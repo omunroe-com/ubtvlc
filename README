@@ -1,0 +1,25 @@
+$Id: README 6961 2004-03-05 17:34:23Z sam $
+
+README for the VLC media player
+===============================
+
+ABOUT-NLS          - Notes on the Free Translation Project.
+AUTHORS            - Main VLC authors.
+COPYING            - The GPL license.
+ChangeLog          - The vlc ChangeLog.
+FAQ                - Commonly asked questions.
+HACKING            - Hacking vlc.
+INSTALL            - Installation instructions.
+INSTALL.win32      - Installation instructions for the Win32 version of vlc.
+README             - This file.
+README.MacOSX.rtf  - Information specific to the MacOS X port.
+THANKS             - All VLC contributors.
+doc/               - Miscellaneous documentation.
+
+Resources
+=========
+
+The VideoLAN web site : http://www.videolan.org/
+Mailing-lists : http://developers.videolan.org/lists.html
+Forums: http://forum.videolan.org/
+

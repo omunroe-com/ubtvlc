@@ -1,0 +1,292 @@
+/*****************************************************************************
+ * spudec.c : SPU decoder thread
+ *****************************************************************************
+ * Copyright (C) 2000-2001 VideoLAN
+ * $Id: spudec.c 6961 2004-03-05 17:34:23Z sam $
+ *
+ * Authors: Samuel Hocevar <sam@zoy.org>
+ *          Laurent Aimar <fenrir@via.ecp.fr>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ *****************************************************************************/
+
+/*****************************************************************************
+ * Preamble
+ *****************************************************************************/
+#include <vlc/vlc.h>
+#include <vlc/vout.h>
+#include <vlc/decoder.h>
+
+#include "spudec.h"
+
+/*****************************************************************************
+ * Module descriptor.
+ *****************************************************************************/
+static int  DecoderOpen   ( vlc_object_t * );
+static int  PacketizerOpen( vlc_object_t * );
+
+static void Close  ( vlc_object_t * );
+
+vlc_module_begin();
+    set_description( _("DVD subtitles decoder") );
+    set_capability( "decoder", 50 );
+    set_callbacks( DecoderOpen, Close );
+
+    add_submodule();
+    set_description( _("DVD subtitles packetizer") );
+    set_capability( "packetizer", 50 );
+    set_callbacks( PacketizerOpen, Close );
+vlc_module_end();
+
+/*****************************************************************************
+ * Local prototypes
+ *****************************************************************************/
+static vout_thread_t *FindVout( decoder_t *);
+
+static block_t *Reassemble( decoder_t *, block_t ** );
+
+static void     Decode   ( decoder_t *, block_t ** );
+static block_t *Packetize( decoder_t *, block_t ** );
+
+/*****************************************************************************
+ * DecoderOpen
+ *****************************************************************************
+ * Tries to launch a decoder and return score so that the interface is able
+ * to chose.
+ *****************************************************************************/
+static int DecoderOpen( vlc_object_t *p_this )
+{
+    decoder_t     *p_dec = (decoder_t*)p_this;
+    decoder_sys_t *p_sys;
+
+    if( p_dec->fmt_in.i_codec != VLC_FOURCC( 's','p','u',' ' ) &&
+        p_dec->fmt_in.i_codec != VLC_FOURCC( 's','p','u','b' ) )
+    {
+        return VLC_EGENERIC;
+    }
+
+    p_dec->p_sys = p_sys = malloc( sizeof( decoder_sys_t ) );
+
+    p_sys->b_packetizer = VLC_FALSE;
+    p_sys->i_spu_size = 0;
+    p_sys->i_spu      = 0;
+    p_sys->p_block    = NULL;
+    p_sys->p_vout     = NULL;
+
+    es_format_Init( &p_dec->fmt_out, SPU_ES, VLC_FOURCC( 's','p','u',' ' ) );
+
+    p_dec->pf_decode_sub = Decode;
+    p_dec->pf_packetize  = Packetize;
+
+    return VLC_SUCCESS;
+}
+
+/*****************************************************************************
+ * PacketizerOpen
+ *****************************************************************************
+ * Tries to launch a decoder and return score so that the interface is able
+ * to chose.
+ *****************************************************************************/
+static int PacketizerOpen( vlc_object_t *p_this )
+{
+    decoder_t *p_dec = (decoder_t*)p_this;
+
+    if( DecoderOpen( p_this ) )
+    {
+        return VLC_EGENERIC;
+    }
+    p_dec->p_sys->b_packetizer = VLC_TRUE;
+
+    return VLC_SUCCESS;
+}
+
+/*****************************************************************************
+ * Close:
+ *****************************************************************************/
+static void Close( vlc_object_t *p_this )
+{
+    decoder_t     *p_dec = (decoder_t*)p_this;
+    decoder_sys_t *p_sys = p_dec->p_sys;
+
+    if( !p_sys->b_packetizer )
+    {
+        /* FIXME check if it's ok to not lock vout */
+        if( p_sys->p_vout != NULL && p_sys->p_vout->p_subpicture != NULL )
+        {
+            subpicture_t *  p_subpic;
+            int             i_subpic;
+
+            for( i_subpic = 0; i_subpic < VOUT_MAX_SUBPICTURES; i_subpic++ )
+            {
+                p_subpic = &p_sys->p_vout->p_subpicture[i_subpic];
+
+                if( p_subpic != NULL &&
+                    ( ( p_subpic->i_status == RESERVED_SUBPICTURE ) ||
+                      ( p_subpic->i_status == READY_SUBPICTURE ) ) )
+                {
+                    vout_DestroySubPicture( p_sys->p_vout, p_subpic );
+                }
+            }
+        }
+    }
+
+    if( p_sys->p_block )
+    {
+        block_ChainRelease( p_sys->p_block );
+    }
+
+    free( p_sys );
+}
+
+/*****************************************************************************
+ * Decode:
+ *****************************************************************************/
+static void     Decode   ( decoder_t *p_dec, block_t **pp_block )
+{
+    decoder_sys_t *p_sys = p_dec->p_sys;
+    block_t       *p_spu = Reassemble( p_dec, pp_block );
+
+    if( p_spu )
+    {
+        p_sys->i_spu = block_ChainExtract( p_spu, p_sys->buffer, 65536 );
+        p_sys->i_pts = p_spu->i_pts;
+        block_ChainRelease( p_spu );
+
+        if( ( p_sys->p_vout = FindVout( p_dec ) ) )
+        {
+            /* Parse and decode */
+            E_(ParsePacket)( p_dec );
+
+            vlc_object_release( p_sys->p_vout );
+        }
+
+        /* reinit context */
+        p_sys->i_spu_size = 0;
+        p_sys->i_rle_size = 0;
+        p_sys->i_spu      = 0;
+        p_sys->p_block    = NULL;
+    }
+}
+
+/*****************************************************************************
+ * Packetize:
+ *****************************************************************************/
+static block_t *Packetize( decoder_t *p_dec, block_t **pp_block )
+{
+    decoder_sys_t *p_sys = p_dec->p_sys;
+    block_t       *p_spu = Reassemble( p_dec, pp_block );
+
+    if( p_spu )
+    {
+        p_spu->i_dts = p_spu->i_pts;
+        p_spu->i_length = 0;
+
+        /* reinit context */
+        p_sys->i_spu_size = 0;
+        p_sys->i_rle_size = 0;
+        p_sys->i_spu      = 0;
+        p_sys->p_block    = NULL;
+
+        return block_ChainGather( p_spu );
+    }
+    return NULL;
+}
+
+/*****************************************************************************
+ * Reassemble:
+ *****************************************************************************/
+static block_t *Reassemble( decoder_t *p_dec, block_t **pp_block )
+{
+    decoder_sys_t *p_sys = p_dec->p_sys;
+    block_t *p_block;
+
+    if( pp_block == NULL || *pp_block == NULL )
+    {
+        return NULL;
+    }
+    p_block = *pp_block;
+    *pp_block = NULL;
+
+    if( p_sys->i_spu_size <= 0 && ( p_block->i_pts <= 0 || p_block->i_buffer < 4 ) )
+    {
+        msg_Dbg( p_dec, "invalid starting packet (size < 4 or pts <=0)" );
+        msg_Dbg( p_dec, "spu size: %d, i_pts: "I64Fd" i_buffer: %d", p_sys->i_spu_size, p_block->i_pts, p_block->i_buffer );
+        block_Release( p_block );
+        return NULL;
+    }
+
+    block_ChainAppend( &p_sys->p_block, p_block );
+    p_sys->i_spu += p_block->i_buffer;
+
+    if( p_sys->i_spu_size <= 0 )
+    {
+        p_sys->i_spu_size = ( p_block->p_buffer[0] << 8 )| p_block->p_buffer[1];
+        p_sys->i_rle_size = ( ( p_block->p_buffer[2] << 8 )| p_block->p_buffer[3] ) - 4;
+
+        /* msg_Dbg( p_dec, "i_spu_size=%d i_rle=%d",
+                    p_sys->i_spu_size, p_sys->i_rle_size ); */
+        if( p_sys->i_spu_size <= 0 || p_sys->i_rle_size >= p_sys->i_spu_size )
+        {
+            p_sys->i_spu_size = 0;
+            p_sys->i_rle_size = 0;
+            p_sys->i_spu      = 0;
+            p_sys->p_block    = NULL;
+
+            block_Release( p_block );
+            return NULL;
+        }
+    }
+
+    if( p_sys->i_spu >= p_sys->i_spu_size )
+    {
+        /* We have a complete sub */
+        msg_Dbg( p_dec, "SPU packets size=%d should be %d",
+                 p_sys->i_spu, p_sys->i_spu_size );
+
+        return p_sys->p_block;
+    }
+    return NULL;
+}
+
+/* following functions are local */
+
+/*****************************************************************************
+ * FindVout: Find a vout or wait for one to be created.
+ *****************************************************************************/
+static vout_thread_t *FindVout( decoder_t *p_dec )
+{
+    vout_thread_t *p_vout = NULL;
+
+    /* Find an available video output */
+    do
+    {
+        if( p_dec->b_die || p_dec->b_error )
+        {
+            break;
+        }
+
+        p_vout = vlc_object_find( p_dec, VLC_OBJECT_VOUT, FIND_ANYWHERE );
+        if( p_vout )
+        {
+            break;
+        }
+
+        msleep( VOUT_OUTMEM_SLEEP );
+    }
+    while( 1 );
+
+    return p_vout;
+}
+

@@ -1,0 +1,71 @@
+$Id: HACKING 6961 2004-03-05 17:34:23Z sam $
+
+Hacking vlc
+===========
+
+Requirements
+------------
+
+You will need the following tools if you plan to use the CVS version of vlc:
+
+ - autoconf version 2.50 or later
+
+ - automake version 1.5 (but 1.6 or later is recommended)
+
+ - gettext version 0.10.40 (but 0.11.3 or later is recommended)
+
+After retrieving the CVS tree, you need to run the bootstrap script to
+generate all the files needed to build vlc. You can then run configure.
+
+If you do not have the correct version of these tools, or if they are
+simply not available for the operating system you plan to develop on,
+you can check out a CVS tree on an OS that provides these tools (such
+as a recent Linux distribution), run bootstrap, and then copy the whole
+tree to your retarded OS.
+
+There is a possibility that, at some point, automake might segfault. The
+reason is unsufficient stack size, and can be easily fixed with the
+`ulimit` command (or an equivalent) available in most shells. For instance
+on bash 2.0, the following command solves the automake crash on Mac OS X :
+ulimit -s 20000
+
+
+The bootstrap sequence
+----------------------
+
+The bootstrap script does the following actions:
+
+ - parse configure.ac for all Makefiles in the modules/ directory that need
+   to be generated, and look for available modules in the corresponding
+   Modules.am file. A module "foo" exists if there is a Modules.am file in
+   the modules/ directory which defines SOURCES_foo.
+
+ - create a top-level Modules.am file (which will be included by Makefile.am)
+   which contains additional build rules for modules, and includes all the
+   Modules.am files that were found in modules/
+
+ - create an m4/private.m4 from configure.ac, generating m4 macros that will
+   be needed by configure.ac.
+
+ - create a Makefile.am file for each Modules.am file found in modules/ .
+
+ - run autopoint (previously gettextize) to create an intl/ directory,
+   needed when libgettext is not available.
+
+ - run the usual aclocal, autoheader, automake and autoconf, which create
+   the various Makefile.in files from the corresponding Makefile.am and the
+   configure script from configure.ac.
+
+ - fix a few files in the vlc repository that may have been altered.
+
+
+How to add a module
+-------------------
+
+To add a module to the repository, just add its sources to a Modules.am
+file. If you create a new Modules.am, do not forget to add a corresponding
+Makefile line at the end of configure.ac.
+
+To have the module built, you need to add a call to AX_ADD_PLUGINS or
+AX_ADD_BUILTINS to configure.ac with your new module name as argument.
+
