@@ -2,7 +2,7 @@
  * http.c
  *****************************************************************************
  * Copyright (C) 2001-2003 VideoLAN
- * $Id: http.c 7522 2004-04-27 16:35:15Z sam $
+ * $Id: http.c 9280 2004-11-11 12:31:27Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -30,10 +30,12 @@
 #include <vlc/sout.h>
 
 #include "vlc_httpd.h"
+#include "vlc_tls.h"
 
 #define FREE( p ) if( p ) { free( p); (p) = NULL; }
 
-#define DEFAULT_PORT 8080
+#define DEFAULT_PORT        8080
+#define DEFAULT_SSL_PORT    8443
 
 /*****************************************************************************
  * Module descriptor
@@ -49,15 +51,46 @@ static void Close( vlc_object_t * );
 #define PASS_TEXT N_("Password")
 #define PASS_LONGTEXT N_("Allows you to give a password that will be " \
                          "requested to access the stream." )
+#define MIME_TEXT N_("Mime")
+#define MIME_LONGTEXT N_("Allows you to give the mime returned by the server." )
 
+#define CERT_TEXT N_( "Certificate file" )
+#define CERT_LONGTEXT N_( "Path to the x509 PEM certificate file that will "\
+                          "be used by the HTTP/SSL stream output" )
+#define KEY_TEXT N_( "Private key file" )
+#define KEY_LONGTEXT N_( "Path to the x509 PEM private key file that will " \
+                         " be used by the HTTP/SSL stream output. Leave " \
+                         "empty if you don't have one." )
+#define CA_TEXT N_( "Root CA file" )
+#define CA_LONGTEXT N_( "Path to the x509 PEM trusted root CA certificates " \
+                        "(certificate authority) file that will be used by " \
+                        "the HTTP/SSL stream output. Leave empty if you " \
+                        "don't have one." )
+#define CRL_TEXT N_( "CRL file" )
+#define CRL_LONGTEXT N_( "Path to the x509 PEM Certificates Revocation List " \
+                         "file that will be HTTP/SSL stream output. Leave " \
+                         "empty if you don't have one." )
 
 vlc_module_begin();
     set_description( _("HTTP stream output") );
     set_capability( "sout access", 0 );
     add_shortcut( "http" );
+    add_shortcut( "https" );
     add_shortcut( "mmsh" );
-    add_string( SOUT_CFG_PREFIX "user", "", NULL, "User", "", VLC_TRUE );
-    add_string( SOUT_CFG_PREFIX "pwd", "", NULL, "Password", "", VLC_TRUE );
+    add_string( SOUT_CFG_PREFIX "user", "", NULL,
+                USER_TEXT, USER_LONGTEXT, VLC_TRUE );
+    add_string( SOUT_CFG_PREFIX "pwd", "", NULL,
+                PASS_TEXT, PASS_LONGTEXT, VLC_TRUE );
+    add_string( SOUT_CFG_PREFIX "mime", "", NULL,
+                MIME_TEXT, MIME_LONGTEXT, VLC_TRUE );
+    add_string( SOUT_CFG_PREFIX "cert", "vlc.pem", NULL,
+                CERT_TEXT, CERT_LONGTEXT, VLC_TRUE );
+    add_string( SOUT_CFG_PREFIX "key", NULL, NULL,
+                KEY_TEXT, KEY_LONGTEXT, VLC_TRUE );
+    add_string( SOUT_CFG_PREFIX "ca", NULL, NULL,
+                CA_TEXT, CA_LONGTEXT, VLC_TRUE );
+    add_string( SOUT_CFG_PREFIX "crl", NULL, NULL,
+                CRL_TEXT, CRL_LONGTEXT, VLC_TRUE );
     set_callbacks( Open, Close );
 vlc_module_end();
 
@@ -66,7 +99,7 @@ vlc_module_end();
  * Exported prototypes
  *****************************************************************************/
 static const char *ppsz_sout_options[] = {
-    "user", "pwd", NULL
+    "user", "pwd", "mime", NULL
 };
 
 static int Write( sout_access_out_t *, block_t * );
@@ -94,6 +127,7 @@ static int Open( vlc_object_t *p_this )
 {
     sout_access_out_t       *p_access = (sout_access_out_t*)p_this;
     sout_access_out_sys_t   *p_sys;
+    tls_server_t            *p_tls;
 
     char                *psz_parser, *psz_name;
 
@@ -109,10 +143,10 @@ static int Open( vlc_object_t *p_this )
                 malloc( sizeof( sout_access_out_sys_t ) ) ) )
     {
         msg_Err( p_access, "Not enough memory" );
-        return( VLC_EGENERIC );
+        return VLC_ENOMEM ;
     }
 
-    sout_ParseCfg( p_access, SOUT_CFG_PREFIX, ppsz_sout_options, p_access->p_cfg );
+    sout_CfgParse( p_access, SOUT_CFG_PREFIX, ppsz_sout_options, p_access->p_cfg );
 
     /* p_access->psz_name host.name:port/filename */
     psz_name = psz_parser = strdup( p_access->psz_name );
@@ -143,11 +177,6 @@ static int Open( vlc_object_t *p_this )
         psz_file_name = psz_parser;
     }
 
-    if( i_bind_port <= 0 )
-    {
-        i_bind_port = DEFAULT_PORT;
-    }
-
     if( !*psz_file_name )
     {
         psz_file_name = strdup( "/" );
@@ -165,13 +194,65 @@ static int Open( vlc_object_t *p_this )
         psz_file_name = strdup( psz_file_name );
     }
 
-    p_sys->p_httpd_host = httpd_HostNew( VLC_OBJECT(p_access), psz_bind_addr,
-                                         i_bind_port );
+    /* SSL support */
+    if( p_access->psz_access && !strcmp( p_access->psz_access, "https" ) )
+    {
+        const char *psz_cert, *psz_key;
+        psz_cert = config_GetPsz( p_this, SOUT_CFG_PREFIX"cert" );
+        psz_key = config_GetPsz( p_this, SOUT_CFG_PREFIX"key" );
+
+        p_tls = tls_ServerCreate( p_this, psz_cert, psz_key );
+        if ( p_tls == NULL )
+        {
+            msg_Err( p_this, "TLS initialization error" );
+            free( psz_file_name );
+            free( psz_name );
+            free( p_sys );
+            return VLC_EGENERIC;
+        }
+
+        psz_cert = config_GetPsz( p_this, SOUT_CFG_PREFIX"ca" );
+        if ( ( psz_cert != NULL) && tls_ServerAddCA( p_tls, psz_cert ) )
+        {
+            msg_Err( p_this, "TLS CA error" );
+            tls_ServerDelete( p_tls );
+            free( psz_file_name );
+            free( psz_name );
+            free( p_sys );
+            return VLC_EGENERIC;
+        }
+
+        psz_cert = config_GetPsz( p_this, SOUT_CFG_PREFIX"crl" );
+        if ( ( psz_cert != NULL) && tls_ServerAddCRL( p_tls, psz_cert ) )
+        {
+            msg_Err( p_this, "TLS CRL error" );
+            tls_ServerDelete( p_tls );
+            free( psz_file_name );
+            free( psz_name );
+            free( p_sys );
+            return VLC_EGENERIC;
+        }
+
+        if( i_bind_port <= 0 )
+            i_bind_port = DEFAULT_SSL_PORT;
+    }
+    else
+    {
+        p_tls = NULL;
+        if( i_bind_port <= 0 )
+            i_bind_port = DEFAULT_PORT;
+    }
+
+    p_sys->p_httpd_host = httpd_TLSHostNew( VLC_OBJECT(p_access),
+                                            psz_bind_addr, i_bind_port,
+                                            p_tls );
     if( p_sys->p_httpd_host == NULL )
     {
         msg_Err( p_access, "cannot listen on %s:%d",
                  psz_bind_addr, i_bind_port );
 
+        if( p_tls != NULL )
+            tls_ServerDelete( p_tls );
         free( psz_name );
         free( psz_file_name );
         free( p_sys );
@@ -180,19 +261,27 @@ static int Open( vlc_object_t *p_this )
 
     if( p_access->psz_access && !strcmp( p_access->psz_access, "mmsh" ) )
     {
-        psz_mime = "video/x-ms-asf-stream";
+        psz_mime = strdup( "video/x-ms-asf-stream" );
+    }
+    else
+    {
+        var_Get( p_access, SOUT_CFG_PREFIX "mime", &val );
+        if( *val.psz_string )
+            psz_mime = val.psz_string;
+        else
+            free( val.psz_string );
     }
 
     var_Get( p_access, SOUT_CFG_PREFIX "user", &val );
-    if( val.psz_string && *val.psz_string )
+    if( *val.psz_string )
         psz_user = val.psz_string;
-    else if( val.psz_string )
+    else
         free( val.psz_string );
 
     var_Get( p_access, SOUT_CFG_PREFIX "pwd", &val );
-    if( val.psz_string && *val.psz_string )
+    if( *val.psz_string )
         psz_pwd = val.psz_string;
-    else if( val.psz_string )
+    else
         free( val.psz_string );
 
     p_sys->p_httpd_stream =
@@ -200,6 +289,7 @@ static int Open( vlc_object_t *p_this )
                          psz_user, psz_pwd );
     if( psz_user ) free( psz_user );
     if( psz_pwd ) free( psz_pwd );
+    if( psz_mime ) free( psz_mime );
 
     if( p_sys->p_httpd_stream == NULL )
     {

@@ -377,9 +377,8 @@ void KInterface::slotSliderMoved( int position )
         // XXX is this locking really useful ?
         vlc_mutex_lock( &p_intf->change_lock );
 
-        off_t i_seek = ( position * p_intf->p_sys->p_input->stream.p_selected_area->i_size ) / 10000;
-        input_Seek( p_intf->p_sys->p_input, i_seek, INPUT_SEEK_SET );
-
+        var_SetFloat( p_intf->p_sys->p_input, "position",
+                       (double)position / 10000.0 );
         vlc_mutex_unlock( &p_intf->change_lock );
     }
 }
@@ -495,7 +494,10 @@ void KInterface::languageMenus(KActionMenu *root, es_descriptor_t *p_es,
 
 void KInterface::slotSetLanguage( bool on, es_descriptor_t *p_es )
 {
-    input_ToggleES( p_intf->p_sys->p_input, p_es, on );
+    if( p_es )
+        var_SetInteger( p_intf->p_sys->p_input, "audio-es", p_es->i_id );
+    else
+        var_SetInteger( p_intf->p_sys->p_input, "audio-es", -1 );
 }
 
 void KInterface::slotSliderChanged( int position )
@@ -503,14 +505,12 @@ void KInterface::slotSliderChanged( int position )
     if( p_intf->p_sys->p_input != NULL )
     {
         char psz_time[ MSTRTIME_MAX_SIZE ];
+        int64_t i_seconds;
 
-        vlc_mutex_lock( &p_intf->p_sys->p_input->stream.stream_lock );
+        i_seconds = var_GetTime( p_intf->p_sys->p_input, "time" ) / I64C(1000000 );
+        secstotimestr( psz_time, i_seconds );
 
-#define p_area p_intf->p_sys->p_input->stream.p_selected_area
-        statusBar()->changeItem( input_OffsetToTime( p_intf->p_sys->p_input, psz_time, ( p_area->i_size * position ) / 10000 ), ID_DATE );
-#undef p_area
-
-        vlc_mutex_unlock( &p_intf->p_sys->p_input->stream.stream_lock );
+        statusBar()->changeItem( psz_time, ID_DATE );
      }
 }
 
@@ -573,7 +573,7 @@ void KInterface::slotPlay()
 {
     if( p_intf->p_sys->p_input )
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_PLAY );
+        var_SetInteger( p_intf->p_sys->p_input, "state", PLAYING_S );
     }
 }
 
@@ -581,7 +581,7 @@ void KInterface::slotPause()
 {
     if ( p_intf->p_sys->p_input )
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_PAUSE );
+        var_SetInteger( p_intf->p_sys->p_input, "state", PAUSE_S );
     }
 }
 
@@ -627,7 +627,7 @@ void KInterface::slotSlow()
 {
     if( p_intf->p_sys->p_input != NULL )
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_SLOWER );
+        var_SetVoid( p_intf->p_sys->p_input, "rate-slower" );
     }
 }
 
@@ -635,7 +635,7 @@ void KInterface::slotFast()
 {
     if( p_intf->p_sys->p_input != NULL )
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_FASTER );
+        var_SetVoid( p_intf->p_sys->p_input, "rate-faster" );
     }
 }
 

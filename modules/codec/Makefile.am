@@ -7,7 +7,7 @@ noinst_LIBRARIES =
 noinst_HEADERS =
 EXTRA_DIST = Modules.am
 BUILT_SOURCES =
-SUBDIRS = cmml ffmpeg ogt spudec
+SUBDIRS = cmml dmo ffmpeg ogt spudec
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/codec
 include Modules.am
@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in a52 cinepak dts flacdec lpcm araw vorbis tarkin theora tremor speex adpcm mpeg_audio libmpeg2 rawvideo quicktime subsdec faad dvbsub mash x264; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in a52 cinepak dts flacdec lpcm araw vorbis tarkin theora tremor speex adpcm mpeg_audio libmpeg2 rawvideo quicktime subsdec faad dvbsub mash x264; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in a52 cinepak dts flacdec lpcm araw vorbis tarkin theora tremor speex adpcm mpeg_audio libmpeg2 rawvideo quicktime subsdec faad dvbsub mash x264; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in a52 cinepak dts flacdec lpcm araw vorbis tarkin theora tremor speex adpcm mpeg_audio libmpeg2 rawvideo quicktime subsdec faad dvbsub mash x264 toolame; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in a52 cinepak dts flacdec lpcm araw vorbis tarkin theora tremor speex adpcm mpeg_audio libmpeg2 rawvideo quicktime subsdec faad dvbsub mash x264 toolame; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in a52 cinepak dts flacdec lpcm araw vorbis tarkin theora tremor speex adpcm mpeg_audio libmpeg2 rawvideo quicktime subsdec faad dvbsub mash x264 toolame; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -808,6 +808,43 @@ libx264_plugin$(LIBEXT): $(libx264_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libx264_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin x264\` ; $(CXXLINK) $(libx264_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin x264` ;; \
 	  objc) echo $(OBJCLINK) $(libx264_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin x264\` ; $(OBJCLINK) $(libx264_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin x264` ;; \
 	  c|*) echo $(LINK) $(libx264_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin x264\` ; $(LINK) $(libx264_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin x264` ;; \
+	esac
+
+
+# The toolame plugin
+
+if UNTRUE
+Ltoolamep = libtoolame_plugin.a
+Dtoolamep = libtoolame_plugin$(LIBEXT)
+Ltoolameb = libtoolame.a
+Ltoolamepic = libtoolame_pic.a
+endif
+
+libtoolame_plugin_a_SOURCES = $(SOURCES_toolame)
+libtoolame_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin toolame`
+libtoolame_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin toolame`
+libtoolame_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin toolame`
+
+libtoolame_pic_a_SOURCES = $(SOURCES_toolame)
+libtoolame_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic toolame`
+libtoolame_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic toolame`
+libtoolame_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic toolame`
+
+libtoolame_a_SOURCES = $(SOURCES_toolame)
+libtoolame_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin toolame`
+libtoolame_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin toolame`
+libtoolame_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin toolame`
+
+libvlc_LIBRARIES += $(Ltoolameb) $(Ltoolamepic)
+libtoolame_DATA = $(Dtoolamep)
+
+libtoolamedir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Ltoolamep)
+libtoolame_plugin$(LIBEXT): $(libtoolame_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage toolame` in \
+	  c++) echo $(CXXLINK) $(libtoolame_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin toolame\` ; $(CXXLINK) $(libtoolame_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin toolame` ;; \
+	  objc) echo $(OBJCLINK) $(libtoolame_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin toolame\` ; $(OBJCLINK) $(libtoolame_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin toolame` ;; \
+	  c|*) echo $(LINK) $(libtoolame_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin toolame\` ; $(LINK) $(libtoolame_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin toolame` ;; \
 	esac
 
 

@@ -2,7 +2,7 @@
  * wxwindows.h: private wxWindows interface description
  *****************************************************************************
  * Copyright (C) 1999-2004 VideoLAN
- * $Id: wxwindows.h 7700 2004-05-17 12:02:43Z gbazin $
+ * $Id: wxwindows.h 9033 2004-10-22 12:07:08Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -108,6 +108,7 @@ struct intf_sys_t
 
     /* special actions */
     vlc_bool_t          b_playing;
+    vlc_bool_t          b_intf_show;                /* interface to be shown */
 
     /* The input thread */
     input_thread_t *    p_input;
@@ -137,6 +138,9 @@ struct intf_sys_t
     /* Embedded vout */
     VideoWindow         *p_video_window;
     wxBoxSizer          *p_video_sizer;
+
+    /* Aout */
+    aout_instance_t     *p_aout;
 };
 
 /*****************************************************************************
@@ -178,29 +182,20 @@ public:
 private:
     intf_thread_t *p_intf;
     Interface *p_main_interface;
+    vlc_bool_t b_init;
     int i_old_playing_status;
     int i_old_rate;
     vlc_bool_t b_old_seekable;
 };
 
-/* Main Interface */
-class Interface: public wxFrame
+
+/* Extended panel */
+class ExtraPanel: public wxPanel
 {
 public:
     /* Constructor */
-    Interface( intf_thread_t *p_intf );
-    virtual ~Interface();
-    void TogglePlayButton( int i_playing_status );
-    void Update();
-
-    wxBoxSizer  *frame_sizer;
-    wxStatusBar *statusbar;
-
-    wxSlider    *slider;
-    wxWindow    *slider_frame;
-    wxWindow    *extra_frame;
-
-    vlc_bool_t b_extra;
+    ExtraPanel( intf_thread_t *p_intf, wxWindow *p_parent );
+    virtual ~ExtraPanel();
 
     wxStaticBox *adjust_box;
     wxButton *restoredefaults_button;
@@ -212,6 +207,108 @@ public:
 
     wxStaticBox *other_box;
     wxComboBox *ratio_combo;
+
+    char *psz_bands;
+    float f_preamp;
+    vlc_bool_t b_update;
+
+private:
+
+    wxPanel *VideoPanel( wxWindow * );
+    wxPanel *EqzPanel( wxWindow * );
+    wxPanel *AudioPanel( wxWindow * );
+
+    wxNotebook *notebook;
+
+    wxCheckBox *eq_chkbox;
+
+    wxCheckBox *eq_2p_chkbox;
+
+    wxSlider *smooth_slider;
+
+    wxSlider *preamp_slider;
+    wxStaticText * preamp_text;
+
+    int i_smooth;
+    wxWindow *p_parent;
+
+    wxSlider *band_sliders[10];
+    wxStaticText *band_texts[10];
+
+    int i_values[10];
+
+    void CheckAout();
+
+    /* Event handlers (these functions should _not_ be virtual) */
+
+    void OnEnableAdjust( wxCommandEvent& );
+    void OnEnableEqualizer( wxCommandEvent& );
+    void OnRestoreDefaults( wxCommandEvent& );
+    void OnChangeEqualizer( wxScrollEvent& );
+    void OnAdjustUpdate( wxScrollEvent& );
+    void OnRatio( wxCommandEvent& );
+    void OnFiltersInfo( wxCommandEvent& );
+    void OnSelectFilter( wxCommandEvent& );
+
+    void OnEqSmooth( wxScrollEvent& );
+    void OnPreamp( wxScrollEvent& );
+    void OnEq2Pass( wxCommandEvent& );
+    void OnEqRestore( wxCommandEvent& );
+
+    void OnHeadphone( wxCommandEvent& );
+    void OnNormvol( wxCommandEvent& );
+    void OnNormvolSlider( wxScrollEvent& );
+
+    void OnIdle( wxIdleEvent& );
+
+    DECLARE_EVENT_TABLE();
+
+    intf_thread_t *p_intf;
+    vlc_bool_t b_my_update;
+};
+
+#if 0
+/* Extended Window  */
+class ExtraWindow: public wxFrame
+{
+public:
+    /* Constructor */
+    ExtraWindow( intf_thread_t *p_intf, wxWindow *p_parent, wxPanel *panel );
+    virtual ~ExtraWindow();
+
+private:
+
+    wxPanel *panel;
+
+    DECLARE_EVENT_TABLE();
+
+    intf_thread_t *p_intf;
+};
+#endif
+
+/* Main Interface */
+class Interface: public wxFrame
+{
+public:
+    /* Constructor */
+    Interface( intf_thread_t *p_intf );
+    virtual ~Interface();
+    void Init();
+    void TogglePlayButton( int i_playing_status );
+    void Update();
+
+    wxBoxSizer  *frame_sizer;
+    wxStatusBar *statusbar;
+
+    wxSlider    *slider;
+    wxWindow    *slider_frame;
+    wxPanel     *extra_frame;
+
+    wxFrame    *extra_window;
+
+    vlc_bool_t b_extra;
+    vlc_bool_t b_undock;
+
 
     wxGauge     *volctrl;
 
@@ -232,7 +329,10 @@ private:
     void OnOpenDisc( wxCommandEvent& event );
     void OnOpenNet( wxCommandEvent& event );
     void OnOpenSat( wxCommandEvent& event );
+
     void OnExtended( wxCommandEvent& event );
+    //void OnUndock( wxCommandEvent& event );
+
     void OnBookmarks( wxCommandEvent& event );
     void OnShowDialog( wxCommandEvent& event );
     void OnPlayStream( wxCommandEvent& event );
@@ -242,13 +342,6 @@ private:
     void OnNextStream( wxCommandEvent& event );
     void OnSlowStream( wxCommandEvent& event );
     void OnFastStream( wxCommandEvent& event );
-
-    void OnEnableAdjust( wxCommandEvent& event );
-    void OnRestoreDefaults( wxCommandEvent& event);
-    void OnAdjustUpdate( wxScrollEvent& event );
-
-    void OnRatio( wxCommandEvent& event );
-    void OnEnableVisual( wxCommandEvent& event );
 
     void OnMenuOpen( wxMenuEvent& event );
 
@@ -331,6 +424,10 @@ private:
     void OnSoutEnable( wxCommandEvent& event );
     void OnSoutSettings( wxCommandEvent& WXUNUSED(event) );
 
+    /* Event handlers for the caching option */
+    void OnCachingEnable( wxCommandEvent& event );
+    void OnCachingChange( wxCommandEvent& event );
+
     DECLARE_EVENT_TABLE();
 
     intf_thread_t *p_intf;
@@ -351,13 +448,15 @@ private:
     /* Controls for the disc panel */
     wxRadioBox *disc_type;
     wxTextCtrl *disc_device;
-    wxSpinCtrl *disc_title;
-    wxSpinCtrl *disc_chapter;
+    wxSpinCtrl *disc_title; int i_disc_title;
+    wxSpinCtrl *disc_chapter; int i_disc_chapter;
+    wxSpinCtrl *disc_sub; int i_disc_sub;
 
     /* The media equivalent name for a DVD names. For example,
-       "Title", is "Track" for a CD-DA */
+     * "Title", is "Track" for a CD-DA */
     wxStaticText *disc_title_label;
     wxStaticText *disc_chapter_label;
+    wxStaticText *disc_sub_label;
     
     /* Indicates if the disc device control was modified */
     bool b_disc_device_changed;
@@ -383,6 +482,11 @@ private:
     wxCheckBox *sout_checkbox;
     SoutDialog *sout_dialog;
     wxArrayString sout_mrl;
+
+    /* Controls for the caching options */
+    wxCheckBox *caching_checkbox;
+    wxSpinCtrl *caching_value;
+    int i_caching;
 };
 
 enum
@@ -414,11 +518,12 @@ enum
     PS_ENCAPSULATION,
     MPEG1_ENCAPSULATION,
     OGG_ENCAPSULATION,
-    RAW_ENCAPSULATION,
     ASF_ENCAPSULATION,
-    AVI_ENCAPSULATION,
     MP4_ENCAPSULATION,
     MOV_ENCAPSULATION,
+    WAV_ENCAPSULATION,
+    RAW_ENCAPSULATION,
+    AVI_ENCAPSULATION,
     ENCAPS_NUM
 };
 
@@ -526,8 +631,10 @@ public:
 
     wxComboBox *file_combo;
     wxComboBox *encoding_combo;
-    wxSpinCtrl *delay_spinctrl;
+    wxComboBox *size_combo;
+    wxComboBox *align_combo;
     wxSpinCtrl *fps_spinctrl;
+    wxSpinCtrl *delay_spinctrl;
 
 private:
     /* Event handlers (these functions should _not_ be virtual) */
@@ -574,23 +681,28 @@ class WizardDialog : public wxWizard
 {
 public:
     /* Constructor */
-    WizardDialog( intf_thread_t *p_intf, wxWindow *p_parent );
+    WizardDialog( intf_thread_t *p_intf, wxWindow *p_parent,char *, int, int );
     virtual ~WizardDialog();
     void SetTranscode( char *vcodec, int vb, char *acodec,int ab);
     void SetMrl( const char *mrl );
+    void SetTTL( int i_ttl );
     void SetPartial( int, int );
     void SetStream( char *method, char *address );
     void SetTranscodeOut( char *address );
     void SetAction( int i_action );
     int  GetAction();
+    void SetSAP( bool b_enabled, const char *psz_name );
     void SetMux( char *mux );
     void Run();
     int i_action;
+    char *method;
 
-private:
+protected:
     int vb,ab;
-    int i_from, i_to;
-    char *vcodec,*acodec,*method,*address,*mrl,*mux;
+    int i_from, i_to, i_ttl;
+    char *vcodec , *acodec , *address , *mrl , *mux ;
+    char *psz_sap_name;
+    bool b_sap;
     DECLARE_EVENT_TABLE();
 
     intf_thread_t *p_intf;
@@ -671,6 +783,9 @@ private:
     void ShowInfos( int item );
 
     /* Event handlers (these functions should _not_ be virtual) */
+
+    void OnSize( wxSizeEvent &event );
+
     void OnAddFile( wxCommandEvent& event );
     void OnAddMRL( wxCommandEvent& event );
     void OnClose( wxCommandEvent& event );
@@ -813,6 +928,8 @@ public:
     virtual ~FileInfo();
     void UpdateFileInfo();
 
+    vlc_bool_t b_need_update;
+
 private:
     void OnClose( wxCommandEvent& event );
 
@@ -822,6 +939,7 @@ private:
     wxTreeCtrl *fileinfo_tree;
     wxTreeItemId fileinfo_root;
     wxString fileinfo_root_label;
+
 
 };
 

@@ -7,23 +7,26 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
+/* Define to 1 if you have the <errno.h> header file. */
+#undef HAVE_ERRNO_H
+
 /* Define if needed */
 #undef HAVE_FLOAT32_T
 
 /* Define to 1 if you have the <float.h> header file. */
 #undef HAVE_FLOAT_H
 
-/* Define if needed */
-#undef HAVE_FPOS_T_POS
+/* Define to 1 if you have the `getpwuid' function. */
+#undef HAVE_GETPWUID
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define if needed */
-#undef HAVE_IN_PORT_T
+/* Define if you have the IOKit API */
+#undef HAVE_IOKIT_IOKITLIB_H
 
-/* Define to 1 if you have the `mp4v2' library (-lmp4v2). */
-#undef HAVE_LIBMP4V2
+/* Define to 1 if you have the <limits.h> header file. */
+#undef HAVE_LIMITS_H
 
 /* Define to 1 if you have the <mathf.h> header file. */
 #undef HAVE_MATHF_H
@@ -33,9 +36,6 @@
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
-
-/* Define if needed */
-#undef HAVE_SOCKLEN_T
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -54,6 +54,9 @@
 
 /* Define to 1 if you have the `strsep' function. */
 #undef HAVE_STRSEP
+
+/* Define to 1 if you have the <sysfs/libsysfs.h> header file. */
+#undef HAVE_SYSFS_LIBSYSFS_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H

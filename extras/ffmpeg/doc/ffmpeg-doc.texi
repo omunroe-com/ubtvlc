@@ -131,7 +131,7 @@ The generic syntax is:
 
 @example 
 @c man begin SYNOPSIS
-ffmpeg [[options][@option{-i} @var{input_file}]]... @{[options] @var{output_file}@}...
+ffmpeg [[infile options][@option{-i} @var{infile}]]... @{[outfile options] @var{outfile}@}...
 @c man end
 @end example
 @c man begin DESCRIPTION
@@ -190,7 +190,7 @@ set the copyright
 set the comment
 
 @item -target type
-specify target file type ("vcd", "svcd" or "dvd"). All the format
+specify target file type ("vcd", "svcd", "dvd", "pal-vcd", "ntsc-svcd", ... ). All the format
 options (bitrate, codecs, buffer sizes) are automatically set by this
 option. You can just type:
 
@@ -198,8 +198,22 @@ option. You can just type:
 ffmpeg -i myfile.avi -target vcd /tmp/vcd.mpg
 @end example
 
+Nevertheless you can specify additional options as long as you know they do not compromise the
+standard, as in:
+
+@example
+ffmpeg -i myfile.avi -target vcd -bf 2 /tmp/vcd.mpg
+@end example
+
 @item -hq
 activate high quality settings
+
+@item -itsoffset offset
+set the input time offset in seconds. @code{[-]hh:mm:ss[.xxx]} syntax
+is also supported.  This option affects all the input files that
+follow it.  The offset is added to the input files' timestamps;
+specifying a positive offset means that the corresponding streams are
+delayed by 'offset' seconds.
 
 @end table
 
@@ -242,8 +256,8 @@ set bottom pad band size (in pixels)
 set left pad band size (in pixels)
 @item -padright size
 set right pad band size (in pixels)
-@item -padcolor color
-set right pad band size (hex). The value for pad color is expressed 
+@item -padcolor (hex color)
+set color of padded bands. The value for pad color is expressed 
 as a six digit hexidecimal number where the first two digits represent red, 
 middle two digits green and last two digits blue. Defaults to 000000 (black)
 @item -vn
@@ -436,8 +450,6 @@ name and its parameters separated by spaces.
 @section Audio Options
 
 @table @option
-@item -ab bitrate         
-set audio bitrate (in kbit/s)
 @item -ar freq    
 set the audio sampling freq (default = 44100 Hz)
 @item -ab bitrate 
@@ -671,8 +683,12 @@ library:
 @tab .fli/.flc files
 @item Sierra VMD       @tab    @tab X
 @tab used in Sierra CD-ROM games
+@item Sierra Online    @tab    @tab X
+@tab .sol files used in Sierra Online games
 @item Matroska         @tab    @tab X
 @end multitable
+@item Electronic Arts Multimedia    @tab    @tab X
+@tab used in various EA games; files have extensions like WVE and UV2
 
 @code{X} means that the encoding (resp. decoding) is supported.
 
@@ -707,24 +723,26 @@ following image formats are supported:
 @item MSMPEG4 V3             @tab  X  @tab  X @tab Also known as DIVX3
 @item WMV7                   @tab  X  @tab  X
 @item WMV8                   @tab  X  @tab  X @tab Not completely working
-@item H263(+)                @tab  X  @tab  X @tab Also known as Real Video 1.0
+@item H.261                  @tab  X  @tab  X
+@item H.263(+)               @tab  X  @tab  X @tab Also known as Real Video 1.0
+@item H.264                  @tab     @tab  X
 @item MJPEG                  @tab  X  @tab  X 
 @item Lossless MJPEG         @tab  X  @tab  X
 @item Apple MJPEG-B          @tab     @tab  X
 @item Sunplus MJPEG          @tab     @tab  X @tab fourcc: SP5X
 @item DV                     @tab  X  @tab  X 
 @item Huff YUV               @tab  X  @tab  X
-@item FFmpeg Video 1         @tab  X  @tab  X @tab Lossless codec (fourcc: FFV1)
+@item FFmpeg Video 1         @tab  X  @tab  X @tab Experimental lossless codec (fourcc: FFV1)
+@item FFmpeg Snow            @tab  X  @tab  X @tab Experimental wavelet codec (fourcc: SNOW)
 @item Asus v1                @tab  X  @tab  X @tab fourcc: ASV1
 @item Asus v2                @tab  X  @tab  X @tab fourcc: ASV2
 @item Creative YUV           @tab     @tab  X @tab fourcc: CYUV
-@item H.264                  @tab     @tab  X
 @item Sorenson Video 1       @tab  X  @tab  X @tab fourcc: SVQ1
 @item Sorenson Video 3       @tab     @tab  X @tab fourcc: SVQ3
 @item On2 VP3                @tab     @tab  X @tab still experimental
 @item Theora                 @tab     @tab  X @tab still experimental
 @item Intel Indeo 3          @tab     @tab  X @tab only works on i386 right now
-@item FLV                    @tab  X  @tab  X @tab Flash H263 variant
+@item FLV                    @tab  X  @tab  X @tab Sorenson H.263 used in Flash
 @item ATI VCR1               @tab     @tab  X @tab fourcc: VCR1
 @item ATI VCR2               @tab     @tab  X @tab fourcc: VCR2
 @item Cirrus Logic AccuPak   @tab     @tab  X @tab fourcc: CLJR
@@ -736,6 +754,7 @@ following image formats are supported:
 @item Apple Animation        @tab     @tab  X @tab fourcc: 'rle '
 @item Apple Graphics         @tab     @tab  X @tab fourcc: 'smc '
 @item Apple Video            @tab     @tab  X @tab fourcc: rpza
+@item Apple QuickDraw        @tab     @tab  X @tab fourcc: qdrw
 @item Cinepak                @tab     @tab  X
 @item Microsoft RLE          @tab     @tab  X
 @item Microsoft Video-1      @tab     @tab  X
@@ -747,6 +766,9 @@ following image formats are supported:
 @item VMD Video              @tab     @tab  X @tab used in Sierra VMD files
 @item MSZH                   @tab     @tab  X @tab Part of LCL
 @item ZLIB                   @tab  X  @tab  X @tab Part of LCL, encoder experimental
+@item TechSmith Camtasia     @tab     @tab  X @tab fourcc: TSCC
+@item IBM Ultimotion         @tab     @tab  X @tab fourcc: ULTI
+@item Miro VideoXL           @tab     @tab  X @tab fourcc: VIXL
 @end multitable
 
 @code{X} means that the encoding (resp. decoding) is supported.
@@ -762,11 +784,13 @@ solutions.
 @item MPEG audio layer 2     @tab  IX  @tab  IX 
 @item MPEG audio layer 1/3   @tab IX   @tab  IX
 @tab MP3 encoding is supported through the external library LAME
-@item AC3                    @tab  IX  @tab  X
+@item AC3                    @tab  IX  @tab  IX
 @tab liba52 is used internally for decoding
 @item Vorbis                 @tab  X   @tab  X
 @tab supported through the external library libvorbis
 @item WMA V1/V2              @tab      @tab X
+@item AAC                    @tab X    @tab X
+@tab supported through the external library libfaac/libfaad
 @item Microsoft ADPCM        @tab X    @tab X
 @item MS IMA ADPCM           @tab X    @tab X
 @item QT IMA ADPCM           @tab      @tab X
@@ -785,10 +809,13 @@ solutions.
 @tab used in Sega Dreamcast games
 @item Electronic Arts ADPCM  @tab      @tab X
 @tab used in various EA titles
+@item Creative ADPCM         @tab      @tab X
 @item RA144                  @tab      @tab X
 @tab Real 14400 bit/s codec
 @item RA288                  @tab      @tab X
 @tab Real 28800 bit/s codec
+@item RADnet                 @tab X    @tab IX
+@tab Real lowbitrate AC3 codec, liba52 is used for decoding
 @item AMR-NB                 @tab X    @tab X
 @tab supported through an external library
 @item AMR-WB                 @tab X    @tab X
@@ -800,9 +827,13 @@ solutions.
 @tab used in various Interplay computer games
 @item Xan DPCM               @tab      @tab X
 @tab used in Origin's Wing Commander IV AVI files
+@item Sierra Online DPCM     @tab      @tab X
+@tab used in Sierra Online game audio files
 @item Apple MACE 3           @tab      @tab X
 @item Apple MACE 6           @tab      @tab X
 @item FLAC                   @tab      @tab X
+@item FFmpeg Sonic           @tab X    @tab X
+@tab Experimental lossy/lossless codec
 @end multitable
 
 @code{X} means that the encoding (resp. decoding) is supported.
@@ -935,6 +966,7 @@ You can use libavcodec or libavformat in your commercial program, but
 @emph{any patch you make must be published}. The best way to proceed is
 to send your patches to the ffmpeg mailing list.
 
+@node Coding Rules
 @section Coding Rules
 
 ffmpeg is programmed in the ISO C90 language with a few additional
@@ -976,14 +1008,47 @@ The presentation is the one specified by 'indent -i4 -kr'.
 Main priority in ffmpeg is simplicity and small code size (=less
 bugs).
 
-Comments: for functions visible from other modules, use the JavaDoc
-format (see examples in @file{libav/utils.c}) so that a documentation
-can be generated automatically.
+Comments: use the JavaDoc/Doxygen 
+format (see examples below) so that a documentation
+can be generated automatically. All non trivial functions should have a comment
+above it explaining what the function does, even if its just one sentance.
+All Structures and their member variables should be documented too.
+@example
+/**
+ * @file mpeg.c
+ * mpeg codec.
+ * @author ...
+ */
+
+/**
+ * Summary sentance.
+ * more text ...
+ * ...
+ */
+typedef struct Foobar{
+    int var1; /**< var1 description */
+    int var2; ///< var2 description
+    /** var3 description */
+    int var3;
+} Foobar;
+
+/**
+ * Summary sentance.
+ * more text ...
+ * ...
+ * @param my_parameter description of my_parameter
+ * @return return value description
+ */
+int myfunc(int my_parameter)
+...
+@end example
 
 fprintf and printf are forbidden in libavformat and libavcodec, 
 please use av_log() instead.
 
 @section Submitting patches
+
+First, (@pxref{Coding Rules}) above if you didn't yet.
 
 When you submit your patch, try to send a unified diff (diff '-up'
 option). I cannot read other diffs :-)
@@ -999,6 +1064,9 @@ transmission) to the ffmpeg-devel mailinglist, see
 It also helps quite a bit if you tell us what the patch does (for example
 'replaces lrint by lrintf') , and why (for example '*bsd isnt c99 compliant
 and has no lrint()')
+
+We reply to all patches submitted and either apply or reject with some
+explanation why, but sometimes we are quite busy so it can take a week or 2
 
 @section Regression tests
 

@@ -2,7 +2,7 @@
  * sort.c : Playlist sorting functions
  *****************************************************************************
  * Copyright (C) 1999-2004 VideoLAN
- * $Id: sort.c 7209 2004-03-31 20:52:31Z gbazin $
+ * $Id: sort.c 8109 2004-07-01 12:37:53Z sigmunau $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -49,6 +49,17 @@ int playlist_Sort( playlist_t * p_playlist , int i_mode, int i_type )
 
     p_playlist->i_sort = i_mode;
     p_playlist->i_order = i_type;
+    /* playlist with one or less items are allways sorted in all
+       manners, quit fast. */
+    if( p_playlist->i_size <= 1 )
+    {
+        vlc_mutex_unlock( &p_playlist->object_lock );
+
+        /* Notify the interfaces, is this necessary? */
+        var_Set( p_playlist, "intf-change", val );
+
+        return VLC_SUCCESS;
+    }
 
     if( i_mode == SORT_RANDOM )
     {

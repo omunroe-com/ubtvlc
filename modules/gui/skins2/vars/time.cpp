@@ -2,7 +2,7 @@
  * time.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: time.cpp 7574 2004-05-01 14:23:40Z asmax $
+ * $Id: time.cpp 8071 2004-06-26 16:15:27Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -58,8 +58,14 @@ const string StreamTime::getAsStringPercent() const
 
 const string StreamTime::getAsStringCurrTime() const
 {
-    if( getIntf()->p_sys->p_input == NULL ||
-        !getIntf()->p_sys->p_input->stream.b_seekable )
+    if( getIntf()->p_sys->p_input == NULL )
+    {
+        return "-:--:--";
+    }
+
+    vlc_value_t pos;
+    var_Get( getIntf()->p_sys->p_input, "position", &pos );
+    if( pos.f_float == 0.0 )
     {
         return "-:--:--";
     }
@@ -73,8 +79,14 @@ const string StreamTime::getAsStringCurrTime() const
 
 const string StreamTime::getAsStringTimeLeft() const
 {
-    if( getIntf()->p_sys->p_input == NULL ||
-        !getIntf()->p_sys->p_input->stream.b_seekable )
+    if( getIntf()->p_sys->p_input == NULL )
+    {
+        return "-:--:--";
+    }
+
+    vlc_value_t pos;
+    var_Get( getIntf()->p_sys->p_input, "position", &pos );
+    if( pos.f_float == 0.0 )
     {
         return "-:--:--";
     }
@@ -89,8 +101,14 @@ const string StreamTime::getAsStringTimeLeft() const
 
 const string StreamTime::getAsStringDuration() const
 {
-    if( getIntf()->p_sys->p_input == NULL ||
-        !getIntf()->p_sys->p_input->stream.b_seekable )
+    if( getIntf()->p_sys->p_input == NULL )
+    {
+        return "-:--:--";
+    }
+
+    vlc_value_t pos;
+    var_Get( getIntf()->p_sys->p_input, "position", &pos );
+    if( pos.f_float == 0.0 )
     {
         return "-:--:--";
     }

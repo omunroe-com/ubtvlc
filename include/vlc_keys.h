@@ -2,7 +2,7 @@
  * hotkeys.h: keycode defines
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: vlc_keys.h 7376 2004-04-19 01:26:26Z andrep $
+ * $Id: vlc_keys.h 8966 2004-10-10 10:08:44Z ipkiss $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -230,4 +230,7 @@ static inline int StringToKey( char *psz_key )
 #define ACTIONID_SUBDELAY_DOWN         47
 #define ACTIONID_HISTORY_BACK          48
 #define ACTIONID_HISTORY_FORWARD       49
+#define ACTIONID_AUDIO_TRACK           50
+#define ACTIONID_SUBTITLE_TRACK        51
+#define ACTIONID_INTF_SHOW             52
 

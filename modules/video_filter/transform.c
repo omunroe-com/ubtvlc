@@ -2,7 +2,7 @@
  * transform.c : transform image module for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: transform.c 7453 2004-04-23 20:01:59Z gbazin $
+ * $Id: transform.c 8551 2004-08-28 17:36:02Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -245,9 +245,12 @@ static void Destroy( vlc_object_t *p_this )
 {
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
 
-    DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
-    vlc_object_detach( p_vout->p_sys->p_vout );
-    vout_Destroy( p_vout->p_sys->p_vout );
+    if( p_vout->p_sys->p_vout )
+    {
+        DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
+        vlc_object_detach( p_vout->p_sys->p_vout );
+        vout_Destroy( p_vout->p_sys->p_vout );
+    }
 
     DEL_PARENT_CALLBACKS( SendEventsToChild );
 
@@ -290,8 +293,9 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
                 uint8_t *p_in = p_pic->p[i_index].p_pixels;
 
                 uint8_t *p_out = p_outpic->p[i_index].p_pixels;
-                uint8_t *p_out_end = p_out + p_outpic->p[i_index].i_lines
-                                              * p_outpic->p[i_index].i_pitch;
+                uint8_t *p_out_end = p_out +
+                    p_outpic->p[i_index].i_visible_lines *
+                    p_outpic->p[i_index].i_pitch;
 
                 for( ; p_out < p_out_end ; )
                 {
@@ -299,7 +303,8 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
 
                     p_out_end -= p_outpic->p[i_index].i_pitch
                                   - p_outpic->p[i_index].i_visible_pitch;
-                    p_line_end = p_in + p_pic->p[i_index].i_lines * i_pitch;
+                    p_line_end = p_in + p_pic->p[i_index].i_visible_lines *
+                        i_pitch;
 
                     for( ; p_in < p_line_end ; )
                     {
@@ -316,7 +321,7 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
             for( i_index = 0 ; i_index < p_pic->i_planes ; i_index++ )
             {
                 uint8_t *p_in = p_pic->p[i_index].p_pixels;
-                uint8_t *p_in_end = p_in + p_pic->p[i_index].i_lines
+                uint8_t *p_in_end = p_in + p_pic->p[i_index].i_visible_lines
                                             * p_pic->p[i_index].i_pitch;
 
                 uint8_t *p_out = p_outpic->p[i_index].p_pixels;
@@ -347,14 +352,16 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
                 uint8_t *p_in = p_pic->p[i_index].p_pixels;
 
                 uint8_t *p_out = p_outpic->p[i_index].p_pixels;
-                uint8_t *p_out_end = p_out + p_outpic->p[i_index].i_lines
-                                              * p_outpic->p[i_index].i_pitch;
+                uint8_t *p_out_end = p_out +
+                    p_outpic->p[i_index].i_visible_lines *
+                    p_outpic->p[i_index].i_pitch;
 
                 for( ; p_out < p_out_end ; )
                 {
                     uint8_t *p_in_end;
 
-                    p_in_end = p_in + p_pic->p[i_index].i_lines * i_pitch;
+                    p_in_end = p_in + p_pic->p[i_index].i_visible_lines *
+                        i_pitch;
 
                     for( ; p_in < p_in_end ; )
                     {
@@ -373,7 +380,7 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
             for( i_index = 0 ; i_index < p_pic->i_planes ; i_index++ )
             {
                 uint8_t *p_in = p_pic->p[i_index].p_pixels;
-                uint8_t *p_in_end = p_in + p_pic->p[i_index].i_lines
+                uint8_t *p_in_end = p_in + p_pic->p[i_index].i_visible_lines
                                             * p_pic->p[i_index].i_pitch;
 
                 uint8_t *p_out = p_outpic->p[i_index].p_pixels;
@@ -392,7 +399,7 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
             for( i_index = 0 ; i_index < p_pic->i_planes ; i_index++ )
             {
                 uint8_t *p_in = p_pic->p[i_index].p_pixels;
-                uint8_t *p_in_end = p_in + p_pic->p[i_index].i_lines
+                uint8_t *p_in_end = p_in + p_pic->p[i_index].i_visible_lines
                                             * p_pic->p[i_index].i_pitch;
 
                 uint8_t *p_out = p_outpic->p[i_index].p_pixels;

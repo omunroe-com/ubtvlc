@@ -2,11 +2,11 @@
  * libvlc.h: main libvlc header
  *****************************************************************************
  * Copyright (C) 1998-2002 VideoLAN
- * $Id: libvlc.h 7598 2004-05-05 20:29:14Z gbazin $
+ * $Id: libvlc.h 9134 2004-11-04 16:39:40Z hartman $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
- *          Gildas Bazin <gbazin@netcourrier.com>
+ *          Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -86,20 +86,10 @@ static char *ppsz_language_text[] =
     "show all the available options, including those that most users should " \
     "never touch.")
 
-#define INTF_PATH_TEXT N_("Interface default search path")
-#define INTF_PATH_LONGTEXT N_( \
-    "This option allows you to set the default path that the interface will " \
-    "open when looking for a file.")
-
-#define PLUGIN_PATH_TEXT N_("Modules search path")
-#define PLUGIN_PATH_LONGTEXT N_( \
-    "This option allows you to specify an additional path for VLC to look " \
-    "for its modules.")
-
 #define AOUT_CAT_LONGTEXT N_( \
     "These options allow you to modify the behavior of the audio " \
     "subsystem, and to add audio filters which can be used for " \
-    "post processing or visual effects (spectrum analyzer, ...).\n" \
+    "post processing or visual effects (spectrum analyzer, etc.).\n" \
     "Enable these filters here, and configure them in the \"audio filters\" " \
     "modules section.")
 
@@ -159,7 +149,7 @@ static char *ppsz_language_text[] =
 #define AUDIO_FILTER_TEXT N_("Audio filters")
 #define AUDIO_FILTER_LONGTEXT N_( \
     "This allows you to add audio post processing filters, to modify " \
-    "the sound, or audio visualization modules (spectrum analyzer, ...).")
+    "the sound, or audio visualization modules (spectrum analyzer, etc.).")
 
 #define AUDIO_CHANNEL_MIXER N_("Channel mixer")
 #define AUDIO_CHANNEL_MIXER_LONGTEXT N_( \
@@ -170,7 +160,7 @@ static char *ppsz_language_text[] =
 #define VOUT_CAT_LONGTEXT N_( \
     "These options allow you to modify the behavior of the video output " \
     "subsystem. You can for example enable video filters (deinterlacing, " \
-    "image adjusting, ...). Enable these filters here and configure " \
+    "image adjusting, etc.). Enable these filters here and configure " \
     "them in the \"video filters\" modules section. You can also set many " \
     "miscellaneous video options." )
 
@@ -242,16 +232,6 @@ static char *ppsz_align_descriptions[] =
 #define VIDEO_ON_TOP_LONGTEXT N_("Always place the video window on top of " \
     "other windows." )
 
-#define SPUMARGIN_TEXT N_("Force SPU position")
-#define SPUMARGIN_LONGTEXT N_( \
-    "You can use this option to place the subtitles under the movie, " \
-    "instead of over the movie. Try several positions.")
-
-#define OSD_TEXT N_("On Screen Display")
-#define OSD_LONGTEXT N_( \
-    "VLC can display messages on the video. This is called OSD (On Screen " \
-    "Display). You can disable this feature here.")
-
 #define FILTER_TEXT N_("Video filter module")
 #define FILTER_LONGTEXT N_( \
     "This will allow you to add a post-processing filter to enhance the " \
@@ -301,6 +281,11 @@ static char *ppsz_align_descriptions[] =
 #define INPUT_PROGRAM_LONGTEXT N_( \
     "Choose the program to select by giving its Service ID.")
 
+#define INPUT_PROGRAMS_TEXT N_("Choose programs")
+#define INPUT_PROGRAMS_LONGTEXT N_( \
+    "Choose the programs to select by giving a comma-separated list of " \
+    "SIDs.")
+
 #define INPUT_AUDIO_TEXT N_("Choose audio")
 #define INPUT_AUDIO_LONGTEXT N_( \
     "Give the default type of audio you want to use in a DVD. " \
@@ -309,12 +294,12 @@ static char *ppsz_align_descriptions[] =
 #define INPUT_CHAN_TEXT N_("Choose audio channel")
 #define INPUT_CHAN_LONGTEXT N_( \
     "Give the stream number of the audio channel you want to use in a DVD " \
-    "(from 1 to n).")
+    "(from 0 to n).")
 
-#define INPUT_SUBT_TEXT N_("Choose subtitle track")
-#define INPUT_SUBT_LONGTEXT N_( \
+#define INPUT_SUB_TEXT N_("Choose subtitle track")
+#define INPUT_SUB_LONGTEXT N_( \
     "Give the stream number of the subtitle channel you want to use " \
-    "(from 1 to n).")
+    "(from 0 to n).")
 
 #define INPUT_REPEAT_TEXT N_("Number of time the same input will be repeated")
 #define INPUT_REPEAT_LONGTEXT N_("Number of time the same input will be repeated")
@@ -325,10 +310,35 @@ static char *ppsz_align_descriptions[] =
 #define STOP_TIME_TEXT N_("Input stop time (seconds)")
 #define STOP_TIME_LONGTEXT N_("Input stop time (seconds)")
 
+#define INPUT_SLAVE_TEXT N_("Input slave (experimental)")
+#define INPUT_SLAVE_LONGTEXT N_("Input slave (experimental)")
+
 #define BOOKMARKS_TEXT N_("Bookmarks list for a stream")
 #define BOOKMARKS_LONGTEXT N_("You can specify a list of bookmarks for a stream in " \
     "the form \"{name=bookmark-name,time=optional-time-offset," \
-    "bytes=optional-byte-offset},{etc...}\"")
+    "bytes=optional-byte-offset},{...}\"")
+
+#define SUB_CAT_LONGTEXT N_( \
+    "These options allow you to modify the behavior of the subpictures " \
+    "subsystem. You can for example enable subpictures filters (logo, etc.). " \
+    "Enable these filters here and configure them in the " \
+    "\"subpictures filters\" modules section. You can also set many " \
+    "miscellaneous subpictures options." )
+
+#define SPUMARGIN_TEXT N_("Force SPU position")
+#define SPUMARGIN_LONGTEXT N_( \
+    "You can use this option to place the subtitles under the movie, " \
+    "instead of over the movie. Try several positions.")
+
+#define OSD_TEXT N_("On Screen Display")
+#define OSD_LONGTEXT N_( \
+    "VLC can display messages on the video. This is called OSD (On Screen " \
+    "Display). You can disable this feature here.")
+
+#define SUB_FILTER_TEXT N_("Subpictures filter module")
+#define SUB_FILTER_LONGTEXT N_( \
+    "This will allow you to add a subpictures filter for instance to overlay "\
+    "a logo.")
 
 #define SUB_AUTO_TEXT N_("Autodetect subtitle files")
 #define SUB_AUTO_LONGTEXT \
@@ -550,6 +560,11 @@ static char *ppsz_align_descriptions[] =
     "When this is active, VLC will keep playing the current playlist item " \
     "over and over again.")
 
+#define PAS_TEXT N_("Play and stop")
+#define PAS_LONGTEXT N_( \
+    "Stop the playlist after each played playlist item. " \
+    "Does advance the playlist index.")
+
 #define MISC_CAT_LONGTEXT N_( \
     "These options allow you to select default modules. Leave these " \
     "alone unless you really know what you are doing." )
@@ -581,9 +596,23 @@ static char *ppsz_align_descriptions[] =
     "priorities. You can use it to tune VLC priority against other " \
     "programs, or against other VLC instances.")
 
-#define MINIMIZE_THREADS_TXT N_("Minimize number of threads")
-#define MINIMIZE_THREADS_LONGTXT N_( \
+#define MINIMIZE_THREADS_TEXT N_("Minimize number of threads")
+#define MINIMIZE_THREADS_LONGTEXT N_( \
      "This option minimizes the number of threads needed to run VLC")
+
+#define PLUGIN_PATH_TEXT N_("Modules search path")
+#define PLUGIN_PATH_LONGTEXT N_( \
+    "This option allows you to specify an additional path for VLC to look " \
+    "for its modules.")
+
+#define PLUGINS_CACHE_TEXT N_("Use a plugins cache")
+#define PLUGINS_CACHE_LONGTEXT N_( \
+    "This option allows you to use a plugins cache which will greatly " \
+    "improve the start time of VLC.")
+
+#define DAEMON_TEXT N_("Run as daemon process")
+#define DAEMON_LONGTEXT N_( \
+     "Runs VLC as a background daemon process.")
 
 #define ONEINSTANCE_TEXT N_("Allow only one running instance")
 #define ONEINSTANCE_LONGTEXT N_( \
@@ -710,18 +739,28 @@ static char *ppsz_align_descriptions[] =
 #define HISTORY_FORWARD_TEXT N_("Go forward in browsing history")
 #define HISTORY_FORWARD_LONGTEXT N_("Select the key to go forward (to the next media item) in the browsing history.")
 
-#define PLAYLIST_USAGE N_("\nPlaylist items:" \
-    "\n  *.mpg, *.vob                   plain MPEG-1/2 files" \
-    "\n  [dvd://][device][@raw_device][@[title][,[chapter][,angle]]]" \
-    "\n                                 DVD device" \
-    "\n  [vcd://][device][@{S|T|E|P}[number]]" \
-    "\n                                 VCD device" \
-    "\n  [cdda://][device][@[T][track-number]]" \
-    "\n                                 Audio CD device" \
-    "\n  udpstream:[[<source address>]@[<bind address>][:<bind port>]]" \
-    "\n                                 UDP stream sent by a streaming server" \
-    "\n  vlc:pause                      pause execution of " \
-    "playlist items" \
+#define AUDIO_TRACK_KEY_TEXT N_("Cycle audio track")
+#define AUDIO_TRACK_KEY_LONGTEXT N_("Cycle through the available audio tracks(languages)")
+#define SUBTITLE_TRACK_KEY_TEXT N_("Cycle subtitle track")
+#define SUBTITLE_TRACK_KEY_LONGTEXT N_("Cycle through the available subtitle tracks")
+#define INTF_SHOW_KEY_TEXT N_("Show interface")
+#define INTF_SHOW_KEY_LONGTEXT N_("Raise the interface above all other windows")
+
+#define PLAYLIST_USAGE N_( \
+    "\nPlaylist MRL syntax:" \
+    "\n  URL[@[title][:chapter][-[title][:chapter]]] [:option=value]" \
+    "\nURL syntax:" \
+    "\n  [file://]filename              plain media file" \
+    "\n  http://ip:port/file            HTTP URL" \
+    "\n  ftp://ip:port/file             FTP URL" \
+    "\n  mms://ip:port/file             MMS URL" \
+    "\n  screen://                      Screen capture" \
+    "\n  [dvd://][device][@raw_device]  DVD device" \
+    "\n  [vcd://][device]               VCD device" \
+    "\n  [cdda://][device]              Audio CD device" \
+    "\n  udp:[[<source address>]@[<bind address>][:<bind port>]]" \
+    "\n                                 UDP stream sent by a streaming server"\
+    "\n  vlc:pause                      pause execution of playlist items" \
     "\n  vlc:quit                       quit VLC" \
     "\n")
 
@@ -747,7 +786,7 @@ vlc_module_begin();
     /* Interface options */
     add_category_hint( N_("Interface"), INTF_CAT_LONGTEXT , VLC_FALSE );
     add_module( "intf", "interface", NULL, NULL, INTF_TEXT,
-                INTF_LONGTEXT, VLC_TRUE );
+                INTF_LONGTEXT, VLC_FALSE );
         change_short('I');
     add_string( "extraintf", NULL, NULL, EXTRAINTF_TEXT,
                      EXTRAINTF_LONGTEXT, VLC_FALSE );
@@ -762,10 +801,6 @@ vlc_module_begin();
     add_bool( "color", 0, NULL, COLOR_TEXT, COLOR_LONGTEXT, VLC_TRUE );
     add_bool( "advanced", 0, NULL, ADVANCED_TEXT,
                             ADVANCED_LONGTEXT, VLC_FALSE );
-    add_directory( "search-path", NULL, NULL, INTF_PATH_TEXT,
-                            INTF_PATH_LONGTEXT, VLC_TRUE );
-    add_directory( "plugin-path", NULL, NULL,
-                PLUGIN_PATH_TEXT, PLUGIN_PATH_LONGTEXT, VLC_TRUE );
 
     /* Audio options */
     add_category_hint( N_("Audio"), AOUT_CAT_LONGTEXT , VLC_FALSE );
@@ -779,17 +814,19 @@ vlc_module_begin();
     add_integer_with_range( "saved-volume", AOUT_VOLUME_DEFAULT,
                             AOUT_VOLUME_MIN, AOUT_VOLUME_MAX, NULL,
                             VOLUME_SAVE_TEXT, VOLUME_SAVE_LONGTEXT, VLC_TRUE );
-    add_integer( "aout-rate", -1, NULL, AOUT_RATE_TEXT, AOUT_RATE_LONGTEXT, VLC_TRUE );
+    add_integer( "aout-rate", -1, NULL, AOUT_RATE_TEXT,
+                 AOUT_RATE_LONGTEXT, VLC_TRUE );
 #if !defined( SYS_DARWIN )
-    add_bool( "hq-resampling", 1, NULL, AOUT_RESAMP_TEXT, AOUT_RESAMP_LONGTEXT, VLC_TRUE );
+    add_bool( "hq-resampling", 1, NULL, AOUT_RESAMP_TEXT,
+              AOUT_RESAMP_LONGTEXT, VLC_TRUE );
 #endif
     add_bool( "spdif", 0, NULL, SPDIF_TEXT, SPDIF_LONGTEXT, VLC_FALSE );
-    add_integer( "audio-desync", 0, NULL, DESYNC_TEXT, DESYNC_LONGTEXT, VLC_TRUE );
-    add_string("audio-filter",0,NULL,AUDIO_FILTER_TEXT,
-                    AUDIO_FILTER_LONGTEXT,VLC_FALSE);
+    add_integer( "audio-desync", 0, NULL, DESYNC_TEXT,
+                 DESYNC_LONGTEXT, VLC_TRUE );
+    add_string( "audio-filter", 0, NULL,AUDIO_FILTER_TEXT,
+                AUDIO_FILTER_LONGTEXT, VLC_FALSE );
     add_module( "audio-channel-mixer", "audio filter", NULL, NULL,
-                    AUDIO_CHANNEL_MIXER, AUDIO_CHANNEL_MIXER_LONGTEXT,
-                    VLC_FALSE );
+                AUDIO_CHANNEL_MIXER, AUDIO_CHANNEL_MIXER_LONGTEXT, VLC_FALSE );
 
     /* Video options */
     add_category_hint( N_("Video"), VOUT_CAT_LONGTEXT , VLC_FALSE );
@@ -806,17 +843,17 @@ vlc_module_begin();
     add_integer( "align", 0, NULL, ALIGN_TEXT, ALIGN_LONGTEXT, VLC_TRUE );
         change_integer_list( pi_align_values, ppsz_align_descriptions, 0 );
     add_float( "zoom", 1, NULL, ZOOM_TEXT, ZOOM_LONGTEXT, VLC_TRUE );
-    add_bool( "grayscale", 0, NULL, GRAYSCALE_TEXT, GRAYSCALE_LONGTEXT, VLC_TRUE );
+    add_bool( "grayscale", 0, NULL, GRAYSCALE_TEXT,
+              GRAYSCALE_LONGTEXT, VLC_TRUE );
     add_bool( "fullscreen", 0, NULL, FULLSCREEN_TEXT,
-                        FULLSCREEN_LONGTEXT, VLC_FALSE );
+              FULLSCREEN_LONGTEXT, VLC_FALSE );
+        change_short('f');
 #ifndef SYS_DARWIN
     add_bool( "overlay", 1, NULL, OVERLAY_TEXT, OVERLAY_LONGTEXT, VLC_TRUE );
 #endif
 
-    add_bool( "video-on-top", 0, NULL, VIDEO_ON_TOP_TEXT, VIDEO_ON_TOP_LONGTEXT, VLC_FALSE );
-    add_integer( "spumargin", -1, NULL, SPUMARGIN_TEXT,
-                        SPUMARGIN_LONGTEXT, VLC_TRUE );
-    add_bool( "osd", 1, NULL, OSD_TEXT, OSD_LONGTEXT, VLC_FALSE );
+    add_bool( "video-on-top", 0, NULL, VIDEO_ON_TOP_TEXT,
+              VIDEO_ON_TOP_LONGTEXT, VLC_FALSE );
     add_module( "filter", "video filter", NULL, NULL,
                 FILTER_TEXT, FILTER_LONGTEXT, VLC_FALSE );
     add_string( "aspect-ratio", "", NULL,
@@ -825,23 +862,9 @@ vlc_module_begin();
     add_string( "pixel-ratio", "1", NULL, PIXEL_RATIO_TEXT, PIXEL_RATIO_TEXT );
 #endif
 
-    /* Input options */
-    add_category_hint( N_("Input"), INPUT_CAT_LONGTEXT , VLC_FALSE );
-    add_integer( "cr-average", 40, NULL, CR_AVERAGE_TEXT,
-                 CR_AVERAGE_LONGTEXT, VLC_FALSE );
-    add_integer( "server-port", 1234, NULL,
-                 SERVER_PORT_TEXT, SERVER_PORT_LONGTEXT, VLC_FALSE );
-    add_integer( "mtu", 1500, NULL, MTU_TEXT, MTU_LONGTEXT, VLC_TRUE );
-    add_string( "iface-addr", "", NULL, IFACE_ADDR_TEXT, IFACE_ADDR_LONGTEXT, VLC_TRUE );
-
-    add_integer( "program", 0, NULL,
-                 INPUT_PROGRAM_TEXT, INPUT_PROGRAM_LONGTEXT, VLC_TRUE );
-    add_integer( "audio-type", -1, NULL,
-                 INPUT_AUDIO_TEXT, INPUT_AUDIO_LONGTEXT, VLC_TRUE );
-    add_integer( "audio-channel", -1, NULL,
-                 INPUT_CHAN_TEXT, INPUT_CHAN_LONGTEXT, VLC_FALSE );
-    add_integer( "spu-channel", -1, NULL,
-                 INPUT_SUBT_TEXT, INPUT_SUBT_LONGTEXT, VLC_FALSE );
+    /* Subpictures options */
+    add_category_hint( N_("Subpictures"), SUB_CAT_LONGTEXT , VLC_FALSE );
+    add_bool( "osd", 1, NULL, OSD_TEXT, OSD_LONGTEXT, VLC_FALSE );
     add_bool( "sub-autodetect-file", VLC_TRUE, NULL,
                  SUB_AUTO_TEXT, SUB_AUTO_LONGTEXT, VLC_FALSE );
     add_integer( "sub-autodetect-fuzzy", 3, NULL,
@@ -853,14 +876,42 @@ vlc_module_begin();
 #endif
     add_string( "sub-autodetect-path", SUB_PATH, NULL,
                  SUB_PATH_TEXT, SUB_PATH_LONGTEXT, VLC_TRUE );
-    add_file( "sub-file", NULL, NULL,
-                 SUB_FILE_TEXT, SUB_FILE_LONGTEXT, VLC_TRUE );
+    add_file( "sub-file", NULL, NULL, SUB_FILE_TEXT,
+              SUB_FILE_LONGTEXT, VLC_TRUE );
+    add_integer( "spumargin", -1, NULL, SPUMARGIN_TEXT,
+                 SPUMARGIN_LONGTEXT, VLC_TRUE );
+    add_module( "sub-filter", "sub filter", NULL, NULL,
+                SUB_FILTER_TEXT, SUB_FILTER_LONGTEXT, VLC_TRUE );
+
+    /* Input options */
+    add_category_hint( N_("Input"), INPUT_CAT_LONGTEXT , VLC_FALSE );
+    add_integer( "cr-average", 40, NULL, CR_AVERAGE_TEXT,
+                 CR_AVERAGE_LONGTEXT, VLC_FALSE );
+    add_integer( "server-port", 1234, NULL,
+                 SERVER_PORT_TEXT, SERVER_PORT_LONGTEXT, VLC_FALSE );
+    add_integer( "mtu", 1500, NULL, MTU_TEXT, MTU_LONGTEXT, VLC_TRUE );
+    add_string( "iface-addr", "", NULL, IFACE_ADDR_TEXT,
+                IFACE_ADDR_LONGTEXT, VLC_TRUE );
+
+    add_integer( "program", 0, NULL,
+                 INPUT_PROGRAM_TEXT, INPUT_PROGRAM_LONGTEXT, VLC_TRUE );
+    add_string( "programs", "", NULL,
+                INPUT_PROGRAMS_TEXT, INPUT_PROGRAMS_LONGTEXT, VLC_FALSE );
+    add_integer( "audio-type", -1, NULL,
+                 INPUT_AUDIO_TEXT, INPUT_AUDIO_LONGTEXT, VLC_TRUE );
+    add_integer( "audio-channel", -1, NULL,
+                 INPUT_CHAN_TEXT, INPUT_CHAN_LONGTEXT, VLC_FALSE );
+    add_integer( "spu-channel", -1, NULL,
+                 INPUT_SUB_TEXT, INPUT_SUB_LONGTEXT, VLC_FALSE );
     add_integer( "input-repeat", 0, NULL,
                  INPUT_REPEAT_TEXT, INPUT_REPEAT_LONGTEXT, VLC_TRUE );
     add_integer( "start-time", 0, NULL,
                  START_TIME_TEXT, START_TIME_LONGTEXT, VLC_TRUE );
     add_integer( "stop-time", 0, NULL,
                  STOP_TIME_TEXT, STOP_TIME_LONGTEXT, VLC_TRUE );
+    add_string( "input-slave", NULL, NULL,
+                 INPUT_SLAVE_TEXT, INPUT_SLAVE_LONGTEXT, VLC_TRUE );
+
     add_string( "bookmarks", NULL, NULL,
                  BOOKMARKS_TEXT, BOOKMARKS_LONGTEXT, VLC_TRUE );
 
@@ -895,8 +946,10 @@ vlc_module_begin();
 
     /* Decoder options */
     add_category_hint( N_("Decoders"), CODEC_CAT_LONGTEXT , VLC_TRUE );
-    add_module( "codec", "decoder", NULL, NULL, CODEC_TEXT, CODEC_LONGTEXT, VLC_TRUE );
-    add_module( "encoder", "encoder", NULL, NULL, ENCODER_TEXT, ENCODER_LONGTEXT, VLC_TRUE );
+    add_module( "codec", "decoder", NULL, NULL, CODEC_TEXT,
+                CODEC_LONGTEXT, VLC_TRUE );
+    add_module( "encoder", "encoder", NULL, NULL, ENCODER_TEXT,
+                ENCODER_LONGTEXT, VLC_TRUE );
 
 
     /* Stream output options */
@@ -947,137 +1000,270 @@ vlc_module_begin();
         change_short('L');
     add_bool( "repeat", 0, NULL, REPEAT_TEXT, REPEAT_LONGTEXT, VLC_TRUE );
         change_short('R');
+    add_bool( "play-and-stop", 0, NULL, PAS_TEXT, PAS_LONGTEXT, VLC_TRUE );
 
     /* Misc options */
     add_category_hint( N_("Miscellaneous"), MISC_CAT_LONGTEXT, VLC_TRUE );
-    add_module( "memcpy", "memcpy", NULL, NULL, MEMCPY_TEXT, MEMCPY_LONGTEXT, VLC_TRUE );
-    add_module( "access", "access", NULL, NULL, ACCESS_TEXT, ACCESS_LONGTEXT, VLC_TRUE );
-    add_module( "demux", "demux", NULL, NULL, DEMUX_TEXT, DEMUX_LONGTEXT, VLC_TRUE );
+    add_module( "memcpy", "memcpy", NULL, NULL, MEMCPY_TEXT,
+                MEMCPY_LONGTEXT, VLC_TRUE );
+    add_module( "access", "access", NULL, NULL, ACCESS_TEXT,
+                ACCESS_LONGTEXT, VLC_TRUE );
+    add_module( "demux", "demux", NULL, NULL, DEMUX_TEXT,
+                DEMUX_LONGTEXT, VLC_TRUE );
+    add_bool( "minimize-threads", 0, NULL, MINIMIZE_THREADS_TEXT,
+              MINIMIZE_THREADS_LONGTEXT, VLC_TRUE );
+    add_bool( "plugins-cache", VLC_TRUE, NULL, PLUGINS_CACHE_TEXT,
+              PLUGINS_CACHE_LONGTEXT, VLC_TRUE );
+    add_directory( "plugin-path", NULL, NULL, PLUGIN_PATH_TEXT,
+                   PLUGIN_PATH_LONGTEXT, VLC_TRUE );
 
-    add_bool( "minimize-threads", 0, NULL, MINIMIZE_THREADS_TXT, MINIMIZE_THREADS_LONGTXT, VLC_TRUE );
+#if !defined(WIN32)
+    add_bool( "daemon", 0, NULL, DAEMON_TEXT, DAEMON_LONGTEXT, VLC_TRUE );
+        change_short('d');
+#endif
 
 #if !defined(SYS_DARWIN) && !defined(SYS_BEOS) && defined(PTHREAD_COND_T_IN_PTHREAD_H)
-    add_bool( "rt-priority", 0, NULL, RT_PRIORITY_TEXT, RT_PRIORITY_LONGTEXT, VLC_TRUE );
+    add_bool( "rt-priority", 0, NULL, RT_PRIORITY_TEXT,
+              RT_PRIORITY_LONGTEXT, VLC_TRUE );
 #endif
 
 #if !defined(SYS_BEOS) && defined(PTHREAD_COND_T_IN_PTHREAD_H)
-    add_integer( "rt-offset", 0, NULL, RT_OFFSET_TEXT, RT_OFFSET_LONGTEXT, VLC_TRUE );
+    add_integer( "rt-offset", 0, NULL, RT_OFFSET_TEXT,
+                 RT_OFFSET_LONGTEXT, VLC_TRUE );
 #endif
 
 #if defined(WIN32)
-    add_bool( "one-instance", 0, NULL, ONEINSTANCE_TEXT, ONEINSTANCE_LONGTEXT, VLC_TRUE );
-    add_bool( "high-priority", 0, NULL, HPRIORITY_TEXT, HPRIORITY_LONGTEXT, VLC_TRUE );
-    add_bool( "fast-mutex", 0, NULL, FAST_MUTEX_TEXT, FAST_MUTEX_LONGTEXT, VLC_TRUE );
-    add_integer( "win9x-cv-method", 1, NULL, WIN9X_CV_TEXT, WIN9X_CV_LONGTEXT, VLC_TRUE );
+    add_bool( "one-instance", 0, NULL, ONEINSTANCE_TEXT,
+              ONEINSTANCE_LONGTEXT, VLC_TRUE );
+    add_bool( "high-priority", 0, NULL, HPRIORITY_TEXT,
+              HPRIORITY_LONGTEXT, VLC_FALSE );
+    add_bool( "fast-mutex", 0, NULL, FAST_MUTEX_TEXT,
+              FAST_MUTEX_LONGTEXT, VLC_TRUE );
+    add_integer( "win9x-cv-method", 1, NULL, WIN9X_CV_TEXT,
+                  WIN9X_CV_LONGTEXT, VLC_TRUE );
 #endif
 
     /* Hotkey options*/
     add_category_hint( N_("Hot keys"), HOTKEY_CAT_LONGTEXT , VLC_FALSE );
+
 #if defined(SYS_DARWIN)
-    add_key( "key-fullscreen", KEY_MODIFIER_COMMAND|'f', NULL, FULLSCREEN_KEY_TEXT, FULLSCREEN_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-play-pause", KEY_MODIFIER_COMMAND|'p', NULL, PLAY_PAUSE_KEY_TEXT, PLAY_PAUSE_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-pause", 0, NULL, PAUSE_KEY_TEXT, PAUSE_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play", 0, NULL, PLAY_KEY_TEXT, PLAY_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-faster", KEY_MODIFIER_COMMAND|'=', NULL, FASTER_KEY_TEXT, FASTER_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-slower", KEY_MODIFIER_COMMAND|'-', NULL, SLOWER_KEY_TEXT, SLOWER_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-next", KEY_MODIFIER_COMMAND|KEY_RIGHT, NULL, NEXT_KEY_TEXT, NEXT_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-prev", KEY_MODIFIER_COMMAND|KEY_LEFT, NULL, PREV_KEY_TEXT, PREV_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-stop", KEY_MODIFIER_COMMAND|'.', NULL, STOP_KEY_TEXT, STOP_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-position", 't', NULL, POSITION_KEY_TEXT, POSITION_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-jump-10sec", KEY_MODIFIER_COMMAND|KEY_MODIFIER_ALT|KEY_LEFT, NULL, JB10SEC_KEY_TEXT, JB10SEC_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump+10sec", KEY_MODIFIER_COMMAND|KEY_MODIFIER_ALT|KEY_RIGHT, NULL, JF10SEC_KEY_TEXT, JF10SEC_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump-1min", KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_LEFT, NULL, JB1MIN_KEY_TEXT, JB1MIN_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump+1min", KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_RIGHT, NULL, JF1MIN_KEY_TEXT, JF1MIN_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump-5min", KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_MODIFIER_ALT|KEY_LEFT, NULL, JB5MIN_KEY_TEXT, JB5MIN_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump+5min", KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_MODIFIER_ALT|KEY_RIGHT, NULL, JF5MIN_KEY_TEXT, JF5MIN_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-nav-activate", KEY_ENTER, NULL, NAV_ACTIVATE_KEY_TEXT, NAV_ACTIVATE_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-nav-up", KEY_UP, NULL, NAV_UP_KEY_TEXT, NAV_UP_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-nav-down", KEY_DOWN, NULL, NAV_DOWN_KEY_TEXT, NAV_DOWN_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-nav-left", KEY_LEFT, NULL, NAV_LEFT_KEY_TEXT, NAV_LEFT_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-nav-right", KEY_RIGHT, NULL, NAV_RIGHT_KEY_TEXT, NAV_RIGHT_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-quit", KEY_MODIFIER_COMMAND|'q', NULL, QUIT_KEY_TEXT, QUIT_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-vol-up", KEY_MODIFIER_COMMAND|KEY_UP, NULL, VOL_UP_KEY_TEXT, VOL_UP_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-vol-down", KEY_MODIFIER_COMMAND|KEY_DOWN, NULL, VOL_DOWN_KEY_TEXT, VOL_DOWN_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-vol-mute", KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|'m', NULL, VOL_MUTE_KEY_TEXT, VOL_MUTE_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-subdelay-up", KEY_MODIFIER_COMMAND|'k', NULL,
-             SUBDELAY_UP_KEY_TEXT, SUBDELAY_UP_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-subdelay-down", KEY_MODIFIER_COMMAND|'j', NULL,
-             SUBDELAY_DOWN_KEY_TEXT, SUBDELAY_DOWN_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark1", KEY_MODIFIER_COMMAND|KEY_F1, NULL, SET_BOOKMARK1_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark2", KEY_MODIFIER_COMMAND|KEY_F2, NULL, SET_BOOKMARK2_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark3", KEY_MODIFIER_COMMAND|KEY_F3, NULL, SET_BOOKMARK3_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark4", KEY_MODIFIER_COMMAND|KEY_F4, NULL, SET_BOOKMARK4_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark5", KEY_MODIFIER_COMMAND|KEY_F5, NULL, SET_BOOKMARK5_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark6", KEY_MODIFIER_COMMAND|KEY_F6, NULL, SET_BOOKMARK6_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark7", KEY_MODIFIER_COMMAND|KEY_F7, NULL, SET_BOOKMARK7_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark8", KEY_MODIFIER_COMMAND|KEY_F8, NULL, SET_BOOKMARK8_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark9", KEY_UNSET, NULL, SET_BOOKMARK9_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark10", KEY_UNSET, NULL, SET_BOOKMARK10_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark1", KEY_F1, NULL, PLAY_BOOKMARK1_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark2", KEY_F2, NULL, PLAY_BOOKMARK2_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark3", KEY_F3, NULL, PLAY_BOOKMARK3_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark4", KEY_F4, NULL, PLAY_BOOKMARK4_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark5", KEY_F5, NULL, PLAY_BOOKMARK5_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark6", KEY_F6, NULL, PLAY_BOOKMARK6_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark7", KEY_F7, NULL, PLAY_BOOKMARK7_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark8", KEY_F8, NULL, PLAY_BOOKMARK8_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark9", KEY_UNSET, NULL, PLAY_BOOKMARK9_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark10", KEY_UNSET, NULL, PLAY_BOOKMARK10_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-history-back", KEY_MODIFIER_COMMAND|'[', NULL, HISTORY_BACK_TEXT, HISTORY_BACK_LONGTEXT, VLC_TRUE );
-    add_key( "key-history-forward", KEY_MODIFIER_COMMAND|']', NULL, HISTORY_FORWARD_TEXT, HISTORY_FORWARD_LONGTEXT, VLC_TRUE );
+#   define KEY_FULLSCREEN         KEY_MODIFIER_COMMAND|'f'
+#   define KEY_PLAY_PAUSE         KEY_MODIFIER_COMMAND|'p'
+#   define KEY_PAUSE              KEY_UNSET
+#   define KEY_PLAY               KEY_UNSET
+#   define KEY_FASTER             KEY_MODIFIER_COMMAND|'='
+#   define KEY_SLOWER             KEY_MODIFIER_COMMAND|'-'
+#   define KEY_NEXT               KEY_MODIFIER_COMMAND|KEY_RIGHT
+#   define KEY_PREV               KEY_MODIFIER_COMMAND|KEY_LEFT
+#   define KEY_STOP               KEY_MODIFIER_COMMAND|'.'
+#   define KEY_POSITION           't'
+#   define KEY_JUMP_M10SEC        KEY_MODIFIER_COMMAND|KEY_MODIFIER_ALT|KEY_LEFT
+#   define KEY_JUMP_P10SEC        KEY_MODIFIER_COMMAND|KEY_MODIFIER_ALT|KEY_RIGHT
+#   define KEY_JUMP_M1MIN         KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_LEFT
+#   define KEY_JUMP_P1MIN         KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_RIGHT
+#   define KEY_JUMP_M5MIN         KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_MODIFIER_ALT|KEY_LEFT
+#   define KEY_JUMP_P5MIN         KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_MODIFIER_ALT|KEY_RIGHT
+#   define KEY_NAV_ACTIVATE       KEY_ENTER
+#   define KEY_NAV_UP             KEY_UP
+#   define KEY_NAV_DOWN           KEY_DOWN
+#   define KEY_NAV_LEFT           KEY_LEFT
+#   define KEY_NAV_RIGHT          KEY_RIGHT
+#   define KEY_QUIT               KEY_MODIFIER_COMMAND|'q'
+#   define KEY_VOL_UP             KEY_MODIFIER_COMMAND|KEY_UP
+#   define KEY_VOL_DOWN           KEY_MODIFIER_COMMAND|KEY_DOWN
+#   define KEY_VOL_MUTE           KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|'m'
+#   define KEY_SUBDELAY_UP        KEY_MODIFIER_COMMAND|'k'
+#   define KEY_SUBDELAY_DOWN      KEY_MODIFIER_COMMAND|'j'
+#   define KEY_AUDIO_TRACK        'l'
+#   define KEY_SUBTITLE_TRACK     's'
+#   define KEY_INTF_SHOW          'i'
+
+#   define KEY_SET_BOOKMARK1      KEY_MODIFIER_COMMAND|KEY_F1
+#   define KEY_SET_BOOKMARK2      KEY_MODIFIER_COMMAND|KEY_F2
+#   define KEY_SET_BOOKMARK3      KEY_MODIFIER_COMMAND|KEY_F3
+#   define KEY_SET_BOOKMARK4      KEY_MODIFIER_COMMAND|KEY_F4
+#   define KEY_SET_BOOKMARK5      KEY_MODIFIER_COMMAND|KEY_F5
+#   define KEY_SET_BOOKMARK6      KEY_MODIFIER_COMMAND|KEY_F6
+#   define KEY_SET_BOOKMARK7      KEY_MODIFIER_COMMAND|KEY_F7
+#   define KEY_SET_BOOKMARK8      KEY_MODIFIER_COMMAND|KEY_F8
+#   define KEY_SET_BOOKMARK9      KEY_UNSET
+#   define KEY_SET_BOOKMARK10     KEY_UNSET
+#   define KEY_PLAY_BOOKMARK1     KEY_F1
+#   define KEY_PLAY_BOOKMARK2     KEY_F2
+#   define KEY_PLAY_BOOKMARK3     KEY_F3
+#   define KEY_PLAY_BOOKMARK4     KEY_F4
+#   define KEY_PLAY_BOOKMARK5     KEY_F5
+#   define KEY_PLAY_BOOKMARK6     KEY_F6
+#   define KEY_PLAY_BOOKMARK7     KEY_F7
+#   define KEY_PLAY_BOOKMARK8     KEY_F8
+#   define KEY_PLAY_BOOKMARK9     KEY_UNSET
+#   define KEY_PLAY_BOOKMARK10    KEY_UNSET
+#   define KEY_HISTORY_BACK       KEY_MODIFIER_COMMAND|'['
+#   define KEY_HISTORY_FORWARD    KEY_MODIFIER_COMMAND|']'
+
 #else
-    add_key( "key-fullscreen", 'f', NULL, FULLSCREEN_KEY_TEXT, FULLSCREEN_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-play-pause", KEY_SPACE, NULL, PLAY_PAUSE_KEY_TEXT, PLAY_PAUSE_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-pause", 0, NULL, PAUSE_KEY_TEXT, PAUSE_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play", 0, NULL, PLAY_KEY_TEXT, PLAY_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-faster", '+', NULL, FASTER_KEY_TEXT, FASTER_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-slower", '-', NULL, SLOWER_KEY_TEXT, SLOWER_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-next", 'n', NULL, NEXT_KEY_TEXT, NEXT_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-prev", 'p', NULL, PREV_KEY_TEXT, PREV_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-stop", 's', NULL, STOP_KEY_TEXT, STOP_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-position", 't', NULL, POSITION_KEY_TEXT, POSITION_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-jump-10sec", KEY_MODIFIER_ALT|KEY_LEFT, NULL, JB10SEC_KEY_TEXT, JB10SEC_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump+10sec", KEY_MODIFIER_ALT|KEY_RIGHT, NULL, JF10SEC_KEY_TEXT, JF10SEC_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump-1min", KEY_MODIFIER_CTRL|KEY_LEFT, NULL, JB1MIN_KEY_TEXT, JB1MIN_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump+1min", KEY_MODIFIER_CTRL|KEY_RIGHT, NULL, JF1MIN_KEY_TEXT, JF1MIN_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump-5min", KEY_MODIFIER_CTRL|KEY_MODIFIER_ALT|KEY_LEFT, NULL, JB5MIN_KEY_TEXT, JB5MIN_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump+5min", KEY_MODIFIER_CTRL|KEY_MODIFIER_ALT|KEY_RIGHT, NULL, JF5MIN_KEY_TEXT, JF5MIN_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-nav-activate", KEY_ENTER, NULL, NAV_ACTIVATE_KEY_TEXT, NAV_ACTIVATE_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-nav-up", KEY_UP, NULL, NAV_UP_KEY_TEXT, NAV_UP_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-nav-down", KEY_DOWN, NULL, NAV_DOWN_KEY_TEXT, NAV_DOWN_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-nav-left", KEY_LEFT, NULL, NAV_LEFT_KEY_TEXT, NAV_LEFT_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-nav-right", KEY_RIGHT, NULL, NAV_RIGHT_KEY_TEXT, NAV_RIGHT_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-quit", KEY_MODIFIER_CTRL|'q', NULL, QUIT_KEY_TEXT, QUIT_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-vol-up", 'a', NULL, VOL_UP_KEY_TEXT, VOL_UP_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-vol-down", 'z', NULL, VOL_DOWN_KEY_TEXT, VOL_DOWN_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-vol-mute", 'm', NULL, VOL_MUTE_KEY_TEXT, VOL_MUTE_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-subdelay-up", KEY_MODIFIER_COMMAND|'h', NULL,
-             SUBDELAY_UP_KEY_TEXT, SUBDELAY_UP_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-subdelay-down", KEY_MODIFIER_COMMAND|'j', NULL,
-             SUBDELAY_DOWN_KEY_TEXT, SUBDELAY_DOWN_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark1", KEY_MODIFIER_CTRL|KEY_F1, NULL, SET_BOOKMARK1_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark2", KEY_MODIFIER_CTRL|KEY_F2, NULL, SET_BOOKMARK2_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark3", KEY_MODIFIER_CTRL|KEY_F3, NULL, SET_BOOKMARK3_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark4", KEY_MODIFIER_CTRL|KEY_F4, NULL, SET_BOOKMARK4_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark5", KEY_MODIFIER_CTRL|KEY_F5, NULL, SET_BOOKMARK5_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark6", KEY_MODIFIER_CTRL|KEY_F6, NULL, SET_BOOKMARK6_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark7", KEY_MODIFIER_CTRL|KEY_F7, NULL, SET_BOOKMARK7_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark8", KEY_MODIFIER_CTRL|KEY_F8, NULL, SET_BOOKMARK8_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark9", KEY_MODIFIER_CTRL|KEY_F9, NULL, SET_BOOKMARK9_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-set-bookmark10", KEY_MODIFIER_CTRL|KEY_F10, NULL, SET_BOOKMARK10_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark1", KEY_F1, NULL, PLAY_BOOKMARK1_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark2", KEY_F2, NULL, PLAY_BOOKMARK2_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark3", KEY_F3, NULL, PLAY_BOOKMARK3_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark4", KEY_F4, NULL, PLAY_BOOKMARK4_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark5", KEY_F5, NULL, PLAY_BOOKMARK5_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark6", KEY_F6, NULL, PLAY_BOOKMARK6_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark7", KEY_F7, NULL, PLAY_BOOKMARK7_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark8", KEY_F8, NULL, PLAY_BOOKMARK8_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark9", KEY_F9, NULL, PLAY_BOOKMARK9_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-play-bookmark10", KEY_F10, NULL, PLAY_BOOKMARK10_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-history-back", KEY_MODIFIER_CTRL|'[', NULL, HISTORY_BACK_TEXT, HISTORY_BACK_LONGTEXT, VLC_TRUE );
-    add_key( "key-history-forward", KEY_MODIFIER_CTRL|']', NULL, HISTORY_FORWARD_TEXT, HISTORY_FORWARD_LONGTEXT, VLC_TRUE );
+#   define KEY_FULLSCREEN         'f'
+#   define KEY_PLAY_PAUSE         KEY_SPACE
+#   define KEY_PAUSE              KEY_UNSET
+#   define KEY_PLAY               KEY_UNSET
+#   define KEY_FASTER             '+'
+#   define KEY_SLOWER             '-'
+#   define KEY_NEXT               'n'
+#   define KEY_PREV               'p'
+#   define KEY_STOP               's'
+#   define KEY_POSITION           't'
+#   define KEY_JUMP_M10SEC        KEY_MODIFIER_ALT|KEY_LEFT
+#   define KEY_JUMP_P10SEC        KEY_MODIFIER_ALT|KEY_RIGHT
+#   define KEY_JUMP_M1MIN         KEY_MODIFIER_CTRL|KEY_LEFT
+#   define KEY_JUMP_P1MIN         KEY_MODIFIER_CTRL|KEY_RIGHT
+#   define KEY_JUMP_M5MIN         KEY_MODIFIER_CTRL|KEY_MODIFIER_ALT|KEY_LEFT
+#   define KEY_JUMP_P5MIN         KEY_MODIFIER_CTRL|KEY_MODIFIER_ALT|KEY_RIGHT
+#   define KEY_NAV_ACTIVATE       KEY_ENTER
+#   define KEY_NAV_UP             KEY_UP
+#   define KEY_NAV_DOWN           KEY_DOWN
+#   define KEY_NAV_LEFT           KEY_LEFT
+#   define KEY_NAV_RIGHT          KEY_RIGHT
+#   define KEY_QUIT               KEY_MODIFIER_CTRL|'q'
+#   define KEY_VOL_UP             KEY_MODIFIER_CTRL|KEY_UP
+#   define KEY_VOL_DOWN           KEY_MODIFIER_CTRL|KEY_DOWN
+#   define KEY_VOL_MUTE           'm'
+#   define KEY_SUBDELAY_UP        KEY_MODIFIER_CTRL|'h'
+#   define KEY_SUBDELAY_DOWN      KEY_MODIFIER_CTRL|'j'
+#   define KEY_AUDIO_TRACK        'l'
+#   define KEY_SUBTITLE_TRACK     'k'
+#   define KEY_INTF_SHOW          'i'
+
+#   define KEY_SET_BOOKMARK1      KEY_MODIFIER_CTRL|KEY_F1
+#   define KEY_SET_BOOKMARK2      KEY_MODIFIER_CTRL|KEY_F2
+#   define KEY_SET_BOOKMARK3      KEY_MODIFIER_CTRL|KEY_F3
+#   define KEY_SET_BOOKMARK4      KEY_MODIFIER_CTRL|KEY_F4
+#   define KEY_SET_BOOKMARK5      KEY_MODIFIER_CTRL|KEY_F5
+#   define KEY_SET_BOOKMARK6      KEY_MODIFIER_CTRL|KEY_F6
+#   define KEY_SET_BOOKMARK7      KEY_MODIFIER_CTRL|KEY_F7
+#   define KEY_SET_BOOKMARK8      KEY_MODIFIER_CTRL|KEY_F8
+#   define KEY_SET_BOOKMARK9      KEY_MODIFIER_CTRL|KEY_F9
+#   define KEY_SET_BOOKMARK10     KEY_MODIFIER_CTRL|KEY_F10
+#   define KEY_PLAY_BOOKMARK1     KEY_F1
+#   define KEY_PLAY_BOOKMARK2     KEY_F2
+#   define KEY_PLAY_BOOKMARK3     KEY_F3
+#   define KEY_PLAY_BOOKMARK4     KEY_F4
+#   define KEY_PLAY_BOOKMARK5     KEY_F5
+#   define KEY_PLAY_BOOKMARK6     KEY_F6
+#   define KEY_PLAY_BOOKMARK7     KEY_F7
+#   define KEY_PLAY_BOOKMARK8     KEY_F8
+#   define KEY_PLAY_BOOKMARK9     KEY_F9
+#   define KEY_PLAY_BOOKMARK10    KEY_F10
+#   define KEY_HISTORY_BACK       KEY_MODIFIER_CTRL|'['
+#   define KEY_HISTORY_FORWARD    KEY_MODIFIER_CTRL|']'
 #endif
+
+    add_key( "key-fullscreen", KEY_FULLSCREEN, NULL, FULLSCREEN_KEY_TEXT,
+             FULLSCREEN_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-play-pause", KEY_PLAY_PAUSE, NULL, PLAY_PAUSE_KEY_TEXT,
+             PLAY_PAUSE_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-pause", KEY_PAUSE, NULL, PAUSE_KEY_TEXT,
+             PAUSE_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-play", KEY_PLAY, NULL, PLAY_KEY_TEXT,
+             PLAY_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-faster", KEY_FASTER, NULL, FASTER_KEY_TEXT,
+             FASTER_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-slower", KEY_SLOWER, NULL, SLOWER_KEY_TEXT,
+             SLOWER_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-next", KEY_NEXT, NULL, NEXT_KEY_TEXT,
+             NEXT_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-prev", KEY_PREV, NULL, PREV_KEY_TEXT,
+             PREV_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-stop", KEY_STOP, NULL, STOP_KEY_TEXT,
+             STOP_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-position", KEY_POSITION, NULL, POSITION_KEY_TEXT,
+             POSITION_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-jump-10sec", KEY_JUMP_M10SEC, NULL, JB10SEC_KEY_TEXT,
+             JB10SEC_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-jump+10sec", KEY_JUMP_P10SEC, NULL, JF10SEC_KEY_TEXT,
+             JF10SEC_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-jump-1min", KEY_JUMP_M1MIN, NULL, JB1MIN_KEY_TEXT,
+             JB1MIN_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-jump+1min", KEY_JUMP_P1MIN, NULL, JF1MIN_KEY_TEXT,
+             JF1MIN_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-jump-5min", KEY_JUMP_M5MIN, NULL, JB5MIN_KEY_TEXT,
+             JB5MIN_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-jump+5min", KEY_JUMP_P5MIN, NULL, JF5MIN_KEY_TEXT,
+             JF5MIN_KEY_LONGTEXT, VLC_FALSE );
+
+    add_key( "key-nav-activate", KEY_NAV_ACTIVATE, NULL, NAV_ACTIVATE_KEY_TEXT,
+             NAV_ACTIVATE_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-nav-up", KEY_NAV_UP, NULL, NAV_UP_KEY_TEXT,
+             NAV_UP_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-nav-down", KEY_NAV_DOWN, NULL, NAV_DOWN_KEY_TEXT,
+             NAV_DOWN_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-nav-left", KEY_NAV_LEFT, NULL, NAV_LEFT_KEY_TEXT,
+             NAV_LEFT_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-nav-right", KEY_NAV_RIGHT, NULL, NAV_RIGHT_KEY_TEXT,
+             NAV_RIGHT_KEY_LONGTEXT, VLC_TRUE );
+
+    add_key( "key-quit", KEY_QUIT, NULL, QUIT_KEY_TEXT,
+             QUIT_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-vol-up", KEY_VOL_UP, NULL, VOL_UP_KEY_TEXT,
+             VOL_UP_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-vol-down", KEY_VOL_DOWN, NULL, VOL_DOWN_KEY_TEXT,
+             VOL_DOWN_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-vol-mute", KEY_VOL_MUTE, NULL, VOL_MUTE_KEY_TEXT,
+             VOL_MUTE_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-subdelay-up", KEY_SUBDELAY_UP, NULL,
+             SUBDELAY_UP_KEY_TEXT, SUBDELAY_UP_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-subdelay-down", KEY_SUBDELAY_DOWN, NULL,
+             SUBDELAY_DOWN_KEY_TEXT, SUBDELAY_DOWN_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-audio-track", KEY_AUDIO_TRACK, NULL, AUDIO_TRACK_KEY_TEXT,
+             AUDIO_TRACK_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-subtitle-track", KEY_SUBTITLE_TRACK, NULL,
+             SUBTITLE_TRACK_KEY_TEXT, SUBTITLE_TRACK_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-intf-show", KEY_INTF_SHOW, NULL,
+             INTF_SHOW_KEY_TEXT, INTF_SHOW_KEY_LONGTEXT, VLC_TRUE );
+
+    add_key( "key-set-bookmark1", KEY_SET_BOOKMARK1, NULL,
+             SET_BOOKMARK1_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-set-bookmark2", KEY_SET_BOOKMARK2, NULL,
+             SET_BOOKMARK2_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-set-bookmark3", KEY_SET_BOOKMARK3, NULL,
+             SET_BOOKMARK3_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-set-bookmark4", KEY_SET_BOOKMARK4, NULL,
+             SET_BOOKMARK4_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-set-bookmark5", KEY_SET_BOOKMARK5, NULL,
+             SET_BOOKMARK5_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-set-bookmark6", KEY_SET_BOOKMARK6, NULL,
+             SET_BOOKMARK6_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-set-bookmark7", KEY_SET_BOOKMARK7, NULL,
+             SET_BOOKMARK7_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-set-bookmark8", KEY_SET_BOOKMARK8, NULL,
+             SET_BOOKMARK8_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-set-bookmark9", KEY_SET_BOOKMARK9, NULL,
+             SET_BOOKMARK9_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-set-bookmark10", KEY_SET_BOOKMARK10, NULL,
+             SET_BOOKMARK10_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-play-bookmark1", KEY_PLAY_BOOKMARK1, NULL,
+             PLAY_BOOKMARK1_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-play-bookmark2", KEY_PLAY_BOOKMARK2, NULL,
+             PLAY_BOOKMARK2_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-play-bookmark3", KEY_PLAY_BOOKMARK3, NULL,
+             PLAY_BOOKMARK3_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-play-bookmark4", KEY_PLAY_BOOKMARK4, NULL,
+             PLAY_BOOKMARK4_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-play-bookmark5", KEY_PLAY_BOOKMARK5, NULL,
+             PLAY_BOOKMARK5_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-play-bookmark6", KEY_PLAY_BOOKMARK6, NULL,
+             PLAY_BOOKMARK6_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-play-bookmark7", KEY_PLAY_BOOKMARK7, NULL,
+             PLAY_BOOKMARK7_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-play-bookmark8", KEY_PLAY_BOOKMARK8, NULL,
+             PLAY_BOOKMARK8_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-play-bookmark9", KEY_PLAY_BOOKMARK9, NULL,
+             PLAY_BOOKMARK9_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-play-bookmark10", KEY_PLAY_BOOKMARK10, NULL,
+             PLAY_BOOKMARK10_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-history-back", KEY_HISTORY_BACK, NULL, HISTORY_BACK_TEXT,
+             HISTORY_BACK_LONGTEXT, VLC_TRUE );
+    add_key( "key-history-forward", KEY_HISTORY_FORWARD, NULL,
+             HISTORY_FORWARD_TEXT, HISTORY_FORWARD_LONGTEXT, VLC_TRUE );
 
     /* Usage (mainly useful for cmd line stuff) */
     add_usage_hint( PLAYLIST_USAGE );
@@ -1102,6 +1288,8 @@ static module_config_t p_help_config[] =
       N_("reset the current config to the default values") },
     { CONFIG_ITEM_STRING, NULL, "config", '\0',
       N_("use alternate config file") },
+    { CONFIG_ITEM_BOOL, NULL, "reset-plugins-cache", '\0',
+      N_("resets the current plugins cache") },
     { CONFIG_ITEM_BOOL, NULL, "version", '\0',
       N_("print version information") },
     { CONFIG_HINT_END, NULL, NULL, '\0', NULL }
@@ -1138,6 +1326,9 @@ static struct hotkey p_hotkeys[] =
     { "key-vol-mute", ACTIONID_VOL_MUTE, 0 },
     { "key-subdelay-down", ACTIONID_SUBDELAY_DOWN, 0 },
     { "key-subdelay-up", ACTIONID_SUBDELAY_UP, 0 },
+    { "key-audio-track", ACTIONID_AUDIO_TRACK, 0},
+    { "key-subtitle-track", ACTIONID_SUBTITLE_TRACK, 0},
+    { "key-intf-show", ACTIONID_INTF_SHOW, 0},
     { "key-nav-activate", ACTIONID_NAV_ACTIVATE, 0 },
     { "key-nav-up", ACTIONID_NAV_UP, 0 },
     { "key-nav-down", ACTIONID_NAV_DOWN, 0 },
@@ -1167,3 +1358,4 @@ static struct hotkey p_hotkeys[] =
     { "key-history-forward", ACTIONID_HISTORY_FORWARD, 0},
     { NULL, 0, 0 }
 };
+

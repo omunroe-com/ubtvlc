@@ -2,7 +2,7 @@
  * win32_loop.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: win32_loop.cpp 7143 2004-03-22 21:18:12Z ipkiss $
+ * $Id: win32_loop.cpp 9320 2004-11-14 17:32:25Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -129,7 +129,12 @@ void Win32Loop::run()
                                 Infos.rcPaint.right - Infos.rcPaint.left + 1,
                                 Infos.rcPaint.bottom - Infos.rcPaint.top + 1 );
                 EndPaint( msg.hwnd, &Infos );
-                win.processEvent( evt );
+                // Ignore all the painting events for the vout window,
+                // otherwise we are going to screw up the colorkey
+                if( win.getType() != "Vout" )
+                {
+                    win.processEvent( evt );
+                }
                 break;
             }
             case WM_MOUSEMOVE:

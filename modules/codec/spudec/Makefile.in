@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -239,7 +241,6 @@ libvlcdir = $(libdir)/vlc/codec
 SOURCES_spudec = \
 	spudec.c \
 	parse.c \
-	render.c \
 	spudec.h \
 	$(NULL)
 
@@ -284,21 +285,19 @@ libspudec_a_AR = $(AR) cru
 libspudec_a_LIBADD =
 am__objects_1 =
 am__objects_2 = libspudec_a-spudec.$(OBJEXT) libspudec_a-parse.$(OBJEXT) \
-	libspudec_a-render.$(OBJEXT) $(am__objects_1)
+	$(am__objects_1)
 am_libspudec_a_OBJECTS = $(am__objects_2)
 libspudec_a_OBJECTS = $(am_libspudec_a_OBJECTS)
 libspudec_pic_a_AR = $(AR) cru
 libspudec_pic_a_LIBADD =
 am__objects_3 = libspudec_pic_a-spudec.$(OBJEXT) \
-	libspudec_pic_a-parse.$(OBJEXT) \
-	libspudec_pic_a-render.$(OBJEXT) $(am__objects_1)
+	libspudec_pic_a-parse.$(OBJEXT) $(am__objects_1)
 am_libspudec_pic_a_OBJECTS = $(am__objects_3)
 libspudec_pic_a_OBJECTS = $(am_libspudec_pic_a_OBJECTS)
 libspudec_plugin_a_AR = $(AR) cru
 libspudec_plugin_a_LIBADD =
 am__objects_4 = libspudec_plugin_a-spudec.$(OBJEXT) \
-	libspudec_plugin_a-parse.$(OBJEXT) \
-	libspudec_plugin_a-render.$(OBJEXT) $(am__objects_1)
+	libspudec_plugin_a-parse.$(OBJEXT) $(am__objects_1)
 am_libspudec_plugin_a_OBJECTS = $(am__objects_4)
 libspudec_plugin_a_OBJECTS = $(am_libspudec_plugin_a_OBJECTS)
 
@@ -306,13 +305,10 @@ DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libspudec_a-parse.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libspudec_a-render.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libspudec_a-spudec.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libspudec_pic_a-parse.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libspudec_pic_a-render.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libspudec_pic_a-spudec.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libspudec_plugin_a-parse.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libspudec_plugin_a-render.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libspudec_plugin_a-spudec.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -398,13 +394,10 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libspudec_a-parse.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libspudec_a-render.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libspudec_a-spudec.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libspudec_pic_a-parse.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libspudec_pic_a-render.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libspudec_pic_a-spudec.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libspudec_plugin_a-parse.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libspudec_plugin_a-render.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libspudec_plugin_a-spudec.Po@am__quote@
 
 .c.o:
@@ -473,28 +466,6 @@ libspudec_a-parse.obj: parse.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_a_CFLAGS) $(CFLAGS) -c -o libspudec_a-parse.obj `if test -f 'parse.c'; then $(CYGPATH_W) 'parse.c'; else $(CYGPATH_W) '$(srcdir)/parse.c'; fi`
 
-libspudec_a-render.o: render.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_a_CFLAGS) $(CFLAGS) -MT libspudec_a-render.o -MD -MP -MF "$(DEPDIR)/libspudec_a-render.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libspudec_a-render.o `test -f 'render.c' || echo '$(srcdir)/'`render.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libspudec_a-render.Tpo" "$(DEPDIR)/libspudec_a-render.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libspudec_a-render.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='render.c' object='libspudec_a-render.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libspudec_a-render.Po' tmpdepfile='$(DEPDIR)/libspudec_a-render.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_a_CFLAGS) $(CFLAGS) -c -o libspudec_a-render.o `test -f 'render.c' || echo '$(srcdir)/'`render.c
-
-libspudec_a-render.obj: render.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_a_CFLAGS) $(CFLAGS) -MT libspudec_a-render.obj -MD -MP -MF "$(DEPDIR)/libspudec_a-render.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libspudec_a-render.obj `if test -f 'render.c'; then $(CYGPATH_W) 'render.c'; else $(CYGPATH_W) '$(srcdir)/render.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libspudec_a-render.Tpo" "$(DEPDIR)/libspudec_a-render.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libspudec_a-render.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='render.c' object='libspudec_a-render.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libspudec_a-render.Po' tmpdepfile='$(DEPDIR)/libspudec_a-render.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_a_CFLAGS) $(CFLAGS) -c -o libspudec_a-render.obj `if test -f 'render.c'; then $(CYGPATH_W) 'render.c'; else $(CYGPATH_W) '$(srcdir)/render.c'; fi`
-
 libspudec_pic_a-spudec.o: spudec.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_pic_a_CFLAGS) $(CFLAGS) -MT libspudec_pic_a-spudec.o -MD -MP -MF "$(DEPDIR)/libspudec_pic_a-spudec.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libspudec_pic_a-spudec.o `test -f 'spudec.c' || echo '$(srcdir)/'`spudec.c; \
@@ -539,28 +510,6 @@ libspudec_pic_a-parse.obj: parse.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_pic_a_CFLAGS) $(CFLAGS) -c -o libspudec_pic_a-parse.obj `if test -f 'parse.c'; then $(CYGPATH_W) 'parse.c'; else $(CYGPATH_W) '$(srcdir)/parse.c'; fi`
 
-libspudec_pic_a-render.o: render.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_pic_a_CFLAGS) $(CFLAGS) -MT libspudec_pic_a-render.o -MD -MP -MF "$(DEPDIR)/libspudec_pic_a-render.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libspudec_pic_a-render.o `test -f 'render.c' || echo '$(srcdir)/'`render.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libspudec_pic_a-render.Tpo" "$(DEPDIR)/libspudec_pic_a-render.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libspudec_pic_a-render.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='render.c' object='libspudec_pic_a-render.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libspudec_pic_a-render.Po' tmpdepfile='$(DEPDIR)/libspudec_pic_a-render.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_pic_a_CFLAGS) $(CFLAGS) -c -o libspudec_pic_a-render.o `test -f 'render.c' || echo '$(srcdir)/'`render.c
-
-libspudec_pic_a-render.obj: render.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_pic_a_CFLAGS) $(CFLAGS) -MT libspudec_pic_a-render.obj -MD -MP -MF "$(DEPDIR)/libspudec_pic_a-render.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libspudec_pic_a-render.obj `if test -f 'render.c'; then $(CYGPATH_W) 'render.c'; else $(CYGPATH_W) '$(srcdir)/render.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libspudec_pic_a-render.Tpo" "$(DEPDIR)/libspudec_pic_a-render.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libspudec_pic_a-render.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='render.c' object='libspudec_pic_a-render.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libspudec_pic_a-render.Po' tmpdepfile='$(DEPDIR)/libspudec_pic_a-render.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_pic_a_CFLAGS) $(CFLAGS) -c -o libspudec_pic_a-render.obj `if test -f 'render.c'; then $(CYGPATH_W) 'render.c'; else $(CYGPATH_W) '$(srcdir)/render.c'; fi`
-
 libspudec_plugin_a-spudec.o: spudec.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_plugin_a_CFLAGS) $(CFLAGS) -MT libspudec_plugin_a-spudec.o -MD -MP -MF "$(DEPDIR)/libspudec_plugin_a-spudec.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libspudec_plugin_a-spudec.o `test -f 'spudec.c' || echo '$(srcdir)/'`spudec.c; \
@@ -604,28 +553,6 @@ libspudec_plugin_a-parse.obj: parse.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libspudec_plugin_a-parse.Po' tmpdepfile='$(DEPDIR)/libspudec_plugin_a-parse.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_plugin_a_CFLAGS) $(CFLAGS) -c -o libspudec_plugin_a-parse.obj `if test -f 'parse.c'; then $(CYGPATH_W) 'parse.c'; else $(CYGPATH_W) '$(srcdir)/parse.c'; fi`
-
-libspudec_plugin_a-render.o: render.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_plugin_a_CFLAGS) $(CFLAGS) -MT libspudec_plugin_a-render.o -MD -MP -MF "$(DEPDIR)/libspudec_plugin_a-render.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libspudec_plugin_a-render.o `test -f 'render.c' || echo '$(srcdir)/'`render.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libspudec_plugin_a-render.Tpo" "$(DEPDIR)/libspudec_plugin_a-render.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libspudec_plugin_a-render.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='render.c' object='libspudec_plugin_a-render.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libspudec_plugin_a-render.Po' tmpdepfile='$(DEPDIR)/libspudec_plugin_a-render.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_plugin_a_CFLAGS) $(CFLAGS) -c -o libspudec_plugin_a-render.o `test -f 'render.c' || echo '$(srcdir)/'`render.c
-
-libspudec_plugin_a-render.obj: render.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_plugin_a_CFLAGS) $(CFLAGS) -MT libspudec_plugin_a-render.obj -MD -MP -MF "$(DEPDIR)/libspudec_plugin_a-render.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libspudec_plugin_a-render.obj `if test -f 'render.c'; then $(CYGPATH_W) 'render.c'; else $(CYGPATH_W) '$(srcdir)/render.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libspudec_plugin_a-render.Tpo" "$(DEPDIR)/libspudec_plugin_a-render.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libspudec_plugin_a-render.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='render.c' object='libspudec_plugin_a-render.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libspudec_plugin_a-render.Po' tmpdepfile='$(DEPDIR)/libspudec_plugin_a-render.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libspudec_plugin_a_CFLAGS) $(CFLAGS) -c -o libspudec_plugin_a-render.obj `if test -f 'render.c'; then $(CYGPATH_W) 'render.c'; else $(CYGPATH_W) '$(srcdir)/render.c'; fi`
 uninstall-info-am:
 libspudecDATA_INSTALL = $(INSTALL_DATA)
 install-libspudecDATA: $(libspudec_DATA)

@@ -1,7 +1,7 @@
 #! /bin/sh
 
 ##  bootstrap file for the VLC media player
-##  $Id: bootstrap 7169 2004-03-25 22:45:59Z sam $
+##  $Id: bootstrap 8491 2004-08-22 02:17:43Z rocky $
 ##
 ##  Authors: Sam Hocevar <sam@zoy.org>
 
@@ -29,16 +29,32 @@ set -x
 AUTOMAKESUCKS=no
 INSTALLSUCKS=no
 
+ACLOCAL_ARGS="-I m4"
+
 # Check for contrib directory
 if test -d extras/contrib/bin; then
   export PATH=./extras/contrib/bin:$PATH
-  export LD_LIBRARY_PATH=./extras/contrib/lib:$LD_LIBRARY_PATH
-  export DYLD_LIBRARY_PATH=./extras/contrib/lib:$DYLD_LIBRARY_PATH
+  ACLOCAL_ARGS="${ACLOCAL_ARGS} -I extras/contrib/share/aclocal"
+  if test ".`uname -s`" = ".Darwin"; then
+    export LD_LIBRARY_PATH=./extras/contrib/lib:$LD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=./extras/contrib/lib:$DYLD_LIBRARY_PATH
+  elif test ".`uname -s`" = ".BeOS"; then
+    export LIBRARY_PATH=./extras/contrib/lib:$LIBRARY_PATH
+    export BELIBRARIES=./extras/contrib/lib:$BELIBRARIES
+  fi
 fi
 
 # Check for automake
 amvers="none"
-if automake-1.7 --version >/dev/null 2>&1; then
+if automake-1.8 --version >/dev/null 2>&1; then
+  amvers="-1.8"
+  # If we also have 1.6 (>> 1.6.1), use it instead because it is faster
+  if automake-1.6 --version >/dev/null 2>&1; then
+    if expr "`automake-1.6 --version | sed -e '1s/[^0-9]*//' -e q`" ">" "1.6.1" > /dev/null 2>&1; then
+      amvers="-1.6"
+    fi
+  fi
+elif automake-1.7 --version >/dev/null 2>&1; then
   amvers="-1.7"
   # If we also have 1.6 (>> 1.6.1), use it instead because it is faster
   if automake-1.6 --version >/dev/null 2>&1; then
@@ -133,20 +149,20 @@ fi
 rm -f m4/private.m4-tmp1 && cat > m4/private.m4-tmp1 << EOF
 dnl  The required AM_CONDITIONAL calls
 dnl  XXX: too many conditionals make the build very slow, disabled them
-AC_DEFUN([AX_VLC_CONDITIONALS], [
+AC_DEFUN([VLC_CONDITIONALS], [
 EOF
 rm -f m4/private.m4-tmp2 && cat > m4/private.m4-tmp2 << EOF
 dnl  The required AC_SUBST calls
-AC_DEFUN([AX_VLC_SUBSTS], [
+AC_DEFUN([VLC_SUBSTS], [
 EOF
 rm -f m4/private.m4-tmp3 && cat > m4/private.m4-tmp3 << EOF
 dnl  The required AC_OUTPUT calls
 dnl  XXX: this feature is only supported starting from automake-1.7
-AC_DEFUN([AX_VLC_MAKEFILES], [AC_OUTPUT([
+AC_DEFUN([VLC_MAKEFILES], [AC_OUTPUT([
 EOF
 rm -f m4/private.m4-tmp4 && cat > m4/private.m4-tmp4 << EOF
 dnl  Helper macro for vlc-config generation
-AC_DEFUN([AX_VLC_CONFIG_HELPER], [
+AC_DEFUN([VLC_CONFIG_HELPER], [
   cat >> vlc-config.in << BLAH
 EOF
 
@@ -339,7 +355,8 @@ rm -Rf autom4te.cache
 # remove old autotools extra cruft
 rm -f config.guess config.sub missing mkinstalldirs compile depcomp install-sh
 # remove new autotools extra cruft
-(cd autotools && rm -f config.guess config.sub missing mkinstalldirs compile depcomp install-sh)
+rm -Rf autotools
+mkdir autotools
 # remove libtool cruft
 rm -f ltmain.sh libtool ltconfig
 # remove gettext cruft
@@ -360,7 +377,7 @@ fi
 
 # Do the rest
 ${autopoint} -f
-${aclocal} -I m4
+${aclocal} ${ACLOCAL_ARGS}
 ${autoconf}
 ${autoheader}
 ${automake} --add-missing --copy

@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -228,8 +230,8 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Lstream_out_dummyb) $(Lstream_out_dummypic) $(Lstream_out_standardb) $(Lstream_out_standardpic) $(Lstream_out_transcodeb) $(Lstream_out_transcodepic) $(Lstream_out_duplicateb) $(Lstream_out_duplicatepic) $(Lstream_out_esb) $(Lstream_out_espic) $(Lstream_out_displayb) $(Lstream_out_displaypic) $(Lstream_out_gatherb) $(Lstream_out_gatherpic) $(Lstream_out_rtpb) $(Lstream_out_rtppic)
-noinst_LIBRARIES = $(Lstream_out_dummyp) $(Lstream_out_standardp) $(Lstream_out_transcodep) $(Lstream_out_duplicatep) $(Lstream_out_esp) $(Lstream_out_displayp) $(Lstream_out_gatherp) $(Lstream_out_rtpp)
+libvlc_LIBRARIES = $(Lstream_out_dummyb) $(Lstream_out_dummypic) $(Lstream_out_descriptionb) $(Lstream_out_descriptionpic) $(Lstream_out_standardb) $(Lstream_out_standardpic) $(Lstream_out_transcodeb) $(Lstream_out_transcodepic) $(Lstream_out_duplicateb) $(Lstream_out_duplicatepic) $(Lstream_out_esb) $(Lstream_out_espic) $(Lstream_out_displayb) $(Lstream_out_displaypic) $(Lstream_out_gatherb) $(Lstream_out_gatherpic) $(Lstream_out_rtpb) $(Lstream_out_rtppic)
+noinst_LIBRARIES = $(Lstream_out_dummyp) $(Lstream_out_descriptionp) $(Lstream_out_standardp) $(Lstream_out_transcodep) $(Lstream_out_duplicatep) $(Lstream_out_esp) $(Lstream_out_displayp) $(Lstream_out_gatherp) $(Lstream_out_rtpp)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
@@ -237,6 +239,7 @@ SUBDIRS = transrate
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/stream_out
 SOURCES_stream_out_dummy = dummy.c
+SOURCES_stream_out_description = description.c
 SOURCES_stream_out_standard = standard.c \
                               announce.c \
                               announce.h
@@ -277,6 +280,31 @@ libstream_out_dummy_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_
 libstream_out_dummy_DATA = $(Dstream_out_dummyp)
 
 libstream_out_dummydir = $(libdir)/vlc/
+
+
+# The stream_out_description plugin
+@UNTRUE_TRUE@Lstream_out_descriptionp = libstream_out_description_plugin.a
+@UNTRUE_TRUE@Dstream_out_descriptionp = libstream_out_description_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lstream_out_descriptionb = libstream_out_description.a
+@UNTRUE_TRUE@Lstream_out_descriptionpic = libstream_out_description_pic.a
+
+libstream_out_description_plugin_a_SOURCES = $(SOURCES_stream_out_description)
+libstream_out_description_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin stream_out_description`
+libstream_out_description_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin stream_out_description`
+libstream_out_description_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin stream_out_description`
+
+libstream_out_description_pic_a_SOURCES = $(SOURCES_stream_out_description)
+libstream_out_description_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_description`
+libstream_out_description_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_description`
+libstream_out_description_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_description`
+
+libstream_out_description_a_SOURCES = $(SOURCES_stream_out_description)
+libstream_out_description_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_description`
+libstream_out_description_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_description`
+libstream_out_description_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_description`
+libstream_out_description_DATA = $(Dstream_out_descriptionp)
+
+libstream_out_descriptiondir = $(libdir)/vlc/
 
 
 # The stream_out_standard plugin
@@ -459,151 +487,173 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 LIBRARIES = $(libvlc_LIBRARIES) $(noinst_LIBRARIES)
 
+libstream_out_description_a_AR = $(AR) cru
+libstream_out_description_a_LIBADD =
+am__objects_1 = libstream_out_description_a-description.$(OBJEXT)
+am_libstream_out_description_a_OBJECTS = $(am__objects_1)
+libstream_out_description_a_OBJECTS = \
+	$(am_libstream_out_description_a_OBJECTS)
+libstream_out_description_pic_a_AR = $(AR) cru
+libstream_out_description_pic_a_LIBADD =
+am__objects_2 = libstream_out_description_pic_a-description.$(OBJEXT)
+am_libstream_out_description_pic_a_OBJECTS = $(am__objects_2)
+libstream_out_description_pic_a_OBJECTS = \
+	$(am_libstream_out_description_pic_a_OBJECTS)
+libstream_out_description_plugin_a_AR = $(AR) cru
+libstream_out_description_plugin_a_LIBADD =
+am__objects_3 = libstream_out_description_plugin_a-description.$(OBJEXT)
+am_libstream_out_description_plugin_a_OBJECTS = $(am__objects_3)
+libstream_out_description_plugin_a_OBJECTS = \
+	$(am_libstream_out_description_plugin_a_OBJECTS)
 libstream_out_display_a_AR = $(AR) cru
 libstream_out_display_a_LIBADD =
-am__objects_1 = libstream_out_display_a-display.$(OBJEXT)
-am_libstream_out_display_a_OBJECTS = $(am__objects_1)
+am__objects_4 = libstream_out_display_a-display.$(OBJEXT)
+am_libstream_out_display_a_OBJECTS = $(am__objects_4)
 libstream_out_display_a_OBJECTS = $(am_libstream_out_display_a_OBJECTS)
 libstream_out_display_pic_a_AR = $(AR) cru
 libstream_out_display_pic_a_LIBADD =
-am__objects_2 = libstream_out_display_pic_a-display.$(OBJEXT)
-am_libstream_out_display_pic_a_OBJECTS = $(am__objects_2)
+am__objects_5 = libstream_out_display_pic_a-display.$(OBJEXT)
+am_libstream_out_display_pic_a_OBJECTS = $(am__objects_5)
 libstream_out_display_pic_a_OBJECTS = \
 	$(am_libstream_out_display_pic_a_OBJECTS)
 libstream_out_display_plugin_a_AR = $(AR) cru
 libstream_out_display_plugin_a_LIBADD =
-am__objects_3 = libstream_out_display_plugin_a-display.$(OBJEXT)
-am_libstream_out_display_plugin_a_OBJECTS = $(am__objects_3)
+am__objects_6 = libstream_out_display_plugin_a-display.$(OBJEXT)
+am_libstream_out_display_plugin_a_OBJECTS = $(am__objects_6)
 libstream_out_display_plugin_a_OBJECTS = \
 	$(am_libstream_out_display_plugin_a_OBJECTS)
 libstream_out_dummy_a_AR = $(AR) cru
 libstream_out_dummy_a_LIBADD =
-am__objects_4 = libstream_out_dummy_a-dummy.$(OBJEXT)
-am_libstream_out_dummy_a_OBJECTS = $(am__objects_4)
+am__objects_7 = libstream_out_dummy_a-dummy.$(OBJEXT)
+am_libstream_out_dummy_a_OBJECTS = $(am__objects_7)
 libstream_out_dummy_a_OBJECTS = $(am_libstream_out_dummy_a_OBJECTS)
 libstream_out_dummy_pic_a_AR = $(AR) cru
 libstream_out_dummy_pic_a_LIBADD =
-am__objects_5 = libstream_out_dummy_pic_a-dummy.$(OBJEXT)
-am_libstream_out_dummy_pic_a_OBJECTS = $(am__objects_5)
+am__objects_8 = libstream_out_dummy_pic_a-dummy.$(OBJEXT)
+am_libstream_out_dummy_pic_a_OBJECTS = $(am__objects_8)
 libstream_out_dummy_pic_a_OBJECTS = \
 	$(am_libstream_out_dummy_pic_a_OBJECTS)
 libstream_out_dummy_plugin_a_AR = $(AR) cru
 libstream_out_dummy_plugin_a_LIBADD =
-am__objects_6 = libstream_out_dummy_plugin_a-dummy.$(OBJEXT)
-am_libstream_out_dummy_plugin_a_OBJECTS = $(am__objects_6)
+am__objects_9 = libstream_out_dummy_plugin_a-dummy.$(OBJEXT)
+am_libstream_out_dummy_plugin_a_OBJECTS = $(am__objects_9)
 libstream_out_dummy_plugin_a_OBJECTS = \
 	$(am_libstream_out_dummy_plugin_a_OBJECTS)
 libstream_out_duplicate_a_AR = $(AR) cru
 libstream_out_duplicate_a_LIBADD =
-am__objects_7 = libstream_out_duplicate_a-duplicate.$(OBJEXT)
-am_libstream_out_duplicate_a_OBJECTS = $(am__objects_7)
+am__objects_10 = libstream_out_duplicate_a-duplicate.$(OBJEXT)
+am_libstream_out_duplicate_a_OBJECTS = $(am__objects_10)
 libstream_out_duplicate_a_OBJECTS = \
 	$(am_libstream_out_duplicate_a_OBJECTS)
 libstream_out_duplicate_pic_a_AR = $(AR) cru
 libstream_out_duplicate_pic_a_LIBADD =
-am__objects_8 = libstream_out_duplicate_pic_a-duplicate.$(OBJEXT)
-am_libstream_out_duplicate_pic_a_OBJECTS = $(am__objects_8)
+am__objects_11 = libstream_out_duplicate_pic_a-duplicate.$(OBJEXT)
+am_libstream_out_duplicate_pic_a_OBJECTS = $(am__objects_11)
 libstream_out_duplicate_pic_a_OBJECTS = \
 	$(am_libstream_out_duplicate_pic_a_OBJECTS)
 libstream_out_duplicate_plugin_a_AR = $(AR) cru
 libstream_out_duplicate_plugin_a_LIBADD =
-am__objects_9 = libstream_out_duplicate_plugin_a-duplicate.$(OBJEXT)
-am_libstream_out_duplicate_plugin_a_OBJECTS = $(am__objects_9)
+am__objects_12 = libstream_out_duplicate_plugin_a-duplicate.$(OBJEXT)
+am_libstream_out_duplicate_plugin_a_OBJECTS = $(am__objects_12)
 libstream_out_duplicate_plugin_a_OBJECTS = \
 	$(am_libstream_out_duplicate_plugin_a_OBJECTS)
 libstream_out_es_a_AR = $(AR) cru
 libstream_out_es_a_LIBADD =
-am__objects_10 = libstream_out_es_a-es.$(OBJEXT)
-am_libstream_out_es_a_OBJECTS = $(am__objects_10)
+am__objects_13 = libstream_out_es_a-es.$(OBJEXT)
+am_libstream_out_es_a_OBJECTS = $(am__objects_13)
 libstream_out_es_a_OBJECTS = $(am_libstream_out_es_a_OBJECTS)
 libstream_out_es_pic_a_AR = $(AR) cru
 libstream_out_es_pic_a_LIBADD =
-am__objects_11 = libstream_out_es_pic_a-es.$(OBJEXT)
-am_libstream_out_es_pic_a_OBJECTS = $(am__objects_11)
+am__objects_14 = libstream_out_es_pic_a-es.$(OBJEXT)
+am_libstream_out_es_pic_a_OBJECTS = $(am__objects_14)
 libstream_out_es_pic_a_OBJECTS = $(am_libstream_out_es_pic_a_OBJECTS)
 libstream_out_es_plugin_a_AR = $(AR) cru
 libstream_out_es_plugin_a_LIBADD =
-am__objects_12 = libstream_out_es_plugin_a-es.$(OBJEXT)
-am_libstream_out_es_plugin_a_OBJECTS = $(am__objects_12)
+am__objects_15 = libstream_out_es_plugin_a-es.$(OBJEXT)
+am_libstream_out_es_plugin_a_OBJECTS = $(am__objects_15)
 libstream_out_es_plugin_a_OBJECTS = \
 	$(am_libstream_out_es_plugin_a_OBJECTS)
 libstream_out_gather_a_AR = $(AR) cru
 libstream_out_gather_a_LIBADD =
-am__objects_13 = libstream_out_gather_a-gather.$(OBJEXT)
-am_libstream_out_gather_a_OBJECTS = $(am__objects_13)
+am__objects_16 = libstream_out_gather_a-gather.$(OBJEXT)
+am_libstream_out_gather_a_OBJECTS = $(am__objects_16)
 libstream_out_gather_a_OBJECTS = $(am_libstream_out_gather_a_OBJECTS)
 libstream_out_gather_pic_a_AR = $(AR) cru
 libstream_out_gather_pic_a_LIBADD =
-am__objects_14 = libstream_out_gather_pic_a-gather.$(OBJEXT)
-am_libstream_out_gather_pic_a_OBJECTS = $(am__objects_14)
+am__objects_17 = libstream_out_gather_pic_a-gather.$(OBJEXT)
+am_libstream_out_gather_pic_a_OBJECTS = $(am__objects_17)
 libstream_out_gather_pic_a_OBJECTS = \
 	$(am_libstream_out_gather_pic_a_OBJECTS)
 libstream_out_gather_plugin_a_AR = $(AR) cru
 libstream_out_gather_plugin_a_LIBADD =
-am__objects_15 = libstream_out_gather_plugin_a-gather.$(OBJEXT)
-am_libstream_out_gather_plugin_a_OBJECTS = $(am__objects_15)
+am__objects_18 = libstream_out_gather_plugin_a-gather.$(OBJEXT)
+am_libstream_out_gather_plugin_a_OBJECTS = $(am__objects_18)
 libstream_out_gather_plugin_a_OBJECTS = \
 	$(am_libstream_out_gather_plugin_a_OBJECTS)
 libstream_out_rtp_a_AR = $(AR) cru
 libstream_out_rtp_a_LIBADD =
-am__objects_16 = libstream_out_rtp_a-rtp.$(OBJEXT)
-am_libstream_out_rtp_a_OBJECTS = $(am__objects_16)
+am__objects_19 = libstream_out_rtp_a-rtp.$(OBJEXT)
+am_libstream_out_rtp_a_OBJECTS = $(am__objects_19)
 libstream_out_rtp_a_OBJECTS = $(am_libstream_out_rtp_a_OBJECTS)
 libstream_out_rtp_pic_a_AR = $(AR) cru
 libstream_out_rtp_pic_a_LIBADD =
-am__objects_17 = libstream_out_rtp_pic_a-rtp.$(OBJEXT)
-am_libstream_out_rtp_pic_a_OBJECTS = $(am__objects_17)
+am__objects_20 = libstream_out_rtp_pic_a-rtp.$(OBJEXT)
+am_libstream_out_rtp_pic_a_OBJECTS = $(am__objects_20)
 libstream_out_rtp_pic_a_OBJECTS = $(am_libstream_out_rtp_pic_a_OBJECTS)
 libstream_out_rtp_plugin_a_AR = $(AR) cru
 libstream_out_rtp_plugin_a_LIBADD =
-am__objects_18 = libstream_out_rtp_plugin_a-rtp.$(OBJEXT)
-am_libstream_out_rtp_plugin_a_OBJECTS = $(am__objects_18)
+am__objects_21 = libstream_out_rtp_plugin_a-rtp.$(OBJEXT)
+am_libstream_out_rtp_plugin_a_OBJECTS = $(am__objects_21)
 libstream_out_rtp_plugin_a_OBJECTS = \
 	$(am_libstream_out_rtp_plugin_a_OBJECTS)
 libstream_out_standard_a_AR = $(AR) cru
 libstream_out_standard_a_LIBADD =
-am__objects_19 = libstream_out_standard_a-standard.$(OBJEXT) \
+am__objects_22 = libstream_out_standard_a-standard.$(OBJEXT) \
 	libstream_out_standard_a-announce.$(OBJEXT)
-am_libstream_out_standard_a_OBJECTS = $(am__objects_19)
+am_libstream_out_standard_a_OBJECTS = $(am__objects_22)
 libstream_out_standard_a_OBJECTS = \
 	$(am_libstream_out_standard_a_OBJECTS)
 libstream_out_standard_pic_a_AR = $(AR) cru
 libstream_out_standard_pic_a_LIBADD =
-am__objects_20 = libstream_out_standard_pic_a-standard.$(OBJEXT) \
+am__objects_23 = libstream_out_standard_pic_a-standard.$(OBJEXT) \
 	libstream_out_standard_pic_a-announce.$(OBJEXT)
-am_libstream_out_standard_pic_a_OBJECTS = $(am__objects_20)
+am_libstream_out_standard_pic_a_OBJECTS = $(am__objects_23)
 libstream_out_standard_pic_a_OBJECTS = \
 	$(am_libstream_out_standard_pic_a_OBJECTS)
 libstream_out_standard_plugin_a_AR = $(AR) cru
 libstream_out_standard_plugin_a_LIBADD =
-am__objects_21 = libstream_out_standard_plugin_a-standard.$(OBJEXT) \
+am__objects_24 = libstream_out_standard_plugin_a-standard.$(OBJEXT) \
 	libstream_out_standard_plugin_a-announce.$(OBJEXT)
-am_libstream_out_standard_plugin_a_OBJECTS = $(am__objects_21)
+am_libstream_out_standard_plugin_a_OBJECTS = $(am__objects_24)
 libstream_out_standard_plugin_a_OBJECTS = \
 	$(am_libstream_out_standard_plugin_a_OBJECTS)
 libstream_out_transcode_a_AR = $(AR) cru
 libstream_out_transcode_a_LIBADD =
-am__objects_22 = libstream_out_transcode_a-transcode.$(OBJEXT)
-am_libstream_out_transcode_a_OBJECTS = $(am__objects_22)
+am__objects_25 = libstream_out_transcode_a-transcode.$(OBJEXT)
+am_libstream_out_transcode_a_OBJECTS = $(am__objects_25)
 libstream_out_transcode_a_OBJECTS = \
 	$(am_libstream_out_transcode_a_OBJECTS)
 libstream_out_transcode_pic_a_AR = $(AR) cru
 libstream_out_transcode_pic_a_LIBADD =
-am__objects_23 = libstream_out_transcode_pic_a-transcode.$(OBJEXT)
-am_libstream_out_transcode_pic_a_OBJECTS = $(am__objects_23)
+am__objects_26 = libstream_out_transcode_pic_a-transcode.$(OBJEXT)
+am_libstream_out_transcode_pic_a_OBJECTS = $(am__objects_26)
 libstream_out_transcode_pic_a_OBJECTS = \
 	$(am_libstream_out_transcode_pic_a_OBJECTS)
 libstream_out_transcode_plugin_a_AR = $(AR) cru
 libstream_out_transcode_plugin_a_LIBADD =
-am__objects_24 = libstream_out_transcode_plugin_a-transcode.$(OBJEXT)
-am_libstream_out_transcode_plugin_a_OBJECTS = $(am__objects_24)
+am__objects_27 = libstream_out_transcode_plugin_a-transcode.$(OBJEXT)
+am_libstream_out_transcode_plugin_a_OBJECTS = $(am__objects_27)
 libstream_out_transcode_plugin_a_OBJECTS = \
 	$(am_libstream_out_transcode_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libstream_out_display_a-display.Po \
+@AMDEP_TRUE@DEP_FILES = \
+@AMDEP_TRUE@	./$(DEPDIR)/libstream_out_description_a-description.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libstream_out_description_pic_a-description.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libstream_out_description_plugin_a-description.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libstream_out_display_a-display.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_display_pic_a-display.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_display_plugin_a-display.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_dummy_a-dummy.Po \
@@ -634,7 +684,10 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-DIST_SOURCES = $(libstream_out_display_a_SOURCES) \
+DIST_SOURCES = $(libstream_out_description_a_SOURCES) \
+	$(libstream_out_description_pic_a_SOURCES) \
+	$(libstream_out_description_plugin_a_SOURCES) \
+	$(libstream_out_display_a_SOURCES) \
 	$(libstream_out_display_pic_a_SOURCES) \
 	$(libstream_out_display_plugin_a_SOURCES) \
 	$(libstream_out_dummy_a_SOURCES) \
@@ -657,10 +710,11 @@ DIST_SOURCES = $(libstream_out_display_a_SOURCES) \
 	$(libstream_out_transcode_a_SOURCES) \
 	$(libstream_out_transcode_pic_a_SOURCES) \
 	$(libstream_out_transcode_plugin_a_SOURCES)
-DATA = $(libstream_out_display_DATA) $(libstream_out_dummy_DATA) \
-	$(libstream_out_duplicate_DATA) $(libstream_out_es_DATA) \
-	$(libstream_out_gather_DATA) $(libstream_out_rtp_DATA) \
-	$(libstream_out_standard_DATA) $(libstream_out_transcode_DATA)
+DATA = $(libstream_out_description_DATA) $(libstream_out_display_DATA) \
+	$(libstream_out_dummy_DATA) $(libstream_out_duplicate_DATA) \
+	$(libstream_out_es_DATA) $(libstream_out_gather_DATA) \
+	$(libstream_out_rtp_DATA) $(libstream_out_standard_DATA) \
+	$(libstream_out_transcode_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -673,7 +727,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libstream_out_display_a_SOURCES) $(libstream_out_display_pic_a_SOURCES) $(libstream_out_display_plugin_a_SOURCES) $(libstream_out_dummy_a_SOURCES) $(libstream_out_dummy_pic_a_SOURCES) $(libstream_out_dummy_plugin_a_SOURCES) $(libstream_out_duplicate_a_SOURCES) $(libstream_out_duplicate_pic_a_SOURCES) $(libstream_out_duplicate_plugin_a_SOURCES) $(libstream_out_es_a_SOURCES) $(libstream_out_es_pic_a_SOURCES) $(libstream_out_es_plugin_a_SOURCES) $(libstream_out_gather_a_SOURCES) $(libstream_out_gather_pic_a_SOURCES) $(libstream_out_gather_plugin_a_SOURCES) $(libstream_out_rtp_a_SOURCES) $(libstream_out_rtp_pic_a_SOURCES) $(libstream_out_rtp_plugin_a_SOURCES) $(libstream_out_standard_a_SOURCES) $(libstream_out_standard_pic_a_SOURCES) $(libstream_out_standard_plugin_a_SOURCES) $(libstream_out_transcode_a_SOURCES) $(libstream_out_transcode_pic_a_SOURCES) $(libstream_out_transcode_plugin_a_SOURCES)
+SOURCES = $(libstream_out_description_a_SOURCES) $(libstream_out_description_pic_a_SOURCES) $(libstream_out_description_plugin_a_SOURCES) $(libstream_out_display_a_SOURCES) $(libstream_out_display_pic_a_SOURCES) $(libstream_out_display_plugin_a_SOURCES) $(libstream_out_dummy_a_SOURCES) $(libstream_out_dummy_pic_a_SOURCES) $(libstream_out_dummy_plugin_a_SOURCES) $(libstream_out_duplicate_a_SOURCES) $(libstream_out_duplicate_pic_a_SOURCES) $(libstream_out_duplicate_plugin_a_SOURCES) $(libstream_out_es_a_SOURCES) $(libstream_out_es_pic_a_SOURCES) $(libstream_out_es_plugin_a_SOURCES) $(libstream_out_gather_a_SOURCES) $(libstream_out_gather_pic_a_SOURCES) $(libstream_out_gather_plugin_a_SOURCES) $(libstream_out_rtp_a_SOURCES) $(libstream_out_rtp_pic_a_SOURCES) $(libstream_out_rtp_plugin_a_SOURCES) $(libstream_out_standard_a_SOURCES) $(libstream_out_standard_pic_a_SOURCES) $(libstream_out_standard_plugin_a_SOURCES) $(libstream_out_transcode_a_SOURCES) $(libstream_out_transcode_pic_a_SOURCES) $(libstream_out_transcode_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -718,6 +772,18 @@ clean-libvlcLIBRARIES:
 
 clean-noinstLIBRARIES:
 	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+libstream_out_description.a: $(libstream_out_description_a_OBJECTS) $(libstream_out_description_a_DEPENDENCIES) 
+	-rm -f libstream_out_description.a
+	$(libstream_out_description_a_AR) libstream_out_description.a $(libstream_out_description_a_OBJECTS) $(libstream_out_description_a_LIBADD)
+	$(RANLIB) libstream_out_description.a
+libstream_out_description_pic.a: $(libstream_out_description_pic_a_OBJECTS) $(libstream_out_description_pic_a_DEPENDENCIES) 
+	-rm -f libstream_out_description_pic.a
+	$(libstream_out_description_pic_a_AR) libstream_out_description_pic.a $(libstream_out_description_pic_a_OBJECTS) $(libstream_out_description_pic_a_LIBADD)
+	$(RANLIB) libstream_out_description_pic.a
+libstream_out_description_plugin.a: $(libstream_out_description_plugin_a_OBJECTS) $(libstream_out_description_plugin_a_DEPENDENCIES) 
+	-rm -f libstream_out_description_plugin.a
+	$(libstream_out_description_plugin_a_AR) libstream_out_description_plugin.a $(libstream_out_description_plugin_a_OBJECTS) $(libstream_out_description_plugin_a_LIBADD)
+	$(RANLIB) libstream_out_description_plugin.a
 libstream_out_display.a: $(libstream_out_display_a_OBJECTS) $(libstream_out_display_a_DEPENDENCIES) 
 	-rm -f libstream_out_display.a
 	$(libstream_out_display_a_AR) libstream_out_display.a $(libstream_out_display_a_OBJECTS) $(libstream_out_display_a_LIBADD)
@@ -821,6 +887,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_description_a-description.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_description_pic_a-description.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_description_plugin_a-description.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_display_a-display.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_display_pic_a-display.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_display_plugin_a-display.Po@am__quote@
@@ -870,6 +939,72 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`
+
+libstream_out_description_a-description.o: description.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_description_a_CFLAGS) $(CFLAGS) -MT libstream_out_description_a-description.o -MD -MP -MF "$(DEPDIR)/libstream_out_description_a-description.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_description_a-description.o `test -f 'description.c' || echo '$(srcdir)/'`description.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_description_a-description.Tpo" "$(DEPDIR)/libstream_out_description_a-description.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_description_a-description.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='description.c' object='libstream_out_description_a-description.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_description_a-description.Po' tmpdepfile='$(DEPDIR)/libstream_out_description_a-description.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_description_a_CFLAGS) $(CFLAGS) -c -o libstream_out_description_a-description.o `test -f 'description.c' || echo '$(srcdir)/'`description.c
+
+libstream_out_description_a-description.obj: description.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_description_a_CFLAGS) $(CFLAGS) -MT libstream_out_description_a-description.obj -MD -MP -MF "$(DEPDIR)/libstream_out_description_a-description.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_description_a-description.obj `if test -f 'description.c'; then $(CYGPATH_W) 'description.c'; else $(CYGPATH_W) '$(srcdir)/description.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_description_a-description.Tpo" "$(DEPDIR)/libstream_out_description_a-description.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_description_a-description.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='description.c' object='libstream_out_description_a-description.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_description_a-description.Po' tmpdepfile='$(DEPDIR)/libstream_out_description_a-description.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_description_a_CFLAGS) $(CFLAGS) -c -o libstream_out_description_a-description.obj `if test -f 'description.c'; then $(CYGPATH_W) 'description.c'; else $(CYGPATH_W) '$(srcdir)/description.c'; fi`
+
+libstream_out_description_pic_a-description.o: description.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_description_pic_a_CFLAGS) $(CFLAGS) -MT libstream_out_description_pic_a-description.o -MD -MP -MF "$(DEPDIR)/libstream_out_description_pic_a-description.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_description_pic_a-description.o `test -f 'description.c' || echo '$(srcdir)/'`description.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_description_pic_a-description.Tpo" "$(DEPDIR)/libstream_out_description_pic_a-description.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_description_pic_a-description.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='description.c' object='libstream_out_description_pic_a-description.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_description_pic_a-description.Po' tmpdepfile='$(DEPDIR)/libstream_out_description_pic_a-description.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_description_pic_a_CFLAGS) $(CFLAGS) -c -o libstream_out_description_pic_a-description.o `test -f 'description.c' || echo '$(srcdir)/'`description.c
+
+libstream_out_description_pic_a-description.obj: description.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_description_pic_a_CFLAGS) $(CFLAGS) -MT libstream_out_description_pic_a-description.obj -MD -MP -MF "$(DEPDIR)/libstream_out_description_pic_a-description.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_description_pic_a-description.obj `if test -f 'description.c'; then $(CYGPATH_W) 'description.c'; else $(CYGPATH_W) '$(srcdir)/description.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_description_pic_a-description.Tpo" "$(DEPDIR)/libstream_out_description_pic_a-description.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_description_pic_a-description.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='description.c' object='libstream_out_description_pic_a-description.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_description_pic_a-description.Po' tmpdepfile='$(DEPDIR)/libstream_out_description_pic_a-description.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_description_pic_a_CFLAGS) $(CFLAGS) -c -o libstream_out_description_pic_a-description.obj `if test -f 'description.c'; then $(CYGPATH_W) 'description.c'; else $(CYGPATH_W) '$(srcdir)/description.c'; fi`
+
+libstream_out_description_plugin_a-description.o: description.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_description_plugin_a_CFLAGS) $(CFLAGS) -MT libstream_out_description_plugin_a-description.o -MD -MP -MF "$(DEPDIR)/libstream_out_description_plugin_a-description.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_description_plugin_a-description.o `test -f 'description.c' || echo '$(srcdir)/'`description.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_description_plugin_a-description.Tpo" "$(DEPDIR)/libstream_out_description_plugin_a-description.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_description_plugin_a-description.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='description.c' object='libstream_out_description_plugin_a-description.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_description_plugin_a-description.Po' tmpdepfile='$(DEPDIR)/libstream_out_description_plugin_a-description.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_description_plugin_a_CFLAGS) $(CFLAGS) -c -o libstream_out_description_plugin_a-description.o `test -f 'description.c' || echo '$(srcdir)/'`description.c
+
+libstream_out_description_plugin_a-description.obj: description.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_description_plugin_a_CFLAGS) $(CFLAGS) -MT libstream_out_description_plugin_a-description.obj -MD -MP -MF "$(DEPDIR)/libstream_out_description_plugin_a-description.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_description_plugin_a-description.obj `if test -f 'description.c'; then $(CYGPATH_W) 'description.c'; else $(CYGPATH_W) '$(srcdir)/description.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_description_plugin_a-description.Tpo" "$(DEPDIR)/libstream_out_description_plugin_a-description.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_description_plugin_a-description.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='description.c' object='libstream_out_description_plugin_a-description.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_description_plugin_a-description.Po' tmpdepfile='$(DEPDIR)/libstream_out_description_plugin_a-description.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_description_plugin_a_CFLAGS) $(CFLAGS) -c -o libstream_out_description_plugin_a-description.obj `if test -f 'description.c'; then $(CYGPATH_W) 'description.c'; else $(CYGPATH_W) '$(srcdir)/description.c'; fi`
 
 libstream_out_display_a-display.o: display.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_display_a_CFLAGS) $(CFLAGS) -MT libstream_out_display_a-display.o -MD -MP -MF "$(DEPDIR)/libstream_out_display_a-display.Tpo" \
@@ -1465,6 +1600,24 @@ libstream_out_transcode_plugin_a-transcode.obj: transcode.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_transcode_plugin_a_CFLAGS) $(CFLAGS) -c -o libstream_out_transcode_plugin_a-transcode.obj `if test -f 'transcode.c'; then $(CYGPATH_W) 'transcode.c'; else $(CYGPATH_W) '$(srcdir)/transcode.c'; fi`
 uninstall-info-am:
+libstream_out_descriptionDATA_INSTALL = $(INSTALL_DATA)
+install-libstream_out_descriptionDATA: $(libstream_out_description_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libstream_out_descriptiondir)
+	@list='$(libstream_out_description_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libstream_out_descriptionDATA_INSTALL) $$d$$p $(DESTDIR)$(libstream_out_descriptiondir)/$$f"; \
+	  $(libstream_out_descriptionDATA_INSTALL) $$d$$p $(DESTDIR)$(libstream_out_descriptiondir)/$$f; \
+	done
+
+uninstall-libstream_out_descriptionDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libstream_out_description_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libstream_out_descriptiondir)/$$f"; \
+	  rm -f $(DESTDIR)$(libstream_out_descriptiondir)/$$f; \
+	done
 libstream_out_displayDATA_INSTALL = $(INSTALL_DATA)
 install-libstream_out_displayDATA: $(libstream_out_display_DATA)
 	@$(NORMAL_INSTALL)
@@ -1784,7 +1937,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libstream_out_displaydir) $(DESTDIR)$(libstream_out_dummydir) $(DESTDIR)$(libstream_out_duplicatedir) $(DESTDIR)$(libstream_out_esdir) $(DESTDIR)$(libstream_out_gatherdir) $(DESTDIR)$(libstream_out_rtpdir) $(DESTDIR)$(libstream_out_standarddir) $(DESTDIR)$(libstream_out_transcodedir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libstream_out_descriptiondir) $(DESTDIR)$(libstream_out_displaydir) $(DESTDIR)$(libstream_out_dummydir) $(DESTDIR)$(libstream_out_duplicatedir) $(DESTDIR)$(libstream_out_esdir) $(DESTDIR)$(libstream_out_gatherdir) $(DESTDIR)$(libstream_out_rtpdir) $(DESTDIR)$(libstream_out_standarddir) $(DESTDIR)$(libstream_out_transcodedir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -1831,7 +1984,8 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-libstream_out_displayDATA \
+install-data-am: install-libstream_out_descriptionDATA \
+	install-libstream_out_displayDATA \
 	install-libstream_out_dummyDATA \
 	install-libstream_out_duplicateDATA \
 	install-libstream_out_esDATA install-libstream_out_gatherDATA \
@@ -1864,7 +2018,8 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libstream_out_displayDATA \
+uninstall-am: uninstall-info-am uninstall-libstream_out_descriptionDATA \
+	uninstall-libstream_out_displayDATA \
 	uninstall-libstream_out_dummyDATA \
 	uninstall-libstream_out_duplicateDATA \
 	uninstall-libstream_out_esDATA \
@@ -1884,6 +2039,7 @@ uninstall-info: uninstall-info-recursive
 	install-data install-data-am install-data-recursive \
 	install-exec install-exec-am install-exec-recursive \
 	install-info install-info-am install-info-recursive \
+	install-libstream_out_descriptionDATA \
 	install-libstream_out_displayDATA \
 	install-libstream_out_dummyDATA \
 	install-libstream_out_duplicateDATA \
@@ -1898,7 +2054,9 @@ uninstall-info: uninstall-info-recursive
 	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
 	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
 	uninstall uninstall-am uninstall-info-am \
-	uninstall-info-recursive uninstall-libstream_out_displayDATA \
+	uninstall-info-recursive \
+	uninstall-libstream_out_descriptionDATA \
+	uninstall-libstream_out_displayDATA \
 	uninstall-libstream_out_dummyDATA \
 	uninstall-libstream_out_duplicateDATA \
 	uninstall-libstream_out_esDATA \
@@ -1915,9 +2073,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in stream_out_dummy stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in stream_out_dummy stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in stream_out_dummy stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 libstream_out_dummy_plugin$(LIBEXT): $(libstream_out_dummy_plugin_a_OBJECTS)
@@ -1925,6 +2083,12 @@ libstream_out_dummy_plugin$(LIBEXT): $(libstream_out_dummy_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libstream_out_dummy_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_dummy\` ; $(CXXLINK) $(libstream_out_dummy_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_dummy` ;; \
 	  objc) echo $(OBJCLINK) $(libstream_out_dummy_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_dummy\` ; $(OBJCLINK) $(libstream_out_dummy_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_dummy` ;; \
 	  c|*) echo $(LINK) $(libstream_out_dummy_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_dummy\` ; $(LINK) $(libstream_out_dummy_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_dummy` ;; \
+	esac
+libstream_out_description_plugin$(LIBEXT): $(libstream_out_description_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage stream_out_description` in \
+	  c++) echo $(CXXLINK) $(libstream_out_description_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_description\` ; $(CXXLINK) $(libstream_out_description_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_description` ;; \
+	  objc) echo $(OBJCLINK) $(libstream_out_description_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_description\` ; $(OBJCLINK) $(libstream_out_description_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_description` ;; \
+	  c|*) echo $(LINK) $(libstream_out_description_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_description\` ; $(LINK) $(libstream_out_description_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_description` ;; \
 	esac
 libstream_out_standard_plugin$(LIBEXT): $(libstream_out_standard_plugin_a_OBJECTS)
 	@case `$(VLC_CONFIG) --linkage stream_out_standard` in \

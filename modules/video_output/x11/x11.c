@@ -2,7 +2,7 @@
  * x11.c : X11 plugin for vlc
  *****************************************************************************
  * Copyright (C) 1998-2001 VideoLAN
- * $Id: x11.c 7522 2004-04-27 16:35:15Z sam $
+ * $Id: x11.c 9268 2004-11-10 13:01:48Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -73,7 +73,7 @@ vlc_module_begin();
     add_integer ( "x11-xineramascreen", 0, NULL, SCREEN_TEXT, SCREEN_LONGTEXT, VLC_TRUE );
 #endif
     set_description( _("X11 video output") );
-    set_capability( "video output", 50 );
+    set_capability( "video output", 70 );
     set_callbacks( E_(Activate), E_(Deactivate) );
 vlc_module_end();
 

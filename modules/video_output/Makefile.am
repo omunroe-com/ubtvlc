@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga hd1000v snapshot opengl; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga hd1000v snapshot opengl; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga hd1000v snapshot opengl; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -364,6 +364,117 @@ libmga_plugin$(LIBEXT): $(libmga_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libmga_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mga\` ; $(CXXLINK) $(libmga_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mga` ;; \
 	  objc) echo $(OBJCLINK) $(libmga_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mga\` ; $(OBJCLINK) $(libmga_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mga` ;; \
 	  c|*) echo $(LINK) $(libmga_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mga\` ; $(LINK) $(libmga_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mga` ;; \
+	esac
+
+
+# The hd1000v plugin
+
+if UNTRUE
+Lhd1000vp = libhd1000v_plugin.a
+Dhd1000vp = libhd1000v_plugin$(LIBEXT)
+Lhd1000vb = libhd1000v.a
+Lhd1000vpic = libhd1000v_pic.a
+endif
+
+libhd1000v_plugin_a_SOURCES = $(SOURCES_hd1000v)
+libhd1000v_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin hd1000v`
+libhd1000v_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin hd1000v`
+libhd1000v_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin hd1000v`
+
+libhd1000v_pic_a_SOURCES = $(SOURCES_hd1000v)
+libhd1000v_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic hd1000v`
+libhd1000v_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic hd1000v`
+libhd1000v_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic hd1000v`
+
+libhd1000v_a_SOURCES = $(SOURCES_hd1000v)
+libhd1000v_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin hd1000v`
+libhd1000v_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin hd1000v`
+libhd1000v_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin hd1000v`
+
+libvlc_LIBRARIES += $(Lhd1000vb) $(Lhd1000vpic)
+libhd1000v_DATA = $(Dhd1000vp)
+
+libhd1000vdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lhd1000vp)
+libhd1000v_plugin$(LIBEXT): $(libhd1000v_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage hd1000v` in \
+	  c++) echo $(CXXLINK) $(libhd1000v_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin hd1000v\` ; $(CXXLINK) $(libhd1000v_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin hd1000v` ;; \
+	  objc) echo $(OBJCLINK) $(libhd1000v_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin hd1000v\` ; $(OBJCLINK) $(libhd1000v_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin hd1000v` ;; \
+	  c|*) echo $(LINK) $(libhd1000v_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin hd1000v\` ; $(LINK) $(libhd1000v_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin hd1000v` ;; \
+	esac
+
+
+# The snapshot plugin
+
+if UNTRUE
+Lsnapshotp = libsnapshot_plugin.a
+Dsnapshotp = libsnapshot_plugin$(LIBEXT)
+Lsnapshotb = libsnapshot.a
+Lsnapshotpic = libsnapshot_pic.a
+endif
+
+libsnapshot_plugin_a_SOURCES = $(SOURCES_snapshot)
+libsnapshot_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin snapshot`
+libsnapshot_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin snapshot`
+libsnapshot_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin snapshot`
+
+libsnapshot_pic_a_SOURCES = $(SOURCES_snapshot)
+libsnapshot_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic snapshot`
+libsnapshot_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic snapshot`
+libsnapshot_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic snapshot`
+
+libsnapshot_a_SOURCES = $(SOURCES_snapshot)
+libsnapshot_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin snapshot`
+libsnapshot_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin snapshot`
+libsnapshot_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin snapshot`
+
+libvlc_LIBRARIES += $(Lsnapshotb) $(Lsnapshotpic)
+libsnapshot_DATA = $(Dsnapshotp)
+
+libsnapshotdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lsnapshotp)
+libsnapshot_plugin$(LIBEXT): $(libsnapshot_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage snapshot` in \
+	  c++) echo $(CXXLINK) $(libsnapshot_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin snapshot\` ; $(CXXLINK) $(libsnapshot_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin snapshot` ;; \
+	  objc) echo $(OBJCLINK) $(libsnapshot_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin snapshot\` ; $(OBJCLINK) $(libsnapshot_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin snapshot` ;; \
+	  c|*) echo $(LINK) $(libsnapshot_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin snapshot\` ; $(LINK) $(libsnapshot_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin snapshot` ;; \
+	esac
+
+
+# The opengl plugin
+
+if UNTRUE
+Lopenglp = libopengl_plugin.a
+Dopenglp = libopengl_plugin$(LIBEXT)
+Lopenglb = libopengl.a
+Lopenglpic = libopengl_pic.a
+endif
+
+libopengl_plugin_a_SOURCES = $(SOURCES_opengl)
+libopengl_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin opengl`
+libopengl_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin opengl`
+libopengl_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin opengl`
+
+libopengl_pic_a_SOURCES = $(SOURCES_opengl)
+libopengl_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic opengl`
+libopengl_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic opengl`
+libopengl_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic opengl`
+
+libopengl_a_SOURCES = $(SOURCES_opengl)
+libopengl_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin opengl`
+libopengl_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin opengl`
+libopengl_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin opengl`
+
+libvlc_LIBRARIES += $(Lopenglb) $(Lopenglpic)
+libopengl_DATA = $(Dopenglp)
+
+libopengldir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lopenglp)
+libopengl_plugin$(LIBEXT): $(libopengl_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage opengl` in \
+	  c++) echo $(CXXLINK) $(libopengl_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin opengl\` ; $(CXXLINK) $(libopengl_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin opengl` ;; \
+	  objc) echo $(OBJCLINK) $(libopengl_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin opengl\` ; $(OBJCLINK) $(libopengl_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin opengl` ;; \
+	  c|*) echo $(LINK) $(libopengl_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin opengl\` ; $(LINK) $(libopengl_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin opengl` ;; \
 	esac
 
 

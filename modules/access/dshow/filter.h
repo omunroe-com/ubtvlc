@@ -2,7 +2,7 @@
  * filter.h : DirectShow access module for vlc
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: filter.h 7718 2004-05-19 09:40:58Z damienf $
+ * $Id: filter.h 8694 2004-09-12 18:00:02Z gbazin $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -69,7 +69,8 @@ class CapturePin: public IPin, public IMemInputPin
 {
     friend class CaptureEnumMediaTypes;
 
-    input_thread_t *p_input;
+    vlc_object_t *p_input;
+    access_sys_t *p_sys;
     CaptureFilter  *p_filter;
 
     IPin *p_connected_pin;
@@ -84,7 +85,8 @@ class CapturePin: public IPin, public IMemInputPin
     long i_ref;
 
   public:
-    CapturePin( input_thread_t * _p_input, CaptureFilter *_p_filter,
+    CapturePin( vlc_object_t *_p_input, access_sys_t *p_sys,
+                CaptureFilter *_p_filter,
                 AM_MEDIA_TYPE *mt, size_t mt_count );
     virtual ~CapturePin();
 
@@ -134,7 +136,7 @@ class CaptureFilter : public IBaseFilter
 {
     friend class CapturePin;
 
-    input_thread_t *p_input;
+    vlc_object_t   *p_input;
     CapturePin     *p_pin;
     IFilterGraph   *p_graph;
     //AM_MEDIA_TYPE  media_type;
@@ -143,7 +145,8 @@ class CaptureFilter : public IBaseFilter
     long i_ref;
 
   public:
-    CaptureFilter( input_thread_t * _p_input, AM_MEDIA_TYPE *mt, size_t mt_count );
+    CaptureFilter( vlc_object_t *_p_input, access_sys_t *p_sys,
+                   AM_MEDIA_TYPE *mt, size_t mt_count );
     virtual ~CaptureFilter();
 
     /* IUnknown methods */
@@ -178,14 +181,14 @@ class CaptureFilter : public IBaseFilter
  ****************************************************************************/
 class CaptureEnumPins : public IEnumPins
 {
-    input_thread_t * p_input;
+    vlc_object_t *p_input;
     CaptureFilter  *p_filter;
 
     int i_position;
     long i_ref;
 
 public:
-    CaptureEnumPins( input_thread_t * _p_input, CaptureFilter *_p_filter,
+    CaptureEnumPins( vlc_object_t *_p_input, CaptureFilter *_p_filter,
                      CaptureEnumPins *pEnumPins );
     virtual ~CaptureEnumPins();
 
@@ -206,14 +209,15 @@ public:
  ****************************************************************************/
 class CaptureEnumMediaTypes : public IEnumMediaTypes
 {
-    input_thread_t * p_input;
+    vlc_object_t *p_input;
     CapturePin     *p_pin;
+    AM_MEDIA_TYPE cx_media_type;
 
-    int i_position;
+    size_t i_position;
     long i_ref;
 
 public:
-    CaptureEnumMediaTypes( input_thread_t * _p_input, CapturePin *_p_pin,
+    CaptureEnumMediaTypes( vlc_object_t *_p_input, CapturePin *_p_pin,
                            CaptureEnumMediaTypes *pEnumMediaTypes );
 
     virtual ~CaptureEnumMediaTypes();

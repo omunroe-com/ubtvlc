@@ -12,16 +12,12 @@ EXTRA_DIST = \
 	vlc.menu \
 	gnome-vlc.desktop \
 	gnome-vlc.dirs \
-	gnome-vlc.menu \
 	gvlc.desktop \
 	gvlc.dirs \
-	gvlc.menu \
 	kvlc.dirs \
-	kvlc.menu \
 	libvlc0-dev.dirs \
 	mozilla-plugin-vlc.dirs \
 	qvlc.dirs \
-	qvlc.menu \
 	vlc-plugin-alsa.dirs \
 	vlc-plugin-arts.dirs \
 	vlc-plugin-esd.dirs \
@@ -31,4 +27,7 @@ EXTRA_DIST = \
 	vlc-plugin-svgalib.dirs \
 	wxvlc.dirs \
 	wxvlc.menu \
+	patches/00list \
+	patches/20_ffmpeg.dpatch \
+	patches/20_interfaces.dpatch \
 	$(NULL)

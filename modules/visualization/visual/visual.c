@@ -2,7 +2,7 @@
  * visual.c : Visualisation system
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: visual.c 7373 2004-04-18 23:08:44Z gbazin $
+ * $Id: visual.c 8551 2004-08-28 17:36:02Z gbazin $
  *
  * Authors: Clément Stenac <zorglub@via.ecp.fr>
  *
@@ -291,7 +291,7 @@ static void DoWork( aout_instance_t *p_aout, aout_filter_t *p_filter,
     for( i = 0 ; i < p_outpic->i_planes ; i++ )
     {
         memset( p_outpic->p[i].p_pixels, i > 0 ? 0x80 : 0x00,
-                p_outpic->p[i].i_lines * p_outpic->p[i].i_pitch );
+                p_outpic->p[i].i_visible_lines * p_outpic->p[i].i_pitch );
     }
 
     /* We can now call our visualization effects */

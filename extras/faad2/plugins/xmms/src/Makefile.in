@@ -66,8 +66,8 @@ EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
 GTK_CONFIG = @GTK_CONFIG@
-HAVE_MPEG4IP_FALSE = @HAVE_MPEG4IP_FALSE@
-HAVE_MPEG4IP_TRUE = @HAVE_MPEG4IP_TRUE@
+HAVE_MPEG4IP_PLUG_FALSE = @HAVE_MPEG4IP_PLUG_FALSE@
+HAVE_MPEG4IP_PLUG_TRUE = @HAVE_MPEG4IP_PLUG_TRUE@
 HAVE_XMMS_FALSE = @HAVE_XMMS_FALSE@
 HAVE_XMMS_TRUE = @HAVE_XMMS_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
@@ -82,7 +82,7 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
-MPEG4IP_PLAYER_PLUGIN_DIR = @MPEG4IP_PLAYER_PLUGIN_DIR@
+MP4FF_LIBS = @MP4FF_LIBS@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -97,8 +97,6 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
-WITH_MP4V2_FALSE = @WITH_MP4V2_FALSE@
-WITH_MP4V2_TRUE = @WITH_MP4V2_TRUE@
 XMMS_CONFIG = @XMMS_CONFIG@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
@@ -121,6 +119,7 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 exec_prefix = @exec_prefix@
+external_mp4v2 = @external_mp4v2@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
@@ -143,16 +142,14 @@ target_alias = @target_alias@
 lib_LTLIBRARIES = libmp4.la
 
 libmp4_la_CFLAGS = `$(XMMS_CONFIG) --cflags` -Wall \
-       `$(GTK_CONFIG) --cflags` -DHAVE_GLIB_H=1 \
-       -I$(top_srcdir)/include -I$(top_srcdir)/common/mp4v2
+       -I$(top_srcdir)/include -I$(top_srcdir)/common/mp4ff
 
 
 libmp4_la_LIBADD = $(top_builddir)/libfaad/libfaad.la \
-       $(top_builddir)/common/mp4v2/libmp4v2.la
+       $(top_builddir)/common/mp4ff/libmp4ff.a
 
 
-libmp4_la_LDFLAGS = -module -avoid-version `$(XMMS_CONFIG) --libs` \
-       `$(GTK_CONFIG) --libs` -lpthread -lstdc++
+libmp4_la_LDFLAGS = -module -avoid-version `$(XMMS_CONFIG) --libs` -lpthread
 
 libmp4_la_SOURCES = libmp4.c mp4_utils.c aac_utils.c
 subdir = plugins/xmms/src
@@ -163,7 +160,7 @@ CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(lib_LTLIBRARIES)
 
 libmp4_la_DEPENDENCIES = $(top_builddir)/libfaad/libfaad.la \
-	$(top_builddir)/common/mp4v2/libmp4v2.la
+	$(top_builddir)/common/mp4ff/libmp4ff.a
 am_libmp4_la_OBJECTS = libmp4_la-libmp4.lo libmp4_la-mp4_utils.lo \
 	libmp4_la-aac_utils.lo
 libmp4_la_OBJECTS = $(am_libmp4_la_OBJECTS)

@@ -2,7 +2,7 @@
  * vout_pictures.h : picture management definitions
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: vout_pictures.h 6961 2004-03-05 17:34:23Z sam $
+ * $Id: vout_pictures.h 8354 2004-08-03 00:11:32Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -88,3 +88,8 @@
 /* Planar 4:4:4, Y:U:V */
 #define FOURCC_I444         VLC_FOURCC('I','4','4','4')
 
+/* Planar 4:4:4:4 Y:U:V:A */
+#define FOURCC_YUVA         VLC_FOURCC('Y','U','V','A')
+
+/* Palettized YUV with palette element Y:U:V:A */
+#define FOURCC_YUVP         VLC_FOURCC('Y','U','V','P')

@@ -3,7 +3,7 @@
  *            encoding.
  *****************************************************************************
  * Copyright (C) 2003-2004 VideoLAN
- * $Id: charset.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: charset.c 8905 2004-10-04 13:34:42Z gbazin $
  *
  * Author: Derk-Jan Hartman <thedj at users.sf.net>
  *

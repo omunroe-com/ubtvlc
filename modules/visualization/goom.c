@@ -2,7 +2,7 @@
  * goom.c: based on libgoom (see http://ios.free.fr/?page=projet&quoi=1)
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: goom.c 7652 2004-05-13 21:13:38Z gbazin $
+ * $Id: goom.c 8978 2004-10-12 12:58:24Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -82,7 +82,7 @@ vlc_module_end();
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
-#define MAX_BLOCKS 10
+#define MAX_BLOCKS 100
 #define GOOM_DELAY 400000
 
 typedef struct
@@ -406,7 +406,7 @@ static char *TitleGet( vlc_object_t *p_this )
 
     if( p_input )
     {
-        char *psz = strrchr( p_input->psz_source, '/' );
+        char *psz = strrchr( p_input->input.p_item->psz_uri, '/' );
 
         if( psz )
         {
@@ -414,7 +414,7 @@ static char *TitleGet( vlc_object_t *p_this )
         }
         else
         {
-            psz = p_input->psz_source;
+            psz = p_input->input.p_item->psz_uri;
         }
         if( psz && *psz )
         {

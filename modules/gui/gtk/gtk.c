@@ -2,7 +2,7 @@
  * gtk.c : Gtk+ plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2001 VideoLAN
- * $Id: gtk.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: gtk.c 7932 2004-06-07 18:26:27Z fenrir $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -62,6 +62,11 @@ static int  Manage       ( intf_thread_t * );
     "You can set the maximum height that the configuration windows in the " \
     "preferences menu will occupy.")
 
+#define PATH_TEXT N_("Interface default search path")
+#define PATH_LONGTEXT N_( \
+    "This option allows you to set the default path that the interface will " \
+    "open when looking for a file.")
+
 vlc_module_begin();
 #ifdef WIN32
     int i = 90;
@@ -74,6 +79,8 @@ vlc_module_begin();
               TOOLTIPS_TEXT, TOOLTIPS_LONGTEXT, VLC_FALSE );
     add_integer( "gtk-prefs-maxh", 480, NULL,
                  PREFS_MAXH_TEXT, PREFS_MAXH_LONGTEXT, VLC_TRUE );
+    add_directory( "gtk-search-path", NULL, NULL, PATH_TEXT,
+                   PATH_LONGTEXT, VLC_TRUE );
 
     set_capability( "interface", i );
     set_callbacks( Open, Close );
@@ -469,11 +476,11 @@ static int Manage( intf_thread_t *p_intf )
                 {
                     if( newvalue >= 0. && newvalue < 100. )
                     {
-                        off_t i_seek = ( newvalue * p_area->i_size ) / 100;
+                        double f_fpos = (double)newvalue / 100.0;
 
                         /* release the lock to be able to seek */
                         vlc_mutex_unlock( &p_input->stream.stream_lock );
-                        input_Seek( p_input, i_seek, INPUT_SEEK_SET );
+                        var_SetFloat( p_input, "position", f_fpos );
                         vlc_mutex_lock( &p_input->stream.stream_lock );
                     }
 

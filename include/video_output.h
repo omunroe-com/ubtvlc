@@ -2,7 +2,7 @@
  * video_output.h : video output thread
  *****************************************************************************
  * Copyright (C) 1999, 2000 VideoLAN
- * $Id: video_output.h 7694 2004-05-16 22:06:34Z gbazin $
+ * $Id: video_output.h 8709 2004-09-15 15:50:54Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@via.ecp.fr>
@@ -102,6 +102,7 @@ struct vout_thread_t
     int       ( *pf_manage )     ( vout_thread_t * );
     void      ( *pf_render )     ( vout_thread_t *, picture_t * );
     void      ( *pf_display )    ( vout_thread_t *, picture_t * );
+    void      ( *pf_swap )       ( vout_thread_t * );         /* OpenGL only */
     int       ( *pf_control )    ( vout_thread_t *, int, va_list );
     /**@}*/
 
@@ -122,11 +123,11 @@ struct vout_thread_t
     vout_chroma_t       chroma;                      /**< translation tables */
     /**@}*/
 
-    /* Picture and subpicture heaps */
-    picture_t           p_picture[2*VOUT_MAX_PICTURES];        /**< pictures */
-    subpicture_t        p_subpicture[VOUT_MAX_PICTURES];    /**< subpictures */
+    /* Picture heap */
+    picture_t           p_picture[2*VOUT_MAX_PICTURES+1];      /**< pictures */
 
-    subpicture_t *      p_last_osd_message;
+    /* Subpicture unit */
+    spu_t            *p_spu;
 
     /* Statistics */
     count_t          c_loops;
@@ -141,14 +142,6 @@ struct vout_thread_t
     /* Filter chain */
     char *psz_filter_chain;
     vlc_bool_t b_filter_change;
-
-    /* text renderer data */
-    text_renderer_sys_t * p_text_renderer_data;        /**< private data for
-                                                           the text renderer */
-    module_t *            p_text_renderer_module;  /**< text renderer module */
-    /** callback used when a new string needs to be shown on the vout */
-    subpicture_t * ( *pf_add_string ) ( vout_thread_t *, char *, text_style_t *, int,
-                             int, int, mtime_t, mtime_t );
 };
 
 #define I_OUTPUTPICTURES p_vout->output.i_pictures
@@ -209,8 +202,6 @@ VLC_EXPORT( int,             vout_ChromaCmp,      ( uint32_t, uint32_t ) );
 
 VLC_EXPORT( picture_t *,     vout_CreatePicture,  ( vout_thread_t *, vlc_bool_t, vlc_bool_t, unsigned int ) );
 VLC_EXPORT( void,            vout_InitFormat,     ( video_frame_format_t *, uint32_t, int, int, int ) );
-VLC_EXPORT( void,            vout_InitPicture,    ( vlc_object_t *, picture_t *, uint32_t, int, int, int ) );
-VLC_EXPORT( void,            vout_AllocatePicture,( vlc_object_t *, picture_t *, uint32_t, int, int, int ) );
 VLC_EXPORT( void,            vout_DestroyPicture, ( vout_thread_t *, picture_t * ) );
 VLC_EXPORT( void,            vout_DisplayPicture, ( vout_thread_t *, picture_t * ) );
 VLC_EXPORT( void,            vout_DatePicture,    ( vout_thread_t *, picture_t *, mtime_t ) );
@@ -224,6 +215,8 @@ VLC_EXPORT( int, vout_vaControlDefault, ( vout_thread_t *, int, va_list ) );
 VLC_EXPORT( void *, vout_RequestWindow, ( vout_thread_t *, int *, int *, unsigned int *, unsigned int * ) );
 VLC_EXPORT( void,   vout_ReleaseWindow, ( vout_thread_t *, void * ) );
 VLC_EXPORT( int, vout_ControlWindow, ( vout_thread_t *, void *, int, va_list ) );
+void vout_IntfInit( vout_thread_t * );
+
 
 static inline int vout_vaControl( vout_thread_t *p_vout, int i_query,
                                   va_list args )
@@ -253,18 +246,6 @@ enum output_query_e
     VOUT_CLOSE
 };
 
-/**
- * \addtogroup subpicture
- * @{
- */
-VLC_EXPORT( subpicture_t *,  vout_CreateSubPicture,   ( vout_thread_t *, int ) );
-VLC_EXPORT( void,            vout_DestroySubPicture,  ( vout_thread_t *, subpicture_t * ) );
-VLC_EXPORT( void,            vout_DisplaySubPicture,  ( vout_thread_t *, subpicture_t * ) );
-
-subpicture_t *  vout_SortSubPictures    ( vout_thread_t *, mtime_t );
-void            vout_RenderSubPictures  ( vout_thread_t *, picture_t *,
-                                                           subpicture_t * );
-/** @}*/
 /**
  * @}
  */

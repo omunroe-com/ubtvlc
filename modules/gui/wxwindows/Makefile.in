@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -242,7 +244,10 @@ EXTRA_DIST = Modules.am \
 	bitmaps/slow.xpm \
 	bitmaps/fast.xpm \
 	bitmaps/playlist.xpm \
-	bitmaps/speaker.xpm
+	bitmaps/speaker.xpm \
+	bitmaps/shuffle.xpm \
+	bitmaps/repeat.xpm \
+	bitmaps/loop.xpm
 
 BUILT_SOURCES = 
 SUBDIRS = 
@@ -252,11 +257,12 @@ SOURCES_wxwindows = \
 	wxwindows.cpp \
 	wxwindows.h \
 	interface.cpp \
+	extrapanel.cpp \
 	dialogs.cpp \
 	open.cpp \
 	streamout.cpp \
-	streamwizard.cpp \
 	wizard.cpp \
+	streamdata.h \
 	messages.cpp \
 	playlist.cpp \
 	iteminfo.cpp \
@@ -313,9 +319,9 @@ libwxwindows_a_LIBADD =
 am__objects_1 =
 am__objects_2 = libwxwindows_a-wxwindows.$(OBJEXT) \
 	libwxwindows_a-interface.$(OBJEXT) \
+	libwxwindows_a-extrapanel.$(OBJEXT) \
 	libwxwindows_a-dialogs.$(OBJEXT) libwxwindows_a-open.$(OBJEXT) \
 	libwxwindows_a-streamout.$(OBJEXT) \
-	libwxwindows_a-streamwizard.$(OBJEXT) \
 	libwxwindows_a-wizard.$(OBJEXT) \
 	libwxwindows_a-messages.$(OBJEXT) \
 	libwxwindows_a-playlist.$(OBJEXT) \
@@ -334,10 +340,10 @@ libwxwindows_pic_a_AR = $(AR) cru
 libwxwindows_pic_a_LIBADD =
 am__objects_3 = libwxwindows_pic_a-wxwindows.$(OBJEXT) \
 	libwxwindows_pic_a-interface.$(OBJEXT) \
+	libwxwindows_pic_a-extrapanel.$(OBJEXT) \
 	libwxwindows_pic_a-dialogs.$(OBJEXT) \
 	libwxwindows_pic_a-open.$(OBJEXT) \
 	libwxwindows_pic_a-streamout.$(OBJEXT) \
-	libwxwindows_pic_a-streamwizard.$(OBJEXT) \
 	libwxwindows_pic_a-wizard.$(OBJEXT) \
 	libwxwindows_pic_a-messages.$(OBJEXT) \
 	libwxwindows_pic_a-playlist.$(OBJEXT) \
@@ -356,10 +362,10 @@ libwxwindows_plugin_a_AR = $(AR) cru
 libwxwindows_plugin_a_LIBADD =
 am__objects_4 = libwxwindows_plugin_a-wxwindows.$(OBJEXT) \
 	libwxwindows_plugin_a-interface.$(OBJEXT) \
+	libwxwindows_plugin_a-extrapanel.$(OBJEXT) \
 	libwxwindows_plugin_a-dialogs.$(OBJEXT) \
 	libwxwindows_plugin_a-open.$(OBJEXT) \
 	libwxwindows_plugin_a-streamout.$(OBJEXT) \
-	libwxwindows_plugin_a-streamwizard.$(OBJEXT) \
 	libwxwindows_plugin_a-wizard.$(OBJEXT) \
 	libwxwindows_plugin_a-messages.$(OBJEXT) \
 	libwxwindows_plugin_a-playlist.$(OBJEXT) \
@@ -380,6 +386,7 @@ depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libwxwindows_a-bookmarks.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_a-dialogs.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_a-extrapanel.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_a-fileinfo.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_a-interface.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_a-iteminfo.Po \
@@ -390,7 +397,6 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_a-preferences.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_a-preferences_widgets.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_a-streamout.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_a-streamwizard.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_a-subtitles.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_a-timer.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_a-video.Po \
@@ -398,6 +404,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_a-wxwindows.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_pic_a-bookmarks.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_pic_a-dialogs.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_pic_a-extrapanel.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_pic_a-fileinfo.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_pic_a-interface.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_pic_a-iteminfo.Po \
@@ -408,7 +415,6 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_pic_a-preferences.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_pic_a-preferences_widgets.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_pic_a-streamout.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_pic_a-streamwizard.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_pic_a-subtitles.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_pic_a-timer.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_pic_a-video.Po \
@@ -416,6 +422,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_pic_a-wxwindows.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_plugin_a-bookmarks.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_plugin_a-dialogs.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_plugin_a-extrapanel.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_plugin_a-fileinfo.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_plugin_a-interface.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_plugin_a-iteminfo.Po \
@@ -426,7 +433,6 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_plugin_a-preferences.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_plugin_a-preferences_widgets.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_plugin_a-streamout.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_plugin_a-streamwizard.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_plugin_a-subtitles.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_plugin_a-timer.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwxwindows_plugin_a-video.Po \
@@ -522,6 +528,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_a-bookmarks.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_a-dialogs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_a-extrapanel.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_a-fileinfo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_a-interface.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_a-iteminfo.Po@am__quote@
@@ -532,7 +539,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_a-preferences.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_a-preferences_widgets.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_a-streamout.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_a-streamwizard.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_a-subtitles.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_a-timer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_a-video.Po@am__quote@
@@ -540,6 +546,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_a-wxwindows.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_pic_a-bookmarks.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_pic_a-dialogs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_pic_a-extrapanel.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_pic_a-fileinfo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_pic_a-interface.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_pic_a-iteminfo.Po@am__quote@
@@ -550,7 +557,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_pic_a-preferences.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_pic_a-preferences_widgets.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_pic_a-streamout.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_pic_a-streamwizard.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_pic_a-subtitles.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_pic_a-timer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_pic_a-video.Po@am__quote@
@@ -558,6 +564,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_pic_a-wxwindows.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_plugin_a-bookmarks.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_plugin_a-dialogs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_plugin_a-extrapanel.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_plugin_a-fileinfo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_plugin_a-interface.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_plugin_a-iteminfo.Po@am__quote@
@@ -568,7 +575,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_plugin_a-preferences.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_plugin_a-preferences_widgets.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_plugin_a-streamout.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_plugin_a-streamwizard.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_plugin_a-subtitles.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_plugin_a-timer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwxwindows_plugin_a-video.Po@am__quote@
@@ -641,6 +647,28 @@ libwxwindows_a-interface.obj: interface.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_a-interface.obj `if test -f 'interface.cpp'; then $(CYGPATH_W) 'interface.cpp'; else $(CYGPATH_W) '$(srcdir)/interface.cpp'; fi`
 
+libwxwindows_a-extrapanel.o: extrapanel.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_a-extrapanel.o -MD -MP -MF "$(DEPDIR)/libwxwindows_a-extrapanel.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libwxwindows_a-extrapanel.o `test -f 'extrapanel.cpp' || echo '$(srcdir)/'`extrapanel.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libwxwindows_a-extrapanel.Tpo" "$(DEPDIR)/libwxwindows_a-extrapanel.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libwxwindows_a-extrapanel.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='extrapanel.cpp' object='libwxwindows_a-extrapanel.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libwxwindows_a-extrapanel.Po' tmpdepfile='$(DEPDIR)/libwxwindows_a-extrapanel.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_a-extrapanel.o `test -f 'extrapanel.cpp' || echo '$(srcdir)/'`extrapanel.cpp
+
+libwxwindows_a-extrapanel.obj: extrapanel.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_a-extrapanel.obj -MD -MP -MF "$(DEPDIR)/libwxwindows_a-extrapanel.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libwxwindows_a-extrapanel.obj `if test -f 'extrapanel.cpp'; then $(CYGPATH_W) 'extrapanel.cpp'; else $(CYGPATH_W) '$(srcdir)/extrapanel.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libwxwindows_a-extrapanel.Tpo" "$(DEPDIR)/libwxwindows_a-extrapanel.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libwxwindows_a-extrapanel.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='extrapanel.cpp' object='libwxwindows_a-extrapanel.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libwxwindows_a-extrapanel.Po' tmpdepfile='$(DEPDIR)/libwxwindows_a-extrapanel.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_a-extrapanel.obj `if test -f 'extrapanel.cpp'; then $(CYGPATH_W) 'extrapanel.cpp'; else $(CYGPATH_W) '$(srcdir)/extrapanel.cpp'; fi`
+
 libwxwindows_a-dialogs.o: dialogs.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_a-dialogs.o -MD -MP -MF "$(DEPDIR)/libwxwindows_a-dialogs.Tpo" \
 @am__fastdepCXX_TRUE@	  -c -o libwxwindows_a-dialogs.o `test -f 'dialogs.cpp' || echo '$(srcdir)/'`dialogs.cpp; \
@@ -706,28 +734,6 @@ libwxwindows_a-streamout.obj: streamout.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libwxwindows_a-streamout.Po' tmpdepfile='$(DEPDIR)/libwxwindows_a-streamout.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_a-streamout.obj `if test -f 'streamout.cpp'; then $(CYGPATH_W) 'streamout.cpp'; else $(CYGPATH_W) '$(srcdir)/streamout.cpp'; fi`
-
-libwxwindows_a-streamwizard.o: streamwizard.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_a-streamwizard.o -MD -MP -MF "$(DEPDIR)/libwxwindows_a-streamwizard.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o libwxwindows_a-streamwizard.o `test -f 'streamwizard.cpp' || echo '$(srcdir)/'`streamwizard.cpp; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libwxwindows_a-streamwizard.Tpo" "$(DEPDIR)/libwxwindows_a-streamwizard.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libwxwindows_a-streamwizard.Tpo"; exit 1; \
-@am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='streamwizard.cpp' object='libwxwindows_a-streamwizard.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libwxwindows_a-streamwizard.Po' tmpdepfile='$(DEPDIR)/libwxwindows_a-streamwizard.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_a-streamwizard.o `test -f 'streamwizard.cpp' || echo '$(srcdir)/'`streamwizard.cpp
-
-libwxwindows_a-streamwizard.obj: streamwizard.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_a-streamwizard.obj -MD -MP -MF "$(DEPDIR)/libwxwindows_a-streamwizard.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o libwxwindows_a-streamwizard.obj `if test -f 'streamwizard.cpp'; then $(CYGPATH_W) 'streamwizard.cpp'; else $(CYGPATH_W) '$(srcdir)/streamwizard.cpp'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libwxwindows_a-streamwizard.Tpo" "$(DEPDIR)/libwxwindows_a-streamwizard.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libwxwindows_a-streamwizard.Tpo"; exit 1; \
-@am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='streamwizard.cpp' object='libwxwindows_a-streamwizard.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libwxwindows_a-streamwizard.Po' tmpdepfile='$(DEPDIR)/libwxwindows_a-streamwizard.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_a-streamwizard.obj `if test -f 'streamwizard.cpp'; then $(CYGPATH_W) 'streamwizard.cpp'; else $(CYGPATH_W) '$(srcdir)/streamwizard.cpp'; fi`
 
 libwxwindows_a-wizard.o: wizard.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_a-wizard.o -MD -MP -MF "$(DEPDIR)/libwxwindows_a-wizard.Tpo" \
@@ -1037,6 +1043,28 @@ libwxwindows_pic_a-interface.obj: interface.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_pic_a-interface.obj `if test -f 'interface.cpp'; then $(CYGPATH_W) 'interface.cpp'; else $(CYGPATH_W) '$(srcdir)/interface.cpp'; fi`
 
+libwxwindows_pic_a-extrapanel.o: extrapanel.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_pic_a-extrapanel.o -MD -MP -MF "$(DEPDIR)/libwxwindows_pic_a-extrapanel.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libwxwindows_pic_a-extrapanel.o `test -f 'extrapanel.cpp' || echo '$(srcdir)/'`extrapanel.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libwxwindows_pic_a-extrapanel.Tpo" "$(DEPDIR)/libwxwindows_pic_a-extrapanel.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libwxwindows_pic_a-extrapanel.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='extrapanel.cpp' object='libwxwindows_pic_a-extrapanel.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libwxwindows_pic_a-extrapanel.Po' tmpdepfile='$(DEPDIR)/libwxwindows_pic_a-extrapanel.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_pic_a-extrapanel.o `test -f 'extrapanel.cpp' || echo '$(srcdir)/'`extrapanel.cpp
+
+libwxwindows_pic_a-extrapanel.obj: extrapanel.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_pic_a-extrapanel.obj -MD -MP -MF "$(DEPDIR)/libwxwindows_pic_a-extrapanel.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libwxwindows_pic_a-extrapanel.obj `if test -f 'extrapanel.cpp'; then $(CYGPATH_W) 'extrapanel.cpp'; else $(CYGPATH_W) '$(srcdir)/extrapanel.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libwxwindows_pic_a-extrapanel.Tpo" "$(DEPDIR)/libwxwindows_pic_a-extrapanel.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libwxwindows_pic_a-extrapanel.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='extrapanel.cpp' object='libwxwindows_pic_a-extrapanel.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libwxwindows_pic_a-extrapanel.Po' tmpdepfile='$(DEPDIR)/libwxwindows_pic_a-extrapanel.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_pic_a-extrapanel.obj `if test -f 'extrapanel.cpp'; then $(CYGPATH_W) 'extrapanel.cpp'; else $(CYGPATH_W) '$(srcdir)/extrapanel.cpp'; fi`
+
 libwxwindows_pic_a-dialogs.o: dialogs.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_pic_a-dialogs.o -MD -MP -MF "$(DEPDIR)/libwxwindows_pic_a-dialogs.Tpo" \
 @am__fastdepCXX_TRUE@	  -c -o libwxwindows_pic_a-dialogs.o `test -f 'dialogs.cpp' || echo '$(srcdir)/'`dialogs.cpp; \
@@ -1102,28 +1130,6 @@ libwxwindows_pic_a-streamout.obj: streamout.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libwxwindows_pic_a-streamout.Po' tmpdepfile='$(DEPDIR)/libwxwindows_pic_a-streamout.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_pic_a-streamout.obj `if test -f 'streamout.cpp'; then $(CYGPATH_W) 'streamout.cpp'; else $(CYGPATH_W) '$(srcdir)/streamout.cpp'; fi`
-
-libwxwindows_pic_a-streamwizard.o: streamwizard.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_pic_a-streamwizard.o -MD -MP -MF "$(DEPDIR)/libwxwindows_pic_a-streamwizard.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o libwxwindows_pic_a-streamwizard.o `test -f 'streamwizard.cpp' || echo '$(srcdir)/'`streamwizard.cpp; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libwxwindows_pic_a-streamwizard.Tpo" "$(DEPDIR)/libwxwindows_pic_a-streamwizard.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libwxwindows_pic_a-streamwizard.Tpo"; exit 1; \
-@am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='streamwizard.cpp' object='libwxwindows_pic_a-streamwizard.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libwxwindows_pic_a-streamwizard.Po' tmpdepfile='$(DEPDIR)/libwxwindows_pic_a-streamwizard.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_pic_a-streamwizard.o `test -f 'streamwizard.cpp' || echo '$(srcdir)/'`streamwizard.cpp
-
-libwxwindows_pic_a-streamwizard.obj: streamwizard.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_pic_a-streamwizard.obj -MD -MP -MF "$(DEPDIR)/libwxwindows_pic_a-streamwizard.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o libwxwindows_pic_a-streamwizard.obj `if test -f 'streamwizard.cpp'; then $(CYGPATH_W) 'streamwizard.cpp'; else $(CYGPATH_W) '$(srcdir)/streamwizard.cpp'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libwxwindows_pic_a-streamwizard.Tpo" "$(DEPDIR)/libwxwindows_pic_a-streamwizard.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libwxwindows_pic_a-streamwizard.Tpo"; exit 1; \
-@am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='streamwizard.cpp' object='libwxwindows_pic_a-streamwizard.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libwxwindows_pic_a-streamwizard.Po' tmpdepfile='$(DEPDIR)/libwxwindows_pic_a-streamwizard.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_pic_a-streamwizard.obj `if test -f 'streamwizard.cpp'; then $(CYGPATH_W) 'streamwizard.cpp'; else $(CYGPATH_W) '$(srcdir)/streamwizard.cpp'; fi`
 
 libwxwindows_pic_a-wizard.o: wizard.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_pic_a-wizard.o -MD -MP -MF "$(DEPDIR)/libwxwindows_pic_a-wizard.Tpo" \
@@ -1433,6 +1439,28 @@ libwxwindows_plugin_a-interface.obj: interface.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_plugin_a-interface.obj `if test -f 'interface.cpp'; then $(CYGPATH_W) 'interface.cpp'; else $(CYGPATH_W) '$(srcdir)/interface.cpp'; fi`
 
+libwxwindows_plugin_a-extrapanel.o: extrapanel.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_plugin_a-extrapanel.o -MD -MP -MF "$(DEPDIR)/libwxwindows_plugin_a-extrapanel.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libwxwindows_plugin_a-extrapanel.o `test -f 'extrapanel.cpp' || echo '$(srcdir)/'`extrapanel.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libwxwindows_plugin_a-extrapanel.Tpo" "$(DEPDIR)/libwxwindows_plugin_a-extrapanel.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libwxwindows_plugin_a-extrapanel.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='extrapanel.cpp' object='libwxwindows_plugin_a-extrapanel.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libwxwindows_plugin_a-extrapanel.Po' tmpdepfile='$(DEPDIR)/libwxwindows_plugin_a-extrapanel.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_plugin_a-extrapanel.o `test -f 'extrapanel.cpp' || echo '$(srcdir)/'`extrapanel.cpp
+
+libwxwindows_plugin_a-extrapanel.obj: extrapanel.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_plugin_a-extrapanel.obj -MD -MP -MF "$(DEPDIR)/libwxwindows_plugin_a-extrapanel.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libwxwindows_plugin_a-extrapanel.obj `if test -f 'extrapanel.cpp'; then $(CYGPATH_W) 'extrapanel.cpp'; else $(CYGPATH_W) '$(srcdir)/extrapanel.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libwxwindows_plugin_a-extrapanel.Tpo" "$(DEPDIR)/libwxwindows_plugin_a-extrapanel.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libwxwindows_plugin_a-extrapanel.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='extrapanel.cpp' object='libwxwindows_plugin_a-extrapanel.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libwxwindows_plugin_a-extrapanel.Po' tmpdepfile='$(DEPDIR)/libwxwindows_plugin_a-extrapanel.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_plugin_a-extrapanel.obj `if test -f 'extrapanel.cpp'; then $(CYGPATH_W) 'extrapanel.cpp'; else $(CYGPATH_W) '$(srcdir)/extrapanel.cpp'; fi`
+
 libwxwindows_plugin_a-dialogs.o: dialogs.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_plugin_a-dialogs.o -MD -MP -MF "$(DEPDIR)/libwxwindows_plugin_a-dialogs.Tpo" \
 @am__fastdepCXX_TRUE@	  -c -o libwxwindows_plugin_a-dialogs.o `test -f 'dialogs.cpp' || echo '$(srcdir)/'`dialogs.cpp; \
@@ -1498,28 +1526,6 @@ libwxwindows_plugin_a-streamout.obj: streamout.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libwxwindows_plugin_a-streamout.Po' tmpdepfile='$(DEPDIR)/libwxwindows_plugin_a-streamout.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_plugin_a-streamout.obj `if test -f 'streamout.cpp'; then $(CYGPATH_W) 'streamout.cpp'; else $(CYGPATH_W) '$(srcdir)/streamout.cpp'; fi`
-
-libwxwindows_plugin_a-streamwizard.o: streamwizard.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_plugin_a-streamwizard.o -MD -MP -MF "$(DEPDIR)/libwxwindows_plugin_a-streamwizard.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o libwxwindows_plugin_a-streamwizard.o `test -f 'streamwizard.cpp' || echo '$(srcdir)/'`streamwizard.cpp; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libwxwindows_plugin_a-streamwizard.Tpo" "$(DEPDIR)/libwxwindows_plugin_a-streamwizard.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libwxwindows_plugin_a-streamwizard.Tpo"; exit 1; \
-@am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='streamwizard.cpp' object='libwxwindows_plugin_a-streamwizard.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libwxwindows_plugin_a-streamwizard.Po' tmpdepfile='$(DEPDIR)/libwxwindows_plugin_a-streamwizard.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_plugin_a-streamwizard.o `test -f 'streamwizard.cpp' || echo '$(srcdir)/'`streamwizard.cpp
-
-libwxwindows_plugin_a-streamwizard.obj: streamwizard.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_plugin_a-streamwizard.obj -MD -MP -MF "$(DEPDIR)/libwxwindows_plugin_a-streamwizard.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o libwxwindows_plugin_a-streamwizard.obj `if test -f 'streamwizard.cpp'; then $(CYGPATH_W) 'streamwizard.cpp'; else $(CYGPATH_W) '$(srcdir)/streamwizard.cpp'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libwxwindows_plugin_a-streamwizard.Tpo" "$(DEPDIR)/libwxwindows_plugin_a-streamwizard.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libwxwindows_plugin_a-streamwizard.Tpo"; exit 1; \
-@am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='streamwizard.cpp' object='libwxwindows_plugin_a-streamwizard.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libwxwindows_plugin_a-streamwizard.Po' tmpdepfile='$(DEPDIR)/libwxwindows_plugin_a-streamwizard.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libwxwindows_plugin_a-streamwizard.obj `if test -f 'streamwizard.cpp'; then $(CYGPATH_W) 'streamwizard.cpp'; else $(CYGPATH_W) '$(srcdir)/streamwizard.cpp'; fi`
 
 libwxwindows_plugin_a-wizard.o: wizard.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwxwindows_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libwxwindows_plugin_a-wizard.o -MD -MP -MF "$(DEPDIR)/libwxwindows_plugin_a-wizard.Tpo" \

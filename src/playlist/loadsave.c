@@ -2,7 +2,7 @@
  * loadsave.c : Playlist loading / saving functions
  *****************************************************************************
  * Copyright (C) 1999-2004 VideoLAN
- * $Id: loadsave.c 7081 2004-03-14 20:18:21Z zorglub $
+ * $Id: loadsave.c 8905 2004-10-04 13:34:42Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -23,17 +23,12 @@
 #include <stdlib.h>                                      /* free(), strtol() */
 #include <stdio.h>                                              /* sprintf() */
 #include <string.h>                                            /* strerror() */
+#include <errno.h>
 
 #include <vlc/vlc.h>
 #include <vlc/vout.h>
 #include <vlc/sout.h>
-
-#ifdef HAVE_ERRNO_H
-#   include <errno.h>
-#endif
-
-#include "stream_control.h"
-#include "input_ext-intf.h"
+#include <vlc/input.h>
 
 #include "vlc_playlist.h"
 
@@ -99,13 +94,8 @@ int playlist_Export( playlist_t * p_playlist, const char *psz_filename ,
     p_export->p_file = fopen( psz_filename, "wt" );
     if( !p_export->p_file )
     {
-#ifdef HAVE_ERRNO_H
         msg_Err( p_playlist , "could not create playlist file %s"
                  " (%s)", psz_filename, strerror(errno) );
-#else
-        msg_Err( p_playlist , "could not create playlist file %s"
-                 , psz_filename );
-#endif
         return VLC_EGENERIC;
     }
 

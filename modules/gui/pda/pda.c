@@ -2,7 +2,7 @@
  * pda.c : PDA Gtk2 plugin for vlc
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: pda.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: pda.c 7945 2004-06-07 21:26:35Z fenrir $
  *
  * Authors: Jean-Paul Saman <jpsaman@wxs.nl>
  *          Marc Ariberti <marcari@videolan.org>
@@ -468,11 +468,11 @@ static int Manage( intf_thread_t *p_intf )
                      * finished dragging the slider */
                     else if( p_intf->p_sys->b_slider_free )
                     {
-                        off_t i_seek = ( newvalue * p_area->i_size ) / 100;
+                        double f_pos = (double)newvalue / 100.0;
 
                         /* release the lock to be able to seek */
                         vlc_mutex_unlock( &p_input->stream.stream_lock );
-                        input_Seek( p_input, i_seek, INPUT_SEEK_SET );
+                        var_SetFloat( p_input, "position", f_pos );
                         vlc_mutex_lock( &p_input->stream.stream_lock );
 
                         /* Update the old value */
@@ -502,11 +502,11 @@ static int Manage( intf_thread_t *p_intf )
                      * finished dragging the slider */
                     else if( p_intf->p_sys->b_slider_free )
                     {
-                        off_t i_seek = ( newvalue * p_area->i_size ) / 100;
+                        double f_pos = (double)newvalue / 100.0;
 
                         /* release the lock to be able to seek */
                         vlc_mutex_unlock( &p_input->stream.stream_lock );
-                        input_Seek( p_input, i_seek, INPUT_SEEK_SET );
+                        var_SetFloat( p_input, "position", f_pos );
                         vlc_mutex_lock( &p_input->stream.stream_lock );
 
                         /* Update the old value */
@@ -558,13 +558,14 @@ void E_(GtkDisplayDate)( GtkAdjustment *p_adj, gpointer userdata )
 
     if( p_intf->p_sys->p_input )
     {
-#define p_area p_intf->p_sys->p_input->stream.p_selected_area
         char psz_time[ MSTRTIME_MAX_SIZE ];
+        int64_t i_seconds;
+
+        i_seconds = var_GetTime( p_intf->p_sys->p_input, "time" ) / I64C(1000000 );
+        secstotimestr( psz_time, i_seconds );
 
         gtk_label_set_text( GTK_LABEL( p_intf->p_sys->p_slider_label ),
-                        input_OffsetToTime( p_intf->p_sys->p_input, psz_time,
-                                   ( p_area->i_size * p_adj->value ) / 100 ) );
-#undef p_area
+                            psz_time );
      }
 }
 

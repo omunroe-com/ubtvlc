@@ -2,7 +2,7 @@
  * interpreter.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: interpreter.cpp 7707 2004-05-17 20:48:39Z ipkiss $
+ * $Id: interpreter.cpp 8524 2004-08-25 21:32:15Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -29,8 +29,10 @@
 #include "../commands/cmd_dummy.hpp"
 #include "../commands/cmd_layout.hpp"
 #include "../commands/cmd_quit.hpp"
+#include "../commands/cmd_minimize.hpp"
 #include "../commands/cmd_input.hpp"
 #include "../commands/cmd_fullscreen.hpp"
+#include "../commands/cmd_on_top.hpp"
 #include "../commands/cmd_show_window.hpp"
 #include "../src/theme.hpp"
 #include "../src/var_manager.hpp"
@@ -53,6 +55,8 @@ Interpreter::Interpreter( intf_thread_t *pIntf ): SkinObject( pIntf )
     REGISTER_CMD( "dialogs.prefs()", CmdDlgPrefs )
     REGISTER_CMD( "dialogs.fileInfo()", CmdDlgFileInfo )
     REGISTER_CMD( "dialogs.popup()", CmdDlgShowPopupMenu )
+    REGISTER_CMD( "playlist.load()", CmdDlgPlaylistLoad )
+    REGISTER_CMD( "playlist.save()", CmdDlgPlaylistSave )
     REGISTER_CMD( "playlist.add()", CmdDlgAdd )
     VarList &rVar = VlcProc::instance( getIntf() )->getPlaylistVar();
     m_commandMap["playlist.del()"] =
@@ -68,6 +72,10 @@ Interpreter::Interpreter( intf_thread_t *pIntf ): SkinObject( pIntf )
         CmdGenericPtr( new CmdPlaylistLoop( getIntf(), true ) );
     m_commandMap["playlist.setLoop(false)"] =
         CmdGenericPtr( new CmdPlaylistLoop( getIntf(), false ) );
+    m_commandMap["playlist.setRepeat(true)"] =
+        CmdGenericPtr( new CmdPlaylistRepeat( getIntf(), true ) );
+    m_commandMap["playlist.setRepeat(false)"] =
+        CmdGenericPtr( new CmdPlaylistRepeat( getIntf(), false ) );
     REGISTER_CMD( "vlc.fullscreen()", CmdFullscreen )
     REGISTER_CMD( "vlc.play()", CmdPlay )
     REGISTER_CMD( "vlc.pause()", CmdPause )
@@ -75,6 +83,8 @@ Interpreter::Interpreter( intf_thread_t *pIntf ): SkinObject( pIntf )
     REGISTER_CMD( "vlc.faster()", CmdFaster )
     REGISTER_CMD( "vlc.slower()", CmdSlower )
     REGISTER_CMD( "vlc.mute()", CmdMute )
+    REGISTER_CMD( "vlc.minimize()", CmdMinimize )
+    REGISTER_CMD( "vlc.onTop()", CmdOnTop )
     REGISTER_CMD( "vlc.quit()", CmdQuit )
 
     // Register the constant bool variables in the var manager

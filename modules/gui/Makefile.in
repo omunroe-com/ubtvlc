@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -227,19 +229,46 @@ target_os = @target_os@
 target_vendor = @target_vendor@
 
 NULL = 
-libvlc_LIBRARIES = 
-noinst_LIBRARIES = 
+
+libvlc_LIBRARIES = $(Lncursesb) $(Lncursespic)
+noinst_LIBRARIES = $(Lncursesp)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
-SUBDIRS = beos pda gtk gtk2 kde macosx ncurses qnx qt skins skins2 wxwindows
+SUBDIRS = beos pda gtk gtk2 kde macosx qnx qt skins2 wxwindows
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/gui
+SOURCES_ncurses = ncurses.c
 
 # There's no need for pic code on win32 so get rid of this to substantially
 # reduce the compilation time.
 @BUILD_MOZILLA_TRUE@@HAVE_WIN32_TRUE@pic = no
 @BUILD_MOZILLA_FALSE@pic = no
+
+
+# The ncurses plugin
+@UNTRUE_TRUE@Lncursesp = libncurses_plugin.a
+@UNTRUE_TRUE@Dncursesp = libncurses_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lncursesb = libncurses.a
+@UNTRUE_TRUE@Lncursespic = libncurses_pic.a
+
+libncurses_plugin_a_SOURCES = $(SOURCES_ncurses)
+libncurses_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin ncurses`
+libncurses_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin ncurses`
+libncurses_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin ncurses`
+
+libncurses_pic_a_SOURCES = $(SOURCES_ncurses)
+libncurses_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ncurses`
+libncurses_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ncurses`
+libncurses_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ncurses`
+
+libncurses_a_SOURCES = $(SOURCES_ncurses)
+libncurses_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin ncurses`
+libncurses_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ncurses`
+libncurses_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ncurses`
+libncurses_DATA = $(Dncursesp)
+
+libncursesdir = $(libdir)/vlc/
 subdir = modules/gui
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
@@ -247,7 +276,36 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 LIBRARIES = $(libvlc_LIBRARIES) $(noinst_LIBRARIES)
 
-DIST_SOURCES =
+libncurses_a_AR = $(AR) cru
+libncurses_a_LIBADD =
+am__objects_1 = libncurses_a-ncurses.$(OBJEXT)
+am_libncurses_a_OBJECTS = $(am__objects_1)
+libncurses_a_OBJECTS = $(am_libncurses_a_OBJECTS)
+libncurses_pic_a_AR = $(AR) cru
+libncurses_pic_a_LIBADD =
+am__objects_2 = libncurses_pic_a-ncurses.$(OBJEXT)
+am_libncurses_pic_a_OBJECTS = $(am__objects_2)
+libncurses_pic_a_OBJECTS = $(am_libncurses_pic_a_OBJECTS)
+libncurses_plugin_a_AR = $(AR) cru
+libncurses_plugin_a_LIBADD =
+am__objects_3 = libncurses_plugin_a-ncurses.$(OBJEXT)
+am_libncurses_plugin_a_OBJECTS = $(am__objects_3)
+libncurses_plugin_a_OBJECTS = $(am_libncurses_plugin_a_OBJECTS)
+
+DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
+depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
+am__depfiles_maybe = depfiles
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libncurses_a-ncurses.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libncurses_pic_a-ncurses.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libncurses_plugin_a-ncurses.Po
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+DIST_SOURCES = $(libncurses_a_SOURCES) $(libncurses_pic_a_SOURCES) \
+	$(libncurses_plugin_a_SOURCES)
+DATA = $(libncurses_DATA)
+
 HEADERS = $(noinst_HEADERS)
 
 
@@ -259,10 +317,13 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
+SOURCES = $(libncurses_a_SOURCES) $(libncurses_pic_a_SOURCES) $(libncurses_plugin_a_SOURCES)
+
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
+.SUFFIXES: .c .o .obj
 $(srcdir)/Makefile.in:  Makefile.am $(srcdir)/Modules.am $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
 	  $(AUTOMAKE) --gnu  modules/gui/Makefile
@@ -301,7 +362,135 @@ clean-libvlcLIBRARIES:
 
 clean-noinstLIBRARIES:
 	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+libncurses.a: $(libncurses_a_OBJECTS) $(libncurses_a_DEPENDENCIES) 
+	-rm -f libncurses.a
+	$(libncurses_a_AR) libncurses.a $(libncurses_a_OBJECTS) $(libncurses_a_LIBADD)
+	$(RANLIB) libncurses.a
+libncurses_pic.a: $(libncurses_pic_a_OBJECTS) $(libncurses_pic_a_DEPENDENCIES) 
+	-rm -f libncurses_pic.a
+	$(libncurses_pic_a_AR) libncurses_pic.a $(libncurses_pic_a_OBJECTS) $(libncurses_pic_a_LIBADD)
+	$(RANLIB) libncurses_pic.a
+libncurses_plugin.a: $(libncurses_plugin_a_OBJECTS) $(libncurses_plugin_a_DEPENDENCIES) 
+	-rm -f libncurses_plugin.a
+	$(libncurses_plugin_a_AR) libncurses_plugin.a $(libncurses_plugin_a_OBJECTS) $(libncurses_plugin_a_LIBADD)
+	$(RANLIB) libncurses_plugin.a
+
+mostlyclean-compile:
+	-rm -f *.$(OBJEXT) core *.core
+
+distclean-compile:
+	-rm -f *.tab.c
+
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libncurses_a-ncurses.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libncurses_pic_a-ncurses.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libncurses_plugin_a-ncurses.Po@am__quote@
+
+.c.o:
+@am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o $@ `test -f '$<' || echo '$(srcdir)/'`$<; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(COMPILE) -c `test -f '$<' || echo '$(srcdir)/'`$<
+
+.c.obj:
+@am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o $@ `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(COMPILE) -c `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`
+
+libncurses_a-ncurses.o: ncurses.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libncurses_a_CFLAGS) $(CFLAGS) -MT libncurses_a-ncurses.o -MD -MP -MF "$(DEPDIR)/libncurses_a-ncurses.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libncurses_a-ncurses.o `test -f 'ncurses.c' || echo '$(srcdir)/'`ncurses.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libncurses_a-ncurses.Tpo" "$(DEPDIR)/libncurses_a-ncurses.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libncurses_a-ncurses.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ncurses.c' object='libncurses_a-ncurses.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libncurses_a-ncurses.Po' tmpdepfile='$(DEPDIR)/libncurses_a-ncurses.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libncurses_a_CFLAGS) $(CFLAGS) -c -o libncurses_a-ncurses.o `test -f 'ncurses.c' || echo '$(srcdir)/'`ncurses.c
+
+libncurses_a-ncurses.obj: ncurses.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libncurses_a_CFLAGS) $(CFLAGS) -MT libncurses_a-ncurses.obj -MD -MP -MF "$(DEPDIR)/libncurses_a-ncurses.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libncurses_a-ncurses.obj `if test -f 'ncurses.c'; then $(CYGPATH_W) 'ncurses.c'; else $(CYGPATH_W) '$(srcdir)/ncurses.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libncurses_a-ncurses.Tpo" "$(DEPDIR)/libncurses_a-ncurses.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libncurses_a-ncurses.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ncurses.c' object='libncurses_a-ncurses.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libncurses_a-ncurses.Po' tmpdepfile='$(DEPDIR)/libncurses_a-ncurses.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libncurses_a_CFLAGS) $(CFLAGS) -c -o libncurses_a-ncurses.obj `if test -f 'ncurses.c'; then $(CYGPATH_W) 'ncurses.c'; else $(CYGPATH_W) '$(srcdir)/ncurses.c'; fi`
+
+libncurses_pic_a-ncurses.o: ncurses.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libncurses_pic_a_CFLAGS) $(CFLAGS) -MT libncurses_pic_a-ncurses.o -MD -MP -MF "$(DEPDIR)/libncurses_pic_a-ncurses.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libncurses_pic_a-ncurses.o `test -f 'ncurses.c' || echo '$(srcdir)/'`ncurses.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libncurses_pic_a-ncurses.Tpo" "$(DEPDIR)/libncurses_pic_a-ncurses.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libncurses_pic_a-ncurses.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ncurses.c' object='libncurses_pic_a-ncurses.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libncurses_pic_a-ncurses.Po' tmpdepfile='$(DEPDIR)/libncurses_pic_a-ncurses.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libncurses_pic_a_CFLAGS) $(CFLAGS) -c -o libncurses_pic_a-ncurses.o `test -f 'ncurses.c' || echo '$(srcdir)/'`ncurses.c
+
+libncurses_pic_a-ncurses.obj: ncurses.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libncurses_pic_a_CFLAGS) $(CFLAGS) -MT libncurses_pic_a-ncurses.obj -MD -MP -MF "$(DEPDIR)/libncurses_pic_a-ncurses.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libncurses_pic_a-ncurses.obj `if test -f 'ncurses.c'; then $(CYGPATH_W) 'ncurses.c'; else $(CYGPATH_W) '$(srcdir)/ncurses.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libncurses_pic_a-ncurses.Tpo" "$(DEPDIR)/libncurses_pic_a-ncurses.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libncurses_pic_a-ncurses.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ncurses.c' object='libncurses_pic_a-ncurses.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libncurses_pic_a-ncurses.Po' tmpdepfile='$(DEPDIR)/libncurses_pic_a-ncurses.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libncurses_pic_a_CFLAGS) $(CFLAGS) -c -o libncurses_pic_a-ncurses.obj `if test -f 'ncurses.c'; then $(CYGPATH_W) 'ncurses.c'; else $(CYGPATH_W) '$(srcdir)/ncurses.c'; fi`
+
+libncurses_plugin_a-ncurses.o: ncurses.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libncurses_plugin_a_CFLAGS) $(CFLAGS) -MT libncurses_plugin_a-ncurses.o -MD -MP -MF "$(DEPDIR)/libncurses_plugin_a-ncurses.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libncurses_plugin_a-ncurses.o `test -f 'ncurses.c' || echo '$(srcdir)/'`ncurses.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libncurses_plugin_a-ncurses.Tpo" "$(DEPDIR)/libncurses_plugin_a-ncurses.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libncurses_plugin_a-ncurses.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ncurses.c' object='libncurses_plugin_a-ncurses.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libncurses_plugin_a-ncurses.Po' tmpdepfile='$(DEPDIR)/libncurses_plugin_a-ncurses.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libncurses_plugin_a_CFLAGS) $(CFLAGS) -c -o libncurses_plugin_a-ncurses.o `test -f 'ncurses.c' || echo '$(srcdir)/'`ncurses.c
+
+libncurses_plugin_a-ncurses.obj: ncurses.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libncurses_plugin_a_CFLAGS) $(CFLAGS) -MT libncurses_plugin_a-ncurses.obj -MD -MP -MF "$(DEPDIR)/libncurses_plugin_a-ncurses.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libncurses_plugin_a-ncurses.obj `if test -f 'ncurses.c'; then $(CYGPATH_W) 'ncurses.c'; else $(CYGPATH_W) '$(srcdir)/ncurses.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libncurses_plugin_a-ncurses.Tpo" "$(DEPDIR)/libncurses_plugin_a-ncurses.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libncurses_plugin_a-ncurses.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ncurses.c' object='libncurses_plugin_a-ncurses.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libncurses_plugin_a-ncurses.Po' tmpdepfile='$(DEPDIR)/libncurses_plugin_a-ncurses.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libncurses_plugin_a_CFLAGS) $(CFLAGS) -c -o libncurses_plugin_a-ncurses.obj `if test -f 'ncurses.c'; then $(CYGPATH_W) 'ncurses.c'; else $(CYGPATH_W) '$(srcdir)/ncurses.c'; fi`
 uninstall-info-am:
+libncursesDATA_INSTALL = $(INSTALL_DATA)
+install-libncursesDATA: $(libncurses_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libncursesdir)
+	@list='$(libncurses_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libncursesDATA_INSTALL) $$d$$p $(DESTDIR)$(libncursesdir)/$$f"; \
+	  $(libncursesDATA_INSTALL) $$d$$p $(DESTDIR)$(libncursesdir)/$$f; \
+	done
+
+uninstall-libncursesDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libncurses_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libncursesdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libncursesdir)/$$f; \
+	done
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run `make' without going through this Makefile.
@@ -474,10 +663,10 @@ distdir: $(DISTFILES)
 check-am: all-am
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-recursive
-all-am: Makefile $(LIBRARIES) $(HEADERS)
+all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libncursesdir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -511,8 +700,10 @@ clean-am: clean-generic clean-libvlcLIBRARIES clean-local \
 	clean-noinstLIBRARIES mostlyclean-am
 
 distclean: distclean-recursive
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
-distclean-am: clean-am distclean-generic distclean-tags
+distclean-am: clean-am distclean-compile distclean-generic \
+	distclean-tags
 
 dvi: dvi-recursive
 
@@ -522,7 +713,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-libvlcLIBRARIES
+install-data-am: install-libncursesDATA install-libvlcLIBRARIES
 
 install-exec-am:
 
@@ -533,12 +724,13 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-recursive
 
-mostlyclean-am: mostlyclean-generic
+mostlyclean-am: mostlyclean-compile mostlyclean-generic
 
 pdf: pdf-recursive
 
@@ -548,26 +740,29 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libvlcLIBRARIES
+uninstall-am: uninstall-info-am uninstall-libncursesDATA \
+	uninstall-libvlcLIBRARIES
 
 uninstall-info: uninstall-info-recursive
 
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am clean \
 	clean-generic clean-libvlcLIBRARIES clean-local \
 	clean-noinstLIBRARIES clean-recursive ctags ctags-recursive \
-	distclean distclean-generic distclean-recursive distclean-tags \
-	distdir dvi dvi-am dvi-recursive info info-am info-recursive \
-	install install-am install-data install-data-am \
-	install-data-recursive install-exec install-exec-am \
-	install-exec-recursive install-info install-info-am \
-	install-info-recursive install-libvlcLIBRARIES install-man \
+	distclean distclean-compile distclean-generic \
+	distclean-recursive distclean-tags distdir dvi dvi-am \
+	dvi-recursive info info-am info-recursive install install-am \
+	install-data install-data-am install-data-recursive \
+	install-exec install-exec-am install-exec-recursive \
+	install-info install-info-am install-info-recursive \
+	install-libncursesDATA install-libvlcLIBRARIES install-man \
 	install-recursive install-strip installcheck installcheck-am \
 	installdirs installdirs-am installdirs-recursive \
 	maintainer-clean maintainer-clean-generic \
-	maintainer-clean-recursive mostlyclean mostlyclean-generic \
-	mostlyclean-recursive pdf pdf-am pdf-recursive ps ps-am \
-	ps-recursive tags tags-recursive uninstall uninstall-am \
-	uninstall-info-am uninstall-info-recursive \
+	maintainer-clean-recursive mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
+	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
+	uninstall uninstall-am uninstall-info-am \
+	uninstall-info-recursive uninstall-libncursesDATA \
 	uninstall-libvlcLIBRARIES uninstall-recursive
 
 
@@ -577,11 +772,17 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in ; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in ; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in ; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in ncurses; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in ncurses; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in ncurses; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
+libncurses_plugin$(LIBEXT): $(libncurses_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage ncurses` in \
+	  c++) echo $(CXXLINK) $(libncurses_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ncurses\` ; $(CXXLINK) $(libncurses_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ncurses` ;; \
+	  objc) echo $(OBJCLINK) $(libncurses_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ncurses\` ; $(OBJCLINK) $(libncurses_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ncurses` ;; \
+	  c|*) echo $(LINK) $(libncurses_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ncurses\` ; $(LINK) $(libncurses_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ncurses` ;; \
+	esac
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

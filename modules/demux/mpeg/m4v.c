@@ -2,7 +2,7 @@
  * m4v.c : MPEG-4 Video demuxer
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: m4v.c 7239 2004-04-02 03:24:53Z fenrir $
+ * $Id: m4v.c 7754 2004-05-23 14:43:14Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -172,12 +172,25 @@ static int Demux( demux_t *p_demux)
         {
             block_t *p_next = p_block_out->p_next;
 
+            if( p_sys->p_es == NULL )
+            {
+                p_sys->p_packetizer->fmt_out.b_packetized = VLC_TRUE;
+                p_sys->p_es = es_out_Add( p_demux->out, &p_sys->p_packetizer->fmt_out);
+            }
+
             es_out_Control( p_demux->out, ES_OUT_SET_PCR, p_sys->i_dts );
 
-            p_block_out->i_dts = p_sys->i_dts;
-            p_block_out->i_pts = 0;
-
             p_block_out->p_next = NULL;
+            if( p_block_out->i_pts == p_block_out->i_dts )
+            {
+                p_block_out->i_pts = p_sys->i_dts;
+            }
+            else
+            {
+                p_block_out->i_pts = 0;
+            }
+            p_block_out->i_dts = p_sys->i_dts;
+
             es_out_Send( p_demux->out, p_sys->p_es, p_block_out );
 
             p_block_out = p_next;

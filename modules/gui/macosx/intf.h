@@ -2,7 +2,7 @@
  * intf.h: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: intf.h 7708 2004-05-17 22:14:25Z fkuehne $
+ * $Id: intf.h 8575 2004-08-29 19:48:09Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -27,37 +27,23 @@
 #include <vlc/intf.h>
 #include <vlc/vout.h>
 #include <vlc/aout.h>
+#include <vlc/input.h>
 
 #include <Cocoa/Cocoa.h>
 
 /*****************************************************************************
- * VLCApplication interface
+ * Local prototypes.
  *****************************************************************************/
-@interface VLCApplication : NSApplication
-{
-    intf_thread_t *p_intf;
-}
+int ExecuteOnMainThread( id target, SEL sel, void * p_arg );
+unsigned int CocoaKeyToVLC( unichar i_key );
 
-- (NSString *)localizedString:(char *)psz;
-- (char *)delocalizeString:(NSString *)psz;
-- (NSString *)wrapString: (NSString *)o_in_string toWidth: (int)i_width;
+#define VLCIntf [[VLCMain sharedInstance] getIntf]
 
-- (void)setIntf:(intf_thread_t *)p_intf;
-- (intf_thread_t *)getIntf;
-- (BOOL)hasDefinedShortcutKey:(NSEvent *)o_event;
-
-@end
-
-#define _NS(s) [NSApp localizedString: _(s)]
+#define _NS(s) [[VLCMain sharedInstance] localizedString: _(s)]
 /* Get an alternate version of the string.
  * This string is stored as '1:string' but when displayed it only displays
  * the translated string. the translation should be '1:translatedstring' though */
-#define _ANS(s) [[NSApp localizedString: _(s)] substringFromIndex:2]
-
-int ExecuteOnMainThread( id target, SEL sel, void * p_arg );
-int PlaylistChanged( vlc_object_t *p_this, const char *psz_variable,
-                     vlc_value_t old_val, vlc_value_t new_val, void *param );
-unsigned int CocoaKeyToVLC( unichar i_key );
+#define _ANS(s) [[[VLCMain sharedInstance] localizedString: _(s)] substringFromIndex:2]
 
 /*****************************************************************************
  * intf_sys_t: description and status of the interface
@@ -67,13 +53,15 @@ struct intf_sys_t
     NSAutoreleasePool * o_pool;
     NSPort * o_sendport;
 
+    /* the current input */
+    input_thread_t * p_input;
+
     /* special actions */
-    vlc_bool_t b_playing;
     vlc_bool_t b_mute;
+    int i_play_status;
 
     /* interface update */
     vlc_bool_t b_intf_update;
-    vlc_bool_t b_play_status;
     vlc_bool_t b_playlist_update;
     vlc_bool_t b_current_title_update;
     vlc_bool_t b_fullscreen_update;
@@ -92,6 +80,7 @@ struct intf_sys_t
  *****************************************************************************/
 @interface VLCMain : NSObject
 {
+    intf_thread_t *p_intf;      /* The main intf object */
     id o_prefs;                 /* VLCPrefs       */
 
     IBOutlet id o_window;       /* main window    */
@@ -213,11 +202,14 @@ struct intf_sys_t
     IBOutlet id o_mu_subtitle;
     IBOutlet id o_mi_deinterlace;
     IBOutlet id o_mu_deinterlace;
+    IBOutlet id o_mi_ffmpeg_pp;
+    IBOutlet id o_mu_ffmpeg_pp;
 
     IBOutlet id o_mu_window;
     IBOutlet id o_mi_minimize;
     IBOutlet id o_mi_close_window;
     IBOutlet id o_mi_controller;
+    IBOutlet id o_mi_equalizer;
     IBOutlet id o_mi_playlist;
     IBOutlet id o_mi_info;
     IBOutlet id o_mi_messages;
@@ -238,10 +230,19 @@ struct intf_sys_t
     IBOutlet id o_dmi_mute;
 }
 
++ (VLCMain *)sharedInstance;
+
+- (intf_thread_t *)getIntf;
+- (void)setIntf:(intf_thread_t *)p_mainintf;
+
 - (id)getControls;
 - (id)getPlaylist;
 - (id)getInfo;
 - (void)terminate;
+- (NSString *)localizedString:(char *)psz;
+- (char *)delocalizeString:(NSString *)psz;
+- (NSString *)wrapString: (NSString *)o_in_string toWidth: (int)i_width;
+- (BOOL)hasDefinedShortcutKey:(NSEvent *)o_event;
 
 - (void)initStrings;
 
@@ -250,7 +251,7 @@ struct intf_sys_t
 - (void)setupMenus;
 
 - (void)updateMessageArray;
-- (void)playStatusUpdated:(BOOL)b_pause;
+- (void)playStatusUpdated:(int) i_status;
 - (void)setSubmenusEnabled:(BOOL)b_enabled;
 - (void)manageVolumeSlider;
 - (IBAction)timesliderUpdate:(id)sender;

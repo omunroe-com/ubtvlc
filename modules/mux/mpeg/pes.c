@@ -2,7 +2,7 @@
  * pes.c: PES packetizer used by the MPEG multiplexers
  *****************************************************************************
  * Copyright (C) 2001, 2002 VideoLAN
- * $Id: pes.c 7306 2004-04-07 22:57:08Z gbazin $
+ * $Id: pes.c 9130 2004-11-03 18:32:30Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -47,8 +47,10 @@
 #define PES_PAYLOAD_SIZE_MAX 65500
 
 static inline int PESHeader( uint8_t *p_hdr, mtime_t i_pts, mtime_t i_dts,
-                             int i_es_size, int i_stream_id, int i_private_id,
-                             vlc_bool_t b_mpeg2 )
+                             int i_es_size, es_format_t *p_fmt,
+                             int i_stream_id, int i_private_id,
+                             vlc_bool_t b_mpeg2, vlc_bool_t b_data_alignment,
+                             int i_header_size )
 {
     bits_buffer_t bits;
     int     i_extra = 0;
@@ -66,7 +68,7 @@ static inline int PESHeader( uint8_t *p_hdr, mtime_t i_pts, mtime_t i_dts,
     }
 
 
-    bits_initwrite( &bits, 30, p_hdr );
+    bits_initwrite( &bits, 50, p_hdr );
 
     /* add start code */
     bits_write( &bits, 24, 0x01 );
@@ -92,26 +94,30 @@ static inline int PESHeader( uint8_t *p_hdr, mtime_t i_pts, mtime_t i_dts,
             {
                 int i_pts_dts;
 
-                if( i_pts > 0 && i_dts > 0 )
+                if( i_pts > 0 && i_dts > 0 &&
+                    ( i_pts != i_dts || ( p_fmt->i_cat == VIDEO_ES &&
+                      p_fmt->i_codec != VLC_FOURCC('m','p','g','v') ) ) )
                 {
-                    bits_write( &bits, 16, i_es_size + i_extra+ 13 );
                     i_pts_dts = 0x03;
+                    if ( !i_header_size ) i_header_size = 0xa;
                 }
                 else if( i_pts > 0 )
                 {
-                    bits_write( &bits, 16, i_es_size  + i_extra + 8 );
                     i_pts_dts = 0x02;
+                    if ( !i_header_size ) i_header_size = 0x5;
                 }
                 else
                 {
-                    bits_write( &bits, 16, i_es_size  + i_extra + 3 );
                     i_pts_dts = 0x00;
+                    if ( !i_header_size ) i_header_size = 0x0;
                 }
 
+                bits_write( &bits, 16, i_es_size + i_extra + 3
+                             + i_header_size ); // size
                 bits_write( &bits, 2, 0x02 ); // mpeg2 id
                 bits_write( &bits, 2, 0x00 ); // pes scrambling control
                 bits_write( &bits, 1, 0x00 ); // pes priority
-                bits_write( &bits, 1, 0x00 ); // data alignement indicator
+                bits_write( &bits, 1, b_data_alignment ); // data alignement indicator
                 bits_write( &bits, 1, 0x00 ); // copyright
                 bits_write( &bits, 1, 0x00 ); // original or copy
 
@@ -122,18 +128,7 @@ static inline int PESHeader( uint8_t *p_hdr, mtime_t i_pts, mtime_t i_dts,
                 bits_write( &bits, 1, 0x00 ); // additional copy info flag
                 bits_write( &bits, 1, 0x00 ); // pes crc flag
                 bits_write( &bits, 1, 0x00 ); // pes extention flags
-                if( i_pts_dts == 0x03 )
-                {
-                    bits_write( &bits, 8, 0x0a ); // header size -> pts and dts
-                }
-                else if( i_pts_dts == 0x02 )
-                {
-                    bits_write( &bits, 8, 0x05 ); // header size -> pts
-                }
-                else
-                {
-                    bits_write( &bits, 8, 0x00 ); // header size -> 0
-                }
+                bits_write( &bits, 8, i_header_size ); // header size -> pts and dts
 
                 /* write pts */
                 if( i_pts_dts & 0x02 )
@@ -145,6 +140,7 @@ static inline int PESHeader( uint8_t *p_hdr, mtime_t i_pts, mtime_t i_dts,
                     bits_write( &bits, 1, 0x01 ); // marker
                     bits_write( &bits, 15, i_pts );
                     bits_write( &bits, 1, 0x01 ); // marker
+                    i_header_size -= 0x5;
                 }
                 /* write i_dts */
                 if( i_pts_dts & 0x01 )
@@ -156,13 +152,20 @@ static inline int PESHeader( uint8_t *p_hdr, mtime_t i_pts, mtime_t i_dts,
                     bits_write( &bits, 1, 0x01 ); // marker
                     bits_write( &bits, 15, i_dts );
                     bits_write( &bits, 1, 0x01 ); // marker
+                    i_header_size -= 0x5;
+                }
+                while ( i_header_size )
+                {
+                    bits_write( &bits, 8, 0xff );
+                    i_header_size--;
                 }
             }
             else /* MPEG1 */
             {
                 int i_pts_dts;
 
-                if( i_pts > 0 && i_dts > 0 )
+                if( i_pts > 0 && i_dts > 0 &&
+                    ( i_pts != i_dts || p_fmt->i_cat == VIDEO_ES ) )
                 {
                     bits_write( &bits, 16, i_es_size + i_extra + 10 /* + stuffing */ );
                     i_pts_dts = 0x03;
@@ -228,11 +231,9 @@ static inline int PESHeader( uint8_t *p_hdr, mtime_t i_pts, mtime_t i_dts,
     }
 }
 
-int E_( EStoPES )( sout_instance_t *p_sout,
-                   block_t **pp_pes,
-                   block_t *p_es,
-                   int i_stream_id,
-                   int b_mpeg2 )
+int E_( EStoPES )( sout_instance_t *p_sout, block_t **pp_pes, block_t *p_es,
+                   es_format_t *p_fmt, int i_stream_id,
+                   int b_mpeg2, int b_data_alignment, int i_header_size )
 {
     block_t *p_pes;
     mtime_t i_pts, i_dts, i_length;
@@ -242,7 +243,7 @@ int E_( EStoPES )( sout_instance_t *p_sout,
 
     int     i_private_id = -1;
 
-    uint8_t header[30];     // PES header + extra < 30 (more like 17)
+    uint8_t header[50];     // PES header + extra < 50 (more like 17)
     int     i_pes_payload;
     int     i_pes_header;
 
@@ -267,7 +268,8 @@ int E_( EStoPES )( sout_instance_t *p_sout,
     {
         i_pes_payload = __MIN( i_size, PES_PAYLOAD_SIZE_MAX );
         i_pes_header  = PESHeader( header, i_pts, i_dts, i_pes_payload,
-                                   i_stream_id, i_private_id, b_mpeg2 );
+                                   p_fmt, i_stream_id, i_private_id, b_mpeg2,
+                                   b_data_alignment, i_header_size );
         i_dts = 0; // only first PES has a dts/pts
         i_pts = 0;
 
@@ -314,7 +316,6 @@ int E_( EStoPES )( sout_instance_t *p_sout,
 
         i_dts += i_length;
     }
-    return( 0 );
+
+    return 0;
 }
-
-

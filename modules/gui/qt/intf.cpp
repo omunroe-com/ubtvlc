@@ -2,7 +2,7 @@
  * intf.cpp: Qt interface
  *****************************************************************************
  * Copyright (C) 1999, 2000 VideoLAN
- * $Id: intf.cpp 7519 2004-04-27 09:33:58Z sam $
+ * $Id: intf.cpp 7945 2004-06-07 21:26:35Z fenrir $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -265,12 +265,12 @@ void IntfWindow::DateDisplay( int i_range )
     if( p_intf->p_sys->p_input )
     {
         char psz_time[ MSTRTIME_MAX_SIZE ];
+        int64_t i_seconds;
 
-        vlc_mutex_lock( &p_intf->p_sys->p_input->stream.stream_lock );
-        p_date->setText( input_OffsetToTime( p_intf->p_sys->p_input, psz_time,
-           ( p_intf->p_sys->p_input->stream.p_selected_area->i_size * i_range )
-               / SLIDER_MAX ) );
-        vlc_mutex_unlock( &p_intf->p_sys->p_input->stream.stream_lock );
+        i_seconds = var_GetTime( p_intf->p_sys->p_input, "time" ) / I64C(1000000 );
+        secstotimestr( psz_time, i_seconds );
+
+        p_date->setText( psz_time );
     }
 }
 
@@ -370,9 +370,8 @@ void IntfWindow::Manage( void )
          * finished dragging the slider */
         else if( p_slider->b_free )
         {
-            off_t i_seek = ( i_value * p_area->i_size ) / SLIDER_MAX;
-
-            input_Seek( p_intf->p_sys->p_input, i_seek, INPUT_SEEK_SET );
+            double f_pos = (double)i_value / (double)SLIDER_MAX;
+            var_SetFloat( p_intf->p_sys->p_input, "position", f_pos );
 
             /* Update the old value */
             p_slider->setOldValue( i_value );
@@ -400,7 +399,7 @@ void IntfWindow::PlaybackPlay( void )
 {
     if( p_intf->p_sys->p_input != NULL )
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_PLAY );
+        var_SetInteger( p_intf->p_sys->p_input, "state", PLAYING_S );
     }
 }
 
@@ -411,7 +410,7 @@ void IntfWindow::PlaybackPause( void )
 {
     if( p_intf->p_sys->p_input != NULL )
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_PAUSE );
+        var_SetInteger( p_intf->p_sys->p_input, "state", PAUSE_S );
     }
 }
 
@@ -422,7 +421,7 @@ void IntfWindow::PlaybackSlow( void )
 {
     if( p_intf->p_sys->p_input != NULL )
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_SLOWER );
+        var_SetVoid( p_intf->p_sys->p_input, "rate-slower" );
     }
 }
 
@@ -433,7 +432,7 @@ void IntfWindow::PlaybackFast( void )
 {
     if( p_intf->p_sys->p_input != NULL )
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_FASTER );
+        var_SetVoid( p_intf->p_sys->p_input, "rate-faster" );
     }
 }
 

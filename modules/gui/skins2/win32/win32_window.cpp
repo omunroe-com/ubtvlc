@@ -2,7 +2,7 @@
  * win32_window.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: win32_window.cpp 7574 2004-05-01 14:23:40Z asmax $
+ * $Id: win32_window.cpp 8966 2004-10-10 10:08:44Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -127,7 +127,8 @@ void Win32Window::moveResize( int left, int top, int width, int height ) const
 
 void Win32Window::raise() const
 {
-    SetWindowPos( m_hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE );
+//     SetWindowPos( m_hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE );
+    SetForegroundWindow( m_hWnd );
 }
 
 

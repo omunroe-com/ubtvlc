@@ -2,11 +2,12 @@ SOURCES_wxwindows = \
 	wxwindows.cpp \
 	wxwindows.h \
 	interface.cpp \
+	extrapanel.cpp \
 	dialogs.cpp \
 	open.cpp \
 	streamout.cpp \
-	streamwizard.cpp \
 	wizard.cpp \
+	streamdata.h \
 	messages.cpp \
 	playlist.cpp \
 	iteminfo.cpp \
@@ -31,4 +32,7 @@ EXTRA_DIST += \
 	bitmaps/slow.xpm \
 	bitmaps/fast.xpm \
 	bitmaps/playlist.xpm \
-	bitmaps/speaker.xpm
+	bitmaps/speaker.xpm \
+	bitmaps/shuffle.xpm \
+	bitmaps/repeat.xpm \
+	bitmaps/loop.xpm

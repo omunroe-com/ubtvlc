@@ -2,7 +2,7 @@
  * distort.c : Misc video effects plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001, 2002, 2003 VideoLAN
- * $Id: distort.c 7453 2004-04-23 20:01:59Z gbazin $
+ * $Id: distort.c 8551 2004-08-28 17:36:02Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -182,7 +182,6 @@ static int Init( vout_thread_t *p_vout )
     if( p_vout->p_sys->p_vout == NULL )
     {
         msg_Err( p_vout, "cannot open vout, aborting" );
-
         return VLC_EGENERIC;
     }
 
@@ -222,9 +221,12 @@ static void Destroy( vlc_object_t *p_this )
 {
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
 
-    DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
-    vlc_object_detach( p_vout->p_sys->p_vout );
-    vout_Destroy( p_vout->p_sys->p_vout );
+    if( p_vout->p_sys->p_vout )
+    {
+        DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
+        vlc_object_detach( p_vout->p_sys->p_vout );
+        vout_Destroy( p_vout->p_sys->p_vout );
+    }
 
     DEL_PARENT_CALLBACKS( SendEventsToChild );
 
@@ -295,7 +297,7 @@ static void DistortWave( vout_thread_t *p_vout, picture_t *p_inpic,
         p_in = p_inpic->p[i_index].p_pixels;
         p_out = p_outpic->p[i_index].p_pixels;
 
-        i_num_lines = p_inpic->p[i_index].i_lines;
+        i_num_lines = p_inpic->p[i_index].i_visible_lines;
 
         black_pixel = ( i_index == Y_PLANE ) ? 0x00 : 0x80;
 
@@ -361,7 +363,7 @@ static void DistortRipple( vout_thread_t *p_vout, picture_t *p_inpic,
 
         black_pixel = ( i_index == Y_PLANE ) ? 0x00 : 0x80;
 
-        i_num_lines = p_inpic->p[i_index].i_lines;
+        i_num_lines = p_inpic->p[i_index].i_visible_lines;
 
         i_first_line = i_num_lines * 4 / 5;
 

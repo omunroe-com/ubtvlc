@@ -2,7 +2,7 @@
  * vout.h: Windows DirectX video output header file
  *****************************************************************************
  * Copyright (C) 2001-2004 VideoLAN
- * $Id: vout.h 7427 2004-04-22 15:59:05Z gbazin $
+ * $Id: vout.h 9269 2004-11-10 13:04:45Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -49,6 +49,7 @@ struct vout_sys_t
     HWND                 hwnd;                  /* Handle of the main window */
     HWND                 hvideownd;        /* Handle of the video sub-window */
     HWND                 hparent;             /* Handle of the parent window */
+    HWND                 hfswnd;          /* Handle of the fullscreen window */
     WNDPROC              pf_wndproc;             /* Window handling callback */
 
     /* Multi-monitor support */
@@ -100,6 +101,15 @@ struct vout_sys_t
     /* Misc */
     vlc_bool_t      b_on_top_change;
 
+    vlc_bool_t      b_wallpaper;
+    COLORREF        color_bkg;
+    COLORREF        color_bkgtxt;
+
+#ifdef MODULE_NAME_IS_glwin32
+    HDC hGLDC;
+    HGLRC hGLRC;
+#endif
+
     event_thread_t *p_event;
     vlc_mutex_t    lock;
 };
@@ -137,3 +147,4 @@ void DirectXUpdateRects ( vout_thread_t *p_vout, vlc_bool_t b_force );
 #define WM_VLC_CHANGE_TEXT WM_APP + 3
 #define IDM_TOGGLE_ON_TOP WM_USER + 1
 #define DX_POSITION_CHANGE 0x1000
+#define DX_WALLPAPER_CHANGE 0x2000

@@ -2,7 +2,7 @@
  * video.c: video decoder using the ffmpeg library
  *****************************************************************************
  * Copyright (C) 1999-2001 VideoLAN
- * $Id: video.c 7673 2004-05-15 11:10:42Z fenrir $
+ * $Id: video.c 9156 2004-11-05 14:57:53Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -70,6 +70,9 @@ struct decoder_sys_t
     int b_direct_rendering;
 
     vlc_bool_t b_has_b_frames;
+
+    /* Hack to force display of still pictures */
+    vlc_bool_t b_first_frame;
 
     int i_buffer_orig, i_buffer;
     char *p_buffer_orig, *p_buffer;
@@ -177,6 +180,12 @@ static inline picture_t *ffmpeg_NewPictBuf( decoder_t *p_dec,
         }
     }
 
+    if( p_context->frame_rate > 0 && p_context->frame_rate_base > 0 )
+    {
+        p_dec->fmt_out.video.i_frame_rate = p_context->frame_rate;
+        p_dec->fmt_out.video.i_frame_rate_base = p_context->frame_rate_base;
+    }
+
     p_pic = p_dec->pf_vout_buffer_new( p_dec );
 
 #ifdef LIBAVCODEC_PP
@@ -221,6 +230,9 @@ int E_(InitVideoDec)( decoder_t *p_dec, AVCodecContext *p_context,
     p_sys->p_ff_pic = avcodec_alloc_frame();
 
     /* ***** Fill p_context with init values ***** */
+    /* FIXME: remove when ffmpeg deals properly with avc1 */
+    if( p_dec->fmt_in.i_codec != VLC_FOURCC('a','v','c','1') )
+    /* End FIXME */
     p_sys->p_context->codec_tag = ffmpeg_CodecTag( p_dec->fmt_in.i_codec );
     p_sys->p_context->width  = p_dec->fmt_in.video.i_width;
     p_sys->p_context->height = p_dec->fmt_in.video.i_height;
@@ -240,6 +252,12 @@ int E_(InitVideoDec)( decoder_t *p_dec, AVCodecContext *p_context,
     var_Get( p_dec, "ffmpeg-vismv", &val );
 #if LIBAVCODEC_BUILD >= 4698
     if( val.i_int ) p_sys->p_context->debug_mv = val.i_int;
+#endif
+
+    var_Create( p_dec, "ffmpeg-lowres", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_dec, "ffmpeg-lowres", &val );
+#if LIBAVCODEC_BUILD >= 4723
+    if( val.i_int > 0 && val.i_int <= 2 ) p_sys->p_context->lowres = val.i_int;
 #endif
 
     /* ***** ffmpeg frame skipping ***** */
@@ -349,7 +367,13 @@ int E_(InitVideoDec)( decoder_t *p_dec, AVCodecContext *p_context,
                           p_sys->p_context->sub_id );
             }
         }
-        else if( p_dec->fmt_in.i_codec != VLC_FOURCC( 'a', 'v', 'c', '1' ) )
+        /* FIXME: remove when ffmpeg deals properly with avc1 */
+        else if( p_dec->fmt_in.i_codec == VLC_FOURCC('a','v','c','1') )
+        {
+            ;
+        }
+        /* End FIXME */
+        else
         {
             p_sys->p_context->extradata_size = i_size;
             p_sys->p_context->extradata =
@@ -365,10 +389,11 @@ int E_(InitVideoDec)( decoder_t *p_dec, AVCodecContext *p_context,
     p_sys->input_pts = p_sys->input_dts = 0;
     p_sys->i_pts = 0;
     p_sys->b_has_b_frames = VLC_FALSE;
+    p_sys->b_first_frame = VLC_TRUE;
     p_sys->i_late_frames = 0;
     p_sys->i_buffer = 0;
     p_sys->i_buffer_orig = 1;
-    p_sys->p_buffer_orig = p_sys->p_buffer = malloc( p_sys->i_buffer );
+    p_sys->p_buffer_orig = p_sys->p_buffer = malloc( p_sys->i_buffer_orig );
 
     /* Set output properties */
     p_dec->fmt_out.i_cat = VIDEO_ES;
@@ -389,6 +414,7 @@ int E_(InitVideoDec)( decoder_t *p_dec, AVCodecContext *p_context,
     {
         vlc_mutex_unlock( lockval.p_address );
         msg_Err( p_dec, "cannot open codec (%s)", p_sys->psz_namecodec );
+        free( p_sys );
         return VLC_EGENERIC;
     }
     vlc_mutex_unlock( lockval.p_address );
@@ -405,6 +431,7 @@ picture_t *E_(DecodeVideo)( decoder_t *p_dec, block_t **pp_block )
 {
     decoder_sys_t *p_sys = p_dec->p_sys;
     int b_drawpicture;
+    int b_null_size = VLC_FALSE;
     block_t *p_block;
 
     if( !pp_block || !*pp_block ) return NULL;
@@ -423,7 +450,7 @@ picture_t *E_(DecodeVideo)( decoder_t *p_dec, block_t **pp_block )
         return NULL;
     }
 
-    if( p_sys->i_late_frames > 0 &&
+    if( !p_dec->b_pace_control && p_sys->i_late_frames > 0 &&
         mdate() - p_sys->i_late_frames_start > I64C(5000000) )
     {
         if( p_sys->i_pts )
@@ -448,7 +475,8 @@ picture_t *E_(DecodeVideo)( decoder_t *p_dec, block_t **pp_block )
 
     /* TODO implement it in a better way */
     /* A good idea could be to decode all I pictures and see for the other */
-    if( p_sys->b_hurry_up && p_sys->i_late_frames > 4 )
+    if( !p_dec->b_pace_control &&
+        p_sys->b_hurry_up && p_sys->i_late_frames > 4 )
     {
         b_drawpicture = 0;
         if( p_sys->i_late_frames < 8 )
@@ -476,6 +504,7 @@ picture_t *E_(DecodeVideo)( decoder_t *p_dec, block_t **pp_block )
     if( p_sys->p_context->width <= 0 || p_sys->p_context->height <= 0 )
     {
         p_sys->p_context->hurry_up = 5;
+        b_null_size = VLC_TRUE;
     }
 
     /*
@@ -516,6 +545,17 @@ picture_t *E_(DecodeVideo)( decoder_t *p_dec, block_t **pp_block )
         i_used = avcodec_decode_video( p_sys->p_context, p_sys->p_ff_pic,
                                        &b_gotpicture,
                                        p_sys->p_buffer, p_sys->i_buffer );
+        if( b_null_size && p_sys->p_context->width > 0 &&
+            p_sys->p_context->height > 0 )
+        {
+            /* Reparse it to not drop the I frame */
+            b_null_size = VLC_FALSE;
+            p_sys->p_context->hurry_up = 0;
+            i_used = avcodec_decode_video( p_sys->p_context, p_sys->p_ff_pic,
+                                           &b_gotpicture,
+                                           p_sys->p_buffer, p_sys->i_buffer );
+        }
+
         if( i_used < 0 )
         {
             msg_Warn( p_dec, "cannot decode one frame (%d bytes)",
@@ -598,6 +638,20 @@ picture_t *E_(DecodeVideo)( decoder_t *p_dec, block_t **pp_block )
                     p_sys->p_context->frame_rate_base /
                     (2 * p_sys->p_context->frame_rate);
             }
+
+            if( p_sys->b_first_frame )
+            {
+                /* Hack to force display of still pictures */
+                p_sys->b_first_frame = VLC_FALSE;
+                p_pic->b_force = VLC_TRUE;
+            }
+
+            p_pic->i_nb_fields = 2 + p_sys->p_ff_pic->repeat_pict;
+#if LIBAVCODEC_BUILD >= 4685
+            p_pic->b_progressive = !p_sys->p_ff_pic->interlaced_frame;
+            p_pic->b_top_field_first = p_sys->p_ff_pic->top_field_first;
+#endif
+
             return p_pic;
         }
         else
@@ -620,7 +674,7 @@ void E_(EndVideoDec)( decoder_t *p_dec )
 {
     decoder_sys_t *p_sys = p_dec->p_sys;
 
-    if( p_sys->p_ff_pic ) free( p_sys->p_ff_pic );
+    if( p_sys->p_ff_pic ) av_free( p_sys->p_ff_pic );
 
 #ifdef LIBAVCODEC_PP
     E_(ClosePostproc)( p_dec, p_sys->p_pp );
@@ -657,7 +711,8 @@ static void ffmpeg_CopyPicture( decoder_t *p_dec,
             i_dst_stride = p_pic->p[i_plane].i_pitch;
 
             i_size = __MIN( i_src_stride, i_dst_stride );
-            for( i_line = 0; i_line < p_pic->p[i_plane].i_lines; i_line++ )
+            for( i_line = 0; i_line < p_pic->p[i_plane].i_visible_lines;
+                 i_line++ )
             {
                 p_dec->p_vlc->pf_memcpy( p_dst, p_src, i_size );
                 p_src += i_src_stride;

@@ -2,9 +2,9 @@
  * codecs.h: codec related structures needed by the demuxers and decoders
  *****************************************************************************
  * Copyright (C) 1999-2001 VideoLAN
- * $Id: codecs.h 7167 2004-03-25 14:00:33Z fenrir $
+ * $Id: codecs.h 8401 2004-08-08 01:36:56Z fenrir $
  *
- * Author: Gildas Bazin <gbazin@netcourrier.com>
+ * Author: Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -120,11 +120,38 @@ typedef struct {
 } BITMAPINFO, *LPBITMAPINFO;
 #endif
 
-/* dvb_spuinfo_t exports the id of the selected track to the decoder */
+#ifndef _RECT32_
+#define _RECT32_
 typedef struct
+#ifdef HAVE_ATTRIBUTE_PACKED
+    __attribute__((__packed__))
+#endif
 {
-    unsigned int i_id;
-} dvb_spuinfo_t;
+    int left, top, right, bottom;
+} RECT32;
+#endif
+
+#ifndef _REFERENCE_TIME_
+#define _REFERENCE_TIME_
+typedef int64_t REFERENCE_TIME;
+#endif
+
+#ifndef _VIDEOINFOHEADER_
+#define _VIDEOINFOHEADER_
+typedef struct
+#ifdef HAVE_ATTRIBUTE_PACKED
+    __attribute__((__packed__))
+#endif
+{
+    RECT32            rcSource;
+    RECT32            rcTarget;
+    uint32_t          dwBitRate;
+    uint32_t          dwBitErrorRate;
+    REFERENCE_TIME    AvgTimePerFrame;
+    BITMAPINFOHEADER  bmiHeader;
+    //int               reserved[3];
+} VIDEOINFOHEADER;
+#endif
 
 /* WAVE format wFormatTag IDs */
 #define WAVE_FORMAT_UNKNOWN             0x0000 /* Microsoft Corporation */
@@ -137,6 +164,7 @@ typedef struct
 #define WAVE_FORMAT_IMA_ADPCM           0x0011 /* Intel Corporation */
 #define WAVE_FORMAT_GSM610              0x0031 /* Microsoft Corporation */
 #define WAVE_FORMAT_MSNAUDIO            0x0032 /* Microsoft Corporation */
+#define WAVE_FORMAT_G726                0x0045 /* ITU-T standard  */
 #define WAVE_FORMAT_MPEG                0x0050 /* Microsoft Corporation */
 #define WAVE_FORMAT_MPEGLAYER3          0x0055 /* ISO/MPEG Layer3 Format Tag */
 #define WAVE_FORMAT_DOLBY_AC3_SPDIF     0x0092 /* Sonic Foundry */
@@ -191,6 +219,7 @@ wave_format_tag_to_fourcc[] =
     { WAVE_FORMAT_ALAW,     VLC_FOURCC( 'a', 'l', 'a', 'w' ), "A-Law" },
     { WAVE_FORMAT_MULAW,    VLC_FOURCC( 'm', 'l', 'a', 'w' ), "Mu-Law" },
     { WAVE_FORMAT_IMA_ADPCM,VLC_FOURCC( 'm', 's', 0x00,0x11), "Ima-Adpcm" },
+    { WAVE_FORMAT_G726,     VLC_FOURCC( 'g', '7', '2', '6' ), "G.726 Adpcm" },
     { WAVE_FORMAT_MPEGLAYER3,VLC_FOURCC('m', 'p', 'g', 'a' ), "Mpeg Audio" },
     { WAVE_FORMAT_MPEG,     VLC_FOURCC( 'm', 'p', 'g', 'a' ), "Mpeg Audio" },
     { WAVE_FORMAT_A52,      VLC_FOURCC( 'a', '5', '2', ' ' ), "A/52" },
@@ -205,25 +234,26 @@ wave_format_tag_to_fourcc[] =
     { WAVE_FORMAT_UNKNOWN,  VLC_FOURCC( 'u', 'n', 'd', 'f' ), "Unknown" }
 };
 
-static inline void wf_tag_to_fourcc( uint16_t i_tag,
-                                     vlc_fourcc_t *fcc, char **ppsz_name )
+static inline void wf_tag_to_fourcc( uint16_t i_tag, vlc_fourcc_t *fcc,
+                                     char **ppsz_name )
 {
     int i;
     for( i = 0; wave_format_tag_to_fourcc[i].i_tag != 0; i++ )
     {
-        if( wave_format_tag_to_fourcc[i].i_tag == i_tag )
-        {
-            break;
-        }
+        if( wave_format_tag_to_fourcc[i].i_tag == i_tag ) break;
     }
-    if( fcc )
+    if( fcc ) *fcc = wave_format_tag_to_fourcc[i].i_fourcc;
+    if( ppsz_name ) *ppsz_name = wave_format_tag_to_fourcc[i].psz_name;
+}
+
+static inline void fourcc_to_wf_tag( vlc_fourcc_t fcc, uint16_t *pi_tag )
+{
+    int i;
+    for( i = 0; wave_format_tag_to_fourcc[i].i_tag != 0; i++ )
     {
-        *fcc = wave_format_tag_to_fourcc[i].i_fourcc;
+        if( wave_format_tag_to_fourcc[i].i_fourcc == fcc ) break;
     }
-    if( ppsz_name )
-    {
-        *ppsz_name = wave_format_tag_to_fourcc[i].psz_name;
-    }
+    if( pi_tag ) *pi_tag = wave_format_tag_to_fourcc[i].i_tag;
 }
 
 /**
@@ -250,6 +280,7 @@ typedef struct es_sys_t
     vlc_bool_t          b_forced_subs;
     unsigned int        palette[16];
     unsigned int        colors[4];
+
 } subtitle_data_t;
 
 #endif /* "codecs.h" */

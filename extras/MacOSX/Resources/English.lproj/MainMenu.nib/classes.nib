@@ -53,6 +53,38 @@
         }, 
         {
             ACTIONS = {
+                bandSliderUpdated = id; 
+                changePreset = id; 
+                enable = id; 
+                preampSliderUpdated = id; 
+                toggleWindow = id; 
+                twopass = id; 
+            }; 
+            CLASS = VLCEqualizer; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                "o_btn_equalizer" = id; 
+                "o_ckb_2pass" = id; 
+                "o_ckb_enable" = id; 
+                "o_fld_preamp" = id; 
+                "o_popup_presets" = id; 
+                "o_slider_band1" = id; 
+                "o_slider_band10" = id; 
+                "o_slider_band2" = id; 
+                "o_slider_band3" = id; 
+                "o_slider_band4" = id; 
+                "o_slider_band5" = id; 
+                "o_slider_band6" = id; 
+                "o_slider_band7" = id; 
+                "o_slider_band8" = id; 
+                "o_slider_band9" = id; 
+                "o_slider_preamp" = id; 
+                "o_window" = id; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            ACTIONS = {
                 createOutlineGroup = id; 
                 deleteOutlineGroup = id; 
                 handleGroup = id; 
@@ -137,7 +169,9 @@
                 "o_mi_device" = id; 
                 "o_mi_documentation" = id; 
                 "o_mi_double_window" = id; 
+                "o_mi_equalizer" = id; 
                 "o_mi_faster" = id; 
+                "o_mi_ffmpeg_pp" = id; 
                 "o_mi_fittoscreen" = id; 
                 "o_mi_floatontop" = id; 
                 "o_mi_fullscreen" = id; 
@@ -172,6 +206,7 @@
                 "o_mi_reportabug" = id; 
                 "o_mi_screen" = id; 
                 "o_mi_select_all" = id; 
+                "o_mi_services" = id; 
                 "o_mi_show_all" = id; 
                 "o_mi_slower" = id; 
                 "o_mi_stop" = id; 
@@ -193,6 +228,7 @@
                 "o_mu_deinterlace" = id; 
                 "o_mu_device" = id; 
                 "o_mu_edit" = id; 
+                "o_mu_ffmpeg_pp" = id; 
                 "o_mu_file" = id; 
                 "o_mu_help" = id; 
                 "o_mu_program" = id; 
@@ -257,12 +293,18 @@
                 "o_file_btn_browse" = id; 
                 "o_file_path" = id; 
                 "o_file_stream" = id; 
+                "o_file_sub_align_lbl" = id; 
+                "o_file_sub_align_pop" = id; 
                 "o_file_sub_btn_browse" = id; 
                 "o_file_sub_btn_settings" = id; 
                 "o_file_sub_ckbox" = id; 
                 "o_file_sub_delay" = id; 
                 "o_file_sub_delay_lbl" = id; 
                 "o_file_sub_delay_stp" = id; 
+                "o_file_sub_encoding_lbl" = id; 
+                "o_file_sub_encoding_pop" = id; 
+                "o_file_sub_file_box" = id; 
+                "o_file_sub_font_box" = id; 
                 "o_file_sub_fps" = id; 
                 "o_file_sub_fps_lbl" = id; 
                 "o_file_sub_fps_stp" = id; 
@@ -270,6 +312,8 @@
                 "o_file_sub_override" = id; 
                 "o_file_sub_path" = id; 
                 "o_file_sub_sheet" = id; 
+                "o_file_sub_size_lbl" = id; 
+                "o_file_sub_size_pop" = id; 
                 "o_mrl" = id; 
                 "o_mrl_lbl" = id; 
                 "o_net_http_url" = id; 
@@ -314,7 +358,9 @@
                 "o_channel_name_lbl" = id; 
                 "o_display" = id; 
                 "o_dump_chkbox" = id; 
+                "o_file_chkbox" = id; 
                 "o_file_field" = id; 
+                "o_http_chkbox" = id; 
                 "o_method" = id; 
                 "o_misc_lbl" = id; 
                 "o_mux_lbl" = id; 
@@ -324,7 +370,10 @@
                 "o_output_ckbox" = id; 
                 "o_output_settings" = id; 
                 "o_output_sheet" = id; 
+                "o_rtsp_chkbox" = id; 
                 "o_sap_chkbox" = id; 
+                "o_sdp_url" = id; 
+                "o_sdp_url_lbl" = id; 
                 "o_slp_chkbox" = id; 
                 "o_stream_address" = id; 
                 "o_stream_address_lbl" = id; 
@@ -346,6 +395,8 @@
                 "o_transcode_video_bitrate" = id; 
                 "o_transcode_video_bitrate_lbl" = id; 
                 "o_transcode_video_chkbox" = id; 
+                "o_transcode_video_scale" = id; 
+                "o_transcode_video_scale_lbl" = id; 
                 "o_transcode_video_selector" = id; 
             }; 
             SUPERCLASS = NSObject; 

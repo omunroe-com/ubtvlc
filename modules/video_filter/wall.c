@@ -2,7 +2,7 @@
  * wall.c : Wall video plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001, 2002, 2003 VideoLAN
- * $Id: wall.c 7522 2004-04-27 16:35:15Z sam $
+ * $Id: wall.c 8551 2004-08-28 17:36:02Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -52,11 +52,11 @@ static int  SendEvents( vlc_object_t *, char const *,
  *****************************************************************************/
 #define COLS_TEXT N_("Number of columns")
 #define COLS_LONGTEXT N_("Select the number of horizontal video windows in " \
-    "which to split the video")
+    "which to split the video.")
 
 #define ROWS_TEXT N_("Number of rows")
 #define ROWS_LONGTEXT N_("Select the number of vertical video windows in " \
-    "which to split the video")
+    "which to split the video.")
 
 #define ACTIVE_TEXT N_("Active windows")
 #define ACTIVE_LONGTEXT N_("Comma separated list of active windows, " \
@@ -402,7 +402,7 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
                 p_in = p_pic->p[i_plane].p_pixels
                         + pi_top_skip[i_plane] + pi_left_skip[i_plane];
 
-                p_in_end = p_in + p_outpic->p[i_plane].i_lines
+                p_in_end = p_in + p_outpic->p[i_plane].i_visible_lines
                                    * p_pic->p[i_plane].i_pitch;
 
                 p_out = p_outpic->p[i_plane].p_pixels;
@@ -428,7 +428,7 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
         for( i_plane = 0 ; i_plane < p_pic->i_planes ; i_plane++ )
         {
             pi_top_skip[i_plane] += p_vout->p_sys->pp_vout[ i_vout ].i_height
-                                     * p_pic->p[i_plane].i_lines
+                                     * p_pic->p[i_plane].i_visible_lines
                                      / p_vout->output.i_height
                                      * p_pic->p[i_plane].i_pitch;
         }

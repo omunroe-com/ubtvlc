@@ -2,7 +2,7 @@
  * async_queue.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: async_queue.hpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: async_queue.hpp 8562 2004-08-29 09:00:03Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -58,6 +58,8 @@ class AsyncQueue: public SkinObject
         list<CmdGenericPtr> m_cmdList;
         /// Timer
         OSTimer *m_pTimer;
+        /// Mutex
+        vlc_mutex_t m_lock;
 
         // Private because it is a singleton
         AsyncQueue( intf_thread_t *pIntf );

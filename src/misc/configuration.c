@@ -2,9 +2,9 @@
  * configuration.c management of the modules configuration
  *****************************************************************************
  * Copyright (C) 2001-2004 VideoLAN
- * $Id: configuration.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: configuration.c 8950 2004-10-07 22:05:34Z hartman $
  *
- * Authors: Gildas Bazin <gbazin@netcourrier.com>
+ * Authors: Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,9 +27,7 @@
 #include <stdio.h>                                              /* sprintf() */
 #include <stdlib.h>                                      /* free(), strtol() */
 #include <string.h>                                              /* strdup() */
-#ifdef HAVE_ERRNO_H
-#   include <errno.h>                                               /* errno */
-#endif
+#include <errno.h>                                                  /* errno */
 
 #ifdef HAVE_UNISTD_H
 #    include <unistd.h>                                          /* getuid() */
@@ -530,8 +528,8 @@ void config_Duplicate( module_t *p_module, module_config_t *p_orig )
                 if( p_module->p_config[i].ppsz_list )
                 {
                     for( j = 0; j < p_orig[i].i_list; j++ )
-                        p_module->p_config[i].ppsz_list[j] =
-                            strdup( p_orig[i].ppsz_list[j] );
+                        p_module->p_config[i].ppsz_list[j] = p_orig[i].ppsz_list[j] ?
+                            strdup( p_orig[i].ppsz_list[j] ) : NULL ;
                     p_module->p_config[i].ppsz_list[j] = NULL;
                 }
             }
@@ -542,8 +540,8 @@ void config_Duplicate( module_t *p_module, module_config_t *p_orig )
                 if( p_module->p_config[i].ppsz_list_text )
                 {
                     for( j = 0; j < p_orig[i].i_list; j++ )
-                        p_module->p_config[i].ppsz_list_text[j] =
-                            strdup( _(p_orig[i].ppsz_list_text[j]) );
+                        p_module->p_config[i].ppsz_list_text[j] = _(p_orig[i].ppsz_list_text[j]) ?
+                            strdup( _(p_orig[i].ppsz_list_text[j] ) ) : NULL ;
                     p_module->p_config[i].ppsz_list_text[j] = NULL;
                 }
             }
@@ -910,6 +908,52 @@ int __config_LoadConfigFile( vlc_object_t *p_this, const char *psz_module_name )
 }
 
 /*****************************************************************************
+ * config_CreateDir: Create configuration directory if it doesn't exist.
+ *****************************************************************************/
+int config_CreateDir( vlc_object_t *p_this, char *psz_dirname )
+{
+    if( !psz_dirname && !*psz_dirname ) return -1;
+
+#if defined( UNDER_CE )
+    {
+        wchar_t psz_new[ MAX_PATH ];
+        char psz_mod[MAX_PATH];
+        int i = 0;
+
+        /* Convert '/' into '\' */
+        while( *psz_dirname )
+        {
+            if( *psz_dirname == '/' ) psz_mod[i] = '\\';
+            else psz_mod[i] = *psz_dirname;
+            psz_dirname++;
+            i++;
+        }
+        psz_mod[i] = 0;
+
+        MultiByteToWideChar( CP_ACP, 0, psz_mod, -1, psz_new, MAX_PATH );
+        if( CreateDirectory( psz_new, NULL ) )
+        {
+            msg_Err( p_this, "could not create %s", psz_mod );
+        }
+    }
+
+#else
+#   if defined( WIN32 )
+    if( mkdir( psz_dirname ) && errno != EEXIST )
+#   else
+    if( mkdir( psz_dirname, 0755 ) && errno != EEXIST )
+#   endif
+    {
+        msg_Err( p_this, "could not create %s (%s)",
+                 psz_dirname, strerror(errno) );
+    }
+
+#endif
+
+    return 0;
+}
+
+/*****************************************************************************
  * config_SaveConfigFile: Save a module's config options.
  *****************************************************************************
  * This will save the specified module's config options to the config file.
@@ -967,35 +1011,7 @@ int __config_SaveConfigFile( vlc_object_t *p_this, const char *psz_module_name )
             return -1;
         }
 
-#if defined( UNDER_CE )
-        {
-            wchar_t psz_new[ MAX_PATH ];
-            MultiByteToWideChar( CP_ACP, 0, psz_filename, -1, psz_new,
-                                 MAX_PATH );
-            if( CreateDirectory( psz_new, NULL ) )
-            {
-                msg_Err( p_this, "could not create %s", psz_filename );
-            }
-        }
-
-#elif defined( HAVE_ERRNO_H )
-#   if defined( WIN32 )
-        if( mkdir( psz_filename ) && errno != EEXIST )
-#   else
-        if( mkdir( psz_filename, 0755 ) && errno != EEXIST )
-#   endif
-        {
-            msg_Err( p_this, "could not create %s (%s)",
-                             psz_filename, strerror(errno) );
-        }
-
-#else
-        if( mkdir( psz_filename ) )
-        {
-            msg_Err( p_this, "could not create %s", psz_filename );
-        }
-
-#endif
+        config_CreateDir( p_this, psz_filename );
 
         strcat( psz_filename, "/" CONFIG_FILE );
     }
@@ -1540,12 +1556,18 @@ char *config_GetHomeDir( void )
     struct passwd *p_pw = NULL;
 #endif
 
-#if defined(WIN32) || defined(UNDER_CE)
+#if defined(WIN32) && !defined(UNDER_CE)
     typedef HRESULT (WINAPI *SHGETFOLDERPATH)( HWND, int, HANDLE, DWORD,
                                                LPSTR );
+#ifndef CSIDL_FLAG_CREATE
 #   define CSIDL_FLAG_CREATE 0x8000
+#endif
+#ifndef CSIDL_APPDATA
 #   define CSIDL_APPDATA 0x1A
+#endif
+#ifndef SHGFP_TYPE_CURRENT
 #   define SHGFP_TYPE_CURRENT 0
+#endif
 
     HINSTANCE shfolder_dll;
     SHGETFOLDERPATH SHGetFolderPath ;
@@ -1558,10 +1580,7 @@ char *config_GetHomeDir( void )
         if ( SHGetFolderPath != NULL )
         {
             p_homedir = (char *)malloc( MAX_PATH );
-            if( !p_homedir )
-            {
-                return NULL;
-            }
+            if( !p_homedir ) return NULL;
 
             /* get the "Application Data" folder for the current user */
             if( S_OK == SHGetFolderPath( NULL,
@@ -1573,8 +1592,23 @@ char *config_GetHomeDir( void )
                 return p_homedir;
             }
             free( p_homedir );
+            p_homedir = NULL;
         }
         FreeLibrary( shfolder_dll );
+    }
+
+#elif defined(UNDER_CE)
+
+    wchar_t p_whomedir[MAX_PATH];
+
+    /* get the "Application Data" folder for the current user */
+    if( SHGetSpecialFolderPath( NULL, p_whomedir, CSIDL_APPDATA, 1 ) )
+    {
+        p_homedir = (char *)malloc( MAX_PATH );
+        if( !p_homedir ) return NULL;
+
+        sprintf( p_homedir, "%ls", p_whomedir );
+        return p_homedir;
     }
 #endif
 

@@ -2,7 +2,7 @@
  * vlc_httpd.h: builtin HTTP/RTSP server.
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: vlc_httpd.h 7137 2004-03-22 12:33:29Z fenrir $
+ * $Id: vlc_httpd.h 9146 2004-11-04 22:57:16Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -113,6 +113,8 @@ typedef int (*httpd_file_callback_t)( httpd_file_sys_t*, httpd_file_t *, uint8_t
 
 /* create a new host */
 VLC_EXPORT( httpd_host_t *, httpd_HostNew, ( vlc_object_t *, char *psz_host, int i_port ) );
+VLC_EXPORT( httpd_host_t *, httpd_TLSHostNew, ( vlc_object_t *, char *, int, tls_server_t * ) );
+
 /* delete a host */
 VLC_EXPORT( void,           httpd_HostDelete, ( httpd_host_t * ) );
 

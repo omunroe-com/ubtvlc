@@ -1,3 +1,192 @@
+vlc (0.8.1-1ubuntu7) hoary; urgency=low
+
+  * Really fix the .desktop entries.
+
+ -- Daniel T Chen <crimsun@fungus.sh.nu>  Sun, 27 Mar 2005 22:05:30 -0500
+
+vlc (0.8.1-1ubuntu6) hoary; urgency=low
+
+  * One last fix for 64-bit arches in modules/gui/wxwindows/subtitles.cpp .
+
+ -- "Daniel T. Chen (new)" <crimsun@fungus.sh.nu>  Tue, 22 Mar 2005 21:30:52 -0500
+
+vlc (0.8.1-1ubuntu5) hoary; urgency=low
+
+  * Fix FTBFS on 64-bit arches in modules/gui/wxwindows/streamout.cpp .
+
+ -- "Daniel T. Chen (new)" <crimsun@fungus.sh.nu>  Tue, 22 Mar 2005 13:32:00 -0500
+
+vlc (0.8.1-1ubuntu4) hoary; urgency=low
+
+  * The "Do not be overzealous" revision.
+  * Restore diff from 0.8.1-1ubuntu1 and only apply the following changes:
+    + debian/:
+      - control: s/xlibs-static-pic/libxinerama-dev/, bump debhelper
+        (>= 4.2.21) for dh_desktop, use wxgtk2.5 instead of 2.4.
+      - rules: Invoke dh_desktop after copying gnome-vlc.desktop to correct
+        location.
+    + modules/gui/wxwindows/open.cpp: Compilation fix on 64-bit systems.
+
+ -- "Daniel T. Chen (new)" <crimsun@fungus.sh.nu>  Tue, 22 Mar 2005 01:59:22 -0500
+
+vlc (0.8.1-1ubuntu3) hoary; urgency=low
+
+  * Don't be silly about libpostproc-dev, which is in multiverse; remove
+    from debian/control:Build-Depends.
+
+ -- "Daniel T. Chen (new)" <crimsun@fungus.sh.nu>  Tue, 22 Mar 2005 00:33:39 -0500
+
+vlc (0.8.1-1ubuntu2) hoary; urgency=low
+
+  * Sync with Debian, pull changes up through 0.8.1-3 courtesy of Sam
+    Hocevar:
+    + debian/:
+      - control: Use wxgtk2.5 instead of 2.4.
+      - g{nome-}vlc.desktop: Fix for the icon location.
+    + modules/gui/wxwindows/open.cpp: Compilation fix on 64-bit systems.
+  * Rebuild with fixed libxosd-dev as part of X.Org transition:
+    + debian/:
+      - control:Build-Depends: s/xlibs-static-pic/libxinerama-dev/ ,
+        require debhelper (>= 4.2.21) for dh_desktop.
+      - rules: Install .desktop file for new GNOME menu method.
+
+ -- "Daniel T. Chen" (new) <crimsun@fungus.sh.nu>  Mon, 21 Mar 2005 19:43:05 -0500
+
+vlc (0.8.1-1ubuntu1) hoary; urgency=low
+
+  * Rebuild with new libflac (no changes)
+
+ -- Matt Zimmerman <mdz@canonical.com>  Fri,  7 Jan 2005 09:20:48 -0800
+
+vlc (0.8.1-1) unstable; urgency=low
+
+  * New upstream release.
+  * debian/gnome-vlc.desktop:
+    + Fixed program path (Closes: #280290).
+  * debian/control:
+    + Require an up-to-date liblivemedia.
+    + Build-depend on libgnutls11-dev.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Sun, 14 Nov 2004 22:21:23 +0100
+
+vlc (0.8.0.final-1) unstable; urgency=low
+
+  * Final 0.8.0 upstream release.
+  * src/misc/modules.c:
+    + Fixed a startup issue with the svlc shortcut (Closes: #274376).
+  * debian/control:
+    + Suggest the Mozilla and ALSA plugins. Only mentioned the others in
+      the package description because they are not of notable usefulness
+      (Closes: #275160).
+  * modules/access/http.c:
+    + Fix HTTP proxy handling (Closes: #278381).
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Wed,  3 Nov 2004 14:52:05 +0100
+
+vlc (0.8.0-test1-1) unstable; urgency=high
+
+  * New upstream tarball.
+  * debian/rules:
+    + Fixed previously broken DVD support.
+    + Removed currently broken Speex support.
+  * debian/control:
+    + Build-depend on libdvdnav.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Sat,  4 Sep 2004 02:32:49 +0200
+
+vlc (0.7.2.svn20040827-1) unstable; urgency=high
+
+  * New SVN snapshot.
+  * debian/rules:
+    + Activated x264 support.
+    + Re-enabled libmodplug support.
+    + Build PIC plugins even on x86.
+    + Disabled SLP because its code is broken.
+    + Disabled the GNOME, Qt, GTK+ and KDE interfaces in favour of the
+      WxWidgets one.
+    + Activated HAL support.
+  * debian/control:
+    + Force the vlc-plugin-arts dependencies.
+    + Build-depend on jam and nasm because of x264.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Fri, 27 Aug 2004 21:31:13 +0200
+
+vlc (0.7.2.final-11) unstable; urgency=medium
+
+  * configure.ac:
+    + Fixed an LDFLAGS/CFLAGS confusion.
+    + Don't use -finline-limit since it now tries to inline functions that
+      have not been explicitely inlined (Closes: #265673).
+  * debian/patches/20_configure.dpatch:
+    + Don't manage this patch with dpatch since it causes ownership issues.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Sun, 15 Aug 2004 01:35:35 +0200
+
+vlc (0.7.2.final-10) unstable; urgency=medium
+
+  * The "I hope I got it right this time" upload.
+  * configure.ac:
+    + Use -maltivec -mabi=altivec for the memcpyaltivec and deinterlace
+      plugins on PowerPC.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Tue, 10 Aug 2004 18:01:47 +0200
+
+vlc (0.7.2.final-9) unstable; urgency=low
+
+  * debian/control:
+    + Added a missing dpatch build dependency (Closes: #263363).
+    + Removed the modplug plugin until libmodplug-dev enters Debian.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Tue, 10 Aug 2004 11:01:15 +0200
+
+vlc (0.7.2.final-8) unstable; urgency=low
+
+  * debian/control:
+    + Added a missing dpatch build dependency.
+  * configure.ac:
+    + Fixed the powerpc build by conditionally re-enabling -maltivec
+      -mabi=altivec.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Fri, 30 Jul 2004 00:05:58 +0200
+
+vlc (0.7.2.final-7) unstable; urgency=low
+
+  * debian/rules:
+    + Switch build system to dpatch.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Thu, 29 Jul 2004 17:03:51 +0200
+
+vlc (0.7.2.final-6) unstable; urgency=low
+
+  * configure.ac: don't use -maltivec -mabi=altivec, because we don't want
+    to trigger AltiVec optimisations in our generic code (Closes: #256578,
+    Closes: #260819).
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Fri, 23 Jul 2004 17:21:21 +0200
+
+vlc (0.7.2.final-5) unstable; urgency=low
+
+  * debian/control:
+    + Build-depend on libdvbpsi3-dev, so that we can get rid of the previous
+      versions of this library.
+    + Recommend the videolan-doc package.
+    + Build-conflict on libavcodec-dev, just in case it enters Sid at an
+      unappropriate moment.
+  * debian/README.Debian:
+    + Removed mention of the libmpeg2 tree, which we no longer provide.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Tue, 20 Jul 2004 11:25:17 +0200
+
+vlc (0.7.2.final-4) unstable; urgency=low
+
+  * debian/rules:
+    + Activated Theora support (Closes: #259061).
+    + Re-enabled the KDE plugin (Closes: #258295).
+  * debian/control:
+    + Set policy to 3.6.1.1.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Tue, 13 Jul 2004 00:21:20 +0200
+
 vlc (0.7.2.final-3) unstable; urgency=low
 
   * extras/ffmpeg/configure: fixed HPPA architecture detection.
@@ -745,7 +934,7 @@ vlc (0.1.99d) unstable; urgency=low
   * the YUV transformations are now plugins as well
   * alternative symlinks like gvlc, fbvlc are now created at compile time
   * borrowed libmpeg2's GPLed MMX YUV transformations (16 and 32 bits)
-  * fixed an endianness problem which occured on iMacs
+  * fixed an endianness problem which occurred on iMacs
 
  -- Samuel Hocevar <sam@via.ecp.fr>  Wed, 12 Jul 2000 01:24:40 +0200
 

@@ -2,7 +2,7 @@
  * adjust.c : Contrast/Hue/Saturation/Brightness video plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001, 2002, 2003 VideoLAN
- * $Id: adjust.c 7453 2004-04-23 20:01:59Z gbazin $
+ * $Id: adjust.c 8551 2004-08-28 17:36:02Z gbazin $
  *
  * Authors: Simon Latapie <garf@via.ecp.fr>
  *
@@ -204,9 +204,12 @@ static void Destroy( vlc_object_t *p_this )
 {
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
 
-    DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
-    vlc_object_detach( p_vout->p_sys->p_vout );
-    vout_Destroy( p_vout->p_sys->p_vout );
+    if( p_vout->p_sys->p_vout )
+    {
+        DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
+        vlc_object_detach( p_vout->p_sys->p_vout );
+        vout_Destroy( p_vout->p_sys->p_vout );
+    }
 
     DEL_PARENT_CALLBACKS( SendEventsToChild );
 
@@ -283,7 +286,7 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
      */
 
     p_in = p_pic->p[0].p_pixels;
-    p_in_end = p_in + p_pic->p[0].i_lines * p_pic->p[0].i_pitch - 8;
+    p_in_end = p_in + p_pic->p[0].i_visible_lines * p_pic->p[0].i_pitch - 8;
 
     p_out = p_outpic->p[0].p_pixels;
 
@@ -317,7 +320,7 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
 
     p_in = p_pic->p[1].p_pixels;
     p_in_v = p_pic->p[2].p_pixels;
-    p_in_end = p_in + p_pic->p[1].i_lines * p_pic->p[1].i_pitch - 8;
+    p_in_end = p_in + p_pic->p[1].i_visible_lines * p_pic->p[1].i_pitch - 8;
 
     p_out = p_outpic->p[1].p_pixels;
     p_out_v = p_outpic->p[2].p_pixels;

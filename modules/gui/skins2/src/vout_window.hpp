@@ -2,7 +2,7 @@
  * vout_window.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: vout_window.hpp 7259 2004-04-03 11:30:26Z ipkiss $
+ * $Id: vout_window.hpp 9320 2004-11-14 17:32:25Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -55,6 +55,8 @@ class VoutWindow: public GenericWindow
 
         /// Refresh an area of the window
         virtual void refresh( int left, int top, int width, int height );
+
+        virtual string getType() const { return "Vout"; }
 
     private:
         /// Image when there is no video

@@ -2,7 +2,7 @@
  * asf.c : ASF demux module
  *****************************************************************************
  * Copyright (C) 2002-2003 VideoLAN
- * $Id: asf.c 7621 2004-05-07 15:36:01Z gbazin $
+ * $Id: asf.c 9063 2004-10-27 10:42:48Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -426,8 +426,7 @@ static int DemuxPacket( demux_t *p_demux )
         }
         else if( i_replicated_data_length == 1 )
         {
-
-            msg_Dbg( p_demux, "found compressed payload" );
+            /* msg_Dbg( p_demux, "found compressed payload" ); */
 
             i_pts = (mtime_t)i_tmp * 1000;
             i_pts_delta = (mtime_t)p_peek[i_skip] * 1000; i_skip++;
@@ -647,23 +646,29 @@ static int DemuxInit( demux_t *p_demux )
         if( ASF_CmpGUID( &p_sp->i_stream_type, &asf_object_stream_type_audio ) &&
             p_sp->i_type_specific_data_length >= sizeof( WAVEFORMATEX ) - 2 )
         {
-            es_format_t  fmt;
-            uint8_t      *p_data = p_sp->p_type_specific_data;
+            es_format_t fmt;
+            uint8_t *p_data = p_sp->p_type_specific_data;
+            int i_format;
 
             es_format_Init( &fmt, AUDIO_ES, 0 );
-            wf_tag_to_fourcc( GetWLE( &p_data[0] ), &fmt.i_codec, NULL );
+            i_format = GetWLE( &p_data[0] );
+            wf_tag_to_fourcc( i_format, &fmt.i_codec, NULL );
             fmt.audio.i_channels        = GetWLE(  &p_data[2] );
             fmt.audio.i_rate      = GetDWLE( &p_data[4] );
             fmt.i_bitrate         = GetDWLE( &p_data[8] ) * 8;
             fmt.audio.i_blockalign      = GetWLE(  &p_data[12] );
             fmt.audio.i_bitspersample   = GetWLE(  &p_data[14] );
 
-            if( p_sp->i_type_specific_data_length > sizeof( WAVEFORMATEX ) )
+            if( p_sp->i_type_specific_data_length > sizeof( WAVEFORMATEX ) &&
+                i_format != WAVE_FORMAT_MPEGLAYER3 &&
+                i_format != WAVE_FORMAT_MPEG )
             {
                 fmt.i_extra = __MIN( GetWLE( &p_data[16] ),
-                                     p_sp->i_type_specific_data_length - sizeof( WAVEFORMATEX ) );
+                                     p_sp->i_type_specific_data_length -
+                                     sizeof( WAVEFORMATEX ) );
                 fmt.p_extra = malloc( fmt.i_extra );
-                memcpy( fmt.p_extra, &p_data[sizeof( WAVEFORMATEX )], fmt.i_extra );
+                memcpy( fmt.p_extra, &p_data[sizeof( WAVEFORMATEX )],
+                        fmt.i_extra );
             }
 
             tk->i_cat = AUDIO_ES;
@@ -673,24 +678,62 @@ static int DemuxInit( demux_t *p_demux )
             msg_Dbg( p_demux, "added new audio stream(codec:0x%x,ID:%d)",
                     GetWLE( p_data ), p_sp->i_stream_number );
         }
-        else if( ASF_CmpGUID( &p_sp->i_stream_type, &asf_object_stream_type_video ) &&
-                 p_sp->i_type_specific_data_length >= 11 + sizeof( BITMAPINFOHEADER ) )
+        else if( ASF_CmpGUID( &p_sp->i_stream_type,
+                              &asf_object_stream_type_video ) &&
+                 p_sp->i_type_specific_data_length >= 11 +
+                 sizeof( BITMAPINFOHEADER ) )
         {
             es_format_t  fmt;
             uint8_t      *p_data = &p_sp->p_type_specific_data[11];
 
             es_format_Init( &fmt, VIDEO_ES,
-                            VLC_FOURCC( p_data[16], p_data[17], p_data[18], p_data[19] ) );
+                            VLC_FOURCC( p_data[16], p_data[17],
+                                        p_data[18], p_data[19] ) );
             fmt.video.i_width = GetDWLE( p_data + 4 );
             fmt.video.i_height= GetDWLE( p_data + 8 );
 
-            if( p_sp->i_type_specific_data_length > 11 + sizeof( BITMAPINFOHEADER ) )
+            if( p_sp->i_type_specific_data_length > 11 +
+                sizeof( BITMAPINFOHEADER ) )
             {
                 fmt.i_extra = __MIN( GetDWLE( p_data ),
-                                     p_sp->i_type_specific_data_length - 11 - sizeof( BITMAPINFOHEADER ) );
+                                     p_sp->i_type_specific_data_length - 11 -
+                                     sizeof( BITMAPINFOHEADER ) );
                 fmt.p_extra = malloc( fmt.i_extra );
-                memcpy( fmt.p_extra, &p_data[sizeof( BITMAPINFOHEADER )], fmt.i_extra );
+                memcpy( fmt.p_extra, &p_data[sizeof( BITMAPINFOHEADER )],
+                        fmt.i_extra );
             }
+
+            /* Look for an aspect ratio */
+            if( p_sys->p_root->p_metadata )
+            {
+                asf_object_metadata_t *p_meta = p_sys->p_root->p_metadata;
+                int i, i_aspect_x = 0, i_aspect_y = 0;
+
+                for( i = 0; i < p_meta->i_record_entries_count; i++ )
+                {
+                    if( !strcmp( p_meta->record[i].psz_name, "AspectRatioX" ) )
+                    {
+                        if( (!i_aspect_x && !p_meta->record[i].i_stream) ||
+                            p_meta->record[i].i_stream ==
+                            p_sp->i_stream_number )
+                            i_aspect_x = p_meta->record[i].i_val;
+                    }
+                    if( !strcmp( p_meta->record[i].psz_name, "AspectRatioY" ) )
+                    {
+                        if( (!i_aspect_y && !p_meta->record[i].i_stream) ||
+                            p_meta->record[i].i_stream ==
+                            p_sp->i_stream_number )
+                            i_aspect_y = p_meta->record[i].i_val;
+                    }
+                }
+
+                if( i_aspect_x && i_aspect_y )
+                {
+                    fmt.video.i_aspect = i_aspect_x *
+                        (int64_t)fmt.video.i_width * VOUT_ASPECT_FACTOR /
+                        fmt.video.i_height / i_aspect_y;
+                }
+	    }
 
             tk->i_cat = VIDEO_ES;
             tk->p_es = es_out_Add( p_demux->out, &fmt );
@@ -748,7 +791,7 @@ static int DemuxInit( demux_t *p_demux )
         }
     }
 
-    /* Create meta informations */
+    /* Create meta information */
     p_sys->meta = vlc_meta_New();
 
     if( ( p_cd = ASF_FindObject( p_sys->p_root->p_hdr,

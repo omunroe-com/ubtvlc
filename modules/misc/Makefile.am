@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in gtk_main gnome_main gtk2_main gnome2_main sap screensaver qte_main freetype logger; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in gtk_main gnome_main gtk2_main gnome2_main sap screensaver qte_main freetype logger; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in gtk_main gnome_main gtk2_main gnome2_main sap screensaver qte_main freetype logger; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in gtk_main gnome_main gtk2_main gnome2_main sap screensaver qte_main freetype logger vod_rtsp gnutls svg; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in gtk_main gnome_main gtk2_main gnome2_main sap screensaver qte_main freetype logger vod_rtsp gnutls svg; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in gtk_main gnome_main gtk2_main gnome2_main sap screensaver qte_main freetype logger vod_rtsp gnutls svg; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -364,6 +364,117 @@ liblogger_plugin$(LIBEXT): $(liblogger_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(liblogger_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin logger\` ; $(CXXLINK) $(liblogger_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin logger` ;; \
 	  objc) echo $(OBJCLINK) $(liblogger_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin logger\` ; $(OBJCLINK) $(liblogger_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin logger` ;; \
 	  c|*) echo $(LINK) $(liblogger_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin logger\` ; $(LINK) $(liblogger_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin logger` ;; \
+	esac
+
+
+# The vod_rtsp plugin
+
+if UNTRUE
+Lvod_rtspp = libvod_rtsp_plugin.a
+Dvod_rtspp = libvod_rtsp_plugin$(LIBEXT)
+Lvod_rtspb = libvod_rtsp.a
+Lvod_rtsppic = libvod_rtsp_pic.a
+endif
+
+libvod_rtsp_plugin_a_SOURCES = $(SOURCES_vod_rtsp)
+libvod_rtsp_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin vod_rtsp`
+libvod_rtsp_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin vod_rtsp`
+libvod_rtsp_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin vod_rtsp`
+
+libvod_rtsp_pic_a_SOURCES = $(SOURCES_vod_rtsp)
+libvod_rtsp_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic vod_rtsp`
+libvod_rtsp_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic vod_rtsp`
+libvod_rtsp_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic vod_rtsp`
+
+libvod_rtsp_a_SOURCES = $(SOURCES_vod_rtsp)
+libvod_rtsp_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin vod_rtsp`
+libvod_rtsp_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin vod_rtsp`
+libvod_rtsp_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin vod_rtsp`
+
+libvlc_LIBRARIES += $(Lvod_rtspb) $(Lvod_rtsppic)
+libvod_rtsp_DATA = $(Dvod_rtspp)
+
+libvod_rtspdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lvod_rtspp)
+libvod_rtsp_plugin$(LIBEXT): $(libvod_rtsp_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage vod_rtsp` in \
+	  c++) echo $(CXXLINK) $(libvod_rtsp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin vod_rtsp\` ; $(CXXLINK) $(libvod_rtsp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin vod_rtsp` ;; \
+	  objc) echo $(OBJCLINK) $(libvod_rtsp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin vod_rtsp\` ; $(OBJCLINK) $(libvod_rtsp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin vod_rtsp` ;; \
+	  c|*) echo $(LINK) $(libvod_rtsp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin vod_rtsp\` ; $(LINK) $(libvod_rtsp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin vod_rtsp` ;; \
+	esac
+
+
+# The gnutls plugin
+
+if UNTRUE
+Lgnutlsp = libgnutls_plugin.a
+Dgnutlsp = libgnutls_plugin$(LIBEXT)
+Lgnutlsb = libgnutls.a
+Lgnutlspic = libgnutls_pic.a
+endif
+
+libgnutls_plugin_a_SOURCES = $(SOURCES_gnutls)
+libgnutls_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin gnutls`
+libgnutls_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin gnutls`
+libgnutls_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin gnutls`
+
+libgnutls_pic_a_SOURCES = $(SOURCES_gnutls)
+libgnutls_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic gnutls`
+libgnutls_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic gnutls`
+libgnutls_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic gnutls`
+
+libgnutls_a_SOURCES = $(SOURCES_gnutls)
+libgnutls_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin gnutls`
+libgnutls_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin gnutls`
+libgnutls_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin gnutls`
+
+libvlc_LIBRARIES += $(Lgnutlsb) $(Lgnutlspic)
+libgnutls_DATA = $(Dgnutlsp)
+
+libgnutlsdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lgnutlsp)
+libgnutls_plugin$(LIBEXT): $(libgnutls_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage gnutls` in \
+	  c++) echo $(CXXLINK) $(libgnutls_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin gnutls\` ; $(CXXLINK) $(libgnutls_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin gnutls` ;; \
+	  objc) echo $(OBJCLINK) $(libgnutls_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin gnutls\` ; $(OBJCLINK) $(libgnutls_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin gnutls` ;; \
+	  c|*) echo $(LINK) $(libgnutls_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin gnutls\` ; $(LINK) $(libgnutls_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin gnutls` ;; \
+	esac
+
+
+# The svg plugin
+
+if UNTRUE
+Lsvgp = libsvg_plugin.a
+Dsvgp = libsvg_plugin$(LIBEXT)
+Lsvgb = libsvg.a
+Lsvgpic = libsvg_pic.a
+endif
+
+libsvg_plugin_a_SOURCES = $(SOURCES_svg)
+libsvg_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin svg`
+libsvg_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin svg`
+libsvg_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin svg`
+
+libsvg_pic_a_SOURCES = $(SOURCES_svg)
+libsvg_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic svg`
+libsvg_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic svg`
+libsvg_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic svg`
+
+libsvg_a_SOURCES = $(SOURCES_svg)
+libsvg_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin svg`
+libsvg_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin svg`
+libsvg_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin svg`
+
+libvlc_LIBRARIES += $(Lsvgb) $(Lsvgpic)
+libsvg_DATA = $(Dsvgp)
+
+libsvgdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lsvgp)
+libsvg_plugin$(LIBEXT): $(libsvg_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage svg` in \
+	  c++) echo $(CXXLINK) $(libsvg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin svg\` ; $(CXXLINK) $(libsvg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin svg` ;; \
+	  objc) echo $(OBJCLINK) $(libsvg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin svg\` ; $(OBJCLINK) $(libsvg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin svg` ;; \
+	  c|*) echo $(LINK) $(libsvg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin svg\` ; $(LINK) $(libsvg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin svg` ;; \
 	esac
 
 

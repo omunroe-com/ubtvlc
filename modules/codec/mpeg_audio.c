@@ -2,7 +2,7 @@
  * mpeg_audio.c: parse MPEG audio sync info and packetize the stream
  *****************************************************************************
  * Copyright (C) 2001-2003 VideoLAN
- * $Id: mpeg_audio.c 7209 2004-03-31 20:52:31Z gbazin $
+ * $Id: mpeg_audio.c 8561 2004-08-29 01:28:28Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -147,6 +147,7 @@ static int OpenDecoder( vlc_object_t *p_this )
     /* Set output properties */
     p_dec->fmt_out.i_cat = AUDIO_ES;
     p_dec->fmt_out.i_codec = VLC_FOURCC('m','p','g','a');
+    p_dec->fmt_out.audio.i_rate = 0; /* So end_date gets initialized */
 
     /* Set callback */
     p_dec->pf_decode_audio = (aout_buffer_t *(*)(decoder_t *, block_t **))
@@ -480,7 +481,7 @@ static uint8_t *GetOutBuffer( decoder_t *p_dec, void **pp_out_buffer )
     p_dec->fmt_out.audio.i_physical_channels =
         p_sys->i_channels_conf & AOUT_CHAN_PHYSMASK;
 
-    p_dec->fmt_out.i_bitrate = p_sys->i_bit_rate;
+    p_dec->fmt_out.i_bitrate = p_sys->i_bit_rate * 1000;
 
     if( p_sys->b_packetizer )
     {

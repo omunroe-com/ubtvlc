@@ -1,4 +1,4 @@
-# $Id: AUTHORS 7388 2004-04-20 01:00:29Z hartman $
+# $Id: AUTHORS 7765 2004-05-24 20:12:27Z jpsaman $
 # 
 # The format of this file was inspired by the Linux kernel CREDITS file.
 # Authors are listed alphabetically.
@@ -282,6 +282,7 @@ D: Familiar and PDA Linux interface
 D: Opie PDA Linux interface
 D: Dutch Translation
 D: DVB-S/C/T on v4l2 API
+D: HD1000 port 
 S: Netherlands
 
 N: Arnaud Schauly

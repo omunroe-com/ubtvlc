@@ -1,4 +1,159 @@
-$Id: NEWS 7733 2004-05-20 19:45:12Z hartman $
+$Id: NEWS 9326 2004-11-14 18:15:34Z fkuehne $
+
+Changes between 0.8.0 and 0.8.1:
+-----------------------------------------------------
+
+Core support:
+ * Include TLS/SSL API (on plattforms where libgnutls is available)
+ * SSL support in the HTTP daemon (HTTP stream output and HTTP interface)
+
+Windows port:
+ * Fixed win32 multichannel audio output support (which was broken in 0.8.0)
+ * Fixed DV and MPEG (WinTV PVR 250/350) support in the dshow input
+ * Fixed spurious taskbar item after switching to fullscreen
+
+WinCE port:
+ * A few more updates (we still miss an interface and a fast video output).
+
+Audio Output:
+ * Portaudio audio output plugin improvements
+
+Video Output:
+ * Proper subpictures scaling using the aspect-ratio info when available
+
+Demuxers:
+ * Fixed crash with ODML avi files
+ * Fixed autodetection of VCD/SVCD bin files
+
+Stream Output:
+ * Encoders:
+   * Fixed aspect ratio and interlaced support in ffmpeg encoder module
+ * Stream output:
+   * Support of playlist group announcement
+
+Changes between 0.7.2 and 0.8.0:
+-----------------------------------------------------
+
+Core support:
+ * Major work on libvlc. Changed/renamed/added functions
+ * Complete switch to the new input core (better seeking, multi-input, ...)
+ * New plugins cache to speed up launch time
+ * New --play-and-stop feature which stops the playlist after each played item
+ * Daemon mode (to run vlc in the background)
+ * Major improvements to the subtitle/OSD subsystem
+
+Input:
+ * New screen capture input plugin for X11, Win32, BeOS and Mac OS X 
+    (Stream your desktop)
+ * Improved DVD support:
+    - uses libdvdnav for playing DVDs with menus support
+    - uses libdvdread for simple playback with menus (eg. for streaming)
+ * Experimental multi-input support ( use --input-slave to play with it )
+ * Automatic MTU discovery for UDP streams
+ * More powerful MRL syntax for DVD/VCD/CDDA access 
+    (selection of titles/chapters).
+
+Demuxers:
+ * Support for iTunes Music Store previews
+ * Support for MJPEG webcams (i.e. AXIS cams)
+ * Added initial mp4 and mpeg-ts text track support
+ * Windows Media Server RTSP support
+ * Support for MPEG TS streams with error correction (204/192 bytes TS packets)
+ * Support for DTS audio in MPEG TS (ETSI TS 102 154 Annex G)
+ * Skins2 .vlt file loader (only when skins2 is the current interface)
+ * Improved Ogg demuxer
+ * Support for MPEG PS streams with MPEG 4 video.
+ * Support for so called AACPlus webstreams
+
+Codecs:
+ * G.726 audio support
+ * 14496-17 MPEG TS text support
+ * MPEG-4 text support
+ * Vastly improved DVB subtitles decoder (ETS 300 743)
+ * Enabled color in DVB subtitles rendering
+ * VobSub supported both externally and in Matroska
+
+Stream Output:
+ Encoders:
+  * Re-use audio/video/spu decoders in transcoder module. From now on,
+     everything that is playable by VLC should be transcodable as well
+  * Subtitles overlaying in transcoder
+  * Subpictures overlaying in transcoder (see video output)
+  * Frame rate selection in the transcoder
+  * DVB subtitles encoder
+  * MPEG 1 layer 2 audio encoder using libtoolame
+  * Improved vorbis/theora encoding
+ Muxers: 
+  * Text track muxing for mp4
+  * Multipart mjpeg muxing. Your video is directly viewable in a Mozilla Browser
+  * 14496-17 text track muxing for MPEG TS
+  * Support for DTS audio in MPEG TS (ETSI TS 102 154 Annex G)
+  * Teletext (0x56 descriptor) streaming support in MPEG TS.
+  * New WAV muxer (supports multi-channel audio)
+  * Improved ASF muxer
+ Misc:
+  * H.263 RTP streaming support
+  * SDP generation outputs more compliant SDPs and can create SDP files now
+  * Improved RTSP and VoD server (experimental)
+
+Audio Output:
+ * New audio equalizer filter
+ * Very trivial volume normalizer
+ * True channel downmixing when playing 5:1 material on Stereo
+ * More gradual resampling which should improve the pitch changing effect
+ * New audio output plugin using portaudio v19
+
+Video Output:
+ * Roku HD1000 Video output
+ * Experimental generic OpenGL video output (X11, Win32, MacOS X)
+   with support for effects.
+ * Improved filter and subpictures support :
+	- New filters can be streamed.
+	- "Subpicture filters" to overlay subpictures on video 
+	- Centralized scaling and blending
+ * New filters : 
+	- "time", to display current time 
+	- "marq", to display a marquee
+
+Interfaces:
+ * OSD sliders for volume and postition information
+ * OSD icons for Play and Pause
+ * New Streaming Wizard for Windows and Linux default interfaces (wxWindows)
+ * A few skins2 improvements
+ * Added search, volume, loop and random functions to the ncurses interface
+ * Added a filesystem browser to the ncurses interface
+ * The remote control interface can now listen for commands on sockets
+ * Improved CORBA control module
+
+Mac OS X port:
+ * Fixed the "cannot set buffersize:[nope]" coreaudio problem
+ * Major speed improvements to the Quartz video output
+ * The Mac OS X interface is no longer required to display video
+
+Linux port:
+ * New galaktos visualization plugin (MilkDrop-compatible)
+ * Experimental SVG rendering module
+ * Support for DVB CAM modules.
+
+Windows port:
+ * DirectX Media Object decoder (allows playing some media types, like WMV3)
+ * DirectX Media Object audio and video encoder
+ * Fixed long standing win32 thread handles leak
+ * Fixed problem with CPU usage with subtitles rendering
+ * Wallpaper mode for the DirectX video output (only in overlay mode)
+
+WinCE port:
+ * Massive update (we still miss an interface and a fast video output).
+
+Mozilla plugin:
+ * Added a lot of Javascript accessible funtionality
+ * Volume, position, length, seek etc etc etc.
+
+Misc:
+ * Server/client network synchronization module
+ * VBrick streams fully supported
+ * Cisco IP/TV streams supported
+ * VLM enhancements
 
 Changes between 0.7.1 and 0.7.2:
 --------------------------------

@@ -22,7 +22,7 @@
 ** Commercial non-GPL licensing of this software is possible.
 ** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
 **
-** $Id: mp4ff.h,v 1.19 2004/01/11 15:52:18 menno Exp $
+** $Id: mp4ff.h,v 1.21 2004/09/03 19:38:58 menno Exp $
 **/
 
 #ifndef MP4FF_H
@@ -51,6 +51,7 @@ typedef void* mp4ff_t;
 /* API */
 
 mp4ff_t *mp4ff_open_read(mp4ff_callback_t *f);
+mp4ff_t *mp4ff_open_read_metaonly(mp4ff_callback_t *f);
 void mp4ff_close(mp4ff_t *f);
 int32_t mp4ff_get_sample_duration(const mp4ff_t *f, const int32_t track, const int32_t sample);
 int32_t mp4ff_get_sample_duration_use_offsets(const mp4ff_t *f, const int32_t track, const int32_t sample);
@@ -97,6 +98,8 @@ int mp4ff_meta_get_comment(const mp4ff_t *f, char **value);
 int mp4ff_meta_get_genre(const mp4ff_t *f, char **value);
 int mp4ff_meta_get_track(const mp4ff_t *f, char **value);
 int mp4ff_meta_get_disc(const mp4ff_t *f, char **value);
+int mp4ff_meta_get_totaltracks(const mp4ff_t *f, char **value);
+int mp4ff_meta_get_totaldiscs(const mp4ff_t *f, char **value);
 int mp4ff_meta_get_compilation(const mp4ff_t *f, char **value);
 int mp4ff_meta_get_tempo(const mp4ff_t *f, char **value);
 int32_t mp4ff_meta_get_coverart(const mp4ff_t *f, char **value);

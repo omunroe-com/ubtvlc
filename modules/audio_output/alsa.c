@@ -2,7 +2,7 @@
  * alsa.c : alsa plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2001 VideoLAN
- * $Id: alsa.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: alsa.c 8485 2004-08-21 13:54:36Z asmax $
  *
  * Authors: Henri Fallon <henri@videolan.org> - Original Author
  *          Jeffrey Baker <jwbaker@acm.org> - Port to ALSA 1.0 API
@@ -198,6 +198,21 @@ static void Probe( aout_instance_t * p_aout,
             --i_channels;
         }
 
+        /* Special case for mono on stereo only boards */
+        i_channels = aout_FormatNbChannels( &p_aout->output.output );        
+        var_Change( p_aout, "audio-device", VLC_VAR_CHOICESCOUNT, &val, NULL );
+        if( val.i_int <= 0 && i_channels == 1 )
+        {
+            if ( !snd_pcm_hw_params_test_channels( p_sys->p_snd_pcm, p_hw, 2 ))
+            {
+                val.i_int = AOUT_VAR_STEREO;
+                text.psz_string = N_("Stereo");
+                var_Change( p_aout, "audio-device",
+                            VLC_VAR_ADDCHOICE, &val, &text );
+                var_Set( p_aout, "audio-device", val );
+            }
+        }
+        
         /* Close the previously opened device */
         snd_pcm_close( p_sys->p_snd_pcm );
     }
@@ -234,6 +249,7 @@ static void Probe( aout_instance_t * p_aout,
     if( val.i_int <= 0 )
     {
         /* Probe() has failed. */
+        msg_Dbg( p_aout, "failed to find a useable alsa configuration" );
         var_Destroy( p_aout, "audio-device" );
         return;
     }
@@ -274,6 +290,7 @@ static int Open( vlc_object_t *p_this )
     snd_pcm_sw_params_t *p_sw;
 
     int i_snd_rc = -1;
+    int i_old_rate;
 
     /* Allocate structures */
     p_aout->output.p_sys = p_sys = malloc( sizeof( aout_sys_t ) );
@@ -491,18 +508,21 @@ static int Open( vlc_object_t *p_this )
     }
 
     /* Set rate. */
+    i_old_rate = p_aout->output.output.i_rate;
 #ifdef HAVE_ALSA_NEW_API
-    if ( ( i_snd_rc = snd_pcm_hw_params_set_rate_near( p_sys->p_snd_pcm, p_hw,
-                                &p_aout->output.output.i_rate, NULL ) ) < 0 )
+    i_snd_rc = snd_pcm_hw_params_set_rate_near( p_sys->p_snd_pcm, p_hw,
+                                                &p_aout->output.output.i_rate,
+                                                NULL );
 #else
-    if ( ( i_snd_rc = snd_pcm_hw_params_set_rate_near( p_sys->p_snd_pcm, p_hw,
-                                p_aout->output.output.i_rate, NULL ) ) < 0 )
+    i_snd_rc = snd_pcm_hw_params_set_rate_near( p_sys->p_snd_pcm, p_hw,
+                                                p_aout->output.output.i_rate,
+                                                NULL );
 #endif
+    if( i_snd_rc < 0 || p_aout->output.output.i_rate != i_old_rate )
     {
         msg_Warn( p_aout, "The rate %d Hz is not supported by your hardware. "
-                  "Using %d Hz instead.\n", p_aout->output.output.i_rate,
-                  i_snd_rc );
-        p_aout->output.output.i_rate = i_snd_rc;
+                  "Using %d Hz instead.\n", i_old_rate,
+                  p_aout->output.output.i_rate );
     }
 
     /* Set buffer size. */
@@ -738,8 +758,27 @@ static void ALSAFill( aout_instance_t * p_aout )
 
             snd_pcm_status_get_tstamp( p_status, &ts_next );
             next_date = (mtime_t)ts_next.tv_sec * 1000000 + ts_next.tv_usec;
-            next_date += (mtime_t)snd_pcm_status_get_delay(p_status)
-                * 1000000 / p_aout->output.output.i_rate;
+            if( next_date )
+            {
+                next_date += (mtime_t)snd_pcm_status_get_delay(p_status)
+                        * 1000000 / p_aout->output.output.i_rate;
+            }
+            else
+            {
+                /* With screwed ALSA drivers the timestamp is always zero;
+                 * use another method then */
+                snd_pcm_sframes_t delay;
+                ssize_t i_bytes = 0;
+
+                if( !snd_pcm_delay( p_sys->p_snd_pcm, &delay ) )
+                {
+                    i_bytes = snd_pcm_frames_to_bytes(p_sys->p_snd_pcm, delay);
+                }
+                next_date = mdate() + (mtime_t)i_bytes * 1000000
+                        / p_aout->output.output.i_bytes_per_frame
+                        / p_aout->output.output.i_rate
+                        * p_aout->output.output.i_frame_length;
+            }
         }
 
         p_buffer = aout_OutputNextBuffer( p_aout, next_date,

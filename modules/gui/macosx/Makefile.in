@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -243,6 +245,8 @@ SOURCES_macosx = \
 	applescript.m \
 	controls.h \
 	controls.m \
+	equalizer.m \
+	equalizer.h \
 	intf.m \
 	intf.h \
 	macosx.m \
@@ -261,6 +265,8 @@ SOURCES_macosx = \
 	output.h \
 	output.m \
 	vout.m \
+	voutqt.m \
+	voutgl.m \
 	vout.h \
 	$(NULL)
 
@@ -306,12 +312,14 @@ libmacosx_a_LIBADD =
 am__objects_1 =
 am__objects_2 = libmacosx_a-about.$(OBJEXT) \
 	libmacosx_a-applescript.$(OBJEXT) \
-	libmacosx_a-controls.$(OBJEXT) libmacosx_a-intf.$(OBJEXT) \
-	libmacosx_a-macosx.$(OBJEXT) libmacosx_a-misc.$(OBJEXT) \
-	libmacosx_a-open.$(OBJEXT) libmacosx_a-playlist.$(OBJEXT) \
+	libmacosx_a-controls.$(OBJEXT) libmacosx_a-equalizer.$(OBJEXT) \
+	libmacosx_a-intf.$(OBJEXT) libmacosx_a-macosx.$(OBJEXT) \
+	libmacosx_a-misc.$(OBJEXT) libmacosx_a-open.$(OBJEXT) \
+	libmacosx_a-playlist.$(OBJEXT) \
 	libmacosx_a-playlistinfo.$(OBJEXT) libmacosx_a-prefs.$(OBJEXT) \
 	libmacosx_a-prefs_widgets.$(OBJEXT) \
 	libmacosx_a-output.$(OBJEXT) libmacosx_a-vout.$(OBJEXT) \
+	libmacosx_a-voutqt.$(OBJEXT) libmacosx_a-voutgl.$(OBJEXT) \
 	$(am__objects_1)
 am_libmacosx_a_OBJECTS = $(am__objects_2)
 libmacosx_a_OBJECTS = $(am_libmacosx_a_OBJECTS)
@@ -320,6 +328,7 @@ libmacosx_pic_a_LIBADD =
 am__objects_3 = libmacosx_pic_a-about.$(OBJEXT) \
 	libmacosx_pic_a-applescript.$(OBJEXT) \
 	libmacosx_pic_a-controls.$(OBJEXT) \
+	libmacosx_pic_a-equalizer.$(OBJEXT) \
 	libmacosx_pic_a-intf.$(OBJEXT) libmacosx_pic_a-macosx.$(OBJEXT) \
 	libmacosx_pic_a-misc.$(OBJEXT) libmacosx_pic_a-open.$(OBJEXT) \
 	libmacosx_pic_a-playlist.$(OBJEXT) \
@@ -327,7 +336,8 @@ am__objects_3 = libmacosx_pic_a-about.$(OBJEXT) \
 	libmacosx_pic_a-prefs.$(OBJEXT) \
 	libmacosx_pic_a-prefs_widgets.$(OBJEXT) \
 	libmacosx_pic_a-output.$(OBJEXT) libmacosx_pic_a-vout.$(OBJEXT) \
-	$(am__objects_1)
+	libmacosx_pic_a-voutqt.$(OBJEXT) \
+	libmacosx_pic_a-voutgl.$(OBJEXT) $(am__objects_1)
 am_libmacosx_pic_a_OBJECTS = $(am__objects_3)
 libmacosx_pic_a_OBJECTS = $(am_libmacosx_pic_a_OBJECTS)
 libmacosx_plugin_a_AR = $(AR) cru
@@ -335,6 +345,7 @@ libmacosx_plugin_a_LIBADD =
 am__objects_4 = libmacosx_plugin_a-about.$(OBJEXT) \
 	libmacosx_plugin_a-applescript.$(OBJEXT) \
 	libmacosx_plugin_a-controls.$(OBJEXT) \
+	libmacosx_plugin_a-equalizer.$(OBJEXT) \
 	libmacosx_plugin_a-intf.$(OBJEXT) \
 	libmacosx_plugin_a-macosx.$(OBJEXT) \
 	libmacosx_plugin_a-misc.$(OBJEXT) \
@@ -344,7 +355,9 @@ am__objects_4 = libmacosx_plugin_a-about.$(OBJEXT) \
 	libmacosx_plugin_a-prefs.$(OBJEXT) \
 	libmacosx_plugin_a-prefs_widgets.$(OBJEXT) \
 	libmacosx_plugin_a-output.$(OBJEXT) \
-	libmacosx_plugin_a-vout.$(OBJEXT) $(am__objects_1)
+	libmacosx_plugin_a-vout.$(OBJEXT) \
+	libmacosx_plugin_a-voutqt.$(OBJEXT) \
+	libmacosx_plugin_a-voutgl.$(OBJEXT) $(am__objects_1)
 am_libmacosx_plugin_a_OBJECTS = $(am__objects_4)
 libmacosx_plugin_a_OBJECTS = $(am_libmacosx_plugin_a_OBJECTS)
 
@@ -354,6 +367,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libmacosx_a-about.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_a-applescript.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_a-controls.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmacosx_a-equalizer.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_a-intf.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_a-macosx.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_a-misc.Po \
@@ -364,9 +378,12 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_a-prefs.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_a-prefs_widgets.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_a-vout.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmacosx_a-voutgl.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmacosx_a-voutqt.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_pic_a-about.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_pic_a-applescript.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_pic_a-controls.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmacosx_pic_a-equalizer.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_pic_a-intf.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_pic_a-macosx.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_pic_a-misc.Po \
@@ -377,9 +394,12 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_pic_a-prefs.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_pic_a-prefs_widgets.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_pic_a-vout.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmacosx_pic_a-voutgl.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmacosx_pic_a-voutqt.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_plugin_a-about.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_plugin_a-applescript.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_plugin_a-controls.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmacosx_plugin_a-equalizer.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_plugin_a-intf.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_plugin_a-macosx.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_plugin_a-misc.Po \
@@ -389,7 +409,9 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_plugin_a-playlistinfo.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_plugin_a-prefs.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmacosx_plugin_a-prefs_widgets.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libmacosx_plugin_a-vout.Po
+@AMDEP_TRUE@	./$(DEPDIR)/libmacosx_plugin_a-vout.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmacosx_plugin_a-voutgl.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmacosx_plugin_a-voutqt.Po
 OBJCCOMPILE = $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_OBJCFLAGS) $(OBJCFLAGS)
 OBJCLD = $(OBJC)
@@ -481,6 +503,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_a-about.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_a-applescript.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_a-controls.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_a-equalizer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_a-intf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_a-macosx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_a-misc.Po@am__quote@
@@ -491,9 +514,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_a-prefs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_a-prefs_widgets.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_a-vout.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_a-voutgl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_a-voutqt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_pic_a-about.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_pic_a-applescript.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_pic_a-controls.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_pic_a-equalizer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_pic_a-intf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_pic_a-macosx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_pic_a-misc.Po@am__quote@
@@ -504,9 +530,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_pic_a-prefs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_pic_a-prefs_widgets.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_pic_a-vout.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_pic_a-voutgl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_pic_a-voutqt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_plugin_a-about.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_plugin_a-applescript.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_plugin_a-controls.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_plugin_a-equalizer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_plugin_a-intf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_plugin_a-macosx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_plugin_a-misc.Po@am__quote@
@@ -517,6 +546,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_plugin_a-prefs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_plugin_a-prefs_widgets.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_plugin_a-vout.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_plugin_a-voutgl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmacosx_plugin_a-voutqt.Po@am__quote@
 
 .m.o:
 @am__fastdepOBJC_TRUE@	if $(OBJCCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
@@ -605,6 +636,28 @@ libmacosx_a-controls.obj: controls.m
 @AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_a-controls.Po' tmpdepfile='$(DEPDIR)/libmacosx_a-controls.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_a-controls.obj `if test -f 'controls.m'; then $(CYGPATH_W) 'controls.m'; else $(CYGPATH_W) '$(srcdir)/controls.m'; fi`
+
+libmacosx_a-equalizer.o: equalizer.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_a-equalizer.o -MD -MP -MF "$(DEPDIR)/libmacosx_a-equalizer.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_a-equalizer.o `test -f 'equalizer.m' || echo '$(srcdir)/'`equalizer.m; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_a-equalizer.Tpo" "$(DEPDIR)/libmacosx_a-equalizer.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_a-equalizer.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='equalizer.m' object='libmacosx_a-equalizer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_a-equalizer.Po' tmpdepfile='$(DEPDIR)/libmacosx_a-equalizer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_a-equalizer.o `test -f 'equalizer.m' || echo '$(srcdir)/'`equalizer.m
+
+libmacosx_a-equalizer.obj: equalizer.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_a-equalizer.obj -MD -MP -MF "$(DEPDIR)/libmacosx_a-equalizer.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_a-equalizer.obj `if test -f 'equalizer.m'; then $(CYGPATH_W) 'equalizer.m'; else $(CYGPATH_W) '$(srcdir)/equalizer.m'; fi`; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_a-equalizer.Tpo" "$(DEPDIR)/libmacosx_a-equalizer.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_a-equalizer.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='equalizer.m' object='libmacosx_a-equalizer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_a-equalizer.Po' tmpdepfile='$(DEPDIR)/libmacosx_a-equalizer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_a-equalizer.obj `if test -f 'equalizer.m'; then $(CYGPATH_W) 'equalizer.m'; else $(CYGPATH_W) '$(srcdir)/equalizer.m'; fi`
 
 libmacosx_a-intf.o: intf.m
 @am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_a-intf.o -MD -MP -MF "$(DEPDIR)/libmacosx_a-intf.Tpo" \
@@ -826,6 +879,50 @@ libmacosx_a-vout.obj: vout.m
 @AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_a-vout.obj `if test -f 'vout.m'; then $(CYGPATH_W) 'vout.m'; else $(CYGPATH_W) '$(srcdir)/vout.m'; fi`
 
+libmacosx_a-voutqt.o: voutqt.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_a-voutqt.o -MD -MP -MF "$(DEPDIR)/libmacosx_a-voutqt.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_a-voutqt.o `test -f 'voutqt.m' || echo '$(srcdir)/'`voutqt.m; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_a-voutqt.Tpo" "$(DEPDIR)/libmacosx_a-voutqt.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_a-voutqt.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='voutqt.m' object='libmacosx_a-voutqt.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_a-voutqt.Po' tmpdepfile='$(DEPDIR)/libmacosx_a-voutqt.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_a-voutqt.o `test -f 'voutqt.m' || echo '$(srcdir)/'`voutqt.m
+
+libmacosx_a-voutqt.obj: voutqt.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_a-voutqt.obj -MD -MP -MF "$(DEPDIR)/libmacosx_a-voutqt.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_a-voutqt.obj `if test -f 'voutqt.m'; then $(CYGPATH_W) 'voutqt.m'; else $(CYGPATH_W) '$(srcdir)/voutqt.m'; fi`; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_a-voutqt.Tpo" "$(DEPDIR)/libmacosx_a-voutqt.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_a-voutqt.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='voutqt.m' object='libmacosx_a-voutqt.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_a-voutqt.Po' tmpdepfile='$(DEPDIR)/libmacosx_a-voutqt.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_a-voutqt.obj `if test -f 'voutqt.m'; then $(CYGPATH_W) 'voutqt.m'; else $(CYGPATH_W) '$(srcdir)/voutqt.m'; fi`
+
+libmacosx_a-voutgl.o: voutgl.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_a-voutgl.o -MD -MP -MF "$(DEPDIR)/libmacosx_a-voutgl.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_a-voutgl.o `test -f 'voutgl.m' || echo '$(srcdir)/'`voutgl.m; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_a-voutgl.Tpo" "$(DEPDIR)/libmacosx_a-voutgl.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_a-voutgl.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='voutgl.m' object='libmacosx_a-voutgl.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_a-voutgl.Po' tmpdepfile='$(DEPDIR)/libmacosx_a-voutgl.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_a-voutgl.o `test -f 'voutgl.m' || echo '$(srcdir)/'`voutgl.m
+
+libmacosx_a-voutgl.obj: voutgl.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_a-voutgl.obj -MD -MP -MF "$(DEPDIR)/libmacosx_a-voutgl.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_a-voutgl.obj `if test -f 'voutgl.m'; then $(CYGPATH_W) 'voutgl.m'; else $(CYGPATH_W) '$(srcdir)/voutgl.m'; fi`; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_a-voutgl.Tpo" "$(DEPDIR)/libmacosx_a-voutgl.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_a-voutgl.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='voutgl.m' object='libmacosx_a-voutgl.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_a-voutgl.Po' tmpdepfile='$(DEPDIR)/libmacosx_a-voutgl.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_a-voutgl.obj `if test -f 'voutgl.m'; then $(CYGPATH_W) 'voutgl.m'; else $(CYGPATH_W) '$(srcdir)/voutgl.m'; fi`
+
 libmacosx_pic_a-about.o: about.m
 @am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_pic_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_pic_a-about.o -MD -MP -MF "$(DEPDIR)/libmacosx_pic_a-about.Tpo" \
 @am__fastdepOBJC_TRUE@	  -c -o libmacosx_pic_a-about.o `test -f 'about.m' || echo '$(srcdir)/'`about.m; \
@@ -891,6 +988,28 @@ libmacosx_pic_a-controls.obj: controls.m
 @AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_pic_a-controls.Po' tmpdepfile='$(DEPDIR)/libmacosx_pic_a-controls.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_pic_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_pic_a-controls.obj `if test -f 'controls.m'; then $(CYGPATH_W) 'controls.m'; else $(CYGPATH_W) '$(srcdir)/controls.m'; fi`
+
+libmacosx_pic_a-equalizer.o: equalizer.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_pic_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_pic_a-equalizer.o -MD -MP -MF "$(DEPDIR)/libmacosx_pic_a-equalizer.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_pic_a-equalizer.o `test -f 'equalizer.m' || echo '$(srcdir)/'`equalizer.m; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_pic_a-equalizer.Tpo" "$(DEPDIR)/libmacosx_pic_a-equalizer.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_pic_a-equalizer.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='equalizer.m' object='libmacosx_pic_a-equalizer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_pic_a-equalizer.Po' tmpdepfile='$(DEPDIR)/libmacosx_pic_a-equalizer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_pic_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_pic_a-equalizer.o `test -f 'equalizer.m' || echo '$(srcdir)/'`equalizer.m
+
+libmacosx_pic_a-equalizer.obj: equalizer.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_pic_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_pic_a-equalizer.obj -MD -MP -MF "$(DEPDIR)/libmacosx_pic_a-equalizer.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_pic_a-equalizer.obj `if test -f 'equalizer.m'; then $(CYGPATH_W) 'equalizer.m'; else $(CYGPATH_W) '$(srcdir)/equalizer.m'; fi`; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_pic_a-equalizer.Tpo" "$(DEPDIR)/libmacosx_pic_a-equalizer.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_pic_a-equalizer.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='equalizer.m' object='libmacosx_pic_a-equalizer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_pic_a-equalizer.Po' tmpdepfile='$(DEPDIR)/libmacosx_pic_a-equalizer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_pic_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_pic_a-equalizer.obj `if test -f 'equalizer.m'; then $(CYGPATH_W) 'equalizer.m'; else $(CYGPATH_W) '$(srcdir)/equalizer.m'; fi`
 
 libmacosx_pic_a-intf.o: intf.m
 @am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_pic_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_pic_a-intf.o -MD -MP -MF "$(DEPDIR)/libmacosx_pic_a-intf.Tpo" \
@@ -1112,6 +1231,50 @@ libmacosx_pic_a-vout.obj: vout.m
 @AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_pic_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_pic_a-vout.obj `if test -f 'vout.m'; then $(CYGPATH_W) 'vout.m'; else $(CYGPATH_W) '$(srcdir)/vout.m'; fi`
 
+libmacosx_pic_a-voutqt.o: voutqt.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_pic_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_pic_a-voutqt.o -MD -MP -MF "$(DEPDIR)/libmacosx_pic_a-voutqt.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_pic_a-voutqt.o `test -f 'voutqt.m' || echo '$(srcdir)/'`voutqt.m; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_pic_a-voutqt.Tpo" "$(DEPDIR)/libmacosx_pic_a-voutqt.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_pic_a-voutqt.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='voutqt.m' object='libmacosx_pic_a-voutqt.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_pic_a-voutqt.Po' tmpdepfile='$(DEPDIR)/libmacosx_pic_a-voutqt.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_pic_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_pic_a-voutqt.o `test -f 'voutqt.m' || echo '$(srcdir)/'`voutqt.m
+
+libmacosx_pic_a-voutqt.obj: voutqt.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_pic_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_pic_a-voutqt.obj -MD -MP -MF "$(DEPDIR)/libmacosx_pic_a-voutqt.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_pic_a-voutqt.obj `if test -f 'voutqt.m'; then $(CYGPATH_W) 'voutqt.m'; else $(CYGPATH_W) '$(srcdir)/voutqt.m'; fi`; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_pic_a-voutqt.Tpo" "$(DEPDIR)/libmacosx_pic_a-voutqt.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_pic_a-voutqt.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='voutqt.m' object='libmacosx_pic_a-voutqt.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_pic_a-voutqt.Po' tmpdepfile='$(DEPDIR)/libmacosx_pic_a-voutqt.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_pic_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_pic_a-voutqt.obj `if test -f 'voutqt.m'; then $(CYGPATH_W) 'voutqt.m'; else $(CYGPATH_W) '$(srcdir)/voutqt.m'; fi`
+
+libmacosx_pic_a-voutgl.o: voutgl.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_pic_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_pic_a-voutgl.o -MD -MP -MF "$(DEPDIR)/libmacosx_pic_a-voutgl.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_pic_a-voutgl.o `test -f 'voutgl.m' || echo '$(srcdir)/'`voutgl.m; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_pic_a-voutgl.Tpo" "$(DEPDIR)/libmacosx_pic_a-voutgl.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_pic_a-voutgl.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='voutgl.m' object='libmacosx_pic_a-voutgl.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_pic_a-voutgl.Po' tmpdepfile='$(DEPDIR)/libmacosx_pic_a-voutgl.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_pic_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_pic_a-voutgl.o `test -f 'voutgl.m' || echo '$(srcdir)/'`voutgl.m
+
+libmacosx_pic_a-voutgl.obj: voutgl.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_pic_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_pic_a-voutgl.obj -MD -MP -MF "$(DEPDIR)/libmacosx_pic_a-voutgl.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_pic_a-voutgl.obj `if test -f 'voutgl.m'; then $(CYGPATH_W) 'voutgl.m'; else $(CYGPATH_W) '$(srcdir)/voutgl.m'; fi`; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_pic_a-voutgl.Tpo" "$(DEPDIR)/libmacosx_pic_a-voutgl.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_pic_a-voutgl.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='voutgl.m' object='libmacosx_pic_a-voutgl.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_pic_a-voutgl.Po' tmpdepfile='$(DEPDIR)/libmacosx_pic_a-voutgl.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_pic_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_pic_a-voutgl.obj `if test -f 'voutgl.m'; then $(CYGPATH_W) 'voutgl.m'; else $(CYGPATH_W) '$(srcdir)/voutgl.m'; fi`
+
 libmacosx_plugin_a-about.o: about.m
 @am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_plugin_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_plugin_a-about.o -MD -MP -MF "$(DEPDIR)/libmacosx_plugin_a-about.Tpo" \
 @am__fastdepOBJC_TRUE@	  -c -o libmacosx_plugin_a-about.o `test -f 'about.m' || echo '$(srcdir)/'`about.m; \
@@ -1177,6 +1340,28 @@ libmacosx_plugin_a-controls.obj: controls.m
 @AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_plugin_a-controls.Po' tmpdepfile='$(DEPDIR)/libmacosx_plugin_a-controls.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_plugin_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_plugin_a-controls.obj `if test -f 'controls.m'; then $(CYGPATH_W) 'controls.m'; else $(CYGPATH_W) '$(srcdir)/controls.m'; fi`
+
+libmacosx_plugin_a-equalizer.o: equalizer.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_plugin_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_plugin_a-equalizer.o -MD -MP -MF "$(DEPDIR)/libmacosx_plugin_a-equalizer.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_plugin_a-equalizer.o `test -f 'equalizer.m' || echo '$(srcdir)/'`equalizer.m; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_plugin_a-equalizer.Tpo" "$(DEPDIR)/libmacosx_plugin_a-equalizer.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_plugin_a-equalizer.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='equalizer.m' object='libmacosx_plugin_a-equalizer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_plugin_a-equalizer.Po' tmpdepfile='$(DEPDIR)/libmacosx_plugin_a-equalizer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_plugin_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_plugin_a-equalizer.o `test -f 'equalizer.m' || echo '$(srcdir)/'`equalizer.m
+
+libmacosx_plugin_a-equalizer.obj: equalizer.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_plugin_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_plugin_a-equalizer.obj -MD -MP -MF "$(DEPDIR)/libmacosx_plugin_a-equalizer.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_plugin_a-equalizer.obj `if test -f 'equalizer.m'; then $(CYGPATH_W) 'equalizer.m'; else $(CYGPATH_W) '$(srcdir)/equalizer.m'; fi`; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_plugin_a-equalizer.Tpo" "$(DEPDIR)/libmacosx_plugin_a-equalizer.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_plugin_a-equalizer.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='equalizer.m' object='libmacosx_plugin_a-equalizer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_plugin_a-equalizer.Po' tmpdepfile='$(DEPDIR)/libmacosx_plugin_a-equalizer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_plugin_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_plugin_a-equalizer.obj `if test -f 'equalizer.m'; then $(CYGPATH_W) 'equalizer.m'; else $(CYGPATH_W) '$(srcdir)/equalizer.m'; fi`
 
 libmacosx_plugin_a-intf.o: intf.m
 @am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_plugin_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_plugin_a-intf.o -MD -MP -MF "$(DEPDIR)/libmacosx_plugin_a-intf.Tpo" \
@@ -1397,6 +1582,50 @@ libmacosx_plugin_a-vout.obj: vout.m
 @AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_plugin_a-vout.Po' tmpdepfile='$(DEPDIR)/libmacosx_plugin_a-vout.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_plugin_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_plugin_a-vout.obj `if test -f 'vout.m'; then $(CYGPATH_W) 'vout.m'; else $(CYGPATH_W) '$(srcdir)/vout.m'; fi`
+
+libmacosx_plugin_a-voutqt.o: voutqt.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_plugin_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_plugin_a-voutqt.o -MD -MP -MF "$(DEPDIR)/libmacosx_plugin_a-voutqt.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_plugin_a-voutqt.o `test -f 'voutqt.m' || echo '$(srcdir)/'`voutqt.m; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_plugin_a-voutqt.Tpo" "$(DEPDIR)/libmacosx_plugin_a-voutqt.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_plugin_a-voutqt.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='voutqt.m' object='libmacosx_plugin_a-voutqt.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_plugin_a-voutqt.Po' tmpdepfile='$(DEPDIR)/libmacosx_plugin_a-voutqt.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_plugin_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_plugin_a-voutqt.o `test -f 'voutqt.m' || echo '$(srcdir)/'`voutqt.m
+
+libmacosx_plugin_a-voutqt.obj: voutqt.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_plugin_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_plugin_a-voutqt.obj -MD -MP -MF "$(DEPDIR)/libmacosx_plugin_a-voutqt.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_plugin_a-voutqt.obj `if test -f 'voutqt.m'; then $(CYGPATH_W) 'voutqt.m'; else $(CYGPATH_W) '$(srcdir)/voutqt.m'; fi`; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_plugin_a-voutqt.Tpo" "$(DEPDIR)/libmacosx_plugin_a-voutqt.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_plugin_a-voutqt.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='voutqt.m' object='libmacosx_plugin_a-voutqt.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_plugin_a-voutqt.Po' tmpdepfile='$(DEPDIR)/libmacosx_plugin_a-voutqt.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_plugin_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_plugin_a-voutqt.obj `if test -f 'voutqt.m'; then $(CYGPATH_W) 'voutqt.m'; else $(CYGPATH_W) '$(srcdir)/voutqt.m'; fi`
+
+libmacosx_plugin_a-voutgl.o: voutgl.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_plugin_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_plugin_a-voutgl.o -MD -MP -MF "$(DEPDIR)/libmacosx_plugin_a-voutgl.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_plugin_a-voutgl.o `test -f 'voutgl.m' || echo '$(srcdir)/'`voutgl.m; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_plugin_a-voutgl.Tpo" "$(DEPDIR)/libmacosx_plugin_a-voutgl.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_plugin_a-voutgl.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='voutgl.m' object='libmacosx_plugin_a-voutgl.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_plugin_a-voutgl.Po' tmpdepfile='$(DEPDIR)/libmacosx_plugin_a-voutgl.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_plugin_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_plugin_a-voutgl.o `test -f 'voutgl.m' || echo '$(srcdir)/'`voutgl.m
+
+libmacosx_plugin_a-voutgl.obj: voutgl.m
+@am__fastdepOBJC_TRUE@	if $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_plugin_a_OBJCFLAGS) $(OBJCFLAGS) -MT libmacosx_plugin_a-voutgl.obj -MD -MP -MF "$(DEPDIR)/libmacosx_plugin_a-voutgl.Tpo" \
+@am__fastdepOBJC_TRUE@	  -c -o libmacosx_plugin_a-voutgl.obj `if test -f 'voutgl.m'; then $(CYGPATH_W) 'voutgl.m'; else $(CYGPATH_W) '$(srcdir)/voutgl.m'; fi`; \
+@am__fastdepOBJC_TRUE@	then mv -f "$(DEPDIR)/libmacosx_plugin_a-voutgl.Tpo" "$(DEPDIR)/libmacosx_plugin_a-voutgl.Po"; \
+@am__fastdepOBJC_TRUE@	else rm -f "$(DEPDIR)/libmacosx_plugin_a-voutgl.Tpo"; exit 1; \
+@am__fastdepOBJC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	source='voutgl.m' object='libmacosx_plugin_a-voutgl.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	depfile='$(DEPDIR)/libmacosx_plugin_a-voutgl.Po' tmpdepfile='$(DEPDIR)/libmacosx_plugin_a-voutgl.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmacosx_plugin_a_OBJCFLAGS) $(OBJCFLAGS) -c -o libmacosx_plugin_a-voutgl.obj `if test -f 'voutgl.m'; then $(CYGPATH_W) 'voutgl.m'; else $(CYGPATH_W) '$(srcdir)/voutgl.m'; fi`
 uninstall-info-am:
 libmacosxDATA_INSTALL = $(INSTALL_DATA)
 install-libmacosxDATA: $(libmacosx_DATA)

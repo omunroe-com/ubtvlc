@@ -44,6 +44,7 @@ else
     do_msmpeg4=y
     do_wmv1=y
     do_wmv2=y
+    do_h261=y
     do_h263=y
     do_h263p=y
     do_mpeg4=y
@@ -97,7 +98,7 @@ do_ffmpeg()
     shift
     echo $ffmpeg -y -bitexact -dct_algo 1 -idct_algo 2 $*
     $ffmpeg -y -bitexact -dct_algo 1 -idct_algo 2 -benchmark $* > $datadir/bench.tmp 2> /tmp/ffmpeg$$
-    egrep -v "^(Stream|Press|Input|Output|frame|  Stream|  Duration)" /tmp/ffmpeg$$ || true
+    egrep -v "^(Stream|Press|Input|Output|frame|  Stream|  Duration|video:)" /tmp/ffmpeg$$ || true
     rm -f /tmp/ffmpeg$$
     do_md5sum $f >> $logfile
     if [ $f = $raw_dst ] ; then
@@ -115,7 +116,7 @@ do_ffmpeg_crc()
     shift
     echo $ffmpeg -y -bitexact -dct_algo 1 -idct_algo 2 $* -f crc $datadir/ffmpeg.crc
     $ffmpeg -y -bitexact -dct_algo 1 -idct_algo 2 $* -f crc $datadir/ffmpeg.crc > /tmp/ffmpeg$$ 2>&1
-    egrep -v "^(Stream|Press|Input|Output|frame|  Stream|  Duration)" /tmp/ffmpeg$$ || true
+    egrep -v "^(Stream|Press|Input|Output|frame|  Stream|  Duration|video:|ffmpeg version|  configuration|  built)" /tmp/ffmpeg$$ || true
     rm -f /tmp/ffmpeg$$ 
     echo "$f `cat $datadir/ffmpeg.crc`" >> $logfile
 }
@@ -126,7 +127,7 @@ do_ffmpeg_nocheck()
     shift
     echo $ffmpeg -y -bitexact -dct_algo 1 -idct_algo 2 $*
     $ffmpeg -y -bitexact -dct_algo 1 -idct_algo 2 -benchmark $* > $datadir/bench.tmp 2> /tmp/ffmpeg$$
-    egrep -v "^(Stream|Press|Input|Output|frame|  Stream|  Duration)" /tmp/ffmpeg$$ || true
+    egrep -v "^(Stream|Press|Input|Output|frame|  Stream|  Duration|video:)" /tmp/ffmpeg$$ || true
     rm -f /tmp/ffmpeg$$
     expr "`cat $datadir/bench.tmp`" : '.*utime=\(.*s\)' > $datadir/bench2.tmp
     echo `cat $datadir/bench2.tmp` $f >> $benchfile
@@ -220,6 +221,16 @@ file=${outfile}wmv2.avi
 do_ffmpeg $file -y -qscale 10 -f pgmyuv -i $raw_src -an -vcodec wmv2 $file
 
 # wmv2 decoding
+do_ffmpeg $raw_dst -y -i $file -f rawvideo $raw_dst 
+fi
+
+###################################
+if [ -n "$do_h261" ] ; then
+# h261 encoding
+file=${outfile}h261.avi
+do_ffmpeg $file -y -qscale 11 -f pgmyuv -i $raw_src -s 352x288 -an -vcodec h261 $file
+
+# h261 decoding
 do_ffmpeg $raw_dst -y -i $file -f rawvideo $raw_dst 
 fi
 
@@ -407,7 +418,7 @@ fi
 if [ -n "$do_svq1" ] ; then
 # svq1 encoding
 file=${outfile}svq1.mov
-do_ffmpeg $file -y -f pgmyuv -i $raw_src -an -vcodec svq1 -pix_fmt yuv410p $file
+do_ffmpeg $file -y -f pgmyuv -i $raw_src -an -vcodec svq1 -qscale 3 -pix_fmt yuv410p $file
 
 # svq1 decoding
 do_ffmpeg $raw_dst -y -i $file -f rawvideo $raw_dst 
@@ -477,7 +488,7 @@ do_ffmpeg_crc $file -i $file
 # asf
 file=${outfile}libav.asf
 do_ffmpeg $file -t 1 -y -qscale 10 -f pgmyuv -i $raw_src -f s16le -i $pcm_src -acodec mp2 $file
-do_ffmpeg_crc $file -i $file
+do_ffmpeg_crc $file -i $file -r 25
 
 # rm
 file=${outfile}libav.rm
@@ -513,6 +524,11 @@ do_ffmpeg_crc $file -i $file
 # nut
 file=${outfile}libav.nut
 do_ffmpeg $file -t 1 -y -qscale 10 -f pgmyuv -i $raw_src -f s16le -i $pcm_src -acodec mp2 $file
+do_ffmpeg_crc $file -i $file
+
+# dv
+file=${outfile}libav.dv
+do_ffmpeg $file -t 1 -y -qscale 10 -f pgmyuv -i $raw_src -f s16le -i $pcm_src -ar 48000 -r 25 -s pal -ac 2 $file
 do_ffmpeg_crc $file -i $file
 
 # XXX: need mpegts tests (add bitstreams or add output capability in ffmpeg)
@@ -562,9 +578,9 @@ $ffmpeg -t 0.5 -y -qscale 10 -f pgmyuv -i $raw_src $file
 do_ffmpeg_crc $file -i $file
 
 # jpeg (we do not do md5 on image files yet)
-#file=${outfile}libav%d.jpg
-#$ffmpeg -t 0.5 -y -qscale 10 -f pgmyuv -i $raw_src $file
-#do_ffmpeg_crc $file -i $file
+file=${outfile}libav%d.jpg
+$ffmpeg -t 0.5 -y -qscale 10 -f pgmyuv -i $raw_src -f image2 $file
+do_ffmpeg_crc $file -f image2 -i $file
 
 ####################
 # audio only

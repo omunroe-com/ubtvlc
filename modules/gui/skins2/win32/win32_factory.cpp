@@ -2,7 +2,7 @@
  * win32_factory.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: win32_factory.cpp 7567 2004-04-30 15:35:56Z gbazin $
+ * $Id: win32_factory.cpp 8864 2004-09-30 19:44:43Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -30,6 +30,7 @@
 #include "win32_window.hpp"
 #include "win32_tooltip.hpp"
 #include "win32_loop.hpp"
+#include "../src/theme.hpp"
 
 
 LRESULT CALLBACK Win32Proc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
@@ -125,7 +126,7 @@ bool Win32Factory::init()
 
     // Create Window
     m_hParentWindow = CreateWindowEx( WS_EX_APPWINDOW, "SkinWindowClass",
-        "VLC media player", WS_SYSMENU, -200, -200, 0, 0, 0, 0, m_hInst, 0 );
+        "VLC media player", WS_SYSMENU|WS_POPUP, -200, -200, 0, 0, 0, 0, m_hInst, 0 );
     if( m_hParentWindow == NULL )
     {
         msg_Err( getIntf(), "Cannot create parent window" );
@@ -180,9 +181,13 @@ bool Win32Factory::init()
 
     // Initialize the resource path
     m_resourcePath.push_back( (string)getIntf()->p_vlc->psz_homedir +
-                               "\\" + CONFIG_DIR + "\\skins2" );
+                               "\\" + CONFIG_DIR + "\\skins" );
+    m_resourcePath.push_back( (string)getIntf()->p_libvlc->psz_vlcpath +
+                              "\\skins" );
     m_resourcePath.push_back( (string)getIntf()->p_libvlc->psz_vlcpath +
                               "\\skins2" );
+    m_resourcePath.push_back( (string)getIntf()->p_libvlc->psz_vlcpath +
+                              "\\share\\skins" );
     m_resourcePath.push_back( (string)getIntf()->p_libvlc->psz_vlcpath +
                               "\\share\\skins2" );
 
@@ -223,6 +228,13 @@ void Win32Factory::destroyOSLoop()
     Win32Loop::destroy( getIntf() );
 }
 
+void Win32Factory::minimize()
+{
+    /* Make sure no tooltip is visible first */
+    getIntf()->p_sys->p_theme->getWindowManager().hideTooltip();
+
+    ShowWindow( m_hParentWindow, SW_MINIMIZE );
+}
 
 OSTimer *Win32Factory::createOSTimer( const Callback &rCallback )
 {

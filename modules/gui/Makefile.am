@@ -7,7 +7,7 @@ noinst_LIBRARIES =
 noinst_HEADERS =
 EXTRA_DIST = Modules.am
 BUILT_SOURCES =
-SUBDIRS = beos pda gtk gtk2 kde macosx ncurses qnx qt skins skins2 wxwindows
+SUBDIRS = beos pda gtk gtk2 kde macosx qnx qt skins2 wxwindows
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/gui
 include Modules.am
@@ -28,9 +28,46 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in ; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in ; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in ; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in ncurses; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in ncurses; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in ncurses; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
+
+# The ncurses plugin
+
+if UNTRUE
+Lncursesp = libncurses_plugin.a
+Dncursesp = libncurses_plugin$(LIBEXT)
+Lncursesb = libncurses.a
+Lncursespic = libncurses_pic.a
+endif
+
+libncurses_plugin_a_SOURCES = $(SOURCES_ncurses)
+libncurses_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin ncurses`
+libncurses_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin ncurses`
+libncurses_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin ncurses`
+
+libncurses_pic_a_SOURCES = $(SOURCES_ncurses)
+libncurses_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ncurses`
+libncurses_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ncurses`
+libncurses_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ncurses`
+
+libncurses_a_SOURCES = $(SOURCES_ncurses)
+libncurses_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin ncurses`
+libncurses_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ncurses`
+libncurses_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ncurses`
+
+libvlc_LIBRARIES += $(Lncursesb) $(Lncursespic)
+libncurses_DATA = $(Dncursesp)
+
+libncursesdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lncursesp)
+libncurses_plugin$(LIBEXT): $(libncurses_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage ncurses` in \
+	  c++) echo $(CXXLINK) $(libncurses_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ncurses\` ; $(CXXLINK) $(libncurses_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ncurses` ;; \
+	  objc) echo $(OBJCLINK) $(libncurses_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ncurses\` ; $(OBJCLINK) $(libncurses_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ncurses` ;; \
+	  c|*) echo $(LINK) $(libncurses_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ncurses\` ; $(LINK) $(libncurses_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ncurses` ;; \
+	esac
+
 

@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -228,8 +230,8 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Lmux_psb) $(Lmux_pspic) $(Lmux_tsb) $(Lmux_tspic) $(Lmux_ts_dvbpsib) $(Lmux_ts_dvbpsipic)
-noinst_LIBRARIES = $(Lmux_psp) $(Lmux_tsp) $(Lmux_ts_dvbpsip)
+libvlc_LIBRARIES = $(Lmux_psb) $(Lmux_pspic) $(Lmux_tsb) $(Lmux_tspic)
+noinst_LIBRARIES = $(Lmux_psp) $(Lmux_tsp)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
@@ -249,15 +251,6 @@ SOURCES_mux_ts = ts.c \
                  csa.h \
                  bits.h \
                  $(NULL)
-
-
-SOURCES_mux_ts_dvbpsi = ts.c \
-                        pes.c \
-                        pes.h \
-                        csa.c \
-                        csa.h \
-                        bits.h \
-                        $(NULL)
 
 
 # There's no need for pic code on win32 so get rid of this to substantially
@@ -314,31 +307,6 @@ libmux_ts_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_ts`
 libmux_ts_DATA = $(Dmux_tsp)
 
 libmux_tsdir = $(libdir)/vlc/
-
-
-# The mux_ts_dvbpsi plugin
-@UNTRUE_TRUE@Lmux_ts_dvbpsip = libmux_ts_dvbpsi_plugin.a
-@UNTRUE_TRUE@Dmux_ts_dvbpsip = libmux_ts_dvbpsi_plugin$(LIBEXT)
-@UNTRUE_TRUE@Lmux_ts_dvbpsib = libmux_ts_dvbpsi.a
-@UNTRUE_TRUE@Lmux_ts_dvbpsipic = libmux_ts_dvbpsi_pic.a
-
-libmux_ts_dvbpsi_plugin_a_SOURCES = $(SOURCES_mux_ts_dvbpsi)
-libmux_ts_dvbpsi_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin mux_ts_dvbpsi`
-libmux_ts_dvbpsi_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mux_ts_dvbpsi`
-libmux_ts_dvbpsi_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mux_ts_dvbpsi`
-
-libmux_ts_dvbpsi_pic_a_SOURCES = $(SOURCES_mux_ts_dvbpsi)
-libmux_ts_dvbpsi_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mux_ts_dvbpsi`
-libmux_ts_dvbpsi_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mux_ts_dvbpsi`
-libmux_ts_dvbpsi_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mux_ts_dvbpsi`
-
-libmux_ts_dvbpsi_a_SOURCES = $(SOURCES_mux_ts_dvbpsi)
-libmux_ts_dvbpsi_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_ts_dvbpsi`
-libmux_ts_dvbpsi_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_ts_dvbpsi`
-libmux_ts_dvbpsi_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_ts_dvbpsi`
-libmux_ts_dvbpsi_DATA = $(Dmux_ts_dvbpsip)
-
-libmux_ts_dvbpsidir = $(libdir)/vlc/
 subdir = modules/mux/mpeg
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
@@ -371,41 +339,19 @@ am__objects_5 = libmux_ts_a-ts.$(OBJEXT) libmux_ts_a-pes.$(OBJEXT) \
 	libmux_ts_a-csa.$(OBJEXT) $(am__objects_1)
 am_libmux_ts_a_OBJECTS = $(am__objects_5)
 libmux_ts_a_OBJECTS = $(am_libmux_ts_a_OBJECTS)
-libmux_ts_dvbpsi_a_AR = $(AR) cru
-libmux_ts_dvbpsi_a_LIBADD =
-am__objects_6 = libmux_ts_dvbpsi_a-ts.$(OBJEXT) \
-	libmux_ts_dvbpsi_a-pes.$(OBJEXT) \
-	libmux_ts_dvbpsi_a-csa.$(OBJEXT) $(am__objects_1)
-am_libmux_ts_dvbpsi_a_OBJECTS = $(am__objects_6)
-libmux_ts_dvbpsi_a_OBJECTS = $(am_libmux_ts_dvbpsi_a_OBJECTS)
-libmux_ts_dvbpsi_pic_a_AR = $(AR) cru
-libmux_ts_dvbpsi_pic_a_LIBADD =
-am__objects_7 = libmux_ts_dvbpsi_pic_a-ts.$(OBJEXT) \
-	libmux_ts_dvbpsi_pic_a-pes.$(OBJEXT) \
-	libmux_ts_dvbpsi_pic_a-csa.$(OBJEXT) $(am__objects_1)
-am_libmux_ts_dvbpsi_pic_a_OBJECTS = $(am__objects_7)
-libmux_ts_dvbpsi_pic_a_OBJECTS = $(am_libmux_ts_dvbpsi_pic_a_OBJECTS)
-libmux_ts_dvbpsi_plugin_a_AR = $(AR) cru
-libmux_ts_dvbpsi_plugin_a_LIBADD =
-am__objects_8 = libmux_ts_dvbpsi_plugin_a-ts.$(OBJEXT) \
-	libmux_ts_dvbpsi_plugin_a-pes.$(OBJEXT) \
-	libmux_ts_dvbpsi_plugin_a-csa.$(OBJEXT) $(am__objects_1)
-am_libmux_ts_dvbpsi_plugin_a_OBJECTS = $(am__objects_8)
-libmux_ts_dvbpsi_plugin_a_OBJECTS = \
-	$(am_libmux_ts_dvbpsi_plugin_a_OBJECTS)
 libmux_ts_pic_a_AR = $(AR) cru
 libmux_ts_pic_a_LIBADD =
-am__objects_9 = libmux_ts_pic_a-ts.$(OBJEXT) \
+am__objects_6 = libmux_ts_pic_a-ts.$(OBJEXT) \
 	libmux_ts_pic_a-pes.$(OBJEXT) libmux_ts_pic_a-csa.$(OBJEXT) \
 	$(am__objects_1)
-am_libmux_ts_pic_a_OBJECTS = $(am__objects_9)
+am_libmux_ts_pic_a_OBJECTS = $(am__objects_6)
 libmux_ts_pic_a_OBJECTS = $(am_libmux_ts_pic_a_OBJECTS)
 libmux_ts_plugin_a_AR = $(AR) cru
 libmux_ts_plugin_a_LIBADD =
-am__objects_10 = libmux_ts_plugin_a-ts.$(OBJEXT) \
+am__objects_7 = libmux_ts_plugin_a-ts.$(OBJEXT) \
 	libmux_ts_plugin_a-pes.$(OBJEXT) \
 	libmux_ts_plugin_a-csa.$(OBJEXT) $(am__objects_1)
-am_libmux_ts_plugin_a_OBJECTS = $(am__objects_10)
+am_libmux_ts_plugin_a_OBJECTS = $(am__objects_7)
 libmux_ts_plugin_a_OBJECTS = $(am_libmux_ts_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
@@ -420,15 +366,6 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libmux_ts_a-csa.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmux_ts_a-pes.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmux_ts_a-ts.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libmux_ts_dvbpsi_a-csa.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libmux_ts_dvbpsi_a-pes.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libmux_ts_dvbpsi_a-ts.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libmux_ts_dvbpsi_pic_a-csa.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libmux_ts_dvbpsi_pic_a-pes.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libmux_ts_dvbpsi_pic_a-ts.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-csa.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-pes.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-ts.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmux_ts_pic_a-csa.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmux_ts_pic_a-pes.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmux_ts_pic_a-ts.Po \
@@ -441,10 +378,8 @@ CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 DIST_SOURCES = $(libmux_ps_a_SOURCES) $(libmux_ps_pic_a_SOURCES) \
 	$(libmux_ps_plugin_a_SOURCES) $(libmux_ts_a_SOURCES) \
-	$(libmux_ts_dvbpsi_a_SOURCES) $(libmux_ts_dvbpsi_pic_a_SOURCES) \
-	$(libmux_ts_dvbpsi_plugin_a_SOURCES) $(libmux_ts_pic_a_SOURCES) \
-	$(libmux_ts_plugin_a_SOURCES)
-DATA = $(libmux_ps_DATA) $(libmux_ts_DATA) $(libmux_ts_dvbpsi_DATA)
+	$(libmux_ts_pic_a_SOURCES) $(libmux_ts_plugin_a_SOURCES)
+DATA = $(libmux_ps_DATA) $(libmux_ts_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -457,7 +392,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libmux_ps_a_SOURCES) $(libmux_ps_pic_a_SOURCES) $(libmux_ps_plugin_a_SOURCES) $(libmux_ts_a_SOURCES) $(libmux_ts_dvbpsi_a_SOURCES) $(libmux_ts_dvbpsi_pic_a_SOURCES) $(libmux_ts_dvbpsi_plugin_a_SOURCES) $(libmux_ts_pic_a_SOURCES) $(libmux_ts_plugin_a_SOURCES)
+SOURCES = $(libmux_ps_a_SOURCES) $(libmux_ps_pic_a_SOURCES) $(libmux_ps_plugin_a_SOURCES) $(libmux_ts_a_SOURCES) $(libmux_ts_pic_a_SOURCES) $(libmux_ts_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -518,18 +453,6 @@ libmux_ts.a: $(libmux_ts_a_OBJECTS) $(libmux_ts_a_DEPENDENCIES)
 	-rm -f libmux_ts.a
 	$(libmux_ts_a_AR) libmux_ts.a $(libmux_ts_a_OBJECTS) $(libmux_ts_a_LIBADD)
 	$(RANLIB) libmux_ts.a
-libmux_ts_dvbpsi.a: $(libmux_ts_dvbpsi_a_OBJECTS) $(libmux_ts_dvbpsi_a_DEPENDENCIES) 
-	-rm -f libmux_ts_dvbpsi.a
-	$(libmux_ts_dvbpsi_a_AR) libmux_ts_dvbpsi.a $(libmux_ts_dvbpsi_a_OBJECTS) $(libmux_ts_dvbpsi_a_LIBADD)
-	$(RANLIB) libmux_ts_dvbpsi.a
-libmux_ts_dvbpsi_pic.a: $(libmux_ts_dvbpsi_pic_a_OBJECTS) $(libmux_ts_dvbpsi_pic_a_DEPENDENCIES) 
-	-rm -f libmux_ts_dvbpsi_pic.a
-	$(libmux_ts_dvbpsi_pic_a_AR) libmux_ts_dvbpsi_pic.a $(libmux_ts_dvbpsi_pic_a_OBJECTS) $(libmux_ts_dvbpsi_pic_a_LIBADD)
-	$(RANLIB) libmux_ts_dvbpsi_pic.a
-libmux_ts_dvbpsi_plugin.a: $(libmux_ts_dvbpsi_plugin_a_OBJECTS) $(libmux_ts_dvbpsi_plugin_a_DEPENDENCIES) 
-	-rm -f libmux_ts_dvbpsi_plugin.a
-	$(libmux_ts_dvbpsi_plugin_a_AR) libmux_ts_dvbpsi_plugin.a $(libmux_ts_dvbpsi_plugin_a_OBJECTS) $(libmux_ts_dvbpsi_plugin_a_LIBADD)
-	$(RANLIB) libmux_ts_dvbpsi_plugin.a
 libmux_ts_pic.a: $(libmux_ts_pic_a_OBJECTS) $(libmux_ts_pic_a_DEPENDENCIES) 
 	-rm -f libmux_ts_pic.a
 	$(libmux_ts_pic_a_AR) libmux_ts_pic.a $(libmux_ts_pic_a_OBJECTS) $(libmux_ts_pic_a_LIBADD)
@@ -554,15 +477,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ts_a-csa.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ts_a-pes.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ts_a-ts.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ts_dvbpsi_a-csa.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ts_dvbpsi_a-pes.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ts_dvbpsi_a-ts.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ts_dvbpsi_pic_a-csa.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ts_dvbpsi_pic_a-pes.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ts_dvbpsi_pic_a-ts.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-csa.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-pes.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-ts.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ts_pic_a-csa.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ts_pic_a-pes.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ts_pic_a-ts.Po@am__quote@
@@ -790,204 +704,6 @@ libmux_ts_a-csa.obj: csa.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_a-csa.obj `if test -f 'csa.c'; then $(CYGPATH_W) 'csa.c'; else $(CYGPATH_W) '$(srcdir)/csa.c'; fi`
 
-libmux_ts_dvbpsi_a-ts.o: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_a-ts.o -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_a-ts.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libmux_ts_dvbpsi_a-ts.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_a-ts.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c
-
-libmux_ts_dvbpsi_a-ts.obj: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_a-ts.obj -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_a-ts.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libmux_ts_dvbpsi_a-ts.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_a-ts.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`
-
-libmux_ts_dvbpsi_a-pes.o: pes.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_a-pes.o -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_a-pes.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_a-pes.o `test -f 'pes.c' || echo '$(srcdir)/'`pes.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_a-pes.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_a-pes.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_a-pes.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pes.c' object='libmux_ts_dvbpsi_a-pes.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_a-pes.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_a-pes.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_a-pes.o `test -f 'pes.c' || echo '$(srcdir)/'`pes.c
-
-libmux_ts_dvbpsi_a-pes.obj: pes.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_a-pes.obj -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_a-pes.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_a-pes.obj `if test -f 'pes.c'; then $(CYGPATH_W) 'pes.c'; else $(CYGPATH_W) '$(srcdir)/pes.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_a-pes.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_a-pes.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_a-pes.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pes.c' object='libmux_ts_dvbpsi_a-pes.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_a-pes.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_a-pes.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_a-pes.obj `if test -f 'pes.c'; then $(CYGPATH_W) 'pes.c'; else $(CYGPATH_W) '$(srcdir)/pes.c'; fi`
-
-libmux_ts_dvbpsi_a-csa.o: csa.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_a-csa.o -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_a-csa.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_a-csa.o `test -f 'csa.c' || echo '$(srcdir)/'`csa.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_a-csa.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_a-csa.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_a-csa.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='csa.c' object='libmux_ts_dvbpsi_a-csa.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_a-csa.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_a-csa.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_a-csa.o `test -f 'csa.c' || echo '$(srcdir)/'`csa.c
-
-libmux_ts_dvbpsi_a-csa.obj: csa.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_a-csa.obj -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_a-csa.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_a-csa.obj `if test -f 'csa.c'; then $(CYGPATH_W) 'csa.c'; else $(CYGPATH_W) '$(srcdir)/csa.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_a-csa.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_a-csa.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_a-csa.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='csa.c' object='libmux_ts_dvbpsi_a-csa.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_a-csa.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_a-csa.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_a-csa.obj `if test -f 'csa.c'; then $(CYGPATH_W) 'csa.c'; else $(CYGPATH_W) '$(srcdir)/csa.c'; fi`
-
-libmux_ts_dvbpsi_pic_a-ts.o: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_pic_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_pic_a-ts.o -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_pic_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-ts.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libmux_ts_dvbpsi_pic_a-ts.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_pic_a-ts.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_pic_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_pic_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_pic_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c
-
-libmux_ts_dvbpsi_pic_a-ts.obj: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_pic_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_pic_a-ts.obj -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_pic_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-ts.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libmux_ts_dvbpsi_pic_a-ts.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_pic_a-ts.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_pic_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_pic_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_pic_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`
-
-libmux_ts_dvbpsi_pic_a-pes.o: pes.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_pic_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_pic_a-pes.o -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-pes.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_pic_a-pes.o `test -f 'pes.c' || echo '$(srcdir)/'`pes.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-pes.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-pes.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-pes.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pes.c' object='libmux_ts_dvbpsi_pic_a-pes.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_pic_a-pes.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_pic_a-pes.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_pic_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_pic_a-pes.o `test -f 'pes.c' || echo '$(srcdir)/'`pes.c
-
-libmux_ts_dvbpsi_pic_a-pes.obj: pes.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_pic_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_pic_a-pes.obj -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-pes.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_pic_a-pes.obj `if test -f 'pes.c'; then $(CYGPATH_W) 'pes.c'; else $(CYGPATH_W) '$(srcdir)/pes.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-pes.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-pes.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-pes.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pes.c' object='libmux_ts_dvbpsi_pic_a-pes.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_pic_a-pes.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_pic_a-pes.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_pic_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_pic_a-pes.obj `if test -f 'pes.c'; then $(CYGPATH_W) 'pes.c'; else $(CYGPATH_W) '$(srcdir)/pes.c'; fi`
-
-libmux_ts_dvbpsi_pic_a-csa.o: csa.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_pic_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_pic_a-csa.o -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-csa.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_pic_a-csa.o `test -f 'csa.c' || echo '$(srcdir)/'`csa.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-csa.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-csa.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-csa.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='csa.c' object='libmux_ts_dvbpsi_pic_a-csa.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_pic_a-csa.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_pic_a-csa.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_pic_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_pic_a-csa.o `test -f 'csa.c' || echo '$(srcdir)/'`csa.c
-
-libmux_ts_dvbpsi_pic_a-csa.obj: csa.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_pic_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_pic_a-csa.obj -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-csa.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_pic_a-csa.obj `if test -f 'csa.c'; then $(CYGPATH_W) 'csa.c'; else $(CYGPATH_W) '$(srcdir)/csa.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-csa.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-csa.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_pic_a-csa.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='csa.c' object='libmux_ts_dvbpsi_pic_a-csa.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_pic_a-csa.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_pic_a-csa.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_pic_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_pic_a-csa.obj `if test -f 'csa.c'; then $(CYGPATH_W) 'csa.c'; else $(CYGPATH_W) '$(srcdir)/csa.c'; fi`
-
-libmux_ts_dvbpsi_plugin_a-ts.o: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_plugin_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_plugin_a-ts.o -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_plugin_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-ts.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libmux_ts_dvbpsi_plugin_a-ts.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-ts.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_plugin_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_plugin_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c
-
-libmux_ts_dvbpsi_plugin_a-ts.obj: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_plugin_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_plugin_a-ts.obj -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_plugin_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-ts.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libmux_ts_dvbpsi_plugin_a-ts.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-ts.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_plugin_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_plugin_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`
-
-libmux_ts_dvbpsi_plugin_a-pes.o: pes.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_plugin_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_plugin_a-pes.o -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-pes.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_plugin_a-pes.o `test -f 'pes.c' || echo '$(srcdir)/'`pes.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-pes.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-pes.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-pes.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pes.c' object='libmux_ts_dvbpsi_plugin_a-pes.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-pes.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-pes.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_plugin_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_plugin_a-pes.o `test -f 'pes.c' || echo '$(srcdir)/'`pes.c
-
-libmux_ts_dvbpsi_plugin_a-pes.obj: pes.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_plugin_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_plugin_a-pes.obj -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-pes.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_plugin_a-pes.obj `if test -f 'pes.c'; then $(CYGPATH_W) 'pes.c'; else $(CYGPATH_W) '$(srcdir)/pes.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-pes.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-pes.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-pes.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pes.c' object='libmux_ts_dvbpsi_plugin_a-pes.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-pes.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-pes.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_plugin_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_plugin_a-pes.obj `if test -f 'pes.c'; then $(CYGPATH_W) 'pes.c'; else $(CYGPATH_W) '$(srcdir)/pes.c'; fi`
-
-libmux_ts_dvbpsi_plugin_a-csa.o: csa.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_plugin_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_plugin_a-csa.o -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-csa.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_plugin_a-csa.o `test -f 'csa.c' || echo '$(srcdir)/'`csa.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-csa.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-csa.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-csa.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='csa.c' object='libmux_ts_dvbpsi_plugin_a-csa.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-csa.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-csa.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_plugin_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_plugin_a-csa.o `test -f 'csa.c' || echo '$(srcdir)/'`csa.c
-
-libmux_ts_dvbpsi_plugin_a-csa.obj: csa.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_plugin_a_CFLAGS) $(CFLAGS) -MT libmux_ts_dvbpsi_plugin_a-csa.obj -MD -MP -MF "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-csa.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmux_ts_dvbpsi_plugin_a-csa.obj `if test -f 'csa.c'; then $(CYGPATH_W) 'csa.c'; else $(CYGPATH_W) '$(srcdir)/csa.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-csa.Tpo" "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-csa.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-csa.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='csa.c' object='libmux_ts_dvbpsi_plugin_a-csa.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-csa.Po' tmpdepfile='$(DEPDIR)/libmux_ts_dvbpsi_plugin_a-csa.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_dvbpsi_plugin_a_CFLAGS) $(CFLAGS) -c -o libmux_ts_dvbpsi_plugin_a-csa.obj `if test -f 'csa.c'; then $(CYGPATH_W) 'csa.c'; else $(CYGPATH_W) '$(srcdir)/csa.c'; fi`
-
 libmux_ts_pic_a-ts.o: ts.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ts_pic_a_CFLAGS) $(CFLAGS) -MT libmux_ts_pic_a-ts.o -MD -MP -MF "$(DEPDIR)/libmux_ts_pic_a-ts.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libmux_ts_pic_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c; \
@@ -1155,24 +871,6 @@ uninstall-libmux_tsDATA:
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
 	  echo " rm -f $(DESTDIR)$(libmux_tsdir)/$$f"; \
 	  rm -f $(DESTDIR)$(libmux_tsdir)/$$f; \
-	done
-libmux_ts_dvbpsiDATA_INSTALL = $(INSTALL_DATA)
-install-libmux_ts_dvbpsiDATA: $(libmux_ts_dvbpsi_DATA)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(libmux_ts_dvbpsidir)
-	@list='$(libmux_ts_dvbpsi_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " $(libmux_ts_dvbpsiDATA_INSTALL) $$d$$p $(DESTDIR)$(libmux_ts_dvbpsidir)/$$f"; \
-	  $(libmux_ts_dvbpsiDATA_INSTALL) $$d$$p $(DESTDIR)$(libmux_ts_dvbpsidir)/$$f; \
-	done
-
-uninstall-libmux_ts_dvbpsiDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(libmux_ts_dvbpsi_DATA)'; for p in $$list; do \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " rm -f $(DESTDIR)$(libmux_ts_dvbpsidir)/$$f"; \
-	  rm -f $(DESTDIR)$(libmux_ts_dvbpsidir)/$$f; \
 	done
 
 # This directory's subdirectories are mostly independent; you can cd
@@ -1349,7 +1047,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libmux_psdir) $(DESTDIR)$(libmux_tsdir) $(DESTDIR)$(libmux_ts_dvbpsidir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libmux_psdir) $(DESTDIR)$(libmux_tsdir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -1397,7 +1095,7 @@ info: info-recursive
 info-am:
 
 install-data-am: install-libmux_psDATA install-libmux_tsDATA \
-	install-libmux_ts_dvbpsiDATA install-libvlcLIBRARIES
+	install-libvlcLIBRARIES
 
 install-exec-am:
 
@@ -1425,8 +1123,7 @@ ps: ps-recursive
 ps-am:
 
 uninstall-am: uninstall-info-am uninstall-libmux_psDATA \
-	uninstall-libmux_tsDATA uninstall-libmux_ts_dvbpsiDATA \
-	uninstall-libvlcLIBRARIES
+	uninstall-libmux_tsDATA uninstall-libvlcLIBRARIES
 
 uninstall-info: uninstall-info-recursive
 
@@ -1440,17 +1137,16 @@ uninstall-info: uninstall-info-recursive
 	install-exec install-exec-am install-exec-recursive \
 	install-info install-info-am install-info-recursive \
 	install-libmux_psDATA install-libmux_tsDATA \
-	install-libmux_ts_dvbpsiDATA install-libvlcLIBRARIES \
-	install-man install-recursive install-strip installcheck \
-	installcheck-am installdirs installdirs-am \
-	installdirs-recursive maintainer-clean maintainer-clean-generic \
-	maintainer-clean-recursive mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
-	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
-	uninstall uninstall-am uninstall-info-am \
+	install-libvlcLIBRARIES install-man install-recursive \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am installdirs-recursive maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-recursive \
+	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
+	tags-recursive uninstall uninstall-am uninstall-info-am \
 	uninstall-info-recursive uninstall-libmux_psDATA \
-	uninstall-libmux_tsDATA uninstall-libmux_ts_dvbpsiDATA \
-	uninstall-libvlcLIBRARIES uninstall-recursive
+	uninstall-libmux_tsDATA uninstall-libvlcLIBRARIES \
+	uninstall-recursive
 
 
 clean-local:
@@ -1459,9 +1155,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in mux_ps mux_ts mux_ts_dvbpsi; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in mux_ps mux_ts mux_ts_dvbpsi; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in mux_ps mux_ts mux_ts_dvbpsi; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in mux_ps mux_ts; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in mux_ps mux_ts; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in mux_ps mux_ts; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 libmux_ps_plugin$(LIBEXT): $(libmux_ps_plugin_a_OBJECTS)
@@ -1475,12 +1171,6 @@ libmux_ts_plugin$(LIBEXT): $(libmux_ts_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libmux_ts_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_ts\` ; $(CXXLINK) $(libmux_ts_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_ts` ;; \
 	  objc) echo $(OBJCLINK) $(libmux_ts_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_ts\` ; $(OBJCLINK) $(libmux_ts_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_ts` ;; \
 	  c|*) echo $(LINK) $(libmux_ts_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_ts\` ; $(LINK) $(libmux_ts_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_ts` ;; \
-	esac
-libmux_ts_dvbpsi_plugin$(LIBEXT): $(libmux_ts_dvbpsi_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage mux_ts_dvbpsi` in \
-	  c++) echo $(CXXLINK) $(libmux_ts_dvbpsi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_ts_dvbpsi\` ; $(CXXLINK) $(libmux_ts_dvbpsi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_ts_dvbpsi` ;; \
-	  objc) echo $(OBJCLINK) $(libmux_ts_dvbpsi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_ts_dvbpsi\` ; $(OBJCLINK) $(libmux_ts_dvbpsi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_ts_dvbpsi` ;; \
-	  c|*) echo $(LINK) $(libmux_ts_dvbpsi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_ts_dvbpsi\` ; $(LINK) $(libmux_ts_dvbpsi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_ts_dvbpsi` ;; \
 	esac
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

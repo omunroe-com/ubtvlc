@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -237,11 +239,14 @@ SUBDIRS =
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/access
 SOURCES_cddax = \
-        ../vcdx/cdrom.c \
-        ../vcdx/cdrom.h \
 	access.c \
+	access.h \
+	callback.c \
+	callback.h \
 	cdda.c \
 	cdda.h \
+	info.c \
+	info.h \
 	$(NULL)
 
 
@@ -284,22 +289,24 @@ LIBRARIES = $(libvlc_LIBRARIES) $(noinst_LIBRARIES)
 libcddax_a_AR = $(AR) cru
 libcddax_a_LIBADD =
 am__objects_1 =
-am__objects_2 = libcddax_a-cdrom.$(OBJEXT) libcddax_a-access.$(OBJEXT) \
-	libcddax_a-cdda.$(OBJEXT) $(am__objects_1)
+am__objects_2 = libcddax_a-access.$(OBJEXT) \
+	libcddax_a-callback.$(OBJEXT) libcddax_a-cdda.$(OBJEXT) \
+	libcddax_a-info.$(OBJEXT) $(am__objects_1)
 am_libcddax_a_OBJECTS = $(am__objects_2)
 libcddax_a_OBJECTS = $(am_libcddax_a_OBJECTS)
 libcddax_pic_a_AR = $(AR) cru
 libcddax_pic_a_LIBADD =
-am__objects_3 = libcddax_pic_a-cdrom.$(OBJEXT) \
-	libcddax_pic_a-access.$(OBJEXT) libcddax_pic_a-cdda.$(OBJEXT) \
-	$(am__objects_1)
+am__objects_3 = libcddax_pic_a-access.$(OBJEXT) \
+	libcddax_pic_a-callback.$(OBJEXT) libcddax_pic_a-cdda.$(OBJEXT) \
+	libcddax_pic_a-info.$(OBJEXT) $(am__objects_1)
 am_libcddax_pic_a_OBJECTS = $(am__objects_3)
 libcddax_pic_a_OBJECTS = $(am_libcddax_pic_a_OBJECTS)
 libcddax_plugin_a_AR = $(AR) cru
 libcddax_plugin_a_LIBADD =
-am__objects_4 = libcddax_plugin_a-cdrom.$(OBJEXT) \
-	libcddax_plugin_a-access.$(OBJEXT) \
-	libcddax_plugin_a-cdda.$(OBJEXT) $(am__objects_1)
+am__objects_4 = libcddax_plugin_a-access.$(OBJEXT) \
+	libcddax_plugin_a-callback.$(OBJEXT) \
+	libcddax_plugin_a-cdda.$(OBJEXT) \
+	libcddax_plugin_a-info.$(OBJEXT) $(am__objects_1)
 am_libcddax_plugin_a_OBJECTS = $(am__objects_4)
 libcddax_plugin_a_OBJECTS = $(am_libcddax_plugin_a_OBJECTS)
 
@@ -307,14 +314,17 @@ DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libcddax_a-access.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcddax_a-callback.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libcddax_a-cdda.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libcddax_a-cdrom.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcddax_a-info.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libcddax_pic_a-access.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcddax_pic_a-callback.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libcddax_pic_a-cdda.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libcddax_pic_a-cdrom.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcddax_pic_a-info.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libcddax_plugin_a-access.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcddax_plugin_a-callback.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libcddax_plugin_a-cdda.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libcddax_plugin_a-cdrom.Po
+@AMDEP_TRUE@	./$(DEPDIR)/libcddax_plugin_a-info.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -399,14 +409,17 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcddax_a-access.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcddax_a-callback.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcddax_a-cdda.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcddax_a-cdrom.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcddax_a-info.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcddax_pic_a-access.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcddax_pic_a-callback.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcddax_pic_a-cdda.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcddax_pic_a-cdrom.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcddax_pic_a-info.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcddax_plugin_a-access.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcddax_plugin_a-callback.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcddax_plugin_a-cdda.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcddax_plugin_a-cdrom.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcddax_plugin_a-info.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
@@ -430,28 +443,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`
 
-libcddax_a-cdrom.o: ../vcdx/cdrom.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_a_CFLAGS) $(CFLAGS) -MT libcddax_a-cdrom.o -MD -MP -MF "$(DEPDIR)/libcddax_a-cdrom.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcddax_a-cdrom.o `test -f '../vcdx/cdrom.c' || echo '$(srcdir)/'`../vcdx/cdrom.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_a-cdrom.Tpo" "$(DEPDIR)/libcddax_a-cdrom.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_a-cdrom.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../vcdx/cdrom.c' object='libcddax_a-cdrom.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_a-cdrom.Po' tmpdepfile='$(DEPDIR)/libcddax_a-cdrom.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_a_CFLAGS) $(CFLAGS) -c -o libcddax_a-cdrom.o `test -f '../vcdx/cdrom.c' || echo '$(srcdir)/'`../vcdx/cdrom.c
-
-libcddax_a-cdrom.obj: ../vcdx/cdrom.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_a_CFLAGS) $(CFLAGS) -MT libcddax_a-cdrom.obj -MD -MP -MF "$(DEPDIR)/libcddax_a-cdrom.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcddax_a-cdrom.obj `if test -f '../vcdx/cdrom.c'; then $(CYGPATH_W) '../vcdx/cdrom.c'; else $(CYGPATH_W) '$(srcdir)/../vcdx/cdrom.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_a-cdrom.Tpo" "$(DEPDIR)/libcddax_a-cdrom.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_a-cdrom.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../vcdx/cdrom.c' object='libcddax_a-cdrom.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_a-cdrom.Po' tmpdepfile='$(DEPDIR)/libcddax_a-cdrom.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_a_CFLAGS) $(CFLAGS) -c -o libcddax_a-cdrom.obj `if test -f '../vcdx/cdrom.c'; then $(CYGPATH_W) '../vcdx/cdrom.c'; else $(CYGPATH_W) '$(srcdir)/../vcdx/cdrom.c'; fi`
-
 libcddax_a-access.o: access.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_a_CFLAGS) $(CFLAGS) -MT libcddax_a-access.o -MD -MP -MF "$(DEPDIR)/libcddax_a-access.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libcddax_a-access.o `test -f 'access.c' || echo '$(srcdir)/'`access.c; \
@@ -473,6 +464,28 @@ libcddax_a-access.obj: access.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_a-access.Po' tmpdepfile='$(DEPDIR)/libcddax_a-access.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_a_CFLAGS) $(CFLAGS) -c -o libcddax_a-access.obj `if test -f 'access.c'; then $(CYGPATH_W) 'access.c'; else $(CYGPATH_W) '$(srcdir)/access.c'; fi`
+
+libcddax_a-callback.o: callback.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_a_CFLAGS) $(CFLAGS) -MT libcddax_a-callback.o -MD -MP -MF "$(DEPDIR)/libcddax_a-callback.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcddax_a-callback.o `test -f 'callback.c' || echo '$(srcdir)/'`callback.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_a-callback.Tpo" "$(DEPDIR)/libcddax_a-callback.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_a-callback.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='callback.c' object='libcddax_a-callback.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_a-callback.Po' tmpdepfile='$(DEPDIR)/libcddax_a-callback.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_a_CFLAGS) $(CFLAGS) -c -o libcddax_a-callback.o `test -f 'callback.c' || echo '$(srcdir)/'`callback.c
+
+libcddax_a-callback.obj: callback.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_a_CFLAGS) $(CFLAGS) -MT libcddax_a-callback.obj -MD -MP -MF "$(DEPDIR)/libcddax_a-callback.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcddax_a-callback.obj `if test -f 'callback.c'; then $(CYGPATH_W) 'callback.c'; else $(CYGPATH_W) '$(srcdir)/callback.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_a-callback.Tpo" "$(DEPDIR)/libcddax_a-callback.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_a-callback.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='callback.c' object='libcddax_a-callback.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_a-callback.Po' tmpdepfile='$(DEPDIR)/libcddax_a-callback.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_a_CFLAGS) $(CFLAGS) -c -o libcddax_a-callback.obj `if test -f 'callback.c'; then $(CYGPATH_W) 'callback.c'; else $(CYGPATH_W) '$(srcdir)/callback.c'; fi`
 
 libcddax_a-cdda.o: cdda.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_a_CFLAGS) $(CFLAGS) -MT libcddax_a-cdda.o -MD -MP -MF "$(DEPDIR)/libcddax_a-cdda.Tpo" \
@@ -496,27 +509,27 @@ libcddax_a-cdda.obj: cdda.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_a_CFLAGS) $(CFLAGS) -c -o libcddax_a-cdda.obj `if test -f 'cdda.c'; then $(CYGPATH_W) 'cdda.c'; else $(CYGPATH_W) '$(srcdir)/cdda.c'; fi`
 
-libcddax_pic_a-cdrom.o: ../vcdx/cdrom.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_pic_a_CFLAGS) $(CFLAGS) -MT libcddax_pic_a-cdrom.o -MD -MP -MF "$(DEPDIR)/libcddax_pic_a-cdrom.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcddax_pic_a-cdrom.o `test -f '../vcdx/cdrom.c' || echo '$(srcdir)/'`../vcdx/cdrom.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_pic_a-cdrom.Tpo" "$(DEPDIR)/libcddax_pic_a-cdrom.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_pic_a-cdrom.Tpo"; exit 1; \
+libcddax_a-info.o: info.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_a_CFLAGS) $(CFLAGS) -MT libcddax_a-info.o -MD -MP -MF "$(DEPDIR)/libcddax_a-info.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcddax_a-info.o `test -f 'info.c' || echo '$(srcdir)/'`info.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_a-info.Tpo" "$(DEPDIR)/libcddax_a-info.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_a-info.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../vcdx/cdrom.c' object='libcddax_pic_a-cdrom.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_pic_a-cdrom.Po' tmpdepfile='$(DEPDIR)/libcddax_pic_a-cdrom.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='info.c' object='libcddax_a-info.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_a-info.Po' tmpdepfile='$(DEPDIR)/libcddax_a-info.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_pic_a_CFLAGS) $(CFLAGS) -c -o libcddax_pic_a-cdrom.o `test -f '../vcdx/cdrom.c' || echo '$(srcdir)/'`../vcdx/cdrom.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_a_CFLAGS) $(CFLAGS) -c -o libcddax_a-info.o `test -f 'info.c' || echo '$(srcdir)/'`info.c
 
-libcddax_pic_a-cdrom.obj: ../vcdx/cdrom.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_pic_a_CFLAGS) $(CFLAGS) -MT libcddax_pic_a-cdrom.obj -MD -MP -MF "$(DEPDIR)/libcddax_pic_a-cdrom.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcddax_pic_a-cdrom.obj `if test -f '../vcdx/cdrom.c'; then $(CYGPATH_W) '../vcdx/cdrom.c'; else $(CYGPATH_W) '$(srcdir)/../vcdx/cdrom.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_pic_a-cdrom.Tpo" "$(DEPDIR)/libcddax_pic_a-cdrom.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_pic_a-cdrom.Tpo"; exit 1; \
+libcddax_a-info.obj: info.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_a_CFLAGS) $(CFLAGS) -MT libcddax_a-info.obj -MD -MP -MF "$(DEPDIR)/libcddax_a-info.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcddax_a-info.obj `if test -f 'info.c'; then $(CYGPATH_W) 'info.c'; else $(CYGPATH_W) '$(srcdir)/info.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_a-info.Tpo" "$(DEPDIR)/libcddax_a-info.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_a-info.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../vcdx/cdrom.c' object='libcddax_pic_a-cdrom.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_pic_a-cdrom.Po' tmpdepfile='$(DEPDIR)/libcddax_pic_a-cdrom.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='info.c' object='libcddax_a-info.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_a-info.Po' tmpdepfile='$(DEPDIR)/libcddax_a-info.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_pic_a_CFLAGS) $(CFLAGS) -c -o libcddax_pic_a-cdrom.obj `if test -f '../vcdx/cdrom.c'; then $(CYGPATH_W) '../vcdx/cdrom.c'; else $(CYGPATH_W) '$(srcdir)/../vcdx/cdrom.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_a_CFLAGS) $(CFLAGS) -c -o libcddax_a-info.obj `if test -f 'info.c'; then $(CYGPATH_W) 'info.c'; else $(CYGPATH_W) '$(srcdir)/info.c'; fi`
 
 libcddax_pic_a-access.o: access.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_pic_a_CFLAGS) $(CFLAGS) -MT libcddax_pic_a-access.o -MD -MP -MF "$(DEPDIR)/libcddax_pic_a-access.Tpo" \
@@ -540,6 +553,28 @@ libcddax_pic_a-access.obj: access.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_pic_a_CFLAGS) $(CFLAGS) -c -o libcddax_pic_a-access.obj `if test -f 'access.c'; then $(CYGPATH_W) 'access.c'; else $(CYGPATH_W) '$(srcdir)/access.c'; fi`
 
+libcddax_pic_a-callback.o: callback.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_pic_a_CFLAGS) $(CFLAGS) -MT libcddax_pic_a-callback.o -MD -MP -MF "$(DEPDIR)/libcddax_pic_a-callback.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcddax_pic_a-callback.o `test -f 'callback.c' || echo '$(srcdir)/'`callback.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_pic_a-callback.Tpo" "$(DEPDIR)/libcddax_pic_a-callback.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_pic_a-callback.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='callback.c' object='libcddax_pic_a-callback.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_pic_a-callback.Po' tmpdepfile='$(DEPDIR)/libcddax_pic_a-callback.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_pic_a_CFLAGS) $(CFLAGS) -c -o libcddax_pic_a-callback.o `test -f 'callback.c' || echo '$(srcdir)/'`callback.c
+
+libcddax_pic_a-callback.obj: callback.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_pic_a_CFLAGS) $(CFLAGS) -MT libcddax_pic_a-callback.obj -MD -MP -MF "$(DEPDIR)/libcddax_pic_a-callback.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcddax_pic_a-callback.obj `if test -f 'callback.c'; then $(CYGPATH_W) 'callback.c'; else $(CYGPATH_W) '$(srcdir)/callback.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_pic_a-callback.Tpo" "$(DEPDIR)/libcddax_pic_a-callback.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_pic_a-callback.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='callback.c' object='libcddax_pic_a-callback.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_pic_a-callback.Po' tmpdepfile='$(DEPDIR)/libcddax_pic_a-callback.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_pic_a_CFLAGS) $(CFLAGS) -c -o libcddax_pic_a-callback.obj `if test -f 'callback.c'; then $(CYGPATH_W) 'callback.c'; else $(CYGPATH_W) '$(srcdir)/callback.c'; fi`
+
 libcddax_pic_a-cdda.o: cdda.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_pic_a_CFLAGS) $(CFLAGS) -MT libcddax_pic_a-cdda.o -MD -MP -MF "$(DEPDIR)/libcddax_pic_a-cdda.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libcddax_pic_a-cdda.o `test -f 'cdda.c' || echo '$(srcdir)/'`cdda.c; \
@@ -562,27 +597,27 @@ libcddax_pic_a-cdda.obj: cdda.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_pic_a_CFLAGS) $(CFLAGS) -c -o libcddax_pic_a-cdda.obj `if test -f 'cdda.c'; then $(CYGPATH_W) 'cdda.c'; else $(CYGPATH_W) '$(srcdir)/cdda.c'; fi`
 
-libcddax_plugin_a-cdrom.o: ../vcdx/cdrom.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_plugin_a_CFLAGS) $(CFLAGS) -MT libcddax_plugin_a-cdrom.o -MD -MP -MF "$(DEPDIR)/libcddax_plugin_a-cdrom.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcddax_plugin_a-cdrom.o `test -f '../vcdx/cdrom.c' || echo '$(srcdir)/'`../vcdx/cdrom.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_plugin_a-cdrom.Tpo" "$(DEPDIR)/libcddax_plugin_a-cdrom.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_plugin_a-cdrom.Tpo"; exit 1; \
+libcddax_pic_a-info.o: info.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_pic_a_CFLAGS) $(CFLAGS) -MT libcddax_pic_a-info.o -MD -MP -MF "$(DEPDIR)/libcddax_pic_a-info.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcddax_pic_a-info.o `test -f 'info.c' || echo '$(srcdir)/'`info.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_pic_a-info.Tpo" "$(DEPDIR)/libcddax_pic_a-info.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_pic_a-info.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../vcdx/cdrom.c' object='libcddax_plugin_a-cdrom.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_plugin_a-cdrom.Po' tmpdepfile='$(DEPDIR)/libcddax_plugin_a-cdrom.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='info.c' object='libcddax_pic_a-info.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_pic_a-info.Po' tmpdepfile='$(DEPDIR)/libcddax_pic_a-info.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_plugin_a_CFLAGS) $(CFLAGS) -c -o libcddax_plugin_a-cdrom.o `test -f '../vcdx/cdrom.c' || echo '$(srcdir)/'`../vcdx/cdrom.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_pic_a_CFLAGS) $(CFLAGS) -c -o libcddax_pic_a-info.o `test -f 'info.c' || echo '$(srcdir)/'`info.c
 
-libcddax_plugin_a-cdrom.obj: ../vcdx/cdrom.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_plugin_a_CFLAGS) $(CFLAGS) -MT libcddax_plugin_a-cdrom.obj -MD -MP -MF "$(DEPDIR)/libcddax_plugin_a-cdrom.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcddax_plugin_a-cdrom.obj `if test -f '../vcdx/cdrom.c'; then $(CYGPATH_W) '../vcdx/cdrom.c'; else $(CYGPATH_W) '$(srcdir)/../vcdx/cdrom.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_plugin_a-cdrom.Tpo" "$(DEPDIR)/libcddax_plugin_a-cdrom.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_plugin_a-cdrom.Tpo"; exit 1; \
+libcddax_pic_a-info.obj: info.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_pic_a_CFLAGS) $(CFLAGS) -MT libcddax_pic_a-info.obj -MD -MP -MF "$(DEPDIR)/libcddax_pic_a-info.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcddax_pic_a-info.obj `if test -f 'info.c'; then $(CYGPATH_W) 'info.c'; else $(CYGPATH_W) '$(srcdir)/info.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_pic_a-info.Tpo" "$(DEPDIR)/libcddax_pic_a-info.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_pic_a-info.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../vcdx/cdrom.c' object='libcddax_plugin_a-cdrom.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_plugin_a-cdrom.Po' tmpdepfile='$(DEPDIR)/libcddax_plugin_a-cdrom.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='info.c' object='libcddax_pic_a-info.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_pic_a-info.Po' tmpdepfile='$(DEPDIR)/libcddax_pic_a-info.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_plugin_a_CFLAGS) $(CFLAGS) -c -o libcddax_plugin_a-cdrom.obj `if test -f '../vcdx/cdrom.c'; then $(CYGPATH_W) '../vcdx/cdrom.c'; else $(CYGPATH_W) '$(srcdir)/../vcdx/cdrom.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_pic_a_CFLAGS) $(CFLAGS) -c -o libcddax_pic_a-info.obj `if test -f 'info.c'; then $(CYGPATH_W) 'info.c'; else $(CYGPATH_W) '$(srcdir)/info.c'; fi`
 
 libcddax_plugin_a-access.o: access.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_plugin_a_CFLAGS) $(CFLAGS) -MT libcddax_plugin_a-access.o -MD -MP -MF "$(DEPDIR)/libcddax_plugin_a-access.Tpo" \
@@ -606,6 +641,28 @@ libcddax_plugin_a-access.obj: access.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_plugin_a_CFLAGS) $(CFLAGS) -c -o libcddax_plugin_a-access.obj `if test -f 'access.c'; then $(CYGPATH_W) 'access.c'; else $(CYGPATH_W) '$(srcdir)/access.c'; fi`
 
+libcddax_plugin_a-callback.o: callback.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_plugin_a_CFLAGS) $(CFLAGS) -MT libcddax_plugin_a-callback.o -MD -MP -MF "$(DEPDIR)/libcddax_plugin_a-callback.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcddax_plugin_a-callback.o `test -f 'callback.c' || echo '$(srcdir)/'`callback.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_plugin_a-callback.Tpo" "$(DEPDIR)/libcddax_plugin_a-callback.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_plugin_a-callback.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='callback.c' object='libcddax_plugin_a-callback.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_plugin_a-callback.Po' tmpdepfile='$(DEPDIR)/libcddax_plugin_a-callback.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_plugin_a_CFLAGS) $(CFLAGS) -c -o libcddax_plugin_a-callback.o `test -f 'callback.c' || echo '$(srcdir)/'`callback.c
+
+libcddax_plugin_a-callback.obj: callback.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_plugin_a_CFLAGS) $(CFLAGS) -MT libcddax_plugin_a-callback.obj -MD -MP -MF "$(DEPDIR)/libcddax_plugin_a-callback.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcddax_plugin_a-callback.obj `if test -f 'callback.c'; then $(CYGPATH_W) 'callback.c'; else $(CYGPATH_W) '$(srcdir)/callback.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_plugin_a-callback.Tpo" "$(DEPDIR)/libcddax_plugin_a-callback.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_plugin_a-callback.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='callback.c' object='libcddax_plugin_a-callback.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_plugin_a-callback.Po' tmpdepfile='$(DEPDIR)/libcddax_plugin_a-callback.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_plugin_a_CFLAGS) $(CFLAGS) -c -o libcddax_plugin_a-callback.obj `if test -f 'callback.c'; then $(CYGPATH_W) 'callback.c'; else $(CYGPATH_W) '$(srcdir)/callback.c'; fi`
+
 libcddax_plugin_a-cdda.o: cdda.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_plugin_a_CFLAGS) $(CFLAGS) -MT libcddax_plugin_a-cdda.o -MD -MP -MF "$(DEPDIR)/libcddax_plugin_a-cdda.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libcddax_plugin_a-cdda.o `test -f 'cdda.c' || echo '$(srcdir)/'`cdda.c; \
@@ -627,6 +684,28 @@ libcddax_plugin_a-cdda.obj: cdda.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_plugin_a-cdda.Po' tmpdepfile='$(DEPDIR)/libcddax_plugin_a-cdda.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_plugin_a_CFLAGS) $(CFLAGS) -c -o libcddax_plugin_a-cdda.obj `if test -f 'cdda.c'; then $(CYGPATH_W) 'cdda.c'; else $(CYGPATH_W) '$(srcdir)/cdda.c'; fi`
+
+libcddax_plugin_a-info.o: info.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_plugin_a_CFLAGS) $(CFLAGS) -MT libcddax_plugin_a-info.o -MD -MP -MF "$(DEPDIR)/libcddax_plugin_a-info.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcddax_plugin_a-info.o `test -f 'info.c' || echo '$(srcdir)/'`info.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_plugin_a-info.Tpo" "$(DEPDIR)/libcddax_plugin_a-info.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_plugin_a-info.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='info.c' object='libcddax_plugin_a-info.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_plugin_a-info.Po' tmpdepfile='$(DEPDIR)/libcddax_plugin_a-info.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_plugin_a_CFLAGS) $(CFLAGS) -c -o libcddax_plugin_a-info.o `test -f 'info.c' || echo '$(srcdir)/'`info.c
+
+libcddax_plugin_a-info.obj: info.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_plugin_a_CFLAGS) $(CFLAGS) -MT libcddax_plugin_a-info.obj -MD -MP -MF "$(DEPDIR)/libcddax_plugin_a-info.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcddax_plugin_a-info.obj `if test -f 'info.c'; then $(CYGPATH_W) 'info.c'; else $(CYGPATH_W) '$(srcdir)/info.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcddax_plugin_a-info.Tpo" "$(DEPDIR)/libcddax_plugin_a-info.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcddax_plugin_a-info.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='info.c' object='libcddax_plugin_a-info.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcddax_plugin_a-info.Po' tmpdepfile='$(DEPDIR)/libcddax_plugin_a-info.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcddax_plugin_a_CFLAGS) $(CFLAGS) -c -o libcddax_plugin_a-info.obj `if test -f 'info.c'; then $(CYGPATH_W) 'info.c'; else $(CYGPATH_W) '$(srcdir)/info.c'; fi`
 uninstall-info-am:
 libcddaxDATA_INSTALL = $(INSTALL_DATA)
 install-libcddaxDATA: $(libcddax_DATA)

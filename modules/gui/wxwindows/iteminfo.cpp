@@ -2,7 +2,7 @@
  * iteminfo.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: iteminfo.cpp 7714 2004-05-18 15:10:18Z gbazin $
+ * $Id: iteminfo.cpp 8664 2004-09-08 10:07:05Z gbazin $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -275,10 +275,6 @@ void ItemInfoDialog::UpdateInfo()
     /* Rebuild the tree */
     for( int i = 0; i< p_item->input.i_categories ; i++)
     {
-        if( !strcmp( p_item->input.pp_categories[i]->psz_name, _("Options") ) )
-        {
-            continue;
-        }
         wxTreeItemId cat = info_tree->AppendItem( info_root,
                             wxU( p_item->input.pp_categories[i]->psz_name) );
 

@@ -2,7 +2,7 @@
  * streamout.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: streamout.cpp 7681 2004-05-16 10:46:54Z zorglub $
+ * $Id: streamout.cpp 9045 2004-10-23 16:08:57Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -36,6 +36,8 @@
 #include <wx/combobox.h>
 #include <wx/statline.h>
 
+#include "streamdata.h"
+
 #ifndef wxRB_SINGLE
 #   define wxRB_SINGLE 0
 #endif
@@ -63,7 +65,7 @@ enum
     EncapsulationRadio3_Event, EncapsulationRadio4_Event,
     EncapsulationRadio5_Event, EncapsulationRadio6_Event,
     EncapsulationRadio7_Event, EncapsulationRadio8_Event,
-    EncapsulationRadio9_Event,
+    EncapsulationRadio9_Event, EncapsulationRadio10_Event,
 
     VideoTranscEnable_Event, VideoTranscCodec_Event, VideoTranscBitrate_Event,
     VideoTranscScale_Event,
@@ -166,7 +168,7 @@ SoutDialog::SoutDialog( intf_thread_t *_p_intf, wxWindow* _p_parent ):
     wxStaticText *mrl_label = new wxStaticText( panel, -1,
                                                 wxU(_("Destination Target:")));
     mrl_combo = new wxComboBox( panel, MRL_Event, wxT(""),
-                                wxPoint(20,25), wxSize(120, -1), 0, NULL );
+                                wxPoint(20,25), wxSize(120, -1) );
     mrl_combo->SetToolTip( wxU(_("You can use this field directly by typing "
         "the full MRL you want to open.\n""Alternatively, the field will be "
         "filled automatically when you use the controls below")) );
@@ -240,7 +242,7 @@ void SoutDialog::UpdateMRL()
         if( file_combo->GetValue().size() )
             dumpfile = wxT(" :demuxdump-file=\"") +
                        file_combo->GetValue() + wxT("\"");
-        mrl_combo->SetValue( wxT(":demux=demuxdump") + dumpfile );
+        mrl_combo->SetValue( wxT(":demux=dump") + dumpfile );
 
         return;
     }
@@ -294,6 +296,9 @@ void SoutDialog::UpdateMRL()
         break;
     case ASF_ENCAPSULATION:
         encapsulation = wxT("asf");
+        break;
+    case WAV_ENCAPSULATION:
+        encapsulation = wxT("wav");
         break;
     case TS_ENCAPSULATION:
     default:
@@ -447,7 +452,7 @@ wxPanel *SoutDialog::AccessPanel( wxWindow* parent )
     subpanel_sizer = new wxFlexGridSizer( 3, 2, 20 );
     label = new wxStaticText( access_subpanels[1], -1, wxU(_("Filename")) );
     file_combo = new wxComboBox( access_subpanels[1], FileName_Event, wxT(""),
-                                 wxPoint(20,25), wxSize(200, -1), 0, NULL );
+                                 wxPoint(20,25), wxSize(200, -1) );
     wxButton *browse_button = new wxButton( access_subpanels[1],
                                   FileBrowse_Event, wxU(_("Browse...")) );
     subpanel_sizer->Add( label, 0, wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL );
@@ -571,7 +576,7 @@ wxPanel *SoutDialog::MiscPanel( wxWindow* parent )
 
 wxPanel *SoutDialog::EncapsulationPanel( wxWindow* parent )
 {
-    int i;
+    unsigned int i;
     wxPanel *panel = new wxPanel( parent, -1, wxDefaultPosition,
                                   wxSize(200, 200) );
 
@@ -586,15 +591,15 @@ wxPanel *SoutDialog::EncapsulationPanel( wxWindow* parent )
         wxT("MPEG PS"),
         wxT("MPEG 1"),
         wxT("Ogg"),
-        wxT("Raw"),
         wxT("ASF"),
-        wxT("AVI"),
         wxT("MP4"),
-        wxT("MOV")
+        wxT("MOV"),
+        wxT("WAV"),
+        wxT("Raw")
     };
 
     /* Stuff everything into the main panel */
-    for( i=0; i < ENCAPS_NUM; i++ )
+    for( i = 0; i < WXSIZEOF(encapsulation_array); i++ )
     {
         encapsulation_radios[i] =
             new wxRadioButton( panel, EncapsulationRadio1_Event + i,
@@ -602,6 +607,13 @@ wxPanel *SoutDialog::EncapsulationPanel( wxWindow* parent )
         panel_sizer->Add( encapsulation_radios[i], 0,
                           wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL |
                           wxALL, 4 );
+    }
+    /* Hide avi one */
+    for( i = WXSIZEOF(encapsulation_array); i < ENCAPS_NUM; i++ )
+    {
+        encapsulation_radios[i] =
+            new wxRadioButton( panel, EncapsulationRadio1_Event + i, wxT("") );
+        encapsulation_radios[i]->Hide();
     }
 
     panel->SetSizerAndFit( panel_sizer );
@@ -624,7 +636,7 @@ wxPanel *SoutDialog::TranscodingPanel( wxWindow* parent )
                                                           wxVERTICAL );
 
     /* Create video transcoding checkox */
-    static const wxString vcodecs_array[] =
+    static const wxString wxvcodecs_array[] =
     {
         wxT("mp1v"),
         wxT("mp2v"),
@@ -633,47 +645,51 @@ wxPanel *SoutDialog::TranscodingPanel( wxWindow* parent )
         wxT("DIV2"),
         wxT("DIV3"),
         wxT("H263"),
+        wxT("h264"),
         wxT("I263"),
         wxT("WMV1"),
         wxT("WMV2"),
         wxT("MJPG"),
         wxT("theo")
     };
+    /*
     static const wxString vbitrates_array[] =
     {
-        wxT("3072"),
-        wxT("2048"),
-        wxT("1024"),
-        wxT("768"),
-        wxT("512"),
-        wxT("384"),
-        wxT("256"),
-        wxT("192"),
-        wxT("128"),
-        wxT("96"),
-        wxT("64"),
-        wxT("32"),
-        wxT("16")
+            wxT("3072"),
+            wxT("2048"),
+            wxT("1024"),
+            wxT("768"),
+            wxT("512"),
+            wxT("384"),
+            wxT("256"),
+            wxT("192"),
+            wxT("128"),
+            wxT("96"),
+            wxT("64"),
+            wxT("32"),
+            wxT("16")
     };
+*/
     static const wxString vscales_array[] =
     {
-        wxT("0.25"),
-        wxT("0.5"),
-        wxT("0.75"),
-        wxT("1"),
-        wxT("1.25"),
-        wxT("1.5"),
-        wxT("1.75"),
-        wxT("2")
+            wxT("0.25"),
+            wxT("0.5"),
+            wxT("0.75"),
+            wxT("1"),
+            wxT("1.25"),
+            wxT("1.5"),
+            wxT("1.75"),
+            wxT("2")
     };
 
     wxFlexGridSizer *video_sizer = new wxFlexGridSizer( 6, 1, 20 );
     video_transc_checkbox =
         new wxCheckBox( panel, VideoTranscEnable_Event, wxU(_("Video codec")));
     video_codec_combo =
-        new wxComboBox( panel, VideoTranscCodec_Event, wxT(""),
-                        wxPoint(20,25), wxDefaultSize, WXSIZEOF(vcodecs_array),
-                        vcodecs_array, wxCB_READONLY );
+        new wxComboBox( panel, VideoTranscCodec_Event, wxvcodecs_array[2],
+                        wxPoint(20,25), wxDefaultSize,
+                        WXSIZEOF(wxvcodecs_array),
+                        wxvcodecs_array, wxCB_READONLY );
     video_codec_combo->SetSelection(2);
     wxStaticText *bitrate_label =
         new wxStaticText( panel, -1, wxU(_("Bitrate (kb/s)")));
@@ -701,26 +717,18 @@ wxPanel *SoutDialog::TranscodingPanel( wxWindow* parent )
                       wxEXPAND | wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL );
 
     /* Create audio transcoding checkox */
-    static const wxString acodecs_array[] =
+    static const wxString wxacodecs_array[] =
     {
         wxT("mpga"),
+        wxT("mp2a"),
         wxT("mp3"),
         wxT("mp4a"),
         wxT("a52"),
         wxT("vorb"),
         wxT("flac"),
-        wxT("spx")
-    };
-    static const wxString abitrates_array[] =
-    {
-        wxT("512"),
-        wxT("256"),
-        wxT("192"),
-        wxT("128"),
-        wxT("96"),
-        wxT("64"),
-        wxT("32"),
-        wxT("16")
+        wxT("spx"),
+        wxT("s16l"),
+        wxT("fl32")
     };
     static const wxString achannels_array[] =
     {
@@ -729,14 +737,27 @@ wxPanel *SoutDialog::TranscodingPanel( wxWindow* parent )
         wxT("4"),
         wxT("6")
     };
-
+/*
+    static const wxString abitrates_array[] =
+    {
+            wxT("512"),
+            wxT("256"),
+            wxT("192"),
+            wxT("128"),
+            wxT("96"),
+            wxT("64"),
+            wxT("32"),
+            wxT("16")
+    };
+*/
     wxFlexGridSizer *audio_sizer = new wxFlexGridSizer( 3, 1, 20 );
     audio_transc_checkbox =
         new wxCheckBox( panel, AudioTranscEnable_Event, wxU(_("Audio codec")));
     audio_codec_combo =
-        new wxComboBox( panel, AudioTranscCodec_Event, wxT(""),
-                        wxPoint(10,25), wxDefaultSize, WXSIZEOF(acodecs_array),
-                        acodecs_array, wxCB_READONLY );
+        new wxComboBox( panel, AudioTranscCodec_Event, wxacodecs_array[0],
+                        wxPoint(10,25), wxDefaultSize,
+                        WXSIZEOF(wxacodecs_array),
+                        wxacodecs_array, wxCB_READONLY );
     audio_codec_combo->SetSelection(0);
 #if defined( __WXMSW__ )
     wxFlexGridSizer *audio_sub_sizer = new wxFlexGridSizer( 4, 5, 20 );
@@ -752,7 +773,7 @@ wxPanel *SoutDialog::TranscodingPanel( wxWindow* parent )
     wxStaticText *channels_label =
         new wxStaticText( panel, -1, wxU(_("Channels")));
     audio_channels_combo =
-        new wxComboBox( panel, AudioTranscChans_Event, wxT(""),
+        new wxComboBox( panel, AudioTranscChans_Event, achannels_array[1],
                         wxPoint(10,25), wxDefaultSize,
                         WXSIZEOF(achannels_array), achannels_array );
     audio_channels_combo->SetSelection(1);

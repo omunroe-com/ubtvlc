@@ -2,7 +2,7 @@
  * win32_specific.c: Win32 specific features
  *****************************************************************************
  * Copyright (C) 2001-2004 VideoLAN
- * $Id: win32_specific.c 7211 2004-03-31 22:04:54Z gbazin $
+ * $Id: win32_specific.c 9106 2004-11-02 12:52:49Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -35,42 +35,49 @@
 #if !defined( UNDER_CE )
 #   include <io.h>
 #   include <fcntl.h>
-#   include <winsock2.h>
 #endif
+
+#include <winsock2.h>
 
 /*****************************************************************************
  * system_Init: initialize winsock and misc other things.
  *****************************************************************************/
 void system_Init( vlc_t *p_this, int *pi_argc, char *ppsz_argv[] )
 {
-#if !defined( UNDER_CE )
     WSADATA Data;
 
     /* Get our full path */
+    char psz_path[MAX_PATH];
+    char *psz_vlc;
+
+#if defined( UNDER_CE )
+    wchar_t psz_wpath[MAX_PATH];
+    if( GetModuleFileName( NULL, psz_wpath, MAX_PATH ) )
+    {
+        WideCharToMultiByte( CP_ACP, 0, psz_wpath, -1,
+                             psz_path, MAX_PATH, NULL, NULL );
+    }
+    else psz_path[0] = '\0';
+
+#else
     if( ppsz_argv[0] )
     {
-        char psz_path[MAX_PATH];
-        char *psz_vlc;
-
         GetFullPathName( ppsz_argv[0], MAX_PATH, psz_path, &psz_vlc );
-
-        if( psz_vlc > psz_path && psz_vlc[-1] == '\\' )
-        {
-            psz_vlc[-1] = '\0';
-            p_this->p_libvlc->psz_vlcpath = strdup( psz_path );
-        }
-        else
-        {
-            p_this->p_libvlc->psz_vlcpath = strdup( "" );
-        }
     }
-    else
+    else if( !GetModuleFileName( NULL, psz_path, MAX_PATH ) )
     {
-        p_this->p_libvlc->psz_vlcpath = strdup( "" );
+        psz_path[0] = '\0';
     }
+#endif
+
+    if( (psz_vlc = strrchr( psz_path, '\\' )) ) *psz_vlc = '\0';
+
+    p_this->p_libvlc->psz_vlcpath = strdup( psz_path );
 
     /* Set the default file-translation mode */
+#if !defined( UNDER_CE )
     _fmode = _O_BINARY;
+#endif
     _setmode( _fileno( stdin ), _O_BINARY ); /* Needed for pipes */
 
     /* Call mdate() once to make sure it is initialized properly */
@@ -111,8 +118,6 @@ void system_Init( vlc_t *p_this, int *pi_argc, char *ppsz_argv[] )
     fprintf( stderr, "error: can't initialize WinSocks\n" );
 
     return;
-
-#endif
 }
 
 /*****************************************************************************
@@ -346,7 +351,5 @@ LRESULT CALLBACK WMCOPYWNDPROC( HWND hwnd, UINT uMsg, WPARAM wParam,
  *****************************************************************************/
 void system_End( vlc_t *p_this )
 {
-#if !defined( UNDER_CE )
     WSACleanup();
-#endif
 }

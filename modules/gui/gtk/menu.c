@@ -2,7 +2,7 @@
  * menu.c : functions to handle menu items.
  *****************************************************************************
  * Copyright (C) 2000, 2001 VideoLAN
- * $Id: menu.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: menu.c 7951 2004-06-07 22:11:57Z fenrir $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *          Stéphane Borel <stef@via.ecp.fr>
@@ -82,7 +82,7 @@ gint GtkSetupMenus( intf_thread_t * p_intf );
  * user_data to transmit intf_* and we need to refresh the other menu.
  ****************************************************************************/
 
-#define GTKLANGTOGGLE( window, menu, type, callback, b_update )         \
+#define GTKLANGTOGGLE( window, menu, type, var_name, callback, b_update )\
     intf_thread_t *         p_intf;                                     \
     GtkWidget *             p_menu;                                     \
     es_descriptor_t *       p_es;                                       \
@@ -94,9 +94,10 @@ gint GtkSetupMenus( intf_thread_t * p_intf );
         p_menu = GTK_WIDGET( gtk_object_get_data(                       \
                    GTK_OBJECT( p_intf->p_sys->window ), (menu) ) );     \
         p_es = (es_descriptor_t*)user_data;                             \
-                                                                        \
-        input_ToggleES( p_intf->p_sys->p_input,                         \
-                        p_es, menuitem->active );                       \
+        if( p_es && menuitem->active )                                  \
+            var_SetInteger( p_intf->p_sys->p_input, var_name, p_es->i_id ); \
+        else                                                            \
+            var_SetInteger( p_intf->p_sys->p_input, var_name, -1 );     \
                                                                         \
         p_intf->p_sys->b_update = menuitem->active;                     \
                                                                         \
@@ -114,13 +115,13 @@ gint GtkSetupMenus( intf_thread_t * p_intf );
 
 void GtkMenubarAudioToggle( GtkCheckMenuItem * menuitem, gpointer user_data )
 {
-    GTKLANGTOGGLE( p_popup, "popup_language", AUDIO_ES,
+    GTKLANGTOGGLE( p_popup, "popup_language", AUDIO_ES, "audio-es",
                    GtkPopupAudioToggle, b_audio_update );
 }
 
 void GtkPopupAudioToggle( GtkCheckMenuItem * menuitem, gpointer user_data )
 {
-    GTKLANGTOGGLE( p_window, "menubar_audio", AUDIO_ES,
+    GTKLANGTOGGLE( p_window, "menubar_audio", AUDIO_ES, "audio-es",
                    GtkMenubarAudioToggle, b_audio_update );
 }
 
@@ -130,13 +131,13 @@ void GtkPopupAudioToggle( GtkCheckMenuItem * menuitem, gpointer user_data )
 
 void GtkMenubarSubtitleToggle( GtkCheckMenuItem * menuitem, gpointer user_data )
 {
-    GTKLANGTOGGLE( p_popup, "popup_subpictures", SPU_ES,
+    GTKLANGTOGGLE( p_popup, "popup_subpictures", SPU_ES, "spu-es",
                    GtkPopupSubtitleToggle, b_spu_update );
 }
 
 void GtkPopupSubtitleToggle( GtkCheckMenuItem * menuitem, gpointer user_data )
 {
-    GTKLANGTOGGLE( p_window, "menubar_subpictures", SPU_ES,
+    GTKLANGTOGGLE( p_window, "menubar_subpictures", SPU_ES, "spu-es",
                    GtkMenubarSubtitleToggle, b_spu_update );
 }
 
@@ -160,33 +161,16 @@ void GtkPopupNavigationToggle( GtkCheckMenuItem * menuitem,
         guint i_title   = DATA2TITLE( user_data );
         guint i_chapter = DATA2CHAPTER( user_data );
 
-        vlc_mutex_lock( &p_intf->p_sys->p_input->stream.stream_lock );
-        p_area = p_intf->p_sys->p_input->stream.p_selected_area;
+        /* FIXME use "navigation" variable */
+        var_SetInteger( p_intf->p_sys->p_input, "title", i_title );
+        var_SetInteger( p_intf->p_sys->p_input, "chapter", i_chapter );
 
-        i_title = __MIN( i_title,
-                         p_intf->p_sys->p_input->stream.i_area_nb - 1 );
-        i_title = __MAX( i_title, 1 );
-
-        if( p_area != p_intf->p_sys->p_input->stream.pp_areas[i_title] )
-        {
-            p_area = p_intf->p_sys->p_input->stream.pp_areas[i_title];
-            p_intf->p_sys->b_title_update = VLC_TRUE;
-        }
-
-        i_chapter = __MIN( i_chapter, p_area->i_part_nb - 1 );
-        i_chapter = __MAX( i_chapter, 1 );
-        p_area->i_part = i_chapter;
-
-        vlc_mutex_unlock( &p_intf->p_sys->p_input->stream.stream_lock );
-
-        input_ChangeArea( p_intf->p_sys->p_input, (input_area_t*)p_area );
-
+        p_intf->p_sys->b_title_update = VLC_TRUE;
         p_intf->p_sys->b_chapter_update = VLC_TRUE;
+
         vlc_mutex_lock( &p_intf->p_sys->p_input->stream.stream_lock );
         GtkSetupMenus( p_intf );
         vlc_mutex_unlock( &p_intf->p_sys->p_input->stream.stream_lock );
-
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_PLAY );
     }
 }
 
@@ -200,7 +184,7 @@ void GtkPopupNavigationToggle( GtkCheckMenuItem * menuitem,
     {                                                                       \
         int i_program_id = (ptrdiff_t)user_data;                            \
                                                                             \
-        input_ChangeProgram( p_intf->p_sys->p_input, i_program_id );        \
+        var_SetInteger( p_intf->p_sys->p_input, "program", i_program_id );  \
                                                                             \
         p_intf->p_sys->b_program_update = VLC_TRUE;                         \
                                                                             \
@@ -210,7 +194,7 @@ void GtkPopupNavigationToggle( GtkCheckMenuItem * menuitem,
                                                                             \
         p_intf->p_sys->b_program_update = VLC_FALSE;                        \
                                                                             \
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_PLAY );       \
+        var_SetInteger( p_intf->p_sys->p_input, "state", PLAYING_S );       \
     }
 
 void GtkMenubarProgramToggle( GtkCheckMenuItem * menuitem, gpointer user_data )
@@ -235,22 +219,12 @@ void GtkMenubarTitleToggle( GtkCheckMenuItem * menuitem, gpointer user_data )
     {
         guint i_title = (ptrdiff_t)user_data;
 
-        vlc_mutex_lock( &p_intf->p_sys->p_input->stream.stream_lock );
-        i_title = __MIN( i_title,
-                         p_intf->p_sys->p_input->stream.i_area_nb - 1 );
-        i_title = __MAX( i_title, 1 );
-        vlc_mutex_unlock( &p_intf->p_sys->p_input->stream.stream_lock );
-
-        input_ChangeArea( p_intf->p_sys->p_input,
-                          p_intf->p_sys->p_input->stream.pp_areas[i_title] );
+        var_SetInteger( p_intf->p_sys->p_input, "title", i_title );
 
         p_intf->p_sys->b_title_update = VLC_TRUE;
         vlc_mutex_lock( &p_intf->p_sys->p_input->stream.stream_lock );
         GtkSetupMenus( p_intf );
         vlc_mutex_unlock( &p_intf->p_sys->p_input->stream.stream_lock );
-        p_intf->p_sys->b_title_update = VLC_FALSE;
-
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_PLAY );
     }
 }
 
@@ -271,13 +245,7 @@ void GtkMenubarChapterToggle( GtkCheckMenuItem * menuitem, gpointer user_data )
 
     if( menuitem->active && !p_intf->p_sys->b_chapter_update )
     {
-        vlc_mutex_lock( &p_intf->p_sys->p_input->stream.stream_lock );
-        i_chapter = __MIN( i_chapter, p_area->i_part_nb - 1 );
-        i_chapter = __MAX( i_chapter, 1 );
-        p_area->i_part = i_chapter;
-        vlc_mutex_unlock( &p_intf->p_sys->p_input->stream.stream_lock );
-
-        input_ChangeArea( p_intf->p_sys->p_input, (input_area_t*)p_area );
+        var_SetInteger( p_intf->p_sys->p_input, "chapter", i_chapter );
 
         p_intf->p_sys->b_chapter_update = VLC_TRUE;
         p_popup_menu = GTK_WIDGET( gtk_object_get_data( GTK_OBJECT(
@@ -288,8 +256,6 @@ void GtkMenubarChapterToggle( GtkCheckMenuItem * menuitem, gpointer user_data )
         vlc_mutex_unlock( &p_intf->p_sys->p_input->stream.stream_lock );
 
         p_intf->p_sys->b_chapter_update = VLC_FALSE;
-
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_PLAY );
     }
 }
 

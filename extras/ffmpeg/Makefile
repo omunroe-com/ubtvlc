@@ -14,16 +14,20 @@ CFLAGS+=-p
 LDFLAGS+=-p
 endif
 
+MANPAGE=$(SRC_PATH)/doc/ffmpeg.1
 PROG=ffmpeg$(EXESUF)
 PROGTEST=output_example$(EXESUF)
 QTFASTSTART=qt-faststart$(EXESUF)
 
 ifeq ($(CONFIG_FFSERVER),yes)
+MANPAGE+=$(SRC_PATH)/doc/ffserver.1
 PROG+=ffserver$(EXESUF)
 endif
 
 ifeq ($(CONFIG_FFPLAY),yes)
+MANPAGE+=$(SRC_PATH)/doc/ffplay.1
 PROG+=ffplay$(EXESUF)
+FFPLAY_O=ffplay.o
 endif
 
 ifeq ($(CONFIG_AUDIO_BEOS),yes)
@@ -40,7 +44,7 @@ endif
 endif
 
 ifeq ($(CONFIG_VORBIS),yes)
-EXTRALIBS+=-logg -lvorbis -lvorbisenc
+EXTRALIBS+=-lvorbis -lvorbisenc -logg
 endif
 
 ifeq ($(CONFIG_FAAD),yes)
@@ -55,6 +59,14 @@ ifeq ($(CONFIG_FAAC),yes)
 EXTRALIBS+=-lfaac
 endif
 
+ifeq ($(CONFIG_XVID),yes)
+EXTRALIBS+=-lxvidcore
+endif
+
+ifeq ($(CONFIG_DC1394),yes)
+EXTRALIBS+=-ldc1394_control -lraw1394
+endif
+
 ifeq ($(BUILD_VHOOK),yes)
 VHOOK=videohook
 INSTALLVHOOK=install-vhook
@@ -67,11 +79,15 @@ else
 TEST=test
 endif
 
-OBJS = ffmpeg.o ffserver.o cmdutils.o ffplay.o
+ifeq ($(BUILD_DOC),yes)
+DOC=documentation
+endif
+
+OBJS = ffmpeg.o ffserver.o cmdutils.o $(FFPLAY_O)
 SRCS = $(OBJS:.o=.c) $(ASM_OBJS:.o=.s)
 FFLIBS = -L./libavformat -lavformat -L./libavcodec -lavcodec
 
-all: lib $(PROG) $(PROGTEST) $(VHOOK) $(QTFASTSTART)
+all: lib $(PROG) $(PROGTEST) $(VHOOK) $(QTFASTSTART) $(DOC)
 
 lib:
 	$(MAKE) -C libavcodec all
@@ -98,7 +114,10 @@ output_example$(EXESUF): output_example.o .libs
 	$(CC) $(LDFLAGS) -o $@ output_example.o $(FFLIBS) $(EXTRALIBS)
 
 qt-faststart$(EXESUF): qt-faststart.c
-	$(CC) qt-faststart.c -o qt-faststart$(EXESUF)
+	$(CC) $(SRC_PATH)/qt-faststart.c -o qt-faststart$(EXESUF)
+
+cws2fws$(EXESUF): cws2fws.c
+	$(CC) $(SRC_PATH)/cws2fws.c -o cws2fws$(EXESUF) -lz
 
 ffplay.o: ffplay.c
 	$(CC) $(CFLAGS) $(SDL_CFLAGS) -c -o $@ $< 
@@ -109,13 +128,16 @@ ffplay.o: ffplay.c
 videohook: .libs
 	$(MAKE) -C vhook all
 
+documentation:
+	$(MAKE) -C doc all
+
 .PHONY: install
 
 install: all install-man $(INSTALLVHOOK)
 	$(MAKE) -C libavcodec install
 	$(MAKE) -C libavformat install
 	install -d "$(bindir)"
-	install -c -s -m 755 $(PROG) "$(bindir)"
+	install -c $(INSTALLSTRIP) -m 755 $(PROG) "$(bindir)"
 
 # create the window installer
 wininstaller: all install
@@ -125,17 +147,13 @@ wininstaller: all install
 install-man:
 ifneq ($(CONFIG_WIN32),yes)
 	if [ -f $(SRC_PATH)/doc/ffmpeg.1 ] ; then \
-	    install -d $(mandir)/man1 ; \
-	    install -m 644 $(SRC_PATH)/doc/ffmpeg.1 $(SRC_PATH)/doc/ffplay.1 \
-                           $(SRC_PATH)/doc/ffserver.1 $(mandir)/man1 ; \
+	    install -d "$(mandir)/man1" ; \
+	    install -m 644 $(MANPAGE) "$(mandir)/man1" ; \
 	fi
 endif
 
-install-vhook: $(prefix)/lib/vhook
-	$(MAKE) -C vhook install INSTDIR=$(prefix)/lib/vhook
-
-$(prefix)/lib/vhook:
-	install -d $@
+install-vhook:
+	$(MAKE) -C vhook install
 
 installlib:
 	$(MAKE) -C libavcodec installlib
@@ -161,11 +179,13 @@ clean: $(CLEANVHOOK)
 	$(MAKE) -C libavcodec clean
 	$(MAKE) -C libavformat clean
 	$(MAKE) -C tests clean
-	rm -f *.o *.d *~ .libs .depend gmon.out TAGS ffmpeg_g$(EXESUF) ffplay_g$(EXESUF) $(PROG) $(PROGTEST)
+	rm -f *.o *.d *~ .libs .depend gmon.out TAGS ffmpeg_g$(EXESUF) \
+	   ffplay_g$(EXESUF) $(PROG) $(PROGTEST) $(QTFASTSTART)
 
 clean-vhook:
 	$(MAKE) -C vhook clean
 
+# Note well: config.log is NOT removed.
 distclean: clean
 	$(MAKE) -C libavcodec distclean
 	rm -f config.mak config.h

@@ -2,11 +2,12 @@
  * vlc.c: the vlc player
  *****************************************************************************
  * Copyright (C) 1998-2004 VideoLAN
- * $Id: vlc.c 7394 2004-04-20 15:05:24Z gbazin $
+ * $Id: vlc.c 9292 2004-11-12 10:44:50Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
- *          Gildas Bazin <gbazin@netcourrier.com>
+ *          Gildas Bazin <gbazin@videolan.org>
+ *          Derk-Jan Hartman <hartman at videolan dot org>
  *          Lots of other people, see the libvlc AUTHORS file
  *
  * This program is free software; you can redistribute it and/or modify
@@ -40,18 +41,21 @@
 /*****************************************************************************
  * Local prototypes.
  *****************************************************************************/
-#ifndef WIN32
+#if !defined(WIN32) && !defined(UNDER_CE)
 static void SigHandler  ( int i_signal );
 #endif
 
 /*****************************************************************************
- * main: parse command line, start interface and spawn threads
+ * main: parse command line, start interface and spawn threads.
  *****************************************************************************/
 int main( int i_argc, char *ppsz_argv[] )
 {
     int i_ret;
 
+#ifndef SYS_DARWIN
+    /* This clutters OSX GUI error logs */
     fprintf( stderr, "VLC media player %s\n", VLC_Version() );
+#endif
 
 #ifdef HAVE_PUTENV
 #   ifdef DEBUG
@@ -76,7 +80,7 @@ int main( int i_argc, char *ppsz_argv[] )
         return i_ret;
     }
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(UNDER_CE)
     /* Set the signal handlers. SIGTERM is not intercepted, because we need at
      * least one method to kill the program when all other methods failed, and
      * when we don't want to use SIGKILL.
@@ -98,11 +102,10 @@ int main( int i_argc, char *ppsz_argv[] )
         return i_ret;
     }
 
-    /* Add a blocking interface, start playing, and keep the return value */
     i_ret = VLC_AddIntf( 0, NULL, VLC_TRUE, VLC_TRUE );
 
     /* Finish the threads */
-    VLC_Stop( 0 );
+    VLC_CleanUp( 0 );
 
     /* Destroy the libvlc structure */
     VLC_Destroy( 0 );
@@ -110,7 +113,7 @@ int main( int i_argc, char *ppsz_argv[] )
     return i_ret;
 }
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(UNDER_CE)
 /*****************************************************************************
  * SigHandler: system signal handler
  *****************************************************************************
@@ -153,3 +156,30 @@ static void SigHandler( int i_signal )
 }
 #endif
 
+#if defined(UNDER_CE)
+#include "vlc_common.h"
+/*****************************************************************************
+ * WinMain: parse command line, start interface and spawn threads. (WinCE only)
+ *****************************************************************************/
+int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
+                    LPTSTR lpCmdLine, int nCmdShow )
+{
+    char **argv, psz_cmdline[MAX_PATH];
+    int argc, i_ret;
+
+    WideCharToMultiByte( CP_ACP, 0, lpCmdLine, -1,
+                         psz_cmdline, MAX_PATH, NULL, NULL );
+
+    argv = vlc_parse_cmdline( psz_cmdline, &argc );
+    argv = realloc( argv, (argc + 1) * sizeof(char *) );
+    if( !argv ) return -1;
+
+    if( argc ) memmove( argv + 1, argv, argc * sizeof(char *) );
+    argv[0] = ""; /* Fake program path */
+
+    i_ret = main( argc + 1, argv );
+
+    /* No need to free the argv memory */
+    return i_ret;
+}
+#endif

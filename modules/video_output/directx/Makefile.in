@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -228,8 +230,8 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Lvout_directxb) $(Lvout_directxpic)
-noinst_LIBRARIES = $(Lvout_directxp)
+libvlc_LIBRARIES = $(Lvout_directxb) $(Lvout_directxpic) $(Lglwin32b) $(Lglwin32pic)
+noinst_LIBRARIES = $(Lvout_directxp) $(Lglwin32p)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
@@ -238,6 +240,13 @@ SUBDIRS =
 libvlcdir = $(libdir)/vlc/video_output
 SOURCES_vout_directx = \
 	directx.c \
+	vout.h \
+	events.c \
+	$(NULL)
+
+
+SOURCES_glwin32 = \
+	glwin32.c \
 	vout.h \
 	events.c \
 	$(NULL)
@@ -272,6 +281,31 @@ libvout_directx_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin vout_directx`
 libvout_directx_DATA = $(Dvout_directxp)
 
 libvout_directxdir = $(libdir)/vlc/
+
+
+# The glwin32 plugin
+@UNTRUE_TRUE@Lglwin32p = libglwin32_plugin.a
+@UNTRUE_TRUE@Dglwin32p = libglwin32_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lglwin32b = libglwin32.a
+@UNTRUE_TRUE@Lglwin32pic = libglwin32_pic.a
+
+libglwin32_plugin_a_SOURCES = $(SOURCES_glwin32)
+libglwin32_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin glwin32`
+libglwin32_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin glwin32`
+libglwin32_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin glwin32`
+
+libglwin32_pic_a_SOURCES = $(SOURCES_glwin32)
+libglwin32_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic glwin32`
+libglwin32_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic glwin32`
+libglwin32_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic glwin32`
+
+libglwin32_a_SOURCES = $(SOURCES_glwin32)
+libglwin32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin glwin32`
+libglwin32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin glwin32`
+libglwin32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin glwin32`
+libglwin32_DATA = $(Dglwin32p)
+
+libglwin32dir = $(libdir)/vlc/
 subdir = modules/video_output/directx
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
@@ -279,31 +313,55 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 LIBRARIES = $(libvlc_LIBRARIES) $(noinst_LIBRARIES)
 
+libglwin32_a_AR = $(AR) cru
+libglwin32_a_LIBADD =
+am__objects_1 =
+am__objects_2 = libglwin32_a-glwin32.$(OBJEXT) \
+	libglwin32_a-events.$(OBJEXT) $(am__objects_1)
+am_libglwin32_a_OBJECTS = $(am__objects_2)
+libglwin32_a_OBJECTS = $(am_libglwin32_a_OBJECTS)
+libglwin32_pic_a_AR = $(AR) cru
+libglwin32_pic_a_LIBADD =
+am__objects_3 = libglwin32_pic_a-glwin32.$(OBJEXT) \
+	libglwin32_pic_a-events.$(OBJEXT) $(am__objects_1)
+am_libglwin32_pic_a_OBJECTS = $(am__objects_3)
+libglwin32_pic_a_OBJECTS = $(am_libglwin32_pic_a_OBJECTS)
+libglwin32_plugin_a_AR = $(AR) cru
+libglwin32_plugin_a_LIBADD =
+am__objects_4 = libglwin32_plugin_a-glwin32.$(OBJEXT) \
+	libglwin32_plugin_a-events.$(OBJEXT) $(am__objects_1)
+am_libglwin32_plugin_a_OBJECTS = $(am__objects_4)
+libglwin32_plugin_a_OBJECTS = $(am_libglwin32_plugin_a_OBJECTS)
 libvout_directx_a_AR = $(AR) cru
 libvout_directx_a_LIBADD =
-am__objects_1 =
-am__objects_2 = libvout_directx_a-directx.$(OBJEXT) \
+am__objects_5 = libvout_directx_a-directx.$(OBJEXT) \
 	libvout_directx_a-events.$(OBJEXT) $(am__objects_1)
-am_libvout_directx_a_OBJECTS = $(am__objects_2)
+am_libvout_directx_a_OBJECTS = $(am__objects_5)
 libvout_directx_a_OBJECTS = $(am_libvout_directx_a_OBJECTS)
 libvout_directx_pic_a_AR = $(AR) cru
 libvout_directx_pic_a_LIBADD =
-am__objects_3 = libvout_directx_pic_a-directx.$(OBJEXT) \
+am__objects_6 = libvout_directx_pic_a-directx.$(OBJEXT) \
 	libvout_directx_pic_a-events.$(OBJEXT) $(am__objects_1)
-am_libvout_directx_pic_a_OBJECTS = $(am__objects_3)
+am_libvout_directx_pic_a_OBJECTS = $(am__objects_6)
 libvout_directx_pic_a_OBJECTS = $(am_libvout_directx_pic_a_OBJECTS)
 libvout_directx_plugin_a_AR = $(AR) cru
 libvout_directx_plugin_a_LIBADD =
-am__objects_4 = libvout_directx_plugin_a-directx.$(OBJEXT) \
+am__objects_7 = libvout_directx_plugin_a-directx.$(OBJEXT) \
 	libvout_directx_plugin_a-events.$(OBJEXT) $(am__objects_1)
-am_libvout_directx_plugin_a_OBJECTS = $(am__objects_4)
+am_libvout_directx_plugin_a_OBJECTS = $(am__objects_7)
 libvout_directx_plugin_a_OBJECTS = \
 	$(am_libvout_directx_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libvout_directx_a-directx.Po \
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libglwin32_a-events.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libglwin32_a-glwin32.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libglwin32_pic_a-events.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libglwin32_pic_a-glwin32.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libglwin32_plugin_a-events.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libglwin32_plugin_a-glwin32.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libvout_directx_a-directx.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvout_directx_a-events.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvout_directx_pic_a-directx.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvout_directx_pic_a-events.Po \
@@ -313,10 +371,11 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-DIST_SOURCES = $(libvout_directx_a_SOURCES) \
+DIST_SOURCES = $(libglwin32_a_SOURCES) $(libglwin32_pic_a_SOURCES) \
+	$(libglwin32_plugin_a_SOURCES) $(libvout_directx_a_SOURCES) \
 	$(libvout_directx_pic_a_SOURCES) \
 	$(libvout_directx_plugin_a_SOURCES)
-DATA = $(libvout_directx_DATA)
+DATA = $(libglwin32_DATA) $(libvout_directx_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -329,7 +388,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libvout_directx_a_SOURCES) $(libvout_directx_pic_a_SOURCES) $(libvout_directx_plugin_a_SOURCES)
+SOURCES = $(libglwin32_a_SOURCES) $(libglwin32_pic_a_SOURCES) $(libglwin32_plugin_a_SOURCES) $(libvout_directx_a_SOURCES) $(libvout_directx_pic_a_SOURCES) $(libvout_directx_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -374,6 +433,18 @@ clean-libvlcLIBRARIES:
 
 clean-noinstLIBRARIES:
 	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+libglwin32.a: $(libglwin32_a_OBJECTS) $(libglwin32_a_DEPENDENCIES) 
+	-rm -f libglwin32.a
+	$(libglwin32_a_AR) libglwin32.a $(libglwin32_a_OBJECTS) $(libglwin32_a_LIBADD)
+	$(RANLIB) libglwin32.a
+libglwin32_pic.a: $(libglwin32_pic_a_OBJECTS) $(libglwin32_pic_a_DEPENDENCIES) 
+	-rm -f libglwin32_pic.a
+	$(libglwin32_pic_a_AR) libglwin32_pic.a $(libglwin32_pic_a_OBJECTS) $(libglwin32_pic_a_LIBADD)
+	$(RANLIB) libglwin32_pic.a
+libglwin32_plugin.a: $(libglwin32_plugin_a_OBJECTS) $(libglwin32_plugin_a_DEPENDENCIES) 
+	-rm -f libglwin32_plugin.a
+	$(libglwin32_plugin_a_AR) libglwin32_plugin.a $(libglwin32_plugin_a_OBJECTS) $(libglwin32_plugin_a_LIBADD)
+	$(RANLIB) libglwin32_plugin.a
 libvout_directx.a: $(libvout_directx_a_OBJECTS) $(libvout_directx_a_DEPENDENCIES) 
 	-rm -f libvout_directx.a
 	$(libvout_directx_a_AR) libvout_directx.a $(libvout_directx_a_OBJECTS) $(libvout_directx_a_LIBADD)
@@ -393,6 +464,12 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libglwin32_a-events.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libglwin32_a-glwin32.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libglwin32_pic_a-events.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libglwin32_pic_a-glwin32.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libglwin32_plugin_a-events.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libglwin32_plugin_a-glwin32.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvout_directx_a-directx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvout_directx_a-events.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvout_directx_pic_a-directx.Po@am__quote@
@@ -421,6 +498,138 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`
+
+libglwin32_a-glwin32.o: glwin32.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_a_CFLAGS) $(CFLAGS) -MT libglwin32_a-glwin32.o -MD -MP -MF "$(DEPDIR)/libglwin32_a-glwin32.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libglwin32_a-glwin32.o `test -f 'glwin32.c' || echo '$(srcdir)/'`glwin32.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libglwin32_a-glwin32.Tpo" "$(DEPDIR)/libglwin32_a-glwin32.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libglwin32_a-glwin32.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='glwin32.c' object='libglwin32_a-glwin32.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libglwin32_a-glwin32.Po' tmpdepfile='$(DEPDIR)/libglwin32_a-glwin32.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_a_CFLAGS) $(CFLAGS) -c -o libglwin32_a-glwin32.o `test -f 'glwin32.c' || echo '$(srcdir)/'`glwin32.c
+
+libglwin32_a-glwin32.obj: glwin32.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_a_CFLAGS) $(CFLAGS) -MT libglwin32_a-glwin32.obj -MD -MP -MF "$(DEPDIR)/libglwin32_a-glwin32.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libglwin32_a-glwin32.obj `if test -f 'glwin32.c'; then $(CYGPATH_W) 'glwin32.c'; else $(CYGPATH_W) '$(srcdir)/glwin32.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libglwin32_a-glwin32.Tpo" "$(DEPDIR)/libglwin32_a-glwin32.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libglwin32_a-glwin32.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='glwin32.c' object='libglwin32_a-glwin32.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libglwin32_a-glwin32.Po' tmpdepfile='$(DEPDIR)/libglwin32_a-glwin32.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_a_CFLAGS) $(CFLAGS) -c -o libglwin32_a-glwin32.obj `if test -f 'glwin32.c'; then $(CYGPATH_W) 'glwin32.c'; else $(CYGPATH_W) '$(srcdir)/glwin32.c'; fi`
+
+libglwin32_a-events.o: events.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_a_CFLAGS) $(CFLAGS) -MT libglwin32_a-events.o -MD -MP -MF "$(DEPDIR)/libglwin32_a-events.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libglwin32_a-events.o `test -f 'events.c' || echo '$(srcdir)/'`events.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libglwin32_a-events.Tpo" "$(DEPDIR)/libglwin32_a-events.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libglwin32_a-events.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='events.c' object='libglwin32_a-events.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libglwin32_a-events.Po' tmpdepfile='$(DEPDIR)/libglwin32_a-events.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_a_CFLAGS) $(CFLAGS) -c -o libglwin32_a-events.o `test -f 'events.c' || echo '$(srcdir)/'`events.c
+
+libglwin32_a-events.obj: events.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_a_CFLAGS) $(CFLAGS) -MT libglwin32_a-events.obj -MD -MP -MF "$(DEPDIR)/libglwin32_a-events.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libglwin32_a-events.obj `if test -f 'events.c'; then $(CYGPATH_W) 'events.c'; else $(CYGPATH_W) '$(srcdir)/events.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libglwin32_a-events.Tpo" "$(DEPDIR)/libglwin32_a-events.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libglwin32_a-events.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='events.c' object='libglwin32_a-events.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libglwin32_a-events.Po' tmpdepfile='$(DEPDIR)/libglwin32_a-events.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_a_CFLAGS) $(CFLAGS) -c -o libglwin32_a-events.obj `if test -f 'events.c'; then $(CYGPATH_W) 'events.c'; else $(CYGPATH_W) '$(srcdir)/events.c'; fi`
+
+libglwin32_pic_a-glwin32.o: glwin32.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_pic_a_CFLAGS) $(CFLAGS) -MT libglwin32_pic_a-glwin32.o -MD -MP -MF "$(DEPDIR)/libglwin32_pic_a-glwin32.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libglwin32_pic_a-glwin32.o `test -f 'glwin32.c' || echo '$(srcdir)/'`glwin32.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libglwin32_pic_a-glwin32.Tpo" "$(DEPDIR)/libglwin32_pic_a-glwin32.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libglwin32_pic_a-glwin32.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='glwin32.c' object='libglwin32_pic_a-glwin32.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libglwin32_pic_a-glwin32.Po' tmpdepfile='$(DEPDIR)/libglwin32_pic_a-glwin32.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_pic_a_CFLAGS) $(CFLAGS) -c -o libglwin32_pic_a-glwin32.o `test -f 'glwin32.c' || echo '$(srcdir)/'`glwin32.c
+
+libglwin32_pic_a-glwin32.obj: glwin32.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_pic_a_CFLAGS) $(CFLAGS) -MT libglwin32_pic_a-glwin32.obj -MD -MP -MF "$(DEPDIR)/libglwin32_pic_a-glwin32.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libglwin32_pic_a-glwin32.obj `if test -f 'glwin32.c'; then $(CYGPATH_W) 'glwin32.c'; else $(CYGPATH_W) '$(srcdir)/glwin32.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libglwin32_pic_a-glwin32.Tpo" "$(DEPDIR)/libglwin32_pic_a-glwin32.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libglwin32_pic_a-glwin32.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='glwin32.c' object='libglwin32_pic_a-glwin32.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libglwin32_pic_a-glwin32.Po' tmpdepfile='$(DEPDIR)/libglwin32_pic_a-glwin32.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_pic_a_CFLAGS) $(CFLAGS) -c -o libglwin32_pic_a-glwin32.obj `if test -f 'glwin32.c'; then $(CYGPATH_W) 'glwin32.c'; else $(CYGPATH_W) '$(srcdir)/glwin32.c'; fi`
+
+libglwin32_pic_a-events.o: events.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_pic_a_CFLAGS) $(CFLAGS) -MT libglwin32_pic_a-events.o -MD -MP -MF "$(DEPDIR)/libglwin32_pic_a-events.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libglwin32_pic_a-events.o `test -f 'events.c' || echo '$(srcdir)/'`events.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libglwin32_pic_a-events.Tpo" "$(DEPDIR)/libglwin32_pic_a-events.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libglwin32_pic_a-events.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='events.c' object='libglwin32_pic_a-events.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libglwin32_pic_a-events.Po' tmpdepfile='$(DEPDIR)/libglwin32_pic_a-events.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_pic_a_CFLAGS) $(CFLAGS) -c -o libglwin32_pic_a-events.o `test -f 'events.c' || echo '$(srcdir)/'`events.c
+
+libglwin32_pic_a-events.obj: events.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_pic_a_CFLAGS) $(CFLAGS) -MT libglwin32_pic_a-events.obj -MD -MP -MF "$(DEPDIR)/libglwin32_pic_a-events.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libglwin32_pic_a-events.obj `if test -f 'events.c'; then $(CYGPATH_W) 'events.c'; else $(CYGPATH_W) '$(srcdir)/events.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libglwin32_pic_a-events.Tpo" "$(DEPDIR)/libglwin32_pic_a-events.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libglwin32_pic_a-events.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='events.c' object='libglwin32_pic_a-events.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libglwin32_pic_a-events.Po' tmpdepfile='$(DEPDIR)/libglwin32_pic_a-events.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_pic_a_CFLAGS) $(CFLAGS) -c -o libglwin32_pic_a-events.obj `if test -f 'events.c'; then $(CYGPATH_W) 'events.c'; else $(CYGPATH_W) '$(srcdir)/events.c'; fi`
+
+libglwin32_plugin_a-glwin32.o: glwin32.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_plugin_a_CFLAGS) $(CFLAGS) -MT libglwin32_plugin_a-glwin32.o -MD -MP -MF "$(DEPDIR)/libglwin32_plugin_a-glwin32.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libglwin32_plugin_a-glwin32.o `test -f 'glwin32.c' || echo '$(srcdir)/'`glwin32.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libglwin32_plugin_a-glwin32.Tpo" "$(DEPDIR)/libglwin32_plugin_a-glwin32.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libglwin32_plugin_a-glwin32.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='glwin32.c' object='libglwin32_plugin_a-glwin32.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libglwin32_plugin_a-glwin32.Po' tmpdepfile='$(DEPDIR)/libglwin32_plugin_a-glwin32.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_plugin_a_CFLAGS) $(CFLAGS) -c -o libglwin32_plugin_a-glwin32.o `test -f 'glwin32.c' || echo '$(srcdir)/'`glwin32.c
+
+libglwin32_plugin_a-glwin32.obj: glwin32.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_plugin_a_CFLAGS) $(CFLAGS) -MT libglwin32_plugin_a-glwin32.obj -MD -MP -MF "$(DEPDIR)/libglwin32_plugin_a-glwin32.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libglwin32_plugin_a-glwin32.obj `if test -f 'glwin32.c'; then $(CYGPATH_W) 'glwin32.c'; else $(CYGPATH_W) '$(srcdir)/glwin32.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libglwin32_plugin_a-glwin32.Tpo" "$(DEPDIR)/libglwin32_plugin_a-glwin32.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libglwin32_plugin_a-glwin32.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='glwin32.c' object='libglwin32_plugin_a-glwin32.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libglwin32_plugin_a-glwin32.Po' tmpdepfile='$(DEPDIR)/libglwin32_plugin_a-glwin32.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_plugin_a_CFLAGS) $(CFLAGS) -c -o libglwin32_plugin_a-glwin32.obj `if test -f 'glwin32.c'; then $(CYGPATH_W) 'glwin32.c'; else $(CYGPATH_W) '$(srcdir)/glwin32.c'; fi`
+
+libglwin32_plugin_a-events.o: events.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_plugin_a_CFLAGS) $(CFLAGS) -MT libglwin32_plugin_a-events.o -MD -MP -MF "$(DEPDIR)/libglwin32_plugin_a-events.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libglwin32_plugin_a-events.o `test -f 'events.c' || echo '$(srcdir)/'`events.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libglwin32_plugin_a-events.Tpo" "$(DEPDIR)/libglwin32_plugin_a-events.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libglwin32_plugin_a-events.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='events.c' object='libglwin32_plugin_a-events.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libglwin32_plugin_a-events.Po' tmpdepfile='$(DEPDIR)/libglwin32_plugin_a-events.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_plugin_a_CFLAGS) $(CFLAGS) -c -o libglwin32_plugin_a-events.o `test -f 'events.c' || echo '$(srcdir)/'`events.c
+
+libglwin32_plugin_a-events.obj: events.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_plugin_a_CFLAGS) $(CFLAGS) -MT libglwin32_plugin_a-events.obj -MD -MP -MF "$(DEPDIR)/libglwin32_plugin_a-events.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libglwin32_plugin_a-events.obj `if test -f 'events.c'; then $(CYGPATH_W) 'events.c'; else $(CYGPATH_W) '$(srcdir)/events.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libglwin32_plugin_a-events.Tpo" "$(DEPDIR)/libglwin32_plugin_a-events.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libglwin32_plugin_a-events.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='events.c' object='libglwin32_plugin_a-events.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libglwin32_plugin_a-events.Po' tmpdepfile='$(DEPDIR)/libglwin32_plugin_a-events.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglwin32_plugin_a_CFLAGS) $(CFLAGS) -c -o libglwin32_plugin_a-events.obj `if test -f 'events.c'; then $(CYGPATH_W) 'events.c'; else $(CYGPATH_W) '$(srcdir)/events.c'; fi`
 
 libvout_directx_a-directx.o: directx.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvout_directx_a_CFLAGS) $(CFLAGS) -MT libvout_directx_a-directx.o -MD -MP -MF "$(DEPDIR)/libvout_directx_a-directx.Tpo" \
@@ -554,6 +763,24 @@ libvout_directx_plugin_a-events.obj: events.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvout_directx_plugin_a_CFLAGS) $(CFLAGS) -c -o libvout_directx_plugin_a-events.obj `if test -f 'events.c'; then $(CYGPATH_W) 'events.c'; else $(CYGPATH_W) '$(srcdir)/events.c'; fi`
 uninstall-info-am:
+libglwin32DATA_INSTALL = $(INSTALL_DATA)
+install-libglwin32DATA: $(libglwin32_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libglwin32dir)
+	@list='$(libglwin32_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libglwin32DATA_INSTALL) $$d$$p $(DESTDIR)$(libglwin32dir)/$$f"; \
+	  $(libglwin32DATA_INSTALL) $$d$$p $(DESTDIR)$(libglwin32dir)/$$f; \
+	done
+
+uninstall-libglwin32DATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libglwin32_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libglwin32dir)/$$f"; \
+	  rm -f $(DESTDIR)$(libglwin32dir)/$$f; \
+	done
 libvout_directxDATA_INSTALL = $(INSTALL_DATA)
 install-libvout_directxDATA: $(libvout_directx_DATA)
 	@$(NORMAL_INSTALL)
@@ -747,7 +974,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libvout_directxdir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libglwin32dir) $(DESTDIR)$(libvout_directxdir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -794,7 +1021,8 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-libvlcLIBRARIES install-libvout_directxDATA
+install-data-am: install-libglwin32DATA install-libvlcLIBRARIES \
+	install-libvout_directxDATA
 
 install-exec-am:
 
@@ -821,8 +1049,8 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libvlcLIBRARIES \
-	uninstall-libvout_directxDATA
+uninstall-am: uninstall-info-am uninstall-libglwin32DATA \
+	uninstall-libvlcLIBRARIES uninstall-libvout_directxDATA
 
 uninstall-info: uninstall-info-recursive
 
@@ -835,16 +1063,17 @@ uninstall-info: uninstall-info-recursive
 	install-data install-data-am install-data-recursive \
 	install-exec install-exec-am install-exec-recursive \
 	install-info install-info-am install-info-recursive \
-	install-libvlcLIBRARIES install-libvout_directxDATA install-man \
-	install-recursive install-strip installcheck installcheck-am \
-	installdirs installdirs-am installdirs-recursive \
-	maintainer-clean maintainer-clean-generic \
-	maintainer-clean-recursive mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
-	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
-	uninstall uninstall-am uninstall-info-am \
-	uninstall-info-recursive uninstall-libvlcLIBRARIES \
-	uninstall-libvout_directxDATA uninstall-recursive
+	install-libglwin32DATA install-libvlcLIBRARIES \
+	install-libvout_directxDATA install-man install-recursive \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am installdirs-recursive maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-recursive \
+	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
+	tags-recursive uninstall uninstall-am uninstall-info-am \
+	uninstall-info-recursive uninstall-libglwin32DATA \
+	uninstall-libvlcLIBRARIES uninstall-libvout_directxDATA \
+	uninstall-recursive
 
 
 clean-local:
@@ -853,9 +1082,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in vout_directx; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in vout_directx; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in vout_directx; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in vout_directx glwin32; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in vout_directx glwin32; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in vout_directx glwin32; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 libvout_directx_plugin$(LIBEXT): $(libvout_directx_plugin_a_OBJECTS)
@@ -863,6 +1092,12 @@ libvout_directx_plugin$(LIBEXT): $(libvout_directx_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libvout_directx_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin vout_directx\` ; $(CXXLINK) $(libvout_directx_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin vout_directx` ;; \
 	  objc) echo $(OBJCLINK) $(libvout_directx_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin vout_directx\` ; $(OBJCLINK) $(libvout_directx_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin vout_directx` ;; \
 	  c|*) echo $(LINK) $(libvout_directx_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin vout_directx\` ; $(LINK) $(libvout_directx_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin vout_directx` ;; \
+	esac
+libglwin32_plugin$(LIBEXT): $(libglwin32_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage glwin32` in \
+	  c++) echo $(CXXLINK) $(libglwin32_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin glwin32\` ; $(CXXLINK) $(libglwin32_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin glwin32` ;; \
+	  objc) echo $(OBJCLINK) $(libglwin32_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin glwin32\` ; $(OBJCLINK) $(libglwin32_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin glwin32` ;; \
+	  c|*) echo $(LINK) $(libglwin32_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin glwin32\` ; $(LINK) $(libglwin32_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin glwin32` ;; \
 	esac
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -2,7 +2,7 @@
  * file.c
  *****************************************************************************
  * Copyright (C) 2001, 2002 VideoLAN
- * $Id: file.c 7522 2004-04-27 16:35:15Z sam $
+ * $Id: file.c 8164 2004-07-10 17:22:35Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -99,7 +99,7 @@ static int Open( vlc_object_t *p_this )
     int                 i_flags;
     vlc_value_t         val;
 
-    sout_ParseCfg( p_access, SOUT_CFG_PREFIX, ppsz_sout_options, p_access->p_cfg );
+    sout_CfgParse( p_access, SOUT_CFG_PREFIX, ppsz_sout_options, p_access->p_cfg );
 
     if( !( p_access->p_sys = malloc( sizeof( sout_access_out_sys_t ) ) ) )
     {

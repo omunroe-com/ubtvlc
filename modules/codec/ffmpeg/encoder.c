@@ -2,7 +2,7 @@
  * encoder.c: video and audio encoder using the ffmpeg library
  *****************************************************************************
  * Copyright (C) 1999-2004 VideoLAN
- * $Id: encoder.c 7496 2004-04-26 09:10:53Z gbazin $
+ * $Id: encoder.c 9156 2004-11-05 14:57:53Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -43,6 +43,9 @@
 #if LIBAVCODEC_BUILD < 4704
 #   define AV_NOPTS_VALUE 0
 #endif
+#if LIBAVCODEC_BUILD < 4684
+#    define FF_QP2LAMBDA 118
+#endif
 
 #include "ffmpeg.h"
 
@@ -50,6 +53,8 @@
 #define HURRY_UP_GUARD1 (450000)
 #define HURRY_UP_GUARD2 (300000)
 #define HURRY_UP_GUARD3 (100000)
+
+#define MAX_FRAME_DELAY (FF_MAX_B_FRAMES + 2)
 
 /*****************************************************************************
  * Local prototypes
@@ -134,13 +139,18 @@ struct encoder_sys_t
     int        i_noise_reduction;
     vlc_bool_t b_mpeg4_matrix;
     vlc_bool_t b_trellis;
+    int        i_quality; /* for VBR */
+
+    /* Used to work around stupid timestamping behaviour in libavcodec */
+    uint64_t i_framenum;
+    mtime_t  pi_delay_pts[MAX_FRAME_DELAY];
 };
 
 static const char *ppsz_enc_options[] = {
     "keyint", "bframes", "vt", "qmin", "qmax", "hq", "strict_rc",
     "rc-buffer-size", "rc-buffer-aggressivity", "pre-me", "hurry-up",
     "interlace", "i-quant-factor", "noise-reduction", "mpeg4-matrix",
-    "trellis", NULL
+    "trellis", "qscale", "strict", NULL
 };
 
 /*****************************************************************************
@@ -201,6 +211,7 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
         msg_Err( p_enc, "out of memory" );
         return VLC_EGENERIC;
     }
+    memset( p_sys, 0, sizeof(encoder_sys_t) );
     p_enc->p_sys = p_sys;
     p_sys->p_codec = p_codec;
 
@@ -209,7 +220,6 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
 
     p_sys->p_buffer_out = NULL;
     p_sys->p_buffer = NULL;
-    p_sys->b_inited = 0;
 
     p_sys->p_context = p_context = avcodec_alloc_context();
 
@@ -233,7 +243,7 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
         p_context->dsp_mask |= FF_MM_SSE2;
     }
 
-    sout_ParseCfg( p_enc, ENC_CFG_PREFIX, ppsz_enc_options, p_enc->p_cfg );
+    sout_CfgParse( p_enc, ENC_CFG_PREFIX, ppsz_enc_options, p_enc->p_cfg );
 
     var_Get( p_enc, ENC_CFG_PREFIX "keyint", &val );
     p_sys->i_key_int = val.i_int;
@@ -274,6 +284,10 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
     var_Get( p_enc, ENC_CFG_PREFIX "mpeg4-matrix", &val );
     p_sys->b_mpeg4_matrix = val.b_bool;
 
+    var_Get( p_enc, ENC_CFG_PREFIX "qscale", &val );
+    if( val.f_float < 0.01 || val.f_float > 255.0 ) val.f_float = 0;
+    p_sys->i_quality = (int)(FF_QP2LAMBDA * val.f_float + 0.5);
+
     var_Get( p_enc, ENC_CFG_PREFIX "hq", &val );
     if( val.psz_string && *val.psz_string )
     {
@@ -295,8 +309,14 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
     var_Get( p_enc, ENC_CFG_PREFIX "trellis", &val );
     p_sys->b_trellis = val.b_bool;
 
+    var_Get( p_enc, ENC_CFG_PREFIX "strict", &val );
+    if( val.i_int < - 1 || val.i_int > 1 ) val.i_int = 0;
+    p_context->strict_std_compliance = val.i_int;
+
     if( p_enc->fmt_in.i_cat == VIDEO_ES )
     {
+        int i_aspect_num, i_aspect_den;
+
         if( !p_enc->fmt_in.video.i_width || !p_enc->fmt_in.video.i_height )
         {
             msg_Warn( p_enc, "invalid size %ix%i", p_enc->fmt_in.video.i_width,
@@ -322,15 +342,17 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
         if( p_sys->i_key_int > 0 )
             p_context->gop_size = p_sys->i_key_int;
         p_context->max_b_frames =
-            __MIN( p_sys->i_b_frames, FF_MAX_B_FRAMES );
+            __MAX( __MIN( p_sys->i_b_frames, FF_MAX_B_FRAMES ), 0 );
         p_context->b_frame_strategy = 0;
 
 #if LIBAVCODEC_BUILD >= 4687
+        av_reduce( &i_aspect_num, &i_aspect_den,
+                   p_enc->fmt_in.video.i_aspect,
+                   VOUT_ASPECT_FACTOR, 1 << 30 /* something big */ );
         av_reduce( &p_context->sample_aspect_ratio.num,
-		   &p_context->sample_aspect_ratio.den,
-		   p_enc->fmt_in.video.i_aspect *
-		   (int64_t)p_context->height / p_context->width,
-		   VOUT_ASPECT_FACTOR, 1 << 30 /* something big */ );
+                   &p_context->sample_aspect_ratio.den,
+                   i_aspect_num * (int64_t)p_context->height,
+                   i_aspect_den * (int64_t)p_context->width, 1 << 30 );
 #else
         p_context->aspect_ratio = ((float)p_enc->fmt_in.video.i_aspect) /
             VOUT_ASPECT_FACTOR;
@@ -392,6 +414,14 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
         p_context->max_qdiff = 3;
 
         p_context->mb_decision = p_sys->i_hq;
+
+        if( p_sys->i_quality )
+        {
+            p_context->flags |= CODEC_FLAG_QSCALE;
+#if LIBAVCODEC_BUILD >= 4668
+            p_context->global_quality = p_sys->i_quality;
+#endif
+        }
     }
     else if( p_enc->fmt_in.i_cat == AUDIO_ES )
     {
@@ -447,12 +477,6 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
         p_sys->i_frame_size = p_context->frame_size * 2 * p_context->channels;
         p_sys->p_buffer = malloc( p_sys->i_frame_size );
     }
-
-    p_sys->i_last_ref_pts = 0;
-    p_sys->i_buggy_pts_detect = 0;
-    p_sys->i_samples_delay = 0;
-    p_sys->i_pts = 0;
-    p_sys->i_last_pts = 0;
 
     msg_Dbg( p_enc, "found encoder %s", psz_namecodec );
 
@@ -584,11 +608,11 @@ static block_t *EncodeVideo( encoder_t *p_enc, picture_t *p_pict )
     /* Let ffmpeg select the frame type */
     frame.pict_type = 0;
 
-    frame.repeat_pict = p_pict->i_nb_fields;
+    frame.repeat_pict = 2 - p_pict->i_nb_fields;
 
 #if LIBAVCODEC_BUILD >= 4685
     frame.interlaced_frame = !p_pict->b_progressive;
-    frame.top_field_first = p_pict->b_top_field_first;
+    frame.top_field_first = !!p_pict->b_top_field_first;
 #endif
 
 #if LIBAVCODEC_BUILD < 4702
@@ -656,11 +680,31 @@ static block_t *EncodeVideo( encoder_t *p_enc, picture_t *p_pict )
                       "same PTS (" I64Fd ")", frame.pts );
             return NULL;
         }
+        else if ( p_sys->i_last_pts > frame.pts )
+        {
+            msg_Warn( p_enc, "almost fed libavcodec with a frame in the "
+                      "past (current: " I64Fd ", last: "I64Fd")",
+                      frame.pts, p_sys->i_last_pts );
+            return NULL;
+        }
         else
         {
             p_sys->i_last_pts = frame.pts;
         }
     }
+
+    frame.quality = p_sys->i_quality;
+
+    /* Ugly work-around for stupid libavcodec behaviour */
+#if LIBAVCODEC_BUILD >= 4722
+    p_sys->i_framenum++;
+    p_sys->pi_delay_pts[p_sys->i_framenum % MAX_FRAME_DELAY] = frame.pts;
+    frame.pts = p_sys->i_framenum * AV_TIME_BASE *
+        p_enc->fmt_in.video.i_frame_rate_base;
+    frame.pts += p_enc->fmt_in.video.i_frame_rate - 1;
+    frame.pts /= p_enc->fmt_in.video.i_frame_rate;
+#endif
+    /* End work-around */
 
     i_out = avcodec_encode_video( p_sys->p_context, p_sys->p_buffer_out,
                                   AVCODEC_MAX_VIDEO_FRAME_SIZE, &frame );
@@ -670,21 +714,37 @@ static block_t *EncodeVideo( encoder_t *p_enc, picture_t *p_pict )
         block_t *p_block = block_New( p_enc, i_out );
         memcpy( p_block->p_buffer, p_sys->p_buffer_out, i_out );
 
-        if( p_sys->p_context->coded_frame->pts != AV_NOPTS_VALUE &&
+        /* FIXME, 3-2 pulldown is not handled correctly */
+        p_block->i_length = I64C(1000000) *
+            p_enc->fmt_in.video.i_frame_rate_base /
+                p_enc->fmt_in.video.i_frame_rate;
+
+        if( !p_sys->p_context->max_b_frames || !p_sys->p_context->delay )
+        {
+            /* No delay -> output pts == input pts */
+            p_block->i_pts = p_block->i_dts = p_pict->date;
+        }
+        else if( p_sys->p_context->coded_frame->pts != AV_NOPTS_VALUE &&
             p_sys->p_context->coded_frame->pts != 0 &&
             p_sys->i_buggy_pts_detect != p_sys->p_context->coded_frame->pts )
         {
             p_sys->i_buggy_pts_detect = p_sys->p_context->coded_frame->pts;
+            p_block->i_pts = p_sys->p_context->coded_frame->pts;
 
-            /* FIXME, 3-2 pulldown is not handled correctly */
-            p_block->i_length = I64C(1000000) *
-                p_enc->fmt_in.video.i_frame_rate_base /
-                p_enc->fmt_in.video.i_frame_rate;
-            p_block->i_pts    = p_sys->p_context->coded_frame->pts;
+            /* Ugly work-around for stupid libavcodec behaviour */
+#if LIBAVCODEC_BUILD >= 4722
+            {
+            int64_t i_framenum = p_block->i_pts *
+                p_enc->fmt_in.video.i_frame_rate /
+                p_enc->fmt_in.video.i_frame_rate_base / AV_TIME_BASE;
 
-            if( !p_sys->p_context->delay ||
-                ( p_sys->p_context->coded_frame->pict_type != FF_I_TYPE &&
-                  p_sys->p_context->coded_frame->pict_type != FF_P_TYPE ) )
+            p_block->i_pts = p_sys->pi_delay_pts[i_framenum % MAX_FRAME_DELAY];
+            }
+#endif
+            /* End work-around */
+
+            if( p_sys->p_context->coded_frame->pict_type != FF_I_TYPE &&
+                p_sys->p_context->coded_frame->pict_type != FF_P_TYPE )
             {
                 p_block->i_dts = p_block->i_pts;
             }
@@ -707,9 +767,6 @@ static block_t *EncodeVideo( encoder_t *p_enc, picture_t *p_pict )
         {
             /* Buggy libavcodec which doesn't update coded_frame->pts
              * correctly */
-            p_block->i_length = I64C(1000000) *
-                p_enc->fmt_in.video.i_frame_rate_base /
-                p_enc->fmt_in.video.i_frame_rate;
             p_block->i_dts = p_block->i_pts = p_pict->date;
         }
 

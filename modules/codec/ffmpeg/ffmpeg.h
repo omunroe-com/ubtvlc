@@ -2,7 +2,7 @@
  * ffmpeg.h: decoder using the ffmpeg library
  *****************************************************************************
  * Copyright (C) 2001 VideoLAN
- * $Id: ffmpeg.h 7559 2004-04-29 20:30:24Z gbazin $
+ * $Id: ffmpeg.h 8806 2004-09-26 13:39:00Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -38,6 +38,7 @@ void E_(InitLibavcodec)( vlc_object_t * );
 int E_(GetFfmpegCodec) ( vlc_fourcc_t, int *, int *, char ** );
 int E_(GetVlcFourcc)   ( int, int *, vlc_fourcc_t *, char ** );
 int E_(GetFfmpegChroma)( vlc_fourcc_t );
+vlc_fourcc_t E_(GetVlcChroma)( int );
 
 /* Video decoder module */
 int  E_( InitVideoDec )( decoder_t *, AVCodecContext *, AVCodec *,
@@ -66,6 +67,12 @@ void E_(CloseAudioEncoder)( vlc_object_t * );
 /* Demux module */
 int  E_(OpenDemux) ( vlc_object_t * );
 void E_(CloseDemux)( vlc_object_t * );
+
+/* Video filter module */
+int  E_(OpenFilter)( vlc_object_t * );
+void E_(CloseFilter)( vlc_object_t * );
+int  E_(OpenDeinterlace)( vlc_object_t * );
+void E_(CloseDeinterlace)( vlc_object_t * );
 
 /* Postprocessing module */
 void *E_(OpenPostproc)( decoder_t *, vlc_bool_t * );
@@ -116,6 +123,10 @@ void E_(ClosePostproc)( decoder_t *, void * );
     "1 - visualize forward predicted MVs of P frames\n" \
     "2 - visualize forward predicted MVs of B frames\n" \
     "4 - visualize backward predicted MVs of B frames" )
+
+#define LOWRES_TEXT N_( "Low resolution decoding" )
+#define LOWRES_LONGTEXT N_( "Will only decode a low resolution version of " \
+    "the video." )
 
 #define LIBAVCODEC_PP_TEXT N_("ffmpeg post processing filter chains")
 /* FIXME (cut/past from ffmpeg */
@@ -230,3 +241,11 @@ void E_(ClosePostproc)( decoder_t *, void * );
 #define ENC_TRELLIS_TEXT N_( "Enable trellis quantization" )
 #define ENC_TRELLIS_LONGTEXT N_( "Allows you to enable trellis " \
   "quantization (rate distortion for block coefficients)." )
+
+#define ENC_QSCALE_TEXT N_( "Use fixed video quantizer scale" )
+#define ENC_QSCALE_LONGTEXT N_( "Allows you to specify a fixed video " \
+  "quantizer scale for VBR encoding (accepted values: 0.01 to 255.0)." )
+
+#define ENC_STRICT_TEXT N_( "Strict standard compliance" )
+#define ENC_STRICT_LONGTEXT N_( "Allows you to force a strict standard " \
+  "compliance when encoding (accepted values: -1, 0, 1)." )

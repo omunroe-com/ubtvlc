@@ -98,6 +98,26 @@ SOURCE="..\modules\demux\mkv.cpp"
 # PROP Output_Dir "Debug\modules\demux"
 # PROP Intermediate_Dir "Debug\modules\demux"
 # End Source File
+# Begin Source File
+SOURCE="..\modules\demux\mp4\libmp4.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=mkv" /D "MODULE_NAME_IS_mkv" 
+!IF "$(CFG)" == "plugin_mkv - Win32 Release"
+# PROP Output_Dir "Release\modules\demux"
+# PROP Intermediate_Dir "Release\modules\demux"
+!ELSEIF "$(CFG)" == "plugin_mkv - Win32 Debug"
+# PROP Output_Dir "Debug\modules\demux"
+# PROP Intermediate_Dir "Debug\modules\demux"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\demux\mp4\drms.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=mkv" /D "MODULE_NAME_IS_mkv" 
+!IF "$(CFG)" == "plugin_mkv - Win32 Release"
+# PROP Output_Dir "Release\modules\demux"
+# PROP Intermediate_Dir "Release\modules\demux"
+!ELSEIF "$(CFG)" == "plugin_mkv - Win32 Debug"
+# PROP Output_Dir "Debug\modules\demux"
+# PROP Intermediate_Dir "Debug\modules\demux"
+# End Source File
 
 # End Group
 

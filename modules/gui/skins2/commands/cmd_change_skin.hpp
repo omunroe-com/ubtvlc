@@ -2,7 +2,7 @@
  * cmd_change_skin.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: cmd_change_skin.hpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: cmd_change_skin.hpp 8524 2004-08-25 21:32:15Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -26,9 +26,6 @@
 #define CMD_CHANGE_SKIN_HPP
 
 #include "cmd_generic.hpp"
-
-
-class WindowManager;
 
 
 /// "Change Skin" command

@@ -2,7 +2,7 @@
  * playlist.c : Playlist management functions
  *****************************************************************************
  * Copyright (C) 1999-2004 VideoLAN
- * $Id: playlist.c 7565 2004-04-30 15:15:16Z zorglub $
+ * $Id: playlist.c 8153 2004-07-08 12:25:20Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -28,9 +28,6 @@
 #include <vlc/vout.h>
 #include <vlc/sout.h>
 #include <vlc/input.h>
-
-#include "stream_control.h"
-#include "input_ext-intf.h"
 
 #include "vlc_playlist.h"
 
@@ -86,6 +83,7 @@ playlist_t * __playlist_Create ( vlc_object_t *p_parent )
     val.b_bool = VLC_FALSE;
     var_Set( p_playlist, "prevent-skip", val );
 
+    var_Create( p_playlist, "play-and-stop", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
     var_Create( p_playlist, "random", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
     var_Create( p_playlist, "repeat", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
     var_Create( p_playlist, "loop", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
@@ -137,6 +135,7 @@ void playlist_Destroy( playlist_t * p_playlist )
     var_Destroy( p_playlist, "intf-popmenu" );
     var_Destroy( p_playlist, "intf-show" );
     var_Destroy( p_playlist, "prevent-skip" );
+    var_Destroy( p_playlist, "play-and-stop" );
     var_Destroy( p_playlist, "random" );
     var_Destroy( p_playlist, "repeat" );
     var_Destroy( p_playlist, "loop" );
@@ -322,6 +321,8 @@ static void RunThread ( playlist_t *p_playlist )
     mtime_t    i_vout_destroyed_date = 0;
     mtime_t    i_sout_destroyed_date = 0;
 
+    playlist_item_t *p_autodelete_item = 0;
+
     /* Tell above that we're ready */
     vlc_thread_ready( p_playlist );
 
@@ -356,6 +357,14 @@ static void RunThread ( playlist_t *p_playlist )
 
                 i_vout_destroyed_date = 0;
                 i_sout_destroyed_date = 0;
+
+                /* Check for autodeletion */
+                if( p_autodelete_item )
+                {
+                    playlist_ItemDelete( p_autodelete_item );
+                    p_autodelete_item = 0;
+                }
+
                 continue;
             }
             /* This input is dying, let him do */
@@ -367,24 +376,29 @@ static void RunThread ( playlist_t *p_playlist )
             else if( p_playlist->p_input->b_error
                       || p_playlist->p_input->b_eof )
             {
-                /* Check for autodeletion */
+                input_StopThread( p_playlist->p_input );
+
                 if( p_playlist->pp_items[p_playlist->i_index]->b_autodeletion )
                 {
+                    /* This ain't pretty but hey it works */
+                    p_autodelete_item =
+                        p_playlist->pp_items[p_playlist->i_index];
+                    p_playlist->pp_items[p_playlist->i_index] =
+                        playlist_ItemNew( p_playlist,
+                                          p_autodelete_item->input.psz_uri, 0);
+
                     vlc_mutex_unlock( &p_playlist->object_lock );
+                    p_playlist->i_status = PLAYLIST_STOPPED;
                     playlist_Delete( p_playlist, p_playlist->i_index );
-                    p_playlist->i_index++;
                     p_playlist->i_status = PLAYLIST_RUNNING;
+                    vlc_mutex_lock( &p_playlist->object_lock );
                 }
-                else
-                {
-                    /* Select the next playlist item */
-                    SkipItem( p_playlist, 1 );
-                    input_StopThread( p_playlist->p_input );
-                    vlc_mutex_unlock( &p_playlist->object_lock );
-                }
+
+                SkipItem( p_playlist, 1 );
+                vlc_mutex_unlock( &p_playlist->object_lock );
                 continue;
             }
-            else if( p_playlist->p_input->stream.control.i_status != INIT_S )
+            else if( p_playlist->p_input->i_state != INIT_S )
             {
                 vlc_mutex_unlock( &p_playlist->object_lock );
                 i_vout_destroyed_date =
@@ -398,14 +412,25 @@ static void RunThread ( playlist_t *p_playlist )
         }
         else if( p_playlist->i_status != PLAYLIST_STOPPED )
         {
-            var_Get( p_playlist, "prevent-skip", &val);
-            if( val.b_bool == VLC_FALSE)
+            /* Start another input. Let's check if that item has
+             * been forced. In that case, we override random (by not skipping)
+             * and play-and-stop */
+            vlc_bool_t b_forced;
+            var_Get( p_playlist, "prevent-skip", &val );
+            b_forced = val.b_bool;
+            if( val.b_bool == VLC_FALSE )
             {
                 SkipItem( p_playlist, 0 );
             }
-            val.b_bool = VLC_TRUE;
-            var_Set( p_playlist, "prevent-skip", val);
-            PlayItem( p_playlist );
+            /* Reset forced status */
+            val.b_bool = VLC_FALSE;
+            var_Set( p_playlist, "prevent-skip", val );
+            /* Check for play-and-stop */
+            var_Get( p_playlist, "play-and-stop", &val );
+            if( val.b_bool == VLC_FALSE || b_forced == VLC_TRUE )
+            {
+                PlayItem( p_playlist );
+            }
         }
         else if( p_playlist->i_status == PLAYLIST_STOPPED )
         {
