@@ -2,7 +2,7 @@
  * sap.c : SAP announce handler
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: sap.c 7397 2004-04-20 17:27:30Z sam $
+ * $Id: sap.c 9201 2004-11-06 16:51:46Z yoann $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -215,6 +215,7 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
     char *psz_head;
     vlc_bool_t b_found = VLC_FALSE;
     sap_session_t *p_sap_session;
+    mtime_t i_hash;
 
     vlc_mutex_lock( &p_sap->object_lock );
 
@@ -249,7 +250,7 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
         {
             /* IPv4 */
             p_method->psz_address = (char*)malloc( 15*sizeof(char) );
-            sprintf(p_method->psz_address, SAP_IPV4_ADDR );
+            snprintf(p_method->psz_address, 15, SAP_IPV4_ADDR );
         }
     }
     msg_Dbg( p_sap, "using SAP address: %s",p_method->psz_address);
@@ -281,6 +282,7 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
             return VLC_ENOMEM;
         }
         p_address->psz_address = strdup( p_method->psz_address );
+        p_address->i_ip_version = p_method->i_ip_version;
         p_address->i_port  =  9875;
         p_address->i_wfd = net_OpenUDP( p_sap, "", 0,
                                         p_address->psz_address,
@@ -319,7 +321,7 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
     }
 
     /* Build the SAP Headers */
-    i_header_size = 8 + strlen( psz_type ) + 1;
+    i_header_size = ( p_method->i_ip_version == 6 ? 20 : 8 ) + strlen( psz_type ) + 1;
     psz_head = (char *) malloc( i_header_size * sizeof( char ) );
     if( ! psz_head )
     {
@@ -327,17 +329,52 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
         return VLC_ENOMEM;
     }
 
-    psz_head[0] = 0x20; /* Means IPv4, not encrypted, not compressed */
-    psz_head[1] = 0x00; /* No authentification */
-    psz_head[2] = 0x42; /* Msg id hash */
-    psz_head[3] = 0x12; /* Msg id hash 2 */
+    psz_head[0] = 0x20; /* Means SAPv1, IPv4, not encrypted, not compressed */
+    psz_head[1] = 0x00; /* No authentification length */
 
-    psz_head[4] = 0x01; /* Source IP  FIXME: we should get the real address */
-    psz_head[5] = 0x02; /* idem */
-    psz_head[6] = 0x03; /* idem */
-    psz_head[7] = 0x04; /* idem */
+    i_hash = mdate();
+    psz_head[2] = (i_hash & 0xFF00) >> 8; /* Msg id hash */
+    psz_head[3] = (i_hash & 0xFF);        /* Msg id hash 2 */
 
-    strncpy( psz_head + 8, psz_type, 15 );
+    if( p_method->i_ip_version == 6 )
+    {
+        /* in_addr_t ip_server = inet_addr( ip ); */
+        psz_head[0] |= 0x10; /* Set IPv6 */
+
+        psz_head[4] = 0x01; /* Source IP  FIXME: we should get the real address */
+        psz_head[5] = 0x02; /* idem */
+        psz_head[6] = 0x03; /* idem */
+        psz_head[7] = 0x04; /* idem */
+
+        psz_head[8] = 0x01; /* Source IP  FIXME: we should get the real address */
+        psz_head[9] = 0x02; /* idem */
+        psz_head[10] = 0x03; /* idem */
+        psz_head[11] = 0x04; /* idem */
+
+        psz_head[12] = 0x01; /* Source IP  FIXME: we should get the real address */
+        psz_head[13] = 0x02; /* idem */
+        psz_head[14] = 0x03; /* idem */
+        psz_head[15] = 0x04; /* idem */
+
+        psz_head[16] = 0x01; /* Source IP  FIXME: we should get the real address */
+        psz_head[17] = 0x02; /* idem */
+        psz_head[18] = 0x03; /* idem */
+        psz_head[19] = 0x04; /* idem */
+
+        strncpy( psz_head + 20, psz_type, 15 );
+    }
+    else
+    {
+        /* in_addr_t ip_server = inet_addr( ip) */
+        /* Source IP  FIXME: we should get the real address */
+        psz_head[4] = 0x01; /* ip_server */
+        psz_head[5] = 0x02; /* ip_server>>8 */
+        psz_head[6] = 0x03; /* ip_server>>16 */
+        psz_head[7] = 0x04; /* ip_server>>24 */
+
+        strncpy( psz_head + 8, psz_type, 15 );
+    }
+
     psz_head[ i_header_size-1 ] = '\0';
     p_sap_session->i_length = i_header_size + strlen( p_sap_session->psz_sdp);
 
@@ -348,6 +385,8 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
     memcpy( p_sap_session->psz_data, psz_head, i_header_size );
     memcpy( p_sap_session->psz_data+i_header_size, p_sap_session->psz_sdp,
             strlen( p_sap_session->psz_sdp) );
+
+    free( psz_head );
 
     /* Enqueue the announce */
     INSERT_ELEM( p_sap->pp_sessions,
@@ -386,8 +425,9 @@ static int announce_SAPAnnounceDel( sap_handler_t *p_sap,
         }
     }
 
-    /* XXX: Dequeue the adress too if it is not used anymore
-     * TODO: address refcount */
+    /* XXX: Dequeue the address too if it is not used anymore
+     * TODO: - address refcount
+             - send a SAP deletion packet */
 
     msg_Dbg( p_sap,"%i announces remaining", p_sap->i_sessions );
 
@@ -436,32 +476,50 @@ static int announce_SendSAPAnnounce( sap_handler_t *p_sap,
 
 static int SDPGenerate( sap_handler_t *p_sap, session_descriptor_t *p_session )
 {
+    int64_t i_sdp_id = mdate();
+    int     i_sdp_version = 1 + p_sap->i_sessions + (rand()&0xfff);
+
+    /* see the lists in modules/stream_out/rtp.c for compliance stuff */
     p_session->psz_sdp = (char *)malloc(
-                            sizeof("v=0\n"
-                                   "o=- 12 12 IN IP4 127.0.0.1\n" /* FIXME */
-                                   "s=\n"
-                                   "c=IN IP4 /\n"
-                                   "m=video  udp\n"
-                                   "a=tool:VLC "VERSION"\n"
-                                   "a=type:broadcast")
+                            sizeof("v=0\r\n"
+                                   "o=- 45383436098 45398  IN IP4 127.0.0.1\r\n" /* FIXME */
+                                   "s=\r\n"
+                                   "t=0 0\r\n"
+                                   "c=IN IP4 /\r\n"
+                                   "m=video  udp\r\n"
+                                   "a=tool:"PACKAGE_STRING"\r\n"
+                                   "a=type:broadcast\r\n")
                            + strlen( p_session->psz_name )
-                           + strlen( p_session->psz_uri ) + 300 );
+                           + strlen( p_session->psz_uri ) + 300
+                           + ( p_session->psz_group ?
+                                 strlen( p_session->psz_group ) : 0 ) );
+
     if( !p_session->psz_sdp )
     {
         msg_Err( p_sap, "out of memory" );
         return VLC_ENOMEM;
     }
     sprintf( p_session->psz_sdp,
-                            "v=0\n"
-                            "o=- 12 12 IN IP4 127.0.0.1\n"
-                            "s=%s\n"
-                            "c=IN IP4 %s/%d\n"
-                            "m=video %d udp %d\n"
-                            "a=tool:VLC "VERSION"\n"
-                            "a=type:broadcast\n",
+                            "v=0\r\n"
+                            "o=- "I64Fd" %d IN IP4 127.0.0.1\r\n"
+                            "s=%s\r\n"
+                            "t=0 0\r\n"
+                            "c=IN IP4 %s/%d\r\n"
+                            "m=video %d udp %d\r\n"
+                            "a=tool:"PACKAGE_STRING"\r\n"
+                            "a=type:broadcast\r\n",
+                            i_sdp_id, i_sdp_version,
                             p_session->psz_name,
                             p_session->psz_uri, p_session->i_ttl,
                             p_session->i_port, p_session->i_payload );
+
+    if( p_session->psz_group )
+    {
+        sprintf( p_session->psz_sdp, "%sa=x-plgroup:%s\r\n",
+                                     p_session->psz_sdp,
+                                     p_session->psz_group );
+    }
+
     msg_Dbg( p_sap, "Generated SDP (%i bytes):\n%s", strlen(p_session->psz_sdp),
                     p_session->psz_sdp );
     return VLC_SUCCESS;

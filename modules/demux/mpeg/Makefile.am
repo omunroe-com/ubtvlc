@@ -28,46 +28,46 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in mpeg_system m4v ps ts ts_dvbpsi mpga mpgv h264; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in mpeg_system m4v ps ts ts_dvbpsi mpga mpgv h264; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in mpeg_system m4v ps ts ts_dvbpsi mpga mpgv h264; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in m4a m4v mpga mpgv h264; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in m4a m4v mpga mpgv h264; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in m4a m4v mpga mpgv h264; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
-# The mpeg_system plugin
+# The m4a plugin
 
 if UNTRUE
-Lmpeg_systemp = libmpeg_system_plugin.a
-Dmpeg_systemp = libmpeg_system_plugin$(LIBEXT)
-Lmpeg_systemb = libmpeg_system.a
-Lmpeg_systempic = libmpeg_system_pic.a
+Lm4ap = libm4a_plugin.a
+Dm4ap = libm4a_plugin$(LIBEXT)
+Lm4ab = libm4a.a
+Lm4apic = libm4a_pic.a
 endif
 
-libmpeg_system_plugin_a_SOURCES = $(SOURCES_mpeg_system)
-libmpeg_system_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin mpeg_system`
-libmpeg_system_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mpeg_system`
-libmpeg_system_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mpeg_system`
+libm4a_plugin_a_SOURCES = $(SOURCES_m4a)
+libm4a_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin m4a`
+libm4a_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin m4a`
+libm4a_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin m4a`
 
-libmpeg_system_pic_a_SOURCES = $(SOURCES_mpeg_system)
-libmpeg_system_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mpeg_system`
-libmpeg_system_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mpeg_system`
-libmpeg_system_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mpeg_system`
+libm4a_pic_a_SOURCES = $(SOURCES_m4a)
+libm4a_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic m4a`
+libm4a_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic m4a`
+libm4a_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic m4a`
 
-libmpeg_system_a_SOURCES = $(SOURCES_mpeg_system)
-libmpeg_system_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mpeg_system`
-libmpeg_system_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mpeg_system`
-libmpeg_system_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mpeg_system`
+libm4a_a_SOURCES = $(SOURCES_m4a)
+libm4a_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin m4a`
+libm4a_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin m4a`
+libm4a_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin m4a`
 
-libvlc_LIBRARIES += $(Lmpeg_systemb) $(Lmpeg_systempic)
-libmpeg_system_DATA = $(Dmpeg_systemp)
+libvlc_LIBRARIES += $(Lm4ab) $(Lm4apic)
+libm4a_DATA = $(Dm4ap)
 
-libmpeg_systemdir = $(libdir)/vlc/
-noinst_LIBRARIES += $(Lmpeg_systemp)
-libmpeg_system_plugin$(LIBEXT): $(libmpeg_system_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage mpeg_system` in \
-	  c++) echo $(CXXLINK) $(libmpeg_system_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mpeg_system\` ; $(CXXLINK) $(libmpeg_system_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mpeg_system` ;; \
-	  objc) echo $(OBJCLINK) $(libmpeg_system_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mpeg_system\` ; $(OBJCLINK) $(libmpeg_system_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mpeg_system` ;; \
-	  c|*) echo $(LINK) $(libmpeg_system_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mpeg_system\` ; $(LINK) $(libmpeg_system_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mpeg_system` ;; \
+libm4adir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lm4ap)
+libm4a_plugin$(LIBEXT): $(libm4a_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage m4a` in \
+	  c++) echo $(CXXLINK) $(libm4a_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin m4a\` ; $(CXXLINK) $(libm4a_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin m4a` ;; \
+	  objc) echo $(OBJCLINK) $(libm4a_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin m4a\` ; $(OBJCLINK) $(libm4a_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin m4a` ;; \
+	  c|*) echo $(LINK) $(libm4a_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin m4a\` ; $(LINK) $(libm4a_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin m4a` ;; \
 	esac
 
 
@@ -105,117 +105,6 @@ libm4v_plugin$(LIBEXT): $(libm4v_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libm4v_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin m4v\` ; $(CXXLINK) $(libm4v_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin m4v` ;; \
 	  objc) echo $(OBJCLINK) $(libm4v_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin m4v\` ; $(OBJCLINK) $(libm4v_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin m4v` ;; \
 	  c|*) echo $(LINK) $(libm4v_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin m4v\` ; $(LINK) $(libm4v_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin m4v` ;; \
-	esac
-
-
-# The ps plugin
-
-if UNTRUE
-Lpsp = libps_plugin.a
-Dpsp = libps_plugin$(LIBEXT)
-Lpsb = libps.a
-Lpspic = libps_pic.a
-endif
-
-libps_plugin_a_SOURCES = $(SOURCES_ps)
-libps_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin ps`
-libps_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin ps`
-libps_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin ps`
-
-libps_pic_a_SOURCES = $(SOURCES_ps)
-libps_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ps`
-libps_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ps`
-libps_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ps`
-
-libps_a_SOURCES = $(SOURCES_ps)
-libps_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin ps`
-libps_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ps`
-libps_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ps`
-
-libvlc_LIBRARIES += $(Lpsb) $(Lpspic)
-libps_DATA = $(Dpsp)
-
-libpsdir = $(libdir)/vlc/
-noinst_LIBRARIES += $(Lpsp)
-libps_plugin$(LIBEXT): $(libps_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage ps` in \
-	  c++) echo $(CXXLINK) $(libps_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ps\` ; $(CXXLINK) $(libps_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ps` ;; \
-	  objc) echo $(OBJCLINK) $(libps_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ps\` ; $(OBJCLINK) $(libps_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ps` ;; \
-	  c|*) echo $(LINK) $(libps_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ps\` ; $(LINK) $(libps_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ps` ;; \
-	esac
-
-
-# The ts plugin
-
-if UNTRUE
-Ltsp = libts_plugin.a
-Dtsp = libts_plugin$(LIBEXT)
-Ltsb = libts.a
-Ltspic = libts_pic.a
-endif
-
-libts_plugin_a_SOURCES = $(SOURCES_ts)
-libts_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin ts`
-libts_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin ts`
-libts_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin ts`
-
-libts_pic_a_SOURCES = $(SOURCES_ts)
-libts_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ts`
-libts_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ts`
-libts_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ts`
-
-libts_a_SOURCES = $(SOURCES_ts)
-libts_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin ts`
-libts_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ts`
-libts_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ts`
-
-libvlc_LIBRARIES += $(Ltsb) $(Ltspic)
-libts_DATA = $(Dtsp)
-
-libtsdir = $(libdir)/vlc/
-noinst_LIBRARIES += $(Ltsp)
-libts_plugin$(LIBEXT): $(libts_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage ts` in \
-	  c++) echo $(CXXLINK) $(libts_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ts\` ; $(CXXLINK) $(libts_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ts` ;; \
-	  objc) echo $(OBJCLINK) $(libts_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ts\` ; $(OBJCLINK) $(libts_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ts` ;; \
-	  c|*) echo $(LINK) $(libts_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ts\` ; $(LINK) $(libts_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ts` ;; \
-	esac
-
-
-# The ts_dvbpsi plugin
-
-if UNTRUE
-Lts_dvbpsip = libts_dvbpsi_plugin.a
-Dts_dvbpsip = libts_dvbpsi_plugin$(LIBEXT)
-Lts_dvbpsib = libts_dvbpsi.a
-Lts_dvbpsipic = libts_dvbpsi_pic.a
-endif
-
-libts_dvbpsi_plugin_a_SOURCES = $(SOURCES_ts_dvbpsi)
-libts_dvbpsi_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin ts_dvbpsi`
-libts_dvbpsi_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin ts_dvbpsi`
-libts_dvbpsi_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin ts_dvbpsi`
-
-libts_dvbpsi_pic_a_SOURCES = $(SOURCES_ts_dvbpsi)
-libts_dvbpsi_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ts_dvbpsi`
-libts_dvbpsi_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ts_dvbpsi`
-libts_dvbpsi_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ts_dvbpsi`
-
-libts_dvbpsi_a_SOURCES = $(SOURCES_ts_dvbpsi)
-libts_dvbpsi_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin ts_dvbpsi`
-libts_dvbpsi_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ts_dvbpsi`
-libts_dvbpsi_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ts_dvbpsi`
-
-libvlc_LIBRARIES += $(Lts_dvbpsib) $(Lts_dvbpsipic)
-libts_dvbpsi_DATA = $(Dts_dvbpsip)
-
-libts_dvbpsidir = $(libdir)/vlc/
-noinst_LIBRARIES += $(Lts_dvbpsip)
-libts_dvbpsi_plugin$(LIBEXT): $(libts_dvbpsi_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage ts_dvbpsi` in \
-	  c++) echo $(CXXLINK) $(libts_dvbpsi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ts_dvbpsi\` ; $(CXXLINK) $(libts_dvbpsi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ts_dvbpsi` ;; \
-	  objc) echo $(OBJCLINK) $(libts_dvbpsi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ts_dvbpsi\` ; $(OBJCLINK) $(libts_dvbpsi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ts_dvbpsi` ;; \
-	  c|*) echo $(LINK) $(libts_dvbpsi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ts_dvbpsi\` ; $(LINK) $(libts_dvbpsi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ts_dvbpsi` ;; \
 	esac
 
 

@@ -2,7 +2,7 @@
  * theme_loader.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: theme_loader.cpp 7290 2004-04-06 19:56:57Z ipkiss $
+ * $Id: theme_loader.cpp 7896 2004-06-05 19:23:03Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -32,9 +32,12 @@
 #ifdef HAVE_FCNTL_H
 #   include <fcntl.h>
 #endif
-#if !defined( WIN32 )
+#ifdef HAVE_SYS_STAT_H
+#   include <sys/stat.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #   include <unistd.h>
-#else
+#elif defined( WIN32 )
 #   include <direct.h>
 #endif
 
@@ -233,7 +236,7 @@ bool ThemeLoader::findThemeFile( const string &rootDir, string &themeFilePath )
             stat( newURI.c_str(), &stat_data );
             if( S_ISDIR(stat_data.st_mode) )
 #elif defined( DT_DIR )
-            if( pDirContent->d_type == DT_DIR )
+            if( pDirContent->d_type & DT_DIR )
 #else
             if( 0 )
 #endif

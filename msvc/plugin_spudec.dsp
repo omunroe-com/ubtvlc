@@ -108,16 +108,6 @@ SOURCE="..\modules\codec\spudec\parse.c"
 # PROP Output_Dir "Debug\modules\codec\spudec"
 # PROP Intermediate_Dir "Debug\modules\codec\spudec"
 # End Source File
-# Begin Source File
-SOURCE="..\modules\codec\spudec\render.c"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=spudec" /D "MODULE_NAME_IS_spudec" 
-!IF "$(CFG)" == "plugin_spudec - Win32 Release"
-# PROP Output_Dir "Release\modules\codec\spudec"
-# PROP Intermediate_Dir "Release\modules\codec\spudec"
-!ELSEIF "$(CFG)" == "plugin_spudec - Win32 Debug"
-# PROP Output_Dir "Debug\modules\codec\spudec"
-# PROP Intermediate_Dir "Debug\modules\codec\spudec"
-# End Source File
 
 # End Group
 

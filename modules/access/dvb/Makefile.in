@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -239,6 +241,7 @@ libvlcdir = $(libdir)/vlc/access
 SOURCES_dvb = \
 	access.c \
 	linux_dvb.c \
+	en50221.c \
 	dvb.h \
 	$(NULL)
 
@@ -283,19 +286,21 @@ libdvb_a_AR = $(AR) cru
 libdvb_a_LIBADD =
 am__objects_1 =
 am__objects_2 = libdvb_a-access.$(OBJEXT) libdvb_a-linux_dvb.$(OBJEXT) \
-	$(am__objects_1)
+	libdvb_a-en50221.$(OBJEXT) $(am__objects_1)
 am_libdvb_a_OBJECTS = $(am__objects_2)
 libdvb_a_OBJECTS = $(am_libdvb_a_OBJECTS)
 libdvb_pic_a_AR = $(AR) cru
 libdvb_pic_a_LIBADD =
 am__objects_3 = libdvb_pic_a-access.$(OBJEXT) \
-	libdvb_pic_a-linux_dvb.$(OBJEXT) $(am__objects_1)
+	libdvb_pic_a-linux_dvb.$(OBJEXT) libdvb_pic_a-en50221.$(OBJEXT) \
+	$(am__objects_1)
 am_libdvb_pic_a_OBJECTS = $(am__objects_3)
 libdvb_pic_a_OBJECTS = $(am_libdvb_pic_a_OBJECTS)
 libdvb_plugin_a_AR = $(AR) cru
 libdvb_plugin_a_LIBADD =
 am__objects_4 = libdvb_plugin_a-access.$(OBJEXT) \
-	libdvb_plugin_a-linux_dvb.$(OBJEXT) $(am__objects_1)
+	libdvb_plugin_a-linux_dvb.$(OBJEXT) \
+	libdvb_plugin_a-en50221.$(OBJEXT) $(am__objects_1)
 am_libdvb_plugin_a_OBJECTS = $(am__objects_4)
 libdvb_plugin_a_OBJECTS = $(am_libdvb_plugin_a_OBJECTS)
 
@@ -303,10 +308,13 @@ DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libdvb_a-access.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libdvb_a-en50221.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libdvb_a-linux_dvb.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libdvb_pic_a-access.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libdvb_pic_a-en50221.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libdvb_pic_a-linux_dvb.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libdvb_plugin_a-access.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libdvb_plugin_a-en50221.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libdvb_plugin_a-linux_dvb.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -392,10 +400,13 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdvb_a-access.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdvb_a-en50221.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdvb_a-linux_dvb.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdvb_pic_a-access.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdvb_pic_a-en50221.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdvb_pic_a-linux_dvb.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdvb_plugin_a-access.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdvb_plugin_a-en50221.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdvb_plugin_a-linux_dvb.Po@am__quote@
 
 .c.o:
@@ -464,6 +475,28 @@ libdvb_a-linux_dvb.obj: linux_dvb.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_a_CFLAGS) $(CFLAGS) -c -o libdvb_a-linux_dvb.obj `if test -f 'linux_dvb.c'; then $(CYGPATH_W) 'linux_dvb.c'; else $(CYGPATH_W) '$(srcdir)/linux_dvb.c'; fi`
 
+libdvb_a-en50221.o: en50221.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_a_CFLAGS) $(CFLAGS) -MT libdvb_a-en50221.o -MD -MP -MF "$(DEPDIR)/libdvb_a-en50221.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvb_a-en50221.o `test -f 'en50221.c' || echo '$(srcdir)/'`en50221.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvb_a-en50221.Tpo" "$(DEPDIR)/libdvb_a-en50221.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvb_a-en50221.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='en50221.c' object='libdvb_a-en50221.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvb_a-en50221.Po' tmpdepfile='$(DEPDIR)/libdvb_a-en50221.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_a_CFLAGS) $(CFLAGS) -c -o libdvb_a-en50221.o `test -f 'en50221.c' || echo '$(srcdir)/'`en50221.c
+
+libdvb_a-en50221.obj: en50221.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_a_CFLAGS) $(CFLAGS) -MT libdvb_a-en50221.obj -MD -MP -MF "$(DEPDIR)/libdvb_a-en50221.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvb_a-en50221.obj `if test -f 'en50221.c'; then $(CYGPATH_W) 'en50221.c'; else $(CYGPATH_W) '$(srcdir)/en50221.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvb_a-en50221.Tpo" "$(DEPDIR)/libdvb_a-en50221.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvb_a-en50221.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='en50221.c' object='libdvb_a-en50221.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvb_a-en50221.Po' tmpdepfile='$(DEPDIR)/libdvb_a-en50221.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_a_CFLAGS) $(CFLAGS) -c -o libdvb_a-en50221.obj `if test -f 'en50221.c'; then $(CYGPATH_W) 'en50221.c'; else $(CYGPATH_W) '$(srcdir)/en50221.c'; fi`
+
 libdvb_pic_a-access.o: access.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_pic_a_CFLAGS) $(CFLAGS) -MT libdvb_pic_a-access.o -MD -MP -MF "$(DEPDIR)/libdvb_pic_a-access.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libdvb_pic_a-access.o `test -f 'access.c' || echo '$(srcdir)/'`access.c; \
@@ -508,6 +541,28 @@ libdvb_pic_a-linux_dvb.obj: linux_dvb.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_pic_a_CFLAGS) $(CFLAGS) -c -o libdvb_pic_a-linux_dvb.obj `if test -f 'linux_dvb.c'; then $(CYGPATH_W) 'linux_dvb.c'; else $(CYGPATH_W) '$(srcdir)/linux_dvb.c'; fi`
 
+libdvb_pic_a-en50221.o: en50221.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_pic_a_CFLAGS) $(CFLAGS) -MT libdvb_pic_a-en50221.o -MD -MP -MF "$(DEPDIR)/libdvb_pic_a-en50221.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvb_pic_a-en50221.o `test -f 'en50221.c' || echo '$(srcdir)/'`en50221.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvb_pic_a-en50221.Tpo" "$(DEPDIR)/libdvb_pic_a-en50221.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvb_pic_a-en50221.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='en50221.c' object='libdvb_pic_a-en50221.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvb_pic_a-en50221.Po' tmpdepfile='$(DEPDIR)/libdvb_pic_a-en50221.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_pic_a_CFLAGS) $(CFLAGS) -c -o libdvb_pic_a-en50221.o `test -f 'en50221.c' || echo '$(srcdir)/'`en50221.c
+
+libdvb_pic_a-en50221.obj: en50221.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_pic_a_CFLAGS) $(CFLAGS) -MT libdvb_pic_a-en50221.obj -MD -MP -MF "$(DEPDIR)/libdvb_pic_a-en50221.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvb_pic_a-en50221.obj `if test -f 'en50221.c'; then $(CYGPATH_W) 'en50221.c'; else $(CYGPATH_W) '$(srcdir)/en50221.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvb_pic_a-en50221.Tpo" "$(DEPDIR)/libdvb_pic_a-en50221.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvb_pic_a-en50221.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='en50221.c' object='libdvb_pic_a-en50221.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvb_pic_a-en50221.Po' tmpdepfile='$(DEPDIR)/libdvb_pic_a-en50221.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_pic_a_CFLAGS) $(CFLAGS) -c -o libdvb_pic_a-en50221.obj `if test -f 'en50221.c'; then $(CYGPATH_W) 'en50221.c'; else $(CYGPATH_W) '$(srcdir)/en50221.c'; fi`
+
 libdvb_plugin_a-access.o: access.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_plugin_a_CFLAGS) $(CFLAGS) -MT libdvb_plugin_a-access.o -MD -MP -MF "$(DEPDIR)/libdvb_plugin_a-access.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libdvb_plugin_a-access.o `test -f 'access.c' || echo '$(srcdir)/'`access.c; \
@@ -551,6 +606,28 @@ libdvb_plugin_a-linux_dvb.obj: linux_dvb.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvb_plugin_a-linux_dvb.Po' tmpdepfile='$(DEPDIR)/libdvb_plugin_a-linux_dvb.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_plugin_a_CFLAGS) $(CFLAGS) -c -o libdvb_plugin_a-linux_dvb.obj `if test -f 'linux_dvb.c'; then $(CYGPATH_W) 'linux_dvb.c'; else $(CYGPATH_W) '$(srcdir)/linux_dvb.c'; fi`
+
+libdvb_plugin_a-en50221.o: en50221.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_plugin_a_CFLAGS) $(CFLAGS) -MT libdvb_plugin_a-en50221.o -MD -MP -MF "$(DEPDIR)/libdvb_plugin_a-en50221.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvb_plugin_a-en50221.o `test -f 'en50221.c' || echo '$(srcdir)/'`en50221.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvb_plugin_a-en50221.Tpo" "$(DEPDIR)/libdvb_plugin_a-en50221.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvb_plugin_a-en50221.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='en50221.c' object='libdvb_plugin_a-en50221.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvb_plugin_a-en50221.Po' tmpdepfile='$(DEPDIR)/libdvb_plugin_a-en50221.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_plugin_a_CFLAGS) $(CFLAGS) -c -o libdvb_plugin_a-en50221.o `test -f 'en50221.c' || echo '$(srcdir)/'`en50221.c
+
+libdvb_plugin_a-en50221.obj: en50221.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_plugin_a_CFLAGS) $(CFLAGS) -MT libdvb_plugin_a-en50221.obj -MD -MP -MF "$(DEPDIR)/libdvb_plugin_a-en50221.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvb_plugin_a-en50221.obj `if test -f 'en50221.c'; then $(CYGPATH_W) 'en50221.c'; else $(CYGPATH_W) '$(srcdir)/en50221.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvb_plugin_a-en50221.Tpo" "$(DEPDIR)/libdvb_plugin_a-en50221.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvb_plugin_a-en50221.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='en50221.c' object='libdvb_plugin_a-en50221.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvb_plugin_a-en50221.Po' tmpdepfile='$(DEPDIR)/libdvb_plugin_a-en50221.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvb_plugin_a_CFLAGS) $(CFLAGS) -c -o libdvb_plugin_a-en50221.obj `if test -f 'en50221.c'; then $(CYGPATH_W) 'en50221.c'; else $(CYGPATH_W) '$(srcdir)/en50221.c'; fi`
 uninstall-info-am:
 libdvbDATA_INSTALL = $(INSTALL_DATA)
 install-libdvbDATA: $(libdvb_DATA)

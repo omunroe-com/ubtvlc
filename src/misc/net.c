@@ -2,7 +2,7 @@
  * net.c:
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: net.c 7370 2004-04-18 18:21:09Z zorglub $
+ * $Id: net.c 9170 2004-11-06 11:14:00Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@videolan.org>
  *
@@ -27,9 +27,7 @@
 #include <stdlib.h>
 #include <vlc/vlc.h>
 
-#ifdef HAVE_ERRNO_H
-#   include <errno.h>
-#endif
+#include <errno.h>
 
 #ifdef HAVE_FCNTL_H
 #   include <fcntl.h>
@@ -53,17 +51,18 @@
 
 #ifdef HAVE_UNISTD_H
 #   include <unistd.h>
+#elif defined( WIN32 ) && !defined( UNDER_CE )
+#   include <io.h>
 #endif
 
 #include "network.h"
-
 
 /*****************************************************************************
  * __net_OpenTCP:
  *****************************************************************************
  * Open a TCP connection and return a handle
  *****************************************************************************/
-int __net_OpenTCP( vlc_object_t *p_this, char *psz_host, int i_port )
+int __net_OpenTCP( vlc_object_t *p_this, const char *psz_host, int i_port )
 {
     vlc_value_t      val;
     void            *private;
@@ -91,7 +90,7 @@ int __net_OpenTCP( vlc_object_t *p_this, char *psz_host, int i_port )
     sock.i_type = NETWORK_TCP;
     sock.psz_bind_addr   = "";
     sock.i_bind_port     = 0;
-    sock.psz_server_addr = psz_host;
+    sock.psz_server_addr = (char *)psz_host;
     sock.i_server_port   = i_port;
     sock.i_ttl           = 0;
 
@@ -108,6 +107,113 @@ int __net_OpenTCP( vlc_object_t *p_this, char *psz_host, int i_port )
     p_this->p_private = private;
 
     return sock.i_handle;
+}
+
+/*****************************************************************************
+ * __net_ListenTCP:
+ *****************************************************************************
+ * Open a TCP listening socket and return it
+ *****************************************************************************/
+int __net_ListenTCP( vlc_object_t *p_this, char *psz_host, int i_port )
+{
+    vlc_value_t      val;
+    void            *private;
+
+    char            *psz_network = "";
+    network_socket_t sock;
+    module_t         *p_network;
+
+    /* Check if we have force ipv4 or ipv6 */
+    var_Create( p_this, "ipv4", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
+    var_Get( p_this, "ipv4", &val );
+    if( val.b_bool )
+    {
+        psz_network = "ipv4";
+    }
+
+    var_Create( p_this, "ipv6", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
+    var_Get( p_this, "ipv6", &val );
+    if( val.b_bool )
+    {
+        psz_network = "ipv6";
+    }
+
+    /* Prepare the network_socket_t structure */
+    sock.i_type = NETWORK_TCP_PASSIVE;
+    sock.psz_bind_addr   = "";
+    sock.i_bind_port     = 0;
+    sock.psz_server_addr = psz_host;
+    sock.i_server_port   = i_port;
+    sock.i_ttl           = 0;
+
+    msg_Dbg( p_this, "net: listening to '%s:%d'", psz_host, i_port );
+    private = p_this->p_private;
+    p_this->p_private = (void*)&sock;
+    if( !( p_network = module_Need( p_this, "network", psz_network, 0 ) ) )
+    {
+        msg_Dbg( p_this, "net: listening to '%s:%d' failed",
+                 psz_host, i_port );
+        return -1;
+    }
+    module_Unneed( p_this, p_network );
+    p_this->p_private = private;
+
+    return sock.i_handle;
+}
+
+/*****************************************************************************
+ * __net_Accept:
+ *****************************************************************************
+ * Accept a connection on a listening socket and return it
+ *****************************************************************************/
+int __net_Accept( vlc_object_t *p_this, int fd, mtime_t i_wait )
+{
+    vlc_bool_t b_die = p_this->b_die, b_block = (i_wait < 0);
+    struct timeval timeout;
+    fd_set fds_r, fds_e;
+    int i_ret;
+
+    while( p_this->b_die == b_die )
+    {
+        /* Initialize file descriptor set */
+        FD_ZERO( &fds_r );
+        FD_SET( fd, &fds_r );
+        FD_ZERO( &fds_e );
+        FD_SET( fd, &fds_e );
+
+        timeout.tv_sec = 0;
+        timeout.tv_usec = b_block ? 500000 : i_wait;
+
+        i_ret = select(fd + 1, &fds_r, NULL, &fds_e, &timeout);
+        if( (i_ret < 0 && errno == EINTR) || i_ret == 0 )
+        {
+            if( b_block ) continue;
+            else return -1;
+        }
+        else if( i_ret < 0 )
+        {
+#if defined(WIN32) || defined(UNDER_CE)
+            msg_Err( p_this, "network select error (%i)", WSAGetLastError() );
+#else
+            msg_Err( p_this, "network select error (%s)", strerror(errno) );
+#endif
+            return -1;
+        }
+
+        if( ( i_ret = accept( fd, 0, 0 ) ) <= 0 )
+        {
+#if defined(WIN32) || defined(UNDER_CE)
+            msg_Err( p_this, "accept failed (%i)", WSAGetLastError() );
+#else
+            msg_Err( p_this, "accept failed (%s)", strerror(errno) );
+#endif
+            return -1;
+        }
+
+        return i_ret;
+    }
+
+    return -1;
 }
 
 /*****************************************************************************
@@ -224,13 +330,17 @@ int __net_Read( vlc_object_t *p_this, int fd, uint8_t *p_data, int i_data,
 
         if( i_ret < 0 )
         {
+#if defined(WIN32) || defined(UNDER_CE)
+            msg_Err( p_this, "network select error" );
+#else
             msg_Err( p_this, "network select error (%s)", strerror(errno) );
+#endif
             return i_total > 0 ? i_total : -1;
         }
 
         if( ( i_recv = recv( fd, p_data, i_data, 0 ) ) < 0 )
         {
-#ifdef WIN32
+#if defined(WIN32) || defined(UNDER_CE)
             /* For udp only */
             /* On win32 recv() will fail if the datagram doesn't fit inside
              * the passed buffer, even though the buffer will be filled with
@@ -239,7 +349,7 @@ int __net_Read( vlc_object_t *p_this, int fd, uint8_t *p_data, int i_data,
             {
                 msg_Err( p_this, "recv() failed. "
                          "Increase the mtu size (--mtu option)" );
-                i_recv = i_data;
+                i_total += i_data;
             }
             else
                 msg_Err( p_this, "recv failed (%i)", WSAGetLastError() );
@@ -295,7 +405,11 @@ int __net_ReadNonBlock( vlc_object_t *p_this, int fd, uint8_t *p_data,
     }
     else if( i_ret < 0 )
     {
+#if defined(WIN32) || defined(UNDER_CE)
+        msg_Err( p_this, "network select error" );
+#else
         msg_Err( p_this, "network select error (%s)", strerror(errno) );
+#endif
         return -1;
     }
     else if( i_ret == 0)
@@ -304,9 +418,12 @@ int __net_ReadNonBlock( vlc_object_t *p_this, int fd, uint8_t *p_data,
     }
     else
     {
-        if( ( i_recv = recv( fd, p_data, i_data, 0 ) ) < 0 )
+#if !defined(UNDER_CE)
+        if( fd == 0/*STDIN_FILENO*/ ) i_recv = read( fd, p_data, i_data ); else
+#endif
+        if( ( i_recv = recv( fd, p_data, i_data, 0 ) ) <= 0 )
         {
-#ifdef WIN32
+#if defined(WIN32) || defined(UNDER_CE)
             /* For udp only */
             /* On win32 recv() will fail if the datagram doesn't fit inside
              * the passed buffer, even though the buffer will be filled with
@@ -323,11 +440,96 @@ int __net_ReadNonBlock( vlc_object_t *p_this, int fd, uint8_t *p_data,
 #endif
             return -1;
         }
-        return i_recv;
+
+        return i_recv ? i_recv : -1;  /* !i_recv -> connection closed if tcp */
     }
+
     /* We will never be here */
     return -1;
 }
+
+/*****************************************************************************
+ * __net_Select:
+ *****************************************************************************
+ * Read from several sockets (with timeout). Takes data from the first socket
+ * that has some.
+ *****************************************************************************/
+int __net_Select( vlc_object_t *p_this, int *pi_fd, int i_fd, uint8_t *p_data,
+                      int i_data, mtime_t i_wait )
+{
+    struct timeval  timeout;
+    fd_set          fds_r, fds_e;
+    int             i_recv;
+    int             i_ret;
+    int             i;
+    int             i_max_fd = 0;
+
+    /* Initialize file descriptor set */
+    FD_ZERO( &fds_r );
+    FD_ZERO( &fds_e );
+
+    for( i = 0 ; i < i_fd ; i++)
+    {
+        if( pi_fd[i] > i_max_fd ) i_max_fd = pi_fd[i];
+        FD_SET( pi_fd[i], &fds_r );
+        FD_SET( pi_fd[i], &fds_e );
+    }
+
+    timeout.tv_sec = 0;
+    timeout.tv_usec = i_wait;
+
+    i_ret = select( i_max_fd + 1, &fds_r, NULL, &fds_e, &timeout );
+
+    if( i_ret < 0 && errno == EINTR )
+    {
+        return 0;
+    }
+    else if( i_ret < 0 )
+    {
+        msg_Err( p_this, "network select error (%s)", strerror(errno) );
+        return -1;
+    }
+    else if( i_ret == 0 )
+    {
+        return 0;
+    }
+    else
+    {
+        for( i = 0 ; i < i_fd ; i++)
+        {
+            if( FD_ISSET( pi_fd[i], &fds_r ) )
+            {
+                i_recv = recv( pi_fd[i], p_data, i_data, 0 );
+                if( i_recv <= 0 )
+                {
+#ifdef WIN32
+                    /* For udp only */
+                    /* On win32 recv() will fail if the datagram doesn't
+                     * fit inside the passed buffer, even though the buffer
+                     *  will be filled with the first part of the datagram. */
+                    if( WSAGetLastError() == WSAEMSGSIZE )
+                    {
+                        msg_Err( p_this, "recv() failed. "
+                             "Increase the mtu size (--mtu option)" );
+                    }
+                    else
+                        msg_Err( p_this, "recv failed (%i)",
+                                        WSAGetLastError() );
+#else
+                     msg_Err( p_this, "recv failed (%s)", strerror(errno) );
+#endif
+                    return VLC_EGENERIC;
+                }
+
+                return i_recv;
+            }
+        }
+    }
+
+    /* We will never be here */
+    return -1;
+}
+
 
 /* Write exact amount requested */
 int __net_Write( vlc_object_t *p_this, int fd, uint8_t *p_data, int i_data )
@@ -364,7 +566,11 @@ int __net_Write( vlc_object_t *p_this, int fd, uint8_t *p_data, int i_data )
 
         if( i_ret < 0 )
         {
+#if defined(WIN32) || defined(UNDER_CE)
+            msg_Err( p_this, "network select error" );
+#else
             msg_Err( p_this, "network select error (%s)", strerror(errno) );
+#endif
             return i_total > 0 ? i_total : -1;
         }
 
@@ -427,18 +633,25 @@ char *__net_Gets( vlc_object_t *p_this, int fd )
     return psz_line;
 }
 
-int net_Printf( vlc_object_t *p_this, int fd, char *psz_fmt, ... )
+int net_Printf( vlc_object_t *p_this, int fd, const char *psz_fmt, ... )
 {
+    int i_ret;
     va_list args;
+    va_start( args, psz_fmt );
+    i_ret = net_vaPrintf( p_this, fd, psz_fmt, args );
+    va_end( args );
+
+    return i_ret;
+}
+
+int __net_vaPrintf( vlc_object_t *p_this, int fd, const char *psz_fmt,
+                    va_list args )
+{
     char    *psz;
     int     i_size, i_ret;
 
-    va_start( args, psz_fmt );
     vasprintf( &psz, psz_fmt, args );
-    va_end( args );
-
     i_size = strlen( psz );
-
     i_ret = __net_Write( p_this, fd, psz, i_size ) < i_size ? -1 : i_size;
     free( psz );
 

@@ -2,7 +2,7 @@
  * filters.c : audio output filters management
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: filters.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: filters.c 8905 2004-10-04 13:34:42Z gbazin $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *

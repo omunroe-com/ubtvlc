@@ -2,10 +2,10 @@
  * audio.c: audio decoder using ffmpeg library
  *****************************************************************************
  * Copyright (C) 1999-2003 VideoLAN
- * $Id: audio.c 7260 2004-04-03 13:33:38Z fenrir $
+ * $Id: audio.c 8994 2004-10-15 08:58:16Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
- *          Gildas Bazin <gbazin@netcourrier.com>
+ *          Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@
 
 #include "ffmpeg.h"
 
-static unsigned int pi_channels_maps[6] =
+static unsigned int pi_channels_maps[7] =
 {
     0,
     AOUT_CHAN_CENTER,   AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT,
@@ -45,7 +45,9 @@ static unsigned int pi_channels_maps[6] =
     AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_REARLEFT
      | AOUT_CHAN_REARRIGHT,
     AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_CENTER
-     | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT
+     | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT,
+    AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_CENTER
+     | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT | AOUT_CHAN_LFE
 };
 
 /*****************************************************************************
@@ -124,6 +126,7 @@ int E_(InitAudioDec)( decoder_t *p_dec, AVCodecContext *p_context,
     {
         vlc_mutex_unlock( lockval.p_address );
         msg_Err( p_dec, "cannot open codec (%s)", p_sys->psz_namecodec );
+        free( p_sys );
         return VLC_EGENERIC;
     }
     vlc_mutex_unlock( lockval.p_address );
@@ -134,26 +137,32 @@ int E_(InitAudioDec)( decoder_t *p_dec, AVCodecContext *p_context,
     p_sys->p_samples = NULL;
     p_sys->i_samples = 0;
 
-    aout_DateSet( &p_sys->end_date, 0 );
+    if( p_dec->fmt_in.audio.i_rate )
+    {
+        aout_DateInit( &p_sys->end_date, p_dec->fmt_in.audio.i_rate );
+        aout_DateSet( &p_sys->end_date, 0 );
+    }
 
     /* Set output properties */
     p_dec->fmt_out.i_cat = AUDIO_ES;
     p_dec->fmt_out.i_codec = AOUT_FMT_S16_NE;
+    p_dec->fmt_out.audio.i_bitspersample = 16;
 
     return VLC_SUCCESS;
 }
 
-/* XXX Needed as aout really doesn't like big audio chunk and wma produce easily > 30000 samples... */
+/*****************************************************************************
+ * SplitBuffer: Needed because aout really doesn't like big audio chunk and
+ * wma produces easily > 30000 samples...
+ *****************************************************************************/
 aout_buffer_t *SplitBuffer( decoder_t *p_dec )
 {
     decoder_sys_t *p_sys = p_dec->p_sys;
     int i_samples = __MIN( p_sys->i_samples, 4096 );
     aout_buffer_t *p_buffer;
 
-    if( i_samples == 0 )
-    {
-        return NULL;
-    }
+    if( i_samples == 0 ) return NULL;
+
     if( ( p_buffer = p_dec->pf_aout_buffer_new( p_dec, i_samples ) ) == NULL )
     {
         msg_Err( p_dec, "cannot get aout buffer" );
@@ -189,10 +198,7 @@ aout_buffer_t *E_( DecodeAudio )( decoder_t *p_dec, block_t **pp_block )
     {
         /* More data */
         p_buffer = SplitBuffer( p_dec );
-        if( p_buffer == NULL )
-        {
-            block_Release( p_block );
-        }
+        if( !p_buffer ) block_Release( p_block );
         return p_buffer;
     }
 
@@ -203,8 +209,7 @@ aout_buffer_t *E_( DecodeAudio )( decoder_t *p_dec, block_t **pp_block )
         return NULL;
     }
 
-    if( p_block->i_buffer <= 0 ||
-        ( p_block->i_flags&BLOCK_FLAG_DISCONTINUITY ) )
+    if( p_block->i_buffer <= 0 || p_block->i_flags & BLOCK_FLAG_DISCONTINUITY )
     {
         block_Release( p_block );
         return NULL;
@@ -264,10 +269,7 @@ aout_buffer_t *E_( DecodeAudio )( decoder_t *p_dec, block_t **pp_block )
     p_sys->p_samples = p_sys->p_output;
 
     p_buffer = SplitBuffer( p_dec );
-    if( !p_buffer )
-    {
-        block_Release( p_block );
-    }
+    if( !p_buffer ) block_Release( p_block );
     return p_buffer;
 }
 

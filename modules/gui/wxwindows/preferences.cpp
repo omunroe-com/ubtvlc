@@ -2,7 +2,7 @@
  * preferences.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: preferences.cpp 7284 2004-04-06 10:33:48Z gbazin $
+ * $Id: preferences.cpp 8869 2004-09-30 22:17:54Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -705,6 +705,7 @@ PrefsPanel::PrefsPanel( wxWindow* parent, intf_thread_t *_p_intf,
 
     b_advanced = VLC_TRUE;
     SetAutoLayout( TRUE );
+    Hide();
 
     wxBoxSizer *sizer = new wxBoxSizer( wxVERTICAL );
 
@@ -810,9 +811,11 @@ PrefsPanel::PrefsPanel( wxWindow* parent, intf_thread_t *_p_intf,
             sizer->Add( help ,0 ,wxEXPAND | wxALL, 5 );
         }
 
+        vlc_object_release( p_module );
     }
     sizer->Layout();
     SetSizer( sizer );
+    Show();
 }
 
 void PrefsPanel::ApplyChanges()

@@ -84,7 +84,7 @@ NoBackup:
   WriteRegStr HKCR "VLC$R0" "" "VLC media file"
   WriteRegStr HKCR "VLC$R0\shell" "" "Play"
   WriteRegStr HKCR "VLC$R0\shell\Play\command" "" '$INSTDIR\vlc.exe "%1"'
-  WriteRegStr HKCR "VLC$R0\DefaultIcon" "" "$INSTDIR\vlc.exe,0"
+  WriteRegStr HKCR "VLC$R0\DefaultIcon" "" '"$INSTDIR\vlc.exe",0'
 FunctionEnd
 
 Function un.RegisterExtension
@@ -134,7 +134,6 @@ Section "Media player (required)" SEC01
   File  /r plugins
   File  /r locale
   File  /r skins
-  File  /r skins2
   File  /r http
 
   WriteRegStr HKCR Applications\vlc.exe "" ""
@@ -151,14 +150,14 @@ Section "Media player (required)" SEC01
 
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\EventHandlers\PlayDVDMovieOnArrival" "VLCPlayDVDMovieOnArrival" ""
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayDVDMovieOnArrival" "Action" "Play DVD movie"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayDVDMovieOnArrival" "DefaultIcon" "$INSTDIR\vlc.exe,0"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayDVDMovieOnArrival" "DefaultIcon" '"$INSTDIR\vlc.exe",0'
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayDVDMovieOnArrival" "Invoke.ProgID" "VLC.MediaFile"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayDVDMovieOnArrival" "InvokeVerb" "play"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayDVDMovieOnArrival" "Provider" "VideoLAN VLC media player"
 
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\EventHandlers\PlayCDAudioOnArrival" "VLCPlayCDAudioOnArrival" ""
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayCDAudioOnArrival" "Action" "Play CD audio"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayCDAudioOnArrival" "DefaultIcon" "$INSTDIR\vlc.exe,0"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayCDAudioOnArrival" "DefaultIcon" '"$INSTDIR\vlc.exe",0'
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayCDAudioOnArrival" "Invoke.ProgID" "VLC.MediaFile"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayCDAudioOnArrival" "InvokeVerb" "play"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayCDAudioOnArrival" "Provider" "VideoLAN VLC media player"
@@ -166,7 +165,7 @@ Section "Media player (required)" SEC01
   WriteRegStr HKCR "VLC.MediaFile\shell" "" "Play"
   WriteRegStr HKCR "VLC.MediaFile\shell\Play\command" "" \
     '$INSTDIR\vlc.exe "%1"'
-  WriteRegStr HKCR "VLC.MediaFile\DefaultIcon" "" "$INSTDIR\vlc.exe,0"
+  WriteRegStr HKCR "VLC.MediaFile\DefaultIcon" "" '"$INSTDIR\vlc.exe",0'
 
 SectionEnd
 
@@ -174,10 +173,10 @@ Section "Start Menu + Desktop Shortcut" SEC02
   SectionIn 1 2 3
   CreateDirectory "$SMPROGRAMS\VideoLAN"
   CreateShortCut "$SMPROGRAMS\VideoLAN\VLC media player.lnk" \
-    "$INSTDIR\vlc.exe" "--intf wxwin"
+    "$INSTDIR\vlc.exe" "--intf wxwin --wxwin-embed"
+  CreateShortCut "$SMPROGRAMS\VideoLAN\VLC media player (alt).lnk" \
+    "$INSTDIR\vlc.exe" "--intf wxwin --no-wxwin-embed"
   CreateShortCut "$SMPROGRAMS\VideoLAN\VLC media player (skins).lnk" \
-    "$INSTDIR\vlc.exe" "--intf skins2"
-  CreateShortCut "$SMPROGRAMS\VideoLAN\VLC media player (old skins).lnk" \
     "$INSTDIR\vlc.exe" "--intf skins"
   CreateShortCut "$DESKTOP\VLC media player.lnk" \
     "$INSTDIR\vlc.exe" "--intf wxwin"
@@ -230,6 +229,7 @@ SubSection "File type associations" SEC04
   !insertmacro RegisterExtensionSection ".pls"
   !insertmacro RegisterExtensionSection ".spx"
   !insertmacro RegisterExtensionSection ".vob"
+  !insertmacro RegisterExtensionSection ".vlc"
   !insertmacro RegisterExtensionSection ".wav"
   !insertmacro RegisterExtensionSection ".wma"
   !insertmacro RegisterExtensionSection ".wmv"
@@ -316,6 +316,7 @@ Section Uninstall
   !insertmacro UnRegisterExtensionSection ".pls"
   !insertmacro UnRegisterExtensionSection ".spx"
   !insertmacro UnRegisterExtensionSection ".vob"
+  !insertmacro UnRegisterExtensionSection ".vlc"
   !insertmacro UnRegisterExtensionSection ".wav"
   !insertmacro UnRegisterExtensionSection ".wma"
   !insertmacro UnRegisterExtensionSection ".wmv"

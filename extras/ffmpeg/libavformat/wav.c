@@ -34,7 +34,11 @@ const CodecTag codec_wav_tags[] = {
     { CODEC_ID_ADPCM_IMA_DK3, 0x62 },  /* rogue format number */
     { CODEC_ID_WMAV1, 0x160 },
     { CODEC_ID_WMAV2, 0x161 },
+    { CODEC_ID_AAC, 0x706d },
     { CODEC_ID_VORBIS, ('V'<<8)+'o' }, //HACK/FIXME, does vorbis in WAV/AVI have an (in)official id?
+    { CODEC_ID_SONIC, 0x2048 },
+    { CODEC_ID_SONIC_LS, 0x2048 },
+    { CODEC_ID_ADPCM_CT, 0x200 },
     { 0, 0 },
 };
 
@@ -105,7 +109,7 @@ int put_wav_header(ByteIOContext *pb, AVCodecContext *enc)
         put_le16(pb, 2); /* wav_extra_size */
         hdrsize += 2;
         put_le16(pb, ((enc->block_align - 4 * enc->channels) / (4 * enc->channels)) * 8 + 1); /* wSamplesPerBlock */
-    } else {
+    } else if(enc->extradata_size){
         put_le16(pb, enc->extradata_size);
         put_buffer(pb, enc->extradata, enc->extradata_size);
         hdrsize += enc->extradata_size;
@@ -113,6 +117,8 @@ int put_wav_header(ByteIOContext *pb, AVCodecContext *enc)
             hdrsize++;
             put_byte(pb, 0);
         }
+    } else {
+        hdrsize -= 2;
     }
 
     return hdrsize;
@@ -203,11 +209,10 @@ static int wav_write_header(AVFormatContext *s)
     return 0;
 }
 
-static int wav_write_packet(AVFormatContext *s, int stream_index_ptr,
-                            const uint8_t *buf, int size, int64_t pts)
+static int wav_write_packet(AVFormatContext *s, AVPacket *pkt)
 {
     ByteIOContext *pb = &s->pb;
-    put_buffer(pb, buf, size);
+    put_buffer(pb, pkt->data, pkt->size);
     return 0;
 }
 
@@ -296,7 +301,9 @@ static int wav_read_header(AVFormatContext *s,
 
     get_wav_header(pb, &st->codec, size);
     st->need_parsing = 1;
-    
+
+    av_set_pts_info(st, 64, 1, st->codec.sample_rate);
+
     size = find_tag(pb, MKTAG('d', 'a', 't', 'a'));
     if (size < 0)
         return -1;
@@ -312,7 +319,7 @@ static int wav_read_packet(AVFormatContext *s,
     AVStream *st;
 
     if (url_feof(&s->pb))
-        return -EIO;
+        return AVERROR_IO;
     st = s->streams[0];
 
     size = MAX_SIZE;
@@ -322,7 +329,7 @@ static int wav_read_packet(AVFormatContext *s,
         size = (size / st->codec.block_align) * st->codec.block_align;
     }
     if (av_new_packet(pkt, size))
-        return -EIO;
+        return AVERROR_IO;
     pkt->stream_index = 0;
 
     ret = get_buffer(&s->pb, pkt->data, pkt->size);
@@ -340,7 +347,7 @@ static int wav_read_close(AVFormatContext *s)
 }
 
 static int wav_read_seek(AVFormatContext *s, 
-                         int stream_index, int64_t timestamp)
+                         int stream_index, int64_t timestamp, int flags)
 {
     AVStream *st;
 
@@ -349,12 +356,13 @@ static int wav_read_seek(AVFormatContext *s,
     case CODEC_ID_MP2:
     case CODEC_ID_MP3:
     case CODEC_ID_AC3:
+    case CODEC_ID_DTS:
         /* use generic seeking with dynamically generated indexes */
         return -1;
     default:
         break;
     }
-    return pcm_read_seek(s, stream_index, timestamp);
+    return pcm_read_seek(s, stream_index, timestamp, flags);
 }
 
 

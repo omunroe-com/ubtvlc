@@ -5,7 +5,7 @@
  *                    Organisation (CSIRO) Australia
  * Copyright (C) 2004 VideoLAN
  *
- * $Id: browser_open.c 7397 2004-04-20 17:27:30Z sam $
+ * $Id: browser_open.c 8327 2004-07-30 17:39:27Z sam $
  *
  * Authors: Andre Pang <Andre.Pang@csiro.au>
  *
@@ -29,14 +29,14 @@
 
 #include "xstrcat.h"
 
-int browser_Open( char *psz_url )
+int browser_Open( const char *psz_url )
 {
 #ifdef SYS_DARWIN
     char *psz_open_commandline;
 
-    psz_open_commandline = strdup( "open " );
-    xstrcat( psz_open_commandline, psz_url );
-        
+    psz_open_commandline = strdup( "/usr/bin/open " );
+    psz_open_commandline = xstrcat( psz_open_commandline, psz_url );
+
     return system( psz_open_commandline );
 #elif defined( WIN32 )
     char *psz_open_commandline;
@@ -48,20 +48,24 @@ int browser_Open( char *psz_url )
 #else
     /* Assume we're on a UNIX of some sort */
     char *psz_open_commandline;
+    int i_ret;
 
     /* Debian uses www-browser */
     psz_open_commandline = strdup( "www-browser" );
     xstrcat( psz_open_commandline, psz_url );
+    i_ret = system( psz_open_commandline );
 
-    if( system( psz_open_commandline ) != 0 )
+    if( i_ret == 0 )
     {
-        free( psz_open_commandline );
-
-        /* Try mozilla */
-        psz_open_commandline = strdup( "mozilla" );
-        xstrcat( psz_open_commandline, psz_url );
-        return system( psz_open_commandline );
+        return 0;
     }
+
+    free( psz_open_commandline );
+
+    /* Try mozilla */
+    psz_open_commandline = strdup( "mozilla" );
+    xstrcat( psz_open_commandline, psz_url );
+    return system( psz_open_commandline );
 #endif
 }
 

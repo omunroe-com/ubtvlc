@@ -2,7 +2,7 @@
  * prefs_widgets.m: Preferences controls
  *****************************************************************************
  * Copyright (C) 2002-2003 VideoLAN
- * $Id: prefs_widgets.m 7090 2004-03-15 19:33:18Z bigben $
+ * $Id: prefs_widgets.m 8571 2004-08-29 15:11:50Z hartman $
  *
  * Authors: Derk-Jan Hartman <hartman at videolan.org> 
  *
@@ -649,7 +649,7 @@
 
 - (char *)stringValue
 {
-    return strdup( [NSApp delocalizeString: [o_textfield stringValue]] );
+    return strdup( [[o_textfield stringValue] fileSystemRepresentation] );
 }
 
 @end

@@ -600,7 +600,9 @@ static int http_server(void)
            second to handle timeouts */
         do {
             ret = poll(poll_table, poll_entry - poll_table, delay);
-        } while (ret == -1);
+            if (ret < 0 && errno != EAGAIN && errno != EINTR)
+                return -1;
+        } while (ret <= 0);
         
         cur_time = gettime_ms();
 
@@ -2163,7 +2165,7 @@ static int http_prepare_data(HTTPContext *c)
                             /* XXX: potential leak */
                             return -1;
                         }
-                        if (av_write_frame(ctx, pkt.stream_index, pkt.data, pkt.size)) {
+                        if (av_write_frame(ctx, &pkt)) {
                             c->state = HTTPSTATE_SEND_DATA_TRAILER;
                         }
                         
@@ -2712,7 +2714,7 @@ static void rtsp_cmd_describe(HTTPContext *c, const char *url)
     struct sockaddr_in my_addr;
     
     /* find which url is asked */
-    url_split(NULL, 0, NULL, 0, NULL, path1, sizeof(path1), url);
+    url_split(NULL, 0, NULL, 0, NULL, 0, NULL, path1, sizeof(path1), url);
     path = path1;
     if (*path == '/')
         path++;
@@ -2786,7 +2788,7 @@ static void rtsp_cmd_setup(HTTPContext *c, const char *url,
     RTSPActionServerSetup setup;
     
     /* find which url is asked */
-    url_split(NULL, 0, NULL, 0, NULL, path1, sizeof(path1), url);
+    url_split(NULL, 0, NULL, 0, NULL, 0, NULL, path1, sizeof(path1), url);
     path = path1;
     if (*path == '/')
         path++;
@@ -2941,7 +2943,7 @@ static HTTPContext *find_rtp_session_with_url(const char *url,
         return NULL;
 
     /* find which url is asked */
-    url_split(NULL, 0, NULL, 0, NULL, path1, sizeof(path1), url);
+    url_split(NULL, 0, NULL, 0, NULL, 0, NULL, path1, sizeof(path1), url);
     path = path1;
     if (*path == '/')
         path++;
@@ -3635,8 +3637,6 @@ static void add_codec(FFStream *stream, AVCodecContext *av)
             av->b_quant_factor = 1.25;
         if (!av->b_quant_offset)
             av->b_quant_offset = 1.25;
-        if (!av->rc_min_rate)
-            av->rc_min_rate = av->bit_rate / 2;
         if (!av->rc_max_rate)
             av->rc_max_rate = av->bit_rate * 2;
 

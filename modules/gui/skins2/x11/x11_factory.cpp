@@ -2,7 +2,7 @@
  * x11_factory.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: x11_factory.cpp 7335 2004-04-12 21:48:18Z gbazin $
+ * $Id: x11_factory.cpp 8116 2004-07-04 22:22:10Z adn $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -96,6 +96,11 @@ void X11Factory::destroyOSLoop()
     X11Loop::destroy( getIntf() );
 }
 
+void X11Factory::minimize()
+{
+    XIconifyWindow( m_pDisplay->getDisplay(), m_pDisplay->getMainWindow(),
+                    DefaultScreen( m_pDisplay->getDisplay() ) );
+}
 
 OSTimer *X11Factory::createOSTimer( const Callback &rCallback )
 {

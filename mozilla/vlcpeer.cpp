@@ -2,7 +2,7 @@
  * vlcpeer.cpp: scriptable peer descriptor
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: vlcpeer.cpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: vlcpeer.cpp 8839 2004-09-28 13:55:00Z zorglub $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -128,3 +128,190 @@ NS_IMETHODIMP VlcPeer::Fullscreen()
     return NS_OK;
 }
 
+/* Set/Get vlc variables */
+NS_IMETHODIMP VlcPeer::Set_int_variable(const char *psz_var, PRInt64 value )
+{
+    vlc_value_t val;
+    val.i_int = value;
+    if( p_plugin )
+    {
+        VLC_VariableSet( p_plugin->i_vlc, psz_var, val );
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP VlcPeer::Set_str_variable(const char *psz_var, const char *value )
+{
+    vlc_value_t val;
+    val.psz_string = strdup( value );
+    if( p_plugin )
+    {
+        VLC_VariableSet( p_plugin->i_vlc, psz_var, val );
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP VlcPeer::Set_bool_variable(const char *psz_var, PRBool value )
+{
+    vlc_value_t val;
+    val.b_bool = value >= 1 ? VLC_TRUE : VLC_FALSE;
+    if( p_plugin )
+    {
+        VLC_VariableSet( p_plugin->i_vlc, psz_var, val );
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP VlcPeer::Get_int_variable( const char *psz_var, PRInt64 *result )
+{
+    vlc_value_t val;
+    if( p_plugin )
+    {
+        fprintf(stderr, "Choppage de %s\n", psz_var );
+        VLC_VariableGet( p_plugin->i_vlc, psz_var, &val );
+        fprintf(stderr, "Valeur %i\n", val.i_int );
+        *result = (PRInt64)val.i_int;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP VlcPeer::Get_bool_variable(  const char *psz_var,PRBool *result )
+{
+    vlc_value_t val;
+    if( p_plugin )
+    {
+        VLC_VariableGet( p_plugin->i_vlc, psz_var, &val );
+        *result = (PRBool)val.b_bool;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP VlcPeer::Get_str_variable( const char *psz_var, char **result )
+{
+    vlc_value_t val;
+    if( p_plugin )
+    {
+        fprintf(stderr, "Choppage de %s\n", psz_var );
+        VLC_VariableGet( p_plugin->i_vlc, psz_var, &val );
+        if( val.psz_string )
+        {
+            *result = strdup( val.psz_string );
+        }
+        else
+        {
+            *result = strdup( "" );
+        }
+    }
+    return NS_OK;
+}
+
+/* Playlist control */
+NS_IMETHODIMP VlcPeer::Clear_playlist()
+{
+    if( p_plugin )
+    {
+        VLC_PlaylistClear( p_plugin->i_vlc );
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP VlcPeer::Add_item( const char *psz_item )
+{
+     if( p_plugin )
+     {
+          VLC_AddTarget( p_plugin->i_vlc, psz_item, NULL, 0,
+                         PLAYLIST_APPEND, PLAYLIST_END);
+     }
+     return NS_OK;
+}
+
+
+NS_IMETHODIMP VlcPeer::Isplaying( PRBool *b_playing )
+{
+    if( p_plugin->i_vlc )
+    {
+        *b_playing = VLC_IsPlaying( p_plugin->i_vlc );
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP VlcPeer::Get_position( PRInt64 *i_position )
+{
+    if( p_plugin->i_vlc )
+    {
+        *i_position = (PRInt64)VLC_PositionGet( p_plugin->i_vlc );
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP VlcPeer::Get_time( PRInt64 *i_time )
+{
+    if( p_plugin->i_vlc )
+    {
+        *i_time = VLC_TimeGet( p_plugin->i_vlc );
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP VlcPeer::Get_length( PRInt64 *i_length )
+{
+    if( p_plugin->i_vlc )
+    {
+        *i_length = VLC_LengthGet( p_plugin->i_vlc );
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP VlcPeer::Seek( PRInt64 i_secs, PRInt64 b_relative )
+{
+    if( p_plugin->i_vlc )
+    {
+        VLC_TimeSet( p_plugin->i_vlc, i_secs, b_relative );
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP VlcPeer::Next()
+{
+    if( p_plugin->i_vlc )
+    {
+        VLC_PlaylistNext( p_plugin->i_vlc);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP VlcPeer::Previous()
+{
+    if( p_plugin->i_vlc )
+    {
+        VLC_PlaylistPrev( p_plugin->i_vlc );
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP VlcPeer::Set_volume( PRInt64 i_volume )
+{
+    if( p_plugin->i_vlc )
+    {
+        VLC_VolumeSet( p_plugin->i_vlc, i_volume );
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP VlcPeer::Get_volume( PRInt64 *i_volume )
+{
+    if( p_plugin->i_vlc )
+    {
+        *i_volume = VLC_VolumeGet( p_plugin->i_vlc );
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP VlcPeer::Mute()
+{
+    if( p_plugin->i_vlc )
+    {
+        VLC_VolumeMute( p_plugin->i_vlc );
+    }
+    return NS_OK;
+}

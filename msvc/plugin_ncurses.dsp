@@ -89,14 +89,14 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 
 # Begin Source File
-SOURCE="..\modules\gui\ncurses\ncurses.c"
+SOURCE="..\modules\gui\ncurses.c"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=ncurses" /D "MODULE_NAME_IS_ncurses" 
 !IF "$(CFG)" == "plugin_ncurses - Win32 Release"
-# PROP Output_Dir "Release\modules\gui\ncurses"
-# PROP Intermediate_Dir "Release\modules\gui\ncurses"
+# PROP Output_Dir "Release\modules\gui"
+# PROP Intermediate_Dir "Release\modules\gui"
 !ELSEIF "$(CFG)" == "plugin_ncurses - Win32 Debug"
-# PROP Output_Dir "Debug\modules\gui\ncurses"
-# PROP Intermediate_Dir "Debug\modules\gui\ncurses"
+# PROP Output_Dir "Debug\modules\gui"
+# PROP Intermediate_Dir "Debug\modules\gui"
 # End Source File
 
 # End Group

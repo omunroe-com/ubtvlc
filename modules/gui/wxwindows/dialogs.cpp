@@ -2,7 +2,7 @@
  * dialogs.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: dialogs.cpp 7555 2004-04-29 18:27:08Z zorglub $
+ * $Id: dialogs.cpp 8512 2004-08-24 18:43:41Z asmax $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -32,7 +32,6 @@
 #include <vlc/vlc.h>
 #include <vlc/aout.h>
 #include <vlc/intf.h>
-#include "stream_control.h"
 
 #include "wxwindows.h"
 
@@ -56,7 +55,6 @@ private:
     void OnMessages( wxCommandEvent& event );
     void OnFileInfo( wxCommandEvent& event );
     void OnPreferences( wxCommandEvent& event );
-    void OnStreamWizardDialog( wxCommandEvent& event );
     void OnWizardDialog( wxCommandEvent& event );
     void OnBookmarks( wxCommandEvent& event );
 
@@ -85,7 +83,6 @@ public:
     Playlist            *p_playlist_dialog;
     Messages            *p_messages_dialog;
     FileInfo            *p_fileinfo_dialog;
-    StreamDialog        *p_streamwizard_dialog;
     WizardDialog        *p_wizard_dialog;
     wxFrame             *p_prefs_dialog;
     wxWindow            *p_bookmarks_dialog;
@@ -115,8 +112,6 @@ BEGIN_EVENT_TABLE(DialogsProvider, wxFrame)
                 DialogsProvider::OnMessages)
     EVT_COMMAND(INTF_DIALOG_PREFS, wxEVT_DIALOG,
                 DialogsProvider::OnPreferences)
-    EVT_COMMAND(INTF_DIALOG_STREAMWIZARD, wxEVT_DIALOG,
-                DialogsProvider::OnStreamWizardDialog)
     EVT_COMMAND(INTF_DIALOG_WIZARD, wxEVT_DIALOG,
                 DialogsProvider::OnWizardDialog)
     EVT_COMMAND(INTF_DIALOG_FILEINFO, wxEVT_DIALOG,
@@ -149,7 +144,6 @@ DialogsProvider::DialogsProvider( intf_thread_t *_p_intf, wxWindow *p_parent )
     p_fileinfo_dialog = NULL;
     p_prefs_dialog = NULL;
     p_file_generic_dialog = NULL;
-    p_streamwizard_dialog = NULL;
     p_wizard_dialog = NULL;
     p_bookmarks_dialog = NULL;
 
@@ -178,7 +172,6 @@ DialogsProvider::~DialogsProvider()
     if( p_messages_dialog ) delete p_messages_dialog;
     if( p_fileinfo_dialog ) delete p_fileinfo_dialog;
     if( p_file_generic_dialog ) delete p_file_generic_dialog;
-    if( p_streamwizard_dialog ) delete p_streamwizard_dialog;
     if( p_wizard_dialog ) delete p_wizard_dialog;
     if( p_bookmarks_dialog ) delete p_bookmarks_dialog;
 
@@ -255,28 +248,16 @@ void DialogsProvider::OnPreferences( wxCommandEvent& WXUNUSED(event) )
     }
 }
 
-void DialogsProvider::OnStreamWizardDialog( wxCommandEvent& WXUNUSED(event) )
-{
-    /* Show/hide the stream window */
-    if( !p_streamwizard_dialog )
-        p_streamwizard_dialog = new StreamDialog( p_intf, this );
-
-    if( p_streamwizard_dialog )
-    {
-        p_streamwizard_dialog->Show( !p_streamwizard_dialog->IsShown() );
-    }
-}
-
 void DialogsProvider::OnWizardDialog( wxCommandEvent& WXUNUSED(event) )
 {
-    p_wizard_dialog = new WizardDialog( p_intf, this );
+    p_wizard_dialog = new WizardDialog( p_intf, this, NULL, 0, 0 );
 
     if( p_wizard_dialog )
     {
         p_wizard_dialog->Run();
+        delete p_wizard_dialog;
     }
 
-    delete p_wizard_dialog;
     p_wizard_dialog = NULL;
 }
 
@@ -335,14 +316,6 @@ void DialogsProvider::OnOpenFileGeneric( wxCommandEvent& event )
         p_arg->pf_callback( p_arg );
     }
 
-    /* Blocking or not ? */
-    if( p_arg->b_blocking )
-    {
-        vlc_mutex_lock( &p_arg->lock );
-        p_arg->b_ready = 1;
-        vlc_cond_signal( &p_arg->wait );
-    }
-
     if( p_arg->psz_results )
     {
         for( int i = 0; i < p_arg->i_results; i++ )
@@ -354,14 +327,7 @@ void DialogsProvider::OnOpenFileGeneric( wxCommandEvent& event )
     if( p_arg->psz_title ) free( p_arg->psz_title );
     if( p_arg->psz_extensions ) free( p_arg->psz_extensions );
 
-    if( p_arg->b_blocking )
-    {
-        vlc_mutex_unlock( &p_arg->lock );
-    }
-    else
-    {
-        free( p_arg );
-    }
+    free( p_arg );
 }
 
 void DialogsProvider::OnOpenFileSimple( wxCommandEvent& event )

@@ -68,6 +68,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -85,18 +87,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -124,6 +128,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -141,7 +146,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -159,14 +163,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -182,7 +185,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -238,7 +240,6 @@ dist_pkgdata_DATA = \
 
 
 nobase_dist_pkgdata_DATA = \
-	$(DIST_skins) \
 	$(DIST_skins2) \
 	$(DIST_http) \
 	$(NULL)
@@ -318,128 +319,8 @@ DIST_icons48 = \
 	$(NULL)
 
 
-DIST_skins = \
-	skins/default/add1.bmp \
-	skins/default/del2.bmp \
-	skins/default/open1.bmp \
-	skins/default/play1.bmp \
-	skins/default/playlist_body.bmp \
-	skins/default/prev4.bmp \
-	skins/default/stop2.bmp \
-	skins/default/add2.bmp \
-	skins/default/del3.bmp \
-	skins/default/open2.bmp  \
-	skins/default/play2.bmp  \
-	skins/default/prefs1.bmp \
-	skins/default/quit1.bmp \
-	skins/default/stop3.bmp \
-	skins/default/add3.bmp \
-	skins/default/open3.bmp \
-	skins/default/play3.bmp \
-	skins/default/prefs2.bmp \
-	skins/default/quit2.bmp \
-	skins/default/stop4.bmp \
-	skins/default/body.bmp \
-	skins/default/next1.bmp \
-	skins/default/pause1.bmp \
-	skins/default/play4.bmp \
-	skins/default/prefs3.bmp \
-	skins/default/quit3.bmp \
-	skins/default/theme.xml \
-	skins/default/next2.bmp \
-	skins/default/pause2.bmp \
-	skins/default/playlist1.bmp \
-	skins/default/prev1.bmp \
-	skins/default/slider1.bmp \
-	skins/default/next3.bmp \
-	skins/default/pause3.bmp \
-	skins/default/playlist2.bmp \
-	skins/default/prev2.bmp \
-	skins/default/slider2.bmp \
-	skins/default/del1.bmp \
-	skins/default/next4.bmp \
-	skins/default/pause4.bmp \
-	skins/default/playlist3.bmp \
-	skins/default/prev3.bmp \
-	skins/default/stop1.bmp \
-	$(NULL)
-
-
 DIST_skins2 = \
-	skins2/default/FreeSansBold.ttf \
-	skins2/default/add_item.png \
-	skins2/default/add_item_onclick.png \
-	skins2/default/body.png \
-	skins2/default/close.png \
-	skins2/default/close_mouseover.png \
-	skins2/default/close_onclick.png \
-	skins2/default/delete_item.png \
-	skins2/default/delete_item_onclick.png \
-	skins2/default/disabled.png \
-	skins2/default/fast.png \
-	skins2/default/fast_disabled.png \
-	skins2/default/fast_onclick.png \
-	skins2/default/next.png \
-	skins2/default/next_disabled.png \
-	skins2/default/next_onclick.png \
-	skins2/default/pause.png \
-	skins2/default/pause_onclick.png \
-	skins2/default/play.png \
-	skins2/default/play_onclick.png \
-	skins2/default/playlist.png \
-	skins2/default/playlist_body1.png \
-	skins2/default/playlist_body2.png \
-	skins2/default/playlist_body3.png \
-	skins2/default/playlist_body4.png \
-	skins2/default/playlist_body6.png \
-	skins2/default/playlist_body7.png \
-	skins2/default/playlist_body8.png \
-	skins2/default/playlist_body9.png \
-	skins2/default/playlist_button.png \
-	skins2/default/playlist_button2.png \
-	skins2/default/playlist_button_onclick.png \
-	skins2/default/playlist_button_onclick2.png \
-	skins2/default/preferences.png \
-	skins2/default/preferences_onclick.png \
-	skins2/default/previous.png \
-	skins2/default/previous_disabled.png \
-	skins2/default/previous_onclick.png \
-	skins2/default/reduce.png \
-	skins2/default/reduce_disabled.png \
-	skins2/default/reduce_onclick.png \
-	skins2/default/resize.png \
-	skins2/default/rev.png \
-	skins2/default/rev_disabled.png \
-	skins2/default/rev_onclick.png \
-	skins2/default/slider.png \
-	skins2/default/slider2.png \
-	skins2/default/slider_onclick.png \
-	skins2/default/slider_playlist.png \
-	skins2/default/slider_volume.png \
-	skins2/default/slider_volume_onclick.png \
-	skins2/default/slow.png \
-	skins2/default/slow_disabled.png \
-	skins2/default/slow_onclick.png \
-	skins2/default/sort.png \
-	skins2/default/sort_onclick.png \
-	skins2/default/stop.png \
-	skins2/default/stop_disabled.png \
-	skins2/default/stop_onclick.png \
-	skins2/default/theme.xml \
-	skins2/default/volume.png \
-	skins2/default/vout2.png \
-	skins2/default/vout_body1.png \
-	skins2/default/vout_body.png \
-	skins2/default/vout_bottom_left.png \
-	skins2/default/vout_bottom.png \
-	skins2/default/vout_bottom_right.png \
-	skins2/default/vout_left.png \
-	skins2/default/vout_onclick.png \
-	skins2/default/vout.png \
-	skins2/default/vout_right.png \
-	skins2/default/vout_top_left.png \
-	skins2/default/vout_top.png \
-	skins2/default/vout_top_right.png \
+	skins2/default.vlt \
 	\
 	skins2/fonts/FreeSans.ttf \
 	skins2/skin.dtd \
@@ -527,7 +408,7 @@ top_distdir = ..
 distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
 
 distdir: $(DISTFILES)
-	$(mkinstalldirs) $(distdir)/http $(distdir)/http/admin $(distdir)/http/vlm $(distdir)/skins/default $(distdir)/skins2 $(distdir)/skins2/default $(distdir)/skins2/fonts
+	$(mkinstalldirs) $(distdir)/http $(distdir)/http/admin $(distdir)/http/vlm $(distdir)/skins2 $(distdir)/skins2/fonts
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

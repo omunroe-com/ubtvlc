@@ -7,7 +7,7 @@ noinst_LIBRARIES =
 noinst_HEADERS =
 EXTRA_DIST = Modules.am
 BUILT_SOURCES =
-SUBDIRS = dshow dvb dvd dvdplay dvdread mms pvr satellite v4l cdda vcd vcdx
+SUBDIRS = dshow dvb mms pvr satellite v4l cdda vcd vcdx screen
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/access
 include Modules.am
@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in access_file access_directory access_udp access_tcp access_http access_ftp slp cdda; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in access_file access_directory access_udp access_tcp access_http access_ftp slp cdda; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in access_file access_directory access_udp access_tcp access_http access_ftp slp cdda; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in access_file access_directory access_udp access_tcp access_http access_ftp dvdnav dvdread slp cdda; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in access_file access_directory access_udp access_tcp access_http access_ftp dvdnav dvdread slp cdda; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in access_file access_directory access_udp access_tcp access_http access_ftp dvdnav dvdread slp cdda; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -253,6 +253,80 @@ libaccess_ftp_plugin$(LIBEXT): $(libaccess_ftp_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libaccess_ftp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin access_ftp\` ; $(CXXLINK) $(libaccess_ftp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin access_ftp` ;; \
 	  objc) echo $(OBJCLINK) $(libaccess_ftp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin access_ftp\` ; $(OBJCLINK) $(libaccess_ftp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin access_ftp` ;; \
 	  c|*) echo $(LINK) $(libaccess_ftp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin access_ftp\` ; $(LINK) $(libaccess_ftp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin access_ftp` ;; \
+	esac
+
+
+# The dvdnav plugin
+
+if UNTRUE
+Ldvdnavp = libdvdnav_plugin.a
+Ddvdnavp = libdvdnav_plugin$(LIBEXT)
+Ldvdnavb = libdvdnav.a
+Ldvdnavpic = libdvdnav_pic.a
+endif
+
+libdvdnav_plugin_a_SOURCES = $(SOURCES_dvdnav)
+libdvdnav_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin dvdnav`
+libdvdnav_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin dvdnav`
+libdvdnav_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin dvdnav`
+
+libdvdnav_pic_a_SOURCES = $(SOURCES_dvdnav)
+libdvdnav_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic dvdnav`
+libdvdnav_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic dvdnav`
+libdvdnav_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic dvdnav`
+
+libdvdnav_a_SOURCES = $(SOURCES_dvdnav)
+libdvdnav_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin dvdnav`
+libdvdnav_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin dvdnav`
+libdvdnav_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin dvdnav`
+
+libvlc_LIBRARIES += $(Ldvdnavb) $(Ldvdnavpic)
+libdvdnav_DATA = $(Ddvdnavp)
+
+libdvdnavdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Ldvdnavp)
+libdvdnav_plugin$(LIBEXT): $(libdvdnav_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage dvdnav` in \
+	  c++) echo $(CXXLINK) $(libdvdnav_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin dvdnav\` ; $(CXXLINK) $(libdvdnav_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin dvdnav` ;; \
+	  objc) echo $(OBJCLINK) $(libdvdnav_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin dvdnav\` ; $(OBJCLINK) $(libdvdnav_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin dvdnav` ;; \
+	  c|*) echo $(LINK) $(libdvdnav_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin dvdnav\` ; $(LINK) $(libdvdnav_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin dvdnav` ;; \
+	esac
+
+
+# The dvdread plugin
+
+if UNTRUE
+Ldvdreadp = libdvdread_plugin.a
+Ddvdreadp = libdvdread_plugin$(LIBEXT)
+Ldvdreadb = libdvdread.a
+Ldvdreadpic = libdvdread_pic.a
+endif
+
+libdvdread_plugin_a_SOURCES = $(SOURCES_dvdread)
+libdvdread_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin dvdread`
+libdvdread_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin dvdread`
+libdvdread_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin dvdread`
+
+libdvdread_pic_a_SOURCES = $(SOURCES_dvdread)
+libdvdread_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic dvdread`
+libdvdread_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic dvdread`
+libdvdread_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic dvdread`
+
+libdvdread_a_SOURCES = $(SOURCES_dvdread)
+libdvdread_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin dvdread`
+libdvdread_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin dvdread`
+libdvdread_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin dvdread`
+
+libvlc_LIBRARIES += $(Ldvdreadb) $(Ldvdreadpic)
+libdvdread_DATA = $(Ddvdreadp)
+
+libdvdreaddir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Ldvdreadp)
+libdvdread_plugin$(LIBEXT): $(libdvdread_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage dvdread` in \
+	  c++) echo $(CXXLINK) $(libdvdread_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin dvdread\` ; $(CXXLINK) $(libdvdread_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin dvdread` ;; \
+	  objc) echo $(OBJCLINK) $(libdvdread_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin dvdread\` ; $(OBJCLINK) $(libdvdread_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin dvdread` ;; \
+	  c|*) echo $(LINK) $(libdvdread_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin dvdread\` ; $(LINK) $(libdvdread_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin dvdread` ;; \
 	esac
 
 

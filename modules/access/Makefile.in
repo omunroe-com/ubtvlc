@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -228,12 +230,12 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Laccess_fileb) $(Laccess_filepic) $(Laccess_directoryb) $(Laccess_directorypic) $(Laccess_udpb) $(Laccess_udppic) $(Laccess_tcpb) $(Laccess_tcppic) $(Laccess_httpb) $(Laccess_httppic) $(Laccess_ftpb) $(Laccess_ftppic) $(Lslpb) $(Lslppic) $(Lcddab) $(Lcddapic)
-noinst_LIBRARIES = $(Laccess_filep) $(Laccess_directoryp) $(Laccess_udpp) $(Laccess_tcpp) $(Laccess_httpp) $(Laccess_ftpp) $(Lslpp) $(Lcddap)
+libvlc_LIBRARIES = $(Laccess_fileb) $(Laccess_filepic) $(Laccess_directoryb) $(Laccess_directorypic) $(Laccess_udpb) $(Laccess_udppic) $(Laccess_tcpb) $(Laccess_tcppic) $(Laccess_httpb) $(Laccess_httppic) $(Laccess_ftpb) $(Laccess_ftppic) $(Ldvdnavb) $(Ldvdnavpic) $(Ldvdreadb) $(Ldvdreadpic) $(Lslpb) $(Lslppic) $(Lcddab) $(Lcddapic)
+noinst_LIBRARIES = $(Laccess_filep) $(Laccess_directoryp) $(Laccess_udpp) $(Laccess_tcpp) $(Laccess_httpp) $(Laccess_ftpp) $(Ldvdnavp) $(Ldvdreadp) $(Lslpp) $(Lcddap)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
-SUBDIRS = dshow dvb dvd dvdplay dvdread mms pvr satellite v4l cdda vcd vcdx
+SUBDIRS = dshow dvb mms pvr satellite v4l cdda vcd vcdx screen
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/access
 SOURCES_access_file = file.c
@@ -242,6 +244,8 @@ SOURCES_access_udp = udp.c
 SOURCES_access_tcp = tcp.c
 SOURCES_access_http = http.c
 SOURCES_access_ftp = ftp.c
+SOURCES_dvdnav = dvdnav.c
+SOURCES_dvdread = dvdread.c
 SOURCES_slp = slp.c
 SOURCES_cdda = \
         cdda.c \
@@ -405,6 +409,56 @@ libaccess_ftp_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_ftp`
 libaccess_ftp_DATA = $(Daccess_ftpp)
 
 libaccess_ftpdir = $(libdir)/vlc/
+
+
+# The dvdnav plugin
+@UNTRUE_TRUE@Ldvdnavp = libdvdnav_plugin.a
+@UNTRUE_TRUE@Ddvdnavp = libdvdnav_plugin$(LIBEXT)
+@UNTRUE_TRUE@Ldvdnavb = libdvdnav.a
+@UNTRUE_TRUE@Ldvdnavpic = libdvdnav_pic.a
+
+libdvdnav_plugin_a_SOURCES = $(SOURCES_dvdnav)
+libdvdnav_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin dvdnav`
+libdvdnav_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin dvdnav`
+libdvdnav_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin dvdnav`
+
+libdvdnav_pic_a_SOURCES = $(SOURCES_dvdnav)
+libdvdnav_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic dvdnav`
+libdvdnav_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic dvdnav`
+libdvdnav_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic dvdnav`
+
+libdvdnav_a_SOURCES = $(SOURCES_dvdnav)
+libdvdnav_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin dvdnav`
+libdvdnav_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin dvdnav`
+libdvdnav_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin dvdnav`
+libdvdnav_DATA = $(Ddvdnavp)
+
+libdvdnavdir = $(libdir)/vlc/
+
+
+# The dvdread plugin
+@UNTRUE_TRUE@Ldvdreadp = libdvdread_plugin.a
+@UNTRUE_TRUE@Ddvdreadp = libdvdread_plugin$(LIBEXT)
+@UNTRUE_TRUE@Ldvdreadb = libdvdread.a
+@UNTRUE_TRUE@Ldvdreadpic = libdvdread_pic.a
+
+libdvdread_plugin_a_SOURCES = $(SOURCES_dvdread)
+libdvdread_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin dvdread`
+libdvdread_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin dvdread`
+libdvdread_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin dvdread`
+
+libdvdread_pic_a_SOURCES = $(SOURCES_dvdread)
+libdvdread_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic dvdread`
+libdvdread_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic dvdread`
+libdvdread_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic dvdread`
+
+libdvdread_a_SOURCES = $(SOURCES_dvdread)
+libdvdread_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin dvdread`
+libdvdread_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin dvdread`
+libdvdread_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin dvdread`
+libdvdread_DATA = $(Ddvdreadp)
+
+libdvdreaddir = $(libdir)/vlc/
 
 
 # The slp plugin
@@ -573,20 +627,50 @@ am__objects_22 = libcdda_plugin_a-cdda.$(OBJEXT) \
 	libcdda_plugin_a-cdrom.$(OBJEXT) $(am__objects_19)
 am_libcdda_plugin_a_OBJECTS = $(am__objects_22)
 libcdda_plugin_a_OBJECTS = $(am_libcdda_plugin_a_OBJECTS)
+libdvdnav_a_AR = $(AR) cru
+libdvdnav_a_LIBADD =
+am__objects_23 = libdvdnav_a-dvdnav.$(OBJEXT)
+am_libdvdnav_a_OBJECTS = $(am__objects_23)
+libdvdnav_a_OBJECTS = $(am_libdvdnav_a_OBJECTS)
+libdvdnav_pic_a_AR = $(AR) cru
+libdvdnav_pic_a_LIBADD =
+am__objects_24 = libdvdnav_pic_a-dvdnav.$(OBJEXT)
+am_libdvdnav_pic_a_OBJECTS = $(am__objects_24)
+libdvdnav_pic_a_OBJECTS = $(am_libdvdnav_pic_a_OBJECTS)
+libdvdnav_plugin_a_AR = $(AR) cru
+libdvdnav_plugin_a_LIBADD =
+am__objects_25 = libdvdnav_plugin_a-dvdnav.$(OBJEXT)
+am_libdvdnav_plugin_a_OBJECTS = $(am__objects_25)
+libdvdnav_plugin_a_OBJECTS = $(am_libdvdnav_plugin_a_OBJECTS)
+libdvdread_a_AR = $(AR) cru
+libdvdread_a_LIBADD =
+am__objects_26 = libdvdread_a-dvdread.$(OBJEXT)
+am_libdvdread_a_OBJECTS = $(am__objects_26)
+libdvdread_a_OBJECTS = $(am_libdvdread_a_OBJECTS)
+libdvdread_pic_a_AR = $(AR) cru
+libdvdread_pic_a_LIBADD =
+am__objects_27 = libdvdread_pic_a-dvdread.$(OBJEXT)
+am_libdvdread_pic_a_OBJECTS = $(am__objects_27)
+libdvdread_pic_a_OBJECTS = $(am_libdvdread_pic_a_OBJECTS)
+libdvdread_plugin_a_AR = $(AR) cru
+libdvdread_plugin_a_LIBADD =
+am__objects_28 = libdvdread_plugin_a-dvdread.$(OBJEXT)
+am_libdvdread_plugin_a_OBJECTS = $(am__objects_28)
+libdvdread_plugin_a_OBJECTS = $(am_libdvdread_plugin_a_OBJECTS)
 libslp_a_AR = $(AR) cru
 libslp_a_LIBADD =
-am__objects_23 = libslp_a-slp.$(OBJEXT)
-am_libslp_a_OBJECTS = $(am__objects_23)
+am__objects_29 = libslp_a-slp.$(OBJEXT)
+am_libslp_a_OBJECTS = $(am__objects_29)
 libslp_a_OBJECTS = $(am_libslp_a_OBJECTS)
 libslp_pic_a_AR = $(AR) cru
 libslp_pic_a_LIBADD =
-am__objects_24 = libslp_pic_a-slp.$(OBJEXT)
-am_libslp_pic_a_OBJECTS = $(am__objects_24)
+am__objects_30 = libslp_pic_a-slp.$(OBJEXT)
+am_libslp_pic_a_OBJECTS = $(am__objects_30)
 libslp_pic_a_OBJECTS = $(am_libslp_pic_a_OBJECTS)
 libslp_plugin_a_AR = $(AR) cru
 libslp_plugin_a_LIBADD =
-am__objects_25 = libslp_plugin_a-slp.$(OBJEXT)
-am_libslp_plugin_a_OBJECTS = $(am__objects_25)
+am__objects_31 = libslp_plugin_a-slp.$(OBJEXT)
+am_libslp_plugin_a_OBJECTS = $(am__objects_31)
 libslp_plugin_a_OBJECTS = $(am_libslp_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
@@ -616,6 +700,12 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libcdda_pic_a-cdrom.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libcdda_plugin_a-cdda.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libcdda_plugin_a-cdrom.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libdvdnav_a-dvdnav.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libdvdnav_pic_a-dvdnav.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libdvdnav_plugin_a-dvdnav.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libdvdread_a-dvdread.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libdvdread_pic_a-dvdread.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libdvdread_plugin_a-dvdread.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libslp_a-slp.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libslp_pic_a-slp.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libslp_plugin_a-slp.Po
@@ -637,12 +727,15 @@ DIST_SOURCES = $(libaccess_directory_a_SOURCES) \
 	$(libaccess_udp_pic_a_SOURCES) \
 	$(libaccess_udp_plugin_a_SOURCES) $(libcdda_a_SOURCES) \
 	$(libcdda_pic_a_SOURCES) $(libcdda_plugin_a_SOURCES) \
+	$(libdvdnav_a_SOURCES) $(libdvdnav_pic_a_SOURCES) \
+	$(libdvdnav_plugin_a_SOURCES) $(libdvdread_a_SOURCES) \
+	$(libdvdread_pic_a_SOURCES) $(libdvdread_plugin_a_SOURCES) \
 	$(libslp_a_SOURCES) $(libslp_pic_a_SOURCES) \
 	$(libslp_plugin_a_SOURCES)
 DATA = $(libaccess_directory_DATA) $(libaccess_file_DATA) \
 	$(libaccess_ftp_DATA) $(libaccess_http_DATA) \
 	$(libaccess_tcp_DATA) $(libaccess_udp_DATA) $(libcdda_DATA) \
-	$(libslp_DATA)
+	$(libdvdnav_DATA) $(libdvdread_DATA) $(libslp_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -655,7 +748,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libaccess_directory_a_SOURCES) $(libaccess_directory_pic_a_SOURCES) $(libaccess_directory_plugin_a_SOURCES) $(libaccess_file_a_SOURCES) $(libaccess_file_pic_a_SOURCES) $(libaccess_file_plugin_a_SOURCES) $(libaccess_ftp_a_SOURCES) $(libaccess_ftp_pic_a_SOURCES) $(libaccess_ftp_plugin_a_SOURCES) $(libaccess_http_a_SOURCES) $(libaccess_http_pic_a_SOURCES) $(libaccess_http_plugin_a_SOURCES) $(libaccess_tcp_a_SOURCES) $(libaccess_tcp_pic_a_SOURCES) $(libaccess_tcp_plugin_a_SOURCES) $(libaccess_udp_a_SOURCES) $(libaccess_udp_pic_a_SOURCES) $(libaccess_udp_plugin_a_SOURCES) $(libcdda_a_SOURCES) $(libcdda_pic_a_SOURCES) $(libcdda_plugin_a_SOURCES) $(libslp_a_SOURCES) $(libslp_pic_a_SOURCES) $(libslp_plugin_a_SOURCES)
+SOURCES = $(libaccess_directory_a_SOURCES) $(libaccess_directory_pic_a_SOURCES) $(libaccess_directory_plugin_a_SOURCES) $(libaccess_file_a_SOURCES) $(libaccess_file_pic_a_SOURCES) $(libaccess_file_plugin_a_SOURCES) $(libaccess_ftp_a_SOURCES) $(libaccess_ftp_pic_a_SOURCES) $(libaccess_ftp_plugin_a_SOURCES) $(libaccess_http_a_SOURCES) $(libaccess_http_pic_a_SOURCES) $(libaccess_http_plugin_a_SOURCES) $(libaccess_tcp_a_SOURCES) $(libaccess_tcp_pic_a_SOURCES) $(libaccess_tcp_plugin_a_SOURCES) $(libaccess_udp_a_SOURCES) $(libaccess_udp_pic_a_SOURCES) $(libaccess_udp_plugin_a_SOURCES) $(libcdda_a_SOURCES) $(libcdda_pic_a_SOURCES) $(libcdda_plugin_a_SOURCES) $(libdvdnav_a_SOURCES) $(libdvdnav_pic_a_SOURCES) $(libdvdnav_plugin_a_SOURCES) $(libdvdread_a_SOURCES) $(libdvdread_pic_a_SOURCES) $(libdvdread_plugin_a_SOURCES) $(libslp_a_SOURCES) $(libslp_pic_a_SOURCES) $(libslp_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -784,6 +877,30 @@ libcdda_plugin.a: $(libcdda_plugin_a_OBJECTS) $(libcdda_plugin_a_DEPENDENCIES)
 	-rm -f libcdda_plugin.a
 	$(libcdda_plugin_a_AR) libcdda_plugin.a $(libcdda_plugin_a_OBJECTS) $(libcdda_plugin_a_LIBADD)
 	$(RANLIB) libcdda_plugin.a
+libdvdnav.a: $(libdvdnav_a_OBJECTS) $(libdvdnav_a_DEPENDENCIES) 
+	-rm -f libdvdnav.a
+	$(libdvdnav_a_AR) libdvdnav.a $(libdvdnav_a_OBJECTS) $(libdvdnav_a_LIBADD)
+	$(RANLIB) libdvdnav.a
+libdvdnav_pic.a: $(libdvdnav_pic_a_OBJECTS) $(libdvdnav_pic_a_DEPENDENCIES) 
+	-rm -f libdvdnav_pic.a
+	$(libdvdnav_pic_a_AR) libdvdnav_pic.a $(libdvdnav_pic_a_OBJECTS) $(libdvdnav_pic_a_LIBADD)
+	$(RANLIB) libdvdnav_pic.a
+libdvdnav_plugin.a: $(libdvdnav_plugin_a_OBJECTS) $(libdvdnav_plugin_a_DEPENDENCIES) 
+	-rm -f libdvdnav_plugin.a
+	$(libdvdnav_plugin_a_AR) libdvdnav_plugin.a $(libdvdnav_plugin_a_OBJECTS) $(libdvdnav_plugin_a_LIBADD)
+	$(RANLIB) libdvdnav_plugin.a
+libdvdread.a: $(libdvdread_a_OBJECTS) $(libdvdread_a_DEPENDENCIES) 
+	-rm -f libdvdread.a
+	$(libdvdread_a_AR) libdvdread.a $(libdvdread_a_OBJECTS) $(libdvdread_a_LIBADD)
+	$(RANLIB) libdvdread.a
+libdvdread_pic.a: $(libdvdread_pic_a_OBJECTS) $(libdvdread_pic_a_DEPENDENCIES) 
+	-rm -f libdvdread_pic.a
+	$(libdvdread_pic_a_AR) libdvdread_pic.a $(libdvdread_pic_a_OBJECTS) $(libdvdread_pic_a_LIBADD)
+	$(RANLIB) libdvdread_pic.a
+libdvdread_plugin.a: $(libdvdread_plugin_a_OBJECTS) $(libdvdread_plugin_a_DEPENDENCIES) 
+	-rm -f libdvdread_plugin.a
+	$(libdvdread_plugin_a_AR) libdvdread_plugin.a $(libdvdread_plugin_a_OBJECTS) $(libdvdread_plugin_a_LIBADD)
+	$(RANLIB) libdvdread_plugin.a
 libslp.a: $(libslp_a_OBJECTS) $(libslp_a_DEPENDENCIES) 
 	-rm -f libslp.a
 	$(libslp_a_AR) libslp.a $(libslp_a_OBJECTS) $(libslp_a_LIBADD)
@@ -827,6 +944,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcdda_pic_a-cdrom.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcdda_plugin_a-cdda.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcdda_plugin_a-cdrom.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdvdnav_a-dvdnav.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdvdnav_pic_a-dvdnav.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdvdnav_plugin_a-dvdnav.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdvdread_a-dvdread.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdvdread_pic_a-dvdread.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdvdread_plugin_a-dvdread.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libslp_a-slp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libslp_pic_a-slp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libslp_plugin_a-slp.Po@am__quote@
@@ -1381,6 +1504,138 @@ libcdda_plugin_a-cdrom.obj: vcd/cdrom.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcdda_plugin_a_CFLAGS) $(CFLAGS) -c -o libcdda_plugin_a-cdrom.obj `if test -f 'vcd/cdrom.c'; then $(CYGPATH_W) 'vcd/cdrom.c'; else $(CYGPATH_W) '$(srcdir)/vcd/cdrom.c'; fi`
 
+libdvdnav_a-dvdnav.o: dvdnav.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdnav_a_CFLAGS) $(CFLAGS) -MT libdvdnav_a-dvdnav.o -MD -MP -MF "$(DEPDIR)/libdvdnav_a-dvdnav.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvdnav_a-dvdnav.o `test -f 'dvdnav.c' || echo '$(srcdir)/'`dvdnav.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvdnav_a-dvdnav.Tpo" "$(DEPDIR)/libdvdnav_a-dvdnav.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvdnav_a-dvdnav.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dvdnav.c' object='libdvdnav_a-dvdnav.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvdnav_a-dvdnav.Po' tmpdepfile='$(DEPDIR)/libdvdnav_a-dvdnav.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdnav_a_CFLAGS) $(CFLAGS) -c -o libdvdnav_a-dvdnav.o `test -f 'dvdnav.c' || echo '$(srcdir)/'`dvdnav.c
+
+libdvdnav_a-dvdnav.obj: dvdnav.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdnav_a_CFLAGS) $(CFLAGS) -MT libdvdnav_a-dvdnav.obj -MD -MP -MF "$(DEPDIR)/libdvdnav_a-dvdnav.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvdnav_a-dvdnav.obj `if test -f 'dvdnav.c'; then $(CYGPATH_W) 'dvdnav.c'; else $(CYGPATH_W) '$(srcdir)/dvdnav.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvdnav_a-dvdnav.Tpo" "$(DEPDIR)/libdvdnav_a-dvdnav.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvdnav_a-dvdnav.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dvdnav.c' object='libdvdnav_a-dvdnav.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvdnav_a-dvdnav.Po' tmpdepfile='$(DEPDIR)/libdvdnav_a-dvdnav.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdnav_a_CFLAGS) $(CFLAGS) -c -o libdvdnav_a-dvdnav.obj `if test -f 'dvdnav.c'; then $(CYGPATH_W) 'dvdnav.c'; else $(CYGPATH_W) '$(srcdir)/dvdnav.c'; fi`
+
+libdvdnav_pic_a-dvdnav.o: dvdnav.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdnav_pic_a_CFLAGS) $(CFLAGS) -MT libdvdnav_pic_a-dvdnav.o -MD -MP -MF "$(DEPDIR)/libdvdnav_pic_a-dvdnav.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvdnav_pic_a-dvdnav.o `test -f 'dvdnav.c' || echo '$(srcdir)/'`dvdnav.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvdnav_pic_a-dvdnav.Tpo" "$(DEPDIR)/libdvdnav_pic_a-dvdnav.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvdnav_pic_a-dvdnav.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dvdnav.c' object='libdvdnav_pic_a-dvdnav.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvdnav_pic_a-dvdnav.Po' tmpdepfile='$(DEPDIR)/libdvdnav_pic_a-dvdnav.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdnav_pic_a_CFLAGS) $(CFLAGS) -c -o libdvdnav_pic_a-dvdnav.o `test -f 'dvdnav.c' || echo '$(srcdir)/'`dvdnav.c
+
+libdvdnav_pic_a-dvdnav.obj: dvdnav.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdnav_pic_a_CFLAGS) $(CFLAGS) -MT libdvdnav_pic_a-dvdnav.obj -MD -MP -MF "$(DEPDIR)/libdvdnav_pic_a-dvdnav.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvdnav_pic_a-dvdnav.obj `if test -f 'dvdnav.c'; then $(CYGPATH_W) 'dvdnav.c'; else $(CYGPATH_W) '$(srcdir)/dvdnav.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvdnav_pic_a-dvdnav.Tpo" "$(DEPDIR)/libdvdnav_pic_a-dvdnav.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvdnav_pic_a-dvdnav.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dvdnav.c' object='libdvdnav_pic_a-dvdnav.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvdnav_pic_a-dvdnav.Po' tmpdepfile='$(DEPDIR)/libdvdnav_pic_a-dvdnav.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdnav_pic_a_CFLAGS) $(CFLAGS) -c -o libdvdnav_pic_a-dvdnav.obj `if test -f 'dvdnav.c'; then $(CYGPATH_W) 'dvdnav.c'; else $(CYGPATH_W) '$(srcdir)/dvdnav.c'; fi`
+
+libdvdnav_plugin_a-dvdnav.o: dvdnav.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdnav_plugin_a_CFLAGS) $(CFLAGS) -MT libdvdnav_plugin_a-dvdnav.o -MD -MP -MF "$(DEPDIR)/libdvdnav_plugin_a-dvdnav.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvdnav_plugin_a-dvdnav.o `test -f 'dvdnav.c' || echo '$(srcdir)/'`dvdnav.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvdnav_plugin_a-dvdnav.Tpo" "$(DEPDIR)/libdvdnav_plugin_a-dvdnav.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvdnav_plugin_a-dvdnav.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dvdnav.c' object='libdvdnav_plugin_a-dvdnav.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvdnav_plugin_a-dvdnav.Po' tmpdepfile='$(DEPDIR)/libdvdnav_plugin_a-dvdnav.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdnav_plugin_a_CFLAGS) $(CFLAGS) -c -o libdvdnav_plugin_a-dvdnav.o `test -f 'dvdnav.c' || echo '$(srcdir)/'`dvdnav.c
+
+libdvdnav_plugin_a-dvdnav.obj: dvdnav.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdnav_plugin_a_CFLAGS) $(CFLAGS) -MT libdvdnav_plugin_a-dvdnav.obj -MD -MP -MF "$(DEPDIR)/libdvdnav_plugin_a-dvdnav.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvdnav_plugin_a-dvdnav.obj `if test -f 'dvdnav.c'; then $(CYGPATH_W) 'dvdnav.c'; else $(CYGPATH_W) '$(srcdir)/dvdnav.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvdnav_plugin_a-dvdnav.Tpo" "$(DEPDIR)/libdvdnav_plugin_a-dvdnav.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvdnav_plugin_a-dvdnav.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dvdnav.c' object='libdvdnav_plugin_a-dvdnav.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvdnav_plugin_a-dvdnav.Po' tmpdepfile='$(DEPDIR)/libdvdnav_plugin_a-dvdnav.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdnav_plugin_a_CFLAGS) $(CFLAGS) -c -o libdvdnav_plugin_a-dvdnav.obj `if test -f 'dvdnav.c'; then $(CYGPATH_W) 'dvdnav.c'; else $(CYGPATH_W) '$(srcdir)/dvdnav.c'; fi`
+
+libdvdread_a-dvdread.o: dvdread.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdread_a_CFLAGS) $(CFLAGS) -MT libdvdread_a-dvdread.o -MD -MP -MF "$(DEPDIR)/libdvdread_a-dvdread.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvdread_a-dvdread.o `test -f 'dvdread.c' || echo '$(srcdir)/'`dvdread.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvdread_a-dvdread.Tpo" "$(DEPDIR)/libdvdread_a-dvdread.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvdread_a-dvdread.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dvdread.c' object='libdvdread_a-dvdread.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvdread_a-dvdread.Po' tmpdepfile='$(DEPDIR)/libdvdread_a-dvdread.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdread_a_CFLAGS) $(CFLAGS) -c -o libdvdread_a-dvdread.o `test -f 'dvdread.c' || echo '$(srcdir)/'`dvdread.c
+
+libdvdread_a-dvdread.obj: dvdread.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdread_a_CFLAGS) $(CFLAGS) -MT libdvdread_a-dvdread.obj -MD -MP -MF "$(DEPDIR)/libdvdread_a-dvdread.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvdread_a-dvdread.obj `if test -f 'dvdread.c'; then $(CYGPATH_W) 'dvdread.c'; else $(CYGPATH_W) '$(srcdir)/dvdread.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvdread_a-dvdread.Tpo" "$(DEPDIR)/libdvdread_a-dvdread.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvdread_a-dvdread.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dvdread.c' object='libdvdread_a-dvdread.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvdread_a-dvdread.Po' tmpdepfile='$(DEPDIR)/libdvdread_a-dvdread.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdread_a_CFLAGS) $(CFLAGS) -c -o libdvdread_a-dvdread.obj `if test -f 'dvdread.c'; then $(CYGPATH_W) 'dvdread.c'; else $(CYGPATH_W) '$(srcdir)/dvdread.c'; fi`
+
+libdvdread_pic_a-dvdread.o: dvdread.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdread_pic_a_CFLAGS) $(CFLAGS) -MT libdvdread_pic_a-dvdread.o -MD -MP -MF "$(DEPDIR)/libdvdread_pic_a-dvdread.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvdread_pic_a-dvdread.o `test -f 'dvdread.c' || echo '$(srcdir)/'`dvdread.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvdread_pic_a-dvdread.Tpo" "$(DEPDIR)/libdvdread_pic_a-dvdread.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvdread_pic_a-dvdread.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dvdread.c' object='libdvdread_pic_a-dvdread.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvdread_pic_a-dvdread.Po' tmpdepfile='$(DEPDIR)/libdvdread_pic_a-dvdread.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdread_pic_a_CFLAGS) $(CFLAGS) -c -o libdvdread_pic_a-dvdread.o `test -f 'dvdread.c' || echo '$(srcdir)/'`dvdread.c
+
+libdvdread_pic_a-dvdread.obj: dvdread.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdread_pic_a_CFLAGS) $(CFLAGS) -MT libdvdread_pic_a-dvdread.obj -MD -MP -MF "$(DEPDIR)/libdvdread_pic_a-dvdread.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvdread_pic_a-dvdread.obj `if test -f 'dvdread.c'; then $(CYGPATH_W) 'dvdread.c'; else $(CYGPATH_W) '$(srcdir)/dvdread.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvdread_pic_a-dvdread.Tpo" "$(DEPDIR)/libdvdread_pic_a-dvdread.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvdread_pic_a-dvdread.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dvdread.c' object='libdvdread_pic_a-dvdread.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvdread_pic_a-dvdread.Po' tmpdepfile='$(DEPDIR)/libdvdread_pic_a-dvdread.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdread_pic_a_CFLAGS) $(CFLAGS) -c -o libdvdread_pic_a-dvdread.obj `if test -f 'dvdread.c'; then $(CYGPATH_W) 'dvdread.c'; else $(CYGPATH_W) '$(srcdir)/dvdread.c'; fi`
+
+libdvdread_plugin_a-dvdread.o: dvdread.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdread_plugin_a_CFLAGS) $(CFLAGS) -MT libdvdread_plugin_a-dvdread.o -MD -MP -MF "$(DEPDIR)/libdvdread_plugin_a-dvdread.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvdread_plugin_a-dvdread.o `test -f 'dvdread.c' || echo '$(srcdir)/'`dvdread.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvdread_plugin_a-dvdread.Tpo" "$(DEPDIR)/libdvdread_plugin_a-dvdread.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvdread_plugin_a-dvdread.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dvdread.c' object='libdvdread_plugin_a-dvdread.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvdread_plugin_a-dvdread.Po' tmpdepfile='$(DEPDIR)/libdvdread_plugin_a-dvdread.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdread_plugin_a_CFLAGS) $(CFLAGS) -c -o libdvdread_plugin_a-dvdread.o `test -f 'dvdread.c' || echo '$(srcdir)/'`dvdread.c
+
+libdvdread_plugin_a-dvdread.obj: dvdread.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdread_plugin_a_CFLAGS) $(CFLAGS) -MT libdvdread_plugin_a-dvdread.obj -MD -MP -MF "$(DEPDIR)/libdvdread_plugin_a-dvdread.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libdvdread_plugin_a-dvdread.obj `if test -f 'dvdread.c'; then $(CYGPATH_W) 'dvdread.c'; else $(CYGPATH_W) '$(srcdir)/dvdread.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdvdread_plugin_a-dvdread.Tpo" "$(DEPDIR)/libdvdread_plugin_a-dvdread.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdvdread_plugin_a-dvdread.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dvdread.c' object='libdvdread_plugin_a-dvdread.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdvdread_plugin_a-dvdread.Po' tmpdepfile='$(DEPDIR)/libdvdread_plugin_a-dvdread.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdvdread_plugin_a_CFLAGS) $(CFLAGS) -c -o libdvdread_plugin_a-dvdread.obj `if test -f 'dvdread.c'; then $(CYGPATH_W) 'dvdread.c'; else $(CYGPATH_W) '$(srcdir)/dvdread.c'; fi`
+
 libslp_a-slp.o: slp.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libslp_a_CFLAGS) $(CFLAGS) -MT libslp_a-slp.o -MD -MP -MF "$(DEPDIR)/libslp_a-slp.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libslp_a-slp.o `test -f 'slp.c' || echo '$(srcdir)/'`slp.c; \
@@ -1572,6 +1827,42 @@ uninstall-libcddaDATA:
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
 	  echo " rm -f $(DESTDIR)$(libcddadir)/$$f"; \
 	  rm -f $(DESTDIR)$(libcddadir)/$$f; \
+	done
+libdvdnavDATA_INSTALL = $(INSTALL_DATA)
+install-libdvdnavDATA: $(libdvdnav_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libdvdnavdir)
+	@list='$(libdvdnav_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libdvdnavDATA_INSTALL) $$d$$p $(DESTDIR)$(libdvdnavdir)/$$f"; \
+	  $(libdvdnavDATA_INSTALL) $$d$$p $(DESTDIR)$(libdvdnavdir)/$$f; \
+	done
+
+uninstall-libdvdnavDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libdvdnav_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libdvdnavdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libdvdnavdir)/$$f; \
+	done
+libdvdreadDATA_INSTALL = $(INSTALL_DATA)
+install-libdvdreadDATA: $(libdvdread_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libdvdreaddir)
+	@list='$(libdvdread_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libdvdreadDATA_INSTALL) $$d$$p $(DESTDIR)$(libdvdreaddir)/$$f"; \
+	  $(libdvdreadDATA_INSTALL) $$d$$p $(DESTDIR)$(libdvdreaddir)/$$f; \
+	done
+
+uninstall-libdvdreadDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libdvdread_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libdvdreaddir)/$$f"; \
+	  rm -f $(DESTDIR)$(libdvdreaddir)/$$f; \
 	done
 libslpDATA_INSTALL = $(INSTALL_DATA)
 install-libslpDATA: $(libslp_DATA)
@@ -1766,7 +2057,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libaccess_directorydir) $(DESTDIR)$(libaccess_filedir) $(DESTDIR)$(libaccess_ftpdir) $(DESTDIR)$(libaccess_httpdir) $(DESTDIR)$(libaccess_tcpdir) $(DESTDIR)$(libaccess_udpdir) $(DESTDIR)$(libcddadir) $(DESTDIR)$(libslpdir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libaccess_directorydir) $(DESTDIR)$(libaccess_filedir) $(DESTDIR)$(libaccess_ftpdir) $(DESTDIR)$(libaccess_httpdir) $(DESTDIR)$(libaccess_tcpdir) $(DESTDIR)$(libaccess_udpdir) $(DESTDIR)$(libcddadir) $(DESTDIR)$(libdvdnavdir) $(DESTDIR)$(libdvdreaddir) $(DESTDIR)$(libslpdir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -1817,7 +2108,8 @@ install-data-am: install-libaccess_directoryDATA \
 	install-libaccess_fileDATA install-libaccess_ftpDATA \
 	install-libaccess_httpDATA install-libaccess_tcpDATA \
 	install-libaccess_udpDATA install-libcddaDATA \
-	install-libslpDATA install-libvlcLIBRARIES
+	install-libdvdnavDATA install-libdvdreadDATA install-libslpDATA \
+	install-libvlcLIBRARIES
 
 install-exec-am:
 
@@ -1848,6 +2140,7 @@ uninstall-am: uninstall-info-am uninstall-libaccess_directoryDATA \
 	uninstall-libaccess_fileDATA uninstall-libaccess_ftpDATA \
 	uninstall-libaccess_httpDATA uninstall-libaccess_tcpDATA \
 	uninstall-libaccess_udpDATA uninstall-libcddaDATA \
+	uninstall-libdvdnavDATA uninstall-libdvdreadDATA \
 	uninstall-libslpDATA uninstall-libvlcLIBRARIES
 
 uninstall-info: uninstall-info-recursive
@@ -1864,18 +2157,20 @@ uninstall-info: uninstall-info-recursive
 	install-libaccess_directoryDATA install-libaccess_fileDATA \
 	install-libaccess_ftpDATA install-libaccess_httpDATA \
 	install-libaccess_tcpDATA install-libaccess_udpDATA \
-	install-libcddaDATA install-libslpDATA install-libvlcLIBRARIES \
-	install-man install-recursive install-strip installcheck \
-	installcheck-am installdirs installdirs-am \
-	installdirs-recursive maintainer-clean maintainer-clean-generic \
-	maintainer-clean-recursive mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
-	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
-	uninstall uninstall-am uninstall-info-am \
+	install-libcddaDATA install-libdvdnavDATA \
+	install-libdvdreadDATA install-libslpDATA \
+	install-libvlcLIBRARIES install-man install-recursive \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am installdirs-recursive maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-recursive \
+	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
+	tags-recursive uninstall uninstall-am uninstall-info-am \
 	uninstall-info-recursive uninstall-libaccess_directoryDATA \
 	uninstall-libaccess_fileDATA uninstall-libaccess_ftpDATA \
 	uninstall-libaccess_httpDATA uninstall-libaccess_tcpDATA \
 	uninstall-libaccess_udpDATA uninstall-libcddaDATA \
+	uninstall-libdvdnavDATA uninstall-libdvdreadDATA \
 	uninstall-libslpDATA uninstall-libvlcLIBRARIES \
 	uninstall-recursive
 
@@ -1886,9 +2181,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in access_file access_directory access_udp access_tcp access_http access_ftp slp cdda; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in access_file access_directory access_udp access_tcp access_http access_ftp slp cdda; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in access_file access_directory access_udp access_tcp access_http access_ftp slp cdda; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in access_file access_directory access_udp access_tcp access_http access_ftp dvdnav dvdread slp cdda; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in access_file access_directory access_udp access_tcp access_http access_ftp dvdnav dvdread slp cdda; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in access_file access_directory access_udp access_tcp access_http access_ftp dvdnav dvdread slp cdda; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 libaccess_file_plugin$(LIBEXT): $(libaccess_file_plugin_a_OBJECTS)
@@ -1926,6 +2221,18 @@ libaccess_ftp_plugin$(LIBEXT): $(libaccess_ftp_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libaccess_ftp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin access_ftp\` ; $(CXXLINK) $(libaccess_ftp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin access_ftp` ;; \
 	  objc) echo $(OBJCLINK) $(libaccess_ftp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin access_ftp\` ; $(OBJCLINK) $(libaccess_ftp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin access_ftp` ;; \
 	  c|*) echo $(LINK) $(libaccess_ftp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin access_ftp\` ; $(LINK) $(libaccess_ftp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin access_ftp` ;; \
+	esac
+libdvdnav_plugin$(LIBEXT): $(libdvdnav_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage dvdnav` in \
+	  c++) echo $(CXXLINK) $(libdvdnav_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin dvdnav\` ; $(CXXLINK) $(libdvdnav_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin dvdnav` ;; \
+	  objc) echo $(OBJCLINK) $(libdvdnav_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin dvdnav\` ; $(OBJCLINK) $(libdvdnav_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin dvdnav` ;; \
+	  c|*) echo $(LINK) $(libdvdnav_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin dvdnav\` ; $(LINK) $(libdvdnav_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin dvdnav` ;; \
+	esac
+libdvdread_plugin$(LIBEXT): $(libdvdread_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage dvdread` in \
+	  c++) echo $(CXXLINK) $(libdvdread_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin dvdread\` ; $(CXXLINK) $(libdvdread_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin dvdread` ;; \
+	  objc) echo $(OBJCLINK) $(libdvdread_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin dvdread\` ; $(OBJCLINK) $(libdvdread_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin dvdread` ;; \
+	  c|*) echo $(LINK) $(libdvdread_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin dvdread\` ; $(LINK) $(libdvdread_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin dvdread` ;; \
 	esac
 libslp_plugin$(LIBEXT): $(libslp_plugin_a_OBJECTS)
 	@case `$(VLC_CONFIG) --linkage slp` in \

@@ -89,14 +89,24 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 
 # Begin Source File
-SOURCE="..\modules\demux\mpeg\ts.c"
+SOURCE="..\modules\demux\ts.c"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=ts" /D "MODULE_NAME_IS_ts" 
 !IF "$(CFG)" == "plugin_ts - Win32 Release"
-# PROP Output_Dir "Release\modules\demux\mpeg"
-# PROP Intermediate_Dir "Release\modules\demux\mpeg"
+# PROP Output_Dir "Release\modules\demux"
+# PROP Intermediate_Dir "Release\modules\demux"
 !ELSEIF "$(CFG)" == "plugin_ts - Win32 Debug"
-# PROP Output_Dir "Debug\modules\demux\mpeg"
-# PROP Intermediate_Dir "Debug\modules\demux\mpeg"
+# PROP Output_Dir "Debug\modules\demux"
+# PROP Intermediate_Dir "Debug\modules\demux"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\demux\..\mux\mpeg\csa.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=ts" /D "MODULE_NAME_IS_ts" 
+!IF "$(CFG)" == "plugin_ts - Win32 Release"
+# PROP Output_Dir "Release\modules\demux"
+# PROP Intermediate_Dir "Release\modules\demux"
+!ELSEIF "$(CFG)" == "plugin_ts - Win32 Debug"
+# PROP Output_Dir "Debug\modules\demux"
+# PROP Intermediate_Dir "Debug\modules\demux"
 # End Source File
 
 # End Group

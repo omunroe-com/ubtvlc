@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -236,7 +238,7 @@ BUILT_SOURCES =
 SUBDIRS = 
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/access
-SOURCES_dshow = dshow.cpp filter.cpp filter.h
+SOURCES_dshow = dshow.cpp common.h filter.cpp filter.h crossbar.cpp
 
 # There's no need for pic code on win32 so get rid of this to substantially
 # reduce the compilation time.
@@ -276,29 +278,35 @@ LIBRARIES = $(libvlc_LIBRARIES) $(noinst_LIBRARIES)
 
 libdshow_a_AR = $(AR) cru
 libdshow_a_LIBADD =
-am__objects_1 = libdshow_a-dshow.$(OBJEXT) libdshow_a-filter.$(OBJEXT)
+am__objects_1 = libdshow_a-dshow.$(OBJEXT) libdshow_a-filter.$(OBJEXT) \
+	libdshow_a-crossbar.$(OBJEXT)
 am_libdshow_a_OBJECTS = $(am__objects_1)
 libdshow_a_OBJECTS = $(am_libdshow_a_OBJECTS)
 libdshow_pic_a_AR = $(AR) cru
 libdshow_pic_a_LIBADD =
 am__objects_2 = libdshow_pic_a-dshow.$(OBJEXT) \
-	libdshow_pic_a-filter.$(OBJEXT)
+	libdshow_pic_a-filter.$(OBJEXT) \
+	libdshow_pic_a-crossbar.$(OBJEXT)
 am_libdshow_pic_a_OBJECTS = $(am__objects_2)
 libdshow_pic_a_OBJECTS = $(am_libdshow_pic_a_OBJECTS)
 libdshow_plugin_a_AR = $(AR) cru
 libdshow_plugin_a_LIBADD =
 am__objects_3 = libdshow_plugin_a-dshow.$(OBJEXT) \
-	libdshow_plugin_a-filter.$(OBJEXT)
+	libdshow_plugin_a-filter.$(OBJEXT) \
+	libdshow_plugin_a-crossbar.$(OBJEXT)
 am_libdshow_plugin_a_OBJECTS = $(am__objects_3)
 libdshow_plugin_a_OBJECTS = $(am_libdshow_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libdshow_a-dshow.Po \
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libdshow_a-crossbar.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libdshow_a-dshow.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libdshow_a-filter.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libdshow_pic_a-crossbar.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libdshow_pic_a-dshow.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libdshow_pic_a-filter.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libdshow_plugin_a-crossbar.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libdshow_plugin_a-dshow.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libdshow_plugin_a-filter.Po
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -389,10 +397,13 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdshow_a-crossbar.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdshow_a-dshow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdshow_a-filter.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdshow_pic_a-crossbar.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdshow_pic_a-dshow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdshow_pic_a-filter.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdshow_plugin_a-crossbar.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdshow_plugin_a-dshow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdshow_plugin_a-filter.Po@am__quote@
 
@@ -462,6 +473,28 @@ libdshow_a-filter.obj: filter.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_a_CXXFLAGS) $(CXXFLAGS) -c -o libdshow_a-filter.obj `if test -f 'filter.cpp'; then $(CYGPATH_W) 'filter.cpp'; else $(CYGPATH_W) '$(srcdir)/filter.cpp'; fi`
 
+libdshow_a-crossbar.o: crossbar.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_a_CXXFLAGS) $(CXXFLAGS) -MT libdshow_a-crossbar.o -MD -MP -MF "$(DEPDIR)/libdshow_a-crossbar.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libdshow_a-crossbar.o `test -f 'crossbar.cpp' || echo '$(srcdir)/'`crossbar.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libdshow_a-crossbar.Tpo" "$(DEPDIR)/libdshow_a-crossbar.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libdshow_a-crossbar.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='crossbar.cpp' object='libdshow_a-crossbar.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libdshow_a-crossbar.Po' tmpdepfile='$(DEPDIR)/libdshow_a-crossbar.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_a_CXXFLAGS) $(CXXFLAGS) -c -o libdshow_a-crossbar.o `test -f 'crossbar.cpp' || echo '$(srcdir)/'`crossbar.cpp
+
+libdshow_a-crossbar.obj: crossbar.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_a_CXXFLAGS) $(CXXFLAGS) -MT libdshow_a-crossbar.obj -MD -MP -MF "$(DEPDIR)/libdshow_a-crossbar.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libdshow_a-crossbar.obj `if test -f 'crossbar.cpp'; then $(CYGPATH_W) 'crossbar.cpp'; else $(CYGPATH_W) '$(srcdir)/crossbar.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libdshow_a-crossbar.Tpo" "$(DEPDIR)/libdshow_a-crossbar.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libdshow_a-crossbar.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='crossbar.cpp' object='libdshow_a-crossbar.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libdshow_a-crossbar.Po' tmpdepfile='$(DEPDIR)/libdshow_a-crossbar.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_a_CXXFLAGS) $(CXXFLAGS) -c -o libdshow_a-crossbar.obj `if test -f 'crossbar.cpp'; then $(CYGPATH_W) 'crossbar.cpp'; else $(CYGPATH_W) '$(srcdir)/crossbar.cpp'; fi`
+
 libdshow_pic_a-dshow.o: dshow.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libdshow_pic_a-dshow.o -MD -MP -MF "$(DEPDIR)/libdshow_pic_a-dshow.Tpo" \
 @am__fastdepCXX_TRUE@	  -c -o libdshow_pic_a-dshow.o `test -f 'dshow.cpp' || echo '$(srcdir)/'`dshow.cpp; \
@@ -506,6 +539,28 @@ libdshow_pic_a-filter.obj: filter.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libdshow_pic_a-filter.obj `if test -f 'filter.cpp'; then $(CYGPATH_W) 'filter.cpp'; else $(CYGPATH_W) '$(srcdir)/filter.cpp'; fi`
 
+libdshow_pic_a-crossbar.o: crossbar.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libdshow_pic_a-crossbar.o -MD -MP -MF "$(DEPDIR)/libdshow_pic_a-crossbar.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libdshow_pic_a-crossbar.o `test -f 'crossbar.cpp' || echo '$(srcdir)/'`crossbar.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libdshow_pic_a-crossbar.Tpo" "$(DEPDIR)/libdshow_pic_a-crossbar.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libdshow_pic_a-crossbar.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='crossbar.cpp' object='libdshow_pic_a-crossbar.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libdshow_pic_a-crossbar.Po' tmpdepfile='$(DEPDIR)/libdshow_pic_a-crossbar.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libdshow_pic_a-crossbar.o `test -f 'crossbar.cpp' || echo '$(srcdir)/'`crossbar.cpp
+
+libdshow_pic_a-crossbar.obj: crossbar.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libdshow_pic_a-crossbar.obj -MD -MP -MF "$(DEPDIR)/libdshow_pic_a-crossbar.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libdshow_pic_a-crossbar.obj `if test -f 'crossbar.cpp'; then $(CYGPATH_W) 'crossbar.cpp'; else $(CYGPATH_W) '$(srcdir)/crossbar.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libdshow_pic_a-crossbar.Tpo" "$(DEPDIR)/libdshow_pic_a-crossbar.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libdshow_pic_a-crossbar.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='crossbar.cpp' object='libdshow_pic_a-crossbar.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libdshow_pic_a-crossbar.Po' tmpdepfile='$(DEPDIR)/libdshow_pic_a-crossbar.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libdshow_pic_a-crossbar.obj `if test -f 'crossbar.cpp'; then $(CYGPATH_W) 'crossbar.cpp'; else $(CYGPATH_W) '$(srcdir)/crossbar.cpp'; fi`
+
 libdshow_plugin_a-dshow.o: dshow.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libdshow_plugin_a-dshow.o -MD -MP -MF "$(DEPDIR)/libdshow_plugin_a-dshow.Tpo" \
 @am__fastdepCXX_TRUE@	  -c -o libdshow_plugin_a-dshow.o `test -f 'dshow.cpp' || echo '$(srcdir)/'`dshow.cpp; \
@@ -549,6 +604,28 @@ libdshow_plugin_a-filter.obj: filter.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libdshow_plugin_a-filter.Po' tmpdepfile='$(DEPDIR)/libdshow_plugin_a-filter.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libdshow_plugin_a-filter.obj `if test -f 'filter.cpp'; then $(CYGPATH_W) 'filter.cpp'; else $(CYGPATH_W) '$(srcdir)/filter.cpp'; fi`
+
+libdshow_plugin_a-crossbar.o: crossbar.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libdshow_plugin_a-crossbar.o -MD -MP -MF "$(DEPDIR)/libdshow_plugin_a-crossbar.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libdshow_plugin_a-crossbar.o `test -f 'crossbar.cpp' || echo '$(srcdir)/'`crossbar.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libdshow_plugin_a-crossbar.Tpo" "$(DEPDIR)/libdshow_plugin_a-crossbar.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libdshow_plugin_a-crossbar.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='crossbar.cpp' object='libdshow_plugin_a-crossbar.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libdshow_plugin_a-crossbar.Po' tmpdepfile='$(DEPDIR)/libdshow_plugin_a-crossbar.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libdshow_plugin_a-crossbar.o `test -f 'crossbar.cpp' || echo '$(srcdir)/'`crossbar.cpp
+
+libdshow_plugin_a-crossbar.obj: crossbar.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libdshow_plugin_a-crossbar.obj -MD -MP -MF "$(DEPDIR)/libdshow_plugin_a-crossbar.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libdshow_plugin_a-crossbar.obj `if test -f 'crossbar.cpp'; then $(CYGPATH_W) 'crossbar.cpp'; else $(CYGPATH_W) '$(srcdir)/crossbar.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libdshow_plugin_a-crossbar.Tpo" "$(DEPDIR)/libdshow_plugin_a-crossbar.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libdshow_plugin_a-crossbar.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='crossbar.cpp' object='libdshow_plugin_a-crossbar.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libdshow_plugin_a-crossbar.Po' tmpdepfile='$(DEPDIR)/libdshow_plugin_a-crossbar.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdshow_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libdshow_plugin_a-crossbar.obj `if test -f 'crossbar.cpp'; then $(CYGPATH_W) 'crossbar.cpp'; else $(CYGPATH_W) '$(srcdir)/crossbar.cpp'; fi`
 uninstall-info-am:
 libdshowDATA_INSTALL = $(INSTALL_DATA)
 install-libdshowDATA: $(libdshow_DATA)

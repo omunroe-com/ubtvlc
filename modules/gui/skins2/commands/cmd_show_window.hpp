@@ -2,7 +2,7 @@
  * cmd_show_window.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: cmd_show_window.hpp 7073 2004-03-14 14:33:12Z asmax $
+ * $Id: cmd_show_window.hpp 8966 2004-10-10 10:08:44Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -75,5 +75,24 @@ class CmdHideWindow: public CmdGeneric
         TopWindow &m_rWin;
 };
 
+
+/// Command to raise all windows
+class CmdRaiseAll: public CmdGeneric
+{
+    public:
+        CmdRaiseAll( intf_thread_t *pIntf, WindowManager &rWinManager ):
+            CmdGeneric( pIntf ), m_rWinManager( rWinManager ) {}
+        virtual ~CmdRaiseAll() {}
+
+        /// This method does the real job of the command
+        virtual void execute() { m_rWinManager.raiseAll(); }
+
+        /// Return the type of the command
+        virtual string getType() const { return "raise all windows"; }
+
+    private:
+        /// Reference to the window manager
+        WindowManager &m_rWinManager;
+};
 
 #endif

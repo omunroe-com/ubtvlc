@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in trivial_channel_mixer headphone_channel_mixer; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in trivial_channel_mixer headphone_channel_mixer; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in trivial_channel_mixer headphone_channel_mixer; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in trivial_channel_mixer simple_channel_mixer headphone_channel_mixer; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in trivial_channel_mixer simple_channel_mixer headphone_channel_mixer; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in trivial_channel_mixer simple_channel_mixer headphone_channel_mixer; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -68,6 +68,43 @@ libtrivial_channel_mixer_plugin$(LIBEXT): $(libtrivial_channel_mixer_plugin_a_OB
 	  c++) echo $(CXXLINK) $(libtrivial_channel_mixer_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin trivial_channel_mixer\` ; $(CXXLINK) $(libtrivial_channel_mixer_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin trivial_channel_mixer` ;; \
 	  objc) echo $(OBJCLINK) $(libtrivial_channel_mixer_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin trivial_channel_mixer\` ; $(OBJCLINK) $(libtrivial_channel_mixer_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin trivial_channel_mixer` ;; \
 	  c|*) echo $(LINK) $(libtrivial_channel_mixer_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin trivial_channel_mixer\` ; $(LINK) $(libtrivial_channel_mixer_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin trivial_channel_mixer` ;; \
+	esac
+
+
+# The simple_channel_mixer plugin
+
+if UNTRUE
+Lsimple_channel_mixerp = libsimple_channel_mixer_plugin.a
+Dsimple_channel_mixerp = libsimple_channel_mixer_plugin$(LIBEXT)
+Lsimple_channel_mixerb = libsimple_channel_mixer.a
+Lsimple_channel_mixerpic = libsimple_channel_mixer_pic.a
+endif
+
+libsimple_channel_mixer_plugin_a_SOURCES = $(SOURCES_simple_channel_mixer)
+libsimple_channel_mixer_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin simple_channel_mixer`
+libsimple_channel_mixer_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin simple_channel_mixer`
+libsimple_channel_mixer_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin simple_channel_mixer`
+
+libsimple_channel_mixer_pic_a_SOURCES = $(SOURCES_simple_channel_mixer)
+libsimple_channel_mixer_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic simple_channel_mixer`
+libsimple_channel_mixer_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic simple_channel_mixer`
+libsimple_channel_mixer_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic simple_channel_mixer`
+
+libsimple_channel_mixer_a_SOURCES = $(SOURCES_simple_channel_mixer)
+libsimple_channel_mixer_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin simple_channel_mixer`
+libsimple_channel_mixer_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin simple_channel_mixer`
+libsimple_channel_mixer_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin simple_channel_mixer`
+
+libvlc_LIBRARIES += $(Lsimple_channel_mixerb) $(Lsimple_channel_mixerpic)
+libsimple_channel_mixer_DATA = $(Dsimple_channel_mixerp)
+
+libsimple_channel_mixerdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lsimple_channel_mixerp)
+libsimple_channel_mixer_plugin$(LIBEXT): $(libsimple_channel_mixer_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage simple_channel_mixer` in \
+	  c++) echo $(CXXLINK) $(libsimple_channel_mixer_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin simple_channel_mixer\` ; $(CXXLINK) $(libsimple_channel_mixer_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin simple_channel_mixer` ;; \
+	  objc) echo $(OBJCLINK) $(libsimple_channel_mixer_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin simple_channel_mixer\` ; $(OBJCLINK) $(libsimple_channel_mixer_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin simple_channel_mixer` ;; \
+	  c|*) echo $(LINK) $(libsimple_channel_mixer_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin simple_channel_mixer\` ; $(LINK) $(libsimple_channel_mixer_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin simple_channel_mixer` ;; \
 	esac
 
 

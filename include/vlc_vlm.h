@@ -2,7 +2,7 @@
  * vlc_vlm.h: VLM interface plugin
  *****************************************************************************
  * Copyright (C) 2000, 2001 VideoLAN
- * $Id: vlc_vlm.h 7209 2004-03-31 20:52:31Z gbazin $
+ * $Id: vlc_vlm.h 9020 2004-10-20 12:01:09Z gbazin $
  *
  * Authors: Simon Latapie <garf@videolan.org>
  *          Laurent Aimar <fenrir@videolan.org>
@@ -29,8 +29,22 @@
 enum
 {
     VOD_TYPE = 0,
-    BROADCAST_TYPE = 1,
+    BROADCAST_TYPE,
+    SCHEDULE_TYPE,
 };
+
+typedef struct
+{
+    /* instance name */
+    char *psz_name;
+
+    /* "playlist" index */
+    int i_index;
+
+    input_item_t   item;
+    input_thread_t *p_input;
+
+} vlm_media_instance_t;
 
 typedef struct
 {
@@ -39,24 +53,28 @@ typedef struct
 
     /* name "media" is reserved */
     char    *psz_name;
+    input_item_t item;
 
+    /* "playlist" */
     int     i_input;
     char    **input;
-
-    /* only for broadcast */
-    vlc_bool_t b_loop;
-
-    /* "playlist" index */
-    int     i_index;
-
-    char    *psz_output;
 
     int     i_option;
     char    **option;
 
-    /* global options for all inputs */
-    input_item_t    item;
-    input_thread_t  *p_input;
+    char    *psz_output;
+
+    /* only for broadcast */
+    vlc_bool_t b_loop;
+
+    /* only for vod */
+    vod_media_t *vod_media;
+    char *psz_vod_output;
+    char *psz_mux;
+
+    /* actual input instances */
+    int                  i_instance;
+    vlm_media_instance_t **instance;
 
 } vlm_media_t;
 
@@ -101,16 +119,11 @@ struct vlm_t
 
     vlc_mutex_t lock;
 
-#if 0
-    int         i_vod;
-    vlm_media_t **vod;
-
-    int         i_broadcast;
-    vlm_media_t **broadcast;
-#endif
-
     int            i_media;
     vlm_media_t    **media;
+
+    int            i_vod;
+    vod_t          *vod;
 
     int            i_schedule;
     vlm_schedule_t **schedule;
@@ -118,11 +131,9 @@ struct vlm_t
 
 
 #define vlm_New( a ) __vlm_New( VLC_OBJECT(a) )
-
 VLC_EXPORT( vlm_t *, __vlm_New, ( vlc_object_t * ) );
-VLC_EXPORT( void,    vlm_Delete, ( vlm_t * ) );
-
-VLC_EXPORT( int,     vlm_ExecuteCommand, ( vlm_t *, char *, vlm_message_t **) );
-VLC_EXPORT( void,    vlm_MessageDelete, ( vlm_message_t* ) );
+VLC_EXPORT( void, vlm_Delete, ( vlm_t * ) );
+VLC_EXPORT( int, vlm_ExecuteCommand, ( vlm_t *, char *, vlm_message_t ** ) );
+VLC_EXPORT( void, vlm_MessageDelete, ( vlm_message_t* ) );
 
 #endif

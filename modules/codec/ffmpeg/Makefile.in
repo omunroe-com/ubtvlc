@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -228,12 +230,12 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Lffmpegb) $(Lffmpegpic)
-noinst_LIBRARIES = $(Lffmpegp)
+libvlc_LIBRARIES = $(Lffmpegb) $(Lffmpegpic) $(Lffmpegaltivecb) $(Lffmpegaltivecpic)
+noinst_LIBRARIES = $(Lffmpegp) $(Lffmpegaltivecp)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
-SUBDIRS = postprocessing
+SUBDIRS = 
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/codec
 SOURCES_ffmpeg = \
@@ -241,6 +243,20 @@ SOURCES_ffmpeg = \
 	ffmpeg.h \
 	video.c \
 	audio.c \
+	video_filter.c \
+	chroma.c \
+	encoder.c \
+	postprocess.c \
+	demux.c \
+	$(NULL)
+
+
+SOURCES_ffmpegaltivec = \
+	ffmpeg.c \
+	ffmpeg.h \
+	video.c \
+	audio.c \
+	video_filter.c \
 	chroma.c \
 	encoder.c \
 	postprocess.c \
@@ -277,6 +293,31 @@ libffmpeg_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ffmpeg`
 libffmpeg_DATA = $(Dffmpegp)
 
 libffmpegdir = $(libdir)/vlc/
+
+
+# The ffmpegaltivec plugin
+@UNTRUE_TRUE@Lffmpegaltivecp = libffmpegaltivec_plugin.a
+@UNTRUE_TRUE@Dffmpegaltivecp = libffmpegaltivec_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lffmpegaltivecb = libffmpegaltivec.a
+@UNTRUE_TRUE@Lffmpegaltivecpic = libffmpegaltivec_pic.a
+
+libffmpegaltivec_plugin_a_SOURCES = $(SOURCES_ffmpegaltivec)
+libffmpegaltivec_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin ffmpegaltivec`
+libffmpegaltivec_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin ffmpegaltivec`
+libffmpegaltivec_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin ffmpegaltivec`
+
+libffmpegaltivec_pic_a_SOURCES = $(SOURCES_ffmpegaltivec)
+libffmpegaltivec_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ffmpegaltivec`
+libffmpegaltivec_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ffmpegaltivec`
+libffmpegaltivec_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ffmpegaltivec`
+
+libffmpegaltivec_a_SOURCES = $(SOURCES_ffmpegaltivec)
+libffmpegaltivec_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin ffmpegaltivec`
+libffmpegaltivec_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ffmpegaltivec`
+libffmpegaltivec_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ffmpegaltivec`
+libffmpegaltivec_DATA = $(Dffmpegaltivecp)
+
+libffmpegaltivecdir = $(libdir)/vlc/
 subdir = modules/codec/ffmpeg
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
@@ -288,15 +329,17 @@ libffmpeg_a_AR = $(AR) cru
 libffmpeg_a_LIBADD =
 am__objects_1 =
 am__objects_2 = libffmpeg_a-ffmpeg.$(OBJEXT) libffmpeg_a-video.$(OBJEXT) \
-	libffmpeg_a-audio.$(OBJEXT) libffmpeg_a-chroma.$(OBJEXT) \
-	libffmpeg_a-encoder.$(OBJEXT) libffmpeg_a-postprocess.$(OBJEXT) \
-	libffmpeg_a-demux.$(OBJEXT) $(am__objects_1)
+	libffmpeg_a-audio.$(OBJEXT) libffmpeg_a-video_filter.$(OBJEXT) \
+	libffmpeg_a-chroma.$(OBJEXT) libffmpeg_a-encoder.$(OBJEXT) \
+	libffmpeg_a-postprocess.$(OBJEXT) libffmpeg_a-demux.$(OBJEXT) \
+	$(am__objects_1)
 am_libffmpeg_a_OBJECTS = $(am__objects_2)
 libffmpeg_a_OBJECTS = $(am_libffmpeg_a_OBJECTS)
 libffmpeg_pic_a_AR = $(AR) cru
 libffmpeg_pic_a_LIBADD =
 am__objects_3 = libffmpeg_pic_a-ffmpeg.$(OBJEXT) \
 	libffmpeg_pic_a-video.$(OBJEXT) libffmpeg_pic_a-audio.$(OBJEXT) \
+	libffmpeg_pic_a-video_filter.$(OBJEXT) \
 	libffmpeg_pic_a-chroma.$(OBJEXT) \
 	libffmpeg_pic_a-encoder.$(OBJEXT) \
 	libffmpeg_pic_a-postprocess.$(OBJEXT) \
@@ -308,12 +351,50 @@ libffmpeg_plugin_a_LIBADD =
 am__objects_4 = libffmpeg_plugin_a-ffmpeg.$(OBJEXT) \
 	libffmpeg_plugin_a-video.$(OBJEXT) \
 	libffmpeg_plugin_a-audio.$(OBJEXT) \
+	libffmpeg_plugin_a-video_filter.$(OBJEXT) \
 	libffmpeg_plugin_a-chroma.$(OBJEXT) \
 	libffmpeg_plugin_a-encoder.$(OBJEXT) \
 	libffmpeg_plugin_a-postprocess.$(OBJEXT) \
 	libffmpeg_plugin_a-demux.$(OBJEXT) $(am__objects_1)
 am_libffmpeg_plugin_a_OBJECTS = $(am__objects_4)
 libffmpeg_plugin_a_OBJECTS = $(am_libffmpeg_plugin_a_OBJECTS)
+libffmpegaltivec_a_AR = $(AR) cru
+libffmpegaltivec_a_LIBADD =
+am__objects_5 = libffmpegaltivec_a-ffmpeg.$(OBJEXT) \
+	libffmpegaltivec_a-video.$(OBJEXT) \
+	libffmpegaltivec_a-audio.$(OBJEXT) \
+	libffmpegaltivec_a-video_filter.$(OBJEXT) \
+	libffmpegaltivec_a-chroma.$(OBJEXT) \
+	libffmpegaltivec_a-encoder.$(OBJEXT) \
+	libffmpegaltivec_a-postprocess.$(OBJEXT) \
+	libffmpegaltivec_a-demux.$(OBJEXT) $(am__objects_1)
+am_libffmpegaltivec_a_OBJECTS = $(am__objects_5)
+libffmpegaltivec_a_OBJECTS = $(am_libffmpegaltivec_a_OBJECTS)
+libffmpegaltivec_pic_a_AR = $(AR) cru
+libffmpegaltivec_pic_a_LIBADD =
+am__objects_6 = libffmpegaltivec_pic_a-ffmpeg.$(OBJEXT) \
+	libffmpegaltivec_pic_a-video.$(OBJEXT) \
+	libffmpegaltivec_pic_a-audio.$(OBJEXT) \
+	libffmpegaltivec_pic_a-video_filter.$(OBJEXT) \
+	libffmpegaltivec_pic_a-chroma.$(OBJEXT) \
+	libffmpegaltivec_pic_a-encoder.$(OBJEXT) \
+	libffmpegaltivec_pic_a-postprocess.$(OBJEXT) \
+	libffmpegaltivec_pic_a-demux.$(OBJEXT) $(am__objects_1)
+am_libffmpegaltivec_pic_a_OBJECTS = $(am__objects_6)
+libffmpegaltivec_pic_a_OBJECTS = $(am_libffmpegaltivec_pic_a_OBJECTS)
+libffmpegaltivec_plugin_a_AR = $(AR) cru
+libffmpegaltivec_plugin_a_LIBADD =
+am__objects_7 = libffmpegaltivec_plugin_a-ffmpeg.$(OBJEXT) \
+	libffmpegaltivec_plugin_a-video.$(OBJEXT) \
+	libffmpegaltivec_plugin_a-audio.$(OBJEXT) \
+	libffmpegaltivec_plugin_a-video_filter.$(OBJEXT) \
+	libffmpegaltivec_plugin_a-chroma.$(OBJEXT) \
+	libffmpegaltivec_plugin_a-encoder.$(OBJEXT) \
+	libffmpegaltivec_plugin_a-postprocess.$(OBJEXT) \
+	libffmpegaltivec_plugin_a-demux.$(OBJEXT) $(am__objects_1)
+am_libffmpegaltivec_plugin_a_OBJECTS = $(am__objects_7)
+libffmpegaltivec_plugin_a_OBJECTS = \
+	$(am_libffmpegaltivec_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
@@ -325,6 +406,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_a-ffmpeg.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_a-postprocess.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_a-video.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_a-video_filter.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_pic_a-audio.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_pic_a-chroma.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_pic_a-demux.Po \
@@ -332,20 +414,48 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_pic_a-ffmpeg.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_pic_a-postprocess.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_pic_a-video.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_pic_a-video_filter.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_plugin_a-audio.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_plugin_a-chroma.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_plugin_a-demux.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_plugin_a-encoder.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_plugin_a-ffmpeg.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_plugin_a-postprocess.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_plugin_a-video.Po
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_plugin_a-video.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpeg_plugin_a-video_filter.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_a-audio.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_a-chroma.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_a-demux.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_a-encoder.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_a-ffmpeg.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_a-postprocess.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_a-video.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_a-video_filter.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_pic_a-audio.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_pic_a-chroma.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_pic_a-demux.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_pic_a-encoder.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_pic_a-ffmpeg.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_pic_a-postprocess.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_pic_a-video.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_pic_a-video_filter.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_plugin_a-audio.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_plugin_a-chroma.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_plugin_a-demux.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_plugin_a-encoder.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_plugin_a-ffmpeg.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_plugin_a-postprocess.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_plugin_a-video.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libffmpegaltivec_plugin_a-video_filter.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 DIST_SOURCES = $(libffmpeg_a_SOURCES) $(libffmpeg_pic_a_SOURCES) \
-	$(libffmpeg_plugin_a_SOURCES)
-DATA = $(libffmpeg_DATA)
+	$(libffmpeg_plugin_a_SOURCES) $(libffmpegaltivec_a_SOURCES) \
+	$(libffmpegaltivec_pic_a_SOURCES) \
+	$(libffmpegaltivec_plugin_a_SOURCES)
+DATA = $(libffmpeg_DATA) $(libffmpegaltivec_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -358,7 +468,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libffmpeg_a_SOURCES) $(libffmpeg_pic_a_SOURCES) $(libffmpeg_plugin_a_SOURCES)
+SOURCES = $(libffmpeg_a_SOURCES) $(libffmpeg_pic_a_SOURCES) $(libffmpeg_plugin_a_SOURCES) $(libffmpegaltivec_a_SOURCES) $(libffmpegaltivec_pic_a_SOURCES) $(libffmpegaltivec_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -415,6 +525,18 @@ libffmpeg_plugin.a: $(libffmpeg_plugin_a_OBJECTS) $(libffmpeg_plugin_a_DEPENDENC
 	-rm -f libffmpeg_plugin.a
 	$(libffmpeg_plugin_a_AR) libffmpeg_plugin.a $(libffmpeg_plugin_a_OBJECTS) $(libffmpeg_plugin_a_LIBADD)
 	$(RANLIB) libffmpeg_plugin.a
+libffmpegaltivec.a: $(libffmpegaltivec_a_OBJECTS) $(libffmpegaltivec_a_DEPENDENCIES) 
+	-rm -f libffmpegaltivec.a
+	$(libffmpegaltivec_a_AR) libffmpegaltivec.a $(libffmpegaltivec_a_OBJECTS) $(libffmpegaltivec_a_LIBADD)
+	$(RANLIB) libffmpegaltivec.a
+libffmpegaltivec_pic.a: $(libffmpegaltivec_pic_a_OBJECTS) $(libffmpegaltivec_pic_a_DEPENDENCIES) 
+	-rm -f libffmpegaltivec_pic.a
+	$(libffmpegaltivec_pic_a_AR) libffmpegaltivec_pic.a $(libffmpegaltivec_pic_a_OBJECTS) $(libffmpegaltivec_pic_a_LIBADD)
+	$(RANLIB) libffmpegaltivec_pic.a
+libffmpegaltivec_plugin.a: $(libffmpegaltivec_plugin_a_OBJECTS) $(libffmpegaltivec_plugin_a_DEPENDENCIES) 
+	-rm -f libffmpegaltivec_plugin.a
+	$(libffmpegaltivec_plugin_a_AR) libffmpegaltivec_plugin.a $(libffmpegaltivec_plugin_a_OBJECTS) $(libffmpegaltivec_plugin_a_LIBADD)
+	$(RANLIB) libffmpegaltivec_plugin.a
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT) core *.core
@@ -429,6 +551,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_a-ffmpeg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_a-postprocess.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_a-video.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_a-video_filter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_pic_a-audio.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_pic_a-chroma.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_pic_a-demux.Po@am__quote@
@@ -436,6 +559,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_pic_a-ffmpeg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_pic_a-postprocess.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_pic_a-video.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_pic_a-video_filter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_plugin_a-audio.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_plugin_a-chroma.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_plugin_a-demux.Po@am__quote@
@@ -443,6 +567,31 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_plugin_a-ffmpeg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_plugin_a-postprocess.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_plugin_a-video.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpeg_plugin_a-video_filter.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_a-audio.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_a-chroma.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_a-demux.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_a-encoder.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_a-ffmpeg.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_a-postprocess.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_a-video.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_a-video_filter.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_pic_a-audio.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_pic_a-chroma.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_pic_a-demux.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_pic_a-encoder.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_pic_a-ffmpeg.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_pic_a-postprocess.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_pic_a-video.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_pic_a-video_filter.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_plugin_a-audio.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_plugin_a-chroma.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_plugin_a-demux.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_plugin_a-encoder.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_plugin_a-ffmpeg.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_plugin_a-postprocess.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_plugin_a-video.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libffmpegaltivec_plugin_a-video_filter.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
@@ -531,6 +680,28 @@ libffmpeg_a-audio.obj: audio.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpeg_a-audio.Po' tmpdepfile='$(DEPDIR)/libffmpeg_a-audio.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_a_CFLAGS) $(CFLAGS) -c -o libffmpeg_a-audio.obj `if test -f 'audio.c'; then $(CYGPATH_W) 'audio.c'; else $(CYGPATH_W) '$(srcdir)/audio.c'; fi`
+
+libffmpeg_a-video_filter.o: video_filter.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_a_CFLAGS) $(CFLAGS) -MT libffmpeg_a-video_filter.o -MD -MP -MF "$(DEPDIR)/libffmpeg_a-video_filter.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpeg_a-video_filter.o `test -f 'video_filter.c' || echo '$(srcdir)/'`video_filter.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpeg_a-video_filter.Tpo" "$(DEPDIR)/libffmpeg_a-video_filter.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpeg_a-video_filter.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video_filter.c' object='libffmpeg_a-video_filter.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpeg_a-video_filter.Po' tmpdepfile='$(DEPDIR)/libffmpeg_a-video_filter.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_a_CFLAGS) $(CFLAGS) -c -o libffmpeg_a-video_filter.o `test -f 'video_filter.c' || echo '$(srcdir)/'`video_filter.c
+
+libffmpeg_a-video_filter.obj: video_filter.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_a_CFLAGS) $(CFLAGS) -MT libffmpeg_a-video_filter.obj -MD -MP -MF "$(DEPDIR)/libffmpeg_a-video_filter.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpeg_a-video_filter.obj `if test -f 'video_filter.c'; then $(CYGPATH_W) 'video_filter.c'; else $(CYGPATH_W) '$(srcdir)/video_filter.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpeg_a-video_filter.Tpo" "$(DEPDIR)/libffmpeg_a-video_filter.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpeg_a-video_filter.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video_filter.c' object='libffmpeg_a-video_filter.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpeg_a-video_filter.Po' tmpdepfile='$(DEPDIR)/libffmpeg_a-video_filter.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_a_CFLAGS) $(CFLAGS) -c -o libffmpeg_a-video_filter.obj `if test -f 'video_filter.c'; then $(CYGPATH_W) 'video_filter.c'; else $(CYGPATH_W) '$(srcdir)/video_filter.c'; fi`
 
 libffmpeg_a-chroma.o: chroma.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_a_CFLAGS) $(CFLAGS) -MT libffmpeg_a-chroma.o -MD -MP -MF "$(DEPDIR)/libffmpeg_a-chroma.Tpo" \
@@ -686,6 +857,28 @@ libffmpeg_pic_a-audio.obj: audio.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpeg_pic_a-audio.obj `if test -f 'audio.c'; then $(CYGPATH_W) 'audio.c'; else $(CYGPATH_W) '$(srcdir)/audio.c'; fi`
 
+libffmpeg_pic_a-video_filter.o: video_filter.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_pic_a_CFLAGS) $(CFLAGS) -MT libffmpeg_pic_a-video_filter.o -MD -MP -MF "$(DEPDIR)/libffmpeg_pic_a-video_filter.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpeg_pic_a-video_filter.o `test -f 'video_filter.c' || echo '$(srcdir)/'`video_filter.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpeg_pic_a-video_filter.Tpo" "$(DEPDIR)/libffmpeg_pic_a-video_filter.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpeg_pic_a-video_filter.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video_filter.c' object='libffmpeg_pic_a-video_filter.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpeg_pic_a-video_filter.Po' tmpdepfile='$(DEPDIR)/libffmpeg_pic_a-video_filter.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpeg_pic_a-video_filter.o `test -f 'video_filter.c' || echo '$(srcdir)/'`video_filter.c
+
+libffmpeg_pic_a-video_filter.obj: video_filter.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_pic_a_CFLAGS) $(CFLAGS) -MT libffmpeg_pic_a-video_filter.obj -MD -MP -MF "$(DEPDIR)/libffmpeg_pic_a-video_filter.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpeg_pic_a-video_filter.obj `if test -f 'video_filter.c'; then $(CYGPATH_W) 'video_filter.c'; else $(CYGPATH_W) '$(srcdir)/video_filter.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpeg_pic_a-video_filter.Tpo" "$(DEPDIR)/libffmpeg_pic_a-video_filter.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpeg_pic_a-video_filter.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video_filter.c' object='libffmpeg_pic_a-video_filter.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpeg_pic_a-video_filter.Po' tmpdepfile='$(DEPDIR)/libffmpeg_pic_a-video_filter.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpeg_pic_a-video_filter.obj `if test -f 'video_filter.c'; then $(CYGPATH_W) 'video_filter.c'; else $(CYGPATH_W) '$(srcdir)/video_filter.c'; fi`
+
 libffmpeg_pic_a-chroma.o: chroma.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_pic_a_CFLAGS) $(CFLAGS) -MT libffmpeg_pic_a-chroma.o -MD -MP -MF "$(DEPDIR)/libffmpeg_pic_a-chroma.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libffmpeg_pic_a-chroma.o `test -f 'chroma.c' || echo '$(srcdir)/'`chroma.c; \
@@ -840,6 +1033,28 @@ libffmpeg_plugin_a-audio.obj: audio.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpeg_plugin_a-audio.obj `if test -f 'audio.c'; then $(CYGPATH_W) 'audio.c'; else $(CYGPATH_W) '$(srcdir)/audio.c'; fi`
 
+libffmpeg_plugin_a-video_filter.o: video_filter.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpeg_plugin_a-video_filter.o -MD -MP -MF "$(DEPDIR)/libffmpeg_plugin_a-video_filter.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpeg_plugin_a-video_filter.o `test -f 'video_filter.c' || echo '$(srcdir)/'`video_filter.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpeg_plugin_a-video_filter.Tpo" "$(DEPDIR)/libffmpeg_plugin_a-video_filter.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpeg_plugin_a-video_filter.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video_filter.c' object='libffmpeg_plugin_a-video_filter.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpeg_plugin_a-video_filter.Po' tmpdepfile='$(DEPDIR)/libffmpeg_plugin_a-video_filter.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpeg_plugin_a-video_filter.o `test -f 'video_filter.c' || echo '$(srcdir)/'`video_filter.c
+
+libffmpeg_plugin_a-video_filter.obj: video_filter.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpeg_plugin_a-video_filter.obj -MD -MP -MF "$(DEPDIR)/libffmpeg_plugin_a-video_filter.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpeg_plugin_a-video_filter.obj `if test -f 'video_filter.c'; then $(CYGPATH_W) 'video_filter.c'; else $(CYGPATH_W) '$(srcdir)/video_filter.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpeg_plugin_a-video_filter.Tpo" "$(DEPDIR)/libffmpeg_plugin_a-video_filter.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpeg_plugin_a-video_filter.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video_filter.c' object='libffmpeg_plugin_a-video_filter.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpeg_plugin_a-video_filter.Po' tmpdepfile='$(DEPDIR)/libffmpeg_plugin_a-video_filter.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpeg_plugin_a-video_filter.obj `if test -f 'video_filter.c'; then $(CYGPATH_W) 'video_filter.c'; else $(CYGPATH_W) '$(srcdir)/video_filter.c'; fi`
+
 libffmpeg_plugin_a-chroma.o: chroma.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpeg_plugin_a-chroma.o -MD -MP -MF "$(DEPDIR)/libffmpeg_plugin_a-chroma.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libffmpeg_plugin_a-chroma.o `test -f 'chroma.c' || echo '$(srcdir)/'`chroma.c; \
@@ -927,6 +1142,534 @@ libffmpeg_plugin_a-demux.obj: demux.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpeg_plugin_a-demux.Po' tmpdepfile='$(DEPDIR)/libffmpeg_plugin_a-demux.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpeg_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpeg_plugin_a-demux.obj `if test -f 'demux.c'; then $(CYGPATH_W) 'demux.c'; else $(CYGPATH_W) '$(srcdir)/demux.c'; fi`
+
+libffmpegaltivec_a-ffmpeg.o: ffmpeg.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_a-ffmpeg.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_a-ffmpeg.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_a-ffmpeg.o `test -f 'ffmpeg.c' || echo '$(srcdir)/'`ffmpeg.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_a-ffmpeg.Tpo" "$(DEPDIR)/libffmpegaltivec_a-ffmpeg.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_a-ffmpeg.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ffmpeg.c' object='libffmpegaltivec_a-ffmpeg.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_a-ffmpeg.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_a-ffmpeg.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_a-ffmpeg.o `test -f 'ffmpeg.c' || echo '$(srcdir)/'`ffmpeg.c
+
+libffmpegaltivec_a-ffmpeg.obj: ffmpeg.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_a-ffmpeg.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_a-ffmpeg.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_a-ffmpeg.obj `if test -f 'ffmpeg.c'; then $(CYGPATH_W) 'ffmpeg.c'; else $(CYGPATH_W) '$(srcdir)/ffmpeg.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_a-ffmpeg.Tpo" "$(DEPDIR)/libffmpegaltivec_a-ffmpeg.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_a-ffmpeg.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ffmpeg.c' object='libffmpegaltivec_a-ffmpeg.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_a-ffmpeg.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_a-ffmpeg.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_a-ffmpeg.obj `if test -f 'ffmpeg.c'; then $(CYGPATH_W) 'ffmpeg.c'; else $(CYGPATH_W) '$(srcdir)/ffmpeg.c'; fi`
+
+libffmpegaltivec_a-video.o: video.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_a-video.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_a-video.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_a-video.o `test -f 'video.c' || echo '$(srcdir)/'`video.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_a-video.Tpo" "$(DEPDIR)/libffmpegaltivec_a-video.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_a-video.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video.c' object='libffmpegaltivec_a-video.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_a-video.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_a-video.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_a-video.o `test -f 'video.c' || echo '$(srcdir)/'`video.c
+
+libffmpegaltivec_a-video.obj: video.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_a-video.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_a-video.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_a-video.obj `if test -f 'video.c'; then $(CYGPATH_W) 'video.c'; else $(CYGPATH_W) '$(srcdir)/video.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_a-video.Tpo" "$(DEPDIR)/libffmpegaltivec_a-video.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_a-video.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video.c' object='libffmpegaltivec_a-video.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_a-video.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_a-video.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_a-video.obj `if test -f 'video.c'; then $(CYGPATH_W) 'video.c'; else $(CYGPATH_W) '$(srcdir)/video.c'; fi`
+
+libffmpegaltivec_a-audio.o: audio.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_a-audio.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_a-audio.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_a-audio.o `test -f 'audio.c' || echo '$(srcdir)/'`audio.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_a-audio.Tpo" "$(DEPDIR)/libffmpegaltivec_a-audio.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_a-audio.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='audio.c' object='libffmpegaltivec_a-audio.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_a-audio.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_a-audio.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_a-audio.o `test -f 'audio.c' || echo '$(srcdir)/'`audio.c
+
+libffmpegaltivec_a-audio.obj: audio.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_a-audio.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_a-audio.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_a-audio.obj `if test -f 'audio.c'; then $(CYGPATH_W) 'audio.c'; else $(CYGPATH_W) '$(srcdir)/audio.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_a-audio.Tpo" "$(DEPDIR)/libffmpegaltivec_a-audio.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_a-audio.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='audio.c' object='libffmpegaltivec_a-audio.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_a-audio.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_a-audio.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_a-audio.obj `if test -f 'audio.c'; then $(CYGPATH_W) 'audio.c'; else $(CYGPATH_W) '$(srcdir)/audio.c'; fi`
+
+libffmpegaltivec_a-video_filter.o: video_filter.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_a-video_filter.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_a-video_filter.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_a-video_filter.o `test -f 'video_filter.c' || echo '$(srcdir)/'`video_filter.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_a-video_filter.Tpo" "$(DEPDIR)/libffmpegaltivec_a-video_filter.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_a-video_filter.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video_filter.c' object='libffmpegaltivec_a-video_filter.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_a-video_filter.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_a-video_filter.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_a-video_filter.o `test -f 'video_filter.c' || echo '$(srcdir)/'`video_filter.c
+
+libffmpegaltivec_a-video_filter.obj: video_filter.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_a-video_filter.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_a-video_filter.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_a-video_filter.obj `if test -f 'video_filter.c'; then $(CYGPATH_W) 'video_filter.c'; else $(CYGPATH_W) '$(srcdir)/video_filter.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_a-video_filter.Tpo" "$(DEPDIR)/libffmpegaltivec_a-video_filter.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_a-video_filter.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video_filter.c' object='libffmpegaltivec_a-video_filter.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_a-video_filter.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_a-video_filter.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_a-video_filter.obj `if test -f 'video_filter.c'; then $(CYGPATH_W) 'video_filter.c'; else $(CYGPATH_W) '$(srcdir)/video_filter.c'; fi`
+
+libffmpegaltivec_a-chroma.o: chroma.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_a-chroma.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_a-chroma.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_a-chroma.o `test -f 'chroma.c' || echo '$(srcdir)/'`chroma.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_a-chroma.Tpo" "$(DEPDIR)/libffmpegaltivec_a-chroma.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_a-chroma.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chroma.c' object='libffmpegaltivec_a-chroma.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_a-chroma.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_a-chroma.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_a-chroma.o `test -f 'chroma.c' || echo '$(srcdir)/'`chroma.c
+
+libffmpegaltivec_a-chroma.obj: chroma.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_a-chroma.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_a-chroma.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_a-chroma.obj `if test -f 'chroma.c'; then $(CYGPATH_W) 'chroma.c'; else $(CYGPATH_W) '$(srcdir)/chroma.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_a-chroma.Tpo" "$(DEPDIR)/libffmpegaltivec_a-chroma.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_a-chroma.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chroma.c' object='libffmpegaltivec_a-chroma.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_a-chroma.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_a-chroma.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_a-chroma.obj `if test -f 'chroma.c'; then $(CYGPATH_W) 'chroma.c'; else $(CYGPATH_W) '$(srcdir)/chroma.c'; fi`
+
+libffmpegaltivec_a-encoder.o: encoder.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_a-encoder.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_a-encoder.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_a-encoder.o `test -f 'encoder.c' || echo '$(srcdir)/'`encoder.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_a-encoder.Tpo" "$(DEPDIR)/libffmpegaltivec_a-encoder.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_a-encoder.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='encoder.c' object='libffmpegaltivec_a-encoder.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_a-encoder.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_a-encoder.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_a-encoder.o `test -f 'encoder.c' || echo '$(srcdir)/'`encoder.c
+
+libffmpegaltivec_a-encoder.obj: encoder.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_a-encoder.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_a-encoder.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_a-encoder.obj `if test -f 'encoder.c'; then $(CYGPATH_W) 'encoder.c'; else $(CYGPATH_W) '$(srcdir)/encoder.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_a-encoder.Tpo" "$(DEPDIR)/libffmpegaltivec_a-encoder.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_a-encoder.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='encoder.c' object='libffmpegaltivec_a-encoder.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_a-encoder.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_a-encoder.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_a-encoder.obj `if test -f 'encoder.c'; then $(CYGPATH_W) 'encoder.c'; else $(CYGPATH_W) '$(srcdir)/encoder.c'; fi`
+
+libffmpegaltivec_a-postprocess.o: postprocess.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_a-postprocess.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_a-postprocess.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_a-postprocess.o `test -f 'postprocess.c' || echo '$(srcdir)/'`postprocess.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_a-postprocess.Tpo" "$(DEPDIR)/libffmpegaltivec_a-postprocess.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_a-postprocess.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='postprocess.c' object='libffmpegaltivec_a-postprocess.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_a-postprocess.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_a-postprocess.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_a-postprocess.o `test -f 'postprocess.c' || echo '$(srcdir)/'`postprocess.c
+
+libffmpegaltivec_a-postprocess.obj: postprocess.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_a-postprocess.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_a-postprocess.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_a-postprocess.obj `if test -f 'postprocess.c'; then $(CYGPATH_W) 'postprocess.c'; else $(CYGPATH_W) '$(srcdir)/postprocess.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_a-postprocess.Tpo" "$(DEPDIR)/libffmpegaltivec_a-postprocess.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_a-postprocess.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='postprocess.c' object='libffmpegaltivec_a-postprocess.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_a-postprocess.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_a-postprocess.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_a-postprocess.obj `if test -f 'postprocess.c'; then $(CYGPATH_W) 'postprocess.c'; else $(CYGPATH_W) '$(srcdir)/postprocess.c'; fi`
+
+libffmpegaltivec_a-demux.o: demux.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_a-demux.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_a-demux.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_a-demux.o `test -f 'demux.c' || echo '$(srcdir)/'`demux.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_a-demux.Tpo" "$(DEPDIR)/libffmpegaltivec_a-demux.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_a-demux.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='demux.c' object='libffmpegaltivec_a-demux.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_a-demux.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_a-demux.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_a-demux.o `test -f 'demux.c' || echo '$(srcdir)/'`demux.c
+
+libffmpegaltivec_a-demux.obj: demux.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_a-demux.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_a-demux.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_a-demux.obj `if test -f 'demux.c'; then $(CYGPATH_W) 'demux.c'; else $(CYGPATH_W) '$(srcdir)/demux.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_a-demux.Tpo" "$(DEPDIR)/libffmpegaltivec_a-demux.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_a-demux.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='demux.c' object='libffmpegaltivec_a-demux.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_a-demux.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_a-demux.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_a-demux.obj `if test -f 'demux.c'; then $(CYGPATH_W) 'demux.c'; else $(CYGPATH_W) '$(srcdir)/demux.c'; fi`
+
+libffmpegaltivec_pic_a-ffmpeg.o: ffmpeg.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_pic_a-ffmpeg.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_pic_a-ffmpeg.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_pic_a-ffmpeg.o `test -f 'ffmpeg.c' || echo '$(srcdir)/'`ffmpeg.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_pic_a-ffmpeg.Tpo" "$(DEPDIR)/libffmpegaltivec_pic_a-ffmpeg.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_pic_a-ffmpeg.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ffmpeg.c' object='libffmpegaltivec_pic_a-ffmpeg.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_pic_a-ffmpeg.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_pic_a-ffmpeg.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_pic_a-ffmpeg.o `test -f 'ffmpeg.c' || echo '$(srcdir)/'`ffmpeg.c
+
+libffmpegaltivec_pic_a-ffmpeg.obj: ffmpeg.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_pic_a-ffmpeg.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_pic_a-ffmpeg.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_pic_a-ffmpeg.obj `if test -f 'ffmpeg.c'; then $(CYGPATH_W) 'ffmpeg.c'; else $(CYGPATH_W) '$(srcdir)/ffmpeg.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_pic_a-ffmpeg.Tpo" "$(DEPDIR)/libffmpegaltivec_pic_a-ffmpeg.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_pic_a-ffmpeg.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ffmpeg.c' object='libffmpegaltivec_pic_a-ffmpeg.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_pic_a-ffmpeg.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_pic_a-ffmpeg.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_pic_a-ffmpeg.obj `if test -f 'ffmpeg.c'; then $(CYGPATH_W) 'ffmpeg.c'; else $(CYGPATH_W) '$(srcdir)/ffmpeg.c'; fi`
+
+libffmpegaltivec_pic_a-video.o: video.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_pic_a-video.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_pic_a-video.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_pic_a-video.o `test -f 'video.c' || echo '$(srcdir)/'`video.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_pic_a-video.Tpo" "$(DEPDIR)/libffmpegaltivec_pic_a-video.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_pic_a-video.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video.c' object='libffmpegaltivec_pic_a-video.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_pic_a-video.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_pic_a-video.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_pic_a-video.o `test -f 'video.c' || echo '$(srcdir)/'`video.c
+
+libffmpegaltivec_pic_a-video.obj: video.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_pic_a-video.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_pic_a-video.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_pic_a-video.obj `if test -f 'video.c'; then $(CYGPATH_W) 'video.c'; else $(CYGPATH_W) '$(srcdir)/video.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_pic_a-video.Tpo" "$(DEPDIR)/libffmpegaltivec_pic_a-video.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_pic_a-video.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video.c' object='libffmpegaltivec_pic_a-video.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_pic_a-video.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_pic_a-video.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_pic_a-video.obj `if test -f 'video.c'; then $(CYGPATH_W) 'video.c'; else $(CYGPATH_W) '$(srcdir)/video.c'; fi`
+
+libffmpegaltivec_pic_a-audio.o: audio.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_pic_a-audio.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_pic_a-audio.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_pic_a-audio.o `test -f 'audio.c' || echo '$(srcdir)/'`audio.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_pic_a-audio.Tpo" "$(DEPDIR)/libffmpegaltivec_pic_a-audio.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_pic_a-audio.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='audio.c' object='libffmpegaltivec_pic_a-audio.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_pic_a-audio.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_pic_a-audio.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_pic_a-audio.o `test -f 'audio.c' || echo '$(srcdir)/'`audio.c
+
+libffmpegaltivec_pic_a-audio.obj: audio.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_pic_a-audio.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_pic_a-audio.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_pic_a-audio.obj `if test -f 'audio.c'; then $(CYGPATH_W) 'audio.c'; else $(CYGPATH_W) '$(srcdir)/audio.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_pic_a-audio.Tpo" "$(DEPDIR)/libffmpegaltivec_pic_a-audio.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_pic_a-audio.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='audio.c' object='libffmpegaltivec_pic_a-audio.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_pic_a-audio.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_pic_a-audio.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_pic_a-audio.obj `if test -f 'audio.c'; then $(CYGPATH_W) 'audio.c'; else $(CYGPATH_W) '$(srcdir)/audio.c'; fi`
+
+libffmpegaltivec_pic_a-video_filter.o: video_filter.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_pic_a-video_filter.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_pic_a-video_filter.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_pic_a-video_filter.o `test -f 'video_filter.c' || echo '$(srcdir)/'`video_filter.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_pic_a-video_filter.Tpo" "$(DEPDIR)/libffmpegaltivec_pic_a-video_filter.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_pic_a-video_filter.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video_filter.c' object='libffmpegaltivec_pic_a-video_filter.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_pic_a-video_filter.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_pic_a-video_filter.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_pic_a-video_filter.o `test -f 'video_filter.c' || echo '$(srcdir)/'`video_filter.c
+
+libffmpegaltivec_pic_a-video_filter.obj: video_filter.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_pic_a-video_filter.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_pic_a-video_filter.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_pic_a-video_filter.obj `if test -f 'video_filter.c'; then $(CYGPATH_W) 'video_filter.c'; else $(CYGPATH_W) '$(srcdir)/video_filter.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_pic_a-video_filter.Tpo" "$(DEPDIR)/libffmpegaltivec_pic_a-video_filter.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_pic_a-video_filter.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video_filter.c' object='libffmpegaltivec_pic_a-video_filter.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_pic_a-video_filter.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_pic_a-video_filter.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_pic_a-video_filter.obj `if test -f 'video_filter.c'; then $(CYGPATH_W) 'video_filter.c'; else $(CYGPATH_W) '$(srcdir)/video_filter.c'; fi`
+
+libffmpegaltivec_pic_a-chroma.o: chroma.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_pic_a-chroma.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_pic_a-chroma.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_pic_a-chroma.o `test -f 'chroma.c' || echo '$(srcdir)/'`chroma.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_pic_a-chroma.Tpo" "$(DEPDIR)/libffmpegaltivec_pic_a-chroma.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_pic_a-chroma.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chroma.c' object='libffmpegaltivec_pic_a-chroma.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_pic_a-chroma.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_pic_a-chroma.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_pic_a-chroma.o `test -f 'chroma.c' || echo '$(srcdir)/'`chroma.c
+
+libffmpegaltivec_pic_a-chroma.obj: chroma.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_pic_a-chroma.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_pic_a-chroma.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_pic_a-chroma.obj `if test -f 'chroma.c'; then $(CYGPATH_W) 'chroma.c'; else $(CYGPATH_W) '$(srcdir)/chroma.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_pic_a-chroma.Tpo" "$(DEPDIR)/libffmpegaltivec_pic_a-chroma.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_pic_a-chroma.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chroma.c' object='libffmpegaltivec_pic_a-chroma.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_pic_a-chroma.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_pic_a-chroma.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_pic_a-chroma.obj `if test -f 'chroma.c'; then $(CYGPATH_W) 'chroma.c'; else $(CYGPATH_W) '$(srcdir)/chroma.c'; fi`
+
+libffmpegaltivec_pic_a-encoder.o: encoder.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_pic_a-encoder.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_pic_a-encoder.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_pic_a-encoder.o `test -f 'encoder.c' || echo '$(srcdir)/'`encoder.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_pic_a-encoder.Tpo" "$(DEPDIR)/libffmpegaltivec_pic_a-encoder.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_pic_a-encoder.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='encoder.c' object='libffmpegaltivec_pic_a-encoder.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_pic_a-encoder.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_pic_a-encoder.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_pic_a-encoder.o `test -f 'encoder.c' || echo '$(srcdir)/'`encoder.c
+
+libffmpegaltivec_pic_a-encoder.obj: encoder.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_pic_a-encoder.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_pic_a-encoder.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_pic_a-encoder.obj `if test -f 'encoder.c'; then $(CYGPATH_W) 'encoder.c'; else $(CYGPATH_W) '$(srcdir)/encoder.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_pic_a-encoder.Tpo" "$(DEPDIR)/libffmpegaltivec_pic_a-encoder.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_pic_a-encoder.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='encoder.c' object='libffmpegaltivec_pic_a-encoder.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_pic_a-encoder.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_pic_a-encoder.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_pic_a-encoder.obj `if test -f 'encoder.c'; then $(CYGPATH_W) 'encoder.c'; else $(CYGPATH_W) '$(srcdir)/encoder.c'; fi`
+
+libffmpegaltivec_pic_a-postprocess.o: postprocess.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_pic_a-postprocess.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_pic_a-postprocess.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_pic_a-postprocess.o `test -f 'postprocess.c' || echo '$(srcdir)/'`postprocess.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_pic_a-postprocess.Tpo" "$(DEPDIR)/libffmpegaltivec_pic_a-postprocess.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_pic_a-postprocess.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='postprocess.c' object='libffmpegaltivec_pic_a-postprocess.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_pic_a-postprocess.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_pic_a-postprocess.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_pic_a-postprocess.o `test -f 'postprocess.c' || echo '$(srcdir)/'`postprocess.c
+
+libffmpegaltivec_pic_a-postprocess.obj: postprocess.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_pic_a-postprocess.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_pic_a-postprocess.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_pic_a-postprocess.obj `if test -f 'postprocess.c'; then $(CYGPATH_W) 'postprocess.c'; else $(CYGPATH_W) '$(srcdir)/postprocess.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_pic_a-postprocess.Tpo" "$(DEPDIR)/libffmpegaltivec_pic_a-postprocess.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_pic_a-postprocess.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='postprocess.c' object='libffmpegaltivec_pic_a-postprocess.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_pic_a-postprocess.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_pic_a-postprocess.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_pic_a-postprocess.obj `if test -f 'postprocess.c'; then $(CYGPATH_W) 'postprocess.c'; else $(CYGPATH_W) '$(srcdir)/postprocess.c'; fi`
+
+libffmpegaltivec_pic_a-demux.o: demux.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_pic_a-demux.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_pic_a-demux.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_pic_a-demux.o `test -f 'demux.c' || echo '$(srcdir)/'`demux.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_pic_a-demux.Tpo" "$(DEPDIR)/libffmpegaltivec_pic_a-demux.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_pic_a-demux.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='demux.c' object='libffmpegaltivec_pic_a-demux.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_pic_a-demux.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_pic_a-demux.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_pic_a-demux.o `test -f 'demux.c' || echo '$(srcdir)/'`demux.c
+
+libffmpegaltivec_pic_a-demux.obj: demux.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_pic_a-demux.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_pic_a-demux.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_pic_a-demux.obj `if test -f 'demux.c'; then $(CYGPATH_W) 'demux.c'; else $(CYGPATH_W) '$(srcdir)/demux.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_pic_a-demux.Tpo" "$(DEPDIR)/libffmpegaltivec_pic_a-demux.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_pic_a-demux.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='demux.c' object='libffmpegaltivec_pic_a-demux.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_pic_a-demux.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_pic_a-demux.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_pic_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_pic_a-demux.obj `if test -f 'demux.c'; then $(CYGPATH_W) 'demux.c'; else $(CYGPATH_W) '$(srcdir)/demux.c'; fi`
+
+libffmpegaltivec_plugin_a-ffmpeg.o: ffmpeg.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_plugin_a-ffmpeg.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_plugin_a-ffmpeg.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_plugin_a-ffmpeg.o `test -f 'ffmpeg.c' || echo '$(srcdir)/'`ffmpeg.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_plugin_a-ffmpeg.Tpo" "$(DEPDIR)/libffmpegaltivec_plugin_a-ffmpeg.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_plugin_a-ffmpeg.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ffmpeg.c' object='libffmpegaltivec_plugin_a-ffmpeg.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_plugin_a-ffmpeg.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_plugin_a-ffmpeg.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_plugin_a-ffmpeg.o `test -f 'ffmpeg.c' || echo '$(srcdir)/'`ffmpeg.c
+
+libffmpegaltivec_plugin_a-ffmpeg.obj: ffmpeg.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_plugin_a-ffmpeg.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_plugin_a-ffmpeg.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_plugin_a-ffmpeg.obj `if test -f 'ffmpeg.c'; then $(CYGPATH_W) 'ffmpeg.c'; else $(CYGPATH_W) '$(srcdir)/ffmpeg.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_plugin_a-ffmpeg.Tpo" "$(DEPDIR)/libffmpegaltivec_plugin_a-ffmpeg.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_plugin_a-ffmpeg.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ffmpeg.c' object='libffmpegaltivec_plugin_a-ffmpeg.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_plugin_a-ffmpeg.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_plugin_a-ffmpeg.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_plugin_a-ffmpeg.obj `if test -f 'ffmpeg.c'; then $(CYGPATH_W) 'ffmpeg.c'; else $(CYGPATH_W) '$(srcdir)/ffmpeg.c'; fi`
+
+libffmpegaltivec_plugin_a-video.o: video.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_plugin_a-video.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_plugin_a-video.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_plugin_a-video.o `test -f 'video.c' || echo '$(srcdir)/'`video.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_plugin_a-video.Tpo" "$(DEPDIR)/libffmpegaltivec_plugin_a-video.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_plugin_a-video.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video.c' object='libffmpegaltivec_plugin_a-video.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_plugin_a-video.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_plugin_a-video.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_plugin_a-video.o `test -f 'video.c' || echo '$(srcdir)/'`video.c
+
+libffmpegaltivec_plugin_a-video.obj: video.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_plugin_a-video.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_plugin_a-video.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_plugin_a-video.obj `if test -f 'video.c'; then $(CYGPATH_W) 'video.c'; else $(CYGPATH_W) '$(srcdir)/video.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_plugin_a-video.Tpo" "$(DEPDIR)/libffmpegaltivec_plugin_a-video.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_plugin_a-video.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video.c' object='libffmpegaltivec_plugin_a-video.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_plugin_a-video.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_plugin_a-video.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_plugin_a-video.obj `if test -f 'video.c'; then $(CYGPATH_W) 'video.c'; else $(CYGPATH_W) '$(srcdir)/video.c'; fi`
+
+libffmpegaltivec_plugin_a-audio.o: audio.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_plugin_a-audio.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_plugin_a-audio.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_plugin_a-audio.o `test -f 'audio.c' || echo '$(srcdir)/'`audio.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_plugin_a-audio.Tpo" "$(DEPDIR)/libffmpegaltivec_plugin_a-audio.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_plugin_a-audio.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='audio.c' object='libffmpegaltivec_plugin_a-audio.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_plugin_a-audio.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_plugin_a-audio.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_plugin_a-audio.o `test -f 'audio.c' || echo '$(srcdir)/'`audio.c
+
+libffmpegaltivec_plugin_a-audio.obj: audio.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_plugin_a-audio.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_plugin_a-audio.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_plugin_a-audio.obj `if test -f 'audio.c'; then $(CYGPATH_W) 'audio.c'; else $(CYGPATH_W) '$(srcdir)/audio.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_plugin_a-audio.Tpo" "$(DEPDIR)/libffmpegaltivec_plugin_a-audio.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_plugin_a-audio.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='audio.c' object='libffmpegaltivec_plugin_a-audio.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_plugin_a-audio.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_plugin_a-audio.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_plugin_a-audio.obj `if test -f 'audio.c'; then $(CYGPATH_W) 'audio.c'; else $(CYGPATH_W) '$(srcdir)/audio.c'; fi`
+
+libffmpegaltivec_plugin_a-video_filter.o: video_filter.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_plugin_a-video_filter.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_plugin_a-video_filter.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_plugin_a-video_filter.o `test -f 'video_filter.c' || echo '$(srcdir)/'`video_filter.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_plugin_a-video_filter.Tpo" "$(DEPDIR)/libffmpegaltivec_plugin_a-video_filter.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_plugin_a-video_filter.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video_filter.c' object='libffmpegaltivec_plugin_a-video_filter.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_plugin_a-video_filter.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_plugin_a-video_filter.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_plugin_a-video_filter.o `test -f 'video_filter.c' || echo '$(srcdir)/'`video_filter.c
+
+libffmpegaltivec_plugin_a-video_filter.obj: video_filter.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_plugin_a-video_filter.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_plugin_a-video_filter.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_plugin_a-video_filter.obj `if test -f 'video_filter.c'; then $(CYGPATH_W) 'video_filter.c'; else $(CYGPATH_W) '$(srcdir)/video_filter.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_plugin_a-video_filter.Tpo" "$(DEPDIR)/libffmpegaltivec_plugin_a-video_filter.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_plugin_a-video_filter.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='video_filter.c' object='libffmpegaltivec_plugin_a-video_filter.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_plugin_a-video_filter.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_plugin_a-video_filter.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_plugin_a-video_filter.obj `if test -f 'video_filter.c'; then $(CYGPATH_W) 'video_filter.c'; else $(CYGPATH_W) '$(srcdir)/video_filter.c'; fi`
+
+libffmpegaltivec_plugin_a-chroma.o: chroma.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_plugin_a-chroma.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_plugin_a-chroma.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_plugin_a-chroma.o `test -f 'chroma.c' || echo '$(srcdir)/'`chroma.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_plugin_a-chroma.Tpo" "$(DEPDIR)/libffmpegaltivec_plugin_a-chroma.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_plugin_a-chroma.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chroma.c' object='libffmpegaltivec_plugin_a-chroma.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_plugin_a-chroma.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_plugin_a-chroma.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_plugin_a-chroma.o `test -f 'chroma.c' || echo '$(srcdir)/'`chroma.c
+
+libffmpegaltivec_plugin_a-chroma.obj: chroma.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_plugin_a-chroma.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_plugin_a-chroma.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_plugin_a-chroma.obj `if test -f 'chroma.c'; then $(CYGPATH_W) 'chroma.c'; else $(CYGPATH_W) '$(srcdir)/chroma.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_plugin_a-chroma.Tpo" "$(DEPDIR)/libffmpegaltivec_plugin_a-chroma.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_plugin_a-chroma.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chroma.c' object='libffmpegaltivec_plugin_a-chroma.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_plugin_a-chroma.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_plugin_a-chroma.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_plugin_a-chroma.obj `if test -f 'chroma.c'; then $(CYGPATH_W) 'chroma.c'; else $(CYGPATH_W) '$(srcdir)/chroma.c'; fi`
+
+libffmpegaltivec_plugin_a-encoder.o: encoder.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_plugin_a-encoder.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_plugin_a-encoder.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_plugin_a-encoder.o `test -f 'encoder.c' || echo '$(srcdir)/'`encoder.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_plugin_a-encoder.Tpo" "$(DEPDIR)/libffmpegaltivec_plugin_a-encoder.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_plugin_a-encoder.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='encoder.c' object='libffmpegaltivec_plugin_a-encoder.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_plugin_a-encoder.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_plugin_a-encoder.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_plugin_a-encoder.o `test -f 'encoder.c' || echo '$(srcdir)/'`encoder.c
+
+libffmpegaltivec_plugin_a-encoder.obj: encoder.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_plugin_a-encoder.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_plugin_a-encoder.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_plugin_a-encoder.obj `if test -f 'encoder.c'; then $(CYGPATH_W) 'encoder.c'; else $(CYGPATH_W) '$(srcdir)/encoder.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_plugin_a-encoder.Tpo" "$(DEPDIR)/libffmpegaltivec_plugin_a-encoder.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_plugin_a-encoder.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='encoder.c' object='libffmpegaltivec_plugin_a-encoder.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_plugin_a-encoder.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_plugin_a-encoder.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_plugin_a-encoder.obj `if test -f 'encoder.c'; then $(CYGPATH_W) 'encoder.c'; else $(CYGPATH_W) '$(srcdir)/encoder.c'; fi`
+
+libffmpegaltivec_plugin_a-postprocess.o: postprocess.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_plugin_a-postprocess.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_plugin_a-postprocess.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_plugin_a-postprocess.o `test -f 'postprocess.c' || echo '$(srcdir)/'`postprocess.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_plugin_a-postprocess.Tpo" "$(DEPDIR)/libffmpegaltivec_plugin_a-postprocess.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_plugin_a-postprocess.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='postprocess.c' object='libffmpegaltivec_plugin_a-postprocess.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_plugin_a-postprocess.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_plugin_a-postprocess.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_plugin_a-postprocess.o `test -f 'postprocess.c' || echo '$(srcdir)/'`postprocess.c
+
+libffmpegaltivec_plugin_a-postprocess.obj: postprocess.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_plugin_a-postprocess.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_plugin_a-postprocess.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_plugin_a-postprocess.obj `if test -f 'postprocess.c'; then $(CYGPATH_W) 'postprocess.c'; else $(CYGPATH_W) '$(srcdir)/postprocess.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_plugin_a-postprocess.Tpo" "$(DEPDIR)/libffmpegaltivec_plugin_a-postprocess.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_plugin_a-postprocess.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='postprocess.c' object='libffmpegaltivec_plugin_a-postprocess.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_plugin_a-postprocess.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_plugin_a-postprocess.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_plugin_a-postprocess.obj `if test -f 'postprocess.c'; then $(CYGPATH_W) 'postprocess.c'; else $(CYGPATH_W) '$(srcdir)/postprocess.c'; fi`
+
+libffmpegaltivec_plugin_a-demux.o: demux.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_plugin_a-demux.o -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_plugin_a-demux.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_plugin_a-demux.o `test -f 'demux.c' || echo '$(srcdir)/'`demux.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_plugin_a-demux.Tpo" "$(DEPDIR)/libffmpegaltivec_plugin_a-demux.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_plugin_a-demux.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='demux.c' object='libffmpegaltivec_plugin_a-demux.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_plugin_a-demux.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_plugin_a-demux.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_plugin_a-demux.o `test -f 'demux.c' || echo '$(srcdir)/'`demux.c
+
+libffmpegaltivec_plugin_a-demux.obj: demux.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -MT libffmpegaltivec_plugin_a-demux.obj -MD -MP -MF "$(DEPDIR)/libffmpegaltivec_plugin_a-demux.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libffmpegaltivec_plugin_a-demux.obj `if test -f 'demux.c'; then $(CYGPATH_W) 'demux.c'; else $(CYGPATH_W) '$(srcdir)/demux.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libffmpegaltivec_plugin_a-demux.Tpo" "$(DEPDIR)/libffmpegaltivec_plugin_a-demux.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libffmpegaltivec_plugin_a-demux.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='demux.c' object='libffmpegaltivec_plugin_a-demux.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libffmpegaltivec_plugin_a-demux.Po' tmpdepfile='$(DEPDIR)/libffmpegaltivec_plugin_a-demux.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libffmpegaltivec_plugin_a_CFLAGS) $(CFLAGS) -c -o libffmpegaltivec_plugin_a-demux.obj `if test -f 'demux.c'; then $(CYGPATH_W) 'demux.c'; else $(CYGPATH_W) '$(srcdir)/demux.c'; fi`
 uninstall-info-am:
 libffmpegDATA_INSTALL = $(INSTALL_DATA)
 install-libffmpegDATA: $(libffmpeg_DATA)
@@ -945,6 +1688,24 @@ uninstall-libffmpegDATA:
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
 	  echo " rm -f $(DESTDIR)$(libffmpegdir)/$$f"; \
 	  rm -f $(DESTDIR)$(libffmpegdir)/$$f; \
+	done
+libffmpegaltivecDATA_INSTALL = $(INSTALL_DATA)
+install-libffmpegaltivecDATA: $(libffmpegaltivec_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libffmpegaltivecdir)
+	@list='$(libffmpegaltivec_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libffmpegaltivecDATA_INSTALL) $$d$$p $(DESTDIR)$(libffmpegaltivecdir)/$$f"; \
+	  $(libffmpegaltivecDATA_INSTALL) $$d$$p $(DESTDIR)$(libffmpegaltivecdir)/$$f; \
+	done
+
+uninstall-libffmpegaltivecDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libffmpegaltivec_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libffmpegaltivecdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libffmpegaltivecdir)/$$f; \
 	done
 
 # This directory's subdirectories are mostly independent; you can cd
@@ -1121,7 +1882,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libffmpegdir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libffmpegdir) $(DESTDIR)$(libffmpegaltivecdir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -1168,7 +1929,8 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-libffmpegDATA install-libvlcLIBRARIES
+install-data-am: install-libffmpegDATA install-libffmpegaltivecDATA \
+	install-libvlcLIBRARIES
 
 install-exec-am:
 
@@ -1196,7 +1958,7 @@ ps: ps-recursive
 ps-am:
 
 uninstall-am: uninstall-info-am uninstall-libffmpegDATA \
-	uninstall-libvlcLIBRARIES
+	uninstall-libffmpegaltivecDATA uninstall-libvlcLIBRARIES
 
 uninstall-info: uninstall-info-recursive
 
@@ -1209,16 +1971,17 @@ uninstall-info: uninstall-info-recursive
 	install-data install-data-am install-data-recursive \
 	install-exec install-exec-am install-exec-recursive \
 	install-info install-info-am install-info-recursive \
-	install-libffmpegDATA install-libvlcLIBRARIES install-man \
-	install-recursive install-strip installcheck installcheck-am \
-	installdirs installdirs-am installdirs-recursive \
-	maintainer-clean maintainer-clean-generic \
-	maintainer-clean-recursive mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
-	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
-	uninstall uninstall-am uninstall-info-am \
+	install-libffmpegDATA install-libffmpegaltivecDATA \
+	install-libvlcLIBRARIES install-man install-recursive \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am installdirs-recursive maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-recursive \
+	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
+	tags-recursive uninstall uninstall-am uninstall-info-am \
 	uninstall-info-recursive uninstall-libffmpegDATA \
-	uninstall-libvlcLIBRARIES uninstall-recursive
+	uninstall-libffmpegaltivecDATA uninstall-libvlcLIBRARIES \
+	uninstall-recursive
 
 
 clean-local:
@@ -1227,9 +1990,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in ffmpeg; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in ffmpeg; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in ffmpeg; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in ffmpeg ffmpegaltivec; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in ffmpeg ffmpegaltivec; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in ffmpeg ffmpegaltivec; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 libffmpeg_plugin$(LIBEXT): $(libffmpeg_plugin_a_OBJECTS)
@@ -1237,6 +2000,12 @@ libffmpeg_plugin$(LIBEXT): $(libffmpeg_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libffmpeg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ffmpeg\` ; $(CXXLINK) $(libffmpeg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ffmpeg` ;; \
 	  objc) echo $(OBJCLINK) $(libffmpeg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ffmpeg\` ; $(OBJCLINK) $(libffmpeg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ffmpeg` ;; \
 	  c|*) echo $(LINK) $(libffmpeg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ffmpeg\` ; $(LINK) $(libffmpeg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ffmpeg` ;; \
+	esac
+libffmpegaltivec_plugin$(LIBEXT): $(libffmpegaltivec_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage ffmpegaltivec` in \
+	  c++) echo $(CXXLINK) $(libffmpegaltivec_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ffmpegaltivec\` ; $(CXXLINK) $(libffmpegaltivec_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ffmpegaltivec` ;; \
+	  objc) echo $(OBJCLINK) $(libffmpegaltivec_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ffmpegaltivec\` ; $(OBJCLINK) $(libffmpegaltivec_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ffmpegaltivec` ;; \
+	  c|*) echo $(LINK) $(libffmpegaltivec_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ffmpegaltivec\` ; $(LINK) $(libffmpegaltivec_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ffmpegaltivec` ;; \
 	esac
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

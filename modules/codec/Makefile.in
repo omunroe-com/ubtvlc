@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -228,14 +230,14 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(La52b) $(La52pic) $(Lcinepakb) $(Lcinepakpic) $(Ldtsb) $(Ldtspic) $(Lflacdecb) $(Lflacdecpic) $(Llpcmb) $(Llpcmpic) $(Larawb) $(Larawpic) $(Lvorbisb) $(Lvorbispic) $(Ltarkinb) $(Ltarkinpic) $(Ltheorab) $(Ltheorapic) $(Ltremorb) $(Ltremorpic) $(Lspeexb) $(Lspeexpic) $(Ladpcmb) $(Ladpcmpic) $(Lmpeg_audiob) $(Lmpeg_audiopic) $(Llibmpeg2b) $(Llibmpeg2pic) $(Lrawvideob) $(Lrawvideopic) $(Lquicktimeb) $(Lquicktimepic) $(Lsubsdecb) $(Lsubsdecpic) $(Lfaadb) $(Lfaadpic) $(Ldvbsubb) $(Ldvbsubpic) $(Lmashb) $(Lmashpic) $(Lx264b) $(Lx264pic)
-noinst_LIBRARIES = $(La52p) $(Lcinepakp) $(Ldtsp) $(Lflacdecp) $(Llpcmp) $(Larawp) $(Lvorbisp) $(Ltarkinp) $(Ltheorap) $(Ltremorp) $(Lspeexp) $(Ladpcmp) $(Lmpeg_audiop) $(Llibmpeg2p) $(Lrawvideop) $(Lquicktimep) $(Lsubsdecp) $(Lfaadp) $(Ldvbsubp) $(Lmashp) $(Lx264p)
+libvlc_LIBRARIES = $(La52b) $(La52pic) $(Lcinepakb) $(Lcinepakpic) $(Ldtsb) $(Ldtspic) $(Lflacdecb) $(Lflacdecpic) $(Llpcmb) $(Llpcmpic) $(Larawb) $(Larawpic) $(Lvorbisb) $(Lvorbispic) $(Ltarkinb) $(Ltarkinpic) $(Ltheorab) $(Ltheorapic) $(Ltremorb) $(Ltremorpic) $(Lspeexb) $(Lspeexpic) $(Ladpcmb) $(Ladpcmpic) $(Lmpeg_audiob) $(Lmpeg_audiopic) $(Llibmpeg2b) $(Llibmpeg2pic) $(Lrawvideob) $(Lrawvideopic) $(Lquicktimeb) $(Lquicktimepic) $(Lsubsdecb) $(Lsubsdecpic) $(Lfaadb) $(Lfaadpic) $(Ldvbsubb) $(Ldvbsubpic) $(Lmashb) $(Lmashpic) $(Lx264b) $(Lx264pic) $(Ltoolameb) $(Ltoolamepic)
+noinst_LIBRARIES = $(La52p) $(Lcinepakp) $(Ldtsp) $(Lflacdecp) $(Llpcmp) $(Larawp) $(Lvorbisp) $(Ltarkinp) $(Ltheorap) $(Ltremorp) $(Lspeexp) $(Ladpcmp) $(Lmpeg_audiop) $(Llibmpeg2p) $(Lrawvideop) $(Lquicktimep) $(Lsubsdecp) $(Lfaadp) $(Ldvbsubp) $(Lmashp) $(Lx264p) $(Ltoolamep)
 noinst_HEADERS = 
 
 # Disabled modules
 EXTRA_DIST = Modules.am dv.c xvid.c
 BUILT_SOURCES = 
-SUBDIRS = cmml ffmpeg ogt spudec
+SUBDIRS = cmml dmo ffmpeg ogt spudec
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/codec
 
@@ -260,6 +262,7 @@ SOURCES_faad = faad.c
 SOURCES_dvbsub = dvbsub.c
 SOURCES_mash = mash.cpp
 SOURCES_x264 = x264.c
+SOURCES_toolame = toolame.c
 
 # There's no need for pic code on win32 so get rid of this to substantially
 # reduce the compilation time.
@@ -790,6 +793,31 @@ libx264_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin x264`
 libx264_DATA = $(Dx264p)
 
 libx264dir = $(libdir)/vlc/
+
+
+# The toolame plugin
+@UNTRUE_TRUE@Ltoolamep = libtoolame_plugin.a
+@UNTRUE_TRUE@Dtoolamep = libtoolame_plugin$(LIBEXT)
+@UNTRUE_TRUE@Ltoolameb = libtoolame.a
+@UNTRUE_TRUE@Ltoolamepic = libtoolame_pic.a
+
+libtoolame_plugin_a_SOURCES = $(SOURCES_toolame)
+libtoolame_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin toolame`
+libtoolame_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin toolame`
+libtoolame_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin toolame`
+
+libtoolame_pic_a_SOURCES = $(SOURCES_toolame)
+libtoolame_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic toolame`
+libtoolame_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic toolame`
+libtoolame_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic toolame`
+
+libtoolame_a_SOURCES = $(SOURCES_toolame)
+libtoolame_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin toolame`
+libtoolame_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin toolame`
+libtoolame_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin toolame`
+libtoolame_DATA = $(Dtoolamep)
+
+libtoolamedir = $(libdir)/vlc/
 subdir = modules/codec
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
@@ -1067,50 +1095,65 @@ libtheora_plugin_a_LIBADD =
 am__objects_54 = libtheora_plugin_a-theora.$(OBJEXT)
 am_libtheora_plugin_a_OBJECTS = $(am__objects_54)
 libtheora_plugin_a_OBJECTS = $(am_libtheora_plugin_a_OBJECTS)
+libtoolame_a_AR = $(AR) cru
+libtoolame_a_LIBADD =
+am__objects_55 = libtoolame_a-toolame.$(OBJEXT)
+am_libtoolame_a_OBJECTS = $(am__objects_55)
+libtoolame_a_OBJECTS = $(am_libtoolame_a_OBJECTS)
+libtoolame_pic_a_AR = $(AR) cru
+libtoolame_pic_a_LIBADD =
+am__objects_56 = libtoolame_pic_a-toolame.$(OBJEXT)
+am_libtoolame_pic_a_OBJECTS = $(am__objects_56)
+libtoolame_pic_a_OBJECTS = $(am_libtoolame_pic_a_OBJECTS)
+libtoolame_plugin_a_AR = $(AR) cru
+libtoolame_plugin_a_LIBADD =
+am__objects_57 = libtoolame_plugin_a-toolame.$(OBJEXT)
+am_libtoolame_plugin_a_OBJECTS = $(am__objects_57)
+libtoolame_plugin_a_OBJECTS = $(am_libtoolame_plugin_a_OBJECTS)
 libtremor_a_AR = $(AR) cru
 libtremor_a_LIBADD =
-am__objects_55 = libtremor_a-vorbis.$(OBJEXT)
-am_libtremor_a_OBJECTS = $(am__objects_55)
+am__objects_58 = libtremor_a-vorbis.$(OBJEXT)
+am_libtremor_a_OBJECTS = $(am__objects_58)
 libtremor_a_OBJECTS = $(am_libtremor_a_OBJECTS)
 libtremor_pic_a_AR = $(AR) cru
 libtremor_pic_a_LIBADD =
-am__objects_56 = libtremor_pic_a-vorbis.$(OBJEXT)
-am_libtremor_pic_a_OBJECTS = $(am__objects_56)
+am__objects_59 = libtremor_pic_a-vorbis.$(OBJEXT)
+am_libtremor_pic_a_OBJECTS = $(am__objects_59)
 libtremor_pic_a_OBJECTS = $(am_libtremor_pic_a_OBJECTS)
 libtremor_plugin_a_AR = $(AR) cru
 libtremor_plugin_a_LIBADD =
-am__objects_57 = libtremor_plugin_a-vorbis.$(OBJEXT)
-am_libtremor_plugin_a_OBJECTS = $(am__objects_57)
+am__objects_60 = libtremor_plugin_a-vorbis.$(OBJEXT)
+am_libtremor_plugin_a_OBJECTS = $(am__objects_60)
 libtremor_plugin_a_OBJECTS = $(am_libtremor_plugin_a_OBJECTS)
 libvorbis_a_AR = $(AR) cru
 libvorbis_a_LIBADD =
-am__objects_58 = libvorbis_a-vorbis.$(OBJEXT)
-am_libvorbis_a_OBJECTS = $(am__objects_58)
+am__objects_61 = libvorbis_a-vorbis.$(OBJEXT)
+am_libvorbis_a_OBJECTS = $(am__objects_61)
 libvorbis_a_OBJECTS = $(am_libvorbis_a_OBJECTS)
 libvorbis_pic_a_AR = $(AR) cru
 libvorbis_pic_a_LIBADD =
-am__objects_59 = libvorbis_pic_a-vorbis.$(OBJEXT)
-am_libvorbis_pic_a_OBJECTS = $(am__objects_59)
+am__objects_62 = libvorbis_pic_a-vorbis.$(OBJEXT)
+am_libvorbis_pic_a_OBJECTS = $(am__objects_62)
 libvorbis_pic_a_OBJECTS = $(am_libvorbis_pic_a_OBJECTS)
 libvorbis_plugin_a_AR = $(AR) cru
 libvorbis_plugin_a_LIBADD =
-am__objects_60 = libvorbis_plugin_a-vorbis.$(OBJEXT)
-am_libvorbis_plugin_a_OBJECTS = $(am__objects_60)
+am__objects_63 = libvorbis_plugin_a-vorbis.$(OBJEXT)
+am_libvorbis_plugin_a_OBJECTS = $(am__objects_63)
 libvorbis_plugin_a_OBJECTS = $(am_libvorbis_plugin_a_OBJECTS)
 libx264_a_AR = $(AR) cru
 libx264_a_LIBADD =
-am__objects_61 = libx264_a-x264.$(OBJEXT)
-am_libx264_a_OBJECTS = $(am__objects_61)
+am__objects_64 = libx264_a-x264.$(OBJEXT)
+am_libx264_a_OBJECTS = $(am__objects_64)
 libx264_a_OBJECTS = $(am_libx264_a_OBJECTS)
 libx264_pic_a_AR = $(AR) cru
 libx264_pic_a_LIBADD =
-am__objects_62 = libx264_pic_a-x264.$(OBJEXT)
-am_libx264_pic_a_OBJECTS = $(am__objects_62)
+am__objects_65 = libx264_pic_a-x264.$(OBJEXT)
+am_libx264_pic_a_OBJECTS = $(am__objects_65)
 libx264_pic_a_OBJECTS = $(am_libx264_pic_a_OBJECTS)
 libx264_plugin_a_AR = $(AR) cru
 libx264_plugin_a_LIBADD =
-am__objects_63 = libx264_plugin_a-x264.$(OBJEXT)
-am_libx264_plugin_a_OBJECTS = $(am__objects_63)
+am__objects_66 = libx264_plugin_a-x264.$(OBJEXT)
+am_libx264_plugin_a_OBJECTS = $(am__objects_66)
 libx264_plugin_a_OBJECTS = $(am_libx264_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
@@ -1170,6 +1213,9 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libtheora_a-theora.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libtheora_pic_a-theora.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libtheora_plugin_a-theora.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libtoolame_a-toolame.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libtoolame_pic_a-toolame.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libtoolame_plugin_a-toolame.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libtremor_a-vorbis.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libtremor_pic_a-vorbis.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libtremor_plugin_a-vorbis.Po \
@@ -1215,18 +1261,21 @@ DIST_SOURCES = $(liba52_a_SOURCES) $(liba52_pic_a_SOURCES) \
 	$(libsubsdec_plugin_a_SOURCES) $(libtarkin_a_SOURCES) \
 	$(libtarkin_pic_a_SOURCES) $(libtarkin_plugin_a_SOURCES) \
 	$(libtheora_a_SOURCES) $(libtheora_pic_a_SOURCES) \
-	$(libtheora_plugin_a_SOURCES) $(libtremor_a_SOURCES) \
-	$(libtremor_pic_a_SOURCES) $(libtremor_plugin_a_SOURCES) \
-	$(libvorbis_a_SOURCES) $(libvorbis_pic_a_SOURCES) \
-	$(libvorbis_plugin_a_SOURCES) $(libx264_a_SOURCES) \
-	$(libx264_pic_a_SOURCES) $(libx264_plugin_a_SOURCES)
+	$(libtheora_plugin_a_SOURCES) $(libtoolame_a_SOURCES) \
+	$(libtoolame_pic_a_SOURCES) $(libtoolame_plugin_a_SOURCES) \
+	$(libtremor_a_SOURCES) $(libtremor_pic_a_SOURCES) \
+	$(libtremor_plugin_a_SOURCES) $(libvorbis_a_SOURCES) \
+	$(libvorbis_pic_a_SOURCES) $(libvorbis_plugin_a_SOURCES) \
+	$(libx264_a_SOURCES) $(libx264_pic_a_SOURCES) \
+	$(libx264_plugin_a_SOURCES)
 DATA = $(liba52_DATA) $(libadpcm_DATA) $(libaraw_DATA) \
 	$(libcinepak_DATA) $(libdts_DATA) $(libdvbsub_DATA) \
 	$(libfaad_DATA) $(libflacdec_DATA) $(liblibmpeg2_DATA) \
 	$(liblpcm_DATA) $(libmash_DATA) $(libmpeg_audio_DATA) \
 	$(libquicktime_DATA) $(librawvideo_DATA) $(libspeex_DATA) \
 	$(libsubsdec_DATA) $(libtarkin_DATA) $(libtheora_DATA) \
-	$(libtremor_DATA) $(libvorbis_DATA) $(libx264_DATA)
+	$(libtoolame_DATA) $(libtremor_DATA) $(libvorbis_DATA) \
+	$(libx264_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -1239,7 +1288,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(liba52_a_SOURCES) $(liba52_pic_a_SOURCES) $(liba52_plugin_a_SOURCES) $(libadpcm_a_SOURCES) $(libadpcm_pic_a_SOURCES) $(libadpcm_plugin_a_SOURCES) $(libaraw_a_SOURCES) $(libaraw_pic_a_SOURCES) $(libaraw_plugin_a_SOURCES) $(libcinepak_a_SOURCES) $(libcinepak_pic_a_SOURCES) $(libcinepak_plugin_a_SOURCES) $(libdts_a_SOURCES) $(libdts_pic_a_SOURCES) $(libdts_plugin_a_SOURCES) $(libdvbsub_a_SOURCES) $(libdvbsub_pic_a_SOURCES) $(libdvbsub_plugin_a_SOURCES) $(libfaad_a_SOURCES) $(libfaad_pic_a_SOURCES) $(libfaad_plugin_a_SOURCES) $(libflacdec_a_SOURCES) $(libflacdec_pic_a_SOURCES) $(libflacdec_plugin_a_SOURCES) $(liblibmpeg2_a_SOURCES) $(liblibmpeg2_pic_a_SOURCES) $(liblibmpeg2_plugin_a_SOURCES) $(liblpcm_a_SOURCES) $(liblpcm_pic_a_SOURCES) $(liblpcm_plugin_a_SOURCES) $(libmash_a_SOURCES) $(libmash_pic_a_SOURCES) $(libmash_plugin_a_SOURCES) $(libmpeg_audio_a_SOURCES) $(libmpeg_audio_pic_a_SOURCES) $(libmpeg_audio_plugin_a_SOURCES) $(libquicktime_a_SOURCES) $(libquicktime_pic_a_SOURCES) $(libquicktime_plugin_a_SOURCES) $(librawvideo_a_SOURCES) $(librawvideo_pic_a_SOURCES) $(librawvideo_plugin_a_SOURCES) $(libspeex_a_SOURCES) $(libspeex_pic_a_SOURCES) $(libspeex_plugin_a_SOURCES) $(libsubsdec_a_SOURCES) $(libsubsdec_pic_a_SOURCES) $(libsubsdec_plugin_a_SOURCES) $(libtarkin_a_SOURCES) $(libtarkin_pic_a_SOURCES) $(libtarkin_plugin_a_SOURCES) $(libtheora_a_SOURCES) $(libtheora_pic_a_SOURCES) $(libtheora_plugin_a_SOURCES) $(libtremor_a_SOURCES) $(libtremor_pic_a_SOURCES) $(libtremor_plugin_a_SOURCES) $(libvorbis_a_SOURCES) $(libvorbis_pic_a_SOURCES) $(libvorbis_plugin_a_SOURCES) $(libx264_a_SOURCES) $(libx264_pic_a_SOURCES) $(libx264_plugin_a_SOURCES)
+SOURCES = $(liba52_a_SOURCES) $(liba52_pic_a_SOURCES) $(liba52_plugin_a_SOURCES) $(libadpcm_a_SOURCES) $(libadpcm_pic_a_SOURCES) $(libadpcm_plugin_a_SOURCES) $(libaraw_a_SOURCES) $(libaraw_pic_a_SOURCES) $(libaraw_plugin_a_SOURCES) $(libcinepak_a_SOURCES) $(libcinepak_pic_a_SOURCES) $(libcinepak_plugin_a_SOURCES) $(libdts_a_SOURCES) $(libdts_pic_a_SOURCES) $(libdts_plugin_a_SOURCES) $(libdvbsub_a_SOURCES) $(libdvbsub_pic_a_SOURCES) $(libdvbsub_plugin_a_SOURCES) $(libfaad_a_SOURCES) $(libfaad_pic_a_SOURCES) $(libfaad_plugin_a_SOURCES) $(libflacdec_a_SOURCES) $(libflacdec_pic_a_SOURCES) $(libflacdec_plugin_a_SOURCES) $(liblibmpeg2_a_SOURCES) $(liblibmpeg2_pic_a_SOURCES) $(liblibmpeg2_plugin_a_SOURCES) $(liblpcm_a_SOURCES) $(liblpcm_pic_a_SOURCES) $(liblpcm_plugin_a_SOURCES) $(libmash_a_SOURCES) $(libmash_pic_a_SOURCES) $(libmash_plugin_a_SOURCES) $(libmpeg_audio_a_SOURCES) $(libmpeg_audio_pic_a_SOURCES) $(libmpeg_audio_plugin_a_SOURCES) $(libquicktime_a_SOURCES) $(libquicktime_pic_a_SOURCES) $(libquicktime_plugin_a_SOURCES) $(librawvideo_a_SOURCES) $(librawvideo_pic_a_SOURCES) $(librawvideo_plugin_a_SOURCES) $(libspeex_a_SOURCES) $(libspeex_pic_a_SOURCES) $(libspeex_plugin_a_SOURCES) $(libsubsdec_a_SOURCES) $(libsubsdec_pic_a_SOURCES) $(libsubsdec_plugin_a_SOURCES) $(libtarkin_a_SOURCES) $(libtarkin_pic_a_SOURCES) $(libtarkin_plugin_a_SOURCES) $(libtheora_a_SOURCES) $(libtheora_pic_a_SOURCES) $(libtheora_plugin_a_SOURCES) $(libtoolame_a_SOURCES) $(libtoolame_pic_a_SOURCES) $(libtoolame_plugin_a_SOURCES) $(libtremor_a_SOURCES) $(libtremor_pic_a_SOURCES) $(libtremor_plugin_a_SOURCES) $(libvorbis_a_SOURCES) $(libvorbis_pic_a_SOURCES) $(libvorbis_plugin_a_SOURCES) $(libx264_a_SOURCES) $(libx264_pic_a_SOURCES) $(libx264_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -1500,6 +1549,18 @@ libtheora_plugin.a: $(libtheora_plugin_a_OBJECTS) $(libtheora_plugin_a_DEPENDENC
 	-rm -f libtheora_plugin.a
 	$(libtheora_plugin_a_AR) libtheora_plugin.a $(libtheora_plugin_a_OBJECTS) $(libtheora_plugin_a_LIBADD)
 	$(RANLIB) libtheora_plugin.a
+libtoolame.a: $(libtoolame_a_OBJECTS) $(libtoolame_a_DEPENDENCIES) 
+	-rm -f libtoolame.a
+	$(libtoolame_a_AR) libtoolame.a $(libtoolame_a_OBJECTS) $(libtoolame_a_LIBADD)
+	$(RANLIB) libtoolame.a
+libtoolame_pic.a: $(libtoolame_pic_a_OBJECTS) $(libtoolame_pic_a_DEPENDENCIES) 
+	-rm -f libtoolame_pic.a
+	$(libtoolame_pic_a_AR) libtoolame_pic.a $(libtoolame_pic_a_OBJECTS) $(libtoolame_pic_a_LIBADD)
+	$(RANLIB) libtoolame_pic.a
+libtoolame_plugin.a: $(libtoolame_plugin_a_OBJECTS) $(libtoolame_plugin_a_DEPENDENCIES) 
+	-rm -f libtoolame_plugin.a
+	$(libtoolame_plugin_a_AR) libtoolame_plugin.a $(libtoolame_plugin_a_OBJECTS) $(libtoolame_plugin_a_LIBADD)
+	$(RANLIB) libtoolame_plugin.a
 libtremor.a: $(libtremor_a_OBJECTS) $(libtremor_a_DEPENDENCIES) 
 	-rm -f libtremor.a
 	$(libtremor_a_AR) libtremor.a $(libtremor_a_OBJECTS) $(libtremor_a_LIBADD)
@@ -1597,6 +1658,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtheora_a-theora.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtheora_pic_a-theora.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtheora_plugin_a-theora.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtoolame_a-toolame.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtoolame_pic_a-toolame.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtoolame_plugin_a-toolame.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtremor_a-vorbis.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtremor_pic_a-vorbis.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtremor_plugin_a-vorbis.Po@am__quote@
@@ -2751,6 +2815,72 @@ libtheora_plugin_a-theora.obj: theora.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtheora_plugin_a_CFLAGS) $(CFLAGS) -c -o libtheora_plugin_a-theora.obj `if test -f 'theora.c'; then $(CYGPATH_W) 'theora.c'; else $(CYGPATH_W) '$(srcdir)/theora.c'; fi`
 
+libtoolame_a-toolame.o: toolame.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtoolame_a_CFLAGS) $(CFLAGS) -MT libtoolame_a-toolame.o -MD -MP -MF "$(DEPDIR)/libtoolame_a-toolame.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libtoolame_a-toolame.o `test -f 'toolame.c' || echo '$(srcdir)/'`toolame.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libtoolame_a-toolame.Tpo" "$(DEPDIR)/libtoolame_a-toolame.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libtoolame_a-toolame.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='toolame.c' object='libtoolame_a-toolame.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libtoolame_a-toolame.Po' tmpdepfile='$(DEPDIR)/libtoolame_a-toolame.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtoolame_a_CFLAGS) $(CFLAGS) -c -o libtoolame_a-toolame.o `test -f 'toolame.c' || echo '$(srcdir)/'`toolame.c
+
+libtoolame_a-toolame.obj: toolame.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtoolame_a_CFLAGS) $(CFLAGS) -MT libtoolame_a-toolame.obj -MD -MP -MF "$(DEPDIR)/libtoolame_a-toolame.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libtoolame_a-toolame.obj `if test -f 'toolame.c'; then $(CYGPATH_W) 'toolame.c'; else $(CYGPATH_W) '$(srcdir)/toolame.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libtoolame_a-toolame.Tpo" "$(DEPDIR)/libtoolame_a-toolame.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libtoolame_a-toolame.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='toolame.c' object='libtoolame_a-toolame.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libtoolame_a-toolame.Po' tmpdepfile='$(DEPDIR)/libtoolame_a-toolame.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtoolame_a_CFLAGS) $(CFLAGS) -c -o libtoolame_a-toolame.obj `if test -f 'toolame.c'; then $(CYGPATH_W) 'toolame.c'; else $(CYGPATH_W) '$(srcdir)/toolame.c'; fi`
+
+libtoolame_pic_a-toolame.o: toolame.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtoolame_pic_a_CFLAGS) $(CFLAGS) -MT libtoolame_pic_a-toolame.o -MD -MP -MF "$(DEPDIR)/libtoolame_pic_a-toolame.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libtoolame_pic_a-toolame.o `test -f 'toolame.c' || echo '$(srcdir)/'`toolame.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libtoolame_pic_a-toolame.Tpo" "$(DEPDIR)/libtoolame_pic_a-toolame.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libtoolame_pic_a-toolame.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='toolame.c' object='libtoolame_pic_a-toolame.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libtoolame_pic_a-toolame.Po' tmpdepfile='$(DEPDIR)/libtoolame_pic_a-toolame.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtoolame_pic_a_CFLAGS) $(CFLAGS) -c -o libtoolame_pic_a-toolame.o `test -f 'toolame.c' || echo '$(srcdir)/'`toolame.c
+
+libtoolame_pic_a-toolame.obj: toolame.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtoolame_pic_a_CFLAGS) $(CFLAGS) -MT libtoolame_pic_a-toolame.obj -MD -MP -MF "$(DEPDIR)/libtoolame_pic_a-toolame.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libtoolame_pic_a-toolame.obj `if test -f 'toolame.c'; then $(CYGPATH_W) 'toolame.c'; else $(CYGPATH_W) '$(srcdir)/toolame.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libtoolame_pic_a-toolame.Tpo" "$(DEPDIR)/libtoolame_pic_a-toolame.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libtoolame_pic_a-toolame.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='toolame.c' object='libtoolame_pic_a-toolame.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libtoolame_pic_a-toolame.Po' tmpdepfile='$(DEPDIR)/libtoolame_pic_a-toolame.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtoolame_pic_a_CFLAGS) $(CFLAGS) -c -o libtoolame_pic_a-toolame.obj `if test -f 'toolame.c'; then $(CYGPATH_W) 'toolame.c'; else $(CYGPATH_W) '$(srcdir)/toolame.c'; fi`
+
+libtoolame_plugin_a-toolame.o: toolame.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtoolame_plugin_a_CFLAGS) $(CFLAGS) -MT libtoolame_plugin_a-toolame.o -MD -MP -MF "$(DEPDIR)/libtoolame_plugin_a-toolame.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libtoolame_plugin_a-toolame.o `test -f 'toolame.c' || echo '$(srcdir)/'`toolame.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libtoolame_plugin_a-toolame.Tpo" "$(DEPDIR)/libtoolame_plugin_a-toolame.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libtoolame_plugin_a-toolame.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='toolame.c' object='libtoolame_plugin_a-toolame.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libtoolame_plugin_a-toolame.Po' tmpdepfile='$(DEPDIR)/libtoolame_plugin_a-toolame.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtoolame_plugin_a_CFLAGS) $(CFLAGS) -c -o libtoolame_plugin_a-toolame.o `test -f 'toolame.c' || echo '$(srcdir)/'`toolame.c
+
+libtoolame_plugin_a-toolame.obj: toolame.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtoolame_plugin_a_CFLAGS) $(CFLAGS) -MT libtoolame_plugin_a-toolame.obj -MD -MP -MF "$(DEPDIR)/libtoolame_plugin_a-toolame.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libtoolame_plugin_a-toolame.obj `if test -f 'toolame.c'; then $(CYGPATH_W) 'toolame.c'; else $(CYGPATH_W) '$(srcdir)/toolame.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libtoolame_plugin_a-toolame.Tpo" "$(DEPDIR)/libtoolame_plugin_a-toolame.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libtoolame_plugin_a-toolame.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='toolame.c' object='libtoolame_plugin_a-toolame.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libtoolame_plugin_a-toolame.Po' tmpdepfile='$(DEPDIR)/libtoolame_plugin_a-toolame.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtoolame_plugin_a_CFLAGS) $(CFLAGS) -c -o libtoolame_plugin_a-toolame.obj `if test -f 'toolame.c'; then $(CYGPATH_W) 'toolame.c'; else $(CYGPATH_W) '$(srcdir)/toolame.c'; fi`
+
 libtremor_a-vorbis.o: vorbis.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtremor_a_CFLAGS) $(CFLAGS) -MT libtremor_a-vorbis.o -MD -MP -MF "$(DEPDIR)/libtremor_a-vorbis.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libtremor_a-vorbis.o `test -f 'vorbis.c' || echo '$(srcdir)/'`vorbis.c; \
@@ -3361,6 +3491,24 @@ uninstall-libtheoraDATA:
 	  echo " rm -f $(DESTDIR)$(libtheoradir)/$$f"; \
 	  rm -f $(DESTDIR)$(libtheoradir)/$$f; \
 	done
+libtoolameDATA_INSTALL = $(INSTALL_DATA)
+install-libtoolameDATA: $(libtoolame_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libtoolamedir)
+	@list='$(libtoolame_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libtoolameDATA_INSTALL) $$d$$p $(DESTDIR)$(libtoolamedir)/$$f"; \
+	  $(libtoolameDATA_INSTALL) $$d$$p $(DESTDIR)$(libtoolamedir)/$$f; \
+	done
+
+uninstall-libtoolameDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libtoolame_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libtoolamedir)/$$f"; \
+	  rm -f $(DESTDIR)$(libtoolamedir)/$$f; \
+	done
 libtremorDATA_INSTALL = $(INSTALL_DATA)
 install-libtremorDATA: $(libtremor_DATA)
 	@$(NORMAL_INSTALL)
@@ -3590,7 +3738,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(liba52dir) $(DESTDIR)$(libadpcmdir) $(DESTDIR)$(libarawdir) $(DESTDIR)$(libcinepakdir) $(DESTDIR)$(libdtsdir) $(DESTDIR)$(libdvbsubdir) $(DESTDIR)$(libfaaddir) $(DESTDIR)$(libflacdecdir) $(DESTDIR)$(liblibmpeg2dir) $(DESTDIR)$(liblpcmdir) $(DESTDIR)$(libmashdir) $(DESTDIR)$(libmpeg_audiodir) $(DESTDIR)$(libquicktimedir) $(DESTDIR)$(librawvideodir) $(DESTDIR)$(libspeexdir) $(DESTDIR)$(libsubsdecdir) $(DESTDIR)$(libtarkindir) $(DESTDIR)$(libtheoradir) $(DESTDIR)$(libtremordir) $(DESTDIR)$(libvorbisdir) $(DESTDIR)$(libx264dir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(liba52dir) $(DESTDIR)$(libadpcmdir) $(DESTDIR)$(libarawdir) $(DESTDIR)$(libcinepakdir) $(DESTDIR)$(libdtsdir) $(DESTDIR)$(libdvbsubdir) $(DESTDIR)$(libfaaddir) $(DESTDIR)$(libflacdecdir) $(DESTDIR)$(liblibmpeg2dir) $(DESTDIR)$(liblpcmdir) $(DESTDIR)$(libmashdir) $(DESTDIR)$(libmpeg_audiodir) $(DESTDIR)$(libquicktimedir) $(DESTDIR)$(librawvideodir) $(DESTDIR)$(libspeexdir) $(DESTDIR)$(libsubsdecdir) $(DESTDIR)$(libtarkindir) $(DESTDIR)$(libtheoradir) $(DESTDIR)$(libtoolamedir) $(DESTDIR)$(libtremordir) $(DESTDIR)$(libvorbisdir) $(DESTDIR)$(libx264dir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -3645,9 +3793,9 @@ install-data-am: install-liba52DATA install-libadpcmDATA \
 	install-libmpeg_audioDATA install-libquicktimeDATA \
 	install-librawvideoDATA install-libspeexDATA \
 	install-libsubsdecDATA install-libtarkinDATA \
-	install-libtheoraDATA install-libtremorDATA \
-	install-libvlcLIBRARIES install-libvorbisDATA \
-	install-libx264DATA
+	install-libtheoraDATA install-libtoolameDATA \
+	install-libtremorDATA install-libvlcLIBRARIES \
+	install-libvorbisDATA install-libx264DATA
 
 install-exec-am:
 
@@ -3683,9 +3831,9 @@ uninstall-am: uninstall-info-am uninstall-liba52DATA \
 	uninstall-libmpeg_audioDATA uninstall-libquicktimeDATA \
 	uninstall-librawvideoDATA uninstall-libspeexDATA \
 	uninstall-libsubsdecDATA uninstall-libtarkinDATA \
-	uninstall-libtheoraDATA uninstall-libtremorDATA \
-	uninstall-libvlcLIBRARIES uninstall-libvorbisDATA \
-	uninstall-libx264DATA
+	uninstall-libtheoraDATA uninstall-libtoolameDATA \
+	uninstall-libtremorDATA uninstall-libvlcLIBRARIES \
+	uninstall-libvorbisDATA uninstall-libx264DATA
 
 uninstall-info: uninstall-info-recursive
 
@@ -3705,11 +3853,12 @@ uninstall-info: uninstall-info-recursive
 	install-libmpeg_audioDATA install-libquicktimeDATA \
 	install-librawvideoDATA install-libspeexDATA \
 	install-libsubsdecDATA install-libtarkinDATA \
-	install-libtheoraDATA install-libtremorDATA \
-	install-libvlcLIBRARIES install-libvorbisDATA \
-	install-libx264DATA install-man install-recursive install-strip \
-	installcheck installcheck-am installdirs installdirs-am \
-	installdirs-recursive maintainer-clean maintainer-clean-generic \
+	install-libtheoraDATA install-libtoolameDATA \
+	install-libtremorDATA install-libvlcLIBRARIES \
+	install-libvorbisDATA install-libx264DATA install-man \
+	install-recursive install-strip installcheck installcheck-am \
+	installdirs installdirs-am installdirs-recursive \
+	maintainer-clean maintainer-clean-generic \
 	maintainer-clean-recursive mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
 	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
@@ -3723,9 +3872,10 @@ uninstall-info: uninstall-info-recursive
 	uninstall-libmpeg_audioDATA uninstall-libquicktimeDATA \
 	uninstall-librawvideoDATA uninstall-libspeexDATA \
 	uninstall-libsubsdecDATA uninstall-libtarkinDATA \
-	uninstall-libtheoraDATA uninstall-libtremorDATA \
-	uninstall-libvlcLIBRARIES uninstall-libvorbisDATA \
-	uninstall-libx264DATA uninstall-recursive
+	uninstall-libtheoraDATA uninstall-libtoolameDATA \
+	uninstall-libtremorDATA uninstall-libvlcLIBRARIES \
+	uninstall-libvorbisDATA uninstall-libx264DATA \
+	uninstall-recursive
 
 
 clean-local:
@@ -3734,9 +3884,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in a52 cinepak dts flacdec lpcm araw vorbis tarkin theora tremor speex adpcm mpeg_audio libmpeg2 rawvideo quicktime subsdec faad dvbsub mash x264; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in a52 cinepak dts flacdec lpcm araw vorbis tarkin theora tremor speex adpcm mpeg_audio libmpeg2 rawvideo quicktime subsdec faad dvbsub mash x264; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in a52 cinepak dts flacdec lpcm araw vorbis tarkin theora tremor speex adpcm mpeg_audio libmpeg2 rawvideo quicktime subsdec faad dvbsub mash x264; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in a52 cinepak dts flacdec lpcm araw vorbis tarkin theora tremor speex adpcm mpeg_audio libmpeg2 rawvideo quicktime subsdec faad dvbsub mash x264 toolame; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in a52 cinepak dts flacdec lpcm araw vorbis tarkin theora tremor speex adpcm mpeg_audio libmpeg2 rawvideo quicktime subsdec faad dvbsub mash x264 toolame; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in a52 cinepak dts flacdec lpcm araw vorbis tarkin theora tremor speex adpcm mpeg_audio libmpeg2 rawvideo quicktime subsdec faad dvbsub mash x264 toolame; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 liba52_plugin$(LIBEXT): $(liba52_plugin_a_OBJECTS)
@@ -3864,6 +4014,12 @@ libx264_plugin$(LIBEXT): $(libx264_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libx264_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin x264\` ; $(CXXLINK) $(libx264_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin x264` ;; \
 	  objc) echo $(OBJCLINK) $(libx264_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin x264\` ; $(OBJCLINK) $(libx264_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin x264` ;; \
 	  c|*) echo $(LINK) $(libx264_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin x264\` ; $(LINK) $(libx264_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin x264` ;; \
+	esac
+libtoolame_plugin$(LIBEXT): $(libtoolame_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage toolame` in \
+	  c++) echo $(CXXLINK) $(libtoolame_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin toolame\` ; $(CXXLINK) $(libtoolame_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin toolame` ;; \
+	  objc) echo $(OBJCLINK) $(libtoolame_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin toolame\` ; $(OBJCLINK) $(libtoolame_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin toolame` ;; \
+	  c|*) echo $(LINK) $(libtoolame_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin toolame\` ; $(LINK) $(libtoolame_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin toolame` ;; \
 	esac
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -4,14 +4,14 @@ prefix="@prefix@"
 exec_prefix="@exec_prefix@"
 exec_prefix_set=no
 
-release="yes"
-debug="no"
+release="no"
+debug="yes"
 gprof="no"
 cprof="no"
 optim="yes"
 
-plugins=" dummy rc telnet logger gestures memcpy hotkeys mpgv mpga m4v h264 mpeg_system ps ps2 pva ts avi asf aac mp4 rawdv demux2 nsv real aiff cvdsub svcdsub spudec dvbsub mpeg_audio lpcm a52 dts cinepak deinterlace invert adjust wall transform distort clone crop motionblur float32tos16 float32tos8 float32tou16 float32tou8 a52tospdif dtstospdif fixed32tofloat32 fixed32tos16 s16tofixed32 s16tofloat32 s16tofloat32swab s8tofloat32 u8tofixed32 u8tofloat32 trivial_resampler ugly_resampler linear_resampler bandlimited_resampler trivial_channel_mixer headphone_channel_mixer trivial_mixer spdif_mixer float32_mixer aout_file i420_rgb i420_yuy2 i422_yuy2 i420_ymga id3 m3u playlist export sgimb rawvideo wav araw demuxdump demuxsub adpcm a52sys dtssys au access_file access_udp access_tcp access_http ipv4 access_mms access_ftp access_directory sap http screensaver access_output_dummy access_output_udp access_output_file access_output_http mux_ts mux_ps mux_avi mux_mp4 mux_asf mux_dummy packetizer_mpegvideo packetizer_h264 packetizer_mpeg4video packetizer_mpeg4audio packetizer_copy stream_out_dummy stream_out_standard stream_out_es stream_out_rtp stream_out_duplicate stream_out_display stream_out_gather livedotcom dvd dvdread dvdplay ts_dvbpsi mux_ts_dvbpsi ts2 v4l pvr cddax vcd cdda dvb dvb ipv6 ogg mux_ogg mkv mpgatofixed32 id3tag a52tofloat32 dtstofloat32 flac flacdec libmpeg2 vorbis subsdec cmml logo x11 xvideo vout_sdl aout_sdl freetype svgalib ggi glide aa caca oss esd arts alsa skins2 gtk gnome wxwindows qt xosd visual slp lirc gtk_main gnome_main"
-builtins="  memcpymmx i420_rgb_mmx i422_yuy2_mmx i420_ymga_mmx i420_yuy2_mmx memcpymmxext memcpy3dn  ffmpeg stream_out_transcode faad"
+plugins=" dummy rc telnet logger gestures memcpy hotkeys netsync showintf mpgv mpga m4v m4a h264 ps pva avi asf aac mp4 rawdv nsv real aiff mjpeg demuxdump cvdsub svcdsub spudec subsdec dvbsub mpeg_audio lpcm a52 dts cinepak deinterlace invert adjust wall transform distort clone crop motionblur float32tos16 float32tos8 float32tou16 float32tou8 a52tospdif dtstospdif fixed32tofloat32 fixed32tos16 s16tofixed32 s16tofloat32 s16tofloat32swab s8tofloat32 u8tofixed32 u8tofloat32 audio_format trivial_resampler ugly_resampler linear_resampler bandlimited_resampler trivial_channel_mixer simple_channel_mixer headphone_channel_mixer normvol trivial_mixer spdif_mixer float32_mixer aout_file equalizer i420_rgb i420_yuy2 i422_yuy2 i420_ymga m3u id3 playlist export sgimb rawvideo blend scale time marq wav araw subtitle vobsub adpcm a52sys dtssys au access_file access_udp access_tcp access_http ipv4 access_mms access_ftp access_directory sap http screensaver access_output_dummy access_output_udp access_output_file access_output_http mux_ps mux_avi mux_mp4 mux_asf mux_dummy mux_wav mux_mpjpeg packetizer_mpegvideo packetizer_h264 packetizer_mpeg4video packetizer_mpeg4audio packetizer_copy stream_out_dummy stream_out_standard stream_out_es stream_out_rtp stream_out_description vod_rtsp stream_out_duplicate stream_out_gather stream_out_display stream_out_transcode dvdread dvdnav mux_ts ts v4l pvr vcd cdda dvb dvb screen ipv6 ogg mux_ogg mod mpgatofixed32 id3tag faad toolame a52tofloat32 dtstofloat32 flac flacdec libmpeg2 vorbis tremor speex cmml logo x11 xvideo glx opengl vout_sdl aout_sdl freetype fb caca oss esd portaudio arts alsa skins2 wxwindows ncurses visual galaktos goom"
+builtins="  memcpymmx i420_rgb_mmx i422_yuy2_mmx i420_ymga_mmx i420_yuy2_mmx memcpymmxext memcpy3dn  livedotcom mkv ffmpeg tarkin theora x264"
 
 cppflags=""
 cflags=""
@@ -58,9 +58,6 @@ register_flags()
       cppflags="${cppflags} "
       ldflags="${ldflags} -la52 -lm"
     ;;
-    aa)
-      ldflags="${ldflags} -laa"
-    ;;
     adjust)
       ldflags="${ldflags} -lm"
     ;;
@@ -76,44 +73,42 @@ register_flags()
       ldflags="${ldflags} -L/usr/lib -ldl -lartsc -lpthread -lgmodule-2.0 -ldl -lgthread-2.0 -lglib-2.0"
     ;;
     caca)
-      cflags="${cflags} -I/usr/include/"
-      ldflags="${ldflags} -L/usr/lib -lcaca_pic -lslang -lX11 -L/usr/X11R6/lib -lncurses -lncurses"
-    ;;
-    cddax)
-      cflags="${cflags} "
-      ldflags="${ldflags} -lcdio -lm"
+      cflags="${cflags} -I/usr/local/include/"
+      ldflags="${ldflags} -L/usr/local/lib -lcaca_pic -lslang -lX11 -L/usr/X11R6/lib -lncurses -lncurses"
     ;;
     cvdsub)
-      ldflags="${ldflags} -lpng -lz"
+      ldflags="${ldflags} -lpng -lz -lm"
     ;;
     distort)
       ldflags="${ldflags} -lm"
     ;;
     dtstofloat32)
-      ldflags="${ldflags} -ldts_pic -lm"
+      cppflags="${cppflags} -I/home/src/dtsdec/include"
+      ldflags="${ldflags} -ldts_pic -L/home/src/dtsdec/libdts -lm"
     ;;
-    dvd)
-      cppflags="${cppflags} -DGOD_DAMN_DMCA"
-      ldflags="${ldflags} -ldl"
-    ;;
-    dvdplay)
-      cppflags="${cppflags} "
-      ldflags="${ldflags} -ldvdplay -ldvdread"
+    dvdnav)
+      cflags="${cflags} -I/usr/local/include -I/usr/local/include/dvdnav"
+      ldflags="${ldflags} -L/usr/local/lib -ldvdnav -lpthread"
     ;;
     dvdread)
       ldflags="${ldflags} -ldvdread"
+    ;;
+    equalizer)
+      ldflags="${ldflags} -lm"
     ;;
     esd)
       cflags="${cflags} "
       ldflags="${ldflags} -L/usr/lib -lesd -laudiofile -lm"
     ;;
     faad)
-      cppflags="${cppflags} -I/home/sam/debian/official/vlc/debian/vlc-0.7.2.final/extras/faad2/include"
-      ldflags="${ldflags} /home/sam/debian/official/vlc/debian/vlc-0.7.2.final/extras/faad2/libfaad/.libs/libfaad.a -lm"
+      ldflags="${ldflags} -lfaad -lm"
     ;;
     ffmpeg)
-      cppflags="${cppflags} -I/home/sam/debian/official/vlc/debian/vlc-0.7.2.final/extras/ffmpeg/libavcodec -I/home/sam/debian/official/vlc/debian/vlc-0.7.2.final/extras/ffmpeg/libavformat"
-      ldflags="${ldflags} -L/home/sam/debian/official/vlc/debian/vlc-0.7.2.final/extras/ffmpeg/libavcodec -lavcodec -lm"
+      cppflags="${cppflags} -I/home/src/ffmpeg/libavcodec -I/home/src/ffmpeg/libavformat"
+      ldflags="${ldflags} -L/home/src/ffmpeg/libavformat /home/src/ffmpeg/libavformat/libavformat.a -L/home/src/ffmpeg/libavcodec /home/src/ffmpeg/libavcodec/libavcodec.a -lfaac -lmp3lame -lz -lm"
+    ;;
+    ffmpegaltivec)
+      ldflags="${ldflags} -lm"
     ;;
     flacdec)
       ldflags="${ldflags} -lFLAC"
@@ -122,28 +117,15 @@ register_flags()
       cflags="${cflags} -I/usr/include/freetype2 -I/usr/include -DHAVE_FRIBIDI"
       ldflags="${ldflags} -L/usr/lib -lfribidi -lfreetype -lz"
     ;;
-    ggi)
-      ldflags="${ldflags} -lggi"
+    galaktos)
+      ldflags="${ldflags} -L/usr/X11R6/lib -lGL -lGLU"
     ;;
-    glide)
-      cppflags="${cppflags} -I/usr/include/glide"
-      ldflags="${ldflags} -lglide2x -lm"
+    glx)
+      cppflags="${cppflags} -I/usr/X11R6/include"
+      ldflags="${ldflags} -lXinerama_pic -L/usr/X11R6/lib -lX11 -lXext -lGL -lGLU"
     ;;
-    gnome)
-      cflags="${cflags} -I/usr/include/gtk-1.2 -I/usr/include/glib-1.2 -I/usr/lib/glib/include -I/usr/include/gnome-1.0 -DNEED_GNOMESUPPORT_H -I/usr/lib/gnome-libs/include"
-      ldflags="${ldflags} -L/usr/lib -L/usr/X11R6/lib -lgnomeui -lart_lgpl -lgdk_imlib -lSM -lICE -lgtk -lgdk -lgmodule -ldl -lXi -lXext -lX11 -lgnome -lgnomesupport -lesd -laudiofile -lm -ldb-3 -lglib"
-    ;;
-    gnome_main)
-      cflags="${cflags} -I/usr/include/gtk-1.2 -I/usr/include/glib-1.2 -I/usr/lib/glib/include -D_REENTRANT -I/usr/include/gtk-1.2 -I/usr/include/glib-1.2 -I/usr/lib/glib/include -I/usr/include/gnome-1.0 -DNEED_GNOMESUPPORT_H -I/usr/lib/gnome-libs/include"
-      ldflags="${ldflags} -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -lgmodule -lgthread -lglib -lpthread -ldl -lXi -lXext -lX11 -lm -L/usr/lib -L/usr/X11R6/lib -lgnomeui -lart_lgpl -lgdk_imlib -lSM -lICE -lgtk -lgdk -lgmodule -ldl -lXi -lXext -lX11 -lgnome -lgnomesupport -lesd -laudiofile -lm -ldb-3 -lglib"
-    ;;
-    gtk)
-      cflags="${cflags} -I/usr/include/gtk-1.2 -I/usr/include/glib-1.2 -I/usr/lib/glib/include -D_REENTRANT"
-      ldflags="${ldflags} -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -lgmodule -lgthread -lglib -lpthread -ldl -lXi -lXext -lX11 -lm"
-    ;;
-    gtk_main)
-      cflags="${cflags} -I/usr/include/gtk-1.2 -I/usr/include/glib-1.2 -I/usr/lib/glib/include -D_REENTRANT"
-      ldflags="${ldflags} -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -lgmodule -lgthread -lglib -lpthread -ldl -lXi -lXext -lX11 -lm"
+    goom)
+      ldflags="${ldflags} -lgoom2"
     ;;
     headphone_channel_mixer)
       ldflags="${ldflags} -lm"
@@ -160,14 +142,10 @@ register_flags()
     libmpeg2)
       ldflags="${ldflags} -lmpeg2"
     ;;
-    lirc)
-      ldflags="${ldflags} -llirc_client"
-    ;;
     livedotcom)
-      cppflags="${cppflags} -I/usr/include/liveMedia -I/usr/include/groupsock -I/usr/include/BasicUsageEnvironment -I/usr/include/UsageEnvironment"
-      cxxflags="${cxxflags} -I/usr/include/liveMedia -I/usr/include/groupsock -I/usr/include/BasicUsageEnvironment -I/usr/include/UsageEnvironment"
+      cxxflags="${cxxflags} -I/home/videolan/live/BasicUsageEnvironment/include -I/home/videolan/live/groupsock/include -I/home/videolan/live/liveMedia/include -I/home/videolan/live/UsageEnvironment/include"
       linkage="c++"
-      ldflags="${ldflags} -lliveMedia_pic -lgroupsock_pic -lBasicUsageEnvironment_pic -lUsageEnvironment_pic"
+      ldflags="${ldflags} -L/home/videolan/live/UsageEnvironment -lUsageEnvironment -L/home/videolan/live/groupsock -lgroupsock -L/home/videolan/live/BasicUsageEnvironment -lBasicUsageEnvironment -L/home/videolan/live/liveMedia -lliveMedia"
     ;;
     logo)
       ldflags="${ldflags} -lpng -lz"
@@ -175,7 +153,12 @@ register_flags()
     mkv)
       cxxflags="${cxxflags} "
       linkage="c++"
-      ldflags="${ldflags} -lmatroska_pic -lebml_pic"
+      ldflags="${ldflags} -lz -lmatroska -lebml"
+    ;;
+    mod)
+      cxxflags="${cxxflags} "
+      linkage="c++"
+      ldflags="${ldflags} -lmodplug"
     ;;
     mozilla)
       cppflags="${cppflags} -I/usr/include/plugin -I/usr/include/mozilla/plugin -I/usr/include/xpcom -I/usr/include/mozilla/xpcom -I/usr/include/java -I/usr/include/mozilla/java -I/usr/include/mozilla -I/usr/include/nspr -I/usr/include/mozilla/nspr"
@@ -184,7 +167,7 @@ register_flags()
       linkage="c++"
       objcflags="${objcflags} -fpic -fPIC"
       if test "${linkage}" = "c"; then linkage="objc"; fi
-      ldflags="${ldflags} -L/usr/lib/mozilla -lxpcom -L/usr/lib/mozilla -lplds4 -lplc4 -lnspr4 -lpthread -ldl -lc -lpthread -L/usr/X11R6/lib -lXt -shared -fpic -fPIC"
+      ldflags="${ldflags} -L/usr/lib/mozilla -lxpcom -L/usr/lib/mozilla -lplds4 -lplc4 -lnspr4 -lpthread -ldl -lc -lpthread -L/usr/X11R6/lib -lXt -lX11 -lSM -lICE -shared -fpic -fPIC"
     ;;
     mp4)
       ldflags="${ldflags} -lz"
@@ -195,11 +178,20 @@ register_flags()
     mux_ogg)
       ldflags="${ldflags} -logg"
     ;;
-    mux_ts_dvbpsi)
+    mux_ts)
       ldflags="${ldflags} -ldvbpsi"
+    ;;
+    ncurses)
+      ldflags="${ldflags} -lncurses"
+    ;;
+    normvol)
+      ldflags="${ldflags} -lm"
     ;;
     ogg)
       ldflags="${ldflags} -logg"
+    ;;
+    opengl)
+      ldflags="${ldflags} -L/usr/X11R6/lib -lGL -lGLU"
     ;;
     pic)
       cflags="${cflags} -fpic -fPIC"
@@ -214,54 +206,52 @@ register_flags()
       objcflags="${objcflags} -fpic -fPIC"
       ldflags="${ldflags} -shared -lpthread -fpic -fPIC"
     ;;
-    qt)
-      cxxflags="${cxxflags} -I/usr/include/qt3 -I/usr/include/qt -I/include"
+    portaudio)
+      cxxflags="${cxxflags} "
       linkage="c++"
-      ldflags="${ldflags} -lqt-mt -L/lib"
+      ldflags="${ldflags} -lportaudio"
     ;;
     sap)
       ldflags="${ldflags} -lz"
     ;;
-    skins)
-      ldflags="${ldflags} -lz"
+    screen)
+      cppflags="${cppflags} -I/usr/X11R6/include"
+      ldflags="${ldflags} -L/usr/X11R6/lib -lX11 -lXext"
     ;;
     skins2)
       cppflags="${cppflags} -I/usr/include/freetype2 -I/usr/include/libxml2 -Imodules/gui/skins2 -I/usr/X11R6/include -DX11_SKINS"
       cxxflags="${cxxflags} -O2 -fno-rtti"
       linkage="c++"
-      ldflags="${ldflags} -L/usr/X11R6/lib -lXext -lX11 -L/usr/lib -lxml2 -lz -lpthread -lm -lpng -lfreetype -lz -lz"
+      ldflags="${ldflags} -L/usr/X11R6/lib -lXext -lX11 -L/usr/lib -lxml2 -lz -lpthread -lm -lfreetype -lz -lpng -lz"
     ;;
-    slp)
-      ldflags="${ldflags} -lslp"
-    ;;
-    stream_out_standard)
-      ldflags="${ldflags} -lslp"
-    ;;
-    stream_out_transcode)
-      cppflags="${cppflags} -I/home/sam/debian/official/vlc/debian/vlc-0.7.2.final/extras/ffmpeg/libavcodec -I/home/sam/debian/official/vlc/debian/vlc-0.7.2.final/extras/ffmpeg/libavformat"
-      ldflags="${ldflags} -L/home/sam/debian/official/vlc/debian/vlc-0.7.2.final/extras/ffmpeg/libavcodec -lm"
+    speex)
+      ldflags="${ldflags} -lspeex"
     ;;
     stream_out_transrate)
       ldflags="${ldflags} -lm"
     ;;
-    subsdec)
-      cppflags="${cppflags} "
-      ldflags="${ldflags} "
-    ;;
     svcdsub)
       ldflags="${ldflags} -lpng -lz"
     ;;
-    svgalib)
-      ldflags="${ldflags} -lvgagl -lvga"
+    tarkin)
+      cppflags="${cppflags} -I/home/src/w3d"
+      ldflags="${ldflags} /home/src/w3d/mem.o /home/src/w3d/pnm.o /home/src/w3d/wavelet.o /home/src/w3d/wavelet_xform.o /home/src/w3d/wavelet_coeff.o /home/src/w3d/yuv.o /home/src/w3d/tarkin.o /home/src/w3d/info.o -logg"
     ;;
-    ts2)
-      ldflags="${ldflags} -ldvbpsi"
+    theora)
+      ldflags="${ldflags} -ltheora -logg"
     ;;
-    ts_dvbpsi)
+    toolame)
+      ldflags="${ldflags} -ltoolame -lm"
+    ;;
+    tremor)
+      ldflags="${ldflags} -lvorbisidec -logg"
+    ;;
+    ts)
       ldflags="${ldflags} -ldvbpsi"
     ;;
     vlc)
-      ldflags="${ldflags} -lrt -lpthread -ldl -lm"
+      cflags="${cflags} "
+      ldflags="${ldflags} -lrt -lpthread -ldl -lm -L/usr/local/lib"
     ;;
     vorbis)
       ldflags="${ldflags} -lvorbisenc -lvorbis -logg"
@@ -271,16 +261,17 @@ register_flags()
       ldflags="${ldflags} -lSDL -lpthread"
     ;;
     wxwindows)
-      cxxflags="${cxxflags} -I/usr/lib/wx/include/gtk-2.4 -DGTK_NO_CHECK_CASTS -D__WXGTK__ -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES"
+      cxxflags="${cxxflags} -I/usr/local/lib/wx/include/gtk2-unicode-release-2.5 -I/usr/local/include/wx-2.5 -DGTK_NO_CHECK_CASTS -D__WXGTK__ -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES"
       linkage="c++"
-      ldflags="${ldflags} -pthread -lwx_gtk-2.4"
+      ldflags="${ldflags} -L/usr/local/lib -pthread -L/usr/X11R6/lib -lwx_gtk2u_xrc-2.5 -lwx_gtk2u_html-2.5 -lwx_gtk2u_adv-2.5 -lwx_gtk2u_core-2.5 -lwx_baseu_xml-2.5 -lwx_baseu_net-2.5 -lwx_baseu-2.5"
     ;;
     x11)
       cppflags="${cppflags} -I/usr/X11R6/include"
       ldflags="${ldflags} -lXinerama_pic -L/usr/X11R6/lib -lX11 -lXext"
     ;;
-    xosd)
-      ldflags="${ldflags} -lxosd"
+    x264)
+      cppflags="${cppflags} -I/home/videolan/x264"
+      ldflags="${ldflags} -lx264 -L/home/videolan/x264 -lm"
     ;;
     xvideo)
       cppflags="${cppflags} -I/usr/X11R6/include"
@@ -300,13 +291,12 @@ register_targets()
     access_tcp) list="${list} access/libaccess_tcp" ;;
     access_http) list="${list} access/libaccess_http" ;;
     access_ftp) list="${list} access/libaccess_ftp" ;;
+    dvdnav) list="${list} access/libdvdnav" ;;
+    dvdread) list="${list} access/libdvdread" ;;
     slp) list="${list} access/libslp" ;;
     cdda) list="${list} access/libcdda" ;;
     dshow) list="${list} access/dshow/libdshow" ;;
     dvb) list="${list} access/dvb/libdvb" ;;
-    dvd) list="${list} access/dvd/libdvd" ;;
-    dvdplay) list="${list} access/dvdplay/libdvdplay" ;;
-    dvdread) list="${list} access/dvdread/libdvdread" ;;
     access_mms) list="${list} access/mms/libaccess_mms" ;;
     pvr) list="${list} access/pvr/libpvr" ;;
     satellite) list="${list} access/satellite/libsatellite" ;;
@@ -314,11 +304,16 @@ register_targets()
     cddax) list="${list} access/cdda/libcddax" ;;
     vcd) list="${list} access/vcd/libvcd" ;;
     vcdx) list="${list} access/vcdx/libvcdx" ;;
+    screen) list="${list} access/screen/libscreen" ;;
     access_output_dummy) list="${list} access_output/libaccess_output_dummy" ;;
     access_output_file) list="${list} access_output/libaccess_output_file" ;;
     access_output_udp) list="${list} access_output/libaccess_output_udp" ;;
     access_output_http) list="${list} access_output/libaccess_output_http" ;;
+    equalizer) list="${list} audio_filter/libequalizer" ;;
+    normvol) list="${list} audio_filter/libnormvol" ;;
+    audio_format) list="${list} audio_filter/libaudio_format" ;;
     trivial_channel_mixer) list="${list} audio_filter/channel_mixer/libtrivial_channel_mixer" ;;
+    simple_channel_mixer) list="${list} audio_filter/channel_mixer/libsimple_channel_mixer" ;;
     headphone_channel_mixer) list="${list} audio_filter/channel_mixer/libheadphone_channel_mixer" ;;
     float32tos16) list="${list} audio_filter/converter/libfloat32tos16" ;;
     float32tos8) list="${list} audio_filter/converter/libfloat32tos8" ;;
@@ -355,6 +350,7 @@ register_targets()
     aout_sdl) list="${list} audio_output/libaout_sdl" ;;
     waveout) list="${list} audio_output/libwaveout" ;;
     hd1000a) list="${list} audio_output/libhd1000a" ;;
+    portaudio) list="${list} audio_output/libportaudio" ;;
     a52) list="${list} codec/liba52" ;;
     cinepak) list="${list} codec/libcinepak" ;;
     dts) list="${list} codec/libdts" ;;
@@ -376,22 +372,25 @@ register_targets()
     dvbsub) list="${list} codec/libdvbsub" ;;
     mash) list="${list} codec/libmash" ;;
     x264) list="${list} codec/libx264" ;;
+    toolame) list="${list} codec/libtoolame" ;;
     cmml) list="${list} codec/cmml/libcmml" ;;
+    dmo) list="${list} codec/dmo/libdmo" ;;
     ffmpeg) list="${list} codec/ffmpeg/libffmpeg" ;;
-    postprocessing_c) list="${list} codec/ffmpeg/postprocessing/libpostprocessing_c" ;;
-    postprocessing_mmx) list="${list} codec/ffmpeg/postprocessing/libpostprocessing_mmx" ;;
-    postprocessing_mmxext) list="${list} codec/ffmpeg/postprocessing/libpostprocessing_mmxext" ;;
+    ffmpegaltivec) list="${list} codec/ffmpeg/libffmpegaltivec" ;;
     svcdsub) list="${list} codec/ogt/libsvcdsub" ;;
     cvdsub) list="${list} codec/ogt/libcvdsub" ;;
     spudec) list="${list} codec/spudec/libspudec" ;;
     gestures) list="${list} control/libgestures" ;;
+    showintf) list="${list} control/libshowintf" ;;
     http) list="${list} control/libhttp" ;;
     telnet) list="${list} control/libtelnet" ;;
+    netsync) list="${list} control/libnetsync" ;;
     ntservice) list="${list} control/libntservice" ;;
     joystick) list="${list} control/libjoystick" ;;
     hotkeys) list="${list} control/libhotkeys" ;;
     lirc) list="${list} control/liblirc" ;;
     rc) list="${list} control/librc" ;;
+    rtci) list="${list} control/librtci" ;;
     corba) list="${list} control/corba/libcorba" ;;
     a52sys) list="${list} demux/liba52sys" ;;
     dtssys) list="${list} demux/libdtssys" ;;
@@ -399,38 +398,35 @@ register_targets()
     ogg) list="${list} demux/libogg" ;;
     m3u) list="${list} demux/libm3u" ;;
     demuxdump) list="${list} demux/libdemuxdump" ;;
-    demuxstream) list="${list} demux/libdemuxstream" ;;
     rawdv) list="${list} demux/librawdv" ;;
     au) list="${list} demux/libau" ;;
     wav) list="${list} demux/libwav" ;;
     aac) list="${list} demux/libaac" ;;
     mkv) list="${list} demux/libmkv" ;;
     livedotcom) list="${list} demux/liblivedotcom" ;;
-    demux2) list="${list} demux/libdemux2" ;;
     nsv) list="${list} demux/libnsv" ;;
     real) list="${list} demux/libreal" ;;
-    ts2) list="${list} demux/libts2" ;;
-    ps2) list="${list} demux/libps2" ;;
-    dvdnav) list="${list} demux/libdvdnav" ;;
+    ts) list="${list} demux/libts" ;;
+    ps) list="${list} demux/libps" ;;
     mod) list="${list} demux/libmod" ;;
     pva) list="${list} demux/libpva" ;;
     aiff) list="${list} demux/libaiff" ;;
     sgimb) list="${list} demux/libsgimb" ;;
+    mjpeg) list="${list} demux/libmjpeg" ;;
+    subtitle) list="${list} demux/libsubtitle" ;;
+    vobsub) list="${list} demux/libvobsub" ;;
     asf) list="${list} demux/asf/libasf" ;;
     avi) list="${list} demux/avi/libavi" ;;
     mp4) list="${list} demux/mp4/libmp4" ;;
-    mpeg_system) list="${list} demux/mpeg/libmpeg_system" ;;
+    m4a) list="${list} demux/mpeg/libm4a" ;;
     m4v) list="${list} demux/mpeg/libm4v" ;;
-    ps) list="${list} demux/mpeg/libps" ;;
-    ts) list="${list} demux/mpeg/libts" ;;
-    ts_dvbpsi) list="${list} demux/mpeg/libts_dvbpsi" ;;
     mpga) list="${list} demux/mpeg/libmpga" ;;
     mpgv) list="${list} demux/mpeg/libmpgv" ;;
     h264) list="${list} demux/mpeg/libh264" ;;
     playlist) list="${list} demux/playlist/libplaylist" ;;
     id3) list="${list} demux/util/libid3" ;;
     id3tag) list="${list} demux/util/libid3tag" ;;
-    demuxsub) list="${list} demux/util/libdemuxsub" ;;
+    ncurses) list="${list} gui/libncurses" ;;
     beos) list="${list} gui/beos/libbeos" ;;
     pda) list="${list} gui/pda/libpda" ;;
     gtk) list="${list} gui/gtk/libgtk" ;;
@@ -439,10 +435,8 @@ register_targets()
     gnome2) list="${list} gui/gtk2/libgnome2" ;;
     kde) list="${list} gui/kde/libkde" ;;
     macosx) list="${list} gui/macosx/libmacosx" ;;
-    ncurses) list="${list} gui/ncurses/libncurses" ;;
     qnx) list="${list} gui/qnx/libqnx" ;;
     qt) list="${list} gui/qt/libqt" ;;
-    skins) list="${list} gui/skins/libskins" ;;
     skins2) list="${list} gui/skins2/libskins2" ;;
     wxwindows) list="${list} gui/wxwindows/libwxwindows" ;;
     gtk_main) list="${list} misc/libgtk_main" ;;
@@ -454,6 +448,9 @@ register_targets()
     qte_main) list="${list} misc/libqte_main" ;;
     freetype) list="${list} misc/libfreetype" ;;
     logger) list="${list} misc/liblogger" ;;
+    vod_rtsp) list="${list} misc/libvod_rtsp" ;;
+    gnutls) list="${list} misc/libgnutls" ;;
+    svg) list="${list} misc/libsvg" ;;
     dummy) list="${list} misc/dummy/libdummy" ;;
     memcpy) list="${list} misc/memcpy/libmemcpy" ;;
     memcpymmx) list="${list} misc/memcpy/libmemcpymmx" ;;
@@ -472,15 +469,17 @@ register_targets()
     mux_ogg) list="${list} mux/libmux_ogg" ;;
     mux_mp4) list="${list} mux/libmux_mp4" ;;
     mux_asf) list="${list} mux/libmux_asf" ;;
+    mux_wav) list="${list} mux/libmux_wav" ;;
+    mux_mpjpeg) list="${list} mux/libmux_mpjpeg" ;;
     mux_ps) list="${list} mux/mpeg/libmux_ps" ;;
     mux_ts) list="${list} mux/mpeg/libmux_ts" ;;
-    mux_ts_dvbpsi) list="${list} mux/mpeg/libmux_ts_dvbpsi" ;;
     packetizer_copy) list="${list} packetizer/libpacketizer_copy" ;;
     packetizer_mpegvideo) list="${list} packetizer/libpacketizer_mpegvideo" ;;
     packetizer_mpeg4video) list="${list} packetizer/libpacketizer_mpeg4video" ;;
     packetizer_mpeg4audio) list="${list} packetizer/libpacketizer_mpeg4audio" ;;
     packetizer_h264) list="${list} packetizer/libpacketizer_h264" ;;
     stream_out_dummy) list="${list} stream_out/libstream_out_dummy" ;;
+    stream_out_description) list="${list} stream_out/libstream_out_description" ;;
     stream_out_standard) list="${list} stream_out/libstream_out_standard" ;;
     stream_out_transcode) list="${list} stream_out/libstream_out_transcode" ;;
     stream_out_duplicate) list="${list} stream_out/libstream_out_duplicate" ;;
@@ -508,6 +507,11 @@ register_targets()
     motionblur) list="${list} video_filter/libmotionblur" ;;
     logo) list="${list} video_filter/liblogo" ;;
     deinterlace) list="${list} video_filter/libdeinterlace" ;;
+    blend) list="${list} video_filter/libblend" ;;
+    scale) list="${list} video_filter/libscale" ;;
+    time) list="${list} video_filter/libtime" ;;
+    marq) list="${list} video_filter/libmarq" ;;
+    swscale) list="${list} video_filter/swscale/libswscale" ;;
     aa) list="${list} video_output/libaa" ;;
     caca) list="${list} video_output/libcaca" ;;
     fb) list="${list} video_output/libfb" ;;
@@ -517,13 +521,19 @@ register_targets()
     svgalib) list="${list} video_output/libsvgalib" ;;
     wingdi) list="${list} video_output/libwingdi" ;;
     mga) list="${list} video_output/libmga" ;;
+    hd1000v) list="${list} video_output/libhd1000v" ;;
+    snapshot) list="${list} video_output/libsnapshot" ;;
+    opengl) list="${list} video_output/libopengl" ;;
     vout_directx) list="${list} video_output/directx/libvout_directx" ;;
+    glwin32) list="${list} video_output/directx/libglwin32" ;;
     qte) list="${list} video_output/qte/libqte" ;;
     x11) list="${list} video_output/x11/libx11" ;;
     xvideo) list="${list} video_output/x11/libxvideo" ;;
+    glx) list="${list} video_output/x11/libglx" ;;
     goom) list="${list} visualization/libgoom" ;;
     xosd) list="${list} visualization/libxosd" ;;
     visual) list="${list} visualization/visual/libvisual" ;;
+    galaktos) list="${list} visualization/galaktos/libgalaktos" ;;
     *)
       ;;
   esac

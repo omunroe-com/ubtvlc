@@ -2,7 +2,7 @@
  * objects.c: vlc_object_t handling
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: objects.c 7546 2004-04-29 13:53:29Z gbazin $
+ * $Id: objects.c 9162 2004-11-06 10:47:04Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -31,17 +31,15 @@
  * Preamble
  *****************************************************************************/
 #include <vlc/vlc.h>
+#include <vlc/input.h>
 
 #ifdef HAVE_STDLIB_H
 #   include <stdlib.h>                                          /* realloc() */
 #endif
 
-#include "stream_control.h"
-#include "input_ext-intf.h"
-#include "input_ext-dec.h"
-
 #include "vlc_video.h"
 #include "video_output.h"
+#include "vlc_spu.h"
 
 #include "audio_output.h"
 #include "aout_internal.h"
@@ -50,9 +48,13 @@
 #include "vlc_playlist.h"
 #include "vlc_interface.h"
 #include "vlc_codec.h"
+#include "vlc_filter.h"
 
 #include "vlc_httpd.h"
 #include "vlc_vlm.h"
+#include "vlc_vod.h"
+#include "vlc_tls.h"
+
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
@@ -132,6 +134,14 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
             i_size = sizeof(demux_t);
             psz_type = "demux";
             break;
+        case VLC_OBJECT_STREAM:
+            i_size = sizeof(stream_t);
+            psz_type = "stream";
+            break;
+        case VLC_OBJECT_ACCESS:
+            i_size = sizeof(access_t);
+            psz_type = "access";
+            break;
         case VLC_OBJECT_DECODER:
             i_size = sizeof(decoder_t);
             psz_type = "decoder";
@@ -144,9 +154,17 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
             i_size = sizeof(encoder_t);
             psz_type = "encoder";
             break;
+        case VLC_OBJECT_FILTER:
+            i_size = sizeof(filter_t);
+            psz_type = "filter";
+            break;
         case VLC_OBJECT_VOUT:
             i_size = sizeof(vout_thread_t);
             psz_type = "video output";
+            break;
+        case VLC_OBJECT_SPU:
+            i_size = sizeof(spu_t);
+            psz_type = "subpicture unit";
             break;
         case VLC_OBJECT_AOUT:
             i_size = sizeof(aout_instance_t);
@@ -163,6 +181,18 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
         case VLC_OBJECT_VLM:
             i_size = sizeof( vlm_t );
             psz_type = "vlm dameon";
+            break;
+        case VLC_OBJECT_VOD:
+            i_size = sizeof( vod_t );
+            psz_type = "vod server";
+            break;
+        case VLC_OBJECT_TLS:
+            i_size = sizeof( tls_t );
+            psz_type = "tls";
+            break;
+        case VLC_OBJECT_OPENGL:
+            i_size = sizeof( vout_thread_t );
+            psz_type = "opengl provider";
             break;
         case VLC_OBJECT_ANNOUNCE:
             i_size = sizeof( announce_handler_t );
@@ -185,12 +215,7 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
     else
     {
         p_new = malloc( i_size );
-
-        if( !p_new )
-        {
-            return NULL;
-        }
-
+        if( !p_new ) return NULL;
         memset( p_new, 0, i_size );
     }
 
@@ -203,6 +228,7 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
     p_new->b_error = VLC_FALSE;
     p_new->b_dead = VLC_FALSE;
     p_new->b_attached = VLC_FALSE;
+    p_new->b_force = VLC_FALSE;
 
     p_new->i_vars = 0;
     p_new->p_vars = (variable_t *)malloc( 16 * sizeof( variable_t ) );

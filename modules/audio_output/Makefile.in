@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -228,8 +230,8 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Lalsab) $(Lalsapic) $(Lartsb) $(Lartspic) $(Lcoreaudiob) $(Lcoreaudiopic) $(Laout_directxb) $(Laout_directxpic) $(Lesdb) $(Lesdpic) $(Laout_fileb) $(Laout_filepic) $(Lossb) $(Losspic) $(Laout_sdlb) $(Laout_sdlpic) $(Lwaveoutb) $(Lwaveoutpic) $(Lhd1000ab) $(Lhd1000apic)
-noinst_LIBRARIES = $(Lalsap) $(Lartsp) $(Lcoreaudiop) $(Laout_directxp) $(Lesdp) $(Laout_filep) $(Lossp) $(Laout_sdlp) $(Lwaveoutp) $(Lhd1000ap)
+libvlc_LIBRARIES = $(Lalsab) $(Lalsapic) $(Lartsb) $(Lartspic) $(Lcoreaudiob) $(Lcoreaudiopic) $(Laout_directxb) $(Laout_directxpic) $(Lesdb) $(Lesdpic) $(Laout_fileb) $(Laout_filepic) $(Lossb) $(Losspic) $(Laout_sdlb) $(Laout_sdlpic) $(Lwaveoutb) $(Lwaveoutpic) $(Lhd1000ab) $(Lhd1000apic) $(Lportaudiob) $(Lportaudiopic)
+noinst_LIBRARIES = $(Lalsap) $(Lartsp) $(Lcoreaudiop) $(Laout_directxp) $(Lesdp) $(Laout_filep) $(Lossp) $(Laout_sdlp) $(Lwaveoutp) $(Lhd1000ap) $(Lportaudiop)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
@@ -246,6 +248,7 @@ SOURCES_oss = oss.c
 SOURCES_aout_sdl = sdl.c
 SOURCES_waveout = waveout.c
 SOURCES_hd1000a = hd1000a.cpp
+SOURCES_portaudio = portaudio.c
 
 # There's no need for pic code on win32 so get rid of this to substantially
 # reduce the compilation time.
@@ -501,6 +504,31 @@ libhd1000a_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin hd1000a`
 libhd1000a_DATA = $(Dhd1000ap)
 
 libhd1000adir = $(libdir)/vlc/
+
+
+# The portaudio plugin
+@UNTRUE_TRUE@Lportaudiop = libportaudio_plugin.a
+@UNTRUE_TRUE@Dportaudiop = libportaudio_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lportaudiob = libportaudio.a
+@UNTRUE_TRUE@Lportaudiopic = libportaudio_pic.a
+
+libportaudio_plugin_a_SOURCES = $(SOURCES_portaudio)
+libportaudio_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin portaudio`
+libportaudio_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin portaudio`
+libportaudio_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin portaudio`
+
+libportaudio_pic_a_SOURCES = $(SOURCES_portaudio)
+libportaudio_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic portaudio`
+libportaudio_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic portaudio`
+libportaudio_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic portaudio`
+
+libportaudio_a_SOURCES = $(SOURCES_portaudio)
+libportaudio_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin portaudio`
+libportaudio_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin portaudio`
+libportaudio_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin portaudio`
+libportaudio_DATA = $(Dportaudiop)
+
+libportaudiodir = $(libdir)/vlc/
 subdir = modules/audio_output
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
@@ -644,20 +672,35 @@ liboss_plugin_a_LIBADD =
 am__objects_27 = liboss_plugin_a-oss.$(OBJEXT)
 am_liboss_plugin_a_OBJECTS = $(am__objects_27)
 liboss_plugin_a_OBJECTS = $(am_liboss_plugin_a_OBJECTS)
+libportaudio_a_AR = $(AR) cru
+libportaudio_a_LIBADD =
+am__objects_28 = libportaudio_a-portaudio.$(OBJEXT)
+am_libportaudio_a_OBJECTS = $(am__objects_28)
+libportaudio_a_OBJECTS = $(am_libportaudio_a_OBJECTS)
+libportaudio_pic_a_AR = $(AR) cru
+libportaudio_pic_a_LIBADD =
+am__objects_29 = libportaudio_pic_a-portaudio.$(OBJEXT)
+am_libportaudio_pic_a_OBJECTS = $(am__objects_29)
+libportaudio_pic_a_OBJECTS = $(am_libportaudio_pic_a_OBJECTS)
+libportaudio_plugin_a_AR = $(AR) cru
+libportaudio_plugin_a_LIBADD =
+am__objects_30 = libportaudio_plugin_a-portaudio.$(OBJEXT)
+am_libportaudio_plugin_a_OBJECTS = $(am__objects_30)
+libportaudio_plugin_a_OBJECTS = $(am_libportaudio_plugin_a_OBJECTS)
 libwaveout_a_AR = $(AR) cru
 libwaveout_a_LIBADD =
-am__objects_28 = libwaveout_a-waveout.$(OBJEXT)
-am_libwaveout_a_OBJECTS = $(am__objects_28)
+am__objects_31 = libwaveout_a-waveout.$(OBJEXT)
+am_libwaveout_a_OBJECTS = $(am__objects_31)
 libwaveout_a_OBJECTS = $(am_libwaveout_a_OBJECTS)
 libwaveout_pic_a_AR = $(AR) cru
 libwaveout_pic_a_LIBADD =
-am__objects_29 = libwaveout_pic_a-waveout.$(OBJEXT)
-am_libwaveout_pic_a_OBJECTS = $(am__objects_29)
+am__objects_32 = libwaveout_pic_a-waveout.$(OBJEXT)
+am_libwaveout_pic_a_OBJECTS = $(am__objects_32)
 libwaveout_pic_a_OBJECTS = $(am_libwaveout_pic_a_OBJECTS)
 libwaveout_plugin_a_AR = $(AR) cru
 libwaveout_plugin_a_LIBADD =
-am__objects_30 = libwaveout_plugin_a-waveout.$(OBJEXT)
-am_libwaveout_plugin_a_OBJECTS = $(am__objects_30)
+am__objects_33 = libwaveout_plugin_a-waveout.$(OBJEXT)
+am_libwaveout_plugin_a_OBJECTS = $(am__objects_33)
 libwaveout_plugin_a_OBJECTS = $(am_libwaveout_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
@@ -690,6 +733,9 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/liboss_a-oss.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/liboss_pic_a-oss.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/liboss_plugin_a-oss.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libportaudio_a-portaudio.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libportaudio_pic_a-portaudio.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libportaudio_plugin_a-portaudio.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwaveout_a-waveout.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwaveout_pic_a-waveout.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwaveout_plugin_a-waveout.Po
@@ -716,12 +762,13 @@ DIST_SOURCES = $(libalsa_a_SOURCES) $(libalsa_pic_a_SOURCES) \
 	$(libhd1000a_a_SOURCES) $(libhd1000a_pic_a_SOURCES) \
 	$(libhd1000a_plugin_a_SOURCES) $(liboss_a_SOURCES) \
 	$(liboss_pic_a_SOURCES) $(liboss_plugin_a_SOURCES) \
-	$(libwaveout_a_SOURCES) $(libwaveout_pic_a_SOURCES) \
-	$(libwaveout_plugin_a_SOURCES)
+	$(libportaudio_a_SOURCES) $(libportaudio_pic_a_SOURCES) \
+	$(libportaudio_plugin_a_SOURCES) $(libwaveout_a_SOURCES) \
+	$(libwaveout_pic_a_SOURCES) $(libwaveout_plugin_a_SOURCES)
 DATA = $(libalsa_DATA) $(libaout_directx_DATA) $(libaout_file_DATA) \
 	$(libaout_sdl_DATA) $(libarts_DATA) $(libcoreaudio_DATA) \
 	$(libesd_DATA) $(libhd1000a_DATA) $(liboss_DATA) \
-	$(libwaveout_DATA)
+	$(libportaudio_DATA) $(libwaveout_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -734,7 +781,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libalsa_a_SOURCES) $(libalsa_pic_a_SOURCES) $(libalsa_plugin_a_SOURCES) $(libaout_directx_a_SOURCES) $(libaout_directx_pic_a_SOURCES) $(libaout_directx_plugin_a_SOURCES) $(libaout_file_a_SOURCES) $(libaout_file_pic_a_SOURCES) $(libaout_file_plugin_a_SOURCES) $(libaout_sdl_a_SOURCES) $(libaout_sdl_pic_a_SOURCES) $(libaout_sdl_plugin_a_SOURCES) $(libarts_a_SOURCES) $(libarts_pic_a_SOURCES) $(libarts_plugin_a_SOURCES) $(libcoreaudio_a_SOURCES) $(libcoreaudio_pic_a_SOURCES) $(libcoreaudio_plugin_a_SOURCES) $(libesd_a_SOURCES) $(libesd_pic_a_SOURCES) $(libesd_plugin_a_SOURCES) $(libhd1000a_a_SOURCES) $(libhd1000a_pic_a_SOURCES) $(libhd1000a_plugin_a_SOURCES) $(liboss_a_SOURCES) $(liboss_pic_a_SOURCES) $(liboss_plugin_a_SOURCES) $(libwaveout_a_SOURCES) $(libwaveout_pic_a_SOURCES) $(libwaveout_plugin_a_SOURCES)
+SOURCES = $(libalsa_a_SOURCES) $(libalsa_pic_a_SOURCES) $(libalsa_plugin_a_SOURCES) $(libaout_directx_a_SOURCES) $(libaout_directx_pic_a_SOURCES) $(libaout_directx_plugin_a_SOURCES) $(libaout_file_a_SOURCES) $(libaout_file_pic_a_SOURCES) $(libaout_file_plugin_a_SOURCES) $(libaout_sdl_a_SOURCES) $(libaout_sdl_pic_a_SOURCES) $(libaout_sdl_plugin_a_SOURCES) $(libarts_a_SOURCES) $(libarts_pic_a_SOURCES) $(libarts_plugin_a_SOURCES) $(libcoreaudio_a_SOURCES) $(libcoreaudio_pic_a_SOURCES) $(libcoreaudio_plugin_a_SOURCES) $(libesd_a_SOURCES) $(libesd_pic_a_SOURCES) $(libesd_plugin_a_SOURCES) $(libhd1000a_a_SOURCES) $(libhd1000a_pic_a_SOURCES) $(libhd1000a_plugin_a_SOURCES) $(liboss_a_SOURCES) $(liboss_pic_a_SOURCES) $(liboss_plugin_a_SOURCES) $(libportaudio_a_SOURCES) $(libportaudio_pic_a_SOURCES) $(libportaudio_plugin_a_SOURCES) $(libwaveout_a_SOURCES) $(libwaveout_pic_a_SOURCES) $(libwaveout_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -887,6 +934,18 @@ liboss_plugin.a: $(liboss_plugin_a_OBJECTS) $(liboss_plugin_a_DEPENDENCIES)
 	-rm -f liboss_plugin.a
 	$(liboss_plugin_a_AR) liboss_plugin.a $(liboss_plugin_a_OBJECTS) $(liboss_plugin_a_LIBADD)
 	$(RANLIB) liboss_plugin.a
+libportaudio.a: $(libportaudio_a_OBJECTS) $(libportaudio_a_DEPENDENCIES) 
+	-rm -f libportaudio.a
+	$(libportaudio_a_AR) libportaudio.a $(libportaudio_a_OBJECTS) $(libportaudio_a_LIBADD)
+	$(RANLIB) libportaudio.a
+libportaudio_pic.a: $(libportaudio_pic_a_OBJECTS) $(libportaudio_pic_a_DEPENDENCIES) 
+	-rm -f libportaudio_pic.a
+	$(libportaudio_pic_a_AR) libportaudio_pic.a $(libportaudio_pic_a_OBJECTS) $(libportaudio_pic_a_LIBADD)
+	$(RANLIB) libportaudio_pic.a
+libportaudio_plugin.a: $(libportaudio_plugin_a_OBJECTS) $(libportaudio_plugin_a_DEPENDENCIES) 
+	-rm -f libportaudio_plugin.a
+	$(libportaudio_plugin_a_AR) libportaudio_plugin.a $(libportaudio_plugin_a_OBJECTS) $(libportaudio_plugin_a_LIBADD)
+	$(RANLIB) libportaudio_plugin.a
 libwaveout.a: $(libwaveout_a_OBJECTS) $(libwaveout_a_DEPENDENCIES) 
 	-rm -f libwaveout.a
 	$(libwaveout_a_AR) libwaveout.a $(libwaveout_a_OBJECTS) $(libwaveout_a_LIBADD)
@@ -933,6 +992,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liboss_a-oss.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liboss_pic_a-oss.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liboss_plugin_a-oss.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libportaudio_a-portaudio.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libportaudio_pic_a-portaudio.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libportaudio_plugin_a-portaudio.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwaveout_a-waveout.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwaveout_pic_a-waveout.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwaveout_plugin_a-waveout.Po@am__quote@
@@ -1487,6 +1549,72 @@ liboss_plugin_a-oss.obj: oss.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liboss_plugin_a_CFLAGS) $(CFLAGS) -c -o liboss_plugin_a-oss.obj `if test -f 'oss.c'; then $(CYGPATH_W) 'oss.c'; else $(CYGPATH_W) '$(srcdir)/oss.c'; fi`
 
+libportaudio_a-portaudio.o: portaudio.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libportaudio_a_CFLAGS) $(CFLAGS) -MT libportaudio_a-portaudio.o -MD -MP -MF "$(DEPDIR)/libportaudio_a-portaudio.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libportaudio_a-portaudio.o `test -f 'portaudio.c' || echo '$(srcdir)/'`portaudio.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libportaudio_a-portaudio.Tpo" "$(DEPDIR)/libportaudio_a-portaudio.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libportaudio_a-portaudio.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='portaudio.c' object='libportaudio_a-portaudio.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libportaudio_a-portaudio.Po' tmpdepfile='$(DEPDIR)/libportaudio_a-portaudio.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libportaudio_a_CFLAGS) $(CFLAGS) -c -o libportaudio_a-portaudio.o `test -f 'portaudio.c' || echo '$(srcdir)/'`portaudio.c
+
+libportaudio_a-portaudio.obj: portaudio.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libportaudio_a_CFLAGS) $(CFLAGS) -MT libportaudio_a-portaudio.obj -MD -MP -MF "$(DEPDIR)/libportaudio_a-portaudio.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libportaudio_a-portaudio.obj `if test -f 'portaudio.c'; then $(CYGPATH_W) 'portaudio.c'; else $(CYGPATH_W) '$(srcdir)/portaudio.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libportaudio_a-portaudio.Tpo" "$(DEPDIR)/libportaudio_a-portaudio.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libportaudio_a-portaudio.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='portaudio.c' object='libportaudio_a-portaudio.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libportaudio_a-portaudio.Po' tmpdepfile='$(DEPDIR)/libportaudio_a-portaudio.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libportaudio_a_CFLAGS) $(CFLAGS) -c -o libportaudio_a-portaudio.obj `if test -f 'portaudio.c'; then $(CYGPATH_W) 'portaudio.c'; else $(CYGPATH_W) '$(srcdir)/portaudio.c'; fi`
+
+libportaudio_pic_a-portaudio.o: portaudio.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libportaudio_pic_a_CFLAGS) $(CFLAGS) -MT libportaudio_pic_a-portaudio.o -MD -MP -MF "$(DEPDIR)/libportaudio_pic_a-portaudio.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libportaudio_pic_a-portaudio.o `test -f 'portaudio.c' || echo '$(srcdir)/'`portaudio.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libportaudio_pic_a-portaudio.Tpo" "$(DEPDIR)/libportaudio_pic_a-portaudio.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libportaudio_pic_a-portaudio.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='portaudio.c' object='libportaudio_pic_a-portaudio.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libportaudio_pic_a-portaudio.Po' tmpdepfile='$(DEPDIR)/libportaudio_pic_a-portaudio.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libportaudio_pic_a_CFLAGS) $(CFLAGS) -c -o libportaudio_pic_a-portaudio.o `test -f 'portaudio.c' || echo '$(srcdir)/'`portaudio.c
+
+libportaudio_pic_a-portaudio.obj: portaudio.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libportaudio_pic_a_CFLAGS) $(CFLAGS) -MT libportaudio_pic_a-portaudio.obj -MD -MP -MF "$(DEPDIR)/libportaudio_pic_a-portaudio.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libportaudio_pic_a-portaudio.obj `if test -f 'portaudio.c'; then $(CYGPATH_W) 'portaudio.c'; else $(CYGPATH_W) '$(srcdir)/portaudio.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libportaudio_pic_a-portaudio.Tpo" "$(DEPDIR)/libportaudio_pic_a-portaudio.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libportaudio_pic_a-portaudio.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='portaudio.c' object='libportaudio_pic_a-portaudio.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libportaudio_pic_a-portaudio.Po' tmpdepfile='$(DEPDIR)/libportaudio_pic_a-portaudio.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libportaudio_pic_a_CFLAGS) $(CFLAGS) -c -o libportaudio_pic_a-portaudio.obj `if test -f 'portaudio.c'; then $(CYGPATH_W) 'portaudio.c'; else $(CYGPATH_W) '$(srcdir)/portaudio.c'; fi`
+
+libportaudio_plugin_a-portaudio.o: portaudio.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libportaudio_plugin_a_CFLAGS) $(CFLAGS) -MT libportaudio_plugin_a-portaudio.o -MD -MP -MF "$(DEPDIR)/libportaudio_plugin_a-portaudio.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libportaudio_plugin_a-portaudio.o `test -f 'portaudio.c' || echo '$(srcdir)/'`portaudio.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libportaudio_plugin_a-portaudio.Tpo" "$(DEPDIR)/libportaudio_plugin_a-portaudio.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libportaudio_plugin_a-portaudio.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='portaudio.c' object='libportaudio_plugin_a-portaudio.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libportaudio_plugin_a-portaudio.Po' tmpdepfile='$(DEPDIR)/libportaudio_plugin_a-portaudio.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libportaudio_plugin_a_CFLAGS) $(CFLAGS) -c -o libportaudio_plugin_a-portaudio.o `test -f 'portaudio.c' || echo '$(srcdir)/'`portaudio.c
+
+libportaudio_plugin_a-portaudio.obj: portaudio.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libportaudio_plugin_a_CFLAGS) $(CFLAGS) -MT libportaudio_plugin_a-portaudio.obj -MD -MP -MF "$(DEPDIR)/libportaudio_plugin_a-portaudio.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libportaudio_plugin_a-portaudio.obj `if test -f 'portaudio.c'; then $(CYGPATH_W) 'portaudio.c'; else $(CYGPATH_W) '$(srcdir)/portaudio.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libportaudio_plugin_a-portaudio.Tpo" "$(DEPDIR)/libportaudio_plugin_a-portaudio.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libportaudio_plugin_a-portaudio.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='portaudio.c' object='libportaudio_plugin_a-portaudio.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libportaudio_plugin_a-portaudio.Po' tmpdepfile='$(DEPDIR)/libportaudio_plugin_a-portaudio.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libportaudio_plugin_a_CFLAGS) $(CFLAGS) -c -o libportaudio_plugin_a-portaudio.obj `if test -f 'portaudio.c'; then $(CYGPATH_W) 'portaudio.c'; else $(CYGPATH_W) '$(srcdir)/portaudio.c'; fi`
+
 libwaveout_a-waveout.o: waveout.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwaveout_a_CFLAGS) $(CFLAGS) -MT libwaveout_a-waveout.o -MD -MP -MF "$(DEPDIR)/libwaveout_a-waveout.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libwaveout_a-waveout.o `test -f 'waveout.c' || echo '$(srcdir)/'`waveout.c; \
@@ -1803,6 +1931,24 @@ uninstall-libossDATA:
 	  echo " rm -f $(DESTDIR)$(libossdir)/$$f"; \
 	  rm -f $(DESTDIR)$(libossdir)/$$f; \
 	done
+libportaudioDATA_INSTALL = $(INSTALL_DATA)
+install-libportaudioDATA: $(libportaudio_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libportaudiodir)
+	@list='$(libportaudio_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libportaudioDATA_INSTALL) $$d$$p $(DESTDIR)$(libportaudiodir)/$$f"; \
+	  $(libportaudioDATA_INSTALL) $$d$$p $(DESTDIR)$(libportaudiodir)/$$f; \
+	done
+
+uninstall-libportaudioDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libportaudio_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libportaudiodir)/$$f"; \
+	  rm -f $(DESTDIR)$(libportaudiodir)/$$f; \
+	done
 libwaveoutDATA_INSTALL = $(INSTALL_DATA)
 install-libwaveoutDATA: $(libwaveout_DATA)
 	@$(NORMAL_INSTALL)
@@ -1996,7 +2142,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libalsadir) $(DESTDIR)$(libaout_directxdir) $(DESTDIR)$(libaout_filedir) $(DESTDIR)$(libaout_sdldir) $(DESTDIR)$(libartsdir) $(DESTDIR)$(libcoreaudiodir) $(DESTDIR)$(libesddir) $(DESTDIR)$(libhd1000adir) $(DESTDIR)$(libossdir) $(DESTDIR)$(libwaveoutdir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libalsadir) $(DESTDIR)$(libaout_directxdir) $(DESTDIR)$(libaout_filedir) $(DESTDIR)$(libaout_sdldir) $(DESTDIR)$(libartsdir) $(DESTDIR)$(libcoreaudiodir) $(DESTDIR)$(libesddir) $(DESTDIR)$(libhd1000adir) $(DESTDIR)$(libossdir) $(DESTDIR)$(libportaudiodir) $(DESTDIR)$(libwaveoutdir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -2047,7 +2193,8 @@ install-data-am: install-libalsaDATA install-libaout_directxDATA \
 	install-libaout_fileDATA install-libaout_sdlDATA \
 	install-libartsDATA install-libcoreaudioDATA install-libesdDATA \
 	install-libhd1000aDATA install-libossDATA \
-	install-libvlcLIBRARIES install-libwaveoutDATA
+	install-libportaudioDATA install-libvlcLIBRARIES \
+	install-libwaveoutDATA
 
 install-exec-am:
 
@@ -2079,7 +2226,8 @@ uninstall-am: uninstall-info-am uninstall-libalsaDATA \
 	uninstall-libaout_sdlDATA uninstall-libartsDATA \
 	uninstall-libcoreaudioDATA uninstall-libesdDATA \
 	uninstall-libhd1000aDATA uninstall-libossDATA \
-	uninstall-libvlcLIBRARIES uninstall-libwaveoutDATA
+	uninstall-libportaudioDATA uninstall-libvlcLIBRARIES \
+	uninstall-libwaveoutDATA
 
 uninstall-info: uninstall-info-recursive
 
@@ -2096,21 +2244,21 @@ uninstall-info: uninstall-info-recursive
 	install-libaout_fileDATA install-libaout_sdlDATA \
 	install-libartsDATA install-libcoreaudioDATA install-libesdDATA \
 	install-libhd1000aDATA install-libossDATA \
-	install-libvlcLIBRARIES install-libwaveoutDATA install-man \
-	install-recursive install-strip installcheck installcheck-am \
-	installdirs installdirs-am installdirs-recursive \
-	maintainer-clean maintainer-clean-generic \
-	maintainer-clean-recursive mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
-	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
-	uninstall uninstall-am uninstall-info-am \
+	install-libportaudioDATA install-libvlcLIBRARIES \
+	install-libwaveoutDATA install-man install-recursive \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am installdirs-recursive maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-recursive \
+	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
+	tags-recursive uninstall uninstall-am uninstall-info-am \
 	uninstall-info-recursive uninstall-libalsaDATA \
 	uninstall-libaout_directxDATA uninstall-libaout_fileDATA \
 	uninstall-libaout_sdlDATA uninstall-libartsDATA \
 	uninstall-libcoreaudioDATA uninstall-libesdDATA \
 	uninstall-libhd1000aDATA uninstall-libossDATA \
-	uninstall-libvlcLIBRARIES uninstall-libwaveoutDATA \
-	uninstall-recursive
+	uninstall-libportaudioDATA uninstall-libvlcLIBRARIES \
+	uninstall-libwaveoutDATA uninstall-recursive
 
 
 clean-local:
@@ -2119,9 +2267,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in alsa arts coreaudio aout_directx esd aout_file oss aout_sdl waveout hd1000a; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in alsa arts coreaudio aout_directx esd aout_file oss aout_sdl waveout hd1000a; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in alsa arts coreaudio aout_directx esd aout_file oss aout_sdl waveout hd1000a; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in alsa arts coreaudio aout_directx esd aout_file oss aout_sdl waveout hd1000a portaudio; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in alsa arts coreaudio aout_directx esd aout_file oss aout_sdl waveout hd1000a portaudio; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in alsa arts coreaudio aout_directx esd aout_file oss aout_sdl waveout hd1000a portaudio; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 libalsa_plugin$(LIBEXT): $(libalsa_plugin_a_OBJECTS)
@@ -2183,6 +2331,12 @@ libhd1000a_plugin$(LIBEXT): $(libhd1000a_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libhd1000a_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin hd1000a\` ; $(CXXLINK) $(libhd1000a_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin hd1000a` ;; \
 	  objc) echo $(OBJCLINK) $(libhd1000a_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin hd1000a\` ; $(OBJCLINK) $(libhd1000a_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin hd1000a` ;; \
 	  c|*) echo $(LINK) $(libhd1000a_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin hd1000a\` ; $(LINK) $(libhd1000a_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin hd1000a` ;; \
+	esac
+libportaudio_plugin$(LIBEXT): $(libportaudio_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage portaudio` in \
+	  c++) echo $(CXXLINK) $(libportaudio_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin portaudio\` ; $(CXXLINK) $(libportaudio_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin portaudio` ;; \
+	  objc) echo $(OBJCLINK) $(libportaudio_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin portaudio\` ; $(OBJCLINK) $(libportaudio_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin portaudio` ;; \
+	  c|*) echo $(LINK) $(libportaudio_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin portaudio\` ; $(LINK) $(libportaudio_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin portaudio` ;; \
 	esac
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

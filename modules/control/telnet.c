@@ -2,7 +2,7 @@
  * telnet.c: VLM interface plugin
  *****************************************************************************
  * Copyright (C) 2000, 2001 VideoLAN
- * $Id: telnet.c 7363 2004-04-16 18:41:00Z fkuehne $
+ * $Id: telnet.c 9083 2004-10-30 10:36:07Z gbazin $
  *
  * Authors: Simon Latapie <garf@videolan.org>
  *          Laurent Aimar <fenrir@videolan.org>
@@ -49,30 +49,13 @@
 #   include <winsock.h>
 #elif defined( WIN32 )
 #   include <winsock2.h>
-#   include <ws2tcpip.h>
-#   ifndef IN_MULTICAST
-#       define IN_MULTICAST(a) IN_CLASSD(a)
-#   endif
 #else
-#   include <netdb.h>                                         /* hostent ... */
 #   include <sys/socket.h>
-#   include <netinet/in.h>
-#   ifdef HAVE_ARPA_INET_H
-#       include <arpa/inet.h>                    /* inet_ntoa(), inet_aton() */
-#   endif
 #endif
 
 #include "network.h"
 
 #include "vlc_vlm.h"
-
-#if defined( WIN32 ) || defined( UNDER_CE )
-#define SOCKET_CLOSE(a)    closesocket(a)
-#else
-#define SOCKET_CLOSE(a)    close(a)
-#endif
-
-#define LISTEN_BACKLOG 100
 
 #define READ_MODE_PWD 1
 #define READ_MODE_CMD 2
@@ -99,9 +82,10 @@ static void Close( vlc_object_t * );
 #define TELNETPWD_LONGTEXT N_( "Default to admin" )
 
 vlc_module_begin();
-    add_integer( "telnet-port", 4212, NULL, TELNETPORT_TEXT, TELNETPORT_LONGTEXT, VLC_TRUE );
-    add_string( "telnet-password", "admin", NULL,
-                    TELNETPWD_TEXT, TELNETPWD_LONGTEXT, VLC_TRUE );
+    add_integer( "telnet-port", 4212, NULL, TELNETPORT_TEXT,
+                 TELNETPORT_LONGTEXT, VLC_TRUE );
+    add_string( "telnet-password", "admin", NULL, TELNETPWD_TEXT,
+                TELNETPWD_LONGTEXT, VLC_TRUE );
     set_description( _("Telnet remote control interface") );
     add_category_hint( "VLM", NULL, VLC_FALSE );
     set_capability( "interface", 0 );
@@ -123,18 +107,18 @@ typedef struct
     uint8_t   *p_buffer_write; // the position in the buffer
     int        i_buffer_write; // the number of byte we still have to send
     int        i_tel_cmd; // for specific telnet commands
+
 } telnet_client_t;
 
-static char* MessageToString( vlm_message_t* , int );
-static void Write_message( telnet_client_t * , vlm_message_t* , char * , int );
-static int  SocketListen( intf_thread_t * , int );
+static char *MessageToString( vlm_message_t *, int );
+static void Write_message( telnet_client_t *, vlm_message_t *, char *, int );
 
 struct intf_sys_t
 {
    telnet_client_t **clients;
    int             i_clients;
    int             fd;
-   vlm_t          *mediatheque;
+   vlm_t           *mediatheque;
 };
 
 /*****************************************************************************
@@ -143,33 +127,32 @@ struct intf_sys_t
 static int Open( vlc_object_t *p_this )
 {
     intf_thread_t *p_intf = (intf_thread_t*) p_this;
+    vlm_t *mediatheque;
     int i_telnetport;
+
+    if( !(mediatheque = vlm_New( p_intf )) )
+    {
+        msg_Err( p_intf, "cannot start VLM" );
+        return VLC_EGENERIC;
+    }
+
+    msg_Info( p_intf, "Using the VLM interface plugin..." );
 
     i_telnetport = config_GetInt( p_intf, "telnet-port" );
 
-#ifdef WIN32
-    vlc_bool_t b_quiet;
-    b_quiet = config_GetInt( p_intf, "dummy-quiet" );
-    if( !b_quiet )
-        CONSOLE_INTRO_MSG;
-#endif
-
-    msg_Info( p_intf, _("Using the VLM interface plugin...") );
-
-    p_intf->pf_run = Run;
-
     p_intf->p_sys = malloc( sizeof( intf_sys_t ) );
-    if( ( p_intf->p_sys->fd = SocketListen( p_intf , i_telnetport ) ) < 0 )
+    if( ( p_intf->p_sys->fd = net_ListenTCP( p_intf , "", i_telnetport ) ) < 0 )
     {
         msg_Err( p_intf, "cannot listen for telnet" );
         free( p_intf->p_sys );
         return VLC_EGENERIC;
     }
-    msg_Info( p_intf, _("Telnet interface started on port: %d"), i_telnetport );
+    msg_Info( p_intf, "Telnet interface started on port: %d", i_telnetport );
 
     p_intf->p_sys->i_clients   = 0;
     p_intf->p_sys->clients     = NULL;
-    p_intf->p_sys->mediatheque = vlm_New( p_intf );
+    p_intf->p_sys->mediatheque = mediatheque;
+    p_intf->pf_run = Run;
 
     return VLC_SUCCESS;
 }
@@ -199,7 +182,6 @@ static void Close( vlc_object_t *p_this )
     free( p_sys );
 }
 
-
 /*****************************************************************************
  * Run: main loop
  *****************************************************************************/
@@ -207,29 +189,23 @@ static void Run( intf_thread_t *p_intf )
 {
     intf_sys_t     *p_sys = p_intf->p_sys;
     struct timeval  timeout;
-    int             i_sock_size = sizeof( struct sockaddr_in );
-    char           *s_password;
+    char           *psz_password;
 
-    s_password = config_GetPsz( p_intf, "telnet-password" );
+    psz_password = config_GetPsz( p_intf, "telnet-password" );
 
     while( !p_intf->b_die )
     {
-        fd_set          fds_read;
-        fd_set          fds_write;
-        int             i_handle_max = 0;
-        int             i_ret;
-        struct          sockaddr_in sock2;
-        int             i_len;
-        int             fd;
-        int             i;
+        fd_set fds_read, fds_write;
+        int    i_handle_max = 0;
+        int    i_ret, i_len, fd, i;
 
         /* if a new client wants to communicate */
-        fd = accept( p_sys->fd, (struct sockaddr *)&sock2, &i_sock_size );
+        fd = net_Accept( p_intf, p_sys->fd, p_sys->i_clients > 0 ? 0 : -1 );
         if( fd > 0 )
         {
             telnet_client_t *cl;
 
-            /* to be non blockant */
+            /* to be non blocking */
 #if defined( WIN32 ) || defined( UNDER_CE )
             {
                 unsigned long i_dummy = 1;
@@ -270,7 +246,7 @@ static void Run( intf_thread_t *p_intf )
         timeout.tv_sec = 0;
         timeout.tv_usec = 500*1000;
 
-        i_ret = select( i_handle_max + 1, &fds_read, &fds_write, NULL, &timeout );
+        i_ret = select( i_handle_max + 1, &fds_read, &fds_write, 0, &timeout );
         if( i_ret == -1 && errno != EINTR )
         {
             msg_Warn( p_intf, "cannot select sockets" );
@@ -306,52 +282,51 @@ static void Run( intf_thread_t *p_intf )
                 {
                     switch( cl->i_tel_cmd )
                     {
-                        case 0:
-                            switch( *cl->p_buffer_read )
-                            {
-                                case '\r':
-                                    break;
-                                case '\n':
-                                    *cl->p_buffer_read = '\n';
-                                    i_end = 1;
-                                    break;
-                                case TEL_IAC: // telnet specific command
-                                    cl->i_tel_cmd = 1;
-                                    cl->p_buffer_read++;
-                                    break;
-                                default:
-                                    cl->p_buffer_read++;
-                                    break;
-                            }
+                    case 0:
+                        switch( *cl->p_buffer_read )
+                        {
+                        case '\r':
                             break;
-                        case 1:
-                            switch( *cl->p_buffer_read )
-                            {
-                                case TEL_WILL: case TEL_WONT: case TEL_DO: case TEL_DONT:
-                                    cl->i_tel_cmd++;
-                                    cl->p_buffer_read++;
-                                    break;
-                                default:
-                                    cl->i_tel_cmd = 0;
-                                    cl->p_buffer_read--;
-                                    break;
-                            }
+                        case '\n':
+                            *cl->p_buffer_read = '\n';
+                            i_end = 1;
                             break;
-                        case 2:
+                        case TEL_IAC: // telnet specific command
+                            cl->i_tel_cmd = 1;
+                            cl->p_buffer_read++;
+                            break;
+                        default:
+                            cl->p_buffer_read++;
+                            break;
+                        }
+                        break;
+                    case 1:
+                        switch( *cl->p_buffer_read )
+                        {
+                        case TEL_WILL: case TEL_WONT:
+                        case TEL_DO: case TEL_DONT:
+                            cl->i_tel_cmd++;
+                            cl->p_buffer_read++;
+                            break;
+                        default:
                             cl->i_tel_cmd = 0;
-                            cl->p_buffer_read -= 2;
+                            cl->p_buffer_read--;
                             break;
-                    }
-
-                    if( i_end != 0 )
-                    {
+                        }
+                        break;
+                    case 2:
+                        cl->i_tel_cmd = 0;
+                        cl->p_buffer_read -= 2;
                         break;
                     }
+
+                    if( i_end != 0 ) break;
                 }
 
-                if( cl->p_buffer_read - cl->buffer_read == 999 ) // too long !
+                if( cl->p_buffer_read - cl->buffer_read == 999 )
                 {
-                    Write_message( cl , NULL, "Line too long\n" , cl->i_mode + 2 );
+                    Write_message( cl, NULL, "Line too long\r\n",
+                                   cl->i_mode + 2 );
                 }
             }
         }
@@ -361,32 +336,38 @@ static void Run( intf_thread_t *p_intf )
         {
             telnet_client_t *cl = p_sys->clients[i];
 
-            if( cl->i_mode >= WRITE_MODE_PWD && cl->i_buffer_write == 0 ) // we have finished to send
+            if( cl->i_mode >= WRITE_MODE_PWD && cl->i_buffer_write == 0 )
             {
+               // we have finished to send
                cl->i_mode -= 2; // corresponding READ MODE
             }
-            else if( cl->i_mode == READ_MODE_PWD && *cl->p_buffer_read == '\n' )
+            else if( cl->i_mode == READ_MODE_PWD &&
+                     *cl->p_buffer_read == '\n' )
             {
                 *cl->p_buffer_read = '\0';
-                if( strcmp( s_password, cl->buffer_read ) == 0 )
+                if( strcmp( psz_password, cl->buffer_read ) == 0 )
                 {
-                    Write_message( cl , NULL, "\xff\xfc\x01\nWelcome, Master\n> ", WRITE_MODE_CMD );
+                    Write_message( cl, NULL, "\xff\xfc\x01\r\nWelcome, "
+                                   "Master\r\n> ", WRITE_MODE_CMD );
                 }
                 else
                 {
                     /* wrong password */
-                    Write_message( cl , NULL, "\n\rTry again, you polio:\n" , WRITE_MODE_PWD );
+                    Write_message( cl, NULL, "\r\nTry again, you polio:",
+                                   WRITE_MODE_PWD );
                 }
             }
-            else if( cl->i_mode == READ_MODE_CMD && *cl->p_buffer_read == '\n' )
+            else if( cl->i_mode == READ_MODE_CMD &&
+                     *cl->p_buffer_read == '\n' )
             {
                 /* ok, here is a command line */
                 if( !strncmp( cl->buffer_read, "logout", 6 ) ||
                     !strncmp( cl->buffer_read, "quit", 4 )  ||
                     !strncmp( cl->buffer_read, "exit", 4 ) )
                 {
-                    close( cl->fd );
-                    TAB_REMOVE( p_intf->p_sys->i_clients , p_intf->p_sys->clients , cl );
+                    net_Close( cl->fd );
+                    TAB_REMOVE( p_intf->p_sys->i_clients ,
+                                p_intf->p_sys->clients , cl );
                     free( cl );
                 }
                 else if( !strncmp( cl->buffer_read, "shutdown", 8 ) )
@@ -401,10 +382,9 @@ static void Run( intf_thread_t *p_intf )
                     /* create a standard string */
                     *cl->p_buffer_read = '\0';
 
-                    vlm_ExecuteCommand( p_sys->mediatheque, cl->buffer_read , &message);
-
-                    Write_message( cl , message, NULL , WRITE_MODE_CMD );
-
+                    vlm_ExecuteCommand( p_sys->mediatheque, cl->buffer_read,
+                                        &message );
+                    Write_message( cl, message, NULL, WRITE_MODE_CMD );
                     vlm_MessageDelete( message );
                 }
             }
@@ -412,7 +392,8 @@ static void Run( intf_thread_t *p_intf )
     }
 }
 
-static void Write_message( telnet_client_t * client, vlm_message_t * message, char * string_message, int i_mode )
+static void Write_message( telnet_client_t *client, vlm_message_t *message,
+                           char *string_message, int i_mode )
 {
     char *psz_message;
 
@@ -421,142 +402,75 @@ static void Write_message( telnet_client_t * client, vlm_message_t * message, ch
     if( client->buffer_write ) free( client->buffer_write );
 
     /* generate the psz_message string */
-    if( message != NULL ) /* ok, look for vlm_message_t */
+    if( message )
     {
-        psz_message = MessageToString( message , 0 );
-        psz_message = realloc( psz_message , strlen( psz_message ) + strlen( "\n> " ) + 1 );
-        strcat( psz_message , "\n> " );
-    }
-    else /* it is a basic string_message */
-    {
-        psz_message = strdup( string_message );
-    }
-
-    client->buffer_write = malloc( strlen( psz_message ) + 1 );
-    strcpy( client->buffer_write , psz_message );
-    client->p_buffer_write = client->buffer_write;
-    client->i_buffer_write = strlen( psz_message );
-    client->i_mode = i_mode;
-    free( psz_message );
-}
-
-/* Does what we want except select and accept */
-static int SocketListen( intf_thread_t *p_intf , int i_port )
-{
-    struct sockaddr_in sock;
-    int fd;
-    int i_opt;
-    int i_flags;
-
-    /* open socket */
-    fd = socket( AF_INET, SOCK_STREAM, 0 );
-    if( fd < 0 )
-    {
-        msg_Err( p_intf, "cannot open socket" );
-        goto socket_failed;
-    }
-    /* reuse socket */
-    i_opt = 1;
-    if( setsockopt( fd, SOL_SOCKET, SO_REUSEADDR,
-                    (void *) &i_opt, sizeof( i_opt ) ) < 0 )
-    {
-        msg_Warn( p_intf, "cannot configure socket (SO_REUSEADDR)" );
-    }
-
-    /* fill p_socket structure */
-    memset( &sock, 0, sizeof( struct sockaddr_in ) );
-    sock.sin_family = AF_INET;                             /* family */
-    sock.sin_port = htons( (uint16_t)i_port );
-    sock.sin_addr.s_addr = INADDR_ANY;
-
-    /* bind it */
-    if( bind( fd, (struct sockaddr *)&sock, sizeof( struct sockaddr_in ) ) < 0 )
-    {
-        msg_Err( p_intf, "cannot bind socket" );
-        goto socket_failed;
-    }
-
-   /* set to non-blocking */
-#if defined( WIN32 ) || defined( UNDER_CE )
-    {
-        unsigned long i_dummy = 1;
-        if( ioctlsocket( fd, FIONBIO, &i_dummy ) != 0 )
-        {
-            msg_Err( p_intf, "cannot set socket to non-blocking mode" );
-            goto socket_failed;
-        }
-    }
-#else
-    if( ( i_flags = fcntl( fd, F_GETFL, 0 ) ) < 0 )
-    {
-        msg_Err( p_intf, "cannot F_GETFL socket" );
-        goto socket_failed;
-    }
-    if( fcntl( fd, F_SETFL, i_flags | O_NONBLOCK ) < 0 )
-    {
-        msg_Err( p_intf, "cannot F_SETFL O_NONBLOCK" );
-        goto socket_failed;
-    }
-#endif
-    /* listen */
-    if( listen( fd, LISTEN_BACKLOG ) < 0 )
-    {
-        msg_Err( p_intf, "cannot listen socket" );
-        goto socket_failed;
-    }
-
-    return fd;
-
-socket_failed:
-    if( fd >= 0 )
-    {
-        SOCKET_CLOSE( fd );
-    }
-    return -1;
-}
-
-/* we need the level of the message to put a beautiful indentation.
-   first level is 0 */
-static char* MessageToString( vlm_message_t* message , int i_level )
-{
-    int i;
-    char *psz_message;
-
-    if( message == NULL )
-    {
-        return strdup( "" );
-    }
-    else if( i_level == 0 && message->i_child == 0 && message->psz_value == NULL  ) /* a command is successful */
-    {
-        /* don't write anything */
-        return strdup( "" );
+        /* ok, look for vlm_message_t */
+        psz_message = MessageToString( message, 0 );
     }
     else
     {
-        psz_message = strdup( "" );
-        psz_message = realloc( psz_message , strlen( psz_message ) + strlen( message->psz_name ) + i_level * 4 + 1 );
-        for( i = 0 ; i < i_level ; i++ )
-        {
-            strcat( psz_message , "    " );
-        }
-        strcat( psz_message , message->psz_name );
-        if( message->psz_value )
-        {
-            psz_message = realloc( psz_message , strlen( psz_message ) + strlen( message->psz_value ) + 3 + 1 );
-            strcat( psz_message , " : " );
-            strcat( psz_message , message->psz_value );
-        }
-
-        for( i = 0 ; i < message->i_child ; i++ )
-        {
-            char *child_message = MessageToString( message->child[i] , i_level + 1 );
-
-            psz_message = realloc( psz_message , strlen( psz_message ) +  strlen( child_message ) + 1 + 1 );
-            strcat( psz_message, "\n" );
-            strcat( psz_message, child_message );
-            free( child_message );
-        }
-
-        return psz_message;
+        /* it is a basic string_message */
+        psz_message = strdup( string_message );
     }
+
+    client->buffer_write = client->p_buffer_write = psz_message;
+    client->i_buffer_write = strlen( psz_message );
+    client->i_mode = i_mode;
+}
+
+/* We need the level of the message to put a beautiful indentation.
+ * first level is 0 */
+static char *MessageToString( vlm_message_t *message, int i_level )
+{
+#define STRING_CR "\r\n"
+#define STRING_TAIL "> "
+
+    char *psz_message;
+    int i, i_message = sizeof( STRING_TAIL );
+
+    if( !message || !message->psz_name )
+    {
+        return strdup( STRING_CR STRING_TAIL );
+    }
+    else if( !i_level && !message->i_child && !message->psz_value  )
+    {
+        /* A command is successful. Don't write anything */
+        return strdup( STRING_CR STRING_TAIL );
+    }
+
+    i_message += strlen( message->psz_name ) + i_level * sizeof( "    " ) + 1;
+    psz_message = malloc( i_message ); *psz_message = 0;
+    for( i = 0; i < i_level; i++ ) strcat( psz_message, "    " );
+    strcat( psz_message, message->psz_name );
+
+    if( message->psz_value )
+    {
+        i_message += sizeof( " : " ) + strlen( message->psz_value ) +
+            sizeof( STRING_CR );
+        psz_message = realloc( psz_message, i_message );
+        strcat( psz_message, " : " );
+        strcat( psz_message, message->psz_value );
+        strcat( psz_message, STRING_CR );
+    }
+    else
+    {
+        i_message += sizeof( STRING_CR );
+        psz_message = realloc( psz_message, i_message );
+        strcat( psz_message, STRING_CR );
+    }
+
+    for( i = 0; i < message->i_child; i++ )
+    {
+        char *child_message =
+            MessageToString( message->child[i], i_level + 1 );
+
+        i_message += strlen( child_message );
+        psz_message = realloc( psz_message, i_message );
+        strcat( psz_message, child_message );
+        free( child_message );
+    }
+
+    if( i_level == 0 ) strcat( psz_message, STRING_TAIL );
+
+    return psz_message;
 }

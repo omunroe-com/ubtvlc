@@ -2,7 +2,7 @@
  * wxwindows.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: wxwindows.cpp 7694 2004-05-16 22:06:34Z gbazin $
+ * $Id: wxwindows.cpp 8869 2004-09-30 22:17:54Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -39,11 +39,14 @@
 #include "wxwindows.h"
 
 /* Temporary hack */
-#if defined(WIN32) && defined(_WX_INIT_H_)
+#if defined(WIN32) && defined(_WX_INIT_H_) 
+#if (wxMAJOR_VERSION <= 2) && (wxMINOR_VERSION <= 5) && (wxRELEASE_NUMBER < 3)
 /* Hack to detect wxWindows 2.5 which has a different wxEntry() prototype */
 extern int wxEntry( HINSTANCE hInstance, HINSTANCE hPrevInstance = NULL,
                     char *pCmdLine = NULL, int nCmdShow = SW_NORMAL );
 #endif
+#endif
+
 #ifdef SYS_DARWIN
 int wxEntry( int argc, char *argv[] , bool enterLoop = TRUE );
 #endif

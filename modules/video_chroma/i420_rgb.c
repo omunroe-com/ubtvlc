@@ -2,7 +2,7 @@
  * i420_rgb.c : YUV to bitmap RGB conversion module for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001, 2004 VideoLAN
- * $Id: i420_rgb.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: i420_rgb.c 8564 2004-08-29 09:58:07Z gbazin $
  *
  * Author: Sam Hocevar <sam@zoy.org>
  *
@@ -122,9 +122,11 @@ static int Activate( vlc_object_t *p_this )
                     p_vout->chroma.pf_convert = E_(I420_RGB16);
                     break;
 
-#ifndef WIN32 /* Hmmm, is there only X11 using 32bits per pixel for RV24 ? */
+#if 0
+                /* Hmmm, is there only X11 using 32bits per pixel for RV24 ? */
                 case VLC_FOURCC('R','V','2','4'):
 #endif
+
                 case VLC_FOURCC('R','V','3','2'):
 #if defined (MODULE_NAME_IS_i420_rgb_mmx)
                     /* If we don't have support for the bitmasks, bail out */
@@ -265,8 +267,10 @@ static void SetGammaTable( int *pi_table, double f_gamma )
  *****************************************************************************/
 static void SetYUV( vout_thread_t *p_vout )
 {
-    int         pi_gamma[256];                                /* gamma table */
-    int         i_index;                                  /* index in tables */
+    int          pi_gamma[256];                               /* gamma table */
+    volatile int i_index;                                 /* index in tables */
+                   /* We use volatile here to work around a strange gcc-3.3.4
+                    * optimization bug */
 
     /* Build gamma table */
     SetGammaTable( pi_gamma, p_vout->f_gamma );

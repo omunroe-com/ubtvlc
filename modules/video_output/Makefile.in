@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -228,8 +230,8 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Laab) $(Laapic) $(Lcacab) $(Lcacapic) $(Lfbb) $(Lfbpic) $(Lggib) $(Lggipic) $(Lglideb) $(Lglidepic) $(Lvout_sdlb) $(Lvout_sdlpic) $(Lsvgalibb) $(Lsvgalibpic) $(Lwingdib) $(Lwingdipic) $(Lmgab) $(Lmgapic)
-noinst_LIBRARIES = $(Laap) $(Lcacap) $(Lfbp) $(Lggip) $(Lglidep) $(Lvout_sdlp) $(Lsvgalibp) $(Lwingdip) $(Lmgap)
+libvlc_LIBRARIES = $(Laab) $(Laapic) $(Lcacab) $(Lcacapic) $(Lfbb) $(Lfbpic) $(Lggib) $(Lggipic) $(Lglideb) $(Lglidepic) $(Lvout_sdlb) $(Lvout_sdlpic) $(Lsvgalibb) $(Lsvgalibpic) $(Lwingdib) $(Lwingdipic) $(Lmgab) $(Lmgapic) $(Lhd1000vb) $(Lhd1000vpic) $(Lsnapshotb) $(Lsnapshotpic) $(Lopenglb) $(Lopenglpic)
+noinst_LIBRARIES = $(Laap) $(Lcacap) $(Lfbp) $(Lggip) $(Lglidep) $(Lvout_sdlp) $(Lsvgalibp) $(Lwingdip) $(Lmgap) $(Lhd1000vp) $(Lsnapshotp) $(Lopenglp)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
@@ -245,6 +247,9 @@ SOURCES_vout_sdl = sdl.c
 SOURCES_svgalib = svgalib.c
 SOURCES_wingdi = wingdi.c
 SOURCES_mga = mga.c
+SOURCES_hd1000v = hd1000v.cpp
+SOURCES_snapshot = snapshot.c
+SOURCES_opengl = opengl.c
 
 # There's no need for pic code on win32 so get rid of this to substantially
 # reduce the compilation time.
@@ -475,6 +480,81 @@ libmga_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mga`
 libmga_DATA = $(Dmgap)
 
 libmgadir = $(libdir)/vlc/
+
+
+# The hd1000v plugin
+@UNTRUE_TRUE@Lhd1000vp = libhd1000v_plugin.a
+@UNTRUE_TRUE@Dhd1000vp = libhd1000v_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lhd1000vb = libhd1000v.a
+@UNTRUE_TRUE@Lhd1000vpic = libhd1000v_pic.a
+
+libhd1000v_plugin_a_SOURCES = $(SOURCES_hd1000v)
+libhd1000v_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin hd1000v`
+libhd1000v_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin hd1000v`
+libhd1000v_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin hd1000v`
+
+libhd1000v_pic_a_SOURCES = $(SOURCES_hd1000v)
+libhd1000v_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic hd1000v`
+libhd1000v_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic hd1000v`
+libhd1000v_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic hd1000v`
+
+libhd1000v_a_SOURCES = $(SOURCES_hd1000v)
+libhd1000v_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin hd1000v`
+libhd1000v_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin hd1000v`
+libhd1000v_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin hd1000v`
+libhd1000v_DATA = $(Dhd1000vp)
+
+libhd1000vdir = $(libdir)/vlc/
+
+
+# The snapshot plugin
+@UNTRUE_TRUE@Lsnapshotp = libsnapshot_plugin.a
+@UNTRUE_TRUE@Dsnapshotp = libsnapshot_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lsnapshotb = libsnapshot.a
+@UNTRUE_TRUE@Lsnapshotpic = libsnapshot_pic.a
+
+libsnapshot_plugin_a_SOURCES = $(SOURCES_snapshot)
+libsnapshot_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin snapshot`
+libsnapshot_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin snapshot`
+libsnapshot_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin snapshot`
+
+libsnapshot_pic_a_SOURCES = $(SOURCES_snapshot)
+libsnapshot_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic snapshot`
+libsnapshot_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic snapshot`
+libsnapshot_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic snapshot`
+
+libsnapshot_a_SOURCES = $(SOURCES_snapshot)
+libsnapshot_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin snapshot`
+libsnapshot_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin snapshot`
+libsnapshot_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin snapshot`
+libsnapshot_DATA = $(Dsnapshotp)
+
+libsnapshotdir = $(libdir)/vlc/
+
+
+# The opengl plugin
+@UNTRUE_TRUE@Lopenglp = libopengl_plugin.a
+@UNTRUE_TRUE@Dopenglp = libopengl_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lopenglb = libopengl.a
+@UNTRUE_TRUE@Lopenglpic = libopengl_pic.a
+
+libopengl_plugin_a_SOURCES = $(SOURCES_opengl)
+libopengl_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin opengl`
+libopengl_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin opengl`
+libopengl_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin opengl`
+
+libopengl_pic_a_SOURCES = $(SOURCES_opengl)
+libopengl_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic opengl`
+libopengl_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic opengl`
+libopengl_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic opengl`
+
+libopengl_a_SOURCES = $(SOURCES_opengl)
+libopengl_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin opengl`
+libopengl_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin opengl`
+libopengl_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin opengl`
+libopengl_DATA = $(Dopenglp)
+
+libopengldir = $(libdir)/vlc/
 subdir = modules/video_output
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
@@ -557,65 +637,110 @@ libglide_plugin_a_LIBADD =
 am__objects_15 = libglide_plugin_a-glide.$(OBJEXT)
 am_libglide_plugin_a_OBJECTS = $(am__objects_15)
 libglide_plugin_a_OBJECTS = $(am_libglide_plugin_a_OBJECTS)
+libhd1000v_a_AR = $(AR) cru
+libhd1000v_a_LIBADD =
+am__objects_16 = libhd1000v_a-hd1000v.$(OBJEXT)
+am_libhd1000v_a_OBJECTS = $(am__objects_16)
+libhd1000v_a_OBJECTS = $(am_libhd1000v_a_OBJECTS)
+libhd1000v_pic_a_AR = $(AR) cru
+libhd1000v_pic_a_LIBADD =
+am__objects_17 = libhd1000v_pic_a-hd1000v.$(OBJEXT)
+am_libhd1000v_pic_a_OBJECTS = $(am__objects_17)
+libhd1000v_pic_a_OBJECTS = $(am_libhd1000v_pic_a_OBJECTS)
+libhd1000v_plugin_a_AR = $(AR) cru
+libhd1000v_plugin_a_LIBADD =
+am__objects_18 = libhd1000v_plugin_a-hd1000v.$(OBJEXT)
+am_libhd1000v_plugin_a_OBJECTS = $(am__objects_18)
+libhd1000v_plugin_a_OBJECTS = $(am_libhd1000v_plugin_a_OBJECTS)
 libmga_a_AR = $(AR) cru
 libmga_a_LIBADD =
-am__objects_16 = libmga_a-mga.$(OBJEXT)
-am_libmga_a_OBJECTS = $(am__objects_16)
+am__objects_19 = libmga_a-mga.$(OBJEXT)
+am_libmga_a_OBJECTS = $(am__objects_19)
 libmga_a_OBJECTS = $(am_libmga_a_OBJECTS)
 libmga_pic_a_AR = $(AR) cru
 libmga_pic_a_LIBADD =
-am__objects_17 = libmga_pic_a-mga.$(OBJEXT)
-am_libmga_pic_a_OBJECTS = $(am__objects_17)
+am__objects_20 = libmga_pic_a-mga.$(OBJEXT)
+am_libmga_pic_a_OBJECTS = $(am__objects_20)
 libmga_pic_a_OBJECTS = $(am_libmga_pic_a_OBJECTS)
 libmga_plugin_a_AR = $(AR) cru
 libmga_plugin_a_LIBADD =
-am__objects_18 = libmga_plugin_a-mga.$(OBJEXT)
-am_libmga_plugin_a_OBJECTS = $(am__objects_18)
+am__objects_21 = libmga_plugin_a-mga.$(OBJEXT)
+am_libmga_plugin_a_OBJECTS = $(am__objects_21)
 libmga_plugin_a_OBJECTS = $(am_libmga_plugin_a_OBJECTS)
+libopengl_a_AR = $(AR) cru
+libopengl_a_LIBADD =
+am__objects_22 = libopengl_a-opengl.$(OBJEXT)
+am_libopengl_a_OBJECTS = $(am__objects_22)
+libopengl_a_OBJECTS = $(am_libopengl_a_OBJECTS)
+libopengl_pic_a_AR = $(AR) cru
+libopengl_pic_a_LIBADD =
+am__objects_23 = libopengl_pic_a-opengl.$(OBJEXT)
+am_libopengl_pic_a_OBJECTS = $(am__objects_23)
+libopengl_pic_a_OBJECTS = $(am_libopengl_pic_a_OBJECTS)
+libopengl_plugin_a_AR = $(AR) cru
+libopengl_plugin_a_LIBADD =
+am__objects_24 = libopengl_plugin_a-opengl.$(OBJEXT)
+am_libopengl_plugin_a_OBJECTS = $(am__objects_24)
+libopengl_plugin_a_OBJECTS = $(am_libopengl_plugin_a_OBJECTS)
+libsnapshot_a_AR = $(AR) cru
+libsnapshot_a_LIBADD =
+am__objects_25 = libsnapshot_a-snapshot.$(OBJEXT)
+am_libsnapshot_a_OBJECTS = $(am__objects_25)
+libsnapshot_a_OBJECTS = $(am_libsnapshot_a_OBJECTS)
+libsnapshot_pic_a_AR = $(AR) cru
+libsnapshot_pic_a_LIBADD =
+am__objects_26 = libsnapshot_pic_a-snapshot.$(OBJEXT)
+am_libsnapshot_pic_a_OBJECTS = $(am__objects_26)
+libsnapshot_pic_a_OBJECTS = $(am_libsnapshot_pic_a_OBJECTS)
+libsnapshot_plugin_a_AR = $(AR) cru
+libsnapshot_plugin_a_LIBADD =
+am__objects_27 = libsnapshot_plugin_a-snapshot.$(OBJEXT)
+am_libsnapshot_plugin_a_OBJECTS = $(am__objects_27)
+libsnapshot_plugin_a_OBJECTS = $(am_libsnapshot_plugin_a_OBJECTS)
 libsvgalib_a_AR = $(AR) cru
 libsvgalib_a_LIBADD =
-am__objects_19 = libsvgalib_a-svgalib.$(OBJEXT)
-am_libsvgalib_a_OBJECTS = $(am__objects_19)
+am__objects_28 = libsvgalib_a-svgalib.$(OBJEXT)
+am_libsvgalib_a_OBJECTS = $(am__objects_28)
 libsvgalib_a_OBJECTS = $(am_libsvgalib_a_OBJECTS)
 libsvgalib_pic_a_AR = $(AR) cru
 libsvgalib_pic_a_LIBADD =
-am__objects_20 = libsvgalib_pic_a-svgalib.$(OBJEXT)
-am_libsvgalib_pic_a_OBJECTS = $(am__objects_20)
+am__objects_29 = libsvgalib_pic_a-svgalib.$(OBJEXT)
+am_libsvgalib_pic_a_OBJECTS = $(am__objects_29)
 libsvgalib_pic_a_OBJECTS = $(am_libsvgalib_pic_a_OBJECTS)
 libsvgalib_plugin_a_AR = $(AR) cru
 libsvgalib_plugin_a_LIBADD =
-am__objects_21 = libsvgalib_plugin_a-svgalib.$(OBJEXT)
-am_libsvgalib_plugin_a_OBJECTS = $(am__objects_21)
+am__objects_30 = libsvgalib_plugin_a-svgalib.$(OBJEXT)
+am_libsvgalib_plugin_a_OBJECTS = $(am__objects_30)
 libsvgalib_plugin_a_OBJECTS = $(am_libsvgalib_plugin_a_OBJECTS)
 libvout_sdl_a_AR = $(AR) cru
 libvout_sdl_a_LIBADD =
-am__objects_22 = libvout_sdl_a-sdl.$(OBJEXT)
-am_libvout_sdl_a_OBJECTS = $(am__objects_22)
+am__objects_31 = libvout_sdl_a-sdl.$(OBJEXT)
+am_libvout_sdl_a_OBJECTS = $(am__objects_31)
 libvout_sdl_a_OBJECTS = $(am_libvout_sdl_a_OBJECTS)
 libvout_sdl_pic_a_AR = $(AR) cru
 libvout_sdl_pic_a_LIBADD =
-am__objects_23 = libvout_sdl_pic_a-sdl.$(OBJEXT)
-am_libvout_sdl_pic_a_OBJECTS = $(am__objects_23)
+am__objects_32 = libvout_sdl_pic_a-sdl.$(OBJEXT)
+am_libvout_sdl_pic_a_OBJECTS = $(am__objects_32)
 libvout_sdl_pic_a_OBJECTS = $(am_libvout_sdl_pic_a_OBJECTS)
 libvout_sdl_plugin_a_AR = $(AR) cru
 libvout_sdl_plugin_a_LIBADD =
-am__objects_24 = libvout_sdl_plugin_a-sdl.$(OBJEXT)
-am_libvout_sdl_plugin_a_OBJECTS = $(am__objects_24)
+am__objects_33 = libvout_sdl_plugin_a-sdl.$(OBJEXT)
+am_libvout_sdl_plugin_a_OBJECTS = $(am__objects_33)
 libvout_sdl_plugin_a_OBJECTS = $(am_libvout_sdl_plugin_a_OBJECTS)
 libwingdi_a_AR = $(AR) cru
 libwingdi_a_LIBADD =
-am__objects_25 = libwingdi_a-wingdi.$(OBJEXT)
-am_libwingdi_a_OBJECTS = $(am__objects_25)
+am__objects_34 = libwingdi_a-wingdi.$(OBJEXT)
+am_libwingdi_a_OBJECTS = $(am__objects_34)
 libwingdi_a_OBJECTS = $(am_libwingdi_a_OBJECTS)
 libwingdi_pic_a_AR = $(AR) cru
 libwingdi_pic_a_LIBADD =
-am__objects_26 = libwingdi_pic_a-wingdi.$(OBJEXT)
-am_libwingdi_pic_a_OBJECTS = $(am__objects_26)
+am__objects_35 = libwingdi_pic_a-wingdi.$(OBJEXT)
+am_libwingdi_pic_a_OBJECTS = $(am__objects_35)
 libwingdi_pic_a_OBJECTS = $(am_libwingdi_pic_a_OBJECTS)
 libwingdi_plugin_a_AR = $(AR) cru
 libwingdi_plugin_a_LIBADD =
-am__objects_27 = libwingdi_plugin_a-wingdi.$(OBJEXT)
-am_libwingdi_plugin_a_OBJECTS = $(am__objects_27)
+am__objects_36 = libwingdi_plugin_a-wingdi.$(OBJEXT)
+am_libwingdi_plugin_a_OBJECTS = $(am__objects_36)
 libwingdi_plugin_a_OBJECTS = $(am_libwingdi_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
@@ -636,9 +761,18 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libglide_a-glide.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libglide_pic_a-glide.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libglide_plugin_a-glide.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libhd1000v_a-hd1000v.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libhd1000v_pic_a-hd1000v.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libhd1000v_plugin_a-hd1000v.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmga_a-mga.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmga_pic_a-mga.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmga_plugin_a-mga.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libopengl_a-opengl.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libopengl_pic_a-opengl.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libopengl_plugin_a-opengl.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libsnapshot_a-snapshot.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libsnapshot_pic_a-snapshot.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libsnapshot_plugin_a-snapshot.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libsvgalib_a-svgalib.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libsvgalib_pic_a-svgalib.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libsvgalib_plugin_a-svgalib.Po \
@@ -652,6 +786,11 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
+	-o $@
 DIST_SOURCES = $(libaa_a_SOURCES) $(libaa_pic_a_SOURCES) \
 	$(libaa_plugin_a_SOURCES) $(libcaca_a_SOURCES) \
 	$(libcaca_pic_a_SOURCES) $(libcaca_plugin_a_SOURCES) \
@@ -659,15 +798,20 @@ DIST_SOURCES = $(libaa_a_SOURCES) $(libaa_pic_a_SOURCES) \
 	$(libfb_plugin_a_SOURCES) $(libggi_a_SOURCES) \
 	$(libggi_pic_a_SOURCES) $(libggi_plugin_a_SOURCES) \
 	$(libglide_a_SOURCES) $(libglide_pic_a_SOURCES) \
-	$(libglide_plugin_a_SOURCES) $(libmga_a_SOURCES) \
-	$(libmga_pic_a_SOURCES) $(libmga_plugin_a_SOURCES) \
-	$(libsvgalib_a_SOURCES) $(libsvgalib_pic_a_SOURCES) \
-	$(libsvgalib_plugin_a_SOURCES) $(libvout_sdl_a_SOURCES) \
-	$(libvout_sdl_pic_a_SOURCES) $(libvout_sdl_plugin_a_SOURCES) \
-	$(libwingdi_a_SOURCES) $(libwingdi_pic_a_SOURCES) \
-	$(libwingdi_plugin_a_SOURCES)
+	$(libglide_plugin_a_SOURCES) $(libhd1000v_a_SOURCES) \
+	$(libhd1000v_pic_a_SOURCES) $(libhd1000v_plugin_a_SOURCES) \
+	$(libmga_a_SOURCES) $(libmga_pic_a_SOURCES) \
+	$(libmga_plugin_a_SOURCES) $(libopengl_a_SOURCES) \
+	$(libopengl_pic_a_SOURCES) $(libopengl_plugin_a_SOURCES) \
+	$(libsnapshot_a_SOURCES) $(libsnapshot_pic_a_SOURCES) \
+	$(libsnapshot_plugin_a_SOURCES) $(libsvgalib_a_SOURCES) \
+	$(libsvgalib_pic_a_SOURCES) $(libsvgalib_plugin_a_SOURCES) \
+	$(libvout_sdl_a_SOURCES) $(libvout_sdl_pic_a_SOURCES) \
+	$(libvout_sdl_plugin_a_SOURCES) $(libwingdi_a_SOURCES) \
+	$(libwingdi_pic_a_SOURCES) $(libwingdi_plugin_a_SOURCES)
 DATA = $(libaa_DATA) $(libcaca_DATA) $(libfb_DATA) $(libggi_DATA) \
-	$(libglide_DATA) $(libmga_DATA) $(libsvgalib_DATA) \
+	$(libglide_DATA) $(libhd1000v_DATA) $(libmga_DATA) \
+	$(libopengl_DATA) $(libsnapshot_DATA) $(libsvgalib_DATA) \
 	$(libvout_sdl_DATA) $(libwingdi_DATA)
 
 HEADERS = $(noinst_HEADERS)
@@ -681,13 +825,13 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libaa_a_SOURCES) $(libaa_pic_a_SOURCES) $(libaa_plugin_a_SOURCES) $(libcaca_a_SOURCES) $(libcaca_pic_a_SOURCES) $(libcaca_plugin_a_SOURCES) $(libfb_a_SOURCES) $(libfb_pic_a_SOURCES) $(libfb_plugin_a_SOURCES) $(libggi_a_SOURCES) $(libggi_pic_a_SOURCES) $(libggi_plugin_a_SOURCES) $(libglide_a_SOURCES) $(libglide_pic_a_SOURCES) $(libglide_plugin_a_SOURCES) $(libmga_a_SOURCES) $(libmga_pic_a_SOURCES) $(libmga_plugin_a_SOURCES) $(libsvgalib_a_SOURCES) $(libsvgalib_pic_a_SOURCES) $(libsvgalib_plugin_a_SOURCES) $(libvout_sdl_a_SOURCES) $(libvout_sdl_pic_a_SOURCES) $(libvout_sdl_plugin_a_SOURCES) $(libwingdi_a_SOURCES) $(libwingdi_pic_a_SOURCES) $(libwingdi_plugin_a_SOURCES)
+SOURCES = $(libaa_a_SOURCES) $(libaa_pic_a_SOURCES) $(libaa_plugin_a_SOURCES) $(libcaca_a_SOURCES) $(libcaca_pic_a_SOURCES) $(libcaca_plugin_a_SOURCES) $(libfb_a_SOURCES) $(libfb_pic_a_SOURCES) $(libfb_plugin_a_SOURCES) $(libggi_a_SOURCES) $(libggi_pic_a_SOURCES) $(libggi_plugin_a_SOURCES) $(libglide_a_SOURCES) $(libglide_pic_a_SOURCES) $(libglide_plugin_a_SOURCES) $(libhd1000v_a_SOURCES) $(libhd1000v_pic_a_SOURCES) $(libhd1000v_plugin_a_SOURCES) $(libmga_a_SOURCES) $(libmga_pic_a_SOURCES) $(libmga_plugin_a_SOURCES) $(libopengl_a_SOURCES) $(libopengl_pic_a_SOURCES) $(libopengl_plugin_a_SOURCES) $(libsnapshot_a_SOURCES) $(libsnapshot_pic_a_SOURCES) $(libsnapshot_plugin_a_SOURCES) $(libsvgalib_a_SOURCES) $(libsvgalib_pic_a_SOURCES) $(libsvgalib_plugin_a_SOURCES) $(libvout_sdl_a_SOURCES) $(libvout_sdl_pic_a_SOURCES) $(libvout_sdl_plugin_a_SOURCES) $(libwingdi_a_SOURCES) $(libwingdi_pic_a_SOURCES) $(libwingdi_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .c .o .obj
+.SUFFIXES: .c .cpp .o .obj
 $(srcdir)/Makefile.in:  Makefile.am $(srcdir)/Modules.am $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
 	  $(AUTOMAKE) --gnu  modules/video_output/Makefile
@@ -786,6 +930,18 @@ libglide_plugin.a: $(libglide_plugin_a_OBJECTS) $(libglide_plugin_a_DEPENDENCIES
 	-rm -f libglide_plugin.a
 	$(libglide_plugin_a_AR) libglide_plugin.a $(libglide_plugin_a_OBJECTS) $(libglide_plugin_a_LIBADD)
 	$(RANLIB) libglide_plugin.a
+libhd1000v.a: $(libhd1000v_a_OBJECTS) $(libhd1000v_a_DEPENDENCIES) 
+	-rm -f libhd1000v.a
+	$(libhd1000v_a_AR) libhd1000v.a $(libhd1000v_a_OBJECTS) $(libhd1000v_a_LIBADD)
+	$(RANLIB) libhd1000v.a
+libhd1000v_pic.a: $(libhd1000v_pic_a_OBJECTS) $(libhd1000v_pic_a_DEPENDENCIES) 
+	-rm -f libhd1000v_pic.a
+	$(libhd1000v_pic_a_AR) libhd1000v_pic.a $(libhd1000v_pic_a_OBJECTS) $(libhd1000v_pic_a_LIBADD)
+	$(RANLIB) libhd1000v_pic.a
+libhd1000v_plugin.a: $(libhd1000v_plugin_a_OBJECTS) $(libhd1000v_plugin_a_DEPENDENCIES) 
+	-rm -f libhd1000v_plugin.a
+	$(libhd1000v_plugin_a_AR) libhd1000v_plugin.a $(libhd1000v_plugin_a_OBJECTS) $(libhd1000v_plugin_a_LIBADD)
+	$(RANLIB) libhd1000v_plugin.a
 libmga.a: $(libmga_a_OBJECTS) $(libmga_a_DEPENDENCIES) 
 	-rm -f libmga.a
 	$(libmga_a_AR) libmga.a $(libmga_a_OBJECTS) $(libmga_a_LIBADD)
@@ -798,6 +954,30 @@ libmga_plugin.a: $(libmga_plugin_a_OBJECTS) $(libmga_plugin_a_DEPENDENCIES)
 	-rm -f libmga_plugin.a
 	$(libmga_plugin_a_AR) libmga_plugin.a $(libmga_plugin_a_OBJECTS) $(libmga_plugin_a_LIBADD)
 	$(RANLIB) libmga_plugin.a
+libopengl.a: $(libopengl_a_OBJECTS) $(libopengl_a_DEPENDENCIES) 
+	-rm -f libopengl.a
+	$(libopengl_a_AR) libopengl.a $(libopengl_a_OBJECTS) $(libopengl_a_LIBADD)
+	$(RANLIB) libopengl.a
+libopengl_pic.a: $(libopengl_pic_a_OBJECTS) $(libopengl_pic_a_DEPENDENCIES) 
+	-rm -f libopengl_pic.a
+	$(libopengl_pic_a_AR) libopengl_pic.a $(libopengl_pic_a_OBJECTS) $(libopengl_pic_a_LIBADD)
+	$(RANLIB) libopengl_pic.a
+libopengl_plugin.a: $(libopengl_plugin_a_OBJECTS) $(libopengl_plugin_a_DEPENDENCIES) 
+	-rm -f libopengl_plugin.a
+	$(libopengl_plugin_a_AR) libopengl_plugin.a $(libopengl_plugin_a_OBJECTS) $(libopengl_plugin_a_LIBADD)
+	$(RANLIB) libopengl_plugin.a
+libsnapshot.a: $(libsnapshot_a_OBJECTS) $(libsnapshot_a_DEPENDENCIES) 
+	-rm -f libsnapshot.a
+	$(libsnapshot_a_AR) libsnapshot.a $(libsnapshot_a_OBJECTS) $(libsnapshot_a_LIBADD)
+	$(RANLIB) libsnapshot.a
+libsnapshot_pic.a: $(libsnapshot_pic_a_OBJECTS) $(libsnapshot_pic_a_DEPENDENCIES) 
+	-rm -f libsnapshot_pic.a
+	$(libsnapshot_pic_a_AR) libsnapshot_pic.a $(libsnapshot_pic_a_OBJECTS) $(libsnapshot_pic_a_LIBADD)
+	$(RANLIB) libsnapshot_pic.a
+libsnapshot_plugin.a: $(libsnapshot_plugin_a_OBJECTS) $(libsnapshot_plugin_a_DEPENDENCIES) 
+	-rm -f libsnapshot_plugin.a
+	$(libsnapshot_plugin_a_AR) libsnapshot_plugin.a $(libsnapshot_plugin_a_OBJECTS) $(libsnapshot_plugin_a_LIBADD)
+	$(RANLIB) libsnapshot_plugin.a
 libsvgalib.a: $(libsvgalib_a_OBJECTS) $(libsvgalib_a_DEPENDENCIES) 
 	-rm -f libsvgalib.a
 	$(libsvgalib_a_AR) libsvgalib.a $(libsvgalib_a_OBJECTS) $(libsvgalib_a_LIBADD)
@@ -856,9 +1036,18 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libglide_a-glide.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libglide_pic_a-glide.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libglide_plugin_a-glide.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhd1000v_a-hd1000v.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhd1000v_pic_a-hd1000v.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhd1000v_plugin_a-hd1000v.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmga_a-mga.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmga_pic_a-mga.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmga_plugin_a-mga.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libopengl_a-opengl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libopengl_pic_a-opengl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libopengl_plugin_a-opengl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsnapshot_a-snapshot.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsnapshot_pic_a-snapshot.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsnapshot_plugin_a-snapshot.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsvgalib_a-svgalib.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsvgalib_pic_a-svgalib.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsvgalib_plugin_a-svgalib.Po@am__quote@
@@ -1287,6 +1476,138 @@ libmga_plugin_a-mga.obj: mga.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmga_plugin_a_CFLAGS) $(CFLAGS) -c -o libmga_plugin_a-mga.obj `if test -f 'mga.c'; then $(CYGPATH_W) 'mga.c'; else $(CYGPATH_W) '$(srcdir)/mga.c'; fi`
 
+libopengl_a-opengl.o: opengl.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libopengl_a_CFLAGS) $(CFLAGS) -MT libopengl_a-opengl.o -MD -MP -MF "$(DEPDIR)/libopengl_a-opengl.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libopengl_a-opengl.o `test -f 'opengl.c' || echo '$(srcdir)/'`opengl.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libopengl_a-opengl.Tpo" "$(DEPDIR)/libopengl_a-opengl.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libopengl_a-opengl.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='opengl.c' object='libopengl_a-opengl.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libopengl_a-opengl.Po' tmpdepfile='$(DEPDIR)/libopengl_a-opengl.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libopengl_a_CFLAGS) $(CFLAGS) -c -o libopengl_a-opengl.o `test -f 'opengl.c' || echo '$(srcdir)/'`opengl.c
+
+libopengl_a-opengl.obj: opengl.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libopengl_a_CFLAGS) $(CFLAGS) -MT libopengl_a-opengl.obj -MD -MP -MF "$(DEPDIR)/libopengl_a-opengl.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libopengl_a-opengl.obj `if test -f 'opengl.c'; then $(CYGPATH_W) 'opengl.c'; else $(CYGPATH_W) '$(srcdir)/opengl.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libopengl_a-opengl.Tpo" "$(DEPDIR)/libopengl_a-opengl.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libopengl_a-opengl.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='opengl.c' object='libopengl_a-opengl.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libopengl_a-opengl.Po' tmpdepfile='$(DEPDIR)/libopengl_a-opengl.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libopengl_a_CFLAGS) $(CFLAGS) -c -o libopengl_a-opengl.obj `if test -f 'opengl.c'; then $(CYGPATH_W) 'opengl.c'; else $(CYGPATH_W) '$(srcdir)/opengl.c'; fi`
+
+libopengl_pic_a-opengl.o: opengl.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libopengl_pic_a_CFLAGS) $(CFLAGS) -MT libopengl_pic_a-opengl.o -MD -MP -MF "$(DEPDIR)/libopengl_pic_a-opengl.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libopengl_pic_a-opengl.o `test -f 'opengl.c' || echo '$(srcdir)/'`opengl.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libopengl_pic_a-opengl.Tpo" "$(DEPDIR)/libopengl_pic_a-opengl.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libopengl_pic_a-opengl.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='opengl.c' object='libopengl_pic_a-opengl.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libopengl_pic_a-opengl.Po' tmpdepfile='$(DEPDIR)/libopengl_pic_a-opengl.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libopengl_pic_a_CFLAGS) $(CFLAGS) -c -o libopengl_pic_a-opengl.o `test -f 'opengl.c' || echo '$(srcdir)/'`opengl.c
+
+libopengl_pic_a-opengl.obj: opengl.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libopengl_pic_a_CFLAGS) $(CFLAGS) -MT libopengl_pic_a-opengl.obj -MD -MP -MF "$(DEPDIR)/libopengl_pic_a-opengl.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libopengl_pic_a-opengl.obj `if test -f 'opengl.c'; then $(CYGPATH_W) 'opengl.c'; else $(CYGPATH_W) '$(srcdir)/opengl.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libopengl_pic_a-opengl.Tpo" "$(DEPDIR)/libopengl_pic_a-opengl.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libopengl_pic_a-opengl.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='opengl.c' object='libopengl_pic_a-opengl.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libopengl_pic_a-opengl.Po' tmpdepfile='$(DEPDIR)/libopengl_pic_a-opengl.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libopengl_pic_a_CFLAGS) $(CFLAGS) -c -o libopengl_pic_a-opengl.obj `if test -f 'opengl.c'; then $(CYGPATH_W) 'opengl.c'; else $(CYGPATH_W) '$(srcdir)/opengl.c'; fi`
+
+libopengl_plugin_a-opengl.o: opengl.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libopengl_plugin_a_CFLAGS) $(CFLAGS) -MT libopengl_plugin_a-opengl.o -MD -MP -MF "$(DEPDIR)/libopengl_plugin_a-opengl.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libopengl_plugin_a-opengl.o `test -f 'opengl.c' || echo '$(srcdir)/'`opengl.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libopengl_plugin_a-opengl.Tpo" "$(DEPDIR)/libopengl_plugin_a-opengl.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libopengl_plugin_a-opengl.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='opengl.c' object='libopengl_plugin_a-opengl.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libopengl_plugin_a-opengl.Po' tmpdepfile='$(DEPDIR)/libopengl_plugin_a-opengl.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libopengl_plugin_a_CFLAGS) $(CFLAGS) -c -o libopengl_plugin_a-opengl.o `test -f 'opengl.c' || echo '$(srcdir)/'`opengl.c
+
+libopengl_plugin_a-opengl.obj: opengl.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libopengl_plugin_a_CFLAGS) $(CFLAGS) -MT libopengl_plugin_a-opengl.obj -MD -MP -MF "$(DEPDIR)/libopengl_plugin_a-opengl.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libopengl_plugin_a-opengl.obj `if test -f 'opengl.c'; then $(CYGPATH_W) 'opengl.c'; else $(CYGPATH_W) '$(srcdir)/opengl.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libopengl_plugin_a-opengl.Tpo" "$(DEPDIR)/libopengl_plugin_a-opengl.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libopengl_plugin_a-opengl.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='opengl.c' object='libopengl_plugin_a-opengl.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libopengl_plugin_a-opengl.Po' tmpdepfile='$(DEPDIR)/libopengl_plugin_a-opengl.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libopengl_plugin_a_CFLAGS) $(CFLAGS) -c -o libopengl_plugin_a-opengl.obj `if test -f 'opengl.c'; then $(CYGPATH_W) 'opengl.c'; else $(CYGPATH_W) '$(srcdir)/opengl.c'; fi`
+
+libsnapshot_a-snapshot.o: snapshot.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnapshot_a_CFLAGS) $(CFLAGS) -MT libsnapshot_a-snapshot.o -MD -MP -MF "$(DEPDIR)/libsnapshot_a-snapshot.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libsnapshot_a-snapshot.o `test -f 'snapshot.c' || echo '$(srcdir)/'`snapshot.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsnapshot_a-snapshot.Tpo" "$(DEPDIR)/libsnapshot_a-snapshot.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsnapshot_a-snapshot.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='snapshot.c' object='libsnapshot_a-snapshot.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsnapshot_a-snapshot.Po' tmpdepfile='$(DEPDIR)/libsnapshot_a-snapshot.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnapshot_a_CFLAGS) $(CFLAGS) -c -o libsnapshot_a-snapshot.o `test -f 'snapshot.c' || echo '$(srcdir)/'`snapshot.c
+
+libsnapshot_a-snapshot.obj: snapshot.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnapshot_a_CFLAGS) $(CFLAGS) -MT libsnapshot_a-snapshot.obj -MD -MP -MF "$(DEPDIR)/libsnapshot_a-snapshot.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libsnapshot_a-snapshot.obj `if test -f 'snapshot.c'; then $(CYGPATH_W) 'snapshot.c'; else $(CYGPATH_W) '$(srcdir)/snapshot.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsnapshot_a-snapshot.Tpo" "$(DEPDIR)/libsnapshot_a-snapshot.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsnapshot_a-snapshot.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='snapshot.c' object='libsnapshot_a-snapshot.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsnapshot_a-snapshot.Po' tmpdepfile='$(DEPDIR)/libsnapshot_a-snapshot.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnapshot_a_CFLAGS) $(CFLAGS) -c -o libsnapshot_a-snapshot.obj `if test -f 'snapshot.c'; then $(CYGPATH_W) 'snapshot.c'; else $(CYGPATH_W) '$(srcdir)/snapshot.c'; fi`
+
+libsnapshot_pic_a-snapshot.o: snapshot.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnapshot_pic_a_CFLAGS) $(CFLAGS) -MT libsnapshot_pic_a-snapshot.o -MD -MP -MF "$(DEPDIR)/libsnapshot_pic_a-snapshot.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libsnapshot_pic_a-snapshot.o `test -f 'snapshot.c' || echo '$(srcdir)/'`snapshot.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsnapshot_pic_a-snapshot.Tpo" "$(DEPDIR)/libsnapshot_pic_a-snapshot.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsnapshot_pic_a-snapshot.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='snapshot.c' object='libsnapshot_pic_a-snapshot.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsnapshot_pic_a-snapshot.Po' tmpdepfile='$(DEPDIR)/libsnapshot_pic_a-snapshot.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnapshot_pic_a_CFLAGS) $(CFLAGS) -c -o libsnapshot_pic_a-snapshot.o `test -f 'snapshot.c' || echo '$(srcdir)/'`snapshot.c
+
+libsnapshot_pic_a-snapshot.obj: snapshot.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnapshot_pic_a_CFLAGS) $(CFLAGS) -MT libsnapshot_pic_a-snapshot.obj -MD -MP -MF "$(DEPDIR)/libsnapshot_pic_a-snapshot.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libsnapshot_pic_a-snapshot.obj `if test -f 'snapshot.c'; then $(CYGPATH_W) 'snapshot.c'; else $(CYGPATH_W) '$(srcdir)/snapshot.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsnapshot_pic_a-snapshot.Tpo" "$(DEPDIR)/libsnapshot_pic_a-snapshot.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsnapshot_pic_a-snapshot.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='snapshot.c' object='libsnapshot_pic_a-snapshot.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsnapshot_pic_a-snapshot.Po' tmpdepfile='$(DEPDIR)/libsnapshot_pic_a-snapshot.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnapshot_pic_a_CFLAGS) $(CFLAGS) -c -o libsnapshot_pic_a-snapshot.obj `if test -f 'snapshot.c'; then $(CYGPATH_W) 'snapshot.c'; else $(CYGPATH_W) '$(srcdir)/snapshot.c'; fi`
+
+libsnapshot_plugin_a-snapshot.o: snapshot.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnapshot_plugin_a_CFLAGS) $(CFLAGS) -MT libsnapshot_plugin_a-snapshot.o -MD -MP -MF "$(DEPDIR)/libsnapshot_plugin_a-snapshot.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libsnapshot_plugin_a-snapshot.o `test -f 'snapshot.c' || echo '$(srcdir)/'`snapshot.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsnapshot_plugin_a-snapshot.Tpo" "$(DEPDIR)/libsnapshot_plugin_a-snapshot.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsnapshot_plugin_a-snapshot.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='snapshot.c' object='libsnapshot_plugin_a-snapshot.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsnapshot_plugin_a-snapshot.Po' tmpdepfile='$(DEPDIR)/libsnapshot_plugin_a-snapshot.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnapshot_plugin_a_CFLAGS) $(CFLAGS) -c -o libsnapshot_plugin_a-snapshot.o `test -f 'snapshot.c' || echo '$(srcdir)/'`snapshot.c
+
+libsnapshot_plugin_a-snapshot.obj: snapshot.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnapshot_plugin_a_CFLAGS) $(CFLAGS) -MT libsnapshot_plugin_a-snapshot.obj -MD -MP -MF "$(DEPDIR)/libsnapshot_plugin_a-snapshot.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libsnapshot_plugin_a-snapshot.obj `if test -f 'snapshot.c'; then $(CYGPATH_W) 'snapshot.c'; else $(CYGPATH_W) '$(srcdir)/snapshot.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsnapshot_plugin_a-snapshot.Tpo" "$(DEPDIR)/libsnapshot_plugin_a-snapshot.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsnapshot_plugin_a-snapshot.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='snapshot.c' object='libsnapshot_plugin_a-snapshot.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsnapshot_plugin_a-snapshot.Po' tmpdepfile='$(DEPDIR)/libsnapshot_plugin_a-snapshot.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnapshot_plugin_a_CFLAGS) $(CFLAGS) -c -o libsnapshot_plugin_a-snapshot.obj `if test -f 'snapshot.c'; then $(CYGPATH_W) 'snapshot.c'; else $(CYGPATH_W) '$(srcdir)/snapshot.c'; fi`
+
 libsvgalib_a-svgalib.o: svgalib.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsvgalib_a_CFLAGS) $(CFLAGS) -MT libsvgalib_a-svgalib.o -MD -MP -MF "$(DEPDIR)/libsvgalib_a-svgalib.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libsvgalib_a-svgalib.o `test -f 'svgalib.c' || echo '$(srcdir)/'`svgalib.c; \
@@ -1484,6 +1805,94 @@ libwingdi_plugin_a-wingdi.obj: wingdi.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libwingdi_plugin_a-wingdi.Po' tmpdepfile='$(DEPDIR)/libwingdi_plugin_a-wingdi.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwingdi_plugin_a_CFLAGS) $(CFLAGS) -c -o libwingdi_plugin_a-wingdi.obj `if test -f 'wingdi.c'; then $(CYGPATH_W) 'wingdi.c'; else $(CYGPATH_W) '$(srcdir)/wingdi.c'; fi`
+
+.cpp.o:
+@am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o $@ `test -f '$<' || echo '$(srcdir)/'`$<; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `test -f '$<' || echo '$(srcdir)/'`$<
+
+.cpp.obj:
+@am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o $@ `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`
+
+libhd1000v_a-hd1000v.o: hd1000v.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libhd1000v_a_CXXFLAGS) $(CXXFLAGS) -MT libhd1000v_a-hd1000v.o -MD -MP -MF "$(DEPDIR)/libhd1000v_a-hd1000v.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libhd1000v_a-hd1000v.o `test -f 'hd1000v.cpp' || echo '$(srcdir)/'`hd1000v.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libhd1000v_a-hd1000v.Tpo" "$(DEPDIR)/libhd1000v_a-hd1000v.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libhd1000v_a-hd1000v.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='hd1000v.cpp' object='libhd1000v_a-hd1000v.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libhd1000v_a-hd1000v.Po' tmpdepfile='$(DEPDIR)/libhd1000v_a-hd1000v.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libhd1000v_a_CXXFLAGS) $(CXXFLAGS) -c -o libhd1000v_a-hd1000v.o `test -f 'hd1000v.cpp' || echo '$(srcdir)/'`hd1000v.cpp
+
+libhd1000v_a-hd1000v.obj: hd1000v.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libhd1000v_a_CXXFLAGS) $(CXXFLAGS) -MT libhd1000v_a-hd1000v.obj -MD -MP -MF "$(DEPDIR)/libhd1000v_a-hd1000v.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libhd1000v_a-hd1000v.obj `if test -f 'hd1000v.cpp'; then $(CYGPATH_W) 'hd1000v.cpp'; else $(CYGPATH_W) '$(srcdir)/hd1000v.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libhd1000v_a-hd1000v.Tpo" "$(DEPDIR)/libhd1000v_a-hd1000v.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libhd1000v_a-hd1000v.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='hd1000v.cpp' object='libhd1000v_a-hd1000v.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libhd1000v_a-hd1000v.Po' tmpdepfile='$(DEPDIR)/libhd1000v_a-hd1000v.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libhd1000v_a_CXXFLAGS) $(CXXFLAGS) -c -o libhd1000v_a-hd1000v.obj `if test -f 'hd1000v.cpp'; then $(CYGPATH_W) 'hd1000v.cpp'; else $(CYGPATH_W) '$(srcdir)/hd1000v.cpp'; fi`
+
+libhd1000v_pic_a-hd1000v.o: hd1000v.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libhd1000v_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libhd1000v_pic_a-hd1000v.o -MD -MP -MF "$(DEPDIR)/libhd1000v_pic_a-hd1000v.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libhd1000v_pic_a-hd1000v.o `test -f 'hd1000v.cpp' || echo '$(srcdir)/'`hd1000v.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libhd1000v_pic_a-hd1000v.Tpo" "$(DEPDIR)/libhd1000v_pic_a-hd1000v.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libhd1000v_pic_a-hd1000v.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='hd1000v.cpp' object='libhd1000v_pic_a-hd1000v.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libhd1000v_pic_a-hd1000v.Po' tmpdepfile='$(DEPDIR)/libhd1000v_pic_a-hd1000v.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libhd1000v_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libhd1000v_pic_a-hd1000v.o `test -f 'hd1000v.cpp' || echo '$(srcdir)/'`hd1000v.cpp
+
+libhd1000v_pic_a-hd1000v.obj: hd1000v.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libhd1000v_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libhd1000v_pic_a-hd1000v.obj -MD -MP -MF "$(DEPDIR)/libhd1000v_pic_a-hd1000v.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libhd1000v_pic_a-hd1000v.obj `if test -f 'hd1000v.cpp'; then $(CYGPATH_W) 'hd1000v.cpp'; else $(CYGPATH_W) '$(srcdir)/hd1000v.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libhd1000v_pic_a-hd1000v.Tpo" "$(DEPDIR)/libhd1000v_pic_a-hd1000v.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libhd1000v_pic_a-hd1000v.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='hd1000v.cpp' object='libhd1000v_pic_a-hd1000v.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libhd1000v_pic_a-hd1000v.Po' tmpdepfile='$(DEPDIR)/libhd1000v_pic_a-hd1000v.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libhd1000v_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libhd1000v_pic_a-hd1000v.obj `if test -f 'hd1000v.cpp'; then $(CYGPATH_W) 'hd1000v.cpp'; else $(CYGPATH_W) '$(srcdir)/hd1000v.cpp'; fi`
+
+libhd1000v_plugin_a-hd1000v.o: hd1000v.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libhd1000v_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libhd1000v_plugin_a-hd1000v.o -MD -MP -MF "$(DEPDIR)/libhd1000v_plugin_a-hd1000v.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libhd1000v_plugin_a-hd1000v.o `test -f 'hd1000v.cpp' || echo '$(srcdir)/'`hd1000v.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libhd1000v_plugin_a-hd1000v.Tpo" "$(DEPDIR)/libhd1000v_plugin_a-hd1000v.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libhd1000v_plugin_a-hd1000v.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='hd1000v.cpp' object='libhd1000v_plugin_a-hd1000v.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libhd1000v_plugin_a-hd1000v.Po' tmpdepfile='$(DEPDIR)/libhd1000v_plugin_a-hd1000v.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libhd1000v_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libhd1000v_plugin_a-hd1000v.o `test -f 'hd1000v.cpp' || echo '$(srcdir)/'`hd1000v.cpp
+
+libhd1000v_plugin_a-hd1000v.obj: hd1000v.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libhd1000v_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libhd1000v_plugin_a-hd1000v.obj -MD -MP -MF "$(DEPDIR)/libhd1000v_plugin_a-hd1000v.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libhd1000v_plugin_a-hd1000v.obj `if test -f 'hd1000v.cpp'; then $(CYGPATH_W) 'hd1000v.cpp'; else $(CYGPATH_W) '$(srcdir)/hd1000v.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libhd1000v_plugin_a-hd1000v.Tpo" "$(DEPDIR)/libhd1000v_plugin_a-hd1000v.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libhd1000v_plugin_a-hd1000v.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='hd1000v.cpp' object='libhd1000v_plugin_a-hd1000v.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libhd1000v_plugin_a-hd1000v.Po' tmpdepfile='$(DEPDIR)/libhd1000v_plugin_a-hd1000v.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libhd1000v_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libhd1000v_plugin_a-hd1000v.obj `if test -f 'hd1000v.cpp'; then $(CYGPATH_W) 'hd1000v.cpp'; else $(CYGPATH_W) '$(srcdir)/hd1000v.cpp'; fi`
 uninstall-info-am:
 libaaDATA_INSTALL = $(INSTALL_DATA)
 install-libaaDATA: $(libaa_DATA)
@@ -1575,6 +1984,24 @@ uninstall-libglideDATA:
 	  echo " rm -f $(DESTDIR)$(libglidedir)/$$f"; \
 	  rm -f $(DESTDIR)$(libglidedir)/$$f; \
 	done
+libhd1000vDATA_INSTALL = $(INSTALL_DATA)
+install-libhd1000vDATA: $(libhd1000v_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libhd1000vdir)
+	@list='$(libhd1000v_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libhd1000vDATA_INSTALL) $$d$$p $(DESTDIR)$(libhd1000vdir)/$$f"; \
+	  $(libhd1000vDATA_INSTALL) $$d$$p $(DESTDIR)$(libhd1000vdir)/$$f; \
+	done
+
+uninstall-libhd1000vDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libhd1000v_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libhd1000vdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libhd1000vdir)/$$f; \
+	done
 libmgaDATA_INSTALL = $(INSTALL_DATA)
 install-libmgaDATA: $(libmga_DATA)
 	@$(NORMAL_INSTALL)
@@ -1592,6 +2019,42 @@ uninstall-libmgaDATA:
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
 	  echo " rm -f $(DESTDIR)$(libmgadir)/$$f"; \
 	  rm -f $(DESTDIR)$(libmgadir)/$$f; \
+	done
+libopenglDATA_INSTALL = $(INSTALL_DATA)
+install-libopenglDATA: $(libopengl_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libopengldir)
+	@list='$(libopengl_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libopenglDATA_INSTALL) $$d$$p $(DESTDIR)$(libopengldir)/$$f"; \
+	  $(libopenglDATA_INSTALL) $$d$$p $(DESTDIR)$(libopengldir)/$$f; \
+	done
+
+uninstall-libopenglDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libopengl_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libopengldir)/$$f"; \
+	  rm -f $(DESTDIR)$(libopengldir)/$$f; \
+	done
+libsnapshotDATA_INSTALL = $(INSTALL_DATA)
+install-libsnapshotDATA: $(libsnapshot_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libsnapshotdir)
+	@list='$(libsnapshot_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libsnapshotDATA_INSTALL) $$d$$p $(DESTDIR)$(libsnapshotdir)/$$f"; \
+	  $(libsnapshotDATA_INSTALL) $$d$$p $(DESTDIR)$(libsnapshotdir)/$$f; \
+	done
+
+uninstall-libsnapshotDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libsnapshot_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libsnapshotdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libsnapshotdir)/$$f; \
 	done
 libsvgalibDATA_INSTALL = $(INSTALL_DATA)
 install-libsvgalibDATA: $(libsvgalib_DATA)
@@ -1822,7 +2285,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libaadir) $(DESTDIR)$(libcacadir) $(DESTDIR)$(libfbdir) $(DESTDIR)$(libggidir) $(DESTDIR)$(libglidedir) $(DESTDIR)$(libmgadir) $(DESTDIR)$(libsvgalibdir) $(DESTDIR)$(libvout_sdldir) $(DESTDIR)$(libwingdidir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libaadir) $(DESTDIR)$(libcacadir) $(DESTDIR)$(libfbdir) $(DESTDIR)$(libggidir) $(DESTDIR)$(libglidedir) $(DESTDIR)$(libhd1000vdir) $(DESTDIR)$(libmgadir) $(DESTDIR)$(libopengldir) $(DESTDIR)$(libsnapshotdir) $(DESTDIR)$(libsvgalibdir) $(DESTDIR)$(libvout_sdldir) $(DESTDIR)$(libwingdidir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -1870,9 +2333,11 @@ info: info-recursive
 info-am:
 
 install-data-am: install-libaaDATA install-libcacaDATA install-libfbDATA \
-	install-libggiDATA install-libglideDATA install-libmgaDATA \
-	install-libsvgalibDATA install-libvlcLIBRARIES \
-	install-libvout_sdlDATA install-libwingdiDATA
+	install-libggiDATA install-libglideDATA install-libhd1000vDATA \
+	install-libmgaDATA install-libopenglDATA \
+	install-libsnapshotDATA install-libsvgalibDATA \
+	install-libvlcLIBRARIES install-libvout_sdlDATA \
+	install-libwingdiDATA
 
 install-exec-am:
 
@@ -1901,9 +2366,11 @@ ps-am:
 
 uninstall-am: uninstall-info-am uninstall-libaaDATA \
 	uninstall-libcacaDATA uninstall-libfbDATA uninstall-libggiDATA \
-	uninstall-libglideDATA uninstall-libmgaDATA \
-	uninstall-libsvgalibDATA uninstall-libvlcLIBRARIES \
-	uninstall-libvout_sdlDATA uninstall-libwingdiDATA
+	uninstall-libglideDATA uninstall-libhd1000vDATA \
+	uninstall-libmgaDATA uninstall-libopenglDATA \
+	uninstall-libsnapshotDATA uninstall-libsvgalibDATA \
+	uninstall-libvlcLIBRARIES uninstall-libvout_sdlDATA \
+	uninstall-libwingdiDATA
 
 uninstall-info: uninstall-info-recursive
 
@@ -1917,22 +2384,24 @@ uninstall-info: uninstall-info-recursive
 	install-exec install-exec-am install-exec-recursive \
 	install-info install-info-am install-info-recursive \
 	install-libaaDATA install-libcacaDATA install-libfbDATA \
-	install-libggiDATA install-libglideDATA install-libmgaDATA \
-	install-libsvgalibDATA install-libvlcLIBRARIES \
-	install-libvout_sdlDATA install-libwingdiDATA install-man \
-	install-recursive install-strip installcheck installcheck-am \
-	installdirs installdirs-am installdirs-recursive \
-	maintainer-clean maintainer-clean-generic \
-	maintainer-clean-recursive mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
-	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
-	uninstall uninstall-am uninstall-info-am \
+	install-libggiDATA install-libglideDATA install-libhd1000vDATA \
+	install-libmgaDATA install-libopenglDATA \
+	install-libsnapshotDATA install-libsvgalibDATA \
+	install-libvlcLIBRARIES install-libvout_sdlDATA \
+	install-libwingdiDATA install-man install-recursive \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am installdirs-recursive maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-recursive \
+	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
+	tags-recursive uninstall uninstall-am uninstall-info-am \
 	uninstall-info-recursive uninstall-libaaDATA \
 	uninstall-libcacaDATA uninstall-libfbDATA uninstall-libggiDATA \
-	uninstall-libglideDATA uninstall-libmgaDATA \
-	uninstall-libsvgalibDATA uninstall-libvlcLIBRARIES \
-	uninstall-libvout_sdlDATA uninstall-libwingdiDATA \
-	uninstall-recursive
+	uninstall-libglideDATA uninstall-libhd1000vDATA \
+	uninstall-libmgaDATA uninstall-libopenglDATA \
+	uninstall-libsnapshotDATA uninstall-libsvgalibDATA \
+	uninstall-libvlcLIBRARIES uninstall-libvout_sdlDATA \
+	uninstall-libwingdiDATA uninstall-recursive
 
 
 clean-local:
@@ -1941,9 +2410,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga hd1000v snapshot opengl; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga hd1000v snapshot opengl; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga hd1000v snapshot opengl; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 libaa_plugin$(LIBEXT): $(libaa_plugin_a_OBJECTS)
@@ -1999,6 +2468,24 @@ libmga_plugin$(LIBEXT): $(libmga_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libmga_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mga\` ; $(CXXLINK) $(libmga_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mga` ;; \
 	  objc) echo $(OBJCLINK) $(libmga_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mga\` ; $(OBJCLINK) $(libmga_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mga` ;; \
 	  c|*) echo $(LINK) $(libmga_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mga\` ; $(LINK) $(libmga_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mga` ;; \
+	esac
+libhd1000v_plugin$(LIBEXT): $(libhd1000v_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage hd1000v` in \
+	  c++) echo $(CXXLINK) $(libhd1000v_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin hd1000v\` ; $(CXXLINK) $(libhd1000v_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin hd1000v` ;; \
+	  objc) echo $(OBJCLINK) $(libhd1000v_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin hd1000v\` ; $(OBJCLINK) $(libhd1000v_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin hd1000v` ;; \
+	  c|*) echo $(LINK) $(libhd1000v_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin hd1000v\` ; $(LINK) $(libhd1000v_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin hd1000v` ;; \
+	esac
+libsnapshot_plugin$(LIBEXT): $(libsnapshot_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage snapshot` in \
+	  c++) echo $(CXXLINK) $(libsnapshot_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin snapshot\` ; $(CXXLINK) $(libsnapshot_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin snapshot` ;; \
+	  objc) echo $(OBJCLINK) $(libsnapshot_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin snapshot\` ; $(OBJCLINK) $(libsnapshot_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin snapshot` ;; \
+	  c|*) echo $(LINK) $(libsnapshot_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin snapshot\` ; $(LINK) $(libsnapshot_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin snapshot` ;; \
+	esac
+libopengl_plugin$(LIBEXT): $(libopengl_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage opengl` in \
+	  c++) echo $(CXXLINK) $(libopengl_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin opengl\` ; $(CXXLINK) $(libopengl_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin opengl` ;; \
+	  objc) echo $(OBJCLINK) $(libopengl_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin opengl\` ; $(OBJCLINK) $(libopengl_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin opengl` ;; \
+	  c|*) echo $(LINK) $(libopengl_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin opengl\` ; $(LINK) $(libopengl_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin opengl` ;; \
 	esac
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

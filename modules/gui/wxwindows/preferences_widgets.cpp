@@ -2,7 +2,7 @@
  * preferences_widgets.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: preferences_widgets.cpp 7692 2004-05-16 19:33:58Z gbazin $
+ * $Id: preferences_widgets.cpp 9088 2004-10-31 13:19:28Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Sigmund Augdal <sigmunau@idi.ntnu.no>
@@ -533,6 +533,7 @@ IntegerConfigControl::IntegerConfigControl( vlc_object_t *p_this,
     sizer->Add( spin, 0, wxALIGN_CENTER_VERTICAL | wxALL, 5 );
     sizer->Layout();
     this->SetSizerAndFit( sizer );
+    i_value = p_item->i_value;
 }
 
 IntegerConfigControl::~IntegerConfigControl()
@@ -542,7 +543,15 @@ IntegerConfigControl::~IntegerConfigControl()
 
 int IntegerConfigControl::GetIntValue()
 {
-    return spin->GetValue();
+    /* We avoid using GetValue because of a recursion bug with wxSpinCtrl with
+     * wxGTK. */
+    return i_value; //spin->GetValue();
+}
+
+void IntegerConfigControl::OnUpdate( wxCommandEvent &event )
+{
+    i_value = event.GetInt();
+    ConfigControl::OnUpdate( event );
 }
 
 /*****************************************************************************

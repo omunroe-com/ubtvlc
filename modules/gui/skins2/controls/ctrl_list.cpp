@@ -2,7 +2,7 @@
  * ctrl_list.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_list.cpp 7261 2004-04-03 13:57:46Z asmax $
+ * $Id: ctrl_list.cpp 8493 2004-08-22 10:38:26Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -161,7 +161,49 @@ void CtrlList::handleEvent( EvtGeneric &rEvent )
 {
     if( rEvent.getAsString().find( "key:down" ) != string::npos )
     {
-        char key = ((EvtKey&)rEvent).getKey();
+        int key = ((EvtKey&)rEvent).getKey();
+        VarList::Iterator it = m_rList.begin();
+        bool previousWasSelected = false;
+        while( it != m_rList.end() )
+        {
+            VarList::Iterator next = it;
+            ++next;
+            if( key == KEY_UP )
+            {
+                // Scroll up one item
+                if( it != m_rList.begin() || &*it != m_pLastSelected )
+                {
+                    bool nextWasSelected = ( &*next == m_pLastSelected );
+                    (*it).m_selected = nextWasSelected;
+                    if( nextWasSelected )
+                    {
+                        m_pLastSelected = &*it;
+                    }
+                }
+            }
+            else if( key == KEY_DOWN )
+            {
+                // Scroll down one item
+                if( next != m_rList.end() || &*it != m_pLastSelected )
+                {
+                    (*it).m_selected = previousWasSelected;
+                }
+                if( previousWasSelected )
+                {
+                    m_pLastSelected = &*it;
+                    previousWasSelected = false;
+                }
+                else
+                {
+                    previousWasSelected = ( &*it == m_pLastSelected );
+                }
+            }
+            it = next;
+        }
+
+        // Redraw the control
+        makeImage();
+        notifyLayout();
     }
 
     else if( rEvent.getAsString().find( "mouse:left" ) != string::npos )

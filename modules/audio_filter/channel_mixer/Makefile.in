@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -228,8 +230,8 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Ltrivial_channel_mixerb) $(Ltrivial_channel_mixerpic) $(Lheadphone_channel_mixerb) $(Lheadphone_channel_mixerpic)
-noinst_LIBRARIES = $(Ltrivial_channel_mixerp) $(Lheadphone_channel_mixerp)
+libvlc_LIBRARIES = $(Ltrivial_channel_mixerb) $(Ltrivial_channel_mixerpic) $(Lsimple_channel_mixerb) $(Lsimple_channel_mixerpic) $(Lheadphone_channel_mixerb) $(Lheadphone_channel_mixerpic)
+noinst_LIBRARIES = $(Ltrivial_channel_mixerp) $(Lsimple_channel_mixerp) $(Lheadphone_channel_mixerp)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
@@ -237,6 +239,7 @@ SUBDIRS =
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/audio_filter
 SOURCES_trivial_channel_mixer = trivial.c
+SOURCES_simple_channel_mixer = simple.c
 SOURCES_headphone_channel_mixer = headphone.c
 
 # There's no need for pic code on win32 so get rid of this to substantially
@@ -268,6 +271,31 @@ libtrivial_channel_mixer_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin trivia
 libtrivial_channel_mixer_DATA = $(Dtrivial_channel_mixerp)
 
 libtrivial_channel_mixerdir = $(libdir)/vlc/
+
+
+# The simple_channel_mixer plugin
+@UNTRUE_TRUE@Lsimple_channel_mixerp = libsimple_channel_mixer_plugin.a
+@UNTRUE_TRUE@Dsimple_channel_mixerp = libsimple_channel_mixer_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lsimple_channel_mixerb = libsimple_channel_mixer.a
+@UNTRUE_TRUE@Lsimple_channel_mixerpic = libsimple_channel_mixer_pic.a
+
+libsimple_channel_mixer_plugin_a_SOURCES = $(SOURCES_simple_channel_mixer)
+libsimple_channel_mixer_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin simple_channel_mixer`
+libsimple_channel_mixer_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin simple_channel_mixer`
+libsimple_channel_mixer_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin simple_channel_mixer`
+
+libsimple_channel_mixer_pic_a_SOURCES = $(SOURCES_simple_channel_mixer)
+libsimple_channel_mixer_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic simple_channel_mixer`
+libsimple_channel_mixer_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic simple_channel_mixer`
+libsimple_channel_mixer_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic simple_channel_mixer`
+
+libsimple_channel_mixer_a_SOURCES = $(SOURCES_simple_channel_mixer)
+libsimple_channel_mixer_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin simple_channel_mixer`
+libsimple_channel_mixer_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin simple_channel_mixer`
+libsimple_channel_mixer_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin simple_channel_mixer`
+libsimple_channel_mixer_DATA = $(Dsimple_channel_mixerp)
+
+libsimple_channel_mixerdir = $(libdir)/vlc/
 
 
 # The headphone_channel_mixer plugin
@@ -318,22 +346,40 @@ am__objects_3 = libheadphone_channel_mixer_plugin_a-headphone.$(OBJEXT)
 am_libheadphone_channel_mixer_plugin_a_OBJECTS = $(am__objects_3)
 libheadphone_channel_mixer_plugin_a_OBJECTS = \
 	$(am_libheadphone_channel_mixer_plugin_a_OBJECTS)
+libsimple_channel_mixer_a_AR = $(AR) cru
+libsimple_channel_mixer_a_LIBADD =
+am__objects_4 = libsimple_channel_mixer_a-simple.$(OBJEXT)
+am_libsimple_channel_mixer_a_OBJECTS = $(am__objects_4)
+libsimple_channel_mixer_a_OBJECTS = \
+	$(am_libsimple_channel_mixer_a_OBJECTS)
+libsimple_channel_mixer_pic_a_AR = $(AR) cru
+libsimple_channel_mixer_pic_a_LIBADD =
+am__objects_5 = libsimple_channel_mixer_pic_a-simple.$(OBJEXT)
+am_libsimple_channel_mixer_pic_a_OBJECTS = $(am__objects_5)
+libsimple_channel_mixer_pic_a_OBJECTS = \
+	$(am_libsimple_channel_mixer_pic_a_OBJECTS)
+libsimple_channel_mixer_plugin_a_AR = $(AR) cru
+libsimple_channel_mixer_plugin_a_LIBADD =
+am__objects_6 = libsimple_channel_mixer_plugin_a-simple.$(OBJEXT)
+am_libsimple_channel_mixer_plugin_a_OBJECTS = $(am__objects_6)
+libsimple_channel_mixer_plugin_a_OBJECTS = \
+	$(am_libsimple_channel_mixer_plugin_a_OBJECTS)
 libtrivial_channel_mixer_a_AR = $(AR) cru
 libtrivial_channel_mixer_a_LIBADD =
-am__objects_4 = libtrivial_channel_mixer_a-trivial.$(OBJEXT)
-am_libtrivial_channel_mixer_a_OBJECTS = $(am__objects_4)
+am__objects_7 = libtrivial_channel_mixer_a-trivial.$(OBJEXT)
+am_libtrivial_channel_mixer_a_OBJECTS = $(am__objects_7)
 libtrivial_channel_mixer_a_OBJECTS = \
 	$(am_libtrivial_channel_mixer_a_OBJECTS)
 libtrivial_channel_mixer_pic_a_AR = $(AR) cru
 libtrivial_channel_mixer_pic_a_LIBADD =
-am__objects_5 = libtrivial_channel_mixer_pic_a-trivial.$(OBJEXT)
-am_libtrivial_channel_mixer_pic_a_OBJECTS = $(am__objects_5)
+am__objects_8 = libtrivial_channel_mixer_pic_a-trivial.$(OBJEXT)
+am_libtrivial_channel_mixer_pic_a_OBJECTS = $(am__objects_8)
 libtrivial_channel_mixer_pic_a_OBJECTS = \
 	$(am_libtrivial_channel_mixer_pic_a_OBJECTS)
 libtrivial_channel_mixer_plugin_a_AR = $(AR) cru
 libtrivial_channel_mixer_plugin_a_LIBADD =
-am__objects_6 = libtrivial_channel_mixer_plugin_a-trivial.$(OBJEXT)
-am_libtrivial_channel_mixer_plugin_a_OBJECTS = $(am__objects_6)
+am__objects_9 = libtrivial_channel_mixer_plugin_a-trivial.$(OBJEXT)
+am_libtrivial_channel_mixer_plugin_a_OBJECTS = $(am__objects_9)
 libtrivial_channel_mixer_plugin_a_OBJECTS = \
 	$(am_libtrivial_channel_mixer_plugin_a_OBJECTS)
 
@@ -344,6 +390,9 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libheadphone_channel_mixer_a-headphone.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libheadphone_channel_mixer_pic_a-headphone.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libheadphone_channel_mixer_plugin_a-headphone.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libsimple_channel_mixer_a-simple.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libsimple_channel_mixer_pic_a-simple.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libsimple_channel_mixer_plugin_a-simple.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libtrivial_channel_mixer_a-trivial.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libtrivial_channel_mixer_pic_a-trivial.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libtrivial_channel_mixer_plugin_a-trivial.Po
@@ -354,10 +403,14 @@ LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 DIST_SOURCES = $(libheadphone_channel_mixer_a_SOURCES) \
 	$(libheadphone_channel_mixer_pic_a_SOURCES) \
 	$(libheadphone_channel_mixer_plugin_a_SOURCES) \
+	$(libsimple_channel_mixer_a_SOURCES) \
+	$(libsimple_channel_mixer_pic_a_SOURCES) \
+	$(libsimple_channel_mixer_plugin_a_SOURCES) \
 	$(libtrivial_channel_mixer_a_SOURCES) \
 	$(libtrivial_channel_mixer_pic_a_SOURCES) \
 	$(libtrivial_channel_mixer_plugin_a_SOURCES)
 DATA = $(libheadphone_channel_mixer_DATA) \
+	$(libsimple_channel_mixer_DATA) \
 	$(libtrivial_channel_mixer_DATA)
 
 HEADERS = $(noinst_HEADERS)
@@ -371,7 +424,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libheadphone_channel_mixer_a_SOURCES) $(libheadphone_channel_mixer_pic_a_SOURCES) $(libheadphone_channel_mixer_plugin_a_SOURCES) $(libtrivial_channel_mixer_a_SOURCES) $(libtrivial_channel_mixer_pic_a_SOURCES) $(libtrivial_channel_mixer_plugin_a_SOURCES)
+SOURCES = $(libheadphone_channel_mixer_a_SOURCES) $(libheadphone_channel_mixer_pic_a_SOURCES) $(libheadphone_channel_mixer_plugin_a_SOURCES) $(libsimple_channel_mixer_a_SOURCES) $(libsimple_channel_mixer_pic_a_SOURCES) $(libsimple_channel_mixer_plugin_a_SOURCES) $(libtrivial_channel_mixer_a_SOURCES) $(libtrivial_channel_mixer_pic_a_SOURCES) $(libtrivial_channel_mixer_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -428,6 +481,18 @@ libheadphone_channel_mixer_plugin.a: $(libheadphone_channel_mixer_plugin_a_OBJEC
 	-rm -f libheadphone_channel_mixer_plugin.a
 	$(libheadphone_channel_mixer_plugin_a_AR) libheadphone_channel_mixer_plugin.a $(libheadphone_channel_mixer_plugin_a_OBJECTS) $(libheadphone_channel_mixer_plugin_a_LIBADD)
 	$(RANLIB) libheadphone_channel_mixer_plugin.a
+libsimple_channel_mixer.a: $(libsimple_channel_mixer_a_OBJECTS) $(libsimple_channel_mixer_a_DEPENDENCIES) 
+	-rm -f libsimple_channel_mixer.a
+	$(libsimple_channel_mixer_a_AR) libsimple_channel_mixer.a $(libsimple_channel_mixer_a_OBJECTS) $(libsimple_channel_mixer_a_LIBADD)
+	$(RANLIB) libsimple_channel_mixer.a
+libsimple_channel_mixer_pic.a: $(libsimple_channel_mixer_pic_a_OBJECTS) $(libsimple_channel_mixer_pic_a_DEPENDENCIES) 
+	-rm -f libsimple_channel_mixer_pic.a
+	$(libsimple_channel_mixer_pic_a_AR) libsimple_channel_mixer_pic.a $(libsimple_channel_mixer_pic_a_OBJECTS) $(libsimple_channel_mixer_pic_a_LIBADD)
+	$(RANLIB) libsimple_channel_mixer_pic.a
+libsimple_channel_mixer_plugin.a: $(libsimple_channel_mixer_plugin_a_OBJECTS) $(libsimple_channel_mixer_plugin_a_DEPENDENCIES) 
+	-rm -f libsimple_channel_mixer_plugin.a
+	$(libsimple_channel_mixer_plugin_a_AR) libsimple_channel_mixer_plugin.a $(libsimple_channel_mixer_plugin_a_OBJECTS) $(libsimple_channel_mixer_plugin_a_LIBADD)
+	$(RANLIB) libsimple_channel_mixer_plugin.a
 libtrivial_channel_mixer.a: $(libtrivial_channel_mixer_a_OBJECTS) $(libtrivial_channel_mixer_a_DEPENDENCIES) 
 	-rm -f libtrivial_channel_mixer.a
 	$(libtrivial_channel_mixer_a_AR) libtrivial_channel_mixer.a $(libtrivial_channel_mixer_a_OBJECTS) $(libtrivial_channel_mixer_a_LIBADD)
@@ -450,6 +515,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libheadphone_channel_mixer_a-headphone.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libheadphone_channel_mixer_pic_a-headphone.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libheadphone_channel_mixer_plugin_a-headphone.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsimple_channel_mixer_a-simple.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsimple_channel_mixer_pic_a-simple.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsimple_channel_mixer_plugin_a-simple.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtrivial_channel_mixer_a-trivial.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtrivial_channel_mixer_pic_a-trivial.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtrivial_channel_mixer_plugin_a-trivial.Po@am__quote@
@@ -542,6 +610,72 @@ libheadphone_channel_mixer_plugin_a-headphone.obj: headphone.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libheadphone_channel_mixer_plugin_a_CFLAGS) $(CFLAGS) -c -o libheadphone_channel_mixer_plugin_a-headphone.obj `if test -f 'headphone.c'; then $(CYGPATH_W) 'headphone.c'; else $(CYGPATH_W) '$(srcdir)/headphone.c'; fi`
 
+libsimple_channel_mixer_a-simple.o: simple.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsimple_channel_mixer_a_CFLAGS) $(CFLAGS) -MT libsimple_channel_mixer_a-simple.o -MD -MP -MF "$(DEPDIR)/libsimple_channel_mixer_a-simple.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libsimple_channel_mixer_a-simple.o `test -f 'simple.c' || echo '$(srcdir)/'`simple.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsimple_channel_mixer_a-simple.Tpo" "$(DEPDIR)/libsimple_channel_mixer_a-simple.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsimple_channel_mixer_a-simple.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='simple.c' object='libsimple_channel_mixer_a-simple.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsimple_channel_mixer_a-simple.Po' tmpdepfile='$(DEPDIR)/libsimple_channel_mixer_a-simple.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsimple_channel_mixer_a_CFLAGS) $(CFLAGS) -c -o libsimple_channel_mixer_a-simple.o `test -f 'simple.c' || echo '$(srcdir)/'`simple.c
+
+libsimple_channel_mixer_a-simple.obj: simple.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsimple_channel_mixer_a_CFLAGS) $(CFLAGS) -MT libsimple_channel_mixer_a-simple.obj -MD -MP -MF "$(DEPDIR)/libsimple_channel_mixer_a-simple.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libsimple_channel_mixer_a-simple.obj `if test -f 'simple.c'; then $(CYGPATH_W) 'simple.c'; else $(CYGPATH_W) '$(srcdir)/simple.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsimple_channel_mixer_a-simple.Tpo" "$(DEPDIR)/libsimple_channel_mixer_a-simple.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsimple_channel_mixer_a-simple.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='simple.c' object='libsimple_channel_mixer_a-simple.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsimple_channel_mixer_a-simple.Po' tmpdepfile='$(DEPDIR)/libsimple_channel_mixer_a-simple.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsimple_channel_mixer_a_CFLAGS) $(CFLAGS) -c -o libsimple_channel_mixer_a-simple.obj `if test -f 'simple.c'; then $(CYGPATH_W) 'simple.c'; else $(CYGPATH_W) '$(srcdir)/simple.c'; fi`
+
+libsimple_channel_mixer_pic_a-simple.o: simple.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsimple_channel_mixer_pic_a_CFLAGS) $(CFLAGS) -MT libsimple_channel_mixer_pic_a-simple.o -MD -MP -MF "$(DEPDIR)/libsimple_channel_mixer_pic_a-simple.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libsimple_channel_mixer_pic_a-simple.o `test -f 'simple.c' || echo '$(srcdir)/'`simple.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsimple_channel_mixer_pic_a-simple.Tpo" "$(DEPDIR)/libsimple_channel_mixer_pic_a-simple.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsimple_channel_mixer_pic_a-simple.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='simple.c' object='libsimple_channel_mixer_pic_a-simple.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsimple_channel_mixer_pic_a-simple.Po' tmpdepfile='$(DEPDIR)/libsimple_channel_mixer_pic_a-simple.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsimple_channel_mixer_pic_a_CFLAGS) $(CFLAGS) -c -o libsimple_channel_mixer_pic_a-simple.o `test -f 'simple.c' || echo '$(srcdir)/'`simple.c
+
+libsimple_channel_mixer_pic_a-simple.obj: simple.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsimple_channel_mixer_pic_a_CFLAGS) $(CFLAGS) -MT libsimple_channel_mixer_pic_a-simple.obj -MD -MP -MF "$(DEPDIR)/libsimple_channel_mixer_pic_a-simple.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libsimple_channel_mixer_pic_a-simple.obj `if test -f 'simple.c'; then $(CYGPATH_W) 'simple.c'; else $(CYGPATH_W) '$(srcdir)/simple.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsimple_channel_mixer_pic_a-simple.Tpo" "$(DEPDIR)/libsimple_channel_mixer_pic_a-simple.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsimple_channel_mixer_pic_a-simple.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='simple.c' object='libsimple_channel_mixer_pic_a-simple.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsimple_channel_mixer_pic_a-simple.Po' tmpdepfile='$(DEPDIR)/libsimple_channel_mixer_pic_a-simple.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsimple_channel_mixer_pic_a_CFLAGS) $(CFLAGS) -c -o libsimple_channel_mixer_pic_a-simple.obj `if test -f 'simple.c'; then $(CYGPATH_W) 'simple.c'; else $(CYGPATH_W) '$(srcdir)/simple.c'; fi`
+
+libsimple_channel_mixer_plugin_a-simple.o: simple.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsimple_channel_mixer_plugin_a_CFLAGS) $(CFLAGS) -MT libsimple_channel_mixer_plugin_a-simple.o -MD -MP -MF "$(DEPDIR)/libsimple_channel_mixer_plugin_a-simple.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libsimple_channel_mixer_plugin_a-simple.o `test -f 'simple.c' || echo '$(srcdir)/'`simple.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsimple_channel_mixer_plugin_a-simple.Tpo" "$(DEPDIR)/libsimple_channel_mixer_plugin_a-simple.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsimple_channel_mixer_plugin_a-simple.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='simple.c' object='libsimple_channel_mixer_plugin_a-simple.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsimple_channel_mixer_plugin_a-simple.Po' tmpdepfile='$(DEPDIR)/libsimple_channel_mixer_plugin_a-simple.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsimple_channel_mixer_plugin_a_CFLAGS) $(CFLAGS) -c -o libsimple_channel_mixer_plugin_a-simple.o `test -f 'simple.c' || echo '$(srcdir)/'`simple.c
+
+libsimple_channel_mixer_plugin_a-simple.obj: simple.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsimple_channel_mixer_plugin_a_CFLAGS) $(CFLAGS) -MT libsimple_channel_mixer_plugin_a-simple.obj -MD -MP -MF "$(DEPDIR)/libsimple_channel_mixer_plugin_a-simple.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libsimple_channel_mixer_plugin_a-simple.obj `if test -f 'simple.c'; then $(CYGPATH_W) 'simple.c'; else $(CYGPATH_W) '$(srcdir)/simple.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsimple_channel_mixer_plugin_a-simple.Tpo" "$(DEPDIR)/libsimple_channel_mixer_plugin_a-simple.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsimple_channel_mixer_plugin_a-simple.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='simple.c' object='libsimple_channel_mixer_plugin_a-simple.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsimple_channel_mixer_plugin_a-simple.Po' tmpdepfile='$(DEPDIR)/libsimple_channel_mixer_plugin_a-simple.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsimple_channel_mixer_plugin_a_CFLAGS) $(CFLAGS) -c -o libsimple_channel_mixer_plugin_a-simple.obj `if test -f 'simple.c'; then $(CYGPATH_W) 'simple.c'; else $(CYGPATH_W) '$(srcdir)/simple.c'; fi`
+
 libtrivial_channel_mixer_a-trivial.o: trivial.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtrivial_channel_mixer_a_CFLAGS) $(CFLAGS) -MT libtrivial_channel_mixer_a-trivial.o -MD -MP -MF "$(DEPDIR)/libtrivial_channel_mixer_a-trivial.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libtrivial_channel_mixer_a-trivial.o `test -f 'trivial.c' || echo '$(srcdir)/'`trivial.c; \
@@ -625,6 +759,24 @@ uninstall-libheadphone_channel_mixerDATA:
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
 	  echo " rm -f $(DESTDIR)$(libheadphone_channel_mixerdir)/$$f"; \
 	  rm -f $(DESTDIR)$(libheadphone_channel_mixerdir)/$$f; \
+	done
+libsimple_channel_mixerDATA_INSTALL = $(INSTALL_DATA)
+install-libsimple_channel_mixerDATA: $(libsimple_channel_mixer_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libsimple_channel_mixerdir)
+	@list='$(libsimple_channel_mixer_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libsimple_channel_mixerDATA_INSTALL) $$d$$p $(DESTDIR)$(libsimple_channel_mixerdir)/$$f"; \
+	  $(libsimple_channel_mixerDATA_INSTALL) $$d$$p $(DESTDIR)$(libsimple_channel_mixerdir)/$$f; \
+	done
+
+uninstall-libsimple_channel_mixerDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libsimple_channel_mixer_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libsimple_channel_mixerdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libsimple_channel_mixerdir)/$$f; \
 	done
 libtrivial_channel_mixerDATA_INSTALL = $(INSTALL_DATA)
 install-libtrivial_channel_mixerDATA: $(libtrivial_channel_mixer_DATA)
@@ -819,7 +971,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libheadphone_channel_mixerdir) $(DESTDIR)$(libtrivial_channel_mixerdir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libheadphone_channel_mixerdir) $(DESTDIR)$(libsimple_channel_mixerdir) $(DESTDIR)$(libtrivial_channel_mixerdir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -867,6 +1019,7 @@ info: info-recursive
 info-am:
 
 install-data-am: install-libheadphone_channel_mixerDATA \
+	install-libsimple_channel_mixerDATA \
 	install-libtrivial_channel_mixerDATA install-libvlcLIBRARIES
 
 install-exec-am:
@@ -895,6 +1048,7 @@ ps: ps-recursive
 ps-am:
 
 uninstall-am: uninstall-info-am uninstall-libheadphone_channel_mixerDATA \
+	uninstall-libsimple_channel_mixerDATA \
 	uninstall-libtrivial_channel_mixerDATA \
 	uninstall-libvlcLIBRARIES
 
@@ -910,6 +1064,7 @@ uninstall-info: uninstall-info-recursive
 	install-exec install-exec-am install-exec-recursive \
 	install-info install-info-am install-info-recursive \
 	install-libheadphone_channel_mixerDATA \
+	install-libsimple_channel_mixerDATA \
 	install-libtrivial_channel_mixerDATA install-libvlcLIBRARIES \
 	install-man install-recursive install-strip installcheck \
 	installcheck-am installdirs installdirs-am \
@@ -920,6 +1075,7 @@ uninstall-info: uninstall-info-recursive
 	uninstall uninstall-am uninstall-info-am \
 	uninstall-info-recursive \
 	uninstall-libheadphone_channel_mixerDATA \
+	uninstall-libsimple_channel_mixerDATA \
 	uninstall-libtrivial_channel_mixerDATA \
 	uninstall-libvlcLIBRARIES uninstall-recursive
 
@@ -930,9 +1086,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in trivial_channel_mixer headphone_channel_mixer; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in trivial_channel_mixer headphone_channel_mixer; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in trivial_channel_mixer headphone_channel_mixer; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in trivial_channel_mixer simple_channel_mixer headphone_channel_mixer; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in trivial_channel_mixer simple_channel_mixer headphone_channel_mixer; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in trivial_channel_mixer simple_channel_mixer headphone_channel_mixer; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 libtrivial_channel_mixer_plugin$(LIBEXT): $(libtrivial_channel_mixer_plugin_a_OBJECTS)
@@ -940,6 +1096,12 @@ libtrivial_channel_mixer_plugin$(LIBEXT): $(libtrivial_channel_mixer_plugin_a_OB
 	  c++) echo $(CXXLINK) $(libtrivial_channel_mixer_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin trivial_channel_mixer\` ; $(CXXLINK) $(libtrivial_channel_mixer_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin trivial_channel_mixer` ;; \
 	  objc) echo $(OBJCLINK) $(libtrivial_channel_mixer_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin trivial_channel_mixer\` ; $(OBJCLINK) $(libtrivial_channel_mixer_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin trivial_channel_mixer` ;; \
 	  c|*) echo $(LINK) $(libtrivial_channel_mixer_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin trivial_channel_mixer\` ; $(LINK) $(libtrivial_channel_mixer_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin trivial_channel_mixer` ;; \
+	esac
+libsimple_channel_mixer_plugin$(LIBEXT): $(libsimple_channel_mixer_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage simple_channel_mixer` in \
+	  c++) echo $(CXXLINK) $(libsimple_channel_mixer_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin simple_channel_mixer\` ; $(CXXLINK) $(libsimple_channel_mixer_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin simple_channel_mixer` ;; \
+	  objc) echo $(OBJCLINK) $(libsimple_channel_mixer_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin simple_channel_mixer\` ; $(OBJCLINK) $(libsimple_channel_mixer_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin simple_channel_mixer` ;; \
+	  c|*) echo $(LINK) $(libsimple_channel_mixer_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin simple_channel_mixer\` ; $(LINK) $(libsimple_channel_mixer_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin simple_channel_mixer` ;; \
 	esac
 libheadphone_channel_mixer_plugin$(LIBEXT): $(libheadphone_channel_mixer_plugin_a_OBJECTS)
 	@case `$(VLC_CONFIG) --linkage headphone_channel_mixer` in \

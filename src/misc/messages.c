@@ -4,7 +4,7 @@
  * modules, especially intf modules. See config.h for output configuration.
  *****************************************************************************
  * Copyright (C) 1998-2004 VideoLAN
- * $Id: messages.c 7553 2004-04-29 15:30:00Z zorglub $
+ * $Id: messages.c 8905 2004-10-04 13:34:42Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -38,9 +38,7 @@
 #   include <fcntl.h>                  /* O_CREAT, O_TRUNC, O_WRONLY, O_SYNC */
 #endif
 
-#ifdef HAVE_ERRNO_H
-#   include <errno.h>                                               /* errno */
-#endif
+#include <errno.h>                                                  /* errno */
 
 #ifdef HAVE_UNISTD_H
 #   include <unistd.h>                                   /* close(), write() */
@@ -299,12 +297,8 @@ static void QueueMsg( vlc_object_t *p_this, int i_type, const char *psz_module,
 
     if( psz_str == NULL )
     {
-#ifdef HAVE_ERRNO_H
         fprintf( stderr, "main warning: can't store message (%s): ",
                  strerror(errno) );
-#else
-        fprintf( stderr, "main warning: can't store message: " );
-#endif
         vlc_va_copy( args, _args );
         vfprintf( stderr, psz_format, args );
         va_end( args );
@@ -496,6 +490,7 @@ static void PrintMsg ( vlc_object_t * p_this, msg_item_t * p_item )
         case VLC_OBJECT_VLM: psz_object = "vlm"; break;
         case VLC_OBJECT_ANNOUNCE: psz_object = "announce handler"; break;
         case VLC_OBJECT_DEMUX: psz_object = "demuxer"; break;
+        case VLC_OBJECT_ACCESS: psz_object = "access"; break;
     }
 
 #ifdef UNDER_CE

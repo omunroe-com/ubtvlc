@@ -1,11 +1,12 @@
 /*****************************************************************************
  * video_output.c : video output thread
+ *
  * This module describes the programming interface for video output threads.
  * It includes functions allowing to open a new thread, send pictures to a
  * thread, and destroy a previously oppened video output thread.
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: video_output.c 7694 2004-05-16 22:06:34Z gbazin $
+ * $Id: video_output.c 9100 2004-11-01 15:35:11Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -37,6 +38,7 @@
 
 #include "vlc_video.h"
 #include "video_output.h"
+#include "vlc_spu.h"
 #include <vlc/input.h>                 /* for input_thread_t and i_pts_delay */
 
 #if defined( SYS_DARWIN )
@@ -52,32 +54,16 @@ static void     ErrorThread       ( vout_thread_t * );
 static void     EndThread         ( vout_thread_t * );
 static void     DestroyThread     ( vout_thread_t * );
 
-static int      ReduceHeight      ( int );
+static void     AspectRatio       ( int, int *, int * );
 static int      BinaryLog         ( uint32_t );
 static void     MaskToShift       ( int *, int *, uint32_t );
 static void     InitWindowSize    ( vout_thread_t *, int *, int * );
-
-void vout_IntfInit( vout_thread_t * );
 
 /* Object variables callbacks */
 static int DeinterlaceCallback( vlc_object_t *, char const *,
                                 vlc_value_t, vlc_value_t, void * );
 static int FilterCallback( vlc_object_t *, char const *,
                            vlc_value_t, vlc_value_t, void * );
-
-/**
- * vout_AspectRatio
- *
- * Set the i_aspect_x and i_aspect_y from i_aspect.
- */
-void vout_AspectRatio( unsigned int i_aspect,
-                       /*out*/ unsigned int *i_aspect_x,
-                       /*out*/ unsigned int *i_aspect_y )
-{
-  unsigned int i_pgcd = ReduceHeight( i_aspect );
-  *i_aspect_x = i_aspect / i_pgcd;
-  *i_aspect_y = VOUT_ASPECT_FACTOR / i_pgcd;
-}
 
 /*****************************************************************************
  * vout_Request: find a video output thread, create one, or destroy one.
@@ -96,11 +82,12 @@ vout_thread_t * __vout_Request ( vlc_object_t *p_this, vout_thread_t *p_vout,
         {
             vlc_object_t *p_playlist;
 
-            p_playlist = vlc_object_find( p_this,
-                                          VLC_OBJECT_PLAYLIST, FIND_ANYWHERE );
+            p_playlist = vlc_object_find( p_this, VLC_OBJECT_PLAYLIST,
+                                          FIND_ANYWHERE );
 
             if( p_playlist )
             {
+                spu_Attach( p_vout->p_spu, p_this, VLC_FALSE );
                 vlc_object_detach( p_vout );
                 vlc_object_attach( p_vout, p_playlist );
 
@@ -150,12 +137,14 @@ vout_thread_t * __vout_Request ( vlc_object_t *p_this, vout_thread_t *p_vout,
     if( p_vout )
     {
         char *psz_filter_chain;
+        vlc_value_t val;
 
         /* We don't directly check for the "filter" variable for obvious
          * performance reasons. */
         if( p_vout->b_filter_change )
         {
-            psz_filter_chain = config_GetPsz( p_this, "filter" );
+            var_Get( p_vout, "filter", &val );
+            psz_filter_chain = val.psz_string;
 
             if( psz_filter_chain && !*psz_filter_chain )
             {
@@ -168,9 +157,7 @@ vout_thread_t * __vout_Request ( vlc_object_t *p_this, vout_thread_t *p_vout,
                 p_vout->psz_filter_chain = NULL;
             }
 
-            if( ( !psz_filter_chain && !p_vout->psz_filter_chain ) ||
-                ( psz_filter_chain && p_vout->psz_filter_chain &&
-                  !strcmp( psz_filter_chain, p_vout->psz_filter_chain ) ) )
+            if( !psz_filter_chain && !p_vout->psz_filter_chain )
             {
                 p_vout->b_filter_change = VLC_FALSE;
             }
@@ -195,6 +182,7 @@ vout_thread_t * __vout_Request ( vlc_object_t *p_this, vout_thread_t *p_vout,
         {
             /* This video output is cool! Hijack it. */
             vlc_object_detach( p_vout );
+            spu_Attach( p_vout->p_spu, p_this, VLC_TRUE );
             vlc_object_attach( p_vout, p_this );
             vlc_object_release( p_vout );
         }
@@ -234,20 +222,15 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent,
         return NULL;
     }
 
-    /* Initialize pictures and subpictures - translation tables and functions
+    /* Initialize pictures - translation tables and functions
      * will be initialized later in InitThread */
-    for( i_index = 0; i_index < 2 * VOUT_MAX_PICTURES; i_index++)
+    for( i_index = 0; i_index < 2 * VOUT_MAX_PICTURES + 1; i_index++)
     {
         p_vout->p_picture[i_index].pf_lock = NULL;
         p_vout->p_picture[i_index].pf_unlock = NULL;
         p_vout->p_picture[i_index].i_status = FREE_PICTURE;
         p_vout->p_picture[i_index].i_type   = EMPTY_PICTURE;
-    }
-
-    for( i_index = 0; i_index < VOUT_MAX_SUBPICTURES; i_index++)
-    {
-        p_vout->p_subpicture[i_index].i_status = FREE_SUBPICTURE;
-        p_vout->p_subpicture[i_index].i_type   = EMPTY_SUBPICTURE;
+        p_vout->p_picture[i_index].b_slow   = 0;
     }
 
     /* No images in the heap */
@@ -293,6 +276,10 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent,
     p_vout->pf_control = 0;
     p_vout->p_parent_intf = 0;
 
+    /* Initialize locks */
+    vlc_mutex_init( p_vout, &p_vout->picture_lock );
+    vlc_mutex_init( p_vout, &p_vout->change_lock );
+
     /* Mouse coordinates */
     var_Create( p_vout, "mouse-x", VLC_VAR_INTEGER );
     var_Create( p_vout, "mouse-y", VLC_VAR_INTEGER );
@@ -300,17 +287,14 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent,
     var_Create( p_vout, "mouse-moved", VLC_VAR_BOOL );
     var_Create( p_vout, "mouse-clicked", VLC_VAR_INTEGER );
 
-    var_Create( p_vout, "intf-change", VLC_VAR_BOOL );
-    val.b_bool = VLC_TRUE;
-    var_Set( p_vout, "intf-change", val );
-
-    /* Initialize locks */
-    vlc_mutex_init( p_vout, &p_vout->picture_lock );
-    vlc_mutex_init( p_vout, &p_vout->subpicture_lock );
-    vlc_mutex_init( p_vout, &p_vout->change_lock );
+    /* Initialize subpicture unit */
+    p_vout->p_spu = spu_Create( p_vout );
+    spu_Attach( p_vout->p_spu, p_parent, VLC_TRUE );
 
     /* Attach the new object now so we can use var inheritance below */
     vlc_object_attach( p_vout, p_parent );
+
+    spu_Init( p_vout->p_spu );
 
     /* Take care of some "interface/control" related initialisations */
     vout_IntfInit( p_vout );
@@ -346,9 +330,9 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent,
 
             if( i_new_aspect && i_new_aspect != i_aspect )
             {
-                unsigned int i_aspect_x, i_aspect_y;
+                int i_aspect_x, i_aspect_y;
 
-                vout_AspectRatio( i_new_aspect, &i_aspect_x, &i_aspect_y );
+                AspectRatio( i_new_aspect, &i_aspect_x, &i_aspect_y );
 
                 msg_Dbg( p_vout, "overriding source aspect ratio to %i:%i",
                          i_aspect_x, i_aspect_y );
@@ -408,16 +392,9 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent,
     if( p_vout->p_module == NULL )
     {
         msg_Err( p_vout, "no suitable vout module" );
+        vlc_object_detach( p_vout );
         vlc_object_destroy( p_vout );
         return NULL;
-    }
-
-    p_vout->p_text_renderer_module =
-        module_Need( p_vout, "text renderer", NULL, 0 );
-    if( p_vout->p_text_renderer_module == NULL )
-    {
-        msg_Warn( p_vout, "no suitable text renderer module" );
-        p_vout->pf_add_string = NULL;
     }
 
     /* Create a few object variables for interface interaction */
@@ -444,15 +421,9 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent,
     var_AddCallback( p_vout, "deinterlace", DeinterlaceCallback, NULL );
 
 
-    var_Create( p_vout, "filter", VLC_VAR_STRING );
+    var_Create( p_vout, "filter", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
     text.psz_string = _("Filters");
     var_Change( p_vout, "filter", VLC_VAR_SETTEXT, &text, NULL );
-    var_Change( p_vout, "filter", VLC_VAR_INHERITVALUE, &val, NULL );
-    if( val.psz_string )
-    {
-        var_Set( p_vout, "filter", val );
-        free( val.psz_string );
-    }
     var_AddCallback( p_vout, "filter", FilterCallback, NULL );
 
     /* Calculate delay created by internal caching */
@@ -484,6 +455,7 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent,
 
         /* Make sure the thread is destroyed */
         p_vout->b_die = VLC_TRUE;
+
         vlc_thread_join( p_vout );
 
         vlc_object_detach( p_vout );
@@ -548,8 +520,7 @@ void vout_Destroy( vout_thread_t *p_vout )
  *****************************************************************************/
 static int InitThread( vout_thread_t *p_vout )
 {
-    int i;
-    unsigned int i_aspect_x, i_aspect_y;
+    int i, i_aspect_x, i_aspect_y;
 
     vlc_mutex_lock( &p_vout->change_lock );
 
@@ -584,38 +555,14 @@ static int InitThread( vout_thread_t *p_vout )
 
     msg_Dbg( p_vout, "got %i direct buffer(s)", I_OUTPUTPICTURES );
 
-#if 0
-    if( !p_vout->psz_filter_chain )
-    {
-        char *psz_aspect = config_GetPsz( p_vout, "pixel-ratio" );
-
-        if( psz_aspect )
-        {
-            int i_new_aspect = p_vout->output.i_width * VOUT_ASPECT_FACTOR
-                                                      * atof( psz_aspect )
-                                                      / p_vout->output.i_height;
-            free( psz_aspect );
-
-            if( i_new_aspect && i_new_aspect != p_vout->output.i_aspect )
-            {
-                vout_AspectRatio( i_new_aspect, &i_aspect_x, &i_aspect_y );
-
-                msg_Dbg( p_vout, "output ratio forced to %i:%i\n",
-                         i_aspect_x, i_aspect_y );
-                p_vout->output.i_aspect = i_new_aspect;
-            }
-        }
-    }
-#endif
-
-    vout_AspectRatio( p_vout->render.i_aspect, &i_aspect_x, &i_aspect_y );
+    AspectRatio( p_vout->render.i_aspect, &i_aspect_x, &i_aspect_y );
     msg_Dbg( p_vout,
              "picture in %ix%i, chroma 0x%.8x (%4.4s), aspect ratio %i:%i",
              p_vout->render.i_width, p_vout->render.i_height,
              p_vout->render.i_chroma, (char*)&p_vout->render.i_chroma,
              i_aspect_x, i_aspect_y );
 
-    vout_AspectRatio( p_vout->output.i_aspect, &i_aspect_x, &i_aspect_y );
+    AspectRatio( p_vout->output.i_aspect, &i_aspect_x, &i_aspect_y );
     msg_Dbg( p_vout,
              "picture out %ix%i, chroma 0x%.8x (%4.4s), aspect ratio %i:%i",
              p_vout->output.i_width, p_vout->output.i_height,
@@ -748,7 +695,7 @@ static void RunThread( vout_thread_t *p_vout)
     }
 
     /*
-     * Main loop - it is not executed if an error occured during
+     * Main loop - it is not executed if an error occurred during
      * initialization
      */
     while( (!p_vout->b_die) && (!p_vout->b_error) )
@@ -908,7 +855,7 @@ static void RunThread( vout_thread_t *p_vout)
         /*
          * Check for subpictures to display
          */
-        p_subpic = vout_SortSubPictures( p_vout, display_date );
+        p_subpic = spu_SortSubpictures( p_vout->p_spu, display_date );
 
         /*
          * Perform rendering
@@ -975,13 +922,16 @@ static void RunThread( vout_thread_t *p_vout)
                 p_vout->pf_display( p_vout, p_directbuffer );
             }
 
-            /* Reinitialize idle loop count */
-            i_idle_loops = 0;
-
             /* Tell the vout this was the last picture and that it does not
              * need to be forced anymore. */
             p_last_picture = p_picture;
             p_last_picture->b_force = 0;
+        }
+
+        if( p_picture != NULL )
+        {
+            /* Reinitialize idle loop count */
+            i_idle_loops = 0;
         }
 
         /*
@@ -989,7 +939,7 @@ static void RunThread( vout_thread_t *p_vout)
          */
         if( p_vout->pf_manage && p_vout->pf_manage( p_vout ) )
         {
-            /* A fatal error occured, and the thread must terminate
+            /* A fatal error occurred, and the thread must terminate
              * immediately, without displaying anything - setting b_error to 1
              * causes the immediate end of the main while() loop. */
             p_vout->b_error = 1;
@@ -1070,9 +1020,9 @@ static void RunThread( vout_thread_t *p_vout)
 /*****************************************************************************
  * ErrorThread: RunThread() error loop
  *****************************************************************************
- * This function is called when an error occured during thread main's loop. The
- * thread can still receive feed, but must be ready to terminate as soon as
- * possible.
+ * This function is called when an error occurred during thread main's loop.
+ * The thread can still receive feed, but must be ready to terminate as soon
+ * as possible.
  *****************************************************************************/
 static void ErrorThread( vout_thread_t *p_vout )
 {
@@ -1088,7 +1038,7 @@ static void ErrorThread( vout_thread_t *p_vout )
  * EndThread: thread destruction
  *****************************************************************************
  * This function is called when the thread ends after a sucessful
- * initialization. It frees all ressources allocated by InitThread.
+ * initialization. It frees all resources allocated by InitThread.
  *****************************************************************************/
 static void EndThread( vout_thread_t *p_vout )
 {
@@ -1110,7 +1060,7 @@ static void EndThread( vout_thread_t *p_vout )
     }
 
     /* Destroy all remaining pictures */
-    for( i_index = 0; i_index < 2 * VOUT_MAX_PICTURES; i_index++ )
+    for( i_index = 0; i_index < 2 * VOUT_MAX_PICTURES + 1; i_index++ )
     {
         if ( p_vout->p_picture[i_index].i_type == MEMORY_PICTURE )
         {
@@ -1118,18 +1068,9 @@ static void EndThread( vout_thread_t *p_vout )
         }
     }
 
-    /* Destroy all remaining subpictures */
-    for( i_index = 0; i_index < VOUT_MAX_SUBPICTURES; i_index++ )
-    {
-        if( p_vout->p_subpicture[i_index].i_status != FREE_SUBPICTURE )
-        {
-            vout_DestroySubPicture( p_vout,
-                                    &p_vout->p_subpicture[i_index] );
-        }
-    }
-
-    if( p_vout->p_text_renderer_module )
-        module_Unneed( p_vout, p_vout->p_text_renderer_module );
+    /* Destroy subpicture unit */
+    spu_Attach( p_vout->p_spu, VLC_OBJECT(p_vout), VLC_FALSE );
+    spu_Destroy( p_vout->p_spu );
 
     /* Destroy translation tables */
     p_vout->pf_end( p_vout );
@@ -1148,11 +1089,13 @@ static void DestroyThread( vout_thread_t *p_vout )
 {
     /* Destroy the locks */
     vlc_mutex_destroy( &p_vout->picture_lock );
-    vlc_mutex_destroy( &p_vout->subpicture_lock );
     vlc_mutex_destroy( &p_vout->change_lock );
 
     /* Release the module */
-    module_Unneed( p_vout, p_vout->p_module );
+    if( p_vout && p_vout->p_module )
+    {
+        module_Unneed( p_vout, p_vout->p_module );
+    }
 }
 
 /* following functions are local */
@@ -1190,6 +1133,13 @@ static int ReduceHeight( int i_ratio )
     }
 
     return i_pgcd;
+}
+
+static void AspectRatio( int i_aspect, int *i_aspect_x, int *i_aspect_y )
+{
+    unsigned int i_pgcd = ReduceHeight( i_aspect );
+    *i_aspect_x = i_aspect / i_pgcd;
+    *i_aspect_y = VOUT_ASPECT_FACTOR / i_pgcd;
 }
 
 /*****************************************************************************
@@ -1319,6 +1269,40 @@ int vout_VarCallback( vlc_object_t * p_this, const char * psz_variable,
 }
 
 /*****************************************************************************
+ * Helper thread for object variables callbacks.
+ * Only used to avoid deadlocks when using the video embedded mode.
+ *****************************************************************************/
+typedef struct suxor_thread_t
+{
+    VLC_COMMON_MEMBERS
+    input_thread_t *p_input;
+
+} suxor_thread_t;
+
+static void SuxorRestartVideoES( suxor_thread_t *p_this )
+{
+    vlc_value_t val;
+
+    /* Now restart current video stream */
+    var_Get( p_this->p_input, "video-es", &val );
+    if( val.i_int >= 0 )
+    {
+        vlc_value_t val_es;
+        val_es.i_int = -VIDEO_ES;
+        var_Set( p_this->p_input, "video-es", val_es );
+        var_Set( p_this->p_input, "video-es", val );
+    }
+
+    vlc_object_release( p_this->p_input );
+
+#ifdef WIN32
+    CloseHandle( p_this->thread_id );
+#endif
+
+    vlc_object_destroy( p_this );
+}
+
+/*****************************************************************************
  * object variables callbacks: a bunch of object variables are used by the
  * interfaces to interact with the vout.
  *****************************************************************************/
@@ -1330,34 +1314,28 @@ static int DeinterlaceCallback( vlc_object_t *p_this, char const *psz_cmd,
     vlc_value_t val;
 
     char *psz_mode = newval.psz_string;
-    char *psz_filter;
-    unsigned int  i;
+    char *psz_filter, *psz_deinterlace = NULL;
 
-    psz_filter = config_GetPsz( p_vout, "filter" );
+    var_Get( p_vout, "filter", &val );
+    psz_filter = val.psz_string;
+    if( psz_filter ) psz_deinterlace = strstr( psz_filter, "deinterlace" );
 
     if( !psz_mode || !*psz_mode )
     {
-        config_PutPsz( p_vout, "filter", "" );
+        if( psz_deinterlace )
+        {
+            char *psz_src = psz_deinterlace + sizeof("deinterlace") - 1;
+            if( psz_src[0] == ',' ) psz_src++;
+            memmove( psz_deinterlace, psz_src, strlen(psz_src) + 1 );
+        }
     }
-    else
+    else if( !psz_deinterlace )
     {
-        if( !psz_filter || !*psz_filter )
-        {
-            config_PutPsz( p_vout, "filter", "deinterlace" );
-        }
-        else
-        {
-            if( strstr( psz_filter, "deinterlace" ) == NULL )
-            {
-                psz_filter = realloc( psz_filter, strlen( psz_filter ) + 20 );
-                strcat( psz_filter, ",deinterlace" );
-            }
-            config_PutPsz( p_vout, "filter", psz_filter );
-        }
+        psz_filter = realloc( psz_filter, strlen( psz_filter ) +
+                              sizeof(",deinterlace") );
+        if( psz_filter && *psz_filter ) strcat( psz_filter, "," );
+        strcat( psz_filter, "deinterlace" );
     }
-
-    if( psz_filter ) free( psz_filter );
-
 
     p_input = (input_thread_t *)vlc_object_find( p_this, VLC_OBJECT_INPUT,
                                                  FIND_PARENT );
@@ -1365,35 +1343,20 @@ static int DeinterlaceCallback( vlc_object_t *p_this, char const *psz_cmd,
 
     if( psz_mode && *psz_mode )
     {
-        val.psz_string = psz_mode;
-        var_Set( p_vout, "deinterlace-mode", val );
         /* Modify input as well because the vout might have to be restarted */
+        val.psz_string = psz_mode;
         var_Create( p_input, "deinterlace-mode", VLC_VAR_STRING );
         var_Set( p_input, "deinterlace-mode", val );
     }
-
-    /* now restart all video streams */
-    vlc_mutex_lock( &p_input->stream.stream_lock );
-
-    p_vout->b_filter_change = VLC_TRUE;
-
-#define ES p_input->stream.pp_es[i]
-
-    for( i = 0 ; i < p_input->stream.i_es_number ; i++ )
-    {
-        if( ( ES->i_cat == VIDEO_ES ) && ES->p_dec != NULL )
-        {
-            input_UnselectES( p_input, ES );
-            input_SelectES( p_input, ES );
-        }
-#undef ES
-    }
-    vlc_mutex_unlock( &p_input->stream.stream_lock );
-
     vlc_object_release( p_input );
 
     val.b_bool = VLC_TRUE;
     var_Set( p_vout, "intf-change", val );
+
+    val.psz_string = psz_filter;
+    var_Set( p_vout, "filter", val );
+    if( psz_filter ) free( psz_filter );
+
     return VLC_SUCCESS;
 }
 
@@ -1403,38 +1366,37 @@ static int FilterCallback( vlc_object_t *p_this, char const *psz_cmd,
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
     input_thread_t *p_input;
     vlc_value_t val;
-    unsigned int i;
 
     p_input = (input_thread_t *)vlc_object_find( p_this, VLC_OBJECT_INPUT,
                                                  FIND_PARENT );
-
     if (!p_input)
     {
         msg_Err( p_vout, "Input not found" );
         return( VLC_EGENERIC );
     }
-    /* Restart the video stream */
-    vlc_mutex_lock( &p_input->stream.stream_lock );
-
-    p_vout->b_filter_change = VLC_TRUE;
-
-#define ES p_input->stream.pp_es[i]
-
-    for( i = 0 ; i < p_input->stream.i_es_number ; i++ )
-    {
-        if( ( ES->i_cat == VIDEO_ES ) && ES->p_dec != NULL )
-        {
-            input_UnselectES( p_input, ES );
-            input_SelectES( p_input, ES );
-        }
-#undef ES
-    }
-    vlc_mutex_unlock( &p_input->stream.stream_lock );
-
-    vlc_object_release( p_input );
 
     val.b_bool = VLC_TRUE;
     var_Set( p_vout, "intf-change", val );
+
+    /* Modify input as well because the vout might have to be restarted */
+    val.psz_string = newval.psz_string;
+    var_Create( p_input, "filter", VLC_VAR_STRING );
+    var_Set( p_input, "filter", val );
+
+    /* Now restart current video stream */
+    var_Get( p_input, "video-es", &val );
+    if( val.i_int >= 0 )
+    {
+        suxor_thread_t *p_suxor =
+            vlc_object_create( p_vout, sizeof(suxor_thread_t) );
+        p_suxor->p_input = p_input;
+        p_vout->b_filter_change = VLC_TRUE;
+        vlc_object_yield( p_input );
+        vlc_thread_create( p_suxor, "suxor", SuxorRestartVideoES,
+                           VLC_THREAD_PRIORITY_LOW, VLC_FALSE );
+    }
+
+    vlc_object_release( p_input );
+
     return VLC_SUCCESS;
 }
-

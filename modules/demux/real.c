@@ -2,7 +2,7 @@
  * real.c: Real demuxer.
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: real.c 7666 2004-05-15 10:53:17Z fenrir $
+ * $Id: real.c 9014 2004-10-18 23:05:30Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -37,7 +37,7 @@ static void Close  ( vlc_object_t * );
 
 vlc_module_begin();
     set_description( _("Real demuxer" ) );
-    set_capability( "demux2", 1);
+    set_capability( "demux2", 15 );
     set_callbacks( Open, Close );
     add_shortcut( "real" );
     add_shortcut( "rm" );

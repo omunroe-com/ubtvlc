@@ -2,7 +2,7 @@
  * cdrom.c: cdrom tools
  *****************************************************************************
  * Copyright (C) 1998-2001 VideoLAN
- * $Id: cdrom.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: cdrom.c 8313 2004-07-29 15:18:04Z hartman $
  *
  * Authors: Johan Bilien <jobi@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -134,12 +134,12 @@ int ioctl_ReadSector( vlc_object_t *p_this, const cddev_t *p_cddev,
   } vcdsector_t;
   vcdsector_t vcd_sector;
   
-  if (cdio_read_mode2_sector(p_cddev->cdio, &vcd_sector, i_sector, true) 
+  if( cdio_read_mode2_sector(p_cddev->cdio, &vcd_sector, i_sector, VLC_TRUE) 
       != 0)
-    {
+  {
       // msg_Err( p_this, "Could not read sector %d", i_sector );
       return -1;
-    }
+  }
     
   memcpy (p_buffer, vcd_sector.data, M2F2_SECTOR_SIZE);
   

@@ -89,14 +89,14 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 
 # Begin Source File
-SOURCE="..\modules\demux\dvdnav.c"
+SOURCE="..\modules\access\dvdnav.c"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=dvdnav" /D "MODULE_NAME_IS_dvdnav" 
 !IF "$(CFG)" == "plugin_dvdnav - Win32 Release"
-# PROP Output_Dir "Release\modules\demux"
-# PROP Intermediate_Dir "Release\modules\demux"
+# PROP Output_Dir "Release\modules\access"
+# PROP Intermediate_Dir "Release\modules\access"
 !ELSEIF "$(CFG)" == "plugin_dvdnav - Win32 Debug"
-# PROP Output_Dir "Debug\modules\demux"
-# PROP Intermediate_Dir "Debug\modules\demux"
+# PROP Output_Dir "Debug\modules\access"
+# PROP Intermediate_Dir "Debug\modules\access"
 # End Source File
 
 # End Group

@@ -5,7 +5,7 @@
  *                    Organisation (CSIRO) Australia
  * Copyright (C) 2004 VideoLAN
  *
- * $Id: xstrcat.h 7397 2004-04-20 17:27:30Z sam $
+ * $Id: xstrcat.h 7775 2004-05-26 08:38:23Z andrep $
  *
  * Authors: Andre Pang <Andre.Pang@csiro.au>
  *
@@ -30,13 +30,13 @@
 /* like strcat, but realloc's enough memory for the new string too */
 
 static inline
-char *xstrcat( char *psz_string, char *psz_to_append )
+char *xstrcat( char *psz_string, const char *psz_to_append )
 {
     size_t i_new_string_length = strlen( psz_string ) +
         strlen( psz_to_append ) + 1;
 
     psz_string = (char *) realloc( psz_string, i_new_string_length );
-    
+
     return strcat( psz_string, psz_to_append );
 }
 

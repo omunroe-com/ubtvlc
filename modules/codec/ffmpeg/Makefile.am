@@ -7,7 +7,7 @@ noinst_LIBRARIES =
 noinst_HEADERS =
 EXTRA_DIST = Modules.am
 BUILT_SOURCES =
-SUBDIRS = postprocessing
+SUBDIRS = 
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/codec
 include Modules.am
@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in ffmpeg; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in ffmpeg; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in ffmpeg; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in ffmpeg ffmpegaltivec; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in ffmpeg ffmpegaltivec; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in ffmpeg ffmpegaltivec; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -68,6 +68,43 @@ libffmpeg_plugin$(LIBEXT): $(libffmpeg_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libffmpeg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ffmpeg\` ; $(CXXLINK) $(libffmpeg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ffmpeg` ;; \
 	  objc) echo $(OBJCLINK) $(libffmpeg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ffmpeg\` ; $(OBJCLINK) $(libffmpeg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ffmpeg` ;; \
 	  c|*) echo $(LINK) $(libffmpeg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ffmpeg\` ; $(LINK) $(libffmpeg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ffmpeg` ;; \
+	esac
+
+
+# The ffmpegaltivec plugin
+
+if UNTRUE
+Lffmpegaltivecp = libffmpegaltivec_plugin.a
+Dffmpegaltivecp = libffmpegaltivec_plugin$(LIBEXT)
+Lffmpegaltivecb = libffmpegaltivec.a
+Lffmpegaltivecpic = libffmpegaltivec_pic.a
+endif
+
+libffmpegaltivec_plugin_a_SOURCES = $(SOURCES_ffmpegaltivec)
+libffmpegaltivec_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin ffmpegaltivec`
+libffmpegaltivec_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin ffmpegaltivec`
+libffmpegaltivec_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin ffmpegaltivec`
+
+libffmpegaltivec_pic_a_SOURCES = $(SOURCES_ffmpegaltivec)
+libffmpegaltivec_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ffmpegaltivec`
+libffmpegaltivec_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ffmpegaltivec`
+libffmpegaltivec_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ffmpegaltivec`
+
+libffmpegaltivec_a_SOURCES = $(SOURCES_ffmpegaltivec)
+libffmpegaltivec_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin ffmpegaltivec`
+libffmpegaltivec_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ffmpegaltivec`
+libffmpegaltivec_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ffmpegaltivec`
+
+libvlc_LIBRARIES += $(Lffmpegaltivecb) $(Lffmpegaltivecpic)
+libffmpegaltivec_DATA = $(Dffmpegaltivecp)
+
+libffmpegaltivecdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lffmpegaltivecp)
+libffmpegaltivec_plugin$(LIBEXT): $(libffmpegaltivec_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage ffmpegaltivec` in \
+	  c++) echo $(CXXLINK) $(libffmpegaltivec_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ffmpegaltivec\` ; $(CXXLINK) $(libffmpegaltivec_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ffmpegaltivec` ;; \
+	  objc) echo $(OBJCLINK) $(libffmpegaltivec_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ffmpegaltivec\` ; $(OBJCLINK) $(libffmpegaltivec_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ffmpegaltivec` ;; \
+	  c|*) echo $(LINK) $(libffmpegaltivec_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ffmpegaltivec\` ; $(LINK) $(libffmpegaltivec_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ffmpegaltivec` ;; \
 	esac
 
 

@@ -2,7 +2,7 @@
  * announce.c : announce handler
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: announce.c 7441 2004-04-23 12:38:04Z gbazin $
+ * $Id: announce.c 9201 2004-11-06 16:51:46Z yoann $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -164,6 +164,7 @@ session_descriptor_t * sout_AnnounceSessionCreate()
         p_session->psz_name = NULL;
         p_session->psz_uri = NULL;
         p_session->i_port = 0;
+        p_session->psz_group = NULL;
     }
 
     return p_session;
@@ -180,6 +181,7 @@ void sout_AnnounceSessionDestroy( session_descriptor_t *p_session )
     if( p_session )
     {
         FREE( p_session->psz_name );
+        FREE( p_session->psz_group );
         FREE( p_session->psz_uri );
         FREE( p_session->psz_sdp );
         FREE( p_session );

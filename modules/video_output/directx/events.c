@@ -2,7 +2,7 @@
  * events.c: Windows DirectX video output events handler
  *****************************************************************************
  * Copyright (C) 2001-2004 VideoLAN
- * $Id: events.c 7694 2004-05-16 22:06:34Z gbazin $
+ * $Id: events.c 9269 2004-11-10 13:04:45Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -55,7 +55,6 @@
 static int  DirectXCreateWindow( vout_thread_t *p_vout );
 static void DirectXCloseWindow ( vout_thread_t *p_vout );
 static long FAR PASCAL DirectXEventProc( HWND, UINT, WPARAM, LPARAM );
-static long FAR PASCAL DirectXVideoEventProc( HWND, UINT, WPARAM, LPARAM );
 
 static int Control( vout_thread_t *p_vout, int i_query, va_list args );
 
@@ -122,8 +121,7 @@ void DirectXEventThread( event_thread_t *p_event )
 
     /* Main loop */
     /* GetMessage will sleep if there's no message in the queue */
-    while( !p_event->b_die &&
-           GetMessage( &msg, p_event->p_vout->p_sys->hwnd, 0, 0 ) )
+    while( !p_event->b_die && GetMessage( &msg, 0, 0, 0 ) )
     {
         /* Check if we are asked to exit */
         if( p_event->b_die )
@@ -138,7 +136,7 @@ void DirectXEventThread( event_thread_t *p_event )
                                p_event->p_vout->p_sys->i_window_height,
                                &i_x, &i_y, &i_width, &i_height );
 
-            if( msg.hwnd != p_event->p_vout->p_sys->hwnd )
+            if( msg.hwnd == p_event->p_vout->p_sys->hvideownd )
             {
                 /* Child window */
                 i_x = i_y = 0;
@@ -298,6 +296,10 @@ void DirectXEventThread( event_thread_t *p_event )
 
             if( !val.psz_string || !*val.psz_string ) /* Default video title */
             {
+#ifdef MODULE_NAME_IS_glwin32
+                SetWindowText( p_event->p_vout->p_sys->hwnd,
+                    VOUT_TITLE " (OpenGL output)" );
+#else
                 if( p_event->p_vout->p_sys->b_using_overlay )
                     SetWindowText( p_event->p_vout->p_sys->hwnd,
                         VOUT_TITLE " (hardware YUV overlay DirectX output)" );
@@ -306,6 +308,7 @@ void DirectXEventThread( event_thread_t *p_event )
                         VOUT_TITLE " (hardware YUV DirectX output)" );
                 else SetWindowText( p_event->p_vout->p_sys->hwnd,
                         VOUT_TITLE " (software RGB DirectX output)" );
+#endif
             }
             else
             {
@@ -383,7 +386,7 @@ static int DirectXCreateWindow( vout_thread_t *p_vout )
 
     /* Fill in the window class structure */
     wc.cbSize        = sizeof(WNDCLASSEX);
-    wc.style         = CS_DBLCLKS;                   /* style: dbl click */
+    wc.style         = CS_OWNDC|CS_DBLCLKS;          /* style: dbl click */
     wc.lpfnWndProc   = (WNDPROC)DirectXEventProc;       /* event handler */
     wc.cbClsExtra    = 0;                         /* no extra class data */
     wc.cbWndExtra    = 0;                        /* no extra window data */
@@ -411,6 +414,21 @@ static int DirectXCreateWindow( vout_thread_t *p_vout )
         }
     }
 
+    /* Register the video sub-window class */
+    wc.lpszClassName = "VLC DirectX video"; wc.hIconSm = 0; wc.hIcon = 0;
+    if( !RegisterClassEx(&wc) )
+    {
+        WNDCLASS wndclass;
+
+        /* Check why it failed. If it's because one already exists
+         * then fine, otherwise return with an error. */
+        if( !GetClassInfo( hInstance, "VLC DirectX video", &wndclass ) )
+        {
+            msg_Err( p_vout, "DirectXCreateWindow RegisterClass FAILED" );
+            return VLC_EGENERIC;
+        }
+    }
+
     /* When you create a window you give the dimensions you wish it to
      * have. Unfortunatly these dimensions will include the borders and
      * titlebar. We use the following function to find out the size of
@@ -421,10 +439,12 @@ static int DirectXCreateWindow( vout_thread_t *p_vout )
     rect_window.bottom = rect_window.top + p_vout->p_sys->i_window_height;
     AdjustWindowRect( &rect_window, WS_OVERLAPPEDWINDOW|WS_SIZEBOX, 0 );
 
+    i_style = WS_OVERLAPPEDWINDOW|WS_SIZEBOX|WS_VISIBLE|WS_CLIPCHILDREN;
+
     if( p_vout->p_sys->hparent )
+    {
         i_style = WS_VISIBLE|WS_CLIPCHILDREN|WS_CHILD;
-    else
-        i_style = WS_OVERLAPPEDWINDOW|WS_SIZEBOX|WS_VISIBLE|WS_CLIPCHILDREN;
+    }
 
     /* Create the window */
     p_vout->p_sys->hwnd =
@@ -455,9 +475,20 @@ static int DirectXCreateWindow( vout_thread_t *p_vout )
 
         /* We don't want the window owner to overwrite our client area */
         i_style = GetWindowLong( p_vout->p_sys->hparent, GWL_STYLE );
-        SetWindowLong( p_vout->p_sys->hparent, GWL_STYLE,
-                       i_style | WS_CLIPCHILDREN );
 
+        if( !(i_style & WS_CLIPCHILDREN) )
+            /* Hmmm, apparently this is a blocking call... */
+            SetWindowLong( p_vout->p_sys->hparent, GWL_STYLE,
+                           i_style | WS_CLIPCHILDREN );
+
+        /* Create our fullscreen window */
+        p_vout->p_sys->hfswnd =
+            CreateWindowEx( WS_EX_APPWINDOW, "VLC DirectX",
+                            VOUT_TITLE " (DirectX Output)",
+                            WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN|WS_SIZEBOX,
+                            CW_USEDEFAULT, CW_USEDEFAULT,
+                            CW_USEDEFAULT, CW_USEDEFAULT,
+                            NULL, NULL, hInstance, NULL );
     }
 
     /* Now display the window */
@@ -487,6 +518,7 @@ static void DirectXCloseWindow( vout_thread_t *p_vout )
     msg_Dbg( p_vout, "DirectXCloseWindow" );
 
     DestroyWindow( p_vout->p_sys->hwnd );
+    if( p_vout->p_sys->hfswnd ) DestroyWindow( p_vout->p_sys->hfswnd );
 
     if( p_vout->p_sys->hparent )
         vout_ReleaseWindow( p_vout, (void *)p_vout->p_sys->hparent );
@@ -686,6 +718,9 @@ static long FAR PASCAL DirectXEventProc( HWND hwnd, UINT message,
         return DefWindowProc(hwnd, message, wParam, lParam);
     }
 
+    if( hwnd == p_vout->p_sys->hvideownd )
+        return DefWindowProc(hwnd, message, wParam, lParam);
+
     switch( message )
     {
 
@@ -743,28 +778,18 @@ static long FAR PASCAL DirectXEventProc( HWND hwnd, UINT message,
     case WM_VLC_CREATE_VIDEO_WIN:
         /* Create video sub-window */
         p_vout->p_sys->hvideownd =
-            CreateWindow( "STATIC", "",   /* window class and title bar text */
+            CreateWindow( "VLC DirectX video", "",      /* window class text */
                     WS_CHILD | WS_VISIBLE,                   /* window style */
                     CW_USEDEFAULT, CW_USEDEFAULT,     /* default coordinates */
                     CW_USEDEFAULT, CW_USEDEFAULT,
                     hwnd,                                   /* parent window */
-                    NULL, GetModuleHandle(NULL), NULL );
+                    NULL, GetModuleHandle(NULL),
+                    (LPVOID)p_vout );            /* send p_vout to WM_CREATE */
 
         if( !p_vout->p_sys->hvideownd )
-        {
             msg_Warn( p_vout, "Can't create video sub-window" );
-        }
         else
-        {
             msg_Dbg( p_vout, "Created video sub-window" );
-            SetWindowLongPtr( p_vout->p_sys->hvideownd,
-                              GWLP_WNDPROC, (LONG_PTR)DirectXVideoEventProc );
-            /* Store the previous window proc of _this_ window with the video
-             * window so we can use it in DirectXVideoEventProc to pass
-             * messages to the creator of _this_ window */
-            SetWindowLongPtr( p_vout->p_sys->hvideownd, GWLP_USERDATA,
-                              (LONG_PTR)p_vout->p_sys->pf_wndproc );
-        }
         break;
 
     case WM_PAINT:
@@ -781,60 +806,6 @@ static long FAR PASCAL DirectXEventProc( HWND hwnd, UINT message,
     }
 
     /* Let windows handle the message */
-    return DefWindowProc(hwnd, message, wParam, lParam);
-}
-
-static long FAR PASCAL DirectXVideoEventProc( HWND hwnd, UINT message,
-                                              WPARAM wParam, LPARAM lParam )
-{
-    WNDPROC pf_parentwndproc;
-    POINT pt;
-
-    switch( message )
-    {
-    case WM_MOUSEMOVE:
-    case WM_LBUTTONDOWN:
-    case WM_LBUTTONUP:
-    case WM_LBUTTONDBLCLK:
-    case WM_MBUTTONDOWN:
-    case WM_MBUTTONUP:
-    case WM_RBUTTONDOWN:
-    case WM_RBUTTONUP:
-        /* Translate mouse cursor position to parent window coordinates. */
-        pt.x = LOWORD( lParam );
-        pt.y = HIWORD( lParam );
-        MapWindowPoints( hwnd, GetParent( hwnd ), &pt, 1 );
-        lParam = MAKELPARAM( pt.x, pt.y );
-        /* Fall through. */
-    case WM_KEYDOWN:
-    case WM_KEYUP:
-    case WM_SYSKEYDOWN:
-    case WM_SYSKEYUP:
-        /* Foward these to the original window proc of the parent so the
-         * creator of the window gets a chance to process them. If we created
-         * the parent window ourself DirectXEventThread will process these
-         * and they will never make it here.
-         * Note that we fake the hwnd to be our parent in order to prevent
-         * confusion in the creator's window proc. */
-        pf_parentwndproc = (WNDPROC)GetWindowLongPtr( hwnd, GWLP_USERDATA );
-
-        if( pf_parentwndproc )
-        {
-            LRESULT i_ret;
-            LONG_PTR p_backup;
-
-            pf_parentwndproc = (WNDPROC)GetWindowLongPtr( hwnd, GWLP_USERDATA);
-
-            p_backup = SetWindowLongPtr( GetParent( hwnd ), GWLP_USERDATA, 0 );
-            i_ret = CallWindowProc( pf_parentwndproc, GetParent( hwnd ),
-                                    message, wParam, lParam );
-            SetWindowLongPtr( GetParent( hwnd ), GWLP_USERDATA, p_backup );
-
-            return i_ret;
-        }
-        break;
-    }
-
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
@@ -916,6 +887,8 @@ static int Control( vout_thread_t *p_vout, int i_query, va_list args )
 
         return VLC_SUCCESS;
 
+    case VOUT_CLOSE:
+        ShowWindow( p_vout->p_sys->hwnd, SW_HIDE );
     case VOUT_REPARENT:
         /* Change window style, borders and title bar */
         vlc_mutex_lock( &p_vout->p_sys->lock );
@@ -929,14 +902,11 @@ static int Control( vout_thread_t *p_vout, int i_query, va_list args )
         SetParent( p_vout->p_sys->hwnd, GetDesktopWindow() );
         SetWindowLong( p_vout->p_sys->hwnd, GWL_STYLE,
                        WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW |
-                       WS_SIZEBOX | WS_VISIBLE );
+                       WS_SIZEBOX | (i_query == VOUT_CLOSE ? 0 : WS_VISIBLE) );
         SetWindowPos( p_vout->p_sys->hwnd, 0, point.x, point.y, 0, 0,
                       SWP_NOSIZE|SWP_NOZORDER|SWP_FRAMECHANGED );
 
         return vout_vaControlDefault( p_vout, i_query, args );
-
-    case VOUT_CLOSE:
-        return VLC_SUCCESS;
 
     case VOUT_SET_STAY_ON_TOP:
         if( p_vout->p_sys->hparent )

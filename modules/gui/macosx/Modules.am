@@ -5,6 +5,8 @@ SOURCES_macosx = \
 	applescript.m \
 	controls.h \
 	controls.m \
+	equalizer.m \
+	equalizer.h \
 	intf.m \
 	intf.h \
 	macosx.m \
@@ -23,6 +25,8 @@ SOURCES_macosx = \
 	output.h \
 	output.m \
 	vout.m \
+	voutqt.m \
+	voutgl.m \
 	vout.h \
 	$(NULL)
 

@@ -2,7 +2,7 @@
  * http.c :  http mini-server ;)
  *****************************************************************************
  * Copyright (C) 2001-2004 VideoLAN
- * $Id: http.c 7356 2004-04-15 20:27:06Z fenrir $
+ * $Id: http.c 9281 2004-11-11 12:45:53Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -39,6 +39,7 @@
 
 #include "vlc_httpd.h"
 #include "vlc_vlm.h"
+#include "vlc_tls.h"
 
 #ifdef HAVE_SYS_STAT_H
 #   include <sys/stat.h>
@@ -61,6 +62,11 @@
 #   include <dirent.h>
 #endif
 
+/* stat() support for large files on win32 */
+#if defined( WIN32 ) && !defined( UNDER_CE )
+#   define stat _stati64
+#endif
+
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
@@ -72,11 +78,25 @@ static void Close( vlc_object_t * );
     "You can set the address and port the http interface will bind to." )
 #define SRC_TEXT N_( "Source directory" )
 #define SRC_LONGTEXT N_( "Source directory" )
+#define CERT_TEXT N_( "Certificate file" )
+#define CERT_LONGTEXT N_( "HTTP interface x509 PEM certificate file " \
+                          "(enables SSL)" )
+#define KEY_TEXT N_( "Private key file" )
+#define KEY_LONGTEXT N_( "HTTP interface x509 PEM private key file" )
+#define CA_TEXT N_( "Root CA file" )
+#define CA_LONGTEXT N_( "HTTP interface x509 PEM trusted root CA " \
+                        "certificates file" )
+#define CRL_TEXT N_( "CRL file" )
+#define CRL_LONGTEXT N_( "HTTP interace Certificates Revocation List file" )
 
 vlc_module_begin();
     set_description( _("HTTP remote control interface") );
         add_string ( "http-host", NULL, NULL, HOST_TEXT, HOST_LONGTEXT, VLC_TRUE );
         add_string ( "http-src",  NULL, NULL, SRC_TEXT,  SRC_LONGTEXT,  VLC_TRUE );
+        add_string ( "http-intf-cert", NULL, NULL, CERT_TEXT, CERT_LONGTEXT, VLC_TRUE );
+        add_string ( "http-intf-key",  NULL, NULL, KEY_TEXT,  KEY_LONGTEXT,  VLC_TRUE );
+        add_string ( "http-intf-ca",   NULL, NULL, CA_TEXT,   CA_LONGTEXT,   VLC_TRUE );
+        add_string ( "http-intf-crl",  NULL, NULL, CRL_TEXT,  CRL_LONGTEXT,  VLC_TRUE );
     set_capability( "interface", 0 );
     set_callbacks( Open, Close );
 vlc_module_end();
@@ -185,8 +205,10 @@ static int Open( vlc_object_t *p_this )
     intf_sys_t    *p_sys;
     char          *psz_host;
     char          *psz_address = "";
+    const char    *psz_cert;
     int           i_port       = 0;
     char          *psz_src;
+    tls_server_t  *p_tls;
 
     psz_host = config_GetPsz( p_intf, "http-host" );
     if( psz_host )
@@ -201,12 +223,7 @@ static int Open( vlc_object_t *p_this )
             i_port = atoi( psz_parser );
         }
     }
-    if( i_port <= 0 )
-    {
-        i_port= 8080;
-    }
 
-    msg_Dbg( p_intf, "base %s:%d", psz_address, i_port );
     p_intf->p_sys = p_sys = malloc( sizeof( intf_sys_t ) );
     if( !p_intf->p_sys )
     {
@@ -216,10 +233,60 @@ static int Open( vlc_object_t *p_this )
     p_sys->p_input    = NULL;
     p_sys->p_vlm      = NULL;
 
-    p_sys->p_httpd_host = httpd_HostNew( VLC_OBJECT(p_intf), psz_address, i_port );
+    psz_cert = config_GetPsz( p_intf, "http-intf-cert" );
+    if ( psz_cert != NULL )
+    {
+        const char *psz_pem;
+
+        msg_Dbg( p_intf, "enablind TLS for HTTP interface (cert file: %s)",
+                 psz_cert );
+        psz_pem = config_GetPsz( p_intf, "http-intf-key" );
+
+        p_tls = tls_ServerCreate( p_this, psz_cert, psz_pem );
+        if ( p_tls == NULL )
+        {
+            msg_Err( p_intf, "TLS initialization error" );
+            free( p_sys );
+            return VLC_EGENERIC;
+        }
+
+        psz_pem = config_GetPsz( p_intf, "http-intf-ca" );
+        if ( ( psz_pem != NULL) && tls_ServerAddCA( p_tls, psz_pem ) )
+        {
+            msg_Err( p_intf, "TLS CA error" );
+            tls_ServerDelete( p_tls );
+            free( p_sys );
+            return VLC_EGENERIC;
+        }
+
+        psz_pem = config_GetPsz( p_intf, "http-intf-crl" );
+        if ( ( psz_pem != NULL) && tls_ServerAddCRL( p_tls, psz_pem ) )
+        {
+            msg_Err( p_intf, "TLS CRL error" );
+            tls_ServerDelete( p_tls );
+            free( p_sys );
+            return VLC_EGENERIC;
+        }
+
+        if( i_port <= 0 )
+            i_port = 8443;
+    }
+    else
+    {
+        p_tls = NULL;
+        if( i_port <= 0 )
+            i_port= 8080;
+    }
+
+    msg_Dbg( p_intf, "base %s:%d", psz_address, i_port );
+
+    p_sys->p_httpd_host = httpd_TLSHostNew( VLC_OBJECT(p_intf), psz_address,
+                                            i_port, p_tls );
     if( p_sys->p_httpd_host == NULL )
     {
         msg_Err( p_intf, "cannot listen on %s:%d", psz_address, i_port );
+        if ( p_tls != NULL )
+            tls_ServerDelete( p_tls );
         free( p_sys );
         return VLC_EGENERIC;
     }
@@ -315,7 +382,6 @@ void Close ( vlc_object_t *p_this )
     {
         vlm_Delete( p_sys->p_vlm );
     }
-
     for( i = 0; i < p_sys->i_files; i++ )
     {
        httpd_FileDelete( p_sys->pp_files[i]->p_file );
@@ -873,10 +939,10 @@ static mvar_t *mvar_InfoSetNew( char *name, input_thread_t *p_input )
         return s;
     }
 
-    vlc_mutex_lock( &p_input->p_item->lock );
-    for ( i = 0; i < p_input->p_item->i_categories; i++ )
+    vlc_mutex_lock( &p_input->input.p_item->lock );
+    for ( i = 0; i < p_input->input.p_item->i_categories; i++ )
     {
-        info_category_t *p_category = p_input->p_item->pp_categories[i];
+        info_category_t *p_category = p_input->input.p_item->pp_categories[i];
         mvar_t *cat  = mvar_New( name, "set" );
         mvar_t *iset = mvar_New( "info", "set" );
 
@@ -896,7 +962,7 @@ static mvar_t *mvar_InfoSetNew( char *name, input_thread_t *p_input )
         }
         mvar_AppendVar( s, cat );
     }
-    vlc_mutex_unlock( &p_input->p_item->lock );
+    vlc_mutex_unlock( &p_input->input.p_item->lock );
 
     return s;
 }
@@ -1045,7 +1111,8 @@ static mvar_t *mvar_FileSetNew( char *name, char *psz_dir )
     }
 
     /* remove traling / or \ */
-    for( p = &psz_dir[strlen( psz_dir) - 1]; p >= psz_dir && ( *p =='/' || *p =='\\' ); p-- )
+    for( p = &psz_dir[strlen( psz_dir) - 1];
+         p >= psz_dir && ( *p =='/' || *p =='\\' ); p-- )
     {
         *p = '\0';
     }
@@ -1064,11 +1131,7 @@ static mvar_t *mvar_FileSetNew( char *name, char *psz_dir )
             continue;
         }
 
-#if defined( WIN32 )
-        sprintf( tmp, "%s\\%s", psz_dir, p_dir_content->d_name );
-#else
         sprintf( tmp, "%s/%s", psz_dir, p_dir_content->d_name );
-#endif
 
 #ifdef HAVE_SYS_STAT_H
         if( stat( tmp, &stat_info ) == -1 )
@@ -1078,6 +1141,7 @@ static mvar_t *mvar_FileSetNew( char *name, char *psz_dir )
 #endif
         f = mvar_New( name, "set" );
         mvar_AppendNewVar( f, "name", tmp );
+
 #ifdef HAVE_SYS_STAT_H
         if( S_ISDIR( stat_info.st_mode ) )
         {
@@ -1092,7 +1156,7 @@ static mvar_t *mvar_FileSetNew( char *name, char *psz_dir )
             mvar_AppendNewVar( f, "type", "unknown" );
         }
 
-        sprintf( tmp, "%lld", stat_info.st_size );
+        sprintf( tmp, I64Fd, (int64_t)stat_info.st_size );
         mvar_AppendNewVar( f, "size", tmp );
 
         /* FIXME memory leak FIXME */
@@ -1121,8 +1185,8 @@ static mvar_t *mvar_VlmSetNew( char *name, vlm_t *vlm )
     int    i;
 
     /* fprintf( stderr," mvar_VlmSetNew: name=`%s'\n", name ); */
-    if( vlm == NULL )
-        return s;
+    if( vlm == NULL ) return s;
+
     if( vlm_ExecuteCommand( vlm, "show", &msg ) )
     {
         return s;
@@ -1755,6 +1819,14 @@ static void MacroDo( httpd_file_sys_t *p_args,
                             msg_Dbg( p_intf, "requested volume set: -%i", (i_volume - i_value) );
                         }
                     } else
+                    if( strstr(vol, "%") != NULL )
+                    {
+                        i_value = atoi( vol );
+                        if( (i_value <= 100) && (i_value>=0) ){
+                            aout_VolumeSet( p_intf, (i_value * (AOUT_VOLUME_MAX - AOUT_VOLUME_MIN))/100+AOUT_VOLUME_MIN);
+                            msg_Dbg( p_intf, "requested volume set: %i%%", atoi( vol ));
+                        }
+                    } else
                     {
                         i_value = atoi( vol );
                         if( ( i_value <= AOUT_VOLUME_MAX ) && ( i_value >= AOUT_VOLUME_MIN ) )
@@ -1971,6 +2043,8 @@ static void MacroDo( httpd_file_sys_t *p_args,
                     if( p_intf->p_sys->p_vlm == NULL )
                         p_intf->p_sys->p_vlm = vlm_New( p_intf );
 
+                    if( p_intf->p_sys->p_vlm == NULL ) break;
+
                     uri_extract_value( p_request, "name", name, 512 );
                     if( StrToMacroType( control ) == MVLC_VLM_NEW )
                     {
@@ -2028,6 +2102,8 @@ static void MacroDo( httpd_file_sys_t *p_args,
                     if( p_intf->p_sys->p_vlm == NULL )
                         p_intf->p_sys->p_vlm = vlm_New( p_intf );
 
+                    if( p_intf->p_sys->p_vlm == NULL ) break;
+
                     uri_extract_value( p_request, "name", name, 512 );
                     sprintf( psz, "del %s", name );
 
@@ -2047,6 +2123,8 @@ static void MacroDo( httpd_file_sys_t *p_args,
                     char psz[512+10];
                     if( p_intf->p_sys->p_vlm == NULL )
                         p_intf->p_sys->p_vlm = vlm_New( p_intf );
+
+                    if( p_intf->p_sys->p_vlm == NULL ) break;
 
                     uri_extract_value( p_request, "name", name, 512 );
                     if( StrToMacroType( control ) == MVLC_VLM_PLAY )
@@ -2076,6 +2154,8 @@ static void MacroDo( httpd_file_sys_t *p_args,
 
                     if( p_intf->p_sys->p_vlm == NULL )
                         p_intf->p_sys->p_vlm = vlm_New( p_intf );
+
+                    if( p_intf->p_sys->p_vlm == NULL ) break;
 
                     uri_extract_value( p_request, "file", file, 512 );
                     uri_decode_url_encoded( file );
@@ -2360,16 +2440,14 @@ static void Execute( httpd_file_sys_t *p_args,
                         {
                             index = mvar_PlaylistSetNew( m.param1, p_intf->p_sys->p_playlist );
                         }
-                        else if( !strcmp( m.param2, "informations" ) )
+                        else if( !strcmp( m.param2, "information" ) )
                         {
                             index = mvar_InfoSetNew( m.param1, p_intf->p_sys->p_input );
                         }
                         else if( !strcmp( m.param2, "vlm" ) )
                         {
                             if( p_intf->p_sys->p_vlm == NULL )
-                            {
                                 p_intf->p_sys->p_vlm = vlm_New( p_intf );
-                            }
                             index = mvar_VlmSetNew( m.param1, p_intf->p_sys->p_vlm );
                         }
 #if 0
@@ -3102,7 +3180,7 @@ static char *Find_end_MRL( char *psz )
 
 /**********************************************************************
  * parse_MRL: parse the MRL, find the mrl string and the options,
- * create an item with all informations in it, and return the item.
+ * create an item with all information in it, and return the item.
  * return NULL if there is an error.
  **********************************************************************/
 playlist_item_t * parse_MRL( intf_thread_t *p_intf, char *psz )

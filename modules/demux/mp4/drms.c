@@ -2,7 +2,7 @@
  * drms.c: DRMS
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: drms.c 7647 2004-05-12 21:44:59Z jlj $
+ * $Id: drms.c 8958 2004-10-08 10:36:25Z gbazin $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Sam Hocevar <sam@zoy.org>
@@ -30,13 +30,21 @@
 #   include <stdio.h>
 #endif
 
-#include <vlc/vlc.h>
+#ifdef __VLC__
+#   include <vlc/vlc.h>
+#   include "libmp4.h"
+#else
+#   include "drmsvl.h"
+#endif
 
 #ifdef HAVE_ERRNO_H
 #   include <errno.h>
 #endif
 
 #ifdef WIN32
+#   if !defined( UNDER_CE )
+#       include <direct.h>
+#   endif
 #   include <tchar.h>
 #   include <shlobj.h>
 #   include <windows.h>
@@ -67,8 +75,7 @@
 #include "drms.h"
 #include "drmstables.h"
 
-#include "libmp4.h"
-
+#if !defined( UNDER_CE )
 /*****************************************************************************
  * aes_s: AES keys structure
  *****************************************************************************
@@ -334,10 +341,19 @@ int drms_init( void *_p_drms, uint32_t i_type,
             AddMD5( &md5, p_drms->p_iviv, 16 );
             EndMD5( &md5 );
 
-            if( GetUserKey( p_drms, p_drms->p_key ) )
+            if( p_drms->i_user == 0 && p_drms->i_key == 0 )
             {
-                i_ret = -1;
-                break;
+                static char const p_secret[] = "tr1-th3n.y00_by3";
+                memcpy( p_drms->p_key, p_secret, 16 );
+                REVERSE( p_drms->p_key, 4 );
+            }
+            else
+            {
+                if( GetUserKey( p_drms, p_drms->p_key ) )
+                {
+                    i_ret = -1;
+                    break;
+                }
             }
 
             InitAES( &p_drms->aes, p_drms->p_key );
@@ -1936,20 +1952,30 @@ static int GetiPodID( int64_t *p_ipod_id )
     mach_port_t port;
     io_object_t device;
     io_iterator_t iterator;
-    CFMutableDictionaryRef matching_dic;
+    CFMutableDictionaryRef match_dic;
+    CFMutableDictionaryRef smatch_dic;
 
     if( IOMasterPort( MACH_PORT_NULL, &port ) == KERN_SUCCESS )
     {
-        if( ( matching_dic = IOServiceMatching( "IOFireWireUnit" ) ) != NULL )
+        smatch_dic = IOServiceMatching( "IOFireWireUnit" );
+        match_dic = CFDictionaryCreateMutable( kCFAllocatorDefault, 0,
+                                           &kCFTypeDictionaryKeyCallBacks,
+                                           &kCFTypeDictionaryValueCallBacks );
+
+        if( smatch_dic != NULL && match_dic != NULL )
         {
-            CFDictionarySetValue( matching_dic,
+            CFDictionarySetValue( smatch_dic,
                                   CFSTR("FireWire Vendor Name"),
                                   CFSTR(VENDOR_NAME) );
-            CFDictionarySetValue( matching_dic,
+            CFDictionarySetValue( smatch_dic,
                                   CFSTR("FireWire Product Name"),
                                   CFSTR(PROD_NAME) );
 
-            if( IOServiceGetMatchingServices( port, matching_dic,
+            CFDictionarySetValue( match_dic,
+                                  CFSTR(kIOPropertyMatchKey),
+                                  smatch_dic );
+
+            if( IOServiceGetMatchingServices( port, match_dic,
                                               &iterator ) == KERN_SUCCESS )
             {
                 while( ( device = IOIteratorNext( iterator ) ) != NULL )
@@ -2027,3 +2053,11 @@ static int GetiPodID( int64_t *p_ipod_id )
     return i_ret;
 }
 
+#else /* !defined( UNDER_CE ) */
+
+void *drms_alloc( char *psz_homedir ){ return 0; }
+void drms_free( void *a ){}
+void drms_decrypt( void *a, uint32_t *b, uint32_t c  ){}
+int drms_init( void *a, uint32_t b, uint8_t *c, uint32_t d ){ return -1; }
+
+#endif /* defined( UNDER_CE ) */

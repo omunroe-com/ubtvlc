@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in x11 xvideo; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in x11 xvideo; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in x11 xvideo; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in x11 xvideo glx; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in x11 xvideo glx; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in x11 xvideo glx; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -105,6 +105,43 @@ libxvideo_plugin$(LIBEXT): $(libxvideo_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libxvideo_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin xvideo\` ; $(CXXLINK) $(libxvideo_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin xvideo` ;; \
 	  objc) echo $(OBJCLINK) $(libxvideo_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin xvideo\` ; $(OBJCLINK) $(libxvideo_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin xvideo` ;; \
 	  c|*) echo $(LINK) $(libxvideo_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin xvideo\` ; $(LINK) $(libxvideo_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin xvideo` ;; \
+	esac
+
+
+# The glx plugin
+
+if UNTRUE
+Lglxp = libglx_plugin.a
+Dglxp = libglx_plugin$(LIBEXT)
+Lglxb = libglx.a
+Lglxpic = libglx_pic.a
+endif
+
+libglx_plugin_a_SOURCES = $(SOURCES_glx)
+libglx_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin glx`
+libglx_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin glx`
+libglx_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin glx`
+
+libglx_pic_a_SOURCES = $(SOURCES_glx)
+libglx_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic glx`
+libglx_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic glx`
+libglx_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic glx`
+
+libglx_a_SOURCES = $(SOURCES_glx)
+libglx_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin glx`
+libglx_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin glx`
+libglx_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin glx`
+
+libvlc_LIBRARIES += $(Lglxb) $(Lglxpic)
+libglx_DATA = $(Dglxp)
+
+libglxdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lglxp)
+libglx_plugin$(LIBEXT): $(libglx_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage glx` in \
+	  c++) echo $(CXXLINK) $(libglx_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin glx\` ; $(CXXLINK) $(libglx_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin glx` ;; \
+	  objc) echo $(OBJCLINK) $(libglx_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin glx\` ; $(OBJCLINK) $(libglx_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin glx` ;; \
+	  c|*) echo $(LINK) $(libglx_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin glx\` ; $(LINK) $(libglx_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin glx` ;; \
 	esac
 
 

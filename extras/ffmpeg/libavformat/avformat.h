@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#define LIBAVFORMAT_BUILD       4612
+#define LIBAVFORMAT_BUILD       4620
 
 #define LIBAVFORMAT_VERSION_INT FFMPEG_VERSION_INT
 #define LIBAVFORMAT_VERSION     FFMPEG_VERSION
@@ -42,6 +42,8 @@ typedef struct AVPacket {
 } AVPacket; 
 #define PKT_FLAG_KEY   0x0001
 
+void av_destruct_packet_nofree(AVPacket *pkt);
+
 /* initialize optional fields of a packet */
 static inline void av_init_packet(AVPacket *pkt)
 {
@@ -50,6 +52,7 @@ static inline void av_init_packet(AVPacket *pkt)
     pkt->duration = 0;
     pkt->flags = 0;
     pkt->stream_index = 0;
+    pkt->destruct= av_destruct_packet_nofree;
 }
 
 int av_new_packet(AVPacket *pkt, int size);
@@ -131,14 +134,13 @@ typedef struct AVOutputFormat {
     enum CodecID audio_codec; /* default audio codec */
     enum CodecID video_codec; /* default video codec */
     int (*write_header)(struct AVFormatContext *);
-    int (*write_packet)(struct AVFormatContext *, 
-                        int stream_index,
-                        const uint8_t *buf, int size, int64_t pts);
+    int (*write_packet)(struct AVFormatContext *, AVPacket *pkt);
     int (*write_trailer)(struct AVFormatContext *);
     /* can use flags: AVFMT_NOFILE, AVFMT_NEEDNUMBER */
     int flags;
     /* currently only used to set pixel format if not YUV420P */
     int (*set_parameters)(struct AVFormatContext *, AVFormatParameters *);
+    int (*interleave_packet)(struct AVFormatContext *, AVPacket *out, AVPacket *in, int flush);
     /* private fields */
     struct AVOutputFormat *next;
 } AVOutputFormat;
@@ -163,10 +165,15 @@ typedef struct AVInputFormat {
     /* close the stream. The AVFormatContext and AVStreams are not
        freed by this function */
     int (*read_close)(struct AVFormatContext *);
-    /* seek at or before a given timestamp (given in AV_TIME_BASE
-       units) relative to the frames in stream component stream_index */
+    /** 
+     * seek to a given timestamp relative to the frames in 
+     * stream component stream_index
+     * @param stream_index must not be -1
+     * @param flags selects which direction should be preferred if no exact 
+     *              match is available
+     */
     int (*read_seek)(struct AVFormatContext *, 
-                     int stream_index, int64_t timestamp);
+                     int stream_index, int64_t timestamp, int flags);
     /**
      * gets the next timestamp in AV_TIME_BASE units.
      */
@@ -214,6 +221,8 @@ typedef struct AVStream {
     int codec_info_nb_frames;
     /* encoding: PTS generation when outputing stream */
     AVFrac pts;
+    AVRational time_base;
+    int pts_wrap_bits; /* number of bits in pts (used for wrapping control) */
     /* ffmpeg.c private use */
     int stream_copy; /* if TRUE, just copy stream */
     /* quality, as it has been removed from AVCodecContext and put in AVVideoFrame
@@ -232,6 +241,7 @@ typedef struct AVStream {
 
     int64_t cur_dts;
     int last_IP_duration;
+    int64_t last_IP_pts;
     /* av_seek_frame() support */
     AVIndexEntry *index_entries; /* only used if the format does not
                                     support seeking natively */
@@ -246,7 +256,7 @@ typedef struct AVStream {
 
 /* format I/O context */
 typedef struct AVFormatContext {
-    AVClass *av_class; /* set by av_alloc_format_context */
+    const AVClass *av_class; /* set by av_alloc_format_context */
     /* can only be iformat or oformat, not both at the same time */
     struct AVInputFormat *iformat;
     struct AVOutputFormat *oformat;
@@ -268,8 +278,6 @@ typedef struct AVFormatContext {
 
     int ctx_flags; /* format specific flags, see AVFMTCTX_xx */
     /* private data for pts handling (do not modify directly) */
-    int pts_wrap_bits; /* number of bits in pts (used for wrapping control) */
-    int pts_num, pts_den; /* value to convert to seconds */
     /* This buffer is only needed when packets were already buffered but
        not decoded, for example to get the codec parameters in mpeg
        streams */
@@ -296,17 +304,14 @@ typedef struct AVFormatContext {
     int cur_len;
     AVPacket cur_pkt;
 
-    /* the following are used for pts/dts unit conversion */
-    int64_t last_pkt_stream_pts;
-    int64_t last_pkt_stream_dts;
-    int64_t last_pkt_pts;
-    int64_t last_pkt_dts;
-    int last_pkt_pts_frac;
-    int last_pkt_dts_frac;
-
     /* av_seek_frame() support */
     int64_t data_offset; /* offset of the first packet */
     int index_built;
+    
+    int mux_rate;
+    int packet_size;
+    int preload;
+    int max_delay;
 } AVFormatContext;
 
 typedef struct AVPacketList {
@@ -394,6 +399,9 @@ int crc_init(void);
 /* img.c */
 int img_init(void);
 
+/* img2.c */
+int img2_init(void);
+
 /* asf.c */
 int asf_init(void);
 
@@ -435,7 +443,7 @@ int ff_wav_init(void);
 
 /* raw.c */
 int pcm_read_seek(AVFormatContext *s, 
-                  int stream_index, int64_t timestamp);
+                  int stream_index, int64_t timestamp, int flags);
 int raw_init(void);
 
 /* mp3.c */
@@ -493,6 +501,12 @@ int vmd_init(void);
 /* matroska.c */
 int matroska_init(void);
 
+/* sol.c */
+int sol_init(void);
+
+/* electronicarts.c */
+int ea_init(void);
+
 #include "rtp.h"
 
 #include "rtsp.h"
@@ -523,6 +537,7 @@ void fifo_free(FifoBuffer *f);
 int fifo_size(FifoBuffer *f, uint8_t *rptr);
 int fifo_read(FifoBuffer *f, uint8_t *buf, int buf_size, uint8_t **rptr_ptr);
 void fifo_write(FifoBuffer *f, uint8_t *buf, int size, uint8_t **wptr_ptr);
+int put_fifo(ByteIOContext *pb, FifoBuffer *f, int buf_size, uint8_t **rptr_ptr);
 
 /* media file input */
 AVInputFormat *av_find_input_format(const char *short_name);
@@ -548,25 +563,29 @@ AVFormatContext *av_alloc_format_context(void);
 int av_find_stream_info(AVFormatContext *ic);
 int av_read_packet(AVFormatContext *s, AVPacket *pkt);
 int av_read_frame(AVFormatContext *s, AVPacket *pkt);
-int av_seek_frame(AVFormatContext *s, int stream_index, int64_t timestamp);
+int av_seek_frame(AVFormatContext *s, int stream_index, int64_t timestamp, int flags);
 int av_read_play(AVFormatContext *s);
 int av_read_pause(AVFormatContext *s);
 void av_close_input_file(AVFormatContext *s);
 AVStream *av_new_stream(AVFormatContext *s, int id);
-void av_set_pts_info(AVFormatContext *s, int pts_wrap_bits,
+void av_set_pts_info(AVStream *s, int pts_wrap_bits,
                      int pts_num, int pts_den);
 
+#define AVSEEK_FLAG_BACKWARD 1 ///< seek backward
+#define AVSEEK_FLAG_BYTE     2 ///< seeking based on position in bytes
+
 int av_find_default_stream_index(AVFormatContext *s);
-int av_index_search_timestamp(AVStream *st, int timestamp);
+int av_index_search_timestamp(AVStream *st, int timestamp, int flags);
 int av_add_index_entry(AVStream *st,
                        int64_t pos, int64_t timestamp, int distance, int flags);
-int av_seek_frame_binary(AVFormatContext *s, int stream_index, int64_t target_ts);
+int av_seek_frame_binary(AVFormatContext *s, int stream_index, int64_t target_ts, int flags);
 
 /* media file output */
 int av_set_parameters(AVFormatContext *s, AVFormatParameters *ap);
 int av_write_header(AVFormatContext *s);
-int av_write_frame(AVFormatContext *s, int stream_index, const uint8_t *buf, 
-                   int size);
+int av_write_frame(AVFormatContext *s, AVPacket *pkt);
+int av_interleaved_write_frame(AVFormatContext *s, AVPacket *pkt);
+
 int av_write_trailer(AVFormatContext *s);
 
 void dump_format(AVFormatContext *ic,
@@ -597,6 +616,7 @@ int audio_init(void);
 
 /* DV1394 */
 int dv1394_init(void);
+int dc1394_init(void);
 
 #ifdef HAVE_AV_CONFIG_H
 
@@ -625,6 +645,7 @@ do {\
 #endif
 
 time_t mktimegm(struct tm *tm);
+struct tm *brktimegm(time_t secs, struct tm *tm);
 const char *small_strptime(const char *p, const char *fmt, 
                            struct tm *dt);
 
@@ -632,6 +653,7 @@ struct in_addr;
 int resolve_host(struct in_addr *sin_addr, const char *hostname);
 
 void url_split(char *proto, int proto_size,
+               char *authorization, int authorization_size,
                char *hostname, int hostname_size,
                int *port_ptr,
                char *path, int path_size,

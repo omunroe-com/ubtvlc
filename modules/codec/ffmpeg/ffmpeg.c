@@ -2,10 +2,10 @@
  * ffmpeg.c: video decoder using ffmpeg library
  *****************************************************************************
  * Copyright (C) 1999-2001 VideoLAN
- * $Id: ffmpeg.c 7673 2004-05-15 11:10:42Z fenrir $
+ * $Id: ffmpeg.c 9307 2004-11-13 13:09:42Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
- *          Gildas Bazin <gbazin@netcourrier.com>
+ *          Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,8 +78,15 @@ static char *enc_hq_list_text[] = { N_("rd"), N_("bits"), N_("simple") };
 vlc_module_begin();
 
     /* decoder main module */
-    set_description( _("ffmpeg audio/video decoder((MS)MPEG4,SVQ1,H263,WMV,WMA)") );
+#if defined(MODULE_NAME_is_ffmpegaltivec) \
+     || (defined(CAN_COMPILE_ALTIVEC) && !defined(NO_ALTIVEC_IN_FFMPEG))
+    set_description( _("AltiVec ffmpeg audio/video decoder ((MS)MPEG4,SVQ1,H263,WMV,WMA)") );
+    /*add_requirement( ALTIVEC );*/
+    set_capability( "decoder", 71 );
+#else
+    set_description( _("ffmpeg audio/video decoder ((MS)MPEG4,SVQ1,H263,WMV,WMA)") );
     set_capability( "decoder", 70 );
+#endif
     set_callbacks( OpenDecoder, CloseDecoder );
 
     add_bool( "ffmpeg-dr", 1, NULL, DR_TEXT, DR_TEXT, VLC_TRUE );
@@ -91,6 +98,9 @@ vlc_module_begin();
         VLC_FALSE );
     add_integer ( "ffmpeg-vismv", 0, NULL, VISMV_TEXT, VISMV_LONGTEXT,
         VLC_TRUE );
+    add_integer ( "ffmpeg-lowres", 0, NULL, LOWRES_TEXT, LOWRES_LONGTEXT,
+        VLC_TRUE );
+        change_integer_range( 0, 2 );
 
 #ifdef LIBAVCODEC_PP
     add_integer( "ffmpeg-pp-q", 0, NULL, PP_Q_TEXT, PP_Q_LONGTEXT, VLC_FALSE );
@@ -145,12 +155,29 @@ vlc_module_begin();
                  ENC_QMAX_TEXT, ENC_QMAX_LONGTEXT, VLC_TRUE );
     add_bool( ENC_CFG_PREFIX "trellis", 0, NULL,
               ENC_TRELLIS_TEXT, ENC_TRELLIS_LONGTEXT, VLC_TRUE );
+    add_float( ENC_CFG_PREFIX "qscale", 0, NULL,
+               ENC_QSCALE_TEXT, ENC_QSCALE_LONGTEXT, VLC_TRUE );
+    add_integer( ENC_CFG_PREFIX "strict", 0, NULL,
+                 ENC_STRICT_TEXT, ENC_STRICT_LONGTEXT, VLC_TRUE );
 
     /* demux submodule */
     add_submodule();
     set_description( _("ffmpeg demuxer" ) );
-    set_capability( "demux2", 1 );
+    set_capability( "demux2", 2 );
     set_callbacks( E_(OpenDemux), E_(CloseDemux) );
+
+    /* video filter submodule */
+    add_submodule();
+    set_capability( "video filter2", 50 );
+    set_callbacks( E_(OpenFilter), E_(CloseFilter) );
+    set_description( _("ffmpeg video filter") );
+
+    /* video filter submodule */
+    add_submodule();
+    set_capability( "video filter2", 0 );
+    set_callbacks( E_(OpenDeinterlace), E_(CloseDeinterlace) );
+    set_description( _("ffmpeg deinterlace video filter") );
+    add_shortcut( "deinterlace" );
 
     var_Create( p_module->p_libvlc, "avcodec", VLC_VAR_MUTEX );
 vlc_module_end();
@@ -213,6 +240,9 @@ static int OpenDecoder( vlc_object_t *p_this )
     if( !(p_dec->p_libvlc->i_cpu & CPU_CAPABILITY_SSE) )
     {
         p_context->dsp_mask |= FF_MM_SSE;
+    }
+    if( !(p_dec->p_libvlc->i_cpu & CPU_CAPABILITY_SSE2) )
+    {
         p_context->dsp_mask |= FF_MM_SSE2;
     }
 
@@ -233,7 +263,7 @@ static int OpenDecoder( vlc_object_t *p_this )
         i_result = VLC_EGENERIC;
     }
 
-    p_dec->p_sys->i_cat = i_cat;
+    if( i_result == VLC_SUCCESS ) p_dec->p_sys->i_cat = i_cat;
 
     return i_result;
 }
@@ -246,16 +276,6 @@ static void CloseDecoder( vlc_object_t *p_this )
     decoder_t *p_dec = (decoder_t *)p_this;
     decoder_sys_t *p_sys = p_dec->p_sys;
 
-    if( p_sys->p_context )
-    {
-        if( p_sys->p_context->extradata )
-            free( p_sys->p_context->extradata );
-
-        avcodec_close( p_sys->p_context );
-        msg_Dbg( p_dec, "ffmpeg codec (%s) stopped", p_sys->psz_namecodec );
-        av_free( p_sys->p_context );
-    }
-
     switch( p_sys->i_cat )
     {
     case AUDIO_ES:
@@ -266,39 +286,22 @@ static void CloseDecoder( vlc_object_t *p_this )
         break;
     }
 
+    if( p_sys->p_context )
+    {
+        if( p_sys->p_context->extradata )
+            free( p_sys->p_context->extradata );
+
+        avcodec_close( p_sys->p_context );
+        msg_Dbg( p_dec, "ffmpeg codec (%s) stopped", p_sys->psz_namecodec );
+        av_free( p_sys->p_context );
+    }
+
     free( p_sys );
 }
-  
+
 /*****************************************************************************
  * local Functions
  *****************************************************************************/
-int E_(GetFfmpegChroma)( vlc_fourcc_t i_chroma )
-{
-    switch( i_chroma )
-    {
-    case VLC_FOURCC( 'I', '4', '2', '0' ):
-        return PIX_FMT_YUV420P;
-    case VLC_FOURCC( 'I', '4', '2', '2' ):
-        return PIX_FMT_YUV422P;
-    case VLC_FOURCC( 'I', '4', '4', '4' ):
-        return PIX_FMT_YUV444P;
-    case VLC_FOURCC( 'R', 'V', '1', '5' ):
-        return PIX_FMT_RGB555;
-    case VLC_FOURCC( 'R', 'V', '1', '6' ):
-        return PIX_FMT_RGB565;
-    case VLC_FOURCC( 'R', 'V', '2', '4' ):
-        return PIX_FMT_RGB24;
-    case VLC_FOURCC( 'R', 'V', '3', '2' ):
-        return PIX_FMT_RGBA32;
-    case VLC_FOURCC( 'G', 'R', 'E', 'Y' ):
-        return PIX_FMT_GRAY8;
-    case VLC_FOURCC( 'Y', 'U', 'Y', '2' ):
-        return PIX_FMT_YUV422;
-    default:
-        return -1;
-    }
-}
-
 void E_(InitLibavcodec)( vlc_object_t *p_object )
 {
     static int b_ffmpeginit = 0;
@@ -325,7 +328,69 @@ void E_(InitLibavcodec)( vlc_object_t *p_object )
     vlc_mutex_unlock( lockval.p_address );
 }
 
+/*****************************************************************************
+ * Chroma fourcc -> ffmpeg_id mapping
+ *****************************************************************************/
+static struct
+{
+    vlc_fourcc_t  i_chroma;
+    int  i_chroma_id;
 
+} chroma_table[] =
+{
+    /* Planar YUV formats */
+    { VLC_FOURCC('I','4','4','4'), PIX_FMT_YUV444P },
+    { VLC_FOURCC('I','4','2','2'), PIX_FMT_YUV422P },
+    { VLC_FOURCC('I','4','2','0'), PIX_FMT_YUV420P },
+    { VLC_FOURCC('Y','V','1','2'), PIX_FMT_YUV420P },
+    { VLC_FOURCC('I','Y','U','V'), PIX_FMT_YUV420P },
+    { VLC_FOURCC('I','4','1','1'), PIX_FMT_YUV411P },
+    { VLC_FOURCC('I','4','1','0'), PIX_FMT_YUV410P },
+    { VLC_FOURCC('Y','V','U','9'), PIX_FMT_YUV410P },
+
+    /* Packed YUV formats */
+    { VLC_FOURCC('Y','U','Y','2'), PIX_FMT_YUV422 },
+#if LIBAVCODEC_BUILD >= 4720
+    { VLC_FOURCC('U','Y','V','Y'), PIX_FMT_UYVY422 },
+#endif
+
+    /* Packed RGB formats */
+    { VLC_FOURCC('R','V','1','5'), PIX_FMT_RGB555 },
+    { VLC_FOURCC('R','V','1','6'), PIX_FMT_RGB565 },
+    { VLC_FOURCC('R','V','2','4'), PIX_FMT_RGB24 },
+    { VLC_FOURCC('R','V','3','2'), PIX_FMT_RGBA32 },
+    { VLC_FOURCC('G','R','E','Y'), PIX_FMT_GRAY8 },
+
+    {0}
+};
+
+int E_(GetFfmpegChroma)( vlc_fourcc_t i_chroma )
+{
+    int i;
+
+    for( i = 0; chroma_table[i].i_chroma != 0; i++ )
+    {
+        if( chroma_table[i].i_chroma == i_chroma )
+            return chroma_table[i].i_chroma_id;
+    }
+    return -1;
+}
+
+vlc_fourcc_t E_(GetVlcChroma)( int i_ffmpeg_chroma )
+{
+    int i;
+
+    for( i = 0; chroma_table[i].i_chroma != 0; i++ )
+    {
+        if( chroma_table[i].i_chroma_id == i_ffmpeg_chroma )
+            return chroma_table[i].i_chroma;
+    }
+    return 0;
+}
+
+/*****************************************************************************
+ * Codec fourcc -> ffmpeg_id mapping
+ *****************************************************************************/
 static struct
 {
     vlc_fourcc_t  i_fourcc;
@@ -363,6 +428,10 @@ static struct
     { VLC_FOURCC('X','V','I','D'), CODEC_ID_MPEG4,
       VIDEO_ES, "MPEG-4 Video" },
     { VLC_FOURCC('X','v','i','D'), CODEC_ID_MPEG4,
+      VIDEO_ES, "MPEG-4 Video" },
+    { VLC_FOURCC('X','V','I','X'), CODEC_ID_MPEG4,
+      VIDEO_ES, "MPEG-4 Video" },
+    { VLC_FOURCC('x','v','i','x'), CODEC_ID_MPEG4,
       VIDEO_ES, "MPEG-4 Video" },
     { VLC_FOURCC('D','X','5','0'), CODEC_ID_MPEG4,
       VIDEO_ES, "MPEG-4 Video" },
@@ -464,6 +533,10 @@ static struct
     /* avc1: special case h264 */
     { VLC_FOURCC('a','v','c','1'), CODEC_ID_H264,
       VIDEO_ES, "h264" },
+    { VLC_FOURCC('V','S','S','H'), CODEC_ID_H264,
+      VIDEO_ES, "h264" },
+    { VLC_FOURCC('v','s','s','h'), CODEC_ID_H264,
+      VIDEO_ES, "h264" },
 
 /* H263 and H263i */
 /* H263(+) is also known as Real Video 1.0 */
@@ -487,6 +560,11 @@ static struct
     /* Flash (H263) variant */
     { VLC_FOURCC('F','L','V','1'), CODEC_ID_FLV1,
       VIDEO_ES, "Flash Video" },
+
+#if LIBAVCODEC_BUILD > 4716
+    { VLC_FOURCC('H','2','6','1'), CODEC_ID_H261,
+      VIDEO_ES, "H.261" },
+#endif
 
 #if LIBAVCODEC_BUILD > 4680
     { VLC_FOURCC('F','L','I','C'), CODEC_ID_FLIC,
@@ -561,7 +639,6 @@ static struct
       VIDEO_ES, "Microsoft RLE Video" },
 #endif
 
-#if( !defined( WORDS_BIGENDIAN ) )
     /* Indeo Video Codecs (Quality of this decoder on ppc is not good) */
     { VLC_FOURCC('I','V','3','1'), CODEC_ID_INDEO3,
       VIDEO_ES, "Indeo Video v3" },
@@ -571,6 +648,10 @@ static struct
       VIDEO_ES, "Indeo Video v3" },
     { VLC_FOURCC('i','v','3','2'), CODEC_ID_INDEO3,
       VIDEO_ES, "Indeo Video v3" },
+
+#if LIBAVCODEC_BUILD >= 4721
+    { VLC_FOURCC('t','s','c','c'), CODEC_ID_TSCC,
+      VIDEO_ES, "TechSmith Camtasia Screen Capture Video" },
 #endif
 
     /* Huff YUV */
@@ -664,6 +745,12 @@ static struct
       VIDEO_ES, "Sierra VMD Video" },
 #endif
 
+#if LIBAVCODEC_BUILD >= 4719
+    /* FFMPEG's SNOW wavelet codec */
+    { VLC_FOURCC('S','N','O','W'), CODEC_ID_SNOW,
+      VIDEO_ES, "FFMpeg SNOW wavelet Video" },
+#endif
+
     /*
      *  Audio Codecs
      */
@@ -712,6 +799,12 @@ static struct
     { VLC_FOURCC('a','5','2','b'), CODEC_ID_AC3, /* VLC specific hack */
       AUDIO_ES, "A52 Audio (aka AC3)" },
 
+#if LIBAVCODEC_BUILD >= 4719
+    /* DTS Audio */
+    { VLC_FOURCC('d','t','s',' '), CODEC_ID_DTS,
+      AUDIO_ES, "DTS Audio" },
+#endif
+
     /* AAC audio */
     { VLC_FOURCC('m','p','4','a'), CODEC_ID_AAC,
       AUDIO_ES, "MPEG AAC Audio" },
@@ -742,6 +835,12 @@ static struct
     /* Sierra VMD */
     { VLC_FOURCC('v','m','d','a'), CODEC_ID_VMDAUDIO,
       AUDIO_ES, "Sierra VMD Audio" },
+#endif
+
+#if LIBAVCODEC_BUILD >= 4706
+    /* G.726 ADPCM */
+    { VLC_FOURCC('g','7','2','6'), CODEC_ID_ADPCM_G726,
+      AUDIO_ES, "G.726 ADPCM Audio" },
 #endif
 
     /* PCM */

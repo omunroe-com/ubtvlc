@@ -108,6 +108,16 @@ SOURCE="..\modules\access\dshow\filter.cpp"
 # PROP Output_Dir "Debug\modules\access\dshow"
 # PROP Intermediate_Dir "Debug\modules\access\dshow"
 # End Source File
+# Begin Source File
+SOURCE="..\modules\access\dshow\crossbar.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=dshow" /D "MODULE_NAME_IS_dshow" 
+!IF "$(CFG)" == "plugin_dshow - Win32 Release"
+# PROP Output_Dir "Release\modules\access\dshow"
+# PROP Intermediate_Dir "Release\modules\access\dshow"
+!ELSEIF "$(CFG)" == "plugin_dshow - Win32 Debug"
+# PROP Output_Dir "Debug\modules\access\dshow"
+# PROP Intermediate_Dir "Debug\modules\access\dshow"
+# End Source File
 
 # End Group
 
@@ -115,6 +125,9 @@ SOURCE="..\modules\access\dshow\filter.cpp"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 
+# Begin Source File
+SOURCE="..\modules\access\dshow\common.h"
+# End Source File
 # Begin Source File
 SOURCE="..\modules\access\dshow\filter.h"
 # End Source File

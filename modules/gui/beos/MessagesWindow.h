@@ -2,7 +2,7 @@
  * MessagesWindow.h
  *****************************************************************************
  * Copyright (C) 1999, 2000, 2001 VideoLAN
- * $Id: MessagesWindow.h 6961 2004-03-05 17:34:23Z sam $
+ * $Id: MessagesWindow.h 8475 2004-08-20 15:49:09Z titer $
  *
  * Authors: Eric Petit <titer@videolan.org>
  *
@@ -29,20 +29,18 @@
 class MessagesView : public BTextView
 {
     public:
-                             MessagesView( intf_thread_t * _p_intf,
+                             MessagesView( msg_subscription_t * _p_sub,
                                            BRect rect, char * name, BRect textRect,
                                            uint32 resizingMode, uint32 flags )
                                  : BTextView( rect, name, textRect,
-                                              resizingMode, flags )
+                                              resizingMode, flags ),
+                                 p_sub(_p_sub)
                              {
-                                 p_intf = _p_intf;
-                                 p_sub = ((intf_sys_t*)p_intf->p_sys)->p_sub;
                              }
         virtual void         Pulse();
 
-        intf_thread_t *      p_intf;
         msg_subscription_t * p_sub;
-        BScrollBar *         fScrollBar;
+        BScrollBar         * fScrollBar;
 };
 
 class MessagesWindow : public BWindow
@@ -56,12 +54,13 @@ class MessagesWindow : public BWindow
 
         void                 ReallyQuit();
 
-        intf_thread_t *      p_intf;
+        intf_thread_t      * p_intf;
+        msg_subscription_t * p_sub;
 
         BView *              fBackgroundView;
         MessagesView *       fMessagesView;
         BScrollView *        fScrollView;
 };
 
-#endif	// BEOS_PREFERENCES_WINDOW_H
+#endif    // BEOS_PREFERENCES_WINDOW_H
 

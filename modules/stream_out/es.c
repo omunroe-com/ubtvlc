@@ -2,7 +2,7 @@
  * es.c: Elementary stream output module
  *****************************************************************************
  * Copyright (C) 2003-2004 VideoLAN
- * $Id: es.c 7468 2004-04-24 12:49:53Z gbazin $
+ * $Id: es.c 8162 2004-07-10 17:20:59Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -147,7 +147,7 @@ static int Open( vlc_object_t *p_this )
     sout_stream_sys_t   *p_sys;
     vlc_value_t         val;
 
-    sout_ParseCfg( p_stream, SOUT_CFG_PREFIX, ppsz_sout_options, p_stream->p_cfg );
+    sout_CfgParse( p_stream, SOUT_CFG_PREFIX, ppsz_sout_options, p_stream->p_cfg );
     p_sys                   = malloc( sizeof( sout_stream_sys_t ) );
 
     p_sys->i_count          = 0;

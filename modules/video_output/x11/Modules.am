@@ -10,3 +10,8 @@ SOURCES_xvideo = \
 	xcommon.h \
 	$(NULL)
 
+SOURCES_glx = \
+	glx.c \
+	xcommon.c \
+	xcommon.h \
+	$(NULL)

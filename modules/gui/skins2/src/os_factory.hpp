@@ -2,7 +2,7 @@
  * os_factory.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: os_factory.hpp 7327 2004-04-12 14:25:15Z asmax $
+ * $Id: os_factory.hpp 8116 2004-07-04 22:22:10Z adn $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -71,6 +71,9 @@ class OSFactory: public SkinObject
 
         /// Destroy the instance of OSLoop.
         virtual void destroyOSLoop() = 0;
+
+        ///
+        virtual void minimize() = 0;
 
         /// Instantiate an OSTimer with the given callback
         virtual OSTimer *createOSTimer( const Callback &rCallback ) = 0;

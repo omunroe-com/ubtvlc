@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -228,19 +230,16 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Lmpeg_systemb) $(Lmpeg_systempic) $(Lm4vb) $(Lm4vpic) $(Lpsb) $(Lpspic) $(Ltsb) $(Ltspic) $(Lts_dvbpsib) $(Lts_dvbpsipic) $(Lmpgab) $(Lmpgapic) $(Lmpgvb) $(Lmpgvpic) $(Lh264b) $(Lh264pic)
-noinst_LIBRARIES = $(Lmpeg_systemp) $(Lm4vp) $(Lpsp) $(Ltsp) $(Lts_dvbpsip) $(Lmpgap) $(Lmpgvp) $(Lh264p)
+libvlc_LIBRARIES = $(Lm4ab) $(Lm4apic) $(Lm4vb) $(Lm4vpic) $(Lmpgab) $(Lmpgapic) $(Lmpgvb) $(Lmpgvpic) $(Lh264b) $(Lh264pic)
+noinst_LIBRARIES = $(Lm4ap) $(Lm4vp) $(Lmpgap) $(Lmpgvp) $(Lh264p)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
 SUBDIRS = 
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/demux
-SOURCES_mpeg_system = system.c system.h
+SOURCES_m4a = m4a.c
 SOURCES_m4v = m4v.c
-SOURCES_ps = ps.c
-SOURCES_ts = ts.c
-SOURCES_ts_dvbpsi = ts.c
 SOURCES_mpga = mpga.c
 SOURCES_mpgv = mpgv.c
 SOURCES_h264 = h264.c
@@ -251,29 +250,29 @@ SOURCES_h264 = h264.c
 @BUILD_MOZILLA_FALSE@pic = no
 
 
-# The mpeg_system plugin
-@UNTRUE_TRUE@Lmpeg_systemp = libmpeg_system_plugin.a
-@UNTRUE_TRUE@Dmpeg_systemp = libmpeg_system_plugin$(LIBEXT)
-@UNTRUE_TRUE@Lmpeg_systemb = libmpeg_system.a
-@UNTRUE_TRUE@Lmpeg_systempic = libmpeg_system_pic.a
+# The m4a plugin
+@UNTRUE_TRUE@Lm4ap = libm4a_plugin.a
+@UNTRUE_TRUE@Dm4ap = libm4a_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lm4ab = libm4a.a
+@UNTRUE_TRUE@Lm4apic = libm4a_pic.a
 
-libmpeg_system_plugin_a_SOURCES = $(SOURCES_mpeg_system)
-libmpeg_system_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin mpeg_system`
-libmpeg_system_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mpeg_system`
-libmpeg_system_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mpeg_system`
+libm4a_plugin_a_SOURCES = $(SOURCES_m4a)
+libm4a_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin m4a`
+libm4a_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin m4a`
+libm4a_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin m4a`
 
-libmpeg_system_pic_a_SOURCES = $(SOURCES_mpeg_system)
-libmpeg_system_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mpeg_system`
-libmpeg_system_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mpeg_system`
-libmpeg_system_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mpeg_system`
+libm4a_pic_a_SOURCES = $(SOURCES_m4a)
+libm4a_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic m4a`
+libm4a_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic m4a`
+libm4a_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic m4a`
 
-libmpeg_system_a_SOURCES = $(SOURCES_mpeg_system)
-libmpeg_system_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mpeg_system`
-libmpeg_system_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mpeg_system`
-libmpeg_system_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mpeg_system`
-libmpeg_system_DATA = $(Dmpeg_systemp)
+libm4a_a_SOURCES = $(SOURCES_m4a)
+libm4a_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin m4a`
+libm4a_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin m4a`
+libm4a_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin m4a`
+libm4a_DATA = $(Dm4ap)
 
-libmpeg_systemdir = $(libdir)/vlc/
+libm4adir = $(libdir)/vlc/
 
 
 # The m4v plugin
@@ -299,81 +298,6 @@ libm4v_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin m4v`
 libm4v_DATA = $(Dm4vp)
 
 libm4vdir = $(libdir)/vlc/
-
-
-# The ps plugin
-@UNTRUE_TRUE@Lpsp = libps_plugin.a
-@UNTRUE_TRUE@Dpsp = libps_plugin$(LIBEXT)
-@UNTRUE_TRUE@Lpsb = libps.a
-@UNTRUE_TRUE@Lpspic = libps_pic.a
-
-libps_plugin_a_SOURCES = $(SOURCES_ps)
-libps_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin ps`
-libps_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin ps`
-libps_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin ps`
-
-libps_pic_a_SOURCES = $(SOURCES_ps)
-libps_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ps`
-libps_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ps`
-libps_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ps`
-
-libps_a_SOURCES = $(SOURCES_ps)
-libps_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin ps`
-libps_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ps`
-libps_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ps`
-libps_DATA = $(Dpsp)
-
-libpsdir = $(libdir)/vlc/
-
-
-# The ts plugin
-@UNTRUE_TRUE@Ltsp = libts_plugin.a
-@UNTRUE_TRUE@Dtsp = libts_plugin$(LIBEXT)
-@UNTRUE_TRUE@Ltsb = libts.a
-@UNTRUE_TRUE@Ltspic = libts_pic.a
-
-libts_plugin_a_SOURCES = $(SOURCES_ts)
-libts_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin ts`
-libts_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin ts`
-libts_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin ts`
-
-libts_pic_a_SOURCES = $(SOURCES_ts)
-libts_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ts`
-libts_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ts`
-libts_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ts`
-
-libts_a_SOURCES = $(SOURCES_ts)
-libts_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin ts`
-libts_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ts`
-libts_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ts`
-libts_DATA = $(Dtsp)
-
-libtsdir = $(libdir)/vlc/
-
-
-# The ts_dvbpsi plugin
-@UNTRUE_TRUE@Lts_dvbpsip = libts_dvbpsi_plugin.a
-@UNTRUE_TRUE@Dts_dvbpsip = libts_dvbpsi_plugin$(LIBEXT)
-@UNTRUE_TRUE@Lts_dvbpsib = libts_dvbpsi.a
-@UNTRUE_TRUE@Lts_dvbpsipic = libts_dvbpsi_pic.a
-
-libts_dvbpsi_plugin_a_SOURCES = $(SOURCES_ts_dvbpsi)
-libts_dvbpsi_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin ts_dvbpsi`
-libts_dvbpsi_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin ts_dvbpsi`
-libts_dvbpsi_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin ts_dvbpsi`
-
-libts_dvbpsi_pic_a_SOURCES = $(SOURCES_ts_dvbpsi)
-libts_dvbpsi_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ts_dvbpsi`
-libts_dvbpsi_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ts_dvbpsi`
-libts_dvbpsi_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ts_dvbpsi`
-
-libts_dvbpsi_a_SOURCES = $(SOURCES_ts_dvbpsi)
-libts_dvbpsi_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin ts_dvbpsi`
-libts_dvbpsi_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ts_dvbpsi`
-libts_dvbpsi_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ts_dvbpsi`
-libts_dvbpsi_DATA = $(Dts_dvbpsip)
-
-libts_dvbpsidir = $(libdir)/vlc/
 
 
 # The mpga plugin
@@ -471,36 +395,36 @@ libh264_plugin_a_LIBADD =
 am__objects_3 = libh264_plugin_a-h264.$(OBJEXT)
 am_libh264_plugin_a_OBJECTS = $(am__objects_3)
 libh264_plugin_a_OBJECTS = $(am_libh264_plugin_a_OBJECTS)
+libm4a_a_AR = $(AR) cru
+libm4a_a_LIBADD =
+am__objects_4 = libm4a_a-m4a.$(OBJEXT)
+am_libm4a_a_OBJECTS = $(am__objects_4)
+libm4a_a_OBJECTS = $(am_libm4a_a_OBJECTS)
+libm4a_pic_a_AR = $(AR) cru
+libm4a_pic_a_LIBADD =
+am__objects_5 = libm4a_pic_a-m4a.$(OBJEXT)
+am_libm4a_pic_a_OBJECTS = $(am__objects_5)
+libm4a_pic_a_OBJECTS = $(am_libm4a_pic_a_OBJECTS)
+libm4a_plugin_a_AR = $(AR) cru
+libm4a_plugin_a_LIBADD =
+am__objects_6 = libm4a_plugin_a-m4a.$(OBJEXT)
+am_libm4a_plugin_a_OBJECTS = $(am__objects_6)
+libm4a_plugin_a_OBJECTS = $(am_libm4a_plugin_a_OBJECTS)
 libm4v_a_AR = $(AR) cru
 libm4v_a_LIBADD =
-am__objects_4 = libm4v_a-m4v.$(OBJEXT)
-am_libm4v_a_OBJECTS = $(am__objects_4)
+am__objects_7 = libm4v_a-m4v.$(OBJEXT)
+am_libm4v_a_OBJECTS = $(am__objects_7)
 libm4v_a_OBJECTS = $(am_libm4v_a_OBJECTS)
 libm4v_pic_a_AR = $(AR) cru
 libm4v_pic_a_LIBADD =
-am__objects_5 = libm4v_pic_a-m4v.$(OBJEXT)
-am_libm4v_pic_a_OBJECTS = $(am__objects_5)
+am__objects_8 = libm4v_pic_a-m4v.$(OBJEXT)
+am_libm4v_pic_a_OBJECTS = $(am__objects_8)
 libm4v_pic_a_OBJECTS = $(am_libm4v_pic_a_OBJECTS)
 libm4v_plugin_a_AR = $(AR) cru
 libm4v_plugin_a_LIBADD =
-am__objects_6 = libm4v_plugin_a-m4v.$(OBJEXT)
-am_libm4v_plugin_a_OBJECTS = $(am__objects_6)
+am__objects_9 = libm4v_plugin_a-m4v.$(OBJEXT)
+am_libm4v_plugin_a_OBJECTS = $(am__objects_9)
 libm4v_plugin_a_OBJECTS = $(am_libm4v_plugin_a_OBJECTS)
-libmpeg_system_a_AR = $(AR) cru
-libmpeg_system_a_LIBADD =
-am__objects_7 = libmpeg_system_a-system.$(OBJEXT)
-am_libmpeg_system_a_OBJECTS = $(am__objects_7)
-libmpeg_system_a_OBJECTS = $(am_libmpeg_system_a_OBJECTS)
-libmpeg_system_pic_a_AR = $(AR) cru
-libmpeg_system_pic_a_LIBADD =
-am__objects_8 = libmpeg_system_pic_a-system.$(OBJEXT)
-am_libmpeg_system_pic_a_OBJECTS = $(am__objects_8)
-libmpeg_system_pic_a_OBJECTS = $(am_libmpeg_system_pic_a_OBJECTS)
-libmpeg_system_plugin_a_AR = $(AR) cru
-libmpeg_system_plugin_a_LIBADD =
-am__objects_9 = libmpeg_system_plugin_a-system.$(OBJEXT)
-am_libmpeg_system_plugin_a_OBJECTS = $(am__objects_9)
-libmpeg_system_plugin_a_OBJECTS = $(am_libmpeg_system_plugin_a_OBJECTS)
 libmpga_a_AR = $(AR) cru
 libmpga_a_LIBADD =
 am__objects_10 = libmpga_a-mpga.$(OBJEXT)
@@ -531,51 +455,6 @@ libmpgv_plugin_a_LIBADD =
 am__objects_15 = libmpgv_plugin_a-mpgv.$(OBJEXT)
 am_libmpgv_plugin_a_OBJECTS = $(am__objects_15)
 libmpgv_plugin_a_OBJECTS = $(am_libmpgv_plugin_a_OBJECTS)
-libps_a_AR = $(AR) cru
-libps_a_LIBADD =
-am__objects_16 = libps_a-ps.$(OBJEXT)
-am_libps_a_OBJECTS = $(am__objects_16)
-libps_a_OBJECTS = $(am_libps_a_OBJECTS)
-libps_pic_a_AR = $(AR) cru
-libps_pic_a_LIBADD =
-am__objects_17 = libps_pic_a-ps.$(OBJEXT)
-am_libps_pic_a_OBJECTS = $(am__objects_17)
-libps_pic_a_OBJECTS = $(am_libps_pic_a_OBJECTS)
-libps_plugin_a_AR = $(AR) cru
-libps_plugin_a_LIBADD =
-am__objects_18 = libps_plugin_a-ps.$(OBJEXT)
-am_libps_plugin_a_OBJECTS = $(am__objects_18)
-libps_plugin_a_OBJECTS = $(am_libps_plugin_a_OBJECTS)
-libts_a_AR = $(AR) cru
-libts_a_LIBADD =
-am__objects_19 = libts_a-ts.$(OBJEXT)
-am_libts_a_OBJECTS = $(am__objects_19)
-libts_a_OBJECTS = $(am_libts_a_OBJECTS)
-libts_dvbpsi_a_AR = $(AR) cru
-libts_dvbpsi_a_LIBADD =
-am__objects_20 = libts_dvbpsi_a-ts.$(OBJEXT)
-am_libts_dvbpsi_a_OBJECTS = $(am__objects_20)
-libts_dvbpsi_a_OBJECTS = $(am_libts_dvbpsi_a_OBJECTS)
-libts_dvbpsi_pic_a_AR = $(AR) cru
-libts_dvbpsi_pic_a_LIBADD =
-am__objects_21 = libts_dvbpsi_pic_a-ts.$(OBJEXT)
-am_libts_dvbpsi_pic_a_OBJECTS = $(am__objects_21)
-libts_dvbpsi_pic_a_OBJECTS = $(am_libts_dvbpsi_pic_a_OBJECTS)
-libts_dvbpsi_plugin_a_AR = $(AR) cru
-libts_dvbpsi_plugin_a_LIBADD =
-am__objects_22 = libts_dvbpsi_plugin_a-ts.$(OBJEXT)
-am_libts_dvbpsi_plugin_a_OBJECTS = $(am__objects_22)
-libts_dvbpsi_plugin_a_OBJECTS = $(am_libts_dvbpsi_plugin_a_OBJECTS)
-libts_pic_a_AR = $(AR) cru
-libts_pic_a_LIBADD =
-am__objects_23 = libts_pic_a-ts.$(OBJEXT)
-am_libts_pic_a_OBJECTS = $(am__objects_23)
-libts_pic_a_OBJECTS = $(am_libts_pic_a_OBJECTS)
-libts_plugin_a_AR = $(AR) cru
-libts_plugin_a_LIBADD =
-am__objects_24 = libts_plugin_a-ts.$(OBJEXT)
-am_libts_plugin_a_OBJECTS = $(am__objects_24)
-libts_plugin_a_OBJECTS = $(am_libts_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
@@ -583,46 +462,32 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libh264_a-h264.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libh264_pic_a-h264.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libh264_plugin_a-h264.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libm4a_a-m4a.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libm4a_pic_a-m4a.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libm4a_plugin_a-m4a.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libm4v_a-m4v.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libm4v_pic_a-m4v.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libm4v_plugin_a-m4v.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libmpeg_system_a-system.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libmpeg_system_pic_a-system.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libmpeg_system_plugin_a-system.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmpga_a-mpga.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmpga_pic_a-mpga.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmpga_plugin_a-mpga.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmpgv_a-mpgv.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmpgv_pic_a-mpgv.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libmpgv_plugin_a-mpgv.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libps_a-ps.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libps_pic_a-ps.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libps_plugin_a-ps.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libts_a-ts.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libts_dvbpsi_a-ts.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libts_dvbpsi_pic_a-ts.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libts_dvbpsi_plugin_a-ts.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libts_pic_a-ts.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libts_plugin_a-ts.Po
+@AMDEP_TRUE@	./$(DEPDIR)/libmpgv_plugin_a-mpgv.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 DIST_SOURCES = $(libh264_a_SOURCES) $(libh264_pic_a_SOURCES) \
-	$(libh264_plugin_a_SOURCES) $(libm4v_a_SOURCES) \
-	$(libm4v_pic_a_SOURCES) $(libm4v_plugin_a_SOURCES) \
-	$(libmpeg_system_a_SOURCES) $(libmpeg_system_pic_a_SOURCES) \
-	$(libmpeg_system_plugin_a_SOURCES) $(libmpga_a_SOURCES) \
+	$(libh264_plugin_a_SOURCES) $(libm4a_a_SOURCES) \
+	$(libm4a_pic_a_SOURCES) $(libm4a_plugin_a_SOURCES) \
+	$(libm4v_a_SOURCES) $(libm4v_pic_a_SOURCES) \
+	$(libm4v_plugin_a_SOURCES) $(libmpga_a_SOURCES) \
 	$(libmpga_pic_a_SOURCES) $(libmpga_plugin_a_SOURCES) \
 	$(libmpgv_a_SOURCES) $(libmpgv_pic_a_SOURCES) \
-	$(libmpgv_plugin_a_SOURCES) $(libps_a_SOURCES) \
-	$(libps_pic_a_SOURCES) $(libps_plugin_a_SOURCES) \
-	$(libts_a_SOURCES) $(libts_dvbpsi_a_SOURCES) \
-	$(libts_dvbpsi_pic_a_SOURCES) $(libts_dvbpsi_plugin_a_SOURCES) \
-	$(libts_pic_a_SOURCES) $(libts_plugin_a_SOURCES)
-DATA = $(libh264_DATA) $(libm4v_DATA) $(libmpeg_system_DATA) \
-	$(libmpga_DATA) $(libmpgv_DATA) $(libps_DATA) $(libts_DATA) \
-	$(libts_dvbpsi_DATA)
+	$(libmpgv_plugin_a_SOURCES)
+DATA = $(libh264_DATA) $(libm4a_DATA) $(libm4v_DATA) $(libmpga_DATA) \
+	$(libmpgv_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -635,7 +500,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libh264_a_SOURCES) $(libh264_pic_a_SOURCES) $(libh264_plugin_a_SOURCES) $(libm4v_a_SOURCES) $(libm4v_pic_a_SOURCES) $(libm4v_plugin_a_SOURCES) $(libmpeg_system_a_SOURCES) $(libmpeg_system_pic_a_SOURCES) $(libmpeg_system_plugin_a_SOURCES) $(libmpga_a_SOURCES) $(libmpga_pic_a_SOURCES) $(libmpga_plugin_a_SOURCES) $(libmpgv_a_SOURCES) $(libmpgv_pic_a_SOURCES) $(libmpgv_plugin_a_SOURCES) $(libps_a_SOURCES) $(libps_pic_a_SOURCES) $(libps_plugin_a_SOURCES) $(libts_a_SOURCES) $(libts_dvbpsi_a_SOURCES) $(libts_dvbpsi_pic_a_SOURCES) $(libts_dvbpsi_plugin_a_SOURCES) $(libts_pic_a_SOURCES) $(libts_plugin_a_SOURCES)
+SOURCES = $(libh264_a_SOURCES) $(libh264_pic_a_SOURCES) $(libh264_plugin_a_SOURCES) $(libm4a_a_SOURCES) $(libm4a_pic_a_SOURCES) $(libm4a_plugin_a_SOURCES) $(libm4v_a_SOURCES) $(libm4v_pic_a_SOURCES) $(libm4v_plugin_a_SOURCES) $(libmpga_a_SOURCES) $(libmpga_pic_a_SOURCES) $(libmpga_plugin_a_SOURCES) $(libmpgv_a_SOURCES) $(libmpgv_pic_a_SOURCES) $(libmpgv_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -692,6 +557,18 @@ libh264_plugin.a: $(libh264_plugin_a_OBJECTS) $(libh264_plugin_a_DEPENDENCIES)
 	-rm -f libh264_plugin.a
 	$(libh264_plugin_a_AR) libh264_plugin.a $(libh264_plugin_a_OBJECTS) $(libh264_plugin_a_LIBADD)
 	$(RANLIB) libh264_plugin.a
+libm4a.a: $(libm4a_a_OBJECTS) $(libm4a_a_DEPENDENCIES) 
+	-rm -f libm4a.a
+	$(libm4a_a_AR) libm4a.a $(libm4a_a_OBJECTS) $(libm4a_a_LIBADD)
+	$(RANLIB) libm4a.a
+libm4a_pic.a: $(libm4a_pic_a_OBJECTS) $(libm4a_pic_a_DEPENDENCIES) 
+	-rm -f libm4a_pic.a
+	$(libm4a_pic_a_AR) libm4a_pic.a $(libm4a_pic_a_OBJECTS) $(libm4a_pic_a_LIBADD)
+	$(RANLIB) libm4a_pic.a
+libm4a_plugin.a: $(libm4a_plugin_a_OBJECTS) $(libm4a_plugin_a_DEPENDENCIES) 
+	-rm -f libm4a_plugin.a
+	$(libm4a_plugin_a_AR) libm4a_plugin.a $(libm4a_plugin_a_OBJECTS) $(libm4a_plugin_a_LIBADD)
+	$(RANLIB) libm4a_plugin.a
 libm4v.a: $(libm4v_a_OBJECTS) $(libm4v_a_DEPENDENCIES) 
 	-rm -f libm4v.a
 	$(libm4v_a_AR) libm4v.a $(libm4v_a_OBJECTS) $(libm4v_a_LIBADD)
@@ -704,18 +581,6 @@ libm4v_plugin.a: $(libm4v_plugin_a_OBJECTS) $(libm4v_plugin_a_DEPENDENCIES)
 	-rm -f libm4v_plugin.a
 	$(libm4v_plugin_a_AR) libm4v_plugin.a $(libm4v_plugin_a_OBJECTS) $(libm4v_plugin_a_LIBADD)
 	$(RANLIB) libm4v_plugin.a
-libmpeg_system.a: $(libmpeg_system_a_OBJECTS) $(libmpeg_system_a_DEPENDENCIES) 
-	-rm -f libmpeg_system.a
-	$(libmpeg_system_a_AR) libmpeg_system.a $(libmpeg_system_a_OBJECTS) $(libmpeg_system_a_LIBADD)
-	$(RANLIB) libmpeg_system.a
-libmpeg_system_pic.a: $(libmpeg_system_pic_a_OBJECTS) $(libmpeg_system_pic_a_DEPENDENCIES) 
-	-rm -f libmpeg_system_pic.a
-	$(libmpeg_system_pic_a_AR) libmpeg_system_pic.a $(libmpeg_system_pic_a_OBJECTS) $(libmpeg_system_pic_a_LIBADD)
-	$(RANLIB) libmpeg_system_pic.a
-libmpeg_system_plugin.a: $(libmpeg_system_plugin_a_OBJECTS) $(libmpeg_system_plugin_a_DEPENDENCIES) 
-	-rm -f libmpeg_system_plugin.a
-	$(libmpeg_system_plugin_a_AR) libmpeg_system_plugin.a $(libmpeg_system_plugin_a_OBJECTS) $(libmpeg_system_plugin_a_LIBADD)
-	$(RANLIB) libmpeg_system_plugin.a
 libmpga.a: $(libmpga_a_OBJECTS) $(libmpga_a_DEPENDENCIES) 
 	-rm -f libmpga.a
 	$(libmpga_a_AR) libmpga.a $(libmpga_a_OBJECTS) $(libmpga_a_LIBADD)
@@ -740,42 +605,6 @@ libmpgv_plugin.a: $(libmpgv_plugin_a_OBJECTS) $(libmpgv_plugin_a_DEPENDENCIES)
 	-rm -f libmpgv_plugin.a
 	$(libmpgv_plugin_a_AR) libmpgv_plugin.a $(libmpgv_plugin_a_OBJECTS) $(libmpgv_plugin_a_LIBADD)
 	$(RANLIB) libmpgv_plugin.a
-libps.a: $(libps_a_OBJECTS) $(libps_a_DEPENDENCIES) 
-	-rm -f libps.a
-	$(libps_a_AR) libps.a $(libps_a_OBJECTS) $(libps_a_LIBADD)
-	$(RANLIB) libps.a
-libps_pic.a: $(libps_pic_a_OBJECTS) $(libps_pic_a_DEPENDENCIES) 
-	-rm -f libps_pic.a
-	$(libps_pic_a_AR) libps_pic.a $(libps_pic_a_OBJECTS) $(libps_pic_a_LIBADD)
-	$(RANLIB) libps_pic.a
-libps_plugin.a: $(libps_plugin_a_OBJECTS) $(libps_plugin_a_DEPENDENCIES) 
-	-rm -f libps_plugin.a
-	$(libps_plugin_a_AR) libps_plugin.a $(libps_plugin_a_OBJECTS) $(libps_plugin_a_LIBADD)
-	$(RANLIB) libps_plugin.a
-libts.a: $(libts_a_OBJECTS) $(libts_a_DEPENDENCIES) 
-	-rm -f libts.a
-	$(libts_a_AR) libts.a $(libts_a_OBJECTS) $(libts_a_LIBADD)
-	$(RANLIB) libts.a
-libts_dvbpsi.a: $(libts_dvbpsi_a_OBJECTS) $(libts_dvbpsi_a_DEPENDENCIES) 
-	-rm -f libts_dvbpsi.a
-	$(libts_dvbpsi_a_AR) libts_dvbpsi.a $(libts_dvbpsi_a_OBJECTS) $(libts_dvbpsi_a_LIBADD)
-	$(RANLIB) libts_dvbpsi.a
-libts_dvbpsi_pic.a: $(libts_dvbpsi_pic_a_OBJECTS) $(libts_dvbpsi_pic_a_DEPENDENCIES) 
-	-rm -f libts_dvbpsi_pic.a
-	$(libts_dvbpsi_pic_a_AR) libts_dvbpsi_pic.a $(libts_dvbpsi_pic_a_OBJECTS) $(libts_dvbpsi_pic_a_LIBADD)
-	$(RANLIB) libts_dvbpsi_pic.a
-libts_dvbpsi_plugin.a: $(libts_dvbpsi_plugin_a_OBJECTS) $(libts_dvbpsi_plugin_a_DEPENDENCIES) 
-	-rm -f libts_dvbpsi_plugin.a
-	$(libts_dvbpsi_plugin_a_AR) libts_dvbpsi_plugin.a $(libts_dvbpsi_plugin_a_OBJECTS) $(libts_dvbpsi_plugin_a_LIBADD)
-	$(RANLIB) libts_dvbpsi_plugin.a
-libts_pic.a: $(libts_pic_a_OBJECTS) $(libts_pic_a_DEPENDENCIES) 
-	-rm -f libts_pic.a
-	$(libts_pic_a_AR) libts_pic.a $(libts_pic_a_OBJECTS) $(libts_pic_a_LIBADD)
-	$(RANLIB) libts_pic.a
-libts_plugin.a: $(libts_plugin_a_OBJECTS) $(libts_plugin_a_DEPENDENCIES) 
-	-rm -f libts_plugin.a
-	$(libts_plugin_a_AR) libts_plugin.a $(libts_plugin_a_OBJECTS) $(libts_plugin_a_LIBADD)
-	$(RANLIB) libts_plugin.a
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT) core *.core
@@ -786,27 +615,18 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libh264_a-h264.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libh264_pic_a-h264.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libh264_plugin_a-h264.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libm4a_a-m4a.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libm4a_pic_a-m4a.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libm4a_plugin_a-m4a.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libm4v_a-m4v.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libm4v_pic_a-m4v.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libm4v_plugin_a-m4v.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmpeg_system_a-system.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmpeg_system_pic_a-system.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmpeg_system_plugin_a-system.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmpga_a-mpga.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmpga_pic_a-mpga.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmpga_plugin_a-mpga.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmpgv_a-mpgv.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmpgv_pic_a-mpgv.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmpgv_plugin_a-mpgv.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libps_a-ps.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libps_pic_a-ps.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libps_plugin_a-ps.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libts_a-ts.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libts_dvbpsi_a-ts.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libts_dvbpsi_pic_a-ts.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libts_dvbpsi_plugin_a-ts.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libts_pic_a-ts.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libts_plugin_a-ts.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
@@ -896,6 +716,72 @@ libh264_plugin_a-h264.obj: h264.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libh264_plugin_a_CFLAGS) $(CFLAGS) -c -o libh264_plugin_a-h264.obj `if test -f 'h264.c'; then $(CYGPATH_W) 'h264.c'; else $(CYGPATH_W) '$(srcdir)/h264.c'; fi`
 
+libm4a_a-m4a.o: m4a.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libm4a_a_CFLAGS) $(CFLAGS) -MT libm4a_a-m4a.o -MD -MP -MF "$(DEPDIR)/libm4a_a-m4a.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libm4a_a-m4a.o `test -f 'm4a.c' || echo '$(srcdir)/'`m4a.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libm4a_a-m4a.Tpo" "$(DEPDIR)/libm4a_a-m4a.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libm4a_a-m4a.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='m4a.c' object='libm4a_a-m4a.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libm4a_a-m4a.Po' tmpdepfile='$(DEPDIR)/libm4a_a-m4a.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libm4a_a_CFLAGS) $(CFLAGS) -c -o libm4a_a-m4a.o `test -f 'm4a.c' || echo '$(srcdir)/'`m4a.c
+
+libm4a_a-m4a.obj: m4a.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libm4a_a_CFLAGS) $(CFLAGS) -MT libm4a_a-m4a.obj -MD -MP -MF "$(DEPDIR)/libm4a_a-m4a.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libm4a_a-m4a.obj `if test -f 'm4a.c'; then $(CYGPATH_W) 'm4a.c'; else $(CYGPATH_W) '$(srcdir)/m4a.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libm4a_a-m4a.Tpo" "$(DEPDIR)/libm4a_a-m4a.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libm4a_a-m4a.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='m4a.c' object='libm4a_a-m4a.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libm4a_a-m4a.Po' tmpdepfile='$(DEPDIR)/libm4a_a-m4a.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libm4a_a_CFLAGS) $(CFLAGS) -c -o libm4a_a-m4a.obj `if test -f 'm4a.c'; then $(CYGPATH_W) 'm4a.c'; else $(CYGPATH_W) '$(srcdir)/m4a.c'; fi`
+
+libm4a_pic_a-m4a.o: m4a.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libm4a_pic_a_CFLAGS) $(CFLAGS) -MT libm4a_pic_a-m4a.o -MD -MP -MF "$(DEPDIR)/libm4a_pic_a-m4a.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libm4a_pic_a-m4a.o `test -f 'm4a.c' || echo '$(srcdir)/'`m4a.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libm4a_pic_a-m4a.Tpo" "$(DEPDIR)/libm4a_pic_a-m4a.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libm4a_pic_a-m4a.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='m4a.c' object='libm4a_pic_a-m4a.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libm4a_pic_a-m4a.Po' tmpdepfile='$(DEPDIR)/libm4a_pic_a-m4a.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libm4a_pic_a_CFLAGS) $(CFLAGS) -c -o libm4a_pic_a-m4a.o `test -f 'm4a.c' || echo '$(srcdir)/'`m4a.c
+
+libm4a_pic_a-m4a.obj: m4a.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libm4a_pic_a_CFLAGS) $(CFLAGS) -MT libm4a_pic_a-m4a.obj -MD -MP -MF "$(DEPDIR)/libm4a_pic_a-m4a.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libm4a_pic_a-m4a.obj `if test -f 'm4a.c'; then $(CYGPATH_W) 'm4a.c'; else $(CYGPATH_W) '$(srcdir)/m4a.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libm4a_pic_a-m4a.Tpo" "$(DEPDIR)/libm4a_pic_a-m4a.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libm4a_pic_a-m4a.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='m4a.c' object='libm4a_pic_a-m4a.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libm4a_pic_a-m4a.Po' tmpdepfile='$(DEPDIR)/libm4a_pic_a-m4a.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libm4a_pic_a_CFLAGS) $(CFLAGS) -c -o libm4a_pic_a-m4a.obj `if test -f 'm4a.c'; then $(CYGPATH_W) 'm4a.c'; else $(CYGPATH_W) '$(srcdir)/m4a.c'; fi`
+
+libm4a_plugin_a-m4a.o: m4a.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libm4a_plugin_a_CFLAGS) $(CFLAGS) -MT libm4a_plugin_a-m4a.o -MD -MP -MF "$(DEPDIR)/libm4a_plugin_a-m4a.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libm4a_plugin_a-m4a.o `test -f 'm4a.c' || echo '$(srcdir)/'`m4a.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libm4a_plugin_a-m4a.Tpo" "$(DEPDIR)/libm4a_plugin_a-m4a.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libm4a_plugin_a-m4a.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='m4a.c' object='libm4a_plugin_a-m4a.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libm4a_plugin_a-m4a.Po' tmpdepfile='$(DEPDIR)/libm4a_plugin_a-m4a.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libm4a_plugin_a_CFLAGS) $(CFLAGS) -c -o libm4a_plugin_a-m4a.o `test -f 'm4a.c' || echo '$(srcdir)/'`m4a.c
+
+libm4a_plugin_a-m4a.obj: m4a.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libm4a_plugin_a_CFLAGS) $(CFLAGS) -MT libm4a_plugin_a-m4a.obj -MD -MP -MF "$(DEPDIR)/libm4a_plugin_a-m4a.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libm4a_plugin_a-m4a.obj `if test -f 'm4a.c'; then $(CYGPATH_W) 'm4a.c'; else $(CYGPATH_W) '$(srcdir)/m4a.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libm4a_plugin_a-m4a.Tpo" "$(DEPDIR)/libm4a_plugin_a-m4a.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libm4a_plugin_a-m4a.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='m4a.c' object='libm4a_plugin_a-m4a.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libm4a_plugin_a-m4a.Po' tmpdepfile='$(DEPDIR)/libm4a_plugin_a-m4a.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libm4a_plugin_a_CFLAGS) $(CFLAGS) -c -o libm4a_plugin_a-m4a.obj `if test -f 'm4a.c'; then $(CYGPATH_W) 'm4a.c'; else $(CYGPATH_W) '$(srcdir)/m4a.c'; fi`
+
 libm4v_a-m4v.o: m4v.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libm4v_a_CFLAGS) $(CFLAGS) -MT libm4v_a-m4v.o -MD -MP -MF "$(DEPDIR)/libm4v_a-m4v.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libm4v_a-m4v.o `test -f 'm4v.c' || echo '$(srcdir)/'`m4v.c; \
@@ -961,72 +847,6 @@ libm4v_plugin_a-m4v.obj: m4v.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libm4v_plugin_a-m4v.Po' tmpdepfile='$(DEPDIR)/libm4v_plugin_a-m4v.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libm4v_plugin_a_CFLAGS) $(CFLAGS) -c -o libm4v_plugin_a-m4v.obj `if test -f 'm4v.c'; then $(CYGPATH_W) 'm4v.c'; else $(CYGPATH_W) '$(srcdir)/m4v.c'; fi`
-
-libmpeg_system_a-system.o: system.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmpeg_system_a_CFLAGS) $(CFLAGS) -MT libmpeg_system_a-system.o -MD -MP -MF "$(DEPDIR)/libmpeg_system_a-system.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmpeg_system_a-system.o `test -f 'system.c' || echo '$(srcdir)/'`system.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmpeg_system_a-system.Tpo" "$(DEPDIR)/libmpeg_system_a-system.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmpeg_system_a-system.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='system.c' object='libmpeg_system_a-system.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmpeg_system_a-system.Po' tmpdepfile='$(DEPDIR)/libmpeg_system_a-system.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmpeg_system_a_CFLAGS) $(CFLAGS) -c -o libmpeg_system_a-system.o `test -f 'system.c' || echo '$(srcdir)/'`system.c
-
-libmpeg_system_a-system.obj: system.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmpeg_system_a_CFLAGS) $(CFLAGS) -MT libmpeg_system_a-system.obj -MD -MP -MF "$(DEPDIR)/libmpeg_system_a-system.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmpeg_system_a-system.obj `if test -f 'system.c'; then $(CYGPATH_W) 'system.c'; else $(CYGPATH_W) '$(srcdir)/system.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmpeg_system_a-system.Tpo" "$(DEPDIR)/libmpeg_system_a-system.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmpeg_system_a-system.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='system.c' object='libmpeg_system_a-system.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmpeg_system_a-system.Po' tmpdepfile='$(DEPDIR)/libmpeg_system_a-system.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmpeg_system_a_CFLAGS) $(CFLAGS) -c -o libmpeg_system_a-system.obj `if test -f 'system.c'; then $(CYGPATH_W) 'system.c'; else $(CYGPATH_W) '$(srcdir)/system.c'; fi`
-
-libmpeg_system_pic_a-system.o: system.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmpeg_system_pic_a_CFLAGS) $(CFLAGS) -MT libmpeg_system_pic_a-system.o -MD -MP -MF "$(DEPDIR)/libmpeg_system_pic_a-system.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmpeg_system_pic_a-system.o `test -f 'system.c' || echo '$(srcdir)/'`system.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmpeg_system_pic_a-system.Tpo" "$(DEPDIR)/libmpeg_system_pic_a-system.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmpeg_system_pic_a-system.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='system.c' object='libmpeg_system_pic_a-system.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmpeg_system_pic_a-system.Po' tmpdepfile='$(DEPDIR)/libmpeg_system_pic_a-system.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmpeg_system_pic_a_CFLAGS) $(CFLAGS) -c -o libmpeg_system_pic_a-system.o `test -f 'system.c' || echo '$(srcdir)/'`system.c
-
-libmpeg_system_pic_a-system.obj: system.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmpeg_system_pic_a_CFLAGS) $(CFLAGS) -MT libmpeg_system_pic_a-system.obj -MD -MP -MF "$(DEPDIR)/libmpeg_system_pic_a-system.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmpeg_system_pic_a-system.obj `if test -f 'system.c'; then $(CYGPATH_W) 'system.c'; else $(CYGPATH_W) '$(srcdir)/system.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmpeg_system_pic_a-system.Tpo" "$(DEPDIR)/libmpeg_system_pic_a-system.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmpeg_system_pic_a-system.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='system.c' object='libmpeg_system_pic_a-system.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmpeg_system_pic_a-system.Po' tmpdepfile='$(DEPDIR)/libmpeg_system_pic_a-system.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmpeg_system_pic_a_CFLAGS) $(CFLAGS) -c -o libmpeg_system_pic_a-system.obj `if test -f 'system.c'; then $(CYGPATH_W) 'system.c'; else $(CYGPATH_W) '$(srcdir)/system.c'; fi`
-
-libmpeg_system_plugin_a-system.o: system.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmpeg_system_plugin_a_CFLAGS) $(CFLAGS) -MT libmpeg_system_plugin_a-system.o -MD -MP -MF "$(DEPDIR)/libmpeg_system_plugin_a-system.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmpeg_system_plugin_a-system.o `test -f 'system.c' || echo '$(srcdir)/'`system.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmpeg_system_plugin_a-system.Tpo" "$(DEPDIR)/libmpeg_system_plugin_a-system.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmpeg_system_plugin_a-system.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='system.c' object='libmpeg_system_plugin_a-system.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmpeg_system_plugin_a-system.Po' tmpdepfile='$(DEPDIR)/libmpeg_system_plugin_a-system.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmpeg_system_plugin_a_CFLAGS) $(CFLAGS) -c -o libmpeg_system_plugin_a-system.o `test -f 'system.c' || echo '$(srcdir)/'`system.c
-
-libmpeg_system_plugin_a-system.obj: system.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmpeg_system_plugin_a_CFLAGS) $(CFLAGS) -MT libmpeg_system_plugin_a-system.obj -MD -MP -MF "$(DEPDIR)/libmpeg_system_plugin_a-system.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libmpeg_system_plugin_a-system.obj `if test -f 'system.c'; then $(CYGPATH_W) 'system.c'; else $(CYGPATH_W) '$(srcdir)/system.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmpeg_system_plugin_a-system.Tpo" "$(DEPDIR)/libmpeg_system_plugin_a-system.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmpeg_system_plugin_a-system.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='system.c' object='libmpeg_system_plugin_a-system.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmpeg_system_plugin_a-system.Po' tmpdepfile='$(DEPDIR)/libmpeg_system_plugin_a-system.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmpeg_system_plugin_a_CFLAGS) $(CFLAGS) -c -o libmpeg_system_plugin_a-system.obj `if test -f 'system.c'; then $(CYGPATH_W) 'system.c'; else $(CYGPATH_W) '$(srcdir)/system.c'; fi`
 
 libmpga_a-mpga.o: mpga.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmpga_a_CFLAGS) $(CFLAGS) -MT libmpga_a-mpga.o -MD -MP -MF "$(DEPDIR)/libmpga_a-mpga.Tpo" \
@@ -1159,204 +979,6 @@ libmpgv_plugin_a-mpgv.obj: mpgv.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmpgv_plugin_a-mpgv.Po' tmpdepfile='$(DEPDIR)/libmpgv_plugin_a-mpgv.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmpgv_plugin_a_CFLAGS) $(CFLAGS) -c -o libmpgv_plugin_a-mpgv.obj `if test -f 'mpgv.c'; then $(CYGPATH_W) 'mpgv.c'; else $(CYGPATH_W) '$(srcdir)/mpgv.c'; fi`
-
-libps_a-ps.o: ps.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libps_a_CFLAGS) $(CFLAGS) -MT libps_a-ps.o -MD -MP -MF "$(DEPDIR)/libps_a-ps.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libps_a-ps.o `test -f 'ps.c' || echo '$(srcdir)/'`ps.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libps_a-ps.Tpo" "$(DEPDIR)/libps_a-ps.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libps_a-ps.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ps.c' object='libps_a-ps.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libps_a-ps.Po' tmpdepfile='$(DEPDIR)/libps_a-ps.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libps_a_CFLAGS) $(CFLAGS) -c -o libps_a-ps.o `test -f 'ps.c' || echo '$(srcdir)/'`ps.c
-
-libps_a-ps.obj: ps.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libps_a_CFLAGS) $(CFLAGS) -MT libps_a-ps.obj -MD -MP -MF "$(DEPDIR)/libps_a-ps.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libps_a-ps.obj `if test -f 'ps.c'; then $(CYGPATH_W) 'ps.c'; else $(CYGPATH_W) '$(srcdir)/ps.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libps_a-ps.Tpo" "$(DEPDIR)/libps_a-ps.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libps_a-ps.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ps.c' object='libps_a-ps.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libps_a-ps.Po' tmpdepfile='$(DEPDIR)/libps_a-ps.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libps_a_CFLAGS) $(CFLAGS) -c -o libps_a-ps.obj `if test -f 'ps.c'; then $(CYGPATH_W) 'ps.c'; else $(CYGPATH_W) '$(srcdir)/ps.c'; fi`
-
-libps_pic_a-ps.o: ps.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libps_pic_a_CFLAGS) $(CFLAGS) -MT libps_pic_a-ps.o -MD -MP -MF "$(DEPDIR)/libps_pic_a-ps.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libps_pic_a-ps.o `test -f 'ps.c' || echo '$(srcdir)/'`ps.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libps_pic_a-ps.Tpo" "$(DEPDIR)/libps_pic_a-ps.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libps_pic_a-ps.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ps.c' object='libps_pic_a-ps.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libps_pic_a-ps.Po' tmpdepfile='$(DEPDIR)/libps_pic_a-ps.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libps_pic_a_CFLAGS) $(CFLAGS) -c -o libps_pic_a-ps.o `test -f 'ps.c' || echo '$(srcdir)/'`ps.c
-
-libps_pic_a-ps.obj: ps.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libps_pic_a_CFLAGS) $(CFLAGS) -MT libps_pic_a-ps.obj -MD -MP -MF "$(DEPDIR)/libps_pic_a-ps.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libps_pic_a-ps.obj `if test -f 'ps.c'; then $(CYGPATH_W) 'ps.c'; else $(CYGPATH_W) '$(srcdir)/ps.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libps_pic_a-ps.Tpo" "$(DEPDIR)/libps_pic_a-ps.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libps_pic_a-ps.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ps.c' object='libps_pic_a-ps.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libps_pic_a-ps.Po' tmpdepfile='$(DEPDIR)/libps_pic_a-ps.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libps_pic_a_CFLAGS) $(CFLAGS) -c -o libps_pic_a-ps.obj `if test -f 'ps.c'; then $(CYGPATH_W) 'ps.c'; else $(CYGPATH_W) '$(srcdir)/ps.c'; fi`
-
-libps_plugin_a-ps.o: ps.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libps_plugin_a_CFLAGS) $(CFLAGS) -MT libps_plugin_a-ps.o -MD -MP -MF "$(DEPDIR)/libps_plugin_a-ps.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libps_plugin_a-ps.o `test -f 'ps.c' || echo '$(srcdir)/'`ps.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libps_plugin_a-ps.Tpo" "$(DEPDIR)/libps_plugin_a-ps.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libps_plugin_a-ps.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ps.c' object='libps_plugin_a-ps.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libps_plugin_a-ps.Po' tmpdepfile='$(DEPDIR)/libps_plugin_a-ps.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libps_plugin_a_CFLAGS) $(CFLAGS) -c -o libps_plugin_a-ps.o `test -f 'ps.c' || echo '$(srcdir)/'`ps.c
-
-libps_plugin_a-ps.obj: ps.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libps_plugin_a_CFLAGS) $(CFLAGS) -MT libps_plugin_a-ps.obj -MD -MP -MF "$(DEPDIR)/libps_plugin_a-ps.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libps_plugin_a-ps.obj `if test -f 'ps.c'; then $(CYGPATH_W) 'ps.c'; else $(CYGPATH_W) '$(srcdir)/ps.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libps_plugin_a-ps.Tpo" "$(DEPDIR)/libps_plugin_a-ps.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libps_plugin_a-ps.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ps.c' object='libps_plugin_a-ps.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libps_plugin_a-ps.Po' tmpdepfile='$(DEPDIR)/libps_plugin_a-ps.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libps_plugin_a_CFLAGS) $(CFLAGS) -c -o libps_plugin_a-ps.obj `if test -f 'ps.c'; then $(CYGPATH_W) 'ps.c'; else $(CYGPATH_W) '$(srcdir)/ps.c'; fi`
-
-libts_a-ts.o: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_a_CFLAGS) $(CFLAGS) -MT libts_a-ts.o -MD -MP -MF "$(DEPDIR)/libts_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libts_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libts_a-ts.Tpo" "$(DEPDIR)/libts_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libts_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libts_a-ts.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libts_a-ts.Po' tmpdepfile='$(DEPDIR)/libts_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_a_CFLAGS) $(CFLAGS) -c -o libts_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c
-
-libts_a-ts.obj: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_a_CFLAGS) $(CFLAGS) -MT libts_a-ts.obj -MD -MP -MF "$(DEPDIR)/libts_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libts_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libts_a-ts.Tpo" "$(DEPDIR)/libts_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libts_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libts_a-ts.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libts_a-ts.Po' tmpdepfile='$(DEPDIR)/libts_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_a_CFLAGS) $(CFLAGS) -c -o libts_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`
-
-libts_dvbpsi_a-ts.o: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_dvbpsi_a_CFLAGS) $(CFLAGS) -MT libts_dvbpsi_a-ts.o -MD -MP -MF "$(DEPDIR)/libts_dvbpsi_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libts_dvbpsi_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libts_dvbpsi_a-ts.Tpo" "$(DEPDIR)/libts_dvbpsi_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libts_dvbpsi_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libts_dvbpsi_a-ts.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libts_dvbpsi_a-ts.Po' tmpdepfile='$(DEPDIR)/libts_dvbpsi_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_dvbpsi_a_CFLAGS) $(CFLAGS) -c -o libts_dvbpsi_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c
-
-libts_dvbpsi_a-ts.obj: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_dvbpsi_a_CFLAGS) $(CFLAGS) -MT libts_dvbpsi_a-ts.obj -MD -MP -MF "$(DEPDIR)/libts_dvbpsi_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libts_dvbpsi_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libts_dvbpsi_a-ts.Tpo" "$(DEPDIR)/libts_dvbpsi_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libts_dvbpsi_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libts_dvbpsi_a-ts.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libts_dvbpsi_a-ts.Po' tmpdepfile='$(DEPDIR)/libts_dvbpsi_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_dvbpsi_a_CFLAGS) $(CFLAGS) -c -o libts_dvbpsi_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`
-
-libts_dvbpsi_pic_a-ts.o: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_dvbpsi_pic_a_CFLAGS) $(CFLAGS) -MT libts_dvbpsi_pic_a-ts.o -MD -MP -MF "$(DEPDIR)/libts_dvbpsi_pic_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libts_dvbpsi_pic_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libts_dvbpsi_pic_a-ts.Tpo" "$(DEPDIR)/libts_dvbpsi_pic_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libts_dvbpsi_pic_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libts_dvbpsi_pic_a-ts.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libts_dvbpsi_pic_a-ts.Po' tmpdepfile='$(DEPDIR)/libts_dvbpsi_pic_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_dvbpsi_pic_a_CFLAGS) $(CFLAGS) -c -o libts_dvbpsi_pic_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c
-
-libts_dvbpsi_pic_a-ts.obj: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_dvbpsi_pic_a_CFLAGS) $(CFLAGS) -MT libts_dvbpsi_pic_a-ts.obj -MD -MP -MF "$(DEPDIR)/libts_dvbpsi_pic_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libts_dvbpsi_pic_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libts_dvbpsi_pic_a-ts.Tpo" "$(DEPDIR)/libts_dvbpsi_pic_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libts_dvbpsi_pic_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libts_dvbpsi_pic_a-ts.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libts_dvbpsi_pic_a-ts.Po' tmpdepfile='$(DEPDIR)/libts_dvbpsi_pic_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_dvbpsi_pic_a_CFLAGS) $(CFLAGS) -c -o libts_dvbpsi_pic_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`
-
-libts_dvbpsi_plugin_a-ts.o: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_dvbpsi_plugin_a_CFLAGS) $(CFLAGS) -MT libts_dvbpsi_plugin_a-ts.o -MD -MP -MF "$(DEPDIR)/libts_dvbpsi_plugin_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libts_dvbpsi_plugin_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libts_dvbpsi_plugin_a-ts.Tpo" "$(DEPDIR)/libts_dvbpsi_plugin_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libts_dvbpsi_plugin_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libts_dvbpsi_plugin_a-ts.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libts_dvbpsi_plugin_a-ts.Po' tmpdepfile='$(DEPDIR)/libts_dvbpsi_plugin_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_dvbpsi_plugin_a_CFLAGS) $(CFLAGS) -c -o libts_dvbpsi_plugin_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c
-
-libts_dvbpsi_plugin_a-ts.obj: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_dvbpsi_plugin_a_CFLAGS) $(CFLAGS) -MT libts_dvbpsi_plugin_a-ts.obj -MD -MP -MF "$(DEPDIR)/libts_dvbpsi_plugin_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libts_dvbpsi_plugin_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libts_dvbpsi_plugin_a-ts.Tpo" "$(DEPDIR)/libts_dvbpsi_plugin_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libts_dvbpsi_plugin_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libts_dvbpsi_plugin_a-ts.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libts_dvbpsi_plugin_a-ts.Po' tmpdepfile='$(DEPDIR)/libts_dvbpsi_plugin_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_dvbpsi_plugin_a_CFLAGS) $(CFLAGS) -c -o libts_dvbpsi_plugin_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`
-
-libts_pic_a-ts.o: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_pic_a_CFLAGS) $(CFLAGS) -MT libts_pic_a-ts.o -MD -MP -MF "$(DEPDIR)/libts_pic_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libts_pic_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libts_pic_a-ts.Tpo" "$(DEPDIR)/libts_pic_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libts_pic_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libts_pic_a-ts.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libts_pic_a-ts.Po' tmpdepfile='$(DEPDIR)/libts_pic_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_pic_a_CFLAGS) $(CFLAGS) -c -o libts_pic_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c
-
-libts_pic_a-ts.obj: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_pic_a_CFLAGS) $(CFLAGS) -MT libts_pic_a-ts.obj -MD -MP -MF "$(DEPDIR)/libts_pic_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libts_pic_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libts_pic_a-ts.Tpo" "$(DEPDIR)/libts_pic_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libts_pic_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libts_pic_a-ts.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libts_pic_a-ts.Po' tmpdepfile='$(DEPDIR)/libts_pic_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_pic_a_CFLAGS) $(CFLAGS) -c -o libts_pic_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`
-
-libts_plugin_a-ts.o: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_plugin_a_CFLAGS) $(CFLAGS) -MT libts_plugin_a-ts.o -MD -MP -MF "$(DEPDIR)/libts_plugin_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libts_plugin_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libts_plugin_a-ts.Tpo" "$(DEPDIR)/libts_plugin_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libts_plugin_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libts_plugin_a-ts.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libts_plugin_a-ts.Po' tmpdepfile='$(DEPDIR)/libts_plugin_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_plugin_a_CFLAGS) $(CFLAGS) -c -o libts_plugin_a-ts.o `test -f 'ts.c' || echo '$(srcdir)/'`ts.c
-
-libts_plugin_a-ts.obj: ts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_plugin_a_CFLAGS) $(CFLAGS) -MT libts_plugin_a-ts.obj -MD -MP -MF "$(DEPDIR)/libts_plugin_a-ts.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libts_plugin_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libts_plugin_a-ts.Tpo" "$(DEPDIR)/libts_plugin_a-ts.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libts_plugin_a-ts.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ts.c' object='libts_plugin_a-ts.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libts_plugin_a-ts.Po' tmpdepfile='$(DEPDIR)/libts_plugin_a-ts.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libts_plugin_a_CFLAGS) $(CFLAGS) -c -o libts_plugin_a-ts.obj `if test -f 'ts.c'; then $(CYGPATH_W) 'ts.c'; else $(CYGPATH_W) '$(srcdir)/ts.c'; fi`
 uninstall-info-am:
 libh264DATA_INSTALL = $(INSTALL_DATA)
 install-libh264DATA: $(libh264_DATA)
@@ -1376,6 +998,24 @@ uninstall-libh264DATA:
 	  echo " rm -f $(DESTDIR)$(libh264dir)/$$f"; \
 	  rm -f $(DESTDIR)$(libh264dir)/$$f; \
 	done
+libm4aDATA_INSTALL = $(INSTALL_DATA)
+install-libm4aDATA: $(libm4a_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libm4adir)
+	@list='$(libm4a_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libm4aDATA_INSTALL) $$d$$p $(DESTDIR)$(libm4adir)/$$f"; \
+	  $(libm4aDATA_INSTALL) $$d$$p $(DESTDIR)$(libm4adir)/$$f; \
+	done
+
+uninstall-libm4aDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libm4a_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libm4adir)/$$f"; \
+	  rm -f $(DESTDIR)$(libm4adir)/$$f; \
+	done
 libm4vDATA_INSTALL = $(INSTALL_DATA)
 install-libm4vDATA: $(libm4v_DATA)
 	@$(NORMAL_INSTALL)
@@ -1393,24 +1033,6 @@ uninstall-libm4vDATA:
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
 	  echo " rm -f $(DESTDIR)$(libm4vdir)/$$f"; \
 	  rm -f $(DESTDIR)$(libm4vdir)/$$f; \
-	done
-libmpeg_systemDATA_INSTALL = $(INSTALL_DATA)
-install-libmpeg_systemDATA: $(libmpeg_system_DATA)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(libmpeg_systemdir)
-	@list='$(libmpeg_system_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " $(libmpeg_systemDATA_INSTALL) $$d$$p $(DESTDIR)$(libmpeg_systemdir)/$$f"; \
-	  $(libmpeg_systemDATA_INSTALL) $$d$$p $(DESTDIR)$(libmpeg_systemdir)/$$f; \
-	done
-
-uninstall-libmpeg_systemDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(libmpeg_system_DATA)'; for p in $$list; do \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " rm -f $(DESTDIR)$(libmpeg_systemdir)/$$f"; \
-	  rm -f $(DESTDIR)$(libmpeg_systemdir)/$$f; \
 	done
 libmpgaDATA_INSTALL = $(INSTALL_DATA)
 install-libmpgaDATA: $(libmpga_DATA)
@@ -1447,60 +1069,6 @@ uninstall-libmpgvDATA:
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
 	  echo " rm -f $(DESTDIR)$(libmpgvdir)/$$f"; \
 	  rm -f $(DESTDIR)$(libmpgvdir)/$$f; \
-	done
-libpsDATA_INSTALL = $(INSTALL_DATA)
-install-libpsDATA: $(libps_DATA)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(libpsdir)
-	@list='$(libps_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " $(libpsDATA_INSTALL) $$d$$p $(DESTDIR)$(libpsdir)/$$f"; \
-	  $(libpsDATA_INSTALL) $$d$$p $(DESTDIR)$(libpsdir)/$$f; \
-	done
-
-uninstall-libpsDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(libps_DATA)'; for p in $$list; do \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " rm -f $(DESTDIR)$(libpsdir)/$$f"; \
-	  rm -f $(DESTDIR)$(libpsdir)/$$f; \
-	done
-libtsDATA_INSTALL = $(INSTALL_DATA)
-install-libtsDATA: $(libts_DATA)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(libtsdir)
-	@list='$(libts_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " $(libtsDATA_INSTALL) $$d$$p $(DESTDIR)$(libtsdir)/$$f"; \
-	  $(libtsDATA_INSTALL) $$d$$p $(DESTDIR)$(libtsdir)/$$f; \
-	done
-
-uninstall-libtsDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(libts_DATA)'; for p in $$list; do \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " rm -f $(DESTDIR)$(libtsdir)/$$f"; \
-	  rm -f $(DESTDIR)$(libtsdir)/$$f; \
-	done
-libts_dvbpsiDATA_INSTALL = $(INSTALL_DATA)
-install-libts_dvbpsiDATA: $(libts_dvbpsi_DATA)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(libts_dvbpsidir)
-	@list='$(libts_dvbpsi_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " $(libts_dvbpsiDATA_INSTALL) $$d$$p $(DESTDIR)$(libts_dvbpsidir)/$$f"; \
-	  $(libts_dvbpsiDATA_INSTALL) $$d$$p $(DESTDIR)$(libts_dvbpsidir)/$$f; \
-	done
-
-uninstall-libts_dvbpsiDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(libts_dvbpsi_DATA)'; for p in $$list; do \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " rm -f $(DESTDIR)$(libts_dvbpsidir)/$$f"; \
-	  rm -f $(DESTDIR)$(libts_dvbpsidir)/$$f; \
 	done
 
 # This directory's subdirectories are mostly independent; you can cd
@@ -1677,7 +1245,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libh264dir) $(DESTDIR)$(libm4vdir) $(DESTDIR)$(libmpeg_systemdir) $(DESTDIR)$(libmpgadir) $(DESTDIR)$(libmpgvdir) $(DESTDIR)$(libpsdir) $(DESTDIR)$(libtsdir) $(DESTDIR)$(libts_dvbpsidir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libh264dir) $(DESTDIR)$(libm4adir) $(DESTDIR)$(libm4vdir) $(DESTDIR)$(libmpgadir) $(DESTDIR)$(libmpgvdir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -1724,10 +1292,9 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-libh264DATA install-libm4vDATA \
-	install-libmpeg_systemDATA install-libmpgaDATA \
-	install-libmpgvDATA install-libpsDATA install-libtsDATA \
-	install-libts_dvbpsiDATA install-libvlcLIBRARIES
+install-data-am: install-libh264DATA install-libm4aDATA \
+	install-libm4vDATA install-libmpgaDATA install-libmpgvDATA \
+	install-libvlcLIBRARIES
 
 install-exec-am:
 
@@ -1755,10 +1322,8 @@ ps: ps-recursive
 ps-am:
 
 uninstall-am: uninstall-info-am uninstall-libh264DATA \
-	uninstall-libm4vDATA uninstall-libmpeg_systemDATA \
-	uninstall-libmpgaDATA uninstall-libmpgvDATA uninstall-libpsDATA \
-	uninstall-libtsDATA uninstall-libts_dvbpsiDATA \
-	uninstall-libvlcLIBRARIES
+	uninstall-libm4aDATA uninstall-libm4vDATA uninstall-libmpgaDATA \
+	uninstall-libmpgvDATA uninstall-libvlcLIBRARIES
 
 uninstall-info: uninstall-info-recursive
 
@@ -1771,22 +1336,19 @@ uninstall-info: uninstall-info-recursive
 	install-data install-data-am install-data-recursive \
 	install-exec install-exec-am install-exec-recursive \
 	install-info install-info-am install-info-recursive \
-	install-libh264DATA install-libm4vDATA \
-	install-libmpeg_systemDATA install-libmpgaDATA \
-	install-libmpgvDATA install-libpsDATA install-libtsDATA \
-	install-libts_dvbpsiDATA install-libvlcLIBRARIES install-man \
-	install-recursive install-strip installcheck installcheck-am \
-	installdirs installdirs-am installdirs-recursive \
-	maintainer-clean maintainer-clean-generic \
+	install-libh264DATA install-libm4aDATA install-libm4vDATA \
+	install-libmpgaDATA install-libmpgvDATA install-libvlcLIBRARIES \
+	install-man install-recursive install-strip installcheck \
+	installcheck-am installdirs installdirs-am \
+	installdirs-recursive maintainer-clean maintainer-clean-generic \
 	maintainer-clean-recursive mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
 	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
 	uninstall uninstall-am uninstall-info-am \
 	uninstall-info-recursive uninstall-libh264DATA \
-	uninstall-libm4vDATA uninstall-libmpeg_systemDATA \
-	uninstall-libmpgaDATA uninstall-libmpgvDATA uninstall-libpsDATA \
-	uninstall-libtsDATA uninstall-libts_dvbpsiDATA \
-	uninstall-libvlcLIBRARIES uninstall-recursive
+	uninstall-libm4aDATA uninstall-libm4vDATA uninstall-libmpgaDATA \
+	uninstall-libmpgvDATA uninstall-libvlcLIBRARIES \
+	uninstall-recursive
 
 
 clean-local:
@@ -1795,40 +1357,22 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in mpeg_system m4v ps ts ts_dvbpsi mpga mpgv h264; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in mpeg_system m4v ps ts ts_dvbpsi mpga mpgv h264; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in mpeg_system m4v ps ts ts_dvbpsi mpga mpgv h264; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in m4a m4v mpga mpgv h264; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in m4a m4v mpga mpgv h264; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in m4a m4v mpga mpgv h264; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
-libmpeg_system_plugin$(LIBEXT): $(libmpeg_system_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage mpeg_system` in \
-	  c++) echo $(CXXLINK) $(libmpeg_system_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mpeg_system\` ; $(CXXLINK) $(libmpeg_system_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mpeg_system` ;; \
-	  objc) echo $(OBJCLINK) $(libmpeg_system_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mpeg_system\` ; $(OBJCLINK) $(libmpeg_system_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mpeg_system` ;; \
-	  c|*) echo $(LINK) $(libmpeg_system_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mpeg_system\` ; $(LINK) $(libmpeg_system_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mpeg_system` ;; \
+libm4a_plugin$(LIBEXT): $(libm4a_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage m4a` in \
+	  c++) echo $(CXXLINK) $(libm4a_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin m4a\` ; $(CXXLINK) $(libm4a_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin m4a` ;; \
+	  objc) echo $(OBJCLINK) $(libm4a_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin m4a\` ; $(OBJCLINK) $(libm4a_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin m4a` ;; \
+	  c|*) echo $(LINK) $(libm4a_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin m4a\` ; $(LINK) $(libm4a_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin m4a` ;; \
 	esac
 libm4v_plugin$(LIBEXT): $(libm4v_plugin_a_OBJECTS)
 	@case `$(VLC_CONFIG) --linkage m4v` in \
 	  c++) echo $(CXXLINK) $(libm4v_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin m4v\` ; $(CXXLINK) $(libm4v_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin m4v` ;; \
 	  objc) echo $(OBJCLINK) $(libm4v_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin m4v\` ; $(OBJCLINK) $(libm4v_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin m4v` ;; \
 	  c|*) echo $(LINK) $(libm4v_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin m4v\` ; $(LINK) $(libm4v_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin m4v` ;; \
-	esac
-libps_plugin$(LIBEXT): $(libps_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage ps` in \
-	  c++) echo $(CXXLINK) $(libps_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ps\` ; $(CXXLINK) $(libps_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ps` ;; \
-	  objc) echo $(OBJCLINK) $(libps_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ps\` ; $(OBJCLINK) $(libps_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ps` ;; \
-	  c|*) echo $(LINK) $(libps_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ps\` ; $(LINK) $(libps_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ps` ;; \
-	esac
-libts_plugin$(LIBEXT): $(libts_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage ts` in \
-	  c++) echo $(CXXLINK) $(libts_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ts\` ; $(CXXLINK) $(libts_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ts` ;; \
-	  objc) echo $(OBJCLINK) $(libts_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ts\` ; $(OBJCLINK) $(libts_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ts` ;; \
-	  c|*) echo $(LINK) $(libts_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ts\` ; $(LINK) $(libts_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ts` ;; \
-	esac
-libts_dvbpsi_plugin$(LIBEXT): $(libts_dvbpsi_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage ts_dvbpsi` in \
-	  c++) echo $(CXXLINK) $(libts_dvbpsi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ts_dvbpsi\` ; $(CXXLINK) $(libts_dvbpsi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ts_dvbpsi` ;; \
-	  objc) echo $(OBJCLINK) $(libts_dvbpsi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ts_dvbpsi\` ; $(OBJCLINK) $(libts_dvbpsi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ts_dvbpsi` ;; \
-	  c|*) echo $(LINK) $(libts_dvbpsi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ts_dvbpsi\` ; $(LINK) $(libts_dvbpsi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ts_dvbpsi` ;; \
 	esac
 libmpga_plugin$(LIBEXT): $(libmpga_plugin_a_OBJECTS)
 	@case `$(VLC_CONFIG) --linkage mpga` in \

@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in id3 id3tag demuxsub; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in id3 id3tag demuxsub; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in id3 id3tag demuxsub; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in id3 id3tag; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in id3 id3tag; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in id3 id3tag; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -105,43 +105,6 @@ libid3tag_plugin$(LIBEXT): $(libid3tag_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libid3tag_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin id3tag\` ; $(CXXLINK) $(libid3tag_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin id3tag` ;; \
 	  objc) echo $(OBJCLINK) $(libid3tag_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin id3tag\` ; $(OBJCLINK) $(libid3tag_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin id3tag` ;; \
 	  c|*) echo $(LINK) $(libid3tag_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin id3tag\` ; $(LINK) $(libid3tag_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin id3tag` ;; \
-	esac
-
-
-# The demuxsub plugin
-
-if UNTRUE
-Ldemuxsubp = libdemuxsub_plugin.a
-Ddemuxsubp = libdemuxsub_plugin$(LIBEXT)
-Ldemuxsubb = libdemuxsub.a
-Ldemuxsubpic = libdemuxsub_pic.a
-endif
-
-libdemuxsub_plugin_a_SOURCES = $(SOURCES_demuxsub)
-libdemuxsub_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin demuxsub`
-libdemuxsub_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin demuxsub`
-libdemuxsub_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin demuxsub`
-
-libdemuxsub_pic_a_SOURCES = $(SOURCES_demuxsub)
-libdemuxsub_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic demuxsub`
-libdemuxsub_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic demuxsub`
-libdemuxsub_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic demuxsub`
-
-libdemuxsub_a_SOURCES = $(SOURCES_demuxsub)
-libdemuxsub_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin demuxsub`
-libdemuxsub_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin demuxsub`
-libdemuxsub_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin demuxsub`
-
-libvlc_LIBRARIES += $(Ldemuxsubb) $(Ldemuxsubpic)
-libdemuxsub_DATA = $(Ddemuxsubp)
-
-libdemuxsubdir = $(libdir)/vlc/
-noinst_LIBRARIES += $(Ldemuxsubp)
-libdemuxsub_plugin$(LIBEXT): $(libdemuxsub_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage demuxsub` in \
-	  c++) echo $(CXXLINK) $(libdemuxsub_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin demuxsub\` ; $(CXXLINK) $(libdemuxsub_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin demuxsub` ;; \
-	  objc) echo $(OBJCLINK) $(libdemuxsub_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin demuxsub\` ; $(OBJCLINK) $(libdemuxsub_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin demuxsub` ;; \
-	  c|*) echo $(LINK) $(libdemuxsub_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin demuxsub\` ; $(LINK) $(libdemuxsub_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin demuxsub` ;; \
 	esac
 
 

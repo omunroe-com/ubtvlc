@@ -20,6 +20,8 @@ struct module_symbols_t {
     void (* aout_DateMove_inner) ( audio_date_t *, mtime_t ) ;
     mtime_t (* aout_DateGet_inner) ( const audio_date_t * ) ;
     mtime_t (* aout_DateIncrement_inner) ( audio_date_t *, uint32_t ) ;
+    int (* aout_CheckChannelReorder_inner) ( const uint32_t *, const uint32_t *, uint32_t, int, int * ) ;
+    void (* aout_ChannelReorder_inner) ( uint8_t *, int, int, const int *, int ) ;
     aout_input_t * (* __aout_DecNew_inner) ( vlc_object_t *, aout_instance_t **, audio_sample_format_t * ) ;
     int (* aout_DecDelete_inner) ( aout_instance_t *, aout_input_t * ) ;
     aout_buffer_t * (* aout_DecNewBuffer_inner) ( aout_instance_t *, aout_input_t *, size_t ) ;
@@ -34,6 +36,7 @@ struct module_symbols_t {
     int (* aout_Restart_inner) ( aout_instance_t * p_aout ) ;
     int (* aout_FindAndRestart_inner) ( vlc_object_t *, const char *, vlc_value_t, vlc_value_t, void * ) ;
     int (* aout_ChannelsRestart_inner) ( vlc_object_t *, const char *, vlc_value_t, vlc_value_t, void * ) ;
+    vlc_bool_t (* vlc_current_charset_inner) ( char ** ) ;
     int (* __config_GetType_inner) (vlc_object_t *, const char *) ;
     int (* __config_GetInt_inner) (vlc_object_t *, const char *) ;
     void (* __config_PutInt_inner) (vlc_object_t *, const char *, int) ;
@@ -51,92 +54,11 @@ struct module_symbols_t {
     void (* config_Duplicate_inner) ( module_t *, module_config_t * ) ;
     void (* config_SetCallbacks_inner) ( module_config_t *, module_config_t * ) ;
     void (* config_UnsetCallbacks_inner) ( module_config_t * ) ;
-    vlc_bool_t (* vlc_current_charset_inner) ( char ** ) ;
-    char * (* stream_ReadLine_inner) ( stream_t * ) ;
-    stream_t * (* __stream_DemuxNew_inner) ( vlc_object_t *p_obj, char *psz_demux, es_out_t *out ) ;
-    void (* stream_DemuxSend_inner) ( stream_t *s, block_t *p_block ) ;
-    void (* stream_DemuxDelete_inner) ( stream_t *s ) ;
-    int (* demux_vaControl_inner) ( input_thread_t *, int i_query, va_list  ) ;
-    int (* demux_Control_inner) ( input_thread_t *, int i_query, ...  ) ;
-    int (* demux_vaControlDefault_inner) ( input_thread_t *, int i_query, va_list  ) ;
-    demux_t * (* __demux2_New_inner) ( vlc_object_t *p_obj, char *psz_mrl, stream_t *s, es_out_t *out ) ;
-    void (* demux2_Delete_inner) ( demux_t * ) ;
-    int (* demux2_vaControlHelper_inner) ( stream_t *, int64_t i_start, int64_t i_end, int i_bitrate, int i_align, int i_query, va_list args ) ;
-    char ** (* subtitles_Detect_inner) ( input_thread_t *, char* path, char *fname ) ;
-    int (* input_vaControl_inner) ( input_thread_t *, int i_query, va_list  ) ;
-    int (* input_Control_inner) ( input_thread_t *, int i_query, ...  ) ;
-    void (* input_DeletePES_inner) ( input_buffers_t *, pes_packet_t * ) ;
-    input_thread_t * (* __input_CreateThread_inner) ( vlc_object_t *, input_item_t * ) ;
-    void (* input_StopThread_inner) ( input_thread_t * ) ;
-    void (* input_DestroyThread_inner) ( input_thread_t * ) ;
-    void (* __input_SetStatus_inner) ( vlc_object_t *, int ) ;
-    void (* __input_SetRate_inner) ( vlc_object_t *, int ) ;
-    void (* __input_Seek_inner) ( vlc_object_t *, off_t, int ) ;
-    void (* __input_Tell_inner) ( vlc_object_t *, stream_position_t * ) ;
-    void (* input_DumpStream_inner) ( input_thread_t * ) ;
-    char * (* input_OffsetToTime_inner) ( input_thread_t *, char *, off_t ) ;
-    int (* input_ToggleES_inner) ( input_thread_t *, es_descriptor_t *, vlc_bool_t ) ;
-    int (* input_ChangeArea_inner) ( input_thread_t *, input_area_t * ) ;
-    int (* input_ChangeProgram_inner) ( input_thread_t *, uint16_t ) ;
-    int (* input_InitStream_inner) ( input_thread_t *, size_t ) ;
-    void (* input_EndStream_inner) ( input_thread_t * ) ;
-    pgrm_descriptor_t * (* input_FindProgram_inner) ( input_thread_t *, uint16_t ) ;
-    pgrm_descriptor_t * (* input_AddProgram_inner) ( input_thread_t *, uint16_t, size_t ) ;
-    void (* input_DelProgram_inner) ( input_thread_t *, pgrm_descriptor_t * ) ;
-    int (* input_SetProgram_inner) ( input_thread_t *, pgrm_descriptor_t * ) ;
-    input_area_t * (* input_AddArea_inner) ( input_thread_t *, uint16_t, uint16_t ) ;
-    void (* input_DelArea_inner) ( input_thread_t *, input_area_t * ) ;
-    es_descriptor_t * (* input_FindES_inner) ( input_thread_t *, uint16_t ) ;
-    es_descriptor_t * (* input_AddES_inner) ( input_thread_t *, pgrm_descriptor_t *, uint16_t, int, char const *, size_t ) ;
-    void (* input_DelES_inner) ( input_thread_t *, es_descriptor_t * ) ;
-    int (* input_SelectES_inner) ( input_thread_t *, es_descriptor_t * ) ;
-    int (* input_UnselectES_inner) ( input_thread_t *, es_descriptor_t * ) ;
-    decoder_t * (* input_RunDecoder_inner) ( input_thread_t *, es_descriptor_t * ) ;
-    void (* input_EndDecoder_inner) ( input_thread_t *, es_descriptor_t * ) ;
-    void (* input_DecodePES_inner) ( decoder_t *, pes_packet_t * ) ;
-    void (* input_DecodeBlock_inner) ( decoder_t *, block_t * ) ;
-    int (* input_ClockManageControl_inner) ( input_thread_t *, pgrm_descriptor_t *, mtime_t ) ;
-    void (* input_ClockManageRef_inner) ( input_thread_t *, pgrm_descriptor_t *, mtime_t ) ;
-    mtime_t (* input_ClockGetTS_inner) ( input_thread_t *, pgrm_descriptor_t *, mtime_t ) ;
-    void (* input_BuffersEnd_inner) ( input_thread_t *, input_buffers_t * ) ;
-    data_buffer_t * (* input_NewBuffer_inner) ( input_buffers_t *, size_t ) ;
-    void (* input_ReleaseBuffer_inner) ( input_buffers_t *, data_buffer_t * ) ;
-    data_packet_t * (* input_ShareBuffer_inner) ( input_buffers_t *, data_buffer_t * ) ;
-    data_packet_t * (* input_NewPacket_inner) ( input_buffers_t *, size_t ) ;
-    void (* input_DeletePacket_inner) ( input_buffers_t *, data_packet_t * ) ;
-    pes_packet_t * (* input_NewPES_inner) ( input_buffers_t * ) ;
-    ssize_t (* input_FillBuffer_inner) ( input_thread_t * ) ;
-    ssize_t (* input_Peek_inner) ( input_thread_t *, byte_t **, size_t ) ;
-    ssize_t (* input_SplitBuffer_inner) ( input_thread_t *, data_packet_t **, size_t ) ;
-    int (* input_AccessInit_inner) ( input_thread_t * ) ;
-    void (* input_AccessReinit_inner) ( input_thread_t * ) ;
-    void (* input_AccessEnd_inner) ( input_thread_t * ) ;
     int (* __intf_Eject_inner) ( vlc_object_t *, const char * ) ;
     const iso639_lang_t * (* GetLang_1_inner) ( const char * ) ;
     const iso639_lang_t * (* GetLang_2T_inner) ( const char * ) ;
     const iso639_lang_t * (* GetLang_2B_inner) ( const char * ) ;
     const char * (* DecodeLanguage_inner) ( uint16_t ) ;
-    httpd_host_t * (* httpd_HostNew_inner) ( vlc_object_t *, char *psz_host, int i_port ) ;
-    void (* httpd_HostDelete_inner) ( httpd_host_t * ) ;
-    httpd_url_t * (* httpd_UrlNew_inner) ( httpd_host_t *, char *psz_url, char *psz_user, char *psz_password ) ;
-    httpd_url_t * (* httpd_UrlNewUnique_inner) ( httpd_host_t *, char *psz_url, char *psz_user, char *psz_password ) ;
-    int (* httpd_UrlCatch_inner) ( httpd_url_t *, int i_msg, httpd_callback_t, httpd_callback_sys_t * ) ;
-    void (* httpd_UrlDelete_inner) ( httpd_url_t * ) ;
-    void (* httpd_ClientModeStream_inner) ( httpd_client_t *cl ) ;
-    void (* httpd_ClientModeBidir_inner) ( httpd_client_t *cl ) ;
-    char* (* httpd_ClientIP_inner) ( httpd_client_t *cl ) ;
-    httpd_file_t * (* httpd_FileNew_inner) ( httpd_host_t *, char *psz_url, char *psz_mime, char *psz_user, char *psz_password, httpd_file_callback_t pf_fill, httpd_file_sys_t * ) ;
-    void (* httpd_FileDelete_inner) ( httpd_file_t * ) ;
-    httpd_redirect_t * (* httpd_RedirectNew_inner) ( httpd_host_t *, char *psz_url_dst, char *psz_url_src ) ;
-    void (* httpd_RedirectDelete_inner) ( httpd_redirect_t * ) ;
-    httpd_stream_t * (* httpd_StreamNew_inner) ( httpd_host_t *, char *psz_url, char *psz_mime, char *psz_user, char *psz_password ) ;
-    void (* httpd_StreamDelete_inner) ( httpd_stream_t * ) ;
-    int (* httpd_StreamHeader_inner) ( httpd_stream_t *, uint8_t *p_data, int i_data ) ;
-    int (* httpd_StreamSend_inner) ( httpd_stream_t *, uint8_t *p_data, int i_data ) ;
-    void (* httpd_MsgInit_inner) ( httpd_message_t * )  ;
-    void (* httpd_MsgAdd_inner) ( httpd_message_t *, char *psz_name, char *psz_value, ... ) ;
-    char * (* httpd_MsgGet_inner) ( httpd_message_t *, char *psz_name ) ;
-    void (* httpd_MsgClean_inner) ( httpd_message_t * ) ;
     module_t * (* __module_Need_inner) ( vlc_object_t *, const char *, const char *, vlc_bool_t ) ;
     void (* __module_Unneed_inner) ( vlc_object_t *, module_t * ) ;
     char * (* mstrtime_inner) ( char *psz_buffer, mtime_t date ) ;
@@ -144,14 +66,31 @@ struct module_symbols_t {
     void (* mwait_inner) ( mtime_t date ) ;
     void (* msleep_inner) ( mtime_t delay ) ;
     char * (* secstotimestr_inner) ( char *psz_buffer, int secs ) ;
-    int (* __net_OpenTCP_inner) ( vlc_object_t *p_this, char *psz_host, int i_port ) ;
+    void (* date_Init_inner) ( date_t *, uint32_t, uint32_t ) ;
+    void (* date_Change_inner) ( date_t *, uint32_t, uint32_t ) ;
+    void (* date_Set_inner) ( date_t *, mtime_t ) ;
+    mtime_t (* date_Get_inner) ( const date_t * ) ;
+    void (* date_Move_inner) ( date_t *, mtime_t ) ;
+    mtime_t (* date_Increment_inner) ( date_t *, uint32_t ) ;
+    int (* __net_OpenTCP_inner) ( vlc_object_t *p_this, const char *psz_host, int i_port ) ;
+    int (* __net_ListenTCP_inner) ( vlc_object_t *p_this, char *psz_localaddr, int i_port ) ;
+    int (* __net_Accept_inner) ( vlc_object_t *p_this, int fd_listen, mtime_t i_wait ) ;
     int (* __net_OpenUDP_inner) ( vlc_object_t *p_this, char *psz_bind, int i_bind, char *psz_server, int i_server ) ;
     void (* net_Close_inner) ( int fd ) ;
     int (* __net_Read_inner) ( vlc_object_t *p_this, int fd, uint8_t *p_data, int i_data, vlc_bool_t b_retry ) ;
     int (* __net_ReadNonBlock_inner) ( vlc_object_t *p_this, int fd, uint8_t *p_data, int i_data, mtime_t i_wait ) ;
+    int (* __net_Select_inner) ( vlc_object_t *p_this, int *pi_fd, int i_fd,uint8_t *p_data, int i_data, mtime_t i_wait ) ;
     int (* __net_Write_inner) ( vlc_object_t *p_this, int fd, uint8_t *p_data, int i_data ) ;
     char * (* __net_Gets_inner) ( vlc_object_t *p_this, int fd ) ;
-    int (* net_Printf_inner) ( vlc_object_t *p_this, int fd, char *psz_fmt, ... ) ;
+    int (* net_Printf_inner) ( vlc_object_t *p_this, int fd, const char *psz_fmt, ... ) ;
+    int (* __net_vaPrintf_inner) ( vlc_object_t *p_this, int fd, const char *psz_fmt, va_list args ) ;
+    int (* vout_ShowTextRelative_inner) ( vout_thread_t *, int, char *, text_style_t *, int, int, int, mtime_t ) ;
+    int (* vout_ShowTextAbsolute_inner) ( vout_thread_t *, int, char *, text_style_t *, int, int, int, mtime_t, mtime_t ) ;
+    void (* __vout_OSDMessage_inner) ( vlc_object_t *, int, char *, ... ) ;
+    void (* vout_OSDSlider_inner) ( vlc_object_t *, int, int , short ) ;
+    void (* vout_OSDIcon_inner) ( vlc_object_t *, int, short ) ;
+    void (* __sout_CfgParse_inner) ( vlc_object_t *, char *psz_prefix, const char **ppsz_options, sout_cfg_t * ) ;
+    char * (* sout_CfgCreate_inner) ( char **, sout_cfg_t **, char * ) ;
     sout_instance_t * (* __sout_NewInstance_inner) ( vlc_object_t *, char * ) ;
     void (* sout_DeleteInstance_inner) ( sout_instance_t * ) ;
     sout_packetizer_input_t * (* sout_InputNew_inner) ( sout_instance_t *, es_format_t * ) ;
@@ -167,10 +106,8 @@ struct module_symbols_t {
     void (* sout_MuxDeleteStream_inner) ( sout_mux_t *, sout_input_t * ) ;
     void (* sout_MuxDelete_inner) ( sout_mux_t * ) ;
     void (* sout_MuxSendBuffer_inner) ( sout_mux_t *, sout_input_t  *, block_t * ) ;
-    void (* __sout_ParseCfg_inner) ( vlc_object_t *, char *psz_prefix, const char **ppsz_options, sout_cfg_t * ) ;
-    char * (* sout_cfg_parser_inner) ( char **, sout_cfg_t **, char * ) ;
-    sout_stream_t * (* sout_stream_new_inner) ( sout_instance_t *, char *psz_chain ) ;
-    void (* sout_stream_delete_inner) ( sout_stream_t *p_stream ) ;
+    sout_stream_t * (* sout_StreamNew_inner) ( sout_instance_t *, char *psz_chain ) ;
+    void (* sout_StreamDelete_inner) ( sout_stream_t * ) ;
     int (* sout_AnnounceRegister_inner) (sout_instance_t *,session_descriptor_t*, announce_method_t* ) ;
     session_descriptor_t* (* sout_AnnounceRegisterSDP_inner) (sout_instance_t *,char *, announce_method_t* ) ;
     int (* sout_AnnounceUnRegister_inner) (sout_instance_t *,session_descriptor_t* ) ;
@@ -192,8 +129,6 @@ struct module_symbols_t {
     int (* vout_ChromaCmp_inner) ( uint32_t, uint32_t ) ;
     picture_t * (* vout_CreatePicture_inner) ( vout_thread_t *, vlc_bool_t, vlc_bool_t, unsigned int ) ;
     void (* vout_InitFormat_inner) ( video_frame_format_t *, uint32_t, int, int, int ) ;
-    void (* vout_InitPicture_inner) ( vlc_object_t *, picture_t *, uint32_t, int, int, int ) ;
-    void (* vout_AllocatePicture_inner) ( vlc_object_t *, picture_t *, uint32_t, int, int, int ) ;
     void (* vout_DestroyPicture_inner) ( vout_thread_t *, picture_t * ) ;
     void (* vout_DisplayPicture_inner) ( vout_thread_t *, picture_t * ) ;
     void (* vout_DatePicture_inner) ( vout_thread_t *, picture_t *, mtime_t ) ;
@@ -204,16 +139,10 @@ struct module_symbols_t {
     void * (* vout_RequestWindow_inner) ( vout_thread_t *, int *, int *, unsigned int *, unsigned int * ) ;
     void (* vout_ReleaseWindow_inner) ( vout_thread_t *, void * ) ;
     int (* vout_ControlWindow_inner) ( vout_thread_t *, void *, int, va_list ) ;
-    subpicture_t * (* vout_CreateSubPicture_inner) ( vout_thread_t *, int ) ;
-    void (* vout_DestroySubPicture_inner) ( vout_thread_t *, subpicture_t * ) ;
-    void (* vout_DisplaySubPicture_inner) ( vout_thread_t *, subpicture_t * ) ;
+    access_t * (* __access2_New_inner) ( vlc_object_t *p_obj, char *psz_access, char *psz_demux, char *psz_path ) ;
+    void (* access2_Delete_inner) ( access_t * ) ;
     block_t * (* __block_New_inner) ( vlc_object_t *, int ) ;
-    void (* block_ChainAppend_inner) ( block_t **, block_t * ) ;
-    void (* block_ChainLastAppend_inner) ( block_t ***ppp_last, block_t * ) ;
-    void (* block_ChainRelease_inner) ( block_t * ) ;
-    int (* block_ChainExtract_inner) ( block_t *, void *, int ) ;
-    block_t * (* block_ChainGather_inner) ( block_t * ) ;
-    block_t * (* block_NewEmpty_inner) ( void ) ;
+    block_t * (* block_Realloc_inner) ( block_t *, int i_pre, int i_body ) ;
     block_fifo_t * (* __block_FifoNew_inner) ( vlc_object_t * ) ;
     void (* block_FifoRelease_inner) ( block_fifo_t * ) ;
     void (* block_FifoEmpty_inner) ( block_fifo_t * ) ;
@@ -226,13 +155,55 @@ struct module_symbols_t {
             char * (* vlc_strndup_inner) ( const char *s, size_t n ) ;
         double (* vlc_atof_inner) ( const char *nptr ) ;
         int64_t (* vlc_atoll_inner) ( const char *nptr ) ;
+        int64_t (* vlc_strtoll_inner) ( const char *nptr, char **endptr, int base ) ;
         char * (* vlc_getenv_inner) ( const char *name ) ;
             int (* vlc_strcasecmp_inner) ( const char *s1, const char *s2 ) ;
             int (* vlc_strncasecmp_inner) ( const char *s1, const char *s2, size_t n ) ;
+            char * (* vlc_strcasestr_inner) ( const char *s1, const char *s2 ) ;
         off_t (* vlc_lseek_inner) ( int fildes, off_t offset, int whence ) ;
+    vlc_bool_t (* vlc_reduce_inner) ( int *, int *, int64_t, int64_t, int64_t ) ;
+    char ** (* vlc_parse_cmdline_inner) ( const char *, int * ) ;
     char * (* vlc_wraptext_inner) ( const char *, int, vlc_bool_t ) ;
+    vlc_iconv_t (* vlc_iconv_open_inner) ( const char *, const char * ) ;
+    size_t (* vlc_iconv_inner) ( vlc_iconv_t, char **, size_t *, char **, size_t * ) ;
+    int (* vlc_iconv_close_inner) ( vlc_iconv_t ) ;
     char * (* vlc_dgettext_inner) ( const char *package, const char *msgid ) ;
+    demux_t * (* __demux2_New_inner) ( vlc_object_t *p_obj, char *psz_access, char *psz_demux, char *psz_path, stream_t *s, es_out_t *out ) ;
+    void (* demux2_Delete_inner) ( demux_t * ) ;
+    int (* demux2_vaControlHelper_inner) ( stream_t *, int64_t i_start, int64_t i_end, int i_bitrate, int i_align, int i_query, va_list args ) ;
     char const * (* vlc_error_inner) ( int ) ;
+    httpd_host_t * (* httpd_HostNew_inner) ( vlc_object_t *, char *psz_host, int i_port ) ;
+    httpd_host_t * (* httpd_TLSHostNew_inner) ( vlc_object_t *, char *, int, tls_server_t * ) ;
+    void (* httpd_HostDelete_inner) ( httpd_host_t * ) ;
+    httpd_url_t * (* httpd_UrlNew_inner) ( httpd_host_t *, char *psz_url, char *psz_user, char *psz_password ) ;
+    httpd_url_t * (* httpd_UrlNewUnique_inner) ( httpd_host_t *, char *psz_url, char *psz_user, char *psz_password ) ;
+    int (* httpd_UrlCatch_inner) ( httpd_url_t *, int i_msg, httpd_callback_t, httpd_callback_sys_t * ) ;
+    void (* httpd_UrlDelete_inner) ( httpd_url_t * ) ;
+    void (* httpd_ClientModeStream_inner) ( httpd_client_t *cl ) ;
+    void (* httpd_ClientModeBidir_inner) ( httpd_client_t *cl ) ;
+    char* (* httpd_ClientIP_inner) ( httpd_client_t *cl ) ;
+    httpd_file_t * (* httpd_FileNew_inner) ( httpd_host_t *, char *psz_url, char *psz_mime, char *psz_user, char *psz_password, httpd_file_callback_t pf_fill, httpd_file_sys_t * ) ;
+    void (* httpd_FileDelete_inner) ( httpd_file_t * ) ;
+    httpd_redirect_t * (* httpd_RedirectNew_inner) ( httpd_host_t *, char *psz_url_dst, char *psz_url_src ) ;
+    void (* httpd_RedirectDelete_inner) ( httpd_redirect_t * ) ;
+    httpd_stream_t * (* httpd_StreamNew_inner) ( httpd_host_t *, char *psz_url, char *psz_mime, char *psz_user, char *psz_password ) ;
+    void (* httpd_StreamDelete_inner) ( httpd_stream_t * ) ;
+    int (* httpd_StreamHeader_inner) ( httpd_stream_t *, uint8_t *p_data, int i_data ) ;
+    int (* httpd_StreamSend_inner) ( httpd_stream_t *, uint8_t *p_data, int i_data ) ;
+    void (* httpd_MsgInit_inner) ( httpd_message_t * )  ;
+    void (* httpd_MsgAdd_inner) ( httpd_message_t *, char *psz_name, char *psz_value, ... ) ;
+    char * (* httpd_MsgGet_inner) ( httpd_message_t *, char *psz_name ) ;
+    void (* httpd_MsgClean_inner) ( httpd_message_t * ) ;
+    tls_server_t * (* tls_ServerCreate_inner) ( vlc_object_t *, const char *, const char * ) ;
+    void (* tls_ServerDelete_inner) ( tls_server_t * ) ;
+    input_thread_t * (* __input_CreateThread_inner) ( vlc_object_t *, input_item_t * ) ;
+    void (* input_StopThread_inner) ( input_thread_t * ) ;
+    void (* input_DestroyThread_inner) ( input_thread_t * ) ;
+    int (* input_vaControl_inner) ( input_thread_t *, int i_query, va_list  ) ;
+    int (* input_Control_inner) ( input_thread_t *, int i_query, ...  ) ;
+    decoder_t * (* input_DecoderNew_inner) ( input_thread_t *, es_format_t *, vlc_bool_t b_force_decoder ) ;
+    void (* input_DecoderDelete_inner) ( decoder_t * ) ;
+    void (* input_DecoderDecode_inner) ( decoder_t *, block_t * ) ;
     intf_thread_t * (* __intf_Create_inner) ( vlc_object_t *, const char * ) ;
     int (* intf_RunThread_inner) ( intf_thread_t * ) ;
     void (* intf_StopThread_inner) ( intf_thread_t * ) ;
@@ -245,10 +216,6 @@ struct module_symbols_t {
     void (* __msg_Dbg_inner) ( vlc_object_t *, const char *, ... ) ATTRIBUTE_FORMAT( 2, 3 ) ;
     msg_subscription_t* (* __msg_Subscribe_inner) ( vlc_object_t * ) ;
     void (* __msg_Unsubscribe_inner) ( vlc_object_t *, msg_subscription_t * ) ;
-    vlm_t * (* __vlm_New_inner) ( vlc_object_t * ) ;
-    void (* vlm_Delete_inner) ( vlm_t * ) ;
-    int (* vlm_ExecuteCommand_inner) ( vlm_t *, char *, vlm_message_t **) ;
-    void (* vlm_MessageDelete_inner) ( vlm_message_t* ) ;
     void * (* __vlc_object_create_inner) ( vlc_object_t *, int ) ;
     void (* __vlc_object_destroy_inner) ( vlc_object_t * ) ;
     void (* __vlc_object_attach_inner) ( vlc_object_t *, vlc_object_t * ) ;
@@ -295,6 +262,20 @@ struct module_symbols_t {
     int (* playlist_Move_inner) ( playlist_t *, int, int ) ;
     int (* playlist_Import_inner) ( playlist_t *, const char * ) ;
     int (* playlist_Export_inner) ( playlist_t *, const char *, const char * ) ;
+    spu_t * (* __spu_Create_inner) ( vlc_object_t * ) ;
+    int (* spu_Init_inner) ( spu_t * ) ;
+    void (* spu_Destroy_inner) ( spu_t * ) ;
+    subpicture_t * (* spu_CreateSubpicture_inner) ( spu_t * ) ;
+    void (* spu_DestroySubpicture_inner) ( spu_t *, subpicture_t * ) ;
+    void (* spu_DisplaySubpicture_inner) ( spu_t *, subpicture_t * ) ;
+    subpicture_region_t * (* __spu_CreateRegion_inner) ( vlc_object_t *, video_format_t * ) ;
+    void (* __spu_DestroyRegion_inner) ( vlc_object_t *, subpicture_region_t * ) ;
+    subpicture_t * (* spu_SortSubpictures_inner) ( spu_t *, mtime_t ) ;
+    void (* spu_RenderSubpictures_inner) ( spu_t *,  video_format_t *, picture_t *, picture_t *, subpicture_t *, int, int ) ;
+    char * (* stream_ReadLine_inner) ( stream_t * ) ;
+    stream_t * (* __stream_DemuxNew_inner) ( vlc_object_t *p_obj, char *psz_demux, es_out_t *out ) ;
+    void (* stream_DemuxSend_inner) ( stream_t *s, block_t *p_block ) ;
+    void (* stream_DemuxDelete_inner) ( stream_t *s ) ;
     int (* __vlc_threads_init_inner) ( vlc_object_t * ) ;
     int (* __vlc_threads_end_inner) ( vlc_object_t * ) ;
     int (* __vlc_mutex_init_inner) ( vlc_object_t *, vlc_mutex_t * ) ;
@@ -305,7 +286,13 @@ struct module_symbols_t {
     int (* __vlc_thread_set_priority_inner) ( vlc_object_t *, char *, int, int ) ;
     void (* __vlc_thread_ready_inner) ( vlc_object_t * ) ;
     void (* __vlc_thread_join_inner) ( vlc_object_t *, char *, int ) ;
-    void (* vout_AspectRatio_inner) ( unsigned int i_aspect, unsigned int *i_aspect_x, unsigned int *i_aspect_y ) ;
+    void (* __vout_CopyPicture_inner) ( vlc_object_t *p_this, picture_t *p_dst, picture_t *p_src ) ;
+    int (* __vout_InitPicture_inner) ( vlc_object_t *p_this, picture_t *p_pic, uint32_t i_chroma, int i_width, int i_height, int i_aspect ) ;
+    int (* __vout_AllocatePicture_inner) ( vlc_object_t *p_this, picture_t *p_pic, uint32_t i_chroma, int i_width, int i_height, int i_aspect ) ;
+    vlm_t * (* __vlm_New_inner) ( vlc_object_t * ) ;
+    void (* vlm_Delete_inner) ( vlm_t * ) ;
+    int (* vlm_ExecuteCommand_inner) ( vlm_t *, char *, vlm_message_t ** ) ;
+    void (* vlm_MessageDelete_inner) ( vlm_message_t* ) ;
     vout_synchro_t * (* __vout_SynchroInit_inner) ( vlc_object_t *, int ) ;
     void (* vout_SynchroRelease_inner) ( vout_synchro_t * ) ;
     void (* vout_SynchroReset_inner) ( vout_synchro_t * ) ;
@@ -315,9 +302,6 @@ struct module_symbols_t {
     void (* vout_SynchroEnd_inner) ( vout_synchro_t *, int, vlc_bool_t ) ;
     mtime_t (* vout_SynchroDate_inner) ( vout_synchro_t * ) ;
     void (* vout_SynchroNewPicture_inner) ( vout_synchro_t *, int, int, mtime_t, mtime_t, int ) ;
-    subpicture_t * (* vout_ShowTextRelative_inner) ( vout_thread_t *, char *, text_style_t *, int, int, int, mtime_t ) ;
-    int (* vout_ShowTextAbsolute_inner) ( vout_thread_t *, char *, text_style_t *, int, int, int, mtime_t, mtime_t ) ;
-    void (* __vout_OSDMessage_inner) ( vlc_object_t *, char *, ... ) ;
 };
 #ifdef __PLUGIN__
 #   define aout_FiltersCreatePipeline p_symbols->aout_FiltersCreatePipeline_inner
@@ -340,6 +324,8 @@ struct module_symbols_t {
 #   define aout_DateMove p_symbols->aout_DateMove_inner
 #   define aout_DateGet p_symbols->aout_DateGet_inner
 #   define aout_DateIncrement p_symbols->aout_DateIncrement_inner
+#   define aout_CheckChannelReorder p_symbols->aout_CheckChannelReorder_inner
+#   define aout_ChannelReorder p_symbols->aout_ChannelReorder_inner
 #   define __aout_DecNew p_symbols->__aout_DecNew_inner
 #   define aout_DecDelete p_symbols->aout_DecDelete_inner
 #   define aout_DecNewBuffer p_symbols->aout_DecNewBuffer_inner
@@ -354,6 +340,7 @@ struct module_symbols_t {
 #   define aout_Restart p_symbols->aout_Restart_inner
 #   define aout_FindAndRestart p_symbols->aout_FindAndRestart_inner
 #   define aout_ChannelsRestart p_symbols->aout_ChannelsRestart_inner
+#   define vlc_current_charset p_symbols->vlc_current_charset_inner
 #   define __config_GetType p_symbols->__config_GetType_inner
 #   define __config_GetInt p_symbols->__config_GetInt_inner
 #   define __config_PutInt p_symbols->__config_PutInt_inner
@@ -371,92 +358,11 @@ struct module_symbols_t {
 #   define config_Duplicate p_symbols->config_Duplicate_inner
 #   define config_SetCallbacks p_symbols->config_SetCallbacks_inner
 #   define config_UnsetCallbacks p_symbols->config_UnsetCallbacks_inner
-#   define vlc_current_charset p_symbols->vlc_current_charset_inner
-#   define stream_ReadLine p_symbols->stream_ReadLine_inner
-#   define __stream_DemuxNew p_symbols->__stream_DemuxNew_inner
-#   define stream_DemuxSend p_symbols->stream_DemuxSend_inner
-#   define stream_DemuxDelete p_symbols->stream_DemuxDelete_inner
-#   define demux_vaControl p_symbols->demux_vaControl_inner
-#   define demux_Control p_symbols->demux_Control_inner
-#   define demux_vaControlDefault p_symbols->demux_vaControlDefault_inner
-#   define __demux2_New p_symbols->__demux2_New_inner
-#   define demux2_Delete p_symbols->demux2_Delete_inner
-#   define demux2_vaControlHelper p_symbols->demux2_vaControlHelper_inner
-#   define subtitles_Detect p_symbols->subtitles_Detect_inner
-#   define input_vaControl p_symbols->input_vaControl_inner
-#   define input_Control p_symbols->input_Control_inner
-#   define input_DeletePES p_symbols->input_DeletePES_inner
-#   define __input_CreateThread p_symbols->__input_CreateThread_inner
-#   define input_StopThread p_symbols->input_StopThread_inner
-#   define input_DestroyThread p_symbols->input_DestroyThread_inner
-#   define __input_SetStatus p_symbols->__input_SetStatus_inner
-#   define __input_SetRate p_symbols->__input_SetRate_inner
-#   define __input_Seek p_symbols->__input_Seek_inner
-#   define __input_Tell p_symbols->__input_Tell_inner
-#   define input_DumpStream p_symbols->input_DumpStream_inner
-#   define input_OffsetToTime p_symbols->input_OffsetToTime_inner
-#   define input_ToggleES p_symbols->input_ToggleES_inner
-#   define input_ChangeArea p_symbols->input_ChangeArea_inner
-#   define input_ChangeProgram p_symbols->input_ChangeProgram_inner
-#   define input_InitStream p_symbols->input_InitStream_inner
-#   define input_EndStream p_symbols->input_EndStream_inner
-#   define input_FindProgram p_symbols->input_FindProgram_inner
-#   define input_AddProgram p_symbols->input_AddProgram_inner
-#   define input_DelProgram p_symbols->input_DelProgram_inner
-#   define input_SetProgram p_symbols->input_SetProgram_inner
-#   define input_AddArea p_symbols->input_AddArea_inner
-#   define input_DelArea p_symbols->input_DelArea_inner
-#   define input_FindES p_symbols->input_FindES_inner
-#   define input_AddES p_symbols->input_AddES_inner
-#   define input_DelES p_symbols->input_DelES_inner
-#   define input_SelectES p_symbols->input_SelectES_inner
-#   define input_UnselectES p_symbols->input_UnselectES_inner
-#   define input_RunDecoder p_symbols->input_RunDecoder_inner
-#   define input_EndDecoder p_symbols->input_EndDecoder_inner
-#   define input_DecodePES p_symbols->input_DecodePES_inner
-#   define input_DecodeBlock p_symbols->input_DecodeBlock_inner
-#   define input_ClockManageControl p_symbols->input_ClockManageControl_inner
-#   define input_ClockManageRef p_symbols->input_ClockManageRef_inner
-#   define input_ClockGetTS p_symbols->input_ClockGetTS_inner
-#   define input_BuffersEnd p_symbols->input_BuffersEnd_inner
-#   define input_NewBuffer p_symbols->input_NewBuffer_inner
-#   define input_ReleaseBuffer p_symbols->input_ReleaseBuffer_inner
-#   define input_ShareBuffer p_symbols->input_ShareBuffer_inner
-#   define input_NewPacket p_symbols->input_NewPacket_inner
-#   define input_DeletePacket p_symbols->input_DeletePacket_inner
-#   define input_NewPES p_symbols->input_NewPES_inner
-#   define input_FillBuffer p_symbols->input_FillBuffer_inner
-#   define input_Peek p_symbols->input_Peek_inner
-#   define input_SplitBuffer p_symbols->input_SplitBuffer_inner
-#   define input_AccessInit p_symbols->input_AccessInit_inner
-#   define input_AccessReinit p_symbols->input_AccessReinit_inner
-#   define input_AccessEnd p_symbols->input_AccessEnd_inner
 #   define __intf_Eject p_symbols->__intf_Eject_inner
 #   define GetLang_1 p_symbols->GetLang_1_inner
 #   define GetLang_2T p_symbols->GetLang_2T_inner
 #   define GetLang_2B p_symbols->GetLang_2B_inner
 #   define DecodeLanguage p_symbols->DecodeLanguage_inner
-#   define httpd_HostNew p_symbols->httpd_HostNew_inner
-#   define httpd_HostDelete p_symbols->httpd_HostDelete_inner
-#   define httpd_UrlNew p_symbols->httpd_UrlNew_inner
-#   define httpd_UrlNewUnique p_symbols->httpd_UrlNewUnique_inner
-#   define httpd_UrlCatch p_symbols->httpd_UrlCatch_inner
-#   define httpd_UrlDelete p_symbols->httpd_UrlDelete_inner
-#   define httpd_ClientModeStream p_symbols->httpd_ClientModeStream_inner
-#   define httpd_ClientModeBidir p_symbols->httpd_ClientModeBidir_inner
-#   define httpd_ClientIP p_symbols->httpd_ClientIP_inner
-#   define httpd_FileNew p_symbols->httpd_FileNew_inner
-#   define httpd_FileDelete p_symbols->httpd_FileDelete_inner
-#   define httpd_RedirectNew p_symbols->httpd_RedirectNew_inner
-#   define httpd_RedirectDelete p_symbols->httpd_RedirectDelete_inner
-#   define httpd_StreamNew p_symbols->httpd_StreamNew_inner
-#   define httpd_StreamDelete p_symbols->httpd_StreamDelete_inner
-#   define httpd_StreamHeader p_symbols->httpd_StreamHeader_inner
-#   define httpd_StreamSend p_symbols->httpd_StreamSend_inner
-#   define httpd_MsgInit p_symbols->httpd_MsgInit_inner
-#   define httpd_MsgAdd p_symbols->httpd_MsgAdd_inner
-#   define httpd_MsgGet p_symbols->httpd_MsgGet_inner
-#   define httpd_MsgClean p_symbols->httpd_MsgClean_inner
 #   define __module_Need p_symbols->__module_Need_inner
 #   define __module_Unneed p_symbols->__module_Unneed_inner
 #   define mstrtime p_symbols->mstrtime_inner
@@ -464,14 +370,31 @@ struct module_symbols_t {
 #   define mwait p_symbols->mwait_inner
 #   define msleep p_symbols->msleep_inner
 #   define secstotimestr p_symbols->secstotimestr_inner
+#   define date_Init p_symbols->date_Init_inner
+#   define date_Change p_symbols->date_Change_inner
+#   define date_Set p_symbols->date_Set_inner
+#   define date_Get p_symbols->date_Get_inner
+#   define date_Move p_symbols->date_Move_inner
+#   define date_Increment p_symbols->date_Increment_inner
 #   define __net_OpenTCP p_symbols->__net_OpenTCP_inner
+#   define __net_ListenTCP p_symbols->__net_ListenTCP_inner
+#   define __net_Accept p_symbols->__net_Accept_inner
 #   define __net_OpenUDP p_symbols->__net_OpenUDP_inner
 #   define net_Close p_symbols->net_Close_inner
 #   define __net_Read p_symbols->__net_Read_inner
 #   define __net_ReadNonBlock p_symbols->__net_ReadNonBlock_inner
+#   define __net_Select p_symbols->__net_Select_inner
 #   define __net_Write p_symbols->__net_Write_inner
 #   define __net_Gets p_symbols->__net_Gets_inner
 #   define net_Printf p_symbols->net_Printf_inner
+#   define __net_vaPrintf p_symbols->__net_vaPrintf_inner
+#   define vout_ShowTextRelative p_symbols->vout_ShowTextRelative_inner
+#   define vout_ShowTextAbsolute p_symbols->vout_ShowTextAbsolute_inner
+#   define __vout_OSDMessage p_symbols->__vout_OSDMessage_inner
+#   define vout_OSDSlider p_symbols->vout_OSDSlider_inner
+#   define vout_OSDIcon p_symbols->vout_OSDIcon_inner
+#   define __sout_CfgParse p_symbols->__sout_CfgParse_inner
+#   define sout_CfgCreate p_symbols->sout_CfgCreate_inner
 #   define __sout_NewInstance p_symbols->__sout_NewInstance_inner
 #   define sout_DeleteInstance p_symbols->sout_DeleteInstance_inner
 #   define sout_InputNew p_symbols->sout_InputNew_inner
@@ -487,10 +410,8 @@ struct module_symbols_t {
 #   define sout_MuxDeleteStream p_symbols->sout_MuxDeleteStream_inner
 #   define sout_MuxDelete p_symbols->sout_MuxDelete_inner
 #   define sout_MuxSendBuffer p_symbols->sout_MuxSendBuffer_inner
-#   define __sout_ParseCfg p_symbols->__sout_ParseCfg_inner
-#   define sout_cfg_parser p_symbols->sout_cfg_parser_inner
-#   define sout_stream_new p_symbols->sout_stream_new_inner
-#   define sout_stream_delete p_symbols->sout_stream_delete_inner
+#   define sout_StreamNew p_symbols->sout_StreamNew_inner
+#   define sout_StreamDelete p_symbols->sout_StreamDelete_inner
 #   define sout_AnnounceRegister p_symbols->sout_AnnounceRegister_inner
 #   define sout_AnnounceRegisterSDP p_symbols->sout_AnnounceRegisterSDP_inner
 #   define sout_AnnounceUnRegister p_symbols->sout_AnnounceUnRegister_inner
@@ -512,8 +433,6 @@ struct module_symbols_t {
 #   define vout_ChromaCmp p_symbols->vout_ChromaCmp_inner
 #   define vout_CreatePicture p_symbols->vout_CreatePicture_inner
 #   define vout_InitFormat p_symbols->vout_InitFormat_inner
-#   define vout_InitPicture p_symbols->vout_InitPicture_inner
-#   define vout_AllocatePicture p_symbols->vout_AllocatePicture_inner
 #   define vout_DestroyPicture p_symbols->vout_DestroyPicture_inner
 #   define vout_DisplayPicture p_symbols->vout_DisplayPicture_inner
 #   define vout_DatePicture p_symbols->vout_DatePicture_inner
@@ -524,16 +443,10 @@ struct module_symbols_t {
 #   define vout_RequestWindow p_symbols->vout_RequestWindow_inner
 #   define vout_ReleaseWindow p_symbols->vout_ReleaseWindow_inner
 #   define vout_ControlWindow p_symbols->vout_ControlWindow_inner
-#   define vout_CreateSubPicture p_symbols->vout_CreateSubPicture_inner
-#   define vout_DestroySubPicture p_symbols->vout_DestroySubPicture_inner
-#   define vout_DisplaySubPicture p_symbols->vout_DisplaySubPicture_inner
+#   define __access2_New p_symbols->__access2_New_inner
+#   define access2_Delete p_symbols->access2_Delete_inner
 #   define __block_New p_symbols->__block_New_inner
-#   define block_ChainAppend p_symbols->block_ChainAppend_inner
-#   define block_ChainLastAppend p_symbols->block_ChainLastAppend_inner
-#   define block_ChainRelease p_symbols->block_ChainRelease_inner
-#   define block_ChainExtract p_symbols->block_ChainExtract_inner
-#   define block_ChainGather p_symbols->block_ChainGather_inner
-#   define block_NewEmpty p_symbols->block_NewEmpty_inner
+#   define block_Realloc p_symbols->block_Realloc_inner
 #   define __block_FifoNew p_symbols->__block_FifoNew_inner
 #   define block_FifoRelease p_symbols->block_FifoRelease_inner
 #   define block_FifoEmpty p_symbols->block_FifoEmpty_inner
@@ -546,13 +459,55 @@ struct module_symbols_t {
         #   define vlc_strndup p_symbols->vlc_strndup_inner
     #   define vlc_atof p_symbols->vlc_atof_inner
     #   define vlc_atoll p_symbols->vlc_atoll_inner
+    #   define vlc_strtoll p_symbols->vlc_strtoll_inner
     #   define vlc_getenv p_symbols->vlc_getenv_inner
         #   define vlc_strcasecmp p_symbols->vlc_strcasecmp_inner
         #   define vlc_strncasecmp p_symbols->vlc_strncasecmp_inner
+        #   define vlc_strcasestr p_symbols->vlc_strcasestr_inner
     #   define vlc_lseek p_symbols->vlc_lseek_inner
+#   define vlc_reduce p_symbols->vlc_reduce_inner
+#   define vlc_parse_cmdline p_symbols->vlc_parse_cmdline_inner
 #   define vlc_wraptext p_symbols->vlc_wraptext_inner
+#   define vlc_iconv_open p_symbols->vlc_iconv_open_inner
+#   define vlc_iconv p_symbols->vlc_iconv_inner
+#   define vlc_iconv_close p_symbols->vlc_iconv_close_inner
 #   define vlc_dgettext p_symbols->vlc_dgettext_inner
+#   define __demux2_New p_symbols->__demux2_New_inner
+#   define demux2_Delete p_symbols->demux2_Delete_inner
+#   define demux2_vaControlHelper p_symbols->demux2_vaControlHelper_inner
 #   define vlc_error p_symbols->vlc_error_inner
+#   define httpd_HostNew p_symbols->httpd_HostNew_inner
+#   define httpd_TLSHostNew p_symbols->httpd_TLSHostNew_inner
+#   define httpd_HostDelete p_symbols->httpd_HostDelete_inner
+#   define httpd_UrlNew p_symbols->httpd_UrlNew_inner
+#   define httpd_UrlNewUnique p_symbols->httpd_UrlNewUnique_inner
+#   define httpd_UrlCatch p_symbols->httpd_UrlCatch_inner
+#   define httpd_UrlDelete p_symbols->httpd_UrlDelete_inner
+#   define httpd_ClientModeStream p_symbols->httpd_ClientModeStream_inner
+#   define httpd_ClientModeBidir p_symbols->httpd_ClientModeBidir_inner
+#   define httpd_ClientIP p_symbols->httpd_ClientIP_inner
+#   define httpd_FileNew p_symbols->httpd_FileNew_inner
+#   define httpd_FileDelete p_symbols->httpd_FileDelete_inner
+#   define httpd_RedirectNew p_symbols->httpd_RedirectNew_inner
+#   define httpd_RedirectDelete p_symbols->httpd_RedirectDelete_inner
+#   define httpd_StreamNew p_symbols->httpd_StreamNew_inner
+#   define httpd_StreamDelete p_symbols->httpd_StreamDelete_inner
+#   define httpd_StreamHeader p_symbols->httpd_StreamHeader_inner
+#   define httpd_StreamSend p_symbols->httpd_StreamSend_inner
+#   define httpd_MsgInit p_symbols->httpd_MsgInit_inner
+#   define httpd_MsgAdd p_symbols->httpd_MsgAdd_inner
+#   define httpd_MsgGet p_symbols->httpd_MsgGet_inner
+#   define httpd_MsgClean p_symbols->httpd_MsgClean_inner
+#   define tls_ServerCreate p_symbols->tls_ServerCreate_inner
+#   define tls_ServerDelete p_symbols->tls_ServerDelete_inner
+#   define __input_CreateThread p_symbols->__input_CreateThread_inner
+#   define input_StopThread p_symbols->input_StopThread_inner
+#   define input_DestroyThread p_symbols->input_DestroyThread_inner
+#   define input_vaControl p_symbols->input_vaControl_inner
+#   define input_Control p_symbols->input_Control_inner
+#   define input_DecoderNew p_symbols->input_DecoderNew_inner
+#   define input_DecoderDelete p_symbols->input_DecoderDelete_inner
+#   define input_DecoderDecode p_symbols->input_DecoderDecode_inner
 #   define __intf_Create p_symbols->__intf_Create_inner
 #   define intf_RunThread p_symbols->intf_RunThread_inner
 #   define intf_StopThread p_symbols->intf_StopThread_inner
@@ -565,10 +520,6 @@ struct module_symbols_t {
 #   define __msg_Dbg p_symbols->__msg_Dbg_inner
 #   define __msg_Subscribe p_symbols->__msg_Subscribe_inner
 #   define __msg_Unsubscribe p_symbols->__msg_Unsubscribe_inner
-#   define __vlm_New p_symbols->__vlm_New_inner
-#   define vlm_Delete p_symbols->vlm_Delete_inner
-#   define vlm_ExecuteCommand p_symbols->vlm_ExecuteCommand_inner
-#   define vlm_MessageDelete p_symbols->vlm_MessageDelete_inner
 #   define __vlc_object_create p_symbols->__vlc_object_create_inner
 #   define __vlc_object_destroy p_symbols->__vlc_object_destroy_inner
 #   define __vlc_object_attach p_symbols->__vlc_object_attach_inner
@@ -615,6 +566,20 @@ struct module_symbols_t {
 #   define playlist_Move p_symbols->playlist_Move_inner
 #   define playlist_Import p_symbols->playlist_Import_inner
 #   define playlist_Export p_symbols->playlist_Export_inner
+#   define __spu_Create p_symbols->__spu_Create_inner
+#   define spu_Init p_symbols->spu_Init_inner
+#   define spu_Destroy p_symbols->spu_Destroy_inner
+#   define spu_CreateSubpicture p_symbols->spu_CreateSubpicture_inner
+#   define spu_DestroySubpicture p_symbols->spu_DestroySubpicture_inner
+#   define spu_DisplaySubpicture p_symbols->spu_DisplaySubpicture_inner
+#   define __spu_CreateRegion p_symbols->__spu_CreateRegion_inner
+#   define __spu_DestroyRegion p_symbols->__spu_DestroyRegion_inner
+#   define spu_SortSubpictures p_symbols->spu_SortSubpictures_inner
+#   define spu_RenderSubpictures p_symbols->spu_RenderSubpictures_inner
+#   define stream_ReadLine p_symbols->stream_ReadLine_inner
+#   define __stream_DemuxNew p_symbols->__stream_DemuxNew_inner
+#   define stream_DemuxSend p_symbols->stream_DemuxSend_inner
+#   define stream_DemuxDelete p_symbols->stream_DemuxDelete_inner
 #   define __vlc_threads_init p_symbols->__vlc_threads_init_inner
 #   define __vlc_threads_end p_symbols->__vlc_threads_end_inner
 #   define __vlc_mutex_init p_symbols->__vlc_mutex_init_inner
@@ -625,7 +590,13 @@ struct module_symbols_t {
 #   define __vlc_thread_set_priority p_symbols->__vlc_thread_set_priority_inner
 #   define __vlc_thread_ready p_symbols->__vlc_thread_ready_inner
 #   define __vlc_thread_join p_symbols->__vlc_thread_join_inner
-#   define vout_AspectRatio p_symbols->vout_AspectRatio_inner
+#   define __vout_CopyPicture p_symbols->__vout_CopyPicture_inner
+#   define __vout_InitPicture p_symbols->__vout_InitPicture_inner
+#   define __vout_AllocatePicture p_symbols->__vout_AllocatePicture_inner
+#   define __vlm_New p_symbols->__vlm_New_inner
+#   define vlm_Delete p_symbols->vlm_Delete_inner
+#   define vlm_ExecuteCommand p_symbols->vlm_ExecuteCommand_inner
+#   define vlm_MessageDelete p_symbols->vlm_MessageDelete_inner
 #   define __vout_SynchroInit p_symbols->__vout_SynchroInit_inner
 #   define vout_SynchroRelease p_symbols->vout_SynchroRelease_inner
 #   define vout_SynchroReset p_symbols->vout_SynchroReset_inner
@@ -635,7 +606,4 @@ struct module_symbols_t {
 #   define vout_SynchroEnd p_symbols->vout_SynchroEnd_inner
 #   define vout_SynchroDate p_symbols->vout_SynchroDate_inner
 #   define vout_SynchroNewPicture p_symbols->vout_SynchroNewPicture_inner
-#   define vout_ShowTextRelative p_symbols->vout_ShowTextRelative_inner
-#   define vout_ShowTextAbsolute p_symbols->vout_ShowTextAbsolute_inner
-#   define __vout_OSDMessage p_symbols->__vout_OSDMessage_inner
 #endif /* __PLUGIN__ */

@@ -2,7 +2,7 @@
  * playlist.m: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: playlist.m 7611 2004-05-06 23:14:23Z hartman $
+ * $Id: playlist.m 8388 2004-08-05 21:32:32Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Derk-Jan Hartman <hartman at videolan dot org>
@@ -56,7 +56,7 @@
     NSNumber *o_number;
 
     playlist_t * p_playlist;
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
 
     if( [[o_event characters] length] )
     {
@@ -191,7 +191,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
 - (void) tableView:(NSTableView*)o_tv
                   didClickTableColumn:(NSTableColumn *)o_tc
 {
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t *p_playlist =
         (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                        FIND_ANYWHERE );
@@ -264,7 +264,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
 
 - (NSMenu *)menuForEvent:(NSEvent *)o_event
 {
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                             FIND_ANYWHERE );
 
@@ -316,7 +316,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
 
 - (IBAction)savePlaylist:(id)sender
 {
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                        FIND_ANYWHERE );
 
@@ -335,7 +335,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
 
 - (IBAction)playItem:(id)sender
 {
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                        FIND_ANYWHERE );
 
@@ -352,7 +352,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
     NSMutableArray *o_to_delete;
     NSNumber *o_number;
 
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                        FIND_ANYWHERE );
 
@@ -392,7 +392,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
     NSMutableArray *o_selected;
     NSNumber *o_number;
 
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                        FIND_ANYWHERE );
 
@@ -434,7 +434,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
 
 - (IBAction)enableGroup:(id)sender
 {
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                        FIND_ANYWHERE );
 
@@ -448,7 +448,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
 
 - (IBAction)disableGroup:(id)sender
 {
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                        FIND_ANYWHERE );
 
@@ -472,7 +472,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
     NSString *o_current_name;
     NSString *o_current_author;
 
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                FIND_ANYWHERE );
 
@@ -528,7 +528,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
 - (IBAction)handlePopUp:(id)sender
 
 {
-             intf_thread_t * p_intf = [NSApp getIntf];
+             intf_thread_t * p_intf = VLCIntf;
              vlc_value_t val1,val2;
              playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                         FIND_ANYWHERE );
@@ -545,7 +545,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
              var_Set( p_playlist, "loop", val1 );
              val1.b_bool = 1;
              var_Set( p_playlist, "repeat", val1 );
-             vout_OSDMessage( p_intf, _( "Repeat One" ) );
+             vout_OSDMessage( p_intf, DEFAULT_CHAN, _( "Repeat One" ) );
         break;
 
         case 2:
@@ -553,7 +553,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
              var_Set( p_playlist, "repeat", val1 );
              val1.b_bool = 1;
              var_Set( p_playlist, "loop", val1 );
-             vout_OSDMessage( p_intf, _( "Repeat All" ) );
+             vout_OSDMessage( p_intf, DEFAULT_CHAN, _( "Repeat All" ) );
         break;
 
         default:
@@ -564,7 +564,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
                   val1.b_bool = 0;
                   var_Set( p_playlist, "repeat", val1 );
                   var_Set( p_playlist, "loop", val1 );
-                  vout_OSDMessage( p_intf, _( "Repeat Off" ) );
+                  vout_OSDMessage( p_intf, DEFAULT_CHAN, _( "Repeat Off" ) );
              }
          break;
      }
@@ -576,7 +576,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
 - (void)appendArray:(NSArray*)o_array atPos:(int)i_position enqueue:(BOOL)b_enqueue
 {
     int i_item;
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                        FIND_ANYWHERE );
 
@@ -667,7 +667,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
 - (void)playlistUpdated
 {
     vlc_value_t val1, val2;
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                        FIND_ANYWHERE );
     if( p_playlist != NULL )
@@ -698,7 +698,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
 {
     int i_row;
 
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                        FIND_ANYWHERE );
 
@@ -728,7 +728,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
 
 - (void)deleteGroup:(int)i_id
 {
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                        FIND_ANYWHERE );
     int i;
@@ -833,7 +833,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
 - (int)numberOfRowsInTableView:(NSTableView *)o_tv
 {
     int i_count = 0;
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                        FIND_ANYWHERE );
 
@@ -853,7 +853,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
                 row:(int)i_row
 {
     id o_value = nil;
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                FIND_ANYWHERE );
 
@@ -880,7 +880,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
     {
         char *psz_temp;
         vlc_mutex_lock( &p_playlist->object_lock );
-        psz_temp = playlist_GetInfo( p_playlist, i_row ,_("General"),_("Author") );
+        psz_temp = playlist_GetInfo( p_playlist, i_row ,_("Meta-information"),_("Artist") );
         vlc_mutex_unlock( &p_playlist->object_lock );
 
         if( psz_temp == NULL )
@@ -922,7 +922,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
                 forTableColumn:(NSTableColumn *)o_tc
                 row:(int)i_rows
 {
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                FIND_ANYWHERE );
     if (p_playlist)
@@ -998,7 +998,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
     {
         if (i_moveRow != -1 && i_proposed_row != -1)
         {
-            intf_thread_t * p_intf = [NSApp getIntf];
+            intf_thread_t * p_intf = VLCIntf;
             playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                             FIND_ANYWHERE );
 

@@ -2,7 +2,7 @@
  * cmd_playlist.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: cmd_playlist.cpp 7321 2004-04-11 16:34:04Z asmax $
+ * $Id: cmd_playlist.cpp 8524 2004-08-25 21:32:15Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -85,6 +85,40 @@ void CmdPlaylistLoop::execute()
         vlc_value_t val;
         val.b_bool = m_value;
         var_Set( pPlaylist , "loop", val);
+    }
+}
+
+
+void CmdPlaylistRepeat::execute()
+{
+    playlist_t *pPlaylist = getIntf()->p_sys->p_playlist;
+    if( pPlaylist != NULL )
+    {
+        vlc_value_t val;
+        val.b_bool = m_value;
+        var_Set( pPlaylist , "repeat", val);
+    }
+}
+
+
+void CmdPlaylistLoad::execute()
+{
+    playlist_t *pPlaylist = getIntf()->p_sys->p_playlist;
+    if( pPlaylist != NULL )
+    {
+        playlist_Import( pPlaylist, m_file.c_str() );
+    }
+}
+
+
+void CmdPlaylistSave::execute()
+{
+    playlist_t *pPlaylist = getIntf()->p_sys->p_playlist;
+    if( pPlaylist != NULL )
+    {
+        // FIXME: when the PLS export will be working, we'll need to remove
+        // this hardcoding...
+        playlist_Export( pPlaylist, m_file.c_str(), "export-m3u" );
     }
 }
 

@@ -2,7 +2,7 @@
  * preferences_widgets.h : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2003 VideoLAN
- * $Id: preferences_widgets.h 7322 2004-04-12 00:06:59Z gbazin $
+ * $Id: preferences_widgets.h 9088 2004-10-31 13:19:28Z gbazin $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -133,6 +133,9 @@ public:
     virtual int GetIntValue();
 private:
     wxSpinCtrl *spin;
+    int i_value;
+
+    void OnUpdate( wxCommandEvent& );
 
     DECLARE_EVENT_TABLE()
 };

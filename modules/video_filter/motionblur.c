@@ -2,7 +2,7 @@
  * motion_blur.c : motion blur filter for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001, 2002, 2003 VideoLAN
- * $Id: motionblur.c 7453 2004-04-23 20:01:59Z gbazin $
+ * $Id: motionblur.c 8551 2004-08-28 17:36:02Z gbazin $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -52,7 +52,7 @@ static int  SendEvents( vlc_object_t *, char const *,
  * Module descriptor
  *****************************************************************************/
 #define MODE_TEXT N_("Blur factor (1-127)")
-#define MODE_LONGTEXT N_("The degree of blurring from 1 to 127")
+#define MODE_LONGTEXT N_("The degree of blurring from 1 to 127.")
 
 vlc_module_begin();
     set_description( _("Motion blur filter") );
@@ -207,9 +207,12 @@ static void Destroy( vlc_object_t *p_this )
 {
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
 
-    DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
-    vlc_object_detach( p_vout->p_sys->p_vout );
-    vout_Destroy( p_vout->p_sys->p_vout );
+    if( p_vout->p_sys->p_vout )
+    {
+        DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
+        vlc_object_detach( p_vout->p_sys->p_vout );
+        vout_Destroy( p_vout->p_sys->p_vout );
+    }
 
     DEL_PARENT_CALLBACKS( SendEventsToChild );
 
@@ -290,7 +293,7 @@ static void CopyPicture( vout_thread_t * p_vout,
             /* There are margins, but with the same width : perfect ! */
             p_vout->p_vlc->pf_memcpy(
                          p_dest->p[i].p_pixels, p_src->p[i].p_pixels,
-                         p_src->p[i].i_pitch * p_src->p[i].i_lines );
+                         p_src->p[i].i_pitch * p_src->p[i].i_visible_lines );
         }
         else
         {
@@ -299,7 +302,7 @@ static void CopyPicture( vout_thread_t * p_vout,
             uint8_t *p_out = p_dest->p[i].p_pixels;
             int i_line;
 
-            for( i_line = p_src->p[i].i_lines; i_line--; )
+            for( i_line = p_src->p[i].i_visible_lines; i_line--; )
             {
                 p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                           p_src->p[i].i_visible_pitch );
@@ -326,7 +329,7 @@ static void RenderBlur( vout_thread_t *p_vout, picture_t *p_oldpic,
         p_new = p_newpic->p[i_plane].p_pixels;
         p_old = p_oldpic->p[i_plane].p_pixels;
         p_out_end = p_out + p_outpic->p[i_plane].i_pitch *
-                             p_outpic->p[i_plane].i_lines;
+                             p_outpic->p[i_plane].i_visible_lines;
         while ( p_out < p_out_end )
         {
             p_out_line_end = p_out + p_outpic->p[i_plane].i_visible_pitch;

@@ -2,7 +2,7 @@
  * ctrl_text.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_text.cpp 7480 2004-04-25 15:04:45Z asmax $
+ * $Id: ctrl_text.cpp 8347 2004-08-01 20:46:01Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -35,8 +35,8 @@
 #include "../utils/var_text.hpp"
 
 
-#define MOVING_TEXT_STEP 3
-#define MOVING_TEXT_DELAY 200
+#define MOVING_TEXT_STEP 1
+#define MOVING_TEXT_DELAY 30
 #define SEPARATOR_STRING "   "
 
 

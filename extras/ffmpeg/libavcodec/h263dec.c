@@ -37,8 +37,8 @@ int ff_h263_decode_init(AVCodecContext *avctx)
     s->avctx = avctx;
     s->out_format = FMT_H263;
 
-    s->width = avctx->width;
-    s->height = avctx->height;
+    s->width  = avctx->coded_width;
+    s->height = avctx->coded_height;
     s->workaround_bugs= avctx->workaround_bugs;
 
     // set defaults
@@ -139,6 +139,7 @@ static int get_consumed_bytes(MpegEncContext *s, int buf_size){
 
 static int decode_slice(MpegEncContext *s){
     const int part_mask= s->partitioned_frame ? (AC_END|AC_ERROR) : 0x7F;
+    const int mb_size= 16>>s->avctx->lowres;
     s->last_resync_gb= s->gb;
     s->first_slice_line= 1;
         
@@ -214,7 +215,7 @@ static int decode_slice(MpegEncContext *s){
                         
                     if(++s->mb_x >= s->mb_width){
                         s->mb_x=0;
-                        ff_draw_horiz_band(s, s->mb_y*16, 16);
+                        ff_draw_horiz_band(s, s->mb_y*mb_size, mb_size);
                         s->mb_y++;
                     }
                     return 0; 
@@ -234,7 +235,7 @@ static int decode_slice(MpegEncContext *s){
                 ff_h263_loop_filter(s);
         }
         
-        ff_draw_horiz_band(s, s->mb_y*16, 16);
+        ff_draw_horiz_band(s, s->mb_y*mb_size, mb_size);
         
         s->mb_x= 0;
     }
@@ -417,8 +418,6 @@ uint64_t time= rdtsc();
     s->flags= avctx->flags;
     s->flags2= avctx->flags2;
 
-    *data_size = 0;
-
     /* no supplementary picture */
     if (buf_size == 0) {
         /* special case for last picture */
@@ -516,6 +515,11 @@ retry:
     if(s->xvid_build==0 && s->divx_version==0 && s->lavc_build==0){
         if(s->avctx->codec_tag == ff_get_fourcc("DIVX") && s->vo_type==0 && s->vol_control_parameters==0)
             s->divx_version= 400; //divx 4
+    }
+    
+    if(s->xvid_build && s->divx_version){
+        s->divx_version=
+        s->divx_build= 0;
     }
 
     if(s->workaround_bugs&FF_BUG_AUTODETECT){
@@ -625,13 +629,21 @@ retry:
     fprintf(f, "%d %d %f\n", buf_size, s->qscale, buf_size*(double)s->qscale);
 }
 #endif
-       
+
+#ifdef HAVE_MMX
+    if(s->codec_id == CODEC_ID_MPEG4 && s->xvid_build && avctx->idct_algo == FF_IDCT_AUTO && (mm_flags & MM_MMX) && !(s->flags&CODEC_FLAG_BITEXACT)){
+        avctx->idct_algo= FF_IDCT_LIBMPEG2MMX;
+        avctx->coded_width= 0; // force reinit
+    }
+#endif
+
         /* After H263 & mpeg4 header decode we have the height, width,*/
         /* and other parameters. So then we could init the picture   */
         /* FIXME: By the way H263 decoder is evolving it should have */
         /* an H263EncContext                                         */
     
-    if (   s->width != avctx->width || s->height != avctx->height) {
+    if (   s->width  != avctx->coded_width 
+        || s->height != avctx->coded_height) {
         /* H.263 could change picture size any time */
         ParseContext pc= s->parse_context; //FIXME move these demuxng hack to avformat
         s->parse_context.buffer=0;
@@ -639,8 +651,7 @@ retry:
         s->parse_context= pc;
     }
     if (!s->context_initialized) {
-        avctx->width = s->width;
-        avctx->height = s->height;
+        avcodec_set_dimensions(avctx, s->width, s->height);
 
         goto retry;
     }
@@ -653,7 +664,7 @@ retry:
     s->current_picture.key_frame= s->pict_type == I_TYPE;
 
     /* skip b frames if we dont have reference frames */
-    if(s->last_picture_ptr==NULL && s->pict_type==B_TYPE) return get_consumed_bytes(s, buf_size);
+    if(s->last_picture_ptr==NULL && (s->pict_type==B_TYPE || s->dropable)) return get_consumed_bytes(s, buf_size);
     /* skip b frames if we are in a hurry */
     if(avctx->hurry_up && s->pict_type==B_TYPE) return get_consumed_bytes(s, buf_size);
     /* skip everything if we are in a hurry>=5 */

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * asf.h: MMS access plug-in
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: asf.h 7058 2004-03-13 05:09:51Z fenrir $
+ * Copyright (C) 2001-2004 VideoLAN
+ * $Id: asf.h 7903 2004-06-05 21:53:24Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -32,7 +32,7 @@
 #define ASF_STREAM_AUDIO    0x0002
 #define ASF_STREAM_UNKNOWN  0xffff
 
-typedef struct asf_stream_s
+typedef struct
 {
     int i_cat;      /* ASF_STREAM_VIDEO, ASF_STREAM_AUDIO */
     int i_bitrate;  /* -1 if unknown */

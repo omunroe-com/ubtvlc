@@ -2,7 +2,7 @@
  * subtitles.c
  *****************************************************************************
  * Copyright (C) 2003-2004 VideoLAN
- * $Id: subtitles.c 7464 2004-04-24 07:27:41Z yoann $
+ * $Id: subtitles.c 8947 2004-10-07 20:52:24Z hartman $
  *
  * Authors: Derk-Jan Hartman <hartman at videolan.org>
  * This is adapted code from the GPL'ed MPlayer (http://mplayerhq.hu)
@@ -31,8 +31,6 @@
 #include <vlc/vlc.h>
 #include <vlc/input.h>
 
-#include "ninput.h"
-
 #ifdef HAVE_DIRENT_H
 #   include <dirent.h>
 #else
@@ -59,7 +57,7 @@
 /**
  * The possible extentions for subtitle files we support
  */
-static const char * sub_exts[] = {  "utf", "utf8", "utf-8", "sub", "srt", "smi", "txt", "ssa", NULL};
+static const char * sub_exts[] = {  "utf", "utf8", "utf-8", "sub", "srt", "smi", "txt", "ssa", "idx", NULL};
 /* extensions from unsupported types */
 /* rt, aqt, jss, js, ass */
 
@@ -133,6 +131,7 @@ typedef struct _subfn
 {
     int priority;
     char *psz_fname;
+    char *psz_ext;
 } subfn;
 
 static int compare_sub_priority( const void *a, const void *b )
@@ -147,7 +146,11 @@ static int compare_sub_priority( const void *a, const void *b )
         return 1;
     }
 
+#ifndef UNDER_CE
     return strcoll(((subfn*)a)->psz_fname, ((subfn*)b)->psz_fname);
+#else
+    return strcmp(((subfn*)a)->psz_fname, ((subfn*)b)->psz_fname);
+#endif
 }
 
 /**
@@ -236,9 +239,8 @@ char **subtitles_Detect( input_thread_t *p_this, char *psz_path,
     char *f_dir, *f_fname, *f_fname_noext, *f_fname_trim, *tmp;
     /* variables to be used for derivatives FILE *f */
     char *tmp_fname_noext, *tmp_fname_trim, *tmp_fname_ext, *tmpresult;
-
     vlc_value_t fuzzy;
-    int len, i, j, i_sub_count;
+    int len, i, j, i_sub_count, i_result2;
     subfn *result; /* unsorted results */
     char **result2; /* sorted results */
     char **tmp_subdirs, **subdirs; /* list of subdirectories to look in */
@@ -246,6 +248,11 @@ char **subtitles_Detect( input_thread_t *p_this, char *psz_path,
     FILE *f;
     DIR *d;
     struct dirent *de;
+
+    if( !strncmp( psz_fname, "file://", 7 ) )
+    {
+        psz_fname += 7;
+    }
 
     i_sub_count = 0;
     len = strlen( psz_fname ) > 256 ? strlen( psz_fname ) : 256;
@@ -361,6 +368,7 @@ char **subtitles_Detect( input_thread_t *p_this, char *psz_path,
                             fclose( f );
                             result[i_sub_count].priority = i_prio;
                             result[i_sub_count].psz_fname = strdup(tmpresult);
+                            result[i_sub_count].psz_ext = strdup(tmp_fname_ext);
                             i_sub_count++;
                         }
                     }
@@ -389,12 +397,33 @@ char **subtitles_Detect( input_thread_t *p_this, char *psz_path,
 
     result2 = (char**)malloc( sizeof(char*) * ( i_sub_count + 1 ) );
     memset( result2, 0, sizeof(char*) * ( i_sub_count + 1 ) );
+    i_result2 = 0;
 
     for( i = 0; i < i_sub_count; i++ )
     {
-        result2[i] = result[i].psz_fname;
+        if( result[i].psz_ext && !strcasecmp( result[i].psz_ext, "sub" ) )
+        {
+            int j;
+            for( j = 0; j < i_sub_count; j++ )
+            {
+                if( result[j].psz_fname && result[i].psz_fname &&
+                    !strncasecmp( result[i].psz_fname, result[j].psz_fname, sizeof( result[i].psz_fname) - 4 ) && 
+                    !strcasecmp( result[j].psz_ext, "idx" ) )
+                    break;
+                
+            }
+            if( j >= i_sub_count )
+            {
+                result2[i_result2] = result[i].psz_fname;
+                i_result2++;
+            }
+        }
+        else
+        {
+            result2[i_result2] = result[i].psz_fname;
+            i_result2++;
+        }
     }
-    result2[i_sub_count] = NULL;
     free( result );
     return result2;
 }

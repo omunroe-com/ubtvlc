@@ -18,6 +18,8 @@ SOURCES_skins2 = \
 	commands/cmd_on_top.hpp \
 	commands/cmd_playlist.cpp \
 	commands/cmd_playlist.hpp \
+	commands/cmd_minimize.cpp \
+	commands/cmd_minimize.hpp \
 	commands/cmd_quit.cpp \
 	commands/cmd_quit.hpp \
 	commands/cmd_resize.cpp \
@@ -115,6 +117,8 @@ SOURCES_skins2 = \
 	src/theme.hpp \
 	src/theme_loader.cpp \
 	src/theme_loader.hpp \
+	src/theme_repository.cpp \
+	src/theme_repository.hpp \
 	src/tooltip.cpp \
 	src/tooltip.hpp \
 	src/top_window.cpp \

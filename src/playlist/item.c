@@ -2,7 +2,7 @@
  * item.c : Playlist item functions
  *****************************************************************************
  * Copyright (C) 1999-2004 VideoLAN
- * $Id: item.c 7436 2004-04-23 06:53:00Z gbazin $
+ * $Id: item.c 8763 2004-09-22 09:20:12Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -32,6 +32,7 @@
 /**
  * Create a new item, without adding it to the playlist
  *
+ * \param p_obj a vlc object (anyone will do)
  * \param psz_uri the mrl of the item
  * \param psz_name a text giving a name or description of the item
  * \return the new item or NULL on failure
@@ -42,12 +43,14 @@ playlist_item_t * __playlist_ItemNew( vlc_object_t *p_obj,
 {
     playlist_item_t * p_item;
 
+    if( psz_uri == NULL ) return NULL;
+
     p_item = malloc( sizeof( playlist_item_t ) );
     if( p_item == NULL ) return NULL;
-    if( psz_uri == NULL) return NULL;
-
     memset( p_item, 0, sizeof( playlist_item_t ) );
 
+    vlc_input_item_Init( p_obj, &p_item->input );
+    p_item->input.i_duration = -1;
     p_item->input.psz_uri = strdup( psz_uri );
 
     if( psz_name != NULL ) p_item->input.psz_name = strdup( psz_name );
@@ -55,13 +58,6 @@ playlist_item_t * __playlist_ItemNew( vlc_object_t *p_obj,
 
     p_item->b_enabled = VLC_TRUE;
     p_item->i_group = PLAYLIST_TYPE_MANUAL;
-    p_item->i_nb_played = 0;
-
-    p_item->input.i_duration = -1;
-    p_item->input.ppsz_options = NULL;
-    p_item->input.i_options = 0;
-
-    vlc_mutex_init( p_obj, &p_item->input.lock );
 
     playlist_ItemCreateCategory( p_item, _("General") );
     return p_item;
@@ -75,50 +71,7 @@ playlist_item_t * __playlist_ItemNew( vlc_object_t *p_obj,
  */
 void playlist_ItemDelete( playlist_item_t *p_item )
 {
-    vlc_mutex_lock( &p_item->input.lock );
-
-    if( p_item->input.psz_name ) free( p_item->input.psz_name );
-    if( p_item->input.psz_uri ) free( p_item->input.psz_uri );
-
-    /* Free the info categories */
-    if( p_item->input.i_categories > 0 )
-    {
-        int i, j;
-
-        for( i = 0; i < p_item->input.i_categories; i++ )
-        {
-            info_category_t *p_category = p_item->input.pp_categories[i];
-
-            for( j = 0; j < p_category->i_infos; j++)
-            {
-                if( p_category->pp_infos[j]->psz_name )
-                {
-                    free( p_category->pp_infos[j]->psz_name);
-                }
-                if( p_category->pp_infos[j]->psz_value )
-                {
-                    free( p_category->pp_infos[j]->psz_value );
-                }
-                free( p_category->pp_infos[j] );
-            }
-
-            if( p_category->i_infos ) free( p_category->pp_infos );
-            if( p_category->psz_name ) free( p_category->psz_name );
-            free( p_category );
-        }
-
-        free( p_item->input.pp_categories );
-    }
-
-    for( ; p_item->input.i_options > 0; p_item->input.i_options-- )
-    {
-        free( p_item->input.ppsz_options[p_item->input.i_options - 1] );
-        if( p_item->input.i_options == 1 ) free( p_item->input.ppsz_options );
-    }
-
-    vlc_mutex_unlock( &p_item->input.lock );
-    vlc_mutex_destroy( &p_item->input.lock );
-
+    vlc_input_item_Clean( &p_item->input );
     free( p_item );
 }
 
@@ -254,7 +207,7 @@ int playlist_AddItem( playlist_t *p_playlist, playlist_item_t *p_item,
  *  Add a option to one item ( no need for p_playlist )
  *
  * \param p_item the item on which we want the info
- * \param psz_format the option
+ * \param psz_option the option
  * \return 0 on success
  */
 int playlist_ItemAddOption( playlist_item_t *p_item, const char *psz_option )
