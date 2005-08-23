@@ -2,7 +2,7 @@
  * gtk_playlist.h : Playlist functions for the Gtk plugin.
  *****************************************************************************
  * Copyright (C) 2000, 2001 VideoLAN
- * $Id: playlist.h 6961 2004-03-05 17:34:23Z sam $
+ * $Id: playlist.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Pierre Baillet <oct@zoy.org>
  *          Stéphane Borel <stef@via.ecp.fr>

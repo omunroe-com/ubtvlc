@@ -2,7 +2,7 @@
  * modules.h : Module management functions.
  *****************************************************************************
  * Copyright (C) 2001 VideoLAN
- * $Id: modules.h 7857 2004-06-01 15:45:07Z gbazin $
+ * $Id: modules.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -56,6 +56,10 @@ struct module_bank_t
 
     int              i_usage;
     module_symbols_t symbols;
+
+    vlc_bool_t       b_main;
+    vlc_bool_t       b_builtins;
+    vlc_bool_t       b_plugins;
 
     /* Plugins cache */
     vlc_bool_t     b_cache;

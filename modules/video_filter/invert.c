@@ -2,7 +2,7 @@
  * invert.c : Invert video plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001, 2002, 2003 VideoLAN
- * $Id: invert.c 8551 2004-08-28 17:36:02Z gbazin $
+ * $Id: invert.c 10145 2005-03-05 16:49:15Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -50,6 +50,9 @@ static int  SendEvents( vlc_object_t *, char const *,
  *****************************************************************************/
 vlc_module_begin();
     set_description( _("Invert video filter") );
+    set_shortname( N_("Color inversion" ));
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VFILTER );
     set_capability( "video filter", 0 );
     add_shortcut( "invert" );
     set_callbacks( Create, Destroy );
@@ -108,6 +111,7 @@ static int Init( vout_thread_t *p_vout )
 {
     int i_index;
     picture_t *p_pic;
+    video_format_t fmt = {0};
 
     I_OUTPUTPICTURES = 0;
 
@@ -117,12 +121,18 @@ static int Init( vout_thread_t *p_vout )
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
 
+    fmt.i_width = fmt.i_visible_width = p_vout->render.i_width;
+    fmt.i_height = fmt.i_visible_height = p_vout->render.i_height;
+    fmt.i_x_offset = fmt.i_y_offset = 0;
+    fmt.i_chroma = p_vout->render.i_chroma;
+    fmt.i_aspect = p_vout->render.i_aspect;
+    fmt.i_sar_num = p_vout->render.i_aspect * fmt.i_height / fmt.i_width;
+    fmt.i_sar_den = VOUT_ASPECT_FACTOR;
+
     /* Try to open the real video output */
     msg_Dbg( p_vout, "spawning the real video output" );
 
-    p_vout->p_sys->p_vout = vout_Create( p_vout,
-                           p_vout->render.i_width, p_vout->render.i_height,
-                           p_vout->render.i_chroma, p_vout->render.i_aspect );
+    p_vout->p_sys->p_vout = vout_Create( p_vout, &fmt );
 
     /* Everything failed */
     if( p_vout->p_sys->p_vout == NULL )

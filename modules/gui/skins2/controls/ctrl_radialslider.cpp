@@ -2,7 +2,7 @@
  * ctrl_radialslider.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_radialslider.cpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: ctrl_radialslider.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -101,7 +101,7 @@ void CtrlRadialSlider::draw( OSGraphics &rImage, int xDest, int yDest )
 void CtrlRadialSlider::onUpdate( Subject<VarPercent> &rVariable )
 {
     m_position = (int)( m_rVariable.get() * m_numImg );
-    notifyLayout();
+    notifyLayout( m_width, m_height );
 }
 
 

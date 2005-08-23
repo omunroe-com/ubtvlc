@@ -2,7 +2,7 @@
  * x11_loop.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: x11_loop.cpp 7279 2004-04-05 18:26:34Z asmax $
+ * $Id: x11_loop.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

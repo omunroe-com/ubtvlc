@@ -55,6 +55,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_ACTIVEX_FALSE = @BUILD_ACTIVEX_FALSE@
+BUILD_ACTIVEX_TRUE = @BUILD_ACTIVEX_TRUE@
 BUILD_DIRENT_FALSE = @BUILD_DIRENT_FALSE@
 BUILD_DIRENT_TRUE = @BUILD_DIRENT_TRUE@
 BUILD_GETOPT_FALSE = @BUILD_GETOPT_FALSE@
@@ -69,8 +71,6 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-CORBA_CFLAGS = @CORBA_CFLAGS@
-CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -98,10 +98,8 @@ FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GTK2_CFLAGS = @GTK2_CFLAGS@
-GTK2_LIBS = @GTK2_LIBS@
-HAL_CFLAGS = @HAL_CFLAGS@
-HAL_LIBS = @HAL_LIBS@
+HAS_MIDL_COMPILER_FALSE = @HAS_MIDL_COMPILER_FALSE@
+HAS_MIDL_COMPILER_TRUE = @HAS_MIDL_COMPILER_TRUE@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -112,6 +110,8 @@ HAVE_PLUGINS_FALSE = @HAVE_PLUGINS_FALSE@
 HAVE_PLUGINS_TRUE = @HAVE_PLUGINS_TRUE@
 HAVE_WIN32_FALSE = @HAVE_WIN32_FALSE@
 HAVE_WIN32_TRUE = @HAVE_WIN32_TRUE@
+HAVE_WINCE_FALSE = @HAVE_WINCE_FALSE@
+HAVE_WINCE_TRUE = @HAVE_WINCE_TRUE@
 INCLUDES = @INCLUDES@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -124,12 +124,7 @@ INTLOBJS = @INTLOBJS@
 INTL_LIBTOOL_SUFFIX_PREFIX = @INTL_LIBTOOL_SUFFIX_PREFIX@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
-LIBCDDB_CFLAGS = @LIBCDDB_CFLAGS@
-LIBCDDB_LIBS = @LIBCDDB_LIBS@
-LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
-LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
-LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -138,6 +133,7 @@ LTLIBICONV = @LTLIBICONV@
 LTLIBINTL = @LTLIBINTL@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+MIDL = @MIDL@
 MKINSTALLDIRS = @MKINSTALLDIRS@
 MOC = @MOC@
 MOZILLA_CONFIG = @MOZILLA_CONFIG@
@@ -154,7 +150,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
 PLUGIN_PATH = @PLUGIN_PATH@
 POSUB = @POSUB@
 RANLIB = @RANLIB@
@@ -164,8 +159,6 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-SVG_CFLAGS = @SVG_CFLAGS@
-SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
@@ -254,6 +247,8 @@ SOURCES_skins2 = \
 	commands/cmd_input.hpp \
 	commands/cmd_layout.cpp \
 	commands/cmd_layout.hpp \
+	commands/cmd_muxer.cpp \
+	commands/cmd_muxer.hpp \
 	commands/cmd_on_top.cpp \
 	commands/cmd_on_top.hpp \
 	commands/cmd_playlist.cpp \
@@ -394,8 +389,6 @@ SOURCES_skins2 = \
 	\
 	vars/playlist.cpp \
 	vars/playlist.hpp \
-	vars/stream.cpp \
-	vars/stream.hpp \
 	vars/time.cpp \
 	vars/time.hpp \
 	vars/volume.cpp \
@@ -432,6 +425,21 @@ SOURCES_skins2 = \
 	x11/x11_window.hpp \
 	x11/x11_tooltip.cpp \
 	x11/x11_tooltip.hpp \
+    \
+	macosx/macosx_dragdrop.cpp \
+	macosx/macosx_dragdrop.hpp \
+	macosx/macosx_factory.cpp \
+	macosx/macosx_factory.hpp \
+	macosx/macosx_graphics.cpp \
+	macosx/macosx_graphics.hpp \
+	macosx/macosx_loop.cpp \
+	macosx/macosx_loop.hpp \
+	macosx/macosx_timer.cpp \
+	macosx/macosx_timer.hpp \
+	macosx/macosx_window.cpp \
+	macosx/macosx_window.hpp \
+	macosx/macosx_tooltip.cpp \
+    macosx/macosx_tooltip.hpp \
 	$(NULL)
 
 
@@ -480,6 +488,7 @@ am__objects_2 = libskins2_a-async_queue.$(OBJEXT) \
 	libskins2_a-cmd_fullscreen.$(OBJEXT) \
 	libskins2_a-cmd_input.$(OBJEXT) \
 	libskins2_a-cmd_layout.$(OBJEXT) \
+	libskins2_a-cmd_muxer.$(OBJEXT) \
 	libskins2_a-cmd_on_top.$(OBJEXT) \
 	libskins2_a-cmd_playlist.$(OBJEXT) \
 	libskins2_a-cmd_minimize.$(OBJEXT) \
@@ -523,8 +532,7 @@ am__objects_2 = libskins2_a-async_queue.$(OBJEXT) \
 	libskins2_a-var_bool.$(OBJEXT) libskins2_a-var_list.$(OBJEXT) \
 	libskins2_a-var_percent.$(OBJEXT) \
 	libskins2_a-var_text.$(OBJEXT) libskins2_a-playlist.$(OBJEXT) \
-	libskins2_a-stream.$(OBJEXT) libskins2_a-time.$(OBJEXT) \
-	libskins2_a-volume.$(OBJEXT) \
+	libskins2_a-time.$(OBJEXT) libskins2_a-volume.$(OBJEXT) \
 	libskins2_a-win32_dragdrop.$(OBJEXT) \
 	libskins2_a-win32_factory.$(OBJEXT) \
 	libskins2_a-win32_graphics.$(OBJEXT) \
@@ -538,7 +546,14 @@ am__objects_2 = libskins2_a-async_queue.$(OBJEXT) \
 	libskins2_a-x11_graphics.$(OBJEXT) \
 	libskins2_a-x11_loop.$(OBJEXT) libskins2_a-x11_timer.$(OBJEXT) \
 	libskins2_a-x11_window.$(OBJEXT) \
-	libskins2_a-x11_tooltip.$(OBJEXT) $(am__objects_1)
+	libskins2_a-x11_tooltip.$(OBJEXT) \
+	libskins2_a-macosx_dragdrop.$(OBJEXT) \
+	libskins2_a-macosx_factory.$(OBJEXT) \
+	libskins2_a-macosx_graphics.$(OBJEXT) \
+	libskins2_a-macosx_loop.$(OBJEXT) \
+	libskins2_a-macosx_timer.$(OBJEXT) \
+	libskins2_a-macosx_window.$(OBJEXT) \
+	libskins2_a-macosx_tooltip.$(OBJEXT) $(am__objects_1)
 am_libskins2_a_OBJECTS = $(am__objects_2)
 libskins2_a_OBJECTS = $(am_libskins2_a_OBJECTS)
 libskins2_pic_a_AR = $(AR) cru
@@ -549,6 +564,7 @@ am__objects_3 = libskins2_pic_a-async_queue.$(OBJEXT) \
 	libskins2_pic_a-cmd_fullscreen.$(OBJEXT) \
 	libskins2_pic_a-cmd_input.$(OBJEXT) \
 	libskins2_pic_a-cmd_layout.$(OBJEXT) \
+	libskins2_pic_a-cmd_muxer.$(OBJEXT) \
 	libskins2_pic_a-cmd_on_top.$(OBJEXT) \
 	libskins2_pic_a-cmd_playlist.$(OBJEXT) \
 	libskins2_pic_a-cmd_minimize.$(OBJEXT) \
@@ -606,8 +622,7 @@ am__objects_3 = libskins2_pic_a-async_queue.$(OBJEXT) \
 	libskins2_pic_a-var_percent.$(OBJEXT) \
 	libskins2_pic_a-var_text.$(OBJEXT) \
 	libskins2_pic_a-playlist.$(OBJEXT) \
-	libskins2_pic_a-stream.$(OBJEXT) libskins2_pic_a-time.$(OBJEXT) \
-	libskins2_pic_a-volume.$(OBJEXT) \
+	libskins2_pic_a-time.$(OBJEXT) libskins2_pic_a-volume.$(OBJEXT) \
 	libskins2_pic_a-win32_dragdrop.$(OBJEXT) \
 	libskins2_pic_a-win32_factory.$(OBJEXT) \
 	libskins2_pic_a-win32_graphics.$(OBJEXT) \
@@ -622,7 +637,14 @@ am__objects_3 = libskins2_pic_a-async_queue.$(OBJEXT) \
 	libskins2_pic_a-x11_loop.$(OBJEXT) \
 	libskins2_pic_a-x11_timer.$(OBJEXT) \
 	libskins2_pic_a-x11_window.$(OBJEXT) \
-	libskins2_pic_a-x11_tooltip.$(OBJEXT) $(am__objects_1)
+	libskins2_pic_a-x11_tooltip.$(OBJEXT) \
+	libskins2_pic_a-macosx_dragdrop.$(OBJEXT) \
+	libskins2_pic_a-macosx_factory.$(OBJEXT) \
+	libskins2_pic_a-macosx_graphics.$(OBJEXT) \
+	libskins2_pic_a-macosx_loop.$(OBJEXT) \
+	libskins2_pic_a-macosx_timer.$(OBJEXT) \
+	libskins2_pic_a-macosx_window.$(OBJEXT) \
+	libskins2_pic_a-macosx_tooltip.$(OBJEXT) $(am__objects_1)
 am_libskins2_pic_a_OBJECTS = $(am__objects_3)
 libskins2_pic_a_OBJECTS = $(am_libskins2_pic_a_OBJECTS)
 libskins2_plugin_a_AR = $(AR) cru
@@ -633,6 +655,7 @@ am__objects_4 = libskins2_plugin_a-async_queue.$(OBJEXT) \
 	libskins2_plugin_a-cmd_fullscreen.$(OBJEXT) \
 	libskins2_plugin_a-cmd_input.$(OBJEXT) \
 	libskins2_plugin_a-cmd_layout.$(OBJEXT) \
+	libskins2_plugin_a-cmd_muxer.$(OBJEXT) \
 	libskins2_plugin_a-cmd_on_top.$(OBJEXT) \
 	libskins2_plugin_a-cmd_playlist.$(OBJEXT) \
 	libskins2_plugin_a-cmd_minimize.$(OBJEXT) \
@@ -691,7 +714,6 @@ am__objects_4 = libskins2_plugin_a-async_queue.$(OBJEXT) \
 	libskins2_plugin_a-var_percent.$(OBJEXT) \
 	libskins2_plugin_a-var_text.$(OBJEXT) \
 	libskins2_plugin_a-playlist.$(OBJEXT) \
-	libskins2_plugin_a-stream.$(OBJEXT) \
 	libskins2_plugin_a-time.$(OBJEXT) \
 	libskins2_plugin_a-volume.$(OBJEXT) \
 	libskins2_plugin_a-win32_dragdrop.$(OBJEXT) \
@@ -708,7 +730,14 @@ am__objects_4 = libskins2_plugin_a-async_queue.$(OBJEXT) \
 	libskins2_plugin_a-x11_loop.$(OBJEXT) \
 	libskins2_plugin_a-x11_timer.$(OBJEXT) \
 	libskins2_plugin_a-x11_window.$(OBJEXT) \
-	libskins2_plugin_a-x11_tooltip.$(OBJEXT) $(am__objects_1)
+	libskins2_plugin_a-x11_tooltip.$(OBJEXT) \
+	libskins2_plugin_a-macosx_dragdrop.$(OBJEXT) \
+	libskins2_plugin_a-macosx_factory.$(OBJEXT) \
+	libskins2_plugin_a-macosx_graphics.$(OBJEXT) \
+	libskins2_plugin_a-macosx_loop.$(OBJEXT) \
+	libskins2_plugin_a-macosx_timer.$(OBJEXT) \
+	libskins2_plugin_a-macosx_window.$(OBJEXT) \
+	libskins2_plugin_a-macosx_tooltip.$(OBJEXT) $(am__objects_1)
 am_libskins2_plugin_a_OBJECTS = $(am__objects_4)
 libskins2_plugin_a_OBJECTS = $(am_libskins2_plugin_a_OBJECTS)
 
@@ -726,6 +755,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-cmd_input.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-cmd_layout.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-cmd_minimize.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-cmd_muxer.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-cmd_on_top.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-cmd_playlist.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-cmd_quit.Po \
@@ -757,6 +787,13 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-generic_window.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-interpreter.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-logger.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-macosx_dragdrop.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-macosx_factory.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-macosx_graphics.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-macosx_loop.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-macosx_timer.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-macosx_tooltip.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-macosx_window.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-os_factory.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-playlist.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-png_bitmap.Po \
@@ -764,7 +801,6 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-scaled_bitmap.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-skin_main.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-skin_parser.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-stream.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-theme.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-theme_loader.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-theme_repository.Po \
@@ -808,6 +844,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-cmd_input.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-cmd_layout.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-cmd_minimize.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-cmd_muxer.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-cmd_on_top.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-cmd_playlist.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-cmd_quit.Po \
@@ -839,6 +876,13 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-generic_window.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-interpreter.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-logger.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-macosx_dragdrop.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-macosx_factory.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-macosx_graphics.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-macosx_loop.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-macosx_timer.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-macosx_tooltip.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-macosx_window.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-os_factory.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-playlist.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-png_bitmap.Po \
@@ -846,7 +890,6 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-scaled_bitmap.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-skin_main.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-skin_parser.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-stream.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-theme.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-theme_loader.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-theme_repository.Po \
@@ -890,6 +933,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-cmd_input.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-cmd_layout.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-cmd_minimize.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-cmd_muxer.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-cmd_on_top.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-cmd_playlist.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-cmd_quit.Po \
@@ -921,6 +965,13 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-generic_window.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-interpreter.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-logger.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-macosx_dragdrop.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-macosx_factory.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-macosx_graphics.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-macosx_loop.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-macosx_timer.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-macosx_tooltip.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-macosx_window.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-os_factory.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-playlist.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-png_bitmap.Po \
@@ -928,7 +979,6 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-scaled_bitmap.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-skin_main.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-skin_parser.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-stream.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-theme.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-theme_loader.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-theme_repository.Po \
@@ -1060,6 +1110,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-cmd_input.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-cmd_layout.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-cmd_minimize.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-cmd_muxer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-cmd_on_top.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-cmd_playlist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-cmd_quit.Po@am__quote@
@@ -1091,6 +1142,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-generic_window.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-interpreter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-logger.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-macosx_dragdrop.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-macosx_factory.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-macosx_graphics.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-macosx_loop.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-macosx_timer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-macosx_tooltip.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-macosx_window.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-os_factory.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-playlist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-png_bitmap.Po@am__quote@
@@ -1098,7 +1156,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-scaled_bitmap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-skin_main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-skin_parser.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-stream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-theme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-theme_loader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-theme_repository.Po@am__quote@
@@ -1142,6 +1199,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-cmd_input.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-cmd_layout.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-cmd_minimize.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-cmd_muxer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-cmd_on_top.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-cmd_playlist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-cmd_quit.Po@am__quote@
@@ -1173,6 +1231,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-generic_window.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-interpreter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-logger.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-macosx_dragdrop.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-macosx_factory.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-macosx_graphics.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-macosx_loop.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-macosx_timer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-macosx_tooltip.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-macosx_window.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-os_factory.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-playlist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-png_bitmap.Po@am__quote@
@@ -1180,7 +1245,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-scaled_bitmap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-skin_main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-skin_parser.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-stream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-theme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-theme_loader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-theme_repository.Po@am__quote@
@@ -1224,6 +1288,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-cmd_input.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-cmd_layout.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-cmd_minimize.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-cmd_muxer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-cmd_on_top.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-cmd_playlist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-cmd_quit.Po@am__quote@
@@ -1255,6 +1320,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-generic_window.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-interpreter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-logger.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-macosx_dragdrop.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-macosx_factory.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-macosx_graphics.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-macosx_loop.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-macosx_timer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-macosx_tooltip.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-macosx_window.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-os_factory.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-playlist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-png_bitmap.Po@am__quote@
@@ -1262,7 +1334,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-scaled_bitmap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-skin_main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-skin_parser.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-stream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-theme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-theme_loader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-theme_repository.Po@am__quote@
@@ -1449,6 +1520,28 @@ libskins2_a-cmd_layout.obj: commands/cmd_layout.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-cmd_layout.Po' tmpdepfile='$(DEPDIR)/libskins2_a-cmd_layout.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-cmd_layout.obj `if test -f 'commands/cmd_layout.cpp'; then $(CYGPATH_W) 'commands/cmd_layout.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_layout.cpp'; fi`
+
+libskins2_a-cmd_muxer.o: commands/cmd_muxer.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-cmd_muxer.o -MD -MP -MF "$(DEPDIR)/libskins2_a-cmd_muxer.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-cmd_muxer.o `test -f 'commands/cmd_muxer.cpp' || echo '$(srcdir)/'`commands/cmd_muxer.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-cmd_muxer.Tpo" "$(DEPDIR)/libskins2_a-cmd_muxer.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-cmd_muxer.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='commands/cmd_muxer.cpp' object='libskins2_a-cmd_muxer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-cmd_muxer.Po' tmpdepfile='$(DEPDIR)/libskins2_a-cmd_muxer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-cmd_muxer.o `test -f 'commands/cmd_muxer.cpp' || echo '$(srcdir)/'`commands/cmd_muxer.cpp
+
+libskins2_a-cmd_muxer.obj: commands/cmd_muxer.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-cmd_muxer.obj -MD -MP -MF "$(DEPDIR)/libskins2_a-cmd_muxer.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-cmd_muxer.obj `if test -f 'commands/cmd_muxer.cpp'; then $(CYGPATH_W) 'commands/cmd_muxer.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_muxer.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-cmd_muxer.Tpo" "$(DEPDIR)/libskins2_a-cmd_muxer.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-cmd_muxer.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='commands/cmd_muxer.cpp' object='libskins2_a-cmd_muxer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-cmd_muxer.Po' tmpdepfile='$(DEPDIR)/libskins2_a-cmd_muxer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-cmd_muxer.obj `if test -f 'commands/cmd_muxer.cpp'; then $(CYGPATH_W) 'commands/cmd_muxer.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_muxer.cpp'; fi`
 
 libskins2_a-cmd_on_top.o: commands/cmd_on_top.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-cmd_on_top.o -MD -MP -MF "$(DEPDIR)/libskins2_a-cmd_on_top.Tpo" \
@@ -2726,28 +2819,6 @@ libskins2_a-playlist.obj: vars/playlist.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-playlist.obj `if test -f 'vars/playlist.cpp'; then $(CYGPATH_W) 'vars/playlist.cpp'; else $(CYGPATH_W) '$(srcdir)/vars/playlist.cpp'; fi`
 
-libskins2_a-stream.o: vars/stream.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-stream.o -MD -MP -MF "$(DEPDIR)/libskins2_a-stream.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o libskins2_a-stream.o `test -f 'vars/stream.cpp' || echo '$(srcdir)/'`vars/stream.cpp; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-stream.Tpo" "$(DEPDIR)/libskins2_a-stream.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-stream.Tpo"; exit 1; \
-@am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='vars/stream.cpp' object='libskins2_a-stream.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-stream.Po' tmpdepfile='$(DEPDIR)/libskins2_a-stream.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-stream.o `test -f 'vars/stream.cpp' || echo '$(srcdir)/'`vars/stream.cpp
-
-libskins2_a-stream.obj: vars/stream.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-stream.obj -MD -MP -MF "$(DEPDIR)/libskins2_a-stream.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o libskins2_a-stream.obj `if test -f 'vars/stream.cpp'; then $(CYGPATH_W) 'vars/stream.cpp'; else $(CYGPATH_W) '$(srcdir)/vars/stream.cpp'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-stream.Tpo" "$(DEPDIR)/libskins2_a-stream.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-stream.Tpo"; exit 1; \
-@am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='vars/stream.cpp' object='libskins2_a-stream.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-stream.Po' tmpdepfile='$(DEPDIR)/libskins2_a-stream.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-stream.obj `if test -f 'vars/stream.cpp'; then $(CYGPATH_W) 'vars/stream.cpp'; else $(CYGPATH_W) '$(srcdir)/vars/stream.cpp'; fi`
-
 libskins2_a-time.o: vars/time.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-time.o -MD -MP -MF "$(DEPDIR)/libskins2_a-time.Tpo" \
 @am__fastdepCXX_TRUE@	  -c -o libskins2_a-time.o `test -f 'vars/time.cpp' || echo '$(srcdir)/'`vars/time.cpp; \
@@ -3122,6 +3193,160 @@ libskins2_a-x11_tooltip.obj: x11/x11_tooltip.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-x11_tooltip.obj `if test -f 'x11/x11_tooltip.cpp'; then $(CYGPATH_W) 'x11/x11_tooltip.cpp'; else $(CYGPATH_W) '$(srcdir)/x11/x11_tooltip.cpp'; fi`
 
+libskins2_a-macosx_dragdrop.o: macosx/macosx_dragdrop.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-macosx_dragdrop.o -MD -MP -MF "$(DEPDIR)/libskins2_a-macosx_dragdrop.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-macosx_dragdrop.o `test -f 'macosx/macosx_dragdrop.cpp' || echo '$(srcdir)/'`macosx/macosx_dragdrop.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-macosx_dragdrop.Tpo" "$(DEPDIR)/libskins2_a-macosx_dragdrop.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-macosx_dragdrop.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_dragdrop.cpp' object='libskins2_a-macosx_dragdrop.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-macosx_dragdrop.Po' tmpdepfile='$(DEPDIR)/libskins2_a-macosx_dragdrop.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-macosx_dragdrop.o `test -f 'macosx/macosx_dragdrop.cpp' || echo '$(srcdir)/'`macosx/macosx_dragdrop.cpp
+
+libskins2_a-macosx_dragdrop.obj: macosx/macosx_dragdrop.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-macosx_dragdrop.obj -MD -MP -MF "$(DEPDIR)/libskins2_a-macosx_dragdrop.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-macosx_dragdrop.obj `if test -f 'macosx/macosx_dragdrop.cpp'; then $(CYGPATH_W) 'macosx/macosx_dragdrop.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_dragdrop.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-macosx_dragdrop.Tpo" "$(DEPDIR)/libskins2_a-macosx_dragdrop.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-macosx_dragdrop.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_dragdrop.cpp' object='libskins2_a-macosx_dragdrop.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-macosx_dragdrop.Po' tmpdepfile='$(DEPDIR)/libskins2_a-macosx_dragdrop.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-macosx_dragdrop.obj `if test -f 'macosx/macosx_dragdrop.cpp'; then $(CYGPATH_W) 'macosx/macosx_dragdrop.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_dragdrop.cpp'; fi`
+
+libskins2_a-macosx_factory.o: macosx/macosx_factory.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-macosx_factory.o -MD -MP -MF "$(DEPDIR)/libskins2_a-macosx_factory.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-macosx_factory.o `test -f 'macosx/macosx_factory.cpp' || echo '$(srcdir)/'`macosx/macosx_factory.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-macosx_factory.Tpo" "$(DEPDIR)/libskins2_a-macosx_factory.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-macosx_factory.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_factory.cpp' object='libskins2_a-macosx_factory.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-macosx_factory.Po' tmpdepfile='$(DEPDIR)/libskins2_a-macosx_factory.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-macosx_factory.o `test -f 'macosx/macosx_factory.cpp' || echo '$(srcdir)/'`macosx/macosx_factory.cpp
+
+libskins2_a-macosx_factory.obj: macosx/macosx_factory.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-macosx_factory.obj -MD -MP -MF "$(DEPDIR)/libskins2_a-macosx_factory.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-macosx_factory.obj `if test -f 'macosx/macosx_factory.cpp'; then $(CYGPATH_W) 'macosx/macosx_factory.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_factory.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-macosx_factory.Tpo" "$(DEPDIR)/libskins2_a-macosx_factory.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-macosx_factory.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_factory.cpp' object='libskins2_a-macosx_factory.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-macosx_factory.Po' tmpdepfile='$(DEPDIR)/libskins2_a-macosx_factory.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-macosx_factory.obj `if test -f 'macosx/macosx_factory.cpp'; then $(CYGPATH_W) 'macosx/macosx_factory.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_factory.cpp'; fi`
+
+libskins2_a-macosx_graphics.o: macosx/macosx_graphics.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-macosx_graphics.o -MD -MP -MF "$(DEPDIR)/libskins2_a-macosx_graphics.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-macosx_graphics.o `test -f 'macosx/macosx_graphics.cpp' || echo '$(srcdir)/'`macosx/macosx_graphics.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-macosx_graphics.Tpo" "$(DEPDIR)/libskins2_a-macosx_graphics.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-macosx_graphics.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_graphics.cpp' object='libskins2_a-macosx_graphics.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-macosx_graphics.Po' tmpdepfile='$(DEPDIR)/libskins2_a-macosx_graphics.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-macosx_graphics.o `test -f 'macosx/macosx_graphics.cpp' || echo '$(srcdir)/'`macosx/macosx_graphics.cpp
+
+libskins2_a-macosx_graphics.obj: macosx/macosx_graphics.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-macosx_graphics.obj -MD -MP -MF "$(DEPDIR)/libskins2_a-macosx_graphics.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-macosx_graphics.obj `if test -f 'macosx/macosx_graphics.cpp'; then $(CYGPATH_W) 'macosx/macosx_graphics.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_graphics.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-macosx_graphics.Tpo" "$(DEPDIR)/libskins2_a-macosx_graphics.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-macosx_graphics.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_graphics.cpp' object='libskins2_a-macosx_graphics.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-macosx_graphics.Po' tmpdepfile='$(DEPDIR)/libskins2_a-macosx_graphics.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-macosx_graphics.obj `if test -f 'macosx/macosx_graphics.cpp'; then $(CYGPATH_W) 'macosx/macosx_graphics.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_graphics.cpp'; fi`
+
+libskins2_a-macosx_loop.o: macosx/macosx_loop.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-macosx_loop.o -MD -MP -MF "$(DEPDIR)/libskins2_a-macosx_loop.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-macosx_loop.o `test -f 'macosx/macosx_loop.cpp' || echo '$(srcdir)/'`macosx/macosx_loop.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-macosx_loop.Tpo" "$(DEPDIR)/libskins2_a-macosx_loop.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-macosx_loop.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_loop.cpp' object='libskins2_a-macosx_loop.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-macosx_loop.Po' tmpdepfile='$(DEPDIR)/libskins2_a-macosx_loop.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-macosx_loop.o `test -f 'macosx/macosx_loop.cpp' || echo '$(srcdir)/'`macosx/macosx_loop.cpp
+
+libskins2_a-macosx_loop.obj: macosx/macosx_loop.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-macosx_loop.obj -MD -MP -MF "$(DEPDIR)/libskins2_a-macosx_loop.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-macosx_loop.obj `if test -f 'macosx/macosx_loop.cpp'; then $(CYGPATH_W) 'macosx/macosx_loop.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_loop.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-macosx_loop.Tpo" "$(DEPDIR)/libskins2_a-macosx_loop.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-macosx_loop.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_loop.cpp' object='libskins2_a-macosx_loop.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-macosx_loop.Po' tmpdepfile='$(DEPDIR)/libskins2_a-macosx_loop.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-macosx_loop.obj `if test -f 'macosx/macosx_loop.cpp'; then $(CYGPATH_W) 'macosx/macosx_loop.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_loop.cpp'; fi`
+
+libskins2_a-macosx_timer.o: macosx/macosx_timer.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-macosx_timer.o -MD -MP -MF "$(DEPDIR)/libskins2_a-macosx_timer.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-macosx_timer.o `test -f 'macosx/macosx_timer.cpp' || echo '$(srcdir)/'`macosx/macosx_timer.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-macosx_timer.Tpo" "$(DEPDIR)/libskins2_a-macosx_timer.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-macosx_timer.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_timer.cpp' object='libskins2_a-macosx_timer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-macosx_timer.Po' tmpdepfile='$(DEPDIR)/libskins2_a-macosx_timer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-macosx_timer.o `test -f 'macosx/macosx_timer.cpp' || echo '$(srcdir)/'`macosx/macosx_timer.cpp
+
+libskins2_a-macosx_timer.obj: macosx/macosx_timer.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-macosx_timer.obj -MD -MP -MF "$(DEPDIR)/libskins2_a-macosx_timer.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-macosx_timer.obj `if test -f 'macosx/macosx_timer.cpp'; then $(CYGPATH_W) 'macosx/macosx_timer.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_timer.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-macosx_timer.Tpo" "$(DEPDIR)/libskins2_a-macosx_timer.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-macosx_timer.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_timer.cpp' object='libskins2_a-macosx_timer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-macosx_timer.Po' tmpdepfile='$(DEPDIR)/libskins2_a-macosx_timer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-macosx_timer.obj `if test -f 'macosx/macosx_timer.cpp'; then $(CYGPATH_W) 'macosx/macosx_timer.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_timer.cpp'; fi`
+
+libskins2_a-macosx_window.o: macosx/macosx_window.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-macosx_window.o -MD -MP -MF "$(DEPDIR)/libskins2_a-macosx_window.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-macosx_window.o `test -f 'macosx/macosx_window.cpp' || echo '$(srcdir)/'`macosx/macosx_window.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-macosx_window.Tpo" "$(DEPDIR)/libskins2_a-macosx_window.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-macosx_window.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_window.cpp' object='libskins2_a-macosx_window.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-macosx_window.Po' tmpdepfile='$(DEPDIR)/libskins2_a-macosx_window.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-macosx_window.o `test -f 'macosx/macosx_window.cpp' || echo '$(srcdir)/'`macosx/macosx_window.cpp
+
+libskins2_a-macosx_window.obj: macosx/macosx_window.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-macosx_window.obj -MD -MP -MF "$(DEPDIR)/libskins2_a-macosx_window.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-macosx_window.obj `if test -f 'macosx/macosx_window.cpp'; then $(CYGPATH_W) 'macosx/macosx_window.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_window.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-macosx_window.Tpo" "$(DEPDIR)/libskins2_a-macosx_window.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-macosx_window.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_window.cpp' object='libskins2_a-macosx_window.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-macosx_window.Po' tmpdepfile='$(DEPDIR)/libskins2_a-macosx_window.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-macosx_window.obj `if test -f 'macosx/macosx_window.cpp'; then $(CYGPATH_W) 'macosx/macosx_window.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_window.cpp'; fi`
+
+libskins2_a-macosx_tooltip.o: macosx/macosx_tooltip.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-macosx_tooltip.o -MD -MP -MF "$(DEPDIR)/libskins2_a-macosx_tooltip.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-macosx_tooltip.o `test -f 'macosx/macosx_tooltip.cpp' || echo '$(srcdir)/'`macosx/macosx_tooltip.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-macosx_tooltip.Tpo" "$(DEPDIR)/libskins2_a-macosx_tooltip.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-macosx_tooltip.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_tooltip.cpp' object='libskins2_a-macosx_tooltip.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-macosx_tooltip.Po' tmpdepfile='$(DEPDIR)/libskins2_a-macosx_tooltip.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-macosx_tooltip.o `test -f 'macosx/macosx_tooltip.cpp' || echo '$(srcdir)/'`macosx/macosx_tooltip.cpp
+
+libskins2_a-macosx_tooltip.obj: macosx/macosx_tooltip.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-macosx_tooltip.obj -MD -MP -MF "$(DEPDIR)/libskins2_a-macosx_tooltip.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-macosx_tooltip.obj `if test -f 'macosx/macosx_tooltip.cpp'; then $(CYGPATH_W) 'macosx/macosx_tooltip.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_tooltip.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-macosx_tooltip.Tpo" "$(DEPDIR)/libskins2_a-macosx_tooltip.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-macosx_tooltip.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_tooltip.cpp' object='libskins2_a-macosx_tooltip.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-macosx_tooltip.Po' tmpdepfile='$(DEPDIR)/libskins2_a-macosx_tooltip.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-macosx_tooltip.obj `if test -f 'macosx/macosx_tooltip.cpp'; then $(CYGPATH_W) 'macosx/macosx_tooltip.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_tooltip.cpp'; fi`
+
 libskins2_pic_a-async_queue.o: commands/async_queue.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-async_queue.o -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-async_queue.Tpo" \
 @am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-async_queue.o `test -f 'commands/async_queue.cpp' || echo '$(srcdir)/'`commands/async_queue.cpp; \
@@ -3253,6 +3478,28 @@ libskins2_pic_a-cmd_layout.obj: commands/cmd_layout.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-cmd_layout.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-cmd_layout.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-cmd_layout.obj `if test -f 'commands/cmd_layout.cpp'; then $(CYGPATH_W) 'commands/cmd_layout.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_layout.cpp'; fi`
+
+libskins2_pic_a-cmd_muxer.o: commands/cmd_muxer.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-cmd_muxer.o -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-cmd_muxer.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-cmd_muxer.o `test -f 'commands/cmd_muxer.cpp' || echo '$(srcdir)/'`commands/cmd_muxer.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-cmd_muxer.Tpo" "$(DEPDIR)/libskins2_pic_a-cmd_muxer.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-cmd_muxer.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='commands/cmd_muxer.cpp' object='libskins2_pic_a-cmd_muxer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-cmd_muxer.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-cmd_muxer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-cmd_muxer.o `test -f 'commands/cmd_muxer.cpp' || echo '$(srcdir)/'`commands/cmd_muxer.cpp
+
+libskins2_pic_a-cmd_muxer.obj: commands/cmd_muxer.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-cmd_muxer.obj -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-cmd_muxer.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-cmd_muxer.obj `if test -f 'commands/cmd_muxer.cpp'; then $(CYGPATH_W) 'commands/cmd_muxer.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_muxer.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-cmd_muxer.Tpo" "$(DEPDIR)/libskins2_pic_a-cmd_muxer.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-cmd_muxer.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='commands/cmd_muxer.cpp' object='libskins2_pic_a-cmd_muxer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-cmd_muxer.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-cmd_muxer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-cmd_muxer.obj `if test -f 'commands/cmd_muxer.cpp'; then $(CYGPATH_W) 'commands/cmd_muxer.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_muxer.cpp'; fi`
 
 libskins2_pic_a-cmd_on_top.o: commands/cmd_on_top.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-cmd_on_top.o -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-cmd_on_top.Tpo" \
@@ -4530,28 +4777,6 @@ libskins2_pic_a-playlist.obj: vars/playlist.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-playlist.obj `if test -f 'vars/playlist.cpp'; then $(CYGPATH_W) 'vars/playlist.cpp'; else $(CYGPATH_W) '$(srcdir)/vars/playlist.cpp'; fi`
 
-libskins2_pic_a-stream.o: vars/stream.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-stream.o -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-stream.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-stream.o `test -f 'vars/stream.cpp' || echo '$(srcdir)/'`vars/stream.cpp; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-stream.Tpo" "$(DEPDIR)/libskins2_pic_a-stream.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-stream.Tpo"; exit 1; \
-@am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='vars/stream.cpp' object='libskins2_pic_a-stream.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-stream.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-stream.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-stream.o `test -f 'vars/stream.cpp' || echo '$(srcdir)/'`vars/stream.cpp
-
-libskins2_pic_a-stream.obj: vars/stream.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-stream.obj -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-stream.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-stream.obj `if test -f 'vars/stream.cpp'; then $(CYGPATH_W) 'vars/stream.cpp'; else $(CYGPATH_W) '$(srcdir)/vars/stream.cpp'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-stream.Tpo" "$(DEPDIR)/libskins2_pic_a-stream.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-stream.Tpo"; exit 1; \
-@am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='vars/stream.cpp' object='libskins2_pic_a-stream.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-stream.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-stream.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-stream.obj `if test -f 'vars/stream.cpp'; then $(CYGPATH_W) 'vars/stream.cpp'; else $(CYGPATH_W) '$(srcdir)/vars/stream.cpp'; fi`
-
 libskins2_pic_a-time.o: vars/time.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-time.o -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-time.Tpo" \
 @am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-time.o `test -f 'vars/time.cpp' || echo '$(srcdir)/'`vars/time.cpp; \
@@ -4926,6 +5151,160 @@ libskins2_pic_a-x11_tooltip.obj: x11/x11_tooltip.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-x11_tooltip.obj `if test -f 'x11/x11_tooltip.cpp'; then $(CYGPATH_W) 'x11/x11_tooltip.cpp'; else $(CYGPATH_W) '$(srcdir)/x11/x11_tooltip.cpp'; fi`
 
+libskins2_pic_a-macosx_dragdrop.o: macosx/macosx_dragdrop.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-macosx_dragdrop.o -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-macosx_dragdrop.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-macosx_dragdrop.o `test -f 'macosx/macosx_dragdrop.cpp' || echo '$(srcdir)/'`macosx/macosx_dragdrop.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-macosx_dragdrop.Tpo" "$(DEPDIR)/libskins2_pic_a-macosx_dragdrop.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-macosx_dragdrop.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_dragdrop.cpp' object='libskins2_pic_a-macosx_dragdrop.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-macosx_dragdrop.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-macosx_dragdrop.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-macosx_dragdrop.o `test -f 'macosx/macosx_dragdrop.cpp' || echo '$(srcdir)/'`macosx/macosx_dragdrop.cpp
+
+libskins2_pic_a-macosx_dragdrop.obj: macosx/macosx_dragdrop.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-macosx_dragdrop.obj -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-macosx_dragdrop.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-macosx_dragdrop.obj `if test -f 'macosx/macosx_dragdrop.cpp'; then $(CYGPATH_W) 'macosx/macosx_dragdrop.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_dragdrop.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-macosx_dragdrop.Tpo" "$(DEPDIR)/libskins2_pic_a-macosx_dragdrop.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-macosx_dragdrop.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_dragdrop.cpp' object='libskins2_pic_a-macosx_dragdrop.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-macosx_dragdrop.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-macosx_dragdrop.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-macosx_dragdrop.obj `if test -f 'macosx/macosx_dragdrop.cpp'; then $(CYGPATH_W) 'macosx/macosx_dragdrop.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_dragdrop.cpp'; fi`
+
+libskins2_pic_a-macosx_factory.o: macosx/macosx_factory.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-macosx_factory.o -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-macosx_factory.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-macosx_factory.o `test -f 'macosx/macosx_factory.cpp' || echo '$(srcdir)/'`macosx/macosx_factory.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-macosx_factory.Tpo" "$(DEPDIR)/libskins2_pic_a-macosx_factory.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-macosx_factory.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_factory.cpp' object='libskins2_pic_a-macosx_factory.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-macosx_factory.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-macosx_factory.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-macosx_factory.o `test -f 'macosx/macosx_factory.cpp' || echo '$(srcdir)/'`macosx/macosx_factory.cpp
+
+libskins2_pic_a-macosx_factory.obj: macosx/macosx_factory.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-macosx_factory.obj -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-macosx_factory.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-macosx_factory.obj `if test -f 'macosx/macosx_factory.cpp'; then $(CYGPATH_W) 'macosx/macosx_factory.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_factory.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-macosx_factory.Tpo" "$(DEPDIR)/libskins2_pic_a-macosx_factory.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-macosx_factory.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_factory.cpp' object='libskins2_pic_a-macosx_factory.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-macosx_factory.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-macosx_factory.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-macosx_factory.obj `if test -f 'macosx/macosx_factory.cpp'; then $(CYGPATH_W) 'macosx/macosx_factory.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_factory.cpp'; fi`
+
+libskins2_pic_a-macosx_graphics.o: macosx/macosx_graphics.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-macosx_graphics.o -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-macosx_graphics.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-macosx_graphics.o `test -f 'macosx/macosx_graphics.cpp' || echo '$(srcdir)/'`macosx/macosx_graphics.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-macosx_graphics.Tpo" "$(DEPDIR)/libskins2_pic_a-macosx_graphics.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-macosx_graphics.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_graphics.cpp' object='libskins2_pic_a-macosx_graphics.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-macosx_graphics.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-macosx_graphics.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-macosx_graphics.o `test -f 'macosx/macosx_graphics.cpp' || echo '$(srcdir)/'`macosx/macosx_graphics.cpp
+
+libskins2_pic_a-macosx_graphics.obj: macosx/macosx_graphics.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-macosx_graphics.obj -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-macosx_graphics.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-macosx_graphics.obj `if test -f 'macosx/macosx_graphics.cpp'; then $(CYGPATH_W) 'macosx/macosx_graphics.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_graphics.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-macosx_graphics.Tpo" "$(DEPDIR)/libskins2_pic_a-macosx_graphics.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-macosx_graphics.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_graphics.cpp' object='libskins2_pic_a-macosx_graphics.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-macosx_graphics.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-macosx_graphics.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-macosx_graphics.obj `if test -f 'macosx/macosx_graphics.cpp'; then $(CYGPATH_W) 'macosx/macosx_graphics.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_graphics.cpp'; fi`
+
+libskins2_pic_a-macosx_loop.o: macosx/macosx_loop.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-macosx_loop.o -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-macosx_loop.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-macosx_loop.o `test -f 'macosx/macosx_loop.cpp' || echo '$(srcdir)/'`macosx/macosx_loop.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-macosx_loop.Tpo" "$(DEPDIR)/libskins2_pic_a-macosx_loop.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-macosx_loop.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_loop.cpp' object='libskins2_pic_a-macosx_loop.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-macosx_loop.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-macosx_loop.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-macosx_loop.o `test -f 'macosx/macosx_loop.cpp' || echo '$(srcdir)/'`macosx/macosx_loop.cpp
+
+libskins2_pic_a-macosx_loop.obj: macosx/macosx_loop.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-macosx_loop.obj -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-macosx_loop.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-macosx_loop.obj `if test -f 'macosx/macosx_loop.cpp'; then $(CYGPATH_W) 'macosx/macosx_loop.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_loop.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-macosx_loop.Tpo" "$(DEPDIR)/libskins2_pic_a-macosx_loop.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-macosx_loop.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_loop.cpp' object='libskins2_pic_a-macosx_loop.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-macosx_loop.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-macosx_loop.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-macosx_loop.obj `if test -f 'macosx/macosx_loop.cpp'; then $(CYGPATH_W) 'macosx/macosx_loop.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_loop.cpp'; fi`
+
+libskins2_pic_a-macosx_timer.o: macosx/macosx_timer.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-macosx_timer.o -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-macosx_timer.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-macosx_timer.o `test -f 'macosx/macosx_timer.cpp' || echo '$(srcdir)/'`macosx/macosx_timer.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-macosx_timer.Tpo" "$(DEPDIR)/libskins2_pic_a-macosx_timer.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-macosx_timer.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_timer.cpp' object='libskins2_pic_a-macosx_timer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-macosx_timer.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-macosx_timer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-macosx_timer.o `test -f 'macosx/macosx_timer.cpp' || echo '$(srcdir)/'`macosx/macosx_timer.cpp
+
+libskins2_pic_a-macosx_timer.obj: macosx/macosx_timer.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-macosx_timer.obj -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-macosx_timer.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-macosx_timer.obj `if test -f 'macosx/macosx_timer.cpp'; then $(CYGPATH_W) 'macosx/macosx_timer.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_timer.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-macosx_timer.Tpo" "$(DEPDIR)/libskins2_pic_a-macosx_timer.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-macosx_timer.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_timer.cpp' object='libskins2_pic_a-macosx_timer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-macosx_timer.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-macosx_timer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-macosx_timer.obj `if test -f 'macosx/macosx_timer.cpp'; then $(CYGPATH_W) 'macosx/macosx_timer.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_timer.cpp'; fi`
+
+libskins2_pic_a-macosx_window.o: macosx/macosx_window.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-macosx_window.o -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-macosx_window.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-macosx_window.o `test -f 'macosx/macosx_window.cpp' || echo '$(srcdir)/'`macosx/macosx_window.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-macosx_window.Tpo" "$(DEPDIR)/libskins2_pic_a-macosx_window.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-macosx_window.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_window.cpp' object='libskins2_pic_a-macosx_window.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-macosx_window.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-macosx_window.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-macosx_window.o `test -f 'macosx/macosx_window.cpp' || echo '$(srcdir)/'`macosx/macosx_window.cpp
+
+libskins2_pic_a-macosx_window.obj: macosx/macosx_window.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-macosx_window.obj -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-macosx_window.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-macosx_window.obj `if test -f 'macosx/macosx_window.cpp'; then $(CYGPATH_W) 'macosx/macosx_window.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_window.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-macosx_window.Tpo" "$(DEPDIR)/libskins2_pic_a-macosx_window.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-macosx_window.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_window.cpp' object='libskins2_pic_a-macosx_window.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-macosx_window.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-macosx_window.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-macosx_window.obj `if test -f 'macosx/macosx_window.cpp'; then $(CYGPATH_W) 'macosx/macosx_window.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_window.cpp'; fi`
+
+libskins2_pic_a-macosx_tooltip.o: macosx/macosx_tooltip.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-macosx_tooltip.o -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-macosx_tooltip.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-macosx_tooltip.o `test -f 'macosx/macosx_tooltip.cpp' || echo '$(srcdir)/'`macosx/macosx_tooltip.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-macosx_tooltip.Tpo" "$(DEPDIR)/libskins2_pic_a-macosx_tooltip.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-macosx_tooltip.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_tooltip.cpp' object='libskins2_pic_a-macosx_tooltip.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-macosx_tooltip.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-macosx_tooltip.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-macosx_tooltip.o `test -f 'macosx/macosx_tooltip.cpp' || echo '$(srcdir)/'`macosx/macosx_tooltip.cpp
+
+libskins2_pic_a-macosx_tooltip.obj: macosx/macosx_tooltip.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-macosx_tooltip.obj -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-macosx_tooltip.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-macosx_tooltip.obj `if test -f 'macosx/macosx_tooltip.cpp'; then $(CYGPATH_W) 'macosx/macosx_tooltip.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_tooltip.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-macosx_tooltip.Tpo" "$(DEPDIR)/libskins2_pic_a-macosx_tooltip.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-macosx_tooltip.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_tooltip.cpp' object='libskins2_pic_a-macosx_tooltip.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-macosx_tooltip.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-macosx_tooltip.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-macosx_tooltip.obj `if test -f 'macosx/macosx_tooltip.cpp'; then $(CYGPATH_W) 'macosx/macosx_tooltip.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_tooltip.cpp'; fi`
+
 libskins2_plugin_a-async_queue.o: commands/async_queue.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-async_queue.o -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-async_queue.Tpo" \
 @am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-async_queue.o `test -f 'commands/async_queue.cpp' || echo '$(srcdir)/'`commands/async_queue.cpp; \
@@ -5057,6 +5436,28 @@ libskins2_plugin_a-cmd_layout.obj: commands/cmd_layout.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-cmd_layout.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-cmd_layout.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-cmd_layout.obj `if test -f 'commands/cmd_layout.cpp'; then $(CYGPATH_W) 'commands/cmd_layout.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_layout.cpp'; fi`
+
+libskins2_plugin_a-cmd_muxer.o: commands/cmd_muxer.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-cmd_muxer.o -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-cmd_muxer.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-cmd_muxer.o `test -f 'commands/cmd_muxer.cpp' || echo '$(srcdir)/'`commands/cmd_muxer.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-cmd_muxer.Tpo" "$(DEPDIR)/libskins2_plugin_a-cmd_muxer.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-cmd_muxer.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='commands/cmd_muxer.cpp' object='libskins2_plugin_a-cmd_muxer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-cmd_muxer.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-cmd_muxer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-cmd_muxer.o `test -f 'commands/cmd_muxer.cpp' || echo '$(srcdir)/'`commands/cmd_muxer.cpp
+
+libskins2_plugin_a-cmd_muxer.obj: commands/cmd_muxer.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-cmd_muxer.obj -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-cmd_muxer.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-cmd_muxer.obj `if test -f 'commands/cmd_muxer.cpp'; then $(CYGPATH_W) 'commands/cmd_muxer.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_muxer.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-cmd_muxer.Tpo" "$(DEPDIR)/libskins2_plugin_a-cmd_muxer.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-cmd_muxer.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='commands/cmd_muxer.cpp' object='libskins2_plugin_a-cmd_muxer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-cmd_muxer.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-cmd_muxer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-cmd_muxer.obj `if test -f 'commands/cmd_muxer.cpp'; then $(CYGPATH_W) 'commands/cmd_muxer.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_muxer.cpp'; fi`
 
 libskins2_plugin_a-cmd_on_top.o: commands/cmd_on_top.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-cmd_on_top.o -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-cmd_on_top.Tpo" \
@@ -6334,28 +6735,6 @@ libskins2_plugin_a-playlist.obj: vars/playlist.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-playlist.obj `if test -f 'vars/playlist.cpp'; then $(CYGPATH_W) 'vars/playlist.cpp'; else $(CYGPATH_W) '$(srcdir)/vars/playlist.cpp'; fi`
 
-libskins2_plugin_a-stream.o: vars/stream.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-stream.o -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-stream.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-stream.o `test -f 'vars/stream.cpp' || echo '$(srcdir)/'`vars/stream.cpp; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-stream.Tpo" "$(DEPDIR)/libskins2_plugin_a-stream.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-stream.Tpo"; exit 1; \
-@am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='vars/stream.cpp' object='libskins2_plugin_a-stream.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-stream.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-stream.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-stream.o `test -f 'vars/stream.cpp' || echo '$(srcdir)/'`vars/stream.cpp
-
-libskins2_plugin_a-stream.obj: vars/stream.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-stream.obj -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-stream.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-stream.obj `if test -f 'vars/stream.cpp'; then $(CYGPATH_W) 'vars/stream.cpp'; else $(CYGPATH_W) '$(srcdir)/vars/stream.cpp'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-stream.Tpo" "$(DEPDIR)/libskins2_plugin_a-stream.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-stream.Tpo"; exit 1; \
-@am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='vars/stream.cpp' object='libskins2_plugin_a-stream.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-stream.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-stream.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-stream.obj `if test -f 'vars/stream.cpp'; then $(CYGPATH_W) 'vars/stream.cpp'; else $(CYGPATH_W) '$(srcdir)/vars/stream.cpp'; fi`
-
 libskins2_plugin_a-time.o: vars/time.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-time.o -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-time.Tpo" \
 @am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-time.o `test -f 'vars/time.cpp' || echo '$(srcdir)/'`vars/time.cpp; \
@@ -6729,6 +7108,160 @@ libskins2_plugin_a-x11_tooltip.obj: x11/x11_tooltip.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-x11_tooltip.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-x11_tooltip.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-x11_tooltip.obj `if test -f 'x11/x11_tooltip.cpp'; then $(CYGPATH_W) 'x11/x11_tooltip.cpp'; else $(CYGPATH_W) '$(srcdir)/x11/x11_tooltip.cpp'; fi`
+
+libskins2_plugin_a-macosx_dragdrop.o: macosx/macosx_dragdrop.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-macosx_dragdrop.o -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-macosx_dragdrop.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-macosx_dragdrop.o `test -f 'macosx/macosx_dragdrop.cpp' || echo '$(srcdir)/'`macosx/macosx_dragdrop.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-macosx_dragdrop.Tpo" "$(DEPDIR)/libskins2_plugin_a-macosx_dragdrop.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-macosx_dragdrop.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_dragdrop.cpp' object='libskins2_plugin_a-macosx_dragdrop.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-macosx_dragdrop.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-macosx_dragdrop.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-macosx_dragdrop.o `test -f 'macosx/macosx_dragdrop.cpp' || echo '$(srcdir)/'`macosx/macosx_dragdrop.cpp
+
+libskins2_plugin_a-macosx_dragdrop.obj: macosx/macosx_dragdrop.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-macosx_dragdrop.obj -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-macosx_dragdrop.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-macosx_dragdrop.obj `if test -f 'macosx/macosx_dragdrop.cpp'; then $(CYGPATH_W) 'macosx/macosx_dragdrop.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_dragdrop.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-macosx_dragdrop.Tpo" "$(DEPDIR)/libskins2_plugin_a-macosx_dragdrop.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-macosx_dragdrop.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_dragdrop.cpp' object='libskins2_plugin_a-macosx_dragdrop.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-macosx_dragdrop.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-macosx_dragdrop.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-macosx_dragdrop.obj `if test -f 'macosx/macosx_dragdrop.cpp'; then $(CYGPATH_W) 'macosx/macosx_dragdrop.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_dragdrop.cpp'; fi`
+
+libskins2_plugin_a-macosx_factory.o: macosx/macosx_factory.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-macosx_factory.o -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-macosx_factory.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-macosx_factory.o `test -f 'macosx/macosx_factory.cpp' || echo '$(srcdir)/'`macosx/macosx_factory.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-macosx_factory.Tpo" "$(DEPDIR)/libskins2_plugin_a-macosx_factory.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-macosx_factory.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_factory.cpp' object='libskins2_plugin_a-macosx_factory.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-macosx_factory.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-macosx_factory.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-macosx_factory.o `test -f 'macosx/macosx_factory.cpp' || echo '$(srcdir)/'`macosx/macosx_factory.cpp
+
+libskins2_plugin_a-macosx_factory.obj: macosx/macosx_factory.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-macosx_factory.obj -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-macosx_factory.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-macosx_factory.obj `if test -f 'macosx/macosx_factory.cpp'; then $(CYGPATH_W) 'macosx/macosx_factory.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_factory.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-macosx_factory.Tpo" "$(DEPDIR)/libskins2_plugin_a-macosx_factory.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-macosx_factory.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_factory.cpp' object='libskins2_plugin_a-macosx_factory.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-macosx_factory.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-macosx_factory.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-macosx_factory.obj `if test -f 'macosx/macosx_factory.cpp'; then $(CYGPATH_W) 'macosx/macosx_factory.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_factory.cpp'; fi`
+
+libskins2_plugin_a-macosx_graphics.o: macosx/macosx_graphics.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-macosx_graphics.o -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-macosx_graphics.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-macosx_graphics.o `test -f 'macosx/macosx_graphics.cpp' || echo '$(srcdir)/'`macosx/macosx_graphics.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-macosx_graphics.Tpo" "$(DEPDIR)/libskins2_plugin_a-macosx_graphics.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-macosx_graphics.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_graphics.cpp' object='libskins2_plugin_a-macosx_graphics.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-macosx_graphics.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-macosx_graphics.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-macosx_graphics.o `test -f 'macosx/macosx_graphics.cpp' || echo '$(srcdir)/'`macosx/macosx_graphics.cpp
+
+libskins2_plugin_a-macosx_graphics.obj: macosx/macosx_graphics.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-macosx_graphics.obj -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-macosx_graphics.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-macosx_graphics.obj `if test -f 'macosx/macosx_graphics.cpp'; then $(CYGPATH_W) 'macosx/macosx_graphics.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_graphics.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-macosx_graphics.Tpo" "$(DEPDIR)/libskins2_plugin_a-macosx_graphics.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-macosx_graphics.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_graphics.cpp' object='libskins2_plugin_a-macosx_graphics.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-macosx_graphics.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-macosx_graphics.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-macosx_graphics.obj `if test -f 'macosx/macosx_graphics.cpp'; then $(CYGPATH_W) 'macosx/macosx_graphics.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_graphics.cpp'; fi`
+
+libskins2_plugin_a-macosx_loop.o: macosx/macosx_loop.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-macosx_loop.o -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-macosx_loop.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-macosx_loop.o `test -f 'macosx/macosx_loop.cpp' || echo '$(srcdir)/'`macosx/macosx_loop.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-macosx_loop.Tpo" "$(DEPDIR)/libskins2_plugin_a-macosx_loop.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-macosx_loop.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_loop.cpp' object='libskins2_plugin_a-macosx_loop.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-macosx_loop.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-macosx_loop.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-macosx_loop.o `test -f 'macosx/macosx_loop.cpp' || echo '$(srcdir)/'`macosx/macosx_loop.cpp
+
+libskins2_plugin_a-macosx_loop.obj: macosx/macosx_loop.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-macosx_loop.obj -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-macosx_loop.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-macosx_loop.obj `if test -f 'macosx/macosx_loop.cpp'; then $(CYGPATH_W) 'macosx/macosx_loop.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_loop.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-macosx_loop.Tpo" "$(DEPDIR)/libskins2_plugin_a-macosx_loop.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-macosx_loop.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_loop.cpp' object='libskins2_plugin_a-macosx_loop.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-macosx_loop.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-macosx_loop.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-macosx_loop.obj `if test -f 'macosx/macosx_loop.cpp'; then $(CYGPATH_W) 'macosx/macosx_loop.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_loop.cpp'; fi`
+
+libskins2_plugin_a-macosx_timer.o: macosx/macosx_timer.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-macosx_timer.o -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-macosx_timer.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-macosx_timer.o `test -f 'macosx/macosx_timer.cpp' || echo '$(srcdir)/'`macosx/macosx_timer.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-macosx_timer.Tpo" "$(DEPDIR)/libskins2_plugin_a-macosx_timer.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-macosx_timer.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_timer.cpp' object='libskins2_plugin_a-macosx_timer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-macosx_timer.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-macosx_timer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-macosx_timer.o `test -f 'macosx/macosx_timer.cpp' || echo '$(srcdir)/'`macosx/macosx_timer.cpp
+
+libskins2_plugin_a-macosx_timer.obj: macosx/macosx_timer.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-macosx_timer.obj -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-macosx_timer.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-macosx_timer.obj `if test -f 'macosx/macosx_timer.cpp'; then $(CYGPATH_W) 'macosx/macosx_timer.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_timer.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-macosx_timer.Tpo" "$(DEPDIR)/libskins2_plugin_a-macosx_timer.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-macosx_timer.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_timer.cpp' object='libskins2_plugin_a-macosx_timer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-macosx_timer.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-macosx_timer.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-macosx_timer.obj `if test -f 'macosx/macosx_timer.cpp'; then $(CYGPATH_W) 'macosx/macosx_timer.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_timer.cpp'; fi`
+
+libskins2_plugin_a-macosx_window.o: macosx/macosx_window.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-macosx_window.o -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-macosx_window.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-macosx_window.o `test -f 'macosx/macosx_window.cpp' || echo '$(srcdir)/'`macosx/macosx_window.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-macosx_window.Tpo" "$(DEPDIR)/libskins2_plugin_a-macosx_window.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-macosx_window.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_window.cpp' object='libskins2_plugin_a-macosx_window.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-macosx_window.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-macosx_window.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-macosx_window.o `test -f 'macosx/macosx_window.cpp' || echo '$(srcdir)/'`macosx/macosx_window.cpp
+
+libskins2_plugin_a-macosx_window.obj: macosx/macosx_window.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-macosx_window.obj -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-macosx_window.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-macosx_window.obj `if test -f 'macosx/macosx_window.cpp'; then $(CYGPATH_W) 'macosx/macosx_window.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_window.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-macosx_window.Tpo" "$(DEPDIR)/libskins2_plugin_a-macosx_window.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-macosx_window.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_window.cpp' object='libskins2_plugin_a-macosx_window.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-macosx_window.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-macosx_window.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-macosx_window.obj `if test -f 'macosx/macosx_window.cpp'; then $(CYGPATH_W) 'macosx/macosx_window.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_window.cpp'; fi`
+
+libskins2_plugin_a-macosx_tooltip.o: macosx/macosx_tooltip.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-macosx_tooltip.o -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-macosx_tooltip.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-macosx_tooltip.o `test -f 'macosx/macosx_tooltip.cpp' || echo '$(srcdir)/'`macosx/macosx_tooltip.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-macosx_tooltip.Tpo" "$(DEPDIR)/libskins2_plugin_a-macosx_tooltip.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-macosx_tooltip.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_tooltip.cpp' object='libskins2_plugin_a-macosx_tooltip.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-macosx_tooltip.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-macosx_tooltip.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-macosx_tooltip.o `test -f 'macosx/macosx_tooltip.cpp' || echo '$(srcdir)/'`macosx/macosx_tooltip.cpp
+
+libskins2_plugin_a-macosx_tooltip.obj: macosx/macosx_tooltip.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-macosx_tooltip.obj -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-macosx_tooltip.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-macosx_tooltip.obj `if test -f 'macosx/macosx_tooltip.cpp'; then $(CYGPATH_W) 'macosx/macosx_tooltip.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_tooltip.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-macosx_tooltip.Tpo" "$(DEPDIR)/libskins2_plugin_a-macosx_tooltip.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-macosx_tooltip.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='macosx/macosx_tooltip.cpp' object='libskins2_plugin_a-macosx_tooltip.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-macosx_tooltip.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-macosx_tooltip.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-macosx_tooltip.obj `if test -f 'macosx/macosx_tooltip.cpp'; then $(CYGPATH_W) 'macosx/macosx_tooltip.cpp'; else $(CYGPATH_W) '$(srcdir)/macosx/macosx_tooltip.cpp'; fi`
 uninstall-info-am:
 libskins2DATA_INSTALL = $(INSTALL_DATA)
 install-libskins2DATA: $(libskins2_DATA)

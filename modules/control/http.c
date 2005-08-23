@@ -1,8 +1,8 @@
 /*****************************************************************************
  * http.c :  http mini-server ;)
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: http.c 9281 2004-11-11 12:45:53Z zorglub $
+ * Copyright (C) 2001-2005 VideoLAN
+ * $Id: http.c 11000 2005-05-13 17:58:05Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -40,6 +40,7 @@
 #include "vlc_httpd.h"
 #include "vlc_vlm.h"
 #include "vlc_tls.h"
+#include "charset.h"
 
 #ifdef HAVE_SYS_STAT_H
 #   include <sys/stat.h>
@@ -57,8 +58,7 @@
 #   include <io.h>
 #endif
 
-#if (!defined( WIN32 ) || defined(__MINGW32__))
-/* Mingw has its own version of dirent */
+#ifdef HAVE_DIRENT_H
 #   include <dirent.h>
 #endif
 
@@ -90,9 +90,13 @@ static void Close( vlc_object_t * );
 #define CRL_LONGTEXT N_( "HTTP interace Certificates Revocation List file" )
 
 vlc_module_begin();
+    set_shortname( _("HTTP"));
     set_description( _("HTTP remote control interface") );
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_GENERAL );
         add_string ( "http-host", NULL, NULL, HOST_TEXT, HOST_LONGTEXT, VLC_TRUE );
         add_string ( "http-src",  NULL, NULL, SRC_TEXT,  SRC_LONGTEXT,  VLC_TRUE );
+        set_section( N_("HTTP SSL" ), 0 );
         add_string ( "http-intf-cert", NULL, NULL, CERT_TEXT, CERT_LONGTEXT, VLC_TRUE );
         add_string ( "http-intf-key",  NULL, NULL, KEY_TEXT,  KEY_LONGTEXT,  VLC_TRUE );
         add_string ( "http-intf-ca",   NULL, NULL, CA_TEXT,   CA_LONGTEXT,   VLC_TRUE );
@@ -144,8 +148,7 @@ static int uri_test_param( char *psz_uri, const char *psz_name );
 static void uri_decode_url_encoded( char *psz );
 
 static char *Find_end_MRL( char *psz );
-
-static playlist_item_t * parse_MRL( intf_thread_t * , char *psz );
+static playlist_item_t *parse_MRL( intf_thread_t * , char *psz );
 
 /*****************************************************************************
  *
@@ -171,6 +174,7 @@ struct httpd_file_sys_t
     intf_thread_t    *p_intf;
     httpd_file_t     *p_file;
     httpd_redirect_t *p_redir;
+    httpd_redirect_t *p_redir2;
 
     char          *file;
     char          *name;
@@ -192,6 +196,7 @@ struct intf_sys_t
     playlist_t          *p_playlist;
     input_thread_t      *p_input;
     vlm_t               *p_vlm;
+    char                *psz_html_type;
 };
 
 
@@ -233,6 +238,24 @@ static int Open( vlc_object_t *p_this )
     p_sys->p_input    = NULL;
     p_sys->p_vlm      = NULL;
 
+    /* determine Content-Type value for HTML pages */
+    vlc_current_charset(&psz_src);
+    if( psz_src == NULL )
+    {
+        free( p_sys );
+        return VLC_ENOMEM;
+    }
+    p_sys->psz_html_type = malloc( 20 + strlen( psz_src ) );
+    if( p_sys->psz_html_type == NULL )
+    {
+        free( p_sys );
+        free( psz_src );
+        return VLC_ENOMEM ;
+    }
+    sprintf( p_sys->psz_html_type, "text/html; charset=%s", psz_src );
+    free( psz_src );
+
+    /* determine SSL configuration */
     psz_cert = config_GetPsz( p_intf, "http-intf-cert" );
     if ( psz_cert != NULL )
     {
@@ -246,6 +269,7 @@ static int Open( vlc_object_t *p_this )
         if ( p_tls == NULL )
         {
             msg_Err( p_intf, "TLS initialization error" );
+            free( p_sys->psz_html_type );
             free( p_sys );
             return VLC_EGENERIC;
         }
@@ -255,6 +279,7 @@ static int Open( vlc_object_t *p_this )
         {
             msg_Err( p_intf, "TLS CA error" );
             tls_ServerDelete( p_tls );
+            free( p_sys->psz_html_type );
             free( p_sys );
             return VLC_EGENERIC;
         }
@@ -264,6 +289,7 @@ static int Open( vlc_object_t *p_this )
         {
             msg_Err( p_intf, "TLS CRL error" );
             tls_ServerDelete( p_tls );
+            free( p_sys->psz_html_type );
             free( p_sys );
             return VLC_EGENERIC;
         }
@@ -287,6 +313,8 @@ static int Open( vlc_object_t *p_this )
         msg_Err( p_intf, "cannot listen on %s:%d", psz_address, i_port );
         if ( p_tls != NULL )
             tls_ServerDelete( p_tls );
+
+        free( p_sys->psz_html_type );
         free( p_sys );
         return VLC_EGENERIC;
     }
@@ -299,16 +327,12 @@ static int Open( vlc_object_t *p_this )
     p_sys->i_files  = 0;
     p_sys->pp_files = NULL;
 
-#if defined(SYS_DARWIN) || defined(SYS_BEOS) || \
-        ( defined(WIN32) && !defined(UNDER_CE ) )
+#if defined(SYS_DARWIN) || defined(SYS_BEOS) || defined(WIN32)
     if ( ( psz_src = config_GetPsz( p_intf, "http-src" )) == NULL )
     {
         char * psz_vlcpath = p_intf->p_libvlc->psz_vlcpath;
         psz_src = malloc( strlen(psz_vlcpath) + strlen("/share/http" ) + 1 );
-        if( !psz_src )
-        {
-            return VLC_ENOMEM;
-        }
+        if( !psz_src ) return VLC_ENOMEM;
 #if defined(WIN32)
         sprintf( psz_src, "%s/http", psz_vlcpath);
 #else
@@ -364,6 +388,7 @@ failed:
         free( p_sys->pp_files );
     }
     httpd_HostDelete( p_sys->p_httpd_host );
+    free( p_sys->psz_html_type );
     free( p_sys );
     return VLC_EGENERIC;
 }
@@ -386,9 +411,9 @@ void Close ( vlc_object_t *p_this )
     {
        httpd_FileDelete( p_sys->pp_files[i]->p_file );
        if( p_sys->pp_files[i]->p_redir )
-       {
            httpd_RedirectDelete( p_sys->pp_files[i]->p_redir );
-       }
+       if( p_sys->pp_files[i]->p_redir2 )
+           httpd_RedirectDelete( p_sys->pp_files[i]->p_redir2 );
 
        free( p_sys->pp_files[i]->file );
        free( p_sys->pp_files[i]->name );
@@ -400,6 +425,7 @@ void Close ( vlc_object_t *p_this )
     }
     httpd_HostDelete( p_sys->p_httpd_host );
 
+    free( p_sys->psz_html_type );
     free( p_sys );
 }
 
@@ -462,7 +488,7 @@ static void Run( intf_thread_t *p_intf )
 /****************************************************************************
  * FileToUrl: create a good name for an url from filename
  ****************************************************************************/
-static char *FileToUrl( char *name )
+static char *FileToUrl( char *name, vlc_bool_t *pb_index )
 {
     char *url, *p;
 
@@ -498,12 +524,14 @@ static char *FileToUrl( char *name )
     }
 #endif
 
+    *pb_index = VLC_FALSE;
     /* index.* -> / */
     if( ( p = strrchr( url, '/' ) ) != NULL )
     {
         if( !strncmp( p, "/index.", 7 ) )
         {
             p[1] = '\0';
+            *pb_index = VLC_TRUE;
         }
     }
     return url;
@@ -592,12 +620,14 @@ static int ParseDirectory( intf_thread_t *p_intf, char *psz_root,
         if( ParseDirectory( p_intf, psz_root, dir ) )
         {
             httpd_file_sys_t *f = malloc( sizeof( httpd_file_sys_t ) );
+            vlc_bool_t b_index;
 
             f->p_intf  = p_intf;
             f->p_file = NULL;
             f->p_redir = NULL;
+            f->p_redir2 = NULL;
             f->file = strdup( dir );
-            f->name = FileToUrl( &dir[strlen( psz_root )] );
+            f->name = FileToUrl( &dir[strlen( psz_root )], &b_index );
             f->b_html = strstr( &dir[strlen( psz_root )], ".htm" ) ? VLC_TRUE : VLC_FALSE;
 
             if( !f->name )
@@ -611,7 +641,8 @@ static int ParseDirectory( intf_thread_t *p_intf, char *psz_root,
                      f->file, f->name );
 
             f->p_file = httpd_FileNew( p_sys->p_httpd_host,
-                                       f->name, f->b_html ? "text/html" : NULL,
+                                       f->name,
+                                       f->b_html ? p_sys->psz_html_type : NULL,
                                        user, password,
                                        HttpCallback, f );
 
@@ -619,15 +650,29 @@ static int ParseDirectory( intf_thread_t *p_intf, char *psz_root,
             {
                 TAB_APPEND( p_sys->i_files, p_sys->pp_files, f );
             }
-            /* For rep/ add a redir from rep to rep/ */
+            /* for url that ends by / add
+             *  - a redirect from rep to rep/
+             *  - in case of index.* rep/index.html to rep/ */
             if( f && f->name[strlen(f->name) - 1] == '/' )
             {
                 char *psz_redir = strdup( f->name );
+                char *p;
                 psz_redir[strlen( psz_redir ) - 1] = '\0';
 
                 msg_Dbg( p_intf, "redir=%s -> %s", psz_redir, f->name );
                 f->p_redir = httpd_RedirectNew( p_sys->p_httpd_host, f->name, psz_redir );
                 free( psz_redir );
+
+                if( b_index && ( p = strstr( f->file, "index." ) ) )
+                {
+                    asprintf( &psz_redir, "%s%s", f->name, p );
+
+                    msg_Dbg( p_intf, "redir=%s -> %s", psz_redir, f->name );
+                    f->p_redir2 = httpd_RedirectNew( p_sys->p_httpd_host,
+                                                     f->name, psz_redir );
+
+                    free( psz_redir );
+                }
             }
         }
     }
@@ -836,7 +881,6 @@ static mvar_t *mvar_IntegerSetNew( char *name, char *arg )
     char *str = dup;
     mvar_t *s = mvar_New( name, "set" );
 
-    fprintf( stderr," mvar_IntegerSetNew: name=`%s' arg=`%s'\n", name, str );
 
     while( str )
     {
@@ -852,7 +896,6 @@ static mvar_t *mvar_IntegerSetNew( char *name, char *arg )
 
         i_step = 0;
         i_match = sscanf( str, "%d:%d:%d", &i_start, &i_stop, &i_step );
-        fprintf( stderr," mvar_IntegerSetNew: m=%d start=%d stop=%d step=%d\n", i_match, i_start, i_stop, i_step );
 
         if( i_match == 1 )
         {
@@ -868,8 +911,8 @@ static mvar_t *mvar_IntegerSetNew( char *name, char *arg )
         {
             int i;
 
-            if( ( i_start < i_stop && i_step > 0 ) ||
-                ( i_start > i_stop && i_step < 0 ) )
+            if( ( i_start <= i_stop && i_step > 0 ) ||
+                ( i_start >= i_stop && i_step < 0 ) )
             {
                 for( i = i_start; ; i += i_step )
                 {
@@ -881,7 +924,6 @@ static mvar_t *mvar_IntegerSetNew( char *name, char *arg )
                         break;
                     }
 
-                    fprintf( stderr," mvar_IntegerSetNew: adding %d\n", i );
                     sprintf( value, "%d", i );
 
                     mvar_PushNewVar( s, name, value );
@@ -895,34 +937,77 @@ static mvar_t *mvar_IntegerSetNew( char *name, char *arg )
     return s;
 }
 
+void PlaylistListNode( playlist_t *p_pl, playlist_item_t *p_node,
+                       char *name, mvar_t *s, int i_depth )
+{
+    if( p_node != NULL )
+    {
+        if (p_node->i_children == -1)
+        {
+            char value[512];
+            mvar_t *itm = mvar_New( name, "set" );
+
+            sprintf( value, "%d", ( p_pl->status.p_item == p_node )? 1 : 0 );
+            mvar_AppendNewVar( itm, "current", value );
+
+            sprintf( value, "%d", p_node->input.i_id );
+            mvar_AppendNewVar( itm, "index", value );
+
+            mvar_AppendNewVar( itm, "name", p_node->input.psz_name );
+
+            mvar_AppendNewVar( itm, "uri", p_node->input.psz_uri );
+
+            sprintf( value, "Item");
+            mvar_AppendNewVar( itm, "type", value );
+
+            sprintf( value, "%d", i_depth );
+            mvar_AppendNewVar( itm, "depth", value );
+
+            mvar_AppendVar( s, itm );
+        }
+        else
+        {
+            char value[512];
+            int i_child;
+            mvar_t *itm = mvar_New( name, "set" );
+
+            mvar_AppendNewVar( itm, "name", p_node->input.psz_name );
+            mvar_AppendNewVar( itm, "uri", p_node->input.psz_name );
+
+            sprintf( value, "Node" );
+            mvar_AppendNewVar( itm, "type", value );
+
+            sprintf( value, "%d", p_node->input.i_id );
+            mvar_AppendNewVar( itm, "index", value );
+
+            sprintf( value, "%d", p_node->i_children);
+            mvar_AppendNewVar( itm, "i_children", value );
+
+            sprintf( value, "%d", i_depth );
+            mvar_AppendNewVar( itm, "depth", value );
+
+            mvar_AppendVar( s, itm );
+
+            for (i_child = 0 ; i_child < p_node->i_children ; i_child++)
+                PlaylistListNode( p_pl, p_node->pp_children[i_child], name, s, i_depth + 1);
+
+        }
+    }
+}
+
 static mvar_t *mvar_PlaylistSetNew( char *name, playlist_t *p_pl )
 {
+    playlist_view_t *p_view;
     mvar_t *s = mvar_New( name, "set" );
-    int    i;
 
-    fprintf( stderr," mvar_PlaylistSetNew: name=`%s'\n", name );
 
     vlc_mutex_lock( &p_pl->object_lock );
-    for( i = 0; i < p_pl->i_size; i++ )
-    {
-        mvar_t *itm = mvar_New( name, "set" );
-        char   value[512];
 
-        sprintf( value, "%d", i == p_pl->i_index ? 1 : 0 );
-        mvar_AppendNewVar( itm, "current", value );
+    p_view = playlist_ViewFind( p_pl, VIEW_CATEGORY ); /* FIXME */
 
-        sprintf( value, "%d", i );
-        mvar_AppendNewVar( itm, "index", value );
+    if( p_view != NULL )
+        PlaylistListNode( p_pl, p_view->p_root, name, s, 0 );
 
-        mvar_AppendNewVar( itm, "name", p_pl->pp_items[i]->input.psz_name );
-
-        mvar_AppendNewVar( itm, "uri", p_pl->pp_items[i]->input.psz_uri );
-
-        sprintf( value, "%d", p_pl->pp_items[i]->i_group );
-        mvar_AppendNewVar( itm, "group", value );
-
-        mvar_AppendVar( s, itm );
-    }
     vlc_mutex_unlock( &p_pl->object_lock );
 
     return s;
@@ -933,7 +1018,6 @@ static mvar_t *mvar_InfoSetNew( char *name, input_thread_t *p_input )
     mvar_t *s = mvar_New( name, "set" );
     int i, j;
 
-    fprintf( stderr," mvar_InfoSetNew: name=`%s'\n", name );
     if( p_input == NULL )
     {
         return s;
@@ -973,7 +1057,6 @@ static mvar_t *mvar_HttpdInfoSetNew( char *name, httpd_t *p_httpd, int i_type )
     httpd_info_t info;
     int          i;
 
-    fprintf( stderr," mvar_HttpdInfoSetNew: name=`%s'\n", name );
     if( !p_httpd->pf_control( p_httpd, i_type, &info, NULL ) )
     {
         for( i= 0; i < info.i_count; )
@@ -1095,7 +1178,6 @@ static mvar_t *mvar_FileSetNew( char *name, char *psz_dir )
     }
     *p = '\0';
 
-    fprintf( stderr," mvar_FileSetNew: name=`%s' dir=`%s'\n", name, psz_dir );
 
 #ifdef HAVE_SYS_STAT_H
     if( stat( psz_dir, &stat_info ) == -1 || !S_ISDIR( stat_info.st_mode ) )
@@ -1184,7 +1266,6 @@ static mvar_t *mvar_VlmSetNew( char *name, vlm_t *vlm )
     vlm_message_t *msg;
     int    i;
 
-    /* fprintf( stderr," mvar_VlmSetNew: name=`%s'\n", name ); */
     if( vlm == NULL ) return s;
 
     if( vlm_ExecuteCommand( vlm, "show", &msg ) )
@@ -1216,8 +1297,6 @@ static mvar_t *mvar_VlmSetNew( char *name, vlm_t *vlm )
             set = mvar_New( name, "set" );
             mvar_AppendNewVar( set, "name", el->psz_name );
 
-            /* fprintf( stderr, "#### name=%s\n", el->psz_name ); */
-
             for( k = 0; k < desc->i_child; k++ )
             {
                 vlm_message_t *ch = desc->child[k];
@@ -1226,19 +1305,22 @@ static mvar_t *mvar_VlmSetNew( char *name, vlm_t *vlm )
                     int c;
                     mvar_t *n = mvar_New( ch->psz_name, "set" );
 
-                    /* fprintf( stderr, "        child=%s [%d]\n", ch->psz_name, ch->i_child ); */
                     for( c = 0; c < ch->i_child; c++ )
                     {
-                        mvar_t *in = mvar_New( ch->psz_name, ch->child[c]->psz_name );
-                        mvar_AppendVar( n, in );
-
-                        /* fprintf( stderr, "            sub=%s\n", ch->child[c]->psz_name );*/
+                        if( ch->child[c]->psz_value )
+                        {
+                            mvar_AppendNewVar( n, ch->child[c]->psz_name, ch->child[c]->psz_value );
+                        }
+                        else
+                        {
+                            mvar_t *in = mvar_New( ch->psz_name, ch->child[c]->psz_name );
+                            mvar_AppendVar( n, in );
+                        }
                     }
                     mvar_AppendVar( set, n );
                 }
                 else
                 {
-                    /* fprintf( stderr, "        child=%s->%s\n", ch->psz_name, ch->psz_value ); */
                     mvar_AppendNewVar( set, ch->psz_name, ch->psz_value );
                 }
             }
@@ -1417,6 +1499,7 @@ enum macroType
     MVLC_FOREACH,
     MVLC_IF,
     MVLC_RPN,
+    MVLC_STACK,
     MVLC_ELSE,
     MVLC_END,
     MVLC_GET,
@@ -1470,6 +1553,7 @@ StrToMacroTypeTab [] =
         { "vlm_save",       MVLC_VLM_SAVE },
 
     { "rpn",        MVLC_RPN },
+    { "stack",        MVLC_STACK },
 
     { "foreach",    MVLC_FOREACH },
     { "value",      MVLC_VALUE },
@@ -1562,26 +1646,26 @@ static void MacroDo( httpd_file_sys_t *p_args,
 
                     uri_extract_value( p_request, "item", item, 512 );
                     i_item = atoi( item );
-                    playlist_Command( p_sys->p_playlist, PLAYLIST_GOTO, i_item );
+                    playlist_Control( p_sys->p_playlist, PLAYLIST_ITEMPLAY,
+                                      playlist_ItemGetById( p_sys->p_playlist,
+                                      i_item ) );
                     msg_Dbg( p_intf, "requested playlist item: %i", i_item );
                     break;
                 }
                 case MVLC_STOP:
-                    playlist_Command( p_sys->p_playlist, PLAYLIST_STOP, 0 );
+                    playlist_Control( p_sys->p_playlist, PLAYLIST_STOP);
                     msg_Dbg( p_intf, "requested playlist stop" );
                     break;
                 case MVLC_PAUSE:
-                    playlist_Command( p_sys->p_playlist, PLAYLIST_PAUSE, 0 );
+                    playlist_Control( p_sys->p_playlist, PLAYLIST_PAUSE );
                     msg_Dbg( p_intf, "requested playlist pause" );
                     break;
                 case MVLC_NEXT:
-                    playlist_Command( p_sys->p_playlist, PLAYLIST_GOTO,
-                                      p_sys->p_playlist->i_index + 1 );
+                    playlist_Control( p_sys->p_playlist, PLAYLIST_SKIP, 1 );
                     msg_Dbg( p_intf, "requested playlist next" );
                     break;
                 case MVLC_PREVIOUS:
-                    playlist_Command( p_sys->p_playlist, PLAYLIST_GOTO,
-                                      p_sys->p_playlist->i_index - 1 );
+                    playlist_Control( p_sys->p_playlist, PLAYLIST_SKIP, -1);
                     msg_Dbg( p_intf, "requested playlist next" );
                     break;
                 case MVLC_FULLSCREEN:
@@ -1613,9 +1697,9 @@ static void MacroDo( httpd_file_sys_t *p_args,
 #define POSITION_ABSOLUTE 12
 #define POSITION_REL_FOR 13
 #define POSITION_REL_BACK 11
-#define TIME_ABSOLUTE 0
-#define TIME_REL_FOR 1
-#define TIME_REL_BACK -1
+#define VL_TIME_ABSOLUTE 0
+#define VL_TIME_REL_FOR 1
+#define VL_TIME_REL_BACK -1
                     if( p_sys->p_input )
                     {
                         uri_extract_value( p_request, "seek_value", value, 20 );
@@ -1630,13 +1714,13 @@ static void MacroDo( httpd_file_sys_t *p_args,
                             {
                                 case '+':
                                 {
-                                    i_relative = TIME_REL_FOR;
+                                    i_relative = VL_TIME_REL_FOR;
                                     p_value++;
                                     break;
                                 }
                                 case '-':
                                 {
-                                    i_relative = TIME_REL_BACK;
+                                    i_relative = VL_TIME_REL_BACK;
                                     p_value++;
                                     break;
                                 }
@@ -1706,7 +1790,7 @@ static void MacroDo( httpd_file_sys_t *p_args,
 
                         switch(i_relative)
                         {
-                            case TIME_ABSOLUTE:
+                            case VL_TIME_ABSOLUTE:
                             {
                                 if( (uint64_t)( i_value ) * 1000000 <= i_length )
                                     val.i_time = (uint64_t)( i_value ) * 1000000;
@@ -1717,7 +1801,7 @@ static void MacroDo( httpd_file_sys_t *p_args,
                                 msg_Dbg( p_intf, "requested seek position: %dsec", i_value );
                                 break;
                             }
-                            case TIME_REL_FOR:
+                            case VL_TIME_REL_FOR:
                             {
                                 var_Get( p_sys->p_input, "time", &val );
                                 if( (uint64_t)( i_value ) * 1000000 + val.i_time <= i_length )
@@ -1731,7 +1815,7 @@ static void MacroDo( httpd_file_sys_t *p_args,
                                 msg_Dbg( p_intf, "requested seek position forward: %dsec", i_value );
                                 break;
                             }
-                            case TIME_REL_BACK:
+                            case VL_TIME_REL_BACK:
                             {
                                 var_Get( p_sys->p_input, "time", &val );
                                 if( (int64_t)( i_value ) * 1000000 > val.i_time )
@@ -1778,9 +1862,9 @@ static void MacroDo( httpd_file_sys_t *p_args,
 #undef POSITION_ABSOLUTE
 #undef POSITION_REL_FOR
 #undef POSITION_REL_BACK
-#undef TIME_ABSOLUTE
-#undef TIME_REL_FOR
-#undef TIME_REL_BACK
+#undef VL_TIME_ABSOLUTE
+#undef VL_TIME_REL_FOR
+#undef VL_TIME_REL_BACK
                     break;
                 }
                 case MVLC_VOLUME:
@@ -1879,24 +1963,15 @@ static void MacroDo( httpd_file_sys_t *p_args,
                         i_nb_items++;
                     }
 
-                    /* The items need to be deleted from in reversed order */
                     if( i_nb_items )
                     {
                         int i;
                         for( i = 0; i < i_nb_items; i++ )
                         {
-                            int j, i_index = 0;
-                            for( j = 0; j < i_nb_items; j++ )
-                            {
-                                if( p_items[j] > p_items[i_index] )
-                                    i_index = j;
-                            }
-
-                            playlist_Delete( p_sys->p_playlist,
-                                             p_items[i_index] );
+                            playlist_LockDelete( p_sys->p_playlist, p_items[i] );
                             msg_Dbg( p_intf, "requested playlist delete: %d",
-                                     p_items[i_index] );
-                            p_items[i_index] = -1;
+                                     p_items[i] );
+                            p_items[i] = -1;
                         }
                     }
 
@@ -1922,17 +1997,17 @@ static void MacroDo( httpd_file_sys_t *p_args,
                         i_nb_items++;
                     }
 
-                    /* The items need to be deleted from in reversed order */
-                    for( i = p_sys->p_playlist->i_size - 1; i >= 0 ; i-- )
+                    for( i = p_sys->p_playlist->i_size - 1 ; i >= 0; i-- )
                     {
                         /* Check if the item is in the keep list */
                         for( j = 0 ; j < i_nb_items ; j++ )
                         {
-                            if( p_items[j] == i ) break;
+                            if( p_items[j] ==
+                                p_sys->p_playlist->pp_items[i]->input.i_id ) break;
                         }
                         if( j == i_nb_items )
                         {
-                            playlist_Delete( p_sys->p_playlist, i );
+                            playlist_LockDelete( p_sys->p_playlist, p_sys->p_playlist->pp_items[i]->input.i_id );
                             msg_Dbg( p_intf, "requested playlist delete: %d",
                                      i );
                         }
@@ -1943,10 +2018,7 @@ static void MacroDo( httpd_file_sys_t *p_args,
                 }
                 case MVLC_EMPTY:
                 {
-                    while( p_sys->p_playlist->i_size > 0 )
-                    {
-                        playlist_Delete( p_sys->p_playlist, 0 );
-                    }
+                    playlist_LockClear( p_sys->p_playlist );
                     msg_Dbg( p_intf, "requested playlist empty" );
                     break;
                 }
@@ -1954,31 +2026,40 @@ static void MacroDo( httpd_file_sys_t *p_args,
                 {
                     char type[12];
                     char order[2];
+                    char item[512];
                     int i_order;
+                    int i_item;
 
                     uri_extract_value( p_request, "type", type, 12 );
                     uri_extract_value( p_request, "order", order, 2 );
+                    uri_extract_value( p_request, "item", item, 512 );
+                    i_item = atoi( item );
 
                     if( order[0] == '0' ) i_order = ORDER_NORMAL;
                     else i_order = ORDER_REVERSE;
 
                     if( !strcmp( type , "title" ) )
                     {
-                        playlist_SortTitle( p_sys->p_playlist , i_order );
+                        playlist_RecursiveNodeSort( p_sys->p_playlist, /*playlist_ItemGetById( p_sys->p_playlist, i_item ),*/
+                                                    p_sys->p_playlist->pp_views[0]->p_root,
+                                                    SORT_TITLE_NODES_FIRST,
+                                                    ( i_order == 0 ) ? ORDER_NORMAL : ORDER_REVERSE );
                         msg_Dbg( p_intf, "requested playlist sort by title (%d)" , i_order );
-                    } else if( !strcmp( type , "group" ) )
-                    {
-                        playlist_SortGroup( p_sys->p_playlist , i_order );
-                        msg_Dbg( p_intf, "requested playlist sort by group (%d)" , i_order );
                     } else if( !strcmp( type , "author" ) )
                     {
-                        playlist_SortAuthor( p_sys->p_playlist , i_order );
+                        playlist_RecursiveNodeSort( p_sys->p_playlist, /*playlist_ItemGetById( p_sys->p_playlist, i_item ),*/
+                                                    p_sys->p_playlist->pp_views[0]->p_root,
+                                                    SORT_AUTHOR,
+                                                    ( i_order == 0 ) ? ORDER_NORMAL : ORDER_REVERSE );
                         msg_Dbg( p_intf, "requested playlist sort by author (%d)" , i_order );
                     } else if( !strcmp( type , "shuffle" ) )
                     {
-                        playlist_Sort( p_sys->p_playlist , SORT_RANDOM, ORDER_NORMAL );
+                        playlist_RecursiveNodeSort( p_sys->p_playlist, /*playlist_ItemGetById( p_sys->p_playlist, i_item ),*/
+                                                    p_sys->p_playlist->pp_views[0]->p_root,
+                                                    SORT_RANDOM,
+                                                    ( i_order == 0 ) ? ORDER_NORMAL : ORDER_REVERSE );
                         msg_Dbg( p_intf, "requested playlist shuffle");
-                    } 
+                    }
 
                     break;
                 }
@@ -2071,7 +2152,6 @@ static void MacroDo( httpd_file_sys_t *p_args,
                             p += sprintf( p, " %s", vlm_properties[i] );
                         }
                     }
-                    fprintf( stderr, "vlm_ExecuteCommand: %s\n", psz );
                     vlm_ExecuteCommand( p_intf->p_sys->p_vlm, psz, &vlm_answer );
                     if( vlm_answer->psz_value == NULL ) /* there is no error */
                     {
@@ -2270,6 +2350,16 @@ static void MacroDo( httpd_file_sys_t *p_args,
         case MVLC_RPN:
             EvaluateRPN( p_args->vars, &p_args->stack, m->param1 );
             break;
+
+/* Usefull for learning stack management */
+        case MVLC_STACK:
+        {
+            int i;
+            msg_Dbg( p_intf, "stack" );
+            for (i=0;i<(&p_args->stack)->i_stack;i++)
+                msg_Dbg( p_intf, "%d -> %s", i, (&p_args->stack)->stack[i] );
+            break;
+        }
 
         case MVLC_UNKNOWN:
         default:
@@ -2930,6 +3020,10 @@ static void  EvaluateRPN( mvar_t  *vars, rpn_stack_t *st, char *exp )
         {
             SSPushN( st, SSPopN( st, vars ) == SSPopN( st, vars ) ? -1 : 0 );
         }
+        else if( !strcmp( s, "!=" ) )
+        {
+            SSPushN( st, SSPopN( st, vars ) != SSPopN( st, vars ) ? -1 : 0 );
+        }
         else if( !strcmp( s, "<" ) )
         {
             int j = SSPopN( st, vars );
@@ -3183,7 +3277,7 @@ static char *Find_end_MRL( char *psz )
  * create an item with all information in it, and return the item.
  * return NULL if there is an error.
  **********************************************************************/
-playlist_item_t * parse_MRL( intf_thread_t *p_intf, char *psz )
+static playlist_item_t *parse_MRL( intf_thread_t *p_intf, char *psz )
 {
     char **ppsz_options = NULL;
     char *mrl;
@@ -3287,11 +3381,8 @@ playlist_item_t * parse_MRL( intf_thread_t *p_intf, char *psz )
         }
     }
 
-    for( i = 0 ; i < i_options ; i++ )
-    {
-        free( ppsz_options[i] );
-    }
-    free( ppsz_options );
+    for( i = 0; i < i_options; i++ ) free( ppsz_options[i] );
+    if( i_options ) free( ppsz_options );
 
     return p_item;
 }

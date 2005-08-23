@@ -3,7 +3,7 @@
  * This header provides a portable threads implementation.
  *****************************************************************************
  * Copyright (C) 1999, 2002 VideoLAN
- * $Id: vlc_threads_funcs.h 8414 2004-08-11 23:34:38Z titer $
+ * $Id: vlc_threads_funcs.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Jean-Marc Dressler <polux@via.ecp.fr>
  *          Samuel Hocevar <sam@via.ecp.fr>
@@ -124,7 +124,7 @@ static inline int __vlc_mutex_lock( char * psz_file, int i_line,
     if( i_result )
     {
         msg_Err( p_mutex->p_this,
-                 "thread %d: mutex_lock failed at %s:%d (%d:%s)",
+                 "thread %u: mutex_lock failed at %s:%d (%d:%s)",
                  i_thread, psz_file, i_line, i_result, psz_error );
     }
     return i_result;
@@ -197,7 +197,7 @@ static inline int __vlc_mutex_unlock( char * psz_file, int i_line,
     if( i_result )
     {
         msg_Err( p_mutex->p_this,
-                 "thread %d: mutex_unlock failed at %s:%d (%d:%s)",
+                 "thread %u: mutex_unlock failed at %s:%d (%d:%s)",
                  i_thread, psz_file, i_line, i_result, psz_error );
     }
 
@@ -339,7 +339,7 @@ static inline int __vlc_cond_signal( char * psz_file, int i_line,
     if( i_result )
     {
         msg_Err( p_condvar->p_this,
-                 "thread %d: cond_signal failed at %s:%d (%d:%s)",
+                 "thread %u: cond_signal failed at %s:%d (%d:%s)",
                  i_thread, psz_file, i_line, i_result, psz_error );
     }
 
@@ -499,7 +499,7 @@ static inline int __vlc_cond_wait( char * psz_file, int i_line,
     {
         /* People keep pissing me off with this. --Meuuh */
         msg_Dbg( p_condvar->p_this,
-                  "thread %d: secret message triggered "
+                  "thread %u: secret message triggered "
                   "at %s:%d (%s)", (int)pthread_self(),
                   psz_file, i_line, strerror(i_result) );
 
@@ -525,7 +525,7 @@ static inline int __vlc_cond_wait( char * psz_file, int i_line,
     if( i_result )
     {
         msg_Err( p_condvar->p_this,
-                 "thread %d: cond_wait failed at %s:%d (%d:%s)",
+                 "thread %u: cond_wait failed at %s:%d (%d:%s)",
                  i_thread, psz_file, i_line, i_result, psz_error );
     }
 

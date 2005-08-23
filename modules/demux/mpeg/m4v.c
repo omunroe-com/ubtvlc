@@ -2,7 +2,7 @@
  * m4v.c : MPEG-4 Video demuxer
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: m4v.c 7754 2004-05-23 14:43:14Z fenrir $
+ * $Id: m4v.c 11082 2005-05-20 16:59:07Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -37,6 +37,8 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 vlc_module_begin();
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_description( _("MPEG-4 video demuxer" ) );
     set_capability( "demux2", 0 );
     set_callbacks( Open, Close );
@@ -93,7 +95,7 @@ static int Open( vlc_object_t * p_this )
             return VLC_EGENERIC;
         }
 
-        msg_Err( p_demux, "this doesn't look like an MPEG-4 ES stream, continuing" );
+        msg_Warn( p_demux, "this doesn't look like an MPEG-4 ES stream, continuing anyway" );
     }
 
     p_demux->pf_demux  = Demux;

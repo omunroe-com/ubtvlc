@@ -2,7 +2,7 @@
  * osd.h : Constants for use with osd modules
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: osd.h 8354 2004-08-03 00:11:32Z gbazin $
+ * $Id: osd.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *

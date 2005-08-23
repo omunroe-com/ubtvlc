@@ -2,7 +2,7 @@
  * clone.c : Clone video plugin for vlc
  *****************************************************************************
  * Copyright (C) 2002, 2003 VideoLAN
- * $Id: clone.c 8551 2004-08-28 17:36:02Z gbazin $
+ * $Id: clone.c 10145 2005-03-05 16:49:15Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -62,10 +62,13 @@ static int  SendEvents( vlc_object_t *, char const *,
 vlc_module_begin();
     set_description( _("Clone video filter") );
     set_capability( "video filter", 0 );
-    
+    set_shortname( N_("Clone" ));
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VFILTER );
+
     add_integer( "clone-count", 2, NULL, COUNT_TEXT, COUNT_LONGTEXT, VLC_FALSE );
     add_string ( "clone-vout-list", NULL, NULL, VOUTLIST_TEXT, VOUTLIST_LONGTEXT, VLC_FALSE );
-    
+
     add_shortcut( "clone" );
     set_callbacks( Create, Destroy );
 vlc_module_end();
@@ -202,6 +205,7 @@ static int Init( vout_thread_t *p_vout )
     int   i_index, i_vout;
     picture_t *p_pic;
     char *psz_default_vout;
+    video_format_t fmt = {0};
 
     I_OUTPUTPICTURES = 0;
 
@@ -210,6 +214,14 @@ static int Init( vout_thread_t *p_vout )
     p_vout->output.i_width  = p_vout->render.i_width;
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
+
+    fmt.i_width = fmt.i_visible_width = p_vout->render.i_width;
+    fmt.i_height = fmt.i_visible_height = p_vout->render.i_height;
+    fmt.i_x_offset = fmt.i_y_offset = 0;
+    fmt.i_chroma = p_vout->render.i_chroma;
+    fmt.i_aspect = p_vout->render.i_aspect;
+    fmt.i_sar_num = p_vout->render.i_aspect * fmt.i_height / fmt.i_width;
+    fmt.i_sar_den = VOUT_ASPECT_FACTOR;
 
     /* Try to open the real video output */
     msg_Dbg( p_vout, "spawning the real video outputs" );
@@ -224,9 +236,7 @@ static int Init( vout_thread_t *p_vout )
                            "default", 8 ) ) )
         {
             p_vout->p_sys->pp_vout[i_vout] =
-                vout_Create( p_vout, p_vout->render.i_width,
-                             p_vout->render.i_height, p_vout->render.i_chroma, 
-                             p_vout->render.i_aspect );
+                vout_Create( p_vout, &fmt );
         }
         else
         {
@@ -234,9 +244,7 @@ static int Init( vout_thread_t *p_vout )
             config_PutPsz( p_vout, "vout",
                            p_vout->p_sys->ppsz_vout_list[i_vout] );
             p_vout->p_sys->pp_vout[i_vout] =
-                vout_Create( p_vout, p_vout->render.i_width,
-                             p_vout->render.i_height, p_vout->render.i_chroma, 
-                             p_vout->render.i_aspect );
+                vout_Create( p_vout, &fmt );
 
             /* Reset the default value */
             config_PutPsz( p_vout, "vout", psz_default_vout );

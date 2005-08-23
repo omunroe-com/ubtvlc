@@ -2,7 +2,7 @@
  * dummy.c : dummy plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001 VideoLAN
- * $Id: dummy.c 8018 2004-06-22 19:34:44Z fenrir $
+ * $Id: dummy.c 11486 2005-06-20 23:34:38Z hartman $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -55,11 +55,15 @@
 #endif
 
 vlc_module_begin();
+    set_shortname( _("Dummy"));
     set_description( _("Dummy interface function") );
     set_capability( "interface", 0 );
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_GENERAL );
     add_shortcut( "vlc" );
     set_callbacks( E_(OpenIntf), NULL );
 #ifdef WIN32
+    set_section( N_( "Dummy Interface" ), NULL );
     add_category_hint( N_("Interface"), NULL, VLC_FALSE );
     add_bool( "dummy-quiet", 0, NULL, QUIET_TEXT, QUIET_LONGTEXT, VLC_FALSE );
 #endif
@@ -72,10 +76,11 @@ vlc_module_begin();
         set_capability( "demux2", 0 );
         set_callbacks( E_(OpenDemux), E_(CloseDemux) );
     add_submodule();
+        set_section( N_( "Dummy decoder" ), NULL );
         set_description( _("Dummy decoder function") );
         set_capability( "decoder", 0 );
         set_callbacks( E_(OpenDecoder), E_(CloseDecoder) );
-        add_bool( "dummy-save-es", 0, NULL, SAVE_TEXT, SAVE_LONGTEXT, VLC_FALSE );
+        add_bool( "dummy-save-es", 0, NULL, SAVE_TEXT, SAVE_LONGTEXT, VLC_TRUE );
     add_submodule();
         set_description( _("Dummy encoder function") );
         set_capability( "encoder", 0 );
@@ -86,10 +91,11 @@ vlc_module_begin();
         set_callbacks( E_(OpenAudio), NULL );
     add_submodule();
         set_description( _("Dummy video output function") );
+        set_section( N_( "Dummy Video output" ), NULL );
         set_capability( "video output", 1 );
         set_callbacks( E_(OpenVideo), NULL );
         add_category_hint( N_("Video"), NULL, VLC_FALSE );
-        add_string( "dummy-chroma", NULL, NULL, CHROMA_TEXT, CHROMA_LONGTEXT, VLC_FALSE );
+        add_string( "dummy-chroma", NULL, NULL, CHROMA_TEXT, CHROMA_LONGTEXT, VLC_TRUE );
     add_submodule();
         set_description( _("Dummy font renderer function") );
         set_capability( "text renderer", 1 );

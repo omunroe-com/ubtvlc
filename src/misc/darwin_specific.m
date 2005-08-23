@@ -2,7 +2,7 @@
  * darwin_specific.m: Darwin specific features
  *****************************************************************************
  * Copyright (C) 2001-2004 VideoLAN
- * $Id: darwin_specific.m 8299 2004-07-27 16:20:32Z hartman $
+ * $Id: darwin_specific.m 11506 2005-06-23 18:03:26Z fkuehne $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -40,20 +40,19 @@ static int FindLanguage( const char * psz_lang )
     const char ** ppsz_parser;
     const char * ppsz_all[] =
     {
+        "Catalan", "ca",
+        "Danish", "da",
         "German", "de",
         "British", "en_GB",
         "English", "en",
         "Spanish", "es",
         "French", "fr",
-        "Hungarian", "hu",
         "Italian", "it",
         "Japanese", "ja",
         "Dutch", "nl",
-        "Norwegian", "no",
-        "Polish", "pl",
         "Brazillian Portuguese", "pt_BR",
         "Russian", "ru",
-        "Swedish", "sv",
+        "Chinese Traditional", "zh_TW",
         NULL
     };
 

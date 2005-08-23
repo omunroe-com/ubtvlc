@@ -2,7 +2,7 @@
  * ctrl_image.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_image.hpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: ctrl_image.hpp 10896 2005-05-04 20:52:43Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -36,9 +36,17 @@ class OSGraphics;
 class CtrlImage: public CtrlFlat
 {
     public:
+        /// Resize methods
+        typedef enum
+        {
+            kMosaic,  // Repeat the base image in a mosaic
+            kScale    // Scale the base image
+        } resize_t;
+
         // Create an image with the given bitmap (which is NOT copied)
         CtrlImage( intf_thread_t *pIntf, const GenericBitmap &rBitmap,
-                   const UString &rHelp, VarBool *pVisible );
+                   resize_t resizeMethod, const UString &rHelp,
+                   VarBool *pVisible );
         virtual ~CtrlImage();
 
         /// Handle an event on the control
@@ -50,11 +58,16 @@ class CtrlImage: public CtrlFlat
         /// Draw the control on the given graphics
         virtual void draw( OSGraphics &rImage, int xDest, int yDest );
 
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return "image"; }
+
     private:
         /// Bitmap
         const GenericBitmap &m_rBitmap;
         /// Buffer to stored the rendered bitmap
         OSGraphics *m_pImage;
+        /// Resize method
+        resize_t m_resizeMethod;
 };
 
 #endif

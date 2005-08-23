@@ -2,7 +2,7 @@
  * gtk2.c : Gtk2 plugin for vlc
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: gtk2.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: gtk2.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -52,6 +52,8 @@ static int  Manage       ( intf_thread_t * );
  *****************************************************************************/
 vlc_module_begin();
     int i = getenv( "DISPLAY" ) == NULL ? 15 : 95;
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_GENERAL );
     set_description( _("Gtk2 interface") );
     set_capability( "interface", i );
     set_callbacks( Open, Close );

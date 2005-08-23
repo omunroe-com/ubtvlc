@@ -2,7 +2,7 @@
  * output.h: MacOS X Output Dialog
  *****************************************************************************
  * Copyright (C) 2002-2003 VideoLAN
- * $Id: output.h 8405 2004-08-08 14:49:46Z bigben $
+ * $Id: output.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>

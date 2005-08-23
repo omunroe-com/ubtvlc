@@ -2,7 +2,7 @@
  * os_factory.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: os_factory.cpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: os_factory.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -28,6 +28,8 @@
 #include "../x11/x11_factory.hpp"
 #elif defined WIN32_SKINS
 #include "../win32/win32_factory.hpp"
+#elif defined MACOSX_SKINS
+#include "../macosx/macosx_factory.hpp"
 #endif
 
 OSFactory *OSFactory::instance( intf_thread_t *pIntf )
@@ -39,6 +41,8 @@ OSFactory *OSFactory::instance( intf_thread_t *pIntf )
         pOsFactory = new X11Factory( pIntf );
 #elif defined WIN32_SKINS
         pOsFactory = new Win32Factory( pIntf );
+#elif defined MACOSX_SKINS
+        pOsFactory = new MacOSXFactory( pIntf );
 #else
 #error "No OSFactory implementation !"
 #endif

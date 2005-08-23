@@ -2,7 +2,7 @@
  * stream_output.h : stream output module
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: stream_output.h 9201 2004-11-06 16:51:46Z yoann $
+ * $Id: stream_output.h 11263 2005-06-03 09:23:54Z courmisch $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -260,8 +260,8 @@ struct announce_method_t
 
     /* For SAP */
     int i_ip_version;
-    char *psz_ipv6_scope;
     char *psz_address; /* If we use a custom address */
+    char sz_ipv6_scope;
 };
 
 
@@ -322,6 +322,9 @@ struct sap_handler_t
 
     int (*pf_add)  ( sap_handler_t*, session_descriptor_t *,announce_method_t*);
     int (*pf_del)  ( sap_handler_t*, session_descriptor_t *);
+
+    /* private data, not in p_sys as there is one kind of sap_handler_t */
+    vlc_iconv_t iconvHandle;
 };
 
 /* The main announce handler object */
@@ -365,7 +368,7 @@ VLC_EXPORT( int,                sout_AnnounceRegister, (sout_instance_t *,sessio
 VLC_EXPORT(session_descriptor_t*,sout_AnnounceRegisterSDP, (sout_instance_t *,char *, announce_method_t* ) );
 VLC_EXPORT( int,                sout_AnnounceUnRegister, (sout_instance_t *,session_descriptor_t* ) );
 
-VLC_EXPORT(session_descriptor_t*,sout_AnnounceSessionCreate, () );
+VLC_EXPORT(session_descriptor_t*,sout_AnnounceSessionCreate, (void) );
 VLC_EXPORT(void,                 sout_AnnounceSessionDestroy, (session_descriptor_t *) );
 VLC_EXPORT(announce_method_t*,   sout_AnnounceMethodCreate, (int) );
 

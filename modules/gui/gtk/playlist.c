@@ -2,7 +2,7 @@
  * gtk_playlist.c : Interface for the playlist dialog
  *****************************************************************************
  * Copyright (C) 2001 VideoLAN
- * $Id: playlist.c 7209 2004-03-31 20:52:31Z gbazin $
+ * $Id: playlist.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Pierre Baillet <oct@zoy.org>
  *          Stéphane Borel <stef@via.ecp.fr>
@@ -506,7 +506,7 @@ void GtkDeleteGListItem( gpointer data, gpointer param )
     int i_cur_row = (long)data;
     playlist_t * p_playlist = param;
 
-    playlist_Delete( p_playlist, i_cur_row );
+    playlist_LockDelete( p_playlist, i_cur_row );
 }
 
 

@@ -7,7 +7,7 @@ noinst_LIBRARIES =
 noinst_HEADERS =
 EXTRA_DIST = Modules.am
 BUILT_SOURCES =
-SUBDIRS = beos pda gtk gtk2 kde macosx qnx qt skins2 wxwindows
+SUBDIRS = beos pda gtk gtk2 kde macosx qnx qt skins2 wxwindows wince
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/gui
 include Modules.am

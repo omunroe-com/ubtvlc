@@ -3,8 +3,8 @@
  * This header is required by all modules which have to handle pictures. It
  * includes all common video types and constants.
  *****************************************************************************
- * Copyright (C) 1999, 2000 VideoLAN
- * $Id: vlc_video.h 9274 2004-11-10 15:16:51Z gbazin $
+ * Copyright (C) 1999 - 2005 VideoLAN
+ * $Id: vlc_video.h 10689 2005-04-15 19:51:23Z massiot $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -110,6 +110,9 @@ struct picture_t
 
     /** This way the picture_Release can be overloaded */
     void (*pf_release)( picture_t * );
+
+    /** Next picture in a FIFO a pictures */
+    struct picture_t *p_next;
 };
 
 /**
@@ -199,19 +202,20 @@ struct picture_heap_t
  */
 struct subpicture_region_t
 {
-    /** \name Region properties */
-    /**@{*/
     video_format_t  fmt;                          /**< format of the picture */
     picture_t       picture;             /**< picture comprising this region */
-
-    char            *psz_text;       /**< text string comprising this region */
 
     int             i_x;                             /**< position of region */
     int             i_y;                             /**< position of region */
 
+    char            *psz_text;       /**< text string comprising this region */
+    int             i_text_color;     /**< text color (RGB native endianess) */
+    int             i_text_alpha;                     /**< text transparency */
+    int             i_text_size;                              /**< text size */
+    int             i_text_align;         /**< horizontal alignment hint for */
+
     subpicture_region_t *p_next;                /**< next region in the list */
     subpicture_region_t *p_cache;       /**< modified version of this region */
-    /**@}*/
 };
 
 /**
@@ -241,10 +245,9 @@ struct subpicture_t
     /**@{*/
     mtime_t         i_start;                  /**< beginning of display date */
     mtime_t         i_stop;                         /**< end of display date */
-    vlc_bool_t      b_ephemer;     /**< If this flag is set to true
-                                      the subtitle will be displayed
-                                      untill the next one appear */
-    vlc_bool_t      b_fade;        /**< enable fading */
+    vlc_bool_t      b_ephemer;    /**< If this flag is set to true the subtitle
+                                will be displayed untill the next one appear */
+    vlc_bool_t      b_fade;                               /**< enable fading */
     /**@}*/
 
     subpicture_region_t *p_region;  /**< region list composing this subtitle */
@@ -258,6 +261,7 @@ struct subpicture_t
     int          i_y;                    /**< offset from alignment position */
     int          i_width;                                 /**< picture width */
     int          i_height;                               /**< picture height */
+    int          i_alpha;                                  /**< transparency */
     int          i_original_picture_width;  /**< original width of the movie */
     int          i_original_picture_height;/**< original height of the movie */
     int          b_absolute;                       /**< position is absolute */
@@ -272,6 +276,8 @@ struct subpicture_t
     /** Pointer to functions for region management */
     subpicture_region_t * ( *pf_create_region ) ( vlc_object_t *,
                                                   video_format_t * );
+    subpicture_region_t * ( *pf_make_region ) ( vlc_object_t *,
+                                                video_format_t *, picture_t * );
     void ( *pf_destroy_region ) ( vlc_object_t *, subpicture_region_t * );
 
     /** Private data - the subtitle plugin might want to put stuff here to

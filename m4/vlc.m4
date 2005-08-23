@@ -1,5 +1,5 @@
 dnl  Macros needed for VLC
-dnl  $Id: vlc.m4 8058 2004-06-25 12:21:32Z sam $
+dnl  $Id: vlc.m4 9943 2005-02-15 21:22:47Z gbazin $
 
 dnl ===========================================================================
 dnl  Macros to add plugins or builtins and handle their flags
@@ -139,7 +139,7 @@ AC_DEFUN([VLC_LIBRARY_SUFFIX], [
     darwin*)
       LIBEXT=".dylib"
       ;;
-    *mingw32* | *cygwin*)
+    *mingw32* | *cygwin* | *wince* | *mingwce* | *pe*)
       LIBEXT=".dll"
       ;;
     hpux*)

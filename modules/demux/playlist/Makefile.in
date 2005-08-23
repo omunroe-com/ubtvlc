@@ -55,6 +55,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_ACTIVEX_FALSE = @BUILD_ACTIVEX_FALSE@
+BUILD_ACTIVEX_TRUE = @BUILD_ACTIVEX_TRUE@
 BUILD_DIRENT_FALSE = @BUILD_DIRENT_FALSE@
 BUILD_DIRENT_TRUE = @BUILD_DIRENT_TRUE@
 BUILD_GETOPT_FALSE = @BUILD_GETOPT_FALSE@
@@ -69,8 +71,6 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-CORBA_CFLAGS = @CORBA_CFLAGS@
-CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -98,10 +98,8 @@ FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GTK2_CFLAGS = @GTK2_CFLAGS@
-GTK2_LIBS = @GTK2_LIBS@
-HAL_CFLAGS = @HAL_CFLAGS@
-HAL_LIBS = @HAL_LIBS@
+HAS_MIDL_COMPILER_FALSE = @HAS_MIDL_COMPILER_FALSE@
+HAS_MIDL_COMPILER_TRUE = @HAS_MIDL_COMPILER_TRUE@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -112,6 +110,8 @@ HAVE_PLUGINS_FALSE = @HAVE_PLUGINS_FALSE@
 HAVE_PLUGINS_TRUE = @HAVE_PLUGINS_TRUE@
 HAVE_WIN32_FALSE = @HAVE_WIN32_FALSE@
 HAVE_WIN32_TRUE = @HAVE_WIN32_TRUE@
+HAVE_WINCE_FALSE = @HAVE_WINCE_FALSE@
+HAVE_WINCE_TRUE = @HAVE_WINCE_TRUE@
 INCLUDES = @INCLUDES@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -124,12 +124,7 @@ INTLOBJS = @INTLOBJS@
 INTL_LIBTOOL_SUFFIX_PREFIX = @INTL_LIBTOOL_SUFFIX_PREFIX@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
-LIBCDDB_CFLAGS = @LIBCDDB_CFLAGS@
-LIBCDDB_LIBS = @LIBCDDB_LIBS@
-LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
-LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
-LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -138,6 +133,7 @@ LTLIBICONV = @LTLIBICONV@
 LTLIBINTL = @LTLIBINTL@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+MIDL = @MIDL@
 MKINSTALLDIRS = @MKINSTALLDIRS@
 MOC = @MOC@
 MOZILLA_CONFIG = @MOZILLA_CONFIG@
@@ -154,7 +150,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
 PLUGIN_PATH = @PLUGIN_PATH@
 POSUB = @POSUB@
 RANLIB = @RANLIB@
@@ -164,8 +159,6 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-SVG_CFLAGS = @SVG_CFLAGS@
-SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
@@ -242,6 +235,7 @@ SOURCES_playlist = playlist.c \
 		   playlist.h \
 		   old.c \
 		   m3u.c \
+                   b4s.c \
 		   pls.c
 
 
@@ -285,14 +279,14 @@ libplaylist_a_AR = $(AR) cru
 libplaylist_a_LIBADD =
 am__objects_1 = libplaylist_a-playlist.$(OBJEXT) \
 	libplaylist_a-old.$(OBJEXT) libplaylist_a-m3u.$(OBJEXT) \
-	libplaylist_a-pls.$(OBJEXT)
+	libplaylist_a-b4s.$(OBJEXT) libplaylist_a-pls.$(OBJEXT)
 am_libplaylist_a_OBJECTS = $(am__objects_1)
 libplaylist_a_OBJECTS = $(am_libplaylist_a_OBJECTS)
 libplaylist_pic_a_AR = $(AR) cru
 libplaylist_pic_a_LIBADD =
 am__objects_2 = libplaylist_pic_a-playlist.$(OBJEXT) \
 	libplaylist_pic_a-old.$(OBJEXT) libplaylist_pic_a-m3u.$(OBJEXT) \
-	libplaylist_pic_a-pls.$(OBJEXT)
+	libplaylist_pic_a-b4s.$(OBJEXT) libplaylist_pic_a-pls.$(OBJEXT)
 am_libplaylist_pic_a_OBJECTS = $(am__objects_2)
 libplaylist_pic_a_OBJECTS = $(am_libplaylist_pic_a_OBJECTS)
 libplaylist_plugin_a_AR = $(AR) cru
@@ -300,6 +294,7 @@ libplaylist_plugin_a_LIBADD =
 am__objects_3 = libplaylist_plugin_a-playlist.$(OBJEXT) \
 	libplaylist_plugin_a-old.$(OBJEXT) \
 	libplaylist_plugin_a-m3u.$(OBJEXT) \
+	libplaylist_plugin_a-b4s.$(OBJEXT) \
 	libplaylist_plugin_a-pls.$(OBJEXT)
 am_libplaylist_plugin_a_OBJECTS = $(am__objects_3)
 libplaylist_plugin_a_OBJECTS = $(am_libplaylist_plugin_a_OBJECTS)
@@ -307,14 +302,17 @@ libplaylist_plugin_a_OBJECTS = $(am_libplaylist_plugin_a_OBJECTS)
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libplaylist_a-m3u.Po \
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libplaylist_a-b4s.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libplaylist_a-m3u.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libplaylist_a-old.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libplaylist_a-playlist.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libplaylist_a-pls.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libplaylist_pic_a-b4s.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libplaylist_pic_a-m3u.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libplaylist_pic_a-old.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libplaylist_pic_a-playlist.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libplaylist_pic_a-pls.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libplaylist_plugin_a-b4s.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libplaylist_plugin_a-m3u.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libplaylist_plugin_a-old.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libplaylist_plugin_a-playlist.Po \
@@ -402,14 +400,17 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libplaylist_a-b4s.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libplaylist_a-m3u.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libplaylist_a-old.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libplaylist_a-playlist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libplaylist_a-pls.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libplaylist_pic_a-b4s.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libplaylist_pic_a-m3u.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libplaylist_pic_a-old.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libplaylist_pic_a-playlist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libplaylist_pic_a-pls.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libplaylist_plugin_a-b4s.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libplaylist_plugin_a-m3u.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libplaylist_plugin_a-old.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libplaylist_plugin_a-playlist.Po@am__quote@
@@ -503,6 +504,28 @@ libplaylist_a-m3u.obj: m3u.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_a_CFLAGS) $(CFLAGS) -c -o libplaylist_a-m3u.obj `if test -f 'm3u.c'; then $(CYGPATH_W) 'm3u.c'; else $(CYGPATH_W) '$(srcdir)/m3u.c'; fi`
 
+libplaylist_a-b4s.o: b4s.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_a_CFLAGS) $(CFLAGS) -MT libplaylist_a-b4s.o -MD -MP -MF "$(DEPDIR)/libplaylist_a-b4s.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libplaylist_a-b4s.o `test -f 'b4s.c' || echo '$(srcdir)/'`b4s.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libplaylist_a-b4s.Tpo" "$(DEPDIR)/libplaylist_a-b4s.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libplaylist_a-b4s.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='b4s.c' object='libplaylist_a-b4s.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libplaylist_a-b4s.Po' tmpdepfile='$(DEPDIR)/libplaylist_a-b4s.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_a_CFLAGS) $(CFLAGS) -c -o libplaylist_a-b4s.o `test -f 'b4s.c' || echo '$(srcdir)/'`b4s.c
+
+libplaylist_a-b4s.obj: b4s.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_a_CFLAGS) $(CFLAGS) -MT libplaylist_a-b4s.obj -MD -MP -MF "$(DEPDIR)/libplaylist_a-b4s.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libplaylist_a-b4s.obj `if test -f 'b4s.c'; then $(CYGPATH_W) 'b4s.c'; else $(CYGPATH_W) '$(srcdir)/b4s.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libplaylist_a-b4s.Tpo" "$(DEPDIR)/libplaylist_a-b4s.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libplaylist_a-b4s.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='b4s.c' object='libplaylist_a-b4s.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libplaylist_a-b4s.Po' tmpdepfile='$(DEPDIR)/libplaylist_a-b4s.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_a_CFLAGS) $(CFLAGS) -c -o libplaylist_a-b4s.obj `if test -f 'b4s.c'; then $(CYGPATH_W) 'b4s.c'; else $(CYGPATH_W) '$(srcdir)/b4s.c'; fi`
+
 libplaylist_a-pls.o: pls.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_a_CFLAGS) $(CFLAGS) -MT libplaylist_a-pls.o -MD -MP -MF "$(DEPDIR)/libplaylist_a-pls.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libplaylist_a-pls.o `test -f 'pls.c' || echo '$(srcdir)/'`pls.c; \
@@ -591,6 +614,28 @@ libplaylist_pic_a-m3u.obj: m3u.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_pic_a_CFLAGS) $(CFLAGS) -c -o libplaylist_pic_a-m3u.obj `if test -f 'm3u.c'; then $(CYGPATH_W) 'm3u.c'; else $(CYGPATH_W) '$(srcdir)/m3u.c'; fi`
 
+libplaylist_pic_a-b4s.o: b4s.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_pic_a_CFLAGS) $(CFLAGS) -MT libplaylist_pic_a-b4s.o -MD -MP -MF "$(DEPDIR)/libplaylist_pic_a-b4s.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libplaylist_pic_a-b4s.o `test -f 'b4s.c' || echo '$(srcdir)/'`b4s.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libplaylist_pic_a-b4s.Tpo" "$(DEPDIR)/libplaylist_pic_a-b4s.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libplaylist_pic_a-b4s.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='b4s.c' object='libplaylist_pic_a-b4s.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libplaylist_pic_a-b4s.Po' tmpdepfile='$(DEPDIR)/libplaylist_pic_a-b4s.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_pic_a_CFLAGS) $(CFLAGS) -c -o libplaylist_pic_a-b4s.o `test -f 'b4s.c' || echo '$(srcdir)/'`b4s.c
+
+libplaylist_pic_a-b4s.obj: b4s.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_pic_a_CFLAGS) $(CFLAGS) -MT libplaylist_pic_a-b4s.obj -MD -MP -MF "$(DEPDIR)/libplaylist_pic_a-b4s.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libplaylist_pic_a-b4s.obj `if test -f 'b4s.c'; then $(CYGPATH_W) 'b4s.c'; else $(CYGPATH_W) '$(srcdir)/b4s.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libplaylist_pic_a-b4s.Tpo" "$(DEPDIR)/libplaylist_pic_a-b4s.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libplaylist_pic_a-b4s.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='b4s.c' object='libplaylist_pic_a-b4s.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libplaylist_pic_a-b4s.Po' tmpdepfile='$(DEPDIR)/libplaylist_pic_a-b4s.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_pic_a_CFLAGS) $(CFLAGS) -c -o libplaylist_pic_a-b4s.obj `if test -f 'b4s.c'; then $(CYGPATH_W) 'b4s.c'; else $(CYGPATH_W) '$(srcdir)/b4s.c'; fi`
+
 libplaylist_pic_a-pls.o: pls.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_pic_a_CFLAGS) $(CFLAGS) -MT libplaylist_pic_a-pls.o -MD -MP -MF "$(DEPDIR)/libplaylist_pic_a-pls.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libplaylist_pic_a-pls.o `test -f 'pls.c' || echo '$(srcdir)/'`pls.c; \
@@ -678,6 +723,28 @@ libplaylist_plugin_a-m3u.obj: m3u.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libplaylist_plugin_a-m3u.Po' tmpdepfile='$(DEPDIR)/libplaylist_plugin_a-m3u.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_plugin_a_CFLAGS) $(CFLAGS) -c -o libplaylist_plugin_a-m3u.obj `if test -f 'm3u.c'; then $(CYGPATH_W) 'm3u.c'; else $(CYGPATH_W) '$(srcdir)/m3u.c'; fi`
+
+libplaylist_plugin_a-b4s.o: b4s.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_plugin_a_CFLAGS) $(CFLAGS) -MT libplaylist_plugin_a-b4s.o -MD -MP -MF "$(DEPDIR)/libplaylist_plugin_a-b4s.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libplaylist_plugin_a-b4s.o `test -f 'b4s.c' || echo '$(srcdir)/'`b4s.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libplaylist_plugin_a-b4s.Tpo" "$(DEPDIR)/libplaylist_plugin_a-b4s.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libplaylist_plugin_a-b4s.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='b4s.c' object='libplaylist_plugin_a-b4s.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libplaylist_plugin_a-b4s.Po' tmpdepfile='$(DEPDIR)/libplaylist_plugin_a-b4s.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_plugin_a_CFLAGS) $(CFLAGS) -c -o libplaylist_plugin_a-b4s.o `test -f 'b4s.c' || echo '$(srcdir)/'`b4s.c
+
+libplaylist_plugin_a-b4s.obj: b4s.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_plugin_a_CFLAGS) $(CFLAGS) -MT libplaylist_plugin_a-b4s.obj -MD -MP -MF "$(DEPDIR)/libplaylist_plugin_a-b4s.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libplaylist_plugin_a-b4s.obj `if test -f 'b4s.c'; then $(CYGPATH_W) 'b4s.c'; else $(CYGPATH_W) '$(srcdir)/b4s.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libplaylist_plugin_a-b4s.Tpo" "$(DEPDIR)/libplaylist_plugin_a-b4s.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libplaylist_plugin_a-b4s.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='b4s.c' object='libplaylist_plugin_a-b4s.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libplaylist_plugin_a-b4s.Po' tmpdepfile='$(DEPDIR)/libplaylist_plugin_a-b4s.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_plugin_a_CFLAGS) $(CFLAGS) -c -o libplaylist_plugin_a-b4s.obj `if test -f 'b4s.c'; then $(CYGPATH_W) 'b4s.c'; else $(CYGPATH_W) '$(srcdir)/b4s.c'; fi`
 
 libplaylist_plugin_a-pls.o: pls.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplaylist_plugin_a_CFLAGS) $(CFLAGS) -MT libplaylist_plugin_a-pls.o -MD -MP -MF "$(DEPDIR)/libplaylist_plugin_a-pls.Tpo" \

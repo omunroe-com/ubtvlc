@@ -2,7 +2,7 @@
  * sgimb.c: a meta demux to parse sgimb referrer files
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: sgimb.c 9300 2004-11-13 01:35:28Z hartman $
+ * $Id: sgimb.c 9961 2005-02-16 22:01:41Z robux4 $
  *
  * Authors: Derk-Jan Hartman <hartman at videolan dot org>
  *
@@ -111,6 +111,8 @@ static void Deactivate( vlc_object_t * );
 
 vlc_module_begin();
     set_description( _("Kasenna MediaBase metademux") );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_capability( "demux2", 170 );
     set_callbacks( Activate, Deactivate );
     add_shortcut( "sgimb" );
@@ -279,7 +281,7 @@ static int ParseLine ( demux_t *p_demux, char *psz_line )
     else if( !strncasecmp( psz_bol, "sgiFormatName=", sizeof("sgiFormatName=") - 1 ) )
     {
         psz_bol += sizeof("sgiFormatName=") - 1;
-        if( !strcasestr( psz_bol, "MPEG-4") ) /*not mpeg4 */
+        if( strcasestr( psz_bol, "MPEG-4") == NULL ) /*not mpeg4 found in string */
             p_sys->b_rtsp_kasenna = VLC_TRUE;
     }
     else if( !strncasecmp( psz_bol, "sgiMulticastAddress=", sizeof("sgiMulticastAddress=") - 1 ) )
@@ -346,8 +348,8 @@ static int Demux ( demux_t *p_demux )
         return -1;
     }
 
-    p_playlist->pp_items[p_playlist->i_index]->b_autodeletion = VLC_TRUE;
-    i_position = p_playlist->i_index + 1;
+    p_playlist->status.p_item->i_flags = PLAYLIST_DEL_FLAG;
+    i_position = -1;  /* FIXME p_playlist->i_index + 1; */
 
     while( ( psz_line = stream_ReadLine( p_demux->s ) ) )
     {

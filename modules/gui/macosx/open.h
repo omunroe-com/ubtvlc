@@ -1,8 +1,8 @@
 /*****************************************************************************
  * open.h: MacOS X module for vlc
  *****************************************************************************
- * Copyright (C) 2002-2003 VideoLAN
- * $Id: open.h 8896 2004-10-02 21:52:02Z fkuehne $
+ * Copyright (C) 2002-2005 VideoLAN
+ * $Id: open.h 10833 2005-04-26 17:33:24Z bigben $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -69,6 +69,7 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class );
     IBOutlet id o_net_udpm_port_stp;
     IBOutlet id o_net_http_url;
     IBOutlet id o_net_http_url_lbl;
+    IBOutlet id o_net_timeshift_ckbox;
 
     IBOutlet id o_file_sub_ckbox;
     IBOutlet id o_file_sub_btn_settings;
@@ -96,24 +97,26 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class );
     IBOutlet id o_sout_options;
 }
 
++ (VLCOpen *)sharedInstance;
+
 - (void)setSubPanel;
 - (void)openTarget:(int)i_type;
 - (void)tabView:(NSTabView *)o_tv didSelectTabViewItem:(NSTabViewItem *)o_tvi;
 
-- (IBAction)openFileGeneric:(id)sender;
+- (void)openFileGeneric;
 - (void)openFilePathChanged:(NSNotification *)o_notification;
 - (IBAction)openFileBrowse:(id)sender;
 - (void) pathChosenInPanel: (NSOpenPanel *) sheet withReturn:(int)returnCode contextInfo:(void  *)contextInfo;
 - (IBAction)openFileStreamChanged:(id)sender;
 
-- (IBAction)openDisc:(id)sender;
+- (void)openDisc;
 - (IBAction)openDiscTypeChanged:(id)sender;
 - (IBAction)openDiscStepperChanged:(id)sender;
 - (void)openDiscInfoChanged:(NSNotification *)o_notification;
 - (IBAction)openDiscMenusChanged:(id)sender;
 - (IBAction)openVTSBrowse:(id)sender;
 
-- (IBAction)openNet:(id)sender;
+- (void)openNet;
 - (IBAction)openNetModeChanged:(id)sender;
 - (IBAction)openNetStepperChanged:(id)sender;
 - (void)openNetInfoChanged:(NSNotification *)o_notification;
@@ -129,6 +132,5 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class );
 - (IBAction)panelCancel:(id)sender;
 - (IBAction)panelOk:(id)sender;
 
-- (IBAction)openFile:(id)sender;
-
+- (void)openFile;
 @end

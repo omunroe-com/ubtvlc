@@ -56,6 +56,8 @@ enum input_control_e
 
     INPUT_CONTROL_SET_AUDIO_DELAY,
     INPUT_CONTROL_SET_SPU_DELAY,
+
+    INPUT_CONTROL_ADD_SLAVE,
 };
 
 /* Internal helpers */
@@ -100,7 +102,7 @@ void input_ControlVarTitle( input_thread_t *, int i_title );
 void input_ConfigVarInit ( input_thread_t * );
 
 /* stream.c */
-stream_t *stream_AccessNew( access_t *p_access );
+stream_t *stream_AccessNew( access_t *p_access, vlc_bool_t );
 void stream_AccessDelete( stream_t *s );
 void stream_AccessReset( stream_t *s );
 void stream_AccessUpdate( stream_t *s );
@@ -108,6 +110,7 @@ void stream_AccessUpdate( stream_t *s );
 /* decoder.c FIXME make it public ?*/
 void       input_DecoderDiscontinuity( decoder_t * p_dec );
 vlc_bool_t input_DecoderEmpty( decoder_t * p_dec );
+void       input_DecoderPreroll( decoder_t *p_dec, int64_t i_preroll_end );
 
 /* es_out.c */
 es_out_t  *input_EsOutNew( input_thread_t * );
@@ -149,5 +152,6 @@ mtime_t input_ClockGetTS( input_thread_t *, input_clock_t *, mtime_t );
 
 /* Subtitles */
 char **subtitles_Detect( input_thread_t *, char* path, char *fname );
+void MRLSplit( vlc_object_t *, char *, char **, char **, char ** );
 
 #endif

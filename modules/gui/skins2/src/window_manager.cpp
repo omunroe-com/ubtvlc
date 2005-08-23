@@ -2,7 +2,7 @@
  * window_manager.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: window_manager.cpp 8966 2004-10-10 10:08:44Z ipkiss $
+ * $Id: window_manager.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

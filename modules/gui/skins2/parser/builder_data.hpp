@@ -2,7 +2,7 @@
  * builder_data.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: builder_data.hpp 7646 2004-05-12 18:56:51Z ipkiss $
+ * $Id: builder_data.hpp 11009 2005-05-14 14:39:05Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -201,8 +201,8 @@ m_id( id ), m_xPos( xPos ), m_yPos( yPos ), m_leftTop( leftTop ), m_rightBottom(
     /// Type definition
     struct Image
     {
-        Image( const string & id, int xPos, int yPos, const string & leftTop, const string & rightBottom, const string & visible, const string & bmpId, const string & actionId, const string & help, int layer, const string & windowId, const string & layoutId ):
-m_id( id ), m_xPos( xPos ), m_yPos( yPos ), m_leftTop( leftTop ), m_rightBottom( rightBottom ), m_visible( visible ), m_bmpId( bmpId ), m_actionId( actionId ), m_help( help ), m_layer( layer ), m_windowId( windowId ), m_layoutId( layoutId ) {}
+        Image( const string & id, int xPos, int yPos, const string & leftTop, const string & rightBottom, const string & visible, const string & bmpId, const string & actionId, const string & resize, const string & help, int layer, const string & windowId, const string & layoutId ):
+m_id( id ), m_xPos( xPos ), m_yPos( yPos ), m_leftTop( leftTop ), m_rightBottom( rightBottom ), m_visible( visible ), m_bmpId( bmpId ), m_actionId( actionId ), m_resize( resize ), m_help( help ), m_layer( layer ), m_windowId( windowId ), m_layoutId( layoutId ) {}
 
         const string m_id;
         int m_xPos;
@@ -212,6 +212,7 @@ m_id( id ), m_xPos( xPos ), m_yPos( yPos ), m_leftTop( leftTop ), m_rightBottom(
         const string m_visible;
         const string m_bmpId;
         const string m_actionId;
+        const string m_resize;
         const string m_help;
         int m_layer;
         const string m_windowId;
@@ -223,8 +224,8 @@ m_id( id ), m_xPos( xPos ), m_yPos( yPos ), m_leftTop( leftTop ), m_rightBottom(
     /// Type definition
     struct Text
     {
-        Text( const string & id, int xPos, int yPos, const string & visible, const string & fontId, const string & text, int width, uint32_t color, const string & help, int layer, const string & windowId, const string & layoutId ):
-m_id( id ), m_xPos( xPos ), m_yPos( yPos ), m_visible( visible ), m_fontId( fontId ), m_text( text ), m_width( width ), m_color( color ), m_help( help ), m_layer( layer ), m_windowId( windowId ), m_layoutId( layoutId ) {}
+        Text( const string & id, int xPos, int yPos, const string & visible, const string & fontId, const string & text, int width, const string & leftTop, const string & rightBottom, uint32_t color, const string & help, int layer, const string & windowId, const string & layoutId ):
+m_id( id ), m_xPos( xPos ), m_yPos( yPos ), m_visible( visible ), m_fontId( fontId ), m_text( text ), m_width( width ), m_leftTop( leftTop ), m_rightBottom( rightBottom ), m_color( color ), m_help( help ), m_layer( layer ), m_windowId( windowId ), m_layoutId( layoutId ) {}
 
         const string m_id;
         int m_xPos;
@@ -233,6 +234,8 @@ m_id( id ), m_xPos( xPos ), m_yPos( yPos ), m_visible( visible ), m_fontId( font
         const string m_fontId;
         const string m_text;
         int m_width;
+        const string m_leftTop;
+        const string m_rightBottom;
         uint32_t m_color;
         const string m_help;
         int m_layer;
@@ -298,8 +301,8 @@ m_id( id ), m_visible( visible ), m_xPos( xPos ), m_yPos( yPos ), m_leftTop( lef
     /// Type definition
     struct List
     {
-        List( const string & id, int xPos, int yPos, const string & visible, int width, int height, const string & leftTop, const string & rightBottom, const string & fontId, const string & var, uint32_t fgColor, uint32_t playColor, uint32_t bgColor1, uint32_t bgColor2, uint32_t selColor, const string & help, int layer, const string & windowId, const string & layoutId ):
-m_id( id ), m_xPos( xPos ), m_yPos( yPos ), m_visible( visible ), m_width( width ), m_height( height ), m_leftTop( leftTop ), m_rightBottom( rightBottom ), m_fontId( fontId ), m_var( var ), m_fgColor( fgColor ), m_playColor( playColor ), m_bgColor1( bgColor1 ), m_bgColor2( bgColor2 ), m_selColor( selColor ), m_help( help ), m_layer( layer ), m_windowId( windowId ), m_layoutId( layoutId ) {}
+        List( const string & id, int xPos, int yPos, const string & visible, int width, int height, const string & leftTop, const string & rightBottom, const string & fontId, const string & var, const string & bgImageId, uint32_t fgColor, uint32_t playColor, uint32_t bgColor1, uint32_t bgColor2, uint32_t selColor, const string & help, int layer, const string & windowId, const string & layoutId ):
+m_id( id ), m_xPos( xPos ), m_yPos( yPos ), m_visible( visible ), m_width( width ), m_height( height ), m_leftTop( leftTop ), m_rightBottom( rightBottom ), m_fontId( fontId ), m_var( var ), m_bgImageId( bgImageId ), m_fgColor( fgColor ), m_playColor( playColor ), m_bgColor1( bgColor1 ), m_bgColor2( bgColor2 ), m_selColor( selColor ), m_help( help ), m_layer( layer ), m_windowId( windowId ), m_layoutId( layoutId ) {}
 
         const string m_id;
         int m_xPos;
@@ -311,6 +314,7 @@ m_id( id ), m_xPos( xPos ), m_yPos( yPos ), m_visible( visible ), m_width( width
         const string m_rightBottom;
         const string m_fontId;
         const string m_var;
+        const string m_bgImageId;
         uint32_t m_fgColor;
         uint32_t m_playColor;
         uint32_t m_bgColor1;

@@ -2,7 +2,7 @@
  * os_graphics.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: os_graphics.hpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: os_graphics.hpp 10861 2005-05-01 13:19:04Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -49,7 +49,8 @@ class OSGraphics: public SkinObject
         /// Render a bitmap on this graphics
         virtual void drawBitmap( const GenericBitmap &rBitmap, int xSrc = 0,
                                  int ySrc = 0, int xDest = 0, int yDest = 0,
-                                 int width = -1, int height = -1 ) = 0;
+                                 int width = -1, int height = -1,
+                                 bool blend = false) = 0;
 
         /// Draw a filled rectangle on the grahics (color is #RRGGBB)
         virtual void fillRect( int left, int top, int width, int height,

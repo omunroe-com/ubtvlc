@@ -2,7 +2,7 @@
  * preferences_widgets.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: preferences_widgets.cpp 9088 2004-10-31 13:19:28Z gbazin $
+ * $Id: preferences_widgets.cpp 11093 2005-05-21 15:07:46Z xtophe $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Sigmund Augdal <sigmunau@idi.ntnu.no>
@@ -33,10 +33,12 @@
 #include <vlc/vlc.h>
 #include <vlc/intf.h>
 
-#include <vlc_help.h>
+#include <vlc_config_cat.h>
 
 #include "wxwindows.h"
 #include "preferences_widgets.h"
+
+#include <wx/statline.h>
 
 /*****************************************************************************
  * CreateConfigControl wrapper
@@ -46,10 +48,22 @@ ConfigControl *CreateConfigControl( vlc_object_t *p_this,
 {
     ConfigControl *p_control = NULL;
 
+    /*Skip deprecated options */
+    if( p_item->psz_current )
+    {
+        return NULL;
+    }
+
     switch( p_item->i_type )
     {
     case CONFIG_ITEM_MODULE:
         p_control = new ModuleConfigControl( p_this, p_item, parent );
+        break;
+    case CONFIG_ITEM_MODULE_CAT:
+        p_control = new ModuleCatConfigControl( p_this, p_item, parent );
+        break;
+    case CONFIG_ITEM_MODULE_LIST_CAT:
+        p_control = new ModuleListCatConfigControl( p_this, p_item, parent );
         break;
 
     case CONFIG_ITEM_STRING:
@@ -93,6 +107,10 @@ ConfigControl *CreateConfigControl( vlc_object_t *p_this,
 
     case CONFIG_ITEM_BOOL:
         p_control = new BoolConfigControl( p_this, p_item, parent );
+        break;
+
+    case CONFIG_SECTION:
+        p_control = new SectionConfigControl( p_this, p_item, parent );
         break;
 
     default:
@@ -154,6 +172,13 @@ void ConfigControl::OnUpdate( wxCommandEvent& WXUNUSED(event) )
         pf_update_callback( p_update_data );
     }
 }
+
+void ConfigControl::OnUpdateScroll( wxScrollEvent& WXUNUSED(event) )
+{
+    wxCommandEvent cevent;
+    OnUpdate(cevent);
+}
+
 
 /*****************************************************************************
  * KeyConfigControl implementation
@@ -281,6 +306,68 @@ ModuleConfigControl::ModuleConfigControl( vlc_object_t *p_this,
     this->SetSizerAndFit( sizer );
 }
 
+ModuleCatConfigControl::~ModuleCatConfigControl()
+{
+    ;
+}
+
+wxString ModuleCatConfigControl::GetPszValue()
+{
+    return wxU( (char *)combo->GetClientData( combo->GetSelection() ));
+}
+
+/*****************************************************************************
+ * ModuleCatConfigControl implementation
+ *****************************************************************************/
+ModuleCatConfigControl::ModuleCatConfigControl( vlc_object_t *p_this,
+                                                module_config_t *p_item,
+                                                wxWindow *parent )
+  : ConfigControl( p_this, p_item, parent )
+{
+    vlc_list_t *p_list;
+    module_t *p_parser;
+
+    label = new wxStaticText(this, -1, wxU(p_item->psz_text));
+    combo = new wxComboBox( this, -1, wxL2U(p_item->psz_value),
+                            wxDefaultPosition, wxDefaultSize,
+                            0, NULL, wxCB_READONLY | wxCB_SORT );
+
+    combo->Append( wxU(_("Default")), (void *)NULL );
+    combo->SetSelection( 0 );
+
+    /* build a list of available modules */
+    p_list = vlc_list_find( p_this, VLC_OBJECT_MODULE, FIND_ANYWHERE );
+    for(  int i_index = 0; i_index < p_list->i_count; i_index++ )
+    {
+        p_parser = (module_t *)p_list->p_values[i_index].p_object ;
+
+        if( !strcmp( p_parser->psz_object_name, "main" ) )
+              continue;
+
+        module_config_t *p_config = p_parser->p_config;
+        if( p_config ) do
+        {
+            /* Hack: required subcategory is stored in i_min */
+            if( p_config->i_type == CONFIG_SUBCATEGORY &&
+                p_config->i_value == p_item->i_min )
+            {
+                combo->Append( wxU(p_parser->psz_longname),
+                                   p_parser->psz_object_name );
+                if( p_item->psz_value && !strcmp(p_item->psz_value,
+                                        p_parser->psz_object_name) )
+                combo->SetValue( wxU(p_parser->psz_longname) );
+            }
+        } while( p_config->i_type != CONFIG_HINT_END && p_config++ );
+    }
+    vlc_list_release( p_list );
+
+    combo->SetToolTip( wxU(p_item->psz_longtext) );
+    sizer->Add( label, 1, wxALIGN_CENTER_VERTICAL | wxALL, 5 );
+    sizer->Add( combo, 1, wxALIGN_CENTER_VERTICAL | wxALL, 5 );
+    sizer->Layout();
+    this->SetSizerAndFit( sizer );
+}
+
 ModuleConfigControl::~ModuleConfigControl()
 {
     ;
@@ -289,6 +376,127 @@ ModuleConfigControl::~ModuleConfigControl()
 wxString ModuleConfigControl::GetPszValue()
 {
     return wxU( (char *)combo->GetClientData( combo->GetSelection() ));
+}
+
+
+/*****************************************************************************
+ * ModuleListCatonfigControl implementation
+ *****************************************************************************/
+BEGIN_EVENT_TABLE(ModuleListCatConfigControl, wxPanel)
+    EVT_CHECKBOX( wxID_HIGHEST , ModuleListCatConfigControl::OnUpdate )
+END_EVENT_TABLE()
+
+
+ModuleListCatConfigControl::ModuleListCatConfigControl( vlc_object_t *p_this,
+                                                     module_config_t *p_item,
+                                                     wxWindow *parent )
+  : ConfigControl( p_this, p_item, parent )
+{
+    vlc_list_t *p_list;
+    module_t *p_parser;
+
+    delete sizer;
+    sizer = new wxBoxSizer( wxVERTICAL );
+    label = new wxStaticText(this, -1, wxU(p_item->psz_text));
+    sizer->Add( label );
+
+    text = new wxTextCtrl( this, -1, wxU(p_item->psz_value),
+                           wxDefaultPosition,wxSize( 300, 20 ) );
+
+
+    /* build a list of available modules */
+    p_list = vlc_list_find( p_this, VLC_OBJECT_MODULE, FIND_ANYWHERE );
+    for(  int i_index = 0; i_index < p_list->i_count; i_index++ )
+    {
+        p_parser = (module_t *)p_list->p_values[i_index].p_object ;
+
+        if( !strcmp( p_parser->psz_object_name, "main" ) )
+              continue;
+
+        module_config_t *p_config = p_parser->p_config;
+        if( p_config ) do
+        {
+            /* Hack: required subcategory is stored in i_min */
+            if( p_config->i_type == CONFIG_SUBCATEGORY &&
+                p_config->i_value == p_item->i_min )
+            {
+                moduleCheckBox *mc = new moduleCheckBox;
+                mc->checkbox = new wxCheckBox( this, wxID_HIGHEST,
+                                               wxU(p_parser->psz_longname));
+                mc->psz_module = strdup( p_parser->psz_object_name );
+                pp_checkboxes.push_back( mc );
+
+                if( p_item->psz_value &&
+                    strstr( p_item->psz_value, p_parser->psz_object_name ) )
+                {
+                    mc->checkbox->SetValue( true );
+                }
+                sizer->Add( mc->checkbox );
+            }
+        } while( p_config->i_type != CONFIG_HINT_END && p_config++ );
+    }
+    vlc_list_release( p_list );
+
+    text->SetToolTip( wxU(p_item->psz_longtext) );
+    sizer->Add(text, 0, wxEXPAND|wxALL, 5 );
+
+    sizer->Add (new wxStaticText( this, -1, wxU( vlc_wraptext( _("Select modules that you want. To get more advanced control, you can also modify the resulting chain by yourself") , 72, ISUTF8 ) ) ) );
+
+    sizer->Layout();
+    this->SetSizerAndFit( sizer );
+}
+
+ModuleListCatConfigControl::~ModuleListCatConfigControl()
+{
+    ;
+}
+
+wxString ModuleListCatConfigControl::GetPszValue()
+{
+    return wxU( text->GetValue().c_str() ) ;
+}
+
+void  ModuleListCatConfigControl::OnUpdate( wxCommandEvent &event )
+{
+    bool b_waschecked = false;
+    wxString newtext =  text->GetValue();
+    
+    for( unsigned int i = 0 ; i< pp_checkboxes.size() ; i++ )
+    {
+        b_waschecked = newtext.Find( wxU(pp_checkboxes[i]->psz_module)) != -1 ;
+        /* For some reasons, ^^ doesn't compile :( */
+        if( (pp_checkboxes[i]->checkbox->IsChecked() && ! b_waschecked )||
+			(! pp_checkboxes[i]->checkbox->IsChecked() && b_waschecked) )
+        {
+            if( b_waschecked )
+            {
+                /* Maybe not the clest solution */
+                if( ! newtext.Replace(wxString(wxT(":"))
+                                      +wxU(pp_checkboxes[i]->psz_module),
+                                      wxT("")))
+                {
+                    if( ! newtext.Replace(wxString(wxU(pp_checkboxes[i]->psz_module))
+                                           + wxT(":"),wxT("")))
+		    { 
+                        newtext.Replace(wxU(pp_checkboxes[i]->psz_module),wxU(""));
+                    }
+                }
+            }
+            else
+            {
+                if( newtext.Len() == 0 )
+                {
+                    newtext = wxU(pp_checkboxes[i]->psz_module);
+                }
+                else
+                {
+                    newtext += wxU( ":" );
+                    newtext += wxU(pp_checkboxes[i]->psz_module);
+                }
+            }
+        }
+    }
+    text->SetValue( newtext );
 }
 
 /*****************************************************************************
@@ -513,7 +721,7 @@ wxString FileConfigControl::GetPszValue()
  *****************************************************************************/
 BEGIN_EVENT_TABLE(IntegerConfigControl, wxPanel)
     EVT_TEXT(-1, IntegerConfigControl::OnUpdate)
-    EVT_COMMAND_SCROLL(-1, IntegerConfigControl::OnUpdate)
+    EVT_COMMAND_SCROLL(-1, IntegerConfigControl::OnUpdateScroll)
 END_EVENT_TABLE()
 
 IntegerConfigControl::IntegerConfigControl( vlc_object_t *p_this,
@@ -552,6 +760,12 @@ void IntegerConfigControl::OnUpdate( wxCommandEvent &event )
 {
     i_value = event.GetInt();
     ConfigControl::OnUpdate( event );
+}
+void IntegerConfigControl::OnUpdateScroll( wxScrollEvent &event )
+{
+    wxCommandEvent cevent;
+    cevent.SetInt(event.GetPosition());
+    OnUpdate(cevent);
 }
 
 /*****************************************************************************
@@ -615,6 +829,9 @@ void IntegerListConfigControl::UpdateCombo( module_config_t *p_item )
 BEGIN_EVENT_TABLE(IntegerListConfigControl, wxPanel)
     /* Button events */
     EVT_BUTTON(-1, IntegerListConfigControl::OnAction)
+
+    /* Update events */
+    EVT_TEXT(-1, IntegerListConfigControl::OnUpdate)
 END_EVENT_TABLE()
 
 void IntegerListConfigControl::OnAction( wxCommandEvent& event )
@@ -653,7 +870,7 @@ int IntegerListConfigControl::GetIntValue()
  * RangedIntConfigControl implementation
  *****************************************************************************/
 BEGIN_EVENT_TABLE(RangedIntConfigControl, wxPanel)
-    EVT_COMMAND_SCROLL(-1, RangedIntConfigControl::OnUpdate)
+    EVT_COMMAND_SCROLL(-1, RangedIntConfigControl::OnUpdateScroll)
 END_EVENT_TABLE()
 
 RangedIntConfigControl::RangedIntConfigControl( vlc_object_t *p_this,
@@ -681,6 +898,7 @@ int RangedIntConfigControl::GetIntValue()
 {
     return slider->GetValue();
 }
+
 
 /*****************************************************************************
  * FloatConfigControl implementation
@@ -749,4 +967,25 @@ int BoolConfigControl::GetIntValue()
 {
     if( checkbox->IsChecked() ) return 1;
     else return 0;
+}
+
+/*****************************************************************************
+ * SectionConfigControl implementation
+ *****************************************************************************/
+SectionConfigControl::SectionConfigControl( vlc_object_t *p_this,
+                                            module_config_t *p_item,
+                                            wxWindow *parent )
+  : ConfigControl( p_this, p_item, parent )
+{
+    delete sizer;
+    sizer = new wxBoxSizer( wxVERTICAL );
+    sizer->Add( new wxStaticText( this, -1, wxU( p_item->psz_text ) ) );
+    sizer->Add( new wxStaticLine( this, -1 ), 0, wxEXPAND, 5 );
+    sizer->Layout();
+    this->SetSizerAndFit( sizer );
+}
+
+SectionConfigControl::~SectionConfigControl()
+{
+    ;
 }

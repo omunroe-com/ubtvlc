@@ -2,7 +2,7 @@
  * visual.h : Header for the visualisation system
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: visual.h 6961 2004-03-05 17:34:23Z sam $
+ * $Id: visual.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Clément Stenac <zorglub@via.ecp.fr>
  *

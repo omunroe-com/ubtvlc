@@ -2,7 +2,7 @@
  * control.c : functions to handle stream control buttons.
  *****************************************************************************
  * Copyright (C) 2000, 2001 VideoLAN
- * $Id: control.c 7957 2004-06-07 22:35:20Z fenrir $
+ * $Id: control.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Stéphane Borel <stef@via.ecp.fr>

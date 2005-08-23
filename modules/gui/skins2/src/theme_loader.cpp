@@ -2,7 +2,7 @@
  * theme_loader.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: theme_loader.cpp 7896 2004-06-05 19:23:03Z ipkiss $
+ * $Id: theme_loader.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -27,6 +27,7 @@
 #include "../parser/builder.hpp"
 #include "../parser/skin_parser.hpp"
 #include "../src/os_factory.hpp"
+#include "../src/vlcproc.hpp"
 #include "../src/window_manager.hpp"
 
 #ifdef HAVE_FCNTL_H
@@ -41,8 +42,7 @@
 #   include <direct.h>
 #endif
 
-#if (!defined( WIN32 ) || defined(__MINGW32__))
-/* Mingw has its own version of dirent */
+#ifdef HAVE_DIRENT_H
 #   include <dirent.h>
 #endif
 
@@ -97,6 +97,10 @@ bool ThemeLoader::load( const string &fileName )
         // Show the windows
         pNewTheme->getWindowManager().showAll();
     }
+    if( skin_last ) free( skin_last );
+
+    // The new theme cannot embed a video output yet
+    VlcProc::instance( getIntf() )->dropVout();
 
     return true;
 }
@@ -175,7 +179,7 @@ bool ThemeLoader::parse( const string &xmlFile )
     // Extract the path of the XML file
     string path;
     const string &sep = OSFactory::instance( getIntf() )->getDirSeparator();
-    unsigned int p = xmlFile.rfind( sep, xmlFile.size() );
+    string::size_type p = xmlFile.rfind( sep, xmlFile.size() );
     if( p != string::npos )
     {
         path = xmlFile.substr( 0, p + 1 );
@@ -244,6 +248,7 @@ bool ThemeLoader::findThemeFile( const string &rootDir, string &themeFilePath )
                 // Can we find the theme file in this subdirectory?
                 if( findThemeFile( newURI, themeFilePath ) )
                 {
+                    closedir( pCurrDir );
                     return true;
                 }
             }
@@ -254,6 +259,7 @@ bool ThemeLoader::findThemeFile( const string &rootDir, string &themeFilePath )
                     string( pDirContent->d_name ) )
                 {
                     themeFilePath = newURI;
+                    closedir( pCurrDir );
                     return true;
                 }
             }
@@ -262,6 +268,7 @@ bool ThemeLoader::findThemeFile( const string &rootDir, string &themeFilePath )
         pDirContent = readdir( pCurrDir );
     }
 
+    closedir( pCurrDir );
     return false;
 }
 

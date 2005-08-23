@@ -3,7 +3,7 @@
  * Declaration and extern access to global program object.
  *****************************************************************************
  * Copyright (C) 1999, 2000, 2001, 2002 VideoLAN
- * $Id: main.h 8911 2004-10-04 16:03:30Z gbazin $
+ * $Id: main.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -90,13 +90,8 @@ struct vlc_t
 
     /* Fast memcpy plugin used */
     module_t *             p_memcpy_module;
-#if defined( UNDER_CE )
-    void* ( __cdecl *pf_memcpy ) ( void *, const void *, size_t );
-    void* ( __cdecl *pf_memset ) ( void *, int, size_t );
-#else
     void* ( *pf_memcpy ) ( void *, const void *, size_t );
     void* ( *pf_memset ) ( void *, int, size_t );
-#endif
 
     /* Shared data - these structures are accessed directly from p_vlc by
      * several modules */

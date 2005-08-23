@@ -35,10 +35,10 @@ void show_help_options(const OptionDef *options, const char *msg, int mask, int 
                 printf("%s", msg);
                 first = 0;
             }
-            strcpy(buf, po->name);
+            pstrcpy(buf, sizeof(buf), po->name);
             if (po->flags & HAS_ARG) {
-                strcat(buf, " ");
-                strcat(buf, po->argname);
+                pstrcat(buf, sizeof(buf), " ");
+                pstrcat(buf, sizeof(buf), po->argname);
             }
             printf("-%-17s  %s\n", buf, po->help);
         }
@@ -109,6 +109,14 @@ void print_error(const char *filename, int err)
         break;
     case AVERROR_NOFMT:
         fprintf(stderr, "%s: Unknown format\n", filename);
+        break;
+    case AVERROR_IO:
+        fprintf(stderr, "%s: I/O error occured\n"
+	        "Usually that means that input file is truncated and/or corrupted.\n",
+		filename);
+        break;
+    case AVERROR_NOMEM:
+        fprintf(stderr, "%s: memory allocation error occured\n", filename);
         break;
     default:
         fprintf(stderr, "%s: Error while opening file\n", filename);

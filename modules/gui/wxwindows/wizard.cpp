@@ -2,7 +2,7 @@
  * wizard.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: wizard.cpp 9136 2004-11-04 16:41:56Z hartman $
+ * $Id: wizard.cpp 10641 2005-04-10 18:40:52Z zorglub $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -183,7 +183,7 @@ class wizHelloPage : public wxWizardPageSimple
 {
     public:
         wizHelloPage( wxWizard *parent);
-        void OnActionChange(wxEvent& event);
+        void OnActionChange( wxCommandEvent& event );
         void OnWizardPageChanging(wxWizardEvent& event);
         void OnMoreInfo( wxCommandEvent& event );
     protected:
@@ -209,7 +209,7 @@ class wizInputPage : public wxWizardPage
         wizInputPage( wxWizard *, wxWizardPage *, intf_thread_t *);
         wizInputPage::~wizInputPage();
         void OnWizardPageChanging(wxWizardEvent& event);
-        void OnInputChange(wxEvent& event);
+        void OnInputChange( wxCommandEvent& event );
         void OnEnablePartial(wxCommandEvent& event);
         virtual wxWizardPage *GetPrev() const;
         virtual wxWizardPage *GetNext() const;
@@ -239,7 +239,6 @@ class wizInputPage : public wxWizardPage
         OpenDialog *p_open_dialog;
         wxListView *listview;
         wxPanel *open_panel;
-        wxPanel *pl_panel;
         wxWizardPage *p_prev;
         wxWizardPage *p_streaming_page;
         wxWizardPage *p_transcode_page;
@@ -317,7 +316,7 @@ protected:
     wxStaticText *address_text;
     wxTextCtrl *address_txtctrl;
     WizardDialog * p_parent;
-    void OnMethodChange(wxEvent& event);
+    void OnMethodChange( wxCommandEvent& event );
     wxRadioButton *method_radios[4];
     wxWizardPage *p_prev;
     wxWizardPage *p_next;
@@ -350,7 +349,7 @@ protected:
     int i_encap;
     int i_mux;
     int i_action;
-    void OnEncapChange(wxEvent& event);
+    void OnEncapChange( wxCommandEvent& event );
     wxRadioButton *encap_radios[MUXERS_NUMBER];
     WizardDialog *p_parent;
     wxWizardPage *p_prev;
@@ -425,7 +424,7 @@ END_EVENT_TABLE()
 
 
 /* Local functions */
-static int ismult( char *psz_uri );
+static int ismult( const char *psz_uri );
 
 static void pageHeader( wxWindow *window, wxBoxSizer *sizer,
                        char *psz_title, char *psz_text);
@@ -506,7 +505,7 @@ void wizHelloPage::OnMoreInfo(wxCommandEvent& event)
                   wxOK | wxICON_INFORMATION, this->p_parent );
 }
 
-void wizHelloPage::OnActionChange(wxEvent& event)
+void wizHelloPage::OnActionChange( wxCommandEvent& event )
 {
     i_action = event.GetId() - ActionRadio0_Event;
     ((wizInputPage *)GetNext())->SetAction( i_action );
@@ -530,11 +529,13 @@ wizInputPage::wizInputPage( wxWizard *parent, wxWizardPage *prev, intf_thread_t 
     p_parent = (WizardDialog *)parent;
     b_chosen = false;
     p_open_dialog = NULL;
-    pl_panel = NULL;
+    listview = NULL;    
     mainSizer = new wxBoxSizer(wxVERTICAL);
 
     /* Create the texts */
     pageHeader( this, mainSizer, INPUT_TITLE, INPUT_TEXT );
+
+    mainSizer->Add( 0,20,0 );
 
     /* Create the radio buttons */
     input_radios[0] = new wxRadioButton( this, InputRadio0_Event ,
@@ -568,10 +569,8 @@ wizInputPage::wizInputPage( wxWizard *parent, wxWizardPage *prev, intf_thread_t 
     {
         if( p_playlist->i_size > 0)
         {
-            pl_panel = new wxPanel(this, -1);
-            wxBoxSizer *plSizer = new wxBoxSizer( wxHORIZONTAL );
-            listview = new wxListView( pl_panel, ListView_Event,
-                                       wxDefaultPosition, wxSize(300,300),
+            listview = new wxListView( this, ListView_Event,
+                                       wxDefaultPosition, wxDefaultSize,
                                        wxLC_REPORT | wxSUNKEN_BORDER );
             listview->InsertColumn( 0, wxU(_("Name")) );
             listview->InsertColumn( 1, wxU(_("URI")) );
@@ -586,13 +585,10 @@ wizInputPage::wizInputPage( wxWizard *parent, wxWizardPage *prev, intf_thread_t 
                                                             input.psz_uri) );
             }
             listview->Select( p_playlist->i_index , TRUE);
-            plSizer->Add( listview, 1, wxALL | wxEXPAND , 5 );
-            pl_panel->SetSizer( plSizer );
-            plSizer->Layout();
-            mainSizer->Add( pl_panel, 1, wxALL|wxEXPAND, 5 );
+            mainSizer->Add( listview, 1, wxALL|wxEXPAND, 5 );
 
-            pl_panel->Hide();
-            mainSizer->Hide( pl_panel );
+            listview->Hide();
+            mainSizer->Hide( listview );
             mainSizer->Layout();
         }
         else
@@ -617,7 +613,7 @@ wizInputPage::wizInputPage( wxWizard *parent, wxWizardPage *prev, intf_thread_t 
     enable_checkbox = new wxCheckBox( this, PartialEnable_Event,
                                                 wxU(_("Enable") ) );
     enable_checkbox->SetToolTip(wxU(_(PARTIAL) ) ) ;
-    partial_sizer->Add( enable_checkbox, 0 , wxLEFT , 5 );
+    partial_sizer->Add( enable_checkbox, 0 , wxALIGN_CENTER_VERTICAL|wxALL, 5 ); //wxLEFT
 
     wxFlexGridSizer *partial_sizer2 = new wxFlexGridSizer( 4 , 1 , 20 );
     partial_sizer2->Add( new wxStaticText(this, -1, wxU(_( "From" ) ) ),
@@ -648,15 +644,15 @@ wizInputPage::~wizInputPage()
 {
 }
 
-void wizInputPage::OnInputChange(wxEvent& event)
+void wizInputPage::OnInputChange( wxCommandEvent& event )
 {
     i_input = event.GetId() - InputRadio0_Event;
     if( i_input == 0 )
     {
-        if( pl_panel )
+        if( listview )
         {
-            pl_panel->Hide();
-            mainSizer->Hide( pl_panel );
+            listview->Hide();
+            mainSizer->Hide( listview );
             open_panel->Show();
             mainSizer->Show( open_panel );
             mainSizer->Layout();
@@ -666,8 +662,8 @@ void wizInputPage::OnInputChange(wxEvent& event)
     {
         open_panel->Hide();
         mainSizer->Hide( open_panel );
-        pl_panel->Show();
-        mainSizer->Show( pl_panel );
+        listview->Show();
+        mainSizer->Show( listview );
         mainSizer->Layout();
     }
 }
@@ -682,7 +678,8 @@ void wizInputPage::OnEnablePartial(wxCommandEvent& event)
 void wizInputPage::OnChoose(wxCommandEvent& event)
 {
     p_open_dialog = new OpenDialog( p_intf, this, -1, -1, OPEN_STREAM );
-    if(  p_open_dialog->ShowModal() == wxID_OK )
+    if(  p_open_dialog->ShowModal() == wxID_OK &&
+         !p_open_dialog->mrl.IsEmpty() )
     {
         mrl_text->SetValue(p_open_dialog->mrl[0] );
     }
@@ -724,8 +721,6 @@ void wizInputPage::OnWizardPageChanging(wxWizardEvent& event)
     {
         int i_from = atoi( from_text->GetValue().mb_str() );
         int i_to = atoi( to_text->GetValue().mb_str() );
-        msg_Dbg( p_intf, "Partial streaming enabled, from %i to %i",
-                         i_from,i_to);
         p_parent->SetPartial( i_from, i_to );
     }
     return;
@@ -801,24 +796,28 @@ wizTranscodeCodecPage::wizTranscodeCodecPage( wxWizard *parent,
     /* Line 1 : only the checkbox */
     wxFlexGridSizer *video_sizer1 = new wxFlexGridSizer( 2,3,20 );
     video_sizer1->Add( new wxCheckBox( this, VideoEnable_Event,
-                       wxU(_("Transcode video") ) ), 0 , 0 , 5 );
+                       wxU(_("Transcode video") ) ), 0 , wxALIGN_CENTER_VERTICAL|wxALL , 5 );
     video_sizer1->Add( 0,0,1);
     /* Line 2 : codec */
     video_sizer1->Add( new wxStaticText(this, -1, wxU(_("Codec"))),0,wxLEFT ,5);
     video_combo = new wxComboBox( this, VideoCodec_Event, wxT(""),
-                                  wxDefaultPosition, wxSize(200,25) );
+                                  wxDefaultPosition, wxSize(200,25), 0, NULL, 
+                                  wxCB_DROPDOWN| wxCB_READONLY );
     for( int i= 0; vcodecs_array[i].psz_display != NULL; i++ )
     {
         video_combo->Append( wxU( vcodecs_array[i].psz_display ) ,
                             (void *)&vcodecs_array[i] );
     }
+    i_video_codec = 0;
+    video_combo->SetSelection(0);
+
     video_sizer1->Add( video_combo, 0 , wxALIGN_LEFT , 0 );
 
     video_sizer1->Add( new wxStaticText(this, -1, wxU(_("Bitrate (kb/s)"))),0,
                        wxLEFT ,5);
     vb_combo = new wxComboBox( this, VideoBitrate_Event, wxT("1024"),
                                wxDefaultPosition, wxDefaultSize,
-                               WXSIZEOF(vbitrates_array), vbitrates_array );
+                               WXSIZEOF(vbitrates_array), vbitrates_array, wxCB_READONLY );
     video_sizer1->Add( vb_combo, 0, wxALIGN_LEFT , 0 );
 
     /* Line 3 : text */
@@ -836,25 +835,28 @@ wizTranscodeCodecPage::wizTranscodeCodecPage( wxWizard *parent,
     /* Line1: enabler */
     wxFlexGridSizer *audio_sizer1 = new wxFlexGridSizer( 2,3,20);
     audio_sizer1->Add( new wxCheckBox( this, AudioEnable_Event,
-                            wxU(_("Transcode audio") ) ), 0 , wxLEFT, 5 );
+                            wxU(_("Transcode audio") ) ), 0 , wxALIGN_CENTER_VERTICAL|wxALL, 5 );
     audio_sizer1->Add( 0, 0, 1 );
 
     /* Line 2 : codec */
     audio_sizer1->Add( new wxStaticText(this, -1, wxU(_("Codec"))),0,wxLEFT,5);
     audio_combo = new wxComboBox( this, AudioCodec_Event, wxT(""),
-                                  wxDefaultPosition, wxSize(200,25) );
+                                  wxDefaultPosition, wxSize(200,25), 0, NULL, 
+                                  wxCB_DROPDOWN| wxCB_READONLY );
     for( int i= 0; acodecs_array[i].psz_display != NULL; i++ )
     {
         audio_combo->Append( wxU( acodecs_array[i].psz_display ) ,
                             (void *)&acodecs_array[i] );
     }
+    i_audio_codec = 0;
+    audio_combo->SetSelection(0);
     audio_sizer1->Add( audio_combo, 0 , wxALIGN_LEFT, 0 );
 
     audio_sizer1->Add( new wxStaticText(this, -1, wxU(_("Bitrate (kb/s)"))),0,
                        wxLEFT ,5);
     ab_combo = new wxComboBox( this, AudioBitrate_Event, wxT("192"),
                                wxDefaultPosition, wxDefaultSize,
-                               WXSIZEOF(abitrates_array), abitrates_array );
+                               WXSIZEOF(abitrates_array), abitrates_array, wxCB_READONLY );
     audio_sizer1->Add( ab_combo, 0, wxALIGN_LEFT, 0 );
 
     /* Line 3 : text */
@@ -998,7 +1000,7 @@ wizStreamingMethodPage::wizStreamingMethodPage( wxWizard *parent,
     /* Create the texts */
     pageHeader( this, mainSizer,  STREAMING1_TITLE, STREAMING1_TEXT );
 
-    mainSizer->Add( 0,0,1 );
+    mainSizer->Add( 0,50,0 );
 
     i_method = 0;
 
@@ -1058,7 +1060,7 @@ void wizStreamingMethodPage::OnWizardPageChanging(wxWizardEvent& event)
     if( !event.GetDirection() ) return;
 
     /* Check valid address */
-    if( i_method == 1 && !ismult((char *) address_txtctrl->GetValue().c_str()) )
+    if( i_method == 1 && !ismult( address_txtctrl->GetValue().mb_str()) )
     {
         wxMessageBox( wxU( INVALID_MCAST_ADDRESS ) , wxU( ERROR_MSG ),
                       wxICON_WARNING | wxOK, this->p_parent );
@@ -1083,7 +1085,7 @@ void wizStreamingMethodPage::OnWizardPageChanging(wxWizardEvent& event)
         }
     }
     p_parent->SetStream( methods_array[i_method].psz_access ,
-                         (char *)address_txtctrl->GetValue().c_str() );
+                         (char *)address_txtctrl->GetValue().mb_str() );
 
     /* Set the action for the muxer page */
     ((wizEncapPage*)GetNext())->SetAction( p_parent->GetAction() );
@@ -1096,11 +1098,13 @@ wxWizardPage *wizStreamingMethodPage::GetNext() const { return p_next; }
 void wizStreamingMethodPage::SetPrev( wxWizardPage *page) {p_prev = page; }
 
 
-void wizStreamingMethodPage::OnMethodChange(wxEvent& event)
+void wizStreamingMethodPage::OnMethodChange( wxCommandEvent& event )
 {
     i_method = event.GetId() - MethodRadio0_Event;
     address_text->SetLabel( wxU(
      vlc_wraptext( _(methods_array[i_method].psz_address), TEXTWIDTH, false)));
+    address_sizer->Layout();
+    mainSizer->Layout();
 }
 
 /***************************************************
@@ -1170,7 +1174,7 @@ void wizEncapPage::OnWizardPageChanging(wxWizardEvent& event)
 }
 
 
-void wizEncapPage::OnEncapChange(wxEvent& event)
+void wizEncapPage::OnEncapChange( wxCommandEvent& event )
 {
     i_mux = event.GetId() - EncapRadio0_Event;
 }
@@ -1273,7 +1277,7 @@ void wizTranscodeExtraPage::OnWizardPageChanging( wxWizardEvent& event )
     }
     if( event.GetDirection() )
     {
-       p_parent->SetTranscodeOut( (char *)file_text->GetValue().c_str());
+       p_parent->SetTranscodeOut( file_text->GetValue().mb_str());
     }
 }
 
@@ -1485,7 +1489,7 @@ void WizardDialog::SetStream( char *method, char *address )
     this->address = strdup( address );
 }
 
-void WizardDialog::SetTranscodeOut( char *address )
+void WizardDialog::SetTranscodeOut( const char *address )
 {
     this->address = strdup( address );
 }
@@ -1507,12 +1511,10 @@ int WizardDialog::GetAction()
 
 void WizardDialog::Run()
 {
-    msg_Dbg( p_intf,"starting wizard");
     if( RunWizard(page1) )
     {
         int i_size;
         char *psz_opt;
-        msg_Dbg( p_intf,"wizard completed");
 
         if( i_action == ACTION_TRANSCODE )
         {
@@ -1520,42 +1522,51 @@ void WizardDialog::Run()
                                   mrl, address);
             msg_Dbg( p_intf,"Using %s (%i kbps) / %s (%i kbps),encap %s",
                                 vcodec,vb,acodec,ab,mux);
-            int i_tr_size = 0 ; /* 10 = ab + vb */
-            i_tr_size += vcodec ? strlen(vcodec) + strlen("vcodec=") +strlen("vb="): 0;
-            i_tr_size += acodec ? strlen(acodec) + strlen("acodec=") +strlen("ab=") : 0;
+            char *psz_transcode;
 
-            char *psz_transcode = (char *)malloc( i_tr_size * sizeof(char));
-            if( vcodec || acodec )
+            if( vcodec != NULL || acodec != NULL )
             {
-                sprintf( psz_transcode, "transcode{" );
+                int i_tr_size = 14;
+                if( vcodec != NULL )
+                    i_tr_size += strlen( vcodec ) + 17;
+                if( acodec != NULL )
+                    i_tr_size += strlen( acodec ) + 17;
+
+                if( vb > 999999 )
+                    vb = 999999;
+                else if( vb < 0 )
+                    vb = 0;
+
+                if( ab > 999999 )
+                    ab = 999999;
+                else if( ab < 0 )
+                    ab = 0;
+
+                psz_transcode = (char *)malloc( i_tr_size * sizeof(char) );
+
+                strcpy( psz_transcode, "transcode{" );
+                if( vcodec != NULL )
+                {
+                    sprintf( psz_transcode + strlen( psz_transcode ),
+                             "vcodec=%s,vb=%i%s", vcodec, vb,
+                             ( acodec != NULL ) ? "," : "}:" );
+                }
+                if( acodec != NULL )
+                {
+                    sprintf( psz_transcode + strlen( psz_transcode ),
+                             "acodec=%s,ab=%i}:", acodec, ab );
+                }
             }
             else
-            {
-                snprintf( psz_transcode, 1 , "%c", 0 );
-            }
-            if( vcodec )
-            {
-                i_tr_size += 5 + strlen(vcodec);
-                snprintf( psz_transcode, i_tr_size , "%svcodec=%s,vb=%i",
-                          psz_transcode, vcodec, vb );
-            }
-            if( acodec )
-            {
-                i_tr_size += 6 + strlen(acodec);
-                /* FIXME */
-                sprintf( psz_transcode, "%s%cacodec=%s,ab=%i",
-                          psz_transcode, vcodec ? ',' : ' ', acodec, ab );
-            }
-            if( vcodec || acodec )
-            {
-                i_tr_size +=2;
-                sprintf( psz_transcode , "%s}:", psz_transcode );
-            }
+                psz_transcode = "";
+
             i_size = 73 + strlen(mux) + strlen(address) + strlen(psz_transcode);
             psz_opt = (char *)malloc( i_size * sizeof(char) );
             snprintf( psz_opt, i_size, ":sout=#%sstandard{mux=%s,url=%s,"
-                      "access=file}",
-                       psz_transcode, mux, address );
+                      "access=file}", psz_transcode, mux, address );
+
+            if( *psz_transcode )
+                free( psz_transcode );
         }
         else
         {
@@ -1572,17 +1583,14 @@ void WizardDialog::Run()
                              "sap,name=\"%s\"",psz_sap_name );
                 }
                 else
-                {
-                    psz_sap_option = (char *) malloc( 5 );
-                    snprintf( psz_sap_option, 5, "sap" );
-                }
+                    psz_sap_option = strdup( "sap" );
+
                 i_size = 40 + strlen(mux) + strlen(address) +
                               strlen( psz_sap_option);
                 psz_opt = (char *)malloc( i_size * sizeof(char) );
                 snprintf( psz_opt, i_size,
                           ":sout=#standard{mux=%s,url=%s,access=%s,%s}",
                           mux, address,method, psz_sap_option);
-                msg_Dbg( p_intf, "Sap enabled: %s", psz_sap_option);
                 if( psz_sap_option ) free( psz_sap_option );
             }
             else
@@ -1605,7 +1613,6 @@ void WizardDialog::Run()
             if( i_from != 0)
             {
                 char psz_from[20];
-                msg_Dbg( p_intf, "Setting starttime");
                 snprintf( psz_from, 20, "start-time=%i", i_from);
                 playlist_ItemAddOption( p_item, psz_from);
             }
@@ -1629,31 +1636,23 @@ void WizardDialog::Run()
                           wxICON_WARNING | wxOK, this );
         }
     }
-    else
-    {
-        msg_Dbg( p_intf, "wizard was cancelled");
-    }
 }
 /****************************************************************
  * Local helper functions
  ****************************************************************/
-static int ismult( char *psz_uri )
+static int ismult( const char *psz_uri )
 {
     char *psz_end;
-    int  i_value;
+    unsigned long i_value;
 
-    i_value = strtol( psz_uri, &psz_end, 0 );
     /* IPv6 */
     if( psz_uri[0] == '[')
-    {
-            if( strncasecmp( &psz_uri[1], "FF0" , 3) ||
-                            strncasecmp( &psz_uri[2], "FF0" , 3))
-                    return( VLC_TRUE );
-            else
-                    return( VLC_FALSE );
-    }
+            return strncasecmp( &psz_uri[1], "FF" , 2) ? VLC_FALSE : VLC_TRUE;
+
+    /* IPv4 */
+    i_value = strtoul( psz_uri, &psz_end, 10 );
     if( *psz_end != '.' ) { return( VLC_FALSE ); }
 
-    return( i_value < 224 ? VLC_FALSE : VLC_TRUE );
+    return( ( i_value >= 224 && i_value < 240 ) ? VLC_TRUE : VLC_FALSE );
 
 }

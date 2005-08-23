@@ -2,7 +2,7 @@
  * dtstospdif.c : encapsulates DTS frames into S/PDIF packets
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: dtstospdif.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: dtstospdif.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *
@@ -65,6 +65,8 @@ static void DoWork    ( aout_instance_t *, aout_filter_t *, aout_buffer_t *,
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_MISC );
     set_description( _("audio filter for DTS->S/PDIF encapsulation") );
     set_capability( "audio filter", 10 );
     set_callbacks( Create, Close );

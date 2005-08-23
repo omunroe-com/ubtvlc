@@ -2,7 +2,7 @@
  * filter.h : DirectShow access module for vlc
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: filter.h 8694 2004-09-12 18:00:02Z gbazin $
+ * $Id: filter.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *

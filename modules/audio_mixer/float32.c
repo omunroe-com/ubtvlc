@@ -2,7 +2,7 @@
  * float32.c : precise float32 audio mixer implementation
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: float32.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: float32.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -42,6 +42,8 @@ static void DoWork    ( aout_instance_t *, aout_buffer_t * );
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_MISC );
     set_description( _("Float32 audio mixer") );
     set_capability( "audio mixer", 10 );
     set_callbacks( Create, NULL );

@@ -2,7 +2,7 @@
  * top_window.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: top_window.hpp 7259 2004-04-03 11:30:26Z ipkiss $
+ * $Id: top_window.hpp 9596 2004-12-17 23:39:34Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -48,6 +48,7 @@ class TopWindow: public GenericWindow
         virtual ~TopWindow();
 
         /// Methods to process OS events.
+        virtual void processEvent( EvtRefresh &rEvtRefresh );
         virtual void processEvent( EvtFocus &rEvtFocus );
         virtual void processEvent( EvtMotion &rEvtMotion );
         virtual void processEvent( EvtMouse &rEvtMouse );

@@ -2,7 +2,7 @@
  * memcpy.c : classic memcpy module
  *****************************************************************************
  * Copyright (C) 2001 VideoLAN
- * $Id: memcpy.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: memcpy.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -77,6 +77,8 @@ static int Activate ( vlc_object_t *p_this )
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+    set_category( CAT_ADVANCED );
+    set_subcategory( SUBCAT_ADVANCED_MISC );
 #ifdef MODULE_NAME_IS_memcpy
     set_description( _("libc memcpy") );
     add_shortcut( "c" );

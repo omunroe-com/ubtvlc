@@ -2,7 +2,7 @@
  * threads.c : threads implementation for the VideoLAN client
  *****************************************************************************
  * Copyright (C) 1999-2004 VideoLAN
- * $Id: threads.c 9056 2004-10-24 21:07:58Z gbazin $
+ * $Id: threads.c 10706 2005-04-16 12:30:45Z courmisch $
  *
  * Authors: Jean-Marc Dressler <polux@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -35,7 +35,9 @@
 /*****************************************************************************
  * Global mutex for lazy initialization of the threads system
  *****************************************************************************/
-static volatile int i_initializations = 0;
+static volatile unsigned i_initializations = 0;
+static volatile int i_status = VLC_THREADS_UNINITIALIZED;
+static vlc_object_t *p_root;
 
 #if defined( PTH_INIT_IN_PTH_H )
 #elif defined( ST_INIT_IN_ST_H )
@@ -69,8 +71,6 @@ struct vlc_namedmutex_t
  *****************************************************************************/
 int __vlc_threads_init( vlc_object_t *p_this )
 {
-    static volatile int i_status = VLC_THREADS_UNINITIALIZED;
-
     libvlc_t *p_libvlc = (libvlc_t *)p_this;
     int i_ret = VLC_SUCCESS;
 
@@ -80,7 +80,6 @@ int __vlc_threads_init( vlc_object_t *p_this )
 #elif defined( ST_INIT_IN_ST_H )
 #elif defined( UNDER_CE )
 #elif defined( WIN32 )
-    HINSTANCE hInstLib;
 #elif defined( HAVE_KERNEL_SCHEDULER_H )
 #elif defined( PTHREAD_COND_T_IN_PTHREAD_H )
     pthread_mutex_lock( &once_mutex );
@@ -107,6 +106,8 @@ int __vlc_threads_init( vlc_object_t *p_this )
         /* Dynamically get the address of SignalObjectAndWait */
         if( GetVersion() < 0x80000000 )
         {
+            HINSTANCE hInstLib;
+
             /* We are running on NT/2K/XP, we can use SignalObjectAndWait */
             hInstLib = LoadLibrary( "kernel32" );
             if( hInstLib )
@@ -129,7 +130,9 @@ int __vlc_threads_init( vlc_object_t *p_this )
 #elif defined( HAVE_CTHREADS_H )
 #endif
 
-        vlc_object_create( p_libvlc, VLC_OBJECT_ROOT );
+        p_root = vlc_object_create( p_libvlc, VLC_OBJECT_ROOT );
+        if( p_root == NULL )
+            i_ret = VLC_ENOMEM;
 
         if( i_ret )
         {
@@ -176,38 +179,43 @@ int __vlc_threads_init( vlc_object_t *p_this )
 /*****************************************************************************
  * vlc_threads_end: stop threads system
  *****************************************************************************
- * FIXME: This function is far from being threadsafe. We should undo exactly
- * what we did above in vlc_threads_init.
+ * FIXME: This function is far from being threadsafe.
  *****************************************************************************/
 int __vlc_threads_end( vlc_object_t *p_this )
 {
 #if defined( PTH_INIT_IN_PTH_H )
+#elif defined( ST_INIT_IN_ST_H )
+#elif defined( UNDER_CE )
+#elif defined( WIN32 )
+#elif defined( HAVE_KERNEL_SCHEDULER_H )
+#elif defined( PTHREAD_COND_T_IN_PTHREAD_H )
+    pthread_mutex_lock( &once_mutex );
+#elif defined( HAVE_CTHREADS_H )
+#endif
+
+    if( i_initializations == 0 )
+        return VLC_EGENERIC;
+
     i_initializations--;
+    if( i_initializations == 0 )
+    {
+        i_status = VLC_THREADS_UNINITIALIZED;
+        vlc_object_destroy( p_root );
+    }
+
+#if defined( PTH_INIT_IN_PTH_H )
     if( i_initializations == 0 )
     {
         return ( pth_kill() == FALSE );
     }
 
 #elif defined( ST_INIT_IN_ST_H )
-    i_initializations--;
-
 #elif defined( UNDER_CE )
-    i_initializations--;
-
 #elif defined( WIN32 )
-    i_initializations--;
-
 #elif defined( HAVE_KERNEL_SCHEDULER_H )
-    i_initializations--;
-
 #elif defined( PTHREAD_COND_T_IN_PTHREAD_H )
-    pthread_mutex_lock( &once_mutex );
-    i_initializations--;
     pthread_mutex_unlock( &once_mutex );
-
 #elif defined( HAVE_CTHREADS_H )
-    i_initializations--;
-
 #endif
     return VLC_SUCCESS;
 }
@@ -610,8 +618,8 @@ int __vlc_thread_create( vlc_object_t *p_this, char * psz_file, int i_line,
 
         p_this->b_thread = 1;
 
-        msg_Dbg( p_this, "thread %d (%s) created at priority %d (%s:%d)",
-                 (int)p_this->thread_id, psz_name, i_priority,
+        msg_Dbg( p_this, "thread %u (%s) created at priority %d (%s:%d)",
+                 (unsigned int)p_this->thread_id, psz_name, i_priority,
                  psz_file, i_line );
 
         vlc_mutex_unlock( &p_this->object_lock );
@@ -705,7 +713,49 @@ void __vlc_thread_join( vlc_object_t *p_this, char * psz_file, int i_line )
     i_ret = st_thread_join( p_this->thread_id, NULL );
 
 #elif defined( UNDER_CE ) || defined( WIN32 )
+    HMODULE hmodule;
+    BOOL (WINAPI *OurGetThreadTimes)( HANDLE, FILETIME*, FILETIME*,
+                                      FILETIME*, FILETIME* );
+    FILETIME create_ft, exit_ft, kernel_ft, user_ft;
+    int64_t real_time, kernel_time, user_time;
+
     WaitForSingleObject( p_this->thread_id, INFINITE );
+
+#if defined( UNDER_CE )
+    hmodule = GetModuleHandle( _T("COREDLL") );
+#else
+    hmodule = GetModuleHandle( _T("KERNEL32") );
+#endif
+    OurGetThreadTimes = (BOOL (WINAPI*)( HANDLE, FILETIME*, FILETIME*,
+                                         FILETIME*, FILETIME* ))
+        GetProcAddress( hmodule, _T("GetThreadTimes") );
+
+    if( OurGetThreadTimes &&
+        OurGetThreadTimes( p_this->thread_id,
+                           &create_ft, &exit_ft, &kernel_ft, &user_ft ) )
+    {
+        real_time =
+          ((((int64_t)exit_ft.dwHighDateTime)<<32)| exit_ft.dwLowDateTime) -
+          ((((int64_t)create_ft.dwHighDateTime)<<32)| create_ft.dwLowDateTime);
+        real_time /= 10;
+
+        kernel_time =
+          ((((int64_t)kernel_ft.dwHighDateTime)<<32)|
+           kernel_ft.dwLowDateTime) / 10;
+
+        user_time =
+          ((((int64_t)user_ft.dwHighDateTime)<<32)|
+           user_ft.dwLowDateTime) / 10;
+
+        msg_Dbg( p_this, "thread times: "
+                 "real "I64Fd"m%fs, kernel "I64Fd"m%fs, user "I64Fd"m%fs",
+                 real_time/60/1000000,
+                 (double)((real_time%(60*1000000))/1000000.0),
+                 kernel_time/60/1000000,
+                 (double)((kernel_time%(60*1000000))/1000000.0),
+                 user_time/60/1000000,
+                 (double)((user_time%(60*1000000))/1000000.0) );
+    }
     CloseHandle( p_this->thread_id );
 
 #elif defined( HAVE_KERNEL_SCHEDULER_H )
@@ -724,18 +774,18 @@ void __vlc_thread_join( vlc_object_t *p_this, char * psz_file, int i_line )
     if( i_ret )
     {
 #ifdef HAVE_STRERROR
-        msg_Err( p_this, "thread_join(%d) failed at %s:%d (%s)",
-                         (int)p_this->thread_id, psz_file, i_line,
+        msg_Err( p_this, "thread_join(%u) failed at %s:%d (%s)",
+                         (unsigned int)p_this->thread_id, psz_file, i_line,
                          strerror(i_ret) );
 #else
-        msg_Err( p_this, "thread_join(%d) failed at %s:%d",
-                         (int)p_this->thread_id, psz_file, i_line );
+        msg_Err( p_this, "thread_join(%u) failed at %s:%d",
+                         (unsigned int)p_this->thread_id, psz_file, i_line );
 #endif
     }
     else
     {
-        msg_Dbg( p_this, "thread %d joined (%s:%d)",
-                         (int)p_this->thread_id, psz_file, i_line );
+        msg_Dbg( p_this, "thread %u joined (%s:%d)",
+                         (unsigned int)p_this->thread_id, psz_file, i_line );
     }
 
     p_this->b_thread = 0;

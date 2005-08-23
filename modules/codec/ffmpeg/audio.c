@@ -2,7 +2,7 @@
  * audio.c: audio decoder using ffmpeg library
  *****************************************************************************
  * Copyright (C) 1999-2003 VideoLAN
- * $Id: audio.c 8994 2004-10-15 08:58:16Z gbazin $
+ * $Id: audio.c 10191 2005-03-07 20:13:56Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -109,14 +109,24 @@ int E_(InitAudioDec)( decoder_t *p_dec, AVCodecContext *p_context,
     p_sys->p_context->channels = p_dec->fmt_in.audio.i_channels;
     p_sys->p_context->block_align = p_dec->fmt_in.audio.i_blockalign;
     p_sys->p_context->bit_rate = p_dec->fmt_in.i_bitrate;
+    p_sys->p_context->bits_per_sample = p_dec->fmt_in.audio.i_bitspersample;
 
     if( ( p_sys->p_context->extradata_size = p_dec->fmt_in.i_extra ) > 0 )
     {
+        int i_offset = 0;
+
+        if( p_dec->fmt_in.i_codec == VLC_FOURCC( 'f', 'l', 'a', 'c' ) )
+            i_offset = 8;
+
+        p_sys->p_context->extradata_size -= i_offset;
         p_sys->p_context->extradata =
-            malloc( p_dec->fmt_in.i_extra + FF_INPUT_BUFFER_PADDING_SIZE );
+            malloc( p_sys->p_context->extradata_size +
+                    FF_INPUT_BUFFER_PADDING_SIZE );
         memcpy( p_sys->p_context->extradata,
-                p_dec->fmt_in.p_extra, p_dec->fmt_in.i_extra );
-        memset( p_sys->p_context->extradata + p_dec->fmt_in.i_extra, 0,
+                (char*)p_dec->fmt_in.p_extra + i_offset,
+                p_sys->p_context->extradata_size );
+        memset( (char*)p_sys->p_context->extradata +
+                p_sys->p_context->extradata_size, 0,
                 FF_INPUT_BUFFER_PADDING_SIZE );
     }
 
@@ -209,7 +219,7 @@ aout_buffer_t *E_( DecodeAudio )( decoder_t *p_dec, block_t **pp_block )
         return NULL;
     }
 
-    if( p_block->i_buffer <= 0 || p_block->i_flags & BLOCK_FLAG_DISCONTINUITY )
+    if( p_block->i_buffer <= 0 || ( p_block->i_flags & (BLOCK_FLAG_DISCONTINUITY|BLOCK_FLAG_CORRUPTED) ) )
     {
         block_Release( p_block );
         return NULL;

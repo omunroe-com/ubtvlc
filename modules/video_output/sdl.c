@@ -2,7 +2,7 @@
  * sdl.c: SDL video output display method
  *****************************************************************************
  * Copyright (C) 1998-2001 VideoLAN
- * $Id: sdl.c 8551 2004-08-28 17:36:02Z gbazin $
+ * $Id: sdl.c 11387 2005-06-10 15:32:08Z hartman $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Pierre Baillet <oct@zoy.org>
@@ -101,13 +101,16 @@ static void SetPalette      ( vout_thread_t *,
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+    set_shortname( "SDL" );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VOUT );
     set_description( _("Simple DirectMedia Layer video output") );
     set_capability( "video output", 60 );
     add_shortcut( "sdl" );
     set_callbacks( Open, Close );
     /* XXX: check for conflicts with the SDL audio output */
     var_Create( p_module->p_libvlc, "sdl", VLC_VAR_MUTEX );
-#if defined( __i386__ )
+#if defined( __i386__ ) || defined( __x86_64__ )
     /* On i386, SDL is linked against svgalib */
     linked_with_a_crap_library_which_uses_atexit();
 #endif

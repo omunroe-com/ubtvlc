@@ -1,8 +1,8 @@
 /*****************************************************************************
  * intf.h: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: intf.h 8575 2004-08-29 19:48:09Z hartman $
+ * Copyright (C) 2002-2005 VideoLAN
+ * $Id: intf.h 11398 2005-06-10 19:54:49Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -45,6 +45,10 @@ unsigned int CocoaKeyToVLC( unichar i_key );
  * the translated string. the translation should be '1:translatedstring' though */
 #define _ANS(s) [[[VLCMain sharedInstance] localizedString: _(s)] substringFromIndex:2]
 
+#define MACOS_VERSION [[[NSDictionary dictionaryWithContentsOfFile: \
+            @"/System/Library/CoreServices/SystemVersion.plist"] \
+            objectForKey: @"ProductVersion"] floatValue]
+
 /*****************************************************************************
  * intf_sys_t: description and status of the interface
  *****************************************************************************/
@@ -63,8 +67,10 @@ struct intf_sys_t
     /* interface update */
     vlc_bool_t b_intf_update;
     vlc_bool_t b_playlist_update;
+    vlc_bool_t b_playmode_update;
     vlc_bool_t b_current_title_update;
     vlc_bool_t b_fullscreen_update;
+    vlc_bool_t b_volume_update;
 
     /* menus handlers */
     vlc_bool_t b_input_update;
@@ -82,8 +88,12 @@ struct intf_sys_t
 {
     intf_thread_t *p_intf;      /* The main intf object */
     id o_prefs;                 /* VLCPrefs       */
+    id o_about;                 /* VLAboutBox     */
+    id o_open;                  /* VLCOpen        */
+    BOOL nib_open_loaded;       /* reference to the open-nib */
 
     IBOutlet id o_window;       /* main window    */
+    IBOutlet id o_playlist_view;/* playlist view  */
     IBOutlet id o_scrollfield;  /* info field     */
     IBOutlet id o_timefield;    /* time field     */
     IBOutlet id o_timeslider;   /* time slider    */
@@ -98,6 +108,7 @@ struct intf_sys_t
     IBOutlet id o_btn_ff;       /* btn fast forward     */
     IBOutlet id o_btn_next;     /* btn next       */
     IBOutlet id o_btn_fullscreen;/* btn fullscreen      */
+    IBOutlet id o_btn_playlist; /* btn playlist   */
 
     NSImage * o_img_play;       /* btn play img   */
     NSImage * o_img_pause;      /* btn pause img  */
@@ -194,6 +205,7 @@ struct intf_sys_t
     IBOutlet id o_mi_fittoscreen;
     IBOutlet id o_mi_fullscreen;
     IBOutlet id o_mi_floatontop;
+    IBOutlet id o_mi_snapshot;
     IBOutlet id o_mi_videotrack;
     IBOutlet id o_mu_videotrack;
     IBOutlet id o_mi_screen;
@@ -228,6 +240,14 @@ struct intf_sys_t
     IBOutlet id o_dmi_next;
     IBOutlet id o_dmi_previous;
     IBOutlet id o_dmi_mute;
+
+    bool b_small_window;
+
+    mtime_t i_end_scroll;
+
+    NSSize o_size_with_playlist;
+
+    int     i_lastShownVolume;
 }
 
 + (VLCMain *)sharedInstance;
@@ -249,6 +269,8 @@ struct intf_sys_t
 - (void)manage;
 - (void)manageIntf:(NSTimer *)o_timer;
 - (void)setupMenus;
+- (void)setScrollField:(NSString *)o_string stopAfter:(int )timeout;
+- (void)resetScrollField;
 
 - (void)updateMessageArray;
 - (void)playStatusUpdated:(int) i_status;
@@ -259,6 +281,12 @@ struct intf_sys_t
 - (IBAction)clearRecentItems:(id)sender;
 - (void)openRecentItem:(id)sender;
 
+- (IBAction)intfOpenFile:(id)sender;
+- (IBAction)intfOpenFileGeneric:(id)sender;
+- (IBAction)intfOpenDisc:(id)sender;
+- (IBAction)intfOpenNet:(id)sender;
+
+- (IBAction)viewAbout:(id)sender;
 - (IBAction)viewPreferences:(id)sender;
 - (IBAction)closeError:(id)sender;
 - (IBAction)openReadMe:(id)sender;
@@ -266,7 +294,12 @@ struct intf_sys_t
 - (IBAction)reportABug:(id)sender;
 - (IBAction)openWebsite:(id)sender;
 - (IBAction)openLicense:(id)sender;
+- (IBAction)openForum:(id)sender;
+- (IBAction)openDonate:(id)sender;
 - (IBAction)openCrashLog:(id)sender;
+
+- (IBAction)togglePlaylist:(id)sender;
+- (void)updateTogglePlaylistState;
 
 - (void)windowDidBecomeKey:(NSNotification *)o_notification;
 

@@ -2,7 +2,7 @@
  * callbacks.h : pda plugin for vlc
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: pda_callbacks.h 6961 2004-03-05 17:34:23Z sam $
+ * $Id: pda_callbacks.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Jean-Paul Saman <jpsaman@wxs.nl>
  *

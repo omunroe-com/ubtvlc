@@ -2,7 +2,7 @@
  * tcp.c: TCP input module
  *****************************************************************************
  * Copyright (C) 2003-2004 VideoLAN
- * $Id: tcp.c 8606 2004-08-31 18:32:54Z hartman $
+ * $Id: tcp.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -43,7 +43,10 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 vlc_module_begin();
+    set_shortname( _("TCP") );
     set_description( _("TCP input") );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACCESS );
 
     add_integer( "tcp-caching", DEFAULT_PTS_DELAY / 1000, NULL, CACHING_TEXT,
                  CACHING_LONGTEXT, VLC_TRUE );
@@ -155,7 +158,8 @@ static int Read( access_t *p_access, uint8_t *p_buffer, int i_len )
     if( p_access->info.b_eof )
         return 0;
 
-    i_read = net_Read( p_access, p_sys->fd, p_buffer, i_len, VLC_FALSE );
+    i_read = net_Read( p_access, p_sys->fd, NULL, p_buffer, i_len,
+                       VLC_FALSE );
     if( i_read == 0 )
         p_access->info.b_eof = VLC_TRUE;
     else if( i_read > 0 )

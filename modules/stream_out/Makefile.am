@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp stream_out_switcher stream_out_bridge stream_out_mosaic_bridge; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp stream_out_switcher stream_out_bridge stream_out_mosaic_bridge; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp stream_out_switcher stream_out_bridge stream_out_mosaic_bridge; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -364,6 +364,117 @@ libstream_out_rtp_plugin$(LIBEXT): $(libstream_out_rtp_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libstream_out_rtp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_rtp\` ; $(CXXLINK) $(libstream_out_rtp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_rtp` ;; \
 	  objc) echo $(OBJCLINK) $(libstream_out_rtp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_rtp\` ; $(OBJCLINK) $(libstream_out_rtp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_rtp` ;; \
 	  c|*) echo $(LINK) $(libstream_out_rtp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_rtp\` ; $(LINK) $(libstream_out_rtp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_rtp` ;; \
+	esac
+
+
+# The stream_out_switcher plugin
+
+if UNTRUE
+Lstream_out_switcherp = libstream_out_switcher_plugin.a
+Dstream_out_switcherp = libstream_out_switcher_plugin$(LIBEXT)
+Lstream_out_switcherb = libstream_out_switcher.a
+Lstream_out_switcherpic = libstream_out_switcher_pic.a
+endif
+
+libstream_out_switcher_plugin_a_SOURCES = $(SOURCES_stream_out_switcher)
+libstream_out_switcher_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin stream_out_switcher`
+libstream_out_switcher_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin stream_out_switcher`
+libstream_out_switcher_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin stream_out_switcher`
+
+libstream_out_switcher_pic_a_SOURCES = $(SOURCES_stream_out_switcher)
+libstream_out_switcher_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_switcher`
+libstream_out_switcher_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_switcher`
+libstream_out_switcher_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_switcher`
+
+libstream_out_switcher_a_SOURCES = $(SOURCES_stream_out_switcher)
+libstream_out_switcher_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_switcher`
+libstream_out_switcher_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_switcher`
+libstream_out_switcher_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_switcher`
+
+libvlc_LIBRARIES += $(Lstream_out_switcherb) $(Lstream_out_switcherpic)
+libstream_out_switcher_DATA = $(Dstream_out_switcherp)
+
+libstream_out_switcherdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lstream_out_switcherp)
+libstream_out_switcher_plugin$(LIBEXT): $(libstream_out_switcher_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage stream_out_switcher` in \
+	  c++) echo $(CXXLINK) $(libstream_out_switcher_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_switcher\` ; $(CXXLINK) $(libstream_out_switcher_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_switcher` ;; \
+	  objc) echo $(OBJCLINK) $(libstream_out_switcher_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_switcher\` ; $(OBJCLINK) $(libstream_out_switcher_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_switcher` ;; \
+	  c|*) echo $(LINK) $(libstream_out_switcher_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_switcher\` ; $(LINK) $(libstream_out_switcher_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_switcher` ;; \
+	esac
+
+
+# The stream_out_bridge plugin
+
+if UNTRUE
+Lstream_out_bridgep = libstream_out_bridge_plugin.a
+Dstream_out_bridgep = libstream_out_bridge_plugin$(LIBEXT)
+Lstream_out_bridgeb = libstream_out_bridge.a
+Lstream_out_bridgepic = libstream_out_bridge_pic.a
+endif
+
+libstream_out_bridge_plugin_a_SOURCES = $(SOURCES_stream_out_bridge)
+libstream_out_bridge_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin stream_out_bridge`
+libstream_out_bridge_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin stream_out_bridge`
+libstream_out_bridge_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin stream_out_bridge`
+
+libstream_out_bridge_pic_a_SOURCES = $(SOURCES_stream_out_bridge)
+libstream_out_bridge_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_bridge`
+libstream_out_bridge_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_bridge`
+libstream_out_bridge_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_bridge`
+
+libstream_out_bridge_a_SOURCES = $(SOURCES_stream_out_bridge)
+libstream_out_bridge_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_bridge`
+libstream_out_bridge_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_bridge`
+libstream_out_bridge_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_bridge`
+
+libvlc_LIBRARIES += $(Lstream_out_bridgeb) $(Lstream_out_bridgepic)
+libstream_out_bridge_DATA = $(Dstream_out_bridgep)
+
+libstream_out_bridgedir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lstream_out_bridgep)
+libstream_out_bridge_plugin$(LIBEXT): $(libstream_out_bridge_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage stream_out_bridge` in \
+	  c++) echo $(CXXLINK) $(libstream_out_bridge_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_bridge\` ; $(CXXLINK) $(libstream_out_bridge_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_bridge` ;; \
+	  objc) echo $(OBJCLINK) $(libstream_out_bridge_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_bridge\` ; $(OBJCLINK) $(libstream_out_bridge_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_bridge` ;; \
+	  c|*) echo $(LINK) $(libstream_out_bridge_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_bridge\` ; $(LINK) $(libstream_out_bridge_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_bridge` ;; \
+	esac
+
+
+# The stream_out_mosaic_bridge plugin
+
+if UNTRUE
+Lstream_out_mosaic_bridgep = libstream_out_mosaic_bridge_plugin.a
+Dstream_out_mosaic_bridgep = libstream_out_mosaic_bridge_plugin$(LIBEXT)
+Lstream_out_mosaic_bridgeb = libstream_out_mosaic_bridge.a
+Lstream_out_mosaic_bridgepic = libstream_out_mosaic_bridge_pic.a
+endif
+
+libstream_out_mosaic_bridge_plugin_a_SOURCES = $(SOURCES_stream_out_mosaic_bridge)
+libstream_out_mosaic_bridge_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin stream_out_mosaic_bridge`
+libstream_out_mosaic_bridge_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin stream_out_mosaic_bridge`
+libstream_out_mosaic_bridge_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin stream_out_mosaic_bridge`
+
+libstream_out_mosaic_bridge_pic_a_SOURCES = $(SOURCES_stream_out_mosaic_bridge)
+libstream_out_mosaic_bridge_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_mosaic_bridge`
+libstream_out_mosaic_bridge_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_mosaic_bridge`
+libstream_out_mosaic_bridge_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_mosaic_bridge`
+
+libstream_out_mosaic_bridge_a_SOURCES = $(SOURCES_stream_out_mosaic_bridge)
+libstream_out_mosaic_bridge_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_mosaic_bridge`
+libstream_out_mosaic_bridge_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_mosaic_bridge`
+libstream_out_mosaic_bridge_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_mosaic_bridge`
+
+libvlc_LIBRARIES += $(Lstream_out_mosaic_bridgeb) $(Lstream_out_mosaic_bridgepic)
+libstream_out_mosaic_bridge_DATA = $(Dstream_out_mosaic_bridgep)
+
+libstream_out_mosaic_bridgedir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lstream_out_mosaic_bridgep)
+libstream_out_mosaic_bridge_plugin$(LIBEXT): $(libstream_out_mosaic_bridge_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage stream_out_mosaic_bridge` in \
+	  c++) echo $(CXXLINK) $(libstream_out_mosaic_bridge_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_mosaic_bridge\` ; $(CXXLINK) $(libstream_out_mosaic_bridge_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_mosaic_bridge` ;; \
+	  objc) echo $(OBJCLINK) $(libstream_out_mosaic_bridge_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_mosaic_bridge\` ; $(OBJCLINK) $(libstream_out_mosaic_bridge_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_mosaic_bridge` ;; \
+	  c|*) echo $(LINK) $(libstream_out_mosaic_bridge_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_mosaic_bridge\` ; $(LINK) $(libstream_out_mosaic_bridge_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_mosaic_bridge` ;; \
 	esac
 
 

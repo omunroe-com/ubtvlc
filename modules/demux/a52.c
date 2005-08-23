@@ -2,7 +2,7 @@
  * a52.c : raw A/52 stream input module for vlc
  *****************************************************************************
  * Copyright (C) 2001 VideoLAN
- * $Id: a52.c 7231 2004-04-01 23:19:30Z fenrir $
+ * $Id: a52.c 9961 2005-02-16 22:01:41Z robux4 $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -39,6 +39,8 @@ static int  Open  ( vlc_object_t * );
 static void Close ( vlc_object_t * );
 
 vlc_module_begin();
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_description( _("Raw A/52 demuxer") );
     set_capability( "demux2", 145 );
     set_callbacks( Open, Close );

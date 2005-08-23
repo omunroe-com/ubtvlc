@@ -2,7 +2,7 @@
  * decoder.h: header for vlc decoders
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: decoder.h 8007 2004-06-22 19:29:19Z fenrir $
+ * $Id: decoder.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

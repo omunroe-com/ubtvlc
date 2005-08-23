@@ -2,7 +2,7 @@
  * nsv.c: NullSoft Video demuxer.
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: nsv.c 7232 2004-04-01 23:21:13Z fenrir $
+ * $Id: nsv.c 10547 2005-04-04 23:50:07Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -44,6 +44,8 @@ static void Close  ( vlc_object_t * );
 vlc_module_begin();
     set_description( _("NullSoft demuxer" ) );
     set_capability( "demux2", 10 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_callbacks( Open, Close );
     add_shortcut( "nsv" );
 vlc_module_end();
@@ -86,17 +88,13 @@ static int Open( vlc_object_t *p_this )
 
     uint8_t     *p_peek;
 
-    if( stream_Peek( p_demux->s, &p_peek, 8 ) < 8 )
-    {
-        msg_Err( p_demux, "cannot peek" );
-        return VLC_EGENERIC;
-    }
+    if( stream_Peek( p_demux->s, &p_peek, 8 ) < 8 ) return VLC_EGENERIC;
+
     if( strncmp( p_peek, "NSVf", 4 ) && strncmp( p_peek, "NSVs", 4 ))
     {
        /* In case we had force this demuxer we try to resynch */
         if( strcmp( p_demux->psz_demux, "nsv" ) || ReSynch( p_demux ) )
         {
-            msg_Warn( p_demux, "NSV module discarded" );
             return VLC_EGENERIC;
         }
     }
@@ -489,6 +487,7 @@ static int ReadNSVs( demux_t *p_demux )
             fcc = VLC_FOURCC( 'a', 'r', 'a', 'w' );
             break;
         case VLC_FOURCC( 'A', 'A', 'C', ' ' ):
+        case VLC_FOURCC( 'A', 'A', 'C', 'P' ):
             fcc = VLC_FOURCC( 'm', 'p', '4', 'a' );
             break;
         case VLC_FOURCC( 'N', 'O', 'N', 'E' ):

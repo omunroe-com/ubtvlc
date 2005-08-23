@@ -2,7 +2,7 @@
  * buffer.c : DirectMedia Object decoder module for vlc
  *****************************************************************************
  * Copyright (C) 2002, 2003 VideoLAN
- * $Id: buffer.c 8409 2004-08-09 10:25:42Z gbazin $
+ * $Id: buffer.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *

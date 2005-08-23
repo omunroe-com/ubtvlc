@@ -2,7 +2,7 @@
  * ctrl_checkbox.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_checkbox.hpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: ctrl_checkbox.hpp 9596 2004-12-17 23:39:34Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -64,6 +64,9 @@ class CtrlCheckbox: public CtrlGeneric
 
         /// Get the text of the tooltip XXX
         virtual UString getTooltipText() const { return *m_pTooltip; }
+
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return "checkbox"; }
 
     private:
         /// Finite state machine of the control

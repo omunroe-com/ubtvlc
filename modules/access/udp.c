@@ -2,7 +2,7 @@
  * udp.c: raw UDP & RTP input module
  *****************************************************************************
  * Copyright (C) 2001-2004 VideoLAN
- * $Id: udp.c 8606 2004-08-31 18:32:54Z hartman $
+ * $Id: udp.c 10593 2005-04-08 17:39:18Z massiot $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Tristan Leteurtre <tooney@via.ecp.fr>
@@ -51,7 +51,10 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 vlc_module_begin();
+    set_shortname( _("UDP/RTP" ) );
     set_description( _("UDP/RTP input") );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACCESS );
 
     add_integer( "udp-caching", DEFAULT_PTS_DELAY / 1000, NULL, CACHING_TEXT,
                  CACHING_LONGTEXT, VLC_TRUE );
@@ -209,7 +212,16 @@ static int Open( vlc_object_t *p_this )
 
     /* Set up p_access */
     p_access->pf_read = NULL;
-    p_access->pf_block = BlockChoose;
+    if( !strcasecmp( p_access->psz_access, "rtp" )
+          || !strcasecmp( p_access->psz_access, "rtp4" )
+          || !strcasecmp( p_access->psz_access, "rtp6" ) )
+    {
+        p_access->pf_block = BlockRTP;
+    }
+    else
+    {
+        p_access->pf_block = BlockChoose;
+    }
     p_access->pf_control = Control;
     p_access->pf_seek = NULL;
     p_access->info.i_update = 0;
@@ -313,7 +325,9 @@ static block_t *BlockUDP( access_t *p_access )
 
     /* Read data */
     p_block = block_New( p_access, p_sys->i_mtu );
-    p_block->i_buffer = net_Read( p_access, p_sys->fd, p_block->p_buffer, p_sys->i_mtu, VLC_FALSE );
+    p_block->i_buffer = net_Read( p_access, p_sys->fd, NULL,
+                                  p_block->p_buffer, p_sys->i_mtu,
+                                  VLC_FALSE );
     if( p_block->i_buffer <= 0 )
     {
         block_Release( p_block );
@@ -378,7 +392,12 @@ trash:
 
 static block_t *BlockRTP( access_t *p_access )
 {
-    return BlockParseRTP( p_access, BlockUDP( p_access ) );
+    block_t *p_block = BlockUDP( p_access );
+
+    if ( p_block != NULL )
+        return BlockParseRTP( p_access, p_block );
+    else
+        return NULL;
 }
 
 /*****************************************************************************
@@ -427,12 +446,12 @@ static block_t *BlockChoose( access_t *p_access )
 
         case 14:
             msg_Dbg( p_access, "detected MPEG audio over RTP" );
-            p_access->psz_demux = strdup( "mp3" );
+            p_access->psz_demux = strdup( "mpga" );
             break;
 
         case 32:
             msg_Dbg( p_access, "detected MPEG video over RTP" );
-            p_access->psz_demux = strdup( "es" );
+            p_access->psz_demux = strdup( "mpgv" );
             break;
 
         default:

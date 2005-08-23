@@ -2,7 +2,7 @@
  * menu.c : functions to handle menu items.
  *****************************************************************************
  * Copyright (C) 2000, 2001 VideoLAN
- * $Id: menu.c 7951 2004-06-07 22:11:57Z fenrir $
+ * $Id: menu.c 10469 2005-03-28 23:23:51Z hartman $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *          Stéphane Borel <stef@via.ecp.fr>
@@ -318,17 +318,17 @@ static void GtkDeinterlaceUpdate( intf_thread_t *p_intf, char *psz_mode )
     char *psz_filter;
     unsigned int  i;
 
-    psz_filter = config_GetPsz( p_intf, "filter" );
+    psz_filter = config_GetPsz( p_intf, "vout-filter" );
 
     if( !strcmp( psz_mode, "None" ) )
     {
-        config_PutPsz( p_intf, "filter", "" );
+        config_PutPsz( p_intf, "vout-filter", "" );
     }
     else
     {
         if( !psz_filter || !*psz_filter )
         {
-            config_PutPsz( p_intf, "filter", "deinterlace" );
+            config_PutPsz( p_intf, "vout-filter", "deinterlace" );
         }
         else
         {
@@ -337,7 +337,7 @@ static void GtkDeinterlaceUpdate( intf_thread_t *p_intf, char *psz_mode )
                 psz_filter = realloc( psz_filter, strlen( psz_filter ) + 20 );
                 strcat( psz_filter, ",deinterlace" );
             }
-            config_PutPsz( p_intf, "filter", psz_filter );
+            config_PutPsz( p_intf, "vout-filter", psz_filter );
         }
     }
 

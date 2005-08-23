@@ -2,7 +2,7 @@
  * libmpeg2.c: mpeg2 video decoder module making use of libmpeg2.
  *****************************************************************************
  * Copyright (C) 1999-2001 VideoLAN
- * $Id: libmpeg2.c 8813 2004-09-26 20:17:50Z gbazin $
+ * $Id: libmpeg2.c 11086 2005-05-20 18:00:02Z massiot $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -65,6 +65,8 @@ struct decoder_sys_t
                                                * the sequence header ?    */
     vlc_bool_t       b_slice_i;             /* intra-slice refresh stream */
 
+    vlc_bool_t      b_preroll;
+
     /*
      * Output properties
      */
@@ -90,6 +92,8 @@ static picture_t *GetNewPicture( decoder_t *, uint8_t ** );
 vlc_module_begin();
     set_description( _("MPEG I/II video decoder (using libmpeg2)") );
     set_capability( "decoder", 150 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_VCODEC );
     set_callbacks( OpenDecoder, CloseDecoder );
     add_shortcut( "libmpeg2" );
 vlc_module_end();
@@ -135,8 +139,9 @@ static int OpenDecoder( vlc_object_t *p_this )
     p_sys->b_garbage_pic = 0;
     p_sys->b_slice_i  = 0;
     p_sys->b_skip     = 0;
+    p_sys->b_preroll = VLC_FALSE;
 
-#if defined( __i386__ )
+#if defined( __i386__ ) || defined( __x86_64__ )
     if( p_dec->p_libvlc->i_cpu & CPU_CAPABILITY_MMX )
     {
         i_accel |= MPEG2_ACCEL_X86_MMX;
@@ -211,7 +216,8 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
                 return NULL;
             }
 
-            if( (p_block->i_flags&BLOCK_FLAG_DISCONTINUITY) &&
+            if( (p_block->i_flags & (BLOCK_FLAG_DISCONTINUITY
+                                      | BLOCK_FLAG_CORRUPTED)) &&
                 p_sys->p_synchro &&
                 p_sys->p_info->sequence &&
                 p_sys->p_info->sequence->width != (unsigned)-1 )
@@ -236,10 +242,22 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
                 if ( p_sys->b_slice_i )
                 {
                     vout_SynchroNewPicture( p_sys->p_synchro,
-                        I_CODING_TYPE, 2, 0, 0, p_sys->i_current_rate );
+                        I_CODING_TYPE, 2, 0, 0, p_sys->i_current_rate,
+                        p_sys->p_info->sequence->flags & SEQ_FLAG_LOW_DELAY );
                     vout_SynchroDecode( p_sys->p_synchro );
                     vout_SynchroEnd( p_sys->p_synchro, I_CODING_TYPE, 0 );
                 }
+            }
+
+            if( p_block->i_flags & BLOCK_FLAG_PREROLL )
+            {
+                p_sys->b_preroll = VLC_TRUE;
+            }
+            else if( p_sys->b_preroll )
+            {
+                p_sys->b_preroll = VLC_FALSE;
+                /* Reset synchro */
+                vout_SynchroReset( p_sys->p_synchro );
             }
 
 #ifdef PIC_FLAG_PTS
@@ -361,7 +379,8 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
             vout_SynchroNewPicture( p_sys->p_synchro,
                 p_sys->p_info->current_picture->flags & PIC_MASK_CODING_TYPE,
                 p_sys->p_info->current_picture->nb_fields,
-                0, 0, p_sys->i_current_rate );
+                0, 0, p_sys->i_current_rate,
+                p_sys->p_info->sequence->flags & SEQ_FLAG_LOW_DELAY );
 
             if( p_sys->b_skip )
             {
@@ -386,7 +405,8 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
                 /* Intra-slice refresh. Simulate a blank I picture. */
                 msg_Dbg( p_dec, "intra-slice refresh stream" );
                 vout_SynchroNewPicture( p_sys->p_synchro,
-                    I_CODING_TYPE, 2, 0, 0, p_sys->i_current_rate );
+                    I_CODING_TYPE, 2, 0, 0, p_sys->i_current_rate,
+                    p_sys->p_info->sequence->flags & SEQ_FLAG_LOW_DELAY );
                 vout_SynchroDecode( p_sys->p_synchro );
                 vout_SynchroEnd( p_sys->p_synchro, I_CODING_TYPE, 0 );
                 p_sys->b_slice_i = 1;
@@ -428,16 +448,18 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
             vout_SynchroNewPicture( p_sys->p_synchro,
                 p_sys->p_info->current_picture->flags & PIC_MASK_CODING_TYPE,
                 p_sys->p_info->current_picture->nb_fields, i_pts, i_dts,
-                p_sys->i_current_rate );
+                p_sys->i_current_rate,
+                p_sys->p_info->sequence->flags & SEQ_FLAG_LOW_DELAY );
 
-            if( !p_dec->b_pace_control &&
+            if( !p_dec->b_pace_control && !p_sys->b_preroll &&
                 !(p_sys->b_slice_i
                    && ((p_sys->p_info->current_picture->flags
                          & PIC_MASK_CODING_TYPE) == P_CODING_TYPE))
                    && !vout_SynchroChoose( p_sys->p_synchro,
                               p_sys->p_info->current_picture->flags
                                 & PIC_MASK_CODING_TYPE,
-                              /*p_sys->p_vout->render_time*/ 0 /*FIXME*/ ) )
+                              /*p_sys->p_vout->render_time*/ 0 /*FIXME*/,
+                              p_sys->p_info->sequence->flags & SEQ_FLAG_LOW_DELAY ) )
             {
                 mpeg2_skip( p_sys->p_mpeg2dec, 1 );
                 p_sys->b_skip = 1;
@@ -554,7 +576,8 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
             if( p_sys->b_slice_i )
             {
                 vout_SynchroNewPicture( p_sys->p_synchro,
-                            I_CODING_TYPE, 2, 0, 0, p_sys->i_current_rate );
+                        I_CODING_TYPE, 2, 0, 0, p_sys->i_current_rate,
+                        p_sys->p_info->sequence->flags & SEQ_FLAG_LOW_DELAY );
                 vout_SynchroDecode( p_sys->p_synchro );
                 vout_SynchroEnd( p_sys->p_synchro, I_CODING_TYPE, 0 );
             }

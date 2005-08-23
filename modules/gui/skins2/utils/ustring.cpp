@@ -2,7 +2,7 @@
  * ustring.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ustring.cpp 7258 2004-04-03 10:55:51Z asmax $
+ * $Id: ustring.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

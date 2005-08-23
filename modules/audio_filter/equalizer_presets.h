@@ -2,7 +2,7 @@
  * equalizer_presets.h:
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: equalizer_presets.h 8429 2004-08-14 23:28:31Z djc $
+ * $Id: equalizer_presets.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *

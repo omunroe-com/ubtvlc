@@ -5,7 +5,7 @@
  *                    Organisation (CSIRO) Australia
  * Copyright (C) 2004 VideoLAN
  *
- * $Id: browser_open.c 8327 2004-07-30 17:39:27Z sam $
+ * $Id: browser_open.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Andre Pang <Andre.Pang@csiro.au>
  *
@@ -38,6 +38,10 @@ int browser_Open( const char *psz_url )
     psz_open_commandline = xstrcat( psz_open_commandline, psz_url );
 
     return system( psz_open_commandline );
+
+#elif defined( UNDER_CE )
+    return -1;
+
 #elif defined( WIN32 )
     char *psz_open_commandline;
 
@@ -45,6 +49,7 @@ int browser_Open( const char *psz_url )
     xstrcat( psz_open_commandline, psz_url );
 
     return system( psz_open_commandline );
+
 #else
     /* Assume we're on a UNIX of some sort */
     char *psz_open_commandline;
@@ -55,10 +60,7 @@ int browser_Open( const char *psz_url )
     xstrcat( psz_open_commandline, psz_url );
     i_ret = system( psz_open_commandline );
 
-    if( i_ret == 0 )
-    {
-        return 0;
-    }
+    if( i_ret == 0 ) return 0;
 
     free( psz_open_commandline );
 

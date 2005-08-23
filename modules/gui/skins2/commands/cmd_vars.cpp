@@ -2,7 +2,7 @@
  * cmd_vars.cpp
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: cmd_vars.cpp 7261 2004-04-03 13:57:46Z asmax $
+ * $Id: cmd_vars.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -23,7 +23,7 @@
 
 #include "cmd_vars.hpp"
 #include "../src/vlcproc.hpp"
-#include "../vars/stream.hpp"
+#include "../utils/var_text.hpp"
 #include "../vars/playlist.hpp"
 
 
@@ -35,9 +35,9 @@ void CmdNotifyPlaylist::execute()
 }
 
 
-void CmdSetStream::execute()
+void CmdSetText::execute()
 {
-    // Change the stream variable
-    m_rStream.set( m_name, m_updateVLC );
+    // Change the text variable
+    m_rText.set( m_value );
 }
 

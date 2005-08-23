@@ -2,7 +2,7 @@
  * builder.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: builder.hpp 7173 2004-03-27 00:21:13Z asmax $
+ * $Id: builder.hpp 9581 2004-12-16 17:47:40Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -47,7 +47,7 @@ class Builder: public SkinObject
 {
     public:
         Builder( intf_thread_t *pIntf, const BuilderData &rData );
-        virtual ~Builder() {}
+        virtual ~Builder();
 
         /// Create a Theme object, ready to use.
         /// Return NULL in case of problem
@@ -90,6 +90,9 @@ class Builder: public SkinObject
 
         /// Function to parse "points" tags
         Bezier *getPoints( const char *pTag ) const;
+
+        /// Image handler (used to load image files)
+        image_handler_t *m_pImageHandler;
 };
 
 #endif

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * misc.m: code not specific to vlc
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: misc.m 8121 2004-07-05 01:27:35Z hartman $
+ * Copyright (C) 2003-2005 VideoLAN
+ * $Id: misc.m 10655 2005-04-12 14:31:14Z bigben $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *
@@ -38,6 +38,8 @@
 {
     self = [super initWithContentRect:contentRect styleMask:styleMask //& ~NSTitledWindowMask
     backing:backingType defer:flag];
+
+    [[VLCMain sharedInstance] updateTogglePlaylistState];
 
     return( self );
 }

@@ -55,6 +55,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_ACTIVEX_FALSE = @BUILD_ACTIVEX_FALSE@
+BUILD_ACTIVEX_TRUE = @BUILD_ACTIVEX_TRUE@
 BUILD_DIRENT_FALSE = @BUILD_DIRENT_FALSE@
 BUILD_DIRENT_TRUE = @BUILD_DIRENT_TRUE@
 BUILD_GETOPT_FALSE = @BUILD_GETOPT_FALSE@
@@ -69,8 +71,6 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-CORBA_CFLAGS = @CORBA_CFLAGS@
-CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -98,10 +98,8 @@ FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GTK2_CFLAGS = @GTK2_CFLAGS@
-GTK2_LIBS = @GTK2_LIBS@
-HAL_CFLAGS = @HAL_CFLAGS@
-HAL_LIBS = @HAL_LIBS@
+HAS_MIDL_COMPILER_FALSE = @HAS_MIDL_COMPILER_FALSE@
+HAS_MIDL_COMPILER_TRUE = @HAS_MIDL_COMPILER_TRUE@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -112,6 +110,8 @@ HAVE_PLUGINS_FALSE = @HAVE_PLUGINS_FALSE@
 HAVE_PLUGINS_TRUE = @HAVE_PLUGINS_TRUE@
 HAVE_WIN32_FALSE = @HAVE_WIN32_FALSE@
 HAVE_WIN32_TRUE = @HAVE_WIN32_TRUE@
+HAVE_WINCE_FALSE = @HAVE_WINCE_FALSE@
+HAVE_WINCE_TRUE = @HAVE_WINCE_TRUE@
 INCLUDES = @INCLUDES@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -124,12 +124,7 @@ INTLOBJS = @INTLOBJS@
 INTL_LIBTOOL_SUFFIX_PREFIX = @INTL_LIBTOOL_SUFFIX_PREFIX@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
-LIBCDDB_CFLAGS = @LIBCDDB_CFLAGS@
-LIBCDDB_LIBS = @LIBCDDB_LIBS@
-LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
-LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
-LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -138,6 +133,7 @@ LTLIBICONV = @LTLIBICONV@
 LTLIBINTL = @LTLIBINTL@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+MIDL = @MIDL@
 MKINSTALLDIRS = @MKINSTALLDIRS@
 MOC = @MOC@
 MOZILLA_CONFIG = @MOZILLA_CONFIG@
@@ -154,7 +150,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
 PLUGIN_PATH = @PLUGIN_PATH@
 POSUB = @POSUB@
 RANLIB = @RANLIB@
@@ -164,8 +159,6 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-SVG_CFLAGS = @SVG_CFLAGS@
-SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
@@ -230,19 +223,14 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Lid3b) $(Lid3pic) $(Lid3tagb) $(Lid3tagpic)
-noinst_LIBRARIES = $(Lid3p) $(Lid3tagp)
+libvlc_LIBRARIES = $(Lid3tagb) $(Lid3tagpic)
+noinst_LIBRARIES = $(Lid3tagp)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
 SUBDIRS = 
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/demux
-SOURCES_id3 = \
-	id3.c \
-	$(NULL)
-
-
 SOURCES_id3tag = \
 	id3tag.c \
 	id3genres.h \
@@ -253,31 +241,6 @@ SOURCES_id3tag = \
 # reduce the compilation time.
 @BUILD_MOZILLA_TRUE@@HAVE_WIN32_TRUE@pic = no
 @BUILD_MOZILLA_FALSE@pic = no
-
-
-# The id3 plugin
-@UNTRUE_TRUE@Lid3p = libid3_plugin.a
-@UNTRUE_TRUE@Did3p = libid3_plugin$(LIBEXT)
-@UNTRUE_TRUE@Lid3b = libid3.a
-@UNTRUE_TRUE@Lid3pic = libid3_pic.a
-
-libid3_plugin_a_SOURCES = $(SOURCES_id3)
-libid3_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin id3`
-libid3_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin id3`
-libid3_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin id3`
-
-libid3_pic_a_SOURCES = $(SOURCES_id3)
-libid3_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic id3`
-libid3_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic id3`
-libid3_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic id3`
-
-libid3_a_SOURCES = $(SOURCES_id3)
-libid3_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin id3`
-libid3_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin id3`
-libid3_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin id3`
-libid3_DATA = $(Did3p)
-
-libid3dir = $(libdir)/vlc/
 
 
 # The id3tag plugin
@@ -310,55 +273,36 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 LIBRARIES = $(libvlc_LIBRARIES) $(noinst_LIBRARIES)
 
-libid3_a_AR = $(AR) cru
-libid3_a_LIBADD =
-am__objects_1 =
-am__objects_2 = libid3_a-id3.$(OBJEXT) $(am__objects_1)
-am_libid3_a_OBJECTS = $(am__objects_2)
-libid3_a_OBJECTS = $(am_libid3_a_OBJECTS)
-libid3_pic_a_AR = $(AR) cru
-libid3_pic_a_LIBADD =
-am__objects_3 = libid3_pic_a-id3.$(OBJEXT) $(am__objects_1)
-am_libid3_pic_a_OBJECTS = $(am__objects_3)
-libid3_pic_a_OBJECTS = $(am_libid3_pic_a_OBJECTS)
-libid3_plugin_a_AR = $(AR) cru
-libid3_plugin_a_LIBADD =
-am__objects_4 = libid3_plugin_a-id3.$(OBJEXT) $(am__objects_1)
-am_libid3_plugin_a_OBJECTS = $(am__objects_4)
-libid3_plugin_a_OBJECTS = $(am_libid3_plugin_a_OBJECTS)
 libid3tag_a_AR = $(AR) cru
 libid3tag_a_LIBADD =
-am__objects_5 = libid3tag_a-id3tag.$(OBJEXT) $(am__objects_1)
-am_libid3tag_a_OBJECTS = $(am__objects_5)
+am__objects_1 =
+am__objects_2 = libid3tag_a-id3tag.$(OBJEXT) $(am__objects_1)
+am_libid3tag_a_OBJECTS = $(am__objects_2)
 libid3tag_a_OBJECTS = $(am_libid3tag_a_OBJECTS)
 libid3tag_pic_a_AR = $(AR) cru
 libid3tag_pic_a_LIBADD =
-am__objects_6 = libid3tag_pic_a-id3tag.$(OBJEXT) $(am__objects_1)
-am_libid3tag_pic_a_OBJECTS = $(am__objects_6)
+am__objects_3 = libid3tag_pic_a-id3tag.$(OBJEXT) $(am__objects_1)
+am_libid3tag_pic_a_OBJECTS = $(am__objects_3)
 libid3tag_pic_a_OBJECTS = $(am_libid3tag_pic_a_OBJECTS)
 libid3tag_plugin_a_AR = $(AR) cru
 libid3tag_plugin_a_LIBADD =
-am__objects_7 = libid3tag_plugin_a-id3tag.$(OBJEXT) $(am__objects_1)
-am_libid3tag_plugin_a_OBJECTS = $(am__objects_7)
+am__objects_4 = libid3tag_plugin_a-id3tag.$(OBJEXT) $(am__objects_1)
+am_libid3tag_plugin_a_OBJECTS = $(am__objects_4)
 libid3tag_plugin_a_OBJECTS = $(am_libid3tag_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libid3_a-id3.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libid3_pic_a-id3.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libid3_plugin_a-id3.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libid3tag_a-id3tag.Po \
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libid3tag_a-id3tag.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libid3tag_pic_a-id3tag.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libid3tag_plugin_a-id3tag.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-DIST_SOURCES = $(libid3_a_SOURCES) $(libid3_pic_a_SOURCES) \
-	$(libid3_plugin_a_SOURCES) $(libid3tag_a_SOURCES) \
-	$(libid3tag_pic_a_SOURCES) $(libid3tag_plugin_a_SOURCES)
-DATA = $(libid3_DATA) $(libid3tag_DATA)
+DIST_SOURCES = $(libid3tag_a_SOURCES) $(libid3tag_pic_a_SOURCES) \
+	$(libid3tag_plugin_a_SOURCES)
+DATA = $(libid3tag_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -371,7 +315,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libid3_a_SOURCES) $(libid3_pic_a_SOURCES) $(libid3_plugin_a_SOURCES) $(libid3tag_a_SOURCES) $(libid3tag_pic_a_SOURCES) $(libid3tag_plugin_a_SOURCES)
+SOURCES = $(libid3tag_a_SOURCES) $(libid3tag_pic_a_SOURCES) $(libid3tag_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -416,18 +360,6 @@ clean-libvlcLIBRARIES:
 
 clean-noinstLIBRARIES:
 	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
-libid3.a: $(libid3_a_OBJECTS) $(libid3_a_DEPENDENCIES) 
-	-rm -f libid3.a
-	$(libid3_a_AR) libid3.a $(libid3_a_OBJECTS) $(libid3_a_LIBADD)
-	$(RANLIB) libid3.a
-libid3_pic.a: $(libid3_pic_a_OBJECTS) $(libid3_pic_a_DEPENDENCIES) 
-	-rm -f libid3_pic.a
-	$(libid3_pic_a_AR) libid3_pic.a $(libid3_pic_a_OBJECTS) $(libid3_pic_a_LIBADD)
-	$(RANLIB) libid3_pic.a
-libid3_plugin.a: $(libid3_plugin_a_OBJECTS) $(libid3_plugin_a_DEPENDENCIES) 
-	-rm -f libid3_plugin.a
-	$(libid3_plugin_a_AR) libid3_plugin.a $(libid3_plugin_a_OBJECTS) $(libid3_plugin_a_LIBADD)
-	$(RANLIB) libid3_plugin.a
 libid3tag.a: $(libid3tag_a_OBJECTS) $(libid3tag_a_DEPENDENCIES) 
 	-rm -f libid3tag.a
 	$(libid3tag_a_AR) libid3tag.a $(libid3tag_a_OBJECTS) $(libid3tag_a_LIBADD)
@@ -447,9 +379,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libid3_a-id3.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libid3_pic_a-id3.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libid3_plugin_a-id3.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libid3tag_a-id3tag.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libid3tag_pic_a-id3tag.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libid3tag_plugin_a-id3tag.Po@am__quote@
@@ -475,72 +404,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`
-
-libid3_a-id3.o: id3.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libid3_a_CFLAGS) $(CFLAGS) -MT libid3_a-id3.o -MD -MP -MF "$(DEPDIR)/libid3_a-id3.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libid3_a-id3.o `test -f 'id3.c' || echo '$(srcdir)/'`id3.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libid3_a-id3.Tpo" "$(DEPDIR)/libid3_a-id3.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libid3_a-id3.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='id3.c' object='libid3_a-id3.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libid3_a-id3.Po' tmpdepfile='$(DEPDIR)/libid3_a-id3.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libid3_a_CFLAGS) $(CFLAGS) -c -o libid3_a-id3.o `test -f 'id3.c' || echo '$(srcdir)/'`id3.c
-
-libid3_a-id3.obj: id3.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libid3_a_CFLAGS) $(CFLAGS) -MT libid3_a-id3.obj -MD -MP -MF "$(DEPDIR)/libid3_a-id3.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libid3_a-id3.obj `if test -f 'id3.c'; then $(CYGPATH_W) 'id3.c'; else $(CYGPATH_W) '$(srcdir)/id3.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libid3_a-id3.Tpo" "$(DEPDIR)/libid3_a-id3.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libid3_a-id3.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='id3.c' object='libid3_a-id3.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libid3_a-id3.Po' tmpdepfile='$(DEPDIR)/libid3_a-id3.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libid3_a_CFLAGS) $(CFLAGS) -c -o libid3_a-id3.obj `if test -f 'id3.c'; then $(CYGPATH_W) 'id3.c'; else $(CYGPATH_W) '$(srcdir)/id3.c'; fi`
-
-libid3_pic_a-id3.o: id3.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libid3_pic_a_CFLAGS) $(CFLAGS) -MT libid3_pic_a-id3.o -MD -MP -MF "$(DEPDIR)/libid3_pic_a-id3.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libid3_pic_a-id3.o `test -f 'id3.c' || echo '$(srcdir)/'`id3.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libid3_pic_a-id3.Tpo" "$(DEPDIR)/libid3_pic_a-id3.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libid3_pic_a-id3.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='id3.c' object='libid3_pic_a-id3.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libid3_pic_a-id3.Po' tmpdepfile='$(DEPDIR)/libid3_pic_a-id3.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libid3_pic_a_CFLAGS) $(CFLAGS) -c -o libid3_pic_a-id3.o `test -f 'id3.c' || echo '$(srcdir)/'`id3.c
-
-libid3_pic_a-id3.obj: id3.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libid3_pic_a_CFLAGS) $(CFLAGS) -MT libid3_pic_a-id3.obj -MD -MP -MF "$(DEPDIR)/libid3_pic_a-id3.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libid3_pic_a-id3.obj `if test -f 'id3.c'; then $(CYGPATH_W) 'id3.c'; else $(CYGPATH_W) '$(srcdir)/id3.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libid3_pic_a-id3.Tpo" "$(DEPDIR)/libid3_pic_a-id3.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libid3_pic_a-id3.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='id3.c' object='libid3_pic_a-id3.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libid3_pic_a-id3.Po' tmpdepfile='$(DEPDIR)/libid3_pic_a-id3.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libid3_pic_a_CFLAGS) $(CFLAGS) -c -o libid3_pic_a-id3.obj `if test -f 'id3.c'; then $(CYGPATH_W) 'id3.c'; else $(CYGPATH_W) '$(srcdir)/id3.c'; fi`
-
-libid3_plugin_a-id3.o: id3.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libid3_plugin_a_CFLAGS) $(CFLAGS) -MT libid3_plugin_a-id3.o -MD -MP -MF "$(DEPDIR)/libid3_plugin_a-id3.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libid3_plugin_a-id3.o `test -f 'id3.c' || echo '$(srcdir)/'`id3.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libid3_plugin_a-id3.Tpo" "$(DEPDIR)/libid3_plugin_a-id3.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libid3_plugin_a-id3.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='id3.c' object='libid3_plugin_a-id3.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libid3_plugin_a-id3.Po' tmpdepfile='$(DEPDIR)/libid3_plugin_a-id3.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libid3_plugin_a_CFLAGS) $(CFLAGS) -c -o libid3_plugin_a-id3.o `test -f 'id3.c' || echo '$(srcdir)/'`id3.c
-
-libid3_plugin_a-id3.obj: id3.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libid3_plugin_a_CFLAGS) $(CFLAGS) -MT libid3_plugin_a-id3.obj -MD -MP -MF "$(DEPDIR)/libid3_plugin_a-id3.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libid3_plugin_a-id3.obj `if test -f 'id3.c'; then $(CYGPATH_W) 'id3.c'; else $(CYGPATH_W) '$(srcdir)/id3.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libid3_plugin_a-id3.Tpo" "$(DEPDIR)/libid3_plugin_a-id3.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libid3_plugin_a-id3.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='id3.c' object='libid3_plugin_a-id3.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libid3_plugin_a-id3.Po' tmpdepfile='$(DEPDIR)/libid3_plugin_a-id3.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libid3_plugin_a_CFLAGS) $(CFLAGS) -c -o libid3_plugin_a-id3.obj `if test -f 'id3.c'; then $(CYGPATH_W) 'id3.c'; else $(CYGPATH_W) '$(srcdir)/id3.c'; fi`
 
 libid3tag_a-id3tag.o: id3tag.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libid3tag_a_CFLAGS) $(CFLAGS) -MT libid3tag_a-id3tag.o -MD -MP -MF "$(DEPDIR)/libid3tag_a-id3tag.Tpo" \
@@ -608,24 +471,6 @@ libid3tag_plugin_a-id3tag.obj: id3tag.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libid3tag_plugin_a_CFLAGS) $(CFLAGS) -c -o libid3tag_plugin_a-id3tag.obj `if test -f 'id3tag.c'; then $(CYGPATH_W) 'id3tag.c'; else $(CYGPATH_W) '$(srcdir)/id3tag.c'; fi`
 uninstall-info-am:
-libid3DATA_INSTALL = $(INSTALL_DATA)
-install-libid3DATA: $(libid3_DATA)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(libid3dir)
-	@list='$(libid3_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " $(libid3DATA_INSTALL) $$d$$p $(DESTDIR)$(libid3dir)/$$f"; \
-	  $(libid3DATA_INSTALL) $$d$$p $(DESTDIR)$(libid3dir)/$$f; \
-	done
-
-uninstall-libid3DATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(libid3_DATA)'; for p in $$list; do \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " rm -f $(DESTDIR)$(libid3dir)/$$f"; \
-	  rm -f $(DESTDIR)$(libid3dir)/$$f; \
-	done
 libid3tagDATA_INSTALL = $(INSTALL_DATA)
 install-libid3tagDATA: $(libid3tag_DATA)
 	@$(NORMAL_INSTALL)
@@ -819,7 +664,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libid3dir) $(DESTDIR)$(libid3tagdir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libid3tagdir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -866,8 +711,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-libid3DATA install-libid3tagDATA \
-	install-libvlcLIBRARIES
+install-data-am: install-libid3tagDATA install-libvlcLIBRARIES
 
 install-exec-am:
 
@@ -894,8 +738,8 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libid3DATA \
-	uninstall-libid3tagDATA uninstall-libvlcLIBRARIES
+uninstall-am: uninstall-info-am uninstall-libid3tagDATA \
+	uninstall-libvlcLIBRARIES
 
 uninstall-info: uninstall-info-recursive
 
@@ -908,17 +752,16 @@ uninstall-info: uninstall-info-recursive
 	install-data install-data-am install-data-recursive \
 	install-exec install-exec-am install-exec-recursive \
 	install-info install-info-am install-info-recursive \
-	install-libid3DATA install-libid3tagDATA \
-	install-libvlcLIBRARIES install-man install-recursive \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am installdirs-recursive maintainer-clean \
-	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-recursive \
-	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
-	tags-recursive uninstall uninstall-am uninstall-info-am \
-	uninstall-info-recursive uninstall-libid3DATA \
-	uninstall-libid3tagDATA uninstall-libvlcLIBRARIES \
-	uninstall-recursive
+	install-libid3tagDATA install-libvlcLIBRARIES install-man \
+	install-recursive install-strip installcheck installcheck-am \
+	installdirs installdirs-am installdirs-recursive \
+	maintainer-clean maintainer-clean-generic \
+	maintainer-clean-recursive mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
+	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
+	uninstall uninstall-am uninstall-info-am \
+	uninstall-info-recursive uninstall-libid3tagDATA \
+	uninstall-libvlcLIBRARIES uninstall-recursive
 
 
 clean-local:
@@ -927,17 +770,11 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in id3 id3tag; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in id3 id3tag; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in id3 id3tag; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in id3tag; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in id3tag; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in id3tag; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
-libid3_plugin$(LIBEXT): $(libid3_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage id3` in \
-	  c++) echo $(CXXLINK) $(libid3_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin id3\` ; $(CXXLINK) $(libid3_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin id3` ;; \
-	  objc) echo $(OBJCLINK) $(libid3_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin id3\` ; $(OBJCLINK) $(libid3_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin id3` ;; \
-	  c|*) echo $(LINK) $(libid3_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin id3\` ; $(LINK) $(libid3_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin id3` ;; \
-	esac
 libid3tag_plugin$(LIBEXT): $(libid3tag_plugin_a_OBJECTS)
 	@case `$(VLC_CONFIG) --linkage id3tag` in \
 	  c++) echo $(CXXLINK) $(libid3tag_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin id3tag\` ; $(CXXLINK) $(libid3tag_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin id3tag` ;; \

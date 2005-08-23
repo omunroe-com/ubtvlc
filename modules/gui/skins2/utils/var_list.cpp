@@ -2,7 +2,7 @@
  * var_list.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: var_list.cpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: var_list.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

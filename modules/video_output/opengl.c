@@ -2,10 +2,11 @@
  * opengl.c: OpenGL video output
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: opengl.c 8950 2004-10-07 22:05:34Z hartman $
+ * $Id: opengl.c 11514 2005-06-24 20:14:28Z hartman $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *          Gildas Bazin <gbazin@videolan.org>
+ *          Eric Petit <titer@m0k.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,7 +95,15 @@ static int SendEvents( vlc_object_t *, char const *,
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
-#define EFFECT_TEXT N_("Effect")
+#define SPEED_TEXT N_( "OpenGL cube rotation speed" )
+/*****************************************************************************
+ * Module descriptor
+ *****************************************************************************/
+#define SPEED_TEXT N_( "OpenGL cube rotation speed" )
+#define SPEED_LONGTEXT N_( "If the OpenGL cube effect is enabled, this " \
+                           "controls its rotation speed." )
+
+#define EFFECT_TEXT N_("Select effect")
 #define EFFECT_LONGTEXT N_( \
     "Allows you to select different visual effects.")
 
@@ -104,17 +113,21 @@ static char *ppsz_effects_text[] = {
         N_("None"), N_("Cube"), N_("Transparent Cube") };
 
 vlc_module_begin();
+    set_shortname( "OpenGL" );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VOUT );
     set_description( _("OpenGL video output") );
 #ifdef SYS_DARWIN
-    set_capability( "video output", 0 );
+    set_capability( "video output", 200 );
 #else
     set_capability( "video output", 20 );
 #endif
     add_shortcut( "opengl" );
+    add_float( "opengl-cube-speed", 2.0, NULL, SPEED_TEXT,
+                    SPEED_LONGTEXT, VLC_TRUE );
     set_callbacks( CreateVout, DestroyVout );
-
     add_string( "opengl-effect", "none", NULL, EFFECT_TEXT,
-                 EFFECT_LONGTEXT, VLC_TRUE );
+                 EFFECT_LONGTEXT, VLC_FALSE );
         change_string_list( ppsz_effects, ppsz_effects_text, 0 );
 vlc_module_end();
 
@@ -135,6 +148,8 @@ struct vout_sys_t
     GLuint      p_textures[2];
 
     int         i_effect;
+
+    float       f_speed;
 };
 
 /*****************************************************************************
@@ -155,6 +170,7 @@ static int CreateVout( vlc_object_t *p_this )
 
     var_Create( p_vout, "opengl-effect", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
 
+    p_sys->i_index = 0;
 #ifdef SYS_DARWIN
     p_sys->i_tex_width  = p_vout->render.i_width;
     p_sys->i_tex_height = p_vout->render.i_height;
@@ -195,6 +211,8 @@ static int CreateVout( vlc_object_t *p_this )
         vlc_object_destroy( p_sys->p_vout );
         return VLC_ENOOBJ;
     }
+
+    p_sys->f_speed = var_CreateGetFloat( p_vout, "opengl-cube-speed" );
 
     p_vout->pf_init = Init;
     p_vout->pf_end = End;
@@ -300,6 +318,13 @@ static int Init( vout_thread_t *p_vout )
 
     I_OUTPUTPICTURES = 1;
 
+    if( p_sys->p_vout->pf_lock &&
+        p_sys->p_vout->pf_lock( p_sys->p_vout ) )
+    {
+        msg_Warn( p_vout, "could not lock OpenGL provider" );
+        return 0;
+    }
+
     InitTextures( p_vout );
 
     glDisable(GL_BLEND);
@@ -349,6 +374,11 @@ static int Init( vout_thread_t *p_vout )
         glTranslatef( 0.0, 0.0, - 5.0 );
     }
 
+    if( p_sys->p_vout->pf_unlock )
+    {
+        p_sys->p_vout->pf_unlock( p_sys->p_vout );
+    }
+
     return 0;
 }
 
@@ -357,8 +387,22 @@ static int Init( vout_thread_t *p_vout )
  *****************************************************************************/
 static void End( vout_thread_t *p_vout )
 {
+    vout_sys_t *p_sys = p_vout->p_sys;
+
+    if( p_sys->p_vout->pf_lock &&
+        p_sys->p_vout->pf_lock( p_sys->p_vout ) )
+    {
+        msg_Warn( p_vout, "could not lock OpenGL provider" );
+        return;
+    }
+
     glFinish();
     glFlush();
+
+    if( p_sys->p_vout->pf_unlock )
+    {
+        p_sys->p_vout->pf_unlock( p_sys->p_vout );
+    }
 }
 
 /*****************************************************************************
@@ -400,6 +444,13 @@ static int Manage( vout_thread_t *p_vout )
     p_vout->i_changes = p_sys->p_vout->i_changes;
 
 #ifdef SYS_DARWIN
+    if( p_sys->p_vout->pf_lock &&
+        p_sys->p_vout->pf_lock( p_sys->p_vout ) )
+    {
+        msg_Warn( p_vout, "could not lock OpenGL provider" );
+        return i_ret;
+    }
+
     /* On OS X, we create the window and the GL view when entering
        fullscreen - the textures have to be inited again */
     if( i_fullscreen_change )
@@ -431,6 +482,11 @@ static int Manage( vout_thread_t *p_vout )
             glTranslatef( 0.0, 0.0, - 5.0 );
         }
     }
+
+    if( p_sys->p_vout->pf_unlock )
+    {
+        p_sys->p_vout->pf_unlock( p_sys->p_vout );
+    }
 #endif
 
     return i_ret;
@@ -442,19 +498,6 @@ static int Manage( vout_thread_t *p_vout )
 static void Render( vout_thread_t *p_vout, picture_t *p_pic )
 {
     vout_sys_t *p_sys = p_vout->p_sys;
-    float f_width, f_height;
-
-    /* glTexCoord works differently with GL_TEXTURE_2D and
-       GL_TEXTURE_RECTANGLE_EXT */
-#ifdef SYS_DARWIN
-    f_width = (float)p_vout->output.i_width;
-    f_height = (float)p_vout->output.i_height;
-#else
-    f_width = (float)p_vout->output.i_width / p_sys->i_tex_width;
-    f_height = (float)p_vout->output.i_height / p_sys->i_tex_height;
-#endif
-
-    glClear( GL_COLOR_BUFFER_BIT );
 
     /* On Win32/GLX, we do this the usual way:
        + Fill the buffer with new content,
@@ -473,84 +516,42 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
        OS X, we first render, then reload the texture to be used next
        time. */
 
-#ifdef SYS_DARWIN
-    glBindTexture( VLCGL_TARGET, p_sys->p_textures[p_sys->i_index] );
-#else
+    if( p_sys->p_vout->pf_lock &&
+        p_sys->p_vout->pf_lock( p_sys->p_vout ) )
+    {
+        msg_Warn( p_vout, "could not lock OpenGL provider" );
+        return;
+    }
 
+#ifdef SYS_DARWIN
+    int i_new_index;
+    i_new_index = ( p_sys->i_index + 1 ) & 1;
+
+
+    /* Update the texture */
+    glBindTexture( VLCGL_TARGET, p_sys->p_textures[i_new_index] );
+    glTexSubImage2D( VLCGL_TARGET, 0, 0, 0, p_sys->i_tex_width,
+                     p_sys->i_tex_height, VLCGL_FORMAT, VLCGL_TYPE,
+                     p_sys->pp_buffer[i_new_index] );
+
+    /* Bind to the previous texture for drawing */
+    glBindTexture( VLCGL_TARGET, p_sys->p_textures[p_sys->i_index] );
+
+    /* Switch buffers */
+    p_sys->i_index = i_new_index;
+    p_pic->p->p_pixels = p_sys->pp_buffer[p_sys->i_index];
+
+#else
     /* Update the texture */
     glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0,
                      p_vout->render.i_width, p_vout->render.i_height,
                      VLCGL_RGB_FORMAT, VLCGL_RGB_TYPE, p_sys->pp_buffer[0] );
 #endif
 
-    if( p_sys->i_effect == OPENGL_EFFECT_NONE )
+    if( p_sys->p_vout->pf_unlock )
     {
-        glEnable( VLCGL_TARGET );
-        glBegin( GL_POLYGON );
-        glTexCoord2f( 0.0, 0.0 ); glVertex2f( -1.0, 1.0 );
-        glTexCoord2f( f_width, 0.0 ); glVertex2f( 1.0, 1.0 );
-        glTexCoord2f( f_width, f_height ); glVertex2f( 1.0, -1.0 );
-        glTexCoord2f( 0.0, f_height ); glVertex2f( -1.0, -1.0 );
-        glEnd();
+        p_sys->p_vout->pf_unlock( p_sys->p_vout );
     }
-    else
-    {
-        glRotatef( 1.0, 0.3, 0.5, 0.7 );
-
-        glEnable( VLCGL_TARGET );
-        glBegin( GL_QUADS );
-
-        /* Front */
-        glTexCoord2f( 0, 0 ); glVertex3f( - 1.0, 1.0, 1.0 );
-        glTexCoord2f( 0, f_height ); glVertex3f( - 1.0, - 1.0, 1.0 );
-        glTexCoord2f( f_width, f_height ); glVertex3f( 1.0, - 1.0, 1.0 );
-        glTexCoord2f( f_width, 0 ); glVertex3f( 1.0, 1.0, 1.0 );
-
-        /* Left */
-        glTexCoord2f( 0, 0 ); glVertex3f( - 1.0, 1.0, - 1.0 );
-        glTexCoord2f( 0, f_height ); glVertex3f( - 1.0, - 1.0, - 1.0 );
-        glTexCoord2f( f_width, f_height ); glVertex3f( - 1.0, - 1.0, 1.0 );
-        glTexCoord2f( f_width, 0 ); glVertex3f( - 1.0, 1.0, 1.0 );
-
-        /* Back */
-        glTexCoord2f( 0, 0 ); glVertex3f( 1.0, 1.0, - 1.0 );
-        glTexCoord2f( 0, f_height ); glVertex3f( 1.0, - 1.0, - 1.0 );
-        glTexCoord2f( f_width, f_height ); glVertex3f( - 1.0, - 1.0, - 1.0 );
-        glTexCoord2f( f_width, 0 ); glVertex3f( - 1.0, 1.0, - 1.0 );
-
-        /* Right */
-        glTexCoord2f( 0, 0 ); glVertex3f( 1.0, 1.0, 1.0 );
-        glTexCoord2f( 0, f_height ); glVertex3f( 1.0, - 1.0, 1.0 );
-        glTexCoord2f( f_width, f_height ); glVertex3f( 1.0, - 1.0, - 1.0 );
-        glTexCoord2f( f_width, 0 ); glVertex3f( 1.0, 1.0, - 1.0 );
-
-        /* Top */
-        glTexCoord2f( 0, 0 ); glVertex3f( - 1.0, 1.0, - 1.0 );
-        glTexCoord2f( 0, f_height ); glVertex3f( - 1.0, 1.0, 1.0 );
-        glTexCoord2f( f_width, f_height ); glVertex3f( 1.0, 1.0, 1.0 );
-        glTexCoord2f( f_width, 0 ); glVertex3f( 1.0, 1.0, - 1.0 );
-
-        /* Bottom */
-        glTexCoord2f( 0, 0 ); glVertex3f( - 1.0, - 1.0, 1.0 );
-        glTexCoord2f( 0, f_height ); glVertex3f( - 1.0, - 1.0, - 1.0 );
-        glTexCoord2f( f_width, f_height ); glVertex3f( 1.0, - 1.0, - 1.0 );
-        glTexCoord2f( f_width, 0 ); glVertex3f( 1.0, - 1.0, 1.0 );
-        glEnd();
-    }
-
-    glDisable( VLCGL_TARGET );
-
-#ifdef SYS_DARWIN
-    /* Switch buffers */
-    p_sys->i_index = ( p_sys->i_index + 1 ) & 1;
-    p_pic->p->p_pixels = p_sys->pp_buffer[p_sys->i_index];
-
-    /* Update the texture */
-    glBindTexture( VLCGL_TARGET, p_sys->p_textures[p_sys->i_index] );
-    glTexSubImage2D( VLCGL_TARGET, 0, 0, 0, p_sys->i_tex_width,
-                     p_sys->i_tex_height, VLCGL_FORMAT, VLCGL_TYPE,
-                     p_sys->pp_buffer[p_sys->i_index] );
-#endif
 }
 
 /*****************************************************************************
@@ -559,7 +560,90 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
 static void DisplayVideo( vout_thread_t *p_vout, picture_t *p_pic )
 {
     vout_sys_t *p_sys = p_vout->p_sys;
+    float f_width, f_height;
+
+    if( p_sys->p_vout->pf_lock &&
+        p_sys->p_vout->pf_lock( p_sys->p_vout ) )
+    {
+        msg_Warn( p_vout, "could not lock OpenGL provider" );
+        return;
+    }
+
+    /* glTexCoord works differently with GL_TEXTURE_2D and
+       GL_TEXTURE_RECTANGLE_EXT */
+#ifdef SYS_DARWIN
+    f_width = (float)p_vout->output.i_width;
+    f_height = (float)p_vout->output.i_height;
+#else
+    f_width = (float)p_vout->output.i_width / p_sys->i_tex_width;
+    f_height = (float)p_vout->output.i_height / p_sys->i_tex_height;
+#endif
+
+    /* Why drawing here and not in Render()? Because this way, the
+       OpenGL providers can call pf_display to force redraw. Currently,
+       the OS X provider uses it to get a smooth window resizing */
+
+    glClear( GL_COLOR_BUFFER_BIT );
+
+    if( p_sys->i_effect == OPENGL_EFFECT_NONE )
+    {
+        glEnable( VLCGL_TARGET );
+        glBegin( GL_POLYGON );
+        glTexCoord2f( 0.5, 0.5 ); glVertex2f( -1.0, 1.0 );
+        glTexCoord2f( f_width - 0.5, 0.5 ); glVertex2f( 1.0, 1.0 );
+        glTexCoord2f( f_width - 0.5, f_height - 0.5 ); glVertex2f( 1.0, -1.0 );
+        glTexCoord2f( 0.5, f_height - 0.5 ); glVertex2f( -1.0, -1.0 );
+        glEnd();
+    }
+    else
+    {
+        glRotatef( 0.5 * p_sys->f_speed , 0.3, 0.5, 0.7 );
+
+        glEnable( VLCGL_TARGET );
+        glBegin( GL_QUADS );
+
+        /* Front */
+        glTexCoord2f( 0.5, 0.5 ); glVertex3f( - 1.0, 1.0, 1.0 );
+        glTexCoord2f( 0.5, f_height - 0.5 ); glVertex3f( - 1.0, - 1.0, 1.0 );
+        glTexCoord2f( f_width - 0.5, f_height - 0.5 ); glVertex3f( 1.0, - 1.0, 1.0 );
+        glTexCoord2f( f_width - 0.5, 0.5 ); glVertex3f( 1.0, 1.0, 1.0 );
+
+        /* Left */
+        glTexCoord2f( 0.5, 0.5 ); glVertex3f( - 1.0, 1.0, - 1.0 );
+        glTexCoord2f( 0.5, f_height - 0.5 ); glVertex3f( - 1.0, - 1.0, - 1.0 );
+        glTexCoord2f( f_width - 0.5, f_height - 0.5 ); glVertex3f( - 1.0, - 1.0, 1.0 );
+        glTexCoord2f( f_width - 0.5, 0.5 ); glVertex3f( - 1.0, 1.0, 1.0 );
+
+        /* Back */
+        glTexCoord2f( 0.5, 0.5 ); glVertex3f( 1.0, 1.0, - 1.0 );
+        glTexCoord2f( 0.5, f_height - 0.5 ); glVertex3f( 1.0, - 1.0, - 1.0 );
+        glTexCoord2f( f_width - 0.5, f_height - 0.5 ); glVertex3f( - 1.0, - 1.0, - 1.0 );
+        glTexCoord2f( f_width - 0.5, 0.5 ); glVertex3f( - 1.0, 1.0, - 1.0 );
+
+        /* Right */
+        glTexCoord2f( 0.5, 0.5 ); glVertex3f( 1.0, 1.0, 1.0 );
+        glTexCoord2f( 0.5, f_height - 0.5 ); glVertex3f( 1.0, - 1.0, 1.0 );
+        glTexCoord2f( f_width - 0.5, f_height - 0.5 ); glVertex3f( 1.0, - 1.0, - 1.0 );
+        glTexCoord2f( f_width - 0.5, 0.5 ); glVertex3f( 1.0, 1.0, - 1.0 );
+
+        /* Top */
+        glTexCoord2f( 0.5, 0.5 ); glVertex3f( - 1.0, 1.0, - 1.0 );
+        glTexCoord2f( 0.5, f_height - 0.5 ); glVertex3f( - 1.0, 1.0, 1.0 );
+        glTexCoord2f( f_width - 0.5, f_height - 0.5 ); glVertex3f( 1.0, 1.0, 1.0 );
+        glTexCoord2f( 0.5, f_height - 0.5 ); glVertex3f( - 1.0, - 1.0, - 1.0 );
+        glTexCoord2f( f_width - 0.5, f_height - 0.5 ); glVertex3f( 1.0, - 1.0, - 1.0 );
+        glTexCoord2f( f_width - 0.5, 0.5 ); glVertex3f( 1.0, - 1.0, 1.0 );
+        glEnd();
+    }
+
+    glDisable( VLCGL_TARGET );
+
     p_sys->p_vout->pf_swap( p_sys->p_vout );
+
+    if( p_sys->p_vout->pf_unlock )
+    {
+        p_sys->p_vout->pf_unlock( p_sys->p_vout );
+    }
 }
 
 int GetAlignedSize( int i_size )
@@ -580,10 +664,17 @@ static int Control( vout_thread_t *p_vout, int i_query, va_list args )
 {
     vout_sys_t *p_sys = p_vout->p_sys;
 
-    if( p_sys->p_vout->pf_control )
-        return p_sys->p_vout->pf_control( p_sys->p_vout, i_query, args );
-    else
+    switch( i_query )
+    {
+    case VOUT_SNAPSHOT:
         return vout_vaControlDefault( p_vout, i_query, args );
+
+    default:
+        if( p_sys->p_vout->pf_control )
+            return p_sys->p_vout->pf_control( p_sys->p_vout, i_query, args );
+        else
+            return vout_vaControlDefault( p_vout, i_query, args );
+    }
 }
 
 static int InitTextures( vout_thread_t *p_vout )
@@ -601,12 +692,12 @@ static int InitTextures( vout_thread_t *p_vout )
         /* Set the texture parameters */
         glTexParameterf( VLCGL_TARGET, GL_TEXTURE_PRIORITY, 1.0 );
     
+        glTexParameteri( VLCGL_TARGET, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+        glTexParameteri( VLCGL_TARGET, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+        
         glTexParameteri( VLCGL_TARGET, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
         glTexParameteri( VLCGL_TARGET, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-    
-        glTexParameteri( VLCGL_TARGET, GL_TEXTURE_WRAP_S, GL_CLAMP );
-        glTexParameteri( VLCGL_TARGET, GL_TEXTURE_WRAP_T, GL_CLAMP );
-    
+
         glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
 #ifdef SYS_DARWIN

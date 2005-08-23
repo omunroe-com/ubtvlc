@@ -1,0 +1,50 @@
+diff -ru libdvdread-orig/dvdread/bswap.h libdvdread/dvdread/bswap.h
+--- libdvdread-orig/dvdread/bswap.h	Sat Mar 12 16:42:18 2005
++++ libdvdread/dvdread/bswap.h	Sat Mar 12 16:42:25 2005
+@@ -65,7 +65,7 @@
+  * functionality! 
+  */
+ 
+-#elif defined(__FreeBSD__) || defined(__sun) || defined(__bsdi__)
++#elif defined(__FreeBSD__) || defined(__sun) || defined(__bsdi__) || defined( __BEOS__ )
+ #define B2N_16(x) \
+  x = ((((x) & 0xff00) >> 8) | \
+       (((x) & 0x00ff) << 8))
+diff -ru libdvdread-orig/dvdread/dvd_reader.c libdvdread/dvdread/dvd_reader.c
+--- libdvdread-orig/dvdread/dvd_reader.c	Sat Mar 12 16:42:18 2005
++++ libdvdread/dvdread/dvd_reader.c	Sat Mar 12 16:48:29 2005
+@@ -344,14 +344,16 @@
+ 
+ 	/* Resolve any symlinks and get the absolut dir name. */
+ 	{
++	    char *current_path;
+ 	    char *new_path;
+-	    int cdir = open( ".", O_RDONLY );
+-	    
+-	    if( cdir >= 0 ) {
++
++	    current_path = getcwd( NULL, PATH_MAX );
++	    if( current_path ) {
+ 		chdir( path_copy );
+ 		new_path = getcwd( NULL, PATH_MAX );
+-		fchdir( cdir );
+-		close( cdir );
++		chdir( current_path );
++		free( current_path );
++
+ 		if( new_path ) {
+ 		    free( path_copy );
+ 		    path_copy = new_path;
+@@ -504,10 +506,12 @@
+             sprintf( filename, "%s%s%s", path,
+                      ( ( path[ strlen( path ) - 1 ] == '/' ) ? "" : "/" ),
+                      ent->d_name );
++            closedir( dir );
+             return 0;
+         }
+     }
+ 
++    closedir( dir );
+     return -1;
+ }
+ 

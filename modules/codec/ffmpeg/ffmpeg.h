@@ -2,7 +2,7 @@
  * ffmpeg.h: decoder using the ffmpeg library
  *****************************************************************************
  * Copyright (C) 2001 VideoLAN
- * $Id: ffmpeg.h 8806 2004-09-26 13:39:00Z gbazin $
+ * $Id: ffmpeg.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *

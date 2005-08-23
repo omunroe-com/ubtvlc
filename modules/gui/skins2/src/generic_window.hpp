@@ -2,7 +2,7 @@
  * generic_window.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: generic_window.hpp 9320 2004-11-14 17:32:25Z ipkiss $
+ * $Id: generic_window.hpp 9319 2004-11-14 17:29:39Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

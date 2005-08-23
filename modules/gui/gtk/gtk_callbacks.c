@@ -2,7 +2,7 @@
  * gtk_callbacks.c : Callbacks for the Gtk+ plugin.
  *****************************************************************************
  * Copyright (C) 2000, 2001, 2003 VideoLAN
- * $Id: gtk_callbacks.c 7950 2004-06-07 21:53:03Z fenrir $
+ * $Id: gtk_callbacks.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *          Stéphane Borel <stef@via.ecp.fr>

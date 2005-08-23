@@ -83,8 +83,8 @@ ffmpeg -i mydivx.avi -o hugefile.yuv
 ffmpeg -i /tmp/a.wav -s 640x480 -i /tmp/a.yuv /tmp/a.mpg
 @end example
 
-Convert the audio file a.wav and the raw yuv video file a.yuv
-to mpeg file a.mpg
+Convert the audio file a.wav and the raw YUV video file a.yuv
+to MPEG file a.mpg
 
 * You can also do audio and video conversions at the same time:
 
@@ -190,7 +190,7 @@ set the copyright
 set the comment
 
 @item -target type
-specify target file type ("vcd", "svcd", "dvd", "pal-vcd", "ntsc-svcd", ... ). All the format
+specify target file type ("vcd", "svcd", "dvd", "dv", "pal-vcd", "ntsc-svcd", ... ). All the format
 options (bitrate, codecs, buffer sizes) are automatically set by this
 option. You can just type:
 
@@ -258,7 +258,7 @@ set left pad band size (in pixels)
 set right pad band size (in pixels)
 @item -padcolor (hex color)
 set color of padded bands. The value for pad color is expressed 
-as a six digit hexidecimal number where the first two digits represent red, 
+as a six digit hexadecimal number where the first two digits represent red, 
 middle two digits green and last two digits blue. Defaults to 000000 (black)
 @item -vn
 disable video recording
@@ -269,7 +269,7 @@ set max video bitrate tolerance (in kbit/s)
 @item -minrate bitrate
 set min video bitrate tolerance (in kbit/s)
 @item -bufsize size
-set ratecontrol buffere size (in kbit)
+set ratecontrol buffer size (in kbit)
 @item -vcodec codec       
 force video codec to @var{codec}. Use the @code{copy} special value to
 tell that the raw codec data must be copied as is.
@@ -338,7 +338,7 @@ exhaustive search (slow and marginally better than epzs)
 @end table
 
 @item -dct_algo algo
-set dct algorithm to @var{algo}. Available values are:
+set DCT algorithm to @var{algo}. Available values are:
 @table @samp
 @item 0
 FF_DCT_AUTO (default)
@@ -355,7 +355,7 @@ FF_DCT_ALTIVEC
 @end table
 
 @item -idct_algo algo
-set idct algorithm to @var{algo}. Available values are:
+set IDCT algorithm to @var{algo}. Available values are:
 @table @samp
 @item 0
 FF_IDCT_AUTO (default)
@@ -414,7 +414,7 @@ FF_MB_DECISION_SIMPLE: use mb_cmp (cannot change it yet in ffmpeg)
 @item 1
 FF_MB_DECISION_BITS: chooses the one which needs the fewest bits
 @item 2
-FF_MB_DECISION_RD: rate distoration
+FF_MB_DECISION_RD: rate distortion
 @end table
 
 @item -4mv
@@ -424,7 +424,7 @@ use data partitioning (only MPEG-4)
 @item -bug param
 workaround not auto detected encoder bugs
 @item -strict strictness
-how strictly to follow the standarts
+how strictly to follow the standards
 @item -aic
 enable Advanced intra coding (h263+)
 @item -umv
@@ -451,7 +451,7 @@ name and its parameters separated by spaces.
 
 @table @option
 @item -ar freq    
-set the audio sampling freq (default = 44100 Hz)
+set the audio sampling frequency (default = 44100 Hz)
 @item -ab bitrate 
 set the audio bitrate in kbit/s (default = 64)
 @item -ac channels
@@ -498,6 +498,9 @@ read input at native frame rate. Mainly used to simulate a grab device.
 @item -loop
 loop over the input stream. Currently it works only for image
 streams. This option is used for ffserver automatic testing.
+@item -loop_output number_of_times
+Repeatedly loop output for formats that support looping such as animated GIF
+(Zero will loop the output infinitely)
 @end table
 
 @node FFmpeg formula evaluator
@@ -566,7 +569,7 @@ The following constants are available:
 @settitle FFmpeg video converter
 
 @c man begin SEEALSO
-ffserver(1), ffplay(1) and the html documentation of @file{ffmpeg}.
+ffserver(1), ffplay(1) and the HTML documentation of @file{ffmpeg}.
 @c man end
 
 @c man begin AUTHOR
@@ -592,7 +595,7 @@ video player it will also be used for streaming :-)
 
 @itemize
 @item For streaming at very low bit rate application, use a low frame rate
-and a small gop size. This is especially true for real video where
+and a small GOP size. This is especially true for real video where
 the Linux player does not seem to be very fast, so it can miss
 frames. An example is:
 
@@ -614,7 +617,7 @@ completely motion estimation (you have only I frames, which means it
 is about as good as JPEG compression).
 
 @item To have very low bitrates in audio, reduce the sampling frequency
-(down to 22050 kHz for mpeg audio, 22050 or 11025 for ac3).
+(down to 22050 kHz for MPEG audio, 22050 or 11025 for AC3).
 
 @item To have a constant quality (but a variable bitrate), use the option
 '-qscale n' when 'n' is between 1 (excellent quality) and 31 (worst
@@ -657,11 +660,12 @@ library:
 @item Raw MPEG video @tab X  @tab  X 
 @item Raw PCM8/16 bits, mulaw/Alaw@tab X  @tab  X 
 @item Raw CRI ADX audio @tab X  @tab  X 
+@item Raw Shorten audio @tab    @tab  X 
 @item SUN AU format @tab X  @tab  X 
 @item NUT @tab X @tab X @tab NUT Open Container Format
-@item Quicktime        @tab X @tab  X 
+@item QuickTime        @tab X @tab  X 
 @item MPEG4            @tab X @tab  X 
-@tab MPEG4 is a variant of Quicktime
+@tab MPEG4 is a variant of QuickTime
 @item Raw MPEG4 video  @tab  X @tab  X 
 @item DV               @tab  X @tab  X
 @item 4xm              @tab    @tab X
@@ -686,9 +690,10 @@ library:
 @item Sierra Online    @tab    @tab X
 @tab .sol files used in Sierra Online games
 @item Matroska         @tab    @tab X
-@end multitable
 @item Electronic Arts Multimedia    @tab    @tab X
 @tab used in various EA games; files have extensions like WVE and UV2
+@item Nullsoft Video (NSV) format @tab    @tab X
+@end multitable
 
 @code{X} means that the encoding (resp. decoding) is supported.
 
@@ -717,10 +722,10 @@ following image formats are supported:
 @item Supported Codec @tab Encoding @tab Decoding @tab Comments
 @item MPEG1 video            @tab  X  @tab  X
 @item MPEG2 video            @tab  X  @tab  X 
-@item MPEG4                  @tab  X  @tab  X @tab Also known as DIVX4/5
+@item MPEG4                  @tab  X  @tab  X @tab Also known as DivX4/5
 @item MSMPEG4 V1             @tab  X  @tab  X
 @item MSMPEG4 V2             @tab  X  @tab  X
-@item MSMPEG4 V3             @tab  X  @tab  X @tab Also known as DIVX3
+@item MSMPEG4 V3             @tab  X  @tab  X @tab Also known as DivX3
 @item WMV7                   @tab  X  @tab  X
 @item WMV8                   @tab  X  @tab  X @tab Not completely working
 @item H.261                  @tab  X  @tab  X
@@ -741,7 +746,7 @@ following image formats are supported:
 @item Sorenson Video 3       @tab     @tab  X @tab fourcc: SVQ3
 @item On2 VP3                @tab     @tab  X @tab still experimental
 @item Theora                 @tab     @tab  X @tab still experimental
-@item Intel Indeo 3          @tab     @tab  X @tab only works on i386 right now
+@item Intel Indeo 3          @tab     @tab  X
 @item FLV                    @tab  X  @tab  X @tab Sorenson H.263 used in Flash
 @item ATI VCR1               @tab     @tab  X @tab fourcc: VCR1
 @item ATI VCR2               @tab     @tab  X @tab fourcc: VCR2
@@ -769,6 +774,11 @@ following image formats are supported:
 @item TechSmith Camtasia     @tab     @tab  X @tab fourcc: TSCC
 @item IBM Ultimotion         @tab     @tab  X @tab fourcc: ULTI
 @item Miro VideoXL           @tab     @tab  X @tab fourcc: VIXL
+@item QPEG                   @tab     @tab  X @tab fourccs: QPEG, Q1.0, Q1.1
+@item LOCO                   @tab     @tab  X @tab 
+@item Winnov WNV1            @tab     @tab  X @tab 
+@item Autodesk Animator Studio Codec  @tab     @tab  X @tab fourcc: AASC
+@item Fraps FPS1             @tab     @tab  X @tab 
 @end multitable
 
 @code{X} means that the encoding (resp. decoding) is supported.
@@ -815,7 +825,7 @@ solutions.
 @item RA288                  @tab      @tab X
 @tab Real 28800 bit/s codec
 @item RADnet                 @tab X    @tab IX
-@tab Real lowbitrate AC3 codec, liba52 is used for decoding
+@tab Real low bitrate AC3 codec, liba52 is used for decoding
 @item AMR-NB                 @tab X    @tab X
 @tab supported through an external library
 @item AMR-WB                 @tab X    @tab X
@@ -831,7 +841,10 @@ solutions.
 @tab used in Sierra Online game audio files
 @item Apple MACE 3           @tab      @tab X
 @item Apple MACE 6           @tab      @tab X
-@item FLAC                   @tab      @tab X
+@item FLAC lossless audio    @tab      @tab X
+@item Shorten lossless audio @tab      @tab X
+@item Apple lossless audio   @tab      @tab X
+@tab QuickTime fourcc 'alac'
 @item FFmpeg Sonic           @tab X    @tab X
 @tab Experimental lossy/lossless codec
 @end multitable
@@ -913,13 +926,13 @@ Then configure ffmpeg with the following options:
 @example
 ./configure --enable-mingw32 --cross-prefix=i386-mingw32msvc-
 @end example
-(you can change the cross-prefix according to the prefix choosen for the
+(you can change the cross-prefix according to the prefix chosen for the
 MinGW tools).
 
 Then you can easily test ffmpeg with wine
 (@url{http://www.winehq.com/}).
 
-@section MacOS X
+@section Mac OS X
 
 @section BeOS
 
@@ -936,7 +949,7 @@ however I still didn't tested building on net_server version of BeOS.
 
 ffserver is broken (needs poll() implementation).
 
-There is still issues with errno codes, which are negative in BeOs, and
+There is still issues with errno codes, which are negative in BeOS, and
 that ffmpeg negates when returning. This ends up turning errors into 
 valid results, then crashes.
 (To be fixed)
@@ -979,18 +992,18 @@ the @samp{inline} keyword;
 @item
 designated struct initializers (@samp{struct s x = @{ .i = 17 @};})
 @item
-compound literals (@samp{x = (struct s) { 17, 23 @};})
+compound literals (@samp{x = (struct s) @{ 17, 23 @};})
 @end itemize
 
 These features are supported by all compilers we care about, so we won't
 accept patches to remove their use unless they absolutely don't impair
 clarity and performance.
 
-All code must compile with gcc 2.95 and gcc 3.3. Currently, ffmpeg also
+All code must compile with GCC 2.95 and GCC 3.3. Currently, ffmpeg also
 compiles with several other compilers, such as the Compaq ccc compiler
 or Sun Studio 9, and we would like to keep it that way unless it would
 be exceedingly involved. To ensure compatibility, please don't use any
-additional C99 features or gcc extensions. Watch out especially for:
+additional C99 features or GCC extensions. Watch out especially for:
 @itemize @bullet
 @item
 mixing statements and declarations;
@@ -999,7 +1012,7 @@ mixing statements and declarations;
 @item
 @samp{__attribute__} not protected by @samp{#ifdef __GNUC__} or similar;
 @item
-gcc statement expressions (@samp{(x = (@{ int y = 4; y; @})}).
+GCC statement expressions (@samp{(x = (@{ int y = 4; y; @})}).
 @end itemize
 
 Indent size is 4. The TAB character should not be used.
@@ -1011,33 +1024,33 @@ bugs).
 Comments: use the JavaDoc/Doxygen 
 format (see examples below) so that a documentation
 can be generated automatically. All non trivial functions should have a comment
-above it explaining what the function does, even if its just one sentance.
+above it explaining what the function does, even if its just one sentence.
 All Structures and their member variables should be documented too.
 @example
 /**
- * @file mpeg.c
+ * @@file mpeg.c
  * mpeg codec.
- * @author ...
+ * @@author ...
  */
 
 /**
- * Summary sentance.
+ * Summary sentence.
  * more text ...
  * ...
  */
-typedef struct Foobar{
+typedef struct Foobar@{
     int var1; /**< var1 description */
     int var2; ///< var2 description
     /** var3 description */
     int var3;
-} Foobar;
+@} Foobar;
 
 /**
- * Summary sentance.
+ * Summary sentence.
  * more text ...
  * ...
- * @param my_parameter description of my_parameter
- * @return return value description
+ * @@param my_parameter description of my_parameter
+ * @@return return value description
  */
 int myfunc(int my_parameter)
 ...
@@ -1046,6 +1059,96 @@ int myfunc(int my_parameter)
 fprintf and printf are forbidden in libavformat and libavcodec, 
 please use av_log() instead.
 
+@node CVS Policy
+@section CVS Policy
+
+@enumerate
+@item 
+   You must not commit code which breaks FFmpeg! (Meaning unfinished but
+   enabled code which breaks compilation or compiles but does not work. Or 
+   breaks the regression tests)
+   You can commit unfinished stuff (for testing etc), but it must be disabled
+   (#ifdef etc) by default so it does not interfere with other developers'
+   work.
+@item 
+   You don't have to over-test things. If it works for you, and you think it
+   should work for others, too, then commit. If your code has problems
+   (portability, exploits compiler bugs, unusual environment etc) they will be
+   reported and eventually fixed.
+@item 
+   Do not commit unrelated changes together, split them into self-contained
+   pieces.
+@item
+   Do not change behavior of the program (renaming options etc) without
+   first discussing it on the ffmpeg-devel mailing list. Do not remove
+   functionality from the code. Just improve!
+   
+   Note: Redundant code can be removed
+@item
+   Do not commit changes to the build system (Makefiles, configure script)
+   which change behavior, defaults etc, without asking first. The same
+   applies to compiler warning fixes, trivial looking fixes and to code
+   maintained by other developers. We usually have a reason for doing things
+   the way we do. Send your changes as patches to the ffmpeg-devel mailing
+   list, and if the code maintainers say OK, you may commit. This does not
+   apply to files you wrote and/or maintain.
+@item
+   We refuse source indentation and other cosmetic changes if they are mixed
+   with functional changes, such commits will be rejected and removed. Every
+   developer has his own indentation style, you should not change it. Of course
+   if you (re)write something, you can use your own style, even though we would
+   prefer if the indentation throughout ffmpeg would be consistent (Many projects
+   force a given indentation style - we don't.) If you really need to make
+   indentation changes (try to avoid this), separate them strictly from real
+   changes.
+
+   NOTE: If you had to put if()@{ .. @} over a large (> 5 lines) chunk of code,
+   then either do NOT change the indentation of the inner part within (don't 
+   move it to the right)! or do so in a separate commit
+@item
+   Always fill out the commit log message. Describe in a few lines what you
+   changed and why. You can refer to mailing list postings if you fix a
+   particular bug. Comments such as "fixed!" or "Changed it." are unacceptable.
+@item
+   If you apply a patch by someone else, include the name and email address in
+   the CVS log message. Since the ffmpeg-cvslog mailing list is publicly
+   archived you should add some SPAM protection to the email address. Send an
+   answer to ffmpeg-devel (or wherever you got the patch from) saying that
+   you applied the patch.
+@item
+   Do NOT commit to code actively maintained by others without permission. Send
+   a patch to ffmpeg-devel instead.
+@item
+    Subscribe to the ffmpeg-cvslog mailing list. The diffs of all CVS commits
+    are sent there and reviewed by all the other developers. Bugs and possible
+    improvements or general questions regarding commits are discussed there. We
+    expect you to react if problems with your code are uncovered.
+@item
+    Update the documentation if you change behavior or add features. If you are
+    unsure how best to do this, send a patch to ffmpeg-devel, the documentation
+    maintainer(s) will review and commit your stuff.
+@item
+    Revert a commit ONLY in case of a big blunder like committing something not
+    intended to be committed or committing a wrong file, the wrong version of a
+    patch, CVS policy violation or broken code and you are going to recommit the
+    right thing immediately.
+
+    Never revert changes made a long time ago or buggy code. Fix it in the
+    normal way instead.
+@item
+    Never write to not allocated memory, never write over the end of arrays, 
+    always check values read from some untrusted source before using them as index
+    into an array or otherwise risky things.
+@end enumerate
+
+We think our rules are not too hard. If you have comments, contact us.
+
+Note, these rules are mostly borrowed from the MPlayer project.
+
+@subsection Renaming/moving files or content of files
+  You CANNOT do that. Post a request for such a change to the mailing list
+  Do NOT remove & readd a file - it will kill the changelog!!!!
+
 @section Submitting patches
 
 First, (@pxref{Coding Rules}) above if you didn't yet.
@@ -1053,16 +1156,20 @@ First, (@pxref{Coding Rules}) above if you didn't yet.
 When you submit your patch, try to send a unified diff (diff '-up'
 option). I cannot read other diffs :-)
 
+Also please do not submit patches which contain several unrelated changes.
+Split them into individual self-contained patches; this makes reviewing 
+them much easier.
+
 Run the regression tests before submitting a patch so that you can
 verify that there are no big problems.
 
 Patches should be posted as base64 encoded attachments (or any other
 encoding which ensures that the patch wont be trashed during 
-transmission) to the ffmpeg-devel mailinglist, see 
-@url{http://lists.sourceforge.net/lists/listinfo/ffmpeg-devel}
+transmission) to the ffmpeg-devel mailing list, see 
+@url{http://www1.mplayerhq.hu/mailman/listinfo/ffmpeg-devel}
 
 It also helps quite a bit if you tell us what the patch does (for example
-'replaces lrint by lrintf') , and why (for example '*bsd isnt c99 compliant
+'replaces lrint by lrintf') , and why (for example '*bsd isn't C99 compliant
 and has no lrint()')
 
 We reply to all patches submitted and either apply or reject with some

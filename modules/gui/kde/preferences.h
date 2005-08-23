@@ -2,7 +2,7 @@
  * preferences.h: includes for the preferences window
  *****************************************************************************
  * Copyright (C) 2001 VideoLAN
- * $Id: preferences.h 6961 2004-03-05 17:34:23Z sam $
+ * $Id: preferences.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no> Mon Aug 12 2002
  *

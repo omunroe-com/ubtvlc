@@ -2,7 +2,7 @@
  * input_clock.c: Clock/System date convertions, stream management
  *****************************************************************************
  * Copyright (C) 1999-2004 VideoLAN
- * $Id: clock.c 8853 2004-09-29 18:14:31Z gbazin $
+ * $Id: clock.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *

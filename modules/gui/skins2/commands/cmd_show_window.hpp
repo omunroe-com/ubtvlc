@@ -2,7 +2,7 @@
  * cmd_show_window.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: cmd_show_window.hpp 8966 2004-10-10 10:08:44Z ipkiss $
+ * $Id: cmd_show_window.hpp 9934 2005-02-15 13:55:08Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

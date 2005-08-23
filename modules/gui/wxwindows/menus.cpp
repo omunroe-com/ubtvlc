@@ -2,7 +2,7 @@
  * menus.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: menus.cpp 8715 2004-09-16 14:31:14Z gbazin $
+ * $Id: menus.cpp 10730 2005-04-18 14:49:29Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -148,6 +148,8 @@ void PopupMenu( intf_thread_t *p_intf, wxWindow *p_parent,
 {
 #define MAX_POPUP_ITEMS 45
 
+    int minimal = config_GetInt( p_intf, "wxwin-minimal" );
+
     vlc_object_t *p_object, *p_input;
     char *ppsz_varnames[MAX_POPUP_ITEMS];
     int pi_objects[MAX_POPUP_ITEMS];
@@ -208,6 +210,8 @@ void PopupMenu( intf_thread_t *p_intf, wxWindow *p_parent,
         pi_objects[i++] = p_object->i_object_id;
         ppsz_varnames[i] = "directx-wallpaper";
         pi_objects[i++] = p_object->i_object_id;
+        ppsz_varnames[i] = "video-snapshot";
+        pi_objects[i++] = p_object->i_object_id;
 
         p_dec_obj = (vlc_object_t *)vlc_object_find( p_object,
                                                      VLC_OBJECT_DECODER,
@@ -251,8 +255,10 @@ void PopupMenu( intf_thread_t *p_intf, wxWindow *p_parent,
                                                 FIND_PARENT );
     if( p_object != NULL )
     {
+#if (wxCHECK_VERSION(2,5,0))
         ppsz_varnames[i] = "intf-switch";
         pi_objects[i++] = p_object->i_object_id;
+#endif
         ppsz_varnames[i] = "intf-add";
         pi_objects[i++] = p_object->i_object_id;
         ppsz_varnames[i] = "intf-skins";
@@ -270,9 +276,12 @@ void PopupMenu( intf_thread_t *p_intf, wxWindow *p_parent,
     {
         vlc_value_t val;
         popupmenu.InsertSeparator( 0 );
+        if (!minimal)
+        {
         popupmenu.Insert( 0, Stop_Event, wxU(_("Stop")) );
         popupmenu.Insert( 0, Previous_Event, wxU(_("Previous")) );
         popupmenu.Insert( 0, Next_Event, wxU(_("Next")) );
+        }
 
         var_Get( p_input, "state", &val );
         if( val.i_int == PAUSE_S )
@@ -297,8 +306,11 @@ void PopupMenu( intf_thread_t *p_intf, wxWindow *p_parent,
 
     popupmenu.Append( MenuDummy_Event, wxU(_("Miscellaneous")),
                       MiscMenu( p_intf ), wxT("") );
+    if (!minimal)
+    {
     popupmenu.Append( MenuDummy_Event, wxU(_("Open")),
                       OpenStreamMenu( p_intf ), wxT("") );
+    }
 
     p_intf->p_sys->p_popup_menu = &popupmenu;
     p_parent->PopupMenu( &popupmenu, pos.x, pos.y );
@@ -396,6 +408,8 @@ wxMenu *VideoMenu( intf_thread_t *_p_intf, wxWindow *p_parent, wxMenu *p_menu )
         pi_objects[i++] = p_object->i_object_id;
         ppsz_varnames[i] = "directx-wallpaper";
         pi_objects[i++] = p_object->i_object_id;
+        ppsz_varnames[i] = "video-snapshot";
+        pi_objects[i++] = p_object->i_object_id;
 
         p_dec_obj = (vlc_object_t *)vlc_object_find( p_object,
                                                      VLC_OBJECT_DECODER,
@@ -492,8 +506,10 @@ wxMenu *SettingsMenu( intf_thread_t *_p_intf, wxWindow *p_parent,
                                                 FIND_PARENT );
     if( p_object != NULL )
     {
+#if (wxCHECK_VERSION(2,5,0))
         ppsz_varnames[i] = "intf-switch";
         pi_objects[i++] = p_object->i_object_id;
+#endif
         ppsz_varnames[i] = "intf-add";
         pi_objects[i++] = p_object->i_object_id;
         vlc_object_release( p_object );
@@ -977,7 +993,7 @@ void MenuEvtHandler::OnMenuEvent( wxCommandEvent& event )
     {
         if( p_intf->p_sys->p_popup_menu )
         {
-            p_menuitem = 
+            p_menuitem =
                 p_intf->p_sys->p_popup_menu->FindItem( event.GetId() );
         }
     }
@@ -993,7 +1009,7 @@ void MenuEvtHandler::OnMenuEvent( wxCommandEvent& event )
 
         wxMutexGuiLeave(); // We don't want deadlocks
         var_Set( p_object, p_menuitemext->psz_var, p_menuitemext->val );
-        wxMutexGuiEnter();
+        //wxMutexGuiEnter();
 
         vlc_object_release( p_object );
     }

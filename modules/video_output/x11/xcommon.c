@@ -2,7 +2,7 @@
  * xcommon.c: Functions common to the X11 and XVideo plugins
  *****************************************************************************
  * Copyright (C) 1998-2001 VideoLAN
- * $Id: xcommon.c 8979 2004-10-13 12:30:20Z gbazin $
+ * $Id: xcommon.c 10831 2005-04-26 14:27:47Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Sam Hocevar <sam@zoy.org>
@@ -52,6 +52,7 @@
 #endif
 
 #include <X11/Xlib.h>
+#include <X11/Xproto.h>
 #include <X11/Xmd.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
@@ -128,6 +129,8 @@ static int ConvertKey( int );
 
 static int WindowOnTop( vout_thread_t *, vlc_bool_t );
 
+static int X11ErrorHandler( Display *, XErrorEvent * );
+
 /*****************************************************************************
  * Activate: allocate X11 video thread output method
  *****************************************************************************
@@ -179,6 +182,9 @@ int E_(Activate) ( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
     if( psz_display ) free( psz_display );
+
+    /* Replace error handler so we can intercept some non-fatal errors */
+    XSetErrorHandler( X11ErrorHandler );
 
     /* Get a screen ID matching the XOpenDisplay return value */
     p_vout->p_sys->i_screen = DefaultScreen( p_vout->p_sys->p_display );
@@ -429,6 +435,13 @@ static int InitVideo( vout_thread_t *p_vout )
         PP_OUTPUTPICTURE[ I_OUTPUTPICTURES ] = p_pic;
 
         I_OUTPUTPICTURES++;
+    }
+
+    if( p_vout->output.i_chroma == VLC_FOURCC('Y','V','1','2') )
+    {
+        /* U and V inverted compared to I420
+         * Fixme: this should be handled by the vout core */
+        p_vout->output.i_chroma = VLC_FOURCC('I','4','2','0');
     }
 
     return VLC_SUCCESS;
@@ -1238,7 +1251,6 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
             {
                 /* U and V inverted compared to I420
                  * Fixme: this should be handled by the vout core */
-                p_vout->output.i_chroma = VLC_FOURCC('I','4','2','0');
                 p_pic->U_PIXELS = p_pic->p_sys->p_image->data
                     + p_pic->p_sys->p_image->offsets[2];
                 p_pic->V_PIXELS = p_pic->p_sys->p_image->data
@@ -2103,6 +2115,23 @@ static IMAGE_TYPE * CreateImage( vout_thread_t *p_vout,
     return p_image;
 }
 
+/*****************************************************************************
+ * X11ErrorHandler: replace error handler so we can intercept some of them
+ *****************************************************************************/
+static int X11ErrorHandler( Display * display, XErrorEvent * event )
+{
+    /* Ingnore errors on XSetInputFocus()
+     * (they happen when a window is not yet mapped) */
+    if( event->request_code == X_SetInputFocus )
+    {
+        fprintf(stderr, "XSetInputFocus failed\n");
+        return 0;
+    }
+
+    XSetErrorHandler(NULL);
+    return (XSetErrorHandler(X11ErrorHandler))( display, event );
+}
+
 #ifdef MODULE_NAME_IS_x11
 /*****************************************************************************
  * SetPalette: sets an 8 bpp palette
@@ -2302,6 +2331,10 @@ static struct
     { XK_End, KEY_END },
     { XK_Page_Up, KEY_PAGEUP },
     { XK_Page_Down, KEY_PAGEDOWN },
+
+    { XK_Insert, KEY_INSERT },
+    { XK_Delete, KEY_DELETE },
+
     { 0, 0 }
 };
 

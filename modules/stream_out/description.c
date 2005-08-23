@@ -2,7 +2,7 @@
  * description.c: description stream output module (gathers ES info)
  *****************************************************************************
  * Copyright (C) 2003-2004 VideoLAN
- * $Id: description.c 8716 2004-09-16 22:04:36Z gbazin $
+ * $Id: description.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *

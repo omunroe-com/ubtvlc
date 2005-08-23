@@ -2,7 +2,7 @@
  * demux.c
  *****************************************************************************
  * Copyright (C) 1999-2004 VideoLAN
- * $Id: demux.c 9152 2004-11-05 12:42:32Z hartman $
+ * $Id: demux.c 11182 2005-05-27 20:42:13Z courmisch $
  *
  * Author: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -27,21 +27,20 @@
 
 #include "input_internal.h"
 
+static void SkipID3Tag( demux_t * );
+
 /*****************************************************************************
  * demux2_New:
  *  if s is NULL then load a access_demux
  *****************************************************************************/
 demux_t *__demux2_New( vlc_object_t *p_obj,
                        char *psz_access, char *psz_demux, char *psz_path,
-                       stream_t *s, es_out_t *out )
+                       stream_t *s, es_out_t *out, vlc_bool_t b_quick )
 {
     demux_t *p_demux = vlc_object_create( p_obj, VLC_OBJECT_DEMUX );
     char *psz_module;
 
-    if( p_demux == NULL )
-    {
-        return NULL;
-    }
+    if( p_demux == NULL ) return NULL;
 
     /* Parse URL */
     p_demux->psz_access = strdup( psz_access );
@@ -55,8 +54,11 @@ demux_t *__demux2_New( vlc_object_t *p_obj,
         p_demux->psz_demux = var_GetString( p_obj, "demux" );
     }
 
-    msg_Dbg( p_obj, "demux2_New: access='%s' demux='%s' path='%s'",
-             p_demux->psz_access, p_demux->psz_demux, p_demux->psz_path );
+    if( !b_quick )
+    {
+        msg_Dbg( p_obj, "creating demux: access='%s' demux='%s' path='%s'",
+                 p_demux->psz_access, p_demux->psz_demux, p_demux->psz_path );
+    }
 
     p_demux->s          = s;
     p_demux->out        = out;
@@ -68,10 +70,8 @@ demux_t *__demux2_New( vlc_object_t *p_obj,
     p_demux->info.i_title  = 0;
     p_demux->info.i_seekpoint = 0;
 
-    if( s )
-        psz_module = p_demux->psz_demux;
-    else
-        psz_module = p_demux->psz_access;
+    if( s ) psz_module = p_demux->psz_demux;
+    else psz_module = p_demux->psz_access;
 
     if( s && *psz_module == '\0' && strrchr( p_demux->psz_path, '.' ) )
     {
@@ -79,8 +79,8 @@ demux_t *__demux2_New( vlc_object_t *p_obj,
          *  - no .mp3, .a52, ... (aac is added as it works only by file ext anyway
          *  - wav can't be added 'cause of a52 and dts in them as raw audio
          */
-        static struct { char *ext; char *demux; } exttodemux[] =
-        {
+         static struct { char *ext; char *demux; } exttodemux[] =
+         {
             { "aac",  "aac" },
             { "aiff", "aiff" },
             { "asf",  "asf" }, { "wmv",  "asf" }, { "wma",  "asf" },
@@ -88,7 +88,7 @@ demux_t *__demux2_New( vlc_object_t *p_obj,
             { "au",   "au" },
             { "flac", "flac" },
             { "dv",   "dv" },
-            { "m3u",  "m3u" },
+            { "m3u",  "playlist" },
             { "mkv",  "mkv" }, { "mka",  "mkv" }, { "mks",  "mkv" },
             { "mp4",  "mp4" }, { "m4a",  "mp4" }, { "mov",  "mp4" }, { "moov", "mp4" },
             { "mod",  "mod" }, { "xm",   "mod" },
@@ -98,17 +98,40 @@ demux_t *__demux2_New( vlc_object_t *p_obj,
             { "rm",   "rm" },
             { NULL,  NULL },
         };
+        /* Here, we don't mind if it does not work, it must be quick */
+        static struct { char *ext; char *demux; } exttodemux_quick[] = 
+        {
+            { "mp3", "mpga" },
+            { "ogg", "ogg" },
+            { "wma", "asf" },
+            { NULL, NULL }
+        };
 
         char *psz_ext = strrchr( p_demux->psz_path, '.' ) + 1;
         int  i;
 
-        for( i = 0; exttodemux[i].ext != NULL; i++ )
+        if( !b_quick )
         {
-            if( !strcasecmp( psz_ext, exttodemux[i].ext ) )
+            for( i = 0; exttodemux[i].ext != NULL; i++ )
             {
-                psz_module = exttodemux[i].demux;
-                break;
+                if( !strcasecmp( psz_ext, exttodemux[i].ext ) )
+                {
+                    psz_module = exttodemux[i].demux;
+                    break;
+                }
             }
+        }
+        else
+        {
+            for( i = 0; exttodemux_quick[i].ext != NULL; i++ )
+            {
+                if( !strcasecmp( psz_ext, exttodemux_quick[i].ext ) )
+                {
+                    psz_module = exttodemux_quick[i].demux;
+                    break;
+                }
+            }
+
         }
     }
 
@@ -117,6 +140,11 @@ demux_t *__demux2_New( vlc_object_t *p_obj,
 
     if( s )
     {
+        /* ID3 tags will mess-up demuxer probing so we skip it here.
+         * ID3 parsers will called later on in the demuxer to access the
+         * skipped info. */
+        SkipID3Tag( p_demux );
+
         p_demux->p_module =
             module_Need( p_demux, "demux2", psz_module,
                          !strcmp( psz_module, p_demux->psz_demux ) ?
@@ -486,7 +514,8 @@ static int DStreamThread( stream_t *s )
     demux_t *p_demux;
 
     /* Create the demuxer */
-    if( !(p_demux = demux2_New( s, "", p_sys->psz_name, "", s, p_sys->out )) )
+    if( !(p_demux = demux2_New( s, "", p_sys->psz_name, "", s, p_sys->out,
+                               VLC_FALSE )) )
     {
         return VLC_EGENERIC;
     }
@@ -501,4 +530,38 @@ static int DStreamThread( stream_t *s )
 
     p_demux->b_die = VLC_TRUE;
     return VLC_SUCCESS;
+}
+
+/****************************************************************************
+ * Utility functions
+ ****************************************************************************/
+static void SkipID3Tag( demux_t *p_demux )
+{
+    uint8_t *p_peek;
+    uint8_t version, revision;
+    int i_size;
+    int b_footer;
+
+    if( !p_demux->s ) return;
+
+    /* Get 10 byte id3 header */
+    if( stream_Peek( p_demux->s, &p_peek, 10 ) < 10 ) return;
+
+    if( p_peek[0] != 'I' || p_peek[1] != 'D' || p_peek[2] != '3' ) return;
+
+    version = p_peek[3];
+    revision = p_peek[4];
+    b_footer = p_peek[5] & 0x10;
+    i_size = (p_peek[6]<<21) + (p_peek[7]<<14) + (p_peek[8]<<7) + p_peek[9];
+
+    if( b_footer ) i_size += 10;
+    i_size += 10;
+
+    /* Skip the entire tag */
+    stream_Read( p_demux->s, NULL, i_size );
+
+    msg_Dbg( p_demux, "ID3v2.%d revision %d tag found, skiping %d bytes",
+             version, revision, i_size );
+
+    return;
 }

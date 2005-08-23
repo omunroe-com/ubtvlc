@@ -2,7 +2,7 @@
  * MediaControlView.h: beos interface
  *****************************************************************************
  * Copyright (C) 1999, 2000, 2001 VideoLAN
- * $Id: MediaControlView.h 8449 2004-08-17 20:55:55Z titer $
+ * $Id: MediaControlView.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Tony Castley <tony@castley.net>
  *          Stephan Aßmus <stippi@yellowbites.com>

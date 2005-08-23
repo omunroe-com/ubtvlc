@@ -5,7 +5,7 @@
  *                         Organisation (CSIRO) Australia
  * Copyright (C) 2004 VideoLAN
  *
- * $Id: intf.c 8709 2004-09-15 15:50:54Z gbazin $
+ * $Id: intf.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Andre Pang <Andre.Pang@csiro.au>
  *
@@ -53,7 +53,6 @@
 #undef  CMML_INTF_USE_TIMED_URIS
 
 #undef  CMML_INTF_DEBUG
-#undef  CMML_INTF_SUBPICTURE_DEBUG
 #undef  CMML_INTF_HISTORY_DEBUG
 
 /*****************************************************************************
@@ -149,10 +148,11 @@ void E_(CloseIntf) ( vlc_object_t *p_this )
     msg_Dbg( p_intf, "freeing CMML interface" );
 #endif
 
-    /* Erase the anchor text description from the video output if it exists */
+    /* erase the anchor text description from the video output if it exists */
     p_vout = vlc_object_find( p_intf, VLC_OBJECT_VOUT, FIND_ANYWHERE );
     if( p_vout )
     {
+        /* enable CMML as a subtitle track */
         spu_Control( p_vout->p_spu, SPU_CHANNEL_CLEAR, DEFAULT_CHAN );
         vlc_object_release( p_vout );
     }
@@ -160,7 +160,7 @@ void E_(CloseIntf) ( vlc_object_t *p_this )
     var_DelCallback( p_intf->p_vlc, "key-pressed", KeyEvent, p_intf );
 
     vlc_object_release( p_intf->p_sys->p_cmml_decoder );
-   
+
     free( p_intf->p_sys );
 }
 
@@ -315,8 +315,14 @@ static int DisplayPendingAnchor( intf_thread_t *p_intf, vout_thread_t *p_vout )
             if( var_Get( p_primary_intf, "intf-displays-cmml-description", &val )
                     == VLC_SUCCESS )
             {
-                if( val.b_bool == VLC_TRUE ) return VLC_TRUE;
+                if( val.b_bool == VLC_TRUE )
+                {
+                    vlc_object_release( p_primary_intf );
+                    return VLC_TRUE;
+                }
             }
+
+            vlc_object_release( p_primary_intf );
         }
 
         /* display anchor as subtitle on-screen */
@@ -484,7 +490,7 @@ static void FollowAnchor ( intf_thread_t *p_intf )
             history_t *p_history = NULL;
             history_item_t *p_history_item = NULL;
             char *psz_timed_url;
-            
+
             p_history = GetHistory( p_playlist );
 
             /* create history item */
@@ -526,7 +532,7 @@ static void FollowAnchor ( intf_thread_t *p_intf )
             msg_Dbg( p_intf, "calling browser_Open with \"%s\"", psz_url );
 #endif
             (void) browser_Open( psz_url );
-            playlist_Command( p_playlist, PLAYLIST_PAUSE, 0 );
+            playlist_Control( p_playlist, PLAYLIST_PAUSE, 0 );
         }
 
         free( psz_uri_to_load );
@@ -821,9 +827,8 @@ static int DisplayAnchor( intf_thread_t *p_intf,
 
         if( psz_anchor_url )
         {
-            /* Should display subtitle underlined and in blue,
-             * but it looks like VLC doesn't implement any
-             * text styles yet.  D'oh! */
+            /* Should display subtitle underlined and in blue, but it looks
+             * like VLC doesn't implement any text styles yet.  D'oh! */
             p_style = &blue_with_underline;
 
         }
@@ -836,11 +841,6 @@ static int DisplayAnchor( intf_thread_t *p_intf,
                 i_margin_h, i_margin_v, i_now, 0 ) == VLC_SUCCESS )
         {
             /* Displayed successfully */
-#ifdef CMML_INTF_SUBPICTURE_DEBUG
-            msg_Dbg( p_intf, "subpicture created at (%d, %d) (%d, %d)",
-                     p_subpicture->i_x, p_subpicture->i_y,
-                     p_subpicture->i_width, p_subpicture->i_height );
-#endif
         }
         else
         {

@@ -58,6 +58,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_ACTIVEX_FALSE = @BUILD_ACTIVEX_FALSE@
+BUILD_ACTIVEX_TRUE = @BUILD_ACTIVEX_TRUE@
 BUILD_DIRENT_FALSE = @BUILD_DIRENT_FALSE@
 BUILD_DIRENT_TRUE = @BUILD_DIRENT_TRUE@
 BUILD_GETOPT_FALSE = @BUILD_GETOPT_FALSE@
@@ -72,8 +74,6 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-CORBA_CFLAGS = @CORBA_CFLAGS@
-CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -101,10 +101,8 @@ FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GTK2_CFLAGS = @GTK2_CFLAGS@
-GTK2_LIBS = @GTK2_LIBS@
-HAL_CFLAGS = @HAL_CFLAGS@
-HAL_LIBS = @HAL_LIBS@
+HAS_MIDL_COMPILER_FALSE = @HAS_MIDL_COMPILER_FALSE@
+HAS_MIDL_COMPILER_TRUE = @HAS_MIDL_COMPILER_TRUE@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -115,6 +113,8 @@ HAVE_PLUGINS_FALSE = @HAVE_PLUGINS_FALSE@
 HAVE_PLUGINS_TRUE = @HAVE_PLUGINS_TRUE@
 HAVE_WIN32_FALSE = @HAVE_WIN32_FALSE@
 HAVE_WIN32_TRUE = @HAVE_WIN32_TRUE@
+HAVE_WINCE_FALSE = @HAVE_WINCE_FALSE@
+HAVE_WINCE_TRUE = @HAVE_WINCE_TRUE@
 INCLUDES = @INCLUDES@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -127,12 +127,7 @@ INTLOBJS = @INTLOBJS@
 INTL_LIBTOOL_SUFFIX_PREFIX = @INTL_LIBTOOL_SUFFIX_PREFIX@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
-LIBCDDB_CFLAGS = @LIBCDDB_CFLAGS@
-LIBCDDB_LIBS = @LIBCDDB_LIBS@
-LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
-LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
-LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -141,6 +136,7 @@ LTLIBICONV = @LTLIBICONV@
 LTLIBINTL = @LTLIBINTL@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+MIDL = @MIDL@
 MKINSTALLDIRS = @MKINSTALLDIRS@
 MOC = @MOC@
 MOZILLA_CONFIG = @MOZILLA_CONFIG@
@@ -157,7 +153,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
 PLUGIN_PATH = @PLUGIN_PATH@
 POSUB = @POSUB@
 RANLIB = @RANLIB@
@@ -167,8 +162,6 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-SVG_CFLAGS = @SVG_CFLAGS@
-SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
@@ -240,7 +233,7 @@ NULL =
 #  - modules should come before . because vlc needs the builtins
 #  - . should come before mozilla because the plugin needs libvlc_pic.a
 #  - po should come before . because VLC.app needs the pofiles
-SUBDIRS = intl modules po . mozilla share m4 doc
+SUBDIRS = intl modules po . mozilla activex share m4 doc
 DIST_SUBDIRS = $(SUBDIRS) src debian ipkg lib
 
 
@@ -261,7 +254,6 @@ EXTRA_DIST = \
 	src/extras/COPYING \
 	toolbox \
 	vlc-config.in.in \
-	vlc.ebuild \
 	vlc.spec \
 	vlc.spec.mdk \
 	vlc.win32.nsi \
@@ -270,8 +262,16 @@ EXTRA_DIST = \
 	extras/MacOSX/Resources/English.lproj/MainMenu.nib/classes.nib \
 	extras/MacOSX/Resources/English.lproj/MainMenu.nib/info.nib \
 	extras/MacOSX/Resources/English.lproj/MainMenu.nib/objects.nib \
+	extras/MacOSX/Resources/English.lproj/About.nib/classes.nib \
+	extras/MacOSX/Resources/English.lproj/About.nib/info.nib \
+	extras/MacOSX/Resources/English.lproj/About.nib/keyedobjects.nib \
+	extras/MacOSX/Resources/English.lproj/Open.nib/classes.nib \
+	extras/MacOSX/Resources/English.lproj/Open.nib/info.nib \
+	extras/MacOSX/Resources/English.lproj/Open.nib/keyedobjects.nib \
+	extras/MacOSX/Resources/English.lproj/Preferences.nib/classes.nib \
+	extras/MacOSX/Resources/English.lproj/Preferences.nib/info.nib \
+	extras/MacOSX/Resources/English.lproj/Preferences.nib/keyedobjects.nib \
 	extras/MacOSX/Resources/English.lproj/InfoPlist.strings \
-	extras/MacOSX/Resources/English.lproj/vlc.scriptTerminology \
 	extras/MacOSX/Resources/a52.icns \
 	extras/MacOSX/Resources/aac.icns \
 	extras/MacOSX/Resources/asf.icns \
@@ -331,6 +331,7 @@ EXTRA_DIST = \
 	extras/MacOSX/Resources/volumetrack.png \
 	extras/MacOSX/Resources/about_bg.png \
 	extras/MacOSX/Resources/vlc.scriptSuite \
+	extras/MacOSX/Resources/vlc.scriptTerminology \
 	extras/MacOSX/Resources/README \
 	extras/MacOSX/vlc.pbproj/project.pbxproj \
 	extras/MacOSX/macosx-dmg \
@@ -426,9 +427,10 @@ HEADERS_include = \
 	include/vlc_es.h \
 	include/vlc_es_out.h \
 	include/vlc_filter.h \
-	include/vlc_help.h \
+	include/vlc_config_cat.h \
 	include/vlc_httpd.h \
 	include/vlc_tls.h \
+	include/vlc_image.h \
 	include/vlc_input.h \
 	include/vlc_interface.h \
 	include/vlc_keys.h \
@@ -443,6 +445,7 @@ HEADERS_include = \
 	include/vlc_video.h \
 	include/vlc_vlm.h \
 	include/vlc_vod.h \
+	include/vlc_xml.h \
 	include/vout_synchro.h \
 	include/win32_specific.h \
 	$(NULL)
@@ -461,6 +464,8 @@ HEADERS_include_built = \
 ###############################################################################
 bin_SCRIPTS = vlc-config
 
+CLEANFILES = $(BUILT_SOURCES)
+
 lib_LIBRARIES = lib/libvlc.a $(LIBRARIES_libvlc_pic)
 
 lib_libvlc_a_SOURCES = $(SOURCES_libvlc)
@@ -477,6 +482,7 @@ lib_libvlc_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags vlc pic`
 @HAVE_BEOS_TRUE@OPT_SOURCES_libvlc_beos = $(SOURCES_libvlc_beos)
 @HAVE_DARWIN_TRUE@OPT_SOURCES_libvlc_darwin = $(SOURCES_libvlc_darwin)
 @HAVE_WIN32_TRUE@OPT_SOURCES_libvlc_win32 = $(SOURCES_libvlc_win32)
+@HAVE_WINCE_TRUE@OPT_SOURCES_libvlc_win32 = $(SOURCES_libvlc_win32)
 @BUILD_DIRENT_TRUE@OPT_SOURCES_libvlc_dirent = $(SOURCES_libvlc_dirent)
 @BUILD_GETOPT_TRUE@OPT_SOURCES_libvlc_getopt = $(SOURCES_libvlc_getopt)
 @BUILD_MOZILLA_TRUE@@HAVE_WIN32_FALSE@LIBRARIES_libvlc_pic = lib/libvlc_pic.a
@@ -498,7 +504,6 @@ SOURCES_libvlc_win32 = \
 
 SOURCES_libvlc_dirent = \
 	src/extras/dirent.c \
-	src/extras/dirent.h \
 	$(NULL)
 
 
@@ -517,10 +522,10 @@ SOURCES_libvlc_common = \
 	src/playlist/playlist.c \
 	src/playlist/sort.c \
 	src/playlist/loadsave.c \
-	src/playlist/group.c \
+	src/playlist/view.c \
 	src/playlist/item.c \
 	src/playlist/item-ext.c \
-	src/playlist/info.c \
+	src/playlist/services_discovery.c \
 	src/input/access.c \
 	src/input/clock.c \
 	src/input/control.c \
@@ -530,6 +535,7 @@ SOURCES_libvlc_common = \
 	src/input/input.c \
 	src/input/input_internal.h \
 	src/input/stream.c \
+	src/input/mem_stream.c \
 	src/input/subtitles.c \
 	src/input/var.c \
 	src/video_output/video_output.c \
@@ -559,6 +565,7 @@ SOURCES_libvlc_common = \
 	src/misc/threads.c \
 	src/misc/cpu.c \
 	src/misc/configuration.c \
+	src/misc/image.c \
 	src/misc/iso_lang.c \
 	src/misc/iso-639_def.h \
 	src/misc/messages.c \
@@ -567,6 +574,7 @@ SOURCES_libvlc_common = \
 	src/misc/error.c \
 	src/misc/net.c \
 	src/misc/vlm.c \
+	src/misc/xml.c \
 	src/extras/libc.c \
 	$(NULL)
 
@@ -589,7 +597,10 @@ bin_PROGRAMS = vlc
 
 vlc_SOURCES = src/vlc.c
 
-vlc_LDFLAGS = `$(VLC_CONFIG) --libs vlc builtin`
+# Work around a bug in the arm-wince-pe linker
+@HAVE_WINCE_TRUE@vlc_WORKAROUNDLDFLAGS = lib/libvlc.a
+
+vlc_LDFLAGS = `$(VLC_CONFIG) --libs vlc builtin` $(vlc_WORKAROUNDLDFLAGS)
 vlc_LDADD = lib/libvlc.a $(DATA_win32_rc) $(LIB_intl)
 vlc_CFLAGS = `$(VLC_CONFIG) --cflags vlc`
 
@@ -617,7 +628,7 @@ subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = intl/Makefile vlc-config
+CONFIG_CLEAN_FILES = intl/Makefile
 LIBRARIES = $(lib_LIBRARIES)
 
 lib_libvlc_a_AR = $(AR) cru
@@ -625,12 +636,12 @@ lib_libvlc_a_LIBADD =
 am__lib_libvlc_a_SOURCES_DIST = src/libvlc.c src/libvlc.h \
 	src/interface/interface.c src/interface/intf_eject.c \
 	src/playlist/playlist.c src/playlist/sort.c \
-	src/playlist/loadsave.c src/playlist/group.c \
-	src/playlist/item.c src/playlist/item-ext.c src/playlist/info.c \
+	src/playlist/loadsave.c src/playlist/view.c src/playlist/item.c \
+	src/playlist/item-ext.c src/playlist/services_discovery.c \
 	src/input/access.c src/input/clock.c src/input/control.c \
 	src/input/decoder.c src/input/demux.c src/input/es_out.c \
 	src/input/input.c src/input/input_internal.h src/input/stream.c \
-	src/input/subtitles.c src/input/var.c \
+	src/input/mem_stream.c src/input/subtitles.c src/input/var.c \
 	src/video_output/video_output.c \
 	src/video_output/vout_pictures.c \
 	src/video_output/vout_pictures.h src/video_output/video_text.c \
@@ -645,12 +656,12 @@ am__lib_libvlc_a_SOURCES_DIST = src/libvlc.c src/libvlc.h \
 	src/misc/charset.c src/misc/httpd.c src/misc/tls.c \
 	src/misc/mtime.c src/misc/block.c src/misc/modules.c \
 	src/misc/threads.c src/misc/cpu.c src/misc/configuration.c \
-	src/misc/iso_lang.c src/misc/iso-639_def.h src/misc/messages.c \
-	src/misc/objects.c src/misc/variables.c src/misc/error.c \
-	src/misc/net.c src/misc/vlm.c src/extras/libc.c \
-	src/misc/beos_specific.cpp src/misc/darwin_specific.m \
-	src/misc/win32_specific.c src/extras/dirent.c \
-	src/extras/dirent.h src/extras/getopt.c src/extras/getopt.h \
+	src/misc/image.c src/misc/iso_lang.c src/misc/iso-639_def.h \
+	src/misc/messages.c src/misc/objects.c src/misc/variables.c \
+	src/misc/error.c src/misc/net.c src/misc/vlm.c src/misc/xml.c \
+	src/extras/libc.c src/misc/beos_specific.cpp \
+	src/misc/darwin_specific.m src/misc/win32_specific.c \
+	src/extras/dirent.c src/extras/getopt.c src/extras/getopt.h \
 	src/extras/getopt1.c
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 =
@@ -660,10 +671,10 @@ am__objects_2 = src/lib_libvlc_a-libvlc.$(OBJEXT) \
 	src/playlist/lib_libvlc_a-playlist.$(OBJEXT) \
 	src/playlist/lib_libvlc_a-sort.$(OBJEXT) \
 	src/playlist/lib_libvlc_a-loadsave.$(OBJEXT) \
-	src/playlist/lib_libvlc_a-group.$(OBJEXT) \
+	src/playlist/lib_libvlc_a-view.$(OBJEXT) \
 	src/playlist/lib_libvlc_a-item.$(OBJEXT) \
 	src/playlist/lib_libvlc_a-item-ext.$(OBJEXT) \
-	src/playlist/lib_libvlc_a-info.$(OBJEXT) \
+	src/playlist/lib_libvlc_a-services_discovery.$(OBJEXT) \
 	src/input/lib_libvlc_a-access.$(OBJEXT) \
 	src/input/lib_libvlc_a-clock.$(OBJEXT) \
 	src/input/lib_libvlc_a-control.$(OBJEXT) \
@@ -672,6 +683,7 @@ am__objects_2 = src/lib_libvlc_a-libvlc.$(OBJEXT) \
 	src/input/lib_libvlc_a-es_out.$(OBJEXT) \
 	src/input/lib_libvlc_a-input.$(OBJEXT) \
 	src/input/lib_libvlc_a-stream.$(OBJEXT) \
+	src/input/lib_libvlc_a-mem_stream.$(OBJEXT) \
 	src/input/lib_libvlc_a-subtitles.$(OBJEXT) \
 	src/input/lib_libvlc_a-var.$(OBJEXT) \
 	src/video_output/lib_libvlc_a-video_output.$(OBJEXT) \
@@ -700,6 +712,7 @@ am__objects_2 = src/lib_libvlc_a-libvlc.$(OBJEXT) \
 	src/misc/lib_libvlc_a-threads.$(OBJEXT) \
 	src/misc/lib_libvlc_a-cpu.$(OBJEXT) \
 	src/misc/lib_libvlc_a-configuration.$(OBJEXT) \
+	src/misc/lib_libvlc_a-image.$(OBJEXT) \
 	src/misc/lib_libvlc_a-iso_lang.$(OBJEXT) \
 	src/misc/lib_libvlc_a-messages.$(OBJEXT) \
 	src/misc/lib_libvlc_a-objects.$(OBJEXT) \
@@ -707,6 +720,7 @@ am__objects_2 = src/lib_libvlc_a-libvlc.$(OBJEXT) \
 	src/misc/lib_libvlc_a-error.$(OBJEXT) \
 	src/misc/lib_libvlc_a-net.$(OBJEXT) \
 	src/misc/lib_libvlc_a-vlm.$(OBJEXT) \
+	src/misc/lib_libvlc_a-xml.$(OBJEXT) \
 	src/extras/lib_libvlc_a-libc.$(OBJEXT) $(am__objects_1)
 am__objects_3 = src/misc/lib_libvlc_a-beos_specific.$(OBJEXT) \
 	$(am__objects_1)
@@ -717,6 +731,7 @@ am__objects_5 = src/misc/lib_libvlc_a-darwin_specific.$(OBJEXT) \
 am__objects_7 = src/misc/lib_libvlc_a-win32_specific.$(OBJEXT) \
 	$(am__objects_1)
 @HAVE_WIN32_TRUE@am__objects_8 = $(am__objects_7)
+@HAVE_WINCE_TRUE@am__objects_8 = $(am__objects_7)
 am__objects_9 = src/extras/lib_libvlc_a-dirent.$(OBJEXT) \
 	$(am__objects_1)
 @BUILD_DIRENT_TRUE@am__objects_10 = $(am__objects_9)
@@ -735,12 +750,12 @@ lib_libvlc_pic_a_LIBADD =
 am__lib_libvlc_pic_a_SOURCES_DIST = src/libvlc.c src/libvlc.h \
 	src/interface/interface.c src/interface/intf_eject.c \
 	src/playlist/playlist.c src/playlist/sort.c \
-	src/playlist/loadsave.c src/playlist/group.c \
-	src/playlist/item.c src/playlist/item-ext.c src/playlist/info.c \
+	src/playlist/loadsave.c src/playlist/view.c src/playlist/item.c \
+	src/playlist/item-ext.c src/playlist/services_discovery.c \
 	src/input/access.c src/input/clock.c src/input/control.c \
 	src/input/decoder.c src/input/demux.c src/input/es_out.c \
 	src/input/input.c src/input/input_internal.h src/input/stream.c \
-	src/input/subtitles.c src/input/var.c \
+	src/input/mem_stream.c src/input/subtitles.c src/input/var.c \
 	src/video_output/video_output.c \
 	src/video_output/vout_pictures.c \
 	src/video_output/vout_pictures.h src/video_output/video_text.c \
@@ -755,12 +770,12 @@ am__lib_libvlc_pic_a_SOURCES_DIST = src/libvlc.c src/libvlc.h \
 	src/misc/charset.c src/misc/httpd.c src/misc/tls.c \
 	src/misc/mtime.c src/misc/block.c src/misc/modules.c \
 	src/misc/threads.c src/misc/cpu.c src/misc/configuration.c \
-	src/misc/iso_lang.c src/misc/iso-639_def.h src/misc/messages.c \
-	src/misc/objects.c src/misc/variables.c src/misc/error.c \
-	src/misc/net.c src/misc/vlm.c src/extras/libc.c \
-	src/misc/beos_specific.cpp src/misc/darwin_specific.m \
-	src/misc/win32_specific.c src/extras/dirent.c \
-	src/extras/dirent.h src/extras/getopt.c src/extras/getopt.h \
+	src/misc/image.c src/misc/iso_lang.c src/misc/iso-639_def.h \
+	src/misc/messages.c src/misc/objects.c src/misc/variables.c \
+	src/misc/error.c src/misc/net.c src/misc/vlm.c src/misc/xml.c \
+	src/extras/libc.c src/misc/beos_specific.cpp \
+	src/misc/darwin_specific.m src/misc/win32_specific.c \
+	src/extras/dirent.c src/extras/getopt.c src/extras/getopt.h \
 	src/extras/getopt1.c
 am__objects_14 = src/lib_libvlc_pic_a-libvlc.$(OBJEXT) \
 	src/interface/lib_libvlc_pic_a-interface.$(OBJEXT) \
@@ -768,10 +783,10 @@ am__objects_14 = src/lib_libvlc_pic_a-libvlc.$(OBJEXT) \
 	src/playlist/lib_libvlc_pic_a-playlist.$(OBJEXT) \
 	src/playlist/lib_libvlc_pic_a-sort.$(OBJEXT) \
 	src/playlist/lib_libvlc_pic_a-loadsave.$(OBJEXT) \
-	src/playlist/lib_libvlc_pic_a-group.$(OBJEXT) \
+	src/playlist/lib_libvlc_pic_a-view.$(OBJEXT) \
 	src/playlist/lib_libvlc_pic_a-item.$(OBJEXT) \
 	src/playlist/lib_libvlc_pic_a-item-ext.$(OBJEXT) \
-	src/playlist/lib_libvlc_pic_a-info.$(OBJEXT) \
+	src/playlist/lib_libvlc_pic_a-services_discovery.$(OBJEXT) \
 	src/input/lib_libvlc_pic_a-access.$(OBJEXT) \
 	src/input/lib_libvlc_pic_a-clock.$(OBJEXT) \
 	src/input/lib_libvlc_pic_a-control.$(OBJEXT) \
@@ -780,6 +795,7 @@ am__objects_14 = src/lib_libvlc_pic_a-libvlc.$(OBJEXT) \
 	src/input/lib_libvlc_pic_a-es_out.$(OBJEXT) \
 	src/input/lib_libvlc_pic_a-input.$(OBJEXT) \
 	src/input/lib_libvlc_pic_a-stream.$(OBJEXT) \
+	src/input/lib_libvlc_pic_a-mem_stream.$(OBJEXT) \
 	src/input/lib_libvlc_pic_a-subtitles.$(OBJEXT) \
 	src/input/lib_libvlc_pic_a-var.$(OBJEXT) \
 	src/video_output/lib_libvlc_pic_a-video_output.$(OBJEXT) \
@@ -808,6 +824,7 @@ am__objects_14 = src/lib_libvlc_pic_a-libvlc.$(OBJEXT) \
 	src/misc/lib_libvlc_pic_a-threads.$(OBJEXT) \
 	src/misc/lib_libvlc_pic_a-cpu.$(OBJEXT) \
 	src/misc/lib_libvlc_pic_a-configuration.$(OBJEXT) \
+	src/misc/lib_libvlc_pic_a-image.$(OBJEXT) \
 	src/misc/lib_libvlc_pic_a-iso_lang.$(OBJEXT) \
 	src/misc/lib_libvlc_pic_a-messages.$(OBJEXT) \
 	src/misc/lib_libvlc_pic_a-objects.$(OBJEXT) \
@@ -815,6 +832,7 @@ am__objects_14 = src/lib_libvlc_pic_a-libvlc.$(OBJEXT) \
 	src/misc/lib_libvlc_pic_a-error.$(OBJEXT) \
 	src/misc/lib_libvlc_pic_a-net.$(OBJEXT) \
 	src/misc/lib_libvlc_pic_a-vlm.$(OBJEXT) \
+	src/misc/lib_libvlc_pic_a-xml.$(OBJEXT) \
 	src/extras/lib_libvlc_pic_a-libc.$(OBJEXT) $(am__objects_1)
 am__objects_15 = src/misc/lib_libvlc_pic_a-beos_specific.$(OBJEXT) \
 	$(am__objects_1)
@@ -825,6 +843,7 @@ am__objects_17 = src/misc/lib_libvlc_pic_a-darwin_specific.$(OBJEXT) \
 am__objects_19 = src/misc/lib_libvlc_pic_a-win32_specific.$(OBJEXT) \
 	$(am__objects_1)
 @HAVE_WIN32_TRUE@am__objects_20 = $(am__objects_19)
+@HAVE_WINCE_TRUE@am__objects_20 = $(am__objects_19)
 am__objects_21 = src/extras/lib_libvlc_pic_a-dirent.$(OBJEXT) \
 	$(am__objects_1)
 @BUILD_DIRENT_TRUE@am__objects_22 = $(am__objects_21)
@@ -887,6 +906,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	src/input/$(DEPDIR)/lib_libvlc_a-demux.Po \
 @AMDEP_TRUE@	src/input/$(DEPDIR)/lib_libvlc_a-es_out.Po \
 @AMDEP_TRUE@	src/input/$(DEPDIR)/lib_libvlc_a-input.Po \
+@AMDEP_TRUE@	src/input/$(DEPDIR)/lib_libvlc_a-mem_stream.Po \
 @AMDEP_TRUE@	src/input/$(DEPDIR)/lib_libvlc_a-stream.Po \
 @AMDEP_TRUE@	src/input/$(DEPDIR)/lib_libvlc_a-subtitles.Po \
 @AMDEP_TRUE@	src/input/$(DEPDIR)/lib_libvlc_a-var.Po \
@@ -897,6 +917,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	src/input/$(DEPDIR)/lib_libvlc_pic_a-demux.Po \
 @AMDEP_TRUE@	src/input/$(DEPDIR)/lib_libvlc_pic_a-es_out.Po \
 @AMDEP_TRUE@	src/input/$(DEPDIR)/lib_libvlc_pic_a-input.Po \
+@AMDEP_TRUE@	src/input/$(DEPDIR)/lib_libvlc_pic_a-mem_stream.Po \
 @AMDEP_TRUE@	src/input/$(DEPDIR)/lib_libvlc_pic_a-stream.Po \
 @AMDEP_TRUE@	src/input/$(DEPDIR)/lib_libvlc_pic_a-subtitles.Po \
 @AMDEP_TRUE@	src/input/$(DEPDIR)/lib_libvlc_pic_a-var.Po \
@@ -912,6 +933,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_a-darwin_specific.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_a-error.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_a-httpd.Po \
+@AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_a-image.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_a-iso_lang.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_a-messages.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_a-modules.Po \
@@ -923,6 +945,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_a-variables.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_a-vlm.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_a-win32_specific.Po \
+@AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_a-xml.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_pic_a-beos_specific.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_pic_a-block.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_pic_a-charset.Po \
@@ -931,6 +954,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_pic_a-darwin_specific.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_pic_a-error.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_pic_a-httpd.Po \
+@AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_pic_a-image.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_pic_a-iso_lang.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_pic_a-messages.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_pic_a-modules.Po \
@@ -942,20 +966,21 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_pic_a-variables.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_pic_a-vlm.Po \
 @AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_pic_a-win32_specific.Po \
-@AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_a-group.Po \
-@AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_a-info.Po \
+@AMDEP_TRUE@	src/misc/$(DEPDIR)/lib_libvlc_pic_a-xml.Po \
 @AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_a-item-ext.Po \
 @AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_a-item.Po \
 @AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_a-loadsave.Po \
 @AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_a-playlist.Po \
+@AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_a-services_discovery.Po \
 @AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_a-sort.Po \
-@AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_pic_a-group.Po \
-@AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_pic_a-info.Po \
+@AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_a-view.Po \
 @AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_pic_a-item-ext.Po \
 @AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_pic_a-item.Po \
 @AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_pic_a-loadsave.Po \
 @AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_pic_a-playlist.Po \
+@AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_pic_a-services_discovery.Po \
 @AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_pic_a-sort.Po \
+@AMDEP_TRUE@	src/playlist/$(DEPDIR)/lib_libvlc_pic_a-view.Po \
 @AMDEP_TRUE@	src/stream_output/$(DEPDIR)/lib_libvlc_a-announce.Po \
 @AMDEP_TRUE@	src/stream_output/$(DEPDIR)/lib_libvlc_a-sap.Po \
 @AMDEP_TRUE@	src/stream_output/$(DEPDIR)/lib_libvlc_a-stream_output.Po \
@@ -1009,7 +1034,7 @@ DIST_COMMON = README $(dist_pkginclude_HEADERS) $(noinst_HEADERS) \
 	aclocal.m4 autotools/compile autotools/config.guess \
 	autotools/config.rpath autotools/config.sub autotools/depcomp \
 	autotools/install-sh autotools/missing autotools/mkinstalldirs \
-	config.h.in configure configure.ac vlc-config.in
+	config.h.in configure configure.ac
 SOURCES = $(lib_libvlc_a_SOURCES) $(dist_lib_libvlc_a_SOURCES) $(lib_libvlc_pic_a_SOURCES) $(vlc_SOURCES)
 
 all: $(BUILT_SOURCES) config.h
@@ -1051,8 +1076,6 @@ $(srcdir)/config.h.in:  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 distclean-hdr:
 	-rm -f config.h stamp-h1
 intl/Makefile: $(top_builddir)/config.status $(top_srcdir)/intl/Makefile.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-vlc-config: $(top_builddir)/config.status vlc-config.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 libLIBRARIES_INSTALL = $(INSTALL_DATA)
 install-libLIBRARIES: $(lib_LIBRARIES)
@@ -1118,14 +1141,15 @@ src/playlist/lib_libvlc_a-sort.$(OBJEXT): src/playlist/$(am__dirstamp) \
 src/playlist/lib_libvlc_a-loadsave.$(OBJEXT): \
 	src/playlist/$(am__dirstamp) \
 	src/playlist/$(DEPDIR)/$(am__dirstamp)
-src/playlist/lib_libvlc_a-group.$(OBJEXT): src/playlist/$(am__dirstamp) \
+src/playlist/lib_libvlc_a-view.$(OBJEXT): src/playlist/$(am__dirstamp) \
 	src/playlist/$(DEPDIR)/$(am__dirstamp)
 src/playlist/lib_libvlc_a-item.$(OBJEXT): src/playlist/$(am__dirstamp) \
 	src/playlist/$(DEPDIR)/$(am__dirstamp)
 src/playlist/lib_libvlc_a-item-ext.$(OBJEXT): \
 	src/playlist/$(am__dirstamp) \
 	src/playlist/$(DEPDIR)/$(am__dirstamp)
-src/playlist/lib_libvlc_a-info.$(OBJEXT): src/playlist/$(am__dirstamp) \
+src/playlist/lib_libvlc_a-services_discovery.$(OBJEXT): \
+	src/playlist/$(am__dirstamp) \
 	src/playlist/$(DEPDIR)/$(am__dirstamp)
 src/input/$(am__dirstamp):
 	@$(mkinstalldirs) src/input
@@ -1148,6 +1172,8 @@ src/input/lib_libvlc_a-es_out.$(OBJEXT): src/input/$(am__dirstamp) \
 src/input/lib_libvlc_a-input.$(OBJEXT): src/input/$(am__dirstamp) \
 	src/input/$(DEPDIR)/$(am__dirstamp)
 src/input/lib_libvlc_a-stream.$(OBJEXT): src/input/$(am__dirstamp) \
+	src/input/$(DEPDIR)/$(am__dirstamp)
+src/input/lib_libvlc_a-mem_stream.$(OBJEXT): src/input/$(am__dirstamp) \
 	src/input/$(DEPDIR)/$(am__dirstamp)
 src/input/lib_libvlc_a-subtitles.$(OBJEXT): src/input/$(am__dirstamp) \
 	src/input/$(DEPDIR)/$(am__dirstamp)
@@ -1246,6 +1272,8 @@ src/misc/lib_libvlc_a-cpu.$(OBJEXT): src/misc/$(am__dirstamp) \
 	src/misc/$(DEPDIR)/$(am__dirstamp)
 src/misc/lib_libvlc_a-configuration.$(OBJEXT): src/misc/$(am__dirstamp) \
 	src/misc/$(DEPDIR)/$(am__dirstamp)
+src/misc/lib_libvlc_a-image.$(OBJEXT): src/misc/$(am__dirstamp) \
+	src/misc/$(DEPDIR)/$(am__dirstamp)
 src/misc/lib_libvlc_a-iso_lang.$(OBJEXT): src/misc/$(am__dirstamp) \
 	src/misc/$(DEPDIR)/$(am__dirstamp)
 src/misc/lib_libvlc_a-messages.$(OBJEXT): src/misc/$(am__dirstamp) \
@@ -1259,6 +1287,8 @@ src/misc/lib_libvlc_a-error.$(OBJEXT): src/misc/$(am__dirstamp) \
 src/misc/lib_libvlc_a-net.$(OBJEXT): src/misc/$(am__dirstamp) \
 	src/misc/$(DEPDIR)/$(am__dirstamp)
 src/misc/lib_libvlc_a-vlm.$(OBJEXT): src/misc/$(am__dirstamp) \
+	src/misc/$(DEPDIR)/$(am__dirstamp)
+src/misc/lib_libvlc_a-xml.$(OBJEXT): src/misc/$(am__dirstamp) \
 	src/misc/$(DEPDIR)/$(am__dirstamp)
 src/extras/$(am__dirstamp):
 	@$(mkinstalldirs) src/extras
@@ -1304,7 +1334,7 @@ src/playlist/lib_libvlc_pic_a-sort.$(OBJEXT): \
 src/playlist/lib_libvlc_pic_a-loadsave.$(OBJEXT): \
 	src/playlist/$(am__dirstamp) \
 	src/playlist/$(DEPDIR)/$(am__dirstamp)
-src/playlist/lib_libvlc_pic_a-group.$(OBJEXT): \
+src/playlist/lib_libvlc_pic_a-view.$(OBJEXT): \
 	src/playlist/$(am__dirstamp) \
 	src/playlist/$(DEPDIR)/$(am__dirstamp)
 src/playlist/lib_libvlc_pic_a-item.$(OBJEXT): \
@@ -1313,7 +1343,7 @@ src/playlist/lib_libvlc_pic_a-item.$(OBJEXT): \
 src/playlist/lib_libvlc_pic_a-item-ext.$(OBJEXT): \
 	src/playlist/$(am__dirstamp) \
 	src/playlist/$(DEPDIR)/$(am__dirstamp)
-src/playlist/lib_libvlc_pic_a-info.$(OBJEXT): \
+src/playlist/lib_libvlc_pic_a-services_discovery.$(OBJEXT): \
 	src/playlist/$(am__dirstamp) \
 	src/playlist/$(DEPDIR)/$(am__dirstamp)
 src/input/lib_libvlc_pic_a-access.$(OBJEXT): src/input/$(am__dirstamp) \
@@ -1332,6 +1362,8 @@ src/input/lib_libvlc_pic_a-input.$(OBJEXT): src/input/$(am__dirstamp) \
 	src/input/$(DEPDIR)/$(am__dirstamp)
 src/input/lib_libvlc_pic_a-stream.$(OBJEXT): src/input/$(am__dirstamp) \
 	src/input/$(DEPDIR)/$(am__dirstamp)
+src/input/lib_libvlc_pic_a-mem_stream.$(OBJEXT): \
+	src/input/$(am__dirstamp) src/input/$(DEPDIR)/$(am__dirstamp)
 src/input/lib_libvlc_pic_a-subtitles.$(OBJEXT): \
 	src/input/$(am__dirstamp) src/input/$(DEPDIR)/$(am__dirstamp)
 src/input/lib_libvlc_pic_a-var.$(OBJEXT): src/input/$(am__dirstamp) \
@@ -1405,6 +1437,8 @@ src/misc/lib_libvlc_pic_a-cpu.$(OBJEXT): src/misc/$(am__dirstamp) \
 	src/misc/$(DEPDIR)/$(am__dirstamp)
 src/misc/lib_libvlc_pic_a-configuration.$(OBJEXT): \
 	src/misc/$(am__dirstamp) src/misc/$(DEPDIR)/$(am__dirstamp)
+src/misc/lib_libvlc_pic_a-image.$(OBJEXT): src/misc/$(am__dirstamp) \
+	src/misc/$(DEPDIR)/$(am__dirstamp)
 src/misc/lib_libvlc_pic_a-iso_lang.$(OBJEXT): src/misc/$(am__dirstamp) \
 	src/misc/$(DEPDIR)/$(am__dirstamp)
 src/misc/lib_libvlc_pic_a-messages.$(OBJEXT): src/misc/$(am__dirstamp) \
@@ -1418,6 +1452,8 @@ src/misc/lib_libvlc_pic_a-error.$(OBJEXT): src/misc/$(am__dirstamp) \
 src/misc/lib_libvlc_pic_a-net.$(OBJEXT): src/misc/$(am__dirstamp) \
 	src/misc/$(DEPDIR)/$(am__dirstamp)
 src/misc/lib_libvlc_pic_a-vlm.$(OBJEXT): src/misc/$(am__dirstamp) \
+	src/misc/$(DEPDIR)/$(am__dirstamp)
+src/misc/lib_libvlc_pic_a-xml.$(OBJEXT): src/misc/$(am__dirstamp) \
 	src/misc/$(DEPDIR)/$(am__dirstamp)
 src/extras/lib_libvlc_pic_a-libc.$(OBJEXT): src/extras/$(am__dirstamp) \
 	src/extras/$(DEPDIR)/$(am__dirstamp)
@@ -1514,6 +1550,7 @@ mostlyclean-compile:
 	-rm -f src/input/lib_libvlc_a-demux.$(OBJEXT)
 	-rm -f src/input/lib_libvlc_a-es_out.$(OBJEXT)
 	-rm -f src/input/lib_libvlc_a-input.$(OBJEXT)
+	-rm -f src/input/lib_libvlc_a-mem_stream.$(OBJEXT)
 	-rm -f src/input/lib_libvlc_a-stream.$(OBJEXT)
 	-rm -f src/input/lib_libvlc_a-subtitles.$(OBJEXT)
 	-rm -f src/input/lib_libvlc_a-var.$(OBJEXT)
@@ -1524,6 +1561,7 @@ mostlyclean-compile:
 	-rm -f src/input/lib_libvlc_pic_a-demux.$(OBJEXT)
 	-rm -f src/input/lib_libvlc_pic_a-es_out.$(OBJEXT)
 	-rm -f src/input/lib_libvlc_pic_a-input.$(OBJEXT)
+	-rm -f src/input/lib_libvlc_pic_a-mem_stream.$(OBJEXT)
 	-rm -f src/input/lib_libvlc_pic_a-stream.$(OBJEXT)
 	-rm -f src/input/lib_libvlc_pic_a-subtitles.$(OBJEXT)
 	-rm -f src/input/lib_libvlc_pic_a-var.$(OBJEXT)
@@ -1541,6 +1579,7 @@ mostlyclean-compile:
 	-rm -f src/misc/lib_libvlc_a-darwin_specific.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_a-error.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_a-httpd.$(OBJEXT)
+	-rm -f src/misc/lib_libvlc_a-image.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_a-iso_lang.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_a-messages.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_a-modules.$(OBJEXT)
@@ -1552,6 +1591,7 @@ mostlyclean-compile:
 	-rm -f src/misc/lib_libvlc_a-variables.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_a-vlm.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_a-win32_specific.$(OBJEXT)
+	-rm -f src/misc/lib_libvlc_a-xml.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_pic_a-beos_specific.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_pic_a-block.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_pic_a-charset.$(OBJEXT)
@@ -1560,6 +1600,7 @@ mostlyclean-compile:
 	-rm -f src/misc/lib_libvlc_pic_a-darwin_specific.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_pic_a-error.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_pic_a-httpd.$(OBJEXT)
+	-rm -f src/misc/lib_libvlc_pic_a-image.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_pic_a-iso_lang.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_pic_a-messages.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_pic_a-modules.$(OBJEXT)
@@ -1571,20 +1612,21 @@ mostlyclean-compile:
 	-rm -f src/misc/lib_libvlc_pic_a-variables.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_pic_a-vlm.$(OBJEXT)
 	-rm -f src/misc/lib_libvlc_pic_a-win32_specific.$(OBJEXT)
-	-rm -f src/playlist/lib_libvlc_a-group.$(OBJEXT)
-	-rm -f src/playlist/lib_libvlc_a-info.$(OBJEXT)
+	-rm -f src/misc/lib_libvlc_pic_a-xml.$(OBJEXT)
 	-rm -f src/playlist/lib_libvlc_a-item-ext.$(OBJEXT)
 	-rm -f src/playlist/lib_libvlc_a-item.$(OBJEXT)
 	-rm -f src/playlist/lib_libvlc_a-loadsave.$(OBJEXT)
 	-rm -f src/playlist/lib_libvlc_a-playlist.$(OBJEXT)
+	-rm -f src/playlist/lib_libvlc_a-services_discovery.$(OBJEXT)
 	-rm -f src/playlist/lib_libvlc_a-sort.$(OBJEXT)
-	-rm -f src/playlist/lib_libvlc_pic_a-group.$(OBJEXT)
-	-rm -f src/playlist/lib_libvlc_pic_a-info.$(OBJEXT)
+	-rm -f src/playlist/lib_libvlc_a-view.$(OBJEXT)
 	-rm -f src/playlist/lib_libvlc_pic_a-item-ext.$(OBJEXT)
 	-rm -f src/playlist/lib_libvlc_pic_a-item.$(OBJEXT)
 	-rm -f src/playlist/lib_libvlc_pic_a-loadsave.$(OBJEXT)
 	-rm -f src/playlist/lib_libvlc_pic_a-playlist.$(OBJEXT)
+	-rm -f src/playlist/lib_libvlc_pic_a-services_discovery.$(OBJEXT)
 	-rm -f src/playlist/lib_libvlc_pic_a-sort.$(OBJEXT)
+	-rm -f src/playlist/lib_libvlc_pic_a-view.$(OBJEXT)
 	-rm -f src/stream_output/lib_libvlc_a-announce.$(OBJEXT)
 	-rm -f src/stream_output/lib_libvlc_a-sap.$(OBJEXT)
 	-rm -f src/stream_output/lib_libvlc_a-stream_output.$(OBJEXT)
@@ -1642,6 +1684,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/input/$(DEPDIR)/lib_libvlc_a-demux.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/input/$(DEPDIR)/lib_libvlc_a-es_out.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/input/$(DEPDIR)/lib_libvlc_a-input.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/input/$(DEPDIR)/lib_libvlc_a-mem_stream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/input/$(DEPDIR)/lib_libvlc_a-stream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/input/$(DEPDIR)/lib_libvlc_a-subtitles.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/input/$(DEPDIR)/lib_libvlc_a-var.Po@am__quote@
@@ -1652,6 +1695,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/input/$(DEPDIR)/lib_libvlc_pic_a-demux.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/input/$(DEPDIR)/lib_libvlc_pic_a-es_out.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/input/$(DEPDIR)/lib_libvlc_pic_a-input.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/input/$(DEPDIR)/lib_libvlc_pic_a-mem_stream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/input/$(DEPDIR)/lib_libvlc_pic_a-stream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/input/$(DEPDIR)/lib_libvlc_pic_a-subtitles.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/input/$(DEPDIR)/lib_libvlc_pic_a-var.Po@am__quote@
@@ -1667,6 +1711,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_a-darwin_specific.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_a-error.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_a-httpd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_a-image.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_a-iso_lang.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_a-messages.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_a-modules.Po@am__quote@
@@ -1678,6 +1723,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_a-variables.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_a-vlm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_a-win32_specific.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_a-xml.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_pic_a-beos_specific.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_pic_a-block.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_pic_a-charset.Po@am__quote@
@@ -1686,6 +1732,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_pic_a-darwin_specific.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_pic_a-error.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_pic_a-httpd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_pic_a-image.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_pic_a-iso_lang.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_pic_a-messages.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_pic_a-modules.Po@am__quote@
@@ -1697,20 +1744,21 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_pic_a-variables.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_pic_a-vlm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_pic_a-win32_specific.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_a-group.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_a-info.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/misc/$(DEPDIR)/lib_libvlc_pic_a-xml.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_a-item-ext.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_a-item.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_a-loadsave.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_a-playlist.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_a-services_discovery.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_a-sort.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_pic_a-group.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_pic_a-info.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_a-view.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_pic_a-item-ext.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_pic_a-item.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_pic_a-loadsave.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_pic_a-playlist.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_pic_a-services_discovery.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_pic_a-sort.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/playlist/$(DEPDIR)/lib_libvlc_pic_a-view.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/stream_output/$(DEPDIR)/lib_libvlc_a-announce.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/stream_output/$(DEPDIR)/lib_libvlc_a-sap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/stream_output/$(DEPDIR)/lib_libvlc_a-stream_output.Po@am__quote@
@@ -1886,27 +1934,27 @@ src/playlist/lib_libvlc_a-loadsave.obj: src/playlist/loadsave.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_a-loadsave.obj `if test -f 'src/playlist/loadsave.c'; then $(CYGPATH_W) 'src/playlist/loadsave.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/loadsave.c'; fi`
 
-src/playlist/lib_libvlc_a-group.o: src/playlist/group.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_a-group.o -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_a-group.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o src/playlist/lib_libvlc_a-group.o `test -f 'src/playlist/group.c' || echo '$(srcdir)/'`src/playlist/group.c; \
-@am__fastdepCC_TRUE@	then mv -f "src/playlist/$(DEPDIR)/lib_libvlc_a-group.Tpo" "src/playlist/$(DEPDIR)/lib_libvlc_a-group.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "src/playlist/$(DEPDIR)/lib_libvlc_a-group.Tpo"; exit 1; \
+src/playlist/lib_libvlc_a-view.o: src/playlist/view.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_a-view.o -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_a-view.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/playlist/lib_libvlc_a-view.o `test -f 'src/playlist/view.c' || echo '$(srcdir)/'`src/playlist/view.c; \
+@am__fastdepCC_TRUE@	then mv -f "src/playlist/$(DEPDIR)/lib_libvlc_a-view.Tpo" "src/playlist/$(DEPDIR)/lib_libvlc_a-view.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/playlist/$(DEPDIR)/lib_libvlc_a-view.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/playlist/group.c' object='src/playlist/lib_libvlc_a-group.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/playlist/$(DEPDIR)/lib_libvlc_a-group.Po' tmpdepfile='src/playlist/$(DEPDIR)/lib_libvlc_a-group.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/playlist/view.c' object='src/playlist/lib_libvlc_a-view.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/playlist/$(DEPDIR)/lib_libvlc_a-view.Po' tmpdepfile='src/playlist/$(DEPDIR)/lib_libvlc_a-view.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_a-group.o `test -f 'src/playlist/group.c' || echo '$(srcdir)/'`src/playlist/group.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_a-view.o `test -f 'src/playlist/view.c' || echo '$(srcdir)/'`src/playlist/view.c
 
-src/playlist/lib_libvlc_a-group.obj: src/playlist/group.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_a-group.obj -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_a-group.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o src/playlist/lib_libvlc_a-group.obj `if test -f 'src/playlist/group.c'; then $(CYGPATH_W) 'src/playlist/group.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/group.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "src/playlist/$(DEPDIR)/lib_libvlc_a-group.Tpo" "src/playlist/$(DEPDIR)/lib_libvlc_a-group.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "src/playlist/$(DEPDIR)/lib_libvlc_a-group.Tpo"; exit 1; \
+src/playlist/lib_libvlc_a-view.obj: src/playlist/view.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_a-view.obj -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_a-view.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/playlist/lib_libvlc_a-view.obj `if test -f 'src/playlist/view.c'; then $(CYGPATH_W) 'src/playlist/view.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/view.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "src/playlist/$(DEPDIR)/lib_libvlc_a-view.Tpo" "src/playlist/$(DEPDIR)/lib_libvlc_a-view.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/playlist/$(DEPDIR)/lib_libvlc_a-view.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/playlist/group.c' object='src/playlist/lib_libvlc_a-group.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/playlist/$(DEPDIR)/lib_libvlc_a-group.Po' tmpdepfile='src/playlist/$(DEPDIR)/lib_libvlc_a-group.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/playlist/view.c' object='src/playlist/lib_libvlc_a-view.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/playlist/$(DEPDIR)/lib_libvlc_a-view.Po' tmpdepfile='src/playlist/$(DEPDIR)/lib_libvlc_a-view.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_a-group.obj `if test -f 'src/playlist/group.c'; then $(CYGPATH_W) 'src/playlist/group.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/group.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_a-view.obj `if test -f 'src/playlist/view.c'; then $(CYGPATH_W) 'src/playlist/view.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/view.c'; fi`
 
 src/playlist/lib_libvlc_a-item.o: src/playlist/item.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_a-item.o -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_a-item.Tpo" \
@@ -1952,27 +2000,27 @@ src/playlist/lib_libvlc_a-item-ext.obj: src/playlist/item-ext.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_a-item-ext.obj `if test -f 'src/playlist/item-ext.c'; then $(CYGPATH_W) 'src/playlist/item-ext.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/item-ext.c'; fi`
 
-src/playlist/lib_libvlc_a-info.o: src/playlist/info.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_a-info.o -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_a-info.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o src/playlist/lib_libvlc_a-info.o `test -f 'src/playlist/info.c' || echo '$(srcdir)/'`src/playlist/info.c; \
-@am__fastdepCC_TRUE@	then mv -f "src/playlist/$(DEPDIR)/lib_libvlc_a-info.Tpo" "src/playlist/$(DEPDIR)/lib_libvlc_a-info.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "src/playlist/$(DEPDIR)/lib_libvlc_a-info.Tpo"; exit 1; \
+src/playlist/lib_libvlc_a-services_discovery.o: src/playlist/services_discovery.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_a-services_discovery.o -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_a-services_discovery.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/playlist/lib_libvlc_a-services_discovery.o `test -f 'src/playlist/services_discovery.c' || echo '$(srcdir)/'`src/playlist/services_discovery.c; \
+@am__fastdepCC_TRUE@	then mv -f "src/playlist/$(DEPDIR)/lib_libvlc_a-services_discovery.Tpo" "src/playlist/$(DEPDIR)/lib_libvlc_a-services_discovery.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/playlist/$(DEPDIR)/lib_libvlc_a-services_discovery.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/playlist/info.c' object='src/playlist/lib_libvlc_a-info.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/playlist/$(DEPDIR)/lib_libvlc_a-info.Po' tmpdepfile='src/playlist/$(DEPDIR)/lib_libvlc_a-info.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/playlist/services_discovery.c' object='src/playlist/lib_libvlc_a-services_discovery.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/playlist/$(DEPDIR)/lib_libvlc_a-services_discovery.Po' tmpdepfile='src/playlist/$(DEPDIR)/lib_libvlc_a-services_discovery.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_a-info.o `test -f 'src/playlist/info.c' || echo '$(srcdir)/'`src/playlist/info.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_a-services_discovery.o `test -f 'src/playlist/services_discovery.c' || echo '$(srcdir)/'`src/playlist/services_discovery.c
 
-src/playlist/lib_libvlc_a-info.obj: src/playlist/info.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_a-info.obj -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_a-info.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o src/playlist/lib_libvlc_a-info.obj `if test -f 'src/playlist/info.c'; then $(CYGPATH_W) 'src/playlist/info.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/info.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "src/playlist/$(DEPDIR)/lib_libvlc_a-info.Tpo" "src/playlist/$(DEPDIR)/lib_libvlc_a-info.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "src/playlist/$(DEPDIR)/lib_libvlc_a-info.Tpo"; exit 1; \
+src/playlist/lib_libvlc_a-services_discovery.obj: src/playlist/services_discovery.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_a-services_discovery.obj -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_a-services_discovery.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/playlist/lib_libvlc_a-services_discovery.obj `if test -f 'src/playlist/services_discovery.c'; then $(CYGPATH_W) 'src/playlist/services_discovery.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/services_discovery.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "src/playlist/$(DEPDIR)/lib_libvlc_a-services_discovery.Tpo" "src/playlist/$(DEPDIR)/lib_libvlc_a-services_discovery.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/playlist/$(DEPDIR)/lib_libvlc_a-services_discovery.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/playlist/info.c' object='src/playlist/lib_libvlc_a-info.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/playlist/$(DEPDIR)/lib_libvlc_a-info.Po' tmpdepfile='src/playlist/$(DEPDIR)/lib_libvlc_a-info.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/playlist/services_discovery.c' object='src/playlist/lib_libvlc_a-services_discovery.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/playlist/$(DEPDIR)/lib_libvlc_a-services_discovery.Po' tmpdepfile='src/playlist/$(DEPDIR)/lib_libvlc_a-services_discovery.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_a-info.obj `if test -f 'src/playlist/info.c'; then $(CYGPATH_W) 'src/playlist/info.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/info.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_a-services_discovery.obj `if test -f 'src/playlist/services_discovery.c'; then $(CYGPATH_W) 'src/playlist/services_discovery.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/services_discovery.c'; fi`
 
 src/input/lib_libvlc_a-access.o: src/input/access.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/input/lib_libvlc_a-access.o -MD -MP -MF "src/input/$(DEPDIR)/lib_libvlc_a-access.Tpo" \
@@ -2149,6 +2197,28 @@ src/input/lib_libvlc_a-stream.obj: src/input/stream.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/input/$(DEPDIR)/lib_libvlc_a-stream.Po' tmpdepfile='src/input/$(DEPDIR)/lib_libvlc_a-stream.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/input/lib_libvlc_a-stream.obj `if test -f 'src/input/stream.c'; then $(CYGPATH_W) 'src/input/stream.c'; else $(CYGPATH_W) '$(srcdir)/src/input/stream.c'; fi`
+
+src/input/lib_libvlc_a-mem_stream.o: src/input/mem_stream.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/input/lib_libvlc_a-mem_stream.o -MD -MP -MF "src/input/$(DEPDIR)/lib_libvlc_a-mem_stream.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/input/lib_libvlc_a-mem_stream.o `test -f 'src/input/mem_stream.c' || echo '$(srcdir)/'`src/input/mem_stream.c; \
+@am__fastdepCC_TRUE@	then mv -f "src/input/$(DEPDIR)/lib_libvlc_a-mem_stream.Tpo" "src/input/$(DEPDIR)/lib_libvlc_a-mem_stream.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/input/$(DEPDIR)/lib_libvlc_a-mem_stream.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/input/mem_stream.c' object='src/input/lib_libvlc_a-mem_stream.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/input/$(DEPDIR)/lib_libvlc_a-mem_stream.Po' tmpdepfile='src/input/$(DEPDIR)/lib_libvlc_a-mem_stream.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/input/lib_libvlc_a-mem_stream.o `test -f 'src/input/mem_stream.c' || echo '$(srcdir)/'`src/input/mem_stream.c
+
+src/input/lib_libvlc_a-mem_stream.obj: src/input/mem_stream.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/input/lib_libvlc_a-mem_stream.obj -MD -MP -MF "src/input/$(DEPDIR)/lib_libvlc_a-mem_stream.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/input/lib_libvlc_a-mem_stream.obj `if test -f 'src/input/mem_stream.c'; then $(CYGPATH_W) 'src/input/mem_stream.c'; else $(CYGPATH_W) '$(srcdir)/src/input/mem_stream.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "src/input/$(DEPDIR)/lib_libvlc_a-mem_stream.Tpo" "src/input/$(DEPDIR)/lib_libvlc_a-mem_stream.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/input/$(DEPDIR)/lib_libvlc_a-mem_stream.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/input/mem_stream.c' object='src/input/lib_libvlc_a-mem_stream.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/input/$(DEPDIR)/lib_libvlc_a-mem_stream.Po' tmpdepfile='src/input/$(DEPDIR)/lib_libvlc_a-mem_stream.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/input/lib_libvlc_a-mem_stream.obj `if test -f 'src/input/mem_stream.c'; then $(CYGPATH_W) 'src/input/mem_stream.c'; else $(CYGPATH_W) '$(srcdir)/src/input/mem_stream.c'; fi`
 
 src/input/lib_libvlc_a-subtitles.o: src/input/subtitles.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/input/lib_libvlc_a-subtitles.o -MD -MP -MF "src/input/$(DEPDIR)/lib_libvlc_a-subtitles.Tpo" \
@@ -2766,6 +2836,28 @@ src/misc/lib_libvlc_a-configuration.obj: src/misc/configuration.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/misc/lib_libvlc_a-configuration.obj `if test -f 'src/misc/configuration.c'; then $(CYGPATH_W) 'src/misc/configuration.c'; else $(CYGPATH_W) '$(srcdir)/src/misc/configuration.c'; fi`
 
+src/misc/lib_libvlc_a-image.o: src/misc/image.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/misc/lib_libvlc_a-image.o -MD -MP -MF "src/misc/$(DEPDIR)/lib_libvlc_a-image.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/misc/lib_libvlc_a-image.o `test -f 'src/misc/image.c' || echo '$(srcdir)/'`src/misc/image.c; \
+@am__fastdepCC_TRUE@	then mv -f "src/misc/$(DEPDIR)/lib_libvlc_a-image.Tpo" "src/misc/$(DEPDIR)/lib_libvlc_a-image.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/misc/$(DEPDIR)/lib_libvlc_a-image.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/misc/image.c' object='src/misc/lib_libvlc_a-image.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/misc/$(DEPDIR)/lib_libvlc_a-image.Po' tmpdepfile='src/misc/$(DEPDIR)/lib_libvlc_a-image.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/misc/lib_libvlc_a-image.o `test -f 'src/misc/image.c' || echo '$(srcdir)/'`src/misc/image.c
+
+src/misc/lib_libvlc_a-image.obj: src/misc/image.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/misc/lib_libvlc_a-image.obj -MD -MP -MF "src/misc/$(DEPDIR)/lib_libvlc_a-image.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/misc/lib_libvlc_a-image.obj `if test -f 'src/misc/image.c'; then $(CYGPATH_W) 'src/misc/image.c'; else $(CYGPATH_W) '$(srcdir)/src/misc/image.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "src/misc/$(DEPDIR)/lib_libvlc_a-image.Tpo" "src/misc/$(DEPDIR)/lib_libvlc_a-image.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/misc/$(DEPDIR)/lib_libvlc_a-image.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/misc/image.c' object='src/misc/lib_libvlc_a-image.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/misc/$(DEPDIR)/lib_libvlc_a-image.Po' tmpdepfile='src/misc/$(DEPDIR)/lib_libvlc_a-image.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/misc/lib_libvlc_a-image.obj `if test -f 'src/misc/image.c'; then $(CYGPATH_W) 'src/misc/image.c'; else $(CYGPATH_W) '$(srcdir)/src/misc/image.c'; fi`
+
 src/misc/lib_libvlc_a-iso_lang.o: src/misc/iso_lang.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/misc/lib_libvlc_a-iso_lang.o -MD -MP -MF "src/misc/$(DEPDIR)/lib_libvlc_a-iso_lang.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o src/misc/lib_libvlc_a-iso_lang.o `test -f 'src/misc/iso_lang.c' || echo '$(srcdir)/'`src/misc/iso_lang.c; \
@@ -2919,6 +3011,28 @@ src/misc/lib_libvlc_a-vlm.obj: src/misc/vlm.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/misc/$(DEPDIR)/lib_libvlc_a-vlm.Po' tmpdepfile='src/misc/$(DEPDIR)/lib_libvlc_a-vlm.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/misc/lib_libvlc_a-vlm.obj `if test -f 'src/misc/vlm.c'; then $(CYGPATH_W) 'src/misc/vlm.c'; else $(CYGPATH_W) '$(srcdir)/src/misc/vlm.c'; fi`
+
+src/misc/lib_libvlc_a-xml.o: src/misc/xml.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/misc/lib_libvlc_a-xml.o -MD -MP -MF "src/misc/$(DEPDIR)/lib_libvlc_a-xml.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/misc/lib_libvlc_a-xml.o `test -f 'src/misc/xml.c' || echo '$(srcdir)/'`src/misc/xml.c; \
+@am__fastdepCC_TRUE@	then mv -f "src/misc/$(DEPDIR)/lib_libvlc_a-xml.Tpo" "src/misc/$(DEPDIR)/lib_libvlc_a-xml.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/misc/$(DEPDIR)/lib_libvlc_a-xml.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/misc/xml.c' object='src/misc/lib_libvlc_a-xml.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/misc/$(DEPDIR)/lib_libvlc_a-xml.Po' tmpdepfile='src/misc/$(DEPDIR)/lib_libvlc_a-xml.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/misc/lib_libvlc_a-xml.o `test -f 'src/misc/xml.c' || echo '$(srcdir)/'`src/misc/xml.c
+
+src/misc/lib_libvlc_a-xml.obj: src/misc/xml.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/misc/lib_libvlc_a-xml.obj -MD -MP -MF "src/misc/$(DEPDIR)/lib_libvlc_a-xml.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/misc/lib_libvlc_a-xml.obj `if test -f 'src/misc/xml.c'; then $(CYGPATH_W) 'src/misc/xml.c'; else $(CYGPATH_W) '$(srcdir)/src/misc/xml.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "src/misc/$(DEPDIR)/lib_libvlc_a-xml.Tpo" "src/misc/$(DEPDIR)/lib_libvlc_a-xml.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/misc/$(DEPDIR)/lib_libvlc_a-xml.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/misc/xml.c' object='src/misc/lib_libvlc_a-xml.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/misc/$(DEPDIR)/lib_libvlc_a-xml.Po' tmpdepfile='src/misc/$(DEPDIR)/lib_libvlc_a-xml.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -c -o src/misc/lib_libvlc_a-xml.obj `if test -f 'src/misc/xml.c'; then $(CYGPATH_W) 'src/misc/xml.c'; else $(CYGPATH_W) '$(srcdir)/src/misc/xml.c'; fi`
 
 src/extras/lib_libvlc_a-libc.o: src/extras/libc.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_a_CFLAGS) $(CFLAGS) -MT src/extras/lib_libvlc_a-libc.o -MD -MP -MF "src/extras/$(DEPDIR)/lib_libvlc_a-libc.Tpo" \
@@ -3162,27 +3276,27 @@ src/playlist/lib_libvlc_pic_a-loadsave.obj: src/playlist/loadsave.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_pic_a-loadsave.obj `if test -f 'src/playlist/loadsave.c'; then $(CYGPATH_W) 'src/playlist/loadsave.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/loadsave.c'; fi`
 
-src/playlist/lib_libvlc_pic_a-group.o: src/playlist/group.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_pic_a-group.o -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-group.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o src/playlist/lib_libvlc_pic_a-group.o `test -f 'src/playlist/group.c' || echo '$(srcdir)/'`src/playlist/group.c; \
-@am__fastdepCC_TRUE@	then mv -f "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-group.Tpo" "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-group.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-group.Tpo"; exit 1; \
+src/playlist/lib_libvlc_pic_a-view.o: src/playlist/view.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_pic_a-view.o -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-view.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/playlist/lib_libvlc_pic_a-view.o `test -f 'src/playlist/view.c' || echo '$(srcdir)/'`src/playlist/view.c; \
+@am__fastdepCC_TRUE@	then mv -f "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-view.Tpo" "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-view.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-view.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/playlist/group.c' object='src/playlist/lib_libvlc_pic_a-group.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/playlist/$(DEPDIR)/lib_libvlc_pic_a-group.Po' tmpdepfile='src/playlist/$(DEPDIR)/lib_libvlc_pic_a-group.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/playlist/view.c' object='src/playlist/lib_libvlc_pic_a-view.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/playlist/$(DEPDIR)/lib_libvlc_pic_a-view.Po' tmpdepfile='src/playlist/$(DEPDIR)/lib_libvlc_pic_a-view.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_pic_a-group.o `test -f 'src/playlist/group.c' || echo '$(srcdir)/'`src/playlist/group.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_pic_a-view.o `test -f 'src/playlist/view.c' || echo '$(srcdir)/'`src/playlist/view.c
 
-src/playlist/lib_libvlc_pic_a-group.obj: src/playlist/group.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_pic_a-group.obj -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-group.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o src/playlist/lib_libvlc_pic_a-group.obj `if test -f 'src/playlist/group.c'; then $(CYGPATH_W) 'src/playlist/group.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/group.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-group.Tpo" "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-group.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-group.Tpo"; exit 1; \
+src/playlist/lib_libvlc_pic_a-view.obj: src/playlist/view.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_pic_a-view.obj -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-view.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/playlist/lib_libvlc_pic_a-view.obj `if test -f 'src/playlist/view.c'; then $(CYGPATH_W) 'src/playlist/view.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/view.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-view.Tpo" "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-view.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-view.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/playlist/group.c' object='src/playlist/lib_libvlc_pic_a-group.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/playlist/$(DEPDIR)/lib_libvlc_pic_a-group.Po' tmpdepfile='src/playlist/$(DEPDIR)/lib_libvlc_pic_a-group.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/playlist/view.c' object='src/playlist/lib_libvlc_pic_a-view.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/playlist/$(DEPDIR)/lib_libvlc_pic_a-view.Po' tmpdepfile='src/playlist/$(DEPDIR)/lib_libvlc_pic_a-view.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_pic_a-group.obj `if test -f 'src/playlist/group.c'; then $(CYGPATH_W) 'src/playlist/group.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/group.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_pic_a-view.obj `if test -f 'src/playlist/view.c'; then $(CYGPATH_W) 'src/playlist/view.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/view.c'; fi`
 
 src/playlist/lib_libvlc_pic_a-item.o: src/playlist/item.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_pic_a-item.o -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-item.Tpo" \
@@ -3228,27 +3342,27 @@ src/playlist/lib_libvlc_pic_a-item-ext.obj: src/playlist/item-ext.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_pic_a-item-ext.obj `if test -f 'src/playlist/item-ext.c'; then $(CYGPATH_W) 'src/playlist/item-ext.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/item-ext.c'; fi`
 
-src/playlist/lib_libvlc_pic_a-info.o: src/playlist/info.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_pic_a-info.o -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-info.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o src/playlist/lib_libvlc_pic_a-info.o `test -f 'src/playlist/info.c' || echo '$(srcdir)/'`src/playlist/info.c; \
-@am__fastdepCC_TRUE@	then mv -f "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-info.Tpo" "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-info.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-info.Tpo"; exit 1; \
+src/playlist/lib_libvlc_pic_a-services_discovery.o: src/playlist/services_discovery.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_pic_a-services_discovery.o -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-services_discovery.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/playlist/lib_libvlc_pic_a-services_discovery.o `test -f 'src/playlist/services_discovery.c' || echo '$(srcdir)/'`src/playlist/services_discovery.c; \
+@am__fastdepCC_TRUE@	then mv -f "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-services_discovery.Tpo" "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-services_discovery.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-services_discovery.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/playlist/info.c' object='src/playlist/lib_libvlc_pic_a-info.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/playlist/$(DEPDIR)/lib_libvlc_pic_a-info.Po' tmpdepfile='src/playlist/$(DEPDIR)/lib_libvlc_pic_a-info.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/playlist/services_discovery.c' object='src/playlist/lib_libvlc_pic_a-services_discovery.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/playlist/$(DEPDIR)/lib_libvlc_pic_a-services_discovery.Po' tmpdepfile='src/playlist/$(DEPDIR)/lib_libvlc_pic_a-services_discovery.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_pic_a-info.o `test -f 'src/playlist/info.c' || echo '$(srcdir)/'`src/playlist/info.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_pic_a-services_discovery.o `test -f 'src/playlist/services_discovery.c' || echo '$(srcdir)/'`src/playlist/services_discovery.c
 
-src/playlist/lib_libvlc_pic_a-info.obj: src/playlist/info.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_pic_a-info.obj -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-info.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o src/playlist/lib_libvlc_pic_a-info.obj `if test -f 'src/playlist/info.c'; then $(CYGPATH_W) 'src/playlist/info.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/info.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-info.Tpo" "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-info.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-info.Tpo"; exit 1; \
+src/playlist/lib_libvlc_pic_a-services_discovery.obj: src/playlist/services_discovery.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/playlist/lib_libvlc_pic_a-services_discovery.obj -MD -MP -MF "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-services_discovery.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/playlist/lib_libvlc_pic_a-services_discovery.obj `if test -f 'src/playlist/services_discovery.c'; then $(CYGPATH_W) 'src/playlist/services_discovery.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/services_discovery.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-services_discovery.Tpo" "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-services_discovery.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/playlist/$(DEPDIR)/lib_libvlc_pic_a-services_discovery.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/playlist/info.c' object='src/playlist/lib_libvlc_pic_a-info.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/playlist/$(DEPDIR)/lib_libvlc_pic_a-info.Po' tmpdepfile='src/playlist/$(DEPDIR)/lib_libvlc_pic_a-info.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/playlist/services_discovery.c' object='src/playlist/lib_libvlc_pic_a-services_discovery.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/playlist/$(DEPDIR)/lib_libvlc_pic_a-services_discovery.Po' tmpdepfile='src/playlist/$(DEPDIR)/lib_libvlc_pic_a-services_discovery.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_pic_a-info.obj `if test -f 'src/playlist/info.c'; then $(CYGPATH_W) 'src/playlist/info.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/info.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/playlist/lib_libvlc_pic_a-services_discovery.obj `if test -f 'src/playlist/services_discovery.c'; then $(CYGPATH_W) 'src/playlist/services_discovery.c'; else $(CYGPATH_W) '$(srcdir)/src/playlist/services_discovery.c'; fi`
 
 src/input/lib_libvlc_pic_a-access.o: src/input/access.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/input/lib_libvlc_pic_a-access.o -MD -MP -MF "src/input/$(DEPDIR)/lib_libvlc_pic_a-access.Tpo" \
@@ -3425,6 +3539,28 @@ src/input/lib_libvlc_pic_a-stream.obj: src/input/stream.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/input/$(DEPDIR)/lib_libvlc_pic_a-stream.Po' tmpdepfile='src/input/$(DEPDIR)/lib_libvlc_pic_a-stream.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/input/lib_libvlc_pic_a-stream.obj `if test -f 'src/input/stream.c'; then $(CYGPATH_W) 'src/input/stream.c'; else $(CYGPATH_W) '$(srcdir)/src/input/stream.c'; fi`
+
+src/input/lib_libvlc_pic_a-mem_stream.o: src/input/mem_stream.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/input/lib_libvlc_pic_a-mem_stream.o -MD -MP -MF "src/input/$(DEPDIR)/lib_libvlc_pic_a-mem_stream.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/input/lib_libvlc_pic_a-mem_stream.o `test -f 'src/input/mem_stream.c' || echo '$(srcdir)/'`src/input/mem_stream.c; \
+@am__fastdepCC_TRUE@	then mv -f "src/input/$(DEPDIR)/lib_libvlc_pic_a-mem_stream.Tpo" "src/input/$(DEPDIR)/lib_libvlc_pic_a-mem_stream.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/input/$(DEPDIR)/lib_libvlc_pic_a-mem_stream.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/input/mem_stream.c' object='src/input/lib_libvlc_pic_a-mem_stream.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/input/$(DEPDIR)/lib_libvlc_pic_a-mem_stream.Po' tmpdepfile='src/input/$(DEPDIR)/lib_libvlc_pic_a-mem_stream.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/input/lib_libvlc_pic_a-mem_stream.o `test -f 'src/input/mem_stream.c' || echo '$(srcdir)/'`src/input/mem_stream.c
+
+src/input/lib_libvlc_pic_a-mem_stream.obj: src/input/mem_stream.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/input/lib_libvlc_pic_a-mem_stream.obj -MD -MP -MF "src/input/$(DEPDIR)/lib_libvlc_pic_a-mem_stream.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/input/lib_libvlc_pic_a-mem_stream.obj `if test -f 'src/input/mem_stream.c'; then $(CYGPATH_W) 'src/input/mem_stream.c'; else $(CYGPATH_W) '$(srcdir)/src/input/mem_stream.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "src/input/$(DEPDIR)/lib_libvlc_pic_a-mem_stream.Tpo" "src/input/$(DEPDIR)/lib_libvlc_pic_a-mem_stream.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/input/$(DEPDIR)/lib_libvlc_pic_a-mem_stream.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/input/mem_stream.c' object='src/input/lib_libvlc_pic_a-mem_stream.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/input/$(DEPDIR)/lib_libvlc_pic_a-mem_stream.Po' tmpdepfile='src/input/$(DEPDIR)/lib_libvlc_pic_a-mem_stream.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/input/lib_libvlc_pic_a-mem_stream.obj `if test -f 'src/input/mem_stream.c'; then $(CYGPATH_W) 'src/input/mem_stream.c'; else $(CYGPATH_W) '$(srcdir)/src/input/mem_stream.c'; fi`
 
 src/input/lib_libvlc_pic_a-subtitles.o: src/input/subtitles.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/input/lib_libvlc_pic_a-subtitles.o -MD -MP -MF "src/input/$(DEPDIR)/lib_libvlc_pic_a-subtitles.Tpo" \
@@ -4042,6 +4178,28 @@ src/misc/lib_libvlc_pic_a-configuration.obj: src/misc/configuration.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/misc/lib_libvlc_pic_a-configuration.obj `if test -f 'src/misc/configuration.c'; then $(CYGPATH_W) 'src/misc/configuration.c'; else $(CYGPATH_W) '$(srcdir)/src/misc/configuration.c'; fi`
 
+src/misc/lib_libvlc_pic_a-image.o: src/misc/image.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/misc/lib_libvlc_pic_a-image.o -MD -MP -MF "src/misc/$(DEPDIR)/lib_libvlc_pic_a-image.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/misc/lib_libvlc_pic_a-image.o `test -f 'src/misc/image.c' || echo '$(srcdir)/'`src/misc/image.c; \
+@am__fastdepCC_TRUE@	then mv -f "src/misc/$(DEPDIR)/lib_libvlc_pic_a-image.Tpo" "src/misc/$(DEPDIR)/lib_libvlc_pic_a-image.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/misc/$(DEPDIR)/lib_libvlc_pic_a-image.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/misc/image.c' object='src/misc/lib_libvlc_pic_a-image.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/misc/$(DEPDIR)/lib_libvlc_pic_a-image.Po' tmpdepfile='src/misc/$(DEPDIR)/lib_libvlc_pic_a-image.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/misc/lib_libvlc_pic_a-image.o `test -f 'src/misc/image.c' || echo '$(srcdir)/'`src/misc/image.c
+
+src/misc/lib_libvlc_pic_a-image.obj: src/misc/image.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/misc/lib_libvlc_pic_a-image.obj -MD -MP -MF "src/misc/$(DEPDIR)/lib_libvlc_pic_a-image.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/misc/lib_libvlc_pic_a-image.obj `if test -f 'src/misc/image.c'; then $(CYGPATH_W) 'src/misc/image.c'; else $(CYGPATH_W) '$(srcdir)/src/misc/image.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "src/misc/$(DEPDIR)/lib_libvlc_pic_a-image.Tpo" "src/misc/$(DEPDIR)/lib_libvlc_pic_a-image.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/misc/$(DEPDIR)/lib_libvlc_pic_a-image.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/misc/image.c' object='src/misc/lib_libvlc_pic_a-image.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/misc/$(DEPDIR)/lib_libvlc_pic_a-image.Po' tmpdepfile='src/misc/$(DEPDIR)/lib_libvlc_pic_a-image.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/misc/lib_libvlc_pic_a-image.obj `if test -f 'src/misc/image.c'; then $(CYGPATH_W) 'src/misc/image.c'; else $(CYGPATH_W) '$(srcdir)/src/misc/image.c'; fi`
+
 src/misc/lib_libvlc_pic_a-iso_lang.o: src/misc/iso_lang.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/misc/lib_libvlc_pic_a-iso_lang.o -MD -MP -MF "src/misc/$(DEPDIR)/lib_libvlc_pic_a-iso_lang.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o src/misc/lib_libvlc_pic_a-iso_lang.o `test -f 'src/misc/iso_lang.c' || echo '$(srcdir)/'`src/misc/iso_lang.c; \
@@ -4195,6 +4353,28 @@ src/misc/lib_libvlc_pic_a-vlm.obj: src/misc/vlm.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/misc/$(DEPDIR)/lib_libvlc_pic_a-vlm.Po' tmpdepfile='src/misc/$(DEPDIR)/lib_libvlc_pic_a-vlm.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/misc/lib_libvlc_pic_a-vlm.obj `if test -f 'src/misc/vlm.c'; then $(CYGPATH_W) 'src/misc/vlm.c'; else $(CYGPATH_W) '$(srcdir)/src/misc/vlm.c'; fi`
+
+src/misc/lib_libvlc_pic_a-xml.o: src/misc/xml.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/misc/lib_libvlc_pic_a-xml.o -MD -MP -MF "src/misc/$(DEPDIR)/lib_libvlc_pic_a-xml.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/misc/lib_libvlc_pic_a-xml.o `test -f 'src/misc/xml.c' || echo '$(srcdir)/'`src/misc/xml.c; \
+@am__fastdepCC_TRUE@	then mv -f "src/misc/$(DEPDIR)/lib_libvlc_pic_a-xml.Tpo" "src/misc/$(DEPDIR)/lib_libvlc_pic_a-xml.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/misc/$(DEPDIR)/lib_libvlc_pic_a-xml.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/misc/xml.c' object='src/misc/lib_libvlc_pic_a-xml.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/misc/$(DEPDIR)/lib_libvlc_pic_a-xml.Po' tmpdepfile='src/misc/$(DEPDIR)/lib_libvlc_pic_a-xml.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/misc/lib_libvlc_pic_a-xml.o `test -f 'src/misc/xml.c' || echo '$(srcdir)/'`src/misc/xml.c
+
+src/misc/lib_libvlc_pic_a-xml.obj: src/misc/xml.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/misc/lib_libvlc_pic_a-xml.obj -MD -MP -MF "src/misc/$(DEPDIR)/lib_libvlc_pic_a-xml.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o src/misc/lib_libvlc_pic_a-xml.obj `if test -f 'src/misc/xml.c'; then $(CYGPATH_W) 'src/misc/xml.c'; else $(CYGPATH_W) '$(srcdir)/src/misc/xml.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "src/misc/$(DEPDIR)/lib_libvlc_pic_a-xml.Tpo" "src/misc/$(DEPDIR)/lib_libvlc_pic_a-xml.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "src/misc/$(DEPDIR)/lib_libvlc_pic_a-xml.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/misc/xml.c' object='src/misc/lib_libvlc_pic_a-xml.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='src/misc/$(DEPDIR)/lib_libvlc_pic_a-xml.Po' tmpdepfile='src/misc/$(DEPDIR)/lib_libvlc_pic_a-xml.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -c -o src/misc/lib_libvlc_pic_a-xml.obj `if test -f 'src/misc/xml.c'; then $(CYGPATH_W) 'src/misc/xml.c'; else $(CYGPATH_W) '$(srcdir)/src/misc/xml.c'; fi`
 
 src/extras/lib_libvlc_pic_a-libc.o: src/extras/libc.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libvlc_pic_a_CFLAGS) $(CFLAGS) -MT src/extras/lib_libvlc_pic_a-libc.o -MD -MP -MF "src/extras/$(DEPDIR)/lib_libvlc_pic_a-libc.Tpo" \
@@ -4655,7 +4835,7 @@ distcleancheck_listfiles = find . -type f -print
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkinstalldirs) $(distdir)/. $(distdir)/autotools $(distdir)/evc $(distdir)/extras/MacOSX $(distdir)/extras/MacOSX/Resources $(distdir)/extras/MacOSX/Resources/English.lproj $(distdir)/extras/MacOSX/Resources/English.lproj/MainMenu.nib $(distdir)/extras/MacOSX/vlc.pbproj $(distdir)/include $(distdir)/include/vlc $(distdir)/intl $(distdir)/msvc $(distdir)/po $(distdir)/src/extras $(distdir)/src/misc
+	$(mkinstalldirs) $(distdir)/autotools $(distdir)/evc $(distdir)/extras/MacOSX $(distdir)/extras/MacOSX/Resources $(distdir)/extras/MacOSX/Resources/English.lproj $(distdir)/extras/MacOSX/Resources/English.lproj/About.nib $(distdir)/extras/MacOSX/Resources/English.lproj/MainMenu.nib $(distdir)/extras/MacOSX/Resources/English.lproj/Open.nib $(distdir)/extras/MacOSX/Resources/English.lproj/Preferences.nib $(distdir)/extras/MacOSX/vlc.pbproj $(distdir)/include $(distdir)/include/vlc $(distdir)/intl $(distdir)/msvc $(distdir)/po $(distdir)/src/extras $(distdir)/src/misc
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -4800,6 +4980,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-rm -f $(CONFIG_CLEAN_FILES)
@@ -4911,13 +5092,13 @@ uninstall-info: uninstall-info-recursive
 	uninstall-recursive uninstall-vlc_appDATA
 
 
-include/vlc_symbols.h: Makefile $(HEADERS_include)
-	srcdir=$(srcdir) $(srcdir)/toolbox --update-includes
+# Common dependencies for these 3 files : Makefile vlc-config
+# Specific dependencies :
+#  include/vlc_symbols.h: $(HEADERS_include)
+#  src/misc/modules_plugin.h: src/misc/modules_plugin.h.in $(HEADERS_include)
+#  src/misc/modules_builtin.h: src/misc/modules_builtin.h.in
 
-src/misc/modules_plugin.h: Makefile src/misc/modules_plugin.h.in $(HEADERS_include)
-	srcdir=$(srcdir) $(srcdir)/toolbox --update-includes
-
-src/misc/modules_builtin.h: Makefile src/misc/modules_builtin.h.in
+include/vlc_symbols.h src/misc/modules_plugin.h src/misc/modules_builtin.h: Makefile $(HEADERS_include) vlc-config src/misc/modules_plugin.h.in src/misc/modules_builtin.h.in
 	srcdir=$(srcdir) $(srcdir)/toolbox --update-includes
 
 # These dependencies are mandatory
@@ -4932,8 +5113,13 @@ intl/libintl.a: FORCE
 	cd $(top_builddir)/intl && $(MAKE) $(AM_MAKEFLAGS)
 
 dist-hook:
-	cp $(distdir)/vlc.ebuild $(distdir)/vlc-${VERSION}.ebuild
 	cd $(distdir) && srcdir=$(srcdir) $(srcdir)/toolbox --update-vc
+	distdir=$(distdir) srcdir=$(srcdir) $(srcdir)/toolbox --dist-contrib
+vlc-config: $(top_builddir)/config.status $(top_builddir)/vlc-config.in
+	cd $(top_builddir) && $(SHELL) ./config.status --file=$@
+	-cd $(top_builddir) && chmod 0755 $@
+
+$(SOURCES): vlc-config
 
 vlc$(EXEEXT): $(vlc_OBJECTS) $(DEPENDENCIES_vlc) stamp-builtin
 	@rm -f $(top_builddir)/vlc$(EXEEXT)
@@ -4983,6 +5169,104 @@ install-exec-local:
 	  rm -f "$(DESTDIR)$(bindir)/$$i" && \
 	  ln -s vlc "$(DESTDIR)$(bindir)/$$i" ; \
 	fi ; done
+# VLC-release.app is the old VLC.app target
+@HAVE_DARWIN_TRUE@VLC-release.app: vlc
+@HAVE_DARWIN_TRUE@	@if test -e "$(top_builddir)/tmp"; then \
+@HAVE_DARWIN_TRUE@	  echo "Error: please remove $(top_builddir)/tmp, it is in the way"; \
+@HAVE_DARWIN_TRUE@	  false; \
+@HAVE_DARWIN_TRUE@	else \
+@HAVE_DARWIN_TRUE@	  echo "OK."; mkdir -p "$(top_builddir)/tmp/extras"; \
+@HAVE_DARWIN_TRUE@	fi
+@HAVE_DARWIN_TRUE@	rm -Rf $(top_builddir)/VLC-release.app
+@HAVE_DARWIN_TRUE@	cp -r $(srcdir)/extras/MacOSX $(top_builddir)/tmp/extras
+@HAVE_DARWIN_TRUE@	for i in AUTHORS COPYING README.MacOSX.rtf THANKS; do \
+@HAVE_DARWIN_TRUE@	  cp "$(srcdir)/$$i" $(top_builddir)/tmp; \
+@HAVE_DARWIN_TRUE@	done
+@HAVE_DARWIN_TRUE@	mkdir -p $(top_builddir)/tmp/modules/audio_output
+@HAVE_DARWIN_TRUE@	cp $(srcdir)/modules/audio_output/coreaudio.c \
+@HAVE_DARWIN_TRUE@	   $(top_builddir)/tmp/modules/audio_output/coreaudio.c
+@HAVE_DARWIN_TRUE@	mkdir -p $(top_builddir)/tmp/modules/gui/macosx
+@HAVE_DARWIN_TRUE@	for i in \
+@HAVE_DARWIN_TRUE@	    about.h \
+@HAVE_DARWIN_TRUE@	    about.m \
+@HAVE_DARWIN_TRUE@	    applescript.h \
+@HAVE_DARWIN_TRUE@	    applescript.m \
+@HAVE_DARWIN_TRUE@	    controls.h \
+@HAVE_DARWIN_TRUE@	    controls.m \
+@HAVE_DARWIN_TRUE@	    equalizer.h \
+@HAVE_DARWIN_TRUE@	    equalizer.m \
+@HAVE_DARWIN_TRUE@	    intf.h \
+@HAVE_DARWIN_TRUE@	    intf.m \
+@HAVE_DARWIN_TRUE@	    macosx.m \
+@HAVE_DARWIN_TRUE@	    misc.h \
+@HAVE_DARWIN_TRUE@	    misc.m \
+@HAVE_DARWIN_TRUE@	    open.h \
+@HAVE_DARWIN_TRUE@	    open.m \
+@HAVE_DARWIN_TRUE@	    output.h \
+@HAVE_DARWIN_TRUE@	    output.m \
+@HAVE_DARWIN_TRUE@	    playlist.h \
+@HAVE_DARWIN_TRUE@	    playlist.m \
+@HAVE_DARWIN_TRUE@	    playlistinfo.h \
+@HAVE_DARWIN_TRUE@	    playlistinfo.m \
+@HAVE_DARWIN_TRUE@	    prefs_widgets.h \
+@HAVE_DARWIN_TRUE@	    prefs_widgets.m \
+@HAVE_DARWIN_TRUE@	    prefs.h \
+@HAVE_DARWIN_TRUE@	    prefs.m \
+@HAVE_DARWIN_TRUE@	    vout.h \
+@HAVE_DARWIN_TRUE@	    voutqt.m \
+@HAVE_DARWIN_TRUE@	    voutgl.m \
+@HAVE_DARWIN_TRUE@	    vout.m; do \
+@HAVE_DARWIN_TRUE@	  cp "$(srcdir)/modules/gui/macosx/$$i" \
+@HAVE_DARWIN_TRUE@             $(top_builddir)/tmp/modules/gui/macosx; \
+@HAVE_DARWIN_TRUE@	done
+@HAVE_DARWIN_TRUE@	cd $(top_builddir)/tmp/extras/MacOSX && xcodebuild -target vlc | grep -v '^\([ \t]\|$$\)'
+@HAVE_DARWIN_TRUE@	cp -r $(top_builddir)/tmp/extras/MacOSX/build/VLC.bundle \
+@HAVE_DARWIN_TRUE@	      $(top_builddir)/VLC-release.app
+@HAVE_DARWIN_TRUE@	rm -Rf $(top_builddir)/tmp
+@HAVE_DARWIN_TRUE@	$(INSTALL) -d $(top_builddir)/VLC-release.app/Contents/MacOS
+@HAVE_DARWIN_TRUE@	$(INSTALL) $(top_builddir)/vlc \
+@HAVE_DARWIN_TRUE@		   $(top_builddir)/VLC-release.app/Contents/MacOS/VLC
+@HAVE_DARWIN_TRUE@	ln -sf ./VLC $(top_builddir)/VLC-release.app/Contents/MacOS/clivlc
+@HAVE_DARWIN_TRUE@	$(INSTALL) -d $(top_builddir)/VLC-release.app/Contents/MacOS/modules
+@HAVE_DARWIN_TRUE@	for i in "" `$(VLC_CONFIG) --target plugin` ; do \
+@HAVE_DARWIN_TRUE@	  if test -n "$$i" ; \
+@HAVE_DARWIN_TRUE@	    then $(INSTALL) "$$i$(LIBEXT)" \
+@HAVE_DARWIN_TRUE@			   "$(top_builddir)/VLC-release.app/Contents/MacOS/modules" ; \
+@HAVE_DARWIN_TRUE@	  fi ; done
+@HAVE_DARWIN_TRUE@	if test -d $(top_builddir)/extras/contrib/vlc-lib; then \
+@HAVE_DARWIN_TRUE@	  mkdir -p $(top_builddir)/VLC-release.app/Contents/MacOS/lib ; \
+@HAVE_DARWIN_TRUE@	  for i in $(top_builddir)/extras/contrib/vlc-lib/*.dylib ; do \
+@HAVE_DARWIN_TRUE@	    $(INSTALL) -m 644 $${i} $(top_builddir)/VLC-release.app/Contents/MacOS/lib/vlc_`basename $${i}` ; \
+@HAVE_DARWIN_TRUE@	  done ; \
+@HAVE_DARWIN_TRUE@	fi
+@HAVE_DARWIN_TRUE@	$(INSTALL) -d $(top_builddir)/VLC-release.app/Contents/MacOS/share
+@HAVE_DARWIN_TRUE@	$(INSTALL) -d $(top_builddir)/VLC-release.app/Contents/MacOS/share/http
+@HAVE_DARWIN_TRUE@	for i in $(srcdir)/share/http/* ; do \
+@HAVE_DARWIN_TRUE@	  $(INSTALL) -m 644 $${i} $(top_builddir)/VLC-release.app/Contents/MacOS/share/http/`basename $${i}` ; \
+@HAVE_DARWIN_TRUE@	done ; \
+@HAVE_DARWIN_TRUE@	$(INSTALL) -d $(top_builddir)/VLC-release.app/Contents/MacOS/share/http/vlm
+@HAVE_DARWIN_TRUE@	for i in $(srcdir)/share/http/vlm/* ; do \
+@HAVE_DARWIN_TRUE@	  $(INSTALL) -m 644 $${i} $(top_builddir)/VLC-release.app/Contents/MacOS/share/http/vlm/`basename $${i}` ; \
+@HAVE_DARWIN_TRUE@	done ; \
+@HAVE_DARWIN_TRUE@	$(INSTALL) -d $(top_builddir)/VLC-release.app/Contents/MacOS/share/http/admin
+@HAVE_DARWIN_TRUE@	for i in $(srcdir)/share/http/admin/* ; do \
+@HAVE_DARWIN_TRUE@	  $(INSTALL) -m 644 $${i} $(top_builddir)/VLC-release.app/Contents/MacOS/share/http/admin/`basename $${i}` ; \
+@HAVE_DARWIN_TRUE@	done ; \
+@HAVE_DARWIN_TRUE@	$(INSTALL) -m 644 $(srcdir)/share/http/admin/.access $(top_builddir)/VLC-release.app/Contents/MacOS/share/http/admin/.access
+@HAVE_DARWIN_TRUE@	$(INSTALL) -d $(top_builddir)/VLC-release.app/Contents/MacOS/locale
+@HAVE_DARWIN_TRUE@	for i in $(ALL_LINGUAS); do \
+@HAVE_DARWIN_TRUE@	  mkdir -p $(top_builddir)/VLC-release.app/Contents/MacOS/locale/$${i}/LC_MESSAGES ; \
+@HAVE_DARWIN_TRUE@	  cp $(srcdir)/po/$${i}.gmo $(top_builddir)/VLC-release.app/Contents/MacOS/locale/$${i}/LC_MESSAGES/vlc.mo || true ; \
+@HAVE_DARWIN_TRUE@	  mkdir -p $(top_builddir)/VLC-release.app/Contents/Resources/$${i}.lproj ; \
+@HAVE_DARWIN_TRUE@	  ln -sf ../English.lproj/InfoPlist.strings \
+@HAVE_DARWIN_TRUE@	      $(top_builddir)/VLC-release.app/Contents/Resources/$${i}.lproj ; \
+@HAVE_DARWIN_TRUE@	  ln -sf ../English.lproj/MainMenu.nib \
+@HAVE_DARWIN_TRUE@	      $(top_builddir)/VLC-release.app/Contents/Resources/$${i}.lproj ; \
+@HAVE_DARWIN_TRUE@	  ln -sf ../English.lproj/vlc.scriptTerminology \
+@HAVE_DARWIN_TRUE@	      $(top_builddir)/VLC-release.app/Contents/Resources/$${i}.lproj ; \
+@HAVE_DARWIN_TRUE@	done
+@HAVE_DARWIN_TRUE@	printf "APPLVLC#" >| $(top_builddir)/VLC-release.app/Contents/PkgInfo
+
 @HAVE_DARWIN_TRUE@VLC.app: vlc
 @HAVE_DARWIN_TRUE@	@if test -e "$(top_builddir)/tmp"; then \
 @HAVE_DARWIN_TRUE@	  echo "Error: please remove $(top_builddir)/tmp, it is in the way"; \
@@ -5033,7 +5317,7 @@ install-exec-local:
 @HAVE_DARWIN_TRUE@             $(top_builddir)/tmp/modules/gui/macosx; \
 @HAVE_DARWIN_TRUE@	done
 @HAVE_DARWIN_TRUE@	cd $(top_builddir)/tmp/extras/MacOSX && xcodebuild -target vlc | grep -v '^\([ \t]\|$$\)'
-@HAVE_DARWIN_TRUE@	cp -r $(top_builddir)/tmp/extras/MacOSX/build/vlc.bundle \
+@HAVE_DARWIN_TRUE@	cp -r $(top_builddir)/tmp/extras/MacOSX/build/VLC.bundle \
 @HAVE_DARWIN_TRUE@	      $(top_builddir)/VLC.app
 @HAVE_DARWIN_TRUE@	rm -Rf $(top_builddir)/tmp
 @HAVE_DARWIN_TRUE@	$(INSTALL) -d $(top_builddir)/VLC.app/Contents/MacOS
@@ -5043,39 +5327,24 @@ install-exec-local:
 @HAVE_DARWIN_TRUE@	$(INSTALL) -d $(top_builddir)/VLC.app/Contents/MacOS/modules
 @HAVE_DARWIN_TRUE@	for i in "" `$(VLC_CONFIG) --target plugin` ; do \
 @HAVE_DARWIN_TRUE@	  if test -n "$$i" ; \
-@HAVE_DARWIN_TRUE@	    then $(INSTALL) "$$i$(LIBEXT)" \
+@HAVE_DARWIN_TRUE@	    then ln -sfn "`pwd`/$$i$(LIBEXT)" \
 @HAVE_DARWIN_TRUE@			   "$(top_builddir)/VLC.app/Contents/MacOS/modules" ; \
 @HAVE_DARWIN_TRUE@	  fi ; done
 @HAVE_DARWIN_TRUE@	if test -d $(top_builddir)/extras/contrib/vlc-lib; then \
 @HAVE_DARWIN_TRUE@	  mkdir -p $(top_builddir)/VLC.app/Contents/MacOS/lib ; \
 @HAVE_DARWIN_TRUE@	  for i in $(top_builddir)/extras/contrib/vlc-lib/*.dylib ; do \
-@HAVE_DARWIN_TRUE@	    $(INSTALL) -m 644 $${i} $(top_builddir)/VLC.app/Contents/MacOS/lib/vlc_`basename $${i}` ; \
+@HAVE_DARWIN_TRUE@	    ln -sfn `pwd`/$${i} $(top_builddir)/VLC.app/Contents/MacOS/lib/vlc_`basename $${i}` ; \
 @HAVE_DARWIN_TRUE@	  done ; \
 @HAVE_DARWIN_TRUE@	fi
-@HAVE_DARWIN_TRUE@	$(INSTALL) -d $(top_builddir)/VLC.app/Contents/MacOS/share
-@HAVE_DARWIN_TRUE@	$(INSTALL) -d $(top_builddir)/VLC.app/Contents/MacOS/share/http
-@HAVE_DARWIN_TRUE@	for i in $(srcdir)/share/http/* ; do \
-@HAVE_DARWIN_TRUE@	  $(INSTALL) -m 644 $${i} $(top_builddir)/VLC.app/Contents/MacOS/share/http/`basename $${i}` ; \
-@HAVE_DARWIN_TRUE@	done ; \
-@HAVE_DARWIN_TRUE@	$(INSTALL) -d $(top_builddir)/VLC.app/Contents/MacOS/share/http/vlm
-@HAVE_DARWIN_TRUE@	for i in $(srcdir)/share/http/vlm/* ; do \
-@HAVE_DARWIN_TRUE@	  $(INSTALL) -m 644 $${i} $(top_builddir)/VLC.app/Contents/MacOS/share/http/vlm/`basename $${i}` ; \
-@HAVE_DARWIN_TRUE@	done ; \
-@HAVE_DARWIN_TRUE@	$(INSTALL) -d $(top_builddir)/VLC.app/Contents/MacOS/share/http/admin
-@HAVE_DARWIN_TRUE@	for i in $(srcdir)/share/http/admin/* ; do \
-@HAVE_DARWIN_TRUE@	  $(INSTALL) -m 644 $${i} $(top_builddir)/VLC.app/Contents/MacOS/share/http/admin/`basename $${i}` ; \
-@HAVE_DARWIN_TRUE@	done ; \
-@HAVE_DARWIN_TRUE@	$(INSTALL) -m 644 $(srcdir)/share/http/admin/.access $(top_builddir)/VLC.app/Contents/MacOS/share/http/admin/.access
+@HAVE_DARWIN_TRUE@	ln -sfn `pwd`/share $(top_builddir)/VLC.app/Contents/MacOS/
 @HAVE_DARWIN_TRUE@	$(INSTALL) -d $(top_builddir)/VLC.app/Contents/MacOS/locale
 @HAVE_DARWIN_TRUE@	for i in $(ALL_LINGUAS); do \
 @HAVE_DARWIN_TRUE@	  mkdir -p $(top_builddir)/VLC.app/Contents/MacOS/locale/$${i}/LC_MESSAGES ; \
-@HAVE_DARWIN_TRUE@	  cp $(srcdir)/po/$${i}.gmo $(top_builddir)/VLC.app/Contents/MacOS/locale/$${i}/LC_MESSAGES/vlc.mo || true ; \
+@HAVE_DARWIN_TRUE@	  ln -sfn `pwd`/po/$${i}.gmo $(top_builddir)/VLC.app/Contents/MacOS/locale/$${i}/LC_MESSAGES/vlc.mo || true ; \
 @HAVE_DARWIN_TRUE@	  mkdir -p $(top_builddir)/VLC.app/Contents/Resources/$${i}.lproj ; \
 @HAVE_DARWIN_TRUE@	  ln -sf ../English.lproj/InfoPlist.strings \
 @HAVE_DARWIN_TRUE@	      $(top_builddir)/VLC.app/Contents/Resources/$${i}.lproj ; \
 @HAVE_DARWIN_TRUE@	  ln -sf ../English.lproj/MainMenu.nib \
-@HAVE_DARWIN_TRUE@	      $(top_builddir)/VLC.app/Contents/Resources/$${i}.lproj ; \
-@HAVE_DARWIN_TRUE@	  ln -sf ../English.lproj/vlc.scriptTerminology \
 @HAVE_DARWIN_TRUE@	      $(top_builddir)/VLC.app/Contents/Resources/$${i}.lproj ; \
 @HAVE_DARWIN_TRUE@	done
 @HAVE_DARWIN_TRUE@	printf "APPLVLC#" >| $(top_builddir)/VLC.app/Contents/PkgInfo
@@ -5103,71 +5372,101 @@ dist-woody: distdir
 #
 package-win32-base:
 # Check that tmp isn't in the way
-	@if test -e "$(srcdir)/vlc-${VERSION}"; then \
-	  echo "Error: please remove $(srcdir)/vlc-${VERSION}, it is in the way"; \
+	@if test -e "$(top_builddir)/vlc-${VERSION}"; then \
+	  echo "Error: please remove $(top_builddir)/vlc-${VERSION}, it is in the way"; \
 	  false; \
 	else \
-	  echo "OK."; mkdir -p "$(srcdir)/vlc-${VERSION}"; \
+	  echo "OK."; mkdir -p "$(top_builddir)/vlc-${VERSION}"; \
 	fi
 
 # Copy relevant files
-	cp "$(srcdir)/vlc.win32.nsi" "$(srcdir)/vlc-${VERSION}/"
-	cp "$(top_builddir)/vlc$(EXEEXT)" "$(srcdir)/vlc-${VERSION}/"
-	cp "$(top_builddir)/vlc.exe.manifest" "$(srcdir)/vlc-${VERSION}/"
-	$(STRIP) "$(srcdir)/vlc-${VERSION}/vlc$(EXEEXT)"
+	cp "$(srcdir)/vlc.win32.nsi" "$(top_builddir)/vlc-${VERSION}/"
+	cp "$(top_builddir)/vlc$(EXEEXT)" "$(top_builddir)/vlc-${VERSION}/"
+	cp "$(top_srcdir)/vlc.exe.manifest" "$(top_builddir)/vlc-${VERSION}/"
+	$(STRIP) "$(top_builddir)/vlc-${VERSION}/vlc$(EXEEXT)"
 
 	for file in AUTHORS MAINTAINERS THANKS NEWS COPYING README ; \
-	  do sed 's/@/_AT_/' < "$(srcdir)/$$file" > "$(srcdir)/vlc-${VERSION}/$${file}.txt" ; \
-	  unix2dos "$(srcdir)/vlc-${VERSION}/$${file}.txt" ; done
+	  do sed 's/@/_AT_/' < "$(srcdir)/$$file" > "$(top_builddir)/vlc-${VERSION}/$${file}.txt" ; \
+	  unix2dos "$(top_builddir)/vlc-${VERSION}/$${file}.txt" ; done
 
-	mkdir -p "$(srcdir)/vlc-${VERSION}/plugins"
+	mkdir -p "$(top_builddir)/vlc-${VERSION}/plugins"
 	for i in "" `$(VLC_CONFIG) --target plugin` ; do \
 	  if test -n "$$i" ; then \
-	    $(INSTALL) "$(srcdir)/$$i$(LIBEXT)" \
-            "$(srcdir)/vlc-${VERSION}/plugins/" ; \
+	    $(INSTALL) "$(top_builddir)/$$i$(LIBEXT)" \
+            "$(top_builddir)/vlc-${VERSION}/plugins/" ; \
 	  fi ; done
 
-	for i in "" $(srcdir)/vlc-${VERSION}/plugins/*$(LIBEXT) ; \
+	for i in "" $(top_builddir)/vlc-${VERSION}/plugins/*$(LIBEXT) ; \
 	  do if test -n "$$i" ; then $(STRIP) "$$i" ; fi ; done
 
-	mkdir $(srcdir)/vlc-${VERSION}/locale
+	mkdir $(top_builddir)/vlc-${VERSION}/locale
 	for i in $(ALL_LINGUAS); do \
-	  mkdir -p "$(srcdir)/vlc-${VERSION}/locale/$${i}/LC_MESSAGES" ; \
+	  mkdir -p "$(top_builddir)/vlc-${VERSION}/locale/$${i}/LC_MESSAGES" ; \
 	  cp "$(srcdir)/po/$${i}.gmo" \
-	    "$(srcdir)/vlc-${VERSION}/locale/$${i}/LC_MESSAGES/vlc.mo" \
+	    "$(top_builddir)/vlc-${VERSION}/locale/$${i}/LC_MESSAGES/vlc.mo" \
             || true ; \
 	done
 
-	mkdir -p $(srcdir)/vlc-${VERSION}/skins/fonts
+	mkdir -p $(top_builddir)/vlc-${VERSION}/skins/fonts
 	for i in $(srcdir)/share/skins2/fonts/*.*; do \
-	  cp $$i $(srcdir)/vlc-${VERSION}/skins/fonts/ || true ; \
+	  cp $$i $(top_builddir)/vlc-${VERSION}/skins/fonts/ || true ; \
 	done
 	for i in $(srcdir)/share/skins2/*.*; do \
-	  cp $$i $(srcdir)/vlc-${VERSION}/skins/ || true ; \
+	  cp $$i $(top_builddir)/vlc-${VERSION}/skins/ || true ; \
 	done
 
-	mkdir -p "$(srcdir)/vlc-${VERSION}/http/admin"
-	mkdir -p "$(srcdir)/vlc-${VERSION}/http/vlm"
-	cp $(srcdir)/share/http/*.html $(srcdir)/vlc-${VERSION}/http/ ;
-	cp $(srcdir)/share/http/*.css $(srcdir)/vlc-${VERSION}/http/ ;
+	mkdir -p "$(top_builddir)/vlc-${VERSION}/http/admin"
+	mkdir -p "$(top_builddir)/vlc-${VERSION}/http/vlm"
+	cp $(srcdir)/share/http/*.html $(top_builddir)/vlc-${VERSION}/http/ ;
+	unix2dos $(top_builddir)/vlc-${VERSION}/http/*.html ;
+	cp $(srcdir)/share/http/*.css $(top_builddir)/vlc-${VERSION}/http/ ;
+	unix2dos $(top_builddir)/vlc-${VERSION}/http/*.css ;
+	cp $(srcdir)/share/http/*.png $(top_builddir)/vlc-${VERSION}/http/
+	cp $(srcdir)/share/http/*.ico $(top_builddir)/vlc-${VERSION}/http/ ;
 	cp $(srcdir)/share/http/admin/*.html \
-           $(srcdir)/vlc-${VERSION}/http/admin/ ;
+           $(top_builddir)/vlc-${VERSION}/http/admin/ ;
+	unix2dos $(top_builddir)/vlc-${VERSION}/http/admin/*.html ;
+	cp $(srcdir)/share/http/admin/dboxfiles.html \
+           $(top_builddir)/vlc-${VERSION}/http/admin/ ;
 	cp $(srcdir)/share/http/admin/.access \
-           $(srcdir)/vlc-${VERSION}/http/admin/ ;
+           $(top_builddir)/vlc-${VERSION}/http/admin/ ;
+	unix2dos $(top_builddir)/vlc-${VERSION}/http/admin/.access ;
 	cp $(srcdir)/share/http/vlm/*.html \
-           $(srcdir)/vlc-${VERSION}/http/vlm/ ;
+           $(top_builddir)/vlc-${VERSION}/http/vlm/ ;
+	unix2dos $(top_builddir)/vlc-${VERSION}/http/vlm/*.html ;
 
-	cp $(srcdir)/share/vlc48x48.ico $(srcdir)/vlc-${VERSION}/ ;
+	cp $(srcdir)/share/vlc48x48new.ico $(top_builddir)/vlc-${VERSION}/ ;
 
-	mkdir -p "$(srcdir)/vlc-${VERSION}/mozilla"
-@BUILD_MOZILLA_TRUE@	cp $(srcdir)/mozilla/*$(LIBEXT) $(srcdir)/vlc-${VERSION}/mozilla/ ;
-@BUILD_MOZILLA_TRUE@	$(STRIP) $(srcdir)/vlc-${VERSION}/mozilla/*$(LIBEXT);
-@BUILD_MOZILLA_TRUE@	cp $(srcdir)/mozilla/vlcintf.xpt  $(srcdir)/vlc-${VERSION}/mozilla/ ;
+	mkdir -p "$(top_builddir)/vlc-${VERSION}/mozilla"
+@BUILD_MOZILLA_TRUE@	cp $(top_builddir)/mozilla/*$(LIBEXT) $(top_builddir)/vlc-${VERSION}/mozilla/ ;
+@BUILD_MOZILLA_TRUE@	$(STRIP) $(top_builddir)/vlc-${VERSION}/mozilla/*$(LIBEXT);
+@BUILD_MOZILLA_TRUE@	cp $(top_builddir)/mozilla/vlcintf.xpt  $(top_builddir)/vlc-${VERSION}/mozilla/ ;
+
+	mkdir -p "$(top_builddir)/vlc-${VERSION}/activex"
+@BUILD_ACTIVEX_TRUE@	cp $(top_builddir)/activex/README.TXT  $(top_builddir)/vlc-${VERSION}/activex/ ;
+@BUILD_ACTIVEX_TRUE@	cp $(top_builddir)/activex/test.html  $(top_builddir)/vlc-${VERSION}/activex/ ;
+@BUILD_ACTIVEX_TRUE@	unix2dos $(top_builddir)/vlc-${VERSION}/activex/* ;
+
+@BUILD_ACTIVEX_TRUE@	cp $(top_builddir)/activex/*$(LIBEXT) $(top_builddir)/vlc-${VERSION}/activex/ ;
+@BUILD_ACTIVEX_TRUE@	$(STRIP) $(top_builddir)/vlc-${VERSION}/activex/*$(LIBEXT);
+# Rebase all those DLLs to speed up loading (need cygwin rebase)
+	if [ -x rebase ]; then \
+		find $(top_builddir)/vlc-${VERSION} -type f -name '*.dll' -print | rebase -b 0x70000000 -T -; \
+	fi
 
 package-win32-base-exe:
-# Create package 
-	wine ~/.wine/fake_windows/Program\ Files/NSIS/makensis.exe \
-             /DVERSION=${VERSION} $(srcdir)/vlc-${VERSION}/vlc.win32.nsi
+# Create package
+	wine C:/Program\ Files/NSIS/makensis.exe \
+             /DVERSION=${VERSION} $(top_builddir)/vlc-${VERSION}/vlc.win32.nsi
+
+package-win32-base-exe-cygwin:
+# Create package
+	C:/Program\ Files/NSIS/makensis.exe \
+             /DVERSION=${VERSION} $(top_builddir)/vlc-${VERSION}/vlc.win32.nsi
+
+package-win32-base-exe-linux:
+# Create package
+	makensis -DVERSION=${VERSION} $(top_builddir)/vlc-${VERSION}/vlc.win32.nsi
 
 package-win32-base-zip:
 # Create package 
@@ -5175,15 +5474,19 @@ package-win32-base-zip:
 
 package-win32-exe: package-win32-base package-win32-base-exe
 # Clean up
-	rm -Rf $(srcdir)/vlc-${VERSION}
+	rm -Rf $(top_builddir)/vlc-${VERSION}
+
+package-win32-exe-linux: package-win32-base package-win32-base-exe-linux
+# Clean up
+	rm -Rf $(top_builddir)/vlc-${VERSION}
 
 package-win32-zip: package-win32-base package-win32-base-zip
 # Clean up
-	rm -Rf $(srcdir)/vlc-${VERSION}
+	rm -Rf $(top_builddir)/vlc-${VERSION}
 
 package-win32: package-win32-base package-win32-base-exe package-win32-base-zip
 # Clean up
-	rm -Rf $(srcdir)/vlc-${VERSION}
+	rm -Rf $(top_builddir)/vlc-${VERSION}
 
 package-beos:
 # Check that tmp isn't in the way
@@ -5208,8 +5511,8 @@ package-beos:
 	mv $(srcdir)/tmp/vlc-${VERSION} $(srcdir)/tmp/vlc ;
 
 # Create normal package
-	strip --strip-debug --strip-unneeded $(srcdir)/tmp/vlc/vlc ;
-	find $(srcdir)/tmp/vlc -name 'lib*.so' -exec strip \
+	$(STRIP) --strip-debug --strip-unneeded $(srcdir)/tmp/vlc/vlc ;
+	find $(srcdir)/tmp/vlc -name 'lib*.so' -exec $(STRIP) \
 	  --strip-debug --strip-unneeded "{}" \; ;
 	xres -o $(srcdir)/tmp/vlc/vlc $(srcdir)/share/vlc_beos.rsrc ;
 	find $(srcdir)/tmp/vlc -exec mimeset -f {} \; ;
@@ -5230,7 +5533,7 @@ package-macosx:
 	fi
 
 # Copy relevant files 
-	cp -R "$(top_builddir)/VLC.app" "$(top_builddir)/tmp/"
+	cp -R "$(top_builddir)/VLC-release.app" "$(top_builddir)/tmp/VLC.app"
 	cd "$(srcdir)" && cp AUTHORS COPYING ChangeLog README README.MacOSX.rtf THANKS NEWS $(top_builddir)/tmp/
 
 # Create disk image 
@@ -5270,7 +5573,7 @@ package-translations:
 ###############################################################################
 # Stamp rules
 ###############################################################################
-clean: clean-stamp
+clean: clean-stamp clean-recursive
 clean-stamp:
 	rm -f stamp-builtin
 

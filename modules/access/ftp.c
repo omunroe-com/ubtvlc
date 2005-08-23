@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ftp.c: FTP input module
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: ftp.c 8606 2004-08-31 18:32:54Z hartman $
+ * Copyright (C) 2001-2005 VideoLAN
+ * $Id: ftp.c 11096 2005-05-21 19:05:14Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -52,8 +52,11 @@ static void    Close( vlc_object_t * );
     "used for the connection.")
 
 vlc_module_begin();
+    set_shortname( "FTP" );
     set_description( _("FTP input") );
     set_capability( "access2", 0 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACCESS );
     add_integer( "ftp-caching", 2 * DEFAULT_PTS_DELAY / 1000, NULL,
                  CACHING_TEXT, CACHING_LONGTEXT, VLC_TRUE );
     add_string( "ftp-user", "anonymous", NULL, USER_TEXT, USER_LONGTEXT,
@@ -75,10 +78,12 @@ static int Control( access_t *, int, va_list );
 
 struct access_sys_t
 {
-    vlc_url_t url;
+    vlc_url_t  url;
 
-    int       fd_cmd;
-    int       fd_data;
+    int        fd_cmd;
+    int        fd_data;
+    
+    vlc_bool_t b_epsv;
 };
 
 static int  ftp_SendCommand( access_t *, char *, ... );
@@ -217,6 +222,20 @@ static int Open( vlc_object_t *p_this )
             goto exit_error;
     }
 
+    /* Extended passive mode */
+    if( ftp_SendCommand( p_access, "EPSV ALL" ) < 0 )
+    {
+        msg_Err( p_access, "cannot request extended passive mode" );
+        goto exit_error;
+    }
+    if( ftp_ReadCommand( p_access, &i_answer, NULL ) != 2 )
+    {
+        p_sys->b_epsv = VLC_FALSE;
+        msg_Warn( p_access, "Extended passive mode not supported" );
+    }
+    else
+        p_sys->b_epsv = VLC_TRUE;
+
     /* binary mode */
     if( ftp_SendCommand( p_access, "TYPE I" ) < 0 ||
         ftp_ReadCommand( p_access, &i_answer, NULL ) != 2 )
@@ -319,7 +338,8 @@ static int Read( access_t *p_access, uint8_t *p_buffer, int i_len )
     if( p_access->info.b_eof )
         return 0;
 
-    i_read = net_Read( p_access, p_sys->fd_data, p_buffer, i_len, VLC_FALSE );
+    i_read = net_Read( p_access, p_sys->fd_data, NULL, p_buffer, i_len,
+                       VLC_FALSE );
     if( i_read == 0 )
         p_access->info.b_eof = VLC_TRUE;
     else if( i_read > 0 )
@@ -397,20 +417,14 @@ static int ftp_SendCommand( access_t *p_access, char *psz_fmt, ... )
     access_sys_t *p_sys = p_access->p_sys;
     va_list      args;
     char         *psz_cmd;
-    int          i_ret;
 
     va_start( args, psz_fmt );
     vasprintf( &psz_cmd, psz_fmt, args );
     va_end( args );
 
     msg_Dbg( p_access, "ftp_SendCommand:\"%s\"", psz_cmd);
-    if( ( i_ret = net_Printf( VLC_OBJECT(p_access), p_sys->fd_cmd,
-                              "%s", psz_cmd ) ) > 0 )
-    {
-        i_ret = net_Printf( VLC_OBJECT(p_access), p_sys->fd_cmd, "\r\n" );
-    }
-
-    if( i_ret < 0 )
+    if( net_Printf( VLC_OBJECT(p_access), p_sys->fd_cmd, NULL, "%s\r\n",
+                    psz_cmd ) < 0 )
     {
         msg_Err( p_access, "failed to send command" );
         return VLC_EGENERIC;
@@ -440,7 +454,7 @@ static int ftp_ReadCommand( access_t *p_access,
     char         *psz_line;
     int          i_answer;
 
-    psz_line = net_Gets( p_access, p_sys->fd_cmd );
+    psz_line = net_Gets( p_access, p_sys->fd_cmd, NULL );
     msg_Dbg( p_access, "answer=%s", psz_line );
     if( psz_line == NULL || strlen( psz_line ) < 3 )
     {
@@ -460,7 +474,7 @@ static int ftp_ReadCommand( access_t *p_access,
 
         for( ;; )
         {
-            char *psz_tmp = net_Gets( p_access, p_sys->fd_cmd );
+            char *psz_tmp = net_Gets( p_access, p_sys->fd_cmd, NULL );
 
             if( psz_tmp == NULL )   /* Error */
                 break;
@@ -492,33 +506,61 @@ static int ftp_StartStream( access_t *p_access, off_t i_start )
 {
     access_sys_t *p_sys = p_access->p_sys;
 
-    char psz_ip[1000];
+    char psz_ipv4[16], *psz_ip;
     int  i_answer;
     char *psz_arg, *psz_parser;
-    int  a1,a2,a3,a4;
-    int  p1,p2;
+    unsigned  a1, a2, a3, a4, p1, p2;
     int  i_port;
 
-    if( ftp_SendCommand( p_access, "PASV" ) < 0 ||
-        ftp_ReadCommand( p_access, &i_answer, &psz_arg ) != 2 )
+    if( ( ftp_SendCommand( p_access, p_sys->b_epsv ? "EPSV" : "PASV" ) < 0 )
+     || ( ftp_ReadCommand( p_access, &i_answer, &psz_arg ) != 2 ) )
     {
-        msg_Err( p_access, "cannot set passive transfer mode" );
+        msg_Err( p_access, "cannot set passive mode" );
         return VLC_EGENERIC;
     }
 
     psz_parser = strchr( psz_arg, '(' );
-    if( !psz_parser ||
-        sscanf( psz_parser, "(%d,%d,%d,%d,%d,%d", &a1, &a2, &a3,
-                &a4, &p1, &p2 ) < 6 )
+    if( psz_parser == NULL )
     {
         free( psz_arg );
-        msg_Err( p_access, "cannot get ip/port for passive transfer mode" );
+        msg_Err( p_access, "cannot parse passive mode response" );
         return VLC_EGENERIC;
+    }
+
+    if( p_sys->b_epsv )
+    {
+        char psz_fmt[7] = "(|||%u";
+        psz_fmt[1] = psz_fmt[2] = psz_fmt[3] = psz_parser[1];
+
+        if( sscanf( psz_parser, psz_fmt, &i_port ) < 1 )
+        {
+            free( psz_arg );
+            msg_Err( p_access, "cannot parse passive mode response" );
+            return VLC_EGENERIC;
+        }
+        /* FIXME: if psz_ip is a hostname/DNS to a cluster of FTP servers,
+         * this may fail because we'll end up on another server :(
+         * getpeername() + getnameinfo() should be used instead.
+         */
+        psz_ip = p_sys->url.psz_host;
+    }
+    else
+    {
+        if( ( sscanf( psz_parser, "(%u,%u,%u,%u,%u,%u", &a1, &a2, &a3, &a4,
+                      &p1, &p2 ) < 6 ) || ( a1 > 255 ) || ( a2 > 255 )
+         || ( a3 > 255 ) || ( a4 > 255 ) || ( p1 > 255 ) || ( p2 > 255 ) )
+        {
+            free( psz_arg );
+            msg_Err( p_access, "cannot parse passive mode response" );
+            return VLC_EGENERIC;
+        }
+
+        sprintf( psz_ipv4, "%u.%u.%u.%u", a1, a2, a3, a4 );
+        psz_ip = psz_ipv4;
+        i_port = (p1 << 8) | p2;
     }
     free( psz_arg );
 
-    sprintf( psz_ip, "%d.%d.%d.%d", a1, a2, a3, a4 );
-    i_port = p1 * 256 + p2;
     msg_Dbg( p_access, "ip:%s port:%d", psz_ip, i_port );
 
     if( ftp_SendCommand( p_access, "TYPE I" ) < 0 ||

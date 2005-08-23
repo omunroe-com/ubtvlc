@@ -1,7 +1,7 @@
 /*****************************************************************************
  * vout.m: MacOS X video output module
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
+ * Copyright (C) 2001-2004 VideoLAN
  * $Id: vout.m 8351 2004-08-02 13:06:38Z hartman $
  *
  * Authors: Colin Delacroix <colin@zoy.org>
@@ -70,6 +70,11 @@ struct vout_sys_t
     MatrixRecordPtr p_matrix;
     DecompressorComponent img_dc;
     ImageDescriptionHandle h_img_descr;
+
+    /* Mozilla plugin-related variables */
+    vlc_bool_t b_embedded;
+    Rect clipping_rect;
+    int portx, porty;
 };
 
 struct picture_sys_t
@@ -104,11 +109,10 @@ static void QTFreePicture       ( vout_thread_t *, picture_t * );
  * This function allocates and initializes a MacOS X vout method.
  *****************************************************************************/
 int E_(OpenVideoQT) ( vlc_object_t *p_this )
-{   
+{
     vout_thread_t * p_vout = (vout_thread_t *)p_this;
-    vlc_value_t val;
     OSErr err;
-    int i_timeout;
+    vlc_value_t value_drawable;
 
     p_vout->p_sys = malloc( sizeof( vout_sys_t ) );
     if( p_vout->p_sys == NULL )
@@ -119,22 +123,7 @@ int E_(OpenVideoQT) ( vlc_object_t *p_this )
 
     memset( p_vout->p_sys, 0, sizeof( vout_sys_t ) );
 
-    /* Wait for a MacOS X interface to appear. Timeout is 2 seconds. */
-    for( i_timeout = 20 ; i_timeout-- ; )
-    {
-        if( NSApp == NULL )
-        {
-            msleep( INTF_IDLE_SLEEP );
-        }
-    }
-
-    if( NSApp == NULL )
-    {
-        /* no MacOS X intf, unable to communicate with MT */
-        msg_Err( p_vout, "no MacOS X interface present" );
-        free( p_vout->p_sys );
-        return( 1 );
-    }
+    p_vout->p_sys->o_pool = [[NSAutoreleasePool alloc] init];
 
     p_vout->pf_init = InitVideo;
     p_vout->pf_end = EndVideo;
@@ -143,13 +132,14 @@ int E_(OpenVideoQT) ( vlc_object_t *p_this )
     p_vout->pf_display = DisplayVideo;
     p_vout->pf_control = ControlVideo;
 
-    p_vout->p_sys->o_pool = [[NSAutoreleasePool alloc] init];
+    /* Are we embedded?  If so, the drawable value will be a pointer to a
+     * CGrafPtr that we're expected to use */
+    var_Get( p_vout->p_vlc, "drawable", &value_drawable );
+    if( value_drawable.i_int != 0 )
+        p_vout->p_sys->b_embedded = VLC_TRUE;
+    else
+        p_vout->p_sys->b_embedded = VLC_FALSE;
 
-    var_Create( p_vout, "macosx-vdev", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
-    var_Create( p_vout, "macosx-fill", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
-    var_Create( p_vout, "macosx-stretch", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
-    var_Create( p_vout, "macosx-opaqueness", VLC_VAR_FLOAT | VLC_VAR_DOINHERIT );
-    
     p_vout->p_sys->b_altivec = p_vout->p_libvlc->i_cpu & CPU_CAPABILITY_ALTIVEC;
     msg_Dbg( p_vout, "We do%s have Altivec", p_vout->p_sys->b_altivec ? "" : "n't" );
     
@@ -210,64 +200,43 @@ int E_(OpenVideoQT) ( vlc_object_t *p_this )
         return VLC_EGENERIC;        
     }
 
-    /* Setup the menuitem for the multiple displays. Read the vlc preference (macosx-vdev) for the primary display */
-    NSArray * o_screens = [NSScreen screens];
-    if( [o_screens count] > 0 && var_Type( p_vout, "video-device" ) == 0 )
-    {
-        int i = 1;
-        vlc_value_t val2, text;
-        NSScreen * o_screen;
-
-        var_Get( p_vout, "macosx-vdev", &val );
-
-        var_Create( p_vout, "video-device", VLC_VAR_INTEGER |
-                                            VLC_VAR_HASCHOICE ); 
-        text.psz_string = _("Video device");
-        var_Change( p_vout, "video-device", VLC_VAR_SETTEXT, &text, NULL );
-        
-        NSEnumerator * o_enumerator = [o_screens objectEnumerator];
-
-        while( (o_screen = [o_enumerator nextObject]) != NULL )
-        {
-            char psz_temp[255];
-            NSRect s_rect = [o_screen frame];
-
-            snprintf( psz_temp, sizeof(psz_temp)/sizeof(psz_temp[0])-1, 
-                      "%s %d (%dx%d)", _("Screen"), i,
-                      (int)s_rect.size.width, (int)s_rect.size.height ); 
-
-            text.psz_string = psz_temp;
-            val2.i_int = i;
-            var_Change( p_vout, "video-device",
-                        VLC_VAR_ADDCHOICE, &val2, &text );
-
-            if( ( i - 1 ) == val.i_int )
-            {
-                var_Set( p_vout, "video-device", val2 );
-            }
-            i++;
-        }
-
-        var_AddCallback( p_vout, "video-device", vout_VarCallback,
-                         NULL );
-
-        val2.b_bool = VLC_TRUE;
-        var_Set( p_vout, "intf-change", val2 );
-    }
-
-    /* Spawn window */
-    p_vout->p_sys->o_window =
-        [[VLCWindow alloc] initWithVout: p_vout frame: nil];
-
 #define o_qtview p_vout->p_sys->o_qtview
     o_qtview = [[VLCQTView alloc] initWithVout: p_vout];
-    [p_vout->p_sys->o_window setContentView: o_qtview];
     [o_qtview autorelease];
 
+    if( p_vout->p_sys->b_embedded )
+    {
+        /* Zero the clipping rectangle */
+        p_vout->p_sys->clipping_rect.left = 0;
+        p_vout->p_sys->clipping_rect.right = 0;
+        p_vout->p_sys->clipping_rect.top = 0;
+        p_vout->p_sys->clipping_rect.bottom = 0;
+    }
+    else
+    {
+        /* Spawn window */
+        p_vout->p_sys->o_window = [[VLCWindow alloc]
+            initWithVout: p_vout view: o_qtview frame: nil];
+        if( !p_vout->p_sys->o_window )
+        {
+            return VLC_EGENERIC;
+        }
+    }
+
     /* Retrieve the QuickDraw port */
-    [o_qtview lockFocus];
-    p_vout->p_sys->p_qdport = [o_qtview qdPort];
-    [o_qtview unlockFocus];
+    if( p_vout->p_sys->b_embedded )
+    {
+        /* Don't need (nor want) to lock the focus, since otherwise we crash
+         * (presumably because we don't own the window, but I'm not sure
+         * if this is the exact reason)  -andrep */
+        p_vout->p_sys->p_qdport = [o_qtview qdPort];
+    }
+    else
+    {
+        [o_qtview lockFocus];
+        p_vout->p_sys->p_qdport = [o_qtview qdPort];
+        [o_qtview unlockFocus];
+    }
 #undef o_qtview
 
     return VLC_SUCCESS;
@@ -281,7 +250,8 @@ void E_(CloseVideoQT) ( vlc_object_t *p_this )
     NSAutoreleasePool *o_pool = [[NSAutoreleasePool alloc] init]; 
     vout_thread_t * p_vout = (vout_thread_t *)p_this;
 
-    [p_vout->p_sys->o_window close];
+    if( !p_vout->p_sys->b_embedded )
+        [p_vout->p_sys->o_window close];
 
     /* Clean Up Quicktime environment */
     ExitMovies();
@@ -308,6 +278,16 @@ static int InitVideo    ( vout_thread_t *p_vout )
     p_vout->output.i_width  = p_vout->render.i_width;
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
+
+    /* If we are embedded (e.g. running as a Mozilla plugin), use the pointer
+     * stored in the "drawable" value as the CGrafPtr for the QuickDraw
+     * graphics port */
+    if( p_vout->p_sys->b_embedded )
+    {
+        vlc_value_t val;
+        var_Get( p_vout->p_vlc, "drawable", &val );
+        p_vout->p_sys->p_qdport = (CGrafPtr) val.i_int;
+    }
 
     SetPort( p_vout->p_sys->p_qdport );
     QTScaleMatrix( p_vout );
@@ -373,6 +353,9 @@ static void EndVideo( vout_thread_t *p_vout )
  *****************************************************************************/
 static int ManageVideo( vout_thread_t *p_vout )
 {
+    vlc_value_t val;
+    var_Get( p_vout->p_vlc, "drawableredraw", &val );
+
     if( p_vout->i_changes & VOUT_FULLSCREEN_CHANGE )
     {
         if( CoToggleFullscreen( p_vout ) )  
@@ -383,17 +366,28 @@ static int ManageVideo( vout_thread_t *p_vout )
         p_vout->i_changes &= ~VOUT_FULLSCREEN_CHANGE;
     }
 
-    if( p_vout->i_changes & VOUT_SIZE_CHANGE ) 
+    if( p_vout->p_sys->b_embedded && val.i_int == 1 )
+    {
+        /* If we're embedded, the application is expected to indicate a
+         * window change (move/resize/etc) via the "drawableredraw" value.
+         * If that's the case, set the VOUT_SIZE_CHANGE flag so we do
+         * actually handle the window change. */
+        val.i_int = 0;
+        var_Set( p_vout->p_vlc, "drawableredraw", val );
+
+        p_vout->i_changes |= VOUT_SIZE_CHANGE;
+    }
+
+    if( p_vout->i_changes & VOUT_SIZE_CHANGE )
     {
         QTScaleMatrix( p_vout );
-        SetDSequenceMatrix( p_vout->p_sys->i_seq, 
+        SetDSequenceMatrix( p_vout->p_sys->i_seq,
                             p_vout->p_sys->p_matrix );
- 
         p_vout->i_changes &= ~VOUT_SIZE_CHANGE;
     }
 
     [p_vout->p_sys->o_window manage];
-    
+
     return( 0 );
 }
 
@@ -407,17 +401,54 @@ static void DisplayVideo( vout_thread_t *p_vout, picture_t *p_pic )
     OSErr err;
     CodecFlags flags;
 
-    if( ( err = DecompressSequenceFrameWhen( 
+    Rect saved_rect;
+    RgnHandle saved_clip;
+
+    saved_clip = NewRgn();
+
+    if( p_vout->p_sys->b_embedded )
+    {
+        /* In the Mozilla plugin, the browser also draws things in the windows.
+         * So, we have to update the origin and clipping rectangle for each
+         * picture.  FIXME: The vout should probably lock something ... */
+
+        /* Save the origin and clipping rectangle used by the host application
+         * (e.g. Mozilla), so we can restore it later */
+        GetPortBounds( p_vout->p_sys->p_qdport, &saved_rect );
+        GetClip( saved_clip );
+
+        /* The port gets unlocked at the end of this function */
+        LockPortBits( p_vout->p_sys->p_qdport );
+
+        /* Change the origin and clipping to the coordinates that the embedded
+         * window wants to draw at */
+        SetPort( p_vout->p_sys->p_qdport );
+        SetOrigin( p_vout->p_sys->portx , p_vout->p_sys->porty );
+        ClipRect( &p_vout->p_sys->clipping_rect );
+    }
+
+    if( ( err = DecompressSequenceFrameWhen(
                     p_vout->p_sys->i_seq,
                     p_pic->p_sys->p_data,
-                    p_pic->p_sys->i_size,                    
+                    p_pic->p_sys->i_size,
                     codecFlagUseImageBuffer, &flags, NULL, NULL ) != noErr ) )
     {
         msg_Warn( p_vout, "DecompressSequenceFrameWhen failed: %d", err );
     }
     else
     {
-        QDFlushPortBuffer( p_vout->p_sys->p_qdport, nil );
+        if( !p_vout->p_sys->b_embedded )
+            QDFlushPortBuffer( p_vout->p_sys->p_qdport, nil );
+    }
+
+    if( p_vout->p_sys->b_embedded )
+    {
+        /* Restore the origin and clipping rectangle to the settings used
+         * by the host application */
+        SetOrigin( saved_rect.left, saved_rect.top );
+        SetClip( saved_clip );
+
+        UnlockPortBits( p_vout->p_sys->p_qdport );
     }
 }
 
@@ -466,21 +497,21 @@ static int CoToggleFullscreen( vout_thread_t *p_vout )
 
     p_vout->b_fullscreen = !p_vout->b_fullscreen;
 
+#define o_qtview p_vout->p_sys->o_qtview
+    o_qtview = [[VLCQTView alloc] initWithVout: p_vout];
+    [o_qtview autorelease];
+    
     if( p_vout->p_sys->b_saved_frame )
     {
         p_vout->p_sys->o_window = [[VLCWindow alloc]
-            initWithVout: p_vout frame: &p_vout->p_sys->s_frame];
+            initWithVout: p_vout view: o_qtview
+            frame: &p_vout->p_sys->s_frame];
     }
     else
     {
         p_vout->p_sys->o_window = [[VLCWindow alloc]
-            initWithVout: p_vout frame: nil];
+            initWithVout: p_vout view: o_qtview frame: nil];
     }
-
-#define o_qtview p_vout->p_sys->o_qtview
-    o_qtview = [[VLCQTView alloc] initWithVout: p_vout];
-    [p_vout->p_sys->o_window setContentView: o_qtview];
-    [o_qtview autorelease];
 
     /* Retrieve the QuickDraw port */
     [o_qtview lockFocus];
@@ -518,6 +549,39 @@ static void QTScaleMatrix( vout_thread_t *p_vout )
     i_width = s_rect.right - s_rect.left;
     i_height = s_rect.bottom - s_rect.top;
 
+    if( p_vout->p_sys->b_embedded )
+    {
+        /* Embedded video get their drawing region from the host application
+         * by the drawable values here.  Read those variables, and store them
+         * in the p_vout->p_sys structure so that other functions (such as
+         * DisplayVideo and ManageVideo) can use them later. */
+        vlc_value_t valt, vall, valb, valr, valx, valy, valw, valh,
+                    valportx, valporty;
+
+        var_Get( p_vout->p_vlc, "drawable", &val );
+        var_Get( p_vout->p_vlc, "drawablet", &valt );
+        var_Get( p_vout->p_vlc, "drawablel", &vall );
+        var_Get( p_vout->p_vlc, "drawableb", &valb );
+        var_Get( p_vout->p_vlc, "drawabler", &valr );
+        var_Get( p_vout->p_vlc, "drawablex", &valx );
+        var_Get( p_vout->p_vlc, "drawabley", &valy );
+        var_Get( p_vout->p_vlc, "drawablew", &valw );
+        var_Get( p_vout->p_vlc, "drawableh", &valh );
+        var_Get( p_vout->p_vlc, "drawableportx", &valportx );
+        var_Get( p_vout->p_vlc, "drawableporty", &valporty );
+
+        p_vout->p_sys->portx = valportx.i_int;
+        p_vout->p_sys->porty = valporty.i_int;
+        p_vout->p_sys->p_qdport = (CGrafPtr) val.i_int;
+        i_width = valw.i_int;
+        i_height = valh.i_int;
+
+        p_vout->p_sys->clipping_rect.top = 0;
+        p_vout->p_sys->clipping_rect.left = 0;
+        p_vout->p_sys->clipping_rect.bottom = valb.i_int - valt.i_int;
+        p_vout->p_sys->clipping_rect.right = valr.i_int - vall.i_int;
+    }
+
     var_Get( p_vout, "macosx-stretch", &val );
     if( val.b_bool )
     {
@@ -525,7 +589,7 @@ static void QTScaleMatrix( vout_thread_t *p_vout )
                            Long2Fix( p_vout->output.i_width ) );
         factor_y = FixDiv( Long2Fix( i_height ),
                            Long2Fix( p_vout->output.i_height ) );
-                           
+
     }
     else if( i_height * p_vout->output.i_aspect < i_width * VOUT_ASPECT_FACTOR )
     {
@@ -551,13 +615,13 @@ static void QTScaleMatrix( vout_thread_t *p_vout )
 
         i_offset_y = (i_height - i_adj_height) / 2;
     }
-    
+
     SetIdentityMatrix( p_vout->p_sys->p_matrix );
 
     ScaleMatrix( p_vout->p_sys->p_matrix,
                  factor_x, factor_y,
                  Long2Fix(0), Long2Fix(0) );
-                 
+
     TranslateMatrix( p_vout->p_sys->p_matrix,
                  Long2Fix(i_offset_x), Long2Fix(i_offset_y) );
 }

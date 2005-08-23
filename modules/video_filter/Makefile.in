@@ -55,6 +55,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_ACTIVEX_FALSE = @BUILD_ACTIVEX_FALSE@
+BUILD_ACTIVEX_TRUE = @BUILD_ACTIVEX_TRUE@
 BUILD_DIRENT_FALSE = @BUILD_DIRENT_FALSE@
 BUILD_DIRENT_TRUE = @BUILD_DIRENT_TRUE@
 BUILD_GETOPT_FALSE = @BUILD_GETOPT_FALSE@
@@ -69,8 +71,6 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-CORBA_CFLAGS = @CORBA_CFLAGS@
-CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -98,10 +98,8 @@ FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GTK2_CFLAGS = @GTK2_CFLAGS@
-GTK2_LIBS = @GTK2_LIBS@
-HAL_CFLAGS = @HAL_CFLAGS@
-HAL_LIBS = @HAL_LIBS@
+HAS_MIDL_COMPILER_FALSE = @HAS_MIDL_COMPILER_FALSE@
+HAS_MIDL_COMPILER_TRUE = @HAS_MIDL_COMPILER_TRUE@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -112,6 +110,8 @@ HAVE_PLUGINS_FALSE = @HAVE_PLUGINS_FALSE@
 HAVE_PLUGINS_TRUE = @HAVE_PLUGINS_TRUE@
 HAVE_WIN32_FALSE = @HAVE_WIN32_FALSE@
 HAVE_WIN32_TRUE = @HAVE_WIN32_TRUE@
+HAVE_WINCE_FALSE = @HAVE_WINCE_FALSE@
+HAVE_WINCE_TRUE = @HAVE_WINCE_TRUE@
 INCLUDES = @INCLUDES@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -124,12 +124,7 @@ INTLOBJS = @INTLOBJS@
 INTL_LIBTOOL_SUFFIX_PREFIX = @INTL_LIBTOOL_SUFFIX_PREFIX@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
-LIBCDDB_CFLAGS = @LIBCDDB_CFLAGS@
-LIBCDDB_LIBS = @LIBCDDB_LIBS@
-LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
-LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
-LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -138,6 +133,7 @@ LTLIBICONV = @LTLIBICONV@
 LTLIBINTL = @LTLIBINTL@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+MIDL = @MIDL@
 MKINSTALLDIRS = @MKINSTALLDIRS@
 MOC = @MOC@
 MOZILLA_CONFIG = @MOZILLA_CONFIG@
@@ -154,7 +150,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
 PLUGIN_PATH = @PLUGIN_PATH@
 POSUB = @POSUB@
 RANLIB = @RANLIB@
@@ -164,8 +159,6 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-SVG_CFLAGS = @SVG_CFLAGS@
-SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
@@ -230,14 +223,15 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Ltransformb) $(Ltransformpic) $(Linvertb) $(Linvertpic) $(Ladjustb) $(Ladjustpic) $(Ldistortb) $(Ldistortpic) $(Lwallb) $(Lwallpic) $(Lcloneb) $(Lclonepic) $(Lcropb) $(Lcroppic) $(Lmotionblurb) $(Lmotionblurpic) $(Llogob) $(Llogopic) $(Ldeinterlaceb) $(Ldeinterlacepic) $(Lblendb) $(Lblendpic) $(Lscaleb) $(Lscalepic) $(Ltimeb) $(Ltimepic) $(Lmarqb) $(Lmarqpic)
-noinst_LIBRARIES = $(Ltransformp) $(Linvertp) $(Ladjustp) $(Ldistortp) $(Lwallp) $(Lclonep) $(Lcropp) $(Lmotionblurp) $(Llogop) $(Ldeinterlacep) $(Lblendp) $(Lscalep) $(Ltimep) $(Lmarqp)
+libvlc_LIBRARIES = $(Lmosaicb) $(Lmosaicpic) $(Ltransformb) $(Ltransformpic) $(Linvertb) $(Linvertpic) $(Ladjustb) $(Ladjustpic) $(Ldistortb) $(Ldistortpic) $(Lwallb) $(Lwallpic) $(Lcloneb) $(Lclonepic) $(Lcropb) $(Lcroppic) $(Lmotionblurb) $(Lmotionblurpic) $(Llogob) $(Llogopic) $(Ldeinterlaceb) $(Ldeinterlacepic) $(Lblendb) $(Lblendpic) $(Lscaleb) $(Lscalepic) $(Ltimeb) $(Ltimepic) $(Lmarqb) $(Lmarqpic) $(Lmotiondetectb) $(Lmotiondetectpic)
+noinst_LIBRARIES = $(Lmosaicp) $(Ltransformp) $(Linvertp) $(Ladjustp) $(Ldistortp) $(Lwallp) $(Lclonep) $(Lcropp) $(Lmotionblurp) $(Llogop) $(Ldeinterlacep) $(Lblendp) $(Lscalep) $(Ltimep) $(Lmarqp) $(Lmotiondetectp)
 noinst_HEADERS = filter_common.h
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
 SUBDIRS = swscale
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/video_filter
+SOURCES_mosaic = mosaic.c mosaic.h
 SOURCES_transform = transform.c
 SOURCES_invert = invert.c
 SOURCES_adjust = adjust.c
@@ -252,11 +246,37 @@ SOURCES_blend = blend.c
 SOURCES_scale = scale.c
 SOURCES_time = time.c
 SOURCES_marq = marq.c
+SOURCES_motiondetect = motiondetect.c
 
 # There's no need for pic code on win32 so get rid of this to substantially
 # reduce the compilation time.
 @BUILD_MOZILLA_TRUE@@HAVE_WIN32_TRUE@pic = no
 @BUILD_MOZILLA_FALSE@pic = no
+
+
+# The mosaic plugin
+@UNTRUE_TRUE@Lmosaicp = libmosaic_plugin.a
+@UNTRUE_TRUE@Dmosaicp = libmosaic_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lmosaicb = libmosaic.a
+@UNTRUE_TRUE@Lmosaicpic = libmosaic_pic.a
+
+libmosaic_plugin_a_SOURCES = $(SOURCES_mosaic)
+libmosaic_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin mosaic`
+libmosaic_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mosaic`
+libmosaic_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mosaic`
+
+libmosaic_pic_a_SOURCES = $(SOURCES_mosaic)
+libmosaic_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mosaic`
+libmosaic_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mosaic`
+libmosaic_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mosaic`
+
+libmosaic_a_SOURCES = $(SOURCES_mosaic)
+libmosaic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mosaic`
+libmosaic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mosaic`
+libmosaic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mosaic`
+libmosaic_DATA = $(Dmosaicp)
+
+libmosaicdir = $(libdir)/vlc/
 
 
 # The transform plugin
@@ -607,6 +627,31 @@ libmarq_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin marq`
 libmarq_DATA = $(Dmarqp)
 
 libmarqdir = $(libdir)/vlc/
+
+
+# The motiondetect plugin
+@UNTRUE_TRUE@Lmotiondetectp = libmotiondetect_plugin.a
+@UNTRUE_TRUE@Dmotiondetectp = libmotiondetect_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lmotiondetectb = libmotiondetect.a
+@UNTRUE_TRUE@Lmotiondetectpic = libmotiondetect_pic.a
+
+libmotiondetect_plugin_a_SOURCES = $(SOURCES_motiondetect)
+libmotiondetect_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin motiondetect`
+libmotiondetect_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin motiondetect`
+libmotiondetect_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin motiondetect`
+
+libmotiondetect_pic_a_SOURCES = $(SOURCES_motiondetect)
+libmotiondetect_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic motiondetect`
+libmotiondetect_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic motiondetect`
+libmotiondetect_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic motiondetect`
+
+libmotiondetect_a_SOURCES = $(SOURCES_motiondetect)
+libmotiondetect_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin motiondetect`
+libmotiondetect_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin motiondetect`
+libmotiondetect_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin motiondetect`
+libmotiondetect_DATA = $(Dmotiondetectp)
+
+libmotiondetectdir = $(libdir)/vlc/
 subdir = modules/video_filter
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
@@ -749,80 +794,111 @@ libmarq_plugin_a_LIBADD =
 am__objects_27 = libmarq_plugin_a-marq.$(OBJEXT)
 am_libmarq_plugin_a_OBJECTS = $(am__objects_27)
 libmarq_plugin_a_OBJECTS = $(am_libmarq_plugin_a_OBJECTS)
+libmosaic_a_AR = $(AR) cru
+libmosaic_a_LIBADD =
+am__objects_28 = libmosaic_a-mosaic.$(OBJEXT)
+am_libmosaic_a_OBJECTS = $(am__objects_28)
+libmosaic_a_OBJECTS = $(am_libmosaic_a_OBJECTS)
+libmosaic_pic_a_AR = $(AR) cru
+libmosaic_pic_a_LIBADD =
+am__objects_29 = libmosaic_pic_a-mosaic.$(OBJEXT)
+am_libmosaic_pic_a_OBJECTS = $(am__objects_29)
+libmosaic_pic_a_OBJECTS = $(am_libmosaic_pic_a_OBJECTS)
+libmosaic_plugin_a_AR = $(AR) cru
+libmosaic_plugin_a_LIBADD =
+am__objects_30 = libmosaic_plugin_a-mosaic.$(OBJEXT)
+am_libmosaic_plugin_a_OBJECTS = $(am__objects_30)
+libmosaic_plugin_a_OBJECTS = $(am_libmosaic_plugin_a_OBJECTS)
 libmotionblur_a_AR = $(AR) cru
 libmotionblur_a_LIBADD =
-am__objects_28 = libmotionblur_a-motionblur.$(OBJEXT)
-am_libmotionblur_a_OBJECTS = $(am__objects_28)
+am__objects_31 = libmotionblur_a-motionblur.$(OBJEXT)
+am_libmotionblur_a_OBJECTS = $(am__objects_31)
 libmotionblur_a_OBJECTS = $(am_libmotionblur_a_OBJECTS)
 libmotionblur_pic_a_AR = $(AR) cru
 libmotionblur_pic_a_LIBADD =
-am__objects_29 = libmotionblur_pic_a-motionblur.$(OBJEXT)
-am_libmotionblur_pic_a_OBJECTS = $(am__objects_29)
+am__objects_32 = libmotionblur_pic_a-motionblur.$(OBJEXT)
+am_libmotionblur_pic_a_OBJECTS = $(am__objects_32)
 libmotionblur_pic_a_OBJECTS = $(am_libmotionblur_pic_a_OBJECTS)
 libmotionblur_plugin_a_AR = $(AR) cru
 libmotionblur_plugin_a_LIBADD =
-am__objects_30 = libmotionblur_plugin_a-motionblur.$(OBJEXT)
-am_libmotionblur_plugin_a_OBJECTS = $(am__objects_30)
+am__objects_33 = libmotionblur_plugin_a-motionblur.$(OBJEXT)
+am_libmotionblur_plugin_a_OBJECTS = $(am__objects_33)
 libmotionblur_plugin_a_OBJECTS = $(am_libmotionblur_plugin_a_OBJECTS)
+libmotiondetect_a_AR = $(AR) cru
+libmotiondetect_a_LIBADD =
+am__objects_34 = libmotiondetect_a-motiondetect.$(OBJEXT)
+am_libmotiondetect_a_OBJECTS = $(am__objects_34)
+libmotiondetect_a_OBJECTS = $(am_libmotiondetect_a_OBJECTS)
+libmotiondetect_pic_a_AR = $(AR) cru
+libmotiondetect_pic_a_LIBADD =
+am__objects_35 = libmotiondetect_pic_a-motiondetect.$(OBJEXT)
+am_libmotiondetect_pic_a_OBJECTS = $(am__objects_35)
+libmotiondetect_pic_a_OBJECTS = $(am_libmotiondetect_pic_a_OBJECTS)
+libmotiondetect_plugin_a_AR = $(AR) cru
+libmotiondetect_plugin_a_LIBADD =
+am__objects_36 = libmotiondetect_plugin_a-motiondetect.$(OBJEXT)
+am_libmotiondetect_plugin_a_OBJECTS = $(am__objects_36)
+libmotiondetect_plugin_a_OBJECTS = \
+	$(am_libmotiondetect_plugin_a_OBJECTS)
 libscale_a_AR = $(AR) cru
 libscale_a_LIBADD =
-am__objects_31 = libscale_a-scale.$(OBJEXT)
-am_libscale_a_OBJECTS = $(am__objects_31)
+am__objects_37 = libscale_a-scale.$(OBJEXT)
+am_libscale_a_OBJECTS = $(am__objects_37)
 libscale_a_OBJECTS = $(am_libscale_a_OBJECTS)
 libscale_pic_a_AR = $(AR) cru
 libscale_pic_a_LIBADD =
-am__objects_32 = libscale_pic_a-scale.$(OBJEXT)
-am_libscale_pic_a_OBJECTS = $(am__objects_32)
+am__objects_38 = libscale_pic_a-scale.$(OBJEXT)
+am_libscale_pic_a_OBJECTS = $(am__objects_38)
 libscale_pic_a_OBJECTS = $(am_libscale_pic_a_OBJECTS)
 libscale_plugin_a_AR = $(AR) cru
 libscale_plugin_a_LIBADD =
-am__objects_33 = libscale_plugin_a-scale.$(OBJEXT)
-am_libscale_plugin_a_OBJECTS = $(am__objects_33)
+am__objects_39 = libscale_plugin_a-scale.$(OBJEXT)
+am_libscale_plugin_a_OBJECTS = $(am__objects_39)
 libscale_plugin_a_OBJECTS = $(am_libscale_plugin_a_OBJECTS)
 libtime_a_AR = $(AR) cru
 libtime_a_LIBADD =
-am__objects_34 = libtime_a-time.$(OBJEXT)
-am_libtime_a_OBJECTS = $(am__objects_34)
+am__objects_40 = libtime_a-time.$(OBJEXT)
+am_libtime_a_OBJECTS = $(am__objects_40)
 libtime_a_OBJECTS = $(am_libtime_a_OBJECTS)
 libtime_pic_a_AR = $(AR) cru
 libtime_pic_a_LIBADD =
-am__objects_35 = libtime_pic_a-time.$(OBJEXT)
-am_libtime_pic_a_OBJECTS = $(am__objects_35)
+am__objects_41 = libtime_pic_a-time.$(OBJEXT)
+am_libtime_pic_a_OBJECTS = $(am__objects_41)
 libtime_pic_a_OBJECTS = $(am_libtime_pic_a_OBJECTS)
 libtime_plugin_a_AR = $(AR) cru
 libtime_plugin_a_LIBADD =
-am__objects_36 = libtime_plugin_a-time.$(OBJEXT)
-am_libtime_plugin_a_OBJECTS = $(am__objects_36)
+am__objects_42 = libtime_plugin_a-time.$(OBJEXT)
+am_libtime_plugin_a_OBJECTS = $(am__objects_42)
 libtime_plugin_a_OBJECTS = $(am_libtime_plugin_a_OBJECTS)
 libtransform_a_AR = $(AR) cru
 libtransform_a_LIBADD =
-am__objects_37 = libtransform_a-transform.$(OBJEXT)
-am_libtransform_a_OBJECTS = $(am__objects_37)
+am__objects_43 = libtransform_a-transform.$(OBJEXT)
+am_libtransform_a_OBJECTS = $(am__objects_43)
 libtransform_a_OBJECTS = $(am_libtransform_a_OBJECTS)
 libtransform_pic_a_AR = $(AR) cru
 libtransform_pic_a_LIBADD =
-am__objects_38 = libtransform_pic_a-transform.$(OBJEXT)
-am_libtransform_pic_a_OBJECTS = $(am__objects_38)
+am__objects_44 = libtransform_pic_a-transform.$(OBJEXT)
+am_libtransform_pic_a_OBJECTS = $(am__objects_44)
 libtransform_pic_a_OBJECTS = $(am_libtransform_pic_a_OBJECTS)
 libtransform_plugin_a_AR = $(AR) cru
 libtransform_plugin_a_LIBADD =
-am__objects_39 = libtransform_plugin_a-transform.$(OBJEXT)
-am_libtransform_plugin_a_OBJECTS = $(am__objects_39)
+am__objects_45 = libtransform_plugin_a-transform.$(OBJEXT)
+am_libtransform_plugin_a_OBJECTS = $(am__objects_45)
 libtransform_plugin_a_OBJECTS = $(am_libtransform_plugin_a_OBJECTS)
 libwall_a_AR = $(AR) cru
 libwall_a_LIBADD =
-am__objects_40 = libwall_a-wall.$(OBJEXT)
-am_libwall_a_OBJECTS = $(am__objects_40)
+am__objects_46 = libwall_a-wall.$(OBJEXT)
+am_libwall_a_OBJECTS = $(am__objects_46)
 libwall_a_OBJECTS = $(am_libwall_a_OBJECTS)
 libwall_pic_a_AR = $(AR) cru
 libwall_pic_a_LIBADD =
-am__objects_41 = libwall_pic_a-wall.$(OBJEXT)
-am_libwall_pic_a_OBJECTS = $(am__objects_41)
+am__objects_47 = libwall_pic_a-wall.$(OBJEXT)
+am_libwall_pic_a_OBJECTS = $(am__objects_47)
 libwall_pic_a_OBJECTS = $(am_libwall_pic_a_OBJECTS)
 libwall_plugin_a_AR = $(AR) cru
 libwall_plugin_a_LIBADD =
-am__objects_42 = libwall_plugin_a-wall.$(OBJEXT)
-am_libwall_plugin_a_OBJECTS = $(am__objects_42)
+am__objects_48 = libwall_plugin_a-wall.$(OBJEXT)
+am_libwall_plugin_a_OBJECTS = $(am__objects_48)
 libwall_plugin_a_OBJECTS = $(am_libwall_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
@@ -855,9 +931,15 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libmarq_a-marq.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmarq_pic_a-marq.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmarq_plugin_a-marq.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmosaic_a-mosaic.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmosaic_pic_a-mosaic.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmosaic_plugin_a-mosaic.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmotionblur_a-motionblur.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmotionblur_pic_a-motionblur.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmotionblur_plugin_a-motionblur.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmotiondetect_a-motiondetect.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmotiondetect_pic_a-motiondetect.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmotiondetect_plugin_a-motiondetect.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libscale_a-scale.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libscale_pic_a-scale.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libscale_plugin_a-scale.Po \
@@ -887,9 +969,12 @@ DIST_SOURCES = $(libadjust_a_SOURCES) $(libadjust_pic_a_SOURCES) \
 	$(libinvert_plugin_a_SOURCES) $(liblogo_a_SOURCES) \
 	$(liblogo_pic_a_SOURCES) $(liblogo_plugin_a_SOURCES) \
 	$(libmarq_a_SOURCES) $(libmarq_pic_a_SOURCES) \
-	$(libmarq_plugin_a_SOURCES) $(libmotionblur_a_SOURCES) \
-	$(libmotionblur_pic_a_SOURCES) \
-	$(libmotionblur_plugin_a_SOURCES) $(libscale_a_SOURCES) \
+	$(libmarq_plugin_a_SOURCES) $(libmosaic_a_SOURCES) \
+	$(libmosaic_pic_a_SOURCES) $(libmosaic_plugin_a_SOURCES) \
+	$(libmotionblur_a_SOURCES) $(libmotionblur_pic_a_SOURCES) \
+	$(libmotionblur_plugin_a_SOURCES) $(libmotiondetect_a_SOURCES) \
+	$(libmotiondetect_pic_a_SOURCES) \
+	$(libmotiondetect_plugin_a_SOURCES) $(libscale_a_SOURCES) \
 	$(libscale_pic_a_SOURCES) $(libscale_plugin_a_SOURCES) \
 	$(libtime_a_SOURCES) $(libtime_pic_a_SOURCES) \
 	$(libtime_plugin_a_SOURCES) $(libtransform_a_SOURCES) \
@@ -899,8 +984,9 @@ DIST_SOURCES = $(libadjust_a_SOURCES) $(libadjust_pic_a_SOURCES) \
 DATA = $(libadjust_DATA) $(libblend_DATA) $(libclone_DATA) \
 	$(libcrop_DATA) $(libdeinterlace_DATA) $(libdistort_DATA) \
 	$(libinvert_DATA) $(liblogo_DATA) $(libmarq_DATA) \
-	$(libmotionblur_DATA) $(libscale_DATA) $(libtime_DATA) \
-	$(libtransform_DATA) $(libwall_DATA)
+	$(libmosaic_DATA) $(libmotionblur_DATA) $(libmotiondetect_DATA) \
+	$(libscale_DATA) $(libtime_DATA) $(libtransform_DATA) \
+	$(libwall_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -913,7 +999,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libadjust_a_SOURCES) $(libadjust_pic_a_SOURCES) $(libadjust_plugin_a_SOURCES) $(libblend_a_SOURCES) $(libblend_pic_a_SOURCES) $(libblend_plugin_a_SOURCES) $(libclone_a_SOURCES) $(libclone_pic_a_SOURCES) $(libclone_plugin_a_SOURCES) $(libcrop_a_SOURCES) $(libcrop_pic_a_SOURCES) $(libcrop_plugin_a_SOURCES) $(libdeinterlace_a_SOURCES) $(libdeinterlace_pic_a_SOURCES) $(libdeinterlace_plugin_a_SOURCES) $(libdistort_a_SOURCES) $(libdistort_pic_a_SOURCES) $(libdistort_plugin_a_SOURCES) $(libinvert_a_SOURCES) $(libinvert_pic_a_SOURCES) $(libinvert_plugin_a_SOURCES) $(liblogo_a_SOURCES) $(liblogo_pic_a_SOURCES) $(liblogo_plugin_a_SOURCES) $(libmarq_a_SOURCES) $(libmarq_pic_a_SOURCES) $(libmarq_plugin_a_SOURCES) $(libmotionblur_a_SOURCES) $(libmotionblur_pic_a_SOURCES) $(libmotionblur_plugin_a_SOURCES) $(libscale_a_SOURCES) $(libscale_pic_a_SOURCES) $(libscale_plugin_a_SOURCES) $(libtime_a_SOURCES) $(libtime_pic_a_SOURCES) $(libtime_plugin_a_SOURCES) $(libtransform_a_SOURCES) $(libtransform_pic_a_SOURCES) $(libtransform_plugin_a_SOURCES) $(libwall_a_SOURCES) $(libwall_pic_a_SOURCES) $(libwall_plugin_a_SOURCES)
+SOURCES = $(libadjust_a_SOURCES) $(libadjust_pic_a_SOURCES) $(libadjust_plugin_a_SOURCES) $(libblend_a_SOURCES) $(libblend_pic_a_SOURCES) $(libblend_plugin_a_SOURCES) $(libclone_a_SOURCES) $(libclone_pic_a_SOURCES) $(libclone_plugin_a_SOURCES) $(libcrop_a_SOURCES) $(libcrop_pic_a_SOURCES) $(libcrop_plugin_a_SOURCES) $(libdeinterlace_a_SOURCES) $(libdeinterlace_pic_a_SOURCES) $(libdeinterlace_plugin_a_SOURCES) $(libdistort_a_SOURCES) $(libdistort_pic_a_SOURCES) $(libdistort_plugin_a_SOURCES) $(libinvert_a_SOURCES) $(libinvert_pic_a_SOURCES) $(libinvert_plugin_a_SOURCES) $(liblogo_a_SOURCES) $(liblogo_pic_a_SOURCES) $(liblogo_plugin_a_SOURCES) $(libmarq_a_SOURCES) $(libmarq_pic_a_SOURCES) $(libmarq_plugin_a_SOURCES) $(libmosaic_a_SOURCES) $(libmosaic_pic_a_SOURCES) $(libmosaic_plugin_a_SOURCES) $(libmotionblur_a_SOURCES) $(libmotionblur_pic_a_SOURCES) $(libmotionblur_plugin_a_SOURCES) $(libmotiondetect_a_SOURCES) $(libmotiondetect_pic_a_SOURCES) $(libmotiondetect_plugin_a_SOURCES) $(libscale_a_SOURCES) $(libscale_pic_a_SOURCES) $(libscale_plugin_a_SOURCES) $(libtime_a_SOURCES) $(libtime_pic_a_SOURCES) $(libtime_plugin_a_SOURCES) $(libtransform_a_SOURCES) $(libtransform_pic_a_SOURCES) $(libtransform_plugin_a_SOURCES) $(libwall_a_SOURCES) $(libwall_pic_a_SOURCES) $(libwall_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -1066,6 +1152,18 @@ libmarq_plugin.a: $(libmarq_plugin_a_OBJECTS) $(libmarq_plugin_a_DEPENDENCIES)
 	-rm -f libmarq_plugin.a
 	$(libmarq_plugin_a_AR) libmarq_plugin.a $(libmarq_plugin_a_OBJECTS) $(libmarq_plugin_a_LIBADD)
 	$(RANLIB) libmarq_plugin.a
+libmosaic.a: $(libmosaic_a_OBJECTS) $(libmosaic_a_DEPENDENCIES) 
+	-rm -f libmosaic.a
+	$(libmosaic_a_AR) libmosaic.a $(libmosaic_a_OBJECTS) $(libmosaic_a_LIBADD)
+	$(RANLIB) libmosaic.a
+libmosaic_pic.a: $(libmosaic_pic_a_OBJECTS) $(libmosaic_pic_a_DEPENDENCIES) 
+	-rm -f libmosaic_pic.a
+	$(libmosaic_pic_a_AR) libmosaic_pic.a $(libmosaic_pic_a_OBJECTS) $(libmosaic_pic_a_LIBADD)
+	$(RANLIB) libmosaic_pic.a
+libmosaic_plugin.a: $(libmosaic_plugin_a_OBJECTS) $(libmosaic_plugin_a_DEPENDENCIES) 
+	-rm -f libmosaic_plugin.a
+	$(libmosaic_plugin_a_AR) libmosaic_plugin.a $(libmosaic_plugin_a_OBJECTS) $(libmosaic_plugin_a_LIBADD)
+	$(RANLIB) libmosaic_plugin.a
 libmotionblur.a: $(libmotionblur_a_OBJECTS) $(libmotionblur_a_DEPENDENCIES) 
 	-rm -f libmotionblur.a
 	$(libmotionblur_a_AR) libmotionblur.a $(libmotionblur_a_OBJECTS) $(libmotionblur_a_LIBADD)
@@ -1078,6 +1176,18 @@ libmotionblur_plugin.a: $(libmotionblur_plugin_a_OBJECTS) $(libmotionblur_plugin
 	-rm -f libmotionblur_plugin.a
 	$(libmotionblur_plugin_a_AR) libmotionblur_plugin.a $(libmotionblur_plugin_a_OBJECTS) $(libmotionblur_plugin_a_LIBADD)
 	$(RANLIB) libmotionblur_plugin.a
+libmotiondetect.a: $(libmotiondetect_a_OBJECTS) $(libmotiondetect_a_DEPENDENCIES) 
+	-rm -f libmotiondetect.a
+	$(libmotiondetect_a_AR) libmotiondetect.a $(libmotiondetect_a_OBJECTS) $(libmotiondetect_a_LIBADD)
+	$(RANLIB) libmotiondetect.a
+libmotiondetect_pic.a: $(libmotiondetect_pic_a_OBJECTS) $(libmotiondetect_pic_a_DEPENDENCIES) 
+	-rm -f libmotiondetect_pic.a
+	$(libmotiondetect_pic_a_AR) libmotiondetect_pic.a $(libmotiondetect_pic_a_OBJECTS) $(libmotiondetect_pic_a_LIBADD)
+	$(RANLIB) libmotiondetect_pic.a
+libmotiondetect_plugin.a: $(libmotiondetect_plugin_a_OBJECTS) $(libmotiondetect_plugin_a_DEPENDENCIES) 
+	-rm -f libmotiondetect_plugin.a
+	$(libmotiondetect_plugin_a_AR) libmotiondetect_plugin.a $(libmotiondetect_plugin_a_OBJECTS) $(libmotiondetect_plugin_a_LIBADD)
+	$(RANLIB) libmotiondetect_plugin.a
 libscale.a: $(libscale_a_OBJECTS) $(libscale_a_DEPENDENCIES) 
 	-rm -f libscale.a
 	$(libscale_a_AR) libscale.a $(libscale_a_OBJECTS) $(libscale_a_LIBADD)
@@ -1160,9 +1270,15 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmarq_a-marq.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmarq_pic_a-marq.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmarq_plugin_a-marq.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmosaic_a-mosaic.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmosaic_pic_a-mosaic.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmosaic_plugin_a-mosaic.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmotionblur_a-motionblur.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmotionblur_pic_a-motionblur.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmotionblur_plugin_a-motionblur.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmotiondetect_a-motiondetect.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmotiondetect_pic_a-motiondetect.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmotiondetect_plugin_a-motiondetect.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libscale_a-scale.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libscale_pic_a-scale.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libscale_plugin_a-scale.Po@am__quote@
@@ -1792,6 +1908,72 @@ libmarq_plugin_a-marq.obj: marq.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmarq_plugin_a_CFLAGS) $(CFLAGS) -c -o libmarq_plugin_a-marq.obj `if test -f 'marq.c'; then $(CYGPATH_W) 'marq.c'; else $(CYGPATH_W) '$(srcdir)/marq.c'; fi`
 
+libmosaic_a-mosaic.o: mosaic.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmosaic_a_CFLAGS) $(CFLAGS) -MT libmosaic_a-mosaic.o -MD -MP -MF "$(DEPDIR)/libmosaic_a-mosaic.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmosaic_a-mosaic.o `test -f 'mosaic.c' || echo '$(srcdir)/'`mosaic.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmosaic_a-mosaic.Tpo" "$(DEPDIR)/libmosaic_a-mosaic.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmosaic_a-mosaic.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mosaic.c' object='libmosaic_a-mosaic.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmosaic_a-mosaic.Po' tmpdepfile='$(DEPDIR)/libmosaic_a-mosaic.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmosaic_a_CFLAGS) $(CFLAGS) -c -o libmosaic_a-mosaic.o `test -f 'mosaic.c' || echo '$(srcdir)/'`mosaic.c
+
+libmosaic_a-mosaic.obj: mosaic.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmosaic_a_CFLAGS) $(CFLAGS) -MT libmosaic_a-mosaic.obj -MD -MP -MF "$(DEPDIR)/libmosaic_a-mosaic.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmosaic_a-mosaic.obj `if test -f 'mosaic.c'; then $(CYGPATH_W) 'mosaic.c'; else $(CYGPATH_W) '$(srcdir)/mosaic.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmosaic_a-mosaic.Tpo" "$(DEPDIR)/libmosaic_a-mosaic.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmosaic_a-mosaic.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mosaic.c' object='libmosaic_a-mosaic.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmosaic_a-mosaic.Po' tmpdepfile='$(DEPDIR)/libmosaic_a-mosaic.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmosaic_a_CFLAGS) $(CFLAGS) -c -o libmosaic_a-mosaic.obj `if test -f 'mosaic.c'; then $(CYGPATH_W) 'mosaic.c'; else $(CYGPATH_W) '$(srcdir)/mosaic.c'; fi`
+
+libmosaic_pic_a-mosaic.o: mosaic.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmosaic_pic_a_CFLAGS) $(CFLAGS) -MT libmosaic_pic_a-mosaic.o -MD -MP -MF "$(DEPDIR)/libmosaic_pic_a-mosaic.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmosaic_pic_a-mosaic.o `test -f 'mosaic.c' || echo '$(srcdir)/'`mosaic.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmosaic_pic_a-mosaic.Tpo" "$(DEPDIR)/libmosaic_pic_a-mosaic.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmosaic_pic_a-mosaic.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mosaic.c' object='libmosaic_pic_a-mosaic.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmosaic_pic_a-mosaic.Po' tmpdepfile='$(DEPDIR)/libmosaic_pic_a-mosaic.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmosaic_pic_a_CFLAGS) $(CFLAGS) -c -o libmosaic_pic_a-mosaic.o `test -f 'mosaic.c' || echo '$(srcdir)/'`mosaic.c
+
+libmosaic_pic_a-mosaic.obj: mosaic.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmosaic_pic_a_CFLAGS) $(CFLAGS) -MT libmosaic_pic_a-mosaic.obj -MD -MP -MF "$(DEPDIR)/libmosaic_pic_a-mosaic.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmosaic_pic_a-mosaic.obj `if test -f 'mosaic.c'; then $(CYGPATH_W) 'mosaic.c'; else $(CYGPATH_W) '$(srcdir)/mosaic.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmosaic_pic_a-mosaic.Tpo" "$(DEPDIR)/libmosaic_pic_a-mosaic.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmosaic_pic_a-mosaic.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mosaic.c' object='libmosaic_pic_a-mosaic.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmosaic_pic_a-mosaic.Po' tmpdepfile='$(DEPDIR)/libmosaic_pic_a-mosaic.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmosaic_pic_a_CFLAGS) $(CFLAGS) -c -o libmosaic_pic_a-mosaic.obj `if test -f 'mosaic.c'; then $(CYGPATH_W) 'mosaic.c'; else $(CYGPATH_W) '$(srcdir)/mosaic.c'; fi`
+
+libmosaic_plugin_a-mosaic.o: mosaic.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmosaic_plugin_a_CFLAGS) $(CFLAGS) -MT libmosaic_plugin_a-mosaic.o -MD -MP -MF "$(DEPDIR)/libmosaic_plugin_a-mosaic.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmosaic_plugin_a-mosaic.o `test -f 'mosaic.c' || echo '$(srcdir)/'`mosaic.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmosaic_plugin_a-mosaic.Tpo" "$(DEPDIR)/libmosaic_plugin_a-mosaic.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmosaic_plugin_a-mosaic.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mosaic.c' object='libmosaic_plugin_a-mosaic.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmosaic_plugin_a-mosaic.Po' tmpdepfile='$(DEPDIR)/libmosaic_plugin_a-mosaic.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmosaic_plugin_a_CFLAGS) $(CFLAGS) -c -o libmosaic_plugin_a-mosaic.o `test -f 'mosaic.c' || echo '$(srcdir)/'`mosaic.c
+
+libmosaic_plugin_a-mosaic.obj: mosaic.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmosaic_plugin_a_CFLAGS) $(CFLAGS) -MT libmosaic_plugin_a-mosaic.obj -MD -MP -MF "$(DEPDIR)/libmosaic_plugin_a-mosaic.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmosaic_plugin_a-mosaic.obj `if test -f 'mosaic.c'; then $(CYGPATH_W) 'mosaic.c'; else $(CYGPATH_W) '$(srcdir)/mosaic.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmosaic_plugin_a-mosaic.Tpo" "$(DEPDIR)/libmosaic_plugin_a-mosaic.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmosaic_plugin_a-mosaic.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mosaic.c' object='libmosaic_plugin_a-mosaic.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmosaic_plugin_a-mosaic.Po' tmpdepfile='$(DEPDIR)/libmosaic_plugin_a-mosaic.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmosaic_plugin_a_CFLAGS) $(CFLAGS) -c -o libmosaic_plugin_a-mosaic.obj `if test -f 'mosaic.c'; then $(CYGPATH_W) 'mosaic.c'; else $(CYGPATH_W) '$(srcdir)/mosaic.c'; fi`
+
 libmotionblur_a-motionblur.o: motionblur.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmotionblur_a_CFLAGS) $(CFLAGS) -MT libmotionblur_a-motionblur.o -MD -MP -MF "$(DEPDIR)/libmotionblur_a-motionblur.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libmotionblur_a-motionblur.o `test -f 'motionblur.c' || echo '$(srcdir)/'`motionblur.c; \
@@ -1857,6 +2039,72 @@ libmotionblur_plugin_a-motionblur.obj: motionblur.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmotionblur_plugin_a-motionblur.Po' tmpdepfile='$(DEPDIR)/libmotionblur_plugin_a-motionblur.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmotionblur_plugin_a_CFLAGS) $(CFLAGS) -c -o libmotionblur_plugin_a-motionblur.obj `if test -f 'motionblur.c'; then $(CYGPATH_W) 'motionblur.c'; else $(CYGPATH_W) '$(srcdir)/motionblur.c'; fi`
+
+libmotiondetect_a-motiondetect.o: motiondetect.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmotiondetect_a_CFLAGS) $(CFLAGS) -MT libmotiondetect_a-motiondetect.o -MD -MP -MF "$(DEPDIR)/libmotiondetect_a-motiondetect.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmotiondetect_a-motiondetect.o `test -f 'motiondetect.c' || echo '$(srcdir)/'`motiondetect.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmotiondetect_a-motiondetect.Tpo" "$(DEPDIR)/libmotiondetect_a-motiondetect.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmotiondetect_a-motiondetect.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='motiondetect.c' object='libmotiondetect_a-motiondetect.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmotiondetect_a-motiondetect.Po' tmpdepfile='$(DEPDIR)/libmotiondetect_a-motiondetect.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmotiondetect_a_CFLAGS) $(CFLAGS) -c -o libmotiondetect_a-motiondetect.o `test -f 'motiondetect.c' || echo '$(srcdir)/'`motiondetect.c
+
+libmotiondetect_a-motiondetect.obj: motiondetect.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmotiondetect_a_CFLAGS) $(CFLAGS) -MT libmotiondetect_a-motiondetect.obj -MD -MP -MF "$(DEPDIR)/libmotiondetect_a-motiondetect.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmotiondetect_a-motiondetect.obj `if test -f 'motiondetect.c'; then $(CYGPATH_W) 'motiondetect.c'; else $(CYGPATH_W) '$(srcdir)/motiondetect.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmotiondetect_a-motiondetect.Tpo" "$(DEPDIR)/libmotiondetect_a-motiondetect.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmotiondetect_a-motiondetect.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='motiondetect.c' object='libmotiondetect_a-motiondetect.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmotiondetect_a-motiondetect.Po' tmpdepfile='$(DEPDIR)/libmotiondetect_a-motiondetect.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmotiondetect_a_CFLAGS) $(CFLAGS) -c -o libmotiondetect_a-motiondetect.obj `if test -f 'motiondetect.c'; then $(CYGPATH_W) 'motiondetect.c'; else $(CYGPATH_W) '$(srcdir)/motiondetect.c'; fi`
+
+libmotiondetect_pic_a-motiondetect.o: motiondetect.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmotiondetect_pic_a_CFLAGS) $(CFLAGS) -MT libmotiondetect_pic_a-motiondetect.o -MD -MP -MF "$(DEPDIR)/libmotiondetect_pic_a-motiondetect.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmotiondetect_pic_a-motiondetect.o `test -f 'motiondetect.c' || echo '$(srcdir)/'`motiondetect.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmotiondetect_pic_a-motiondetect.Tpo" "$(DEPDIR)/libmotiondetect_pic_a-motiondetect.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmotiondetect_pic_a-motiondetect.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='motiondetect.c' object='libmotiondetect_pic_a-motiondetect.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmotiondetect_pic_a-motiondetect.Po' tmpdepfile='$(DEPDIR)/libmotiondetect_pic_a-motiondetect.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmotiondetect_pic_a_CFLAGS) $(CFLAGS) -c -o libmotiondetect_pic_a-motiondetect.o `test -f 'motiondetect.c' || echo '$(srcdir)/'`motiondetect.c
+
+libmotiondetect_pic_a-motiondetect.obj: motiondetect.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmotiondetect_pic_a_CFLAGS) $(CFLAGS) -MT libmotiondetect_pic_a-motiondetect.obj -MD -MP -MF "$(DEPDIR)/libmotiondetect_pic_a-motiondetect.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmotiondetect_pic_a-motiondetect.obj `if test -f 'motiondetect.c'; then $(CYGPATH_W) 'motiondetect.c'; else $(CYGPATH_W) '$(srcdir)/motiondetect.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmotiondetect_pic_a-motiondetect.Tpo" "$(DEPDIR)/libmotiondetect_pic_a-motiondetect.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmotiondetect_pic_a-motiondetect.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='motiondetect.c' object='libmotiondetect_pic_a-motiondetect.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmotiondetect_pic_a-motiondetect.Po' tmpdepfile='$(DEPDIR)/libmotiondetect_pic_a-motiondetect.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmotiondetect_pic_a_CFLAGS) $(CFLAGS) -c -o libmotiondetect_pic_a-motiondetect.obj `if test -f 'motiondetect.c'; then $(CYGPATH_W) 'motiondetect.c'; else $(CYGPATH_W) '$(srcdir)/motiondetect.c'; fi`
+
+libmotiondetect_plugin_a-motiondetect.o: motiondetect.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmotiondetect_plugin_a_CFLAGS) $(CFLAGS) -MT libmotiondetect_plugin_a-motiondetect.o -MD -MP -MF "$(DEPDIR)/libmotiondetect_plugin_a-motiondetect.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmotiondetect_plugin_a-motiondetect.o `test -f 'motiondetect.c' || echo '$(srcdir)/'`motiondetect.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmotiondetect_plugin_a-motiondetect.Tpo" "$(DEPDIR)/libmotiondetect_plugin_a-motiondetect.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmotiondetect_plugin_a-motiondetect.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='motiondetect.c' object='libmotiondetect_plugin_a-motiondetect.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmotiondetect_plugin_a-motiondetect.Po' tmpdepfile='$(DEPDIR)/libmotiondetect_plugin_a-motiondetect.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmotiondetect_plugin_a_CFLAGS) $(CFLAGS) -c -o libmotiondetect_plugin_a-motiondetect.o `test -f 'motiondetect.c' || echo '$(srcdir)/'`motiondetect.c
+
+libmotiondetect_plugin_a-motiondetect.obj: motiondetect.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmotiondetect_plugin_a_CFLAGS) $(CFLAGS) -MT libmotiondetect_plugin_a-motiondetect.obj -MD -MP -MF "$(DEPDIR)/libmotiondetect_plugin_a-motiondetect.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmotiondetect_plugin_a-motiondetect.obj `if test -f 'motiondetect.c'; then $(CYGPATH_W) 'motiondetect.c'; else $(CYGPATH_W) '$(srcdir)/motiondetect.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmotiondetect_plugin_a-motiondetect.Tpo" "$(DEPDIR)/libmotiondetect_plugin_a-motiondetect.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmotiondetect_plugin_a-motiondetect.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='motiondetect.c' object='libmotiondetect_plugin_a-motiondetect.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmotiondetect_plugin_a-motiondetect.Po' tmpdepfile='$(DEPDIR)/libmotiondetect_plugin_a-motiondetect.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmotiondetect_plugin_a_CFLAGS) $(CFLAGS) -c -o libmotiondetect_plugin_a-motiondetect.obj `if test -f 'motiondetect.c'; then $(CYGPATH_W) 'motiondetect.c'; else $(CYGPATH_W) '$(srcdir)/motiondetect.c'; fi`
 
 libscale_a-scale.o: scale.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libscale_a_CFLAGS) $(CFLAGS) -MT libscale_a-scale.o -MD -MP -MF "$(DEPDIR)/libscale_a-scale.Tpo" \
@@ -2284,6 +2532,24 @@ uninstall-libmarqDATA:
 	  echo " rm -f $(DESTDIR)$(libmarqdir)/$$f"; \
 	  rm -f $(DESTDIR)$(libmarqdir)/$$f; \
 	done
+libmosaicDATA_INSTALL = $(INSTALL_DATA)
+install-libmosaicDATA: $(libmosaic_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libmosaicdir)
+	@list='$(libmosaic_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libmosaicDATA_INSTALL) $$d$$p $(DESTDIR)$(libmosaicdir)/$$f"; \
+	  $(libmosaicDATA_INSTALL) $$d$$p $(DESTDIR)$(libmosaicdir)/$$f; \
+	done
+
+uninstall-libmosaicDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libmosaic_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libmosaicdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libmosaicdir)/$$f; \
+	done
 libmotionblurDATA_INSTALL = $(INSTALL_DATA)
 install-libmotionblurDATA: $(libmotionblur_DATA)
 	@$(NORMAL_INSTALL)
@@ -2301,6 +2567,24 @@ uninstall-libmotionblurDATA:
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
 	  echo " rm -f $(DESTDIR)$(libmotionblurdir)/$$f"; \
 	  rm -f $(DESTDIR)$(libmotionblurdir)/$$f; \
+	done
+libmotiondetectDATA_INSTALL = $(INSTALL_DATA)
+install-libmotiondetectDATA: $(libmotiondetect_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libmotiondetectdir)
+	@list='$(libmotiondetect_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libmotiondetectDATA_INSTALL) $$d$$p $(DESTDIR)$(libmotiondetectdir)/$$f"; \
+	  $(libmotiondetectDATA_INSTALL) $$d$$p $(DESTDIR)$(libmotiondetectdir)/$$f; \
+	done
+
+uninstall-libmotiondetectDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libmotiondetect_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libmotiondetectdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libmotiondetectdir)/$$f; \
 	done
 libscaleDATA_INSTALL = $(INSTALL_DATA)
 install-libscaleDATA: $(libscale_DATA)
@@ -2549,7 +2833,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libadjustdir) $(DESTDIR)$(libblenddir) $(DESTDIR)$(libclonedir) $(DESTDIR)$(libcropdir) $(DESTDIR)$(libdeinterlacedir) $(DESTDIR)$(libdistortdir) $(DESTDIR)$(libinvertdir) $(DESTDIR)$(liblogodir) $(DESTDIR)$(libmarqdir) $(DESTDIR)$(libmotionblurdir) $(DESTDIR)$(libscaledir) $(DESTDIR)$(libtimedir) $(DESTDIR)$(libtransformdir) $(DESTDIR)$(libwalldir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libadjustdir) $(DESTDIR)$(libblenddir) $(DESTDIR)$(libclonedir) $(DESTDIR)$(libcropdir) $(DESTDIR)$(libdeinterlacedir) $(DESTDIR)$(libdistortdir) $(DESTDIR)$(libinvertdir) $(DESTDIR)$(liblogodir) $(DESTDIR)$(libmarqdir) $(DESTDIR)$(libmosaicdir) $(DESTDIR)$(libmotionblurdir) $(DESTDIR)$(libmotiondetectdir) $(DESTDIR)$(libscaledir) $(DESTDIR)$(libtimedir) $(DESTDIR)$(libtransformdir) $(DESTDIR)$(libwalldir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -2600,7 +2884,8 @@ install-data-am: install-libadjustDATA install-libblendDATA \
 	install-libcloneDATA install-libcropDATA \
 	install-libdeinterlaceDATA install-libdistortDATA \
 	install-libinvertDATA install-liblogoDATA install-libmarqDATA \
-	install-libmotionblurDATA install-libscaleDATA \
+	install-libmosaicDATA install-libmotionblurDATA \
+	install-libmotiondetectDATA install-libscaleDATA \
 	install-libtimeDATA install-libtransformDATA \
 	install-libvlcLIBRARIES install-libwallDATA
 
@@ -2634,7 +2919,8 @@ uninstall-am: uninstall-info-am uninstall-libadjustDATA \
 	uninstall-libcropDATA uninstall-libdeinterlaceDATA \
 	uninstall-libdistortDATA uninstall-libinvertDATA \
 	uninstall-liblogoDATA uninstall-libmarqDATA \
-	uninstall-libmotionblurDATA uninstall-libscaleDATA \
+	uninstall-libmosaicDATA uninstall-libmotionblurDATA \
+	uninstall-libmotiondetectDATA uninstall-libscaleDATA \
 	uninstall-libtimeDATA uninstall-libtransformDATA \
 	uninstall-libvlcLIBRARIES uninstall-libwallDATA
 
@@ -2652,13 +2938,13 @@ uninstall-info: uninstall-info-recursive
 	install-libadjustDATA install-libblendDATA install-libcloneDATA \
 	install-libcropDATA install-libdeinterlaceDATA \
 	install-libdistortDATA install-libinvertDATA \
-	install-liblogoDATA install-libmarqDATA \
-	install-libmotionblurDATA install-libscaleDATA \
-	install-libtimeDATA install-libtransformDATA \
-	install-libvlcLIBRARIES install-libwallDATA install-man \
-	install-recursive install-strip installcheck installcheck-am \
-	installdirs installdirs-am installdirs-recursive \
-	maintainer-clean maintainer-clean-generic \
+	install-liblogoDATA install-libmarqDATA install-libmosaicDATA \
+	install-libmotionblurDATA install-libmotiondetectDATA \
+	install-libscaleDATA install-libtimeDATA \
+	install-libtransformDATA install-libvlcLIBRARIES \
+	install-libwallDATA install-man install-recursive install-strip \
+	installcheck installcheck-am installdirs installdirs-am \
+	installdirs-recursive maintainer-clean maintainer-clean-generic \
 	maintainer-clean-recursive mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
 	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
@@ -2668,7 +2954,8 @@ uninstall-info: uninstall-info-recursive
 	uninstall-libcropDATA uninstall-libdeinterlaceDATA \
 	uninstall-libdistortDATA uninstall-libinvertDATA \
 	uninstall-liblogoDATA uninstall-libmarqDATA \
-	uninstall-libmotionblurDATA uninstall-libscaleDATA \
+	uninstall-libmosaicDATA uninstall-libmotionblurDATA \
+	uninstall-libmotiondetectDATA uninstall-libscaleDATA \
 	uninstall-libtimeDATA uninstall-libtransformDATA \
 	uninstall-libvlcLIBRARIES uninstall-libwallDATA \
 	uninstall-recursive
@@ -2680,11 +2967,17 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in mosaic transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq motiondetect; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in mosaic transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq motiondetect; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in mosaic transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq motiondetect; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
+libmosaic_plugin$(LIBEXT): $(libmosaic_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage mosaic` in \
+	  c++) echo $(CXXLINK) $(libmosaic_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mosaic\` ; $(CXXLINK) $(libmosaic_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mosaic` ;; \
+	  objc) echo $(OBJCLINK) $(libmosaic_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mosaic\` ; $(OBJCLINK) $(libmosaic_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mosaic` ;; \
+	  c|*) echo $(LINK) $(libmosaic_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mosaic\` ; $(LINK) $(libmosaic_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mosaic` ;; \
+	esac
 libtransform_plugin$(LIBEXT): $(libtransform_plugin_a_OBJECTS)
 	@case `$(VLC_CONFIG) --linkage transform` in \
 	  c++) echo $(CXXLINK) $(libtransform_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin transform\` ; $(CXXLINK) $(libtransform_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin transform` ;; \
@@ -2768,6 +3061,12 @@ libmarq_plugin$(LIBEXT): $(libmarq_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libmarq_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin marq\` ; $(CXXLINK) $(libmarq_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin marq` ;; \
 	  objc) echo $(OBJCLINK) $(libmarq_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin marq\` ; $(OBJCLINK) $(libmarq_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin marq` ;; \
 	  c|*) echo $(LINK) $(libmarq_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin marq\` ; $(LINK) $(libmarq_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin marq` ;; \
+	esac
+libmotiondetect_plugin$(LIBEXT): $(libmotiondetect_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage motiondetect` in \
+	  c++) echo $(CXXLINK) $(libmotiondetect_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin motiondetect\` ; $(CXXLINK) $(libmotiondetect_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin motiondetect` ;; \
+	  objc) echo $(OBJCLINK) $(libmotiondetect_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin motiondetect\` ; $(OBJCLINK) $(libmotiondetect_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin motiondetect` ;; \
+	  c|*) echo $(LINK) $(libmotiondetect_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin motiondetect\` ; $(LINK) $(libmotiondetect_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin motiondetect` ;; \
 	esac
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

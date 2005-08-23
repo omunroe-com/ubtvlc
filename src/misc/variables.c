@@ -2,7 +2,7 @@
  * variables.c: routines for object variables handling
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: variables.c 9119 2004-11-02 23:40:20Z gbazin $
+ * $Id: variables.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *

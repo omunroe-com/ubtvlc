@@ -2,7 +2,7 @@
  * joystick.c: control vlc with a joystick
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: joystick.c 8338 2004-07-31 17:29:44Z sam $
+ * $Id: joystick.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Clément Stenac <zorglub@via.ecp.fr>
  *
@@ -158,6 +158,8 @@ static void Run       ( intf_thread_t *p_intf );
 #define MAP_LONGTEXT N_( "Allows you to remap the actions." )
 
 vlc_module_begin();
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_CONTROL );
     add_integer( "motion-threshold", DEFAULT_THRESHOLD, NULL,
                      THRESHOLD_TEXT, THRESHOLD_LONGTEXT, VLC_TRUE );
     add_string( "joystick-device", DEFAULT_DEVICE, NULL,

@@ -2,7 +2,7 @@
  * engine_vars.c:
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: engine_vars.c 8205 2004-07-17 13:55:48Z asmax $
+ * $Id: engine_vars.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *          code from projectM http://xmms-projectm.sourceforge.net

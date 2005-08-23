@@ -2,7 +2,7 @@
  * slp.c: SLP access plugin
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: slp.c 7209 2004-03-31 20:52:31Z gbazin $
+ * $Id: slp.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Loïc Minier <lool@videolan.org>
  *

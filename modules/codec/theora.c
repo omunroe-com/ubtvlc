@@ -2,7 +2,7 @@
  * theora.c: theora decoder module making use of libtheora.
  *****************************************************************************
  * Copyright (C) 1999-2001 VideoLAN
- * $Id: theora.c 8813 2004-09-26 20:17:50Z gbazin $
+ * $Id: theora.c 11030 2005-05-16 13:32:12Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -54,6 +54,11 @@ struct decoder_sys_t
     theora_state     td;                   /* theora bitstream user comments */
 
     /*
+     * Decoding properties
+     */
+    vlc_bool_t b_decoded_first_keyframe;
+
+    /*
      * Common properties
      */
     mtime_t i_pts;
@@ -88,6 +93,9 @@ static block_t *Encode( encoder_t *p_enc, picture_t *p_pict );
   "of specifying a particular bitrate. This will produce a VBR stream." )
 
 vlc_module_begin();
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_VCODEC );
+    set_shortname( "Theora" );
     set_description( _("Theora video decoder") );
     set_capability( "decoder", 100 );
     set_callbacks( OpenDecoder, CloseDecoder );
@@ -101,7 +109,7 @@ vlc_module_begin();
 
     add_submodule();
     set_description( _("Theora video encoder") );
-    set_capability( "encoder", 100 );
+    set_capability( "encoder", 150 );
     set_callbacks( OpenEncoder, CloseEncoder );
     add_shortcut( "theora" );
 
@@ -137,6 +145,7 @@ static int OpenDecoder( vlc_object_t *p_this )
     p_dec->p_sys->b_packetizer = VLC_FALSE;
 
     p_sys->i_pts = 0;
+    p_sys->b_decoded_first_keyframe = VLC_FALSE;
 
     /* Set output properties */
     p_dec->fmt_out.i_cat = VIDEO_ES;
@@ -307,6 +316,21 @@ static int ProcessHeaders( decoder_t *p_dec )
              p_sys->ti.frame_width, p_sys->ti.frame_height,
              p_sys->ti.offset_x, p_sys->ti.offset_y );
 
+    /* Sanity check that seems necessary for some corrupted files */
+    if( p_sys->ti.width < p_sys->ti.frame_width ||
+        p_sys->ti.height < p_sys->ti.frame_height )
+    {
+        msg_Warn( p_dec, "trying to correct invalid theora header "
+                  "(frame size (%dx%d) is smaller than frame content (%d,%d))",
+                  p_sys->ti.width, p_sys->ti.height,
+                  p_sys->ti.frame_width, p_sys->ti.frame_height );
+
+        if( p_sys->ti.width < p_sys->ti.frame_width )
+            p_sys->ti.width = p_sys->ti.frame_width;
+        if( p_sys->ti.height < p_sys->ti.frame_height )
+            p_sys->ti.height = p_sys->ti.frame_height;
+    }
+
     /* The next packet in order is the comments header */
     oggpacket.b_o_s = 0;
     oggpacket.bytes = *(p_extra++) << 8;
@@ -378,6 +402,14 @@ static void *ProcessPacket( decoder_t *p_dec, ogg_packet *p_oggpacket,
     block_t *p_block = *pp_block;
     void *p_buf;
 
+    if( ( p_block->i_flags&(BLOCK_FLAG_DISCONTINUITY|BLOCK_FLAG_CORRUPTED) ) != 0 )
+    {
+        /* Don't send the the first packet after a discontinuity to
+         * theora_decode, otherwise we get purple/green display artifacts
+         * appearing in the video output */
+        return NULL;
+    }
+
     /* Date management */
     if( p_block->i_pts > 0 && p_block->i_pts != p_sys->i_pts )
     {
@@ -426,8 +458,20 @@ static picture_t *DecodePacket( decoder_t *p_dec, ogg_packet *p_oggpacket )
 
     theora_decode_packetin( &p_sys->td, p_oggpacket );
 
-    /* Decode */
-    theora_decode_YUVout( &p_sys->td, &yuv );
+    /* Check for keyframe */
+    if( !(p_oggpacket->packet[0] & 0x80) /* data packet */ &&
+        !(p_oggpacket->packet[0] & 0x40) /* intra frame */ )
+        p_sys->b_decoded_first_keyframe = VLC_TRUE;
+
+    /* If we haven't seen a single keyframe yet, don't let Theora decode
+     * anything, otherwise we'll get display artifacts.  (This is impossible
+     * in the general case, but can happen if e.g. we play a network stream
+     * using a timed URL, such that the server doesn't start the video with a
+     * keyframe). */
+    if( p_sys->b_decoded_first_keyframe )
+        theora_decode_YUVout( &p_sys->td, &yuv );
+    else
+        return NULL;
 
     /* Get a new picture */
     p_pic = p_dec->pf_vout_buffer_new( p_dec );
@@ -517,7 +561,8 @@ static void theora_CopyPicture( decoder_t *p_dec, picture_t *p_pic,
 
         for( i_line = 0; i_line < p_pic->p[i_plane].i_visible_lines; i_line++ )
         {
-            p_dec->p_vlc->pf_memcpy( p_dst, p_src, i_width );
+            p_dec->p_vlc->pf_memcpy( p_dst, p_src + i_src_xoffset,
+                                     i_plane ? yuv->uv_width : yuv->y_width );
             p_src += i_src_stride;
             p_dst += i_dst_stride;
         }

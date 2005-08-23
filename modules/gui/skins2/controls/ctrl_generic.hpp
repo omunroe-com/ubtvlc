@@ -2,7 +2,7 @@
  * ctrl_generic.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_generic.hpp 7073 2004-03-14 14:33:12Z asmax $
+ * $Id: ctrl_generic.hpp 9596 2004-12-17 23:39:34Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -78,13 +78,24 @@ class CtrlGeneric: public SkinObject, public Observer<VarBool>
         /// Return true if the control is visible
         virtual bool isVisible() const;
 
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return ""; }
+
     protected:
         // If pVisible is NULL, the control is always visible
         CtrlGeneric( intf_thread_t *pIntf, const UString &rHelp,
                      VarBool *pVisible = NULL );
 
-        /// Tell the layout when the image has changed
-        virtual void notifyLayout() const;
+        /// Tell the layout when the image has changed, with the size of the
+        /// rectangle to repaint and its offset.
+        /// Use the default values to repaint the whole window
+        virtual void notifyLayout( int witdh = -1, int height = -1,
+                                   int xOffSet = 0, int yOffSet = 0 ) const;
+
+        /// Same as notifyLayout(), but takes optional images as parameters.
+        /// The maximum size(s) of the images will be used for repainting.
+        void notifyLayoutMaxSize( const OSGraphics *pImg1 = NULL,
+                                  const OSGraphics *pImg2 = NULL );
 
         /// Ask the layout to capture the mouse
         virtual void captureMouse() const;

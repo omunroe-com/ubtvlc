@@ -2,7 +2,7 @@
  * display.c: Gtk+ tools for main interface
  *****************************************************************************
  * Copyright (C) 1999, 2000, 2003 VideoLAN
- * $Id: display.c 7945 2004-06-07 21:26:35Z fenrir $
+ * $Id: display.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Stéphane Borel <stef@via.ecp.fr>

@@ -2,7 +2,7 @@
  * main.c:
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: main.c 8243 2004-07-22 21:27:45Z gbazin $
+ * $Id: main.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *          Adapted from projectM (http://xmms-projectm.sourceforge.net/)

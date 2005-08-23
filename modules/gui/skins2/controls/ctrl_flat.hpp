@@ -2,7 +2,7 @@
  * ctrl_flat.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_flat.hpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: ctrl_flat.hpp 9641 2004-12-22 13:06:43Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

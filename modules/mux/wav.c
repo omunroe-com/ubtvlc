@@ -2,7 +2,7 @@
  * wav.c: wav muxer module for vlc
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: wav.c 8862 2004-09-30 17:21:40Z gbazin $
+ * $Id: wav.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -41,6 +41,8 @@ static void Close  ( vlc_object_t * );
 vlc_module_begin();
     set_description( _("WAV muxer") );
     set_capability( "sout mux", 5 );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_MUX );
     set_callbacks( Open, Close );
     add_shortcut( "wav" );
 vlc_module_end();

@@ -2,7 +2,7 @@
  * ctrl_list.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_list.hpp 7261 2004-04-03 13:57:46Z asmax $
+ * $Id: ctrl_list.hpp 11009 2005-05-14 14:39:05Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -31,6 +31,7 @@
 
 class OSGraphics;
 class GenericFont;
+class GenericBitmap;
 
 
 /// Class for control list
@@ -38,7 +39,8 @@ class CtrlList: public CtrlGeneric, public Observer<VarList>,
     public Observer<VarPercent>
 {
     public:
-        CtrlList( intf_thread_t *pIntf, VarList &rList, GenericFont &rFont,
+        CtrlList( intf_thread_t *pIntf, VarList &rList,
+                  const GenericFont &rFont, const GenericBitmap *pBitmap,
                   uint32_t fgcolor, uint32_t playcolor, uint32_t bgcolor1,
                   uint32_t bgcolor2, uint32_t selColor,
                   const UString &rHelp, VarBool *pVisible );
@@ -59,16 +61,22 @@ class CtrlList: public CtrlGeneric, public Observer<VarList>,
         /// Return true if the control can gain the focus
         virtual bool isFocusable() const { return true; }
 
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return "list"; }
+
     private:
         /// List associated to the control
         VarList &m_rList;
         /// Font
-        GenericFont &m_rFont;
+        const GenericFont &m_rFont;
+        /// Background bitmap
+        /** If NULL, the 2 background colors defined below will be used */
+        const GenericBitmap *m_pBitmap;
         /// Color of normal text
         uint32_t m_fgColor;
         /// Color of the playing item
         uint32_t m_playColor;
-        /// Background colors
+        /// Background colors, used when no background bitmap is given
         uint32_t m_bgColor1, m_bgColor2;
         /// Background of selected items
         uint32_t m_selColor;

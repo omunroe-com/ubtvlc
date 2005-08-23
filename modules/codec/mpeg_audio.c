@@ -2,7 +2,7 @@
  * mpeg_audio.c: parse MPEG audio sync info and packetize the stream
  *****************************************************************************
  * Copyright (C) 2001-2003 VideoLAN
- * $Id: mpeg_audio.c 8561 2004-08-29 01:28:28Z gbazin $
+ * $Id: mpeg_audio.c 10287 2005-03-11 07:52:18Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -104,8 +104,10 @@ static int SyncInfo( uint32_t i_header, unsigned int * pi_channels,
  *****************************************************************************/
 vlc_module_begin();
     set_description( _("MPEG audio layer I/II/III parser") );
-#if defined(SYS_DARWIN)
-    set_capability( "decoder", 5 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACODEC );
+#if defined(SYS_DARWIN) || defined(UNDER_CE)
+   set_capability( "decoder", 5 );
 #else
     set_capability( "decoder", 100 );
 #endif
@@ -194,7 +196,7 @@ static void *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
         return NULL;
     }
 
-    if( (*pp_block)->i_flags&BLOCK_FLAG_DISCONTINUITY )
+    if( (*pp_block)->i_flags&(BLOCK_FLAG_DISCONTINUITY|BLOCK_FLAG_CORRUPTED) )
     {
         p_sys->i_state = STATE_NOSYNC;
     }
@@ -464,7 +466,7 @@ static uint8_t *GetOutBuffer( decoder_t *p_dec, void **pp_out_buffer )
 
     if( p_dec->fmt_out.audio.i_rate != p_sys->i_rate )
     {
-        msg_Info( p_dec, "MPGA channels:%d samplerate:%d bitrate:%d",
+        msg_Dbg( p_dec, "MPGA channels:%d samplerate:%d bitrate:%d",
                   p_sys->i_channels, p_sys->i_rate, p_sys->i_bit_rate );
 
         aout_DateInit( &p_sys->end_date, p_sys->i_rate );

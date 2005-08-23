@@ -2,7 +2,7 @@
  * encoder.c: video and audio encoder using the ffmpeg library
  *****************************************************************************
  * Copyright (C) 1999-2004 VideoLAN
- * $Id: encoder.c 9156 2004-11-05 14:57:53Z gbazin $
+ * $Id: encoder.c 11321 2005-06-06 17:11:25Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -147,7 +147,7 @@ struct encoder_sys_t
 };
 
 static const char *ppsz_enc_options[] = {
-    "keyint", "bframes", "vt", "qmin", "qmax", "hq", "strict_rc",
+    "keyint", "bframes", "vt", "qmin", "qmax", "hq", "strict-rc",
     "rc-buffer-size", "rc-buffer-aggressivity", "pre-me", "hurry-up",
     "interlace", "i-quant-factor", "noise-reduction", "mpeg4-matrix",
     "trellis", "qscale", "strict", NULL
@@ -156,8 +156,8 @@ static const char *ppsz_enc_options[] = {
 /*****************************************************************************
  * OpenEncoder: probe the encoder
  *****************************************************************************/
-extern int16_t ff_mpeg4_default_intra_matrix[];
-extern int16_t ff_mpeg4_default_non_intra_matrix[];
+extern int16_t IMPORT_SYMBOL ff_mpeg4_default_intra_matrix[];
+extern int16_t IMPORT_SYMBOL ff_mpeg4_default_non_intra_matrix[];
 
 int E_(OpenEncoder)( vlc_object_t *p_this )
 {
@@ -328,8 +328,13 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
         p_context->width = p_enc->fmt_in.video.i_width;
         p_context->height = p_enc->fmt_in.video.i_height;
 
+#if LIBAVCODEC_BUILD >= 4754
+        p_context->time_base.num = p_enc->fmt_in.video.i_frame_rate_base;
+        p_context->time_base.den = p_enc->fmt_in.video.i_frame_rate;
+#else
         p_context->frame_rate = p_enc->fmt_in.video.i_frame_rate;
         p_context->frame_rate_base= p_enc->fmt_in.video.i_frame_rate_base;
+#endif
 
         /* Defaults from ffmpeg.c */
         p_context->qblur = 0.5;
@@ -361,6 +366,21 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
         p_sys->p_buffer_out = malloc( AVCODEC_MAX_VIDEO_FRAME_SIZE );
 
         p_enc->fmt_in.i_codec = VLC_FOURCC('I','4','2','0');
+        p_context->pix_fmt = E_(GetFfmpegChroma)( p_enc->fmt_in.i_codec );
+#if LIBAVCODEC_BUILD >= 4714
+        if( p_codec->pix_fmts )
+        {
+            const enum PixelFormat *p = p_codec->pix_fmts;
+            for( ; *p != -1; p++ )
+            {
+                if( *p == p_context->pix_fmt ) break;
+            }
+            if( *p == -1 ) p_context->pix_fmt = p_codec->pix_fmts[0];
+            p_enc->fmt_in.i_codec = E_(GetVlcChroma)( p_context->pix_fmt );
+        }
+#else
+        p_enc->fmt_in.i_codec = E_(GetVlcChroma)( p_context->pix_fmt );
+#endif
 
         if ( p_sys->b_strict_rc )
         {
@@ -399,6 +419,9 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
         if ( p_sys->b_trellis )
             p_context->flags |= CODEC_FLAG_TRELLIS_QUANT;
 
+        if ( p_sys->i_qmin > 0 && p_sys->i_qmin == p_sys->i_qmax )
+            p_context->flags |= CODEC_FLAG_QSCALE;
+
 #if LIBAVCODEC_BUILD >= 4702
         if ( p_enc->i_threads >= 1 )
             p_context->thread_count = p_enc->i_threads;
@@ -425,6 +448,10 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
     }
     else if( p_enc->fmt_in.i_cat == AUDIO_ES )
     {
+        /* work around bug in libmp3lame encoding */
+        if( i_codec_id == CODEC_ID_MP3 && p_enc->fmt_in.audio.i_channels > 2 )
+            p_enc->fmt_in.audio.i_channels = 2;
+
         p_enc->fmt_in.i_codec  = AOUT_FMT_S16_NE;
         p_context->sample_rate = p_enc->fmt_in.audio.i_rate;
         p_context->channels    = p_enc->fmt_in.audio.i_channels;

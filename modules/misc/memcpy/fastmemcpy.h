@@ -1,7 +1,7 @@
 /*****************************************************************************
  * fastmemcpy.h : fast memcpy routines
  *****************************************************************************
- * $Id: fastmemcpy.h 6961 2004-03-05 17:34:23Z sam $
+ * $Id: fastmemcpy.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: various Linux kernel hackers
  *          various MPlayer hackers

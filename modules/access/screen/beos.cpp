@@ -2,7 +2,7 @@
  * beos.cpp: Screen capture module.
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: beos.cpp 8290 2004-07-26 20:29:24Z gbazin $
+ * $Id: beos.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Eric Petit <titer@m0k.org>
  *

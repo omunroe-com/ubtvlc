@@ -2,7 +2,7 @@
  * vlc_codec.h: codec related structures
  *****************************************************************************
  * Copyright (C) 1999-2003 VideoLAN
- * $Id: vlc_codec.h 8531 2004-08-26 21:27:06Z gbazin $
+ * $Id: vlc_codec.h 11084 2005-05-20 17:54:10Z massiot $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -38,6 +38,11 @@ typedef struct decoder_owner_sys_t decoder_owner_sys_t;
  * @{
  */
 
+/*
+ * BIG FAT WARNING : the code relies in the first 4 members of filter_t
+ * and decoder_t to be the same, so if you have anything to add, do it
+ * at the end of the structure.
+ */
 struct decoder_t
 {
     VLC_COMMON_MEMBERS

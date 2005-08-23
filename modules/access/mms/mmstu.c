@@ -2,7 +2,7 @@
  * mms.c: MMS access plug-in
  *****************************************************************************
  * Copyright (C) 2001, 2002 VideoLAN
- * $Id: mmstu.c 9059 2004-10-25 11:23:11Z markfm $
+ * $Id: mmstu.c 11080 2005-05-20 16:03:15Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -47,7 +47,9 @@
 #   include <sys/stat.h>
 #endif
 
-#ifdef WIN32
+#if defined( UNDER_CE )
+#   include <winsock.h>
+#elif WIN32
 #   include <winsock2.h>
 #   include <ws2tcpip.h>
 #   ifndef IN_MULTICAST
@@ -249,6 +251,7 @@ static int Control( access_t *p_access, int i_query, va_list args )
     vlc_bool_t   *pb_bool;
     int          *pi_int;
     int64_t      *pi_64;
+    int           i_int;
     vlc_value_t  val;
 
     switch( i_query )
@@ -258,11 +261,21 @@ static int Control( access_t *p_access, int i_query, va_list args )
             pb_bool = (vlc_bool_t*)va_arg( args, vlc_bool_t* );
             *pb_bool = p_sys->b_seekable;
             break;
+
         case ACCESS_CAN_FASTSEEK:
         case ACCESS_CAN_PAUSE:
-        case ACCESS_CAN_CONTROL_PACE:
             pb_bool = (vlc_bool_t*)va_arg( args, vlc_bool_t* );
             *pb_bool = VLC_FALSE;
+            break;
+
+        case ACCESS_CAN_CONTROL_PACE:
+            pb_bool = (vlc_bool_t*)va_arg( args, vlc_bool_t* );
+
+#if 0       /* Disable for now until we have a clock synchro algo
+             * which works with something else than MPEG over UDP */
+            *pb_bool = VLC_FALSE;
+#endif
+            *pb_bool = VLC_TRUE;
             break;
 
         /* */
@@ -277,6 +290,15 @@ static int Control( access_t *p_access, int i_query, va_list args )
             *pi_64 = (int64_t)var_GetInteger( p_access, "mms-caching" ) * I64C(1000);
             break;
 
+        case ACCESS_GET_PRIVATE_ID_STATE:
+            i_int = (int)va_arg( args, int );
+            pb_bool = (vlc_bool_t*)va_arg( args, vlc_bool_t );
+
+            if( i_int < 0 || i_int > 127 )
+                return VLC_EGENERIC;
+            *pb_bool =  p_sys->asfh.stream[i_int].i_selected ? VLC_TRUE : VLC_FALSE;
+            break;
+
         /* */
         case ACCESS_SET_PAUSE_STATE:
         case ACCESS_GET_TITLE_INFO:
@@ -284,6 +306,7 @@ static int Control( access_t *p_access, int i_query, va_list args )
         case ACCESS_SET_SEEKPOINT:
         case ACCESS_SET_PRIVATE_ID_STATE:
             return VLC_EGENERIC;
+
 
         default:
             msg_Warn( p_access, "unimplemented query in control" );
@@ -562,7 +585,7 @@ static int MMSOpen( access_t  *p_access, vlc_url_t *p_url, int  i_proto )
             psz[i] = p[i]; \
         } \
         psz[size] = '\0'; \
-        p += 2 * ( size ); \
+        p += ( size ); \
     }
     GETUTF16( p_sys->psz_server_version, i_server_version );
     GETUTF16( p_sys->psz_tool_version, i_tool_version );
@@ -833,7 +856,7 @@ static int MMSOpen( access_t  *p_access, vlc_url_t *p_url, int  i_proto )
 
     var_buffer_free( &buffer );
 
-    msg_Info( p_access, "connection sucessful" );
+    msg_Info( p_access, "connection successful" );
 
     return VLC_SUCCESS;
 }

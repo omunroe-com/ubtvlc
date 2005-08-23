@@ -39,6 +39,23 @@
 
 #include <errno.h>
 
+/* Include dvbpsi headers */
+#ifdef HAVE_DVBPSI_DR_H
+#   include <dvbpsi/dvbpsi.h>
+#   include <dvbpsi/descriptor.h>
+#   include <dvbpsi/pat.h>
+#   include <dvbpsi/pmt.h>
+#   include <dvbpsi/dr.h>
+#   include <dvbpsi/psi.h>
+#else
+#   include "dvbpsi.h"
+#   include "descriptor.h"
+#   include "tables/pat.h"
+#   include "tables/pmt.h"
+#   include "descriptors/dr.h"
+#   include "psi.h"
+#endif
+
 #include "dvb.h"
 
 /*****************************************************************************
@@ -81,10 +98,14 @@ static void Close( vlc_object_t *p_this );
 #define BUDGET_LONGTEXT N_("This allows you to stream an entire transponder with a budget card.")
 
 #define SATNO_TEXT N_("Satellite number in the Diseqc system")
-#define SATNO_LONGTEXT N_("[0=no diseqc, 1-4=normal diseqc, -1=A, -2=B simple diseqc]")
+#define SATNO_LONGTEXT N_("[0=no diseqc, 1-4=satellite number]")
 
 #define VOLTAGE_TEXT N_("LNB voltage")
 #define VOLTAGE_LONGTEXT N_("In Volts [0, 13=vertical, 18=horizontal]")
+
+#define HIGH_VOLTAGE_TEXT N_("High LNB voltage")
+#define HIGH_VOLTAGE_LONGTEXT N_("Enable high voltage if your cables are " \
+    "particularly long. This is not supported by all frontends.")
 
 #define TONE_TEXT N_("22 kHz tone")
 #define TONE_LONGTEXT N_("[0=off, 1=on, -1=auto]")
@@ -121,6 +142,8 @@ static void Close( vlc_object_t *p_this );
 vlc_module_begin();
     set_shortname( _("DVB") );
     set_description( N_("DVB input with v4l2 support") );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACCESS );
 
     add_integer( "dvb-caching", DEFAULT_PTS_DELAY / 1000, NULL, CACHING_TEXT,
                  CACHING_LONGTEXT, VLC_TRUE );
@@ -146,6 +169,8 @@ vlc_module_begin();
                  VLC_TRUE );
     add_integer( "dvb-voltage", 13, NULL, VOLTAGE_TEXT, VOLTAGE_LONGTEXT,
                  VLC_TRUE );
+    add_bool( "dvb-high-voltage", 0, NULL, HIGH_VOLTAGE_TEXT,
+              HIGH_VOLTAGE_LONGTEXT, VLC_TRUE );
     add_integer( "dvb-tone", -1, NULL, TONE_TEXT, TONE_LONGTEXT,
                  VLC_TRUE );
     add_integer( "dvb-fec", 9, NULL, FEC_TEXT, FEC_LONGTEXT, VLC_TRUE );
@@ -186,7 +211,8 @@ vlc_module_end();
 static block_t *Block( access_t * );
 static int Control( access_t *, int, va_list );
 
-#define DVB_READ_ONCE 3
+#define DVB_READ_ONCE 20
+#define DVB_READ_ONCE_START 2
 #define TS_PACKET_SIZE 188
 
 static void FilterUnset( access_t *, int i_max );
@@ -272,6 +298,11 @@ static int Open( vlc_object_t *p_this )
 
     E_(CAMOpen)( p_access );
 
+    if( p_sys->b_budget_mode )
+        p_sys->i_read_once = DVB_READ_ONCE;
+    else
+        p_sys->i_read_once = DVB_READ_ONCE_START;
+
     return VLC_SUCCESS;
 }
 
@@ -303,19 +334,24 @@ static block_t *Block( access_t *p_access )
     for ( ; ; )
     {
         struct timeval timeout;
-        fd_set fds;
+        fd_set fds, fde;
         int i_ret;
+        int i_max_handle = p_sys->i_handle;
 
-        /* Initialize file descriptor set */
+        /* Initialize file descriptor sets */
         FD_ZERO( &fds );
+        FD_ZERO( &fde );
         FD_SET( p_sys->i_handle, &fds );
+        FD_SET( p_sys->i_frontend_handle, &fde );
+        if ( p_sys->i_frontend_handle > i_max_handle )
+            i_max_handle = p_sys->i_frontend_handle;
 
         /* We'll wait 0.5 second if nothing happens */
         timeout.tv_sec = 0;
         timeout.tv_usec = 500000;
 
         /* Find if some data is available */
-        i_ret = select( p_sys->i_handle + 1, &fds, NULL, NULL, &timeout );
+        i_ret = select( i_max_handle + 1, &fds, NULL, &fde, &timeout );
 
         if ( p_access->b_die )
             return NULL;
@@ -335,20 +371,34 @@ static block_t *Block( access_t *p_access )
             p_sys->i_ca_next_event = mdate() + p_sys->i_ca_timeout;
         }
 
+        if ( FD_ISSET( p_sys->i_frontend_handle, &fde ) )
+        {
+            E_(FrontendPoll)( p_access );
+        }
+
+        if ( p_sys->i_frontend_timeout && mdate() > p_sys->i_frontend_timeout )
+        {
+            msg_Warn( p_access, "no lock, tuning again" );
+            E_(FrontendSet)( p_access );
+        }
+
         if ( FD_ISSET( p_sys->i_handle, &fds ) )
         {
             break;
         }
     }
 
-    p_block = block_New( p_access, DVB_READ_ONCE * TS_PACKET_SIZE );
+    p_block = block_New( p_access, p_sys->i_read_once * TS_PACKET_SIZE );
     if( ( p_block->i_buffer = read( p_sys->i_handle, p_block->p_buffer,
-                                    DVB_READ_ONCE * TS_PACKET_SIZE ) ) <= 0 )
+                                    p_sys->i_read_once*TS_PACKET_SIZE ) ) <= 0 )
     {
         msg_Err( p_access, "read failed (%s)", strerror(errno) );
         block_Release( p_block );
         return NULL;
     }
+
+    if( p_sys->i_read_once < DVB_READ_ONCE )
+        p_sys->i_read_once++;
 
     return p_block;
 }
@@ -406,15 +456,14 @@ static int Control( access_t *p_access, int i_query, va_list args )
 
         case ACCESS_SET_PRIVATE_ID_CA:
         {
-            uint8_t **pp_capmts;
-            int i_nb_capmts;
+            dvbpsi_pmt_t *p_pmt;
 
-            pp_capmts = (uint8_t **)va_arg( args, uint8_t ** );
-            i_nb_capmts = (int)va_arg( args, int );
+            p_pmt = (dvbpsi_pmt_t *)va_arg( args, dvbpsi_pmt_t * );
 
-            E_(CAMSet)( p_access, pp_capmts, i_nb_capmts );
+            E_(CAMSet)( p_access, p_pmt );
             break;
         }
+
         default:
             msg_Warn( p_access, "unimplemented query in control" );
             return VLC_EGENERIC;
@@ -455,6 +504,9 @@ static void FilterSet( access_t *p_access, int i_pid, int i_type )
     }
     p_sys->p_demux_handles[i].i_type = i_type;
     p_sys->p_demux_handles[i].i_pid = i_pid;
+
+    if( p_sys->i_read_once < DVB_READ_ONCE )
+        p_sys->i_read_once++;
 }
 
 static void FilterUnset( access_t *p_access, int i_max )
@@ -510,6 +562,7 @@ static void VarInit( access_t *p_access )
     var_Create( p_access, "dvb-budget-mode", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
     var_Create( p_access, "dvb-satno", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
     var_Create( p_access, "dvb-voltage", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Create( p_access, "dvb-high-voltage", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
     var_Create( p_access, "dvb-tone", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
     var_Create( p_access, "dvb-fec", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
     var_Create( p_access, "dvb-srate", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
@@ -573,7 +626,9 @@ static int ParseMRL( access_t *p_access )
 
         else GET_OPTION_BOOL("budget-mode")
         else GET_OPTION_INT("voltage")
+        else GET_OPTION_BOOL("high-voltage")
         else GET_OPTION_INT("tone")
+        else GET_OPTION_INT("satno")
         else GET_OPTION_INT("fec")
         else GET_OPTION_INT("srate")
 
@@ -586,18 +641,6 @@ static int ParseMRL( access_t *p_access )
         else GET_OPTION_INT("guard")
         else GET_OPTION_INT("hierarchy")
 
-        else if( !strncmp( psz_parser, "satno=",
-                           strlen( "satno=" ) ) )
-        {
-            psz_parser += strlen( "satno=" );
-            if ( *psz_parser == 'A' || *psz_parser == 'a' )
-                val.i_int = -1;
-            else if ( *psz_parser == 'B' || *psz_parser == 'b' )
-                val.i_int = -2;
-            else
-                val.i_int = strtol( psz_parser, &psz_parser, 0 );
-            var_Set( p_access, "dvb-satno", val );
-        }
         /* Redundant with voltage but much easier to use */
         else if( !strncmp( psz_parser, "polarization=",
                            strlen( "polarization=" ) ) )

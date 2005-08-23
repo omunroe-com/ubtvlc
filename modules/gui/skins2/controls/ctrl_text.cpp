@@ -2,7 +2,7 @@
  * ctrl_text.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_text.cpp 8347 2004-08-01 20:46:01Z asmax $
+ * $Id: ctrl_text.cpp 10861 2005-05-01 13:19:04Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -160,7 +160,7 @@ void CtrlText::draw( OSGraphics &rImage, int xDest, int yDest )
         if( width > 0 && height > 0 )
         {
             rImage.drawBitmap( *m_pCurrImg, -m_xPos, 0, xDest, yDest,
-                            width, height );
+                            width, height, true );
         }
     }
 }
@@ -227,7 +227,7 @@ void CtrlText::displayText( const UString &rText )
                 m_pTimer->stop();
             }
         }
-        notifyLayout();
+        notifyLayout( getPosition()->getWidth(), getPosition()->getHeight() );
     }
 }
 
@@ -311,7 +311,8 @@ void CtrlText::transMove( SkinObject *pCtrl )
         pThis->m_xPos = (pEvtMouse->getXPos() - pThis->m_xOffset);
         pThis->adjust( pThis->m_xPos );
 
-        pThis->notifyLayout();
+        pThis->notifyLayout( pThis->getPosition()->getWidth(),
+                             pThis->getPosition()->getHeight() );
     }
 }
 
@@ -323,7 +324,8 @@ void CtrlText::updateText( SkinObject *pCtrl )
     pThis->m_xPos -= MOVING_TEXT_STEP;
     pThis->adjust( pThis->m_xPos );
 
-    pThis->notifyLayout();
+    pThis->notifyLayout( pThis->getPosition()->getWidth(),
+                         pThis->getPosition()->getHeight() );
 }
 
 

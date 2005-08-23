@@ -2,7 +2,7 @@
  * ctrl_move.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_move.cpp 7073 2004-03-14 14:33:12Z asmax $
+ * $Id: ctrl_move.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

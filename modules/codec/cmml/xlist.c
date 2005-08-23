@@ -5,7 +5,7 @@
  *                         Organisation (CSIRO) Australia
  * Copyright (C) 2000-2004 VideoLAN
  *
- * $Id: xlist.c 7397 2004-04-20 17:27:30Z sam $
+ * $Id: xlist.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Conrad Parker <Conrad.Parker@csiro.au>
  *          Andre Pang <Andre.Pang@csiro.au>

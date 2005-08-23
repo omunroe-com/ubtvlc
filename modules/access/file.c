@@ -2,7 +2,7 @@
  * file.c: file input (file: access plug-in)
  *****************************************************************************
  * Copyright (C) 2001-2004 VideoLAN
- * $Id: file.c 8917 2004-10-05 15:31:22Z gbazin $
+ * $Id: file.c 10310 2005-03-11 22:36:40Z anil $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -86,6 +86,9 @@ static void Close( vlc_object_t * );
 
 vlc_module_begin();
     set_description( _("Standard filesystem file input") );
+    set_shortname( _("File") );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACCESS );
     add_integer( "file-caching", DEFAULT_PTS_DELAY / 1000, NULL, CACHING_TEXT, CACHING_LONGTEXT, VLC_TRUE );
     add_string( "file-cat", NULL, NULL, CAT_TEXT, CAT_LONGTEXT, VLC_TRUE );
     set_capability( "access2", 50 );
@@ -182,7 +185,9 @@ static int Open( vlc_object_t *p_this )
     p_sys->file = NULL;
     p_sys->i_file = 0;
     p_sys->i_index = 0;
+#ifndef UNDER_CE
     p_sys->fd = -1;
+#endif
 
     if( !strcasecmp( p_access->psz_access, "stream" ) )
     {
@@ -552,6 +557,7 @@ static int Control( access_t *p_access, int i_query, va_list args )
         case ACCESS_SET_TITLE:
         case ACCESS_SET_SEEKPOINT:
         case ACCESS_SET_PRIVATE_ID_STATE:
+        case ACCESS_GET_META:
             return VLC_EGENERIC;
 
         default:
@@ -574,7 +580,7 @@ static int _OpenFile( access_t * p_access, char * psz_name )
     p_sys->fd = fopen( psz_name, "rb" );
     if ( !p_sys->fd )
     {
-        msg_Err( p_access, "cannot open file %s" );
+        msg_Err( p_access, "cannot open file %s", psz_name );
         return VLC_EGENERIC;
     }
 

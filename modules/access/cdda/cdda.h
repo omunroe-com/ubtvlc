@@ -2,7 +2,7 @@
  * cdda.h : CD-DA input module header for vlc using libcdio.
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: cdda.h 8952 2004-10-07 22:50:44Z rocky $
+ * $Id: cdda.h 10859 2005-05-01 08:56:03Z rocky $
  *
  * Author: Rocky Bernstein <rocky@panix.com>
  *
@@ -24,12 +24,20 @@
 #include <vlc/input.h>
 #include <cdio/cdio.h>
 #include <cdio/cdtext.h>
+#if LIBCDIO_VERSION_NUM >= 73
+#include <cdio/audio.h>
+#include <cdio/mmc.h>
+#endif
+
 #include "vlc_meta.h"
 #include "codecs.h"
 
 #ifdef HAVE_LIBCDDB
 #include <cddb/cddb.h>
 #endif
+
+
+#define CDDA_MRL_PREFIX "cddax://"
 
 /* Frequency of sample in bits per second. */
 #define CDDA_FREQUENCY_SAMPLE 44100
@@ -56,33 +64,54 @@
 #define dbg_print(mask, s, args...)
 #endif
 
+#if LIBCDIO_VERSION_NUM >= 72
+#include <cdio/cdda.h>
+#else
+#define CdIo_t CdIo
+#endif    
+
+typedef enum {
+  paranoia_none    = 0, /* Note: We make use of 0 as being the same as false */
+  paranoia_overlap = 1, 
+  paranoia_full    = 2
+} paranoia_mode_t;
+
+  
 /*****************************************************************************
  * cdda_data_t: CD audio information
  *****************************************************************************/
 typedef struct cdda_data_s
 {
-  CdIo          *p_cdio;                   /* libcdio CD device */
-  track_t        i_tracks;                 /* # of tracks */
-  track_t        i_first_track;            /* # of first track */
-  track_t        i_titles;                 /* # of titles in playlist */
+  CdIo_t         *p_cdio;             /* libcdio CD device */
+  track_t        i_tracks;            /* # of tracks */
+  track_t        i_first_track;       /* # of first track */
+  track_t        i_titles;            /* # of titles in playlist */
   
   /* Current position */
-  track_t        i_track;                  /* Current track */
-  lsn_t          i_lsn;                    /* Current Logical Sector Number */
-  lsn_t          lsn[CDIO_CD_MAX_TRACKS];  /* Track LSNs. Origin is NOT 
-					      0 origin but origin of track
-					      number (usually 1).
-					    */
+  track_t        i_track;             /* Current track */
+  lsn_t          i_lsn;               /* Current Logical Sector Number */
   
-  int            i_blocks_per_read;        /* # blocks to get in a read */
-  int            i_debug;                  /* Debugging mask */
+  lsn_t          first_frame;         /* LSN of first frame of this track   */
+  lsn_t          last_frame;          /* LSN of last frame of this track    */
+  lsn_t          last_disc_frame;     /* LSN of last frame on CD            */
+  int            i_blocks_per_read;   /* # blocks to get in a read */
+  int            i_debug;             /* Debugging mask */
 
   /* Information about CD */
   vlc_meta_t    *p_meta;
-  char *         psz_mcn;                  /* Media Catalog Number */
+  char *         psz_mcn;             /* Media Catalog Number */
+  char *         psz_source;          /* CD drive or CD image filename */
   input_title_t *p_title[CDIO_CD_MAX_TRACKS]; /* This *is* 0 origin, not
 					         track number origin */
-  
+
+#if LIBCDIO_VERSION_NUM >= 72
+  /* Paranoia support */
+  paranoia_mode_t e_paranoia;         /* Use cd paranoia for reads? */
+  cdrom_drive_t *paranoia_cd;         /* Place to store drive
+					 handle given by paranoia. */
+  cdrom_paranoia_t *paranoia;
+
+#endif    
   
 #ifdef HAVE_LIBCDDB
   vlc_bool_t     b_cddb_enabled;      /* Use CDDB at all? */
@@ -95,7 +124,10 @@ typedef struct cdda_data_s
   } cddb;
 #endif
 
-  vlc_bool_t   b_cdtext_enabled;      /* Use CD-Text at all? If not,
+  vlc_bool_t   b_audio_ctl;           /* Use CD-Text audio controls and
+					 audio output? */
+
+  vlc_bool_t   b_cdtext;              /* Use CD-Text at all? If not,
 					 cdtext_preferred is meaningless. */
   vlc_bool_t   b_cdtext_prefer;       /* Prefer CD-Text info over
 					 CDDB? If no CDDB, the issue
@@ -108,6 +140,12 @@ typedef struct cdda_data_s
 
   WAVEHEADER   waveheader;            /* Wave header for the output data  */
   vlc_bool_t   b_header;
+  vlc_bool_t   b_nav_mode;           /* If false we view the entire CD as
+					as a unit rather than each track
+					as a unit. If b_nav_mode then the
+					slider area represents the Disc rather
+					than a track
+				      */
   
   input_thread_t *p_input;
   

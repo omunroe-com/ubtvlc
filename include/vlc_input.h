@@ -53,24 +53,60 @@ struct input_item_t
     mtime_t    i_duration;           /**< A hint about the duration of this
                                       * item, in milliseconds*/
 
+    int        i_id;                 /**< Identifier of the item */
+    uint8_t    i_type;               /**< Type (file, disc, ...) */
+
     int        i_categories;         /**< Number of info categories */
     info_category_t **pp_categories; /**< Pointer to the first info category */
 
     int         i_es;                /**< Number of es format descriptions */
     es_format_t **es;                /**< Pointer to an array of es formats */
 
+    vlc_bool_t  b_fixed_name;        /**< Can the interface change the name ?*/
+
     vlc_mutex_t lock;                /**< Item cannot be changed without this lock */
 };
+
+#define ITEM_TYPE_UNKNOWN       0
+#define ITEM_TYPE_AFILE         1
+#define ITEM_TYPE_VFILE         2
+#define ITEM_TYPE_DIRECTORY     3
+#define ITEM_TYPE_DISC          4
+#define ITEM_TYPE_CDDA          5
+#define ITEM_TYPE_CARD          6
+#define ITEM_TYPE_NET           7
+#define ITEM_TYPE_PLAYLIST      8
+#define ITEM_TYPE_NODE          9
 
 static inline void vlc_input_item_Init( vlc_object_t *p_o, input_item_t *p_i )
 {
     memset( p_i, 0, sizeof(input_item_t) );
+    p_i->i_options  = 0;
+    p_i->i_es = 0;
+    p_i->i_categories = 0 ;
     p_i->psz_name = 0;
     p_i->psz_uri = 0;
     p_i->ppsz_options = 0;
     p_i->pp_categories = 0;
     p_i->es = 0;
+    p_i->i_type = ITEM_TYPE_UNKNOWN;
+    p_i->b_fixed_name = VLC_TRUE;
     vlc_mutex_init( p_o, &p_i->lock );
+}
+
+static inline void vlc_input_item_CopyOptions( input_item_t *p_parent,
+                                               input_item_t *p_child )
+{
+    int i;
+    for( i = 0 ; i< p_parent->i_options; i++ )
+    {
+        char *psz_option= strdup( p_parent->ppsz_options[i] );
+        p_child->i_options++;
+        p_child->ppsz_options = (char **)realloc( p_child->ppsz_options,
+                                                  p_child->i_options *
+                                                  sizeof( char * ) );
+        p_child->ppsz_options[p_child->i_options-1] = psz_option;
+    }
 }
 
 static inline void vlc_input_item_Clean( input_item_t *p_i )
@@ -122,6 +158,9 @@ static inline void vlc_input_item_Clean( input_item_t *p_i )
     vlc_mutex_destroy( &p_i->lock );
 }
 
+VLC_EXPORT( char *, vlc_input_item_GetInfo, ( input_item_t *p_i, const char *psz_cat,const char *psz_name ) );
+VLC_EXPORT(int, vlc_input_item_AddInfo, ( input_item_t *p_i, const char *psz_cat, const char *psz_name, const char *psz_format, ... ) );
+
 /*****************************************************************************
  * Seek point: (generalisation of chapters)
  *****************************************************************************/
@@ -130,13 +169,15 @@ struct seekpoint_t
     int64_t i_byte_offset;
     int64_t i_time_offset;
     char    *psz_name;
+    int     i_level;
 };
 
 static inline seekpoint_t *vlc_seekpoint_New( void )
 {
     seekpoint_t *point = (seekpoint_t*)malloc( sizeof( seekpoint_t ) );
     point->i_byte_offset =
-    point->i_time_offset = 0;
+    point->i_time_offset = -1;
+    point->i_level = 0;
     point->psz_name = NULL;
     return point;
 }
@@ -331,6 +372,9 @@ struct input_thread_t
     int         i_bookmark;
     seekpoint_t **bookmark;
 
+    /* Global meta datas FIXME move to input_item_t ? */
+    vlc_meta_t  *p_meta;
+
     /* Output */
     es_out_t    *p_es_out;
     sout_instance_t *p_sout;            /* XXX Move it to es_out ? */
@@ -362,6 +406,8 @@ struct input_thread_t
  *****************************************************************************/
 #define input_CreateThread(a,b) __input_CreateThread(VLC_OBJECT(a),b)
 VLC_EXPORT( input_thread_t *, __input_CreateThread, ( vlc_object_t *, input_item_t * ) );
+#define input_Preparse(a,b) __input_Preparse(VLC_OBJECT(a),b)
+VLC_EXPORT( int, __input_Preparse, ( vlc_object_t *, input_item_t * ) );
 VLC_EXPORT( void,             input_StopThread,     ( input_thread_t * ) );
 VLC_EXPORT( void,             input_DestroyThread,  ( input_thread_t * ) );
 
@@ -386,16 +432,17 @@ enum input_query_e
     INPUT_GET_STATE,            /* arg1= int *          res=    */
     INPUT_SET_STATE,            /* arg1= int            res=can fail    */
 
-    /* input variable "audio-delay" and "spu-delay" */
+    /* input variable "audio-delay" and "sub-delay" */
     INPUT_GET_AUDIO_DELAY,      /* arg1 = int* res=can fail */
     INPUT_SET_AUDIO_DELAY,      /* arg1 = int  res=can fail */
     INPUT_GET_SPU_DELAY,        /* arg1 = int* res=can fail */
     INPUT_SET_SPU_DELAY,        /* arg1 = int  res=can fail */
 
     /* Meta datas */
-    INPUT_ADD_INFO,   /* arg1= char * arg2= char * arg3=...  res=can fail    */
-    INPUT_GET_INFO,   /* arg1= char * arg2= char * arg3= char ** res=can fail*/
-    INPUT_SET_NAME,   /* arg1= char * res=can fail    */
+    INPUT_ADD_INFO,   /* arg1= char* arg2= char* arg3=...     res=can fail */
+    INPUT_GET_INFO,   /* arg1= char* arg2= char* arg3= char** res=can fail */
+    INPUT_DEL_INFO,   /* arg1= char* arg2= char*              res=can fail */
+    INPUT_SET_NAME,   /* arg1= char* res=can fail    */
 
     /* Input config options */
     INPUT_ADD_OPTION,      /* arg1= char * arg2= char *  res=can fail*/
@@ -411,6 +458,9 @@ enum input_query_e
     INPUT_CHANGE_BOOKMARK, /* arg1= seekpoint_t * arg2= int * res=can fail   */
     INPUT_DEL_BOOKMARK,    /* arg1= seekpoint_t *  res=can fail   */
     INPUT_SET_BOOKMARK,    /* arg1= int  res=can fail    */
+
+    /* On the fly input slave */
+    INPUT_ADD_SLAVE,       /* arg1= char * */
 };
 
 VLC_EXPORT( int, input_vaControl,( input_thread_t *, int i_query, va_list  ) );

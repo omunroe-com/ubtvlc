@@ -2,7 +2,7 @@
  * display.h: Gtk+ tools for main interface.
  *****************************************************************************
  * Copyright (C) 1999, 2000 VideoLAN
- * $Id: display.h 6961 2004-03-05 17:34:23Z sam $
+ * $Id: display.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Stéphane Borel <stef@via.ecp.fr>

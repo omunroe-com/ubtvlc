@@ -2,7 +2,7 @@
  * filter.c: video scaling module using the swscale library
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: filter.c 8848 2004-09-29 14:21:31Z fkuehne $
+ * $Id: filter.c 11387 2005-06-10 15:32:08Z hartman $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -73,6 +73,8 @@ static char *ppsz_mode_descriptions[] =
 vlc_module_begin();
     set_description( _("Video scaling filter") );
     set_capability( "video filter2", 1000 );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VFILTER );
     set_callbacks( OpenFilter, CloseFilter );
 
     add_integer( "swscale-mode", 0, NULL, MODE_TEXT, MODE_LONGTEXT, VLC_TRUE );

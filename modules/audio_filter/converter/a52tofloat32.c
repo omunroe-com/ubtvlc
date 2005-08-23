@@ -4,7 +4,7 @@
  *   (http://liba52.sf.net/).
  *****************************************************************************
  * Copyright (C) 2001, 2002 VideoLAN
- * $Id: a52tofloat32.c 8863 2004-09-30 17:42:27Z gbazin $
+ * $Id: a52tofloat32.c 10922 2005-05-07 20:02:48Z fkuehne $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -100,7 +100,10 @@ struct filter_sys_t
     "listening room.")
 
 vlc_module_begin();
+    set_shortname( "A/52" );
     set_description( _("ATSC A/52 (AC-3) audio decoder") );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACODEC );
     add_bool( "a52-dynrng", 1, NULL, DYNRNG_TEXT, DYNRNG_LONGTEXT, VLC_FALSE );
     set_capability( "audio filter", 100 );
     set_callbacks( Create, Destroy );
@@ -112,7 +115,7 @@ vlc_module_begin();
 vlc_module_end();
 
 /*****************************************************************************
- * Create: 
+ * Create:
  *****************************************************************************/
 static int Create( vlc_object_t *p_this )
 {
@@ -121,7 +124,11 @@ static int Create( vlc_object_t *p_this )
     int i_ret;
 
     if ( p_filter->input.i_format != VLC_FOURCC('a','5','2',' ')
+#ifdef LIBA52_FIXED
+          || p_filter->output.i_format != VLC_FOURCC('f','i','3','2') )
+#else
           || p_filter->output.i_format != VLC_FOURCC('f','l','3','2') )
+#endif
     {
         return -1;
     }
@@ -314,7 +321,11 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
                     aout_buffer_t * p_in_buf, aout_buffer_t * p_out_buf )
 {
     filter_sys_t    *p_sys = (filter_sys_t *)p_filter->p_sys;
+#ifdef LIBA52_FIXED
+    sample_t        i_sample_level = (1 << 24);
+#else
     sample_t        i_sample_level = 1;
+#endif
     int             i_flags = p_sys->i_flags;
     int             i_bytes_per_block = 256 * p_sys->i_nb_channels
                       * sizeof(float);
@@ -327,7 +338,7 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
     if ( (i_flags & A52_CHANNEL_MASK) != (p_sys->i_flags & A52_CHANNEL_MASK)
           && !p_sys->b_dontwarn )
     {
-        msg_Warn( p_filter,
+        msg_Warn( p_aout,
                   "liba52 couldn't do the requested downmix 0x%x->0x%x",
                   p_sys->i_flags  & A52_CHANNEL_MASK,
                   i_flags & A52_CHANNEL_MASK );
@@ -346,7 +357,7 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
 
         if( a52_block( p_sys->p_liba52 ) )
         {
-            msg_Warn( p_filter, "a52_block failed for block %d", i );
+            msg_Warn( p_aout, "a52_block failed for block %d", i );
         }
 
         p_samples = a52_samples( p_sys->p_liba52 );
@@ -405,7 +416,11 @@ static int OpenFilter( vlc_object_t *p_this )
     }
 
     p_filter->fmt_out.audio.i_format =
+#ifdef LIBA52_FIXED
+        p_filter->fmt_out.i_codec = VLC_FOURCC('f','i','3','2');
+#else
         p_filter->fmt_out.i_codec = VLC_FOURCC('f','l','3','2');
+#endif
 
     /* Allocate the memory needed to store the module's structure */
     p_sys = p_filter->p_sys = malloc( sizeof(filter_sys_t) );
@@ -427,6 +442,7 @@ static int OpenFilter( vlc_object_t *p_this )
                   p_filter->fmt_in.audio, p_filter->fmt_out.audio );
 
     p_filter->pf_audio_filter = Convert;
+    p_filter->fmt_out.audio.i_rate = p_filter->fmt_in.audio.i_rate;
 
     return i_ret;
 }

@@ -2,7 +2,7 @@
  * win32_graphics.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: win32_graphics.cpp 7326 2004-04-12 14:07:57Z ipkiss $
+ * $Id: win32_graphics.cpp 11017 2005-05-14 23:50:13Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -68,7 +68,7 @@ void Win32Graphics::clear()
 
 void Win32Graphics::drawBitmap( const GenericBitmap &rBitmap,
                                 int xSrc, int ySrc, int xDest, int yDest,
-                                int width, int height )
+                                int width, int height, bool blend )
 {
     // Get the bitmap size if necessary
     if( width == -1 )
@@ -136,12 +136,8 @@ void Win32Graphics::drawBitmap( const GenericBitmap &rBitmap,
             uint8_t a = *(pBmpData++);
 
             // Draw the pixel
-            // Note: the colours are multiplied by a/255, because of the
-            // algorithm used by Windows for the AlphaBlending
             ((UINT32 *)pBits)[x + y * width] =
-                (a << 24) | (((r * a) >> 8) << 16) |
-                            (((g * a) >> 8) << 8) |
-                             ((b * a) >> 8);
+                (a << 24) | (r << 16) | (g << 8) | b;
 
             if( a > 0 )
             {

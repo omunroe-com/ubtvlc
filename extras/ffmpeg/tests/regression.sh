@@ -5,14 +5,14 @@
 #
 #set -x
 # Even in the 21st century some diffs are not supporting -u.
-diff -u $0 $0 > /dev/null 2>&1
+diff -u "$0" "$0" > /dev/null 2>&1
 if [ $? -eq 0 ]; then
   diff_cmd="diff -u"
 else
   diff_cmd="diff"
 fi
 
-diff -w $0 $0 > /dev/null 2>&1
+diff -w "$0" "$0" > /dev/null 2>&1
 if [ $? -eq 0 ]; then
   diff_cmd="$diff_cmd -w"
 fi
@@ -32,6 +32,12 @@ elif [ "$1" = "mpeg" ] ; then
     do_mpeg2=y
 elif [ "$1" = "ac3" ] ; then
     do_ac3=y
+elif [ "$1" = "huffyuv" ] ; then
+    do_huffyuv=y
+elif [ "$1" = "mpeg2thread" ] ; then
+    do_mpeg2thread=y
+elif [ "$1" = "snow" ] ; then
+    do_snow=y
 elif [ "$1" = "libavtest" ] ; then
     do_libav=y
     logfile="$datadir/libav.regression"
@@ -52,6 +58,7 @@ else
     do_mjpeg=y
     do_ljpeg=y
     do_rv10=y
+    do_rv20=y
     do_mp2=y
     do_ac3=y
     do_g726=y
@@ -68,6 +75,8 @@ else
     do_ffv1=y
     do_error=y
     do_svq1=y
+    do_snow=y
+    do_adpcm_yam=y
 fi
 
 
@@ -81,6 +90,7 @@ raw_dst="$datadir/out.yuv"
 raw_ref="$datadir/ref.yuv"
 pcm_src="asynth1.sw"
 pcm_dst="$datadir/out.wav"
+pcm_ref="$datadir/ref.wav"
 if [ X"`echo | md5sum 2> /dev/null`" != X ]; then
     do_md5sum() { md5sum -b $1; }
 elif [ -x /sbin/md5 ]; then
@@ -103,6 +113,8 @@ do_ffmpeg()
     do_md5sum $f >> $logfile
     if [ $f = $raw_dst ] ; then
         $tiny_psnr $f $raw_ref >> $logfile
+    elif [ $f = $pcm_dst ] ; then
+        $tiny_psnr $f $pcm_ref 2 >> $logfile
     else
         wc -c $f >> $logfile
     fi
@@ -139,6 +151,7 @@ echo "ffmpeg benchmarks" > $benchfile
 ###################################
 # generate reference for quality check
 do_ffmpeg_nocheck $raw_ref -y -f pgmyuv -i $raw_src -an -f rawvideo $raw_ref
+do_ffmpeg_nocheck $pcm_ref -y -ab 128 -ac 2 -ar 44100 -f s16le -i $pcm_src -f wav $pcm_ref
 
 ###################################
 if [ -n "$do_mpeg" ] ; then
@@ -179,6 +192,13 @@ if [ -n "$do_mpeg2thread" ] ; then
 # mpeg2 encoding interlaced
 file=${outfile}mpeg2thread.mpg
 do_ffmpeg $file -y -qscale 10 -f pgmyuv -i $raw_src -vcodec mpeg2video -f mpeg1video -bf 2 -ildct -ilme -threads 2 $file 
+
+# mpeg2 decoding
+do_ffmpeg $raw_dst -y -i $file -f rawvideo $raw_dst
+
+# mpeg2 encoding interlaced
+file=${outfile}mpeg2reuse.mpg
+do_ffmpeg $file -y -sameq -me_threshold 256 -mb_threshold 1024 -i ${outfile}mpeg2thread.mpg -vcodec mpeg2video -f mpeg1video -bf 2 -ildct -ilme -threads 4 $file 
 
 # mpeg2 decoding
 do_ffmpeg $raw_dst -y -i $file -f rawvideo $raw_dst
@@ -268,10 +288,10 @@ fi
 if [ -n "$do_huffyuv" ] ; then
 # huffyuv
 file=${outfile}huffyuv.avi
-do_ffmpeg $file -y -qscale 10 -f pgmyuv -i $raw_src -an -vcodec huffyuv -strict -1 $file
+do_ffmpeg $file -y -f pgmyuv -i $raw_src -an -vcodec huffyuv -pix_fmt yuv422p $file
 
 # huffyuv decoding
-do_ffmpeg $raw_dst -y -i $file -f rawvideo -strict -1 $raw_dst
+do_ffmpeg $raw_dst -y -i $file -f rawvideo -strict -2 -pix_fmt yuv420p $raw_dst
 fi
 
 ###################################
@@ -348,17 +368,17 @@ fi
 if [ -n "$do_mjpeg" ] ; then
 # mjpeg
 file=${outfile}mjpeg.avi
-do_ffmpeg $file -y -qscale 10 -f pgmyuv -i $raw_src -an -vcodec mjpeg $file
+do_ffmpeg $file -y -qscale 10 -f pgmyuv -i $raw_src -an -vcodec mjpeg -pix_fmt yuvj420p $file
 
 # mjpeg decoding
-do_ffmpeg $raw_dst -y -i $file -f rawvideo $raw_dst 
+do_ffmpeg $raw_dst -y -i $file -f rawvideo -pix_fmt yuv420p $raw_dst 
 fi
 
 ###################################
 if [ -n "$do_ljpeg" ] ; then
 # ljpeg
 file=${outfile}ljpeg.avi
-do_ffmpeg $file -y -f pgmyuv -i $raw_src -an -vcodec ljpeg $file
+do_ffmpeg $file -y -f pgmyuv -i $raw_src -an -vcodec ljpeg -strict -1 $file
 
 # ljpeg decoding
 do_ffmpeg $raw_dst -y -i $file -f rawvideo $raw_dst 
@@ -371,6 +391,16 @@ file=${outfile}rv10.rm
 do_ffmpeg $file -y -qscale 10 -f pgmyuv -i $raw_src -an $file 
 
 # rv10 decoding
+do_ffmpeg $raw_dst -y -i $file -f rawvideo $raw_dst 
+fi
+
+###################################
+if [ -n "$do_rv20" ] ; then
+# rv20 encoding
+file=${outfile}rv20.rm
+do_ffmpeg $file -y -qscale 10 -f pgmyuv -i $raw_src -vcodec rv20 -an $file 
+
+# rv20 decoding
 do_ffmpeg $raw_dst -y -i $file -f rawvideo $raw_dst 
 fi
 
@@ -408,9 +438,26 @@ fi
 if [ -n "$do_ffv1" ] ; then
 # ffv1 encoding
 file=${outfile}ffv1.avi
-do_ffmpeg $file -y -strict -1 -f pgmyuv -i $raw_src -an -vcodec ffv1 $file
+do_ffmpeg $file -y -strict -2 -f pgmyuv -i $raw_src -an -vcodec ffv1 $file
 
 # ffv1 decoding
+do_ffmpeg $raw_dst -y -i $file -f rawvideo $raw_dst 
+fi
+
+###################################
+if [ -n "$do_snow" ] ; then
+# snow encoding
+file=${outfile}snow.avi
+do_ffmpeg $file -y -strict -2 -f pgmyuv -i $raw_src -an -vcodec snow -qscale 2 $file
+
+# snow decoding
+do_ffmpeg $raw_dst -y -i $file -f rawvideo $raw_dst 
+
+# snow encoding
+file=${outfile}snow53.avi
+do_ffmpeg $file -y -strict -2 -f pgmyuv -i $raw_src -an -vcodec snow -pred 1 -qpel -4mv $file
+
+# snow decoding
 do_ffmpeg $raw_dst -y -i $file -f rawvideo $raw_dst 
 fi
 
@@ -421,7 +468,7 @@ file=${outfile}svq1.mov
 do_ffmpeg $file -y -f pgmyuv -i $raw_src -an -vcodec svq1 -qscale 3 -pix_fmt yuv410p $file
 
 # svq1 decoding
-do_ffmpeg $raw_dst -y -i $file -f rawvideo $raw_dst 
+do_ffmpeg $raw_dst -y -i $file -f rawvideo -pix_fmt yuv420p $raw_dst 
 fi
 
 ###################################
@@ -432,6 +479,7 @@ do_ffmpeg $file -y -ab 128 -ac 2 -ar 44100 -f s16le -i $pcm_src $file
 
 # mp2 decoding
 do_ffmpeg $pcm_dst -y -i $file -f wav $pcm_dst 
+$tiny_psnr $pcm_dst $pcm_ref 2 1924 >> $logfile
 fi
 
 ###################################
@@ -475,6 +523,16 @@ do_ffmpeg $pcm_dst -y -i $file -f wav $pcm_dst
 fi
 
 ###################################
+if [ -n "$do_adpcm_yam" ] ; then
+# encoding
+file=${outfile}adpcm_yam.wav
+do_ffmpeg $file -y -ab 128 -ac 2 -ar 44100 -f s16le -i $pcm_src -acodec adpcm_yamaha $file 
+
+# decoding
+do_ffmpeg $pcm_dst -y -i $file -f wav $pcm_dst 
+fi
+
+###################################
 # libav testing
 ###################################
 
@@ -498,6 +556,11 @@ do_ffmpeg $file -t 1 -y -qscale 10 -f pgmyuv -i $raw_src -f s16le -i $pcm_src $f
 
 # mpegps
 file=${outfile}libav.mpg
+do_ffmpeg $file -t 1 -y -qscale 10 -f pgmyuv -i $raw_src -f s16le -i $pcm_src $file
+do_ffmpeg_crc $file -i $file
+
+# mpegts
+file=${outfile}libav.ts
 do_ffmpeg $file -t 1 -y -qscale 10 -f pgmyuv -i $raw_src -f s16le -i $pcm_src $file
 do_ffmpeg_crc $file -i $file
 
@@ -531,8 +594,6 @@ file=${outfile}libav.dv
 do_ffmpeg $file -t 1 -y -qscale 10 -f pgmyuv -i $raw_src -f s16le -i $pcm_src -ar 48000 -r 25 -s pal -ac 2 $file
 do_ffmpeg_crc $file -i $file
 
-# XXX: need mpegts tests (add bitstreams or add output capability in ffmpeg)
-
 ####################
 # streamed images
 # mjpeg
@@ -542,18 +603,18 @@ do_ffmpeg_crc $file -i $file
 
 # pbmpipe
 file=${outfile}libav.pbm
-do_ffmpeg $file -t 1 -y -qscale 10 -f pgmyuv -i $raw_src -f imagepipe $file
-do_ffmpeg_crc $file -f imagepipe -i $file
+do_ffmpeg $file -t 1 -y -qscale 10 -f pgmyuv -i $raw_src -f image2pipe $file
+do_ffmpeg_crc $file -f image2pipe -i $file
 
 # pgmpipe
 file=${outfile}libav.pgm
-do_ffmpeg $file -t 1 -y -qscale 10 -f pgmyuv -i $raw_src -f imagepipe $file
-do_ffmpeg_crc $file -f imagepipe -i $file
+do_ffmpeg $file -t 1 -y -qscale 10 -f pgmyuv -i $raw_src -f image2pipe $file
+do_ffmpeg_crc $file -f image2pipe -i $file
 
 # ppmpipe
 file=${outfile}libav.ppm
-do_ffmpeg $file -t 1 -y -qscale 10 -f pgmyuv -i $raw_src -f imagepipe $file
-do_ffmpeg_crc $file -f imagepipe -i $file
+do_ffmpeg $file -t 1 -y -qscale 10 -f pgmyuv -i $raw_src -f image2pipe $file
+do_ffmpeg_crc $file -f image2pipe -i $file
 
 # gif
 file=${outfile}libav.gif
@@ -561,7 +622,7 @@ do_ffmpeg $file -t 1 -y -qscale 10 -f pgmyuv -i $raw_src $file
 #do_ffmpeg_crc $file -i $file
 
 # yuv4mpeg
-file=${outfile}libav.yuv4mpeg
+file=${outfile}libav.y4m
 do_ffmpeg $file -t 1 -y -qscale 10 -f pgmyuv -i $raw_src $file
 #do_ffmpeg_crc $file -i $file
 
@@ -579,7 +640,7 @@ do_ffmpeg_crc $file -i $file
 
 # jpeg (we do not do md5 on image files yet)
 file=${outfile}libav%d.jpg
-$ffmpeg -t 0.5 -y -qscale 10 -f pgmyuv -i $raw_src -f image2 $file
+$ffmpeg -t 0.5 -y -qscale 10 -f pgmyuv -i $raw_src -bitexact -dct_algo 1 -idct_algo 2 -pix_fmt yuvj420p -f image2 $file
 do_ffmpeg_crc $file -f image2 -i $file
 
 ####################
@@ -605,6 +666,11 @@ file=${outfile}libav.au
 do_ffmpeg $file -t 1 -y -qscale 10 -f s16le -i $pcm_src $file
 do_ffmpeg_crc $file -i $file
 
+# mmf
+file=${outfile}libav.mmf
+do_ffmpeg $file -t 1 -y -qscale 10 -f s16le -i $pcm_src $file
+do_ffmpeg_crc $file -i $file
+
 ####################
 # pix_fmt conversions
 conversions="yuv420p yuv422p yuv444p yuv422 yuv410p yuv411p yuvj420p \
@@ -622,7 +688,7 @@ fi
 
 
 
-if $diff_cmd $logfile $reffile ; then
+if $diff_cmd "$logfile" "$reffile" ; then
     echo 
     echo Regression test succeeded.
     exit 0

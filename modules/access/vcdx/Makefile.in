@@ -55,6 +55,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_ACTIVEX_FALSE = @BUILD_ACTIVEX_FALSE@
+BUILD_ACTIVEX_TRUE = @BUILD_ACTIVEX_TRUE@
 BUILD_DIRENT_FALSE = @BUILD_DIRENT_FALSE@
 BUILD_DIRENT_TRUE = @BUILD_DIRENT_TRUE@
 BUILD_GETOPT_FALSE = @BUILD_GETOPT_FALSE@
@@ -69,8 +71,6 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-CORBA_CFLAGS = @CORBA_CFLAGS@
-CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -98,10 +98,8 @@ FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GTK2_CFLAGS = @GTK2_CFLAGS@
-GTK2_LIBS = @GTK2_LIBS@
-HAL_CFLAGS = @HAL_CFLAGS@
-HAL_LIBS = @HAL_LIBS@
+HAS_MIDL_COMPILER_FALSE = @HAS_MIDL_COMPILER_FALSE@
+HAS_MIDL_COMPILER_TRUE = @HAS_MIDL_COMPILER_TRUE@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -112,6 +110,8 @@ HAVE_PLUGINS_FALSE = @HAVE_PLUGINS_FALSE@
 HAVE_PLUGINS_TRUE = @HAVE_PLUGINS_TRUE@
 HAVE_WIN32_FALSE = @HAVE_WIN32_FALSE@
 HAVE_WIN32_TRUE = @HAVE_WIN32_TRUE@
+HAVE_WINCE_FALSE = @HAVE_WINCE_FALSE@
+HAVE_WINCE_TRUE = @HAVE_WINCE_TRUE@
 INCLUDES = @INCLUDES@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -124,12 +124,7 @@ INTLOBJS = @INTLOBJS@
 INTL_LIBTOOL_SUFFIX_PREFIX = @INTL_LIBTOOL_SUFFIX_PREFIX@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
-LIBCDDB_CFLAGS = @LIBCDDB_CFLAGS@
-LIBCDDB_LIBS = @LIBCDDB_LIBS@
-LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
-LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
-LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -138,6 +133,7 @@ LTLIBICONV = @LTLIBICONV@
 LTLIBINTL = @LTLIBINTL@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+MIDL = @MIDL@
 MKINSTALLDIRS = @MKINSTALLDIRS@
 MOC = @MOC@
 MOZILLA_CONFIG = @MOZILLA_CONFIG@
@@ -154,7 +150,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
 PLUGIN_PATH = @PLUGIN_PATH@
 POSUB = @POSUB@
 RANLIB = @RANLIB@
@@ -164,8 +159,6 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-SVG_CFLAGS = @SVG_CFLAGS@
-SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
@@ -240,15 +233,14 @@ SUBDIRS =
 libvlcdir = $(libdir)/vlc/access
 SOURCES_vcdx = \
 	access.c \
-	cdrom.c \
-	cdrom.h \
-	demux.c \
 	intf.c \
 	intf.h \
 	vcd.c \
 	vcd.h \
 	vcdplayer.h \
 	vcdplayer.c \
+	info.c \
+	info.h \
 	$(NULL)
 
 
@@ -291,27 +283,25 @@ LIBRARIES = $(libvlc_LIBRARIES) $(noinst_LIBRARIES)
 libvcdx_a_AR = $(AR) cru
 libvcdx_a_LIBADD =
 am__objects_1 =
-am__objects_2 = libvcdx_a-access.$(OBJEXT) libvcdx_a-cdrom.$(OBJEXT) \
-	libvcdx_a-demux.$(OBJEXT) libvcdx_a-intf.$(OBJEXT) \
+am__objects_2 = libvcdx_a-access.$(OBJEXT) libvcdx_a-intf.$(OBJEXT) \
 	libvcdx_a-vcd.$(OBJEXT) libvcdx_a-vcdplayer.$(OBJEXT) \
-	$(am__objects_1)
+	libvcdx_a-info.$(OBJEXT) $(am__objects_1)
 am_libvcdx_a_OBJECTS = $(am__objects_2)
 libvcdx_a_OBJECTS = $(am_libvcdx_a_OBJECTS)
 libvcdx_pic_a_AR = $(AR) cru
 libvcdx_pic_a_LIBADD =
 am__objects_3 = libvcdx_pic_a-access.$(OBJEXT) \
-	libvcdx_pic_a-cdrom.$(OBJEXT) libvcdx_pic_a-demux.$(OBJEXT) \
 	libvcdx_pic_a-intf.$(OBJEXT) libvcdx_pic_a-vcd.$(OBJEXT) \
-	libvcdx_pic_a-vcdplayer.$(OBJEXT) $(am__objects_1)
+	libvcdx_pic_a-vcdplayer.$(OBJEXT) libvcdx_pic_a-info.$(OBJEXT) \
+	$(am__objects_1)
 am_libvcdx_pic_a_OBJECTS = $(am__objects_3)
 libvcdx_pic_a_OBJECTS = $(am_libvcdx_pic_a_OBJECTS)
 libvcdx_plugin_a_AR = $(AR) cru
 libvcdx_plugin_a_LIBADD =
 am__objects_4 = libvcdx_plugin_a-access.$(OBJEXT) \
-	libvcdx_plugin_a-cdrom.$(OBJEXT) \
-	libvcdx_plugin_a-demux.$(OBJEXT) \
 	libvcdx_plugin_a-intf.$(OBJEXT) libvcdx_plugin_a-vcd.$(OBJEXT) \
-	libvcdx_plugin_a-vcdplayer.$(OBJEXT) $(am__objects_1)
+	libvcdx_plugin_a-vcdplayer.$(OBJEXT) \
+	libvcdx_plugin_a-info.$(OBJEXT) $(am__objects_1)
 am_libvcdx_plugin_a_OBJECTS = $(am__objects_4)
 libvcdx_plugin_a_OBJECTS = $(am_libvcdx_plugin_a_OBJECTS)
 
@@ -319,20 +309,17 @@ DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libvcdx_a-access.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libvcdx_a-cdrom.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libvcdx_a-demux.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libvcdx_a-info.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvcdx_a-intf.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvcdx_a-vcd.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvcdx_a-vcdplayer.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvcdx_pic_a-access.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libvcdx_pic_a-cdrom.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libvcdx_pic_a-demux.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libvcdx_pic_a-info.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvcdx_pic_a-intf.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvcdx_pic_a-vcd.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvcdx_pic_a-vcdplayer.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvcdx_plugin_a-access.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libvcdx_plugin_a-cdrom.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libvcdx_plugin_a-demux.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libvcdx_plugin_a-info.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvcdx_plugin_a-intf.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvcdx_plugin_a-vcd.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvcdx_plugin_a-vcdplayer.Po
@@ -420,20 +407,17 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_a-access.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_a-cdrom.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_a-demux.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_a-info.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_a-intf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_a-vcd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_a-vcdplayer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_pic_a-access.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_pic_a-cdrom.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_pic_a-demux.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_pic_a-info.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_pic_a-intf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_pic_a-vcd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_pic_a-vcdplayer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_plugin_a-access.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_plugin_a-cdrom.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_plugin_a-demux.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_plugin_a-info.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_plugin_a-intf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_plugin_a-vcd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvcdx_plugin_a-vcdplayer.Po@am__quote@
@@ -481,50 +465,6 @@ libvcdx_a-access.obj: access.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_a-access.Po' tmpdepfile='$(DEPDIR)/libvcdx_a-access.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_a_CFLAGS) $(CFLAGS) -c -o libvcdx_a-access.obj `if test -f 'access.c'; then $(CYGPATH_W) 'access.c'; else $(CYGPATH_W) '$(srcdir)/access.c'; fi`
-
-libvcdx_a-cdrom.o: cdrom.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_a_CFLAGS) $(CFLAGS) -MT libvcdx_a-cdrom.o -MD -MP -MF "$(DEPDIR)/libvcdx_a-cdrom.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libvcdx_a-cdrom.o `test -f 'cdrom.c' || echo '$(srcdir)/'`cdrom.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_a-cdrom.Tpo" "$(DEPDIR)/libvcdx_a-cdrom.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_a-cdrom.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cdrom.c' object='libvcdx_a-cdrom.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_a-cdrom.Po' tmpdepfile='$(DEPDIR)/libvcdx_a-cdrom.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_a_CFLAGS) $(CFLAGS) -c -o libvcdx_a-cdrom.o `test -f 'cdrom.c' || echo '$(srcdir)/'`cdrom.c
-
-libvcdx_a-cdrom.obj: cdrom.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_a_CFLAGS) $(CFLAGS) -MT libvcdx_a-cdrom.obj -MD -MP -MF "$(DEPDIR)/libvcdx_a-cdrom.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libvcdx_a-cdrom.obj `if test -f 'cdrom.c'; then $(CYGPATH_W) 'cdrom.c'; else $(CYGPATH_W) '$(srcdir)/cdrom.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_a-cdrom.Tpo" "$(DEPDIR)/libvcdx_a-cdrom.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_a-cdrom.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cdrom.c' object='libvcdx_a-cdrom.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_a-cdrom.Po' tmpdepfile='$(DEPDIR)/libvcdx_a-cdrom.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_a_CFLAGS) $(CFLAGS) -c -o libvcdx_a-cdrom.obj `if test -f 'cdrom.c'; then $(CYGPATH_W) 'cdrom.c'; else $(CYGPATH_W) '$(srcdir)/cdrom.c'; fi`
-
-libvcdx_a-demux.o: demux.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_a_CFLAGS) $(CFLAGS) -MT libvcdx_a-demux.o -MD -MP -MF "$(DEPDIR)/libvcdx_a-demux.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libvcdx_a-demux.o `test -f 'demux.c' || echo '$(srcdir)/'`demux.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_a-demux.Tpo" "$(DEPDIR)/libvcdx_a-demux.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_a-demux.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='demux.c' object='libvcdx_a-demux.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_a-demux.Po' tmpdepfile='$(DEPDIR)/libvcdx_a-demux.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_a_CFLAGS) $(CFLAGS) -c -o libvcdx_a-demux.o `test -f 'demux.c' || echo '$(srcdir)/'`demux.c
-
-libvcdx_a-demux.obj: demux.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_a_CFLAGS) $(CFLAGS) -MT libvcdx_a-demux.obj -MD -MP -MF "$(DEPDIR)/libvcdx_a-demux.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libvcdx_a-demux.obj `if test -f 'demux.c'; then $(CYGPATH_W) 'demux.c'; else $(CYGPATH_W) '$(srcdir)/demux.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_a-demux.Tpo" "$(DEPDIR)/libvcdx_a-demux.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_a-demux.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='demux.c' object='libvcdx_a-demux.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_a-demux.Po' tmpdepfile='$(DEPDIR)/libvcdx_a-demux.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_a_CFLAGS) $(CFLAGS) -c -o libvcdx_a-demux.obj `if test -f 'demux.c'; then $(CYGPATH_W) 'demux.c'; else $(CYGPATH_W) '$(srcdir)/demux.c'; fi`
 
 libvcdx_a-intf.o: intf.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_a_CFLAGS) $(CFLAGS) -MT libvcdx_a-intf.o -MD -MP -MF "$(DEPDIR)/libvcdx_a-intf.Tpo" \
@@ -592,6 +532,28 @@ libvcdx_a-vcdplayer.obj: vcdplayer.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_a_CFLAGS) $(CFLAGS) -c -o libvcdx_a-vcdplayer.obj `if test -f 'vcdplayer.c'; then $(CYGPATH_W) 'vcdplayer.c'; else $(CYGPATH_W) '$(srcdir)/vcdplayer.c'; fi`
 
+libvcdx_a-info.o: info.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_a_CFLAGS) $(CFLAGS) -MT libvcdx_a-info.o -MD -MP -MF "$(DEPDIR)/libvcdx_a-info.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libvcdx_a-info.o `test -f 'info.c' || echo '$(srcdir)/'`info.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_a-info.Tpo" "$(DEPDIR)/libvcdx_a-info.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_a-info.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='info.c' object='libvcdx_a-info.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_a-info.Po' tmpdepfile='$(DEPDIR)/libvcdx_a-info.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_a_CFLAGS) $(CFLAGS) -c -o libvcdx_a-info.o `test -f 'info.c' || echo '$(srcdir)/'`info.c
+
+libvcdx_a-info.obj: info.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_a_CFLAGS) $(CFLAGS) -MT libvcdx_a-info.obj -MD -MP -MF "$(DEPDIR)/libvcdx_a-info.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libvcdx_a-info.obj `if test -f 'info.c'; then $(CYGPATH_W) 'info.c'; else $(CYGPATH_W) '$(srcdir)/info.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_a-info.Tpo" "$(DEPDIR)/libvcdx_a-info.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_a-info.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='info.c' object='libvcdx_a-info.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_a-info.Po' tmpdepfile='$(DEPDIR)/libvcdx_a-info.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_a_CFLAGS) $(CFLAGS) -c -o libvcdx_a-info.obj `if test -f 'info.c'; then $(CYGPATH_W) 'info.c'; else $(CYGPATH_W) '$(srcdir)/info.c'; fi`
+
 libvcdx_pic_a-access.o: access.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_pic_a_CFLAGS) $(CFLAGS) -MT libvcdx_pic_a-access.o -MD -MP -MF "$(DEPDIR)/libvcdx_pic_a-access.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libvcdx_pic_a-access.o `test -f 'access.c' || echo '$(srcdir)/'`access.c; \
@@ -613,50 +575,6 @@ libvcdx_pic_a-access.obj: access.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_pic_a-access.Po' tmpdepfile='$(DEPDIR)/libvcdx_pic_a-access.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_pic_a_CFLAGS) $(CFLAGS) -c -o libvcdx_pic_a-access.obj `if test -f 'access.c'; then $(CYGPATH_W) 'access.c'; else $(CYGPATH_W) '$(srcdir)/access.c'; fi`
-
-libvcdx_pic_a-cdrom.o: cdrom.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_pic_a_CFLAGS) $(CFLAGS) -MT libvcdx_pic_a-cdrom.o -MD -MP -MF "$(DEPDIR)/libvcdx_pic_a-cdrom.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libvcdx_pic_a-cdrom.o `test -f 'cdrom.c' || echo '$(srcdir)/'`cdrom.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_pic_a-cdrom.Tpo" "$(DEPDIR)/libvcdx_pic_a-cdrom.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_pic_a-cdrom.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cdrom.c' object='libvcdx_pic_a-cdrom.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_pic_a-cdrom.Po' tmpdepfile='$(DEPDIR)/libvcdx_pic_a-cdrom.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_pic_a_CFLAGS) $(CFLAGS) -c -o libvcdx_pic_a-cdrom.o `test -f 'cdrom.c' || echo '$(srcdir)/'`cdrom.c
-
-libvcdx_pic_a-cdrom.obj: cdrom.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_pic_a_CFLAGS) $(CFLAGS) -MT libvcdx_pic_a-cdrom.obj -MD -MP -MF "$(DEPDIR)/libvcdx_pic_a-cdrom.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libvcdx_pic_a-cdrom.obj `if test -f 'cdrom.c'; then $(CYGPATH_W) 'cdrom.c'; else $(CYGPATH_W) '$(srcdir)/cdrom.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_pic_a-cdrom.Tpo" "$(DEPDIR)/libvcdx_pic_a-cdrom.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_pic_a-cdrom.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cdrom.c' object='libvcdx_pic_a-cdrom.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_pic_a-cdrom.Po' tmpdepfile='$(DEPDIR)/libvcdx_pic_a-cdrom.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_pic_a_CFLAGS) $(CFLAGS) -c -o libvcdx_pic_a-cdrom.obj `if test -f 'cdrom.c'; then $(CYGPATH_W) 'cdrom.c'; else $(CYGPATH_W) '$(srcdir)/cdrom.c'; fi`
-
-libvcdx_pic_a-demux.o: demux.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_pic_a_CFLAGS) $(CFLAGS) -MT libvcdx_pic_a-demux.o -MD -MP -MF "$(DEPDIR)/libvcdx_pic_a-demux.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libvcdx_pic_a-demux.o `test -f 'demux.c' || echo '$(srcdir)/'`demux.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_pic_a-demux.Tpo" "$(DEPDIR)/libvcdx_pic_a-demux.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_pic_a-demux.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='demux.c' object='libvcdx_pic_a-demux.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_pic_a-demux.Po' tmpdepfile='$(DEPDIR)/libvcdx_pic_a-demux.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_pic_a_CFLAGS) $(CFLAGS) -c -o libvcdx_pic_a-demux.o `test -f 'demux.c' || echo '$(srcdir)/'`demux.c
-
-libvcdx_pic_a-demux.obj: demux.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_pic_a_CFLAGS) $(CFLAGS) -MT libvcdx_pic_a-demux.obj -MD -MP -MF "$(DEPDIR)/libvcdx_pic_a-demux.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libvcdx_pic_a-demux.obj `if test -f 'demux.c'; then $(CYGPATH_W) 'demux.c'; else $(CYGPATH_W) '$(srcdir)/demux.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_pic_a-demux.Tpo" "$(DEPDIR)/libvcdx_pic_a-demux.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_pic_a-demux.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='demux.c' object='libvcdx_pic_a-demux.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_pic_a-demux.Po' tmpdepfile='$(DEPDIR)/libvcdx_pic_a-demux.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_pic_a_CFLAGS) $(CFLAGS) -c -o libvcdx_pic_a-demux.obj `if test -f 'demux.c'; then $(CYGPATH_W) 'demux.c'; else $(CYGPATH_W) '$(srcdir)/demux.c'; fi`
 
 libvcdx_pic_a-intf.o: intf.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_pic_a_CFLAGS) $(CFLAGS) -MT libvcdx_pic_a-intf.o -MD -MP -MF "$(DEPDIR)/libvcdx_pic_a-intf.Tpo" \
@@ -724,6 +642,28 @@ libvcdx_pic_a-vcdplayer.obj: vcdplayer.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_pic_a_CFLAGS) $(CFLAGS) -c -o libvcdx_pic_a-vcdplayer.obj `if test -f 'vcdplayer.c'; then $(CYGPATH_W) 'vcdplayer.c'; else $(CYGPATH_W) '$(srcdir)/vcdplayer.c'; fi`
 
+libvcdx_pic_a-info.o: info.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_pic_a_CFLAGS) $(CFLAGS) -MT libvcdx_pic_a-info.o -MD -MP -MF "$(DEPDIR)/libvcdx_pic_a-info.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libvcdx_pic_a-info.o `test -f 'info.c' || echo '$(srcdir)/'`info.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_pic_a-info.Tpo" "$(DEPDIR)/libvcdx_pic_a-info.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_pic_a-info.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='info.c' object='libvcdx_pic_a-info.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_pic_a-info.Po' tmpdepfile='$(DEPDIR)/libvcdx_pic_a-info.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_pic_a_CFLAGS) $(CFLAGS) -c -o libvcdx_pic_a-info.o `test -f 'info.c' || echo '$(srcdir)/'`info.c
+
+libvcdx_pic_a-info.obj: info.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_pic_a_CFLAGS) $(CFLAGS) -MT libvcdx_pic_a-info.obj -MD -MP -MF "$(DEPDIR)/libvcdx_pic_a-info.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libvcdx_pic_a-info.obj `if test -f 'info.c'; then $(CYGPATH_W) 'info.c'; else $(CYGPATH_W) '$(srcdir)/info.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_pic_a-info.Tpo" "$(DEPDIR)/libvcdx_pic_a-info.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_pic_a-info.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='info.c' object='libvcdx_pic_a-info.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_pic_a-info.Po' tmpdepfile='$(DEPDIR)/libvcdx_pic_a-info.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_pic_a_CFLAGS) $(CFLAGS) -c -o libvcdx_pic_a-info.obj `if test -f 'info.c'; then $(CYGPATH_W) 'info.c'; else $(CYGPATH_W) '$(srcdir)/info.c'; fi`
+
 libvcdx_plugin_a-access.o: access.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_plugin_a_CFLAGS) $(CFLAGS) -MT libvcdx_plugin_a-access.o -MD -MP -MF "$(DEPDIR)/libvcdx_plugin_a-access.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libvcdx_plugin_a-access.o `test -f 'access.c' || echo '$(srcdir)/'`access.c; \
@@ -745,50 +685,6 @@ libvcdx_plugin_a-access.obj: access.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_plugin_a-access.Po' tmpdepfile='$(DEPDIR)/libvcdx_plugin_a-access.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_plugin_a_CFLAGS) $(CFLAGS) -c -o libvcdx_plugin_a-access.obj `if test -f 'access.c'; then $(CYGPATH_W) 'access.c'; else $(CYGPATH_W) '$(srcdir)/access.c'; fi`
-
-libvcdx_plugin_a-cdrom.o: cdrom.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_plugin_a_CFLAGS) $(CFLAGS) -MT libvcdx_plugin_a-cdrom.o -MD -MP -MF "$(DEPDIR)/libvcdx_plugin_a-cdrom.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libvcdx_plugin_a-cdrom.o `test -f 'cdrom.c' || echo '$(srcdir)/'`cdrom.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_plugin_a-cdrom.Tpo" "$(DEPDIR)/libvcdx_plugin_a-cdrom.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_plugin_a-cdrom.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cdrom.c' object='libvcdx_plugin_a-cdrom.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_plugin_a-cdrom.Po' tmpdepfile='$(DEPDIR)/libvcdx_plugin_a-cdrom.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_plugin_a_CFLAGS) $(CFLAGS) -c -o libvcdx_plugin_a-cdrom.o `test -f 'cdrom.c' || echo '$(srcdir)/'`cdrom.c
-
-libvcdx_plugin_a-cdrom.obj: cdrom.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_plugin_a_CFLAGS) $(CFLAGS) -MT libvcdx_plugin_a-cdrom.obj -MD -MP -MF "$(DEPDIR)/libvcdx_plugin_a-cdrom.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libvcdx_plugin_a-cdrom.obj `if test -f 'cdrom.c'; then $(CYGPATH_W) 'cdrom.c'; else $(CYGPATH_W) '$(srcdir)/cdrom.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_plugin_a-cdrom.Tpo" "$(DEPDIR)/libvcdx_plugin_a-cdrom.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_plugin_a-cdrom.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cdrom.c' object='libvcdx_plugin_a-cdrom.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_plugin_a-cdrom.Po' tmpdepfile='$(DEPDIR)/libvcdx_plugin_a-cdrom.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_plugin_a_CFLAGS) $(CFLAGS) -c -o libvcdx_plugin_a-cdrom.obj `if test -f 'cdrom.c'; then $(CYGPATH_W) 'cdrom.c'; else $(CYGPATH_W) '$(srcdir)/cdrom.c'; fi`
-
-libvcdx_plugin_a-demux.o: demux.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_plugin_a_CFLAGS) $(CFLAGS) -MT libvcdx_plugin_a-demux.o -MD -MP -MF "$(DEPDIR)/libvcdx_plugin_a-demux.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libvcdx_plugin_a-demux.o `test -f 'demux.c' || echo '$(srcdir)/'`demux.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_plugin_a-demux.Tpo" "$(DEPDIR)/libvcdx_plugin_a-demux.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_plugin_a-demux.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='demux.c' object='libvcdx_plugin_a-demux.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_plugin_a-demux.Po' tmpdepfile='$(DEPDIR)/libvcdx_plugin_a-demux.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_plugin_a_CFLAGS) $(CFLAGS) -c -o libvcdx_plugin_a-demux.o `test -f 'demux.c' || echo '$(srcdir)/'`demux.c
-
-libvcdx_plugin_a-demux.obj: demux.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_plugin_a_CFLAGS) $(CFLAGS) -MT libvcdx_plugin_a-demux.obj -MD -MP -MF "$(DEPDIR)/libvcdx_plugin_a-demux.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libvcdx_plugin_a-demux.obj `if test -f 'demux.c'; then $(CYGPATH_W) 'demux.c'; else $(CYGPATH_W) '$(srcdir)/demux.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_plugin_a-demux.Tpo" "$(DEPDIR)/libvcdx_plugin_a-demux.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_plugin_a-demux.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='demux.c' object='libvcdx_plugin_a-demux.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_plugin_a-demux.Po' tmpdepfile='$(DEPDIR)/libvcdx_plugin_a-demux.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_plugin_a_CFLAGS) $(CFLAGS) -c -o libvcdx_plugin_a-demux.obj `if test -f 'demux.c'; then $(CYGPATH_W) 'demux.c'; else $(CYGPATH_W) '$(srcdir)/demux.c'; fi`
 
 libvcdx_plugin_a-intf.o: intf.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_plugin_a_CFLAGS) $(CFLAGS) -MT libvcdx_plugin_a-intf.o -MD -MP -MF "$(DEPDIR)/libvcdx_plugin_a-intf.Tpo" \
@@ -855,6 +751,28 @@ libvcdx_plugin_a-vcdplayer.obj: vcdplayer.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_plugin_a-vcdplayer.Po' tmpdepfile='$(DEPDIR)/libvcdx_plugin_a-vcdplayer.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_plugin_a_CFLAGS) $(CFLAGS) -c -o libvcdx_plugin_a-vcdplayer.obj `if test -f 'vcdplayer.c'; then $(CYGPATH_W) 'vcdplayer.c'; else $(CYGPATH_W) '$(srcdir)/vcdplayer.c'; fi`
+
+libvcdx_plugin_a-info.o: info.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_plugin_a_CFLAGS) $(CFLAGS) -MT libvcdx_plugin_a-info.o -MD -MP -MF "$(DEPDIR)/libvcdx_plugin_a-info.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libvcdx_plugin_a-info.o `test -f 'info.c' || echo '$(srcdir)/'`info.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_plugin_a-info.Tpo" "$(DEPDIR)/libvcdx_plugin_a-info.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_plugin_a-info.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='info.c' object='libvcdx_plugin_a-info.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_plugin_a-info.Po' tmpdepfile='$(DEPDIR)/libvcdx_plugin_a-info.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_plugin_a_CFLAGS) $(CFLAGS) -c -o libvcdx_plugin_a-info.o `test -f 'info.c' || echo '$(srcdir)/'`info.c
+
+libvcdx_plugin_a-info.obj: info.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_plugin_a_CFLAGS) $(CFLAGS) -MT libvcdx_plugin_a-info.obj -MD -MP -MF "$(DEPDIR)/libvcdx_plugin_a-info.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libvcdx_plugin_a-info.obj `if test -f 'info.c'; then $(CYGPATH_W) 'info.c'; else $(CYGPATH_W) '$(srcdir)/info.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvcdx_plugin_a-info.Tpo" "$(DEPDIR)/libvcdx_plugin_a-info.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libvcdx_plugin_a-info.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='info.c' object='libvcdx_plugin_a-info.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libvcdx_plugin_a-info.Po' tmpdepfile='$(DEPDIR)/libvcdx_plugin_a-info.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvcdx_plugin_a_CFLAGS) $(CFLAGS) -c -o libvcdx_plugin_a-info.obj `if test -f 'info.c'; then $(CYGPATH_W) 'info.c'; else $(CYGPATH_W) '$(srcdir)/info.c'; fi`
 uninstall-info-am:
 libvcdxDATA_INSTALL = $(INSTALL_DATA)
 install-libvcdxDATA: $(libvcdx_DATA)

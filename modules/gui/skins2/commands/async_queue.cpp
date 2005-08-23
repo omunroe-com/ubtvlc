@@ -2,7 +2,7 @@
  * async_queue.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: async_queue.cpp 8562 2004-08-29 09:00:03Z asmax $
+ * $Id: async_queue.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -103,18 +103,29 @@ void AsyncQueue::remove( const string &rType )
 
 void AsyncQueue::flush()
 {
-    vlc_mutex_lock( &m_lock );
-
-    while( m_cmdList.size() > 0 )
+    while (true)
     {
-        // Pop the first command from the queue
-        CmdGenericPtr cCommand = m_cmdList.front();
-        m_cmdList.pop_front();
-        // And execute it
-        cCommand.get()->execute();
-    }
+        vlc_mutex_lock( &m_lock );
 
-    vlc_mutex_unlock( &m_lock );
+        if( m_cmdList.size() > 0 )
+        {
+            // Pop the first command from the queue
+            CmdGenericPtr cCommand = m_cmdList.front();
+            m_cmdList.pop_front();
+
+            // Unlock the mutex to avoid deadlocks if another thread wants to
+            // enqueue/remove a command while this one is processed
+            vlc_mutex_unlock( &m_lock );
+
+            // Execute the command
+            cCommand.get()->execute();
+        }
+        else
+        {
+            vlc_mutex_unlock( &m_lock );
+            break;
+        }
+    }
 }
 
 

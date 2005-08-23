@@ -5,7 +5,7 @@
  * Copyright (C) 2003 Antoine Missout <antoine.missout@metakine.com>
  * Copyright (C) 2000-2003 Michel Lespinasse <walken@zoy.org>
  * Copyright (C) 1999-2000 Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
- * $Id: frame.c 9038 2004-10-22 13:44:24Z massiot $
+ * $Id: frame.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>

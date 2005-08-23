@@ -2,7 +2,7 @@
  * display.c: display stream output module
  *****************************************************************************
  * Copyright (C) 2001, 2002 VideoLAN
- * $Id: display.c 8265 2004-07-24 10:24:11Z gbazin $
+ * $Id: display.c 10112 2005-03-03 06:58:04Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -47,9 +47,12 @@ static void Close( vlc_object_t * );
 #define SOUT_CFG_PREFIX "sout-display-"
 
 vlc_module_begin();
+    set_shortname( _("Display"));
     set_description( _("Display stream output") );
     set_capability( "sout stream", 50 );
     add_shortcut( "display" );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_STREAM );
     add_bool( SOUT_CFG_PREFIX "audio", 1, NULL, AUDIO_TEXT,
               AUDIO_LONGTEXT, VLC_TRUE );
     add_bool( SOUT_CFG_PREFIX "video", 1, NULL, VIDEO_TEXT,

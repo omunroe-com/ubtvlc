@@ -2,7 +2,7 @@
  * dts.c : raw DTS stream input module for vlc
  *****************************************************************************
  * Copyright (C) 2001 VideoLAN
- * $Id: dts.c 7231 2004-04-01 23:19:30Z fenrir $
+ * $Id: dts.c 9961 2005-02-16 22:01:41Z robux4 $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -35,6 +35,8 @@ static int  Open  ( vlc_object_t * );
 static void Close ( vlc_object_t * );
 
 vlc_module_begin();
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_description( _("Raw DTS demuxer") );
     set_capability( "demux2", 155 );
     set_callbacks( Open, Close );

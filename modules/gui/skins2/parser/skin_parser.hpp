@@ -2,7 +2,7 @@
  * skin_parser.hpp
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: skin_parser.hpp 7369 2004-04-18 18:11:51Z ipkiss $
+ * $Id: skin_parser.hpp 9417 2004-11-26 10:04:08Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -40,8 +40,6 @@ class SkinParser: public XMLParser
         const BuilderData &getData() const { return m_data; }
 
     private:
-        // Static variable to avoid initializing catalogs twice
-        static bool m_initialized;
         /// Container for mapping data from the XML
         BuilderData m_data;
         /// Current IDs

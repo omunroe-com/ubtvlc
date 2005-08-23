@@ -1,4 +1,137 @@
-$Id: NEWS 9326 2004-11-14 18:15:34Z fkuehne $
+$Id: NEWS 11524 2005-06-25 10:23:06Z dionoea $
+
+Changes between 0.8.1 and 0.8.2:
+-----------------------------------------------------
+
+Core support:
+ * Rewrite of the playlist
+    - Tree structure
+    - Input preparsing (for meta-data)
+    - Grouping (by artist, ...) support 
+ * Preferences improvements: 
+    - New organization, designed to improve usability
+    - New configuration types (list of modules, ...)
+ * XML parsers
+ * Core image manipulation support
+ * Client-side SSL/TLS support
+ * SSL Client certificates checking support (allows for secure VoD)
+ * Renamed --spu-channel to --sub-track
+ * Renamed --spumargin to --sub-margin
+ * Renamed --audio-channel to --audio-track
+ * Renamed --filter to --vout-filter
+ * filters, extra interfaces, visualizations and service discovery modules are
+   now separated by ':' instead of ','
+ * Access filter architecture
+ * Track selection based on preferred language (--sub-language and --audio-language)
+ * Zsh autocompletion for VLC's arguments
+ * Many bugfixes...
+
+Input/Demuxers:
+ * Support for SOCKS proxy
+ * Support for Shoutcast Meta-data
+ * Support for (HE-)AAC raw-audio streams
+ * Support for images on a HTTP server that get refreshed on the server
+ * Better support for Kasenna streams
+ * RTSP UDP->TCP rollover support
+ * Massive Matroska improvements
+ * Support for XA and VOC audio files
+ * TiVo demuxer
+ * Samba (Windows shares) access module
+ * Improved CDDAX module (uses several playlist items)
+ * Fixes to Linux DVB support
+ * Fix the "negative subtitles delay" bug
+ * Support for FTP over IPv6
+
+Decoders / Encoders:
+ * Dirac decoder and encoder
+ * PNG decoder/encoder
+ * Improvements to DVB subtitles encoder
+ * Support for Apple Lossless Audio Codec
+
+Access filters:
+ * New Record and Timeshift filters
+
+Services discovery:
+ * New type of modules, that add items to the playlist
+ * Brand new SAP module
+     * To enable SAP, you now need to use "-S sap" or add SAP in 
+       the "Manage->Services Discovery" menu
+     ( IPv6 SAP is now enabled by default )
+     * Non-standard support for HTTP streams SAP announces removed
+ * HAL (Hardware Abstraction Layer) discovery
+ * DAAP (iTunes shares) support
+ * Shoutcast
+
+Audio output:
+ * Support for 20/24 bits LPCM
+
+Video output:
+ * Video snapshot support (png or jpg)
+ * Image file video output (png)
+ * Motion detection filter (can trigger playlist actions)
+ * Improvements to wall video filter
+ * Support for font color and opacity
+
+Stream output:
+ * Muxers
+    - ASF improvements
+ * VLM / VoD
+    - Ability to load a configuration file on startup
+    - Seeking support in VoD streams
+ * Mosaic (picture-in-picture system)
+
+Interfaces:
+ * wxWidgets
+    - Redesigned playlist : add playlist, add directory, ...
+    - Improved preferences
+    - Improvements to the wizard
+    - DVD, VCD and Audio CD navigation buttons
+ * MacOS X
+    - Redesigned playlist
+    - Improved preferences
+ * Skins
+    - Support for multiple actions
+    - Fixes
+ * HTTP
+    - Support for the new playlist system
+ * Lirc
+    - Now uses new config settings. See doc/lirc/example.lirc
+
+Windows port:
+ * Screensaver disabling fix
+ * DirectShow tuner configuration
+ * Support for no-decoration windows
+
+MacOS X port:
+ * Many Mac OS X 10.4 Tiger related fixes
+ * The OpenGL video output is back
+ * A new audio module that should work more reliable for analog audio output in various configurations.
+   - Supports multichannel discrete analog output
+   - Digital audio output requires you to change a preference setting because it
+     is not yet available in the new module
+   - Please read the README.MacOSX.rtf file for more information.
+
+BeOS port:
+ * Support for single-buffered overlay
+
+Pocket PC port:
+ * Many fixes
+ * New interface
+ * New video output
+
+Mozilla Plugin:
+ * Javascript fixes
+ * Mozilla plugin for MacOS X is back (not yet distributed)
+
+IE Plugin:
+ * Brand new Internet Explorer ActiveX plugin
+
+Translations:
+ The following languages were added:
+ * Catalan
+ * Danish
+ * Turkish
+
 
 Changes between 0.8.0 and 0.8.1:
 -----------------------------------------------------
@@ -24,6 +157,7 @@ Video Output:
 Demuxers:
  * Fixed crash with ODML avi files
  * Fixed autodetection of VCD/SVCD bin files
+ * Supports Kasenna VoD (MPEG2 only) and simulcast streaming
 
 Stream Output:
  * Encoders:

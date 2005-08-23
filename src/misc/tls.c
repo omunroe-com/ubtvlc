@@ -1,10 +1,10 @@
 /*****************************************************************************
  * tls.c
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: httpd.c 8263 2004-07-24 09:06:58Z courmisch $
+ * Copyright (C) 2004-2005 VideoLAN
+ * $Id: tls.c 10616 2005-04-09 12:30:34Z courmisch $
  *
- * Authors: Remi Denis-Courmont <courmisch@via.ecp.fr>
+ * Authors: Remi Denis-Courmont <rem # videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,13 +26,6 @@
 
 #include "vlc_tls.h"
 
-
-/*
- * TODO:
- * - client side stuff,
- * - server-side client cert validation,
- * - client-side server cert validation (?).
- */
 
 /*****************************************************************************
  * tls_ServerCreate:
@@ -56,11 +49,77 @@ tls_ServerCreate( vlc_object_t *p_this, const char *psz_cert,
         if( psz_key == NULL )
             psz_key = psz_cert;
 
-        p_server = __tls_ServerCreate( p_tls, psz_cert, psz_key );
+        p_server = p_tls->pf_server_create( p_tls, psz_cert, psz_key );
         if( p_server != NULL )
         {
-            msg_Dbg( p_this, "TLS/SSL provider initialized" );
+            msg_Dbg( p_tls, "TLS/SSL provider initialized" );
             return p_server;
+        }
+        else
+            msg_Err( p_tls, "TLS/SSL provider error" );
+        module_Unneed( p_tls, p_tls->p_module );
+    }
+    else
+        msg_Err( p_tls, "TLS/SSL provider not found" );
+
+    vlc_object_detach( p_tls );
+    vlc_object_destroy( p_tls );
+    return NULL;
+}
+
+
+/*****************************************************************************
+ * tls_ServerDelete:
+ *****************************************************************************
+ * Releases data allocated with tls_ServerCreate.
+ *****************************************************************************/
+void
+tls_ServerDelete( tls_server_t *p_server )
+{
+    tls_t *p_tls = (tls_t *)p_server->p_parent;
+
+    p_server->pf_delete( p_server );
+
+    module_Unneed( p_tls, p_tls->p_module );
+    vlc_object_detach( p_tls );
+    vlc_object_destroy( p_tls );
+}
+
+
+/*****************************************************************************
+ * tls_ClientCreate:
+ *****************************************************************************
+ * Allocates a client's TLS credentials and shakes hands through the network.
+ * Returns NULL on error. This is a blocking network operation.
+ *****************************************************************************/
+tls_session_t *
+tls_ClientCreate( vlc_object_t *p_this, int fd, const char *psz_hostname )
+{
+    tls_t *p_tls;
+    tls_session_t *p_session;
+
+    p_tls = vlc_object_create( p_this, VLC_OBJECT_TLS );
+    vlc_object_attach( p_tls, p_this );
+
+    p_tls->p_module = module_Need( p_tls, "tls", 0, 0 );
+    if( p_tls->p_module != NULL )
+    {
+        p_session = p_tls->pf_client_create( p_tls );
+        if( p_session != NULL )
+        {
+            int i_val;
+
+            for( i_val = tls_ClientSessionHandshake( p_session, fd,
+                                                     psz_hostname );
+                 i_val > 0;
+                 i_val = tls_SessionContinueHandshake( p_session ) );
+            
+            if( i_val == 0 )
+            {
+                msg_Dbg( p_this, "TLS/SSL provider initialized" );
+                return p_session;
+            }
+            msg_Err( p_this, "TLS/SSL session handshake error" );
         }
         else
             msg_Err( p_this, "TLS/SSL provider error" );
@@ -76,19 +135,18 @@ tls_ServerCreate( vlc_object_t *p_this, const char *psz_cert,
 
 
 /*****************************************************************************
- * tls_ServerDelete:
+ * tls_ClientDelete:
  *****************************************************************************
- * Releases data allocated with tls_ServerCreate
+ * Releases data allocated with tls_ClientCreate.
  *****************************************************************************/
 void
-tls_ServerDelete( tls_server_t *p_server )
+tls_ClientDelete( tls_session_t *p_session )
 {
-    tls_t *p_tls = p_server->p_tls;
+    tls_t *p_tls = (tls_t *)p_session->p_parent;
 
-    __tls_ServerDelete( p_server );
+    p_session->pf_close( p_session );
 
     module_Unneed( p_tls, p_tls->p_module );
     vlc_object_detach( p_tls );
     vlc_object_destroy( p_tls );
 }
-

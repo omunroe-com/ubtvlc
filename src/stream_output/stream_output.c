@@ -2,7 +2,7 @@
  * stream_output.c : stream output module
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: stream_output.c 8998 2004-10-15 15:46:53Z gbazin $
+ * $Id: stream_output.c 10597 2005-04-08 17:55:29Z massiot $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -543,6 +543,14 @@ void sout_MuxSendBuffer( sout_mux_t *p_mux, sout_input_t *p_input,
 {
     block_FifoPut( p_input->p_fifo, p_buffer );
 
+    if( p_mux->p_sout->i_out_pace_nocontrol )
+    {
+        mtime_t current_date = mdate();
+        if ( current_date > p_buffer->i_dts )
+            msg_Warn( p_mux, "late buffer for mux input ("I64Fd")",
+                      current_date - p_buffer->i_dts );
+    }
+
     if( p_mux->b_waiting_stream )
     {
         if( p_mux->i_add_stream_start < 0 )
@@ -993,6 +1001,7 @@ void __sout_CfgParse( vlc_object_t *p_this, char *psz_prefix,
                 val.f_float = atof( cfg->psz_value ? cfg->psz_value : "0" );
                 break;
             case VLC_VAR_STRING:
+            case VLC_VAR_MODULE:
                 val.psz_string = cfg->psz_value;
                 break;
             default:

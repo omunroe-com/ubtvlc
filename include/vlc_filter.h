@@ -1,8 +1,8 @@
 /*****************************************************************************
- * vlc_codec.h: codec related structures
+ * vlc_filter.h: filter related structures
  *****************************************************************************
  * Copyright (C) 1999-2003 VideoLAN
- * $Id: vlc_filter.h 9200 2004-11-06 16:51:26Z gbazin $
+ * $Id: vlc_filter.h 11084 2005-05-20 17:54:10Z massiot $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -37,6 +37,12 @@ typedef struct filter_owner_sys_t filter_owner_sys_t;
  *
  * @{
  */
+
+/*
+ * BIG FAT WARNING : the code relies in the first 4 members of filter_t
+ * and decoder_t to be the same, so if you have anything to add, do it
+ * at the end of the structure.
+ */
 struct filter_t
 {
     VLC_COMMON_MEMBERS
@@ -51,6 +57,9 @@ struct filter_t
     /* Output format of filter */
     es_format_t         fmt_out;
 
+    /* Filter configuration */
+    sout_cfg_t *        p_cfg;
+
     picture_t *         ( * pf_video_filter ) ( filter_t *, picture_t * );
     block_t *           ( * pf_audio_filter ) ( filter_t *, block_t * );
     void                ( * pf_video_blend )  ( filter_t *, picture_t *,
@@ -58,7 +67,7 @@ struct filter_t
                                                 int, int, int );
 
     subpicture_t *      ( *pf_sub_filter ) ( filter_t *, mtime_t );
-    subpicture_t *      ( *pf_render_string ) ( filter_t *, block_t * );
+    int                 ( *pf_render_text ) ( filter_t *, subpicture_region_t *, subpicture_region_t * );
 
     /*
      * Buffers allocation

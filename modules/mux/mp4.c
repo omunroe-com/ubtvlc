@@ -2,7 +2,7 @@
  * mp4.c: mp4/mov muxer
  *****************************************************************************
  * Copyright (C) 2001, 2002, 2003 VideoLAN
- * $Id: mp4.c 9078 2004-10-29 09:19:38Z gbazin $
+ * $Id: mp4.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin at videolan dot org>
@@ -54,6 +54,9 @@ static void Close  ( vlc_object_t * );
 
 vlc_module_begin();
     set_description( _("MP4/MOV muxer") );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_MUX );
+    set_shortname( "MP4" );
 
     add_bool( SOUT_CFG_PREFIX "faststart", 1, NULL, FASTSTART_TEXT, FASTSTART_LONGTEXT,
               VLC_TRUE );

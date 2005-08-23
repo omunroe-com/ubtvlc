@@ -24,6 +24,7 @@
 #include <sys/wait.h>
 #include <ctype.h>
 #include "framehook.h"
+#include "avformat.h"
 
 /** Bi-directional pipe structure.
 */
@@ -55,14 +56,15 @@ rwpipe *rwpipe_open( int argc, char *argv[] )
 
         if ( this->pid == 0 )
         {
-            char *command = av_mallocz( 10240 );
+#define COMMAND_SIZE 10240
+            char *command = av_mallocz( COMMAND_SIZE );
             int i;
 
             strcpy( command, "" );
             for ( i = 0; i < argc; i ++ )
             {
-                strcat( command, argv[ i ] );
-                strcat( command, " " );
+                pstrcat( command, COMMAND_SIZE, argv[ i ] );
+                pstrcat( command, COMMAND_SIZE, " " );
             }
 
             dup2( output[ 0 ], STDIN_FILENO );
@@ -73,7 +75,7 @@ rwpipe *rwpipe_open( int argc, char *argv[] )
             close( output[ 0 ] );
             close( output[ 1 ] );
 
-            execl("/bin/sh", "sh", "-c", command, NULL );
+            execl("/bin/sh", "sh", "-c", command, (char*)NULL );
             exit( 255 );
         }
         else

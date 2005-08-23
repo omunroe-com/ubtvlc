@@ -2,7 +2,7 @@
  * common.h: a few defines and wrappers for swscale
  *****************************************************************************
  * Copyright (C) 1999-2004 VideoLAN
- * $Id: common.h 8701 2004-09-13 19:43:30Z gbazin $
+ * $Id: common.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *

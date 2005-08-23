@@ -2,7 +2,7 @@
  * MsgVals.h
  *****************************************************************************
  * Copyright (C) 2001 VideoLAN
- * $Id: MsgVals.h 8652 2004-09-06 16:46:25Z titer $
+ * $Id: MsgVals.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Tony Castley <tcastley@mail.powerup.com.au>
  *          Stephan Aßmus <stippi@yellowbites.com>

@@ -2,7 +2,7 @@
  * ncurses.c : NCurses plugin for vlc
  *****************************************************************************
  * Copyright (C) 2001-2004 VideoLAN
- * $Id: ncurses.c 8644 2004-09-05 16:53:04Z fkuehne $
+ * $Id: ncurses.c 11183 2005-05-27 21:14:19Z yoann $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -75,7 +75,14 @@ static void Eject          ( intf_thread_t * );
 
 static int  HandleKey      ( intf_thread_t *, int );
 static void Redraw         ( intf_thread_t *, time_t * );
+static void PlaylistRebuild( intf_thread_t * );
+static void PlaylistAddNode( intf_thread_t *, playlist_item_t *, int, char *);
+static void PlaylistDestroy( intf_thread_t * );
+static int  PlaylistChanged( vlc_object_t *, const char *, vlc_value_t,
+                             vlc_value_t, void * );
+static void FindIndex      ( intf_thread_t * );
 static void SearchPlaylist ( intf_thread_t *, char * );
+static int  SubSearchPlaylist( intf_thread_t *, char *, int, int );
 static void ManageSlider   ( intf_thread_t * );
 static void ReadDir        ( intf_thread_t * );
 
@@ -89,8 +96,11 @@ static void ReadDir        ( intf_thread_t * );
     "will show you initially.")
 
 vlc_module_begin();
-    set_description( _("ncurses interface") );
+    set_shortname( "Ncurses" );
+    set_description( _("Ncurses interface") );
     set_capability( "interface", 10 );
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_GENERAL );
     set_callbacks( Open, Close );
     add_shortcut( "curses" );
     add_directory( "browse-dir", NULL, NULL, BROWSE_TEXT, BROWSE_LONGTEXT, VLC_FALSE );
@@ -115,6 +125,11 @@ struct dir_entry_t
     vlc_bool_t  b_file;
     char        *psz_path;
 };
+struct pl_item_t
+{
+    playlist_item_t *p_item;
+    char            *psz_display;
+};
 struct intf_sys_t
 {
     playlist_t     *p_playlist;
@@ -133,7 +148,8 @@ struct intf_sys_t
 
     int             i_box_plidx;    /* Playlist index */
     int             b_box_plidx_follow;
-    int             i_box_bidx;    /* browser index */
+    playlist_item_t *p_plnode;      /* Playlist node */
+    int             i_box_bidx;     /* browser index */
 
     int             b_box_cleared;
 
@@ -144,10 +160,15 @@ struct intf_sys_t
     int             i_before_search;
 
     char            *psz_open_chain;
-    
+
     char            *psz_current_dir;
     int             i_dir_entries;
     struct dir_entry_t  **pp_dir_entries;
+
+    int             i_current_view;             /* playlist view             */
+    struct pl_item_t    **pp_plist;
+    int             i_plist_entries;
+    vlc_bool_t      b_need_update;              /* for playlist view */
 };
 
 static void DrawBox( WINDOW *win, int y, int x, int h, int w, char *title );
@@ -176,6 +197,7 @@ static int Open( vlc_object_t *p_this )
     p_sys->b_box_plidx_follow = VLC_TRUE;
     p_sys->b_box_cleared = VLC_FALSE;
     p_sys->i_box_plidx = 0;
+    p_sys->p_plnode = NULL;
     p_sys->i_box_bidx = 0;
     p_sys->p_sub = msg_Subscribe( p_intf );
 
@@ -201,6 +223,12 @@ static int Open( vlc_object_t *p_this )
     val.i_int = -1;
     var_Set( p_intf->p_vlc, "verbose", val );
 
+    /* Set defaul playlist view */
+    p_sys->i_current_view = VIEW_CATEGORY;
+    p_sys->pp_plist = NULL;
+    p_sys->i_plist_entries = 0;
+    p_sys->b_need_update = VLC_FALSE;
+
     /* Initialize search chain */
     p_sys->psz_search_chain = (char *)malloc( SEARCH_CHAIN_SIZE + 1 );
     p_sys->psz_old_search = NULL;
@@ -208,11 +236,11 @@ static int Open( vlc_object_t *p_this )
 
     /* Initialize open chain */
     p_sys->psz_open_chain = (char *)malloc( OPEN_CHAIN_SIZE + 1 );
-    
+
     /* Initialize browser options */
     var_Create( p_intf, "browse-dir", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
     var_Get( p_intf, "browse-dir", &val);
-    
+
     if( val.psz_string && *val.psz_string )
     {
         p_sys->psz_current_dir = strdup( val.psz_string);
@@ -222,9 +250,9 @@ static int Open( vlc_object_t *p_this )
     {
         p_sys->psz_current_dir = strdup( p_intf->p_vlc->psz_homedir );
     }
-    
+
     p_sys->i_dir_entries = 0;
-    p_sys->pp_dir_entries  = NULL;
+    p_sys->pp_dir_entries = NULL;
     ReadDir( p_intf );
 
     return VLC_SUCCESS;
@@ -239,6 +267,13 @@ static void Close( vlc_object_t *p_this )
     intf_sys_t    *p_sys = p_intf->p_sys;
     int i;
 
+    var_DelCallback( p_sys->p_playlist, "intf-change", PlaylistChanged,
+                     p_intf );
+    var_DelCallback( p_sys->p_playlist, "item-append", PlaylistChanged,
+                     p_intf );
+
+    PlaylistDestroy( p_intf );
+
     for( i = 0; i < p_sys->i_dir_entries; i++ )
     {
         struct dir_entry_t *p_dir_entry = p_sys->pp_dir_entries[i];
@@ -247,7 +282,7 @@ static void Close( vlc_object_t *p_this )
         if( p_dir_entry ) free( p_dir_entry );
     }
     p_sys->pp_dir_entries = NULL;
-    
+
     if( p_sys->psz_current_dir ) free( p_sys->psz_current_dir );
     if( p_sys->psz_search_chain ) free( p_sys->psz_search_chain );
     if( p_sys->psz_old_search ) free( p_sys->psz_old_search );
@@ -293,7 +328,15 @@ static void Run( intf_thread_t *p_intf )
         /* Update the input */
         if( p_sys->p_playlist == NULL )
         {
-            p_sys->p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST, FIND_ANYWHERE );
+            p_sys->p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
+                                                 FIND_ANYWHERE );
+            if( p_sys->p_playlist )
+            {
+                var_AddCallback( p_sys->p_playlist, "intf-change",
+                                 PlaylistChanged, p_intf );
+                var_AddCallback( p_sys->p_playlist, "item-append",
+                                 PlaylistChanged, p_intf );
+            }
         }
         if( p_sys->p_playlist )
         {
@@ -321,7 +364,7 @@ static void Run( intf_thread_t *p_intf )
 
         if( p_sys->b_box_plidx_follow && p_sys->p_playlist->i_index >= 0 )
         {
-            p_sys->i_box_plidx = p_sys->p_playlist->i_index;
+            FindIndex( p_intf );
         }
 
         while( ( i_key = getch()) != -1 )
@@ -329,7 +372,7 @@ static void Run( intf_thread_t *p_intf )
             /*
              * HandleKey returns 1 if the screen needs to be redrawn
              */
-            if ( HandleKey( p_intf, i_key ) )
+            if( HandleKey( p_intf, i_key ) )
             {
                 Redraw( p_intf, &t_last_refresh );
             }
@@ -345,9 +388,9 @@ static void Run( intf_thread_t *p_intf )
         /*
          * redraw the screen every second
          */
-        if ( (time(0) - t_last_refresh) >= 1 )
+        if( (time(0) - t_last_refresh) >= 1 )
         {
-            ManageSlider ( p_intf );
+            ManageSlider( p_intf );
             Redraw( p_intf, &t_last_refresh );
         }
     }
@@ -392,6 +435,20 @@ static int HandleKey( intf_thread_t *p_intf, int i_key )
                 playlist_Sort( p_sys->p_playlist, SORT_TITLE, ORDER_REVERSE );
                 return 1;
 
+            /* Playlist view */
+            case 'v':
+                switch( p_sys->i_current_view )
+                {
+                    case VIEW_CATEGORY:
+                        p_sys->i_current_view = VIEW_ALL;
+                        break;
+                    default:
+                        p_sys->i_current_view = VIEW_CATEGORY;
+                }
+                PlaylistRebuild( p_intf );
+                FindIndex( p_intf );
+                return 1;
+
             /* Playlist navigation */
             case KEY_HOME:
                 p_sys->i_box_plidx = 0;
@@ -417,8 +474,9 @@ static int HandleKey( intf_thread_t *p_intf, int i_key )
             {
                 int i_item = p_sys->p_playlist->i_index;
 
-                playlist_Delete( p_sys->p_playlist, p_sys->i_box_plidx );
-                if( i_item < p_sys->p_playlist->i_size && i_item != p_sys->p_playlist->i_index )
+                playlist_LockDelete( p_sys->p_playlist, p_sys->i_box_plidx );
+                if( i_item < p_sys->p_playlist->i_size &&
+                    i_item != p_sys->p_playlist->i_index )
                 {
                     playlist_Goto( p_sys->p_playlist, i_item );
                 }
@@ -427,7 +485,27 @@ static int HandleKey( intf_thread_t *p_intf, int i_key )
 
             case KEY_ENTER:
             case 0x0d:
-                playlist_Goto( p_sys->p_playlist, p_sys->i_box_plidx );
+                if( p_sys->i_current_view == VIEW_ALL )
+                {
+                    playlist_Goto( p_sys->p_playlist, p_sys->i_box_plidx );
+                }
+                else
+                {
+                    if( p_sys->pp_plist[p_sys->i_box_plidx]->p_item->i_children
+                                == -1 )
+                    {
+                        playlist_Control( p_sys->p_playlist, PLAYLIST_ITEMPLAY,
+                            p_sys->pp_plist[p_sys->i_box_plidx]->p_item );
+                    }
+                    else
+                    {
+                        playlist_Control( p_sys->p_playlist, PLAYLIST_VIEWPLAY,
+                            p_sys->i_current_view,
+                            p_sys->pp_plist[p_sys->i_box_plidx]->p_item,
+                            NULL );
+                    }
+                }
+                p_sys->b_box_plidx_follow = VLC_TRUE;
                 break;
             default:
                 b_ret = VLC_FALSE;
@@ -436,12 +514,26 @@ static int HandleKey( intf_thread_t *p_intf, int i_key )
 
         if( b_ret )
         {
-            if( p_sys->i_box_plidx >= p_sys->p_playlist->i_size ) p_sys->i_box_plidx = p_sys->p_playlist->i_size - 1;
+            int i_max = p_sys->i_plist_entries;
+            if( p_sys->i_current_view == VIEW_ALL )
+                i_max = p_sys->p_playlist->i_size;
+            if( p_sys->i_box_plidx >= i_max ) p_sys->i_box_plidx = i_max - 1;
             if( p_sys->i_box_plidx < 0 ) p_sys->i_box_plidx = 0;
-            if( p_sys->i_box_plidx == p_sys->p_playlist->i_index )
-                p_sys->b_box_plidx_follow = VLC_TRUE;
+            if( p_sys->i_current_view == VIEW_ALL )
+            {
+                if( p_sys->i_box_plidx == p_sys->p_playlist->i_index )
+                    p_sys->b_box_plidx_follow = VLC_TRUE;
+                else
+                    p_sys->b_box_plidx_follow = VLC_FALSE;
+            }
             else
-                p_sys->b_box_plidx_follow = VLC_FALSE;
+            {
+                if( p_sys->pp_plist[p_sys->i_box_plidx]->p_item ==
+                        p_sys->p_playlist->status.p_item )
+                    p_sys->b_box_plidx_follow = VLC_TRUE;
+                else
+                    p_sys->b_box_plidx_follow = VLC_FALSE;
+            }
             return 1;
         }
     }
@@ -492,7 +584,7 @@ static int HandleKey( intf_thread_t *p_intf, int i_key )
                     char *psz_uri = (char *)malloc( sizeof(char)*i_size_entry);
 
                     sprintf( psz_uri, "%s/%s", p_sys->psz_current_dir, p_sys->pp_dir_entries[p_sys->i_box_bidx]->psz_path );
-                    
+
                     p_sys->psz_current_dir = strdup( psz_uri );
                     ReadDir( p_intf );
                     free( psz_uri );
@@ -549,21 +641,21 @@ static int HandleKey( intf_thread_t *p_intf, int i_key )
         {
             case KEY_HOME:
                 p_sys->f_slider = 0;
-                ManageSlider ( p_intf );
+                ManageSlider( p_intf );
                 return 1;
             case KEY_END:
                 p_sys->f_slider = 99.9;
-                ManageSlider ( p_intf );
+                ManageSlider( p_intf );
                 return 1;
             case KEY_UP:
                 p_sys->f_slider += 5.0;
                 if( p_sys->f_slider >= 99.0 ) p_sys->f_slider = 99.0;
-                ManageSlider ( p_intf );
+                ManageSlider( p_intf );
                 return 1;
             case KEY_DOWN:
                 p_sys->f_slider -= 5.0;
                 if( p_sys->f_slider < 0.0 ) p_sys->f_slider = 0.0;
-                ManageSlider ( p_intf );
+                ManageSlider( p_intf );
                 return 1;
 
             default:
@@ -731,27 +823,42 @@ static int HandleKey( intf_thread_t *p_intf, int i_key )
         case KEY_RIGHT:
             p_sys->f_slider += 1.0;
             if( p_sys->f_slider > 99.9 ) p_sys->f_slider = 99.9;
-            ManageSlider ( p_intf );
+            ManageSlider( p_intf );
             return 1;
 
         case KEY_LEFT:
             p_sys->f_slider -= 1.0;
             if( p_sys->f_slider < 0.0 ) p_sys->f_slider = 0.0;
-            ManageSlider ( p_intf );
+            ManageSlider( p_intf );
             return 1;
 
         /* Common control */
         case 'f':
         {
-            vout_thread_t *p_vout;
             if( p_intf->p_sys->p_input )
             {
+                vout_thread_t *p_vout;
                 p_vout = vlc_object_find( p_intf->p_sys->p_input,
                                           VLC_OBJECT_VOUT, FIND_CHILD );
                 if( p_vout )
                 {
-                    p_vout->i_changes |= VOUT_FULLSCREEN_CHANGE;
+                    var_Get( p_vout, "fullscreen", &val );
+                    val.b_bool = !val.b_bool;
+                    var_Set( p_vout, "fullscreen", val );
                     vlc_object_release( p_vout );
+                }
+                else
+                {
+                    playlist_t *p_playlist;
+                    p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
+                                                  FIND_ANYWHERE );
+                    if( p_playlist )
+                    {
+                        var_Get( p_playlist, "fullscreen", &val );
+                        val.b_bool = !val.b_bool;
+                        var_Set( p_playlist, "fullscreen", val );
+                        vlc_object_release( p_playlist );
+                    }
                 }
             }
             return 0;
@@ -842,7 +949,7 @@ static int HandleKey( intf_thread_t *p_intf, int i_key )
     }
 }
 
-static void ManageSlider ( intf_thread_t *p_intf )
+static void ManageSlider( intf_thread_t *p_intf )
 {
     intf_sys_t     *p_sys = p_intf->p_sys;
     input_thread_t *p_input = p_sys->p_input;
@@ -875,15 +982,16 @@ static void ManageSlider ( intf_thread_t *p_intf )
 
 static void SearchPlaylist( intf_thread_t *p_intf, char *psz_searchstring )
 {
-    bool b_ok = false;
-    int i_current;
+    int i_max;
     int i_first = 0 ;
     int i_item = -1;
     intf_sys_t *p_sys = p_intf->p_sys;
     playlist_t *p_playlist = p_sys->p_playlist;
 
     if( p_sys->i_before_search >= 0 )
+    {
         i_first = p_sys->i_before_search;
+    }
 
     if( ( ! psz_searchstring ) ||  strlen( psz_searchstring ) <= 0 )
     {
@@ -891,38 +999,55 @@ static void SearchPlaylist( intf_thread_t *p_intf, char *psz_searchstring )
         return;
     }
 
-    for( i_current = i_first + 1; i_current < p_playlist->i_size;
-         i_current++ )
+    i_max = p_sys->i_current_view == VIEW_ALL ?
+                p_playlist->i_size : p_sys->i_plist_entries;
+
+    i_item = SubSearchPlaylist( p_intf, psz_searchstring, i_first + 1, i_max );
+    if( i_item < 0 )
     {
-        if( strcasestr( p_playlist->pp_items[i_current]->input.psz_name,
-                        psz_searchstring ) != NULL
-            || strcasestr( p_playlist->pp_items[i_current]->input.psz_uri,
-                           psz_searchstring ) != NULL )
-        {
-            i_item = i_current;
-            b_ok = true;
-            break;
-        }
+        i_item = SubSearchPlaylist( p_intf, psz_searchstring, 0, i_first );
     }
-    if( !b_ok )
+
+    if( i_item < 0 || i_item >= i_max ) return;
+
+    p_sys->i_box_plidx = i_item;
+}
+
+static int SubSearchPlaylist( intf_thread_t *p_intf, char *psz_searchstring,
+                              int i_start, int i_stop )
+{
+    intf_sys_t *p_sys = p_intf->p_sys;
+    playlist_t *p_playlist = p_sys->p_playlist;
+    int i, i_item = -1;
+
+    if( p_sys->i_current_view == VIEW_ALL )
     {
-        for( i_current = 0; i_current < i_first; i_current++ )
+        for( i = i_start + 1; i < i_stop; i++ )
         {
-            if( strcasestr( p_playlist->pp_items[i_current]->input.psz_name,
+            if( strcasestr( p_playlist->pp_items[i]->input.psz_name,
                             psz_searchstring ) != NULL
-                || strcasestr( p_playlist->pp_items[i_current]->input.psz_uri,
+                || strcasestr( p_playlist->pp_items[i]->input.psz_uri,
                                psz_searchstring ) != NULL )
             {
-                i_item = i_current;
-                b_ok = true;
+                i_item = i;
+                break;
+            }
+        }
+    }
+    else
+    {
+        for( i = i_start + 1; i < i_stop; i++ )
+        {
+            if( strcasestr( p_sys->pp_plist[i]->psz_display,
+                            psz_searchstring ) != NULL )
+            {
+                i_item = i;
                 break;
             }
         }
     }
 
-    if( i_item < 0 || i_item >= p_playlist->i_size ) return;
-
-    p_sys->i_box_plidx = i_item;
+    return i_item;
 }
 
 
@@ -932,11 +1057,11 @@ static void mvnprintw( int y, int x, int w, const char *p_fmt, ... )
     char    *p_buf = NULL;
     int      i_len;
 
-    va_start ( vl_args, p_fmt );
-    vasprintf ( &p_buf, p_fmt, vl_args );
-    va_end ( vl_args );
+    va_start( vl_args, p_fmt );
+    vasprintf( &p_buf, p_fmt, vl_args );
+    va_end( vl_args );
 
-    if ( p_buf == NULL )
+    if( p_buf == NULL )
     {
         return;
     }
@@ -980,9 +1105,9 @@ static void MainBoxWrite( intf_thread_t *p_intf, int l, int x, const char *p_fmt
         return;
     }
 
-    va_start ( vl_args, p_fmt );
-    vasprintf ( &p_buf, p_fmt, vl_args );
-    va_end ( vl_args );
+    va_start( vl_args, p_fmt );
+    vasprintf( &p_buf, p_fmt, vl_args );
+    va_end( vl_args );
 
     if( p_buf == NULL )
     {
@@ -992,7 +1117,7 @@ static void MainBoxWrite( intf_thread_t *p_intf, int l, int x, const char *p_fmt
     mvnprintw( p_sys->i_box_y + l - p_sys->i_box_start, x, COLS - x - 1, "%s", p_buf );
 }
 
-static void Redraw ( intf_thread_t *p_intf, time_t *t_last_refresh )
+static void Redraw( intf_thread_t *p_intf, time_t *t_last_refresh )
 {
     intf_sys_t     *p_sys = p_intf->p_sys;
     input_thread_t *p_input = p_sys->p_input;
@@ -1003,9 +1128,9 @@ static void Redraw ( intf_thread_t *p_intf, time_t *t_last_refresh )
     //clear();
 
     /* Title */
-    attrset ( A_REVERSE );
+    attrset( A_REVERSE );
     mvnprintw( y, 0, COLS, "VLC media player" " (ncurses interface) [ h for help ]" );
-    attroff ( A_REVERSE );
+    attroff( A_REVERSE );
     y += 2;
 
     /* Infos */
@@ -1075,7 +1200,7 @@ static void Redraw ( intf_thread_t *p_intf, time_t *t_last_refresh )
         }
         else
         {
-            y++;
+            y += 2;
         }
     }
     else
@@ -1174,12 +1299,12 @@ static void Redraw ( intf_thread_t *p_intf, time_t *t_last_refresh )
         {
             int i,j;
             vlc_mutex_lock( &p_input->input.p_item->lock );
-            for ( i = 0; i < p_input->input.p_item->i_categories; i++ )
+            for( i = 0; i < p_input->input.p_item->i_categories; i++ )
             {
                 info_category_t *p_category = p_input->input.p_item->pp_categories[i];
                 if( y >= y_end ) break;
                 MainBoxWrite( p_intf, l++, 1, "  [%s]", p_category->psz_name );
-                for ( j = 0; j < p_category->i_infos; j++ )
+                for( j = 0; j < p_category->i_infos; j++ )
                 {
                     info_t *p_info = p_category->pp_infos[j];
                     if( y >= y_end ) break;
@@ -1247,7 +1372,7 @@ static void Redraw ( intf_thread_t *p_intf, time_t *t_last_refresh )
     }
     else if( p_sys->i_box_type == BOX_BROWSE )
     {
-        /* Playlist box */
+        /* Filebrowser box */
         int        i_start, i_stop;
         int        i_item;
         DrawBox( p_sys->w, y++, 0, h, COLS, " Browse " );
@@ -1292,7 +1417,7 @@ static void Redraw ( intf_thread_t *p_intf, time_t *t_last_refresh )
                             p_sys->pp_dir_entries[i_item]->psz_path );
             if( b_selected )
             {
-                attroff ( A_REVERSE );
+                attroff( A_REVERSE );
             }
         }
 
@@ -1303,11 +1428,35 @@ static void Redraw ( intf_thread_t *p_intf, time_t *t_last_refresh )
     {
         /* Playlist box */
         playlist_t *p_playlist = p_sys->p_playlist;
-        int        i_start, i_stop;
+        int        i_start, i_stop, i_max = p_sys->i_plist_entries;
         int        i_item;
-        DrawBox( p_sys->w, y++, 0, h, COLS, " Playlist " );
+        char       *psz_title;
 
-        if( p_sys->i_box_plidx >= p_playlist->i_size ) p_sys->i_box_plidx = p_playlist->i_size - 1;
+        switch( p_sys->i_current_view )
+        {
+            case VIEW_ALL:
+                psz_title = strdup( " Playlist (All, unsorted) " );
+                i_max = p_playlist->i_size;
+                break;
+            case VIEW_CATEGORY:
+                psz_title = strdup( " Playlist (By category) " );
+                break;
+            default:
+                psz_title = strdup( " Playlist (Manually added) " );
+        }
+
+        DrawBox( p_sys->w, y++, 0, h, COLS, psz_title );
+
+        if( p_sys->i_current_view != VIEW_ALL &&
+                ( p_sys->b_need_update || p_sys->pp_plist == NULL ) )
+        {
+            PlaylistRebuild( p_intf );
+        }
+        if( p_sys->b_box_plidx_follow )
+        {
+            FindIndex( p_intf );
+        }
+
         if( p_sys->i_box_plidx < 0 ) p_sys->i_box_plidx = 0;
 
         if( p_sys->i_box_plidx < (h - 2)/2 )
@@ -1315,24 +1464,27 @@ static void Redraw ( intf_thread_t *p_intf, time_t *t_last_refresh )
             i_start = 0;
             i_stop = h - 2;
         }
-        else if( p_playlist->i_size - p_sys->i_box_plidx > (h - 2)/2 )
+        else if( i_max - p_sys->i_box_plidx > (h - 2)/2 )
         {
             i_start = p_sys->i_box_plidx - (h - 2)/2;
             i_stop = i_start + h - 2;
         }
         else
         {
-            i_stop = p_playlist->i_size;
-            i_start = p_playlist->i_size - (h - 2);
+            i_stop = i_max;
+            i_start = i_max - (h - 2);
         }
         if( i_start < 0 )
         {
             i_start = 0;
         }
-        if( i_stop > p_playlist->i_size )
+        if( i_stop > i_max )
         {
-            i_stop = p_playlist->i_size;
+            i_stop = i_max;
         }
+
+       if( p_sys->i_current_view == VIEW_ALL )
+       {
 
         for( i_item = i_start; i_item < i_stop; i_item++ )
         {
@@ -1362,9 +1514,34 @@ static void Redraw ( intf_thread_t *p_intf, time_t *t_last_refresh )
             }
             if( b_selected )
             {
-                attroff ( A_REVERSE );
+                attroff( A_REVERSE );
             }
         }
+
+       }
+       else
+       {
+
+        for( i_item = i_start; i_item < i_stop; i_item++ )
+        {
+            vlc_bool_t b_selected = ( p_sys->i_box_plidx == i_item );
+            int c = ( p_playlist->status.p_item ==
+                          p_sys->pp_plist[i_item]->p_item ) ? '>' : ' ';
+
+            if( y >= y_end ) break;
+            if( b_selected )
+            {
+                attrset( A_REVERSE );
+            }
+            mvnprintw( y++, 1, COLS - 2, "%c%s", c,
+                       p_sys->pp_plist[i_item]->psz_display );
+            if( b_selected )
+            {
+                attroff( A_REVERSE );
+            }
+        }
+
+       }
     }
     else
     {
@@ -1406,7 +1583,131 @@ static void Redraw ( intf_thread_t *p_intf, time_t *t_last_refresh )
     *t_last_refresh = time( 0 );
 }
 
-static void Eject ( intf_thread_t *p_intf )
+static void PlaylistRebuild( intf_thread_t *p_intf )
+{
+    intf_sys_t *p_sys = p_intf->p_sys;
+    playlist_view_t *p_view;
+    playlist_t *p_playlist = p_sys->p_playlist;
+
+    if( p_playlist == NULL )
+    {
+        return;
+    }
+
+    vlc_mutex_lock( &p_playlist->object_lock );
+
+    p_view = playlist_ViewFind( p_playlist, p_intf->p_sys->i_current_view );
+
+    /* First clear the old one */
+    PlaylistDestroy( p_intf );
+
+    /* Build the new one */
+    PlaylistAddNode( p_intf, p_view->p_root, 0, "" );
+
+    p_sys->b_need_update = VLC_FALSE;
+
+    vlc_mutex_unlock( &p_playlist->object_lock );
+}
+
+static void PlaylistAddNode( intf_thread_t *p_intf, playlist_item_t *p_node,
+                             int i, char *c )
+{
+    intf_sys_t *p_sys = p_intf->p_sys;
+    playlist_item_t *p_child;
+    char *psz_tmp;
+    int k;
+
+    psz_tmp = (char *)malloc( strlen( c ) + 4 );
+    if( psz_tmp == NULL ) return;
+    for( k = 0; k < p_node->i_children; k++ )
+    {
+        struct pl_item_t *p_pl_item;
+        char *buff;
+        int i_size;
+
+        p_child = p_node->pp_children[k];
+        i_size = strlen( c ) + strlen( p_child->input.psz_name ) + 4;
+        buff = (char *)malloc( sizeof( char ) * i_size );
+        p_pl_item = (struct pl_item_t *)malloc( sizeof( struct pl_item_t ) );
+        if(  p_pl_item == NULL || buff == NULL ) return;
+
+        if( strlen( c ) )
+        {
+            sprintf( buff, "%s%c-%s", c, k == p_node->i_children - 1 ?
+                     '`' : '|', p_child->input.psz_name );
+        }
+        else
+        {
+            sprintf( buff, " %s", p_child->input.psz_name );
+        }
+        p_pl_item->psz_display = strdup( buff );
+        p_pl_item->p_item = p_child;
+        INSERT_ELEM( p_sys->pp_plist, p_sys->i_plist_entries,
+                     p_sys->i_plist_entries, p_pl_item );
+        free( buff );
+        i++;
+
+        if( p_child->i_children > 0 )
+        {
+            sprintf( psz_tmp, "%s%c ", c,
+                     k == p_node->i_children - 1 ? ' ' : '|' );
+            PlaylistAddNode( p_intf, p_child, i,
+                             strlen( c ) ? psz_tmp : " " );
+        }
+    }
+    free( psz_tmp );
+}
+
+static int PlaylistChanged( vlc_object_t *p_this, const char *psz_variable,
+                            vlc_value_t oval, vlc_value_t nval, void *param )
+{
+    intf_thread_t *p_intf = (intf_thread_t *)param;
+    p_intf->p_sys->b_need_update = VLC_TRUE;
+    return VLC_SUCCESS;
+}
+
+static void FindIndex( intf_thread_t *p_intf )
+{
+    intf_sys_t *p_sys = p_intf->p_sys;
+    int i;
+
+    if( p_sys->i_current_view == VIEW_ALL )
+    {
+         p_sys->i_box_plidx = p_sys->p_playlist->i_index;
+    }
+    else if( ( p_sys->i_box_plidx < p_sys->i_plist_entries &&
+               p_sys->pp_plist[p_sys->i_box_plidx]->p_item !=
+               p_sys->p_playlist->status.p_item ) )
+    {
+        for( i = 0; i < p_sys->i_plist_entries; i++ )
+        {
+            if( p_sys->pp_plist[i]->p_item ==
+                p_sys->p_playlist->status.p_item )
+            {
+                p_sys->i_box_plidx = i;
+                break;
+            }
+        }
+    }
+}
+
+static void PlaylistDestroy( intf_thread_t *p_intf )
+{
+    intf_sys_t *p_sys = p_intf->p_sys;
+    int i;
+
+    for( i = 0; i < p_sys->i_plist_entries; i++ )
+    {
+        struct pl_item_t *p_pl_item = p_sys->pp_plist[i];
+        free( p_pl_item->psz_display );
+        REMOVE_ELEM( p_sys->pp_plist, p_sys->i_plist_entries, i );
+        free( p_pl_item );
+    }
+    p_sys->pp_plist = NULL;
+    p_sys->i_plist_entries = 0;
+}
+
+static void Eject( intf_thread_t *p_intf )
 {
     char *psz_device = NULL, *psz_parser, *psz_name;
 
@@ -1539,7 +1840,7 @@ static void ReadDir( intf_thread_t *p_intf )
 #endif
             return;
         }
-        
+
         /* Clean the old shit */
         for( i = 0; i < p_sys->i_dir_entries; i++ )
         {
@@ -1642,7 +1943,7 @@ static void DrawBox( WINDOW *win, int y, int x, int h, int w, char *title )
     int i;
     int i_len;
 
-    if(  w > 3 && h > 2 )
+    if( w > 3 && h > 2 )
     {
         if( title == NULL ) title = "";
         i_len = strlen( title );
@@ -1681,6 +1982,6 @@ static void DrawLine( WINDOW *win, int y, int x, int w )
     {
         attrset( A_REVERSE );
         mvhline( y, x, ' ', w );
-        attroff ( A_REVERSE );
+        attroff( A_REVERSE );
     }
 }

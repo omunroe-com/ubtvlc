@@ -5,7 +5,7 @@
  *                         Organisation (CSIRO) Australia
  * Copyright (C) 2004 VideoLAN
  *
- * $Id: xurl.h 7397 2004-04-20 17:27:30Z sam $
+ * $Id: xurl.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Andre Pang <Andre.Pang@csiro.au>
  *

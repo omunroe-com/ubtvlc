@@ -2,7 +2,7 @@
  * playlist.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: playlist.cpp 8659 2004-09-07 21:16:49Z gbazin $
+ * $Id: playlist.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -34,7 +34,7 @@ Playlist::Playlist( intf_thread_t *pIntf ): VarList( pIntf )
     m_pPlaylist = pIntf->p_sys->p_playlist;
 
     // Try to guess the current charset
-    char *pCharset = (char*)malloc( 100 );
+    char *pCharset;
     vlc_current_charset( &pCharset );
     iconvHandle = vlc_iconv_open( "UTF-8", pCharset );
     msg_Dbg( pIntf, "Using character encoding: %s", pCharset );
@@ -64,7 +64,9 @@ void Playlist::delSelected()
     {
         if( (*it).m_selected )
         {
-            playlist_Delete( m_pPlaylist, index );
+            playlist_item_t *p_item = playlist_LockItemGetByPos( m_pPlaylist,
+                                                                 index );
+            playlist_LockDelete( m_pPlaylist, p_item->input.i_id );
         }
         else
         {

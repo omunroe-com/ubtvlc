@@ -2,7 +2,7 @@
  * fileinfo.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: fileinfo.cpp 8554 2004-08-28 19:29:32Z zorglub $
+ * $Id: fileinfo.cpp 11019 2005-05-15 13:20:55Z ipkiss $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -45,7 +45,7 @@ enum
 
 BEGIN_EVENT_TABLE(FileInfo, wxFrame)
     /* Button events */
-    EVT_BUTTON(wxID_OK, FileInfo::OnClose)
+    EVT_BUTTON(wxID_OK, FileInfo::OnButtonClose)
 
     /* Hide the window when the user closes the window */
     EVT_CLOSE(FileInfo::OnClose)
@@ -101,7 +101,9 @@ FileInfo::FileInfo( intf_thread_t *_p_intf, wxWindow *p_parent ):
 
 void FileInfo::UpdateFileInfo()
 {
-    input_thread_t *p_input = p_intf->p_sys->p_input;
+    input_thread_t *p_input =
+        (input_thread_t *)vlc_object_find( p_intf, VLC_OBJECT_INPUT,
+                                           FIND_ANYWHERE );
 
     if( !p_input || p_input->b_dead || !p_input->input.p_item->psz_name )
     {
@@ -109,6 +111,10 @@ void FileInfo::UpdateFileInfo()
         {
             fileinfo_root_label = wxT("");
             fileinfo_tree->DeleteChildren( fileinfo_root );
+        }
+        if (p_input)
+        {
+            vlc_object_release(p_input);
         }
         return;
     }
@@ -126,6 +132,7 @@ void FileInfo::UpdateFileInfo()
     else if( fileinfo_root_label == wxL2U(p_input->input.p_item->psz_name) &&
              b_need_update == VLC_FALSE )
     {
+        vlc_object_release(p_input);
         return;
     }
 
@@ -153,6 +160,7 @@ void FileInfo::UpdateFileInfo()
 
     b_need_update = VLC_FALSE;
 
+    vlc_object_release(p_input);
     return;
 }
 
@@ -160,7 +168,13 @@ FileInfo::~FileInfo()
 {
 }
 
-void FileInfo::OnClose( wxCommandEvent& event )
+void FileInfo::OnButtonClose( wxCommandEvent& event )
+{
+    wxCloseEvent cevent;
+    OnClose(cevent);
+}
+
+void FileInfo::OnClose( wxCloseEvent& WXUNUSED(event) )
 {
     Hide();
 }
