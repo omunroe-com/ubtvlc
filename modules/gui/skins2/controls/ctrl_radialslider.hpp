@@ -2,7 +2,7 @@
  * ctrl_radialslider.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_radialslider.hpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: ctrl_radialslider.hpp 9596 2004-12-17 23:39:34Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -56,6 +56,9 @@ class CtrlRadialSlider: public CtrlGeneric, public Observer<VarPercent>
 
         /// Draw the control on the given graphics
         virtual void draw( OSGraphics &rImage, int xDest, int yDest );
+
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return "radial_slider"; }
 
     private:
         /// Finite state machine of the control

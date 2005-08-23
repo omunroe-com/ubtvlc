@@ -2,7 +2,7 @@
  * ctrl_resize.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_resize.hpp 6964 2004-03-05 20:56:39Z ipkiss $
+ * $Id: ctrl_resize.hpp 9596 2004-12-17 23:39:34Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -63,6 +63,9 @@ class CtrlResize: public CtrlFlat
         static void transStillResize( SkinObject *pCtrl );
         static void transResizeStill( SkinObject *pCtrl );
         static void transResizeResize( SkinObject *pCtrl );
+
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return m_rCtrl.getType(); }
 
     private:
         FSM m_fsm;

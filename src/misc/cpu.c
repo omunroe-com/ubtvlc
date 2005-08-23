@@ -2,7 +2,7 @@
  * cpu.c: CPU detection code
  *****************************************************************************
  * Copyright (C) 1998-2004 VideoLAN
- * $Id: cpu.c 8442 2004-08-16 12:51:11Z titer $
+ * $Id: cpu.c 10687 2005-04-15 18:06:51Z massiot $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -52,7 +52,7 @@ static void SigHandler   ( int );
 #ifdef HAVE_SIGNAL_H
 static jmp_buf env;
 static int     i_illegal;
-#if defined( __i386__ )
+#if defined( __i386__ ) || defined( __x86_64__ )
 static char   *psz_capability;
 #endif
 #endif
@@ -79,16 +79,16 @@ uint32_t CPUCapabilities( void )
 
     return i_capabilities;
 
-#elif defined( __i386__ )
+#elif defined( __i386__ ) || defined( __x86_64__ )
     volatile unsigned int  i_eax, i_ebx, i_ecx, i_edx;
     volatile vlc_bool_t    b_amd;
 
     /* Needed for x86 CPU capabilities detection */
 #   define cpuid( reg )                    \
-        asm volatile ( "pushl %%ebx\n\t"   \
+        asm volatile ( "push %%ebx\n\t"   \
                        "cpuid\n\t"         \
                        "movl %%ebx,%1\n\t" \
-                       "popl %%ebx\n\t"    \
+                       "pop %%ebx\n\t"    \
                      : "=a" ( i_eax ),     \
                        "=r" ( i_ebx ),     \
                        "=c" ( i_ecx ),     \
@@ -103,18 +103,17 @@ uint32_t CPUCapabilities( void )
 
     i_capabilities |= CPU_CAPABILITY_FPU;
 
-    /* test for a 486 CPU */
-    asm volatile ( "pushl %%ebx\n\t"
-                   "pushfl\n\t"
-                   "popl %%eax\n\t"
+    asm volatile ( "push %%ebx\n\t"
+                   "pushf\n\t"
+                   "pop %%eax\n\t"
                    "movl %%eax, %%ebx\n\t"
                    "xorl $0x200000, %%eax\n\t"
-                   "pushl %%eax\n\t"
-                   "popfl\n\t"
-                   "pushfl\n\t"
-                   "popl %%eax\n\t"
+                   "push %%eax\n\t"
+                   "popf\n\t"
+                   "pushf\n\t"
+                   "pop %%eax\n\t"
                    "movl %%ebx,%1\n\t"
-                   "popl %%ebx\n\t"
+                   "pop %%ebx\n\t"
                  : "=a" ( i_eax ),
                    "=r" ( i_ebx )
                  :
@@ -283,7 +282,7 @@ uint32_t CPUCapabilities( void )
     i_capabilities |= CPU_CAPABILITY_FPU;
     return i_capabilities;
 
-#elif defined( _MSC_VER )
+#elif defined( _MSC_VER ) && !defined( UNDER_CE )
     i_capabilities |= CPU_CAPABILITY_FPU;
     return i_capabilities;
 

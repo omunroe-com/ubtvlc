@@ -2,7 +2,7 @@
  * gnome.c : Gnome plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000 VideoLAN
- * $Id: gnome.c 7932 2004-06-07 18:26:27Z fenrir $
+ * $Id: gnome.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -75,6 +75,8 @@ vlc_module_begin();
     int i = getenv( "DISPLAY" ) == NULL ? 15 : 100;
 #endif
     set_description( _("GNOME interface") );
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_GENERAL );
 
     add_bool( "gnome-tooltips", 1, E_(GtkHideTooltips),
               TOOLTIPS_TEXT, TOOLTIPS_LONGTEXT, VLC_FALSE );

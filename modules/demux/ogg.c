@@ -2,7 +2,7 @@
  * ogg.c : ogg stream demux module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2003 VideoLAN
- * $Id: ogg.c 8567 2004-08-29 12:27:49Z gbazin $
+ * $Id: ogg.c 11054 2005-05-18 10:23:37Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *          Andre Pang <Andre.Pang@csiro.au> (Annodex support)
@@ -41,6 +41,8 @@ static void Close( vlc_object_t * );
 
 vlc_module_begin();
     set_description( _("Ogg stream demuxer" ) );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_capability( "demux2", 50 );
     set_callbacks( Open, Close );
     add_shortcut( "ogg" );
@@ -180,14 +182,9 @@ static int Open( vlc_object_t * p_this )
 
 
     /* Check if we are dealing with an ogg stream */
-    if( stream_Peek( p_demux->s, &p_peek, 4 ) < 4 )
-    {
-        msg_Err( p_demux, "cannot peek" );
-        return VLC_EGENERIC;
-    }
+    if( stream_Peek( p_demux->s, &p_peek, 4 ) < 4 ) return VLC_EGENERIC;
     if( strcmp( p_demux->psz_demux, "ogg" ) && strncmp( p_peek, "OggS", 4 ) )
     {
-        msg_Warn( p_demux, "ogg module discarded (invalid header)" );
         return VLC_EGENERIC;
     }
 
@@ -295,8 +292,6 @@ static int Demux( demux_t * p_demux )
                 {
                     p_stream->secondary_header_packets = 0;
                 }
-
-                p_stream->secondary_header_packets--;
             }
 
             if( p_stream->b_reinit )
@@ -520,10 +515,15 @@ static void Ogg_DecodePacket( demux_t *p_demux,
           break;
 
         case VLC_FOURCC( 'f','l','a','c' ):
-          if( p_stream->i_packets_backup == 2 )
+          if( !p_stream->fmt.audio.i_rate && p_stream->i_packets_backup == 2 )
           {
               Ogg_ReadFlacHeader( p_demux, p_stream, p_oggpacket );
               p_stream->b_force_backup = 0;
+          }
+          else if( p_stream->fmt.audio.i_rate )
+          {
+              p_stream->b_force_backup = 0;
+              p_oggpacket->packet += 9; p_oggpacket->bytes -= 9;
           }
           b_store_size = VLC_FALSE;
           break;
@@ -655,7 +655,7 @@ static void Ogg_DecodePacket( demux_t *p_demux,
         /* We remove the header from the packet */
         i_header_len = (*p_oggpacket->packet & PACKET_LEN_BITS01) >> 6;
         i_header_len |= (*p_oggpacket->packet & PACKET_LEN_BITS2) << 1;
-        
+
         if( p_stream->fmt.i_codec == VLC_FOURCC( 's','u','b','t' ))
         {
             /* But with subtitles we need to retrieve the duration first */
@@ -733,6 +733,7 @@ static int Ogg_FindLogicalStreams( demux_t *p_demux )
                 p_stream = malloc( sizeof(logical_stream_t) );
                 memset( p_stream, 0, sizeof(logical_stream_t) );
                 p_stream->p_headers = 0;
+                p_stream->secondary_header_packets = 0;
 
                 es_format_Init( &p_stream->fmt, 0, 0 );
 
@@ -770,7 +771,7 @@ static int Ogg_FindLogicalStreams( demux_t *p_demux )
                              p_stream->fmt.audio.i_channels,
                              (int)p_stream->f_rate, p_stream->fmt.i_bitrate );
                 }
-                /* Check for Flac header */
+                /* Check for Flac header (< version 1.1.1) */
                 else if( oggpacket.bytes >= 4 &&
                     ! strncmp( &oggpacket.packet[0], "fLaC", 4 ) )
                 {
@@ -783,6 +784,25 @@ static int Ogg_FindLogicalStreams( demux_t *p_demux )
 
                     p_stream->fmt.i_cat = AUDIO_ES;
                     p_stream->fmt.i_codec = VLC_FOURCC( 'f','l','a','c' );
+                }
+                /* Check for Flac header (>= version 1.1.1) */
+                else if( oggpacket.bytes >= 13 && oggpacket.packet[0] ==0x7F &&
+                    ! strncmp( &oggpacket.packet[1], "FLAC", 4 ) &&
+                    ! strncmp( &oggpacket.packet[9], "fLaC", 4 ) )
+                {
+                    int i_packets = ((int)oggpacket.packet[7]) << 8 |
+                        oggpacket.packet[8];
+                    msg_Dbg( p_demux, "found FLAC header version %i.%i "
+                             "(%i header packets)",
+                             oggpacket.packet[5], oggpacket.packet[6],
+                             i_packets );
+
+                    p_stream->b_force_backup = 1;
+
+                    p_stream->fmt.i_cat = AUDIO_ES;
+                    p_stream->fmt.i_codec = VLC_FOURCC( 'f','l','a','c' );
+                    oggpacket.packet += 13; oggpacket.bytes -= 13;
+                    Ogg_ReadFlacHeader( p_demux, p_stream, &oggpacket );
                 }
                 /* Check for Theora header */
                 else if( oggpacket.bytes >= 7 &&
@@ -850,6 +870,9 @@ static int Ogg_FindLogicalStreams( demux_t *p_demux )
                         msg_Dbg( p_demux, "found video header of type: %.4s",
                                  (char *)&p_stream->fmt.i_codec );
 
+                        p_stream->fmt.video.i_frame_rate = 10000000;
+                        p_stream->fmt.video.i_frame_rate_base =
+                            GetQWLE((oggpacket.packet+164));
                         p_stream->f_rate = 10000000.0 /
                             GetQWLE((oggpacket.packet+164));
                         p_stream->fmt.video.i_bits_per_pixel =
@@ -949,6 +972,9 @@ static int Ogg_FindLogicalStreams( demux_t *p_demux )
                         msg_Dbg( p_demux, "found video header of type: %.4s",
                                  (char *)&p_stream->fmt.i_codec );
 
+                        p_stream->fmt.video.i_frame_rate = 10000000;
+                        p_stream->fmt.video.i_frame_rate_base =
+                            GetQWLE(&st->time_unit);
                         p_stream->f_rate = 10000000.0 /
                             GetQWLE(&st->time_unit);
                         p_stream->fmt.video.i_bits_per_pixel =
@@ -1179,6 +1205,9 @@ static void Ogg_ReadTheoraHeader( logical_stream_t *p_stream,
     bs_read( &bitstream, 24 ); /* aspect_numerator */
     bs_read( &bitstream, 24 ); /* aspect_denominator */
 
+    p_stream->fmt.video.i_frame_rate = i_fps_numerator;
+    p_stream->fmt.video.i_frame_rate_base = i_fps_denominator;
+
     bs_read( &bitstream, 8 ); /* colorspace */
     p_stream->fmt.i_bitrate = bs_read( &bitstream, 24 );
     bs_read( &bitstream, 6 ); /* quality */
@@ -1252,6 +1281,7 @@ static void Ogg_ReadFlacHeader( demux_t *p_demux, logical_stream_t *p_stream,
     bs_t s;
 
     bs_init( &s, p_oggpacket->packet, p_oggpacket->bytes );
+
     bs_read( &s, 1 );
     if( bs_read( &s, 7 ) == 0 )
     {
@@ -1311,14 +1341,17 @@ static void Ogg_ReadAnnodexHeader( vlc_object_t *p_this,
         p_stream->secondary_header_packets =
             GetDWLE( &p_oggpacket->packet[24] );
 
-        msg_Dbg( p_this, "anxdata packet info: %qd/%qd, %d",
-                 granule_rate_numerator, granule_rate_denominator,
-                 p_stream->secondary_header_packets);
-
         /* we are guaranteed that the first header field will be
          * the content-type (by the Annodex standard) */
-        sscanf( &p_oggpacket->packet[28], "Content-Type: %1024s\r\n",
-                content_type_string );
+        if( !strncasecmp( &p_oggpacket->packet[28], "Content-Type: ", 14 ) )
+        {
+            sscanf( &p_oggpacket->packet[42], "%1024s\r\n",
+                    content_type_string );
+        }
+
+        msg_Dbg( p_this, "AnxData packet info: "I64Fd" / "I64Fd", %d, ``%s''",
+                 granule_rate_numerator, granule_rate_denominator,
+                 p_stream->secondary_header_packets, content_type_string );
 
         p_stream->f_rate = (float) granule_rate_numerator /
             (float) granule_rate_denominator;
@@ -1335,6 +1368,13 @@ static void Ogg_ReadAnnodexHeader( vlc_object_t *p_this,
         {
             p_stream->fmt.i_cat = AUDIO_ES;
             p_stream->fmt.i_codec = VLC_FOURCC( 'v','o','r','b' );
+
+            p_stream->b_force_backup = 1;
+        }
+        else if( !strncmp(content_type_string, "audio/x-speex", 14) )
+        {
+            p_stream->fmt.i_cat = AUDIO_ES;
+            p_stream->fmt.i_codec = VLC_FOURCC( 's','p','x',' ' );
 
             p_stream->b_force_backup = 1;
         }

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * controls.m: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2002-2003 VideoLAN
- * $Id: controls.m 8948 2004-10-07 21:33:38Z bigben $
+ * Copyright (C) 2002-2005 VideoLAN
+ * $Id: controls.m 11398 2005-06-10 19:54:49Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -54,7 +54,7 @@
         {
             vlc_mutex_unlock( &p_playlist->object_lock );
             vlc_object_release( p_playlist );
-            [o_open openFileGeneric: nil];
+            [o_main intfOpenFileGeneric: (id)sender];
         }
         else
         {
@@ -128,9 +128,9 @@
     else
     {
         vout_OSDMessage( p_intf, DEFAULT_CHAN, _( "Random Off" ) );
-    }    
+    }
 
-    p_intf->p_sys->b_playlist_update = VLC_TRUE;
+    p_intf->p_sys->b_playmode_update = VLC_TRUE;
     p_intf->p_sys->b_intf_update = VLC_TRUE;
     vlc_object_release( p_playlist );
 }
@@ -148,21 +148,21 @@
 
     var_Get( p_playlist, "repeat", &val );
     if (!val.b_bool)
-    {   
+    {
         var_Set( p_playlist, "loop", val );
-    } 
+    }
     val.b_bool = !val.b_bool;
     var_Set( p_playlist, "repeat", val );
     if( val.b_bool )
     {
-        vout_OSDMessage( p_intf, DEFAULT_CHAN, _( "Repeat All" ) );
+        vout_OSDMessage( p_intf, DEFAULT_CHAN, _( "Repeat One" ) );
     }
     else
     {
         vout_OSDMessage( p_intf, DEFAULT_CHAN, _( "Repeat Off" ) );
     }
 
-    p_intf->p_sys->b_playlist_update = VLC_TRUE;    
+    p_intf->p_sys->b_playmode_update = VLC_TRUE;
     p_intf->p_sys->b_intf_update = VLC_TRUE;
     vlc_object_release( p_playlist );
 }
@@ -187,14 +187,14 @@
     var_Set( p_playlist, "loop", val );
     if( val.b_bool )
     {
-        vout_OSDMessage( p_intf, DEFAULT_CHAN, _( "Repeat One" ) );
+        vout_OSDMessage( p_intf, DEFAULT_CHAN, _( "Repeat All" ) );
     }
     else
     {
         vout_OSDMessage( p_intf, DEFAULT_CHAN, _( "Repeat Off" ) );
-    }    
+    }
 
-    p_intf->p_sys->b_playlist_update = VLC_TRUE;
+    p_intf->p_sys->b_playmode_update = VLC_TRUE;
     p_intf->p_sys->b_intf_update = VLC_TRUE;
     vlc_object_release( p_playlist );
 }
@@ -222,7 +222,8 @@
     intf_thread_t * p_intf = VLCIntf;
     val.i_int = config_GetInt( p_intf, "key-vol-up" );
     var_Set( p_intf->p_vlc, "key-pressed", val );
-    [self updateVolumeSlider];
+    /* Manage volume status */
+    [o_main manageVolumeSlider];
 }
 
 - (IBAction)volumeDown:(id)sender
@@ -231,7 +232,8 @@
     intf_thread_t * p_intf = VLCIntf;
     val.i_int = config_GetInt( p_intf, "key-vol-down" );
     var_Set( p_intf->p_vlc, "key-pressed", val );
-    [self updateVolumeSlider];
+    /* Manage volume status */
+    [o_main manageVolumeSlider];
 }
 
 - (IBAction)mute:(id)sender
@@ -240,25 +242,17 @@
     intf_thread_t * p_intf = VLCIntf;
     val.i_int = config_GetInt( p_intf, "key-vol-mute" );
     var_Set( p_intf->p_vlc, "key-pressed", val );
-    [self updateVolumeSlider];
+    /* Manage volume status */
+    [o_main manageVolumeSlider];
 }
 
 - (IBAction)volumeSliderUpdated:(id)sender
 {
     intf_thread_t * p_intf = VLCIntf;
     audio_volume_t i_volume = (audio_volume_t)[sender intValue];
-
     aout_VolumeSet( p_intf, i_volume * AOUT_VOLUME_STEP );
-}
-
-- (void)updateVolumeSlider
-{
-    intf_thread_t * p_intf = VLCIntf;
-    audio_volume_t i_volume;
-
-    aout_VolumeGet( p_intf, &i_volume );
-
-    [o_volumeslider setFloatValue: (float)(i_volume / AOUT_VOLUME_STEP)];
+    /* Manage volume status */
+    [o_main manageVolumeSlider];
 }
 
 - (IBAction)windowAction:(id)sender
@@ -268,9 +262,6 @@
     NSArray *o_windows = [NSApp orderedWindows];
     NSEnumerator *o_enumerator = [o_windows objectEnumerator];
     vout_thread_t *p_vout = vlc_object_find( VLCIntf, VLC_OBJECT_VOUT,
-                                              FIND_ANYWHERE );
-
-    playlist_t * p_playlist = vlc_object_find( VLCIntf, VLC_OBJECT_PLAYLIST,
                                               FIND_ANYWHERE );
 
     if( p_vout != NULL )
@@ -292,32 +283,32 @@
                     if( ![o_window isZoomed] )
                         [o_window performZoom:self];
                 }
+                else if( [o_title isEqualToString: _NS("Snapshot") ] )
+                {
+                    [o_window snapshot];
+                }
                 else
                 {
-                    vlc_value_t val;
-                    var_Get( p_vout, "fullscreen", &val );
-                    var_Set( p_vout, "fullscreen", (vlc_value_t)!val.b_bool );
+                    [o_window toggleFullscreen];
                 }
                 break;
             }
         }
         vlc_object_release( (vlc_object_t *)p_vout );
-        if (p_playlist) vlc_object_release(p_playlist);
     }
-
-    else if ( p_playlist != NULL )
+    else
     {
-        if (! ([o_title isEqualToString: _NS("Half Size") ] ||
-               [o_title isEqualToString: _NS("Normal Size") ] ||
-               [o_title isEqualToString: _NS("Double Size") ] ||
-               [o_title isEqualToString: _NS("Float on Top") ] ||
-               [o_title isEqualToString: _NS("Fit to Screen") ] ))
+        playlist_t * p_playlist = vlc_object_find( VLCIntf, VLC_OBJECT_PLAYLIST,
+                                              FIND_ANYWHERE );
+
+        if( p_playlist && ( [o_title isEqualToString: _NS("Fullscreen")] ||
+            [sender isKindOfClass:[NSButton class]] ) )
         {
             vlc_value_t val;
             var_Get( p_playlist, "fullscreen", &val );
             var_Set( p_playlist, "fullscreen", (vlc_value_t)!val.b_bool );
         }
-    vlc_object_release( (vlc_object_t *)p_playlist );
+        if( p_playlist ) vlc_object_release( (vlc_object_t *)p_playlist );
     }
 
 }
@@ -558,13 +549,14 @@
     {
         vlc_mutex_lock( &p_playlist->object_lock );
     }
+    else return FALSE;
 
 #define p_input p_playlist->p_input
 
     if( [[o_mi title] isEqualToString: _NS("Faster")] ||
         [[o_mi title] isEqualToString: _NS("Slower")] )
     {
-        if( p_playlist != NULL && p_input != NULL )
+        if( p_input != NULL )
         {
             bEnabled = p_input->input.b_can_pace_control;
         }
@@ -575,22 +567,16 @@
     }
     else if( [[o_mi title] isEqualToString: _NS("Stop")] )
     {
-        if( p_playlist == NULL || p_input == NULL )
+        if( p_input == NULL )
         {
             bEnabled = FALSE;
         }
+		[o_main setupMenus]; /* Make sure input menu is up to date */
     }
     else if( [[o_mi title] isEqualToString: _NS("Previous")] ||
              [[o_mi title] isEqualToString: _NS("Next")] )
     {
-        if( p_playlist == NULL )
-        {
-            bEnabled = FALSE;
-        }
-        else
-        {
             bEnabled = p_playlist->i_size > 1;
-        }
     }
     else if( [[o_mi title] isEqualToString: _NS("Random")] )
     {
@@ -616,24 +602,23 @@
     else if( [[o_mi title] isEqualToString: _NS("Step Forward")] ||
              [[o_mi title] isEqualToString: _NS("Step Backward")] )
     {
-        bEnabled = FALSE;
-        if( p_playlist != NULL && p_input != NULL )
+        if( p_input != NULL )
         {
             var_Get( p_input, "seekable", &val);
-            if( val.b_bool )
-            {
-                bEnabled = TRUE;
-            }
+            bEnabled = val.b_bool;
         }
     }
     else if( [[o_mi title] isEqualToString: _NS("Mute")] ) 
     {
         [o_mi setState: p_intf->p_sys->b_mute ? NSOnState : NSOffState];
+		[o_main setupMenus]; /* Make sure audio menu is up to date */
     }
     else if( [[o_mi title] isEqualToString: _NS("Half Size")] ||
                 [[o_mi title] isEqualToString: _NS("Normal Size")] ||
                 [[o_mi title] isEqualToString: _NS("Double Size")] ||
                 [[o_mi title] isEqualToString: _NS("Fit to Screen")] ||
+                [[o_mi title] isEqualToString: _NS("Snapshot")] ||
+                [[o_mi title] isEqualToString: _NS("Fullscreen")] ||
                 [[o_mi title] isEqualToString: _NS("Float on Top")] )
     {
         id o_window;
@@ -645,13 +630,13 @@
                                               FIND_ANYWHERE );
         if( p_vout != NULL )
         {
-            if ( [[o_mi title] isEqualToString: _NS("Float on Top")] )
+            if( [[o_mi title] isEqualToString: _NS("Float on Top")] )
             {
                 var_Get( p_vout, "video-on-top", &val );
                 [o_mi setState: val.b_bool ?  NSOnState : NSOffState];
             }
 
-            while ((o_window = [o_enumerator nextObject]))
+            while( (o_window = [o_enumerator nextObject]))
             {
                 if( [[o_window className] isEqualToString: @"VLCWindow"] )
                 {
@@ -661,27 +646,17 @@
             }
             vlc_object_release( (vlc_object_t *)p_vout );
         }
-    }
-    else if( [[o_mi title] isEqualToString: _NS("Fullscreen")])
-    {
-        if (p_playlist)
+        else if( [[o_mi title] isEqualToString: _NS("Fullscreen")] )
         {
-            var_Get(p_playlist, "fullscreen", &val );
+            var_Get( p_playlist, "fullscreen", &val );
             [o_mi setState: val.b_bool];
             bEnabled = TRUE;
         }
-        else
-        {
-            bEnabled = FALSE;
-        }
+		[o_main setupMenus]; /* Make sure video menu is up to date */
     }
 
-
-    if( p_playlist != NULL )
-    {
-        vlc_mutex_unlock( &p_playlist->object_lock );
-        vlc_object_release( p_playlist );
-    }
+    vlc_mutex_unlock( &p_playlist->object_lock );
+    vlc_object_release( p_playlist );
 
     return( bEnabled );
 }
@@ -715,6 +690,7 @@
 - (void)dealloc
 {
     free( psz_name );
+    [super dealloc];
 }
 
 - (char *)name

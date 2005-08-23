@@ -2,7 +2,7 @@
  * info.cpp: the KInfoWindow class
  *****************************************************************************
  * Copyright (C) 2001-2003 VideoLAN
- * $Id: info.cpp 7227 2004-04-01 19:20:21Z gbazin $
+ * $Id: info.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Author: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *

@@ -2,7 +2,7 @@
  * standard.c: standard stream output module
  *****************************************************************************
  * Copyright (C) 2003-2004 VideoLAN
- * $Id: standard.c 9201 2004-11-06 16:51:46Z yoann $
+ * $Id: standard.c 10470 2005-03-28 23:24:21Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -75,10 +75,13 @@ static void     Close   ( vlc_object_t * );
 #define SOUT_CFG_PREFIX "sout-standard-"
 
 vlc_module_begin();
+    set_shortname( _("Standard"));
     set_description( _("Standard stream output") );
     set_capability( "sout stream", 50 );
     add_shortcut( "standard" );
     add_shortcut( "std" );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_STREAM );
 
     add_string( SOUT_CFG_PREFIX "access", "", NULL, ACCESS_TEXT,
                 ACCESS_LONGTEXT, VLC_FALSE );
@@ -256,7 +259,7 @@ static int Open( vlc_object_t *p_this )
         }
     }
 
-    /* fix or warm of incompatible couple */
+    /* fix or warn of incompatible couple */
     if( psz_mux && psz_access )
     {
         if( !strncmp( psz_access, "mmsh", 4 ) &&
@@ -356,7 +359,7 @@ static int Open( vlc_object_t *p_this )
         {
             if( url.i_port == 0 ) url.i_port = DEFAULT_PORT;
 
-            p_session->psz_uri = url.psz_host;
+            p_session->psz_uri = strdup( url.psz_host );
             p_session->i_port = url.i_port;
             p_session->psz_sdp = NULL;
 

@@ -2,7 +2,7 @@
  * vout_window.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: vout_window.cpp 7074 2004-03-14 14:58:11Z asmax $
+ * $Id: vout_window.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -22,6 +22,7 @@
  *****************************************************************************/
 
 #include "vout_window.hpp"
+#include "vlcproc.hpp"
 #include "os_factory.hpp"
 #include "os_graphics.hpp"
 #include "os_window.hpp"
@@ -42,7 +43,15 @@ VoutWindow::~VoutWindow()
     {
         delete m_pImage;
     }
-    // XXX we should stop the vout before destroying the window!
+
+    // Get the VlcProc
+    VlcProc *pVlcProc = getIntf()->p_sys->p_vlcProc;
+
+    // Reparent the video output
+    if( pVlcProc && pVlcProc->isVoutUsed() )
+    {
+        pVlcProc->dropVout();
+    }
 }
 
 
@@ -69,7 +78,14 @@ void VoutWindow::refresh( int left, int top, int width, int height )
 {
     if( m_pImage )
     {
-        m_pImage->copyToWindow( *getOSWindow(), left, top, width, height, left,
-                                top );
+        // Get the VlcProc
+        VlcProc *pVlcProc = getIntf()->p_sys->p_vlcProc;
+
+        // Refresh only when there is no video!
+        if( pVlcProc && !pVlcProc->isVoutUsed() )
+        {
+            m_pImage->copyToWindow( *getOSWindow(), left, top,
+                                    width, height, left, top );
+        }
     }
 }

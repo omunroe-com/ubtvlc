@@ -2,7 +2,7 @@
  * x11.c: Screen capture module.
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: x11.c 8290 2004-07-26 20:29:24Z gbazin $
+ * $Id: x11.c 10147 2005-03-05 17:18:30Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -69,9 +69,10 @@ int screen_InitCapture( demux_t *p_demux )
     case 16:
         i_chroma = VLC_FOURCC('R','V','1','6'); break;
     case 24:
-        i_chroma = VLC_FOURCC('R','V','2','4'); break;
     case 32:
-        i_chroma = VLC_FOURCC('R','V','3','2'); break;
+        i_chroma = VLC_FOURCC('R','V','3','2');
+        win_info.depth = 32;
+        break;
     default:
         msg_Err( p_demux, "unknown screen depth %i", win_info.depth );
         XCloseDisplay( p_display );

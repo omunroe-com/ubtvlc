@@ -2,7 +2,7 @@
  * x11_graphics.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: x11_graphics.cpp 7292 2004-04-06 20:38:10Z asmax $
+ * $Id: x11_graphics.cpp 10861 2005-05-01 13:19:04Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -129,7 +129,7 @@ void X11Graphics::drawGraphics( const OSGraphics &rGraphics, int xSrc,
 
 void X11Graphics::drawBitmap( const GenericBitmap &rBitmap, int xSrc,
                               int ySrc, int xDest, int yDest, int width,
-                              int height )
+                              int height, bool blend )
 {
     // Get the bitmap size if necessary
     if( width == -1 )
@@ -190,7 +190,8 @@ void X11Graphics::drawBitmap( const GenericBitmap &rBitmap, int xSrc,
     Region mask = XCreateRegion();
 
     // Get a pointer on the right X11Display::makePixel method
-    X11Display::MakePixelFunc_t makePixelFunc = m_rDisplay.getMakePixel();
+    X11Display::MakePixelFunc_t makePixelFunc = ( blend ?
+        m_rDisplay.getBlendPixel() : m_rDisplay.getPutPixel() );
 
     // Skip the first lines of the image
     pBmpData += 4 * ySrc * rBitmap.getWidth();

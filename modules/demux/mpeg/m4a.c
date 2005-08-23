@@ -37,6 +37,8 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 vlc_module_begin();
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_description( _("MPEG-4 audio demuxer" ) );
     set_capability( "demux2", 110 );
     set_callbacks( Open, Close );
@@ -69,7 +71,6 @@ static int Open( vlc_object_t * p_this )
     demux_t     *p_demux = (demux_t*)p_this;
     demux_sys_t *p_sys;
     uint8_t     *p_peek;
-    module_t    *p_id3;
     int         b_forced = VLC_FALSE;
 
     if( p_demux->psz_path )
@@ -85,12 +86,6 @@ static int Open( vlc_object_t * p_this )
     if( !p_demux->b_force && !b_forced )
     {
         return VLC_EGENERIC;
-    }
-
-    /* skip possible id3 header */
-    if( ( p_id3 = module_Need( p_demux, "id3", NULL, 0 ) ) )
-    {
-        module_Unneed( p_demux, p_id3 );
     }
 
     /* peek the begining (10 is for adts header) */

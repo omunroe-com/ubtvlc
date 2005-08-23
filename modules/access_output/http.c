@@ -2,7 +2,7 @@
  * http.c
  *****************************************************************************
  * Copyright (C) 2001-2003 VideoLAN
- * $Id: http.c 9280 2004-11-11 12:31:27Z zorglub $
+ * $Id: http.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -74,9 +74,12 @@ static void Close( vlc_object_t * );
 vlc_module_begin();
     set_description( _("HTTP stream output") );
     set_capability( "sout access", 0 );
+    set_shortname( N_("HTTP" ) );
     add_shortcut( "http" );
     add_shortcut( "https" );
     add_shortcut( "mmsh" );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_ACO );
     add_string( SOUT_CFG_PREFIX "user", "", NULL,
                 USER_TEXT, USER_LONGTEXT, VLC_TRUE );
     add_string( SOUT_CFG_PREFIX "pwd", "", NULL,
@@ -99,7 +102,7 @@ vlc_module_end();
  * Exported prototypes
  *****************************************************************************/
 static const char *ppsz_sout_options[] = {
-    "user", "pwd", "mime", NULL
+    "user", "pwd", "mime", "cert", "key", "ca", "crl", NULL
 };
 
 static int Write( sout_access_out_t *, block_t * );

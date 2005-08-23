@@ -2,7 +2,7 @@
  * messages.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: messages.cpp 8175 2004-07-12 06:47:15Z zorglub $
+ * $Id: messages.cpp 10641 2005-04-10 18:40:52Z zorglub $
  *
  * Authors: Olivier Teulière <ipkiss@via.ecp.fr>
  *
@@ -48,7 +48,7 @@ enum
 
 BEGIN_EVENT_TABLE(Messages, wxFrame)
     /* Button events */
-    EVT_BUTTON(wxID_OK, Messages::OnClose)
+    EVT_BUTTON(wxID_OK, Messages::OnButtonClose)
     EVT_BUTTON(wxID_CLEAR, Messages::OnClear)
     EVT_BUTTON(wxID_SAVEAS, Messages::OnSaveLog)
 
@@ -95,9 +95,9 @@ Messages::Messages( intf_thread_t *_p_intf, wxWindow *p_parent ):
     clear_button->SetDefault();
 
     /* Create the Save Log button */
-     wxButton *save_log_button = new wxButton( messages_panel, wxID_SAVEAS,
-                                               wxU(_("Save As...")));
-     save_log_button->SetDefault();
+    wxButton *save_log_button = new wxButton( messages_panel, wxID_SAVEAS,
+                                              wxU(_("Save As...")));
+    save_log_button->SetDefault();
 
     /* Place everything in sizers */
     wxBoxSizer *buttons_sizer = new wxBoxSizer( wxHORIZONTAL );
@@ -142,6 +142,8 @@ void Messages::UpdateLog()
     vlc_mutex_lock( p_sub->p_lock );
     int i_stop = *p_sub->pi_stop;
     vlc_mutex_unlock( p_sub->p_lock );
+
+    textctrl->SetInsertionPointEnd();
 
     if( p_sub->i_start != i_stop )
     {
@@ -191,7 +193,13 @@ void Messages::UpdateLog()
 /*****************************************************************************
  * Private methods.
  *****************************************************************************/
-void Messages::OnClose( wxCommandEvent& WXUNUSED(event) )
+void Messages::OnButtonClose( wxCommandEvent& WXUNUSED(event) )
+{
+    wxCloseEvent cevent;
+    OnClose(cevent);
+}
+
+void Messages::OnClose( wxCloseEvent& WXUNUSED(event) )
 {
     Hide();
 }

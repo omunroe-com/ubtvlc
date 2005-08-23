@@ -2,7 +2,7 @@
  * pda_callbacks.c : Callbacks for the pda Linux Gtk+ plugin.
  *****************************************************************************
  * Copyright (C) 2000, 2001 VideoLAN
- * $Id: pda_callbacks.c 7932 2004-06-07 18:26:27Z fenrir $
+ * $Id: pda_callbacks.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Jean-Paul Saman <jpsaman@wxs.nl>
  *
@@ -873,7 +873,7 @@ void onDeletePlaylist(GtkButton *button, gpointer user_data)
                  */
                 p_rows = g_list_reverse( p_rows );
             }
-    
+
             for (p_node=p_rows; p_node!=NULL; p_node = p_node->next)
             {
                 GtkTreeIter iter;
@@ -887,7 +887,7 @@ void onDeletePlaylist(GtkButton *button, gpointer user_data)
                         gint item;
 
                         gtk_tree_model_get(p_model, &iter, 2, &item, -1);
-                        playlist_Delete(p_playlist, item);
+                        playlist_LockDelete(p_playlist, item);
                     }
                 }
             }
@@ -929,7 +929,7 @@ void onClearPlaylist(GtkButton *button, gpointer user_data)
 
     for(item = p_playlist->i_size - 1; item >= 0 ;item-- )
     {
-        playlist_Delete( p_playlist, item);
+        playlist_LockDelete( p_playlist, item);
     }
     vlc_object_release( p_playlist );
 

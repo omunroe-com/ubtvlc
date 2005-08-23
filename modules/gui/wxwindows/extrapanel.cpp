@@ -2,7 +2,7 @@
  * extrapanel.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004, 2003 VideoLAN
- * $Id: extrapanel.cpp 9133 2004-11-04 13:37:17Z zorglub $
+ * $Id: extrapanel.cpp 10974 2005-05-11 15:34:24Z gbazin $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -147,12 +147,12 @@ struct filter {
 
 static const struct filter vfilters[] =
 {
-    { "clone", "Image clone", "Creates several clones of the image" },
-    { "distort", "Distortion", "Adds distorsion effects" },
-    { "invert", "Image inversion" , "Inverts the image colors" },
-    { "crop", "Image cropping", "Crops the image" },
-    { "motionblur", "Blurring", "Creates a motion blurring on the image" },
-    { "transform", "Transformation", "Rotates or flips the image" },
+    { "clone", N_("Image clone"), N_("Creates several clones of the image") },
+    { "distort", N_("Distortion"), N_("Adds distorsion effects") },
+    { "invert", N_("Image inversion") , N_("Inverts the image colors") },
+    { "crop", N_("Image cropping"), N_("Crops the image") },
+    { "motionblur", N_("Blurring"), N_("Creates a motion blurring on the image") },
+    { "transform",  N_("Transformation"), N_("Rotates or flips the image") },
     { NULL, NULL, NULL } /* Do not remove this line */
 };
 
@@ -171,13 +171,19 @@ ExtraPanel::ExtraPanel( intf_thread_t *_p_intf, wxWindow *_p_parent ):
 
     notebook = new wxNotebook( this, Notebook_Event );
 
+#if (!wxCHECK_VERSION(2,5,0))
     wxNotebookSizer *notebook_sizer = new wxNotebookSizer( notebook );
+#endif
 
     notebook->AddPage( VideoPanel( notebook ), wxU(_("Video")) );
     notebook->AddPage( EqzPanel( notebook ), wxU(_("Equalizer")) );
     notebook->AddPage( AudioPanel( notebook ), wxU(_("Audio")) );
 
+#if (!wxCHECK_VERSION(2,5,0))
     extra_sizer->Add( notebook_sizer, 1, wxEXPAND, 0 );
+#else
+    extra_sizer->Add( notebook, 1, wxEXPAND, 0 );
+#endif
 
     SetSizerAndFit( extra_sizer );
     extra_sizer->Layout();
@@ -328,7 +334,7 @@ wxPanel *ExtraPanel::VideoPanel( wxWindow *parent )
     panel_sizer->SetSizeHints( panel );
 
     /* Write down initial values */
-    psz_filters = config_GetPsz( p_intf, "filter" );
+    psz_filters = config_GetPsz( p_intf, "vout-filter" );
     if( psz_filters && strstr( psz_filters, "adjust" ) )
     {
         adjust_check->SetValue( 1 );
@@ -367,6 +373,8 @@ wxPanel *ExtraPanel::VideoPanel( wxWindow *parent )
     f_value = config_GetFloat( p_intf, "gamma" );
     if( f_value > 0 && f_value < 10 )
         gamma_slider->SetValue( (int)(10 * f_value) );
+
+    b_update = VLC_FALSE;
 
     return panel;
 }
@@ -471,12 +479,12 @@ wxPanel *ExtraPanel::EqzPanel( wxWindow *parent )
 
     top_sizer->Add( 0, 0, 1, wxALL, 2 );
 
-    top_sizer->Add( new wxButton( panel, EqRestore_Event,
-                                  wxU( _("Restore Defaults") ) ),
-		    0, wxALL, 2 );
+    eq_restoredefaults_button = new wxButton( panel, EqRestore_Event,
+                                  wxU( _("Restore Defaults") ) );
+    top_sizer->Add( eq_restoredefaults_button, 0, wxALL, 2 );
     top_sizer->Add( 0, 0, 1, wxALL, 2 );
 
-    wxStaticText *smooth_text = new wxStaticText( panel, -1, wxU( "Smooth :" ));
+    smooth_text = new wxStaticText( panel, -1, wxU( "Smooth :" ));
     smooth_text->SetToolTip( wxU( SMOOTH_TIP ) );
     top_sizer->Add( smooth_text, 0, wxALL, 2 );
 
@@ -535,6 +543,40 @@ wxPanel *ExtraPanel::EqzPanel( wxWindow *parent )
     panel_sizer->SetSizeHints( panel );
 
     CheckAout();
+
+    aout_instance_t *p_aout= (aout_instance_t *)vlc_object_find(p_intf,
+                                 VLC_OBJECT_AOUT, FIND_ANYWHERE);
+    char *psz_af = NULL;
+    if( p_aout )
+    {
+        psz_af = var_GetString( p_aout, "audio-filter" );
+        if( var_GetBool( p_aout, "equalizer-2pass" ) )
+            eq_2p_chkbox->SetValue( true );
+    }
+    else
+    {
+        psz_af = config_GetPsz( p_intf, "audio-filter" );
+        if( config_GetInt( p_intf, "equalizer-2pass" ) )
+            eq_2p_chkbox->SetValue( true );
+    }
+    if( psz_af != NULL ? strstr( psz_af, "equalizer" ) != NULL : VLC_FALSE )
+    {
+        eq_chkbox->SetValue( true );
+    } else {
+        eq_2p_chkbox->Disable();
+        eq_restoredefaults_button->Disable();
+        smooth_slider->Disable();
+        smooth_text->Disable();
+        preamp_slider->Disable();
+        preamp_text->Disable();
+        for( int i_index=0; i_index < 10; i_index++ )
+        {
+            band_sliders[i_index]->Disable();
+            band_texts[i_index]->Disable();
+        }
+    }
+    free( psz_af );
+
     return panel;
 }
 
@@ -591,10 +633,38 @@ void ExtraPanel::OnIdle( wxIdleEvent &event )
  *************************/
 void ExtraPanel::OnEnableEqualizer( wxCommandEvent &event )
 {
+    int i_index;
     aout_instance_t *p_aout= (aout_instance_t *)vlc_object_find(p_intf,
                                  VLC_OBJECT_AOUT, FIND_ANYWHERE);
     ChangeFiltersString( p_intf,p_aout, "equalizer",
                          event.IsChecked() ? VLC_TRUE : VLC_FALSE );
+
+    if( event.IsChecked() )
+    {
+        eq_2p_chkbox->Enable();
+        eq_restoredefaults_button->Enable();
+        smooth_slider->Enable();
+        smooth_text->Enable();
+        preamp_slider->Enable();
+        preamp_text->Enable();
+        for( i_index=0; i_index < 10; i_index++ )
+        {
+            band_sliders[i_index]->Enable();
+            band_texts[i_index]->Enable();
+        }
+    } else {
+        eq_2p_chkbox->Disable();
+        eq_restoredefaults_button->Disable();
+        smooth_slider->Disable();
+        smooth_text->Disable();
+        preamp_slider->Disable();
+        preamp_text->Disable();
+        for( i_index=0; i_index < 10; i_index++ )
+        {
+            band_sliders[i_index]->Disable();
+            band_texts[i_index]->Disable();
+        }
+    }
 
     if( p_aout != NULL )
         vlc_object_release( p_aout );
@@ -983,7 +1053,7 @@ static void ChangeVFiltersString( intf_thread_t *p_intf,
     vout_thread_t *p_vout;
     char *psz_parser, *psz_string;
 
-    psz_string = config_GetPsz( p_intf, "filter" );
+    psz_string = config_GetPsz( p_intf, "vout-filter" );
 
     if( !psz_string ) psz_string = strdup("");
 
@@ -1024,14 +1094,14 @@ static void ChangeVFiltersString( intf_thread_t *p_intf,
          }
     }
     /* Vout is not kept, so put that in the config */
-    config_PutPsz( p_intf, "filter", psz_string );
+    config_PutPsz( p_intf, "vout-filter", psz_string );
 
     /* Try to set on the fly */
     p_vout = (vout_thread_t *)vlc_object_find( p_intf, VLC_OBJECT_VOUT,
                                               FIND_ANYWHERE );
     if( p_vout )
     {
-        var_SetString( p_vout, "filter", psz_string );
+        var_SetString( p_vout, "vout-filter", psz_string );
         vlc_object_release( p_vout );
     }
 
@@ -1063,7 +1133,7 @@ static void ChangeFiltersString( intf_thread_t *p_intf,
         if( !psz_parser )
         {
             psz_parser = psz_string;
-            asprintf( &psz_string, (*psz_string) ? "%s,%s" : "%s%s",
+            asprintf( &psz_string, (*psz_string) ? "%s:%s" : "%s%s",
                             psz_string, psz_name );
             free( psz_parser );
         }
@@ -1077,10 +1147,10 @@ static void ChangeFiltersString( intf_thread_t *p_intf,
         if( psz_parser )
         {
             memmove( psz_parser, psz_parser + strlen(psz_name) +
-                            (*(psz_parser + strlen(psz_name)) == ',' ? 1 : 0 ),
+                            (*(psz_parser + strlen(psz_name)) == ':' ? 1 : 0 ),
                             strlen(psz_parser + strlen(psz_name)) + 1 );
 
-            if( *(psz_string+strlen(psz_string ) -1 ) == ',' )
+            if( *(psz_string+strlen(psz_string ) -1 ) == ':' )
             {
                 *(psz_string+strlen(psz_string ) -1 ) = '\0';
             }

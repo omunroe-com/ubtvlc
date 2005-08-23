@@ -1,8 +1,8 @@
 /*****************************************************************************
  * open.m: MacOS X module for vlc
  *****************************************************************************
- * Copyright (C) 2002-2003 VideoLAN
- * $Id: open.m 9069 2004-10-27 21:47:44Z bigben $
+ * Copyright (C) 2002-2005 VideoLAN
+ * $Id: open.m 11382 2005-06-10 15:05:04Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net> 
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -129,6 +129,24 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
  *****************************************************************************/
 @implementation VLCOpen
 
+static VLCOpen *_o_sharedMainInstance = nil;
+
++ (VLCOpen *)sharedInstance
+{
+    return _o_sharedMainInstance ? _o_sharedMainInstance : [[self alloc] init];
+}
+
+- (id)init
+{
+    if( _o_sharedMainInstance) {
+        [self dealloc];
+    } else {
+        _o_sharedMainInstance = [super init];
+    }
+    
+    return _o_sharedMainInstance;
+}
+
 - (void)awakeFromNib
 {
     intf_thread_t * p_intf = VLCIntf;
@@ -165,6 +183,7 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
     [[o_net_mode cellAtRow:0 column:0] setTitle: _NS("UDP/RTP")];
     [[o_net_mode cellAtRow:1 column:0] setTitle: _NS("UDP/RTP Multicast")];
     [[o_net_mode cellAtRow:2 column:0] setTitle: _NS("HTTP/FTP/MMS/RTSP")];
+    [o_net_timeshift_ckbox setTitle: _NS("Allow timeshifting")];
 
     [o_net_udp_port setIntValue: config_GetInt( p_intf, "server-port" )];
     [o_net_udp_port_stp setIntValue: config_GetInt( p_intf, "server-port" )];
@@ -335,6 +354,11 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
                       [[(VLCOutput *)o_sout_options getMRL] objectAtIndex: i]]];
             }
         }
+        if( [o_net_timeshift_ckbox state] == NSOnState )
+        {
+            [o_options addObject: [NSString stringWithString:
+                                                @"access-filter=timeshift"]];
+        }
         [o_dic setObject: (NSArray *)[o_options copy] forKey: @"ITEM_OPTIONS"];
         [o_playlist appendArray: [NSArray arrayWithObject: o_dic] atPos: -1 enqueue:NO];
     }
@@ -358,19 +382,19 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
     }  
 }
 
-- (IBAction)openFileGeneric:(id)sender
+- (void)openFileGeneric
 {
     [self openFilePathChanged: nil];
     [self openTarget: 0];
 }
 
-- (IBAction)openDisc:(id)sender
+- (void)openDisc
 {
     [self openDiscTypeChanged: nil];
     [self openTarget: 1];
 }
 
-- (IBAction)openNet:(id)sender
+- (void)openNet
 {
     [self openNetModeChanged: nil];
     [self openTarget: 2];
@@ -577,7 +601,7 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
             o_mrl_string = [NSString stringWithFormat: @"dvdnav://%@",
                             o_device]; 
         else
-            o_mrl_string = [NSString stringWithFormat: @"dvdread://%@@%i:%i",
+            o_mrl_string = [NSString stringWithFormat: @"dvdread://%@@%i:%i-",
                             o_device, i_title, i_chapter]; 
     }
     else /* VIDEO_TS folder */
@@ -627,7 +651,7 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
 
     o_mode = [[o_net_mode selectedCell] title];
 
-    if( [o_mode isEqualToString: _NS("UDP/RTP")] ) b_udp = TRUE;   
+    if( [o_mode isEqualToString: _NS("UDP/RTP")] ) b_udp = TRUE;
     else if( [o_mode isEqualToString: _NS("UDP/RTP Multicast")] ) b_udpm = TRUE;
     else if( [o_mode isEqualToString: _NS("HTTP/FTP/MMS/RTSP")] ) b_http = TRUE;
 
@@ -700,11 +724,10 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
         else
             o_mrl_string = o_url;
     }
-
     [o_mrl setStringValue: o_mrl_string];
 }
 
-- (IBAction)openFile:(id)sender
+- (void)openFile
 {
     NSOpenPanel *o_open_panel = [NSOpenPanel openPanel];
     int i;

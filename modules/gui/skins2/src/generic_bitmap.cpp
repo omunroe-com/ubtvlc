@@ -2,7 +2,7 @@
  * generic_bitmap.cpp
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: generic_bitmap.cpp 7173 2004-03-27 00:21:13Z asmax $
+ * $Id: generic_bitmap.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *

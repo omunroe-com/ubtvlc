@@ -55,6 +55,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_ACTIVEX_FALSE = @BUILD_ACTIVEX_FALSE@
+BUILD_ACTIVEX_TRUE = @BUILD_ACTIVEX_TRUE@
 BUILD_DIRENT_FALSE = @BUILD_DIRENT_FALSE@
 BUILD_DIRENT_TRUE = @BUILD_DIRENT_TRUE@
 BUILD_GETOPT_FALSE = @BUILD_GETOPT_FALSE@
@@ -69,8 +71,6 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-CORBA_CFLAGS = @CORBA_CFLAGS@
-CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -98,10 +98,8 @@ FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GTK2_CFLAGS = @GTK2_CFLAGS@
-GTK2_LIBS = @GTK2_LIBS@
-HAL_CFLAGS = @HAL_CFLAGS@
-HAL_LIBS = @HAL_LIBS@
+HAS_MIDL_COMPILER_FALSE = @HAS_MIDL_COMPILER_FALSE@
+HAS_MIDL_COMPILER_TRUE = @HAS_MIDL_COMPILER_TRUE@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -112,6 +110,8 @@ HAVE_PLUGINS_FALSE = @HAVE_PLUGINS_FALSE@
 HAVE_PLUGINS_TRUE = @HAVE_PLUGINS_TRUE@
 HAVE_WIN32_FALSE = @HAVE_WIN32_FALSE@
 HAVE_WIN32_TRUE = @HAVE_WIN32_TRUE@
+HAVE_WINCE_FALSE = @HAVE_WINCE_FALSE@
+HAVE_WINCE_TRUE = @HAVE_WINCE_TRUE@
 INCLUDES = @INCLUDES@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -124,12 +124,7 @@ INTLOBJS = @INTLOBJS@
 INTL_LIBTOOL_SUFFIX_PREFIX = @INTL_LIBTOOL_SUFFIX_PREFIX@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
-LIBCDDB_CFLAGS = @LIBCDDB_CFLAGS@
-LIBCDDB_LIBS = @LIBCDDB_LIBS@
-LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
-LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
-LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -138,6 +133,7 @@ LTLIBICONV = @LTLIBICONV@
 LTLIBINTL = @LTLIBINTL@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+MIDL = @MIDL@
 MKINSTALLDIRS = @MKINSTALLDIRS@
 MOC = @MOC@
 MOZILLA_CONFIG = @MOZILLA_CONFIG@
@@ -154,7 +150,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
 PLUGIN_PATH = @PLUGIN_PATH@
 POSUB = @POSUB@
 RANLIB = @RANLIB@
@@ -164,8 +159,6 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-SVG_CFLAGS = @SVG_CFLAGS@
-SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
@@ -230,26 +223,27 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Lgtk_mainb) $(Lgtk_mainpic) $(Lgnome_mainb) $(Lgnome_mainpic) $(Lgtk2_mainb) $(Lgtk2_mainpic) $(Lgnome2_mainb) $(Lgnome2_mainpic) $(Lsapb) $(Lsappic) $(Lscreensaverb) $(Lscreensaverpic) $(Lqte_mainb) $(Lqte_mainpic) $(Lfreetypeb) $(Lfreetypepic) $(Lloggerb) $(Lloggerpic) $(Lvod_rtspb) $(Lvod_rtsppic) $(Lgnutlsb) $(Lgnutlspic) $(Lsvgb) $(Lsvgpic)
-noinst_LIBRARIES = $(Lgtk_mainp) $(Lgnome_mainp) $(Lgtk2_mainp) $(Lgnome2_mainp) $(Lsapp) $(Lscreensaverp) $(Lqte_mainp) $(Lfreetypep) $(Lloggerp) $(Lvod_rtspp) $(Lgnutlsp) $(Lsvgp)
+libvlc_LIBRARIES = $(Lgtk_mainb) $(Lgtk_mainpic) $(Lgnome_mainb) $(Lgnome_mainpic) $(Lgtk2_mainb) $(Lgtk2_mainpic) $(Lgnome2_mainb) $(Lgnome2_mainpic) $(Lscreensaverb) $(Lscreensaverpic) $(Lqte_mainb) $(Lqte_mainpic) $(Lfreetypeb) $(Lfreetypepic) $(Lwin32textb) $(Lwin32textpic) $(Lloggerb) $(Lloggerpic) $(Lvod_rtspb) $(Lvod_rtsppic) $(Lgnutlsb) $(Lgnutlspic) $(Lsvgb) $(Lsvgpic) $(Lexternrunb) $(Lexternrunpic)
+noinst_LIBRARIES = $(Lgtk_mainp) $(Lgnome_mainp) $(Lgtk2_mainp) $(Lgnome2_mainp) $(Lscreensaverp) $(Lqte_mainp) $(Lfreetypep) $(Lwin32textp) $(Lloggerp) $(Lvod_rtspp) $(Lgnutlsp) $(Lsvgp) $(Lexternrunp)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
-SUBDIRS = dummy memcpy network testsuite playlist
+SUBDIRS = dummy memcpy network testsuite playlist xml
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/misc
 SOURCES_gtk_main = gtk_main.c
 SOURCES_gnome_main = gtk_main.c
 SOURCES_gtk2_main = gtk_main.c
 SOURCES_gnome2_main = gtk_main.c
-SOURCES_sap = sap.c
 SOURCES_screensaver = screensaver.c
 SOURCES_qte_main = qte_main.cpp
 SOURCES_freetype = freetype.c
+SOURCES_win32text = win32text.c
 SOURCES_logger = logger.c
 SOURCES_vod_rtsp = rtsp.c
 SOURCES_gnutls = gnutls.c
 SOURCES_svg = svg.c
+SOURCES_externrun = externrun.c
 
 # There's no need for pic code on win32 so get rid of this to substantially
 # reduce the compilation time.
@@ -357,31 +351,6 @@ libgnome2_main_DATA = $(Dgnome2_mainp)
 libgnome2_maindir = $(libdir)/vlc/
 
 
-# The sap plugin
-@UNTRUE_TRUE@Lsapp = libsap_plugin.a
-@UNTRUE_TRUE@Dsapp = libsap_plugin$(LIBEXT)
-@UNTRUE_TRUE@Lsapb = libsap.a
-@UNTRUE_TRUE@Lsappic = libsap_pic.a
-
-libsap_plugin_a_SOURCES = $(SOURCES_sap)
-libsap_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin sap`
-libsap_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin sap`
-libsap_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin sap`
-
-libsap_pic_a_SOURCES = $(SOURCES_sap)
-libsap_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic sap`
-libsap_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic sap`
-libsap_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic sap`
-
-libsap_a_SOURCES = $(SOURCES_sap)
-libsap_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin sap`
-libsap_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin sap`
-libsap_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin sap`
-libsap_DATA = $(Dsapp)
-
-libsapdir = $(libdir)/vlc/
-
-
 # The screensaver plugin
 @UNTRUE_TRUE@Lscreensaverp = libscreensaver_plugin.a
 @UNTRUE_TRUE@Dscreensaverp = libscreensaver_plugin$(LIBEXT)
@@ -455,6 +424,31 @@ libfreetype_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin freetype`
 libfreetype_DATA = $(Dfreetypep)
 
 libfreetypedir = $(libdir)/vlc/
+
+
+# The win32text plugin
+@UNTRUE_TRUE@Lwin32textp = libwin32text_plugin.a
+@UNTRUE_TRUE@Dwin32textp = libwin32text_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lwin32textb = libwin32text.a
+@UNTRUE_TRUE@Lwin32textpic = libwin32text_pic.a
+
+libwin32text_plugin_a_SOURCES = $(SOURCES_win32text)
+libwin32text_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin win32text`
+libwin32text_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin win32text`
+libwin32text_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin win32text`
+
+libwin32text_pic_a_SOURCES = $(SOURCES_win32text)
+libwin32text_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic win32text`
+libwin32text_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic win32text`
+libwin32text_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic win32text`
+
+libwin32text_a_SOURCES = $(SOURCES_win32text)
+libwin32text_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin win32text`
+libwin32text_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin win32text`
+libwin32text_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin win32text`
+libwin32text_DATA = $(Dwin32textp)
+
+libwin32textdir = $(libdir)/vlc/
 
 
 # The logger plugin
@@ -555,6 +549,31 @@ libsvg_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin svg`
 libsvg_DATA = $(Dsvgp)
 
 libsvgdir = $(libdir)/vlc/
+
+
+# The externrun plugin
+@UNTRUE_TRUE@Lexternrunp = libexternrun_plugin.a
+@UNTRUE_TRUE@Dexternrunp = libexternrun_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lexternrunb = libexternrun.a
+@UNTRUE_TRUE@Lexternrunpic = libexternrun_pic.a
+
+libexternrun_plugin_a_SOURCES = $(SOURCES_externrun)
+libexternrun_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin externrun`
+libexternrun_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin externrun`
+libexternrun_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin externrun`
+
+libexternrun_pic_a_SOURCES = $(SOURCES_externrun)
+libexternrun_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic externrun`
+libexternrun_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic externrun`
+libexternrun_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic externrun`
+
+libexternrun_a_SOURCES = $(SOURCES_externrun)
+libexternrun_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin externrun`
+libexternrun_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin externrun`
+libexternrun_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin externrun`
+libexternrun_DATA = $(Dexternrunp)
+
+libexternrundir = $(libdir)/vlc/
 subdir = modules/misc
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
@@ -562,141 +581,141 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 LIBRARIES = $(libvlc_LIBRARIES) $(noinst_LIBRARIES)
 
+libexternrun_a_AR = $(AR) cru
+libexternrun_a_LIBADD =
+am__objects_1 = libexternrun_a-externrun.$(OBJEXT)
+am_libexternrun_a_OBJECTS = $(am__objects_1)
+libexternrun_a_OBJECTS = $(am_libexternrun_a_OBJECTS)
+libexternrun_pic_a_AR = $(AR) cru
+libexternrun_pic_a_LIBADD =
+am__objects_2 = libexternrun_pic_a-externrun.$(OBJEXT)
+am_libexternrun_pic_a_OBJECTS = $(am__objects_2)
+libexternrun_pic_a_OBJECTS = $(am_libexternrun_pic_a_OBJECTS)
+libexternrun_plugin_a_AR = $(AR) cru
+libexternrun_plugin_a_LIBADD =
+am__objects_3 = libexternrun_plugin_a-externrun.$(OBJEXT)
+am_libexternrun_plugin_a_OBJECTS = $(am__objects_3)
+libexternrun_plugin_a_OBJECTS = $(am_libexternrun_plugin_a_OBJECTS)
 libfreetype_a_AR = $(AR) cru
 libfreetype_a_LIBADD =
-am__objects_1 = libfreetype_a-freetype.$(OBJEXT)
-am_libfreetype_a_OBJECTS = $(am__objects_1)
+am__objects_4 = libfreetype_a-freetype.$(OBJEXT)
+am_libfreetype_a_OBJECTS = $(am__objects_4)
 libfreetype_a_OBJECTS = $(am_libfreetype_a_OBJECTS)
 libfreetype_pic_a_AR = $(AR) cru
 libfreetype_pic_a_LIBADD =
-am__objects_2 = libfreetype_pic_a-freetype.$(OBJEXT)
-am_libfreetype_pic_a_OBJECTS = $(am__objects_2)
+am__objects_5 = libfreetype_pic_a-freetype.$(OBJEXT)
+am_libfreetype_pic_a_OBJECTS = $(am__objects_5)
 libfreetype_pic_a_OBJECTS = $(am_libfreetype_pic_a_OBJECTS)
 libfreetype_plugin_a_AR = $(AR) cru
 libfreetype_plugin_a_LIBADD =
-am__objects_3 = libfreetype_plugin_a-freetype.$(OBJEXT)
-am_libfreetype_plugin_a_OBJECTS = $(am__objects_3)
+am__objects_6 = libfreetype_plugin_a-freetype.$(OBJEXT)
+am_libfreetype_plugin_a_OBJECTS = $(am__objects_6)
 libfreetype_plugin_a_OBJECTS = $(am_libfreetype_plugin_a_OBJECTS)
 libgnome2_main_a_AR = $(AR) cru
 libgnome2_main_a_LIBADD =
-am__objects_4 = libgnome2_main_a-gtk_main.$(OBJEXT)
-am_libgnome2_main_a_OBJECTS = $(am__objects_4)
+am__objects_7 = libgnome2_main_a-gtk_main.$(OBJEXT)
+am_libgnome2_main_a_OBJECTS = $(am__objects_7)
 libgnome2_main_a_OBJECTS = $(am_libgnome2_main_a_OBJECTS)
 libgnome2_main_pic_a_AR = $(AR) cru
 libgnome2_main_pic_a_LIBADD =
-am__objects_5 = libgnome2_main_pic_a-gtk_main.$(OBJEXT)
-am_libgnome2_main_pic_a_OBJECTS = $(am__objects_5)
+am__objects_8 = libgnome2_main_pic_a-gtk_main.$(OBJEXT)
+am_libgnome2_main_pic_a_OBJECTS = $(am__objects_8)
 libgnome2_main_pic_a_OBJECTS = $(am_libgnome2_main_pic_a_OBJECTS)
 libgnome2_main_plugin_a_AR = $(AR) cru
 libgnome2_main_plugin_a_LIBADD =
-am__objects_6 = libgnome2_main_plugin_a-gtk_main.$(OBJEXT)
-am_libgnome2_main_plugin_a_OBJECTS = $(am__objects_6)
+am__objects_9 = libgnome2_main_plugin_a-gtk_main.$(OBJEXT)
+am_libgnome2_main_plugin_a_OBJECTS = $(am__objects_9)
 libgnome2_main_plugin_a_OBJECTS = $(am_libgnome2_main_plugin_a_OBJECTS)
 libgnome_main_a_AR = $(AR) cru
 libgnome_main_a_LIBADD =
-am__objects_7 = libgnome_main_a-gtk_main.$(OBJEXT)
-am_libgnome_main_a_OBJECTS = $(am__objects_7)
+am__objects_10 = libgnome_main_a-gtk_main.$(OBJEXT)
+am_libgnome_main_a_OBJECTS = $(am__objects_10)
 libgnome_main_a_OBJECTS = $(am_libgnome_main_a_OBJECTS)
 libgnome_main_pic_a_AR = $(AR) cru
 libgnome_main_pic_a_LIBADD =
-am__objects_8 = libgnome_main_pic_a-gtk_main.$(OBJEXT)
-am_libgnome_main_pic_a_OBJECTS = $(am__objects_8)
+am__objects_11 = libgnome_main_pic_a-gtk_main.$(OBJEXT)
+am_libgnome_main_pic_a_OBJECTS = $(am__objects_11)
 libgnome_main_pic_a_OBJECTS = $(am_libgnome_main_pic_a_OBJECTS)
 libgnome_main_plugin_a_AR = $(AR) cru
 libgnome_main_plugin_a_LIBADD =
-am__objects_9 = libgnome_main_plugin_a-gtk_main.$(OBJEXT)
-am_libgnome_main_plugin_a_OBJECTS = $(am__objects_9)
+am__objects_12 = libgnome_main_plugin_a-gtk_main.$(OBJEXT)
+am_libgnome_main_plugin_a_OBJECTS = $(am__objects_12)
 libgnome_main_plugin_a_OBJECTS = $(am_libgnome_main_plugin_a_OBJECTS)
 libgnutls_a_AR = $(AR) cru
 libgnutls_a_LIBADD =
-am__objects_10 = libgnutls_a-gnutls.$(OBJEXT)
-am_libgnutls_a_OBJECTS = $(am__objects_10)
+am__objects_13 = libgnutls_a-gnutls.$(OBJEXT)
+am_libgnutls_a_OBJECTS = $(am__objects_13)
 libgnutls_a_OBJECTS = $(am_libgnutls_a_OBJECTS)
 libgnutls_pic_a_AR = $(AR) cru
 libgnutls_pic_a_LIBADD =
-am__objects_11 = libgnutls_pic_a-gnutls.$(OBJEXT)
-am_libgnutls_pic_a_OBJECTS = $(am__objects_11)
+am__objects_14 = libgnutls_pic_a-gnutls.$(OBJEXT)
+am_libgnutls_pic_a_OBJECTS = $(am__objects_14)
 libgnutls_pic_a_OBJECTS = $(am_libgnutls_pic_a_OBJECTS)
 libgnutls_plugin_a_AR = $(AR) cru
 libgnutls_plugin_a_LIBADD =
-am__objects_12 = libgnutls_plugin_a-gnutls.$(OBJEXT)
-am_libgnutls_plugin_a_OBJECTS = $(am__objects_12)
+am__objects_15 = libgnutls_plugin_a-gnutls.$(OBJEXT)
+am_libgnutls_plugin_a_OBJECTS = $(am__objects_15)
 libgnutls_plugin_a_OBJECTS = $(am_libgnutls_plugin_a_OBJECTS)
 libgtk2_main_a_AR = $(AR) cru
 libgtk2_main_a_LIBADD =
-am__objects_13 = libgtk2_main_a-gtk_main.$(OBJEXT)
-am_libgtk2_main_a_OBJECTS = $(am__objects_13)
+am__objects_16 = libgtk2_main_a-gtk_main.$(OBJEXT)
+am_libgtk2_main_a_OBJECTS = $(am__objects_16)
 libgtk2_main_a_OBJECTS = $(am_libgtk2_main_a_OBJECTS)
 libgtk2_main_pic_a_AR = $(AR) cru
 libgtk2_main_pic_a_LIBADD =
-am__objects_14 = libgtk2_main_pic_a-gtk_main.$(OBJEXT)
-am_libgtk2_main_pic_a_OBJECTS = $(am__objects_14)
+am__objects_17 = libgtk2_main_pic_a-gtk_main.$(OBJEXT)
+am_libgtk2_main_pic_a_OBJECTS = $(am__objects_17)
 libgtk2_main_pic_a_OBJECTS = $(am_libgtk2_main_pic_a_OBJECTS)
 libgtk2_main_plugin_a_AR = $(AR) cru
 libgtk2_main_plugin_a_LIBADD =
-am__objects_15 = libgtk2_main_plugin_a-gtk_main.$(OBJEXT)
-am_libgtk2_main_plugin_a_OBJECTS = $(am__objects_15)
+am__objects_18 = libgtk2_main_plugin_a-gtk_main.$(OBJEXT)
+am_libgtk2_main_plugin_a_OBJECTS = $(am__objects_18)
 libgtk2_main_plugin_a_OBJECTS = $(am_libgtk2_main_plugin_a_OBJECTS)
 libgtk_main_a_AR = $(AR) cru
 libgtk_main_a_LIBADD =
-am__objects_16 = libgtk_main_a-gtk_main.$(OBJEXT)
-am_libgtk_main_a_OBJECTS = $(am__objects_16)
+am__objects_19 = libgtk_main_a-gtk_main.$(OBJEXT)
+am_libgtk_main_a_OBJECTS = $(am__objects_19)
 libgtk_main_a_OBJECTS = $(am_libgtk_main_a_OBJECTS)
 libgtk_main_pic_a_AR = $(AR) cru
 libgtk_main_pic_a_LIBADD =
-am__objects_17 = libgtk_main_pic_a-gtk_main.$(OBJEXT)
-am_libgtk_main_pic_a_OBJECTS = $(am__objects_17)
+am__objects_20 = libgtk_main_pic_a-gtk_main.$(OBJEXT)
+am_libgtk_main_pic_a_OBJECTS = $(am__objects_20)
 libgtk_main_pic_a_OBJECTS = $(am_libgtk_main_pic_a_OBJECTS)
 libgtk_main_plugin_a_AR = $(AR) cru
 libgtk_main_plugin_a_LIBADD =
-am__objects_18 = libgtk_main_plugin_a-gtk_main.$(OBJEXT)
-am_libgtk_main_plugin_a_OBJECTS = $(am__objects_18)
+am__objects_21 = libgtk_main_plugin_a-gtk_main.$(OBJEXT)
+am_libgtk_main_plugin_a_OBJECTS = $(am__objects_21)
 libgtk_main_plugin_a_OBJECTS = $(am_libgtk_main_plugin_a_OBJECTS)
 liblogger_a_AR = $(AR) cru
 liblogger_a_LIBADD =
-am__objects_19 = liblogger_a-logger.$(OBJEXT)
-am_liblogger_a_OBJECTS = $(am__objects_19)
+am__objects_22 = liblogger_a-logger.$(OBJEXT)
+am_liblogger_a_OBJECTS = $(am__objects_22)
 liblogger_a_OBJECTS = $(am_liblogger_a_OBJECTS)
 liblogger_pic_a_AR = $(AR) cru
 liblogger_pic_a_LIBADD =
-am__objects_20 = liblogger_pic_a-logger.$(OBJEXT)
-am_liblogger_pic_a_OBJECTS = $(am__objects_20)
+am__objects_23 = liblogger_pic_a-logger.$(OBJEXT)
+am_liblogger_pic_a_OBJECTS = $(am__objects_23)
 liblogger_pic_a_OBJECTS = $(am_liblogger_pic_a_OBJECTS)
 liblogger_plugin_a_AR = $(AR) cru
 liblogger_plugin_a_LIBADD =
-am__objects_21 = liblogger_plugin_a-logger.$(OBJEXT)
-am_liblogger_plugin_a_OBJECTS = $(am__objects_21)
+am__objects_24 = liblogger_plugin_a-logger.$(OBJEXT)
+am_liblogger_plugin_a_OBJECTS = $(am__objects_24)
 liblogger_plugin_a_OBJECTS = $(am_liblogger_plugin_a_OBJECTS)
 libqte_main_a_AR = $(AR) cru
 libqte_main_a_LIBADD =
-am__objects_22 = libqte_main_a-qte_main.$(OBJEXT)
-am_libqte_main_a_OBJECTS = $(am__objects_22)
+am__objects_25 = libqte_main_a-qte_main.$(OBJEXT)
+am_libqte_main_a_OBJECTS = $(am__objects_25)
 libqte_main_a_OBJECTS = $(am_libqte_main_a_OBJECTS)
 libqte_main_pic_a_AR = $(AR) cru
 libqte_main_pic_a_LIBADD =
-am__objects_23 = libqte_main_pic_a-qte_main.$(OBJEXT)
-am_libqte_main_pic_a_OBJECTS = $(am__objects_23)
+am__objects_26 = libqte_main_pic_a-qte_main.$(OBJEXT)
+am_libqte_main_pic_a_OBJECTS = $(am__objects_26)
 libqte_main_pic_a_OBJECTS = $(am_libqte_main_pic_a_OBJECTS)
 libqte_main_plugin_a_AR = $(AR) cru
 libqte_main_plugin_a_LIBADD =
-am__objects_24 = libqte_main_plugin_a-qte_main.$(OBJEXT)
-am_libqte_main_plugin_a_OBJECTS = $(am__objects_24)
+am__objects_27 = libqte_main_plugin_a-qte_main.$(OBJEXT)
+am_libqte_main_plugin_a_OBJECTS = $(am__objects_27)
 libqte_main_plugin_a_OBJECTS = $(am_libqte_main_plugin_a_OBJECTS)
-libsap_a_AR = $(AR) cru
-libsap_a_LIBADD =
-am__objects_25 = libsap_a-sap.$(OBJEXT)
-am_libsap_a_OBJECTS = $(am__objects_25)
-libsap_a_OBJECTS = $(am_libsap_a_OBJECTS)
-libsap_pic_a_AR = $(AR) cru
-libsap_pic_a_LIBADD =
-am__objects_26 = libsap_pic_a-sap.$(OBJEXT)
-am_libsap_pic_a_OBJECTS = $(am__objects_26)
-libsap_pic_a_OBJECTS = $(am_libsap_pic_a_OBJECTS)
-libsap_plugin_a_AR = $(AR) cru
-libsap_plugin_a_LIBADD =
-am__objects_27 = libsap_plugin_a-sap.$(OBJEXT)
-am_libsap_plugin_a_OBJECTS = $(am__objects_27)
-libsap_plugin_a_OBJECTS = $(am_libsap_plugin_a_OBJECTS)
 libscreensaver_a_AR = $(AR) cru
 libscreensaver_a_LIBADD =
 am__objects_28 = libscreensaver_a-screensaver.$(OBJEXT)
@@ -742,11 +761,29 @@ libvod_rtsp_plugin_a_LIBADD =
 am__objects_36 = libvod_rtsp_plugin_a-rtsp.$(OBJEXT)
 am_libvod_rtsp_plugin_a_OBJECTS = $(am__objects_36)
 libvod_rtsp_plugin_a_OBJECTS = $(am_libvod_rtsp_plugin_a_OBJECTS)
+libwin32text_a_AR = $(AR) cru
+libwin32text_a_LIBADD =
+am__objects_37 = libwin32text_a-win32text.$(OBJEXT)
+am_libwin32text_a_OBJECTS = $(am__objects_37)
+libwin32text_a_OBJECTS = $(am_libwin32text_a_OBJECTS)
+libwin32text_pic_a_AR = $(AR) cru
+libwin32text_pic_a_LIBADD =
+am__objects_38 = libwin32text_pic_a-win32text.$(OBJEXT)
+am_libwin32text_pic_a_OBJECTS = $(am__objects_38)
+libwin32text_pic_a_OBJECTS = $(am_libwin32text_pic_a_OBJECTS)
+libwin32text_plugin_a_AR = $(AR) cru
+libwin32text_plugin_a_LIBADD =
+am__objects_39 = libwin32text_plugin_a-win32text.$(OBJEXT)
+am_libwin32text_plugin_a_OBJECTS = $(am__objects_39)
+libwin32text_plugin_a_OBJECTS = $(am_libwin32text_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libfreetype_a-freetype.Po \
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libexternrun_a-externrun.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libexternrun_pic_a-externrun.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libexternrun_plugin_a-externrun.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libfreetype_a-freetype.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libfreetype_pic_a-freetype.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libfreetype_plugin_a-freetype.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libgnome2_main_a-gtk_main.Po \
@@ -770,9 +807,6 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libqte_main_a-qte_main.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libqte_main_pic_a-qte_main.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libqte_main_plugin_a-qte_main.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libsap_a-sap.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libsap_pic_a-sap.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libsap_plugin_a-sap.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libscreensaver_a-screensaver.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libscreensaver_pic_a-screensaver.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libscreensaver_plugin_a-screensaver.Po \
@@ -781,7 +815,10 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libsvg_plugin_a-svg.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvod_rtsp_a-rtsp.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvod_rtsp_pic_a-rtsp.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libvod_rtsp_plugin_a-rtsp.Po
+@AMDEP_TRUE@	./$(DEPDIR)/libvod_rtsp_plugin_a-rtsp.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libwin32text_a-win32text.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libwin32text_pic_a-win32text.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libwin32text_plugin_a-win32text.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -791,9 +828,10 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
-DIST_SOURCES = $(libfreetype_a_SOURCES) $(libfreetype_pic_a_SOURCES) \
-	$(libfreetype_plugin_a_SOURCES) $(libgnome2_main_a_SOURCES) \
-	$(libgnome2_main_pic_a_SOURCES) \
+DIST_SOURCES = $(libexternrun_a_SOURCES) $(libexternrun_pic_a_SOURCES) \
+	$(libexternrun_plugin_a_SOURCES) $(libfreetype_a_SOURCES) \
+	$(libfreetype_pic_a_SOURCES) $(libfreetype_plugin_a_SOURCES) \
+	$(libgnome2_main_a_SOURCES) $(libgnome2_main_pic_a_SOURCES) \
 	$(libgnome2_main_plugin_a_SOURCES) $(libgnome_main_a_SOURCES) \
 	$(libgnome_main_pic_a_SOURCES) \
 	$(libgnome_main_plugin_a_SOURCES) $(libgnutls_a_SOURCES) \
@@ -804,17 +842,17 @@ DIST_SOURCES = $(libfreetype_a_SOURCES) $(libfreetype_pic_a_SOURCES) \
 	$(liblogger_a_SOURCES) $(liblogger_pic_a_SOURCES) \
 	$(liblogger_plugin_a_SOURCES) $(libqte_main_a_SOURCES) \
 	$(libqte_main_pic_a_SOURCES) $(libqte_main_plugin_a_SOURCES) \
-	$(libsap_a_SOURCES) $(libsap_pic_a_SOURCES) \
-	$(libsap_plugin_a_SOURCES) $(libscreensaver_a_SOURCES) \
-	$(libscreensaver_pic_a_SOURCES) \
+	$(libscreensaver_a_SOURCES) $(libscreensaver_pic_a_SOURCES) \
 	$(libscreensaver_plugin_a_SOURCES) $(libsvg_a_SOURCES) \
 	$(libsvg_pic_a_SOURCES) $(libsvg_plugin_a_SOURCES) \
 	$(libvod_rtsp_a_SOURCES) $(libvod_rtsp_pic_a_SOURCES) \
-	$(libvod_rtsp_plugin_a_SOURCES)
-DATA = $(libfreetype_DATA) $(libgnome2_main_DATA) $(libgnome_main_DATA) \
-	$(libgnutls_DATA) $(libgtk2_main_DATA) $(libgtk_main_DATA) \
-	$(liblogger_DATA) $(libqte_main_DATA) $(libsap_DATA) \
-	$(libscreensaver_DATA) $(libsvg_DATA) $(libvod_rtsp_DATA)
+	$(libvod_rtsp_plugin_a_SOURCES) $(libwin32text_a_SOURCES) \
+	$(libwin32text_pic_a_SOURCES) $(libwin32text_plugin_a_SOURCES)
+DATA = $(libexternrun_DATA) $(libfreetype_DATA) $(libgnome2_main_DATA) \
+	$(libgnome_main_DATA) $(libgnutls_DATA) $(libgtk2_main_DATA) \
+	$(libgtk_main_DATA) $(liblogger_DATA) $(libqte_main_DATA) \
+	$(libscreensaver_DATA) $(libsvg_DATA) $(libvod_rtsp_DATA) \
+	$(libwin32text_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -827,7 +865,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libfreetype_a_SOURCES) $(libfreetype_pic_a_SOURCES) $(libfreetype_plugin_a_SOURCES) $(libgnome2_main_a_SOURCES) $(libgnome2_main_pic_a_SOURCES) $(libgnome2_main_plugin_a_SOURCES) $(libgnome_main_a_SOURCES) $(libgnome_main_pic_a_SOURCES) $(libgnome_main_plugin_a_SOURCES) $(libgnutls_a_SOURCES) $(libgnutls_pic_a_SOURCES) $(libgnutls_plugin_a_SOURCES) $(libgtk2_main_a_SOURCES) $(libgtk2_main_pic_a_SOURCES) $(libgtk2_main_plugin_a_SOURCES) $(libgtk_main_a_SOURCES) $(libgtk_main_pic_a_SOURCES) $(libgtk_main_plugin_a_SOURCES) $(liblogger_a_SOURCES) $(liblogger_pic_a_SOURCES) $(liblogger_plugin_a_SOURCES) $(libqte_main_a_SOURCES) $(libqte_main_pic_a_SOURCES) $(libqte_main_plugin_a_SOURCES) $(libsap_a_SOURCES) $(libsap_pic_a_SOURCES) $(libsap_plugin_a_SOURCES) $(libscreensaver_a_SOURCES) $(libscreensaver_pic_a_SOURCES) $(libscreensaver_plugin_a_SOURCES) $(libsvg_a_SOURCES) $(libsvg_pic_a_SOURCES) $(libsvg_plugin_a_SOURCES) $(libvod_rtsp_a_SOURCES) $(libvod_rtsp_pic_a_SOURCES) $(libvod_rtsp_plugin_a_SOURCES)
+SOURCES = $(libexternrun_a_SOURCES) $(libexternrun_pic_a_SOURCES) $(libexternrun_plugin_a_SOURCES) $(libfreetype_a_SOURCES) $(libfreetype_pic_a_SOURCES) $(libfreetype_plugin_a_SOURCES) $(libgnome2_main_a_SOURCES) $(libgnome2_main_pic_a_SOURCES) $(libgnome2_main_plugin_a_SOURCES) $(libgnome_main_a_SOURCES) $(libgnome_main_pic_a_SOURCES) $(libgnome_main_plugin_a_SOURCES) $(libgnutls_a_SOURCES) $(libgnutls_pic_a_SOURCES) $(libgnutls_plugin_a_SOURCES) $(libgtk2_main_a_SOURCES) $(libgtk2_main_pic_a_SOURCES) $(libgtk2_main_plugin_a_SOURCES) $(libgtk_main_a_SOURCES) $(libgtk_main_pic_a_SOURCES) $(libgtk_main_plugin_a_SOURCES) $(liblogger_a_SOURCES) $(liblogger_pic_a_SOURCES) $(liblogger_plugin_a_SOURCES) $(libqte_main_a_SOURCES) $(libqte_main_pic_a_SOURCES) $(libqte_main_plugin_a_SOURCES) $(libscreensaver_a_SOURCES) $(libscreensaver_pic_a_SOURCES) $(libscreensaver_plugin_a_SOURCES) $(libsvg_a_SOURCES) $(libsvg_pic_a_SOURCES) $(libsvg_plugin_a_SOURCES) $(libvod_rtsp_a_SOURCES) $(libvod_rtsp_pic_a_SOURCES) $(libvod_rtsp_plugin_a_SOURCES) $(libwin32text_a_SOURCES) $(libwin32text_pic_a_SOURCES) $(libwin32text_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -872,6 +910,18 @@ clean-libvlcLIBRARIES:
 
 clean-noinstLIBRARIES:
 	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+libexternrun.a: $(libexternrun_a_OBJECTS) $(libexternrun_a_DEPENDENCIES) 
+	-rm -f libexternrun.a
+	$(libexternrun_a_AR) libexternrun.a $(libexternrun_a_OBJECTS) $(libexternrun_a_LIBADD)
+	$(RANLIB) libexternrun.a
+libexternrun_pic.a: $(libexternrun_pic_a_OBJECTS) $(libexternrun_pic_a_DEPENDENCIES) 
+	-rm -f libexternrun_pic.a
+	$(libexternrun_pic_a_AR) libexternrun_pic.a $(libexternrun_pic_a_OBJECTS) $(libexternrun_pic_a_LIBADD)
+	$(RANLIB) libexternrun_pic.a
+libexternrun_plugin.a: $(libexternrun_plugin_a_OBJECTS) $(libexternrun_plugin_a_DEPENDENCIES) 
+	-rm -f libexternrun_plugin.a
+	$(libexternrun_plugin_a_AR) libexternrun_plugin.a $(libexternrun_plugin_a_OBJECTS) $(libexternrun_plugin_a_LIBADD)
+	$(RANLIB) libexternrun_plugin.a
 libfreetype.a: $(libfreetype_a_OBJECTS) $(libfreetype_a_DEPENDENCIES) 
 	-rm -f libfreetype.a
 	$(libfreetype_a_AR) libfreetype.a $(libfreetype_a_OBJECTS) $(libfreetype_a_LIBADD)
@@ -968,18 +1018,6 @@ libqte_main_plugin.a: $(libqte_main_plugin_a_OBJECTS) $(libqte_main_plugin_a_DEP
 	-rm -f libqte_main_plugin.a
 	$(libqte_main_plugin_a_AR) libqte_main_plugin.a $(libqte_main_plugin_a_OBJECTS) $(libqte_main_plugin_a_LIBADD)
 	$(RANLIB) libqte_main_plugin.a
-libsap.a: $(libsap_a_OBJECTS) $(libsap_a_DEPENDENCIES) 
-	-rm -f libsap.a
-	$(libsap_a_AR) libsap.a $(libsap_a_OBJECTS) $(libsap_a_LIBADD)
-	$(RANLIB) libsap.a
-libsap_pic.a: $(libsap_pic_a_OBJECTS) $(libsap_pic_a_DEPENDENCIES) 
-	-rm -f libsap_pic.a
-	$(libsap_pic_a_AR) libsap_pic.a $(libsap_pic_a_OBJECTS) $(libsap_pic_a_LIBADD)
-	$(RANLIB) libsap_pic.a
-libsap_plugin.a: $(libsap_plugin_a_OBJECTS) $(libsap_plugin_a_DEPENDENCIES) 
-	-rm -f libsap_plugin.a
-	$(libsap_plugin_a_AR) libsap_plugin.a $(libsap_plugin_a_OBJECTS) $(libsap_plugin_a_LIBADD)
-	$(RANLIB) libsap_plugin.a
 libscreensaver.a: $(libscreensaver_a_OBJECTS) $(libscreensaver_a_DEPENDENCIES) 
 	-rm -f libscreensaver.a
 	$(libscreensaver_a_AR) libscreensaver.a $(libscreensaver_a_OBJECTS) $(libscreensaver_a_LIBADD)
@@ -1016,6 +1054,18 @@ libvod_rtsp_plugin.a: $(libvod_rtsp_plugin_a_OBJECTS) $(libvod_rtsp_plugin_a_DEP
 	-rm -f libvod_rtsp_plugin.a
 	$(libvod_rtsp_plugin_a_AR) libvod_rtsp_plugin.a $(libvod_rtsp_plugin_a_OBJECTS) $(libvod_rtsp_plugin_a_LIBADD)
 	$(RANLIB) libvod_rtsp_plugin.a
+libwin32text.a: $(libwin32text_a_OBJECTS) $(libwin32text_a_DEPENDENCIES) 
+	-rm -f libwin32text.a
+	$(libwin32text_a_AR) libwin32text.a $(libwin32text_a_OBJECTS) $(libwin32text_a_LIBADD)
+	$(RANLIB) libwin32text.a
+libwin32text_pic.a: $(libwin32text_pic_a_OBJECTS) $(libwin32text_pic_a_DEPENDENCIES) 
+	-rm -f libwin32text_pic.a
+	$(libwin32text_pic_a_AR) libwin32text_pic.a $(libwin32text_pic_a_OBJECTS) $(libwin32text_pic_a_LIBADD)
+	$(RANLIB) libwin32text_pic.a
+libwin32text_plugin.a: $(libwin32text_plugin_a_OBJECTS) $(libwin32text_plugin_a_DEPENDENCIES) 
+	-rm -f libwin32text_plugin.a
+	$(libwin32text_plugin_a_AR) libwin32text_plugin.a $(libwin32text_plugin_a_OBJECTS) $(libwin32text_plugin_a_LIBADD)
+	$(RANLIB) libwin32text_plugin.a
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT) core *.core
@@ -1023,6 +1073,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libexternrun_a-externrun.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libexternrun_pic_a-externrun.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libexternrun_plugin_a-externrun.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfreetype_a-freetype.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfreetype_pic_a-freetype.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfreetype_plugin_a-freetype.Po@am__quote@
@@ -1047,9 +1100,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libqte_main_a-qte_main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libqte_main_pic_a-qte_main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libqte_main_plugin_a-qte_main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsap_a-sap.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsap_pic_a-sap.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsap_plugin_a-sap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libscreensaver_a-screensaver.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libscreensaver_pic_a-screensaver.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libscreensaver_plugin_a-screensaver.Po@am__quote@
@@ -1059,6 +1109,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvod_rtsp_a-rtsp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvod_rtsp_pic_a-rtsp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvod_rtsp_plugin_a-rtsp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwin32text_a-win32text.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwin32text_pic_a-win32text.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwin32text_plugin_a-win32text.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
@@ -1081,6 +1134,72 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`
+
+libexternrun_a-externrun.o: externrun.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexternrun_a_CFLAGS) $(CFLAGS) -MT libexternrun_a-externrun.o -MD -MP -MF "$(DEPDIR)/libexternrun_a-externrun.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libexternrun_a-externrun.o `test -f 'externrun.c' || echo '$(srcdir)/'`externrun.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libexternrun_a-externrun.Tpo" "$(DEPDIR)/libexternrun_a-externrun.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libexternrun_a-externrun.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='externrun.c' object='libexternrun_a-externrun.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libexternrun_a-externrun.Po' tmpdepfile='$(DEPDIR)/libexternrun_a-externrun.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexternrun_a_CFLAGS) $(CFLAGS) -c -o libexternrun_a-externrun.o `test -f 'externrun.c' || echo '$(srcdir)/'`externrun.c
+
+libexternrun_a-externrun.obj: externrun.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexternrun_a_CFLAGS) $(CFLAGS) -MT libexternrun_a-externrun.obj -MD -MP -MF "$(DEPDIR)/libexternrun_a-externrun.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libexternrun_a-externrun.obj `if test -f 'externrun.c'; then $(CYGPATH_W) 'externrun.c'; else $(CYGPATH_W) '$(srcdir)/externrun.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libexternrun_a-externrun.Tpo" "$(DEPDIR)/libexternrun_a-externrun.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libexternrun_a-externrun.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='externrun.c' object='libexternrun_a-externrun.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libexternrun_a-externrun.Po' tmpdepfile='$(DEPDIR)/libexternrun_a-externrun.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexternrun_a_CFLAGS) $(CFLAGS) -c -o libexternrun_a-externrun.obj `if test -f 'externrun.c'; then $(CYGPATH_W) 'externrun.c'; else $(CYGPATH_W) '$(srcdir)/externrun.c'; fi`
+
+libexternrun_pic_a-externrun.o: externrun.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexternrun_pic_a_CFLAGS) $(CFLAGS) -MT libexternrun_pic_a-externrun.o -MD -MP -MF "$(DEPDIR)/libexternrun_pic_a-externrun.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libexternrun_pic_a-externrun.o `test -f 'externrun.c' || echo '$(srcdir)/'`externrun.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libexternrun_pic_a-externrun.Tpo" "$(DEPDIR)/libexternrun_pic_a-externrun.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libexternrun_pic_a-externrun.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='externrun.c' object='libexternrun_pic_a-externrun.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libexternrun_pic_a-externrun.Po' tmpdepfile='$(DEPDIR)/libexternrun_pic_a-externrun.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexternrun_pic_a_CFLAGS) $(CFLAGS) -c -o libexternrun_pic_a-externrun.o `test -f 'externrun.c' || echo '$(srcdir)/'`externrun.c
+
+libexternrun_pic_a-externrun.obj: externrun.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexternrun_pic_a_CFLAGS) $(CFLAGS) -MT libexternrun_pic_a-externrun.obj -MD -MP -MF "$(DEPDIR)/libexternrun_pic_a-externrun.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libexternrun_pic_a-externrun.obj `if test -f 'externrun.c'; then $(CYGPATH_W) 'externrun.c'; else $(CYGPATH_W) '$(srcdir)/externrun.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libexternrun_pic_a-externrun.Tpo" "$(DEPDIR)/libexternrun_pic_a-externrun.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libexternrun_pic_a-externrun.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='externrun.c' object='libexternrun_pic_a-externrun.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libexternrun_pic_a-externrun.Po' tmpdepfile='$(DEPDIR)/libexternrun_pic_a-externrun.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexternrun_pic_a_CFLAGS) $(CFLAGS) -c -o libexternrun_pic_a-externrun.obj `if test -f 'externrun.c'; then $(CYGPATH_W) 'externrun.c'; else $(CYGPATH_W) '$(srcdir)/externrun.c'; fi`
+
+libexternrun_plugin_a-externrun.o: externrun.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexternrun_plugin_a_CFLAGS) $(CFLAGS) -MT libexternrun_plugin_a-externrun.o -MD -MP -MF "$(DEPDIR)/libexternrun_plugin_a-externrun.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libexternrun_plugin_a-externrun.o `test -f 'externrun.c' || echo '$(srcdir)/'`externrun.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libexternrun_plugin_a-externrun.Tpo" "$(DEPDIR)/libexternrun_plugin_a-externrun.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libexternrun_plugin_a-externrun.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='externrun.c' object='libexternrun_plugin_a-externrun.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libexternrun_plugin_a-externrun.Po' tmpdepfile='$(DEPDIR)/libexternrun_plugin_a-externrun.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexternrun_plugin_a_CFLAGS) $(CFLAGS) -c -o libexternrun_plugin_a-externrun.o `test -f 'externrun.c' || echo '$(srcdir)/'`externrun.c
+
+libexternrun_plugin_a-externrun.obj: externrun.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexternrun_plugin_a_CFLAGS) $(CFLAGS) -MT libexternrun_plugin_a-externrun.obj -MD -MP -MF "$(DEPDIR)/libexternrun_plugin_a-externrun.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libexternrun_plugin_a-externrun.obj `if test -f 'externrun.c'; then $(CYGPATH_W) 'externrun.c'; else $(CYGPATH_W) '$(srcdir)/externrun.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libexternrun_plugin_a-externrun.Tpo" "$(DEPDIR)/libexternrun_plugin_a-externrun.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libexternrun_plugin_a-externrun.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='externrun.c' object='libexternrun_plugin_a-externrun.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libexternrun_plugin_a-externrun.Po' tmpdepfile='$(DEPDIR)/libexternrun_plugin_a-externrun.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexternrun_plugin_a_CFLAGS) $(CFLAGS) -c -o libexternrun_plugin_a-externrun.obj `if test -f 'externrun.c'; then $(CYGPATH_W) 'externrun.c'; else $(CYGPATH_W) '$(srcdir)/externrun.c'; fi`
 
 libfreetype_a-freetype.o: freetype.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfreetype_a_CFLAGS) $(CFLAGS) -MT libfreetype_a-freetype.o -MD -MP -MF "$(DEPDIR)/libfreetype_a-freetype.Tpo" \
@@ -1544,72 +1663,6 @@ liblogger_plugin_a-logger.obj: logger.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblogger_plugin_a_CFLAGS) $(CFLAGS) -c -o liblogger_plugin_a-logger.obj `if test -f 'logger.c'; then $(CYGPATH_W) 'logger.c'; else $(CYGPATH_W) '$(srcdir)/logger.c'; fi`
 
-libsap_a-sap.o: sap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsap_a_CFLAGS) $(CFLAGS) -MT libsap_a-sap.o -MD -MP -MF "$(DEPDIR)/libsap_a-sap.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libsap_a-sap.o `test -f 'sap.c' || echo '$(srcdir)/'`sap.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsap_a-sap.Tpo" "$(DEPDIR)/libsap_a-sap.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsap_a-sap.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sap.c' object='libsap_a-sap.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsap_a-sap.Po' tmpdepfile='$(DEPDIR)/libsap_a-sap.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsap_a_CFLAGS) $(CFLAGS) -c -o libsap_a-sap.o `test -f 'sap.c' || echo '$(srcdir)/'`sap.c
-
-libsap_a-sap.obj: sap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsap_a_CFLAGS) $(CFLAGS) -MT libsap_a-sap.obj -MD -MP -MF "$(DEPDIR)/libsap_a-sap.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libsap_a-sap.obj `if test -f 'sap.c'; then $(CYGPATH_W) 'sap.c'; else $(CYGPATH_W) '$(srcdir)/sap.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsap_a-sap.Tpo" "$(DEPDIR)/libsap_a-sap.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsap_a-sap.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sap.c' object='libsap_a-sap.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsap_a-sap.Po' tmpdepfile='$(DEPDIR)/libsap_a-sap.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsap_a_CFLAGS) $(CFLAGS) -c -o libsap_a-sap.obj `if test -f 'sap.c'; then $(CYGPATH_W) 'sap.c'; else $(CYGPATH_W) '$(srcdir)/sap.c'; fi`
-
-libsap_pic_a-sap.o: sap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsap_pic_a_CFLAGS) $(CFLAGS) -MT libsap_pic_a-sap.o -MD -MP -MF "$(DEPDIR)/libsap_pic_a-sap.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libsap_pic_a-sap.o `test -f 'sap.c' || echo '$(srcdir)/'`sap.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsap_pic_a-sap.Tpo" "$(DEPDIR)/libsap_pic_a-sap.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsap_pic_a-sap.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sap.c' object='libsap_pic_a-sap.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsap_pic_a-sap.Po' tmpdepfile='$(DEPDIR)/libsap_pic_a-sap.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsap_pic_a_CFLAGS) $(CFLAGS) -c -o libsap_pic_a-sap.o `test -f 'sap.c' || echo '$(srcdir)/'`sap.c
-
-libsap_pic_a-sap.obj: sap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsap_pic_a_CFLAGS) $(CFLAGS) -MT libsap_pic_a-sap.obj -MD -MP -MF "$(DEPDIR)/libsap_pic_a-sap.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libsap_pic_a-sap.obj `if test -f 'sap.c'; then $(CYGPATH_W) 'sap.c'; else $(CYGPATH_W) '$(srcdir)/sap.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsap_pic_a-sap.Tpo" "$(DEPDIR)/libsap_pic_a-sap.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsap_pic_a-sap.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sap.c' object='libsap_pic_a-sap.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsap_pic_a-sap.Po' tmpdepfile='$(DEPDIR)/libsap_pic_a-sap.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsap_pic_a_CFLAGS) $(CFLAGS) -c -o libsap_pic_a-sap.obj `if test -f 'sap.c'; then $(CYGPATH_W) 'sap.c'; else $(CYGPATH_W) '$(srcdir)/sap.c'; fi`
-
-libsap_plugin_a-sap.o: sap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsap_plugin_a_CFLAGS) $(CFLAGS) -MT libsap_plugin_a-sap.o -MD -MP -MF "$(DEPDIR)/libsap_plugin_a-sap.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libsap_plugin_a-sap.o `test -f 'sap.c' || echo '$(srcdir)/'`sap.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsap_plugin_a-sap.Tpo" "$(DEPDIR)/libsap_plugin_a-sap.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsap_plugin_a-sap.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sap.c' object='libsap_plugin_a-sap.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsap_plugin_a-sap.Po' tmpdepfile='$(DEPDIR)/libsap_plugin_a-sap.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsap_plugin_a_CFLAGS) $(CFLAGS) -c -o libsap_plugin_a-sap.o `test -f 'sap.c' || echo '$(srcdir)/'`sap.c
-
-libsap_plugin_a-sap.obj: sap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsap_plugin_a_CFLAGS) $(CFLAGS) -MT libsap_plugin_a-sap.obj -MD -MP -MF "$(DEPDIR)/libsap_plugin_a-sap.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libsap_plugin_a-sap.obj `if test -f 'sap.c'; then $(CYGPATH_W) 'sap.c'; else $(CYGPATH_W) '$(srcdir)/sap.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsap_plugin_a-sap.Tpo" "$(DEPDIR)/libsap_plugin_a-sap.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libsap_plugin_a-sap.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sap.c' object='libsap_plugin_a-sap.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsap_plugin_a-sap.Po' tmpdepfile='$(DEPDIR)/libsap_plugin_a-sap.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsap_plugin_a_CFLAGS) $(CFLAGS) -c -o libsap_plugin_a-sap.obj `if test -f 'sap.c'; then $(CYGPATH_W) 'sap.c'; else $(CYGPATH_W) '$(srcdir)/sap.c'; fi`
-
 libscreensaver_a-screensaver.o: screensaver.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libscreensaver_a_CFLAGS) $(CFLAGS) -MT libscreensaver_a-screensaver.o -MD -MP -MF "$(DEPDIR)/libscreensaver_a-screensaver.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libscreensaver_a-screensaver.o `test -f 'screensaver.c' || echo '$(srcdir)/'`screensaver.c; \
@@ -1808,6 +1861,72 @@ libvod_rtsp_plugin_a-rtsp.obj: rtsp.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvod_rtsp_plugin_a_CFLAGS) $(CFLAGS) -c -o libvod_rtsp_plugin_a-rtsp.obj `if test -f 'rtsp.c'; then $(CYGPATH_W) 'rtsp.c'; else $(CYGPATH_W) '$(srcdir)/rtsp.c'; fi`
 
+libwin32text_a-win32text.o: win32text.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwin32text_a_CFLAGS) $(CFLAGS) -MT libwin32text_a-win32text.o -MD -MP -MF "$(DEPDIR)/libwin32text_a-win32text.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libwin32text_a-win32text.o `test -f 'win32text.c' || echo '$(srcdir)/'`win32text.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwin32text_a-win32text.Tpo" "$(DEPDIR)/libwin32text_a-win32text.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libwin32text_a-win32text.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='win32text.c' object='libwin32text_a-win32text.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libwin32text_a-win32text.Po' tmpdepfile='$(DEPDIR)/libwin32text_a-win32text.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwin32text_a_CFLAGS) $(CFLAGS) -c -o libwin32text_a-win32text.o `test -f 'win32text.c' || echo '$(srcdir)/'`win32text.c
+
+libwin32text_a-win32text.obj: win32text.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwin32text_a_CFLAGS) $(CFLAGS) -MT libwin32text_a-win32text.obj -MD -MP -MF "$(DEPDIR)/libwin32text_a-win32text.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libwin32text_a-win32text.obj `if test -f 'win32text.c'; then $(CYGPATH_W) 'win32text.c'; else $(CYGPATH_W) '$(srcdir)/win32text.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwin32text_a-win32text.Tpo" "$(DEPDIR)/libwin32text_a-win32text.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libwin32text_a-win32text.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='win32text.c' object='libwin32text_a-win32text.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libwin32text_a-win32text.Po' tmpdepfile='$(DEPDIR)/libwin32text_a-win32text.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwin32text_a_CFLAGS) $(CFLAGS) -c -o libwin32text_a-win32text.obj `if test -f 'win32text.c'; then $(CYGPATH_W) 'win32text.c'; else $(CYGPATH_W) '$(srcdir)/win32text.c'; fi`
+
+libwin32text_pic_a-win32text.o: win32text.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwin32text_pic_a_CFLAGS) $(CFLAGS) -MT libwin32text_pic_a-win32text.o -MD -MP -MF "$(DEPDIR)/libwin32text_pic_a-win32text.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libwin32text_pic_a-win32text.o `test -f 'win32text.c' || echo '$(srcdir)/'`win32text.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwin32text_pic_a-win32text.Tpo" "$(DEPDIR)/libwin32text_pic_a-win32text.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libwin32text_pic_a-win32text.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='win32text.c' object='libwin32text_pic_a-win32text.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libwin32text_pic_a-win32text.Po' tmpdepfile='$(DEPDIR)/libwin32text_pic_a-win32text.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwin32text_pic_a_CFLAGS) $(CFLAGS) -c -o libwin32text_pic_a-win32text.o `test -f 'win32text.c' || echo '$(srcdir)/'`win32text.c
+
+libwin32text_pic_a-win32text.obj: win32text.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwin32text_pic_a_CFLAGS) $(CFLAGS) -MT libwin32text_pic_a-win32text.obj -MD -MP -MF "$(DEPDIR)/libwin32text_pic_a-win32text.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libwin32text_pic_a-win32text.obj `if test -f 'win32text.c'; then $(CYGPATH_W) 'win32text.c'; else $(CYGPATH_W) '$(srcdir)/win32text.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwin32text_pic_a-win32text.Tpo" "$(DEPDIR)/libwin32text_pic_a-win32text.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libwin32text_pic_a-win32text.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='win32text.c' object='libwin32text_pic_a-win32text.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libwin32text_pic_a-win32text.Po' tmpdepfile='$(DEPDIR)/libwin32text_pic_a-win32text.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwin32text_pic_a_CFLAGS) $(CFLAGS) -c -o libwin32text_pic_a-win32text.obj `if test -f 'win32text.c'; then $(CYGPATH_W) 'win32text.c'; else $(CYGPATH_W) '$(srcdir)/win32text.c'; fi`
+
+libwin32text_plugin_a-win32text.o: win32text.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwin32text_plugin_a_CFLAGS) $(CFLAGS) -MT libwin32text_plugin_a-win32text.o -MD -MP -MF "$(DEPDIR)/libwin32text_plugin_a-win32text.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libwin32text_plugin_a-win32text.o `test -f 'win32text.c' || echo '$(srcdir)/'`win32text.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwin32text_plugin_a-win32text.Tpo" "$(DEPDIR)/libwin32text_plugin_a-win32text.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libwin32text_plugin_a-win32text.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='win32text.c' object='libwin32text_plugin_a-win32text.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libwin32text_plugin_a-win32text.Po' tmpdepfile='$(DEPDIR)/libwin32text_plugin_a-win32text.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwin32text_plugin_a_CFLAGS) $(CFLAGS) -c -o libwin32text_plugin_a-win32text.o `test -f 'win32text.c' || echo '$(srcdir)/'`win32text.c
+
+libwin32text_plugin_a-win32text.obj: win32text.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwin32text_plugin_a_CFLAGS) $(CFLAGS) -MT libwin32text_plugin_a-win32text.obj -MD -MP -MF "$(DEPDIR)/libwin32text_plugin_a-win32text.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libwin32text_plugin_a-win32text.obj `if test -f 'win32text.c'; then $(CYGPATH_W) 'win32text.c'; else $(CYGPATH_W) '$(srcdir)/win32text.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwin32text_plugin_a-win32text.Tpo" "$(DEPDIR)/libwin32text_plugin_a-win32text.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libwin32text_plugin_a-win32text.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='win32text.c' object='libwin32text_plugin_a-win32text.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libwin32text_plugin_a-win32text.Po' tmpdepfile='$(DEPDIR)/libwin32text_plugin_a-win32text.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwin32text_plugin_a_CFLAGS) $(CFLAGS) -c -o libwin32text_plugin_a-win32text.obj `if test -f 'win32text.c'; then $(CYGPATH_W) 'win32text.c'; else $(CYGPATH_W) '$(srcdir)/win32text.c'; fi`
+
 .cpp.o:
 @am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
 @am__fastdepCXX_TRUE@	  -c -o $@ `test -f '$<' || echo '$(srcdir)/'`$<; \
@@ -1896,6 +2015,24 @@ libqte_main_plugin_a-qte_main.obj: qte_main.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libqte_main_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libqte_main_plugin_a-qte_main.obj `if test -f 'qte_main.cpp'; then $(CYGPATH_W) 'qte_main.cpp'; else $(CYGPATH_W) '$(srcdir)/qte_main.cpp'; fi`
 uninstall-info-am:
+libexternrunDATA_INSTALL = $(INSTALL_DATA)
+install-libexternrunDATA: $(libexternrun_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libexternrundir)
+	@list='$(libexternrun_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libexternrunDATA_INSTALL) $$d$$p $(DESTDIR)$(libexternrundir)/$$f"; \
+	  $(libexternrunDATA_INSTALL) $$d$$p $(DESTDIR)$(libexternrundir)/$$f; \
+	done
+
+uninstall-libexternrunDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libexternrun_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libexternrundir)/$$f"; \
+	  rm -f $(DESTDIR)$(libexternrundir)/$$f; \
+	done
 libfreetypeDATA_INSTALL = $(INSTALL_DATA)
 install-libfreetypeDATA: $(libfreetype_DATA)
 	@$(NORMAL_INSTALL)
@@ -2040,24 +2177,6 @@ uninstall-libqte_mainDATA:
 	  echo " rm -f $(DESTDIR)$(libqte_maindir)/$$f"; \
 	  rm -f $(DESTDIR)$(libqte_maindir)/$$f; \
 	done
-libsapDATA_INSTALL = $(INSTALL_DATA)
-install-libsapDATA: $(libsap_DATA)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(libsapdir)
-	@list='$(libsap_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " $(libsapDATA_INSTALL) $$d$$p $(DESTDIR)$(libsapdir)/$$f"; \
-	  $(libsapDATA_INSTALL) $$d$$p $(DESTDIR)$(libsapdir)/$$f; \
-	done
-
-uninstall-libsapDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(libsap_DATA)'; for p in $$list; do \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " rm -f $(DESTDIR)$(libsapdir)/$$f"; \
-	  rm -f $(DESTDIR)$(libsapdir)/$$f; \
-	done
 libscreensaverDATA_INSTALL = $(INSTALL_DATA)
 install-libscreensaverDATA: $(libscreensaver_DATA)
 	@$(NORMAL_INSTALL)
@@ -2111,6 +2230,24 @@ uninstall-libvod_rtspDATA:
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
 	  echo " rm -f $(DESTDIR)$(libvod_rtspdir)/$$f"; \
 	  rm -f $(DESTDIR)$(libvod_rtspdir)/$$f; \
+	done
+libwin32textDATA_INSTALL = $(INSTALL_DATA)
+install-libwin32textDATA: $(libwin32text_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libwin32textdir)
+	@list='$(libwin32text_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libwin32textDATA_INSTALL) $$d$$p $(DESTDIR)$(libwin32textdir)/$$f"; \
+	  $(libwin32textDATA_INSTALL) $$d$$p $(DESTDIR)$(libwin32textdir)/$$f; \
+	done
+
+uninstall-libwin32textDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libwin32text_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libwin32textdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libwin32textdir)/$$f; \
 	done
 
 # This directory's subdirectories are mostly independent; you can cd
@@ -2287,7 +2424,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libfreetypedir) $(DESTDIR)$(libgnome2_maindir) $(DESTDIR)$(libgnome_maindir) $(DESTDIR)$(libgnutlsdir) $(DESTDIR)$(libgtk2_maindir) $(DESTDIR)$(libgtk_maindir) $(DESTDIR)$(libloggerdir) $(DESTDIR)$(libqte_maindir) $(DESTDIR)$(libsapdir) $(DESTDIR)$(libscreensaverdir) $(DESTDIR)$(libsvgdir) $(DESTDIR)$(libvod_rtspdir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libexternrundir) $(DESTDIR)$(libfreetypedir) $(DESTDIR)$(libgnome2_maindir) $(DESTDIR)$(libgnome_maindir) $(DESTDIR)$(libgnutlsdir) $(DESTDIR)$(libgtk2_maindir) $(DESTDIR)$(libgtk_maindir) $(DESTDIR)$(libloggerdir) $(DESTDIR)$(libqte_maindir) $(DESTDIR)$(libscreensaverdir) $(DESTDIR)$(libsvgdir) $(DESTDIR)$(libvod_rtspdir) $(DESTDIR)$(libwin32textdir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -2334,13 +2471,13 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-libfreetypeDATA install-libgnome2_mainDATA \
-	install-libgnome_mainDATA install-libgnutlsDATA \
-	install-libgtk2_mainDATA install-libgtk_mainDATA \
-	install-libloggerDATA install-libqte_mainDATA \
-	install-libsapDATA install-libscreensaverDATA \
+install-data-am: install-libexternrunDATA install-libfreetypeDATA \
+	install-libgnome2_mainDATA install-libgnome_mainDATA \
+	install-libgnutlsDATA install-libgtk2_mainDATA \
+	install-libgtk_mainDATA install-libloggerDATA \
+	install-libqte_mainDATA install-libscreensaverDATA \
 	install-libsvgDATA install-libvlcLIBRARIES \
-	install-libvod_rtspDATA
+	install-libvod_rtspDATA install-libwin32textDATA
 
 install-exec-am:
 
@@ -2367,13 +2504,14 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libfreetypeDATA \
-	uninstall-libgnome2_mainDATA uninstall-libgnome_mainDATA \
-	uninstall-libgnutlsDATA uninstall-libgtk2_mainDATA \
-	uninstall-libgtk_mainDATA uninstall-libloggerDATA \
-	uninstall-libqte_mainDATA uninstall-libsapDATA \
+uninstall-am: uninstall-info-am uninstall-libexternrunDATA \
+	uninstall-libfreetypeDATA uninstall-libgnome2_mainDATA \
+	uninstall-libgnome_mainDATA uninstall-libgnutlsDATA \
+	uninstall-libgtk2_mainDATA uninstall-libgtk_mainDATA \
+	uninstall-libloggerDATA uninstall-libqte_mainDATA \
 	uninstall-libscreensaverDATA uninstall-libsvgDATA \
-	uninstall-libvlcLIBRARIES uninstall-libvod_rtspDATA
+	uninstall-libvlcLIBRARIES uninstall-libvod_rtspDATA \
+	uninstall-libwin32textDATA
 
 uninstall-info: uninstall-info-recursive
 
@@ -2386,27 +2524,28 @@ uninstall-info: uninstall-info-recursive
 	install-data install-data-am install-data-recursive \
 	install-exec install-exec-am install-exec-recursive \
 	install-info install-info-am install-info-recursive \
-	install-libfreetypeDATA install-libgnome2_mainDATA \
-	install-libgnome_mainDATA install-libgnutlsDATA \
-	install-libgtk2_mainDATA install-libgtk_mainDATA \
-	install-libloggerDATA install-libqte_mainDATA \
-	install-libsapDATA install-libscreensaverDATA \
+	install-libexternrunDATA install-libfreetypeDATA \
+	install-libgnome2_mainDATA install-libgnome_mainDATA \
+	install-libgnutlsDATA install-libgtk2_mainDATA \
+	install-libgtk_mainDATA install-libloggerDATA \
+	install-libqte_mainDATA install-libscreensaverDATA \
 	install-libsvgDATA install-libvlcLIBRARIES \
-	install-libvod_rtspDATA install-man install-recursive \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am installdirs-recursive maintainer-clean \
-	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-recursive \
-	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
-	tags-recursive uninstall uninstall-am uninstall-info-am \
-	uninstall-info-recursive uninstall-libfreetypeDATA \
-	uninstall-libgnome2_mainDATA uninstall-libgnome_mainDATA \
-	uninstall-libgnutlsDATA uninstall-libgtk2_mainDATA \
-	uninstall-libgtk_mainDATA uninstall-libloggerDATA \
-	uninstall-libqte_mainDATA uninstall-libsapDATA \
+	install-libvod_rtspDATA install-libwin32textDATA install-man \
+	install-recursive install-strip installcheck installcheck-am \
+	installdirs installdirs-am installdirs-recursive \
+	maintainer-clean maintainer-clean-generic \
+	maintainer-clean-recursive mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
+	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
+	uninstall uninstall-am uninstall-info-am \
+	uninstall-info-recursive uninstall-libexternrunDATA \
+	uninstall-libfreetypeDATA uninstall-libgnome2_mainDATA \
+	uninstall-libgnome_mainDATA uninstall-libgnutlsDATA \
+	uninstall-libgtk2_mainDATA uninstall-libgtk_mainDATA \
+	uninstall-libloggerDATA uninstall-libqte_mainDATA \
 	uninstall-libscreensaverDATA uninstall-libsvgDATA \
 	uninstall-libvlcLIBRARIES uninstall-libvod_rtspDATA \
-	uninstall-recursive
+	uninstall-libwin32textDATA uninstall-recursive
 
 
 clean-local:
@@ -2415,9 +2554,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in gtk_main gnome_main gtk2_main gnome2_main sap screensaver qte_main freetype logger vod_rtsp gnutls svg; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in gtk_main gnome_main gtk2_main gnome2_main sap screensaver qte_main freetype logger vod_rtsp gnutls svg; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in gtk_main gnome_main gtk2_main gnome2_main sap screensaver qte_main freetype logger vod_rtsp gnutls svg; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in gtk_main gnome_main gtk2_main gnome2_main screensaver qte_main freetype win32text logger vod_rtsp gnutls svg externrun; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in gtk_main gnome_main gtk2_main gnome2_main screensaver qte_main freetype win32text logger vod_rtsp gnutls svg externrun; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in gtk_main gnome_main gtk2_main gnome2_main screensaver qte_main freetype win32text logger vod_rtsp gnutls svg externrun; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 libgtk_main_plugin$(LIBEXT): $(libgtk_main_plugin_a_OBJECTS)
@@ -2444,12 +2583,6 @@ libgnome2_main_plugin$(LIBEXT): $(libgnome2_main_plugin_a_OBJECTS)
 	  objc) echo $(OBJCLINK) $(libgnome2_main_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin gnome2_main\` ; $(OBJCLINK) $(libgnome2_main_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin gnome2_main` ;; \
 	  c|*) echo $(LINK) $(libgnome2_main_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin gnome2_main\` ; $(LINK) $(libgnome2_main_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin gnome2_main` ;; \
 	esac
-libsap_plugin$(LIBEXT): $(libsap_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage sap` in \
-	  c++) echo $(CXXLINK) $(libsap_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin sap\` ; $(CXXLINK) $(libsap_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin sap` ;; \
-	  objc) echo $(OBJCLINK) $(libsap_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin sap\` ; $(OBJCLINK) $(libsap_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin sap` ;; \
-	  c|*) echo $(LINK) $(libsap_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin sap\` ; $(LINK) $(libsap_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin sap` ;; \
-	esac
 libscreensaver_plugin$(LIBEXT): $(libscreensaver_plugin_a_OBJECTS)
 	@case `$(VLC_CONFIG) --linkage screensaver` in \
 	  c++) echo $(CXXLINK) $(libscreensaver_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin screensaver\` ; $(CXXLINK) $(libscreensaver_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin screensaver` ;; \
@@ -2467,6 +2600,12 @@ libfreetype_plugin$(LIBEXT): $(libfreetype_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libfreetype_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin freetype\` ; $(CXXLINK) $(libfreetype_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin freetype` ;; \
 	  objc) echo $(OBJCLINK) $(libfreetype_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin freetype\` ; $(OBJCLINK) $(libfreetype_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin freetype` ;; \
 	  c|*) echo $(LINK) $(libfreetype_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin freetype\` ; $(LINK) $(libfreetype_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin freetype` ;; \
+	esac
+libwin32text_plugin$(LIBEXT): $(libwin32text_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage win32text` in \
+	  c++) echo $(CXXLINK) $(libwin32text_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin win32text\` ; $(CXXLINK) $(libwin32text_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin win32text` ;; \
+	  objc) echo $(OBJCLINK) $(libwin32text_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin win32text\` ; $(OBJCLINK) $(libwin32text_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin win32text` ;; \
+	  c|*) echo $(LINK) $(libwin32text_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin win32text\` ; $(LINK) $(libwin32text_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin win32text` ;; \
 	esac
 liblogger_plugin$(LIBEXT): $(liblogger_plugin_a_OBJECTS)
 	@case `$(VLC_CONFIG) --linkage logger` in \
@@ -2491,6 +2630,12 @@ libsvg_plugin$(LIBEXT): $(libsvg_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libsvg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin svg\` ; $(CXXLINK) $(libsvg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin svg` ;; \
 	  objc) echo $(OBJCLINK) $(libsvg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin svg\` ; $(OBJCLINK) $(libsvg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin svg` ;; \
 	  c|*) echo $(LINK) $(libsvg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin svg\` ; $(LINK) $(libsvg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin svg` ;; \
+	esac
+libexternrun_plugin$(LIBEXT): $(libexternrun_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage externrun` in \
+	  c++) echo $(CXXLINK) $(libexternrun_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin externrun\` ; $(CXXLINK) $(libexternrun_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin externrun` ;; \
+	  objc) echo $(OBJCLINK) $(libexternrun_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin externrun\` ; $(OBJCLINK) $(libexternrun_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin externrun` ;; \
+	  c|*) echo $(LINK) $(libexternrun_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin externrun\` ; $(LINK) $(libexternrun_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin externrun` ;; \
 	esac
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

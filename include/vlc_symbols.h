@@ -72,18 +72,19 @@ struct module_symbols_t {
     mtime_t (* date_Get_inner) ( const date_t * ) ;
     void (* date_Move_inner) ( date_t *, mtime_t ) ;
     mtime_t (* date_Increment_inner) ( date_t *, uint32_t ) ;
+    int (* net_ConvertIPv4_inner) ( uint32_t *p_addr, const char * psz_address ) ;
     int (* __net_OpenTCP_inner) ( vlc_object_t *p_this, const char *psz_host, int i_port ) ;
     int (* __net_ListenTCP_inner) ( vlc_object_t *p_this, char *psz_localaddr, int i_port ) ;
     int (* __net_Accept_inner) ( vlc_object_t *p_this, int fd_listen, mtime_t i_wait ) ;
     int (* __net_OpenUDP_inner) ( vlc_object_t *p_this, char *psz_bind, int i_bind, char *psz_server, int i_server ) ;
     void (* net_Close_inner) ( int fd ) ;
-    int (* __net_Read_inner) ( vlc_object_t *p_this, int fd, uint8_t *p_data, int i_data, vlc_bool_t b_retry ) ;
-    int (* __net_ReadNonBlock_inner) ( vlc_object_t *p_this, int fd, uint8_t *p_data, int i_data, mtime_t i_wait ) ;
-    int (* __net_Select_inner) ( vlc_object_t *p_this, int *pi_fd, int i_fd,uint8_t *p_data, int i_data, mtime_t i_wait ) ;
-    int (* __net_Write_inner) ( vlc_object_t *p_this, int fd, uint8_t *p_data, int i_data ) ;
-    char * (* __net_Gets_inner) ( vlc_object_t *p_this, int fd ) ;
-    int (* net_Printf_inner) ( vlc_object_t *p_this, int fd, const char *psz_fmt, ... ) ;
-    int (* __net_vaPrintf_inner) ( vlc_object_t *p_this, int fd, const char *psz_fmt, va_list args ) ;
+    int (* __net_Read_inner) ( vlc_object_t *p_this, int fd, v_socket_t *, uint8_t *p_data, int i_data, vlc_bool_t b_retry ) ;
+    int (* __net_ReadNonBlock_inner) ( vlc_object_t *p_this, int fd, v_socket_t *, uint8_t *p_data, int i_data, mtime_t i_wait ) ;
+    int (* __net_Select_inner) ( vlc_object_t *p_this, int *pi_fd, v_socket_t **, int i_fd, uint8_t *p_data, int i_data, mtime_t i_wait ) ;
+    int (* __net_Write_inner) ( vlc_object_t *p_this, int fd, v_socket_t *, uint8_t *p_data, int i_data ) ;
+    char * (* __net_Gets_inner) ( vlc_object_t *p_this, int fd, v_socket_t * ) ;
+    int (* net_Printf_inner) ( vlc_object_t *p_this, int fd, v_socket_t *, const char *psz_fmt, ... ) ;
+    int (* __net_vaPrintf_inner) ( vlc_object_t *p_this, int fd, v_socket_t *, const char *psz_fmt, va_list args ) ;
     int (* vout_ShowTextRelative_inner) ( vout_thread_t *, int, char *, text_style_t *, int, int, int, mtime_t ) ;
     int (* vout_ShowTextAbsolute_inner) ( vout_thread_t *, int, char *, text_style_t *, int, int, int, mtime_t, mtime_t ) ;
     void (* __vout_OSDMessage_inner) ( vlc_object_t *, int, char *, ... ) ;
@@ -111,7 +112,7 @@ struct module_symbols_t {
     int (* sout_AnnounceRegister_inner) (sout_instance_t *,session_descriptor_t*, announce_method_t* ) ;
     session_descriptor_t* (* sout_AnnounceRegisterSDP_inner) (sout_instance_t *,char *, announce_method_t* ) ;
     int (* sout_AnnounceUnRegister_inner) (sout_instance_t *,session_descriptor_t* ) ;
-    session_descriptor_t* (* sout_AnnounceSessionCreate_inner) () ;
+    session_descriptor_t* (* sout_AnnounceSessionCreate_inner) (void) ;
     void (* sout_AnnounceSessionDestroy_inner) (session_descriptor_t *) ;
     announce_method_t* (* sout_AnnounceMethodCreate_inner) (int) ;
     int (* __var_Create_inner) ( vlc_object_t *, const char *, int ) ;
@@ -122,8 +123,8 @@ struct module_symbols_t {
     int (* __var_Get_inner) ( vlc_object_t *, const char *, vlc_value_t * ) ;
     int (* __var_AddCallback_inner) ( vlc_object_t *, const char *, vlc_callback_t, void * ) ;
     int (* __var_DelCallback_inner) ( vlc_object_t *, const char *, vlc_callback_t, void * ) ;
-    vout_thread_t * (* __vout_Request_inner) ( vlc_object_t *, vout_thread_t *, unsigned int, unsigned int, uint32_t, unsigned int ) ;
-    vout_thread_t * (* __vout_Create_inner) ( vlc_object_t *, unsigned int, unsigned int, uint32_t, unsigned int ) ;
+    vout_thread_t * (* __vout_Request_inner) ( vlc_object_t *, vout_thread_t *, video_format_t * ) ;
+    vout_thread_t * (* __vout_Create_inner) ( vlc_object_t *, video_format_t * ) ;
     void (* vout_Destroy_inner) ( vout_thread_t * ) ;
     int (* vout_VarCallback_inner) ( vlc_object_t *, const char *, vlc_value_t, vlc_value_t, void * ) ;
     int (* vout_ChromaCmp_inner) ( uint32_t, uint32_t ) ;
@@ -139,7 +140,8 @@ struct module_symbols_t {
     void * (* vout_RequestWindow_inner) ( vout_thread_t *, int *, int *, unsigned int *, unsigned int * ) ;
     void (* vout_ReleaseWindow_inner) ( vout_thread_t *, void * ) ;
     int (* vout_ControlWindow_inner) ( vout_thread_t *, void *, int, va_list ) ;
-    access_t * (* __access2_New_inner) ( vlc_object_t *p_obj, char *psz_access, char *psz_demux, char *psz_path ) ;
+    access_t * (* __access2_New_inner) ( vlc_object_t *p_obj, char *psz_access, char *psz_demux, char *psz_path, vlc_bool_t b_quick ) ;
+    access_t * (* access2_FilterNew_inner) ( access_t *p_source, char *psz_access_filter ) ;
     void (* access2_Delete_inner) ( access_t * ) ;
     block_t * (* __block_New_inner) ( vlc_object_t *, int ) ;
     block_t * (* block_Realloc_inner) ( block_t *, int i_pre, int i_body ) ;
@@ -160,7 +162,9 @@ struct module_symbols_t {
             int (* vlc_strcasecmp_inner) ( const char *s1, const char *s2 ) ;
             int (* vlc_strncasecmp_inner) ( const char *s1, const char *s2, size_t n ) ;
             char * (* vlc_strcasestr_inner) ( const char *s1, const char *s2 ) ;
-        off_t (* vlc_lseek_inner) ( int fildes, off_t offset, int whence ) ;
+        void * (* vlc_opendir_inner) ( const char * ) ;
+        void * (* vlc_readdir_inner) ( void * ) ;
+        int (* vlc_closedir_inner) ( void * ) ;
     vlc_bool_t (* vlc_reduce_inner) ( int *, int *, int64_t, int64_t, int64_t ) ;
     char ** (* vlc_parse_cmdline_inner) ( const char *, int * ) ;
     char * (* vlc_wraptext_inner) ( const char *, int, vlc_bool_t ) ;
@@ -168,7 +172,7 @@ struct module_symbols_t {
     size_t (* vlc_iconv_inner) ( vlc_iconv_t, char **, size_t *, char **, size_t * ) ;
     int (* vlc_iconv_close_inner) ( vlc_iconv_t ) ;
     char * (* vlc_dgettext_inner) ( const char *package, const char *msgid ) ;
-    demux_t * (* __demux2_New_inner) ( vlc_object_t *p_obj, char *psz_access, char *psz_demux, char *psz_path, stream_t *s, es_out_t *out ) ;
+    demux_t * (* __demux2_New_inner) ( vlc_object_t *p_obj, char *psz_access, char *psz_demux, char *psz_path, stream_t *s, es_out_t *out, vlc_bool_t ) ;
     void (* demux2_Delete_inner) ( demux_t * ) ;
     int (* demux2_vaControlHelper_inner) ( stream_t *, int64_t i_start, int64_t i_end, int i_bitrate, int i_align, int i_query, va_list args ) ;
     char const * (* vlc_error_inner) ( int ) ;
@@ -196,7 +200,14 @@ struct module_symbols_t {
     void (* httpd_MsgClean_inner) ( httpd_message_t * ) ;
     tls_server_t * (* tls_ServerCreate_inner) ( vlc_object_t *, const char *, const char * ) ;
     void (* tls_ServerDelete_inner) ( tls_server_t * ) ;
+    tls_session_t * (* tls_ClientCreate_inner) ( vlc_object_t *, int, const char * ) ;
+    void (* tls_ClientDelete_inner) ( tls_session_t * ) ;
+    image_handler_t * (* __image_HandlerCreate_inner) ( vlc_object_t * ) ;
+    void (* image_HandlerDelete_inner) ( image_handler_t * ) ;
+    char * (* vlc_input_item_GetInfo_inner) ( input_item_t *p_i, const char *psz_cat,const char *psz_name ) ;
+    int (* vlc_input_item_AddInfo_inner) ( input_item_t *p_i, const char *psz_cat, const char *psz_name, const char *psz_format, ... ) ;
     input_thread_t * (* __input_CreateThread_inner) ( vlc_object_t *, input_item_t * ) ;
+    int (* __input_Preparse_inner) ( vlc_object_t *, input_item_t * ) ;
     void (* input_StopThread_inner) ( input_thread_t * ) ;
     void (* input_DestroyThread_inner) ( input_thread_t * ) ;
     int (* input_vaControl_inner) ( input_thread_t *, int i_query, va_list  ) ;
@@ -226,40 +237,62 @@ struct module_symbols_t {
     void (* __vlc_object_release_inner) ( vlc_object_t * ) ;
     vlc_list_t * (* __vlc_list_find_inner) ( vlc_object_t *, int, int ) ;
     void (* vlc_list_release_inner) ( vlc_list_t * ) ;
-    void (* playlist_Command_inner) ( playlist_t *, playlist_command_t, int ) ;
-    playlist_item_t*  (* __playlist_ItemNew_inner) ( vlc_object_t *,const char *,const char * ) ;
-    void (* playlist_ItemDelete_inner) ( playlist_item_t * ) ;
-    int (* playlist_ItemAdd_inner) ( playlist_t *, playlist_item_t *, int, int ) ;
-    int (* playlist_Add_inner) ( playlist_t *, const char *, const char *, int, int ) ;
-    int (* playlist_AddExt_inner) ( playlist_t *, const char *, const char *, int, int, mtime_t, const char **,int ) ;
+    int (* playlist_Control_inner) ( playlist_t *, int, ...  ) ;
+    int (* playlist_LockControl_inner) ( playlist_t *, int, ...  ) ;
     int (* playlist_Clear_inner) ( playlist_t * ) ;
-    int (* playlist_Delete_inner) ( playlist_t *, int ) ;
-    int (* playlist_Disable_inner) ( playlist_t *, int ) ;
-    int (* playlist_Enable_inner) ( playlist_t *, int ) ;
-    int (* playlist_DisableGroup_inner) ( playlist_t *, int ) ;
-    int (* playlist_EnableGroup_inner) ( playlist_t *, int ) ;
-    int (* playlist_ItemSetGroup_inner) (playlist_item_t *, int ) ;
+    int (* playlist_LockClear_inner) ( playlist_t * ) ;
+    int (* playlist_PreparseEnqueue_inner) (playlist_t *, input_item_t *) ;
+    int (* playlist_ServicesDiscoveryAdd_inner) (playlist_t *, const char *);
+    int (* playlist_ServicesDiscoveryRemove_inner) (playlist_t *, const char *);
+    int (* playlist_AddSDModules_inner) (playlist_t *, char *);
+    vlc_bool_t (* playlist_IsServicesDiscoveryLoaded_inner) ( playlist_t *,const char *);
+    playlist_item_t*  (* __playlist_ItemNew_inner) ( vlc_object_t *,const char *,const char * ) ;
+    playlist_item_t*  (* __playlist_ItemCopy_inner) ( vlc_object_t *,playlist_item_t* ) ;
+    playlist_item_t*  (* playlist_ItemNewWithType_inner) ( vlc_object_t *,const char *,const char *, int ) ;
+    int (* playlist_ItemDelete_inner) ( playlist_item_t * ) ;
+    int (* playlist_ItemAddParent_inner) ( playlist_item_t *, int,playlist_item_t *) ;
+    int (* playlist_CopyParents_inner) ( playlist_item_t *,playlist_item_t *) ;
     int (* playlist_ItemSetName_inner) (playlist_item_t *,  char * ) ;
     int (* playlist_ItemSetDuration_inner) (playlist_item_t *, mtime_t ) ;
-    int (* playlist_SetGroup_inner) (playlist_t * , int , int ) ;
-    int (* playlist_SetName_inner) (playlist_t *, int ,  char * ) ;
-    int (* playlist_SetDuration_inner) (playlist_t *, int , mtime_t ) ;
-    int (* playlist_GetPositionById_inner) (playlist_t *, int) ;
+    int (* playlist_ViewInsert_inner) (playlist_t *, int, char * ) ;
+    int (* playlist_ViewDelete_inner) (playlist_t *,playlist_view_t* ) ;
+    playlist_view_t * (* playlist_ViewFind_inner) (playlist_t *, int ) ;
+    int (* playlist_ViewUpdate_inner) (playlist_t *, int ) ;
+    int (* playlist_ViewDump_inner) (playlist_t *, playlist_view_t * ) ;
+    int (* playlist_ViewEmpty_inner) (playlist_t *, int, vlc_bool_t ) ;
+    playlist_item_t * (* playlist_NodeCreate_inner) ( playlist_t *,int,char *, playlist_item_t * p_parent ) ;
+    int (* playlist_NodeAppend_inner) (playlist_t *,int,playlist_item_t*,playlist_item_t *) ;
+    int (* playlist_NodeInsert_inner) (playlist_t *,int,playlist_item_t*,playlist_item_t *, int) ;
+    int (* playlist_NodeRemoveItem_inner) (playlist_t *,playlist_item_t*,playlist_item_t *) ;
+    int (* playlist_NodeChildrenCount_inner) (playlist_t *,playlist_item_t* ) ;
+    playlist_item_t * (* playlist_ChildSearchName_inner) (playlist_item_t*, const char* ) ;
+    int (* playlist_NodeDelete_inner) ( playlist_t *, playlist_item_t *, vlc_bool_t , vlc_bool_t ) ;
+    int (* playlist_NodeEmpty_inner) ( playlist_t *, playlist_item_t *, vlc_bool_t ) ;
+    int (* playlist_Add_inner) ( playlist_t *, const char *, const char *, int, int ) ;
+    int (* playlist_AddExt_inner) ( playlist_t *, const char *, const char *, int, int, mtime_t, const char **,int ) ;
+    int (* playlist_ItemAdd_inner) ( playlist_t *, playlist_item_t *, int, int ) ;
+    int (* playlist_NodeAddItem_inner) ( playlist_t *, playlist_item_t *,int,playlist_item_t *,int , int ) ;
+    int (* playlist_Delete_inner) ( playlist_t *, int ) ;
+    int (* playlist_LockDelete_inner) ( playlist_t *, int ) ;
+    int (* playlist_Disable_inner) ( playlist_t *, playlist_item_t * ) ;
+    int (* playlist_Enable_inner) ( playlist_t *, playlist_item_t * ) ;
+    int (* playlist_ItemToNode_inner) (playlist_t *,playlist_item_t *) ;
+    int (* playlist_LockItemToNode_inner) (playlist_t *,playlist_item_t *) ;
+    int (* playlist_Replace_inner) (playlist_t *,playlist_item_t *, input_item_t*) ;
+    int (* playlist_LockReplace_inner) (playlist_t *,playlist_item_t *, input_item_t*) ;
     playlist_item_t * (* playlist_ItemGetById_inner) (playlist_t *, int) ;
+    playlist_item_t * (* playlist_LockItemGetById_inner) (playlist_t *, int) ;
     playlist_item_t * (* playlist_ItemGetByPos_inner) (playlist_t *, int) ;
-    playlist_group_t * (* playlist_CreateGroup_inner) (playlist_t *, char* ) ;
-    int (* playlist_DeleteGroup_inner) (playlist_t *, int ) ;
-    char * (* playlist_FindGroup_inner) (playlist_t *, int ) ;
-    int (* playlist_GroupToId_inner) (playlist_t *, char * ) ;
-    char *  (* playlist_GetInfo_inner) ( playlist_t * , int, const char *, const char *) ;
-    char *  (* playlist_ItemGetInfo_inner) ( playlist_item_t * , const char *, const char *) ;
-    info_category_t* (* playlist_ItemGetCategory_inner) ( playlist_item_t *, const char *) ;
-    info_category_t* (* playlist_ItemCreateCategory_inner) ( playlist_item_t *, const char *) ;
-    int (* playlist_AddInfo_inner) (playlist_t *, int, const char * , const char *, const char *, ...) ;
-    int (* playlist_ItemAddInfo_inner) (playlist_item_t *, const char * , const char *, const char *, ...) ;
+    playlist_item_t * (* playlist_LockItemGetByPos_inner) (playlist_t *, int) ;
+    playlist_item_t * (* playlist_ItemGetByInput_inner) (playlist_t *,input_item_t * ) ;
+    playlist_item_t * (* playlist_LockItemGetByInput_inner) (playlist_t *,input_item_t * ) ;
+    int (* playlist_GetPositionById_inner) (playlist_t *,int ) ;
     int (* playlist_ItemAddOption_inner) (playlist_item_t *, const char *) ;
     int (* playlist_Sort_inner) ( playlist_t *, int, int) ;
     int (* playlist_Move_inner) ( playlist_t *, int, int ) ;
+    int (* playlist_NodeGroup_inner) ( playlist_t *, int,playlist_item_t *,playlist_item_t **,int, int, int ) ;
+    int (* playlist_NodeSort_inner) ( playlist_t *, playlist_item_t *,int, int ) ;
+    int (* playlist_RecursiveNodeSort_inner) ( playlist_t *, playlist_item_t *,int, int ) ;
     int (* playlist_Import_inner) ( playlist_t *, const char * ) ;
     int (* playlist_Export_inner) ( playlist_t *, const char *, const char * ) ;
     spu_t * (* __spu_Create_inner) ( vlc_object_t * ) ;
@@ -269,6 +302,7 @@ struct module_symbols_t {
     void (* spu_DestroySubpicture_inner) ( spu_t *, subpicture_t * ) ;
     void (* spu_DisplaySubpicture_inner) ( spu_t *, subpicture_t * ) ;
     subpicture_region_t * (* __spu_CreateRegion_inner) ( vlc_object_t *, video_format_t * ) ;
+    subpicture_region_t * (* __spu_MakeRegion_inner) ( vlc_object_t *, video_format_t *, picture_t * ) ;
     void (* __spu_DestroyRegion_inner) ( vlc_object_t *, subpicture_region_t * ) ;
     subpicture_t * (* spu_SortSubpictures_inner) ( spu_t *, mtime_t ) ;
     void (* spu_RenderSubpictures_inner) ( spu_t *,  video_format_t *, picture_t *, picture_t *, subpicture_t *, int, int ) ;
@@ -276,6 +310,8 @@ struct module_symbols_t {
     stream_t * (* __stream_DemuxNew_inner) ( vlc_object_t *p_obj, char *psz_demux, es_out_t *out ) ;
     void (* stream_DemuxSend_inner) ( stream_t *s, block_t *p_block ) ;
     void (* stream_DemuxDelete_inner) ( stream_t *s ) ;
+    stream_t * (* __stream_MemoryNew_inner) (vlc_object_t *p_obj, uint8_t *p_buffer, int64_t i_size, vlc_bool_t i_preserve_memory ) ;
+    stream_t * (* __stream_UrlNew_inner) (vlc_object_t *p_this, const char *psz_url ) ;
     int (* __vlc_threads_init_inner) ( vlc_object_t * ) ;
     int (* __vlc_threads_end_inner) ( vlc_object_t * ) ;
     int (* __vlc_mutex_init_inner) ( vlc_object_t *, vlc_mutex_t * ) ;
@@ -292,16 +328,28 @@ struct module_symbols_t {
     vlm_t * (* __vlm_New_inner) ( vlc_object_t * ) ;
     void (* vlm_Delete_inner) ( vlm_t * ) ;
     int (* vlm_ExecuteCommand_inner) ( vlm_t *, char *, vlm_message_t ** ) ;
-    void (* vlm_MessageDelete_inner) ( vlm_message_t* ) ;
+    void (* vlm_MessageDelete_inner) ( vlm_message_t * ) ;
+    vlm_media_t * (* vlm_MediaNew_inner) ( vlm_t *, char *, int ) ;
+    void (* vlm_MediaDelete_inner) ( vlm_t *, vlm_media_t *, char * ) ;
+    int (* vlm_MediaSetup_inner) ( vlm_t *, vlm_media_t *, char *, char * ) ;
+    int (* vlm_MediaControl_inner) ( vlm_t *, vlm_media_t *, char *, char *, char * ) ;
+    vlm_schedule_t * (* vlm_ScheduleNew_inner) ( vlm_t *, char * ) ;
+    void (* vlm_ScheduleDelete_inner) ( vlm_t *, vlm_schedule_t *, char * ) ;
+    int (* vlm_ScheduleSetup_inner) ( vlm_schedule_t *, char *, char * ) ;
+    int (* vlm_MediaVodControl_inner) ( void *, vod_media_t *, char *, int, va_list ) ;
+    int (* vlm_Save_inner) ( vlm_t *, char * ) ;
+    int (* vlm_Load_inner) ( vlm_t *, char * ) ;
+    xml_t * (* __xml_Create_inner) ( vlc_object_t * ) ;
+    void (* xml_Delete_inner) ( xml_t * ) ;
     vout_synchro_t * (* __vout_SynchroInit_inner) ( vlc_object_t *, int ) ;
     void (* vout_SynchroRelease_inner) ( vout_synchro_t * ) ;
     void (* vout_SynchroReset_inner) ( vout_synchro_t * ) ;
-    vlc_bool_t (* vout_SynchroChoose_inner) ( vout_synchro_t *, int, int ) ;
+    vlc_bool_t (* vout_SynchroChoose_inner) ( vout_synchro_t *, int, int, vlc_bool_t ) ;
     void (* vout_SynchroTrash_inner) ( vout_synchro_t * ) ;
     void (* vout_SynchroDecode_inner) ( vout_synchro_t * ) ;
     void (* vout_SynchroEnd_inner) ( vout_synchro_t *, int, vlc_bool_t ) ;
     mtime_t (* vout_SynchroDate_inner) ( vout_synchro_t * ) ;
-    void (* vout_SynchroNewPicture_inner) ( vout_synchro_t *, int, int, mtime_t, mtime_t, int ) ;
+    void (* vout_SynchroNewPicture_inner) ( vout_synchro_t *, int, int, mtime_t, mtime_t, int, vlc_bool_t ) ;
 };
 #ifdef __PLUGIN__
 #   define aout_FiltersCreatePipeline p_symbols->aout_FiltersCreatePipeline_inner
@@ -376,6 +424,7 @@ struct module_symbols_t {
 #   define date_Get p_symbols->date_Get_inner
 #   define date_Move p_symbols->date_Move_inner
 #   define date_Increment p_symbols->date_Increment_inner
+#   define net_ConvertIPv4 p_symbols->net_ConvertIPv4_inner
 #   define __net_OpenTCP p_symbols->__net_OpenTCP_inner
 #   define __net_ListenTCP p_symbols->__net_ListenTCP_inner
 #   define __net_Accept p_symbols->__net_Accept_inner
@@ -444,6 +493,7 @@ struct module_symbols_t {
 #   define vout_ReleaseWindow p_symbols->vout_ReleaseWindow_inner
 #   define vout_ControlWindow p_symbols->vout_ControlWindow_inner
 #   define __access2_New p_symbols->__access2_New_inner
+#   define access2_FilterNew p_symbols->access2_FilterNew_inner
 #   define access2_Delete p_symbols->access2_Delete_inner
 #   define __block_New p_symbols->__block_New_inner
 #   define block_Realloc p_symbols->block_Realloc_inner
@@ -464,7 +514,9 @@ struct module_symbols_t {
         #   define vlc_strcasecmp p_symbols->vlc_strcasecmp_inner
         #   define vlc_strncasecmp p_symbols->vlc_strncasecmp_inner
         #   define vlc_strcasestr p_symbols->vlc_strcasestr_inner
-    #   define vlc_lseek p_symbols->vlc_lseek_inner
+    #   define vlc_opendir p_symbols->vlc_opendir_inner
+    #   define vlc_readdir p_symbols->vlc_readdir_inner
+    #   define vlc_closedir p_symbols->vlc_closedir_inner
 #   define vlc_reduce p_symbols->vlc_reduce_inner
 #   define vlc_parse_cmdline p_symbols->vlc_parse_cmdline_inner
 #   define vlc_wraptext p_symbols->vlc_wraptext_inner
@@ -500,7 +552,14 @@ struct module_symbols_t {
 #   define httpd_MsgClean p_symbols->httpd_MsgClean_inner
 #   define tls_ServerCreate p_symbols->tls_ServerCreate_inner
 #   define tls_ServerDelete p_symbols->tls_ServerDelete_inner
+#   define tls_ClientCreate p_symbols->tls_ClientCreate_inner
+#   define tls_ClientDelete p_symbols->tls_ClientDelete_inner
+#   define __image_HandlerCreate p_symbols->__image_HandlerCreate_inner
+#   define image_HandlerDelete p_symbols->image_HandlerDelete_inner
+#   define vlc_input_item_GetInfo p_symbols->vlc_input_item_GetInfo_inner
+#   define vlc_input_item_AddInfo p_symbols->vlc_input_item_AddInfo_inner
 #   define __input_CreateThread p_symbols->__input_CreateThread_inner
+#   define __input_Preparse p_symbols->__input_Preparse_inner
 #   define input_StopThread p_symbols->input_StopThread_inner
 #   define input_DestroyThread p_symbols->input_DestroyThread_inner
 #   define input_vaControl p_symbols->input_vaControl_inner
@@ -530,40 +589,62 @@ struct module_symbols_t {
 #   define __vlc_object_release p_symbols->__vlc_object_release_inner
 #   define __vlc_list_find p_symbols->__vlc_list_find_inner
 #   define vlc_list_release p_symbols->vlc_list_release_inner
-#   define playlist_Command p_symbols->playlist_Command_inner
-#   define __playlist_ItemNew p_symbols->__playlist_ItemNew_inner
-#   define playlist_ItemDelete p_symbols->playlist_ItemDelete_inner
-#   define playlist_ItemAdd p_symbols->playlist_ItemAdd_inner
-#   define playlist_Add p_symbols->playlist_Add_inner
-#   define playlist_AddExt p_symbols->playlist_AddExt_inner
+#   define playlist_Control p_symbols->playlist_Control_inner
+#   define playlist_LockControl p_symbols->playlist_LockControl_inner
 #   define playlist_Clear p_symbols->playlist_Clear_inner
-#   define playlist_Delete p_symbols->playlist_Delete_inner
-#   define playlist_Disable p_symbols->playlist_Disable_inner
-#   define playlist_Enable p_symbols->playlist_Enable_inner
-#   define playlist_DisableGroup p_symbols->playlist_DisableGroup_inner
-#   define playlist_EnableGroup p_symbols->playlist_EnableGroup_inner
-#   define playlist_ItemSetGroup p_symbols->playlist_ItemSetGroup_inner
+#   define playlist_LockClear p_symbols->playlist_LockClear_inner
+#   define playlist_PreparseEnqueue p_symbols->playlist_PreparseEnqueue_inner
+#   define playlist_ServicesDiscoveryAdd p_symbols->playlist_ServicesDiscoveryAdd_inner
+#   define playlist_ServicesDiscoveryRemove p_symbols->playlist_ServicesDiscoveryRemove_inner
+#   define playlist_AddSDModules p_symbols->playlist_AddSDModules_inner
+#   define playlist_IsServicesDiscoveryLoaded p_symbols->playlist_IsServicesDiscoveryLoaded_inner
+#   define __playlist_ItemNew p_symbols->__playlist_ItemNew_inner
+#   define __playlist_ItemCopy p_symbols->__playlist_ItemCopy_inner
+#   define playlist_ItemNewWithType p_symbols->playlist_ItemNewWithType_inner
+#   define playlist_ItemDelete p_symbols->playlist_ItemDelete_inner
+#   define playlist_ItemAddParent p_symbols->playlist_ItemAddParent_inner
+#   define playlist_CopyParents p_symbols->playlist_CopyParents_inner
 #   define playlist_ItemSetName p_symbols->playlist_ItemSetName_inner
 #   define playlist_ItemSetDuration p_symbols->playlist_ItemSetDuration_inner
-#   define playlist_SetGroup p_symbols->playlist_SetGroup_inner
-#   define playlist_SetName p_symbols->playlist_SetName_inner
-#   define playlist_SetDuration p_symbols->playlist_SetDuration_inner
-#   define playlist_GetPositionById p_symbols->playlist_GetPositionById_inner
+#   define playlist_ViewInsert p_symbols->playlist_ViewInsert_inner
+#   define playlist_ViewDelete p_symbols->playlist_ViewDelete_inner
+#   define playlist_ViewFind p_symbols->playlist_ViewFind_inner
+#   define playlist_ViewUpdate p_symbols->playlist_ViewUpdate_inner
+#   define playlist_ViewDump p_symbols->playlist_ViewDump_inner
+#   define playlist_ViewEmpty p_symbols->playlist_ViewEmpty_inner
+#   define playlist_NodeCreate p_symbols->playlist_NodeCreate_inner
+#   define playlist_NodeAppend p_symbols->playlist_NodeAppend_inner
+#   define playlist_NodeInsert p_symbols->playlist_NodeInsert_inner
+#   define playlist_NodeRemoveItem p_symbols->playlist_NodeRemoveItem_inner
+#   define playlist_NodeChildrenCount p_symbols->playlist_NodeChildrenCount_inner
+#   define playlist_ChildSearchName p_symbols->playlist_ChildSearchName_inner
+#   define playlist_NodeDelete p_symbols->playlist_NodeDelete_inner
+#   define playlist_NodeEmpty p_symbols->playlist_NodeEmpty_inner
+#   define playlist_Add p_symbols->playlist_Add_inner
+#   define playlist_AddExt p_symbols->playlist_AddExt_inner
+#   define playlist_ItemAdd p_symbols->playlist_ItemAdd_inner
+#   define playlist_NodeAddItem p_symbols->playlist_NodeAddItem_inner
+#   define playlist_Delete p_symbols->playlist_Delete_inner
+#   define playlist_LockDelete p_symbols->playlist_LockDelete_inner
+#   define playlist_Disable p_symbols->playlist_Disable_inner
+#   define playlist_Enable p_symbols->playlist_Enable_inner
+#   define playlist_ItemToNode p_symbols->playlist_ItemToNode_inner
+#   define playlist_LockItemToNode p_symbols->playlist_LockItemToNode_inner
+#   define playlist_Replace p_symbols->playlist_Replace_inner
+#   define playlist_LockReplace p_symbols->playlist_LockReplace_inner
 #   define playlist_ItemGetById p_symbols->playlist_ItemGetById_inner
+#   define playlist_LockItemGetById p_symbols->playlist_LockItemGetById_inner
 #   define playlist_ItemGetByPos p_symbols->playlist_ItemGetByPos_inner
-#   define playlist_CreateGroup p_symbols->playlist_CreateGroup_inner
-#   define playlist_DeleteGroup p_symbols->playlist_DeleteGroup_inner
-#   define playlist_FindGroup p_symbols->playlist_FindGroup_inner
-#   define playlist_GroupToId p_symbols->playlist_GroupToId_inner
-#   define playlist_GetInfo p_symbols->playlist_GetInfo_inner
-#   define playlist_ItemGetInfo p_symbols->playlist_ItemGetInfo_inner
-#   define playlist_ItemGetCategory p_symbols->playlist_ItemGetCategory_inner
-#   define playlist_ItemCreateCategory p_symbols->playlist_ItemCreateCategory_inner
-#   define playlist_AddInfo p_symbols->playlist_AddInfo_inner
-#   define playlist_ItemAddInfo p_symbols->playlist_ItemAddInfo_inner
+#   define playlist_LockItemGetByPos p_symbols->playlist_LockItemGetByPos_inner
+#   define playlist_ItemGetByInput p_symbols->playlist_ItemGetByInput_inner
+#   define playlist_LockItemGetByInput p_symbols->playlist_LockItemGetByInput_inner
+#   define playlist_GetPositionById p_symbols->playlist_GetPositionById_inner
 #   define playlist_ItemAddOption p_symbols->playlist_ItemAddOption_inner
 #   define playlist_Sort p_symbols->playlist_Sort_inner
 #   define playlist_Move p_symbols->playlist_Move_inner
+#   define playlist_NodeGroup p_symbols->playlist_NodeGroup_inner
+#   define playlist_NodeSort p_symbols->playlist_NodeSort_inner
+#   define playlist_RecursiveNodeSort p_symbols->playlist_RecursiveNodeSort_inner
 #   define playlist_Import p_symbols->playlist_Import_inner
 #   define playlist_Export p_symbols->playlist_Export_inner
 #   define __spu_Create p_symbols->__spu_Create_inner
@@ -573,6 +654,7 @@ struct module_symbols_t {
 #   define spu_DestroySubpicture p_symbols->spu_DestroySubpicture_inner
 #   define spu_DisplaySubpicture p_symbols->spu_DisplaySubpicture_inner
 #   define __spu_CreateRegion p_symbols->__spu_CreateRegion_inner
+#   define __spu_MakeRegion p_symbols->__spu_MakeRegion_inner
 #   define __spu_DestroyRegion p_symbols->__spu_DestroyRegion_inner
 #   define spu_SortSubpictures p_symbols->spu_SortSubpictures_inner
 #   define spu_RenderSubpictures p_symbols->spu_RenderSubpictures_inner
@@ -580,6 +662,8 @@ struct module_symbols_t {
 #   define __stream_DemuxNew p_symbols->__stream_DemuxNew_inner
 #   define stream_DemuxSend p_symbols->stream_DemuxSend_inner
 #   define stream_DemuxDelete p_symbols->stream_DemuxDelete_inner
+#   define __stream_MemoryNew p_symbols->__stream_MemoryNew_inner
+#   define __stream_UrlNew p_symbols->__stream_UrlNew_inner
 #   define __vlc_threads_init p_symbols->__vlc_threads_init_inner
 #   define __vlc_threads_end p_symbols->__vlc_threads_end_inner
 #   define __vlc_mutex_init p_symbols->__vlc_mutex_init_inner
@@ -597,6 +681,18 @@ struct module_symbols_t {
 #   define vlm_Delete p_symbols->vlm_Delete_inner
 #   define vlm_ExecuteCommand p_symbols->vlm_ExecuteCommand_inner
 #   define vlm_MessageDelete p_symbols->vlm_MessageDelete_inner
+#   define vlm_MediaNew p_symbols->vlm_MediaNew_inner
+#   define vlm_MediaDelete p_symbols->vlm_MediaDelete_inner
+#   define vlm_MediaSetup p_symbols->vlm_MediaSetup_inner
+#   define vlm_MediaControl p_symbols->vlm_MediaControl_inner
+#   define vlm_ScheduleNew p_symbols->vlm_ScheduleNew_inner
+#   define vlm_ScheduleDelete p_symbols->vlm_ScheduleDelete_inner
+#   define vlm_ScheduleSetup p_symbols->vlm_ScheduleSetup_inner
+#   define vlm_MediaVodControl p_symbols->vlm_MediaVodControl_inner
+#   define vlm_Save p_symbols->vlm_Save_inner
+#   define vlm_Load p_symbols->vlm_Load_inner
+#   define __xml_Create p_symbols->__xml_Create_inner
+#   define xml_Delete p_symbols->xml_Delete_inner
 #   define __vout_SynchroInit p_symbols->__vout_SynchroInit_inner
 #   define vout_SynchroRelease p_symbols->vout_SynchroRelease_inner
 #   define vout_SynchroReset p_symbols->vout_SynchroReset_inner

@@ -55,6 +55,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_ACTIVEX_FALSE = @BUILD_ACTIVEX_FALSE@
+BUILD_ACTIVEX_TRUE = @BUILD_ACTIVEX_TRUE@
 BUILD_DIRENT_FALSE = @BUILD_DIRENT_FALSE@
 BUILD_DIRENT_TRUE = @BUILD_DIRENT_TRUE@
 BUILD_GETOPT_FALSE = @BUILD_GETOPT_FALSE@
@@ -69,8 +71,6 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-CORBA_CFLAGS = @CORBA_CFLAGS@
-CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -98,10 +98,8 @@ FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GTK2_CFLAGS = @GTK2_CFLAGS@
-GTK2_LIBS = @GTK2_LIBS@
-HAL_CFLAGS = @HAL_CFLAGS@
-HAL_LIBS = @HAL_LIBS@
+HAS_MIDL_COMPILER_FALSE = @HAS_MIDL_COMPILER_FALSE@
+HAS_MIDL_COMPILER_TRUE = @HAS_MIDL_COMPILER_TRUE@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -112,6 +110,8 @@ HAVE_PLUGINS_FALSE = @HAVE_PLUGINS_FALSE@
 HAVE_PLUGINS_TRUE = @HAVE_PLUGINS_TRUE@
 HAVE_WIN32_FALSE = @HAVE_WIN32_FALSE@
 HAVE_WIN32_TRUE = @HAVE_WIN32_TRUE@
+HAVE_WINCE_FALSE = @HAVE_WINCE_FALSE@
+HAVE_WINCE_TRUE = @HAVE_WINCE_TRUE@
 INCLUDES = @INCLUDES@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -124,12 +124,7 @@ INTLOBJS = @INTLOBJS@
 INTL_LIBTOOL_SUFFIX_PREFIX = @INTL_LIBTOOL_SUFFIX_PREFIX@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
-LIBCDDB_CFLAGS = @LIBCDDB_CFLAGS@
-LIBCDDB_LIBS = @LIBCDDB_LIBS@
-LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
-LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
-LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -138,6 +133,7 @@ LTLIBICONV = @LTLIBICONV@
 LTLIBINTL = @LTLIBINTL@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+MIDL = @MIDL@
 MKINSTALLDIRS = @MKINSTALLDIRS@
 MOC = @MOC@
 MOZILLA_CONFIG = @MOZILLA_CONFIG@
@@ -154,7 +150,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
 PLUGIN_PATH = @PLUGIN_PATH@
 POSUB = @POSUB@
 RANLIB = @RANLIB@
@@ -164,8 +159,6 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-SVG_CFLAGS = @SVG_CFLAGS@
-SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
@@ -230,8 +223,8 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Laab) $(Laapic) $(Lcacab) $(Lcacapic) $(Lfbb) $(Lfbpic) $(Lggib) $(Lggipic) $(Lglideb) $(Lglidepic) $(Lvout_sdlb) $(Lvout_sdlpic) $(Lsvgalibb) $(Lsvgalibpic) $(Lwingdib) $(Lwingdipic) $(Lmgab) $(Lmgapic) $(Lhd1000vb) $(Lhd1000vpic) $(Lsnapshotb) $(Lsnapshotpic) $(Lopenglb) $(Lopenglpic)
-noinst_LIBRARIES = $(Laap) $(Lcacap) $(Lfbp) $(Lggip) $(Lglidep) $(Lvout_sdlp) $(Lsvgalibp) $(Lwingdip) $(Lmgap) $(Lhd1000vp) $(Lsnapshotp) $(Lopenglp)
+libvlc_LIBRARIES = $(Laab) $(Laapic) $(Lcacab) $(Lcacapic) $(Lfbb) $(Lfbpic) $(Lggib) $(Lggipic) $(Lglideb) $(Lglidepic) $(Lvout_sdlb) $(Lvout_sdlpic) $(Lsvgalibb) $(Lsvgalibpic) $(Lwingdib) $(Lwingdipic) $(Lwingapib) $(Lwingapipic) $(Lmgab) $(Lmgapic) $(Lhd1000vb) $(Lhd1000vpic) $(Lsnapshotb) $(Lsnapshotpic) $(Lopenglb) $(Lopenglpic) $(Limageb) $(Limagepic)
+noinst_LIBRARIES = $(Laap) $(Lcacap) $(Lfbp) $(Lggip) $(Lglidep) $(Lvout_sdlp) $(Lsvgalibp) $(Lwingdip) $(Lwingapip) $(Lmgap) $(Lhd1000vp) $(Lsnapshotp) $(Lopenglp) $(Limagep)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
@@ -246,10 +239,12 @@ SOURCES_glide = glide.c
 SOURCES_vout_sdl = sdl.c
 SOURCES_svgalib = svgalib.c
 SOURCES_wingdi = wingdi.c
+SOURCES_wingapi = wingdi.c
 SOURCES_mga = mga.c
 SOURCES_hd1000v = hd1000v.cpp
 SOURCES_snapshot = snapshot.c
 SOURCES_opengl = opengl.c
+SOURCES_image = image.c
 
 # There's no need for pic code on win32 so get rid of this to substantially
 # reduce the compilation time.
@@ -457,6 +452,31 @@ libwingdi_DATA = $(Dwingdip)
 libwingdidir = $(libdir)/vlc/
 
 
+# The wingapi plugin
+@UNTRUE_TRUE@Lwingapip = libwingapi_plugin.a
+@UNTRUE_TRUE@Dwingapip = libwingapi_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lwingapib = libwingapi.a
+@UNTRUE_TRUE@Lwingapipic = libwingapi_pic.a
+
+libwingapi_plugin_a_SOURCES = $(SOURCES_wingapi)
+libwingapi_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin wingapi`
+libwingapi_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin wingapi`
+libwingapi_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin wingapi`
+
+libwingapi_pic_a_SOURCES = $(SOURCES_wingapi)
+libwingapi_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic wingapi`
+libwingapi_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic wingapi`
+libwingapi_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic wingapi`
+
+libwingapi_a_SOURCES = $(SOURCES_wingapi)
+libwingapi_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin wingapi`
+libwingapi_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin wingapi`
+libwingapi_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin wingapi`
+libwingapi_DATA = $(Dwingapip)
+
+libwingapidir = $(libdir)/vlc/
+
+
 # The mga plugin
 @UNTRUE_TRUE@Lmgap = libmga_plugin.a
 @UNTRUE_TRUE@Dmgap = libmga_plugin$(LIBEXT)
@@ -555,6 +575,31 @@ libopengl_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin opengl`
 libopengl_DATA = $(Dopenglp)
 
 libopengldir = $(libdir)/vlc/
+
+
+# The image plugin
+@UNTRUE_TRUE@Limagep = libimage_plugin.a
+@UNTRUE_TRUE@Dimagep = libimage_plugin$(LIBEXT)
+@UNTRUE_TRUE@Limageb = libimage.a
+@UNTRUE_TRUE@Limagepic = libimage_pic.a
+
+libimage_plugin_a_SOURCES = $(SOURCES_image)
+libimage_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin image`
+libimage_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin image`
+libimage_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin image`
+
+libimage_pic_a_SOURCES = $(SOURCES_image)
+libimage_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic image`
+libimage_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic image`
+libimage_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic image`
+
+libimage_a_SOURCES = $(SOURCES_image)
+libimage_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin image`
+libimage_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin image`
+libimage_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin image`
+libimage_DATA = $(Dimagep)
+
+libimagedir = $(libdir)/vlc/
 subdir = modules/video_output
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
@@ -652,95 +697,125 @@ libhd1000v_plugin_a_LIBADD =
 am__objects_18 = libhd1000v_plugin_a-hd1000v.$(OBJEXT)
 am_libhd1000v_plugin_a_OBJECTS = $(am__objects_18)
 libhd1000v_plugin_a_OBJECTS = $(am_libhd1000v_plugin_a_OBJECTS)
+libimage_a_AR = $(AR) cru
+libimage_a_LIBADD =
+am__objects_19 = libimage_a-image.$(OBJEXT)
+am_libimage_a_OBJECTS = $(am__objects_19)
+libimage_a_OBJECTS = $(am_libimage_a_OBJECTS)
+libimage_pic_a_AR = $(AR) cru
+libimage_pic_a_LIBADD =
+am__objects_20 = libimage_pic_a-image.$(OBJEXT)
+am_libimage_pic_a_OBJECTS = $(am__objects_20)
+libimage_pic_a_OBJECTS = $(am_libimage_pic_a_OBJECTS)
+libimage_plugin_a_AR = $(AR) cru
+libimage_plugin_a_LIBADD =
+am__objects_21 = libimage_plugin_a-image.$(OBJEXT)
+am_libimage_plugin_a_OBJECTS = $(am__objects_21)
+libimage_plugin_a_OBJECTS = $(am_libimage_plugin_a_OBJECTS)
 libmga_a_AR = $(AR) cru
 libmga_a_LIBADD =
-am__objects_19 = libmga_a-mga.$(OBJEXT)
-am_libmga_a_OBJECTS = $(am__objects_19)
+am__objects_22 = libmga_a-mga.$(OBJEXT)
+am_libmga_a_OBJECTS = $(am__objects_22)
 libmga_a_OBJECTS = $(am_libmga_a_OBJECTS)
 libmga_pic_a_AR = $(AR) cru
 libmga_pic_a_LIBADD =
-am__objects_20 = libmga_pic_a-mga.$(OBJEXT)
-am_libmga_pic_a_OBJECTS = $(am__objects_20)
+am__objects_23 = libmga_pic_a-mga.$(OBJEXT)
+am_libmga_pic_a_OBJECTS = $(am__objects_23)
 libmga_pic_a_OBJECTS = $(am_libmga_pic_a_OBJECTS)
 libmga_plugin_a_AR = $(AR) cru
 libmga_plugin_a_LIBADD =
-am__objects_21 = libmga_plugin_a-mga.$(OBJEXT)
-am_libmga_plugin_a_OBJECTS = $(am__objects_21)
+am__objects_24 = libmga_plugin_a-mga.$(OBJEXT)
+am_libmga_plugin_a_OBJECTS = $(am__objects_24)
 libmga_plugin_a_OBJECTS = $(am_libmga_plugin_a_OBJECTS)
 libopengl_a_AR = $(AR) cru
 libopengl_a_LIBADD =
-am__objects_22 = libopengl_a-opengl.$(OBJEXT)
-am_libopengl_a_OBJECTS = $(am__objects_22)
+am__objects_25 = libopengl_a-opengl.$(OBJEXT)
+am_libopengl_a_OBJECTS = $(am__objects_25)
 libopengl_a_OBJECTS = $(am_libopengl_a_OBJECTS)
 libopengl_pic_a_AR = $(AR) cru
 libopengl_pic_a_LIBADD =
-am__objects_23 = libopengl_pic_a-opengl.$(OBJEXT)
-am_libopengl_pic_a_OBJECTS = $(am__objects_23)
+am__objects_26 = libopengl_pic_a-opengl.$(OBJEXT)
+am_libopengl_pic_a_OBJECTS = $(am__objects_26)
 libopengl_pic_a_OBJECTS = $(am_libopengl_pic_a_OBJECTS)
 libopengl_plugin_a_AR = $(AR) cru
 libopengl_plugin_a_LIBADD =
-am__objects_24 = libopengl_plugin_a-opengl.$(OBJEXT)
-am_libopengl_plugin_a_OBJECTS = $(am__objects_24)
+am__objects_27 = libopengl_plugin_a-opengl.$(OBJEXT)
+am_libopengl_plugin_a_OBJECTS = $(am__objects_27)
 libopengl_plugin_a_OBJECTS = $(am_libopengl_plugin_a_OBJECTS)
 libsnapshot_a_AR = $(AR) cru
 libsnapshot_a_LIBADD =
-am__objects_25 = libsnapshot_a-snapshot.$(OBJEXT)
-am_libsnapshot_a_OBJECTS = $(am__objects_25)
+am__objects_28 = libsnapshot_a-snapshot.$(OBJEXT)
+am_libsnapshot_a_OBJECTS = $(am__objects_28)
 libsnapshot_a_OBJECTS = $(am_libsnapshot_a_OBJECTS)
 libsnapshot_pic_a_AR = $(AR) cru
 libsnapshot_pic_a_LIBADD =
-am__objects_26 = libsnapshot_pic_a-snapshot.$(OBJEXT)
-am_libsnapshot_pic_a_OBJECTS = $(am__objects_26)
+am__objects_29 = libsnapshot_pic_a-snapshot.$(OBJEXT)
+am_libsnapshot_pic_a_OBJECTS = $(am__objects_29)
 libsnapshot_pic_a_OBJECTS = $(am_libsnapshot_pic_a_OBJECTS)
 libsnapshot_plugin_a_AR = $(AR) cru
 libsnapshot_plugin_a_LIBADD =
-am__objects_27 = libsnapshot_plugin_a-snapshot.$(OBJEXT)
-am_libsnapshot_plugin_a_OBJECTS = $(am__objects_27)
+am__objects_30 = libsnapshot_plugin_a-snapshot.$(OBJEXT)
+am_libsnapshot_plugin_a_OBJECTS = $(am__objects_30)
 libsnapshot_plugin_a_OBJECTS = $(am_libsnapshot_plugin_a_OBJECTS)
 libsvgalib_a_AR = $(AR) cru
 libsvgalib_a_LIBADD =
-am__objects_28 = libsvgalib_a-svgalib.$(OBJEXT)
-am_libsvgalib_a_OBJECTS = $(am__objects_28)
+am__objects_31 = libsvgalib_a-svgalib.$(OBJEXT)
+am_libsvgalib_a_OBJECTS = $(am__objects_31)
 libsvgalib_a_OBJECTS = $(am_libsvgalib_a_OBJECTS)
 libsvgalib_pic_a_AR = $(AR) cru
 libsvgalib_pic_a_LIBADD =
-am__objects_29 = libsvgalib_pic_a-svgalib.$(OBJEXT)
-am_libsvgalib_pic_a_OBJECTS = $(am__objects_29)
+am__objects_32 = libsvgalib_pic_a-svgalib.$(OBJEXT)
+am_libsvgalib_pic_a_OBJECTS = $(am__objects_32)
 libsvgalib_pic_a_OBJECTS = $(am_libsvgalib_pic_a_OBJECTS)
 libsvgalib_plugin_a_AR = $(AR) cru
 libsvgalib_plugin_a_LIBADD =
-am__objects_30 = libsvgalib_plugin_a-svgalib.$(OBJEXT)
-am_libsvgalib_plugin_a_OBJECTS = $(am__objects_30)
+am__objects_33 = libsvgalib_plugin_a-svgalib.$(OBJEXT)
+am_libsvgalib_plugin_a_OBJECTS = $(am__objects_33)
 libsvgalib_plugin_a_OBJECTS = $(am_libsvgalib_plugin_a_OBJECTS)
 libvout_sdl_a_AR = $(AR) cru
 libvout_sdl_a_LIBADD =
-am__objects_31 = libvout_sdl_a-sdl.$(OBJEXT)
-am_libvout_sdl_a_OBJECTS = $(am__objects_31)
+am__objects_34 = libvout_sdl_a-sdl.$(OBJEXT)
+am_libvout_sdl_a_OBJECTS = $(am__objects_34)
 libvout_sdl_a_OBJECTS = $(am_libvout_sdl_a_OBJECTS)
 libvout_sdl_pic_a_AR = $(AR) cru
 libvout_sdl_pic_a_LIBADD =
-am__objects_32 = libvout_sdl_pic_a-sdl.$(OBJEXT)
-am_libvout_sdl_pic_a_OBJECTS = $(am__objects_32)
+am__objects_35 = libvout_sdl_pic_a-sdl.$(OBJEXT)
+am_libvout_sdl_pic_a_OBJECTS = $(am__objects_35)
 libvout_sdl_pic_a_OBJECTS = $(am_libvout_sdl_pic_a_OBJECTS)
 libvout_sdl_plugin_a_AR = $(AR) cru
 libvout_sdl_plugin_a_LIBADD =
-am__objects_33 = libvout_sdl_plugin_a-sdl.$(OBJEXT)
-am_libvout_sdl_plugin_a_OBJECTS = $(am__objects_33)
+am__objects_36 = libvout_sdl_plugin_a-sdl.$(OBJEXT)
+am_libvout_sdl_plugin_a_OBJECTS = $(am__objects_36)
 libvout_sdl_plugin_a_OBJECTS = $(am_libvout_sdl_plugin_a_OBJECTS)
+libwingapi_a_AR = $(AR) cru
+libwingapi_a_LIBADD =
+am__objects_37 = libwingapi_a-wingdi.$(OBJEXT)
+am_libwingapi_a_OBJECTS = $(am__objects_37)
+libwingapi_a_OBJECTS = $(am_libwingapi_a_OBJECTS)
+libwingapi_pic_a_AR = $(AR) cru
+libwingapi_pic_a_LIBADD =
+am__objects_38 = libwingapi_pic_a-wingdi.$(OBJEXT)
+am_libwingapi_pic_a_OBJECTS = $(am__objects_38)
+libwingapi_pic_a_OBJECTS = $(am_libwingapi_pic_a_OBJECTS)
+libwingapi_plugin_a_AR = $(AR) cru
+libwingapi_plugin_a_LIBADD =
+am__objects_39 = libwingapi_plugin_a-wingdi.$(OBJEXT)
+am_libwingapi_plugin_a_OBJECTS = $(am__objects_39)
+libwingapi_plugin_a_OBJECTS = $(am_libwingapi_plugin_a_OBJECTS)
 libwingdi_a_AR = $(AR) cru
 libwingdi_a_LIBADD =
-am__objects_34 = libwingdi_a-wingdi.$(OBJEXT)
-am_libwingdi_a_OBJECTS = $(am__objects_34)
+am__objects_40 = libwingdi_a-wingdi.$(OBJEXT)
+am_libwingdi_a_OBJECTS = $(am__objects_40)
 libwingdi_a_OBJECTS = $(am_libwingdi_a_OBJECTS)
 libwingdi_pic_a_AR = $(AR) cru
 libwingdi_pic_a_LIBADD =
-am__objects_35 = libwingdi_pic_a-wingdi.$(OBJEXT)
-am_libwingdi_pic_a_OBJECTS = $(am__objects_35)
+am__objects_41 = libwingdi_pic_a-wingdi.$(OBJEXT)
+am_libwingdi_pic_a_OBJECTS = $(am__objects_41)
 libwingdi_pic_a_OBJECTS = $(am_libwingdi_pic_a_OBJECTS)
 libwingdi_plugin_a_AR = $(AR) cru
 libwingdi_plugin_a_LIBADD =
-am__objects_36 = libwingdi_plugin_a-wingdi.$(OBJEXT)
-am_libwingdi_plugin_a_OBJECTS = $(am__objects_36)
+am__objects_42 = libwingdi_plugin_a-wingdi.$(OBJEXT)
+am_libwingdi_plugin_a_OBJECTS = $(am__objects_42)
 libwingdi_plugin_a_OBJECTS = $(am_libwingdi_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
@@ -764,6 +839,9 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libhd1000v_a-hd1000v.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libhd1000v_pic_a-hd1000v.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libhd1000v_plugin_a-hd1000v.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libimage_a-image.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libimage_pic_a-image.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libimage_plugin_a-image.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmga_a-mga.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmga_pic_a-mga.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmga_plugin_a-mga.Po \
@@ -779,6 +857,9 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libvout_sdl_a-sdl.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvout_sdl_pic_a-sdl.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libvout_sdl_plugin_a-sdl.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libwingapi_a-wingdi.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libwingapi_pic_a-wingdi.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libwingapi_plugin_a-wingdi.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwingdi_a-wingdi.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwingdi_pic_a-wingdi.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libwingdi_plugin_a-wingdi.Po
@@ -800,19 +881,23 @@ DIST_SOURCES = $(libaa_a_SOURCES) $(libaa_pic_a_SOURCES) \
 	$(libglide_a_SOURCES) $(libglide_pic_a_SOURCES) \
 	$(libglide_plugin_a_SOURCES) $(libhd1000v_a_SOURCES) \
 	$(libhd1000v_pic_a_SOURCES) $(libhd1000v_plugin_a_SOURCES) \
-	$(libmga_a_SOURCES) $(libmga_pic_a_SOURCES) \
-	$(libmga_plugin_a_SOURCES) $(libopengl_a_SOURCES) \
-	$(libopengl_pic_a_SOURCES) $(libopengl_plugin_a_SOURCES) \
-	$(libsnapshot_a_SOURCES) $(libsnapshot_pic_a_SOURCES) \
-	$(libsnapshot_plugin_a_SOURCES) $(libsvgalib_a_SOURCES) \
-	$(libsvgalib_pic_a_SOURCES) $(libsvgalib_plugin_a_SOURCES) \
-	$(libvout_sdl_a_SOURCES) $(libvout_sdl_pic_a_SOURCES) \
-	$(libvout_sdl_plugin_a_SOURCES) $(libwingdi_a_SOURCES) \
+	$(libimage_a_SOURCES) $(libimage_pic_a_SOURCES) \
+	$(libimage_plugin_a_SOURCES) $(libmga_a_SOURCES) \
+	$(libmga_pic_a_SOURCES) $(libmga_plugin_a_SOURCES) \
+	$(libopengl_a_SOURCES) $(libopengl_pic_a_SOURCES) \
+	$(libopengl_plugin_a_SOURCES) $(libsnapshot_a_SOURCES) \
+	$(libsnapshot_pic_a_SOURCES) $(libsnapshot_plugin_a_SOURCES) \
+	$(libsvgalib_a_SOURCES) $(libsvgalib_pic_a_SOURCES) \
+	$(libsvgalib_plugin_a_SOURCES) $(libvout_sdl_a_SOURCES) \
+	$(libvout_sdl_pic_a_SOURCES) $(libvout_sdl_plugin_a_SOURCES) \
+	$(libwingapi_a_SOURCES) $(libwingapi_pic_a_SOURCES) \
+	$(libwingapi_plugin_a_SOURCES) $(libwingdi_a_SOURCES) \
 	$(libwingdi_pic_a_SOURCES) $(libwingdi_plugin_a_SOURCES)
 DATA = $(libaa_DATA) $(libcaca_DATA) $(libfb_DATA) $(libggi_DATA) \
-	$(libglide_DATA) $(libhd1000v_DATA) $(libmga_DATA) \
-	$(libopengl_DATA) $(libsnapshot_DATA) $(libsvgalib_DATA) \
-	$(libvout_sdl_DATA) $(libwingdi_DATA)
+	$(libglide_DATA) $(libhd1000v_DATA) $(libimage_DATA) \
+	$(libmga_DATA) $(libopengl_DATA) $(libsnapshot_DATA) \
+	$(libsvgalib_DATA) $(libvout_sdl_DATA) $(libwingapi_DATA) \
+	$(libwingdi_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -825,7 +910,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libaa_a_SOURCES) $(libaa_pic_a_SOURCES) $(libaa_plugin_a_SOURCES) $(libcaca_a_SOURCES) $(libcaca_pic_a_SOURCES) $(libcaca_plugin_a_SOURCES) $(libfb_a_SOURCES) $(libfb_pic_a_SOURCES) $(libfb_plugin_a_SOURCES) $(libggi_a_SOURCES) $(libggi_pic_a_SOURCES) $(libggi_plugin_a_SOURCES) $(libglide_a_SOURCES) $(libglide_pic_a_SOURCES) $(libglide_plugin_a_SOURCES) $(libhd1000v_a_SOURCES) $(libhd1000v_pic_a_SOURCES) $(libhd1000v_plugin_a_SOURCES) $(libmga_a_SOURCES) $(libmga_pic_a_SOURCES) $(libmga_plugin_a_SOURCES) $(libopengl_a_SOURCES) $(libopengl_pic_a_SOURCES) $(libopengl_plugin_a_SOURCES) $(libsnapshot_a_SOURCES) $(libsnapshot_pic_a_SOURCES) $(libsnapshot_plugin_a_SOURCES) $(libsvgalib_a_SOURCES) $(libsvgalib_pic_a_SOURCES) $(libsvgalib_plugin_a_SOURCES) $(libvout_sdl_a_SOURCES) $(libvout_sdl_pic_a_SOURCES) $(libvout_sdl_plugin_a_SOURCES) $(libwingdi_a_SOURCES) $(libwingdi_pic_a_SOURCES) $(libwingdi_plugin_a_SOURCES)
+SOURCES = $(libaa_a_SOURCES) $(libaa_pic_a_SOURCES) $(libaa_plugin_a_SOURCES) $(libcaca_a_SOURCES) $(libcaca_pic_a_SOURCES) $(libcaca_plugin_a_SOURCES) $(libfb_a_SOURCES) $(libfb_pic_a_SOURCES) $(libfb_plugin_a_SOURCES) $(libggi_a_SOURCES) $(libggi_pic_a_SOURCES) $(libggi_plugin_a_SOURCES) $(libglide_a_SOURCES) $(libglide_pic_a_SOURCES) $(libglide_plugin_a_SOURCES) $(libhd1000v_a_SOURCES) $(libhd1000v_pic_a_SOURCES) $(libhd1000v_plugin_a_SOURCES) $(libimage_a_SOURCES) $(libimage_pic_a_SOURCES) $(libimage_plugin_a_SOURCES) $(libmga_a_SOURCES) $(libmga_pic_a_SOURCES) $(libmga_plugin_a_SOURCES) $(libopengl_a_SOURCES) $(libopengl_pic_a_SOURCES) $(libopengl_plugin_a_SOURCES) $(libsnapshot_a_SOURCES) $(libsnapshot_pic_a_SOURCES) $(libsnapshot_plugin_a_SOURCES) $(libsvgalib_a_SOURCES) $(libsvgalib_pic_a_SOURCES) $(libsvgalib_plugin_a_SOURCES) $(libvout_sdl_a_SOURCES) $(libvout_sdl_pic_a_SOURCES) $(libvout_sdl_plugin_a_SOURCES) $(libwingapi_a_SOURCES) $(libwingapi_pic_a_SOURCES) $(libwingapi_plugin_a_SOURCES) $(libwingdi_a_SOURCES) $(libwingdi_pic_a_SOURCES) $(libwingdi_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -942,6 +1027,18 @@ libhd1000v_plugin.a: $(libhd1000v_plugin_a_OBJECTS) $(libhd1000v_plugin_a_DEPEND
 	-rm -f libhd1000v_plugin.a
 	$(libhd1000v_plugin_a_AR) libhd1000v_plugin.a $(libhd1000v_plugin_a_OBJECTS) $(libhd1000v_plugin_a_LIBADD)
 	$(RANLIB) libhd1000v_plugin.a
+libimage.a: $(libimage_a_OBJECTS) $(libimage_a_DEPENDENCIES) 
+	-rm -f libimage.a
+	$(libimage_a_AR) libimage.a $(libimage_a_OBJECTS) $(libimage_a_LIBADD)
+	$(RANLIB) libimage.a
+libimage_pic.a: $(libimage_pic_a_OBJECTS) $(libimage_pic_a_DEPENDENCIES) 
+	-rm -f libimage_pic.a
+	$(libimage_pic_a_AR) libimage_pic.a $(libimage_pic_a_OBJECTS) $(libimage_pic_a_LIBADD)
+	$(RANLIB) libimage_pic.a
+libimage_plugin.a: $(libimage_plugin_a_OBJECTS) $(libimage_plugin_a_DEPENDENCIES) 
+	-rm -f libimage_plugin.a
+	$(libimage_plugin_a_AR) libimage_plugin.a $(libimage_plugin_a_OBJECTS) $(libimage_plugin_a_LIBADD)
+	$(RANLIB) libimage_plugin.a
 libmga.a: $(libmga_a_OBJECTS) $(libmga_a_DEPENDENCIES) 
 	-rm -f libmga.a
 	$(libmga_a_AR) libmga.a $(libmga_a_OBJECTS) $(libmga_a_LIBADD)
@@ -1002,6 +1099,18 @@ libvout_sdl_plugin.a: $(libvout_sdl_plugin_a_OBJECTS) $(libvout_sdl_plugin_a_DEP
 	-rm -f libvout_sdl_plugin.a
 	$(libvout_sdl_plugin_a_AR) libvout_sdl_plugin.a $(libvout_sdl_plugin_a_OBJECTS) $(libvout_sdl_plugin_a_LIBADD)
 	$(RANLIB) libvout_sdl_plugin.a
+libwingapi.a: $(libwingapi_a_OBJECTS) $(libwingapi_a_DEPENDENCIES) 
+	-rm -f libwingapi.a
+	$(libwingapi_a_AR) libwingapi.a $(libwingapi_a_OBJECTS) $(libwingapi_a_LIBADD)
+	$(RANLIB) libwingapi.a
+libwingapi_pic.a: $(libwingapi_pic_a_OBJECTS) $(libwingapi_pic_a_DEPENDENCIES) 
+	-rm -f libwingapi_pic.a
+	$(libwingapi_pic_a_AR) libwingapi_pic.a $(libwingapi_pic_a_OBJECTS) $(libwingapi_pic_a_LIBADD)
+	$(RANLIB) libwingapi_pic.a
+libwingapi_plugin.a: $(libwingapi_plugin_a_OBJECTS) $(libwingapi_plugin_a_DEPENDENCIES) 
+	-rm -f libwingapi_plugin.a
+	$(libwingapi_plugin_a_AR) libwingapi_plugin.a $(libwingapi_plugin_a_OBJECTS) $(libwingapi_plugin_a_LIBADD)
+	$(RANLIB) libwingapi_plugin.a
 libwingdi.a: $(libwingdi_a_OBJECTS) $(libwingdi_a_DEPENDENCIES) 
 	-rm -f libwingdi.a
 	$(libwingdi_a_AR) libwingdi.a $(libwingdi_a_OBJECTS) $(libwingdi_a_LIBADD)
@@ -1039,6 +1148,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhd1000v_a-hd1000v.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhd1000v_pic_a-hd1000v.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhd1000v_plugin_a-hd1000v.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libimage_a-image.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libimage_pic_a-image.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libimage_plugin_a-image.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmga_a-mga.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmga_pic_a-mga.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmga_plugin_a-mga.Po@am__quote@
@@ -1054,6 +1166,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvout_sdl_a-sdl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvout_sdl_pic_a-sdl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvout_sdl_plugin_a-sdl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwingapi_a-wingdi.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwingapi_pic_a-wingdi.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwingapi_plugin_a-wingdi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwingdi_a-wingdi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwingdi_pic_a-wingdi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwingdi_plugin_a-wingdi.Po@am__quote@
@@ -1410,6 +1525,72 @@ libglide_plugin_a-glide.obj: glide.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libglide_plugin_a_CFLAGS) $(CFLAGS) -c -o libglide_plugin_a-glide.obj `if test -f 'glide.c'; then $(CYGPATH_W) 'glide.c'; else $(CYGPATH_W) '$(srcdir)/glide.c'; fi`
 
+libimage_a-image.o: image.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libimage_a_CFLAGS) $(CFLAGS) -MT libimage_a-image.o -MD -MP -MF "$(DEPDIR)/libimage_a-image.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libimage_a-image.o `test -f 'image.c' || echo '$(srcdir)/'`image.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libimage_a-image.Tpo" "$(DEPDIR)/libimage_a-image.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libimage_a-image.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='image.c' object='libimage_a-image.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libimage_a-image.Po' tmpdepfile='$(DEPDIR)/libimage_a-image.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libimage_a_CFLAGS) $(CFLAGS) -c -o libimage_a-image.o `test -f 'image.c' || echo '$(srcdir)/'`image.c
+
+libimage_a-image.obj: image.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libimage_a_CFLAGS) $(CFLAGS) -MT libimage_a-image.obj -MD -MP -MF "$(DEPDIR)/libimage_a-image.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libimage_a-image.obj `if test -f 'image.c'; then $(CYGPATH_W) 'image.c'; else $(CYGPATH_W) '$(srcdir)/image.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libimage_a-image.Tpo" "$(DEPDIR)/libimage_a-image.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libimage_a-image.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='image.c' object='libimage_a-image.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libimage_a-image.Po' tmpdepfile='$(DEPDIR)/libimage_a-image.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libimage_a_CFLAGS) $(CFLAGS) -c -o libimage_a-image.obj `if test -f 'image.c'; then $(CYGPATH_W) 'image.c'; else $(CYGPATH_W) '$(srcdir)/image.c'; fi`
+
+libimage_pic_a-image.o: image.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libimage_pic_a_CFLAGS) $(CFLAGS) -MT libimage_pic_a-image.o -MD -MP -MF "$(DEPDIR)/libimage_pic_a-image.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libimage_pic_a-image.o `test -f 'image.c' || echo '$(srcdir)/'`image.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libimage_pic_a-image.Tpo" "$(DEPDIR)/libimage_pic_a-image.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libimage_pic_a-image.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='image.c' object='libimage_pic_a-image.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libimage_pic_a-image.Po' tmpdepfile='$(DEPDIR)/libimage_pic_a-image.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libimage_pic_a_CFLAGS) $(CFLAGS) -c -o libimage_pic_a-image.o `test -f 'image.c' || echo '$(srcdir)/'`image.c
+
+libimage_pic_a-image.obj: image.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libimage_pic_a_CFLAGS) $(CFLAGS) -MT libimage_pic_a-image.obj -MD -MP -MF "$(DEPDIR)/libimage_pic_a-image.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libimage_pic_a-image.obj `if test -f 'image.c'; then $(CYGPATH_W) 'image.c'; else $(CYGPATH_W) '$(srcdir)/image.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libimage_pic_a-image.Tpo" "$(DEPDIR)/libimage_pic_a-image.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libimage_pic_a-image.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='image.c' object='libimage_pic_a-image.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libimage_pic_a-image.Po' tmpdepfile='$(DEPDIR)/libimage_pic_a-image.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libimage_pic_a_CFLAGS) $(CFLAGS) -c -o libimage_pic_a-image.obj `if test -f 'image.c'; then $(CYGPATH_W) 'image.c'; else $(CYGPATH_W) '$(srcdir)/image.c'; fi`
+
+libimage_plugin_a-image.o: image.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libimage_plugin_a_CFLAGS) $(CFLAGS) -MT libimage_plugin_a-image.o -MD -MP -MF "$(DEPDIR)/libimage_plugin_a-image.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libimage_plugin_a-image.o `test -f 'image.c' || echo '$(srcdir)/'`image.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libimage_plugin_a-image.Tpo" "$(DEPDIR)/libimage_plugin_a-image.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libimage_plugin_a-image.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='image.c' object='libimage_plugin_a-image.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libimage_plugin_a-image.Po' tmpdepfile='$(DEPDIR)/libimage_plugin_a-image.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libimage_plugin_a_CFLAGS) $(CFLAGS) -c -o libimage_plugin_a-image.o `test -f 'image.c' || echo '$(srcdir)/'`image.c
+
+libimage_plugin_a-image.obj: image.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libimage_plugin_a_CFLAGS) $(CFLAGS) -MT libimage_plugin_a-image.obj -MD -MP -MF "$(DEPDIR)/libimage_plugin_a-image.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libimage_plugin_a-image.obj `if test -f 'image.c'; then $(CYGPATH_W) 'image.c'; else $(CYGPATH_W) '$(srcdir)/image.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libimage_plugin_a-image.Tpo" "$(DEPDIR)/libimage_plugin_a-image.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libimage_plugin_a-image.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='image.c' object='libimage_plugin_a-image.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libimage_plugin_a-image.Po' tmpdepfile='$(DEPDIR)/libimage_plugin_a-image.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libimage_plugin_a_CFLAGS) $(CFLAGS) -c -o libimage_plugin_a-image.obj `if test -f 'image.c'; then $(CYGPATH_W) 'image.c'; else $(CYGPATH_W) '$(srcdir)/image.c'; fi`
+
 libmga_a-mga.o: mga.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmga_a_CFLAGS) $(CFLAGS) -MT libmga_a-mga.o -MD -MP -MF "$(DEPDIR)/libmga_a-mga.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libmga_a-mga.o `test -f 'mga.c' || echo '$(srcdir)/'`mga.c; \
@@ -1740,6 +1921,72 @@ libvout_sdl_plugin_a-sdl.obj: sdl.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvout_sdl_plugin_a_CFLAGS) $(CFLAGS) -c -o libvout_sdl_plugin_a-sdl.obj `if test -f 'sdl.c'; then $(CYGPATH_W) 'sdl.c'; else $(CYGPATH_W) '$(srcdir)/sdl.c'; fi`
 
+libwingapi_a-wingdi.o: wingdi.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwingapi_a_CFLAGS) $(CFLAGS) -MT libwingapi_a-wingdi.o -MD -MP -MF "$(DEPDIR)/libwingapi_a-wingdi.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libwingapi_a-wingdi.o `test -f 'wingdi.c' || echo '$(srcdir)/'`wingdi.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwingapi_a-wingdi.Tpo" "$(DEPDIR)/libwingapi_a-wingdi.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libwingapi_a-wingdi.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wingdi.c' object='libwingapi_a-wingdi.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libwingapi_a-wingdi.Po' tmpdepfile='$(DEPDIR)/libwingapi_a-wingdi.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwingapi_a_CFLAGS) $(CFLAGS) -c -o libwingapi_a-wingdi.o `test -f 'wingdi.c' || echo '$(srcdir)/'`wingdi.c
+
+libwingapi_a-wingdi.obj: wingdi.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwingapi_a_CFLAGS) $(CFLAGS) -MT libwingapi_a-wingdi.obj -MD -MP -MF "$(DEPDIR)/libwingapi_a-wingdi.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libwingapi_a-wingdi.obj `if test -f 'wingdi.c'; then $(CYGPATH_W) 'wingdi.c'; else $(CYGPATH_W) '$(srcdir)/wingdi.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwingapi_a-wingdi.Tpo" "$(DEPDIR)/libwingapi_a-wingdi.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libwingapi_a-wingdi.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wingdi.c' object='libwingapi_a-wingdi.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libwingapi_a-wingdi.Po' tmpdepfile='$(DEPDIR)/libwingapi_a-wingdi.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwingapi_a_CFLAGS) $(CFLAGS) -c -o libwingapi_a-wingdi.obj `if test -f 'wingdi.c'; then $(CYGPATH_W) 'wingdi.c'; else $(CYGPATH_W) '$(srcdir)/wingdi.c'; fi`
+
+libwingapi_pic_a-wingdi.o: wingdi.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwingapi_pic_a_CFLAGS) $(CFLAGS) -MT libwingapi_pic_a-wingdi.o -MD -MP -MF "$(DEPDIR)/libwingapi_pic_a-wingdi.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libwingapi_pic_a-wingdi.o `test -f 'wingdi.c' || echo '$(srcdir)/'`wingdi.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwingapi_pic_a-wingdi.Tpo" "$(DEPDIR)/libwingapi_pic_a-wingdi.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libwingapi_pic_a-wingdi.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wingdi.c' object='libwingapi_pic_a-wingdi.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libwingapi_pic_a-wingdi.Po' tmpdepfile='$(DEPDIR)/libwingapi_pic_a-wingdi.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwingapi_pic_a_CFLAGS) $(CFLAGS) -c -o libwingapi_pic_a-wingdi.o `test -f 'wingdi.c' || echo '$(srcdir)/'`wingdi.c
+
+libwingapi_pic_a-wingdi.obj: wingdi.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwingapi_pic_a_CFLAGS) $(CFLAGS) -MT libwingapi_pic_a-wingdi.obj -MD -MP -MF "$(DEPDIR)/libwingapi_pic_a-wingdi.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libwingapi_pic_a-wingdi.obj `if test -f 'wingdi.c'; then $(CYGPATH_W) 'wingdi.c'; else $(CYGPATH_W) '$(srcdir)/wingdi.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwingapi_pic_a-wingdi.Tpo" "$(DEPDIR)/libwingapi_pic_a-wingdi.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libwingapi_pic_a-wingdi.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wingdi.c' object='libwingapi_pic_a-wingdi.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libwingapi_pic_a-wingdi.Po' tmpdepfile='$(DEPDIR)/libwingapi_pic_a-wingdi.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwingapi_pic_a_CFLAGS) $(CFLAGS) -c -o libwingapi_pic_a-wingdi.obj `if test -f 'wingdi.c'; then $(CYGPATH_W) 'wingdi.c'; else $(CYGPATH_W) '$(srcdir)/wingdi.c'; fi`
+
+libwingapi_plugin_a-wingdi.o: wingdi.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwingapi_plugin_a_CFLAGS) $(CFLAGS) -MT libwingapi_plugin_a-wingdi.o -MD -MP -MF "$(DEPDIR)/libwingapi_plugin_a-wingdi.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libwingapi_plugin_a-wingdi.o `test -f 'wingdi.c' || echo '$(srcdir)/'`wingdi.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwingapi_plugin_a-wingdi.Tpo" "$(DEPDIR)/libwingapi_plugin_a-wingdi.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libwingapi_plugin_a-wingdi.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wingdi.c' object='libwingapi_plugin_a-wingdi.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libwingapi_plugin_a-wingdi.Po' tmpdepfile='$(DEPDIR)/libwingapi_plugin_a-wingdi.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwingapi_plugin_a_CFLAGS) $(CFLAGS) -c -o libwingapi_plugin_a-wingdi.o `test -f 'wingdi.c' || echo '$(srcdir)/'`wingdi.c
+
+libwingapi_plugin_a-wingdi.obj: wingdi.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwingapi_plugin_a_CFLAGS) $(CFLAGS) -MT libwingapi_plugin_a-wingdi.obj -MD -MP -MF "$(DEPDIR)/libwingapi_plugin_a-wingdi.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libwingapi_plugin_a-wingdi.obj `if test -f 'wingdi.c'; then $(CYGPATH_W) 'wingdi.c'; else $(CYGPATH_W) '$(srcdir)/wingdi.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwingapi_plugin_a-wingdi.Tpo" "$(DEPDIR)/libwingapi_plugin_a-wingdi.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libwingapi_plugin_a-wingdi.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wingdi.c' object='libwingapi_plugin_a-wingdi.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libwingapi_plugin_a-wingdi.Po' tmpdepfile='$(DEPDIR)/libwingapi_plugin_a-wingdi.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwingapi_plugin_a_CFLAGS) $(CFLAGS) -c -o libwingapi_plugin_a-wingdi.obj `if test -f 'wingdi.c'; then $(CYGPATH_W) 'wingdi.c'; else $(CYGPATH_W) '$(srcdir)/wingdi.c'; fi`
+
 libwingdi_a-wingdi.o: wingdi.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwingdi_a_CFLAGS) $(CFLAGS) -MT libwingdi_a-wingdi.o -MD -MP -MF "$(DEPDIR)/libwingdi_a-wingdi.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libwingdi_a-wingdi.o `test -f 'wingdi.c' || echo '$(srcdir)/'`wingdi.c; \
@@ -2002,6 +2249,24 @@ uninstall-libhd1000vDATA:
 	  echo " rm -f $(DESTDIR)$(libhd1000vdir)/$$f"; \
 	  rm -f $(DESTDIR)$(libhd1000vdir)/$$f; \
 	done
+libimageDATA_INSTALL = $(INSTALL_DATA)
+install-libimageDATA: $(libimage_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libimagedir)
+	@list='$(libimage_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libimageDATA_INSTALL) $$d$$p $(DESTDIR)$(libimagedir)/$$f"; \
+	  $(libimageDATA_INSTALL) $$d$$p $(DESTDIR)$(libimagedir)/$$f; \
+	done
+
+uninstall-libimageDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libimage_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libimagedir)/$$f"; \
+	  rm -f $(DESTDIR)$(libimagedir)/$$f; \
+	done
 libmgaDATA_INSTALL = $(INSTALL_DATA)
 install-libmgaDATA: $(libmga_DATA)
 	@$(NORMAL_INSTALL)
@@ -2091,6 +2356,24 @@ uninstall-libvout_sdlDATA:
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
 	  echo " rm -f $(DESTDIR)$(libvout_sdldir)/$$f"; \
 	  rm -f $(DESTDIR)$(libvout_sdldir)/$$f; \
+	done
+libwingapiDATA_INSTALL = $(INSTALL_DATA)
+install-libwingapiDATA: $(libwingapi_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libwingapidir)
+	@list='$(libwingapi_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libwingapiDATA_INSTALL) $$d$$p $(DESTDIR)$(libwingapidir)/$$f"; \
+	  $(libwingapiDATA_INSTALL) $$d$$p $(DESTDIR)$(libwingapidir)/$$f; \
+	done
+
+uninstall-libwingapiDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libwingapi_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libwingapidir)/$$f"; \
+	  rm -f $(DESTDIR)$(libwingapidir)/$$f; \
 	done
 libwingdiDATA_INSTALL = $(INSTALL_DATA)
 install-libwingdiDATA: $(libwingdi_DATA)
@@ -2285,7 +2568,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libaadir) $(DESTDIR)$(libcacadir) $(DESTDIR)$(libfbdir) $(DESTDIR)$(libggidir) $(DESTDIR)$(libglidedir) $(DESTDIR)$(libhd1000vdir) $(DESTDIR)$(libmgadir) $(DESTDIR)$(libopengldir) $(DESTDIR)$(libsnapshotdir) $(DESTDIR)$(libsvgalibdir) $(DESTDIR)$(libvout_sdldir) $(DESTDIR)$(libwingdidir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libaadir) $(DESTDIR)$(libcacadir) $(DESTDIR)$(libfbdir) $(DESTDIR)$(libggidir) $(DESTDIR)$(libglidedir) $(DESTDIR)$(libhd1000vdir) $(DESTDIR)$(libimagedir) $(DESTDIR)$(libmgadir) $(DESTDIR)$(libopengldir) $(DESTDIR)$(libsnapshotdir) $(DESTDIR)$(libsvgalibdir) $(DESTDIR)$(libvout_sdldir) $(DESTDIR)$(libwingapidir) $(DESTDIR)$(libwingdidir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -2334,10 +2617,10 @@ info-am:
 
 install-data-am: install-libaaDATA install-libcacaDATA install-libfbDATA \
 	install-libggiDATA install-libglideDATA install-libhd1000vDATA \
-	install-libmgaDATA install-libopenglDATA \
+	install-libimageDATA install-libmgaDATA install-libopenglDATA \
 	install-libsnapshotDATA install-libsvgalibDATA \
 	install-libvlcLIBRARIES install-libvout_sdlDATA \
-	install-libwingdiDATA
+	install-libwingapiDATA install-libwingdiDATA
 
 install-exec-am:
 
@@ -2367,9 +2650,10 @@ ps-am:
 uninstall-am: uninstall-info-am uninstall-libaaDATA \
 	uninstall-libcacaDATA uninstall-libfbDATA uninstall-libggiDATA \
 	uninstall-libglideDATA uninstall-libhd1000vDATA \
-	uninstall-libmgaDATA uninstall-libopenglDATA \
-	uninstall-libsnapshotDATA uninstall-libsvgalibDATA \
-	uninstall-libvlcLIBRARIES uninstall-libvout_sdlDATA \
+	uninstall-libimageDATA uninstall-libmgaDATA \
+	uninstall-libopenglDATA uninstall-libsnapshotDATA \
+	uninstall-libsvgalibDATA uninstall-libvlcLIBRARIES \
+	uninstall-libvout_sdlDATA uninstall-libwingapiDATA \
 	uninstall-libwingdiDATA
 
 uninstall-info: uninstall-info-recursive
@@ -2385,22 +2669,24 @@ uninstall-info: uninstall-info-recursive
 	install-info install-info-am install-info-recursive \
 	install-libaaDATA install-libcacaDATA install-libfbDATA \
 	install-libggiDATA install-libglideDATA install-libhd1000vDATA \
-	install-libmgaDATA install-libopenglDATA \
+	install-libimageDATA install-libmgaDATA install-libopenglDATA \
 	install-libsnapshotDATA install-libsvgalibDATA \
 	install-libvlcLIBRARIES install-libvout_sdlDATA \
-	install-libwingdiDATA install-man install-recursive \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am installdirs-recursive maintainer-clean \
-	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-recursive \
-	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
-	tags-recursive uninstall uninstall-am uninstall-info-am \
+	install-libwingapiDATA install-libwingdiDATA install-man \
+	install-recursive install-strip installcheck installcheck-am \
+	installdirs installdirs-am installdirs-recursive \
+	maintainer-clean maintainer-clean-generic \
+	maintainer-clean-recursive mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
+	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
+	uninstall uninstall-am uninstall-info-am \
 	uninstall-info-recursive uninstall-libaaDATA \
 	uninstall-libcacaDATA uninstall-libfbDATA uninstall-libggiDATA \
 	uninstall-libglideDATA uninstall-libhd1000vDATA \
-	uninstall-libmgaDATA uninstall-libopenglDATA \
-	uninstall-libsnapshotDATA uninstall-libsvgalibDATA \
-	uninstall-libvlcLIBRARIES uninstall-libvout_sdlDATA \
+	uninstall-libimageDATA uninstall-libmgaDATA \
+	uninstall-libopenglDATA uninstall-libsnapshotDATA \
+	uninstall-libsvgalibDATA uninstall-libvlcLIBRARIES \
+	uninstall-libvout_sdlDATA uninstall-libwingapiDATA \
 	uninstall-libwingdiDATA uninstall-recursive
 
 
@@ -2410,9 +2696,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga hd1000v snapshot opengl; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga hd1000v snapshot opengl; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga hd1000v snapshot opengl; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi wingapi mga hd1000v snapshot opengl image; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi wingapi mga hd1000v snapshot opengl image; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi wingapi mga hd1000v snapshot opengl image; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 libaa_plugin$(LIBEXT): $(libaa_plugin_a_OBJECTS)
@@ -2463,6 +2749,12 @@ libwingdi_plugin$(LIBEXT): $(libwingdi_plugin_a_OBJECTS)
 	  objc) echo $(OBJCLINK) $(libwingdi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin wingdi\` ; $(OBJCLINK) $(libwingdi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin wingdi` ;; \
 	  c|*) echo $(LINK) $(libwingdi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin wingdi\` ; $(LINK) $(libwingdi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin wingdi` ;; \
 	esac
+libwingapi_plugin$(LIBEXT): $(libwingapi_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage wingapi` in \
+	  c++) echo $(CXXLINK) $(libwingapi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin wingapi\` ; $(CXXLINK) $(libwingapi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin wingapi` ;; \
+	  objc) echo $(OBJCLINK) $(libwingapi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin wingapi\` ; $(OBJCLINK) $(libwingapi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin wingapi` ;; \
+	  c|*) echo $(LINK) $(libwingapi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin wingapi\` ; $(LINK) $(libwingapi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin wingapi` ;; \
+	esac
 libmga_plugin$(LIBEXT): $(libmga_plugin_a_OBJECTS)
 	@case `$(VLC_CONFIG) --linkage mga` in \
 	  c++) echo $(CXXLINK) $(libmga_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mga\` ; $(CXXLINK) $(libmga_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mga` ;; \
@@ -2486,6 +2778,12 @@ libopengl_plugin$(LIBEXT): $(libopengl_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libopengl_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin opengl\` ; $(CXXLINK) $(libopengl_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin opengl` ;; \
 	  objc) echo $(OBJCLINK) $(libopengl_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin opengl\` ; $(OBJCLINK) $(libopengl_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin opengl` ;; \
 	  c|*) echo $(LINK) $(libopengl_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin opengl\` ; $(LINK) $(libopengl_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin opengl` ;; \
+	esac
+libimage_plugin$(LIBEXT): $(libimage_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage image` in \
+	  c++) echo $(CXXLINK) $(libimage_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin image\` ; $(CXXLINK) $(libimage_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin image` ;; \
+	  objc) echo $(OBJCLINK) $(libimage_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin image\` ; $(OBJCLINK) $(libimage_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin image` ;; \
+	  c|*) echo $(LINK) $(libimage_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin image\` ; $(LINK) $(libimage_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin image` ;; \
 	esac
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

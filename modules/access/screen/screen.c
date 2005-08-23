@@ -2,7 +2,7 @@
  * screen.c: Screen capture module.
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: screen.c 8611 2004-09-01 11:02:15Z zorglub $
+ * $Id: screen.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -60,6 +60,9 @@ static void Close( vlc_object_t * );
 
 vlc_module_begin();
     set_description( _("Screen Input") );
+    set_shortname( N_("Screen" ));
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACCESS );
 
     add_integer( "screen-caching", DEFAULT_PTS_DELAY / 1000, NULL,
         CACHING_TEXT, CACHING_LONGTEXT, VLC_TRUE );

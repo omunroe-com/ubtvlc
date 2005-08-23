@@ -2,7 +2,7 @@
  * preferences.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: preferences.cpp 8869 2004-09-30 22:17:54Z gbazin $
+ * $Id: preferences.cpp 11508 2005-06-23 18:58:12Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -32,7 +32,7 @@
 #include <vlc/vlc.h>
 #include <vlc/intf.h>
 
-#include <vlc_help.h>
+#include <vlc_config_cat.h>
 
 #include "wxwindows.h"
 #include "preferences_widgets.h"
@@ -41,14 +41,24 @@
 #include <wx/statline.h>
 #include <wx/clntdata.h>
 #include <wx/dynarray.h>
+#include <wx/imaglist.h>
+
+#include "bitmaps/type_net.xpm"
+#include "bitmaps/codec.xpm"
+#include "bitmaps/video.xpm"
+#include "bitmaps/type_playlist.xpm"
+#include "bitmaps/advanced.xpm"
+#include "bitmaps/intf.xpm"
+#include "bitmaps/audio.xpm"
 
 #ifndef wxRB_SINGLE
 #   define wxRB_SINGLE 0
 #endif
 
-#define GENERAL_ID 1242
-#define PLUGIN_ID 1243
-#define CAPABILITY_ID 1244
+#define TYPE_CATEGORY 0
+#define TYPE_CATSUBCAT 1  /* Category with embedded subcategory */
+#define TYPE_SUBCATEGORY 2
+#define TYPE_MODULE 3
 
 /*****************************************************************************
  * Classes declarations.
@@ -82,7 +92,6 @@ private:
     vlc_bool_t b_advanced;
 
     wxTreeItemId root_item;
-    wxTreeItemId general_item;
     wxTreeItemId plugins_item;
 };
 
@@ -94,7 +103,7 @@ public:
 
     PrefsPanel() { }
     PrefsPanel( wxWindow *parent, intf_thread_t *_p_intf,
-                PrefsDialog *, int i_object_id, char *, char * );
+                PrefsDialog *, ConfigTreeData* );
     virtual ~PrefsPanel() {}
 
     void ApplyChanges();
@@ -106,6 +115,7 @@ private:
 
     vlc_bool_t b_advanced;
 
+    wxStaticText *hidden_text;
     wxBoxSizer *config_sizer;
     wxScrolledWindow *config_window;
 
@@ -116,18 +126,23 @@ class ConfigTreeData : public wxTreeItemData
 {
 public:
 
-    ConfigTreeData() { b_submodule = 0; panel = NULL; psz_section = NULL;
+    ConfigTreeData() { b_submodule = 0; panel = NULL; psz_name = NULL;
                        psz_help = NULL; }
-    virtual ~ConfigTreeData() { if( panel ) delete panel;
-                                if( psz_section) free(psz_section);
-                                if( psz_help) free(psz_help); }
+    virtual ~ConfigTreeData() {
+                                 if( panel ) delete panel;
+                                 if( psz_name ) free( psz_name );
+                                 if( psz_help ) free( psz_help );
+                              };
 
     vlc_bool_t b_submodule;
 
     PrefsPanel *panel;
     wxBoxSizer *sizer;
+
     int i_object_id;
-    char *psz_section;
+    int i_subcat_id;
+    int i_type;
+    char *psz_name;
     char *psz_help;
 };
 
@@ -153,7 +168,7 @@ BEGIN_EVENT_TABLE(PrefsDialog, wxFrame)
     EVT_CHECKBOX(Advanced_Event, PrefsDialog::OnAdvanced)
 
     /* Don't destroy the window when the user closes it */
-    EVT_CLOSE(PrefsDialog::OnCancel)
+    EVT_CLOSE(PrefsDialog::OnClose)
 END_EVENT_TABLE()
 
 // menu and control ids
@@ -254,6 +269,12 @@ void PrefsDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
     prefs_tree->CleanChanges();
 }
 
+void PrefsDialog::OnClose( wxCloseEvent& WXUNUSED(event) )
+{
+    wxCommandEvent cevent;
+    OnCancel(cevent);
+}
+
 void PrefsDialog::OnCancel( wxCommandEvent& WXUNUSED(event) )
 {
     this->Hide();
@@ -297,15 +318,15 @@ void PrefsDialog::OnAdvanced( wxCommandEvent& event )
 PrefsTreeCtrl::PrefsTreeCtrl( wxWindow *_p_parent, intf_thread_t *_p_intf,
                               PrefsDialog *_p_prefs_dialog,
                               wxBoxSizer *_p_sizer )
-  : wxTreeCtrl( _p_parent, PrefsTree_Ctrl, wxDefaultPosition, wxDefaultSize,
+  : wxTreeCtrl( _p_parent, PrefsTree_Ctrl, wxDefaultPosition, wxSize(200,-1),
                 wxTR_NO_LINES | wxTR_FULL_ROW_HIGHLIGHT |
                 wxTR_LINES_AT_ROOT | wxTR_HIDE_ROOT |
                 wxTR_HAS_BUTTONS | wxTR_TWIST_BUTTONS | wxSUNKEN_BORDER )
 {
-    vlc_list_t      *p_list;
+    vlc_list_t      *p_list = NULL;;
     module_t        *p_module;
     module_config_t *p_item;
-    int i_index;
+    int i_index, i_image=0;
 
     /* Initializations */
     p_intf = _p_intf;
@@ -315,21 +336,23 @@ PrefsTreeCtrl::PrefsTreeCtrl( wxWindow *_p_parent, intf_thread_t *_p_intf,
     b_advanced = VLC_FALSE;
 
     root_item = AddRoot( wxT("") );
+    wxASSERT_MSG(root_item.IsOk(), "Could not add root item");
+
+    wxImageList *p_images = new wxImageList( 16,16,TRUE );
+    p_images->Add( wxIcon( audio_xpm ) );
+    p_images->Add( wxIcon( video_xpm ) );
+    p_images->Add( wxIcon( codec_xpm ) );
+    p_images->Add( wxIcon( type_net_xpm ) );
+    p_images->Add( wxIcon( advanced_xpm ) );
+    p_images->Add( wxIcon( type_playlist_xpm ) );
+    p_images->Add( wxIcon( intf_xpm ) );
+    AssignImageList( p_images );
 
     /* List the plugins */
     p_list = vlc_list_find( p_intf, VLC_OBJECT_MODULE, FIND_ANYWHERE );
     if( !p_list ) return;
 
-    /*
-     * Build a tree of the main options
-     */
-    ConfigTreeData *config_data = new ConfigTreeData;
-    config_data->i_object_id = GENERAL_ID;
-    config_data->psz_help = wraptext( GENERAL_HELP, 72 , ISUTF8 );
-    config_data->psz_section = strdup( GENERAL_TITLE );
-    general_item = AppendItem( root_item, wxU(_("General settings")),
-                                -1, -1, config_data );
-
+    /* Build the categories list */
     for( i_index = 0; i_index < p_list->i_count; i_index++ )
     {
         p_module = (module_t *)p_list->p_values[i_index].p_object;
@@ -338,6 +361,8 @@ PrefsTreeCtrl::PrefsTreeCtrl( wxWindow *_p_parent, intf_thread_t *_p_intf,
     }
     if( i_index < p_list->i_count )
     {
+        wxTreeItemId current_item;
+        char *psz_help;
         /* We found the main module */
 
         /* Enumerate config categories and store a reference so we can
@@ -346,46 +371,131 @@ PrefsTreeCtrl::PrefsTreeCtrl( wxWindow *_p_parent, intf_thread_t *_p_intf,
 
         if( p_item ) do
         {
+            ConfigTreeData *config_data;
             switch( p_item->i_type )
             {
-            case CONFIG_HINT_CATEGORY:
-                ConfigTreeData *config_data = new ConfigTreeData;
-                config_data->psz_section = strdup(p_item->psz_text);
-                if( p_item->psz_longtext )
+            case CONFIG_CATEGORY:
+                config_data = new ConfigTreeData;
+                config_data->psz_name = strdup( config_CategoryNameGet(
+                                                            p_item->i_value ) );
+                psz_help = config_CategoryHelpGet( p_item->i_value );
+                if( psz_help )
                 {
-                    config_data->psz_help =
-                        wraptext( p_item->psz_longtext, 72 , ISUTF8 );
+                    config_data->psz_help = wraptext( strdup( psz_help ),
+                                                      72 , ISUTF8 );
                 }
                 else
                 {
                     config_data->psz_help = NULL;
                 }
-                config_data->i_object_id = p_module->i_object_id;
+                config_data->i_type = TYPE_CATEGORY;
+                config_data->i_object_id = p_item->i_value;
 
                 /* Add the category to the tree */
-                AppendItem( general_item, wxU(p_item->psz_text),
-                            -1, -1, config_data );
+                switch( p_item->i_value )
+                {
+                    case CAT_AUDIO:
+                        i_image = 0; break;
+                    case CAT_VIDEO:
+                        i_image = 1; break;
+                    case CAT_INPUT:
+                        i_image = 2; break;
+                    case CAT_SOUT:
+                        i_image = 3; break;
+                    case CAT_ADVANCED:
+                        i_image = 4; break;
+                    case CAT_PLAYLIST:
+                        i_image = 5; break;
+                    case CAT_INTERFACE:
+                        i_image = 6; break;
+                }
+                current_item = AppendItem( root_item,
+                                           wxU( config_data->psz_name ),
+                                           i_image, -1, config_data );
+
+                break;
+            case CONFIG_SUBCATEGORY:
+                if( p_item->i_value == SUBCAT_VIDEO_GENERAL ||
+                    p_item->i_value == SUBCAT_AUDIO_GENERAL )
+                {
+                    ConfigTreeData *cd = (ConfigTreeData *)
+                                            GetItemData( current_item );
+                    cd->i_type = TYPE_CATSUBCAT;
+                    cd->i_subcat_id = p_item->i_value;
+                    if( cd->psz_name ) free( cd->psz_name );
+                    cd->psz_name = strdup(  config_CategoryNameGet(
+                                                      p_item->i_value ) );
+                    if( cd->psz_help ) free( cd->psz_help );
+                    char *psz_help = config_CategoryHelpGet( p_item->i_value );
+                    if( psz_help )
+                    {
+                        cd->psz_help = wraptext( strdup( psz_help ),72 ,
+                                                 ISUTF8 );
+                    }
+                    else
+                    {
+                        cd->psz_help = NULL;
+                    }
+                    continue;
+                }
+
+                config_data = new ConfigTreeData;
+
+                config_data->psz_name = strdup(  config_CategoryNameGet(
+                                                           p_item->i_value ) );
+                psz_help = config_CategoryHelpGet( p_item->i_value );
+                if( psz_help )
+                {
+                    config_data->psz_help = wraptext( strdup( psz_help ) ,
+                                                      72 , ISUTF8 );
+                }
+                else
+                {
+                    config_data->psz_help = NULL;
+                }
+                config_data->i_type = TYPE_SUBCATEGORY;
+                config_data->i_object_id = p_item->i_value;
+                /* WXMSW doesn't know image -1 ... FIXME */
+                #ifdef __WXMSW__
+                switch( p_item->i_value / 100 )
+                {
+                    case CAT_AUDIO:
+                        i_image = 0; break;
+                    case CAT_VIDEO:
+                        i_image = 1; break;
+                    case CAT_INPUT:
+                        i_image = 2; break;
+                    case CAT_SOUT:
+                        i_image = 3; break;
+                    case CAT_ADVANCED:
+                        i_image = 4; break;
+                    case CAT_PLAYLIST:
+                        i_image = 5; break;
+                    case CAT_INTERFACE:
+                        i_image = 6; break;
+                }
+                #else
+                i_image = -1;
+                #endif
+                AppendItem( current_item, wxU( config_data->psz_name ),
+                            i_image, -1, config_data );
                 break;
             }
         }
         while( p_item->i_type != CONFIG_HINT_END && p_item++ );
 
-        SortChildren( general_item );
     }
 
 
     /*
      * Build a tree of all the plugins
      */
-    config_data = new ConfigTreeData;
-    config_data->i_object_id = PLUGIN_ID;
-    config_data->psz_help = wraptext( PLUGIN_HELP, 72, ISUTF8 );
-    config_data->psz_section = strdup( PLUGIN_TITLE );
-    plugins_item = AppendItem( root_item, wxU(_("Modules")),
-                        -1, -1,config_data );
-
     for( i_index = 0; i_index < p_list->i_count; i_index++ )
     {
+        int i_category = -1;
+        int i_subcategory = -1;
+        int i_options = 0;
+
         p_module = (module_t *)p_list->p_values[i_index].p_object;
 
         /* Exclude the main module */
@@ -395,72 +505,123 @@ PrefsTreeCtrl::PrefsTreeCtrl( wxWindow *_p_parent, intf_thread_t *_p_intf,
         /* Exclude empty plugins (submodules don't have config options, they
          * are stored in the parent module) */
         if( p_module->b_submodule )
-            p_item = ((module_t *)p_module->p_parent)->p_config;
+              continue;
+//            p_item = ((module_t *)p_module->p_parent)->p_config;
         else
             p_item = p_module->p_config;
+
 
         if( !p_item ) continue;
         do
         {
+            if( p_item->i_type == CONFIG_CATEGORY )
+            {
+                i_category = p_item->i_value;
+            }
+            else if( p_item->i_type == CONFIG_SUBCATEGORY )
+            {
+                i_subcategory = p_item->i_value;
+            }
             if( p_item->i_type & CONFIG_ITEM )
-                break;
-        }
-        while( p_item->i_type != CONFIG_HINT_END && p_item++ );
-        if( p_item->i_type == CONFIG_HINT_END ) continue;
-
-        /* Find the capability child item */
-        long cookie; size_t i_child_index;
-        wxTreeItemId capability_item = GetFirstChild( plugins_item, cookie);
-        for( i_child_index = 0;
-             i_child_index < GetChildrenCount( plugins_item, FALSE );
-             i_child_index++ )
-        {
-            if( !GetItemText(capability_item).Cmp(
-                    wxU(p_module->psz_capability ) ) )
+                i_options ++;
+            if( i_options > 0 && i_category >= 0 && i_subcategory >= 0 )
             {
                 break;
             }
-            capability_item = GetNextChild( plugins_item, cookie );
+        }
+        while( p_item->i_type != CONFIG_HINT_END && p_item++ );
+
+        if( !i_options ) continue;
+
+        /* Find the right category item */
+        wxTreeItemIdValue cookie;
+        vlc_bool_t b_found = VLC_FALSE;
+
+        wxTreeItemId category_item = GetFirstChild( root_item , cookie);
+        while( category_item.IsOk() )
+        {
+            ConfigTreeData *config_data =
+                    (ConfigTreeData *)GetItemData( category_item );
+            if( config_data->i_object_id == i_category )
+            {
+                b_found = VLC_TRUE;
+                break;
+            }
+            category_item = GetNextChild( root_item, cookie );
         }
 
-        if( i_child_index == GetChildrenCount( plugins_item, FALSE ) &&
-            p_module->psz_capability && *p_module->psz_capability )
+        if( !b_found ) continue;
+
+        /* Find subcategory item */
+        b_found = VLC_FALSE;
+        //cookie = -1;
+        wxTreeItemId subcategory_item = GetFirstChild( category_item, cookie );
+        while( subcategory_item.IsOk() )
         {
-            /* We didn't find it, add it */
-            ConfigTreeData *config_data = new ConfigTreeData;
-            config_data->psz_section =
-                wraptext( GetCapabilityHelp( p_module->psz_capability , 1 ),
-                          72, ISUTF8 );
-            config_data->psz_help =
-                wraptext( GetCapabilityHelp( p_module->psz_capability , 2 ),
-                          72, ISUTF8 );
-            config_data->i_object_id = CAPABILITY_ID;
-            capability_item = AppendItem( plugins_item,
-                                          wxU(p_module->psz_capability),
-                                          -1,-1,config_data );
+            ConfigTreeData *config_data =
+                    (ConfigTreeData *)GetItemData( subcategory_item );
+            if( config_data->i_object_id == i_subcategory )
+            {
+                b_found = VLC_TRUE;
+                break;
+            }
+            subcategory_item = GetNextChild( category_item, cookie );
+        }
+        if( !b_found )
+        {
+            subcategory_item = category_item;
         }
 
         /* Add the plugin to the tree */
         ConfigTreeData *config_data = new ConfigTreeData;
         config_data->b_submodule = p_module->b_submodule;
+        config_data->i_type = TYPE_MODULE;
         config_data->i_object_id = p_module->b_submodule ?
             ((module_t *)p_module->p_parent)->i_object_id :
             p_module->i_object_id;
         config_data->psz_help = NULL;
-        AppendItem( capability_item, wxU(p_module->psz_object_name), -1, -1,
+
+        /* WXMSW doesn't know image -1 ... FIXME */
+        #ifdef __WXMSW__
+        switch( i_subcategory / 100 )
+        {
+            case CAT_AUDIO:
+                i_image = 0; break;
+            case CAT_VIDEO:
+                i_image = 1; break;
+            case CAT_INPUT:
+                i_image = 2; break;
+            case CAT_SOUT:
+                i_image = 3; break;
+            case CAT_ADVANCED:
+                i_image = 4; break;
+            case CAT_PLAYLIST:
+                i_image = 5; break;
+            case CAT_INTERFACE:
+                i_image = 6; break;
+        }
+        #else
+        i_image = -1;
+        #endif
+        AppendItem( subcategory_item, wxU( p_module->psz_shortname ?
+                       p_module->psz_shortname : p_module->psz_object_name )
+                                    , i_image, -1,
                     config_data );
     }
 
     /* Sort all this mess */
-    long cookie; size_t i_child_index;
-    SortChildren( plugins_item );
-    wxTreeItemId capability_item = GetFirstChild( plugins_item, cookie);
+    wxTreeItemIdValue cookie; 
+    size_t i_child_index;
+    wxTreeItemId capability_item = GetFirstChild( root_item, cookie);
     for( i_child_index = 0;
-         i_child_index < GetChildrenCount( plugins_item, FALSE );
+         (capability_item.IsOk() && 
+          //(i_child_index < GetChildrenCount( plugins_item, FALSE )));
+          (i_child_index < GetChildrenCount( root_item, FALSE )));
          i_child_index++ )
     {
         SortChildren( capability_item );
-        capability_item = GetNextChild( plugins_item, cookie );
+        //capability_item = GetNextChild( plugins_item, cookie );
+        capability_item = GetNextChild( root_item, cookie );
     }
 
     /* Clean-up everything */
@@ -474,60 +635,53 @@ PrefsTreeCtrl::PrefsTreeCtrl( wxWindow *_p_parent, intf_thread_t *_p_intf,
     SelectItem( GetFirstChild( root_item, cookie ) );
 #endif
 
-    Expand( general_item );
+    //cannot expand hidden root item
+    //Expand( root_item );
 }
 
-PrefsTreeCtrl::~PrefsTreeCtrl()
-{
+PrefsTreeCtrl::~PrefsTreeCtrl(){
 }
 
 void PrefsTreeCtrl::ApplyChanges()
 {
-    long cookie, cookie2;
+    wxTreeItemIdValue cookie, cookie2, cookie3;
     ConfigTreeData *config_data;
 
-    /* Apply changes to the main module */
-    wxTreeItemId item = GetFirstChild( general_item, cookie );
-    for( size_t i_child_index = 0;
-         i_child_index < GetChildrenCount( general_item, FALSE );
-         i_child_index++ )
+    wxTreeItemId category = GetFirstChild( root_item, cookie );
+    while( category.IsOk() )
     {
-        config_data = (ConfigTreeData *)GetItemData( item );
-        if( config_data && config_data->panel )
+        wxTreeItemId subcategory = GetFirstChild( category, cookie2 );
+        while( subcategory.IsOk() )
         {
-            config_data->panel->ApplyChanges();
-        }
-
-        item = GetNextChild( general_item, cookie );
-    }
-
-    /* Apply changes to the plugins */
-    item = GetFirstChild( plugins_item, cookie );
-    for( size_t i_child_index = 0;
-         i_child_index < GetChildrenCount( plugins_item, FALSE );
-         i_child_index++ )
-    {
-        wxTreeItemId item2 = GetFirstChild( item, cookie2 );
-        for( size_t i_child_index = 0;
-             i_child_index < GetChildrenCount( item, FALSE );
-             i_child_index++ )
-        {
-            config_data = (ConfigTreeData *)GetItemData( item2 );
+            wxTreeItemId module = GetFirstChild( subcategory, cookie3 );
+            while( module.IsOk() )
+            {
+                config_data = (ConfigTreeData *)GetItemData( module );
+                if( config_data && config_data->panel )
+                {
+                    config_data->panel->ApplyChanges();
+                }
+                module = GetNextChild( subcategory, cookie3 );
+            }
+            config_data = (ConfigTreeData *)GetItemData( subcategory );
             if( config_data && config_data->panel )
             {
                 config_data->panel->ApplyChanges();
             }
-
-            item2 = GetNextChild( item, cookie2 );
+            subcategory = GetNextChild( category, cookie2 );
         }
-
-        item = GetNextChild( plugins_item, cookie );
+        config_data = (ConfigTreeData *)GetItemData( category );
+        if( config_data && config_data->panel )
+        {
+            config_data->panel->ApplyChanges();
+        }
+        category = GetNextChild( root_item, cookie );
     }
 }
 
 void PrefsTreeCtrl::CleanChanges()
 {
-    long cookie, cookie2;
+    wxTreeItemIdValue cookie, cookie2, cookie3;
     ConfigTreeData *config_data;
 
     config_data = !GetSelection() ? NULL :
@@ -535,48 +689,45 @@ void PrefsTreeCtrl::CleanChanges()
     if( config_data  )
     {
         config_data->panel->Hide();
+#if (wxCHECK_VERSION(2,5,0))
+        p_sizer->Detach( config_data->panel );
+#else
         p_sizer->Remove( config_data->panel );
+#endif
     }
 
-    /* Clean changes for the main module */
-    wxTreeItemId item = GetFirstChild( general_item, cookie );
-    for( size_t i_child_index = 0;
-         i_child_index < GetChildrenCount( general_item, FALSE );
-         i_child_index++ )
+    wxTreeItemId category = GetFirstChild( root_item, cookie );
+    while( category.IsOk() )
     {
-        config_data = (ConfigTreeData *)GetItemData( item );
-        if( config_data && config_data->panel )
+        wxTreeItemId subcategory = GetFirstChild( category, cookie2 );
+        while( subcategory.IsOk() )
         {
-            delete config_data->panel;
-            config_data->panel = NULL;
-        }
-
-        item = GetNextChild( general_item, cookie );
-    }
-
-    /* Clean changes for the plugins */
-    item = GetFirstChild( plugins_item, cookie );
-    for( size_t i_child_index = 0;
-         i_child_index < GetChildrenCount( plugins_item, FALSE );
-         i_child_index++ )
-    {
-        wxTreeItemId item2 = GetFirstChild( item, cookie2 );
-        for( size_t i_child_index = 0;
-             i_child_index < GetChildrenCount( item, FALSE );
-             i_child_index++ )
-        {
-            config_data = (ConfigTreeData *)GetItemData( item2 );
-
+            wxTreeItemId module = GetFirstChild( subcategory, cookie3 );
+            while( module.IsOk() )
+            {
+                config_data = (ConfigTreeData *)GetItemData( module );
+                if( config_data && config_data->panel )
+                {
+                    delete config_data->panel;
+                    config_data->panel = NULL;
+                }
+                module = GetNextChild( subcategory, cookie3 );
+            }
+            config_data = (ConfigTreeData *)GetItemData( subcategory );
             if( config_data && config_data->panel )
             {
                 delete config_data->panel;
                 config_data->panel = NULL;
             }
-
-            item2 = GetNextChild( item, cookie2 );
+            subcategory = GetNextChild( category, cookie2 );
         }
-
-        item = GetNextChild( plugins_item, cookie );
+        config_data = (ConfigTreeData *)GetItemData( category );
+        if( config_data && config_data->panel )
+        {
+            delete config_data->panel;
+            config_data->panel = NULL;
+        }
+        category = GetNextChild( root_item, cookie );
     }
 
     if( GetSelection() )
@@ -596,29 +747,28 @@ ConfigTreeData *PrefsTreeCtrl::FindModuleConfig( ConfigTreeData *config_data )
         return config_data;
     }
 
-    long cookie, cookie2;
+    wxTreeItemIdValue cookie, cookie2, cookie3;
     ConfigTreeData *config_new;
-    wxTreeItemId item = GetFirstChild( plugins_item, cookie );
-    for( size_t i_child_index = 0;
-         i_child_index < GetChildrenCount( plugins_item, FALSE );
-         i_child_index++ )
+    wxTreeItemId category = GetFirstChild( root_item, cookie );
+    while( category.IsOk() )
     {
-        wxTreeItemId item2 = GetFirstChild( item, cookie2 );
-        for( size_t i_child_index = 0;
-             i_child_index < GetChildrenCount( item, FALSE );
-             i_child_index++ )
+        wxTreeItemId subcategory = GetFirstChild( category, cookie2 );
+        while( subcategory.IsOk() )
         {
-            config_new = (ConfigTreeData *)GetItemData( item2 );
-            if( config_new && !config_new->b_submodule &&
-                config_new->i_object_id == config_data->i_object_id )
+            wxTreeItemId module = GetFirstChild( subcategory, cookie3 );
+            while( module.IsOk() )
             {
-                return config_new;
+                config_new = (ConfigTreeData *)GetItemData( module );
+                if( config_new && !config_new->b_submodule &&
+                    config_new->i_object_id == config_data->i_object_id )
+                {
+                    return config_new;
+                }
+                module = GetNextChild( subcategory, cookie3 );
             }
-
-            item2 = GetNextChild( item, cookie2 );
+            subcategory = GetNextChild( category, cookie2 );
         }
-
-        item = GetNextChild( plugins_item, cookie );
+        category = GetNextChild( root_item, cookie );
     }
 
     /* Found nothing */
@@ -635,7 +785,11 @@ void PrefsTreeCtrl::OnSelectTreeItem( wxTreeEvent& event )
     if( config_data && config_data->panel )
     {
         config_data->panel->Hide();
+#if (wxCHECK_VERSION(2,5,0))
+        p_sizer->Detach( config_data->panel );
+#else
         p_sizer->Remove( config_data->panel );
+#endif
     }
 
     /* Don't use event.GetItem() because we also send fake events */
@@ -648,9 +802,7 @@ void PrefsTreeCtrl::OnSelectTreeItem( wxTreeEvent& event )
             /* The panel hasn't been created yet. Let's do it. */
             config_data->panel =
                 new PrefsPanel( p_parent, p_intf, p_prefs_dialog,
-                                config_data->i_object_id,
-                                config_data->psz_section,
-                                config_data->psz_help );
+                                config_data );
             config_data->panel->SwitchAdvanced( b_advanced );
         }
         else
@@ -673,7 +825,11 @@ void PrefsTreeCtrl::OnAdvanced( wxCommandEvent& event )
     if( config_data  )
     {
         config_data->panel->Hide();
+#if (wxCHECK_VERSION(2,5,0))
+        p_sizer->Detach( config_data->panel );
+#else
         p_sizer->Remove( config_data->panel );
+#endif
     }
 
     if( GetSelection() )
@@ -688,10 +844,11 @@ void PrefsTreeCtrl::OnAdvanced( wxCommandEvent& event )
  *****************************************************************************/
 PrefsPanel::PrefsPanel( wxWindow* parent, intf_thread_t *_p_intf,
                         PrefsDialog *_p_prefs_dialog,
-                        int i_object_id, char *psz_section, char *psz_help )
+                        ConfigTreeData *config_data )
   :  wxPanel( parent, -1, wxDefaultPosition, wxDefaultSize )
 {
     module_config_t *p_item;
+    vlc_list_t *p_list = NULL;;
 
     wxStaticText *label;
     wxStaticText *help;
@@ -710,10 +867,9 @@ PrefsPanel::PrefsPanel( wxWindow* parent, intf_thread_t *_p_intf,
     wxBoxSizer *sizer = new wxBoxSizer( wxVERTICAL );
 
 
-    if( i_object_id == PLUGIN_ID || i_object_id == GENERAL_ID ||
-        i_object_id == CAPABILITY_ID )
+    if( config_data->i_type == TYPE_CATEGORY )
     {
-        label = new wxStaticText( this, -1,wxU(_( psz_section )));
+        label = new wxStaticText( this, -1,wxU(_( config_data->psz_name )));
         wxFont heading_font = label->GetFont();
         heading_font.SetPointSize( heading_font.GetPointSize() + 5 );
         label->SetFont( heading_font );
@@ -721,7 +877,8 @@ PrefsPanel::PrefsPanel( wxWindow* parent, intf_thread_t *_p_intf,
         sizer->Add( new wxStaticLine( this, 0 ), 0,
                     wxEXPAND | wxLEFT | wxRIGHT, 2 );
 
-        help = new wxStaticText( this, -1, wxU(_( psz_help ) ) );
+        hidden_text = NULL;
+        help = new wxStaticText( this, -1, wxU(_( config_data->psz_help ) ) );
         sizer->Add( help ,0 ,wxEXPAND | wxALL, 5 );
 
         config_sizer = NULL; config_window = NULL;
@@ -729,7 +886,35 @@ PrefsPanel::PrefsPanel( wxWindow* parent, intf_thread_t *_p_intf,
     else
     {
         /* Get a pointer to the module */
-        p_module = (module_t *)vlc_object_get( p_intf,  i_object_id );
+        if( config_data->i_type == TYPE_MODULE )
+        {
+            p_module = (module_t *)vlc_object_get( p_intf,
+                                                   config_data->i_object_id );
+        }
+        else
+        {
+            /* List the plugins */
+            int i_index;
+            vlc_bool_t b_found = VLC_FALSE;
+            p_list = vlc_list_find( p_intf, VLC_OBJECT_MODULE, FIND_ANYWHERE );
+            if( !p_list ) return;
+
+            for( i_index = 0; i_index < p_list->i_count; i_index++ )
+            {
+                p_module = (module_t *)p_list->p_values[i_index].p_object;
+                if( !strcmp( p_module->psz_object_name, "main" ) )
+                {
+                    b_found = VLC_TRUE;
+                    break;
+                }
+            }
+            if( !p_module && !b_found )
+            {
+                msg_Warn( p_intf, "ohoh, unable to find main module" );
+                return;
+            }
+        }
+
         if( p_module->i_object_type != VLC_OBJECT_MODULE )
         {
             /* 0OOoo something went really bad */
@@ -745,21 +930,39 @@ PrefsPanel::PrefsPanel( wxWindow* parent, intf_thread_t *_p_intf,
             p_item = p_module->p_config;
 
         /* Find the category if it has been specified */
-        if( psz_section && p_item->i_type == CONFIG_HINT_CATEGORY )
+        if( config_data->i_type == TYPE_SUBCATEGORY ||
+            config_data->i_type == TYPE_CATSUBCAT )
         {
-            while( !p_item->i_type == CONFIG_HINT_CATEGORY ||
-                   strcmp( psz_section, p_item->psz_text ) )
+            do
             {
+                if( p_item->i_type == CONFIG_SUBCATEGORY &&
+                    ( config_data->i_type == TYPE_SUBCATEGORY &&
+                      p_item->i_value == config_data->i_object_id ) ||
+                    ( config_data->i_type == TYPE_CATSUBCAT &&
+                      p_item->i_value == config_data->i_subcat_id ) )
+                {
+                    break;
+                }
                 if( p_item->i_type == CONFIG_HINT_END )
                     break;
-                p_item++;
-            }
+            } while( p_item++ );
         }
 
         /* Add a head title to the panel */
+        char *psz_head;
+        if( config_data->i_type == TYPE_SUBCATEGORY ||
+            config_data->i_type == TYPE_CATSUBCAT )
+        {
+            psz_head = config_data->psz_name;
+            p_item++;
+        }
+        else
+        {
+            psz_head = p_module->psz_longname;
+        }
+
         label = new wxStaticText( this, -1,
-                                  wxU(_(psz_section ? p_item->psz_text :
-                                  p_module->psz_longname )));
+                      wxU(_( psz_head ? psz_head : _("Unknown") ) ) );
         wxFont heading_font = label->GetFont();
         heading_font.SetPointSize( heading_font.GetPointSize() + 5 );
         label->SetFont( heading_font );
@@ -777,8 +980,12 @@ PrefsPanel::PrefsPanel( wxWindow* parent, intf_thread_t *_p_intf,
         if( p_item ) do
         {
             /* If a category has been specified, check we finished the job */
-            if( psz_section && p_item->i_type == CONFIG_HINT_CATEGORY &&
-                strcmp( psz_section, p_item->psz_text ) )
+            if( ( ( config_data->i_type == TYPE_SUBCATEGORY &&
+                    p_item->i_value != config_data->i_object_id ) ||
+                  ( config_data->i_type == TYPE_CATSUBCAT  &&
+                    p_item->i_value != config_data->i_subcat_id ) ) &&
+                (p_item->i_type == CONFIG_CATEGORY ||
+                  p_item->i_type == CONFIG_SUBCATEGORY ) )
                 break;
 
             ConfigControl *control =
@@ -793,25 +1000,41 @@ PrefsPanel::PrefsPanel( wxWindow* parent, intf_thread_t *_p_intf,
 
             config_sizer->Add( control, 0, wxEXPAND | wxALL, 2 );
         }
-        while( p_item->i_type != CONFIG_HINT_END && p_item++ );
+        while( !( p_item->i_type == CONFIG_HINT_END ||
+               ( ( config_data->i_type == TYPE_SUBCATEGORY ||
+                   config_data->i_type == TYPE_CATSUBCAT ) &&
+                 ( p_item->i_type == CONFIG_CATEGORY ||
+                   p_item->i_type == CONFIG_SUBCATEGORY ) ) ) && p_item++ );
+
 
         config_sizer->Layout();
         config_window->SetSizer( config_sizer );
         sizer->Add( config_window, 1, wxEXPAND | wxALL, 5 );
+        hidden_text = new wxStaticText( this, -1,
+                        wxU( _( "Some options are available but hidden. " \
+                                "Check \"Advanced options\" to see them." ) ) );
+        sizer->Add( hidden_text );
 
         /* And at last put a useful help string if available */
-        if( psz_help && *psz_help )
+        if( config_data->psz_help && *config_data->psz_help )
         {
             sizer->Add( new wxStaticLine( this, 0 ), 0,
                         wxEXPAND | wxLEFT | wxRIGHT, 2 );
-            help = new wxStaticText( this, -1, wxU(_(psz_help)),
+            help = new wxStaticText( this, -1, wxU(_(config_data->psz_help)),
                                      wxDefaultPosition, wxDefaultSize,
                                      wxALIGN_LEFT,
                                      wxT("") );
             sizer->Add( help ,0 ,wxEXPAND | wxALL, 5 );
         }
 
-        vlc_object_release( p_module );
+        if( config_data->i_type == TYPE_MODULE )
+        {
+            vlc_object_release( p_module );
+        }
+        else
+        {
+            vlc_list_release( p_list );
+        }
     }
     sizer->Layout();
     SetSizer( sizer );
@@ -832,6 +1055,9 @@ void PrefsPanel::ApplyChanges()
         case CONFIG_ITEM_FILE:
         case CONFIG_ITEM_DIRECTORY:
         case CONFIG_ITEM_MODULE:
+        case CONFIG_ITEM_MODULE_CAT:
+        case CONFIG_ITEM_MODULE_LIST:
+        case CONFIG_ITEM_MODULE_LIST_CAT:
             config_PutPsz( p_intf, control->GetName().mb_str(),
                            control->GetPszValue().mb_str() );
             break;
@@ -854,7 +1080,12 @@ void PrefsPanel::ApplyChanges()
 
 void PrefsPanel::SwitchAdvanced( vlc_bool_t b_new_advanced )
 {
-    if( b_advanced == b_new_advanced ) return;
+    bool hidden = false;
+
+    if( b_advanced == b_new_advanced ) 
+    {
+        goto hide;
+    }
 
     if( config_sizer && config_window )
     {
@@ -865,6 +1096,7 @@ void PrefsPanel::SwitchAdvanced( vlc_bool_t b_new_advanced )
             ConfigControl *control = config_array.Item(i);
             if( control->IsAdvanced() )
             {
+                if( !b_advanced ) hidden = true;
                 control->Show( b_advanced );
                 config_sizer->Show( control, b_advanced );
             }
@@ -873,6 +1105,17 @@ void PrefsPanel::SwitchAdvanced( vlc_bool_t b_new_advanced )
         config_sizer->Layout();
         config_window->FitInside();
         config_window->Refresh();
+    }
+hide:
+    if( hidden && hidden_text )
+    {
+        hidden_text->Show( true );
+        config_sizer->Show( hidden_text, true );
+    }
+    else if ( hidden_text )
+    {
+        hidden_text->Show( false );
+        config_sizer->Show( hidden_text, false );
     }
     return;
 }

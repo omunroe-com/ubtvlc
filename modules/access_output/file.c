@@ -2,7 +2,7 @@
  * file.c
  *****************************************************************************
  * Copyright (C) 2001, 2002 VideoLAN
- * $Id: file.c 8164 2004-07-10 17:22:35Z fenrir $
+ * $Id: file.c 10953 2005-05-10 11:39:32Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -51,6 +51,9 @@
 #ifndef STDOUT_FILENO
 #   define STDOUT_FILENO 1
 #endif
+#ifndef O_LARGEFILE
+#   define O_LARGEFILE 0
+#endif
 
 /*****************************************************************************
  * Module descriptor
@@ -65,7 +68,10 @@ static void Close( vlc_object_t * );
 
 vlc_module_begin();
     set_description( _("File stream output") );
+    set_shortname( N_("File" ));
     set_capability( "sout access", 50 );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_ACO );
     add_shortcut( "file" );
     add_shortcut( "stream" );
     add_bool( SOUT_CFG_PREFIX "append", 0, NULL, APPEND_TEXT,APPEND_LONGTEXT,
@@ -112,7 +118,7 @@ static int Open( vlc_object_t *p_this )
         msg_Err( p_access, "no file name specified" );
         return VLC_EGENERIC;
     }
-    i_flags = O_RDWR|O_CREAT;
+    i_flags = O_RDWR|O_CREAT|O_LARGEFILE;
 
     var_Get( p_access, SOUT_CFG_PREFIX "append", &val );
     if( val.b_bool )

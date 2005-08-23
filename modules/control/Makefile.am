@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in gestures showintf http telnet netsync ntservice joystick hotkeys lirc rc rtci; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in gestures showintf http telnet netsync ntservice joystick hotkeys lirc rc rtci; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in gestures showintf http telnet netsync ntservice joystick hotkeys lirc rc rtci; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in gestures showintf http telnet netsync ntservice joystick hotkeys lirc rc; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in gestures showintf http telnet netsync ntservice joystick hotkeys lirc rc; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in gestures showintf http telnet netsync ntservice joystick hotkeys lirc rc; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -401,43 +401,6 @@ librc_plugin$(LIBEXT): $(librc_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(librc_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin rc\` ; $(CXXLINK) $(librc_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin rc` ;; \
 	  objc) echo $(OBJCLINK) $(librc_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin rc\` ; $(OBJCLINK) $(librc_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin rc` ;; \
 	  c|*) echo $(LINK) $(librc_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin rc\` ; $(LINK) $(librc_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin rc` ;; \
-	esac
-
-
-# The rtci plugin
-
-if UNTRUE
-Lrtcip = librtci_plugin.a
-Drtcip = librtci_plugin$(LIBEXT)
-Lrtcib = librtci.a
-Lrtcipic = librtci_pic.a
-endif
-
-librtci_plugin_a_SOURCES = $(SOURCES_rtci)
-librtci_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin rtci`
-librtci_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin rtci`
-librtci_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin rtci`
-
-librtci_pic_a_SOURCES = $(SOURCES_rtci)
-librtci_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic rtci`
-librtci_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic rtci`
-librtci_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic rtci`
-
-librtci_a_SOURCES = $(SOURCES_rtci)
-librtci_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin rtci`
-librtci_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin rtci`
-librtci_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin rtci`
-
-libvlc_LIBRARIES += $(Lrtcib) $(Lrtcipic)
-librtci_DATA = $(Drtcip)
-
-librtcidir = $(libdir)/vlc/
-noinst_LIBRARIES += $(Lrtcip)
-librtci_plugin$(LIBEXT): $(librtci_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage rtci` in \
-	  c++) echo $(CXXLINK) $(librtci_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin rtci\` ; $(CXXLINK) $(librtci_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin rtci` ;; \
-	  objc) echo $(OBJCLINK) $(librtci_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin rtci\` ; $(OBJCLINK) $(librtci_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin rtci` ;; \
-	  c|*) echo $(LINK) $(librtci_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin rtci\` ; $(LINK) $(librtci_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin rtci` ;; \
 	esac
 
 

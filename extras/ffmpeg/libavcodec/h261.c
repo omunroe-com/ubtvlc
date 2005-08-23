@@ -53,8 +53,6 @@ typedef struct H261Context{
     int current_mv_x;
     int current_mv_y;
     int gob_number;
-    int bits_left; //8 - nr of bits left of the following frame in the last byte in this frame
-    int last_bits; //bits left of the following frame in the last byte in this frame
     int gob_start_code_skipped; // 1 if gob start code is already read before gob header is read
 }H261Context;
 
@@ -105,8 +103,8 @@ void ff_h261_encode_picture_header(MpegEncContext * s, int picture_number){
 
     put_bits(&s->pb, 20, 0x10); /* PSC */
 
-    temp_ref= s->picture_number * (int64_t)30000 * s->avctx->frame_rate_base / 
-                         (1001 * (int64_t)s->avctx->frame_rate);
+    temp_ref= s->picture_number * (int64_t)30000 * s->avctx->time_base.num / 
+                         (1001 * (int64_t)s->avctx->time_base.den); //FIXME maybe this should use a timestamp
     put_bits(&s->pb, 5, temp_ref & 0x1f); /* TemporalReference */
 
     put_bits(&s->pb, 1, 0); /* split screen off */
@@ -176,7 +174,7 @@ static void h261_encode_motion(H261Context * h, int val){
         put_bits(&s->pb,h261_mv_tab[code][1],h261_mv_tab[code][0]);
     } 
     else{
-        if(val > 16)
+        if(val > 15)
             val -=32;
         if(val < -16)
             val+=32;
@@ -284,7 +282,7 @@ void ff_h261_encode_init(MpegEncContext *s){
     
     if (!done) {
         done = 1;
-        init_rl(&h261_rl_tcoeff);
+        init_rl(&h261_rl_tcoeff, 1);
     }
 
     s->min_qcoeff= -127;
@@ -374,7 +372,7 @@ static VLC h261_mtype_vlc;
 static VLC h261_mv_vlc;
 static VLC h261_cbp_vlc;
 
-void init_vlc_rl(RLTable *rl);
+void init_vlc_rl(RLTable *rl, int use_static);
 
 static void h261_decode_init_vlc(H261Context *h){
     static int done = 0;
@@ -383,18 +381,18 @@ static void h261_decode_init_vlc(H261Context *h){
         done = 1;
         init_vlc(&h261_mba_vlc, H261_MBA_VLC_BITS, 35,
                  h261_mba_bits, 1, 1,
-                 h261_mba_code, 1, 1);
+                 h261_mba_code, 1, 1, 1);
         init_vlc(&h261_mtype_vlc, H261_MTYPE_VLC_BITS, 10,
                  h261_mtype_bits, 1, 1,
-                 h261_mtype_code, 1, 1);
+                 h261_mtype_code, 1, 1, 1);
         init_vlc(&h261_mv_vlc, H261_MV_VLC_BITS, 17,
                  &h261_mv_tab[0][1], 2, 1,
-                 &h261_mv_tab[0][0], 2, 1);
+                 &h261_mv_tab[0][0], 2, 1, 1);
         init_vlc(&h261_cbp_vlc, H261_CBP_VLC_BITS, 63,
                  &h261_cbp_tab[0][1], 2, 1,
-                 &h261_cbp_tab[0][0], 2, 1);
-        init_rl(&h261_rl_tcoeff);
-        init_vlc_rl(&h261_rl_tcoeff);
+                 &h261_cbp_tab[0][0], 2, 1, 1);
+        init_rl(&h261_rl_tcoeff, 1);
+        init_vlc_rl(&h261_rl_tcoeff, 1);
     }
 }
 
@@ -533,7 +531,6 @@ static int h261_decode_mb_skipped(H261Context *h, int mba1, int mba2 )
         xy = s->mb_x + s->mb_y * s->mb_stride;
         ff_init_block_index(s);
         ff_update_block_index(s);
-        s->dsp.clear_blocks(s->block[0]);
 
         for(j=0;j<6;j++)
             s->block_last_index[j] = -1;
@@ -543,7 +540,7 @@ static int h261_decode_mb_skipped(H261Context *h, int mba1, int mba2 )
         s->current_picture.mb_type[xy]= MB_TYPE_SKIP | MB_TYPE_16x16 | MB_TYPE_L0;
         s->mv[0][0][0] = 0;
         s->mv[0][0][1] = 0;
-        s->mb_skiped = 1;
+        s->mb_skipped = 1;
         h->mtype &= ~MB_TYPE_H261_FIL;
 
         MPV_decode_mb(s, s->block);
@@ -608,7 +605,6 @@ static int h261_decode_mb(H261Context *h){
     xy = s->mb_x + s->mb_y * s->mb_stride;
     ff_init_block_index(s);
     ff_update_block_index(s);
-    s->dsp.clear_blocks(s->block[0]);
 
     // Read mtype
     h->mtype = get_vlc2(&s->gb, h261_mtype_vlc.table, H261_MTYPE_VLC_BITS, 2);
@@ -663,12 +659,16 @@ static int h261_decode_mb(H261Context *h){
 intra:
     /* decode each block */
     if(s->mb_intra || HAS_CBP(h->mtype)){
+        s->dsp.clear_blocks(s->block[0]);
         for (i = 0; i < 6; i++) {
             if (h261_decode_block(h, s->block[i], i, cbp&32) < 0){
                 return SLICE_ERROR;
             }
             cbp+=cbp;
         }
+    }else{
+        for (i = 0; i < 6; i++)
+            s->block_last_index[i]= -1;
     }
 
     MPV_decode_mb(s, s->block);
@@ -847,48 +847,30 @@ static int h261_decode_gob(H261Context *h){
 }
 
 static int h261_find_frame_end(ParseContext *pc, AVCodecContext* avctx, const uint8_t *buf, int buf_size){
-    int vop_found, i, j, bits_left, last_bits;
+    int vop_found, i, j;
     uint32_t state;
-
-    H261Context *h = avctx->priv_data;
-
-    if(h){
-        bits_left = h->bits_left;
-        last_bits = h->last_bits;
-    }
-    else{
-        bits_left = 0;
-        last_bits = 0;
-    }
 
     vop_found= pc->frame_start_found;
     state= pc->state;
-    if(bits_left!=0 && !vop_found)
-        state = state << (8-bits_left) | last_bits;
-    i=0;
-    if(!vop_found){
-        for(i=0; i<buf_size; i++){
-            state= (state<<8) | buf[i];
-            for(j=0; j<8; j++){
-                if(( (  (state<<j)  |  (buf[i]>>(8-j))  )>>(32-20) == 0x10 )&&(((state >> (17-j)) & 0x4000) == 0x0)){
-                    i++;
-                    vop_found=1;
-                    break;
-                }
+   
+    for(i=0; i<buf_size && !vop_found; i++){
+        state= (state<<8) | buf[i];
+        for(j=0; j<8; j++){
+            if(((state>>j)&0xFFFFF) == 0x00010){
+                i++;
+                vop_found=1;
+                break;
             }
-            if(vop_found)
-                    break;    
         }
     }
     if(vop_found){
         for(; i<buf_size; i++){
-            if(avctx->flags & CODEC_FLAG_TRUNCATED)//XXX ffplay workaround, someone a better solution?
-                state= (state<<8) | buf[i];
+            state= (state<<8) | buf[i];
             for(j=0; j<8; j++){
-                if(( (  (state<<j)  |  (buf[i]>>(8-j))  )>>(32-20) == 0x10 )&&(((state >> (17-j)) & 0x4000) == 0x0)){
+                if(((state>>j)&0xFFFFF) == 0x00010){
                     pc->frame_start_found=0;
-                    pc->state=-1;
-                    return i-3;
+                    pc->state= state>>(2*8);
+                    return i-1;
                 }
             }
         }
@@ -922,18 +904,11 @@ static int h261_parse(AVCodecParserContext *s,
  * returns the number of bytes consumed for building the current frame
  */
 static int get_consumed_bytes(MpegEncContext *s, int buf_size){
-    if(s->flags&CODEC_FLAG_TRUNCATED){
-        int pos= (get_bits_count(&s->gb)+7)>>3;
-        pos -= s->parse_context.last_index;
-        if(pos<0) pos=0;// padding is not really read so this might be -1
-        return pos;
-    }else{
-        int pos= get_bits_count(&s->gb)>>3;
-        if(pos==0) pos=1; //avoid infinite loops (i doubt thats needed but ...)
-        if(pos+10>buf_size) pos=buf_size; // oops ;)
+    int pos= get_bits_count(&s->gb)>>3;
+    if(pos==0) pos=1; //avoid infinite loops (i doubt thats needed but ...)
+    if(pos+10>buf_size) pos=buf_size; // oops ;)
 
-        return pos;
-    }
+    return pos;
 }
 
 static int h261_decode_frame(AVCodecContext *avctx,
@@ -952,20 +927,7 @@ static int h261_decode_frame(AVCodecContext *avctx,
     s->flags= avctx->flags;
     s->flags2= avctx->flags2;
 
-    /* no supplementary picture */
-    if (buf_size == 0) {
-        return 0;
-    }
-
-    if(s->flags&CODEC_FLAG_TRUNCATED){
-        int next;
-
-        next= h261_find_frame_end(&s->parse_context,avctx, buf, buf_size);
-
-        if( ff_combine_frame(&s->parse_context, next, &buf, &buf_size) < 0 )
-            return buf_size;
-    }
-
+    h->gob_start_code_skipped=0;
 
 retry:
 
@@ -1008,6 +970,10 @@ retry:
 
     /* skip everything if we are in a hurry>=5 */
     if(avctx->hurry_up>=5) return get_consumed_bytes(s, buf_size);
+    if(  (avctx->skip_frame >= AVDISCARD_NONREF && s->pict_type==B_TYPE)
+       ||(avctx->skip_frame >= AVDISCARD_NONKEY && s->pict_type!=I_TYPE)
+       || avctx->skip_frame >= AVDISCARD_ALL)
+        return get_consumed_bytes(s, buf_size);
 
     if(MPV_frame_start(s, avctx) < 0)
         return -1;
@@ -1027,7 +993,7 @@ retry:
 
 assert(s->current_picture.pict_type == s->current_picture_ptr->pict_type);
 assert(s->current_picture.pict_type == s->pict_type);
-    *pict= *(AVFrame*)&s->current_picture;
+    *pict= *(AVFrame*)s->current_picture_ptr;
     ff_print_debug_info(s, pict);
 
     /* Return the Picture timestamp as the frame number */
@@ -1048,6 +1014,7 @@ static int h261_decode_end(AVCodecContext *avctx)
     return 0;
 }
 
+#ifdef CONFIG_ENCODERS
 AVCodec h261_encoder = {
     "h261",
     CODEC_TYPE_VIDEO,
@@ -1057,6 +1024,7 @@ AVCodec h261_encoder = {
     MPV_encode_picture,
     MPV_encode_end,
 };
+#endif
 
 AVCodec h261_decoder = {
     "h261",
@@ -1067,7 +1035,7 @@ AVCodec h261_decoder = {
     NULL,
     h261_decode_end,
     h261_decode_frame,
-    CODEC_CAP_TRUNCATED,
+    CODEC_CAP_DR1,
 };
 
 AVCodecParser h261_parser = {

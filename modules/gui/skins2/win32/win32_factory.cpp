@@ -2,7 +2,7 @@
  * win32_factory.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: win32_factory.cpp 8864 2004-09-30 19:44:43Z gbazin $
+ * $Id: win32_factory.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -105,7 +105,7 @@ bool Win32Factory::init()
     skinWindowClass.lpszMenuName = NULL;
     skinWindowClass.cbClsExtra = 0;
     skinWindowClass.cbWndExtra = 0;
-    skinWindowClass.hbrBackground = HBRUSH (COLOR_WINDOW);
+    skinWindowClass.hbrBackground = NULL;
     skinWindowClass.hCursor = LoadCursor( NULL , IDC_ARROW );
     skinWindowClass.hIcon = LoadIcon( m_hInst, "VLC_ICON" );
     skinWindowClass.hInstance = m_hInst;

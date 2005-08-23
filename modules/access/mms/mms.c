@@ -2,7 +2,7 @@
  * mms.c: MMS over tcp, udp and http access plug-in
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: mms.c 8826 2004-09-27 17:41:49Z gbazin $
+ * $Id: mms.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -55,8 +55,11 @@ static void Close( vlc_object_t * );
     "Always select the stream with the maximum bitrate." )
 
 vlc_module_begin();
+    set_shortname( _("MMS") );
     set_description( _("Microsoft Media Server (MMS) input") );
     set_capability( "access2", -1 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACCESS );
 
     add_integer( "mms-caching", 4 * DEFAULT_PTS_DELAY / 1000, NULL,
                  CACHING_TEXT, CACHING_LONGTEXT, VLC_TRUE );

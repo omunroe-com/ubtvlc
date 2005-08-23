@@ -2,7 +2,7 @@
  * snapshot.c : snapshot plugin for vlc
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: snapshot.c 8644 2004-09-05 16:53:04Z fkuehne $
+ * $Id: snapshot.c 10438 2005-03-26 19:29:32Z oaubert $
  *
  * Authors: Olivier Aubert <oaubert@lisi.univ-lyon1.fr>
  *
@@ -19,6 +19,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ *****************************************************************************/
+
+/*****************************************************************************
+ * This module is a pseudo video output the offers the possibility to
+ * keep a cache of low-res snapshots.
+ * The snapshot structure is defined in include/snapshot.h
+ * In order to access the current snapshot cache, object variables are used:
+ *   snapshot-list-pointer : the pointer on the first element in the list
+ *   snapshot-datasize     : size of a snapshot 
+ *                           (also available in snapshot_t->i_datasize)
+ *   snapshot-cache-size   : size of the cache list
+ *
+ * It is used for the moment by the CORBA module and a specialized
+ * python-vlc binding.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -58,7 +72,11 @@ static void Display   ( vout_thread_t *, picture_t * );
 
 vlc_module_begin( );
     set_description( _( "snapshot module" ) );
-    set_capability( "video output", 0 );
+    set_shortname( N_("Snapshot") );
+
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VOUT );
+    set_capability( "video output", 1 );
 
     add_integer( "snapshot-width", 320, NULL, WIDTH_TEXT, WIDTH_LONGTEXT, VLC_FALSE );
     add_integer( "snapshot-height", 200, NULL, HEIGHT_TEXT, HEIGHT_LONGTEXT, VLC_FALSE );
@@ -94,11 +112,11 @@ static int Create( vlc_object_t *p_this )
     if( ! p_vout->p_sys )
         return VLC_ENOMEM;
 
-    var_Create( p_this, "snapshot-width", VLC_VAR_INTEGER );
-    var_Create( p_this, "snapshot-height", VLC_VAR_INTEGER );
-    var_Create( p_this, "snapshot-datasize", VLC_VAR_INTEGER );
-    var_Create( p_this, "snapshot-cache-size", VLC_VAR_INTEGER );
-    var_Create( p_this, "snapshot-list-pointer", VLC_VAR_ADDRESS );
+    var_Create( p_vout, "snapshot-width", VLC_VAR_INTEGER );
+    var_Create( p_vout, "snapshot-height", VLC_VAR_INTEGER );
+    var_Create( p_vout, "snapshot-datasize", VLC_VAR_INTEGER );
+    var_Create( p_vout, "snapshot-cache-size", VLC_VAR_INTEGER );
+    var_Create( p_vout, "snapshot-list-pointer", VLC_VAR_ADDRESS );
 
     p_vout->pf_init = Init;
     p_vout->pf_end = NULL;
@@ -342,7 +360,7 @@ static mtime_t snapshot_GetMovietime( vout_thread_t *p_vout )
 
     var_Get( p_input, "time", &val );
 
-    i_result = val.i_time;
+    i_result = val.i_time - p_input->i_pts_delay;
 
     return( i_result / 1000 );
 }

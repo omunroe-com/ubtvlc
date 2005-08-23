@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in alsa arts coreaudio aout_directx esd aout_file oss aout_sdl waveout hd1000a portaudio; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in alsa arts coreaudio aout_directx esd aout_file oss aout_sdl waveout hd1000a portaudio; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in alsa arts coreaudio aout_directx esd aout_file oss aout_sdl waveout hd1000a portaudio; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in alsa arts coreaudio aout_directx esd aout_file oss aout_sdl waveout hd1000a portaudio auhal; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in alsa arts coreaudio aout_directx esd aout_file oss aout_sdl waveout hd1000a portaudio auhal; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in alsa arts coreaudio aout_directx esd aout_file oss aout_sdl waveout hd1000a portaudio auhal; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -438,6 +438,43 @@ libportaudio_plugin$(LIBEXT): $(libportaudio_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libportaudio_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin portaudio\` ; $(CXXLINK) $(libportaudio_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin portaudio` ;; \
 	  objc) echo $(OBJCLINK) $(libportaudio_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin portaudio\` ; $(OBJCLINK) $(libportaudio_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin portaudio` ;; \
 	  c|*) echo $(LINK) $(libportaudio_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin portaudio\` ; $(LINK) $(libportaudio_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin portaudio` ;; \
+	esac
+
+
+# The auhal plugin
+
+if UNTRUE
+Lauhalp = libauhal_plugin.a
+Dauhalp = libauhal_plugin$(LIBEXT)
+Lauhalb = libauhal.a
+Lauhalpic = libauhal_pic.a
+endif
+
+libauhal_plugin_a_SOURCES = $(SOURCES_auhal)
+libauhal_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin auhal`
+libauhal_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin auhal`
+libauhal_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin auhal`
+
+libauhal_pic_a_SOURCES = $(SOURCES_auhal)
+libauhal_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic auhal`
+libauhal_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic auhal`
+libauhal_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic auhal`
+
+libauhal_a_SOURCES = $(SOURCES_auhal)
+libauhal_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin auhal`
+libauhal_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin auhal`
+libauhal_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin auhal`
+
+libvlc_LIBRARIES += $(Lauhalb) $(Lauhalpic)
+libauhal_DATA = $(Dauhalp)
+
+libauhaldir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lauhalp)
+libauhal_plugin$(LIBEXT): $(libauhal_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage auhal` in \
+	  c++) echo $(CXXLINK) $(libauhal_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin auhal\` ; $(CXXLINK) $(libauhal_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin auhal` ;; \
+	  objc) echo $(OBJCLINK) $(libauhal_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin auhal\` ; $(OBJCLINK) $(libauhal_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin auhal` ;; \
+	  c|*) echo $(LINK) $(libauhal_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin auhal\` ; $(LINK) $(libauhal_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin auhal` ;; \
 	esac
 
 

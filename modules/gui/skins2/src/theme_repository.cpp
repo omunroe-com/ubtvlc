@@ -2,7 +2,7 @@
  * theme_repository.cpp
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: theme_repository.cpp 8513 2004-08-24 19:01:32Z asmax $
+ * $Id: theme_repository.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -30,8 +30,7 @@
 #elif defined( WIN32 )
 #   include <direct.h>
 #endif
-#if (!defined( WIN32 ) || defined(__MINGW32__))
-/* Mingw has its own version of dirent */
+#ifdef HAVE_DIRENT_H
 #   include <dirent.h>
 #endif
 
@@ -135,6 +134,8 @@ void ThemeRepository::parseDirectory( const string &rDir )
 
         pDirContent = readdir( pDir );
     }
+
+    closedir( pDir );
 }
 
 

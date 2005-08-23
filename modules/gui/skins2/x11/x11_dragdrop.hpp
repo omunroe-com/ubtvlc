@@ -2,7 +2,7 @@
  * x11_dragdrop.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: x11_dragdrop.hpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: x11_dragdrop.hpp 9934 2005-02-15 13:55:08Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

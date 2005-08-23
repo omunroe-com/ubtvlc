@@ -2,7 +2,7 @@
  * vorbis.c: vorbis decoder/encoder/packetizer module making use of libvorbis.
  *****************************************************************************
  * Copyright (C) 2001-2003 VideoLAN
- * $Id: vorbis.c 8565 2004-08-29 10:56:24Z gbazin $
+ * $Id: vorbis.c 10666 2005-04-12 22:47:36Z fkuehne $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -141,13 +141,15 @@ static block_t *Encode   ( encoder_t *, aout_buffer_t * );
   "Allows you to force a constant bitrate encoding (CBR)." )
 
 vlc_module_begin();
-
+    set_shortname( "Vorbis" );
     set_description( _("Vorbis audio decoder") );
 #ifdef MODULE_NAME_IS_tremor
     set_capability( "decoder", 90 );
 #else
     set_capability( "decoder", 100 );
 #endif
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACODEC );
     set_callbacks( OpenDecoder, CloseDecoder );
 
     add_submodule();
@@ -160,7 +162,9 @@ vlc_module_begin();
     add_submodule();
     set_description( _("Vorbis audio encoder") );
     set_capability( "encoder", 100 );
-    set_callbacks( OpenEncoder, CloseEncoder );
+#if defined(HAVE_VORBIS_VORBISENC_H)
+	set_callbacks( OpenEncoder, CloseEncoder );
+#endif
 
     add_integer( ENC_CFG_PREFIX "quality", 3, NULL, ENC_QUALITY_TEXT,
                  ENC_QUALITY_LONGTEXT, VLC_FALSE );
@@ -203,6 +207,7 @@ static int OpenDecoder( vlc_object_t *p_this )
 
     /* Misc init */
     aout_DateSet( &p_sys->end_date, 0 );
+    p_sys->i_last_block_size = 0;
     p_sys->b_packetizer = VLC_FALSE;
     p_sys->i_headers = 0;
 
@@ -288,7 +293,7 @@ static void *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
         p_dec->fmt_in.p_extra =
             realloc( p_dec->fmt_in.p_extra, p_dec->fmt_in.i_extra +
                      oggpacket.bytes + 2 );
-        p_extra = p_dec->fmt_in.p_extra + p_dec->fmt_in.i_extra;
+        p_extra = (uint8_t *)p_dec->fmt_in.p_extra + p_dec->fmt_in.i_extra;
         *(p_extra++) = oggpacket.bytes >> 8;
         *(p_extra++) = oggpacket.bytes & 0xFF;
 
@@ -481,7 +486,11 @@ static aout_buffer_t *DecodePacket( decoder_t *p_dec, ogg_packet *p_oggpacket )
 #endif
 
     if( p_oggpacket->bytes &&
+#ifdef MODULE_NAME_IS_tremor
+        vorbis_synthesis( &p_sys->vb, p_oggpacket, 1 ) == 0 )
+#else
         vorbis_synthesis( &p_sys->vb, p_oggpacket ) == 0 )
+#endif
         vorbis_synthesis_blockin( &p_sys->vd, &p_sys->vb );
 
     /* **pp_pcm is a multichannel float vector. In stereo, for
@@ -576,7 +585,19 @@ static void ParseVorbisComments( decoder_t *p_dec )
             psz_value++;
             input_Control( p_input, INPUT_ADD_INFO, _("Vorbis comment"),
                            psz_name, psz_value );
+            /* HACK, we should use meta */
+            if( strstr( psz_name, "artist" ) )
+            {
+                input_Control( p_input, INPUT_ADD_INFO, _("Meta-information"),
+                               _("Artist"), psz_value );
+            }
+            else if( strstr( psz_name, "title" ) )
+            {
+                p_input->input.p_item->psz_name = strdup( psz_value );
+            }
         }
+        /* FIXME */
+        var_SetInteger( p_input, "item-change", p_input->input.p_item->i_id );
         free( psz_comment );
         i++;
     }
@@ -585,24 +606,27 @@ static void ParseVorbisComments( decoder_t *p_dec )
 /*****************************************************************************
  * Interleave: helper function to interleave channels
  *****************************************************************************/
-static void Interleave(
 #ifdef MODULE_NAME_IS_tremor
-                        int32_t *p_out, const int32_t **pp_in,
-#else
-                        float *p_out, const float **pp_in,
-#endif
+static void Interleave( int32_t *p_out, const int32_t **pp_in,
                         int i_nb_channels, int i_samples )
 {
     int i, j;
 
     for ( j = 0; j < i_samples; j++ )
-    {
         for ( i = 0; i < i_nb_channels; i++ )
-        {
-            p_out[j * i_nb_channels + i] = pp_in[i][j];
-        }
-    }
+            p_out[j * i_nb_channels + i] = pp_in[i][j] * (FIXED32_ONE >> 24);
 }
+#else
+static void Interleave( float *p_out, const float **pp_in,
+                        int i_nb_channels, int i_samples )
+{
+    int i, j;
+
+    for ( j = 0; j < i_samples; j++ )
+        for ( i = 0; i < i_nb_channels; i++ )
+            p_out[j * i_nb_channels + i] = pp_in[i][j];
+}
+#endif
 
 /*****************************************************************************
  * CloseDecoder: vorbis decoder destruction

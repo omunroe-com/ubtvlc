@@ -2,7 +2,7 @@
  * announce.h : Session announcement
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: announce.h 8376 2004-08-04 21:48:57Z hartman $
+ * $Id: announce.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Clément Stenac <zorglub@via.ecp.fr>
  *

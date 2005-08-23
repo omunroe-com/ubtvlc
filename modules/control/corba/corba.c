@@ -2,7 +2,7 @@
  * corba.c : CORBA (ORBit) remote control plugin for vlc
  *****************************************************************************
  * Copyright (C) 2001 VideoLAN
- * $Id: corba.c 7940 2004-06-07 19:40:26Z oaubert $
+ * $Id: corba.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Olivier Aubert <oaubert@lisi.univ-lyon1.fr>
  *
@@ -682,6 +682,8 @@ static void Run          ( intf_thread_t * );
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+set_category( CAT_INTERFACE );
+set_subcategory( SUBCAT_INTERFACE_CONTROL );
 add_category_hint( N_( "Corba control" ), NULL, VLC_FALSE );
 
 set_description( _( "corba control module" ) );

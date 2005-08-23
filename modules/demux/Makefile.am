@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in a52sys dtssys flac ogg m3u demuxdump rawdv au wav aac mkv livedotcom nsv real ts ps mod pva aiff sgimb mjpeg subtitle vobsub; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in a52sys dtssys flac ogg m3u demuxdump rawdv au wav aac mkv livedotcom nsv real ts ps mod pva aiff sgimb mjpeg subtitle vobsub; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in a52sys dtssys flac ogg m3u demuxdump rawdv au wav aac mkv livedotcom nsv real ts ps mod pva aiff sgimb mjpeg subtitle vobsub; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in a52sys dtssys flac ogg m3u demuxdump rawdv au wav mkv livedotcom nsv real ts ps mod pva aiff sgimb mjpeg subtitle ty vobsub voc xa nuv; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in a52sys dtssys flac ogg m3u demuxdump rawdv au wav mkv livedotcom nsv real ts ps mod pva aiff sgimb mjpeg subtitle ty vobsub voc xa nuv; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in a52sys dtssys flac ogg m3u demuxdump rawdv au wav mkv livedotcom nsv real ts ps mod pva aiff sgimb mjpeg subtitle ty vobsub voc xa nuv; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -364,43 +364,6 @@ libwav_plugin$(LIBEXT): $(libwav_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libwav_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin wav\` ; $(CXXLINK) $(libwav_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin wav` ;; \
 	  objc) echo $(OBJCLINK) $(libwav_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin wav\` ; $(OBJCLINK) $(libwav_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin wav` ;; \
 	  c|*) echo $(LINK) $(libwav_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin wav\` ; $(LINK) $(libwav_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin wav` ;; \
-	esac
-
-
-# The aac plugin
-
-if UNTRUE
-Laacp = libaac_plugin.a
-Daacp = libaac_plugin$(LIBEXT)
-Laacb = libaac.a
-Laacpic = libaac_pic.a
-endif
-
-libaac_plugin_a_SOURCES = $(SOURCES_aac)
-libaac_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin aac`
-libaac_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin aac`
-libaac_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin aac`
-
-libaac_pic_a_SOURCES = $(SOURCES_aac)
-libaac_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic aac`
-libaac_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic aac`
-libaac_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic aac`
-
-libaac_a_SOURCES = $(SOURCES_aac)
-libaac_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin aac`
-libaac_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin aac`
-libaac_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin aac`
-
-libvlc_LIBRARIES += $(Laacb) $(Laacpic)
-libaac_DATA = $(Daacp)
-
-libaacdir = $(libdir)/vlc/
-noinst_LIBRARIES += $(Laacp)
-libaac_plugin$(LIBEXT): $(libaac_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage aac` in \
-	  c++) echo $(CXXLINK) $(libaac_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin aac\` ; $(CXXLINK) $(libaac_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin aac` ;; \
-	  objc) echo $(OBJCLINK) $(libaac_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin aac\` ; $(OBJCLINK) $(libaac_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin aac` ;; \
-	  c|*) echo $(LINK) $(libaac_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin aac\` ; $(LINK) $(libaac_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin aac` ;; \
 	esac
 
 
@@ -848,6 +811,43 @@ libsubtitle_plugin$(LIBEXT): $(libsubtitle_plugin_a_OBJECTS)
 	esac
 
 
+# The ty plugin
+
+if UNTRUE
+Ltyp = libty_plugin.a
+Dtyp = libty_plugin$(LIBEXT)
+Ltyb = libty.a
+Ltypic = libty_pic.a
+endif
+
+libty_plugin_a_SOURCES = $(SOURCES_ty)
+libty_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin ty`
+libty_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin ty`
+libty_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin ty`
+
+libty_pic_a_SOURCES = $(SOURCES_ty)
+libty_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ty`
+libty_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ty`
+libty_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ty`
+
+libty_a_SOURCES = $(SOURCES_ty)
+libty_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin ty`
+libty_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ty`
+libty_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ty`
+
+libvlc_LIBRARIES += $(Ltyb) $(Ltypic)
+libty_DATA = $(Dtyp)
+
+libtydir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Ltyp)
+libty_plugin$(LIBEXT): $(libty_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage ty` in \
+	  c++) echo $(CXXLINK) $(libty_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ty\` ; $(CXXLINK) $(libty_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ty` ;; \
+	  objc) echo $(OBJCLINK) $(libty_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ty\` ; $(OBJCLINK) $(libty_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ty` ;; \
+	  c|*) echo $(LINK) $(libty_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin ty\` ; $(LINK) $(libty_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin ty` ;; \
+	esac
+
+
 # The vobsub plugin
 
 if UNTRUE
@@ -882,6 +882,117 @@ libvobsub_plugin$(LIBEXT): $(libvobsub_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libvobsub_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin vobsub\` ; $(CXXLINK) $(libvobsub_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin vobsub` ;; \
 	  objc) echo $(OBJCLINK) $(libvobsub_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin vobsub\` ; $(OBJCLINK) $(libvobsub_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin vobsub` ;; \
 	  c|*) echo $(LINK) $(libvobsub_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin vobsub\` ; $(LINK) $(libvobsub_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin vobsub` ;; \
+	esac
+
+
+# The voc plugin
+
+if UNTRUE
+Lvocp = libvoc_plugin.a
+Dvocp = libvoc_plugin$(LIBEXT)
+Lvocb = libvoc.a
+Lvocpic = libvoc_pic.a
+endif
+
+libvoc_plugin_a_SOURCES = $(SOURCES_voc)
+libvoc_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin voc`
+libvoc_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin voc`
+libvoc_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin voc`
+
+libvoc_pic_a_SOURCES = $(SOURCES_voc)
+libvoc_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic voc`
+libvoc_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic voc`
+libvoc_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic voc`
+
+libvoc_a_SOURCES = $(SOURCES_voc)
+libvoc_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin voc`
+libvoc_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin voc`
+libvoc_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin voc`
+
+libvlc_LIBRARIES += $(Lvocb) $(Lvocpic)
+libvoc_DATA = $(Dvocp)
+
+libvocdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lvocp)
+libvoc_plugin$(LIBEXT): $(libvoc_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage voc` in \
+	  c++) echo $(CXXLINK) $(libvoc_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin voc\` ; $(CXXLINK) $(libvoc_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin voc` ;; \
+	  objc) echo $(OBJCLINK) $(libvoc_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin voc\` ; $(OBJCLINK) $(libvoc_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin voc` ;; \
+	  c|*) echo $(LINK) $(libvoc_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin voc\` ; $(LINK) $(libvoc_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin voc` ;; \
+	esac
+
+
+# The xa plugin
+
+if UNTRUE
+Lxap = libxa_plugin.a
+Dxap = libxa_plugin$(LIBEXT)
+Lxab = libxa.a
+Lxapic = libxa_pic.a
+endif
+
+libxa_plugin_a_SOURCES = $(SOURCES_xa)
+libxa_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin xa`
+libxa_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin xa`
+libxa_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin xa`
+
+libxa_pic_a_SOURCES = $(SOURCES_xa)
+libxa_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic xa`
+libxa_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic xa`
+libxa_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic xa`
+
+libxa_a_SOURCES = $(SOURCES_xa)
+libxa_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin xa`
+libxa_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin xa`
+libxa_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin xa`
+
+libvlc_LIBRARIES += $(Lxab) $(Lxapic)
+libxa_DATA = $(Dxap)
+
+libxadir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lxap)
+libxa_plugin$(LIBEXT): $(libxa_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage xa` in \
+	  c++) echo $(CXXLINK) $(libxa_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin xa\` ; $(CXXLINK) $(libxa_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin xa` ;; \
+	  objc) echo $(OBJCLINK) $(libxa_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin xa\` ; $(OBJCLINK) $(libxa_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin xa` ;; \
+	  c|*) echo $(LINK) $(libxa_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin xa\` ; $(LINK) $(libxa_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin xa` ;; \
+	esac
+
+
+# The nuv plugin
+
+if UNTRUE
+Lnuvp = libnuv_plugin.a
+Dnuvp = libnuv_plugin$(LIBEXT)
+Lnuvb = libnuv.a
+Lnuvpic = libnuv_pic.a
+endif
+
+libnuv_plugin_a_SOURCES = $(SOURCES_nuv)
+libnuv_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin nuv`
+libnuv_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin nuv`
+libnuv_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin nuv`
+
+libnuv_pic_a_SOURCES = $(SOURCES_nuv)
+libnuv_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic nuv`
+libnuv_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic nuv`
+libnuv_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic nuv`
+
+libnuv_a_SOURCES = $(SOURCES_nuv)
+libnuv_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin nuv`
+libnuv_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin nuv`
+libnuv_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin nuv`
+
+libvlc_LIBRARIES += $(Lnuvb) $(Lnuvpic)
+libnuv_DATA = $(Dnuvp)
+
+libnuvdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lnuvp)
+libnuv_plugin$(LIBEXT): $(libnuv_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage nuv` in \
+	  c++) echo $(CXXLINK) $(libnuv_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin nuv\` ; $(CXXLINK) $(libnuv_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin nuv` ;; \
+	  objc) echo $(OBJCLINK) $(libnuv_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin nuv\` ; $(OBJCLINK) $(libnuv_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin nuv` ;; \
+	  c|*) echo $(LINK) $(libnuv_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin nuv\` ; $(LINK) $(libnuv_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin nuv` ;; \
 	esac
 
 

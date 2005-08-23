@@ -2,7 +2,7 @@
  * output.c : internal management of output streams for the audio output
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: output.c 8485 2004-08-21 13:54:36Z asmax $
+ * $Id: output.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -275,7 +275,12 @@ aout_buffer_t * aout_OutputNextBuffer( aout_instance_t * p_aout,
     vlc_mutex_lock( &p_aout->output_fifo_lock );
 
     p_buffer = p_aout->output.fifo.p_first;
-    while ( p_buffer && p_buffer->start_date < mdate() - AOUT_PTS_TOLERANCE )
+
+    /* Drop the audio sample if the audio output is really late.
+     * In the case of b_can_sleek, we don't use a resampler so we need to be
+     * a lot more severe. */
+    while ( p_buffer && p_buffer->start_date <
+            (b_can_sleek ? start_date : mdate()) - AOUT_PTS_TOLERANCE )
     {
         msg_Dbg( p_aout, "audio output is too slow ("I64Fd"), "
                  "trashing "I64Fd"us", mdate() - p_buffer->start_date,

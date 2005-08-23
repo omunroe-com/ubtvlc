@@ -2,7 +2,7 @@
  * QConfigItem.h : includes for the QConfigItem class
  *****************************************************************************
  * Copyright (C) 2001 VideoLAN
- * $Id: QConfigItem.h 6961 2004-03-05 17:34:23Z sam $
+ * $Id: QConfigItem.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Andres Krapf <dae@chez.com> Sun Mar 25 2001
  *

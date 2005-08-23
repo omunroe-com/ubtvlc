@@ -2,7 +2,7 @@
  * portaudio.c : portaudio (v19) audio output plugin
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: portaudio.c 9287 2004-11-12 08:06:26Z gbazin $
+ * $Id: portaudio.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Frederic Ruget <frederic.ruget@free.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -108,7 +108,10 @@ static int PAOpenStream( aout_instance_t * );
 #define DEVICE_LONGTEXT N_("Portaudio identifier for the output device")
 
 vlc_module_begin();
+    set_shortname( "PortAudio" );
     set_description( N_("PORTAUDIO audio output") );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_AOUT );
     add_integer( "portaudio-device", 0, NULL,
                  DEVICE_TEXT, DEVICE_LONGTEXT, VLC_FALSE );
     set_capability( "audio output", 0 );

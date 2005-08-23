@@ -2,7 +2,7 @@
  * ugly.c : ugly resampler (changes pitch)
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: ugly.c 7998 2004-06-18 12:38:28Z sigmunau $
+ * $Id: ugly.c 10814 2005-04-26 07:23:56Z fenrir $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -45,6 +45,8 @@ static void DoWork    ( aout_instance_t *, aout_filter_t *, aout_buffer_t *,
 vlc_module_begin();
     set_description( _("audio filter for ugly resampling") );
     set_capability( "audio filter", 2 );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_MISC );
     set_callbacks( Create, NULL );
 vlc_module_end();
 
@@ -82,7 +84,7 @@ static int Create( vlc_object_t *p_this )
 static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
                     aout_buffer_t * p_in_buf, aout_buffer_t * p_out_buf )
 {
-    int32_t *p_in_orig, *p_in, *p_out = (int32_t*)p_out_buf->p_buffer;
+    int32_t *p_in, *p_out = (int32_t*)p_out_buf->p_buffer;
 
     unsigned int i_nb_channels = aout_FormatNbChannels( &p_filter->input );
     unsigned int i_in_nb = p_in_buf->i_nb_samples;

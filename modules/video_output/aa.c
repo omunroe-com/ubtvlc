@@ -2,7 +2,7 @@
  * vout_aa.c: Aa video output display method for testing purposes
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: aa.c 8551 2004-08-28 17:36:02Z gbazin $
+ * $Id: aa.c 10112 2005-03-03 06:58:04Z zorglub $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -52,6 +52,9 @@ static void SetPalette     ( vout_thread_t *, uint16_t *, uint16_t *, uint16_t *
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+    set_shortname( _("Ascii Art"));
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VOUT );
     set_description( _("ASCII-art video output") );
     set_capability( "video output", 10 );
     add_shortcut( "aalib" );

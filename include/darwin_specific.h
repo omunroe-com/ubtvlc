@@ -2,7 +2,7 @@
  * darwin_specific.h: Darwin specific features
  *****************************************************************************
  * Copyright (C) 2001 VideoLAN
- * $Id: darwin_specific.h 8299 2004-07-27 16:20:32Z hartman $
+ * $Id: darwin_specific.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *

@@ -2,7 +2,7 @@
  * interpreter.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: interpreter.cpp 8524 2004-08-25 21:32:15Z ipkiss $
+ * $Id: interpreter.cpp 10770 2005-04-22 22:25:10Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -24,6 +24,7 @@
 
 #include "interpreter.hpp"
 #include "expr_evaluator.hpp"
+#include "../commands/cmd_muxer.hpp"
 #include "../commands/cmd_playlist.hpp"
 #include "../commands/cmd_dialogs.hpp"
 #include "../commands/cmd_dummy.hpp"
@@ -83,6 +84,8 @@ Interpreter::Interpreter( intf_thread_t *pIntf ): SkinObject( pIntf )
     REGISTER_CMD( "vlc.faster()", CmdFaster )
     REGISTER_CMD( "vlc.slower()", CmdSlower )
     REGISTER_CMD( "vlc.mute()", CmdMute )
+    REGISTER_CMD( "vlc.volumeUp()", CmdVolumeUp )
+    REGISTER_CMD( "vlc.volumeDown()", CmdVolumeDown )
     REGISTER_CMD( "vlc.minimize()", CmdMinimize )
     REGISTER_CMD( "vlc.onTop()", CmdOnTop )
     REGISTER_CMD( "vlc.quit()", CmdQuit )
@@ -131,7 +134,35 @@ CmdGeneric *Interpreter::parseAction( const string &rAction, Theme *pTheme )
 
     CmdGeneric *pCommand = NULL;
 
-    if( rAction.find( ".setLayout(" ) != string::npos )
+    if( rAction.find( ";" ) != string::npos )
+    {
+        // Several actions are defined...
+        list<CmdGeneric *> actionList;
+        string rightPart = rAction;
+        string::size_type pos = rightPart.find( ";" );
+        while( pos != string::npos )
+        {
+            string leftPart = rightPart.substr( 0, rightPart.find( ";" ) );
+            // Remove any whitespace at the end of the left part, and parse it
+            leftPart =
+                leftPart.substr( 0, leftPart.find_last_not_of( " \t" ) + 1 );
+            actionList.push_back( parseAction( leftPart, pTheme ) );
+            // Now remove any whitespace at the beginning of the right part,
+            // and go on checking for further actions in it...
+            rightPart = rightPart.substr( pos, rightPart.size() );
+            rightPart =
+                rightPart.substr( rightPart.find_first_not_of( " \t;" ),
+                                  rightPart.size() );
+            pos = rightPart.find( ";" );
+        }
+        actionList.push_back( parseAction( rightPart, pTheme ) );
+
+        // The list is filled, we remove NULL pointers from it, just in case...
+        actionList.remove( NULL );
+
+        pCommand = new CmdMuxer( getIntf(), actionList );
+    }
+    else if( rAction.find( ".setLayout(" ) != string::npos )
     {
         int leftPos = rAction.find( ".setLayout(" );
         string windowId = rAction.substr( 0, leftPos );
@@ -177,6 +208,10 @@ CmdGeneric *Interpreter::parseAction( const string &rAction, Theme *pTheme )
         // Add the command in the pool
         pTheme->m_commands.push_back( CmdGenericPtr( pCommand ) );
     }
+    else
+    {
+        msg_Warn( getIntf(), "Unknown action: %s", rAction.c_str() );
+    }
 
     return pCommand;
 }
@@ -186,14 +221,14 @@ VarBool *Interpreter::getVarBool( const string &rName, Theme *pTheme )
 {
     VarManager *pVarManager = VarManager::instance( getIntf() );
 
-   // Convert the expression into Reverse Polish Notation
-    ExprEvaluator *pEvaluator = new ExprEvaluator( getIntf() );
-    pEvaluator->parse( rName );
+    // Convert the expression into Reverse Polish Notation
+    ExprEvaluator evaluator( getIntf() );
+    evaluator.parse( rName );
 
     list<VarBool*> varStack;
 
     // Get the first token from the RPN stack
-    string token = pEvaluator->getToken();
+    string token = evaluator.getToken();
     while( !token.empty() )
     {
         if( token == "and" )
@@ -295,7 +330,7 @@ VarBool *Interpreter::getVarBool( const string &rName, Theme *pTheme )
             varStack.push_back( pVar );
         }
         // Get the first token from the RPN stack
-        token = pEvaluator->getToken();
+        token = evaluator.getToken();
     }
 
     // The stack should contain a single variable

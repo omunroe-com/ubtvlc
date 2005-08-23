@@ -2,7 +2,7 @@
  * iso_lang.h: languages codes and abbreviations
  *****************************************************************************
  * Copyright (C) 1998-2004 VideoLAN
- * $Id: iso-639_def.h 7522 2004-04-27 16:35:15Z sam $
+ * $Id: iso-639_def.h 10885 2005-05-03 11:07:20Z courmisch $
  *
  * This is used in iso_lang.cpp and is taken from the GNU glibc 2.2.5
  * tarball. It has been partially completed with native language names.
@@ -56,7 +56,7 @@ static const iso639_lang_t p_languages[] =
     { N_( "Breton" ),           "",            "br", "bre", "bre" },
     { N_( "Bulgarian" ),        "",            "bg", "bul", "bul" },
     { N_( "Burmese" ),          "",            "my", "mya", "bur" },
-    { N_( "Catalan" ),          "",            "ca", "cat", "cat" },
+    { N_( "Catalan" ),          "Catala",      "ca", "cat", "cat" },
     { N_( "Chamorro" ),         "",            "ch", "cha", "cha" },
     { N_( "Chechen" ),          "",            "ce", "che", "che" },
     { N_( "Chinese" ),          "",            "zh", "zho", "chi" },

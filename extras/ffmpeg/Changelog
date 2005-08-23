@@ -7,6 +7,19 @@ version <next>
 - Electronic Arts Multimedia (WVE/UV2/etc.) file demuxer
 - Miro VideoXL (VIXL) video decoder
 - H.261 video encoder
+- QPEG video decoder
+- Nullsoft Video (NSV) file demuxer
+- Shorten audio decoder
+- LOCO video decoder
+- Apple Lossless Audio Codec (ALAC) decoder 
+- Winnov WNV1 video decoder
+- Autodesk Animator Studio Codec (AASC) decoder
+- Indeo 2 video decoder
+- Fraps FPS1 video decoder
+- SNOW video encoder/decoder
+- Sonic audio encoder/decoder
+- Vorbis decoder
+- Macromedia ADPCM decoder
 
 version 0.4.9-pre1:
 

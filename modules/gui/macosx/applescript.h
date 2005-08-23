@@ -2,7 +2,7 @@
  * applescript.h: MacOS X AppleScript support
  *****************************************************************************
  * Copyright (C) 2002-2003 VideoLAN
- * $Id: applescript.h 7090 2004-03-15 19:33:18Z bigben $
+ * $Id: applescript.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Derk-Jan Hartman <thedj@users.sourceforge.net>
  *

@@ -2,7 +2,7 @@
  * block.c: Data blocks management functions
  *****************************************************************************
  * Copyright (C) 2003-2004 VideoLAN
- * $Id: block.c 8699 2004-09-13 13:28:10Z gbazin $
+ * $Id: block.c 11233 2005-06-01 18:34:45Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@videolan.org>
  *
@@ -100,9 +100,9 @@ block_t *block_Realloc( block_t *p_block, int i_prebody, int i_body )
 
     if( i_body < 0 || i_buffer_size <= 0 ) return NULL;
 
-    if( i_prebody < ( p_block->p_buffer - p_block->p_sys->p_allocated_buffer +
-                      p_block->p_sys->i_allocated_buffer ) ||
-        p_block->p_buffer - i_prebody > p_block->p_sys->p_allocated_buffer )
+    if( p_block->p_buffer - i_prebody > p_block->p_sys->p_allocated_buffer &&
+        p_block->p_buffer - i_prebody < p_block->p_sys->p_allocated_buffer +
+        p_block->p_sys->i_allocated_buffer )
     {
         p_block->p_buffer -= i_prebody;
         p_block->i_buffer += i_prebody;

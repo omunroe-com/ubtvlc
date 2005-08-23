@@ -2,7 +2,7 @@
  * DrawingTidbits.cpp
  *****************************************************************************
  * Copyright (C) 2001 VideoLAN
- * $Id: DrawingTidbits.cpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: DrawingTidbits.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Tony Castley <tcastley@mail.powerup.com.au>
  *          Stephan Aßmus <stippi@yellowbites.com>

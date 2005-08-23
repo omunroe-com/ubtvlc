@@ -7,7 +7,7 @@ noinst_LIBRARIES =
 noinst_HEADERS =
 EXTRA_DIST = Modules.am
 BUILT_SOURCES =
-SUBDIRS = dummy memcpy network testsuite playlist
+SUBDIRS = dummy memcpy network testsuite playlist xml
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/misc
 include Modules.am
@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in gtk_main gnome_main gtk2_main gnome2_main sap screensaver qte_main freetype logger vod_rtsp gnutls svg; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in gtk_main gnome_main gtk2_main gnome2_main sap screensaver qte_main freetype logger vod_rtsp gnutls svg; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in gtk_main gnome_main gtk2_main gnome2_main sap screensaver qte_main freetype logger vod_rtsp gnutls svg; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in gtk_main gnome_main gtk2_main gnome2_main screensaver qte_main freetype win32text logger vod_rtsp gnutls svg externrun; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in gtk_main gnome_main gtk2_main gnome2_main screensaver qte_main freetype win32text logger vod_rtsp gnutls svg externrun; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in gtk_main gnome_main gtk2_main gnome2_main screensaver qte_main freetype win32text logger vod_rtsp gnutls svg externrun; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -182,43 +182,6 @@ libgnome2_main_plugin$(LIBEXT): $(libgnome2_main_plugin_a_OBJECTS)
 	esac
 
 
-# The sap plugin
-
-if UNTRUE
-Lsapp = libsap_plugin.a
-Dsapp = libsap_plugin$(LIBEXT)
-Lsapb = libsap.a
-Lsappic = libsap_pic.a
-endif
-
-libsap_plugin_a_SOURCES = $(SOURCES_sap)
-libsap_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin sap`
-libsap_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin sap`
-libsap_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin sap`
-
-libsap_pic_a_SOURCES = $(SOURCES_sap)
-libsap_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic sap`
-libsap_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic sap`
-libsap_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic sap`
-
-libsap_a_SOURCES = $(SOURCES_sap)
-libsap_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin sap`
-libsap_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin sap`
-libsap_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin sap`
-
-libvlc_LIBRARIES += $(Lsapb) $(Lsappic)
-libsap_DATA = $(Dsapp)
-
-libsapdir = $(libdir)/vlc/
-noinst_LIBRARIES += $(Lsapp)
-libsap_plugin$(LIBEXT): $(libsap_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage sap` in \
-	  c++) echo $(CXXLINK) $(libsap_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin sap\` ; $(CXXLINK) $(libsap_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin sap` ;; \
-	  objc) echo $(OBJCLINK) $(libsap_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin sap\` ; $(OBJCLINK) $(libsap_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin sap` ;; \
-	  c|*) echo $(LINK) $(libsap_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin sap\` ; $(LINK) $(libsap_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin sap` ;; \
-	esac
-
-
 # The screensaver plugin
 
 if UNTRUE
@@ -327,6 +290,43 @@ libfreetype_plugin$(LIBEXT): $(libfreetype_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libfreetype_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin freetype\` ; $(CXXLINK) $(libfreetype_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin freetype` ;; \
 	  objc) echo $(OBJCLINK) $(libfreetype_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin freetype\` ; $(OBJCLINK) $(libfreetype_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin freetype` ;; \
 	  c|*) echo $(LINK) $(libfreetype_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin freetype\` ; $(LINK) $(libfreetype_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin freetype` ;; \
+	esac
+
+
+# The win32text plugin
+
+if UNTRUE
+Lwin32textp = libwin32text_plugin.a
+Dwin32textp = libwin32text_plugin$(LIBEXT)
+Lwin32textb = libwin32text.a
+Lwin32textpic = libwin32text_pic.a
+endif
+
+libwin32text_plugin_a_SOURCES = $(SOURCES_win32text)
+libwin32text_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin win32text`
+libwin32text_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin win32text`
+libwin32text_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin win32text`
+
+libwin32text_pic_a_SOURCES = $(SOURCES_win32text)
+libwin32text_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic win32text`
+libwin32text_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic win32text`
+libwin32text_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic win32text`
+
+libwin32text_a_SOURCES = $(SOURCES_win32text)
+libwin32text_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin win32text`
+libwin32text_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin win32text`
+libwin32text_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin win32text`
+
+libvlc_LIBRARIES += $(Lwin32textb) $(Lwin32textpic)
+libwin32text_DATA = $(Dwin32textp)
+
+libwin32textdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lwin32textp)
+libwin32text_plugin$(LIBEXT): $(libwin32text_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage win32text` in \
+	  c++) echo $(CXXLINK) $(libwin32text_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin win32text\` ; $(CXXLINK) $(libwin32text_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin win32text` ;; \
+	  objc) echo $(OBJCLINK) $(libwin32text_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin win32text\` ; $(OBJCLINK) $(libwin32text_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin win32text` ;; \
+	  c|*) echo $(LINK) $(libwin32text_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin win32text\` ; $(LINK) $(libwin32text_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin win32text` ;; \
 	esac
 
 
@@ -475,6 +475,43 @@ libsvg_plugin$(LIBEXT): $(libsvg_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libsvg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin svg\` ; $(CXXLINK) $(libsvg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin svg` ;; \
 	  objc) echo $(OBJCLINK) $(libsvg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin svg\` ; $(OBJCLINK) $(libsvg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin svg` ;; \
 	  c|*) echo $(LINK) $(libsvg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin svg\` ; $(LINK) $(libsvg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin svg` ;; \
+	esac
+
+
+# The externrun plugin
+
+if UNTRUE
+Lexternrunp = libexternrun_plugin.a
+Dexternrunp = libexternrun_plugin$(LIBEXT)
+Lexternrunb = libexternrun.a
+Lexternrunpic = libexternrun_pic.a
+endif
+
+libexternrun_plugin_a_SOURCES = $(SOURCES_externrun)
+libexternrun_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin externrun`
+libexternrun_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin externrun`
+libexternrun_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin externrun`
+
+libexternrun_pic_a_SOURCES = $(SOURCES_externrun)
+libexternrun_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic externrun`
+libexternrun_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic externrun`
+libexternrun_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic externrun`
+
+libexternrun_a_SOURCES = $(SOURCES_externrun)
+libexternrun_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin externrun`
+libexternrun_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin externrun`
+libexternrun_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin externrun`
+
+libvlc_LIBRARIES += $(Lexternrunb) $(Lexternrunpic)
+libexternrun_DATA = $(Dexternrunp)
+
+libexternrundir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lexternrunp)
+libexternrun_plugin$(LIBEXT): $(libexternrun_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage externrun` in \
+	  c++) echo $(CXXLINK) $(libexternrun_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin externrun\` ; $(CXXLINK) $(libexternrun_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin externrun` ;; \
+	  objc) echo $(OBJCLINK) $(libexternrun_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin externrun\` ; $(OBJCLINK) $(libexternrun_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin externrun` ;; \
+	  c|*) echo $(LINK) $(libexternrun_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin externrun\` ; $(LINK) $(libexternrun_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin externrun` ;; \
 	esac
 
 

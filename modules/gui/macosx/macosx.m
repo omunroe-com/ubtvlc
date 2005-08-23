@@ -1,8 +1,8 @@
 /*****************************************************************************
  * macosx.m: Mac OS X module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: macosx.m 8446 2004-08-17 15:17:04Z titer $
+ * Copyright (C) 2001-2005 VideoLAN
+ * $Id: macosx.m 11387 2005-06-10 15:32:08Z hartman $
  *
  * Authors: Colin Delacroix <colin@zoy.org>
  *          Eugenio Jarosiewicz <ej0@cise.ufl.edu>
@@ -68,11 +68,16 @@ void E_(CloseVideoGL) ( vlc_object_t * );
         "borders (OpenGL only)." )
 
 vlc_module_begin();
-    set_description( _("Mac OS X interface, sound and video") );
+    set_description( _("Mac OS X interface") );
     set_capability( "interface", 100 );
     set_callbacks( E_(OpenIntf), E_(CloseIntf) );
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_GENERAL );
     add_submodule();
+        set_description( _("Quartz video") );
         set_capability( "video output", 100 );
+        set_category( CAT_VIDEO);
+        set_subcategory( SUBCAT_VIDEO_VOUT );
         set_callbacks( E_(OpenVideoQT), E_(CloseVideoQT) );
         add_integer( "macosx-vdev", 0, NULL, VDEV_TEXT, VDEV_LONGTEXT,
                      VLC_FALSE );
@@ -83,7 +88,10 @@ vlc_module_begin();
         add_bool( "macosx-fill", 0, NULL, FILL_TEXT, FILL_LONGTEXT,
                   VLC_TRUE );
     add_submodule();
+        set_description( "Mac OS X OpenGL" );
         set_capability( "opengl provider", 100 );
+        set_category( CAT_VIDEO);
+        set_subcategory( SUBCAT_VIDEO_VOUT );
         set_callbacks( E_(OpenVideoGL), E_(CloseVideoGL) );
 vlc_module_end();
 

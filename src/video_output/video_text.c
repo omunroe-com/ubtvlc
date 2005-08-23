@@ -2,7 +2,7 @@
  * video_text.c : text manipulation functions
  *****************************************************************************
  * Copyright (C) 1999-2004 VideoLAN
- * $Id: video_text.c 8722 2004-09-17 14:47:01Z gbazin $
+ * $Id: video_text.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Author: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *

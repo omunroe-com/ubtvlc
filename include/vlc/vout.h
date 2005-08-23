@@ -2,7 +2,7 @@
  * vout.h: video output header for vlc
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: vout.h 8709 2004-09-15 15:50:54Z gbazin $
+ * $Id: vout.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

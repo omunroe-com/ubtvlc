@@ -2,7 +2,7 @@
  * preferences_widgets.h : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2003 VideoLAN
- * $Id: preferences_widgets.h 9088 2004-10-31 13:19:28Z gbazin $
+ * $Id: preferences_widgets.h 10641 2005-04-10 18:40:52Z zorglub $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -20,6 +20,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
+
+#include <vector>
 
 class ConfigControl: public wxPanel
 {
@@ -46,7 +48,8 @@ protected:
     void (*pf_update_callback)( void * );
     void *p_update_data;
 
-    void OnUpdate( wxCommandEvent& );
+    void OnUpdate( wxCommandEvent& event );
+    void OnUpdateScroll( wxScrollEvent& event );
 
 private:
     wxString name;
@@ -81,6 +84,39 @@ public:
 private:
     wxComboBox *combo;
 };
+
+struct moduleCheckBox {
+    wxCheckBox *checkbox;
+    char *psz_module;
+};
+
+class ModuleCatConfigControl: public ConfigControl
+{
+public:
+    ModuleCatConfigControl( vlc_object_t *, module_config_t *, wxWindow * );
+    ~ModuleCatConfigControl();
+    virtual wxString GetPszValue();
+private:
+    wxComboBox *combo;
+};
+
+
+class ModuleListCatConfigControl: public ConfigControl
+{
+public:
+    ModuleListCatConfigControl( vlc_object_t *, module_config_t *, wxWindow * );
+    ~ModuleListCatConfigControl();
+    virtual wxString GetPszValue();
+private:
+    std::vector<moduleCheckBox *> pp_checkboxes;
+
+    void OnUpdate( wxCommandEvent& );
+
+    wxTextCtrl *text;
+    DECLARE_EVENT_TABLE()
+};
+
+;
 
 class StringConfigControl: public ConfigControl
 {
@@ -135,7 +171,8 @@ private:
     wxSpinCtrl *spin;
     int i_value;
 
-    void OnUpdate( wxCommandEvent& );
+    void OnUpdate( wxCommandEvent& event );
+    void OnUpdateScroll( wxScrollEvent& event );
 
     DECLARE_EVENT_TABLE()
 };
@@ -189,4 +226,11 @@ private:
     wxCheckBox *checkbox;
 
     DECLARE_EVENT_TABLE()
+};
+
+class SectionConfigControl: public ConfigControl
+{
+public:
+    SectionConfigControl( vlc_object_t *, module_config_t *, wxWindow * );
+    ~SectionConfigControl();
 };

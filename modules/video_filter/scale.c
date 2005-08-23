@@ -3,7 +3,7 @@
  *  Uses the low quality "nearest neighbour" algorithm.
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: scale.c 8991 2004-10-14 22:14:09Z gbazin $
+ * $Id: scale.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -52,6 +52,8 @@ static picture_t *Filter( filter_t *, picture_t * );
 vlc_module_begin();
     set_description( _("Video scaling filter") );
     set_capability( "video filter2", 10000 );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VFILTER );
     set_callbacks( OpenFilter, CloseFilter );
 vlc_module_end();
 
@@ -112,7 +114,8 @@ static picture_t *Filter( filter_t *p_filter, picture_t *p_pic )
     if( !p_pic_dst )
     {
         msg_Warn( p_filter, "can't get output picture" );
-        p_pic->pf_release( p_pic );
+        if( p_pic->pf_release )
+            p_pic->pf_release( p_pic );
         return NULL;
     }
 

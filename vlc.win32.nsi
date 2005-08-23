@@ -12,6 +12,7 @@
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ; General configuration ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -38,8 +39,8 @@ InstType "Full"
 
 ; MUI Settings
 !define MUI_ABORTWARNING
-!define MUI_ICON "vlc48x48.ico"
-!define MUI_UNICON "vlc48x48.ico"
+!define MUI_ICON "vlc48x48new.ico"
+!define MUI_UNICON "vlc48x48new.ico"
 !define MUI_COMPONENTSPAGE_SMALLDESC
 
 ; Welcome page
@@ -83,7 +84,7 @@ NoBackup:
   ReadRegStr $0 HKCR "VLC$R0" ""
   WriteRegStr HKCR "VLC$R0" "" "VLC media file"
   WriteRegStr HKCR "VLC$R0\shell" "" "Play"
-  WriteRegStr HKCR "VLC$R0\shell\Play\command" "" '$INSTDIR\vlc.exe "%1"'
+  WriteRegStr HKCR "VLC$R0\shell\Play\command" "" '"$INSTDIR\vlc.exe" "%1"'
   WriteRegStr HKCR "VLC$R0\DefaultIcon" "" '"$INSTDIR\vlc.exe",0'
 FunctionEnd
 
@@ -151,21 +152,26 @@ Section "Media player (required)" SEC01
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\EventHandlers\PlayDVDMovieOnArrival" "VLCPlayDVDMovieOnArrival" ""
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayDVDMovieOnArrival" "Action" "Play DVD movie"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayDVDMovieOnArrival" "DefaultIcon" '"$INSTDIR\vlc.exe",0'
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayDVDMovieOnArrival" "Invoke.ProgID" "VLC.MediaFile"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayDVDMovieOnArrival" "InvokeProgID" "VLC.DVDMovie"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayDVDMovieOnArrival" "InvokeVerb" "play"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayDVDMovieOnArrival" "Provider" "VideoLAN VLC media player"
 
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\EventHandlers\PlayCDAudioOnArrival" "VLCPlayCDAudioOnArrival" ""
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayCDAudioOnArrival" "Action" "Play CD audio"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayCDAudioOnArrival" "DefaultIcon" '"$INSTDIR\vlc.exe",0'
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayCDAudioOnArrival" "Invoke.ProgID" "VLC.MediaFile"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayCDAudioOnArrival" "InvokeProgID" "VLC.CDAudio"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayCDAudioOnArrival" "InvokeVerb" "play"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\VLCPlayCDAudioOnArrival" "Provider" "VideoLAN VLC media player"
-  WriteRegStr HKCR "VLC.MediaFile" "" "VLC media file"
-  WriteRegStr HKCR "VLC.MediaFile\shell" "" "Play"
-  WriteRegStr HKCR "VLC.MediaFile\shell\Play\command" "" \
-    '$INSTDIR\vlc.exe "%1"'
-  WriteRegStr HKCR "VLC.MediaFile\DefaultIcon" "" '"$INSTDIR\vlc.exe",0'
+  WriteRegStr HKCR "VLC.DVDMovie" "" "VLC DVD Movie"
+  WriteRegStr HKCR "VLC.DVDMovie\shell" "" "Play"
+  WriteRegStr HKCR "VLC.DVDMovie\shell\Play\command" "" \
+    '$INSTDIR\vlc.exe dvd:%1@1:0'
+  WriteRegStr HKCR "VLC.DVDMovie\DefaultIcon" "" '"$INSTDIR\vlc.exe",0'
+  WriteRegStr HKCR "VLC.CDAudio" "" "VLC CD Audio"
+  WriteRegStr HKCR "VLC.CDAudio\shell" "" "Play"
+  WriteRegStr HKCR "VLC.CDAudio\shell\Play\command" "" \
+    '$INSTDIR\vlc.exe cdda:%1'
+  WriteRegStr HKCR "VLC.CDAudio\DefaultIcon" "" '"$INSTDIR\vlc.exe",0'
 
 SectionEnd
 
@@ -178,61 +184,111 @@ Section "Start Menu + Desktop Shortcut" SEC02
     "$INSTDIR\vlc.exe" "--intf wxwin --no-wxwin-embed"
   CreateShortCut "$SMPROGRAMS\VideoLAN\VLC media player (skins).lnk" \
     "$INSTDIR\vlc.exe" "--intf skins"
+  CreateShortCut "$SMPROGRAMS\VideoLAN\Reset VLC defaults and quit.lnk" \
+    "$INSTDIR\vlc.exe" "--reset-config --reset-plugins-cache --save-config vlc:quit "
   CreateShortCut "$DESKTOP\VLC media player.lnk" \
     "$INSTDIR\vlc.exe" "--intf wxwin"
   WriteIniStr "$INSTDIR\${PRODUCT_NAME}.url" "InternetShortcut" "URL" \
     "${PRODUCT_WEB_SITE}"
-  CreateShortCut "$SMPROGRAMS\VideoLAN\Website.lnk" \
+  CreateShortCut "$SMPROGRAMS\VideoLAN\${PRODUCT_NAME} Website.lnk" \
     "$INSTDIR\${PRODUCT_NAME}.url"
+  WriteIniStr "$INSTDIR\Documentation.url" "InternetShortcut" "URL" \
+    "${PRODUCT_WEB_SITE}/doc/"
+  CreateShortCut "$SMPROGRAMS\VideoLAN\Documentation.lnk" \
+    "$INSTDIR\Documentation.url"
 SectionEnd
 
 Section /o "Mozilla plugin" SEC03
   SectionIn 2 3
-  File  /r mozilla
+  File /r mozilla
 
-  WriteRegStr HKLM \
-    SOFTWARE\MozillaPlugins\@videolan.org/vlc,version=${VERSION} \
-    "Path" '"$INSTDIR\mozilla\npvlc.dll"'
+  ; doesn't work. bug in mozilla/mozilla firefox or moz documentation (xpt file isn't loaded)
+  ; see mozilla bugs 184506 and 159445
+  ;!define Moz "SOFTWARE\MozillaPlugins\@videolan.org/vlc,version=${VERSION}"
+  ;WriteRegStr HKLM ${Moz} "Description" "VideoLAN VLC plugin for Mozilla"
+  ;WriteRegStr HKLM ${Moz} "Path" "$INSTDIR\mozilla\npvlc.dll"
+  ;WriteRegStr HKLM ${Moz} "Product" "VLC media player"
+  ;WriteRegStr HKLM ${Moz} "Vendor" "VideoLAN"
+  ;WriteRegStr HKLM ${Moz} "Version" "${VERSION}"
+  ;WriteRegStr HKLM ${Moz} "XPTPath" "$INSTDIR\mozilla\vlcintf.xpt"
+
+  Push $R0
+  Push $R1
+  Push $R2
+
+  !define Index 'Line${__LINE__}'
+  StrCpy $R1 "0"
+
+  "${Index}-Loop:"
+
+    ; Check for Key
+    EnumRegKey $R0 HKLM "SOFTWARE\Mozilla" "$R1"
+    StrCmp $R0 "" "${Index}-End"
+    IntOp $R1 $R1 + 1
+    ReadRegStr $R2 HKLM "SOFTWARE\Mozilla\$R0\Extensions" "Plugins"
+    StrCmp $R2 "" "${Index}-Loop" ""
+
+    CopyFiles "$INSTDIR\mozilla\*" "$R2"
+    Goto "${Index}-Loop"
+
+  "${Index}-End:"
+  !undef Index
+
 SectionEnd
 
-SubSection "File type associations" SEC04
-  ; Make sure we have the same list in uninstall
-  !insertmacro RegisterExtensionSection ".a52"
-  !insertmacro RegisterExtensionSection ".aac"
-  !insertmacro RegisterExtensionSection ".ac3"
-  !insertmacro RegisterExtensionSection ".asf"
-  !insertmacro RegisterExtensionSection ".asx"
-  !insertmacro RegisterExtensionSection ".avi"
-  !insertmacro RegisterExtensionSection ".bin"
-  !insertmacro RegisterExtensionSection ".cue"
-  !insertmacro RegisterExtensionSection ".divx"
-  !insertmacro RegisterExtensionSection ".dts"
-  !insertmacro RegisterExtensionSection ".dv"
-  !insertmacro RegisterExtensionSection ".flac"
-  !insertmacro RegisterExtensionSection ".m1v"
-  !insertmacro RegisterExtensionSection ".m2v"
-  !insertmacro RegisterExtensionSection ".m3u"
-  !insertmacro RegisterExtensionSection ".mka"
-  !insertmacro RegisterExtensionSection ".mkv"
-  !insertmacro RegisterExtensionSection ".mov"
-  !insertmacro RegisterExtensionSection ".mp1"
-  !insertmacro RegisterExtensionSection ".mp2"
-  !insertmacro RegisterExtensionSection ".mp3"
-  !insertmacro RegisterExtensionSection ".mp4"
-  !insertmacro RegisterExtensionSection ".mpeg"
-  !insertmacro RegisterExtensionSection ".mpeg1"
-  !insertmacro RegisterExtensionSection ".mpeg2"
-  !insertmacro RegisterExtensionSection ".mpeg4"
-  !insertmacro RegisterExtensionSection ".mpg"
-  !insertmacro RegisterExtensionSection ".ogg"
-  !insertmacro RegisterExtensionSection ".ogm"
-  !insertmacro RegisterExtensionSection ".pls"
-  !insertmacro RegisterExtensionSection ".spx"
-  !insertmacro RegisterExtensionSection ".vob"
-  !insertmacro RegisterExtensionSection ".vlc"
-  !insertmacro RegisterExtensionSection ".wav"
-  !insertmacro RegisterExtensionSection ".wma"
-  !insertmacro RegisterExtensionSection ".wmv"
+Section /o "ActiveX plugin" SEC04
+  SectionIn 2 3
+  SetOutPath "$INSTDIR"
+  File activex\axvlc.dll
+  RegDLL "$INSTDIR\axvlc.dll"
+SectionEnd
+
+SubSection "File type associations" SEC05
+  SubSection "Audio Files"
+    ; Make sure we have the same list in uninstall
+    !insertmacro RegisterExtensionSection ".a52"
+    !insertmacro RegisterExtensionSection ".aac"
+    !insertmacro RegisterExtensionSection ".ac3"
+    !insertmacro RegisterExtensionSection ".dts"
+    !insertmacro RegisterExtensionSection ".flac"
+    !insertmacro RegisterExtensionSection ".mka"
+    !insertmacro RegisterExtensionSection ".mp1"
+    !insertmacro RegisterExtensionSection ".mp2"
+    !insertmacro RegisterExtensionSection ".mp3"
+    !insertmacro RegisterExtensionSection ".ogg"
+    !insertmacro RegisterExtensionSection ".spx"
+    !insertmacro RegisterExtensionSection ".wav"
+    !insertmacro RegisterExtensionSection ".wma"
+  SubSectionEnd
+  SubSection "Video Files"
+    ; Make sure we have the same list in uninstall
+    !insertmacro RegisterExtensionSection ".asf"
+    !insertmacro RegisterExtensionSection ".avi"
+    !insertmacro RegisterExtensionSection ".divx"
+    !insertmacro RegisterExtensionSection ".dv"
+    !insertmacro RegisterExtensionSection ".m1v"
+    !insertmacro RegisterExtensionSection ".m2v"
+    !insertmacro RegisterExtensionSection ".mkv"
+    !insertmacro RegisterExtensionSection ".mov"
+    !insertmacro RegisterExtensionSection ".mp4"
+    !insertmacro RegisterExtensionSection ".mpeg"
+    !insertmacro RegisterExtensionSection ".mpeg1"
+    !insertmacro RegisterExtensionSection ".mpeg2"
+    !insertmacro RegisterExtensionSection ".mpeg4"
+    !insertmacro RegisterExtensionSection ".mpg"
+    !insertmacro RegisterExtensionSection ".ogm"
+    !insertmacro RegisterExtensionSection ".vob"
+    !insertmacro RegisterExtensionSection ".wmv"
+  SubSectionEnd
+  SubSection "Other"
+    ; Make sure we have the same list in uninstall
+    !insertmacro RegisterExtensionSection ".asx"
+    !insertmacro RegisterExtensionSection ".bin"
+    !insertmacro RegisterExtensionSection ".cue"
+    !insertmacro RegisterExtensionSection ".m3u"
+    !insertmacro RegisterExtensionSection ".pls"
+    !insertmacro RegisterExtensionSection ".vlc"
+  SubSectionEnd
 SubSectionEnd
 
 Section -Post
@@ -262,8 +318,10 @@ SectionEnd
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC02} \
     "Adds icons to your start menu and your desktop for easy access"
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC03} \
-    "The VLC mozilla plugin"
+    "The VLC Mozilla and Mozilla Firefox plugin"
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC04} \
+    "The VLC ActiveX plugin"
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC05} \
     "Sets VLC media player as the default application for the specified file type"
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
@@ -320,6 +378,33 @@ Section Uninstall
   !insertmacro UnRegisterExtensionSection ".wav"
   !insertmacro UnRegisterExtensionSection ".wma"
   !insertmacro UnRegisterExtensionSection ".wmv"
+
+  UnRegDLL "$INSTDIR\axvlc.dll"
+  Delete /REBOOTOK "$INSTDIR\axvlc.dll"
+
+  ;remove mozilla plugin
+  Push $R0
+  Push $R1
+  Push $R2
+
+  !define Index 'Line${__LINE__}'
+  StrCpy $R1 "0"
+
+  "${Index}-Loop:"
+
+    ; Check for Key
+    EnumRegKey $R0 HKLM "SOFTWARE\Mozilla" "$R1"
+    StrCmp $R0 "" "${Index}-End"
+    IntOp $R1 $R1 + 1
+    ReadRegStr $R2 HKLM "SOFTWARE\Mozilla\$R0\Extensions" "Plugins"
+    StrCmp $R2 "" "${Index}-Loop" ""
+
+    Delete "$R2\vlcintf.xpt"
+    Delete "$R2\npvlc.dll"
+    Goto "${Index}-Loop"
+
+  "${Index}-End:"
+  !undef Index
 
   RMDir "$SMPROGRAMS\VideoLAN"
   RMDir /r $SMPROGRAMS\VideoLAN

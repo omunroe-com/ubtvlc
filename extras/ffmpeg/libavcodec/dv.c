@@ -144,7 +144,7 @@ static int dvvideo_init(AVCodecContext *avctx)
         /* NOTE: as a trick, we use the fact the no codes are unused
            to accelerate the parsing of partial codes */
         init_vlc(&dv_vlc, TEX_VLC_BITS, j, 
-                 new_dv_vlc_len, 1, 1, new_dv_vlc_bits, 2, 2);
+                 new_dv_vlc_len, 1, 1, new_dv_vlc_bits, 2, 2, 0);
 
         dv_rl_vlc = av_malloc(dv_vlc.table_size * sizeof(RL_VLC_ELEM));
 	if (!dv_rl_vlc) {
@@ -263,6 +263,7 @@ static const int mb_area_start[5] = { 1, 6, 21, 43, 64 };
 
 #ifndef ALT_BITSTREAM_READER
 #warning only works with ALT_BITSTREAM_READER
+static int re_index; //Hack to make it compile
 #endif
 
 static inline int get_bits_left(GetBitContext *s)
@@ -888,10 +889,6 @@ static int dvvideo_decode_frame(AVCodecContext *avctx,
 {
     DVVideoContext *s = avctx->priv_data;
   
-    /* special case for last picture */
-    if(buf_size==0)
-        return 0;
-    
     s->sys = dv_frame_profile(buf);
     if (!s->sys || buf_size < s->sys->frame_size)
         return -1; /* NOTE: we only accept several full frames */
@@ -931,7 +928,9 @@ static int dvvideo_encode_frame(AVCodecContext *c, uint8_t *buf, int buf_size,
     s->sys = dv_codec_profile(c);
     if (!s->sys)
 	return -1;
-    
+    if(buf_size < s->sys->frame_size)
+        return -1;
+
     c->pix_fmt = s->sys->pix_fmt;
     s->picture = *((AVFrame *)data);
 
@@ -943,6 +942,7 @@ static int dvvideo_encode_frame(AVCodecContext *c, uint8_t *buf, int buf_size,
     return s->sys->frame_size;
 }
 
+#ifdef CONFIG_DVVIDEO_ENCODER
 AVCodec dvvideo_encoder = {
     "dvvideo",
     CODEC_TYPE_VIDEO,
@@ -955,6 +955,7 @@ AVCodec dvvideo_encoder = {
     CODEC_CAP_DR1,
     NULL
 };
+#endif // CONFIG_DVVIDEO_ENCODER
 
 AVCodec dvvideo_decoder = {
     "dvvideo",

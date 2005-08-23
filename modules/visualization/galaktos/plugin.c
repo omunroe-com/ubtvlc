@@ -2,7 +2,7 @@
  * plugin.c:
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: plugin.c 8261 2004-07-23 18:13:20Z gbazin $
+ * $Id: plugin.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *          Implementation of the winamp plugin MilkDrop
@@ -46,7 +46,7 @@ static void Close        ( vlc_object_t * );
 
 vlc_module_begin();
     set_description( _("GaLaktos visualization plugin") );
-    set_capability( "audio filter", 0 );
+    set_capability( "visualization", 0 );
     set_callbacks( Open, Close );
     add_shortcut( "galaktos" );
 vlc_module_end();

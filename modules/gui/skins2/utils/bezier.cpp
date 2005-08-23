@@ -2,7 +2,7 @@
  * bezier.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: bezier.cpp 7217 2004-04-01 09:07:37Z gbazin $
+ * $Id: bezier.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -133,9 +133,9 @@ int Bezier::getWidth() const
     int width = 0;
     for( int i = 0; i < m_nbPoints; i++ )
     {
-        if( m_leftVect[i] > width )
+        if( m_leftVect[i] >= width )
         {
-            width = m_leftVect[i];
+            width = m_leftVect[i] + 1;
         }
     }
     return width;
@@ -147,9 +147,9 @@ int Bezier::getHeight() const
     int height = 0;
     for( int i = 0; i < m_nbPoints; i++ )
     {
-        if( m_topVect[i] > height )
+        if( m_topVect[i] >= height )
         {
-            height = m_topVect[i];
+            height = m_topVect[i] + 1;
         }
     }
     return height;

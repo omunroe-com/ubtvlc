@@ -4,7 +4,7 @@
  * interface, such as message output.
  *****************************************************************************
  * Copyright (C) 1999, 2000 VideoLAN
- * $Id: vlc_interface.h 9125 2004-11-03 00:05:22Z sam $
+ * $Id: vlc_interface.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -141,6 +141,8 @@ VLC_EXPORT( void,              intf_Destroy,    ( intf_thread_t * ) );
 #define INTF_DIALOG_NET         4
 #define INTF_DIALOG_CAPTURE     5
 #define INTF_DIALOG_SAT         6
+
+#define INTF_DIALOG_DIRECTORY   7
 
 #define INTF_DIALOG_STREAMWIZARD 8
 #define INTF_DIALOG_WIZARD 9

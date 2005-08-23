@@ -2,7 +2,7 @@
  * generic_layout.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: generic_layout.hpp 7228 2004-04-01 21:04:43Z ipkiss $
+ * $Id: generic_layout.hpp 9596 2004-12-17 23:39:34Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -75,6 +75,9 @@ class GenericLayout: public SkinObject, public Box
         /// Refresh the window
         virtual void refreshAll();
 
+        /// Refresh a rectangular portion of the window
+        virtual void refreshRect( int x, int y, int width, int height );
+
         /// Get the image of the layout
         virtual OSGraphics *getImage() const { return m_pImage; }
 
@@ -105,7 +108,12 @@ class GenericLayout: public SkinObject, public Box
         virtual const list<LayeredControl> &getControlList() const;
 
         /// Called by a control when its image has changed
-        virtual void onControlUpdate( const CtrlGeneric &rCtrl );
+        /// The arguments indicate the size of the rectangle to refresh,
+        /// and the offset (from the control position) of this rectangle.
+        /// Use a negative width or height to refresh the layout completely
+        virtual void onControlUpdate( const CtrlGeneric &rCtrl,
+                                      int width, int height,
+                                      int xOffSet, int yOffSet );
 
         /// Get the list of the anchors of this layout
         virtual const list<Anchor*>& getAnchorList() const;

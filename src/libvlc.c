@@ -2,7 +2,7 @@
  * libvlc.c: main libvlc source
  *****************************************************************************
  * Copyright (C) 1998-2004 VideoLAN
- * $Id: libvlc.c 9056 2004-10-24 21:07:58Z gbazin $
+ * $Id: libvlc.c 11209 2005-05-31 17:48:47Z xtophe $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -93,6 +93,7 @@ static vlc_t *    p_static_vlc;
  *****************************************************************************/
 static void SetLanguage   ( char const * );
 static int  GetFilenames  ( vlc_t *, int, char *[] );
+static void Help          ( vlc_t *, char const *psz_help_name );
 static void Usage         ( vlc_t *, char const *psz_module_name );
 static void ListModules   ( vlc_t * );
 static void Version       ( void );
@@ -245,6 +246,7 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     char *       p_tmp;
     char *       psz_modules;
     char *       psz_parser;
+    char *       psz_control;
     char *       psz_language;
     vlc_bool_t   b_exit = VLC_FALSE;
     vlc_t *      p_vlc = vlc_current_object( i_object );
@@ -317,10 +319,7 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     /* Check for short help option */
     if( config_GetInt( p_vlc, "help" ) )
     {
-        fprintf( stdout, _("Usage: %s [options] [items]...\n"),
-                         p_vlc->psz_object_name );
-        Usage( p_vlc, "main" );
-        Usage( p_vlc, "help" );
+        Help( p_vlc, "help" );
         b_exit = VLC_TRUE;
     }
     /* Check for version option */
@@ -456,14 +455,14 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     /* Check for help on modules */
     if( (p_tmp = config_GetPsz( p_vlc, "module" )) )
     {
-        Usage( p_vlc, p_tmp );
+        Help( p_vlc, p_tmp );
         free( p_tmp );
         b_exit = VLC_TRUE;
     }
     /* Check for long help option */
     else if( config_GetInt( p_vlc, "longhelp" ) )
     {
-        Usage( p_vlc, NULL );
+        Help( p_vlc, "longhelp" );
         b_exit = VLC_TRUE;
     }
     /* Check for module list option */
@@ -572,7 +571,10 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
 
     /* p_vlc initialization. FIXME ? */
 
-#if defined( __i386__ )
+    if( !config_GetInt( p_vlc, "fpu" ) )
+        libvlc.i_cpu &= ~CPU_CAPABILITY_FPU;
+
+#if defined( __i386__ ) || defined( __x86_64__ )
     if( !config_GetInt( p_vlc, "mmx" ) )
         libvlc.i_cpu &= ~CPU_CAPABILITY_MMX;
     if( !config_GetInt( p_vlc, "3dn" ) )
@@ -649,16 +651,46 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
         return VLC_EGENERIC;
     }
 
+    psz_modules = config_GetPsz( p_playlist, "services-discovery" );
+    if( psz_modules && *psz_modules )
+    {
+        /* Add service discovery modules */
+        playlist_AddSDModules( p_playlist, psz_modules );
+    }
+    if( psz_modules ) free( psz_modules );
+
     /*
      * Load background interfaces
      */
     psz_modules = config_GetPsz( p_vlc, "extraintf" );
+    psz_control = config_GetPsz( p_vlc, "control" );
+
+    if( psz_modules && *psz_modules && psz_control && *psz_control )
+    {
+        psz_modules = (char *)realloc( psz_modules, strlen( psz_modules ) +
+                                                    strlen( psz_control ) + 1 );
+        sprintf( psz_modules, "%s:%s", psz_modules, psz_control );
+    }
+    else if( psz_control && *psz_control )
+    {
+        if( psz_modules ) free( psz_modules );
+        psz_modules = strdup( psz_control );
+    }
+
     psz_parser = psz_modules;
+    if( psz_parser && *psz_parser &&
+       strstr( psz_parser, ",") && !strstr(psz_parser, ":" ) )
+    {
+        msg_Info( p_vlc, "Warning: you are using a deprecated syntax for "
+                         "extraintf / control." );
+        msg_Info( p_vlc, "You must now use ':' as separator instead of ','." );
+    }
     while ( psz_parser && *psz_parser )
     {
         char *psz_module, *psz_temp;
         psz_module = psz_parser;
-        psz_parser = strchr( psz_module, ',' );
+        psz_parser = strchr( psz_module, ':' );
+        if( !psz_parser ) psz_parser = strchr( psz_module, ',' );
         if ( psz_parser )
         {
             *psz_parser = '\0';
@@ -1007,6 +1039,62 @@ int VLC_VariableGet( int i_object, char const *psz_var, vlc_value_t *p_value )
 }
 
 /*****************************************************************************
+ * VLC_VariableType: get a vlc variable type
+ *****************************************************************************/
+int VLC_VariableType( int i_object, char const *psz_var, int *pi_type )
+{
+    int i_type;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    /* FIXME: Temporary hack for Mozilla, if variable starts with conf:: then
+     * we handle it as a configuration variable. Don't tell Gildas :) -- sam */
+    if( !strncmp( psz_var, "conf::", 6 ) )
+    {
+        module_config_t *p_item;
+        char const *psz_newvar = psz_var + 6;
+
+        p_item = config_FindConfig( VLC_OBJECT(p_vlc), psz_newvar );
+
+        if( p_item )
+        {
+            switch( p_item->i_type )
+            {
+                case CONFIG_ITEM_BOOL:
+                    i_type = VLC_VAR_BOOL;
+                    break;
+                case CONFIG_ITEM_INTEGER:
+                    i_type = VLC_VAR_INTEGER;
+                    break;
+                case CONFIG_ITEM_FLOAT:
+                    i_type = VLC_VAR_FLOAT;
+                    break;
+                default:
+                    i_type = VLC_VAR_STRING;
+                    break;
+            }
+        }
+        else
+            i_type = 0;
+    }
+    else
+        i_type = VLC_VAR_TYPE & var_Type( p_vlc , psz_var );
+
+    if( i_object ) vlc_object_release( p_vlc );
+
+    if( i_type > 0 )
+    {
+        *pi_type = i_type;
+        return VLC_SUCCESS;
+    }
+    return VLC_ENOVAR;
+}
+
+/*****************************************************************************
  * VLC_AddTarget: adds a target for playing.
  *****************************************************************************
  * This function adds psz_target to the current playlist. If a playlist does
@@ -1315,12 +1403,14 @@ int VLC_TimeSet( int i_object, int i_seconds, vlc_bool_t b_relative )
 
     if( b_relative )
     {
-        val.i_time = i_seconds * 1000000;
+        val.i_time = i_seconds;
+        val.i_time = val.i_time * 1000000L;
         var_Set( p_input, "time-offset", val );
     }
     else
     {
-        val.i_time = i_seconds * 1000000;
+        val.i_time = i_seconds;
+        val.i_time = val.i_time * 1000000L;
         var_Set( p_input, "time", val );
     }
     vlc_object_release( p_input );
@@ -1362,7 +1452,7 @@ int VLC_LengthGet( int i_object )
     vlc_object_release( p_input );
 
     if( i_object ) vlc_object_release( p_vlc );
-    return val.i_time  / 1000000;
+    return val.i_time  / 1000000L;
 }
 
 /**
@@ -1819,7 +1909,39 @@ static int GetFilenames( vlc_t *p_vlc, int i_argc, char *ppsz_argv[] )
 }
 
 /*****************************************************************************
- * Usage: print program usage
+ * Help: print program help
+ *****************************************************************************
+ * Print a short inline help. Message interface is initialized at this stage.
+ *****************************************************************************/
+static void Help( vlc_t *p_this, char const *psz_help_name )
+{
+#ifdef WIN32
+    ShowConsole();
+#endif
+
+    if( psz_help_name && !strcmp( psz_help_name, "help" ) )
+    {
+        fprintf( stdout, VLC_USAGE, p_this->psz_object_name );
+        Usage( p_this, "help" );
+        Usage( p_this, "main" );
+    }
+    else if( psz_help_name && !strcmp( psz_help_name, "longhelp" ) )
+    {
+        fprintf( stdout, VLC_USAGE, p_this->psz_object_name );
+        Usage( p_this, NULL );
+    }
+    else if( psz_help_name )
+    {
+        Usage( p_this, psz_help_name );
+    }
+
+#ifdef WIN32        /* Pause the console because it's destroyed when we exit */
+    PauseConsole();
+#endif
+}
+
+/*****************************************************************************
+ * Usage: print module usage
  *****************************************************************************
  * Print a short inline help. Message interface is initialized at this stage.
  *****************************************************************************/
@@ -1842,22 +1964,22 @@ static void Usage( vlc_t *p_this, char const *psz_module_name )
     vlc_list_t *p_list;
     module_t *p_parser;
     module_config_t *p_item;
-    char psz_spaces[PADDING_SPACES+LINE_START+1];
+    char psz_spaces_text[PADDING_SPACES+LINE_START+1];
+    char psz_spaces_longtext[LINE_START+3];
     char psz_format[sizeof(FORMAT_STRING)];
-    char psz_buffer[1000];
+    char psz_buffer[10000];
     char psz_short[4];
     int i_index;
     int i_width = ConsoleWidth() - (PADDING_SPACES+LINE_START+1);
     vlc_bool_t b_advanced = config_GetInt( p_this, "advanced" );
+    vlc_bool_t b_description;
 
-    memset( psz_spaces, ' ', PADDING_SPACES+LINE_START );
-    psz_spaces[PADDING_SPACES+LINE_START] = '\0';
+    memset( psz_spaces_text, ' ', PADDING_SPACES+LINE_START );
+    psz_spaces_text[PADDING_SPACES+LINE_START] = '\0';
+    memset( psz_spaces_longtext, ' ', LINE_START+2 );
+    psz_spaces_longtext[LINE_START+2] = '\0';
 
     strcpy( psz_format, FORMAT_STRING );
-
-#ifdef WIN32
-    ShowConsole();
-#endif
 
     /* List all modules */
     p_list = vlc_list_find( p_this, VLC_OBJECT_MODULE, FIND_ANYWHERE );
@@ -1905,7 +2027,7 @@ static void Usage( vlc_t *p_this, char const *psz_module_name )
              p_item->i_type != CONFIG_HINT_END;
              p_item++ )
         {
-            char *psz_text;
+            char *psz_text, *psz_spaces = psz_spaces_text;
             char *psz_bra = NULL, *psz_type = NULL, *psz_ket = NULL;
             char *psz_suf = "", *psz_prefix = NULL;
             int i;
@@ -1928,12 +2050,12 @@ static void Usage( vlc_t *p_this, char const *psz_module_name )
             case CONFIG_ITEM_FILE:
             case CONFIG_ITEM_DIRECTORY:
             case CONFIG_ITEM_MODULE: /* We could also have "=<" here */
-                if( !p_item->ppsz_list )
-                {
-                    psz_bra = " <"; psz_type = _("string"); psz_ket = ">";
-                    break;
-                }
-                else
+            case CONFIG_ITEM_MODULE_CAT:
+            case CONFIG_ITEM_MODULE_LIST:
+            case CONFIG_ITEM_MODULE_LIST_CAT:
+                psz_bra = " <"; psz_type = _("string"); psz_ket = ">";
+
+                if( p_item->ppsz_list )
                 {
                     psz_bra = " {";
                     psz_type = psz_buffer;
@@ -1944,11 +2066,26 @@ static void Usage( vlc_t *p_this, char const *psz_module_name )
                         strcat( psz_type, p_item->ppsz_list[i] );
                     }
                     psz_ket = "}";
-                    break;
                 }
+                break;
             case CONFIG_ITEM_INTEGER:
             case CONFIG_ITEM_KEY: /* FIXME: do something a bit more clever */
                 psz_bra = " <"; psz_type = _("integer"); psz_ket = ">";
+
+                if( p_item->i_list )
+                {
+                    psz_bra = " {";
+                    psz_type = psz_buffer;
+                    psz_type[0] = '\0';
+                    for( i = 0; p_item->ppsz_list_text[i]; i++ )
+                    {
+                        if( i ) strcat( psz_type, ", " );
+                        sprintf( psz_type + strlen(psz_type), "%i (%s)",
+                                 p_item->pi_list[i],
+                                 p_item->ppsz_list_text[i] );
+                    }
+                    psz_ket = "}";
+                }
                 break;
             case CONFIG_ITEM_FLOAT:
                 psz_bra = " <"; psz_type = _("float"); psz_ket = ">";
@@ -2019,6 +2156,9 @@ static void Usage( vlc_t *p_this, char const *psz_module_name )
 
             /* We wrap the rest of the output */
             sprintf( psz_buffer, "%s%s", p_item->psz_text, psz_suf );
+            b_description = config_GetInt( p_this, "help-verbose" );
+
+ description:
             psz_text = psz_buffer;
             while( *psz_text )
             {
@@ -2067,15 +2207,20 @@ static void Usage( vlc_t *p_this, char const *psz_module_name )
                     psz_text = psz_word;
                 }
             }
+
+            if( b_description && p_item->psz_longtext )
+            {
+                sprintf( psz_buffer, "%s%s", p_item->psz_longtext, psz_suf );
+                b_description = VLC_FALSE;
+                psz_spaces = psz_spaces_longtext;
+                fprintf( stdout, "%s", psz_spaces );
+                goto description;
+            }
         }
     }
 
     /* Release the module list */
     vlc_list_release( p_list );
-
-#ifdef WIN32        /* Pause the console because it's destroyed when we exit */
-    PauseConsole();
-#endif
 }
 
 /*****************************************************************************
@@ -2096,12 +2241,6 @@ static void ListModules( vlc_t *p_this )
 #ifdef WIN32
     ShowConsole();
 #endif
-
-    /* Usage */
-    fprintf( stdout, _("Usage: %s [options] [items]...\n\n"),
-                     p_this->p_vlc->psz_object_name );
-
-    fprintf( stdout, _("[module]              [description]\n") );
 
     /* List all modules */
     p_list = vlc_list_find( p_this, VLC_OBJECT_MODULE, FIND_ANYWHERE );
@@ -2287,6 +2426,7 @@ static void InitDeviceValues( vlc_t *p_vlc )
 
                 hal_free_string( block_dev );
             }
+            hal_free_string_array( devices );
         }
 
         hal_shutdown( ctx );

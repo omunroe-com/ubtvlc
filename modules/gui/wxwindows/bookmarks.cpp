@@ -2,7 +2,7 @@
  * bookmarks.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: bookmarks.cpp 8644 2004-09-05 16:53:04Z fkuehne $
+ * $Id: bookmarks.cpp 10641 2005-04-10 18:40:52Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -68,7 +68,7 @@ private:
     void Update();
 
     /* Event handlers (these functions should _not_ be virtual) */
-    void OnClose( wxCommandEvent& event );
+    void OnClose( wxCloseEvent& event );
     void OnAdd( wxCommandEvent& event );
     void OnDel( wxCommandEvent& event );
     void OnClear( wxCommandEvent& event );
@@ -164,7 +164,9 @@ BookmarkEditDialog::BookmarkEditDialog( intf_thread_t *_p_intf,
     sizer->Add( bytes_text, 0, wxEXPAND|wxRIGHT, 5);
 
     wxBoxSizer *button_sizer = new wxBoxSizer( wxHORIZONTAL );
-    button_sizer->Add( new wxButton( this, wxID_OK, wxU(_("OK") ) ) );
+    wxButton *ok_button = new wxButton( this, wxID_OK, wxU(_("OK") ) );
+    ok_button->SetDefault();
+    button_sizer->Add( ok_button );
     button_sizer->Add( new wxButton( this, wxID_CANCEL, wxU(_("Cancel") ) ) );
 
     panel_sizer->Add( sizer, 0, wxEXPAND | wxTOP|wxBOTTOM, 5 );
@@ -294,7 +296,7 @@ BookmarksDialog::~BookmarksDialog()
  *****************************************************************************/
 wxWindow *BookmarksDialog( intf_thread_t *p_intf, wxWindow *p_parent )
 {
-    return new BookmarksDialog::BookmarksDialog( p_intf, p_parent );
+    return new class BookmarksDialog( p_intf, p_parent );
 }
 
 void BookmarksDialog::Update()
@@ -334,7 +336,7 @@ bool BookmarksDialog::Show( bool show )
     return wxFrame::Show( show );
 }
 
-void BookmarksDialog::OnClose( wxCommandEvent& event )
+void BookmarksDialog::OnClose( wxCloseEvent& event )
 {
     Hide();
 }
@@ -543,8 +545,7 @@ void BookmarksDialog::OnUpdate( wxCommandEvent &event )
 static int PlaylistChanged( vlc_object_t *p_this, const char *psz_variable,
                             vlc_value_t oval, vlc_value_t nval, void *param )
 {
-    BookmarksDialog::BookmarksDialog *p_dialog =
-        (BookmarksDialog::BookmarksDialog *)param;
+    class BookmarksDialog *p_dialog = (class BookmarksDialog *)param;
 
     wxCommandEvent bookmarks_event( wxEVT_BOOKMARKS, 0 );
     p_dialog->AddPendingEvent( bookmarks_event );

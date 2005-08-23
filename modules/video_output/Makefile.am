@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga hd1000v snapshot opengl; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga hd1000v snapshot opengl; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi mga hd1000v snapshot opengl; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi wingapi mga hd1000v snapshot opengl image; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi wingapi mga hd1000v snapshot opengl image; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in aa caca fb ggi glide vout_sdl svgalib wingdi wingapi mga hd1000v snapshot opengl image; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -330,6 +330,43 @@ libwingdi_plugin$(LIBEXT): $(libwingdi_plugin_a_OBJECTS)
 	esac
 
 
+# The wingapi plugin
+
+if UNTRUE
+Lwingapip = libwingapi_plugin.a
+Dwingapip = libwingapi_plugin$(LIBEXT)
+Lwingapib = libwingapi.a
+Lwingapipic = libwingapi_pic.a
+endif
+
+libwingapi_plugin_a_SOURCES = $(SOURCES_wingapi)
+libwingapi_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin wingapi`
+libwingapi_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin wingapi`
+libwingapi_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin wingapi`
+
+libwingapi_pic_a_SOURCES = $(SOURCES_wingapi)
+libwingapi_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic wingapi`
+libwingapi_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic wingapi`
+libwingapi_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic wingapi`
+
+libwingapi_a_SOURCES = $(SOURCES_wingapi)
+libwingapi_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin wingapi`
+libwingapi_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin wingapi`
+libwingapi_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin wingapi`
+
+libvlc_LIBRARIES += $(Lwingapib) $(Lwingapipic)
+libwingapi_DATA = $(Dwingapip)
+
+libwingapidir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lwingapip)
+libwingapi_plugin$(LIBEXT): $(libwingapi_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage wingapi` in \
+	  c++) echo $(CXXLINK) $(libwingapi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin wingapi\` ; $(CXXLINK) $(libwingapi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin wingapi` ;; \
+	  objc) echo $(OBJCLINK) $(libwingapi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin wingapi\` ; $(OBJCLINK) $(libwingapi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin wingapi` ;; \
+	  c|*) echo $(LINK) $(libwingapi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin wingapi\` ; $(LINK) $(libwingapi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin wingapi` ;; \
+	esac
+
+
 # The mga plugin
 
 if UNTRUE
@@ -475,6 +512,43 @@ libopengl_plugin$(LIBEXT): $(libopengl_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libopengl_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin opengl\` ; $(CXXLINK) $(libopengl_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin opengl` ;; \
 	  objc) echo $(OBJCLINK) $(libopengl_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin opengl\` ; $(OBJCLINK) $(libopengl_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin opengl` ;; \
 	  c|*) echo $(LINK) $(libopengl_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin opengl\` ; $(LINK) $(libopengl_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin opengl` ;; \
+	esac
+
+
+# The image plugin
+
+if UNTRUE
+Limagep = libimage_plugin.a
+Dimagep = libimage_plugin$(LIBEXT)
+Limageb = libimage.a
+Limagepic = libimage_pic.a
+endif
+
+libimage_plugin_a_SOURCES = $(SOURCES_image)
+libimage_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin image`
+libimage_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin image`
+libimage_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin image`
+
+libimage_pic_a_SOURCES = $(SOURCES_image)
+libimage_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic image`
+libimage_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic image`
+libimage_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic image`
+
+libimage_a_SOURCES = $(SOURCES_image)
+libimage_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin image`
+libimage_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin image`
+libimage_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin image`
+
+libvlc_LIBRARIES += $(Limageb) $(Limagepic)
+libimage_DATA = $(Dimagep)
+
+libimagedir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Limagep)
+libimage_plugin$(LIBEXT): $(libimage_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage image` in \
+	  c++) echo $(CXXLINK) $(libimage_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin image\` ; $(CXXLINK) $(libimage_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin image` ;; \
+	  objc) echo $(OBJCLINK) $(libimage_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin image\` ; $(OBJCLINK) $(libimage_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin image` ;; \
+	  c|*) echo $(LINK) $(libimage_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin image\` ; $(LINK) $(libimage_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin image` ;; \
 	esac
 
 

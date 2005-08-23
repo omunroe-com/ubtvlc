@@ -2,7 +2,7 @@
  * png_bitmap.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: png_bitmap.hpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: png_bitmap.hpp 9581 2004-12-16 17:47:40Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -35,8 +35,8 @@ class PngBitmap: public GenericBitmap
     public:
         /// Load a PNG bitmap from a file. aColor is the transparency
         /// color, in the format 0xRRGGBB
-        PngBitmap( intf_thread_t *pIntf, string fileName,
-                   uint32_t aColor );
+        PngBitmap( intf_thread_t *pIntf, image_handler_t *pImageHandler,
+                   string fileName, uint32_t aColor );
 
         virtual ~PngBitmap();
 

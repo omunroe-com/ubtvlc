@@ -2,7 +2,7 @@
  * beos_specific.h: BeOS specific features
  *****************************************************************************
  * Copyright (C) 1999, 2000 VideoLAN
- * $Id: beos_specific.h 6961 2004-03-05 17:34:23Z sam $
+ * $Id: beos_specific.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Jean-Marc Dressler <polux@via.ecp.fr>
  *

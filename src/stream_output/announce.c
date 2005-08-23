@@ -2,7 +2,7 @@
  * announce.c : announce handler
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: announce.c 9201 2004-11-06 16:51:46Z yoann $
+ * $Id: announce.c 11263 2005-06-03 09:23:54Z courmisch $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -151,7 +151,7 @@ int sout_AnnounceUnRegister( sout_instance_t *p_sout,
  *
  * \return a new session descriptor
  */
-session_descriptor_t * sout_AnnounceSessionCreate()
+session_descriptor_t * sout_AnnounceSessionCreate(void)
 {
     session_descriptor_t *p_session;
 
@@ -184,7 +184,7 @@ void sout_AnnounceSessionDestroy( session_descriptor_t *p_session )
         FREE( p_session->psz_group );
         FREE( p_session->psz_uri );
         FREE( p_session->psz_sdp );
-        FREE( p_session );
+        free( p_session );
     }
 }
 
@@ -208,7 +208,7 @@ announce_method_t * sout_AnnounceMethodCreate( int i_type )
             /* Default values */
             p_method->psz_address = NULL;
             p_method->i_ip_version = 4 ;
-            p_method->psz_ipv6_scope = strdup("8");
+            p_method->sz_ipv6_scope = '\0';
         }
     }
     return p_method;

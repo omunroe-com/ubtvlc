@@ -1,8 +1,8 @@
 /*****************************************************************************
  * wxwindows.cpp : wxWindows plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000-2004 VideoLAN
- * $Id: wxwindows.cpp 8869 2004-09-30 22:17:54Z gbazin $
+ * Copyright (C) 2000-2005 VideoLAN
+ * $Id: wxwindows.cpp 10818 2005-04-26 08:34:54Z fenrir $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -39,7 +39,7 @@
 #include "wxwindows.h"
 
 /* Temporary hack */
-#if defined(WIN32) && defined(_WX_INIT_H_) 
+#if defined(WIN32) && defined(_WX_INIT_H_)
 #if (wxMAJOR_VERSION <= 2) && (wxMINOR_VERSION <= 5) && (wxRELEASE_NUMBER < 3)
 /* Hack to detect wxWindows 2.5 which has a different wxEntry() prototype */
 extern int wxEntry( HINSTANCE hInstance, HINSTANCE hPrevInstance = NULL,
@@ -62,6 +62,10 @@ static void Run          ( intf_thread_t * );
 static void Init         ( intf_thread_t * );
 
 static void ShowDialog   ( intf_thread_t *, int, int, intf_dialog_args_t * );
+
+#if (wxCHECK_VERSION(2,5,0))
+void *wxClassInfo_sm_classTable_BUGGY = 0;
+#endif
 
 /*****************************************************************************
  * Local classes declarations.
@@ -89,6 +93,14 @@ private:
 #define BOOKMARKS_TEXT N_("Show bookmarks dialog")
 #define BOOKMARKS_LONGTEXT N_("Show bookmarks dialog when the interface " \
     "starts.")
+#define TASKBAR_TEXT N_("Show taskbar entry")
+#define TASKBAR_LONGTEXT N_("Show taskbar entry")
+#define MINIMAL_TEXT N_("Minimal interface")
+#define MINIMAL_LONGTEXT N_("Use minimal interface, no toolbar, few menus")
+#define SIZE_TO_VIDEO_TEXT N_("Size to video")
+#define SIZE_TO_VIDEO_LONGTEXT N_("Resize VLC to match the video resolution")
+#define SYSTRAY_TEXT N_("Show systray icon")
+#define SYSTRAY_LONGTEXT N_("Show systray icon")
 
 vlc_module_begin();
 #ifdef WIN32
@@ -96,7 +108,10 @@ vlc_module_begin();
 #else
     int i_score = getenv( "DISPLAY" ) == NULL ? 15 : 150;
 #endif
+    set_shortname( (char*) "wxWindows" );
     set_description( (char *) _("wxWindows interface module") );
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_GENERAL );
     set_capability( "interface", i_score );
     set_callbacks( Open, Close );
     add_shortcut( "wxwindows" );
@@ -108,6 +123,19 @@ vlc_module_begin();
               EMBED_TEXT, EMBED_LONGTEXT, VLC_FALSE );
     add_bool( "wxwin-bookmarks", 0, NULL,
               BOOKMARKS_TEXT, BOOKMARKS_LONGTEXT, VLC_FALSE );
+    add_bool( "wxwin-taskbar", 1, NULL,
+              TASKBAR_TEXT, TASKBAR_LONGTEXT, VLC_FALSE );
+    add_bool( "wxwin-minimal", 0, NULL,
+              MINIMAL_TEXT, MINIMAL_LONGTEXT, VLC_TRUE );
+    add_bool( "wxwin-autosize", 1, NULL,
+              SIZE_TO_VIDEO_TEXT, SIZE_TO_VIDEO_LONGTEXT, VLC_TRUE );
+#ifdef wxHAS_TASK_BAR_ICON
+    add_bool( "wxwin-systray", 0, NULL,
+              SYSTRAY_TEXT, SYSTRAY_LONGTEXT, VLC_FALSE );
+#endif
+    add_string( "wxwin-config-last", NULL, NULL,
+                "last config", "last config", VLC_TRUE );
+        change_autosave();
 
     add_submodule();
     set_description( _("wxWindows dialogs provider") );
@@ -155,6 +183,9 @@ static int Open( vlc_object_t *p_this )
     /* We support play on start */
     p_intf->b_play = VLC_TRUE;
 
+    p_intf->p_sys->b_video_autosize =
+        config_GetInt( p_intf, "wxwin-autosize" );
+
     return VLC_SUCCESS;
 }
 
@@ -175,11 +206,6 @@ static void Close( vlc_object_t *p_this )
 {
     intf_thread_t *p_intf = (intf_thread_t *)p_this;
 
-    if( p_intf->p_sys->p_input )
-    {
-        vlc_object_release( p_intf->p_sys->p_input );
-    }
-
     vlc_mutex_lock( &p_intf->object_lock );
     p_intf->b_dead = VLC_TRUE;
     vlc_mutex_unlock( &p_intf->object_lock );
@@ -194,6 +220,13 @@ static void Close( vlc_object_t *p_this )
 
     msg_Unsubscribe( p_intf, p_intf->p_sys->p_sub );
 
+    /* */
+    delete p_intf->p_sys->p_window_settings;
+
+#if (wxCHECK_VERSION(2,5,0))
+    wxClassInfo::sm_classTable = (wxHashTable*)wxClassInfo_sm_classTable_BUGGY;
+#endif
+
     /* Destroy structure */
     free( p_intf->p_sys );
 }
@@ -201,6 +234,8 @@ static void Close( vlc_object_t *p_this )
 /*****************************************************************************
  * Run: wxWindows thread
  *****************************************************************************/
+
+//when is this called?
 #if !defined(__BUILTIN__) && defined( WIN32 )
 HINSTANCE hInstance = 0;
 extern "C" BOOL WINAPI
@@ -248,6 +283,11 @@ static void Init( intf_thread_t *p_intf )
 
 #if defined( WIN32 )
 #if !defined(__BUILTIN__)
+
+    //because no one knows when DllMain is called
+    if (hInstance == NULL)
+      hInstance = GetModuleHandle(NULL);
+
     wxEntry( hInstance/*GetModuleHandle(NULL)*/, NULL, NULL, SW_SHOW );
 #else
     wxEntry( GetModuleHandle(NULL), NULL, NULL, SW_SHOW );
@@ -291,6 +331,9 @@ bool Instance::OnInit()
      * keep the default '.' for floating point numbers. */
     setlocale( LC_NUMERIC, "C" );
 
+    /* Load saved window settings */
+    p_intf->p_sys->p_window_settings = new WindowSettings( p_intf );
+
     /* Make an instance of your derived frame. Passing NULL (the default value
      * of Frame's constructor is NULL) as the frame doesn't have a parent
      * since it is the first window */
@@ -298,7 +341,13 @@ bool Instance::OnInit()
     if( !p_intf->pf_show_dialog )
     {
         /* The module is used in interface mode */
-        Interface *MainInterface = new Interface( p_intf );
+        long style = wxDEFAULT_FRAME_STYLE;
+        if ( ! config_GetInt( p_intf, "wxwin-taskbar" ) )
+        {
+            style = wxDEFAULT_FRAME_STYLE|wxFRAME_NO_TASKBAR;
+        }
+
+        Interface *MainInterface = new Interface( p_intf, style );
         p_intf->p_sys->p_wxwindow = MainInterface;
 
         /* Show the interface */
@@ -325,7 +374,7 @@ bool Instance::OnInit()
                                            FIND_ANYWHERE );
         if( p_playlist )
         {
-            playlist_Play( p_playlist );
+            playlist_LockControl( p_playlist, PLAYLIST_AUTOPLAY );
             vlc_object_release( p_playlist );
         }
     }
@@ -344,6 +393,12 @@ int Instance::OnExit()
          /* We need to manually clean up the dialogs class */
          if( p_intf->p_sys->p_wxwindow ) delete p_intf->p_sys->p_wxwindow;
     }
+
+#if (wxCHECK_VERSION(2,5,0))
+    wxClassInfo_sm_classTable_BUGGY = wxClassInfo::sm_classTable;
+    wxClassInfo::sm_classTable = 0;
+#endif
+
     return 0;
 }
 
@@ -367,4 +422,189 @@ static void ShowDialog( intf_thread_t *p_intf, int i_dialog_event, int i_arg,
     {
         p_intf->p_sys->p_wxwindow->AddPendingEvent( event );
     }
+}
+
+/*****************************************************************************
+ * WindowSettings utility class
+ *****************************************************************************/
+WindowSettings::WindowSettings( intf_thread_t *_p_intf )
+{
+    char *psz_org = NULL;
+    char *psz;
+    int i;
+
+    /* */
+    p_intf = _p_intf;
+
+    /* */
+    for( i = 0; i < ID_MAX; i++ )
+    {
+        b_valid[i] = false;
+        b_shown[i] = false;
+        position[i] = wxDefaultPosition;
+        size[i] = wxDefaultSize;
+    }
+    b_shown[ID_MAIN] = true;
+
+    if( p_intf->pf_show_dialog ) return;
+
+    /* Parse the configuration */
+    psz_org = psz = config_GetPsz( p_intf, "wxwin-config-last" );
+    if( !psz || *psz == '\0' ) return;
+
+    msg_Dbg( p_intf, "Using last windows config '%s'", psz );
+
+    i_screen_w = 0;
+    i_screen_h = 0;
+    while( psz && *psz )
+    {
+        int id, v[4];
+
+        psz = strchr( psz, '(' );
+
+        if( !psz )
+            break;
+        psz++;
+
+        id = strtol( psz, &psz, 0 );
+        if( *psz != ',' ) /* broken cfg */
+            goto invalid;
+        psz++;
+
+        for( i = 0; i < 4; i++ )
+        {
+            v[i] = strtol( psz, &psz, 0 );
+
+            if( i < 3 )
+            {
+                if( *psz != ',' )
+                    goto invalid;
+                psz++;
+            }
+            else
+            {
+                if( *psz != ')' )
+                    goto invalid;
+            }
+        }
+        if( id == ID_SCREEN )
+        {
+            i_screen_w = v[2];
+            i_screen_h = v[3];
+        }
+        else if( id >= 0 && id < ID_MAX )
+        {
+            b_valid[id] = true;
+            b_shown[id] = true;
+            position[id] = wxPoint( v[0], v[1] );
+            size[id] = wxSize( v[2], v[3] );
+
+            msg_Dbg( p_intf, "id=%d p=(%d,%d) s=(%d,%d)",
+                     id, position[id].x, position[id].y,
+                         size[id].x, size[id].y );
+        }
+
+        psz = strchr( psz, ')' );
+        if( psz ) psz++;
+    }
+
+    if( i_screen_w <= 0 || i_screen_h <= 0 )
+        goto invalid;
+
+    for( i = 0; i < ID_MAX; i++ )
+    {
+        if( !b_valid[i] )
+            continue;
+        if( position[i].x < 0 || position[i].y < 0 )
+            goto invalid;
+        if( size[i].x <= 0 || size[i].y <= 0 )
+            goto invalid;
+    }
+
+    if( psz_org ) free( psz_org );
+    return;
+
+invalid:
+    msg_Dbg( p_intf, "last windows config is invalid (ignored)" );
+    for( i = 0; i < ID_MAX; i++ )
+    {
+        b_valid[i] = false;
+        b_shown[i] = false;
+        position[i] = wxDefaultPosition;
+        size[i] = wxDefaultSize;
+    }
+    if( psz_org ) free( psz_org );
+}
+
+
+WindowSettings::~WindowSettings( )
+{
+    wxString sCfg;
+
+    if( p_intf->pf_show_dialog ) return;
+
+    sCfg = wxString::Format( wxT("(%d,0,0,%d,%d)"), ID_SCREEN,
+                             wxSystemSettings::GetMetric( wxSYS_SCREEN_X ),
+                             wxSystemSettings::GetMetric( wxSYS_SCREEN_Y ) );
+    for( int i = 0; i < ID_MAX; i++ )
+    {
+        if( !b_valid[i] || !b_shown[i] )
+            continue;
+
+        sCfg += wxString::Format( wxT("(%d,%d,%d,%d,%d)"),
+                                  i, position[i].x, position[i].y,
+                                     size[i].x, size[i].y );
+    }
+
+    config_PutPsz( p_intf, "wxwin-config-last", sCfg.mb_str() );
+}
+
+void WindowSettings::SetScreen( int i_screen_w, int i_screen_h )
+{
+    int i;
+
+    for( i = 0; i < ID_MAX; i++ )
+    {
+        if( !b_valid[i] )
+            continue;
+        if( position[i].x >= i_screen_w || position[i].y >= i_screen_h )
+            goto invalid;
+    }
+    return;
+
+invalid:
+    for( i = 0; i < ID_MAX; i++ )
+    {
+        b_valid[i] = false;
+        b_shown[i] = false;
+        position[i] = wxDefaultPosition;
+        size[i] = wxDefaultSize;
+    }
+}
+
+void WindowSettings::SetSettings( int id, bool _b_shown, wxPoint p, wxSize s )
+{
+    if( id < 0 || id >= ID_MAX )
+        return;
+
+    b_valid[id] = true;
+    b_shown[id] = _b_shown;
+
+    position[id] = p;
+    size[id] = s;
+}
+
+bool WindowSettings::GetSettings( int id, bool& _b_shown, wxPoint& p, wxSize& s)
+{
+    if( id < 0 || id >= ID_MAX )
+        return false;
+
+    if( !b_valid[id] )
+        return false;
+
+    _b_shown = b_shown[id];
+    p = position[id];
+    s = size[id];
+
+    return true;
 }

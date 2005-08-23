@@ -2,7 +2,7 @@
  * subtitles.c
  *****************************************************************************
  * Copyright (C) 2003-2004 VideoLAN
- * $Id: subtitles.c 8947 2004-10-07 20:52:24Z hartman $
+ * $Id: subtitles.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Derk-Jan Hartman <hartman at videolan.org>
  * This is adapted code from the GPL'ed MPlayer (http://mplayerhq.hu)
@@ -33,8 +33,6 @@
 
 #ifdef HAVE_DIRENT_H
 #   include <dirent.h>
-#else
-#   include "../extras/dirent.h"
 #endif
 
 #include <ctype.h>

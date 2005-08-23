@@ -2,7 +2,7 @@
  * rawdv.c : raw DV input module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2004 VideoLAN
- * $Id: rawdv.c 7665 2004-05-15 10:52:56Z fenrir $
+ * $Id: rawdv.c 9961 2005-02-16 22:01:41Z robux4 $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -38,6 +38,8 @@ static void Close( vlc_object_t * );
 vlc_module_begin();
     set_description( _("raw DV demuxer") );
     set_capability( "demux2", 2 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_callbacks( Open, Close );
     add_shortcut( "rawdv" );
 vlc_module_end();

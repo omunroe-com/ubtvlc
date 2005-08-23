@@ -2,7 +2,7 @@
  * subsdec.c : text subtitles decoder
  *****************************************************************************
  * Copyright (C) 2000-2001 VideoLAN
- * $Id: subsdec.c 8659 2004-09-07 21:16:49Z gbazin $
+ * $Id: subsdec.c 10310 2005-03-11 22:36:40Z anil $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Samuel Hocevar <sam@zoy.org>
@@ -89,12 +89,15 @@ static char *ppsz_justification_text[] = {N_("Center"),N_("Left"),N_("Right")};
 #define ALIGN_LONGTEXT N_("Set the justification of subtitles")
 
 vlc_module_begin();
-    set_description( _("text subtitles decoder") );
+    set_shortname( _("Subtitles"));
+    set_description( _("Text subtitles decoder") );
     set_capability( "decoder", 50 );
     set_callbacks( OpenDecoder, CloseDecoder );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_SCODEC );
 
     add_integer( "subsdec-align", 0, NULL, ALIGN_TEXT, ALIGN_LONGTEXT,
-                 VLC_TRUE );
+                 VLC_FALSE );
         change_integer_list( pi_justification, ppsz_justification_text, 0 );
     add_string( "subsdec-encoding", DEFAULT_NAME, NULL,
                 ENCODING_TEXT, ENCODING_LONGTEXT, VLC_FALSE );

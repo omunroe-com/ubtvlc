@@ -55,6 +55,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_ACTIVEX_FALSE = @BUILD_ACTIVEX_FALSE@
+BUILD_ACTIVEX_TRUE = @BUILD_ACTIVEX_TRUE@
 BUILD_DIRENT_FALSE = @BUILD_DIRENT_FALSE@
 BUILD_DIRENT_TRUE = @BUILD_DIRENT_TRUE@
 BUILD_GETOPT_FALSE = @BUILD_GETOPT_FALSE@
@@ -69,8 +71,6 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-CORBA_CFLAGS = @CORBA_CFLAGS@
-CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -98,10 +98,8 @@ FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GTK2_CFLAGS = @GTK2_CFLAGS@
-GTK2_LIBS = @GTK2_LIBS@
-HAL_CFLAGS = @HAL_CFLAGS@
-HAL_LIBS = @HAL_LIBS@
+HAS_MIDL_COMPILER_FALSE = @HAS_MIDL_COMPILER_FALSE@
+HAS_MIDL_COMPILER_TRUE = @HAS_MIDL_COMPILER_TRUE@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -112,6 +110,8 @@ HAVE_PLUGINS_FALSE = @HAVE_PLUGINS_FALSE@
 HAVE_PLUGINS_TRUE = @HAVE_PLUGINS_TRUE@
 HAVE_WIN32_FALSE = @HAVE_WIN32_FALSE@
 HAVE_WIN32_TRUE = @HAVE_WIN32_TRUE@
+HAVE_WINCE_FALSE = @HAVE_WINCE_FALSE@
+HAVE_WINCE_TRUE = @HAVE_WINCE_TRUE@
 INCLUDES = @INCLUDES@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -124,12 +124,7 @@ INTLOBJS = @INTLOBJS@
 INTL_LIBTOOL_SUFFIX_PREFIX = @INTL_LIBTOOL_SUFFIX_PREFIX@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
-LIBCDDB_CFLAGS = @LIBCDDB_CFLAGS@
-LIBCDDB_LIBS = @LIBCDDB_LIBS@
-LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
-LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
-LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -138,6 +133,7 @@ LTLIBICONV = @LTLIBICONV@
 LTLIBINTL = @LTLIBINTL@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+MIDL = @MIDL@
 MKINSTALLDIRS = @MKINSTALLDIRS@
 MOC = @MOC@
 MOZILLA_CONFIG = @MOZILLA_CONFIG@
@@ -154,7 +150,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
 PLUGIN_PATH = @PLUGIN_PATH@
 POSUB = @POSUB@
 RANLIB = @RANLIB@
@@ -164,8 +159,6 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-SVG_CFLAGS = @SVG_CFLAGS@
-SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
@@ -230,8 +223,8 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Laccess_fileb) $(Laccess_filepic) $(Laccess_directoryb) $(Laccess_directorypic) $(Laccess_udpb) $(Laccess_udppic) $(Laccess_tcpb) $(Laccess_tcppic) $(Laccess_httpb) $(Laccess_httppic) $(Laccess_ftpb) $(Laccess_ftppic) $(Ldvdnavb) $(Ldvdnavpic) $(Ldvdreadb) $(Ldvdreadpic) $(Lslpb) $(Lslppic) $(Lcddab) $(Lcddapic)
-noinst_LIBRARIES = $(Laccess_filep) $(Laccess_directoryp) $(Laccess_udpp) $(Laccess_tcpp) $(Laccess_httpp) $(Laccess_ftpp) $(Ldvdnavp) $(Ldvdreadp) $(Lslpp) $(Lcddap)
+libvlc_LIBRARIES = $(Laccess_fileb) $(Laccess_filepic) $(Laccess_directoryb) $(Laccess_directorypic) $(Laccess_udpb) $(Laccess_udppic) $(Laccess_tcpb) $(Laccess_tcppic) $(Laccess_httpb) $(Laccess_httppic) $(Laccess_ftpb) $(Laccess_ftppic) $(Laccess_smbb) $(Laccess_smbpic) $(Ldvdnavb) $(Ldvdnavpic) $(Ldvdreadb) $(Ldvdreadpic) $(Lslpb) $(Lslppic) $(Laccess_fakeb) $(Laccess_fakepic) $(Lcddab) $(Lcddapic)
+noinst_LIBRARIES = $(Laccess_filep) $(Laccess_directoryp) $(Laccess_udpp) $(Laccess_tcpp) $(Laccess_httpp) $(Laccess_ftpp) $(Laccess_smbp) $(Ldvdnavp) $(Ldvdreadp) $(Lslpp) $(Laccess_fakep) $(Lcddap)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
@@ -244,9 +237,11 @@ SOURCES_access_udp = udp.c
 SOURCES_access_tcp = tcp.c
 SOURCES_access_http = http.c
 SOURCES_access_ftp = ftp.c
+SOURCES_access_smb = smb.c
 SOURCES_dvdnav = dvdnav.c
 SOURCES_dvdread = dvdread.c
 SOURCES_slp = slp.c
+SOURCES_access_fake = fake.c
 SOURCES_cdda = \
         cdda.c \
         vcd/cdrom.c \
@@ -411,6 +406,31 @@ libaccess_ftp_DATA = $(Daccess_ftpp)
 libaccess_ftpdir = $(libdir)/vlc/
 
 
+# The access_smb plugin
+@UNTRUE_TRUE@Laccess_smbp = libaccess_smb_plugin.a
+@UNTRUE_TRUE@Daccess_smbp = libaccess_smb_plugin$(LIBEXT)
+@UNTRUE_TRUE@Laccess_smbb = libaccess_smb.a
+@UNTRUE_TRUE@Laccess_smbpic = libaccess_smb_pic.a
+
+libaccess_smb_plugin_a_SOURCES = $(SOURCES_access_smb)
+libaccess_smb_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin access_smb`
+libaccess_smb_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin access_smb`
+libaccess_smb_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin access_smb`
+
+libaccess_smb_pic_a_SOURCES = $(SOURCES_access_smb)
+libaccess_smb_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_smb`
+libaccess_smb_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_smb`
+libaccess_smb_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_smb`
+
+libaccess_smb_a_SOURCES = $(SOURCES_access_smb)
+libaccess_smb_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_smb`
+libaccess_smb_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_smb`
+libaccess_smb_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_smb`
+libaccess_smb_DATA = $(Daccess_smbp)
+
+libaccess_smbdir = $(libdir)/vlc/
+
+
 # The dvdnav plugin
 @UNTRUE_TRUE@Ldvdnavp = libdvdnav_plugin.a
 @UNTRUE_TRUE@Ddvdnavp = libdvdnav_plugin$(LIBEXT)
@@ -486,6 +506,31 @@ libslp_DATA = $(Dslpp)
 libslpdir = $(libdir)/vlc/
 
 
+# The access_fake plugin
+@UNTRUE_TRUE@Laccess_fakep = libaccess_fake_plugin.a
+@UNTRUE_TRUE@Daccess_fakep = libaccess_fake_plugin$(LIBEXT)
+@UNTRUE_TRUE@Laccess_fakeb = libaccess_fake.a
+@UNTRUE_TRUE@Laccess_fakepic = libaccess_fake_pic.a
+
+libaccess_fake_plugin_a_SOURCES = $(SOURCES_access_fake)
+libaccess_fake_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin access_fake`
+libaccess_fake_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin access_fake`
+libaccess_fake_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin access_fake`
+
+libaccess_fake_pic_a_SOURCES = $(SOURCES_access_fake)
+libaccess_fake_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_fake`
+libaccess_fake_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_fake`
+libaccess_fake_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_fake`
+
+libaccess_fake_a_SOURCES = $(SOURCES_access_fake)
+libaccess_fake_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_fake`
+libaccess_fake_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_fake`
+libaccess_fake_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_fake`
+libaccess_fake_DATA = $(Daccess_fakep)
+
+libaccess_fakedir = $(libdir)/vlc/
+
+
 # The cdda plugin
 @UNTRUE_TRUE@Lcddap = libcdda_plugin.a
 @UNTRUE_TRUE@Dcddap = libcdda_plugin$(LIBEXT)
@@ -533,144 +578,174 @@ am__objects_3 = libaccess_directory_plugin_a-directory.$(OBJEXT)
 am_libaccess_directory_plugin_a_OBJECTS = $(am__objects_3)
 libaccess_directory_plugin_a_OBJECTS = \
 	$(am_libaccess_directory_plugin_a_OBJECTS)
+libaccess_fake_a_AR = $(AR) cru
+libaccess_fake_a_LIBADD =
+am__objects_4 = libaccess_fake_a-fake.$(OBJEXT)
+am_libaccess_fake_a_OBJECTS = $(am__objects_4)
+libaccess_fake_a_OBJECTS = $(am_libaccess_fake_a_OBJECTS)
+libaccess_fake_pic_a_AR = $(AR) cru
+libaccess_fake_pic_a_LIBADD =
+am__objects_5 = libaccess_fake_pic_a-fake.$(OBJEXT)
+am_libaccess_fake_pic_a_OBJECTS = $(am__objects_5)
+libaccess_fake_pic_a_OBJECTS = $(am_libaccess_fake_pic_a_OBJECTS)
+libaccess_fake_plugin_a_AR = $(AR) cru
+libaccess_fake_plugin_a_LIBADD =
+am__objects_6 = libaccess_fake_plugin_a-fake.$(OBJEXT)
+am_libaccess_fake_plugin_a_OBJECTS = $(am__objects_6)
+libaccess_fake_plugin_a_OBJECTS = $(am_libaccess_fake_plugin_a_OBJECTS)
 libaccess_file_a_AR = $(AR) cru
 libaccess_file_a_LIBADD =
-am__objects_4 = libaccess_file_a-file.$(OBJEXT)
-am_libaccess_file_a_OBJECTS = $(am__objects_4)
+am__objects_7 = libaccess_file_a-file.$(OBJEXT)
+am_libaccess_file_a_OBJECTS = $(am__objects_7)
 libaccess_file_a_OBJECTS = $(am_libaccess_file_a_OBJECTS)
 libaccess_file_pic_a_AR = $(AR) cru
 libaccess_file_pic_a_LIBADD =
-am__objects_5 = libaccess_file_pic_a-file.$(OBJEXT)
-am_libaccess_file_pic_a_OBJECTS = $(am__objects_5)
+am__objects_8 = libaccess_file_pic_a-file.$(OBJEXT)
+am_libaccess_file_pic_a_OBJECTS = $(am__objects_8)
 libaccess_file_pic_a_OBJECTS = $(am_libaccess_file_pic_a_OBJECTS)
 libaccess_file_plugin_a_AR = $(AR) cru
 libaccess_file_plugin_a_LIBADD =
-am__objects_6 = libaccess_file_plugin_a-file.$(OBJEXT)
-am_libaccess_file_plugin_a_OBJECTS = $(am__objects_6)
+am__objects_9 = libaccess_file_plugin_a-file.$(OBJEXT)
+am_libaccess_file_plugin_a_OBJECTS = $(am__objects_9)
 libaccess_file_plugin_a_OBJECTS = $(am_libaccess_file_plugin_a_OBJECTS)
 libaccess_ftp_a_AR = $(AR) cru
 libaccess_ftp_a_LIBADD =
-am__objects_7 = libaccess_ftp_a-ftp.$(OBJEXT)
-am_libaccess_ftp_a_OBJECTS = $(am__objects_7)
+am__objects_10 = libaccess_ftp_a-ftp.$(OBJEXT)
+am_libaccess_ftp_a_OBJECTS = $(am__objects_10)
 libaccess_ftp_a_OBJECTS = $(am_libaccess_ftp_a_OBJECTS)
 libaccess_ftp_pic_a_AR = $(AR) cru
 libaccess_ftp_pic_a_LIBADD =
-am__objects_8 = libaccess_ftp_pic_a-ftp.$(OBJEXT)
-am_libaccess_ftp_pic_a_OBJECTS = $(am__objects_8)
+am__objects_11 = libaccess_ftp_pic_a-ftp.$(OBJEXT)
+am_libaccess_ftp_pic_a_OBJECTS = $(am__objects_11)
 libaccess_ftp_pic_a_OBJECTS = $(am_libaccess_ftp_pic_a_OBJECTS)
 libaccess_ftp_plugin_a_AR = $(AR) cru
 libaccess_ftp_plugin_a_LIBADD =
-am__objects_9 = libaccess_ftp_plugin_a-ftp.$(OBJEXT)
-am_libaccess_ftp_plugin_a_OBJECTS = $(am__objects_9)
+am__objects_12 = libaccess_ftp_plugin_a-ftp.$(OBJEXT)
+am_libaccess_ftp_plugin_a_OBJECTS = $(am__objects_12)
 libaccess_ftp_plugin_a_OBJECTS = $(am_libaccess_ftp_plugin_a_OBJECTS)
 libaccess_http_a_AR = $(AR) cru
 libaccess_http_a_LIBADD =
-am__objects_10 = libaccess_http_a-http.$(OBJEXT)
-am_libaccess_http_a_OBJECTS = $(am__objects_10)
+am__objects_13 = libaccess_http_a-http.$(OBJEXT)
+am_libaccess_http_a_OBJECTS = $(am__objects_13)
 libaccess_http_a_OBJECTS = $(am_libaccess_http_a_OBJECTS)
 libaccess_http_pic_a_AR = $(AR) cru
 libaccess_http_pic_a_LIBADD =
-am__objects_11 = libaccess_http_pic_a-http.$(OBJEXT)
-am_libaccess_http_pic_a_OBJECTS = $(am__objects_11)
+am__objects_14 = libaccess_http_pic_a-http.$(OBJEXT)
+am_libaccess_http_pic_a_OBJECTS = $(am__objects_14)
 libaccess_http_pic_a_OBJECTS = $(am_libaccess_http_pic_a_OBJECTS)
 libaccess_http_plugin_a_AR = $(AR) cru
 libaccess_http_plugin_a_LIBADD =
-am__objects_12 = libaccess_http_plugin_a-http.$(OBJEXT)
-am_libaccess_http_plugin_a_OBJECTS = $(am__objects_12)
+am__objects_15 = libaccess_http_plugin_a-http.$(OBJEXT)
+am_libaccess_http_plugin_a_OBJECTS = $(am__objects_15)
 libaccess_http_plugin_a_OBJECTS = $(am_libaccess_http_plugin_a_OBJECTS)
+libaccess_smb_a_AR = $(AR) cru
+libaccess_smb_a_LIBADD =
+am__objects_16 = libaccess_smb_a-smb.$(OBJEXT)
+am_libaccess_smb_a_OBJECTS = $(am__objects_16)
+libaccess_smb_a_OBJECTS = $(am_libaccess_smb_a_OBJECTS)
+libaccess_smb_pic_a_AR = $(AR) cru
+libaccess_smb_pic_a_LIBADD =
+am__objects_17 = libaccess_smb_pic_a-smb.$(OBJEXT)
+am_libaccess_smb_pic_a_OBJECTS = $(am__objects_17)
+libaccess_smb_pic_a_OBJECTS = $(am_libaccess_smb_pic_a_OBJECTS)
+libaccess_smb_plugin_a_AR = $(AR) cru
+libaccess_smb_plugin_a_LIBADD =
+am__objects_18 = libaccess_smb_plugin_a-smb.$(OBJEXT)
+am_libaccess_smb_plugin_a_OBJECTS = $(am__objects_18)
+libaccess_smb_plugin_a_OBJECTS = $(am_libaccess_smb_plugin_a_OBJECTS)
 libaccess_tcp_a_AR = $(AR) cru
 libaccess_tcp_a_LIBADD =
-am__objects_13 = libaccess_tcp_a-tcp.$(OBJEXT)
-am_libaccess_tcp_a_OBJECTS = $(am__objects_13)
+am__objects_19 = libaccess_tcp_a-tcp.$(OBJEXT)
+am_libaccess_tcp_a_OBJECTS = $(am__objects_19)
 libaccess_tcp_a_OBJECTS = $(am_libaccess_tcp_a_OBJECTS)
 libaccess_tcp_pic_a_AR = $(AR) cru
 libaccess_tcp_pic_a_LIBADD =
-am__objects_14 = libaccess_tcp_pic_a-tcp.$(OBJEXT)
-am_libaccess_tcp_pic_a_OBJECTS = $(am__objects_14)
+am__objects_20 = libaccess_tcp_pic_a-tcp.$(OBJEXT)
+am_libaccess_tcp_pic_a_OBJECTS = $(am__objects_20)
 libaccess_tcp_pic_a_OBJECTS = $(am_libaccess_tcp_pic_a_OBJECTS)
 libaccess_tcp_plugin_a_AR = $(AR) cru
 libaccess_tcp_plugin_a_LIBADD =
-am__objects_15 = libaccess_tcp_plugin_a-tcp.$(OBJEXT)
-am_libaccess_tcp_plugin_a_OBJECTS = $(am__objects_15)
+am__objects_21 = libaccess_tcp_plugin_a-tcp.$(OBJEXT)
+am_libaccess_tcp_plugin_a_OBJECTS = $(am__objects_21)
 libaccess_tcp_plugin_a_OBJECTS = $(am_libaccess_tcp_plugin_a_OBJECTS)
 libaccess_udp_a_AR = $(AR) cru
 libaccess_udp_a_LIBADD =
-am__objects_16 = libaccess_udp_a-udp.$(OBJEXT)
-am_libaccess_udp_a_OBJECTS = $(am__objects_16)
+am__objects_22 = libaccess_udp_a-udp.$(OBJEXT)
+am_libaccess_udp_a_OBJECTS = $(am__objects_22)
 libaccess_udp_a_OBJECTS = $(am_libaccess_udp_a_OBJECTS)
 libaccess_udp_pic_a_AR = $(AR) cru
 libaccess_udp_pic_a_LIBADD =
-am__objects_17 = libaccess_udp_pic_a-udp.$(OBJEXT)
-am_libaccess_udp_pic_a_OBJECTS = $(am__objects_17)
+am__objects_23 = libaccess_udp_pic_a-udp.$(OBJEXT)
+am_libaccess_udp_pic_a_OBJECTS = $(am__objects_23)
 libaccess_udp_pic_a_OBJECTS = $(am_libaccess_udp_pic_a_OBJECTS)
 libaccess_udp_plugin_a_AR = $(AR) cru
 libaccess_udp_plugin_a_LIBADD =
-am__objects_18 = libaccess_udp_plugin_a-udp.$(OBJEXT)
-am_libaccess_udp_plugin_a_OBJECTS = $(am__objects_18)
+am__objects_24 = libaccess_udp_plugin_a-udp.$(OBJEXT)
+am_libaccess_udp_plugin_a_OBJECTS = $(am__objects_24)
 libaccess_udp_plugin_a_OBJECTS = $(am_libaccess_udp_plugin_a_OBJECTS)
 libcdda_a_AR = $(AR) cru
 libcdda_a_LIBADD =
-am__objects_19 =
-am__objects_20 = libcdda_a-cdda.$(OBJEXT) libcdda_a-cdrom.$(OBJEXT) \
-	$(am__objects_19)
-am_libcdda_a_OBJECTS = $(am__objects_20)
+am__objects_25 =
+am__objects_26 = libcdda_a-cdda.$(OBJEXT) libcdda_a-cdrom.$(OBJEXT) \
+	$(am__objects_25)
+am_libcdda_a_OBJECTS = $(am__objects_26)
 libcdda_a_OBJECTS = $(am_libcdda_a_OBJECTS)
 libcdda_pic_a_AR = $(AR) cru
 libcdda_pic_a_LIBADD =
-am__objects_21 = libcdda_pic_a-cdda.$(OBJEXT) \
-	libcdda_pic_a-cdrom.$(OBJEXT) $(am__objects_19)
-am_libcdda_pic_a_OBJECTS = $(am__objects_21)
+am__objects_27 = libcdda_pic_a-cdda.$(OBJEXT) \
+	libcdda_pic_a-cdrom.$(OBJEXT) $(am__objects_25)
+am_libcdda_pic_a_OBJECTS = $(am__objects_27)
 libcdda_pic_a_OBJECTS = $(am_libcdda_pic_a_OBJECTS)
 libcdda_plugin_a_AR = $(AR) cru
 libcdda_plugin_a_LIBADD =
-am__objects_22 = libcdda_plugin_a-cdda.$(OBJEXT) \
-	libcdda_plugin_a-cdrom.$(OBJEXT) $(am__objects_19)
-am_libcdda_plugin_a_OBJECTS = $(am__objects_22)
+am__objects_28 = libcdda_plugin_a-cdda.$(OBJEXT) \
+	libcdda_plugin_a-cdrom.$(OBJEXT) $(am__objects_25)
+am_libcdda_plugin_a_OBJECTS = $(am__objects_28)
 libcdda_plugin_a_OBJECTS = $(am_libcdda_plugin_a_OBJECTS)
 libdvdnav_a_AR = $(AR) cru
 libdvdnav_a_LIBADD =
-am__objects_23 = libdvdnav_a-dvdnav.$(OBJEXT)
-am_libdvdnav_a_OBJECTS = $(am__objects_23)
+am__objects_29 = libdvdnav_a-dvdnav.$(OBJEXT)
+am_libdvdnav_a_OBJECTS = $(am__objects_29)
 libdvdnav_a_OBJECTS = $(am_libdvdnav_a_OBJECTS)
 libdvdnav_pic_a_AR = $(AR) cru
 libdvdnav_pic_a_LIBADD =
-am__objects_24 = libdvdnav_pic_a-dvdnav.$(OBJEXT)
-am_libdvdnav_pic_a_OBJECTS = $(am__objects_24)
+am__objects_30 = libdvdnav_pic_a-dvdnav.$(OBJEXT)
+am_libdvdnav_pic_a_OBJECTS = $(am__objects_30)
 libdvdnav_pic_a_OBJECTS = $(am_libdvdnav_pic_a_OBJECTS)
 libdvdnav_plugin_a_AR = $(AR) cru
 libdvdnav_plugin_a_LIBADD =
-am__objects_25 = libdvdnav_plugin_a-dvdnav.$(OBJEXT)
-am_libdvdnav_plugin_a_OBJECTS = $(am__objects_25)
+am__objects_31 = libdvdnav_plugin_a-dvdnav.$(OBJEXT)
+am_libdvdnav_plugin_a_OBJECTS = $(am__objects_31)
 libdvdnav_plugin_a_OBJECTS = $(am_libdvdnav_plugin_a_OBJECTS)
 libdvdread_a_AR = $(AR) cru
 libdvdread_a_LIBADD =
-am__objects_26 = libdvdread_a-dvdread.$(OBJEXT)
-am_libdvdread_a_OBJECTS = $(am__objects_26)
+am__objects_32 = libdvdread_a-dvdread.$(OBJEXT)
+am_libdvdread_a_OBJECTS = $(am__objects_32)
 libdvdread_a_OBJECTS = $(am_libdvdread_a_OBJECTS)
 libdvdread_pic_a_AR = $(AR) cru
 libdvdread_pic_a_LIBADD =
-am__objects_27 = libdvdread_pic_a-dvdread.$(OBJEXT)
-am_libdvdread_pic_a_OBJECTS = $(am__objects_27)
+am__objects_33 = libdvdread_pic_a-dvdread.$(OBJEXT)
+am_libdvdread_pic_a_OBJECTS = $(am__objects_33)
 libdvdread_pic_a_OBJECTS = $(am_libdvdread_pic_a_OBJECTS)
 libdvdread_plugin_a_AR = $(AR) cru
 libdvdread_plugin_a_LIBADD =
-am__objects_28 = libdvdread_plugin_a-dvdread.$(OBJEXT)
-am_libdvdread_plugin_a_OBJECTS = $(am__objects_28)
+am__objects_34 = libdvdread_plugin_a-dvdread.$(OBJEXT)
+am_libdvdread_plugin_a_OBJECTS = $(am__objects_34)
 libdvdread_plugin_a_OBJECTS = $(am_libdvdread_plugin_a_OBJECTS)
 libslp_a_AR = $(AR) cru
 libslp_a_LIBADD =
-am__objects_29 = libslp_a-slp.$(OBJEXT)
-am_libslp_a_OBJECTS = $(am__objects_29)
+am__objects_35 = libslp_a-slp.$(OBJEXT)
+am_libslp_a_OBJECTS = $(am__objects_35)
 libslp_a_OBJECTS = $(am_libslp_a_OBJECTS)
 libslp_pic_a_AR = $(AR) cru
 libslp_pic_a_LIBADD =
-am__objects_30 = libslp_pic_a-slp.$(OBJEXT)
-am_libslp_pic_a_OBJECTS = $(am__objects_30)
+am__objects_36 = libslp_pic_a-slp.$(OBJEXT)
+am_libslp_pic_a_OBJECTS = $(am__objects_36)
 libslp_pic_a_OBJECTS = $(am_libslp_pic_a_OBJECTS)
 libslp_plugin_a_AR = $(AR) cru
 libslp_plugin_a_LIBADD =
-am__objects_31 = libslp_plugin_a-slp.$(OBJEXT)
-am_libslp_plugin_a_OBJECTS = $(am__objects_31)
+am__objects_37 = libslp_plugin_a-slp.$(OBJEXT)
+am_libslp_plugin_a_OBJECTS = $(am__objects_37)
 libslp_plugin_a_OBJECTS = $(am_libslp_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
@@ -679,6 +754,9 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libaccess_directory_a-directory.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libaccess_directory_pic_a-directory.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libaccess_directory_plugin_a-directory.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libaccess_fake_a-fake.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libaccess_fake_pic_a-fake.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libaccess_fake_plugin_a-fake.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libaccess_file_a-file.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libaccess_file_pic_a-file.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libaccess_file_plugin_a-file.Po \
@@ -688,6 +766,9 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libaccess_http_a-http.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libaccess_http_pic_a-http.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libaccess_http_plugin_a-http.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libaccess_smb_a-smb.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libaccess_smb_pic_a-smb.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libaccess_smb_plugin_a-smb.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libaccess_tcp_a-tcp.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libaccess_tcp_pic_a-tcp.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libaccess_tcp_plugin_a-tcp.Po \
@@ -716,12 +797,16 @@ LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 DIST_SOURCES = $(libaccess_directory_a_SOURCES) \
 	$(libaccess_directory_pic_a_SOURCES) \
 	$(libaccess_directory_plugin_a_SOURCES) \
-	$(libaccess_file_a_SOURCES) $(libaccess_file_pic_a_SOURCES) \
+	$(libaccess_fake_a_SOURCES) $(libaccess_fake_pic_a_SOURCES) \
+	$(libaccess_fake_plugin_a_SOURCES) $(libaccess_file_a_SOURCES) \
+	$(libaccess_file_pic_a_SOURCES) \
 	$(libaccess_file_plugin_a_SOURCES) $(libaccess_ftp_a_SOURCES) \
 	$(libaccess_ftp_pic_a_SOURCES) \
 	$(libaccess_ftp_plugin_a_SOURCES) $(libaccess_http_a_SOURCES) \
 	$(libaccess_http_pic_a_SOURCES) \
-	$(libaccess_http_plugin_a_SOURCES) $(libaccess_tcp_a_SOURCES) \
+	$(libaccess_http_plugin_a_SOURCES) $(libaccess_smb_a_SOURCES) \
+	$(libaccess_smb_pic_a_SOURCES) \
+	$(libaccess_smb_plugin_a_SOURCES) $(libaccess_tcp_a_SOURCES) \
 	$(libaccess_tcp_pic_a_SOURCES) \
 	$(libaccess_tcp_plugin_a_SOURCES) $(libaccess_udp_a_SOURCES) \
 	$(libaccess_udp_pic_a_SOURCES) \
@@ -732,8 +817,9 @@ DIST_SOURCES = $(libaccess_directory_a_SOURCES) \
 	$(libdvdread_pic_a_SOURCES) $(libdvdread_plugin_a_SOURCES) \
 	$(libslp_a_SOURCES) $(libslp_pic_a_SOURCES) \
 	$(libslp_plugin_a_SOURCES)
-DATA = $(libaccess_directory_DATA) $(libaccess_file_DATA) \
-	$(libaccess_ftp_DATA) $(libaccess_http_DATA) \
+DATA = $(libaccess_directory_DATA) $(libaccess_fake_DATA) \
+	$(libaccess_file_DATA) $(libaccess_ftp_DATA) \
+	$(libaccess_http_DATA) $(libaccess_smb_DATA) \
 	$(libaccess_tcp_DATA) $(libaccess_udp_DATA) $(libcdda_DATA) \
 	$(libdvdnav_DATA) $(libdvdread_DATA) $(libslp_DATA)
 
@@ -748,7 +834,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libaccess_directory_a_SOURCES) $(libaccess_directory_pic_a_SOURCES) $(libaccess_directory_plugin_a_SOURCES) $(libaccess_file_a_SOURCES) $(libaccess_file_pic_a_SOURCES) $(libaccess_file_plugin_a_SOURCES) $(libaccess_ftp_a_SOURCES) $(libaccess_ftp_pic_a_SOURCES) $(libaccess_ftp_plugin_a_SOURCES) $(libaccess_http_a_SOURCES) $(libaccess_http_pic_a_SOURCES) $(libaccess_http_plugin_a_SOURCES) $(libaccess_tcp_a_SOURCES) $(libaccess_tcp_pic_a_SOURCES) $(libaccess_tcp_plugin_a_SOURCES) $(libaccess_udp_a_SOURCES) $(libaccess_udp_pic_a_SOURCES) $(libaccess_udp_plugin_a_SOURCES) $(libcdda_a_SOURCES) $(libcdda_pic_a_SOURCES) $(libcdda_plugin_a_SOURCES) $(libdvdnav_a_SOURCES) $(libdvdnav_pic_a_SOURCES) $(libdvdnav_plugin_a_SOURCES) $(libdvdread_a_SOURCES) $(libdvdread_pic_a_SOURCES) $(libdvdread_plugin_a_SOURCES) $(libslp_a_SOURCES) $(libslp_pic_a_SOURCES) $(libslp_plugin_a_SOURCES)
+SOURCES = $(libaccess_directory_a_SOURCES) $(libaccess_directory_pic_a_SOURCES) $(libaccess_directory_plugin_a_SOURCES) $(libaccess_fake_a_SOURCES) $(libaccess_fake_pic_a_SOURCES) $(libaccess_fake_plugin_a_SOURCES) $(libaccess_file_a_SOURCES) $(libaccess_file_pic_a_SOURCES) $(libaccess_file_plugin_a_SOURCES) $(libaccess_ftp_a_SOURCES) $(libaccess_ftp_pic_a_SOURCES) $(libaccess_ftp_plugin_a_SOURCES) $(libaccess_http_a_SOURCES) $(libaccess_http_pic_a_SOURCES) $(libaccess_http_plugin_a_SOURCES) $(libaccess_smb_a_SOURCES) $(libaccess_smb_pic_a_SOURCES) $(libaccess_smb_plugin_a_SOURCES) $(libaccess_tcp_a_SOURCES) $(libaccess_tcp_pic_a_SOURCES) $(libaccess_tcp_plugin_a_SOURCES) $(libaccess_udp_a_SOURCES) $(libaccess_udp_pic_a_SOURCES) $(libaccess_udp_plugin_a_SOURCES) $(libcdda_a_SOURCES) $(libcdda_pic_a_SOURCES) $(libcdda_plugin_a_SOURCES) $(libdvdnav_a_SOURCES) $(libdvdnav_pic_a_SOURCES) $(libdvdnav_plugin_a_SOURCES) $(libdvdread_a_SOURCES) $(libdvdread_pic_a_SOURCES) $(libdvdread_plugin_a_SOURCES) $(libslp_a_SOURCES) $(libslp_pic_a_SOURCES) $(libslp_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -805,6 +891,18 @@ libaccess_directory_plugin.a: $(libaccess_directory_plugin_a_OBJECTS) $(libacces
 	-rm -f libaccess_directory_plugin.a
 	$(libaccess_directory_plugin_a_AR) libaccess_directory_plugin.a $(libaccess_directory_plugin_a_OBJECTS) $(libaccess_directory_plugin_a_LIBADD)
 	$(RANLIB) libaccess_directory_plugin.a
+libaccess_fake.a: $(libaccess_fake_a_OBJECTS) $(libaccess_fake_a_DEPENDENCIES) 
+	-rm -f libaccess_fake.a
+	$(libaccess_fake_a_AR) libaccess_fake.a $(libaccess_fake_a_OBJECTS) $(libaccess_fake_a_LIBADD)
+	$(RANLIB) libaccess_fake.a
+libaccess_fake_pic.a: $(libaccess_fake_pic_a_OBJECTS) $(libaccess_fake_pic_a_DEPENDENCIES) 
+	-rm -f libaccess_fake_pic.a
+	$(libaccess_fake_pic_a_AR) libaccess_fake_pic.a $(libaccess_fake_pic_a_OBJECTS) $(libaccess_fake_pic_a_LIBADD)
+	$(RANLIB) libaccess_fake_pic.a
+libaccess_fake_plugin.a: $(libaccess_fake_plugin_a_OBJECTS) $(libaccess_fake_plugin_a_DEPENDENCIES) 
+	-rm -f libaccess_fake_plugin.a
+	$(libaccess_fake_plugin_a_AR) libaccess_fake_plugin.a $(libaccess_fake_plugin_a_OBJECTS) $(libaccess_fake_plugin_a_LIBADD)
+	$(RANLIB) libaccess_fake_plugin.a
 libaccess_file.a: $(libaccess_file_a_OBJECTS) $(libaccess_file_a_DEPENDENCIES) 
 	-rm -f libaccess_file.a
 	$(libaccess_file_a_AR) libaccess_file.a $(libaccess_file_a_OBJECTS) $(libaccess_file_a_LIBADD)
@@ -841,6 +939,18 @@ libaccess_http_plugin.a: $(libaccess_http_plugin_a_OBJECTS) $(libaccess_http_plu
 	-rm -f libaccess_http_plugin.a
 	$(libaccess_http_plugin_a_AR) libaccess_http_plugin.a $(libaccess_http_plugin_a_OBJECTS) $(libaccess_http_plugin_a_LIBADD)
 	$(RANLIB) libaccess_http_plugin.a
+libaccess_smb.a: $(libaccess_smb_a_OBJECTS) $(libaccess_smb_a_DEPENDENCIES) 
+	-rm -f libaccess_smb.a
+	$(libaccess_smb_a_AR) libaccess_smb.a $(libaccess_smb_a_OBJECTS) $(libaccess_smb_a_LIBADD)
+	$(RANLIB) libaccess_smb.a
+libaccess_smb_pic.a: $(libaccess_smb_pic_a_OBJECTS) $(libaccess_smb_pic_a_DEPENDENCIES) 
+	-rm -f libaccess_smb_pic.a
+	$(libaccess_smb_pic_a_AR) libaccess_smb_pic.a $(libaccess_smb_pic_a_OBJECTS) $(libaccess_smb_pic_a_LIBADD)
+	$(RANLIB) libaccess_smb_pic.a
+libaccess_smb_plugin.a: $(libaccess_smb_plugin_a_OBJECTS) $(libaccess_smb_plugin_a_DEPENDENCIES) 
+	-rm -f libaccess_smb_plugin.a
+	$(libaccess_smb_plugin_a_AR) libaccess_smb_plugin.a $(libaccess_smb_plugin_a_OBJECTS) $(libaccess_smb_plugin_a_LIBADD)
+	$(RANLIB) libaccess_smb_plugin.a
 libaccess_tcp.a: $(libaccess_tcp_a_OBJECTS) $(libaccess_tcp_a_DEPENDENCIES) 
 	-rm -f libaccess_tcp.a
 	$(libaccess_tcp_a_AR) libaccess_tcp.a $(libaccess_tcp_a_OBJECTS) $(libaccess_tcp_a_LIBADD)
@@ -923,6 +1033,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_directory_a-directory.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_directory_pic_a-directory.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_directory_plugin_a-directory.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_fake_a-fake.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_fake_pic_a-fake.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_fake_plugin_a-fake.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_file_a-file.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_file_pic_a-file.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_file_plugin_a-file.Po@am__quote@
@@ -932,6 +1045,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_http_a-http.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_http_pic_a-http.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_http_plugin_a-http.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_smb_a-smb.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_smb_pic_a-smb.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_smb_plugin_a-smb.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_tcp_a-tcp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_tcp_pic_a-tcp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaccess_tcp_plugin_a-tcp.Po@am__quote@
@@ -1041,6 +1157,72 @@ libaccess_directory_plugin_a-directory.obj: directory.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libaccess_directory_plugin_a-directory.Po' tmpdepfile='$(DEPDIR)/libaccess_directory_plugin_a-directory.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_directory_plugin_a_CFLAGS) $(CFLAGS) -c -o libaccess_directory_plugin_a-directory.obj `if test -f 'directory.c'; then $(CYGPATH_W) 'directory.c'; else $(CYGPATH_W) '$(srcdir)/directory.c'; fi`
+
+libaccess_fake_a-fake.o: fake.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_fake_a_CFLAGS) $(CFLAGS) -MT libaccess_fake_a-fake.o -MD -MP -MF "$(DEPDIR)/libaccess_fake_a-fake.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libaccess_fake_a-fake.o `test -f 'fake.c' || echo '$(srcdir)/'`fake.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libaccess_fake_a-fake.Tpo" "$(DEPDIR)/libaccess_fake_a-fake.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libaccess_fake_a-fake.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fake.c' object='libaccess_fake_a-fake.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libaccess_fake_a-fake.Po' tmpdepfile='$(DEPDIR)/libaccess_fake_a-fake.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_fake_a_CFLAGS) $(CFLAGS) -c -o libaccess_fake_a-fake.o `test -f 'fake.c' || echo '$(srcdir)/'`fake.c
+
+libaccess_fake_a-fake.obj: fake.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_fake_a_CFLAGS) $(CFLAGS) -MT libaccess_fake_a-fake.obj -MD -MP -MF "$(DEPDIR)/libaccess_fake_a-fake.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libaccess_fake_a-fake.obj `if test -f 'fake.c'; then $(CYGPATH_W) 'fake.c'; else $(CYGPATH_W) '$(srcdir)/fake.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libaccess_fake_a-fake.Tpo" "$(DEPDIR)/libaccess_fake_a-fake.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libaccess_fake_a-fake.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fake.c' object='libaccess_fake_a-fake.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libaccess_fake_a-fake.Po' tmpdepfile='$(DEPDIR)/libaccess_fake_a-fake.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_fake_a_CFLAGS) $(CFLAGS) -c -o libaccess_fake_a-fake.obj `if test -f 'fake.c'; then $(CYGPATH_W) 'fake.c'; else $(CYGPATH_W) '$(srcdir)/fake.c'; fi`
+
+libaccess_fake_pic_a-fake.o: fake.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_fake_pic_a_CFLAGS) $(CFLAGS) -MT libaccess_fake_pic_a-fake.o -MD -MP -MF "$(DEPDIR)/libaccess_fake_pic_a-fake.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libaccess_fake_pic_a-fake.o `test -f 'fake.c' || echo '$(srcdir)/'`fake.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libaccess_fake_pic_a-fake.Tpo" "$(DEPDIR)/libaccess_fake_pic_a-fake.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libaccess_fake_pic_a-fake.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fake.c' object='libaccess_fake_pic_a-fake.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libaccess_fake_pic_a-fake.Po' tmpdepfile='$(DEPDIR)/libaccess_fake_pic_a-fake.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_fake_pic_a_CFLAGS) $(CFLAGS) -c -o libaccess_fake_pic_a-fake.o `test -f 'fake.c' || echo '$(srcdir)/'`fake.c
+
+libaccess_fake_pic_a-fake.obj: fake.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_fake_pic_a_CFLAGS) $(CFLAGS) -MT libaccess_fake_pic_a-fake.obj -MD -MP -MF "$(DEPDIR)/libaccess_fake_pic_a-fake.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libaccess_fake_pic_a-fake.obj `if test -f 'fake.c'; then $(CYGPATH_W) 'fake.c'; else $(CYGPATH_W) '$(srcdir)/fake.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libaccess_fake_pic_a-fake.Tpo" "$(DEPDIR)/libaccess_fake_pic_a-fake.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libaccess_fake_pic_a-fake.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fake.c' object='libaccess_fake_pic_a-fake.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libaccess_fake_pic_a-fake.Po' tmpdepfile='$(DEPDIR)/libaccess_fake_pic_a-fake.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_fake_pic_a_CFLAGS) $(CFLAGS) -c -o libaccess_fake_pic_a-fake.obj `if test -f 'fake.c'; then $(CYGPATH_W) 'fake.c'; else $(CYGPATH_W) '$(srcdir)/fake.c'; fi`
+
+libaccess_fake_plugin_a-fake.o: fake.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_fake_plugin_a_CFLAGS) $(CFLAGS) -MT libaccess_fake_plugin_a-fake.o -MD -MP -MF "$(DEPDIR)/libaccess_fake_plugin_a-fake.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libaccess_fake_plugin_a-fake.o `test -f 'fake.c' || echo '$(srcdir)/'`fake.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libaccess_fake_plugin_a-fake.Tpo" "$(DEPDIR)/libaccess_fake_plugin_a-fake.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libaccess_fake_plugin_a-fake.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fake.c' object='libaccess_fake_plugin_a-fake.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libaccess_fake_plugin_a-fake.Po' tmpdepfile='$(DEPDIR)/libaccess_fake_plugin_a-fake.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_fake_plugin_a_CFLAGS) $(CFLAGS) -c -o libaccess_fake_plugin_a-fake.o `test -f 'fake.c' || echo '$(srcdir)/'`fake.c
+
+libaccess_fake_plugin_a-fake.obj: fake.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_fake_plugin_a_CFLAGS) $(CFLAGS) -MT libaccess_fake_plugin_a-fake.obj -MD -MP -MF "$(DEPDIR)/libaccess_fake_plugin_a-fake.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libaccess_fake_plugin_a-fake.obj `if test -f 'fake.c'; then $(CYGPATH_W) 'fake.c'; else $(CYGPATH_W) '$(srcdir)/fake.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libaccess_fake_plugin_a-fake.Tpo" "$(DEPDIR)/libaccess_fake_plugin_a-fake.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libaccess_fake_plugin_a-fake.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fake.c' object='libaccess_fake_plugin_a-fake.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libaccess_fake_plugin_a-fake.Po' tmpdepfile='$(DEPDIR)/libaccess_fake_plugin_a-fake.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_fake_plugin_a_CFLAGS) $(CFLAGS) -c -o libaccess_fake_plugin_a-fake.obj `if test -f 'fake.c'; then $(CYGPATH_W) 'fake.c'; else $(CYGPATH_W) '$(srcdir)/fake.c'; fi`
 
 libaccess_file_a-file.o: file.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_file_a_CFLAGS) $(CFLAGS) -MT libaccess_file_a-file.o -MD -MP -MF "$(DEPDIR)/libaccess_file_a-file.Tpo" \
@@ -1239,6 +1421,72 @@ libaccess_http_plugin_a-http.obj: http.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libaccess_http_plugin_a-http.Po' tmpdepfile='$(DEPDIR)/libaccess_http_plugin_a-http.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_http_plugin_a_CFLAGS) $(CFLAGS) -c -o libaccess_http_plugin_a-http.obj `if test -f 'http.c'; then $(CYGPATH_W) 'http.c'; else $(CYGPATH_W) '$(srcdir)/http.c'; fi`
+
+libaccess_smb_a-smb.o: smb.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_smb_a_CFLAGS) $(CFLAGS) -MT libaccess_smb_a-smb.o -MD -MP -MF "$(DEPDIR)/libaccess_smb_a-smb.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libaccess_smb_a-smb.o `test -f 'smb.c' || echo '$(srcdir)/'`smb.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libaccess_smb_a-smb.Tpo" "$(DEPDIR)/libaccess_smb_a-smb.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libaccess_smb_a-smb.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='smb.c' object='libaccess_smb_a-smb.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libaccess_smb_a-smb.Po' tmpdepfile='$(DEPDIR)/libaccess_smb_a-smb.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_smb_a_CFLAGS) $(CFLAGS) -c -o libaccess_smb_a-smb.o `test -f 'smb.c' || echo '$(srcdir)/'`smb.c
+
+libaccess_smb_a-smb.obj: smb.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_smb_a_CFLAGS) $(CFLAGS) -MT libaccess_smb_a-smb.obj -MD -MP -MF "$(DEPDIR)/libaccess_smb_a-smb.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libaccess_smb_a-smb.obj `if test -f 'smb.c'; then $(CYGPATH_W) 'smb.c'; else $(CYGPATH_W) '$(srcdir)/smb.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libaccess_smb_a-smb.Tpo" "$(DEPDIR)/libaccess_smb_a-smb.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libaccess_smb_a-smb.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='smb.c' object='libaccess_smb_a-smb.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libaccess_smb_a-smb.Po' tmpdepfile='$(DEPDIR)/libaccess_smb_a-smb.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_smb_a_CFLAGS) $(CFLAGS) -c -o libaccess_smb_a-smb.obj `if test -f 'smb.c'; then $(CYGPATH_W) 'smb.c'; else $(CYGPATH_W) '$(srcdir)/smb.c'; fi`
+
+libaccess_smb_pic_a-smb.o: smb.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_smb_pic_a_CFLAGS) $(CFLAGS) -MT libaccess_smb_pic_a-smb.o -MD -MP -MF "$(DEPDIR)/libaccess_smb_pic_a-smb.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libaccess_smb_pic_a-smb.o `test -f 'smb.c' || echo '$(srcdir)/'`smb.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libaccess_smb_pic_a-smb.Tpo" "$(DEPDIR)/libaccess_smb_pic_a-smb.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libaccess_smb_pic_a-smb.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='smb.c' object='libaccess_smb_pic_a-smb.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libaccess_smb_pic_a-smb.Po' tmpdepfile='$(DEPDIR)/libaccess_smb_pic_a-smb.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_smb_pic_a_CFLAGS) $(CFLAGS) -c -o libaccess_smb_pic_a-smb.o `test -f 'smb.c' || echo '$(srcdir)/'`smb.c
+
+libaccess_smb_pic_a-smb.obj: smb.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_smb_pic_a_CFLAGS) $(CFLAGS) -MT libaccess_smb_pic_a-smb.obj -MD -MP -MF "$(DEPDIR)/libaccess_smb_pic_a-smb.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libaccess_smb_pic_a-smb.obj `if test -f 'smb.c'; then $(CYGPATH_W) 'smb.c'; else $(CYGPATH_W) '$(srcdir)/smb.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libaccess_smb_pic_a-smb.Tpo" "$(DEPDIR)/libaccess_smb_pic_a-smb.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libaccess_smb_pic_a-smb.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='smb.c' object='libaccess_smb_pic_a-smb.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libaccess_smb_pic_a-smb.Po' tmpdepfile='$(DEPDIR)/libaccess_smb_pic_a-smb.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_smb_pic_a_CFLAGS) $(CFLAGS) -c -o libaccess_smb_pic_a-smb.obj `if test -f 'smb.c'; then $(CYGPATH_W) 'smb.c'; else $(CYGPATH_W) '$(srcdir)/smb.c'; fi`
+
+libaccess_smb_plugin_a-smb.o: smb.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_smb_plugin_a_CFLAGS) $(CFLAGS) -MT libaccess_smb_plugin_a-smb.o -MD -MP -MF "$(DEPDIR)/libaccess_smb_plugin_a-smb.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libaccess_smb_plugin_a-smb.o `test -f 'smb.c' || echo '$(srcdir)/'`smb.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libaccess_smb_plugin_a-smb.Tpo" "$(DEPDIR)/libaccess_smb_plugin_a-smb.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libaccess_smb_plugin_a-smb.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='smb.c' object='libaccess_smb_plugin_a-smb.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libaccess_smb_plugin_a-smb.Po' tmpdepfile='$(DEPDIR)/libaccess_smb_plugin_a-smb.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_smb_plugin_a_CFLAGS) $(CFLAGS) -c -o libaccess_smb_plugin_a-smb.o `test -f 'smb.c' || echo '$(srcdir)/'`smb.c
+
+libaccess_smb_plugin_a-smb.obj: smb.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_smb_plugin_a_CFLAGS) $(CFLAGS) -MT libaccess_smb_plugin_a-smb.obj -MD -MP -MF "$(DEPDIR)/libaccess_smb_plugin_a-smb.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libaccess_smb_plugin_a-smb.obj `if test -f 'smb.c'; then $(CYGPATH_W) 'smb.c'; else $(CYGPATH_W) '$(srcdir)/smb.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libaccess_smb_plugin_a-smb.Tpo" "$(DEPDIR)/libaccess_smb_plugin_a-smb.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libaccess_smb_plugin_a-smb.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='smb.c' object='libaccess_smb_plugin_a-smb.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libaccess_smb_plugin_a-smb.Po' tmpdepfile='$(DEPDIR)/libaccess_smb_plugin_a-smb.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_smb_plugin_a_CFLAGS) $(CFLAGS) -c -o libaccess_smb_plugin_a-smb.obj `if test -f 'smb.c'; then $(CYGPATH_W) 'smb.c'; else $(CYGPATH_W) '$(srcdir)/smb.c'; fi`
 
 libaccess_tcp_a-tcp.o: tcp.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libaccess_tcp_a_CFLAGS) $(CFLAGS) -MT libaccess_tcp_a-tcp.o -MD -MP -MF "$(DEPDIR)/libaccess_tcp_a-tcp.Tpo" \
@@ -1720,6 +1968,24 @@ uninstall-libaccess_directoryDATA:
 	  echo " rm -f $(DESTDIR)$(libaccess_directorydir)/$$f"; \
 	  rm -f $(DESTDIR)$(libaccess_directorydir)/$$f; \
 	done
+libaccess_fakeDATA_INSTALL = $(INSTALL_DATA)
+install-libaccess_fakeDATA: $(libaccess_fake_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libaccess_fakedir)
+	@list='$(libaccess_fake_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libaccess_fakeDATA_INSTALL) $$d$$p $(DESTDIR)$(libaccess_fakedir)/$$f"; \
+	  $(libaccess_fakeDATA_INSTALL) $$d$$p $(DESTDIR)$(libaccess_fakedir)/$$f; \
+	done
+
+uninstall-libaccess_fakeDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libaccess_fake_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libaccess_fakedir)/$$f"; \
+	  rm -f $(DESTDIR)$(libaccess_fakedir)/$$f; \
+	done
 libaccess_fileDATA_INSTALL = $(INSTALL_DATA)
 install-libaccess_fileDATA: $(libaccess_file_DATA)
 	@$(NORMAL_INSTALL)
@@ -1773,6 +2039,24 @@ uninstall-libaccess_httpDATA:
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
 	  echo " rm -f $(DESTDIR)$(libaccess_httpdir)/$$f"; \
 	  rm -f $(DESTDIR)$(libaccess_httpdir)/$$f; \
+	done
+libaccess_smbDATA_INSTALL = $(INSTALL_DATA)
+install-libaccess_smbDATA: $(libaccess_smb_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libaccess_smbdir)
+	@list='$(libaccess_smb_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libaccess_smbDATA_INSTALL) $$d$$p $(DESTDIR)$(libaccess_smbdir)/$$f"; \
+	  $(libaccess_smbDATA_INSTALL) $$d$$p $(DESTDIR)$(libaccess_smbdir)/$$f; \
+	done
+
+uninstall-libaccess_smbDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libaccess_smb_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libaccess_smbdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libaccess_smbdir)/$$f; \
 	done
 libaccess_tcpDATA_INSTALL = $(INSTALL_DATA)
 install-libaccess_tcpDATA: $(libaccess_tcp_DATA)
@@ -2057,7 +2341,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libaccess_directorydir) $(DESTDIR)$(libaccess_filedir) $(DESTDIR)$(libaccess_ftpdir) $(DESTDIR)$(libaccess_httpdir) $(DESTDIR)$(libaccess_tcpdir) $(DESTDIR)$(libaccess_udpdir) $(DESTDIR)$(libcddadir) $(DESTDIR)$(libdvdnavdir) $(DESTDIR)$(libdvdreaddir) $(DESTDIR)$(libslpdir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libaccess_directorydir) $(DESTDIR)$(libaccess_fakedir) $(DESTDIR)$(libaccess_filedir) $(DESTDIR)$(libaccess_ftpdir) $(DESTDIR)$(libaccess_httpdir) $(DESTDIR)$(libaccess_smbdir) $(DESTDIR)$(libaccess_tcpdir) $(DESTDIR)$(libaccess_udpdir) $(DESTDIR)$(libcddadir) $(DESTDIR)$(libdvdnavdir) $(DESTDIR)$(libdvdreaddir) $(DESTDIR)$(libslpdir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -2105,8 +2389,9 @@ info: info-recursive
 info-am:
 
 install-data-am: install-libaccess_directoryDATA \
-	install-libaccess_fileDATA install-libaccess_ftpDATA \
-	install-libaccess_httpDATA install-libaccess_tcpDATA \
+	install-libaccess_fakeDATA install-libaccess_fileDATA \
+	install-libaccess_ftpDATA install-libaccess_httpDATA \
+	install-libaccess_smbDATA install-libaccess_tcpDATA \
 	install-libaccess_udpDATA install-libcddaDATA \
 	install-libdvdnavDATA install-libdvdreadDATA install-libslpDATA \
 	install-libvlcLIBRARIES
@@ -2137,8 +2422,9 @@ ps: ps-recursive
 ps-am:
 
 uninstall-am: uninstall-info-am uninstall-libaccess_directoryDATA \
-	uninstall-libaccess_fileDATA uninstall-libaccess_ftpDATA \
-	uninstall-libaccess_httpDATA uninstall-libaccess_tcpDATA \
+	uninstall-libaccess_fakeDATA uninstall-libaccess_fileDATA \
+	uninstall-libaccess_ftpDATA uninstall-libaccess_httpDATA \
+	uninstall-libaccess_smbDATA uninstall-libaccess_tcpDATA \
 	uninstall-libaccess_udpDATA uninstall-libcddaDATA \
 	uninstall-libdvdnavDATA uninstall-libdvdreadDATA \
 	uninstall-libslpDATA uninstall-libvlcLIBRARIES
@@ -2154,8 +2440,9 @@ uninstall-info: uninstall-info-recursive
 	install-data install-data-am install-data-recursive \
 	install-exec install-exec-am install-exec-recursive \
 	install-info install-info-am install-info-recursive \
-	install-libaccess_directoryDATA install-libaccess_fileDATA \
-	install-libaccess_ftpDATA install-libaccess_httpDATA \
+	install-libaccess_directoryDATA install-libaccess_fakeDATA \
+	install-libaccess_fileDATA install-libaccess_ftpDATA \
+	install-libaccess_httpDATA install-libaccess_smbDATA \
 	install-libaccess_tcpDATA install-libaccess_udpDATA \
 	install-libcddaDATA install-libdvdnavDATA \
 	install-libdvdreadDATA install-libslpDATA \
@@ -2167,8 +2454,9 @@ uninstall-info: uninstall-info-recursive
 	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
 	tags-recursive uninstall uninstall-am uninstall-info-am \
 	uninstall-info-recursive uninstall-libaccess_directoryDATA \
-	uninstall-libaccess_fileDATA uninstall-libaccess_ftpDATA \
-	uninstall-libaccess_httpDATA uninstall-libaccess_tcpDATA \
+	uninstall-libaccess_fakeDATA uninstall-libaccess_fileDATA \
+	uninstall-libaccess_ftpDATA uninstall-libaccess_httpDATA \
+	uninstall-libaccess_smbDATA uninstall-libaccess_tcpDATA \
 	uninstall-libaccess_udpDATA uninstall-libcddaDATA \
 	uninstall-libdvdnavDATA uninstall-libdvdreadDATA \
 	uninstall-libslpDATA uninstall-libvlcLIBRARIES \
@@ -2181,9 +2469,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in access_file access_directory access_udp access_tcp access_http access_ftp dvdnav dvdread slp cdda; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in access_file access_directory access_udp access_tcp access_http access_ftp dvdnav dvdread slp cdda; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in access_file access_directory access_udp access_tcp access_http access_ftp dvdnav dvdread slp cdda; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in access_file access_directory access_udp access_tcp access_http access_ftp access_smb dvdnav dvdread slp access_fake cdda; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in access_file access_directory access_udp access_tcp access_http access_ftp access_smb dvdnav dvdread slp access_fake cdda; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in access_file access_directory access_udp access_tcp access_http access_ftp access_smb dvdnav dvdread slp access_fake cdda; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 libaccess_file_plugin$(LIBEXT): $(libaccess_file_plugin_a_OBJECTS)
@@ -2222,6 +2510,12 @@ libaccess_ftp_plugin$(LIBEXT): $(libaccess_ftp_plugin_a_OBJECTS)
 	  objc) echo $(OBJCLINK) $(libaccess_ftp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin access_ftp\` ; $(OBJCLINK) $(libaccess_ftp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin access_ftp` ;; \
 	  c|*) echo $(LINK) $(libaccess_ftp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin access_ftp\` ; $(LINK) $(libaccess_ftp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin access_ftp` ;; \
 	esac
+libaccess_smb_plugin$(LIBEXT): $(libaccess_smb_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage access_smb` in \
+	  c++) echo $(CXXLINK) $(libaccess_smb_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin access_smb\` ; $(CXXLINK) $(libaccess_smb_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin access_smb` ;; \
+	  objc) echo $(OBJCLINK) $(libaccess_smb_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin access_smb\` ; $(OBJCLINK) $(libaccess_smb_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin access_smb` ;; \
+	  c|*) echo $(LINK) $(libaccess_smb_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin access_smb\` ; $(LINK) $(libaccess_smb_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin access_smb` ;; \
+	esac
 libdvdnav_plugin$(LIBEXT): $(libdvdnav_plugin_a_OBJECTS)
 	@case `$(VLC_CONFIG) --linkage dvdnav` in \
 	  c++) echo $(CXXLINK) $(libdvdnav_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin dvdnav\` ; $(CXXLINK) $(libdvdnav_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin dvdnav` ;; \
@@ -2239,6 +2533,12 @@ libslp_plugin$(LIBEXT): $(libslp_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libslp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin slp\` ; $(CXXLINK) $(libslp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin slp` ;; \
 	  objc) echo $(OBJCLINK) $(libslp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin slp\` ; $(OBJCLINK) $(libslp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin slp` ;; \
 	  c|*) echo $(LINK) $(libslp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin slp\` ; $(LINK) $(libslp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin slp` ;; \
+	esac
+libaccess_fake_plugin$(LIBEXT): $(libaccess_fake_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage access_fake` in \
+	  c++) echo $(CXXLINK) $(libaccess_fake_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin access_fake\` ; $(CXXLINK) $(libaccess_fake_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin access_fake` ;; \
+	  objc) echo $(OBJCLINK) $(libaccess_fake_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin access_fake\` ; $(OBJCLINK) $(libaccess_fake_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin access_fake` ;; \
+	  c|*) echo $(LINK) $(libaccess_fake_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin access_fake\` ; $(LINK) $(libaccess_fake_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin access_fake` ;; \
 	esac
 libcdda_plugin$(LIBEXT): $(libcdda_plugin_a_OBJECTS)
 	@case `$(VLC_CONFIG) --linkage cdda` in \

@@ -2,7 +2,7 @@
  * asf.c : ASF demux module
  *****************************************************************************
  * Copyright (C) 2002-2003 VideoLAN
- * $Id: asf.c 9063 2004-10-27 10:42:48Z gbazin $
+ * $Id: asf.c 10150 2005-03-05 17:54:19Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -34,6 +34,11 @@
 #include "codecs.h"                        /* BITMAPINFOHEADER, WAVEFORMATEX */
 #include "libasf.h"
 
+/* TODO
+ *  - add support for the newly added object: language, bitrate,
+ *                                            extended stream properties.
+ */
+
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
@@ -41,6 +46,8 @@ static int  Open  ( vlc_object_t * );
 static void Close ( vlc_object_t * );
 
 vlc_module_begin();
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_description( _("ASF v1.0 demuxer") );
     set_capability( "demux2", 200 );
     set_callbacks( Open, Close );
@@ -101,18 +108,11 @@ static int Open( vlc_object_t * p_this )
     guid_t      guid;
     uint8_t     *p_peek;
 
-    /* a little test to see if it could be a asf stream */
-    if( stream_Peek( p_demux->s, &p_peek, 16 ) < 16 )
-    {
-        msg_Warn( p_demux, "ASF plugin discarded (cannot peek)" );
-        return VLC_EGENERIC;
-    }
+    /* A little test to see if it could be a asf stream */
+    if( stream_Peek( p_demux->s, &p_peek, 16 ) < 16 ) return VLC_EGENERIC;
+
     ASF_GetGUID( &guid, p_peek );
-    if( !ASF_CmpGUID( &guid, &asf_object_header_guid ) )
-    {
-        msg_Warn( p_demux, "ASF plugin discarded (not a valid file)" );
-        return VLC_EGENERIC;
-    }
+    if( !ASF_CmpGUID( &guid, &asf_object_header_guid ) ) return VLC_EGENERIC;
 
     /* Set p_demux fields */
     p_demux->pf_demux = Demux;
@@ -630,6 +630,7 @@ static int DemuxInit( demux_t *p_demux )
     {
         asf_track_t    *tk;
         asf_object_stream_properties_t *p_sp;
+        vlc_bool_t b_access_selected;
 
         p_sp = ASF_FindObject( p_sys->p_root->p_hdr,
                                &asf_object_stream_properties_guid,
@@ -642,6 +643,17 @@ static int DemuxInit( demux_t *p_demux )
         tk->p_sp = p_sp;
         tk->p_es = NULL;
         tk->p_frame = NULL;
+
+        /* Check (in case of mms) if this track is selected (ie will receive data) */
+        if( !stream_Control( p_demux->s, STREAM_CONTROL_ACCESS, ACCESS_GET_PRIVATE_ID_STATE,
+                             p_sp->i_stream_number, &b_access_selected ) &&
+            !b_access_selected )
+        {
+            tk->i_cat = UNKNOWN_ES;
+            msg_Dbg( p_demux, "ignoring not selected stream(ID:%d) (by access)",
+                     p_sp->i_stream_number );
+            continue;
+        }
 
         if( ASF_CmpGUID( &p_sp->i_stream_type, &asf_object_stream_type_audio ) &&
             p_sp->i_type_specific_data_length >= sizeof( WAVEFORMATEX ) - 2 )

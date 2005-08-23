@@ -33,25 +33,22 @@
 
 #include <vlc/vlc.h>
 #include <vlc/vout.h>
+#include "osd.h"
+#include "vlc_block.h"
+#include "vlc_filter.h"
 
 #include <librsvg-2/librsvg/rsvg.h>
+
+typedef struct svg_rendition_t svg_rendition_t;
 
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
 static int  Create    ( vlc_object_t * );
 static void Destroy   ( vlc_object_t * );
-static void Render    ( vout_thread_t *, picture_t *,
-                        const subpicture_t * );
-static subpicture_t *AddText ( vout_thread_t *p_vout, int i_channel,
-                               char *psz_string, text_style_t *p_style, int i_flags,
-                               int i_hmargin, int i_vmargin, mtime_t i_start,
-                               mtime_t i_stop );
-static byte_t *svg_GetTemplate ();
-static void svg_SizeCallback  (int *width, int *height, gpointer data );
-static void svg_RenderPicture (vout_thread_t *p_vout,
-                               subpicture_sys_t *p_string );
-static void FreeString( subpicture_t * );
+static int RenderText( filter_t *p_filter, subpicture_region_t *p_region_out,
+                       subpicture_region_t *p_region_in );
+
 
 /*****************************************************************************
  * Module descriptor
@@ -61,7 +58,9 @@ static void FreeString( subpicture_t * );
 #define TEMPLATE_LONGTEXT N_( "Location of a file holding a SVG template for automatic string conversion" )
 
 vlc_module_begin();
- set_capability( "text renderer", 100 );
+ set_category( CAT_INPUT);
+ set_category( SUBCAT_INPUT_SCODEC );
+ set_capability( "text renderer", 101 );
  add_shortcut( "svg" );
  add_string( "svg-template-file", "", NULL, TEMPLATE_TEXT, TEMPLATE_LONGTEXT, VLC_TRUE );
  set_callbacks( Create, Destroy );
@@ -70,7 +69,7 @@ vlc_module_end();
 /**
    Describes a SVG string to be displayed on the video
 */
-struct subpicture_sys_t
+struct svg_rendition_t
 {
     int            i_width;
     int            i_height;
@@ -81,16 +80,27 @@ struct subpicture_sys_t
     GdkPixbuf      *p_rendition;
 };
 
+static int Render( filter_t *, subpicture_region_t *, svg_rendition_t *, int, int);
+static byte_t *svg_GetTemplate ();
+static void svg_set_size( filter_t *p_filter, int width, int height );
+static void svg_SizeCallback  ( int *width, int *height, gpointer data );
+static void svg_RenderPicture ( filter_t *p_filter,
+                                svg_rendition_t *p_svg );
+static void FreeString( svg_rendition_t * );
+
 /*****************************************************************************
- * vout_sys_t: svg local data
+ * filter_sys_t: svg local data
  *****************************************************************************
- * This structure is part of the video output thread descriptor.
+ * This structure is part of the filter thread descriptor.
  * It describes the svg specific properties of an output thread.
  *****************************************************************************/
-struct text_renderer_sys_t
+struct filter_sys_t
 {
     /* The SVG template used to convert strings */
     byte_t        *psz_template;
+    /* Default size for rendering. Initialized to the output size. */
+    int            i_width;
+    int            i_height;
     vlc_mutex_t   *lock;
 };
 
@@ -101,36 +111,45 @@ struct text_renderer_sys_t
  *****************************************************************************/
 static int Create( vlc_object_t *p_this )
 {
-    vout_thread_t *p_vout = ( vout_thread_t * )p_this;
+    filter_t *p_filter = (filter_t *)p_this;
+    filter_sys_t *p_sys;
 
     /* Allocate structure */
-    p_vout->p_text_renderer_data = malloc( sizeof( text_renderer_sys_t ) );
-    if( p_vout->p_text_renderer_data == NULL )
+    p_sys = malloc( sizeof( filter_sys_t ) );
+    if( !p_sys )
     {
-        msg_Err( p_vout, "Out of memory" );
+        msg_Err( p_filter, "Out of memory" );
         return VLC_ENOMEM;
     }
-    p_vout->pf_add_string = AddText;
 
     /* Initialize psz_template */
-    p_vout->p_text_renderer_data->psz_template = svg_GetTemplate( p_this );
-    if( !p_vout->p_text_renderer_data->psz_template )
+    p_sys->psz_template = svg_GetTemplate( p_this );
+    if( !p_sys->psz_template )
     {
-        msg_Err( p_vout, "Out of memory" );
+        msg_Err( p_filter, "Out of memory" );
         return VLC_ENOMEM;
     }
+
+    p_sys->i_width = p_filter->fmt_out.video.i_width;
+    p_sys->i_height = p_filter->fmt_out.video.i_height;
+
+    p_filter->pf_render_text = RenderText;
+    p_filter->p_sys = p_sys;
+
+    /* MUST call this before any RSVG funcs */
+    g_type_init ();
 
     return VLC_SUCCESS;
 }
 
 static byte_t *svg_GetTemplate( vlc_object_t *p_this )
 {
-    vout_thread_t *p_vout = ( vout_thread_t * )p_this;
+    filter_t *p_filter = (filter_t *)p_this;
     char *psz_filename;
     char *psz_template;
     FILE *file;
 
-    psz_filename = config_GetPsz( p_vout, "svg-template-file" );
+    psz_filename = config_GetPsz( p_filter, "svg-template-file" );
     if( !psz_filename || psz_filename[0] == 0 )
     {
         /* No filename. Use a default value. */
@@ -159,14 +178,15 @@ static byte_t *svg_GetTemplate( vlc_object_t *p_this )
             }
             else
             {
-                fprintf( stderr, "Reading %ld bytes from %s\n", (long)s.st_size, psz_filename );
+                msg_Dbg( p_this, "Reading %ld bytes from template %s\n", (long)s.st_size, psz_filename );
 
                 psz_template = malloc( s.st_size + 42 );
                 if( !psz_template )
                 {
-                    msg_Err( p_vout, "Out of memory" );
+                    msg_Err( p_filter, "Out of memory" );
                     return NULL;
                 }
+                memset( psz_template, 0, s.st_size + 1 );
                 fread( psz_template, s.st_size, 1, file );
                 fclose( file );
             }
@@ -192,41 +212,82 @@ static byte_t *svg_GetTemplate( vlc_object_t *p_this )
  *****************************************************************************/
 static void Destroy( vlc_object_t *p_this )
 {
-    vout_thread_t *p_vout = ( vout_thread_t * )p_this;
-    free( p_vout->p_text_renderer_data->psz_template );
-    free( p_vout->p_text_renderer_data );
+    filter_t *p_filter = (filter_t *)p_this;
+    filter_sys_t *p_sys = p_filter->p_sys;
+
+    free( p_sys->psz_template );
+    free( p_sys );
 }
 
 /*****************************************************************************
  * Render: render SVG in picture
- *****************************************************************************
- * This function merges the previously rendered SVG subpicture into a picture
  *****************************************************************************/
-static void Render( vout_thread_t *p_vout, picture_t *p_pic,
-                    const subpicture_t *p_subpic )
+static int Render( filter_t *p_filter, subpicture_region_t *p_region,
+                   svg_rendition_t *p_svg, int i_width, int i_height )
 {
-    subpicture_sys_t *p_string = p_subpic->p_sys;
+    video_format_t fmt;
+    uint8_t *p_y, *p_u, *p_v, *p_a;
+    int x, y, i_pitch, i_u_pitch;
     guchar *pixels_in = NULL;
-    guchar *pixels_out = NULL;
-    int rowstride_in, rowstride_out;
-    int channels_in, channels_out;
-    int x, y;
-    int i_width, i_height;
+    int rowstride_in;
+    int channels_in;
     int alpha;
+    picture_t *p_pic;
+    subpicture_region_t *p_region_tmp;
 
-    if( p_string->p_rendition == NULL ) {
-        /* Something changed ( presumably the dimensions ). Get the new
-           dimensions and update the pixbuf */
-        p_string->i_width = p_vout->output.i_width;
-        p_string->i_height = p_vout->output.i_height;
-        svg_RenderPicture( p_vout, p_string );
+    if ( p_filter->p_sys->i_width != i_width ||
+         p_filter->p_sys->i_height != i_height )
+    {
+        svg_set_size( p_filter, i_width, i_height );
+        p_svg->p_rendition = NULL;
     }
 
-    /* This rendering code is in no way optimized. If someone has some
-       time to lose to make it work faster, please do.
-    */
+    if( p_svg->p_rendition == NULL ) {
+        svg_RenderPicture( p_filter, p_svg );
+        /* FIXME: should do a check here to ensure that
+           the rendition went OK */
+    }
+    i_width = gdk_pixbuf_get_width( p_svg->p_rendition );
+    i_height = gdk_pixbuf_get_height( p_svg->p_rendition );
 
-    /* FIXME: The alpha value is not taken into account. */
+    /* Create a new subpicture region */
+    memset( &fmt, 0, sizeof(video_format_t) );
+    fmt.i_chroma = VLC_FOURCC('Y','U','V','A');
+    fmt.i_aspect = VOUT_ASPECT_FACTOR;
+    fmt.i_width = fmt.i_visible_width = i_width;
+    fmt.i_height = fmt.i_visible_height = i_height;
+    fmt.i_x_offset = fmt.i_y_offset = 0;
+    p_region_tmp = spu_CreateRegion( p_filter, &fmt );
+    if( !p_region_tmp )
+    {
+        msg_Err( p_filter, "cannot allocate SPU region" );
+        return VLC_EGENERIC;
+    }
+    p_region->fmt = p_region_tmp->fmt;
+    p_region->picture = p_region_tmp->picture;
+    free( p_region_tmp );
+
+    p_region->i_x = p_region->i_y = 0;
+    p_y = p_region->picture.Y_PIXELS;
+    p_u = p_region->picture.U_PIXELS;
+    p_v = p_region->picture.V_PIXELS;
+    p_a = p_region->picture.A_PIXELS;
+
+    i_pitch = p_region->picture.Y_PITCH;
+    i_u_pitch = p_region->picture.U_PITCH;
+
+    /* Initialize the region pixels (only the alpha will be changed later) */
+    memset( p_y, 0x00, i_pitch * p_region->fmt.i_height );
+    memset( p_u, 0x80, i_u_pitch * p_region->fmt.i_height );
+    memset( p_v, 0x80, i_u_pitch * p_region->fmt.i_height );
+
+    p_pic = &(p_region->picture);
+
+    /* Copy the data */
+
+    /* This rendering code is in no way optimized. If someone has some time to
+       make it work faster or better, please do.
+    */
 
     /*
       p_pixbuf->get_rowstride() is the number of bytes in a line.
@@ -242,207 +303,168 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic,
       blue  = pixels [ n_channels * ( y*rowstride ) + x ) + 2 ];
     */
 
-    pixels_in = gdk_pixbuf_get_pixels( p_string->p_rendition );
-    pixels_out = p_pic->p->p_pixels;
+    pixels_in = gdk_pixbuf_get_pixels( p_svg->p_rendition );
+    rowstride_in = gdk_pixbuf_get_rowstride( p_svg->p_rendition );
+    channels_in = gdk_pixbuf_get_n_channels( p_svg->p_rendition );
+    alpha = gdk_pixbuf_get_has_alpha( p_svg->p_rendition );
 
-    rowstride_in = gdk_pixbuf_get_rowstride( p_string->p_rendition );
-    rowstride_out = p_pic->p->i_pitch;
+    /*
+      This crashes the plugin (if !alpha). As there is always an alpha value,
+      it does not matter for the moment :
 
-    channels_in = gdk_pixbuf_get_n_channels( p_string->p_rendition );
-    channels_out = p_pic->p->i_pixel_pitch;
-
-    alpha = gdk_pixbuf_get_has_alpha( p_string->p_rendition );
-
+    if( !alpha )
+      memset( p_a, 0xFF, i_pitch * p_region->fmt.i_height );
+    */
+ 
 #define INDEX_IN( x, y ) ( y * rowstride_in + x * channels_in )
-#define INDEX_OUT( x, y ) ( y * rowstride_out + x * channels_out )
-#define UV_INDEX_OUT( x, y ) ( y * p_pic->p[U_PLANE].i_pitch / 2 + x * p_pic->p[U_PLANE].i_pixel_pitch / 2 )
-
-    i_width = gdk_pixbuf_get_width( p_string->p_rendition );
-    i_height = gdk_pixbuf_get_height( p_string->p_rendition );
-
-    switch( p_vout->output.i_chroma )
+#define INDEX_OUT( x, y ) ( y * i_pitch + x * p_pic->p[Y_PLANE].i_pixel_pitch )
+  
+    for( y = 0; y < i_height; y++ )
     {
-        /* I420 target, no scaling */
-    case VLC_FOURCC( 'I','4','2','0' ):
-    case VLC_FOURCC( 'I','Y','U','V' ):
-    case VLC_FOURCC( 'Y','V','1','2' ):
-        for( y = 0; y < i_height; y++ )
+        for( x = 0; x < i_width; x++ )
         {
-            for( x = 0; x < i_width; x++ )
-            {
-                guchar *p_in;
-                int i_out;
-                int i_uv_out;
-
-                p_in = &pixels_in[INDEX_IN( x, y )];
-
+            guchar *p_in;
+            int i_out;
+ 
+            p_in = &pixels_in[INDEX_IN( x, y )];
+            
 #define R( pixel ) *pixel
 #define G( pixel ) *( pixel+1 )
 #define B( pixel ) *( pixel+2 )
 #define ALPHA( pixel ) *( pixel+3 )
+ 
+            /* From http://www.geocrawler.com/archives/3/8263/2001/6/0/6020594/ :
+               Y = 0.29900 * R + 0.58700 * G + 0.11400 * B
+               U = -0.1687 * r  - 0.3313 * g + 0.5 * b + 128
+               V = 0.5   * r - 0.4187 * g - 0.0813 * b + 128
+            */
+            if ( alpha ) {
+                i_out = INDEX_OUT( x, y );
+                
+                p_pic->Y_PIXELS[i_out] = .299 * R( p_in ) + .587 * G( p_in ) + .114 * B( p_in );
+                
+		p_pic->U_PIXELS[i_out] = -.1687 * R( p_in ) - .3313 * G( p_in ) + .5 * B( p_in ) + 128;
+		p_pic->V_PIXELS[i_out] = .5 * R( p_in ) - .4187 * G( p_in ) - .0813 * B( p_in ) + 128;
 
-                /* From http://www.geocrawler.com/archives/3/8263/2001/6/0/6020594/ :
-                   Y = 0.29900 * R + 0.58700 * G + 0.11400 * B
-                   U = -0.1687 * r  - 0.3313 * g + 0.5 * b + 128
-                   V = 0.5   * r - 0.4187 * g - 0.0813 * b + 128
-                */
-                if( (alpha && ALPHA( p_in ) > 10 ) || ( ! alpha )) {
-                    i_out = INDEX_OUT( x, y );
-
-                    p_pic->p[Y_PLANE].p_pixels[i_out] = .299 * R( p_in ) + .587 * G( p_in ) + .114 * B( p_in );
-
-                    if( ( x % 2 == 0 ) && ( y % 2 == 0 ) ) {
-                        i_uv_out = UV_INDEX_OUT( x, y );
-
-                        p_pic->p[U_PLANE].p_pixels[i_uv_out] = -.1687 * R( p_in ) - .3313 * G( p_in ) + .5 * B( p_in ) + 128;
-                        p_pic->p[V_PLANE].p_pixels[i_uv_out] = .5 * R( p_in ) - .4187 * G( p_in ) - .0813 * B( p_in ) + 128;
-                    }
-                }
+		p_pic->A_PIXELS[i_out] = ALPHA( p_in );
             }
         }
-        break;
-
-        /* RV32 target, scaling */
-    case VLC_FOURCC( 'R','V','2','4' ):
-    case VLC_FOURCC( 'R','V','3','2' ):
-        for( y = 0; y < i_height; y++ )
-        {
-            for( x = 0; x < i_width; x++ )
-            {
-                guchar *p_in;
-                guchar *p_out;
-
-                p_in = &pixels_in[INDEX_IN( x, y )];
-                p_out = &pixels_out[INDEX_OUT( x, y )];
-
-                *p_out = *p_in;
-                *( p_out+1 ) = *( p_in+1 );
-                *( p_out+2 ) = *( p_in+2 );
-            }
-        }
-        break;
-
-    default:
-        msg_Err( p_vout, "unknown chroma, can't render SVG" );
-        break;
     }
+
+    return VLC_SUCCESS;
+}
+
+static void svg_set_size( filter_t *p_filter, int width, int height )
+{
+  p_filter->p_sys->i_width = width;
+  p_filter->p_sys->i_height = height;
 }
 
 static void svg_SizeCallback( int *width, int *height, gpointer data )
 {
-    subpicture_sys_t *p_string = data;
+    filter_t *p_filter = data;
 
-    *width = p_string->i_width;
-    *height = p_string->i_height;
+    *width = p_filter->p_sys->i_width;
+    *height = p_filter->p_sys->i_height;
     return;
 }
 
-static void svg_RenderPicture( vout_thread_t *p_vout,
-                               subpicture_sys_t *p_string )
+static void svg_RenderPicture( filter_t *p_filter,
+                               svg_rendition_t *p_svg )
 {
     /* Render the SVG string p_string->psz_text into a new picture_t
        p_string->p_rendition with dimensions ( ->i_width, ->i_height ) */
     RsvgHandle *p_handle;
-    GError *error;
+    GError *error = NULL;
 
     p_handle = rsvg_handle_new();
 
-    rsvg_handle_set_size_callback( p_handle, svg_SizeCallback, p_string, NULL );
+    rsvg_handle_set_size_callback( p_handle, svg_SizeCallback, p_filter, NULL );
 
     rsvg_handle_write( p_handle,
-                       p_string->psz_text, strlen( p_string->psz_text ) + 1,
+                       p_svg->psz_text, strlen( p_svg->psz_text ) + 1,
                        &error );
+    if( error != NULL )
+    {
+        msg_Err( p_filter, "Error in handle_write: %s\n", error->message );
+        return;
+    }
     rsvg_handle_close( p_handle, &error );
 
-    p_string->p_rendition = rsvg_handle_get_pixbuf( p_handle );
+    p_svg->p_rendition = rsvg_handle_get_pixbuf( p_handle );
     rsvg_handle_free( p_handle );
 }
 
 
-/**
- * This function receives a SVG string and creates a subpicture for it.
- * It is used as pf_add_string callback in the vout method by this module.
- */
-static subpicture_t *AddText ( vout_thread_t *p_vout, int i_channel,
-                               char *psz_string, text_style_t *p_style, int i_flags,
-                               int i_hmargin, int i_vmargin, mtime_t i_start,
-                               mtime_t i_stop )
+static int RenderText( filter_t *p_filter, subpicture_region_t *p_region_out,
+                       subpicture_region_t *p_region_in )
 {
-    subpicture_sys_t *p_string;
-    subpicture_t *p_subpic;
+    filter_sys_t *p_sys = p_filter->p_sys;
+    svg_rendition_t *p_svg = NULL;
+    char *psz_string;
 
-    msg_Dbg( p_vout, "adding string \"%s\" start_date "I64Fd
-             " end_date" I64Fd, psz_string, i_start, i_stop );
+    /* Sanity check */
+    if( !p_region_in || !p_region_out ) return VLC_EGENERIC;
+    psz_string = p_region_in->psz_text;
+    if( !psz_string || !*psz_string ) return VLC_EGENERIC;
 
-    /* Create and initialize a subpicture */
-    p_subpic = vout_CreateSubPicture( p_vout, i_channel, GRAPH_CONTENT,
-                                      MEMORY_SUBPICTURE );
-    if( p_subpic == NULL )
+    p_svg = ( svg_rendition_t * )malloc( sizeof( svg_rendition_t ) );
+    if( !p_svg )
     {
-        return NULL;
+        msg_Err( p_filter, "Out of memory" );
+        return VLC_ENOMEM;
     }
 
-    p_subpic->pf_render = Render;
-    p_subpic->pf_destroy = FreeString;
-    p_subpic->i_start = i_start;
-    p_subpic->i_stop = i_stop;
-    if( i_stop == 0 )
-    {
-        p_subpic->b_ephemer = VLC_TRUE;
-    }
-    else
-    {
-        p_subpic->b_ephemer = VLC_FALSE;
-    }
-
-    /* Create and initialize private data for the subpicture */
-    p_string = malloc( sizeof( subpicture_sys_t ) );
-    if( p_string == NULL )
-    {
-        vout_DestroySubPicture( p_vout, p_subpic );
-        return NULL;
-    }
-    p_subpic->p_sys = p_string;
+    p_region_out->i_x = p_region_in->i_x;
+    p_region_out->i_y = p_region_in->i_y;
 
     /* Check if the data is SVG or pure text. In the latter case,
        convert the text to SVG. FIXME: find a better test */
     if( strstr( psz_string, "<svg" ))
     {
         /* Data is SVG: duplicate */
-        p_string->psz_text = strdup( psz_string );
+        p_svg->psz_text = strdup( psz_string );
+        if( !p_svg->psz_text )
+        {
+            msg_Err( p_filter, "Out of memory" );
+            free( p_svg );
+            return VLC_ENOMEM;
+        }
     }
     else
     {
         /* Data is text. Convert to SVG */
         int length;
-        byte_t* psz_template = p_vout->p_text_renderer_data->psz_template;
+        byte_t* psz_template = p_sys->psz_template;
         length = strlen( psz_string ) + strlen( psz_template ) + 42;
-        p_string->psz_text = malloc( length + 1 );
-        if( p_string->psz_text == NULL )
+        p_svg->psz_text = malloc( length + 1 );
+        if( !p_svg->psz_text )
         {
-            return NULL;
+            msg_Err( p_filter, "Out of memory" );
+            free( p_svg );
+            return VLC_ENOMEM;
         }
-        snprintf( p_string->psz_text, length, psz_template, psz_string );
+        memset( p_svg->psz_text, 0, length + 1 );
+        snprintf( p_svg->psz_text, length, psz_template, psz_string );
     }
-
-    p_string->i_width = p_vout->output.i_width;
-    p_string->i_height = p_vout->output.i_height;
-    p_string->i_chroma = p_vout->output.i_chroma;
+    p_svg->i_width = p_sys->i_width;
+    p_svg->i_height = p_sys->i_height;
+    p_svg->i_chroma = VLC_FOURCC('Y','U','V','A');
 
     /* Render the SVG.
        The input data is stored in the p_string structure,
        and the function updates the p_rendition attribute. */
-    svg_RenderPicture( p_vout, p_string );
+    svg_RenderPicture( p_filter, p_svg );
 
-    vout_DisplaySubPicture( p_vout, p_subpic );
-    return p_subpic;
+    Render( p_filter, p_region_out, p_svg, p_svg->i_width, p_svg->i_height );
+    FreeString( p_svg );
+
+    return VLC_SUCCESS;
 }
 
-static void FreeString( subpicture_t *p_subpic )
+static void FreeString( svg_rendition_t *p_svg )
 {
-    subpicture_sys_t *p_string = p_subpic->p_sys;
-
-    free( p_string->psz_text );
-    free( p_string->p_rendition );
-    free( p_string );
+    free( p_svg->psz_text );
+    free( p_svg->p_rendition );
+    free( p_svg );
 }

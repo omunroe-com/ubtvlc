@@ -1,7 +1,7 @@
 /*****************************************************************************
- * vout.m: MacOS X video output module
+ * voutgl.m: MacOS X OpenGL provider
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
+ * Copyright (C) 2001-2004 VideoLAN
  * $Id: vout.m 8351 2004-08-02 13:06:38Z hartman $
  *
  * Authors: Colin Delacroix <colin@zoy.org>
@@ -14,7 +14,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -48,18 +48,18 @@
     vout_thread_t * p_vout;
 }
 
-- (id)initWithFrame: (NSRect) frame vout: (vout_thread_t*) p_vout;
-
+- (id) initWithVout: (vout_thread_t *) p_vout;
 @end
-
 
 struct vout_sys_t
 {
-    NSAutoreleasePool *o_pool;
-    VLCWindow * o_window;
-    VLCGLView * o_glview;
-    vlc_bool_t  b_saved_frame;
-    NSRect      s_frame;
+    NSAutoreleasePool * o_pool;
+    VLCWindow         * o_window;
+    VLCGLView         * o_glview;
+    vlc_bool_t          b_saved_frame;
+    NSRect              s_frame;
+    vlc_bool_t          b_got_frame;
+    vlc_mutex_t         lock;
 };
 
 /*****************************************************************************
@@ -71,21 +71,13 @@ static void End    ( vout_thread_t * p_vout );
 static int  Manage ( vout_thread_t * p_vout );
 static int  Control( vout_thread_t *, int, va_list );
 static void Swap   ( vout_thread_t * p_vout );
+static int  Lock   ( vout_thread_t * p_vout );
+static void Unlock ( vout_thread_t * p_vout );
 
 int E_(OpenVideoGL)  ( vlc_object_t * p_this )
 {
     vout_thread_t * p_vout = (vout_thread_t *) p_this;
-    int i_timeout;
-    vlc_value_t val;
 
-
-/* OpenGL interface disabled until
- * - the video on top var is properly working
- * - the escape key is working in fullscreen
- * - the green line is gone
- * - other problems?????
- */
-return( 1 );
     if( !CGDisplayUsesOpenGLAcceleration( kCGDirectMainDisplay ) )
     {
         msg_Warn( p_vout, "no hardware acceleration" );
@@ -102,19 +94,19 @@ return( 1 );
 
     memset( p_vout->p_sys, 0, sizeof( vout_sys_t ) );
 
-    /* Wait for a MacOS X interface to appear. Timeout is 2 seconds. */
-    for( i_timeout = 20 ; i_timeout-- ; )
-    {
-        if( NSApp == NULL )     
-        {
-            msleep( INTF_IDLE_SLEEP );
-        }
-    }
+    p_vout->p_sys->o_pool = [[NSAutoreleasePool alloc] init];
+    vlc_mutex_init( p_vout, &p_vout->p_sys->lock );
 
-    if( NSApp == NULL )
+    /* Create the GL view */
+    p_vout->p_sys->o_glview = [[VLCGLView alloc] initWithVout: p_vout];
+    [p_vout->p_sys->o_glview autorelease];
+
+    /* Spawn the window */
+    p_vout->p_sys->b_got_frame = VLC_FALSE;
+    p_vout->p_sys->o_window = [[VLCWindow alloc] initWithVout: p_vout
+        view: p_vout->p_sys->o_glview frame: nil];
+    if( !p_vout->p_sys->o_window )
     {
-        /* No MacOS X intf, unable to communicate with MT */
-        msg_Err( p_vout, "no MacOS X interface present" );
         return VLC_EGENERIC;
     }
 
@@ -123,84 +115,24 @@ return( 1 );
     p_vout->pf_manage = Manage;
     p_vout->pf_control= Control;
     p_vout->pf_swap   = Swap;
-
-
-    p_vout->p_sys->o_pool = [[NSAutoreleasePool alloc] init];
-
-    var_Create( p_vout, "macosx-vdev", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
-    var_Create( p_vout, "macosx-fill", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
-    var_Create( p_vout, "macosx-stretch", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
-    var_Create( p_vout, "macosx-opaqueness", VLC_VAR_FLOAT | VLC_VAR_DOINHERIT );
-
-    /* Setup the menuitem for the multiple displays. Read the vlc preference (macosx-vdev) for the primary display */
-    NSArray * o_screens = [NSScreen screens];
-    if( [o_screens count] > 0 && var_Type( p_vout, "video-device" ) == 0 )
-    {
-        int i = 1;
-        vlc_value_t val2, text;
-        NSScreen * o_screen;
-
-        var_Get( p_vout, "macosx-vdev", &val );
-
-        var_Create( p_vout, "video-device", VLC_VAR_INTEGER |
-                                            VLC_VAR_HASCHOICE ); 
-        text.psz_string = _("Video device");
-        var_Change( p_vout, "video-device", VLC_VAR_SETTEXT, &text, NULL );
-        
-        NSEnumerator * o_enumerator = [o_screens objectEnumerator];
-
-        while( (o_screen = [o_enumerator nextObject]) != NULL )
-        {
-            char psz_temp[255];
-            NSRect s_rect = [o_screen frame];
-
-            snprintf( psz_temp, sizeof(psz_temp)/sizeof(psz_temp[0])-1, 
-                      "%s %d (%dx%d)", _("Screen"), i,
-                      (int)s_rect.size.width, (int)s_rect.size.height ); 
-
-            text.psz_string = psz_temp;
-            val2.i_int = i;
-            var_Change( p_vout, "video-device",
-                        VLC_VAR_ADDCHOICE, &val2, &text );
-
-            if( ( i - 1 ) == val.i_int )
-            {
-                var_Set( p_vout, "video-device", val2 );
-            }
-            i++;
-        }
-
-        var_AddCallback( p_vout, "video-device", vout_VarCallback,
-                         NULL );
-
-        val2.b_bool = VLC_TRUE;
-        var_Set( p_vout, "intf-change", val2 );
-    }
-
-    /* Spawn window */
-    p_vout->p_sys->o_window = [[VLCWindow alloc] initWithVout: p_vout
-                                                 frame: nil];
-    
-    /* Add OpenGL view */
-#define o_glview p_vout->p_sys->o_glview
-    o_glview = [[VLCGLView alloc] initWithFrame:
-                [p_vout->p_sys->o_window frame] vout: p_vout];
-    [p_vout->p_sys->o_window setContentView: o_glview];
-    [o_glview autorelease];
-#undef o_glview
+    p_vout->pf_lock   = Lock;
+    p_vout->pf_unlock = Unlock;
 
     return VLC_SUCCESS;
 }
 
-int E_(CloseVideoGL) ( vlc_object_t * p_this )
+void E_(CloseVideoGL) ( vlc_object_t * p_this )
 {
     vout_thread_t * p_vout = (vout_thread_t *) p_this;
-    NSAutoreleasePool *o_pool = [[NSAutoreleasePool alloc] init]; 
+    NSAutoreleasePool *o_pool = [[NSAutoreleasePool alloc] init];
 
+    /* Close the window */
     [p_vout->p_sys->o_window close];
 
+    /* Clean up */
+    vlc_mutex_destroy( &p_vout->p_sys->lock );
     [o_pool release];
-    return VLC_SUCCESS;
+    free( p_vout->p_sys );
 }
 
 static int Init( vout_thread_t * p_vout )
@@ -219,7 +151,7 @@ static int Manage( vout_thread_t * p_vout )
     if( p_vout->i_changes & VOUT_FULLSCREEN_CHANGE )
     {
         NSAutoreleasePool *o_pool = [[NSAutoreleasePool alloc] init];
-        
+
         if( !p_vout->b_fullscreen )
         {
             /* Save window size and position */
@@ -233,23 +165,25 @@ static int Manage( vout_thread_t * p_vout )
 
         p_vout->b_fullscreen = !p_vout->b_fullscreen;
 
+#define o_glview p_vout->p_sys->o_glview
+        o_glview = [[VLCGLView alloc] initWithVout: p_vout];
+        [o_glview autorelease];
+
         if( p_vout->p_sys->b_saved_frame )
         {
             p_vout->p_sys->o_window = [[VLCWindow alloc]
-                initWithVout: p_vout frame: &p_vout->p_sys->s_frame];
+                initWithVout: p_vout view: o_glview
+                frame: &p_vout->p_sys->s_frame];
         }
         else
         {
             p_vout->p_sys->o_window = [[VLCWindow alloc]
-                initWithVout: p_vout frame: nil];
+                initWithVout: p_vout view: o_glview frame: nil];
         }
 
-#define o_glview p_vout->p_sys->o_glview
-        o_glview = [[VLCGLView alloc] initWithFrame: [p_vout->p_sys->o_window frame] vout: p_vout];
-        [p_vout->p_sys->o_window setContentView: o_glview];
-        [o_glview autorelease];
         [[o_glview openGLContext] makeCurrentContext];
 #undef o_glview
+
         [o_pool release];
 
         p_vout->i_changes &= ~VOUT_FULLSCREEN_CHANGE;
@@ -281,12 +215,20 @@ static int Control( vout_thread_t *p_vout, int i_query, va_list args )
 
 static void Swap( vout_thread_t * p_vout )
 {
+    p_vout->p_sys->b_got_frame = VLC_TRUE;
     [[p_vout->p_sys->o_glview openGLContext] makeCurrentContext];
-    if( [p_vout->p_sys->o_glview lockFocusIfCanDraw] )
-    {
-        glFlush();
-        [p_vout->p_sys->o_glview unlockFocus];
-    }
+    glFlush();
+}
+
+static int Lock( vout_thread_t * p_vout )
+{
+    vlc_mutex_lock( &p_vout->p_sys->lock );
+    return 0;
+}
+
+static void Unlock( vout_thread_t * p_vout )
+{
+    vlc_mutex_unlock( &p_vout->p_sys->lock );
 }
 
 /*****************************************************************************
@@ -294,10 +236,10 @@ static void Swap( vout_thread_t * p_vout )
  *****************************************************************************/
 @implementation VLCGLView
 
-- (id) initWithFrame: (NSRect) frame vout: (vout_thread_t*) _p_vout
+- (id) initWithVout: (vout_thread_t *) vout
 {
-    p_vout = _p_vout;
-    
+    p_vout = vout;
+
     NSOpenGLPixelFormatAttribute attribs[] =
     {
         NSOpenGLPFAAccelerated,
@@ -318,7 +260,7 @@ static void Swap( vout_thread_t * p_vout )
         return nil;
     }
 
-    self = [super initWithFrame:frame pixelFormat: fmt];
+    self = [super initWithFrame: NSMakeRect(0,0,10,10) pixelFormat: fmt];
     [fmt release];
 
     [[self openGLContext] makeCurrentContext];
@@ -333,13 +275,24 @@ static void Swap( vout_thread_t * p_vout )
     return self;
 }
 
-- (void)reshape
+- (void) reshape
 {
     int x, y;
+    vlc_value_t val;
+
+    Lock( p_vout );
     NSRect bounds = [self bounds];
+
     [[self openGLContext] makeCurrentContext];
-    if( bounds.size.height * p_vout->render.i_aspect <
-            bounds.size.width * VOUT_ASPECT_FACTOR )
+
+    var_Get( p_vout, "macosx-stretch", &val );
+    if( val.b_bool )
+    {
+        x = bounds.size.width;
+        y = bounds.size.height;
+    }
+    else if( bounds.size.height * p_vout->render.i_aspect <
+             bounds.size.width * VOUT_ASPECT_FACTOR )
     {
         x = bounds.size.height * p_vout->render.i_aspect / VOUT_ASPECT_FACTOR;
         y = bounds.size.height;
@@ -349,15 +302,43 @@ static void Swap( vout_thread_t * p_vout )
         x = bounds.size.width;
         y = bounds.size.width * VOUT_ASPECT_FACTOR / p_vout->render.i_aspect;
     }
+
     glViewport( ( bounds.size.width - x ) / 2,
                 ( bounds.size.height - y ) / 2, x, y );
-    glClear( GL_COLOR_BUFFER_BIT );
+
+    if( p_vout->p_sys->b_got_frame )
+    {
+        /* Ask the opengl module to redraw */
+        vout_thread_t * p_parent;
+        p_parent = (vout_thread_t *) p_vout->p_parent;
+        Unlock( p_vout );
+        if( p_parent && p_parent->pf_display )
+        {
+            p_parent->pf_display( p_parent, NULL );
+        }
+    }
+    else
+    {
+        glClear( GL_COLOR_BUFFER_BIT );
+        Unlock( p_vout );
+    }
+    [super reshape];
+}
+
+- (void) update
+{
+    Lock( p_vout );
+    [super update];
+    Unlock( p_vout );
 }
 
 - (void) drawRect: (NSRect) rect
 {
+    Lock( p_vout );
     [[self openGLContext] makeCurrentContext];
     glFlush();
+    [super drawRect:rect];
+    Unlock( p_vout );
 }
 
 @end

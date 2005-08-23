@@ -2,7 +2,7 @@
  * ctrl_button.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_button.hpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: ctrl_button.hpp 9596 2004-12-17 23:39:34Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -57,6 +57,9 @@ class CtrlButton: public CtrlGeneric
 
         /// Get the text of the tooltip
         virtual UString getTooltipText() const { return m_tooltip; }
+
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return "button"; }
 
     private:
         /// Finite state machine of the control

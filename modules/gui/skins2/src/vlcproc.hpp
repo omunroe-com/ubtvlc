@@ -2,7 +2,7 @@
  * vlcproc.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: vlcproc.hpp 8966 2004-10-10 10:08:44Z ipkiss $
+ * $Id: vlcproc.hpp 10735 2005-04-18 21:21:09Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -25,10 +25,12 @@
 #ifndef VLCPROC_HPP
 #define VLCPROC_HPP
 
+#include <set>
+
 #include "../vars/playlist.hpp"
 #include "../vars/time.hpp"
 #include "../vars/volume.hpp"
-#include "../vars/stream.hpp"
+#include "../utils/var_text.hpp"
 
 class OSTimer;
 class VarBool;
@@ -54,11 +56,26 @@ class VlcProc: public SkinObject
         /// Getter for the volume variable
         Volume &getVolumeVar() { return *((Volume*)(m_cVarVolume.get())); }
 
-        /// Getter for the stream variable
-        Stream &getStreamVar() { return *((Stream*)(m_cVarStream.get())); }
+        /// Getter for the stream name variable
+        VarText &getStreamNameVar()
+           { return *((VarText*)(m_cVarStreamName.get())); }
+
+        /// Getter for the stream URI variable
+        VarText &getStreamURIVar()
+            { return *((VarText*)(m_cVarStreamURI.get())); }
 
         /// Set the vout window handle
-        void setVoutWindow( void *pVoutWindow );
+        void registerVoutWindow( void *pVoutWindow );
+
+        /// Unset the vout window handle
+        void unregisterVoutWindow( void *pVoutWindow );
+
+        /// Indicate whether the embedded video output is currently used
+        bool isVoutUsed() const { return m_pVout; }
+
+        /// If an embedded video output is used, drop it (i.e. tell it to stop
+        /// using our window handle)
+        void dropVout();
 
     protected:
         // Protected because it is a singleton
@@ -77,8 +94,9 @@ class VlcProc: public SkinObject
         VariablePtr m_cVarTime;
         /// Variable for audio volume
         VariablePtr m_cVarVolume;
-        /// Variable for current stream properties (only name, currently)
-        VariablePtr m_cVarStream;
+        /// Variable for current stream properties
+        VariablePtr m_cVarStreamName;
+        VariablePtr m_cVarStreamURI;
         /// Variable for the "mute" state
         VariablePtr m_cVarMute;
         /// Variables related to the input
@@ -86,17 +104,27 @@ class VlcProc: public SkinObject
         VariablePtr m_cVarStopped;
         VariablePtr m_cVarPaused;
         VariablePtr m_cVarSeekable;
-        /// Vout window hanlde
-        void *m_pVoutWindow;
+
+        /// Set of handles of vout windows
+        /**
+         * When changing the skin, the handles of the 2 skins coexist in the
+         * set (but this is temporary, until the old theme is destroyed).
+         */
+        set<void *> m_handleSet;
         /// Vout thread
         vout_thread_t *m_pVout;
 
-        /// Poll VLC internals to update the status (volume, current time in
-        /// the stream, current filename, play/pause/stop status, ...)
-        /// This function should be called regurlarly, since there is no
-        /// callback mechanism (yet?) to automatically update a variable when
-        /// the internal status changes
+        /**
+         * Poll VLC internals to update the status (volume, current time in
+         * the stream, current filename, play/pause/stop status, ...)
+         * This function should be called regurlarly, since there is no
+         * callback mechanism (yet?) to automatically update a variable when
+         * the internal status changes
+         */
         void manage();
+
+        /// Update the stream name variable
+        void updateStreamName( playlist_t *p_playlist );
 
         /// This function directly calls manage(), because it's boring to
         /// always write "pThis->"

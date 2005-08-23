@@ -2,7 +2,7 @@
  * messages.h: the KMessagesWindow class
  *****************************************************************************
  * Copyright (C) 2001-2003 VideoLAN
- * $Id: messages.h 6961 2004-03-05 17:34:23Z sam $
+ * $Id: messages.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Author: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *

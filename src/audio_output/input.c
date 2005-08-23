@@ -2,7 +2,7 @@
  * input.c : internal management of input streams for the audio output
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: input.c 9318 2004-11-14 17:27:44Z gbazin $
+ * $Id: input.c 11112 2005-05-22 16:18:46Z zorglub $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -53,7 +53,7 @@ int aout_InputNew( aout_instance_t * p_aout, aout_input_t * p_input )
     audio_sample_format_t user_filter_format;
     audio_sample_format_t intermediate_format;/* input of resampler */
     vlc_value_t val, text;
-    char * psz_filters;
+    char * psz_filters, *psz_visual;
     aout_filter_t * p_user_channel_mixer;
 
     aout_FormatPrint( p_aout, "input", &p_input->input );
@@ -141,29 +141,29 @@ int aout_InputNew( aout_instance_t * p_aout, aout_input_t * p_input )
     if( var_Type( p_aout, "equalizer" ) == 0 )
     {
         module_config_t *p_config;
-	int i;
+        int i;
 
-	p_config = config_FindConfig( VLC_OBJECT(p_aout), "equalizer-preset" );
-	if( p_config && p_config->i_list )
-	{
- 	    var_Create( p_aout, "equalizer",
-			VLC_VAR_STRING | VLC_VAR_HASCHOICE );
-	    text.psz_string = _("Equalizer");
-	    var_Change( p_aout, "equalizer", VLC_VAR_SETTEXT, &text, NULL );
+        p_config = config_FindConfig( VLC_OBJECT(p_aout), "equalizer-preset" );
+        if( p_config && p_config->i_list )
+        {
+               var_Create( p_aout, "equalizer",
+                           VLC_VAR_STRING | VLC_VAR_HASCHOICE );
+            text.psz_string = _("Equalizer");
+            var_Change( p_aout, "equalizer", VLC_VAR_SETTEXT, &text, NULL );
 
-	    val.psz_string = ""; text.psz_string = _("Disable");
-	    var_Change( p_aout, "equalizer", VLC_VAR_ADDCHOICE, &val, &text );
+            val.psz_string = ""; text.psz_string = _("Disable");
+            var_Change( p_aout, "equalizer", VLC_VAR_ADDCHOICE, &val, &text );
 
-	    for( i = 0; i < p_config->i_list; i++ )
-	    {
-		val.psz_string = p_config->ppsz_list[i];
-		text.psz_string = p_config->ppsz_list_text[i];
-		var_Change( p_aout, "equalizer", VLC_VAR_ADDCHOICE,
-			    &val, &text );
-	    }
+            for( i = 0; i < p_config->i_list; i++ )
+            {
+                val.psz_string = p_config->ppsz_list[i];
+                text.psz_string = p_config->ppsz_list_text[i];
+                var_Change( p_aout, "equalizer", VLC_VAR_ADDCHOICE,
+                            &val, &text );
+            }
 
-	    var_AddCallback( p_aout, "equalizer", EqualizerCallback, NULL );
-	}
+            var_AddCallback( p_aout, "equalizer", EqualizerCallback, NULL );
+        }
     }
 
     if( var_Type( p_aout, "audio-filter" ) == 0 )
@@ -173,14 +173,43 @@ int aout_InputNew( aout_instance_t * p_aout, aout_input_t * p_input )
         text.psz_string = _("Audio filters");
         var_Change( p_aout, "audio-filter", VLC_VAR_SETTEXT, &text, NULL );
     }
+    if( var_Type( p_aout, "audio-visual" ) == 0 )
+    {
+        var_Create( p_aout, "audio-visual",
+                    VLC_VAR_STRING | VLC_VAR_DOINHERIT );
+        text.psz_string = _("Audio visualizations");
+        var_Change( p_aout, "audio-visual", VLC_VAR_SETTEXT, &text, NULL );
+    }
 
     var_Get( p_aout, "audio-filter", &val );
     psz_filters = val.psz_string;
+    var_Get( p_aout, "audio-visual", &val );
+    psz_visual = val.psz_string;
+
+    if( psz_filters && *psz_filters && psz_visual && *psz_visual )
+    {
+        psz_filters = (char *)realloc( psz_filters, strlen( psz_filters ) +
+                                                    strlen( psz_visual )  + 1);
+        sprintf( psz_filters, "%s:%s", psz_filters, psz_visual );
+    }
+    else if(  psz_visual && *psz_visual )
+    {
+        if( psz_filters ) free( psz_filters );
+        psz_filters = strdup( psz_visual );
+    }
+
     if( psz_filters && *psz_filters )
     {
         char *psz_parser = psz_filters;
         char *psz_next;
 
+        if( strchr( psz_filters, ',' ) && !strchr( psz_filters, ':' ) )
+        {
+            msg_Info( p_aout, "Warning: you are using a deprecated syntax for "
+                              "audio-filter / audio-visual." );
+            msg_Info( p_aout, "You must now use ':' as separator instead of "
+                              "','." );
+        }
         while( psz_parser && *psz_parser )
         {
             aout_filter_t * p_filter;
@@ -191,11 +220,16 @@ int aout_InputNew( aout_instance_t * p_aout, aout_input_t * p_input )
                 break;
             }
 
-            while( *psz_parser == ' ' && *psz_parser == ',' )
+            while( *psz_parser == ' ' || *psz_parser == ':' ||
+                   *psz_parser == ',')
             {
                 psz_parser++;
             }
-            if( ( psz_next = strchr( psz_parser , ','  ) ) )
+            if( ( psz_next = strchr( psz_parser , ':'  ) ) )
+            {
+                *psz_next++ = '\0';
+            }
+            else if( ( psz_next = strchr( psz_parser , ','  ) ) )
             {
                 *psz_next++ = '\0';
             }
@@ -223,18 +257,23 @@ int aout_InputNew( aout_instance_t * p_aout, aout_input_t * p_input )
                     sizeof(audio_sample_format_t) );
 
             p_filter->p_module =
-                module_Need( p_filter,"audio filter", psz_parser, VLC_TRUE );
+                module_Need( p_filter,"audio filter", psz_parser, VLC_FALSE );
 
             if( p_filter->p_module== NULL )
             {
-                msg_Err( p_aout, "cannot add user filter %s (skipped)",
-                         psz_parser );
+                p_filter->p_module =
+                    module_Need( p_filter,"visualization", psz_parser,
+                                                           VLC_FALSE );
+                if( p_filter->p_module == NULL )
+                {
+                    msg_Err( p_aout, "cannot add user filter %s (skipped)",
+                             psz_parser );
 
-                vlc_object_detach( p_filter );
-                vlc_object_destroy( p_filter );
-                psz_parser = psz_next;
-                continue;
-
+                    vlc_object_detach( p_filter );
+                    vlc_object_destroy( p_filter );
+                    psz_parser = psz_next;
+                    continue;
+                }
             }
             p_filter->b_continuity = VLC_FALSE;
 
@@ -245,6 +284,7 @@ int aout_InputNew( aout_instance_t * p_aout, aout_input_t * p_input )
         }
     }
     if( psz_filters ) free( psz_filters );
+    if( psz_visual ) free( psz_visual );
 
     /* Attach the user channel mixer */
     if ( p_user_channel_mixer )
@@ -562,7 +602,7 @@ static int ChangeFiltersString( aout_instance_t * p_aout,
         if( !psz_parser )
         {
             psz_parser = val.psz_string;
-            asprintf( &val.psz_string, (*val.psz_string) ? "%s,%s" : "%s%s",
+            asprintf( &val.psz_string, (*val.psz_string) ? "%s:%s" : "%s%s",
                       val.psz_string, psz_name );
             free( psz_parser );
         }
@@ -576,7 +616,7 @@ static int ChangeFiltersString( aout_instance_t * p_aout,
         if( psz_parser )
         {
             memmove( psz_parser, psz_parser + strlen(psz_name) +
-                     (*(psz_parser + strlen(psz_name)) == ',' ? 1 : 0 ),
+                     (*(psz_parser + strlen(psz_name)) == ':' ? 1 : 0 ),
                      strlen(psz_parser + strlen(psz_name)) + 1 );
         }
         else

@@ -2,7 +2,7 @@
  * skin_main.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: skin_main.cpp 8524 2004-08-25 21:32:15Z ipkiss $
+ * $Id: skin_main.cpp 10681 2005-04-15 14:01:27Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -234,7 +234,8 @@ static void Run( intf_thread_t *p_intf )
                                            FIND_ANYWHERE );
         if( p_playlist )
         {
-            playlist_Play( p_playlist );
+            p_playlist->status.i_view = -1;
+            playlist_Control( p_playlist, PLAYLIST_AUTOPLAY );
             vlc_object_release( p_playlist );
         }
     }
@@ -339,15 +340,19 @@ static int DemuxControl( demux_t *p_demux, int i_query, va_list args )
     " correctly.")
 
 vlc_module_begin();
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_GENERAL );
     add_string( "skins2-last", "", NULL, SKINS2_LAST, SKINS2_LAST_LONG,
                 VLC_TRUE );
+        change_autosave();
     add_string( "skins2-config", "", NULL, SKINS2_CONFIG, SKINS2_CONFIG_LONG,
                 VLC_TRUE );
+        change_autosave();
 #ifdef WIN32
     add_bool( "skins2-transparency", VLC_FALSE, NULL, SKINS2_TRANSPARENCY,
               SKINS2_TRANSPARENCY_LONG, VLC_FALSE );
 #endif
-
+    set_shortname( _("Skins"));
     set_description( _("Skinnable Interface") );
     set_capability( "interface", 30 );
     set_callbacks( Open, Close );

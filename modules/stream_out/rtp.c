@@ -2,7 +2,7 @@
  * rtp.c: rtp stream output module
  *****************************************************************************
  * Copyright (C) 2003-2004 VideoLAN
- * $Id: rtp.c 8412 2004-08-10 15:02:11Z hartman $
+ * $Id: rtp.c 11047 2005-05-17 13:37:48Z fkuehne $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -74,7 +74,7 @@
 #define PORT_VIDEO_LONGTEXT N_( \
     "Allows you to specify the default video port used for the RTP streaming." )
 
-#define TTL_TEXT N_("Time to live")
+#define TTL_TEXT N_("Time To Live")
 #define TTL_LONGTEXT N_( \
     "Allows you to specify the time to live for the output stream." )
 
@@ -84,9 +84,12 @@ static void Close( vlc_object_t * );
 #define SOUT_CFG_PREFIX "sout-rtp-"
 
 vlc_module_begin();
+    set_shortname( _("RTP"));
     set_description( _("RTP stream output") );
     set_capability( "sout stream", 0 );
     add_shortcut( "rtp" );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_STREAM );
 
     add_string( SOUT_CFG_PREFIX "dst", "", NULL, DST_TEXT,
                 DST_LONGTEXT, VLC_TRUE );
@@ -389,7 +392,7 @@ static int Open( vlc_object_t *p_this )
 
         char *psz_rtpmap;
         char access[100];
-        char url[strlen( p_sys->psz_destination ) + 1 + 12 + 1];
+        char url[p_sys->psz_destination ? strlen( p_sys->psz_destination ) + 1 + 12+1 : 14];
 
         /* Check muxer type */
         if( !strncasecmp( val.psz_string, "ps", 2 ) || !strncasecmp( val.psz_string, "mpeg1", 5 ) )
@@ -999,6 +1002,10 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
         default:
             msg_Err( p_stream, "cannot add this stream (unsupported "
                      "codec:%4.4s)", (char*)&p_fmt->i_codec );
+            if( p_access )
+            {
+                sout_AccessOutDelete( p_access );
+            }
             free( id );
             return NULL;
     }

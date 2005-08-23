@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout.h: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: vout.h 8446 2004-08-17 15:17:04Z titer $
+ * Copyright (C) 2001-2005 VideoLAN
+ * $Id: vout.h 11283 2005-06-04 15:10:24Z titer $
  *
  * Authors: Colin Delacroix <colin@zoy.org>
  *          Florian G. Pflug <fgp@phlo.org>
@@ -30,23 +30,30 @@
 @interface VLCWindow : NSWindow
 {
     vout_thread_t * p_vout;
+    NSView        * o_view;
+    NSRect        * s_frame;
 
+    vout_thread_t * p_real_vout;
     Ptr             p_fullscreen_state;
     mtime_t         i_time_mouse_last_moved;
+    vlc_bool_t      b_init_ok;
 }
 
-- (id)initWithVout:(vout_thread_t *)_p_vout
-    frame:(NSRect *)s_frame;
-- (void)close;
-- (void)setOnTop:(bool)b_on_top;
+- (id) initWithVout: (vout_thread_t *) p_vout view: (NSView *) view
+                     frame: (NSRect *) s_frame;
+- (id) initReal: (id) sender;
+- (void) close;
+- (id)   closeReal: (id) sender;
+- (void)setOnTop:(BOOL)b_on_top;
 
-- (void)hideMouse:(bool)b_hide;
+- (void)hideMouse:(BOOL)b_hide;
 - (void)manage;
 
 - (void)scaleWindowWithFactor: (float)factor;
 - (void)toggleFloatOnTop;
 - (void)toggleFullscreen;
 - (BOOL)isFullscreen;
+- (void)snapshot;
 - (void)updateTitle;
 
 - (BOOL)windowShouldClose:(id)sender;

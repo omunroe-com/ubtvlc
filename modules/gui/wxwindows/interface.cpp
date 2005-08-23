@@ -1,8 +1,8 @@
 /*****************************************************************************
  * interface.cpp : wxWindows plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000-2004, 2003 VideoLAN
- * $Id: interface.cpp 9111 2004-11-02 19:23:40Z gbazin $
+ * Copyright (C) 2000-2005 VideoLAN
+ * $Id: interface.cpp 11292 2005-06-04 20:49:12Z dionoea $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -27,6 +27,7 @@
 #include <vlc/vlc.h>
 #include <vlc/aout.h>
 #include <vlc/vout.h>
+#include <vlc/input.h>
 #include <vlc/intf.h>
 
 #include "wxwindows.h"
@@ -42,12 +43,17 @@
 #include "bitmaps/fast.xpm"
 #include "bitmaps/playlist.xpm"
 #include "bitmaps/speaker.xpm"
+#include "bitmaps/speaker_mute.xpm"
 
 #define TOOLBAR_BMP_WIDTH 16
 #define TOOLBAR_BMP_HEIGHT 16
 
 /* include the icon graphic */
 #include "../../../share/vlc32x32.xpm"
+/* include a small icon graphic for the systray icon */
+#ifdef wxHAS_TASK_BAR_ICON
+#include "../../../share/vlc16x16.xpm"
+#endif
 
 /*****************************************************************************
  * Local class declarations.
@@ -72,28 +78,31 @@ private:
 
 };
 
-class wxVolCtrl: public wxGauge
+class wxVolCtrl;
+class VLCVolCtrl : public wxControl
 {
 public:
-    /* Constructor */
-    wxVolCtrl( intf_thread_t *_p_intf, wxWindow* parent, wxWindowID id,
-               wxPoint = wxDefaultPosition, wxSize = wxSize( 20, -1 ) );
-    virtual ~wxVolCtrl() {};
+    VLCVolCtrl( intf_thread_t *p_intf, wxWindow *p_parent );
+    virtual ~VLCVolCtrl() {};
 
+    virtual void OnPaint( wxPaintEvent &event );
+    void OnChange( wxMouseEvent& event );
     void UpdateVolume();
 
-    void OnChange( wxMouseEvent& event );
+  private:
+    DECLARE_EVENT_TABLE()
 
-private:
+    wxVolCtrl *gauge;
+    int i_y_offset;
+    vlc_bool_t b_mute;
     intf_thread_t *p_intf;
-
-    DECLARE_EVENT_TABLE();
 };
 
-BEGIN_EVENT_TABLE(wxVolCtrl, wxWindow)
+BEGIN_EVENT_TABLE(VLCVolCtrl, wxControl)
+   EVT_PAINT(VLCVolCtrl::OnPaint)
+
     /* Mouse events */
-    EVT_LEFT_DOWN(wxVolCtrl::OnChange)
-    EVT_MOTION(wxVolCtrl::OnChange)
+    EVT_LEFT_UP(VLCVolCtrl::OnChange)
 END_EVENT_TABLE()
 
 /*****************************************************************************
@@ -111,6 +120,7 @@ enum
     OpenFileSimple_Event,
     OpenAdv_Event,
     OpenFile_Event,
+    OpenDir_Event,
     OpenDisc_Event,
     OpenNet_Event,
     OpenCapture_Event,
@@ -138,10 +148,16 @@ enum
     SlowStream_Event,
     FastStream_Event,
 
+    DiscMenu_Event,
+    DiscPrev_Event,
+    DiscNext_Event,
+
     /* it is important for the id corresponding to the "About" command to have
      * this standard value as otherwise it won't be handled properly under Mac
      * (where it is special and put into the "Apple" menu) */
-    About_Event = wxID_ABOUT
+    About_Event = wxID_ABOUT,
+
+    Iconize_Event
 };
 
 BEGIN_EVENT_TABLE(Interface, wxFrame)
@@ -170,6 +186,7 @@ BEGIN_EVENT_TABLE(Interface, wxFrame)
     EVT_MENU(OpenFileSimple_Event, Interface::OnShowDialog)
     EVT_MENU(OpenAdv_Event, Interface::OnShowDialog)
     EVT_MENU(OpenFile_Event, Interface::OnShowDialog)
+    EVT_MENU(OpenDir_Event, Interface::OnShowDialog)
     EVT_MENU(OpenDisc_Event, Interface::OnShowDialog)
     EVT_MENU(OpenNet_Event, Interface::OnShowDialog)
     EVT_MENU(OpenCapture_Event, Interface::OnShowDialog)
@@ -182,6 +199,11 @@ BEGIN_EVENT_TABLE(Interface, wxFrame)
     EVT_MENU(SlowStream_Event, Interface::OnSlowStream)
     EVT_MENU(FastStream_Event, Interface::OnFastStream)
 
+    /* Disc Buttons events */
+    EVT_BUTTON(DiscMenu_Event, Interface::OnDiscMenu)
+    EVT_BUTTON(DiscPrev_Event, Interface::OnDiscPrev)
+    EVT_BUTTON(DiscNext_Event, Interface::OnDiscNext)
+
     /* Slider events */
     EVT_COMMAND_SCROLL(SliderScroll_Event, Interface::OnSliderUpdate)
 
@@ -189,20 +211,23 @@ BEGIN_EVENT_TABLE(Interface, wxFrame)
     EVT_COMMAND(0, wxEVT_INTF, Interface::OnControlEvent)
     EVT_COMMAND(1, wxEVT_INTF, Interface::OnControlEvent)
 
+    EVT_TIMER(ID_CONTROLS_TIMER, Interface::OnControlsTimer)
+    EVT_TIMER(ID_SLIDER_TIMER, Interface::OnSliderTimer)
 END_EVENT_TABLE()
 
 /*****************************************************************************
  * Constructor.
  *****************************************************************************/
-Interface::Interface( intf_thread_t *_p_intf ):
+Interface::Interface( intf_thread_t *_p_intf, long style ):
     wxFrame( NULL, -1, wxT("VLC media player"),
-             wxDefaultPosition, wxSize(700,100), wxDEFAULT_FRAME_STYLE )
+             wxDefaultPosition, wxSize(700,100), style )
 {
     /* Initializations */
     p_intf = _p_intf;
     i_old_playing_status = PAUSE_S;
     b_extra = VLC_FALSE;
 //    b_undock = VLC_FALSE;
+
 
     extra_window = NULL;
 
@@ -216,8 +241,28 @@ Interface::Interface( intf_thread_t *_p_intf ):
     /* Create a dummy widget that can get the keyboard focus */
     wxWindow *p_dummy = new wxWindow( this, 0, wxDefaultPosition,
                                       wxSize(0,0) );
+#if defined(__WXGTK20__) && wxCHECK_VERSION(2,5,6)
+    /* As ugly as your butt! Please remove when wxWidgets 2.6 fixed their
+     * Accelerators bug. */
+    p_dummy->m_imData = 0;
+    m_imData = 0;
+#endif
     p_dummy->SetFocus();
     frame_sizer->Add( p_dummy, 0, 0 );
+
+#ifdef wxHAS_TASK_BAR_ICON
+    /* Systray integration */
+    p_systray = NULL;
+    if ( config_GetInt( p_intf, "wxwin-systray" ) )
+    {
+        p_systray = new Systray(this, p_intf);
+        p_systray->SetIcon( wxIcon( vlc16x16_xpm ), wxT("VLC media player") );
+        if ( (! p_systray->IsOk()) || (! p_systray->IsIconInstalled()) )
+        {
+            msg_Warn(p_intf, "Cannot set systray icon, weird things may happen");
+        }
+    }
+#endif
 
     /* Creation of the menu bar */
     CreateOurMenuBar();
@@ -239,10 +284,11 @@ Interface::Interface( intf_thread_t *_p_intf ):
     statusbar->SetStatusText( wxString::Format(wxT("x%.2f"), 1.0), 1 );
 
     /* Video window */
+    video_window = 0;
     if( config_GetInt( p_intf, "wxwin-embed" ) )
     {
-        VideoWindow( p_intf, this );
-        frame_sizer->Add( p_intf->p_sys->p_video_sizer, 1, wxEXPAND , 0 );
+        video_window = CreateVideoWindow( p_intf, this );
+        frame_sizer->Add( p_intf->p_sys->p_video_sizer, 1, wxEXPAND, 0 );
     }
 
     /* Creation of the slider sub-window */
@@ -264,16 +310,39 @@ Interface::Interface( intf_thread_t *_p_intf ):
 
     SetupHotkeys();
 
+    m_controls_timer.SetOwner(this, ID_CONTROLS_TIMER);
+    m_slider_timer.SetOwner(this, ID_SLIDER_TIMER);
+
     /* Start timer */
     timer = new Timer( p_intf, this );
+
+    /* */
+    WindowSettings *ws = p_intf->p_sys->p_window_settings;
+    wxPoint p;
+    wxSize  s;
+    bool    b_shown;
+
+    ws->SetScreen( wxSystemSettings::GetMetric( wxSYS_SCREEN_X ),
+                   wxSystemSettings::GetMetric( wxSYS_SCREEN_Y ) );
+
+    if( ws->GetSettings( WindowSettings::ID_MAIN, b_shown, p, s ) )
+        Move( p );
 }
 
 Interface::~Interface()
 {
-    if( p_intf->p_sys->p_wxwindow )
-    {
-        delete p_intf->p_sys->p_wxwindow;
-    }
+    WindowSettings *ws = p_intf->p_sys->p_window_settings;
+
+    ws->SetSettings( WindowSettings::ID_MAIN, true,
+                     GetPosition(), GetSize() );
+
+    if( video_window ) delete video_window;
+
+#ifdef wxHAS_TASK_BAR_ICON
+    if( p_systray ) delete p_systray;
+#endif
+
+    if( p_intf->p_sys->p_wxwindow ) delete p_intf->p_sys->p_wxwindow;
 
     /* Clean up */
     delete timer;
@@ -288,7 +357,7 @@ void Interface::Init()
 void Interface::Update()
 {
     /* Misc updates */
-    ((wxVolCtrl *)volctrl)->UpdateVolume();
+    ((VLCVolCtrl *)volctrl)->UpdateVolume();
 }
 
 void Interface::OnControlEvent( wxCommandEvent& event )
@@ -296,8 +365,13 @@ void Interface::OnControlEvent( wxCommandEvent& event )
     switch( event.GetId() )
     {
     case 0:
+        {
+          if( p_intf->p_sys->b_video_autosize )
+          {
         frame_sizer->Layout();
         frame_sizer->Fit(this);
+          }
+        }
         break;
 
     case 1:
@@ -314,27 +388,37 @@ void Interface::OnControlEvent( wxCommandEvent& event )
  *****************************************************************************/
 void Interface::CreateOurMenuBar()
 {
+    int minimal = config_GetInt( p_intf, "wxwin-minimal" );
+
     /* Create the "File" menu */
     wxMenu *file_menu = new wxMenu;
+
+    if (!minimal)
+    {
     file_menu->Append( OpenFileSimple_Event,
                        wxU(_("Quick &Open File...\tCtrl-O")) );
 
     file_menu->AppendSeparator();
     file_menu->Append( OpenFile_Event, wxU(_("Open &File...\tCtrl-F")) );
+    file_menu->Append( OpenDir_Event, wxU(_("Open Dir&ectory...\tCtrl-E")) );
     file_menu->Append( OpenDisc_Event, wxU(_("Open &Disc...\tCtrl-D")) );
     file_menu->Append( OpenNet_Event,
                        wxU(_("Open &Network Stream...\tCtrl-N")) );
     file_menu->Append( OpenCapture_Event,
-                       wxU(_("Open &Capture Device...\tCtrl-C")) );
+                       wxU(_("Open C&apture Device...\tCtrl-A")) );
 
     file_menu->AppendSeparator();
     file_menu->Append( Wizard_Event, wxU(_("&Wizard...\tCtrl-W")) );
     file_menu->AppendSeparator();
+    }
     file_menu->Append( Exit_Event, wxU(_("E&xit\tCtrl-X")) );
 
     /* Create the "View" menu */
     wxMenu *view_menu = new wxMenu;
+    if (!minimal)
+    {
     view_menu->Append( Playlist_Event, wxU(_("&Playlist...\tCtrl-P")) );
+    }
     view_menu->Append( Logs_Event, wxU(_("&Messages...\tCtrl-M")) );
     view_menu->Append( FileInfo_Event,
                        wxU(_("Stream and Media &info...\tCtrl-I")) );
@@ -350,7 +434,7 @@ void Interface::CreateOurMenuBar()
     help_menu->Append( About_Event, wxU(_("About VLC media player")) );
 
     /* Append the freshly created menus to the menu bar... */
-    wxMenuBar *menubar = new wxMenuBar( wxMB_DOCKABLE );
+    wxMenuBar *menubar = new wxMenuBar();
     menubar->Append( file_menu, wxU(_("&File")) );
     menubar->Append( view_menu, wxU(_("&View")) );
     menubar->Append( p_settings_menu, wxU(_("&Settings")) );
@@ -390,45 +474,6 @@ void Interface::CreateOurMenuBar()
 #endif
 }
 
-class VLCVolCtrl : public wxControl
-{
-public:
-    VLCVolCtrl( intf_thread_t *p_intf, wxWindow *p_parent, wxGauge ** );
-    virtual ~VLCVolCtrl() {};
-
-    virtual void OnPaint( wxPaintEvent &event );
-
-  private:
-    DECLARE_EVENT_TABLE()
-    int i_y_offset;
-};
-
-BEGIN_EVENT_TABLE(VLCVolCtrl, wxControl)
-   EVT_PAINT(VLCVolCtrl::OnPaint)
-END_EVENT_TABLE()
-
-#if defined(__WXGTK__)
-#define VLCVOL_HEIGHT p_parent->GetSize().GetHeight()
-#else
-#define VLCVOL_HEIGHT TOOLBAR_BMP_HEIGHT
-#endif
-VLCVolCtrl::VLCVolCtrl( intf_thread_t *p_intf, wxWindow *p_parent,
-                        wxGauge **pp_volctrl )
-  :wxControl( p_parent, -1, wxDefaultPosition, wxSize(64, VLCVOL_HEIGHT ),
-              wxBORDER_NONE ),
-   i_y_offset((VLCVOL_HEIGHT - TOOLBAR_BMP_HEIGHT) / 2)
-{
-    *pp_volctrl = new wxVolCtrl( p_intf, this, -1, wxPoint( 18, i_y_offset ),
-                                 wxSize( 44, TOOLBAR_BMP_HEIGHT ) );
-}
-
-void VLCVolCtrl::OnPaint( wxPaintEvent &evt )
-{
-    wxPaintDC dc( this );
-    wxBitmap mPlayBitmap( speaker_xpm );
-    dc.DrawBitmap( mPlayBitmap, 0, i_y_offset, TRUE );
-}
-
 void Interface::CreateOurToolBar()
 {
 #define HELP_OPEN N_("Open")
@@ -441,26 +486,33 @@ void Interface::CreateOurToolBar()
 #define HELP_SLOW N_("Play slower")
 #define HELP_FAST N_("Play faster")
 
+    int minimal = config_GetInt( p_intf, "wxwin-minimal" );
+
     wxLogNull LogDummy; /* Hack to suppress annoying log message on the win32
                          * version because we don't include wx.rc */
 
     wxToolBar *toolbar =
-        CreateToolBar( wxTB_HORIZONTAL | wxTB_FLAT | wxTB_DOCKABLE );
+        CreateToolBar( wxTB_HORIZONTAL | wxTB_FLAT );
 
     toolbar->SetToolBitmapSize( wxSize(TOOLBAR_BMP_WIDTH,TOOLBAR_BMP_HEIGHT) );
 
+    if (!minimal)
+    {
     toolbar->AddTool( OpenFile_Event, wxT(""),
                       wxBitmap( eject_xpm ), wxU(_(HELP_OPEN)) );
     toolbar->AddSeparator();
-    toolbar->AddTool( PlayStream_Event, wxT(""), wxBitmap( play_xpm ),
-                      wxU(_(HELP_PLAY)) );
-#if 0
-    toolbar->AddTool( PlayStream_Event, wxT(""), wxBitmap( pause_xpm ),
-                      wxU(_(HELP_PAUSE)) );
-#endif
+    }
+
+    wxToolBarToolBase *p_tool = toolbar->AddTool( PlayStream_Event, wxT(""),
+                      wxBitmap( play_xpm ), wxU(_(HELP_PLAY)), wxITEM_CHECK );
+    p_tool->SetClientData( p_tool );
+
+    if (!minimal)
+    {
     toolbar->AddTool( StopStream_Event, wxT(""), wxBitmap( stop_xpm ),
                       wxU(_(HELP_STOP)) );
     toolbar->AddSeparator();
+
     toolbar->AddTool( PrevStream_Event, wxT(""),
                       wxBitmap( prev_xpm ), wxU(_(HELP_PLP)) );
     toolbar->AddTool( SlowStream_Event, wxT(""),
@@ -472,6 +524,7 @@ void Interface::CreateOurToolBar()
     toolbar->AddSeparator();
     toolbar->AddTool( Playlist_Event, wxT(""), wxBitmap( playlist_xpm ),
                       wxU(_(HELP_PLO)) );
+    }
 
     wxControl *p_dummy_ctrl =
         new wxControl( toolbar, -1, wxDefaultPosition,
@@ -479,8 +532,8 @@ void Interface::CreateOurToolBar()
 
     toolbar->AddControl( p_dummy_ctrl );
 
-    VLCVolCtrl *sound_control = new VLCVolCtrl( p_intf, toolbar, &volctrl );
-    toolbar->AddControl( sound_control );
+    volctrl = new VLCVolCtrl( p_intf, toolbar );
+    toolbar->AddControl( volctrl );
 
     toolbar->Realize();
 
@@ -495,23 +548,47 @@ void Interface::CreateOurSlider()
     /* Create a new frame and sizer containing the slider */
     slider_frame = new wxPanel( this, -1, wxDefaultPosition, wxDefaultSize );
     slider_frame->SetAutoLayout( TRUE );
-    wxBoxSizer *frame_sizer = new wxBoxSizer( wxHORIZONTAL );
-    //frame_sizer->SetMinSize( -1, 50 );
+    slider_sizer = new wxBoxSizer( wxHORIZONTAL );
+    //slider_sizer->SetMinSize( -1, 50 );
 
     /* Create slider */
     slider = new wxSlider( slider_frame, SliderScroll_Event, 0, 0,
                            SLIDER_MAX_POS, wxDefaultPosition, wxDefaultSize );
 
+    /* Add Disc Buttons */
+    disc_frame = new wxPanel( slider_frame, -1, wxDefaultPosition,
+                              wxDefaultSize );
+    disc_frame->SetAutoLayout( TRUE );
+    disc_sizer = new wxBoxSizer( wxHORIZONTAL );
+
+    disc_menu_button = new wxBitmapButton( disc_frame, DiscMenu_Event,
+                                           wxBitmap( playlist_xpm ) );
+    disc_prev_button = new wxBitmapButton( disc_frame, DiscPrev_Event,
+                                           wxBitmap( prev_xpm ) );
+    disc_next_button = new wxBitmapButton( disc_frame, DiscNext_Event,
+                                           wxBitmap( next_xpm ) );
+
+    disc_sizer->Add( disc_menu_button, 1, wxEXPAND | wxLEFT | wxRIGHT, 1 );
+    disc_sizer->Add( disc_prev_button, 1, wxEXPAND | wxLEFT | wxRIGHT, 1 );
+    disc_sizer->Add( disc_next_button, 1, wxEXPAND | wxLEFT | wxRIGHT, 1 );
+
+    disc_frame->SetSizer( disc_sizer );
+    disc_sizer->Layout();
+
     /* Add everything to the frame */
-    frame_sizer->Add( slider, 1, wxEXPAND | wxALL, 5 );
-    slider_frame->SetSizer( frame_sizer );
-    frame_sizer->Layout();
-    frame_sizer->SetSizeHints(slider_frame);
+    slider_sizer->Add( slider, 1, wxEXPAND | wxALL, 5 );
+    slider_sizer->Add( disc_frame, 0, wxALL, 2 );
+    slider_frame->SetSizer( slider_sizer );
+
+    disc_frame->Hide();
+    slider_sizer->Hide( disc_frame );
+
+    slider_sizer->Layout();
+    slider_sizer->Fit( slider_frame );
 
     /* Hide the slider by default */
     slider_frame->Hide();
 }
-
 
 static int ConvertHotkeyModifiers( int i_hotkey )
 {
@@ -550,7 +627,9 @@ static int ConvertHotkey( int i_hotkey )
         case KEY_F11: return WXK_F11;
         case KEY_F12: return WXK_F12;
         case KEY_HOME: return WXK_HOME;
-        case KEY_END: return WXK_HOME;
+        case KEY_END: return WXK_END;
+        case KEY_INSERT: return WXK_INSERT;
+        case KEY_DELETE: return WXK_DELETE;
         case KEY_MENU: return WXK_MENU;
         case KEY_ESC: return WXK_ESCAPE;
         case KEY_PAGEUP: return WXK_PRIOR;
@@ -573,13 +652,20 @@ void Interface::SetupHotkeys()
     p_intf->p_sys->i_first_hotkey_event = wxID_HIGHEST + 7000;
     p_intf->p_sys->i_hotkeys = i_hotkeys;
 
-    wxAcceleratorEntry p_entries[i_hotkeys];
+    wxAcceleratorEntry *p_entries = new wxAcceleratorEntry[i_hotkeys];
 
     /* Setup the hotkeys as accelerators */
     for( int i = 0; i < i_hotkeys; i++ )
     {
-        p_entries[i].Set( ConvertHotkeyModifiers( p_hotkeys[i].i_key ),
-                          ConvertHotkey( p_hotkeys[i].i_key ),
+        int i_mod = ConvertHotkeyModifiers( p_hotkeys[i].i_key );
+        int i_key = ConvertHotkey( p_hotkeys[i].i_key );
+
+#ifdef WIN32
+        if( !(p_hotkeys[i].i_key & KEY_SPECIAL) && i_mod )
+            i_key = toupper(i_key);
+#endif
+
+        p_entries[i].Set( i_mod, i_key,
                           p_intf->p_sys->i_first_hotkey_event + i );
     }
 
@@ -592,15 +678,108 @@ void Interface::SetupHotkeys()
     else
     {
         SetAcceleratorTable( accel );
-        msg_Dbg( p_intf, "accelerator table loaded" );
+    }
+
+    delete [] p_entries;
+}
+
+void Interface::HideSlider( bool layout )
+{
+    ShowSlider( false, layout );
+}
+
+void Interface::ShowSlider( bool show, bool layout )
+{
+    if( show )
+    {
+        //prevent the hide timers from hiding it now
+        m_slider_timer.Stop();
+        m_controls_timer.Stop();
+
+        //prevent continuous layout
+        if( slider_frame->IsShown() ) return;
+    }
+    else
+    {
+        //prevent continuous layout
+        if( !slider_frame->IsShown() ) return;
+    }
+
+    if( layout && p_intf->p_sys->b_video_autosize )
+        UpdateVideoWindow( p_intf, video_window );
+
+    slider_frame->Show( show );
+    frame_sizer->Show( slider_frame, show );
+
+    if( layout )
+    {
+        frame_sizer->Layout();
+        if( p_intf->p_sys->b_video_autosize ) frame_sizer->Fit( this );
+    }
+}
+
+void Interface::HideDiscFrame( bool layout )
+{
+    ShowDiscFrame( false, layout );
+}
+
+void Interface::ShowDiscFrame( bool show, bool layout )
+{
+    if( show )
+    {
+        //prevent the hide timer from hiding it now
+        m_controls_timer.Stop();
+
+        //prevent continuous layout
+        if( disc_frame->IsShown() ) return;
+    }
+    else
+    {
+        //prevent continuous layout
+        if( !disc_frame->IsShown() ) return;
+    }
+
+    if( layout && p_intf->p_sys->b_video_autosize )
+        UpdateVideoWindow( p_intf, video_window );
+
+    disc_frame->Show( show );
+    slider_sizer->Show( disc_frame, show );
+
+    if( layout )
+    {
+        slider_sizer->Layout();
+        if( p_intf->p_sys->b_video_autosize )
+            slider_sizer->Fit( slider_frame );
     }
 }
 
 /*****************************************************************************
  * Event Handlers.
  *****************************************************************************/
+void Interface::OnControlsTimer( wxTimerEvent& WXUNUSED(event) )
+{
+    if( p_intf->p_sys->b_video_autosize )
+        UpdateVideoWindow( p_intf, video_window );
 
-void Interface::OnMenuOpen(wxMenuEvent& event)
+    /* Hide slider and Disc Buttons */
+    //postpone layout, we'll do it ourselves
+    HideDiscFrame( false );
+    HideSlider( false );
+
+    slider_sizer->Layout();
+    if( p_intf->p_sys->b_video_autosize )
+    {
+        slider_sizer->Fit( slider_frame );
+        frame_sizer->Fit( this );
+    }
+}
+
+void Interface::OnSliderTimer( wxTimerEvent& WXUNUSED(event) )
+{
+    HideSlider();
+}
+
+void Interface::OnMenuOpen( wxMenuEvent& event )
 {
 #if defined( __WXMSW__ )
 #   define GetEventObject GetMenu
@@ -612,15 +791,17 @@ void Interface::OnMenuOpen(wxMenuEvent& event)
 
         /* Add static items */
         p_settings_menu->AppendCheckItem( Extended_Event,
-            wxU(_("&Extended GUI") ) );
+            wxU(_("Extended &GUI\tCtrl-G") ) );
         if( b_extra ) p_settings_menu->Check( Extended_Event, TRUE );
 #if 0
         p_settings_menu->AppendCheckItem( Undock_Event,
             wxU(_("&Undock Ext. GUI") ) );
         if( b_undock ) p_settings_menu->Check( Undock_Event, TRUE );
 #endif
-        p_settings_menu->Append( Bookmarks_Event, wxU(_("&Bookmarks...") ) );
-        p_settings_menu->Append( Prefs_Event, wxU(_("&Preferences...")) );
+        p_settings_menu->Append( Bookmarks_Event,
+                                 wxU(_("&Bookmarks...\tCtrl-B") ) );
+        p_settings_menu->Append( Prefs_Event,
+                                 wxU(_("Preference&s...\tCtrl-S")) );
     }
 
     else if( event.GetEventObject() == p_audio_menu )
@@ -674,8 +855,8 @@ void Interface::OnAbout( wxCommandEvent& WXUNUSED(event) )
     wxString msg;
     msg.Printf( wxString(wxT("VLC media player " PACKAGE_VERSION)) +
         wxU(_(" (wxWindows interface)\n\n")) +
-        wxU(_("(c) 1996-2004 - the VideoLAN Team\n\n")) +
-        wxU( vlc_wraptext(INTF_ABOUT_MSG,WRAPCOUNT,ISUTF8) ) + wxT("\n\n") +
+        wxU(_("(c) 1996-2005 - the VideoLAN Team\n\n")) +
+        wxU( INTF_ABOUT_MSG ) + wxT("\n\n") +
         wxU(_("The VideoLAN team <videolan@videolan.org>\n"
               "http://www.videolan.org/\n\n")) );
 
@@ -698,6 +879,9 @@ void Interface::OnShowDialog( wxCommandEvent& event )
             i_id = INTF_DIALOG_FILE;
         case OpenFile_Event:
             i_id = INTF_DIALOG_FILE;
+            break;
+        case OpenDir_Event:
+            i_id = INTF_DIALOG_DIRECTORY;
             break;
         case OpenDisc_Event:
             i_id = INTF_DIALOG_DISC;
@@ -781,7 +965,11 @@ void Interface::OnExtended(wxCommandEvent& event)
                 fprintf(stderr,"Creating window\n");
             extra_frame->Hide();
             frame_sizer->Hide( extra_frame );
+#if (wxCHECK_VERSION(2,5,0))
             frame_sizer->Detach( extra_frame );
+#else
+            frame_sizer->Remove( extra_frame );
+#endif
             frame_sizer->Layout();
             frame_sizer->Fit(this);
             extra_window = new ExtraWindow( p_intf, this, extra_frame );
@@ -825,7 +1013,11 @@ void Interface::OnUndock(wxCommandEvent& event)
                 fprintf(stderr,"Creating window\n");
             extra_frame->Hide();
             frame_sizer->Hide( extra_frame );
+#if (wxCHECK_VERSION(2,5,0))
             frame_sizer->Detach( extra_frame );
+#else
+            frame_sizer->Remove( extra_frame );
+#endif
             frame_sizer->Layout();
             frame_sizer->Fit(this);
             extra_window = new ExtraWindow( p_intf, this, extra_frame );
@@ -834,7 +1026,13 @@ void Interface::OnUndock(wxCommandEvent& event)
 }
 #endif
 
+
 void Interface::OnPlayStream( wxCommandEvent& WXUNUSED(event) )
+{
+    PlayStream();
+}
+
+void Interface::PlayStream()
 {
     wxCommandEvent dummy;
     playlist_t *p_playlist =
@@ -886,6 +1084,10 @@ void Interface::OnPlayStream( wxCommandEvent& WXUNUSED(event) )
 
 void Interface::OnStopStream( wxCommandEvent& WXUNUSED(event) )
 {
+    StopStream();
+}
+void Interface::StopStream()
+{
     playlist_t * p_playlist =
         (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                        FIND_ANYWHERE );
@@ -929,15 +1131,17 @@ void Interface::OnSliderUpdate( wxScrollEvent& event )
             /* Update stream date */
             char psz_time[ MSTRTIME_MAX_SIZE ], psz_total[ MSTRTIME_MAX_SIZE ];
             mtime_t i_seconds;
-            vlc_value_t val;
 
-            i_seconds = var_GetTime( p_intf->p_sys->p_input, "length" ) / I64C(1000000 );
+            i_seconds = var_GetTime( p_intf->p_sys->p_input, "length" ) /
+                        I64C(1000000 );
             secstotimestr( psz_total, i_seconds );
 
-            i_seconds = var_GetTime( p_intf->p_sys->p_input, "time" ) / I64C(1000000 );
+            i_seconds = var_GetTime( p_intf->p_sys->p_input, "time" ) /
+                        I64C(1000000 );
             secstotimestr( psz_time, i_seconds );
 
-            statusbar->SetStatusText( wxU(psz_time)+ wxString(wxT(" / ")) + wxU(psz_total), 0 );
+            statusbar->SetStatusText( wxU(psz_time) + wxString(wxT(" / ") ) +
+                                      wxU(psz_total), 0 );
         }
     }
 #endif
@@ -947,6 +1151,11 @@ void Interface::OnSliderUpdate( wxScrollEvent& event )
 }
 
 void Interface::OnPrevStream( wxCommandEvent& WXUNUSED(event) )
+{
+    PrevStream();
+}
+
+void Interface::PrevStream()
 {
     playlist_t * p_playlist =
         (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
@@ -977,6 +1186,11 @@ void Interface::OnPrevStream( wxCommandEvent& WXUNUSED(event) )
 }
 
 void Interface::OnNextStream( wxCommandEvent& WXUNUSED(event) )
+{
+    NextStream();
+}
+
+void Interface::NextStream()
 {
     playlist_t * p_playlist =
         (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
@@ -1042,24 +1256,76 @@ void Interface::TogglePlayButton( int i_playing_status )
     if( i_playing_status == i_old_playing_status )
         return;
 
-    GetToolBar()->DeleteTool( PlayStream_Event );
+    wxToolBarToolBase *p_tool = (wxToolBarToolBase *)
+        GetToolBar()->GetToolClientData( PlayStream_Event );
+    if( !p_tool ) return;
 
     if( i_playing_status == PLAYING_S )
     {
-        GetToolBar()->InsertTool( 2, PlayStream_Event, wxU(_("Pause")),
-                                  wxBitmap( pause_xpm ), wxNullBitmap,
-                                  wxITEM_NORMAL, wxU(_(HELP_PAUSE)) );
+        p_tool->SetNormalBitmap( wxBitmap( pause_xpm ) );
+        p_tool->SetLabel( wxU(_("Pause")) );
+        p_tool->SetShortHelp( wxU(_(HELP_PAUSE)) );
     }
     else
     {
-        GetToolBar()->InsertTool( 2, PlayStream_Event, wxU(_("Play")),
-                                  wxBitmap( play_xpm ), wxNullBitmap,
-                                  wxITEM_NORMAL, wxU(_(HELP_PLAY)) );
+        p_tool->SetNormalBitmap( wxBitmap( play_xpm ) );
+        p_tool->SetLabel( wxU(_("Play")) );
+        p_tool->SetShortHelp( wxU(_(HELP_PLAY)) );
     }
 
     GetToolBar()->Realize();
+    GetToolBar()->ToggleTool( PlayStream_Event, true );
+    GetToolBar()->ToggleTool( PlayStream_Event, false );
 
     i_old_playing_status = i_playing_status;
+}
+
+void Interface::OnDiscMenu( wxCommandEvent& WXUNUSED(event) )
+{
+    input_thread_t *p_input =
+        (input_thread_t *)vlc_object_find( p_intf, VLC_OBJECT_INPUT,
+                                           FIND_ANYWHERE );
+    if( p_input )
+    {
+        vlc_value_t val; val.i_int = 2;
+
+        var_Set( p_input, "title  0", val);
+        vlc_object_release( p_input );
+    }
+}
+
+void Interface::OnDiscPrev( wxCommandEvent& WXUNUSED(event) )
+{
+    input_thread_t *p_input =
+        (input_thread_t *)vlc_object_find( p_intf, VLC_OBJECT_INPUT,
+                                           FIND_ANYWHERE );
+    if( p_input )
+    {
+        int i_type = var_Type( p_input, "prev-chapter" );
+        vlc_value_t val; val.b_bool = VLC_TRUE;
+
+        var_Set( p_input, ( i_type & VLC_VAR_TYPE ) != 0 ?
+                 "prev-chapter" : "prev-title", val );
+
+        vlc_object_release( p_input );
+    }
+}
+
+void Interface::OnDiscNext( wxCommandEvent& WXUNUSED(event) )
+{
+    input_thread_t *p_input =
+        (input_thread_t *)vlc_object_find( p_intf, VLC_OBJECT_INPUT,
+                                           FIND_ANYWHERE );
+    if( p_input )
+    {
+        int i_type = var_Type( p_input, "next-chapter" );
+        vlc_value_t val; val.b_bool = VLC_TRUE;
+
+        var_Set( p_input, ( i_type & VLC_VAR_TYPE ) != 0 ?
+                 "next-chapter" : "next-title", val );
+
+        vlc_object_release( p_input );
+    }
 }
 
 #if wxUSE_DRAG_AND_DROP
@@ -1100,6 +1366,31 @@ bool DragAndDrop::OnDropFiles( wxCoord, wxCoord,
 /*****************************************************************************
  * Definition of VolCtrl class.
  *****************************************************************************/
+class wxVolCtrl: public wxGauge
+{
+public:
+    /* Constructor */
+    wxVolCtrl( intf_thread_t *_p_intf, wxWindow* parent, wxWindowID id,
+               wxPoint = wxDefaultPosition, wxSize = wxSize( 20, -1 ) );
+    virtual ~wxVolCtrl() {};
+
+    void UpdateVolume();
+    int GetVolume();
+
+    void OnChange( wxMouseEvent& event );
+
+private:
+    intf_thread_t *p_intf;
+
+    DECLARE_EVENT_TABLE();
+};
+
+BEGIN_EVENT_TABLE(wxVolCtrl, wxWindow)
+    /* Mouse events */
+    EVT_LEFT_DOWN(wxVolCtrl::OnChange)
+    EVT_MOTION(wxVolCtrl::OnChange)
+END_EVENT_TABLE()
+
 wxVolCtrl::wxVolCtrl( intf_thread_t *_p_intf, wxWindow* parent, wxWindowID id,
                       wxPoint point, wxSize size )
   : wxGauge( parent, id, 200, point, size, wxGA_HORIZONTAL | wxGA_SMOOTH )
@@ -1129,3 +1420,140 @@ void wxVolCtrl::UpdateVolume()
     SetToolTip( wxString::Format((wxString)wxU(_("Volume")) + wxT(" %d"),
                 i_gauge_volume / 2 ) );
 }
+
+#if defined(__WXGTK__)
+#define VLCVOL_HEIGHT p_parent->GetSize().GetHeight()
+#else
+#define VLCVOL_HEIGHT TOOLBAR_BMP_HEIGHT
+#endif
+VLCVolCtrl::VLCVolCtrl( intf_thread_t *_p_intf, wxWindow *p_parent )
+  :wxControl( p_parent, -1, wxDefaultPosition, wxSize(64, VLCVOL_HEIGHT ),
+              wxBORDER_NONE ),
+   i_y_offset((VLCVOL_HEIGHT - TOOLBAR_BMP_HEIGHT) / 2),
+   b_mute(0), p_intf(_p_intf)
+{
+    gauge = new wxVolCtrl( p_intf, this, -1, wxPoint( 18, i_y_offset ),
+                           wxSize( 44, TOOLBAR_BMP_HEIGHT ) );
+}
+
+void VLCVolCtrl::OnPaint( wxPaintEvent &evt )
+{
+    wxPaintDC dc( this );
+    wxBitmap mPlayBitmap( b_mute ? speaker_mute_xpm : speaker_xpm );
+    dc.DrawBitmap( mPlayBitmap, 0, i_y_offset, TRUE );
+}
+
+void VLCVolCtrl::OnChange( wxMouseEvent& event )
+{
+    if( event.GetX() < TOOLBAR_BMP_WIDTH )
+    {
+        int i_volume;
+        aout_VolumeMute( p_intf, (audio_volume_t *)&i_volume );
+
+        b_mute = !b_mute;
+        Refresh();
+    }
+}
+
+void VLCVolCtrl::UpdateVolume()
+{
+    gauge->UpdateVolume();
+
+    int i_volume = gauge->GetValue();
+    if( !!i_volume == !b_mute ) return;
+    b_mute = !b_mute;
+    Refresh();
+}
+
+/*****************************************************************************
+ * Systray class.
+ *****************************************************************************/
+
+#ifdef wxHAS_TASK_BAR_ICON
+
+BEGIN_EVENT_TABLE(Systray, wxTaskBarIcon)
+    /* Mouse events */
+#ifdef WIN32
+    EVT_TASKBAR_LEFT_DCLICK(Systray::OnLeftClick)
+#else
+    EVT_TASKBAR_LEFT_DOWN(Systray::OnLeftClick)
+#endif
+    /* Menu events */
+    EVT_MENU(Iconize_Event, Systray::OnMenuIconize)
+    EVT_MENU(Exit_Event, Systray::OnExit)
+    EVT_MENU(PlayStream_Event, Systray::OnPlayStream)
+    EVT_MENU(NextStream_Event, Systray::OnNextStream)
+    EVT_MENU(PrevStream_Event, Systray::OnPrevStream)
+    EVT_MENU(StopStream_Event, Systray::OnStopStream)
+END_EVENT_TABLE()
+
+Systray::Systray( Interface *_p_main_interface, intf_thread_t *_p_intf )
+{
+    p_main_interface = _p_main_interface;
+    p_intf = _p_intf;
+}
+
+/* Event handlers */
+void Systray::OnMenuIconize( wxCommandEvent& event )
+{
+    p_main_interface->Show( ! p_main_interface->IsShown() );
+    if ( p_main_interface->IsShown() ) p_main_interface->Raise();
+}
+
+void Systray::OnLeftClick( wxTaskBarIconEvent& event )
+{
+    wxCommandEvent cevent;
+    OnMenuIconize(cevent);
+}
+
+void Systray::OnExit( wxCommandEvent& event )
+{
+    p_main_interface->Close(TRUE);
+}
+
+void Systray::OnPrevStream( wxCommandEvent& event )
+{
+    p_main_interface->PrevStream();
+}
+
+void Systray::OnNextStream( wxCommandEvent& event )
+{
+    p_main_interface->NextStream();
+}
+
+void Systray::OnPlayStream( wxCommandEvent& event )
+{
+    p_main_interface->PlayStream();
+}
+
+void Systray::OnStopStream( wxCommandEvent& event )
+{
+    p_main_interface->StopStream();
+}
+
+/* Systray popup menu */
+wxMenu* Systray::CreatePopupMenu()
+{
+    int minimal = config_GetInt( p_intf, "wxwin-minimal" );
+
+    wxMenu* systray_menu = new wxMenu;
+    systray_menu->Append( Exit_Event, wxU(_("Quit VLC")) );
+    systray_menu->AppendSeparator();
+    systray_menu->Append( PlayStream_Event, wxU(_("Play/Pause")) );
+
+    if (!minimal)
+    {
+    systray_menu->Append( PrevStream_Event, wxU(_("Previous")) );
+    systray_menu->Append( NextStream_Event, wxU(_("Next")) );
+    systray_menu->Append( StopStream_Event, wxU(_("Stop")) );
+    }
+    systray_menu->AppendSeparator();
+    systray_menu->Append( Iconize_Event, wxU(_("Show/Hide interface")) );
+    return systray_menu;
+}
+
+void Systray::UpdateTooltip( const wxChar* tooltip )
+{
+    SetIcon( wxIcon( vlc16x16_xpm ), tooltip );
+}
+#endif

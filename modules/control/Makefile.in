@@ -55,6 +55,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_ACTIVEX_FALSE = @BUILD_ACTIVEX_FALSE@
+BUILD_ACTIVEX_TRUE = @BUILD_ACTIVEX_TRUE@
 BUILD_DIRENT_FALSE = @BUILD_DIRENT_FALSE@
 BUILD_DIRENT_TRUE = @BUILD_DIRENT_TRUE@
 BUILD_GETOPT_FALSE = @BUILD_GETOPT_FALSE@
@@ -69,8 +71,6 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-CORBA_CFLAGS = @CORBA_CFLAGS@
-CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -98,10 +98,8 @@ FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GTK2_CFLAGS = @GTK2_CFLAGS@
-GTK2_LIBS = @GTK2_LIBS@
-HAL_CFLAGS = @HAL_CFLAGS@
-HAL_LIBS = @HAL_LIBS@
+HAS_MIDL_COMPILER_FALSE = @HAS_MIDL_COMPILER_FALSE@
+HAS_MIDL_COMPILER_TRUE = @HAS_MIDL_COMPILER_TRUE@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -112,6 +110,8 @@ HAVE_PLUGINS_FALSE = @HAVE_PLUGINS_FALSE@
 HAVE_PLUGINS_TRUE = @HAVE_PLUGINS_TRUE@
 HAVE_WIN32_FALSE = @HAVE_WIN32_FALSE@
 HAVE_WIN32_TRUE = @HAVE_WIN32_TRUE@
+HAVE_WINCE_FALSE = @HAVE_WINCE_FALSE@
+HAVE_WINCE_TRUE = @HAVE_WINCE_TRUE@
 INCLUDES = @INCLUDES@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -124,12 +124,7 @@ INTLOBJS = @INTLOBJS@
 INTL_LIBTOOL_SUFFIX_PREFIX = @INTL_LIBTOOL_SUFFIX_PREFIX@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
-LIBCDDB_CFLAGS = @LIBCDDB_CFLAGS@
-LIBCDDB_LIBS = @LIBCDDB_LIBS@
-LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
-LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
-LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -138,6 +133,7 @@ LTLIBICONV = @LTLIBICONV@
 LTLIBINTL = @LTLIBINTL@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+MIDL = @MIDL@
 MKINSTALLDIRS = @MKINSTALLDIRS@
 MOC = @MOC@
 MOZILLA_CONFIG = @MOZILLA_CONFIG@
@@ -154,7 +150,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
 PLUGIN_PATH = @PLUGIN_PATH@
 POSUB = @POSUB@
 RANLIB = @RANLIB@
@@ -164,8 +159,6 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-SVG_CFLAGS = @SVG_CFLAGS@
-SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
@@ -230,8 +223,8 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Lgesturesb) $(Lgesturespic) $(Lshowintfb) $(Lshowintfpic) $(Lhttpb) $(Lhttppic) $(Ltelnetb) $(Ltelnetpic) $(Lnetsyncb) $(Lnetsyncpic) $(Lntserviceb) $(Lntservicepic) $(Ljoystickb) $(Ljoystickpic) $(Lhotkeysb) $(Lhotkeyspic) $(Llircb) $(Llircpic) $(Lrcb) $(Lrcpic) $(Lrtcib) $(Lrtcipic)
-noinst_LIBRARIES = $(Lgesturesp) $(Lshowintfp) $(Lhttpp) $(Ltelnetp) $(Lnetsyncp) $(Lntservicep) $(Ljoystickp) $(Lhotkeysp) $(Llircp) $(Lrcp) $(Lrtcip)
+libvlc_LIBRARIES = $(Lgesturesb) $(Lgesturespic) $(Lshowintfb) $(Lshowintfpic) $(Lhttpb) $(Lhttppic) $(Ltelnetb) $(Ltelnetpic) $(Lnetsyncb) $(Lnetsyncpic) $(Lntserviceb) $(Lntservicepic) $(Ljoystickb) $(Ljoystickpic) $(Lhotkeysb) $(Lhotkeyspic) $(Llircb) $(Llircpic) $(Lrcb) $(Lrcpic)
+noinst_LIBRARIES = $(Lgesturesp) $(Lshowintfp) $(Lhttpp) $(Ltelnetp) $(Lnetsyncp) $(Lntservicep) $(Ljoystickp) $(Lhotkeysp) $(Llircp) $(Lrcp)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
@@ -248,7 +241,6 @@ SOURCES_joystick = joystick.c
 SOURCES_hotkeys = hotkeys.c
 SOURCES_lirc = lirc.c
 SOURCES_rc = rc.c
-SOURCES_rtci = rtci.c
 
 # There's no need for pic code on win32 so get rid of this to substantially
 # reduce the compilation time.
@@ -504,31 +496,6 @@ librc_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin rc`
 librc_DATA = $(Drcp)
 
 librcdir = $(libdir)/vlc/
-
-
-# The rtci plugin
-@UNTRUE_TRUE@Lrtcip = librtci_plugin.a
-@UNTRUE_TRUE@Drtcip = librtci_plugin$(LIBEXT)
-@UNTRUE_TRUE@Lrtcib = librtci.a
-@UNTRUE_TRUE@Lrtcipic = librtci_pic.a
-
-librtci_plugin_a_SOURCES = $(SOURCES_rtci)
-librtci_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin rtci`
-librtci_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin rtci`
-librtci_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin rtci`
-
-librtci_pic_a_SOURCES = $(SOURCES_rtci)
-librtci_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic rtci`
-librtci_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic rtci`
-librtci_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic rtci`
-
-librtci_a_SOURCES = $(SOURCES_rtci)
-librtci_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin rtci`
-librtci_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin rtci`
-librtci_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin rtci`
-librtci_DATA = $(Drtcip)
-
-librtcidir = $(libdir)/vlc/
 subdir = modules/control
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
@@ -656,50 +623,35 @@ librc_plugin_a_LIBADD =
 am__objects_24 = librc_plugin_a-rc.$(OBJEXT)
 am_librc_plugin_a_OBJECTS = $(am__objects_24)
 librc_plugin_a_OBJECTS = $(am_librc_plugin_a_OBJECTS)
-librtci_a_AR = $(AR) cru
-librtci_a_LIBADD =
-am__objects_25 = librtci_a-rtci.$(OBJEXT)
-am_librtci_a_OBJECTS = $(am__objects_25)
-librtci_a_OBJECTS = $(am_librtci_a_OBJECTS)
-librtci_pic_a_AR = $(AR) cru
-librtci_pic_a_LIBADD =
-am__objects_26 = librtci_pic_a-rtci.$(OBJEXT)
-am_librtci_pic_a_OBJECTS = $(am__objects_26)
-librtci_pic_a_OBJECTS = $(am_librtci_pic_a_OBJECTS)
-librtci_plugin_a_AR = $(AR) cru
-librtci_plugin_a_LIBADD =
-am__objects_27 = librtci_plugin_a-rtci.$(OBJEXT)
-am_librtci_plugin_a_OBJECTS = $(am__objects_27)
-librtci_plugin_a_OBJECTS = $(am_librtci_plugin_a_OBJECTS)
 libshowintf_a_AR = $(AR) cru
 libshowintf_a_LIBADD =
-am__objects_28 = libshowintf_a-showintf.$(OBJEXT)
-am_libshowintf_a_OBJECTS = $(am__objects_28)
+am__objects_25 = libshowintf_a-showintf.$(OBJEXT)
+am_libshowintf_a_OBJECTS = $(am__objects_25)
 libshowintf_a_OBJECTS = $(am_libshowintf_a_OBJECTS)
 libshowintf_pic_a_AR = $(AR) cru
 libshowintf_pic_a_LIBADD =
-am__objects_29 = libshowintf_pic_a-showintf.$(OBJEXT)
-am_libshowintf_pic_a_OBJECTS = $(am__objects_29)
+am__objects_26 = libshowintf_pic_a-showintf.$(OBJEXT)
+am_libshowintf_pic_a_OBJECTS = $(am__objects_26)
 libshowintf_pic_a_OBJECTS = $(am_libshowintf_pic_a_OBJECTS)
 libshowintf_plugin_a_AR = $(AR) cru
 libshowintf_plugin_a_LIBADD =
-am__objects_30 = libshowintf_plugin_a-showintf.$(OBJEXT)
-am_libshowintf_plugin_a_OBJECTS = $(am__objects_30)
+am__objects_27 = libshowintf_plugin_a-showintf.$(OBJEXT)
+am_libshowintf_plugin_a_OBJECTS = $(am__objects_27)
 libshowintf_plugin_a_OBJECTS = $(am_libshowintf_plugin_a_OBJECTS)
 libtelnet_a_AR = $(AR) cru
 libtelnet_a_LIBADD =
-am__objects_31 = libtelnet_a-telnet.$(OBJEXT)
-am_libtelnet_a_OBJECTS = $(am__objects_31)
+am__objects_28 = libtelnet_a-telnet.$(OBJEXT)
+am_libtelnet_a_OBJECTS = $(am__objects_28)
 libtelnet_a_OBJECTS = $(am_libtelnet_a_OBJECTS)
 libtelnet_pic_a_AR = $(AR) cru
 libtelnet_pic_a_LIBADD =
-am__objects_32 = libtelnet_pic_a-telnet.$(OBJEXT)
-am_libtelnet_pic_a_OBJECTS = $(am__objects_32)
+am__objects_29 = libtelnet_pic_a-telnet.$(OBJEXT)
+am_libtelnet_pic_a_OBJECTS = $(am__objects_29)
 libtelnet_pic_a_OBJECTS = $(am_libtelnet_pic_a_OBJECTS)
 libtelnet_plugin_a_AR = $(AR) cru
 libtelnet_plugin_a_LIBADD =
-am__objects_33 = libtelnet_plugin_a-telnet.$(OBJEXT)
-am_libtelnet_plugin_a_OBJECTS = $(am__objects_33)
+am__objects_30 = libtelnet_plugin_a-telnet.$(OBJEXT)
+am_libtelnet_plugin_a_OBJECTS = $(am__objects_30)
 libtelnet_plugin_a_OBJECTS = $(am_libtelnet_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
@@ -729,9 +681,6 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/librc_a-rc.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/librc_pic_a-rc.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/librc_plugin_a-rc.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/librtci_a-rtci.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/librtci_pic_a-rtci.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/librtci_plugin_a-rtci.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libshowintf_a-showintf.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libshowintf_pic_a-showintf.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libshowintf_plugin_a-showintf.Po \
@@ -754,15 +703,13 @@ DIST_SOURCES = $(libgestures_a_SOURCES) $(libgestures_pic_a_SOURCES) \
 	$(libntservice_a_SOURCES) $(libntservice_pic_a_SOURCES) \
 	$(libntservice_plugin_a_SOURCES) $(librc_a_SOURCES) \
 	$(librc_pic_a_SOURCES) $(librc_plugin_a_SOURCES) \
-	$(librtci_a_SOURCES) $(librtci_pic_a_SOURCES) \
-	$(librtci_plugin_a_SOURCES) $(libshowintf_a_SOURCES) \
-	$(libshowintf_pic_a_SOURCES) $(libshowintf_plugin_a_SOURCES) \
-	$(libtelnet_a_SOURCES) $(libtelnet_pic_a_SOURCES) \
-	$(libtelnet_plugin_a_SOURCES)
+	$(libshowintf_a_SOURCES) $(libshowintf_pic_a_SOURCES) \
+	$(libshowintf_plugin_a_SOURCES) $(libtelnet_a_SOURCES) \
+	$(libtelnet_pic_a_SOURCES) $(libtelnet_plugin_a_SOURCES)
 DATA = $(libgestures_DATA) $(libhotkeys_DATA) $(libhttp_DATA) \
 	$(libjoystick_DATA) $(liblirc_DATA) $(libnetsync_DATA) \
-	$(libntservice_DATA) $(librc_DATA) $(librtci_DATA) \
-	$(libshowintf_DATA) $(libtelnet_DATA)
+	$(libntservice_DATA) $(librc_DATA) $(libshowintf_DATA) \
+	$(libtelnet_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -775,7 +722,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libgestures_a_SOURCES) $(libgestures_pic_a_SOURCES) $(libgestures_plugin_a_SOURCES) $(libhotkeys_a_SOURCES) $(libhotkeys_pic_a_SOURCES) $(libhotkeys_plugin_a_SOURCES) $(libhttp_a_SOURCES) $(libhttp_pic_a_SOURCES) $(libhttp_plugin_a_SOURCES) $(libjoystick_a_SOURCES) $(libjoystick_pic_a_SOURCES) $(libjoystick_plugin_a_SOURCES) $(liblirc_a_SOURCES) $(liblirc_pic_a_SOURCES) $(liblirc_plugin_a_SOURCES) $(libnetsync_a_SOURCES) $(libnetsync_pic_a_SOURCES) $(libnetsync_plugin_a_SOURCES) $(libntservice_a_SOURCES) $(libntservice_pic_a_SOURCES) $(libntservice_plugin_a_SOURCES) $(librc_a_SOURCES) $(librc_pic_a_SOURCES) $(librc_plugin_a_SOURCES) $(librtci_a_SOURCES) $(librtci_pic_a_SOURCES) $(librtci_plugin_a_SOURCES) $(libshowintf_a_SOURCES) $(libshowintf_pic_a_SOURCES) $(libshowintf_plugin_a_SOURCES) $(libtelnet_a_SOURCES) $(libtelnet_pic_a_SOURCES) $(libtelnet_plugin_a_SOURCES)
+SOURCES = $(libgestures_a_SOURCES) $(libgestures_pic_a_SOURCES) $(libgestures_plugin_a_SOURCES) $(libhotkeys_a_SOURCES) $(libhotkeys_pic_a_SOURCES) $(libhotkeys_plugin_a_SOURCES) $(libhttp_a_SOURCES) $(libhttp_pic_a_SOURCES) $(libhttp_plugin_a_SOURCES) $(libjoystick_a_SOURCES) $(libjoystick_pic_a_SOURCES) $(libjoystick_plugin_a_SOURCES) $(liblirc_a_SOURCES) $(liblirc_pic_a_SOURCES) $(liblirc_plugin_a_SOURCES) $(libnetsync_a_SOURCES) $(libnetsync_pic_a_SOURCES) $(libnetsync_plugin_a_SOURCES) $(libntservice_a_SOURCES) $(libntservice_pic_a_SOURCES) $(libntservice_plugin_a_SOURCES) $(librc_a_SOURCES) $(librc_pic_a_SOURCES) $(librc_plugin_a_SOURCES) $(libshowintf_a_SOURCES) $(libshowintf_pic_a_SOURCES) $(libshowintf_plugin_a_SOURCES) $(libtelnet_a_SOURCES) $(libtelnet_pic_a_SOURCES) $(libtelnet_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -916,18 +863,6 @@ librc_plugin.a: $(librc_plugin_a_OBJECTS) $(librc_plugin_a_DEPENDENCIES)
 	-rm -f librc_plugin.a
 	$(librc_plugin_a_AR) librc_plugin.a $(librc_plugin_a_OBJECTS) $(librc_plugin_a_LIBADD)
 	$(RANLIB) librc_plugin.a
-librtci.a: $(librtci_a_OBJECTS) $(librtci_a_DEPENDENCIES) 
-	-rm -f librtci.a
-	$(librtci_a_AR) librtci.a $(librtci_a_OBJECTS) $(librtci_a_LIBADD)
-	$(RANLIB) librtci.a
-librtci_pic.a: $(librtci_pic_a_OBJECTS) $(librtci_pic_a_DEPENDENCIES) 
-	-rm -f librtci_pic.a
-	$(librtci_pic_a_AR) librtci_pic.a $(librtci_pic_a_OBJECTS) $(librtci_pic_a_LIBADD)
-	$(RANLIB) librtci_pic.a
-librtci_plugin.a: $(librtci_plugin_a_OBJECTS) $(librtci_plugin_a_DEPENDENCIES) 
-	-rm -f librtci_plugin.a
-	$(librtci_plugin_a_AR) librtci_plugin.a $(librtci_plugin_a_OBJECTS) $(librtci_plugin_a_LIBADD)
-	$(RANLIB) librtci_plugin.a
 libshowintf.a: $(libshowintf_a_OBJECTS) $(libshowintf_a_DEPENDENCIES) 
 	-rm -f libshowintf.a
 	$(libshowintf_a_AR) libshowintf.a $(libshowintf_a_OBJECTS) $(libshowintf_a_LIBADD)
@@ -983,9 +918,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librc_a-rc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librc_pic_a-rc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librc_plugin_a-rc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtci_a-rtci.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtci_pic_a-rtci.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtci_plugin_a-rtci.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libshowintf_a-showintf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libshowintf_pic_a-showintf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libshowintf_plugin_a-showintf.Po@am__quote@
@@ -1543,72 +1475,6 @@ librc_plugin_a-rc.obj: rc.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librc_plugin_a_CFLAGS) $(CFLAGS) -c -o librc_plugin_a-rc.obj `if test -f 'rc.c'; then $(CYGPATH_W) 'rc.c'; else $(CYGPATH_W) '$(srcdir)/rc.c'; fi`
 
-librtci_a-rtci.o: rtci.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librtci_a_CFLAGS) $(CFLAGS) -MT librtci_a-rtci.o -MD -MP -MF "$(DEPDIR)/librtci_a-rtci.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o librtci_a-rtci.o `test -f 'rtci.c' || echo '$(srcdir)/'`rtci.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/librtci_a-rtci.Tpo" "$(DEPDIR)/librtci_a-rtci.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/librtci_a-rtci.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rtci.c' object='librtci_a-rtci.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/librtci_a-rtci.Po' tmpdepfile='$(DEPDIR)/librtci_a-rtci.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librtci_a_CFLAGS) $(CFLAGS) -c -o librtci_a-rtci.o `test -f 'rtci.c' || echo '$(srcdir)/'`rtci.c
-
-librtci_a-rtci.obj: rtci.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librtci_a_CFLAGS) $(CFLAGS) -MT librtci_a-rtci.obj -MD -MP -MF "$(DEPDIR)/librtci_a-rtci.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o librtci_a-rtci.obj `if test -f 'rtci.c'; then $(CYGPATH_W) 'rtci.c'; else $(CYGPATH_W) '$(srcdir)/rtci.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/librtci_a-rtci.Tpo" "$(DEPDIR)/librtci_a-rtci.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/librtci_a-rtci.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rtci.c' object='librtci_a-rtci.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/librtci_a-rtci.Po' tmpdepfile='$(DEPDIR)/librtci_a-rtci.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librtci_a_CFLAGS) $(CFLAGS) -c -o librtci_a-rtci.obj `if test -f 'rtci.c'; then $(CYGPATH_W) 'rtci.c'; else $(CYGPATH_W) '$(srcdir)/rtci.c'; fi`
-
-librtci_pic_a-rtci.o: rtci.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librtci_pic_a_CFLAGS) $(CFLAGS) -MT librtci_pic_a-rtci.o -MD -MP -MF "$(DEPDIR)/librtci_pic_a-rtci.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o librtci_pic_a-rtci.o `test -f 'rtci.c' || echo '$(srcdir)/'`rtci.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/librtci_pic_a-rtci.Tpo" "$(DEPDIR)/librtci_pic_a-rtci.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/librtci_pic_a-rtci.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rtci.c' object='librtci_pic_a-rtci.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/librtci_pic_a-rtci.Po' tmpdepfile='$(DEPDIR)/librtci_pic_a-rtci.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librtci_pic_a_CFLAGS) $(CFLAGS) -c -o librtci_pic_a-rtci.o `test -f 'rtci.c' || echo '$(srcdir)/'`rtci.c
-
-librtci_pic_a-rtci.obj: rtci.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librtci_pic_a_CFLAGS) $(CFLAGS) -MT librtci_pic_a-rtci.obj -MD -MP -MF "$(DEPDIR)/librtci_pic_a-rtci.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o librtci_pic_a-rtci.obj `if test -f 'rtci.c'; then $(CYGPATH_W) 'rtci.c'; else $(CYGPATH_W) '$(srcdir)/rtci.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/librtci_pic_a-rtci.Tpo" "$(DEPDIR)/librtci_pic_a-rtci.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/librtci_pic_a-rtci.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rtci.c' object='librtci_pic_a-rtci.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/librtci_pic_a-rtci.Po' tmpdepfile='$(DEPDIR)/librtci_pic_a-rtci.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librtci_pic_a_CFLAGS) $(CFLAGS) -c -o librtci_pic_a-rtci.obj `if test -f 'rtci.c'; then $(CYGPATH_W) 'rtci.c'; else $(CYGPATH_W) '$(srcdir)/rtci.c'; fi`
-
-librtci_plugin_a-rtci.o: rtci.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librtci_plugin_a_CFLAGS) $(CFLAGS) -MT librtci_plugin_a-rtci.o -MD -MP -MF "$(DEPDIR)/librtci_plugin_a-rtci.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o librtci_plugin_a-rtci.o `test -f 'rtci.c' || echo '$(srcdir)/'`rtci.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/librtci_plugin_a-rtci.Tpo" "$(DEPDIR)/librtci_plugin_a-rtci.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/librtci_plugin_a-rtci.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rtci.c' object='librtci_plugin_a-rtci.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/librtci_plugin_a-rtci.Po' tmpdepfile='$(DEPDIR)/librtci_plugin_a-rtci.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librtci_plugin_a_CFLAGS) $(CFLAGS) -c -o librtci_plugin_a-rtci.o `test -f 'rtci.c' || echo '$(srcdir)/'`rtci.c
-
-librtci_plugin_a-rtci.obj: rtci.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librtci_plugin_a_CFLAGS) $(CFLAGS) -MT librtci_plugin_a-rtci.obj -MD -MP -MF "$(DEPDIR)/librtci_plugin_a-rtci.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o librtci_plugin_a-rtci.obj `if test -f 'rtci.c'; then $(CYGPATH_W) 'rtci.c'; else $(CYGPATH_W) '$(srcdir)/rtci.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/librtci_plugin_a-rtci.Tpo" "$(DEPDIR)/librtci_plugin_a-rtci.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/librtci_plugin_a-rtci.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rtci.c' object='librtci_plugin_a-rtci.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/librtci_plugin_a-rtci.Po' tmpdepfile='$(DEPDIR)/librtci_plugin_a-rtci.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librtci_plugin_a_CFLAGS) $(CFLAGS) -c -o librtci_plugin_a-rtci.obj `if test -f 'rtci.c'; then $(CYGPATH_W) 'rtci.c'; else $(CYGPATH_W) '$(srcdir)/rtci.c'; fi`
-
 libshowintf_a-showintf.o: showintf.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshowintf_a_CFLAGS) $(CFLAGS) -MT libshowintf_a-showintf.o -MD -MP -MF "$(DEPDIR)/libshowintf_a-showintf.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libshowintf_a-showintf.o `test -f 'showintf.c' || echo '$(srcdir)/'`showintf.c; \
@@ -1885,24 +1751,6 @@ uninstall-librcDATA:
 	  echo " rm -f $(DESTDIR)$(librcdir)/$$f"; \
 	  rm -f $(DESTDIR)$(librcdir)/$$f; \
 	done
-librtciDATA_INSTALL = $(INSTALL_DATA)
-install-librtciDATA: $(librtci_DATA)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(librtcidir)
-	@list='$(librtci_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " $(librtciDATA_INSTALL) $$d$$p $(DESTDIR)$(librtcidir)/$$f"; \
-	  $(librtciDATA_INSTALL) $$d$$p $(DESTDIR)$(librtcidir)/$$f; \
-	done
-
-uninstall-librtciDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(librtci_DATA)'; for p in $$list; do \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " rm -f $(DESTDIR)$(librtcidir)/$$f"; \
-	  rm -f $(DESTDIR)$(librtcidir)/$$f; \
-	done
 libshowintfDATA_INSTALL = $(INSTALL_DATA)
 install-libshowintfDATA: $(libshowintf_DATA)
 	@$(NORMAL_INSTALL)
@@ -2114,7 +1962,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libgesturesdir) $(DESTDIR)$(libhotkeysdir) $(DESTDIR)$(libhttpdir) $(DESTDIR)$(libjoystickdir) $(DESTDIR)$(liblircdir) $(DESTDIR)$(libnetsyncdir) $(DESTDIR)$(libntservicedir) $(DESTDIR)$(librcdir) $(DESTDIR)$(librtcidir) $(DESTDIR)$(libshowintfdir) $(DESTDIR)$(libtelnetdir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libgesturesdir) $(DESTDIR)$(libhotkeysdir) $(DESTDIR)$(libhttpdir) $(DESTDIR)$(libjoystickdir) $(DESTDIR)$(liblircdir) $(DESTDIR)$(libnetsyncdir) $(DESTDIR)$(libntservicedir) $(DESTDIR)$(librcdir) $(DESTDIR)$(libshowintfdir) $(DESTDIR)$(libtelnetdir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -2164,8 +2012,8 @@ info-am:
 install-data-am: install-libgesturesDATA install-libhotkeysDATA \
 	install-libhttpDATA install-libjoystickDATA install-liblircDATA \
 	install-libnetsyncDATA install-libntserviceDATA \
-	install-librcDATA install-librtciDATA install-libshowintfDATA \
-	install-libtelnetDATA install-libvlcLIBRARIES
+	install-librcDATA install-libshowintfDATA install-libtelnetDATA \
+	install-libvlcLIBRARIES
 
 install-exec-am:
 
@@ -2196,9 +2044,8 @@ uninstall-am: uninstall-info-am uninstall-libgesturesDATA \
 	uninstall-libhotkeysDATA uninstall-libhttpDATA \
 	uninstall-libjoystickDATA uninstall-liblircDATA \
 	uninstall-libnetsyncDATA uninstall-libntserviceDATA \
-	uninstall-librcDATA uninstall-librtciDATA \
-	uninstall-libshowintfDATA uninstall-libtelnetDATA \
-	uninstall-libvlcLIBRARIES
+	uninstall-librcDATA uninstall-libshowintfDATA \
+	uninstall-libtelnetDATA uninstall-libvlcLIBRARIES
 
 uninstall-info: uninstall-info-recursive
 
@@ -2214,22 +2061,21 @@ uninstall-info: uninstall-info-recursive
 	install-libgesturesDATA install-libhotkeysDATA \
 	install-libhttpDATA install-libjoystickDATA install-liblircDATA \
 	install-libnetsyncDATA install-libntserviceDATA \
-	install-librcDATA install-librtciDATA install-libshowintfDATA \
-	install-libtelnetDATA install-libvlcLIBRARIES install-man \
-	install-recursive install-strip installcheck installcheck-am \
-	installdirs installdirs-am installdirs-recursive \
-	maintainer-clean maintainer-clean-generic \
-	maintainer-clean-recursive mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
-	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
-	uninstall uninstall-am uninstall-info-am \
+	install-librcDATA install-libshowintfDATA install-libtelnetDATA \
+	install-libvlcLIBRARIES install-man install-recursive \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am installdirs-recursive maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-recursive \
+	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
+	tags-recursive uninstall uninstall-am uninstall-info-am \
 	uninstall-info-recursive uninstall-libgesturesDATA \
 	uninstall-libhotkeysDATA uninstall-libhttpDATA \
 	uninstall-libjoystickDATA uninstall-liblircDATA \
 	uninstall-libnetsyncDATA uninstall-libntserviceDATA \
-	uninstall-librcDATA uninstall-librtciDATA \
-	uninstall-libshowintfDATA uninstall-libtelnetDATA \
-	uninstall-libvlcLIBRARIES uninstall-recursive
+	uninstall-librcDATA uninstall-libshowintfDATA \
+	uninstall-libtelnetDATA uninstall-libvlcLIBRARIES \
+	uninstall-recursive
 
 
 clean-local:
@@ -2238,9 +2084,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in gestures showintf http telnet netsync ntservice joystick hotkeys lirc rc rtci; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in gestures showintf http telnet netsync ntservice joystick hotkeys lirc rc rtci; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in gestures showintf http telnet netsync ntservice joystick hotkeys lirc rc rtci; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in gestures showintf http telnet netsync ntservice joystick hotkeys lirc rc; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in gestures showintf http telnet netsync ntservice joystick hotkeys lirc rc; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in gestures showintf http telnet netsync ntservice joystick hotkeys lirc rc; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 libgestures_plugin$(LIBEXT): $(libgestures_plugin_a_OBJECTS)
@@ -2302,12 +2148,6 @@ librc_plugin$(LIBEXT): $(librc_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(librc_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin rc\` ; $(CXXLINK) $(librc_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin rc` ;; \
 	  objc) echo $(OBJCLINK) $(librc_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin rc\` ; $(OBJCLINK) $(librc_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin rc` ;; \
 	  c|*) echo $(LINK) $(librc_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin rc\` ; $(LINK) $(librc_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin rc` ;; \
-	esac
-librtci_plugin$(LIBEXT): $(librtci_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage rtci` in \
-	  c++) echo $(CXXLINK) $(librtci_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin rtci\` ; $(CXXLINK) $(librtci_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin rtci` ;; \
-	  objc) echo $(OBJCLINK) $(librtci_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin rtci\` ; $(OBJCLINK) $(librtci_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin rtci` ;; \
-	  c|*) echo $(LINK) $(librtci_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin rtci\` ; $(LINK) $(librtci_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin rtci` ;; \
 	esac
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

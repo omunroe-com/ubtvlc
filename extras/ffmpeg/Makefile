@@ -14,18 +14,18 @@ CFLAGS+=-p
 LDFLAGS+=-p
 endif
 
-MANPAGE=$(SRC_PATH)/doc/ffmpeg.1
+MANPAGE=doc/ffmpeg.1
 PROG=ffmpeg$(EXESUF)
 PROGTEST=output_example$(EXESUF)
 QTFASTSTART=qt-faststart$(EXESUF)
 
 ifeq ($(CONFIG_FFSERVER),yes)
-MANPAGE+=$(SRC_PATH)/doc/ffserver.1
+MANPAGE+=doc/ffserver.1
 PROG+=ffserver$(EXESUF)
 endif
 
 ifeq ($(CONFIG_FFPLAY),yes)
-MANPAGE+=$(SRC_PATH)/doc/ffplay.1
+MANPAGE+=doc/ffplay.1
 PROG+=ffplay$(EXESUF)
 FFPLAY_O=ffplay.o
 endif
@@ -43,8 +43,14 @@ EXTRALIBS+=-lmp3lame
 endif
 endif
 
-ifeq ($(CONFIG_VORBIS),yes)
-EXTRALIBS+=-lvorbis -lvorbisenc -logg
+ifeq ($(CONFIG_LIBOGG),yes)
+ifeq ($(CONFIG_LIBVORBIS),yes)
+EXTRALIBS+= -lvorbisenc -lvorbis
+endif
+ifeq ($(CONFIG_LIBTHEORA),yes)
+EXTRALIBS+= -ltheora
+endif
+EXTRALIBS+= -logg
 endif
 
 ifeq ($(CONFIG_FAAD),yes)
@@ -85,7 +91,7 @@ endif
 
 OBJS = ffmpeg.o ffserver.o cmdutils.o $(FFPLAY_O)
 SRCS = $(OBJS:.o=.c) $(ASM_OBJS:.o=.s)
-FFLIBS = -L./libavformat -lavformat -L./libavcodec -lavcodec
+FFLIBS = -L./libavformat -lavformat$(BUILDSUF) -L./libavcodec -lavcodec$(BUILDSUF)
 
 all: lib $(PROG) $(PROGTEST) $(VHOOK) $(QTFASTSTART) $(DOC)
 
@@ -146,7 +152,7 @@ wininstaller: all install
 # install man from source dir if available
 install-man:
 ifneq ($(CONFIG_WIN32),yes)
-	if [ -f $(SRC_PATH)/doc/ffmpeg.1 ] ; then \
+	if [ -f doc/ffmpeg.1 ] ; then \
 	    install -d "$(mandir)/man1" ; \
 	    install -m 644 $(MANPAGE) "$(mandir)/man1" ; \
 	fi
@@ -162,10 +168,10 @@ installlib:
 dep:	depend
 
 depend: .depend
-	make -C libavcodec depend
-	make -C libavformat depend
+	$(MAKE) -C libavcodec depend
+	$(MAKE) -C libavformat depend
 ifeq ($(BUILD_VHOOK),yes)
-	make -C vhook depend
+	$(MAKE) -C vhook depend
 endif
 
 .depend: $(SRCS)

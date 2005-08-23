@@ -2,7 +2,7 @@
  * bitmap_font.cpp
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: bitmap_font.cpp 7261 2004-04-03 13:57:46Z asmax $
+ * $Id: bitmap_font.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *

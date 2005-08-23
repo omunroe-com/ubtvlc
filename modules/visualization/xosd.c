@@ -2,7 +2,7 @@
  * xosd.c : X On Screen Display interface
  *****************************************************************************
  * Copyright (C) 2001 VideoLAN
- * $Id: xosd.c 7542 2004-04-28 18:22:31Z zorglub $
+ * $Id: xosd.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Loïc Minier <lool@videolan.org>
  *
@@ -77,6 +77,8 @@ static int PlaylistNext( vlc_object_t *p_this, const char *psz_variable,
 #define COLOUR_LONGTEXT ("Colour used to display text in the xosd output")
 
 vlc_module_begin();
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_CONTROL );
     set_description( _("XOSD interface") );
     add_bool( "xosd-position", 1, NULL, POSITION_TEXT, POSITION_LONGTEXT, VLC_TRUE );
     add_integer( "xosd-text-offset", 30, NULL, TXT_OFS_TEXT, TXT_OFS_LONGTEXT, VLC_TRUE );
@@ -225,13 +227,13 @@ static void Run( intf_thread_t *p_intf )
                 free( psz_display );
                 psz_display = NULL;
             }
-            if( p_playlist->i_status == PLAYLIST_STOPPED )
+            if( p_playlist->status.i_status == PLAYLIST_STOPPED )
             {
                 psz_display = (char *)malloc( sizeof(char )*strlen(_("Stop")));
                 sprintf( psz_display,_("Stop") );
                 vlc_object_release( p_playlist );
             }
-            else if( p_playlist->i_status == PLAYLIST_PAUSED )
+            else if( p_playlist->status.i_status == PLAYLIST_PAUSED )
             {
                 psz_display = (char *)malloc( sizeof(char )*strlen(_("Pause")));
                 sprintf( psz_display,_("Pause") );
@@ -240,8 +242,7 @@ static void Run( intf_thread_t *p_intf )
             else
             {
     //           vlc_mutex_lock(&p_playlist->object_lock );
-                 p_item = playlist_ItemGetByPos( p_playlist,
-                                 p_playlist->i_index );
+                 p_item = p_playlist->status.p_item;
                 item = p_item->input;
                 if( !p_item )
                 {

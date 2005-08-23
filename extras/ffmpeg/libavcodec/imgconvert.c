@@ -268,6 +268,9 @@ int avpicture_fill(AVPicture *picture, uint8_t *ptr,
     int size, w2, h2, size2;
     PixFmtInfo *pinfo;
     
+    if(avcodec_check_dimensions(NULL, width, height))
+        goto fail;
+
     pinfo = &pix_fmt_info[pix_fmt];
     size = width * height;
     switch(pix_fmt) {
@@ -344,6 +347,7 @@ int avpicture_fill(AVPicture *picture, uint8_t *ptr,
         picture->linesize[1] = 4;
         return size2 + 256 * 4;
     default:
+fail:
         picture->data[0] = NULL;
         picture->data[1] = NULL;
         picture->data[2] = NULL;
@@ -360,7 +364,7 @@ int avpicture_layout(const AVPicture* src, int pix_fmt, int width, int height,
     const unsigned char* s; 
     int size = avpicture_get_size(pix_fmt, width, height);
 
-    if (size > dest_size)
+    if (size > dest_size || size < 0)
         return -1;
 
     if (pf->pixel_type == FF_PIXEL_PACKED || pf->pixel_type == FF_PIXEL_PALETTE) {
@@ -572,6 +576,8 @@ static void img_copy_plane(uint8_t *dst, int dst_wrap,
                            const uint8_t *src, int src_wrap,
                            int width, int height)
 {
+    if((!dst) || (!src)) 
+        return;
     for(;height > 0; height--) {
         memcpy(dst, src, width);
         dst += dst_wrap;
@@ -946,6 +952,39 @@ static void yuv420p_to_yuv422(AVPicture *dst, const AVPicture *src,
                 *line1++ =          *line2++ = *cb1++;                      
                 *line1++ = *lum1++; *line2++ = *lum2++;                     
                 *line1++ =          *line2++ = *cr1++;
+        }
+        
+        linesrc += dst->linesize[0] * 2;
+        lumsrc += src->linesize[0] * 2;
+        cb2 += src->linesize[1];
+        cr2 += src->linesize[2];
+    }
+}
+
+static void yuv420p_to_uyvy422(AVPicture *dst, const AVPicture *src,
+                              int width, int height)
+{
+    int w, h;
+    uint8_t *line1, *line2, *linesrc = dst->data[0];
+    uint8_t *lum1, *lum2, *lumsrc = src->data[0];
+    uint8_t *cb1, *cb2 = src->data[1];
+    uint8_t *cr1, *cr2 = src->data[2];
+    
+    for(h = height / 2; h--;) {
+        line1 = linesrc;
+        line2 = linesrc + dst->linesize[0];
+        
+        lum1 = lumsrc;
+        lum2 = lumsrc + src->linesize[0];
+        
+        cb1 = cb2;
+        cr1 = cr2;
+        
+        for(w = width / 2; w--;) {
+                *line1++ =          *line2++ = *cb1++;                      
+                *line1++ = *lum1++; *line2++ = *lum2++;                     
+                *line1++ =          *line2++ = *cr1++;
+                *line1++ = *lum1++; *line2++ = *lum2++;                     
         }
         
         linesrc += dst->linesize[0] * 2;
@@ -1682,6 +1721,9 @@ static ConvertEntry convert_table[PIX_FMT_NB][PIX_FMT_NB] = {
         [PIX_FMT_RGBA32] = { 
             .convert = yuv420p_to_rgba32
         },
+	[PIX_FMT_UYVY422] = { 
+            .convert = yuv420p_to_uyvy422,
+        },
     },
     [PIX_FMT_YUV422P] = { 
         [PIX_FMT_YUV422] = { 
@@ -1884,6 +1926,8 @@ int avpicture_alloc(AVPicture *picture,
     void *ptr;
 
     size = avpicture_get_size(pix_fmt, width, height);
+    if(size<0)
+        goto fail;
     ptr = av_malloc(size);
     if (!ptr)
         goto fail;

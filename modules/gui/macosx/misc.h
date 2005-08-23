@@ -2,7 +2,7 @@
  * misc.h: code not specific to vlc
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: misc.h 7723 2004-05-19 23:58:06Z hartman $
+ * $Id: misc.h 10655 2005-04-12 14:31:14Z bigben $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *
@@ -24,6 +24,7 @@
 /*****************************************************************************
  * VLCControllerWindow
  *****************************************************************************/
+
 
 @interface VLCControllerWindow : NSWindow
 {

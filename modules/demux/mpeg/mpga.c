@@ -2,7 +2,7 @@
  * mpga.c : MPEG-I/II Audio input module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2004 VideoLAN
- * $Id: mpga.c 9061 2004-10-26 13:03:03Z gbazin $
+ * $Id: mpga.c 10615 2005-04-09 11:27:23Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -41,6 +41,8 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 vlc_module_begin();
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_description( _("MPEG-I/II audio demuxer" ) );
     set_capability( "demux2", 100 );
     set_callbacks( Open, Close );
@@ -70,6 +72,7 @@ struct demux_sys_t
     int i_xing_bytes;
     int i_xing_bitrate_avg;
     int i_xing_frame_samples;
+    block_t *p_block_in, *p_block_out;
 };
 
 static int HeaderCheck( uint32_t h )
@@ -112,12 +115,12 @@ static int Open( vlc_object_t * p_this )
 {
     demux_t     *p_demux = (demux_t*)p_this;
     demux_sys_t *p_sys;
-    vlc_bool_t  b_forced = VLC_FALSE;
+    vlc_bool_t   b_forced = VLC_FALSE;
 
     uint32_t     header;
     uint8_t     *p_peek;
     module_t    *p_id3;
-    vlc_meta_t  *p_meta = NULL;
+    block_t     *p_block_in, *p_block_out;
 
     if( p_demux->psz_path )
     {
@@ -128,31 +131,14 @@ static int Open( vlc_object_t * p_this )
         }
     }
 
-    /* Skip/parse possible id3 header */
-    if( ( p_id3 = module_Need( p_demux, "id3", NULL, 0 ) ) )
-    {
-        p_meta = (vlc_meta_t *)p_demux->p_private;
-        p_demux->p_private = NULL;
-        module_Unneed( p_demux, p_id3 );
-    }
-
-    if( stream_Peek( p_demux->s, &p_peek, 4 ) < 4 )
-    {
-        msg_Err( p_demux, "cannot peek" );
-        if( p_meta ) vlc_meta_Delete( p_meta );
-        return VLC_EGENERIC;
-    }
+    if( stream_Peek( p_demux->s, &p_peek, 4 ) < 4 ) return VLC_EGENERIC;
 
     if( !HeaderCheck( header = GetDWBE( p_peek ) ) )
     {
         vlc_bool_t b_ok = VLC_FALSE;
         int i_peek;
 
-        if( !p_demux->b_force && !b_forced )
-        {
-            if( p_meta ) vlc_meta_Delete( p_meta );
-            return VLC_EGENERIC;
-        }
+        if( !p_demux->b_force && !b_forced ) return VLC_EGENERIC;
 
         i_peek = stream_Peek( p_demux->s, &p_peek, 8096 );
         while( i_peek > 4 )
@@ -165,12 +151,7 @@ static int Open( vlc_object_t * p_this )
             p_peek += 1;
             i_peek -= 1;
         }
-        if( !b_ok && !p_demux->b_force )
-        {
-            msg_Warn( p_demux, "mpga module discarded" );
-            if( p_meta ) vlc_meta_Delete( p_meta );
-            return VLC_EGENERIC;
-        }
+        if( !b_ok && !p_demux->b_force ) return VLC_EGENERIC;
     }
 
     p_demux->p_sys = p_sys = malloc( sizeof( demux_sys_t ) );
@@ -178,7 +159,7 @@ static int Open( vlc_object_t * p_this )
     p_sys->p_es = 0;
     p_sys->p_packetizer = 0;
     p_sys->b_start = VLC_TRUE;
-    p_sys->meta = p_meta;
+    p_sys->meta = 0;
     p_demux->pf_demux   = Demux;
     p_demux->pf_control = Control;
 
@@ -264,6 +245,38 @@ static int Open( vlc_object_t * p_this )
         }
     }
 
+    if( ( p_block_in = stream_Block( p_demux->s, MPGA_PACKET_SIZE ) ) == NULL )
+    {
+        return VLC_EGENERIC;
+    }
+    p_block_in->i_pts = p_block_in->i_dts = 1;
+    p_block_out = p_sys->p_packetizer->pf_packetize(
+        p_sys->p_packetizer, &p_block_in );
+    
+    p_sys->p_packetizer->fmt_out.b_packetized = VLC_TRUE;
+    p_sys->p_es = es_out_Add( p_demux->out,
+                              &p_sys->p_packetizer->fmt_out);
+    p_sys->i_bitrate_avg = p_sys->p_packetizer->fmt_out.i_bitrate;
+    
+    if( p_sys->i_xing_bytes && p_sys->i_xing_frames &&
+        p_sys->i_xing_frame_samples )
+    {
+        p_sys->i_bitrate_avg = p_sys->i_xing_bytes * I64C(8) *
+            p_sys->p_packetizer->fmt_out.audio.i_rate /
+            p_sys->i_xing_frames / p_sys->i_xing_frame_samples;
+    }
+
+    p_sys->p_block_in = p_block_in;
+    p_sys->p_block_out = p_block_out;
+
+    /* Parse possible id3 header */
+    if( ( p_id3 = module_Need( p_demux, "id3", NULL, 0 ) ) )
+    {
+        p_sys->meta = (vlc_meta_t *)p_demux->p_private;
+        p_demux->p_private = NULL;
+        module_Unneed( p_demux, p_id3 );
+    }
+
     return VLC_SUCCESS;
 }
 
@@ -276,38 +289,30 @@ static int Demux( demux_t *p_demux )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
     block_t *p_block_in, *p_block_out;
-
-    if( ( p_block_in = stream_Block( p_demux->s, MPGA_PACKET_SIZE ) ) == NULL )
+    if( p_sys->b_start )
     {
-        return 0;
+        p_sys->b_start = VLC_FALSE;
+        p_block_in = p_sys->p_block_in;
+        p_block_out = p_sys->p_block_out;
+    }
+    else
+    {
+        if( ( p_block_in = stream_Block( p_demux->s, MPGA_PACKET_SIZE ) )
+            == NULL )
+        {
+            return 0;
+        }
+        p_block_in->i_pts = p_block_in->i_dts = 0;
+        p_block_out = p_sys->p_packetizer->pf_packetize(
+            p_sys->p_packetizer, &p_block_in );
     }
 
-    p_block_in->i_pts = p_block_in->i_dts = p_sys->b_start ? 1 : 0;
-    p_sys->b_start = VLC_FALSE;
 
-    while( (p_block_out = p_sys->p_packetizer->pf_packetize(
-                                          p_sys->p_packetizer, &p_block_in )) )
+    while( p_block_out )
     {
         while( p_block_out )
         {
             block_t *p_next = p_block_out->p_next;
-
-            if( p_sys->p_es == NULL )
-            {
-                p_sys->p_packetizer->fmt_out.b_packetized = VLC_TRUE;
-                p_sys->p_es = es_out_Add( p_demux->out,
-                                          &p_sys->p_packetizer->fmt_out);
-
-                p_sys->i_bitrate_avg = p_sys->p_packetizer->fmt_out.i_bitrate;
-
-                if( p_sys->i_xing_bytes && p_sys->i_xing_frames &&
-                    p_sys->i_xing_frame_samples )
-                {
-                    p_sys->i_bitrate_avg = p_sys->i_xing_bytes * I64C(8) *
-                        p_sys->p_packetizer->fmt_out.audio.i_rate /
-                        p_sys->i_xing_frames / p_sys->i_xing_frame_samples;
-                }
-            }
 
             es_out_Control( p_demux->out, ES_OUT_SET_PCR, p_block_out->i_dts );
 
@@ -317,6 +322,8 @@ static int Demux( demux_t *p_demux )
 
             p_block_out = p_next;
         }
+        p_block_out = p_sys->p_packetizer->pf_packetize(
+            p_sys->p_packetizer, &p_block_in );
     }
     return 1;
 }

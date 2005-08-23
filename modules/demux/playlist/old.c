@@ -2,7 +2,7 @@
  * old.c : Old playlist format import
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: old.c 8030 2004-06-22 21:22:13Z gbazin $
+ * $Id: old.c 11449 2005-06-17 16:45:58Z massiot $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -37,29 +37,21 @@
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
-int Import_Old ( vlc_object_t * );
 static int Demux( demux_t *p_demux);
 static int Control( demux_t *p_demux, int i_query, va_list args );
 
 /*****************************************************************************
  * Import_Old : main import function
  *****************************************************************************/
-int Import_Old( vlc_object_t *p_this )
+int E_(Import_Old)( vlc_object_t *p_this )
 {
     demux_t *p_demux = (demux_t *)p_this;
     uint8_t *p_peek;
 
-    if( stream_Peek( p_demux->s, &p_peek, 31 ) < 31 )
-    {
-        msg_Err( p_demux, "cannot peek" );
-        return VLC_EGENERIC;
-    }
+    if( stream_Peek( p_demux->s, &p_peek, 31 ) < 31 ) return VLC_EGENERIC;
 
-    if( strncmp( p_peek, PLAYLIST_FILE_HEADER , 31 ) )
-    {
-        msg_Warn(p_demux, "old import module discarded: invalid file");
-        return VLC_EGENERIC;
-    }
+    if( strncmp( p_peek, PLAYLIST_FILE_HEADER , 31 ) ) return VLC_EGENERIC;
+
     msg_Dbg( p_demux, "found valid old playlist file");
 
     p_demux->pf_control = Control;

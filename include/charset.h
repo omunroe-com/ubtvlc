@@ -2,7 +2,7 @@
  * charset.h: Determine a canonical name for the current locale's character encoding.
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: charset.h 6961 2004-03-05 17:34:23Z sam $
+ * $Id: charset.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Author: Derk-Jan Hartman <thedj at users.sourceforge.net>
  *

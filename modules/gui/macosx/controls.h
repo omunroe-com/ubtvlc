@@ -1,8 +1,8 @@
 /*****************************************************************************
  * controls.h: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2002-2003 VideoLAN
- * $Id: controls.h 7178 2004-03-28 12:29:42Z bigben $
+ * Copyright (C) 2002-2005 VideoLAN
+ * $Id: controls.h 10964 2005-05-10 23:08:52Z djc $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -28,7 +28,6 @@
  *****************************************************************************/
 @interface VLCControls : NSObject
 {
-    IBOutlet id o_open;
     IBOutlet id o_main;
 
     IBOutlet id o_btn_fullscreen;
@@ -53,7 +52,6 @@
 - (IBAction)volumeDown:(id)sender;
 - (IBAction)mute:(id)sender;
 - (IBAction)volumeSliderUpdated:(id)sender;
-- (void)updateVolumeSlider;
 
 - (IBAction)windowAction:(id)sender;
 

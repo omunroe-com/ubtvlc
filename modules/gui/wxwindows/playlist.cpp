@@ -1,10 +1,11 @@
 /*****************************************************************************
  * playlist.cpp : wxWindows plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000-2004 VideoLAN
- * $Id: playlist.cpp 8563 2004-08-29 09:04:20Z zorglub $
+ * Copyright (C) 2000-2005 VideoLAN
+ * $Id: playlist.cpp 11236 2005-06-01 19:53:37Z courmisch $
  *
  * Authors: Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Clément Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/OR MODIFy
  * it under the terms of the GNU General Public License as published by
@@ -33,11 +34,25 @@
 #include "bitmaps/repeat.xpm"
 #include "bitmaps/loop.xpm"
 
+#include "bitmaps/type_unknown.xpm"
+#include "bitmaps/type_afile.xpm"
+#include "bitmaps/type_vfile.xpm"
+#include "bitmaps/type_net.xpm"
+#include "bitmaps/type_card.xpm"
+#include "bitmaps/type_disc.xpm"
+#include "bitmaps/type_cdda.xpm"
+#include "bitmaps/type_directory.xpm"
+#include "bitmaps/type_playlist.xpm"
+#include "bitmaps/type_node.xpm"
+
+#include <wx/dynarray.h>
+#include <wx/imaglist.h>
 
 #define HELP_SHUFFLE N_( "Shuffle" )
-#define HELP_LOOP N_( "Loop" )
-#define HELP_REPEAT N_( "Repeat" )
+#define HELP_LOOP N_( "Repeat All" )
+#define HELP_REPEAT N_( "Repeat One" )
 
+namespace wxvlc {
 /* Callback prototype */
 static int PlaylistChanged( vlc_object_t *, const char *,
                             vlc_value_t, vlc_value_t, void * );
@@ -45,6 +60,10 @@ static int PlaylistNext( vlc_object_t *, const char *,
                          vlc_value_t, vlc_value_t, void * );
 static int ItemChanged( vlc_object_t *, const char *,
                         vlc_value_t, vlc_value_t, void * );
+static int ItemAppended( vlc_object_t *p_this, const char *psz_variable,
+                      vlc_value_t oval, vlc_value_t nval, void *param );
+static int ItemDeleted( vlc_object_t *p_this, const char *psz_variable,
+                      vlc_value_t oval, vlc_value_t nval, void *param );
 
 /*****************************************************************************
  * Event Table.
@@ -55,6 +74,7 @@ enum
 {
     /* menu items */
     AddFile_Event = 1,
+    AddDir_Event,
     AddMRL_Event,
     Close_Event,
     Open_Event,
@@ -62,44 +82,40 @@ enum
 
     SortTitle_Event,
     RSortTitle_Event,
-    SortAuthor_Event,
-    RSortAuthor_Event,
-    SortGroup_Event,
-    RSortGroup_Event,
     Randomize_Event,
 
-    EnableSelection_Event,
-    DisableSelection_Event,
-
-    InvertSelection_Event,
     DeleteSelection_Event,
     Random_Event,
     Loop_Event,
     Repeat_Event,
-    SelectAll_Event,
-
-    EnableGroup_Event,
-    DisableGroup_Event,
-
-    Up_Event,
-    Down_Event,
-    Infos_Event,
 
     PopupPlay_Event,
+    PopupPlayThis_Event,
+    PopupPreparse_Event,
+    PopupSort_Event,
     PopupDel_Event,
-    PopupEna_Event,
     PopupInfo_Event,
 
     SearchText_Event,
     Search_Event,
 
     /* controls */
-    ListView_Event,
+    TreeCtrl_Event,
 
     Browse_Event,  /* For export playlist */
 
     /* custom events */
-    UpdateItem_Event
+    UpdateItem_Event,
+    AppendItem_Event,
+    RemoveItem_Event,
+
+    MenuDummy_Event = wxID_HIGHEST + 999,
+
+    FirstView_Event = wxID_HIGHEST + 1000,
+    LastView_Event = wxID_HIGHEST + 1100,
+
+    FirstSD_Event = wxID_HIGHEST + 2000,
+    LastSD_Event = wxID_HIGHEST + 2100,
 };
 
 DEFINE_LOCAL_EVENT_TYPE( wxEVT_PLAYLIST );
@@ -109,56 +125,46 @@ BEGIN_EVENT_TABLE(Playlist, wxFrame)
 
     /* Menu events */
     EVT_MENU(AddFile_Event, Playlist::OnAddFile)
+    EVT_MENU(AddDir_Event, Playlist::OnAddDir)
     EVT_MENU(AddMRL_Event, Playlist::OnAddMRL)
-    EVT_MENU(Close_Event, Playlist::OnClose)
+    EVT_MENU(Close_Event, Playlist::OnMenuClose)
     EVT_MENU(Open_Event, Playlist::OnOpen)
     EVT_MENU(Save_Event, Playlist::OnSave)
 
     EVT_MENU(SortTitle_Event, Playlist::OnSort)
     EVT_MENU(RSortTitle_Event, Playlist::OnSort)
-    EVT_MENU(SortAuthor_Event, Playlist::OnSort)
-    EVT_MENU(RSortAuthor_Event, Playlist::OnSort)
-    EVT_MENU(SortGroup_Event, Playlist::OnSort)
-    EVT_MENU(RSortGroup_Event, Playlist::OnSort)
 
     EVT_MENU(Randomize_Event, Playlist::OnSort)
 
-    EVT_MENU(EnableSelection_Event, Playlist::OnEnableSelection)
-    EVT_MENU(DisableSelection_Event, Playlist::OnDisableSelection)
-    EVT_MENU(InvertSelection_Event, Playlist::OnInvertSelection)
     EVT_MENU(DeleteSelection_Event, Playlist::OnDeleteSelection)
-    EVT_MENU(SelectAll_Event, Playlist::OnSelectAll)
-    EVT_MENU(Infos_Event, Playlist::OnInfos)
+
+    EVT_MENU_OPEN( Playlist::OnMenuOpen )
+    EVT_MENU( -1, Playlist::OnMenuEvent )
 
     EVT_TOOL(Random_Event, Playlist::OnRandom)
     EVT_TOOL(Repeat_Event, Playlist::OnRepeat)
     EVT_TOOL(Loop_Event, Playlist::OnLoop)
 
-    EVT_MENU(EnableGroup_Event, Playlist::OnEnDis)
-    EVT_MENU(DisableGroup_Event, Playlist::OnEnDis)
-
-    /* Listview events */
-    EVT_LIST_ITEM_ACTIVATED(ListView_Event, Playlist::OnActivateItem)
-    EVT_LIST_COL_CLICK(ListView_Event, Playlist::OnColSelect)
-    EVT_LIST_KEY_DOWN(ListView_Event, Playlist::OnKeyDown)
-    EVT_LIST_ITEM_RIGHT_CLICK(ListView_Event, Playlist::OnPopup)
-
     /* Popup events */
     EVT_MENU( PopupPlay_Event, Playlist::OnPopupPlay)
+    EVT_MENU( PopupPlayThis_Event, Playlist::OnPopupPlay)
+    EVT_MENU( PopupPreparse_Event, Playlist::OnPopupPreparse)
+    EVT_MENU( PopupSort_Event, Playlist::OnPopupSort)
     EVT_MENU( PopupDel_Event, Playlist::OnPopupDel)
-    EVT_MENU( PopupEna_Event, Playlist::OnPopupEna)
     EVT_MENU( PopupInfo_Event, Playlist::OnPopupInfo)
 
+    /* Tree control events */
+    EVT_TREE_ITEM_ACTIVATED( TreeCtrl_Event, Playlist::OnActivateItem )
+    EVT_TREE_KEY_DOWN( -1, Playlist::OnKeyDown )
+
+    EVT_CONTEXT_MENU( Playlist::OnPopup )
 
     /* Button events */
     EVT_BUTTON( Search_Event, Playlist::OnSearch)
     EVT_BUTTON( Save_Event, Playlist::OnSave)
-    EVT_BUTTON( Infos_Event, Playlist::OnInfos)
 
-    EVT_BUTTON( Up_Event, Playlist::OnUp)
-    EVT_BUTTON( Down_Event, Playlist::OnDown)
-
-    EVT_TEXT(SearchText_Event, Playlist::OnSearchTextChange)
+    /*EVT_TEXT( SearchText_Event, Playlist::OnSearchTextChange )*/
+    EVT_TEXT_ENTER( SearchText_Event, Playlist::OnSearch )
 
     /* Custom events */
     EVT_COMMAND(-1, wxEVT_PLAYLIST, Playlist::OnPlaylistEvent)
@@ -168,20 +174,27 @@ BEGIN_EVENT_TABLE(Playlist, wxFrame)
     EVT_CLOSE(Playlist::OnClose)
 END_EVENT_TABLE()
 
-
-/* Event Table for the Newgroup class */
-BEGIN_EVENT_TABLE(NewGroup, wxDialog)
-    EVT_BUTTON( wxID_OK, NewGroup::OnOk)
-    EVT_BUTTON( wxID_CANCEL, NewGroup::OnCancel)
-END_EVENT_TABLE()
-
+/*****************************************************************************
+ * PlaylistItem class
+ ****************************************************************************/
+class PlaylistItem : public wxTreeItemData
+{
+public:
+    PlaylistItem( playlist_item_t *p_item ) : wxTreeItemData()
+    {
+        i_id = p_item->input.i_id;
+    }
+protected:
+    int i_id;
+friend class Playlist;
+};
 
 /*****************************************************************************
  * Constructor.
  *****************************************************************************/
 Playlist::Playlist( intf_thread_t *_p_intf, wxWindow *p_parent ):
     wxFrame( p_parent, -1, wxU(_("Playlist")), wxDefaultPosition,
-             wxSize(345,400), wxDEFAULT_FRAME_STYLE ), listview(NULL)
+             wxSize(500,300), wxDEFAULT_FRAME_STYLE )
 {
     vlc_value_t val;
 
@@ -190,10 +203,22 @@ Playlist::Playlist( intf_thread_t *_p_intf, wxWindow *p_parent ):
     i_update_counter = 0;
     i_sort_mode = MODE_NONE;
     b_need_update = VLC_FALSE;
+    p_playlist = (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
+                                                FIND_ANYWHERE );
+    if( p_playlist == NULL )
+    {
+        return;
+    }
+
     SetIcon( *p_intf->p_sys->p_icon );
 
+    p_view_menu = NULL;
+    p_sd_menu = SDMenu();
+
+    i_current_view = VIEW_CATEGORY;
+    b_changed_view = VLC_FALSE;
+
     i_title_sorted = 0;
-    i_author_sorted = 0;
     i_group_sorted = 0;
     i_duration_sorted = 0;
 
@@ -203,8 +228,12 @@ Playlist::Playlist( intf_thread_t *_p_intf, wxWindow *p_parent ):
 
     /* Create our "Manage" menu */
     wxMenu *manage_menu = new wxMenu;
-    manage_menu->Append( AddFile_Event, wxU(_("&Simple Add...")) );
+    manage_menu->Append( AddFile_Event, wxU(_("&Simple Add File...")) );
+    manage_menu->Append( AddDir_Event, wxU(_("Add &Directory...")) );
     manage_menu->Append( AddMRL_Event, wxU(_("&Add MRL...")) );
+    manage_menu->AppendSeparator();
+    manage_menu->Append( MenuDummy_Event, wxU(_("Services discovery")),
+                         p_sd_menu );
     manage_menu->AppendSeparator();
     manage_menu->Append( Open_Event, wxU(_("&Open Playlist...")) );
     manage_menu->Append( Save_Event, wxU(_("&Save Playlist...")) );
@@ -216,45 +245,39 @@ Playlist::Playlist( intf_thread_t *_p_intf, wxWindow *p_parent ):
     sort_menu->Append( SortTitle_Event, wxU(_("Sort by &title")) );
     sort_menu->Append( RSortTitle_Event, wxU(_("&Reverse sort by title")) );
     sort_menu->AppendSeparator();
-    sort_menu->Append( SortAuthor_Event, wxU(_("Sort by &author")) );
-    sort_menu->Append( RSortAuthor_Event, wxU(_("Reverse sort by author")) );
-    sort_menu->AppendSeparator();
-    sort_menu->Append( SortGroup_Event, wxU(_("Sort by &group")) );
-    sort_menu->Append( RSortGroup_Event, wxU(_("Reverse sort by group")) );
-    sort_menu->AppendSeparator();
     sort_menu->Append( Randomize_Event, wxU(_("&Shuffle Playlist")) );
 
     /* Create our "Selection" menu */
     wxMenu *selection_menu = new wxMenu;
-    selection_menu->Append( EnableSelection_Event, wxU(_("&Enable")) );
-    selection_menu->Append( DisableSelection_Event, wxU(_("&Disable")) );
-    selection_menu->AppendSeparator();
-    selection_menu->Append( InvertSelection_Event, wxU(_("&Invert")) );
     selection_menu->Append( DeleteSelection_Event, wxU(_("D&elete")) );
-    selection_menu->Append( SelectAll_Event, wxU(_("&Select All")) );
 
-    /* Create our "Group" menu */
-    wxMenu *group_menu = new wxMenu;
-    group_menu->Append( EnableGroup_Event, wxU(_("&Enable all group items")) );
-    group_menu->Append( DisableGroup_Event,
-                        wxU(_("&Disable all group items")) );
+    /* Create our "View" menu */
+    ViewMenu();
 
     /* Append the freshly created menus to the menu bar */
-    wxMenuBar *menubar = new wxMenuBar( wxMB_DOCKABLE );
+    wxMenuBar *menubar = new wxMenuBar();
     menubar->Append( manage_menu, wxU(_("&Manage")) );
     menubar->Append( sort_menu, wxU(_("S&ort")) );
     menubar->Append( selection_menu, wxU(_("&Selection")) );
-    menubar->Append( group_menu, wxU(_("&Groups")) );
+    menubar->Append( p_view_menu, wxU(_("&View items") ) );
 
     /* Attach the menu bar to the frame */
     SetMenuBar( menubar );
 
     /* Create the popup menu */
-    popup_menu = new wxMenu;
-    popup_menu->Append( PopupPlay_Event, wxU(_("Play")) );
-    popup_menu->Append( PopupDel_Event, wxU(_("Delete")) );
-    popup_menu->Append( PopupEna_Event, wxU(_("Enable/Disable")) );
-    popup_menu->Append( PopupInfo_Event, wxU(_("Info")) );
+    node_popup = new wxMenu;
+    node_popup->Append( PopupPlay_Event, wxU(_("Play")) );
+    node_popup->Append( PopupPlayThis_Event, wxU(_("Play this branch")) );
+    node_popup->Append( PopupPreparse_Event, wxU(_("Preparse")) );
+    node_popup->Append( PopupSort_Event, wxU(_("Sort this branch")) );
+    node_popup->Append( PopupDel_Event, wxU(_("Delete")) );
+    node_popup->Append( PopupInfo_Event, wxU(_("Info")) );
+
+    item_popup = new wxMenu;
+    item_popup->Append( PopupPlay_Event, wxU(_("Play")) );
+    item_popup->Append( PopupPreparse_Event, wxU(_("Preparse")) );
+    item_popup->Append( PopupDel_Event, wxU(_("Delete")) );
+    item_popup->Append( PopupInfo_Event, wxU(_("Info")) );
 
     /* Create a panel to put everything in */
     wxPanel *playlist_panel = new wxPanel( this, -1 );
@@ -262,7 +285,7 @@ Playlist::Playlist( intf_thread_t *_p_intf, wxWindow *p_parent ):
 
     /* Create the toolbar */
     wxToolBar *toolbar =
-        CreateToolBar( wxTB_HORIZONTAL | wxTB_FLAT | wxTB_DOCKABLE );
+        CreateToolBar( wxTB_HORIZONTAL | wxTB_FLAT );
 
     /* Create the random tool */
     toolbar->AddTool( Random_Event, wxT(""), wxBitmap(shuffle_on_xpm),
@@ -302,60 +325,54 @@ Playlist::Playlist( intf_thread_t *_p_intf, wxWindow *p_parent ):
     search_button->SetDefault();
     toolbar->Realize();
 
-    /* Create the listview */
-    /* FIXME: the given size is arbitrary, and prevents us from resizing
-     * the window to smaller dimensions. But the sizers don't seem to adjust
-     * themselves to the size of a listview, and with a wxDefaultSize the
-     * playlist window is ridiculously small */
-    listview = new wxListView( playlist_panel, ListView_Event,
+    /* Create the tree */
+    treectrl = new wxTreeCtrl( playlist_panel, TreeCtrl_Event,
                                wxDefaultPosition, wxDefaultSize,
-                               wxLC_REPORT | wxSUNKEN_BORDER );
+                               wxTR_HIDE_ROOT | wxTR_LINES_AT_ROOT|
+                               wxTR_NO_LINES |
+                               wxTR_HAS_BUTTONS | wxTR_TWIST_BUTTONS |
+                               wxTR_MULTIPLE | wxTR_EXTENDED );
+
+    /* Create image list */
+    wxImageList *p_images = new wxImageList( 16 , 16, TRUE );
+
+    /* FIXME: absolutely needs to be in the right order FIXME */
+    p_images->Add( wxIcon( type_unknown_xpm ) );
+    p_images->Add( wxIcon( type_afile_xpm ) );
+    p_images->Add( wxIcon( type_vfile_xpm ) );
+    p_images->Add( wxIcon( type_directory_xpm ) );
+    p_images->Add( wxIcon( type_disc_xpm ) );
+    p_images->Add( wxIcon( type_cdda_xpm ) );
+    p_images->Add( wxIcon( type_card_xpm ) );
+    p_images->Add( wxIcon( type_net_xpm ) );
+    p_images->Add( wxIcon( type_playlist_xpm ) );
+    p_images->Add( wxIcon( type_node_xpm ) );
+    treectrl->AssignImageList( p_images );
+
+    treectrl->AddRoot( wxU(_("root" )), -1, -1, NULL );
 
     /* Reduce font size */
-    wxFont font= listview->GetFont();
-    font.SetPointSize(8);
-    listview->SetFont( font );
-
-    listview->InsertColumn( 0, wxU(_("Name")) );
-    listview->SetColumnWidth( 0, 250 );
-    listview->InsertColumn( 1, wxU(_("Duration")) );
-    listview->SetColumnWidth( 1, 75 );
-    listview->Layout();
-
-    /* Create the Up-Down buttons */
-    wxButton *up_button =
-        new wxButton( playlist_panel, Up_Event, wxU(_("Up") ) );
-    wxButton *down_button =
-        new wxButton( playlist_panel, Down_Event, wxU(_("Down") ) );
-
-    wxBoxSizer *updown_sizer = new wxBoxSizer( wxHORIZONTAL );
-    updown_sizer->Layout();
-
-    /* The top and bottom sizers */
-    wxBoxSizer *bottom_sizer = new wxBoxSizer( wxHORIZONTAL );
-    bottom_sizer->Add( up_button, 0, wxALIGN_LEFT | wxRIGHT, 3);
-    bottom_sizer->Add( down_button, 0, wxALIGN_LEFT | wxLEFT, 3);
-    bottom_sizer->Layout();
+    wxFont font= treectrl->GetFont();
+    font.SetPointSize(9);
+    treectrl->SetFont( font );
 
     wxBoxSizer *panel_sizer = new wxBoxSizer( wxVERTICAL );
-    panel_sizer->Add( listview, 1, wxEXPAND | wxALL, 5 );
-    panel_sizer->Add( bottom_sizer, 0, wxALL, 5);
+    panel_sizer->Add( treectrl, 1, wxEXPAND | wxALL, 5 );
     panel_sizer->Layout();
 
     playlist_panel->SetSizerAndFit( panel_sizer );
+
+    int pi_widths[1] =  { -1 };
+    statusbar = CreateStatusBar( 1 );
+    statusbar->SetStatusWidths( 1, pi_widths );
 
 #if wxUSE_DRAG_AND_DROP
     /* Associate drop targets with the playlist */
     SetDropTarget( new DragAndDrop( p_intf, VLC_TRUE ) );
 #endif
 
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        return;
-    }
+    i_saved_id = -1;
+
 
     /* We want to be noticed of playlist changes */
 
@@ -368,26 +385,19 @@ Playlist::Playlist( intf_thread_t *_p_intf, wxWindow *p_parent ):
     /* One item has been updated */
     var_AddCallback( p_playlist, "item-change", ItemChanged, this );
 
-    vlc_object_release( p_playlist );
+    var_AddCallback( p_playlist, "item-append", ItemAppended, this );
+    var_AddCallback( p_playlist, "item-deleted", ItemDeleted, this );
 
     /* Update the playlist */
-    Rebuild();
-}
+    Rebuild( VLC_TRUE );
 
-void Playlist::OnSize( wxSizeEvent& event)
-{
-    wxSize size = GetClientSize();
-    if( listview )
-        listview->SetColumnWidth( 0, size.x - listview->GetColumnWidth(1)
-				  - 15 /* margins */ );
-    event.Skip();
 }
 
 Playlist::~Playlist()
 {
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
+    if( pp_sds != NULL )
+        free( pp_sds );
+
     if( p_playlist == NULL )
     {
         return;
@@ -396,134 +406,422 @@ Playlist::~Playlist()
     var_DelCallback( p_playlist, "item-change", ItemChanged, this );
     var_DelCallback( p_playlist, "playlist-current", PlaylistNext, this );
     var_DelCallback( p_playlist, "intf-change", PlaylistChanged, this );
+    var_DelCallback( p_playlist, "item-append", ItemAppended, this );
+    var_DelCallback( p_playlist, "item-deleted", ItemDeleted, this );
     vlc_object_release( p_playlist );
 }
 
 /**********************************************************************
- * Update one playlist item
+ * Update functions
  **********************************************************************/
+
+/* Update a node */
+void Playlist::UpdateNode( playlist_item_t *p_node, wxTreeItemId node )
+{
+    wxTreeItemIdValue cookie;
+    wxTreeItemId child;
+    for( int i = 0; i< p_node->i_children ; i++ )
+    {
+        if( i == 0 )
+        {
+            child = treectrl->GetFirstChild( node, cookie);
+        }
+        else
+        {
+            child = treectrl->GetNextChild( node, cookie );
+        }
+
+        if( !child.IsOk() )
+        {
+            /* Not enough children */
+            CreateNode( p_node->pp_children[i], node );
+            /* Keep the tree pointer up to date */
+            child = treectrl->GetNextChild( node, cookie );
+        }
+    }
+    treectrl->SetItemImage( node, p_node->input.i_type );
+
+}
+
+/* Creates the node p_node as last child of parent */
+void Playlist::CreateNode( playlist_item_t *p_node, wxTreeItemId parent )
+{
+    wxTreeItemId node =
+        treectrl->AppendItem( parent, wxL2U( p_node->input.psz_name ),
+                              -1,-1, new PlaylistItem( p_node ) );
+    treectrl->SetItemImage( node, p_node->input.i_type );
+
+    UpdateNodeChildren( p_node, node );
+}
+
+/* Update all children (recursively) of this node */
+void Playlist::UpdateNodeChildren( playlist_item_t *p_node,
+                                   wxTreeItemId node )
+{
+
+    for( int i = 0; i< p_node->i_children ; i++ )
+    {
+        /* Append the item */
+        if( p_node->pp_children[i]->i_children == -1 )
+        {
+            wxTreeItemId item =
+                treectrl->AppendItem( node,
+                    wxL2U( p_node->pp_children[i]->input.psz_name ), -1,-1,
+                           new PlaylistItem( p_node->pp_children[i]) );
+
+            UpdateTreeItem( item );
+        }
+        else
+        {
+            CreateNode( p_node->pp_children[i], node );
+        }
+    }
+}
+
+/* Update an item in the tree */
+void Playlist::UpdateTreeItem( wxTreeItemId item )
+{
+    if( ! item.IsOk() ) return;
+
+    wxTreeItemData *p_data = treectrl->GetItemData( item );
+    if( !p_data ) return;
+    
+    LockPlaylist( p_intf->p_sys, p_playlist );
+    playlist_item_t *p_item = playlist_ItemGetById( p_playlist,
+                                          ((PlaylistItem *)p_data)->i_id );
+    if( !p_item ) return;
+
+    wxString msg;
+    wxString duration = wxU( "" );
+    char *psz_author = vlc_input_item_GetInfo( &p_item->input,
+                                                     _("Meta-information"),
+                                                     _("Artist"));
+    if( psz_author == NULL )
+        return;
+    char psz_duration[MSTRTIME_MAX_SIZE];
+    mtime_t dur = p_item->input.i_duration;
+
+    if( dur != -1 )
+    {
+        secstotimestr( psz_duration, dur/1000000 );
+        duration.Append( wxU( " ( " ) +  wxString( wxU( psz_duration ) ) +
+                         wxU( " )" ) );
+    }
+
+    if( !strcmp( psz_author, "" ) || p_item->input.b_fixed_name == VLC_TRUE )
+    {
+        msg.Printf( wxString( wxU( p_item->input.psz_name ) ) + duration );
+    }
+    else
+    {
+        msg.Printf( wxString(wxU( psz_author )) + wxT(" - ") +
+                    wxString(wxU(p_item->input.psz_name)) + duration );
+    }
+    free( psz_author );
+    treectrl->SetItemText( item , msg );
+    treectrl->SetItemImage( item, p_item->input.i_type );
+
+    if( p_playlist->status.p_item == p_item )
+    {
+        treectrl->SetItemBold( item, true );
+        treectrl->EnsureVisible( item );
+    }
+    else
+    {
+        treectrl->SetItemBold( item, false );
+    }
+    UnlockPlaylist( p_intf->p_sys, p_playlist );
+}
+
+/* Process a AppendIt em request */
+void Playlist::AppendItem( wxCommandEvent& event )
+{
+    playlist_add_t *p_add = (playlist_add_t *)event.GetClientData();
+    playlist_item_t *p_item = NULL;
+
+    wxTreeItemId item,node;
+
+    if( p_add->i_view != i_current_view )
+    {
+        goto update;
+    }
+
+    node = FindItem( treectrl->GetRootItem(), p_add->i_node );
+    if( !node.IsOk() )
+    {
+        goto update;
+    }
+
+    p_item = playlist_ItemGetById( p_playlist, p_add->i_item );
+    if( !p_item )
+        goto update;
+
+    item = treectrl->AppendItem( node,
+                                 wxL2U( p_item->input.psz_name ), -1,-1,
+                                 new PlaylistItem( p_item ) );
+    treectrl->SetItemImage( item, p_item->input.i_type );
+
+    if( item.IsOk() && p_item->i_children == -1 )
+    {
+        UpdateTreeItem( item );
+    }
+
+update:
+    int i_count = CountItems( treectrl->GetRootItem());
+    if( i_count != p_playlist->i_size )
+    {
+        statusbar->SetStatusText( wxString::Format( wxU(_(
+                                  "%i items in playlist (%i not shown)")),
+                                  p_playlist->i_size,
+                                  p_playlist->i_size - i_count ) );
+        if( !b_changed_view )
+        {
+            i_current_view = VIEW_CATEGORY;
+            b_changed_view = VLC_TRUE;
+            b_need_update = VLC_TRUE;
+        }
+    }
+    else
+    {
+        statusbar->SetStatusText( wxString::Format( wxU(_(
+                                  "%i items in playlist")),
+                                  p_playlist->i_size ), 0 );
+    }
+
+    return;
+}
+
+/* Process a updateitem request */
 void Playlist::UpdateItem( int i )
 {
     if( i < 0 ) return; /* Sanity check */
+    
+    wxTreeItemId item = FindItem( treectrl->GetRootItem(), i );
 
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-
-    if( p_playlist == NULL )
+    if( item.IsOk() )
     {
-        return;
+        UpdateTreeItem( item );
+    }
+}
+
+void Playlist::RemoveItem( int i )
+{
+    if( i <= 0 ) return; /* Sanity check */
+    if( i == i_saved_id ) i_saved_id = -1;
+
+    wxTreeItemId item = FindItem( treectrl->GetRootItem(), i );
+
+    if( item.IsOk() )
+    {
+        treectrl->Delete( item );
+    }
+}
+
+
+/**********************************************************************
+ * Search functions (internal)
+ **********************************************************************/
+
+/* Find a wxItem from a playlist id */
+wxTreeItemId Playlist::FindItem( wxTreeItemId root, int i_id )
+{
+    wxTreeItemIdValue cookie;
+    PlaylistItem *p_wxcurrent;
+    wxTreeItemId search;
+    wxTreeItemId item = treectrl->GetFirstChild( root, cookie );
+    wxTreeItemId child;
+
+    p_wxcurrent = (PlaylistItem *)treectrl->GetItemData( root );
+
+    if( i_id < 0 )
+    {
+        wxTreeItemId dummy;
+        return dummy;
+    }
+    if( i_saved_id == i_id )
+    {
+        return saved_tree_item;
     }
 
-    playlist_item_t *p_item = playlist_ItemGetByPos( p_playlist, i );
-
-    if( !p_item )
+    if( !p_wxcurrent )
     {
-        vlc_object_release(p_playlist);
-        return;
+        wxTreeItemId dummy;
+        return dummy;
+    }        
+
+    if( p_wxcurrent->i_id == i_id )
+    {
+        i_saved_id = i_id;
+        saved_tree_item = root;
+        return root;
     }
 
-    char *psz_author = playlist_ItemGetInfo( p_item, _("General"), _("Author"));
+    while( item.IsOk() )
+    {
+        p_wxcurrent = (PlaylistItem *)treectrl->GetItemData( item );
+        if( p_wxcurrent->i_id == i_id )
+        {
+            i_saved_id = i_id;
+            saved_tree_item = item;
+            return item;
+        }
+        if( treectrl->ItemHasChildren( item ) )
+        {
+            wxTreeItemId search = FindItem( item, i_id );
+            if( search.IsOk() )
+            {
+                i_saved_id = i_id;
+                saved_tree_item = search;
+                return search;
+            }
+        }
+        item = treectrl->GetNextChild( root, cookie );
+    }
+    /* Not found */
+    wxTreeItemId dummy;
+    return dummy;
+}
 
-    if( !strcmp( psz_author, "" ) )
+int Playlist::CountItems( wxTreeItemId root )
+{
+    wxTreeItemIdValue cookie;
+    int count = 0;
+    wxTreeItemId item = treectrl->GetFirstChild( root, cookie );
+    
+    while( item.IsOk() )
     {
-        listview->SetItem( i, 0, wxL2U(p_item->input.psz_name) );
+        if( treectrl->ItemHasChildren( item ) )
+        {
+            count += CountItems( item );
+        }
+        else
+        {
+            playlist_item_t *p_item;
+            LockPlaylist( p_intf->p_sys, p_playlist );
+            p_item = playlist_ItemGetById( p_playlist, ((PlaylistItem *)treectrl->GetItemData( item ))->i_id );
+            if( p_item && p_item->i_children == -1 )
+                count++;
+            UnlockPlaylist( p_intf->p_sys, p_playlist );
+        }
+        item = treectrl->GetNextChild( root, cookie );
     }
-    else
-    {
-        wxString msg;
-        msg.Printf( wxString(wxU( psz_author )) + wxT(" - ") +
-                    wxString(wxL2U(p_item->input.psz_name)) );
-        listview->SetItem( i, 0, msg );
-    }
-#if 0
-    listview->SetItem( i, 0, wxL2U(p_item->input.psz_name) );
-    listview->SetItem( i, 1, wxU( playlist_ItemGetInfo( p_item,
-                                       _("General"), _("Author") ) ) );
-    char *psz_group = playlist_FindGroup(p_playlist,
-                                         p_item->i_group);
-    listview->SetItem( i, 3,
-             wxL2U( psz_group ? psz_group : _("Normal") ) );
-#endif
-    if( p_item->b_enabled == VLC_FALSE )
-    {
-        wxListItem listitem;
-        listitem.m_itemId = i;
-        listitem.SetTextColour( *wxLIGHT_GREY);
-        listview->SetItem(listitem);
-    }
+    return count;
+}
 
-    char psz_duration[MSTRTIME_MAX_SIZE];
-    mtime_t dur = p_item->input.i_duration;
-    if( dur != -1 )
-        secstotimestr( psz_duration, dur/1000000 );
-    else
-        memcpy( psz_duration, "-:--:--", sizeof("-:--:--") );
-    listview->SetItem( i, 1, wxU(psz_duration) );
+/* Find a wxItem from a name (from current) */
+wxTreeItemId Playlist::FindItemByName( wxTreeItemId root, wxString search_string, wxTreeItemId current, vlc_bool_t *pb_current_found )
+{
+    wxTreeItemIdValue cookie;
+    wxTreeItemId search;
+    wxTreeItemId item = treectrl->GetFirstChild( root, cookie );
+    wxTreeItemId child;
 
-    /* Change the colour for the currenty played stream */
-    wxListItem listitem;
-    listitem.m_itemId = i;
-    if( i == p_playlist->i_index )
+    while( item.IsOk() )
     {
-        listitem.SetTextColour( *wxRED );
+        if( treectrl->GetItemText( item).Lower().Contains(
+                                                 search_string.Lower() ) )
+        {
+            if( !current.IsOk() || *pb_current_found == VLC_TRUE )
+            {
+                return item;
+            }
+            else if( current.IsOk() && item == current )
+            {
+                *pb_current_found = VLC_TRUE;
+            }
+        }
+        if( treectrl->ItemHasChildren( item ) )
+        {
+            wxTreeItemId search = FindItemByName( item, search_string, current,
+                                                  pb_current_found );
+            if( search.IsOk() )
+            {
+                return search;
+            }
+        }
+        item = treectrl->GetNextChild( root, cookie);
     }
-    else
-    {
-        listitem.SetTextColour( *wxBLACK );
-    }
-    listview->SetItem( listitem );
-
-    vlc_object_release(p_playlist);
+    /* Not found */
+    wxTreeItemId dummy;
+    return dummy;
 }
 
 /**********************************************************************
  * Rebuild the playlist
  **********************************************************************/
-void Playlist::Rebuild()
+void Playlist::Rebuild( vlc_bool_t b_root )
 {
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
+    playlist_view_t *p_view;
+
+    /* We can remove the callbacks before locking, anyway, we won't
+     * miss anything */
+    if( b_root )
     {
-        return;
+        var_DelCallback( p_playlist, "item-change", ItemChanged, this );
+        var_DelCallback( p_playlist, "playlist-current", PlaylistNext, this );
+        var_DelCallback( p_playlist, "intf-change", PlaylistChanged, this );
+        var_DelCallback( p_playlist, "item-append", ItemAppended, this );
+        var_DelCallback( p_playlist, "item-deleted", ItemDeleted, this );
+
+        /* ...and rebuild it */
+        LockPlaylist( p_intf->p_sys, p_playlist );
+    }
+    i_saved_id = -1;
+
+    p_view = playlist_ViewFind( p_playlist, i_current_view ); /* FIXME */
+
+    /* HACK we should really get new*/
+    treectrl->DeleteAllItems();
+    treectrl->AddRoot( wxU(_("root" )), -1, -1,
+                         new PlaylistItem( p_view->p_root) );
+
+    wxTreeItemId root = treectrl->GetRootItem();
+    UpdateNode( p_view->p_root, root );
+
+    int i_count = CountItems( treectrl->GetRootItem() );
+
+    if( i_count < p_playlist->i_size && !b_changed_view )
+    {
+        i_current_view = VIEW_CATEGORY;
+        b_changed_view = VLC_TRUE;
+        Rebuild( VLC_FALSE );
+    }
+    else if( i_count != p_playlist->i_size )
+    {
+        statusbar->SetStatusText( wxString::Format( wxU(_(
+                                  "%i items in playlist (%i not shown)")),
+                                  p_playlist->i_size,
+                                  p_playlist->i_size - i_count ) );
+    }
+    else
+    {
+        statusbar->SetStatusText( wxString::Format( wxU(_(
+                                  "%i items in playlist")),
+                                  p_playlist->i_size ), 0 );
     }
 
-    int i_focused = listview->GetFocusedItem();
-
-    /* Clear the list... */
-    listview->DeleteAllItems();
-
-    /* ...and rebuild it */
-    vlc_mutex_lock( &p_playlist->object_lock );
-    for( int i = 0; i < p_playlist->i_size; i++ )
+    if( b_root )
     {
-        wxString filename = wxL2U(p_playlist->pp_items[i]->input.psz_name);
-        listview->InsertItem( i, filename );
-        /* FIXME: Very slow, need to find the playlist many times */
-        UpdateItem( i );
-    }
-    vlc_mutex_unlock( &p_playlist->object_lock );
+        /* Put callbacks back online */
+        var_AddCallback( p_playlist, "intf-change", PlaylistChanged, this );
+        var_AddCallback( p_playlist, "playlist-current", PlaylistNext, this );
+        var_AddCallback( p_playlist, "item-change", ItemChanged, this );
+        var_AddCallback( p_playlist, "item-append", ItemAppended, this );
+        var_AddCallback( p_playlist, "item-deleted", ItemDeleted, this );
 
-    if( i_focused >= 0 && i_focused < p_playlist->i_size )
-    {
-        listview->Focus( i_focused );
-        listview->Select( i_focused );
+        UnlockPlaylist( p_intf->p_sys, p_playlist );
     }
-    else if( p_playlist->i_index >= 0 )
-    {
-        listview->Focus( p_playlist->i_index );
-    }
-    vlc_object_release( p_playlist );
 }
+
+
 
 void Playlist::ShowPlaylist( bool show )
 {
-    if( show ) Rebuild();
+    if( show ) Rebuild( VLC_TRUE );
     Show( show );
 }
 
+/* This function is called on a regular basis */
 void Playlist::UpdatePlaylist()
 {
     i_update_counter++;
@@ -534,61 +832,63 @@ void Playlist::UpdatePlaylist()
     if( this->b_need_update )
     {
         this->b_need_update = VLC_FALSE;
-        Rebuild();
+        Rebuild( VLC_TRUE );
     }
 
     /* Updating the playing status every 0.5s is enough */
     if( i_update_counter % 5 ) return;
-
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        return;
-    }
-
-    /* Update the colour of items */
-    int i_playlist_index = p_playlist->i_index;
-    if( p_intf->p_sys->i_playing != i_playlist_index )
-    {
-        wxListItem listitem;
-        listitem.m_itemId = i_playlist_index;
-        listitem.SetTextColour( *wxRED );
-        listview->SetItem( listitem );
-
-        if( p_intf->p_sys->i_playing != -1 )
-        {
-            listitem.m_itemId = p_intf->p_sys->i_playing;
-            listitem.SetTextColour( *wxBLACK );
-            listview->SetItem( listitem );
-        }
-        p_intf->p_sys->i_playing = i_playlist_index;
-    }
-
-    vlc_object_release( p_playlist );
 }
 
 /*****************************************************************************
  * Private methods.
  *****************************************************************************/
-void Playlist::DeleteItem( int item )
+void Playlist::DeleteTreeItem( wxTreeItemId item )
 {
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        return;
-    }
+   PlaylistItem *p_wxitem;
+   playlist_item_t *p_item;
+   p_wxitem = (PlaylistItem *)treectrl->GetItemData( item );
 
-    playlist_Delete( p_playlist, item );
-    listview->DeleteItem( item );
+   LockPlaylist( p_intf->p_sys, p_playlist );
+   p_item = playlist_ItemGetById( p_playlist, p_wxitem->i_id );
 
-    vlc_object_release( p_playlist );
+   if( !p_item )
+   {
+       UnlockPlaylist( p_intf->p_sys, p_playlist );
+       return;
+   }
+
+   if( p_item->i_children == -1 )
+   {
+       UnlockPlaylist( p_intf->p_sys, p_playlist );
+       DeleteItem( p_item->input.i_id );
+   }
+   else
+   {
+       UnlockPlaylist( p_intf->p_sys, p_playlist );
+       DeleteNode( p_item );
+   }
+   RemoveItem( item );
 }
 
-void Playlist::OnClose( wxCommandEvent& WXUNUSED(event) )
+
+
+void Playlist::DeleteItem( int item_id )
+{
+    playlist_LockDelete( p_playlist, item_id );
+}
+
+void Playlist::DeleteNode( playlist_item_t *p_item )
+{
+    playlist_NodeDelete( p_playlist, p_item, VLC_TRUE , VLC_FALSE );
+}
+
+void Playlist::OnMenuClose( wxCommandEvent& event )
+{
+    wxCloseEvent cevent;
+    OnClose(cevent);
+}
+
+void Playlist::OnClose( wxCloseEvent& WXUNUSED(event) )
 {
     Hide();
 }
@@ -599,23 +899,14 @@ void Playlist::OnSave( wxCommandEvent& WXUNUSED(event) )
         char *psz_desc;
         char *psz_filter;
         char *psz_module;
-    } formats[] = {{ _("M3U file"), "*.m3u", "export-m3u" },
-                   { _("PLS file"), "*.pls", "export-pls" }};
+    } formats[] = {{ _("M3U file"), "*.m3u", "export-m3u" }};
+
     wxString filter = wxT("");
 
-    playlist_t * p_playlist =
-                (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                               FIND_ANYWHERE );
-
-    if( ! p_playlist )
-    {
-        return;
-    }
     if( p_playlist->i_size == 0 )
     {
         wxMessageBox( wxU(_("Playlist is empty") ), wxU(_("Can't save")),
                       wxICON_WARNING | wxOK, this );
-        vlc_object_release( p_playlist );
         return;
     }
 
@@ -638,20 +929,10 @@ void Playlist::OnSave( wxCommandEvent& WXUNUSED(event) )
         }
     }
 
-    vlc_object_release( p_playlist );
-
 }
 
 void Playlist::OnOpen( wxCommandEvent& WXUNUSED(event) )
 {
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        return;
-    }
-
     wxFileDialog dialog( this, wxU(_("Open playlist")), wxT(""), wxT(""),
         wxT("All playlists|*.pls;*.m3u;*.asx;*.b4s|M3U files|*.m3u"), wxOPEN );
 
@@ -659,71 +940,24 @@ void Playlist::OnOpen( wxCommandEvent& WXUNUSED(event) )
     {
         playlist_Import( p_playlist, dialog.GetPath().mb_str() );
     }
-
-    vlc_object_release( p_playlist );
 }
 
 void Playlist::OnAddFile( wxCommandEvent& WXUNUSED(event) )
 {
     p_intf->p_sys->pf_show_dialog( p_intf, INTF_DIALOG_FILE_SIMPLE, 0, 0 );
 
-#if 0
-    Rebuild();
-#endif
+}
+
+void Playlist::OnAddDir( wxCommandEvent& WXUNUSED(event) )
+{
+    p_intf->p_sys->pf_show_dialog( p_intf, INTF_DIALOG_DIRECTORY, 0, 0 );
+
 }
 
 void Playlist::OnAddMRL( wxCommandEvent& WXUNUSED(event) )
 {
     p_intf->p_sys->pf_show_dialog( p_intf, INTF_DIALOG_FILE, 0, 0 );
 
-#if 0
-    Rebuild();
-#endif
-}
-
-/********************************************************************
- * Move functions
- ********************************************************************/
-void Playlist::OnUp( wxCommandEvent& event )
-{
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        return;
-    }
-
-    /* We use the first selected item, so find it */
-    long i_item = listview->GetNextItem( -1, wxLIST_NEXT_ALL,
-                                         wxLIST_STATE_SELECTED);
-    if( i_item > 0 && i_item < p_playlist->i_size )
-    {
-        playlist_Move( p_playlist, i_item, i_item - 1 );
-        listview->Focus( i_item - 1 );
-    }
-    vlc_object_release( p_playlist );
-}
-
-void Playlist::OnDown( wxCommandEvent& event )
-{
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        return;
-    }
-
-    /* We use the first selected item, so find it */
-    long i_item = listview->GetNextItem( -1, wxLIST_NEXT_ALL,
-                                         wxLIST_STATE_SELECTED );
-    if( i_item >= 0 && i_item < p_playlist->i_size - 1 )
-    {
-        playlist_Move( p_playlist, i_item, i_item + 2 );
-        listview->Focus( i_item + 1 );
-    }
-    vlc_object_release( p_playlist );
 }
 
 /********************************************************************
@@ -731,304 +965,82 @@ void Playlist::OnDown( wxCommandEvent& event )
  ********************************************************************/
 void Playlist::OnSort( wxCommandEvent& event )
 {
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        return;
-    }
+    PlaylistItem *p_wxitem;
+    p_wxitem = (PlaylistItem *)treectrl->GetItemData( treectrl->GetRootItem() );
+
+    LockPlaylist( p_intf->p_sys, p_playlist );
     switch( event.GetId() )
     {
         case SortTitle_Event:
-           playlist_SortTitle( p_playlist, ORDER_NORMAL );
-           break;
+            playlist_RecursiveNodeSort( p_playlist, playlist_ItemGetById( p_playlist, p_wxitem->i_id ),
+                                        SORT_TITLE_NODES_FIRST, ORDER_NORMAL );
+            break;
         case RSortTitle_Event:
-           playlist_SortTitle( p_playlist, ORDER_REVERSE );
-           break;
-        case SortAuthor_Event:
-           playlist_SortAuthor(p_playlist, ORDER_NORMAL );
-           break;
-        case RSortAuthor_Event:
-           playlist_SortAuthor( p_playlist, ORDER_REVERSE );
-           break;
-        case SortGroup_Event:
-           playlist_SortGroup( p_playlist, ORDER_NORMAL );
-           break;
-        case RSortGroup_Event:
-           playlist_SortGroup( p_playlist, ORDER_REVERSE );
-           break;
-        case Randomize_Event:
-           playlist_Sort( p_playlist, SORT_RANDOM, ORDER_NORMAL );
-           break;
+            playlist_RecursiveNodeSort( p_playlist, playlist_ItemGetById( p_playlist, p_wxitem->i_id ),
+                                        SORT_TITLE_NODES_FIRST, ORDER_REVERSE );
     }
-    vlc_object_release( p_playlist );
+    UnlockPlaylist( p_intf->p_sys, p_playlist );
 
-    Rebuild();
-}
-
-void Playlist::OnColSelect( wxListEvent& event )
-{
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        return;
-    }
-    switch( event.GetColumn() )
-    {
-        case 0:
-            if( i_title_sorted != 1 )
-            {
-                playlist_SortTitle( p_playlist, ORDER_NORMAL );
-                i_title_sorted = 1;
-            }
-            else
-            {
-                playlist_SortTitle( p_playlist, ORDER_REVERSE );
-                i_title_sorted = -1;
-            }
-            break;
-        case 1:
-            if( i_author_sorted != 1 )
-            {
-                playlist_SortAuthor( p_playlist, ORDER_NORMAL );
-                i_author_sorted = 1;
-            }
-            else
-            {
-                playlist_SortAuthor( p_playlist, ORDER_REVERSE );
-                i_author_sorted = -1;
-            }
-            break;
-        case 2:
-            if( i_duration_sorted != 1 )
-            {
-                playlist_Sort( p_playlist, SORT_DURATION, ORDER_NORMAL );
-                i_duration_sorted = 1;
-            }
-            else
-            {
-                playlist_Sort( p_playlist, SORT_DURATION, ORDER_REVERSE );
-                i_duration_sorted = -1;
-            }
-            break;
-        case 3:
-            if( i_group_sorted != 1 )
-            {
-                playlist_SortGroup( p_playlist, ORDER_NORMAL );
-                i_group_sorted = 1;
-            }
-            else
-            {
-                playlist_SortGroup( p_playlist, ORDER_REVERSE );
-                i_group_sorted = -1;
-            }
-            break;
-        default:
-            break;
-    }
-    vlc_object_release( p_playlist );
-
-    Rebuild();
+    Rebuild( VLC_TRUE );
 }
 
 /**********************************************************************
- * Search functions
+ * Search functions (user)
  **********************************************************************/
-void Playlist::OnSearchTextChange( wxCommandEvent& WXUNUSED(event) )
+/*void Playlist::OnSearchTextChange( wxCommandEvent& WXUNUSED(event) )
 {
    search_button->SetDefault();
-}
+}*/
 
 void Playlist::OnSearch( wxCommandEvent& WXUNUSED(event) )
 {
     wxString search_string = search_text->GetValue();
 
-    bool b_ok = false;
-    int i_current;
-    int i_first = 0 ;
-    int i_item = -1;
+    vlc_bool_t pb_found = VLC_FALSE;
 
-    for( i_current = 0; i_current < listview->GetItemCount(); i_current++ )
+    wxTreeItemId found =
+     FindItemByName( treectrl->GetRootItem(), search_string,
+                     search_current, &pb_found );
+
+    if( !found.IsOk() )
     {
-        if( listview->GetItemState( i_current, wxLIST_STATE_SELECTED ) ==
-              wxLIST_STATE_SELECTED )
-        {
-            i_first = i_current;
-            break;
-        }
+        wxTreeItemId dummy;
+        search_current = dummy;
+        found =  FindItemByName( treectrl->GetRootItem(), search_string,
+                                 search_current, &pb_found );
     }
 
-    if( i_first == listview->GetItemCount() )
+    if( found.IsOk() )
     {
-        i_first = -1;
+        search_current = found;
+        treectrl->EnsureVisible( found );
+        treectrl->SelectItem( found, true );
     }
-
-    for( i_current = i_first + 1; i_current < listview->GetItemCount();
-         i_current++ )
-    {
-        wxListItem listitem;
-        listitem.SetId( i_current );
-        listview->GetItem( listitem );
-        if( listitem.m_text.Lower().Contains( search_string.Lower() ) )
-        {
-            i_item = i_current;
-            b_ok = true;
-            break;
-        }
-        listitem.SetColumn( 1 );
-        listview->GetItem( listitem );
-        if( listitem.m_text.Lower().Contains( search_string.Lower() ) )
-        {
-            i_item = i_current;
-            b_ok = true;
-            break;
-        }
-    }
-    if( !b_ok )
-    {
-        for( i_current = -1 ; i_current < i_first - 1;
-             i_current++ )
-        {
-            wxListItem listitem;
-            listitem.SetId( i_current );
-            listview->GetItem( listitem );
-            if( listitem.m_text.Lower().Contains( search_string.Lower() ) )
-            {
-                i_item = i_current;
-                b_ok = true;
-                break;
-            }
-            listitem.SetColumn( 1 );
-            listview->GetItem( listitem );
-            if( listitem.m_text.Lower().Contains( search_string.Lower() ) )
-            {
-                i_item = i_current;
-                b_ok = true;
-                break;
-            }
-        }
-    }
-
-    if( i_item < 0 || i_item >= listview->GetItemCount() )
-    {
-        return;
-    }
-
-    for( long item = 0; item < listview->GetItemCount(); item++ )
-    {
-        listview->Select( item, FALSE );
-    }
-
-    wxListItem listitem;
-    listitem.SetId(i_item);
-    listitem.m_state = wxLIST_STATE_SELECTED;
-    listview->Select( i_item, TRUE );
-    listview->Focus( i_item );
 }
 
 /**********************************************************************
  * Selection functions
  **********************************************************************/
-void Playlist::OnInvertSelection( wxCommandEvent& WXUNUSED(event) )
+void Playlist::RecursiveDeleteSelection(  wxTreeItemId root )
 {
-    for( long item = 0; item < listview->GetItemCount(); item++ )
+    wxTreeItemIdValue cookie;
+    wxTreeItemId child = treectrl->GetFirstChild( root, cookie );
+    while( child.IsOk() )
     {
-        listview->Select( item, ! listview->IsSelected( item ) );
+        if( treectrl->ItemHasChildren( child ) )
+        {
+            RecursiveDeleteSelection( child );
+            if( treectrl->IsSelected(child ) ) DeleteTreeItem( child );
+        }
+        else if( treectrl->IsSelected( child ) )
+            DeleteTreeItem( child );
+        child = treectrl->GetNextChild( root, cookie );
     }
 }
 
 void Playlist::OnDeleteSelection( wxCommandEvent& WXUNUSED(event) )
 {
-    long *pd_del = NULL;
-    int i_del = 0;
-    int i;
-
-    /* Delete from the end to the beginning, to avoid a shift of indices */
-    for( long item = listview->GetItemCount() - 1; item >= 0; item-- )
-    {
-        /* TODO : use vector */
-        if( listview->IsSelected( item ) )
-        {
-            if( i_del> 0 )
-            {
-                pd_del = (long *)realloc( pd_del, sizeof( void **) *
-                                                         (i_del + 1 ) );
-            }
-            else
-            {
-                pd_del = (long *)malloc( sizeof( void ** ) );
-            }
-            pd_del[i_del] = item;
-            i_del ++;
-        }
-    }
-    for( long item = listview->GetItemCount() - 1; item >= 0; item-- )
-    {
-        for( i = 0 ; i < i_del; i++ )
-        {
-            if( item == pd_del[i] )
-            {
-                DeleteItem( item );
-            }
-        }
-    }
-
-    Rebuild();
-}
-
-void Playlist::OnEnableSelection( wxCommandEvent& WXUNUSED(event) )
-{
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        return;
-    }
-
-    for( long item = listview->GetItemCount() - 1; item >= 0; item-- )
-    {
-        if( listview->IsSelected( item ) )
-        {
-            /*XXX*/
-            playlist_Enable( p_playlist, item );
-            UpdateItem( item );
-        }
-    }
-    vlc_object_release( p_playlist);
-}
-
-void Playlist::OnDisableSelection( wxCommandEvent& WXUNUSED(event) )
-{
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        return;
-    }
-
-    for( long item = listview->GetItemCount() - 1; item >= 0; item-- )
-    {
-        if( listview->IsSelected( item ) )
-        {
-            /*XXX*/
-            playlist_Disable( p_playlist, item );
-            UpdateItem( item );
-        }
-    }
-    vlc_object_release( p_playlist);
-}
-
-void Playlist::OnSelectAll( wxCommandEvent& WXUNUSED(event) )
-{
-    for( long item = 0; item < listview->GetItemCount(); item++ )
-    {
-        listview->Select( item, TRUE );
-    }
+    RecursiveDeleteSelection( treectrl->GetRootItem() );
 }
 
 /**********************************************************************
@@ -1038,65 +1050,67 @@ void Playlist::OnRandom( wxCommandEvent& event )
 {
     vlc_value_t val;
     val.b_bool = event.IsChecked();
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        return;
-    }
     var_Set( p_playlist, "random", val);
-    vlc_object_release( p_playlist );
 }
 
 void Playlist::OnLoop( wxCommandEvent& event )
 {
     vlc_value_t val;
     val.b_bool = event.IsChecked();
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        return;
-    }
     var_Set( p_playlist, "loop", val);
-    vlc_object_release( p_playlist );
 }
 
 void Playlist::OnRepeat( wxCommandEvent& event )
 {
     vlc_value_t val;
     val.b_bool = event.IsChecked();
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        return;
-    }
     var_Set( p_playlist, "repeat", val);
-    vlc_object_release( p_playlist );
 }
 
-
-
-void Playlist::OnActivateItem( wxListEvent& event )
+/********************************************************************
+ * Event
+ ********************************************************************/
+void Playlist::OnActivateItem( wxTreeEvent& event )
 {
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
+    playlist_item_t *p_item,*p_node,*p_item2,*p_node2;
+
+    PlaylistItem *p_wxitem = (PlaylistItem *)treectrl->GetItemData(
+                                                            event.GetItem() );
+    wxTreeItemId parent = treectrl->GetItemParent( event.GetItem() );
+
+    PlaylistItem *p_wxparent = (PlaylistItem *)treectrl->GetItemData( parent );
+
+    LockPlaylist( p_intf->p_sys, p_playlist );
+
+    if( !( p_wxitem && p_wxparent ) ) return;
+
+    p_item2 = playlist_ItemGetById(p_playlist, p_wxitem->i_id);
+    p_node2 = playlist_ItemGetById(p_playlist, p_wxparent->i_id);
+    if( p_item2 && p_item2->i_children == -1 )
     {
-        return;
+        p_node = p_node2;
+        p_item = p_item2;
+    }
+    else
+    {
+        p_node = p_item2;
+        if( p_node && p_node->i_children > 0 &&
+            p_node->pp_children[0]->i_children == -1)
+        {
+            p_item = p_node->pp_children[0];
+        }
+        else
+        {
+            p_item = NULL;
+        }
     }
 
-    playlist_Goto( p_playlist, event.GetIndex() );
-
-    vlc_object_release( p_playlist );
+    playlist_Control( p_playlist, PLAYLIST_VIEWPLAY, i_current_view,
+                      p_node, p_item );
+    UnlockPlaylist( p_intf->p_sys, p_playlist );
 }
 
-void Playlist::OnKeyDown( wxListEvent& event )
+void Playlist::OnKeyDown( wxTreeEvent& event )
 {
     long keycode = event.GetKeyCode();
     /* Delete selected items */
@@ -1105,140 +1119,312 @@ void Playlist::OnKeyDown( wxListEvent& event )
         /* We send a dummy event */
         OnDeleteSelection( event );
     }
-}
-
-void Playlist::ShowInfos( int i_item )
-{
-    if( i_item == -1 )
+    else
     {
-        return;
+        event.Skip();
     }
-
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        return;
-    }
-
-    vlc_mutex_lock( &p_playlist->object_lock);
-    playlist_item_t *p_item = playlist_ItemGetByPos( p_playlist, i_item );
-    vlc_mutex_unlock( &p_playlist->object_lock );
-
-    if( p_item )
-    {
-        iteminfo_dialog = new ItemInfoDialog( p_intf, p_item, this );
-        if( iteminfo_dialog->ShowModal() == wxID_OK ) UpdateItem( i_item );
-        delete iteminfo_dialog;
-    }
-
-    vlc_object_release( p_playlist );
-}
-
-void Playlist::OnInfos( wxCommandEvent& WXUNUSED(event) )
-{
-    /* We use the first selected item, so find it */
-    long i_item = listview->GetNextItem( -1, wxLIST_NEXT_ALL,
-                                         wxLIST_STATE_SELECTED );
-    ShowInfos( i_item );
 }
 
 void Playlist::OnEnDis( wxCommandEvent& event )
 {
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
+    msg_Warn( p_intf, "not implemented" );
+}
+
+/**********************************************************************
+ * Menu
+ **********************************************************************/
+
+void Playlist::OnMenuOpen( wxMenuEvent& event)
+{
+#if defined( __WXMSW__ )
+#   define GetEventObject GetMenu
+#endif
+
+    if( event.GetEventObject() == p_view_menu )
     {
+        p_view_menu = ViewMenu();
+    }
+#if defined( __WXMSW__ )
+#   undef GetEventObject
+#endif
+}
+
+void Playlist::OnMenuEvent( wxCommandEvent& event )
+{
+    if( event.GetId() < FirstView_Event )
+    {
+        event.Skip();
         return;
     }
-
-    long i_item = listview->GetNextItem( -1, wxLIST_NEXT_ALL,
-                                         wxLIST_STATE_SELECTED );
-
-    if( i_item >= 0 && i_item < p_playlist->i_size )
+    else if( event.GetId() < LastView_Event )
     {
-       switch( event.GetId() )
-       {
-           case EnableGroup_Event:
-               /*XXX*/
-               playlist_EnableGroup( p_playlist,
-                                     p_playlist->pp_items[i_item]->i_group );
-               break;
-           case DisableGroup_Event:
-               playlist_DisableGroup( p_playlist,
-                                      p_playlist->pp_items[i_item]->i_group );
-               break;
-       }
-       Rebuild();
+
+        int i_new_view = event.GetId() - FirstView_Event;
+
+        playlist_view_t *p_view = playlist_ViewFind( p_playlist, i_new_view );
+
+        if( p_view != NULL )
+        {
+            b_changed_view = VLC_TRUE;
+            i_current_view = i_new_view;
+            playlist_ViewUpdate( p_playlist, i_new_view );
+            Rebuild( VLC_TRUE );
+            return;
+        }
+        else if( i_new_view >= VIEW_FIRST_SORTED &&
+                 i_new_view <= VIEW_LAST_SORTED )
+        {
+            b_changed_view = VLC_TRUE;
+            playlist_ViewInsert( p_playlist, i_new_view, "View" );
+            playlist_ViewUpdate( p_playlist, i_new_view );
+
+            i_current_view = i_new_view;
+
+            Rebuild( VLC_TRUE );
+        }
+    }
+    else if( event.GetId() >= FirstSD_Event && event.GetId() < LastSD_Event )
+    {
+        if( !playlist_IsServicesDiscoveryLoaded( p_playlist,
+                                pp_sds[event.GetId() - FirstSD_Event] ) )
+        {
+            playlist_ServicesDiscoveryAdd( p_playlist,
+                            pp_sds[event.GetId() - FirstSD_Event] );
+        }
+        else
+        {
+            //wxMutexGuiLeave();
+            playlist_ServicesDiscoveryRemove( p_playlist,
+                            pp_sds[event.GetId() - FirstSD_Event] );
+            //wxMutexGuiEnter();
+        }
+    }
+}
+
+wxMenu * Playlist::ViewMenu()
+{
+    if( !p_view_menu )
+    {
+        p_view_menu = new wxMenu;
+    }
+    else
+    {
+        wxMenuItemList::Node *node = p_view_menu->GetMenuItems().GetFirst();
+        for( ; node; )
+        {
+            wxMenuItem *item = node->GetData();
+            node = node->GetNext();
+            p_view_menu->Delete( item );
+        }
     }
 
-    vlc_object_release( p_playlist );
+    /* FIXME : have a list of "should have" views */
+    p_view_menu->Append( FirstView_Event + VIEW_CATEGORY,
+                           wxU(_("Normal") ) );
+    p_view_menu->Append( FirstView_Event + VIEW_S_AUTHOR,
+                           wxU(_("Sorted by artist") ) );
+
+    return p_view_menu;
 }
+
+wxMenu *Playlist::SDMenu()
+{
+    p_sd_menu = new wxMenu;
+
+    vlc_list_t *p_list = vlc_list_find( p_playlist, VLC_OBJECT_MODULE,
+                                        FIND_ANYWHERE );
+
+    int i_number = 0;
+    for( int i_index = 0; i_index < p_list->i_count; i_index++ )
+    {
+        module_t * p_parser = (module_t *)p_list->p_values[i_index].p_object ;
+
+        if( !strcmp( p_parser->psz_capability, "services_discovery" ) )
+            i_number++;
+    }
+    if( i_number ) pp_sds = (char **)calloc( i_number, sizeof(void *) );
+
+    i_number = 0;
+    for( int i_index = 0; i_index < p_list->i_count; i_index++ )
+    {
+        module_t * p_parser = (module_t *)p_list->p_values[i_index].p_object ;
+
+        if( !strcmp( p_parser->psz_capability, "services_discovery" ) )
+        {
+            p_sd_menu->AppendCheckItem( FirstSD_Event + i_number ,
+                wxU( p_parser->psz_longname ? p_parser->psz_longname :
+                     (p_parser->psz_shortname ?
+                      p_parser->psz_shortname : p_parser->psz_object_name) ) );
+
+            if( playlist_IsServicesDiscoveryLoaded( p_playlist,
+                                    p_parser->psz_object_name ) )
+            {
+                p_sd_menu->Check( FirstSD_Event + i_number, TRUE );
+            }
+
+            pp_sds[i_number++] = p_parser->psz_object_name;
+        }
+    }
+    vlc_list_release( p_list );
+    return p_sd_menu;
+}
+
 
 /*****************************************************************************
  * Popup management functions
  *****************************************************************************/
-void Playlist::OnPopup( wxListEvent& event )
+void Playlist::OnPopup( wxContextMenuEvent& event )
 {
-    i_popup_item = event.GetIndex();
-    for( long item = 0; item < listview->GetItemCount(); item++ )
+    wxPoint pt = event.GetPosition();
+    playlist_item_t *p_item;
+
+    i_wx_popup_item = treectrl->HitTest( ScreenToClient( pt ) );
+    if( i_wx_popup_item.IsOk() )
     {
-        listview->Select( item, FALSE );
+        PlaylistItem *p_wxitem = (PlaylistItem *)treectrl->GetItemData(
+                                                            i_wx_popup_item );
+        PlaylistItem *p_wxparent= (PlaylistItem *)treectrl->GetItemData(
+                                  treectrl->GetItemParent( i_wx_popup_item ) );
+        i_popup_item = p_wxitem->i_id;
+        i_popup_parent = p_wxparent->i_id;
+        treectrl->SelectItem( i_wx_popup_item );
+
+        LockPlaylist( p_intf->p_sys, p_playlist );
+        p_item = playlist_ItemGetById( p_playlist, i_popup_item );
+
+        if( !p_item )
+        {
+            UnlockPlaylist( p_intf->p_sys, p_playlist );
+            return;
+        }
+        if( p_item->i_children == -1 )
+        {
+            UnlockPlaylist( p_intf->p_sys, p_playlist );
+            Playlist::PopupMenu( item_popup,
+                                 ScreenToClient( wxGetMousePosition() ) );
+        }
+        else
+        {
+            UnlockPlaylist( p_intf->p_sys, p_playlist );
+            Playlist::PopupMenu( node_popup,
+                                 ScreenToClient( wxGetMousePosition() ) );
+        }
     }
-    listview->Select( i_popup_item );
-    Playlist::PopupMenu( popup_menu, ScreenToClient( wxGetMousePosition() ) );
 }
 
-void Playlist::OnPopupPlay( wxMenuEvent& event )
+void Playlist::OnPopupPlay( wxCommandEvent& event )
 {
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
+    playlist_item_t *p_popup_item, *p_popup_parent;
+    LockPlaylist( p_intf->p_sys, p_playlist );
+    p_popup_item = playlist_ItemGetById( p_playlist, i_popup_item );
+    p_popup_parent = playlist_ItemGetById( p_playlist, i_popup_parent );
+    if( p_popup_item != NULL )
     {
-        return;
+        if( p_popup_item->i_children > -1 )
+        {
+            if( event.GetId() == PopupPlay_Event &&
+                p_popup_item->i_children > 0 )
+            {
+                playlist_Control( p_playlist, PLAYLIST_VIEWPLAY,
+                                  i_current_view, p_popup_item,
+                                  p_popup_item->pp_children[0] );
+            }
+            else
+            {
+                playlist_Control( p_playlist, PLAYLIST_VIEWPLAY,
+                                  i_current_view, p_popup_item, NULL );
+            }
+        }
+        else
+        {
+            if( event.GetId() == PopupPlay_Event )
+            {
+                playlist_Control( p_playlist, PLAYLIST_VIEWPLAY,
+                                  i_current_view, p_popup_parent,
+                                  p_popup_item );
+            }
+        }
     }
-    if( i_popup_item != -1 )
-    {
-        playlist_Goto( p_playlist, i_popup_item );
-    }
-    vlc_object_release( p_playlist );
+    UnlockPlaylist( p_intf->p_sys, p_playlist );
 }
 
-void Playlist::OnPopupDel( wxMenuEvent& event )
+void Playlist::OnPopupPreparse( wxCommandEvent& event )
 {
-    DeleteItem( i_popup_item );
+    Preparse();
 }
 
-void Playlist::OnPopupEna( wxMenuEvent& event )
+void Playlist::Preparse()
 {
-    playlist_t *p_playlist =
-        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        return;
-    }
+    playlist_item_t *p_popup_item;
+    LockPlaylist( p_intf->p_sys, p_playlist );
+    p_popup_item = playlist_ItemGetById( p_playlist, i_popup_item );
 
-    if( p_playlist->pp_items[i_popup_item]->b_enabled )
-        //playlist_IsEnabled( p_playlist, i_popup_item ) )
+    if( p_popup_item != NULL )
     {
-        playlist_Disable( p_playlist, i_popup_item );
+        if( p_popup_item->i_children == -1 )
+        {
+            playlist_PreparseEnqueue( p_playlist, &p_popup_item->input );
+        }
+        else
+        {
+            int i = 0;
+            playlist_item_t *p_parent = p_popup_item;
+            for( i = 0; i< p_parent->i_children ; i++ )
+            {
+                wxMenuEvent dummy;
+                i_wx_popup_item = FindItem( treectrl->GetRootItem(),
+                                         p_parent->pp_children[i]->input.i_id );
+                i_popup_item = p_parent->pp_children[i]->input.i_id;
+                Preparse();
+            }
+        }
     }
-    else
-    {
-        playlist_Enable( p_playlist, i_popup_item );
-    }
-    vlc_object_release( p_playlist);
-    UpdateItem( i_popup_item );
+    UnlockPlaylist( p_intf->p_sys, p_playlist );
 }
 
-void Playlist::OnPopupInfo( wxMenuEvent& event )
+void Playlist::OnPopupDel( wxCommandEvent& event )
 {
-    ShowInfos( i_popup_item );
+    DeleteTreeItem( i_wx_popup_item );
 }
+
+void Playlist::OnPopupSort( wxCommandEvent& event )
+{
+    PlaylistItem *p_wxitem;
+    playlist_item_t *p_item;
+
+    p_wxitem = (PlaylistItem *)treectrl->GetItemData( i_wx_popup_item );
+    LockPlaylist( p_intf->p_sys, p_playlist );
+
+    p_item = playlist_ItemGetById( p_playlist, p_wxitem->i_id );
+    if( p_item->i_children >= 0 )
+    {
+        playlist_RecursiveNodeSort( p_playlist, p_item,
+                                    SORT_TITLE_NODES_FIRST, ORDER_NORMAL );
+        
+        treectrl->DeleteChildren( i_wx_popup_item );
+        i_saved_id = -1;
+        UpdateNodeChildren( p_item, i_wx_popup_item );
+
+    }
+    UnlockPlaylist( p_intf->p_sys, p_playlist );
+}
+
+void Playlist::OnPopupInfo( wxCommandEvent& event )
+{
+    LockPlaylist( p_intf->p_sys, p_playlist );
+    playlist_item_t *p_popup_item = playlist_ItemGetById( p_playlist, i_popup_item );
+    if( p_popup_item )
+    {
+        iteminfo_dialog = new ItemInfoDialog( p_intf, p_popup_item, this );
+        if( iteminfo_dialog->ShowModal() == wxID_OK )
+        {
+            UpdateItem( i_wx_popup_item );
+        }
+        delete iteminfo_dialog;
+    }
+    UnlockPlaylist( p_intf->p_sys, p_playlist );
+}
+
 
 /*****************************************************************************
  * Custom events management
@@ -1247,9 +1433,15 @@ void Playlist::OnPlaylistEvent( wxCommandEvent& event )
 {
     switch( event.GetId() )
     {
-    case UpdateItem_Event:
-        UpdateItem( event.GetInt() );
-        break;
+        case UpdateItem_Event:
+            UpdateItem( event.GetInt() );
+            break;
+        case AppendItem_Event:
+            AppendItem( event );
+            break;
+        case RemoveItem_Event:
+            RemoveItem( event.GetInt() );
+            break;
     }
 }
 
@@ -1297,80 +1489,31 @@ static int ItemChanged( vlc_object_t *p_this, const char *psz_variable,
 
     return 0;
 }
-
-/***************************************************************************
- * NewGroup Class
- ***************************************************************************/
-NewGroup::NewGroup( intf_thread_t *_p_intf, wxWindow *_p_parent ):
-    wxDialog( _p_parent, -1, wxU(_("New Group")), wxDefaultPosition,
-             wxDefaultSize, wxDEFAULT_FRAME_STYLE )
+static int ItemDeleted( vlc_object_t *p_this, const char *psz_variable,
+                        vlc_value_t old_val, vlc_value_t new_val, void *param )
 {
-    /* Initializations */
-    p_intf = _p_intf;
-    psz_name = NULL;
-    SetIcon( *p_intf->p_sys->p_icon );
+    Playlist *p_playlist_dialog = (Playlist *)param;
 
-    /* Create a panel to put everything in*/
-    wxPanel *panel = new wxPanel( this, -1 );
-    panel->SetAutoLayout( TRUE );
+    wxCommandEvent event( wxEVT_PLAYLIST, RemoveItem_Event );
+    event.SetInt( new_val.i_int );
+    p_playlist_dialog->AddPendingEvent( event );
 
-    wxStaticText *group_label =
-            new wxStaticText( panel, -1,
-                wxU(_("Enter a name for the new group:")));
-
-    groupname = new wxTextCtrl(panel, -1, wxU(""), wxDefaultPosition,
-                               wxSize(100, 27), wxTE_PROCESS_ENTER);
-
-    wxButton *ok_button = new wxButton(panel, wxID_OK, wxU(_("OK")) );
-    ok_button->SetDefault();
-    wxButton *cancel_button = new wxButton( panel, wxID_CANCEL,
-                                            wxU(_("Cancel")) );
-
-    wxBoxSizer *button_sizer = new wxBoxSizer( wxHORIZONTAL );
-
-    button_sizer->Add( ok_button, 0, wxALL, 5 );
-    button_sizer->Add( cancel_button, 0, wxALL, 5 );
-    button_sizer->Layout();
-
-    wxBoxSizer *panel_sizer = new wxBoxSizer( wxVERTICAL );
-    panel_sizer->Add( group_label, 0, wxEXPAND | wxALL, 5 );
-    panel_sizer->Add( groupname, 0, wxEXPAND | wxALL, 5 );
-    panel_sizer->Add( button_sizer, 0, wxEXPAND | wxALL, 5 );
-    panel_sizer->Layout();
-
-    panel->SetSizerAndFit( panel_sizer );
-
-    wxBoxSizer *main_sizer = new wxBoxSizer( wxVERTICAL );
-    main_sizer->Add( panel, 1, wxEXPAND, 0 );
-    main_sizer->Layout();
-    SetSizerAndFit( main_sizer );
+    return 0;
 }
 
-NewGroup::~NewGroup()
+static int ItemAppended( vlc_object_t *p_this, const char *psz_variable,
+                         vlc_value_t oval, vlc_value_t nval, void *param )
 {
+    Playlist *p_playlist_dialog = (Playlist *)param;
+
+    playlist_add_t *p_add = (playlist_add_t *)malloc(sizeof( playlist_add_t));
+
+    memcpy( p_add, nval.p_address, sizeof( playlist_add_t ) );
+
+    wxCommandEvent event( wxEVT_PLAYLIST, AppendItem_Event );
+    event.SetClientData( (void *)p_add );
+    p_playlist_dialog->AddPendingEvent( event );
+
+    return VLC_SUCCESS;
 }
-
-void NewGroup::OnOk( wxCommandEvent& event )
-{
-    psz_name = strdup( groupname->GetLineText(0).mb_str() );
-
-    playlist_t * p_playlist =
-          (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                       FIND_ANYWHERE );
-
-    if( p_playlist )
-    {
-        if( !playlist_CreateGroup( p_playlist, psz_name ) )
-        {
-            psz_name = NULL;
-        }
-        vlc_object_release( p_playlist );
-    }
-
-    EndModal( wxID_OK );
-}
-
-void NewGroup::OnCancel( wxCommandEvent& WXUNUSED(event) )
-{
-    EndModal( wxID_CANCEL );
 }

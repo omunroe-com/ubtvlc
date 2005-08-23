@@ -2,7 +2,7 @@
  * ffmpeg.c: video decoder using ffmpeg library
  *****************************************************************************
  * Copyright (C) 1999-2001 VideoLAN
- * $Id: ffmpeg.c 9307 2004-11-13 13:09:42Z gbazin $
+ * $Id: ffmpeg.c 11349 2005-06-08 07:34:58Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -76,17 +76,20 @@ static char *enc_hq_list_text[] = { N_("rd"), N_("bits"), N_("simple") };
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-
+    set_shortname( "FFmpeg");
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_SCODEC );
     /* decoder main module */
 #if defined(MODULE_NAME_is_ffmpegaltivec) \
      || (defined(CAN_COMPILE_ALTIVEC) && !defined(NO_ALTIVEC_IN_FFMPEG))
-    set_description( _("AltiVec ffmpeg audio/video decoder ((MS)MPEG4,SVQ1,H263,WMV,WMA)") );
+    set_description( _("AltiVec ffmpeg audio/video decoder/encoder ((MS)MPEG4,SVQ1,H263,WMV,WMA)") );
     /*add_requirement( ALTIVEC );*/
     set_capability( "decoder", 71 );
 #else
-    set_description( _("ffmpeg audio/video decoder ((MS)MPEG4,SVQ1,H263,WMV,WMA)") );
+    set_description( _("ffmpeg audio/video decoder/encoder ((MS)MPEG4,SVQ1,H263,WMV,WMA)") );
     set_capability( "decoder", 70 );
 #endif
+    set_section( N_("Decoding") , NULL );
     set_callbacks( OpenDecoder, CloseDecoder );
 
     add_bool( "ffmpeg-dr", 1, NULL, DR_TEXT, DR_TEXT, VLC_TRUE );
@@ -118,6 +121,7 @@ vlc_module_begin();
 
     /* encoder submodule */
     add_submodule();
+    set_section( N_("Encoding") , NULL );
     set_description( _("ffmpeg audio/video encoder") );
     set_capability( "encoder", 100 );
     set_callbacks( E_(OpenEncoder), E_(CloseEncoder) );
@@ -177,7 +181,7 @@ vlc_module_begin();
     set_capability( "video filter2", 0 );
     set_callbacks( E_(OpenDeinterlace), E_(CloseDeinterlace) );
     set_description( _("ffmpeg deinterlace video filter") );
-    add_shortcut( "deinterlace" );
+    add_shortcut( "ffmpeg-deinterlace" );
 
     var_Create( p_module->p_libvlc, "avcodec", VLC_VAR_MUTEX );
 vlc_module_end();
@@ -339,11 +343,15 @@ static struct
 } chroma_table[] =
 {
     /* Planar YUV formats */
+    { VLC_FOURCC('Y','U','V','A'), PIX_FMT_YUV444P }, /* Hack */
     { VLC_FOURCC('I','4','4','4'), PIX_FMT_YUV444P },
+    { VLC_FOURCC('J','4','4','4'), PIX_FMT_YUVJ444P },
     { VLC_FOURCC('I','4','2','2'), PIX_FMT_YUV422P },
+    { VLC_FOURCC('J','4','2','2'), PIX_FMT_YUVJ422P },
     { VLC_FOURCC('I','4','2','0'), PIX_FMT_YUV420P },
     { VLC_FOURCC('Y','V','1','2'), PIX_FMT_YUV420P },
     { VLC_FOURCC('I','Y','U','V'), PIX_FMT_YUV420P },
+    { VLC_FOURCC('J','4','2','0'), PIX_FMT_YUVJ420P },
     { VLC_FOURCC('I','4','1','1'), PIX_FMT_YUV411P },
     { VLC_FOURCC('I','4','1','0'), PIX_FMT_YUV410P },
     { VLC_FOURCC('Y','V','U','9'), PIX_FMT_YUV410P },
@@ -438,6 +446,8 @@ static struct
     { VLC_FOURCC('d','x','5','0'), CODEC_ID_MPEG4,
       VIDEO_ES, "MPEG-4 Video" },
     { VLC_FOURCC('m','p','4','v'), CODEC_ID_MPEG4,
+      VIDEO_ES, "MPEG-4 Video" },
+    { VLC_FOURCC('M','P','4','V'), CODEC_ID_MPEG4,
       VIDEO_ES, "MPEG-4 Video" },
     { VLC_FOURCC( 4,  0,  0,  0 ), CODEC_ID_MPEG4,
       VIDEO_ES, "MPEG-4 Video" },
@@ -616,6 +626,12 @@ static struct
       VIDEO_ES, "Windows Media Video 1" },
     { VLC_FOURCC('W','M','V','2'), CODEC_ID_WMV2,
       VIDEO_ES, "Windows Media Video 2" },
+#if 0
+    { VLC_FOURCC('W','M','V','3'), CODEC_ID_WMV3,
+      VIDEO_ES, "Windows Media Video 3" },
+    { VLC_FOURCC('V','C','9',' '), CODEC_ID_VC9,
+      VIDEO_ES, "Windows Media Video VC9" },
+#endif
 
 #if LIBAVCODEC_BUILD >= 4683
     /* Microsoft Video 1 */
@@ -751,6 +767,56 @@ static struct
       VIDEO_ES, "FFMpeg SNOW wavelet Video" },
 #endif
 
+#if LIBAVCODEC_BUILD >= 4752
+    { VLC_FOURCC('q','d','r','w'), CODEC_ID_QDRAW,
+      VIDEO_ES, "Apple QuickDraw Video" },
+
+    { VLC_FOURCC('Q','P','E','G'), CODEC_ID_QPEG,
+      VIDEO_ES, "QPEG Video" },
+    { VLC_FOURCC('Q','1','.','0'), CODEC_ID_QPEG,
+      VIDEO_ES, "QPEG Video" },
+    { VLC_FOURCC('Q','1','.','1'), CODEC_ID_QPEG,
+      VIDEO_ES, "QPEG Video" },
+
+    { VLC_FOURCC('U','L','T','I'), CODEC_ID_ULTI,
+      VIDEO_ES, "IBM Ultimotion Video" },
+
+    { VLC_FOURCC('V','I','X','L'), CODEC_ID_VIXL,
+      VIDEO_ES, "Miro/Pinnacle VideoXL Video" },
+
+    { VLC_FOURCC('L','O','C','O'), CODEC_ID_LOCO,
+      VIDEO_ES, "LOCO Video" },
+
+    { VLC_FOURCC('W','N','V','1'), CODEC_ID_WNV1,
+      VIDEO_ES, "Winnov WNV1 Video" },
+
+    { VLC_FOURCC('A','A','S','C'), CODEC_ID_AASC,
+      VIDEO_ES, "Autodesc RLE Video" },
+#endif
+#if LIBAVCODEC_BUILD >= 4753
+    { VLC_FOURCC('I','V','2','0'), CODEC_ID_INDEO2,
+      VIDEO_ES, "Indeo Video v2" },
+    { VLC_FOURCC('R','T','2','1'), CODEC_ID_INDEO2,
+      VIDEO_ES, "Indeo Video v2" },
+#endif
+
+    /*
+     *  Image codecs
+     */
+
+#if LIBAVCODEC_BUILD >= 4731
+    { VLC_FOURCC('p','n','g',' '), CODEC_ID_PNG,
+      VIDEO_ES, "PNG Image" },
+    { VLC_FOURCC('p','p','m',' '), CODEC_ID_PPM,
+      VIDEO_ES, "PPM Image" },
+    { VLC_FOURCC('p','g','m',' '), CODEC_ID_PGM,
+      VIDEO_ES, "PGM Image" },
+    { VLC_FOURCC('p','g','m','y'), CODEC_ID_PGMYUV,
+      VIDEO_ES, "PGM YUV Image" },
+    { VLC_FOURCC('p','a','m',' '), CODEC_ID_PAM,
+      VIDEO_ES, "PAM Image" },
+#endif
+
     /*
      *  Audio Codecs
      */
@@ -841,6 +907,26 @@ static struct
     /* G.726 ADPCM */
     { VLC_FOURCC('g','7','2','6'), CODEC_ID_ADPCM_G726,
       AUDIO_ES, "G.726 ADPCM Audio" },
+#endif
+
+#if LIBAVCODEC_BUILD >= 4683
+    /* AMR */
+    { VLC_FOURCC('s','a','m','r'), CODEC_ID_AMR_NB,
+      AUDIO_ES, "AMR narrow band" },
+    { VLC_FOURCC('s','a','w','b'), CODEC_ID_AMR_WB,
+      AUDIO_ES, "AMR wide band" },
+#endif
+
+#if LIBAVCODEC_BUILD >= 4703
+    /* FLAC */
+    { VLC_FOURCC('f','l','a','c'), CODEC_ID_FLAC,
+      AUDIO_ES, "FLAC (Free Lossless Audio Codec)" },
+#endif
+
+#if LIBAVCODEC_BUILD >= 4745
+    /* ALAC */
+    { VLC_FOURCC('a','l','a','c'), CODEC_ID_ALAC,
+      AUDIO_ES, "Apple Lossless Audio Codec" },
 #endif
 
     /* PCM */

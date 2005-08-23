@@ -2,7 +2,7 @@
  * udp.c
  *****************************************************************************
  * Copyright (C) 2001, 2002 VideoLAN
- * $Id: udp.c 8769 2004-09-22 15:25:11Z gbazin $
+ * $Id: udp.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -87,6 +87,9 @@ static void Close( vlc_object_t * );
 
 vlc_module_begin();
     set_description( _("UDP stream output") );
+    set_shortname( N_( "UDP" ) );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_ACO );
     add_integer( SOUT_CFG_PREFIX "caching", DEFAULT_PTS_DELAY / 1000, NULL, CACHING_TEXT, CACHING_LONGTEXT, VLC_TRUE );
     add_integer( SOUT_CFG_PREFIX "ttl", 0, NULL,TTL_TEXT, TTL_LONGTEXT,
                                  VLC_TRUE );
@@ -379,6 +382,12 @@ static int Write( sout_access_out_t *p_access, block_t *p_buffer )
             p_sys->p_buffer->i_buffer += i_write;
             p_buffer->p_buffer += i_write;
             p_buffer->i_buffer -= i_write;
+            if ( p_buffer->i_flags & BLOCK_FLAG_CLOCK )
+            {
+                if ( p_sys->p_buffer->i_flags & BLOCK_FLAG_CLOCK )
+                    msg_Warn( p_access, "putting two PCRs at once" );
+                p_sys->p_buffer->i_flags |= BLOCK_FLAG_CLOCK;
+            }
 
             if( p_sys->p_buffer->i_buffer == p_sys->i_mtu || i_packets > 1 )
             {
@@ -488,7 +497,7 @@ static void ThreadWrite( vlc_object_t *p_this )
                 i_dropped_packets++;
                 continue;
             }
-            else if( i_date - i_date_last < 0 )
+            else if( i_date - i_date_last < -15000 )
             {
                 if( !i_dropped_packets )
                     msg_Dbg( p_thread, "mmh, packets in the past ("I64Fd")"
@@ -516,7 +525,7 @@ static void ThreadWrite( vlc_object_t *p_this )
         }
 
         i_to_send--;
-        if ( !i_to_send )
+        if ( !i_to_send || (p_pk->i_flags & BLOCK_FLAG_CLOCK) )
         {
             mwait( i_date );
             i_to_send = p_thread->i_group;
@@ -529,7 +538,7 @@ static void ThreadWrite( vlc_object_t *p_this )
             i_dropped_packets = 0;
         }
 
-#if 0
+#if 1
         i_sent = mdate();
         if ( i_sent > i_date + 20000 )
         {

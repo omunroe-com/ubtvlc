@@ -6,9 +6,10 @@
  * thread, and destroy a previously oppened video output thread.
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: video_output.c 9100 2004-11-01 15:35:11Z gbazin $
+ * $Id: video_output.c 11112 2005-05-22 16:18:46Z zorglub $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
+ *          Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +41,7 @@
 #include "video_output.h"
 #include "vlc_spu.h"
 #include <vlc/input.h>                 /* for input_thread_t and i_pts_delay */
+#include "vlc_playlist.h"
 
 #if defined( SYS_DARWIN )
 #include "darwin_specific.h"
@@ -65,17 +67,19 @@ static int DeinterlaceCallback( vlc_object_t *, char const *,
 static int FilterCallback( vlc_object_t *, char const *,
                            vlc_value_t, vlc_value_t, void * );
 
+/* From vout_intf.c */
+int vout_Snapshot( vout_thread_t *, picture_t * );
+
 /*****************************************************************************
  * vout_Request: find a video output thread, create one, or destroy one.
  *****************************************************************************
  * This function looks for a video output thread matching the current
  * properties. If not found, it spawns a new one.
  *****************************************************************************/
-vout_thread_t * __vout_Request ( vlc_object_t *p_this, vout_thread_t *p_vout,
-                                 unsigned int i_width, unsigned int i_height,
-                                 vlc_fourcc_t i_chroma, unsigned int i_aspect )
+vout_thread_t *__vout_Request( vlc_object_t *p_this, vout_thread_t *p_vout,
+                               video_format_t *p_fmt )
 {
-    if( !i_width || !i_height || !i_chroma )
+    if( !p_fmt )
     {
         /* Reattach video output to input before bailing out */
         if( p_vout )
@@ -114,12 +118,13 @@ vout_thread_t * __vout_Request ( vlc_object_t *p_this, vout_thread_t *p_vout,
 
         if( !p_vout )
         {
-            vlc_object_t *p_playlist;
+            playlist_t *p_playlist;
 
             p_playlist = vlc_object_find( p_this,
                                           VLC_OBJECT_PLAYLIST, FIND_ANYWHERE );
             if( p_playlist )
             {
+                vlc_mutex_lock( &p_playlist->gc_lock );
                 p_vout = vlc_object_find( p_playlist,
                                           VLC_OBJECT_VOUT, FIND_CHILD );
                 /* only first children of p_input for unused vout */
@@ -128,6 +133,7 @@ vout_thread_t * __vout_Request ( vlc_object_t *p_this, vout_thread_t *p_vout,
                     vlc_object_release( p_vout );
                     p_vout = NULL;
                 }
+                vlc_mutex_unlock( &p_playlist->gc_lock );
                 vlc_object_release( p_playlist );
             }
         }
@@ -139,11 +145,11 @@ vout_thread_t * __vout_Request ( vlc_object_t *p_this, vout_thread_t *p_vout,
         char *psz_filter_chain;
         vlc_value_t val;
 
-        /* We don't directly check for the "filter" variable for obvious
+        /* We don't directly check for the "vout-filter" variable for obvious
          * performance reasons. */
         if( p_vout->b_filter_change )
         {
-            var_Get( p_vout, "filter", &val );
+            var_Get( p_vout, "vout-filter", &val );
             psz_filter_chain = val.psz_string;
 
             if( psz_filter_chain && !*psz_filter_chain )
@@ -165,10 +171,10 @@ vout_thread_t * __vout_Request ( vlc_object_t *p_this, vout_thread_t *p_vout,
             if( psz_filter_chain ) free( psz_filter_chain );
         }
 
-        if( ( p_vout->render.i_width != i_width ) ||
-            ( p_vout->render.i_height != i_height ) ||
-            ( p_vout->render.i_chroma != i_chroma ) ||
-            ( p_vout->render.i_aspect != i_aspect
+        if( ( p_vout->fmt_render.i_width != p_fmt->i_width ) ||
+            ( p_vout->fmt_render.i_height != p_fmt->i_height ) ||
+            ( p_vout->fmt_render.i_chroma != p_fmt->i_chroma ) ||
+            ( p_vout->fmt_render.i_aspect != p_fmt->i_aspect
                     && !p_vout->b_override_aspect ) ||
             p_vout->b_filter_change )
         {
@@ -192,7 +198,7 @@ vout_thread_t * __vout_Request ( vlc_object_t *p_this, vout_thread_t *p_vout,
     {
         msg_Dbg( p_this, "no usable vout present, spawning one" );
 
-        p_vout = vout_Create( p_this, i_width, i_height, i_chroma, i_aspect );
+        p_vout = vout_Create( p_this, p_fmt );
     }
 
     return p_vout;
@@ -204,15 +210,18 @@ vout_thread_t * __vout_Request ( vlc_object_t *p_this, vout_thread_t *p_vout,
  * This function creates a new video output thread, and returns a pointer
  * to its description. On error, it returns NULL.
  *****************************************************************************/
-vout_thread_t * __vout_Create( vlc_object_t *p_parent,
-                               unsigned int i_width, unsigned int i_height,
-                               vlc_fourcc_t i_chroma, unsigned int i_aspect )
+vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
 {
     vout_thread_t  * p_vout;                            /* thread descriptor */
     input_thread_t * p_input_thread;
     int              i_index;                               /* loop variable */
     char           * psz_plugin;
     vlc_value_t      val, text;
+
+    unsigned int i_width = p_fmt->i_width;
+    unsigned int i_height = p_fmt->i_height;
+    vlc_fourcc_t i_chroma = p_fmt->i_chroma;
+    unsigned int i_aspect = p_fmt->i_aspect;
 
     /* Allocate descriptor */
     p_vout = vlc_object_create( p_parent, VLC_OBJECT_VOUT );
@@ -238,6 +247,8 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent,
 
     /* Initialize the rendering heap */
     I_RENDERPICTURES = 0;
+    p_vout->fmt_render        = *p_fmt;   /* FIXME palette */
+    p_vout->fmt_in            = *p_fmt;   /* FIXME palette */
     p_vout->render.i_width    = i_width;
     p_vout->render.i_height   = i_height;
     p_vout->render.i_chroma   = i_chroma;
@@ -321,9 +332,8 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent,
             }
             else
             {
-                i_new_aspect = i_width * VOUT_ASPECT_FACTOR
-                                       * atof( val.psz_string )
-                                       / i_height;
+                i_new_aspect = VOUT_ASPECT_FACTOR
+                                       * atof( val.psz_string );
             }
 
             free( val.psz_string );
@@ -344,9 +354,19 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent,
         }
 
         /* Look for the default filter configuration */
-        var_Create( p_vout, "filter", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
-        var_Get( p_vout, "filter", &val );
+        var_Create( p_vout, "vout-filter", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
+        var_Get( p_vout, "vout-filter", &val );
         p_vout->psz_filter_chain = val.psz_string;
+
+        if( p_vout->psz_filter_chain && *p_vout->psz_filter_chain &&
+            strchr( p_vout->psz_filter_chain, ',' ) &&
+            !strchr( p_vout->psz_filter_chain, ':') )
+        {
+            msg_Info( p_vout, "Warning: you are using a deprecated syntax for "
+                             "vout-filter." );
+            msg_Info( p_vout, "You must now use ':' as separator instead of "
+                             "','." );
+        }
     }
     else
     {
@@ -354,6 +374,8 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent,
         char *psz_end;
 
         psz_end = strchr( ((vout_thread_t *)p_parent)->psz_filter_chain, ':' );
+        if( !psz_end ) psz_end = strchr(
+                        ((vout_thread_t *)p_parent)->psz_filter_chain, ',' );
         if( psz_end && *(psz_end+1) )
             p_vout->psz_filter_chain = strdup( psz_end+1 );
         else p_vout->psz_filter_chain = NULL;
@@ -373,6 +395,7 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent,
         char *psz_end;
 
         psz_end = strchr( p_vout->psz_filter_chain, ':' );
+        if( !psz_end ) psz_end = strchr( p_vout->psz_filter_chain, ',' );
         if( psz_end )
             psz_plugin = strndup( p_vout->psz_filter_chain,
                                   psz_end - p_vout->psz_filter_chain );
@@ -421,10 +444,10 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent,
     var_AddCallback( p_vout, "deinterlace", DeinterlaceCallback, NULL );
 
 
-    var_Create( p_vout, "filter", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
+    var_Create( p_vout, "vout-filter", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
     text.psz_string = _("Filters");
-    var_Change( p_vout, "filter", VLC_VAR_SETTEXT, &text, NULL );
-    var_AddCallback( p_vout, "filter", FilterCallback, NULL );
+    var_Change( p_vout, "vout-filter", VLC_VAR_SETTEXT, &text, NULL );
+    var_AddCallback( p_vout, "vout-filter", FilterCallback, NULL );
 
     /* Calculate delay created by internal caching */
     p_input_thread = (input_thread_t *)vlc_object_find( p_vout,
@@ -555,19 +578,59 @@ static int InitThread( vout_thread_t *p_vout )
 
     msg_Dbg( p_vout, "got %i direct buffer(s)", I_OUTPUTPICTURES );
 
-    AspectRatio( p_vout->render.i_aspect, &i_aspect_x, &i_aspect_y );
-    msg_Dbg( p_vout,
-             "picture in %ix%i, chroma 0x%.8x (%4.4s), aspect ratio %i:%i",
-             p_vout->render.i_width, p_vout->render.i_height,
-             p_vout->render.i_chroma, (char*)&p_vout->render.i_chroma,
-             i_aspect_x, i_aspect_y );
+    AspectRatio( p_vout->fmt_render.i_aspect, &i_aspect_x, &i_aspect_y );
 
-    AspectRatio( p_vout->output.i_aspect, &i_aspect_x, &i_aspect_y );
-    msg_Dbg( p_vout,
-             "picture out %ix%i, chroma 0x%.8x (%4.4s), aspect ratio %i:%i",
+    msg_Dbg( p_vout, "picture in %ix%i (%i,%i,%ix%i), "
+             "chroma %4.4s, ar %i:%i, sar %i:%i",
+             p_vout->fmt_render.i_width, p_vout->fmt_render.i_height,
+             p_vout->fmt_render.i_x_offset, p_vout->fmt_render.i_y_offset,
+             p_vout->fmt_render.i_visible_width,
+             p_vout->fmt_render.i_visible_height,
+             (char*)&p_vout->fmt_render.i_chroma,
+             i_aspect_x, i_aspect_y,
+             p_vout->fmt_render.i_sar_num, p_vout->fmt_render.i_sar_den );
+
+    AspectRatio( p_vout->fmt_in.i_aspect, &i_aspect_x, &i_aspect_y );
+
+    msg_Dbg( p_vout, "picture user %ix%i (%i,%i,%ix%i), "
+             "chroma %4.4s, ar %i:%i, sar %i:%i",
+             p_vout->fmt_in.i_width, p_vout->fmt_in.i_height,
+             p_vout->fmt_in.i_x_offset, p_vout->fmt_in.i_y_offset,
+             p_vout->fmt_in.i_visible_width,
+             p_vout->fmt_in.i_visible_height,
+             (char*)&p_vout->fmt_in.i_chroma,
+             i_aspect_x, i_aspect_y,
+             p_vout->fmt_in.i_sar_num, p_vout->fmt_in.i_sar_den );
+
+    if( !p_vout->fmt_out.i_width || !p_vout->fmt_out.i_height )
+    {
+        p_vout->fmt_out.i_width = p_vout->fmt_out.i_visible_width =
+            p_vout->output.i_width;
+        p_vout->fmt_out.i_height = p_vout->fmt_out.i_visible_height =
+            p_vout->output.i_height;
+        p_vout->fmt_out.i_x_offset =  p_vout->fmt_out.i_y_offset = 0;
+
+        p_vout->fmt_out.i_aspect = p_vout->output.i_aspect;
+        p_vout->fmt_out.i_chroma = p_vout->output.i_chroma;
+    }
+    if( !p_vout->fmt_out.i_sar_num || !p_vout->fmt_out.i_sar_num )
+    {
+        p_vout->fmt_out.i_sar_num = p_vout->fmt_out.i_aspect *
+            p_vout->fmt_out.i_height;
+        p_vout->fmt_out.i_sar_den = VOUT_ASPECT_FACTOR *
+            p_vout->fmt_out.i_width;
+    }
+
+    vlc_reduce( &p_vout->fmt_out.i_sar_num, &p_vout->fmt_out.i_sar_den,
+                p_vout->fmt_out.i_sar_num, p_vout->fmt_out.i_sar_den, 0 );
+
+    AspectRatio( p_vout->fmt_out.i_aspect, &i_aspect_x, &i_aspect_y );
+
+    msg_Dbg( p_vout, "picture out %ix%i, chroma %4.4s, ar %i:%i, sar %i:%i",
              p_vout->output.i_width, p_vout->output.i_height,
-             p_vout->output.i_chroma, (char*)&p_vout->output.i_chroma,
-             i_aspect_x, i_aspect_y );
+             (char*)&p_vout->output.i_chroma,
+             i_aspect_x, i_aspect_y,
+             p_vout->fmt_out.i_sar_num, p_vout->fmt_out.i_sar_den );
 
     /* Calculate shifts from system-updated masks */
     MaskToShift( &p_vout->output.i_lrshift, &p_vout->output.i_rrshift,
@@ -850,6 +913,12 @@ static void RunThread( vout_thread_t *p_vout)
         if( p_picture == NULL )
         {
             i_idle_loops++;
+        }
+
+        if( p_picture && p_vout->b_snapshot )
+        {
+            p_vout->b_snapshot = VLC_FALSE;
+            vout_Snapshot( p_vout, p_picture );
         }
 
         /*
@@ -1283,6 +1352,8 @@ static void SuxorRestartVideoES( suxor_thread_t *p_this )
 {
     vlc_value_t val;
 
+    vlc_thread_ready( p_this );
+
     /* Now restart current video stream */
     var_Get( p_this->p_input, "video-es", &val );
     if( val.i_int >= 0 )
@@ -1316,7 +1387,7 @@ static int DeinterlaceCallback( vlc_object_t *p_this, char const *psz_cmd,
     char *psz_mode = newval.psz_string;
     char *psz_filter, *psz_deinterlace = NULL;
 
-    var_Get( p_vout, "filter", &val );
+    var_Get( p_vout, "vout-filter", &val );
     psz_filter = val.psz_string;
     if( psz_filter ) psz_deinterlace = strstr( psz_filter, "deinterlace" );
 
@@ -1325,15 +1396,15 @@ static int DeinterlaceCallback( vlc_object_t *p_this, char const *psz_cmd,
         if( psz_deinterlace )
         {
             char *psz_src = psz_deinterlace + sizeof("deinterlace") - 1;
-            if( psz_src[0] == ',' ) psz_src++;
+            if( psz_src[0] == ':' ) psz_src++;
             memmove( psz_deinterlace, psz_src, strlen(psz_src) + 1 );
         }
     }
     else if( !psz_deinterlace )
     {
         psz_filter = realloc( psz_filter, strlen( psz_filter ) +
-                              sizeof(",deinterlace") );
-        if( psz_filter && *psz_filter ) strcat( psz_filter, "," );
+                              sizeof(":deinterlace") );
+        if( psz_filter && *psz_filter ) strcat( psz_filter, ":" );
         strcat( psz_filter, "deinterlace" );
     }
 
@@ -1354,7 +1425,7 @@ static int DeinterlaceCallback( vlc_object_t *p_this, char const *psz_cmd,
     var_Set( p_vout, "intf-change", val );
 
     val.psz_string = psz_filter;
-    var_Set( p_vout, "filter", val );
+    var_Set( p_vout, "vout-filter", val );
     if( psz_filter ) free( psz_filter );
 
     return VLC_SUCCESS;
@@ -1380,8 +1451,9 @@ static int FilterCallback( vlc_object_t *p_this, char const *psz_cmd,
 
     /* Modify input as well because the vout might have to be restarted */
     val.psz_string = newval.psz_string;
-    var_Create( p_input, "filter", VLC_VAR_STRING );
-    var_Set( p_input, "filter", val );
+    var_Create( p_input, "vout-filter", VLC_VAR_STRING );
+
+    var_Set( p_input, "vout-filter", val );
 
     /* Now restart current video stream */
     var_Get( p_input, "video-es", &val );

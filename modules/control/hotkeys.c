@@ -1,8 +1,8 @@
 /*****************************************************************************
  * hotkeys.c: Hotkey handling for vlc
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: hotkeys.c 8966 2004-10-10 10:08:44Z ipkiss $
+ * Copyright (C) 2005 VideoLAN
+ * $Id: hotkeys.c 10733 2005-04-18 18:13:37Z jpsaman $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -236,7 +236,7 @@ static void Run( intf_thread_t *p_intf )
         /* Find action triggered by hotkey */
         i_action = 0;
         i_key = GetKey( p_intf );
-        for( i = 0; p_hotkeys[i].psz_action != NULL; i++ )
+        for( i = 0; i_key != -1 && p_hotkeys[i].psz_action != NULL; i++ )
         {
             if( p_hotkeys[i].i_key == i_key )
             {
@@ -253,6 +253,14 @@ static void Run( intf_thread_t *p_intf )
 
         if( i_action == ACTIONID_QUIT )
         {
+            p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
+                                    FIND_ANYWHERE );
+            if( p_playlist )
+            {
+                playlist_Stop( p_playlist );
+                vlc_object_release( p_playlist );
+            }
+            /* Playlist is stopped now kill vlc. */
             p_intf->p_vlc->b_die = VLC_TRUE;
             ClearChannels( p_intf, p_vout );
             vout_OSDMessage( p_intf, DEFAULT_CHAN, _( "Quit" ) );
@@ -299,6 +307,10 @@ static void Run( intf_thread_t *p_intf )
                 vlc_object_release( p_playlist );
             }
         }
+        else if( i_action == ACTIONID_SNAPSHOT )
+        {
+            if( p_vout ) vout_Control( p_vout, VOUT_SNAPSHOT );
+        }
         else if( i_action == ACTIONID_SUBDELAY_DOWN )
         {
             int64_t i_delay = var_GetTime( p_input, "spu-delay" );
@@ -319,6 +331,28 @@ static void Run( intf_thread_t *p_intf )
             var_SetTime( p_input, "spu-delay", i_delay );
             ClearChannels( p_intf, p_vout );
             vout_OSDMessage( p_intf, DEFAULT_CHAN, "Subtitle delay %i ms",
+                                 (int)(i_delay/1000) );
+        }
+        else if( i_action == ACTIONID_AUDIODELAY_DOWN )
+        {
+            int64_t i_delay = var_GetTime( p_input, "audio-delay" );
+
+            i_delay -= 50000;    /* 50 ms */
+
+            var_SetTime( p_input, "audio-delay", i_delay );
+            ClearChannels( p_intf, p_vout );
+            vout_OSDMessage( p_intf, DEFAULT_CHAN, "Audio delay %i ms",
+                                 (int)(i_delay/1000) );
+        }
+        else if( i_action == ACTIONID_AUDIODELAY_UP )
+        {
+            int64_t i_delay = var_GetTime( p_input, "audio-delay" );
+
+            i_delay += 50000;    /* 50 ms */
+
+            var_SetTime( p_input, "audio-delay", i_delay );
+            ClearChannels( p_intf, p_vout );
+            vout_OSDMessage( p_intf, DEFAULT_CHAN, "Audio delay %i ms",
                                  (int)(i_delay/1000) );
         }
         else if( i_action == ACTIONID_FULLSCREEN )
@@ -685,10 +719,13 @@ static void SetBookmark( intf_thread_t *p_intf, int i_num )
         sprintf( psz_bookmark_name, "bookmark%i", i_num );
         var_Create( p_intf, psz_bookmark_name,
                     VLC_VAR_STRING|VLC_VAR_DOINHERIT );
-        val.psz_string = strdup( p_playlist->pp_items[p_playlist->i_index]->input.psz_uri );
-        var_Set( p_intf, psz_bookmark_name, val );
-        msg_Info( p_intf, "setting playlist bookmark %i to %s", i_num,
-                  val.psz_string );
+        if( p_playlist->status.p_item )
+        {
+            val.psz_string = strdup( p_playlist->status.p_item->input.psz_uri );
+            var_Set( p_intf, psz_bookmark_name, val );
+            msg_Info( p_intf, "setting playlist bookmark %i to %s", i_num,
+                      val.psz_string );
+        }
         vlc_object_release( p_playlist );
     }
 }

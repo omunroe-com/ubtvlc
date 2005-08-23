@@ -28,11 +28,48 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in mosaic transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq motiondetect; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in mosaic transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq motiondetect; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in mosaic transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq motiondetect; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
+
+# The mosaic plugin
+
+if UNTRUE
+Lmosaicp = libmosaic_plugin.a
+Dmosaicp = libmosaic_plugin$(LIBEXT)
+Lmosaicb = libmosaic.a
+Lmosaicpic = libmosaic_pic.a
+endif
+
+libmosaic_plugin_a_SOURCES = $(SOURCES_mosaic)
+libmosaic_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin mosaic`
+libmosaic_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mosaic`
+libmosaic_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mosaic`
+
+libmosaic_pic_a_SOURCES = $(SOURCES_mosaic)
+libmosaic_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mosaic`
+libmosaic_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mosaic`
+libmosaic_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mosaic`
+
+libmosaic_a_SOURCES = $(SOURCES_mosaic)
+libmosaic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mosaic`
+libmosaic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mosaic`
+libmosaic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mosaic`
+
+libvlc_LIBRARIES += $(Lmosaicb) $(Lmosaicpic)
+libmosaic_DATA = $(Dmosaicp)
+
+libmosaicdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lmosaicp)
+libmosaic_plugin$(LIBEXT): $(libmosaic_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage mosaic` in \
+	  c++) echo $(CXXLINK) $(libmosaic_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mosaic\` ; $(CXXLINK) $(libmosaic_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mosaic` ;; \
+	  objc) echo $(OBJCLINK) $(libmosaic_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mosaic\` ; $(OBJCLINK) $(libmosaic_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mosaic` ;; \
+	  c|*) echo $(LINK) $(libmosaic_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mosaic\` ; $(LINK) $(libmosaic_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mosaic` ;; \
+	esac
+
 
 # The transform plugin
 
@@ -549,6 +586,43 @@ libmarq_plugin$(LIBEXT): $(libmarq_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libmarq_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin marq\` ; $(CXXLINK) $(libmarq_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin marq` ;; \
 	  objc) echo $(OBJCLINK) $(libmarq_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin marq\` ; $(OBJCLINK) $(libmarq_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin marq` ;; \
 	  c|*) echo $(LINK) $(libmarq_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin marq\` ; $(LINK) $(libmarq_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin marq` ;; \
+	esac
+
+
+# The motiondetect plugin
+
+if UNTRUE
+Lmotiondetectp = libmotiondetect_plugin.a
+Dmotiondetectp = libmotiondetect_plugin$(LIBEXT)
+Lmotiondetectb = libmotiondetect.a
+Lmotiondetectpic = libmotiondetect_pic.a
+endif
+
+libmotiondetect_plugin_a_SOURCES = $(SOURCES_motiondetect)
+libmotiondetect_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin motiondetect`
+libmotiondetect_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin motiondetect`
+libmotiondetect_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin motiondetect`
+
+libmotiondetect_pic_a_SOURCES = $(SOURCES_motiondetect)
+libmotiondetect_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic motiondetect`
+libmotiondetect_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic motiondetect`
+libmotiondetect_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic motiondetect`
+
+libmotiondetect_a_SOURCES = $(SOURCES_motiondetect)
+libmotiondetect_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin motiondetect`
+libmotiondetect_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin motiondetect`
+libmotiondetect_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin motiondetect`
+
+libvlc_LIBRARIES += $(Lmotiondetectb) $(Lmotiondetectpic)
+libmotiondetect_DATA = $(Dmotiondetectp)
+
+libmotiondetectdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lmotiondetectp)
+libmotiondetect_plugin$(LIBEXT): $(libmotiondetect_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage motiondetect` in \
+	  c++) echo $(CXXLINK) $(libmotiondetect_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin motiondetect\` ; $(CXXLINK) $(libmotiondetect_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin motiondetect` ;; \
+	  objc) echo $(OBJCLINK) $(libmotiondetect_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin motiondetect\` ; $(OBJCLINK) $(libmotiondetect_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin motiondetect` ;; \
+	  c|*) echo $(LINK) $(libmotiondetect_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin motiondetect\` ; $(LINK) $(libmotiondetect_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin motiondetect` ;; \
 	esac
 
 

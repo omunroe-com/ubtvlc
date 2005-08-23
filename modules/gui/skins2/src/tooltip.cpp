@@ -2,7 +2,7 @@
  * tooltip.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: tooltip.cpp 6994 2004-03-07 11:47:50Z asmax $
+ * $Id: tooltip.cpp 10861 2005-05-01 13:19:04Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -113,7 +113,7 @@ void Tooltip::makeImage( const UString &rText )
     m_pImage = OSFactory::instance( getIntf() )->createOSGraphics( w, h );
     m_pImage->fillRect( 0, 0, w, h, 0xffffd0 );
     m_pImage->drawRect( 0, 0, w, h, 0x000000 );
-    m_pImage->drawBitmap( *pBmpTip, 0, 0, 5, 5 );
+    m_pImage->drawBitmap( *pBmpTip, 0, 0, 5, 5, -1, -1, true );
 
     delete pBmpTip;
 }

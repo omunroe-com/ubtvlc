@@ -3,7 +3,7 @@
  * This header provides portable declarations for mutexes & conditions
  *****************************************************************************
  * Copyright (C) 1999, 2002 VideoLAN
- * $Id: vlc_threads.h 6961 2004-03-05 17:34:23Z sam $
+ * $Id: vlc_threads.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Jean-Marc Dressler <polux@via.ecp.fr>
  *          Samuel Hocevar <sam@via.ecp.fr>
@@ -146,7 +146,7 @@ typedef struct
 #elif defined( WIN32 ) || defined( UNDER_CE )
 typedef HANDLE vlc_thread_t;
 typedef BOOL (WINAPI *SIGNALOBJECTANDWAIT) ( HANDLE, HANDLE, DWORD, BOOL );
-typedef unsigned (__stdcall *PTHREAD_START) (void *);
+typedef unsigned (WINAPI *PTHREAD_START) (void *);
 
 typedef struct
 {

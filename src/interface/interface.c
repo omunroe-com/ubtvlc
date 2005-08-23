@@ -4,7 +4,7 @@
  * interface, such as command line.
  *****************************************************************************
  * Copyright (C) 1998-2004 VideoLAN
- * $Id: interface.c 8481 2004-08-21 11:47:04Z ipkiss $
+ * $Id: interface.c 10147 2005-03-05 17:18:30Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -156,14 +156,16 @@ int intf_RunThread( intf_thread_t *p_intf )
         }
     }
 
-    if( p_intf->b_block && strncmp( p_intf->p_module->psz_shortname, "clivlc", 6) )
+    if( p_intf->b_block && strncmp( p_intf->p_module->psz_object_name,
+                                    "clivlc", 6) )
     {
         o_pool = [[NSAutoreleasePool alloc] init];
-	[VLCApplication sharedApplication];
+        [VLCApplication sharedApplication];
     }
 
-    if( p_intf->b_block && ( !strncmp( p_intf->p_module->psz_shortname, "macosx" , 6 ) ||
-                             !strncmp( p_intf->p_vlc->psz_object_name, "clivlc", 6 ) ) )
+    if( p_intf->b_block &&
+        ( !strncmp( p_intf->p_module->psz_object_name, "macosx" , 6 ) ||
+          !strncmp( p_intf->p_vlc->psz_object_name, "clivlc", 6 ) ) )
     {
         /* VLC in normal primary interface mode */
         RunInterface( p_intf );
@@ -358,8 +360,6 @@ static void RunInterface( intf_thread_t *p_intf )
     val.psz_string = "http"; text.psz_string = "Web Interface";
     var_Change( p_intf, "intf-add", VLC_VAR_ADDCHOICE, &val, &text );
     val.psz_string = "logger"; text.psz_string = "Debug logging";
-    var_Change( p_intf, "intf-add", VLC_VAR_ADDCHOICE, &val, &text );
-    val.psz_string = "sap"; text.psz_string = "SAP Playlist";
     var_Change( p_intf, "intf-add", VLC_VAR_ADDCHOICE, &val, &text );
     val.psz_string = "gestures"; text.psz_string = "Mouse Gestures";
     var_Change( p_intf, "intf-add", VLC_VAR_ADDCHOICE, &val, &text );

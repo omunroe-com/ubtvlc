@@ -2,7 +2,7 @@
  * objects.c: vlc_object_t handling
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: objects.c 9162 2004-11-06 10:47:04Z courmisch $
+ * $Id: objects.c 10705 2005-04-16 12:24:32Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -54,6 +54,7 @@
 #include "vlc_vlm.h"
 #include "vlc_vod.h"
 #include "vlc_tls.h"
+#include "vlc_xml.h"
 
 /*****************************************************************************
  * Local prototypes
@@ -126,6 +127,10 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
             i_size = sizeof(playlist_t);
             psz_type = "playlist";
             break;
+        case VLC_OBJECT_SD:
+            i_size = sizeof(services_discovery_t);
+            psz_type = "services discovery";
+            break;
         case VLC_OBJECT_INPUT:
             i_size = sizeof(input_thread_t);
             psz_type = "input";
@@ -190,6 +195,10 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
             i_size = sizeof( tls_t );
             psz_type = "tls";
             break;
+        case VLC_OBJECT_XML:
+            i_size = sizeof( xml_t );
+            psz_type = "xml";
+            break;
         case VLC_OBJECT_OPENGL:
             i_size = sizeof( vout_thread_t );
             psz_type = "opengl provider";
@@ -235,7 +244,8 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
 
     if( !p_new->p_vars )
     {
-        free( p_new );
+        if( i_type != VLC_OBJECT_ROOT )
+            free( p_new );
         return NULL;
     }
 
@@ -387,7 +397,9 @@ void __vlc_object_destroy( vlc_object_t *p_this )
     vlc_mutex_destroy( &p_this->object_lock );
     vlc_cond_destroy( &p_this->object_wait );
 
-    free( p_this );
+    /* root is not dynamically allocated by vlc_object_create */
+    if( p_this->i_object_type != VLC_OBJECT_ROOT )
+        free( p_this );
 }
 
 /**

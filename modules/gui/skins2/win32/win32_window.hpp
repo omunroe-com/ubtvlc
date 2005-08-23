@@ -2,7 +2,7 @@
  * win32_window.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: win32_window.hpp 7369 2004-04-18 18:11:51Z ipkiss $
+ * $Id: win32_window.hpp 10735 2005-04-18 21:21:09Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -71,6 +71,8 @@ class Win32Window: public OSWindow
         LPDROPTARGET m_pDropTarget;
         /// Indicates whether the window is layered
         mutable bool m_isLayered;
+        /// Parent window
+        Win32Window *m_pParent;
 };
 
 

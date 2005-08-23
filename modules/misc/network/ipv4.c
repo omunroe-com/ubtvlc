@@ -2,7 +2,7 @@
  * ipv4.c: IPv4 network abstraction layer
  *****************************************************************************
  * Copyright (C) 2001, 2002 VideoLAN
- * $Id: ipv4.c 8907 2004-10-04 14:29:23Z gbazin $
+ * $Id: ipv4.c 11387 2005-06-10 15:32:08Z hartman $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Mathias Kretschmer <mathias@research.att.com>
@@ -28,6 +28,7 @@
  *****************************************************************************/
 #include <stdlib.h>
 #include <string.h>
+
 #include <vlc/vlc.h>
 #include <errno.h>
 
@@ -45,13 +46,19 @@
 #   include <unistd.h>
 #endif
 
-#if defined( UNDER_CE )
-#   include <winsock.h>
-#   define close(fd) CloseHandle((HANDLE)fd)
-#elif defined( WIN32 )
+#if defined(WIN32) || defined(UNDER_CE)
+#   if defined(UNDER_CE) && defined(sockaddr_storage)
+#       undef sockaddr_storage
+#   endif
 #   include <winsock2.h>
 #   include <ws2tcpip.h>
 #   define close closesocket
+#   if defined(UNDER_CE)
+#       undef IP_MULTICAST_TTL
+#       define IP_MULTICAST_TTL 3
+#       undef IP_ADD_MEMBERSHIP
+#       define IP_ADD_MEMBERSHIP 5
+#   endif
 #else
 #   include <netdb.h>                                         /* hostent ... */
 #   include <sys/socket.h>
@@ -90,13 +97,21 @@ static int NetOpen( vlc_object_t * );
     "Allows you to modify the default TCP connection timeout. This " \
     "value should be set in millisecond units." )
 
+#define MIFACE_TEXT N_("Multicast output interface")
+#define MIFACE_LONGTEXT N_( \
+    "Indicate here the multicast output interface. " \
+    "This overrides the routing table.")
+
 vlc_module_begin();
     set_description( _("IPv4 network abstraction layer") );
     set_capability( "network", 50 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ADVANCED );
     set_callbacks( NetOpen, NULL );
 
     add_integer( "ipv4-timeout", 5 * 1000, NULL, TIMEOUT_TEXT,
                  TIMEOUT_LONGTEXT, VLC_TRUE );
+    add_string( "miface-addr", NULL, NULL, MIFACE_TEXT, MIFACE_LONGTEXT, VLC_TRUE );
 vlc_module_end();
 
 /*****************************************************************************
@@ -256,7 +271,7 @@ static int OpenUDP( vlc_object_t * p_this, network_socket_t * p_socket )
 
     /* Build the local socket */
 
-#if defined( WIN32 ) && !defined( UNDER_CE )
+#if defined( WIN32 ) || defined( UNDER_CE )
     /* Under Win32 and for multicasting, we bind to INADDR_ANY,
      * so let's call BuildAddr with "" instead of psz_bind_addr */
     if( BuildAddr( &sock, IN_MULTICAST( ntohl( inet_addr(psz_bind_addr) ) ) ?
@@ -282,7 +297,7 @@ static int OpenUDP( vlc_object_t * p_this, network_socket_t * p_socket )
         return( -1 );
     }
 
-#if defined( WIN32 ) && !defined( UNDER_CE )
+#if defined( WIN32 ) || defined( UNDER_CE )
     /* Restore the sock struct so we can spare a few #ifdef WIN32 later on */
     if( IN_MULTICAST( ntohl( inet_addr(psz_bind_addr) ) ) )
     {
@@ -313,7 +328,7 @@ static int OpenUDP( vlc_object_t * p_this, network_socket_t * p_socket )
     }
 #endif
 
-#if !defined( UNDER_CE ) && !defined( SYS_BEOS )
+#if !defined( SYS_BEOS )
     /* Join the multicast group if the socket is a multicast address */
     if( IN_MULTICAST( ntohl(sock.sin_addr.s_addr) ) )
     {
@@ -418,12 +433,29 @@ static int OpenUDP( vlc_object_t * p_this, network_socket_t * p_socket )
             return( -1 );
         }
 
-#if !defined( UNDER_CE ) && !defined( SYS_BEOS )
+#if !defined( SYS_BEOS )
         if( IN_MULTICAST( ntohl(inet_addr(psz_server_addr) ) ) )
         {
             /* set the time-to-live */
             int i_ttl = p_socket->i_ttl;
             unsigned char ttl;
+            
+            /* set the multicast interface */
+            char * psz_mif_addr = config_GetPsz( p_this, "miface-addr" );
+            if( psz_mif_addr )
+            {
+                struct in_addr intf;
+                intf.s_addr = inet_addr(psz_mif_addr);
+                free( psz_mif_addr  );
+
+                if( setsockopt( i_handle, IPPROTO_IP, IP_MULTICAST_IF,
+                                &intf, sizeof( intf ) ) < 0 )
+                {
+                    msg_Dbg( p_this, "failed to set multicast interface (%s).", strerror(errno) );
+                    close( i_handle );
+                    return ( -1 );
+                }
+            }
 
             if( i_ttl < 1 )
             {
@@ -601,7 +633,7 @@ static int OpenTCP( vlc_object_t * p_this, network_socket_t * p_socket )
                 goto error;
             }
 
-#if !defined( SYS_BEOS )
+#if !defined( SYS_BEOS ) && !defined( UNDER_CE )
             if( getsockopt( i_handle, SOL_SOCKET, SO_ERROR, (void*)&i_opt,
                             &i_opt_size ) == -1 || i_opt != 0 )
             {

@@ -2,7 +2,7 @@
  * visual.c : Visualisation system
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: visual.c 8551 2004-08-28 17:36:02Z gbazin $
+ * $Id: visual.c 10257 2005-03-10 13:05:43Z zorglub $
  *
  * Authors: Clément Stenac <zorglub@via.ecp.fr>
  *
@@ -72,24 +72,30 @@ static int  Open         ( vlc_object_t * );
 static void Close        ( vlc_object_t * );
 
 vlc_module_begin();
-    set_description( _("visualizer filter") );
+    set_shortname( _("Visualizer"));
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_VISUAL );
+    set_description( _("Visualizer filter") );
+    set_section( N_( "General") , NULL );
     add_string("effect-list", "spectrum", NULL,
             ELIST_TEXT, ELIST_LONGTEXT, VLC_TRUE );
     add_integer("effect-width",VOUT_WIDTH,NULL,
              WIDTH_TEXT, WIDTH_LONGTEXT, VLC_FALSE );
     add_integer("effect-height" , VOUT_HEIGHT , NULL,
              HEIGHT_TEXT, HEIGHT_LONGTEXT, VLC_FALSE );
+    set_section( N_("Spectrum analyser") , NULL );
     add_integer("visual-nbbands", 80, NULL,
-             NBBANDS_TEXT, NBBANDS_LONGTEXT, VLC_FALSE );
+             NBBANDS_TEXT, NBBANDS_LONGTEXT, VLC_TRUE );
     add_integer("visual-separ", 1, NULL,
-             SEPAR_TEXT, SEPAR_LONGTEXT, VLC_FALSE );
+             SEPAR_TEXT, SEPAR_LONGTEXT, VLC_TRUE );
     add_integer("visual-amp", 3, NULL,
-             AMP_TEXT, AMP_LONGTEXT, VLC_FALSE );
+             AMP_TEXT, AMP_LONGTEXT, VLC_TRUE );
     add_bool("visual-peaks", VLC_TRUE, NULL,
-             PEAKS_TEXT, PEAKS_LONGTEXT, VLC_FALSE );
+             PEAKS_TEXT, PEAKS_LONGTEXT, VLC_TRUE );
+    set_section( N_( "Random effect") , NULL );
     add_integer("visual-stars", 200, NULL,
-             STARS_TEXT, STARS_LONGTEXT, VLC_FALSE );
-    set_capability( "audio filter", 0 );
+             STARS_TEXT, STARS_LONGTEXT, VLC_TRUE );
+    set_capability( "visualization", 0 );
     set_callbacks( Open, Close );
     add_shortcut( "visualizer");
 vlc_module_end();
@@ -126,6 +132,7 @@ static int Open( vlc_object_t *p_this )
     vlc_value_t        val;
 
     char *psz_effects, *psz_parser;
+    video_format_t fmt = {0};
 
     if( ( p_filter->input.i_format != VLC_FOURCC('f','l','3','2') &&
           p_filter->input.i_format != VLC_FOURCC('f','i','3','2') ) )
@@ -240,12 +247,13 @@ static int Open( vlc_object_t *p_this )
     }
 
     /* Open the video output */
-    p_sys->p_vout =
-         vout_Request( p_filter, NULL,
-                       p_sys->i_width, p_sys->i_height,
-                       VLC_FOURCC('I','4','2','0'),
-                       VOUT_ASPECT_FACTOR * p_sys->i_width/p_sys->i_height );
+    fmt.i_width = fmt.i_visible_width = p_sys->i_width;
+    fmt.i_height = fmt.i_visible_height = p_sys->i_height;
+    fmt.i_chroma = VLC_FOURCC('I','4','2','0');
+    fmt.i_aspect = VOUT_ASPECT_FACTOR * p_sys->i_width/p_sys->i_height;
+    fmt.i_sar_num = fmt.i_sar_den = 1;
 
+    p_sys->p_vout = vout_Request( p_filter, NULL, &fmt );
     if( p_sys->p_vout == NULL )
     {
         msg_Err( p_filter, "no suitable vout module" );
@@ -323,7 +331,7 @@ static void Close( vlc_object_t *p_this )
 
     if( p_filter->p_sys->p_vout )
     {
-        vout_Request( p_filter, p_filter->p_sys->p_vout, 0, 0, 0, 0 );
+        vout_Request( p_filter, p_filter->p_sys->p_vout, 0 );
     }
 
     /* Free the list */

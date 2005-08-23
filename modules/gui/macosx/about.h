@@ -1,8 +1,8 @@
 /*****************************************************************************
  * about.h: MacOS X About Panel
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: about.h 7090 2004-03-15 19:33:18Z bigben $
+ * Copyright (C) 2001-2005 VideoLAN
+ * $Id: about.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Derk-Jan Hartman <thedj@users.sourceforge.net>
  * 
@@ -49,6 +49,6 @@
 }
 
 + (VLAboutBox *)sharedInstance;
-- (IBAction)showPanel:(id)sender;
+- (void)showPanel;
 
 @end

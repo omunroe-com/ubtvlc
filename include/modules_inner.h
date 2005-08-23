@@ -2,7 +2,7 @@
  * modules_inner.h : Macros used from within a module.
  *****************************************************************************
  * Copyright (C) 2001 VideoLAN
- * $Id: modules_inner.h 7690 2004-05-16 19:17:56Z gbazin $
+ * $Id: modules_inner.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -78,6 +78,12 @@
 #   define EXTERN_SYMBOL
 #endif
 
+#if defined( USE_DLL )
+#   define IMPORT_SYMBOL __declspec(dllimport)
+#else
+#   define IMPORT_SYMBOL
+#endif
+
 #define MODULE_STRING STRINGIFY( MODULE_NAME )
 
 /*
@@ -99,7 +105,7 @@
         p_module->b_unloadable = VLC_TRUE;                                    \
         p_module->b_reentrant = VLC_TRUE;                                     \
         p_module->psz_object_name = MODULE_STRING;                            \
-        p_module->psz_shortname = MODULE_STRING;                              \
+        p_module->psz_shortname = NULL;                                       \
         p_module->psz_longname = MODULE_STRING;                               \
         p_module->pp_shortcuts[ 0 ] = MODULE_STRING;                          \
         p_module->i_cpu = 0;                                                  \

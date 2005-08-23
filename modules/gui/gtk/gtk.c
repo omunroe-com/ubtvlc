@@ -2,7 +2,7 @@
  * gtk.c : Gtk+ plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2001 VideoLAN
- * $Id: gtk.c 7932 2004-06-07 18:26:27Z fenrir $
+ * $Id: gtk.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -74,6 +74,8 @@ vlc_module_begin();
     int i = getenv( "DISPLAY" ) == NULL ? 10 : 90;
 #endif
     set_description( _("Gtk+ interface") );
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_GENERAL );
 
     add_bool( "gtk-tooltips", 1, E_(GtkHideTooltips),
               TOOLTIPS_TEXT, TOOLTIPS_LONGTEXT, VLC_FALSE );

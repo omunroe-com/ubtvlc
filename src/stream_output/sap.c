@@ -2,7 +2,7 @@
  * sap.c : SAP announce handler
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: sap.c 9201 2004-11-06 16:51:46Z yoann $
+ * $Id: sap.c 11232 2005-06-01 18:34:09Z courmisch $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -32,6 +32,7 @@
 #include <vlc/sout.h>
 
 #include <network.h>
+#include "charset.h"
 
 #define SAP_IPV4_ADDR "224.2.127.254" /* Standard port and address for SAP */
 #define SAP_PORT 9875
@@ -62,6 +63,7 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
 
 static int announce_SAPAnnounceDel( sap_handler_t *p_sap,
                              session_descriptor_t *p_session );
+static char *convert_to_utf8( struct sap_handler_t *p_this, char *psz_local );
 
 #define FREE( p ) if( p ) { free( p ); (p) = NULL; }
 
@@ -75,6 +77,7 @@ static int announce_SAPAnnounceDel( sap_handler_t *p_sap,
 sap_handler_t *announce_SAPHandlerCreate( announce_handler_t *p_announce )
 {
     sap_handler_t *p_sap;
+    char *psz_charset;
 
     p_sap = vlc_object_create( p_announce, sizeof( sap_handler_t ) );
 
@@ -85,6 +88,14 @@ sap_handler_t *announce_SAPHandlerCreate( announce_handler_t *p_announce )
     }
 
     vlc_mutex_init( p_sap, &p_sap->object_lock );
+
+    vlc_current_charset( &psz_charset );
+    p_sap->iconvHandle = vlc_iconv_open( "UTF-8", psz_charset );
+    free( psz_charset );
+    if( p_sap->iconvHandle == (vlc_iconv_t)(-1) )
+    {
+        msg_Warn( p_sap, "Unable to do requested conversion" );
+    }
 
     p_sap->pf_add = announce_SAPAnnounceAdd;
     p_sap->pf_del = announce_SAPAnnounceDel;
@@ -143,6 +154,9 @@ void announce_SAPHandlerDestroy( sap_handler_t *p_sap )
         REMOVE_ELEM( p_sap->pp_addresses, p_sap->i_addresses, i );
         FREE( p_address );
     }
+
+    if( p_sap->iconvHandle != (vlc_iconv_t)(-1) )
+        vlc_iconv_close( p_sap->iconvHandle );
 
     /* Free the structure */
     vlc_object_destroy( p_sap );
@@ -234,9 +248,9 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
         if( p_method->i_ip_version == 6 )
         {
             char sz_scope;
-            if( p_method->psz_ipv6_scope != NULL )
+            if( p_method->sz_ipv6_scope )
             {
-                sz_scope = *p_method->psz_ipv6_scope;
+                sz_scope = p_method->sz_ipv6_scope;
             }
             else
             {
@@ -304,6 +318,7 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
             p_address->b_enabled = VLC_TRUE;
             p_address->b_ready = VLC_TRUE;
             p_address->i_interval = config_GetInt( p_sap,"sap-interval");
+            p_address->i_rfd = -1;
         }
 
         if( p_address->i_wfd == -1 || (p_address->i_rfd == -1
@@ -421,6 +436,10 @@ static int announce_SAPAnnounceDel( sap_handler_t *p_sap,
             REMOVE_ELEM( p_sap->pp_sessions,
                          p_sap->i_sessions,
                          i );
+
+            FREE( p_session->p_sap->psz_sdp );
+            FREE( p_session->p_sap->psz_data );
+            free( p_session->p_sap );
             break;
         }
     }
@@ -454,7 +473,7 @@ static int announce_SendSAPAnnounce( sap_handler_t *p_sap,
 #ifdef EXTRA_DEBUG
         msg_Dbg( p_sap, "Sending announce");
 #endif
-        i_ret = net_Write( p_sap, p_session->p_address->i_wfd,
+        i_ret = net_Write( p_sap, p_session->p_address->i_wfd, NULL,
                            p_session->psz_data,
                            p_session->i_length );
         if( i_ret  != p_session->i_length )
@@ -478,6 +497,13 @@ static int SDPGenerate( sap_handler_t *p_sap, session_descriptor_t *p_session )
 {
     int64_t i_sdp_id = mdate();
     int     i_sdp_version = 1 + p_sap->i_sessions + (rand()&0xfff);
+    char *psz_group, *psz_name;
+    char ipv;
+
+    psz_group = convert_to_utf8( p_sap, p_session->psz_group );
+    psz_name = convert_to_utf8( p_sap, p_session->psz_name );
+
+    ipv = ( strchr( p_session->psz_uri, ':' )  != NULL) ? '6' : '4';
 
     /* see the lists in modules/stream_out/rtp.c for compliance stuff */
     p_session->psz_sdp = (char *)malloc(
@@ -489,14 +515,15 @@ static int SDPGenerate( sap_handler_t *p_sap, session_descriptor_t *p_session )
                                    "m=video  udp\r\n"
                                    "a=tool:"PACKAGE_STRING"\r\n"
                                    "a=type:broadcast\r\n")
-                           + strlen( p_session->psz_name )
+                           + strlen( psz_name )
                            + strlen( p_session->psz_uri ) + 300
-                           + ( p_session->psz_group ?
-                                 strlen( p_session->psz_group ) : 0 ) );
+                           + ( psz_group ? strlen( psz_group ) : 0 ) );
 
-    if( !p_session->psz_sdp )
+    if( p_session->psz_sdp == NULL || psz_name == NULL )
     {
         msg_Err( p_sap, "out of memory" );
+        FREE( psz_name );
+        FREE( psz_group );
         return VLC_ENOMEM;
     }
     sprintf( p_session->psz_sdp,
@@ -504,20 +531,21 @@ static int SDPGenerate( sap_handler_t *p_sap, session_descriptor_t *p_session )
                             "o=- "I64Fd" %d IN IP4 127.0.0.1\r\n"
                             "s=%s\r\n"
                             "t=0 0\r\n"
-                            "c=IN IP4 %s/%d\r\n"
+                            "c=IN IP%c %s/%d\r\n"
                             "m=video %d udp %d\r\n"
                             "a=tool:"PACKAGE_STRING"\r\n"
                             "a=type:broadcast\r\n",
                             i_sdp_id, i_sdp_version,
-                            p_session->psz_name,
+                            psz_name, ipv,
                             p_session->psz_uri, p_session->i_ttl,
                             p_session->i_port, p_session->i_payload );
+    free( psz_name );
 
-    if( p_session->psz_group )
+    if( psz_group )
     {
         sprintf( p_session->psz_sdp, "%sa=x-plgroup:%s\r\n",
-                                     p_session->psz_sdp,
-                                     p_session->psz_group );
+                                     p_session->psz_sdp, psz_group );
+        free( psz_group );
     }
 
     msg_Dbg( p_sap, "Generated SDP (%i bytes):\n%s", strlen(p_session->psz_sdp),
@@ -541,7 +569,7 @@ static int CalculateRate( sap_handler_t *p_sap, sap_address_t *p_address )
     do
     {
         /* Might be too slow if we have huge data */
-        i_read = net_ReadNonBlock( p_sap, p_address->i_rfd, buffer,
+        i_read = net_ReadNonBlock( p_sap, p_address->i_rfd, NULL, buffer,
                                    SAP_MAX_BUFFER, 0 );
         i_tot += i_read;
     } while( i_read > 0 && i_tot < SAP_MAX_BUFFER );
@@ -581,4 +609,35 @@ static int CalculateRate( sap_handler_t *p_sap, sap_address_t *p_address )
     p_address->i_buff = 0;
 
     return VLC_SUCCESS;
+}
+
+
+static char *convert_to_utf8( struct sap_handler_t *p_this, char *psz_local )
+{
+    char *psz_unicode, *psz_in, *psz_out;
+    size_t ret, i_in, i_out;
+
+    if( psz_local == NULL )
+        return NULL;
+    if ( p_this->iconvHandle == (vlc_iconv_t)(-1) )
+        return strdup( psz_local );
+
+    psz_in = psz_local;
+    i_in = strlen( psz_local );
+
+    i_out = 6 * i_in;
+    psz_unicode = malloc( i_out + 1 );
+    if( psz_unicode == NULL )
+        return strdup( psz_local );
+    psz_out = psz_unicode;
+
+    ret = vlc_iconv( p_this->iconvHandle,
+                     &psz_in, &i_in, &psz_out, &i_out);
+    if( ret == (size_t)(-1) || i_in )
+    {
+        msg_Warn( p_this, "Failed to convert \"%s\" to UTF-8", psz_local );
+        return strdup( psz_local );
+    }
+    *psz_out = '\0';
+    return psz_unicode;
 }

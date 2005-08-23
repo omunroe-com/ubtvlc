@@ -2,7 +2,7 @@
  * scaled_bitmap.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: scaled_bitmap.cpp 8899 2004-10-03 14:11:12Z asmax $
+ * $Id: scaled_bitmap.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

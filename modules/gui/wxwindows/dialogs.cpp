@@ -2,7 +2,7 @@
  * dialogs.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: dialogs.cpp 8512 2004-08-24 18:43:41Z asmax $
+ * $Id: dialogs.cpp 11019 2005-05-15 13:20:55Z ipkiss $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -60,6 +60,7 @@ private:
 
     void OnOpenFileGeneric( wxCommandEvent& event );
     void OnOpenFileSimple( wxCommandEvent& event );
+    void OnOpenDirectory( wxCommandEvent& event );
     void OnOpenFile( wxCommandEvent& event );
     void OnOpenDisc( wxCommandEvent& event );
     void OnOpenNet( wxCommandEvent& event );
@@ -80,6 +81,7 @@ public:
     /* Secondary windows */
     OpenDialog          *p_open_dialog;
     wxFileDialog        *p_file_dialog;
+    wxDirDialog         *p_dir_dialog;
     Playlist            *p_playlist_dialog;
     Messages            *p_messages_dialog;
     FileInfo            *p_fileinfo_dialog;
@@ -105,6 +107,8 @@ BEGIN_EVENT_TABLE(DialogsProvider, wxFrame)
                 DialogsProvider::OnOpenFileSimple)
     EVT_COMMAND(INTF_DIALOG_FILE_GENERIC, wxEVT_DIALOG,
                 DialogsProvider::OnOpenFileGeneric)
+    EVT_COMMAND(INTF_DIALOG_DIRECTORY, wxEVT_DIALOG,
+                DialogsProvider::OnOpenDirectory)
 
     EVT_COMMAND(INTF_DIALOG_PLAYLIST, wxEVT_DIALOG,
                 DialogsProvider::OnPlaylist)
@@ -146,6 +150,7 @@ DialogsProvider::DialogsProvider( intf_thread_t *_p_intf, wxWindow *p_parent )
     p_file_generic_dialog = NULL;
     p_wizard_dialog = NULL;
     p_bookmarks_dialog = NULL;
+    p_dir_dialog = NULL;
 
     /* Give our interface a nice little icon */
     p_intf->p_sys->p_icon = new wxIcon( vlc_xpm );
@@ -160,10 +165,50 @@ DialogsProvider::DialogsProvider( intf_thread_t *_p_intf, wxWindow *p_parent )
 
     /* Intercept all menu events in our custom event handler */
     PushEventHandler( new MenuEvtHandler( p_intf, NULL ) );
+
+
+    WindowSettings *ws = p_intf->p_sys->p_window_settings;
+    wxPoint p;
+    wxSize  s;
+    bool    b_shown;
+
+#define INIT( id, w, N, S ) \
+    if( ws->GetSettings( WindowSettings::id, b_shown, p, s ) && b_shown ) \
+    {                           \
+        if( !w )                \
+            w = N;              \
+        w->SetSize( s );        \
+        w->Move( p );           \
+        w->S( true );           \
+    }
+
+    INIT( ID_PLAYLIST, p_playlist_dialog, new Playlist(p_intf,this), ShowPlaylist );
+    INIT( ID_MESSAGES, p_messages_dialog, new Messages(p_intf,this), Show );
+    INIT( ID_FILE_INFO, p_fileinfo_dialog, new FileInfo(p_intf,this), Show );
+    INIT( ID_BOOKMARKS, p_bookmarks_dialog, BookmarksDialog(p_intf,this), Show);
+#undef INIT
 }
 
 DialogsProvider::~DialogsProvider()
 {
+    WindowSettings *ws = p_intf->p_sys->p_window_settings;
+
+#define UPDATE(id,w)                                        \
+  {                                                         \
+    if( w && w->IsShown() )                                 \
+        ws->SetSettings(  WindowSettings::id, true,         \
+                          w->GetPosition(), w->GetSize() ); \
+    else                                                    \
+        ws->SetSettings(  WindowSettings::id, false );      \
+  }
+
+    UPDATE( ID_PLAYLIST,  p_playlist_dialog );
+    UPDATE( ID_MESSAGES,  p_messages_dialog );
+    UPDATE( ID_FILE_INFO, p_fileinfo_dialog );
+    UPDATE( ID_BOOKMARKS, p_bookmarks_dialog );
+
+#undef UPDATE
+
     /* Clean up */
     if( p_open_dialog )     delete p_open_dialog;
     if( p_prefs_dialog )    p_prefs_dialog->Destroy();
@@ -187,17 +232,17 @@ DialogsProvider::~DialogsProvider()
 
 void DialogsProvider::OnIdle( wxIdleEvent& WXUNUSED(event) )
 {
-  /* Update the log window */
-  if( p_messages_dialog )
-    p_messages_dialog->UpdateLog();
+    /* Update the log window */
+    if( p_messages_dialog )
+        p_messages_dialog->UpdateLog();
 
-  /* Update the playlist */
-  if( p_playlist_dialog )
-    p_playlist_dialog->UpdatePlaylist();
+    /* Update the playlist */
+    if( p_playlist_dialog )
+        p_playlist_dialog->UpdatePlaylist();
 
-  /* Update the fileinfo windows */
-  if( p_fileinfo_dialog )
-    p_fileinfo_dialog->UpdateFileInfo();
+    /* Update the fileinfo windows */
+    if( p_fileinfo_dialog )
+        p_fileinfo_dialog->UpdateFileInfo();
 }
 
 void DialogsProvider::OnPlaylist( wxCommandEvent& WXUNUSED(event) )
@@ -360,6 +405,32 @@ void DialogsProvider::OnOpenFileSimple( wxCommandEvent& event )
                 playlist_Add( p_playlist, (const char *)paths[i].mb_str(),
                               (const char *)paths[i].mb_str(),
                               PLAYLIST_APPEND, PLAYLIST_END );
+    }
+
+    vlc_object_release( p_playlist );
+}
+
+void DialogsProvider::OnOpenDirectory( wxCommandEvent& event )
+{
+    playlist_t *p_playlist =
+        (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
+                                       FIND_ANYWHERE );
+    if( p_playlist == NULL )
+    {
+        return;
+    }
+
+    if( p_dir_dialog == NULL )
+        p_dir_dialog = new wxDirDialog( NULL );
+
+    if( p_dir_dialog && p_dir_dialog->ShowModal() == wxID_OK )
+    {
+        wxString path = p_dir_dialog->GetPath();
+
+        playlist_Add( p_playlist, (const char *)path.mb_str(),
+                      (const char *)path.mb_str(),
+                      PLAYLIST_APPEND | (event.GetInt() ? PLAYLIST_GO : 0),
+                      PLAYLIST_END );
     }
 
     vlc_object_release( p_playlist );

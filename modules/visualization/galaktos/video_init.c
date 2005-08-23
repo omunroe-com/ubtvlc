@@ -2,7 +2,7 @@
  * video_init.c:
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: video_init.c 8225 2004-07-20 20:25:25Z asmax $
+ * $Id: video_init.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *          code from projectM http://xmms-projectm.sourceforge.net

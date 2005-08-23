@@ -55,6 +55,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_ACTIVEX_FALSE = @BUILD_ACTIVEX_FALSE@
+BUILD_ACTIVEX_TRUE = @BUILD_ACTIVEX_TRUE@
 BUILD_DIRENT_FALSE = @BUILD_DIRENT_FALSE@
 BUILD_DIRENT_TRUE = @BUILD_DIRENT_TRUE@
 BUILD_GETOPT_FALSE = @BUILD_GETOPT_FALSE@
@@ -69,8 +71,6 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-CORBA_CFLAGS = @CORBA_CFLAGS@
-CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -98,10 +98,8 @@ FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GTK2_CFLAGS = @GTK2_CFLAGS@
-GTK2_LIBS = @GTK2_LIBS@
-HAL_CFLAGS = @HAL_CFLAGS@
-HAL_LIBS = @HAL_LIBS@
+HAS_MIDL_COMPILER_FALSE = @HAS_MIDL_COMPILER_FALSE@
+HAS_MIDL_COMPILER_TRUE = @HAS_MIDL_COMPILER_TRUE@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -112,6 +110,8 @@ HAVE_PLUGINS_FALSE = @HAVE_PLUGINS_FALSE@
 HAVE_PLUGINS_TRUE = @HAVE_PLUGINS_TRUE@
 HAVE_WIN32_FALSE = @HAVE_WIN32_FALSE@
 HAVE_WIN32_TRUE = @HAVE_WIN32_TRUE@
+HAVE_WINCE_FALSE = @HAVE_WINCE_FALSE@
+HAVE_WINCE_TRUE = @HAVE_WINCE_TRUE@
 INCLUDES = @INCLUDES@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -124,12 +124,7 @@ INTLOBJS = @INTLOBJS@
 INTL_LIBTOOL_SUFFIX_PREFIX = @INTL_LIBTOOL_SUFFIX_PREFIX@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
-LIBCDDB_CFLAGS = @LIBCDDB_CFLAGS@
-LIBCDDB_LIBS = @LIBCDDB_LIBS@
-LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
-LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
-LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -138,6 +133,7 @@ LTLIBICONV = @LTLIBICONV@
 LTLIBINTL = @LTLIBINTL@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+MIDL = @MIDL@
 MKINSTALLDIRS = @MKINSTALLDIRS@
 MOC = @MOC@
 MOZILLA_CONFIG = @MOZILLA_CONFIG@
@@ -154,7 +150,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
 PLUGIN_PATH = @PLUGIN_PATH@
 POSUB = @POSUB@
 RANLIB = @RANLIB@
@@ -164,8 +159,6 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-SVG_CFLAGS = @SVG_CFLAGS@
-SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
@@ -230,8 +223,8 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Lstream_out_dummyb) $(Lstream_out_dummypic) $(Lstream_out_descriptionb) $(Lstream_out_descriptionpic) $(Lstream_out_standardb) $(Lstream_out_standardpic) $(Lstream_out_transcodeb) $(Lstream_out_transcodepic) $(Lstream_out_duplicateb) $(Lstream_out_duplicatepic) $(Lstream_out_esb) $(Lstream_out_espic) $(Lstream_out_displayb) $(Lstream_out_displaypic) $(Lstream_out_gatherb) $(Lstream_out_gatherpic) $(Lstream_out_rtpb) $(Lstream_out_rtppic)
-noinst_LIBRARIES = $(Lstream_out_dummyp) $(Lstream_out_descriptionp) $(Lstream_out_standardp) $(Lstream_out_transcodep) $(Lstream_out_duplicatep) $(Lstream_out_esp) $(Lstream_out_displayp) $(Lstream_out_gatherp) $(Lstream_out_rtpp)
+libvlc_LIBRARIES = $(Lstream_out_dummyb) $(Lstream_out_dummypic) $(Lstream_out_descriptionb) $(Lstream_out_descriptionpic) $(Lstream_out_standardb) $(Lstream_out_standardpic) $(Lstream_out_transcodeb) $(Lstream_out_transcodepic) $(Lstream_out_duplicateb) $(Lstream_out_duplicatepic) $(Lstream_out_esb) $(Lstream_out_espic) $(Lstream_out_displayb) $(Lstream_out_displaypic) $(Lstream_out_gatherb) $(Lstream_out_gatherpic) $(Lstream_out_rtpb) $(Lstream_out_rtppic) $(Lstream_out_switcherb) $(Lstream_out_switcherpic) $(Lstream_out_bridgeb) $(Lstream_out_bridgepic) $(Lstream_out_mosaic_bridgeb) $(Lstream_out_mosaic_bridgepic)
+noinst_LIBRARIES = $(Lstream_out_dummyp) $(Lstream_out_descriptionp) $(Lstream_out_standardp) $(Lstream_out_transcodep) $(Lstream_out_duplicatep) $(Lstream_out_esp) $(Lstream_out_displayp) $(Lstream_out_gatherp) $(Lstream_out_rtpp) $(Lstream_out_switcherp) $(Lstream_out_bridgep) $(Lstream_out_mosaic_bridgep)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
@@ -250,6 +243,9 @@ SOURCES_stream_out_es = es.c
 SOURCES_stream_out_display = display.c
 SOURCES_stream_out_gather = gather.c
 SOURCES_stream_out_rtp = rtp.c
+SOURCES_stream_out_switcher = switcher.c
+SOURCES_stream_out_bridge = bridge.c
+SOURCES_stream_out_mosaic_bridge = mosaic_bridge.c
 
 # There's no need for pic code on win32 so get rid of this to substantially
 # reduce the compilation time.
@@ -480,6 +476,81 @@ libstream_out_rtp_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_rt
 libstream_out_rtp_DATA = $(Dstream_out_rtpp)
 
 libstream_out_rtpdir = $(libdir)/vlc/
+
+
+# The stream_out_switcher plugin
+@UNTRUE_TRUE@Lstream_out_switcherp = libstream_out_switcher_plugin.a
+@UNTRUE_TRUE@Dstream_out_switcherp = libstream_out_switcher_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lstream_out_switcherb = libstream_out_switcher.a
+@UNTRUE_TRUE@Lstream_out_switcherpic = libstream_out_switcher_pic.a
+
+libstream_out_switcher_plugin_a_SOURCES = $(SOURCES_stream_out_switcher)
+libstream_out_switcher_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin stream_out_switcher`
+libstream_out_switcher_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin stream_out_switcher`
+libstream_out_switcher_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin stream_out_switcher`
+
+libstream_out_switcher_pic_a_SOURCES = $(SOURCES_stream_out_switcher)
+libstream_out_switcher_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_switcher`
+libstream_out_switcher_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_switcher`
+libstream_out_switcher_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_switcher`
+
+libstream_out_switcher_a_SOURCES = $(SOURCES_stream_out_switcher)
+libstream_out_switcher_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_switcher`
+libstream_out_switcher_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_switcher`
+libstream_out_switcher_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_switcher`
+libstream_out_switcher_DATA = $(Dstream_out_switcherp)
+
+libstream_out_switcherdir = $(libdir)/vlc/
+
+
+# The stream_out_bridge plugin
+@UNTRUE_TRUE@Lstream_out_bridgep = libstream_out_bridge_plugin.a
+@UNTRUE_TRUE@Dstream_out_bridgep = libstream_out_bridge_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lstream_out_bridgeb = libstream_out_bridge.a
+@UNTRUE_TRUE@Lstream_out_bridgepic = libstream_out_bridge_pic.a
+
+libstream_out_bridge_plugin_a_SOURCES = $(SOURCES_stream_out_bridge)
+libstream_out_bridge_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin stream_out_bridge`
+libstream_out_bridge_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin stream_out_bridge`
+libstream_out_bridge_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin stream_out_bridge`
+
+libstream_out_bridge_pic_a_SOURCES = $(SOURCES_stream_out_bridge)
+libstream_out_bridge_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_bridge`
+libstream_out_bridge_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_bridge`
+libstream_out_bridge_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_bridge`
+
+libstream_out_bridge_a_SOURCES = $(SOURCES_stream_out_bridge)
+libstream_out_bridge_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_bridge`
+libstream_out_bridge_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_bridge`
+libstream_out_bridge_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_bridge`
+libstream_out_bridge_DATA = $(Dstream_out_bridgep)
+
+libstream_out_bridgedir = $(libdir)/vlc/
+
+
+# The stream_out_mosaic_bridge plugin
+@UNTRUE_TRUE@Lstream_out_mosaic_bridgep = libstream_out_mosaic_bridge_plugin.a
+@UNTRUE_TRUE@Dstream_out_mosaic_bridgep = libstream_out_mosaic_bridge_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lstream_out_mosaic_bridgeb = libstream_out_mosaic_bridge.a
+@UNTRUE_TRUE@Lstream_out_mosaic_bridgepic = libstream_out_mosaic_bridge_pic.a
+
+libstream_out_mosaic_bridge_plugin_a_SOURCES = $(SOURCES_stream_out_mosaic_bridge)
+libstream_out_mosaic_bridge_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin stream_out_mosaic_bridge`
+libstream_out_mosaic_bridge_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin stream_out_mosaic_bridge`
+libstream_out_mosaic_bridge_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin stream_out_mosaic_bridge`
+
+libstream_out_mosaic_bridge_pic_a_SOURCES = $(SOURCES_stream_out_mosaic_bridge)
+libstream_out_mosaic_bridge_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_mosaic_bridge`
+libstream_out_mosaic_bridge_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_mosaic_bridge`
+libstream_out_mosaic_bridge_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_mosaic_bridge`
+
+libstream_out_mosaic_bridge_a_SOURCES = $(SOURCES_stream_out_mosaic_bridge)
+libstream_out_mosaic_bridge_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_mosaic_bridge`
+libstream_out_mosaic_bridge_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_mosaic_bridge`
+libstream_out_mosaic_bridge_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_mosaic_bridge`
+libstream_out_mosaic_bridge_DATA = $(Dstream_out_mosaic_bridgep)
+
+libstream_out_mosaic_bridgedir = $(libdir)/vlc/
 subdir = modules/stream_out
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
@@ -487,169 +558,226 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 LIBRARIES = $(libvlc_LIBRARIES) $(noinst_LIBRARIES)
 
+libstream_out_bridge_a_AR = $(AR) cru
+libstream_out_bridge_a_LIBADD =
+am__objects_1 = libstream_out_bridge_a-bridge.$(OBJEXT)
+am_libstream_out_bridge_a_OBJECTS = $(am__objects_1)
+libstream_out_bridge_a_OBJECTS = $(am_libstream_out_bridge_a_OBJECTS)
+libstream_out_bridge_pic_a_AR = $(AR) cru
+libstream_out_bridge_pic_a_LIBADD =
+am__objects_2 = libstream_out_bridge_pic_a-bridge.$(OBJEXT)
+am_libstream_out_bridge_pic_a_OBJECTS = $(am__objects_2)
+libstream_out_bridge_pic_a_OBJECTS = \
+	$(am_libstream_out_bridge_pic_a_OBJECTS)
+libstream_out_bridge_plugin_a_AR = $(AR) cru
+libstream_out_bridge_plugin_a_LIBADD =
+am__objects_3 = libstream_out_bridge_plugin_a-bridge.$(OBJEXT)
+am_libstream_out_bridge_plugin_a_OBJECTS = $(am__objects_3)
+libstream_out_bridge_plugin_a_OBJECTS = \
+	$(am_libstream_out_bridge_plugin_a_OBJECTS)
 libstream_out_description_a_AR = $(AR) cru
 libstream_out_description_a_LIBADD =
-am__objects_1 = libstream_out_description_a-description.$(OBJEXT)
-am_libstream_out_description_a_OBJECTS = $(am__objects_1)
+am__objects_4 = libstream_out_description_a-description.$(OBJEXT)
+am_libstream_out_description_a_OBJECTS = $(am__objects_4)
 libstream_out_description_a_OBJECTS = \
 	$(am_libstream_out_description_a_OBJECTS)
 libstream_out_description_pic_a_AR = $(AR) cru
 libstream_out_description_pic_a_LIBADD =
-am__objects_2 = libstream_out_description_pic_a-description.$(OBJEXT)
-am_libstream_out_description_pic_a_OBJECTS = $(am__objects_2)
+am__objects_5 = libstream_out_description_pic_a-description.$(OBJEXT)
+am_libstream_out_description_pic_a_OBJECTS = $(am__objects_5)
 libstream_out_description_pic_a_OBJECTS = \
 	$(am_libstream_out_description_pic_a_OBJECTS)
 libstream_out_description_plugin_a_AR = $(AR) cru
 libstream_out_description_plugin_a_LIBADD =
-am__objects_3 = libstream_out_description_plugin_a-description.$(OBJEXT)
-am_libstream_out_description_plugin_a_OBJECTS = $(am__objects_3)
+am__objects_6 = libstream_out_description_plugin_a-description.$(OBJEXT)
+am_libstream_out_description_plugin_a_OBJECTS = $(am__objects_6)
 libstream_out_description_plugin_a_OBJECTS = \
 	$(am_libstream_out_description_plugin_a_OBJECTS)
 libstream_out_display_a_AR = $(AR) cru
 libstream_out_display_a_LIBADD =
-am__objects_4 = libstream_out_display_a-display.$(OBJEXT)
-am_libstream_out_display_a_OBJECTS = $(am__objects_4)
+am__objects_7 = libstream_out_display_a-display.$(OBJEXT)
+am_libstream_out_display_a_OBJECTS = $(am__objects_7)
 libstream_out_display_a_OBJECTS = $(am_libstream_out_display_a_OBJECTS)
 libstream_out_display_pic_a_AR = $(AR) cru
 libstream_out_display_pic_a_LIBADD =
-am__objects_5 = libstream_out_display_pic_a-display.$(OBJEXT)
-am_libstream_out_display_pic_a_OBJECTS = $(am__objects_5)
+am__objects_8 = libstream_out_display_pic_a-display.$(OBJEXT)
+am_libstream_out_display_pic_a_OBJECTS = $(am__objects_8)
 libstream_out_display_pic_a_OBJECTS = \
 	$(am_libstream_out_display_pic_a_OBJECTS)
 libstream_out_display_plugin_a_AR = $(AR) cru
 libstream_out_display_plugin_a_LIBADD =
-am__objects_6 = libstream_out_display_plugin_a-display.$(OBJEXT)
-am_libstream_out_display_plugin_a_OBJECTS = $(am__objects_6)
+am__objects_9 = libstream_out_display_plugin_a-display.$(OBJEXT)
+am_libstream_out_display_plugin_a_OBJECTS = $(am__objects_9)
 libstream_out_display_plugin_a_OBJECTS = \
 	$(am_libstream_out_display_plugin_a_OBJECTS)
 libstream_out_dummy_a_AR = $(AR) cru
 libstream_out_dummy_a_LIBADD =
-am__objects_7 = libstream_out_dummy_a-dummy.$(OBJEXT)
-am_libstream_out_dummy_a_OBJECTS = $(am__objects_7)
+am__objects_10 = libstream_out_dummy_a-dummy.$(OBJEXT)
+am_libstream_out_dummy_a_OBJECTS = $(am__objects_10)
 libstream_out_dummy_a_OBJECTS = $(am_libstream_out_dummy_a_OBJECTS)
 libstream_out_dummy_pic_a_AR = $(AR) cru
 libstream_out_dummy_pic_a_LIBADD =
-am__objects_8 = libstream_out_dummy_pic_a-dummy.$(OBJEXT)
-am_libstream_out_dummy_pic_a_OBJECTS = $(am__objects_8)
+am__objects_11 = libstream_out_dummy_pic_a-dummy.$(OBJEXT)
+am_libstream_out_dummy_pic_a_OBJECTS = $(am__objects_11)
 libstream_out_dummy_pic_a_OBJECTS = \
 	$(am_libstream_out_dummy_pic_a_OBJECTS)
 libstream_out_dummy_plugin_a_AR = $(AR) cru
 libstream_out_dummy_plugin_a_LIBADD =
-am__objects_9 = libstream_out_dummy_plugin_a-dummy.$(OBJEXT)
-am_libstream_out_dummy_plugin_a_OBJECTS = $(am__objects_9)
+am__objects_12 = libstream_out_dummy_plugin_a-dummy.$(OBJEXT)
+am_libstream_out_dummy_plugin_a_OBJECTS = $(am__objects_12)
 libstream_out_dummy_plugin_a_OBJECTS = \
 	$(am_libstream_out_dummy_plugin_a_OBJECTS)
 libstream_out_duplicate_a_AR = $(AR) cru
 libstream_out_duplicate_a_LIBADD =
-am__objects_10 = libstream_out_duplicate_a-duplicate.$(OBJEXT)
-am_libstream_out_duplicate_a_OBJECTS = $(am__objects_10)
+am__objects_13 = libstream_out_duplicate_a-duplicate.$(OBJEXT)
+am_libstream_out_duplicate_a_OBJECTS = $(am__objects_13)
 libstream_out_duplicate_a_OBJECTS = \
 	$(am_libstream_out_duplicate_a_OBJECTS)
 libstream_out_duplicate_pic_a_AR = $(AR) cru
 libstream_out_duplicate_pic_a_LIBADD =
-am__objects_11 = libstream_out_duplicate_pic_a-duplicate.$(OBJEXT)
-am_libstream_out_duplicate_pic_a_OBJECTS = $(am__objects_11)
+am__objects_14 = libstream_out_duplicate_pic_a-duplicate.$(OBJEXT)
+am_libstream_out_duplicate_pic_a_OBJECTS = $(am__objects_14)
 libstream_out_duplicate_pic_a_OBJECTS = \
 	$(am_libstream_out_duplicate_pic_a_OBJECTS)
 libstream_out_duplicate_plugin_a_AR = $(AR) cru
 libstream_out_duplicate_plugin_a_LIBADD =
-am__objects_12 = libstream_out_duplicate_plugin_a-duplicate.$(OBJEXT)
-am_libstream_out_duplicate_plugin_a_OBJECTS = $(am__objects_12)
+am__objects_15 = libstream_out_duplicate_plugin_a-duplicate.$(OBJEXT)
+am_libstream_out_duplicate_plugin_a_OBJECTS = $(am__objects_15)
 libstream_out_duplicate_plugin_a_OBJECTS = \
 	$(am_libstream_out_duplicate_plugin_a_OBJECTS)
 libstream_out_es_a_AR = $(AR) cru
 libstream_out_es_a_LIBADD =
-am__objects_13 = libstream_out_es_a-es.$(OBJEXT)
-am_libstream_out_es_a_OBJECTS = $(am__objects_13)
+am__objects_16 = libstream_out_es_a-es.$(OBJEXT)
+am_libstream_out_es_a_OBJECTS = $(am__objects_16)
 libstream_out_es_a_OBJECTS = $(am_libstream_out_es_a_OBJECTS)
 libstream_out_es_pic_a_AR = $(AR) cru
 libstream_out_es_pic_a_LIBADD =
-am__objects_14 = libstream_out_es_pic_a-es.$(OBJEXT)
-am_libstream_out_es_pic_a_OBJECTS = $(am__objects_14)
+am__objects_17 = libstream_out_es_pic_a-es.$(OBJEXT)
+am_libstream_out_es_pic_a_OBJECTS = $(am__objects_17)
 libstream_out_es_pic_a_OBJECTS = $(am_libstream_out_es_pic_a_OBJECTS)
 libstream_out_es_plugin_a_AR = $(AR) cru
 libstream_out_es_plugin_a_LIBADD =
-am__objects_15 = libstream_out_es_plugin_a-es.$(OBJEXT)
-am_libstream_out_es_plugin_a_OBJECTS = $(am__objects_15)
+am__objects_18 = libstream_out_es_plugin_a-es.$(OBJEXT)
+am_libstream_out_es_plugin_a_OBJECTS = $(am__objects_18)
 libstream_out_es_plugin_a_OBJECTS = \
 	$(am_libstream_out_es_plugin_a_OBJECTS)
 libstream_out_gather_a_AR = $(AR) cru
 libstream_out_gather_a_LIBADD =
-am__objects_16 = libstream_out_gather_a-gather.$(OBJEXT)
-am_libstream_out_gather_a_OBJECTS = $(am__objects_16)
+am__objects_19 = libstream_out_gather_a-gather.$(OBJEXT)
+am_libstream_out_gather_a_OBJECTS = $(am__objects_19)
 libstream_out_gather_a_OBJECTS = $(am_libstream_out_gather_a_OBJECTS)
 libstream_out_gather_pic_a_AR = $(AR) cru
 libstream_out_gather_pic_a_LIBADD =
-am__objects_17 = libstream_out_gather_pic_a-gather.$(OBJEXT)
-am_libstream_out_gather_pic_a_OBJECTS = $(am__objects_17)
+am__objects_20 = libstream_out_gather_pic_a-gather.$(OBJEXT)
+am_libstream_out_gather_pic_a_OBJECTS = $(am__objects_20)
 libstream_out_gather_pic_a_OBJECTS = \
 	$(am_libstream_out_gather_pic_a_OBJECTS)
 libstream_out_gather_plugin_a_AR = $(AR) cru
 libstream_out_gather_plugin_a_LIBADD =
-am__objects_18 = libstream_out_gather_plugin_a-gather.$(OBJEXT)
-am_libstream_out_gather_plugin_a_OBJECTS = $(am__objects_18)
+am__objects_21 = libstream_out_gather_plugin_a-gather.$(OBJEXT)
+am_libstream_out_gather_plugin_a_OBJECTS = $(am__objects_21)
 libstream_out_gather_plugin_a_OBJECTS = \
 	$(am_libstream_out_gather_plugin_a_OBJECTS)
+libstream_out_mosaic_bridge_a_AR = $(AR) cru
+libstream_out_mosaic_bridge_a_LIBADD =
+am__objects_22 = libstream_out_mosaic_bridge_a-mosaic_bridge.$(OBJEXT)
+am_libstream_out_mosaic_bridge_a_OBJECTS = $(am__objects_22)
+libstream_out_mosaic_bridge_a_OBJECTS = \
+	$(am_libstream_out_mosaic_bridge_a_OBJECTS)
+libstream_out_mosaic_bridge_pic_a_AR = $(AR) cru
+libstream_out_mosaic_bridge_pic_a_LIBADD =
+am__objects_23 = \
+	libstream_out_mosaic_bridge_pic_a-mosaic_bridge.$(OBJEXT)
+am_libstream_out_mosaic_bridge_pic_a_OBJECTS = $(am__objects_23)
+libstream_out_mosaic_bridge_pic_a_OBJECTS = \
+	$(am_libstream_out_mosaic_bridge_pic_a_OBJECTS)
+libstream_out_mosaic_bridge_plugin_a_AR = $(AR) cru
+libstream_out_mosaic_bridge_plugin_a_LIBADD =
+am__objects_24 = \
+	libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.$(OBJEXT)
+am_libstream_out_mosaic_bridge_plugin_a_OBJECTS = $(am__objects_24)
+libstream_out_mosaic_bridge_plugin_a_OBJECTS = \
+	$(am_libstream_out_mosaic_bridge_plugin_a_OBJECTS)
 libstream_out_rtp_a_AR = $(AR) cru
 libstream_out_rtp_a_LIBADD =
-am__objects_19 = libstream_out_rtp_a-rtp.$(OBJEXT)
-am_libstream_out_rtp_a_OBJECTS = $(am__objects_19)
+am__objects_25 = libstream_out_rtp_a-rtp.$(OBJEXT)
+am_libstream_out_rtp_a_OBJECTS = $(am__objects_25)
 libstream_out_rtp_a_OBJECTS = $(am_libstream_out_rtp_a_OBJECTS)
 libstream_out_rtp_pic_a_AR = $(AR) cru
 libstream_out_rtp_pic_a_LIBADD =
-am__objects_20 = libstream_out_rtp_pic_a-rtp.$(OBJEXT)
-am_libstream_out_rtp_pic_a_OBJECTS = $(am__objects_20)
+am__objects_26 = libstream_out_rtp_pic_a-rtp.$(OBJEXT)
+am_libstream_out_rtp_pic_a_OBJECTS = $(am__objects_26)
 libstream_out_rtp_pic_a_OBJECTS = $(am_libstream_out_rtp_pic_a_OBJECTS)
 libstream_out_rtp_plugin_a_AR = $(AR) cru
 libstream_out_rtp_plugin_a_LIBADD =
-am__objects_21 = libstream_out_rtp_plugin_a-rtp.$(OBJEXT)
-am_libstream_out_rtp_plugin_a_OBJECTS = $(am__objects_21)
+am__objects_27 = libstream_out_rtp_plugin_a-rtp.$(OBJEXT)
+am_libstream_out_rtp_plugin_a_OBJECTS = $(am__objects_27)
 libstream_out_rtp_plugin_a_OBJECTS = \
 	$(am_libstream_out_rtp_plugin_a_OBJECTS)
 libstream_out_standard_a_AR = $(AR) cru
 libstream_out_standard_a_LIBADD =
-am__objects_22 = libstream_out_standard_a-standard.$(OBJEXT) \
+am__objects_28 = libstream_out_standard_a-standard.$(OBJEXT) \
 	libstream_out_standard_a-announce.$(OBJEXT)
-am_libstream_out_standard_a_OBJECTS = $(am__objects_22)
+am_libstream_out_standard_a_OBJECTS = $(am__objects_28)
 libstream_out_standard_a_OBJECTS = \
 	$(am_libstream_out_standard_a_OBJECTS)
 libstream_out_standard_pic_a_AR = $(AR) cru
 libstream_out_standard_pic_a_LIBADD =
-am__objects_23 = libstream_out_standard_pic_a-standard.$(OBJEXT) \
+am__objects_29 = libstream_out_standard_pic_a-standard.$(OBJEXT) \
 	libstream_out_standard_pic_a-announce.$(OBJEXT)
-am_libstream_out_standard_pic_a_OBJECTS = $(am__objects_23)
+am_libstream_out_standard_pic_a_OBJECTS = $(am__objects_29)
 libstream_out_standard_pic_a_OBJECTS = \
 	$(am_libstream_out_standard_pic_a_OBJECTS)
 libstream_out_standard_plugin_a_AR = $(AR) cru
 libstream_out_standard_plugin_a_LIBADD =
-am__objects_24 = libstream_out_standard_plugin_a-standard.$(OBJEXT) \
+am__objects_30 = libstream_out_standard_plugin_a-standard.$(OBJEXT) \
 	libstream_out_standard_plugin_a-announce.$(OBJEXT)
-am_libstream_out_standard_plugin_a_OBJECTS = $(am__objects_24)
+am_libstream_out_standard_plugin_a_OBJECTS = $(am__objects_30)
 libstream_out_standard_plugin_a_OBJECTS = \
 	$(am_libstream_out_standard_plugin_a_OBJECTS)
+libstream_out_switcher_a_AR = $(AR) cru
+libstream_out_switcher_a_LIBADD =
+am__objects_31 = libstream_out_switcher_a-switcher.$(OBJEXT)
+am_libstream_out_switcher_a_OBJECTS = $(am__objects_31)
+libstream_out_switcher_a_OBJECTS = \
+	$(am_libstream_out_switcher_a_OBJECTS)
+libstream_out_switcher_pic_a_AR = $(AR) cru
+libstream_out_switcher_pic_a_LIBADD =
+am__objects_32 = libstream_out_switcher_pic_a-switcher.$(OBJEXT)
+am_libstream_out_switcher_pic_a_OBJECTS = $(am__objects_32)
+libstream_out_switcher_pic_a_OBJECTS = \
+	$(am_libstream_out_switcher_pic_a_OBJECTS)
+libstream_out_switcher_plugin_a_AR = $(AR) cru
+libstream_out_switcher_plugin_a_LIBADD =
+am__objects_33 = libstream_out_switcher_plugin_a-switcher.$(OBJEXT)
+am_libstream_out_switcher_plugin_a_OBJECTS = $(am__objects_33)
+libstream_out_switcher_plugin_a_OBJECTS = \
+	$(am_libstream_out_switcher_plugin_a_OBJECTS)
 libstream_out_transcode_a_AR = $(AR) cru
 libstream_out_transcode_a_LIBADD =
-am__objects_25 = libstream_out_transcode_a-transcode.$(OBJEXT)
-am_libstream_out_transcode_a_OBJECTS = $(am__objects_25)
+am__objects_34 = libstream_out_transcode_a-transcode.$(OBJEXT)
+am_libstream_out_transcode_a_OBJECTS = $(am__objects_34)
 libstream_out_transcode_a_OBJECTS = \
 	$(am_libstream_out_transcode_a_OBJECTS)
 libstream_out_transcode_pic_a_AR = $(AR) cru
 libstream_out_transcode_pic_a_LIBADD =
-am__objects_26 = libstream_out_transcode_pic_a-transcode.$(OBJEXT)
-am_libstream_out_transcode_pic_a_OBJECTS = $(am__objects_26)
+am__objects_35 = libstream_out_transcode_pic_a-transcode.$(OBJEXT)
+am_libstream_out_transcode_pic_a_OBJECTS = $(am__objects_35)
 libstream_out_transcode_pic_a_OBJECTS = \
 	$(am_libstream_out_transcode_pic_a_OBJECTS)
 libstream_out_transcode_plugin_a_AR = $(AR) cru
 libstream_out_transcode_plugin_a_LIBADD =
-am__objects_27 = libstream_out_transcode_plugin_a-transcode.$(OBJEXT)
-am_libstream_out_transcode_plugin_a_OBJECTS = $(am__objects_27)
+am__objects_36 = libstream_out_transcode_plugin_a-transcode.$(OBJEXT)
+am_libstream_out_transcode_plugin_a_OBJECTS = $(am__objects_36)
 libstream_out_transcode_plugin_a_OBJECTS = \
 	$(am_libstream_out_transcode_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = \
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libstream_out_bridge_a-bridge.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libstream_out_bridge_pic_a-bridge.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libstream_out_bridge_plugin_a-bridge.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_description_a-description.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_description_pic_a-description.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_description_plugin_a-description.Po \
@@ -668,6 +796,9 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_gather_a-gather.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_gather_pic_a-gather.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_gather_plugin_a-gather.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libstream_out_mosaic_bridge_a-mosaic_bridge.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libstream_out_mosaic_bridge_pic_a-mosaic_bridge.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_rtp_a-rtp.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_rtp_pic_a-rtp.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_rtp_plugin_a-rtp.Po \
@@ -677,6 +808,9 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_standard_pic_a-standard.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_standard_plugin_a-announce.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_standard_plugin_a-standard.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libstream_out_switcher_a-switcher.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libstream_out_switcher_pic_a-switcher.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libstream_out_switcher_plugin_a-switcher.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_transcode_a-transcode.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_transcode_pic_a-transcode.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libstream_out_transcode_plugin_a-transcode.Po
@@ -684,7 +818,10 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-DIST_SOURCES = $(libstream_out_description_a_SOURCES) \
+DIST_SOURCES = $(libstream_out_bridge_a_SOURCES) \
+	$(libstream_out_bridge_pic_a_SOURCES) \
+	$(libstream_out_bridge_plugin_a_SOURCES) \
+	$(libstream_out_description_a_SOURCES) \
 	$(libstream_out_description_pic_a_SOURCES) \
 	$(libstream_out_description_plugin_a_SOURCES) \
 	$(libstream_out_display_a_SOURCES) \
@@ -701,19 +838,27 @@ DIST_SOURCES = $(libstream_out_description_a_SOURCES) \
 	$(libstream_out_gather_a_SOURCES) \
 	$(libstream_out_gather_pic_a_SOURCES) \
 	$(libstream_out_gather_plugin_a_SOURCES) \
+	$(libstream_out_mosaic_bridge_a_SOURCES) \
+	$(libstream_out_mosaic_bridge_pic_a_SOURCES) \
+	$(libstream_out_mosaic_bridge_plugin_a_SOURCES) \
 	$(libstream_out_rtp_a_SOURCES) \
 	$(libstream_out_rtp_pic_a_SOURCES) \
 	$(libstream_out_rtp_plugin_a_SOURCES) \
 	$(libstream_out_standard_a_SOURCES) \
 	$(libstream_out_standard_pic_a_SOURCES) \
 	$(libstream_out_standard_plugin_a_SOURCES) \
+	$(libstream_out_switcher_a_SOURCES) \
+	$(libstream_out_switcher_pic_a_SOURCES) \
+	$(libstream_out_switcher_plugin_a_SOURCES) \
 	$(libstream_out_transcode_a_SOURCES) \
 	$(libstream_out_transcode_pic_a_SOURCES) \
 	$(libstream_out_transcode_plugin_a_SOURCES)
-DATA = $(libstream_out_description_DATA) $(libstream_out_display_DATA) \
-	$(libstream_out_dummy_DATA) $(libstream_out_duplicate_DATA) \
-	$(libstream_out_es_DATA) $(libstream_out_gather_DATA) \
-	$(libstream_out_rtp_DATA) $(libstream_out_standard_DATA) \
+DATA = $(libstream_out_bridge_DATA) $(libstream_out_description_DATA) \
+	$(libstream_out_display_DATA) $(libstream_out_dummy_DATA) \
+	$(libstream_out_duplicate_DATA) $(libstream_out_es_DATA) \
+	$(libstream_out_gather_DATA) \
+	$(libstream_out_mosaic_bridge_DATA) $(libstream_out_rtp_DATA) \
+	$(libstream_out_standard_DATA) $(libstream_out_switcher_DATA) \
 	$(libstream_out_transcode_DATA)
 
 HEADERS = $(noinst_HEADERS)
@@ -727,7 +872,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libstream_out_description_a_SOURCES) $(libstream_out_description_pic_a_SOURCES) $(libstream_out_description_plugin_a_SOURCES) $(libstream_out_display_a_SOURCES) $(libstream_out_display_pic_a_SOURCES) $(libstream_out_display_plugin_a_SOURCES) $(libstream_out_dummy_a_SOURCES) $(libstream_out_dummy_pic_a_SOURCES) $(libstream_out_dummy_plugin_a_SOURCES) $(libstream_out_duplicate_a_SOURCES) $(libstream_out_duplicate_pic_a_SOURCES) $(libstream_out_duplicate_plugin_a_SOURCES) $(libstream_out_es_a_SOURCES) $(libstream_out_es_pic_a_SOURCES) $(libstream_out_es_plugin_a_SOURCES) $(libstream_out_gather_a_SOURCES) $(libstream_out_gather_pic_a_SOURCES) $(libstream_out_gather_plugin_a_SOURCES) $(libstream_out_rtp_a_SOURCES) $(libstream_out_rtp_pic_a_SOURCES) $(libstream_out_rtp_plugin_a_SOURCES) $(libstream_out_standard_a_SOURCES) $(libstream_out_standard_pic_a_SOURCES) $(libstream_out_standard_plugin_a_SOURCES) $(libstream_out_transcode_a_SOURCES) $(libstream_out_transcode_pic_a_SOURCES) $(libstream_out_transcode_plugin_a_SOURCES)
+SOURCES = $(libstream_out_bridge_a_SOURCES) $(libstream_out_bridge_pic_a_SOURCES) $(libstream_out_bridge_plugin_a_SOURCES) $(libstream_out_description_a_SOURCES) $(libstream_out_description_pic_a_SOURCES) $(libstream_out_description_plugin_a_SOURCES) $(libstream_out_display_a_SOURCES) $(libstream_out_display_pic_a_SOURCES) $(libstream_out_display_plugin_a_SOURCES) $(libstream_out_dummy_a_SOURCES) $(libstream_out_dummy_pic_a_SOURCES) $(libstream_out_dummy_plugin_a_SOURCES) $(libstream_out_duplicate_a_SOURCES) $(libstream_out_duplicate_pic_a_SOURCES) $(libstream_out_duplicate_plugin_a_SOURCES) $(libstream_out_es_a_SOURCES) $(libstream_out_es_pic_a_SOURCES) $(libstream_out_es_plugin_a_SOURCES) $(libstream_out_gather_a_SOURCES) $(libstream_out_gather_pic_a_SOURCES) $(libstream_out_gather_plugin_a_SOURCES) $(libstream_out_mosaic_bridge_a_SOURCES) $(libstream_out_mosaic_bridge_pic_a_SOURCES) $(libstream_out_mosaic_bridge_plugin_a_SOURCES) $(libstream_out_rtp_a_SOURCES) $(libstream_out_rtp_pic_a_SOURCES) $(libstream_out_rtp_plugin_a_SOURCES) $(libstream_out_standard_a_SOURCES) $(libstream_out_standard_pic_a_SOURCES) $(libstream_out_standard_plugin_a_SOURCES) $(libstream_out_switcher_a_SOURCES) $(libstream_out_switcher_pic_a_SOURCES) $(libstream_out_switcher_plugin_a_SOURCES) $(libstream_out_transcode_a_SOURCES) $(libstream_out_transcode_pic_a_SOURCES) $(libstream_out_transcode_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -772,6 +917,18 @@ clean-libvlcLIBRARIES:
 
 clean-noinstLIBRARIES:
 	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+libstream_out_bridge.a: $(libstream_out_bridge_a_OBJECTS) $(libstream_out_bridge_a_DEPENDENCIES) 
+	-rm -f libstream_out_bridge.a
+	$(libstream_out_bridge_a_AR) libstream_out_bridge.a $(libstream_out_bridge_a_OBJECTS) $(libstream_out_bridge_a_LIBADD)
+	$(RANLIB) libstream_out_bridge.a
+libstream_out_bridge_pic.a: $(libstream_out_bridge_pic_a_OBJECTS) $(libstream_out_bridge_pic_a_DEPENDENCIES) 
+	-rm -f libstream_out_bridge_pic.a
+	$(libstream_out_bridge_pic_a_AR) libstream_out_bridge_pic.a $(libstream_out_bridge_pic_a_OBJECTS) $(libstream_out_bridge_pic_a_LIBADD)
+	$(RANLIB) libstream_out_bridge_pic.a
+libstream_out_bridge_plugin.a: $(libstream_out_bridge_plugin_a_OBJECTS) $(libstream_out_bridge_plugin_a_DEPENDENCIES) 
+	-rm -f libstream_out_bridge_plugin.a
+	$(libstream_out_bridge_plugin_a_AR) libstream_out_bridge_plugin.a $(libstream_out_bridge_plugin_a_OBJECTS) $(libstream_out_bridge_plugin_a_LIBADD)
+	$(RANLIB) libstream_out_bridge_plugin.a
 libstream_out_description.a: $(libstream_out_description_a_OBJECTS) $(libstream_out_description_a_DEPENDENCIES) 
 	-rm -f libstream_out_description.a
 	$(libstream_out_description_a_AR) libstream_out_description.a $(libstream_out_description_a_OBJECTS) $(libstream_out_description_a_LIBADD)
@@ -844,6 +1001,18 @@ libstream_out_gather_plugin.a: $(libstream_out_gather_plugin_a_OBJECTS) $(libstr
 	-rm -f libstream_out_gather_plugin.a
 	$(libstream_out_gather_plugin_a_AR) libstream_out_gather_plugin.a $(libstream_out_gather_plugin_a_OBJECTS) $(libstream_out_gather_plugin_a_LIBADD)
 	$(RANLIB) libstream_out_gather_plugin.a
+libstream_out_mosaic_bridge.a: $(libstream_out_mosaic_bridge_a_OBJECTS) $(libstream_out_mosaic_bridge_a_DEPENDENCIES) 
+	-rm -f libstream_out_mosaic_bridge.a
+	$(libstream_out_mosaic_bridge_a_AR) libstream_out_mosaic_bridge.a $(libstream_out_mosaic_bridge_a_OBJECTS) $(libstream_out_mosaic_bridge_a_LIBADD)
+	$(RANLIB) libstream_out_mosaic_bridge.a
+libstream_out_mosaic_bridge_pic.a: $(libstream_out_mosaic_bridge_pic_a_OBJECTS) $(libstream_out_mosaic_bridge_pic_a_DEPENDENCIES) 
+	-rm -f libstream_out_mosaic_bridge_pic.a
+	$(libstream_out_mosaic_bridge_pic_a_AR) libstream_out_mosaic_bridge_pic.a $(libstream_out_mosaic_bridge_pic_a_OBJECTS) $(libstream_out_mosaic_bridge_pic_a_LIBADD)
+	$(RANLIB) libstream_out_mosaic_bridge_pic.a
+libstream_out_mosaic_bridge_plugin.a: $(libstream_out_mosaic_bridge_plugin_a_OBJECTS) $(libstream_out_mosaic_bridge_plugin_a_DEPENDENCIES) 
+	-rm -f libstream_out_mosaic_bridge_plugin.a
+	$(libstream_out_mosaic_bridge_plugin_a_AR) libstream_out_mosaic_bridge_plugin.a $(libstream_out_mosaic_bridge_plugin_a_OBJECTS) $(libstream_out_mosaic_bridge_plugin_a_LIBADD)
+	$(RANLIB) libstream_out_mosaic_bridge_plugin.a
 libstream_out_rtp.a: $(libstream_out_rtp_a_OBJECTS) $(libstream_out_rtp_a_DEPENDENCIES) 
 	-rm -f libstream_out_rtp.a
 	$(libstream_out_rtp_a_AR) libstream_out_rtp.a $(libstream_out_rtp_a_OBJECTS) $(libstream_out_rtp_a_LIBADD)
@@ -868,6 +1037,18 @@ libstream_out_standard_plugin.a: $(libstream_out_standard_plugin_a_OBJECTS) $(li
 	-rm -f libstream_out_standard_plugin.a
 	$(libstream_out_standard_plugin_a_AR) libstream_out_standard_plugin.a $(libstream_out_standard_plugin_a_OBJECTS) $(libstream_out_standard_plugin_a_LIBADD)
 	$(RANLIB) libstream_out_standard_plugin.a
+libstream_out_switcher.a: $(libstream_out_switcher_a_OBJECTS) $(libstream_out_switcher_a_DEPENDENCIES) 
+	-rm -f libstream_out_switcher.a
+	$(libstream_out_switcher_a_AR) libstream_out_switcher.a $(libstream_out_switcher_a_OBJECTS) $(libstream_out_switcher_a_LIBADD)
+	$(RANLIB) libstream_out_switcher.a
+libstream_out_switcher_pic.a: $(libstream_out_switcher_pic_a_OBJECTS) $(libstream_out_switcher_pic_a_DEPENDENCIES) 
+	-rm -f libstream_out_switcher_pic.a
+	$(libstream_out_switcher_pic_a_AR) libstream_out_switcher_pic.a $(libstream_out_switcher_pic_a_OBJECTS) $(libstream_out_switcher_pic_a_LIBADD)
+	$(RANLIB) libstream_out_switcher_pic.a
+libstream_out_switcher_plugin.a: $(libstream_out_switcher_plugin_a_OBJECTS) $(libstream_out_switcher_plugin_a_DEPENDENCIES) 
+	-rm -f libstream_out_switcher_plugin.a
+	$(libstream_out_switcher_plugin_a_AR) libstream_out_switcher_plugin.a $(libstream_out_switcher_plugin_a_OBJECTS) $(libstream_out_switcher_plugin_a_LIBADD)
+	$(RANLIB) libstream_out_switcher_plugin.a
 libstream_out_transcode.a: $(libstream_out_transcode_a_OBJECTS) $(libstream_out_transcode_a_DEPENDENCIES) 
 	-rm -f libstream_out_transcode.a
 	$(libstream_out_transcode_a_AR) libstream_out_transcode.a $(libstream_out_transcode_a_OBJECTS) $(libstream_out_transcode_a_LIBADD)
@@ -887,6 +1068,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_bridge_a-bridge.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_bridge_pic_a-bridge.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_bridge_plugin_a-bridge.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_description_a-description.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_description_pic_a-description.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_description_plugin_a-description.Po@am__quote@
@@ -905,6 +1089,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_gather_a-gather.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_gather_pic_a-gather.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_gather_plugin_a-gather.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_mosaic_bridge_a-mosaic_bridge.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_mosaic_bridge_pic_a-mosaic_bridge.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_rtp_a-rtp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_rtp_pic_a-rtp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_rtp_plugin_a-rtp.Po@am__quote@
@@ -914,6 +1101,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_standard_pic_a-standard.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_standard_plugin_a-announce.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_standard_plugin_a-standard.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_switcher_a-switcher.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_switcher_pic_a-switcher.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_switcher_plugin_a-switcher.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_transcode_a-transcode.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_transcode_pic_a-transcode.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstream_out_transcode_plugin_a-transcode.Po@am__quote@
@@ -939,6 +1129,72 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`
+
+libstream_out_bridge_a-bridge.o: bridge.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_bridge_a_CFLAGS) $(CFLAGS) -MT libstream_out_bridge_a-bridge.o -MD -MP -MF "$(DEPDIR)/libstream_out_bridge_a-bridge.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_bridge_a-bridge.o `test -f 'bridge.c' || echo '$(srcdir)/'`bridge.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_bridge_a-bridge.Tpo" "$(DEPDIR)/libstream_out_bridge_a-bridge.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_bridge_a-bridge.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bridge.c' object='libstream_out_bridge_a-bridge.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_bridge_a-bridge.Po' tmpdepfile='$(DEPDIR)/libstream_out_bridge_a-bridge.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_bridge_a_CFLAGS) $(CFLAGS) -c -o libstream_out_bridge_a-bridge.o `test -f 'bridge.c' || echo '$(srcdir)/'`bridge.c
+
+libstream_out_bridge_a-bridge.obj: bridge.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_bridge_a_CFLAGS) $(CFLAGS) -MT libstream_out_bridge_a-bridge.obj -MD -MP -MF "$(DEPDIR)/libstream_out_bridge_a-bridge.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_bridge_a-bridge.obj `if test -f 'bridge.c'; then $(CYGPATH_W) 'bridge.c'; else $(CYGPATH_W) '$(srcdir)/bridge.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_bridge_a-bridge.Tpo" "$(DEPDIR)/libstream_out_bridge_a-bridge.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_bridge_a-bridge.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bridge.c' object='libstream_out_bridge_a-bridge.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_bridge_a-bridge.Po' tmpdepfile='$(DEPDIR)/libstream_out_bridge_a-bridge.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_bridge_a_CFLAGS) $(CFLAGS) -c -o libstream_out_bridge_a-bridge.obj `if test -f 'bridge.c'; then $(CYGPATH_W) 'bridge.c'; else $(CYGPATH_W) '$(srcdir)/bridge.c'; fi`
+
+libstream_out_bridge_pic_a-bridge.o: bridge.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_bridge_pic_a_CFLAGS) $(CFLAGS) -MT libstream_out_bridge_pic_a-bridge.o -MD -MP -MF "$(DEPDIR)/libstream_out_bridge_pic_a-bridge.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_bridge_pic_a-bridge.o `test -f 'bridge.c' || echo '$(srcdir)/'`bridge.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_bridge_pic_a-bridge.Tpo" "$(DEPDIR)/libstream_out_bridge_pic_a-bridge.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_bridge_pic_a-bridge.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bridge.c' object='libstream_out_bridge_pic_a-bridge.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_bridge_pic_a-bridge.Po' tmpdepfile='$(DEPDIR)/libstream_out_bridge_pic_a-bridge.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_bridge_pic_a_CFLAGS) $(CFLAGS) -c -o libstream_out_bridge_pic_a-bridge.o `test -f 'bridge.c' || echo '$(srcdir)/'`bridge.c
+
+libstream_out_bridge_pic_a-bridge.obj: bridge.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_bridge_pic_a_CFLAGS) $(CFLAGS) -MT libstream_out_bridge_pic_a-bridge.obj -MD -MP -MF "$(DEPDIR)/libstream_out_bridge_pic_a-bridge.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_bridge_pic_a-bridge.obj `if test -f 'bridge.c'; then $(CYGPATH_W) 'bridge.c'; else $(CYGPATH_W) '$(srcdir)/bridge.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_bridge_pic_a-bridge.Tpo" "$(DEPDIR)/libstream_out_bridge_pic_a-bridge.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_bridge_pic_a-bridge.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bridge.c' object='libstream_out_bridge_pic_a-bridge.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_bridge_pic_a-bridge.Po' tmpdepfile='$(DEPDIR)/libstream_out_bridge_pic_a-bridge.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_bridge_pic_a_CFLAGS) $(CFLAGS) -c -o libstream_out_bridge_pic_a-bridge.obj `if test -f 'bridge.c'; then $(CYGPATH_W) 'bridge.c'; else $(CYGPATH_W) '$(srcdir)/bridge.c'; fi`
+
+libstream_out_bridge_plugin_a-bridge.o: bridge.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_bridge_plugin_a_CFLAGS) $(CFLAGS) -MT libstream_out_bridge_plugin_a-bridge.o -MD -MP -MF "$(DEPDIR)/libstream_out_bridge_plugin_a-bridge.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_bridge_plugin_a-bridge.o `test -f 'bridge.c' || echo '$(srcdir)/'`bridge.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_bridge_plugin_a-bridge.Tpo" "$(DEPDIR)/libstream_out_bridge_plugin_a-bridge.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_bridge_plugin_a-bridge.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bridge.c' object='libstream_out_bridge_plugin_a-bridge.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_bridge_plugin_a-bridge.Po' tmpdepfile='$(DEPDIR)/libstream_out_bridge_plugin_a-bridge.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_bridge_plugin_a_CFLAGS) $(CFLAGS) -c -o libstream_out_bridge_plugin_a-bridge.o `test -f 'bridge.c' || echo '$(srcdir)/'`bridge.c
+
+libstream_out_bridge_plugin_a-bridge.obj: bridge.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_bridge_plugin_a_CFLAGS) $(CFLAGS) -MT libstream_out_bridge_plugin_a-bridge.obj -MD -MP -MF "$(DEPDIR)/libstream_out_bridge_plugin_a-bridge.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_bridge_plugin_a-bridge.obj `if test -f 'bridge.c'; then $(CYGPATH_W) 'bridge.c'; else $(CYGPATH_W) '$(srcdir)/bridge.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_bridge_plugin_a-bridge.Tpo" "$(DEPDIR)/libstream_out_bridge_plugin_a-bridge.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_bridge_plugin_a-bridge.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bridge.c' object='libstream_out_bridge_plugin_a-bridge.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_bridge_plugin_a-bridge.Po' tmpdepfile='$(DEPDIR)/libstream_out_bridge_plugin_a-bridge.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_bridge_plugin_a_CFLAGS) $(CFLAGS) -c -o libstream_out_bridge_plugin_a-bridge.obj `if test -f 'bridge.c'; then $(CYGPATH_W) 'bridge.c'; else $(CYGPATH_W) '$(srcdir)/bridge.c'; fi`
 
 libstream_out_description_a-description.o: description.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_description_a_CFLAGS) $(CFLAGS) -MT libstream_out_description_a-description.o -MD -MP -MF "$(DEPDIR)/libstream_out_description_a-description.Tpo" \
@@ -1336,6 +1592,72 @@ libstream_out_gather_plugin_a-gather.obj: gather.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_gather_plugin_a_CFLAGS) $(CFLAGS) -c -o libstream_out_gather_plugin_a-gather.obj `if test -f 'gather.c'; then $(CYGPATH_W) 'gather.c'; else $(CYGPATH_W) '$(srcdir)/gather.c'; fi`
 
+libstream_out_mosaic_bridge_a-mosaic_bridge.o: mosaic_bridge.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_mosaic_bridge_a_CFLAGS) $(CFLAGS) -MT libstream_out_mosaic_bridge_a-mosaic_bridge.o -MD -MP -MF "$(DEPDIR)/libstream_out_mosaic_bridge_a-mosaic_bridge.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_mosaic_bridge_a-mosaic_bridge.o `test -f 'mosaic_bridge.c' || echo '$(srcdir)/'`mosaic_bridge.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_mosaic_bridge_a-mosaic_bridge.Tpo" "$(DEPDIR)/libstream_out_mosaic_bridge_a-mosaic_bridge.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_mosaic_bridge_a-mosaic_bridge.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mosaic_bridge.c' object='libstream_out_mosaic_bridge_a-mosaic_bridge.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_mosaic_bridge_a-mosaic_bridge.Po' tmpdepfile='$(DEPDIR)/libstream_out_mosaic_bridge_a-mosaic_bridge.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_mosaic_bridge_a_CFLAGS) $(CFLAGS) -c -o libstream_out_mosaic_bridge_a-mosaic_bridge.o `test -f 'mosaic_bridge.c' || echo '$(srcdir)/'`mosaic_bridge.c
+
+libstream_out_mosaic_bridge_a-mosaic_bridge.obj: mosaic_bridge.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_mosaic_bridge_a_CFLAGS) $(CFLAGS) -MT libstream_out_mosaic_bridge_a-mosaic_bridge.obj -MD -MP -MF "$(DEPDIR)/libstream_out_mosaic_bridge_a-mosaic_bridge.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_mosaic_bridge_a-mosaic_bridge.obj `if test -f 'mosaic_bridge.c'; then $(CYGPATH_W) 'mosaic_bridge.c'; else $(CYGPATH_W) '$(srcdir)/mosaic_bridge.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_mosaic_bridge_a-mosaic_bridge.Tpo" "$(DEPDIR)/libstream_out_mosaic_bridge_a-mosaic_bridge.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_mosaic_bridge_a-mosaic_bridge.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mosaic_bridge.c' object='libstream_out_mosaic_bridge_a-mosaic_bridge.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_mosaic_bridge_a-mosaic_bridge.Po' tmpdepfile='$(DEPDIR)/libstream_out_mosaic_bridge_a-mosaic_bridge.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_mosaic_bridge_a_CFLAGS) $(CFLAGS) -c -o libstream_out_mosaic_bridge_a-mosaic_bridge.obj `if test -f 'mosaic_bridge.c'; then $(CYGPATH_W) 'mosaic_bridge.c'; else $(CYGPATH_W) '$(srcdir)/mosaic_bridge.c'; fi`
+
+libstream_out_mosaic_bridge_pic_a-mosaic_bridge.o: mosaic_bridge.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_mosaic_bridge_pic_a_CFLAGS) $(CFLAGS) -MT libstream_out_mosaic_bridge_pic_a-mosaic_bridge.o -MD -MP -MF "$(DEPDIR)/libstream_out_mosaic_bridge_pic_a-mosaic_bridge.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_mosaic_bridge_pic_a-mosaic_bridge.o `test -f 'mosaic_bridge.c' || echo '$(srcdir)/'`mosaic_bridge.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_mosaic_bridge_pic_a-mosaic_bridge.Tpo" "$(DEPDIR)/libstream_out_mosaic_bridge_pic_a-mosaic_bridge.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_mosaic_bridge_pic_a-mosaic_bridge.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mosaic_bridge.c' object='libstream_out_mosaic_bridge_pic_a-mosaic_bridge.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_mosaic_bridge_pic_a-mosaic_bridge.Po' tmpdepfile='$(DEPDIR)/libstream_out_mosaic_bridge_pic_a-mosaic_bridge.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_mosaic_bridge_pic_a_CFLAGS) $(CFLAGS) -c -o libstream_out_mosaic_bridge_pic_a-mosaic_bridge.o `test -f 'mosaic_bridge.c' || echo '$(srcdir)/'`mosaic_bridge.c
+
+libstream_out_mosaic_bridge_pic_a-mosaic_bridge.obj: mosaic_bridge.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_mosaic_bridge_pic_a_CFLAGS) $(CFLAGS) -MT libstream_out_mosaic_bridge_pic_a-mosaic_bridge.obj -MD -MP -MF "$(DEPDIR)/libstream_out_mosaic_bridge_pic_a-mosaic_bridge.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_mosaic_bridge_pic_a-mosaic_bridge.obj `if test -f 'mosaic_bridge.c'; then $(CYGPATH_W) 'mosaic_bridge.c'; else $(CYGPATH_W) '$(srcdir)/mosaic_bridge.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_mosaic_bridge_pic_a-mosaic_bridge.Tpo" "$(DEPDIR)/libstream_out_mosaic_bridge_pic_a-mosaic_bridge.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_mosaic_bridge_pic_a-mosaic_bridge.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mosaic_bridge.c' object='libstream_out_mosaic_bridge_pic_a-mosaic_bridge.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_mosaic_bridge_pic_a-mosaic_bridge.Po' tmpdepfile='$(DEPDIR)/libstream_out_mosaic_bridge_pic_a-mosaic_bridge.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_mosaic_bridge_pic_a_CFLAGS) $(CFLAGS) -c -o libstream_out_mosaic_bridge_pic_a-mosaic_bridge.obj `if test -f 'mosaic_bridge.c'; then $(CYGPATH_W) 'mosaic_bridge.c'; else $(CYGPATH_W) '$(srcdir)/mosaic_bridge.c'; fi`
+
+libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.o: mosaic_bridge.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_mosaic_bridge_plugin_a_CFLAGS) $(CFLAGS) -MT libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.o -MD -MP -MF "$(DEPDIR)/libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.o `test -f 'mosaic_bridge.c' || echo '$(srcdir)/'`mosaic_bridge.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.Tpo" "$(DEPDIR)/libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mosaic_bridge.c' object='libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.Po' tmpdepfile='$(DEPDIR)/libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_mosaic_bridge_plugin_a_CFLAGS) $(CFLAGS) -c -o libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.o `test -f 'mosaic_bridge.c' || echo '$(srcdir)/'`mosaic_bridge.c
+
+libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.obj: mosaic_bridge.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_mosaic_bridge_plugin_a_CFLAGS) $(CFLAGS) -MT libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.obj -MD -MP -MF "$(DEPDIR)/libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.obj `if test -f 'mosaic_bridge.c'; then $(CYGPATH_W) 'mosaic_bridge.c'; else $(CYGPATH_W) '$(srcdir)/mosaic_bridge.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.Tpo" "$(DEPDIR)/libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mosaic_bridge.c' object='libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.Po' tmpdepfile='$(DEPDIR)/libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_mosaic_bridge_plugin_a_CFLAGS) $(CFLAGS) -c -o libstream_out_mosaic_bridge_plugin_a-mosaic_bridge.obj `if test -f 'mosaic_bridge.c'; then $(CYGPATH_W) 'mosaic_bridge.c'; else $(CYGPATH_W) '$(srcdir)/mosaic_bridge.c'; fi`
+
 libstream_out_rtp_a-rtp.o: rtp.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_rtp_a_CFLAGS) $(CFLAGS) -MT libstream_out_rtp_a-rtp.o -MD -MP -MF "$(DEPDIR)/libstream_out_rtp_a-rtp.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libstream_out_rtp_a-rtp.o `test -f 'rtp.c' || echo '$(srcdir)/'`rtp.c; \
@@ -1534,6 +1856,72 @@ libstream_out_standard_plugin_a-announce.obj: announce.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_standard_plugin_a_CFLAGS) $(CFLAGS) -c -o libstream_out_standard_plugin_a-announce.obj `if test -f 'announce.c'; then $(CYGPATH_W) 'announce.c'; else $(CYGPATH_W) '$(srcdir)/announce.c'; fi`
 
+libstream_out_switcher_a-switcher.o: switcher.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_switcher_a_CFLAGS) $(CFLAGS) -MT libstream_out_switcher_a-switcher.o -MD -MP -MF "$(DEPDIR)/libstream_out_switcher_a-switcher.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_switcher_a-switcher.o `test -f 'switcher.c' || echo '$(srcdir)/'`switcher.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_switcher_a-switcher.Tpo" "$(DEPDIR)/libstream_out_switcher_a-switcher.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_switcher_a-switcher.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='switcher.c' object='libstream_out_switcher_a-switcher.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_switcher_a-switcher.Po' tmpdepfile='$(DEPDIR)/libstream_out_switcher_a-switcher.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_switcher_a_CFLAGS) $(CFLAGS) -c -o libstream_out_switcher_a-switcher.o `test -f 'switcher.c' || echo '$(srcdir)/'`switcher.c
+
+libstream_out_switcher_a-switcher.obj: switcher.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_switcher_a_CFLAGS) $(CFLAGS) -MT libstream_out_switcher_a-switcher.obj -MD -MP -MF "$(DEPDIR)/libstream_out_switcher_a-switcher.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_switcher_a-switcher.obj `if test -f 'switcher.c'; then $(CYGPATH_W) 'switcher.c'; else $(CYGPATH_W) '$(srcdir)/switcher.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_switcher_a-switcher.Tpo" "$(DEPDIR)/libstream_out_switcher_a-switcher.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_switcher_a-switcher.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='switcher.c' object='libstream_out_switcher_a-switcher.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_switcher_a-switcher.Po' tmpdepfile='$(DEPDIR)/libstream_out_switcher_a-switcher.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_switcher_a_CFLAGS) $(CFLAGS) -c -o libstream_out_switcher_a-switcher.obj `if test -f 'switcher.c'; then $(CYGPATH_W) 'switcher.c'; else $(CYGPATH_W) '$(srcdir)/switcher.c'; fi`
+
+libstream_out_switcher_pic_a-switcher.o: switcher.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_switcher_pic_a_CFLAGS) $(CFLAGS) -MT libstream_out_switcher_pic_a-switcher.o -MD -MP -MF "$(DEPDIR)/libstream_out_switcher_pic_a-switcher.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_switcher_pic_a-switcher.o `test -f 'switcher.c' || echo '$(srcdir)/'`switcher.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_switcher_pic_a-switcher.Tpo" "$(DEPDIR)/libstream_out_switcher_pic_a-switcher.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_switcher_pic_a-switcher.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='switcher.c' object='libstream_out_switcher_pic_a-switcher.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_switcher_pic_a-switcher.Po' tmpdepfile='$(DEPDIR)/libstream_out_switcher_pic_a-switcher.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_switcher_pic_a_CFLAGS) $(CFLAGS) -c -o libstream_out_switcher_pic_a-switcher.o `test -f 'switcher.c' || echo '$(srcdir)/'`switcher.c
+
+libstream_out_switcher_pic_a-switcher.obj: switcher.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_switcher_pic_a_CFLAGS) $(CFLAGS) -MT libstream_out_switcher_pic_a-switcher.obj -MD -MP -MF "$(DEPDIR)/libstream_out_switcher_pic_a-switcher.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_switcher_pic_a-switcher.obj `if test -f 'switcher.c'; then $(CYGPATH_W) 'switcher.c'; else $(CYGPATH_W) '$(srcdir)/switcher.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_switcher_pic_a-switcher.Tpo" "$(DEPDIR)/libstream_out_switcher_pic_a-switcher.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_switcher_pic_a-switcher.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='switcher.c' object='libstream_out_switcher_pic_a-switcher.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_switcher_pic_a-switcher.Po' tmpdepfile='$(DEPDIR)/libstream_out_switcher_pic_a-switcher.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_switcher_pic_a_CFLAGS) $(CFLAGS) -c -o libstream_out_switcher_pic_a-switcher.obj `if test -f 'switcher.c'; then $(CYGPATH_W) 'switcher.c'; else $(CYGPATH_W) '$(srcdir)/switcher.c'; fi`
+
+libstream_out_switcher_plugin_a-switcher.o: switcher.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_switcher_plugin_a_CFLAGS) $(CFLAGS) -MT libstream_out_switcher_plugin_a-switcher.o -MD -MP -MF "$(DEPDIR)/libstream_out_switcher_plugin_a-switcher.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_switcher_plugin_a-switcher.o `test -f 'switcher.c' || echo '$(srcdir)/'`switcher.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_switcher_plugin_a-switcher.Tpo" "$(DEPDIR)/libstream_out_switcher_plugin_a-switcher.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_switcher_plugin_a-switcher.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='switcher.c' object='libstream_out_switcher_plugin_a-switcher.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_switcher_plugin_a-switcher.Po' tmpdepfile='$(DEPDIR)/libstream_out_switcher_plugin_a-switcher.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_switcher_plugin_a_CFLAGS) $(CFLAGS) -c -o libstream_out_switcher_plugin_a-switcher.o `test -f 'switcher.c' || echo '$(srcdir)/'`switcher.c
+
+libstream_out_switcher_plugin_a-switcher.obj: switcher.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_switcher_plugin_a_CFLAGS) $(CFLAGS) -MT libstream_out_switcher_plugin_a-switcher.obj -MD -MP -MF "$(DEPDIR)/libstream_out_switcher_plugin_a-switcher.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libstream_out_switcher_plugin_a-switcher.obj `if test -f 'switcher.c'; then $(CYGPATH_W) 'switcher.c'; else $(CYGPATH_W) '$(srcdir)/switcher.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libstream_out_switcher_plugin_a-switcher.Tpo" "$(DEPDIR)/libstream_out_switcher_plugin_a-switcher.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libstream_out_switcher_plugin_a-switcher.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='switcher.c' object='libstream_out_switcher_plugin_a-switcher.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libstream_out_switcher_plugin_a-switcher.Po' tmpdepfile='$(DEPDIR)/libstream_out_switcher_plugin_a-switcher.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_switcher_plugin_a_CFLAGS) $(CFLAGS) -c -o libstream_out_switcher_plugin_a-switcher.obj `if test -f 'switcher.c'; then $(CYGPATH_W) 'switcher.c'; else $(CYGPATH_W) '$(srcdir)/switcher.c'; fi`
+
 libstream_out_transcode_a-transcode.o: transcode.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_transcode_a_CFLAGS) $(CFLAGS) -MT libstream_out_transcode_a-transcode.o -MD -MP -MF "$(DEPDIR)/libstream_out_transcode_a-transcode.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libstream_out_transcode_a-transcode.o `test -f 'transcode.c' || echo '$(srcdir)/'`transcode.c; \
@@ -1600,6 +1988,24 @@ libstream_out_transcode_plugin_a-transcode.obj: transcode.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libstream_out_transcode_plugin_a_CFLAGS) $(CFLAGS) -c -o libstream_out_transcode_plugin_a-transcode.obj `if test -f 'transcode.c'; then $(CYGPATH_W) 'transcode.c'; else $(CYGPATH_W) '$(srcdir)/transcode.c'; fi`
 uninstall-info-am:
+libstream_out_bridgeDATA_INSTALL = $(INSTALL_DATA)
+install-libstream_out_bridgeDATA: $(libstream_out_bridge_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libstream_out_bridgedir)
+	@list='$(libstream_out_bridge_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libstream_out_bridgeDATA_INSTALL) $$d$$p $(DESTDIR)$(libstream_out_bridgedir)/$$f"; \
+	  $(libstream_out_bridgeDATA_INSTALL) $$d$$p $(DESTDIR)$(libstream_out_bridgedir)/$$f; \
+	done
+
+uninstall-libstream_out_bridgeDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libstream_out_bridge_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libstream_out_bridgedir)/$$f"; \
+	  rm -f $(DESTDIR)$(libstream_out_bridgedir)/$$f; \
+	done
 libstream_out_descriptionDATA_INSTALL = $(INSTALL_DATA)
 install-libstream_out_descriptionDATA: $(libstream_out_description_DATA)
 	@$(NORMAL_INSTALL)
@@ -1708,6 +2114,24 @@ uninstall-libstream_out_gatherDATA:
 	  echo " rm -f $(DESTDIR)$(libstream_out_gatherdir)/$$f"; \
 	  rm -f $(DESTDIR)$(libstream_out_gatherdir)/$$f; \
 	done
+libstream_out_mosaic_bridgeDATA_INSTALL = $(INSTALL_DATA)
+install-libstream_out_mosaic_bridgeDATA: $(libstream_out_mosaic_bridge_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libstream_out_mosaic_bridgedir)
+	@list='$(libstream_out_mosaic_bridge_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libstream_out_mosaic_bridgeDATA_INSTALL) $$d$$p $(DESTDIR)$(libstream_out_mosaic_bridgedir)/$$f"; \
+	  $(libstream_out_mosaic_bridgeDATA_INSTALL) $$d$$p $(DESTDIR)$(libstream_out_mosaic_bridgedir)/$$f; \
+	done
+
+uninstall-libstream_out_mosaic_bridgeDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libstream_out_mosaic_bridge_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libstream_out_mosaic_bridgedir)/$$f"; \
+	  rm -f $(DESTDIR)$(libstream_out_mosaic_bridgedir)/$$f; \
+	done
 libstream_out_rtpDATA_INSTALL = $(INSTALL_DATA)
 install-libstream_out_rtpDATA: $(libstream_out_rtp_DATA)
 	@$(NORMAL_INSTALL)
@@ -1743,6 +2167,24 @@ uninstall-libstream_out_standardDATA:
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
 	  echo " rm -f $(DESTDIR)$(libstream_out_standarddir)/$$f"; \
 	  rm -f $(DESTDIR)$(libstream_out_standarddir)/$$f; \
+	done
+libstream_out_switcherDATA_INSTALL = $(INSTALL_DATA)
+install-libstream_out_switcherDATA: $(libstream_out_switcher_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libstream_out_switcherdir)
+	@list='$(libstream_out_switcher_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libstream_out_switcherDATA_INSTALL) $$d$$p $(DESTDIR)$(libstream_out_switcherdir)/$$f"; \
+	  $(libstream_out_switcherDATA_INSTALL) $$d$$p $(DESTDIR)$(libstream_out_switcherdir)/$$f; \
+	done
+
+uninstall-libstream_out_switcherDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libstream_out_switcher_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libstream_out_switcherdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libstream_out_switcherdir)/$$f; \
 	done
 libstream_out_transcodeDATA_INSTALL = $(INSTALL_DATA)
 install-libstream_out_transcodeDATA: $(libstream_out_transcode_DATA)
@@ -1937,7 +2379,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libstream_out_descriptiondir) $(DESTDIR)$(libstream_out_displaydir) $(DESTDIR)$(libstream_out_dummydir) $(DESTDIR)$(libstream_out_duplicatedir) $(DESTDIR)$(libstream_out_esdir) $(DESTDIR)$(libstream_out_gatherdir) $(DESTDIR)$(libstream_out_rtpdir) $(DESTDIR)$(libstream_out_standarddir) $(DESTDIR)$(libstream_out_transcodedir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libstream_out_bridgedir) $(DESTDIR)$(libstream_out_descriptiondir) $(DESTDIR)$(libstream_out_displaydir) $(DESTDIR)$(libstream_out_dummydir) $(DESTDIR)$(libstream_out_duplicatedir) $(DESTDIR)$(libstream_out_esdir) $(DESTDIR)$(libstream_out_gatherdir) $(DESTDIR)$(libstream_out_mosaic_bridgedir) $(DESTDIR)$(libstream_out_rtpdir) $(DESTDIR)$(libstream_out_standarddir) $(DESTDIR)$(libstream_out_switcherdir) $(DESTDIR)$(libstream_out_transcodedir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -1984,13 +2426,16 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-libstream_out_descriptionDATA \
+install-data-am: install-libstream_out_bridgeDATA \
+	install-libstream_out_descriptionDATA \
 	install-libstream_out_displayDATA \
 	install-libstream_out_dummyDATA \
 	install-libstream_out_duplicateDATA \
 	install-libstream_out_esDATA install-libstream_out_gatherDATA \
+	install-libstream_out_mosaic_bridgeDATA \
 	install-libstream_out_rtpDATA \
 	install-libstream_out_standardDATA \
+	install-libstream_out_switcherDATA \
 	install-libstream_out_transcodeDATA install-libvlcLIBRARIES
 
 install-exec-am:
@@ -2018,14 +2463,17 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libstream_out_descriptionDATA \
+uninstall-am: uninstall-info-am uninstall-libstream_out_bridgeDATA \
+	uninstall-libstream_out_descriptionDATA \
 	uninstall-libstream_out_displayDATA \
 	uninstall-libstream_out_dummyDATA \
 	uninstall-libstream_out_duplicateDATA \
 	uninstall-libstream_out_esDATA \
 	uninstall-libstream_out_gatherDATA \
+	uninstall-libstream_out_mosaic_bridgeDATA \
 	uninstall-libstream_out_rtpDATA \
 	uninstall-libstream_out_standardDATA \
+	uninstall-libstream_out_switcherDATA \
 	uninstall-libstream_out_transcodeDATA uninstall-libvlcLIBRARIES
 
 uninstall-info: uninstall-info-recursive
@@ -2039,13 +2487,16 @@ uninstall-info: uninstall-info-recursive
 	install-data install-data-am install-data-recursive \
 	install-exec install-exec-am install-exec-recursive \
 	install-info install-info-am install-info-recursive \
+	install-libstream_out_bridgeDATA \
 	install-libstream_out_descriptionDATA \
 	install-libstream_out_displayDATA \
 	install-libstream_out_dummyDATA \
 	install-libstream_out_duplicateDATA \
 	install-libstream_out_esDATA install-libstream_out_gatherDATA \
+	install-libstream_out_mosaic_bridgeDATA \
 	install-libstream_out_rtpDATA \
 	install-libstream_out_standardDATA \
+	install-libstream_out_switcherDATA \
 	install-libstream_out_transcodeDATA install-libvlcLIBRARIES \
 	install-man install-recursive install-strip installcheck \
 	installcheck-am installdirs installdirs-am \
@@ -2054,15 +2505,17 @@ uninstall-info: uninstall-info-recursive
 	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
 	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
 	uninstall uninstall-am uninstall-info-am \
-	uninstall-info-recursive \
+	uninstall-info-recursive uninstall-libstream_out_bridgeDATA \
 	uninstall-libstream_out_descriptionDATA \
 	uninstall-libstream_out_displayDATA \
 	uninstall-libstream_out_dummyDATA \
 	uninstall-libstream_out_duplicateDATA \
 	uninstall-libstream_out_esDATA \
 	uninstall-libstream_out_gatherDATA \
+	uninstall-libstream_out_mosaic_bridgeDATA \
 	uninstall-libstream_out_rtpDATA \
 	uninstall-libstream_out_standardDATA \
+	uninstall-libstream_out_switcherDATA \
 	uninstall-libstream_out_transcodeDATA uninstall-libvlcLIBRARIES \
 	uninstall-recursive
 
@@ -2073,9 +2526,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp stream_out_switcher stream_out_bridge stream_out_mosaic_bridge; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp stream_out_switcher stream_out_bridge stream_out_mosaic_bridge; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp stream_out_switcher stream_out_bridge stream_out_mosaic_bridge; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 libstream_out_dummy_plugin$(LIBEXT): $(libstream_out_dummy_plugin_a_OBJECTS)
@@ -2131,6 +2584,24 @@ libstream_out_rtp_plugin$(LIBEXT): $(libstream_out_rtp_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libstream_out_rtp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_rtp\` ; $(CXXLINK) $(libstream_out_rtp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_rtp` ;; \
 	  objc) echo $(OBJCLINK) $(libstream_out_rtp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_rtp\` ; $(OBJCLINK) $(libstream_out_rtp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_rtp` ;; \
 	  c|*) echo $(LINK) $(libstream_out_rtp_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_rtp\` ; $(LINK) $(libstream_out_rtp_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_rtp` ;; \
+	esac
+libstream_out_switcher_plugin$(LIBEXT): $(libstream_out_switcher_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage stream_out_switcher` in \
+	  c++) echo $(CXXLINK) $(libstream_out_switcher_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_switcher\` ; $(CXXLINK) $(libstream_out_switcher_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_switcher` ;; \
+	  objc) echo $(OBJCLINK) $(libstream_out_switcher_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_switcher\` ; $(OBJCLINK) $(libstream_out_switcher_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_switcher` ;; \
+	  c|*) echo $(LINK) $(libstream_out_switcher_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_switcher\` ; $(LINK) $(libstream_out_switcher_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_switcher` ;; \
+	esac
+libstream_out_bridge_plugin$(LIBEXT): $(libstream_out_bridge_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage stream_out_bridge` in \
+	  c++) echo $(CXXLINK) $(libstream_out_bridge_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_bridge\` ; $(CXXLINK) $(libstream_out_bridge_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_bridge` ;; \
+	  objc) echo $(OBJCLINK) $(libstream_out_bridge_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_bridge\` ; $(OBJCLINK) $(libstream_out_bridge_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_bridge` ;; \
+	  c|*) echo $(LINK) $(libstream_out_bridge_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_bridge\` ; $(LINK) $(libstream_out_bridge_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_bridge` ;; \
+	esac
+libstream_out_mosaic_bridge_plugin$(LIBEXT): $(libstream_out_mosaic_bridge_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage stream_out_mosaic_bridge` in \
+	  c++) echo $(CXXLINK) $(libstream_out_mosaic_bridge_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_mosaic_bridge\` ; $(CXXLINK) $(libstream_out_mosaic_bridge_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_mosaic_bridge` ;; \
+	  objc) echo $(OBJCLINK) $(libstream_out_mosaic_bridge_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_mosaic_bridge\` ; $(OBJCLINK) $(libstream_out_mosaic_bridge_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_mosaic_bridge` ;; \
+	  c|*) echo $(LINK) $(libstream_out_mosaic_bridge_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_mosaic_bridge\` ; $(LINK) $(libstream_out_mosaic_bridge_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_mosaic_bridge` ;; \
 	esac
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -2,7 +2,7 @@
  * expr_evaluator.cpp
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: expr_evaluator.cpp 7579 2004-05-02 14:03:20Z ipkiss $
+ * $Id: expr_evaluator.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *

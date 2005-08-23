@@ -2,7 +2,7 @@
  * transforms_yuvmmx.h: MMX YUV transformation assembly
  *****************************************************************************
  * Copyright (C) 1999-2004 VideoLAN
- * $Id: i420_rgb_mmx.h 7703 2004-05-17 19:38:13Z gbazin $
+ * $Id: i420_rgb_mmx.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Olie Lho <ollie@sis.com.tw>
  *          Gaël Hendryckx <jimmy@via.ecp.fr>

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * httpd.c
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: httpd.c 9284 2004-11-11 18:50:53Z gbazin $
+ * Copyright (C) 2004-2005 VideoLAN
+ * $Id: httpd.c 11100 2005-05-22 07:46:02Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
- *          Remi Denis-Courmont <courmisch@via.ecp.fr>
+ *          Remi Denis-Courmont <rem # videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,8 +56,10 @@
 #   endif
 #endif
 
-#if defined(WIN32)
+#if defined(WIN32) && !defined(UNDER_CE)
 static const struct in6_addr in6addr_any = {{IN6ADDR_ANY_INIT}};
+#elif defined(UNDER_CE) && defined(AF_INET6)
+#   undef AF_INET6
 #endif
 
 #ifndef PF_INET
@@ -264,6 +266,9 @@ enum
     HTTPD_CLIENT_WAITING,
 
     HTTPD_CLIENT_DEAD,
+
+    HTTPD_CLIENT_TLS_HS_IN,
+    HTTPD_CLIENT_TLS_HS_OUT
 };
 /* mode */
 enum
@@ -874,15 +879,6 @@ void httpd_StreamDelete( httpd_stream_t *stream )
  *****************************************************************************/
 #define LISTEN_BACKLOG          100
 
-#if defined(HAVE_GETNAMEINFO) && !defined(HAVE_GETADDRINFO)
-/* 
- * For now, VLC's configure script does not check for getaddrinfo(),
- * but it should be present if getnameinfo() is (the opposite is untrue, with
- * Debian potato as an example)
- */
-# define HAVE_GETADDRINFO 1
-#endif
-
 static void httpd_HostThread( httpd_host_t * );
 static int GetAddrPort( const struct sockaddr_storage *p_ss );
 
@@ -926,25 +922,16 @@ httpd_host_t *httpd_TLSHostNew( vlc_object_t *p_this, char *psz_host,
         vlc_value_t val;
         char psz_port[6];
         struct addrinfo hints;
+        int check;
 
         memset( &hints, 0, sizeof( hints ) );
-
-#if 0
-        /* 
-         * For now, keep IPv4 by default. That said, it should be safe to use
-         * IPv6 by default *on the server side*, as, apart from NetBSD, most
-         * systems accept IPv4 clients on IPv6 listening sockets.
-         */
-        hints.ai_family = PF_INET;
-#else
-        hints.ai_family = 0;
 
         /* Check if ipv4 or ipv6 were forced */
         var_Create( p_this, "ipv4", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
         var_Get( p_this, "ipv4", &val );
         if( val.b_bool )
             hints.ai_family = PF_INET;
-#endif
+
         var_Create( p_this, "ipv6", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
         var_Get( p_this, "ipv6", &val );
         if( val.b_bool )
@@ -959,9 +946,15 @@ httpd_host_t *httpd_TLSHostNew( vlc_object_t *p_this, char *psz_host,
         snprintf( psz_port, sizeof( psz_port ), "%d", i_port );
         psz_port[sizeof( psz_port ) - 1] = '\0';
         
-        if( getaddrinfo( psz_host, psz_port, &hints, &res ) )
+        check = getaddrinfo( psz_host, psz_port, &hints, &res );
+        if( check != 0 )
         {
+#ifdef HAVE_GAI_STRERROR
+            msg_Err( p_this, "cannot resolve %s:%d : %s", psz_host, i_port,
+                     gai_strerror( check ) );
+#else
             msg_Err( p_this, "cannot resolve %s:%d", psz_host, i_port );
+#endif
             return NULL;
         }
     }
@@ -1027,7 +1020,7 @@ httpd_host_t *httpd_TLSHostNew( vlc_object_t *p_this, char *psz_host,
                 continue;
 
             /* Cannot re-use host if it uses TLS/SSL */
-            if( &httpd->host[i]->p_tls != NULL )
+            if( httpd->host[i]->p_tls != NULL )
                 continue;
 
 #ifdef AF_INET6
@@ -1180,6 +1173,12 @@ socket_error:
     return host;
 
 error:
+    if( httpd->i_host <= 0 )
+    {
+        vlc_object_release( httpd );
+        vlc_object_detach( httpd );
+        vlc_object_destroy( httpd );
+    }
     vlc_mutex_unlock( lockval.p_address );
 
     if( fd != -1 )
@@ -1191,8 +1190,6 @@ error:
         vlc_object_destroy( host );
     }
 
-    /* TODO destroy no more used httpd TODO */
-    vlc_object_release( httpd );
     return NULL;
 }
 
@@ -1207,8 +1204,6 @@ void httpd_HostDelete( httpd_host_t *host )
 
     var_Get( httpd->p_libvlc, "httpd_mutex", &lockval );
     vlc_mutex_lock( lockval.p_address );
-
-    vlc_object_release( httpd );
 
     host->i_ref--;
     if( host->i_ref > 0 )
@@ -1251,6 +1246,7 @@ void httpd_HostDelete( httpd_host_t *host )
     if( httpd->i_host <= 0 )
     {
         msg_Info( httpd, "httpd doesn't reference any host, deleting" );
+        vlc_object_release( httpd );
         vlc_object_detach( httpd );
         vlc_object_destroy( httpd );
     }
@@ -1534,7 +1530,7 @@ static void httpd_ClientClean( httpd_client_t *cl )
     if( cl->fd >= 0 )
     {
         if( cl->p_tls != NULL )
-            tls_SessionClose( cl->p_tls );
+            tls_ServerSessionClose( cl->p_tls );
         net_Close( cl->fd );
         cl->fd = -1;
     }
@@ -1554,15 +1550,6 @@ static httpd_client_t *httpd_ClientNew( int fd, struct sockaddr_storage *sock,
                                         tls_session_t *p_tls )
 {
     httpd_client_t *cl = malloc( sizeof( httpd_client_t ) );
-    /* set this new socket non-block */
-#if defined( WIN32 ) || defined( UNDER_CE )
-    {
-        unsigned long i_dummy = 1;
-        ioctlsocket( fd, FIONBIO, &i_dummy );
-    }
-#else
-    fcntl( fd, F_SETFL, O_NONBLOCK );
-#endif
     cl->i_ref   = 0;
     cl->fd      = fd;
     memcpy( &cl->sock, sock, sizeof( cl->sock ) );
@@ -1616,7 +1603,7 @@ static void httpd_ClientRecv( httpd_client_t *cl )
 
         if( cl->i_buffer >= 4 )
         {
-            fprintf( stderr, "peek=%4.4s\n", cl->p_buffer );
+            /*fprintf( stderr, "peek=%4.4s\n", cl->p_buffer );*/
             /* detect type */
             if( cl->p_buffer[0] == '$' )
             {
@@ -1730,7 +1717,7 @@ static void httpd_ClientRecv( httpd_client_t *cl )
                     p = NULL;
                     cl->query.i_type = HTTPD_MSG_NONE;
 
-                    fprintf( stderr, "received new request=%s\n", cl->p_buffer);
+                    /*fprintf( stderr, "received new request=%s\n", cl->p_buffer);*/
 
                     for( i = 0; msg_type[i].name != NULL; i++ )
                     {
@@ -1902,7 +1889,7 @@ static void httpd_ClientRecv( httpd_client_t *cl )
         cl->i_activity_timeout = 0;
 
     /* Debugging only */
-    if( cl->i_state == HTTPD_CLIENT_RECEIVE_DONE )
+    /*if( cl->i_state == HTTPD_CLIENT_RECEIVE_DONE )
     {
         int i;
 
@@ -1925,7 +1912,7 @@ static void httpd_ClientRecv( httpd_client_t *cl )
             fprintf( stderr, "  - option name='%s' value='%s'\n",
                      cl->query.name[i], cl->query.value[i] );
         }
-    }
+    }*/
 }
 
 
@@ -1970,8 +1957,8 @@ static void httpd_ClientSend( httpd_client_t *cl )
         cl->i_buffer = 0;
         cl->i_buffer_size = (uint8_t*)p - cl->p_buffer;
 
-        fprintf( stderr, "sending answer\n" );
-        fprintf( stderr, "%s",  cl->p_buffer );
+        /*fprintf( stderr, "sending answer\n" );
+        fprintf( stderr, "%s",  cl->p_buffer );*/
     }
 
     i_len = httpd_NetSend( cl, &cl->p_buffer[cl->i_buffer],
@@ -2026,6 +2013,43 @@ static void httpd_ClientSend( httpd_client_t *cl )
             /* error */
             cl->i_state = HTTPD_CLIENT_DEAD;
         }
+    }
+}
+
+static void httpd_ClientTlsHsIn( httpd_client_t *cl )
+{
+    switch( tls_SessionContinueHandshake( cl->p_tls ) )
+    {
+        case 0:
+            cl->i_state = HTTPD_CLIENT_RECEIVING;
+            break;
+
+        case -1:
+            cl->i_state = HTTPD_CLIENT_DEAD;
+            cl->p_tls = NULL;
+            break;
+
+        case 2:
+            cl->i_state = HTTPD_CLIENT_TLS_HS_OUT;
+    }
+}
+
+static void httpd_ClientTlsHsOut( httpd_client_t *cl )
+{
+    switch( tls_SessionContinueHandshake( cl->p_tls ) )
+    {
+        case 0:
+            cl->i_state = HTTPD_CLIENT_RECEIVING;
+            break;
+
+        case -1:
+            cl->i_state = HTTPD_CLIENT_DEAD;
+            cl->p_tls = NULL;
+            break;
+
+        case 1:
+            cl->i_state = HTTPD_CLIENT_TLS_HS_IN;
+            break;
     }
 }
 
@@ -2086,12 +2110,14 @@ static void httpd_HostThread( httpd_host_t *host )
                 i_client--;
                 continue;
             }
-            else if( cl->i_state == HTTPD_CLIENT_RECEIVING )
+            else if( ( cl->i_state == HTTPD_CLIENT_RECEIVING )
+                  || ( cl->i_state == HTTPD_CLIENT_TLS_HS_IN ) )
             {
                 FD_SET( cl->fd, &fds_read );
                 i_handle_max = __MAX( i_handle_max, cl->fd );
             }
-            else if( cl->i_state == HTTPD_CLIENT_SENDING )
+            else if( ( cl->i_state == HTTPD_CLIENT_SENDING )
+                  || ( cl->i_state == HTTPD_CLIENT_TLS_HS_OUT ) )
             {
                 FD_SET( cl->fd, &fds_write );
                 i_handle_max = __MAX( i_handle_max, cl->fd );
@@ -2431,14 +2457,36 @@ static void httpd_HostThread( httpd_host_t *host )
             fd = accept( host->fd, (struct sockaddr *)&sock, &i_sock_size );
             if( fd >= 0 )
             {
+                int i_state = 0;
+
+                /* set this new socket non-block */
+#if defined( WIN32 ) || defined( UNDER_CE )
+                {
+                    unsigned long i_dummy = 1;
+                    ioctlsocket( fd, FIONBIO, &i_dummy );
+                }
+#else
+                fcntl( fd, F_SETFL, O_NONBLOCK );
+#endif
+
                 if( p_tls != NULL)
                 {
-                    p_tls = tls_SessionHandshake( p_tls, fd );
-                    if ( p_tls == NULL )
+                    switch ( tls_ServerSessionHandshake( p_tls, fd ) )
                     {
-                        msg_Err( host, "Rejecting TLS connection" );
-                        net_Close( fd );
-                        fd = -1;
+                        case -1:
+                            msg_Err( host, "Rejecting TLS connection" );
+                            net_Close( fd );
+                            fd = -1;
+                            p_tls = NULL;
+                            break;
+
+                        case 1: /* missing input - most likely */
+                            i_state = HTTPD_CLIENT_TLS_HS_IN;
+                            break;
+
+                        case 2: /* missing output */
+                            i_state = HTTPD_CLIENT_TLS_HS_OUT;
+                            break;
                     }
                 }
                 
@@ -2453,7 +2501,9 @@ static void httpd_HostThread( httpd_host_t *host )
                     TAB_APPEND( host->i_client, host->client, cl );
                     vlc_mutex_unlock( &host->lock );
 
-    
+                    if( i_state != 0 )
+                        cl->i_state = i_state; // override state for TLS
+
                     // FIXME: it sucks to allocate memory for debug
                     ip = httpd_ClientIP( cl );
                     msg_Dbg( host, "new connection (%s)",
@@ -2476,6 +2526,14 @@ static void httpd_HostThread( httpd_host_t *host )
             {
                 httpd_ClientSend( cl );
             }
+            else if( cl->i_state == HTTPD_CLIENT_TLS_HS_IN )
+            {
+                httpd_ClientTlsHsIn( cl );
+            }
+            else if( cl->i_state == HTTPD_CLIENT_TLS_HS_OUT )
+            {
+                httpd_ClientTlsHsOut( cl );
+            }
 
             if( cl->i_mode == HTTPD_CLIENT_BIDIR &&
                 cl->i_state == HTTPD_CLIENT_SENDING &&
@@ -2486,6 +2544,9 @@ static void httpd_HostThread( httpd_host_t *host )
         }
         vlc_mutex_unlock( &host->lock );
     }
+
+    if( p_tls != NULL )
+        tls_ServerSessionClose( p_tls );
 }
 
 #ifndef HAVE_GETADDRINFO

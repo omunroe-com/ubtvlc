@@ -83,6 +83,7 @@ fi
 if test "${top_builddir}" != ""; then
   top_builddir="${top_builddir}/"
 fi
+includes="${includes} -I${top_builddir}include"
 cppflags="${includes}"
 libs="-L@libdir@"
 module=""
@@ -187,7 +188,7 @@ while test $# -gt 0; do
       usage 1 1>&1
       ;;
     vlc)
-      cppflags="${cppflags} -D__VLC__"
+      cppflags="${cppflags} -D__VLC__ -I${top_builddir}src/misc"
       ;;
     plugin)
       echo_plugin=yes
@@ -202,6 +203,10 @@ while test $# -gt 0; do
       ;;
     mozilla)
       ;;
+    external)
+      echo_external=yes
+      ldflags="${ldflags} -lvlc"
+      ;;      
     *)
       module="$1"
       ;;
@@ -293,6 +298,20 @@ if test "${echo_libs}" = yes; then
       for target in `echo "${list}"`; do printf "${top_builddir}modules/${target}.a "; done
     fi
   fi
+  if test "${echo_external}" = yes; then
+    if test "${echo_pic}" = yes; then
+      for module in `echo "${builtins}"`; do
+        ldflags="${ldflags} @libdir@/vlc/lib${module}_pic.a"
+      done
+    else
+      for module in `echo "${builtins}"`; do
+        ldflags="${ldflags} @libdir@/vlc/lib${module}.a"
+      done
+    fi
+    for module in `echo "${builtins}"`; do
+      register_flags "${module}"
+    done
+    register_flags "vlc"
+  fi
   echo "${libs} ${ldflags}"
 fi
-

@@ -2,7 +2,7 @@
  * ctrl_move.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_move.hpp 7073 2004-03-14 14:33:12Z asmax $
+ * $Id: ctrl_move.hpp 9596 2004-12-17 23:39:34Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -61,6 +61,9 @@ class CtrlMove: public CtrlFlat
         static void transMovingMoving( SkinObject *pCtrl );
         static void transStillMoving( SkinObject *pCtrl );
         static void transMovingStill( SkinObject *pCtrl );
+
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return m_rCtrl.getType(); }
 
     private:
         FSM m_fsm;

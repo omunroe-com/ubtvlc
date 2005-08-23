@@ -1,8 +1,8 @@
 /*****************************************************************************
  * wxwindows.h: private wxWindows interface description
  *****************************************************************************
- * Copyright (C) 1999-2004 VideoLAN
- * $Id: wxwindows.h 9033 2004-10-22 12:07:08Z gbazin $
+ * Copyright (C) 1999-2005 VideoLAN
+ * $Id: wxwindows.h 11236 2005-06-01 19:53:37Z courmisch $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -42,12 +42,11 @@
 #include <wx/accel.h>
 #include <wx/checkbox.h>
 #include <wx/wizard.h>
+#include <wx/taskbar.h>
 #include "vlc_keys.h"
 
-/* Hmmm, work-around for newest wxWin */
-#ifdef wxStaticCastEvent
-#   undef wxStaticCastEvent
-#   define wxStaticCastEvent(type, val) ((type)(val))
+#if (!wxCHECK_VERSION(2,5,0))
+typedef long wxTreeItemIdValue;
 #endif
 
 DECLARE_LOCAL_EVENT_TYPE( wxEVT_DIALOG, 0 );
@@ -66,9 +65,9 @@ DECLARE_LOCAL_EVENT_TYPE( wxEVT_INTF, 1 );
 
 #else // ENABLE_NLS && ENABLE_UTF8
 #if wxUSE_UNICODE
-#   define wxU(ansi) wxString(ansi, *wxConvCurrent)
+#   define wxU(ansi) wxString(ansi, wxConvLocal)
 #else
-#   define wxU(ansi) ansi
+#   define wxU(ansi) (ansi)
 #endif
 #define ISUTF8 0
 
@@ -76,11 +75,7 @@ DECLARE_LOCAL_EVENT_TYPE( wxEVT_INTF, 1 );
 
 /* wxL2U (locale to unicode) is used to convert ansi strings to unicode
  * strings (wchar_t) */
-#if wxUSE_UNICODE
-#   define wxL2U(ansi) wxString(ansi, *wxConvCurrent)
-#else
-#   define wxL2U(ansi) ansi
-#endif
+#define wxL2U(ansi) wxU(ansi)
 
 #define WRAPCOUNT 80
 
@@ -92,10 +87,16 @@ DECLARE_LOCAL_EVENT_TYPE( wxEVT_INTF, 1 );
 #define MODE_AUTHOR 2
 #define MODE_TITLE 3
 
+enum{
+  ID_CONTROLS_TIMER,
+  ID_SLIDER_TIMER,
+};
+
 class DialogsProvider;
 class PrefsTreeCtrl;
 class AutoBuiltPanel;
 class VideoWindow;
+class WindowSettings;
 
 /*****************************************************************************
  * intf_sys_t: description and status of wxwindows interface
@@ -105,6 +106,9 @@ struct intf_sys_t
     /* the wx parent window */
     wxWindow            *p_wxwindow;
     wxIcon              *p_icon;
+
+    /* window settings */
+    WindowSettings      *p_window_settings;
 
     /* special actions */
     vlc_bool_t          b_playing;
@@ -123,6 +127,7 @@ struct intf_sys_t
 
     /* Playlist management */
     int                 i_playing;                 /* playlist selected item */
+    unsigned            i_playlist_usage;
 
     /* Send an event to show a dialog */
     void (*pf_show_dialog) ( intf_thread_t *p_intf, int i_dialog, int i_arg,
@@ -138,6 +143,7 @@ struct intf_sys_t
     /* Embedded vout */
     VideoWindow         *p_video_window;
     wxBoxSizer          *p_video_sizer;
+    vlc_bool_t          b_video_autosize;
 
     /* Aout */
     aout_instance_t     *p_aout;
@@ -147,7 +153,8 @@ struct intf_sys_t
  * Prototypes
  *****************************************************************************/
 wxArrayString SeparateEntries( wxString );
-wxWindow *VideoWindow( intf_thread_t *p_intf, wxWindow *p_parent );
+wxWindow *CreateVideoWindow( intf_thread_t *p_intf, wxWindow *p_parent );
+void UpdateVideoWindow( intf_thread_t *p_intf, wxWindow *p_window );
 wxWindow *BookmarksDialog( intf_thread_t *p_intf, wxWindow *p_parent );
 wxWindow *CreateDialogsProvider( intf_thread_t *p_intf, wxWindow *p_parent );
 
@@ -180,12 +187,14 @@ public:
     virtual void Notify();
 
 private:
+    //use wxWindow::IsShown instead
+    //vlc_bool_t b_slider_shown;
+    //vlc_bool_t b_disc_shown;
     intf_thread_t *p_intf;
     Interface *p_main_interface;
     vlc_bool_t b_init;
     int i_old_playing_status;
     int i_old_rate;
-    vlc_bool_t b_old_seekable;
 };
 
 
@@ -224,7 +233,10 @@ private:
 
     wxCheckBox *eq_2p_chkbox;
 
+    wxButton *eq_restoredefaults_button;
+
     wxSlider *smooth_slider;
+    wxStaticText *smooth_text;
 
     wxSlider *preamp_slider;
     wxStaticText * preamp_text;
@@ -286,31 +298,78 @@ private:
 };
 #endif
 
+/* Systray integration */
+#ifdef wxHAS_TASK_BAR_ICON
+class Systray: public wxTaskBarIcon
+{
+public:
+    Systray( Interface* p_main_interface, intf_thread_t *p_intf );
+    virtual ~Systray() {};
+    wxMenu* CreatePopupMenu();
+    void UpdateTooltip( const wxChar* tooltip );
+
+private:
+    void OnMenuIconize( wxCommandEvent& event );
+    void OnLeftClick( wxTaskBarIconEvent& event );
+    void OnPlayStream ( wxCommandEvent& event );
+    void OnStopStream ( wxCommandEvent& event );
+    void OnPrevStream ( wxCommandEvent& event );
+    void OnNextStream ( wxCommandEvent& event );
+    void OnExit(  wxCommandEvent& event );
+    Interface* p_main_interface;
+    intf_thread_t *p_intf;
+    DECLARE_EVENT_TABLE()
+};
+#endif
+
 /* Main Interface */
 class Interface: public wxFrame
 {
 public:
     /* Constructor */
-    Interface( intf_thread_t *p_intf );
+    Interface( intf_thread_t *p_intf, long style = wxDEFAULT_FRAME_STYLE );
     virtual ~Interface();
     void Init();
     void TogglePlayButton( int i_playing_status );
     void Update();
+    void PlayStream();
+    void StopStream();
+    void PrevStream();
+    void NextStream();
 
     wxBoxSizer  *frame_sizer;
     wxStatusBar *statusbar;
 
+    void HideSlider(bool layout = true);
+    void ShowSlider(bool show = true, bool layout = true);
+
     wxSlider    *slider;
     wxWindow    *slider_frame;
+    wxBoxSizer  *slider_sizer;
     wxPanel     *extra_frame;
+
+    void HideDiscFrame(bool layout = true);
+    void ShowDiscFrame(bool show = true, bool layout = true);
+
+    wxPanel         *disc_frame;
+    wxBoxSizer      *disc_sizer;
+    wxBitmapButton  *disc_menu_button;
+    wxBitmapButton  *disc_prev_button;
+    wxBitmapButton  *disc_next_button;
 
     wxFrame    *extra_window;
 
     vlc_bool_t b_extra;
     vlc_bool_t b_undock;
 
+    wxControl  *volctrl;
 
-    wxGauge     *volctrl;
+#ifdef wxHAS_TASK_BAR_ICON
+    Systray     *p_systray;
+#endif
+
+    wxTimer m_controls_timer;
+    wxTimer m_slider_timer;
 
 private:
     void SetupHotkeys();
@@ -321,10 +380,14 @@ private:
     void Open( int i_access_method );
 
     /* Event handlers (these functions should _not_ be virtual) */
+    void OnControlsTimer(wxTimerEvent& WXUNUSED(event));
+    void OnSliderTimer(wxTimerEvent& WXUNUSED(event));
+
     void OnExit( wxCommandEvent& event );
     void OnAbout( wxCommandEvent& event );
 
     void OnOpenFileSimple( wxCommandEvent& event );
+    void OnOpenDir( wxCommandEvent& event );
     void OnOpenFile( wxCommandEvent& event );
     void OnOpenDisc( wxCommandEvent& event );
     void OnOpenNet( wxCommandEvent& event );
@@ -343,6 +406,10 @@ private:
     void OnSlowStream( wxCommandEvent& event );
     void OnFastStream( wxCommandEvent& event );
 
+    void OnDiscMenu( wxCommandEvent& event );
+    void OnDiscPrev( wxCommandEvent& event );
+    void OnDiscNext( wxCommandEvent& event );
+
     void OnMenuOpen( wxMenuEvent& event );
 
 #if defined( __WXMSW__ ) || defined( __WXMAC__ )
@@ -357,7 +424,8 @@ private:
     Timer *timer;
     intf_thread_t *p_intf;
 
-private:
+    wxWindow *video_window;
+
     int i_old_playing_status;
 
     /* For auto-generated menus */
@@ -399,6 +467,7 @@ private:
     /* Event handlers (these functions should _not_ be virtual) */
     void OnOk( wxCommandEvent& event );
     void OnCancel( wxCommandEvent& event );
+    void OnClose( wxCloseEvent& event );
 
     void OnPageChange( wxNotebookEvent& event );
     void OnMRLChange( wxCommandEvent& event );
@@ -408,11 +477,13 @@ private:
     void OnFileBrowse( wxCommandEvent& event );
 
     /* Event handlers for the disc page */
+    void OnDiscPanelChangeSpin( wxSpinEvent& event );
     void OnDiscPanelChange( wxCommandEvent& event );
     void OnDiscTypeChange( wxCommandEvent& event );
     void OnDiscDeviceChange( wxCommandEvent& event );
 
     /* Event handlers for the net page */
+    void OnNetPanelChangeSpin( wxSpinEvent& event );
     void OnNetPanelChange( wxCommandEvent& event );
     void OnNetTypeChange( wxCommandEvent& event );
 
@@ -427,6 +498,7 @@ private:
     /* Event handlers for the caching option */
     void OnCachingEnable( wxCommandEvent& event );
     void OnCachingChange( wxCommandEvent& event );
+    void OnCachingChangeSpin( wxSpinEvent& event );
 
     DECLARE_EVENT_TABLE();
 
@@ -457,10 +529,10 @@ private:
     wxStaticText *disc_title_label;
     wxStaticText *disc_chapter_label;
     wxStaticText *disc_sub_label;
-    
+
     /* Indicates if the disc device control was modified */
     bool b_disc_device_changed;
-    
+
     /* Controls for the net panel */
     wxRadioBox *net_type;
     int i_net_type;
@@ -469,6 +541,7 @@ private:
     wxSpinCtrl *net_ports[4];
     int        i_net_ports[4];
     wxTextCtrl *net_addrs[4];
+    wxCheckBox *net_timeshift;
     wxCheckBox *net_ipv6;
 
     /* Controls for the subtitles file */
@@ -508,7 +581,6 @@ enum
     HTTP_ACCESS_OUT,
     MMSH_ACCESS_OUT,
     UDP_ACCESS_OUT,
-    RTP_ACCESS_OUT,
     ACCESS_OUT_NUM
 };
 
@@ -565,6 +637,7 @@ private:
     void OnNetChange( wxCommandEvent& event );
 
     /* Event specific to the announce address */
+    void OnAnnounceGroupChange( wxCommandEvent& event );
     void OnAnnounceAddrChange( wxCommandEvent& event );
 
     /* Event handlers for the encapsulation panel */
@@ -602,6 +675,7 @@ private:
     wxPanel *misc_subpanels[MISC_SOUT_NUM];
     wxCheckBox *sap_checkbox;
     wxCheckBox *slp_checkbox;
+    wxTextCtrl *announce_group;
     wxTextCtrl *announce_addr;
 
     /* Controls for the encapsulation */
@@ -619,6 +693,12 @@ private:
     wxComboBox *audio_bitrate_combo;
     wxComboBox *audio_channels_combo;
     wxComboBox *video_scale_combo;
+    wxComboBox *subtitles_codec_combo;
+    wxCheckBox *subtitles_transc_checkbox;
+    wxCheckBox *subtitles_overlay_checkbox;
+
+    /* Misc controls */
+    wxCheckBox *sout_all_checkbox;
 };
 
 /* Subtitles File Dialog */
@@ -688,7 +768,7 @@ public:
     void SetTTL( int i_ttl );
     void SetPartial( int, int );
     void SetStream( char *method, char *address );
-    void SetTranscodeOut( char *address );
+    void SetTranscodeOut( const char *address );
     void SetAction( int i_action );
     int  GetAction();
     void SetSAP( bool b_enabled, const char *psz_name );
@@ -726,6 +806,7 @@ private:
     void OnSave( wxCommandEvent& event );
     void OnResetAll( wxCommandEvent& event );
     void OnAdvanced( wxCommandEvent& event );
+    void OnClose( wxCloseEvent& event );
 
     DECLARE_EVENT_TABLE();
 
@@ -746,7 +827,8 @@ public:
 
 private:
     /* Event handlers (these functions should _not_ be virtual) */
-    void OnClose( wxCommandEvent& event );
+    void OnButtonClose( wxCommandEvent& event );
+    void OnClose( wxCloseEvent& WXUNUSED(event) );
     void OnClear( wxCommandEvent& event );
     void OnSaveLog( wxCommandEvent& event );
 
@@ -775,100 +857,121 @@ public:
     void UpdatePlaylist();
     void ShowPlaylist( bool show );
     void UpdateItem( int );
+    void AppendItem( wxCommandEvent& );
 
     bool b_need_update;
 
 private:
+    void RemoveItem( int );
+    void DeleteTreeItem( wxTreeItemId );
     void DeleteItem( int item );
-    void ShowInfos( int item );
+    void DeleteNode( playlist_item_t *node );
+
+    void RecursiveDeleteSelection( wxTreeItemId );
 
     /* Event handlers (these functions should _not_ be virtual) */
 
-    void OnSize( wxSizeEvent &event );
-
+    /* Menu Handlers */
     void OnAddFile( wxCommandEvent& event );
+    void OnAddDir( wxCommandEvent& event );
     void OnAddMRL( wxCommandEvent& event );
-    void OnClose( wxCommandEvent& event );
-    void OnSearch( wxCommandEvent& event );
-    void OnEnDis( wxCommandEvent& event );
-    void OnInfos( wxCommandEvent& event );
-    void OnSearchTextChange( wxCommandEvent& event );
+    void OnMenuClose( wxCommandEvent& event );
+    void OnClose( wxCloseEvent& WXUNUSED(event) );
+
+    void OnDeleteSelection( wxCommandEvent& event );
+
     void OnOpen( wxCommandEvent& event );
     void OnSave( wxCommandEvent& event );
 
+    /* Search (user) */
+    void OnSearch( wxCommandEvent& event );
+    /*void OnSearchTextChange( wxCommandEvent& event );*/
+    wxTextCtrl *search_text;
+    wxButton *search_button;
+    wxTreeItemId search_current;
+
+    void OnEnDis( wxCommandEvent& event );
+
+    /* Sort */
+    int i_sort_mode;
     void OnSort( wxCommandEvent& event );
-    void OnColSelect( wxListEvent& event );
+    int i_title_sorted;
+    int i_group_sorted;
+    int i_duration_sorted;
+
+    /* Dynamic menus */
+    void OnMenuEvent( wxCommandEvent& event );
+    void OnMenuOpen( wxMenuEvent& event );
+    wxMenu *p_view_menu;
+    wxMenu *p_sd_menu;
+    wxMenu *ViewMenu();
+    wxMenu *SDMenu();
 
     void OnUp( wxCommandEvent& event);
     void OnDown( wxCommandEvent& event);
 
-    void OnEnableSelection( wxCommandEvent& event );
-    void OnDisableSelection( wxCommandEvent& event );
-    void OnInvertSelection( wxCommandEvent& event );
-    void OnDeleteSelection( wxCommandEvent& event );
-    void OnSelectAll( wxCommandEvent& event );
     void OnRandom( wxCommandEvent& event );
     void OnRepeat( wxCommandEvent& event );
     void OnLoop ( wxCommandEvent& event );
-    void OnActivateItem( wxListEvent& event );
-    void OnKeyDown( wxListEvent& event );
+
+    void OnActivateItem( wxTreeEvent& event );
+    void OnKeyDown( wxTreeEvent& event );
     void OnNewGroup( wxCommandEvent& event );
 
-    /* Popup functions */
-    void OnPopup( wxListEvent& event );
-    void OnPopupPlay( wxMenuEvent& event );
-    void OnPopupDel( wxMenuEvent& event );
-    void OnPopupEna( wxMenuEvent& event );
-    void OnPopupInfo( wxMenuEvent& event );
-    void Rebuild();
+    /* Popup  */
+    wxMenu *item_popup;
+    wxMenu *node_popup;
+    wxTreeItemId i_wx_popup_item;
+    int i_popup_item;
+    int i_popup_parent;
+    void OnPopup( wxContextMenuEvent& event );
+    void OnPopupPlay( wxCommandEvent& event );
+    void OnPopupPreparse( wxCommandEvent& event );
+    void OnPopupSort( wxCommandEvent& event );
+    void OnPopupDel( wxCommandEvent& event );
+    void OnPopupEna( wxCommandEvent& event );
+    void OnPopupInfo( wxCommandEvent& event );
+    void Rebuild( vlc_bool_t );
+
+    void Preparse();
+
+    /* Update */
+    void UpdateNode( playlist_item_t*, wxTreeItemId );
+    void UpdateNodeChildren( playlist_item_t*, wxTreeItemId );
+    void CreateNode( playlist_item_t*, wxTreeItemId );
+    void UpdateTreeItem( wxTreeItemId );
+
+    /* Search (internal) */
+    int CountItems( wxTreeItemId);
+    wxTreeItemId FindItem( wxTreeItemId, int );
+    wxTreeItemId FindItemByName( wxTreeItemId, wxString,
+                                 wxTreeItemId, vlc_bool_t *);
+
+    wxTreeItemId saved_tree_item;
+    int i_saved_id;
+
+    playlist_t *p_playlist;
+
 
     /* Custom events */
     void OnPlaylistEvent( wxCommandEvent& event );
 
-    wxTextCtrl *search_text;
-    wxButton *search_button;
     DECLARE_EVENT_TABLE();
 
-    wxMenu *popup_menu;
 
+    /* Global widgets */
+    wxStatusBar *statusbar;
     ItemInfoDialog *iteminfo_dialog;
 
-    intf_thread_t *p_intf;
-    wxListView *listview;
-    wxTreeCtrl *treeview;
     int i_update_counter;
-    int i_sort_mode;
-
-    int i_popup_item;
-
-    int i_title_sorted;
-    int i_author_sorted;
-    int i_group_sorted;
-    int i_duration_sorted;
-};
-
-class NewGroup: public wxDialog
-{
-public:
-    /* Constructor */
-    NewGroup( intf_thread_t *p_intf, wxWindow *p_parent );
-    virtual ~NewGroup();
-
-private:
-
-    /* Event handlers (these functions should _not_ be virtual) */
-    void OnOk( wxCommandEvent& event );
-    void OnCancel( wxCommandEvent& event );
-
-    DECLARE_EVENT_TABLE();
 
     intf_thread_t *p_intf;
-    wxTextCtrl *groupname;
+    wxTreeCtrl *treectrl;
+    int i_current_view;
+    vlc_bool_t b_changed_view;
+    char **pp_sds;
 
-protected:
-    friend class Playlist;
-    friend class ItemInfoDialog;
-    char *psz_name;
+
 };
 
 /* ItemInfo Dialog */
@@ -889,7 +992,6 @@ private:
     /* Event handlers (these functions should _not_ be virtual) */
     void OnOk( wxCommandEvent& event );
     void OnCancel( wxCommandEvent& event );
-    void OnNewGroup( wxCommandEvent& event );
 
     void UpdateInfo();
 
@@ -908,14 +1010,10 @@ private:
 
     wxTextCtrl *uri_text;
     wxTextCtrl *name_text;
-    wxTextCtrl *author_text;
 
     wxTreeCtrl *info_tree;
     wxTreeItemId info_root;
 
-    wxCheckBox *enabled_checkbox;
-    wxComboBox *group_combo;
-    int ids_array[100];
 };
 
 
@@ -931,7 +1029,8 @@ public:
     vlc_bool_t b_need_update;
 
 private:
-    void OnClose( wxCommandEvent& event );
+    void OnButtonClose( wxCommandEvent& event );
+    void OnClose( wxCloseEvent& WXUNUSED(event) );
 
     DECLARE_EVENT_TABLE();
 
@@ -939,7 +1038,6 @@ private:
     wxTreeCtrl *fileinfo_tree;
     wxTreeItemId fileinfo_root;
     wxString fileinfo_root_label;
-
 
 };
 
@@ -959,6 +1057,42 @@ private:
 };
 #endif
 } // end of wxvlc namespace
+
+/* */
+class WindowSettings
+{
+public:
+    WindowSettings( intf_thread_t *_p_intf );
+    virtual ~WindowSettings();
+    enum
+    {
+        ID_SCREEN = -1,
+        ID_MAIN,
+        ID_PLAYLIST,
+        ID_MESSAGES,
+        ID_FILE_INFO,
+        ID_BOOKMARKS,
+        ID_VIDEO,
+
+        ID_MAX,
+    };
+
+    void SetSettings( int id, bool _b_shown,
+                      wxPoint p = wxDefaultPosition, wxSize s = wxDefaultSize );
+    bool GetSettings( int id, bool& _b_shown, wxPoint& p, wxSize& s );
+
+    void SetScreen( int i_screen_w, int i_screen_h );
+
+private:
+    intf_thread_t *p_intf;
+
+    int     i_screen_w;
+    int     i_screen_h;
+    bool    b_valid[ID_MAX];
+    bool    b_shown[ID_MAX];
+    wxPoint position[ID_MAX];
+    wxSize  size[ID_MAX];
+};
 
 /* Menus */
 void PopupMenu( intf_thread_t *, wxWindow *, const wxPoint& );
@@ -987,4 +1121,24 @@ private:
 };
 
 } // end of wxvlc namespace
+
+
+/*
+ * wxWindows keeps dead locking because the timer tries to lock the playlist
+ * when it's already locked somewhere else in the very wxWindows interface
+ * module. Unless someone implements a "vlc_mutex_trylock", we need that.
+ */
+inline void LockPlaylist( intf_sys_t *p_sys, playlist_t *p_pl )
+{
+    if( p_sys->i_playlist_usage++ == 0)
+        vlc_mutex_lock( &p_pl->object_lock );
+}
+
+inline void UnlockPlaylist( intf_sys_t *p_sys, playlist_t *p_pl )
+{
+    if( --p_sys->i_playlist_usage == 0)
+        vlc_mutex_unlock( &p_pl->object_lock );
+}
+
 using namespace wxvlc;
+

@@ -1,11 +1,12 @@
 /*****************************************************************************
  * network.h: interface to communicate with network plug-ins
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: network.h 9219 2004-11-07 11:17:37Z courmisch $
+ * Copyright (C) 2002-2005 VideoLAN
+ * $Id: network.h 10944 2005-05-09 18:23:32Z courmisch $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
+ *          Rémi Denis-Courmont <courmisch # via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -166,17 +167,82 @@ static inline void vlc_UrlClean( vlc_url_t *url )
     url->psz_path     = NULL;
     url->psz_option   = NULL;
 }
+
+/*****************************************************************************
+ * vlc_UrlEncode: 
+ *****************************************************************************
+ * perform URL encoding
+ * (you do NOT want to do URL decoding - it is not reversible - do NOT do it)
+ *****************************************************************************/
+static inline char *vlc_UrlEncode( const char *psz_url )
+{
+    char *psz_enc, *out;
+    const char *in;
+
+    psz_enc = (char *)malloc( 3 * strlen( psz_url ) + 1 );
+    if( psz_enc == NULL )
+        return NULL;
+
+    out = psz_enc;
+    for( in = psz_url; *in; in++ )
+    {
+        char c = *in;
+
+        if( ( c <= 32 ) || ( c == '%' ) || ( c == '?' ) || ( c == '&' )
+         || ( c == '+' ) )
+        {
+            *out++ = '%';   
+            *out++ = ( ( c >> 4 ) >= 0xA ) ? 'A' + ( c >> 4 ) - 0xA
+                                           : '0' + ( c >> 4 );
+            *out++ = ( ( c & 0xf ) >= 0xA ) ? 'A' + ( c & 0xf ) - 0xA
+                                           : '0' + ( c & 0xf );
+        }
+        else
+            *out++ = c;
+    }
+    *out++ = '\0';
+
+    return (char *)realloc( psz_enc, out - psz_enc );
+}
+
+/*****************************************************************************
+ * vlc_UrlIsNotEncoded:
+ *****************************************************************************
+ * check if given string is not a valid URL and must hence be encoded
+ *****************************************************************************/
+#include <ctype.h>
+
+static inline int vlc_UrlIsNotEncoded( const char *psz_url )
+{
+    const char *ptr;
+
+    for( ptr = psz_url; *ptr; ptr++ )
+    {
+        char c = *ptr;
+
+        if( c == '%' )
+        {
+            if( !isxdigit( ptr[1] ) || !isxdigit( ptr[2] ) )
+                return 1; /* not encoded */
+            ptr += 2;
+        }
+        else
+        if( c == ' ' )
+            return 1;
+    }
+    return 0; /* looks fine - but maybe it is not encoded */
+}
                     
 /*****************************************************************************
  * vlc_b64_encode:
  *****************************************************************************
  *
  *****************************************************************************/
-static inline char *vlc_b64_encode( unsigned char *src )
+static inline char *vlc_b64_encode( char *src )
 {
     static const char b64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
                                                                                 
-    char *dst = malloc( strlen( src ) * 4 / 3 + 12 );
+    char *dst = (char *)malloc( strlen( src ) * 4 / 3 + 12 );
     char *ret = dst;
     unsigned i_bits = 0;
     unsigned i_shift = 0;
@@ -211,6 +277,9 @@ static inline char *vlc_b64_encode( unsigned char *src )
     return ret;
 }
 
+VLC_EXPORT( int, net_ConvertIPv4, ( uint32_t *p_addr, const char * psz_address ) );
+
+/* Portable networking layer communication */
 #define net_OpenTCP(a, b, c) __net_OpenTCP(VLC_OBJECT(a), b, c)
 VLC_EXPORT( int, __net_OpenTCP, ( vlc_object_t *p_this, const char *psz_host, int i_port ) );
 
@@ -225,25 +294,33 @@ VLC_EXPORT( int, __net_OpenUDP, ( vlc_object_t *p_this, char *psz_bind, int i_bi
 
 VLC_EXPORT( void, net_Close, ( int fd ) );
 
-#define net_Read(a,b,c,d,e) __net_Read(VLC_OBJECT(a),b,c,d,e)
-VLC_EXPORT( int, __net_Read, ( vlc_object_t *p_this, int fd, uint8_t *p_data, int i_data, vlc_bool_t b_retry ) );
 
-#define net_ReadNonBlock(a,b,c,d,e) __net_ReadNonBlock(VLC_OBJECT(a),b,c,d,e)
-VLC_EXPORT( int, __net_ReadNonBlock, ( vlc_object_t *p_this, int fd, uint8_t *p_data, int i_data, mtime_t i_wait ) );
+/* Functions to read from or write to the networking layer */
+struct virtual_socket_t
+{
+    void *p_sys;
+    int (*pf_recv) ( void *, void *, int );
+    int (*pf_send) ( void *, const void *, int );
+};
 
-#define net_Select(a,b,c,d,e,f) __net_Select(VLC_OBJECT(a),b,c,d,e,f)
-VLC_EXPORT( int, __net_Select, ( vlc_object_t *p_this, int *pi_fd, int i_fd,uint8_t *p_data, int i_data, mtime_t i_wait ) );
+#define net_Read(a,b,c,d,e,f) __net_Read(VLC_OBJECT(a),b,c,d,e,f)
+VLC_EXPORT( int, __net_Read, ( vlc_object_t *p_this, int fd, v_socket_t *, uint8_t *p_data, int i_data, vlc_bool_t b_retry ) );
 
+#define net_ReadNonBlock(a,b,c,d,e,f) __net_ReadNonBlock(VLC_OBJECT(a),b,c,d,e,f)
+VLC_EXPORT( int, __net_ReadNonBlock, ( vlc_object_t *p_this, int fd, v_socket_t *, uint8_t *p_data, int i_data, mtime_t i_wait ) );
 
-#define net_Write(a,b,c,d) __net_Write(VLC_OBJECT(a),b,c,d)
-VLC_EXPORT( int, __net_Write, ( vlc_object_t *p_this, int fd, uint8_t *p_data, int i_data ) );
+#define net_Select(a,b,c,d,e,f,g) __net_Select(VLC_OBJECT(a),b,c,d,e,f,g)
+VLC_EXPORT( int, __net_Select, ( vlc_object_t *p_this, int *pi_fd, v_socket_t **, int i_fd, uint8_t *p_data, int i_data, mtime_t i_wait ) );
 
-#define net_Gets(a,b) __net_Gets(VLC_OBJECT(a),b)
-VLC_EXPORT( char *, __net_Gets, ( vlc_object_t *p_this, int fd ) );
+#define net_Write(a,b,c,d,e) __net_Write(VLC_OBJECT(a),b,c,d,e)
+VLC_EXPORT( int, __net_Write, ( vlc_object_t *p_this, int fd, v_socket_t *, uint8_t *p_data, int i_data ) );
 
-VLC_EXPORT( int, net_Printf, ( vlc_object_t *p_this, int fd, const char *psz_fmt, ... ) );
+#define net_Gets(a,b,c) __net_Gets(VLC_OBJECT(a),b,c)
+VLC_EXPORT( char *, __net_Gets, ( vlc_object_t *p_this, int fd, v_socket_t * ) );
 
-#define net_vaPrintf(a,b,c,d) __net_vaPrintf(VLC_OBJECT(a),b,c,d)
-VLC_EXPORT( int, __net_vaPrintf, ( vlc_object_t *p_this, int fd, const char *psz_fmt, va_list args ) );
+VLC_EXPORT( int, net_Printf, ( vlc_object_t *p_this, int fd, v_socket_t *, const char *psz_fmt, ... ) );
+
+#define net_vaPrintf(a,b,c,d,e) __net_vaPrintf(VLC_OBJECT(a),b,c,d,e)
+VLC_EXPORT( int, __net_vaPrintf, ( vlc_object_t *p_this, int fd, v_socket_t *, const char *psz_fmt, va_list args ) );
 
 #endif

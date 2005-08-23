@@ -2,7 +2,7 @@
  * coreaudio.c: CoreAudio output plugin
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: coreaudio.c 8190 2004-07-15 18:47:32Z hartman $
+ * $Id: coreaudio.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Colin Delacroix <colin@zoy.org>
  *          Jon Lech Johansen <jon-vl@nanocrew.net>
@@ -220,8 +220,11 @@ static OSStatus StreamListener   ( AudioStreamID inStream,
     "then be used by default for audio playback.")
 
 vlc_module_begin();
+    set_shortname( "CoreAudio" );
     set_description( _("CoreAudio output") );
     set_capability( "audio output", 100 );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_AOUT );
     set_callbacks( Open, Close );
     add_integer( "coreaudio-dev", -1, NULL, ADEV_TEXT, ADEV_LONGTEXT, VLC_FALSE ); 
 vlc_module_end();

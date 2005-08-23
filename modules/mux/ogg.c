@@ -2,7 +2,7 @@
  * ogg.c: ogg muxer module for vlc
  *****************************************************************************
  * Copyright (C) 2001, 2002 VideoLAN
- * $Id: ogg.c 8566 2004-08-29 11:42:43Z gbazin $
+ * $Id: ogg.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -49,6 +49,8 @@ static void Close  ( vlc_object_t * );
 vlc_module_begin();
     set_description( _("Ogg/ogm muxer") );
     set_capability( "sout mux", 10 );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_MUX );
     add_shortcut( "ogg" );
     add_shortcut( "ogm" );
     set_callbacks( Open, Close );
@@ -345,6 +347,7 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
         case VLC_FOURCC( 'W', 'M', 'V', '2' ):
         case VLC_FOURCC( 'W', 'M', 'V', '3' ):
         case VLC_FOURCC( 'S', 'N', 'O', 'W' ):
+        case VLC_FOURCC( 'd', 'r', 'a', 'c' ):
             p_stream->p_oggds_header = malloc( sizeof(oggds_header_t) );
             memset( p_stream->p_oggds_header, 0, sizeof(oggds_header_t) );
             p_stream->p_oggds_header->i_packet_type = PACKET_TYPE_HEADER;

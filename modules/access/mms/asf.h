@@ -2,7 +2,7 @@
  * asf.h: MMS access plug-in
  *****************************************************************************
  * Copyright (C) 2001-2004 VideoLAN
- * $Id: asf.h 7903 2004-06-05 21:53:24Z fenrir $
+ * $Id: asf.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -130,4 +130,18 @@ static const guid_t asf_object_bitrate_mutual_exclusion_guid =
     { 0x90,0x34,0x00,0xA0,0xC9,0x03,0x49,0xBE }
 };
 
+static const guid_t asf_object_extended_stream_properties_guid =
+{
+    0x14E6A5CB,
+    0xC672,
+    0x4332,
+    { 0x83, 0x99, 0xA9, 0x69, 0x52, 0x06, 0x5B, 0x5A }
+};
 
+static const guid_t asf_object_header_extension_guid =
+{
+    0x5FBF03B5,
+    0xA92E,
+    0x11CF,
+    { 0x8E, 0xE3, 0x00, 0xC0, 0x0C, 0x20, 0x53, 0x65 }
+};

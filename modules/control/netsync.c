@@ -2,7 +2,7 @@
  * netsync.c: synchronisation between several network clients.
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: netsync.c 9087 2004-10-30 15:32:56Z gbazin $
+ * $Id: netsync.c 10112 2005-03-03 06:58:04Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -87,7 +87,10 @@ static mtime_t GetClockRef( intf_thread_t *, mtime_t );
   "the master client used for the network synchronisation." )
 
 vlc_module_begin();
+    set_shortname( _("Netsync"));
     set_description( _("Network synchronisation") );
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_CONTROL );
 
     add_bool( "netsync-master", 0, NULL,
               NETSYNC_TEXT, NETSYNC_LONGTEXT, VLC_TRUE );

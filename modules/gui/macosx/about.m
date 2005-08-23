@@ -1,8 +1,8 @@
 /*****************************************************************************
  * about.m: MacOS X About Panel
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: about.m 7090 2004-03-15 19:33:18Z bigben $
+ * Copyright (C) 2001-2005 VideoLAN
+ * $Id: about.m 10045 2005-02-23 13:53:28Z hartman $
  *
  * Authors: Derk-Jan Hartman <thedj@users.sourceforge.net>
  *
@@ -50,14 +50,17 @@ static VLAboutBox *_o_sharedInstance = nil;
     return _o_sharedInstance;
 }
 
-- (IBAction)showPanel:(id)sender
+- (void)showPanel
 {    
     if (!o_credits_path)
     {
         NSString *o_name;
         NSString *o_version;
         NSString *o_thanks_path;
-    
+        
+		/* Load the needed nib-file */
+		[NSBundle loadNibNamed:@"About" owner:self];
+		
         /* Get the info dictionary (Info.plist) */
         o_info_dict = [[NSBundle mainBundle] infoDictionary];
         

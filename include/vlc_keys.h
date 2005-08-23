@@ -2,7 +2,7 @@
  * hotkeys.h: keycode defines
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: vlc_keys.h 8966 2004-10-10 10:08:44Z ipkiss $
+ * $Id: vlc_keys.h 10816 2005-04-26 07:28:07Z fenrir $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -49,14 +49,16 @@
 #define KEY_F12              0x00120000
 #define KEY_HOME             0x00130000
 #define KEY_END              0x00140000
-#define KEY_MENU             0x00150000
-#define KEY_ESC              0x00160000
-#define KEY_PAGEUP           0x00170000
-#define KEY_PAGEDOWN         0x00180000
-#define KEY_TAB              0x00190000
-#define KEY_BACKSPACE        0x001A0000
-#define KEY_MOUSEWHEELUP     0x001B0000
-#define KEY_MOUSEWHEELDOWN   0x001C0000
+#define KEY_INSERT           0x00150000
+#define KEY_DELETE           0x00160000
+#define KEY_MENU             0x00170000
+#define KEY_ESC              0x00180000
+#define KEY_PAGEUP           0x00190000
+#define KEY_PAGEDOWN         0x001A0000
+#define KEY_TAB              0x001B0000
+#define KEY_BACKSPACE        0x001C0000
+#define KEY_MOUSEWHEELUP     0x001D0000
+#define KEY_MOUSEWHEELDOWN   0x001E0000
 
 #define KEY_ASCII            0x0000007F
 #define KEY_UNSET            0
@@ -101,6 +103,8 @@ static const struct key_descriptor_s vlc_keys[] =
     { "F12", KEY_F12 },
     { "Home", KEY_HOME },
     { "End", KEY_END },
+    { "Insert", KEY_INSERT },
+    { "Delete", KEY_DELETE },
     { "Menu", KEY_MENU },
     { "Esc", KEY_ESC },
     { "Page Up", KEY_PAGEUP },
@@ -232,5 +236,10 @@ static inline int StringToKey( char *psz_key )
 #define ACTIONID_HISTORY_FORWARD       49
 #define ACTIONID_AUDIO_TRACK           50
 #define ACTIONID_SUBTITLE_TRACK        51
+#define ACTIONID_CUBESPEED_UP          52
+#define ACTIONID_CUBESPEED_DOWN        53
 #define ACTIONID_INTF_SHOW             52
-
+#define ACTIONID_AUDIODELAY_UP         53
+#define ACTIONID_AUDIODELAY_DOWN       54
+#define ACTIONID_SNAPSHOT              55
+#define ACTIONID_RECORD                56

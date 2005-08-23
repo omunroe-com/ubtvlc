@@ -2,7 +2,7 @@
  * real.c: Real demuxer.
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: real.c 9014 2004-10-18 23:05:30Z hartman $
+ * $Id: real.c 10150 2005-03-05 17:54:19Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -38,6 +38,8 @@ static void Close  ( vlc_object_t * );
 vlc_module_begin();
     set_description( _("Real demuxer" ) );
     set_capability( "demux2", 15 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_callbacks( Open, Close );
     add_shortcut( "real" );
     add_shortcut( "rm" );
@@ -90,16 +92,8 @@ static int Open( vlc_object_t *p_this )
 
     uint8_t     *p_peek;
 
-    if( stream_Peek( p_demux->s, &p_peek, 10 ) < 10 )
-    {
-        msg_Err( p_demux, "cannot peek" );
-        return VLC_EGENERIC;
-    }
-    if( strncmp( p_peek, ".RMF", 4 ) )
-    {
-        msg_Warn( p_demux, "Real module discarded" );
-        return VLC_EGENERIC;
-    }
+    if( stream_Peek( p_demux->s, &p_peek, 10 ) < 10 ) return VLC_EGENERIC;
+    if( strncmp( p_peek, ".RMF", 4 ) ) return VLC_EGENERIC;
 
     /* Fill p_demux field */
     p_demux->pf_demux = Demux;

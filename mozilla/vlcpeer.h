@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlcpeer.h: scriptable peer descriptor
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: vlcpeer.h 8839 2004-09-28 13:55:00Z zorglub $
+ * Copyright (C) 2002-2005 VideoLAN
+ * $Id: vlcpeer.h 11326 2005-06-07 00:01:41Z dionoea $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -31,6 +31,20 @@ class VlcPeer : public VlcIntf, public ClassInfo
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_VLCINTF
+
+    // These flags are used by the DOM and security systems to signal that
+    // JavaScript callers are allowed to call this object's scriptable methods.
+    NS_IMETHOD GetFlags(PRUint32 *aFlags)
+    {
+        *aFlags = nsIClassInfo::PLUGIN_OBJECT | nsIClassInfo::DOM_OBJECT;
+        return NS_OK;
+    }
+
+    NS_IMETHOD GetImplementationLanguage(PRUint32 *aImplementationLanguage)
+    {
+        *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
+        return NS_OK;
+    }
 
              VlcPeer();
              VlcPeer( VlcPlugin * );
