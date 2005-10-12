@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout_window.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: vout_window.hpp 7259 2004-04-03 11:30:26Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: vout_window.hpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -30,24 +30,18 @@ class OSGraphics;
 
 
 /// Class to handle a video output window
-class VoutWindow: public GenericWindow
+class VoutWindow: private GenericWindow
 {
     public:
         VoutWindow( intf_thread_t *pIntf, int xPos, int yPos,
                     bool dragDrop, bool playOnDrop, GenericWindow &rParent );
         virtual ~VoutWindow();
 
-        /// These methods are redefined here to make them public
+        /// Make some functions public
         //@{
-        /// Show the window
-        virtual void show() { GenericWindow::show(); }
-
-        /// Hide the window
-        virtual void hide() { GenericWindow::hide(); }
-
-        /// Move the window
-        virtual void move( int left, int top )
-            { GenericWindow::move( left, top ); }
+        using GenericWindow::show;
+        using GenericWindow::hide;
+        using GenericWindow::move;
         //@}
 
         /// Resize the window
@@ -55,6 +49,8 @@ class VoutWindow: public GenericWindow
 
         /// Refresh an area of the window
         virtual void refresh( int left, int top, int width, int height );
+
+        virtual string getType() const { return "Vout"; }
 
     private:
         /// Image when there is no video

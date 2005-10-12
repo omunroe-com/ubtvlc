@@ -1,8 +1,8 @@
 /*****************************************************************************
  * svgalib.c : SVGAlib plugin for vlc
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: svgalib.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: svgalib.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -50,6 +50,9 @@ static void SetPalette( vout_thread_t *, uint16_t *, uint16_t *, uint16_t * );
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+    set_shortname( "SVGAlib" );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VOUT );
     set_description( _("SVGAlib video output") );
     set_capability( "video output", 0 );
     set_callbacks( Create, Destroy );

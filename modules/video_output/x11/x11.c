@@ -1,8 +1,8 @@
 /*****************************************************************************
  * x11.c : X11 plugin for vlc
  *****************************************************************************
- * Copyright (C) 1998-2001 VideoLAN
- * $Id: x11.c 7522 2004-04-27 16:35:15Z sam $
+ * Copyright (C) 1998-2001 the VideoLAN team
+ * $Id: x11.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -64,6 +64,9 @@ extern void E_(Deactivate) ( vlc_object_t * );
     "set it to 0 for first screen, 1 for the second.")
 
 vlc_module_begin();
+    set_shortname( "X11" );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VOUT );
     add_string( "x11-display", NULL, NULL, DISPLAY_TEXT, DISPLAY_LONGTEXT, VLC_TRUE );
     add_bool( "x11-altfullscreen", 0, NULL, ALT_FS_TEXT, ALT_FS_LONGTEXT, VLC_TRUE );
 #ifdef HAVE_SYS_SHM_H
@@ -73,7 +76,7 @@ vlc_module_begin();
     add_integer ( "x11-xineramascreen", 0, NULL, SCREEN_TEXT, SCREEN_LONGTEXT, VLC_TRUE );
 #endif
     set_description( _("X11 video output") );
-    set_capability( "video output", 50 );
+    set_capability( "video output", 70 );
     set_callbacks( E_(Activate), E_(Deactivate) );
 vlc_module_end();
 

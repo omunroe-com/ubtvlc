@@ -1,8 +1,8 @@
 /*****************************************************************************
  * charset.h: Determine a canonical name for the current locale's character encoding.
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: charset.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003-2005 the VideoLAN team
+ * $Id: charset.h 12037 2005-08-05 19:25:38Z massiot $
  *
  * Author: Derk-Jan Hartman <thedj at users.sourceforge.net>
  *
@@ -26,6 +26,12 @@ extern "C" {
 # endif
 
 VLC_EXPORT( vlc_bool_t, vlc_current_charset, ( char ** ) );
+VLC_EXPORT( void, LocaleFree, ( const char * ) );
+VLC_EXPORT( char *, FromLocale, ( const char * ) );
+VLC_EXPORT( char *, ToLocale, ( const char * ) );
+VLC_EXPORT( char *, EnsureUTF8, ( char * ) );
+VLC_EXPORT( char *, __vlc_fix_readdir_charset, ( vlc_object_t *, const char * ) );
+#define vlc_fix_readdir_charset(a,b) __vlc_fix_readdir_charset(VLC_OBJECT(a),b)
 
 # ifdef __cplusplus
 }

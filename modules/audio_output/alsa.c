@@ -1,8 +1,8 @@
 /*****************************************************************************
  * alsa.c : alsa plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000-2001 VideoLAN
- * $Id: alsa.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2000-2001 the VideoLAN team
+ * $Id: alsa.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Henri Fallon <henri@videolan.org> - Original Author
  *          Jeffrey Baker <jwbaker@acm.org> - Port to ALSA 1.0 API
@@ -91,14 +91,26 @@ static void Close        ( vlc_object_t * );
 static void Play         ( aout_instance_t * );
 static int  ALSAThread   ( aout_instance_t * );
 static void ALSAFill     ( aout_instance_t * );
+static int FindDevicesCallback( vlc_object_t *p_this, char const *psz_name,
+                                vlc_value_t newval, vlc_value_t oldval, void *p_unused );
 
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
+static char *ppsz_devices[] = { "default" };
+static char *ppsz_devices_text[] = { N_("Default") };
 vlc_module_begin();
+    set_shortname( "ALSA" );
     set_description( _("ALSA audio output") );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_AOUT );
     add_string( "alsadev", DEFAULT_ALSA_DEVICE, aout_FindAndRestart,
                 N_("ALSA Device Name"), NULL, VLC_FALSE );
+        change_string_list( ppsz_devices, ppsz_devices_text, FindDevicesCallback );
+        change_action_add( FindDevicesCallback, N_("Refresh list") );
+
+
+
     set_capability( "audio output", 150 );
     set_callbacks( Open, Close );
 vlc_module_end();
@@ -198,6 +210,21 @@ static void Probe( aout_instance_t * p_aout,
             --i_channels;
         }
 
+        /* Special case for mono on stereo only boards */
+        i_channels = aout_FormatNbChannels( &p_aout->output.output );        
+        var_Change( p_aout, "audio-device", VLC_VAR_CHOICESCOUNT, &val, NULL );
+        if( val.i_int <= 0 && i_channels == 1 )
+        {
+            if ( !snd_pcm_hw_params_test_channels( p_sys->p_snd_pcm, p_hw, 2 ))
+            {
+                val.i_int = AOUT_VAR_STEREO;
+                text.psz_string = N_("Stereo");
+                var_Change( p_aout, "audio-device",
+                            VLC_VAR_ADDCHOICE, &val, &text );
+                var_Set( p_aout, "audio-device", val );
+            }
+        }
+        
         /* Close the previously opened device */
         snd_pcm_close( p_sys->p_snd_pcm );
     }
@@ -234,6 +261,7 @@ static void Probe( aout_instance_t * p_aout,
     if( val.i_int <= 0 )
     {
         /* Probe() has failed. */
+        msg_Dbg( p_aout, "failed to find a useable alsa configuration" );
         var_Destroy( p_aout, "audio-device" );
         return;
     }
@@ -274,6 +302,7 @@ static int Open( vlc_object_t *p_this )
     snd_pcm_sw_params_t *p_sw;
 
     int i_snd_rc = -1;
+    unsigned int i_old_rate;
 
     /* Allocate structures */
     p_aout->output.p_sys = p_sys = malloc( sizeof( aout_sys_t ) );
@@ -491,18 +520,21 @@ static int Open( vlc_object_t *p_this )
     }
 
     /* Set rate. */
+    i_old_rate = p_aout->output.output.i_rate;
 #ifdef HAVE_ALSA_NEW_API
-    if ( ( i_snd_rc = snd_pcm_hw_params_set_rate_near( p_sys->p_snd_pcm, p_hw,
-                                &p_aout->output.output.i_rate, NULL ) ) < 0 )
+    i_snd_rc = snd_pcm_hw_params_set_rate_near( p_sys->p_snd_pcm, p_hw,
+                                                &p_aout->output.output.i_rate,
+                                                NULL );
 #else
-    if ( ( i_snd_rc = snd_pcm_hw_params_set_rate_near( p_sys->p_snd_pcm, p_hw,
-                                p_aout->output.output.i_rate, NULL ) ) < 0 )
+    i_snd_rc = snd_pcm_hw_params_set_rate_near( p_sys->p_snd_pcm, p_hw,
+                                                p_aout->output.output.i_rate,
+                                                NULL );
 #endif
+    if( i_snd_rc < 0 || p_aout->output.output.i_rate != i_old_rate )
     {
         msg_Warn( p_aout, "The rate %d Hz is not supported by your hardware. "
-                  "Using %d Hz instead.\n", p_aout->output.output.i_rate,
-                  i_snd_rc );
-        p_aout->output.output.i_rate = i_snd_rc;
+                  "Using %d Hz instead.\n", i_old_rate,
+                  p_aout->output.output.i_rate );
     }
 
     /* Set buffer size. */
@@ -738,8 +770,27 @@ static void ALSAFill( aout_instance_t * p_aout )
 
             snd_pcm_status_get_tstamp( p_status, &ts_next );
             next_date = (mtime_t)ts_next.tv_sec * 1000000 + ts_next.tv_usec;
-            next_date += (mtime_t)snd_pcm_status_get_delay(p_status)
-                * 1000000 / p_aout->output.output.i_rate;
+            if( next_date )
+            {
+                next_date += (mtime_t)snd_pcm_status_get_delay(p_status)
+                        * 1000000 / p_aout->output.output.i_rate;
+            }
+            else
+            {
+                /* With screwed ALSA drivers the timestamp is always zero;
+                 * use another method then */
+                snd_pcm_sframes_t delay;
+                ssize_t i_bytes = 0;
+
+                if( !snd_pcm_delay( p_sys->p_snd_pcm, &delay ) )
+                {
+                    i_bytes = snd_pcm_frames_to_bytes(p_sys->p_snd_pcm, delay);
+                }
+                next_date = mdate() + (mtime_t)i_bytes * 1000000
+                        / p_aout->output.output.i_bytes_per_frame
+                        / p_aout->output.output.i_rate
+                        * p_aout->output.output.i_frame_length;
+            }
         }
 
         p_buffer = aout_OutputNextBuffer( p_aout, next_date,
@@ -765,3 +816,139 @@ static void ALSAFill( aout_instance_t * p_aout )
         aout_BufferFree( p_buffer );
     }
 }
+
+static void GetDevicesForCard(module_config_t *p_item, int i_card);
+static void GetDevices( module_config_t *p_item );
+
+/*****************************************************************************
+ * config variable callback
+ *****************************************************************************/
+static int FindDevicesCallback( vlc_object_t *p_this, char const *psz_name,
+                               vlc_value_t newval, vlc_value_t oldval, void *p_unused )
+{
+    module_config_t *p_item;
+    int i;
+
+    p_item = config_FindConfig( p_this, psz_name );
+    if( !p_item ) return VLC_SUCCESS;
+
+    /* Clear-up the current list */
+    if( p_item->i_list )
+    {
+        /* Keep the first entrie */
+        for( i = 1; i < p_item->i_list; i++ )
+        {
+            free( p_item->ppsz_list[i] );
+            free( p_item->ppsz_list_text[i] );
+        }
+        /* TODO: Remove when no more needed */
+        p_item->ppsz_list[i] = NULL;
+        p_item->ppsz_list_text[i] = NULL;
+    }
+    p_item->i_list = 1;
+
+    GetDevices( p_item );
+
+    /* Signal change to the interface */
+    p_item->b_dirty = VLC_TRUE;
+
+    return VLC_SUCCESS;
+
+}
+
+
+static void GetDevicesForCard(module_config_t *p_item, int i_card)
+{
+    int i_pcm_device = -1;
+    int i_err = 0;
+    snd_pcm_info_t *p_pcm_info;
+    snd_ctl_t *p_ctl;
+    char psz_dev[64];
+    char *psz_card_name;
+    
+    sprintf(psz_dev, "hw:%i", i_card);
+    
+    if (( i_err = snd_ctl_open(&p_ctl, psz_dev, 0)) < 0 )
+    {
+        return;
+    }
+    
+    if ((i_err = snd_card_get_name(i_card, &psz_card_name)) != 0)
+    {
+        psz_card_name = _("Unknown soundcard");
+    }
+
+    snd_pcm_info_alloca(&p_pcm_info);
+
+    for (;;)
+    {
+        char *psz_device, *psz_descr;
+        if ((i_err = snd_ctl_pcm_next_device(p_ctl, &i_pcm_device)) < 0)
+        {
+            i_pcm_device = -1;
+        }
+        if ( i_pcm_device < 0 )
+            break;
+
+        snd_pcm_info_set_device(p_pcm_info, i_pcm_device);
+        snd_pcm_info_set_subdevice(p_pcm_info, 0);
+        snd_pcm_info_set_stream(p_pcm_info, SND_PCM_STREAM_PLAYBACK);
+
+        if ((i_err = snd_ctl_pcm_info(p_ctl, p_pcm_info)) < 0)
+        {
+            if (i_err != -ENOENT)
+            {
+/*                printf("get_devices_for_card(): "
+                         "snd_ctl_pcm_info() "
+                         "failed (%d:%d): %s.\n", i_card,
+                         i_pcm_device, snd_strerror(-i_err));*/
+            }
+            continue;
+        }
+
+        asprintf( &psz_device, "hw:%d,%d", i_card, i_pcm_device );
+        asprintf( &psz_descr, "%s: %s (%s)", psz_card_name,
+                  snd_pcm_info_get_name(p_pcm_info), psz_device );
+
+        p_item->ppsz_list =
+            (char **)realloc( p_item->ppsz_list,
+                              (p_item->i_list + 2) * sizeof(char *) );
+        p_item->ppsz_list_text =
+            (char **)realloc( p_item->ppsz_list_text,
+                              (p_item->i_list + 2) * sizeof(char *) );
+        p_item->ppsz_list[ p_item->i_list ] = psz_device;
+        p_item->ppsz_list_text[ p_item->i_list ] = psz_descr;
+        p_item->i_list++;
+        p_item->ppsz_list[ p_item->i_list ] = NULL;
+        p_item->ppsz_list_text[ p_item->i_list ] = NULL;
+                
+    }
+
+    snd_ctl_close( p_ctl );
+}
+
+
+
+static void GetDevices( module_config_t *p_item )
+{
+    int i_card = -1;
+    int i_err = 0;
+    
+    if ((i_err = snd_card_next(&i_card)) != 0)
+    {
+//        g_warning("snd_next_card() failed: %s", snd_strerror(-err));
+        return;
+    }
+    
+    while (i_card > -1)
+    {
+        GetDevicesForCard(p_item, i_card);
+        if ((i_err = snd_card_next(&i_card)) != 0)
+        {
+//            g_warning("snd_next_card() failed: %s",
+//                  snd_strerror(-err));
+            break;
+        }
+    }
+}
+

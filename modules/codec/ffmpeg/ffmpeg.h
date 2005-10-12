@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ffmpeg.h: decoder using the ffmpeg library
  *****************************************************************************
- * Copyright (C) 2001 VideoLAN
- * $Id: ffmpeg.h 7559 2004-04-29 20:30:24Z gbazin $
+ * Copyright (C) 2001 the VideoLAN team
+ * $Id: ffmpeg.h 11867 2005-07-27 16:55:17Z massiot $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -38,6 +38,7 @@ void E_(InitLibavcodec)( vlc_object_t * );
 int E_(GetFfmpegCodec) ( vlc_fourcc_t, int *, int *, char ** );
 int E_(GetVlcFourcc)   ( int, int *, vlc_fourcc_t *, char ** );
 int E_(GetFfmpegChroma)( vlc_fourcc_t );
+vlc_fourcc_t E_(GetVlcChroma)( int );
 
 /* Video decoder module */
 int  E_( InitVideoDec )( decoder_t *, AVCodecContext *, AVCodec *,
@@ -66,6 +67,12 @@ void E_(CloseAudioEncoder)( vlc_object_t * );
 /* Demux module */
 int  E_(OpenDemux) ( vlc_object_t * );
 void E_(CloseDemux)( vlc_object_t * );
+
+/* Video filter module */
+int  E_(OpenFilter)( vlc_object_t * );
+void E_(CloseFilter)( vlc_object_t * );
+int  E_(OpenDeinterlace)( vlc_object_t * );
+void E_(CloseDeinterlace)( vlc_object_t * );
 
 /* Postprocessing module */
 void *E_(OpenPostproc)( decoder_t *, vlc_bool_t * );
@@ -116,6 +123,10 @@ void E_(ClosePostproc)( decoder_t *, void * );
     "1 - visualize forward predicted MVs of P frames\n" \
     "2 - visualize forward predicted MVs of B frames\n" \
     "4 - visualize backward predicted MVs of B frames" )
+
+#define LOWRES_TEXT N_( "Low resolution decoding" )
+#define LOWRES_LONGTEXT N_( "Will only decode a low resolution version of " \
+    "the video." )
 
 #define LIBAVCODEC_PP_TEXT N_("ffmpeg post processing filter chains")
 /* FIXME (cut/past from ffmpeg */
@@ -175,6 +186,10 @@ void E_(ClosePostproc)( decoder_t *, void * );
 #define ENC_INTERLACE_LONGTEXT N_( "Allows you to enable dedicated " \
   "algorithms for interlaced frames." )
 
+#define ENC_INTERLACE_ME_TEXT N_( "Enable interlaced motion estimation" )
+#define ENC_INTERLACE_ME_LONGTEXT N_( "Allows you to enable interlaced " \
+  "motion estimation algorithms. It requires more CPU." )
+
 #define ENC_PRE_ME_TEXT N_( "Enable pre motion estimation" )
 #define ENC_PRE_ME_LONGTEXT N_( "Allows you to enable the pre motion " \
   "estimation." )
@@ -230,3 +245,37 @@ void E_(ClosePostproc)( decoder_t *, void * );
 #define ENC_TRELLIS_TEXT N_( "Enable trellis quantization" )
 #define ENC_TRELLIS_LONGTEXT N_( "Allows you to enable trellis " \
   "quantization (rate distortion for block coefficients)." )
+
+#define ENC_QSCALE_TEXT N_( "Use fixed video quantizer scale" )
+#define ENC_QSCALE_LONGTEXT N_( "Allows you to specify a fixed video " \
+  "quantizer scale for VBR encoding (accepted values: 0.01 to 255.0)." )
+
+#define ENC_STRICT_TEXT N_( "Strict standard compliance" )
+#define ENC_STRICT_LONGTEXT N_( "Allows you to force a strict standard " \
+  "compliance when encoding (accepted values: -1, 0, 1)." )
+
+#define ENC_LUMI_MASKING_TEXT N_( "Luminance masking" )
+#define ENC_LUMI_MASKING_LONGTEXT N_( "Allows you to raise the quantizer for " \
+  "very bright macroblocks (default: 0.0)." )
+
+#define ENC_DARK_MASKING_TEXT N_( "Darkness masking" )
+#define ENC_DARK_MASKING_LONGTEXT N_( "Allows you to raise the quantizer for " \
+  "very dark macroblocks (default: 0.0)." )
+
+#define ENC_P_MASKING_TEXT N_( "Motion masking" )
+#define ENC_P_MASKING_LONGTEXT N_( "Allows you to raise the quantizer for " \
+  "macroblocks with a high temporal complexity (default: 0.0)." )
+
+#define ENC_BORDER_MASKING_TEXT N_( "Border masking" )
+#define ENC_BORDER_MASKING_LONGTEXT N_( "Allows you to raise the quantizer " \
+  "for macroblocks at the border of the frame (default: 0.0)." )
+
+#define ENC_LUMA_ELIM_TEXT N_( "Luminance elimination" )
+#define ENC_LUMA_ELIM_LONGTEXT N_( "Eliminates luminance blocks when " \
+  "the PSNR isn't much changed (default: 0.0). The H264 specification " \
+  "recommends -4." )
+
+#define ENC_CHROMA_ELIM_TEXT N_( "Chrominance elimination" )
+#define ENC_CHROMA_ELIM_LONGTEXT N_( "Eliminates chrominance blocks when " \
+  "the PSNR isn't much changed (default: 0.0). The H264 specification " \
+  "recommends 7." )

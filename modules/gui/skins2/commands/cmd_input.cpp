@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_input.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_input.cpp 7707 2004-05-17 20:48:39Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_input.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -24,6 +24,7 @@
 
 #include <vlc/aout.h>
 #include "cmd_input.hpp"
+#include "cmd_dialogs.hpp"
 
 
 void CmdPlay::execute()
@@ -34,7 +35,16 @@ void CmdPlay::execute()
         return;
     }
 
-    playlist_Play( pPlaylist );
+    if( pPlaylist->i_size )
+    {
+        playlist_Play( pPlaylist );
+    }
+    else
+    {
+        // If the playlist is empty, open a file requester instead
+        CmdDlgFile cmd( getIntf() );
+        cmd.execute();
+    }
 }
 
 
@@ -97,5 +107,17 @@ void CmdFaster::execute()
 void CmdMute::execute()
 {
     aout_VolumeMute( getIntf(), NULL );
+}
+
+
+void CmdVolumeUp::execute()
+{
+    aout_VolumeUp( getIntf(), 1, NULL );
+}
+
+
+void CmdVolumeDown::execute()
+{
+    aout_VolumeDown( getIntf(), 1, NULL );
 }
 

@@ -66,8 +66,8 @@ EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
 GTK_CONFIG = @GTK_CONFIG@
-HAVE_MPEG4IP_FALSE = @HAVE_MPEG4IP_FALSE@
-HAVE_MPEG4IP_TRUE = @HAVE_MPEG4IP_TRUE@
+HAVE_MPEG4IP_PLUG_FALSE = @HAVE_MPEG4IP_PLUG_FALSE@
+HAVE_MPEG4IP_PLUG_TRUE = @HAVE_MPEG4IP_PLUG_TRUE@
 HAVE_XMMS_FALSE = @HAVE_XMMS_FALSE@
 HAVE_XMMS_TRUE = @HAVE_XMMS_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
@@ -76,14 +76,13 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
-LIBS = 
+LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
-
-LIBTOOL_DEPS = 
+LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
-MPEG4IP_PLAYER_PLUGIN_DIR = @MPEG4IP_PLAYER_PLUGIN_DIR@
+MP4FF_LIBS = @MP4FF_LIBS@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -98,8 +97,6 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
-WITH_MP4V2_FALSE = @WITH_MP4V2_FALSE@
-WITH_MP4V2_TRUE = @WITH_MP4V2_TRUE@
 XMMS_CONFIG = @XMMS_CONFIG@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
@@ -122,6 +119,7 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 exec_prefix = @exec_prefix@
+external_mp4v2 = @external_mp4v2@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
@@ -142,22 +140,30 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 lib_LTLIBRARIES = libfaad.la
-include_HEADERS = ../include/faad.h
+
+include_HEADERS = $(top_srcdir)/include/faad.h \
+                  $(top_srcdir)/include/neaacdec.h
+
+
+libfaad_la_LDFLAGS = -lm
 
 libfaad_la_SOURCES = bits.c cfft.c decoder.c drc.c \
-error.c filtbank.c \
+drm_dec.c error.c filtbank.c \
 ic_predict.c is.c lt_predict.c mdct.c mp4.c ms.c output.c pns.c \
+ps_dec.c ps_syntax.c \
 pulse.c specrec.c syntax.c tns.c hcr.c huffman.c \
 rvlc.c ssr.c ssr_fb.c ssr_ipqf.c common.c \
 sbr_dct.c sbr_e_nf.c sbr_fbt.c sbr_hfadj.c sbr_hfgen.c \
 sbr_huff.c sbr_qmf.c sbr_syntax.c sbr_tf_grid.c sbr_dec.c \
 analysis.h bits.h cfft.h cfft_tab.h common.h \
-decoder.h drc.h error.h fixed.h filtbank.h \
-huffman.h ic_predict.h iq_table.h is.h kbd_win.h lt_predict.h mdct.h mp4.h \
-ms.h output.h pns.h pulse.h rvlc.h sine_win.h ssr.h ssr_fb.h ssr_ipqf.h \
-ssr_win.h specrec.h syntax.h structs.h tns.h \
+decoder.h drc.h drm_dec.h error.h fixed.h filtbank.h \
+huffman.h ic_predict.h iq_table.h is.h kbd_win.h lt_predict.h \
+mdct.h mdct_tab.h mp4.h ms.h output.h pns.h ps_dec.h ps_tables.h \
+pulse.h rvlc.h \
 sbr_dct.h sbr_dec.h sbr_e_nf.h sbr_fbt.h sbr_hfadj.h sbr_hfgen.h \
 sbr_huff.h sbr_noise.h sbr_qmf.h sbr_syntax.h sbr_tf_grid.h \
+sine_win.h specrec.h ssr.h ssr_fb.h ssr_ipqf.h \
+ssr_win.h syntax.h structs.h tns.h \
 sbr_qmf_c.h codebook/hcb.h \
 codebook/hcb_1.h codebook/hcb_2.h codebook/hcb_3.h codebook/hcb_4.h \
 codebook/hcb_5.h codebook/hcb_6.h codebook/hcb_7.h codebook/hcb_8.h \
@@ -170,15 +176,14 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(lib_LTLIBRARIES)
 
-libfaad_la_LDFLAGS =
 libfaad_la_LIBADD =
-am_libfaad_la_OBJECTS = bits.lo cfft.lo decoder.lo drc.lo error.lo \
-	filtbank.lo ic_predict.lo is.lo lt_predict.lo mdct.lo mp4.lo \
-	ms.lo output.lo pns.lo pulse.lo specrec.lo syntax.lo tns.lo \
-	hcr.lo huffman.lo rvlc.lo ssr.lo ssr_fb.lo ssr_ipqf.lo \
-	common.lo sbr_dct.lo sbr_e_nf.lo sbr_fbt.lo sbr_hfadj.lo \
-	sbr_hfgen.lo sbr_huff.lo sbr_qmf.lo sbr_syntax.lo \
-	sbr_tf_grid.lo sbr_dec.lo
+am_libfaad_la_OBJECTS = bits.lo cfft.lo decoder.lo drc.lo drm_dec.lo \
+	error.lo filtbank.lo ic_predict.lo is.lo lt_predict.lo mdct.lo \
+	mp4.lo ms.lo output.lo pns.lo ps_dec.lo ps_syntax.lo pulse.lo \
+	specrec.lo syntax.lo tns.lo hcr.lo huffman.lo rvlc.lo ssr.lo \
+	ssr_fb.lo ssr_ipqf.lo common.lo sbr_dct.lo sbr_e_nf.lo \
+	sbr_fbt.lo sbr_hfadj.lo sbr_hfgen.lo sbr_huff.lo sbr_qmf.lo \
+	sbr_syntax.lo sbr_tf_grid.lo sbr_dec.lo
 libfaad_la_OBJECTS = $(am_libfaad_la_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
@@ -186,18 +191,20 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/bits.Plo ./$(DEPDIR)/cfft.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/common.Plo ./$(DEPDIR)/decoder.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/drc.Plo ./$(DEPDIR)/error.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/filtbank.Plo ./$(DEPDIR)/hcr.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/huffman.Plo ./$(DEPDIR)/ic_predict.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/is.Plo ./$(DEPDIR)/lt_predict.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/mdct.Plo ./$(DEPDIR)/mp4.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/ms.Plo ./$(DEPDIR)/output.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/pns.Plo ./$(DEPDIR)/pulse.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/rvlc.Plo ./$(DEPDIR)/sbr_dct.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/sbr_dec.Plo ./$(DEPDIR)/sbr_e_nf.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/sbr_fbt.Plo ./$(DEPDIR)/sbr_hfadj.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/sbr_hfgen.Plo ./$(DEPDIR)/sbr_huff.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/sbr_qmf.Plo ./$(DEPDIR)/sbr_syntax.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/drc.Plo ./$(DEPDIR)/drm_dec.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/error.Plo ./$(DEPDIR)/filtbank.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/hcr.Plo ./$(DEPDIR)/huffman.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/ic_predict.Plo ./$(DEPDIR)/is.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/lt_predict.Plo ./$(DEPDIR)/mdct.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/mp4.Plo ./$(DEPDIR)/ms.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/output.Plo ./$(DEPDIR)/pns.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/ps_dec.Plo ./$(DEPDIR)/ps_syntax.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/pulse.Plo ./$(DEPDIR)/rvlc.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/sbr_dct.Plo ./$(DEPDIR)/sbr_dec.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/sbr_e_nf.Plo ./$(DEPDIR)/sbr_fbt.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/sbr_hfadj.Plo ./$(DEPDIR)/sbr_hfgen.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/sbr_huff.Plo ./$(DEPDIR)/sbr_qmf.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/sbr_syntax.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/sbr_tf_grid.Plo ./$(DEPDIR)/specrec.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/ssr.Plo ./$(DEPDIR)/ssr_fb.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/ssr_ipqf.Plo ./$(DEPDIR)/syntax.Plo \
@@ -266,6 +273,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/decoder.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drm_dec.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/error.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/filtbank.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hcr.Plo@am__quote@
@@ -278,6 +286,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ms.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/output.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pns.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ps_dec.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ps_syntax.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pulse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rvlc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sbr_dct.Plo@am__quote@

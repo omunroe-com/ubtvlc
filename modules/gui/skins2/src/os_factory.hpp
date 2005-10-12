@@ -1,8 +1,8 @@
 /*****************************************************************************
  * os_factory.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: os_factory.hpp 7327 2004-04-12 14:25:15Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: os_factory.hpp 12207 2005-08-15 15:54:32Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -31,6 +31,7 @@
 #include <list>
 
 class GenericWindow;
+class CmdGeneric;
 class OSBitmap;
 class OSGraphics;
 class OSLoop;
@@ -72,8 +73,11 @@ class OSFactory: public SkinObject
         /// Destroy the instance of OSLoop.
         virtual void destroyOSLoop() = 0;
 
-        /// Instantiate an OSTimer with the given callback
-        virtual OSTimer *createOSTimer( const Callback &rCallback ) = 0;
+        ///
+        virtual void minimize() = 0;
+
+        /// Instantiate an OSTimer with the given command
+        virtual OSTimer *createOSTimer( CmdGeneric &rCmd ) = 0;
 
         /// Instantiate an object OSWindow.
         virtual OSWindow *createOSWindow( GenericWindow &rWindow,

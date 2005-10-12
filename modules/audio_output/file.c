@@ -1,8 +1,8 @@
 /*****************************************************************************
  * file.c : audio output which writes the samples to a file
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: file.c 7522 2004-04-27 16:35:15Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: file.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -108,6 +108,9 @@ static int format_int[] = { VLC_FOURCC('u','8',' ',' '),
 
 vlc_module_begin();
     set_description( N_("File audio output") );
+    set_shortname( _("File") );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_AOUT );
 
     add_string( "audiofile-format", "s16", NULL,
                 FORMAT_TEXT, FORMAT_LONGTEXT, VLC_TRUE );

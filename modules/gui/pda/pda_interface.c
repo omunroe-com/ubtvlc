@@ -920,7 +920,6 @@ create_pda (void)
   comboVideoCodec_items = g_list_append (comboVideoCodec_items, (gpointer) _("mp2v"));
   comboVideoCodec_items = g_list_append (comboVideoCodec_items, (gpointer) _("mp4v"));
   comboVideoCodec_items = g_list_append (comboVideoCodec_items, (gpointer) _("H263"));
-  comboVideoCodec_items = g_list_append (comboVideoCodec_items, (gpointer) _("I263"));
   comboVideoCodec_items = g_list_append (comboVideoCodec_items, (gpointer) _("WMV1"));
   comboVideoCodec_items = g_list_append (comboVideoCodec_items, (gpointer) _("WMV2"));
   gtk_combo_set_popdown_strings (GTK_COMBO (comboVideoCodec), comboVideoCodec_items);
@@ -1347,7 +1346,7 @@ create_pda (void)
   gtk_label_set_justify (GTK_LABEL (labelAuthors), GTK_JUSTIFY_LEFT);
   gtk_label_set_line_wrap (GTK_LABEL (labelAuthors), TRUE);
 
-  labelCopyright = gtk_label_new (_("(c) 1996-2004 the VideoLAN team"));
+  labelCopyright = gtk_label_new (_("(c) 1996-2004 the the VideoLAN team team"));
   gtk_widget_set_name (labelCopyright, "labelCopyright");
   gtk_widget_show (labelCopyright);
   gtk_fixed_put (GTK_FIXED (fixed2), labelCopyright, 16, 48);

@@ -31,7 +31,7 @@ static const unsigned char AMRWB_header [] = "#!AMR-WB\n";
 static int amr_write_header(AVFormatContext *s)
 {
     ByteIOContext *pb = &s->pb;
-    AVCodecContext *enc = &s->streams[0]->codec;
+    AVCodecContext *enc = s->streams[0]->codec;
 
     s->priv_data = NULL;
 
@@ -51,10 +51,9 @@ static int amr_write_header(AVFormatContext *s)
     return 0;
 }
 
-static int amr_write_packet(AVFormatContext *s, int stream_index_ptr,
-                           uint8_t *buf, int size, int force_pts)
+static int amr_write_packet(AVFormatContext *s, AVPacket *pkt)
 {
-    put_buffer(&s->pb, buf, size);
+    put_buffer(&s->pb, pkt->data, pkt->size);
     put_flush_packet(&s->pb);
     return 0;
 }
@@ -101,11 +100,11 @@ static int amr_read_header(AVFormatContext *s,
             return AVERROR_NOMEM;
         }
     
-        st->codec.codec_type = CODEC_TYPE_AUDIO;
-        st->codec.codec_tag = CODEC_ID_AMR_WB;
-        st->codec.codec_id = CODEC_ID_AMR_WB;
-        st->codec.channels = 1;
-        st->codec.sample_rate = 16000;
+        st->codec->codec_type = CODEC_TYPE_AUDIO;
+        st->codec->codec_tag = MKTAG('s', 'a', 'w', 'b');
+        st->codec->codec_id = CODEC_ID_AMR_WB;
+        st->codec->channels = 1;
+        st->codec->sample_rate = 16000;
     }
     else
     {
@@ -115,11 +114,11 @@ static int amr_read_header(AVFormatContext *s,
             return AVERROR_NOMEM;
         }
     
-        st->codec.codec_type = CODEC_TYPE_AUDIO;
-        st->codec.codec_tag = CODEC_ID_AMR_NB;
-        st->codec.codec_id = CODEC_ID_AMR_NB;
-        st->codec.channels = 1;
-        st->codec.sample_rate = 8000;
+        st->codec->codec_type = CODEC_TYPE_AUDIO;
+        st->codec->codec_tag = MKTAG('s', 'a', 'm', 'r');
+        st->codec->codec_id = CODEC_ID_AMR_NB;
+        st->codec->channels = 1;
+        st->codec->sample_rate = 8000;
     }
 
     return 0;
@@ -130,7 +129,7 @@ static int amr_read_header(AVFormatContext *s,
 static int amr_read_packet(AVFormatContext *s,
                           AVPacket *pkt)
 {
-    AVCodecContext *enc = &s->streams[0]->codec;
+    AVCodecContext *enc = s->streams[0]->codec;
 
     if (enc->codec_id == CODEC_ID_AMR_NB)
     {
@@ -141,7 +140,7 @@ static int amr_read_packet(AVFormatContext *s,
     
         if (url_feof(&s->pb))
         {
-            return -EIO;
+            return AVERROR_IO;
         }
     
         toc=get_byte(&s->pb);
@@ -152,10 +151,10 @@ static int amr_read_packet(AVFormatContext *s,
     
         if (av_new_packet(pkt, size+1))
         {
-            return -EIO;
+            return AVERROR_IO;
         }
         pkt->stream_index = 0;
-        
+        pkt->pos= url_ftell(&s->pb);
         pkt->data[0]=toc;
     
         read = get_buffer(&s->pb, pkt->data+1, size);
@@ -163,7 +162,7 @@ static int amr_read_packet(AVFormatContext *s,
         if (read != size)
         {
             av_free_packet(pkt);
-            return -EIO;
+            return AVERROR_IO;
         }
     
         return 0;
@@ -177,7 +176,7 @@ static int amr_read_packet(AVFormatContext *s,
     
         if (url_feof(&s->pb))
         {
-            return -EIO;
+            return AVERROR_IO;
         }
     
         toc=get_byte(&s->pb);
@@ -186,10 +185,11 @@ static int amr_read_packet(AVFormatContext *s,
     
         if ( (size==0) || av_new_packet(pkt, size))
         {
-            return -EIO;
+            return AVERROR_IO;
         }
     
         pkt->stream_index = 0;
+        pkt->pos= url_ftell(&s->pb);
         pkt->data[0]=toc;
     
         read = get_buffer(&s->pb, pkt->data+1, size-1);
@@ -197,14 +197,14 @@ static int amr_read_packet(AVFormatContext *s,
         if (read != (size-1))
         {
             av_free_packet(pkt);
-            return -EIO;
+            return AVERROR_IO;
         }
     
         return 0;
     }
     else
     {
-        return -EIO;
+        return AVERROR_IO;
     }
 }
 

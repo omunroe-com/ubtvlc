@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_radialslider.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_radialslider.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: ctrl_radialslider.cpp 12207 2005-08-15 15:54:32Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -40,8 +40,8 @@ CtrlRadialSlider::CtrlRadialSlider( intf_thread_t *pIntf,
                                     VarBool *pVisible ):
     CtrlGeneric( pIntf, rHelp, pVisible ), m_fsm( pIntf ), m_numImg( numImg ),
     m_rVariable( rVariable ), m_minAngle( minAngle ), m_maxAngle( maxAngle ),
-    m_cmdUpDown( this, &transUpDown ), m_cmdDownUp( this, &transDownUp ),
-    m_cmdMove( this, &transMove ), m_position( 0 ), m_lastPos( 0 )
+    m_cmdUpDown( this ), m_cmdDownUp( this ),
+    m_cmdMove( this )
 {
     // Build the images of the sequence
     OSFactory *pOsFactory = OSFactory::instance( getIntf() );
@@ -101,39 +101,33 @@ void CtrlRadialSlider::draw( OSGraphics &rImage, int xDest, int yDest )
 void CtrlRadialSlider::onUpdate( Subject<VarPercent> &rVariable )
 {
     m_position = (int)( m_rVariable.get() * m_numImg );
-    notifyLayout();
+    notifyLayout( m_width, m_height );
 }
 
 
-void CtrlRadialSlider::transUpDown( SkinObject *pCtrl )
+void CtrlRadialSlider::CmdUpDown::execute()
 {
-    CtrlRadialSlider *pThis = (CtrlRadialSlider*)pCtrl;
-
-    EvtMouse *pEvtMouse = (EvtMouse*)pThis->m_pEvt;
+    EvtMouse *pEvtMouse = (EvtMouse*)m_pParent->m_pEvt;
 
     // Change the position of the cursor, in non-blocking mode
-    pThis->setCursor( pEvtMouse->getXPos(), pEvtMouse->getYPos(), false );
+    m_pParent->setCursor( pEvtMouse->getXPos(), pEvtMouse->getYPos(), false );
 
-    pThis->captureMouse();
+    m_pParent->captureMouse();
 }
 
 
-void CtrlRadialSlider::transDownUp( SkinObject *pCtrl )
+void CtrlRadialSlider::CmdDownUp::execute()
 {
-    CtrlRadialSlider *pThis = (CtrlRadialSlider*)pCtrl;
-
-    pThis->releaseMouse();
+    m_pParent->releaseMouse();
 }
 
 
-void CtrlRadialSlider::transMove( SkinObject *pCtrl )
+void CtrlRadialSlider::CmdMove::execute()
 {
-    CtrlRadialSlider *pThis = (CtrlRadialSlider*)pCtrl;
-
-    EvtMouse *pEvtMouse = (EvtMouse*)pThis->m_pEvt;
+    EvtMouse *pEvtMouse = (EvtMouse*)m_pParent->m_pEvt;
 
     // Change the position of the cursor, in blocking mode
-    pThis->setCursor( pEvtMouse->getXPos(), pEvtMouse->getYPos(), true );
+    m_pParent->setCursor( pEvtMouse->getXPos(), pEvtMouse->getYPos(), true );
 }
 
 
@@ -151,7 +145,7 @@ void CtrlRadialSlider::setCursor( int posX, int posY, bool blocking )
     int y = posY - pPos->getTop() - m_width / 2;
 
     // Compute the polar coordinates. angle is -(-j,OM)
-    float r = sqrt(x*x + y*y);
+    float r = sqrt((float)(x*x + y*y));
     if( r == 0 )
     {
         return;

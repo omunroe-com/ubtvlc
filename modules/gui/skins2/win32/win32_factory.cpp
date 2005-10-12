@@ -1,8 +1,8 @@
 /*****************************************************************************
  * win32_factory.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: win32_factory.cpp 7567 2004-04-30 15:35:56Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: win32_factory.cpp 12207 2005-08-15 15:54:32Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -30,6 +30,7 @@
 #include "win32_window.hpp"
 #include "win32_tooltip.hpp"
 #include "win32_loop.hpp"
+#include "../src/theme.hpp"
 
 
 LRESULT CALLBACK Win32Proc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
@@ -100,13 +101,13 @@ bool Win32Factory::init()
     WNDCLASS skinWindowClass;
     skinWindowClass.style = CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS;
     skinWindowClass.lpfnWndProc = (WNDPROC) Win32Proc;
-    skinWindowClass.lpszClassName = "SkinWindowClass";
+    skinWindowClass.lpszClassName = _T("SkinWindowClass");
     skinWindowClass.lpszMenuName = NULL;
     skinWindowClass.cbClsExtra = 0;
     skinWindowClass.cbWndExtra = 0;
-    skinWindowClass.hbrBackground = HBRUSH (COLOR_WINDOW);
+    skinWindowClass.hbrBackground = NULL;
     skinWindowClass.hCursor = LoadCursor( NULL , IDC_ARROW );
-    skinWindowClass.hIcon = LoadIcon( m_hInst, "VLC_ICON" );
+    skinWindowClass.hIcon = LoadIcon( m_hInst, _T("VLC_ICON") );
     skinWindowClass.hInstance = m_hInst;
 
     // Register class and check it
@@ -116,7 +117,7 @@ bool Win32Factory::init()
 
         // Check why it failed. If it's because the class already exists
         // then fine, otherwise return with an error.
-        if( !GetClassInfo( m_hInst, "SkinWindowClass", &wndclass ) )
+        if( !GetClassInfo( m_hInst, _T("SkinWindowClass"), &wndclass ) )
         {
             msg_Err( getIntf(), "Cannot register window class" );
             return false;
@@ -124,8 +125,9 @@ bool Win32Factory::init()
     }
 
     // Create Window
-    m_hParentWindow = CreateWindowEx( WS_EX_APPWINDOW, "SkinWindowClass",
-        "VLC media player", WS_SYSMENU, -200, -200, 0, 0, 0, 0, m_hInst, 0 );
+    m_hParentWindow = CreateWindowEx( WS_EX_APPWINDOW, _T("SkinWindowClass"),
+        _T("VLC media player"), WS_SYSMENU|WS_POPUP,
+        -200, -200, 0, 0, 0, 0, m_hInst, 0 );
     if( m_hParentWindow == NULL )
     {
         msg_Err( getIntf(), "Cannot create parent window" );
@@ -135,8 +137,8 @@ bool Win32Factory::init()
     // We do it this way otherwise CreateWindowEx will fail
     // if WS_EX_LAYERED is not supported
     SetWindowLongPtr( m_hParentWindow, GWL_EXSTYLE,
-                      GetWindowLong( m_hParentWindow, GWL_EXSTYLE )
-                      | WS_EX_LAYERED );
+                      GetWindowLong( m_hParentWindow, GWL_EXSTYLE ) |
+                      WS_EX_LAYERED );
 
     // Store with it a pointer to the interface thread
     SetWindowLongPtr( m_hParentWindow, GWLP_USERDATA, (LONG_PTR)getIntf() );
@@ -146,12 +148,12 @@ bool Win32Factory::init()
     OleInitialize( NULL );
 
     // We dynamically load msimg32.dll to get a pointer to TransparentBlt()
-    m_hMsimg32 = LoadLibrary( "msimg32.dll" );
+    m_hMsimg32 = LoadLibrary( _T("msimg32.dll") );
     if( !m_hMsimg32 ||
         !( TransparentBlt =
             (BOOL (WINAPI*)(HDC, int, int, int, int,
                             HDC, int, int, int, int, unsigned int))
-            GetProcAddress( m_hMsimg32, "TransparentBlt" ) ) )
+            GetProcAddress( m_hMsimg32, _T("TransparentBlt") ) ) )
     {
         TransparentBlt = NULL;
         msg_Dbg( getIntf(), "Couldn't find TransparentBlt(), "
@@ -161,18 +163,18 @@ bool Win32Factory::init()
         !( AlphaBlend =
             (BOOL (WINAPI*)( HDC, int, int, int, int, HDC, int, int,
                               int, int, BLENDFUNCTION ))
-            GetProcAddress( m_hMsimg32, "AlphaBlend" ) ) )
+            GetProcAddress( m_hMsimg32, _T("AlphaBlend") ) ) )
     {
         AlphaBlend = NULL;
         msg_Dbg( getIntf(), "Couldn't find AlphaBlend()" );
     }
 
     // Idem for user32.dll and SetLayeredWindowAttributes()
-    m_hUser32 = LoadLibrary( "user32.dll" );
+    m_hUser32 = LoadLibrary( _T("user32.dll") );
     if( !m_hUser32 ||
         !( SetLayeredWindowAttributes =
             (BOOL (WINAPI *)(HWND, COLORREF, BYTE, DWORD))
-            GetProcAddress( m_hUser32, "SetLayeredWindowAttributes" ) ) )
+            GetProcAddress( m_hUser32, _T("SetLayeredWindowAttributes") ) ) )
     {
         SetLayeredWindowAttributes = NULL;
         msg_Dbg( getIntf(), "Couldn't find SetLayeredWindowAttributes()" );
@@ -180,9 +182,13 @@ bool Win32Factory::init()
 
     // Initialize the resource path
     m_resourcePath.push_back( (string)getIntf()->p_vlc->psz_homedir +
-                               "\\" + CONFIG_DIR + "\\skins2" );
+                               "\\" + CONFIG_DIR + "\\skins" );
+    m_resourcePath.push_back( (string)getIntf()->p_libvlc->psz_vlcpath +
+                              "\\skins" );
     m_resourcePath.push_back( (string)getIntf()->p_libvlc->psz_vlcpath +
                               "\\skins2" );
+    m_resourcePath.push_back( (string)getIntf()->p_libvlc->psz_vlcpath +
+                              "\\share\\skins" );
     m_resourcePath.push_back( (string)getIntf()->p_libvlc->psz_vlcpath +
                               "\\share\\skins2" );
 
@@ -223,10 +229,17 @@ void Win32Factory::destroyOSLoop()
     Win32Loop::destroy( getIntf() );
 }
 
-
-OSTimer *Win32Factory::createOSTimer( const Callback &rCallback )
+void Win32Factory::minimize()
 {
-    return new Win32Timer( getIntf(), rCallback, m_hParentWindow );
+    /* Make sure no tooltip is visible first */
+    getIntf()->p_sys->p_theme->getWindowManager().hideTooltip();
+
+    ShowWindow( m_hParentWindow, SW_MINIMIZE );
+}
+
+OSTimer *Win32Factory::createOSTimer( CmdGeneric &rCmd )
+{
+    return new Win32Timer( getIntf(), rCmd, m_hParentWindow );
 }
 
 
@@ -342,6 +355,5 @@ void Win32Factory::rmDir( const string &rPath )
     FindClose( handle );
     RemoveDirectory( rPath.c_str() );
 }
-
 
 #endif

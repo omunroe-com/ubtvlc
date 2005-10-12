@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ugly.c : ugly resampler (changes pitch)
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: ugly.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: ugly.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -44,7 +44,9 @@ static void DoWork    ( aout_instance_t *, aout_filter_t *, aout_buffer_t *,
  *****************************************************************************/
 vlc_module_begin();
     set_description( _("audio filter for ugly resampling") );
-    set_capability( "audio filter", 5 );
+    set_capability( "audio filter", 2 );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_MISC );
     set_callbacks( Create, NULL );
 vlc_module_end();
 
@@ -100,7 +102,7 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
 #ifdef HAVE_ALLOCA
     p_in = (int32_t *)alloca( p_in_buf->i_nb_bytes );
 #else
-    p_in = (int32_t *)malloc( p_in_buf->i_nb_bytes );
+    p_in_orig = p_in = (int32_t *)malloc( p_in_buf->i_nb_bytes );
 #endif
     if( p_in == NULL )
     {
@@ -131,4 +133,9 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
     p_out_buf->start_date = p_in_buf->start_date;
     p_out_buf->end_date = p_out_buf->start_date + p_out_buf->i_nb_samples *
         1000000 / p_filter->output.i_rate;
+
+#ifndef HAVE_ALLOCA
+    free( p_in_orig );
+#endif
+
 }

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * interpreter.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: interpreter.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: interpreter.hpp 12281 2005-08-20 00:31:27Z dionoea $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -31,6 +31,7 @@
 class Theme;
 class VarBool;
 class VarList;
+class VarTree;
 class VarPercent;
 
 
@@ -58,6 +59,9 @@ class Interpreter: public SkinObject
 
         /// Returns the list variable corresponding to the given name
         VarList *getVarList( const string &rName, Theme *pTheme );
+
+        /// Returns the tree variable corresponding to the given name
+        VarTree *getVarTree( const string &rName, Theme *pTheme );
 
     private:
         /// Map of global commands

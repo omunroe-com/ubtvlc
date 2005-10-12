@@ -1,8 +1,8 @@
 /*****************************************************************************
  * transform.c : transform image module for vlc
  *****************************************************************************
- * Copyright (C) 2000-2004 VideoLAN
- * $Id: transform.c 7453 2004-04-23 20:01:59Z gbazin $
+ * Copyright (C) 2000-2004 the VideoLAN team
+ * $Id: transform.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -64,7 +64,10 @@ static char *type_list_text[] = { N_("Rotate by 90 degrees"),
 
 vlc_module_begin();
     set_description( _("Video transformation filter") );
+    set_shortname( N_("Transformation"));
     set_capability( "video filter", 0 );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VFILTER );
 
     add_string( "transform-type", "90", NULL,
                           TYPE_TEXT, TYPE_LONGTEXT, VLC_FALSE);
@@ -177,6 +180,7 @@ static int Init( vout_thread_t *p_vout )
 {
     int i_index;
     picture_t *p_pic;
+    video_format_t fmt = {0};
 
     I_OUTPUTPICTURES = 0;
 
@@ -186,23 +190,31 @@ static int Init( vout_thread_t *p_vout )
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
 
+    fmt.i_width = fmt.i_visible_width = p_vout->render.i_width;
+    fmt.i_height = fmt.i_visible_height = p_vout->render.i_height;
+    fmt.i_x_offset = fmt.i_y_offset = 0;
+    fmt.i_chroma = p_vout->render.i_chroma;
+    fmt.i_aspect = p_vout->render.i_aspect;
+    fmt.i_sar_num = p_vout->render.i_aspect * fmt.i_height / fmt.i_width;
+    fmt.i_sar_den = VOUT_ASPECT_FACTOR;
+
     /* Try to open the real video output */
     msg_Dbg( p_vout, "spawning the real video output" );
 
     if( p_vout->p_sys->b_rotation )
     {
-        p_vout->p_sys->p_vout = vout_Create( p_vout,
-                           p_vout->render.i_height, p_vout->render.i_width,
-                           p_vout->render.i_chroma,
-                           (uint64_t)VOUT_ASPECT_FACTOR
-                            * (uint64_t)VOUT_ASPECT_FACTOR
-                            / (uint64_t)p_vout->render.i_aspect );
+        fmt.i_width = fmt.i_visible_width = p_vout->render.i_height;
+        fmt.i_height = fmt.i_visible_height = p_vout->render.i_width;
+        fmt.i_aspect = VOUT_ASPECT_FACTOR *
+            (uint64_t)VOUT_ASPECT_FACTOR / p_vout->render.i_aspect;
+        fmt.i_sar_num = VOUT_ASPECT_FACTOR;
+        fmt.i_sar_den = p_vout->render.i_aspect * fmt.i_height / fmt.i_width;
+
+        p_vout->p_sys->p_vout = vout_Create( p_vout, &fmt );
     }
     else
     {
-        p_vout->p_sys->p_vout = vout_Create( p_vout,
-                           p_vout->render.i_width, p_vout->render.i_height,
-                           p_vout->render.i_chroma, p_vout->render.i_aspect );
+        p_vout->p_sys->p_vout = vout_Create( p_vout, &fmt );
     }
 
     /* Everything failed */
@@ -245,9 +257,12 @@ static void Destroy( vlc_object_t *p_this )
 {
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
 
-    DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
-    vlc_object_detach( p_vout->p_sys->p_vout );
-    vout_Destroy( p_vout->p_sys->p_vout );
+    if( p_vout->p_sys->p_vout )
+    {
+        DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
+        vlc_object_detach( p_vout->p_sys->p_vout );
+        vout_Destroy( p_vout->p_sys->p_vout );
+    }
 
     DEL_PARENT_CALLBACKS( SendEventsToChild );
 
@@ -290,8 +305,9 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
                 uint8_t *p_in = p_pic->p[i_index].p_pixels;
 
                 uint8_t *p_out = p_outpic->p[i_index].p_pixels;
-                uint8_t *p_out_end = p_out + p_outpic->p[i_index].i_lines
-                                              * p_outpic->p[i_index].i_pitch;
+                uint8_t *p_out_end = p_out +
+                    p_outpic->p[i_index].i_visible_lines *
+                    p_outpic->p[i_index].i_pitch;
 
                 for( ; p_out < p_out_end ; )
                 {
@@ -299,7 +315,8 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
 
                     p_out_end -= p_outpic->p[i_index].i_pitch
                                   - p_outpic->p[i_index].i_visible_pitch;
-                    p_line_end = p_in + p_pic->p[i_index].i_lines * i_pitch;
+                    p_line_end = p_in + p_pic->p[i_index].i_visible_lines *
+                        i_pitch;
 
                     for( ; p_in < p_line_end ; )
                     {
@@ -316,7 +333,7 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
             for( i_index = 0 ; i_index < p_pic->i_planes ; i_index++ )
             {
                 uint8_t *p_in = p_pic->p[i_index].p_pixels;
-                uint8_t *p_in_end = p_in + p_pic->p[i_index].i_lines
+                uint8_t *p_in_end = p_in + p_pic->p[i_index].i_visible_lines
                                             * p_pic->p[i_index].i_pitch;
 
                 uint8_t *p_out = p_outpic->p[i_index].p_pixels;
@@ -347,14 +364,16 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
                 uint8_t *p_in = p_pic->p[i_index].p_pixels;
 
                 uint8_t *p_out = p_outpic->p[i_index].p_pixels;
-                uint8_t *p_out_end = p_out + p_outpic->p[i_index].i_lines
-                                              * p_outpic->p[i_index].i_pitch;
+                uint8_t *p_out_end = p_out +
+                    p_outpic->p[i_index].i_visible_lines *
+                    p_outpic->p[i_index].i_pitch;
 
                 for( ; p_out < p_out_end ; )
                 {
                     uint8_t *p_in_end;
 
-                    p_in_end = p_in + p_pic->p[i_index].i_lines * i_pitch;
+                    p_in_end = p_in + p_pic->p[i_index].i_visible_lines *
+                        i_pitch;
 
                     for( ; p_in < p_in_end ; )
                     {
@@ -373,7 +392,7 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
             for( i_index = 0 ; i_index < p_pic->i_planes ; i_index++ )
             {
                 uint8_t *p_in = p_pic->p[i_index].p_pixels;
-                uint8_t *p_in_end = p_in + p_pic->p[i_index].i_lines
+                uint8_t *p_in_end = p_in + p_pic->p[i_index].i_visible_lines
                                             * p_pic->p[i_index].i_pitch;
 
                 uint8_t *p_out = p_outpic->p[i_index].p_pixels;
@@ -392,7 +411,7 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
             for( i_index = 0 ; i_index < p_pic->i_planes ; i_index++ )
             {
                 uint8_t *p_in = p_pic->p[i_index].p_pixels;
-                uint8_t *p_in_end = p_in + p_pic->p[i_index].i_lines
+                uint8_t *p_in_end = p_in + p_pic->p[i_index].i_visible_lines
                                             * p_pic->p[i_index].i_pitch;
 
                 uint8_t *p_out = p_outpic->p[i_index].p_pixels;

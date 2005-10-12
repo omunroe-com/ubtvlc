@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_es.h: Elementary stream formats descriptions
  *****************************************************************************
- * Copyright (C) 1999-2001 VideoLAN
- * $Id: vlc_es.h 7234 2004-04-02 00:06:09Z fenrir $
+ * Copyright (C) 1999-2001 the VideoLAN team
+ * $Id: vlc_es.h 12307 2005-08-20 19:14:58Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -31,15 +31,13 @@
 
 /**
  * video palette data
- * \see viedo_format_t
+ * \see video_format_t
  * \see subs_format_t
  */
 struct video_palette_t
 {
-    int i_dummy; /**< to keep the compatibility with ffmpeg's palette */
-
-    uint32_t palette[256]; /**< 4-byte ARGB palette entries, stored in native
-                            * byte order */
+    int i_entries;      /**< to keep the compatibility with ffmpeg's palette */
+    uint8_t palette[256][4];                   /**< 4-byte RGBA/YUVA palette */
 };
 
 /**
@@ -63,7 +61,7 @@ struct audio_format_t
     unsigned int i_bytes_per_frame;
 
     /* Number of sampleframes contained in one compressed frame. */
-    unsigned int        i_frame_length;
+    unsigned int i_frame_length;
     /* Please note that it may be completely arbitrary - buffers are not
      * obliged to contain a integral number of so-called "frames". It's
      * just here for the division :
@@ -75,6 +73,14 @@ struct audio_format_t
     int i_blockalign;
     int i_bitspersample;
 };
+
+#ifdef WORDS_BIGENDIAN
+#   define AUDIO_FMT_S16_NE VLC_FOURCC('s','1','6','b')
+#   define AUDIO_FMT_U16_NE VLC_FOURCC('u','1','6','b')
+#else
+#   define AUDIO_FMT_S16_NE VLC_FOURCC('s','1','6','l')
+#   define AUDIO_FMT_U16_NE VLC_FOURCC('u','1','6','l')
+#endif
 
 /**
  * video format description
@@ -93,9 +99,13 @@ struct video_format_t
 
     unsigned int i_bits_per_pixel;             /**< number of bits per pixel */
 
+    unsigned int i_sar_num;                   /**< sample/pixel aspect ratio */
+    unsigned int i_sar_den;
+
     unsigned int i_frame_rate;                     /**< frame rate numerator */
     unsigned int i_frame_rate_base;              /**< frame rate denominator */
 
+    int i_rmask, i_gmask, i_bmask;          /**< color masks for RGB chroma */
     video_palette_t *p_palette;              /**< video palette from demuxer */
 };
 
@@ -104,12 +114,23 @@ struct video_format_t
  */
 struct subs_format_t
 {
+    /* the character encoding of the text of the subtitle.
+     * all gettext recognized shorts can be used */
     char *psz_encoding;
+
+
+    int  i_x_origin; /**< x coordinate of the subtitle. 0 = left */
+    int  i_y_origin; /**< y coordinate of the subtitle. 0 = top */
 
     struct
     {
-        /* FIXME */
+        /*  */
         uint32_t palette[16+1];
+
+        /* the width of the original movie the spu was extracted from */
+        int i_original_frame_width;
+        /* the height of the original movie the spu was extracted from */
+        int i_original_frame_height;
     } spu;
 
     struct
@@ -142,7 +163,7 @@ struct es_format_t
     video_format_t video;
     subs_format_t  subs;
 
-    int            i_bitrate;
+    unsigned int   i_bitrate;
 
     vlc_bool_t     b_packetized; /* wether the data is packetized
                                     (ie. not truncated) */
@@ -203,8 +224,10 @@ static inline void es_format_Copy( es_format_t *dst, es_format_t *src )
 
     if( src->video.p_palette )
     {
-        dst->video.p_palette = (video_palette_t*)malloc( sizeof( video_palette_t ) );
-        memcpy( dst->video.p_palette, src->video.p_palette, sizeof( video_palette_t ) );
+        dst->video.p_palette =
+            (video_palette_t*)malloc( sizeof( video_palette_t ) );
+        memcpy( dst->video.p_palette, src->video.p_palette,
+                sizeof( video_palette_t ) );
     }
 }
 

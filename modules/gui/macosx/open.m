@@ -1,12 +1,13 @@
 /*****************************************************************************
  * open.m: MacOS X module for vlc
  *****************************************************************************
- * Copyright (C) 2002-2003 VideoLAN
- * $Id: open.m 7090 2004-03-15 19:33:18Z bigben $
+ * Copyright (C) 2002-2005 the VideoLAN team
+ * $Id: open.m 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net> 
  *          Christophe Massiot <massiot@via.ecp.fr>
  *          Derk-Jan Hartman <thedj@users.sourceforge.net>
+ *          Benjamin Pracht <bigben at videolan dot org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -128,9 +129,27 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
  *****************************************************************************/
 @implementation VLCOpen
 
+static VLCOpen *_o_sharedMainInstance = nil;
+
++ (VLCOpen *)sharedInstance
+{
+    return _o_sharedMainInstance ? _o_sharedMainInstance : [[self alloc] init];
+}
+
+- (id)init
+{
+    if( _o_sharedMainInstance) {
+        [self dealloc];
+    } else {
+        _o_sharedMainInstance = [super init];
+    }
+    
+    return _o_sharedMainInstance;
+}
+
 - (void)awakeFromNib
 {
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
 
     [o_panel setTitle: _NS("Open Source")];
     [o_mrl_lbl setTitle: _NS("Media Resource Locator (MRL)")];
@@ -163,21 +182,15 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
 
     [[o_net_mode cellAtRow:0 column:0] setTitle: _NS("UDP/RTP")];
     [[o_net_mode cellAtRow:1 column:0] setTitle: _NS("UDP/RTP Multicast")];
-    [[o_net_mode cellAtRow:2 column:0] setTitle: _NS("HTTP/FTP/MMS")];
+    [[o_net_mode cellAtRow:2 column:0] setTitle: _NS("HTTP/FTP/MMS/RTSP")];
+    [o_net_timeshift_ckbox setTitle: _NS("Allow timeshifting")];
 
     [o_net_udp_port setIntValue: config_GetInt( p_intf, "server-port" )];
     [o_net_udp_port_stp setIntValue: config_GetInt( p_intf, "server-port" )];
 
-    [o_file_sub_ckbox setTitle: _NS("Load subtitles file:")];
-    [o_file_sub_btn_settings setTitle: _NS("Settings...")];
-    [o_file_sub_btn_browse setTitle: _NS("Browse...")];
-    [o_file_sub_override setTitle: _NS("Override")];
-    [o_file_sub_delay_lbl setStringValue: _NS("delay")];
-    [o_file_sub_delay_stp setEnabled: NO];
-    [o_file_sub_fps_lbl setStringValue: _NS("fps")];
-    [o_file_sub_fps_stp setEnabled: NO];
-    [o_file_sub_ok_btn setStringValue: _NS("OK")];
-    
+    [self setSubPanel];
+
+
     [[NSNotificationCenter defaultCenter] addObserver: self
         selector: @selector(openFilePathChanged:)
         name: NSControlTextDidChangeNotification
@@ -218,6 +231,76 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
         object: o_net_http_url];
 }
 
+- (void)setSubPanel
+{
+    intf_thread_t * p_intf = VLCIntf;
+    int i_index;
+    module_config_t * p_item;
+
+    [o_file_sub_ckbox setTitle: _NS("Load subtitles file:")];
+    [o_file_sub_btn_settings setTitle: _NS("Settings...")];
+    [o_file_sub_btn_browse setTitle: _NS("Browse...")];
+    [o_file_sub_override setTitle: _NS("Override")];
+    [o_file_sub_delay_lbl setStringValue: _NS("delay")];
+    [o_file_sub_delay_stp setEnabled: NO];
+    [o_file_sub_fps_lbl setStringValue: _NS("fps")];
+    [o_file_sub_fps_stp setEnabled: NO];
+    [o_file_sub_encoding_lbl setStringValue: _NS("Subtitles encoding")];
+    [o_file_sub_encoding_pop removeAllItems];
+    [o_file_sub_size_lbl setStringValue: _NS("Font size")];
+    [o_file_sub_size_pop removeAllItems];
+    [o_file_sub_align_lbl setStringValue: _NS("Subtitles justification")];
+    [o_file_sub_align_pop removeAllItems];
+    [o_file_sub_ok_btn setStringValue: _NS("OK")];
+    [o_file_sub_font_box setTitle: _NS("Font Properties")];
+    [o_file_sub_file_box setTitle: _NS("Subtitle File")];
+
+    p_item = config_FindConfig( VLC_OBJECT(p_intf), "subsdec-encoding" );
+
+    if( p_item )
+    {
+        for( i_index = 0; p_item->ppsz_list && p_item->ppsz_list[i_index];
+             i_index++ )
+        {
+            [o_file_sub_encoding_pop addItemWithTitle:
+                [NSString stringWithCString:
+                p_item->ppsz_list[i_index]]];
+        }
+        [o_file_sub_encoding_pop selectItemWithTitle:
+                [NSString stringWithCString:
+                p_item->psz_value]];
+    }
+
+    p_item = config_FindConfig( VLC_OBJECT(p_intf), "subsdec-align" );
+
+    if ( p_item )
+    {
+        for ( i_index = 0; i_index < p_item->i_list; i_index++ )
+        {
+            [o_file_sub_align_pop addItemWithTitle:
+                [NSString stringWithUTF8String:
+                p_item->ppsz_list_text[i_index]]];
+        }
+        [o_file_sub_align_pop selectItemAtIndex: p_item->i_value];
+    }
+
+    p_item = config_FindConfig( VLC_OBJECT(p_intf), "freetype-rel-fontsize" );
+
+    if ( p_item )
+    {
+        for ( i_index = 0; i_index < p_item->i_list; i_index++ )
+        {
+            [o_file_sub_size_pop addItemWithTitle:
+                [NSString stringWithUTF8String:
+                p_item->ppsz_list_text[i_index]]];
+            if ( p_item->i_value == p_item->pi_list[i_index] )
+            {
+                [o_file_sub_size_pop selectItemAtIndex: i_index];
+            }
+        }
+    }
+}
+
 - (void)openTarget:(int)i_type
 {
     int i_result;
@@ -232,20 +315,49 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
     {
         NSMutableDictionary *o_dic;
         NSMutableArray *o_options = [NSMutableArray array];
+        unsigned int i;
+
         o_dic = [NSMutableDictionary dictionaryWithObject: [o_mrl stringValue] forKey: @"ITEM_URL"];
-        
         if( [o_file_sub_ckbox state] == NSOnState )
         {
-            [o_options addObject: [NSString stringWithFormat: @"sub-file=%s", [[o_file_sub_path stringValue] UTF8String]]];
+            intf_thread_t * p_intf = VLCIntf;
+            module_config_t * p_item;
+
+            [o_options addObject: [NSString stringWithFormat: @"sub-file=%s", [[o_file_sub_path stringValue] fileSystemRepresentation]]];
             if( [o_file_sub_override state] == NSOnState )
             {
                 [o_options addObject: [NSString stringWithFormat: @"sub-delay=%i", (int)( [o_file_sub_delay intValue] * 10 )]];
                 [o_options addObject: [NSString stringWithFormat: @"sub-fps=%f", [o_file_sub_fps floatValue]]];
             }
+            [o_options addObject: [NSString stringWithFormat:
+                    @"subsdec-encoding=%@",
+                    [o_file_sub_encoding_pop titleOfSelectedItem]]];
+            [o_options addObject: [NSString stringWithFormat:
+                    @"subsdec-align=%i",
+                    [o_file_sub_align_pop indexOfSelectedItem]]];
+
+            p_item = config_FindConfig( VLC_OBJECT(p_intf),
+                                            "freetype-rel-fontsize" );
+
+            if ( p_item )
+            {
+                [o_options addObject: [NSString stringWithFormat:
+                    @"freetype-rel-fontsize=%i",
+                    p_item->pi_list[[o_file_sub_size_pop indexOfSelectedItem]]]];
+            }
         }
         if( [o_output_ckbox state] == NSOnState )
         {
-            [o_options addObject: [NSString stringWithString: [(VLCOutput *)o_sout_options getMRL]]];
+            for (i = 0 ; i < [[o_sout_options getMRL] count] ; i++)
+            {
+                [o_options addObject: [NSString stringWithString:
+                      [[(VLCOutput *)o_sout_options getMRL] objectAtIndex: i]]];
+            }
+        }
+        if( [o_net_timeshift_ckbox state] == NSOnState )
+        {
+            [o_options addObject: [NSString stringWithString:
+                                                @"access-filter=timeshift"]];
         }
         [o_dic setObject: (NSArray *)[o_options copy] forKey: @"ITEM_OPTIONS"];
         [o_playlist appendArray: [NSArray arrayWithObject: o_dic] atPos: -1 enqueue:NO];
@@ -270,19 +382,19 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
     }  
 }
 
-- (IBAction)openFileGeneric:(id)sender
+- (void)openFileGeneric
 {
     [self openFilePathChanged: nil];
     [self openTarget: 0];
 }
 
-- (IBAction)openDisc:(id)sender
+- (void)openDisc
 {
     [self openDiscTypeChanged: nil];
     [self openTarget: 1];
 }
 
-- (IBAction)openNet:(id)sender
+- (void)openNet
 {
     [self openNetModeChanged: nil];
     [self openTarget: 2];
@@ -469,7 +581,7 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
         if ( [o_device isEqualToString:
                 [NSString stringWithFormat: _NS("No %@s found"), o_type]] )
             o_device = @"";
-        o_mrl_string = [NSString stringWithFormat: @"vcd://%@@%i,%i",
+        o_mrl_string = [NSString stringWithFormat: @"vcd://%@@%i:%i",
                         o_device, i_title, i_chapter]; 
     }
     else if ( [o_type isEqualToString: _NS("Audio CD")] )
@@ -486,19 +598,19 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
                 [NSString stringWithFormat: _NS("No %@s found"), o_type]] )
             o_device = @"";
         if ( b_menus )
-            o_mrl_string = [NSString stringWithFormat: @"dvdplay://%@",
+            o_mrl_string = [NSString stringWithFormat: @"dvdnav://%@",
                             o_device]; 
         else
-            o_mrl_string = [NSString stringWithFormat: @"dvdold://%@@%i,%i",
+            o_mrl_string = [NSString stringWithFormat: @"dvdread://%@@%i:%i-",
                             o_device, i_title, i_chapter]; 
     }
     else /* VIDEO_TS folder */
     {
         if ( b_menus )
-            o_mrl_string = [NSString stringWithFormat: @"dvdplay://%@",
+            o_mrl_string = [NSString stringWithFormat: @"dvdnav://%@",
                             o_videots]; 
         else
-            o_mrl_string = [NSString stringWithFormat: @"dvdread://%@@%i,%i",
+            o_mrl_string = [NSString stringWithFormat: @"dvdread://%@@%i:%i",
                             o_videots, i_title, i_chapter]; 
     }
 
@@ -539,9 +651,9 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
 
     o_mode = [[o_net_mode selectedCell] title];
 
-    if( [o_mode isEqualToString: _NS("UDP/RTP")] ) b_udp = TRUE;   
+    if( [o_mode isEqualToString: _NS("UDP/RTP")] ) b_udp = TRUE;
     else if( [o_mode isEqualToString: _NS("UDP/RTP Multicast")] ) b_udpm = TRUE;
-    else if( [o_mode isEqualToString: _NS("HTTP/FTP/MMS")] ) b_http = TRUE;
+    else if( [o_mode isEqualToString: _NS("HTTP/FTP/MMS/RTSP")] ) b_http = TRUE;
 
     [o_net_udp_port setEnabled: b_udp];
     [o_net_udp_port_stp setEnabled: b_udp];
@@ -573,7 +685,7 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
 {
     NSString *o_mode;
     NSString *o_mrl_string = [NSString string];
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
 
     o_mode = [[o_net_mode selectedCell] title];
 
@@ -602,21 +714,20 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
                 [o_mrl_string stringByAppendingFormat: @":%i", i_port]; 
         } 
     }
-    else if( [o_mode isEqualToString: _NS("HTTP/FTP/MMS")] )
+    else if( [o_mode isEqualToString: _NS("HTTP/FTP/MMS/RTSP")] )
     {
         NSString *o_url = [o_net_http_url stringValue];
 
         if ( ![o_url hasPrefix:@"http:"] && ![o_url hasPrefix:@"ftp:"]
-              && ![o_url hasPrefix:@"mms"] )
+              && ![o_url hasPrefix:@"mms"] && ![o_url hasPrefix:@"rtsp"] )
             o_mrl_string = [NSString stringWithFormat: @"http://%@", o_url];
         else
             o_mrl_string = o_url;
     }
-
     [o_mrl setStringValue: o_mrl_string];
 }
 
-- (IBAction)openFile:(id)sender
+- (void)openFile
 {
     NSOpenPanel *o_open_panel = [NSOpenPanel openPanel];
     int i;

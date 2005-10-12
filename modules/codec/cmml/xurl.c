@@ -3,9 +3,9 @@
  *****************************************************************************
  * Copyright (C) 2003-2004 Commonwealth Scientific and Industrial Research
  *                         Organisation (CSIRO) Australia
- * Copyright (C) 2004 VideoLAN
+ * Copyright (C) 2004 the VideoLAN team
  *
- * $Id: xurl.c 7397 2004-04-20 17:27:30Z sam $
+ * $Id: xurl.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Andre Pang <Andre.Pang@csiro.au>
  *
@@ -434,11 +434,7 @@ char *XURL_GetHead( const char *psz_path )
     }
 
     /* append a trailing / */
-#ifdef XURL_WIN32_PATHING
-    streallocat( psz_path_head, "\\" );
-#else
     streallocat( psz_path_head, "/" );
-#endif
 
     return psz_path_head;
 }

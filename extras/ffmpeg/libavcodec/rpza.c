@@ -92,7 +92,7 @@ static void rpza_decode_stream(RpzaContext *s)
 
     /* First byte is always 0xe1. Warn if it's different */
     if (s->buf[stream_ptr] != 0xe1)
-        av_log(s->avctx, AV_LOG_ERROR, "First chunk byte is 0x%02x instead of 0x1e\n",
+        av_log(s->avctx, AV_LOG_ERROR, "First chunk byte is 0x%02x instead of 0xe1\n",
             s->buf[stream_ptr]);
 
     /* Get chunk size, ingnoring first byte */
@@ -106,7 +106,7 @@ static void rpza_decode_stream(RpzaContext *s)
     chunk_size = s->size;
 
     /* Number of 4x4 blocks in frame. */
-    total_blocks = (s->avctx->width * s->avctx->height) / (4 * 4);
+    total_blocks = ((s->avctx->width + 3) / 4) * ((s->avctx->height + 3) / 4);
 
     /* Process chunk data */
     while (stream_ptr < chunk_size) {
@@ -247,10 +247,6 @@ static int rpza_decode_frame(AVCodecContext *avctx,
                              uint8_t *buf, int buf_size)
 {
     RpzaContext *s = (RpzaContext *)avctx->priv_data;
-
-    /* no supplementary picture */
-    if (buf_size == 0)
-        return 0;
 
     s->buf = buf;
     s->size = buf_size;

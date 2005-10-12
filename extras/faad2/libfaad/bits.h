@@ -1,6 +1,6 @@
 /*
 ** FAAD2 - Freeware Advanced Audio (AAC) Decoder including SBR decoding
-** Copyright (C) 2003-2004 M. Bakker, Ahead Software AG, http://www.nero.com
+** Copyright (C) 2003-2005 M. Bakker, Ahead Software AG, http://www.nero.com
 **  
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,10 +19,15 @@
 ** Any non-GPL usage of this software or parts of this software is strictly
 ** forbidden.
 **
+** Software using this code must display the following message visibly in the
+** software:
+** "FAAD2 AAC/HE-AAC/HE-AACv2/DRM decoder (c) Ahead Software, www.nero.com"
+** in, for example, the about-box or help/startup screen.
+**
 ** Commercial non-GPL licensing of this software is possible.
 ** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
 **
-** $Id: bits.h,v 1.36 2004/02/04 20:07:24 menno Exp $
+** $Id: bits.h,v 1.41 2005/02/01 13:15:56 menno Exp $
 **/
 
 #ifndef __BITS_H__
@@ -56,9 +61,9 @@ typedef struct _bitfile
 } bitfile;
 
 
-#if defined (_WIN32) && !defined(_WIN32_WCE)
+#if defined (_WIN32) && !defined(_WIN32_WCE) && !defined(__MINGW32__)
 #define BSWAP(a) __asm mov eax,a __asm bswap eax __asm mov a, eax
-#elif defined(LINUX) || defined(DJGPP)
+#elif defined(LINUX) || defined(DJGPP) || defined(__MINGW32__)
 #define BSWAP(a) __asm__ ( "bswapl %0\n" : "=r" (a) : "0" (a) )
 #else
 #define BSWAP(a) \
@@ -281,8 +286,9 @@ static uint8_t faad_check_CRC(bitfile *ld, uint16_t len)
     }
 
     if (r != CRC)
+  //  if (0)
     {
-        return 8;
+        return 28;
     } else {
         return 0;
     }
@@ -317,7 +323,7 @@ typedef struct
     /* bit input */
     uint32_t bufa;
     uint32_t bufb;
-    int8_t len; 
+    int8_t len;
 } bits_t;
 
 
@@ -331,7 +337,7 @@ static INLINE uint32_t showbits_hcr(bits_t *ld, uint8_t bits)
         if (ld->len >= bits)
             return ((ld->bufa >> (ld->len - bits)) & (0xFFFFFFFF >> (32 - bits)));
         else
-            return ((ld->bufa << (bits - ld->len)) & (0xFFFFFFFF >> (32 - bits)));        
+            return ((ld->bufa << (bits - ld->len)) & (0xFFFFFFFF >> (32 - bits)));
     } else {
         if ((ld->len - bits) < 32)
         {

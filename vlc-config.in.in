@@ -37,6 +37,7 @@ Options:
         [--version]               print version and exit
         [--linkage]               print linkage mode (c, c++, objc)
         [--target]                print targets and exit
+        [--list]                  print modules names and exit
         [--libs]                  output linking flags
         [--cflags]                output C compilation flags
         [--cxxflags]              output C++ compilation flags
@@ -82,7 +83,10 @@ if test "@includedir@" != "/usr/include"; then
 fi
 if test "${top_builddir}" != ""; then
   top_builddir="${top_builddir}/"
+elif test "${TOP_BUILDDIR}" != ""; then
+  top_builddir="${TOP_BUILDDIR}/"
 fi
+includes="${includes}"
 cppflags="${includes}"
 libs="-L@libdir@"
 module=""
@@ -171,6 +175,9 @@ while test $# -gt 0; do
     --target)
       echo_target=yes
       ;;
+    --list)
+      echo_list=yes
+      ;;
     --cflags)
       echo_cflags=yes
       ;;
@@ -187,7 +194,7 @@ while test $# -gt 0; do
       usage 1 1>&1
       ;;
     vlc)
-      cppflags="${cppflags} -D__VLC__"
+      cppflags="${cppflags} -D__VLC__ -I${top_builddir}src/misc"
       ;;
     plugin)
       echo_plugin=yes
@@ -202,6 +209,10 @@ while test $# -gt 0; do
       ;;
     mozilla)
       ;;
+    external)
+      echo_external=yes
+      ldflags="${ldflags} -lvlc"
+      ;;      
     *)
       module="$1"
       ;;
@@ -263,6 +274,18 @@ if test "${echo_target}" = yes; then
   exit 0
 fi
 
+if test "${echo_list}" = yes; then
+  if test "${echo_plugin}" = yes; then
+    echo "${plugins}"
+    printf '\n'
+  fi
+  if test "${echo_builtin}" = yes; then
+    echo "${builtins}"
+    printf '\n'
+  fi
+  exit 0
+fi
+
 if test "${echo_prefix}" = yes; then
   echo "${prefix}"
 fi
@@ -293,6 +316,20 @@ if test "${echo_libs}" = yes; then
       for target in `echo "${list}"`; do printf "${top_builddir}modules/${target}.a "; done
     fi
   fi
+  if test "${echo_external}" = yes; then
+    if test "${echo_pic}" = yes; then
+      for module in `echo "${builtins}"`; do
+        ldflags="${ldflags} @libdir@/vlc/lib${module}_pic.a"
+      done
+    else
+      for module in `echo "${builtins}"`; do
+        ldflags="${ldflags} @libdir@/vlc/lib${module}.a"
+      done
+    fi
+    for module in `echo "${builtins}"`; do
+      register_flags "${module}"
+    done
+    register_flags "vlc"
+  fi
   echo "${libs} ${ldflags}"
 fi
-

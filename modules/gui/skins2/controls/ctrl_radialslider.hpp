@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_radialslider.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_radialslider.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: ctrl_radialslider.hpp 12053 2005-08-06 23:38:31Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -57,6 +57,9 @@ class CtrlRadialSlider: public CtrlGeneric, public Observer<VarPercent>
         /// Draw the control on the given graphics
         virtual void draw( OSGraphics &rImage, int xDest, int yDest );
 
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return "radial_slider"; }
+
     private:
         /// Finite state machine of the control
         FSM m_fsm;
@@ -66,10 +69,6 @@ class CtrlRadialSlider: public CtrlGeneric, public Observer<VarPercent>
         VarPercent &m_rVariable;
         /// Min and max angles of the button
         float m_minAngle, m_maxAngle;
-        /// Callbacks objects
-        Callback m_cmdUpDown;
-        Callback m_cmdDownUp;
-        Callback m_cmdMove;
         /// Position of the cursor
         int m_position;
         /// Size of an image
@@ -81,10 +80,10 @@ class CtrlRadialSlider: public CtrlGeneric, public Observer<VarPercent>
         /// Last saved position
         int m_lastPos;
 
-        /// Callback functions
-        static void transUpDown( SkinObject *pCtrl );
-        static void transDownUp( SkinObject *pCtrl );
-        static void transMove( SkinObject *pCtrl );
+        /// Callback objects
+        DEFINE_CALLBACK( CtrlRadialSlider, UpDown )
+        DEFINE_CALLBACK( CtrlRadialSlider, DownUp )
+        DEFINE_CALLBACK( CtrlRadialSlider, Move )
 
         /// Method called when the observed variable is modified
         virtual void onUpdate( Subject<VarPercent> &rVariable );

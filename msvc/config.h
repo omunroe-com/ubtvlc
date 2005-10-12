@@ -4,10 +4,16 @@
 #define CONFIGURE_LINE "Visual C++"
 
 /* Copyright string */
-#define COPYRIGHT_MESSAGE "VLC media player - version 0.7.2 Bond - (c) 1996-2004 VideoLAN"
+#define COPYRIGHT_MESSAGE "VLC media player - version 0.8.4-svn Janus - (c) 1996-2004 VideoLAN"
 
 /* Maximum supported data alignment */
 #define ATTRIBUTE_ALIGNED_MAX 16
+
+/* Define if we have support for dynamic plugins */
+#define HAVE_DYNAMIC_PLUGINS 1
+
+/* Define if you want the HTTP dameon support */
+#define ENABLE_HTTPD 1
 
 /* Define if you have Windows' LoadLibrary */
 #define HAVE_DL_WINDOWS 1
@@ -109,10 +115,10 @@
 #define LIBEXT ".dll"
 
 /* String suffix for module functions */
-#define MODULE_SUFFIX "__0_7_2"
+#define MODULE_SUFFIX "__0_8_4_svn"
 
 /* Symbol suffix for module functions */
-#define MODULE_SYMBOL 0_7_2
+#define MODULE_SYMBOL 0_8_4_svn
 
 /* Name of package */
 #define PACKAGE "vlc"
@@ -124,13 +130,13 @@
 #define PACKAGE_NAME "vlc"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "vlc 0.7.2"
+#define PACKAGE_STRING "vlc 0.8.4-svn"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "vlc"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.7.2"
+#define PACKAGE_VERSION "0.8.4-svn"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
@@ -139,10 +145,22 @@
 #define TIME_WITH_SYS_TIME 1
 
 /* Version number of package */
-#define VERSION "0.7.2"
+#define VERSION "0.8.4-svn"
 
 /* Simple version string */
-#define VERSION_MESSAGE "0.7.2 Bond"
+#define VERSION_MESSAGE "0.8.4-svn Janus"
+
+/* compiler */
+#define VLC_COMPILER "Microsoft Visual C++"
+
+/* user who ran configure */
+#define VLC_COMPILE_BY "user"
+
+/* domain of the host which ran configure */
+#define VLC_COMPILE_DOMAIN "videolan.org"
+
+/* host which ran configure */
+#define VLC_COMPILE_HOST "machine"
 
 /* Define as `__inline' if that's what the C compiler calls it, or to nothing
    if it is not supported. */
@@ -153,3 +171,6 @@
 
 /* Define to `unsigned' if <sys/types.h> does not define. */
 /* #undef size_t */
+
+#define HAVE_STRUCT_ADDRINFO 1
+#define HAVE_DYNAMIC_PLUGINS 1

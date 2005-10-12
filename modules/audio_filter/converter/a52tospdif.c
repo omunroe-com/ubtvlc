@@ -1,8 +1,8 @@
 /*****************************************************************************
  * a52tospdif.c : encapsulates A/52 frames into S/PDIF packets
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: a52tospdif.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: a52tospdif.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Stéphane Borel <stef@via.ecp.fr>
@@ -48,6 +48,8 @@ static void DoWork    ( aout_instance_t *, aout_filter_t *, aout_buffer_t *,
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_MISC );
     set_description( _("audio filter for A/52->S/PDIF encapsulation") );
     set_capability( "audio filter", 10 );
     set_callbacks( Create, NULL );

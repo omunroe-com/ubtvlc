@@ -1,8 +1,8 @@
 /*****************************************************************************
  * prefs.h: MacOS X module for vlc
  *****************************************************************************
- * Copyright (C) 2002-2003 VideoLAN
- * $Id: prefs.h 7090 2004-03-15 19:33:18Z bigben $
+ * Copyright (C) 2002-2005 the VideoLAN team
+ * $Id: prefs.h 12274 2005-08-19 16:16:34Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net> 
  *
@@ -21,14 +21,16 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#define PREFS_WRAP 300
-
 @interface VLCTreeItem : NSObject
 {
     NSString *o_name;
+    NSString *o_title;
+    NSString *o_help;
     int i_object_id;
     VLCTreeItem *o_parent;
     NSMutableArray *o_children;
+    int i_object_category;
+    NSMutableArray *o_subviews;
 }
 
 + (VLCTreeItem *)rootItem;
@@ -36,7 +38,12 @@
 - (VLCTreeItem *)childAtIndex:(int)i_index;
 - (int)getObjectID;
 - (NSString *)getName;
+- (NSString *)getTitle;
+- (NSString *)getHelp;
 - (BOOL)hasPrefs:(NSString *)o_module_name;
+- (NSView *)showView:(NSScrollView *)o_prefs_view advancedView:(vlc_bool_t) b_advanced;
+- (void)applyChanges;
+- (void)resetView;
 
 @end
 
@@ -52,6 +59,7 @@
     NSMutableDictionary *o_save_prefs;
     
     IBOutlet id o_prefs_window;
+    IBOutlet id o_title;
     IBOutlet id o_tree;
     IBOutlet id o_prefs_view;
     IBOutlet id o_save_btn;
@@ -60,17 +68,15 @@
     IBOutlet id o_advanced_ckb;
 }
 
++ (VLCPrefs *)sharedInstance;
+
 - (void)initStrings;
+- (void)setTitle: (NSString *) o_title_name;
 - (void)showPrefs;
 - (IBAction)savePrefs: (id)sender;
 - (IBAction)closePrefs: (id)sender;
 - (IBAction)resetAll: (id)sender;
-- (void)sheetDidEnd:(NSWindow *)o_sheet returnCode:(int)i_return contextInfo:(void *)o_context;
 - (IBAction)advancedToggle: (id)sender;
-- (IBAction)openFileDialog: (id)sender;
-- (void)pathChosenInPanel:(NSOpenPanel *)o_sheet withReturn:(int)i_return_code contextInfo:(void  *)o_context_info;
-- (void)showViewForID: (int) i_id andName:(NSString *)o_item_name;
-- (void)configChanged:(id)o_unknown;
 
 @end
 
@@ -80,92 +86,3 @@
 }
 
 @end
-
-#define INTF_CONTROL_CONFIG(x) \
-@interface VLC##x : NS##x \
-{ \
-    NSString *o_module_name; \
-    NSString *o_config_name; \
-    int i_config_type; \
-} \
-- (void)setModuleName:(NSString *)_o_module_name; \
-- (void)setConfigName:(NSString *)_o_config_name; \
-- (void)setConfigType:(int)_i_config_type; \
-- (NSString *)moduleName; \
-- (NSString *)configName; \
-- (int)configType; \
-@end
-
-#define IMPL_CONTROL_CONFIG(x) \
-@implementation VLC##x \
-- (id)init \
-{ \
-    self = [super init]; \
-    if( self != nil ) \
-    { \
-        o_module_name = nil; \
-        o_config_name = nil; \
-        i_config_type = 0; \
-    } \
-    return( self ); \
-} \
-- (void)dealloc \
-{ \
-    if( o_module_name != nil ) \
-    { \
-        [o_module_name release]; \
-    } \
-    if( o_config_name != nil ) \
-    { \
-        [o_config_name release]; \
-    } \
-    [super dealloc]; \
-} \
-- (void)setModuleName:(NSString *)_o_module_name \
-{ \
-    if( o_module_name != nil ) \
-    { \
-        [o_module_name release]; \
-    } \
-    o_module_name = [_o_module_name retain]; \
-} \
-- (void)setConfigName:(NSString *)_o_config_name \
-{ \
-    if( o_config_name != nil ) \
-    { \
-        [o_config_name release]; \
-    } \
-    o_config_name = [_o_config_name retain]; \
-} \
-- (void)setConfigType:(int)_i_config_type \
-{ \
-    i_config_type = _i_config_type; \
-} \
-- (NSString *)moduleName \
-{ \
-    return( o_module_name ); \
-} \
-- (NSString *)configName \
-{ \
-    return( o_config_name ); \
-} \
-- (int)configType \
-{ \
-    return( i_config_type ); \
-} \
-@end
-
-INTF_CONTROL_CONFIG(Button);
-INTF_CONTROL_CONFIG(PopUpButton);
-INTF_CONTROL_CONFIG(ComboBox);
-INTF_CONTROL_CONFIG(TextField);
-INTF_CONTROL_CONFIG(Slider);
-INTF_CONTROL_CONFIG(Matrix);
-
-#define CONTROL_CONFIG( obj, mname, ctype, cname ) \
-    { \
-        [obj setModuleName: mname]; \
-        [obj setConfigType: ctype]; \
-        [obj setConfigName: [NSString stringWithUTF8String: cname]]; \
-    }
-

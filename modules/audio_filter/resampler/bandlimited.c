@@ -1,8 +1,8 @@
 /*****************************************************************************
  * bandlimited.c : band-limited interpolation resampler
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: bandlimited.c 7522 2004-04-27 16:35:15Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: bandlimited.c 12102 2005-08-10 14:12:17Z hartman $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -79,6 +79,8 @@ struct aout_filter_sys_t
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_MISC );
     set_description( _("audio filter for band-limited interpolation resampling") );
     set_capability( "audio filter", 20 );
     set_callbacks( Create, Close );
@@ -122,6 +124,12 @@ static int Create( vlc_object_t *p_this )
     /* Calculate worst case for the length of the filter wing */
     d_factor = (double)p_filter->output.i_rate
                         / p_filter->input.i_rate;
+
+    if( d_factor < (double)1.0 )
+    {
+        return VLC_EGENERIC;
+    }
+
     i_filter_wing = ((SMALL_FILTER_NMULT + 1)/2.0)
                       * __MAX(1.0, 1.0/d_factor) + 10;
     p_filter->p_sys->i_buf_size = aout_FormatNbChannels( &p_filter->input ) *

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_resize.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_resize.hpp 6964 2004-03-05 20:56:39Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: ctrl_resize.hpp 12053 2005-08-06 23:38:31Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -57,12 +57,8 @@ class CtrlResize: public CtrlFlat
         /// Get the position of the decorated control in the layout, if any
         virtual const Position *getPosition() const;
 
-        static void transOutStill( SkinObject *pCtrl );
-        static void transStillOut( SkinObject *pCtrl );
-        static void transStillStill( SkinObject *pCtrl );
-        static void transStillResize( SkinObject *pCtrl );
-        static void transResizeStill( SkinObject *pCtrl );
-        static void transResizeResize( SkinObject *pCtrl );
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return m_rCtrl.getType(); }
 
     private:
         FSM m_fsm;
@@ -74,13 +70,14 @@ class CtrlResize: public CtrlFlat
         EvtGeneric *m_pEvt;
         /// Position of the click that started the resizing
         int m_xPos, m_yPos;
-        /// Callbacks
-        Callback m_cmdOutStill;
-        Callback m_cmdStillOut;
-        Callback m_cmdStillStill;
-        Callback m_cmdStillResize;
-        Callback m_cmdResizeStill;
-        Callback m_cmdResizeResize;
+
+        /// Callback objects
+        DEFINE_CALLBACK( CtrlResize, OutStill )
+        DEFINE_CALLBACK( CtrlResize, StillOut )
+        DEFINE_CALLBACK( CtrlResize, StillStill )
+        DEFINE_CALLBACK( CtrlResize, StillResize )
+        DEFINE_CALLBACK( CtrlResize, ResizeStill )
+        DEFINE_CALLBACK( CtrlResize, ResizeResize )
 
         // Size of the layout, before resizing
         int m_width, m_height;

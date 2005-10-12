@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout_aa.c: Aa video output display method for testing purposes
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: aa.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: aa.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -52,6 +52,9 @@ static void SetPalette     ( vout_thread_t *, uint16_t *, uint16_t *, uint16_t *
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+    set_shortname( _("Ascii Art"));
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VOUT );
     set_description( _("ASCII-art video output") );
     set_capability( "video output", 10 );
     add_shortcut( "aalib" );
@@ -147,6 +150,7 @@ static int Init( vout_thread_t *p_vout )
     /* Allocate the picture */
     p_pic->p->p_pixels = aa_image( p_vout->p_sys->aa_context );
     p_pic->p->i_lines = p_vout->p_sys->i_height;
+    p_pic->p->i_visible_lines = p_vout->p_sys->i_height;
     p_pic->p->i_pitch = p_vout->p_sys->i_width;
     p_pic->p->i_pixel_pitch = 1;
     p_pic->p->i_visible_pitch = p_vout->p_sys->i_width;

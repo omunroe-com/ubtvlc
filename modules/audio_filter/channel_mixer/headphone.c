@@ -2,8 +2,8 @@
  * headphone.c : headphone virtual spatialization channel mixer module
  *               -> gives the feeling of a real room with a simple headphone
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: headphone.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: headphone.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Boris Dorès <babal@via.ecp.fr>
  *
@@ -55,11 +55,13 @@ static void DoWork    ( aout_instance_t *, aout_filter_t *, aout_buffer_t *,
 
 #define HEADPHONE_DIM_TEXT N_("Characteristic dimension")
 #define HEADPHONE_DIM_LONGTEXT N_( \
-     "Headphone virtual spatialization effect parameter: "\
-     "distance between front left speaker and listener in meters.")
+     "Distance between front left speaker and listener in meters.")
 
 vlc_module_begin();
-    set_description( N_("headphone channel mixer with virtual spatialization effect") );
+    set_description( N_("Headphone channel mixer with virtual spatialization effect") );
+    set_shortname( _("Headphone effect") );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_AFILTER );
 
     add_integer( "headphone-dim", 10, NULL, HEADPHONE_DIM_TEXT,
                  HEADPHONE_DIM_LONGTEXT, VLC_FALSE );
@@ -306,6 +308,7 @@ static int Create( vlc_object_t *p_this )
           || (p_filter->input.i_format != VLC_FOURCC('f','l','3','2')
                && p_filter->input.i_format != VLC_FOURCC('f','i','3','2')) )
     {
+        msg_Dbg( p_filter, "Filter discarded (invalid format)" );
         return -1;
     }
 

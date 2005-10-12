@@ -1,8 +1,8 @@
 /*****************************************************************************
  * xcommon.h: Defines common to the X11 and XVideo plugins
  *****************************************************************************
- * Copyright (C) 1998-2001 VideoLAN
- * $Id: xcommon.h 7431 2004-04-23 05:44:18Z gbazin $
+ * Copyright (C) 1998-2001 the VideoLAN team
+ * $Id: xcommon.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -142,6 +142,13 @@ struct vout_sys_t
     vlc_bool_t          b_net_wm_state_stays_on_top;
     Atom                net_wm_state_below;
     vlc_bool_t          b_net_wm_state_below;
+
+#ifdef MODULE_NAME_IS_glx
+    /* GLX properties */
+    int                 b_glx13;
+    GLXContext          gwctx;
+    GLXWindow           gwnd;
+#endif
 };
 
 /*****************************************************************************
@@ -174,6 +181,7 @@ typedef struct mwmhints_t
     uint32_t decorations;
     int32_t  input_mode;
     uint32_t status;
+
 } mwmhints_t;
 
 /*****************************************************************************

@@ -33,14 +33,13 @@ static int mpjpeg_write_header(AVFormatContext *s)
     return 0;
 }
 
-static int mpjpeg_write_packet(AVFormatContext *s, int stream_index, 
-                               const uint8_t *buf, int size, int64_t pts)
+static int mpjpeg_write_packet(AVFormatContext *s, AVPacket *pkt)
 {
     uint8_t buf1[256];
 
     snprintf(buf1, sizeof(buf1), "Content-type: image/jpeg\n\n");
     put_buffer(&s->pb, buf1, strlen(buf1));
-    put_buffer(&s->pb, buf, size);
+    put_buffer(&s->pb, pkt->data, pkt->size);
 
     snprintf(buf1, sizeof(buf1), "\n--%s\n", BOUNDARY_TAG);
     put_buffer(&s->pb, buf1, strlen(buf1));
@@ -66,45 +65,9 @@ static AVOutputFormat mpjpeg_format = {
     mpjpeg_write_trailer,
 };
 
-
-/*************************************/
-/* single frame JPEG */
-
-static int single_jpeg_write_header(AVFormatContext *s)
-{
-    return 0;
-}
-
-static int single_jpeg_write_packet(AVFormatContext *s, int stream_index,
-                                    const uint8_t *buf, int size, int64_t pts)
-{
-    put_buffer(&s->pb, buf, size);
-    put_flush_packet(&s->pb);
-    return 1; /* no more data can be sent */
-}
-
-static int single_jpeg_write_trailer(AVFormatContext *s)
-{
-    return 0;
-}
-
-static AVOutputFormat single_jpeg_format = {
-    "singlejpeg",
-    "single JPEG image",
-    "image/jpeg",
-    NULL, /* note: no extension to favorize jpeg multiple images match */
-    0,
-    CODEC_ID_NONE,
-    CODEC_ID_MJPEG,
-    single_jpeg_write_header,
-    single_jpeg_write_packet,
-    single_jpeg_write_trailer,
-};
-
 int jpeg_init(void)
 {
     av_register_output_format(&mpjpeg_format);
-    av_register_output_format(&single_jpeg_format);
     return 0;
 }
 #endif //CONFIG_ENCODERS

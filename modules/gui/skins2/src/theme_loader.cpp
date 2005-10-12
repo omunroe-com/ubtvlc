@@ -1,8 +1,8 @@
 /*****************************************************************************
  * theme_loader.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: theme_loader.cpp 7290 2004-04-06 19:56:57Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: theme_loader.cpp 12293 2005-08-20 12:04:13Z damienf $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -27,19 +27,22 @@
 #include "../parser/builder.hpp"
 #include "../parser/skin_parser.hpp"
 #include "../src/os_factory.hpp"
+#include "../src/vlcproc.hpp"
 #include "../src/window_manager.hpp"
 
 #ifdef HAVE_FCNTL_H
 #   include <fcntl.h>
 #endif
-#if !defined( WIN32 )
+#ifdef HAVE_SYS_STAT_H
+#   include <sys/stat.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #   include <unistd.h>
-#else
+#elif defined( WIN32 ) && !defined( UNDER_CE )
 #   include <direct.h>
 #endif
 
-#if (!defined( WIN32 ) || defined(__MINGW32__))
-/* Mingw has its own version of dirent */
+#ifdef HAVE_DIRENT_H
 #   include <dirent.h>
 #endif
 
@@ -47,7 +50,10 @@
 #if defined( HAVE_ZLIB_H )
 #   include <zlib.h>
 #   include <errno.h>
-int gzopen_frontend( char *pathname, int oflags, int mode );
+int gzopen_frontend ( char *pathname, int oflags, int mode );
+int gzclose_frontend( int );
+int gzread_frontend ( int, void *, size_t );
+int gzwrite_frontend( int, const void *, size_t );
 #if defined( HAVE_LIBTAR_H )
 #   include <libtar.h>
 #else
@@ -94,6 +100,10 @@ bool ThemeLoader::load( const string &fileName )
         // Show the windows
         pNewTheme->getWindowManager().showAll();
     }
+    if( skin_last ) free( skin_last );
+
+    // The new theme cannot embed a video output yet
+    VlcProc::instance( getIntf() )->dropVout();
 
     return true;
 }
@@ -104,8 +114,10 @@ bool ThemeLoader::extractTarGz( const string &tarFile, const string &rootDir )
 {
     TAR *t;
 #if defined( HAVE_LIBTAR_H )
-    tartype_t gztype = { (openfunc_t) gzopen_frontend, (closefunc_t) gzclose,
-        (readfunc_t) gzread, (writefunc_t) gzwrite };
+    tartype_t gztype = { (openfunc_t) gzopen_frontend,
+                         (closefunc_t) gzclose_frontend,
+                         (readfunc_t) gzread_frontend,
+                         (writefunc_t) gzwrite_frontend };
 
     if( tar_open( &t, (char *)tarFile.c_str(), &gztype, O_RDONLY, 0,
                   TAR_GNU ) == -1 )
@@ -172,7 +184,7 @@ bool ThemeLoader::parse( const string &xmlFile )
     // Extract the path of the XML file
     string path;
     const string &sep = OSFactory::instance( getIntf() )->getDirSeparator();
-    unsigned int p = xmlFile.rfind( sep, xmlFile.size() );
+    string::size_type p = xmlFile.rfind( sep, xmlFile.size() );
     if( p != string::npos )
     {
         path = xmlFile.substr( 0, p + 1 );
@@ -217,7 +229,7 @@ bool ThemeLoader::findThemeFile( const string &rootDir, string &themeFilePath )
     }
 
     // Get the first directory entry
-    pDirContent = readdir( pCurrDir );
+    pDirContent = (dirent*)readdir( pCurrDir );
 
     // While we still have entries in the directory
     while( pDirContent != NULL )
@@ -233,7 +245,7 @@ bool ThemeLoader::findThemeFile( const string &rootDir, string &themeFilePath )
             stat( newURI.c_str(), &stat_data );
             if( S_ISDIR(stat_data.st_mode) )
 #elif defined( DT_DIR )
-            if( pDirContent->d_type == DT_DIR )
+            if( pDirContent->d_type & DT_DIR )
 #else
             if( 0 )
 #endif
@@ -241,6 +253,7 @@ bool ThemeLoader::findThemeFile( const string &rootDir, string &themeFilePath )
                 // Can we find the theme file in this subdirectory?
                 if( findThemeFile( newURI, themeFilePath ) )
                 {
+                    closedir( pCurrDir );
                     return true;
                 }
             }
@@ -251,14 +264,16 @@ bool ThemeLoader::findThemeFile( const string &rootDir, string &themeFilePath )
                     string( pDirContent->d_name ) )
                 {
                     themeFilePath = newURI;
+                    closedir( pCurrDir );
                     return true;
                 }
             }
         }
 
-        pDirContent = readdir( pCurrDir );
+        pDirContent = (dirent*)readdir( pCurrDir );
     }
 
+    closedir( pCurrDir );
     return false;
 }
 
@@ -520,12 +535,16 @@ int makedir( char *newdir )
 #endif
 
 #ifdef HAVE_ZLIB_H
+
+static int currentGzFd = -1;
+static void * currentGzVp = NULL;
+
 int gzopen_frontend( char *pathname, int oflags, int mode )
 {
     char *gzflags;
     gzFile gzf;
 
-    switch( oflags & O_ACCMODE )
+    switch( oflags )
     {
         case O_WRONLY:
             gzflags = "wb";
@@ -546,6 +565,40 @@ int gzopen_frontend( char *pathname, int oflags, int mode )
         return -1;
     }
 
-    return (int)gzf;
+    /** Hum ... */
+    currentGzFd = 42;
+    currentGzVp = gzf;
+
+    return currentGzFd;
 }
+
+int gzclose_frontend( int fd )
+{
+    if( currentGzVp != NULL && fd != -1 )
+    {
+        void *toClose = currentGzVp;
+        currentGzVp = NULL;  currentGzFd = -1;
+        return gzclose( toClose );
+    }
+    return -1;
+}
+
+int gzread_frontend( int fd, void *p_buffer, size_t i_length )
+{
+    if( currentGzVp != NULL && fd != -1 )
+    {
+        return gzread( currentGzVp, p_buffer, i_length );
+    }
+    return -1;
+}
+
+int gzwrite_frontend( int fd, const void * p_buffer, size_t i_length )
+{
+    if( currentGzVp != NULL && fd != -1 )
+    {
+        return gzwrite( currentGzVp, const_cast<void*>(p_buffer), i_length );
+    }
+    return -1;
+}
+
 #endif

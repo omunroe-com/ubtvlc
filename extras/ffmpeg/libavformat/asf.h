@@ -72,6 +72,12 @@ typedef struct {
 
 
 typedef struct {
+    uint32_t packet_number;
+    uint16_t packet_count;
+} ASFIndex;
+
+
+typedef struct {
     uint32_t seqno;
     unsigned int packet_size;
     int is_streamed;
@@ -114,6 +120,14 @@ typedef struct {
     int packet_pos;
 
     int stream_index;
+
+
+    int64_t last_indexed_pts;
+    ASFIndex* index_ptr;
+    uint32_t nb_index_count;
+    uint32_t nb_index_memory_alloc;
+    uint16_t maximum_packet;
+
     ASFStream* asf_st; /* currently decoded stream */
 } ASFContext;
 
@@ -139,6 +153,10 @@ static const GUID audio_conceal_none = {
     0x20fb5700, 0x5b55, 0x11cf, { 0xa8, 0xfd, 0x00, 0x80, 0x5f, 0x5c, 0x44, 0x2b },
 };
 
+static const GUID audio_conceal_spread = {
+     0xBFC3CD50, 0x618F, 0x11CF, { 0x8B, 0xB2, 0x00, 0xAA, 0x00, 0xB4, 0xE2, 0x20 },
+};
+
 static const GUID video_stream = {
     0xBC19EFC0, 0x5B4D, 0x11CF, { 0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B },
 };
@@ -147,6 +165,9 @@ static const GUID video_conceal_none = {
     0x20FB5700, 0x5B55, 0x11CF, { 0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B },
 };
 
+static const GUID command_stream = {
+    0x59DACFC0, 0x59E6, 0x11D0, { 0xA3, 0xAC, 0x00, 0xA0, 0xC9, 0x03, 0x48, 0xF6 },
+};
 
 static const GUID comment_header = {
     0x75b22633, 0x668e, 0x11cf, { 0xa6, 0xd9, 0x00, 0xaa, 0x00, 0x62, 0xce, 0x6c },
@@ -173,6 +194,10 @@ static const GUID head2_guid = {
 
 static const GUID extended_content_header = {
         0xD2D0A440, 0xE307, 0x11D2, { 0x97, 0xF0, 0x00, 0xA0, 0xC9, 0x5E, 0xA8, 0x50 },
+};
+
+static const GUID simple_index_header = {
+        0x33000890, 0xE5B1, 0x11CF, { 0x89, 0xF4, 0x00, 0xA0, 0xC9, 0x03, 0x49, 0xCB },
 };
 
 /* I am not a number !!! This GUID is the one found on the PC used to

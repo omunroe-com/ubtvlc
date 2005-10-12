@@ -251,14 +251,14 @@ static int mp3_read_header(AVFormatContext *s,
     if (!st)
         return AVERROR_NOMEM;
 
-    st->codec.codec_type = CODEC_TYPE_AUDIO;
-    st->codec.codec_id = CODEC_ID_MP3;
+    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_id = CODEC_ID_MP3;
     st->need_parsing = 1;
     
     /* try to get the TAG */
     if (!url_is_streamed(&s->pb)) {
         /* XXX: change that */
-        filesize = url_filesize(url_fileno(&s->pb));
+        filesize = url_fsize(&s->pb);
         if (filesize > 128) {
             url_fseek(&s->pb, filesize - 128, SEEK_SET);
             ret = get_buffer(&s->pb, buf, ID3_TAG_SIZE);
@@ -297,14 +297,11 @@ static int mp3_read_packet(AVFormatContext *s, AVPacket *pkt)
     
     size= MP3_PACKET_SIZE;
 
-    if (av_new_packet(pkt, size) < 0)
-        return -EIO;
+    ret= av_get_packet(&s->pb, pkt, size);
 
     pkt->stream_index = 0;
-    ret = get_buffer(&s->pb, pkt->data, size);
     if (ret <= 0) {
-        av_free_packet(pkt);
-        return -EIO;
+        return AVERROR_IO;
     }
     /* note: we need to modify the packet size here to handle the last
        packet */
@@ -324,10 +321,9 @@ static int mp3_write_header(struct AVFormatContext *s)
     return 0;
 }
 
-static int mp3_write_packet(struct AVFormatContext *s, int stream_index,
-			    const uint8_t *buf, int size, int64_t pts)
+static int mp3_write_packet(struct AVFormatContext *s, AVPacket *pkt)
 {
-    put_buffer(&s->pb, buf, size);
+    put_buffer(&s->pb, pkt->data, pkt->size);
     put_flush_packet(&s->pb);
     return 0;
 }
@@ -354,7 +350,7 @@ AVInputFormat mp3_iformat = {
     mp3_read_header,
     mp3_read_packet,
     mp3_read_close,
-    .extensions = "mp2,mp3", /* XXX: use probe */
+    .extensions = "mp2,mp3,m2a", /* XXX: use probe */
 };
 
 #ifdef CONFIG_ENCODERS
@@ -363,9 +359,9 @@ AVOutputFormat mp2_oformat = {
     "MPEG audio layer 2",
     "audio/x-mpeg",
 #ifdef CONFIG_MP3LAME
-    "mp2",
+    "mp2,m2a",
 #else
-    "mp2,mp3",
+    "mp2,mp3,m2a",
 #endif
     0,
     CODEC_ID_MP2,

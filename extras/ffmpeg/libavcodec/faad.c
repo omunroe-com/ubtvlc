@@ -28,6 +28,10 @@
 #include "avcodec.h"
 #include "faad.h"
 
+#ifndef FAADAPI
+#define FAADAPI
+#endif
+
 /*
  * when CONFIG_FAADBIN is defined the libfaad will be opened at runtime
  */
@@ -82,7 +86,7 @@ typedef struct {
 		                         faacDecFrameInfo *hInfo,
 		                         unsigned char *buffer,
 								 unsigned long buffer_size);
-	unsigned char* FAADAPI (*faacDecGetErrorMessage)(unsigned char errcode);
+	char* FAADAPI (*faacDecGetErrorMessage)(unsigned char errcode);
 #endif
     
     void FAADAPI (*faacDecClose)(faacDecHandle hDecoder);
@@ -116,12 +120,10 @@ static int faac_init_mp4(AVCodecContext *avctx)
     if (r < 0)
 	av_log(avctx, AV_LOG_ERROR, "faacDecInit2 failed r:%d   sr:%ld  ch:%ld  s:%d\n",
 		r, samplerate, (long)channels, avctx->extradata_size);
-    return r;
-}
+    avctx->sample_rate = samplerate;
+    avctx->channels = channels;
 
-static int faac_init_aac(AVCodecContext *avctx)
-{
-    return 0;
+    return r;
 }
 
 static int faac_decode_frame(AVCodecContext *avctx,
@@ -156,7 +158,7 @@ static int faac_decode_frame(AVCodecContext *avctx,
     out = s->faacDecDecode(s->faac_handle, &frame_info, (unsigned char*)buf, (unsigned long)buf_size);
 
     if (frame_info.error > 0) {
-	av_log(avctx, AV_LOG_ERROR, "faac: frame decodinf failed: %s\n",
+	av_log(avctx, AV_LOG_ERROR, "faac: frame decoding failed: %s\n",
 		s->faacDecGetErrorMessage(frame_info.error));
         return 0;
     }
@@ -232,7 +234,7 @@ static int faac_decode_init(AVCodecContext *avctx)
 				       unsigned char*)));
 	dfaac(Decode, (void *FAADAPI (*)(faacDecHandle, faacDecFrameInfo*,
 		             unsigned char*, unsigned long)));
-	dfaac(GetErrorMessage, (unsigned char* FAADAPI (*)(unsigned char)));
+	dfaac(GetErrorMessage, (char* FAADAPI (*)(unsigned char)));
 #endif
 #undef dfacc
 

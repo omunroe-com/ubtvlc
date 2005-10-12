@@ -1,8 +1,8 @@
 /*****************************************************************************
  * playlistinfo.h: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: playlistinfo.h 7568 2004-04-30 15:44:06Z bigben $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id: playlistinfo.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Benjamin Pracht <bigben at videolan dot org> 
  *
@@ -35,17 +35,13 @@
     IBOutlet id o_uri_txt;
     IBOutlet id o_title_txt;
     IBOutlet id o_author_txt;
-    IBOutlet id o_btn_info_ok;
-    IBOutlet id o_btn_info_cancel;
+    IBOutlet id o_btn_ok;
+    IBOutlet id o_btn_cancel;
     IBOutlet id o_btn_delete_group;
     IBOutlet id o_btn_add_group;
     IBOutlet id o_outline_view;
-    IBOutlet id o_group_lbl;
-    IBOutlet id o_group_cbx;
-    IBOutlet id o_group_color;
 
-    int i_item;
-    NSMutableArray * o_selected;
+    playlist_item_t * p_item;
 }
 
 - (IBAction)togglePlaylistInfoPanel:(id)sender;
@@ -53,11 +49,8 @@
 - (void)initPanel:(id)sender;
 - (IBAction)infoCancel:(id)sender;
 - (IBAction)infoOk:(id)sender;
-- (IBAction)handleGroup:(id)sender;
-- (IBAction)deleteOutlineGroup:(id)sender;
-- (IBAction)createOutlineGroup:(id)sender;
-- (void)createComboBox;
-- (int)getItem;
+- (playlist_item_t *)getItem;
+- (BOOL)isItemInPlaylist:(playlist_item_t *)p_item;
 
 @end
 
@@ -66,7 +59,7 @@
     NSString *o_name;
     NSString *o_value;
     int i_object_id;
-    int i_item;
+    playlist_item_t * p_item;
     VLCInfoTreeItem *o_parent;
     NSMutableArray *o_children;
 }

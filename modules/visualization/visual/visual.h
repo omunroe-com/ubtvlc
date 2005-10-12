@@ -1,8 +1,8 @@
 /*****************************************************************************
  * visual.h : Header for the visualisation system
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: visual.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: visual.h 12404 2005-08-25 19:57:12Z zorglub $
  *
  * Authors: Clément Stenac <zorglub@via.ecp.fr>
  *
@@ -61,11 +61,13 @@ int random_Run
         (visual_effect_t * , aout_instance_t *, aout_buffer_t *, picture_t *);
 int spectrum_Run
         (visual_effect_t * , aout_instance_t *, aout_buffer_t *, picture_t *);
+int spectrometer_Run
+        (visual_effect_t * , aout_instance_t *, aout_buffer_t *, picture_t *);
 #if 0
 int blur_Run
         (visual_effect_t * , aout_instance_t *, aout_buffer_t *, picture_t *);
 #endif
 
 /* Default vout size */
-#define VOUT_WIDTH 320
-#define VOUT_HEIGHT 120
+#define VOUT_WIDTH 533
+#define VOUT_HEIGHT 400

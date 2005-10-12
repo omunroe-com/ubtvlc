@@ -1,8 +1,8 @@
 /*****************************************************************************
  * macosx.m: Mac OS X module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: macosx.m 7709 2004-05-18 06:46:05Z fkuehne $
+ * Copyright (C) 2001-2005 the VideoLAN team
+ * $Id: macosx.m 12504 2005-09-09 21:19:15Z hartman $
  *
  * Authors: Colin Delacroix <colin@zoy.org>
  *          Eugenio Jarosiewicz <ej0@cise.ufl.edu>
@@ -38,8 +38,11 @@
 int  E_(OpenIntf)     ( vlc_object_t * );
 void E_(CloseIntf)    ( vlc_object_t * );
 
-int  E_(OpenVideo)    ( vlc_object_t * );
-void E_(CloseVideo)   ( vlc_object_t * );
+int  E_(OpenVideoQT)  ( vlc_object_t * );
+void E_(CloseVideoQT) ( vlc_object_t * );
+
+int  E_(OpenVideoGL)  ( vlc_object_t * );
+void E_(CloseVideoGL) ( vlc_object_t * );
 
 /*****************************************************************************
  * Module descriptor
@@ -59,49 +62,42 @@ void E_(CloseVideo)   ( vlc_object_t * );
         "of the movie when resizing the video, stretch the video " \
         "to fill the entire window." )
 
-#define MACOSX_VOUT_TEXT N_("video rendering mode")
-#define MACOSX_VOUT_LONGTEXT N_("The default method is OpenGL " \
-        "for Quartz Extreme machines and Quartz for the others.")
-
-#define OPENGL_EFFECT_TEXT N_("OpenGL effect")
-#define OPENGL_EFFECT_LONGTEXT N_("Use 'None' to display the video " \
-        "without any fantasy, 'Cube' to let the video play on " \
-        "the faces of a rotating cube, 'Transparent cube' do make this " \
-        "cube transparent." )
-
 #define FILL_TEXT N_("Fill fullscreen")
 #define FILL_LONGTEXT N_("In fullscreen mode, crop the picture if " \
         "necessary in order to fill the screen without black " \
         "borders (OpenGL only)." )
+        
+#define BACKGROUND_TEXT N_("Use as Desktop Background")
+#define BACKGROUND_LONGTEXT N_("Use the video as the Desktop Background " \
+        "of the Finder. Desktop icons cannot be interacted with in this mode." )
 
-static char * effect_list[] = { "none", "cube", "transparent-cube" };
-static char * effect_list_text[] = { N_("None"), N_("Cube"),
-                                     N_("Transparent cube") };
-
-static char *ppsz_vout_list[] = { "auto", "quartz", "opengl" };
-static char *ppsz_vout_list_text[] = { N_("Auto"), "Quartz", "OpenGL" };
-    
 vlc_module_begin();
-    set_description( _("Mac OS X interface, sound and video") );
+    set_description( _("Mac OS X interface") );
     set_capability( "interface", 100 );
     set_callbacks( E_(OpenIntf), E_(CloseIntf) );
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_GENERAL );
     add_submodule();
-        set_capability( "video output", 200 );
-        set_callbacks( E_(OpenVideo), E_(CloseVideo) );
+        set_description( _("Quartz video") );
+        set_capability( "video output", 100 );
+        set_category( CAT_VIDEO);
+        set_subcategory( SUBCAT_VIDEO_VOUT );
+        set_callbacks( E_(OpenVideoQT), E_(CloseVideoQT) );
         add_integer( "macosx-vdev", 0, NULL, VDEV_TEXT, VDEV_LONGTEXT,
                      VLC_FALSE );
         add_bool( "macosx-stretch", 0, NULL, STRETCH_TEXT, STRETCH_LONGTEXT,
                      VLC_FALSE );
         add_float_with_range( "macosx-opaqueness", 1, 0, 1, NULL,
                 OPAQUENESS_TEXT, OPAQUENESS_LONGTEXT, VLC_TRUE );
-        add_string( "macosx-vout", "auto", NULL, MACOSX_VOUT_TEXT,
-                MACOSX_VOUT_LONGTEXT, VLC_TRUE );
-        change_string_list( ppsz_vout_list, ppsz_vout_list_text, 0 );
-        add_string( "macosx-opengl-effect", "none", NULL,
-                    OPENGL_EFFECT_TEXT, OPENGL_EFFECT_LONGTEXT,
-                    VLC_TRUE );
         add_bool( "macosx-fill", 0, NULL, FILL_TEXT, FILL_LONGTEXT,
                   VLC_TRUE );
-        change_string_list( effect_list, effect_list_text, 0 );
+        add_bool( "macosx-background", 0, NULL, BACKGROUND_TEXT, BACKGROUND_LONGTEXT,
+                     VLC_FALSE );
+    add_submodule();
+        set_description( "Mac OS X OpenGL" );
+        set_capability( "opengl provider", 100 );
+        set_category( CAT_VIDEO);
+        set_subcategory( SUBCAT_VIDEO_VOUT );
+        set_callbacks( E_(OpenVideoGL), E_(CloseVideoGL) );
 vlc_module_end();
 
