@@ -1,8 +1,8 @@
 /*****************************************************************************
  * var_manager.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: var_manager.cpp 7561 2004-04-29 22:09:23Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: var_manager.cpp 11973 2005-08-02 23:26:22Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -26,8 +26,10 @@
 
 
 VarManager::VarManager( intf_thread_t *pIntf ): SkinObject( pIntf ),
-    m_tooltipText( pIntf ), m_helpText( pIntf )
+    m_pTooltipText( NULL ), m_pHelpText( NULL )
 {
+    m_pTooltipText = new VarText( pIntf );
+    m_pHelpText = new VarText( pIntf, false );
 }
 
 
@@ -45,6 +47,12 @@ VarManager::~VarManager()
     {
         m_anonVarList.pop_back();
     }
+
+    delete m_pTooltipText;
+
+    // Warning! the help text must be the last variable to be deleted,
+    // because VarText destructor references it (FIXME: find a cleaner way?)
+    delete m_pHelpText;
 }
 
 

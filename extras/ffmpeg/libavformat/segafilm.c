@@ -92,7 +92,7 @@ static int film_read_header(AVFormatContext *s,
 
     /* load the main FILM header */
     if (get_buffer(pb, scratch, 16) != 16)
-        return -EIO;
+        return AVERROR_IO;
     data_offset = BE_32(&scratch[4]);
     film->version = BE_32(&scratch[8]);
 
@@ -100,7 +100,7 @@ static int film_read_header(AVFormatContext *s,
     if (film->version == 0) {
         /* special case for Lemmings .film files; 20-byte header */
         if (get_buffer(pb, scratch, 20) != 20)
-            return -EIO;
+            return AVERROR_IO;
         /* make some assumptions about the audio parameters */
         film->audio_type = CODEC_ID_PCM_S8;
         film->audio_samplerate = 22050;
@@ -109,7 +109,7 @@ static int film_read_header(AVFormatContext *s,
     } else {
         /* normal Saturn .cpk files; 32-byte header */
         if (get_buffer(pb, scratch, 32) != 32)
-            return -EIO;
+            return AVERROR_IO;
         film->audio_samplerate = BE_16(&scratch[24]);;
         film->audio_channels = scratch[21];
         film->audio_bits = scratch[22];
@@ -140,11 +140,11 @@ static int film_read_header(AVFormatContext *s,
         if (!st)
             return AVERROR_NOMEM;
         film->video_stream_index = st->index;
-        st->codec.codec_type = CODEC_TYPE_VIDEO;
-        st->codec.codec_id = film->video_type;
-        st->codec.codec_tag = 0;  /* no fourcc */
-        st->codec.width = BE_32(&scratch[16]);
-        st->codec.height = BE_32(&scratch[12]);
+        st->codec->codec_type = CODEC_TYPE_VIDEO;
+        st->codec->codec_id = film->video_type;
+        st->codec->codec_tag = 0;  /* no fourcc */
+        st->codec->width = BE_32(&scratch[16]);
+        st->codec->height = BE_32(&scratch[12]);
     }
 
     if (film->audio_type) {
@@ -152,33 +152,38 @@ static int film_read_header(AVFormatContext *s,
         if (!st)
             return AVERROR_NOMEM;
         film->audio_stream_index = st->index;
-        st->codec.codec_type = CODEC_TYPE_AUDIO;
-        st->codec.codec_id = film->audio_type;
-        st->codec.codec_tag = 1;
-        st->codec.channels = film->audio_channels;
-        st->codec.bits_per_sample = film->audio_bits;
-        st->codec.sample_rate = film->audio_samplerate;
-        st->codec.bit_rate = st->codec.channels * st->codec.sample_rate *
-            st->codec.bits_per_sample;
-        st->codec.block_align = st->codec.channels * 
-            st->codec.bits_per_sample / 8;
+        st->codec->codec_type = CODEC_TYPE_AUDIO;
+        st->codec->codec_id = film->audio_type;
+        st->codec->codec_tag = 1;
+        st->codec->channels = film->audio_channels;
+        st->codec->bits_per_sample = film->audio_bits;
+        st->codec->sample_rate = film->audio_samplerate;
+        st->codec->bit_rate = st->codec->channels * st->codec->sample_rate *
+            st->codec->bits_per_sample;
+        st->codec->block_align = st->codec->channels * 
+            st->codec->bits_per_sample / 8;
     }
 
     /* load the sample table */
     if (get_buffer(pb, scratch, 16) != 16)
-        return -EIO;
+        return AVERROR_IO;
     if (BE_32(&scratch[0]) != STAB_TAG)
         return AVERROR_INVALIDDATA;
     film->base_clock = BE_32(&scratch[8]);
     film->sample_count = BE_32(&scratch[12]);
+    if(film->sample_count >= UINT_MAX / sizeof(film_sample_t))
+        return -1;
     film->sample_table = av_malloc(film->sample_count * sizeof(film_sample_t));
+    
+    for(i=0; i<s->nb_streams; i++)
+        av_set_pts_info(s->streams[i], 33, 1, film->base_clock);
     
     audio_frame_counter = 0;
     for (i = 0; i < film->sample_count; i++) {
         /* load the next sample record and transfer it to an internal struct */
         if (get_buffer(pb, scratch, 16) != 16) {
             av_free(film->sample_table);
-            return -EIO;
+            return AVERROR_IO;
         }
         film->sample_table[i].sample_offset = 
             data_offset + BE_32(&scratch[0]);
@@ -200,10 +205,6 @@ static int film_read_header(AVFormatContext *s,
 
     film->current_sample = 0;
 
-    /* set the pts reference to match the tick rate of the file */
-    s->pts_num = 1;
-    s->pts_den = film->base_clock;
-
     return 0;
 }
 
@@ -218,7 +219,7 @@ static int film_read_packet(AVFormatContext *s,
     int left, right;
 
     if (film->current_sample >= film->sample_count)
-        return -EIO;
+        return AVERROR_IO;
 
     sample = &film->sample_table[film->current_sample];
 
@@ -230,13 +231,16 @@ static int film_read_packet(AVFormatContext *s,
         (film->video_type == CODEC_ID_CINEPAK)) {
         if (av_new_packet(pkt, sample->sample_size - film->cvid_extra_bytes))
             return AVERROR_NOMEM;
+        if(pkt->size < 10)
+            return -1;
+        pkt->pos= url_ftell(pb);
         ret = get_buffer(pb, pkt->data, 10);
         /* skip the non-spec CVID bytes */
         url_fseek(pb, film->cvid_extra_bytes, SEEK_CUR);
         ret += get_buffer(pb, pkt->data + 10, 
             sample->sample_size - 10 - film->cvid_extra_bytes);
         if (ret != sample->sample_size - film->cvid_extra_bytes)
-            ret = -EIO;
+            ret = AVERROR_IO;
     } else if ((sample->stream == film->audio_stream_index) &&
         (film->audio_channels == 2)) {
         /* stereo PCM needs to be interleaved */
@@ -251,9 +255,10 @@ static int film_read_packet(AVFormatContext *s,
             film->stereo_buffer = av_malloc(film->stereo_buffer_size);
         }
 
+        pkt->pos= url_ftell(pb);
         ret = get_buffer(pb, film->stereo_buffer, sample->sample_size);
         if (ret != sample->sample_size)
-            ret = -EIO;
+            ret = AVERROR_IO;
 
         left = 0;
         right = sample->sample_size / 2;
@@ -269,11 +274,9 @@ static int film_read_packet(AVFormatContext *s,
             }
         }
     } else {
-        if (av_new_packet(pkt, sample->sample_size))
-            return AVERROR_NOMEM;
-        ret = get_buffer(pb, pkt->data, sample->sample_size);
+        ret= av_get_packet(pb, pkt, sample->sample_size);
         if (ret != sample->sample_size)
-            ret = -EIO;
+            ret = AVERROR_IO;
     }
 
     pkt->stream_index = sample->stream;

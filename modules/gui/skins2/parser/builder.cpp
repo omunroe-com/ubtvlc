@@ -1,8 +1,8 @@
 /*****************************************************************************
  * builder.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: builder.cpp 7626 2004-05-08 18:10:38Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: builder.cpp 12281 2005-08-20 00:31:27Z dionoea $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -43,17 +43,25 @@
 #include "../controls/ctrl_slider.hpp"
 #include "../controls/ctrl_radialslider.hpp"
 #include "../controls/ctrl_text.hpp"
+#include "../controls/ctrl_tree.hpp"
 #include "../controls/ctrl_video.hpp"
 #include "../utils/position.hpp"
 #include "../utils/var_bool.hpp"
 #include "../utils/var_text.hpp"
 
+#include "vlc_image.h"
 
-Builder::Builder( intf_thread_t *pIntf, const BuilderData &rData):
+
+Builder::Builder( intf_thread_t *pIntf, const BuilderData &rData ):
     SkinObject( pIntf ), m_rData( rData ), m_pTheme( NULL )
 {
+    m_pImageHandler = image_HandlerCreate( pIntf );
 }
 
+Builder::~Builder()
+{
+    if( m_pImageHandler ) image_HandlerDelete( m_pImageHandler );
+}
 
 CmdGeneric *Builder::parseAction( const string &rAction )
 {
@@ -94,6 +102,7 @@ Theme *Builder::build()
     ADD_OBJECTS( RadialSlider );
     ADD_OBJECTS( Slider );
     ADD_OBJECTS( List );
+    ADD_OBJECTS( Tree );
     ADD_OBJECTS( Video );
 
     return m_pTheme;
@@ -133,15 +142,17 @@ void Builder::addTheme( const BuilderData::Theme &rData )
 
 void Builder::addBitmap( const BuilderData::Bitmap &rData )
 {
-    GenericBitmap *pBmp = new PngBitmap( getIntf(), rData.m_fileName,
-                                         rData.m_alphaColor );
+    GenericBitmap *pBmp =
+        new PngBitmap( getIntf(), m_pImageHandler,
+                       rData.m_fileName, rData.m_alphaColor );
     m_pTheme->m_bitmaps[rData.m_id] = GenericBitmapPtr( pBmp );
 }
 
 
 void Builder::addBitmapFont( const BuilderData::BitmapFont &rData )
 {
-    GenericBitmap *pBmp = new PngBitmap( getIntf(), rData.m_file, 0 );
+    GenericBitmap *pBmp =
+        new PngBitmap( getIntf(), m_pImageHandler, rData.m_file, 0 );
     m_pTheme->m_bitmaps[rData.m_id] = GenericBitmapPtr( pBmp );
 
     GenericFont *pFont = new BitmapFont( getIntf(), *pBmp, rData.m_type );
@@ -380,7 +391,9 @@ void Builder::addImage( const BuilderData::Image &rData )
     Interpreter *pInterpreter = Interpreter::instance( getIntf() );
     VarBool *pVisible = pInterpreter->getVarBool( rData.m_visible, m_pTheme );
 
-    CtrlImage *pImage = new CtrlImage( getIntf(), *pBmp,
+    CtrlImage::resize_t resizeMethod =
+        (rData.m_resize == "scale" ? CtrlImage::kScale : CtrlImage::kMosaic);
+    CtrlImage *pImage = new CtrlImage( getIntf(), *pBmp, resizeMethod,
         UString( getIntf(), rData.m_help.c_str() ), pVisible );
 
     // Compute the position of the control
@@ -444,10 +457,13 @@ void Builder::addText( const BuilderData::Text &rData )
 
     int height = pFont->getSize();
 
-    pLayout->addControl( pText, Position( rData.m_xPos, rData.m_yPos,
-                                          rData.m_xPos + rData.m_width,
-                                          rData.m_yPos + height, *pLayout ),
-                         rData.m_layer );
+    // Compute the position of the control
+    const Position pos = makePosition( rData.m_leftTop, rData.m_rightBottom,
+                                       rData.m_xPos, rData.m_yPos,
+                                       rData.m_width, height,
+                                       *pLayout );
+
+    pLayout->addControl( pText, pos, rData.m_layer );
 
     m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pText );
 }
@@ -566,6 +582,10 @@ void Builder::addSlider( const BuilderData::Slider &rData )
 
 void Builder::addList( const BuilderData::List &rData )
 {
+    // Get the background bitmap, if any
+    GenericBitmap *pBgBmp = NULL;
+    GET_BMP( pBgBmp, rData.m_bgImageId );
+
     GenericLayout *pLayout = m_pTheme->getLayoutById(rData.m_layoutId);
     if( pLayout == NULL )
     {
@@ -594,7 +614,7 @@ void Builder::addList( const BuilderData::List &rData )
     VarBool *pVisible = pInterpreter->getVarBool( rData.m_visible, m_pTheme );
 
     // Create the list control
-    CtrlList *pList = new CtrlList( getIntf(), *pVar, *pFont,
+    CtrlList *pList = new CtrlList( getIntf(), *pVar, *pFont, pBgBmp,
        rData.m_fgColor, rData.m_playColor, rData.m_bgColor1,
        rData.m_bgColor2, rData.m_selColor,
        UString( getIntf(), rData.m_help.c_str() ), pVisible );
@@ -610,6 +630,62 @@ void Builder::addList( const BuilderData::List &rData )
     m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pList );
 }
 
+void Builder::addTree( const BuilderData::Tree &rData )
+{
+    // Get the bitmaps, if any
+    GenericBitmap *pBgBmp = NULL;
+    GenericBitmap *pItemBmp = NULL;
+    GenericBitmap *pOpenBmp = NULL;
+    GenericBitmap *pClosedBmp = NULL;
+    GET_BMP( pBgBmp, rData.m_bgImageId );
+    GET_BMP( pItemBmp, rData.m_itemImageId );
+    GET_BMP( pOpenBmp, rData.m_openImageId );
+    GET_BMP( pClosedBmp, rData.m_closedImageId );
+
+    GenericLayout *pLayout = m_pTheme->getLayoutById(rData.m_layoutId);
+    if( pLayout == NULL )
+    {
+        msg_Err( getIntf(), "unknown layout id: %s", rData.m_layoutId.c_str() );
+        return;
+    }
+
+    GenericFont *pFont = getFont( rData.m_fontId );
+    if( pFont == NULL )
+    {
+        msg_Err( getIntf(), "Unknown font id: %s", rData.m_fontId.c_str() );
+        return;
+    }
+
+    // Get the list variable
+    Interpreter *pInterpreter = Interpreter::instance( getIntf() );
+    VarTree *pVar = pInterpreter->getVarTree( rData.m_var, m_pTheme );
+    if( pVar == NULL )
+    {
+        msg_Err( getIntf(), "No such list variable: %s", rData.m_var.c_str() );
+        return;
+    }
+
+    // Get the visibility variable
+    // XXX check when it is null
+    VarBool *pVisible = pInterpreter->getVarBool( rData.m_visible, m_pTheme );
+
+    // Create the list control
+    CtrlTree *pTree = new CtrlTree( getIntf(), *pVar, *pFont, pBgBmp,
+       pItemBmp, pOpenBmp, pClosedBmp,
+       rData.m_fgColor, rData.m_playColor, rData.m_bgColor1,
+       rData.m_bgColor2, rData.m_selColor,
+       UString( getIntf(), rData.m_help.c_str() ), pVisible );
+
+    // Compute the position of the control
+    const Position pos = makePosition( rData.m_leftTop, rData.m_rightBottom,
+                                       rData.m_xPos, rData.m_yPos,
+                                       rData.m_width, rData.m_height,
+                                       *pLayout );
+
+    pLayout->addControl( pTree, pos, rData.m_layer );
+
+    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pTree );
+}
 
 void Builder::addVideo( const BuilderData::Video &rData )
 {

@@ -6,16 +6,16 @@ pkgdatadir = $(datadir)/vlc
 
 dist_pkgdata_DATA = \
 	$(DIST_pda) \
-	$(DIST_familiar) \
 	$(DIST_icons16) \
 	$(DIST_icons32) \
 	$(DIST_icons48) \
 	$(NULL)
 
 nobase_dist_pkgdata_DATA = \
-	$(DIST_skins) \
 	$(DIST_skins2) \
 	$(DIST_http) \
+	$(DIST_osdmenu_default) \
+	$(DIST_osdmenu_dvd) \
 	$(NULL)
 
 DIST_fonts = \
@@ -29,17 +29,6 @@ DIST_rsrc = \
 	vlc_beos.rsrc \
 	vlc_win32_rc.rc \
 	vlc-icons.xcf \
-	$(NULL)
-
-DIST_familiar = \
-	familiar-forwardb16x16.xpm \
-	familiar-openb16x16.xpm \
-	familiar-pauseb16x16.xpm \
-	familiar-playb16x16.xpm \
-	familiar-playlistb16x16.xpm \
-	familiar-preferencesb16x16.xpm \
-	familiar-rewindb16x16.xpm \
-	familiar-stopb16x16.xpm \
 	$(NULL)
 
 DIST_pda = \
@@ -81,131 +70,12 @@ DIST_icons48 = \
 	gvlc48x48.png \
 	kvlc48x48.png \
 	qvlc48x48.png \
-	vlc48x48.ico \
+	vlc48x48new.ico \
 	vlc48x48.png \
 	$(NULL)
 
-DIST_skins = \
-	skins/default/add1.bmp \
-	skins/default/del2.bmp \
-	skins/default/open1.bmp \
-	skins/default/play1.bmp \
-	skins/default/playlist_body.bmp \
-	skins/default/prev4.bmp \
-	skins/default/stop2.bmp \
-	skins/default/add2.bmp \
-	skins/default/del3.bmp \
-	skins/default/open2.bmp  \
-	skins/default/play2.bmp  \
-	skins/default/prefs1.bmp \
-	skins/default/quit1.bmp \
-	skins/default/stop3.bmp \
-	skins/default/add3.bmp \
-	skins/default/open3.bmp \
-	skins/default/play3.bmp \
-	skins/default/prefs2.bmp \
-	skins/default/quit2.bmp \
-	skins/default/stop4.bmp \
-	skins/default/body.bmp \
-	skins/default/next1.bmp \
-	skins/default/pause1.bmp \
-	skins/default/play4.bmp \
-	skins/default/prefs3.bmp \
-	skins/default/quit3.bmp \
-	skins/default/theme.xml \
-	skins/default/next2.bmp \
-	skins/default/pause2.bmp \
-	skins/default/playlist1.bmp \
-	skins/default/prev1.bmp \
-	skins/default/slider1.bmp \
-	skins/default/next3.bmp \
-	skins/default/pause3.bmp \
-	skins/default/playlist2.bmp \
-	skins/default/prev2.bmp \
-	skins/default/slider2.bmp \
-	skins/default/del1.bmp \
-	skins/default/next4.bmp \
-	skins/default/pause4.bmp \
-	skins/default/playlist3.bmp \
-	skins/default/prev3.bmp \
-	skins/default/stop1.bmp \
-	$(NULL)
-
 DIST_skins2 = \
-	skins2/default/FreeSansBold.ttf \
-	skins2/default/add_item.png \
-	skins2/default/add_item_onclick.png \
-	skins2/default/body.png \
-	skins2/default/close.png \
-	skins2/default/close_mouseover.png \
-	skins2/default/close_onclick.png \
-	skins2/default/delete_item.png \
-	skins2/default/delete_item_onclick.png \
-	skins2/default/disabled.png \
-	skins2/default/fast.png \
-	skins2/default/fast_disabled.png \
-	skins2/default/fast_onclick.png \
-	skins2/default/next.png \
-	skins2/default/next_disabled.png \
-	skins2/default/next_onclick.png \
-	skins2/default/pause.png \
-	skins2/default/pause_onclick.png \
-	skins2/default/play.png \
-	skins2/default/play_onclick.png \
-	skins2/default/playlist.png \
-	skins2/default/playlist_body1.png \
-	skins2/default/playlist_body2.png \
-	skins2/default/playlist_body3.png \
-	skins2/default/playlist_body4.png \
-	skins2/default/playlist_body6.png \
-	skins2/default/playlist_body7.png \
-	skins2/default/playlist_body8.png \
-	skins2/default/playlist_body9.png \
-	skins2/default/playlist_button.png \
-	skins2/default/playlist_button2.png \
-	skins2/default/playlist_button_onclick.png \
-	skins2/default/playlist_button_onclick2.png \
-	skins2/default/preferences.png \
-	skins2/default/preferences_onclick.png \
-	skins2/default/previous.png \
-	skins2/default/previous_disabled.png \
-	skins2/default/previous_onclick.png \
-	skins2/default/reduce.png \
-	skins2/default/reduce_disabled.png \
-	skins2/default/reduce_onclick.png \
-	skins2/default/resize.png \
-	skins2/default/rev.png \
-	skins2/default/rev_disabled.png \
-	skins2/default/rev_onclick.png \
-	skins2/default/slider.png \
-	skins2/default/slider2.png \
-	skins2/default/slider_onclick.png \
-	skins2/default/slider_playlist.png \
-	skins2/default/slider_volume.png \
-	skins2/default/slider_volume_onclick.png \
-	skins2/default/slow.png \
-	skins2/default/slow_disabled.png \
-	skins2/default/slow_onclick.png \
-	skins2/default/sort.png \
-	skins2/default/sort_onclick.png \
-	skins2/default/stop.png \
-	skins2/default/stop_disabled.png \
-	skins2/default/stop_onclick.png \
-	skins2/default/theme.xml \
-	skins2/default/volume.png \
-	skins2/default/vout2.png \
-	skins2/default/vout_body1.png \
-	skins2/default/vout_body.png \
-	skins2/default/vout_bottom_left.png \
-	skins2/default/vout_bottom.png \
-	skins2/default/vout_bottom_right.png \
-	skins2/default/vout_left.png \
-	skins2/default/vout_onclick.png \
-	skins2/default/vout.png \
-	skins2/default/vout_right.png \
-	skins2/default/vout_top_left.png \
-	skins2/default/vout_top.png \
-	skins2/default/vout_top_right.png \
+	skins2/default.vlt \
 	\
 	skins2/fonts/FreeSans.ttf \
 	skins2/skin.dtd \
@@ -223,4 +93,73 @@ DIST_http = \
 	http/vlm/index.html \
 	http/vlm/new.html \
 	http/style.css \
+	http/webcam.html \
+	http/favicon.ico \
+	http/cone_minus.png \
+	http/cone_plus.png \
 	$(NULL)
+
+DIST_osdmenu_default = \
+	osdmenu/default.cfg \
+	osdmenu/default/unselected.png \
+	osdmenu/default/selection/bw.png \
+	osdmenu/default/selection/esc.png \
+	osdmenu/default/selection/fw.png \
+	osdmenu/default/selection/volume.png \
+	osdmenu/default/selection/next.png \
+	osdmenu/default/selection/play_pause.png \
+	osdmenu/default/selection/previous.png \
+	osdmenu/default/selection/stop.png \
+	osdmenu/default/selected/bw.png \
+	osdmenu/default/selected/next.png \
+	osdmenu/default/selected/play_pause.png \
+	osdmenu/default/selected/fw.png \
+	osdmenu/default/selected/stop.png \
+	osdmenu/default/selected/previous.png \
+	osdmenu/default/selected/esc.png \
+	osdmenu/default/selected/volume.png \
+	osdmenu/default/volume/volume_00.png \
+	osdmenu/default/volume/volume_01.png \
+	osdmenu/default/volume/volume_02.png \
+	osdmenu/default/volume/volume_03.png \
+	osdmenu/default/volume/volume_04.png \
+	osdmenu/default/volume/volume_05.png \
+	osdmenu/default/volume/volume_06.png \
+	osdmenu/default/volume/volume_07.png \
+	osdmenu/default/volume/volume_08.png \
+	osdmenu/default/volume/volume_09.png \
+	osdmenu/default/volume/volume_10.png \
+	$(NULL)
+
+DIST_osdmenu_dvd = \
+	osdmenu/dvd.cfg \
+	osdmenu/dvd/selection/bw.png \
+	osdmenu/dvd/selection/esc.png \
+	osdmenu/dvd/selection/fw.png \
+	osdmenu/dvd/selection/mute.png \
+	osdmenu/dvd/selection/next.png \
+	osdmenu/dvd/selection/pause.png \
+	osdmenu/dvd/selection/play.png \
+	osdmenu/dvd/selection/previous.png \
+	osdmenu/dvd/selection/slow.png \
+	osdmenu/dvd/selection/stop.png \
+	osdmenu/dvd/selected/bw.png \
+	osdmenu/dvd/selected/next.png \
+	osdmenu/dvd/selected/play.png \
+	osdmenu/dvd/selected/fw.png \
+	osdmenu/dvd/selected/stop.png \
+	osdmenu/dvd/selected/pause.png \
+	osdmenu/dvd/selected/previous.png \
+	osdmenu/dvd/selected/esc.png \
+	osdmenu/dvd/selected/mute.png \
+	osdmenu/dvd/selected/slow.png \
+	osdmenu/dvd/selected/volume.png \
+	osdmenu/dvd/volume/volume00.png \
+	osdmenu/dvd/volume/volume01.png \
+	osdmenu/dvd/volume/volume02.png \
+	osdmenu/dvd/volume/volume03.png \
+	osdmenu/dvd/volume/volume04.png \
+	osdmenu/dvd/volume/volume05.png \
+	osdmenu/dvd/unselect/barroff.png \
+	$(NULL)
+

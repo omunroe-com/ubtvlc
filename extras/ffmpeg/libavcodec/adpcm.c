@@ -17,6 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include "avcodec.h"
+#include "bitstream.h"
 
 /**
  * @file adpcm.c
@@ -98,9 +99,32 @@ static const int xa_adpcm_table[5][2] = {
    { 122, -60 }
 };
 
-static int ea_adpcm_table[] = {
+static const int ea_adpcm_table[] = {
     0, 240, 460, 392, 0, 0, -208, -220, 0, 1,
     3, 4, 7, 8, 10, 11, 0, -1, -3, -4
+};
+
+static const int ct_adpcm_table[8] = {
+    0x00E6, 0x00E6, 0x00E6, 0x00E6,
+    0x0133, 0x0199, 0x0200, 0x0266
+};
+
+// padded to zero where table size is less then 16
+static const int swf_index_tables[4][16] = {
+    /*2*/ { -1, 2 },
+    /*3*/ { -1, -1, 2, 4 },
+    /*4*/ { -1, -1, -1, -1, 2, 4, 6, 8 },
+    /*5*/ { -1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 4, 6, 8, 10, 13, 16 }
+};
+
+static const int yamaha_indexscale[] = {
+    230, 230, 230, 230, 307, 409, 512, 614,
+    230, 230, 230, 230, 307, 409, 512, 614
+};
+
+static const int yamaha_difflookup[] = {
+    1, 3, 5, 7, 9, 11, 13, 15,
+    -1, -3, -5, -7, -9, -11, -13, -15
 };
 
 /* end of tables */
@@ -124,6 +148,10 @@ typedef struct ADPCMContext {
     int channel; /* for stereo MOVs, decode left, then decode right, then tell it's decoded */
     ADPCMChannelStatus status[2];
     short sample_buffer[32]; /* hold left samples while waiting for right samples */
+
+    /* SWF only */
+    int nb_bits;
+    int nb_samples;
 } ADPCMContext;
 
 /* XXX: implement encoding */
@@ -148,6 +176,10 @@ static int adpcm_encode_init(AVCodecContext *avctx)
     case CODEC_ID_ADPCM_MS:
         avctx->frame_size = (BLKSIZE - 7 * avctx->channels) * 2 / avctx->channels + 2; /* each 16 bits sample gives one nibble */
                                                              /* and we have 7 bytes per channel overhead */
+        avctx->block_align = BLKSIZE;
+        break;
+    case CODEC_ID_ADPCM_YAMAHA:
+        avctx->frame_size = BLKSIZE * avctx->channels;
         avctx->block_align = BLKSIZE;
         break;
     default:
@@ -240,6 +272,31 @@ static inline unsigned char adpcm_ms_compress_sample(ADPCMChannelStatus *c, shor
     if (c->idelta < 16) c->idelta = 16;
 
     return nibble;
+}
+
+static inline unsigned char adpcm_yamaha_compress_sample(ADPCMChannelStatus *c, short sample)
+{
+    int i1 = 0, j1;
+
+    if(!c->step) {
+        c->predictor = 0;
+        c->step = 127;
+    }
+    j1 = sample - c->predictor;
+
+    j1 = (j1 * 8) / c->step;
+    i1 = abs(j1) / 2;
+    if (i1 > 7)
+        i1 = 7;
+    if (j1 < 0)
+        i1 += 8;
+
+    c->predictor = c->predictor + ((c->step * yamaha_difflookup[i1]) / 8);
+    CLAMP_TO_SHORT(c->predictor);
+    c->step = (c->step * yamaha_indexscale[i1]) >> 8;
+    c->step = clip(c->step, 127, 24567);
+
+    return i1;
 }
 
 static int adpcm_encode_frame(AVCodecContext *avctx,
@@ -344,6 +401,18 @@ static int adpcm_encode_frame(AVCodecContext *avctx,
             *dst++ = nibble;
         }
         break;
+    case CODEC_ID_ADPCM_YAMAHA:
+        n = avctx->frame_size / 2;
+        for (; n>0; n--) {
+            for(i = 0; i < avctx->channels; i++) {
+                int nibble;
+                nibble  = adpcm_yamaha_compress_sample(&c->status[i], samples[i]);
+                nibble |= adpcm_yamaha_compress_sample(&c->status[i], samples[i+avctx->channels]) << 4;
+                *dst++ = nibble;
+            }
+            samples += 2 * avctx->channels;
+        }
+        break;
     default:
         return -1;
     }
@@ -361,6 +430,9 @@ static int adpcm_decode_init(AVCodecContext * avctx)
     c->status[0].step = c->status[1].step = 0;
 
     switch(avctx->codec->id) {
+    case CODEC_ID_ADPCM_CT:
+	c->status[0].step = c->status[1].step = 511;
+	break;
     default:
         break;
     }
@@ -409,6 +481,51 @@ static inline short adpcm_ms_expand_nibble(ADPCMChannelStatus *c, char nibble)
     if (c->idelta < 16) c->idelta = 16;
 
     return (short)predictor;
+}
+
+static inline short adpcm_ct_expand_nibble(ADPCMChannelStatus *c, char nibble)
+{
+    int predictor;
+    int sign, delta, diff;
+    int new_step;
+
+    sign = nibble & 8;
+    delta = nibble & 7;
+    /* perform direct multiplication instead of series of jumps proposed by
+     * the reference ADPCM implementation since modern CPUs can do the mults
+     * quickly enough */
+    diff = ((2 * delta + 1) * c->step) >> 3;
+    predictor = c->predictor;
+    /* predictor update is not so trivial: predictor is multiplied on 254/256 before updating */
+    if(sign)
+	predictor = ((predictor * 254) >> 8) - diff;
+    else
+    	predictor = ((predictor * 254) >> 8) + diff;
+    /* calculate new step and clamp it to range 511..32767 */
+    new_step = (ct_adpcm_table[nibble & 7] * c->step) >> 8;
+    c->step = new_step;
+    if(c->step < 511)
+	c->step = 511;
+    if(c->step > 32767)
+	c->step = 32767;
+
+    CLAMP_TO_SHORT(predictor);
+    c->predictor = predictor;
+    return (short)predictor;
+}
+
+static inline short adpcm_yamaha_expand_nibble(ADPCMChannelStatus *c, unsigned char nibble)
+{
+    if(!c->step) {
+        c->predictor = 0;
+        c->step = 127;
+    }
+
+    c->predictor += (c->step * yamaha_difflookup[nibble]) / 8;
+    CLAMP_TO_SHORT(c->predictor);
+    c->step = (c->step * yamaha_indexscale[nibble]) >> 8;
+    c->step = clip(c->step, 127, 24567);
+    return c->predictor;
 }
 
 static void xa_decode(short *out, const unsigned char *in, 
@@ -568,7 +685,6 @@ static int adpcm_decode_frame(AVCodecContext *avctx,
         if(st) { /* handle stereo interlacing */
             c->channel = (channel + 1) % 2; /* we get one packet for left, then one for right data */
             if(channel == 1) { /* wait for the other packet before outputing anything */
-                *data_size = 0;
                 return src - buf;
             }
         }
@@ -841,8 +957,109 @@ static int adpcm_decode_frame(AVCodecContext *avctx,
             src++;
         }
         break;
+    case CODEC_ID_ADPCM_CT:
+	while (src < buf + buf_size) {
+            if (st) {
+                *samples++ = adpcm_ct_expand_nibble(&c->status[0], 
+                    (src[0] >> 4) & 0x0F);
+                *samples++ = adpcm_ct_expand_nibble(&c->status[1], 
+                    src[0] & 0x0F);
+            } else {
+                *samples++ = adpcm_ct_expand_nibble(&c->status[0], 
+                    (src[0] >> 4) & 0x0F);
+                *samples++ = adpcm_ct_expand_nibble(&c->status[0], 
+                    src[0] & 0x0F);
+            }
+	    src++;
+        }
+        break;
+    case CODEC_ID_ADPCM_SWF:
+    {
+	GetBitContext gb;
+	const int *table;
+	int k0, signmask;
+	int size = buf_size*8;
+	
+	init_get_bits(&gb, buf, size);
+
+	// first frame, read bits & inital values
+	if (!c->nb_bits)
+	{
+	    c->nb_bits = get_bits(&gb, 2)+2;
+//	    av_log(NULL,AV_LOG_INFO,"nb_bits: %d\n", c->nb_bits);
+	}
+	
+	table = swf_index_tables[c->nb_bits-2];
+	k0 = 1 << (c->nb_bits-2);
+	signmask = 1 << (c->nb_bits-1);
+	
+	while (get_bits_count(&gb) <= size)
+	{
+	    int i;
+
+	    c->nb_samples++;
+	    // wrap around at every 4096 samples...
+	    if ((c->nb_samples & 0xfff) == 1)
+	    {
+		for (i = 0; i <= st; i++)
+		{
+		    *samples++ = c->status[i].predictor = get_sbits(&gb, 16);
+		    c->status[i].step_index = get_bits(&gb, 6);
+		}
+	    }
+
+	    // similar to IMA adpcm
+	    for (i = 0; i <= st; i++)
+	    {
+		int delta = get_bits(&gb, c->nb_bits);
+		int step = step_table[c->status[i].step_index];
+		long vpdiff = 0; // vpdiff = (delta+0.5)*step/4
+		int k = k0;
+		
+		do {
+		    if (delta & k)
+			vpdiff += step;
+		    step >>= 1;
+		    k >>= 1;
+		} while(k);
+		vpdiff += step;
+		
+		if (delta & signmask)
+		    c->status[i].predictor -= vpdiff;
+		else
+		    c->status[i].predictor += vpdiff;
+		
+		c->status[i].step_index += table[delta & (~signmask)];
+		
+		c->status[i].step_index = clip(c->status[i].step_index, 0, 88);
+		c->status[i].predictor = clip(c->status[i].predictor, -32768, 32767);
+		
+		*samples++ = c->status[i].predictor;
+	    }
+	}
+	
+//	src += get_bits_count(&gb)*8;
+	src += size;
+	
+	break;
+    }
+    case CODEC_ID_ADPCM_YAMAHA:
+        while (src < buf + buf_size) {
+            if (st) {
+                *samples++ = adpcm_yamaha_expand_nibble(&c->status[0],
+                        src[0] & 0x0F);
+                *samples++ = adpcm_yamaha_expand_nibble(&c->status[1],
+                        (src[0] >> 4) & 0x0F);
+            } else {
+                *samples++ = adpcm_yamaha_expand_nibble(&c->status[0],
+                        src[0] & 0x0F);
+                *samples++ = adpcm_yamaha_expand_nibble(&c->status[0],
+                        (src[0] >> 4) & 0x0F);
+            }
+            src++;
+        }
+        break;
     default:
-        *data_size = 0;
         return -1;
     }
     *data_size = (uint8_t *)samples - (uint8_t *)data;
@@ -897,5 +1114,8 @@ ADPCM_CODEC(CODEC_ID_ADPCM_4XM, adpcm_4xm);
 ADPCM_CODEC(CODEC_ID_ADPCM_XA, adpcm_xa);
 ADPCM_CODEC(CODEC_ID_ADPCM_ADX, adpcm_adx);
 ADPCM_CODEC(CODEC_ID_ADPCM_EA, adpcm_ea);
+ADPCM_CODEC(CODEC_ID_ADPCM_CT, adpcm_ct);
+ADPCM_CODEC(CODEC_ID_ADPCM_SWF, adpcm_swf);
+ADPCM_CODEC(CODEC_ID_ADPCM_YAMAHA, adpcm_yamaha);
 
 #undef ADPCM_CODEC

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * glide.c : 3dfx Glide plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: glide.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id: glide.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -153,6 +153,7 @@ static int Init( vout_thread_t *p_vout )
 
     p_pic->p->p_pixels = p_vout->p_sys->pp_buffer[p_vout->p_sys->i_index];
     p_pic->p->i_lines = GLIDE_HEIGHT;
+    p_pic->p->i_visible_lines = GLIDE_HEIGHT;
     p_pic->p->i_pitch = p_vout->p_sys->p_buffer_info.strideInBytes;
                          /*1024 * GLIDE_BYTES_PER_PIXEL*/
     p_pic->p->i_pixel_pitch = GLIDE_BYTES_PER_PIXEL;

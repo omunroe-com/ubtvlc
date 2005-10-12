@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_layout.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_layout.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_layout.hpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

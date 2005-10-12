@@ -1,0 +1,20 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 11_remove_postproc_support_from_configure.dpatch by Daniel T Chen <crimsun@fungus.sh.nu>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Hack around libpostproc-dev/multiverse crackfulness by removing 
+## DP: postproc support from configure
+
+@DPATCH@
+
+--- vlc.1/configure	2005-10-11 03:26:40.000000000 -0700
++++ vlc/configure	2005-10-11 03:29:27.000000000 -0700
+@@ -25751,7 +25751,7 @@
+ 
+ 
+   for element in ffmpeg stream_out_switcher; do
+-    eval "LDFLAGS_${element}="'"'"`${FFMPEG_CONFIG} --plugin-libs avcodec avformat postproc` "'$'"{LDFLAGS_${element}} "'"'
++    eval "LDFLAGS_${element}="'"'"`${FFMPEG_CONFIG} --plugin-libs avcodec avformat` "'$'"{LDFLAGS_${element}} "'"'
+     am_modules_with_ldflags="${am_modules_with_ldflags} ${element}"
+   done
+ 

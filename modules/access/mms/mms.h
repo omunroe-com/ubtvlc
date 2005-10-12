@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mms.h: MMS access plug-in
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: mms.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id: mms.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -28,27 +28,11 @@
 
 
 /* mmst and mmsu */
-int  E_( MMSTUOpen )  ( input_thread_t * );
-void E_( MMSTUClose ) ( input_thread_t * );
+int  E_( MMSTUOpen )  ( access_t * );
+void E_( MMSTUClose ) ( access_t * );
 
 /* mmsh */
-int  E_( MMSHOpen )  ( input_thread_t * );
-void E_( MMSHClose ) ( input_thread_t * );
+int  E_( MMSHOpen )  ( access_t * );
+void E_( MMSHClose ) ( access_t * );
 
 #define FREE( p ) if( p ) { free( p ); (p) = NULL; }
-
-/* url: [/]host[:port][/path][@username[:password]] */
-typedef struct url_s
-{
-    char    *psz_host;
-    int     i_port;
-
-    char    *psz_path;
-
-    char    *psz_username;
-    char    *psz_password;
-} url_t;
-
-url_t *E_( url_new )  ( char * );
-void   E_( url_free ) ( url_t * );
-

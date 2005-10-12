@@ -31,6 +31,9 @@
 #define PMT_TID   0x02 
 #define SDT_TID   0x42
 
+/* descriptor ids */
+#define DVB_SUBT_DESCID             0x59
+
 #define STREAM_TYPE_VIDEO_MPEG1     0x01
 #define STREAM_TYPE_VIDEO_MPEG2     0x02
 #define STREAM_TYPE_AUDIO_MPEG1     0x03
@@ -39,9 +42,12 @@
 #define STREAM_TYPE_PRIVATE_DATA    0x06
 #define STREAM_TYPE_AUDIO_AAC       0x0f
 #define STREAM_TYPE_VIDEO_MPEG4     0x10
-#define STREAM_TYPE_VIDEO_H264      0x1a
+#define STREAM_TYPE_VIDEO_H264      0x1b
 
 #define STREAM_TYPE_AUDIO_AC3       0x81
+#define STREAM_TYPE_AUDIO_DTS       0x8a
+
+#define STREAM_TYPE_SUBTITLE_DVB    0x100
 
 unsigned int mpegts_crc32(const uint8_t *data, int len);
 extern AVOutputFormat mpegts_mux;

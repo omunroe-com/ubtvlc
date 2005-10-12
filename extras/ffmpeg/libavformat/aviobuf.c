@@ -28,8 +28,8 @@ int init_put_byte(ByteIOContext *s,
                   int write_flag,
                   void *opaque,
                   int (*read_packet)(void *opaque, uint8_t *buf, int buf_size),
-                  void (*write_packet)(void *opaque, uint8_t *buf, int buf_size),
-                  int (*seek)(void *opaque, offset_t offset, int whence))
+                  int (*write_packet)(void *opaque, uint8_t *buf, int buf_size),
+                  offset_t (*seek)(void *opaque, offset_t offset, int whence))
 {
     s->buffer = buffer;
     s->buffer_size = buffer_size;
@@ -46,6 +46,7 @@ int init_put_byte(ByteIOContext *s,
     s->pos = 0;
     s->must_flush = 0;
     s->eof_reached = 0;
+    s->error = 0;
     s->is_streamed = 0;
     s->max_packet_size = 0;
     s->update_checksum= NULL;
@@ -57,8 +58,12 @@ int init_put_byte(ByteIOContext *s,
 static void flush_buffer(ByteIOContext *s)
 {
     if (s->buf_ptr > s->buffer) {
-        if (s->write_packet)
-            s->write_packet(s->opaque, s->buffer, s->buf_ptr - s->buffer);
+        if (s->write_packet && !s->error){
+            int ret= s->write_packet(s->opaque, s->buffer, s->buf_ptr - s->buffer);
+            if(ret < 0){
+                s->error = ret;
+            }
+        }
         if(s->update_checksum){
             s->checksum= s->update_checksum(s->checksum, s->checksum_ptr, s->buf_ptr - s->checksum_ptr);
             s->checksum_ptr= s->buffer;
@@ -148,7 +153,8 @@ offset_t url_fseek(ByteIOContext *s, offset_t offset, int whence)
                 return -EPIPE;
             s->buf_ptr = s->buffer;
             s->buf_end = s->buffer;
-            s->seek(s->opaque, offset, SEEK_SET);
+            if (s->seek(s->opaque, offset, SEEK_SET) == (offset_t)-EPIPE)
+                return -EPIPE;
             s->pos = offset;
         }
         s->eof_reached = 0;
@@ -166,9 +172,25 @@ offset_t url_ftell(ByteIOContext *s)
     return url_fseek(s, 0, SEEK_CUR);
 }
 
+offset_t url_fsize(ByteIOContext *s)
+{
+    offset_t size;
+    
+    if (!s->seek)
+        return -EPIPE;
+    size = s->seek(s->opaque, -1, SEEK_END) + 1;
+    s->seek(s->opaque, s->pos, SEEK_SET);
+    return size;
+}
+
 int url_feof(ByteIOContext *s)
 {
     return s->eof_reached;
+}
+
+int url_ferror(ByteIOContext *s)
+{
+    return s->error;
 }
 
 #ifdef CONFIG_ENCODERS
@@ -186,17 +208,6 @@ void put_be32(ByteIOContext *s, unsigned int val)
     put_byte(s, val >> 16);
     put_byte(s, val >> 8);
     put_byte(s, val);
-}
-
-/* IEEE format is assumed */
-void put_be64_double(ByteIOContext *s, double val)
-{
-    union {
-        double d;
-        uint64_t ull;
-    } u;
-    u.d = val;
-    put_be64(s, u.ull);
 }
 
 void put_strz(ByteIOContext *s, const char *str)
@@ -231,6 +242,12 @@ void put_be16(ByteIOContext *s, unsigned int val)
     put_byte(s, val);
 }
 
+void put_be24(ByteIOContext *s, unsigned int val)
+{
+    put_be16(s, val >> 8);
+    put_byte(s, val);
+}
+
 void put_tag(ByteIOContext *s, const char *tag)
 {
     while (*tag) {
@@ -250,7 +267,8 @@ static void fill_buffer(ByteIOContext *s)
         return;
 
     if(s->update_checksum){
-        s->checksum= s->update_checksum(s->checksum, s->checksum_ptr, s->buf_end - s->checksum_ptr);
+        if(s->buf_end > s->checksum_ptr)
+            s->checksum= s->update_checksum(s->checksum, s->checksum_ptr, s->buf_end - s->checksum_ptr);
         s->checksum_ptr= s->buffer;
     }
 
@@ -259,6 +277,8 @@ static void fill_buffer(ByteIOContext *s)
         /* do not modify buffer if EOF reached so that a seek back can
            be done without rereading data */
         s->eof_reached = 1;
+    if(len<0)
+        s->error= len;
     } else {
         s->pos += len;
         s->buf_ptr = s->buffer;
@@ -320,10 +340,28 @@ int get_buffer(ByteIOContext *s, unsigned char *buf, int size)
         if (len > size)
             len = size;
         if (len == 0) {
-            fill_buffer(s);
-            len = s->buf_end - s->buf_ptr;
-            if (len == 0)
-                break;
+            if(size > s->buffer_size && !s->update_checksum){
+                len = s->read_packet(s->opaque, buf, size);
+                if (len <= 0) {
+                    /* do not modify buffer if EOF reached so that a seek back can
+                    be done without rereading data */
+                    s->eof_reached = 1;
+                    if(len<0)
+                        s->error= len;
+                    break;
+                } else {
+                    s->pos += len;
+                    size -= len;
+                    buf += len;
+                    s->buf_ptr = s->buffer;
+                    s->buf_end = s->buffer/* + len*/;
+                }
+            }else{
+                fill_buffer(s);
+                len = s->buf_end - s->buf_ptr;
+                if (len == 0)
+                    break;
+            }
         } else {
             memcpy(buf, s->buf_ptr, len);
             buf += len;
@@ -337,6 +375,9 @@ int get_buffer(ByteIOContext *s, unsigned char *buf, int size)
 int get_partial_buffer(ByteIOContext *s, unsigned char *buf, int size)
 {
     int len;
+    
+    if(size<0)
+        return -1;
 
     len = s->buf_end - s->buf_ptr;
     if (len == 0) {
@@ -361,10 +402,8 @@ unsigned int get_le16(ByteIOContext *s)
 unsigned int get_le32(ByteIOContext *s)
 {
     unsigned int val;
-    val = get_byte(s);
-    val |= get_byte(s) << 8;
-    val |= get_byte(s) << 16;
-    val |= get_byte(s) << 24;
+    val = get_le16(s);
+    val |= get_le16(s) << 16;
     return val;
 }
 
@@ -384,25 +423,19 @@ unsigned int get_be16(ByteIOContext *s)
     return val;
 }
 
-unsigned int get_be32(ByteIOContext *s)
+unsigned int get_be24(ByteIOContext *s)
 {
     unsigned int val;
-    val = get_byte(s) << 24;
-    val |= get_byte(s) << 16;
-    val |= get_byte(s) << 8;
+    val = get_be16(s) << 8;
     val |= get_byte(s);
     return val;
 }
-
-double get_be64_double(ByteIOContext *s)
+unsigned int get_be32(ByteIOContext *s)
 {
-    union {
-        double d;
-        uint64_t ull;
-    } u;
-
-    u.ull = get_be64(s);
-    return u.d;
+    unsigned int val;
+    val = get_be16(s) << 16;
+    val |= get_be16(s);
+    return val;
 }
 
 char *get_strz(ByteIOContext *s, char *buf, int maxlen)
@@ -431,10 +464,10 @@ uint64_t get_be64(ByteIOContext *s)
 /* link with avio functions */
 
 #ifdef CONFIG_ENCODERS
-static void url_write_packet(void *opaque, uint8_t *buf, int buf_size)
+static int url_write_packet(void *opaque, uint8_t *buf, int buf_size)
 {
     URLContext *h = opaque;
-    url_write(h, buf, buf_size);
+    return url_write(h, buf, buf_size);
 }
 #else
 #define	url_write_packet NULL
@@ -446,11 +479,11 @@ static int url_read_packet(void *opaque, uint8_t *buf, int buf_size)
     return url_read(h, buf, buf_size);
 }
 
-static int url_seek_packet(void *opaque, int64_t offset, int whence)
+static offset_t url_seek_packet(void *opaque, offset_t offset, int whence)
 {
     URLContext *h = opaque;
-    url_seek(h, offset, whence);
-    return 0;
+    return url_seek(h, offset, whence);
+    //return 0;
 }
 
 int url_fdopen(ByteIOContext *s, URLContext *h)
@@ -473,7 +506,7 @@ int url_fdopen(ByteIOContext *s, URLContext *h)
                       (h->flags & URL_WRONLY || h->flags & URL_RDWR), h,
                       url_read_packet, url_write_packet, url_seek_packet) < 0) {
         av_free(buffer);
-        return -EIO;
+        return AVERROR_IO;
     }
     s->is_streamed = h->is_streamed;
     s->max_packet_size = max_packet_size;
@@ -608,7 +641,7 @@ typedef struct DynBuffer {
     uint8_t io_buffer[1];
 } DynBuffer;
 
-static void dyn_buf_write(void *opaque, uint8_t *buf, int buf_size)
+static int dyn_buf_write(void *opaque, uint8_t *buf, int buf_size)
 {
     DynBuffer *d = opaque;
     int new_size, new_allocated_size;
@@ -616,41 +649,47 @@ static void dyn_buf_write(void *opaque, uint8_t *buf, int buf_size)
     /* reallocate buffer if needed */
     new_size = d->pos + buf_size;
     new_allocated_size = d->allocated_size;
+    if(new_size < d->pos || new_size > INT_MAX/2)
+        return -1;
     while (new_size > new_allocated_size) {
         if (!new_allocated_size)
             new_allocated_size = new_size;
         else
-            new_allocated_size = (new_allocated_size * 3) / 2 + 1;    
+            new_allocated_size += new_allocated_size / 2 + 1;    
     }
     
     if (new_allocated_size > d->allocated_size) {
         d->buffer = av_realloc(d->buffer, new_allocated_size);
         if(d->buffer == NULL)
-             return ;
+             return -1234;
         d->allocated_size = new_allocated_size;
     }
     memcpy(d->buffer + d->pos, buf, buf_size);
     d->pos = new_size;
     if (d->pos > d->size)
         d->size = d->pos;
+    return buf_size;
 }
 
-static void dyn_packet_buf_write(void *opaque, uint8_t *buf, int buf_size)
+static int dyn_packet_buf_write(void *opaque, uint8_t *buf, int buf_size)
 {
     unsigned char buf1[4];
+    int ret;
 
     /* packetized write: output the header */
     buf1[0] = (buf_size >> 24);
     buf1[1] = (buf_size >> 16);
     buf1[2] = (buf_size >> 8);
     buf1[3] = (buf_size);
-    dyn_buf_write(opaque, buf1, 4);
+    ret= dyn_buf_write(opaque, buf1, 4);
+    if(ret < 0)
+        return ret;
 
     /* then the data */
-    dyn_buf_write(opaque, buf, buf_size);
+    return dyn_buf_write(opaque, buf, buf_size);
 }
 
-static int dyn_buf_seek(void *opaque, offset_t offset, int whence)
+static offset_t dyn_buf_seek(void *opaque, offset_t offset, int whence)
 {
     DynBuffer *d = opaque;
 
@@ -674,6 +713,8 @@ static int url_open_dyn_buf_internal(ByteIOContext *s, int max_packet_size)
     else
         io_buffer_size = 1024;
         
+    if(sizeof(DynBuffer) + io_buffer_size < io_buffer_size)
+        return -1;
     d = av_malloc(sizeof(DynBuffer) + io_buffer_size);
     if (!d)
         return -1;

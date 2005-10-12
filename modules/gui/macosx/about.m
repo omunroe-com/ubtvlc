@@ -1,8 +1,8 @@
 /*****************************************************************************
  * about.m: MacOS X About Panel
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: about.m 7090 2004-03-15 19:33:18Z bigben $
+ * Copyright (C) 2001-2005 the VideoLAN team
+ * $Id: about.m 12528 2005-09-12 19:42:53Z fkuehne $
  *
  * Authors: Derk-Jan Hartman <thedj@users.sourceforge.net>
  *
@@ -50,14 +50,14 @@ static VLAboutBox *_o_sharedInstance = nil;
     return _o_sharedInstance;
 }
 
-- (IBAction)showPanel:(id)sender
+- (void)showPanel
 {    
     if (!o_credits_path)
     {
         NSString *o_name;
         NSString *o_version;
         NSString *o_thanks_path;
-    
+		
         /* Get the info dictionary (Info.plist) */
         o_info_dict = [[NSBundle mainBundle] infoDictionary];
         
@@ -74,6 +74,11 @@ static VLAboutBox *_o_sharedInstance = nil;
         
         /* Setup the version field */
         o_version = [o_info_dict objectForKey:@"CFBundleVersion"];
+        
+        /* setup the creator / revision field */
+        [o_revision_field setStringValue: [NSString stringWithFormat: \
+            _NS("Compiled by %s, based on SVN revision %s"), VLC_CompileBy(), \
+            VLC_Changeset()]];
     
         /* Setup the nameversion field */
         o_name_version = [NSString stringWithFormat:@"%@ - Version %@", o_name, o_version];

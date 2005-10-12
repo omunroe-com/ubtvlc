@@ -1,8 +1,8 @@
 /*****************************************************************************
  * variables.c: routines for object variables handling
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: variables.c 7152 2004-03-23 23:30:49Z gbazin $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id: variables.c 12509 2005-09-10 15:22:51Z robux4 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -63,16 +63,22 @@ static void DupList( vlc_value_t *p_val )
     int i;
     vlc_list_t *p_list = malloc( sizeof(vlc_list_t) );
 
+    p_list->i_count = p_val->p_list->i_count;
     if( p_val->p_list->i_count )
     {
-        p_list->i_count = p_val->p_list->i_count;
         p_list->p_values = malloc( p_list->i_count * sizeof(vlc_value_t) );
         p_list->pi_types = malloc( p_list->i_count * sizeof(int) );
+    }
+    else
+    {
+        p_list->p_values = NULL;
+        p_list->pi_types = NULL;
     }
 
     for( i = 0; i < p_list->i_count; i++ )
     {
         p_list->p_values[i] = p_val->p_list->p_values[i];
+        p_list->pi_types[i] = p_val->p_list->pi_types[i];
         switch( p_val->p_list->pi_types[i] & VLC_VAR_TYPE )
         {
         case VLC_VAR_STRING:
@@ -187,6 +193,7 @@ int __var_Create( vlc_object_t *p_this, const char *psz_name, int i_type )
     p_this->i_vars++;
 
     p_var = &p_this->p_vars[i_new];
+    memset( p_var, 0, sizeof(*p_var) );
 
     p_var->i_hash = HashString( psz_name );
     p_var->psz_name = strdup( psz_name );
@@ -1224,6 +1231,35 @@ static int InheritValue( vlc_object_t *p_this, const char *psz_name,
         case VLC_VAR_BOOL:
             p_val->b_bool = config_GetInt( p_this, psz_name );
             break;
+        case VLC_VAR_LIST:
+        {
+            char *psz_orig, *psz_var;
+            vlc_list_t *p_list = malloc(sizeof(vlc_list_t));
+            p_val->p_list = p_list;
+            p_list->i_count = 0;
+
+            psz_var = psz_orig = config_GetPsz( p_this, psz_name );
+            while( psz_var && *psz_var )
+            {
+                char *psz_item = psz_var;
+                vlc_value_t val;
+                while( *psz_var && *psz_var != ',' ) psz_var++;
+                if( *psz_var == ',' )
+                {
+                    *psz_var = '\0';
+                    psz_var++;
+                }
+                val.i_int = strtol( psz_item, NULL, 0 );
+                INSERT_ELEM( p_list->p_values, p_list->i_count,
+                             p_list->i_count, val );
+                /* p_list->i_count is incremented twice by INSERT_ELEM */
+                p_list->i_count--;
+                INSERT_ELEM( p_list->pi_types, p_list->i_count,
+                             p_list->i_count, VLC_VAR_INTEGER );
+            }
+            if( psz_orig ) free( psz_orig );
+            break;
+        }
         default:
             return VLC_ENOOBJ;
             break;

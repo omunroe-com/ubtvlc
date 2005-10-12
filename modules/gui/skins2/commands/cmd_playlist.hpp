@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_playlist.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_playlist.hpp 7321 2004-04-11 16:34:04Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_playlist.hpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -78,6 +78,7 @@ class CmdPlaylistRandom: public CmdGeneric
         bool m_value;
 };
 
+
 /// Command to set the loop state
 class CmdPlaylistLoop: public CmdGeneric
 {
@@ -97,6 +98,65 @@ class CmdPlaylistLoop: public CmdGeneric
         bool m_value;
 };
 
+
+/// Command to set the repeat state
+class CmdPlaylistRepeat: public CmdGeneric
+{
+    public:
+        CmdPlaylistRepeat( intf_thread_t *pIntf, bool value ):
+            CmdGeneric( pIntf ), m_value( value ) {}
+        virtual ~CmdPlaylistRepeat() {}
+
+        /// This method does the real job of the command
+        virtual void execute();
+
+        /// Return the type of the command
+        virtual string getType() const { return "playlist repeat"; }
+
+    private:
+        /// Repeat state
+        bool m_value;
+};
+
+
+/// Command to load a playlist
+class CmdPlaylistLoad: public CmdGeneric
+{
+    public:
+        CmdPlaylistLoad( intf_thread_t *pIntf, const string& rFile ):
+            CmdGeneric( pIntf ), m_file( rFile ) {}
+        virtual ~CmdPlaylistLoad() {}
+
+        /// This method does the real job of the command
+        virtual void execute();
+
+        /// Return the type of the command
+        virtual string getType() const { return "playlist load"; }
+
+    private:
+        /// Playlist file to load
+        string m_file;
+};
+
+
+/// Command to save a playlist
+class CmdPlaylistSave: public CmdGeneric
+{
+    public:
+        CmdPlaylistSave( intf_thread_t *pIntf, const string& rFile ):
+            CmdGeneric( pIntf ), m_file( rFile ) {}
+        virtual ~CmdPlaylistSave() {}
+
+        /// This method does the real job of the command
+        virtual void execute();
+
+        /// Return the type of the command
+        virtual string getType() const { return "playlist save"; }
+
+    private:
+        /// Playlist file to save
+        string m_file;
+};
 
 
 #endif

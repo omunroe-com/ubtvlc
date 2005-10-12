@@ -1,8 +1,8 @@
 /*****************************************************************************
  * skin_common.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: skin_common.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: skin_common.hpp 12501 2005-09-09 19:20:34Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -40,9 +40,17 @@ class OSLoop;
 class VarManager;
 class VlcProc;
 class Theme;
+class ThemeRepository;
 
 #ifndef M_PI
 #   define M_PI 3.14159265358979323846
+#endif
+
+#ifdef _MSC_VER
+// turn off 'warning C4355: 'this' : used in base member initializer list'
+#pragma warning ( disable:4355 )
+// turn off 'identifier was truncated to '255' characters in the debug info'
+#pragma warning ( disable:4786 )
 #endif
 
 // Useful macros
@@ -89,6 +97,8 @@ struct intf_sys_t
     VarManager *p_varManager;
     /// VLC state handler
     VlcProc *p_vlcProc;
+    /// Theme repository
+    ThemeRepository *p_repository;
 
     /// Current theme
     Theme *p_theme;
@@ -105,28 +115,6 @@ class SkinObject
         /// Getter (public because it is used in C callbacks in the win32
         /// interface)
         intf_thread_t *getIntf() const { return m_pIntf; }
-
-        /// Class for callbacks
-        class Callback {
-            public:
-                /// Type for callback methods
-                typedef void (*CallbackFunc_t)( SkinObject* );
-
-                /// Create a callback with the given object and function
-                Callback( SkinObject *pObj, CallbackFunc_t pFunc ):
-                    m_pObj( pObj ), m_pFunc( pFunc ) {}
-                ~Callback() {}
-
-                /// Getters
-                SkinObject *getObj() const { return m_pObj; }
-                CallbackFunc_t getFunc() const { return m_pFunc; }
-
-            private:
-                /// Pointer on the callback object
-                SkinObject *const m_pObj;
-                /// Pointer on the callback method
-                CallbackFunc_t m_pFunc;
-        };
 
     private:
         intf_thread_t *m_pIntf;

@@ -21,11 +21,20 @@
  * @file flac.c
  * FLAC (Free Lossless Audio Codec) decoder
  * @author Alex Beregszaszi
+ *
+ * For more information on the FLAC format, visit:
+ *  http://flac.sourceforge.net/
+ *
+ * This decoder can be used in 1 of 2 ways: Either raw FLAC data can be fed
+ * through, starting from the initial 'fLaC' signature; or by passing the
+ * 34-byte streaminfo structure through avctx->extradata[_size] followed
+ * by data starting with the 0xFFF8 marker.
  */
  
 #include <limits.h>
  
 #include "avcodec.h"
+#include "bitstream.h"
 #include "golomb.h"
 
 #undef NDEBUG
@@ -33,6 +42,7 @@
 
 #define MAX_CHANNELS 8
 #define MAX_BLOCKSIZE 65535
+#define FLAC_STREAMINFO_SIZE 34
 
 enum decorrelation_type {
     INDEPENDENT,
@@ -133,6 +143,29 @@ static int64_t get_utf8(GetBitContext *gb)
     return val;
 }
 
+#if 0
+static int skip_utf8(GetBitContext *gb)
+{
+    int ones=0, bytes;
+    
+    while(get_bits1(gb))
+        ones++;
+
+    if     (ones==0) bytes=0;
+    else if(ones==1) return -1;
+    else             bytes= ones - 1;
+    
+    skip_bits(gb, 7-ones);
+    while(bytes--){
+        const int tmp = get_bits(gb, 8);
+        
+        if((tmp>>6) != 2)
+            return -1;
+    }
+    return 0;
+}
+#endif
+
 static int get_crc8(const uint8_t *buf, int count){
     int crc=0;
     int i;
@@ -144,8 +177,21 @@ static int get_crc8(const uint8_t *buf, int count){
     return crc;
 }
 
+static void metadata_streaminfo(FLACContext *s);
+static void dump_headers(FLACContext *s);
+
 static int flac_decode_init(AVCodecContext * avctx)
 {
+    FLACContext *s = avctx->priv_data;
+    s->avctx = avctx;
+
+    /* initialize based on the demuxer-supplied streamdata header */
+    if (avctx->extradata_size == FLAC_STREAMINFO_SIZE) {
+        init_get_bits(&s->gb, avctx->extradata, avctx->extradata_size*8);
+        metadata_streaminfo(s);
+        dump_headers(s);
+    }
+
     return 0;
 }
 
@@ -360,7 +406,7 @@ static inline int decode_subframe(FLACContext *s, int channel)
 
     if (get_bits1(&s->gb))
     {
-        av_log(s->avctx, AV_LOG_DEBUG, "invalid subframe padding\n");
+        av_log(s->avctx, AV_LOG_ERROR, "invalid subframe padding\n");
         return -1;
     }
     type = get_bits(&s->gb, 6);
@@ -416,7 +462,7 @@ static inline int decode_subframe(FLACContext *s, int channel)
     }
     else
     {
-        av_log(s->avctx, AV_LOG_DEBUG, "invalid coding type\n");
+        av_log(s->avctx, AV_LOG_ERROR, "invalid coding type\n");
         return -1;
     }
         
@@ -446,7 +492,7 @@ static int decode_frame(FLACContext *s)
         decorrelation = LEFT_SIDE + assignment - 8;
     else
     {
-        av_log(s->avctx, AV_LOG_DEBUG, "unsupported channel assignment %d (channels=%d)\n", assignment, s->channels);
+        av_log(s->avctx, AV_LOG_ERROR, "unsupported channel assignment %d (channels=%d)\n", assignment, s->channels);
         return -1;
     }
         
@@ -457,13 +503,13 @@ static int decode_frame(FLACContext *s)
         bps = sample_size_table[sample_size_code];
     else 
     {
-        av_log(s->avctx, AV_LOG_DEBUG, "invalid sample size code (%d)\n", sample_size_code);
+        av_log(s->avctx, AV_LOG_ERROR, "invalid sample size code (%d)\n", sample_size_code);
         return -1;
     }
 
     if (get_bits1(&s->gb))
     {
-        av_log(s->avctx, AV_LOG_DEBUG, "broken stream, invalid padding\n");
+        av_log(s->avctx, AV_LOG_ERROR, "broken stream, invalid padding\n");
         return -1;
     }
     
@@ -510,7 +556,7 @@ static int decode_frame(FLACContext *s)
     skip_bits(&s->gb, 8);
     crc8= get_crc8(s->gb.buffer, get_bits_count(&s->gb)/8);
     if(crc8){
-        av_log(s->avctx, AV_LOG_ERROR, "header crc missmatch crc=%2X\n", crc8);
+        av_log(s->avctx, AV_LOG_ERROR, "header crc mismatch crc=%2X\n", crc8);
         return -1;
     }
     
@@ -543,20 +589,16 @@ static int flac_decode_frame(AVCodecContext *avctx,
 {
     FLACContext *s = avctx->priv_data;
     int metadata_last, metadata_type, metadata_size;
-    int tmp = 0, i, j = 0, input_buf_size;
-    int16_t *samples = data, *left, *right;
+    int tmp = 0, i, j = 0, input_buf_size = 0;
+    int16_t *samples = data;
 
-    *data_size = 0;
-
-    s->avctx = avctx;
-    
     if(s->max_framesize == 0){
-        s->max_framesize= 8192; // should hopefully be enough for the first header
+        s->max_framesize= 65536; // should hopefully be enough for the first header
         s->bitstream= av_fast_realloc(s->bitstream, &s->allocated_bitstream_size, s->max_framesize);
     }
 
     if(1 && s->max_framesize){//FIXME truncated
-            buf_size= FFMIN(buf_size, s->max_framesize - s->bitstream_size);
+            buf_size= FFMAX(FFMIN(buf_size, s->max_framesize - s->bitstream_size), 0);
             input_buf_size= buf_size;
 
             if(s->bitstream_index + s->bitstream_size + buf_size > s->allocated_bitstream_size){
@@ -594,10 +636,20 @@ static int flac_decode_frame(AVCodecContext *avctx,
             if(metadata_size){
                 switch(metadata_type)
                 {
-                case METADATA_TYPE_STREAMINFO:
+                case METADATA_TYPE_STREAMINFO:{
                     metadata_streaminfo(s);
+
+                    /* Buffer might have been reallocated, reinit bitreader */
+                    if(buf != &s->bitstream[s->bitstream_index])
+                    {
+                        int bits_count = get_bits_count(&s->gb);
+                        buf= &s->bitstream[s->bitstream_index];
+                        init_get_bits(&s->gb, buf, buf_size*8);
+                        skip_bits(&s->gb, bits_count);
+                    }
+ 
                     dump_headers(s);
-                    break;
+                    break;}
                 default:
                     for(i=0; i<metadata_size; i++)
                         skip_bits(&s->gb, 8);

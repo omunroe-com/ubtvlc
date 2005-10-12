@@ -1,8 +1,8 @@
 /*****************************************************************************
  * window_manager.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: window_manager.cpp 7400 2004-04-20 19:24:03Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: window_manager.cpp 11847 2005-07-25 18:57:32Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -29,11 +29,16 @@
 #include "anchor.hpp"
 #include "tooltip.hpp"
 #include "../utils/position.hpp"
+#include "../src/var_manager.hpp"
 
 
 WindowManager::WindowManager( intf_thread_t *pIntf ):
-    SkinObject( pIntf ), m_isOnTop( false ), m_magnet( 0 ), m_pTooltip( NULL )
+    SkinObject( pIntf ), m_magnet( 0 ), m_pTooltip( NULL )
 {
+    // Create and register a variable for the "on top" status
+    VarManager *pVarManager = VarManager::instance( getIntf() );
+    m_cVarOnTop = VariablePtr( new VarBoolImpl( getIntf() ) );
+    pVarManager->registerVar( m_cVarOnTop, "vlc.isOnTop" );
 }
 
 
@@ -179,6 +184,17 @@ void WindowManager::synchVisibility() const
 }
 
 
+void WindowManager::raiseAll() const
+{
+    // Raise all the windows
+    WinSet_t::const_iterator it;
+    for( it = m_allWindows.begin(); it != m_allWindows.end(); it++ )
+    {
+        (*it)->raise();
+    }
+}
+
+
 void WindowManager::showAll() const
 {
     // Show all the windows
@@ -203,11 +219,15 @@ void WindowManager::hideAll() const
 
 void WindowManager::toggleOnTop()
 {
-    m_isOnTop = !m_isOnTop;
+    // Update the boolean variable
+    VarBoolImpl *pVarOnTop = (VarBoolImpl*)m_cVarOnTop.get();
+    pVarOnTop->set( !pVarOnTop->get() );
+
+    // Toggle the "on top" status
     WinSet_t::const_iterator it;
     for( it = m_allWindows.begin(); it != m_allWindows.end(); it++ )
     {
-        (*it)->toggleOnTop( m_isOnTop );
+        (*it)->toggleOnTop( pVarOnTop->get() );
     }
 }
 
@@ -244,6 +264,12 @@ void WindowManager::checkAnchors( TopWindow *pWindow,
     for( itMov = m_movingWindows.begin();
          itMov != m_movingWindows.end(); itMov++ )
     {
+        // Skip the invisible windows
+        if( ! (*itMov)->getVisibleVar().get() )
+        {
+            continue;
+        }
+
         int newLeft = (*itMov)->getLeft() + xOffset;
         int newTop = (*itMov)->getTop() + yOffset;
         if( newLeft > workArea.getLeft() - m_magnet &&

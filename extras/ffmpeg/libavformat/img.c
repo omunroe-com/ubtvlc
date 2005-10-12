@@ -90,7 +90,7 @@ static int find_image_range(int *pfirst_index, int *plast_index,
 static int image_probe(AVProbeData *p)
 {
     if (filename_number_test(p->filename) >= 0 && guess_image_format(p->filename))
-        return AVPROBE_SCORE_MAX;
+        return AVPROBE_SCORE_MAX-1;
     else
         return 0;
 }
@@ -123,7 +123,7 @@ static int img_read_header(AVFormatContext *s1, AVFormatParameters *ap)
     if (ap && ap->image_format)
         s->img_fmt = ap->image_format;
 
-    strcpy(s->path, s1->filename);
+    pstrcpy(s->path, sizeof(s->path), s1->filename);
     s->img_number = 0;
     s->img_count = 0;
     
@@ -132,15 +132,13 @@ static int img_read_header(AVFormatContext *s1, AVFormatParameters *ap)
         s->is_pipe = 0;
     else
         s->is_pipe = 1;
-        
-    if (!ap || !ap->frame_rate) {
-        st->codec.frame_rate      = 25;
-        st->codec.frame_rate_base = 1;
+
+    if (!ap || !ap->time_base.num) {
+        st->codec->time_base= (AVRational){1,25};
     } else {
-        st->codec.frame_rate      = ap->frame_rate;
-        st->codec.frame_rate_base = ap->frame_rate_base;
+        st->codec->time_base= ap->time_base;
     }
-    
+ 
     if (!s->is_pipe) {
         if (find_image_range(&first_index, &last_index, s->path) < 0)
             goto fail;
@@ -149,9 +147,7 @@ static int img_read_header(AVFormatContext *s1, AVFormatParameters *ap)
         s->img_number = first_index;
         /* compute duration */
         st->start_time = 0;
-        st->duration = ((int64_t)AV_TIME_BASE * 
-                        (last_index - first_index + 1) * 
-                        st->codec.frame_rate_base) / st->codec.frame_rate;
+        st->duration = last_index - first_index + 1;
         if (get_frame_filename(buf, sizeof(buf), s->path, s->img_number) < 0)
             goto fail;
         if (url_fopen(f, buf, URL_RDONLY) < 0)
@@ -170,11 +166,11 @@ static int img_read_header(AVFormatContext *s1, AVFormatParameters *ap)
         url_fseek(f, 0, SEEK_SET);
     }
     
-    st->codec.codec_type = CODEC_TYPE_VIDEO;
-    st->codec.codec_id = CODEC_ID_RAWVIDEO;
-    st->codec.width = s->width;
-    st->codec.height = s->height;
-    st->codec.pix_fmt = s->pix_fmt;
+    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_id = CODEC_ID_RAWVIDEO;
+    st->codec->width = s->width;
+    st->codec->height = s->height;
+    st->codec->pix_fmt = s->pix_fmt;
     s->img_size = avpicture_get_size(s->pix_fmt, (s->width+15)&(~15), (s->height+15)&(~15));
 
     return 0;
@@ -183,7 +179,7 @@ static int img_read_header(AVFormatContext *s1, AVFormatParameters *ap)
         url_fclose(f);
  fail:
     av_free(s);
-    return -EIO;
+    return AVERROR_IO;
 }
 
 static int read_packet_alloc_cb(void *opaque, AVImageInfo *info)
@@ -211,14 +207,14 @@ static int img_read_packet(AVFormatContext *s1, AVPacket *pkt)
         }
         if (get_frame_filename(filename, sizeof(filename),
                                s->path, s->img_number) < 0)
-            return -EIO;
+            return AVERROR_IO;
         f = &f1;
         if (url_fopen(f, filename, URL_RDONLY) < 0)
-            return -EIO;
+            return AVERROR_IO;
     } else {
         f = &s1->pb;
         if (url_feof(f))
-            return -EIO;
+            return AVERROR_IO;
     }
 
     av_new_packet(pkt, s->img_size);
@@ -232,11 +228,11 @@ static int img_read_packet(AVFormatContext *s1, AVPacket *pkt)
 
     if (ret < 0) {
         av_free_packet(pkt);
-        return -EIO; /* signal EOF */
+        return AVERROR_IO; /* signal EOF */
     } else {
         /* XXX: computing this pts is not necessary as it is done in
            the generic code too */
-        pkt->pts = av_rescale((int64_t)s->img_count * s1->streams[0]->codec.frame_rate_base, s1->pts_den, s1->streams[0]->codec.frame_rate) / s1->pts_num;
+        pkt->pts = av_rescale((int64_t)s->img_count * s1->streams[0]->codec->time_base.num, s1->streams[0]->time_base.den, s1->streams[0]->codec->time_base.den) / s1->streams[0]->time_base.num;
         s->img_count++;
         s->img_number++;
         return 0;
@@ -280,7 +276,7 @@ static int img_set_parameters(AVFormatContext *s, AVFormatParameters *ap)
         return -1;
     img->img_fmt = img_fmt;
     img->pix_fmt = i;
-    st->codec.pix_fmt = img->pix_fmt;
+    st->codec->pix_fmt = img->pix_fmt;
     return 0;
 }
 
@@ -289,7 +285,7 @@ static int img_write_header(AVFormatContext *s)
     VideoData *img = s->priv_data;
 
     img->img_number = 1;
-    strcpy(img->path, s->filename);
+    pstrcpy(img->path, sizeof(img->path), s->filename);
 
     /* find format */
     if (s->oformat->flags & AVFMT_NOFILE)
@@ -300,35 +296,34 @@ static int img_write_header(AVFormatContext *s)
     return 0;
 }
 
-static int img_write_packet(AVFormatContext *s, int stream_index,
-                            const uint8_t *buf, int size, int64_t pts)
+static int img_write_packet(AVFormatContext *s, AVPacket *pkt)
 {
     VideoData *img = s->priv_data;
-    AVStream *st = s->streams[stream_index];
+    AVStream *st = s->streams[pkt->stream_index];
     ByteIOContext pb1, *pb;
     AVPicture *picture;
     int width, height, ret;
     char filename[1024];
     AVImageInfo info;
 
-    width = st->codec.width;
-    height = st->codec.height;
+    width = st->codec->width;
+    height = st->codec->height;
     
-    picture = (AVPicture *)buf;
+    picture = (AVPicture *)pkt->data;
 
     if (!img->is_pipe) {
         if (get_frame_filename(filename, sizeof(filename), 
                                img->path, img->img_number) < 0)
-            return -EIO;
+            return AVERROR_IO;
         pb = &pb1;
         if (url_fopen(pb, filename, URL_WRONLY) < 0)
-            return -EIO;
+            return AVERROR_IO;
     } else {
         pb = &s->pb;
     }
     info.width = width;
     info.height = height;
-    info.pix_fmt = st->codec.pix_fmt;
+    info.pix_fmt = st->codec->pix_fmt;
     info.interleaved = 0;    /* FIXME: there should be a way to set it right */
     info.pict = *picture;
     ret = av_write_image(pb, img->img_fmt, &info);

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * bits.h
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: bits.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id: bits.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>

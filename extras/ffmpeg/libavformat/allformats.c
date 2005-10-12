@@ -26,6 +26,12 @@
  */
 void av_register_all(void)
 {
+    static int inited = 0;
+    
+    if (inited != 0)
+        return;
+    inited = 1;
+
     avcodec_init();
     avcodec_register_all();
 
@@ -34,18 +40,18 @@ void av_register_all(void)
 #ifdef CONFIG_ENCODERS
     crc_init();
     img_init();
+    img2_init();
 #endif //CONFIG_ENCODERS
     raw_init();
     mp3_init();
     rm_init();
-#ifdef CONFIG_RISKY
     asf_init();
-#endif
 #ifdef CONFIG_ENCODERS
     avienc_init();
 #endif //CONFIG_ENCODERS
     avidec_init();
     ff_wav_init();
+    ff_mmf_init();
     swf_init();
     au_init();
 #ifdef CONFIG_ENCODERS
@@ -76,15 +82,14 @@ void av_register_all(void)
     amr_init();
 #endif
     yuv4mpeg_init();
-    
-#ifdef CONFIG_VORBIS
+
     ogg_init();
+#ifdef CONFIG_LIBOGG
+    libogg_init();
 #endif
 
-#ifndef CONFIG_WIN32
     ffm_init();
-#endif
-#ifdef CONFIG_VIDEO4LINUX
+#if defined(CONFIG_VIDEO4LINUX) || defined(CONFIG_BKTR)
     video_grab_init();
 #endif
 #if defined(CONFIG_AUDIO_OSS) || defined(CONFIG_AUDIO_BEOS)
@@ -95,11 +100,20 @@ void av_register_all(void)
     dv1394_init();
 #endif
 
+#ifdef CONFIG_DC1394
+    dc1394_init();
+#endif
+
     nut_init();
     matroska_init();
+    sol_init();
+    ea_init();
+    nsvdec_init();
+    daud_init();
 
 #ifdef CONFIG_ENCODERS
     /* image formats */
+#if 0
     av_register_image_format(&pnm_image_format);
     av_register_image_format(&pbm_image_format);
     av_register_image_format(&pgm_image_format);
@@ -111,8 +125,9 @@ void av_register_all(void)
     av_register_image_format(&png_image_format);
 #endif
     av_register_image_format(&jpeg_image_format);
-    av_register_image_format(&gif_image_format);
-    av_register_image_format(&sgi_image_format);
+#endif
+    av_register_image_format(&gif_image_format);  
+//    av_register_image_format(&sgi_image_format); heap corruption, dont enable
 #endif //CONFIG_ENCODERS
 
     /* file protocols */

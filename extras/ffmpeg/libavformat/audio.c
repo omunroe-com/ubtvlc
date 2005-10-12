@@ -21,7 +21,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef __OpenBSD__
+#include <soundcard.h>
+#else
 #include <sys/soundcard.h>
+#endif
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -49,7 +53,11 @@ static int audio_open(AudioData *s, int is_output, const char *audio_device)
 
     /* open linux audio device */
     if (!audio_device)
+#ifdef __OpenBSD__
+	audio_device = "/dev/sound";
+#else
         audio_device = "/dev/dsp";
+#endif
 
     if (is_output)
         audio_fd = open(audio_device, O_WRONLY);
@@ -57,7 +65,7 @@ static int audio_open(AudioData *s, int is_output, const char *audio_device)
         audio_fd = open(audio_device, O_RDONLY);
     if (audio_fd < 0) {
         perror(audio_device);
-        return -EIO;
+        return AVERROR_IO;
     }
 
     if (flip && *flip == '1') {
@@ -108,7 +116,7 @@ static int audio_open(AudioData *s, int is_output, const char *audio_device)
     default:
         av_log(NULL, AV_LOG_ERROR, "Soundcard does not support 16 bit sample format\n");
         close(audio_fd);
-        return -EIO;
+        return AVERROR_IO;
     }
     err=ioctl(audio_fd, SNDCTL_DSP_SETFMT, &tmp);
     if (err < 0) {
@@ -137,7 +145,7 @@ static int audio_open(AudioData *s, int is_output, const char *audio_device)
     return 0;
  fail:
     close(audio_fd);
-    return -EIO;
+    return AVERROR_IO;
 }
 
 static int audio_close(AudioData *s)
@@ -154,21 +162,22 @@ static int audio_write_header(AVFormatContext *s1)
     int ret;
 
     st = s1->streams[0];
-    s->sample_rate = st->codec.sample_rate;
-    s->channels = st->codec.channels;
+    s->sample_rate = st->codec->sample_rate;
+    s->channels = st->codec->channels;
     ret = audio_open(s, 1, NULL);
     if (ret < 0) {
-        return -EIO;
+        return AVERROR_IO;
     } else {
         return 0;
     }
 }
 
-static int audio_write_packet(AVFormatContext *s1, int stream_index,
-                              const uint8_t *buf, int size, int64_t pts)
+static int audio_write_packet(AVFormatContext *s1, AVPacket *pkt)
 {
     AudioData *s = s1->priv_data;
     int len, ret;
+    int size= pkt->size;
+    uint8_t *buf= pkt->data;
 
     while (size > 0) {
         len = AUDIO_BLOCK_SIZE - s->buffer_ptr;
@@ -182,7 +191,7 @@ static int audio_write_packet(AVFormatContext *s1, int stream_index,
                 if (ret > 0)
                     break;
                 if (ret < 0 && (errno != EAGAIN && errno != EINTR))
-                    return -EIO;
+                    return AVERROR_IO;
             }
             s->buffer_ptr = 0;
         }
@@ -221,16 +230,16 @@ static int audio_read_header(AVFormatContext *s1, AVFormatParameters *ap)
     ret = audio_open(s, 0, ap->device);
     if (ret < 0) {
         av_free(st);
-        return -EIO;
+        return AVERROR_IO;
     }
 
     /* take real parameters */
-    st->codec.codec_type = CODEC_TYPE_AUDIO;
-    st->codec.codec_id = s->codec_id;
-    st->codec.sample_rate = s->sample_rate;
-    st->codec.channels = s->channels;
+    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_id = s->codec_id;
+    st->codec->sample_rate = s->sample_rate;
+    st->codec->channels = s->channels;
 
-    av_set_pts_info(s1, 48, 1, 1000000);  /* 48 bits pts in us */
+    av_set_pts_info(st, 48, 1, 1000000);  /* 48 bits pts in us */
     return 0;
 }
 
@@ -242,7 +251,7 @@ static int audio_read_packet(AVFormatContext *s1, AVPacket *pkt)
     struct audio_buf_info abufi;
     
     if (av_new_packet(pkt, s->frame_size) < 0)
-        return -EIO;
+        return AVERROR_IO;
     for(;;) {
         struct timeval tv;
         fd_set fds;
@@ -262,11 +271,12 @@ static int audio_read_packet(AVFormatContext *s1, AVPacket *pkt)
         if (ret == -1 && (errno == EAGAIN || errno == EINTR)) {
             av_free_packet(pkt);
             pkt->size = 0;
+            pkt->pts = av_gettime() & ((1LL << 48) - 1);
             return 0;
         }
         if (!(ret == 0 || (ret == -1 && (errno == EAGAIN || errno == EINTR)))) {
             av_free_packet(pkt);
-            return -EIO;
+            return AVERROR_IO;
         }
     }
     pkt->size = ret;

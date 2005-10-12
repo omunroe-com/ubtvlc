@@ -35,7 +35,6 @@
 #include "avcodec.h"
 #include "dsputil.h"
 
-#define PALETTE_COUNT 256
 
 typedef struct {
     uint8_t  y0, y1, y2, y3;
@@ -63,7 +62,6 @@ typedef struct CinepakContext {
 
     int width, height;
 
-    unsigned char palette[PALETTE_COUNT * 4];
     int palette_video;
     cvid_strip_t strips[MAX_STRIPS];
 
@@ -177,28 +175,28 @@ static int cinepak_decode_vectors (CinepakContext *s, cvid_strip_t *strip,
                         s->frame.data[2][iv[0]] = codebook->v;
                     }
 
-                    s->frame.data[0][iy[0] + 2] = codebook->y0;
-                    s->frame.data[0][iy[0] + 3] = codebook->y0;
-                    s->frame.data[0][iy[1] + 2] = codebook->y0;
-                    s->frame.data[0][iy[1] + 3] = codebook->y0;
+                    s->frame.data[0][iy[0] + 2] = codebook->y1;
+                    s->frame.data[0][iy[0] + 3] = codebook->y1;
+                    s->frame.data[0][iy[1] + 2] = codebook->y1;
+                    s->frame.data[0][iy[1] + 3] = codebook->y1;
                     if (!s->palette_video) {
                         s->frame.data[1][iu[0] + 1] = codebook->u;
                         s->frame.data[2][iv[0] + 1] = codebook->v;
                     }
 
-                    s->frame.data[0][iy[2] + 0] = codebook->y0;
-                    s->frame.data[0][iy[2] + 1] = codebook->y0;
-                    s->frame.data[0][iy[3] + 0] = codebook->y0;
-                    s->frame.data[0][iy[3] + 1] = codebook->y0;
+                    s->frame.data[0][iy[2] + 0] = codebook->y2;
+                    s->frame.data[0][iy[2] + 1] = codebook->y2;
+                    s->frame.data[0][iy[3] + 0] = codebook->y2;
+                    s->frame.data[0][iy[3] + 1] = codebook->y2;
                     if (!s->palette_video) {
                         s->frame.data[1][iu[1]] = codebook->u;
                         s->frame.data[2][iv[1]] = codebook->v;
                     }
 
-                    s->frame.data[0][iy[2] + 2] = codebook->y0;
-                    s->frame.data[0][iy[2] + 3] = codebook->y0;
-                    s->frame.data[0][iy[3] + 2] = codebook->y0;
-                    s->frame.data[0][iy[3] + 3] = codebook->y0;
+                    s->frame.data[0][iy[2] + 2] = codebook->y3;
+                    s->frame.data[0][iy[2] + 3] = codebook->y3;
+                    s->frame.data[0][iy[3] + 2] = codebook->y3;
+                    s->frame.data[0][iy[3] + 3] = codebook->y3;
                     if (!s->palette_video) {
                         s->frame.data[1][iu[1] + 1] = codebook->u;
                         s->frame.data[2][iv[1] + 1] = codebook->v;
@@ -276,6 +274,9 @@ static int cinepak_decode_strip (CinepakContext *s,
     while ((data + 4) <= eod) {
         chunk_id   = BE_16 (&data[0]);
         chunk_size = BE_16 (&data[2]) - 4;
+        if(chunk_size < 0)
+            return -1;
+
         data      += 4;
         chunk_size = ((data + chunk_size) > eod) ? (eod - data) : chunk_size;
 
@@ -315,13 +316,22 @@ static int cinepak_decode (CinepakContext *s)
     uint8_t      *eod = (s->data + s->size);
     int           i, result, strip_size, frame_flags, num_strips;
     int           y0 = 0;
+    int           encoded_buf_size;
+    /* if true, Cinepak data is from a Sega FILM/CPK file */
+    int           sega_film_data = 0;
 
     if (s->size < 10)
         return -1;
 
     frame_flags = s->data[0];
     num_strips  = BE_16 (&s->data[8]);
-    s->data    += 10;
+    encoded_buf_size = BE_16 (&s->data[2]);
+    if (encoded_buf_size != s->size)
+        sega_film_data = 1;
+    if (sega_film_data)
+        s->data    += 12;
+    else
+        s->data    += 10;
 
     if (num_strips > MAX_STRIPS)
         num_strips = MAX_STRIPS;
@@ -361,22 +371,20 @@ static int cinepak_decode (CinepakContext *s)
 static int cinepak_decode_init(AVCodecContext *avctx)
 {
     CinepakContext *s = (CinepakContext *)avctx->priv_data;
-/*
-    int i;
-    unsigned char r, g, b;
-    unsigned char *raw_palette;
-    unsigned int *palette32;
-*/
 
     s->avctx = avctx;
     s->width = (avctx->width + 3) & ~3;
     s->height = (avctx->height + 3) & ~3;
 
-// check for paletted data
-s->palette_video = 0;
+    // check for paletted data
+    if ((avctx->palctrl == NULL) || (avctx->bits_per_sample == 40)) {
+        s->palette_video = 0;
+        avctx->pix_fmt = PIX_FMT_YUV420P;
+    } else {
+        s->palette_video = 1;
+        avctx->pix_fmt = PIX_FMT_PAL8;
+    }
 
-
-    avctx->pix_fmt = PIX_FMT_YUV420P;
     avctx->has_b_frames = 0;
     dsputil_init(&s->dsp, avctx);
 
@@ -403,6 +411,15 @@ static int cinepak_decode_frame(AVCodecContext *avctx,
     }
 
     cinepak_decode(s);
+
+    if (s->palette_video) {
+        memcpy (s->frame.data[1], avctx->palctrl->palette, AVPALETTE_SIZE);
+        if (avctx->palctrl->palette_changed) {
+            s->frame.palette_has_changed = 1;
+            avctx->palctrl->palette_changed = 0;
+        } else
+            s->frame.palette_has_changed = 0;
+    }
 
     *data_size = sizeof(AVFrame);
     *(AVFrame*)data = s->frame;

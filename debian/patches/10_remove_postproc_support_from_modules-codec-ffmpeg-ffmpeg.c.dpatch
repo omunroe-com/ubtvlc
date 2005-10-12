@@ -1,0 +1,20 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 10_remove_postproc_support_from_modules-codec-ffmpeg-ffmpeg.c.diff.dpatch by Daniel T Chen <crimsun@fungus.sh.nu>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Hack around libpostproc-dev/multiverse crackfulness by removing 
+## DP: postproc support from modules/codec/ffmpeg/ffmpeg.c
+
+@DPATCH@
+
+--- vlc.1/modules/codec/ffmpeg/ffmpeg.c	2005-10-11 02:26:54.000000000 -0700
++++ vlc/modules/codec/ffmpeg/ffmpeg.c	2005-10-11 02:26:17.000000000 -0700
+@@ -42,7 +42,7 @@
+ 
+ #include "ffmpeg.h"
+ 
+-#ifdef LIBAVCODEC_PP
++#if 0
+ #   ifdef HAVE_POSTPROC_POSTPROCESS_H
+ #       include <postproc/postprocess.h>
+ #   else

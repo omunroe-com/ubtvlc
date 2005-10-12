@@ -1,8 +1,8 @@
 /*****************************************************************************
  * MsgVals.h
  *****************************************************************************
- * Copyright (C) 2001 VideoLAN
- * $Id: MsgVals.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001 the VideoLAN team
+ * $Id: MsgVals.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Tony Castley <tcastley@mail.powerup.com.au>
  *          Stephan Aßmus <stippi@yellowbites.com>
@@ -51,7 +51,6 @@
 #define PREV_TITLE         'prti'
 #define NEXT_TITLE         'nxti'
 #define TOGGLE_TITLE       'tgti'
-#define NAVIGATE_MENU      'navm'
 #define PREV_CHAPTER       'prch'
 #define NEXT_CHAPTER       'nxch'
 #define TOGGLE_CHAPTER     'tgch'

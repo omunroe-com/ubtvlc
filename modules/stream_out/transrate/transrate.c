@@ -1,8 +1,8 @@
 /*****************************************************************************
  * transrate.c: MPEG2 video transrating module
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: transrate.c 7411 2004-04-21 15:54:09Z massiot $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: transrate.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -53,6 +53,8 @@ static int  transrate_video_process( sout_stream_t *, sout_stream_id_t *, block_
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_STREAM );
     set_description( _("MPEG2 video transrating stream output") );
     set_capability( "sout stream", 50 );
     add_shortcut( "transrate" );
@@ -80,7 +82,7 @@ static int Open( vlc_object_t *p_this )
     char *val;
 
     p_sys = malloc( sizeof( sout_stream_sys_t ) );
-    p_sys->p_out = sout_stream_new( p_stream->p_sout, p_stream->psz_next );
+    p_sys->p_out = sout_StreamNew( p_stream->p_sout, p_stream->psz_next );
 
     p_sys->i_vbitrate   = 0;
 
@@ -142,7 +144,7 @@ static void Close( vlc_object_t * p_this )
     sout_stream_t       *p_stream = (sout_stream_t *)p_this;
     sout_stream_sys_t   *p_sys = p_stream->p_sys;
 
-    sout_stream_delete( p_sys->p_out );
+    sout_StreamDelete( p_sys->p_out );
     free( p_sys );
 }
 

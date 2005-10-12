@@ -1,8 +1,8 @@
 /*****************************************************************************
  * i420_rgb16.c : YUV to bitmap RGB conversion module for vlc
  *****************************************************************************
- * Copyright (C) 2000 VideoLAN
- * $Id: i420_rgb16.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2000 the VideoLAN team
+ * $Id: i420_rgb16.c 12618 2005-09-20 00:11:35Z sam $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -34,6 +34,9 @@
 #if defined (MODULE_NAME_IS_i420_rgb)
 #   include "i420_rgb_c.h"
 #elif defined (MODULE_NAME_IS_i420_rgb_mmx)
+#   if defined(HAVE_MMX_INTRINSICS)
+#       include <mmintrin.h>
+#   endif
 #   include "i420_rgb_mmx.h"
 #endif
 
@@ -81,6 +84,11 @@ void E_(I420_RGB16_dithering)( vout_thread_t *p_vout, picture_t *p_src,
     /* Offset array pointer */
     int *       p_offset_start = p_vout->chroma.p_sys->p_offset;
     int *       p_offset;
+
+    const int i_source_margin = p_src->p[0].i_pitch
+                                 - p_src->p[0].i_visible_pitch;
+    const int i_source_margin_c = p_src->p[1].i_pitch
+                                 - p_src->p[1].i_visible_pitch;
 
     /* The dithering matrices */
     int dither10[4] = {  0x0,  0x8,  0x2,  0xa };
@@ -172,6 +180,13 @@ void E_(I420_RGB16_dithering)( vout_thread_t *p_vout, picture_t *p_src,
         }
         SCALE_WIDTH;
         SCALE_HEIGHT( 420, 2 );
+
+        p_y += i_source_margin;
+        if( i_y % 2 )
+        {
+            p_u += i_source_margin_c;
+            p_v += i_source_margin_c;
+        }
     }
 }
 #endif
@@ -219,6 +234,11 @@ void E_(I420_RGB16)( vout_thread_t *p_vout, picture_t *p_src,
     int *       p_offset_start = p_vout->chroma.p_sys->p_offset;
     int *       p_offset;
 
+    const int i_source_margin = p_src->p[0].i_pitch
+                                 - p_src->p[0].i_visible_pitch;
+    const int i_source_margin_c = p_src->p[1].i_pitch
+                                 - p_src->p[1].i_visible_pitch;
+
     i_right_margin = p_dest->p->i_pitch - p_dest->p->i_visible_pitch;
 
     if( p_vout->render.i_width & 7 )
@@ -261,6 +281,14 @@ void E_(I420_RGB16)( vout_thread_t *p_vout, picture_t *p_src,
             /* 15bpp 5/5/5 */
             for ( i_x = p_vout->render.i_width / 8; i_x--; )
             {
+#   if defined (HAVE_MMX_INTRINSICS)
+                __m64 mm0, mm1, mm2, mm3, mm4, mm5, mm6, mm7;
+                uint64_t tmp64;
+                INTRINSICS_INIT_16
+                INTRINSICS_YUV_MUL
+                INTRINSICS_YUV_ADD
+                INTRINSICS_UNPACK_15
+#   else
                 __asm__( MMX_INIT_16
                          : : "r" (p_y), "r" (p_u), "r" (p_v), "r" (p_buffer) );
 
@@ -269,6 +297,7 @@ void E_(I420_RGB16)( vout_thread_t *p_vout, picture_t *p_src,
                          MMX_YUV_ADD
                          MMX_UNPACK_15
                          : : "r" (p_y), "r" (p_u), "r" (p_v), "r" (p_buffer) );
+#   endif
 
                 p_y += 8;
                 p_u += 4;
@@ -281,6 +310,14 @@ void E_(I420_RGB16)( vout_thread_t *p_vout, picture_t *p_src,
             /* 16bpp 5/6/5 */
             for ( i_x = p_vout->render.i_width / 8; i_x--; )
             {
+#   if defined (HAVE_MMX_INTRINSICS)
+                __m64 mm0, mm1, mm2, mm3, mm4, mm5, mm6, mm7;
+                uint64_t tmp64;
+                INTRINSICS_INIT_16
+                INTRINSICS_YUV_MUL
+                INTRINSICS_YUV_ADD
+                INTRINSICS_UNPACK_16
+#   else
                 __asm__( MMX_INIT_16
                          : : "r" (p_y), "r" (p_u), "r" (p_v), "r" (p_buffer) );
 
@@ -289,6 +326,7 @@ void E_(I420_RGB16)( vout_thread_t *p_vout, picture_t *p_src,
                          MMX_YUV_ADD
                          MMX_UNPACK_16
                          : : "r" (p_y), "r" (p_u), "r" (p_v), "r" (p_buffer) );
+#   endif
 
                 p_y += 8;
                 p_u += 4;
@@ -302,6 +340,12 @@ void E_(I420_RGB16)( vout_thread_t *p_vout, picture_t *p_src,
          * at least we have all the pixels */
         if( i_rewind )
         {
+#if defined (MODULE_NAME_IS_i420_rgb_mmx)
+#   if defined (HAVE_MMX_INTRINSICS)
+            __m64 mm0, mm1, mm2, mm3, mm4, mm5, mm6, mm7;
+            uint64_t tmp64;
+#   endif
+#endif
             p_y -= i_rewind;
             p_u -= i_rewind >> 1;
             p_v -= i_rewind >> 1;
@@ -312,26 +356,43 @@ void E_(I420_RGB16)( vout_thread_t *p_vout, picture_t *p_src,
             CONVERT_YUV_PIXEL(2);  CONVERT_Y_PIXEL(2);
             CONVERT_YUV_PIXEL(2);  CONVERT_Y_PIXEL(2);
 #elif defined (MODULE_NAME_IS_i420_rgb_mmx)
+
+#   if defined (HAVE_MMX_INTRINSICS)
+            INTRINSICS_INIT_16
+#   else
             __asm__( MMX_INIT_16
                      : : "r" (p_y), "r" (p_u), "r" (p_v), "r" (p_buffer) );
+#   endif
 
             if( p_vout->output.i_rmask == 0x7c00 )
             {
                 /* 15bpp 5/5/5 */
+#   if defined (HAVE_MMX_INTRINSICS)
+                INTRINSICS_YUV_MUL
+                INTRINSICS_YUV_ADD
+                INTRINSICS_UNPACK_15
+#   else
                 __asm__( ".align 8"
                          MMX_YUV_MUL
                          MMX_YUV_ADD
                          MMX_UNPACK_15
                          : : "r" (p_y), "r" (p_u), "r" (p_v), "r" (p_buffer) );
+#   endif
             }
             else
             {
+#   if defined (HAVE_MMX_INTRINSICS)
+                INTRINSICS_YUV_MUL
+                INTRINSICS_YUV_ADD
+                INTRINSICS_UNPACK_16
+#   else
                 /* 16bpp 5/6/5 */
                 __asm__( ".align 8"
                          MMX_YUV_MUL
                          MMX_YUV_ADD
                          MMX_UNPACK_16
                          : : "r" (p_y), "r" (p_u), "r" (p_v), "r" (p_buffer) );
+#   endif
             }
 
             p_y += 8;
@@ -342,6 +403,13 @@ void E_(I420_RGB16)( vout_thread_t *p_vout, picture_t *p_src,
         }
         SCALE_WIDTH;
         SCALE_HEIGHT( 420, 2 );
+
+        p_y += i_source_margin;
+        if( i_y % 2 )
+        {
+            p_u += i_source_margin_c;
+            p_v += i_source_margin_c;
+        }
     }
 }
 
@@ -388,6 +456,11 @@ void E_(I420_RGB32)( vout_thread_t *p_vout, picture_t *p_src,
     int *       p_offset_start = p_vout->chroma.p_sys->p_offset;
     int *       p_offset;
 
+    const int i_source_margin = p_src->p[0].i_pitch
+                                 - p_src->p[0].i_visible_pitch;
+    const int i_source_margin_c = p_src->p[1].i_pitch
+                                 - p_src->p[1].i_visible_pitch;
+
     i_right_margin = p_dest->p->i_pitch - p_dest->p->i_visible_pitch;
 
     if( p_vout->render.i_width & 7 )
@@ -424,6 +497,14 @@ void E_(I420_RGB32)( vout_thread_t *p_vout, picture_t *p_src,
             CONVERT_YUV_PIXEL(4);  CONVERT_Y_PIXEL(4);
             CONVERT_YUV_PIXEL(4);  CONVERT_Y_PIXEL(4);
 #elif defined (MODULE_NAME_IS_i420_rgb_mmx)
+#   if defined (HAVE_MMX_INTRINSICS)
+            __m64 mm0, mm1, mm2, mm3, mm4, mm5, mm6, mm7;
+            uint64_t tmp64;
+            INTRINSICS_INIT_32
+            INTRINSICS_YUV_MUL
+            INTRINSICS_YUV_ADD
+            INTRINSICS_UNPACK_32
+#   else
             __asm__( MMX_INIT_32
                      : : "r" (p_y), "r" (p_u), "r" (p_v), "r" (p_buffer) );
 
@@ -432,6 +513,7 @@ void E_(I420_RGB32)( vout_thread_t *p_vout, picture_t *p_src,
                      MMX_YUV_ADD
                      MMX_UNPACK_32
                      : : "r" (p_y), "r" (p_u), "r" (p_v), "r" (p_buffer) );
+#   endif
 
             p_y += 8;
             p_u += 4;
@@ -444,6 +526,12 @@ void E_(I420_RGB32)( vout_thread_t *p_vout, picture_t *p_src,
          * at least we have all the pixels */
         if( i_rewind )
         {
+#if defined (MODULE_NAME_IS_i420_rgb_mmx)
+#   if defined (HAVE_MMX_INTRINSICS)
+            __m64 mm0, mm1, mm2, mm3, mm4, mm5, mm6, mm7;
+            uint64_t tmp64;
+#   endif
+#endif
             p_y -= i_rewind;
             p_u -= i_rewind >> 1;
             p_v -= i_rewind >> 1;
@@ -454,6 +542,12 @@ void E_(I420_RGB32)( vout_thread_t *p_vout, picture_t *p_src,
             CONVERT_YUV_PIXEL(4);  CONVERT_Y_PIXEL(4);
             CONVERT_YUV_PIXEL(4);  CONVERT_Y_PIXEL(4);
 #elif defined (MODULE_NAME_IS_i420_rgb_mmx)
+#   if defined (HAVE_MMX_INTRINSICS)
+            INTRINSICS_INIT_32
+            INTRINSICS_YUV_MUL
+            INTRINSICS_YUV_ADD
+            INTRINSICS_UNPACK_32
+#   else
             __asm__( MMX_INIT_32
                      : : "r" (p_y), "r" (p_u), "r" (p_v), "r" (p_buffer) );
 
@@ -462,6 +556,7 @@ void E_(I420_RGB32)( vout_thread_t *p_vout, picture_t *p_src,
                      MMX_YUV_ADD
                      MMX_UNPACK_32
                      : : "r" (p_y), "r" (p_u), "r" (p_v), "r" (p_buffer) );
+#   endif
 
             p_y += 8;
             p_u += 4;
@@ -471,6 +566,13 @@ void E_(I420_RGB32)( vout_thread_t *p_vout, picture_t *p_src,
         }
         SCALE_WIDTH;
         SCALE_HEIGHT( 420, 4 );
+
+        p_y += i_source_margin;
+        if( i_y % 2 )
+        {
+            p_u += i_source_margin_c;
+            p_v += i_source_margin_c;
+        }
     }
 }
 

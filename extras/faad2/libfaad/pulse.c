@@ -1,6 +1,6 @@
 /*
 ** FAAD2 - Freeware Advanced Audio (AAC) Decoder including SBR decoding
-** Copyright (C) 2003-2004 M. Bakker, Ahead Software AG, http://www.nero.com
+** Copyright (C) 2003-2005 M. Bakker, Ahead Software AG, http://www.nero.com
 **  
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,12 +19,16 @@
 ** Any non-GPL usage of this software or parts of this software is strictly
 ** forbidden.
 **
+** Software using this code must display the following message visibly in the
+** software:
+** "FAAD2 AAC/HE-AAC/HE-AACv2/DRM decoder (c) Ahead Software, www.nero.com"
+** in, for example, the about-box or help/startup screen.
+**
 ** Commercial non-GPL licensing of this software is possible.
 ** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
 **
-** $Id: pulse.c,v 1.14 2004/01/05 14:05:12 menno Exp $
+** $Id: pulse.c,v 1.18 2005/02/01 13:15:58 menno Exp $
 **/
-
 #include "common.h"
 #include "structs.h"
 
@@ -39,7 +43,8 @@ uint8_t pulse_decode(ic_stream *ics, int16_t *spec_data, uint16_t framelen)
 
     k = ics->swb_offset[pul->pulse_start_sfb];
 
-    for(i = 0; i <= pul->number_pulse; i++) {
+    for (i = 0; i <= pul->number_pulse; i++)
+    {
         k += pul->pulse_offset[i];
 
         if (k >= framelen)

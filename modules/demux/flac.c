@@ -1,8 +1,8 @@
 /*****************************************************************************
  * flac.c : FLAC demux module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: flac.c 7231 2004-04-01 23:19:30Z fenrir $
+ * Copyright (C) 2001-2003 the VideoLAN team
+ * $Id: flac.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -37,6 +37,8 @@ static void Close ( vlc_object_t * );
 vlc_module_begin();
     set_description( _("FLAC demuxer") );
     set_capability( "demux2", 155 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_callbacks( Open, Close );
     add_shortcut( "flac" );
 vlc_module_end();
@@ -54,6 +56,7 @@ struct demux_sys_t
 
     /* Packetizer */
     decoder_t *p_packetizer;
+    vlc_meta_t *p_meta;
 };
 
 #define STREAMINFO_SIZE 38
@@ -65,26 +68,19 @@ struct demux_sys_t
 static int Open( vlc_object_t * p_this )
 {
     demux_t     *p_demux = (demux_t*)p_this;
+    module_t    *p_id3;
     demux_sys_t *p_sys;
     int          i_peek;
     byte_t      *p_peek;
     es_format_t  fmt;
 
     /* Have a peep at the show. */
-    if( stream_Peek( p_demux->s, &p_peek, 4 ) < 4 )
-    {
-        /* Stream shorter than 4 bytes... */
-        msg_Err( p_demux, "cannot peek()" );
-        return VLC_EGENERIC;
-    }
+    if( stream_Peek( p_demux->s, &p_peek, 4 ) < 4 ) return VLC_EGENERIC;
 
     if( p_peek[0]!='f' || p_peek[1]!='L' || p_peek[2]!='a' || p_peek[3]!='C' )
     {
-        if( strncmp( p_demux->psz_demux, "flac", 4 ) )
-        {
-            msg_Warn( p_demux, "flac module discarded (no startcode)" );
-            return VLC_EGENERIC;
-        }
+        if( !p_demux->b_force ) return VLC_EGENERIC;
+
         /* User forced */
         msg_Err( p_demux, "this doesn't look like a flac stream, "
                  "continuing anyway" );
@@ -95,6 +91,7 @@ static int Open( vlc_object_t * p_this )
     p_demux->p_sys      = p_sys = malloc( sizeof( demux_sys_t ) );
     es_format_Init( &fmt, AUDIO_ES, VLC_FOURCC( 'f', 'l', 'a', 'c' ) );
     p_sys->b_start = VLC_TRUE;
+    p_sys->p_meta = 0;
 
     /* We need to read and store the STREAMINFO metadata */
     i_peek = stream_Peek( p_demux->s, &p_peek, 8 );
@@ -141,13 +138,21 @@ static int Open( vlc_object_t * p_this )
     {
         if( p_sys->p_packetizer->fmt_in.p_extra )
             free( p_sys->p_packetizer->fmt_in.p_extra );
-
         vlc_object_destroy( p_sys->p_packetizer );
+
         msg_Err( p_demux, "cannot find flac packetizer" );
         return VLC_EGENERIC;
     }
 
     p_sys->p_es = es_out_Add( p_demux->out, &fmt );
+
+    /* Parse possible id3 header */
+    if( ( p_id3 = module_Need( p_demux, "id3", NULL, 0 ) ) )
+    {
+        p_sys->p_meta = (vlc_meta_t *)p_demux->p_private;
+        p_demux->p_private = NULL;
+        module_Unneed( p_demux, p_id3 );
+    }
 
     return VLC_SUCCESS;
 }
@@ -168,7 +173,7 @@ static void Close( vlc_object_t * p_this )
 
     /* Delete the decoder */
     vlc_object_destroy( p_sys->p_packetizer );
-
+    if( p_sys->p_meta ) vlc_meta_Delete( p_sys->p_meta );
     free( p_sys );
 }
 
@@ -223,11 +228,16 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
 {
     /* demux_sys_t *p_sys  = p_demux->p_sys; */
     /* FIXME bitrate */
-    if( i_query == DEMUX_SET_TIME )
-        return VLC_EGENERIC;
-    else
-        return demux2_vaControlHelper( p_demux->s,
-                                       0, -1,
-                                       8*0, 1, i_query, args );
+    if( i_query == DEMUX_SET_TIME ) return VLC_EGENERIC;
+    else if( i_query == DEMUX_GET_META )
+    {        
+        vlc_meta_t **pp_meta = (vlc_meta_t **)va_arg( args, vlc_meta_t** );
+        if( p_demux->p_sys->p_meta )
+            *pp_meta = vlc_meta_Duplicate( p_demux->p_sys->p_meta );
+        else *pp_meta = NULL;
+        return VLC_SUCCESS;
+    }
+    else return demux2_vaControlHelper( p_demux->s, 0, -1,
+                                        8*0, 1, i_query, args );
 }
 

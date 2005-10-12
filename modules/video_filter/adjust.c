@@ -1,8 +1,8 @@
 /*****************************************************************************
  * adjust.c : Contrast/Hue/Saturation/Brightness video plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001, 2002, 2003 VideoLAN
- * $Id: adjust.c 7453 2004-04-23 20:01:59Z gbazin $
+ * Copyright (C) 2000, 2001, 2002, 2003 the VideoLAN team
+ * $Id: adjust.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Simon Latapie <garf@via.ecp.fr>
  *
@@ -71,6 +71,9 @@ static int  SendEvents( vlc_object_t *, char const *,
 
 vlc_module_begin();
     set_description( _("Image properties filter") );
+    set_shortname( N_("Image adjust" ));
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VFILTER );
     set_capability( "video filter", 0 );
 
     add_float_with_range( "contrast", 1.0, 0.0, 2.0, NULL, CONT_TEXT, CONT_LONGTEXT, VLC_FALSE );
@@ -147,6 +150,7 @@ static int Init( vout_thread_t *p_vout )
 {
     int i_index;
     picture_t *p_pic;
+    video_format_t fmt = {0};
 
     I_OUTPUTPICTURES = 0;
 
@@ -156,12 +160,18 @@ static int Init( vout_thread_t *p_vout )
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
 
+    fmt.i_width = fmt.i_visible_width = p_vout->render.i_width;
+    fmt.i_height = fmt.i_visible_height = p_vout->render.i_height;
+    fmt.i_x_offset = fmt.i_y_offset = 0;
+    fmt.i_chroma = p_vout->render.i_chroma;
+    fmt.i_aspect = p_vout->render.i_aspect;
+    fmt.i_sar_num = p_vout->render.i_aspect * fmt.i_height / fmt.i_width;
+    fmt.i_sar_den = VOUT_ASPECT_FACTOR;
+
     /* Try to open the real video output */
     msg_Dbg( p_vout, "spawning the real video output" );
 
-    p_vout->p_sys->p_vout = vout_Create( p_vout,
-                     p_vout->render.i_width, p_vout->render.i_height,
-                     p_vout->render.i_chroma, p_vout->render.i_aspect );
+    p_vout->p_sys->p_vout = vout_Create( p_vout, &fmt );
 
     /* Everything failed */
     if( p_vout->p_sys->p_vout == NULL )
@@ -204,9 +214,12 @@ static void Destroy( vlc_object_t *p_this )
 {
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
 
-    DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
-    vlc_object_detach( p_vout->p_sys->p_vout );
-    vout_Destroy( p_vout->p_sys->p_vout );
+    if( p_vout->p_sys->p_vout )
+    {
+        DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
+        vlc_object_detach( p_vout->p_sys->p_vout );
+        vout_Destroy( p_vout->p_sys->p_vout );
+    }
 
     DEL_PARENT_CALLBACKS( SendEventsToChild );
 
@@ -283,7 +296,7 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
      */
 
     p_in = p_pic->p[0].p_pixels;
-    p_in_end = p_in + p_pic->p[0].i_lines * p_pic->p[0].i_pitch - 8;
+    p_in_end = p_in + p_pic->p[0].i_visible_lines * p_pic->p[0].i_pitch - 8;
 
     p_out = p_outpic->p[0].p_pixels;
 
@@ -317,7 +330,7 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
 
     p_in = p_pic->p[1].p_pixels;
     p_in_v = p_pic->p[2].p_pixels;
-    p_in_end = p_in + p_pic->p[1].i_lines * p_pic->p[1].i_pitch - 8;
+    p_in_end = p_in + p_pic->p[1].i_visible_lines * p_pic->p[1].i_pitch - 8;
 
     p_out = p_outpic->p[1].p_pixels;
     p_out_v = p_outpic->p[2].p_pixels;

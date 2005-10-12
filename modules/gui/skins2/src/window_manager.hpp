@@ -1,8 +1,8 @@
 /*****************************************************************************
  * window_manager.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: window_manager.hpp 7270 2004-04-03 23:21:47Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: window_manager.hpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -67,6 +67,9 @@ class WindowManager: public SkinObject
         /// If a new anchoring is detected, the windows will move accordingly.
         void move( TopWindow &rWindow, int left, int top ) const;
 
+        /// Raise all the registered windows
+        void raiseAll() const;
+
         /// Show all the registered windows
         void showAll() const;
 
@@ -130,7 +133,7 @@ class WindowManager: public SkinObject
         /// move.
         WinSet_t m_movingWindows;
         /// Indicate whether the windows are currently on top
-        bool m_isOnTop;
+        VariablePtr m_cVarOnTop;
         /// Magnetism of the screen edges (= scope of action)
         int m_magnet;
         /// Alpha value of the static windows

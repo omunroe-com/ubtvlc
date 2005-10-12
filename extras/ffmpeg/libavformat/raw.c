@@ -25,10 +25,9 @@ static int raw_write_header(struct AVFormatContext *s)
     return 0;
 }
 
-static int raw_write_packet(struct AVFormatContext *s, int stream_index,
-			    const uint8_t *buf, int size, int64_t pts)
+static int raw_write_packet(struct AVFormatContext *s, AVPacket *pkt)
 {
-    put_buffer(&s->pb, buf, size);
+    put_buffer(&s->pb, pkt->data, pkt->size);
     put_flush_packet(&s->pb);
     return 0;
 }
@@ -51,23 +50,25 @@ static int raw_read_header(AVFormatContext *s, AVFormatParameters *ap)
     if (ap) {
         id = s->iformat->value;
         if (id == CODEC_ID_RAWVIDEO) {
-            st->codec.codec_type = CODEC_TYPE_VIDEO;
+            st->codec->codec_type = CODEC_TYPE_VIDEO;
         } else {
-            st->codec.codec_type = CODEC_TYPE_AUDIO;
+            st->codec->codec_type = CODEC_TYPE_AUDIO;
         }
-        st->codec.codec_id = id;
+        st->codec->codec_id = id;
 
-        switch(st->codec.codec_type) {
+        switch(st->codec->codec_type) {
         case CODEC_TYPE_AUDIO:
-            st->codec.sample_rate = ap->sample_rate;
-            st->codec.channels = ap->channels;
+            st->codec->sample_rate = ap->sample_rate;
+            st->codec->channels = ap->channels;
+            av_set_pts_info(st, 64, 1, st->codec->sample_rate);
             break;
         case CODEC_TYPE_VIDEO:
-            st->codec.frame_rate      = ap->frame_rate;
-            st->codec.frame_rate_base = ap->frame_rate_base;
-            st->codec.width = ap->width;
-            st->codec.height = ap->height;
-	    st->codec.pix_fmt = ap->pix_fmt;
+            av_set_pts_info(st, 64, ap->time_base.num, ap->time_base.den);
+            st->codec->width = ap->width;
+            st->codec->height = ap->height;
+            st->codec->pix_fmt = ap->pix_fmt;
+            if(st->codec->pix_fmt == PIX_FMT_NONE)
+                st->codec->pix_fmt= PIX_FMT_YUV420P;
             break;
         default:
             return -1;
@@ -87,14 +88,11 @@ static int raw_read_packet(AVFormatContext *s, AVPacket *pkt)
     
     size= RAW_PACKET_SIZE;
 
-    if (av_new_packet(pkt, size) < 0)
-        return -EIO;
+    ret= av_get_packet(&s->pb, pkt, size);
 
     pkt->stream_index = 0;
-    ret = get_buffer(&s->pb, pkt->data, size);
     if (ret <= 0) {
-        av_free_packet(pkt);
-        return -EIO;
+        return AVERROR_IO;
     }
     /* note: we need to modify the packet size here to handle the last
        packet */
@@ -109,13 +107,14 @@ static int raw_read_partial_packet(AVFormatContext *s, AVPacket *pkt)
     size = RAW_PACKET_SIZE;
 
     if (av_new_packet(pkt, size) < 0)
-        return -EIO;
-
+        return AVERROR_IO;
+    
+    pkt->pos= url_ftell(&s->pb);
     pkt->stream_index = 0;
     ret = get_partial_buffer(&s->pb, pkt->data, size);
     if (ret <= 0) {
         av_free_packet(pkt);
-        return -EIO;
+        return AVERROR_IO;
     }
     pkt->size = ret;
     return ret;
@@ -127,31 +126,31 @@ static int raw_read_close(AVFormatContext *s)
 }
 
 int pcm_read_seek(AVFormatContext *s, 
-                  int stream_index, int64_t timestamp)
+                  int stream_index, int64_t timestamp, int flags)
 {
     AVStream *st;
     int block_align, byte_rate;
     int64_t pos;
 
     st = s->streams[0];
-    switch(st->codec.codec_id) {
+    switch(st->codec->codec_id) {
     case CODEC_ID_PCM_S16LE:
     case CODEC_ID_PCM_S16BE:
     case CODEC_ID_PCM_U16LE:
     case CODEC_ID_PCM_U16BE:
-        block_align = 2 * st->codec.channels;
-        byte_rate = block_align * st->codec.sample_rate;
+        block_align = 2 * st->codec->channels;
+        byte_rate = block_align * st->codec->sample_rate;
         break;
     case CODEC_ID_PCM_S8:
     case CODEC_ID_PCM_U8:
     case CODEC_ID_PCM_MULAW:
     case CODEC_ID_PCM_ALAW:
-        block_align = st->codec.channels;
-        byte_rate = block_align * st->codec.sample_rate;
+        block_align = st->codec->channels;
+        byte_rate = block_align * st->codec->sample_rate;
         break;
     default:
-        block_align = st->codec.block_align;
-        byte_rate = st->codec.bit_rate / 8;
+        block_align = st->codec->block_align;
+        byte_rate = st->codec->bit_rate / 8;
         break;
     }
     
@@ -159,11 +158,14 @@ int pcm_read_seek(AVFormatContext *s,
         return -1;
 
     /* compute the position by aligning it to block_align */
-    pos = (timestamp * byte_rate) / AV_TIME_BASE;
-    pos = (pos / block_align) * block_align;
+    pos = av_rescale_rnd(timestamp * byte_rate, 
+                         st->time_base.num, 
+                         st->time_base.den * (int64_t)block_align,
+                         (flags & AVSEEK_FLAG_BACKWARD) ? AV_ROUND_DOWN : AV_ROUND_UP);
+    pos *= block_align;
 
     /* recompute exact position */
-    st->cur_dts = (pos * AV_TIME_BASE) / byte_rate;
+    st->cur_dts = av_rescale(pos, st->time_base.den, byte_rate * (int64_t)st->time_base.num);
     url_fseek(&s->pb, pos + s->data_offset, SEEK_SET);
     return 0;
 }
@@ -178,8 +180,40 @@ static int ac3_read_header(AVFormatContext *s,
     if (!st)
         return AVERROR_NOMEM;
 
-    st->codec.codec_type = CODEC_TYPE_AUDIO;
-    st->codec.codec_id = CODEC_ID_AC3;
+    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_id = CODEC_ID_AC3;
+    st->need_parsing = 1;
+    /* the parameters will be extracted from the compressed bitstream */
+    return 0;
+}
+
+static int shorten_read_header(AVFormatContext *s,
+                               AVFormatParameters *ap)
+{
+    AVStream *st;
+
+    st = av_new_stream(s, 0);
+    if (!st)
+        return AVERROR_NOMEM;
+    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_id = CODEC_ID_SHORTEN;
+    st->need_parsing = 1;
+    /* the parameters will be extracted from the compressed bitstream */
+    return 0;
+}
+
+/* dts read */
+static int dts_read_header(AVFormatContext *s,
+                           AVFormatParameters *ap)
+{
+    AVStream *st;
+
+    st = av_new_stream(s, 0);
+    if (!st)
+        return AVERROR_NOMEM;
+
+    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_id = CODEC_ID_DTS;
     st->need_parsing = 1;
     /* the parameters will be extracted from the compressed bitstream */
     return 0;
@@ -195,22 +229,20 @@ static int video_read_header(AVFormatContext *s,
     if (!st)
         return AVERROR_NOMEM;
 
-    st->codec.codec_type = CODEC_TYPE_VIDEO;
-    st->codec.codec_id = s->iformat->value;
+    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_id = s->iformat->value;
     st->need_parsing = 1;
 
     /* for mjpeg, specify frame rate */
     /* for mpeg4 specify it too (most mpeg4 streams dont have the fixed_vop_rate set ...)*/
-    if (st->codec.codec_id == CODEC_ID_MJPEG || 
-        st->codec.codec_id == CODEC_ID_MPEG4) {
-        if (ap && ap->frame_rate) {
-            st->codec.frame_rate      = ap->frame_rate;
-            st->codec.frame_rate_base = ap->frame_rate_base;
-        } else {
-            st->codec.frame_rate      = 25;
-            st->codec.frame_rate_base = 1;
-        }
+    if (ap && ap->time_base.num) {
+        av_set_pts_info(st, 64, ap->time_base.num, ap->time_base.den);
+    } else if ( st->codec->codec_id == CODEC_ID_MJPEG || 
+                st->codec->codec_id == CODEC_ID_MPEG4 ||
+                st->codec->codec_id == CODEC_ID_H264) {
+        av_set_pts_info(st, 64, 1, 25);
     }
+
     return 0;
 }
 
@@ -260,6 +292,32 @@ static int h263_probe(AVProbeData *p)
     return 0;
 }
 
+static int h261_probe(AVProbeData *p)
+{
+    int code;
+    const uint8_t *d;
+
+    if (p->buf_size < 6)
+        return 0;
+    d = p->buf;
+    code = (d[0] << 12) | (d[1] << 4) | (d[2] >> 4);
+    if (code == 0x10) {
+        return 50;
+    }
+    return 0;
+}
+
+AVInputFormat shorten_iformat = {
+    "shn",
+    "raw shn",
+    0,
+    NULL,
+    shorten_read_header,
+    raw_read_partial_packet,
+    raw_read_close,
+    .extensions = "shn",
+};
+
 AVInputFormat ac3_iformat = {
     "ac3",
     "raw ac3",
@@ -280,6 +338,44 @@ AVOutputFormat ac3_oformat = {
     0,
     CODEC_ID_AC3,
     0,
+    raw_write_header,
+    raw_write_packet,
+    raw_write_trailer,
+};
+#endif //CONFIG_ENCODERS
+
+AVInputFormat dts_iformat = {
+    "dts",
+    "raw dts",
+    0,
+    NULL,
+    dts_read_header,
+    raw_read_partial_packet,
+    raw_read_close,
+    .extensions = "dts",
+};
+
+AVInputFormat h261_iformat = {
+    "h261",
+    "raw h261",
+    0,
+    h261_probe,
+    video_read_header,
+    raw_read_partial_packet,
+    raw_read_close,
+    .extensions = "h261",
+    .value = CODEC_ID_H261,
+};
+
+#ifdef CONFIG_ENCODERS
+AVOutputFormat h261_oformat = {
+    "h261",
+    "raw h261",
+    "video/x-h261",
+    "h261",
+    0,
+    0,
+    CODEC_ID_H261,
     raw_write_header,
     raw_write_packet,
     raw_write_trailer,
@@ -348,7 +444,7 @@ AVInputFormat h264_iformat = {
     video_read_header,
     raw_read_partial_packet,
     raw_read_close,
-    .extensions = "h26l,h264", //FIXME remove after writing mpeg4_probe
+    .extensions = "h26l,h264,264", //FIXME remove after writing mpeg4_probe
     .value = CODEC_ID_H264,
 };
 
@@ -383,10 +479,25 @@ AVOutputFormat mpeg1video_oformat = {
     "mpeg1video",
     "MPEG video",
     "video/x-mpeg",
-    "mpg,mpeg",
+    "mpg,mpeg,m1v",
     0,
     0,
     CODEC_ID_MPEG1VIDEO,
+    raw_write_header,
+    raw_write_packet,
+    raw_write_trailer,
+};
+#endif //CONFIG_ENCODERS
+
+#ifdef CONFIG_ENCODERS
+AVOutputFormat mpeg2video_oformat = {
+    "mpeg2video",
+    "MPEG2 video",
+    NULL,
+    "m2v",
+    0,
+    0,
+    CODEC_ID_MPEG2VIDEO,
     raw_write_header,
     raw_write_packet,
     raw_write_trailer,
@@ -498,26 +609,18 @@ static int rawvideo_read_packet(AVFormatContext *s, AVPacket *pkt)
     int packet_size, ret, width, height;
     AVStream *st = s->streams[0];
 
-    width = st->codec.width;
-    height = st->codec.height;
+    width = st->codec->width;
+    height = st->codec->height;
 
-    packet_size = avpicture_get_size(st->codec.pix_fmt, width, height);
+    packet_size = avpicture_get_size(st->codec->pix_fmt, width, height);
     if (packet_size < 0)
-        av_abort();
+        return -1;
 
-    if (av_new_packet(pkt, packet_size) < 0)
-        return -EIO;
+    ret= av_get_packet(&s->pb, pkt, packet_size);
 
     pkt->stream_index = 0;
-#if 0
-    /* bypass buffered I/O */
-    ret = url_read(url_fileno(&s->pb), pkt->data, pkt->size);
-#else
-    ret = get_buffer(&s->pb, pkt->data, pkt->size);
-#endif
-    if (ret != pkt->size) {
-        av_free_packet(pkt);
-        return -EIO;
+    if (ret != packet_size) {
+        return AVERROR_IO;
     } else {
         return 0;
     }
@@ -531,7 +634,7 @@ AVInputFormat rawvideo_iformat = {
     raw_read_header,
     rawvideo_read_packet,
     raw_read_close,
-    .extensions = "yuv",
+    .extensions = "yuv,cif,qcif",
     .value = CODEC_ID_RAWVIDEO,
 };
 
@@ -551,9 +654,7 @@ AVOutputFormat rawvideo_oformat = {
 #endif //CONFIG_ENCODERS
 
 #ifdef CONFIG_ENCODERS
-static int null_write_packet(struct AVFormatContext *s, 
-                             int stream_index,
-                             const uint8_t *buf, int size, int64_t pts)
+static int null_write_packet(struct AVFormatContext *s, AVPacket *pkt)
 {
     return 0;
 }
@@ -586,8 +687,16 @@ AVOutputFormat null_oformat = {
 
 int raw_init(void)
 {
+
+    av_register_input_format(&shorten_iformat);
+
     av_register_input_format(&ac3_iformat);
     av_register_output_format(&ac3_oformat);
+
+    av_register_input_format(&dts_iformat);
+
+    av_register_input_format(&h261_iformat);
+    av_register_output_format(&h261_oformat);
 
     av_register_input_format(&h263_iformat);
     av_register_output_format(&h263_oformat);
@@ -600,6 +709,8 @@ int raw_init(void)
 
     av_register_input_format(&mpegvideo_iformat);
     av_register_output_format(&mpeg1video_oformat);
+
+    av_register_output_format(&mpeg2video_oformat);
 
     av_register_input_format(&mjpeg_iformat);
     av_register_output_format(&mjpeg_oformat);

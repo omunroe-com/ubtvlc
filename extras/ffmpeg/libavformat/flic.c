@@ -76,7 +76,7 @@ static int flic_read_header(AVFormatContext *s,
 
     /* load the whole header and pull out the width and height */
     if (get_buffer(pb, header, FLIC_HEADER_SIZE) != FLIC_HEADER_SIZE)
-        return -EIO;
+        return AVERROR_IO;
 
     magic_number = LE_16(&header[4]);
     speed = LE_32(&header[0x10]);
@@ -86,23 +86,21 @@ static int flic_read_header(AVFormatContext *s,
     if (!st)
         return AVERROR_NOMEM;
     flic->video_stream_index = st->index;
-    st->codec.codec_type = CODEC_TYPE_VIDEO;
-    st->codec.codec_id = CODEC_ID_FLIC;
-    st->codec.codec_tag = 0;  /* no fourcc */
-    st->codec.width = LE_16(&header[0x08]);
-    st->codec.height = LE_16(&header[0x0A]);
+    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_id = CODEC_ID_FLIC;
+    st->codec->codec_tag = 0;  /* no fourcc */
+    st->codec->width = LE_16(&header[0x08]);
+    st->codec->height = LE_16(&header[0x0A]);
 
-    if (!st->codec.width || !st->codec.height)
+    if (!st->codec->width || !st->codec->height)
         return AVERROR_INVALIDDATA;
 
     /* send over the whole 128-byte FLIC header */
-    st->codec.extradata_size = FLIC_HEADER_SIZE;
-    st->codec.extradata = av_malloc(FLIC_HEADER_SIZE);
-    memcpy(st->codec.extradata, header, FLIC_HEADER_SIZE);
+    st->codec->extradata_size = FLIC_HEADER_SIZE;
+    st->codec->extradata = av_malloc(FLIC_HEADER_SIZE);
+    memcpy(st->codec->extradata, header, FLIC_HEADER_SIZE);
 
-    /* set the pts reference (1 pts = 1/90000) */
-    s->pts_num = 1;
-    s->pts_den = 90000;
+    av_set_pts_info(st, 33, 1, 90000);
 
     /* Time to figure out the framerate: If there is a FLIC chunk magic
      * number at offset 0x10, assume this is from the Bullfrog game,
@@ -115,10 +113,10 @@ static int flic_read_header(AVFormatContext *s,
         url_fseek(pb, 12, SEEK_SET);
 
         /* send over abbreviated FLIC header chunk */
-        av_free(st->codec.extradata);
-        st->codec.extradata_size = 12;
-        st->codec.extradata = av_malloc(12);
-        memcpy(st->codec.extradata, header, 12);
+        av_free(st->codec->extradata);
+        st->codec->extradata_size = 12;
+        st->codec->extradata = av_malloc(12);
+        memcpy(st->codec->extradata, header, 12);
 
     } else if (magic_number == FLIC_FILE_MAGIC_1) {
         /*
@@ -166,26 +164,27 @@ static int flic_read_packet(AVFormatContext *s,
 
         if ((ret = get_buffer(pb, preamble, FLIC_PREAMBLE_SIZE)) !=
             FLIC_PREAMBLE_SIZE) {
-            ret = -EIO;
+            ret = AVERROR_IO;
             break;
         }
 
         size = LE_32(&preamble[0]);
         magic = LE_16(&preamble[4]);
 
-        if ((magic == FLIC_CHUNK_MAGIC_1) || (magic == FLIC_CHUNK_MAGIC_2)) {
+        if (((magic == FLIC_CHUNK_MAGIC_1) || (magic == FLIC_CHUNK_MAGIC_2)) && size > FLIC_PREAMBLE_SIZE) {
             if (av_new_packet(pkt, size)) {
-                ret = -EIO;
+                ret = AVERROR_IO;
                 break;
             }
             pkt->stream_index = flic->video_stream_index;
             pkt->pts = flic->pts;
+            pkt->pos = url_ftell(pb); 
             memcpy(pkt->data, preamble, FLIC_PREAMBLE_SIZE);
             ret = get_buffer(pb, pkt->data + FLIC_PREAMBLE_SIZE, 
                 size - FLIC_PREAMBLE_SIZE);
             if (ret != size - FLIC_PREAMBLE_SIZE) {
                 av_free_packet(pkt);
-                ret = -EIO;
+                ret = AVERROR_IO;
             }
             flic->pts += flic->frame_pts_inc;
             packet_read = 1;

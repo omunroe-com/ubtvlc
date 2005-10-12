@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_video.cpp
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: ctrl_video.cpp 7073 2004-03-14 14:33:12Z asmax $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: ctrl_video.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *

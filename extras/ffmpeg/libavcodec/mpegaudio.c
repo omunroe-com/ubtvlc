@@ -23,6 +23,7 @@
  */
  
 #include "avcodec.h"
+#include "bitstream.h"
 #include "mpegaudio.h"
 
 /* currently, cannot change these constants (need to modify
@@ -87,8 +88,10 @@ static int MPA_encode_init(AVCodecContext *avctx)
             break;
         }
     }
-    if (i == 3)
+    if (i == 3){
+        av_log(avctx, AV_LOG_ERROR, "Sampling rate %d is not allowed in mp2\n", freq);
         return -1;
+    }
     s->freq_index = i;
 
     /* encoding bitrate & frequency */
@@ -96,8 +99,10 @@ static int MPA_encode_init(AVCodecContext *avctx)
         if (mpa_bitrate_tab[s->lsf][1][i] == bitrate) 
             break;
     }
-    if (i == 15)
+    if (i == 15){
+        av_log(avctx, AV_LOG_ERROR, "bitrate %d is not allowed in mp2\n", bitrate);
         return -1;
+    }
     s->bitrate_index = i;
 
     /* compute total header size & pad bit */
@@ -462,7 +467,8 @@ static void compute_scale_factors(unsigned char scale_code[SBLIMIT],
             sf[1] = sf[2] = sf[0];
             break;
         default:
-            av_abort();
+            assert(0); //cant happen
+            code = 0;           /* kill warning */
         }
         
 #if 0
@@ -779,6 +785,7 @@ static int MPA_encode_close(AVCodecContext *avctx)
     return 0;
 }
 
+#ifdef CONFIG_MP2_ENCODER
 AVCodec mp2_encoder = {
     "mp2",
     CODEC_TYPE_AUDIO,
@@ -789,5 +796,6 @@ AVCodec mp2_encoder = {
     MPA_encode_close,
     NULL,
 };
+#endif // CONFIG_MP2_ENCODER
 
 #undef FIX

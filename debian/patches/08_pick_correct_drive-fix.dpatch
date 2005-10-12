@@ -1,0 +1,19 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 08_pick_correct_drive-fix.dpatch by Daniel T Chen <crimsun@fungus.sh.nu>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Pick the correct drive. Use the correct function.
+
+@DPATCH@
+
+--- trunk/modules/gui/wxwidgets/open.cpp	(revision 12763)
++++ trunk/modules/gui/wxwidgets/open.cpp	(revision 12764)
+@@ -718,7 +718,7 @@
+     for( char drive_letter = 'A'; drive_letter <= 'Z'; ++drive_letter )
+     {
+         char drive_name[3] = {drive_letter, ':', 0};
+-        UINT type = GetDriveType( drive_name );
++        UINT type = GetDriveTypeA( drive_name );
+         if( type == DRIVE_CDROM )
+         {
+             psz_default_device[0] = drive_letter;

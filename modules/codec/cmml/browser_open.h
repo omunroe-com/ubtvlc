@@ -3,9 +3,9 @@
  *****************************************************************************
  * Copyright (C) 2004 Commonwealth Scientific and Industrial Research
  *                    Organisation (CSIRO) Australia
- * Copyright (C) 2004 VideoLAN
+ * Copyright (C) 2004 the VideoLAN team
  *
- * $Id: browser_open.h 7397 2004-04-20 17:27:30Z sam $
+ * $Id: browser_open.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Andre Pang <Andre.Pang@csiro.au>
  *
@@ -27,7 +27,7 @@
 #ifndef __BROWSER_OPEN_H__
 #define __BROWSER_OPEN_H__
 
-int browser_Open( char *psz_url );
+int browser_Open( const char *psz_url );
 
 #endif /* __BROWSER_OPEN_H__ */
 
