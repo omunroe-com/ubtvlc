@@ -2,9 +2,9 @@
  * lirc.c : lirc module for vlc
  *****************************************************************************
  * Copyright (C) 2003-2005 the VideoLAN team
- * $Id: lirc.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: lirc.c 12836 2005-10-15 13:23:08Z sigmunau $
  *
- * Author: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Author: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

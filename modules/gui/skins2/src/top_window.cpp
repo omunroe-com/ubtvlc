@@ -2,7 +2,7 @@
  * top_window.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: top_window.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: top_window.cpp 12912 2005-10-22 11:57:29Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -49,12 +49,11 @@
 
 TopWindow::TopWindow( intf_thread_t *pIntf, int left, int top,
                       WindowManager &rWindowManager,
-                      bool dragDrop, bool playOnDrop ):
-    GenericWindow( pIntf, left, top, dragDrop, playOnDrop,
-                   NULL),
-    m_rWindowManager( rWindowManager ), m_pActiveLayout( NULL ),
-    m_pLastHitControl( NULL ), m_pCapturingControl( NULL ),
-    m_pFocusControl( NULL ), m_currModifier( 0 )
+                      bool dragDrop, bool playOnDrop, bool visible ):
+    GenericWindow( pIntf, left, top, dragDrop, playOnDrop, NULL ),
+    m_visible( visible ), m_rWindowManager( rWindowManager ),
+    m_pActiveLayout( NULL ), m_pLastHitControl( NULL ),
+    m_pCapturingControl( NULL ), m_pFocusControl( NULL ), m_currModifier( 0 )
 {
     // Register as a moving window
     m_rWindowManager.registerWindow( *this );

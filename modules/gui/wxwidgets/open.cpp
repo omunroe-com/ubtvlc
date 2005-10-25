@@ -2,7 +2,7 @@
  * open.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2005 the VideoLAN team
- * $Id: open.cpp 12481 2005-09-06 21:15:18Z dionoea $
+ * $Id: open.cpp 12796 2005-10-09 16:36:17Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -31,6 +31,7 @@
 #include <stdio.h>
 
 #include <vlc/vlc.h>
+#include "charset.h"
 
 #ifdef HAVE_LIBCDIO
 #include <cdio/cdio.h>
@@ -717,7 +718,7 @@ wxPanel *OpenDialog::DiscPanel( wxWindow* parent )
     for( char drive_letter = 'A'; drive_letter <= 'Z'; ++drive_letter )
     {
         char drive_name[3] = {drive_letter, ':', 0};
-        UINT type = GetDriveType( drive_name );
+        UINT type = GetDriveTypeA( drive_name );
         if( type == DRIVE_CDROM )
         {
             psz_default_device[0] = drive_letter;
@@ -1147,17 +1148,17 @@ void OpenDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
         playlist_item_t *p_item;
         char *psz_utf8;
 
-        psz_utf8 = FromLocale( mrl[i].mb_str() );
+        psz_utf8 = wxFromLocale( mrl[i] );
         p_item = playlist_ItemNew( p_intf, psz_utf8, psz_utf8 );
-        LocaleFree( psz_utf8 );
+        wxLocaleFree( psz_utf8 );
 
         /* Insert options */
         while( i + 1 < (int)mrl.GetCount() &&
                ((const char *)mrl[i + 1].mb_str())[0] == ':' )
         {
-            psz_utf8 = FromLocale( mrl[i + 1].mb_str() );
+            psz_utf8 = wxFromLocale( mrl[i + 1] );
             playlist_ItemAddOption( p_item, psz_utf8 );
-            LocaleFree( psz_utf8 );
+            wxLocaleFree( psz_utf8 );
             i++;
         }
 
@@ -1166,9 +1167,9 @@ void OpenDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
         {
             for( int j = 0; j < (int)subsfile_mrl.GetCount(); j++ )
             {
-                psz_utf8 = FromLocale( subsfile_mrl[j].mb_str() );
+                psz_utf8 = wxFromLocale( subsfile_mrl[j] );
                 playlist_ItemAddOption( p_item, psz_utf8 );
-                LocaleFree( psz_utf8 );
+                wxLocaleFree( psz_utf8 );
             }
         }
 
@@ -1177,9 +1178,9 @@ void OpenDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
         {
             for( int j = 0; j < (int)sout_mrl.GetCount(); j++ )
             {
-                psz_utf8 = FromLocale( sout_mrl[j].mb_str() );
-                playlist_ItemAddOption( p_item, sout_mrl[j].mb_str() );
-                LocaleFree( psz_utf8 );
+                psz_utf8 = wxFromLocale( sout_mrl[j] );
+                playlist_ItemAddOption( p_item, psz_utf8 );
+                wxLocaleFree( psz_utf8 );
             }
         }
 

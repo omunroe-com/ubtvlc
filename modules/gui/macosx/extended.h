@@ -2,7 +2,7 @@
  * extended.h: MacOS X Extended interface panel
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: extended.h 12238 2005-08-18 16:12:29Z fkuehne $
+ * $Id: extended.h 12765 2005-10-06 16:00:01Z fkuehne $
  *
  * Authors: Felix Kühne <fkuehne@users.sf.net>
  *
@@ -86,6 +86,8 @@
     BOOL o_adjImg_expanded;
     BOOL o_audFlts_expanded;
     BOOL o_vidFlts_expanded;
+    
+    BOOL o_config_changed;
 }
 
 - (IBAction)adjImg_Enbl:(id)sender;
@@ -102,6 +104,8 @@
 - (IBAction)vidFlts_mrInfo:(id)sender;
 
 + (VLCExtended *)sharedInstance;
+- (BOOL)getConfigChanged;
+- (void)collapsAll;
 
 - (void)showPanel;
 - (void)initStrings;

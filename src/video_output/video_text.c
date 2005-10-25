@@ -2,9 +2,9 @@
  * video_text.c : text manipulation functions
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: video_text.c 12412 2005-08-27 16:40:23Z jpsaman $
+ * $Id: video_text.c 12836 2005-10-15 13:23:08Z sigmunau $
  *
- * Author: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Author: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

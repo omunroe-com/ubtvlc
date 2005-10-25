@@ -2,7 +2,7 @@
  * normvol.c :  volume normalizer
  *****************************************************************************
  * Copyright (C) 2001 the VideoLAN team
- * $Id: normvol.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: normvol.c 12676 2005-09-25 16:49:40Z babal $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -98,6 +98,7 @@ vlc_module_end();
 static int Open( vlc_object_t *p_this )
 {
     aout_filter_t *p_filter = (aout_filter_t*)p_this;
+    vlc_bool_t b_fit = VLC_TRUE;
     int i_channels;
     aout_filter_sys_t *p_sys = p_filter->p_sys =
         malloc( sizeof( aout_filter_sys_t ) );
@@ -105,13 +106,22 @@ static int Open( vlc_object_t *p_this )
     if( p_filter->input.i_format != VLC_FOURCC('f','l','3','2' ) ||
         p_filter->output.i_format != VLC_FOURCC('f','l','3','2') )
     {
-            msg_Warn( p_filter, "Bad input or output format" );
-            return VLC_EGENERIC;
+        b_fit = VLC_FALSE;
+        p_filter->input.i_format = VLC_FOURCC('f','l','3','2');
+        p_filter->output.i_format = VLC_FOURCC('f','l','3','2');
+        msg_Warn( p_filter, "Bad input or output format" );
     }
 
     if ( !AOUT_FMTS_SIMILAR( &p_filter->input, &p_filter->output ) )
     {
+        b_fit = VLC_FALSE;
+        memcpy( &p_filter->output, &p_filter->input,
+                sizeof(audio_sample_format_t) );
         msg_Warn( p_filter, "input and output formats are not similar" );
+    }
+
+    if ( ! b_fit )
+    {
         return VLC_EGENERIC;
     }
 

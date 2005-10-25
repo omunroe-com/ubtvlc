@@ -2,7 +2,7 @@
  * avi.c : AVI file Stream input module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: avi.c 12561 2005-09-15 14:50:47Z jpsaman $
+ * $Id: avi.c 12821 2005-10-11 17:16:13Z zorglub $
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -42,7 +42,8 @@
 
 #define INDEX_TEXT N_("Force index creation")
 #define INDEX_LONGTEXT N_( \
-    "Recreate a index for the AVI file so we can seek trough it more reliably." )
+    "Recreate a index for the AVI file. Use this if your AVI file is damaged "\
+    "or incomplete (not seekable)" )
 
 static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
@@ -57,7 +58,7 @@ vlc_module_begin();
     add_bool( "avi-interleaved", 0, NULL,
               INTERLEAVE_TEXT, INTERLEAVE_LONGTEXT, VLC_TRUE );
     add_bool( "avi-index", 0, NULL,
-              INDEX_TEXT, INDEX_LONGTEXT, VLC_TRUE );
+              INDEX_TEXT, INDEX_LONGTEXT, VLC_FALSE );
 
     set_callbacks( Open, Close );
 vlc_module_end();
@@ -895,7 +896,7 @@ static int Demux_Seekable( demux_t *p_demux )
 
         if( ( p_frame = stream_Block( p_demux->s, __EVEN( i_size ) ) )==NULL )
         {
-            msg_Warn( p_demux, "failled reading data" );
+            msg_Warn( p_demux, "failed reading data" );
             tk->b_activated = VLC_FALSE;
             toread[i_track].b_ok = VLC_FALSE;
             continue;

@@ -2,7 +2,7 @@
  * nsc.c: NSC file demux and encoding decoder
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: $
+ * $Id: nsc.c 12923 2005-10-23 09:25:27Z courmisch $
  *
  * Authors: Jon Lech Johansen <jon@nanocrew.net>
  *          Derk-Jan Hartman <hartman at videolan dot org>
@@ -297,7 +297,6 @@ static int DemuxOpen( vlc_object_t * p_this )
  *****************************************************************************/
 static void DemuxClose( vlc_object_t *p_this )
 {
-    demux_t *p_demux = (demux_t*)p_this;
     return;
 }
 
@@ -352,7 +351,6 @@ static int ParseLine ( demux_t *p_demux, char *psz_line )
  *****************************************************************************/
 static int Demux ( demux_t *p_demux )
 {
-    demux_sys_t     *p_sys = p_demux->p_sys;
     char            *psz_line;
 
     while( ( psz_line = stream_ReadLine( p_demux->s ) ) )

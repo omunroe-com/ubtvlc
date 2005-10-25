@@ -2,7 +2,7 @@
  * http.c: HTTP input module
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: http.c 12210 2005-08-15 16:54:13Z zorglub $
+ * $Id: http.c 12821 2005-10-11 17:16:13Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -77,7 +77,7 @@ vlc_module_begin();
     add_integer( "http-caching", 4 * DEFAULT_PTS_DELAY / 1000, NULL,
                  CACHING_TEXT, CACHING_LONGTEXT, VLC_TRUE );
     add_string( "http-user-agent", COPYRIGHT_MESSAGE , NULL, AGENT_TEXT,
-                AGENT_LONGTEXT, VLC_FALSE );
+                AGENT_LONGTEXT, VLC_TRUE );
     add_bool( "http-reconnect", 0, NULL, RECONNECT_TEXT,
               RECONNECT_LONGTEXT, VLC_TRUE );
     add_bool( "http-continuous", 0, NULL, CONTINUOUS_TEXT,
@@ -584,7 +584,7 @@ static int ReadICYMeta( access_t *p_access )
         return VLC_SUCCESS;
 
     i_read = buffer << 4;
-    msg_Dbg( p_access, "ICY meta size=%u", i_read);
+    /* msg_Dbg( p_access, "ICY meta size=%u", i_read); */
 
     psz_meta = malloc( i_read + 1 );
     if( net_Read( p_access, p_sys->fd, p_sys->p_vs,
@@ -593,7 +593,7 @@ static int ReadICYMeta( access_t *p_access )
 
     psz_meta[i_read] = '\0'; /* Just in case */
 
-    msg_Dbg( p_access, "icy-meta=%s", psz_meta );
+    /* msg_Dbg( p_access, "icy-meta=%s", psz_meta ); */
 
     /* Now parse the meta */
     /* Look for StreamTitle= */
@@ -615,16 +615,18 @@ static int ReadICYMeta( access_t *p_access )
             if( psz ) *psz = '\0';
         }
 
-        if( p_sys->psz_icy_title ) free( p_sys->psz_icy_title );
+        if( !p_sys->psz_icy_title ||
+            strcmp( p_sys->psz_icy_title, &p[1] ) )
+        {
+            if( p_sys->psz_icy_title )
+                free( p_sys->psz_icy_title );
+            p_sys->psz_icy_title = strdup( &p[1] );
+            p_access->info.i_update |= INPUT_UPDATE_META;
 
-        p_sys->psz_icy_title = strdup( &p[1] );
-
-        p_access->info.i_update |= INPUT_UPDATE_META;
+            msg_Dbg( p_access, "New Title=%s", p_sys->psz_icy_title );
+        }
     }
-
     free( psz_meta );
-
-    msg_Dbg( p_access, "New Title=%s", p_sys->psz_icy_title );
 
     return VLC_SUCCESS;
 }
@@ -698,8 +700,7 @@ static int Control( access_t *p_access, int i_query, va_list args )
         case ACCESS_GET_META:
             pp_meta = (vlc_meta_t**)va_arg( args, vlc_meta_t** );
             *pp_meta = vlc_meta_New();
-            msg_Dbg( p_access, "GET META %s %s %s",
-                     p_sys->psz_icy_name, p_sys->psz_icy_genre, p_sys->psz_icy_title );
+
             if( p_sys->psz_icy_name )
                 vlc_meta_Add( *pp_meta, VLC_META_TITLE,
                               p_sys->psz_icy_name );

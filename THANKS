@@ -1,4 +1,4 @@
-$Id: THANKS 12591 2005-09-18 13:18:55Z sam $
+$Id: THANKS 12859 2005-10-16 19:44:44Z fkuehne $
 
 VLC makes extensive use of the following persons' code:
 
@@ -95,6 +95,8 @@ Remco Poortinga <poortinga at telin.nl> - IPv6 multicast patch
 Rene Gollent <rgollent at u.arizona.edu> - BeOS interface fix
 Roine Gustafsson <roine at popstar.com> - spudec bug fixes
 Rudolf Cornelissen <rag.cornelissen at inter.nl.net> - BeOS fixes
+Scott Caudle <dorkmanzcot at gmail dot com> - Visualization, WX 
+improvements
 Sebastien Chaumat <Sebastien.Chaumat at ens-lyon.fr> - YOPY port tests
 Steve Lhomme <steve dot lhomme at free dot fr> - MSVC fixes and Matroska enhancements
 Steve Brown <sbrown at cortland.com> - fix for optional PES size bug
@@ -106,11 +108,13 @@ Thomas L. Wood <twood at lucent.com> - fixed a bug in QuantMatrixExtension
 Tong Ka Man <kmtong at cwbase dot com> - playlist_Clear addition
 Valek Filippov <frob at df.ru> - Russian translation
 Vicente Jimenez Aguilar <vice at v1ce.net> - Spanish translation
+Vincent van den Heuvel <heuvel@mac.com> - OSX about window artwork (v0.8.4)
 Vitalijus Slavinskas <Vitalijus.Slavinskas at stud.ktu dot lt> - nsv patches
 Vladimir Chernyshov - MMX motion optimizations
 Wade Majors <guru at startrek.com> - BeOS icon integration, debugging and fixes
 Wallace Wadge <wwadge at gmail.com> - multiple programs TS mux
 Watanabe Go <go at dsl.gr.jp> - fix for non-ASCII filenames
+Wei Mingzhi <whistler_wmz at users.sourceforge.net> - Simplied Chinese translation
 Xavier Maillard <zedek at fxgsproject.org> - audio converters
 Xavier Marchesini <xav at alarue.net> - Win32 fixes
 Xènia Albà Cantero <xenia_alba at hotmail.com> - Catalan translation

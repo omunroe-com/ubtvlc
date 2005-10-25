@@ -2,7 +2,7 @@
  * mkv.cpp : matroska demuxer
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: mkv.cpp 12519 2005-09-12 09:56:32Z robux4 $
+ * $Id: mkv.cpp 12915 2005-10-22 15:04:45Z robUx4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Steve Lhomme <steve.lhomme@free.fr>
@@ -99,8 +99,11 @@ extern "C" {
 #   include <zlib.h>
 #endif
 
-#define MATROSKA_COMPRESSION_NONE 0
-#define MATROSKA_COMPRESSION_ZLIB 1
+#define MATROSKA_COMPRESSION_NONE  -1
+#define MATROSKA_COMPRESSION_ZLIB   0
+#define MATROSKA_COMPRESSION_BLIB   1
+#define MATROSKA_COMPRESSION_LZOX   2
+#define MATROSKA_COMPRESSION_HEADER 3
 
 #define MKVD_TIMECODESCALE 1000000
 
@@ -402,6 +405,10 @@ vlc_module_begin();
             N_("Chapter codecs"),
             N_("Use chapter codecs found in the segment."), VLC_TRUE );
 
+    add_bool( "mkv-preload-local-dir", 1, NULL,
+            N_("Preload Directory"),
+            N_("Preload matroska files from the same family in the same directory (not good for broken files)."), VLC_TRUE );
+
     add_bool( "mkv-seek-percent", 0, NULL,
             N_("Seek based on percent not time"),
             N_("Seek based on percent not time."), VLC_TRUE );
@@ -573,6 +580,7 @@ typedef struct
 
     uint64_t     i_default_duration;
     float        f_timecodescale;
+    mtime_t      i_last_dts;
 
     /* video */
     es_format_t fmt;
@@ -595,7 +603,8 @@ typedef struct
     char         *psz_codec_download_url;
     
     /* encryption/compression */
-    int           i_compression_type;
+    int                    i_compression_type;
+    KaxContentCompSettings *p_compression_data;
 
 } mkv_track_t;
 
@@ -1023,6 +1032,10 @@ public:
     {
         for( size_t i_track = 0; i_track < tracks.size(); i_track++ )
         {
+            if ( tracks[i_track]->p_compression_data )
+            {
+                delete tracks[i_track]->p_compression_data;
+            }
             if( tracks[i_track]->fmt.psz_description )
             {
                 free( tracks[i_track]->fmt.psz_description );
@@ -1152,7 +1165,11 @@ public:
     void LoadTags( );
     void InformationCreate( );
     void Seek( mtime_t i_date, mtime_t i_time_offset );
-    int BlockGet( KaxBlock * & pp_block, int64_t *pi_ref1, int64_t *pi_ref2, int64_t *pi_duration );
+#if LIBMATROSKA_VERSION >= 0x000800
+    int BlockGet( KaxBlock * &, KaxSimpleBlock * &, int64_t *, int64_t *, int64_t *);
+#else
+    int BlockGet( KaxBlock * &, int64_t *, int64_t *, int64_t *);
+#endif
     bool Select( mtime_t i_start_time );
     void UnSelect( );
 
@@ -1287,7 +1304,6 @@ public:
     demux_sys_t( demux_t & demux )
         :demuxer(demux)
         ,i_pts(0)
-        ,i_last_dts(0)
         ,i_start_pts(0)
         ,i_chapter_time(0)
         ,meta(NULL)
@@ -1320,7 +1336,6 @@ public:
     demux_t                 & demuxer;
 
     mtime_t                 i_pts;
-    mtime_t                 i_last_dts;
     mtime_t                 i_start_pts;
     mtime_t                 i_chapter_time;
 
@@ -1350,7 +1365,7 @@ public:
     void PreloadFamily( const matroska_segment_c & of_segment );
     void PreloadLinked( matroska_segment_c *p_segment );
     bool PreparePlayback( virtual_segment_c *p_new_segment );
-    matroska_stream_c *AnalyseAllSegmentsFound( EbmlStream *p_estream, bool b_initial = false );
+    matroska_stream_c *AnalyseAllSegmentsFound( demux_t *p_demux, EbmlStream *p_estream, bool b_initial = false );
     void JumpTo( virtual_segment_c & p_segment, chapter_item_c * p_chapter );
 
     void StartUiThread();
@@ -1428,7 +1443,7 @@ static int Open( vlc_object_t * p_this )
         return VLC_EGENERIC;
     }
 
-    p_stream = p_sys->AnalyseAllSegmentsFound( p_io_stream, true );
+    p_stream = p_sys->AnalyseAllSegmentsFound( p_demux, p_io_stream, true );
     if( p_stream == NULL )
     {
         msg_Err( p_demux, "cannot find KaxSegment" );
@@ -1453,81 +1468,90 @@ static int Open( vlc_object_t * p_this )
         p_stream->p_in->setFilePointer( p_segment->cluster->GetElementPosition() );
     }
 
-    /* get the files from the same dir from the same family (based on p_demux->psz_path) */
-    if (p_demux->psz_path[0] != '\0' && !strcmp(p_demux->psz_access, ""))
+    if (config_GetInt( p_demux, "mkv-preload-local-dir" ))
     {
-        // assume it's a regular file
-        // get the directory path
-        s_path = p_demux->psz_path;
-        if (s_path.at(s_path.length() - 1) == DIRECTORY_SEPARATOR)
+        /* get the files from the same dir from the same family (based on p_demux->psz_path) */
+        if (p_demux->psz_path[0] != '\0' && !strcmp(p_demux->psz_access, ""))
         {
-            s_path = s_path.substr(0,s_path.length()-1);
-        }
-        else
-        {
-            if (s_path.find_last_of(DIRECTORY_SEPARATOR) > 0) 
+            // assume it's a regular file
+            // get the directory path
+            s_path = p_demux->psz_path;
+            if (s_path.at(s_path.length() - 1) == DIRECTORY_SEPARATOR)
             {
-                s_path = s_path.substr(0,s_path.find_last_of(DIRECTORY_SEPARATOR));
+                s_path = s_path.substr(0,s_path.length()-1);
             }
-        }
-
-        struct dirent *p_file_item;
-        DIR *p_src_dir = opendir(s_path.c_str());
-
-        if (p_src_dir != NULL)
-        {
-            while ((p_file_item = (dirent *) readdir(p_src_dir)))
+            else
             {
-                if (strlen(p_file_item->d_name) > 4)
+                if (s_path.find_last_of(DIRECTORY_SEPARATOR) > 0) 
                 {
-                    s_filename = s_path + DIRECTORY_SEPARATOR + p_file_item->d_name;
+                    s_path = s_path.substr(0,s_path.find_last_of(DIRECTORY_SEPARATOR));
+                }
+            }
 
-                    if (!s_filename.compare(p_demux->psz_path))
-                        continue; // don't reuse the original opened file
+            struct dirent *p_file_item;
+            DIR *p_src_dir = opendir(s_path.c_str());
+
+            if (p_src_dir != NULL)
+            {
+                while ((p_file_item = (dirent *) readdir(p_src_dir)))
+                {
+                    if (strlen(p_file_item->d_name) > 4)
+                    {
+                        s_filename = s_path + DIRECTORY_SEPARATOR + p_file_item->d_name;
+
+#ifdef WIN32
+                        if (!strcasecmp(s_filename.c_str(), p_demux->psz_path))
+#else
+                        if (!s_filename.compare(p_demux->psz_path))
+#endif
+                            continue; // don't reuse the original opened file
 
 #if defined(__GNUC__) && (__GNUC__ < 3)
-                    if (!s_filename.compare("mkv", s_filename.length() - 3, 3) || 
-                        !s_filename.compare("mka", s_filename.length() - 3, 3))
+                        if (!s_filename.compare("mkv", s_filename.length() - 3, 3) || 
+                            !s_filename.compare("mka", s_filename.length() - 3, 3))
 #else
-                    if (!s_filename.compare(s_filename.length() - 3, 3, "mkv") || 
-                        !s_filename.compare(s_filename.length() - 3, 3, "mka"))
+                        if (!s_filename.compare(s_filename.length() - 3, 3, "mkv") || 
+                            !s_filename.compare(s_filename.length() - 3, 3, "mka"))
 #endif
-                    {
-                        // test wether this file belongs to our family
-                        stream_t *p_file_stream = stream_UrlNew( p_demux, s_filename.c_str());
-                        if ( p_file_stream != NULL )
                         {
-                            vlc_stream_io_callback *p_file_io = new vlc_stream_io_callback( p_file_stream, VLC_TRUE );
-                            EbmlStream *p_estream = new EbmlStream(*p_file_io);
-
-                            p_stream = p_sys->AnalyseAllSegmentsFound( p_estream );
-
-                            if ( p_stream == NULL )
+                            // test wether this file belongs to our family
+                            stream_t *p_file_stream = stream_UrlNew( p_demux, s_filename.c_str());
+                            if ( p_file_stream != NULL )
                             {
-                                msg_Dbg( p_demux, "the file '%s' will not be used", s_filename.c_str() );
-                                delete p_estream;
-                                delete p_file_io;
+                                vlc_stream_io_callback *p_file_io = new vlc_stream_io_callback( p_file_stream, VLC_TRUE );
+                                EbmlStream *p_estream = new EbmlStream(*p_file_io);
+
+                                p_stream = p_sys->AnalyseAllSegmentsFound( p_demux, p_estream );
+
+                                if ( p_stream == NULL )
+                                {
+                                    msg_Dbg( p_demux, "the file '%s' will not be used", s_filename.c_str() );
+                                    delete p_estream;
+                                    delete p_file_io;
+                                }
+                                else
+                                {
+                                    p_stream->p_in = p_file_io;
+                                    p_stream->p_es = p_estream;
+                                    p_sys->streams.push_back( p_stream );
+                                }
                             }
                             else
                             {
-                                p_stream->p_in = p_file_io;
-                                p_stream->p_es = p_estream;
-                                p_sys->streams.push_back( p_stream );
+                                msg_Dbg( p_demux, "the file '%s' cannot be opened", s_filename.c_str() );
                             }
-                        }
-                        else
-                        {
-                            msg_Dbg( p_demux, "the file '%s' cannot be opened", s_filename.c_str() );
                         }
                     }
                 }
+                closedir( p_src_dir );
             }
-            closedir( p_src_dir );
         }
+
+        p_sys->PreloadFamily( *p_segment );
     }
 
-    p_sys->PreloadFamily( *p_segment );
     p_sys->PreloadLinked( p_segment );
+
     if ( !p_sys->PreparePlayback( NULL ) )
     {
         msg_Err( p_demux, "cannot use the segment" );
@@ -1647,39 +1671,54 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
     }
 }
 
+#if LIBMATROSKA_VERSION >= 0x000800
+int matroska_segment_c::BlockGet( KaxBlock * & pp_block, KaxSimpleBlock * & pp_simpleblock, int64_t *pi_ref1, int64_t *pi_ref2, int64_t *pi_duration )
+#else
 int matroska_segment_c::BlockGet( KaxBlock * & pp_block, int64_t *pi_ref1, int64_t *pi_ref2, int64_t *pi_duration )
+#endif
 {
+#if LIBMATROSKA_VERSION >= 0x000800
+    pp_simpleblock = NULL;
+#endif
     pp_block = NULL;
     *pi_ref1  = 0;
     *pi_ref2  = 0;
 
     for( ;; )
     {
-        EbmlElement *el;
+        EbmlElement *el = NULL;
         int         i_level;
 
         if ( ep == NULL )
             return VLC_EGENERIC;
 
-        el = ep->Get();
-        i_level = ep->GetLevel();
-
-        if( el == NULL && pp_block != NULL )
+#if LIBMATROSKA_VERSION >= 0x000800
+        if( pp_simpleblock != NULL || ((el = ep->Get()) == NULL && pp_block != NULL) )
+#else
+        if( (el = ep->Get()) == NULL && pp_block != NULL )
+#endif
         {
             /* update the index */
 #define idx p_indexes[i_index - 1]
             if( i_index > 0 && idx.i_time == -1 )
             {
-                idx.i_time        = (*pp_block).GlobalTimecode() / (mtime_t)1000;
+#if LIBMATROSKA_VERSION >= 0x000800
+                if ( pp_simpleblock != NULL )
+                    idx.i_time        = pp_simpleblock->GlobalTimecode() / (mtime_t)1000;
+                else
+#endif
+                    idx.i_time        = (*pp_block).GlobalTimecode() / (mtime_t)1000;
                 idx.b_key         = *pi_ref1 == 0 ? VLC_TRUE : VLC_FALSE;
             }
 #undef idx
             return VLC_SUCCESS;
         }
 
+        i_level = ep->GetLevel();
+
         if( el == NULL )
         {
-            if( ep->GetLevel() > 1 )
+            if( i_level > 1 )
             {
                 ep->Up();
                 continue;
@@ -1739,6 +1778,15 @@ int matroska_segment_c::BlockGet( KaxBlock * & pp_block, int64_t *pi_ref1, int64
                 i_block_pos = el->GetElementPosition();
                 ep->Down();
             }
+#if LIBMATROSKA_VERSION >= 0x000800
+            else if( MKV_IS_ID( el, KaxSimpleBlock ) )
+            {
+                pp_simpleblock = (KaxSimpleBlock*)el;
+
+                pp_simpleblock->ReadData( es.I_O() );
+                pp_simpleblock->SetParent( *cluster );
+            }
+#endif
             break;
         case 3:
             if( MKV_IS_ID( el, KaxBlock ) )
@@ -1766,7 +1814,7 @@ int matroska_segment_c::BlockGet( KaxBlock * & pp_block, int64_t *pi_ref1, int64
                 {
                     *pi_ref1 = int64( ref ) * cluster->GlobalTimecodeScale();
                 }
-                else
+                else if( *pi_ref2 == 0 )
                 {
                     *pi_ref2 = int64( ref ) * cluster->GlobalTimecodeScale();
                 }
@@ -1793,17 +1841,22 @@ int matroska_segment_c::BlockGet( KaxBlock * & pp_block, int64_t *pi_ref1, int64
     }
 }
 
-static block_t *MemToBlock( demux_t *p_demux, uint8_t *p_mem, int i_mem)
+static block_t *MemToBlock( demux_t *p_demux, uint8_t *p_mem, int i_mem, size_t offset)
 {
     block_t *p_block;
-    if( !(p_block = block_New( p_demux, i_mem ) ) ) return NULL;
-    memcpy( p_block->p_buffer, p_mem, i_mem );
+    if( !(p_block = block_New( p_demux, i_mem + offset ) ) ) return NULL;
+    memcpy( p_block->p_buffer + offset, p_mem, i_mem );
     //p_block->i_rate = p_input->stream.control.i_rate;
     return p_block;
 }
 
+#if LIBMATROSKA_VERSION >= 0x000800
+static void BlockDecode( demux_t *p_demux, KaxBlock *block, KaxSimpleBlock *simpleblock, 
+                         mtime_t i_pts, mtime_t i_duration, bool f_mandatory )
+#else
 static void BlockDecode( demux_t *p_demux, KaxBlock *block, mtime_t i_pts,
-                         mtime_t i_duration )
+                         mtime_t i_duration, bool f_mandatory )
+#endif
 {
     demux_sys_t        *p_sys = p_demux->p_sys;
     matroska_segment_c *p_segment = p_sys->p_current_segment->Segment();
@@ -1815,7 +1868,12 @@ static void BlockDecode( demux_t *p_demux, KaxBlock *block, mtime_t i_pts,
 #define tk  p_segment->tracks[i_track]
     for( i_track = 0; i_track < p_segment->tracks.size(); i_track++ )
     {
+#if LIBMATROSKA_VERSION >= 0x000800
+        if( (block != NULL && tk->i_number == block->TrackNum()) ||
+            (simpleblock != NULL && tk->i_number == simpleblock->TrackNum()))
+#else
         if( tk->i_number == block->TrackNum() )
+#endif
         {
             break;
         }
@@ -1854,18 +1912,37 @@ static void BlockDecode( demux_t *p_demux, KaxBlock *block, mtime_t i_pts,
         block_t *p_init;
 
         msg_Dbg( p_demux, "sending header (%d bytes)", tk->i_data_init );
-        p_init = MemToBlock( p_demux, tk->p_data_init, tk->i_data_init );
+        p_init = MemToBlock( p_demux, tk->p_data_init, tk->i_data_init, 0 );
         if( p_init ) es_out_Send( p_demux->out, tk->p_es, p_init );
     }
     tk->b_inited = VLC_TRUE;
 
 
+#if LIBMATROSKA_VERSION >= 0x000800
+    for( i = 0; 
+        (block != NULL && i < block->NumberFrames()) || (simpleblock != NULL && i < simpleblock->NumberFrames());
+        i++ )
+#else
     for( i = 0; i < block->NumberFrames(); i++ )
+#endif
     {
         block_t *p_block;
-        DataBuffer &data = block->GetBuffer(i);
+        DataBuffer *data;
+#if LIBMATROSKA_VERSION >= 0x000800
+        if ( simpleblock != NULL )
+        {
+            data = &simpleblock->GetBuffer(i);
+            // condition when the DTS is correct (keyframe or B frame == NOT P frame)
+            f_mandatory = simpleblock->IsDiscardable() || simpleblock->IsKeyframe();
+        }
+        else
+#endif
+        data = &block->GetBuffer(i);
 
-        p_block = MemToBlock( p_demux, data.Buffer(), data.Size() );
+        if( tk->i_compression_type == MATROSKA_COMPRESSION_HEADER && tk->p_compression_data != NULL )
+            p_block = MemToBlock( p_demux, data->Buffer(), data->Size(), tk->p_compression_data->GetSize() );
+        else
+            p_block = MemToBlock( p_demux, data->Buffer(), data->Size(), 0 );
 
         if( p_block == NULL )
         {
@@ -1873,11 +1950,16 @@ static void BlockDecode( demux_t *p_demux, KaxBlock *block, mtime_t i_pts,
         }
 
 #if defined(HAVE_ZLIB_H)
-        if( tk->i_compression_type )
+        if( tk->i_compression_type == MATROSKA_COMPRESSION_ZLIB )
         {
             p_block = block_zlib_decompress( VLC_OBJECT(p_demux), p_block );
         }
+        else
 #endif
+        if( tk->i_compression_type == MATROSKA_COMPRESSION_HEADER )
+        {
+            memcpy( p_block->p_buffer, tk->p_compression_data->GetBuffer(), tk->p_compression_data->GetSize() );
+        }
 
         if ( tk->fmt.i_cat == NAV_ES )
         {
@@ -1902,14 +1984,21 @@ static void BlockDecode( demux_t *p_demux, KaxBlock *block, mtime_t i_pts,
         {
             if( !strcmp( tk->psz_codec, "V_MS/VFW/FOURCC" ) )
             {
+                // in VFW we have no idea about B frames
                 p_block->i_pts = 0;
+                p_block->i_dts = i_pts;
             }
             else
             {
                 p_block->i_pts = i_pts;
+                if ( f_mandatory )
+                    p_block->i_dts = p_block->i_pts;
+                else
+                    p_block->i_dts = min( i_pts, tk->i_last_dts + (tk->i_default_duration >> 10));
+                p_sys->i_pts = p_block->i_dts;
             }
-            p_block->i_dts = p_sys->i_pts;
         }
+        tk->i_last_dts = p_block->i_dts;
 
 #if 0
 msg_Dbg( p_demux, "block i_dts: "I64Fd" / i_pts: "I64Fd, p_block->i_dts, p_block->i_pts);
@@ -1928,7 +2017,7 @@ msg_Dbg( p_demux, "block i_dts: "I64Fd" / i_pts: "I64Fd, p_block->i_dts, p_block
 #undef tk
 }
 
-matroska_stream_c *demux_sys_t::AnalyseAllSegmentsFound( EbmlStream *p_estream, bool b_initial )
+matroska_stream_c *demux_sys_t::AnalyseAllSegmentsFound( demux_t *p_demux, EbmlStream *p_estream, bool b_initial )
 {
     int i_upper_lvl = 0;
     size_t i;
@@ -1939,10 +2028,37 @@ matroska_stream_c *demux_sys_t::AnalyseAllSegmentsFound( EbmlStream *p_estream, 
     p_l0 = p_estream->FindNextID(EbmlHead::ClassInfos, 0xFFFFFFFFL);
     if (p_l0 == NULL)
     {
+        msg_Err( p_demux, "No EBML header found" );
         return NULL;
     }
-    p_l0->SkipData(*p_estream, KaxMatroska_Context);
+
+    // verify we can read this Segment, we only support Matroska version 1 for now
+    p_l0->Read(*p_estream, EbmlHead::ClassInfos.Context, i_upper_lvl, p_l0, true);
+
+    EDocType doc_type = GetChild<EDocType>(*static_cast<EbmlHead*>(p_l0));
+    if (std::string(doc_type) != "matroska")
+    {
+        msg_Err( p_demux, "Not a Matroska file : DocType = %s ", std::string(doc_type).c_str());
+        return NULL;
+    }
+
+    EDocTypeReadVersion doc_read_version = GetChild<EDocTypeReadVersion>(*static_cast<EbmlHead*>(p_l0));
+#if LIBMATROSKA_VERSION >= 0x000800
+    if (uint64(doc_read_version) > 2)
+    {
+        msg_Err( p_demux, "This matroska file is needs version "I64Fd" and this VLC only supports version 1 & 2", uint64(doc_read_version));
+        return NULL;
+    }
+#else
+    if (uint64(doc_read_version) != 1)
+    {
+        msg_Err( p_demux, "This matroska file is needs version "I64Fd" and this VLC only supports version 1", uint64(doc_read_version));
+        return NULL;
+    }
+#endif
+
     delete p_l0;
+
 
     // find all segments in this file
     p_l0 = p_estream->FindNextID(KaxSegment::ClassInfos, 0xFFFFFFFFFLL);
@@ -2241,6 +2357,12 @@ bool matroska_segment_c::Select( mtime_t i_start_time )
             ((uint8_t*)tracks[i_track]->fmt.p_extra)[0] = ((i_profile + 1) << 3) | ((i_srate&0xe) >> 1);
             ((uint8_t*)tracks[i_track]->fmt.p_extra)[1] = ((i_srate & 0x1) << 7) | (tracks[i_track]->fmt.audio.i_channels << 3);
         }
+        else if( !strcmp( tracks[i_track]->psz_codec, "A_AAC" ) )
+        {
+            tracks[i_track]->fmt.i_codec = VLC_FOURCC( 'm', 'p', '4', 'a' );
+            tracks[i_track]->fmt.i_extra = tracks[i_track]->i_extra_data;
+            tracks[i_track]->fmt.p_extra = malloc( tracks[i_track]->i_extra_data );
+        }
         else if( !strcmp( tracks[i_track]->psz_codec, "A_PCM/INT/BIG" ) ||
                  !strcmp( tracks[i_track]->psz_codec, "A_PCM/INT/LIT" ) ||
                  !strcmp( tracks[i_track]->psz_codec, "A_PCM/FLOAT/IEEE" ) )
@@ -2394,7 +2516,10 @@ int demux_sys_t::EventMouse( vlc_object_t *p_this, char const *psz_var,
     event_thread_t *p_ev = (event_thread_t *) p_data;
     vlc_mutex_lock( &p_ev->lock );
     if( psz_var[6] == 'c' )
+    {
         p_ev->b_clicked = VLC_TRUE;
+        msg_Dbg( p_this, "Event Mouse: clicked");
+    }
     else if( psz_var[6] == 'm' )
         p_ev->b_moved = VLC_TRUE;
     vlc_mutex_unlock( &p_ev->lock );
@@ -2409,6 +2534,7 @@ int demux_sys_t::EventKey( vlc_object_t *p_this, char const *psz_var,
     vlc_mutex_lock( &p_ev->lock );
     p_ev->b_key = VLC_TRUE;
     vlc_mutex_unlock( &p_ev->lock );
+    msg_Dbg( p_this, "Event Key");
 
     return VLC_SUCCESS;
 }
@@ -2444,6 +2570,8 @@ int demux_sys_t::EventThread( vlc_object_t *p_this )
             vlc_value_t valk;
             struct vlc_t::hotkey *p_hotkeys = p_ev->p_vlc->p_hotkeys;
             int i, i_action = -1;
+
+            msg_Dbg( p_ev->p_demux, "Handle Key Event");
 
             vlc_mutex_lock( &p_ev->lock );
 
@@ -2593,6 +2721,8 @@ int demux_sys_t::EventThread( vlc_object_t *p_this )
                 int32_t button;
                 int32_t best,dist,d;
                 int32_t mx,my,dx,dy;
+
+                msg_Dbg( p_ev->p_demux, "Handle Mouse Event: Mouse clicked x(%d)*y(%d)", (unsigned)valx.i_int, (unsigned)valy.i_int);
 
                 b_activated = VLC_TRUE;
                 // get current button
@@ -3185,7 +3315,13 @@ static int Demux( demux_t *p_demux)
         int64_t i_block_ref1;
         int64_t i_block_ref2;
 
+#if LIBMATROSKA_VERSION >= 0x000800
+        KaxSimpleBlock *simpleblock;
+
+        if( p_segment->BlockGet( block, simpleblock, &i_block_ref1, &i_block_ref2, &i_block_duration ) )
+#else
         if( p_segment->BlockGet( block, &i_block_ref1, &i_block_ref2, &i_block_duration ) )
+#endif
         {
             if ( p_vsegment->Edition() && p_vsegment->Edition()->b_ordered )
             {
@@ -3197,7 +3333,7 @@ static int Demux( demux_t *p_demux)
                     if ( p_chap->i_user_start_time == p_chap->i_user_start_time )
                         p_vsegment->SelectNext();
                     */
-                    p_sys->i_last_dts = p_sys->i_pts = p_chap->i_user_end_time;
+                    p_sys->i_pts = p_chap->i_user_end_time;
                     p_sys->i_pts++; // trick to avoid staying on segments with no duration and no content
 
                     i_return = 1;
@@ -3227,36 +3363,24 @@ static int Demux( demux_t *p_demux)
             }
         }
 
-        mtime_t i_pts, i_dts;
-
-        mtime_t i_time = block->GlobalTimecode();
-        if ( i_block_ref1 != 0 )
-            i_time += min( 0, i_block_ref1 );
-        if ( i_block_ref2 != 0 )
-            i_time += min( 0, i_block_ref2 );
-
-        i_pts = (p_sys->i_chapter_time + block->GlobalTimecode()) / (mtime_t) 1000;
-        i_dts = (p_sys->i_chapter_time + i_time) / (mtime_t) 1000;
-
-        if ( i_dts != i_pts && p_sys->i_last_dts >= i_dts )
-            p_sys->i_last_dts += 200;
+#if LIBMATROSKA_VERSION >= 0x000800
+        if ( simpleblock != NULL )
+            p_sys->i_pts = (p_sys->i_chapter_time + simpleblock->GlobalTimecode()) / (mtime_t) 1000;
         else
-            p_sys->i_last_dts = i_dts;
-
-        p_sys->i_pts = i_pts;
+#endif
+        p_sys->i_pts = (p_sys->i_chapter_time + block->GlobalTimecode()) / (mtime_t) 1000;
 
         if( p_sys->i_pts >= p_sys->i_start_pts  )
         {
             es_out_Control( p_demux->out, ES_OUT_SET_PCR, p_sys->i_pts );
-        }
 
-        if( i_pts >= p_sys->i_start_pts  )
             if ( p_vsegment->UpdateCurrentToChapter( *p_demux ) )
             {
                 i_return = 1;
                 delete block;
                 break;
             }
+        }
         
         if ( p_vsegment->Edition() && p_vsegment->Edition()->b_ordered && p_vsegment->CurrentChapter() == NULL )
         {
@@ -3282,7 +3406,11 @@ static int Demux( demux_t *p_demux)
             continue;
         }
 
-        BlockDecode( p_demux, block, i_pts, i_block_duration );
+#if LIBMATROSKA_VERSION >= 0x000800
+        BlockDecode( p_demux, block, simpleblock, p_sys->i_pts, i_block_duration, i_block_ref1 >= 0 || i_block_ref2 > 0 );
+#else
+        BlockDecode( p_demux, block, p_sys->i_pts, i_block_duration, i_block_ref1 >= 0 || i_block_ref2 > 0 );
+#endif
 
         delete block;
         i_block_count++;
@@ -3865,13 +3993,13 @@ void matroska_segment_c::ParseSeekHead( KaxSeekHead *seekhead )
 void matroska_segment_c::ParseTrackEntry( KaxTrackEntry *m )
 {
     size_t i, j, k, n;
+    bool bSupported = true;
 
     mkv_track_t *tk;
 
     msg_Dbg( &sys.demuxer, "|   |   + Track Entry" );
 
     tk = new mkv_track_t();
-    tracks.push_back( tk );
 
     /* Init the track */
     memset( tk, 0, sizeof( mkv_track_t ) );
@@ -3900,6 +4028,7 @@ void matroska_segment_c::ParseTrackEntry( KaxTrackEntry *m )
     tk->psz_codec_download_url = NULL;
     
     tk->i_compression_type = MATROSKA_COMPRESSION_NONE;
+    tk->p_compression_data = NULL;
 
     for( i = 0; i < m->ListSize(); i++ )
     {
@@ -4043,6 +4172,11 @@ void matroska_segment_c::ParseTrackEntry( KaxTrackEntry *m )
         {
             EbmlMaster *cencs = static_cast<EbmlMaster*>(l);
             MkvTree( sys.demuxer, 3, "Content Encodings" );
+            if ( cencs->ListSize() > 1 )
+            {
+                msg_Err( &sys.demuxer, "Multiple Compression method not supported" );
+                bSupported = false;
+            }
             for( j = 0; j < cencs->ListSize(); j++ )
             {
                 EbmlElement *l2 = (*cencs)[j];
@@ -4079,10 +4213,17 @@ void matroska_segment_c::ParseTrackEntry( KaxTrackEntry *m )
                                 {
                                     KaxContentCompAlgo &compalg = *(KaxContentCompAlgo*)l4;
                                     MkvTree( sys.demuxer, 6, "Compression Algorithm: %i", uint32(compalg) );
-                                    if( uint32( compalg ) == 0 )
+                                    tk->i_compression_type = uint32( compalg );
+                                    if ( ( tk->i_compression_type != MATROSKA_COMPRESSION_ZLIB ) && 
+                                         ( tk->i_compression_type != MATROSKA_COMPRESSION_HEADER ) )
                                     {
-                                        tk->i_compression_type = MATROSKA_COMPRESSION_ZLIB;
+                                        msg_Err( &sys.demuxer, "Track Compression method %d not supported", tk->i_compression_type );
+                                        bSupported = false;
                                     }
+                                }
+                                else if( MKV_IS_ID( l4, KaxContentCompSettings ) )
+                                {
+                                    tk->p_compression_data = new KaxContentCompSettings( *(KaxContentCompSettings*)l4 );
                                 }
                                 else
                                 {
@@ -4270,6 +4411,16 @@ void matroska_segment_c::ParseTrackEntry( KaxTrackEntry *m )
             msg_Dbg( &sys.demuxer, "|   |   |   + Unknown (%s)",
                      typeid(*l).name() );
         }
+    }
+
+    if ( bSupported )
+    {
+        tracks.push_back( tk );
+    }
+    else
+    {
+        msg_Err( &sys.demuxer, "Track Entry %d not supported", tk->i_number );
+        delete tk;
     }
 }
 
@@ -5109,6 +5260,11 @@ bool matroska_segment_c::Preload( )
         else if( MKV_IS_ID( el, KaxTracks ) )
         {
             ParseTracks( static_cast<KaxTracks*>( el ) );
+            if ( tracks.size() == 0 )
+            {
+                msg_Err( &sys.demuxer, "No tracks supported" );
+                return false;
+            }
         }
         else if( MKV_IS_ID( el, KaxSeekHead ) )
         {
@@ -5217,7 +5373,9 @@ size_t virtual_segment_c::AddSegment( matroska_segment_c *p_segment )
     // check if it's not already in here
     for ( i=0; i<linked_segments.size(); i++ )
     {
-        if ( *p_segment->p_segment_uid == *linked_segments[i]->p_segment_uid )
+        if ( linked_segments[i]->p_segment_uid != NULL 
+            && p_segment->p_segment_uid != NULL
+            && *p_segment->p_segment_uid == *linked_segments[i]->p_segment_uid )
             return 0;
     }
 
@@ -5288,6 +5446,9 @@ void virtual_segment_c::AppendUID( const EbmlBinary * p_UID )
 void matroska_segment_c::Seek( mtime_t i_date, mtime_t i_time_offset )
 {
     KaxBlock    *block;
+#if LIBMATROSKA_VERSION >= 0x000800
+    KaxSimpleBlock *simpleblock;
+#endif
     int         i_track_skipping;
     int64_t     i_block_duration;
     int64_t     i_block_ref1;
@@ -5345,7 +5506,11 @@ void matroska_segment_c::Seek( mtime_t i_date, mtime_t i_time_offset )
 
     while( i_track_skipping > 0 )
     {
+#if LIBMATROSKA_VERSION >= 0x000800
+        if( BlockGet( block, simpleblock, &i_block_ref1, &i_block_ref2, &i_block_duration ) )
+#else
         if( BlockGet( block, &i_block_ref1, &i_block_ref2, &i_block_duration ) )
+#endif
         {
             msg_Warn( &sys.demuxer, "cannot get block EOF?" );
 
@@ -5361,7 +5526,7 @@ void matroska_segment_c::Seek( mtime_t i_date, mtime_t i_time_offset )
             }
         }
 
-        sys.i_last_dts = sys.i_pts = (sys.i_chapter_time + block->GlobalTimecode()) / (mtime_t) 1000;
+        sys.i_pts = (sys.i_chapter_time + block->GlobalTimecode()) / (mtime_t) 1000;
 
         if( i_track < tracks.size() )
         {
@@ -5379,7 +5544,11 @@ void matroska_segment_c::Seek( mtime_t i_date, mtime_t i_time_offset )
                 }
                 if( !tracks[i_track]->b_search_keyframe )
                 {
-                    BlockDecode( &sys.demuxer, block, sys.i_pts, 0 );
+#if LIBMATROSKA_VERSION >= 0x000800
+                    BlockDecode( &sys.demuxer, block, simpleblock, sys.i_pts, 0, i_block_ref1 >= 0 || i_block_ref2 > 0 );
+#else
+                    BlockDecode( &sys.demuxer, block, sys.i_pts, 0, i_block_ref1 >= 0 || i_block_ref2 > 0 );
+#endif
                 }
             } 
         }

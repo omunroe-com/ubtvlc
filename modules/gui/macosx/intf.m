@@ -2,7 +2,7 @@
  * intf.m: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: intf.m 12529 2005-09-12 20:47:34Z hartman $
+ * $Id: intf.m 12868 2005-10-16 23:21:25Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -41,7 +41,7 @@
 #include "wizard.h"
 #include "extended.h"
 #include "bookmarks.h"
-#include "update.h"
+/*#include "update.h"*/
 
 /*****************************************************************************
  * Local prototypes.
@@ -301,9 +301,9 @@ static VLCMain *_o_sharedMainInstance = nil;
     o_prefs = nil;
     o_open = [[VLCOpen alloc] init];
     o_wizard = [[VLCWizard alloc] init];
-    o_extended = [[VLCExtended alloc] init];
+    o_extended = nil;
     o_bookmarks = [[VLCBookmarks alloc] init];
-    o_update = [[VLCUpdate alloc] init];
+    /*o_update = [[VLCUpdate alloc] init];*/
 
     i_lastShownVolume = -1;
     return _o_sharedMainInstance;
@@ -432,17 +432,6 @@ static VLCMain *_o_sharedMainInstance = nil;
     nib_main_loaded = TRUE;
 }
 
-- (void)dealloc
-{
-    [o_about release];
-    [o_prefs release];
-    [o_open release];
-    [o_extended release];
-    [o_bookmarks release];
-    
-    [super dealloc];
-}
-
 - (void)initStrings
 {
     [o_window setTitle: _NS("VLC - Controller")];
@@ -467,7 +456,7 @@ static VLCMain *_o_sharedMainInstance = nil;
     /* main menu */
     [o_mi_about setTitle: [_NS("About VLC media player") \
         stringByAppendingString: @"..."]];
-    [o_mi_checkForUpdate setTitle: _NS("Check for Update...")];
+/*    [o_mi_checkForUpdate setTitle: _NS("Check for Update...")];*/
     [o_mi_prefs setTitle: _NS("Preferences...")];
     [o_mi_add_intf setTitle: _NS("Add Interface")];
     [o_mu_add_intf setTitle: _NS("Add Interface")];
@@ -1376,6 +1365,32 @@ static VLCMain *_o_sharedMainInstance = nil;
     }
     msleep( 500000 );
 
+    /* save the prefs if they were changed in the extended panel */
+    if (o_extended && [o_extended getConfigChanged])
+    {
+        [o_extended savePrefs];
+    }
+
+    /* release some other objects here, because it isn't sure whether dealloc
+     * will be called later on -- FK (10/6/05) */
+    if( nib_about_loaded && o_about )
+        [o_about release];
+    
+    if( nib_open_loaded && o_open )
+        [o_open release];
+    
+    if( nib_extended_loaded && o_extended )
+    {
+        [o_extended collapsAll];
+        [o_extended release];
+    }
+    
+    if( nib_bookmarks_loaded && o_bookmarks )
+        [o_bookmarks release];
+
+    if( nib_wizard_loaded && o_wizard )
+        [o_wizard release];
+
     if( o_img_pause_pressed != nil )
     {
         [o_img_pause_pressed release];
@@ -1495,6 +1510,10 @@ static VLCMain *_o_sharedMainInstance = nil;
 
 - (IBAction)showExtended:(id)sender
 {
+    if ( o_extended == nil )
+    {
+        o_extended = [[VLCExtended alloc] init];
+    }
     if (!nib_extended_loaded)
     {
         nib_extended_loaded = [NSBundle loadNibNamed:@"Extended" owner:self];
@@ -1541,7 +1560,7 @@ static VLCMain *_o_sharedMainInstance = nil;
     [o_prefs showPrefs];
 }
 
-- (IBAction)checkForUpdate:(id)sender
+/*- (IBAction)checkForUpdate:(id)sender
 {
     if (!nib_update_loaded)
     {
@@ -1550,7 +1569,7 @@ static VLCMain *_o_sharedMainInstance = nil;
     } else {
         [o_update showUpdateWindow];
     }
-}
+}*/
 
 - (IBAction)closeError:(id)sender
 {

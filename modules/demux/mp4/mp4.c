@@ -2,7 +2,7 @@
  * mp4.c : MP4 file input module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: mp4.c 12007 2005-08-04 16:50:18Z courmisch $
+ * $Id: mp4.c 12789 2005-10-09 11:09:06Z fenrir $
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 #include <vlc/vlc.h>
 #include <vlc/input.h>
 #include <vlc_playlist.h>
+#include <vlc_md5.h>
 #include "iso_lang.h"
 #include "vlc_meta.h"
 
@@ -164,7 +165,7 @@ static int      MP4_TrackSampleSize( mp4_track_t * );
 static int      MP4_TrackNextSample( demux_t *, mp4_track_t * );
 static void     MP4_TrackSetELST( demux_t *, mp4_track_t *, int64_t );
 
-/* Return time in µs of a track */
+/* Return time in s of a track */
 static inline int64_t MP4_TrackGetDTS( demux_t *p_demux, mp4_track_t *p_track )
 {
 #define chunk p_track->chunk[p_track->i_chunk]
@@ -1277,6 +1278,7 @@ static int TrackCreateES( demux_t *p_demux, mp4_track_t *p_track,
             break;
 
         case( VLC_FOURCC( 't', 'e', 'x', 't' ) ):
+        case( VLC_FOURCC( 't', 'x', '3', 'g' ) ):
             p_track->fmt.i_codec = VLC_FOURCC( 's', 'u', 'b', 't' );
             /* FIXME: Not true, could be UTF-16 with a Byte Order Mark (0xfeff) */
             /* FIXME UTF-8 doesn't work here ? */
@@ -1776,6 +1778,7 @@ static void MP4_TrackCreate( demux_t *p_demux, mp4_track_t *p_track,
 
         case( FOURCC_text ):
         case( FOURCC_subp ):
+        case( FOURCC_tx3g ):
             p_track->fmt.i_cat = SPU_ES;
             break;
 
@@ -2004,7 +2007,11 @@ static int MP4_TrackSeek( demux_t *p_demux, mp4_track_t *p_track,
         VLC_SUCCESS )
     {
         p_track->b_selected = VLC_TRUE;
+
+        es_out_Control( p_demux->out, ES_OUT_SET_NEXT_DISPLAY_TIME,
+                        p_track->p_es, i_start );
     }
+
     return( p_track->b_selected ? VLC_SUCCESS : VLC_EGENERIC );
 }
 

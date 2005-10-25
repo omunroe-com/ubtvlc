@@ -4,7 +4,7 @@
  * modules, especially intf modules. See config.h for output configuration.
  *****************************************************************************
  * Copyright (C) 1998-2005 the VideoLAN team
- * $Id: messages.c 12135 2005-08-11 21:17:04Z zorglub $
+ * $Id: messages.c 12729 2005-10-02 08:00:06Z courmisch $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -99,18 +99,19 @@ void __msg_Create( vlc_object_t *p_this )
  */
 void __msg_Flush( vlc_object_t *p_this )
 {
-    int i_index;
-
     vlc_mutex_lock( &p_this->p_libvlc->msg_bank.lock );
 
     p_this->p_libvlc->msg_bank.b_configured = VLC_TRUE;
 
+#if 0
+    /* Some messages remain in the queue, dont rewrite them */
     for( i_index = p_this->p_libvlc->msg_bank.i_start;
          i_index != p_this->p_libvlc->msg_bank.i_stop;
          i_index = (i_index+1) % VLC_MSG_QSIZE )
     {
         PrintMsg( p_this, &p_this->p_libvlc->msg_bank.msg[i_index] );
     }
+#endif
 
     FlushMsg( &p_this->p_libvlc->msg_bank );
 

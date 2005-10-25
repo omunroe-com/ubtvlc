@@ -2,7 +2,7 @@
  * dialogs.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: dialogs.cpp 12281 2005-08-20 00:31:27Z dionoea $
+ * $Id: dialogs.cpp 12802 2005-10-09 17:57:58Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -175,7 +175,7 @@ bool Dialogs::init()
     m_pModule = module_Need( m_pProvider, "dialogs provider", NULL, 0 );
     if( m_pModule == NULL )
     {
-        msg_Err( getIntf(), "No suitable dialogs provider found" );
+        msg_Err( getIntf(), "No suitable dialogs provider found (hint: compile the wxWidgets plugin, and make sure it is loaded properly)" );
         vlc_object_destroy( m_pProvider );
         m_pProvider = NULL;
         return false;

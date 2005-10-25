@@ -1,11 +1,11 @@
 dnl Autoconf settings for vlc
-dnl $Id: configure.ac 12606 2005-09-19 16:06:04Z sam $
+dnl $Id: configure.ac 12901 2005-10-20 17:49:04Z xtophe $
 
-AC_INIT(vlc,0.8.4-svn20040920)
+AC_INIT(vlc,0.8.4-test1)
 VERSION_MAJOR="0"
 VERSION_MINOR="8"
 VERSION_REVISION="4"
-VERSION_EXTRA="svn"
+VERSION_EXTRA="test1"
 
 CONFIGURE_LINE="$0 $*"
 CODENAME="Janus"
@@ -17,8 +17,11 @@ AC_CANONICAL_SYSTEM
 
 dnl XXX: we don't put any flags here, because automake 1.5 doesn't support
 dnl them. And we need the comma otherwize automake will choke on it.
-AM_INIT_AUTOMAKE(vlc,0.8.4-svn20040920)
+AM_INIT_AUTOMAKE(vlc,0.8.4-test1)
 AM_CONFIG_HEADER(config.h)
+
+dnl HA! HA!
+AM_MAINTAINER_MODE
 
 dnl
 dnl  Save *FLAGS
@@ -200,7 +203,13 @@ case "${target_os}" in
     VLC_ADD_CXXFLAGS([beos],[])
     VLC_ADD_LDFLAGS([vlc beos],[-lbe])
     VLC_ADD_LDFLAGS([beos],[-lmedia -ltranslation -ltracker -lgame])
-    VLC_ADD_LDFLAGS([access_file access_ftp access_mms access_output_udp telnet netsync sap ipv4 vlc],[-lnet])
+
+    dnl Check for BONE
+    if test -f /boot/beos/system/lib/libbind.so; then
+        VLC_ADD_LDFLAGS([access_file access_ftp access_mms access_output_udp telnet netsync sap ipv4 vlc],[-lbind -lsocket])
+    else
+        VLC_ADD_LDFLAGS([access_file access_ftp access_mms access_output_udp telnet netsync sap ipv4 vlc],[-lnet])
+    fi
 
     dnl Ugly check for Zeta
     if test -f /boot/beos/system/lib/libzeta.so; then
@@ -219,7 +228,7 @@ AM_CONDITIONAL(HAVE_WINCE, test "${SYS}" = "mingwce")
 dnl
 dnl Gettext stuff
 dnl
-ALL_LINGUAS="ca da de en_GB es fr it ja ko nl pt_BR ro ru tr zh_TW"
+ALL_LINGUAS="ca da de en_GB es fr it ja ko nl pt_BR ro ru tr zh_CN zh_TW"
 AM_GNU_GETTEXT_VERSION(0.11.5)
 AM_GNU_GETTEXT
 if test "${nls_cv_force_use_gnu_gettext}" = "yes"; then
@@ -466,7 +475,7 @@ AC_CHECK_LIB(m,cos,[
   VLC_ADD_LDFLAGS([adjust distort a52tofloat32 dtstofloat32 x264 goom],[-lm])
 ])
 AC_CHECK_LIB(m,pow,[
-  VLC_ADD_LDFLAGS([ffmpeg ffmpegaltivec stream_out_transrate i420_rgb faad twolame equalizer vlc freetype],[-lm])
+  VLC_ADD_LDFLAGS([ffmpeg ffmpegaltivec stream_out_transrate i420_rgb faad twolame equalizer vlc freetype mpc],[-lm])
 ])
 AC_CHECK_LIB(m,sqrt,[
   VLC_ADD_LDFLAGS([headphone_channel_mixer normvol speex],[-lm])
@@ -705,11 +714,15 @@ if test "${x_libraries}" = "NONE"; then
   x_libraries="/usr/X11R6/lib"
 fi
 
+dnl it seems that autoconf do the pkg-config detection only for the first PKG_CHECK_MODULES in the configure.ac ( which is logical) but in our case it is nested in a if so it was not working if you're not on linux or have disable hal.
+
+PKG_PROG_PKG_CONFIG()
+
 dnl Check for hal
 AC_ARG_ENABLE(hal,
   [  --enable-hal            Linux HAL services discovery (default enabled)])
  
-if test "${enable_hal}" != "no"
+if test "${enable_hal}" != "no" -a "${SYS}" = "linux"
 then
   PKG_CHECK_MODULES(HAL, hal >= 0.2.97,
     [AC_DEFINE(HAVE_HAL, [], [Define if you have the HAL library])
@@ -1006,7 +1019,7 @@ dnl  VLC_ADD_PLUGINS([externrun])
   VLC_ADD_PLUGINS([i420_yuy2 i422_yuy2 i420_ymga])
   VLC_ADD_PLUGINS([aout_file linear_resampler bandlimited_resampler])
   VLC_ADD_PLUGINS([float32_mixer spdif_mixer simple_channel_mixer])
-  VLC_ADD_PLUGINS([headphone_channel_mixer normvol equalizer])
+  VLC_ADD_PLUGINS([dolby_surround_decoder headphone_channel_mixer normvol equalizer])
   VLC_ADD_PLUGINS([fixed32tofloat32 float32tos16 float32tos8 float32tou16 float32tou8 a52tospdif dtstospdif s16tofloat32 s16tofloat32swab s8tofloat32 u8tofloat32 audio_format])
 fi
 
@@ -1715,7 +1728,7 @@ dnl
 dnl  gnomeVFS access module
 dnl
 AC_ARG_ENABLE(gnomevfs,
-  [  --enable-gnomevfs      GnomeVFS access module (default enables)])
+  [  --enable-gnomevfs      GnomeVFS access module (default enabled)])
 if test "${enable_gnomevfs}" != "no"
 then
   PKG_CHECK_MODULES(GNOMEVFS, gnome-vfs-2.0,
@@ -1980,11 +1993,11 @@ AC_ARG_ENABLE(mkv,
 if test "${enable_mkv}" != "no" -a "${CXX}" != ""; then
   AC_LANG_PUSH(C++)
   AC_CHECK_HEADERS(ebml/EbmlVersion.h, [
-    AC_MSG_CHECKING(for libebml version >= 0.7.3)
+    AC_MSG_CHECKING(for libebml version >= 0.7.6)
     AC_EGREP_CPP(yes,
       [#include <ebml/EbmlVersion.h>
        #ifdef LIBEBML_VERSION
-       #if LIBEBML_VERSION >= 0x000703
+       #if LIBEBML_VERSION >= 0x000706
        yes
        #endif
        #endif],
@@ -2040,6 +2053,19 @@ then
     VLC_ADD_CXXFLAGS([mod],[])
     VLC_ADD_LDFLAGS([mod],[-lmodplug])])
 fi
+
+dnl
+dnl  mpc demux plugin
+dnl
+AC_ARG_ENABLE(mpc,
+  [  --enable-mpc            Mpc demux support (default enabled)])
+if test "${enable_mpc}" != "no"
+then
+  AC_CHECK_HEADERS(mpcdec/mpcdec.h, [
+    VLC_ADD_PLUGINS([mpc])
+    VLC_ADD_LDFLAGS([mpc],[-lmpcdec])])
+fi
+
 
 dnl
 dnl  Codec plugins
@@ -2116,6 +2142,9 @@ AC_CHECK_HEADERS(id3tag.h, [
 dnl
 dnl  ffmpeg decoder/demuxer plugin
 dnl
+dnl we try to find ffmpeg using : 1- ffmpeg-config, 2- pkg-config
+dnl 				3- default place, 4- given tree
+
 AC_ARG_ENABLE(ffmpeg,
 [  --enable-ffmpeg         ffmpeg codec (default enabled)])
 if test "${enable_ffmpeg}" != "no"
@@ -2142,29 +2171,52 @@ dnl Look for a ffmpeg-config (we are on debian )
      VLC_ADD_LDFLAGS([ffmpeg stream_out_switcher],[`${FFMPEG_CONFIG} --plugin-libs avcodec avformat postproc`])
   
   else
-    AC_ARG_WITH(ffmpeg-mp3lame,
+
+dnl Those options have to be here because the .pc can be bogus for ffmpeg previous nov 05
+
+	AC_ARG_WITH(ffmpeg-mp3lame,
       [    --with-ffmpeg-mp3lame specify if ffmpeg has been compiled with mp3lame support],
       [
-        VLC_ADD_LDFLAGS([ffmpeg],[-lmp3lame]) ])
+        if test "$with_ffmpeg_mp3lame" = "yes";	then
+		VLC_ADD_LDFLAGS([ffmpeg],[-lmp3lame])
+	fi
+	])
 
     AC_ARG_WITH(ffmpeg-faac,
       [    --with-ffmpeg-faac    specify if ffmpeg has been compiled with faac support],
       [
-        VLC_ADD_LDFLAGS([ffmpeg],[-lfaac]) ])
+        if test "$with_ffmpeg_faac" = "yes"; then
+		VLC_ADD_LDFLAGS([ffmpeg],[-lfaac])
+	fi])
 
     AC_ARG_WITH(ffmpeg-dts,
       [    --with-ffmpeg-dts     specify if ffmpeg has been compiled with dts support],
       [
-        VLC_ADD_LDFLAGS([ffmpeg],[-ldts]) ])
+        if test "$with_ffmpeg_dts" = "yes"; then
+		VLC_ADD_LDFLAGS([ffmpeg],[-ldts])
+	fi])
 
     AC_ARG_WITH(ffmpeg-zlib,
       [    --with-ffmpeg-zlib    specify if ffmpeg has been compiled with zlib support],
       [
-        VLC_ADD_LDFLAGS([ffmpeg],[-lz]) ])
+        if test "$with_ffmpeg_zlib" = "yes"; then
+		VLC_ADD_LDFLAGS([ffmpeg],[-lz])
+	fi])
 
-    AC_ARG_WITH(ffmpeg-tree,
-      [    --with-ffmpeg-tree=PATH ffmpeg tree for static linking])
+dnl Trying with pkg-config
+   PKG_CHECK_MODULES(FFMPEG,[libavcodec, libavformat],
+    [
+     AC_CHECK_HEADERS(ffmpeg/avcodec.h)
+     AC_CHECK_HEADERS(postproc/postprocess.h)
+     VLC_ADD_BUILTINS([ffmpeg])
+     if test "${enable_sout}" != "no"; then
+         VLC_ADD_BUILTINS([stream_out_switcher])
+     fi
+     VLC_ADD_CFLAGS([ffmpeg stream_out_switcher],[${FFMPEG_CFLAGS}])
+     VLC_ADD_LDFLAGS([ffmpeg],[${FFMPEG_LIBS}])
 
+    ],[
+     
     dnl
     dnl test for !(--with-ffmpeg-tree)
     dnl
@@ -2180,6 +2232,8 @@ dnl Look for a ffmpeg-config (we are on debian )
 
       AC_CHECK_LIB(avcodec, avcodec_init, [
         VLC_ADD_BUILTINS([ffmpeg])
+
+
         VLC_ADD_LDFLAGS([ffmpeg],[-lavcodec])
         if test "${enable_sout}" != "no"; then
             VLC_ADD_BUILTINS([stream_out_switcher])
@@ -2266,6 +2320,10 @@ dnl Look for a ffmpeg-config (we are on debian )
         VLC_ADD_CPPFLAGS([ffmpeg stream_out_switcher],[-I${real_ffmpeg_tree}/libavformat])
       fi
     fi
+    ])
+    AC_ARG_WITH(ffmpeg-tree,
+      [    --with-ffmpeg-tree=PATH ffmpeg tree for static linking])
+
   fi
 fi
 
@@ -3872,6 +3930,12 @@ then
     fi
     VLC_ADD_LDFLAGS([wxwidgets],[`${WX_CONFIG} --libs`])
     VLC_ADD_CXXFLAGS([wxwidgets],[`${WX_CONFIG} --cxxflags`])
+    if ${WX_CONFIG} --unicode
+    then 
+      # wxwidgets should provide the following flags but does not
+      # the following is required to compile for win32
+      VLC_ADD_CXXFLAGS([wxwidgets],[-D_UNICODE -DUNICODE])
+    fi
     if test "$have_libcdio" = "yes"
     then 
       VLC_ADD_LDFLAGS([wxwidgets],[$LIBCDIO_LIBS])

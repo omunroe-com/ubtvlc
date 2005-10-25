@@ -3,7 +3,7 @@
 # DO NOT EDIT - edit Modules.am or $(top_srcdir)/bootstrap instead
 
 basedir = demux
-mods = a52sys dtssys flac ogg m3u demuxdump rawdv au wav mkv livedotcom nsv real ts ps mod pva aiff sgimb mjpeg subtitle ty vobsub voc xa nuv nsc
+mods = a52sys dtssys flac ogg m3u demuxdump rawdv au wav mkv livedotcom nsv real ts ps mod pva aiff sgimb mjpeg subtitle ty vobsub voc xa nuv nsc mpc
 
 NULL =
 libvlc_LIBRARIES =
@@ -16,7 +16,7 @@ SUFFIXES = _plugin$(LIBEXT) _plugin.a
 
 libvlcdir = $(libdir)/vlc/$(basedir)
 
-EXTRA_LIBRARIES =  liba52sys_plugin.a liba52sys.a liba52sys_pic.a libdtssys_plugin.a libdtssys.a libdtssys_pic.a libflac_plugin.a libflac.a libflac_pic.a libogg_plugin.a libogg.a libogg_pic.a libm3u_plugin.a libm3u.a libm3u_pic.a libdemuxdump_plugin.a libdemuxdump.a libdemuxdump_pic.a librawdv_plugin.a librawdv.a librawdv_pic.a libau_plugin.a libau.a libau_pic.a libwav_plugin.a libwav.a libwav_pic.a libmkv_plugin.a libmkv.a libmkv_pic.a liblivedotcom_plugin.a liblivedotcom.a liblivedotcom_pic.a libnsv_plugin.a libnsv.a libnsv_pic.a libreal_plugin.a libreal.a libreal_pic.a libts_plugin.a libts.a libts_pic.a libps_plugin.a libps.a libps_pic.a libmod_plugin.a libmod.a libmod_pic.a libpva_plugin.a libpva.a libpva_pic.a libaiff_plugin.a libaiff.a libaiff_pic.a libsgimb_plugin.a libsgimb.a libsgimb_pic.a libmjpeg_plugin.a libmjpeg.a libmjpeg_pic.a libsubtitle_plugin.a libsubtitle.a libsubtitle_pic.a libty_plugin.a libty.a libty_pic.a libvobsub_plugin.a libvobsub.a libvobsub_pic.a libvoc_plugin.a libvoc.a libvoc_pic.a libxa_plugin.a libxa.a libxa_pic.a libnuv_plugin.a libnuv.a libnuv_pic.a libnsc_plugin.a libnsc.a libnsc_pic.a
+EXTRA_LIBRARIES =  liba52sys_plugin.a liba52sys.a liba52sys_pic.a libdtssys_plugin.a libdtssys.a libdtssys_pic.a libflac_plugin.a libflac.a libflac_pic.a libogg_plugin.a libogg.a libogg_pic.a libm3u_plugin.a libm3u.a libm3u_pic.a libdemuxdump_plugin.a libdemuxdump.a libdemuxdump_pic.a librawdv_plugin.a librawdv.a librawdv_pic.a libau_plugin.a libau.a libau_pic.a libwav_plugin.a libwav.a libwav_pic.a libmkv_plugin.a libmkv.a libmkv_pic.a liblivedotcom_plugin.a liblivedotcom.a liblivedotcom_pic.a libnsv_plugin.a libnsv.a libnsv_pic.a libreal_plugin.a libreal.a libreal_pic.a libts_plugin.a libts.a libts_pic.a libps_plugin.a libps.a libps_pic.a libmod_plugin.a libmod.a libmod_pic.a libpva_plugin.a libpva.a libpva_pic.a libaiff_plugin.a libaiff.a libaiff_pic.a libsgimb_plugin.a libsgimb.a libsgimb_pic.a libmjpeg_plugin.a libmjpeg.a libmjpeg_pic.a libsubtitle_plugin.a libsubtitle.a libsubtitle_pic.a libty_plugin.a libty.a libty_pic.a libvobsub_plugin.a libvobsub.a libvobsub_pic.a libvoc_plugin.a libvoc.a libvoc_pic.a libxa_plugin.a libxa.a libxa_pic.a libnuv_plugin.a libnuv.a libnuv_pic.a libnsc_plugin.a libnsc.a libnsc_pic.a libmpc_plugin.a libmpc.a libmpc_pic.a
 include Modules.am
 
 all: all-modules
@@ -35,8 +35,10 @@ _plugin.a_plugin$(LIBEXT):
 	@mod="$*" ; mod=$${mod:3} ; 	ldfl="`$(VLC_CONFIG) --libs plugin $$mod` -u $(SYMPREF)$(VLC_ENTRY)" ; 	case `$(VLC_CONFIG) --linkage $$mod` in \
 	  c++)  ld="$(CXXLINK)" ;; 	  objc) ld="$(OBJCLINK)" ;; 	  c|*)  ld="$(LINK)" ;; 	esac ; 	echo $$ld $< $$ldfl ; 	$$ld $< $$ldfl
 
+if MAINTAINER_MODE
 $(srcdir)/Makefile.am: $(srcdir)/Modules.am $(top_srcdir)/bootstrap
 	cd $(top_srcdir) && $(SHELL) ./bootstrap
+endif
 
 mostlyclean-local:
 	-rm -f *.a *$(LIBEXT)
@@ -516,4 +518,21 @@ libnsc_a_SOURCES = $(SOURCES_nsc)
 libnsc_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin nsc`
 libnsc_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin nsc`
 libnsc_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin nsc`
+
+# The mpc plugin
+
+libmpc_plugin_a_SOURCES = $(SOURCES_mpc)
+libmpc_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin mpc`
+libmpc_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mpc`
+libmpc_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mpc`
+
+libmpc_pic_a_SOURCES = $(SOURCES_mpc)
+libmpc_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mpc`
+libmpc_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mpc`
+libmpc_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mpc`
+
+libmpc_a_SOURCES = $(SOURCES_mpc)
+libmpc_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mpc`
+libmpc_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mpc`
+libmpc_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mpc`
 

@@ -2,7 +2,7 @@
  * ugly.c : ugly resampler (changes pitch)
  *****************************************************************************
  * Copyright (C) 2002 the VideoLAN team
- * $Id: ugly.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: ugly.c 12653 2005-09-22 20:56:57Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -85,6 +85,9 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
                     aout_buffer_t * p_in_buf, aout_buffer_t * p_out_buf )
 {
     int32_t *p_in, *p_out = (int32_t*)p_out_buf->p_buffer;
+#ifndef HAVE_ALLOCA
+    int32_t *p_in_orig;
+#endif
 
     unsigned int i_nb_channels = aout_FormatNbChannels( &p_filter->input );
     unsigned int i_in_nb = p_in_buf->i_nb_samples;

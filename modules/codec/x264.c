@@ -2,7 +2,7 @@
  * x264.c: h264 video encoder
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: x264.c 11724 2005-07-13 17:51:13Z courmisch $
+ * $Id: x264.c 12821 2005-10-11 17:16:13Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -121,10 +121,11 @@ static void Close( vlc_object_t * );
 static char *enc_analyse_list[] =
   { "", "all", "normal", "fast", "none" };
 static char *enc_analyse_list_text[] =
-  { N_("default"), N_("all"), N_("normal"), N_("fast"), N_("none") };
+  { N_("default"), N_("all"), N_("slow"), N_("normal"),
+    N_("fast"), N_("none") };
 
 vlc_module_begin();
-    set_description( _("h264 video encoder using x264 library"));
+    set_description( _("H264 encoder (using x264 library)"));
     set_capability( "encoder", 200 );
     set_callbacks( Open, Close );
     set_category( CAT_INPUT );
@@ -353,6 +354,9 @@ static int  Open ( vlc_object_t *p_this )
         p_sys->param.analyse.i_subpel_refine = val.i_int;
 #endif
 
+#ifndef X264_ANALYSE_BSUB16x16
+#   define X264_ANALYSE_BSUB16x16 0
+#endif
     var_Get( p_enc, SOUT_CFG_PREFIX "analyse", &val );
     if( !strcmp( val.psz_string, "none" ) )
     {
@@ -367,14 +371,23 @@ static int  Open ( vlc_object_t *p_this )
         p_sys->param.analyse.inter =
             X264_ANALYSE_I4x4 | X264_ANALYSE_PSUB16x16;
     }
+    else if( !strcmp( val.psz_string, "slow" ) )
+    {
+        p_sys->param.analyse.inter =
+            X264_ANALYSE_I4x4 |
+            X264_ANALYSE_PSUB16x16 | X264_ANALYSE_PSUB8x8 |
+            X264_ANALYSE_BSUB16x16;
+    }
     else if( !strcmp( val.psz_string, "all" ) )
     {
-#ifndef X264_ANALYSE_BSUB16x16
-#   define X264_ANALYSE_BSUB16x16 0
-#endif
         p_sys->param.analyse.inter =
-            X264_ANALYSE_I4x4 | X264_ANALYSE_PSUB16x16 | X264_ANALYSE_PSUB8x8 |
+            X264_ANALYSE_I4x4 |
+            X264_ANALYSE_PSUB16x16 | X264_ANALYSE_PSUB8x8 |
             X264_ANALYSE_BSUB16x16;
+#ifdef X264_ANALYSE_I8x8
+        p_sys->param.analyse.inter |= X264_ANALYSE_I8x8;
+        p_sys->param.analyse.b_transform_8x8 = 1;
+#endif
     }
     if( val.psz_string ) free( val.psz_string );
 

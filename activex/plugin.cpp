@@ -474,11 +474,19 @@ HRESULT VLCPlugin::onInit(void)
 {
     if( 0 == _i_vlc )
     {
-#ifdef ACTIVEX_DEBUG
-        char *ppsz_argv[] = { "vlc", "-vv", "--fast-mutex", "--win9x-cv-method=1" };
-#else
-        char *ppsz_argv[] = { "vlc", "-vv" };
-#endif
+        _i_vlc = VLC_Create();
+        if( _i_vlc < 0 )
+        {
+            _i_vlc = 0;
+            return E_FAIL;
+        }
+
+        /*
+        ** default initialization options
+        */
+        char *ppsz_argv[10] = { "vlc", "-vv" };
+        int   ppsz_argc = 2;
+
         HKEY h_key;
         DWORD i_type, i_data = MAX_PATH + 1;
         char p_data[MAX_PATH + 1];
@@ -501,14 +509,21 @@ HRESULT VLCPlugin::onInit(void)
         ppsz_argv[0] = "C:\\cygwin\\home\\Damien_Fouilleul\\dev\\videolan\\vlc-trunk\\vlc";
 #endif
 
-        _i_vlc = VLC_Create();
-        if( _i_vlc < 0 )
+        if( IsDebuggerPresent() )
         {
-            _i_vlc = 0;
-            return E_FAIL;
+            /*
+            ** VLC default threading mechanism is designed to be as compatible
+            ** with POSIX as possible, however when debugged on win32, threads
+            ** lose signals and eventually VLC get stuck during initialization.
+            ** threading support can be configured to be more debugging friendly
+            ** but it will be less compatible with POSIX.
+            ** This is done by initializing with the following options
+            */
+            ppsz_argv[ppsz_argc++] = "--fast-mutex";
+            ppsz_argv[ppsz_argc++] = "--win9x-cv-method=1";
         }
 
-        if( VLC_Init(_i_vlc, sizeof(ppsz_argv)/sizeof(char*), ppsz_argv) )
+        if( VLC_Init(_i_vlc, ppsz_argc, ppsz_argv) )
         {
             VLC_Destroy(_i_vlc);
             _i_vlc = 0;
@@ -541,25 +556,28 @@ HRESULT VLCPlugin::onLoad(void)
                 if( SUCCEEDED(pClientSite->GetMoniker(OLEGETMONIKER_ONLYIFTHERE,
                                 OLEWHICHMK_CONTAINER, &pContMoniker)) )
                 {
-                    LPOLESTR name;
-                    if( SUCCEEDED(pContMoniker->GetDisplayName(pBC, NULL, &name)) )
+                    LPOLESTR base_url;
+                    if( SUCCEEDED(pContMoniker->GetDisplayName(pBC, NULL, &base_url)) )
                     {
-                        if( UrlIsW(name, URLIS_URL) )
+                        /*
+                        ** check that the moniker name is a URL
+                        */
+                        if( UrlIsW(base_url, URLIS_URL) )
                         {
-                            LPOLESTR url = (LPOLESTR)CoTaskMemAlloc(sizeof(OLECHAR)*INTERNET_MAX_URL_LENGTH);
-                            if( NULL != url )
+                            DWORD len = INTERNET_MAX_URL_LENGTH;
+                            LPOLESTR abs_url = (LPOLESTR)CoTaskMemAlloc(sizeof(OLECHAR)*len);
+                            if( NULL != abs_url )
                             {
-                                DWORD len = INTERNET_MAX_URL_LENGTH;
-                                if( SUCCEEDED(UrlCombineW(name, _bstr_mrl, url, &len,
+                                if( SUCCEEDED(UrlCombineW(base_url, _bstr_mrl, abs_url, &len,
                                                 URL_ESCAPE_UNSAFE)) )
                                 {
                                     SysFreeString(_bstr_mrl);
-                                    _bstr_mrl = SysAllocStringLen(url, len);
+                                    _bstr_mrl = SysAllocStringLen(abs_url, len);
                                 }
-                                CoTaskMemFree(url);
+                                CoTaskMemFree(abs_url);
                             }
                         }
-                        CoTaskMemFree(name);
+                        CoTaskMemFree(base_url);
                     }
                     pContMoniker->Release();
                 }
@@ -614,7 +632,6 @@ HRESULT VLCPlugin::onAmbientChanged(LPUNKNOWN pContainer, DISPID dispID)
             if( SUCCEEDED(GetObjectProperty(pContainer, dispID, v)) )
             {
                 setUserMode(V_BOOL(&v) != VARIANT_FALSE);
-                VariantClear(&v);
             }
             break;
         case DISPID_AMBIENT_UIDEAD:
@@ -648,16 +665,18 @@ HRESULT VLCPlugin::onAmbientChanged(LPUNKNOWN pContainer, DISPID dispID)
         case DISPID_AMBIENT_TOPTOBOTTOM:
             break;
         case DISPID_UNKNOWN:
+        /*
+        ** multiple property change, look up the ones we are interested in
+        */
             VariantInit(&v);
             V_VT(&v) = VT_BOOL;
             if( SUCCEEDED(GetObjectProperty(pContainer, DISPID_AMBIENT_USERMODE, v)) )
             {
                 setUserMode(V_BOOL(&v) != VARIANT_FALSE);
-                VariantClear(&v);
             }
             VariantInit(&v);
             V_VT(&v) = VT_I4;
-            if( SUCCEEDED(GetObjectProperty(pContainer, dispID, v)) )
+            if( SUCCEEDED(GetObjectProperty(pContainer, DISPID_AMBIENT_CODEPAGE, v)) )
             {
                 setCodePage(V_I4(&v));
             }
@@ -707,8 +726,9 @@ HRESULT VLCPlugin::onActivateInPlace(LPMSG lpMesg, HWND hwndParent, LPCRECT lprc
 
     /*
     ** Create a window for in place activated control.
-    ** the window geometry represents the control viewport
-    ** so that embedded video is always properly clipped.
+    ** the window geometry matches the control viewport
+    ** within container so that embedded video is always
+    ** properly clipped.
     */
     _inplacewnd = CreateWindow(_p_class->getInPlaceWndClassName(),
             "VLC Plugin In-Place Window",
@@ -729,8 +749,9 @@ HRESULT VLCPlugin::onActivateInPlace(LPMSG lpMesg, HWND hwndParent, LPCRECT lprc
     SetWindowLongPtr(_inplacewnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
     /*
-    ** VLC embedded video geometry automatically matches parent window.
-    ** hence create a child window so that video position and size
+    ** VLC embedded video automatically grows to cover client
+    ** area of parent window.
+    ** hence create a such a 'parent' window whose geometry
     ** is always correct relative to the viewport bounds
     */
     _videownd = CreateWindow(_p_class->getVideoWndClassName(),
@@ -757,14 +778,17 @@ HRESULT VLCPlugin::onActivateInPlace(LPMSG lpMesg, HWND hwndParent, LPCRECT lprc
     if( getVisible() )
         ShowWindow(_inplacewnd, SW_SHOWNORMAL);
 
-    /* horrible cast there */
+    /* set internal video width and height */
     vlc_value_t val;
-    val.i_int = reinterpret_cast<int>(_videownd);
-    VLC_VariableSet(_i_vlc, "drawable", val);
     val.i_int = posRect.right-posRect.left;
     VLC_VariableSet(_i_vlc, "width", val);
     val.i_int = posRect.bottom-posRect.top;
     VLC_VariableSet(_i_vlc, "height", val);
+
+    /* set internal video parent window */
+    /* horrible cast there */
+    val.i_int = reinterpret_cast<int>(_videownd);
+    VLC_VariableSet(_i_vlc, "drawable", val);
 
     if( _b_usermode && _b_autoplay & (VLC_PlaylistNumberOfItems(_i_vlc) > 0) )
     {
@@ -890,7 +914,7 @@ void VLCPlugin::onPaint(HDC hdc, const RECT &bounds, const RECT &clipRect)
             {
                 HBITMAP oldBmp = (HBITMAP)SelectObject(hdcDraw, hBitmap);
 
-                if( (size.cx != width) || (size.cx != height) )
+                if( (size.cx != width) || (size.cy != height) )
                 {
                     // needs to scale canvas
                     SetMapMode(hdcDraw, MM_ANISOTROPIC);

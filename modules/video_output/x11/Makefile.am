@@ -35,8 +35,10 @@ _plugin.a_plugin$(LIBEXT):
 	@mod="$*" ; mod=$${mod:3} ; 	ldfl="`$(VLC_CONFIG) --libs plugin $$mod` -u $(SYMPREF)$(VLC_ENTRY)" ; 	case `$(VLC_CONFIG) --linkage $$mod` in \
 	  c++)  ld="$(CXXLINK)" ;; 	  objc) ld="$(OBJCLINK)" ;; 	  c|*)  ld="$(LINK)" ;; 	esac ; 	echo $$ld $< $$ldfl ; 	$$ld $< $$ldfl
 
+if MAINTAINER_MODE
 $(srcdir)/Makefile.am: $(srcdir)/Modules.am $(top_srcdir)/bootstrap
 	cd $(top_srcdir) && $(SHELL) ./bootstrap
+endif
 
 mostlyclean-local:
 	-rm -f *.a *$(LIBEXT)

@@ -2,10 +2,10 @@
  * flac.c: flac decoder/packetizer/encoder module making use of libflac
  *****************************************************************************
  * Copyright (C) 1999-2001 the VideoLAN team
- * $Id: flac.c 11709 2005-07-11 16:20:33Z massiot $
+ * $Id: flac.c 12836 2005-10-15 13:23:08Z sigmunau $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
- *          Sigmund Augdal <sigmunau@idi.ntnu.no>
+ *          Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

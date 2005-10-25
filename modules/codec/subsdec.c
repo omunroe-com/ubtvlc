@@ -2,7 +2,7 @@
  * subsdec.c : text subtitles decoder
  *****************************************************************************
  * Copyright (C) 2000-2001 the VideoLAN team
- * $Id: subsdec.c 12412 2005-08-27 16:40:23Z jpsaman $
+ * $Id: subsdec.c 12746 2005-10-02 13:15:22Z dionoea $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Samuel Hocevar <sam@zoy.org>
@@ -234,7 +234,8 @@ static subpicture_t *ParseText( decoder_t *p_dec, block_t *p_block )
     }
 
     /* Should be resiliant against bad subtitles */
-    psz_subtitle = strndup( p_block->p_buffer, p_block->i_buffer );
+    psz_subtitle = strndup( (const char *)p_block->p_buffer,
+                            p_block->i_buffer );
 
     i_align_h = p_sys->i_align ? 20 : 0;
     i_align_v = 10;

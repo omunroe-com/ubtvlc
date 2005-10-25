@@ -2,7 +2,7 @@
  * playlist.m: MacOS X interface module
  *****************************************************************************
 * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: playlist.m 12531 2005-09-12 21:54:45Z hartman $
+ * $Id: playlist.m 12722 2005-10-01 13:47:58Z fkuehne $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Derk-Jan Hartman <hartman at videola/n dot org>
@@ -507,7 +507,7 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
     [o_mi_sort_author setTitle: _NS("Sort Node by Author")];
     [o_mi_services setTitle: _NS("Services discovery")];
     [o_status_field setStringValue: [NSString stringWithFormat:
-                        _NS("no items in playlist")]];
+                        _NS("No items in the playlist")]];
 
     [o_random_ckb setTitle: _NS("Random")];
 #if 0
@@ -1509,19 +1509,17 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
     if( p_playlist->i_size >= 2 )
     {
         [o_status_field setStringValue: [NSString stringWithFormat:
-                    _NS("%i items in playlist"), p_playlist->i_size]];
+                    _NS("%i items in the playlist"), p_playlist->i_size]];
     }
     else
     {
         if( p_playlist->i_size == 0 )
         {
-            [o_status_field setStringValue: [NSString stringWithFormat:
-                    _NS("no items in playlist")]];
+            [o_status_field setStringValue: _NS("No items in the playlist")];
         }
         else
         {
-            [o_status_field setStringValue: [NSString stringWithFormat:
-                    _NS("1 item in playlist")]];
+            [o_status_field setStringValue: _NS("1 item in the playlist")];
         }
     }
     vlc_object_release( p_playlist );

@@ -2,9 +2,9 @@
  * vlc_keys.h: keycode defines
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: vlc_keys.h 12387 2005-08-24 22:27:28Z titer $
+ * $Id: vlc_keys.h 12836 2005-10-15 13:23:08Z sigmunau $
  *
- * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

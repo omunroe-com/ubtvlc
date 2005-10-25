@@ -2,7 +2,7 @@
  * vout_pictures.c : picture management functions
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: vout_pictures.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: vout_pictures.c 12933 2005-10-23 11:07:38Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -440,29 +440,24 @@ void vout_PlacePicture( vout_thread_t *p_vout,
     }
     else
     {
-        *pi_width = __MIN( i_width, p_vout->render.i_width );
-        *pi_height = __MIN( i_height, p_vout->render.i_height );
+        *pi_width = __MIN( i_width, p_vout->fmt_in.i_visible_width );
+        *pi_height = __MIN( i_height, p_vout->fmt_in.i_visible_height );
     }
 
-    if( VOUT_ASPECT_FACTOR * *pi_width / *pi_height < p_vout->render.i_aspect )
+    if( p_vout->fmt_in.i_visible_width * (int64_t)p_vout->fmt_in.i_sar_num *
+        *pi_height /
+        (p_vout->fmt_in.i_visible_height * p_vout->fmt_in.i_sar_den) >
+        *pi_width )
     {
-        *pi_width = *pi_height * p_vout->render.i_aspect / VOUT_ASPECT_FACTOR;
+        *pi_height = p_vout->fmt_in.i_visible_height *
+            (int64_t)p_vout->fmt_in.i_sar_den * *pi_width /
+            (p_vout->fmt_in.i_visible_width * p_vout->fmt_in.i_sar_num);
     }
     else
     {
-        *pi_height = *pi_width * VOUT_ASPECT_FACTOR / p_vout->render.i_aspect;
-    }
-
-    if( *pi_width > i_width )
-    {
-        *pi_width = i_width;
-        *pi_height = VOUT_ASPECT_FACTOR * *pi_width / p_vout->render.i_aspect;
-    }
-
-    if( *pi_height > i_height )
-    {
-        *pi_height = i_height;
-        *pi_width = *pi_height * p_vout->render.i_aspect / VOUT_ASPECT_FACTOR;
+        *pi_width = p_vout->fmt_in.i_visible_width *
+            (int64_t)p_vout->fmt_in.i_sar_num * *pi_height /
+            (p_vout->fmt_in.i_visible_height * p_vout->fmt_in.i_sar_den);
     }
 
     switch( p_vout->i_alignment & VOUT_ALIGN_HMASK )

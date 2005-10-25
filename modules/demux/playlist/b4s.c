@@ -2,9 +2,9 @@
  * b4s.c : B4S playlist format import
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: b4s.c 12570 2005-09-15 23:53:41Z sigmunau $
+ * $Id: b4s.c 12836 2005-10-15 13:23:08Z sigmunau $
  *
- * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

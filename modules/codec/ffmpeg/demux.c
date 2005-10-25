@@ -2,7 +2,7 @@
  * demux.c: demuxer using ffmpeg (libavformat).
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: demux.c 12609 2005-09-19 18:30:36Z fkuehne $
+ * $Id: demux.c 12832 2005-10-14 11:22:46Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -133,7 +133,7 @@ int E_(OpenDemux)( vlc_object_t *p_this )
 
         if( strcasecmp( &p_demux->psz_path[i_len - 4], ".str" ) &&
             strcasecmp( &p_demux->psz_path[i_len - 4], ".xai" ) &&
-            strcasecmp( &p_demux->psz_path[i_len - 4], ".xa" ) )
+            strcasecmp( &p_demux->psz_path[i_len - 3], ".xa" ) )
         {
             return VLC_EGENERIC;
         }

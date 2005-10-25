@@ -2,7 +2,7 @@
  * pes.c: PES packetizer used by the MPEG multiplexers
  *****************************************************************************
  * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: pes.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: pes.c 12798 2005-10-09 17:01:08Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -64,7 +64,6 @@ static inline int PESHeader( uint8_t *p_hdr, mtime_t i_pts, mtime_t i_dts,
             i_extra += 3;
         }
     }
-
 
     bits_initwrite( &bits, 50, p_hdr );
 
@@ -271,6 +270,10 @@ int E_( EStoPES )( sout_instance_t *p_sout, block_t **pp_pes, block_t *p_es,
     p_data = p_es->p_buffer;
 
     *pp_pes = p_pes = NULL;
+
+#ifdef DEBUG
+    memset( header, 0, 50 );
+#endif
 
     do
     {

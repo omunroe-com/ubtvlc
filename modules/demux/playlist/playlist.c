@@ -2,7 +2,7 @@
  * playlist.c :  Playlist import module
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: playlist.c 12305 2005-08-20 17:18:41Z gbazin $
+ * $Id: playlist.c 12821 2005-10-11 17:16:13Z zorglub $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -46,7 +46,7 @@ vlc_module_begin();
               VLC_FALSE );
 
     set_shortname( _("Playlist") );
-    set_description( _("Old playlist open") );
+    set_description( _("Playlist") );
     add_shortcut( "old-open" );
     set_capability( "demux2", 10 );
     set_callbacks( E_(Import_Old), NULL );

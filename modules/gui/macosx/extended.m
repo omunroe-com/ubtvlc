@@ -2,7 +2,7 @@
  * extended.m: MacOS X Extended interface panel
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: extended.m 12514 2005-09-11 12:45:41Z fkuehne $
+ * $Id: extended.m 12767 2005-10-06 16:45:21Z fkuehne $
  *
  * Authors: Felix Kühne <fkuehne@users.sf.net>
  *
@@ -166,6 +166,28 @@ static VLCExtended *_o_sharedInstance = nil;
     }
 }
 
+- (void)collapsAll
+{
+    /* collaps all views so Cocoa saves the window position correctly */
+    if( o_adjImg_expanded )
+    {
+        [self extWin_exp_adjImg: nil];
+    }
+    if( o_audFlts_expanded )
+    {
+        [self extWin_exp_audFlts: nil];
+    }
+    if( o_vidFlts_expanded )
+    {
+        [self extWin_exp_vidFlts: nil];
+    }
+}
+
+- (BOOL)getConfigChanged
+{
+    return o_config_changed;
+}
+
 - (void)showPanel
 {
     /* get the correct slider values from the prefs, in case they were changed
@@ -204,8 +226,11 @@ static VLCExtended *_o_sharedInstance = nil;
         [o_sld_gamma setIntValue: (int)(10 * f_value) ];
     }
 
-    [o_sld_maxLevel setFloatValue: (config_GetFloat(p_intf, "norm-max-level") \
-        * 10)];
+    f_value = config_GetFloat( p_intf, "norm-max-level" );
+    if( f_value > 0 && f_value < 10 )
+    {
+        [o_sld_maxLevel setFloatValue: f_value ];
+    }
 
     [o_sld_opaque setFloatValue: (config_GetFloat( p_intf, \
         "macosx-opaqueness") * 100)];
@@ -316,6 +341,8 @@ static VLCExtended *_o_sharedInstance = nil;
         }
         vlc_object_release( p_vout );
     }
+
+    o_config_changed = YES;
 }
 
 /* change the opaqueness of the vouts */
@@ -359,6 +386,8 @@ static VLCExtended *_o_sharedInstance = nil;
     config_PutFloat( p_playlist , "macosx-opaqueness" , val.f_float );
     
     vlc_object_release( p_playlist );
+
+    o_config_changed = YES;
 }
 
 - (IBAction)audFtls_hdphnVirt:(id)sender
@@ -366,9 +395,9 @@ static VLCExtended *_o_sharedInstance = nil;
     /* en-/disable headphone virtualisation */
     if ([o_ckb_hdphnVirt state] == NSOnState)
     {
-        [self changeAFiltersString: "headphone" onOrOff: VLC_TRUE ];
+        [self changeAFiltersString: "headphone_channel_mixer" onOrOff: VLC_TRUE ];
     }else{
-        [self changeAFiltersString: "headphone" onOrOff: VLC_FALSE ];
+        [self changeAFiltersString: "headphone_channel_mixer" onOrOff: VLC_FALSE ];
     }
 }
 
@@ -380,13 +409,12 @@ static VLCExtended *_o_sharedInstance = nil;
                                  VLC_OBJECT_AOUT, FIND_ANYWHERE);
     if( p_aout != NULL )
     {
-        var_SetFloat( p_aout, "norm-max-level", [o_sld_maxLevel floatValue] / 10 );
+        var_SetFloat( p_aout, "norm-max-level", [o_sld_maxLevel floatValue] );
         vlc_object_release( p_aout );
     }
-    else
-    {
-        config_PutFloat( p_intf, "norm-max-level", [o_sld_maxLevel floatValue] /10 );
-    }
+    config_PutFloat( p_intf, "norm-max-level", [o_sld_maxLevel floatValue] );
+
+    o_config_changed = YES;
 }
 
 - (IBAction)audFtls_vlmeNorm:(id)sender
@@ -652,11 +680,16 @@ static VLCExtended *_o_sharedInstance = nil;
     }
 
     free( psz_string );
+
+    o_config_changed = YES;
 }
 
 
 - (void)changeAFiltersString: (char *)psz_name onOrOff: (vlc_bool_t )b_add;
 {
+    /* copied from ../wxwidgets/extrapanel.cpp
+     * renamed to conform with Cocoa's rules */
+
     char *psz_parser, *psz_string;
     intf_thread_t * p_intf = VLCIntf;
     aout_instance_t * p_aout= (aout_instance_t *)vlc_object_find(p_intf,
@@ -725,6 +758,8 @@ static VLCExtended *_o_sharedInstance = nil;
         vlc_object_release( p_aout );
     }
     free( psz_string );
+
+    o_config_changed = YES;
 }
 
 - (void)savePrefs
@@ -734,42 +769,36 @@ static VLCExtended *_o_sharedInstance = nil;
     playlist_t * p_playlist = vlc_object_find( VLCIntf, VLC_OBJECT_PLAYLIST, \
         FIND_ANYWHERE );
     int returnedValue;
+    NSArray * theModules;
+    theModules = [[NSArray alloc] initWithObjects: @"main", @"headphone", \
+        @"transform", @"adjust", @"invert", @"motionblur", @"distort", \
+        @"clone", @"crop", @"normvol", @"headphone_channel_mixer", @"macosx", \
+        nil];
+    unsigned int x = 0;
     
-    returnedValue = config_SaveConfigFile( p_playlist, NULL);
-    if (returnedValue == 0)
+    while ( x != [theModules count] )
     {
-        msg_Dbg(p_playlist, "VLCExtended: saved preferences successfully");
-    } else {
-        msg_Dbg(p_playlist, "VLCExtended: error while saving the preferences " \
-            "(%i)" , returnedValue);
+        returnedValue = config_SaveConfigFile( p_playlist, [[theModules \
+            objectAtIndex: x] UTF8String] );
+
+        if (returnedValue != 0)
+        {
+            msg_Err(p_playlist, "VLCExtended: error while saving the " \
+            "preferences of '%s' (%i)", [[theModules objectAtIndex: x] \
+            UTF8String] , returnedValue);
+            
+            [theModules release];
+            vlc_object_release( p_playlist );
+            
+            return;
+        }
+
+        x = ( x + 1 );
     }
+    
+    msg_Dbg( p_playlist, "VLCExtended: saved certain preferences successfully" );
+    
+    [theModules release];
     vlc_object_release( p_playlist );
-}
-
-
-/*****************************************************************************
- * delegate method
- *****************************************************************************/
-
-- (BOOL)applicationShouldTerminate:(NSWindow *)sender
-{
-    /* collaps all views so Cocoa saves the window position correctly */
-    if( o_adjImg_expanded )
-    {
-        [self extWin_exp_adjImg: nil];
-    }
-    if( o_audFlts_expanded )
-    {
-        [self extWin_exp_audFlts: nil];
-    }
-    if( o_vidFlts_expanded )
-    {
-        [self extWin_exp_vidFlts: nil];
-    }
-
-    /* save the prefs before shutting down */
-    [self savePrefs];
-    
-    return YES;
 }
 @end

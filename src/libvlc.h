@@ -2,7 +2,7 @@
  * libvlc.h: main libvlc header
  *****************************************************************************
  * Copyright (C) 1998-2005 VideoLAN (Centrale Réseaux) and its contributors
- * $Id: libvlc.h 12580 2005-09-17 12:12:54Z zorglub $
+ * $Id: libvlc.h 12887 2005-10-19 07:09:09Z md $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -29,9 +29,9 @@
 
 static char *ppsz_language[] =
 { "auto", "en", "en_GB", "ca", "da", "de", "es",
-  "fr", "it", "ja", "ko", "nl", "pt_BR", "ro", "ru", "tr", "zh_TW" };
+  "fr", "it", "ja", "ko", "nl", "pt_BR", "ro", "ru", "tr", "zh_CN", "zh_TW" };
 static char *ppsz_language_text[] =
-{ N_("Auto"), N_("American English"), N_("British English"), N_("Catalan"), N_("Danish"), N_("German"), N_("Spanish"), N_("French"), N_("Italian"), N_("Japanese"), N_("Korean"), N_("Dutch"), N_("Brazilian Portuguese"), N_("Romanian"), N_("Russian"), N_("Turkish"), N_("Chinese Traditional") };
+{ N_("Auto"), N_("American English"), N_("British English"), N_("Catalan"), N_("Danish"), N_("German"), N_("Spanish"), N_("French"), N_("Italian"), N_("Japanese"), N_("Korean"), N_("Dutch"), N_("Brazilian Portuguese"), N_("Romanian"), N_("Russian"), N_("Turkish"), N_("Simplified Chinese"), N_("Chinese Traditional") };
 
 static char *ppsz_snap_formats[] =
 { "png", "jpg" };
@@ -74,9 +74,9 @@ static char *ppsz_snap_formats[] =
 #define QUIET_LONGTEXT N_( \
     "This option turns off all warning and information messages.")
 
-#define OPEN_TEXT N_("Open MRL")
+#define OPEN_TEXT N_("Default stream")
 #define OPEN_LONGTEXT N_( \
-    "This option allows you to open a default MRL on start-up.")
+    "This option allows you to always open a default stream on start-up." )
 
 #define LANGUAGE_TEXT N_("Language")
 #define LANGUAGE_LONGTEXT N_( "This option allows you to set the language " \
@@ -115,7 +115,7 @@ static char *ppsz_snap_formats[] =
 #define MONO_TEXT N_("Force mono audio")
 #define MONO_LONGTEXT N_("This will force a mono audio output.")
 
-#define VOLUME_TEXT N_("Audio output volume")
+#define VOLUME_TEXT N_("Default audio volume")
 #define VOLUME_LONGTEXT N_( \
     "You can set the default audio output volume here, in a range from 0 to " \
     "1024.")
@@ -159,6 +159,17 @@ static char *ppsz_snap_formats[] =
     "This option allows you to use the S/PDIF audio output by default when " \
     "your hardware supports it as well as the audio stream being played.")
 
+#define FORCE_DOLBY_TEXT N_("Force detection of Dolby Surround")
+#define FORCE_DOLBY_LONGTEXT N_( \
+    "Use this when you know your stream is (or is not) encoded with Dolby "\
+    "Surround but fails to be detected as such. And even if the stream is "\
+    "not actually encoded with Dolby Surround, turning on this option might "\
+    "enhance your experience, especially when combined with the Headphone "\
+    "Channel Mixer." )
+static int pi_force_dolby_values[] = { 0, 1, 2 };
+static char *ppsz_force_dolby_descriptions[] = { N_("Auto"), N_("On"), N_("Off") };
+
+
 #define AUDIO_FILTER_TEXT N_("Audio filters")
 #define AUDIO_FILTER_LONGTEXT N_( \
     "This allows you to add audio post processing filters, to modify " \
@@ -168,12 +179,6 @@ static char *ppsz_snap_formats[] =
 #define AUDIO_VISUAL_LONGTEXT N_( \
     "This allows you to add visualization modules " \
     "(spectrum analyzer, etc.).")
-
-#define AUDIO_CHANNEL_MIXER N_("Channel mixer")
-#define AUDIO_CHANNEL_MIXER_LONGTEXT N_( \
-     "This allows you to choose a specific audio channel mixer. For " \
-     "instance, you can use the \"headphone\" mixer that gives 5.1 feeling " \
-     "with a headphone.")
 
 #define VOUT_CAT_LONGTEXT N_( \
     "These options allow you to modify the behavior of the video output " \
@@ -283,6 +288,13 @@ static char *ppsz_align_descriptions[] =
     "aspect, or a float value (1.25, 1.3333, etc.) expressing pixel " \
     "squareness.")
 
+#define HDTV_FIX_TEXT N_("Fix HDTV height")
+#define HDTV_FIX_LONGTEXT N_( \
+    "This option allows proper handling of HDTV-1080 video format " \
+    "even if broken encoder incorrectly set height to 1088 lines. " \
+    "Disable this option only if your video has non-standard format " \
+    "requiring all 1088 lines.")
+
 #define MASPECT_RATIO_TEXT N_("Monitor aspect ratio")
 #define MASPECT_RATIO_LONGTEXT N_( \
     "This will force the monitor aspect ratio. Most monitors have a 4:3." \
@@ -291,7 +303,8 @@ static char *ppsz_align_descriptions[] =
 
 #define SKIP_FRAMES_TEXT N_("Skip frames")
 #define SKIP_FRAMES_LONGTEXT N_( \
-    "Disable this option to disable frame drops on MPEG-2 streams.")
+    "This option enables framedropping on MPEG2 stream. Framedropping " \
+    "occurs when your computer is not powerful enough" )
 
 #define QUIET_SYNCHRO_TEXT N_("Quiet synchro")
 #define QUIET_SYNCHRO_LONGTEXT N_( \
@@ -326,46 +339,40 @@ static char *ppsz_clock_descriptions[] =
     "This is the typical size of UDP packets that we expect. On Ethernet " \
     "it is usually 1500.")
 
-#define IFACE_ADDR_TEXT N_("Network interface address")
-#define IFACE_ADDR_LONGTEXT N_( \
-    "If you have several interfaces on your machine and use the " \
-    "multicast solution, you will probably have to indicate the IP address " \
-    "of your multicasting interface here.")
-
 #define TTL_TEXT N_("Time To Live")
 #define TTL_LONGTEXT N_( \
     "Indicate here the Time To Live of the multicast packets sent by " \
     "the stream output.")
 
-#define INPUT_PROGRAM_TEXT N_("Choose program (SID)")
+#define INPUT_PROGRAM_TEXT N_("Program to select")
 #define INPUT_PROGRAM_LONGTEXT N_( \
     "Choose the program to select by giving its Service ID.\n" \
     "Only use this option if you want to read a multi-program stream " \
     "(like DVB streams for example)." )
 
-#define INPUT_PROGRAMS_TEXT N_("Choose programs")
+#define INPUT_PROGRAMS_TEXT N_("Programs to select")
 #define INPUT_PROGRAMS_LONGTEXT N_( \
     "Choose the programs to select by giving a comma-separated list of " \
     "SIDs.\n" \
     "Only use this option if you want to read a multi-program stream " \
     "(like DVB streams for example)." )
 
-#define INPUT_AUDIOTRACK_TEXT N_("Choose audio track")
+#define INPUT_AUDIOTRACK_TEXT N_("Audio track")
 #define INPUT_AUDIOTRACK_LONGTEXT N_( \
     "Give the stream number of the audio track you want to use" \
     "(from 0 to n).")
 
-#define INPUT_SUBTRACK_TEXT N_("Choose subtitles track")
+#define INPUT_SUBTRACK_TEXT N_("Subtitles track")
 #define INPUT_SUBTRACK_LONGTEXT N_( \
     "Give the stream number of the subtitle track you want to use " \
     "(from 0 to n).")
 
-#define INPUT_AUDIOTRACK_LANG_TEXT N_("Choose audio language")
+#define INPUT_AUDIOTRACK_LANG_TEXT N_("Audio language")
 #define INPUT_AUDIOTRACK_LANG_LONGTEXT N_( \
     "Give the language of the audio track you want to use " \
     "(comma separted, two or tree letter country code).")
 
-#define INPUT_SUBTRACK_LANG_TEXT N_("Choose subtitle language")
+#define INPUT_SUBTRACK_LANG_TEXT N_("Subtitle language")
 #define INPUT_SUBTRACK_LANG_LONGTEXT N_( \
     "Give the language of the subtitle track you want to use " \
     "(comma separted, two or tree letter country code).")
@@ -382,12 +389,12 @@ static char *ppsz_clock_descriptions[] =
 
 #define INPUT_LIST_TEXT N_("Input list")
 #define INPUT_LIST_LONGTEXT N_("Allows you to specify a comma-separated list " \
-    "of inputs that will be concatenated.")
+    "of inputs that will be concatenated after the normal one.")
 
 #define INPUT_SLAVE_TEXT N_("Input slave (experimental)")
-#define INPUT_SLAVE_LONGTEXT N_("Allows you to play from several files at " \
+#define INPUT_SLAVE_LONGTEXT N_("Allows you to play from several streams at " \
     "the same time. This feature is experimental, not all formats " \
- 	"are supported.")
+    "are supported.")
 
 #define BOOKMARKS_TEXT N_("Bookmarks list for a stream")
 #define BOOKMARKS_LONGTEXT N_("You can specify a list of bookmarks for a stream in " \
@@ -681,7 +688,9 @@ static char *ppsz_clock_descriptions[] =
 
 #define ACCESS_TEXT N_("Access module")
 #define ACCESS_LONGTEXT N_( \
-    "This is a legacy entry to let you configure access modules.")
+    "This allows you to force an access module. You can use it if " \
+    "the correct access is not automatically detected. You should not "\
+    "set this as a global option unless you really know what you are doing." )
 
 #define ACCESS_FILTER_TEXT N_("Access filter module")
 #define ACCESS_FILTER_LONGTEXT N_( \
@@ -902,7 +911,7 @@ static char *ppsz_clock_descriptions[] =
     "\n            and that overrides previous settings." \
     "\n" \
     "\nPlaylistitem MRL syntax:" \
-    "\n  URL[@[title][:chapter][-[title][:chapter]]] [:option=value ...]" \
+    "\n  [[access][/demux]://]URL[@[title][:chapter][-[title][:chapter]]] [:option=value ...]" \
     "\n" \
     "\n  Many of the global --options can also be used as MRL specific :options." \
     "\n  Multiple :option=value pairs can be specified." \
@@ -960,6 +969,9 @@ vlc_module_begin();
               AOUT_RESAMP_LONGTEXT, VLC_TRUE );
 #endif
     add_bool( "spdif", 0, NULL, SPDIF_TEXT, SPDIF_LONGTEXT, VLC_FALSE );
+    add_integer( "force-dolby-surround", 0, NULL, FORCE_DOLBY_TEXT,
+                 FORCE_DOLBY_LONGTEXT, VLC_FALSE );
+        change_integer_list( pi_force_dolby_values, ppsz_force_dolby_descriptions, 0 );
     add_integer( "audio-desync", 0, NULL, DESYNC_TEXT,
                  DESYNC_LONGTEXT, VLC_TRUE );
     set_subcategory( SUBCAT_AUDIO_AOUT );
@@ -985,7 +997,7 @@ vlc_module_begin();
               FULLSCREEN_LONGTEXT, VLC_FALSE );
         change_short('f');
     add_bool( "skip-frames", 1, NULL, SKIP_FRAMES_TEXT,
-              SKIP_FRAMES_LONGTEXT, VLC_FALSE );
+              SKIP_FRAMES_LONGTEXT, VLC_TRUE );
     add_bool( "quiet-synchro", 0, NULL, QUIET_SYNCHRO_TEXT,
               QUIET_SYNCHRO_LONGTEXT, VLC_TRUE );
 #ifndef SYS_DARWIN
@@ -1012,6 +1024,7 @@ vlc_module_begin();
                ASPECT_RATIO_TEXT, ASPECT_RATIO_LONGTEXT, VLC_FALSE );
     add_string( "monitor-aspect-ratio", "4:3", NULL,
                MASPECT_RATIO_TEXT, MASPECT_RATIO_LONGTEXT, VLC_FALSE );
+    add_bool( "hdtv-fix", 1, NULL, HDTV_FIX_TEXT, HDTV_FIX_LONGTEXT, VLC_TRUE );
     add_bool( "video-deco", 1, NULL, VIDEO_DECO_TEXT,
               VIDEO_DECO_LONGTEXT, VLC_TRUE );
     add_string( "video-title", NULL, NULL, VIDEO_TITLE_TEXT,
@@ -1063,34 +1076,18 @@ vlc_module_begin();
 
 /* Input options */
     set_category( CAT_INPUT );
-    set_subcategory( SUBCAT_INPUT_ACCESS );
-    add_category_hint( N_("Input"), INPUT_CAT_LONGTEXT , VLC_FALSE );
-    add_module( "access", "access2", NULL, NULL, ACCESS_TEXT,
-                ACCESS_LONGTEXT, VLC_TRUE );
-
-    set_subcategory( SUBCAT_INPUT_ACCESS_FILTER );
-    add_module_list_cat( "access-filter", SUBCAT_INPUT_ACCESS_FILTER, NULL, NULL,
-                ACCESS_FILTER_TEXT, ACCESS_FILTER_LONGTEXT, VLC_FALSE );
-
-
-    set_subcategory( SUBCAT_INPUT_DEMUX );
-    add_module( "demux", "demux2", NULL, NULL, DEMUX_TEXT,
-                DEMUX_LONGTEXT, VLC_TRUE );
-    set_subcategory( SUBCAT_INPUT_VCODEC );
-    set_subcategory( SUBCAT_INPUT_ACODEC );
-    set_subcategory( SUBCAT_INPUT_SCODEC );
-    set_subcategory( SUBCAT_INPUT_ADVANCED );
+    set_subcategory( SUBCAT_INPUT_GENERAL );
 
     set_section( N_( "Track settings" ), NULL );
     add_integer( "program", 0, NULL,
                  INPUT_PROGRAM_TEXT, INPUT_PROGRAM_LONGTEXT, VLC_TRUE );
     add_string( "programs", "", NULL,
-                INPUT_PROGRAMS_TEXT, INPUT_PROGRAMS_LONGTEXT, VLC_FALSE );
+                INPUT_PROGRAMS_TEXT, INPUT_PROGRAMS_LONGTEXT, VLC_TRUE );
     add_integer( "audio-track", -1, NULL,
-                 INPUT_AUDIOTRACK_TEXT, INPUT_AUDIOTRACK_LONGTEXT, VLC_FALSE );
+                 INPUT_AUDIOTRACK_TEXT, INPUT_AUDIOTRACK_LONGTEXT, VLC_TRUE );
        add_deprecated( "audio-channel", VLC_FALSE ); /*deprecated since 0.8.2 */
     add_integer( "sub-track", -1, NULL,
-                 INPUT_SUBTRACK_TEXT, INPUT_SUBTRACK_LONGTEXT, VLC_FALSE );
+                 INPUT_SUBTRACK_TEXT, INPUT_SUBTRACK_LONGTEXT, VLC_TRUE );
        add_deprecated("spu-channel",VLC_FALSE); /*deprecated since 0.8.2*/
     add_string( "audio-language", "", NULL,
                  INPUT_AUDIOTRACK_LANG_TEXT, INPUT_AUDIOTRACK_LANG_LONGTEXT,
@@ -1099,10 +1096,9 @@ vlc_module_begin();
                  INPUT_SUBTRACK_LANG_TEXT, INPUT_SUBTRACK_LANG_LONGTEXT,
                   VLC_FALSE );
 
-
     set_section( N_( "Playback control" ) , NULL);
     add_integer( "input-repeat", 0, NULL,
-                 INPUT_REPEAT_TEXT, INPUT_REPEAT_LONGTEXT, VLC_TRUE );
+                 INPUT_REPEAT_TEXT, INPUT_REPEAT_LONGTEXT, VLC_FALSE );
     add_integer( "start-time", 0, NULL,
                  START_TIME_TEXT, START_TIME_LONGTEXT, VLC_TRUE );
     add_integer( "stop-time", 0, NULL,
@@ -1129,8 +1125,6 @@ vlc_module_begin();
     add_integer( "server-port", 1234, NULL,
                  SERVER_PORT_TEXT, SERVER_PORT_LONGTEXT, VLC_FALSE );
     add_integer( "mtu", 1500, NULL, MTU_TEXT, MTU_LONGTEXT, VLC_TRUE );
-    add_string( "iface-addr", "", NULL, IFACE_ADDR_TEXT,
-                IFACE_ADDR_LONGTEXT, VLC_TRUE );
     add_bool( "ipv6", 0, NULL, IPV6_TEXT, IPV6_LONGTEXT, VLC_FALSE );
         change_short('6');
     add_bool( "ipv4", 0, NULL, IPV4_TEXT, IPV4_LONGTEXT, VLC_FALSE );
@@ -1168,9 +1162,9 @@ vlc_module_begin();
     set_section( N_( "Advanced" ), NULL );
 
     add_integer( "cr-average", 40, NULL, CR_AVERAGE_TEXT,
-                 CR_AVERAGE_LONGTEXT, VLC_FALSE );
+                 CR_AVERAGE_LONGTEXT, VLC_TRUE );
     add_integer( "clock-synchro", -1, NULL, CLOCK_SYNCHRO_TEXT,
-                 CLOCK_SYNCHRO_LONGTEXT, VLC_FALSE );
+                 CLOCK_SYNCHRO_LONGTEXT, VLC_TRUE );
         change_integer_list( pi_clock_values, ppsz_clock_descriptions, 0 );
 
 /* Decoder options */
@@ -1179,6 +1173,23 @@ vlc_module_begin();
                 CODEC_LONGTEXT, VLC_TRUE );
     add_string( "encoder",  NULL, NULL, ENCODER_TEXT,
                 ENCODER_LONGTEXT, VLC_TRUE );
+
+    set_subcategory( SUBCAT_INPUT_ACCESS );
+    add_category_hint( N_("Input"), INPUT_CAT_LONGTEXT , VLC_FALSE );
+    add_module( "access", "access2", NULL, NULL, ACCESS_TEXT,
+                ACCESS_LONGTEXT, VLC_TRUE );
+
+    set_subcategory( SUBCAT_INPUT_ACCESS_FILTER );
+    add_module_list_cat( "access-filter", SUBCAT_INPUT_ACCESS_FILTER, NULL, NULL,
+                ACCESS_FILTER_TEXT, ACCESS_FILTER_LONGTEXT, VLC_FALSE );
+
+
+    set_subcategory( SUBCAT_INPUT_DEMUX );
+    add_module( "demux", "demux2", NULL, NULL, DEMUX_TEXT,
+                DEMUX_LONGTEXT, VLC_TRUE );
+    set_subcategory( SUBCAT_INPUT_VCODEC );
+    set_subcategory( SUBCAT_INPUT_ACODEC );
+    set_subcategory( SUBCAT_INPUT_SCODEC );
 
 
 /* Stream output options */
@@ -1239,8 +1250,6 @@ vlc_module_begin();
     add_category_hint( N_("Miscellaneous"), MISC_CAT_LONGTEXT, VLC_TRUE );
     add_module( "memcpy", "memcpy", NULL, NULL, MEMCPY_TEXT,
                 MEMCPY_LONGTEXT, VLC_TRUE );
-    add_module( "audio-channel-mixer", "audio mixer", NULL, NULL,
-                AUDIO_CHANNEL_MIXER, AUDIO_CHANNEL_MIXER_LONGTEXT, VLC_TRUE );
         change_short('A');
 
     set_section( N_("Plugins" ), NULL );
@@ -1253,8 +1262,8 @@ vlc_module_begin();
     add_bool( "minimize-threads", 0, NULL, MINIMIZE_THREADS_TEXT,
               MINIMIZE_THREADS_LONGTEXT, VLC_TRUE );
 
-#if !defined(SYS_BEOS) && defined(PTHREAD_COND_T_IN_PTHREAD_H)
-    add_bool( "rt-priority", 0, NULL, RT_PRIORITY_TEXT,
+#if !defined(SYS_DARWIN) && !defined(SYS_BEOS) && defined(PTHREAD_COND_T_IN_PTHREAD_H)
+    add_bool( "rt-priority", VLC_FALSE, NULL, RT_PRIORITY_TEXT,
               RT_PRIORITY_LONGTEXT, VLC_TRUE );
 #endif
 

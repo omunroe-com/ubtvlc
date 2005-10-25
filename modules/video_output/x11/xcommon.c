@@ -2,7 +2,7 @@
  * xcommon.c: Functions common to the X11 and XVideo plugins
  *****************************************************************************
  * Copyright (C) 1998-2001 the VideoLAN team
- * $Id: xcommon.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: xcommon.c 12930 2005-10-23 10:19:03Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Sam Hocevar <sam@zoy.org>
@@ -262,7 +262,7 @@ int E_(Activate) ( vlc_object_t *p_this )
     /* Set main window's size */
     p_vout->p_sys->original_window.i_width = p_vout->i_window_width;
     p_vout->p_sys->original_window.i_height = p_vout->i_window_height;
-
+    var_Create( p_vout, "video-title", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
     /* Spawn base window - this window will include the video output window,
      * but also command buttons, subtitles and other indicators */
     if( CreateWindow( p_vout, &p_vout->p_sys->original_window ) )
@@ -365,6 +365,9 @@ static int InitVideo( vout_thread_t *p_vout )
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
 
+    p_vout->fmt_out = p_vout->fmt_in;
+    p_vout->fmt_out.i_chroma = p_vout->output.i_chroma;
+
     switch( p_vout->output.i_chroma )
     {
         case VLC_FOURCC('R','V','1','5'):
@@ -443,6 +446,7 @@ static int InitVideo( vout_thread_t *p_vout )
         /* U and V inverted compared to I420
          * Fixme: this should be handled by the vout core */
         p_vout->output.i_chroma = VLC_FOURCC('I','4','2','0');
+        p_vout->fmt_out.i_chroma = VLC_FOURCC('I','4','2','0');
     }
 
     return VLC_SUCCESS;
@@ -472,8 +476,10 @@ static void DisplayVideo( vout_thread_t *p_vout, picture_t *p_pic )
         XvShmPutImage( p_vout->p_sys->p_display, p_vout->p_sys->i_xvport,
                        p_vout->p_sys->p_win->video_window,
                        p_vout->p_sys->p_win->gc, p_pic->p_sys->p_image,
-                       0 /*src_x*/, 0 /*src_y*/,
-                       p_vout->output.i_width, p_vout->output.i_height,
+                       p_vout->fmt_out.i_x_offset,
+                       p_vout->fmt_out.i_y_offset,
+                       p_vout->fmt_out.i_visible_width,
+                       p_vout->fmt_out.i_visible_height,
                        0 /*dest_x*/, 0 /*dest_y*/, i_width, i_height,
                        False /* Don't put True here or you'll waste your CPU */ );
 #   else
@@ -493,8 +499,10 @@ static void DisplayVideo( vout_thread_t *p_vout, picture_t *p_pic )
         XvPutImage( p_vout->p_sys->p_display, p_vout->p_sys->i_xvport,
                     p_vout->p_sys->p_win->video_window,
                     p_vout->p_sys->p_win->gc, p_pic->p_sys->p_image,
-                    0 /*src_x*/, 0 /*src_y*/,
-                    p_vout->output.i_width, p_vout->output.i_height,
+                    p_vout->fmt_out.i_x_offset,
+                    p_vout->fmt_out.i_y_offset,
+                    p_vout->fmt_out.i_visible_width,
+                    p_vout->fmt_out.i_visible_height,
                     0 /*dest_x*/, 0 /*dest_y*/, i_width, i_height );
 #else
         XPutImage( p_vout->p_sys->p_display,
@@ -914,6 +922,7 @@ static int CreateWindow( vout_thread_t *p_vout, x11_window_t *p_win )
     vlc_bool_t              b_expose = VLC_FALSE;
     vlc_bool_t              b_configure_notify = VLC_FALSE;
     vlc_bool_t              b_map_notify = VLC_FALSE;
+    vlc_value_t             val;
 
     /* Prepare window manager hints and properties */
     p_win->wm_protocols =
@@ -1003,15 +1012,24 @@ static int CreateWindow( vout_thread_t *p_vout, x11_window_t *p_win )
             }
             else
             {
-                XStoreName( p_vout->p_sys->p_display, p_win->base_window,
+                 var_Get( p_vout, "video-title", &val );
+                 if( !val.psz_string || !*val.psz_string )
+                 {
+                    XStoreName( p_vout->p_sys->p_display, p_win->base_window,
 #ifdef MODULE_NAME_IS_x11
-                        VOUT_TITLE " (X11 output)"
+                                VOUT_TITLE " (X11 output)"
 #elif defined(MODULE_NAME_IS_glx)
-                        VOUT_TITLE " (GLX output)"
+                                VOUT_TITLE " (GLX output)"
 #else
-                        VOUT_TITLE " (XVideo output)"
+                                VOUT_TITLE " (XVideo output)"
 #endif
                       );
+                }
+                else
+                {
+                    XStoreName( p_vout->p_sys->p_display,
+                               p_win->base_window, val.psz_string );
+                }
             }
         }
     }
@@ -2020,6 +2038,11 @@ static IMAGE_TYPE * CreateShmImage( vout_thread_t *p_vout,
 
     /* Create XImage / XvImage */
 #ifdef MODULE_NAME_IS_xvideo
+
+    /* Make sure the buffer is aligned to multiple of 16 */
+    i_height = ( i_height + 15 ) >> 4 << 4;
+    i_width = ( i_width + 15 ) >> 4 << 4;
+
     p_image = XvShmCreateImage( p_display, i_xvport, i_chroma, 0,
                                 i_width, i_height, p_shm );
 #else
@@ -2104,6 +2127,11 @@ static IMAGE_TYPE * CreateImage( vout_thread_t *p_vout,
 
     /* Allocate memory for image */
 #ifdef MODULE_NAME_IS_xvideo
+
+    /* Make sure the buffer is aligned to multiple of 16 */
+    i_height = ( i_height + 15 ) >> 4 << 4;
+    i_width = ( i_width + 15 ) >> 4 << 4;
+
     p_data = (byte_t *) malloc( i_width * i_height * i_bits_per_pixel / 8 );
 #elif defined(MODULE_NAME_IS_x11)
     i_bytes_per_line = i_width * i_bytes_per_pixel;

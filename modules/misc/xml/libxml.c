@@ -2,7 +2,7 @@
  * libxml.c: XML parser using libxml2
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: libxml.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: libxml.c 12783 2005-10-08 15:35:18Z dionoea $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -197,6 +197,7 @@ static int ReaderNodeType( xml_reader_t *p_reader )
     case XML_READER_TYPE_END_ELEMENT:
         i_ret = XML_READER_ENDELEM;
         break;
+    case XML_READER_TYPE_CDATA:
     case XML_READER_TYPE_TEXT:
         i_ret = XML_READER_TEXT;
         break;

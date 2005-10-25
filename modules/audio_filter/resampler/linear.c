@@ -2,10 +2,10 @@
  * linear.c : linear interpolation resampler
  *****************************************************************************
  * Copyright (C) 2002 the VideoLAN team
- * $Id: linear.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: linear.c 12836 2005-10-15 13:23:08Z sigmunau $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
- *          Sigmund Augdal <sigmunau@idi.ntnu.no>
+ *          Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

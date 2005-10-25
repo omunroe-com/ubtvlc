@@ -2,7 +2,7 @@
  * dshow.cpp : DirectShow access module for vlc
  *****************************************************************************
  * Copyright (C) 2002, 2003 the VideoLAN team
- * $Id: dshow.cpp 12572 2005-09-16 16:13:07Z damienf $
+ * $Id: dshow.cpp 12821 2005-10-11 17:16:13Z zorglub $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -158,10 +158,10 @@ vlc_module_begin();
                 VLC_TRUE );
 
     add_bool( "dshow-config", VLC_FALSE, NULL, CONFIG_TEXT, CONFIG_LONGTEXT,
-              VLC_FALSE );
+              VLC_TRUE );
 
     add_bool( "dshow-tuner", VLC_FALSE, NULL, TUNER_TEXT, TUNER_LONGTEXT,
-              VLC_FALSE );
+              VLC_TRUE );
 
     add_integer( "dshow-tuner-channel", 0, NULL, CHANNEL_TEXT,
                  CHANNEL_LONGTEXT, VLC_TRUE );

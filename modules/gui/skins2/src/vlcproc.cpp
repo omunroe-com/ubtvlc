@@ -2,7 +2,7 @@
  * vlcproc.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: vlcproc.cpp 12281 2005-08-20 00:31:27Z dionoea $
+ * $Id: vlcproc.cpp 12955 2005-10-24 19:59:51Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -35,6 +35,7 @@
 #include "../commands/cmd_change_skin.hpp"
 #include "../commands/cmd_show_window.hpp"
 #include "../commands/cmd_quit.hpp"
+#include "../commands/cmd_resize.hpp"
 #include "../commands/cmd_vars.hpp"
 #include "../utils/var_bool.hpp"
 
@@ -83,9 +84,9 @@ VlcProc::VlcProc( intf_thread_t *pIntf ): SkinObject( pIntf ), m_pVout( NULL ),
     REGISTER_VAR( m_cPlaytree, Playtree, "playtree" )
     pVarManager->registerVar( getPlaytreeVar().getPositionVarPtr(),
                               "playtree.slider" );
-    REGISTER_VAR( m_cVarRandom, VarBoolImpl, "playtree.isRandom" )
-    REGISTER_VAR( m_cVarLoop, VarBoolImpl, "playtree.isLoop" )
-    REGISTER_VAR( m_cVarRepeat, VarBoolImpl, "playtree.isRepeat" )
+    pVarManager->registerVar( m_cVarRandom, "playtree.isRandom" );
+    pVarManager->registerVar( m_cVarLoop, "playtree.isLoop" );
+    pVarManager->registerVar( m_cVarRepeat, "playtree.isRepeat" );
     REGISTER_VAR( m_cVarTime, StreamTime, "time" )
     REGISTER_VAR( m_cVarVolume, Volume, "volume" )
     REGISTER_VAR( m_cVarMute, VarBoolImpl, "vlc.isMute" )
@@ -299,12 +300,12 @@ int VlcProc::onIntfChange( vlc_object_t *pObj, const char *pVariable,
     // Create a playlist notify command
     CmdNotifyPlaylist *pCmd = new CmdNotifyPlaylist( pThis->getIntf() );
     // Create a playtree notify command
-    CmdNotifyPlaytree *pCmdTree = new CmdNotifyPlaytree( pThis->getIntf() );
+    CmdPlaytreeChanged *pCmdTree = new CmdPlaytreeChanged( pThis->getIntf() );
 
     // Push the command in the asynchronous command queue
     AsyncQueue *pQueue = AsyncQueue::instance( pThis->getIntf() );
     pQueue->remove( "notify playlist" );
-    pQueue->remove( "notify playtree" );
+    pQueue->remove( "playtree changed" );
     pQueue->push( CmdGenericPtr( pCmd ) );
     pQueue->push( CmdGenericPtr( pCmdTree ) );
 
@@ -348,12 +349,13 @@ int VlcProc::onItemChange( vlc_object_t *pObj, const char *pVariable,
     // TODO: selective update
     CmdNotifyPlaylist *pCmd = new CmdNotifyPlaylist( pThis->getIntf() );
     // Create a playtree notify command
-    CmdNotifyPlaytree *pCmdTree = new CmdNotifyPlaytree( pThis->getIntf() );
+    CmdPlaytreeUpdate *pCmdTree = new CmdPlaytreeUpdate( pThis->getIntf(),
+                                                         newVal.i_int );
 
     // Push the command in the asynchronous command queue
     AsyncQueue *pQueue = AsyncQueue::instance( pThis->getIntf() );
     pQueue->remove( "notify playlist" );
-    pQueue->remove( "notify playtree" );
+    pQueue->remove( "playtree update" );
     pQueue->push( CmdGenericPtr( pCmd ) );
     pQueue->push( CmdGenericPtr( pCmdTree ) );
 
@@ -377,11 +379,11 @@ int VlcProc::onPlaylistChange( vlc_object_t *pObj, const char *pVariable,
     // TODO: selective update
     CmdNotifyPlaylist *pCmd = new CmdNotifyPlaylist( pThis->getIntf() );
     // Create a playtree notify command
-    CmdNotifyPlaytree *pCmdTree = new CmdNotifyPlaytree( pThis->getIntf() );
+    CmdPlaytreeChanged *pCmdTree = new CmdPlaytreeChanged( pThis->getIntf() );
 
     // Push the command in the asynchronous command queue
     pQueue->remove( "notify playlist" );
-    pQueue->remove( "notify playtree" );
+    pQueue->remove( "playtree changed" );
     pQueue->push( CmdGenericPtr( pCmd ) );
     pQueue->push( CmdGenericPtr( pCmdTree ) );
 
@@ -453,7 +455,15 @@ void *VlcProc::getWindow( intf_thread_t *pIntf, vout_thread_t *pVout,
     }
     else
     {
-        return *pThis->m_handleSet.begin();
+        // Get the window handle
+        void *pWindow = *pThis->m_handleSet.begin();
+        // Post a resize vout command
+        CmdResizeVout *pCmd = new CmdResizeVout( pThis->getIntf(), pWindow,
+                                                 *pWidthHint, *pHeightHint );
+        AsyncQueue *pQueue = AsyncQueue::instance( pThis->getIntf() );
+        pQueue->remove( "resize vout" );
+        pQueue->push( CmdGenericPtr( pCmd ) );
+        return pWindow;
     }
 }
 
@@ -468,6 +478,35 @@ void VlcProc::releaseWindow( intf_thread_t *pIntf, void *pWindow )
 int VlcProc::controlWindow( intf_thread_t *pIntf, void *pWindow,
                             int query, va_list args )
 {
+    VlcProc *pThis = pIntf->p_sys->p_vlcProc;
+
+    switch( query )
+    {
+        case VOUT_SET_ZOOM:
+        {
+            double fArg = va_arg( args, double );
+
+            if( pThis->m_pVout )
+            {
+                // Compute requested vout dimensions
+                int width = (int)( pThis->m_pVout->i_window_width * fArg );
+                int height = (int)( pThis->m_pVout->i_window_height * fArg );
+
+                // Post a resize vout command
+                CmdResizeVout *pCmd =
+                    new CmdResizeVout( pThis->getIntf(), pWindow,
+                                       width, height );
+                AsyncQueue *pQueue = AsyncQueue::instance( pThis->getIntf() );
+                pQueue->remove( "resize vout" );
+                pQueue->push( CmdGenericPtr( pCmd ) );
+            }
+        }
+
+        default:
+            msg_Dbg( pIntf, "control query not supported" );
+            break;
+    }
+
     return VLC_SUCCESS;
 }
 

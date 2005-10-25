@@ -2,10 +2,10 @@
  * m3u.c : M3U playlist format import
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: m3u.c 12558 2005-09-15 06:17:33Z zorglub $
+ * $Id: m3u.c 12836 2005-10-15 13:23:08Z sigmunau $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
- *          Sigmund Augdal <sigmunau@idi.ntnu.no>
+ *          Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

@@ -2,7 +2,7 @@
  * rtp.c: rtp stream output module
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: rtp.c 11929 2005-07-31 19:04:29Z courmisch $
+ * $Id: rtp.c 12951 2005-10-24 07:33:08Z md $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -107,14 +107,14 @@ vlc_module_begin();
     add_string( SOUT_CFG_PREFIX "email", "", NULL, EMAIL_TEXT,
                 EMAIL_LONGTEXT, VLC_TRUE );
 
-    add_integer( SOUT_CFG_PREFIX "port-audio", 1234, NULL, PORT_AUDIO_TEXT,
+    add_integer( SOUT_CFG_PREFIX "port", 1234, NULL, PORT_TEXT,
                  PORT_LONGTEXT, VLC_TRUE );
-    add_integer( SOUT_CFG_PREFIX "port-video", 1236, NULL, PORT_VIDEO_TEXT,
-                 PORT_LONGTEXT, VLC_TRUE );
-    add_integer( SOUT_CFG_PREFIX "port", 1238, NULL, PORT_TEXT,
-                 PORT_LONGTEXT, VLC_TRUE );
+    add_integer( SOUT_CFG_PREFIX "port-audio", 1230, NULL, PORT_AUDIO_TEXT,
+                 PORT_AUDIO_LONGTEXT, VLC_TRUE );
+    add_integer( SOUT_CFG_PREFIX "port-video", 1232, NULL, PORT_VIDEO_TEXT,
+                 PORT_VIDEO_LONGTEXT, VLC_TRUE );
 
-    add_integer( SOUT_CFG_PREFIX "ttl", 0, NULL, TTL_TEXT,
+    add_integer( SOUT_CFG_PREFIX "ttl", 1, NULL, TTL_TEXT,
                  TTL_LONGTEXT, VLC_TRUE );
 
     set_callbacks( Open, Close );
@@ -397,7 +397,7 @@ static int Open( vlc_object_t *p_this )
         sout_access_out_t *p_grab;
         char *psz_rtpmap, url[NI_MAXHOST + 8], access[17], psz_ttl[5], ipv;
 
-        if( p_sys->psz_destination )
+        if( !p_sys->psz_destination || *p_sys->psz_destination == '\0' )
         {
             msg_Err( p_stream, "rtp needs a destination when muxing" );
             free( p_sys );
@@ -593,6 +593,11 @@ static void Close( vlc_object_t * p_this )
         if( p_sys->packet )
         {
             block_Release( p_sys->packet );
+        }
+        if( p_sys->b_export_sap )
+        {   
+            p_sys->p_mux = NULL;
+            SapSetup( p_stream );
         }
     }
 
@@ -1175,7 +1180,7 @@ static int Del( sout_stream_t *p_stream, sout_stream_id_t *id )
     if( id->rtsp_access ) free( id->rtsp_access );
 
     /* Update SDP (sap/file) */
-    if( p_sys->b_export_sap ) SapSetup( p_stream );
+    if( p_sys->b_export_sap && !p_sys->p_mux ) SapSetup( p_stream );
     if( p_sys->b_export_sdp_file ) FileSetup( p_stream );
 
     free( id );
@@ -1314,6 +1319,7 @@ static int SapSetup( sout_stream_t *p_stream )
     if( ( p_sys->i_es > 0 || p_sys->p_mux ) && p_sys->psz_sdp && *p_sys->psz_sdp )
     {
         p_sys->p_session = sout_AnnounceRegisterSDP( p_sout, p_sys->psz_sdp,
+                                                     p_sys->psz_destination,
                                                      p_method );
     }
 
@@ -1353,7 +1359,7 @@ static int HttpSetup( sout_stream_t *p_stream, vlc_url_t *url)
 {
     sout_stream_sys_t *p_sys = p_stream->p_sys;
 
-    p_sys->p_httpd_host = httpd_HostNew( VLC_OBJECT(p_stream), url->psz_host, url->i_port );
+    p_sys->p_httpd_host = httpd_HostNew( VLC_OBJECT(p_stream), url->psz_host, url->i_port > 0 ? url->i_port : 80 );
     if( p_sys->p_httpd_host )
     {
         p_sys->p_httpd_file = httpd_FileNew( p_sys->p_httpd_host,

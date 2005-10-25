@@ -2,7 +2,7 @@
  * darwin_specific.m: Darwin specific features
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: darwin_specific.m 12485 2005-09-07 17:44:36Z fkuehne $
+ * $Id: darwin_specific.m 12824 2005-10-12 16:04:18Z fkuehne $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -56,6 +56,7 @@ static int FindLanguage( const char * psz_lang )
         "Romanian", "ro",
         "Russian", "ru",
         "Turkish", "tr",
+        "Simplified Chinese", "zh_CN", 
         "Chinese Traditional", "zh_TW",
         NULL
     };

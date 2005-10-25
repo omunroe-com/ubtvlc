@@ -2,7 +2,7 @@
  * tcp.c: TCP input module
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: tcp.c 11967 2005-08-02 17:31:33Z courmisch $
+ * $Id: tcp.c 12706 2005-09-29 14:30:26Z jpsaman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -87,7 +87,7 @@ static int Open( vlc_object_t *p_this )
             psz_parser = psz_dup;
     }
     psz_parser = strchr( psz_parser, ':' );
-    
+
     if( psz_parser == NULL )
     {
         msg_Err( p_access, "missing port number : %s", psz_dup );

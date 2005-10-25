@@ -2,7 +2,7 @@
  * dmo.c : DirectMedia Object decoder module for vlc
  *****************************************************************************
  * Copyright (C) 2002, 2003 the VideoLAN team
- * $Id: dmo.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: dmo.c 12948 2005-10-23 16:55:11Z zorglub $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -165,6 +165,7 @@ static const codec_dll decoders_table[] =
     /* WMA 3 */
     { VLC_FOURCC('W','M','A','3'), "wma9dmod.dll", &guid_wma9 },
     { VLC_FOURCC('w','m','a','3'), "wma9dmod.dll", &guid_wma9 },
+    { VLC_FOURCC('w','m','a','p'), "wma9dmod.dll", &guid_wma9 },
     /* WMA 2 */
     { VLC_FOURCC('W','M','A','2'), "wma9dmod.dll", &guid_wma9 },
     { VLC_FOURCC('w','m','a','2'), "wma9dmod.dll", &guid_wma9 },

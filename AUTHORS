@@ -1,4 +1,4 @@
-# $Id: AUTHORS 12591 2005-09-18 13:18:55Z sam $
+# $Id: AUTHORS 12836 2005-10-15 13:23:08Z sigmunau $
 # 
 # The format of this file was inspired by the Linux kernel CREDITS file.
 # Authors are listed alphabetically.
@@ -13,7 +13,7 @@ D: input and decoders core improvements
 D: avi, asf/wmv/wma, mp4/mov, mp3, aac, wav demultiplexers
 D: MPEG-4, Div & OpenDivX and various decoders (ffmpeg)
 D: AAC decoder (libfaad2)
-D: cinepak, adpcm, araw decoders
+D: cinepak, adpcm, araw, musepack decoders
 D: Subtile file parser.
 D: mms, ftp access
 D: Stream output
@@ -38,15 +38,16 @@ E: oaubert at lisi dot univ-lyon1 dot fr
 D: CORBA interface
 S: France
 
-N: Sigmund Augdal
-E: sigmunau@idi.ntnu.no
+N: Sigmund Augdal Helberg
+E: dnumgis@videolan.org
 C: sigmunau
 D: lirc plugin
-D: norwegian translation
 D: aalib plugin
-D: KDE plug-in
 D: Subtitles and freetype
 D: Hotkeys
+D: Shoutcast discovery module and b4s playlist parser
+D: wxWidgets preferences
+D: File-Info and metadata handling
 S: Norway
 
 N: Pierre Baillet
@@ -322,14 +323,14 @@ D: Portaudio audio output
 S: France
 
 N: Jean-Paul Saman
-E: jean-paul dot saman#planet dot nl
+E: jp_dot_saman#videolan_dot_nl
 D: libmad plug-in
 D: iPAQ port
-D: Familiar and PDA Linux interface
-D: Opie PDA Linux interface
+D: PDA (Familiar Linux) interface 
 D: Dutch Translation
 D: DVB-S/C/T on v4l2 API
 D: HD1000 port 
+D: OSD menu
 S: Netherlands
 
 N: Arnaud Schauly

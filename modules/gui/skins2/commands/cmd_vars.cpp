@@ -2,7 +2,7 @@
  * cmd_vars.cpp
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: cmd_vars.cpp 12281 2005-08-20 00:31:27Z dionoea $
+ * $Id: cmd_vars.cpp 12949 2005-10-23 17:42:16Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -35,11 +35,19 @@ void CmdNotifyPlaylist::execute()
     rVar.onChange();
 }
 
-void CmdNotifyPlaytree::execute()
+void CmdPlaytreeChanged::execute()
 {
     // Notify  the playtree variable
     Playtree &rVar = VlcProc::instance( getIntf() )->getPlaytreeVar();
     rVar.onChange();
+}
+
+
+void CmdPlaytreeUpdate::execute()
+{
+    // Notify  the playtree variable
+    Playtree &rVar = VlcProc::instance( getIntf() )->getPlaytreeVar();
+    rVar.onUpdate( m_id );
 }
 
 

@@ -2,7 +2,7 @@
  * md5.c: not so strong MD5 hashing
  *****************************************************************************
  * Copyright (C) 2004-2005 the VideoLAN team
- * $Id: md5.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: md5.c 12747 2005-10-02 16:33:02Z jpsaman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Sam Hocevar <sam@zoy.org>
@@ -24,7 +24,7 @@
 
 #include <string.h>
 #include <vlc/vlc.h>
-#include "vlc_md5.h"
+#include <vlc_md5.h>
 
 #ifdef WORDS_BIGENDIAN
 /*****************************************************************************

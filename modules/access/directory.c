@@ -2,7 +2,7 @@
  * directory.c: expands a directory (directory: access plug-in)
  *****************************************************************************
  * Copyright (C) 2002-2004 the VideoLAN team
- * $Id: directory.c 12245 2005-08-18 16:50:38Z zorglub $
+ * $Id: directory.c 12869 2005-10-17 01:14:04Z hartman $
  *
  * Authors: Derk-Jan Hartman <hartman at videolan dot org>
  *
@@ -94,10 +94,8 @@ vlc_module_begin();
     add_string( "recursive", "expand" , NULL, RECURSIVE_TEXT,
                 RECURSIVE_LONGTEXT, VLC_FALSE );
       change_string_list( psz_recursive_list, psz_recursive_list_text, 0 );
-#ifdef HAVE_STRSEP
     add_string( "ignore-filetypes", "m3u,db,nfo,jpg,gif,sfv,txt,sub,idx,srt,cue",
                 NULL, IGNORE_TEXT, IGNORE_LONGTEXT, VLC_FALSE );
-#endif
     set_callbacks( Open, Close );
 
     add_submodule();
@@ -395,26 +393,38 @@ static int ReadDir( playlist_t *p_playlist,
     playlist_item_t *p_node;
 
     /* Build array with ignores */
-#ifdef HAVE_STRSEP
     char **ppsz_extensions = 0;
     int i_extensions = 0;
     char *psz_ignore = var_CreateGetString( p_playlist, "ignore-filetypes" );
     if( psz_ignore && *psz_ignore )
     {
-        char *psz_backup;
-        char *psz_parser = psz_backup = strdup( psz_ignore );
-        int a = 0;
+        char *psz_parser = psz_ignore;
+        int a;
 
-        while( strsep( &psz_parser, "," ) ) i_extensions++;
-        free( psz_backup );
+        for( a = 0; psz_parser[a] != '\0'; a++ )
+        {
+            if( psz_parser[a] == ',' ) i_extensions++;
+        }
 
         ppsz_extensions = (char **)malloc( sizeof( char * ) * i_extensions );
 
-        psz_parser = psz_ignore;
-        while( a < i_extensions &&
-               ( ppsz_extensions[a++] = strsep( &psz_parser, "," ) ) );
+        for( a = 0; a < i_extensions; a++ )
+        {
+            int b;
+            char *tmp;
+            
+            while( psz_parser[0] != '\0' && psz_parser[0] == ' ' ) psz_parser++;
+            for( b = 0; psz_parser[b] != '\0'; b++ )
+            {
+                if( psz_parser[b] == ',' ) break;
+            }
+            tmp = malloc( b + 1 );
+            strncpy( tmp, psz_parser, b );
+            tmp[b] = 0;
+            ppsz_extensions[a] = tmp;
+            psz_parser += b+1;
+        }
     }
-#endif /* HAVE_STRSEP */
 
     /* Change the item to a node */
     if( p_parent->i_children == -1 )
@@ -498,7 +508,6 @@ static int ReadDir( playlist_t *p_playlist,
                 playlist_item_t *p_item;
                 char *psz_tmp1, *psz_tmp2, *psz_loc;
 
-#ifdef HAVE_STRSEP
                 if( i_extensions > 0 )
                 {
                     char *psz_dot = strrchr( p_dir_content->d_name, '.' );
@@ -518,7 +527,6 @@ static int ReadDir( playlist_t *p_playlist,
                         }
                     }
                 }
-#endif /* HAVE_STRSEP */
 
                 psz_loc = FromLocale( psz_uri );
                 psz_tmp1 = vlc_fix_readdir_charset( VLC_OBJECT(p_playlist),
@@ -543,10 +551,13 @@ static int ReadDir( playlist_t *p_playlist,
         free( psz_uri );
     }
 
-#ifdef HAVE_STRSEP
+    for( i = 0; i < i_extensions; i++ )
+    {
+        if( ppsz_extensions[i] )
+            free( ppsz_extensions[i] );
+    }
     if( ppsz_extensions ) free( ppsz_extensions );
     if( psz_ignore ) free( psz_ignore );
-#endif /* HAVE_STRSEP */
 
     free( pp_dir_content );
     return VLC_SUCCESS;

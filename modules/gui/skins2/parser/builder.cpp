@@ -2,7 +2,7 @@
  * builder.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: builder.cpp 12281 2005-08-20 00:31:27Z dionoea $
+ * $Id: builder.cpp 12912 2005-10-22 11:57:29Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -186,8 +186,9 @@ void Builder::addWindow( const BuilderData::Window &rData )
 {
     TopWindow *pWin =
         new TopWindow( getIntf(), rData.m_xPos, rData.m_yPos,
-                           m_pTheme->getWindowManager(),
-                           rData.m_dragDrop, rData.m_playOnDrop );
+                       m_pTheme->getWindowManager(),
+                       rData.m_dragDrop, rData.m_playOnDrop,
+                       rData.m_visible );
 
     m_pTheme->m_windows[rData.m_id] = TopWindowPtr( pWin );
 }

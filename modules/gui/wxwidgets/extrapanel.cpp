@@ -2,7 +2,7 @@
  * extrapanel.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004, 2003 the VideoLAN team
- * $Id: extrapanel.cpp 12038 2005-08-05 19:47:51Z fkuehne $
+ * $Id: extrapanel.cpp 12676 2005-09-25 16:49:40Z babal $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -819,7 +819,7 @@ void ExtraPanel::OnHeadphone( wxCommandEvent &event )
 {
     aout_instance_t *p_aout= (aout_instance_t *)vlc_object_find(p_intf,
                                  VLC_OBJECT_AOUT, FIND_ANYWHERE);
-    ChangeFiltersString( p_intf , p_aout, "headphone",
+    ChangeFiltersString( p_intf , p_aout, "headphone_channel_mixer",
                          event.IsChecked() ? VLC_TRUE : VLC_FALSE );
     if( p_aout != NULL )
         vlc_object_release( p_aout );

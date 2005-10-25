@@ -2,7 +2,7 @@
  * ipv4.c: IPv4 network abstraction layer
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: ipv4.c 12555 2005-09-14 17:24:32Z massiot $
+ * $Id: ipv4.c 12947 2005-10-23 16:43:48Z gbazin $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Mathias Kretschmer <mathias@research.att.com>
@@ -101,7 +101,7 @@ vlc_module_begin();
     set_description( _("UDP/IPv4 network abstraction layer") );
     set_capability( "network", 50 );
     set_category( CAT_INPUT );
-    set_subcategory( SUBCAT_INPUT_ADVANCED );
+    set_subcategory( SUBCAT_INPUT_GENERAL );
     set_callbacks( OpenUDP, NULL );
     add_string( "miface-addr", NULL, NULL, MIFACE_TEXT, MIFACE_LONGTEXT, VLC_TRUE );
 vlc_module_end();
@@ -298,7 +298,7 @@ static int OpenUDP( vlc_object_t * p_this )
     if( IN_MULTICAST( ntohl(sock.sin_addr.s_addr) ) )
     {
         /* Determine interface to be used for multicast */
-        char * psz_if_addr = config_GetPsz( p_this, "iface-addr" );
+        char * psz_if_addr = config_GetPsz( p_this, "miface-addr" );
 
         /* If we have a source address, we use IP_ADD_SOURCE_MEMBERSHIP
            so that IGMPv3 aware OSes running on IGMPv3 aware networks

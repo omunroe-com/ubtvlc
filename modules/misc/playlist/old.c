@@ -2,9 +2,9 @@
  * old.c : Old playlist format import/export
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: old.c 11988 2005-08-03 19:01:44Z courmisch $
+ * $Id: old.c 12742 2005-10-02 12:47:49Z jpsaman $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: Clï¿½ent Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 
 #include <vlc/vlc.h>
 #include <vlc/intf.h>
+#include <charset.h>
 
 #include <errno.h>                                                 /* ENOMEM */
 

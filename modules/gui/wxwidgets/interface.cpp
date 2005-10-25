@@ -2,7 +2,7 @@
  * interface.cpp : wxWidgets plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2005 the VideoLAN team
- * $Id: interface.cpp 12586 2005-09-18 09:43:23Z robux4 $
+ * $Id: interface.cpp 12796 2005-10-09 16:36:17Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -29,6 +29,7 @@
 #include <vlc/vout.h>
 #include <vlc/input.h>
 #include <vlc/intf.h>
+#include "charset.h"
 
 #include "wxwidgets.h"
 
@@ -329,6 +330,20 @@ Interface::Interface( intf_thread_t *_p_intf, long style ):
 
     if( ws->GetSettings( WindowSettings::ID_MAIN, b_shown, p, s ) )
         Move( p );
+
+    /* Set minimum window size to prevent user from glitching it */
+    s = GetSize();
+    if( config_GetInt( p_intf, "wx-embed" ) )
+    {
+        wxSize  s2;
+        s2 = video_window->GetSize();
+        s.SetHeight( s.GetHeight() - s2.GetHeight() );
+    }
+    SetMinSize( s );
+
+    /* Show extended GUI if requested */
+    if( ( b_extra = config_GetInt( p_intf, "wx-extended" ) ) )
+        frame_sizer->Show( extra_frame );
 }
 
 Interface::~Interface()
@@ -472,6 +487,34 @@ void Interface::CreateOurMenuBar()
 #endif
 #endif
     }
+
+/* Patch by zcot for menu wrapping */
+#if defined(WIN32)
+    /* Find out size of msw menu bar */
+    i_size = 0;
+    SIZE sizing;
+    HDC hdc = GetDC( NULL );
+    for( unsigned int i = 0; i < menubar->GetMenuCount(); i++ )
+    {
+        //                [ MENU BUTTON WIDTH CALCULATION ]
+        // [ SM_CXDLGFRAME + pixels + textextent + pixels + SM_CXDLGFRAME ]
+        GetTextExtentPoint32( hdc, menubar->GetLabelTop(i).c_str(),
+                                menubar->GetLabelTop(i).Length(), &sizing );
+        // + text size..
+        i_size += sizing.cx;
+        // +1 more pixel on each size
+        i_size += 2;
+        // width of 2 DLGFRAME
+        i_size += GetSystemMetrics( SM_CXDLGFRAME ) * 2;
+    }
+    ReleaseDC( NULL, hdc );
+    // Width of 2 edges of app window
+    i_size += GetSystemMetrics( SM_CXSIZEFRAME ) * 2;
+    // + 2 more pixels on each side..
+    i_size += 4;
+#endif
+/* End patch by zcot */
+
     frame_sizer->SetMinSize( i_size, -1 );
 
     /* Intercept all menu events in our custom event handler */
@@ -535,11 +578,13 @@ void Interface::CreateOurToolBar()
                       wxU(_(HELP_PLO)) );
     }
 
+#if !( (wxMAJOR_VERSION <= 2) && (wxMINOR_VERSION <= 6) && (wxRELEASE_NUMBER < 2) )
     wxControl *p_dummy_ctrl =
         new wxControl( toolbar, -1, wxDefaultPosition,
                        wxSize(35, 16 ), wxBORDER_NONE );
 
     toolbar->AddControl( p_dummy_ctrl );
+#endif
 
     volctrl = new VLCVolCtrl( p_intf, toolbar );
     toolbar->AddControl( volctrl );
@@ -1373,11 +1418,11 @@ bool DragAndDrop::OnDropFiles( wxCoord, wxCoord,
 
     for( size_t i = 0; i < filenames.GetCount(); i++ )
     {
-        char *psz_utf8 = FromLocale( filenames[i].mb_str() );
+        char *psz_utf8 = wxFromLocale( filenames[i] );
         playlist_Add( p_playlist, psz_utf8, psz_utf8,
                       PLAYLIST_APPEND | ((i | b_enqueue) ? 0 : PLAYLIST_GO),
                       PLAYLIST_END );
-        LocaleFree( psz_utf8 );
+        wxLocaleFree( psz_utf8 );
     }
 
     vlc_object_release( p_playlist );

@@ -2,7 +2,7 @@
  * input.c: input thread
  *****************************************************************************
  * Copyright (C) 1998-2004 the VideoLAN team
- * $Id: input.c 12197 2005-08-15 13:37:59Z massiot $
+ * $Id: input.c 12888 2005-10-19 09:12:12Z gbazin $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -804,7 +804,7 @@ static int Init( input_thread_t * p_input, vlc_bool_t b_quick )
                                             p_input->input.p_item->psz_uri );
             input_source_t *sub;
 
-            for( i = 0; subs[i] != NULL; i++ )
+            for( i = 0; subs && subs[i]; i++ )
             {
                 if( strcmp( psz_subtitle, subs[i] ) )
                 {
@@ -817,8 +817,8 @@ static int Init( input_thread_t * p_input, vlc_bool_t b_quick )
                 }
                 free( subs[i] );
             }
-            free( subs );
-            free( psz_autopath );
+            if( subs ) free( subs );
+            if( psz_autopath ) free( psz_autopath );
         }
         free( psz_subtitle );
 
@@ -1195,7 +1195,7 @@ static vlc_bool_t Control( input_thread_t *p_input, int i_type,
     vlc_bool_t b_force_update = VLC_FALSE;
 
     if( !p_input ) return b_force_update;
-        
+
     switch( i_type )
     {
         case INPUT_CONTROL_SET_DIE:
@@ -1274,8 +1274,8 @@ static vlc_bool_t Control( input_thread_t *p_input, int i_type,
             if( i_ret )
             {
                 int64_t i_length;
-                /* Emulate it with a SET_POS */
 
+                /* Emulate it with a SET_POS */
                 demux2_Control( p_input->input.p_demux,
                                 DEMUX_GET_LENGTH, &i_length );
                 if( i_length > 0 )
@@ -1287,8 +1287,8 @@ static vlc_bool_t Control( input_thread_t *p_input, int i_type,
             }
             if( i_ret )
             {
-                msg_Err( p_input, "INPUT_CONTROL_SET_TIME(_OFFSET) "I64Fd
-                         " failed", i_time );
+                msg_Warn( p_input, "INPUT_CONTROL_SET_TIME(_OFFSET) "I64Fd
+                         " failed or not possible", i_time );
             }
             else
             {
@@ -1924,7 +1924,7 @@ static int InputSourceInit( input_thread_t *p_input,
     vlc_value_t val;
 
     if( !in ) return VLC_EGENERIC;
-    
+
     /* Split uri */
     if( !b_quick )
     {
@@ -1944,7 +1944,28 @@ static int InputSourceInit( input_thread_t *p_input,
                      &in->i_seekpoint_start, &in->i_seekpoint_end );
 
         if( psz_forced_demux && *psz_forced_demux )
+        {
             psz_demux = psz_forced_demux;
+        }
+        else if( !psz_demux || *psz_demux == '\0' )
+        {
+            /* special hack for forcing a demuxer with --demux=module
+             * (and do nothing with a list) */
+            char *psz_var_demux = var_GetString( p_input, "demux" );
+
+            if( *psz_var_demux != '\0' &&
+                !strchr(psz_var_demux, ',' ) &&
+                !strchr(psz_var_demux, ':' ) )
+            {
+                psz_demux = psz_var_demux;
+
+                msg_Dbg( p_input, "Enforce demux ` %s'", psz_demux );
+            }
+            else if( psz_var_demux )
+            {
+                free( psz_var_demux );
+            }
+        }
 
         /* Try access_demux if no demux given */
         if( *psz_demux == '\0' )
