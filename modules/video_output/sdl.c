@@ -2,7 +2,7 @@
  * sdl.c: SDL video output display method
  *****************************************************************************
  * Copyright (C) 1998-2001 the VideoLAN team
- * $Id: sdl.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: sdl.c 12875 2005-10-18 07:12:27Z md $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Pierre Baillet <oct@zoy.org>
@@ -42,7 +42,8 @@
 
 #include SDL_INCLUDE_FILE
 
-#define SDL_MAX_DIRECTBUFFERS 10
+/* SDL is not able to crop overlays - so use only 1 direct buffer */
+#define SDL_MAX_DIRECTBUFFERS 1
 #define SDL_DEFAULT_BPP 16
 
 /*****************************************************************************

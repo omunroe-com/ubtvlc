@@ -2,7 +2,7 @@
  * rc.c : remote control stdin/stdout module for vlc
  *****************************************************************************
  * Copyright (C) 2004 - 2005 the VideoLAN team
- * $Id: rc.c 12333 2005-08-22 08:29:37Z jpsaman $
+ * $Id: rc.c 12953 2005-10-24 15:17:03Z bigben $
  *
  * Author: Peter Surda <shurdeek@panorama.sth.ac.at>
  *         Jean-Paul Saman <jpsaman #_at_# m2x _replaceWith#dot_ nl>
@@ -37,6 +37,7 @@
 #include <vlc/intf.h>
 #include <vlc/aout.h>
 #include <vlc/vout.h>
+#include <vlc_video.h>
 #include <vlc_osd.h>
 
 #ifdef HAVE_UNISTD_H
@@ -372,13 +373,17 @@ static void RegisterCallbacks( intf_thread_t *p_intf )
     var_AddCallback( p_intf, "play", Playlist, NULL );
     var_Create( p_intf, "stop", VLC_VAR_VOID | VLC_VAR_ISCOMMAND );
     var_AddCallback( p_intf, "stop", Playlist, NULL );
+    var_Create( p_intf, "clear", VLC_VAR_VOID | VLC_VAR_ISCOMMAND );
+    var_AddCallback( p_intf, "clear", Playlist, NULL );
     var_Create( p_intf, "prev", VLC_VAR_VOID | VLC_VAR_ISCOMMAND );
     var_AddCallback( p_intf, "prev", Playlist, NULL );
     var_Create( p_intf, "next", VLC_VAR_VOID | VLC_VAR_ISCOMMAND );
     var_AddCallback( p_intf, "next", Playlist, NULL );
     var_Create( p_intf, "goto", VLC_VAR_INTEGER | VLC_VAR_ISCOMMAND );
     var_AddCallback( p_intf, "goto", Playlist, NULL );
- 
+    var_Create( p_intf, "status", VLC_VAR_INTEGER | VLC_VAR_ISCOMMAND );
+    var_AddCallback( p_intf, "status", Playlist, NULL );
+
     /* marquee on the fly items */
     var_Create( p_intf, "marq-marquee", VLC_VAR_VOID | VLC_VAR_ISCOMMAND );
     var_AddCallback( p_intf, "marq-marquee", Other, NULL );
@@ -800,7 +805,23 @@ static void Run( intf_thread_t *p_intf )
 
                 if( p_vout )
                 {
-                    p_vout->i_changes |= VOUT_FULLSCREEN_CHANGE;
+                    vlc_value_t val;
+                    vlc_bool_t b_update = VLC_FALSE;
+                    var_Get( p_vout, "fullscreen", &val );
+                    val.b_bool = !val.b_bool;
+                    if( !strncmp(psz_arg, "on", 2) && (val.b_bool == VLC_TRUE) )
+                    {
+                        b_update = VLC_TRUE;
+                        val.b_bool = VLC_TRUE;
+                    }
+                    else if( !strncmp(psz_arg, "off", 3)  && (val.b_bool == VLC_FALSE) )
+                    {
+                        b_update = VLC_TRUE;
+                        val.b_bool = VLC_FALSE;
+                    }
+                    else if( strncmp(psz_arg, "off", 3) && strncmp(psz_arg, "on", 2) )
+                        b_update = VLC_TRUE;
+                    if( b_update ) var_Set( p_vout, "fullscreen", val );
                     vlc_object_release( p_vout );
                 }
             }
@@ -858,6 +879,8 @@ static void Help( intf_thread_t *p_intf, vlc_bool_t b_longhelp)
     msg_rc(_("| next . . . . . . . . . . . .  next playlist item"));
     msg_rc(_("| prev . . . . . . . . . .  previous playlist item"));
     msg_rc(_("| goto . . . . . . . . . . . .  goto item at index"));
+    msg_rc(_("| clear . . . . . . . . . . .   clear the playlist"));
+    msg_rc(_("| status . . . . . . . . . current playlist status"));
     msg_rc(_("| title [X]  . . . . set/get title in current item"));
     msg_rc(_("| title_n  . . . . . .  next title in current item"));
     msg_rc(_("| title_p  . . . .  previous title in current item"));
@@ -872,7 +895,7 @@ static void Help( intf_thread_t *p_intf, vlc_bool_t b_longhelp)
     msg_rc(_("| faster . . . . . . . .  faster playing of stream"));
     msg_rc(_("| slower . . . . . . . .  slower playing of stream"));
     msg_rc(_("| normal . . . . . . . .  normal playing of stream"));
-    msg_rc(_("| f  . . . . . . . . . . . . . . toggle fullscreen"));
+    msg_rc(_("| f [on|off] . . . . . . . . . . toggle fullscreen"));
     msg_rc(_("| info . . .  information about the current stream"));
     msg_rc(  "| ");
     msg_rc(_("| volume [X] . . . . . . . .  set/get audio volume"));
@@ -1068,7 +1091,6 @@ static int Input( vlc_object_t *p_this, char const *psz_cmd,
     {
         val.i_int = config_GetInt( p_intf, "key-jump+3sec" );
         var_Set( p_intf->p_vlc, "key-pressed", val );
-        
         vlc_object_release( p_input );
         return VLC_SUCCESS;
     }
@@ -1076,14 +1098,12 @@ static int Input( vlc_object_t *p_this, char const *psz_cmd,
     {
         val.i_int = config_GetInt( p_intf, "key-jump-3sec" );
         var_Set( p_intf->p_vlc, "key-pressed", val );
-
         vlc_object_release( p_input );
         return VLC_SUCCESS;
     }
     else if ( !strcmp( psz_cmd, "faster" ) )
     {
         val.b_bool = VLC_TRUE;
-
         var_Set( p_input, "rate-faster", val );
         vlc_object_release( p_input );
         return VLC_SUCCESS;
@@ -1091,7 +1111,6 @@ static int Input( vlc_object_t *p_this, char const *psz_cmd,
     else if ( !strcmp( psz_cmd, "slower" ) )
     {
         val.b_bool = VLC_TRUE;
-
         var_Set( p_input, "rate-slower", val );
         vlc_object_release( p_input );
         return VLC_SUCCESS;
@@ -1099,7 +1118,6 @@ static int Input( vlc_object_t *p_this, char const *psz_cmd,
     else if ( !strcmp( psz_cmd, "normal" ) )
     {
         val.i_int = INPUT_RATE_DEFAULT;
-
         var_Set( p_input, "rate", val );
         vlc_object_release( p_input );
         return VLC_SUCCESS;
@@ -1140,7 +1158,6 @@ static int Input( vlc_object_t *p_this, char const *psz_cmd,
             val.b_bool = VLC_TRUE;
             var_Set( p_input, "prev-chapter", val );
         }
-
         vlc_object_release( p_input );
         return VLC_SUCCESS;
     }
@@ -1186,6 +1203,7 @@ static int Input( vlc_object_t *p_this, char const *psz_cmd,
     }
 
     /* Never reached. */
+    vlc_object_release( p_input );
     return VLC_EGENERIC;
 }
 
@@ -1253,6 +1271,13 @@ static int Playlist( vlc_object_t *p_this, char const *psz_cmd,
     {
         playlist_Stop( p_playlist );
     }
+    else if( !strcmp( psz_cmd, "clear" ) )
+    {
+        playlist_Stop( p_playlist );
+        vlc_mutex_lock( &p_playlist->object_lock );
+        playlist_Clear( p_playlist );
+        vlc_mutex_unlock( &p_playlist->object_lock );
+    }
     else if( !strcmp( psz_cmd, "add" ) &&
              newval.psz_string && *newval.psz_string )
     {
@@ -1282,29 +1307,32 @@ static int Playlist( vlc_object_t *p_this, char const *psz_cmd,
             msg_rc( "| no entries" );
         }
     }
-    else if( !strcmp( newval.psz_string, "status" ) )
+    else if( !strcmp( psz_cmd, "status" ) )
     {
-        /* Replay the current state of the system. */
-        msg_rc( STATUS_CHANGE "( New input: %s )", p_playlist->p_input->input.p_item->psz_uri );
-        msg_rc( STATUS_CHANGE "( audio volume: %d )", config_GetInt( p_intf, "volume" ));
-
-        vlc_mutex_lock( &p_playlist->object_lock );
-        switch( p_playlist->status.i_status )
+        if( p_playlist->p_input )
         {
-            case PLAYLIST_STOPPED:
-                msg_rc( STATUS_CHANGE "( stop state: 0 )" );
-                break;
-            case PLAYLIST_RUNNING:
-                msg_rc( STATUS_CHANGE "( play state: 1 )" );
-                break;
-            case PLAYLIST_PAUSED:
-                msg_rc( STATUS_CHANGE "( pause state: 2 )" );
-                break;
-            default:
-                msg_rc( STATUS_CHANGE "( state unknown )" );
-                break;
+            /* Replay the current state of the system. */
+            msg_rc( STATUS_CHANGE "( New input: %s )", p_playlist->p_input->input.p_item->psz_uri );
+            msg_rc( STATUS_CHANGE "( audio volume: %d )", config_GetInt( p_intf, "volume" ));
+
+            vlc_mutex_lock( &p_playlist->object_lock );
+            switch( p_playlist->status.i_status )
+            {
+                case PLAYLIST_STOPPED:
+                    msg_rc( STATUS_CHANGE "( stop state: 0 )" );
+                    break;
+                case PLAYLIST_RUNNING:
+                    msg_rc( STATUS_CHANGE "( play state: 1 )" );
+                    break;
+                case PLAYLIST_PAUSED:
+                    msg_rc( STATUS_CHANGE "( pause state: 2 )" );
+                    break;
+                default:
+                    msg_rc( STATUS_CHANGE "( state unknown )" );
+                    break;
+            }
+            vlc_mutex_unlock( &p_playlist->object_lock );
         }
-        vlc_mutex_unlock( &p_playlist->object_lock );
     }
 
     /*
@@ -1907,8 +1935,8 @@ static int Menu( vlc_object_t *p_this, char const *psz_cmd,
             vlc_object_release( p_playlist );
             return VLC_EGENERIC;
         }
-        vlc_object_release( p_playlist );
     }
+    vlc_object_release( p_playlist );
 
     val.psz_string = strdup( newval.psz_string );
     if( !strcmp( val.psz_string, "on" ) || !strcmp( val.psz_string, "show" ))

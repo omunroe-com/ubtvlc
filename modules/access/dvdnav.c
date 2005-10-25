@@ -2,7 +2,7 @@
  * dvdnav.c: DVD module using the dvdnav library.
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: dvdnav.c 12437 2005-08-31 19:09:50Z massiot $
+ * $Id: dvdnav.c 12835 2005-10-15 12:15:06Z jpsaman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -744,10 +744,10 @@ static int Demux( demux_t *p_demux )
          */
         DemuxBlock( p_demux, packet, i_len );
         if( p_sys->b_spu_change ) 
-	{
-		ButtonUpdate( p_demux, VLC_FALSE );
-	        p_sys->b_spu_change = VLC_FALSE;
-	}
+        {
+            ButtonUpdate( p_demux, VLC_FALSE );
+            p_sys->b_spu_change = VLC_FALSE;
+        }
         break;
     }
 

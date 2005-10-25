@@ -2,7 +2,7 @@
  * theme_loader.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: theme_loader.cpp 12293 2005-08-20 12:04:13Z damienf $
+ * $Id: theme_loader.cpp 12912 2005-10-22 11:57:29Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -98,7 +98,7 @@ bool ThemeLoader::load( const string &fileName )
     {
         config_PutPsz( getIntf(), "skins2-last", fileName.c_str() );
         // Show the windows
-        pNewTheme->getWindowManager().showAll();
+        pNewTheme->getWindowManager().showAll( true );
     }
     if( skin_last ) free( skin_last );
 

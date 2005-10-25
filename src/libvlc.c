@@ -2,7 +2,7 @@
  * libvlc.c: main libvlc source
  *****************************************************************************
  * Copyright (C) 1998-2004 the VideoLAN team
- * $Id: libvlc.c 12580 2005-09-17 12:12:54Z zorglub $
+ * $Id: libvlc.c 12931 2005-10-23 10:44:59Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -778,8 +778,6 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     var_Create( p_vlc, "drawableh", VLC_VAR_INTEGER );
     var_Create( p_vlc, "drawableportx", VLC_VAR_INTEGER );
     var_Create( p_vlc, "drawableporty", VLC_VAR_INTEGER );
-    var_Create( p_vlc, "width", VLC_VAR_INTEGER );
-    var_Create( p_vlc, "height", VLC_VAR_INTEGER );
 
     /*
      * Get input filenames given as commandline arguments
@@ -2447,6 +2445,9 @@ static void ShowConsole( void )
 
     AllocConsole();
 
+    freopen( "CONOUT$", "w", stderr );
+    freopen( "CONIN$", "r", stdin );
+
     if( (f_help = fopen( "vlc-help.txt", "wt" )) )
     {
         fclose( f_help );
@@ -2455,9 +2456,6 @@ static void ShowConsole( void )
     }
 
     else freopen( "CONOUT$", "w", stdout );
-
-    freopen( "CONOUT$", "w", stderr );
-    freopen( "CONIN$", "r", stdin );
 
 #   endif
 }
@@ -2618,8 +2616,9 @@ char *FromLocale( const char *locale )
         while( vlc_iconv( libvlc.from_locale, &iptr, &inb, &optr, &outb )
                                                                == (size_t)-1 )
         {
-            *optr++ = '?';
-            *iptr++;
+            *optr = '?';
+            optr++;
+            iptr++;
             vlc_iconv( libvlc.from_locale, NULL, NULL, NULL, NULL );
         }
         vlc_mutex_unlock( &libvlc.from_locale_lock );
@@ -2658,8 +2657,9 @@ char *ToLocale( const char *utf8 )
         while( vlc_iconv( libvlc.to_locale, &iptr, &inb, &optr, &outb )
                                                                == (size_t)-1 )
         {
-            *optr++ = '?'; /* should not happen, and yes, it sucks */
-            *iptr++;
+            *optr = '?'; /* should not happen, and yes, it sucks */
+            optr++;
+            iptr++;
             vlc_iconv( libvlc.to_locale, NULL, NULL, NULL, NULL );
         }
         vlc_mutex_unlock( &libvlc.to_locale_lock );

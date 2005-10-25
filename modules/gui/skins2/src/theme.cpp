@@ -2,7 +2,7 @@
  * theme.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: theme.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: theme.cpp 12912 2005-10-22 11:57:29Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -51,7 +51,7 @@ void Theme::loadConfig()
     if( !strcmp( save, "" ) )
     {
         // Show the windows
-        m_windowManager.showAll();
+        m_windowManager.showAll( true );
         return;
     }
 

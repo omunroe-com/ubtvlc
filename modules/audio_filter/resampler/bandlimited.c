@@ -2,7 +2,7 @@
  * bandlimited.c : band-limited interpolation resampler
  *****************************************************************************
  * Copyright (C) 2002 the VideoLAN team
- * $Id: bandlimited.c 12102 2005-08-10 14:12:17Z hartman $
+ * $Id: bandlimited.c 12715 2005-09-30 19:36:22Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -124,12 +124,6 @@ static int Create( vlc_object_t *p_this )
     /* Calculate worst case for the length of the filter wing */
     d_factor = (double)p_filter->output.i_rate
                         / p_filter->input.i_rate;
-
-    if( d_factor < (double)1.0 )
-    {
-        return VLC_EGENERIC;
-    }
-
     i_filter_wing = ((SMALL_FILTER_NMULT + 1)/2.0)
                       * __MAX(1.0, 1.0/d_factor) + 10;
     p_filter->p_sys->i_buf_size = aout_FormatNbChannels( &p_filter->input ) *

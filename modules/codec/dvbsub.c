@@ -4,7 +4,7 @@
  *****************************************************************************
  * Copyright (C) 2003 ANEVIA
  * Copyright (C) 2003-2005 VideoLAN (Centrale Réseaux) and its contributors
- * $Id: dvbsub.c 12350 2005-08-22 19:30:52Z gbazin $
+ * $Id: dvbsub.c 12708 2005-09-29 14:31:26Z jpsaman $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Damien LUCAS <damien.lucas@anevia.com>
@@ -92,7 +92,7 @@ vlc_module_begin();
     add_integer( DVBSUB_CFG_PREFIX "position", 8, NULL, POS_TEXT, POS_LONGTEXT, VLC_TRUE );
         change_integer_list( pi_pos_values, ppsz_pos_descriptions, 0 );
     add_integer( DVBSUB_CFG_PREFIX "x", -1, NULL, POSX_TEXT, POSX_LONGTEXT, VLC_FALSE );
-    add_integer( DVBSUB_CFG_PREFIX "y", -1, NULL, POSY_TEXT, POSY_LONGTEXT, VLC_FALSE );    
+    add_integer( DVBSUB_CFG_PREFIX "y", -1, NULL, POSY_TEXT, POSY_LONGTEXT, VLC_FALSE );
 
 #   define ENC_CFG_PREFIX "sout-dvbsub-"
     add_submodule();

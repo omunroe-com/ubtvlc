@@ -2,7 +2,7 @@
  * decoder.c: Functions for the management of decoders
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: decoder.c 12438 2005-08-31 20:37:23Z gbazin $
+ * $Id: decoder.c 12887 2005-10-19 07:09:09Z md $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -853,10 +853,30 @@ static aout_buffer_t *aout_new_buffer( decoder_t *p_dec, int i_samples )
 
     if( p_sys->p_aout_input == NULL )
     {
+        audio_sample_format_t format;
+        int i_force_dolby = config_GetInt( p_dec, "force-dolby-surround" );
+
         p_dec->fmt_out.audio.i_format = p_dec->fmt_out.i_codec;
         p_sys->audio = p_dec->fmt_out.audio;
+
+        memcpy( &format, &p_sys->audio, sizeof( audio_sample_format_t ) );
+        if ( i_force_dolby && (format.i_original_channels&AOUT_CHAN_PHYSMASK)
+                                    == (AOUT_CHAN_LEFT|AOUT_CHAN_RIGHT) )
+        {
+            if ( i_force_dolby == 1 )
+            {
+                format.i_original_channels = format.i_original_channels |
+                                             AOUT_CHAN_DOLBYSTEREO;
+            }
+            else /* i_force_dolby == 2 */
+            {
+                format.i_original_channels = format.i_original_channels &
+                                             ~AOUT_CHAN_DOLBYSTEREO;
+            }
+        }
+
         p_sys->p_aout_input =
-            aout_DecNew( p_dec, &p_sys->p_aout, &p_sys->audio );
+            aout_DecNew( p_dec, &p_sys->p_aout, &format );
         if( p_sys->p_aout_input == NULL )
         {
             msg_Err( p_dec, "failed to create audio output" );
@@ -897,21 +917,6 @@ static picture_t *vout_new_buffer( decoder_t *p_dec )
             return NULL;
         }
 
-        if( !p_dec->fmt_out.video.i_sar_num ||
-            !p_dec->fmt_out.video.i_sar_den )
-        {
-            p_dec->fmt_out.video.i_sar_num =
-              p_dec->fmt_out.video.i_aspect * p_dec->fmt_out.video.i_height;
-
-            p_dec->fmt_out.video.i_sar_den = VOUT_ASPECT_FACTOR *
-              p_dec->fmt_out.video.i_width;
-        }
-
-        vlc_ureduce( &p_dec->fmt_out.video.i_sar_num,
-                     &p_dec->fmt_out.video.i_sar_den,
-                     p_dec->fmt_out.video.i_sar_num,
-                     p_dec->fmt_out.video.i_sar_den, 0 );
-
         if( !p_dec->fmt_out.video.i_visible_width ||
             !p_dec->fmt_out.video.i_visible_height )
         {
@@ -920,6 +925,28 @@ static picture_t *vout_new_buffer( decoder_t *p_dec )
             p_dec->fmt_out.video.i_visible_height =
                 p_dec->fmt_out.video.i_height;
         }
+
+        if( p_dec->fmt_out.video.i_visible_height == 1088 &&
+            var_CreateGetBool( p_dec, "hdtv-fix" ) )
+        {
+            p_dec->fmt_out.video.i_visible_height = 1080;
+            msg_Warn( p_dec, "Fixing broken HDTV stream (display_height=1088)");
+        }
+
+        if( !p_dec->fmt_out.video.i_sar_num ||
+            !p_dec->fmt_out.video.i_sar_den )
+        {
+            p_dec->fmt_out.video.i_sar_num = p_dec->fmt_out.video.i_aspect * 
+              p_dec->fmt_out.video.i_visible_height;
+
+            p_dec->fmt_out.video.i_sar_den = VOUT_ASPECT_FACTOR *
+              p_dec->fmt_out.video.i_visible_width;
+        }
+
+        vlc_ureduce( &p_dec->fmt_out.video.i_sar_num,
+                     &p_dec->fmt_out.video.i_sar_den,
+                     p_dec->fmt_out.video.i_sar_num,
+                     p_dec->fmt_out.video.i_sar_den, 0 );
 
         p_dec->fmt_out.video.i_chroma = p_dec->fmt_out.i_codec;
         p_sys->video = p_dec->fmt_out.video;

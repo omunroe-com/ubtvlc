@@ -2,7 +2,7 @@
  * net.c:
  *****************************************************************************
  * Copyright (C) 2004-2005 the VideoLAN team
- * $Id: net.c 12584 2005-09-17 15:14:34Z courmisch $
+ * $Id: net.c 12946 2005-10-23 16:24:30Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@videolan.org>
  *          Rémi Denis-Courmont <rem # videolan.org>
@@ -33,28 +33,9 @@
 #ifdef HAVE_FCNTL_H
 #   include <fcntl.h>
 #endif
-
 #ifdef HAVE_SYS_TIME_H
 #    include <sys/time.h>
 #endif
-
-#if defined( WIN32 ) || defined( UNDER_CE )
-#   if defined(UNDER_CE) && defined(sockaddr_storage)
-#       undef sockaddr_storage
-#   endif
-#   include <io.h>
-#   include <winsock2.h>
-#   include <ws2tcpip.h>
-#   define ENETUNREACH WSAENETUNREACH
-#else
-#   include <sys/socket.h>
-#   include <netinet/in.h>
-#   ifdef HAVE_ARPA_INET_H
-#       include <arpa/inet.h>
-#   endif
-#   include <netdb.h>
-#endif
-
 #ifdef HAVE_UNISTD_H
 #   include <unistd.h>
 #endif
@@ -1229,8 +1210,15 @@ int inet_pton(int af, const char *src, void *dst)
     int len = sizeof( addr );
 
     /* Damn it, they didn't even put LPCSTR for the firs parameter!!! */
+#ifdef UNICODE
+    wchar_t *workaround_for_ill_designed_api =
+        malloc( MAX_PATH * sizeof(wchar_t) );
+    mbstowcs( workaround_for_ill_designed_api, src, MAX_PATH );
+    workaround_for_ill_designed_api[MAX_PATH-1] = 0;
+#else
     char *workaround_for_ill_designed_api = strdup( src );
-    
+#endif
+
     if( !WSAStringToAddress( workaround_for_ill_designed_api, af, NULL,
                              (LPSOCKADDR)&addr, &len ) )
     {

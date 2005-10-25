@@ -2,7 +2,7 @@
  * wxwidgets.h: private wxWindows interface description
  *****************************************************************************
  * Copyright (C) 1999-2005 the VideoLAN team
- * $Id: wxwidgets.h 12502 2005-09-09 19:38:01Z gbazin $
+ * $Id: wxwidgets.h 12897 2005-10-20 11:09:02Z md $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -79,6 +79,14 @@ DECLARE_LOCAL_EVENT_TYPE( wxEVT_INTF, 1 );
 /* wxL2U (locale to unicode) is used to convert ansi strings to unicode
  * strings (wchar_t) */
 #define wxL2U(ansi) wxU(ansi)
+
+#if wxUSE_UNICODE
+#   define wxFromLocale(wxstring) FromUTF32(wxstring.wc_str())
+#   define wxLocaleFree(string) free(string)
+#else
+#   define wxFromLocale(wxstring) FromLocale(wxstring.mb_str())
+#   define wxLocaleFree(string) LocaleFree(string)
+#endif
 
 #define WRAPCOUNT 80
 
@@ -589,6 +597,7 @@ enum
     FILE_ACCESS_OUT,
     HTTP_ACCESS_OUT,
     MMSH_ACCESS_OUT,
+    RTP_ACCESS_OUT,
     UDP_ACCESS_OUT,
     ACCESS_OUT_NUM
 };

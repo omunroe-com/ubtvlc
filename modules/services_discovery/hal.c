@@ -106,7 +106,7 @@ static int Open( vlc_object_t *p_this )
     p_sd->pf_run = Run;
     p_sd->p_sys  = p_sys;
 
-    if( !( p_sys->p_ctx = libhal_ctx_init_direct( NULL ) ) )
+    if( !( p_sys->p_ctx = hal_initialize( NULL, FALSE ) ) )
     {
         free( p_sys );
         msg_Err( p_sd, "hal not available" );
@@ -160,17 +160,16 @@ static void AddDvd( services_discovery_t *p_sd, char *psz_device )
     services_discovery_sys_t    *p_sys  = p_sd->p_sys;
     playlist_t          *p_playlist;
     playlist_item_t     *p_item;
-    psz_name = libhal_device_get_property_string( p_sd->p_sys->p_ctx,
-                                                  psz_device, "volume.label",
-						  NULL );
-    psz_blockdevice = libhal_device_get_property_string( p_sd->p_sys->p_ctx,
-                                            psz_device, "block.device", NULL );
+    psz_name = hal_device_get_property_string( p_sd->p_sys->p_ctx,
+                                               psz_device, "volume.label" );
+    psz_blockdevice = hal_device_get_property_string( p_sd->p_sys->p_ctx,
+                                                 psz_device, "block.device" );
     asprintf( &psz_uri, "dvd://%s", psz_blockdevice );
     /* Create the playlist item here */
     p_item = playlist_ItemNew( p_sd, psz_uri,
                                psz_name );
     free( psz_uri );
-    libhal_free_string( psz_device );
+    hal_free_string( psz_device );
     if( !p_item )
     {
         return;
@@ -198,14 +197,14 @@ static void AddCdda( services_discovery_t *p_sd, char *psz_device )
     services_discovery_sys_t    *p_sys  = p_sd->p_sys;
     playlist_t          *p_playlist;
     playlist_item_t     *p_item;
-    psz_blockdevice = libhal_device_get_property_string( p_sd->p_sys->p_ctx,
-                                             psz_device, "block.device", NULL );
+    psz_blockdevice = hal_device_get_property_string( p_sd->p_sys->p_ctx,
+                                                 psz_device, "block.device" );
     asprintf( &psz_uri, "cdda://%s", psz_blockdevice );
     /* Create the playlist item here */
     p_item = playlist_ItemNew( p_sd, psz_uri,
                                psz_name );
     free( psz_uri );
-    libhal_free_string( psz_device );
+    hal_free_string( psz_device );
     if( !p_item )
     {
         return;
@@ -230,25 +229,24 @@ static void ParseDevice( services_discovery_t *p_sd, char *psz_device )
 {
     char *psz_disc_type;
     services_discovery_sys_t    *p_sys  = p_sd->p_sys;
-    if( libhal_device_property_exists( p_sys->p_ctx, psz_device,
-                                       "volume.disc.type", NULL ) )
+    if( hal_device_property_exists( p_sys->p_ctx, psz_device,
+                                    "volume.disc.type" ) )
     {
-        psz_disc_type = libhal_device_get_property_string( p_sys->p_ctx,
-                                                           psz_device,
-                                                           "volume.disc.type",
-							   NULL );
+        psz_disc_type = hal_device_get_property_string( p_sys->p_ctx,
+                                                        psz_device,
+                                                        "volume.disc.type" );
         if( !strcmp( psz_disc_type, "dvd_rom" ) )
         {
             AddDvd( p_sd, psz_device );
         }
         else if( !strcmp( psz_disc_type, "cd_rom" ) )
         {
-            if( libhal_device_get_property_bool( p_sys->p_ctx, psz_device, "volume.disc.has_audio", NULL ) )
+            if( hal_device_get_property_bool( p_sys->p_ctx, psz_device, "volume.disc.has_audio" ) )
             {
                 AddCdda( p_sd, psz_device );
             }
         }
-        libhal_free_string( psz_disc_type );
+        hal_free_string( psz_disc_type );
     }
 }
 
@@ -262,7 +260,7 @@ static void Run( services_discovery_t *p_sd )
     services_discovery_sys_t    *p_sys  = p_sd->p_sys;
 
     /* parse existing devices first */
-    if( ( devices = libhal_get_all_devices( p_sys->p_ctx, &i_devices, NULL ) ) )
+    if( ( devices = hal_get_all_devices( p_sys->p_ctx, &i_devices ) ) )
     {
         for( i = 0; i < i_devices; i++ )
         {

@@ -2,7 +2,7 @@
  * wall.c : Wall video plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001, 2002, 2003 the VideoLAN team
- * $Id: wall.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: wall.c 12821 2005-10-11 17:16:13Z zorglub $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -74,7 +74,8 @@ vlc_module_begin();
 
     add_integer( "wall-cols", 3, NULL, COLS_TEXT, COLS_LONGTEXT, VLC_FALSE );
     add_integer( "wall-rows", 3, NULL, ROWS_TEXT, ROWS_LONGTEXT, VLC_FALSE );
-    add_string( "wall-active", NULL, NULL, ACTIVE_TEXT, ACTIVE_LONGTEXT, VLC_FALSE );
+    add_string( "wall-active", NULL, NULL, ACTIVE_TEXT, ACTIVE_LONGTEXT,
+                 VLC_TRUE );
     add_string( "wall-element-aspect", "4:3", NULL, ASPECT_TEXT, ASPECT_LONGTEXT, VLC_FALSE );
 
     add_shortcut( "wall" );

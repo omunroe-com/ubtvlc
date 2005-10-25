@@ -2,8 +2,8 @@
  * charset.c: Determine a canonical name for the current locale's character
  *            encoding.
  *****************************************************************************
- * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: charset.c 12125 2005-08-11 17:47:33Z massiot $
+ * Copyright (C) 2003-2005 the VideoLAN team
+ * $Id: charset.c 12751 2005-10-02 16:52:52Z courmisch $
  *
  * Author: Derk-Jan Hartman <thedj at users.sf.net>
  *

@@ -2,7 +2,7 @@
  * drms.c: DRMS
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: drms.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: drms.c 12748 2005-10-02 16:33:40Z jpsaman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Sam Hocevar <sam@zoy.org>
@@ -32,7 +32,7 @@
 
 #ifdef __VLC__
 #   include <vlc/vlc.h>
-#   include "vlc_md5.h"
+#   include <vlc_md5.h>
 #   include "libmp4.h"
 #else
 #   include "drmsvl.h"

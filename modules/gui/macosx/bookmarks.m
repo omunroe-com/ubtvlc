@@ -2,7 +2,7 @@
  * bookmarks.m: MacOS X Bookmarks window
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id$
+ * $Id: bookmarks.m 12811 2005-10-10 15:41:52Z fkuehne $
  *
  * Authors: Felix KŸhne <fkuehne@users.sf.net>
  *
@@ -259,7 +259,7 @@ static VLCBookmarks *_o_sharedInstance = nil;
     {
         free( pp_bookmarks[i]->psz_name );
     }
-    /* FIXME: putting the name to core does not work!! -- FK*/
+
     pp_bookmarks[i]->psz_name = strdup([[o_edit_fld_name stringValue] UTF8String]); 
     pp_bookmarks[i]->i_byte_offset = [[o_edit_fld_bytes stringValue] intValue];
     pp_bookmarks[i]->i_time_offset = ([[o_edit_fld_time stringValue] intValue]  * 1000000);

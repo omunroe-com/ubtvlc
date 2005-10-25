@@ -2,7 +2,7 @@
 # src/Makefile : Dearchive and compile all files necessary
 # ***************************************************************************
 # Copyright (C) 2003, 2004, 2005 the VideoLAN team
-# $Id: Makefile 12577 2005-09-16 18:52:33Z titer $
+# $Id: Makefile 12944 2005-10-23 15:34:37Z zorglub $
 #
 # Authors: Christophe Massiot <massiot@via.ecp.fr>
 #          Derk-Jan Hartman <hartman at videolan dot org>
@@ -78,6 +78,9 @@ else
 # Building natively
 RANLIB=ranlib
 endif
+ifeq ($(HOST),i586-pc-beos)
+FFMPEGCONF+=--cpu=x86
+endif
 
 # ***************************************************************************
 # Standard rules
@@ -89,7 +92,7 @@ ifdef HAVE_DARWIN_OS
 	.FLAC .speex .shout .faad .faac .lame .twolame .ebml .matroska .ffmpeg .openslp \
 	.dvdcss .dvdread .dvdnav .dvbpsi .live .goom2k4 .caca .mod \
 	.png .gpg-error .gcrypt .gnutls .opendaap .cddb .cdio .vcdimager .SDL_image \
-	.glib .libidl .gecko .aclocal
+	.glib .libidl .gecko .libmpcdec .aclocal
 # .mozilla will build an entire mozilla. it can be used if we need to create a new .gecko package
 else
 
@@ -719,6 +722,10 @@ DISTCLEAN_PKG += libmatroska-$(LIBMATROSKA_VERSION).tar.bz2
 # ffmpeg
 # ***************************************************************************
 
+# Note: we are using this cvs-snapshot of ffmpeg now, because this one 
+# compiles finely on 10.2 and is used in the win32-port as well, so we
+# experience the same bugs in both ports ;)
+
 ffmpeg:
 	echo $(FFMPEG_CVSROOT) A > ./ffmpeg.cvs
 	CVS_PASSFILE=./ffmpeg.cvs cvs -z3 -d $(FFMPEG_CVSROOT) co ffmpeg
@@ -733,7 +740,7 @@ ffmpeg-$(FFMPEG_VERSION).tar.gz:
 #	patch -p 0 < Patches/ffmpeg.patch
 
 .ffmpeg: ffmpeg
-	(cd $<; ./configure $(FFMPEGCONF) --prefix=$(PREFIX) --extra-cflags="$(CFLAGS) -DRUNTIME_CPUDETECT" --extra-ldflags="$(LDFLAGS)" --enable-gpl --enable-mp3lame --enable-faac --enable-pp --disable-vhook --disable-audio-beos --disable-ffserver --disable-vorbis --disable-faad --enable-mp3lame --enable-zlib --enable-a52 --disable-ffplay && make && make -C libavcodec/libpostproc install && make -C libavcodec installlib && make -C libavformat installlib && make -C libavutil installlib)
+	(cd $<; ./configure $(FFMPEGCONF) --prefix=$(PREFIX) --extra-cflags="$(CFLAGS) -DRUNTIME_CPUDETECT" --extra-ldflags="$(LDFLAGS)" --enable-gpl --enable-mp3lame --enable-faac --enable-pp --disable-vhook --disable-audio-beos --disable-ffserver --enable-mp3lame --enable-a52 --disable-ffplay && echo -e "#define HAVE_LRINTF 1" >> config.h && make && make -C libavcodec/libpostproc install && make -C libavcodec installlib && make -C libavformat installlib && make -C libavutil installlib)
 	touch $@
 
 CLEAN_FILE += .ffmpeg
@@ -852,20 +859,25 @@ DISTCLEAN_PKG += libdvbpsi3-$(LIBDVBPSI_VERSION).tar.gz
 # live
 # ***************************************************************************
 
-live-$(LIVEDOTCOM_VERSION).tar.gz:
+live555-$(LIVEDOTCOM_VERSION).tar.gz:
 	$(WGET) $(LIVEDOTCOM_URL)
 
-live: live-$(LIVEDOTCOM_VERSION).tar.gz
+live: live555-$(LIVEDOTCOM_VERSION).tar.gz
 	$(EXTRACT_GZ)
 	patch -p 0 < Patches/live.patch
+	patch -p 0 < Patches/livedotcom-osx.patch
 
 .live: live
+ifeq ($(HOST),ppc-darwin)
+	(cd $<; ./genMakefiles macosx-before-version-10.4 && make )
+else
 	(cd $<; ./genMakefiles macosx && make )
+endif
 	touch $@
 
 CLEAN_FILE += .live
 CLEAN_PKG += live
-DISTCLEAN_PKG += live-$(LIVEDOTCOM_VERSION).tar.gz
+DISTCLEAN_PKG += live555-$(LIVEDOTCOM_VERSION).tar.gz
 
 # ***************************************************************************
 # goom
@@ -1357,6 +1369,24 @@ CLEAN_PKG += SDL_image
 DISTCLEAN_PKG += SDL_image-$(SDL_IMAGE_VERSION).tar.gz
 
 # ***************************************************************************
+# Musepack decoder library (libmpcdec)
+# ***************************************************************************
+
+libmpcdec-$(MUSE_VERSION).tar.bz2:
+	$(WGET) $(MUSE_URL)
+
+libmpcdec: libmpcdec-$(MUSE_VERSION).tar.bz2 
+	$(EXTRACT_BZ2)
+
+.libmpcdec: libmpcdec
+	(cd $<; ./configure --prefix=$(PREFIX) && make && make install)
+	touch $@
+
+CLEAN_FILE += .libmpcdec
+CLEAN_PKG += libmpcdec
+DISTCLEAN_PKG += libmpcdec-$(MUSE_VERSION).tar.bz2
+
+# ***************************************************************************
 # Copy aclocal files
 # This is necessary for --missing aclocal to succeed after a
 # configure.ac/Makefile.am change in the vlc root dir
@@ -1366,6 +1396,7 @@ DISTCLEAN_PKG += SDL_image-$(SDL_IMAGE_VERSION).tar.gz
 	cp -R $(PREFIX)/share/aclocal/* $(PREFIX)/../../m4/
 	touch $@
 
+CLEAN_FILE += .aclocal
 
 # ***************************************************************************
 # Some cleansing

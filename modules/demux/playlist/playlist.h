@@ -2,9 +2,9 @@
  * playlist.h:  Playlist import module common functions
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: playlist.h 12305 2005-08-20 17:18:41Z gbazin $
+ * $Id: playlist.h 12836 2005-10-15 13:23:08Z sigmunau $
  *
- * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

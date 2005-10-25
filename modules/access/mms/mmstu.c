@@ -2,7 +2,7 @@
  * mms.c: MMS access plug-in
  *****************************************************************************
  * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: mmstu.c 12612 2005-09-19 20:20:07Z gbazin $
+ * $Id: mmstu.c 12651 2005-09-22 20:48:59Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -926,15 +926,13 @@ static void MMSClose( access_t  *p_access )
  * MMS specific functions
  *
  ****************************************************************************/
-static int mms_CommandSend( access_t *p_access,
-                             int i_command,
-                             uint32_t i_prefix1, uint32_t i_prefix2,
-                             uint8_t *p_data, int i_data_old )
+static int mms_CommandSend( access_t *p_access, int i_command,
+                            uint32_t i_prefix1, uint32_t i_prefix2,
+                            uint8_t *p_data, int i_data_old )
 {
     var_buffer_t buffer;
-
-    access_sys_t        *p_sys = p_access->p_sys;
-    int i_data_by8;
+    access_sys_t *p_sys = p_access->p_sys;
+    int i_data_by8, i_ret;
     int i_data = i_data_old;
 
     while( i_data & 0x7 ) i_data++;
@@ -966,10 +964,9 @@ static int mms_CommandSend( access_t *p_access,
     var_buffer_add64( &buffer, 0 );
 
     /* send it */
-    if( send( p_sys->i_handle_tcp,
-              buffer.p_data,
-              buffer.i_data - ( 8 - ( i_data - i_data_old ) ),
-              0 ) == -1 )
+    i_ret = net_Write( p_access, p_sys->i_handle_tcp, NULL, buffer.p_data,
+                       buffer.i_data - ( 8 - ( i_data - i_data_old ) ) );
+    if( i_ret != buffer.i_data - ( 8 - ( i_data - i_data_old ) ) )
     {
         msg_Err( p_access, "failed to send command" );
         return VLC_EGENERIC;

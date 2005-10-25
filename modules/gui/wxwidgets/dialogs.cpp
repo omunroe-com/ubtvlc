@@ -2,7 +2,7 @@
  * dialogs.cpp : wxWidgets plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: dialogs.cpp 12586 2005-09-18 09:43:23Z robux4 $
+ * $Id: dialogs.cpp 12796 2005-10-09 16:36:17Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -32,6 +32,7 @@
 #include <vlc/vlc.h>
 #include <vlc/aout.h>
 #include <vlc/intf.h>
+#include "charset.h"
 
 #include "wxwidgets.h"
 
@@ -405,7 +406,7 @@ void DialogsProvider::OnOpenFileSimple( wxCommandEvent& event )
 
         for( size_t i = 0; i < paths.GetCount(); i++ )
         {
-            char *psz_utf8 = FromLocale( paths[i].mb_str() );
+            char *psz_utf8 = wxFromLocale( paths[i] );
             if( event.GetInt() )
                 playlist_Add( p_playlist, psz_utf8, psz_utf8,
                               PLAYLIST_APPEND | (i ? 0 : PLAYLIST_GO),
@@ -413,7 +414,7 @@ void DialogsProvider::OnOpenFileSimple( wxCommandEvent& event )
             else
                 playlist_Add( p_playlist, psz_utf8, psz_utf8,
                               PLAYLIST_APPEND, PLAYLIST_END );
-            LocaleFree( psz_utf8 );
+            wxLocaleFree( psz_utf8 );
         }
     }
 
@@ -436,11 +437,11 @@ void DialogsProvider::OnOpenDirectory( wxCommandEvent& event )
     if( p_dir_dialog && p_dir_dialog->ShowModal() == wxID_OK )
     {
         wxString path = p_dir_dialog->GetPath();
-        char *psz_utf8 = FromLocale( path.mb_str() );
+        char *psz_utf8 = wxFromLocale( path );
         playlist_Add( p_playlist, psz_utf8, psz_utf8,
                       PLAYLIST_APPEND | (event.GetInt() ? PLAYLIST_GO : 0),
                       PLAYLIST_END );
-        LocaleFree( psz_utf8 );
+        wxLocaleFree( psz_utf8 );
     }
 
     vlc_object_release( p_playlist );

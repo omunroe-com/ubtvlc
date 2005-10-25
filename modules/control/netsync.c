@@ -2,7 +2,7 @@
  * netsync.c: synchronisation between several network clients.
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: netsync.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: netsync.c 12657 2005-09-22 21:23:35Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -32,32 +32,11 @@
 #ifdef HAVE_UNISTD_H
 #    include <unistd.h>
 #endif
-
 #ifdef HAVE_SYS_TIME_H
 #    include <sys/time.h>
 #endif
-#include <sys/types.h>
-
-#ifdef WIN32
-#   include <winsock2.h>
-#   include <ws2tcpip.h>
-#   ifndef IN_MULTICAST
-#       define IN_MULTICAST(a) IN_CLASSD(a)
-#   endif
-#else
-#   include <sys/socket.h>
-#   include <netinet/in.h>
-#   if HAVE_ARPA_INET_H
-#      include <arpa/inet.h>
-#   elif defined( SYS_BEOS )
-#      include <net/netdb.h>
-#   endif
-#endif
-
-#ifdef UNDER_CE
-#   define close(a) CloseHandle(a);
-#elif defined( WIN32 )
-#   define close(a) closesocket(a);
+#ifdef HAVE_SYS_TYPES_H
+#   include <sys/types.h>
 #endif
 
 #include "network.h"

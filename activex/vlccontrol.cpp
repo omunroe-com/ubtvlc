@@ -345,20 +345,20 @@ STDMETHODIMP VLCControl::setVariable(BSTR name, VARIANT value)
             switch( i_type )
             {
                 case VLC_VAR_BOOL:
-                    hr = VariantChangeType(&value, &arg, 0, VT_BOOL);
+                    hr = VariantChangeType(&arg, &value, 0, VT_BOOL);
                     if( SUCCEEDED(hr) )
                         val.b_bool = (VARIANT_TRUE == V_BOOL(&arg)) ? VLC_TRUE : VLC_FALSE;
                     break;
 
                 case VLC_VAR_INTEGER:
                 case VLC_VAR_HOTKEY:
-                    hr = VariantChangeType(&value, &arg, 0, VT_I4);
+                    hr = VariantChangeType(&arg, &value, 0, VT_I4);
                     if( SUCCEEDED(hr) )
                         val.i_int = V_I4(&arg);
                     break;
 
                 case VLC_VAR_FLOAT:
-                    hr = VariantChangeType(&value, &arg, 0, VT_R4);
+                    hr = VariantChangeType(&arg, &value, 0, VT_R4);
                     if( SUCCEEDED(hr) )
                         val.f_float = V_R4(&arg);
                     break;
@@ -368,7 +368,7 @@ STDMETHODIMP VLCControl::setVariable(BSTR name, VARIANT value)
                 case VLC_VAR_FILE:
                 case VLC_VAR_DIRECTORY:
                 case VLC_VAR_VARIABLE:
-                    hr = VariantChangeType(&value, &arg, 0, VT_BSTR);
+                    hr = VariantChangeType(&arg, &value, 0, VT_BSTR);
                     if( SUCCEEDED(hr) )
                     {
                         val.psz_string = CStrFromBSTR(codePage, V_BSTR(&arg));
@@ -378,7 +378,7 @@ STDMETHODIMP VLCControl::setVariable(BSTR name, VARIANT value)
 
                 case VLC_VAR_TIME:
                     // use a double value to represent time (base is expressed in seconds)
-                    hr = VariantChangeType(&value, &arg, 0, VT_R8);
+                    hr = VariantChangeType(&arg, &value, 0, VT_R8);
                     if( SUCCEEDED(hr) )
                         val.i_time = (signed __int64)(V_R8(&arg)*1000000.0);
                     break;
@@ -433,16 +433,18 @@ STDMETHODIMP VLCControl::setVariable(BSTR name, VARIANT value)
 
 STDMETHODIMP VLCControl::getVariable( BSTR name, VARIANT *value)
 {
-    if( 0 == SysStringLen(name) )
-        return E_INVALIDARG;
-
     if( NULL == value )
         return E_POINTER;
+
+    VariantInit(value);
+
+    if( 0 == SysStringLen(name) )
+        return E_INVALIDARG;
 
     int i_vlc = _p_instance->getVLCObject();
     if( i_vlc )
     {
-        int codePage = _p_instance->getCodePage();
+        UINT codePage = _p_instance->getCodePage();
         char *psz_varname = CStrFromBSTR(codePage, name);
         if( NULL == psz_varname )
             return E_OUTOFMEMORY;
@@ -481,7 +483,8 @@ STDMETHODIMP VLCControl::getVariable( BSTR name, VARIANT *value)
                 case VLC_VAR_VARIABLE:
                     V_VT(value) = VT_BSTR;
                     V_BSTR(value) = BSTRFromCStr(codePage, val.psz_string);
-                    CoTaskMemFree(val.psz_string);
+                    if( NULL != val.psz_string)
+                        free(val.psz_string);
                     break;
 
                 case VLC_VAR_TIME:
@@ -616,7 +619,7 @@ static HRESULT createTargetOptions(int codePage, VARIANT *options, char ***cOpti
         SafeArrayGetUBound(array, 1, &uBound);
 
         // have we got any options
-        if( uBound > lBound )
+        if( uBound >= lBound )
         {
             VARTYPE vType;
             hr = SafeArrayGetVartype(array, &vType);
@@ -633,7 +636,7 @@ static HRESULT createTargetOptions(int codePage, VARIANT *options, char ***cOpti
                     return E_OUTOFMEMORY;
 
                 ZeroMemory(*cOptions, sizeof(char *)*(uBound-lBound));
-                for(pos=lBound; SUCCEEDED(hr) && (pos<uBound); ++pos )
+                for(pos=lBound; SUCCEEDED(hr) && (pos<=uBound); ++pos )
                 {
                     VARIANT option;
                     hr = SafeArrayGetElement(array, &pos, &option);

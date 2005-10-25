@@ -43,7 +43,7 @@ static void Close( vlc_object_t * );
     "value should be set in millisecond units." )
 
 vlc_module_begin();
-    set_description( _("Standard filesystem file input") );
+    set_description( _("Real RTSP") );
     set_shortname( _("Real RTSP") );
     set_category( CAT_INPUT );
     set_subcategory( SUBCAT_INPUT_ACCESS );
@@ -292,7 +292,6 @@ static int Seek( access_t *p_access, int64_t i_pos )
  *****************************************************************************/
 static int Control( access_t *p_access, int i_query, va_list args )
 {
-    access_sys_t *p_sys = p_access->p_sys;
     vlc_bool_t   *pb_bool;
     int          *pi_int;
     int64_t      *pi_64;

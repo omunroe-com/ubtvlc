@@ -2,7 +2,7 @@
  * messages.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: messages.cpp 11981 2005-08-03 15:03:23Z xtophe $
+ * $Id: messages.cpp 12826 2005-10-12 19:18:50Z ipkiss $
  *
  * Authors: Olivier Teulière <ipkiss@via.ecp.fr>
  *
@@ -143,10 +143,10 @@ void Messages::UpdateLog()
     int i_stop = *p_sub->pi_stop;
     vlc_mutex_unlock( p_sub->p_lock );
 
-    textctrl->SetInsertionPointEnd();
-
     if( p_sub->i_start != i_stop )
     {
+        textctrl->SetInsertionPointEnd();
+
         for( i_start = p_sub->i_start;
              i_start != i_stop;
              i_start = (i_start+1) % VLC_MSG_QSIZE )

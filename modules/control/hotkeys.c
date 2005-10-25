@@ -2,9 +2,9 @@
  * hotkeys.c: Hotkey handling for vlc
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: hotkeys.c 12412 2005-08-27 16:40:23Z jpsaman $
+ * $Id: hotkeys.c 12908 2005-10-22 10:18:20Z asmax $
  *
- * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *          Jean-Paul Saman <jpsaman #_at_# m2x.nl>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -327,50 +327,6 @@ static void Run( intf_thread_t *p_intf )
         {
             if( p_vout ) vout_Control( p_vout, VOUT_SNAPSHOT );
         }
-        else if( i_action == ACTIONID_SUBDELAY_DOWN )
-        {
-            int64_t i_delay = var_GetTime( p_input, "spu-delay" );
-
-            i_delay -= 50000;    /* 50 ms */
-
-            var_SetTime( p_input, "spu-delay", i_delay );
-            ClearChannels( p_intf, p_vout );
-            vout_OSDMessage( p_intf, DEFAULT_CHAN, "Subtitle delay %i ms",
-                                 (int)(i_delay/1000) );
-        }
-        else if( i_action == ACTIONID_SUBDELAY_UP )
-        {
-            int64_t i_delay = var_GetTime( p_input, "spu-delay" );
-
-            i_delay += 50000;    /* 50 ms */
-
-            var_SetTime( p_input, "spu-delay", i_delay );
-            ClearChannels( p_intf, p_vout );
-            vout_OSDMessage( p_intf, DEFAULT_CHAN, "Subtitle delay %i ms",
-                                 (int)(i_delay/1000) );
-        }
-        else if( i_action == ACTIONID_AUDIODELAY_DOWN )
-        {
-            int64_t i_delay = var_GetTime( p_input, "audio-delay" );
-
-            i_delay -= 50000;    /* 50 ms */
-
-            var_SetTime( p_input, "audio-delay", i_delay );
-            ClearChannels( p_intf, p_vout );
-            vout_OSDMessage( p_intf, DEFAULT_CHAN, "Audio delay %i ms",
-                                 (int)(i_delay/1000) );
-        }
-        else if( i_action == ACTIONID_AUDIODELAY_UP )
-        {
-            int64_t i_delay = var_GetTime( p_input, "audio-delay" );
-
-            i_delay += 50000;    /* 50 ms */
-
-            var_SetTime( p_input, "audio-delay", i_delay );
-            ClearChannels( p_intf, p_vout );
-            vout_OSDMessage( p_intf, DEFAULT_CHAN, "Audio delay %i ms",
-                                 (int)(i_delay/1000) );
-        }
         else if( i_action == ACTIONID_FULLSCREEN )
         {
             if( p_vout )
@@ -389,31 +345,6 @@ static void Run( intf_thread_t *p_intf )
                     vlc_object_release( p_playlist );
                 }
             }
-        }
-        else if( i_action == ACTIONID_PLAY )
-        {
-            p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                          FIND_ANYWHERE );
-            if( p_playlist )
-            {
-                var_Get( p_input, "rate", &val );
-                msg_Dbg( p_input, "rate %d", val.i_int );
-                if( val.i_int != INPUT_RATE_DEFAULT )
-                {
-                    /* Return to normal speed */
-                    val.i_int = INPUT_RATE_DEFAULT;
-                    var_Set( p_input, "rate", val );
-                }
-                else
-                {
-                    ClearChannels( p_intf, p_vout );
-                    vout_OSDIcon( VLC_OBJECT( p_intf ), DEFAULT_CHAN,
-                                  OSD_PAUSE_ICON );
-                    playlist_Play( p_playlist );
-                }
-                vlc_object_release( p_playlist );
-            }
-
         }
         else if( i_action == ACTIONID_PLAY_PAUSE )
         {
@@ -462,49 +393,49 @@ static void Run( intf_thread_t *p_intf )
             }
             else if( i_action == ACTIONID_JUMP_BACKWARD_3SEC && b_seekable )
             {
-                val.i_time = (-3000000 * ((mtime_t)(1 << i_times)));
+                val.i_time = (-3000000L * ((mtime_t)(1 << i_times)));
                 var_Set( p_input, "time-offset", val );
                 DisplayPosition( p_intf, p_vout, p_input );
             }
             else if( i_action == ACTIONID_JUMP_FORWARD_3SEC && b_seekable )
             {
-                val.i_time = (3000000 * ((mtime_t)(1 << i_times)));
+                val.i_time = (3000000L * ((mtime_t)(1 << i_times)));
                 var_Set( p_input, "time-offset", val );
                 DisplayPosition( p_intf, p_vout, p_input );
             }
             else if( i_action == ACTIONID_JUMP_BACKWARD_10SEC && b_seekable )
             {
-                val.i_time = (-10000000 * ((mtime_t)(1 << i_times)));
+                val.i_time = (-10000000L * ((mtime_t)(1 << i_times)));
                 var_Set( p_input, "time-offset", val );
                 DisplayPosition( p_intf, p_vout, p_input );
             }
             else if( i_action == ACTIONID_JUMP_FORWARD_10SEC && b_seekable )
             {
-                val.i_time = (10000000 * ((mtime_t)(1 << i_times)));
+                val.i_time = (10000000L * ((mtime_t)(1 << i_times)));
                 var_Set( p_input, "time-offset", val );
                 DisplayPosition( p_intf, p_vout, p_input );
             }
             else if( i_action == ACTIONID_JUMP_BACKWARD_1MIN && b_seekable )
             {
-                val.i_time = (-60000000 * ((mtime_t)(1 << i_times)));
+                val.i_time = (-60000000L * ((mtime_t)(1 << i_times)));
                 var_Set( p_input, "time-offset", val );
                 DisplayPosition( p_intf, p_vout, p_input );
             }
             else if( i_action == ACTIONID_JUMP_FORWARD_1MIN && b_seekable )
             {
-                val.i_time = (60000000 * ((mtime_t)(1 << i_times)));
+                val.i_time = (60000000L * ((mtime_t)(1 << i_times)));
                 var_Set( p_input, "time-offset", val );
                 DisplayPosition( p_intf, p_vout, p_input );
             }
             else if( i_action == ACTIONID_JUMP_BACKWARD_5MIN && b_seekable )
             {
-                val.i_time = (-300000000 * ((mtime_t)(1 << i_times)));
+                val.i_time = (-300000000L * ((mtime_t)(1 << i_times)));
                 var_Set( p_input, "time-offset", val );
                 DisplayPosition( p_intf, p_vout, p_input );
             }
             else if( i_action == ACTIONID_JUMP_FORWARD_5MIN && b_seekable )
             {
-                val.i_time = (300000000 * ((mtime_t)(1 << i_times)));
+                val.i_time = (300000000L * ((mtime_t)(1 << i_times)));
                 var_Set( p_input, "time-offset", val );
                 DisplayPosition( p_intf, p_vout, p_input );
             }
@@ -557,7 +488,7 @@ static void Run( intf_thread_t *p_intf )
                 vlc_value_t val, list, list2;
                 int i_count, i;
                 var_Get( p_input, "spu-es", &val );
-                
+
                 var_Change( p_input, "spu-es", VLC_VAR_GETCHOICES,
                             &list, &list2 );
                 i_count = list.p_list->i_count;
@@ -675,6 +606,74 @@ static void Run( intf_thread_t *p_intf )
                 val.b_bool = VLC_TRUE;
                 var_Set( p_input, "next-chapter", val );
             }
+            else if( i_action == ACTIONID_SUBDELAY_DOWN )
+            {
+                int64_t i_delay = var_GetTime( p_input, "spu-delay" );
+
+                i_delay -= 50000;    /* 50 ms */
+
+                var_SetTime( p_input, "spu-delay", i_delay );
+                ClearChannels( p_intf, p_vout );
+                vout_OSDMessage( p_intf, DEFAULT_CHAN, "Subtitle delay %i ms",
+                                 (int)(i_delay/1000) );
+            }
+            else if( i_action == ACTIONID_SUBDELAY_UP )
+            {
+                int64_t i_delay = var_GetTime( p_input, "spu-delay" );
+
+                i_delay += 50000;    /* 50 ms */
+
+                var_SetTime( p_input, "spu-delay", i_delay );
+                ClearChannels( p_intf, p_vout );
+                vout_OSDMessage( p_intf, DEFAULT_CHAN, "Subtitle delay %i ms",
+                                 (int)(i_delay/1000) );
+            }
+            else if( i_action == ACTIONID_AUDIODELAY_DOWN )
+            {
+                int64_t i_delay = var_GetTime( p_input, "audio-delay" );
+
+                i_delay -= 50000;    /* 50 ms */
+
+                var_SetTime( p_input, "audio-delay", i_delay );
+                ClearChannels( p_intf, p_vout );
+                vout_OSDMessage( p_intf, DEFAULT_CHAN, "Audio delay %i ms",
+                                 (int)(i_delay/1000) );
+            }
+            else if( i_action == ACTIONID_AUDIODELAY_UP )
+            {
+                int64_t i_delay = var_GetTime( p_input, "audio-delay" );
+
+                i_delay += 50000;    /* 50 ms */
+
+                var_SetTime( p_input, "audio-delay", i_delay );
+                ClearChannels( p_intf, p_vout );
+                vout_OSDMessage( p_intf, DEFAULT_CHAN, "Audio delay %i ms",
+                                 (int)(i_delay/1000) );
+            }
+            else if( i_action == ACTIONID_PLAY )
+            {
+                p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
+                                              FIND_ANYWHERE );
+                if( p_playlist )
+                {
+                    var_Get( p_input, "rate", &val );
+                    msg_Dbg( p_input, "rate %d", val.i_int );
+                    if( val.i_int != INPUT_RATE_DEFAULT )
+                    {
+                        /* Return to normal speed */
+                        val.i_int = INPUT_RATE_DEFAULT;
+                        var_Set( p_input, "rate", val );
+                    }
+                    else
+                    {
+                        ClearChannels( p_intf, p_vout );
+                        vout_OSDIcon( VLC_OBJECT( p_intf ), DEFAULT_CHAN,
+                                      OSD_PAUSE_ICON );
+                        playlist_Play( p_playlist );
+                    }
+                    vlc_object_release( p_playlist );
+                }
+            }
         }
     }
 }
@@ -738,7 +737,7 @@ static int ActionKeyCB( vlc_object_t *p_this, char const *psz_var,
         if( !strcmp( p_hotkeys[i].psz_action, psz_var ) )
         {
             p_hotkeys[i].i_key = newval.i_int;
-            /* do hotkey accounting */            
+            /* do hotkey accounting */
             i_date = mdate();
             if( (p_hotkeys[i].i_delta_date > 0) &&
                 (p_hotkeys[i].i_delta_date <= (i_date - p_hotkeys[i].i_last_date) ) )

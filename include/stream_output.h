@@ -2,7 +2,7 @@
  * stream_output.h : stream output module
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: stream_output.h 12116 2005-08-10 22:08:50Z jpsaman $
+ * $Id: stream_output.h 12932 2005-10-23 10:58:24Z zorglub $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -253,6 +253,7 @@ struct session_descriptor_t
 
     sap_session_t *p_sap; /* If we have a sap session, remember it */
     char *psz_sdp;
+    vlc_bool_t b_rtp;
 };
 
 #define METHOD_TYPE_SAP 1
@@ -336,7 +337,7 @@ static inline char *sout_cfg_find_value( sout_cfg_t *p_cfg, char *psz_name )
 
 /* Announce system */
 VLC_EXPORT( int,                sout_AnnounceRegister, (sout_instance_t *,session_descriptor_t*, announce_method_t* ) );
-VLC_EXPORT(session_descriptor_t*,sout_AnnounceRegisterSDP, (sout_instance_t *,const char *, announce_method_t* ) );
+VLC_EXPORT(session_descriptor_t*,sout_AnnounceRegisterSDP, (sout_instance_t *,const char *, const char *, announce_method_t* ) );
 VLC_EXPORT( int,                sout_AnnounceUnRegister, (sout_instance_t *,session_descriptor_t* ) );
 
 VLC_EXPORT(session_descriptor_t*,sout_AnnounceSessionCreate, (void) );

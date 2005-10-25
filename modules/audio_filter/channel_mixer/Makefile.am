@@ -3,7 +3,7 @@
 # DO NOT EDIT - edit Modules.am or $(top_srcdir)/bootstrap instead
 
 basedir = audio_filter
-mods = trivial_channel_mixer simple_channel_mixer headphone_channel_mixer
+mods = trivial_channel_mixer simple_channel_mixer headphone_channel_mixer dolby_surround_decoder
 
 NULL =
 libvlc_LIBRARIES =
@@ -16,7 +16,7 @@ SUFFIXES = _plugin$(LIBEXT) _plugin.a
 
 libvlcdir = $(libdir)/vlc/$(basedir)
 
-EXTRA_LIBRARIES =  libtrivial_channel_mixer_plugin.a libtrivial_channel_mixer.a libtrivial_channel_mixer_pic.a libsimple_channel_mixer_plugin.a libsimple_channel_mixer.a libsimple_channel_mixer_pic.a libheadphone_channel_mixer_plugin.a libheadphone_channel_mixer.a libheadphone_channel_mixer_pic.a
+EXTRA_LIBRARIES =  libtrivial_channel_mixer_plugin.a libtrivial_channel_mixer.a libtrivial_channel_mixer_pic.a libsimple_channel_mixer_plugin.a libsimple_channel_mixer.a libsimple_channel_mixer_pic.a libheadphone_channel_mixer_plugin.a libheadphone_channel_mixer.a libheadphone_channel_mixer_pic.a libdolby_surround_decoder_plugin.a libdolby_surround_decoder.a libdolby_surround_decoder_pic.a
 include Modules.am
 
 all: all-modules
@@ -35,8 +35,10 @@ _plugin.a_plugin$(LIBEXT):
 	@mod="$*" ; mod=$${mod:3} ; 	ldfl="`$(VLC_CONFIG) --libs plugin $$mod` -u $(SYMPREF)$(VLC_ENTRY)" ; 	case `$(VLC_CONFIG) --linkage $$mod` in \
 	  c++)  ld="$(CXXLINK)" ;; 	  objc) ld="$(OBJCLINK)" ;; 	  c|*)  ld="$(LINK)" ;; 	esac ; 	echo $$ld $< $$ldfl ; 	$$ld $< $$ldfl
 
+if MAINTAINER_MODE
 $(srcdir)/Makefile.am: $(srcdir)/Modules.am $(top_srcdir)/bootstrap
 	cd $(top_srcdir) && $(SHELL) ./bootstrap
+endif
 
 mostlyclean-local:
 	-rm -f *.a *$(LIBEXT)
@@ -108,4 +110,21 @@ libheadphone_channel_mixer_a_SOURCES = $(SOURCES_headphone_channel_mixer)
 libheadphone_channel_mixer_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin headphone_channel_mixer`
 libheadphone_channel_mixer_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin headphone_channel_mixer`
 libheadphone_channel_mixer_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin headphone_channel_mixer`
+
+# The dolby_surround_decoder plugin
+
+libdolby_surround_decoder_plugin_a_SOURCES = $(SOURCES_dolby_surround_decoder)
+libdolby_surround_decoder_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin dolby_surround_decoder`
+libdolby_surround_decoder_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin dolby_surround_decoder`
+libdolby_surround_decoder_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin dolby_surround_decoder`
+
+libdolby_surround_decoder_pic_a_SOURCES = $(SOURCES_dolby_surround_decoder)
+libdolby_surround_decoder_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic dolby_surround_decoder`
+libdolby_surround_decoder_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic dolby_surround_decoder`
+libdolby_surround_decoder_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic dolby_surround_decoder`
+
+libdolby_surround_decoder_a_SOURCES = $(SOURCES_dolby_surround_decoder)
+libdolby_surround_decoder_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin dolby_surround_decoder`
+libdolby_surround_decoder_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin dolby_surround_decoder`
+libdolby_surround_decoder_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin dolby_surround_decoder`
 

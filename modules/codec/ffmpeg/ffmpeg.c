@@ -2,7 +2,7 @@
  * ffmpeg.c: video decoder using ffmpeg library
  *****************************************************************************
  * Copyright (C) 1999-2001 the VideoLAN team
- * $Id: ffmpeg.c 12590 2005-09-18 12:58:25Z robux4 $
+ * $Id: ffmpeg.c 12885 2005-10-18 23:58:23Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -990,6 +990,12 @@ static struct
     /* ALAC */
     { VLC_FOURCC('a','l','a','c'), CODEC_ID_ALAC,
       AUDIO_ES, "Apple Lossless Audio Codec" },
+#endif
+
+#if LIBAVCODEC_BUILD >= ((50<<16)+(0<<8)+1)
+    /* QDM2 */
+    { VLC_FOURCC('Q','D','M','2'), CODEC_ID_QDM2,
+      AUDIO_ES, "QDM2" },
 #endif
 
     /* PCM */

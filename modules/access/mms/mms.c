@@ -2,7 +2,7 @@
  * mms.c: MMS over tcp, udp and http access plug-in
  *****************************************************************************
  * Copyright (C) 2002-2004 the VideoLAN team
- * $Id: mms.c 12520 2005-09-12 10:36:36Z hartman $
+ * $Id: mms.c 12821 2005-10-11 17:16:13Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -50,9 +50,10 @@ static void Close( vlc_object_t * );
 
 #define ALL_TEXT N_("Force selection of all streams")
 
-#define BITRATE_TEXT N_("Select maximum bitrate stream")
+#define BITRATE_TEXT N_( "Maximum bitrate" )
 #define BITRATE_LONGTEXT N_( \
-    "Always select the stream with the maximum bitrate." )
+    "If this is set, the stream with the maximum bitrate under that limit \
+     will be selected" )
 
 vlc_module_begin();
     set_shortname( _("MMS") );

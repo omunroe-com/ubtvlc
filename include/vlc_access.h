@@ -2,7 +2,7 @@
  * vlc_access.h
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: vlc_access.h 12202 2005-08-15 14:57:02Z zorglub $
+ * $Id: vlc_access.h 12954 2005-10-24 17:08:54Z md $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -103,6 +103,8 @@ struct access_t
 
         int          i_title;    /* idem, start from 0 (could be menu) */
         int          i_seekpoint;/* idem, start from 0 */
+
+        vlc_bool_t   b_prebuffered; /* Read only for input */ 
     } info;
     access_sys_t *p_sys;
 };

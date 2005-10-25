@@ -2,7 +2,7 @@
  * logo.c : logo video plugin for vlc
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: logo.c 12412 2005-08-27 16:40:23Z jpsaman $
+ * $Id: logo.c 12821 2005-10-11 17:16:13Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Simon Latapie <garf@videolan.org>
@@ -95,11 +95,11 @@ vlc_module_begin();
     set_callbacks( Create, Destroy );
 
     add_file( "logo-file", NULL, NULL, FILE_TEXT, FILE_LONGTEXT, VLC_FALSE );
-    add_integer( "logo-x", -1, NULL, POSX_TEXT, POSX_LONGTEXT, VLC_FALSE );
-    add_integer( "logo-y", 0, NULL, POSY_TEXT, POSY_LONGTEXT, VLC_FALSE );
+    add_integer( "logo-x", -1, NULL, POSX_TEXT, POSX_LONGTEXT, VLC_TRUE );
+    add_integer( "logo-y", 0, NULL, POSY_TEXT, POSY_LONGTEXT, VLC_TRUE );
     add_integer_with_range( "logo-transparency", 255, 0, 255, NULL,
         TRANS_TEXT, TRANS_LONGTEXT, VLC_FALSE );
-    add_integer( "logo-position", 6, NULL, POS_TEXT, POS_LONGTEXT, VLC_TRUE );
+    add_integer( "logo-position", 6, NULL, POS_TEXT, POS_LONGTEXT, VLC_FALSE );
         change_integer_list( pi_pos_values, ppsz_pos_descriptions, 0 );
 
     /* subpicture filter submodule */

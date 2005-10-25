@@ -2,7 +2,7 @@
  * stream.c
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: stream.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: stream.c 12954 2005-10-24 17:08:54Z md $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -198,7 +198,7 @@ stream_t *__stream_UrlNew( vlc_object_t *p_parent, const char *psz_url )
 
     psz_dup = strdup( psz_url );
     MRLSplit( p_parent, psz_dup, &psz_access, &psz_demux, &psz_path );
-    
+
     /* Now try a real access */
     p_access = access2_New( p_parent, psz_access, psz_demux, psz_path, 0 );
     free( psz_dup );
@@ -566,6 +566,7 @@ static int AStreamControl( stream_t *s, int i_query, va_list args )
 static void AStreamPrebufferBlock( stream_t *s )
 {
     stream_sys_t *p_sys = s->p_sys;
+    access_t     *p_access = p_sys->p_access;
 
     int64_t i_first = 0;
     int64_t i_start;
@@ -606,18 +607,31 @@ static void AStreamPrebufferBlock( stream_t *s )
             continue;
         }
 
+        while( b )
+        {
+            /* Append the block */
+            p_sys->block.i_size += b->i_buffer;
+            *p_sys->block.pp_last = b;
+            p_sys->block.pp_last = &b->p_next;
+
+            p_sys->stat.i_read_count++;
+            b = b->p_next;
+        }
+
+        if( p_access->info.b_prebuffered ) 
+        {
+            /* Access has already prebufferred - update stats and exit */
+            p_sys->stat.i_bytes = p_sys->block.i_size;
+            p_sys->stat.i_read_time = mdate() - i_start;
+            break;
+        }
+
         if( i_first == 0 )
         {
             i_first = mdate();
             msg_Dbg( s, "received first data for our buffer");
         }
 
-        /* Append the block */
-        p_sys->block.i_size += b->i_buffer;
-        *p_sys->block.pp_last = b;
-        p_sys->block.pp_last = &b->p_next;
-
-        p_sys->stat.i_read_count++;
     }
 
     p_sys->block.p_current = p_sys->block.p_first;
@@ -926,22 +940,28 @@ static int AStreamRefillBlock( stream_t *s )
 
         msleep( STREAM_DATA_WAIT );
     }
-    i_stop = mdate();
 
-    /* Append the block */
-    p_sys->block.i_size += b->i_buffer;
-    *p_sys->block.pp_last = b;
-    p_sys->block.pp_last = &b->p_next;
+    while( b )
+    {
+        i_stop = mdate();
 
-    /* Fix p_current */
-    if( p_sys->block.p_current == NULL )
-        p_sys->block.p_current = b;
+        /* Append the block */
+        p_sys->block.i_size += b->i_buffer;
+        *p_sys->block.pp_last = b;
+        p_sys->block.pp_last = &b->p_next;
 
-    /* Update stat */
-    p_sys->stat.i_bytes += b->i_buffer;
-    p_sys->stat.i_read_time += i_stop - i_start;
-    p_sys->stat.i_read_count++;
+        /* Fix p_current */
+        if( p_sys->block.p_current == NULL )
+            p_sys->block.p_current = b;
 
+        /* Update stat */
+        p_sys->stat.i_bytes += b->i_buffer;
+        p_sys->stat.i_read_time += i_stop - i_start;
+        p_sys->stat.i_read_count++;
+
+        b = b->p_next;
+        i_start = mdate();
+    }
     return VLC_SUCCESS;
 }
 

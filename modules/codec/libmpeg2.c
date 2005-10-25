@@ -2,7 +2,7 @@
  * libmpeg2.c: mpeg2 video decoder module making use of libmpeg2.
  *****************************************************************************
  * Copyright (C) 1999-2001 the VideoLAN team
- * $Id: libmpeg2.c 12429 2005-08-29 19:04:05Z hartman $
+ * $Id: libmpeg2.c 12889 2005-10-19 09:38:50Z md $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -668,8 +668,8 @@ static void GetAR( decoder_t *p_dec )
     }
 
     msg_Dbg( p_dec, "%dx%d, aspect %d, %u.%03u fps",
-             p_sys->p_info->sequence->width,
-             p_sys->p_info->sequence->height, p_sys->i_aspect,
+             p_sys->p_info->sequence->display_width,
+             p_sys->p_info->sequence->display_height, p_sys->i_aspect,
              (uint32_t)((uint64_t)1001000000 * 27 /
                  p_sys->p_info->sequence->frame_period / 1001),
              (uint32_t)((uint64_t)1001000000 * 27 /

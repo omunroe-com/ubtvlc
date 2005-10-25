@@ -2,7 +2,7 @@
 # src/packages.mak : Archive locations
 # ***************************************************************************
 # Copyright (C) 2003 - 2005 the VideoLAN team
-# $Id: packages.mak 12543 2005-09-13 17:52:09Z fkuehne $
+# $Id: packages.mak 12890 2005-10-19 11:27:09Z hartman $
 #
 # Authors: Christophe Massiot <massiot@via.ecp.fr>
 #          Derk-Jan Hartman <hartman at videolan dot org>
@@ -76,9 +76,9 @@ FAAC_VERSION=1.24
 FAAC_URL=$(VIDEOLAN)/testing/contrib/faac-$(FAAC_VERSION).tar.bz2
 LAME_VERSION=3.93.1
 LAME_URL=$(SF)/lame/lame-$(LAME_VERSION).tar.gz
-LIBEBML_VERSION=0.7.5
+LIBEBML_VERSION=0.7.6
 LIBEBML_URL=http://dl.matroska.org/downloads/libebml/libebml-$(LIBEBML_VERSION).tar.bz2
-LIBMATROSKA_VERSION=0.7.7
+LIBMATROSKA_VERSION=0.8.0
 LIBMATROSKA_URL=http://dl.matroska.org/downloads/libmatroska/libmatroska-$(LIBMATROSKA_VERSION).tar.bz2
 FFMPEG_VERSION=0.4.8
 FFMPEG_URL=$(SF)/ffmpeg/ffmpeg-$(FFMPEG_VERSION).tar.gz
@@ -94,7 +94,7 @@ LIBDVDNAV_URL=$(VIDEOLAN)/testing/contrib/libdvdnav-$(LIBDVDNAV_VERSION).tar.gz
 LIBDVBPSI_VERSION=0.1.5
 LIBDVBPSI_URL=$(VIDEOLAN)/contrib/libdvbpsi3-$(LIBDVBPSI_VERSION).tar.gz
 LIVEDOTCOM_VERSION=latest
-LIVEDOTCOM_URL=http://www.live.com/liveMedia/public/live-$(LIVEDOTCOM_VERSION).tar.gz
+LIVEDOTCOM_URL=http://www.live555.com/liveMedia/public/live555-$(LIVEDOTCOM_VERSION).tar.gz
 #GOOM_URL=$(VIDEOLAN)/testing/contrib/goom-macosx-altivec-bin.tar.gz
 GOOM2k4_VERSION=2k4-0
 GOOM2k4_URL=$(SF)/goom/goom-$(GOOM2k4_VERSION)-src.tar.gz
@@ -141,3 +141,5 @@ SDL_VERSION=1.2.8
 SDL_URL=http://www.libsdl.org/release/SDL-$(SDL_VERSION).tar.gz
 SDL_IMAGE_VERSION=1.2.4
 SDL_IMAGE_URL=http://www.libsdl.org/projects/SDL_image/release/SDL_image-$(SDL_IMAGE_VERSION).tar.gz
+MUSE_VERSION=1.2.1
+MUSE_URL=http://files.musepack.net/source/libmpcdec-$(MUSE_VERSION).tar.bz2

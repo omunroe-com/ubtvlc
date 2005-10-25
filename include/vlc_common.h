@@ -3,7 +3,7 @@
  * Collection of useful common types and macros definitions
  *****************************************************************************
  * Copyright (C) 1998-2005 the VideoLAN team
- * $Id: vlc_common.h 12408 2005-08-26 18:15:21Z massiot $
+ * $Id: vlc_common.h 12649 2005-09-22 20:14:20Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@via.ecp.fr>
  *          Vincent Seguin <seguin@via.ecp.fr>
@@ -546,7 +546,7 @@ static int64_t GCD( int64_t a, int64_t b )
 }
 
 /* Dynamic array handling: realloc array, move data, increment position */
-#if defined( _MSC_VER ) && _MSC_VER < 1300
+#if defined( _MSC_VER ) && _MSC_VER < 1300 && !defined( UNDER_CE )
 #   define VLCCVP (void**) /* Work-around for broken compiler */
 #else
 #   define VLCCVP
@@ -994,8 +994,8 @@ static inline void _SetQWBE( uint8_t *p, uint64_t i_qw )
 /* several type definitions */
 #   if defined( __MINGW32__ )
 #       if !defined( _OFF_T_ )
-typedef long long _off_t;
-typedef _off_t off_t;
+            typedef long long _off_t;
+            typedef _off_t off_t;
 #           define _OFF_T_
 #       else
 #           ifdef off_t
@@ -1005,17 +1005,15 @@ typedef _off_t off_t;
 #       endif
 #   endif
 
-/*
-#   if (defined( _MSC_VER ) && (!defined(__WXMSW__)))
+#   if defined( _MSC_VER ) && !defined( __WXMSW__ )
 #       if !defined( _OFF_T_DEFINED )
-typedef __int64 off_t;
+            typedef __int64 off_t;
 #           define _OFF_T_DEFINED
 #       else
+            /* for wx compatibility typedef long off_t; */
 #           define off_t __int64
-            // for wx compatibility typedef long off_t;
 #       endif
 #   endif
-*/
 
 #   if defined( __BORLANDC__ )
 #       undef off_t

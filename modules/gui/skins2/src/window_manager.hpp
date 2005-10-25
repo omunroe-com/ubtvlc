@@ -2,7 +2,7 @@
  * window_manager.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: window_manager.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: window_manager.hpp 12912 2005-10-22 11:57:29Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -71,7 +71,7 @@ class WindowManager: public SkinObject
         void raiseAll() const;
 
         /// Show all the registered windows
-        void showAll() const;
+        void showAll(bool firstTime = false) const;
 
         /// Hide all the registered windows
         void hideAll() const;

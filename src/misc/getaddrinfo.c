@@ -3,7 +3,7 @@
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
  * Copyright (C) 2002-2004 Rémi Denis-Courmont
- * $Id: getaddrinfo.c 11778 2005-07-17 21:21:04Z asmax $
+ * $Id: getaddrinfo.c 12850 2005-10-16 14:42:15Z courmisch $
  *
  * Author: Rémi Denis-Courmont <rem # videolan.org>
  *
@@ -27,30 +27,17 @@
 #include <stddef.h> /* size_t */
 #include <string.h> /* strncpy(), strlen(), memcpy(), memset(), strchr() */
 #include <stdlib.h> /* malloc(), free(), strtoul() */
-#include <sys/types.h>
-#ifdef HAVE_ARPA_INET_H
-# include <arpa/inet.h>
-#endif
-#ifdef HAVE_NETINET_IN_H
-# include <netinet/in.h>
-#endif
 #include <errno.h>
 
-#if defined( WIN32 ) || defined( UNDER_CE )
-#   if defined(UNDER_CE) && defined(sockaddr_storage)
-#       undef sockaddr_storage
-#   endif
-#   include <winsock2.h>
-#   include <ws2tcpip.h>
-#else
-#   include <sys/socket.h>
-#   include <netinet/in.h>
-#   ifdef HAVE_ARPA_INET_H
-#       include <arpa/inet.h>
-#   endif
-#   include <netdb.h>
+#ifdef HAVE_SYS_TYPES_H
+#   include <sys/types.h>
 #endif
-
+#ifdef HAVE_ARPA_INET_H
+#   include <arpa/inet.h>
+#endif
+#ifdef HAVE_NETINET_IN_H
+#   include <netinet/in.h>
+#endif
 #ifdef HAVE_UNISTD_H
 #   include <unistd.h>
 #endif
@@ -500,7 +487,7 @@ int vlc_getnameinfo( const struct sockaddr *sa, int salen,
 {
     char psz_servbuf[6], *psz_serv;
     int i_servlen, i_val;
-#ifdef WIN32
+#if defined( WIN32 ) && !defined( UNDER_CE )
     /*
      * Here is the kind of kludge you need to keep binary compatibility among
      * varying OS versions...
@@ -522,7 +509,7 @@ int vlc_getnameinfo( const struct sockaddr *sa, int salen,
         psz_serv = NULL;
         i_servlen = 0;
     }
-#ifdef WIN32    
+#if defined( WIN32 ) && !defined( UNDER_CE )
     wship6_module = LoadLibrary( "wship6.dll" );
     if( wship6_module != NULL )
     {
@@ -543,9 +530,8 @@ int vlc_getnameinfo( const struct sockaddr *sa, int salen,
         FreeLibrary( wship6_module );
     }
 #endif
-#if HAVE_GETNAMEINFO
-    i_val = getnameinfo( sa, salen, host, hostlen, psz_serv, i_servlen,
-                         flags );
+#if defined( HAVE_GETNAMEINFO ) || defined( UNDER_CE )
+    i_val = getnameinfo(sa, salen, host, hostlen, psz_serv, i_servlen, flags);
 #else
     {
 # ifdef HAVE_USABLE_MUTEX_THAT_DONT_NEED_LIBVLC_POINTER
@@ -645,14 +631,14 @@ int vlc_getaddrinfo( vlc_object_t *p_this, const char *node,
         }
     }
 
-#ifdef WIN32
+#if defined( WIN32 ) && !defined( UNDER_CE )
     {
         typedef int (CALLBACK * GETADDRINFO) ( const char *, const char *,
                                             const struct addrinfo *,
                                             struct addrinfo ** );
         HINSTANCE wship6_module;
         GETADDRINFO ws2_getaddrinfo;
-         
+
         wship6_module = LoadLibrary( "wship6.dll" );
         if( wship6_module != NULL )
         {
@@ -672,7 +658,31 @@ int vlc_getaddrinfo( vlc_object_t *p_this, const char *node,
         }
     }
 #endif
-#if HAVE_GETADDRINFO
+#if defined( HAVE_GETADDRINFO ) || defined( UNDER_CE )
+# ifdef AI_IDN
+    /* Run-time I18n Domain Names support */
+    {
+        static vlc_bool_t i_idn = VLC_TRUE; /* beware of thread-safety */
+
+        if( i_idn )
+        {
+            int i_ret;
+
+            hints.ai_flags |= AI_IDN;
+            i_ret = getaddrinfo( psz_node, psz_service, &hints, res );
+
+            if( i_ret != EAI_BADFLAGS )
+                return i_ret;
+
+            /* libidn not available: disable and retry without it */
+
+            /* NOTE: Using i_idn here would not be thread-safe */
+            hints.ai_flags &= ~AI_IDN;
+            i_idn = VLC_FALSE;
+            msg_Dbg( p_this, "I18n Domain Names not supported - disabled" );
+        }
+    }
+# endif
     return getaddrinfo( psz_node, psz_service, &hints, res );
 #else
 {
@@ -694,7 +704,7 @@ int vlc_getaddrinfo( vlc_object_t *p_this, const char *node,
 
 void vlc_freeaddrinfo( struct addrinfo *infos )
 {
-#ifdef WIN32
+#if defined( WIN32 ) && !defined( UNDER_CE )
     typedef void (CALLBACK * FREEADDRINFO) ( struct addrinfo * );
     HINSTANCE wship6_module;
     FREEADDRINFO ws2_freeaddrinfo;
@@ -719,7 +729,7 @@ void vlc_freeaddrinfo( struct addrinfo *infos )
         FreeLibrary( wship6_module );
     }
 #endif
-#ifdef HAVE_GETADDRINFO
+#if defined( HAVE_GETADDRINFO ) || defined( UNDER_CE )
     freeaddrinfo( infos );
 #else
     __freeaddrinfo( infos );

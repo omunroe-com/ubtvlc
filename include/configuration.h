@@ -4,7 +4,7 @@
  * It includes functions allowing to declare, get or set configuration options.
  *****************************************************************************
  * Copyright (C) 1999, 2000 the VideoLAN team
- * $Id: configuration.h 12428 2005-08-29 16:34:32Z massiot $
+ * $Id: configuration.h 12871 2005-10-17 20:15:10Z hartman $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -80,13 +80,13 @@
    #define SUBCAT_VIDEO_SUBPIC 305
 
 #define CAT_INPUT 4
-   #define SUBCAT_INPUT_ACCESS 401
-   #define SUBCAT_INPUT_ACCESS_FILTER 402
-   #define SUBCAT_INPUT_DEMUX 403
-   #define SUBCAT_INPUT_VCODEC 404
-   #define SUBCAT_INPUT_ACODEC 405
-   #define SUBCAT_INPUT_SCODEC 406
-   #define SUBCAT_INPUT_ADVANCED 407
+   #define SUBCAT_INPUT_GENERAL 401
+   #define SUBCAT_INPUT_ACCESS 402
+   #define SUBCAT_INPUT_ACCESS_FILTER 403
+   #define SUBCAT_INPUT_DEMUX 404
+   #define SUBCAT_INPUT_VCODEC 405
+   #define SUBCAT_INPUT_ACODEC 406
+   #define SUBCAT_INPUT_SCODEC 407
 
 #define CAT_SOUT 5
    #define SUBCAT_SOUT_GENERAL 501

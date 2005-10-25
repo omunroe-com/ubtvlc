@@ -2,7 +2,7 @@
  * ftp.c: FTP input module
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: ftp.c 11906 2005-07-29 17:28:01Z courmisch $
+ * $Id: ftp.c 12956 2005-10-25 07:02:52Z md $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr> - original code
  *          Rémi Denis-Courmont <rem # videolan.org> - EPSV support
@@ -237,6 +237,12 @@ static int Open( vlc_object_t *p_this )
     {
         p_sys->url.i_port = 21; /* default port */
     }
+
+    /* FTP URLs are relative to user's default directory (RFC1738)
+       For absolute path use ftp://foo.bar//usr/local/etc/filename */
+
+    if( *p_sys->url.psz_path == '/' )
+        p_sys->url.psz_path++;
 
     if( Connect( p_access, p_sys ) < 0 )
         goto exit_error;

@@ -444,6 +444,9 @@
 /* Define to 1 if you have the <mozilla-config.h> header file. */
 #undef HAVE_MOZILLA_CONFIG_H
 
+/* Define to 1 if you have the <mpcdec/mpcdec.h> header file. */
+#undef HAVE_MPCDEC_MPCDEC_H
+
 /* Define to 1 if you have the <mpeg2dec/mpeg2.h> header file. */
 #undef HAVE_MPEG2DEC_MPEG2_H
 

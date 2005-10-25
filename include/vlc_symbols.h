@@ -331,7 +331,7 @@ int intf_RunThread (intf_thread_t *);
 xml_t * __xml_Create (vlc_object_t *);
 msg_subscription_t* __msg_Subscribe (vlc_object_t *);
 const char * VLC_Version (void);
-session_descriptor_t* sout_AnnounceRegisterSDP (sout_instance_t *,const char *, announce_method_t*);
+session_descriptor_t* sout_AnnounceRegisterSDP (sout_instance_t *,const char *, const char *, announce_method_t*);
 char * stream_ReadLine (stream_t *);
 int playlist_PreparseEnqueueItem (playlist_t *, playlist_item_t *);
 void __osd_MenuPrev (vlc_object_t *);
@@ -385,6 +385,7 @@ void sout_MuxDeleteStream (sout_mux_t *, sout_input_t *);
 char * httpd_MsgGet (httpd_message_t *, char *psz_name);
 const iso639_lang_t * GetLang_1 (const char *);
 void aout_FormatsPrint (aout_instance_t * p_aout, const char * psz_text, const audio_sample_format_t * p_format1, const audio_sample_format_t * p_format2);
+char * FromUTF32 (const wchar_t *);
 void __vout_OSDMessage (vlc_object_t *, int, char *, ...);
 void intf_StopThread (intf_thread_t *);
 stream_t * __stream_MemoryNew (vlc_object_t *p_obj, uint8_t *p_buffer, int64_t i_size, vlc_bool_t i_preserve_memory);
@@ -548,7 +549,7 @@ struct module_symbols_t
     sout_stream_t * (*sout_StreamNew_inner) (sout_instance_t *, char *psz_chain);
     void (*sout_StreamDelete_inner) (sout_stream_t *);
     int (*sout_AnnounceRegister_inner) (sout_instance_t *,session_descriptor_t*, announce_method_t*);
-    session_descriptor_t* (*sout_AnnounceRegisterSDP_inner) (sout_instance_t *,const char *, announce_method_t*);
+    session_descriptor_t* (*sout_AnnounceRegisterSDP_inner) (sout_instance_t *,const char *, const char *, announce_method_t*);
     int (*sout_AnnounceUnRegister_inner) (sout_instance_t *,session_descriptor_t*);
     session_descriptor_t* (*sout_AnnounceSessionCreate_inner) (void);
     void (*sout_AnnounceSessionDestroy_inner) (session_descriptor_t *);
@@ -815,7 +816,6 @@ struct module_symbols_t
     osd_state_t * (*__osd_StateChange_inner) (osd_state_t *, const int);
     void (*osd_ConfigUnload_inner) (vlc_object_t *, osd_menu_t **);
     void (*__osd_MenuShow_inner) (vlc_object_t *);
-    void *__osd_VolumeDown_deprecated;
     void (*__osd_MenuNext_inner) (vlc_object_t *);
     void (*__osd_MenuDelete_inner) (vlc_object_t *, osd_menu_t *);
     void (*__osd_MenuHide_inner) (vlc_object_t *);
@@ -846,6 +846,7 @@ struct module_symbols_t
     void (*osd_Message_inner) (spu_t *, int, char *, ...);
     int (*osd_ShowTextAbsolute_inner) (spu_t *, int, char *, text_style_t *, int, int, int, mtime_t, mtime_t);
     char * (*config_GetUserDir_inner) (void);
+    char * (*FromUTF32_inner) (const wchar_t *);
 };
 #  if defined (__PLUGIN__)
 #  define aout_FiltersCreatePipeline (p_symbols)->aout_FiltersCreatePipeline_inner
@@ -1254,6 +1255,7 @@ struct module_symbols_t
 #  define osd_Message (p_symbols)->osd_Message_inner
 #  define osd_ShowTextAbsolute (p_symbols)->osd_ShowTextAbsolute_inner
 #  define config_GetUserDir (p_symbols)->config_GetUserDir_inner
+#  define FromUTF32 (p_symbols)->FromUTF32_inner
 #  elif defined (HAVE_DYNAMIC_PLUGINS) && !defined (__BUILTIN__)
 /******************************************************************
  * STORE_SYMBOLS: store VLC APIs into p_symbols for plugin access.
@@ -1665,8 +1667,8 @@ struct module_symbols_t
     ((p_symbols)->osd_Message_inner) = osd_Message; \
     ((p_symbols)->osd_ShowTextAbsolute_inner) = osd_ShowTextAbsolute; \
     ((p_symbols)->config_GetUserDir_inner) = config_GetUserDir; \
+    ((p_symbols)->FromUTF32_inner) = FromUTF32; \
     (p_symbols)->net_ConvertIPv4_deprecated = NULL; \
-    (p_symbols)->__osd_VolumeDown_deprecated = NULL; \
 
 #  endif /* __PLUGIN__ */
 # endif /* HAVE_SHARED_LIBVLC */

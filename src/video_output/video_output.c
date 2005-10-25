@@ -6,7 +6,7 @@
  * thread, and destroy a previously oppened video output thread.
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: video_output.c 12136 2005-08-11 21:21:08Z dionoea $
+ * $Id: video_output.c 12927 2005-10-23 10:00:58Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -640,9 +640,13 @@ static int InitThread( vout_thread_t *p_vout )
 
     AspectRatio( p_vout->fmt_out.i_aspect, &i_aspect_x, &i_aspect_y );
 
-    msg_Dbg( p_vout, "picture out %ix%i, chroma %4.4s, ar %i:%i, sar %i:%i",
-             p_vout->output.i_width, p_vout->output.i_height,
-             (char*)&p_vout->output.i_chroma,
+    msg_Dbg( p_vout, "picture out %ix%i (%i,%i,%ix%i), "
+             "chroma %4.4s, ar %i:%i, sar %i:%i",
+             p_vout->fmt_out.i_width, p_vout->fmt_out.i_height,
+             p_vout->fmt_out.i_x_offset, p_vout->fmt_out.i_y_offset,
+             p_vout->fmt_out.i_visible_width,
+             p_vout->fmt_out.i_visible_height,
+             (char*)&p_vout->fmt_out.i_chroma,
              i_aspect_x, i_aspect_y,
              p_vout->fmt_out.i_sar_num, p_vout->fmt_out.i_sar_den );
 

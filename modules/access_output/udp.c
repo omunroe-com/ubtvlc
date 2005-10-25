@@ -2,7 +2,7 @@
  * udp.c
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: udp.c 12554 2005-09-14 17:22:48Z massiot $
+ * $Id: udp.c 12822 2005-10-11 17:32:01Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -337,6 +337,7 @@ static void Close( vlc_object_t * p_this )
         p_dummy->i_dts = 0;
         p_dummy->i_pts = 0;
         p_dummy->i_length = 0;
+        memset( p_dummy->p_buffer, 0, p_dummy->i_buffer );
         block_FifoPut( p_sys->p_thread->p_fifo, p_dummy );
     }
     vlc_thread_join( p_sys->p_thread );

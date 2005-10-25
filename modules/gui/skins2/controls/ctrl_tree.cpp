@@ -2,7 +2,7 @@
  * ctrl_tree.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_tree.cpp 12467 2005-09-03 19:22:47Z ipkiss $
+ * $Id: ctrl_tree.cpp 12950 2005-10-23 17:59:52Z asmax $
  *
  * Authors: Antoine Cellerier <dionoea@videolan.org>
  *
@@ -146,8 +146,6 @@ void CtrlTree::onUpdate( Subject<VarPercent> &rPercent )
 
     int excessItems = m_rTree.visibleItems() - maxItems();
 
-    fprintf( stderr, "Hullo\n");
-
     if( excessItems > 0)
     {
         VarPercent &rVarPos = m_rTree.getPositionVar();
@@ -159,14 +157,11 @@ void CtrlTree::onUpdate( Subject<VarPercent> &rPercent )
     }
     if( m_lastPos != it )
     {
-        fprintf( stderr, "updating\n" );
         // Redraw the control if the position has changed
         m_lastPos = it;
         makeImage();
         notifyLayout();
     }
-    else
-        fprintf( stderr, "not updating\n" );
 }
 
 void CtrlTree::onResize()
@@ -401,18 +396,27 @@ void CtrlTree::handleEvent( EvtGeneric &rEvent )
         else if( rEvent.getAsString().find( "mouse:left:down" ) !=
                  string::npos )
         {
-            // Unselect any previously selected item
-            for( it = m_rTree.begin(); it != m_rTree.end();
-                 it = m_rTree.getNextVisibleItem( it ) )
-            {
-                it->m_selected = false;
-            }
-            // Select the new item
             it = findItemAtPos(yPos);
-            if( it != m_rTree.end() )
+            if( it->size() && xPos > (it->depth() - 1) * itemImageWidth()
+                && xPos < it->depth() * itemImageWidth() )
             {
-                it->m_selected = true;
-                m_pLastSelected = &*it;
+                // Fold/unfold the item
+                it->m_expanded = !it->m_expanded;
+            }
+            else
+            {
+                // Unselect any previously selected item
+                for( it = m_rTree.begin(); it != m_rTree.end();
+                     it = m_rTree.getNextVisibleItem( it ) )
+                {
+                    it->m_selected = false;
+                }
+                // Select the new item
+                if( it != m_rTree.end() )
+                {
+                    it->m_selected = true;
+                    m_pLastSelected = &*it;
+                }
             }
         }
 
@@ -422,15 +426,8 @@ void CtrlTree::handleEvent( EvtGeneric &rEvent )
             it = findItemAtPos(yPos);
             if( it != m_rTree.end() )
             {
-                if( it->size() && xPos < it->depth() * itemImageWidth() )
-                {
-                    it->m_expanded = !it->m_expanded;
-                }
-                else
-                {
-                    // Execute the action associated to this item
-                    m_rTree.action( &*it );
-                }
+               // Execute the action associated to this item
+               m_rTree.action( &*it );
             }
         }
 

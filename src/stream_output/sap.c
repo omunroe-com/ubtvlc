@@ -2,7 +2,7 @@
  * sap.c : SAP announce handler
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: sap.c 12588 2005-09-18 10:06:05Z jpsaman $
+ * $Id: sap.c 12929 2005-10-23 10:06:49Z courmisch $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Rémi Denis-Courmont <rem # videolan.org>
@@ -34,18 +34,6 @@
 #include <vlc/sout.h>
 
 #include "network.h"
-#if defined( WIN32 ) || defined( UNDER_CE )
-#   if defined(UNDER_CE) && defined(sockaddr_storage)
-#       undef sockaddr_storage
-#   endif
-#   include <winsock2.h>
-#   include <ws2tcpip.h>
-#else
-#   include <netdb.h>
-#   ifdef HAVE_ARPA_INET_H
-#       include <arpa/inet.h>
-#   endif
-#endif
 #include "charset.h"
 
 /* SAP is always on that port */
@@ -284,7 +272,7 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
         vlc_mutex_unlock( &p_sap->object_lock );
         vlc_freeaddrinfo( res );
         msg_Err( p_sap, "Unsupported address family of size %d > %u",
-                 res->ai_addrlen, sizeof( addr ) );
+                 res->ai_addrlen, (unsigned) sizeof( addr ) );
         return VLC_EGENERIC;
     }
 
@@ -336,7 +324,7 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
             ((struct sockaddr_in *)&addr)->sin_addr.s_addr = htonl( ipv4 );
             break;
         }
-        
+
         default:
             vlc_mutex_unlock( &p_sap->object_lock );
             vlc_freeaddrinfo( res );
@@ -542,7 +530,7 @@ static int announce_SAPAnnounceDel( sap_handler_t *p_sap,
      * TODO: - address refcount
              - send a SAP deletion packet */
 
-    msg_Dbg( p_sap,"%i announces remaining", p_sap->i_sessions );
+    msg_Dbg( p_sap,"%i announcements remaining", p_sap->i_sessions );
 
     vlc_mutex_unlock( &p_sap->object_lock );
 
@@ -552,7 +540,7 @@ static int announce_SAPAnnounceDel( sap_handler_t *p_sap,
 static int announce_SendSAPAnnounce( sap_handler_t *p_sap,
                                      sap_session_t *p_session )
 {
-    unsigned int i_ret;
+    int i_ret;
 
     /* This announce has never been sent yet */
     if( p_session->i_last == 0 )
@@ -570,11 +558,11 @@ static int announce_SendSAPAnnounce( sap_handler_t *p_sap,
         i_ret = net_Write( p_sap, p_session->p_address->i_wfd, NULL,
                            p_session->psz_data,
                            p_session->i_length );
-        if( i_ret != (unsigned int)p_session->i_length )
+        if( i_ret != p_session->i_length )
         {
             msg_Warn( p_sap, "SAP send failed on address %s (%i %i)",
-                   p_session->p_address->psz_address,
-                   i_ret, p_session->i_length );
+                      p_session->p_address->psz_address,
+                      i_ret, p_session->i_length );
         }
         p_session->i_last = p_session->i_next;
         p_session->i_next = p_session->i_last
@@ -627,15 +615,16 @@ static char *SDPGenerate( sap_handler_t *p_sap,
                             "s=%s\r\n"
                             "t=0 0\r\n"
                             "c=IN IP%c %s/%d\r\n"
-                            "m=video %d udp %d\r\n"
+                            "m=video %d %s %d\r\n"
                             "a=tool:"PACKAGE_STRING"\r\n"
                             "a=type:broadcast\r\n"
                             "%s%s%s",
                             i_sdp_id, i_sdp_version,
                             ipv, p_addr->psz_machine,
-                            psz_name, ipv,
-                            psz_uri, p_session->i_ttl,
-                            p_session->i_port, p_session->i_payload,
+                            psz_name, ipv, psz_uri, p_session->i_ttl,
+                            p_session->i_port, 
+                            p_session->b_rtp ? "RTP/AVP" : "udp",
+                            p_session->i_payload,
                             psz_group ? "a=x-plgroup:" : "",
                             psz_group ? psz_group : "", psz_group ? "\r\n" : "" ) == -1 )
         return NULL;

@@ -2,7 +2,7 @@
  * ts.c: Transport Stream input module for VLC.
  *****************************************************************************
  * Copyright (C) 2004-2005 VideoLAN (Centrale Réseaux) and its contributors
- * $Id: ts.c 12605 2005-09-19 12:59:58Z massiot $
+ * $Id: ts.c 12692 2005-09-27 01:10:56Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Jean-Paul Saman <jpsaman #_at_# m2x.nl>
@@ -1065,6 +1065,7 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
     demux_sys_t *p_sys = p_demux->p_sys;
     double f, *pf;
     int64_t i64;
+    int64_t *pi64;
     int i_int;
 
     if( p_sys->b_file_out )
@@ -1116,6 +1117,12 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
             }
             *pi64 = 0;
             return VLC_EGENERIC;
+#else
+        case DEMUX_GET_TIME:
+        case DEMUX_GET_LENGTH:
+            pi64 = (int64_t*)va_arg( args, int64_t * );
+            *pi64 = 0;
+            return VLC_SUCCESS;
 #endif
         case DEMUX_SET_GROUP:
         {
@@ -2882,23 +2889,32 @@ static void PMTCallBack( demux_t *p_demux, dvbpsi_pmt_t *p_pmt )
                 else if( p_dr->i_tag == 0x73 )
                 {
                     /* DTS audio descriptor (ETSI TS 101 154 Annex F) */
-                    msg_Dbg( p_demux, "   * DTS audio descriptor not decoded" );
+                    msg_Dbg( p_demux, "    * DTS audio descriptor not decoded" );
                     pid->es->fmt.i_cat = AUDIO_ES;
                     pid->es->fmt.i_codec = VLC_FOURCC( 'd', 't', 's', ' ' );
                 }
                 else if( p_dr->i_tag == 0x45 )
                 {
-                    msg_Dbg( p_demux, "   * VBI Data descriptor" );
+                    msg_Dbg( p_demux, "    * VBI Data descriptor" );
                     /* FIXME : store the information somewhere */
                 }
                 else if( p_dr->i_tag == 0x46 )
                 {
-                    msg_Dbg( p_demux, "  * VBI Teletext descriptor" );
+                    msg_Dbg( p_demux, "    * VBI Teletext descriptor" );
                     /* FIXME : store the information somewhere */
                 }
+#ifdef _DVBPSI_DR_52_H_
+                else if( p_dr->i_tag == 0x52 )
+                {
+                    dvbpsi_stream_identifier_dr_t *si;
+                    si = dvbpsi_DecodeStreamIdentifierDr( p_dr );
+                    
+                    msg_Dbg( p_demux, "    * Stream Component Identifier: %d", si->i_component_tag );
+                }
+#endif
                 else if( p_dr->i_tag == 0x56 )
                 {
-                    msg_Dbg( p_demux, "   * EBU Teletext descriptor" );
+                    msg_Dbg( p_demux, "    * EBU Teletext descriptor" );
                     pid->es->fmt.i_cat = SPU_ES;
                     pid->es->fmt.i_codec = VLC_FOURCC( 't', 'e', 'l', 'x' );
                     pid->es->fmt.psz_description = strdup( "Teletext" );

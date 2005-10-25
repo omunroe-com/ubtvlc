@@ -49,6 +49,7 @@ AC_DEFUN([VLC_CONFIG_HELPER], [
     trivial_channel_mixer) list="\${list} audio_filter/channel_mixer/libtrivial_channel_mixer" ;;
     simple_channel_mixer) list="\${list} audio_filter/channel_mixer/libsimple_channel_mixer" ;;
     headphone_channel_mixer) list="\${list} audio_filter/channel_mixer/libheadphone_channel_mixer" ;;
+    dolby_surround_decoder) list="\${list} audio_filter/channel_mixer/libdolby_surround_decoder" ;;
     float32tos16) list="\${list} audio_filter/converter/libfloat32tos16" ;;
     float32tos8) list="\${list} audio_filter/converter/libfloat32tos8" ;;
     float32tou16) list="\${list} audio_filter/converter/libfloat32tou16" ;;
@@ -157,6 +158,7 @@ AC_DEFUN([VLC_CONFIG_HELPER], [
     xa) list="\${list} demux/libxa" ;;
     nuv) list="\${list} demux/libnuv" ;;
     nsc) list="\${list} demux/libnsc" ;;
+    mpc) list="\${list} demux/libmpc" ;;
     asf) list="\${list} demux/asf/libasf" ;;
     avi) list="\${list} demux/avi/libavi" ;;
     mp4) list="\${list} demux/mp4/libmp4" ;;
