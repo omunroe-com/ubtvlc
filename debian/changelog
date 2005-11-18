@@ -1,3 +1,9 @@
+vlc (0.8.4-svn20051025-0ubuntu1~breezy1) breezy-backports; urgency=low
+
+  * Automated backport upload; no source changes.
+
+ -- Ubuntu Archive Auto-Backport <archive@ubuntu.com>  Fri, 18 Nov 2005 17:18:19 +0000
+
 vlc (0.8.4-svn20051025-0ubuntu1) dapper; urgency=low
 
   * New svn checkout to fix the Unicode issues once and for all that
