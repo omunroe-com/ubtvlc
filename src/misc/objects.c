@@ -1,8 +1,8 @@
 /*****************************************************************************
  * objects.c: vlc_object_t handling
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: objects.c 7546 2004-04-29 13:53:29Z gbazin $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: objects.c 12116 2005-08-10 22:08:50Z jpsaman $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -31,17 +31,15 @@
  * Preamble
  *****************************************************************************/
 #include <vlc/vlc.h>
+#include <vlc/input.h>
 
 #ifdef HAVE_STDLIB_H
 #   include <stdlib.h>                                          /* realloc() */
 #endif
 
-#include "stream_control.h"
-#include "input_ext-intf.h"
-#include "input_ext-dec.h"
-
 #include "vlc_video.h"
 #include "video_output.h"
+#include "vlc_spu.h"
 
 #include "audio_output.h"
 #include "aout_internal.h"
@@ -50,9 +48,15 @@
 #include "vlc_playlist.h"
 #include "vlc_interface.h"
 #include "vlc_codec.h"
+#include "vlc_filter.h"
 
 #include "vlc_httpd.h"
 #include "vlc_vlm.h"
+#include "vlc_vod.h"
+#include "vlc_tls.h"
+#include "vlc_xml.h"
+#include "vlc_osd.h"
+
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
@@ -68,7 +72,7 @@ static void           SetAttachment ( vlc_object_t *, vlc_bool_t );
 
 static vlc_list_t   * NewList       ( int );
 static void           ListReplace   ( vlc_list_t *, vlc_object_t *, int );
-static void           ListAppend    ( vlc_list_t *, vlc_object_t * );
+/*static void           ListAppend    ( vlc_list_t *, vlc_object_t * );*/
 static int            CountChildren ( vlc_object_t *, int );
 static void           ListChildren  ( vlc_list_t *, vlc_object_t *, int );
 
@@ -124,6 +128,10 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
             i_size = sizeof(playlist_t);
             psz_type = "playlist";
             break;
+        case VLC_OBJECT_SD:
+            i_size = sizeof(services_discovery_t);
+            psz_type = "services discovery";
+            break;
         case VLC_OBJECT_INPUT:
             i_size = sizeof(input_thread_t);
             psz_type = "input";
@@ -131,6 +139,14 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
         case VLC_OBJECT_DEMUX:
             i_size = sizeof(demux_t);
             psz_type = "demux";
+            break;
+        case VLC_OBJECT_STREAM:
+            i_size = sizeof(stream_t);
+            psz_type = "stream";
+            break;
+        case VLC_OBJECT_ACCESS:
+            i_size = sizeof(access_t);
+            psz_type = "access";
             break;
         case VLC_OBJECT_DECODER:
             i_size = sizeof(decoder_t);
@@ -144,9 +160,17 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
             i_size = sizeof(encoder_t);
             psz_type = "encoder";
             break;
+        case VLC_OBJECT_FILTER:
+            i_size = sizeof(filter_t);
+            psz_type = "filter";
+            break;
         case VLC_OBJECT_VOUT:
             i_size = sizeof(vout_thread_t);
             psz_type = "video output";
+            break;
+        case VLC_OBJECT_SPU:
+            i_size = sizeof(spu_t);
+            psz_type = "subpicture unit";
             break;
         case VLC_OBJECT_AOUT:
             i_size = sizeof(aout_instance_t);
@@ -164,9 +188,29 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
             i_size = sizeof( vlm_t );
             psz_type = "vlm dameon";
             break;
+        case VLC_OBJECT_VOD:
+            i_size = sizeof( vod_t );
+            psz_type = "vod server";
+            break;
+        case VLC_OBJECT_TLS:
+            i_size = sizeof( tls_t );
+            psz_type = "tls";
+            break;
+        case VLC_OBJECT_XML:
+            i_size = sizeof( xml_t );
+            psz_type = "xml";
+            break;
+        case VLC_OBJECT_OPENGL:
+            i_size = sizeof( vout_thread_t );
+            psz_type = "opengl provider";
+            break;
         case VLC_OBJECT_ANNOUNCE:
             i_size = sizeof( announce_handler_t );
             psz_type = "announce handler";
+            break;
+        case VLC_OBJECT_OSDMENU:
+            i_size = sizeof( osd_menu_t );
+            psz_type = "osd menu";
             break;
         default:
             i_size = i_type > 0
@@ -185,12 +229,7 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
     else
     {
         p_new = malloc( i_size );
-
-        if( !p_new )
-        {
-            return NULL;
-        }
-
+        if( !p_new ) return NULL;
         memset( p_new, 0, i_size );
     }
 
@@ -203,13 +242,15 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
     p_new->b_error = VLC_FALSE;
     p_new->b_dead = VLC_FALSE;
     p_new->b_attached = VLC_FALSE;
+    p_new->b_force = VLC_FALSE;
 
     p_new->i_vars = 0;
     p_new->p_vars = (variable_t *)malloc( 16 * sizeof( variable_t ) );
 
     if( !p_new->p_vars )
     {
-        free( p_new );
+        if( i_type != VLC_OBJECT_ROOT )
+            free( p_new );
         return NULL;
     }
 
@@ -306,17 +347,23 @@ void __vlc_object_destroy( vlc_object_t *p_this )
         /* Don't warn immediately ... 100ms seems OK */
         if( i_delay == 2 )
         {
-            msg_Warn( p_this, "refcount is %i, delaying before deletion",
-                              p_this->i_refcount );
+            msg_Warn( p_this,
+                  "refcount is %i, delaying before deletion (id=%d,type=%d)",
+                  p_this->i_refcount, p_this->i_object_id,
+                  p_this->i_object_type );
         }
-        else if( i_delay == 12 )
+        else if( i_delay == 10 )
         {
-            msg_Err( p_this, "refcount is %i, I have a bad feeling about this",
-                             p_this->i_refcount );
+            msg_Err( p_this,
+                  "refcount is %i, delaying again (id=%d,type=%d)",
+                  p_this->i_refcount, p_this->i_object_id,
+                  p_this->i_object_type );
         }
-        else if( i_delay == 42 )
+        else if( i_delay == 20 )
         {
-            msg_Err( p_this, "we waited too long, cancelling destruction" );
+            msg_Err( p_this,
+                  "we waited too long, cancelling destruction (id=%d,type=%d)",
+                  p_this->i_object_id, p_this->i_object_type );
             return;
         }
 
@@ -361,7 +408,9 @@ void __vlc_object_destroy( vlc_object_t *p_this )
     vlc_mutex_destroy( &p_this->object_lock );
     vlc_cond_destroy( &p_this->object_wait );
 
-    free( p_this );
+    /* root is not dynamically allocated by vlc_object_create */
+    if( p_this->i_object_type != VLC_OBJECT_ROOT )
+        free( p_this );
 }
 
 /**
@@ -991,7 +1040,7 @@ static void ListReplace( vlc_list_t *p_list, vlc_object_t *p_object,
     return;
 }
 
-static void ListAppend( vlc_list_t *p_list, vlc_object_t *p_object )
+/*static void ListAppend( vlc_list_t *p_list, vlc_object_t *p_object )
 {
     if( p_list == NULL )
     {
@@ -1012,7 +1061,7 @@ static void ListAppend( vlc_list_t *p_list, vlc_object_t *p_object )
     p_list->i_count++;
 
     return;
-}
+}*/
 
 static int CountChildren( vlc_object_t *p_this, int i_type )
 {

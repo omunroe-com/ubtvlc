@@ -1,8 +1,8 @@
 /*****************************************************************************
  * intf.c: Video CD interface to handle user interaction and still time
  *****************************************************************************
- * Copyright (C) 2002,2003 VideoLAN
- * $Id: intf.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002,2003 the VideoLAN team
+ * $Id: intf.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Author: Rocky Bernstein <rocky@panix.com>
  *   from DVD code by Stéphane Borel <stef@via.ecp.fr>
@@ -27,10 +27,8 @@
  *****************************************************************************/
 #include <vlc/vlc.h>
 #include <vlc/intf.h>
+#include <vlc/input.h>
 
-#include "stream_control.h"
-#include "input_ext-intf.h"
-#include "input_ext-dec.h"
 #include "vlc_keys.h"
 
 #include "vcd.h"
@@ -50,7 +48,7 @@ static void RunIntf        ( intf_thread_t *p_intf );
 /*****************************************************************************
  * OpenIntf: initialize dummy interface
  *****************************************************************************/
-int E_(OpenIntf) ( vlc_object_t *p_this )
+int VCDOpenIntf ( vlc_object_t *p_this )
 {
     intf_thread_t *p_intf = (intf_thread_t *)p_this;
 
@@ -60,23 +58,23 @@ int E_(OpenIntf) ( vlc_object_t *p_this )
     p_intf->p_sys = malloc( sizeof( intf_sys_t ) );
     if( p_intf->p_sys == NULL )
     {
-        return( 1 );
+        return( VLC_EGENERIC );
     };
 
     p_intf->pf_run = RunIntf;
 
     var_AddCallback( p_intf->p_vlc, "key-pressed", KeyEvent, p_intf );
     p_intf->p_sys->m_still_time = 0;
-    p_intf->p_sys->b_inf_still = 0;
+    p_intf->p_sys->b_infinite_still = 0;
     p_intf->p_sys->b_still = 0;
 
-    return( 0 );
+    return( VLC_SUCCESS );
 }
 
 /*****************************************************************************
  * CloseIntf: destroy dummy interface
  *****************************************************************************/
-void E_(CloseIntf) ( vlc_object_t *p_this )
+void VCDCloseIntf ( vlc_object_t *p_this )
 {
     intf_thread_t *p_intf = (intf_thread_t *)p_this;
     var_DelCallback( p_intf->p_vlc, "key-pressed", KeyEvent, p_intf );
@@ -89,13 +87,15 @@ void E_(CloseIntf) ( vlc_object_t *p_this )
 /*****************************************************************************
  * RunIntf: main loop
  *****************************************************************************/
-static void RunIntf( intf_thread_t *p_intf )
+static void 
+RunIntf( intf_thread_t *p_intf )
 {
     vlc_object_t      * p_vout = NULL;
     mtime_t             mtime = 0;
     mtime_t             mlast = 0;
-    thread_vcd_data_t * p_vcd;
+    vcdplayer_t       * p_vcdplayer;
     input_thread_t    * p_input;
+    access_t          * p_access;
 
     /* What you add to the last input number entry. It accumulates all of
        the 10_ADD keypresses */
@@ -108,8 +108,14 @@ static void RunIntf( intf_thread_t *p_intf )
     }
 
     p_input = p_intf->p_sys->p_input;
-    p_vcd   = p_intf->p_sys->p_vcd =
-      (thread_vcd_data_t *) p_input->p_access_data;
+
+    while ( !p_intf->p_sys->p_vcdplayer )
+    {
+        msleep( INTF_IDLE_SLEEP );
+    }
+    
+    p_vcdplayer = p_intf->p_sys->p_vcdplayer;
+    p_access    = p_vcdplayer->p_access;
 
     dbg_print( INPUT_DBG_CALL, "intf initialized" );
 
@@ -121,7 +127,7 @@ static void RunIntf( intf_thread_t *p_intf )
         /*
          * Have we timed-out in showing a still frame?
          */
-        if( p_intf->p_sys->b_still && !p_intf->p_sys->b_inf_still )
+        if( p_intf->p_sys->b_still && !p_intf->p_sys->b_infinite_still )
         {
             if( p_intf->p_sys->m_still_time > 0 )
             {
@@ -137,10 +143,9 @@ static void RunIntf( intf_thread_t *p_intf )
             }
             else
             {
-                /* Still time has elasped; set to continue playing. */
+                /* Still time has elapsed; set to continue playing. */
                 dbg_print(INPUT_DBG_STILL, "wait time done - setting play");
-                input_SetStatus( p_intf->p_sys->p_input,
-                                 INPUT_STATUS_PLAY );
+                var_SetInteger( p_intf->p_sys->p_input, "state", PLAYING_S );
                 p_intf->p_sys->m_still_time = 0;
                 p_intf->p_sys->b_still = 0;
                 mlast = 0;
@@ -178,7 +183,7 @@ static void RunIntf( intf_thread_t *p_intf )
               dbg_print( INPUT_DBG_EVENT, "ACTIONID_NAV_LEFT - prev (%d)",
                          number_addend );
               do {
-                vcdplayer_play_prev( p_input );
+                vcdplayer_play_prev( p_access );
               }        while (number_addend-- > 0);
               break;
 
@@ -186,41 +191,42 @@ static void RunIntf( intf_thread_t *p_intf )
               dbg_print( INPUT_DBG_EVENT, "ACTIONID_NAV_RIGHT - next (%d)",
                          number_addend );
               do {
-                vcdplayer_play_next( p_input );
+                vcdplayer_play_next( p_access );
               } while (number_addend-- > 0);
               break;
 
             case ACTIONID_NAV_UP:
               dbg_print( INPUT_DBG_EVENT, "ACTIONID_NAV_UP - return" );
               do {
-                vcdplayer_play_return( p_input );
+                vcdplayer_play_return( p_access );
               } while (number_addend-- > 0);
               break;
 
             case ACTIONID_NAV_DOWN:
               dbg_print( INPUT_DBG_EVENT, "ACTIONID_NAV_DOWN - default"  );
-              vcdplayer_play_default( p_input );
+              vcdplayer_play_default( p_access );
               break;
 
             case ACTIONID_NAV_ACTIVATE:
               {
                 vcdinfo_itemid_t itemid;
-                itemid.type=p_vcd->play_item.type;
+                itemid.type=p_vcdplayer->play_item.type;
 
                 dbg_print( INPUT_DBG_EVENT, "ACTIONID_NAV_ACTIVATE" );
 
-                if ( vcdplayer_pbc_is_on( p_vcd ) && number_addend != 0 ) {
-                  lid_t next_num=vcdinfo_selection_get_lid(p_vcd->vcd,
-                                                           p_vcd->cur_lid,
+                if ( vcdplayer_pbc_is_on( p_vcdplayer ) 
+		     && number_addend != 0 ) {
+                  lid_t next_num=vcdinfo_selection_get_lid(p_vcdplayer->vcd,
+                                                           p_vcdplayer->i_lid,
                                                            number_addend);
                   if (VCDINFO_INVALID_LID != next_num) {
                     itemid.num  = next_num;
                     itemid.type = VCDINFO_ITEM_TYPE_LID;
-                    VCDPlay( p_input, itemid );
+                    vcdplayer_play( p_access, itemid );
                   }
                 } else {
                   itemid.num = number_addend;
-                  VCDPlay( p_input, itemid );
+                  vcdplayer_play( p_access, itemid );
                 }
                 break;
               }
@@ -233,9 +239,9 @@ static void RunIntf( intf_thread_t *p_intf )
             if( p_intf->p_sys->b_still )
               {
                 dbg_print(INPUT_DBG_STILL, "Playing still after activate");
-                input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_PLAY );
+                var_SetInteger( p_intf->p_sys->p_input, "state", PLAYING_S );
                 p_intf->p_sys->b_still = 0;
-                p_intf->p_sys->b_inf_still = 0;
+                p_intf->p_sys->b_infinite_still = 0;
                 p_intf->p_sys->m_still_time = 0;
               }
 
@@ -321,9 +327,10 @@ static int InitThread( intf_thread_t * p_intf )
 
         vlc_mutex_lock( &p_intf->change_lock );
 
-        p_intf->p_sys->p_input = p_input;
+        p_intf->p_sys->p_input     = p_input;
+        p_intf->p_sys->p_vcdplayer = NULL;
 
-        p_intf->p_sys->b_move = VLC_FALSE;
+        p_intf->p_sys->b_move  = VLC_FALSE;
         p_intf->p_sys->b_click = VLC_FALSE;
         p_intf->p_sys->b_key_pressed = VLC_FALSE;
 
@@ -357,19 +364,18 @@ static int KeyEvent( vlc_object_t *p_this, char const *psz_var,
  * vcdIntfStillTime: function provided to demux plugin to request
  * still images
  *****************************************************************************/
-int vcdIntfStillTime( intf_thread_t *p_intf, int i_sec )
+int vcdIntfStillTime( intf_thread_t *p_intf, uint8_t i_sec )
 {
     vlc_mutex_lock( &p_intf->change_lock );
 
-    if( i_sec == -1 )
+    p_intf->p_sys->b_still = 1;
+    if( 255 == i_sec )
     {
-        p_intf->p_sys->b_still     = 1;
-        p_intf->p_sys->b_inf_still = 1;
+        p_intf->p_sys->b_infinite_still = VLC_TRUE;
     }
-    else if( i_sec > 0 )
+    else 
     {
-        p_intf->p_sys->b_still = 1;
-        p_intf->p_sys->m_still_time = 1000000 * i_sec;
+        p_intf->p_sys->m_still_time = MILLISECONDS_PER_SEC * i_sec;
     }
     vlc_mutex_unlock( &p_intf->change_lock );
 
@@ -383,7 +389,7 @@ int vcdIntfResetStillTime( intf_thread_t *p_intf )
 {
     vlc_mutex_lock( &p_intf->change_lock );
     p_intf->p_sys->m_still_time = 0;
-    input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_PLAY );
+    var_SetInteger( p_intf->p_sys->p_input, "state", PLAYING_S );
     vlc_mutex_unlock( &p_intf->change_lock );
 
     return VLC_SUCCESS;

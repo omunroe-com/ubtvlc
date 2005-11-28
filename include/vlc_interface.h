@@ -3,8 +3,8 @@
  * This library provides basic functions for threads to interact with user
  * interface, such as message output.
  *****************************************************************************
- * Copyright (C) 1999, 2000 VideoLAN
- * $Id: vlc_interface.h 7394 2004-04-20 15:05:24Z gbazin $
+ * Copyright (C) 1999, 2000 the VideoLAN team
+ * $Id: vlc_interface.h 11835 2005-07-24 21:03:20Z dionoea $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -90,11 +90,6 @@ struct intf_dialog_args_t
 {
     char *psz_title;
 
-    vlc_bool_t  b_blocking;
-    vlc_bool_t  b_ready;
-    vlc_mutex_t lock;
-    vlc_cond_t  wait;
-
     char **psz_results;
     int  i_results;
 
@@ -123,10 +118,13 @@ VLC_EXPORT( void,              intf_Destroy,    ( intf_thread_t * ) );
  *****************************************************************************/
 #if defined( WIN32 ) && !defined( UNDER_CE )
 #    define CONSOLE_INTRO_MSG \
+         if( !getenv( "PWD" ) || !getenv( "PS1" ) ) /* detect cygwin shell */ \
+         { \
          AllocConsole(); \
          freopen( "CONOUT$", "w", stdout ); \
          freopen( "CONOUT$", "w", stderr ); \
          freopen( "CONIN$", "r", stdin ); \
+         } \
          msg_Info( p_intf, COPYRIGHT_MESSAGE ); \
          msg_Info( p_intf, _("\nWarning: if you can't access the GUI " \
                              "anymore, open a dos command box, go to the " \
@@ -144,6 +142,8 @@ VLC_EXPORT( void,              intf_Destroy,    ( intf_thread_t * ) );
 #define INTF_DIALOG_CAPTURE     5
 #define INTF_DIALOG_SAT         6
 
+#define INTF_DIALOG_DIRECTORY   7
+
 #define INTF_DIALOG_STREAMWIZARD 8
 #define INTF_DIALOG_WIZARD 9
 
@@ -157,15 +157,17 @@ VLC_EXPORT( void,              intf_Destroy,    ( intf_thread_t * ) );
 
 #define INTF_DIALOG_FILE_GENERIC 30
 
+#define INTF_DIALOG_UPDATEVLC   90
+
 #define INTF_DIALOG_EXIT       99
 
 /* Useful text messages shared by interfaces */
 #define INTF_ABOUT_MSG \
     _( "VLC is an open-source and cross-platform multimedia " \
        "player for various audio and video formats (MPEG-1, MPEG-2, MPEG-4, " \
-       "DivX, mp3, Ogg, ...) as well as DVDs, VCDs, CD audio, and various " \
+       "DivX, mp3, Ogg, etc.) as well as DVDs, VCDs, CD audio, and various " \
        "streaming protocols.\n\n" \
        "VLC is also a streaming server with transcoding capabilities " \
-       "(UDP unicast and multicast, HTTP, ...) mainly designed for " \
+       "(UDP unicast and multicast, HTTP, etc.) mainly designed for " \
        "high-bandwidth networks.\n\n"\
        "For more information, have a look at the web site." )

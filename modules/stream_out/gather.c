@@ -1,8 +1,8 @@
 /*****************************************************************************
  * gather.c: gathering stream output module
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: gather.c 7046 2004-03-11 17:36:43Z fenrir $
+ * Copyright (C) 2003-2004 the VideoLAN team
+ * $Id: gather.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -40,6 +40,8 @@ vlc_module_begin();
     set_description( _("Gathering stream output") );
     set_capability( "sout stream", 50 );
     add_shortcut( "gather" );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_STREAM );
     set_callbacks( Open, Close );
 vlc_module_end();
 
@@ -76,7 +78,7 @@ static int Open( vlc_object_t *p_this )
     sout_stream_sys_t *p_sys;
 
     p_stream->p_sys = p_sys = malloc( sizeof( sout_stream_sys_t ) );
-    p_sys->p_out    = sout_stream_new( p_stream->p_sout, p_stream->psz_next );
+    p_sys->p_out    = sout_StreamNew( p_stream->p_sout, p_stream->psz_next );
     if( p_sys->p_out == NULL )
     {
         free( p_sys );
@@ -108,7 +110,7 @@ static void Close( vlc_object_t * p_this )
     }
     free( p_sys->id );
 
-    sout_stream_delete( p_sys->p_out );
+    sout_StreamDelete( p_sys->p_out );
     free( p_sys );
 }
 

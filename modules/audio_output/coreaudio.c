@@ -1,8 +1,8 @@
 /*****************************************************************************
  * coreaudio.c: CoreAudio output plugin
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: coreaudio.c 7648 2004-05-13 15:38:15Z hartman $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id: coreaudio.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Colin Delacroix <colin@zoy.org>
  *          Jon Lech Johansen <jon-vl@nanocrew.net>
@@ -36,8 +36,6 @@
 #include "aout_internal.h"
 
 #include <CoreAudio/CoreAudio.h>
-
-#define A52_FRAME_NB 1536
 
 #define STREAM_FORMAT_MSG( pre, sfm ) \
     pre ": [%ld][%4.4s][%ld][%ld][%ld][%ld][%ld][%ld]", \
@@ -164,7 +162,7 @@ struct aout_sys_t
     vlc_bool_t                  b_revert_sfmt;
     AudioStreamBasicDescription sfmt_revert;
 
-    UInt32                      i_buffer_size;
+    UInt32                      i_bufframe_size;
     mtime_t                     clock_diff;
 };
 
@@ -222,8 +220,11 @@ static OSStatus StreamListener   ( AudioStreamID inStream,
     "then be used by default for audio playback.")
 
 vlc_module_begin();
+    set_shortname( "CoreAudio" );
     set_description( _("CoreAudio output") );
     set_capability( "audio output", 100 );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_AOUT );
     set_callbacks( Open, Close );
     add_integer( "coreaudio-dev", -1, NULL, ADEV_TEXT, ADEV_LONGTEXT, VLC_FALSE ); 
 vlc_module_end();
@@ -321,14 +322,14 @@ static int Open( vlc_object_t * p_this )
     msg_Dbg( p_aout, STREAM_FORMAT_MSG( "using format",
                                         p_sys->stream_format ) );
 
-    /* Get the buffer size */
-    i_param_size = sizeof( p_sys->i_buffer_size );
+    /* Get the bufframe size */
+    i_param_size = sizeof( p_sys->i_bufframe_size );
     err = AudioDeviceGetProperty( p_sys->devid, i_startingChannel, FALSE, 
-                                  kAudioDevicePropertyBufferSize, 
-                                  &i_param_size, &p_sys->i_buffer_size );
+                                  kAudioDevicePropertyBufferFrameSize, 
+                                  &i_param_size, &p_sys->i_bufframe_size );
     if( err != noErr )
     {
-        msg_Err( p_aout, "failed to get buffer size: [%4.4s]", 
+        msg_Err( p_aout, "failed to get bufframe size: [%4.4s]", 
                  (char *)&err );
         FreeDevice( p_aout );
         FreeHardwareInfo( p_aout );
@@ -337,43 +338,23 @@ static int Open( vlc_object_t * p_this )
         return( VLC_EGENERIC );
     }
 
-    msg_Dbg( p_aout, "device buffer size: [%ld]", p_sys->i_buffer_size );
+    msg_Dbg( p_aout, "device bufframe size: [%ld]", p_sys->i_bufframe_size );
     msg_Dbg( p_aout, "device buffer index: [%ld]", p_sys->i_stream_index );
-    
+
     /* If we do AC3 over SPDIF, set buffer size to one AC3 frame */
     if( ( p_sys->stream_format.mFormatID == kAudioFormat60958AC3 ||
           p_sys->stream_format.mFormatID == 'IAC3' ) &&
-        p_sys->i_buffer_size != AOUT_SPDIF_SIZE )
+        p_sys->i_bufframe_size != A52_FRAME_NB )
     {
-        p_sys->i_buffer_size = AOUT_SPDIF_SIZE;
-        i_param_size = sizeof( p_sys->i_buffer_size );
-        err = AudioDeviceSetProperty( p_sys->devid, 0, 0, FALSE,
-                                      kAudioDevicePropertyBufferSize,
-                                      i_param_size, &p_sys->i_buffer_size );
-        if( err != noErr )
-        {
-            msg_Err( p_aout, "failed to set buffer size: [%4.4s]", 
-                     (char *)&err );
-            FreeDevice( p_aout );
-            FreeHardwareInfo( p_aout );
-            vlc_mutex_destroy( &p_sys->lock );
-            free( (void *)p_sys );
-            return( VLC_EGENERIC );
-        }
-
-        msg_Dbg( p_aout, "device buffer size set to: [%ld]", 
-                 p_sys->i_buffer_size );
-
-        /* Set buffer frame size */
-        i_param_size = sizeof( p_aout->output.i_nb_samples );
+        p_sys->i_bufframe_size = A52_FRAME_NB;
+        i_param_size = sizeof( p_sys->i_bufframe_size );
         err = AudioDeviceSetProperty( p_sys->devid, 0, 0, FALSE,
                                       kAudioDevicePropertyBufferFrameSize,
-                                      i_param_size,
-                                      &p_aout->output.i_nb_samples );
+                                      i_param_size, &p_sys->i_bufframe_size );
         if( err != noErr )
         {
-            msg_Err( p_aout, "failed to set buffer frame size: [%4.4s]", 
-                     (char *)&err );
+            msg_Err( p_aout, "failed to set bufframe size (%ld): [%4.4s]", 
+                     p_sys->i_bufframe_size, (char *)&err );
             FreeDevice( p_aout );
             FreeHardwareInfo( p_aout );
             vlc_mutex_destroy( &p_sys->lock );
@@ -381,8 +362,8 @@ static int Open( vlc_object_t * p_this )
             return( VLC_EGENERIC );
         }
 
-        msg_Dbg( p_aout, "device buffer frame size set to: [%d]",
-                 p_aout->output.i_nb_samples );
+        msg_Dbg( p_aout, "device bufframe size set to: [%ld]", 
+                 p_sys->i_bufframe_size );
     }
 
     switch( p_sys->stream_format.mFormatID )
@@ -432,8 +413,7 @@ static int Open( vlc_object_t * p_this )
             return( VLC_EGENERIC );
         }
 
-        p_aout->output.i_nb_samples = (int)( p_sys->i_buffer_size /
-                                      p_sys->stream_format.mBytesPerFrame );
+        p_aout->output.i_nb_samples = p_sys->i_bufframe_size;
 
         aout_VolumeSoftInit( p_aout );
         break;
@@ -626,12 +606,12 @@ static OSStatus IOCallback( AudioDeviceID inDevice,
     p_buffer = aout_OutputNextBuffer( p_aout, current_date, B_SPDI );
 #undef B_SPDI
 
+#define BUFFER outOutputData->mBuffers[ p_sys->i_stream_index ]
     if( p_buffer != NULL )
     {
         /* move data into output data buffer */
-        p_aout->p_vlc->pf_memcpy( outOutputData->mBuffers[ p_sys->i_stream_index ].mData, 
-                                  p_buffer->p_buffer, 
-                                  p_sys->i_buffer_size );
+        p_aout->p_vlc->pf_memcpy( BUFFER.mData,
+                                  p_buffer->p_buffer, p_buffer->i_nb_bytes );
 
         aout_BufferFree( p_buffer );
     }
@@ -639,8 +619,9 @@ static OSStatus IOCallback( AudioDeviceID inDevice,
     {
         if( p_aout->output.output.i_format == VLC_FOURCC('f','l','3','2') )
         {
-            UInt32 i, i_size = p_sys->i_buffer_size / sizeof(float);
-            float * p = (float *)outOutputData->mBuffers[ p_sys->i_stream_index ].mData;
+            UInt32 i, i_size = p_sys->i_bufframe_size * 
+                               p_sys->stream_format.mChannelsPerFrame;
+            float * p = (float *)BUFFER.mData;
 
             for( i = 0; i < i_size; i++ )
             {
@@ -649,10 +630,10 @@ static OSStatus IOCallback( AudioDeviceID inDevice,
         }
         else
         {
-            memset( outOutputData->mBuffers[ p_sys->i_stream_index ].mData, 
-                    0, p_sys->i_buffer_size );
+            p_aout->p_vlc->pf_memset( BUFFER.mData, 0, BUFFER.mDataByteSize );
         }
     }
+#undef BUFFER
 
     return( noErr );     
 }

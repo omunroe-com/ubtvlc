@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mash.c: Video decoder using openmash codec implementations
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: mash.cpp 7397 2004-04-20 17:27:30Z sam $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: mash.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -64,6 +64,8 @@ static block_t   *SendFrame  ( decoder_t *, block_t * );
 vlc_module_begin();
     set_description( _("Video decoder using openmash") );
     set_capability( "decoder", 50 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_VCODEC );
     set_callbacks( OpenDecoder, CloseDecoder );
 vlc_module_end();
 

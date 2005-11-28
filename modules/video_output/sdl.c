@@ -1,8 +1,8 @@
 /*****************************************************************************
  * sdl.c: SDL video output display method
  *****************************************************************************
- * Copyright (C) 1998-2001 VideoLAN
- * $Id: sdl.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1998-2001 the VideoLAN team
+ * $Id: sdl.c 12875 2005-10-18 07:12:27Z md $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Pierre Baillet <oct@zoy.org>
@@ -42,7 +42,8 @@
 
 #include SDL_INCLUDE_FILE
 
-#define SDL_MAX_DIRECTBUFFERS 10
+/* SDL is not able to crop overlays - so use only 1 direct buffer */
+#define SDL_MAX_DIRECTBUFFERS 1
 #define SDL_DEFAULT_BPP 16
 
 /*****************************************************************************
@@ -101,13 +102,16 @@ static void SetPalette      ( vout_thread_t *,
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+    set_shortname( "SDL" );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VOUT );
     set_description( _("Simple DirectMedia Layer video output") );
     set_capability( "video output", 60 );
     add_shortcut( "sdl" );
     set_callbacks( Open, Close );
     /* XXX: check for conflicts with the SDL audio output */
     var_Create( p_module->p_libvlc, "sdl", VLC_VAR_MUTEX );
-#if defined( __i386__ )
+#if defined( __i386__ ) || defined( __x86_64__ )
     /* On i386, SDL is linked against svgalib */
     linked_with_a_crap_library_which_uses_atexit();
 #endif
@@ -317,7 +321,7 @@ static void Close ( vlc_object_t *p_this )
  * Manage: handle Sys events
  *****************************************************************************
  * This function should be called regularly by video output thread. It returns
- * a non null value if an error occured.
+ * a non null value if an error occurred.
  *****************************************************************************/
 static int Manage( vout_thread_t *p_vout )
 {
@@ -405,11 +409,9 @@ static int Manage( vout_thread_t *p_vout )
                 break;
 
             case 4:
-                input_Seek( p_vout, 15, INPUT_SEEK_SECONDS | INPUT_SEEK_CUR );
                 break;
 
             case 5:
-                input_Seek( p_vout, -15, INPUT_SEEK_SECONDS | INPUT_SEEK_CUR );
                 break;
             }
             break;
@@ -475,19 +477,15 @@ static int Manage( vout_thread_t *p_vout )
                 break;
 
             case SDLK_LEFT:
-                input_Seek( p_vout, -5, INPUT_SEEK_SECONDS | INPUT_SEEK_CUR );
                 break;
 
             case SDLK_RIGHT:
-                input_Seek( p_vout, 5, INPUT_SEEK_SECONDS | INPUT_SEEK_CUR );
                 break;
 
             case SDLK_UP:
-                input_Seek( p_vout, 60, INPUT_SEEK_SECONDS | INPUT_SEEK_CUR );
                 break;
 
             case SDLK_DOWN:
-                input_Seek( p_vout, -60, INPUT_SEEK_SECONDS | INPUT_SEEK_CUR );
                 break;
 
             case SDLK_b:
@@ -820,6 +818,7 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
 
         p_pic->p->p_pixels = p_vout->p_sys->p_display->pixels;
         p_pic->p->i_lines = p_vout->p_sys->p_display->h;
+        p_pic->p->i_visible_lines = p_vout->p_sys->p_display->h;
         p_pic->p->i_pitch = p_vout->p_sys->p_display->pitch;
         p_pic->p->i_visible_pitch =
             p_pic->p->i_pixel_pitch * p_vout->p_sys->p_display->w;
@@ -852,6 +851,7 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
 
         p_pic->Y_PIXELS = p_pic->p_sys->p_overlay->pixels[0];
         p_pic->p[Y_PLANE].i_lines = p_pic->p_sys->p_overlay->h;
+        p_pic->p[Y_PLANE].i_visible_lines = p_pic->p_sys->p_overlay->h;
         p_pic->p[Y_PLANE].i_pitch = p_pic->p_sys->p_overlay->pitches[0];
 
         switch( p_vout->output.i_chroma )
@@ -862,12 +862,14 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
 
             p_pic->U_PIXELS = p_pic->p_sys->p_overlay->pixels[2];
             p_pic->p[U_PLANE].i_lines = p_pic->p_sys->p_overlay->h / 2;
+            p_pic->p[U_PLANE].i_visible_lines = p_pic->p_sys->p_overlay->h / 2;
             p_pic->p[U_PLANE].i_pitch = p_pic->p_sys->p_overlay->pitches[2];
             p_pic->p[U_PLANE].i_pixel_pitch = 1;
             p_pic->p[U_PLANE].i_visible_pitch = p_pic->p_sys->p_overlay->w / 2;
 
             p_pic->V_PIXELS = p_pic->p_sys->p_overlay->pixels[1];
             p_pic->p[V_PLANE].i_lines = p_pic->p_sys->p_overlay->h / 2;
+            p_pic->p[V_PLANE].i_visible_lines = p_pic->p_sys->p_overlay->h / 2;
             p_pic->p[V_PLANE].i_pitch = p_pic->p_sys->p_overlay->pitches[1];
             p_pic->p[V_PLANE].i_pixel_pitch = 1;
             p_pic->p[V_PLANE].i_visible_pitch = p_pic->p_sys->p_overlay->w / 2;
@@ -881,12 +883,14 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
 
             p_pic->U_PIXELS = p_pic->p_sys->p_overlay->pixels[1];
             p_pic->p[U_PLANE].i_lines = p_pic->p_sys->p_overlay->h / 2;
+            p_pic->p[U_PLANE].i_visible_lines = p_pic->p_sys->p_overlay->h / 2;
             p_pic->p[U_PLANE].i_pitch = p_pic->p_sys->p_overlay->pitches[1];
             p_pic->p[U_PLANE].i_pixel_pitch = 1;
             p_pic->p[U_PLANE].i_visible_pitch = p_pic->p_sys->p_overlay->w / 2;
 
             p_pic->V_PIXELS = p_pic->p_sys->p_overlay->pixels[2];
             p_pic->p[V_PLANE].i_lines = p_pic->p_sys->p_overlay->h / 2;
+            p_pic->p[V_PLANE].i_visible_lines = p_pic->p_sys->p_overlay->h / 2;
             p_pic->p[V_PLANE].i_pitch = p_pic->p_sys->p_overlay->pitches[2];
             p_pic->p[V_PLANE].i_pixel_pitch = 1;
             p_pic->p[V_PLANE].i_visible_pitch = p_pic->p_sys->p_overlay->w / 2;

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * builder.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: builder.hpp 7173 2004-03-27 00:21:13Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: builder.hpp 12281 2005-08-20 00:31:27Z dionoea $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -47,7 +47,7 @@ class Builder: public SkinObject
 {
     public:
         Builder( intf_thread_t *pIntf, const BuilderData &rData );
-        virtual ~Builder() {}
+        virtual ~Builder();
 
         /// Create a Theme object, ready to use.
         /// Return NULL in case of problem
@@ -77,6 +77,7 @@ class Builder: public SkinObject
         void addRadialSlider( const BuilderData::RadialSlider &rData );
         void addSlider( const BuilderData::Slider &rData );
         void addList( const BuilderData::List &rData );
+        void addTree( const BuilderData::Tree &rData );
         void addVideo( const BuilderData::Video &rData );
 
        /// Compute the position of a control
@@ -90,6 +91,9 @@ class Builder: public SkinObject
 
         /// Function to parse "points" tags
         Bezier *getPoints( const char *pTag ) const;
+
+        /// Image handler (used to load image files)
+        image_handler_t *m_pImageHandler;
 };
 
 #endif

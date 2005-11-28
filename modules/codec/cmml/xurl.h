@@ -3,9 +3,9 @@
  *****************************************************************************
  * Copyright (C) 2003-2004 Commonwealth Scientific and Industrial Research
  *                         Organisation (CSIRO) Australia
- * Copyright (C) 2004 VideoLAN
+ * Copyright (C) 2004 the VideoLAN team
  *
- * $Id: xurl.h 7397 2004-04-20 17:27:30Z sam $
+ * $Id: xurl.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Andre Pang <Andre.Pang@csiro.au>
  *

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_text.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_text.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: ctrl_text.hpp 12207 2005-08-15 15:54:32Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -60,16 +60,19 @@ class CtrlText: public CtrlGeneric, public Observer<VarText>
         /// This takes effect immediatly
         void setText( const UString &rText, uint32_t color = 0xFFFFFFFF );
 
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return "text"; }
+
     private:
         /// Finite state machine of the control
         FSM m_fsm;
         /// Variable associated to the control
         VarText &m_rVariable;
         /// Callback objects
-        Callback m_cmdToManual;
-        Callback m_cmdManualMoving;
-        Callback m_cmdManualStill;
-        Callback m_cmdMove;
+        DEFINE_CALLBACK( CtrlText, ToManual )
+        DEFINE_CALLBACK( CtrlText, ManualMoving )
+        DEFINE_CALLBACK( CtrlText, ManualStill )
+        DEFINE_CALLBACK( CtrlText, Move )
         /// The last received event
         EvtGeneric *m_pEvt;
         /// Font used to render the text
@@ -91,13 +94,8 @@ class CtrlText: public CtrlGeneric, public Observer<VarText>
          /// Timer to move the text
         OSTimer *m_pTimer;
 
-        /// Callback functions
-        static void transToManual( SkinObject *pCtrl );
-        static void transManualMoving( SkinObject *pCtrl );
-        static void transManualStill( SkinObject *pCtrl );
-        static void transMove( SkinObject *pCtrl );
         /// Callback for the timer
-        static void updateText( SkinObject *pCtrl );
+        DEFINE_CALLBACK( CtrlText, UpdateText );
 
         /// Method called when the observed variable is modified
         virtual void onUpdate( Subject<VarText> &rVariable );

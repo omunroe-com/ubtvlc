@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cinepak.c: cinepak video decoder
  *****************************************************************************
- * Copyright (C) 1999-2001 VideoLAN
- * $Id: cinepak.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999-2001 the VideoLAN team
+ * $Id: cinepak.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -37,6 +37,8 @@ static void CloseDecoder( vlc_object_t * );
 vlc_module_begin();
     set_description( _("Cinepak video decoder") );
     set_capability( "decoder", 100 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_VCODEC );
     set_callbacks( OpenDecoder, CloseDecoder );
 vlc_module_end();
 
@@ -173,7 +175,7 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
             p_src = p_sys->context.p_pix[i_plane];
 
             i_lines = __MIN( p_sys->context.i_lines[i_plane],
-                             p_pic->p[i_plane].i_lines );
+                             p_pic->p[i_plane].i_visible_lines );
             for( i_line = 0; i_line < i_lines; i_line++ )
             {
                 memcpy( p_dst, p_src,

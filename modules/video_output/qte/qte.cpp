@@ -1,8 +1,8 @@
 /*****************************************************************************
  * qte.cpp : QT Embedded plugin for vlc
  *****************************************************************************
- * Copyright (C) 1998-2003 VideoLAN
- * $Id: qte.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1998-2003 the VideoLAN team
+ * $Id: qte.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Gerald Hansink <gerald.hansink@ordain.nl>
  *          Jean-Paul Saman <jpsaman@wxs.nl>
@@ -110,6 +110,8 @@ extern "C"
 {
 
 vlc_module_begin();
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VOUT );
 //    add_category_hint( N_("QT Embedded"), NULL );
 //    add_string( "qte-display", "landscape", NULL, DISPLAY_TEXT, DISPLAY_LONGTEXT);
     set_description( _("QT Embedded video output") );
@@ -462,6 +464,7 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
     p_pic->p->p_pixels = (p_pic->p_sys->pQImage->jumpTable())[0];
     p_pic->p->i_pitch = p_pic->p_sys->pQImage->bytesPerLine();
     p_pic->p->i_lines = p_vout->output.i_height;
+    p_pic->p->i_visible_lines = p_vout->output.i_height;
     p_pic->p->i_visible_pitch =
             p_pic->p->i_pixel_pitch * p_vout->output.i_width;
 

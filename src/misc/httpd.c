@@ -1,10 +1,11 @@
 /*****************************************************************************
  * httpd.c
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: httpd.c 7441 2004-04-23 12:38:04Z gbazin $
+ * Copyright (C) 2004-2005 the VideoLAN team
+ * $Id: httpd.c 12916 2005-10-22 16:23:01Z md $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
+ *          Rémi Denis-Courmont <rem # videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,29 +25,44 @@
 #include <stdlib.h>
 #include <vlc/vlc.h>
 
-#include "vlc_httpd.h"
+#ifdef ENABLE_HTTPD
 
+#include "vlc_httpd.h"
+#include "network.h"
+#include "vlc_tls.h"
+#include "vlc_acl.h"
+
+#include <string.h>
 #include <errno.h>
+
 #ifdef HAVE_UNISTD_H
 #   include <unistd.h>
 #endif
-#include <fcntl.h>
+
+#ifdef HAVE_FCNTL_H
+#   include <fcntl.h>
+#endif
 
 #if defined( UNDER_CE )
 #   include <winsock.h>
 #elif defined( WIN32 )
 #   include <winsock2.h>
 #   include <ws2tcpip.h>
-#   ifndef IN_MULTICAST
-#       define IN_MULTICAST(a) IN_CLASSD(a)
-#   endif
 #else
 #   include <netdb.h>                                         /* hostent ... */
 #   include <sys/socket.h>
+/* FIXME: should not be needed */
 #   include <netinet/in.h>
 #   ifdef HAVE_ARPA_INET_H
 #       include <arpa/inet.h>                    /* inet_ntoa(), inet_aton() */
 #   endif
+#endif
+
+#if defined( WIN32 )
+/* We need HUGE buffer otherwise TCP throughput is very limited */
+#define HTTPD_CL_BUFSIZE 1000000
+#else
+#define HTTPD_CL_BUFSIZE 10000
 #endif
 
 #if 0
@@ -200,8 +216,9 @@ struct httpd_host_t
     int         i_ref;
 
     /* address/port and socket for listening at connections */
-    struct sockaddr_in sock;
-    int                fd;
+    char        *psz_hostname;
+    int         i_port;
+    int         *fd;
 
     vlc_mutex_t lock;
 
@@ -214,6 +231,9 @@ struct httpd_host_t
 
     int            i_client;
     httpd_client_t **client;
+    
+    /* TLS data */
+    tls_server_t *p_tls;
 };
 
 struct httpd_url_t
@@ -222,9 +242,10 @@ struct httpd_url_t
 
     vlc_mutex_t lock;
 
-    char    *psz_url;
-    char    *psz_user;
-    char    *psz_password;
+    char      *psz_url;
+    char      *psz_user;
+    char      *psz_password;
+    vlc_acl_t *p_acl;
 
     struct
     {
@@ -245,6 +266,9 @@ enum
     HTTPD_CLIENT_WAITING,
 
     HTTPD_CLIENT_DEAD,
+
+    HTTPD_CLIENT_TLS_HS_IN,
+    HTTPD_CLIENT_TLS_HS_OUT
 };
 /* mode */
 enum
@@ -260,7 +284,8 @@ struct httpd_client_t
 
     int     i_ref;
 
-    struct  sockaddr_in sock;
+    struct  sockaddr_storage sock;
+    int     i_sock_size;
     int     fd;
 
     int     i_mode;
@@ -278,6 +303,9 @@ struct httpd_client_t
     /* */
     httpd_message_t query;  /* client -> httpd */
     httpd_message_t answer; /* httpd -> client */
+    
+    /* TLS data */
+    tls_session_t *p_tls;
 };
 
 
@@ -343,8 +371,8 @@ static void b64_decode( char *dest, char *src )
 
 static struct
 {
-    char *psz_ext;
-    char *psz_mime;
+    const char *psz_ext;
+    const char *psz_mime;
 } http_mime[] =
 {
     { ".htm",   "text/html" },
@@ -361,6 +389,7 @@ static struct
     { ".jpg",   "image/jpeg" },
     { ".jpeg",  "image/jpeg" },
     { ".png",   "image/png" },
+    { ".mpjpeg","multipart/x-mixed-replace; boundary=This Random String" },
 
     /* media mime */
     { ".avi",   "video/avi" },
@@ -387,7 +416,7 @@ static struct
     /* end */
     { NULL,     NULL }
 };
-static char *httpd_MimeFromUrl( char *psz_url )
+static const char *httpd_MimeFromUrl( const char *psz_url )
 {
 
     char *psz_ext;
@@ -409,7 +438,7 @@ static char *httpd_MimeFromUrl( char *psz_url )
 }
 
 /*****************************************************************************
- * High Level Funtions: httpd_file_t
+ * High Level Functions: httpd_file_t
  *****************************************************************************/
 struct httpd_file_t
 {
@@ -427,6 +456,9 @@ struct httpd_file_t
 static int httpd_FileCallBack( httpd_callback_sys_t *p_sys, httpd_client_t *cl, httpd_message_t *answer, httpd_message_t *query )
 {
     httpd_file_t *file = (httpd_file_t*)p_sys;
+    uint8_t *psz_args = query->psz_args;
+    uint8_t **pp_body, *p_body;
+    int *pi_body, i_body;
 
     if( answer == NULL || query == NULL )
     {
@@ -444,15 +476,30 @@ static int httpd_FileCallBack( httpd_callback_sys_t *p_sys, httpd_client_t *cl, 
 
     if( query->i_type != HTTPD_MSG_HEAD )
     {
-        char *psz_args = query->psz_args;
-        if( query->i_type == HTTPD_MSG_POST )
-        {
-            /* Check that */
-            psz_args = query->p_body;
-        }
-        file->pf_fill( file->p_sys, file, psz_args, &answer->p_body,
-                       &answer->i_body );
+        pp_body = &answer->p_body;
+        pi_body = &answer->i_body;
     }
+    else
+    {
+        /* The file still needs to be executed. */
+        p_body = NULL;
+        i_body = 0;
+        pp_body = &p_body;
+        pi_body = &i_body;
+    }
+
+    if( query->i_type == HTTPD_MSG_POST )
+    {
+        /* msg_Warn not supported */
+    }
+
+    file->pf_fill( file->p_sys, file, psz_args, pp_body, pi_body );
+
+    if( query->i_type == HTTPD_MSG_HEAD && p_body != NULL )
+    {
+        free( p_body );
+    }
+
     /* We respect client request */
     if( strcmp( httpd_MsgGet( &cl->query, "Connection" ), "" ) )
     {
@@ -467,15 +514,16 @@ static int httpd_FileCallBack( httpd_callback_sys_t *p_sys, httpd_client_t *cl, 
 
 
 httpd_file_t *httpd_FileNew( httpd_host_t *host,
-                             char *psz_url, char *psz_mime,
-                             char *psz_user, char *psz_password,
-                             httpd_file_callback_t pf_fill,
+                             const char *psz_url, const char *psz_mime,
+                             const char *psz_user, const char *psz_password,
+                             const vlc_acl_t *p_acl, httpd_file_callback_t pf_fill,
                              httpd_file_sys_t *p_sys )
 {
     httpd_file_t *file = malloc( sizeof( httpd_file_t ) );
 
     if( ( file->url = httpd_UrlNewUnique( host, psz_url, psz_user,
-                                          psz_password ) ) == NULL )
+                                          psz_password, p_acl )
+        ) == NULL )
     {
         free( file );
         return NULL;
@@ -515,7 +563,165 @@ void httpd_FileDelete( httpd_file_t *file )
 }
 
 /*****************************************************************************
- * High Level Funtions: httpd_redirect_t
+ * High Level Functions: httpd_handler_t (for CGIs)
+ *****************************************************************************/
+struct httpd_handler_t
+{
+    httpd_url_t *url;
+
+    httpd_handler_callback_t pf_fill;
+    httpd_handler_sys_t      *p_sys;
+
+};
+
+static int httpd_HandlerCallBack( httpd_callback_sys_t *p_sys, httpd_client_t *cl, httpd_message_t *answer, httpd_message_t *query )
+{
+    httpd_handler_t *handler = (httpd_handler_t*)p_sys;
+    uint8_t *psz_args = query->psz_args;
+    char psz_remote_addr[100];
+
+    if( answer == NULL || query == NULL )
+    {
+        return VLC_SUCCESS;
+    }
+    answer->i_proto  = HTTPD_PROTO_NONE;
+    answer->i_type   = HTTPD_MSG_ANSWER;
+
+    /* We do it ourselves, thanks */
+    answer->i_status = 0;
+    answer->psz_status = NULL;
+
+    switch( cl->sock.ss_family )
+    {
+#ifdef HAVE_INET_PTON
+    case AF_INET:
+        inet_ntop( cl->sock.ss_family,
+                   &((struct sockaddr_in *)&cl->sock)->sin_addr,
+                   psz_remote_addr, sizeof(psz_remote_addr) );
+        break;
+    case AF_INET6:
+        inet_ntop( cl->sock.ss_family,
+                   &((struct sockaddr_in6 *)&cl->sock)->sin6_addr,
+                   psz_remote_addr, sizeof(psz_remote_addr) );
+        break;
+#else
+    case AF_INET:
+    {
+        char *psz_tmp = inet_ntoa( ((struct sockaddr_in *)&cl->sock)->sin_addr );
+        strncpy( psz_remote_addr, psz_tmp, sizeof(psz_remote_addr) );
+        break;
+    }
+#endif
+    default:
+        psz_remote_addr[0] = '\0';
+    }
+
+    handler->pf_fill( handler->p_sys, handler, query->psz_url, psz_args,
+                      query->i_type, query->p_body, query->i_body,
+                      psz_remote_addr, NULL,
+                      &answer->p_body, &answer->i_body );
+
+    if( query->i_type == HTTPD_MSG_HEAD )
+    {
+        char *p = answer->p_body;
+        while ( (p = strchr( p, '\r' )) != NULL )
+        {
+            if( p[1] && p[1] == '\n' && p[2] && p[2] == '\r'
+                 && p[3] && p[3] == '\n' )
+            {
+                break;
+            }
+        }
+        if( p != NULL )
+        {
+            p[4] = '\0';
+            answer->i_body = strlen(answer->p_body) + 1;
+            answer->p_body = realloc( answer->p_body, answer->i_body );
+        }
+    }
+
+    if( strncmp( answer->p_body, "HTTP/1.", 7 ) )
+    {
+        int i_status, i_headers;
+        char *psz_headers, *psz_new, *psz_status;
+        char psz_code[12];
+        if( !strncmp( answer->p_body, "Status: ", 8 ) )
+        {
+            /* Apache-style */
+            i_status = strtol( &answer->p_body[8], &psz_headers, 0 );
+            if( *psz_headers ) psz_headers++;
+            if( *psz_headers ) psz_headers++;
+            i_headers = answer->i_body - (psz_headers - (char *)answer->p_body);
+        }
+        else
+        {
+            i_status = 200;
+            psz_headers = answer->p_body;
+            i_headers = answer->i_body;
+        }
+        switch( i_status )
+        {
+        case 200:
+            psz_status = "OK";
+            break;
+        case 401:
+            psz_status = "Unauthorized";
+            break;
+        default:
+            psz_status = "Undefined";
+            break;
+        }
+        snprintf( psz_code, sizeof(psz_code), "%d", i_status );
+        answer->i_body = sizeof("HTTP/1.0  \r\n") + strlen(psz_code)
+                           + strlen(psz_status) + i_headers - 1;
+        psz_new = malloc( answer->i_body + 1);
+        sprintf( psz_new, "HTTP/1.0 %s %s\r\n", psz_code, psz_status );
+        memcpy( &psz_new[strlen(psz_new)], psz_headers, i_headers );
+        free( answer->p_body );
+        answer->p_body = psz_new;
+    }
+
+    return VLC_SUCCESS;
+}
+
+httpd_handler_t *httpd_HandlerNew( httpd_host_t *host, const char *psz_url,
+                                   const char *psz_user,
+                                   const char *psz_password,
+                                   const vlc_acl_t *p_acl,
+                                   httpd_handler_callback_t pf_fill,
+                                   httpd_handler_sys_t *p_sys )
+{
+    httpd_handler_t *handler = malloc( sizeof( httpd_handler_t ) );
+
+    if( ( handler->url = httpd_UrlNewUnique( host, psz_url, psz_user,
+                                             psz_password, p_acl )
+        ) == NULL )
+    {
+        free( handler );
+        return NULL;
+    }
+
+    handler->pf_fill = pf_fill;
+    handler->p_sys   = p_sys;
+
+    httpd_UrlCatch( handler->url, HTTPD_MSG_HEAD, httpd_HandlerCallBack,
+                    (httpd_callback_sys_t*)handler );
+    httpd_UrlCatch( handler->url, HTTPD_MSG_GET,  httpd_HandlerCallBack,
+                    (httpd_callback_sys_t*)handler );
+    httpd_UrlCatch( handler->url, HTTPD_MSG_POST, httpd_HandlerCallBack,
+                    (httpd_callback_sys_t*)handler );
+
+    return handler;
+}
+
+void httpd_HandlerDelete( httpd_handler_t *handler )
+{
+    httpd_UrlDelete( handler->url );
+    free( handler );
+}
+
+/*****************************************************************************
+ * High Level Functions: httpd_redirect_t
  *****************************************************************************/
 struct httpd_redirect_t
 {
@@ -541,16 +747,22 @@ static int httpd_RedirectCallBack( httpd_callback_sys_t *p_sys,
     answer->psz_status = strdup( "Moved Permanently" );
 
     p = answer->p_body = malloc( 1000 + strlen( rdir->psz_dst ) );
-    p += sprintf( p, "<html>\n" );
-    p += sprintf( p, "<head>\n" );
-    p += sprintf( p, "<title>Redirection</title>\n" );
-    p += sprintf( p, "</head>\n" );
-    p += sprintf( p, "<body>\n" );
-    p += sprintf( p, "<h1><center>You should be <a href=\"%s\">redirected</a></center></h1>\n", rdir->psz_dst );
-    p += sprintf( p, "<hr />\n" );
-    p += sprintf( p, "<a href=\"http://www.videolan.org\">VideoLAN</a>\n" );
-    p += sprintf( p, "</body>\n" );
-    p += sprintf( p, "</html>\n" );
+    p += sprintf( (char *)p,
+        "<?xml version=\"1.0\" encoding=\"ascii\" ?>\n"
+        "<!DOCTYPE html PUBLIC \"-//W3C//DTD  XHTML 1.0 Strict//EN\" "
+        "\"http://www.w3.org/TR/xhtml10/DTD/xhtml10strict.dtd\">\n"
+        "<html>\n"
+        "<head>\n"
+        "<title>Redirection</title>\n"
+        "</head>\n"
+        "<body>\n"
+        "<h1>You should be " 
+        "<a href=\"%s\">redirected</a></h1>\n"
+        "<hr />\n"
+        "<p><a href=\"http://www.videolan.org\">VideoLAN</a>\n</p>"
+        "<hr />\n"
+        "</body>\n"
+        "</html>\n", rdir->psz_dst );
     answer->i_body = p - answer->p_body;
 
     /* XXX check if it's ok or we need to set an absolute url */
@@ -561,12 +773,12 @@ static int httpd_RedirectCallBack( httpd_callback_sys_t *p_sys,
     return VLC_SUCCESS;
 }
 
-httpd_redirect_t *httpd_RedirectNew( httpd_host_t *host, char *psz_url_dst,
-                                     char *psz_url_src )
+httpd_redirect_t *httpd_RedirectNew( httpd_host_t *host, const char *psz_url_dst,
+                                     const char *psz_url_src )
 {
     httpd_redirect_t *rdir = malloc( sizeof( httpd_redirect_t ) );
 
-    if( !( rdir->url = httpd_UrlNewUnique( host, psz_url_src, NULL, NULL ) ) )
+    if( !( rdir->url = httpd_UrlNewUnique( host, psz_url_src, NULL, NULL, NULL ) ) )
     {
         free( rdir );
         return NULL;
@@ -649,9 +861,9 @@ static int httpd_StreamCallBack( httpd_callback_sys_t *p_sys,
 
         i_pos   = answer->i_body_offset % stream->i_buffer_size;
         i_write = stream->i_buffer_pos - answer->i_body_offset;
-        if( i_write > 10000 )
+        if( i_write > HTTPD_CL_BUFSIZE )
         {
-            i_write = 10000;
+            i_write = HTTPD_CL_BUFSIZE;
         }
         else if( i_write <= 0 )
         {
@@ -740,13 +952,15 @@ static int httpd_StreamCallBack( httpd_callback_sys_t *p_sys,
 }
 
 httpd_stream_t *httpd_StreamNew( httpd_host_t *host,
-                                 char *psz_url, char *psz_mime,
-                                 char *psz_user, char *psz_password )
+                                 const char *psz_url, const char *psz_mime,
+                                 const char *psz_user, const char *psz_password,
+                                 const vlc_acl_t *p_acl )
 {
     httpd_stream_t *stream = malloc( sizeof( httpd_stream_t ) );
 
     if( ( stream->url = httpd_UrlNewUnique( host, psz_url, psz_user,
-                                            psz_password ) ) == NULL )
+                                            psz_password, p_acl )
+        ) == NULL )
     {
         free( stream );
         return NULL;
@@ -848,32 +1062,35 @@ void httpd_StreamDelete( httpd_stream_t *stream )
 /*****************************************************************************
  * Low level
  *****************************************************************************/
-#define LISTEN_BACKLOG          100
-
-#if defined( WIN32 ) || defined( UNDER_CE )
-#define SOCKET_CLOSE(a)    closesocket(a)
-#else
-#define SOCKET_CLOSE(a)    close(a)
-#endif
-
 static void httpd_HostThread( httpd_host_t * );
-static int BuildAddr( struct sockaddr_in * p_socket,
-                      const char * psz_address, int i_port );
-
 
 /* create a new host */
-httpd_host_t *httpd_HostNew( vlc_object_t *p_this, char *psz_host, int i_port )
+httpd_host_t *httpd_HostNew( vlc_object_t *p_this, const char *psz_host,
+                             int i_port )
+{
+    return httpd_TLSHostNew( p_this, psz_host, i_port, NULL, NULL, NULL, NULL
+                           );
+}
+
+httpd_host_t *httpd_TLSHostNew( vlc_object_t *p_this, const char *psz_hostname,
+                                int i_port,
+                                const char *psz_cert, const char *psz_key,
+                                const char *psz_ca, const char *psz_crl )
 {
     httpd_t      *httpd;
     httpd_host_t *host;
-    vlc_value_t lockval;
-    struct sockaddr_in sock;
+    tls_server_t *p_tls;
+    char *psz_host;
+    vlc_value_t  lockval;
     int i;
 
-    /* resolv */
-    if( BuildAddr( &sock, psz_host, i_port ) )
+    if( psz_hostname == NULL )
+        psz_hostname = "";
+
+    psz_host = strdup( psz_hostname );
+    if( psz_host == NULL )
     {
-        msg_Err( p_this, "cannot build address for %s:%d", psz_host, i_port );
+        msg_Err( p_this, "memory error" );
         return NULL;
     }
 
@@ -888,6 +1105,7 @@ httpd_host_t *httpd_HostNew( vlc_object_t *p_this, char *psz_host, int i_port )
         if( ( httpd = vlc_object_create( p_this, VLC_OBJECT_HTTPD ) ) == NULL )
         {
             vlc_mutex_unlock( lockval.p_address );
+            free( psz_host );
             return NULL;
         }
 
@@ -899,90 +1117,79 @@ httpd_host_t *httpd_HostNew( vlc_object_t *p_this, char *psz_host, int i_port )
     }
 
     /* verify if it already exist */
-    for( i = 0; i < httpd->i_host; i++ )
+    for( i = httpd->i_host - 1; i >= 0; i-- )
     {
-        if( httpd->host[i]->sock.sin_port == sock.sin_port &&
-            ( httpd->host[i]->sock.sin_addr.s_addr == INADDR_ANY ||
-              httpd->host[i]->sock.sin_addr.s_addr == sock.sin_addr.s_addr ) )
+        host = httpd->host[i];
+
+        /* cannot mix TLS and non-TLS hosts */
+        if( ( ( httpd->host[i]->p_tls != NULL ) != ( psz_cert != NULL ) )
+         || ( host->i_port != i_port )
+         || strcmp( host->psz_hostname, psz_hostname ) )
+            continue;
+
+        /* yep found */
+        host->i_ref++;
+
+        vlc_mutex_unlock( lockval.p_address );
+        return host;
+    }
+
+    host = NULL;
+
+    /* determine TLS configuration */
+    if ( psz_cert != NULL )
+    {
+        p_tls = tls_ServerCreate( p_this, psz_cert, psz_key );
+        if ( p_tls == NULL )
         {
-            /* yep found */
-            host = httpd->host[i];
-            host->i_ref++;
+            msg_Err( p_this, "TLS initialization error" );
+            goto error;
+        }
 
-            vlc_mutex_unlock( lockval.p_address );
+        if ( ( psz_ca != NULL) && tls_ServerAddCA( p_tls, psz_ca ) )
+        {
+            msg_Err( p_this, "TLS CA error" );
+            goto error;
+        }
 
-            msg_Dbg( p_this, "host already registered" );
-            return host;
+        if ( ( psz_crl != NULL) && tls_ServerAddCRL( p_tls, psz_crl ) )
+        {
+            msg_Err( p_this, "TLS CRL error" );
+            goto error;
         }
     }
+    else
+        p_tls = NULL;
+
     /* create the new host */
     host = vlc_object_create( p_this, sizeof( httpd_host_t ) );
     host->httpd = httpd;
     vlc_mutex_init( httpd, &host->lock );
     host->i_ref = 1;
-    memcpy( &host->sock, &sock, sizeof( struct sockaddr_in ) );
+
+    host->fd = net_ListenTCP( p_this, psz_host, i_port );
+    if( host->fd == NULL )
+    {
+        msg_Err( p_this, "cannot create socket(s) for HTTP host" );
+        goto error;
+    }
+       
+    host->i_port = i_port;
+    host->psz_hostname = psz_host;
+
     host->i_url     = 0;
     host->url       = NULL;
     host->i_client  = 0;
     host->client    = NULL;
 
-    /* create the listening socket */
-    if( ( host->fd = socket( AF_INET, SOCK_STREAM, 0 ) ) < 0 )
-    {
-        goto socket_error;
-    }
-    /* reuse socket */
-    i = 1;
-    if( setsockopt( host->fd, SOL_SOCKET, SO_REUSEADDR,
-                    (void *) &i, sizeof( i ) ) < 0 )
-    {
-        msg_Warn( p_this, "cannot configure socket (SO_REUSEADDR)" );
-    }
-    /* bind it */
-    if( bind( host->fd, (struct sockaddr *)&host->sock,
-        sizeof( struct sockaddr_in ) ) < 0 )
-    {
-        msg_Err( p_this, "cannot bind socket" );
-        goto socket_error;
-    }
-    /* set to non-blocking */
-#if defined( WIN32 ) || defined( UNDER_CE )
-    {
-        unsigned long i_dummy = 1;
-        if( ioctlsocket( host->fd, FIONBIO, &i_dummy ) != 0 )
-        {
-            msg_Err( p_this, "cannot set socket to non-blocking mode" );
-            goto socket_error;
-        }
-    }
-#else
-    {
-        unsigned int i_flags;
-        if( ( i_flags = fcntl( host->fd, F_GETFL, 0 ) ) < 0 )
-        {
-            msg_Err( p_this, "cannot F_GETFL socket" );
-            goto socket_error;
-        }
-        if( fcntl( host->fd, F_SETFL, i_flags | O_NONBLOCK ) < 0 )
-        {
-            msg_Err( p_this, "cannot F_SETFL O_NONBLOCK" );
-            goto socket_error;
-        }
-    }
-#endif
-    /* listen */
-    if( listen( host->fd, LISTEN_BACKLOG ) < 0 )
-    {
-        msg_Err( p_this, "cannot listen socket" );
-        goto socket_error;
-    }
+    host->p_tls = p_tls;
 
     /* create the thread */
     if( vlc_thread_create( host, "httpd host thread", httpd_HostThread,
                            VLC_THREAD_PRIORITY_LOW, VLC_FALSE ) )
     {
         msg_Err( p_this, "cannot spawn http host thread" );
-        goto socket_error;
+        goto error;
     }
 
     /* now add it to httpd */
@@ -991,18 +1198,26 @@ httpd_host_t *httpd_HostNew( vlc_object_t *p_this, char *psz_host, int i_port )
 
     return host;
 
-socket_error:
+error:
+    free( psz_host );
+    if( httpd->i_host <= 0 )
+    {
+        vlc_object_release( httpd );
+        vlc_object_detach( httpd );
+        vlc_object_destroy( httpd );
+    }
     vlc_mutex_unlock( lockval.p_address );
 
-    if( host->fd > 0 )
+    if( host != NULL )
     {
-        SOCKET_CLOSE( host->fd );
+        net_ListenClose( host->fd );
+        vlc_mutex_destroy( &host->lock );
+        vlc_object_destroy( host );
     }
-    vlc_mutex_destroy( &host->lock );
-    vlc_object_destroy( host );
 
-    /* TODO destroy no more used httpd TODO */
-    vlc_object_release( httpd );
+    if( p_tls != NULL )
+        tls_ServerDelete( p_tls );
+
     return NULL;
 }
 
@@ -1017,8 +1232,6 @@ void httpd_HostDelete( httpd_host_t *host )
 
     var_Get( httpd->p_libvlc, "httpd_mutex", &lockval );
     vlc_mutex_lock( lockval.p_address );
-
-    vlc_object_release( httpd );
 
     host->i_ref--;
     if( host->i_ref > 0 )
@@ -1052,10 +1265,16 @@ void httpd_HostDelete( httpd_host_t *host )
         /* TODO */
     }
 
-    SOCKET_CLOSE( host->fd );
+    if( host->p_tls != NULL)
+        tls_ServerDelete( host->p_tls );
+
+    net_ListenClose( host->fd );
+    free( host->psz_hostname );
+
     vlc_mutex_destroy( &host->lock );
     vlc_object_destroy( host );
 
+    vlc_object_release( httpd );
     if( httpd->i_host <= 0 )
     {
         msg_Info( httpd, "httpd doesn't reference any host, deleting" );
@@ -1066,9 +1285,9 @@ void httpd_HostDelete( httpd_host_t *host )
 }
 
 /* register a new url */
-static httpd_url_t *httpd_UrlNewPrivate( httpd_host_t *host, char *psz_url,
-                                         char *psz_user, char *psz_password,
-                                         vlc_bool_t b_check )
+static httpd_url_t *httpd_UrlNewPrivate( httpd_host_t *host, const char *psz_url,
+                                         const char *psz_user, const char *psz_password,
+                                         const vlc_acl_t *p_acl, vlc_bool_t b_check )
 {
     httpd_url_t *url;
     int         i;
@@ -1095,6 +1314,7 @@ static httpd_url_t *httpd_UrlNewPrivate( httpd_host_t *host, char *psz_url,
     url->psz_url = strdup( psz_url );
     url->psz_user = strdup( psz_user ? psz_user : "" );
     url->psz_password = strdup( psz_password ? psz_password : "" );
+    url->p_acl = ACL_Duplicate( host, p_acl );
     for( i = 0; i < HTTPD_MSG_MAX; i++ )
     {
         url->catch[i].cb = NULL;
@@ -1107,18 +1327,20 @@ static httpd_url_t *httpd_UrlNewPrivate( httpd_host_t *host, char *psz_url,
     return url;
 }
 
-httpd_url_t *httpd_UrlNew( httpd_host_t *host, char *psz_url,
-                           char *psz_user, char *psz_password )
+httpd_url_t *httpd_UrlNew( httpd_host_t *host, const char *psz_url,
+                           const char *psz_user, const char *psz_password,
+                           const vlc_acl_t *p_acl )
 {
     return httpd_UrlNewPrivate( host, psz_url, psz_user,
-                                psz_password, VLC_FALSE );
+                                psz_password, p_acl, VLC_FALSE );
 }
 
-httpd_url_t *httpd_UrlNewUnique( httpd_host_t *host, char *psz_url,
-                                 char *psz_user, char *psz_password )
+httpd_url_t *httpd_UrlNewUnique( httpd_host_t *host, const char *psz_url,
+                                 const char *psz_user, const char *psz_password,
+                                 const vlc_acl_t *p_acl )
 {
     return httpd_UrlNewPrivate( host, psz_url, psz_user,
-                                psz_password, VLC_TRUE );
+                                psz_password, p_acl, VLC_TRUE );
 }
 
 /* register callback on a url */
@@ -1147,6 +1369,7 @@ void httpd_UrlDelete( httpd_url_t *url )
     free( url->psz_url );
     free( url->psz_user );
     free( url->psz_password );
+    ACL_Destroy( url->p_acl );
 
     for( i = 0; i < host->i_client; i++ )
     {
@@ -1268,8 +1491,8 @@ static void httpd_ClientInit( httpd_client_t *cl )
 {
     cl->i_state = HTTPD_CLIENT_RECEIVING;
     cl->i_activity_date = mdate();
-    cl->i_activity_timeout = 50000000;
-    cl->i_buffer_size = 10000;
+    cl->i_activity_timeout = I64C(10000000);
+    cl->i_buffer_size = HTTPD_CL_BUFSIZE;
     cl->i_buffer = 0;
     cl->p_buffer = malloc( cl->i_buffer_size );
     cl->i_mode   = HTTPD_CLIENT_FILE;
@@ -1289,17 +1512,23 @@ void httpd_ClientModeBidir( httpd_client_t *cl )
     cl->i_mode   = HTTPD_CLIENT_BIDIR;
 }
 
-char* httpd_ClientIP( httpd_client_t *cl )
+char* httpd_ClientIP( httpd_client_t *cl, char *psz_ip )
 {
-    /* FIXME not thread safe */
-    return strdup( inet_ntoa( cl->sock.sin_addr ) );
+    return net_GetPeerAddress( cl->fd, psz_ip, NULL ) ? NULL : psz_ip;
+}
+
+char* httpd_ServerIP( httpd_client_t *cl, char *psz_ip )
+{
+    return net_GetSockAddress( cl->fd, psz_ip, NULL ) ? NULL : psz_ip;
 }
 
 static void httpd_ClientClean( httpd_client_t *cl )
 {
-    if( cl->fd > 0 )
+    if( cl->fd >= 0 )
     {
-        SOCKET_CLOSE( cl->fd );
+        if( cl->p_tls != NULL )
+            tls_ServerSessionClose( cl->p_tls );
+        net_Close( cl->fd );
         cl->fd = -1;
     }
 
@@ -1313,27 +1542,47 @@ static void httpd_ClientClean( httpd_client_t *cl )
     }
 }
 
-static httpd_client_t *httpd_ClientNew( int fd, struct sockaddr_in *sock )
+static httpd_client_t *httpd_ClientNew( int fd, struct sockaddr_storage *sock,
+                                        int i_sock_size,
+                                        tls_session_t *p_tls )
 {
     httpd_client_t *cl = malloc( sizeof( httpd_client_t ) );
-    /* set this new socket non-block */
-#if defined( WIN32 ) || defined( UNDER_CE )
-    {
-        unsigned long i_dummy = 1;
-        ioctlsocket( fd, FIONBIO, &i_dummy );
-    }
-#else
-    fcntl( fd, F_SETFL, O_NONBLOCK );
-#endif
     cl->i_ref   = 0;
     cl->fd      = fd;
-    cl->sock    = *sock;
+    memcpy( &cl->sock, sock, sizeof( cl->sock ) );
+    cl->i_sock_size = i_sock_size;
     cl->url     = NULL;
+    cl->p_tls = p_tls;
 
     httpd_ClientInit( cl );
 
     return cl;
 }
+
+
+static int httpd_NetRecv( httpd_client_t *cl, uint8_t *p, int i_len )
+{
+    tls_session_t *p_tls;
+    
+    p_tls = cl->p_tls;
+    if( p_tls != NULL)
+        return tls_Recv( p_tls, p, i_len );
+
+    return recv( cl->fd, p, i_len, 0 );
+}
+
+
+static int httpd_NetSend( httpd_client_t *cl, const uint8_t *p, int i_len )
+{
+    tls_session_t *p_tls;
+
+    p_tls = cl->p_tls;
+    if( p_tls != NULL)
+        return tls_Send( p_tls, p, i_len );
+
+    return send( cl->fd, p, i_len, 0 );
+}
+
 
 static void httpd_ClientRecv( httpd_client_t *cl )
 {
@@ -1341,9 +1590,9 @@ static void httpd_ClientRecv( httpd_client_t *cl )
 
     if( cl->query.i_proto == HTTPD_PROTO_NONE )
     {
-        /* enought to see if it's rtp over rtsp or RTSP/HTTP */
-        i_len = recv( cl->fd, &cl->p_buffer[cl->i_buffer], 4 - cl->i_buffer, 0 );
-
+        /* enough to see if it's rtp over rtsp or RTSP/HTTP */
+        i_len = httpd_NetRecv( cl, &cl->p_buffer[cl->i_buffer],
+                               4 - cl->i_buffer );
         if( i_len > 0 )
         {
             cl->i_buffer += i_len;
@@ -1351,7 +1600,7 @@ static void httpd_ClientRecv( httpd_client_t *cl )
 
         if( cl->i_buffer >= 4 )
         {
-            fprintf( stderr, "peek=%4.4s\n", cl->p_buffer );
+            /*fprintf( stderr, "peek=%4.4s\n", cl->p_buffer );*/
             /* detect type */
             if( cl->p_buffer[0] == '$' )
             {
@@ -1364,19 +1613,19 @@ static void httpd_ClientRecv( httpd_client_t *cl )
 
                 cl->i_buffer      = 0;
             }
-            else if( !strncmp( cl->p_buffer, "HTTP", 4 ) )
+            else if( !memcmp( cl->p_buffer, "HTTP", 4 ) )
             {
                 cl->query.i_proto = HTTPD_PROTO_HTTP;
                 cl->query.i_type  = HTTPD_MSG_ANSWER;
             }
-            else if( !strncmp( cl->p_buffer, "RTSP", 4 ) )
+            else if( !memcmp( cl->p_buffer, "RTSP", 4 ) )
             {
                 cl->query.i_proto = HTTPD_PROTO_RTSP;
                 cl->query.i_type  = HTTPD_MSG_ANSWER;
             }
-            else if( !strncmp( cl->p_buffer, "GET", 3 ) ||
-                     !strncmp( cl->p_buffer, "HEAD", 4 ) ||
-                     !strncmp( cl->p_buffer, "POST", 4 ) )
+            else if( !memcmp( cl->p_buffer, "GET", 3 ) ||
+                     !memcmp( cl->p_buffer, "HEAD", 4 ) ||
+                     !memcmp( cl->p_buffer, "POST", 4 ) )
             {
                 cl->query.i_proto = HTTPD_PROTO_HTTP;
                 cl->query.i_type  = HTTPD_MSG_NONE;
@@ -1391,8 +1640,8 @@ static void httpd_ClientRecv( httpd_client_t *cl )
     else if( cl->query.i_body > 0 )
     {
         /* we are reading the body of a request or a channel */
-        i_len = recv( cl->fd, &cl->query.p_body[cl->i_buffer],
-                      cl->query.i_body - cl->i_buffer, 0 );
+        i_len = httpd_NetRecv( cl, &cl->query.p_body[cl->i_buffer],
+                               cl->query.i_body - cl->i_buffer );
         if( i_len > 0 )
         {
             cl->i_buffer += i_len;
@@ -1407,7 +1656,7 @@ static void httpd_ClientRecv( httpd_client_t *cl )
         /* we are reading a header -> char by char */
         for( ;; )
         {
-            i_len = recv( cl->fd, &cl->p_buffer[cl->i_buffer], 1, 0 );
+            i_len = httpd_NetRecv (cl, &cl->p_buffer[cl->i_buffer], 1 );
             if( i_len <= 0 )
             {
                 break;
@@ -1419,8 +1668,8 @@ static void httpd_ClientRecv( httpd_client_t *cl )
                 cl->i_buffer_size += 1024;
                 cl->p_buffer = realloc( cl->p_buffer, cl->i_buffer_size );
             }
-            if( ( cl->i_buffer >= 2 && !strncmp( &cl->p_buffer[cl->i_buffer-2], "\n\n", 2 ) )||
-                ( cl->i_buffer >= 4 && !strncmp( &cl->p_buffer[cl->i_buffer-4], "\r\n\r\n", 4 ) ) )
+            if( ( cl->i_buffer >= 2 && !memcmp( &cl->p_buffer[cl->i_buffer-2], "\n\n", 2 ) )||
+                ( cl->i_buffer >= 4 && !memcmp( &cl->p_buffer[cl->i_buffer-4], "\r\n\r\n", 4 ) ) )
             {
                 char *p;
 
@@ -1429,8 +1678,12 @@ static void httpd_ClientRecv( httpd_client_t *cl )
 
                 if( cl->query.i_type == HTTPD_MSG_ANSWER )
                 {
+                    /* FIXME:
+                     * assume strlen( "HTTP/1.x" ) = 8
+                     */
                     cl->query.i_status =
-                        strtol( &cl->p_buffer[strlen( "HTTP/1.x" )], &p, 0 );
+                        strtol( (char *)&cl->p_buffer[8],
+                                &p, 0 );
                     while( *p == ' ' )
                     {
                         p++;
@@ -1465,14 +1718,14 @@ static void httpd_ClientRecv( httpd_client_t *cl )
                     p = NULL;
                     cl->query.i_type = HTTPD_MSG_NONE;
 
-                    fprintf( stderr, "received new request=%s\n", cl->p_buffer);
+                    /*fprintf( stderr, "received new request=%s\n", cl->p_buffer);*/
 
                     for( i = 0; msg_type[i].name != NULL; i++ )
                     {
-                        if( !strncmp( cl->p_buffer, msg_type[i].name,
+                        if( !strncmp( (char *)cl->p_buffer, msg_type[i].name,
                                       strlen( msg_type[i].name ) ) )
                         {
-                            p = &cl->p_buffer[strlen(msg_type[i].name) + 1 ];
+                            p = (char *)&cl->p_buffer[strlen((char *)msg_type[i].name) + 1 ];
                             cl->query.i_type = msg_type[i].i_type;
                             if( cl->query.i_proto != msg_type[i].i_proto )
                             {
@@ -1485,11 +1738,11 @@ static void httpd_ClientRecv( httpd_client_t *cl )
                     }
                     if( p == NULL )
                     {
-                        if( strstr( cl->p_buffer, "HTTP/1." ) )
+                        if( strstr( (char *)cl->p_buffer, "HTTP/1." ) )
                         {
                             cl->query.i_proto = HTTPD_PROTO_HTTP;
                         }
-                        else if( strstr( cl->p_buffer, "RTSP/1." ) )
+                        else if( strstr( (char *)cl->p_buffer, "RTSP/1." ) )
                         {
                             cl->query.i_proto = HTTPD_PROTO_RTSP;
                         }
@@ -1519,7 +1772,7 @@ static void httpd_ClientRecv( httpd_client_t *cl )
                         if( ( p3 = strchr( cl->query.psz_url, '?' ) )  )
                         {
                             *p3++ = '\0';
-                            cl->query.psz_args = strdup( p3 );
+                            cl->query.psz_args = (uint8_t *)strdup( p3 );
                         }
                         if( p2 )
                         {
@@ -1632,8 +1885,12 @@ static void httpd_ClientRecv( httpd_client_t *cl )
     }
     cl->i_activity_date = mdate();
 
+    /* XXX: for QT I have to disable timeout. Try to find why */
+    if( cl->query.i_proto == HTTPD_PROTO_RTSP )
+        cl->i_activity_timeout = 0;
+
     /* Debugging only */
-    if( cl->i_state == HTTPD_CLIENT_RECEIVE_DONE )
+    /*if( cl->i_state == HTTPD_CLIENT_RECEIVE_DONE )
     {
         int i;
 
@@ -1656,8 +1913,9 @@ static void httpd_ClientRecv( httpd_client_t *cl )
             fprintf( stderr, "  - option name='%s' value='%s'\n",
                      cl->query.name[i], cl->query.value[i] );
         }
-    }
+    }*/
 }
+
 
 static void httpd_ClientSend( httpd_client_t *cl )
 {
@@ -1684,7 +1942,7 @@ static void httpd_ClientSend( httpd_client_t *cl )
             free( cl->p_buffer );
             cl->p_buffer = malloc( i_size );
         }
-        p = cl->p_buffer;
+        p = (char *)cl->p_buffer;
 
         p += sprintf( p, "%s/1.%d %d %s\r\n",
                       cl->answer.i_proto ==  HTTPD_PROTO_HTTP ? "HTTP" : "RTSP",
@@ -1700,13 +1958,13 @@ static void httpd_ClientSend( httpd_client_t *cl )
         cl->i_buffer = 0;
         cl->i_buffer_size = (uint8_t*)p - cl->p_buffer;
 
-        fprintf( stderr, "sending answer\n" );
-        fprintf( stderr, "%s",  cl->p_buffer );
+        /*fprintf( stderr, "sending answer\n" );
+        fprintf( stderr, "%s",  cl->p_buffer );*/
     }
 
-    i_len = send( cl->fd, &cl->p_buffer[cl->i_buffer],
-                  cl->i_buffer_size - cl->i_buffer, 0 );
-    if( i_len > 0 )
+    i_len = httpd_NetSend( cl, &cl->p_buffer[cl->i_buffer],
+                           cl->i_buffer_size - cl->i_buffer );
+    if( i_len >= 0 )
     {
         cl->i_activity_date = mdate();
         cl->i_buffer += i_len;
@@ -1759,13 +2017,54 @@ static void httpd_ClientSend( httpd_client_t *cl )
     }
 }
 
+static void httpd_ClientTlsHsIn( httpd_client_t *cl )
+{
+    switch( tls_SessionContinueHandshake( cl->p_tls ) )
+    {
+        case 0:
+            cl->i_state = HTTPD_CLIENT_RECEIVING;
+            break;
+
+        case -1:
+            cl->i_state = HTTPD_CLIENT_DEAD;
+            cl->p_tls = NULL;
+            break;
+
+        case 2:
+            cl->i_state = HTTPD_CLIENT_TLS_HS_OUT;
+    }
+}
+
+static void httpd_ClientTlsHsOut( httpd_client_t *cl )
+{
+    switch( tls_SessionContinueHandshake( cl->p_tls ) )
+    {
+        case 0:
+            cl->i_state = HTTPD_CLIENT_RECEIVING;
+            break;
+
+        case -1:
+            cl->i_state = HTTPD_CLIENT_DEAD;
+            cl->p_tls = NULL;
+            break;
+
+        case 1:
+            cl->i_state = HTTPD_CLIENT_TLS_HS_IN;
+            break;
+    }
+}
+
 static void httpd_HostThread( httpd_host_t *host )
 {
+    tls_session_t *p_tls = NULL;
+
     while( !host->b_die )
     {
         struct timeval  timeout;
         fd_set          fds_read;
         fd_set          fds_write;
+        /* FIXME: (too) many int variables */
+        int             fd, i_fd;
         int             i_handle_max = 0;
         int             i_ret;
         int             i_client;
@@ -1782,8 +2081,18 @@ static void httpd_HostThread( httpd_host_t *host )
         FD_ZERO( &fds_read );
         FD_ZERO( &fds_write );
 
-        FD_SET( host->fd, &fds_read );
-        i_handle_max = host->fd;
+        i_handle_max = -1;
+
+        for( i_fd = 0; (fd = host->fd[i_fd]) != -1; i_fd++ )
+        {
+            FD_SET( fd, &fds_read );
+            if( fd > i_handle_max )
+                i_handle_max = fd;
+        }
+
+        /* prepare a new TLS session */
+        if( ( p_tls == NULL ) && ( host->p_tls != NULL ) )
+            p_tls = tls_ServerSessionPrepare( host->p_tls );
 
         /* add all socket that should be read/write and close dead connection */
         vlc_mutex_lock( &host->lock );
@@ -1793,22 +2102,23 @@ static void httpd_HostThread( httpd_host_t *host )
 
             if( cl->i_ref < 0 || ( cl->i_ref == 0 &&
                 ( cl->i_state == HTTPD_CLIENT_DEAD ||
-                  cl->i_activity_date + cl->i_activity_timeout < mdate() ) ) )
+                  ( cl->i_activity_timeout > 0 &&
+                    cl->i_activity_date+cl->i_activity_timeout < mdate()) ) ) )
             {
-                msg_Dbg( host, "connection closed(%s)",
-                         inet_ntoa(cl->sock.sin_addr) );
                 httpd_ClientClean( cl );
                 TAB_REMOVE( host->i_client, host->client, cl );
                 free( cl );
                 i_client--;
                 continue;
             }
-            else if( cl->i_state == HTTPD_CLIENT_RECEIVING )
+            else if( ( cl->i_state == HTTPD_CLIENT_RECEIVING )
+                  || ( cl->i_state == HTTPD_CLIENT_TLS_HS_IN ) )
             {
                 FD_SET( cl->fd, &fds_read );
                 i_handle_max = __MAX( i_handle_max, cl->fd );
             }
-            else if( cl->i_state == HTTPD_CLIENT_SENDING )
+            else if( ( cl->i_state == HTTPD_CLIENT_SENDING )
+                  || ( cl->i_state == HTTPD_CLIENT_TLS_HS_OUT ) )
             {
                 FD_SET( cl->fd, &fds_write );
                 i_handle_max = __MAX( i_handle_max, cl->fd );
@@ -1898,16 +2208,20 @@ static void httpd_HostThread( httpd_host_t *host )
 
                         p = answer->p_body = malloc( 1000 );
 
-                        p += sprintf( p, "<html>\n" );
-                        p += sprintf( p, "<head>\n" );
-                        p += sprintf( p, "<title>Error 501</title>\n" );
-                        p += sprintf( p, "</head>\n" );
-                        p += sprintf( p, "<body>\n" );
-                        p += sprintf( p, "<h1><center> 501 Unimplemented</center></h1>\n" );
-                        p += sprintf( p, "<hr />\n" );
-                        p += sprintf( p, "<a href=\"http://www.videolan.org\">VideoLAN</a>\n" );
-                        p += sprintf( p, "</body>\n" );
-                        p += sprintf( p, "</html>\n" );
+                        p += sprintf( (char *)p,
+                            "<?xml version=\"1.0\" encoding=\"ascii\" ?>"
+                            "<!DOCTYPE html PUBLIC \"-//W3C//DTD  XHTML 1.0 Strict//EN\" "
+                            "\"http://www.w3.org/TR/xhtml10/DTD/xhtml10strict.dtd\">\n"
+                            "<html>\n"
+                            "<head>\n"
+                            "<title>Error 501</title>\n"
+                            "</head>\n"
+                            "<body>\n"
+                            "<h1>501 Unimplemented</h1>\n"
+                            "<hr />\n"
+                            "<a href=\"http://www.videolan.org\">VideoLAN</a>\n"
+                            "</body>\n"
+                            "</html>\n" );
 
                         answer->i_body = p - answer->p_body;
                         httpd_MsgAdd( answer, "Content-Length", "%d", answer->i_body );
@@ -1919,6 +2233,7 @@ static void httpd_HostThread( httpd_host_t *host )
                 else
                 {
                     vlc_bool_t b_auth_failed = VLC_FALSE;
+                    vlc_bool_t b_hosts_failed = VLC_FALSE;
                     int i;
 
                     /* Search the url and trigger callbacks */
@@ -1930,6 +2245,22 @@ static void httpd_HostThread( httpd_host_t *host )
                         {
                             if( url->catch[i_msg].cb )
                             {
+                                if( answer && ( url->p_acl != NULL ) )
+                                {
+                                    char ip[NI_MAXNUMERICHOST];
+
+                                    if( httpd_ClientIP( cl, ip ) != NULL )
+                                    {
+                                        if( ACL_Check( url->p_acl, ip ) )
+                                        {
+                                            b_hosts_failed = VLC_TRUE;
+                                            break;
+                                        }
+                                    }
+                                    else
+                                        b_hosts_failed = VLC_TRUE;
+                                }
+
                                 if( answer && ( *url->psz_user || *url->psz_password ) )
                                 {
                                     /* create the headers */
@@ -1969,6 +2300,14 @@ static void httpd_HostThread( httpd_host_t *host )
 
                                 if( !url->catch[i_msg].cb( url->catch[i_msg].p_sys, cl, answer, query ) )
                                 {
+                                    if( answer->i_proto == HTTPD_PROTO_NONE )
+                                    {
+                                        /* Raw answer from a CGI */
+                                        cl->i_buffer = cl->i_buffer_size;
+                                    }
+                                    else
+                                        cl->i_buffer = -1;
+
                                     /* only one url can answer */
                                     answer = NULL;
                                     if( cl->url == NULL )
@@ -1988,21 +2327,46 @@ static void httpd_HostThread( httpd_host_t *host )
                         answer->i_version= 0;
                         p = answer->p_body = malloc( 1000 + strlen(query->psz_url) );
 
-                        if( b_auth_failed )
+                        if( b_hosts_failed )
+                        {
+                            answer->i_status = 403;
+                            answer->psz_status = strdup( "Forbidden" );
+
+                            /* FIXME: lots of code duplication */
+                            p += sprintf( (char *)p,
+                                "<?xml version=\"1.0\" encoding=\"ascii\" ?>"
+                                "<!DOCTYPE html PUBLIC \"-//W3C//DTD  XHTML 1.0 Strict//EN\" "
+                                "\"http://www.w3.org/TR/xhtml10/DTD/xhtml10strict.dtd\">\n"
+                                "<html>\n"
+                                "<head>\n"
+                                "<title>Error 403</title>\n"
+                                "</head>\n"
+                                "<body>\n"
+                                "<h1>403 Forbidden (%s)</h1>\n"
+                                "<hr />\n"
+                                "<a href=\"http://www.videolan.org\">VideoLAN</a>\n"
+                                "</body>\n"
+                                "</html>\n", query->psz_url );
+                        }
+                        else if( b_auth_failed )
                         {
                             answer->i_status = 401;
                             answer->psz_status = strdup( "Authorization Required" );
 
-                            p += sprintf( p, "<html>\n" );
-                            p += sprintf( p, "<head>\n" );
-                            p += sprintf( p, "<title>Error 401</title>\n" );
-                            p += sprintf( p, "</head>\n" );
-                            p += sprintf( p, "<body>\n" );
-                            p += sprintf( p, "<h1><center> 401 Authorization Required (%s)</center></h1>\n", query->psz_url );
-                            p += sprintf( p, "<hr />\n" );
-                            p += sprintf( p, "<a href=\"http://www.videolan.org\">VideoLAN</a>\n" );
-                            p += sprintf( p, "</body>\n" );
-                            p += sprintf( p, "</html>\n" );
+                            p += sprintf( (char *)p,
+                                "<?xml version=\"1.0\" encoding=\"ascii\" ?>"
+                                "<!DOCTYPE html PUBLIC \"-//W3C//DTD  XHTML 1.0 Strict//EN\" "
+                                "\"http://www.w3.org/TR/xhtml10/DTD/xhtml10strict.dtd\">\n"
+                                "<html>\n"
+                                "<head>\n"
+                                "<title>Error 401</title>\n"
+                                "</head>\n"
+                                "<body>\n"
+                                "<h1>401 Authorization Required (%s)</h1>\n"
+                                "<hr />\n"
+                                "<a href=\"http://www.videolan.org\">VideoLAN</a>\n"
+                                "</body>\n"
+                                "</html>\n", query->psz_url );
                         }
                         else
                         {
@@ -2010,22 +2374,27 @@ static void httpd_HostThread( httpd_host_t *host )
                             answer->i_status = 404;
                             answer->psz_status = strdup( "Not found" );
 
-                            p += sprintf( p, "<html>\n" );
-                            p += sprintf( p, "<head>\n" );
-                            p += sprintf( p, "<title>Error 404</title>\n" );
-                            p += sprintf( p, "</head>\n" );
-                            p += sprintf( p, "<body>\n" );
-                            p += sprintf( p, "<h1><center> 404 Ressource not found(%s)</center></h1>\n", query->psz_url );
-                            p += sprintf( p, "<hr />\n" );
-                            p += sprintf( p, "<a href=\"http://www.videolan.org\">VideoLAN</a>\n" );
-                            p += sprintf( p, "</body>\n" );
-                            p += sprintf( p, "</html>\n" );
+                            p += sprintf( (char *)p,
+                                "<?xml version=\"1.0\" encoding=\"ascii\" ?>"
+                                "<!DOCTYPE html PUBLIC \"-//W3C//DTD  XHTML 1.0 Strict//EN\" "
+                                "\"http://www.w3.org/TR/xhtml10/DTD/xhtml10strict.dtd\">\n"
+                                "<html>\n"
+                                "<head>\n"
+                                "<title>Error 404</title>\n"
+                                "</head>\n"
+                                "<body>\n"
+                                "<h1>404 Resource not found(%s)</h1>\n"
+                                "<hr />\n"
+                                "<a href=\"http://www.videolan.org\">VideoLAN</a>\n"
+                                "</body>\n"
+                                "</html>\n", query->psz_url );
                         }
 
                         answer->i_body = p - answer->p_body;
+                        cl->i_buffer = -1;  /* Force the creation of the answer in httpd_ClientSend */
                         httpd_MsgAdd( answer, "Content-Length", "%d", answer->i_body );
                     }
-                    cl->i_buffer = -1;  /* Force the creation of the answer in httpd_ClientSend */
+
                     cl->i_state = HTTPD_CLIENT_SENDING;
                 }
             }
@@ -2129,7 +2498,11 @@ static void httpd_HostThread( httpd_host_t *host )
 
         if( i_ret == -1 && errno != EINTR )
         {
-            msg_Warn( host, "cannot select sockets" );
+#if defined(WIN32) || defined(UNDER_CE)
+            msg_Warn( host, "cannot select sockets (%d)", WSAGetLastError( ) );
+#else
+            msg_Warn( host, "cannot select sockets : %s", strerror( errno ) );
+#endif
             msleep( 1000 );
             continue;
         }
@@ -2139,25 +2512,66 @@ static void httpd_HostThread( httpd_host_t *host )
         }
 
         /* accept new connections */
-        if( FD_ISSET( host->fd, &fds_read ) )
+        for( i_fd = 0; (fd = host->fd[i_fd]) != -1; i_fd++ )
         {
-            int     i_sock_size = sizeof( struct sockaddr_in );
-            struct  sockaddr_in sock;
-            int     fd;
-
-            fd = accept( host->fd, (struct sockaddr *)&sock, &i_sock_size );
-            if( fd > 0 )
+            if( FD_ISSET( fd, &fds_read ) )
             {
-                httpd_client_t *cl = httpd_ClientNew( fd, &sock );
-
-                vlc_mutex_lock( &host->lock );
-                TAB_APPEND( host->i_client, host->client, cl );
-                vlc_mutex_unlock( &host->lock );
-
-                msg_Dbg( host, "new connection (%s)",
-                         inet_ntoa(sock.sin_addr) );
+                socklen_t i_sock_size = sizeof( struct sockaddr_storage );
+                struct  sockaddr_storage sock;
+    
+                fd = accept( fd, (struct sockaddr *)&sock, &i_sock_size );
+                if( fd >= 0 )
+                {
+                    int i_state = 0;
+    
+                    /* set this new socket non-block */
+    #if defined( WIN32 ) || defined( UNDER_CE )
+                    {
+                        unsigned long i_dummy = 1;
+                        ioctlsocket( fd, FIONBIO, &i_dummy );
+                    }
+    #else
+                    fcntl( fd, F_SETFL, O_NONBLOCK );
+    #endif
+    
+                    if( p_tls != NULL)
+                    {
+                        switch ( tls_ServerSessionHandshake( p_tls, fd ) )
+                        {
+                            case -1:
+                                msg_Err( host, "Rejecting TLS connection" );
+                                net_Close( fd );
+                                fd = -1;
+                                p_tls = NULL;
+                                break;
+    
+                            case 1: /* missing input - most likely */
+                                i_state = HTTPD_CLIENT_TLS_HS_IN;
+                                break;
+    
+                            case 2: /* missing output */
+                                i_state = HTTPD_CLIENT_TLS_HS_OUT;
+                                break;
+                        }
+                    }
+                    
+                    if( fd >= 0 )
+                    {
+                        httpd_client_t *cl;
+    
+                        cl = httpd_ClientNew( fd, &sock, i_sock_size, p_tls );
+                        p_tls = NULL;
+                        vlc_mutex_lock( &host->lock );
+                        TAB_APPEND( host->i_client, host->client, cl );
+                        vlc_mutex_unlock( &host->lock );
+    
+                        if( i_state != 0 )
+                            cl->i_state = i_state; // override state for TLS
+                    }
+                }
             }
         }
+
         /* now try all others socket */
         vlc_mutex_lock( &host->lock );
         for( i_client = 0; i_client < host->i_client; i_client++ )
@@ -2171,6 +2585,14 @@ static void httpd_HostThread( httpd_host_t *host )
             {
                 httpd_ClientSend( cl );
             }
+            else if( cl->i_state == HTTPD_CLIENT_TLS_HS_IN )
+            {
+                httpd_ClientTlsHsIn( cl );
+            }
+            else if( cl->i_state == HTTPD_CLIENT_TLS_HS_OUT )
+            {
+                httpd_ClientTlsHsOut( cl );
+            }
 
             if( cl->i_mode == HTTPD_CLIENT_BIDIR &&
                 cl->i_state == HTTPD_CLIENT_SENDING &&
@@ -2181,43 +2603,79 @@ static void httpd_HostThread( httpd_host_t *host )
         }
         vlc_mutex_unlock( &host->lock );
     }
+
+    if( p_tls != NULL )
+        tls_ServerSessionClose( p_tls );
 }
 
-static int BuildAddr( struct sockaddr_in * p_socket,
-                      const char * psz_address, int i_port )
+#else /* ENABLE_HTTPD */
+
+/* We just define an empty wrapper */
+httpd_host_t *httpd_TLSHostNew( vlc_object_t *a, char *b, int c,
+                                tls_server_t *d )
 {
-    /* Reset struct */
-    memset( p_socket, 0, sizeof( struct sockaddr_in ) );
-    p_socket->sin_family = AF_INET;                                /* family */
-    p_socket->sin_port = htons( (uint16_t)i_port );
-    if( !*psz_address )
-    {
-        p_socket->sin_addr.s_addr = INADDR_ANY;
-    }
-    else
-    {
-        struct hostent    * p_hostent;
-
-        /* Try to convert address directly from in_addr - this will work if
-         * psz_address is dotted decimal. */
-#ifdef HAVE_ARPA_INET_H
-        if( !inet_aton( psz_address, &p_socket->sin_addr ) )
-#else
-        p_socket->sin_addr.s_addr = inet_addr( psz_address );
-/*        if( p_socket->sin_addr.s_addr == INADDR_NONE )*/
-        if( p_socket->sin_addr.s_addr == INADDR_BROADCAST )
-#endif
-        {
-            /* We have a fqdn, try to find its address */
-            if ( (p_hostent = gethostbyname( psz_address )) == NULL )
-            {
-                return( -1 );
-            }
-
-            /* Copy the first address of the host in the socket address */
-            memcpy( &p_socket->sin_addr, p_hostent->h_addr_list[0],
-                     p_hostent->h_length );
-        }
-    }
-    return( 0 );
+    msg_Err( a, "HTTP daemon support is disabled" );
+    return 0;
 }
+httpd_host_t *httpd_HostNew( vlc_object_t *a, char *b, int c )
+{
+    msg_Err( a, "HTTP daemon support is disabled" );
+    return 0;
+}
+void httpd_HostDelete( httpd_host_t *a )
+{
+}
+httpd_url_t *httpd_UrlNew( httpd_host_t *host, char *psz_url,
+                           char *psz_user, char *psz_password,
+                           const vlc_acl_t *p_acl )
+{
+    return NULL;
+}
+httpd_url_t *httpd_UrlNewUnique( httpd_host_t *host, char *psz_url,
+                                 char *psz_user, char *psz_password,
+                                 const vlc_acl_t *p_acl )
+{
+    return NULL;
+}
+int httpd_UrlCatch( httpd_url_t *a, int b, httpd_callback_t c,
+                    httpd_callback_sys_t *d ){ return 0; }
+void httpd_UrlDelete( httpd_url_t *a ){}
+
+char* httpd_ClientIP( httpd_client_t *cl, char *psz_ip ) { return NULL; }
+char* httpd_ServerIP( httpd_client_t *cl, char *psz_ip ) { return NULL; }
+
+void httpd_ClientModeStream( httpd_client_t *a ){}
+void httpd_ClientModeBidir( httpd_client_t *a ){}
+
+void httpd_FileDelete( httpd_file_t *a ){}
+httpd_file_t *httpd_FileNew( httpd_host_t *a, char *b, char *c, char *d,
+                             char *e, httpd_file_callback_t f,
+                             httpd_file_sys_t *g ){ return 0; }
+
+httpd_handler_t *httpd_HandlerNew( httpd_host_t *host, const char *psz_url,
+                                   const char *psz_user,
+                                   const char *psz_password,
+                                   const vlc_acl_t *p_acl,
+                                   httpd_handler_callback_t pf_fill,
+                                   httpd_handler_sys_t *p_sys )
+{
+    return NULL;
+}
+void httpd_HandlerDelete( httpd_handler_t *handler ) {}
+
+void httpd_RedirectDelete( httpd_redirect_t *a ){}
+httpd_redirect_t *httpd_RedirectNew( httpd_host_t *a,
+                                     char *b, char *c ){ return 0; }
+
+void httpd_StreamDelete( httpd_stream_t *a ){}
+int  httpd_StreamHeader( httpd_stream_t *a, uint8_t *b, int c ){ return 0; }
+int  httpd_StreamSend  ( httpd_stream_t *a, uint8_t *b, int c ){ return 0; }
+httpd_stream_t *httpd_StreamNew( httpd_host_t *a, char *b, char *c,
+                                 char *d, char *e ){ return 0; }
+
+void httpd_MsgInit ( httpd_message_t *a ){}
+void httpd_MsgAdd  ( httpd_message_t *a, char *b, char *c, ... ){}
+char *httpd_MsgGet ( httpd_message_t *a, char *b ){ return 0; }
+void httpd_MsgClean( httpd_message_t *a ){}
+
+#endif /* ENABLE_HTTPD */

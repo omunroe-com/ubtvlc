@@ -8,8 +8,8 @@
  * 'm' stands for 'micro', since maximum resolution is the microsecond.
  * Functions prototyped are implemented in interface/mtime.c.
  *****************************************************************************
- * Copyright (C) 1996, 1997, 1998, 1999, 2000 VideoLAN
- * $Id: mtime.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1996, 1997, 1998, 1999, 2000 the VideoLAN team
+ * $Id: mtime.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -47,8 +47,13 @@
  *****************************************************************************/
 #define MSTRTIME_MAX_SIZE 22
 
+/* Well, Duh? But it does clue us in that we are converting from
+   millisecond quantity to a second quantity or vice versa.
+*/
+#define MILLISECONDS_PER_SEC 1000
+
 #define msecstotimestr(psz_buffer, msecs) \
-  secstotimestr( psz_buffer, (msecs / (int) 1000) )
+  secstotimestr( psz_buffer, (msecs / (int) MILLISECONDS_PER_SEC) )
 
 /*****************************************************************************
  * Prototypes
@@ -59,3 +64,20 @@ VLC_EXPORT( void,    mwait,    ( mtime_t date ) );
 VLC_EXPORT( void,    msleep,   ( mtime_t delay ) );
 VLC_EXPORT( char *,  secstotimestr, ( char *psz_buffer, int secs ) );
 
+/*****************************************************************************
+ * date_t: date incrementation without long-term rounding errors
+ *****************************************************************************/
+struct date_t
+{
+    mtime_t  date;
+    uint32_t i_divider_num;
+    uint32_t i_divider_den;
+    uint32_t i_remainder;
+};
+
+VLC_EXPORT( void,    date_Init,      ( date_t *, uint32_t, uint32_t ) );
+VLC_EXPORT( void,    date_Change,    ( date_t *, uint32_t, uint32_t ) );
+VLC_EXPORT( void,    date_Set,       ( date_t *, mtime_t ) );
+VLC_EXPORT( mtime_t, date_Get,       ( const date_t * ) );
+VLC_EXPORT( void,    date_Move,      ( date_t *, mtime_t ) );
+VLC_EXPORT( mtime_t, date_Increment, ( date_t *, uint32_t ) );

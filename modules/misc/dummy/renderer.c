@@ -1,10 +1,10 @@
 /*****************************************************************************
  * renderer.c : dummy text rendering functions
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: renderer.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id: renderer.c 12836 2005-10-15 13:23:08Z sigmunau $
  *
- * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,21 +23,21 @@
 
 #include <vlc/vlc.h>
 #include <vlc/vout.h>
+#include "vlc_block.h"
+#include "vlc_filter.h"
 
-static subpicture_t * AddText ( vout_thread_t *, char *, text_style_t *, int,
-                        int, int, mtime_t, mtime_t );
+static int RenderText( filter_t *, subpicture_region_t *,
+                       subpicture_region_t * );
 
 int E_(OpenRenderer)( vlc_object_t *p_this )
 {
-    vout_thread_t *p_vout = (vout_thread_t *)p_this;
-    p_vout->pf_add_string = AddText;
+    filter_t *p_filter = (filter_t *)p_this;
+    p_filter->pf_render_text = RenderText;
     return VLC_SUCCESS;
 }
 
-static subpicture_t * AddText ( vout_thread_t *p_vout, char *psz_string,
-                        text_style_t *p_style , int i_flags, int i_x_margin,
-                        int i_y_margin, mtime_t i_start, mtime_t i_stop )
+static int RenderText( filter_t *p_filter, subpicture_region_t *p_region_out,
+                       subpicture_region_t *p_region_in )
 {
-    return VLC_SUCCESS;
+    return VLC_EGENERIC;
 }
-

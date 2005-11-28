@@ -1,8 +1,8 @@
 /****************************************************************************
  * cdrom.h: cdrom tools header
  *****************************************************************************
- * Copyright (C) 1998-2001 VideoLAN
- * $Id: cdrom.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1998-2001 the VideoLAN team
+ * $Id: cdrom.h 11709 2005-07-11 16:20:33Z massiot $
  *
  * Authors: Johan Bilien <jobi@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -71,7 +71,7 @@ typedef struct msf_s
  *****************************************************************************/
 typedef struct entries_sect_s
 {
-    uint8_t psz_id[8];                              /* "ENTRYVCD" */
+    char psz_id[8];                                 /* "ENTRYVCD" */
     uint8_t i_version;                              /* 0x02 VCD2.0
                                                        0x01 SVCD  */
     uint8_t i_sys_prof_tag;                         /* 0x01 if VCD1.1

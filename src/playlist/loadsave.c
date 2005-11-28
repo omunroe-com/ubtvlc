@@ -1,8 +1,8 @@
 /*****************************************************************************
  * loadsave.c : Playlist loading / saving functions
  *****************************************************************************
- * Copyright (C) 1999-2004 VideoLAN
- * $Id: loadsave.c 7081 2004-03-14 20:18:21Z zorglub $
+ * Copyright (C) 1999-2004 the VideoLAN team
+ * $Id: loadsave.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -23,26 +23,22 @@
 #include <stdlib.h>                                      /* free(), strtol() */
 #include <stdio.h>                                              /* sprintf() */
 #include <string.h>                                            /* strerror() */
+#include <errno.h>
 
 #include <vlc/vlc.h>
 #include <vlc/vout.h>
 #include <vlc/sout.h>
-
-#ifdef HAVE_ERRNO_H
-#   include <errno.h>
-#endif
-
-#include "stream_control.h"
-#include "input_ext-intf.h"
+#include <vlc/input.h>
 
 #include "vlc_playlist.h"
 
 #define PLAYLIST_FILE_HEADER  "# vlc playlist file version 0.5"
 
-
 /**
- * Import a certain playlist file into the playlist
+ * Import a certain playlist file into the library
+ * This file will get inserted as a new category
  *
+ * XXX: TODO
  * \param p_playlist the playlist to which the new items will be added
  * \param psz_filename the name of the playlistfile to import
  * \return VLC_SUCCESS on success
@@ -53,7 +49,41 @@ int playlist_Import( playlist_t * p_playlist, const char *psz_filename )
     char *psz_uri;
     int i_id;
 
-    msg_Dbg( p_playlist, "clearing playlist");
+    msg_Info( p_playlist, "clearing playlist");
+    playlist_Clear( p_playlist );
+
+
+    psz_uri = (char *)malloc(sizeof(char)*strlen(psz_filename) + 17 );
+    sprintf( psz_uri, "file/playlist://%s", psz_filename);
+
+    i_id = playlist_Add( p_playlist, psz_uri, psz_uri,
+                  PLAYLIST_INSERT  , PLAYLIST_END);
+
+    vlc_mutex_lock( &p_playlist->object_lock );
+    p_item = playlist_ItemGetById( p_playlist, i_id );
+    p_item->b_autodeletion = VLC_TRUE;
+    vlc_mutex_unlock( &p_playlist->object_lock );
+
+    playlist_Play(p_playlist);
+
+    return VLC_SUCCESS;
+}
+
+/**
+ * Load a certain playlist file into the playlist
+ * This file will replace the contents of the "current" view
+ *
+ * \param p_playlist the playlist to which the new items will be added
+ * \param psz_filename the name of the playlistfile to import
+ * \return VLC_SUCCESS on success
+ */
+int playlist_Load( playlist_t * p_playlist, const char *psz_filename )
+{
+    playlist_item_t *p_item;
+    char *psz_uri;
+    int i_id;
+
+    msg_Info( p_playlist, "clearing playlist");
     playlist_Clear( p_playlist );
 
 
@@ -99,13 +129,8 @@ int playlist_Export( playlist_t * p_playlist, const char *psz_filename ,
     p_export->p_file = fopen( psz_filename, "wt" );
     if( !p_export->p_file )
     {
-#ifdef HAVE_ERRNO_H
         msg_Err( p_playlist , "could not create playlist file %s"
                  " (%s)", psz_filename, strerror(errno) );
-#else
-        msg_Err( p_playlist , "could not create playlist file %s"
-                 , psz_filename );
-#endif
         return VLC_EGENERIC;
     }
 

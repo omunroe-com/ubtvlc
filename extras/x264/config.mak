@@ -1,0 +1,16 @@
+prefix=/usr/local
+eprefix=${prefix}
+bindir=${eprefix}/bin
+libdir=${eprefix}/lib
+includedir=${prefix}/include
+ARCH=X86
+SYS=LINUX
+CC=gcc
+CFLAGS=-Wall -I. -O4 -ffast-math -D__X264__ -DHAVE_MALLOC_H -DHAVE_MMXEXT -DHAVE_SSE2 -DARCH_X86 -DSYS_LINUX -fPIC -s -fomit-frame-pointer
+LDFLAGS= -lm -s
+AS=nasm
+ASFLAGS=-f elf -D__PIC__
+VFW=no
+EXE=
+VIS=no
+HAVE_GETOPT_LONG=1

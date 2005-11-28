@@ -1,15 +1,15 @@
 /*****************************************************************************
  * frame.c: MPEG2 video transrating module
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * Copyright (C) 2003 Antoine Missout
+ * Copyright (C) 2003-2004 the VideoLAN team
+ * Copyright (C) 2003 Antoine Missout <antoine.missout@metakine.com>
  * Copyright (C) 2000-2003 Michel Lespinasse <walken@zoy.org>
  * Copyright (C) 1999-2000 Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
- * $Id: frame.c 7411 2004-04-21 15:54:09Z massiot $
+ * $Id: frame.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
- *          Antoine Missout
+ *          Antoine Missout <antoine.missout@metakine.com>
  *          Michel Lespinasse <walken@zoy.org>
  *          Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
  *

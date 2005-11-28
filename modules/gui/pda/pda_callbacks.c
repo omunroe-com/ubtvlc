@@ -1,8 +1,8 @@
 /*****************************************************************************
  * pda_callbacks.c : Callbacks for the pda Linux Gtk+ plugin.
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: pda_callbacks.c 7212 2004-03-31 22:55:48Z gbazin $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id: pda_callbacks.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Jean-Paul Saman <jpsaman@wxs.nl>
  *
@@ -356,7 +356,7 @@ void onRewind(GtkButton *button, gpointer user_data)
 
     if (p_intf->p_sys->p_input != NULL)
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_SLOWER );
+        var_SetVoid( p_intf->p_sys->p_input, "rate-slower" );
     }
 }
 
@@ -367,7 +367,7 @@ void onPause(GtkButton *button, gpointer user_data)
 
     if (p_intf->p_sys->p_input != NULL)
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_PAUSE );
+        var_SetInteger( p_intf->p_sys->p_input, "state", PAUSE_S );
     }
 }
 
@@ -415,7 +415,7 @@ void onForward(GtkButton *button, gpointer user_data)
 
     if (p_intf->p_sys->p_input != NULL)
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_FASTER );
+        var_SetVoid( p_intf->p_sys->p_input, "rate-faster" );
     }
 }
 
@@ -873,7 +873,7 @@ void onDeletePlaylist(GtkButton *button, gpointer user_data)
                  */
                 p_rows = g_list_reverse( p_rows );
             }
-    
+
             for (p_node=p_rows; p_node!=NULL; p_node = p_node->next)
             {
                 GtkTreeIter iter;
@@ -887,7 +887,7 @@ void onDeletePlaylist(GtkButton *button, gpointer user_data)
                         gint item;
 
                         gtk_tree_model_get(p_model, &iter, 2, &item, -1);
-                        playlist_Delete(p_playlist, item);
+                        playlist_LockDelete(p_playlist, item);
                     }
                 }
             }
@@ -929,7 +929,7 @@ void onClearPlaylist(GtkButton *button, gpointer user_data)
 
     for(item = p_playlist->i_size - 1; item >= 0 ;item-- )
     {
-        playlist_Delete( p_playlist, item);
+        playlist_LockDelete( p_playlist, item);
     }
     vlc_object_release( p_playlist );
 

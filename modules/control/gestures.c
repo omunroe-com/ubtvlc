@@ -1,16 +1,16 @@
 /*****************************************************************************
  * gestures.c: control vlc with mouse gestures
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: gestures.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: gestures.c 12836 2005-10-15 13:23:08Z sigmunau $
  *
- * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -26,14 +26,14 @@
  *****************************************************************************/
 #include <stdlib.h>                                      /* malloc(), free() */
 #include <string.h>
-#include <unistd.h>
 
 #include <vlc/vlc.h>
 #include <vlc/intf.h>
 #include <vlc/vout.h>
 
-#include "stream_control.h"
-#include "input_ext-intf.h"
+#ifdef HAVE_UNISTD_H
+#    include <unistd.h>
+#endif
 
 /*****************************************************************************
  * intf_sys_t: description and status of interface
@@ -87,6 +87,9 @@ static char *button_list[] = { "left", "middle", "right" };
 static char *button_list_text[] = { N_("Left"), N_("Middle"), N_("Right") };
 
 vlc_module_begin();
+    set_shortname( _("Gestures"));
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_CONTROL );
     add_integer( "gestures-threshold", 30, NULL, THRESHOLD_TEXT, THRESHOLD_LONGTEXT, VLC_TRUE );
     add_string( "gestures-button", "right", NULL,
                 BUTTON_TEXT, BUTTON_LONGTEXT, VLC_FALSE );

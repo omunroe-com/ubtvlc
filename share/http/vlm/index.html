@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="iso-8859-1" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD  XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml10/DTD/xhtml10transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
  <head>
     <title>VLC media player</title>
-    <link href="/style.css" title="Default" rel="stylesheet" />
+    <link href="/style.css" title="Default" rel="stylesheet" type="text/css" />
 
     <vlc id="if" param1="url_param"/>
         <meta http-equiv="refresh" content="0;URL=/vlm/" />
@@ -14,7 +14,10 @@
  </head>
  <body>
     <h2>
-     <a href="http://www.videolan.org/">VLC media player<vlc id="value" param1="version" /></a> (http interface)</h2>
+     <a href="http://www.videolan.org/">VLC media player <vlc id="value" param1="version" /></a> (http interface)</h2>
+     <h3>
+     The VLM http interface is currently brocken. You should use the telnet interface instead.
+     </h3>
     <div class="sectitle">VLM - Configuration</div>
     <div class="section">
 
@@ -68,7 +71,9 @@
        <table>
         <tr>
          <td>
-          <vlc id="value" param1="el.state" />
+          <vlc id="foreach" param1="instance" param2="el.instances" />
+           <vlc id="value" param1="instance" />
+          <vlc id="end" />
          </td>
          <td align="right">
           <form method="get" action="" />

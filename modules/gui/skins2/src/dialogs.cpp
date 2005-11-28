@@ -1,8 +1,8 @@
 /*****************************************************************************
  * dialogs.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: dialogs.cpp 7335 2004-04-12 21:48:18Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: dialogs.cpp 12802 2005-10-09 17:57:58Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -26,10 +26,12 @@
 #include "../commands/async_queue.hpp"
 #include "../commands/cmd_change_skin.hpp"
 #include "../commands/cmd_quit.hpp"
+#include "../commands/cmd_playlist.hpp"
+#include "../commands/cmd_playtree.hpp"
 
 
 /// Callback called when a new skin is chosen
-static void showChangeSkinCB( intf_dialog_args_t *pArg )
+void Dialogs::showChangeSkinCB( intf_dialog_args_t *pArg )
 {
     intf_thread_t *pIntf = (intf_thread_t *)pArg->p_arg;
 
@@ -38,12 +40,12 @@ static void showChangeSkinCB( intf_dialog_args_t *pArg )
         if( pArg->psz_results[0] )
         {
             // Create a change skin command
-            CmdChangeSkin *pCmd = new CmdChangeSkin( pIntf,
-                                                     pArg->psz_results[0] );
+            CmdChangeSkin *pCmd =
+                new CmdChangeSkin( pIntf, pArg->psz_results[0] );
 
             // Push the command in the asynchronous command queue
             AsyncQueue *pQueue = AsyncQueue::instance( pIntf );
-            pQueue->remove( "resize" );
+            pQueue->remove( "change skin" );
             pQueue->push( CmdGenericPtr( pCmd ) );
         }
     }
@@ -57,12 +59,50 @@ static void showChangeSkinCB( intf_dialog_args_t *pArg )
 }
 
 
+void Dialogs::showPlaylistLoadCB( intf_dialog_args_t *pArg )
+{
+    intf_thread_t *pIntf = (intf_thread_t *)pArg->p_arg;
+
+    if( pArg->i_results && pArg->psz_results[0] )
+    {
+        // Create a Playlist Load command
+        CmdPlaylistLoad *pCmd =
+            new CmdPlaylistLoad( pIntf, pArg->psz_results[0] );
+
+        // Push the command in the asynchronous command queue
+        AsyncQueue *pQueue = AsyncQueue::instance( pIntf );
+        pQueue->remove( "load playlist" );
+        pQueue->remove( "load playtree" );
+        pQueue->push( CmdGenericPtr( pCmd ) );
+    }
+}
+
+
+void Dialogs::showPlaylistSaveCB( intf_dialog_args_t *pArg )
+{
+    intf_thread_t *pIntf = (intf_thread_t *)pArg->p_arg;
+
+    if( pArg->i_results && pArg->psz_results[0] )
+    {
+        // Create a Playlist Save command
+        CmdPlaylistSave *pCmd =
+            new CmdPlaylistSave( pIntf, pArg->psz_results[0] );
+
+        // Push the command in the asynchronous command queue
+        AsyncQueue *pQueue = AsyncQueue::instance( pIntf );
+        pQueue->remove( "load playlist" );
+        pQueue->remove( "load playtree" );
+        pQueue->push( CmdGenericPtr( pCmd ) );
+    }
+}
+
+
 /// Callback called when the popup menu is requested
 static int PopupMenuCB( vlc_object_t *p_this, const char *psz_variable,
                         vlc_value_t old_val, vlc_value_t new_val, void *param )
 {
     Dialogs *p_dialogs = (Dialogs *)param;
-    p_dialogs->showPopupMenu( new_val.b_bool );
+    p_dialogs->showPopupMenu( new_val.b_bool != 0 );
 
     return VLC_SUCCESS;
 }
@@ -135,7 +175,7 @@ bool Dialogs::init()
     m_pModule = module_Need( m_pProvider, "dialogs provider", NULL, 0 );
     if( m_pModule == NULL )
     {
-        msg_Err( getIntf(), "No suitable dialogs provider found" );
+        msg_Err( getIntf(), "No suitable dialogs provider found (hint: compile the wxWidgets plugin, and make sure it is loaded properly)" );
         vlc_object_destroy( m_pProvider );
         m_pProvider = NULL;
         return false;
@@ -159,7 +199,8 @@ bool Dialogs::init()
 }
 
 
-void Dialogs::showChangeSkin()
+void Dialogs::showFileGeneric( const string &rTitle, const string &rExtensions,
+                               DlgCallback callback, int flags )
 {
     if( m_pProvider && m_pProvider->pf_show_dialog )
     {
@@ -167,18 +208,41 @@ void Dialogs::showChangeSkin()
             (intf_dialog_args_t *)malloc( sizeof(intf_dialog_args_t) );
         memset( p_arg, 0, sizeof(intf_dialog_args_t) );
 
-        p_arg->b_blocking = false;
+        p_arg->psz_title = strdup( rTitle.c_str() );
+        p_arg->psz_extensions = strdup( rExtensions.c_str() );
 
-        p_arg->psz_title = strdup( _("Open a skin file") );
-        p_arg->psz_extensions =
-            strdup( _("Skin files (*.vlt)|*.vlt|Skin files (*.xml)|*.xml|") );
+        p_arg->b_save = flags & kSAVE;
+        p_arg->b_multiple = flags & kMULTIPLE;
 
         p_arg->p_arg = getIntf();
-        p_arg->pf_callback = showChangeSkinCB;
+        p_arg->pf_callback = callback;
 
         m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_FILE_GENERIC,
                                      0, p_arg );
     }
+}
+
+
+void Dialogs::showChangeSkin()
+{
+    showFileGeneric( _("Open a skin file"),
+                     _("Skin files (*.vlt)|*.vlt|Skin files (*.xml)|*.xml"),
+                     showChangeSkinCB, kOPEN );
+}
+
+
+void Dialogs::showPlaylistLoad()
+{
+    showFileGeneric( _("Open playlist"),
+                     _("All playlists|*.pls;*.m3u;*.asx;*.b4s|M3U files|*.m3u"),
+                     showPlaylistLoadCB, kOPEN );
+}
+
+
+void Dialogs::showPlaylistSave()
+{
+    showFileGeneric( _("Save playlist"), _("M3U file|*.m3u"),
+                     showPlaylistSaveCB, kSAVE );
 }
 
 
@@ -197,6 +261,16 @@ void Dialogs::showFile( bool play )
     if( m_pProvider && m_pProvider->pf_show_dialog )
     {
         m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_FILE,
+                                     (int)play, 0 );
+    }
+}
+
+
+void Dialogs::showDirectory( bool play )
+{
+    if( m_pProvider && m_pProvider->pf_show_dialog )
+    {
+        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_DIRECTORY,
                                      (int)play, 0 );
     }
 }
@@ -242,9 +316,18 @@ void Dialogs::showPrefs()
 
 void Dialogs::showFileInfo()
 {
-   if( m_pProvider && m_pProvider->pf_show_dialog )
+    if( m_pProvider && m_pProvider->pf_show_dialog )
     {
-       m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_FILEINFO, 0, 0 );
+        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_FILEINFO, 0, 0 );
+    }
+}
+
+
+void Dialogs::showStreamingWizard()
+{
+    if( m_pProvider && m_pProvider->pf_show_dialog )
+    {
+        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_WIZARD, 0, 0 );
     }
 }
 

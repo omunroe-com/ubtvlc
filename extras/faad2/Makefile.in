@@ -66,8 +66,8 @@ EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
 GTK_CONFIG = @GTK_CONFIG@
-HAVE_MPEG4IP_FALSE = @HAVE_MPEG4IP_FALSE@
-HAVE_MPEG4IP_TRUE = @HAVE_MPEG4IP_TRUE@
+HAVE_MPEG4IP_PLUG_FALSE = @HAVE_MPEG4IP_PLUG_FALSE@
+HAVE_MPEG4IP_PLUG_TRUE = @HAVE_MPEG4IP_PLUG_TRUE@
 HAVE_XMMS_FALSE = @HAVE_XMMS_FALSE@
 HAVE_XMMS_TRUE = @HAVE_XMMS_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
@@ -82,7 +82,7 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
-MPEG4IP_PLAYER_PLUGIN_DIR = @MPEG4IP_PLAYER_PLUGIN_DIR@
+MP4FF_LIBS = @MP4FF_LIBS@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -97,8 +97,6 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
-WITH_MP4V2_FALSE = @WITH_MP4V2_FALSE@
-WITH_MP4V2_TRUE = @WITH_MP4V2_TRUE@
 XMMS_CONFIG = @XMMS_CONFIG@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
@@ -121,6 +119,7 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 exec_prefix = @exec_prefix@
+external_mp4v2 = @external_mp4v2@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
@@ -157,8 +156,8 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 	check-recursive installcheck-recursive
 DIST_COMMON = README $(srcdir)/Makefile.in $(srcdir)/configure AUTHORS \
 	COPYING ChangeLog INSTALL Makefile.am NEWS TODO aclocal.m4 \
-	compile config.guess config.h.in config.sub configure.in \
-	depcomp faad2.spec.in install-sh ltmain.sh missing \
+	compile config.guess config.h.in config.sub configure \
+	configure.in depcomp faad2.spec.in install-sh ltmain.sh missing \
 	mkinstalldirs
 DIST_SUBDIRS = $(SUBDIRS)
 all: config.h
@@ -559,7 +558,7 @@ uninstall-info: uninstall-info-recursive
 	uninstall-info-recursive uninstall-recursive
 
 
-rpm:    Makefile
+rpm:	Makefile
 	make dist
 	$(RPMBUILD) -ta $(PACKAGE)-$(VERSION).tar.gz
 	rm $(PACKAGE)-$(VERSION).tar.gz

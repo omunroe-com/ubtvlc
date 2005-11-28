@@ -1,8 +1,8 @@
 /*****************************************************************************
  * expr_evaluator.cpp
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: expr_evaluator.cpp 7579 2004-05-02 14:03:20Z ipkiss $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: expr_evaluator.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * distort.c : Misc video effects plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001, 2002, 2003 VideoLAN
- * $Id: distort.c 7453 2004-04-23 20:01:59Z gbazin $
+ * Copyright (C) 2000, 2001, 2002, 2003 the VideoLAN team
+ * $Id: distort.c 12968 2005-10-25 19:24:21Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -64,7 +64,10 @@ static char *mode_list_text[] = { N_("Wave"), N_("Ripple") };
 
 vlc_module_begin();
     set_description( _("Distort video filter") );
+    set_shortname( N_( "Distortion" ));
     set_capability( "video filter", 0 );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VFILTER );
 
     add_string( "distort-mode", "wave", NULL, MODE_TEXT, MODE_LONGTEXT,
                 VLC_FALSE );
@@ -162,6 +165,7 @@ static int Init( vout_thread_t *p_vout )
 {
     int i_index;
     picture_t *p_pic;
+    video_format_t fmt = {0};
 
     I_OUTPUTPICTURES = 0;
 
@@ -170,19 +174,18 @@ static int Init( vout_thread_t *p_vout )
     p_vout->output.i_width  = p_vout->render.i_width;
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
+    p_vout->fmt_out = p_vout->fmt_in;
+    fmt = p_vout->fmt_out;
 
     /* Try to open the real video output */
     msg_Dbg( p_vout, "spawning the real video output" );
 
-    p_vout->p_sys->p_vout = vout_Create( p_vout,
-                           p_vout->render.i_width, p_vout->render.i_height,
-                           p_vout->render.i_chroma, p_vout->render.i_aspect );
+    p_vout->p_sys->p_vout = vout_Create( p_vout, &fmt );
 
     /* Everything failed */
     if( p_vout->p_sys->p_vout == NULL )
     {
         msg_Err( p_vout, "cannot open vout, aborting" );
-
         return VLC_EGENERIC;
     }
 
@@ -222,9 +225,12 @@ static void Destroy( vlc_object_t *p_this )
 {
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
 
-    DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
-    vlc_object_detach( p_vout->p_sys->p_vout );
-    vout_Destroy( p_vout->p_sys->p_vout );
+    if( p_vout->p_sys->p_vout )
+    {
+        DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
+        vlc_object_detach( p_vout->p_sys->p_vout );
+        vout_Destroy( p_vout->p_sys->p_vout );
+    }
 
     DEL_PARENT_CALLBACKS( SendEventsToChild );
 
@@ -295,7 +301,7 @@ static void DistortWave( vout_thread_t *p_vout, picture_t *p_inpic,
         p_in = p_inpic->p[i_index].p_pixels;
         p_out = p_outpic->p[i_index].p_pixels;
 
-        i_num_lines = p_inpic->p[i_index].i_lines;
+        i_num_lines = p_inpic->p[i_index].i_visible_lines;
 
         black_pixel = ( i_index == Y_PLANE ) ? 0x00 : 0x80;
 
@@ -361,7 +367,7 @@ static void DistortRipple( vout_thread_t *p_vout, picture_t *p_inpic,
 
         black_pixel = ( i_index == Y_PLANE ) ? 0x00 : 0x80;
 
-        i_num_lines = p_inpic->p[i_index].i_lines;
+        i_num_lines = p_inpic->p[i_index].i_visible_lines;
 
         i_first_line = i_num_lines * 4 / 5;
 

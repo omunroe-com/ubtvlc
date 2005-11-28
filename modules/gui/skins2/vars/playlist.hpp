@@ -1,8 +1,8 @@
 /*****************************************************************************
  * playlist.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: playlist.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: playlist.hpp 11988 2005-08-03 19:01:44Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -27,11 +27,6 @@
 
 #include "../utils/var_list.hpp"
 
-#ifndef iconv_t
-#  define iconv_t libiconv_t
-   typedef void* iconv_t;
-#endif
-
 /// Variable for VLC playlist
 class Playlist: public VarList
 {
@@ -51,14 +46,9 @@ class Playlist: public VarList
     private:
         /// VLC playlist object
         playlist_t *m_pPlaylist;
-        /// Iconv handle
-        iconv_t iconvHandle;
 
         /// Build the list from the VLC playlist
         void buildList();
-
-        /// Convert a string to UTF8 from the current encoding
-        UString *convertName( const char *pName );
 };
 
 

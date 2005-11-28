@@ -1,11 +1,11 @@
 /*****************************************************************************
  * decoder.c: AAC decoder using libfaad2
  *****************************************************************************
- * Copyright (C) 2001, 2003 VideoLAN
- * $Id: faad.c 7007 2004-03-07 22:34:22Z gbazin $
+ * Copyright (C) 2001, 2003 the VideoLAN team
+ * $Id: faad.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
- *          Gildas Bazin <gbazin@netcourrier.com>
+ *          Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,8 @@ static void Close( vlc_object_t * );
 vlc_module_begin();
     set_description( _("AAC audio decoder (using libfaad2)") );
     set_capability( "decoder", 100 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACODEC );
     set_callbacks( Open, Close );
 vlc_module_end();
 
@@ -179,7 +181,7 @@ static aout_buffer_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
 
     p_block = *pp_block;
 
-    if( p_block->i_flags&BLOCK_FLAG_DISCONTINUITY )
+    if( p_block->i_flags&(BLOCK_FLAG_DISCONTINUITY|BLOCK_FLAG_CORRUPTED) )
     {
         block_Release( p_block );
         return NULL;
@@ -198,6 +200,22 @@ static aout_buffer_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
                 p_block->p_buffer, p_block->i_buffer );
         p_sys->i_buffer += p_block->i_buffer;
         p_block->i_buffer = 0;
+    }
+
+    if( p_dec->fmt_out.audio.i_rate == 0 && p_dec->fmt_in.i_extra > 0 )
+    {
+        /* We have a decoder config so init the handle */
+        unsigned long i_rate;
+        unsigned char i_channels;
+
+        if( faacDecInit2( p_sys->hfaad, p_dec->fmt_in.p_extra,
+                          p_dec->fmt_in.i_extra,
+                          &i_rate, &i_channels ) >= 0 )
+        {
+            p_dec->fmt_out.audio.i_rate = i_rate;
+            p_dec->fmt_out.audio.i_channels = i_channels;
+            aout_DateInit( &p_sys->date, i_rate );
+        }
     }
 
     if( p_dec->fmt_out.audio.i_rate == 0 && p_sys->i_buffer )
@@ -307,6 +325,13 @@ static aout_buffer_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
                         pi_channels_out[j];
                     break;
                 }
+            }
+
+            if( j == MAX_CHANNEL_POSITIONS )
+            {
+                msg_Warn( p_dec, "unknown channel ordering" );
+                block_Release( p_block );
+                return NULL;
             }
         }
         p_dec->fmt_out.audio.i_original_channels =

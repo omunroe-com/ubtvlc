@@ -1,8 +1,8 @@
 /****************************************************************************
  * cdrom.c: cdrom tools
  *****************************************************************************
- * Copyright (C) 1998-2001 VideoLAN
- * $Id: cdrom.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1998-2001 the VideoLAN team
+ * $Id: cdrom.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Johan Bilien <jobi@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>

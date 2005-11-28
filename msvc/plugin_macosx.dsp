@@ -49,8 +49,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12 /out:"plugins\libmacosx_plugin.dll"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib comctl32.lib rpcrt4.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12 /opt:ref /out:"plugins\libmacosx_plugin.dll"
 
 !ELSEIF  "$(CFG)" == "plugin_macosx - Win32 Debug"
 
@@ -73,8 +73,9 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12 /pdb:"plugins\libmacosx_plugin.pdb" /out:"plugins\libmacosx_plugin.dll"
+# SUBTRACT BASE LINK32 /pdb:none
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib comctl32.lib rpcrt4.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12 /pdb:"plugins\libmacosx_plugin.pdb" /out:"plugins\libmacosx_plugin.dll"
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
@@ -110,6 +111,16 @@ SOURCE="..\modules\gui\macosx\applescript.m"
 # End Source File
 # Begin Source File
 SOURCE="..\modules\gui\macosx\controls.m"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=macosx" /D "MODULE_NAME_IS_macosx" 
+!IF "$(CFG)" == "plugin_macosx - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\macosx"
+# PROP Intermediate_Dir "Release\modules\gui\macosx"
+!ELSEIF "$(CFG)" == "plugin_macosx - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\macosx"
+# PROP Intermediate_Dir "Debug\modules\gui\macosx"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\macosx\equalizer.m"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=macosx" /D "MODULE_NAME_IS_macosx" 
 !IF "$(CFG)" == "plugin_macosx - Win32 Release"
 # PROP Output_Dir "Release\modules\gui\macosx"
@@ -218,6 +229,56 @@ SOURCE="..\modules\gui\macosx\vout.m"
 # PROP Output_Dir "Debug\modules\gui\macosx"
 # PROP Intermediate_Dir "Debug\modules\gui\macosx"
 # End Source File
+# Begin Source File
+SOURCE="..\modules\gui\macosx\voutqt.m"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=macosx" /D "MODULE_NAME_IS_macosx" 
+!IF "$(CFG)" == "plugin_macosx - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\macosx"
+# PROP Intermediate_Dir "Release\modules\gui\macosx"
+!ELSEIF "$(CFG)" == "plugin_macosx - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\macosx"
+# PROP Intermediate_Dir "Debug\modules\gui\macosx"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\macosx\voutgl.m"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=macosx" /D "MODULE_NAME_IS_macosx" 
+!IF "$(CFG)" == "plugin_macosx - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\macosx"
+# PROP Intermediate_Dir "Release\modules\gui\macosx"
+!ELSEIF "$(CFG)" == "plugin_macosx - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\macosx"
+# PROP Intermediate_Dir "Debug\modules\gui\macosx"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\macosx\wizard.m"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=macosx" /D "MODULE_NAME_IS_macosx" 
+!IF "$(CFG)" == "plugin_macosx - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\macosx"
+# PROP Intermediate_Dir "Release\modules\gui\macosx"
+!ELSEIF "$(CFG)" == "plugin_macosx - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\macosx"
+# PROP Intermediate_Dir "Debug\modules\gui\macosx"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\macosx\extended.m"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=macosx" /D "MODULE_NAME_IS_macosx" 
+!IF "$(CFG)" == "plugin_macosx - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\macosx"
+# PROP Intermediate_Dir "Release\modules\gui\macosx"
+!ELSEIF "$(CFG)" == "plugin_macosx - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\macosx"
+# PROP Intermediate_Dir "Debug\modules\gui\macosx"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\macosx\bookmarks.m"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=macosx" /D "MODULE_NAME_IS_macosx" 
+!IF "$(CFG)" == "plugin_macosx - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\macosx"
+# PROP Intermediate_Dir "Release\modules\gui\macosx"
+!ELSEIF "$(CFG)" == "plugin_macosx - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\macosx"
+# PROP Intermediate_Dir "Debug\modules\gui\macosx"
+# End Source File
 
 # End Group
 
@@ -233,6 +294,9 @@ SOURCE="..\modules\gui\macosx\applescript.h"
 # End Source File
 # Begin Source File
 SOURCE="..\modules\gui\macosx\controls.h"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\macosx\equalizer.h"
 # End Source File
 # Begin Source File
 SOURCE="..\modules\gui\macosx\intf.h"
@@ -260,6 +324,15 @@ SOURCE="..\modules\gui\macosx\output.h"
 # End Source File
 # Begin Source File
 SOURCE="..\modules\gui\macosx\vout.h"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\macosx\wizard.h"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\macosx\extended.h"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\macosx\bookmarks.h"
 # End Source File
 
 # End Group

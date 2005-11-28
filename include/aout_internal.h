@@ -1,8 +1,8 @@
 /*****************************************************************************
  * aout_internal.h : internal defines for audio output
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: aout_internal.h 7379 2004-04-19 10:48:04Z gbazin $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: aout_internal.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -39,6 +39,7 @@ typedef struct aout_alloc_t
         if ( (p_alloc)->i_alloc_type == AOUT_ALLOC_STACK )                  \
         {                                                                   \
             (p_new_buffer) = alloca( i_alloc_size + sizeof(aout_buffer_t) );\
+            i_alloc_type = AOUT_ALLOC_STACK;                                \
         }                                                                   \
         else
 #else
@@ -53,16 +54,17 @@ typedef struct aout_alloc_t
     }                                                                       \
     else                                                                    \
     {                                                                       \
-        int i_alloc_size;                                                   \
+        int i_alloc_size, i_alloc_type;                                     \
         i_alloc_size = (int)( (uint64_t)(p_alloc)->i_bytes_per_sec          \
                                             * (i_nb_usec) / 1000000 + 1 );  \
         ALLOCA_TEST( p_alloc, p_new_buffer )                                \
         {                                                                   \
             (p_new_buffer) = malloc( i_alloc_size + sizeof(aout_buffer_t) );\
+            i_alloc_type = AOUT_ALLOC_HEAP;                                 \
         }                                                                   \
         if ( p_new_buffer != NULL )                                         \
         {                                                                   \
-            (p_new_buffer)->i_alloc_type = (p_alloc)->i_alloc_type;         \
+            (p_new_buffer)->i_alloc_type = i_alloc_type;                    \
             (p_new_buffer)->i_size = i_alloc_size;                          \
             (p_new_buffer)->p_buffer = (byte_t *)(p_new_buffer)             \
                                          + sizeof(aout_buffer_t);           \

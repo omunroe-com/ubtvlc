@@ -1,6 +1,6 @@
 /*
 ** FAAD2 - Freeware Advanced Audio (AAC) Decoder including SBR decoding
-** Copyright (C) 2003-2004 M. Bakker, Ahead Software AG, http://www.nero.com
+** Copyright (C) 2003-2005 M. Bakker, Ahead Software AG, http://www.nero.com
 **  
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,10 +19,15 @@
 ** Any non-GPL usage of this software or parts of this software is strictly
 ** forbidden.
 **
+** Software using this code must display the following message visibly in the
+** software:
+** "FAAD2 AAC/HE-AAC/HE-AACv2/DRM decoder (c) Ahead Software, www.nero.com"
+** in, for example, the about-box or help/startup screen.
+**
 ** Commercial non-GPL licensing of this software is possible.
 ** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
 **
-** $Id: syntax.h,v 1.48 2004/01/29 11:31:11 menno Exp $
+** $Id: syntax.h,v 1.55 2005/02/01 13:15:59 menno Exp $
 **/
 
 #ifndef __SYNTAX_H__
@@ -60,8 +65,8 @@ extern "C" {
 #define DRMCH_MONO          1
 #define DRMCH_STEREO        2
 #define DRMCH_SBR_MONO      3
-#define DRMCH_SBR_LC_STEREO 4
-#define DRMCH_SBR_STEREO    5
+#define DRMCH_SBR_STEREO    4
+#define DRMCH_SBR_PS_STEREO 5
 
 
 /* First object type that has ER */
@@ -110,11 +115,14 @@ int8_t GASpecificConfig(bitfile *ld, mp4AudioSpecificConfig *mp4ASC,
 
 uint8_t adts_frame(adts_header *adts, bitfile *ld);
 void get_adif_header(adif_header *adif, bitfile *ld);
-void raw_data_block(faacDecHandle hDecoder, faacDecFrameInfo *hInfo,
+void raw_data_block(NeAACDecHandle hDecoder, NeAACDecFrameInfo *hInfo,
                     bitfile *ld, program_config *pce, drc_info *drc);
-uint8_t reordered_spectral_data(faacDecHandle hDecoder, ic_stream *ics, bitfile *ld,
+uint8_t reordered_spectral_data(NeAACDecHandle hDecoder, ic_stream *ics, bitfile *ld,
                                 int16_t *spectral_data);
-
+#ifdef DRM
+void DRM_aac_scalable_main_element(NeAACDecHandle hDecoder, NeAACDecFrameInfo *hInfo,
+                                   bitfile *ld, program_config *pce, drc_info *drc);
+#endif
 
 #ifdef __cplusplus
 }

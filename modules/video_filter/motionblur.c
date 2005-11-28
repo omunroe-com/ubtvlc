@@ -1,10 +1,10 @@
 /*****************************************************************************
  * motion_blur.c : motion blur filter for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001, 2002, 2003 VideoLAN
- * $Id: motionblur.c 7453 2004-04-23 20:01:59Z gbazin $
+ * Copyright (C) 2000, 2001, 2002, 2003 the VideoLAN team
+ * $Id: motionblur.c 12968 2005-10-25 19:24:21Z gbazin $
  *
- * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,11 +52,14 @@ static int  SendEvents( vlc_object_t *, char const *,
  * Module descriptor
  *****************************************************************************/
 #define MODE_TEXT N_("Blur factor (1-127)")
-#define MODE_LONGTEXT N_("The degree of blurring from 1 to 127")
+#define MODE_LONGTEXT N_("The degree of blurring from 1 to 127.")
 
 vlc_module_begin();
+    set_shortname( _("Motion blur") );
     set_description( _("Motion blur filter") );
     set_capability( "video filter", 0 );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VFILTER );
 
     add_integer_with_range( "blur-factor", 80, 1, 127, NULL,
         MODE_TEXT, MODE_LONGTEXT, VLC_FALSE );
@@ -129,6 +132,7 @@ static int Init( vout_thread_t *p_vout )
 {
     int i_index;
     picture_t *p_pic;
+    video_format_t fmt = {0};
 
     I_OUTPUTPICTURES = 0;
 
@@ -144,6 +148,8 @@ static int Init( vout_thread_t *p_vout )
             p_vout->output.i_width  = p_vout->render.i_width;
             p_vout->output.i_height = p_vout->render.i_height;
             p_vout->output.i_aspect = p_vout->render.i_aspect;
+            p_vout->fmt_out = p_vout->fmt_in;
+            fmt = p_vout->fmt_out;
             break;
 
         default:
@@ -158,9 +164,7 @@ static int Init( vout_thread_t *p_vout )
     case VLC_FOURCC('I','4','2','0'):
     case VLC_FOURCC('I','Y','U','V'):
     case VLC_FOURCC('Y','V','1','2'):
-        p_vout->p_sys->p_vout = vout_Create( p_vout,
-                           p_vout->output.i_width, p_vout->output.i_height,
-                           p_vout->output.i_chroma, p_vout->output.i_aspect );
+        p_vout->p_sys->p_vout = vout_Create( p_vout, &fmt );
         break;
     default:
         break;
@@ -207,9 +211,12 @@ static void Destroy( vlc_object_t *p_this )
 {
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
 
-    DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
-    vlc_object_detach( p_vout->p_sys->p_vout );
-    vout_Destroy( p_vout->p_sys->p_vout );
+    if( p_vout->p_sys->p_vout )
+    {
+        DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
+        vlc_object_detach( p_vout->p_sys->p_vout );
+        vout_Destroy( p_vout->p_sys->p_vout );
+    }
 
     DEL_PARENT_CALLBACKS( SendEventsToChild );
 
@@ -290,7 +297,7 @@ static void CopyPicture( vout_thread_t * p_vout,
             /* There are margins, but with the same width : perfect ! */
             p_vout->p_vlc->pf_memcpy(
                          p_dest->p[i].p_pixels, p_src->p[i].p_pixels,
-                         p_src->p[i].i_pitch * p_src->p[i].i_lines );
+                         p_src->p[i].i_pitch * p_src->p[i].i_visible_lines );
         }
         else
         {
@@ -299,7 +306,7 @@ static void CopyPicture( vout_thread_t * p_vout,
             uint8_t *p_out = p_dest->p[i].p_pixels;
             int i_line;
 
-            for( i_line = p_src->p[i].i_lines; i_line--; )
+            for( i_line = p_src->p[i].i_visible_lines; i_line--; )
             {
                 p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                           p_src->p[i].i_visible_pitch );
@@ -326,7 +333,7 @@ static void RenderBlur( vout_thread_t *p_vout, picture_t *p_oldpic,
         p_new = p_newpic->p[i_plane].p_pixels;
         p_old = p_oldpic->p[i_plane].p_pixels;
         p_out_end = p_out + p_outpic->p[i_plane].i_pitch *
-                             p_outpic->p[i_plane].i_lines;
+                             p_outpic->p[i_plane].i_visible_lines;
         while ( p_out < p_out_end )
         {
             p_out_line_end = p_out + p_outpic->p[i_plane].i_visible_pitch;

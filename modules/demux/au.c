@@ -1,8 +1,8 @@
 /*****************************************************************************
  * au.c : au file input module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: au.c 7665 2004-05-15 10:52:56Z fenrir $
+ * Copyright (C) 2001-2003 the VideoLAN team
+ * $Id: au.c 11685 2005-07-10 10:51:28Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -41,6 +41,8 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 vlc_module_begin();
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_description( _("AU demuxer") );
     set_capability( "demux2", 10 );
     set_callbacks( Open, Close );
@@ -103,14 +105,10 @@ static int Open( vlc_object_t *p_this )
     int          i_cat;
     int          i_samples, i_modulo;
 
-    if( stream_Peek( p_demux->s, &p_peek, 4 ) < 4 )
+    if( stream_Peek( p_demux->s, &p_peek, 4 ) < 4 ) return VLC_EGENERIC;
+
+    if( memcmp( p_peek, ".snd", 4 ) )
     {
-        msg_Warn( p_demux, "cannot peek" );
-        return VLC_EGENERIC;
-    }
-    if( strncmp( p_peek, ".snd", 4 ) )
-    {
-        msg_Warn( p_demux, "AU module discarded" );
         return VLC_EGENERIC;
     }
 

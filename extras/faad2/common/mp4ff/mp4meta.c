@@ -22,7 +22,7 @@
 ** Commercial non-GPL licensing of this software is possible.
 ** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
 **
-** $Id: mp4meta.c,v 1.13 2004/01/11 15:52:18 menno Exp $
+** $Id: mp4meta.c,v 1.16 2005/02/01 13:15:55 menno Exp $
 **/
 
 #ifdef USE_TAGGING
@@ -31,6 +31,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "mp4ffint.h"
+
+
 
 static int32_t mp4ff_tag_add_field(mp4ff_metadata_t *tags, const char *item, const char *value)
 {
@@ -298,6 +300,8 @@ int32_t mp4ff_parse_metadata(mp4ff_t *f, const int32_t size)
     while (sumsize < size)
     {
         subsize = mp4ff_atom_read_header(f, &atom_type, &header_size);
+        if (subsize == 0)
+            break;
         mp4ff_parse_tag(f, atom_type, (uint32_t)(subsize-header_size));
         sumsize += subsize;
     }
@@ -391,9 +395,19 @@ int32_t mp4ff_meta_get_track(const mp4ff_t *f, char **value)
     return mp4ff_meta_find_by_name(f, "track", value);
 }
 
+int32_t mp4ff_meta_get_totaltracks(const mp4ff_t *f, char **value)
+{
+    return mp4ff_meta_find_by_name(f, "totaltracks", value);
+}
+
 int32_t mp4ff_meta_get_disc(const mp4ff_t *f, char **value)
 {
     return mp4ff_meta_find_by_name(f, "disc", value);
+}
+
+int32_t mp4ff_meta_get_totaldiscs(const mp4ff_t *f, char **value)
+{
+    return mp4ff_meta_find_by_name(f, "totaldiscs", value);
 }
 
 int32_t mp4ff_meta_get_compilation(const mp4ff_t *f, char **value)
