@@ -1,10 +1,10 @@
 /*****************************************************************************
  * old.c : Old playlist format import/export
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: old.c 7209 2004-03-31 20:52:31Z gbazin $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: old.c 12742 2005-10-02 12:47:49Z jpsaman $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: Clï¿½ent Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 
 #include <vlc/vlc.h>
 #include <vlc/intf.h>
+#include <charset.h>
 
 #include <errno.h>                                                 /* ENOMEM */
 
@@ -54,8 +55,11 @@ int Export_Old( vlc_object_t *p_this )
 
     for ( i = 0 ; i < p_playlist->i_size ; i++ )
     {
-        fprintf( p_export->p_file , "%s\n" ,
-        p_playlist->pp_items[i]->input.psz_uri );
+        char *psz_uri;
+
+        psz_uri = ToLocale( p_playlist->pp_items[i]->input.psz_uri );
+        fprintf( p_export->p_file , "%s\n" , psz_uri );
+        LocaleFree( psz_uri );
     }
     return VLC_SUCCESS;
 }

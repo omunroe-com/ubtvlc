@@ -1,8 +1,8 @@
 /*****************************************************************************
  * top_window.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: top_window.hpp 7259 2004-04-03 11:30:26Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: top_window.hpp 12912 2005-10-22 11:57:29Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -44,10 +44,11 @@ class TopWindow: public GenericWindow
     public:
         TopWindow( intf_thread_t *pIntf, int xPos, int yPos,
                    WindowManager &rWindowManager,
-                   bool dragDrop, bool playOnDrop );
+                   bool dragDrop, bool playOnDrop, bool visible );
         virtual ~TopWindow();
 
         /// Methods to process OS events.
+        virtual void processEvent( EvtRefresh &rEvtRefresh );
         virtual void processEvent( EvtFocus &rEvtFocus );
         virtual void processEvent( EvtMotion &rEvtMotion );
         virtual void processEvent( EvtMouse &rEvtMouse );
@@ -76,6 +77,9 @@ class TopWindow: public GenericWindow
         /// Called by a control when its tooltip changed
         virtual void onTooltipChange( const CtrlGeneric &rCtrl );
 
+        /// Get the initial visibility status
+        bool isVisible() const { return m_visible; }
+
     protected:
         /// Actually show the window
         virtual void innerShow();
@@ -84,6 +88,8 @@ class TopWindow: public GenericWindow
         /// Change the active layout
         virtual void setActiveLayout( GenericLayout *pLayout );
 
+        /// Initial visibility status
+        bool m_visible;
         /// Window manager
         WindowManager &m_rWindowManager;
         /// Current active layout of the window

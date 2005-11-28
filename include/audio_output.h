@@ -1,8 +1,8 @@
 /*****************************************************************************
  * audio_output.h : audio output interface
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: audio_output.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002-2005 the VideoLAN team
+ * $Id: audio_output.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -40,9 +40,11 @@
 #ifdef WORDS_BIGENDIAN
 #   define AOUT_FMT_S16_NE VLC_FOURCC('s','1','6','b')
 #   define AOUT_FMT_U16_NE VLC_FOURCC('u','1','6','b')
+#   define AOUT_FMT_S24_NE VLC_FOURCC('s','2','4','b')
 #else
 #   define AOUT_FMT_S16_NE VLC_FOURCC('s','1','6','l')
 #   define AOUT_FMT_U16_NE VLC_FOURCC('u','1','6','l')
+#   define AOUT_FMT_S24_NE VLC_FOURCC('s','2','4','l')
 #endif
 
 #define AOUT_FMT_NON_LINEAR( p_format )                                    \
@@ -98,6 +100,7 @@ typedef int32_t vlc_fixed_t;
 #define AOUT_CHAN_REVERSESTEREO     0x40000
 
 #define AOUT_CHAN_PHYSMASK          0xFFFF
+#define AOUT_CHAN_MAX               9
 
 /* Values used for the audio-device and audio-channels object variables */
 #define AOUT_VAR_MONO               1
@@ -129,6 +132,13 @@ struct aout_buffer_t
     mtime_t                 start_date, end_date;
 
     struct aout_buffer_t *  p_next;
+
+    /** Private data (aout_buffer_t will disappear soon so no need for an
+     * aout_buffer_sys_t type) */
+    void * p_sys;
+
+    /** This way the release can be overloaded */
+    void (*pf_release)( aout_buffer_t * );
 };
 
 /* Size of a frame for S/PDIF output. */
@@ -159,6 +169,9 @@ VLC_EXPORT( void, aout_DateSet, ( audio_date_t *, mtime_t ) );
 VLC_EXPORT( void, aout_DateMove, ( audio_date_t *, mtime_t ) );
 VLC_EXPORT( mtime_t, aout_DateGet, ( const audio_date_t * ) );
 VLC_EXPORT( mtime_t, aout_DateIncrement, ( audio_date_t *, uint32_t ) );
+
+VLC_EXPORT( int, aout_CheckChannelReorder, ( const uint32_t *, const uint32_t *, uint32_t, int, int * ) );
+VLC_EXPORT( void, aout_ChannelReorder, ( uint8_t *, int, int, const int *, int ) );
 
 /* From dec.c : */
 #define aout_DecNew(a, b, c) __aout_DecNew(VLC_OBJECT(a), b, c)

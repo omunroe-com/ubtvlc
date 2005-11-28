@@ -1,8 +1,8 @@
 /*****************************************************************************
  * announce.h : Session announcement
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: announce.h 7370 2004-04-18 18:21:09Z zorglub $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: announce.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Clément Stenac <zorglub@via.ecp.fr>
  *
@@ -25,21 +25,6 @@
  * Preamble
  *****************************************************************************/
 
-#if defined( UNDER_CE )
-#   include <winsock.h>
-#elif defined( WIN32 )
-#   include <winsock2.h>
-#   include <ws2tcpip.h>
-#   define close closesocket
-#else
-#   include <netdb.h>                                         /* hostent ... */
-#   include <sys/socket.h>
-#   include <netinet/in.h>
-#   ifdef HAVE_ARPA_INET_H
-#       include <arpa/inet.h>                    /* inet_ntoa(), inet_aton() */
-#   endif
-#endif
-
 #ifdef HAVE_SLP_H
 #   include <slp.h>
 #endif
@@ -48,19 +33,6 @@
 #   include <sys/types.h>
 #endif
 
-/*****************************************************************************
- * sap_session_t: SAP Session descriptor
- *****************************************************************************/
-struct sap_session_t2
-{
-        char * psz_sdp;
-        module_t p_network;
-        unsigned int i_socket;
-        unsigned int i_calls;
-        int i_ip_version;
-};
-
-typedef struct sap_session_t2 sap_session_t2;
 /*****************************************************************************
  * slp_session_t: SLP Session descriptor
  *****************************************************************************/
@@ -75,20 +47,6 @@ typedef struct slp_session_t slp_session_t;
 /*****************************************************************************
  * Prototypes
  *****************************************************************************/
-sap_session_t2 *  sout_SAPNew        (sout_instance_t *, char * psz_sdp_arg,
-                                                      int ip_version,
-                                                      char * psz_v6_scope );
-
-char * SDPGenerateUDP(char * ,char *);
-void             sout_SAPDelete     (sout_instance_t *,sap_session_t2*);
-void             sout_SAPSend       (sout_instance_t *,sap_session_t2 *);
 int              sout_SLPReg        (sout_instance_t *,char *,char *);
 int              sout_SLPDereg      (sout_instance_t *,char *,char *);
 
-/*
-VLC_EXPORT( sap_session_t *, sout_SAPNew, ( sout_instance_t *,char * , char * , int , char *) );
-VLC_EXPORT( void, sout_SAPSend, ( sout_instance_t *,sap_session_t *) );
-VLC_EXPORT( void, sout_SAPDelete, ( sout_instance_t *,sap_session_t * ) );
-
-VLC_EXPORT( int, sout_SLPReg, (sout_instance_t*,char*,char*) );
-VLC_EXPORT( int, sout_SLPDereg, (sout_instance_t*,char*,char*) );*/

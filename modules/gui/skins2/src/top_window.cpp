@@ -1,8 +1,8 @@
 /*****************************************************************************
  * top_window.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: top_window.cpp 7267 2004-04-03 20:17:06Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: top_window.cpp 12912 2005-10-22 11:57:29Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -28,10 +28,11 @@
 #include "os_window.hpp"
 #include "os_factory.hpp"
 #include "theme.hpp"
-#include "dialogs.hpp"
 #include "var_manager.hpp"
 #include "../commands/cmd_on_top.hpp"
+#include "../commands/cmd_dialogs.hpp"
 #include "../controls/ctrl_generic.hpp"
+#include "../events/evt_refresh.hpp"
 #include "../events/evt_enter.hpp"
 #include "../events/evt_focus.hpp"
 #include "../events/evt_leave.hpp"
@@ -48,12 +49,11 @@
 
 TopWindow::TopWindow( intf_thread_t *pIntf, int left, int top,
                       WindowManager &rWindowManager,
-                      bool dragDrop, bool playOnDrop ):
-    GenericWindow( pIntf, left, top, dragDrop, playOnDrop,
-                   NULL),
-    m_rWindowManager( rWindowManager ), m_pActiveLayout( NULL ),
-    m_pLastHitControl( NULL ), m_pCapturingControl( NULL ),
-    m_pFocusControl( NULL ), m_currModifier( 0 )
+                      bool dragDrop, bool playOnDrop, bool visible ):
+    GenericWindow( pIntf, left, top, dragDrop, playOnDrop, NULL ),
+    m_visible( visible ), m_rWindowManager( rWindowManager ),
+    m_pActiveLayout( NULL ), m_pLastHitControl( NULL ),
+    m_pCapturingControl( NULL ), m_pFocusControl( NULL ), m_currModifier( 0 )
 {
     // Register as a moving window
     m_rWindowManager.registerWindow( *this );
@@ -64,6 +64,24 @@ TopWindow::~TopWindow()
 {
     // Unregister from the window manager
     m_rWindowManager.unregisterWindow( *this );
+}
+
+
+void TopWindow::processEvent( EvtRefresh &rEvtRefresh )
+{
+    // We override the behaviour defined in GenericWindow, because we don't
+    // want to draw on a video control!
+    if( m_pActiveLayout == NULL )
+    {
+        GenericWindow::processEvent( rEvtRefresh );
+    }
+    else
+    {
+        m_pActiveLayout->refreshRect( rEvtRefresh.getXStart(),
+                                      rEvtRefresh.getYStart(),
+                                      rEvtRefresh.getWidth(),
+                                      rEvtRefresh.getHeight() );
+    }
 }
 
 
@@ -183,20 +201,17 @@ void TopWindow::processEvent( EvtKey &rEvtKey )
     // Only do the action when the key is down
     if( rEvtKey.getAsString().find( "key:down") != string::npos )
     {
-        //XXX not to be hardcoded !
+        //XXX not to be hardcoded!
         // Ctrl-S = Change skin
         if( (rEvtKey.getMod() & EvtInput::kModCtrl) &&
             rEvtKey.getKey() == 's' )
         {
-            Dialogs *pDialogs = Dialogs::instance( getIntf() );
-            if( pDialogs != NULL )
-            {
-                pDialogs->showChangeSkin();
-            }
+            CmdDlgChangeSkin cmd( getIntf() );
+            cmd.execute();
             return;
         }
 
-        //XXX not to be hardcoded !
+        //XXX not to be hardcoded!
         // Ctrl-T = Toggle on top
         if( (rEvtKey.getMod() & EvtInput::kModCtrl) &&
             rEvtKey.getKey() == 't' )

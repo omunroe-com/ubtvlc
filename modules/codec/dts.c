@@ -1,8 +1,8 @@
 /*****************************************************************************
  * dts.c: parse DTS audio sync info and packetize the stream
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: dts.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003-2005 the VideoLAN team
+ * $Id: dts.c 12089 2005-08-09 15:18:44Z jpsaman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -54,8 +54,12 @@ struct decoder_sys_t
 
     mtime_t i_pts;
 
-    int i_frame_size, i_bit_rate;
-    unsigned int i_frame_length, i_rate, i_channels, i_channels_conf;
+    unsigned int i_bit_rate;
+    unsigned int i_frame_size;
+    unsigned int i_frame_length;
+    unsigned int i_rate;
+    unsigned int i_channels;
+    unsigned int i_channels_conf;
 };
 
 enum {
@@ -130,6 +134,7 @@ static int OpenDecoder( vlc_object_t *p_this )
     /* Set output properties */
     p_dec->fmt_out.i_cat = AUDIO_ES;
     p_dec->fmt_out.i_codec = VLC_FOURCC('d','t','s',' ');
+    p_dec->fmt_out.audio.i_rate = 0; /* So end_date gets initialized */
 
     /* Set callback */
     p_dec->pf_decode_audio = (aout_buffer_t *(*)(decoder_t *, block_t **))
@@ -172,7 +177,7 @@ static void *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
         return NULL;
     }
 
-    if( (*pp_block)->i_flags&BLOCK_FLAG_DISCONTINUITY )
+    if( (*pp_block)->i_flags&(BLOCK_FLAG_DISCONTINUITY|BLOCK_FLAG_CORRUPTED) )
     {
         p_sys->i_state = STATE_NOSYNC;
     }

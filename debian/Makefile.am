@@ -7,21 +7,19 @@ EXTRA_DIST = \
 	control \
 	copyright \
 	rules \
+	vlc.desktop \
 	vlc.dirs \
 	vlc.docs \
 	vlc.menu \
+	vlc.mime \
 	gnome-vlc.desktop \
 	gnome-vlc.dirs \
-	gnome-vlc.menu \
 	gvlc.desktop \
 	gvlc.dirs \
-	gvlc.menu \
 	kvlc.dirs \
-	kvlc.menu \
 	libvlc0-dev.dirs \
 	mozilla-plugin-vlc.dirs \
 	qvlc.dirs \
-	qvlc.menu \
 	vlc-plugin-alsa.dirs \
 	vlc-plugin-arts.dirs \
 	vlc-plugin-esd.dirs \
@@ -31,4 +29,8 @@ EXTRA_DIST = \
 	vlc-plugin-svgalib.dirs \
 	wxvlc.dirs \
 	wxvlc.menu \
+	patches/00list \
+	patches/20_osdmenu-paths.dpatch \
+	patches/20_no-wx-updates.dpatch \
+	gcc-snapshot \
 	$(NULL)

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * modules.h : Module management functions.
  *****************************************************************************
- * Copyright (C) 2001 VideoLAN
- * $Id: modules.h 7690 2004-05-16 19:17:56Z gbazin $
+ * Copyright (C) 2001 the VideoLAN team
+ * $Id: modules.h 12319 2005-08-21 18:48:05Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -54,7 +54,25 @@ struct module_bank_t
 {
     VLC_COMMON_MEMBERS
 
+    int              i_usage;
+#ifndef HAVE_SHARED_LIBVLC
     module_symbols_t symbols;
+#endif
+
+    vlc_bool_t       b_main;
+    vlc_bool_t       b_builtins;
+    vlc_bool_t       b_plugins;
+
+    /* Plugins cache */
+    vlc_bool_t     b_cache;
+    vlc_bool_t     b_cache_dirty;
+    vlc_bool_t     b_cache_delete;
+
+    int            i_cache;
+    module_cache_t **pp_cache;
+
+    int            i_loaded_cache;
+    module_cache_t **pp_loaded_cache;
 };
 
 /*****************************************************************************
@@ -104,11 +122,27 @@ struct module_t
     char *              psz_filename;                     /* Module filename */
 
     vlc_bool_t          b_builtin;  /* Set to true if the module is built in */
+    vlc_bool_t          b_loaded;        /* Set to true if the dll is loaded */
 
     /*
      * Symbol table we send to the module so that it can access vlc symbols
      */
     module_symbols_t *p_symbols;
+};
+
+/*****************************************************************************
+ * Module cache description structure
+ *****************************************************************************/
+struct module_cache_t
+{
+    /* Mandatory cache entry header */
+    char       *psz_file;
+    int64_t    i_time;
+    int64_t    i_size;
+    vlc_bool_t b_junk;
+
+    /* Optional extra data */
+    module_t *p_module;
 };
 
 /*****************************************************************************

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * es.c: Elementary stream output module
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: es.c 7468 2004-04-24 12:49:53Z gbazin $
+ * Copyright (C) 2003-2004 the VideoLAN team
+ * $Id: es.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -75,9 +75,12 @@ static void     Close   ( vlc_object_t * );
 #define SOUT_CFG_PREFIX "sout-es-"
 
 vlc_module_begin();
+    set_shortname( "ES" );
     set_description( _("Elementary stream output") );
     set_capability( "sout stream", 50 );
     add_shortcut( "es" );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_STREAM );
 
     add_string( SOUT_CFG_PREFIX "access", "", NULL, ACCESS_TEXT,
                 ACCESS_LONGTEXT, VLC_TRUE );
@@ -147,7 +150,7 @@ static int Open( vlc_object_t *p_this )
     sout_stream_sys_t   *p_sys;
     vlc_value_t         val;
 
-    sout_ParseCfg( p_stream, SOUT_CFG_PREFIX, ppsz_sout_options, p_stream->p_cfg );
+    sout_CfgParse( p_stream, SOUT_CFG_PREFIX, ppsz_sout_options, p_stream->p_cfg );
     p_sys                   = malloc( sizeof( sout_stream_sys_t ) );
 
     p_sys->i_count          = 0;

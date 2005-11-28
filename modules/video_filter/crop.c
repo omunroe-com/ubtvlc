@@ -1,8 +1,8 @@
 /*****************************************************************************
  * crop.c : Crop video plugin for vlc
  *****************************************************************************
- * Copyright (C) 2002, 2003 VideoLAN
- * $Id: crop.c 7522 2004-04-27 16:35:15Z sam $
+ * Copyright (C) 2002, 2003 the VideoLAN team
+ * $Id: crop.c 12982 2005-10-27 09:29:36Z md $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -59,6 +59,9 @@ static int  SendEvents( vlc_object_t *, char const *,
 
 vlc_module_begin();
     set_description( _("Crop video filter") );
+    set_shortname( N_("Crop" ));
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VFILTER );
     set_capability( "video filter", 0 );
 
     add_string( "crop-geometry", NULL, NULL, GEOMETRY_TEXT, GEOMETRY_LONGTEXT, VLC_FALSE );
@@ -131,6 +134,7 @@ static int Init( vout_thread_t *p_vout )
     int   i_index;
     char *psz_var;
     picture_t *p_pic;
+    video_format_t fmt = {0};
 
     I_OUTPUTPICTURES = 0;
 
@@ -142,6 +146,7 @@ static int Init( vout_thread_t *p_vout )
     p_vout->output.i_width  = p_vout->render.i_width;
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
+    p_vout->fmt_out = p_vout->fmt_in;
 
     /* Shall we use autocrop ? */
     p_vout->p_sys->b_autocrop = config_GetInt( p_vout, "autocrop" );
@@ -228,9 +233,10 @@ static int Init( vout_thread_t *p_vout )
     }
     else
     {
-        p_vout->p_sys->i_width  = p_vout->output.i_width;
-        p_vout->p_sys->i_height = p_vout->output.i_height;
-        p_vout->p_sys->i_x = p_vout->p_sys->i_y = 0;
+        p_vout->p_sys->i_width  = p_vout->fmt_out.i_visible_width;
+        p_vout->p_sys->i_height = p_vout->fmt_out.i_visible_height;
+        p_vout->p_sys->i_x = p_vout->fmt_out.i_x_offset;
+        p_vout->p_sys->i_y = p_vout->fmt_out.i_y_offset;
     }
 
     /* Pheeew. Parsing done. */
@@ -240,14 +246,20 @@ static int Init( vout_thread_t *p_vout )
                      p_vout->p_sys->b_autocrop ? "" : "not " );
 
     /* Set current output image properties */
-    p_vout->p_sys->i_aspect = p_vout->output.i_aspect
-                            * p_vout->output.i_height / p_vout->p_sys->i_height
-                            * p_vout->p_sys->i_width / p_vout->output.i_width;
+    p_vout->p_sys->i_aspect = p_vout->fmt_out.i_aspect
+           * p_vout->fmt_out.i_visible_height / p_vout->p_sys->i_height
+           * p_vout->p_sys->i_width / p_vout->fmt_out.i_visible_width;
+
+    fmt.i_width = fmt.i_visible_width = p_vout->p_sys->i_width;
+    fmt.i_height = fmt.i_visible_height = p_vout->p_sys->i_height;
+    fmt.i_x_offset = fmt.i_y_offset = 0;
+    fmt.i_chroma = p_vout->render.i_chroma;
+    fmt.i_aspect = p_vout->p_sys->i_aspect;
+    fmt.i_sar_num = p_vout->p_sys->i_aspect * fmt.i_height / fmt.i_width;
+    fmt.i_sar_den = VOUT_ASPECT_FACTOR;
 
     /* Try to open the real video output */
-    p_vout->p_sys->p_vout = vout_Create( p_vout,
-                    p_vout->p_sys->i_width, p_vout->p_sys->i_height,
-                    p_vout->render.i_chroma, p_vout->p_sys->i_aspect );
+    p_vout->p_sys->p_vout = vout_Create( p_vout, &fmt );
     if( p_vout->p_sys->p_vout == NULL )
     {
         msg_Err( p_vout, "failed to create vout" );
@@ -287,9 +299,12 @@ static void Destroy( vlc_object_t *p_this )
 {
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
 
-    DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
-    vlc_object_detach( p_vout->p_sys->p_vout );
-    vout_Destroy( p_vout->p_sys->p_vout );
+    if( p_vout->p_sys->p_vout )
+    {
+        DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
+        vlc_object_detach( p_vout->p_sys->p_vout );
+        vout_Destroy( p_vout->p_sys->p_vout );
+    }
 
     DEL_PARENT_CALLBACKS( SendEventsToChild );
 
@@ -304,6 +319,8 @@ static void Destroy( vlc_object_t *p_this )
  *****************************************************************************/
 static int Manage( vout_thread_t *p_vout )
 {
+    video_format_t fmt = {0};
+
     if( !p_vout->p_sys->b_changed )
     {
         return VLC_SUCCESS;
@@ -311,9 +328,15 @@ static int Manage( vout_thread_t *p_vout )
 
     vout_Destroy( p_vout->p_sys->p_vout );
 
-    p_vout->p_sys->p_vout = vout_Create( p_vout,
-                    p_vout->p_sys->i_width, p_vout->p_sys->i_height,
-                    p_vout->render.i_chroma, p_vout->p_sys->i_aspect );
+    fmt.i_width = fmt.i_visible_width = p_vout->p_sys->i_width;
+    fmt.i_height = fmt.i_visible_height = p_vout->p_sys->i_height;
+    fmt.i_x_offset = fmt.i_y_offset = 0;
+    fmt.i_chroma = p_vout->render.i_chroma;
+    fmt.i_aspect = p_vout->p_sys->i_aspect;
+    fmt.i_sar_num = p_vout->p_sys->i_aspect * fmt.i_height / fmt.i_width;
+    fmt.i_sar_den = VOUT_ASPECT_FACTOR;
+
+    p_vout->p_sys->p_vout = vout_Create( p_vout, &fmt );
     if( p_vout->p_sys->p_vout == NULL )
     {
         msg_Err( p_vout, "failed to create vout" );
@@ -368,13 +391,13 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
 
         p_in = p_pic->p[i_plane].p_pixels
                 /* Skip the right amount of lines */
-                + i_in_pitch * ( p_pic->p[i_plane].i_lines * p_vout->p_sys->i_y
-                                  / p_vout->output.i_height )
+                + i_in_pitch * ( p_pic->p[i_plane].i_visible_lines *
+                                 p_vout->p_sys->i_y / p_vout->output.i_height )
                 /* Skip the right amount of columns */
                 + i_in_pitch * p_vout->p_sys->i_x / p_vout->output.i_width;
 
         p_out = p_outpic->p[i_plane].p_pixels;
-        p_out_end = p_out + i_out_pitch * p_outpic->p[i_plane].i_lines;
+        p_out_end = p_out + i_out_pitch * p_outpic->p[i_plane].i_visible_lines;
 
         while( p_out < p_out_end )
         {
@@ -399,7 +422,7 @@ static void UpdateStats( vout_thread_t *p_vout, picture_t *p_pic )
     uint8_t *p_in = p_pic->p[0].p_pixels;
     int i_pitch = p_pic->p[0].i_pitch;
     int i_visible_pitch = p_pic->p[0].i_visible_pitch;
-    int i_lines = p_pic->p[0].i_lines;
+    int i_lines = p_pic->p[0].i_visible_lines;
     int i_firstwhite = -1, i_lastwhite = -1, i;
 
     /* Determine where black borders are */

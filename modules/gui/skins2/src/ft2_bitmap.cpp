@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ft2_bitmap.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ft2_bitmap.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: ft2_bitmap.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -60,9 +60,9 @@ void FT2Bitmap::draw( const FT_Bitmap &rBitmap, int left, int top,
         {
             // The buffer in FT_Bitmap contains alpha values
             uint8_t val = *(pBuf++);
-            *(pData++) = blue;
-            *(pData++) = green;
-            *(pData++) = red;
+            *(pData++) = (blue * val) >> 8;
+            *(pData++) = (green * val) >> 8;
+            *(pData++) = (red * val) >> 8;
             *(pData++) = val;
         }
     }

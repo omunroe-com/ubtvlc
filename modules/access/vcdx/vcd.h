@@ -1,9 +1,9 @@
 /*****************************************************************************
  * vcd.h : VCD input module header for vlc
- *          using libcdio, libvcd and libvcdinfo
+ *         using libcdio, libvcd and libvcdinfo
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: vcd.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003, 2004 the VideoLAN team
+ * $Id: vcd.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Rocky Bernstein <rocky@panix.com> 
  *
@@ -24,6 +24,8 @@
 
 #include <libvcd/info.h>
 
+#define VCD_MRL_PREFIX "vcdx://"
+
 /*****************************************************************************
  * vcd_data_t: structure for communication between access and intf.
  *****************************************************************************/
@@ -40,7 +42,7 @@ typedef struct
 #endif
 
     int                     i_still_time;
-    bool                    b_end_of_cell;
+    vlc_bool_t              b_end_of_cell;
 
 #if FINISHED
     vcdplay_event_t         event;
@@ -50,6 +52,5 @@ typedef struct
 
 } vcd_data_t;
 
-int  VCDSetArea      ( input_thread_t *, input_area_t * );
-void VCDSeek         ( input_thread_t *, off_t );
-int  VCDPlay         ( input_thread_t *, vcdinfo_itemid_t );
+int  VCDSetArea      ( access_t * );
+int  VCDSeek         ( access_t *, off_t );

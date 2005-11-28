@@ -1,0 +1,25 @@
+This is the contrib build system for VLC Media Player. It has been
+primarily developed for Mac OS X, though it should be easy to adapt to
+other operating systems.
+
+To use it, first in the contrib directory, type :
+	./bootstrap
+
+You can specify an argument to cross compile, for example:
+    ./bootstrap i586-pc-beos
+This will look for a i586-pc-beos-gcc cross compiler. Default is to
+build natively.
+
+Customize config.mak if you need to, then you need to choose between
+building from source (can take a long time but is easily customizable)
+and fetching a pre-compiled binary package. Either type 'make src'
+or 'make bin' (also from the contrib directory).
+
+make bin IS NOT WORKING atm USE make src
+
+Once the contribs are built, you can start building VLC.
+See: http://developers.videolan.org/vlc/osx-compile.html 
+for more details on that.
+
+Happy hacking.
+--Meuuh 2003-11-15

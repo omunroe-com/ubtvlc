@@ -1,8 +1,8 @@
 /*****************************************************************************
  * generic_bitmap.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: generic_bitmap.hpp 7173 2004-03-27 00:21:13Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: generic_bitmap.hpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

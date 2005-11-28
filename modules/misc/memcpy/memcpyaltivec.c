@@ -1,8 +1,8 @@
 /*****************************************************************************
  * memcpyaltivec.c : AltiVec memcpy module
  *****************************************************************************
- * Copyright (C) 2001 VideoLAN
- * $Id: memcpyaltivec.c 7406 2004-04-21 13:23:01Z sam $
+ * Copyright (C) 2001 the VideoLAN team
+ * $Id: memcpyaltivec.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Author: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -54,6 +54,8 @@ static int Activate ( vlc_object_t *p_this )
  *****************************************************************************/
 vlc_module_begin();
     set_description( _("AltiVec memcpy") );
+    set_category( CAT_ADVANCED );
+    set_subcategory( SUBCAT_ADVANCED_MISC );
     add_requirement( ALTIVEC );
     set_capability( "memcpy", 100 );
     set_callbacks( Activate, NULL );

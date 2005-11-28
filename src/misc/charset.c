@@ -2,8 +2,8 @@
  * charset.c: Determine a canonical name for the current locale's character
  *            encoding.
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: charset.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003-2005 the VideoLAN team
+ * $Id: charset.c 12751 2005-10-02 16:52:52Z courmisch $
  *
  * Author: Derk-Jan Hartman <thedj at users.sf.net>
  *
@@ -43,6 +43,11 @@
 # include <windows.h>
 #endif
 
+#ifdef SYS_DARWIN
+#   include <errno.h>
+#   include <string.h>
+#endif
+
 #include "charset.h"
 
 typedef struct VLCCharsetAlias
@@ -59,7 +64,7 @@ typedef struct VLCCharsetAlias
  * a lot of basic aliases (check it first by iconv -l).
  *
  */
-
+#if defined WIN32 || defined OS2 || !HAVE_LANGINFO_CODESET
 static const char* vlc_encoding_from_language( const char *l )
 {
     /* check for language (and perhaps country) codes */
@@ -91,7 +96,7 @@ static const char* vlc_encoding_from_language( const char *l )
     /* We don't know. This ain't working go to default. */
     return "ISO-8859-1";
 }
-
+#endif
 
 static const char* vlc_charset_aliases( const char *psz_name )
 {
@@ -197,14 +202,14 @@ static const char* vlc_charset_aliases( const char *psz_name )
 }
 
 /* Returns charset from "language_COUNTRY.charset@modifier" string */
-static char *vlc_encoding_from_locale( char *psz_locale )
+#if defined WIN32 || defined OS2 || !HAVE_LANGINFO_CODESET
+static void vlc_encoding_from_locale( char *psz_locale, char *psz_charset )
 {
     char *psz_dot = strchr( psz_locale, '.' );
 
     if( psz_dot != NULL )
     {
         const char *psz_modifier;
-        static char buf[2 + 10 + 1];
 
         psz_dot++;
 
@@ -212,30 +217,38 @@ static char *vlc_encoding_from_locale( char *psz_locale )
         psz_modifier = strchr( psz_dot, '@' );
 
         if( psz_modifier == NULL )
-            return psz_dot;
-        if( 0 < ( psz_modifier - psz_dot ) < sizeof( buf ))
         {
-            memcpy( buf, psz_dot, psz_modifier - psz_dot );
-            buf[ psz_modifier - psz_dot ] = '\0';
-            return buf;
+            strcpy( psz_charset, psz_dot );
+            return;
+        }
+        if( 0 < ( psz_modifier - psz_dot )
+             && ( psz_modifier - psz_dot ) < 2 + 10 + 1 )
+        {
+            memcpy( psz_charset, psz_dot, psz_modifier - psz_dot );
+            psz_charset[ psz_modifier - psz_dot ] = '\0';
+            return;
         }
     }
     /* try language mapping */
-    return (char *)vlc_encoding_from_language( psz_locale );
+    strcpy( psz_charset, vlc_encoding_from_language( psz_locale ) );
 }
+#endif
 
 vlc_bool_t vlc_current_charset( char **psz_charset )
 {
     const char *psz_codeset;
 
-#if !(defined WIN32 || defined OS2)
+#if !(defined WIN32 || defined OS2 || defined SYS_DARWIN)
 
 # if HAVE_LANGINFO_CODESET
     /* Most systems support nl_langinfo( CODESET ) nowadays.  */
     psz_codeset = nl_langinfo( CODESET );
+    if( !strcmp( psz_codeset, "ANSI_X3.4-1968" ) )
+        psz_codeset = "ASCII";
 # else
     /* On old systems which lack it, use setlocale or getenv.  */
     const char *psz_locale = NULL;
+    char buf[2 + 10 + 1];
 
     /* But most old systems don't have a complete set of locales.  Some
      * (like SunOS 4 or DJGPP) have only the C locale.  Therefore we don't
@@ -257,12 +270,18 @@ vlc_bool_t vlc_current_charset( char **psz_charset )
 
     /* On some old systems, one used to set locale = "iso8859_1". On others,
      * you set it to "language_COUNTRY.charset". Darwin only has LANG :( */
-    psz_codeset = vlc_encoding_from_locale( (char *)psz_locale );
+    vlc_encoding_from_locale( (char *)psz_locale, buf );
+    psz_codeset =  buf;
 # endif /* HAVE_LANGINFO_CODESET */
+
+#elif defined SYS_DARWIN
+
+    /* Darwin is always using UTF-8 internally. */
+    psz_codeset = "UTF-8";
 
 #elif defined WIN32
 
-    static char buf[2 + 10 + 1];
+    char buf[2 + 10 + 1];
 
     /* Woe32 has a function returning the locale's codepage as a number.  */
     sprintf( buf, "CP%u", GetACP() );
@@ -271,7 +290,7 @@ vlc_bool_t vlc_current_charset( char **psz_charset )
 #elif defined OS2
 
     const char *psz_locale;
-    static char buf[2 + 10 + 1];
+    char buf[2 + 10 + 1];
     ULONG cp[3];
     ULONG cplen;
 
@@ -285,7 +304,8 @@ vlc_bool_t vlc_current_charset( char **psz_charset )
             locale = getenv( "LANG" );
     }
     if( psz_locale != NULL && psz_locale[0] != '\0' )
-        psz_codeset = vlc_encoding_from_locale( psz_locale );
+        vlc_encoding_from_locale( psz_locale, buf );
+        psz_codeset = buf;
     else
     {
         /* OS/2 has a function returning the locale's codepage as a number. */
@@ -315,7 +335,7 @@ vlc_bool_t vlc_current_charset( char **psz_charset )
     }
 
     if( psz_charset )
-        *psz_charset = strdup((char *)psz_codeset);
+        *psz_charset = strdup(psz_codeset);
 
     if( !strcasecmp(psz_codeset, "UTF8") || !strcasecmp(psz_codeset, "UTF-8") )
         return VLC_TRUE;
@@ -323,3 +343,34 @@ vlc_bool_t vlc_current_charset( char **psz_charset )
     return VLC_FALSE;
 }
 
+char *__vlc_fix_readdir_charset( vlc_object_t *p_this, const char *psz_string )
+{
+#ifdef SYS_DARWIN
+    if ( p_this->p_libvlc->iconv_macosx != (vlc_iconv_t)-1 )
+    {
+        const char *psz_in = psz_string;
+        size_t i_in = strlen(psz_in);
+        size_t i_out = i_in * 2;
+        char *psz_utf8 = malloc(i_out + 1);
+        char *psz_out = psz_utf8;
+
+        vlc_mutex_lock( &p_this->p_libvlc->iconv_lock );
+        size_t i_ret = vlc_iconv( p_this->p_libvlc->iconv_macosx,
+                                  &psz_in, &i_in, &psz_out, &i_out );
+        vlc_mutex_unlock( &p_this->p_libvlc->iconv_lock );
+        if( i_ret == (size_t)-1 || i_in )
+        {
+            msg_Warn( p_this,
+                      "failed to convert \"%s\" from HFS+ charset (%s)",
+                      psz_string, strerror(errno) );
+            free( psz_utf8 );
+            return strdup( psz_string );
+        }
+
+        *psz_out = '\0';
+        return psz_utf8;
+    }
+#endif
+
+    return strdup( psz_string );
+}

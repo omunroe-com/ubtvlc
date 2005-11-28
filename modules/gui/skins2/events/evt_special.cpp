@@ -1,8 +1,8 @@
 /*****************************************************************************
  * evt_special.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: evt_special.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: evt_special.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

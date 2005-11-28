@@ -1,8 +1,8 @@
 /*****************************************************************************
  * var_percent.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: var_percent.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: var_percent.cpp 11786 2005-07-18 23:57:41Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -26,11 +26,6 @@
 
 
 const string VarPercent::m_type = "percent";
-
-
-VarPercent::VarPercent( intf_thread_t *pIntf ): Variable( pIntf ), m_value( 0 )
-{
-}
 
 
 void VarPercent::set( float percentage )

@@ -366,31 +366,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "plugin_mpeg_system"=.\plugin_mpeg_system.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "plugin_ps"=.\plugin_ps.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "plugin_ts"=.\plugin_ts.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -474,18 +450,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "plugin_mux_ts"=.\plugin_mux_ts.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "plugin_packetizer_copy"=.\plugin_packetizer_copy.dsp - Package Owner=<4>
 
 Package=<5>
@@ -535,18 +499,6 @@ Package=<4>
 ###############################################################################
 
 Project: "plugin_dummy"=.\plugin_dummy.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "plugin_rc"=.\plugin_rc.dsp - Package Owner=<4>
 
 Package=<5>
 {{{

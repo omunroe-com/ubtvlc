@@ -1,8 +1,8 @@
 /*****************************************************************************
  * filter_common.h: Common filter functions
  *****************************************************************************
- * Copyright (C) 2001, 2002, 2003 VideoLAN
- * $Id: filter_common.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001, 2002, 2003 the VideoLAN team
+ * $Id: filter_common.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *

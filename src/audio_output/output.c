@@ -1,8 +1,8 @@
 /*****************************************************************************
  * output.c : internal management of output streams for the audio output
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: output.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id: output.c 12676 2005-09-25 16:49:40Z babal $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -189,6 +189,7 @@ int aout_OutputNew( aout_instance_t * p_aout,
     aout_FormatPrint( p_aout, "mixer", &p_aout->output.output );
 
     /* Create filters. */
+    p_aout->output.i_nb_filters = 0;
     if ( aout_FiltersCreatePipeline( p_aout, p_aout->output.pp_filters,
                                      &p_aout->output.i_nb_filters,
                                      &p_aout->mixer.mixer,
@@ -246,6 +247,12 @@ void aout_OutputPlay( aout_instance_t * p_aout, aout_buffer_t * p_buffer )
                       p_aout->output.i_nb_filters,
                       &p_buffer );
 
+    if( p_buffer->i_nb_bytes == 0 )
+    {
+        aout_BufferFree( p_buffer );
+        return;
+    }
+
     vlc_mutex_lock( &p_aout->output_fifo_lock );
     aout_FifoPush( p_aout, &p_aout->output.fifo, p_buffer );
     p_aout->output.pf_play( p_aout );
@@ -269,7 +276,12 @@ aout_buffer_t * aout_OutputNextBuffer( aout_instance_t * p_aout,
     vlc_mutex_lock( &p_aout->output_fifo_lock );
 
     p_buffer = p_aout->output.fifo.p_first;
-    while ( p_buffer && p_buffer->start_date < mdate() - AOUT_PTS_TOLERANCE )
+
+    /* Drop the audio sample if the audio output is really late.
+     * In the case of b_can_sleek, we don't use a resampler so we need to be
+     * a lot more severe. */
+    while ( p_buffer && p_buffer->start_date <
+            (b_can_sleek ? start_date : mdate()) - AOUT_PTS_TOLERANCE )
     {
         msg_Dbg( p_aout, "audio output is too slow ("I64Fd"), "
                  "trashing "I64Fd"us", mdate() - p_buffer->start_date,
@@ -300,7 +312,8 @@ aout_buffer_t * aout_OutputNextBuffer( aout_instance_t * p_aout,
     }
 
     /* Here we suppose that all buffers have the same duration - this is
-     * generally true, and anyway if it's wrong it won't be a disaster. */
+     * generally true, and anyway if it's wrong it won't be a disaster.
+     */
     if ( p_buffer->start_date > start_date
                          + (p_buffer->end_date - p_buffer->start_date) )
     /*

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * generic_window.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: generic_window.hpp 7269 2004-04-03 22:18:23Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: generic_window.hpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -75,6 +75,9 @@ class GenericWindow: public SkinObject, public Observer<VarBool>
 
         /// Give access to the visibility variable
         VarBool &getVisibleVar() { return m_varVisible; }
+
+        /// Window type, mainly useful when overloaded (for VoutWindow)
+        virtual string getType() const { return "Generic"; }
 
     protected:
         /// Get the OS window

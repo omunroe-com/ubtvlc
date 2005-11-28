@@ -1,12 +1,12 @@
 /*****************************************************************************
  * a52.c: parse A/52 audio sync info and packetize the stream
  *****************************************************************************
- * Copyright (C) 2001-2002 VideoLAN
- * $Id: a52.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001-2002 the VideoLAN team
+ * $Id: a52.c 11709 2005-07-11 16:20:33Z massiot $
  *
  * Authors: Stéphane Borel <stef@via.ecp.fr>
  *          Christophe Massiot <massiot@via.ecp.fr>
- *          Gildas Bazin <gbazin@netcourrier.com>
+ *          Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,7 +77,8 @@ static int  OpenPacketizer( vlc_object_t * );
 static void CloseDecoder  ( vlc_object_t * );
 static void *DecodeBlock  ( decoder_t *, block_t ** );
 
-static int  SyncInfo      ( const byte_t *, int *, int *, int *,int * );
+static int  SyncInfo      ( const byte_t *, unsigned int *, unsigned int *,
+                            unsigned int *, int * );
 
 static uint8_t       *GetOutBuffer ( decoder_t *, void ** );
 static aout_buffer_t *GetAoutBuffer( decoder_t * );
@@ -90,6 +91,8 @@ vlc_module_begin();
     set_description( _("A/52 parser") );
     set_capability( "decoder", 100 );
     set_callbacks( OpenDecoder, CloseDecoder );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACODEC );
 
     add_submodule();
     set_description( _("A/52 audio packetizer") );
@@ -129,6 +132,7 @@ static int OpenDecoder( vlc_object_t *p_this )
     /* Set output properties */
     p_dec->fmt_out.i_cat = AUDIO_ES;
     p_dec->fmt_out.i_codec = VLC_FOURCC('a','5','2',' ');
+    p_dec->fmt_out.audio.i_rate = 0; /* So end_date gets initialized */
 
     /* Set callback */
     p_dec->pf_decode_audio = (aout_buffer_t *(*)(decoder_t *, block_t **))
@@ -171,7 +175,7 @@ static void *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
         return NULL;
     }
 
-    if( (*pp_block)->i_flags&BLOCK_FLAG_DISCONTINUITY )
+    if( (*pp_block)->i_flags&(BLOCK_FLAG_DISCONTINUITY|BLOCK_FLAG_CORRUPTED) )
     {
         p_sys->i_state = STATE_NOSYNC;
     }
@@ -406,8 +410,9 @@ static block_t *GetSoutBuffer( decoder_t *p_dec )
  * their SyncInfo...
  *****************************************************************************/
 static int SyncInfo( const byte_t * p_buf,
-                     int * pi_channels, int * pi_channels_conf,
-                     int * pi_sample_rate, int * pi_bit_rate )
+                     unsigned int * pi_channels,
+                     unsigned int * pi_channels_conf,
+                     unsigned int * pi_sample_rate, int * pi_bit_rate )
 {
     static const uint8_t halfrate[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3 };
     static const int rate[] = { 32,  40,  48,  56,  64,  80,  96, 112,

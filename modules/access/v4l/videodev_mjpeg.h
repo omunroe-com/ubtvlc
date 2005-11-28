@@ -2,7 +2,7 @@
  * Copyright (C) lavrec (see http://mjpeg.sourceforge.net)
  * ( XXX This file was get from the driver-zoran package and it is under GPL)
  *
- * $Id: videodev_mjpeg.h 6961 2004-03-05 17:34:23Z sam $
+ * $Id: videodev_mjpeg.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

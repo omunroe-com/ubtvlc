@@ -1,8 +1,8 @@
 /*****************************************************************************
  * visual.c : Visualisation system
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: visual.c 7373 2004-04-18 23:08:44Z gbazin $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: visual.c 12905 2005-10-20 22:37:14Z zcot $
  *
  * Authors: Clément Stenac <zorglub@via.ecp.fr>
  *
@@ -38,7 +38,7 @@
 #define ELIST_TEXT N_( "Effects list" )
 #define ELIST_LONGTEXT N_( \
       "A list of visual effect, separated by commas.\n"  \
-      "Current effects include: dummy, random, scope, spectrum" )
+      "Current effects include: dummy, scope, spectrum" )
 
 #define WIDTH_TEXT N_( "Video width" )
 #define WIDTH_LONGTEXT N_( \
@@ -51,6 +51,8 @@
 #define NBBANDS_TEXT N_( "Number of bands" )
 #define NBBANDS_LONGTEXT N_( \
       "Number of bands used by spectrum analyzer, should be 20 or 80." )
+#define SPNBBANDS_LONGTEXT N_( \
+      "Number of bands used by the spectrOmeter, from 20 to 80." )
 
 #define SEPAR_TEXT N_( "Band separator" )
 #define SEPAR_LONGTEXT N_( \
@@ -64,6 +66,38 @@
 #define PEAKS_LONGTEXT N_( \
         "Defines whether to draw peaks." )
 
+#define ORIG_TEXT N_( "Enable original graphic spectrum" )
+#define ORIG_LONGTEXT N_( \
+        "Defines whether to draw the original spectrum graphic routine." )
+
+#define BANDS_TEXT N_( "Enable bands" )
+#define BANDS_LONGTEXT N_( \
+        "Defines whether to draw the bands." )
+
+#define BASE_TEXT N_( "Enable base" )
+#define BASE_LONGTEXT N_( \
+        "Defines whether to draw the base of the bands." )
+
+#define RADIUS_TEXT N_( "Base pixel radius" )
+#define RADIUS_LONGTEXT N_( \
+        "Defines radius size in pixels, of base of bands(beginning)." )
+
+#define SECT_TEXT N_( "Spectral sections" )
+#define SECT_LONGTEXT N_( \
+        "Determines how many sections of spectrum will exist." )
+
+#define PEAK_HEIGHT_TEXT N_( "Peak height" )
+#define PEAK_HEIGHT_LONGTEXT N_( \
+        "This is the total pixel height of the peak items." )
+
+#define PEAK_WIDTH_TEXT N_( "Peak extra width" )
+#define PEAK_WIDTH_LONGTEXT N_( \
+        "Additions or subtractions of pixels on the peak width." )
+
+#define COLOR1_TEXT N_( "V-plane color" )
+#define COLOR1_LONGTEXT N_( \
+        "YUV-Color cube shifting across the V-plane ( 0 - 127 )." )
+
 #define STARS_TEXT N_( "Number of stars" )
 #define STARS_LONGTEXT N_( \
         "Defines the number of stars to draw with random effect." )
@@ -72,24 +106,52 @@ static int  Open         ( vlc_object_t * );
 static void Close        ( vlc_object_t * );
 
 vlc_module_begin();
-    set_description( _("visualizer filter") );
+    set_shortname( _("Visualizer"));
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_VISUAL );
+    set_description( _("Visualizer filter") );
+    set_section( N_( "General") , NULL );
     add_string("effect-list", "spectrum", NULL,
             ELIST_TEXT, ELIST_LONGTEXT, VLC_TRUE );
     add_integer("effect-width",VOUT_WIDTH,NULL,
              WIDTH_TEXT, WIDTH_LONGTEXT, VLC_FALSE );
     add_integer("effect-height" , VOUT_HEIGHT , NULL,
              HEIGHT_TEXT, HEIGHT_LONGTEXT, VLC_FALSE );
+    set_section( N_("Spectrum analyser") , NULL );
     add_integer("visual-nbbands", 80, NULL,
-             NBBANDS_TEXT, NBBANDS_LONGTEXT, VLC_FALSE );
+             NBBANDS_TEXT, NBBANDS_LONGTEXT, VLC_TRUE );
     add_integer("visual-separ", 1, NULL,
-             SEPAR_TEXT, SEPAR_LONGTEXT, VLC_FALSE );
+             SEPAR_TEXT, SEPAR_LONGTEXT, VLC_TRUE );
     add_integer("visual-amp", 3, NULL,
-             AMP_TEXT, AMP_LONGTEXT, VLC_FALSE );
+             AMP_TEXT, AMP_LONGTEXT, VLC_TRUE );
     add_bool("visual-peaks", VLC_TRUE, NULL,
-             PEAKS_TEXT, PEAKS_LONGTEXT, VLC_FALSE );
-    add_integer("visual-stars", 200, NULL,
-             STARS_TEXT, STARS_LONGTEXT, VLC_FALSE );
-    set_capability( "audio filter", 0 );
+             PEAKS_TEXT, PEAKS_LONGTEXT, VLC_TRUE );
+    set_section( N_("Spectrometer") , NULL );
+    add_bool("spect-show-original", VLC_FALSE, NULL,
+             ORIG_TEXT, ORIG_LONGTEXT, VLC_TRUE );
+    add_bool("spect-show-base", VLC_TRUE, NULL,
+             BASE_TEXT, BASE_LONGTEXT, VLC_TRUE );
+    add_integer("spect-radius", 42, NULL,
+             RADIUS_TEXT, RADIUS_LONGTEXT, VLC_TRUE );
+    add_integer("spect-sections", 3, NULL,
+             SECT_TEXT, SECT_LONGTEXT, VLC_TRUE );
+    add_integer("spect-color", 80, NULL,
+             COLOR1_TEXT, COLOR1_LONGTEXT, VLC_TRUE );
+    add_bool("spect-show-bands", VLC_TRUE, NULL,
+             BANDS_TEXT, BANDS_LONGTEXT, VLC_TRUE );
+    add_integer("spect-nbbands", 32, NULL,
+             NBBANDS_TEXT, SPNBBANDS_LONGTEXT, VLC_TRUE );
+    add_integer("spect-separ", 1, NULL,
+             SEPAR_TEXT, SEPAR_LONGTEXT, VLC_TRUE );
+    add_integer("spect-amp", 8, NULL,
+             AMP_TEXT, AMP_LONGTEXT, VLC_TRUE );
+    add_bool("spect-show-peaks", VLC_TRUE, NULL,
+             PEAKS_TEXT, PEAKS_LONGTEXT, VLC_TRUE );
+    add_integer("spect-peak-width", 61, NULL,
+             PEAK_WIDTH_TEXT, PEAK_WIDTH_LONGTEXT, VLC_TRUE );
+    add_integer("spect-peak-height", 1, NULL,
+             PEAK_HEIGHT_TEXT, PEAK_HEIGHT_LONGTEXT, VLC_TRUE );
+    set_capability( "visualization", 0 );
     set_callbacks( Open, Close );
     add_shortcut( "visualizer");
 vlc_module_end();
@@ -111,7 +173,7 @@ static struct
 {
     { "scope",      scope_Run },
     { "spectrum",   spectrum_Run },
-    { "random",     random_Run},
+    { "spectrometer",   spectrometer_Run },
     { "dummy",      dummy_Run},
     { NULL,         dummy_Run}
 };
@@ -126,6 +188,7 @@ static int Open( vlc_object_t *p_this )
     vlc_value_t        val;
 
     char *psz_effects, *psz_parser;
+    video_format_t fmt = {0};
 
     if( ( p_filter->input.i_format != VLC_FOURCC('f','l','3','2') &&
           p_filter->input.i_format != VLC_FOURCC('f','i','3','2') ) )
@@ -156,8 +219,7 @@ static int Open( vlc_object_t *p_this )
     var_Get( p_filter, "effect-list", &val);
     psz_parser = psz_effects = strdup( val.psz_string );
     free( val.psz_string );
-    msg_Dbg( p_filter , "Building list of effects" );
-    
+
     var_AddCallback( p_filter, "effect-list", FilterCallback, NULL );
 
     while( psz_parser && *psz_parser != '\0' )
@@ -240,12 +302,13 @@ static int Open( vlc_object_t *p_this )
     }
 
     /* Open the video output */
-    p_sys->p_vout =
-         vout_Request( p_filter, NULL,
-                       p_sys->i_width, p_sys->i_height,
-                       VLC_FOURCC('I','4','2','0'),
-                       VOUT_ASPECT_FACTOR * p_sys->i_width/p_sys->i_height );
+    fmt.i_width = fmt.i_visible_width = p_sys->i_width;
+    fmt.i_height = fmt.i_visible_height = p_sys->i_height;
+    fmt.i_chroma = VLC_FOURCC('I','4','2','0');
+    fmt.i_aspect = VOUT_ASPECT_FACTOR * p_sys->i_width/p_sys->i_height;
+    fmt.i_sar_num = fmt.i_sar_den = 1;
 
+    p_sys->p_vout = vout_Request( p_filter, NULL, &fmt );
     if( p_sys->p_vout == NULL )
     {
         msg_Err( p_filter, "no suitable vout module" );
@@ -291,7 +354,7 @@ static void DoWork( aout_instance_t *p_aout, aout_filter_t *p_filter,
     for( i = 0 ; i < p_outpic->i_planes ; i++ )
     {
         memset( p_outpic->p[i].p_pixels, i > 0 ? 0x80 : 0x00,
-                p_outpic->p[i].i_lines * p_outpic->p[i].i_pitch );
+                p_outpic->p[i].i_visible_lines * p_outpic->p[i].i_pitch );
     }
 
     /* We can now call our visualization effects */
@@ -323,7 +386,7 @@ static void Close( vlc_object_t *p_this )
 
     if( p_filter->p_sys->p_vout )
     {
-        vout_Request( p_filter, p_filter->p_sys->p_vout, 0, 0, 0, 0 );
+        vout_Request( p_filter, p_filter->p_sys->p_vout, 0 );
     }
 
     /* Free the list */
