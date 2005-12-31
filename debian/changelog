@@ -1,3 +1,14 @@
+vlc (0.8.4.debian-1ubuntu3) dapper; urgency=low
+
+  * debian/control: Replace mozilla-dev build dependency with
+    firefox-dev. Change mozilla-plugin-vlc's Recommends appropriately.
+    Fixes FTBFS due to mozilla-dev muck on [!amd64].
+  * debian/rules: Elide Ubuntu modifications into UBUNTU_ENV to pass
+    to configure (MOZILLA_CONFIG=/usr/bin/firefox-config ,
+    XPIDL=/usr/lib/mozilla-firefox/xpidl)
+
+ -- Daniel T Chen <crimsun@fungus.sh.nu>  Fri, 30 Dec 2005 19:29:07 -0800
+
 vlc (0.8.4.debian-1ubuntu2) dapper; urgency=low
 
   * Rebuild for new dbus.
