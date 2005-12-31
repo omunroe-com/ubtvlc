@@ -13,6 +13,8 @@ DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 confflags = --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) 
 
+UBUNTU_ENV += MOZILLA_CONFIG=/usr/bin/firefox-config XPIDL=/usr/lib/mozilla-firefox/xpidl
+
 #
 # Compilation options
 #
@@ -135,6 +137,7 @@ configure-stamp:
 	 && $(MAKE)
 
 	# Configure VLC
+	$(UBUNTU_ENV) \
 	./configure --mandir=$${prefix}/share/man \
 	  --infodir=$${prefix}/share/info $(confflags) $(vlc_confflags)
 
