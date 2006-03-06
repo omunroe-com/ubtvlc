@@ -1,3 +1,12 @@
+vlc (0.8.4.debian-1ubuntu5) dapper; urgency=low
+
+  * Integrate updates from Debian:
+    - Enable support for zeroconf/bonjour, musepack decoding, and VCD
+      navigation (and adjust debian/{control,rules} accordingly, adding
+      debian/patches/22_avahi_client_0.6_api).
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 05 Mar 2006 18:38:55 -0800
+
 vlc (0.8.4.debian-1ubuntu4) dapper; urgency=low
 
   * removed nonexistent xlibs-static-pic build dep to fix FTBFS
