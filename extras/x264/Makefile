@@ -24,11 +24,12 @@ ASMSRC  = common/i386/dct-a.asm common/i386/cpu-a.asm \
           common/i386/pixel-sse2.asm common/i386/quant-a.asm \
           common/i386/deblock-a.asm
 OBJASM  = $(ASMSRC:%.asm=%.o)
+ASFLAGS += -Icommon/i386/
 endif
 
 # MMX/SSE optims
 ifeq ($(ARCH),X86_64)
-SRCS   += common/i386/mc-c.c common/i386/dct-c.c common/i386/predict.c
+SRCS   += common/i386/mc-c.c common/i386/dct-c.c common/amd64/predict.c
 ASMSRC  = common/amd64/dct-a.asm common/amd64/cpu-a.asm \
           common/amd64/pixel-a.asm common/amd64/mc-a.asm \
           common/amd64/mc-a2.asm common/amd64/predict-a.asm \
@@ -51,14 +52,12 @@ endif
 
 ifneq ($(HAVE_GETOPT_LONG),1)
 SRCS += extras/getopt.c
-CFLAGS += -DHAVE_GETOPT_LONG=0
-else
-CFLAGS += -DHAVE_GETOPT_LONG=1
 endif
 
 OBJS = $(SRCS:%.c=%.o)
 DEP  = depend
 
+.PHONY: default fprofiled clean distclean install uninstall
 default: $(DEP) x264$(EXE)
 
 libx264.a: .depend $(OBJS) $(OBJASM)
@@ -75,30 +74,58 @@ checkasm: tools/checkasm.o libx264.a
 	$(CC) -o $@ $< libx264.a $(LDFLAGS)
 
 common/amd64/*.o: common/amd64/amd64inc.asm
+common/i386/*.o: common/i386/i386inc.asm
 %.o: %.asm
 	$(AS) $(ASFLAGS) -o $@ $<
 
-.depend: config.mak config.h
+.depend: config.mak
 	rm -f .depend
 # Hacky - because gcc 2.9x doesn't have -MT
 	$(foreach SRC, $(SRCS) x264.c matroska.c, ( echo -n "`dirname $(SRC)`/" && $(CC) $(CFLAGS) $(SRC) -MM -g0 ) 1>> .depend;)
 
-config.h: $(wildcard .svn/entries */.svn/entries */*/.svn/entries)
-	./version.sh
+config.mak: $(wildcard .svn/entries */.svn/entries */*/.svn/entries)
+	./configure $(CONFIGURE_ARGS)
 
 depend: .depend
 ifneq ($(wildcard .depend),)
 include .depend
 endif
 
+SRC2 = $(SRCS) x264.c matroska.c
+# These should cover most of the important codepaths
+OPT0 = --crf 30 -b1 -m1 -r1 --me dia --no-cabac
+OPT1 = --crf 18 -b2 -m3 -r3 --me hex -8 --cqm jvt --direct spatial
+OPT2 = --crf 24 -b3 -m6 -r6 --me umh -8 -w -t1 -A all --b-pyramid --b-rdo --mixed-refs
+
+ifeq (,$(VIDS))
+fprofiled:
+	@echo 'usage: make fprofiled VIDS="infile1 infile2 ..."'
+	@echo 'where infiles are anything that x264 understands,'
+	@echo 'i.e. YUV with resolution in the filename, or avisynth.'
+else
+fprofiled:
+	make clean
+	mv config.mak config.mak2
+	sed -e 's/CFLAGS.*/& -fprofile-generate/; s/LDFLAGS.*/& -fprofile-generate/' config.mak2 > config.mak
+	make x264$(EXE)
+	$(foreach V, $(VIDS), $(foreach I, 0 1 2, ./x264$(EXE) $(OPT$I) $(V) --progress -o $(DEVNULL) ;))
+	rm -f $(SRC2:%.c=%.o)
+	sed -e 's/CFLAGS.*/& -fprofile-use/; s/LDFLAGS.*/& -fprofile-use/' config.mak2 > config.mak
+	make
+	rm -f $(SRC2:%.c=%.gcda) $(SRC2:%.c=%.gcno)
+	mv config.mak2 config.mak
+endif
+
 clean:
-	rm -f $(OBJS) $(OBJASM) config.h *.a x264.o matroska.o x264 x264.exe .depend TAGS x264.pc
+	rm -f $(OBJS) $(OBJASM) *.a x264.o matroska.o x264 x264.exe .depend TAGS
 	rm -f checkasm checkasm.exe tools/checkasm.o
 	rm -f tools/avc2avi tools/avc2avi.exe tools/avc2avi.o
 	rm -rf vfw/build/cygwin/bin
+	rm -f $(SRC2:%.c=%.gcda) $(SRC2:%.c=%.gcno)
+	- sed -e 's/ *-fprofile-\(generate\|use\)//g' config.mak > config.mak2 && mv config.mak2 config.mak
 
 distclean: clean
-	rm -f config.mak vfw/build/cygwin/config.mak
+	rm -f config.mak config.h vfw/build/cygwin/config.mak x264.pc
 
 install: x264
 	install -d $(DESTDIR)$(bindir) $(DESTDIR)$(includedir)
@@ -109,7 +136,6 @@ install: x264
 	install x264 $(DESTDIR)$(bindir)
 	ranlib $(DESTDIR)$(libdir)/libx264.a
 
-.PHONY: uninstall
 uninstall:
 	rm -f $(DESTDIR)$(includedir)/x264.h $(DESTDIR)$(libdir)/libx264.a
 	rm -f $(DESTDIR)$(bindir)/x264 $(DESTDIR)$(libdir)/pkgconfig/x264.pc

@@ -104,7 +104,7 @@ rm -rf %{buildroot}
 %{_libdir}/libfaad.a
 %{_libdir}/libfaad.la
 %{_includedir}/faad.h
-%{_includedir}/neaacdec.h
+%{_includedir}/faad.h
 
 %files xmms
 %defattr(-,root,root)

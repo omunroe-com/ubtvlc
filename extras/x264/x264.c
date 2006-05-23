@@ -21,6 +21,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
+#define _LARGEFILE_SOURCE
+#define _FILE_OFFSET_BITS 64
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -36,6 +39,10 @@
 #include <fcntl.h>  /* _O_BINARY */
 #endif
 
+#ifndef _MSC_VER
+#include "config.h"
+#endif
+
 #ifdef AVIS_INPUT
 #include <windows.h>
 #include <vfw.h>
@@ -48,10 +55,6 @@
 
 #include "common/common.h"
 #include "x264.h"
-
-#ifndef _MSC_VER
-#include "config.h"
-#endif
 
 #include "matroska.h"
 
@@ -256,11 +259,14 @@ static void Help( x264_param_t *defaults )
              "      --b-rdo                 RD based mode decision for B-frames. Requires subme 6.\n"
              "      --mixed-refs            Decide references on a per partition basis\n"
              "      --no-chroma-me          Ignore chroma in motion estimation\n"
+             "      --bime                  Jointly optimize both MVs in B-frames\n"
              "  -8, --8x8dct                Adaptive spatial transform size\n"
              "  -t, --trellis <integer>     Trellis RD quantization. Requires CABAC. [%d]\n"
              "                                  - 0: disabled\n"
              "                                  - 1: enabled only on the final encode of a MB\n"
              "                                  - 2: enabled on all mode decisions\n"
+             "      --no-fast-pskip         Disables early SKIP detection on P-frames\n"
+             "      --nr <integer>          Noise reduction [%d]\n"
              "\n"
              "      --cqm <string>          Preset quant matrices [\"flat\"]\n"
              "                                  - jvt, flat\n"
@@ -354,6 +360,7 @@ static void Help( x264_param_t *defaults )
             defaults->analyse.i_me_range,
             defaults->analyse.i_subpel_refine,
             defaults->analyse.i_trellis,
+            defaults->analyse.i_noise_reduction,
             strtable_lookup( overscan_str, defaults->vui.i_overscan ),
             strtable_lookup( vidformat_str, defaults->vui.i_vidformat ),
             strtable_lookup( fullrange_str, defaults->vui.b_fullrange ),
@@ -478,6 +485,9 @@ static int  Parse( int argc, char **argv,
 #define OPT_MIXED_REFS 314
 #define OPT_CRF 315
 #define OPT_B_RDO 316
+#define OPT_NO_FAST_PSKIP 317
+#define OPT_BIME 318
+#define OPT_NR 319
 
         static struct option long_options[] =
         {
@@ -511,11 +521,13 @@ static int  Parse( int argc, char **argv,
             { "me",      required_argument, NULL, OPT_ME },
             { "merange", required_argument, NULL, OPT_MERANGE },
             { "subme",   required_argument, NULL, 'm' },
-            { "b-rdo", no_argument,    NULL, OPT_B_RDO },
+            { "b-rdo",   no_argument,       NULL, OPT_B_RDO },
             { "mixed-refs", no_argument,    NULL, OPT_MIXED_REFS },
             { "no-chroma-me", no_argument,  NULL, OPT_NO_CHROMA_ME },
+            { "bime",    no_argument,       NULL, OPT_BIME },
             { "8x8dct",  no_argument,       NULL, '8' },
             { "trellis", required_argument, NULL, 't' },
+            { "no-fast-pskip", no_argument, NULL, OPT_NO_FAST_PSKIP },
             { "level",   required_argument, NULL, OPT_LEVEL },
             { "ratetol", required_argument, NULL, OPT_RATETOL },
             { "vbv-maxrate", required_argument, NULL, OPT_VBVMAXRATE },
@@ -538,6 +550,7 @@ static int  Parse( int argc, char **argv,
             { "progress",no_argument,       NULL, OPT_PROGRESS },
             { "visualize",no_argument,      NULL, OPT_VISUALIZE },
             { "aud",     no_argument,       NULL, OPT_AUD },
+            { "nr",      required_argument, NULL, OPT_NR },
             { "cqm",     required_argument, NULL, OPT_CQM },
             { "cqmfile", required_argument, NULL, OPT_CQMFILE },
             { "cqm4",    required_argument, NULL, OPT_CQM4 },
@@ -742,11 +755,17 @@ static int  Parse( int argc, char **argv,
             case OPT_NO_CHROMA_ME:
                 param->analyse.b_chroma_me = 0;
                 break;
+            case OPT_BIME:
+                param->analyse.b_bidir_me = 1;
+                break;
             case '8':
                 param->analyse.b_transform_8x8 = 1;
                 break;
             case 't':
                 param->analyse.i_trellis = atoi(optarg);
+                break;
+            case OPT_NO_FAST_PSKIP:
+                param->analyse.b_fast_pskip = 0;
                 break;
             case OPT_LEVEL:
                 if( atof(optarg) < 6 )
@@ -832,6 +851,9 @@ static int  Parse( int argc, char **argv,
                 fprintf( stderr, "not compiled with visualization support\n" );
 #endif
                 break;
+            case OPT_NR:
+                param->analyse.i_noise_reduction = atoi(optarg);
+                break;
             case OPT_CQM:
                 if( strstr( optarg, "flat" ) )
                     param->i_cqm_preset = X264_CQM_FLAT;
@@ -878,11 +900,11 @@ static int  Parse( int argc, char **argv,
                 break;
             case OPT_CQM4PY:
                 param->i_cqm_preset = X264_CQM_CUSTOM;
-                b_error |= parse_cqm( optarg, param->cqm_4iy, 16 );
+                b_error |= parse_cqm( optarg, param->cqm_4py, 16 );
                 break;
             case OPT_CQM4PC:
                 param->i_cqm_preset = X264_CQM_CUSTOM;
-                b_error |= parse_cqm( optarg, param->cqm_4ic, 16 );
+                b_error |= parse_cqm( optarg, param->cqm_4pc, 16 );
                 break;
             case OPT_CQM8I:
                 param->i_cqm_preset = X264_CQM_CUSTOM;
@@ -1163,7 +1185,7 @@ static int get_frame_total_yuv( hnd_t handle, int i_width, int i_height )
 
     if( !fseek( f, 0, SEEK_END ) )
     {
-        int64_t i_size = ftell( f );
+        uint64_t i_size = ftell( f );
         fseek( f, 0, SEEK_SET );
         i_frame_total = (int)(i_size / ( i_width * i_height * 3 / 2 ));
     }
@@ -1177,7 +1199,7 @@ static int read_frame_yuv( x264_picture_t *p_pic, hnd_t handle, int i_frame, int
     FILE *f = (FILE *)handle;
 
     if( i_frame != prev_frame+1 )
-        if( fseek( f, i_frame * i_width * i_height * 3 / 2, SEEK_SET ) )
+        if( fseek( f, (uint64_t)i_frame * i_width * i_height * 3 / 2, SEEK_SET ) )
             return -1;
 
     if( fread( p_pic->img.plane[0], 1, i_width * i_height, f ) <= 0
@@ -1468,6 +1490,8 @@ static int set_param_mp4( hnd_t handle, x264_param_t *p_param )
     gf_isom_avc_config_new(p_mp4->p_file, p_mp4->i_track, p_mp4->p_config, 
         NULL, NULL, &p_mp4->i_descidx);
 
+    gf_isom_set_track_enabled(p_mp4->p_file, p_mp4->i_track, 1);
+
     gf_isom_set_visual_info(p_mp4->p_file, p_mp4->i_track, p_mp4->i_descidx, 
         p_param->i_width, p_param->i_height);
 
@@ -1549,9 +1573,9 @@ static int write_nalu_mp4( hnd_t handle, uint8_t *p_nalu, int i_size )
 static int set_eop_mp4( hnd_t handle, x264_picture_t *p_picture )
 {
     mp4_t *p_mp4 = (mp4_t *)handle;
-    uint32_t dts = p_mp4->i_numframe * p_mp4->i_time_inc;
-    uint32_t pts = p_picture->i_pts;
-    int offset = p_mp4->i_init_delay + pts - dts;
+    uint64_t dts = (uint64_t)p_mp4->i_numframe * p_mp4->i_time_inc;
+    uint64_t pts = (uint64_t)p_picture->i_pts;
+    int32_t offset = p_mp4->i_init_delay + pts - dts;
 
     p_mp4->p_sample->IsRAP = p_picture->i_type == X264_TYPE_IDR ? 1 : 0;
     p_mp4->p_sample->DTS = dts;
@@ -1604,7 +1628,7 @@ static int write_header_mkv( mkv_t *p_mkv )
     avcC[1] = p_mkv->sps[1];
     avcC[2] = p_mkv->sps[2];
     avcC[3] = p_mkv->sps[3];
-    avcC[4] = 0xfe; // nalu size length is three bytes
+    avcC[4] = 0xff; // nalu size length is four bytes
     avcC[5] = 0xe1; // one sps
 
     avcC[6] = p_mkv->sps_len >> 8;
@@ -1712,7 +1736,7 @@ static int write_nalu_mkv( hnd_t handle, uint8_t *p_nalu, int i_size )
 {
     mkv_t *p_mkv = handle;
     uint8_t type = p_nalu[4] & 0x1f;
-    uint8_t dsize[3];
+    uint8_t dsize[4];
     int psize;
 
     switch( type )
@@ -1752,10 +1776,11 @@ static int write_nalu_mkv( hnd_t handle, uint8_t *p_nalu, int i_size )
             p_mkv->b_writing_frame = 1;
         }
         psize = i_size - 4 ;
-        dsize[0] = psize >> 16;
-        dsize[1] = psize >> 8;
-        dsize[2] = psize;
-        if( mk_addFrameData(p_mkv->w, dsize, 3) < 0 ||
+        dsize[0] = psize >> 24;
+        dsize[1] = psize >> 16;
+        dsize[2] = psize >> 8;
+        dsize[3] = psize;
+        if( mk_addFrameData(p_mkv->w, dsize, 4) < 0 ||
             mk_addFrameData(p_mkv->w, p_nalu + 4, i_size - 4) < 0 )
             return -1;
         break;

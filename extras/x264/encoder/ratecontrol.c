@@ -25,7 +25,6 @@
 
 #define _ISOC99_SOURCE
 #undef NDEBUG // always check asserts, the speed effect is far too small to disable them
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -38,6 +37,9 @@
 
 #if defined(SYS_FREEBSD) || defined(SYS_BEOS) || defined(SYS_NETBSD)
 #define exp2f(x) powf( 2, (x) )
+#endif
+#if defined(_MSC_VER)
+#define isfinite _finite
 #endif
 #if defined(_MSC_VER) || defined(SYS_SunOS)
 #define exp2f(x) pow( 2, (x) )
@@ -190,10 +192,19 @@ int x264_ratecontrol_new( x264_t *h )
     rc->last_non_b_pict_type = -1;
     rc->cbr_decay = 1.0;
 
-    if( rc->b_2pass && h->param.rc.i_rf_constant )
+    if( h->param.rc.i_rf_constant && h->param.rc.b_stat_read )
+    {
         x264_log(h, X264_LOG_ERROR, "constant rate-factor is incompatible with 2pass.\n");
-    if( h->param.rc.i_vbv_max_bitrate && !h->param.rc.b_cbr && !h->param.rc.i_rf_constant )
+        return -1;
+    }
+    if( h->param.rc.i_vbv_buffer_size && !h->param.rc.b_cbr && !h->param.rc.i_rf_constant )
         x264_log(h, X264_LOG_ERROR, "VBV is incompatible with constant QP.\n");
+    if( h->param.rc.i_vbv_buffer_size && h->param.rc.b_cbr
+        && h->param.rc.i_vbv_max_bitrate == 0 )
+    {
+        x264_log( h, X264_LOG_DEBUG, "VBV maxrate unspecified, assuming CBR\n" );
+        h->param.rc.i_vbv_max_bitrate = h->param.rc.i_bitrate;
+    }
     if( h->param.rc.i_vbv_max_bitrate < h->param.rc.i_bitrate &&
         h->param.rc.i_vbv_max_bitrate > 0)
         x264_log(h, X264_LOG_ERROR, "max bitrate less than average bitrate, ignored.\n");
@@ -211,8 +222,8 @@ int x264_ratecontrol_new( x264_t *h )
         rc->cbr_decay = 1.0 - rc->buffer_rate / rc->buffer_size
                       * 0.5 * X264_MAX(0, 1.5 - rc->buffer_rate * rc->fps / rc->bitrate);
     }
-    else if( h->param.rc.i_vbv_max_bitrate || h->param.rc.i_vbv_buffer_size )
-        x264_log(h, X264_LOG_ERROR, "VBV maxrate or buffer size specified, but not both.\n");
+    else if( h->param.rc.i_vbv_max_bitrate )
+        x264_log(h, X264_LOG_ERROR, "VBV maxrate specified, but no bufsize.\n");
     if(rc->rate_tolerance < 0.01) {
         x264_log(h, X264_LOG_ERROR, "bitrate tolerance too small, using .01\n");
         rc->rate_tolerance = 0.01;
@@ -748,7 +759,7 @@ static double get_qscale(x264_t *h, ratecontrol_entry_t *rce, double rate_factor
     q = x264_eval((char*)h->param.rc.psz_rc_eq, const_values, const_names, func1, func1_names, NULL, NULL, rce);
 
     // avoid NaN's in the rc_eq
-    if(q != q || rce->i_tex_bits + rce->p_tex_bits + rce->mv_bits == 0)
+    if(!isfinite(q) || rce->i_tex_bits + rce->p_tex_bits + rce->mv_bits == 0)
         q = rcc->last_qscale;
     else {
         rcc->last_rceq = q;
@@ -1021,7 +1032,7 @@ static float rate_estimate_qscale(x264_t *h, int pict_type)
             }
             else
             {
-                if( h->stat.i_slice_count[h->param.i_keyint_max > 1 ? SLICE_TYPE_P : SLICE_TYPE_I] < 5 )
+                if( h->stat.i_slice_count[SLICE_TYPE_P] + h->stat.i_slice_count[SLICE_TYPE_I] < 6 )
                 {
                     float w = h->stat.i_slice_count[SLICE_TYPE_P] / 5.;
                     float q2 = qp2qscale(ABR_INIT_QP);

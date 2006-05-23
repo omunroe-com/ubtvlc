@@ -1,9 +1,7 @@
 [Desktop Entry]
 Encoding=UTF-8
-Name=VLC media player
-Name[fr]=lecteur multimédia VLC
-Comment=Universal movies and music player
-Comment[fr]=Lecteur universel pour films et musique
+Name=VLC Media Player
+Comment=Play movies and music
 Exec=wxvlc
 Icon=vlc.png
 Terminal=false

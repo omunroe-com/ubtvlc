@@ -21,22 +21,11 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#else
-#include <inttypes.h>
-#endif
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdarg.h>
 
-#include "x264.h"
-
-#include "pixel.h"
-#include "mc.h"
+#include "common.h"
 #include "clip1.h"
-#include "frame.h"
 
 #ifdef HAVE_MMXEXT
 #include "i386/mc.h"
@@ -334,7 +323,7 @@ static void motion_compensation_chroma( uint8_t *src, int i_src_stride,
 }
 
 #ifdef HAVE_MMXEXT
-static void motion_compensation_chroma_sse( uint8_t *src, int i_src_stride,
+static void motion_compensation_chroma_mmxext( uint8_t *src, int i_src_stride,
                                         uint8_t *dst, int i_dst_stride,
                                         int mvx, int mvy,
                                         int i_width, int i_height )
@@ -348,8 +337,8 @@ static void motion_compensation_chroma_sse( uint8_t *src, int i_src_stride,
         
         src  += (mvy >> 3) * i_src_stride + (mvx >> 3);
         
-        x264_mc_chroma_sse(src, i_src_stride, dst, i_dst_stride,
-                              d8x, d8y, i_height, i_width);
+        x264_mc_chroma_mmxext( src, i_src_stride, dst, i_dst_stride,
+                               d8x, d8y, i_width, i_height );
     }
 }
 #endif
@@ -385,7 +374,7 @@ void x264_mc_init( int cpu, x264_mc_functions_t *pf )
 #ifdef HAVE_MMXEXT
     if( cpu&X264_CPU_MMXEXT ) {
         x264_mc_mmxext_init( pf );
-        pf->mc_chroma = motion_compensation_chroma_sse;
+        pf->mc_chroma = motion_compensation_chroma_mmxext;
     }
 #endif
 #ifdef HAVE_SSE2
@@ -447,6 +436,30 @@ void x264_frame_filter( int cpu, x264_frame_t *frame )
                 p_hv += x_inc;
                 p_in += x_inc;
             }
+        }
+    }
+
+    /* generate integral image:
+     * each entry in frame->integral is the sum of all luma samples above and
+     * to the left of its location (inclusive).
+     * this allows us to calculate the DC of any rectangle by looking only
+     * at the corner entries.
+     * individual entries will overflow 16 bits, but that's ok:
+     * we only need the differences between entries, and those will be correct
+     * as long as we don't try to evaluate a rectangle bigger than 16x16.
+     * likewise, we don't really have to init the edges to 0, leaving garbage
+     * there wouldn't affect the results.*/
+
+    if( frame->integral )
+    {
+        memset( frame->integral - 32 * stride - 32, 0, stride * sizeof(uint16_t) );
+        for( y = -31; y < frame->i_lines[0] + 32; y++ )
+        {
+            uint8_t  *ref  = frame->plane[0] + y * stride - 32;
+            uint16_t *line = frame->integral + y * stride - 32;
+            uint16_t v = line[0] = 0;
+            for( x = 1; x < stride; x++ )
+                line[x] = v += ref[x] + line[x-stride] - line[x-stride-1];
         }
     }
 }

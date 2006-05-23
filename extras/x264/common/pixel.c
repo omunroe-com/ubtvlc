@@ -21,17 +21,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#else
-#include <inttypes.h>
-#endif
-#include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 
-#include "x264.h"
-#include "pixel.h"
+#include "common.h"
 #include "clip1.h"
 
 #ifdef HAVE_MMXEXT
@@ -345,6 +337,10 @@ void x264_pixel_init( int cpu, x264_pixel_function_t *pixf )
         pixf->sad[PIXEL_8x4  ] = x264_pixel_sad_8x4_mmxext;
         pixf->sad[PIXEL_4x8  ] = x264_pixel_sad_4x8_mmxext;
         pixf->sad[PIXEL_4x4]   = x264_pixel_sad_4x4_mmxext;
+
+        pixf->sad_pde[PIXEL_16x16] = x264_pixel_sad_pde_16x16_mmxext;
+        pixf->sad_pde[PIXEL_16x8 ] = x264_pixel_sad_pde_16x8_mmxext;
+        pixf->sad_pde[PIXEL_8x16 ] = x264_pixel_sad_pde_8x16_mmxext;
 
         pixf->ssd[PIXEL_16x16] = x264_pixel_ssd_16x16_mmxext;
         pixf->ssd[PIXEL_16x8]  = x264_pixel_ssd_16x8_mmxext;

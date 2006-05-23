@@ -1,33 +1,28 @@
 /*
 ** FAAD2 - Freeware Advanced Audio (AAC) Decoder including SBR decoding
-** Copyright (C) 2003-2005 M. Bakker, Ahead Software AG, http://www.nero.com
-**  
+** Copyright (C) 2003-2004 M. Bakker, Ahead Software AG, http://www.nero.com
+**
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 2 of the License, or
 ** (at your option) any later version.
-** 
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-** 
+**
 ** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software 
+** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
 ** Any non-GPL usage of this software or parts of this software is strictly
 ** forbidden.
 **
-** Software using this code must display the following message visibly in the
-** software:
-** "FAAD2 AAC/HE-AAC/HE-AACv2/DRM decoder (c) Ahead Software, www.nero.com"
-** in, for example, the about-box or help/startup screen.
-**
 ** Commercial non-GPL licensing of this software is possible.
 ** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
 **
-** $Id: specrec.c,v 1.57 2005/02/01 13:28:56 menno Exp $
+** $Id: specrec.c,v 1.56 2004/09/08 09:43:11 gcp Exp $
 **/
 
 /*
@@ -60,7 +55,7 @@
 
 
 /* static function declarations */
-static uint8_t quant_to_spec(NeAACDecHandle hDecoder,
+static uint8_t quant_to_spec(faacDecHandle hDecoder,
                              ic_stream *ics, int16_t *quant_data,
                              real_t *spec_data, uint16_t frame_len);
 
@@ -302,7 +297,7 @@ ALIGN static const  uint16_t *swb_offset_128_window[] =
     in section named section. This offset depends on window_sequence and
     scale_factor_grouping and is needed to decode the spectral_data().
 */
-uint8_t window_grouping_info(NeAACDecHandle hDecoder, ic_stream *ics)
+uint8_t window_grouping_info(faacDecHandle hDecoder, ic_stream *ics)
 {
     uint8_t i, g;
 
@@ -331,11 +326,6 @@ uint8_t window_grouping_info(NeAACDecHandle hDecoder, ic_stream *ics)
 #ifdef LD_DEC
         }
 #endif
-
-        if (ics->max_sfb > ics->num_swb)
-        {
-            return 32;
-        }
 
         /* preparation of sect_sfb_offset for long blocks */
         /* also copy the last value! */
@@ -377,11 +367,6 @@ uint8_t window_grouping_info(NeAACDecHandle hDecoder, ic_stream *ics)
         ics->window_group_length[ics->num_window_groups-1] = 1;
         ics->num_swb = num_swb_128_window[sf_index];
 
-        if (ics->max_sfb > ics->num_swb)
-        {
-            return 32;
-        }
-
         for (i = 0; i < ics->num_swb; i++)
             ics->swb_offset[i] = swb_offset_128_window[sf_index][i];
         ics->swb_offset[ics->num_swb] = hDecoder->frameLength/8;
@@ -420,7 +405,7 @@ uint8_t window_grouping_info(NeAACDecHandle hDecoder, ic_stream *ics)
         }
         return 0;
     default:
-        return 32;
+        return 1;
     }
 }
 
@@ -545,7 +530,7 @@ ALIGN static const real_t pow2sf_tab[] = {
   - Within a scalefactor window band, the coefficients are in ascending
     spectral order.
 */
-static uint8_t quant_to_spec(NeAACDecHandle hDecoder,
+static uint8_t quant_to_spec(faacDecHandle hDecoder,
                              ic_stream *ics, int16_t *quant_data,
                              real_t *spec_data, uint16_t frame_len)
 {
@@ -679,7 +664,7 @@ static uint8_t quant_to_spec(NeAACDecHandle hDecoder,
     return error;
 }
 
-static uint8_t allocate_single_channel(NeAACDecHandle hDecoder, uint8_t channel,
+static uint8_t allocate_single_channel(faacDecHandle hDecoder, uint8_t channel,
                                        uint8_t output_channels)
 {
     uint8_t mul = 1;
@@ -689,14 +674,11 @@ static uint8_t allocate_single_channel(NeAACDecHandle hDecoder, uint8_t channel,
     if (hDecoder->object_type == MAIN)
     {
         /* allocate the state only when needed */
-        if (hDecoder->pred_stat[channel] != NULL)
+        if (hDecoder->pred_stat[channel] == NULL)
         {
-            faad_free(hDecoder->pred_stat[channel]);
-            hDecoder->pred_stat[channel] = NULL;
+            hDecoder->pred_stat[channel] = (pred_state*)faad_malloc(hDecoder->frameLength * sizeof(pred_state));
+            reset_all_predictors(hDecoder->pred_stat[channel], hDecoder->frameLength);
         }
-
-        hDecoder->pred_stat[channel] = (pred_state*)faad_malloc(hDecoder->frameLength * sizeof(pred_state));
-        reset_all_predictors(hDecoder->pred_stat[channel], hDecoder->frameLength);
     }
 #endif
 
@@ -704,23 +686,15 @@ static uint8_t allocate_single_channel(NeAACDecHandle hDecoder, uint8_t channel,
     if (is_ltp_ot(hDecoder->object_type))
     {
         /* allocate the state only when needed */
-        if (hDecoder->lt_pred_stat[channel] != NULL)
+        if (hDecoder->lt_pred_stat[channel] == NULL)
         {
-            faad_free(hDecoder->lt_pred_stat[channel]);
-            hDecoder->lt_pred_stat[channel] = NULL;
+            hDecoder->lt_pred_stat[channel] = (int16_t*)faad_malloc(hDecoder->frameLength*4 * sizeof(int16_t));
+            memset(hDecoder->lt_pred_stat[channel], 0, hDecoder->frameLength*4 * sizeof(int16_t));
         }
-
-        hDecoder->lt_pred_stat[channel] = (int16_t*)faad_malloc(hDecoder->frameLength*4 * sizeof(int16_t));
-        memset(hDecoder->lt_pred_stat[channel], 0, hDecoder->frameLength*4 * sizeof(int16_t));
     }
 #endif
 
-    if (hDecoder->time_out[channel] != NULL)
-    {
-        faad_free(hDecoder->time_out[channel]);
-        hDecoder->time_out[channel] = NULL;
-    }
-
+    if (hDecoder->time_out[channel] == NULL)
     {
         mul = 1;
 #ifdef SBR_DEC
@@ -735,29 +709,22 @@ static uint8_t allocate_single_channel(NeAACDecHandle hDecoder, uint8_t channel,
         hDecoder->time_out[channel] = (real_t*)faad_malloc(mul*hDecoder->frameLength*sizeof(real_t));
         memset(hDecoder->time_out[channel], 0, mul*hDecoder->frameLength*sizeof(real_t));
     }
-
 #if (defined(PS_DEC) || defined(DRM_PS))
     if (output_channels == 2)
     {
-        if (hDecoder->time_out[channel+1] != NULL)
+        if (hDecoder->time_out[channel+1] == NULL)
         {
-            faad_free(hDecoder->time_out[channel+1]);
-            hDecoder->time_out[channel+1] = NULL;
+            hDecoder->time_out[channel+1] = (real_t*)faad_malloc(mul*hDecoder->frameLength*sizeof(real_t));
+            memset(hDecoder->time_out[channel+1], 0, mul*hDecoder->frameLength*sizeof(real_t));
         }
-
-        hDecoder->time_out[channel+1] = (real_t*)faad_malloc(mul*hDecoder->frameLength*sizeof(real_t));
-        memset(hDecoder->time_out[channel+1], 0, mul*hDecoder->frameLength*sizeof(real_t));
     }
 #endif
 
-    if (hDecoder->fb_intermed[channel] != NULL)
+    if (hDecoder->fb_intermed[channel] == NULL)
     {
-        faad_free(hDecoder->fb_intermed[channel]);
-        hDecoder->fb_intermed[channel] = NULL;
+        hDecoder->fb_intermed[channel] = (real_t*)faad_malloc(hDecoder->frameLength*sizeof(real_t));
+        memset(hDecoder->fb_intermed[channel], 0, hDecoder->frameLength*sizeof(real_t));
     }
-
-    hDecoder->fb_intermed[channel] = (real_t*)faad_malloc(hDecoder->frameLength*sizeof(real_t));
-    memset(hDecoder->fb_intermed[channel], 0, hDecoder->frameLength*sizeof(real_t));
 
 #ifdef SSR_DEC
     if (hDecoder->object_type == SSR)
@@ -780,7 +747,7 @@ static uint8_t allocate_single_channel(NeAACDecHandle hDecoder, uint8_t channel,
     return 0;
 }
 
-static uint8_t allocate_channel_pair(NeAACDecHandle hDecoder,
+static uint8_t allocate_channel_pair(faacDecHandle hDecoder,
                                      uint8_t channel, uint8_t paired_channel)
 {
     uint8_t mul = 1;
@@ -885,7 +852,7 @@ static uint8_t allocate_channel_pair(NeAACDecHandle hDecoder,
     return 0;
 }
 
-uint8_t reconstruct_single_channel(NeAACDecHandle hDecoder, ic_stream *ics,
+uint8_t reconstruct_single_channel(faacDecHandle hDecoder, ic_stream *ics,
                                    element *sce, int16_t *spec_data)
 {
     uint8_t retval, output_channels;
@@ -897,13 +864,10 @@ uint8_t reconstruct_single_channel(NeAACDecHandle hDecoder, ic_stream *ics,
 
 
     /* always allocate 2 channels, PS can always "suddenly" turn up */
-#if ( (defined(DRM) && defined(DRM_PS)) )
+#if (defined(PS_DEC) || defined(DRM_PS))
     output_channels = 2;
-#elif defined(PS_DEC)
-    if (hDecoder->ps_used[hDecoder->fr_ch_ele])
-        output_channels = 2;
-    else
-        output_channels = 1;
+#else
+    output_channels = 1;
 #endif
 
     if (hDecoder->element_output_channels[hDecoder->fr_ch_ele] == 0)
@@ -912,17 +876,7 @@ uint8_t reconstruct_single_channel(NeAACDecHandle hDecoder, ic_stream *ics,
         hDecoder->element_output_channels[hDecoder->fr_ch_ele] = output_channels;
     } else if (hDecoder->element_output_channels[hDecoder->fr_ch_ele] != output_channels) {
         /* element inconsistency */
-
-        /* this only happens if PS is actually found but not in the first frame
-         * this means that there is only 1 bitstream element!
-         */
-
-        /* reset the allocation */
-        hDecoder->element_alloced[hDecoder->fr_ch_ele] = 0;
-
-        hDecoder->element_output_channels[hDecoder->fr_ch_ele] = output_channels;
-
-        //return 21;
+        return 21;
     }
 
     if (hDecoder->element_alloced[hDecoder->fr_ch_ele] == 0)
@@ -1076,8 +1030,7 @@ uint8_t reconstruct_single_channel(NeAACDecHandle hDecoder, ic_stream *ics,
 
     /* copy L to R when no PS is used */
 #if (defined(PS_DEC) || defined(DRM_PS))
-    if ((hDecoder->ps_used[hDecoder->fr_ch_ele] == 0) &&
-        (hDecoder->element_output_channels[hDecoder->fr_ch_ele] == 2))
+    if ((hDecoder->ps_used[hDecoder->fr_ch_ele] == 0))
     {
         uint8_t ele = hDecoder->fr_ch_ele;
         uint8_t ch = sce->channel;
@@ -1091,7 +1044,7 @@ uint8_t reconstruct_single_channel(NeAACDecHandle hDecoder, ic_stream *ics,
     return 0;
 }
 
-uint8_t reconstruct_channel_pair(NeAACDecHandle hDecoder, ic_stream *ics1, ic_stream *ics2,
+uint8_t reconstruct_channel_pair(faacDecHandle hDecoder, ic_stream *ics1, ic_stream *ics2,
                                  element *cpe, int16_t *spec_data1, int16_t *spec_data2)
 {
     uint8_t retval;
