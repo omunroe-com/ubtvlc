@@ -21,7 +21,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
@@ -121,6 +120,7 @@ void    x264_param_default( x264_param_t *param )
     param->analyse.b_chroma_me = 1;
     param->analyse.i_mv_range = -1; // set from level_idc
     param->analyse.i_chroma_qp_offset = 0;
+    param->analyse.b_fast_pskip = 1;
     param->analyse.b_psnr = 1;
 
     param->i_cqm_preset = X264_CQM_FLAT;
@@ -131,6 +131,7 @@ void    x264_param_default( x264_param_t *param )
     memset( param->cqm_8iy, 16, 64 );
     memset( param->cqm_8py, 16, 64 );
 
+    param->b_repeat_headers = 1;
     param->b_aud = 0;
 }
 
@@ -456,19 +457,23 @@ char *x264_param2string( x264_param_t *p, int b_res )
     s += sprintf( s, " cqm=%d", p->i_cqm_preset );
     s += sprintf( s, " chroma_qp_offset=%d", p->analyse.i_chroma_qp_offset );
     s += sprintf( s, " slices=%d", p->i_threads );
+    s += sprintf( s, " nr=%d", p->analyse.i_noise_reduction );
 
     s += sprintf( s, " bframes=%d", p->i_bframe );
     if( p->i_bframe )
     {
-        s += sprintf( s, " b_pyramid=%d b_adapt=%d b_bias=%d direct=%d wpredb=%d",
+        s += sprintf( s, " b_pyramid=%d b_adapt=%d b_bias=%d direct=%d wpredb=%d bime=%d",
                       p->b_bframe_pyramid, p->b_bframe_adaptive, p->i_bframe_bias,
-                      p->analyse.i_direct_mv_pred, p->analyse.b_weighted_bipred );
+                      p->analyse.i_direct_mv_pred, p->analyse.b_weighted_bipred,
+                      p->analyse.b_bidir_me );
     }
 
     s += sprintf( s, " keyint=%d keyint_min=%d scenecut=%d",
                   p->i_keyint_max, p->i_keyint_min, p->i_scenecut_threshold );
 
-    s += sprintf( s, " pass=%d", p->rc.b_stat_read ? 2 : 1 );
+    s += sprintf( s, " rc=%s", p->rc.b_stat_read && p->rc.b_cbr ? "2pass" :
+                               p->rc.b_cbr ? p->rc.i_vbv_buffer_size ? "cbr" : "abr" :
+                               p->rc.i_rf_constant ? "crf" : "cqp" );
     if( p->rc.b_cbr || p->rc.i_rf_constant )
     {
         if( p->rc.i_rf_constant )
@@ -482,7 +487,7 @@ char *x264_param2string( x264_param_t *p, int b_res )
         if( p->rc.b_stat_read )
             s += sprintf( s, " cplxblur=%.1f qblur=%.1f",
                           p->rc.f_complexity_blur, p->rc.f_qblur );
-        if( p->rc.i_vbv_max_bitrate && p->rc.i_vbv_buffer_size )
+        if( p->rc.i_vbv_buffer_size )
             s += sprintf( s, " vbv_maxrate=%d vbv_bufsize=%d",
                           p->rc.i_vbv_max_bitrate, p->rc.i_vbv_buffer_size );
     }

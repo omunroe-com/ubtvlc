@@ -1,33 +1,28 @@
 /*
 ** FAAD2 - Freeware Advanced Audio (AAC) Decoder including SBR decoding
-** Copyright (C) 2003-2005 M. Bakker, Ahead Software AG, http://www.nero.com
-**  
+** Copyright (C) 2003-2004 M. Bakker, Ahead Software AG, http://www.nero.com
+**
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 2 of the License, or
 ** (at your option) any later version.
-** 
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-** 
+**
 ** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software 
+** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
 ** Any non-GPL usage of this software or parts of this software is strictly
 ** forbidden.
 **
-** Software using this code must display the following message visibly in the
-** software:
-** "FAAD2 AAC/HE-AAC/HE-AACv2/DRM decoder (c) Ahead Software, www.nero.com"
-** in, for example, the about-box or help/startup screen.
-**
 ** Commercial non-GPL licensing of this software is possible.
 ** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
 **
-** $Id: structs.h,v 1.43 2005/02/01 13:28:56 menno Exp $
+** $Id: structs.h,v 1.42 2004/09/08 09:43:11 gcp Exp $
 **/
 
 #ifndef __STRUCTS_H__
@@ -266,7 +261,6 @@ typedef struct
     uint8_t ms_used[MAX_WINDOW_GROUPS][MAX_SFB];
 
     uint8_t noise_used;
-    uint8_t is_used;
 
     uint8_t pulse_data_present;
     uint8_t tns_data_present;
@@ -336,7 +330,7 @@ typedef struct mp4AudioSpecificConfig
     /*uint8_t*/ char downSampledSBR;
 } mp4AudioSpecificConfig;
 
-typedef struct NeAACDecConfiguration
+typedef struct faacDecConfiguration
 {
     /*uint8_t*/ unsigned char defObjectType;
     /*uint32_t*/ unsigned long defSampleRate;
@@ -344,9 +338,9 @@ typedef struct NeAACDecConfiguration
     /*uint8_t*/ unsigned char downMatrix;
     /*uint8_t*/ unsigned char useOldADTSFormat;
     /*uint8_t*/ unsigned char dontUpSampleImplicitSBR;
-} NeAACDecConfiguration, *NeAACDecConfigurationPtr;
+} faacDecConfiguration, *faacDecConfigurationPtr;
 
-typedef struct NeAACDecFrameInfo
+typedef struct faacDecFrameInfo
 {
     /*uint32_t*/ unsigned long bytesconsumed;
     /*uint32_t*/ unsigned long samples;
@@ -372,7 +366,7 @@ typedef struct NeAACDecFrameInfo
 
     /* PS: 0: off, 1: on */
     /*uint8_t*/ unsigned char ps;
-} NeAACDecFrameInfo;
+} faacDecFrameInfo;
 
 typedef struct
 {
@@ -453,10 +447,6 @@ typedef struct
     int16_t *lt_pred_stat[MAX_CHANNELS];
 #endif
 
-#ifdef DRM
-    uint8_t error_state;
-#endif
-
     /* Program Config Element */
     uint8_t pce_set;
     program_config pce;
@@ -464,7 +454,7 @@ typedef struct
     uint8_t internal_channel[MAX_CHANNELS];
 
     /* Configuration data */
-    NeAACDecConfiguration config;
+    faacDecConfiguration config;
 
 #ifdef PROFILE
     int64_t cycles;
@@ -473,7 +463,7 @@ typedef struct
     int64_t scalefac_cycles;
     int64_t requant_cycles;
 #endif
-} NeAACDecStruct, *NeAACDecHandle;
+} faacDecStruct, *faacDecHandle;
 
 
 

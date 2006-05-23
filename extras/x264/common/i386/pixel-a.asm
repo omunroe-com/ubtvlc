@@ -27,14 +27,7 @@ BITS 32
 ; Macros and other preprocessor constants
 ;=============================================================================
 
-%macro cglobal 1
-	%ifdef PREFIX
-		global _%1
-		%define %1 _%1
-	%else
-		global %1
-	%endif
-%endmacro
+%include "i386inc.asm"
 
 %macro SAD_INC_2x16P 0
     movq    mm1,    [eax]
@@ -269,6 +262,10 @@ cglobal x264_pixel_sad_8x4_mmxext
 cglobal x264_pixel_sad_4x8_mmxext
 cglobal x264_pixel_sad_4x4_mmxext
 
+cglobal x264_pixel_sad_pde_16x16_mmxext
+cglobal x264_pixel_sad_pde_16x8_mmxext
+cglobal x264_pixel_sad_pde_8x16_mmxext
+
 cglobal x264_pixel_ssd_16x16_mmxext
 cglobal x264_pixel_ssd_16x8_mmxext
 cglobal x264_pixel_ssd_8x16_mmxext
@@ -388,6 +385,66 @@ x264_pixel_sad_4x4_mmxext:
     SAD_START
     SAD_INC_2x4P
     SAD_INC_2x4P
+    SAD_END
+
+
+%macro PDE_CHECK 0
+    movd ebx, mm0
+    cmp  ebx, [esp+24] ; prev_score
+    jl   .continue
+    pop  ebx
+    mov  eax, 0xffff
+    ret
+ALIGN 4
+.continue:
+    mov  ebx, [esp+12]
+%endmacro
+
+ALIGN 16
+;-----------------------------------------------------------------------------
+;   int __cdecl x264_pixel_sad_pde_16x16_mmxext (uint8_t *, int, uint8_t *, int, int )
+;-----------------------------------------------------------------------------
+x264_pixel_sad_pde_16x16_mmxext:
+    SAD_START
+    SAD_INC_2x16P
+    SAD_INC_2x16P
+    SAD_INC_2x16P
+    SAD_INC_2x16P
+    PDE_CHECK
+    SAD_INC_2x16P
+    SAD_INC_2x16P
+    SAD_INC_2x16P
+    SAD_INC_2x16P
+    SAD_END
+
+ALIGN 16
+;-----------------------------------------------------------------------------
+;   int __cdecl x264_pixel_sad_pde_16x8_mmxext (uint8_t *, int, uint8_t *, int, int )
+;-----------------------------------------------------------------------------
+x264_pixel_sad_pde_16x8_mmxext:
+    SAD_START
+    SAD_INC_2x16P
+    SAD_INC_2x16P
+    PDE_CHECK
+    SAD_INC_2x16P
+    SAD_INC_2x16P
+    SAD_END
+
+ALIGN 16
+;-----------------------------------------------------------------------------
+;   int __cdecl x264_pixel_sad_pde_8x16_mmxext (uint8_t *, int, uint8_t *, int, int )
+;-----------------------------------------------------------------------------
+x264_pixel_sad_pde_8x16_mmxext:
+    SAD_START
+    SAD_INC_2x8P
+    SAD_INC_2x8P
+    SAD_INC_2x8P
+    SAD_INC_2x8P
+    PDE_CHECK
+    SAD_INC_2x8P
+    SAD_INC_2x8P
+    SAD_INC_2x8P
+    SAD_INC_2x8P
     SAD_END
 
 

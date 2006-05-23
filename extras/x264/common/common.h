@@ -30,6 +30,7 @@
 #include <inttypes.h>
 #endif
 #include <stdarg.h>
+#include <stdlib.h>
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
@@ -47,6 +48,12 @@
 #define X264_MAX4(a,b,c,d) X264_MAX((a),X264_MAX3((b),(c),(d)))
 #define XCHG(type,a,b) { type t = a; a = b; b = t; }
 #define FIX8(f) ((int)(f*(1<<8)+.5))
+
+#if defined(__GNUC__) && (__GNUC__ > 3 || __GNUC__ == 3 && __GNUC_MINOR__ > 0)
+#define UNUSED __attribute__((unused))
+#else
+#define UNUSED
+#endif
 
 /****************************************************************************
  * Includes
@@ -261,6 +268,10 @@ struct x264_t
     int             unquant4_mf[4][52][16];
     int             unquant8_mf[2][52][64];
 
+    uint32_t        nr_residual_sum[4][64];
+    uint32_t        nr_offset[4][64];
+    uint32_t        nr_count[4];
+
     /* Slice header */
     x264_slice_header_t sh;
 
@@ -343,9 +354,15 @@ struct x264_t
         int     i_subpel_refine;
         int     b_chroma_me;
         int     b_trellis;
+        int     b_noise_reduction;
+
         /* Allowed qpel MV range to stay within the picture + emulated edge pixels */
         int     mv_min[2];
         int     mv_max[2];
+        /* Subpel MV range for motion search.
+         * same mv_min/max but includes levels' i_mv_range. */
+        int     mv_min_spel[2];
+        int     mv_max_spel[2];
         /* Fullpel MV range for motion search */
         int     mv_min_fpel[2];
         int     mv_max_fpel[2];
@@ -395,6 +412,7 @@ struct x264_t
 
             /* pointer over mb of the references */
             uint8_t *p_fref[2][16][4+2]; /* last: lN, lH, lV, lHV, cU, cV */
+            uint16_t *p_integral[2][16];
 
             /* common stride */
             int     i_stride[3];

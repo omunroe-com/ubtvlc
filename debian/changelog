@@ -1,3 +1,24 @@
+vlc (0.8.4.debian-1ubuntu6) dapper; urgency=low
+
+  "'Time to race', she said, 'Race the downhill'."
+
+  * Add debian/patches/24_prefs_stacking_fix, fixing stacking in
+    Preferences dialog. Taken from upstream svn changeset 13795, thanks
+    to Bruce Cowan (Closes: Malone #31891).
+  * Demote ttf-freefont, ttf-thryomanes to Suggests as the former
+    provides bad metrics for Thai. See Debian #362071 for additional
+    information.
+  * Don't use gcc-snapshot as the compiler. See Debian #361729 for more
+    information.
+  * Make vlc.desktop HIG-compliant.
+  * Rebuild against new libebml-dev and libmatroska-dev, fixing crashes
+    with Matroska files (Closes: Malone #29644).
+  * Use our own faad2 and x264, fixing garbled graphics (Closes: Malone
+    #28539). Please see Debian #365389 if the inclusion of these
+    libraries stirs your ire.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Tue, 23 May 2006 03:42:19 -0400
+
 vlc (0.8.4.debian-1ubuntu5) dapper; urgency=low
 
   * Integrate updates from Debian:

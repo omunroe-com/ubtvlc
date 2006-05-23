@@ -35,7 +35,7 @@
 
 #include <stdarg.h>
 
-#define X264_BUILD 40
+#define X264_BUILD 44
 
 /* x264_t:
  *      opaque handler for decoder and encoder */
@@ -196,10 +196,13 @@ typedef struct
         int          i_me_range; /* integer pixel motion estimation search range (from predicted mv) */
         int          i_mv_range; /* maximum length of a mv (in pixels) */
         int          i_subpel_refine; /* subpixel motion estimation quality */
+        int          b_bidir_me; /* jointly optimize both MVs in B-frames */
         int          b_chroma_me; /* chroma ME for subpel and mode decision in P-frames */
         int          b_bframe_rdo; /* RD based mode decision for B-frames */
         int          b_mixed_references; /* allow each mb partition in P-frames to have it's own reference number */
         int          i_trellis;  /* trellis RD quantization */
+        int          b_fast_pskip; /* early SKIP detection on P-frames */
+        int          i_noise_reduction; /* adaptive pseudo-deadzone */
 
         int          b_psnr;    /* Do we compute PSNR stats (save a few % of cpu) */
     } analyse;
@@ -239,6 +242,7 @@ typedef struct
     } rc;
 
     int b_aud;                  /* generate access unit delimiters */
+    int b_repeat_headers;       /* put SPS/PPS before each keyframe */
 } x264_param_t;
 
 typedef struct {
