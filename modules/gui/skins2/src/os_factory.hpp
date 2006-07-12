@@ -2,10 +2,10 @@
  * os_factory.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: os_factory.hpp 12207 2005-08-15 15:54:32Z asmax $
+ * $Id: os_factory.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef OS_FACTORY_HPP
@@ -37,6 +37,7 @@ class OSGraphics;
 class OSLoop;
 class OSWindow;
 class OSTooltip;
+class OSPopup;
 class OSTimer;
 
 
@@ -44,33 +45,37 @@ class OSTimer;
 class OSFactory: public SkinObject
 {
     public:
-        typedef enum
+        enum CursorType_t
         {
             kDefaultArrow,
             kResizeNS,
             kResizeWE,
             kResizeNWSE,
             kResizeNESW
-        } CursorType_t;
+        };
 
-        /// Initialization method overloaded in derived classes.
-        /// It must return false if the init failed.
+        /**
+         * Initialization method overloaded in derived classes.
+         * It must return false if the init failed.
+         */
         virtual bool init() { return true; }
 
-        /// Get the right instance of OSFactory.
-        /// Returns NULL if initialization of the concrete factory failed.
+        /**
+         * Get the right instance of OSFactory.
+         * Returns NULL if initialization of the concrete factory failed.
+         */
         static OSFactory *instance( intf_thread_t *pIntf );
 
-        /// Delete the instance of OSFactory.
+        /// Delete the instance of OSFactory
         static void destroy( intf_thread_t *pIntf );
 
-        /// Instantiate an object OSGraphics.
+        /// Instantiate an object OSGraphics
         virtual OSGraphics *createOSGraphics( int width, int height ) = 0;
 
-        /// Get the instance of the singleton OSLoop.
+        /// Get the instance of the singleton OSLoop
         virtual OSLoop *getOSLoop() = 0;
 
-        /// Destroy the instance of OSLoop.
+        /// Destroy the instance of OSLoop
         virtual void destroyOSLoop() = 0;
 
         ///
@@ -79,13 +84,16 @@ class OSFactory: public SkinObject
         /// Instantiate an OSTimer with the given command
         virtual OSTimer *createOSTimer( CmdGeneric &rCmd ) = 0;
 
-        /// Instantiate an object OSWindow.
+        /// Instantiate an object OSWindow
         virtual OSWindow *createOSWindow( GenericWindow &rWindow,
                                           bool dragDrop, bool playOnDrop,
                                           OSWindow *pParent ) = 0;
 
-        /// Instantiate an object OSTooltip.
+        /// Instantiate an object OSTooltip
         virtual OSTooltip *createOSTooltip() = 0;
+
+        /// Instantiate an object OSPopup
+        virtual OSPopup *createOSPopup() = 0;
 
         /// Get the directory separator
         virtual const string &getDirSeparator() const = 0;
@@ -110,7 +118,7 @@ class OSFactory: public SkinObject
         virtual void rmDir( const string &rPath ) = 0;
 
    protected:
-        // Protected because it's a singleton.
+        // Protected because it's a singleton
         OSFactory( intf_thread_t* pIntf ): SkinObject( pIntf ) {}
         virtual ~OSFactory() {}
 };

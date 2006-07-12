@@ -81,7 +81,7 @@ void    x264_param_default( x264_param_t *param )
     param->i_cabac_init_idc = 0;
 
     param->rc.b_cbr = 0;
-    param->rc.i_bitrate = 1000;
+    param->rc.i_bitrate = 0;
     param->rc.f_rate_tolerance = 1.0;
     param->rc.i_vbv_max_bitrate = 0;
     param->rc.i_vbv_buffer_size = 0;
@@ -113,7 +113,7 @@ void    x264_param_default( x264_param_t *param )
     param->analyse.intra = X264_ANALYSE_I4x4 | X264_ANALYSE_I8x8;
     param->analyse.inter = X264_ANALYSE_I4x4 | X264_ANALYSE_I8x8
                          | X264_ANALYSE_PSUB16x16 | X264_ANALYSE_BSUB16x16;
-    param->analyse.i_direct_mv_pred = X264_DIRECT_PRED_TEMPORAL;
+    param->analyse.i_direct_mv_pred = X264_DIRECT_PRED_SPATIAL;
     param->analyse.i_me_method = X264_ME_HEX;
     param->analyse.i_me_range = 16;
     param->analyse.i_subpel_refine = 5;
@@ -121,6 +121,7 @@ void    x264_param_default( x264_param_t *param )
     param->analyse.i_mv_range = -1; // set from level_idc
     param->analyse.i_chroma_qp_offset = 0;
     param->analyse.b_fast_pskip = 1;
+    param->analyse.b_dct_decimate = 1;
     param->analyse.b_psnr = 1;
 
     param->i_cqm_preset = X264_CQM_FLAT;
@@ -396,6 +397,27 @@ void *x264_realloc( void *p, int i_size )
 }
 
 /****************************************************************************
+ * x264_reduce_fraction:
+ ****************************************************************************/
+void x264_reduce_fraction( int *n, int *d )
+{
+    int a = *n;
+    int b = *d;
+    int c;
+    if( !a || !b )
+        return;
+    c = a % b;
+    while(c)
+    {
+	a = b;
+	b = c;
+	c = a % b;
+    }
+    *n /= b;
+    *d /= b;
+}
+
+/****************************************************************************
  * x264_slurp_file:
  ****************************************************************************/
 char *x264_slurp_file( const char *filename )
@@ -458,6 +480,7 @@ char *x264_param2string( x264_param_t *p, int b_res )
     s += sprintf( s, " chroma_qp_offset=%d", p->analyse.i_chroma_qp_offset );
     s += sprintf( s, " slices=%d", p->i_threads );
     s += sprintf( s, " nr=%d", p->analyse.i_noise_reduction );
+    s += sprintf( s, " decimate=%d", p->analyse.b_dct_decimate );
 
     s += sprintf( s, " bframes=%d", p->i_bframe );
     if( p->i_bframe )

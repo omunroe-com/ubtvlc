@@ -2,9 +2,9 @@
  * m3u.c :  M3U playlist export module
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: m3u.c 12558 2005-09-15 06:17:33Z zorglub $
+ * $Id: m3u.c 14932 2006-03-25 23:10:43Z xtophe $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -28,6 +28,7 @@
 
 #include <vlc/vlc.h>
 #include <vlc/intf.h>
+#include <vlc_meta.h>
 
 #include <errno.h>                                                 /* ENOMEM */
 
@@ -45,7 +46,7 @@ int Export_M3U( vlc_object_t *p_this )
     playlist_export_t *p_export = (playlist_export_t *)p_playlist->p_private;
     int i, j;
 
-    msg_Dbg(p_playlist, "Saving using M3U format");
+    msg_Dbg(p_playlist, "saving using M3U format");
 
     /* Write header */
     fprintf( p_export->p_file, "#EXTM3U\n" );
@@ -65,7 +66,7 @@ int Export_M3U( vlc_object_t *p_this )
         {
             char *psz_artist =
                 vlc_input_item_GetInfo( &p_playlist->pp_items[i]->input,
-                                        _("Meta-information"), _("Artist") );
+                                        _(VLC_META_INFO_CAT), _(VLC_META_ARTIST) );
             if( psz_artist && *psz_artist )
             {
                 /* write EXTINF with artist */

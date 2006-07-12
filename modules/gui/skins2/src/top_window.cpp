@@ -2,10 +2,10 @@
  * top_window.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: top_window.cpp 12912 2005-10-22 11:57:29Z asmax $
+ * $Id: top_window.cpp 15481 2006-04-30 18:07:40Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "top_window.hpp"
@@ -36,6 +36,7 @@
 #include "../events/evt_enter.hpp"
 #include "../events/evt_focus.hpp"
 #include "../events/evt_leave.hpp"
+#include "../events/evt_menu.hpp"
 #include "../events/evt_motion.hpp"
 #include "../events/evt_mouse.hpp"
 #include "../events/evt_key.hpp"
@@ -87,7 +88,21 @@ void TopWindow::processEvent( EvtRefresh &rEvtRefresh )
 
 void TopWindow::processEvent( EvtFocus &rEvtFocus )
 {
-//    fprintf(stderr, rEvtFocus.getAsString().c_str()) ;
+//    fprintf(stderr, rEvtFocus.getAsString().c_str());
+}
+
+
+void TopWindow::processEvent( EvtMenu &rEvtMenu )
+{
+    Popup *pPopup = m_rWindowManager.getActivePopup();
+    // We should never receive a menu event when there is no active popup!
+    if( pPopup == NULL )
+    {
+        msg_Warn( getIntf(), "unexpected menu event, ignoring" );
+        return;
+    }
+
+    pPopup->handleEvent( rEvtMenu );
 }
 
 
@@ -307,12 +322,22 @@ void TopWindow::refresh( int left, int top, int width, int height )
 
 void TopWindow::setActiveLayout( GenericLayout *pLayout )
 {
+    bool isVisible = getVisibleVar().get();
+    if( m_pActiveLayout && isVisible )
+    {
+        m_pActiveLayout->onHide();
+    }
+
     pLayout->setWindow( this );
     m_pActiveLayout = pLayout;
     // Get the size of the layout and resize the window
     resize( pLayout->getWidth(), pLayout->getHeight() );
+
     updateShape();
-    pLayout->refreshAll();
+    if( isVisible )
+    {
+        pLayout->onShow();
+    }
 }
 
 
@@ -328,13 +353,25 @@ void TopWindow::innerShow()
     if( m_pActiveLayout )
     {
         updateShape();
-        m_pActiveLayout->refreshAll();
+        m_pActiveLayout->onShow();
     }
     // Show the window
     GenericWindow::innerShow();
 }
 
- 
+
+void TopWindow::innerHide()
+{
+    if( m_pActiveLayout )
+    {
+        // Notify the active layout
+        m_pActiveLayout->onHide();
+    }
+    // Hide the window
+    GenericWindow::innerHide();
+}
+
+
 void TopWindow::updateShape()
 {
     // Set the shape of the window
@@ -365,7 +402,7 @@ void TopWindow::onControlRelease( const CtrlGeneric &rCtrl )
     }
     else
     {
-        msg_Dbg( getIntf(), "Control had not captured the mouse" );
+        msg_Dbg( getIntf(), "control had not captured the mouse" );
     }
 
     // Send an enter event to the control under the mouse, if it doesn't
@@ -436,7 +473,7 @@ CtrlGeneric *TopWindow::findHitControl( int xPos, int yPos )
         }
         else
         {
-            msg_Dbg( getIntf(), "Control at NULL position" );
+            msg_Dbg( getIntf(), "control at NULL position" );
         }
     }
 

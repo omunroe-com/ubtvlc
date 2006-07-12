@@ -2,7 +2,7 @@
  * i420_yuy2.h : YUV to YUV conversion module for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001 the VideoLAN team
- * $Id: i420_yuy2.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: i420_yuy2.h 14173 2006-02-05 12:43:38Z hartman $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifdef MODULE_NAME_IS_i420_yuy2_mmx
@@ -26,7 +26,7 @@
 #define MMX_CALL(MMX_INSTRUCTIONS)                                          \
     do {                                                                    \
     __asm__ __volatile__(                                                   \
-        ".align 8 \n\t"                                                     \
+        ".p2align 3 \n\t"                                                   \
         MMX_INSTRUCTIONS                                                    \
         :                                                                   \
         : "r" (p_line1),  "r" (p_line2),  "r" (p_y1),  "r" (p_y2),          \
@@ -73,10 +73,10 @@ movq      %%mm0, 8(%1)  # Store high YUYV                                 \n\
 #define MMX_YUV420_UYVY "                                                 \n\
 movq       (%2), %%mm0  # Load 8 Y            y7 y6 y5 y4 y3 y2 y1 y0     \n\
 movq       (%3), %%mm3  # Load 8 Y            Y7 Y6 Y5 Y4 Y3 Y2 Y1 Y0     \n\
-movd       (%4), %%mm2  # Load 4 Cb           00 00 00 00 u3 u2 u1 u0     \n\
-movd       (%5), %%mm1  # Load 4 Cr           00 00 00 00 v3 v2 v1 v0     \n\
-punpcklbw %%mm2, %%mm1  #                     u3 v3 u2 v2 u1 v1 u0 v0     \n\
-movq      %%mm1, %%mm2  #                     u3 v3 u2 v2 u1 v1 u0 v0     \n\
+movd       (%4), %%mm1  # Load 4 Cb           00 00 00 00 u3 u2 u1 u0     \n\
+movd       (%5), %%mm2  # Load 4 Cr           00 00 00 00 v3 v2 v1 v0     \n\
+punpcklbw %%mm2, %%mm1  #                     v3 u3 v2 u2 v1 u1 v0 u0     \n\
+movq      %%mm1, %%mm2  #                     v3 u3 v2 u2 v1 u1 v0 u0     \n\
 punpcklbw %%mm0, %%mm2  #                     y3 v1 y2 u1 y1 v0 y0 u0     \n\
 movq      %%mm2, (%0)   # Store low UYVY                                  \n\
 movq      %%mm1, %%mm2  #                     u3 v3 u2 v2 u1 v1 u0 v0     \n\

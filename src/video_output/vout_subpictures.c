@@ -2,7 +2,7 @@
  * vout_subpictures.c : subpicture management functions
  *****************************************************************************
  * Copyright (C) 2000-2005 the VideoLAN team
- * $Id: vout_subpictures.c 12194 2005-08-15 12:21:16Z jpsaman $
+ * $Id: vout_subpictures.c 15203 2006-04-13 14:47:20Z hartman $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -256,7 +256,7 @@ subpicture_region_t *__spu_CreateRegion( vlc_object_t *p_this,
     p_region->p_cache = 0;
     p_region->fmt = *p_fmt;
     p_region->psz_text = 0;
-    p_region->i_text_color = 0xFFFFFF;
+    p_region->p_style = NULL;
 
     if( p_fmt->i_chroma == VLC_FOURCC('Y','U','V','P') )
         p_fmt->p_palette = p_region->fmt.p_palette =
@@ -299,7 +299,7 @@ subpicture_region_t *__spu_MakeRegion( vlc_object_t *p_this,
     p_region->p_cache = 0;
     p_region->fmt = *p_fmt;
     p_region->psz_text = 0;
-    p_region->i_text_color = 0xFFFFFF;
+    p_region->p_style = NULL;
 
     if( p_fmt->i_chroma == VLC_FOURCC('Y','U','V','P') )
         p_fmt->p_palette = p_region->fmt.p_palette =
@@ -324,7 +324,6 @@ void __spu_DestroyRegion( vlc_object_t *p_this, subpicture_region_t *p_region )
     if( p_region->picture.pf_release )
         p_region->picture.pf_release( &p_region->picture );
     if( p_region->fmt.p_palette ) free( p_region->fmt.p_palette );
-    if( p_region->psz_text ) free( p_region->psz_text );
     if( p_region->p_cache ) __spu_DestroyRegion( p_this, p_region->p_cache );
     free( p_region );
 }
@@ -498,43 +497,75 @@ void spu_RenderSubpictures( spu_t *p_spu, video_format_t *p_fmt,
         }
 
         /* Load the text rendering module */
-        if( !p_spu->p_text && p_region )
+        if( !p_spu->p_text && p_region && p_region->fmt.i_chroma == VLC_FOURCC('T','E','X','T') )
         {
+            char *psz_modulename = NULL;
+
             p_spu->p_text = vlc_object_create( p_spu, VLC_OBJECT_FILTER );
             vlc_object_attach( p_spu->p_text, p_spu );
 
             p_spu->p_text->fmt_out.video.i_width =
                 p_spu->p_text->fmt_out.video.i_visible_width =
-                    p_fmt->i_width;
+                p_fmt->i_width;
             p_spu->p_text->fmt_out.video.i_height =
                 p_spu->p_text->fmt_out.video.i_visible_height =
-                    p_fmt->i_height;
+                p_fmt->i_height;
 
             p_spu->p_text->pf_sub_buffer_new = spu_new_buffer;
             p_spu->p_text->pf_sub_buffer_del = spu_del_buffer;
-            p_spu->p_text->p_module =
-                module_Need( p_spu->p_text, "text renderer", 0, 0 );
+
+            psz_modulename = var_CreateGetString( p_spu, "text-renderer" );
+            if( psz_modulename && *psz_modulename )
+            {
+                p_spu->p_text->p_module =
+                    module_Need( p_spu->p_text, "text renderer", psz_modulename, VLC_TRUE );
+            }
+            if( !p_spu->p_text->p_module )
+            {
+                p_spu->p_text->p_module =
+                    module_Need( p_spu->p_text, "text renderer", 0, 0 );
+            }
+            if( psz_modulename ) free( psz_modulename );
         }
-        else if( p_region )
+        if( p_spu->p_text )
         {
-            p_spu->p_text->fmt_out.video.i_width =
-                p_spu->p_text->fmt_out.video.i_visible_width =
+            if( p_subpic->i_original_picture_height > 0 &&
+                p_subpic->i_original_picture_width  > 0 )
+            {
+                p_spu->p_text->fmt_out.video.i_width =
+                    p_spu->p_text->fmt_out.video.i_visible_width =
+                    p_subpic->i_original_picture_width;
+                p_spu->p_text->fmt_out.video.i_height =
+                    p_spu->p_text->fmt_out.video.i_visible_height =
+                    p_subpic->i_original_picture_height;
+            }
+            else
+            {
+                p_spu->p_text->fmt_out.video.i_width =
+                    p_spu->p_text->fmt_out.video.i_visible_width =
                     p_fmt->i_width;
-            p_spu->p_text->fmt_out.video.i_height =
-                p_spu->p_text->fmt_out.video.i_visible_height =
+                p_spu->p_text->fmt_out.video.i_height =
+                    p_spu->p_text->fmt_out.video.i_visible_height =
                     p_fmt->i_height;
+            }
         }
 
         i_scale_width = i_scale_width_orig;
         i_scale_height = i_scale_height_orig;
 
-        if( p_subpic->i_original_picture_width &&
-            p_subpic->i_original_picture_height )
+        if( p_subpic->i_original_picture_height > 0 &&
+            p_subpic->i_original_picture_width  > 0 )
         {
             i_scale_width = i_scale_width * p_fmt->i_width /
                              p_subpic->i_original_picture_width;
             i_scale_height = i_scale_height * p_fmt->i_height /
                              p_subpic->i_original_picture_height;
+        }
+        else if( p_subpic->i_original_picture_height > 0 )
+        {
+            i_scale_height = i_scale_height * p_fmt->i_height /
+                             p_subpic->i_original_picture_height;
+            i_scale_width = i_scale_height * i_scale_height / p_fmt->i_height; 
         }
 
         /* Set default subpicture aspect ratio */
@@ -592,7 +623,7 @@ void spu_RenderSubpictures( spu_t *p_spu, video_format_t *p_fmt,
                 if( p_spu->p_text && p_spu->p_text->p_module &&
                     p_spu->p_text->pf_render_text )
                 {
-                    p_region->i_text_align = p_subpic->i_flags & 0x3;
+                    p_region->i_align = p_subpic->i_flags;
                     p_spu->p_text->pf_render_text( p_spu->p_text,
                                                    p_region, p_region ); 
                 }
@@ -694,15 +725,18 @@ void spu_RenderSubpictures( spu_t *p_spu, video_format_t *p_fmt,
                 i_y_offset = p_region->i_y +
                     p_subpic->i_y * i_scale_height / 1000;
 
-                if( p_spu->i_margin >= 0 )
-                {
-                    if( p_subpic->i_height + (unsigned int)p_spu->i_margin <=
-                        p_fmt->i_height )
-                    {
-                        i_y_offset = p_fmt->i_height -
-                            p_spu->i_margin - p_subpic->i_height;
-                    }
-                }
+            }
+
+            if( p_spu->i_margin != 0 && p_spu->b_force_crop == VLC_FALSE )
+            {
+                int i_diff = 0;
+                int i_low = i_y_offset - p_spu->i_margin;
+                int i_high = i_y_offset + p_region->fmt.i_height - p_spu->i_margin;
+
+                /* crop extra margin to keep within bounds */
+                if( i_low < 0 ) i_diff = i_low;
+                if( i_high > (int)p_fmt->i_height ) i_diff = i_high - p_fmt->i_height;
+                i_y_offset -= ( p_spu->i_margin + i_diff );
             }
 
             p_spu->p_blend->fmt_in.video = p_region->fmt;

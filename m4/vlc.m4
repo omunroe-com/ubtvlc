@@ -1,8 +1,10 @@
 dnl  Macros needed for VLC
-dnl  $Id: vlc.m4 12279 2005-08-19 17:52:53Z courmisch $
+dnl  $Id: vlc.m4 13072 2005-11-01 11:30:23Z xtophe $
 
 dnl ===========================================================================
 dnl  Macros to add plugins or builtins and handle their flags
+m4_pattern_allow([^PKG_CONFIG(_LIBDIR)?$])
+
 
 AC_DEFUN([VLC_ADD_BUILTINS], [
   BUILTINS="${BUILTINS} $1"

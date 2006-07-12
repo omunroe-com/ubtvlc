@@ -2,10 +2,10 @@
  * ctrl_slider.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_slider.hpp 12054 2005-08-06 23:45:34Z asmax $
+ * $Id: ctrl_slider.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CTRL_SLIDER_HPP
@@ -37,7 +37,7 @@ class VarPercent;
 
 
 /// Cursor of a slider
-class CtrlSliderCursor: public CtrlGeneric, public Observer<VarPercent>
+class CtrlSliderCursor: public CtrlGeneric, public Observer<VarPercent, void*>
 {
     public:
         /// Create a cursor with 3 images (which are NOT copied, be careful)
@@ -98,24 +98,32 @@ class CtrlSliderCursor: public CtrlGeneric, public Observer<VarPercent>
         const Bezier &m_rCurve;
 
         /// Method called when the position variable is modified
-        virtual void onUpdate( Subject<VarPercent> &rVariable );
+        virtual void onUpdate( Subject<VarPercent,void*> &rVariable, void * );
 
-        /// Methode to compute the resize factors
+        /// Method to compute the resize factors
         void getResizeFactors( float &rFactorX, float &rFactorY ) const;
+
+        /// Call notifyLayout
+        void refreshLayout();
 };
 
 
 /// Slider background
-class CtrlSliderBg: public CtrlGeneric
+class CtrlSliderBg: public CtrlGeneric, public Observer<VarPercent, void*>
 {
     public:
-        CtrlSliderBg( intf_thread_t *pIntf, CtrlSliderCursor &rCursor,
+        CtrlSliderBg( intf_thread_t *pIntf,
                       const Bezier &rCurve, VarPercent &rVariable,
-                      int thickness, VarBool *pVisible, const UString &rHelp );
-        virtual ~CtrlSliderBg() {}
+                      int thickness, GenericBitmap *pBackground, int nbHoriz,
+                      int nbVert, int padHoriz, int padVert, VarBool *pVisible,
+                      const UString &rHelp );
+        virtual ~CtrlSliderBg();
 
         /// Tell whether the mouse is over the control
         virtual bool mouseOver( int x, int y ) const;
+
+        /// Draw the control on the given graphics
+        virtual void draw( OSGraphics &rImage, int xDest, int yDest );
 
         /// Handle an event
         virtual void handleEvent( EvtGeneric &rEvent );
@@ -123,9 +131,12 @@ class CtrlSliderBg: public CtrlGeneric
         /// Get the type of control (custom RTTI)
         virtual string getType() const { return "slider_bg"; }
 
+        /// Associate a cursor to this background
+        void associateCursor( CtrlSliderCursor &rCursor );
+
     private:
         /// Cursor of the slider
-        CtrlSliderCursor &m_rCursor;
+        CtrlSliderCursor *m_pCursor;
         /// Variable associated to the slider
         VarPercent &m_rVariable;
         /// Thickness of the curve
@@ -134,8 +145,21 @@ class CtrlSliderBg: public CtrlGeneric
         const Bezier &m_rCurve;
         /// Initial size of the control
         int m_width, m_height;
+        /// Background image sequence (optional)
+        OSGraphics *m_pImgSeq;
+        /// Number of images in the background bitmap
+        int m_nbHoriz, m_nbVert;
+        /// Number of pixels between two images
+        int m_padHoriz, m_padVert;
+        /// Size of a background image
+        int m_bgWidth, m_bgHeight;
+        /// Index of the current background image
+        int m_position;
 
-        /// Methode to compute the resize factors
+        /// Method called when the observed variable is modified
+        virtual void onUpdate( Subject<VarPercent,void*> &rVariable, void* );
+
+        /// Method to compute the resize factors
         void getResizeFactors( float &rFactorX, float &rFactorY ) const;
 };
 

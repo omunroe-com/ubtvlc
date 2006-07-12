@@ -2,7 +2,7 @@
  * clone.c : Clone video plugin for vlc
  *****************************************************************************
  * Copyright (C) 2002, 2003 the VideoLAN team
- * $Id: clone.c 12968 2005-10-25 19:24:21Z gbazin $
+ * $Id: clone.c 14977 2006-03-30 08:40:51Z zorglub $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -53,11 +53,12 @@ static int  SendEvents( vlc_object_t *, char const *,
  * Module descriptor
  *****************************************************************************/
 #define COUNT_TEXT N_("Number of clones")
-#define COUNT_LONGTEXT N_("Select the number of video windows in which to "\
+#define COUNT_LONGTEXT N_("Number of video windows in which to "\
     "clone the video.")
 
-#define VOUTLIST_TEXT N_("List of video output modules")
-#define VOUTLIST_LONGTEXT N_("Select the specific video output modules that you want to activate.")
+#define VOUTLIST_TEXT N_("Video output modules")
+#define VOUTLIST_LONGTEXT N_("You can use specific video output modules " \
+        "for the clones. Use a comma-separated list of modules." )
 
 vlc_module_begin();
     set_description( _("Clone video filter") );

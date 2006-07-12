@@ -2,9 +2,9 @@
  * daap.c :  Apple DAAP discovery module
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: sap.c 9569 2004-12-15 22:17:52Z zorglub $
+ * $Id: daap.c 14898 2006-03-23 21:41:12Z xtophe $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -29,7 +29,7 @@
 #include <vlc/vlc.h>
 #include <vlc/intf.h>
 
-#include "network.h"
+#include "vlc_url.h"
 
 #include <vlc/input.h>
 
@@ -220,7 +220,7 @@ static int OpenAccess( vlc_object_t *p_this )
 
     if( p_sys->p_db == NULL || i_ret )
     {
-        msg_Err( p_access, "The DAAP services_discovery module must be enabled" );
+        msg_Err( p_access, "the DAAP services_discovery module must be enabled" );
         return VLC_EGENERIC;
     }
 
@@ -276,7 +276,7 @@ static int OpenAccess( vlc_object_t *p_this )
     }
 
 
-    msg_Dbg( p_access, "Downloading %s song %i (db %i)",
+    msg_Dbg( p_access, "downloading %s song %i (db %i)",
                            p_sys->songdata.songformat,
                            p_sys->i_song, p_sys->p_host->i_database_id );
 
@@ -287,7 +287,7 @@ static int OpenAccess( vlc_object_t *p_this )
                                           p_sys->songdata.songformat,
                                           &(p_sys->song) );
 
-    msg_Dbg( p_access, "Finished downloading, read %i bytes (ret %i)",
+    msg_Dbg( p_access, "finished downloading, read %i bytes (ret %i)",
                                           p_sys->song.size, i_ret );
 
     p_access->info.i_size = p_sys->song.size;
@@ -604,10 +604,10 @@ static void ProcessHost( services_discovery_t *p_sd, dhost_t *p_host )
                                                    p_host->p_songs[i].id );
         p_item = playlist_ItemNew( p_sd, psz_buff,
                                          p_host->p_songs[i].itemname );
-        vlc_input_item_AddInfo( &p_item->input, _("Meta-information"),
-                                _("Artist"), p_host->p_songs[i].songartist );
-        vlc_input_item_AddInfo( &p_item->input, _("Meta-information"),
-                                _("Album"), p_host->p_songs[i].songalbum );
+        vlc_input_item_AddInfo( &p_item->input, _(VLC_META_INFO_CAT),
+                                _(VLC_META_ARTIST), p_host->p_songs[i].songartist );
+        vlc_input_item_AddInfo( &p_item->input, _(VLC_META_INFO_CAT),
+                                _(VLC_META_COLLECTION), p_host->p_songs[i].songalbum );
 
         playlist_NodeAddItem( p_playlist, p_item, VIEW_CATEGORY,
                               p_host->p_node, PLAYLIST_APPEND, PLAYLIST_END );

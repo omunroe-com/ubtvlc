@@ -1,4 +1,111 @@
-$Id: NEWS 13329 2005-11-22 21:38:25Z fkuehne $
+$Id: NEWS 15460 2006-04-30 15:48:29Z dionoea $
+
+Changes between 0.8.4a and 0.8.5:
+--------------------------------------------------------
+
+Core support:
+ * Statistics collection (bitrates, packets, connections, ...)
+ * Support for downloading updates
+ * Updated strings
+
+Input:
+ * Initial support for RTSP-over-HTTP (to allow NAT traversal)
+ * Linux DV (Digital Video - Firewire) input
+ * Improvements to the Audio CD input
+     - Separate playlist entries for the tracks 
+     - Support for CDDB 
+ * Support for more DVB (satellite) encryption modules
+ * Improved subtitles encoding support
+ * Improved support for playing MP4 files from the Web
+
+Decoders:
+ * Cook (Real audio) support
+
+Playlist / Services discovery:
+ * XSPF playlist support
+ * Podcast support
+ * Updated Shoutcast to use new listing
+
+Audio output:
+ * New JACK audio output
+
+Video output:
+ * New video filters: 
+    - magnify: allows you to zoom on part of the image
+    - gradient and edge detection: "cartoon-like" effect
+    - bluescreen: overlay parts of a video transparently on another one
+ * Logo video filter: can now loop through multiple images
+ * RSS video filter: display feed images. Support for Atom feeds.
+ * Improvements to the subtitles rendering
+
+Stream output:
+ * Initial support for throttling users on VOD streams
+
+Interfaces:
+ * System to inform the user and request information 
+    - HTTP authentication
+    - Fatal errors
+    - ...
+ * wxWidgets
+    - VLM (VideoLAN Media Manager) control panel
+    - Improved media information panel (shows statistics, metadata, ...)
+    - Drag & Drop support in the playlist
+ * Skins2 
+    - New default skin
+    - Support for Winamp 2 skins
+    - Improved playlist handling
+    - Support for popup menus, animated bitmaps, equalizer, ...
+ * OS X
+    - Embedded Video output
+    - new Go-To-Specific-Time feature
+    - Video cropping and aspect ratio changing while playing
+    - Improved media information panel (shows statistics, metadata, ...)
+    - support for processing multiple items with the wizard in a single run
+    - option to save selections in the wizard for a session (default enabled)
+ * HTTP
+    - New default interface pages for VLC and VLM (including a mosaic wizard)
+    - A bunch of new RPN functions
+
+Windows Port:
+ * MSN messenger "Now playing" support
+
+OS X Port:
+ * Mac-Intel compatibility
+ * Enhanced support of various audio output devices 
+ * Growl "Now playing" support
+
+*Nix port:
+ * Ability to log to syslog
+ * Root wrapper to avoid running VLC as root
+
+Developers:
+ * New libvlc API (not finished yet)
+ * Java bindings
+ * A bit more automatic testing
+
+Changes between 0.8.4 and 0.8.4a:
+---------------------------------
+
+Audio output:
+ * Fix a52 over spdif in alsa
+ * SPDIF output available again in the Mac OS X Audio menu.
+
+Decoder:
+ * Add support for new BMP and Cook (RealAudio G2) decoders in ffmpeg
+ * Add support for some non-standard FOURCCs used for H.264/H.263
+
+Demux:
+ * Fix bug with some HE-AAC audio tracks
+
+Services Discovery:
+ * HAL fixes, should now work with new API
+ * SAP, fix 20 second freeze on windows
+ * UPnP fixes
+ * Avahi 0.6 support
+ 
+Interfaces:
+ * Mac OS X
+    - fixed encoding of H.264/H.263 content when using the wizard 
 
 Changes between 0.8.2 and 0.8.4:
 --------------------------------
@@ -42,6 +149,7 @@ Stream output:
  * Fixed MTU handling to avoid IP fragments
  
 Interfaces:
+- new cone icon by Richard ¯iestad (Eurodata, retron.info)
  * Mac OS X
     - New streaming and transcoding wizard
     - New extended controls panel
@@ -78,7 +186,7 @@ Translations:
  * Korean
  * Romanian
  * Simplified Chinese
- The following language was re-added:
+ The following languages were re-added:
  * Swedish
 
 Changes between 0.8.1 and 0.8.2:

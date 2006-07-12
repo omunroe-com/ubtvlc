@@ -2,7 +2,7 @@
  * mp4.c : MP4 file input module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: mp4.c 13184 2005-11-10 18:51:31Z gbazin $
+ * $Id: mp4.c 15060 2006-04-02 14:49:26Z hartman $
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -406,7 +406,13 @@ static int Open( vlc_object_t * p_this )
                     else
                     {
                         /* msg dbg relative ? */
-                        char *psz_absolute = alloca( strlen( p_demux->psz_access ) + 3 + strlen( p_demux->psz_path ) + strlen( psz_ref ) + 1);
+                        int i_path_size = strlen( p_demux->psz_access ) + 3 +
+                                         strlen( p_demux->psz_path ) + strlen( psz_ref ) + 1;
+#ifdef HAVE_ALLOCA
+                        char *psz_absolute = alloca( i_path_size );
+#else
+                        char *psz_absolute = (char *)malloc( i_path_size );
+#endif
                         char *end = strrchr( p_demux->psz_path, '/' );
 
                         if( end )
@@ -439,6 +445,9 @@ static int Open( vlc_object_t * p_this )
                                 b_play = VLC_TRUE;
                             }
                         }
+#ifndef HAVE_ALLOCA
+                        free( psz_absolute );
+#endif
                     }
                 }
                 else
@@ -812,35 +821,38 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
             for( p_0xa9xxx = p_udta->p_first; p_0xa9xxx != NULL;
                  p_0xa9xxx = p_0xa9xxx->p_next )
             {
+                char *psz_utf;
+                if( !p_0xa9xxx || !p_0xa9xxx->data.p_0xa9xxx )
+                    continue;
+                psz_utf = strdup( p_0xa9xxx->data.p_0xa9xxx->psz_text );
+                if( psz_utf == NULL )
+                    continue;
+                /* FIXME FIXME: should convert from whatever the character
+                 * encoding of MP4 meta data is to UTF-8. */
+                EnsureUTF8( psz_utf );
+
                 switch( p_0xa9xxx->i_type )
                 {
                 case FOURCC_0xa9nam: /* Full name */
-                    vlc_meta_Add( meta, VLC_META_TITLE,
-                                  p_0xa9xxx->data.p_0xa9xxx->psz_text );
+                    vlc_meta_Add( meta, VLC_META_TITLE, psz_utf );
                     break;
                 case FOURCC_0xa9aut:
-                    vlc_meta_Add( meta, VLC_META_AUTHOR,
-                                  p_0xa9xxx->data.p_0xa9xxx->psz_text );
+                    vlc_meta_Add( meta, VLC_META_AUTHOR, psz_utf );
                     break;
                 case FOURCC_0xa9ART:
-                    vlc_meta_Add( meta, VLC_META_ARTIST,
-                                  p_0xa9xxx->data.p_0xa9xxx->psz_text );
+                    vlc_meta_Add( meta, VLC_META_ARTIST, psz_utf );
                     break;
                 case FOURCC_0xa9cpy:
-                    vlc_meta_Add( meta, VLC_META_COPYRIGHT,
-                                  p_0xa9xxx->data.p_0xa9xxx->psz_text );
+                    vlc_meta_Add( meta, VLC_META_COPYRIGHT, psz_utf );
                     break;
                 case FOURCC_0xa9day: /* Creation Date */
-                    vlc_meta_Add( meta, VLC_META_DATE,
-                                  p_0xa9xxx->data.p_0xa9xxx->psz_text );
+                    vlc_meta_Add( meta, VLC_META_DATE, psz_utf );
                     break;
                 case FOURCC_0xa9des: /* Description */
-                    vlc_meta_Add( meta, VLC_META_DESCRIPTION,
-                                  p_0xa9xxx->data.p_0xa9xxx->psz_text );
+                    vlc_meta_Add( meta, VLC_META_DESCRIPTION, psz_utf );
                     break;
                 case FOURCC_0xa9gen: /* Genre */
-                    vlc_meta_Add( meta, VLC_META_GENRE,
-                                  p_0xa9xxx->data.p_0xa9xxx->psz_text );
+                    vlc_meta_Add( meta, VLC_META_GENRE, psz_utf );
                     break;
 
                 case FOURCC_0xa9swr:
@@ -869,6 +881,7 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
                 default:
                     break;
                 }
+                free( psz_utf );
             }
             return VLC_SUCCESS;
         }
@@ -879,7 +892,7 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
             return VLC_EGENERIC;
 
         default:
-            msg_Warn( p_demux, "control query unimplemented !!!" );
+            msg_Warn( p_demux, "control query %u unimplemented", i_query );
             return VLC_EGENERIC;
     }
 }
@@ -1270,9 +1283,28 @@ static int TrackCreateES( demux_t *p_demux, mp4_track_t *p_track,
         case( VLC_FOURCC( 'm', 's', 0x00, 0x55 ) ):
             p_track->fmt.i_codec = VLC_FOURCC( 'm', 'p', 'g', 'a' );
             break;
+
         case( VLC_FOURCC( 'r', 'a', 'w', ' ' ) ):
             p_track->fmt.i_codec = VLC_FOURCC( 'a', 'r', 'a', 'w' );
+
+            /* Buggy files workaround */
+            if( p_sample->data.p_sample_soun && (p_track->i_timescale !=
+                p_sample->data.p_sample_soun->i_sampleratehi) )
+            {
+                MP4_Box_data_sample_soun_t *p_soun =
+                    p_sample->data.p_sample_soun;
+
+                msg_Warn( p_demux, "i_timescale ("I64Fu") != i_sampleratehi "
+                          "(%u), making both equal (report any problem).",
+                          p_track->i_timescale, p_soun->i_sampleratehi );
+
+                if( p_soun->i_sampleratehi )
+                    p_track->i_timescale = p_soun->i_sampleratehi;
+                else
+                    p_soun->i_sampleratehi = p_track->i_timescale;
+            }
             break;
+
         case( VLC_FOURCC( 's', '2', '6', '3' ) ):
             p_track->fmt.i_codec = VLC_FOURCC( 'h', '2', '6', '3' );
             break;
@@ -1282,7 +1314,7 @@ static int TrackCreateES( demux_t *p_demux, mp4_track_t *p_track,
             p_track->fmt.i_codec = VLC_FOURCC( 's', 'u', 'b', 't' );
             /* FIXME: Not true, could be UTF-16 with a Byte Order Mark (0xfeff) */
             /* FIXME UTF-8 doesn't work here ? */
-            /* p_track->fmt.subs.psz_encoding = strdup( "UTF-8" ); */
+            p_track->fmt.subs.psz_encoding = strdup( "UTF-8" );
             break;
 
         default:
@@ -1340,6 +1372,10 @@ static int TrackCreateES( demux_t *p_demux, mp4_track_t *p_track,
                 if( p_track->fmt.i_cat == SPU_ES )
                 {
                     p_track->fmt.i_codec = VLC_FOURCC( 's','p','u',' ' );
+                    if( p_track->i_width > 0 )
+                        p_track->fmt.subs.spu.i_original_frame_width = p_track->i_width;
+                    if( p_track->i_height > 0 )
+                        p_track->fmt.subs.spu.i_original_frame_height = p_track->i_height;
                     break;
                 }
             /* Fallback */
@@ -1844,32 +1880,6 @@ static void MP4_TrackCreate( demux_t *p_demux, mp4_track_t *p_track,
                     p_track->fmt.psz_description =
                         strdup( p_0xa9xxx->data.p_0xa9xxx->psz_text );
                     break;
-            }
-        }
-    }
-
-    /* fxi i_timescale for AUDIO_ES with i_qt_version == 0 */
-    if( p_track->fmt.i_cat == AUDIO_ES ) //&& p_track->i_sample_size == 1 )
-    {
-        MP4_Box_t *p_sample;
-
-        p_sample = MP4_BoxGet(  p_track->p_stsd, "[0]" );
-        if( p_sample && p_sample->data.p_sample_soun)
-        {
-            MP4_Box_data_sample_soun_t *p_soun = p_sample->data.p_sample_soun;
-            if( p_soun->i_qt_version == 0 &&
-                p_track->i_timescale != p_soun->i_sampleratehi )
-            {
-                msg_Warn( p_demux,
-                          "i_timescale ("I64Fu") != i_sampleratehi (%u) with "
-                          "qt_version == 0\n"
-                          "Making both equal. (report any problem)",
-                          p_track->i_timescale, p_soun->i_sampleratehi );
-
-                if( p_soun->i_sampleratehi )
-                    p_track->i_timescale = p_soun->i_sampleratehi;
-                else
-                    p_soun->i_sampleratehi = p_track->i_timescale;
             }
         }
     }

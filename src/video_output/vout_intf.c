@@ -2,7 +2,7 @@
  * vout_intf.c : video output interface
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: vout_intf.c 13051 2005-10-31 07:35:39Z md $
+ * $Id: vout_intf.c 15160 2006-04-10 14:41:23Z hartman $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -28,11 +28,14 @@
 
 #include <vlc/vlc.h>
 #include <vlc/intf.h>
+#include <vlc_block.h>
 
 #include "vlc_video.h"
 #include "video_output.h"
 #include "vlc_image.h"
 #include "vlc_spu.h"
+
+#include <snapshot.h>
 
 /*****************************************************************************
  * Local prototypes
@@ -182,6 +185,7 @@ void vout_IntfInit( vout_thread_t *p_vout )
     /* Create a few object variables we'll need later on */
     var_Create( p_vout, "snapshot-path", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "snapshot-format", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
+    var_Create( p_vout, "snapshot-preview", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "width", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "height", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "align", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
@@ -231,13 +235,17 @@ void vout_IntfInit( vout_thread_t *p_vout )
     var_Change( p_vout, "crop", VLC_VAR_DELCHOICE, &val, 0 );
     val.psz_string = ""; text.psz_string = _("Default");
     var_Change( p_vout, "crop", VLC_VAR_ADDCHOICE, &val, &text );
-    val.psz_string = "001:1"; text.psz_string = _("1:1");
+    val.psz_string = "001:1"; text.psz_string = "1:1";
     var_Change( p_vout, "crop", VLC_VAR_ADDCHOICE, &val, &text );
-    val.psz_string = "004:3"; text.psz_string = _("4:3");
+    val.psz_string = "004:3"; text.psz_string = "4:3";
     var_Change( p_vout, "crop", VLC_VAR_ADDCHOICE, &val, &text );
-    val.psz_string = "16:9"; text.psz_string = _("16:9");
+    val.psz_string = "016:9"; text.psz_string = "16:9";
     var_Change( p_vout, "crop", VLC_VAR_ADDCHOICE, &val, &text );
-    val.psz_string = "221:100"; text.psz_string = _("221:100");
+    val.psz_string = "16:10"; text.psz_string = "16:10";
+    var_Change( p_vout, "crop", VLC_VAR_ADDCHOICE, &val, &text );
+    val.psz_string = "221:100"; text.psz_string = "221:100";
+    var_Change( p_vout, "crop", VLC_VAR_ADDCHOICE, &val, &text );
+    val.psz_string = "5:4"; text.psz_string = "5:4";
     var_Change( p_vout, "crop", VLC_VAR_ADDCHOICE, &val, &text );
 
     var_AddCallback( p_vout, "crop", CropCallback, NULL );
@@ -273,7 +281,7 @@ void vout_IntfInit( vout_thread_t *p_vout )
         vlc_ureduce( &p_vout->i_par_num, &p_vout->i_par_den,
                      p_vout->i_par_num, p_vout->i_par_den, 0 );
 
-        msg_Dbg( p_vout, "monitor pixel aspect-ratio overriding: %i:%i",
+        msg_Dbg( p_vout, "overriding monitor pixel aspect-ratio: %i:%i",
                  p_vout->i_par_num, p_vout->i_par_den );
         b_force_par = VLC_TRUE;
     }
@@ -290,13 +298,17 @@ void vout_IntfInit( vout_thread_t *p_vout )
     var_Change( p_vout, "aspect-ratio", VLC_VAR_DELCHOICE, &val, 0 );
     val.psz_string = ""; text.psz_string = _("Default");
     var_Change( p_vout, "aspect-ratio", VLC_VAR_ADDCHOICE, &val, &text );
-    val.psz_string = "001:1"; text.psz_string = _("1:1");
+    val.psz_string = "001:1"; text.psz_string = "1:1";
     var_Change( p_vout, "aspect-ratio", VLC_VAR_ADDCHOICE, &val, &text );
-    val.psz_string = "004:3"; text.psz_string = _("4:3");
+    val.psz_string = "004:3"; text.psz_string = "4:3";
     var_Change( p_vout, "aspect-ratio", VLC_VAR_ADDCHOICE, &val, &text );
-    val.psz_string = "16:9"; text.psz_string = _("16:9");
+    val.psz_string = "016:9"; text.psz_string = "16:9";
     var_Change( p_vout, "aspect-ratio", VLC_VAR_ADDCHOICE, &val, &text );
-    val.psz_string = "221:100"; text.psz_string = _("221:100");
+    val.psz_string = "16:10"; text.psz_string = "16:10";
+    var_Change( p_vout, "aspect-ratio", VLC_VAR_ADDCHOICE, &val, &text );
+    val.psz_string = "221:100"; text.psz_string = "221:100";
+    var_Change( p_vout, "aspect-ratio", VLC_VAR_ADDCHOICE, &val, &text );
+    val.psz_string = "5:4"; text.psz_string = "5:4";
     var_Change( p_vout, "aspect-ratio", VLC_VAR_ADDCHOICE, &val, &text );
 
     var_AddCallback( p_vout, "aspect-ratio", AspectCallback, NULL );
@@ -368,7 +380,98 @@ int vout_Snapshot( vout_thread_t *p_vout, picture_t *p_pic )
         val.psz_string = 0;
     }
 
-#if defined(SYS_DARWIN) || defined(SYS_BEOS)
+    /* Embedded snapshot : if snapshot-path == object:object-id, then
+       create a snapshot_t* and store it in
+       object(object-id)->p_private, then unlock and signal the
+       waiting object.
+     */
+    if( val.psz_string && !strncmp( val.psz_string, "object:", 7 ) )
+    {
+        int i_id;
+        vlc_object_t* p_dest;
+        block_t *p_block;
+        snapshot_t *p_snapshot;
+        int i_size;
+
+        /* Destination object-id is following object: */
+        i_id = atoi( &val.psz_string[7] );
+        p_dest = ( vlc_object_t* )vlc_current_object( i_id );
+        if( !p_dest )
+        {
+            msg_Err( p_vout, "Cannot find calling object" );
+            image_HandlerDelete( p_image );
+            return VLC_EGENERIC;
+        }
+        /* Object must be locked. We will unlock it once we get the
+           snapshot and written it to p_private */
+        p_dest->p_private = NULL;
+
+        /* Save the snapshot to a memory zone */
+        fmt_in = p_vout->fmt_in;
+        fmt_out.i_sar_num = fmt_out.i_sar_den = 1;
+	/* FIXME: should not be hardcoded. We should be able to
+	   specify the snapshot size (snapshot-width and snapshot-height). */
+        fmt_out.i_width = 320;
+        fmt_out.i_height = 200;
+        fmt_out.i_chroma = VLC_FOURCC( 'p','n','g',' ' );
+        p_block = ( block_t* ) image_Write( p_image, p_pic, &fmt_in, &fmt_out );
+        if( !p_block ) 
+        {
+            msg_Err( p_vout, "Could not get snapshot" );
+            image_HandlerDelete( p_image );
+            vlc_cond_signal( &p_dest->object_wait );
+            vlc_mutex_unlock( &p_dest->object_lock );
+            vlc_object_release( p_dest );
+            return VLC_EGENERIC;
+        }
+
+        /* Copy the p_block data to a snapshot structure */
+        /* FIXME: get the timestamp */
+        p_snapshot = ( snapshot_t* ) malloc( sizeof( snapshot_t ) );
+        if( !p_snapshot )
+        {
+            block_Release( p_block );
+            image_HandlerDelete( p_image );
+            vlc_cond_signal( &p_dest->object_wait );
+            vlc_mutex_unlock( &p_dest->object_lock );
+            vlc_object_release( p_dest );
+            return VLC_ENOMEM;
+        }
+
+        i_size = p_block->i_buffer;
+
+        p_snapshot->i_width = fmt_out.i_width;
+        p_snapshot->i_height = fmt_out.i_height;
+        p_snapshot->i_datasize = i_size;
+        p_snapshot->date = p_block->i_pts; /* FIXME ?? */
+        p_snapshot->p_data = ( char* ) malloc( i_size );
+        if( !p_snapshot->p_data )
+        {
+            block_Release( p_block );
+            free( p_snapshot );
+            image_HandlerDelete( p_image );
+            vlc_cond_signal( &p_dest->object_wait );
+            vlc_mutex_unlock( &p_dest->object_lock );
+	    vlc_object_release( p_dest );
+            return VLC_ENOMEM;
+        }
+	memcpy( p_snapshot->p_data, p_block->p_buffer, p_block->i_buffer );
+
+	p_dest->p_private = p_snapshot;
+
+        block_Release( p_block );
+        
+        /* Unlock the object */
+        vlc_cond_signal( &p_dest->object_wait );
+        vlc_mutex_unlock( &p_dest->object_lock );
+	vlc_object_release( p_dest );
+
+        image_HandlerDelete( p_image );
+	return VLC_SUCCESS;
+    }
+
+
+#if defined(__APPLE__) || defined(SYS_BEOS)
     if( !val.psz_string && p_vout->p_vlc->psz_homedir )
     {
         asprintf( &val.psz_string, "%s/Desktop",
@@ -473,33 +576,41 @@ int vout_Snapshot( vout_thread_t *p_vout, picture_t *p_pic )
     msg_Dbg( p_vout, "snapshot taken (%s)", psz_filename );
     free( psz_filename );
 
-    /* Inject a subpicture with the snapshot */
-    memset( &fmt_out, 0, sizeof(fmt_out) );
-    fmt_out.i_chroma = VLC_FOURCC('Y','U','V','A');
-    p_pif = image_Convert( p_image, p_pic, &fmt_in, &fmt_out );
-    image_HandlerDelete( p_image );
-    if( !p_pif ) return VLC_EGENERIC;
-
-    p_subpic = spu_CreateSubpicture( p_vout->p_spu );
-    if( p_subpic == NULL )
+    if( var_GetBool( p_vout, "snapshot-preview" ) )
     {
-         p_pif->pf_release( p_pif );
-         return VLC_EGENERIC;
+        /* Inject a subpicture with the snapshot */
+        memset( &fmt_out, 0, sizeof(fmt_out) );
+        fmt_out.i_chroma = VLC_FOURCC('Y','U','V','A');
+        p_pif = image_Convert( p_image, p_pic, &fmt_in, &fmt_out );
+        image_HandlerDelete( p_image );
+        if( !p_pif ) return VLC_EGENERIC;
+
+        p_subpic = spu_CreateSubpicture( p_vout->p_spu );
+        if( p_subpic == NULL )
+        {
+             p_pif->pf_release( p_pif );
+             return VLC_EGENERIC;
+        }
+
+        p_subpic->i_channel = 0;
+        p_subpic->i_start = mdate();
+        p_subpic->i_stop = mdate() + 4000000;
+        p_subpic->b_ephemer = VLC_TRUE;
+        p_subpic->b_fade = VLC_TRUE;
+        p_subpic->i_original_picture_width = p_vout->render.i_width * 4;
+        p_subpic->i_original_picture_height = p_vout->render.i_height * 4;
+
+        p_subpic->p_region = spu_CreateRegion( p_vout->p_spu, &fmt_out );
+        vout_CopyPicture( p_image->p_parent, &p_subpic->p_region->picture,
+                          p_pif );
+        p_pif->pf_release( p_pif );
+
+        spu_DisplaySubpicture( p_vout->p_spu, p_subpic );
     }
-
-    p_subpic->i_channel = 0;
-    p_subpic->i_start = mdate();
-    p_subpic->i_stop = mdate() + 4000000;
-    p_subpic->b_ephemer = VLC_TRUE;
-    p_subpic->b_fade = VLC_TRUE;
-    p_subpic->i_original_picture_width = p_vout->render.i_width * 4;
-    p_subpic->i_original_picture_height = p_vout->render.i_height * 4;
-
-    p_subpic->p_region = spu_CreateRegion( p_vout->p_spu, &fmt_out );
-    vout_CopyPicture( p_image->p_parent, &p_subpic->p_region->picture, p_pif );
-    p_pif->pf_release( p_pif );
-
-    spu_DisplaySubpicture( p_vout->p_spu, p_subpic );
+    else
+    {
+        image_HandlerDelete( p_image );
+    }
 
     return VLC_SUCCESS;
 }
@@ -608,7 +719,8 @@ static int ZoomCallback( vlc_object_t *p_this, char const *psz_cmd,
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
     InitWindowSize( p_vout, &p_vout->i_window_width,
                     &p_vout->i_window_height );
-    vout_Control( p_vout, VOUT_SET_ZOOM );
+    vout_Control( p_vout, VOUT_SET_SIZE, p_vout->i_window_width, 
+                  p_vout->i_window_height );
     return VLC_SUCCESS;
 }
 

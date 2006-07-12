@@ -2,7 +2,7 @@
  * alsa.c : alsa plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2001 the VideoLAN team
- * $Id: alsa.c 13164 2005-11-08 23:36:22Z bigben $
+ * $Id: alsa.c 15495 2006-05-01 08:26:18Z courmisch $
  *
  * Authors: Henri Fallon <henri@videolan.org> - Original Author
  *          Jeffrey Baker <jwbaker@acm.org> - Port to ALSA 1.0 API
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -201,7 +201,7 @@ static void Probe( aout_instance_t * p_aout,
                     break;
                 case 6:
                     val.i_int = AOUT_VAR_5_1;
-                    text.psz_string = N_("5.1");
+                    text.psz_string = "5.1";
                     var_Change( p_aout, "audio-device",
                                 VLC_VAR_ADDCHOICE, &val, &text );
                     break;
@@ -225,7 +225,7 @@ static void Probe( aout_instance_t * p_aout,
                 var_Set( p_aout, "audio-device", val );
             }
         }
-        
+
         /* Close the previously opened device */
         snd_pcm_close( p_sys->p_snd_pcm );
     }
@@ -315,7 +315,6 @@ static int Open( vlc_object_t *p_this )
     }
     p_sys->b_playing = VLC_FALSE;
     p_sys->start_date = 0;
-    p_sys->p_status = (snd_pcm_status_t *)malloc(snd_pcm_status_sizeof());
     vlc_cond_init( p_aout, &p_sys->wait );
     vlc_mutex_init( p_aout, &p_sys->lock );
 
@@ -407,7 +406,7 @@ static int Open( vlc_object_t *p_this )
     {
         p_aout->output.output.i_physical_channels = AOUT_CHAN_CENTER;
     }
-    else
+    else if( val.i_int != AOUT_VAR_SPDIF )
     {
         /* This should not happen ! */
         msg_Err( p_aout, "internal: can't find audio-device (%i)", val.i_int );
@@ -567,9 +566,9 @@ static int Open( vlc_object_t *p_this )
 #endif
         if( i_snd_rc < 0 || p_aout->output.output.i_rate != i_old_rate )
         {
-            msg_Warn( p_aout, "The rate %d Hz is not supported by your hardware. "
-                  "Using %d Hz instead.\n", i_old_rate,
-                  p_aout->output.output.i_rate );
+            msg_Warn( p_aout, "The rate %d Hz is not supported by your " \
+                "hardware. Using %d Hz instead.\n", i_old_rate, \
+                p_aout->output.output.i_rate );
         }
 
         /* Set buffer size. */
@@ -727,7 +726,6 @@ static void Close( vlc_object_t *p_this )
     snd_output_close( p_sys->p_snd_stderr );
 #endif
 
-    free( p_sys->p_status );
     free( p_sys );
 }
 
@@ -736,6 +734,9 @@ static void Close( vlc_object_t *p_this )
  *****************************************************************************/
 static int ALSAThread( aout_instance_t * p_aout )
 {
+    p_aout->output.p_sys->p_status =
+        (snd_pcm_status_t *)malloc(snd_pcm_status_sizeof());
+
     /* Wait for the exact time to start playing (avoids resampling) */
     vlc_mutex_lock( &p_aout->output.p_sys->lock );
     if( !p_aout->output.p_sys->start_date )
@@ -750,6 +751,7 @@ static int ALSAThread( aout_instance_t * p_aout )
         ALSAFill( p_aout );
     }
 
+    free( p_aout->output.p_sys->p_status );
     return 0;
 }
 
@@ -787,7 +789,7 @@ static void ALSAFill( aout_instance_t * p_aout )
 
             if( i_snd_rc == 0 )
             {
-                msg_Warn( p_aout, "recovered from buffer underrun" );
+                msg_Dbg( p_aout, "recovered from buffer underrun" );
 
                 /* Reget the status */
                 i_snd_rc = snd_pcm_status( p_sys->p_snd_pcm, p_status );
@@ -816,6 +818,8 @@ static void ALSAFill( aout_instance_t * p_aout )
             /* Here the device should be either in the RUNNING state.
              * p_status is valid. */
 
+#if 0
+    /* This apparently does not work correctly in Alsa 1.0.11 */
             snd_pcm_status_get_tstamp( p_status, &ts_next );
             next_date = (mtime_t)ts_next.tv_sec * 1000000 + ts_next.tv_usec;
             if( next_date )
@@ -824,19 +828,16 @@ static void ALSAFill( aout_instance_t * p_aout )
                         * 1000000 / p_aout->output.output.i_rate;
             }
             else
+#endif
             {
                 /* With screwed ALSA drivers the timestamp is always zero;
                  * use another method then */
-                snd_pcm_sframes_t delay;
+                snd_pcm_sframes_t delay = 0;
                 ssize_t i_bytes = 0;
 
-                if( !snd_pcm_delay( p_sys->p_snd_pcm, &delay ) )
-                {
-                    i_bytes = snd_pcm_frames_to_bytes(p_sys->p_snd_pcm, delay);
-                }
-                next_date = mdate() + (mtime_t)i_bytes * 1000000
-                        / p_aout->output.output.i_bytes_per_frame
-                        / p_aout->output.output.i_rate
+                snd_pcm_delay( p_sys->p_snd_pcm, &delay );
+                next_date = mdate() + (mtime_t)(delay) * 1000000 /
+                          p_aout->output.output.i_rate
                         * p_aout->output.output.i_frame_length;
             }
         }

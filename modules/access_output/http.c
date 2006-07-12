@@ -2,7 +2,7 @@
  * http.c
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: http.c 12496 2005-09-09 02:42:40Z jlj $
+ * $Id: http.c 15172 2006-04-11 13:17:20Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Jon Lech Johansen <jon@nanocrew.net>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -58,30 +58,36 @@ static void Close( vlc_object_t * );
 #define SOUT_CFG_PREFIX "sout-http-"
 
 #define USER_TEXT N_("Username")
-#define USER_LONGTEXT N_("Allows you to give a user name that will be " \
+#define USER_LONGTEXT N_("User name that will be " \
                          "requested to access the stream." )
 #define PASS_TEXT N_("Password")
-#define PASS_LONGTEXT N_("Allows you to give a password that will be " \
+#define PASS_LONGTEXT N_("Password that will be " \
                          "requested to access the stream." )
+
+/// \bug [String] missing closing parenthesis
 #define MIME_TEXT N_("Mime")
-#define MIME_LONGTEXT N_("Allows you to give the mime returned by the server." )
+#define MIME_LONGTEXT N_("MIME returned by the server (autodetected " \
+                        "if not specified." )
 
 #define CERT_TEXT N_( "Certificate file" )
 #define CERT_LONGTEXT N_( "Path to the x509 PEM certificate file that will "\
-                          "be used by the HTTP/SSL stream output" )
+                          "be used for HTTPS." )
 #define KEY_TEXT N_( "Private key file" )
 #define KEY_LONGTEXT N_( "Path to the x509 PEM private key file that will " \
-                         " be used by the HTTP/SSL stream output. Leave " \
+                         " be used for HTTPS. Leave " \
                          "empty if you don't have one." )
 #define CA_TEXT N_( "Root CA file" )
 #define CA_LONGTEXT N_( "Path to the x509 PEM trusted root CA certificates " \
-                        "(certificate authority) file that will be used by " \
-                        "the HTTP/SSL stream output. Leave empty if you " \
+                        "(certificate authority) file that will be used for" \
+                        "HTTPS. Leave empty if you " \
                         "don't have one." )
 #define CRL_TEXT N_( "CRL file" )
 #define CRL_LONGTEXT N_( "Path to the x509 PEM Certificates Revocation List " \
-                         "file that will be HTTP/SSL stream output. Leave " \
+                         "file that will be used for SSL. Leave " \
                          "empty if you don't have one." )
+#define BONJOUR_TEXT N_( "Advertise with Bonjour")
+#define BONJOUR_LONGTEXT N_( "Advertise the stream with the Bonjour protocol." )
+
 
 vlc_module_begin();
     set_description( _("HTTP stream output") );
@@ -106,6 +112,8 @@ vlc_module_begin();
                 CA_TEXT, CA_LONGTEXT, VLC_TRUE );
     add_string( SOUT_CFG_PREFIX "crl", NULL, NULL,
                 CRL_TEXT, CRL_LONGTEXT, VLC_TRUE );
+    add_bool( SOUT_CFG_PREFIX "bonjour", VLC_FALSE, NULL,
+              BONJOUR_TEXT, BONJOUR_LONGTEXT,VLC_TRUE);
     set_callbacks( Open, Close );
 vlc_module_end();
 
@@ -147,7 +155,7 @@ static int Open( vlc_object_t *p_this )
     sout_access_out_t       *p_access = (sout_access_out_t*)p_this;
     sout_access_out_sys_t   *p_sys;
 
-    char                *psz_parser, *psz_name;
+    char                *psz_parser;
 
     char                *psz_bind_addr;
     int                 i_bind_port;
@@ -159,11 +167,6 @@ static int Open( vlc_object_t *p_this )
                         *psz_crl = NULL;
     vlc_value_t         val;
 
-#ifdef HAVE_AVAHI_CLIENT
-    playlist_t          *p_playlist;
-    char                *psz_txt;
-#endif
-
     if( !( p_sys = p_access->p_sys =
                 malloc( sizeof( sout_access_out_sys_t ) ) ) )
     {
@@ -173,10 +176,9 @@ static int Open( vlc_object_t *p_this )
 
     sout_CfgParse( p_access, SOUT_CFG_PREFIX, ppsz_sout_options, p_access->p_cfg );
 
-    /* p_access->psz_name host.name:port/filename */
-    psz_name = psz_parser = strdup( p_access->psz_name );
+    /* p_access->psz_name = "hostname:port/filename" */
+    psz_bind_addr = psz_parser = strdup( p_access->psz_name );
 
-    psz_bind_addr = psz_parser;
     i_bind_port = 0;
     psz_file_name = "";
 
@@ -244,11 +246,12 @@ static int Open( vlc_object_t *p_this )
     {
         msg_Err( p_access, "cannot listen on %s:%d",
                  psz_bind_addr, i_bind_port );
-        free( psz_name );
         free( psz_file_name );
+        free( psz_bind_addr );
         free( p_sys );
         return VLC_EGENERIC;
     }
+    free( psz_bind_addr );
 
     if( p_access->psz_access && !strcmp( p_access->psz_access, "mmsh" ) )
     {
@@ -287,50 +290,57 @@ static int Open( vlc_object_t *p_this )
         msg_Err( p_access, "cannot add stream %s", psz_file_name );
         httpd_HostDelete( p_sys->p_httpd_host );
 
-        free( psz_name );
         free( psz_file_name );
         free( p_sys );
         return VLC_EGENERIC;
     }
 
 #ifdef HAVE_AVAHI_CLIENT
-    asprintf( &psz_txt, "path=%s", psz_file_name );
+    if( config_GetInt(p_this, SOUT_CFG_PREFIX "bonjour") )
+    {
+        playlist_t          *p_playlist;
+        char                *psz_txt, *psz_name;
+
+        p_playlist = (playlist_t *)vlc_object_find( p_access,
+                                                    VLC_OBJECT_PLAYLIST,
+                                                    FIND_ANYWHERE );
+        if( p_playlist == NULL )
+        {
+            msg_Err( p_access, "unable to find playlist" );
+            httpd_StreamDelete( p_sys->p_httpd_stream );
+            httpd_HostDelete( p_sys->p_httpd_host );
+            free( (void *)p_sys );
+            return VLC_EGENERIC;
+        }
+
+        psz_name = strrchr( p_playlist->status.p_item->input.psz_uri,
+                            DIRECTORY_SEPARATOR );
+        if( psz_name != NULL ) psz_name++;
+        else psz_name = p_playlist->status.p_item->input.psz_uri;
+
+        asprintf( &psz_txt, "path=%s", psz_file_name );
+
+        p_sys->p_bonjour = bonjour_start_service( (vlc_object_t *)p_access,
+                                    strcmp( p_access->psz_access, "https" )
+                                       ? "_vlc-http._tcp" : "_vlc-https._tcp",
+                                                  psz_name, i_bind_port, psz_txt );
+        free( (void *)psz_txt );
+
+        if( p_sys->p_bonjour == NULL )
+        {
+            vlc_object_release( p_playlist );
+            httpd_StreamDelete( p_sys->p_httpd_stream );
+            httpd_HostDelete( p_sys->p_httpd_host );
+            free( (void *)p_sys );
+            return VLC_EGENERIC;
+        }
+        vlc_object_release( p_playlist );
+    }
+    else
+        p_sys->p_bonjour = NULL;
 #endif
 
     free( psz_file_name );
-    free( psz_name );
-
-#ifdef HAVE_AVAHI_CLIENT
-    p_playlist = (playlist_t *)vlc_object_find( p_access, VLC_OBJECT_PLAYLIST,
-                                                FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        msg_Err( p_access, "unable to find playlist" );
-        httpd_HostDelete( p_sys->p_httpd_host );
-        free( (void *)psz_txt );
-        free( (void *)p_sys );
-        return VLC_EGENERIC;
-    }
-
-    psz_name = strrchr( p_playlist->status.p_item->input.psz_uri,
-                        DIRECTORY_SEPARATOR );
-    if( psz_name != NULL ) psz_name++;
-    else psz_name = p_playlist->status.p_item->input.psz_uri;
-
-    p_sys->p_bonjour = bonjour_start_service( (vlc_object_t *)p_access,
-                                              "_vlc-http._tcp",
-                                              psz_name, i_bind_port, psz_txt );
-    free( (void *)psz_txt );
-    if( p_sys->p_bonjour == NULL )
-    {
-        vlc_object_release( p_playlist );
-        httpd_HostDelete( p_sys->p_httpd_host );
-        free( (void *)p_sys );
-        return VLC_EGENERIC;
-    }
-
-    vlc_object_release( p_playlist );
-#endif
 
     p_sys->i_header_allocated = 1024;
     p_sys->i_header_size      = 0;
@@ -356,7 +366,8 @@ static void Close( vlc_object_t * p_this )
     sout_access_out_sys_t   *p_sys = p_access->p_sys;
 
 #ifdef HAVE_AVAHI_CLIENT
-    bonjour_stop_service( p_sys->p_bonjour );
+    if( p_sys->p_bonjour != NULL )
+        bonjour_stop_service( p_sys->p_bonjour );
 #endif
 
     /* update p_sout->i_out_pace_nocontrol */

@@ -62,7 +62,7 @@ int getAACTrack(mp4ff_t *infile)
     printf("testing-track: %d\n", i);
     mp4ff_get_decoder_config(infile, i, &buff, &buff_size);
     if(buff){
-      rc = faacDecAudioSpecificConfig(buff, buff_size, &mp4ASC);
+      rc = NeAACDecAudioSpecificConfig(buff, buff_size, &mp4ASC);
       g_free(buff);
       if(rc < 0)
 	continue;

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ogg.c: ogg muxer module for vlc
  *****************************************************************************
- * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: ogg.c 12699 2005-09-28 19:00:42Z dionoea $
+ * Copyright (C) 2001, 2002, 2006 the VideoLAN team
+ * $Id: ogg.c 14918 2006-03-25 12:54:27Z fkuehne $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -47,7 +47,7 @@ static int  Open   ( vlc_object_t * );
 static void Close  ( vlc_object_t * );
 
 vlc_module_begin();
-    set_description( _("Ogg/ogm muxer") );
+    set_description( _("Ogg/OGM muxer") );
     set_capability( "sout mux", 10 );
     set_category( CAT_SOUT );
     set_subcategory( SUBCAT_SOUT_MUX );
@@ -517,7 +517,7 @@ static int DelStream( sout_mux_t *p_mux, sout_input_t *p_input )
         }
         else
         {
-            /* Wasn't already added so get rid of it */
+            /* wasn't already added so get rid of it */
             FREE( p_stream->p_oggds_header );
             FREE( p_stream );
             p_sys->i_add_streams--;

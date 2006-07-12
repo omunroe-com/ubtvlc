@@ -2,10 +2,10 @@
  * async_queue.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: async_queue.cpp 12207 2005-08-15 15:54:32Z asmax $
+ * $Id: async_queue.cpp 14118 2006-02-01 18:06:48Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "async_queue.hpp"
@@ -75,13 +75,18 @@ void AsyncQueue::destroy( intf_thread_t *pIntf )
 }
 
 
-void AsyncQueue::push( const CmdGenericPtr &rcCommand )
+void AsyncQueue::push( const CmdGenericPtr &rcCommand, bool removePrev )
 {
+    if( removePrev )
+    {
+        // Remove the commands of the same type
+        remove( rcCommand.get()->getType(), rcCommand );
+    }
     m_cmdList.push_back( rcCommand );
 }
 
 
-void AsyncQueue::remove( const string &rType )
+void AsyncQueue::remove( const string &rType, const CmdGenericPtr &rcCommand )
 {
     vlc_mutex_lock( &m_lock );
 
@@ -91,10 +96,15 @@ void AsyncQueue::remove( const string &rType )
         // Remove the command if it is of the given type
         if( (*it).get()->getType() == rType )
         {
-            list<CmdGenericPtr>::iterator itNew = it;
-            itNew++;
-            m_cmdList.erase( it );
-            it = itNew;
+            // Maybe the command wants to check if it must really be
+            // removed
+            if( rcCommand.get()->checkRemove( (*it).get() ) == true )
+            {
+                list<CmdGenericPtr>::iterator itNew = it;
+                itNew++;
+                m_cmdList.erase( it );
+                it = itNew;
+            }
         }
     }
 

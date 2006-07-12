@@ -2,7 +2,7 @@
  * util.c : Utility functions for HTTP interface
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: http.c 12225 2005-08-18 10:01:30Z massiot $
+ * $Id: util.c 15116 2006-04-06 16:16:02Z massiot $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -20,10 +20,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "http.h"
+#include "vlc_strings.h"
 
 /****************************************************************************
  * File and directory functions
@@ -109,7 +110,6 @@ int E_(ParseDirectory)( intf_thread_t *p_intf, char *psz_root,
     struct stat   stat_info;
 #endif
     DIR           *p_dir;
-    struct dirent *p_dir_content;
     vlc_acl_t     *p_acl;
     FILE          *file;
 
@@ -127,29 +127,29 @@ int E_(ParseDirectory)( intf_thread_t *p_intf, char *psz_root,
 #endif
 
 #ifdef HAVE_SYS_STAT_H
-    if( stat( psz_dir, &stat_info ) == -1 || !S_ISDIR( stat_info.st_mode ) )
+    if( utf8_stat( psz_dir, &stat_info ) == -1 || !S_ISDIR( stat_info.st_mode ) )
     {
         return VLC_EGENERIC;
     }
 #endif
 
-    if( ( p_dir = opendir( psz_dir ) ) == NULL )
+    if( ( p_dir = utf8_opendir( psz_dir ) ) == NULL )
     {
-        msg_Err( p_intf, "cannot open dir (%s)", psz_dir );
+        msg_Err( p_intf, "cannot open directory (%s)", psz_dir );
         return VLC_EGENERIC;
     }
 
     i_dirlen = strlen( psz_dir );
     if( i_dirlen + 10 > MAX_DIR_SIZE )
     {
-        msg_Warn( p_intf, "skipping too deep dir (%s)", psz_dir );
+        msg_Warn( p_intf, "skipping too deep directory (%s)", psz_dir );
         return 0;
     }
 
     msg_Dbg( p_intf, "dir=%s", psz_dir );
 
     sprintf( dir, "%s%c.access", psz_dir, sep );
-    if( ( file = fopen( dir, "r" ) ) != NULL )
+    if( ( file = utf8_fopen( dir, "r" ) ) != NULL )
     {
         char line[1024];
         int  i_size;
@@ -192,17 +192,20 @@ int E_(ParseDirectory)( intf_thread_t *p_intf, char *psz_root,
 
     for( ;; )
     {
+        const char *psz_filename;
         /* parse psz_src dir */
-        if( ( p_dir_content = readdir( p_dir ) ) == NULL )
+        if( ( psz_filename = utf8_readdir( p_dir ) ) == NULL )
         {
             break;
         }
 
-        if( ( p_dir_content->d_name[0] == '.' )
-         || ( i_dirlen + strlen( p_dir_content->d_name ) > MAX_DIR_SIZE ) )
+        if( ( psz_filename[0] == '.' )
+         || ( i_dirlen + strlen( psz_filename ) > MAX_DIR_SIZE ) )
             continue;
 
-        sprintf( dir, "%s%c%s", psz_dir, sep, p_dir_content->d_name );
+        sprintf( dir, "%s%c%s", psz_dir, sep, psz_filename );
+        LocaleFree( psz_filename );
+
         if( E_(ParseDirectory)( p_intf, psz_root, dir ) )
         {
             httpd_file_sys_t *f = NULL;
@@ -245,7 +248,7 @@ int E_(ParseDirectory)( intf_thread_t *p_intf, char *psz_root,
             f->p_redir2 = NULL;
             f->file = psz_file;
             f->name = psz_name;
-            f->b_html = strstr( &dir[strlen( psz_root )], ".htm" ) ? VLC_TRUE : VLC_FALSE;
+            f->b_html = strstr( &dir[strlen( psz_root )], ".htm" ) || strstr( &dir[strlen( psz_root )], ".xml" ) ? VLC_TRUE : VLC_FALSE;
 
             if( !f->name )
             {
@@ -259,12 +262,25 @@ int E_(ParseDirectory)( intf_thread_t *p_intf, char *psz_root,
 
             if( !f->b_handler )
             {
+                char *psz_type = strdup( p_sys->psz_html_type );
+                if( strstr( &dir[strlen( psz_root )], ".xml" ) )
+                {
+                    char *psz = strstr( psz_type, "html;" );
+                    if( psz )
+                    {
+                        psz[0] = 'x';
+                        psz[1] = 'm';
+                        psz[2] = 'l';
+                        psz[3] = ';';
+                        psz[4] = ' ';
+                    }
+                }
                 f->p_file = httpd_FileNew( p_sys->p_httpd_host,
                                            f->name,
-                                           f->b_html ? p_sys->psz_html_type :
-                                            NULL,
+                                           f->b_html ? psz_type : NULL,
                                            user, password, p_acl,
                                            E_(HttpCallback), f );
+                free( psz_type );
                 if( f->p_file != NULL )
                 {
                     TAB_APPEND( p_sys->i_files, p_sys->pp_files, f );
@@ -341,26 +357,9 @@ char *E_(FromUTF8)( intf_thread_t *p_intf, char *psz_utf8 )
         char *psz_out = psz_local;
         size_t i_ret;
         char psz_tmp[i_in + 1];
-        char *psz_in = psz_tmp;
-        uint8_t *p = (uint8_t *)psz_tmp;
+        const char *psz_in = psz_tmp;
         strcpy( psz_tmp, psz_utf8 );
 
-        /* Fix Unicode quotes. If we are here we are probably converting
-         * to an inferior charset not understanding Unicode quotes. */
-        while( *p )
-        {
-            if( p[0] == 0xe2 && p[1] == 0x80 && p[2] == 0x99 )
-            {
-                *p = '\'';
-                memmove( &p[1], &p[3], strlen(&p[3]) + 1 );
-            }
-            if( p[0] == 0xe2 && p[1] == 0x80 && p[2] == 0x9a )
-            {
-                *p = '"';
-                memmove( &p[1], &p[3], strlen(&p[3]) + 1 );
-            }
-            p++;
-        }
         i_in = strlen( psz_tmp );
 
         i_ret = vlc_iconv( p_sys->iconv_from_utf8, &psz_in, &i_in,
@@ -387,7 +386,7 @@ char *E_(ToUTF8)( intf_thread_t *p_intf, char *psz_local )
 
     if ( p_sys->iconv_to_utf8 != (vlc_iconv_t)-1 )
     {
-        char *psz_in = psz_local;
+        const char *psz_in = psz_local;
         size_t i_in = strlen(psz_in);
         size_t i_out = i_in * 6;
         char *psz_utf8 = malloc(i_out + 1);
@@ -446,6 +445,18 @@ void E_(PlaylistListNode)( intf_thread_t *p_intf, playlist_t *p_pl,
             sprintf( value, "%d", i_depth );
             E_(mvar_AppendNewVar)( itm, "depth", value );
 
+            if( p_node->i_flags & PLAYLIST_RO_FLAG )
+            {
+                E_(mvar_AppendNewVar)( itm, "ro", "ro" );
+            }
+            else
+            {
+                E_(mvar_AppendNewVar)( itm, "ro", "rw" );
+            }
+
+            sprintf( value, "%ld", (long)p_node->input.i_duration );
+            E_(mvar_AppendNewVar)( itm, "duration", value );
+
             E_(mvar_AppendVar)( s, itm );
         }
         else
@@ -471,6 +482,15 @@ void E_(PlaylistListNode)( intf_thread_t *p_intf, playlist_t *p_pl,
 
             sprintf( value, "%d", i_depth );
             E_(mvar_AppendNewVar)( itm, "depth", value );
+
+            if( p_node->i_flags & PLAYLIST_RO_FLAG )
+            {
+                E_(mvar_AppendNewVar)( itm, "ro", "ro" );
+            }
+            else
+            {
+                E_(mvar_AppendNewVar)( itm, "ro", "rw" );
+            }
 
             E_(mvar_AppendVar)( s, itm );
 
@@ -546,8 +566,10 @@ void E_(HandleSeek)( intf_thread_t *p_intf, char *p_value )
                 {
                     i_value += 3600 * i_stock;
                     i_stock = 0;
-                    /* other characters which are not numbers are not important */
-                    while( ((p_value[0] < '0') || (p_value[0] > '9')) && (p_value[0] != '\0') )
+                    /* other characters which are not numbers are not
+                     * important */
+                    while( ((p_value[0] < '0') || (p_value[0] > '9'))
+                           && (p_value[0] != '\0') )
                     {
                         p_value++;
                     }
@@ -558,7 +580,8 @@ void E_(HandleSeek)( intf_thread_t *p_intf, char *p_value )
                     i_value += 60 * i_stock;
                     i_stock = 0;
                     p_value++;
-                    while( ((p_value[0] < '0') || (p_value[0] > '9')) && (p_value[0] != '\0') )
+                    while( ((p_value[0] < '0') || (p_value[0] > '9'))
+                           && (p_value[0] != '\0') )
                     {
                         p_value++;
                     }
@@ -568,7 +591,8 @@ void E_(HandleSeek)( intf_thread_t *p_intf, char *p_value )
                 {
                     i_value += i_stock;
                     i_stock = 0;
-                    while( ((p_value[0] < '0') || (p_value[0] > '9')) && (p_value[0] != '\0') )
+                    while( ((p_value[0] < '0') || (p_value[0] > '9'))
+                           && (p_value[0] != '\0') )
                     {
                         p_value++;
                     }
@@ -582,7 +606,8 @@ void E_(HandleSeek)( intf_thread_t *p_intf, char *p_value )
             }
         }
 
-        /* if there is no known symbol, I consider it as seconds. Otherwise, i_stock = 0 */
+        /* if there is no known symbol, I consider it as seconds.
+         * Otherwise, i_stock = 0 */
         i_value += i_stock;
 
         switch(i_relative)
@@ -628,30 +653,35 @@ void E_(HandleSeek)( intf_thread_t *p_intf, char *p_value )
             }
             case POSITION_ABSOLUTE:
             {
-                val.f_float = __MIN( __MAX( ((float) i_value ) / 100.0 , 0.0 ) , 100.0 );
+                val.f_float = __MIN( __MAX( ((float) i_value ) / 100.0 ,
+                                            0.0 ), 100.0 );
                 var_Set( p_sys->p_input, "position", val );
-                msg_Dbg( p_intf, "requested seek percent: %d", i_value );
+                msg_Dbg( p_intf, "requested seek percent: %d%%", i_value );
                 break;
             }
             case POSITION_REL_FOR:
             {
                 var_Get( p_sys->p_input, "position", &val );
-                val.f_float += __MIN( __MAX( ((float) i_value ) / 100.0 , 0.0 ) , 100.0 );
+                val.f_float += __MIN( __MAX( ((float) i_value ) / 100.0,
+                                             0.0 ) , 100.0 );
                 var_Set( p_sys->p_input, "position", val );
-                msg_Dbg( p_intf, "requested seek percent forward: %d", i_value );
+                msg_Dbg( p_intf, "requested seek percent forward: %d%%",
+                         i_value );
                 break;
             }
             case POSITION_REL_BACK:
             {
                 var_Get( p_sys->p_input, "position", &val );
-                val.f_float -= __MIN( __MAX( ((float) i_value ) / 100.0 , 0.0 ) , 100.0 );
+                val.f_float -= __MIN( __MAX( ((float) i_value ) / 100.0,
+                                             0.0 ) , 100.0 );
                 var_Set( p_sys->p_input, "position", val );
-                msg_Dbg( p_intf, "requested seek percent backward: %d", i_value );
+                msg_Dbg( p_intf, "requested seek percent backward: %d%%",
+                         i_value );
                 break;
             }
             default:
             {
-                msg_Dbg( p_intf, "requested seek: what the f*** is going on here ?" );
+                msg_Dbg( p_intf, "invalid seek request" );
                 break;
             }
         }
@@ -743,42 +773,6 @@ char *E_(ExtractURIValue)( char *psz_uri, const char *psz_name,
     return p;
 }
 
-void E_(DecodeEncodedURI)( char *psz )
-{
-    char *dup = strdup( psz );
-    char *p = dup;
-
-    while( *p )
-    {
-        if( *p == '%' )
-        {
-            char val[3];
-            p++;
-            if( !*p )
-            {
-                break;
-            }
-
-            val[0] = *p++;
-            val[1] = *p++;
-            val[2] = '\0';
-
-            *psz++ = strtol( val, NULL, 16 );
-        }
-        else if( *p == '+' )
-        {
-            *psz++ = ' ';
-            p++;
-        }
-        else
-        {
-            *psz++ = *p++;
-        }
-    }
-    *psz++ = '\0';
-    free( dup );
-}
-
 /* Since the resulting string is smaller we can work in place, so it is
  * permitted to have psz == new. new points to the first word of the
  * string, the function returns the remaining string. */
@@ -818,210 +812,95 @@ char *E_(FirstWord)( char *psz, char *new )
     else
         return NULL;
 }
+
 /**********************************************************************
- * Find_end_MRL: Find the end of the sentence :
- * this function parses the string psz and find the end of the item
- * and/or option with detecting the " and ' problems.
- * returns NULL if an error is detected, otherwise, returns a pointer
- * of the end of the sentence (after the last character)
-**********************************************************************/
-static char *Find_end_MRL( char *psz )
-{
-    char *s_sent = psz;
-
-    switch( *s_sent )
-    {
-        case '\"':
-        {
-            s_sent++;
-
-            while( ( *s_sent != '\"' ) && ( *s_sent != '\0' ) )
-            {
-                if( *s_sent == '\'' )
-                {
-                    s_sent = Find_end_MRL( s_sent );
-
-                    if( s_sent == NULL )
-                    {
-                        return NULL;
-                    }
-                } else
-                {
-                    s_sent++;
-                }
-            }
-
-            if( *s_sent == '\"' )
-            {
-                s_sent++;
-                return s_sent;
-            } else  /* *s_sent == '\0' , which means the number of " is incorrect */
-            {
-                return NULL;
-            }
-            break;
-        }
-        case '\'':
-        {
-            s_sent++;
-
-            while( ( *s_sent != '\'' ) && ( *s_sent != '\0' ) )
-            {
-                if( *s_sent == '\"' )
-                {
-                    s_sent = Find_end_MRL( s_sent );
-
-                    if( s_sent == NULL )
-                    {
-                        return NULL;
-                    }
-                } else
-                {
-                    s_sent++;
-                }
-            }
-
-            if( *s_sent == '\'' )
-            {
-                s_sent++;
-                return s_sent;
-            } else  /* *s_sent == '\0' , which means the number of ' is incorrect */
-            {
-                return NULL;
-            }
-            break;
-        }
-        default: /* now we can look for spaces */
-        {
-            while( ( *s_sent != ' ' ) && ( *s_sent != '\0' ) )
-            {
-                if( ( *s_sent == '\'' ) || ( *s_sent == '\"' ) )
-                {
-                    s_sent = Find_end_MRL( s_sent );
-                } else
-                {
-                    s_sent++;
-                }
-            }
-            return s_sent;
-        }
-    }
-}
-/**********************************************************************
- * parse_MRL: parse the MRL, find the mrl string and the options,
+ * MRLParse: parse the MRL, find the MRL string and the options,
  * create an item with all information in it, and return the item.
  * return NULL if there is an error.
  **********************************************************************/
-playlist_item_t *E_(MRLParse)( intf_thread_t *p_intf, char *psz,
-                                   char *psz_name )
+
+/* Function analog to FirstWord except that it relies on colon instead
+ * of space to delimit option boundaries. */
+static char *FirstOption( char *psz, char *new )
 {
-    char **ppsz_options = NULL;
-    char *mrl;
+    vlc_bool_t b_end, b_start = VLC_TRUE;
+
+    while( *psz == ' ' )
+        psz++;
+
+    while( *psz != '\0' && (*psz != ' ' || psz[1] != ':') )
+    {
+        if( *psz == '\'' )
+        {
+            char c = *psz++;
+            while( *psz != '\0' && *psz != c )
+            {
+                if( *psz == '\\' && psz[1] != '\0' )
+                    psz++;
+                *new++ = *psz++;
+                b_start = VLC_FALSE;
+            }
+            if( *psz == c )
+                psz++;
+        }
+        else
+        {
+            if( *psz == '\\' && psz[1] != '\0' )
+                psz++;
+            *new++ = *psz++;
+            b_start = VLC_FALSE;
+        }
+    }
+    b_end = !*psz;
+
+    if ( !b_start )
+        while (new[-1] == ' ')
+            new--;
+
+    *new++ = '\0';
+    if( !b_end )
+        return psz + 1;
+    else
+        return NULL;
+}
+
+playlist_item_t *E_(MRLParse)( intf_thread_t *p_intf, char *_psz,
+                               char *psz_name )
+{
+    char *psz = strdup( _psz );
     char *s_mrl = psz;
-    int i_error = 0;
     char *s_temp;
-    int i = 0;
-    int i_options = 0;
     playlist_item_t * p_item = NULL;
 
-    /* In case there is spaces before the mrl */
-    while( ( *s_mrl == ' ' ) && ( *s_mrl != '\0' ) )
-    {
-        s_mrl++;
-    }
-
     /* extract the mrl */
-    s_temp = strstr( s_mrl , " :" );
+    s_temp = FirstOption( s_mrl, s_mrl );
     if( s_temp == NULL )
     {
         s_temp = s_mrl + strlen( s_mrl );
-    } else
-    {
-        while( (*s_temp == ' ') && (s_temp != s_mrl ) )
-        {
-            s_temp--;
-        }
-        s_temp++;
     }
 
-    /* if the mrl is between " or ', we must remove them */
-    if( (*s_mrl == '\'') || (*s_mrl == '\"') )
-    {
-        mrl = (char *)malloc( (s_temp - s_mrl - 1) * sizeof( char ) );
-        strncpy( mrl , (s_mrl + 1) , s_temp - s_mrl - 2 );
-        mrl[ s_temp - s_mrl - 2 ] = '\0';
-    } else
-    {
-        mrl = (char *)malloc( (s_temp - s_mrl + 1) * sizeof( char ) );
-        strncpy( mrl , s_mrl , s_temp - s_mrl );
-        mrl[ s_temp - s_mrl ] = '\0';
-    }
-
+    p_item = playlist_ItemNew( p_intf, s_mrl, psz_name );
     s_mrl = s_temp;
 
     /* now we can take care of the options */
-    while( (*s_mrl != '\0') && (i_error == 0) )
+    while ( *s_mrl != '\0' )
     {
-        switch( *s_mrl )
+        s_temp = FirstOption( s_mrl, s_mrl );
+        if( s_mrl == '\0' )
+            break;
+        if( s_temp == NULL )
         {
-            case ' ':
-            {
-                s_mrl++;
-                break;
-            }
-            case ':': /* an option */
-            {
-                s_temp = Find_end_MRL( s_mrl );
-
-                if( s_temp == NULL )
-                {
-                    i_error = 1;
-                }
-                else
-                {
-                    i_options++;
-                    ppsz_options = realloc( ppsz_options , i_options *
-                                            sizeof(char *) );
-                    ppsz_options[ i_options - 1 ] =
-                        malloc( (s_temp - s_mrl + 1) * sizeof(char) );
-
-                    strncpy( ppsz_options[ i_options - 1 ] , s_mrl ,
-                             s_temp - s_mrl );
-
-                    /* don't forget to finish the string with a '\0' */
-                    (ppsz_options[ i_options - 1 ])[ s_temp - s_mrl ] = '\0';
-
-                    s_mrl = s_temp;
-                }
-                break;
-            }
-            default:
-            {
-                i_error = 1;
-                break;
-            }
+            s_temp = s_mrl + strlen( s_mrl );
         }
+        playlist_ItemAddOption( p_item, s_mrl );
+        s_mrl = s_temp;
     }
 
-    if( i_error != 0 )
-    {
-        free( mrl );
-    }
-    else
-    {
-        /* now create an item */
-        p_item = playlist_ItemNew( p_intf, mrl, psz_name );
-        for( i = 0 ; i< i_options ; i++ )
-        {
-            playlist_ItemAddOption( p_item, ppsz_options[i] );
-        }
-    }
-
-    for( i = 0; i < i_options; i++ ) free( ppsz_options[i] );
-    if( i_options ) free( ppsz_options );
+    free( psz );
 
     return p_item;
 }
+
 /**********************************************************************
  * RealPath: parse ../, ~ and path stuff
  **********************************************************************/

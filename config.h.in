@@ -54,7 +54,7 @@
 /* Define to 1 if you have the <a52dec/a52.h> header file. */
 #undef HAVE_A52DEC_A52_H
 
-/* Define to `1' if <netdb.h> defines struct addrinfo. */
+/* Define to 1 if <netdb.h> defines `struct addrinfo'. */
 #undef HAVE_ADDRINFO
 
 /* Define to 1 if you have `alloca', as a function or macro. */
@@ -94,6 +94,9 @@
 
 /* Support for __attribute__((packed)) for structs */
 #undef HAVE_ATTRIBUTE_PACKED
+
+/* Define if you have avahi-client 0.6 or greater */
+#undef HAVE_AVAHI_06
 
 /* Define if you have the avahi-client library */
 #undef HAVE_AVAHI_CLIENT
@@ -214,6 +217,12 @@
 /* Define to 1 if you have the <ffmpeg/avcodec.h> header file. */
 #undef HAVE_FFMPEG_AVCODEC_H
 
+/* Define to 1 if you have the <ffmpeg/avformat.h> header file. */
+#undef HAVE_FFMPEG_AVFORMAT_H
+
+/* Define to 1 if you have the <ffmpeg/avutil.h> header file. */
+#undef HAVE_FFMPEG_AVUTIL_H
+
 /* Define to 1 if you have the `fgets_unlocked' function. */
 #undef HAVE_FGETS_UNLOCKED
 
@@ -289,6 +298,9 @@
 /* Define if you have the HAL library */
 #undef HAVE_HAL
 
+/* Define if you have the new HAL library API */
+#undef HAVE_HAL_1
+
 /* Define if you have the iconv() function. */
 #undef HAVE_ICONV
 
@@ -323,6 +335,9 @@
 /* Define to 1 if you have the `isatty' function. */
 #undef HAVE_ISATTY
 
+/* Define to 1 if you have the <jack/jack.h> header file. */
+#undef HAVE_JACK_JACK_H
+
 /* Define to 1 if you have the <jpeglib.h> header file. */
 #undef HAVE_JPEGLIB_H
 
@@ -341,18 +356,17 @@
 /* Define if your <locale.h> file defines LC_MESSAGES. */
 #undef HAVE_LC_MESSAGES
 
+/* Define to 1 if you have the <libavc1394/avc1394.h> header file. */
+#undef HAVE_LIBAVC1394_AVC1394_H
+
 /* Define if you have ffmpeg's libavformat. */
-#undef HAVE_LIBAVFORMAT
+#undef HAVE_LIBAVFORMAT_TREE
 
 /* Define this if you have libcddb installed */
 #undef HAVE_LIBCDDB
 
 /* Define if you have libcdio 0.72 or greater installed */
 #undef HAVE_LIBCDIO
-
-/* Define to 1 if you have the <libdirac_decoder/dirac_parser.h> header file.
-   */
-#undef HAVE_LIBDIRAC_DECODER_DIRAC_PARSER_H
 
 /* Define to 1 if you have the <libmodplug/modplug.h> header file. */
 #undef HAVE_LIBMODPLUG_MODPLUG_H
@@ -362,6 +376,9 @@
 
 /* Define to 1 if you have the `pth' library (-lpth). */
 #undef HAVE_LIBPTH
+
+/* Define to 1 if you have the <libraw1394/raw1394.h> header file. */
+#undef HAVE_LIBRAW1394_RAW1394_H
 
 /* Define to 1 if you have the <libsmbclient.h> header file. */
 #undef HAVE_LIBSMBCLIENT_H
@@ -404,6 +421,9 @@
 
 /* Define to 1 if you have the `lrintf' function. */
 #undef HAVE_LRINTF
+
+/* Define to 1 if you have the `lstat' function. */
+#undef HAVE_LSTAT
 
 /* Define to 1 if you have the <machine/param.h> header file. */
 #undef HAVE_MACHINE_PARAM_H
@@ -546,9 +566,6 @@
 /* Define to 1 if you have the `sigrelse' function. */
 #undef HAVE_SIGRELSE
 
-/* Define to 1 if you have the <slp.h> header file. */
-#undef HAVE_SLP_H
-
 /* Define if <sys/socket.h> defines socklen_t. */
 #undef HAVE_SOCKLEN_T
 
@@ -643,6 +660,9 @@
 /* Define to 1 if you have the <sysfs/libsysfs.h> header file. */
 #undef HAVE_SYSFS_LIBSYSFS_H
 
+/* Define to 1 if you have the <syslog.h> header file. */
+#undef HAVE_SYSLOG_H
+
 /* Define to 1 if you have the <sys/dl.h> header file. */
 #undef HAVE_SYS_DL_H
 
@@ -678,9 +698,6 @@
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
-
-/* Define to 1 if you have the `textdomain' function. */
-#undef HAVE_TEXTDOMAIN
 
 /* Define to 1 if you have the <theora/theora.h> header file. */
 #undef HAVE_THEORA_THEORA_H
@@ -733,6 +750,9 @@
 /* Define to 1 if you have the <X11/extensions/dpms.h> header file. */
 #undef HAVE_X11_EXTENSIONS_DPMS_H
 
+/* Define to 1 if you have the <X11/extensions/xf86vmode.h> header file. */
+#undef HAVE_X11_EXTENSIONS_XF86VMODE_H
+
 /* Define to 1 if you have the <X11/extensions/Xinerama.h> header file. */
 #undef HAVE_X11_EXTENSIONS_XINERAMA_H
 
@@ -744,6 +764,9 @@
 
 /* Define to 1 if you have the <x264.h> header file. */
 #undef HAVE_X264_H
+
+/* Define this if you have libXxf86vm installed */
+#undef HAVE_XF86VIDMODE
 
 /* Define this if you have libXinerama installed */
 #undef HAVE_XINERAMA
@@ -789,6 +812,9 @@
 
 /* Symbol suffix for module functions */
 #undef MODULE_SYMBOL
+
+/* Define to 1 if debug code should NOT be compiled */
+#undef NDEBUG
 
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
 #undef NO_MINUS_C_MINUS_O
@@ -890,6 +916,9 @@
 
 /* big endian system */
 #undef WORDS_BIGENDIAN
+
+/* Define to 1 if the X Window System is missing or not being used. */
+#undef X_DISPLAY_MISSING
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const

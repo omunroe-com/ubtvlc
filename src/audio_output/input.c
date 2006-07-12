@@ -2,7 +2,7 @@
  * input.c : internal management of input streams for the audio output
  *****************************************************************************
  * Copyright (C) 2002-2004 the VideoLAN team
- * $Id: input.c 13047 2005-10-30 21:22:26Z hartman $
+ * $Id: input.c 14953 2006-03-28 20:29:28Z zorglub $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -166,14 +166,14 @@ int aout_InputNew( aout_instance_t * p_aout, aout_input_t * p_input )
 
         if( psz_parser == NULL || !*psz_parser )
             continue;
-        
+
         while( psz_parser && *psz_parser )
         {
             aout_filter_t * p_filter = NULL;
 
             if( p_input->i_nb_filters >= AOUT_MAX_FILTERS )
             {
-                msg_Dbg( p_aout, "max filter reached (%d)", AOUT_MAX_FILTERS );
+                msg_Dbg( p_aout, "max filters reached (%d)", AOUT_MAX_FILTERS );
                 break;
             }
 
@@ -210,7 +210,7 @@ int aout_InputNew( aout_instance_t * p_aout, aout_input_t * p_input )
                         sizeof(audio_sample_format_t) );
                 memcpy( &p_filter->output, &chain_output_format,
                         sizeof(audio_sample_format_t) );
-                        
+
                 p_filter->p_module = module_Need( p_filter, "visualization",
                                                   psz_parser, VLC_TRUE );
             }
@@ -235,7 +235,8 @@ int aout_InputNew( aout_instance_t * p_aout, aout_input_t * p_input )
                     {
                         aout_FormatPrepare( &p_filter->input );
                         aout_FormatPrepare( &p_filter->output );
-                        p_filter->p_module = module_Need( p_filter, "audio filter",
+                        p_filter->p_module = module_Need( p_filter,
+                                                          "audio filter",
                                                           psz_parser, VLC_TRUE );
                     }
                     /* try visual filters */
@@ -245,7 +246,8 @@ int aout_InputNew( aout_instance_t * p_aout, aout_input_t * p_input )
                                 sizeof(audio_sample_format_t) );
                         memcpy( &p_filter->output, &chain_output_format,
                                 sizeof(audio_sample_format_t) );
-                        p_filter->p_module = module_Need( p_filter, "visualization",
+                        p_filter->p_module = module_Need( p_filter,
+                                                          "visualization",
                                                           psz_parser, VLC_TRUE );
                     }
                 }
@@ -445,6 +447,11 @@ int aout_InputPlay( aout_instance_t * p_aout, aout_input_t * p_input,
             p_input->pp_resamplers[0]->b_continuity = VLC_FALSE;
         }
         start_date = 0;
+        if( p_input->p_input_thread )
+        {
+            stats_UpdateInteger( p_input->p_input_thread, STATS_LOST_ABUFFERS, 1,
+                                 NULL );
+        }
     }
 
     if ( p_buffer->start_date < mdate() + AOUT_MIN_PREPARE_TIME )
@@ -453,6 +460,11 @@ int aout_InputPlay( aout_instance_t * p_aout, aout_input_t * p_input,
          * can't present it anyway, so drop the buffer. */
         msg_Warn( p_aout, "PTS is out of range ("I64Fd"), dropping buffer",
                   mdate() - p_buffer->start_date );
+        if( p_input->p_input_thread )
+        {
+            stats_UpdateInteger( p_input->p_input_thread, STATS_LOST_ABUFFERS,
+                                 1, NULL );
+        }
         aout_BufferFree( p_buffer );
         p_input->i_resampling_type = AOUT_RESAMPLING_NONE;
         if ( p_input->i_nb_resamplers != 0 )
@@ -490,6 +502,11 @@ int aout_InputPlay( aout_instance_t * p_aout, aout_input_t * p_input,
         msg_Warn( p_aout, "audio drift is too big ("I64Fd"), dropping buffer",
                   start_date - p_buffer->start_date );
         aout_BufferFree( p_buffer );
+        if( p_input->p_input_thread )
+        {
+            stats_UpdateInteger( p_input->p_input_thread, STATS_LOST_ABUFFERS,
+                                 1, NULL );
+        }
         return 0;
     }
 

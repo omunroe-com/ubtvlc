@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "plugin.h"
@@ -40,18 +40,18 @@ STDMETHODIMP VLCOleControl::GetControlInfo(CONTROLINFO *pCI)
 
 STDMETHODIMP VLCOleControl::OnMnemonic(LPMSG pMsg)
 {
-    return E_NOTIMPL;
+    return S_OK;
 };
 
 STDMETHODIMP VLCOleControl::OnAmbientPropertyChange(DISPID dispID)
 {
     HRESULT hr;
-    IOleObject *oleObj;
+    LPOLEOBJECT oleObj;
 
     hr = QueryInterface(IID_IOleObject, (LPVOID *)&oleObj);
     if( SUCCEEDED(hr) )
     {
-        IOleClientSite *clientSite;
+        LPOLECLIENTSITE clientSite;
 
         hr = oleObj->GetClientSite(&clientSite);
         if( SUCCEEDED(hr) && (NULL != clientSite) )

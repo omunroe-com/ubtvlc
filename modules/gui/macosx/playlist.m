@@ -2,7 +2,7 @@
  * playlist.m: MacOS X interface module
  *****************************************************************************
 * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: playlist.m 13288 2005-11-20 16:07:54Z bigben $
+ * $Id: playlist.m 15464 2006-04-30 16:19:04Z fkuehne $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Derk-Jan Hartman <hartman at videola/n dot org>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /* TODO
@@ -47,6 +47,7 @@
 #include "intf.h"
 #import "wizard.h"
 #import "bookmarks.h"
+#import "playlistinfo.h"
 #include "playlist.h"
 #include "controls.h"
 #include "vlc_osd.h"
@@ -463,27 +464,6 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
     vlc_list_release( p_list );
     vlc_object_release( p_playlist );
 
-    /* Change the simple textfield into a searchField if we can... */
-#if 0
-    if( MACOS_VERSION >= 10.3 )
-    {
-        NSView *o_parentview = [o_status_field superview];
-        NSSearchField *o_better_search_field = [[NSSearchField alloc]initWithFrame:[o_search_field frame]];
-        [o_better_search_field setRecentsAutosaveName:@"VLC media player search"];
-        [o_better_search_field setDelegate:self];
-        [[NSNotificationCenter defaultCenter] addObserver: self
-            selector: @selector(searchfieldChanged:)
-            name: NSControlTextDidChangeNotification
-            object: o_better_search_field];
-
-        [o_better_search_field setTarget:self];
-        [o_better_search_field setAction:@selector(searchItem:)];
-
-        [o_better_search_field setAutoresizingMask:NSViewMinXMargin];
-        [o_parentview addSubview:o_better_search_field];
-        [o_search_field setHidden:YES];
-    }
-#endif
     //[self playlistUpdated];
 }
 
@@ -501,8 +481,8 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
     [o_mi_delete setTitle: _NS("Delete")];
     [o_mi_recursive_expand setTitle: _NS("Expand Node")];
     [o_mi_selectall setTitle: _NS("Select All")];
-    [o_mi_info setTitle: _NS("Properties")];
-    [o_mi_preparse setTitle: _NS("Preparse")];
+    [o_mi_info setTitle: _NS("Information")];
+    [o_mi_preparse setTitle: _NS("Get Stream Information")];
     [o_mi_sort_name setTitle: _NS("Sort Node by Name")];
     [o_mi_sort_author setTitle: _NS("Sort Node by Author")];
     [o_mi_services setTitle: _NS("Services discovery")];
@@ -517,13 +497,14 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
     [[o_loop_popup itemAtIndex:0] setTitle: _NS("Standard Play")];
     [[o_loop_popup itemAtIndex:1] setTitle: _NS("Repeat One")];
     [[o_loop_popup itemAtIndex:2] setTitle: _NS("Repeat All")];
+    [o_mi_addNode setTitle: _NS("Add Folder to Playlist")];
 }
 
 - (void)playlistUpdated
 {
     unsigned int i;
 
-    /* Clear indications of any existing column sorting*/
+    /* Clear indications of any existing column sorting */
     for( i = 0 ; i < [[o_outline_view tableColumns] count] ; i++ )
     {
         [o_outline_view setIndicatorImage:nil inTableColumn:
@@ -537,6 +518,29 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
     [o_outline_view reloadData];
     [[[[VLCMain sharedInstance] getWizard] getPlaylistWizard] reloadOutlineView];
     [[[[VLCMain sharedInstance] getBookmarks] getDataTable] reloadData];
+
+    playlist_t *p_playlist = vlc_object_find( VLCIntf, VLC_OBJECT_PLAYLIST,
+                                          FIND_ANYWHERE );
+    if(! p_playlist )
+        return;
+
+    if( p_playlist->i_size >= 2 )
+    {
+        [o_status_field setStringValue: [NSString stringWithFormat:
+                    _NS("%i items in the playlist"), p_playlist->i_size]];
+    }
+    else
+    {
+        if( p_playlist->i_size == 0 )
+        {
+            [o_status_field setStringValue: _NS("No items in the playlist")];
+        }
+        else
+        {
+            [o_status_field setStringValue: _NS("1 item in the playlist")];
+        }
+    }
+    vlc_object_release( p_playlist );
 }
 
 - (void)playModeUpdated
@@ -637,6 +641,9 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
     [o_outline_view scrollRowToVisible: i_row];
 
     vlc_object_release(p_playlist);
+
+    /* update our info-panel to reflect the new item */
+    [[[VLCMain sharedInstance] getInfo] updatePanel];
 }
 
 /* Check if p_item is a child of p_node recursively. We need to check the item
@@ -1491,6 +1498,27 @@ belongs to an Apple hidden private API, and then can "disapear" at any time*/
     {
         [cell setFont: [NSFont systemFontOfSize: 0]];
     }
+    vlc_object_release( p_playlist );
+}
+
+- (IBAction)addNode:(id)sender
+{
+    /* simply adds a new node to the end of the playlist */
+    playlist_t * p_playlist = vlc_object_find( VLCIntf, VLC_OBJECT_PLAYLIST,
+                                          FIND_ANYWHERE );
+    if( !p_playlist )
+    {
+        return;
+    }
+
+    playlist_item_t * p_item = playlist_NodeCreate( p_playlist, VIEW_CATEGORY, 
+        _("Empty Folder"), p_playlist->p_general );
+
+    if(! p_item )
+        msg_Warn( VLCIntf, "node creation failed" );
+    
+    playlist_ViewUpdate( p_playlist, VIEW_CATEGORY );
+    
     vlc_object_release( p_playlist );
 }
 

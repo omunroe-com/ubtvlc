@@ -2,7 +2,7 @@
  * modules.h : Module management functions.
  *****************************************************************************
  * Copyright (C) 2001 the VideoLAN team
- * $Id: modules.h 12319 2005-08-21 18:48:05Z courmisch $
+ * $Id: modules.h 13990 2006-01-22 17:10:57Z zorglub $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -87,6 +87,7 @@ struct module_t
      */
     char *psz_shortname;                                      /* Module name */
     char *psz_longname;                           /* Module descriptive name */
+    char *psz_help;                /* Long help string for "special" modules */
 
     /*
      * Variables set by the module to tell us what it can do

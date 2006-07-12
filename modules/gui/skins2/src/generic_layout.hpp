@@ -2,10 +2,10 @@
  * generic_layout.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: generic_layout.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: generic_layout.hpp 15481 2006-04-30 18:07:40Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef GENERIC_LAYOUT_HPP
@@ -35,6 +35,7 @@
 class Anchor;
 class OSGraphics;
 class CtrlGeneric;
+class CtrlVideo;
 
 
 /// Control and its associated layer
@@ -121,6 +122,12 @@ class GenericLayout: public SkinObject, public Box
         /// Add an anchor to this layout
         virtual void addAnchor( Anchor *pAnchor );
 
+        /// Called when the layout is shown
+        virtual void onShow();
+
+        /// Called when the layout is hidden
+        virtual void onHide();
+
     private:
         /// Parent window of the layout
         TopWindow *m_pWindow;
@@ -132,8 +139,12 @@ class GenericLayout: public SkinObject, public Box
         OSGraphics *m_pImage;
         /// List of the controls in the layout
         list<LayeredControl> m_controlList;
+        //// Video control
+        CtrlVideo *m_pVideoControl;
         /// List of the anchors in the layout
         list<Anchor*> m_anchorList;
+        /// Flag to know if the layout is visible
+        bool m_visible;
 };
 
 

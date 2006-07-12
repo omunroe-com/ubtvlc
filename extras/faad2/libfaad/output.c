@@ -1,28 +1,33 @@
 /*
 ** FAAD2 - Freeware Advanced Audio (AAC) Decoder including SBR decoding
-** Copyright (C) 2003 M. Bakker, Ahead Software AG, http://www.nero.com
-**
+** Copyright (C) 2003-2005 M. Bakker, Ahead Software AG, http://www.nero.com
+**  
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 2 of the License, or
 ** (at your option) any later version.
-**
+** 
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-**
+** 
 ** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software
+** along with this program; if not, write to the Free Software 
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
 ** Any non-GPL usage of this software or parts of this software is strictly
 ** forbidden.
 **
+** Software using this code must display the following message visibly in the
+** software:
+** "FAAD2 AAC/HE-AAC/HE-AACv2/DRM decoder (c) Ahead Software, www.nero.com"
+** in, for example, the about-box or help/startup screen.
+**
 ** Commercial non-GPL licensing of this software is possible.
 ** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
 **
-** $Id: output.c,v 1.42 2004/09/04 14:56:28 menno Exp $
+** $Id: output.c,v 1.43 2005/02/01 13:15:58 menno Exp $
 **/
 
 #include "common.h"
@@ -84,7 +89,7 @@ if (sample >= 0.0f)            \
 
 #define CONV(a,b) ((a<<1)|(b&0x1))
 
-static void to_PCM_16bit(faacDecHandle hDecoder, real_t **input,
+static void to_PCM_16bit(NeAACDecHandle hDecoder, real_t **input,
                          uint8_t channels, uint16_t frame_len,
                          int16_t **sample_buffer)
 {
@@ -149,7 +154,7 @@ static void to_PCM_16bit(faacDecHandle hDecoder, real_t **input,
     }
 }
 
-static void to_PCM_24bit(faacDecHandle hDecoder, real_t **input,
+static void to_PCM_24bit(NeAACDecHandle hDecoder, real_t **input,
                          uint8_t channels, uint16_t frame_len,
                          int32_t **sample_buffer)
 {
@@ -219,7 +224,7 @@ static void to_PCM_24bit(faacDecHandle hDecoder, real_t **input,
     }
 }
 
-static void to_PCM_32bit(faacDecHandle hDecoder, real_t **input,
+static void to_PCM_32bit(NeAACDecHandle hDecoder, real_t **input,
                          uint8_t channels, uint16_t frame_len,
                          int32_t **sample_buffer)
 {
@@ -289,7 +294,7 @@ static void to_PCM_32bit(faacDecHandle hDecoder, real_t **input,
     }
 }
 
-static void to_PCM_float(faacDecHandle hDecoder, real_t **input,
+static void to_PCM_float(NeAACDecHandle hDecoder, real_t **input,
                          uint8_t channels, uint16_t frame_len,
                          float32_t **sample_buffer)
 {
@@ -341,7 +346,7 @@ static void to_PCM_float(faacDecHandle hDecoder, real_t **input,
     }
 }
 
-static void to_PCM_double(faacDecHandle hDecoder, real_t **input,
+static void to_PCM_double(NeAACDecHandle hDecoder, real_t **input,
                           uint8_t channels, uint16_t frame_len,
                           double **sample_buffer)
 {
@@ -393,7 +398,7 @@ static void to_PCM_double(faacDecHandle hDecoder, real_t **input,
     }
 }
 
-void *output_to_PCM(faacDecHandle hDecoder,
+void *output_to_PCM(NeAACDecHandle hDecoder,
                     real_t **input, void *sample_buffer, uint8_t channels,
                     uint16_t frame_len, uint8_t format)
 {
@@ -463,7 +468,7 @@ static INLINE real_t get_sample(real_t **input, uint8_t channel, uint16_t sample
     }
 }
 
-void* output_to_PCM(faacDecHandle hDecoder,
+void* output_to_PCM(NeAACDecHandle hDecoder,
                     real_t **input, void *sample_buffer, uint8_t channels,
                     uint16_t frame_len, uint8_t format)
 {

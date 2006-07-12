@@ -2,7 +2,7 @@
  * glwin32.c: Windows OpenGL provider
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: glwin32.c 13062 2005-10-31 21:14:27Z gbazin $
+ * $Id: glwin32.c 15002 2006-03-31 16:12:31Z fkuehne $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <errno.h>                                                 /* ENOMEM */
@@ -222,7 +222,7 @@ static void CloseVideo( vlc_object_t *p_this )
 {
     vout_thread_t * p_vout = (vout_thread_t *)p_this;
 
-    msg_Dbg( p_vout, "CloseVideo" );
+    msg_Dbg( p_vout, "closing video" );
 
     if( p_vout->p_sys->p_event )
     {

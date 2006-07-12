@@ -2,7 +2,7 @@
  * file.c: file input (file: access plug-in)
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: file.c 12318 2005-08-21 17:46:48Z damienf $
+ * $Id: file.c 15016 2006-03-31 23:07:01Z xtophe $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -79,15 +79,15 @@ static void Close( vlc_object_t * );
 
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for file streams. This " \
-    "value should be set in millisecond units." )
+    "Caching value for files. This " \
+    "value should be set in milliseconds." )
 #define CAT_TEXT N_("Concatenate with additional files")
 #define CAT_LONGTEXT N_( \
-    "Allows you to play split files as if they were part of a unique file. " \
-    "Specify a comma-separated list of files." )
+    "Play split files as if they were part of a unique file. " \
+    "You need to specify a comma-separated list of files." )
 
 vlc_module_begin();
-    set_description( _("Standard filesystem file input") );
+    set_description( _("File input") );
     set_shortname( _("File") );
     set_category( CAT_INPUT );
     set_subcategory( SUBCAT_INPUT_ACCESS );
@@ -164,11 +164,9 @@ static int Open( vlc_object_t *p_this )
     {
         if( psz_name[0] == '~' && psz_name[1] == '/' )
         {
-            psz = malloc( strlen(p_access->p_vlc->psz_homedir)
-                           + strlen(psz_name) );
             /* This is incomplete : we should also support the ~cmassiot/
              * syntax. */
-            sprintf( psz, "%s/%s", p_access->p_vlc->psz_homedir, psz_name + 2 );
+            asprintf( &psz, "%s/%s", p_access->p_vlc->psz_homedir, psz_name + 2 );
             free( psz_name );
             psz_name = psz;
         }
@@ -186,15 +184,12 @@ static int Open( vlc_object_t *p_this )
 #endif
 
 #ifdef HAVE_SYS_STAT_H
-        psz = ToLocale( psz_name );
-        if( stat( psz, &stat_info ) )
+        if( utf8_stat( psz_name, &stat_info ) )
         {
             msg_Warn( p_access, "%s: %s", psz_name, strerror( errno ) );
-            LocaleFree( psz );
             free( psz_name );
             return VLC_EGENERIC;
         }
-        LocaleFree( psz );
 #endif
     }
 
@@ -607,13 +602,9 @@ static int Control( access_t *p_access, int i_query, va_list args )
 static int _OpenFile( access_t * p_access, const char * psz_name )
 {
     access_sys_t *p_sys = p_access->p_sys;
-    const char *psz_localname;
-
-    psz_localname = ToLocale( psz_name );
 
 #ifdef UNDER_CE
-    p_sys->fd = fopen( psz_localname, "rb" );
-    LocaleFree( psz_localname );
+    p_sys->fd = utf8_fopen( psz_name, "rb" );
     if ( !p_sys->fd )
     {
         msg_Err( p_access, "cannot open file %s", psz_name );
@@ -625,6 +616,12 @@ static int _OpenFile( access_t * p_access, const char * psz_name )
     p_access->info.i_update |= INPUT_UPDATE_SIZE;
     fseek( p_sys->fd, 0, SEEK_SET );
 #else
+    const char *psz_localname = ToLocale( psz_name );
+    if( psz_localname == NULL )
+    {
+        msg_Err( p_access, "incorrect file name %s", psz_name );
+        return VLC_EGENERIC;
+    }
 
     p_sys->fd = open( psz_localname, O_NONBLOCK /*| O_LARGEFILE*/ );
     LocaleFree( psz_localname );
@@ -634,6 +631,14 @@ static int _OpenFile( access_t * p_access, const char * psz_name )
                  strerror(errno) );
         return VLC_EGENERIC;
     }
+
+#if defined(HAVE_FCNTL_H) && defined(F_FDAHEAD) && defined(F_NOCACHE)
+    /* We'd rather use any available memory for reading ahead
+     * than for caching what we've already seen/heard */
+    fcntl(p_sys->fd, F_RDAHEAD, 1);
+    fcntl(p_sys->fd, F_NOCACHE, 1);
+#endif
+
 #endif
 
     return VLC_SUCCESS;

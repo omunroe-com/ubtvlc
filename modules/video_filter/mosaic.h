@@ -2,7 +2,7 @@
  * mosaic.h:
  *****************************************************************************
  * Copyright (C) 2004-2005 the VideoLAN team
- * $Id: mosaic.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: mosaic.h 14356 2006-02-17 22:10:56Z dionoea $
  *
  * Authors: Antoine Cellerier <dionoea@videolan.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 typedef struct bridged_es_t
@@ -51,7 +51,7 @@ static bridge_t *__GetBridge( vlc_object_t *p_object )
     else
     {
         p_bridge = val.p_address;
-    }    
+    }
 
     return p_bridge;
 }

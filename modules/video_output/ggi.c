@@ -2,7 +2,7 @@
  * ggi.c : GGI plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001 the VideoLAN team
- * $Id: ggi.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: ggi.c 15002 2006-03-31 16:12:31Z fkuehne $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -53,9 +53,9 @@ static void SetPalette     ( vout_thread_t *, uint16_t *, uint16_t *, uint16_t *
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
-#define DISPLAY_TEXT N_("X11 display name")
+#define DISPLAY_TEXT N_("X11 display")
 #define DISPLAY_LONGTEXT N_( \
-            "Specify the X11 hardware display you want to use.\n" \
+            "X11 hardware display to use.\n" \
             "By default, VLC will use the value of the DISPLAY " \
             "environment variable.")
 
@@ -530,7 +530,7 @@ static void SetPalette( vout_thread_t *p_vout,
     /* Set palette */
     if( ggiSetPalette( p_vout->p_sys->p_display, 0, 256, colors ) < 0 )
     {
-        msg_Err( p_vout, "failed setting palette" );
+        msg_Err( p_vout, "failed to set palette" );
     }
 }
 

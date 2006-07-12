@@ -2,7 +2,7 @@
  * access.c: Real rtsp input
  *****************************************************************************
  * Copyright (C) 2005 VideoLAN
- * $Id: file.c 10310 2005-03-11 22:36:40Z anil $
+ * $Id: access.c 15016 2006-03-31 23:07:01Z xtophe $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -39,8 +39,8 @@ static void Close( vlc_object_t * );
 
 #define CACHING_TEXT N_("Caching value (ms)")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for RTSP streams. This " \
-    "value should be set in millisecond units." )
+    "Caching value for RTSP streams. This " \
+    "value should be set in milliseconds." )
 
 vlc_module_begin();
     set_description( _("Real RTSP") );
@@ -53,6 +53,7 @@ vlc_module_begin();
     set_callbacks( Open, Close );
     add_shortcut( "realrtsp" );
     add_shortcut( "rtsp" );
+    add_shortcut( "pnm" );
 vlc_module_end();
 
 
@@ -84,7 +85,7 @@ static int RtspConnect( void *p_userdata, char *psz_server, int i_port )
     access_sys_t *p_sys = p_access->p_sys;
 
     /* Open connection */
-    p_sys->fd = net_OpenTCP( p_access, psz_server, i_port );
+    p_sys->fd = net_ConnectTCP( p_access, psz_server, i_port );
     if( p_sys->fd < 0 )
     {
         msg_Err( p_access, "cannot connect to %s:%d", psz_server, i_port );
@@ -220,6 +221,7 @@ static int Open( vlc_object_t *p_this )
         p_sys->p_header = block_New( p_access, 4096 );
         p_sys->p_header->i_buffer =
             rmff_dump_header( h, p_sys->p_header->p_buffer, 1024 );
+        rmff_free_header( h );
     }
     else
     {
@@ -231,6 +233,7 @@ static int Open( vlc_object_t *p_this )
     var_Create( p_access, "realrtsp-caching",
                 VLC_VAR_INTEGER | VLC_VAR_DOINHERIT);
 
+    if( psz_server ) free( psz_server );
     return VLC_SUCCESS;
 
  error:

@@ -2,7 +2,7 @@
  * macosx_factory.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: macosx_factory.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: macosx_factory.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef MACOSX_FACTORY_HPP
@@ -37,13 +37,13 @@ class MacOSXFactory: public OSFactory
         /// Initialization method
         virtual bool init();
 
-        /// Instantiate an object OSGraphics.
+        /// Instantiate an object OSGraphics
         virtual OSGraphics *createOSGraphics( int width, int height );
 
-        /// Get the instance of the singleton OSLoop.
+        /// Get the instance of the singleton OSLoop
         virtual OSLoop *getOSLoop();
 
-        /// Destroy the instance of OSLoop.
+        /// Destroy the instance of OSLoop
         virtual void destroyOSLoop();
 
         /// Instantiate an OSTimer with the given callback
@@ -57,8 +57,11 @@ class MacOSXFactory: public OSFactory
                                           bool dragDrop, bool playOnDrop,
                                           OSWindow *pParent );
 
-        /// Instantiate an object OSTooltip.
+        /// Instantiate an object OSTooltip
         virtual OSTooltip *createOSTooltip();
+
+        /// Instantiate an object OSPopup
+        virtual OSPopup *createOSPopup();
 
         /// Get the directory separator
         virtual const string &getDirSeparator() const { return m_dirSep; }

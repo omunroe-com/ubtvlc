@@ -2,10 +2,10 @@
  * cmd_resize.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: cmd_resize.cpp 12955 2005-10-24 19:59:51Z asmax $
+ * $Id: cmd_resize.cpp 14118 2006-02-01 18:06:48Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "cmd_resize.hpp"
 #include "../src/generic_layout.hpp"
+#include "../src/vlcproc.hpp"
 
 
 CmdResize::CmdResize( intf_thread_t *pIntf, GenericLayout &rLayout, int width,
@@ -51,8 +52,7 @@ CmdResizeVout::CmdResizeVout( intf_thread_t *pIntf, void *pWindow, int width,
 
 void CmdResizeVout::execute()
 {
-    // TODO
-    msg_Dbg( getIntf(), "New vout size requested: %d x %d", m_width,
-             m_height );
+    VarBox &rVoutSize = VlcProc::instance( getIntf() )->getVoutSizeVar();
+    rVoutSize.setSize( m_width, m_height );
 }
 

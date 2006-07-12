@@ -4,7 +4,7 @@
  * includes all common video types and constants.
  *****************************************************************************
  * Copyright (C) 1999 - 2005 the VideoLAN team
- * $Id: vlc_video.h 12412 2005-08-27 16:40:23Z jpsaman $
+ * $Id: vlc_video.h 15328 2006-04-23 13:56:24Z bigben $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 #ifndef _VLC_VIDEO_H
 #define _VLC_VIDEO_H 1
@@ -57,7 +57,7 @@ typedef struct plane_t
  */
 struct picture_t
 {
-    /** 
+    /**
      * The properties of the picture
      */
     video_frame_format_t format;
@@ -139,9 +139,9 @@ struct picture_heap_t
     vlc_bool_t      b_allow_modify_pics;
 
     /* Stuff used for truecolor RGB planes */
-    int i_rmask, i_rrshift, i_lrshift;
-    int i_gmask, i_rgshift, i_lgshift;
-    int i_bmask, i_rbshift, i_lbshift;
+    uint32_t i_rmask; int i_rrshift, i_lrshift;
+    uint32_t i_gmask; int i_rgshift, i_lgshift;
+    uint32_t i_bmask; int i_rbshift, i_lbshift;
 
     /** Stuff used for palettized RGB planes */
     void (* pf_setpalette) ( vout_thread_t *, uint16_t *, uint16_t *, uint16_t * );
@@ -207,12 +207,10 @@ struct subpicture_region_t
 
     int             i_x;                             /**< position of region */
     int             i_y;                             /**< position of region */
+    int             i_align;                  /**< alignment within a region */
 
     char            *psz_text;       /**< text string comprising this region */
-    int             i_text_color;     /**< text color (RGB native endianess) */
-    int             i_text_alpha;                     /**< text transparency */
-    int             i_text_size;                              /**< text size */
-    int             i_text_align;         /**< horizontal alignment hint for */
+    text_style_t    *p_style;  /* a description of the text style formatting */
 
     subpicture_region_t *p_next;                /**< next region in the list */
     subpicture_region_t *p_cache;       /**< modified version of this region */

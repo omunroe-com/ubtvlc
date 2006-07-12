@@ -1,8 +1,8 @@
 /*****************************************************************************
  * telnet.c: VLM interface plugin
  *****************************************************************************
- * Copyright (C) 2000-2005 the VideoLAN team
- * $Id: telnet.c 11892 2005-07-28 18:14:28Z courmisch $
+ * Copyright (C) 2000-2006 the VideoLAN team
+ * $Id: telnet.c 15002 2006-03-31 16:12:31Z fkuehne $
  *
  * Authors: Simon Latapie <garf@videolan.org>
  *          Laurent Aimar <fenrir@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -45,15 +45,8 @@
 #   include <unistd.h>
 #endif
 
-#if defined( UNDER_CE )
-#   include <winsock.h>
-#elif defined( WIN32 )
-#   include <winsock2.h>
-#else
-#   include <sys/socket.h>
-#endif
-
 #include "network.h"
+#include "vlc_url.h"
 
 #include "vlc_vlm.h"
 
@@ -76,19 +69,24 @@
 static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
-#define TELNETHOST_TEXT N_( "Telnet Interface host" )
-#define TELNETHOST_LONGTEXT N_( "Default to listen on all network interfaces" )
-#define TELNETPORT_TEXT N_( "Telnet Interface port" )
-#define TELNETPORT_LONGTEXT N_( "Default to 4212" )
+#define TELNETHOST_TEXT N_( "Host" )
+#define TELNETHOST_LONGTEXT N_( "This is the host on which the " \
+    "interface will listen. It defaults to all network interfaces (0.0.0.0)." \
+    " If you want this interface to be available only on the local " \
+    "machine, enter \"127.0.0.1\"." )
+#define TELNETPORT_TEXT N_( "Port" )
+#define TELNETPORT_LONGTEXT N_( "This is the TCP port on which this " \
+    "interface will listen. It defaults to 4212." )
 #define TELNETPORT_DEFAULT 4212
-#define TELNETPWD_TEXT N_( "Telnet Interface password" )
-#define TELNETPWD_LONGTEXT N_( "Default to admin" )
+#define TELNETPWD_TEXT N_( "Password" )
+#define TELNETPWD_LONGTEXT N_( "A single administration password is used " \
+    "to protect this interface. The default value is \"admin\"." )
 #define TELNETPWD_DEFAULT "admin"
 
 vlc_module_begin();
     set_shortname( "Telnet" );
     set_category( CAT_INTERFACE );
-    set_subcategory( SUBCAT_INTERFACE_GENERAL );
+    set_subcategory( SUBCAT_INTERFACE_CONTROL );
     add_string( "telnet-host", "", NULL, TELNETHOST_TEXT,
                  TELNETHOST_LONGTEXT, VLC_TRUE );
     add_integer( "telnet-port", TELNETPORT_DEFAULT, NULL, TELNETPORT_TEXT,
@@ -177,7 +175,7 @@ static int Open( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
 
-    msg_Info( p_intf, "Using the VLM interface plugin..." );
+    msg_Info( p_intf, "using the VLM interface plugin..." );
 
     i_telnetport = config_GetInt( p_intf, "telnet-port" );
     psz_address  = config_GetPsz( p_intf, "telnet-host" );
@@ -193,18 +191,22 @@ static int Open( vlc_object_t *p_this )
                 == NULL )
     {
         msg_Err( p_intf, "cannot listen for telnet" );
+        vlc_UrlClean(&url);
+        free( psz_address );
         free( p_intf->p_sys );
         return VLC_EGENERIC;
     }
     msg_Info( p_intf, 
-              "Telnet interface started on interface %s %d",
-	      url.psz_host, url.i_port );
+              "telnet interface started on interface %s %d",
+              url.psz_host, url.i_port );
 
     p_intf->p_sys->i_clients   = 0;
     p_intf->p_sys->clients     = NULL;
     p_intf->p_sys->mediatheque = mediatheque;
     p_intf->pf_run = Run;
 
+    vlc_UrlClean(&url);
+    free( psz_address );
     return VLC_SUCCESS;
 }
 
@@ -270,7 +272,7 @@ static void Run( intf_thread_t *p_intf )
             cl->fd = fd;
             cl->buffer_write = NULL;
             cl->p_buffer_write = cl->buffer_write;
-            Write_message( cl, NULL, "Password:\xff\xfb\x01", WRITE_MODE_PWD );
+            Write_message( cl, NULL, "Password: \xff\xfb\x01", WRITE_MODE_PWD );
 
             TAB_APPEND( p_sys->i_clients, p_sys->clients, cl );
         }
@@ -413,7 +415,8 @@ static void Run( intf_thread_t *p_intf )
                 else
                 {
                     /* wrong password */
-                    Write_message( cl, NULL, "\r\nWrong password. ",
+                    Write_message( cl, NULL,
+                                   "\r\nWrong password.\r\nPassword: ",
                                    WRITE_MODE_PWD );
                 }
             }
@@ -495,11 +498,12 @@ static char *MessageToString( vlm_message_t *message, int i_level )
     else if( !i_level && !message->i_child && !message->psz_value  )
     {
         /* A command is successful. Don't write anything */
-        return strdup( STRING_CR STRING_TAIL );
+        return strdup( /*STRING_CR*/ STRING_TAIL );
     }
 
     i_message += strlen( message->psz_name ) + i_level * sizeof( "    " ) + 1;
-    psz_message = malloc( i_message ); *psz_message = 0;
+    psz_message = malloc( i_message );
+    *psz_message = 0;
     for( i = 0; i < i_level; i++ ) strcat( psz_message, "    " );
     strcat( psz_message, message->psz_name );
 

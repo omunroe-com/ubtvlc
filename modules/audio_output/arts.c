@@ -2,7 +2,7 @@
  * arts.c : aRts module
  *****************************************************************************
  * Copyright (C) 2001-2002 the VideoLAN team
- * $Id: arts.c 12186 2005-08-14 12:43:30Z sam $
+ * $Id: arts.c 14568 2006-03-02 13:35:43Z courmisch $
  *
  * Authors: Emmanuel Blindauer <manu@agat.net>
  *          Samuel Hocevar <sam@zoy.org>
@@ -19,14 +19,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <errno.h>                                                 /* ENOMEM */
-#include <fcntl.h>                                       /* open(), O_WRONLY */
 #include <string.h>                                            /* strerror() */
 #include <unistd.h>                                      /* write(), close() */
 #include <stdlib.h>                            /* calloc(), malloc(), free() */

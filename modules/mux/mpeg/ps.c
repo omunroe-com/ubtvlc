@@ -3,7 +3,7 @@
  *       multiplexer module for vlc
  *****************************************************************************
  * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: ps.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: ps.c 15118 2006-04-06 17:54:21Z massiot $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -43,14 +43,14 @@
  * Module descriptor
  *****************************************************************************/
 #define DTS_TEXT N_("DTS delay (ms)")
-#define DTS_LONGTEXT N_("This option will delay the DTS (decoding time " \
+#define DTS_LONGTEXT N_("Delay the DTS (decoding time " \
   "stamps) and PTS (presentation timestamps) of the data in the " \
   "stream, compared to the SCRs. This allows for some buffering inside " \
   "the client decoder.")
 
 #define PES_SIZE_TEXT N_("PES maximum size")
-#define PES_SIZE_LONGTEXT N_("This option will set the maximum allowed PES "\
-  "size when producing the MPEG PS stream.")
+#define PES_SIZE_LONGTEXT N_("Set the maximum allowed PES "\
+  "size when producing the MPEG PS streams.")
 
 static int     Open   ( vlc_object_t * );
 static void    Close  ( vlc_object_t * );
@@ -606,7 +606,7 @@ static void MuxWritePackHeader( sout_mux_t *p_mux, block_t **p_buf,
 
     if( p_sys->b_mpeg2 )
     {
-        bits_write( &bits, 9,  0 ); // src extention
+        bits_write( &bits, 9,  0 ); // src extension
     }
     bits_write( &bits, 1,  1 );     // marker
 

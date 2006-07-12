@@ -2,7 +2,7 @@
  * flac.c : FLAC demux module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2003 the VideoLAN team
- * $Id: flac.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: flac.c 14790 2006-03-18 02:06:16Z xtophe $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -230,7 +230,7 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
     /* FIXME bitrate */
     if( i_query == DEMUX_SET_TIME ) return VLC_EGENERIC;
     else if( i_query == DEMUX_GET_META )
-    {        
+    {
         vlc_meta_t **pp_meta = (vlc_meta_t **)va_arg( args, vlc_meta_t** );
         if( p_demux->p_sys->p_meta )
             *pp_meta = vlc_meta_Duplicate( p_demux->p_sys->p_meta );

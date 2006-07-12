@@ -2,7 +2,7 @@
  * theora.c: theora decoder module making use of libtheora.
  *****************************************************************************
  * Copyright (C) 1999-2001 the VideoLAN team
- * $Id: theora.c 11724 2005-07-13 17:51:13Z courmisch $
+ * $Id: theora.c 15005 2006-03-31 16:28:03Z xtophe $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -89,7 +89,7 @@ static block_t *Encode( encoder_t *p_enc, picture_t *p_pict );
  *****************************************************************************/
 #define ENC_QUALITY_TEXT N_("Encoding quality")
 #define ENC_QUALITY_LONGTEXT N_( \
-  "Allows you to specify a quality between 1 (low) and 10 (high), instead " \
+  "Enforce a quality between 1 (low) and 10 (high), instead " \
   "of specifying a particular bitrate. This will produce a VBR stream." )
 
 vlc_module_begin();
@@ -278,7 +278,7 @@ static int ProcessHeaders( decoder_t *p_dec )
 
     if( theora_decode_header( &p_sys->ti, &p_sys->tc, &oggpacket ) < 0 )
     {
-        msg_Err( p_dec, "This bitstream does not contain Theora video data" );
+        msg_Err( p_dec, "this bitstream does not contain Theora video data" );
         return VLC_EGENERIC;
     }
 

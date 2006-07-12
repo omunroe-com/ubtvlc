@@ -2,7 +2,7 @@
  * output.c : internal management of output streams for the audio output
  *****************************************************************************
  * Copyright (C) 2002-2004 the VideoLAN team
- * $Id: output.c 12676 2005-09-25 16:49:40Z babal $
+ * $Id: output.c 14953 2006-03-28 20:29:28Z zorglub $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -57,7 +57,7 @@ int aout_OutputNew( aout_instance_t * p_aout,
     p_aout->output.p_module = module_Need( p_aout, "audio output", "$aout", 0);
     if ( p_aout->output.p_module == NULL )
     {
-        msg_Err( p_aout, "no suitable aout module" );
+        msg_Err( p_aout, "no suitable audio output module" );
         vlc_mutex_unlock( &p_aout->output_fifo_lock );
         return -1;
     }
@@ -186,7 +186,7 @@ int aout_OutputNew( aout_instance_t * p_aout,
         p_aout->mixer.mixer.i_format = p_format->i_format;
     }
 
-    aout_FormatPrint( p_aout, "mixer", &p_aout->output.output );
+    aout_FormatPrint( p_aout, "mixer", &p_aout->mixer.mixer );
 
     /* Create filters. */
     p_aout->output.i_nb_filters = 0;
@@ -195,7 +195,7 @@ int aout_OutputNew( aout_instance_t * p_aout,
                                      &p_aout->mixer.mixer,
                                      &p_aout->output.output ) < 0 )
     {
-        msg_Err( p_aout, "couldn't set an output pipeline" );
+        msg_Err( p_aout, "couldn't create audio output pipeline" );
         module_Unneed( p_aout, p_aout->output.p_module );
         return -1;
     }

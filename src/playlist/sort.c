@@ -2,9 +2,9 @@
  * sort.c : Playlist sorting functions
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: sort.c 12564 2005-09-15 17:42:24Z zorglub $
+ * $Id: sort.c 14333 2006-02-16 17:31:31Z dionoea $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 #include <stdlib.h>                                      /* free(), strtol() */
 #include <stdio.h>                                              /* sprintf() */
@@ -187,10 +187,10 @@ int playlist_ItemArraySort( playlist_t *p_playlist, int i_items,
             {
                 char *psz_a = vlc_input_item_GetInfo(
                                  &pp_items[i]->input,
-                                 _( "Meta-information"), _("Artist") );
+                                 _(VLC_META_INFO_CAT), _(VLC_META_ARTIST) );
                 char *psz_b = vlc_input_item_GetInfo(
                                  &pp_items[i_small]->input,
-                                 _( "Meta-information"), _("Artist") );
+                                 _(VLC_META_INFO_CAT), _(VLC_META_ARTIST) );
                 if( pp_items[i]->i_children == -1 &&
                     pp_items[i_small]->i_children >= 0 )
                 {
@@ -230,10 +230,10 @@ int playlist_ItemArraySort( playlist_t *p_playlist, int i_items,
 	    {
                 char *psz_a = vlc_input_item_GetInfo(
                                  &pp_items[i]->input,
-                                 _( "Meta-information"), _("Album/movie/show title") );
+                                 _(VLC_META_INFO_CAT), _(VLC_META_COLLECTION) );
                 char *psz_b = vlc_input_item_GetInfo(
                                  &pp_items[i_small]->input,
-                                 _( "Meta-information"), _("Album/movie/show title") );
+                                 _(VLC_META_INFO_CAT), _(VLC_META_COLLECTION) );
                 if( pp_items[i]->i_children == -1 &&
                     pp_items[i_small]->i_children >= 0 )
                 {
@@ -325,17 +325,17 @@ int playlist_NodeGroup( playlist_t * p_playlist , int i_view,
         else if ( i_mode == SORT_AUTHOR )
         {
             psz_search = vlc_input_item_GetInfo( &pp_items[i]->input,
-                            _("Meta-information"), _( "Artist" ) );
+                            _(VLC_META_INFO_CAT), _(VLC_META_ARTIST) );
         }
         else if ( i_mode == SORT_ALBUM )
         {
             psz_search = vlc_input_item_GetInfo( &pp_items[i]->input,
-                            _("Meta-information"), _( "Album/movie/show title" ) );
+                            _(VLC_META_INFO_CAT), _(VLC_META_COLLECTION) );
         }
         else if ( i_mode == SORT_GENRE )
         {
             psz_search = vlc_input_item_GetInfo( &pp_items[i]->input,
-                            _("Meta-information"), _( "Genre" ) );
+                            _(VLC_META_INFO_CAT), _(VLC_META_GENRE) );
         }
 
         if( psz_search && !strcmp( psz_search, "" ) )

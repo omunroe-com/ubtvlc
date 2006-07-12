@@ -2,9 +2,9 @@
  * iso_lang.c: function to decode language code (in dvd or a52 for instance).
  *****************************************************************************
  * Copyright (C) 1998-2004 the VideoLAN team
- * $Id: iso_lang.c 11716 2005-07-12 18:01:14Z courmisch $
+ * $Id: iso_lang.c 14118 2006-02-01 18:06:48Z courmisch $
  *
- * Author: Stéphane Borel <stef@via.ecp.fr>
+ * Author: StÃ©phane Borel <stef@via.ecp.fr>
  *         Arnaud de Bossoreille de Ribou <bozo@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************

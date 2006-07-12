@@ -2,10 +2,10 @@
  * var_text.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: var_text.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: var_text.hpp 15249 2006-04-17 15:18:05Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef VAR_TEXT_HPP
@@ -32,8 +32,9 @@
 
 
 /// String variable
-class VarText: public Variable, public Subject<VarText>,
-               public Observer<VarPercent>, public Observer< VarText >
+class VarText: public Variable, public Subject<VarText, void*>,
+               public Observer<VarPercent, void*>,
+               public Observer< VarText,void*>
 {
     public:
         // Set substVars to true to replace "$X" variables in the text
@@ -48,10 +49,13 @@ class VarText: public Variable, public Subject<VarText>,
         virtual const UString get() const;
 
         /// Methods called when an observed variable is modified
-        virtual void onUpdate( Subject<VarPercent> &rVariable );
-        virtual void onUpdate( Subject<VarText> &rVariable );
+        virtual void onUpdate( Subject<VarPercent, void*> &rVariable, void* );
+        virtual void onUpdate( Subject<VarText, void*> &rVariable, void* );
 
     private:
+        /// Stop observing other variables
+        void delObservers();
+
         /// Variable type
         static const string m_type;
         /// The text of the variable

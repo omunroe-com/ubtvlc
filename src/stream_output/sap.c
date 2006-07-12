@@ -2,7 +2,7 @@
  * sap.c : SAP announce handler
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: sap.c 12929 2005-10-23 10:06:49Z courmisch $
+ * $Id: sap.c 15025 2006-04-01 11:27:40Z fkuehne $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Rémi Denis-Courmont <rem # videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -57,7 +57,6 @@ struct sap_address_t
 {
     char *psz_address;
     char psz_machine[NI_MAXNUMERICHOST];
-    int i_port;
     int i_rfd; /* Read socket */
     int i_wfd; /* Write socket */
 
@@ -124,7 +123,7 @@ sap_handler_t *announce_SAPHandlerCreate( announce_handler_t *p_announce )
     if( vlc_thread_create( p_sap, "sap handler", RunThread,
                        VLC_THREAD_PRIORITY_LOW, VLC_FALSE ) )
     {
-        msg_Dbg( p_announce, "Unable to spawn SAP handler thread");
+        msg_Dbg( p_announce, "unable to spawn SAP handler thread");
         free( p_sap );
         return NULL;
     };
@@ -247,7 +246,7 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
     if( p_session->psz_uri == NULL )
     {
         vlc_mutex_unlock( &p_sap->object_lock );
-        msg_Err( p_sap, "*FIXME* Unexpected NULL URI for SAP announce" );
+        msg_Err( p_sap, "*FIXME* unexpected NULL URI for SAP announce" );
         msg_Err( p_sap, "This should not happen. VLC needs fixing." );
         return VLC_EGENERIC;
     }
@@ -318,8 +317,20 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
             if ((ipv4 & 0xfffc0000) == 0xefc00000)
                 ipv4 =  0xefc3ffff;
             else
+            if ((ipv4 & 0xff000000) == 0xef000000)
+                ipv4 = 0;
+            else
             /* other addresses => 224.2.127.254 */
                 ipv4 = 0xe0027ffe;
+
+            if( ipv4 == 0 )
+            {
+                msg_Err( p_sap, "Out-of-scope multicast address "
+                        "not supported by SAP: %s", p_session->psz_uri );
+                vlc_mutex_unlock( &p_sap->object_lock );
+                vlc_freeaddrinfo( res );
+                return VLC_EGENERIC;
+            }
 
             ((struct sockaddr_in *)&addr)->sin_addr.s_addr = htonl( ipv4 );
             break;
@@ -370,9 +381,7 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
             return VLC_ENOMEM;
         }
         p_address->psz_address = strdup( psz_addr );
-        p_address->i_port  =  9875;
-        p_address->i_wfd = net_OpenUDP( p_sap, "", 0, psz_addr,
-                                        p_address->i_port );
+        p_address->i_wfd = net_ConnectUDP( p_sap, psz_addr, SAP_PORT, 255 );
         if( p_address->i_wfd != -1 )
         {
             char *ptr;
@@ -389,8 +398,7 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
 
         if( p_sap->b_control == VLC_TRUE )
         {
-            p_address->i_rfd = net_OpenUDP( p_sap, psz_addr,
-                                            p_address->i_port, "", 0 );
+            p_address->i_rfd = net_OpenUDP( p_sap, psz_addr, SAP_PORT, "", 0 );
             if( p_address->i_rfd != -1 )
                 net_StopSend( p_address->i_rfd );
             p_address->i_buff = 0;
@@ -447,13 +455,12 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
                    psz_head + 4 );
     }
     else
-#else
+#endif
     {
         inet_pton( AF_INET, /* can't fail */
                    p_sap_session->p_address->psz_machine,
                    psz_head + 4 );
     }
-#endif
 
     memcpy( psz_head + (b_ipv6 ? 20 : 8), "application/sdp", 15 );
 
@@ -490,7 +497,7 @@ static int announce_SAPAnnounceAdd( sap_handler_t *p_sap,
                  p_sap->i_sessions,
                  p_sap->i_sessions,
                  p_sap_session );
-    msg_Dbg( p_sap,"Addresses: %i  Sessions: %i",
+    msg_Dbg( p_sap,"%i addresses, %i sessions",
                    p_sap->i_addresses,p_sap->i_sessions);
 
     /* Remember the SAP session for later deletion */
@@ -553,12 +560,12 @@ static int announce_SendSAPAnnounce( sap_handler_t *p_sap,
     if( p_session->i_next < mdate() )
     {
 #ifdef EXTRA_DEBUG
-        msg_Dbg( p_sap, "Sending announce");
+        msg_Dbg( p_sap, "sending announce");
 #endif
         i_ret = net_Write( p_sap, p_session->p_address->i_wfd, NULL,
                            p_session->psz_data,
                            p_session->i_length );
-        if( i_ret != p_session->i_length )
+        if( i_ret != (int)p_session->i_length )
         {
             msg_Warn( p_sap, "SAP send failed on address %s (%i %i)",
                       p_session->p_address->psz_address,
@@ -621,14 +628,16 @@ static char *SDPGenerate( sap_handler_t *p_sap,
                             "%s%s%s",
                             i_sdp_id, i_sdp_version,
                             ipv, p_addr->psz_machine,
-                            psz_name, ipv, psz_uri, p_session->i_ttl,
+                            psz_name, ipv, psz_uri,
+                            /* FIXME: 1 is IPv4 default TTL, not that of IPv6 */
+                            p_session->i_ttl ?: (config_GetInt( p_sap, "ttl" ) ?: 1),
                             p_session->i_port, 
                             p_session->b_rtp ? "RTP/AVP" : "udp",
                             p_session->i_payload,
                             psz_group ? "a=x-plgroup:" : "",
                             psz_group ? psz_group : "", psz_group ? "\r\n" : "" ) == -1 )
         return NULL;
-    
+
     msg_Dbg( p_sap, "Generated SDP (%i bytes):\n%s", strlen(psz_sdp),
              psz_sdp );
     return psz_sdp;
@@ -678,10 +687,8 @@ static int CalculateRate( sap_handler_t *p_sap, sap_address_t *p_address )
         p_address->i_interval = MAX_INTERVAL;
     }
 #ifdef EXTRA_DEBUG
-    msg_Dbg( p_sap,"%s:%i : Rate=%i, Interval = %i s",
-                    p_address->psz_address,p_address->i_port,
-                    i_rate,
-                    p_address->i_interval );
+    msg_Dbg( p_sap,"%s:%i: rate=%i, interval = %i s",
+             p_address->psz_address,SAP_PORT, i_rate, p_address->i_interval );
 #endif
 
     p_address->b_ready = VLC_TRUE;

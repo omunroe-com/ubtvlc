@@ -2,7 +2,7 @@
  * esd.c : EsounD module
  *****************************************************************************
  * Copyright (C) 2000, 2001 the VideoLAN team
- * $Id: esd.c 12744 2005-10-02 13:04:25Z dionoea $
+ * $Id: esd.c 14568 2006-03-02 13:35:43Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,14 +18,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
 #include <errno.h>                                                 /* ENOMEM */
-#include <fcntl.h>                                       /* open(), O_WRONLY */
 #include <string.h>                                            /* strerror() */
 #include <unistd.h>                                      /* write(), close() */
 #include <stdlib.h>                            /* calloc(), malloc(), free() */

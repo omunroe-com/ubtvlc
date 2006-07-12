@@ -2,7 +2,7 @@
  * video.cpp : WinCE gui plugin for VLC
  *****************************************************************************
  * Copyright (C) 2000-2004, 2003 the VideoLAN team
- * $Id: video.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: video.cpp 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Marodon Cedric <cedric_marodon@yahoo.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -227,9 +227,6 @@ int VideoWindow::ControlWindow( void *p_window, int i_query, va_list args )
 
     switch( i_query )
     {
-    case VOUT_SET_ZOOM:
-        break;
-
     case VOUT_SET_STAY_ON_TOP:
         break;
 

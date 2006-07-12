@@ -2,7 +2,7 @@
  * wince.cpp: WinCE gui plugin for VLC
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: wince.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: wince.cpp 13859 2006-01-04 22:29:53Z zorglub $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -112,7 +112,7 @@ static int Open( vlc_object_t *p_this )
     }
 
     // Suscribe to messages bank
-    p_intf->p_sys->p_sub = msg_Subscribe( p_intf );
+    p_intf->p_sys->p_sub = msg_Subscribe( p_intf, MSG_QUEUE_NORMAL );
 
     // Misc init
     p_intf->p_sys->p_audio_menu = NULL;

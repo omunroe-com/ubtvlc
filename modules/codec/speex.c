@@ -2,7 +2,7 @@
  * speex.c: speex decoder/packetizer/encoder module making use of libspeex.
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: speex.c 12745 2005-10-02 13:12:31Z dionoea $
+ * $Id: speex.c 15005 2006-03-31 16:28:03Z xtophe $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -344,7 +344,7 @@ static int ProcessInitialHeader( decoder_t *p_dec, ogg_packet *p_oggpacket )
     if( p_header->speex_version_id > 1 )
     {
         msg_Err( p_dec, "this file was encoded with Speex bit-stream "
-                 "version %d, which I don't know how to decode.",
+                 "version %d which is not supported by this decoder.",
                  p_header->speex_version_id );
         return VLC_EGENERIC;
     }

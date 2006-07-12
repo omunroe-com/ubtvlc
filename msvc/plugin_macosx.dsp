@@ -130,6 +130,16 @@ SOURCE="..\modules\gui\macosx\equalizer.m"
 # PROP Intermediate_Dir "Debug\modules\gui\macosx"
 # End Source File
 # Begin Source File
+SOURCE="..\modules\gui\macosx\interaction.m"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=macosx" /D "MODULE_NAME_IS_macosx" 
+!IF "$(CFG)" == "plugin_macosx - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\macosx"
+# PROP Intermediate_Dir "Release\modules\gui\macosx"
+!ELSEIF "$(CFG)" == "plugin_macosx - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\macosx"
+# PROP Intermediate_Dir "Debug\modules\gui\macosx"
+# End Source File
+# Begin Source File
 SOURCE="..\modules\gui\macosx\intf.m"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=macosx" /D "MODULE_NAME_IS_macosx" 
 !IF "$(CFG)" == "plugin_macosx - Win32 Release"
@@ -279,6 +289,26 @@ SOURCE="..\modules\gui\macosx\bookmarks.m"
 # PROP Output_Dir "Debug\modules\gui\macosx"
 # PROP Intermediate_Dir "Debug\modules\gui\macosx"
 # End Source File
+# Begin Source File
+SOURCE="..\modules\gui\macosx\embeddedwindow.m"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=macosx" /D "MODULE_NAME_IS_macosx" 
+!IF "$(CFG)" == "plugin_macosx - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\macosx"
+# PROP Intermediate_Dir "Release\modules\gui\macosx"
+!ELSEIF "$(CFG)" == "plugin_macosx - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\macosx"
+# PROP Intermediate_Dir "Debug\modules\gui\macosx"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\macosx\update.m"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=macosx" /D "MODULE_NAME_IS_macosx" 
+!IF "$(CFG)" == "plugin_macosx - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\macosx"
+# PROP Intermediate_Dir "Release\modules\gui\macosx"
+!ELSEIF "$(CFG)" == "plugin_macosx - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\macosx"
+# PROP Intermediate_Dir "Debug\modules\gui\macosx"
+# End Source File
 
 # End Group
 
@@ -297,6 +327,9 @@ SOURCE="..\modules\gui\macosx\controls.h"
 # End Source File
 # Begin Source File
 SOURCE="..\modules\gui\macosx\equalizer.h"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\macosx\interaction.h"
 # End Source File
 # Begin Source File
 SOURCE="..\modules\gui\macosx\intf.h"
@@ -333,6 +366,12 @@ SOURCE="..\modules\gui\macosx\extended.h"
 # End Source File
 # Begin Source File
 SOURCE="..\modules\gui\macosx\bookmarks.h"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\macosx\embeddedwindow.h"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\macosx\update.h"
 # End Source File
 
 # End Group

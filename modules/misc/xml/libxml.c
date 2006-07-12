@@ -2,7 +2,7 @@
  * libxml.c: XML parser using libxml2
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: libxml.c 12783 2005-10-08 15:35:18Z dionoea $
+ * $Id: libxml.c 14958 2006-03-29 07:33:35Z fkuehne $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <stdlib.h>
@@ -38,8 +38,6 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 vlc_module_begin();
-    set_category( CAT_ADVANCED );
-    set_subcategory( SUBCAT_ADVANCED_XML );
     set_description( _("XML Parser (using libxml2)") );
     set_capability( "xml", 10 );
     set_callbacks( Open, Close );
@@ -101,7 +99,8 @@ static void CatalogLoad( xml_t *p_xml, const char *psz_filename )
 static void CatalogAdd( xml_t *p_xml, const char *psz_arg1,
                           const char *psz_arg2, const char *psz_filename )
 {
-    xmlCatalogAdd( psz_arg1, psz_arg2, psz_filename );
+    xmlCatalogAdd( (unsigned char*)psz_arg1, (unsigned char*)psz_arg2, 
+        (unsigned char*)psz_filename );
 }
 
 /*****************************************************************************
@@ -129,7 +128,7 @@ static xml_reader_t *ReaderCreate( xml_t *p_xml, stream_t *p_stream )
                                       NULL, NULL, 0 );
     if( !p_libxml_reader )
     {
-        msg_Err( p_xml, "failed to create xml parser" );
+        msg_Err( p_xml, "failed to create XML parser" );
         return 0;
     }
 

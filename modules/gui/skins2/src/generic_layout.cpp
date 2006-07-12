@@ -2,10 +2,10 @@
  * generic_layout.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: generic_layout.cpp 12469 2005-09-03 22:25:36Z ipkiss $
+ * $Id: generic_layout.cpp 15508 2006-05-01 13:34:54Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "generic_layout.hpp"
@@ -27,6 +27,7 @@
 #include "os_factory.hpp"
 #include "os_graphics.hpp"
 #include "../controls/ctrl_generic.hpp"
+#include "../controls/ctrl_video.hpp"
 
 
 GenericLayout::GenericLayout( intf_thread_t *pIntf, int width, int height,
@@ -34,7 +35,8 @@ GenericLayout::GenericLayout( intf_thread_t *pIntf, int width, int height,
                               int maxHeight ):
     SkinObject( pIntf ), m_pWindow( NULL ), m_width( width ),
     m_height( height ), m_minWidth( minWidth ), m_maxWidth( maxWidth ),
-    m_minHeight( minHeight ), m_maxHeight( maxHeight )
+    m_minHeight( minHeight ), m_maxHeight( maxHeight ), m_pVideoControl( NULL ),
+    m_visible( false )
 {
     // Get the OSFactory
     OSFactory *pOsFactory = OSFactory::instance( getIntf() );
@@ -107,10 +109,16 @@ void GenericLayout::addControl( CtrlGeneric *pControl,
         {
             m_controlList.push_back( LayeredControl( pControl, layer ) );
         }
+
+        // Check if it is a video control
+        if( pControl->getType() == "video" )
+        {
+            m_pVideoControl = (CtrlVideo*)pControl;
+        }
     }
     else
     {
-        msg_Dbg( getIntf(), "Adding NULL control in the layout" );
+        msg_Dbg( getIntf(), "adding NULL control in the layout" );
     }
 }
 
@@ -144,6 +152,24 @@ void GenericLayout::onControlUpdate( const CtrlGeneric &rCtrl,
 
 void GenericLayout::resize( int width, int height )
 {
+    // Check boundaries
+    if( width < m_minWidth )
+    {
+        width = m_minWidth;
+    }
+    if( width > m_maxWidth )
+    {
+        width = m_maxWidth;
+    }
+    if( height < m_minHeight )
+    {
+        height = m_minHeight;
+    }
+    if( height > m_maxHeight )
+    {
+        height = m_maxHeight;
+    }
+
     if( width == m_width && height == m_height )
     {
         return;
@@ -165,13 +191,7 @@ void GenericLayout::resize( int width, int height )
     list<LayeredControl>::const_iterator iter;
     for( iter = m_controlList.begin(); iter != m_controlList.end(); iter++ )
     {
-        (*iter).m_pControl->onResize();
-        const Position *pPos = (*iter).m_pControl->getPosition();
-        if( pPos )
-        {
-            (*iter).m_pControl->draw( *m_pImage, pPos->getLeft(),
-                                      pPos->getTop() );
-        }
+        iter->m_pControl->onResize();
     }
 
     // Resize and refresh the associated window
@@ -179,13 +199,11 @@ void GenericLayout::resize( int width, int height )
     if( pWindow )
     {
         // Resize the window
-        pWindow->refresh( 0, 0, width, height );
         pWindow->resize( width, height );
-        pWindow->refresh( 0, 0, width, height );
-
+        refreshAll();
         // Change the shape of the window and redraw it
         pWindow->updateShape();
-        pWindow->refresh( 0, 0, width, height );
+        refreshAll();
     }
 }
 
@@ -198,6 +216,10 @@ void GenericLayout::refreshAll()
 
 void GenericLayout::refreshRect( int x, int y, int width, int height )
 {
+    // Do nothing if the layout is hidden
+    if( !m_visible )
+        return;
+
     // Draw all the controls of the layout
     list<LayeredControl>::const_iterator iter;
     list<LayeredControl>::const_iterator iterVideo = m_controlList.end();
@@ -205,13 +227,9 @@ void GenericLayout::refreshRect( int x, int y, int width, int height )
     {
         CtrlGeneric *pCtrl = (*iter).m_pControl;
         const Position *pPos = pCtrl->getPosition();
-        if( pCtrl->isVisible() && pPos )
+        if( pPos && pCtrl->isVisible() )
         {
             pCtrl->draw( *m_pImage, pPos->getLeft(), pPos->getTop() );
-            // Remember the video control (we assume there is at most one video
-            // control per layout)
-            if( pCtrl->getType() == "video" && pCtrl->getPosition() )
-                iterVideo = iter;
         }
     }
 
@@ -230,7 +248,7 @@ void GenericLayout::refreshRect( int x, int y, int width, int height )
             height = m_height - y;
 
         // Refresh the window... but do not paint on a video control!
-        if( iterVideo == m_controlList.end() )
+        if( !m_pVideoControl )
         {
             // No video control, we can safely repaint the rectangle
             pWindow->refresh( x, y, width, height );
@@ -245,10 +263,10 @@ void GenericLayout::refreshRect( int x, int y, int width, int height )
             // becomes a real mess :)
 
             // Use short variable names for convenience
-            int xx = iterVideo->m_pControl->getPosition()->getLeft();
-            int yy = iterVideo->m_pControl->getPosition()->getTop();
-            int ww = iterVideo->m_pControl->getPosition()->getWidth();
-            int hh = iterVideo->m_pControl->getPosition()->getHeight();
+            int xx = m_pVideoControl->getPosition()->getLeft();
+            int yy = m_pVideoControl->getPosition()->getTop();
+            int ww = m_pVideoControl->getPosition()->getWidth();
+            int hh = m_pVideoControl->getPosition()->getHeight();
 
             // Top part:
             if( y < yy )
@@ -276,5 +294,30 @@ const list<Anchor*>& GenericLayout::getAnchorList() const
 void GenericLayout::addAnchor( Anchor *pAnchor )
 {
     m_anchorList.push_back( pAnchor );
+}
+
+
+void GenericLayout::onShow()
+{
+    m_visible = true;
+
+    refreshAll();
+    // TODO find a better way to handle the vout ?
+    if( m_pVideoControl )
+    {
+        m_pVideoControl->setVisible( true );
+    }
+}
+
+
+void GenericLayout::onHide()
+{
+    m_visible = false;
+
+    // TODO find a better way to handle the vout ?
+    if( m_pVideoControl )
+    {
+        m_pVideoControl->setVisible( false );
+    }
 }
 

@@ -2,7 +2,7 @@
  * wall.c : Wall video plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001, 2002, 2003 the VideoLAN team
- * $Id: wall.c 12821 2005-10-11 17:16:13Z zorglub $
+ * $Id: wall.c 14977 2006-03-30 08:40:51Z zorglub $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -51,19 +51,20 @@ static int  SendEvents( vlc_object_t *, char const *,
  * Module descriptor
  *****************************************************************************/
 #define COLS_TEXT N_("Number of columns")
-#define COLS_LONGTEXT N_("Select the number of horizontal video windows in " \
+#define COLS_LONGTEXT N_("Number of horizontal windows in " \
     "which to split the video.")
 
 #define ROWS_TEXT N_("Number of rows")
-#define ROWS_LONGTEXT N_("Select the number of vertical video windows in " \
+#define ROWS_LONGTEXT N_("Number of vertical windows in " \
     "which to split the video.")
 
 #define ACTIVE_TEXT N_("Active windows")
-#define ACTIVE_LONGTEXT N_("Comma separated list of active windows, " \
+#define ACTIVE_LONGTEXT N_("Comma-separated list of active windows, " \
     "defaults to all")
 
 #define ASPECT_TEXT N_("Element aspect ratio")
-#define ASPECT_LONGTEXT N_("The aspect ratio of the individual displays building the display wall")
+#define ASPECT_LONGTEXT N_("Aspect ratio of the individual displays " \
+   "building the wall.")
 
 vlc_module_begin();
     set_description( _("Wall video filter") );

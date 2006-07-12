@@ -16,7 +16,7 @@
 #include <xmms/configfile.h>
 #include <xmms/titlestring.h>
 
-#include "faad.h"
+#include "neaacdec.h"
 #include "mp4ff.h"
 
 #define MP4_DESCRIPTION	"MP4 & MPEG2/4-AAC audio player - 1.2.x"
@@ -280,7 +280,7 @@ static void *mp4Decode(void *args)
       pthread_mutex_unlock(&mutex);
       pthread_exit(NULL);
     }else{  
-      faacDecHandle	decoder;
+      NeAACDecHandle	decoder;
       unsigned char	*buffer	= NULL;
       guint		bufferSize = 0;
       gulong		samplerate;
@@ -294,14 +294,14 @@ static void *mp4Decode(void *args)
       mp4AudioSpecificConfig mp4ASC;
       gchar		*xmmstitle;
 
-      decoder = faacDecOpen();
+      decoder = NeAACDecOpen();
       mp4ff_get_decoder_config(infile, mp4track, &buffer, &bufferSize);
-      if(faacDecInit2(decoder, buffer, bufferSize, &samplerate, &channels)<0){
+      if(NeAACDecInit2(decoder, buffer, bufferSize, &samplerate, &channels)<0){
           goto end;
       }
       if(buffer){
 	framesize = 1024;
-	if(faacDecAudioSpecificConfig(buffer, bufferSize, &mp4ASC) >= 0){
+	if(NeAACDecAudioSpecificConfig(buffer, bufferSize, &mp4ASC) >= 0){
 	  if(mp4ASC.frameLengthFlag == 1) framesize = 960;
 	  if(mp4ASC.sbr_present_flag == 1) framesize *= 2;
 	}
@@ -366,7 +366,7 @@ static void *mp4Decode(void *args)
 	  mp4_ip.output->buffer_free();
             goto end;
 	}else{
-	  sampleBuffer = faacDecDecode(decoder, &frameInfo, buffer, bufferSize);
+	  sampleBuffer = NeAACDecDecode(decoder, &frameInfo, buffer, bufferSize);
 	  if(frameInfo.error > 0){
 	    g_print("MP4: %s\n",
 		    faacDecGetErrorMessage(frameInfo.error));
@@ -394,7 +394,7 @@ static void *mp4Decode(void *args)
 end:
       mp4_ip.output->close_audio();
       g_free(args);
-      faacDecClose(decoder);
+      NeAACDecClose(decoder);
       if(infile) mp4ff_close(infile);
       if(mp4cb) g_free(mp4cb);
       bPlaying = FALSE;
@@ -405,7 +405,7 @@ end:
   }else{
     // WE ARE READING AN AAC FILE
     FILE		*file = NULL;
-    faacDecHandle	decoder = 0;
+    NeAACDecHandle	decoder = 0;
     guchar		*buffer = 0;
     gulong		bufferconsumed = 0;
     gulong		samplerate = 0;
@@ -415,7 +415,7 @@ end:
     gchar		*temp = g_strdup(args);
     gchar		*ext  = strrchr(temp, '.');
     gchar		*xmmstitle = NULL;
-    faacDecConfigurationPtr config;
+    NeAACDecConfigurationPtr config;
 
     if((file = fopen(args, "rb")) == 0){
       g_print("AAC: can't find file %s\n", args);
@@ -423,21 +423,21 @@ end:
       pthread_mutex_unlock(&mutex);
       pthread_exit(NULL);
     }
-    if((decoder = faacDecOpen()) == NULL){
+    if((decoder = NeAACDecOpen()) == NULL){
       g_print("AAC: Open Decoder Error\n");
       fclose(file);
       bPlaying = FALSE;
       pthread_mutex_unlock(&mutex);
       pthread_exit(NULL);
     }
-    config = faacDecGetCurrentConfiguration(decoder);
+    config = NeAACDecGetCurrentConfiguration(decoder);
     config->useOldADTSFormat = 0;
-    faacDecSetConfiguration(decoder, config);
+    NeAACDecSetConfiguration(decoder, config);
     if((buffer = g_malloc(BUFFER_SIZE)) == NULL){
       g_print("AAC: error g_malloc\n");
       fclose(file);
       bPlaying = FALSE;
-      faacDecClose(decoder);
+      NeAACDecClose(decoder);
       pthread_mutex_unlock(&mutex);
       pthread_exit(NULL);
     }
@@ -446,7 +446,7 @@ end:
       g_free(buffer);
       fclose(file);
       bPlaying = FALSE;
-      faacDecClose(decoder);
+      NeAACDecClose(decoder);
       pthread_mutex_unlock(&mutex);
       pthread_exit(NULL);
     }
@@ -472,7 +472,7 @@ end:
     if(input->track_name) g_free(input->track_name);
     if(input->genre) g_free(input->genre);
     g_free(input);
-    bufferconsumed = faacDecInit(decoder,
+    bufferconsumed = NeAACDecInit(decoder,
 				 buffer,
 				 buffervalid,
 				 &samplerate,
@@ -501,7 +501,7 @@ end:
     mp4_ip.output->flush(0);
 
     while(bPlaying && buffervalid > 0){
-      faacDecFrameInfo	finfo;
+      NeAACDecFrameInfo	finfo;
       unsigned long	samplesdecoded;
       char*		sample_buffer = NULL;
       /*
@@ -520,24 +520,24 @@ end:
 			     BUFFER_SIZE-buffervalid, file);
 	bufferconsumed = 0;
       }
-      sample_buffer = faacDecDecode(decoder, &finfo, buffer, buffervalid);
+      sample_buffer = NeAACDecDecode(decoder, &finfo, buffer, buffervalid);
       if(finfo.error){
-	config = faacDecGetCurrentConfiguration(decoder);
+	config = NeAACDecGetCurrentConfiguration(decoder);
 	if(config->useOldADTSFormat != 1){
-	  faacDecClose(decoder);
-	  decoder = faacDecOpen();
-	  config = faacDecGetCurrentConfiguration(decoder);
+	  NeAACDecClose(decoder);
+	  decoder = NeAACDecOpen();
+	  config = NeAACDecGetCurrentConfiguration(decoder);
 	  config->useOldADTSFormat = 1;
-	  faacDecSetConfiguration(decoder, config);
+	  NeAACDecSetConfiguration(decoder, config);
 	  finfo.bytesconsumed=0;
 	  finfo.samples = 0;
-	  faacDecInit(decoder,
+	  NeAACDecInit(decoder,
 		      buffer,
 		      buffervalid,
 		      &samplerate,
 		      &channels);
 	}else{
-	  g_print("FAAD2 Warning %s\n", faacDecGetErrorMessage(finfo.error));
+	  g_print("FAAD2 Warning %s\n", NeAACDecGetErrorMessage(finfo.error));
 	  buffervalid = 0;
 	}
       }
@@ -562,7 +562,7 @@ end:
     mp4_ip.output->close_audio();
     bPlaying = FALSE;
     g_free(buffer);
-    faacDecClose(decoder);
+    NeAACDecClose(decoder);
     g_free(xmmstitle);
     fclose(file);
     seekPosition = -1;

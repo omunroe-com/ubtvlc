@@ -2,7 +2,7 @@
  * interface.cpp: WinCE gui plugin for VLC
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: interface.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: interface.cpp 14737 2006-03-12 10:41:31Z courmisch $
  *
  * Authors: Marodon Cedric <cedric_marodon@yahoo.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -494,9 +494,15 @@ LRESULT Interface::WndProc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
         {
             string about = (string)"VLC media player " PACKAGE_VERSION +
                 _("\n(WinCE interface)\n\n") +
-                _("(c) 1996-2005 - the VideoLAN Team\n\n") +
+                _("(c) 1996-2006 - the VideoLAN Team\n\n") +
+                _("Compiled by ") + VLC_CompileBy() + "@" +
+                VLC_CompileHost() + "." + VLC_CompileDomain() + ".\n" +
+                _("Compiler: ") + VLC_Compiler() + ".\n" +
+#ifndef HAVE_SHARED_LIBVLC
+                _("Based on SVN revision: ") + VLC_Changeset() + ".\n\n" +
+#endif
                 _("The VideoLAN team <videolan@videolan.org>\n"
-                  "http://www.videolan.org/\n\n");
+                  "http://www.videolan.org/");
 
             MessageBox( hwnd, _FROMMB(about.c_str()),
                         _T("About VLC media player"), MB_OK );

@@ -14,7 +14,7 @@ for DLL to know too much about its environment.
 /*
  * Modified for use with MPlayer, detailed CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: win32.c 11593 2005-06-28 18:02:01Z courmisch $
+ * $Id: win32.c 14919 2006-03-25 14:37:36Z courmisch $
  */
 
 #include "config.h"
@@ -84,7 +84,7 @@ static int vsscanf( const char *str, const char *format, va_list ap)
 }
 #endif
 
-char* def_path = WIN32_PATH;
+static char* def_path = WIN32_PATH;
 
 static void do_cpuid(unsigned int ax, unsigned int *regs)
 {

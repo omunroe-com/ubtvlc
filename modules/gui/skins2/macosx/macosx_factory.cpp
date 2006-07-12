@@ -2,7 +2,7 @@
  * macosx_factory.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: macosx_factory.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: macosx_factory.cpp 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifdef MACOSX_SKINS
@@ -26,6 +26,7 @@
 #include "macosx_factory.hpp"
 #include "macosx_graphics.hpp"
 #include "macosx_loop.hpp"
+#include "macosx_popup.hpp"
 #include "macosx_timer.hpp"
 #include "macosx_window.hpp"
 #include "macosx_tooltip.hpp"
@@ -90,6 +91,12 @@ OSWindow *MacOSXFactory::createOSWindow( GenericWindow &rWindow, bool dragDrop,
 OSTooltip *MacOSXFactory::createOSTooltip()
 {
     return new MacOSXTooltip( getIntf() );
+}
+
+
+OSPopup *MacOSXFactory::createOSPopup()
+{
+    return new MacOSXPopup( getIntf() );
 }
 
 

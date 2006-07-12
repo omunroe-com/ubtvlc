@@ -2,7 +2,7 @@
  * b4s.c : B4S playlist format import
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: b4s.c 12836 2005-10-15 13:23:08Z sigmunau $
+ * $Id: b4s.c 14790 2006-03-18 02:06:16Z xtophe $
  *
  * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -84,7 +84,7 @@ int E_(Import_B4S)( vlc_object_t *p_this )
     p_demux->p_sys = p_sys = malloc( sizeof(demux_sys_t) );
     if( p_sys == NULL )
     {
-        msg_Err( p_demux, "Out of memory" );
+        msg_Err( p_demux, "out of memory" );
         return VLC_ENOMEM;
     }
     p_sys->b_shout = p_demux->psz_demux &&
@@ -133,7 +133,7 @@ static int Demux( demux_t *p_demux )
     b_shoutcast = p_sys->b_shout;
 
     p_playlist = (playlist_t *) vlc_object_find( p_demux, VLC_OBJECT_PLAYLIST,
-                                                 FIND_PARENT );
+                                                 FIND_ANYWHERE );
     if( !p_playlist )
     {
         msg_Err( p_demux, "can't find playlist" );
@@ -321,7 +321,7 @@ static int Demux( demux_t *p_demux )
                     if( psz_now )
                     {
                         vlc_input_item_AddInfo( &(p_item->input),
-                                                _("Meta-information"),
+                                                _(VLC_META_INFO_CAT),
                                                 _( VLC_META_NOW_PLAYING ),
                                                 "%s",
                                                 psz_now );
@@ -329,7 +329,7 @@ static int Demux( demux_t *p_demux )
                     if( psz_genre )
                     {
                         vlc_input_item_AddInfo( &p_item->input,
-                                                _("Meta-information"),
+                                                _(VLC_META_INFO_CAT),
                                                 _( VLC_META_GENRE ),
                                                 "%s",
                                                 psz_genre );
@@ -337,7 +337,7 @@ static int Demux( demux_t *p_demux )
                     if( psz_listeners )
                     {
                         vlc_input_item_AddInfo( &p_item->input,
-                                                _("Meta-information"),
+                                                _(VLC_META_INFO_CAT),
                                                 _( "Listeners" ),
                                                 "%s",
                                                 psz_listeners );
@@ -345,7 +345,7 @@ static int Demux( demux_t *p_demux )
                     if( psz_bitrate )
                     {
                         vlc_input_item_AddInfo( &p_item->input,
-                                                _("Meta-information"),
+                                                _(VLC_META_INFO_CAT),
                                                 _( "Bitrate" ),
                                                 "%s",
                                                 psz_bitrate );

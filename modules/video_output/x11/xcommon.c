@@ -1,8 +1,8 @@
 /*****************************************************************************
  * xcommon.c: Functions common to the X11 and XVideo plugins
  *****************************************************************************
- * Copyright (C) 1998-2001 the VideoLAN team
- * $Id: xcommon.c 13247 2005-11-14 20:28:22Z jpsaman $
+ * Copyright (C) 1998-2006 the VideoLAN team
+ * $Id: xcommon.c 15526 2006-05-02 19:21:23Z bigben $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Sam Hocevar <sam@zoy.org>
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -74,6 +74,10 @@
 
 #ifdef HAVE_XINERAMA
 #   include <X11/extensions/Xinerama.h>
+#endif
+
+#ifdef HAVE_X11_EXTENSIONS_XF86VMODE_H
+#   include <X11/extensions/xf86vmode.h>
 #endif
 
 #include "xcommon.h"
@@ -370,15 +374,27 @@ static int InitVideo( vout_thread_t *p_vout )
 
     switch( p_vout->output.i_chroma )
     {
-        case VLC_FOURCC('R','V','1','5'):
+        case VLC_FOURCC('R','V','1','6'):
+#if defined( WORDS_BIGENDIAN )
+            p_vout->output.i_rmask = 0xf800;
+            p_vout->output.i_gmask = 0x07e0;
+            p_vout->output.i_bmask = 0x001f;
+#else
             p_vout->output.i_rmask = 0x001f;
             p_vout->output.i_gmask = 0x07e0;
             p_vout->output.i_bmask = 0xf800;
+#endif
             break;
-        case VLC_FOURCC('R','V','1','6'):
+        case VLC_FOURCC('R','V','1','5'):
+#if defined( WORDS_BIGENDIAN )
+            p_vout->output.i_rmask = 0x7c00;
+            p_vout->output.i_gmask = 0x03e0;
+            p_vout->output.i_bmask = 0x001f;
+#else
             p_vout->output.i_rmask = 0x001f;
             p_vout->output.i_gmask = 0x03e0;
             p_vout->output.i_bmask = 0x7c00;
+#endif
             break;
     }
 
@@ -1310,7 +1326,7 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
 #ifdef HAVE_SYS_SHM_H
         if( p_pic->p_sys->p_image && p_vout->p_sys->b_shm )
         {
-            msg_Warn( p_vout, "couldn't create SHM image, disabling SHM." );
+            msg_Warn( p_vout, "couldn't create SHM image, disabling SHM" );
             p_vout->p_sys->b_shm = VLC_FALSE;
         }
 #endif /* HAVE_SYS_SHM_H */
@@ -1568,12 +1584,39 @@ static void ToggleFullScreen ( vout_thread_t *p_vout )
         {
             /* The window wasn't necessarily created at the requested size */
             p_vout->p_sys->p_win->i_x = p_vout->p_sys->p_win->i_y = 0;
-            p_vout->p_sys->p_win->i_width =
-                DisplayWidth( p_vout->p_sys->p_display,
-                              p_vout->p_sys->i_screen );
-            p_vout->p_sys->p_win->i_height =
-                DisplayHeight( p_vout->p_sys->p_display,
-                               p_vout->p_sys->i_screen );
+
+#ifdef HAVE_XF86VIDMODE
+            XF86VidModeModeLine mode;
+            int i_dummy;
+
+            if( XF86VidModeGetModeLine( p_vout->p_sys->p_display,
+                                        p_vout->p_sys->i_screen, &i_dummy,
+                                        &mode ) )
+            {
+                p_vout->p_sys->p_win->i_width = mode.hdisplay;
+                p_vout->p_sys->p_win->i_height = mode.vdisplay;
+
+                /* move cursor to the middle of the window to prevent
+                 * unwanted display move if the display is smaller than the
+                 * full desktop */
+                XWarpPointer( p_vout->p_sys->p_display, None,
+                              p_vout->p_sys->p_win->base_window, 0, 0, 0, 0,
+                              mode.hdisplay / 2 , mode.vdisplay / 2 );
+                /* force desktop view to upper left corner */
+                XF86VidModeSetViewPort( p_vout->p_sys->p_display,
+                                        p_vout->p_sys->i_screen, 0, 0 );
+            }
+            else
+#endif
+            {
+                p_vout->p_sys->p_win->i_width =
+                    DisplayWidth( p_vout->p_sys->p_display,
+                                p_vout->p_sys->i_screen );
+                p_vout->p_sys->p_win->i_height =
+                    DisplayHeight( p_vout->p_sys->p_display,
+                                p_vout->p_sys->i_screen );
+            }
+
         }
 
         XMoveResizeWindow( p_vout->p_sys->p_display,
@@ -1958,7 +2001,7 @@ static int InitDisplay( vout_thread_t *p_vout )
 
     if( config_GetInt( p_vout, MODULE_STRING "-shm" ) )
     {
-#   ifdef SYS_DARWIN
+#   ifdef __APPLE__
         /* FIXME: As of 2001-03-16, XFree4 for MacOS X does not support Xshm */
 #   else
         p_vout->p_sys->b_shm =
@@ -2024,13 +2067,26 @@ static int InitDisplay( vout_thread_t *p_vout )
          */
         xvisual_template.screen =   p_vout->p_sys->i_screen;
         xvisual_template.class =    TrueColor;
+/* In some cases, we get a truecolor class adaptor that has a different
+   color depth. So try to get a real true color one first */
+        xvisual_template.depth =    p_vout->p_sys->i_screen_depth;
+
         p_xvisual = XGetVisualInfo( p_vout->p_sys->p_display,
-                                    VisualScreenMask | VisualClassMask,
+                                    VisualScreenMask | VisualClassMask |
+                                    VisualDepthMask,
                                     &xvisual_template, &i_count );
         if( p_xvisual == NULL )
         {
-            msg_Err( p_vout, "no TrueColor visual available" );
-            return VLC_EGENERIC;
+            msg_Warn( p_vout, "No screen matching the required color depth" );
+            p_xvisual = XGetVisualInfo( p_vout->p_sys->p_display,
+                                    VisualScreenMask | VisualClassMask,
+                                    &xvisual_template, &i_count );
+            if( p_xvisual == NULL )
+            {
+            
+                msg_Err( p_vout, "no TrueColor visual available" );
+                return VLC_EGENERIC;
+            }
         }
 
         p_vout->output.i_rmask = p_xvisual->red_mask;
@@ -2288,21 +2344,41 @@ static void SetPalette( vout_thread_t *p_vout,
 static int Control( vout_thread_t *p_vout, int i_query, va_list args )
 {
     vlc_bool_t b_arg;
+    unsigned int i_width, i_height;
+    unsigned int *pi_width, *pi_height;
 
     switch( i_query )
     {
-        case VOUT_SET_ZOOM:
+        case VOUT_GET_SIZE:
+            if( p_vout->p_sys->p_win->owner_window )
+                return vout_ControlWindow( p_vout,
+                    (void *)p_vout->p_sys->p_win->owner_window, i_query, args);
+
+            pi_width  = va_arg( args, unsigned int * );
+            pi_height = va_arg( args, unsigned int * );
+
+            vlc_mutex_lock( &p_vout->p_sys->lock );
+            *pi_width  = p_vout->p_sys->p_win->i_width;
+            *pi_height = p_vout->p_sys->p_win->i_height;
+            vlc_mutex_unlock( &p_vout->p_sys->lock );
+            return VLC_SUCCESS;
+
+        case VOUT_SET_SIZE:
             if( p_vout->p_sys->p_win->owner_window )
                 return vout_ControlWindow( p_vout,
                     (void *)p_vout->p_sys->p_win->owner_window, i_query, args);
 
             vlc_mutex_lock( &p_vout->p_sys->lock );
 
+            i_width  = va_arg( args, unsigned int );
+            i_height = va_arg( args, unsigned int );
+            if( !i_width ) i_width = p_vout->i_window_width;
+            if( !i_height ) i_height = p_vout->i_window_height;
+
             /* Update dimensions */
             XResizeWindow( p_vout->p_sys->p_display,
                            p_vout->p_sys->p_win->base_window,
-                           p_vout->i_window_width,
-                           p_vout->i_window_height );
+                           i_width, i_height );
 
             vlc_mutex_unlock( &p_vout->p_sys->lock );
             return VLC_SUCCESS;

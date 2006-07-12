@@ -2,7 +2,7 @@
  * cdrom.c: cdrom tools
  *****************************************************************************
  * Copyright (C) 1998-2001 the VideoLAN team
- * $Id: cdrom.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: cdrom.c 14422 2006-02-20 12:21:15Z hartman $
  *
  * Authors: Johan Bilien <jobi@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -30,6 +30,7 @@
 #include <stdlib.h>
 
 #include <vlc/vlc.h>
+#include "charset.h"
 
 #ifdef HAVE_UNISTD_H
 #   include <unistd.h>
@@ -47,7 +48,7 @@
 
 #if defined( SYS_BSDI )
 #   include <dvd.h>
-#elif defined ( SYS_DARWIN )
+#elif defined ( __APPLE__ )
 #   include <CoreFoundation/CFBase.h>
 #   include <IOKit/IOKitLib.h>
 #   include <IOKit/storage/IOCDTypes.h>
@@ -221,7 +222,7 @@ int ioctl_GetTracksMap( vlc_object_t *p_this, const vcddev_t *p_vcddev,
          *  vcd device mode
          */
 
-#if defined( SYS_DARWIN )
+#if defined( __APPLE__ )
 
         CDTOC *pTOC;
         int i_descriptors;
@@ -232,7 +233,7 @@ int ioctl_GetTracksMap( vlc_object_t *p_this, const vcddev_t *p_vcddev,
             return 0;
         }
 
-        i_descriptors = darwin_getNumberOfDescriptors( pTOC );
+        i_descriptors = CDTOCGetDescriptorCount( pTOC );
         i_tracks = darwin_getNumberOfTracks( pTOC, i_descriptors );
 
         if( pp_sectors )
@@ -251,7 +252,7 @@ int ioctl_GetTracksMap( vlc_object_t *p_this, const vcddev_t *p_vcddev,
 
             pTrackDescriptors = pTOC->descriptors;
 
-            for( i_tracks = 0, i = 0; i <= i_descriptors; i++ )
+            for( i_tracks = 0, i = 0; i < i_descriptors; i++ )
             {
                 track = pTrackDescriptors[i].point;
 
@@ -581,7 +582,7 @@ int ioctl_ReadSectors( vlc_object_t *p_this, const vcddev_t *p_vcddev,
          *  vcd device mode
          */
 
-#if defined( SYS_DARWIN )
+#if defined( __APPLE__ )
         dk_cd_read_t cd_read;
 
         memset( &cd_read, 0, sizeof(cd_read) );
@@ -858,7 +859,7 @@ static int OpenVCDImage( vlc_object_t * p_this, const char *psz_dev,
 
     /* Open the cue file and try to parse it */
     msg_Dbg( p_this,"trying .cue file: %s", psz_cuefile );
-    cuefile = fopen( psz_cuefile, "rt" );
+    cuefile = utf8_fopen( psz_cuefile, "rt" );
     if( cuefile && fscanf( cuefile, "FILE %c", line ) &&
         fgets( line, 1024, cuefile ) )
     {
@@ -953,7 +954,7 @@ static void CloseVCDImage( vlc_object_t * p_this, vcddev_t *p_vcddev )
         free( p_vcddev->p_sectors );
 }
 
-#if defined( SYS_DARWIN )
+#if defined( __APPLE__ )
 /****************************************************************************
  * darwin_getTOC: get the TOC
  ****************************************************************************/
@@ -1056,37 +1057,17 @@ static CDTOC *darwin_getTOC( vlc_object_t * p_this, const vcddev_t *p_vcddev )
 }
 
 /****************************************************************************
- * darwin_getNumberOfDescriptors: get number of descriptors in TOC 
- ****************************************************************************/
-static int darwin_getNumberOfDescriptors( CDTOC *pTOC )
-{
-    int i_descriptors;
-
-    /* get TOC length */
-    i_descriptors = pTOC->length;
-
-    /* remove the first and last session */
-    i_descriptors -= ( sizeof(pTOC->sessionFirst) +
-                       sizeof(pTOC->sessionLast) );
-
-    /* divide the length by the size of a single descriptor */
-    i_descriptors /= sizeof(CDTOCDescriptor);
-
-    return( i_descriptors );
-}
-
-/****************************************************************************
  * darwin_getNumberOfTracks: get number of tracks in TOC 
  ****************************************************************************/
 static int darwin_getNumberOfTracks( CDTOC *pTOC, int i_descriptors )
 {
     u_char track;
     int i, i_tracks = 0; 
-    CDTOCDescriptor *pTrackDescriptors;
+    CDTOCDescriptor *pTrackDescriptors = NULL;
 
-    pTrackDescriptors = pTOC->descriptors;
+    pTrackDescriptors = (CDTOCDescriptor *)pTOC->descriptors;
 
-    for( i = i_descriptors; i >= 0; i-- )
+    for( i = i_descriptors; i > 0; i-- )
     {
         track = pTrackDescriptors[i].point;
 
@@ -1098,7 +1079,7 @@ static int darwin_getNumberOfTracks( CDTOC *pTOC, int i_descriptors )
 
     return( i_tracks );
 }
-#endif /* SYS_DARWIN */
+#endif /* __APPLE__ */
 
 #if defined( WIN32 )
 /*****************************************************************************

@@ -2,7 +2,7 @@
  * waveout.c : Windows waveOut plugin for vlc
  *****************************************************************************
  * Copyright (C) 2001 the VideoLAN team
- * $Id: waveout.c 13383 2005-11-25 19:21:47Z gbazin $
+ * $Id: waveout.c 14569 2006-03-02 13:54:40Z courmisch $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -42,6 +42,10 @@
  *****************************************************************************/
 #ifdef UNDER_CE
 #   define DWORD_PTR DWORD
+#   ifdef waveOutGetDevCaps
+#       undef waveOutGetDevCaps
+        MMRESULT WINAPI waveOutGetDevCaps(UINT, LPWAVEOUTCAPS, UINT);
+#   endif
 #endif
 
 #ifndef WAVE_FORMAT_IEEE_FLOAT
@@ -740,12 +744,14 @@ static void WaveOutThread( notification_thread_t *p_notif )
             if( (p_waveheader[i].dwFlags & WHDR_DONE) &&
                 p_waveheader[i].dwUser )
             {
+                aout_buffer_t *p_buffer =
+                        (aout_buffer_t *)(p_waveheader[i].dwUser);
                 /* Unprepare and free the buffers which has just been played */
                 waveOutUnprepareHeader( p_sys->h_waveout, &p_waveheader[i],
                                         sizeof(WAVEHDR) );
 
                 if( p_waveheader[i].dwUser != 1 )
-                    aout_BufferFree( (aout_buffer_t *)p_waveheader[i].dwUser );
+                    aout_BufferFree( p_buffer );
 
                 p_waveheader[i].dwUser = 0;
             }

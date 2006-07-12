@@ -2,10 +2,10 @@
  * interpreter.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: interpreter.hpp 12281 2005-08-20 00:31:27Z dionoea $
+ * $Id: interpreter.hpp 15249 2006-04-17 15:18:05Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef INTERPRETER_HPP
@@ -62,6 +62,9 @@ class Interpreter: public SkinObject
 
         /// Returns the tree variable corresponding to the given name
         VarTree *getVarTree( const string &rName, Theme *pTheme );
+
+        /// Get a constant value
+        string getConstant( const string &rValue );
 
     private:
         /// Map of global commands

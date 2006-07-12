@@ -2,7 +2,7 @@
  * darwin_specific.m: Darwin specific features
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: darwin_specific.m 13240 2005-11-14 17:45:51Z fkuehne $
+ * $Id: darwin_specific.m 15281 2006-04-19 14:24:55Z fkuehne $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 #include <string.h>                                              /* strdup() */
 #include <stdlib.h>                                                /* free() */
@@ -49,15 +49,21 @@ static int FindLanguage( const char * psz_lang )
         "Spanish", "es",
         "French", "fr",
         "Galician", "gl",
+        "Hebrew", "he",
+        "Hindu", "hi",
+        "Hungarian", "hu",
         "Italian", "it",
         "Japanese", "ja",
         "Korean", "ko",
+        "Georgian", "ka",
         "Dutch", "nl",
-        "Brazillian Portuguese", "pt_BR",
+        "Occitan", "oc",
+        "Brazilian Portuguese", "pt_BR",
         "Romanian", "ro",
         "Russian", "ru",
+        "Swedish", "sv",
         "Turkish", "tr",
-        "Simplified Chinese", "zh_CN", 
+        "Simplified Chinese", "zh_CN",
         "Chinese Traditional", "zh_TW",
         NULL
     };

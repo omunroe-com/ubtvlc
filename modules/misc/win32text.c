@@ -2,7 +2,7 @@
  * win32text.c : Text drawing routines using the TextOut win32 API
  *****************************************************************************
  * Copyright (C) 2002 - 2005 the VideoLAN team
- * $Id: freetype.c 10258 2005-03-10 13:37:29Z gbazin $
+ * $Id: win32text.c 15209 2006-04-14 09:37:39Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -52,28 +52,34 @@ static int SetFont( filter_t *, int );
  * Module descriptor
  *****************************************************************************/
 #define FONT_TEXT N_("Font")
-#define FONT_LONGTEXT N_("Font filename")
+#define FONT_LONGTEXT N_("Filename for the font you want to use")
 #define FONTSIZE_TEXT N_("Font size in pixels")
-#define FONTSIZE_LONGTEXT N_("The size of the fonts used by the osd module. " \
-    "If set to something different than 0 this option will override the " \
-    "relative font size " )
-#define OPACITY_TEXT N_("Opacity, 0..255")
-#define OPACITY_LONGTEXT N_("The opacity (inverse of transparency) of " \
-    "overlay text. 0 = transparent, 255 = totally opaque. " )
-#define COLOR_TEXT N_("Text Default Color")
-#define COLOR_LONGTEXT N_("The color of overlay text. 1 byte for each color, "\
-    "hexadecimal. #000000 = all colors off, 0xFF0000 = just Red, " \
-    "0xFFFFFF = all color on [White]" )
-#define FONTSIZER_TEXT N_("Font size")
-#define FONTSIZER_LONGTEXT N_("The size of the fonts used by the osd module" )
+/// \bug [String] extra space
+#define FONTSIZE_LONGTEXT N_("This is the default size of the fonts " \
+     "that will be rendered on the video. " \
+     "If set to something different than 0 this option will override the " \
+     "relative font size. " )
+#define OPACITY_TEXT N_("Opacity")
+#define OPACITY_LONGTEXT N_("The opacity (inverse of transparency) of the " \
+     "text that will be rendered on the video. 0 = transparent, " \
+     "255 = totally opaque. " )
+#define COLOR_TEXT N_("Text default color")
+#define COLOR_LONGTEXT N_("The color of the text that will be rendered on "\
+  "the video. This must be an hexadecimal (like HTML colors). The first two "\
+  "chars are for red, then green, then blue. #000000 = black, #FF0000 = red,"\
+  " #00FF00 = green, #FFFF00 = yellow (red + green), #FFFFFF = white" )
+#define FONTSIZER_TEXT N_("Relative font size")
+#define FONTSIZER_LONGTEXT N_("This is the relative default size of the " \
+  "fonts that will be rendered on the video. If absolute font size is set, "\
+   "relative size will be overriden." )
 
 static int   pi_sizes[] = { 20, 18, 16, 12, 6 };
 static char *ppsz_sizes_text[] = { N_("Smaller"), N_("Small"), N_("Normal"),
                                    N_("Large"), N_("Larger") };
 static int pi_color_values[] = {
   0x00000000, 0x00808080, 0x00C0C0C0, 0x00FFFFFF, 0x00800000,
-  0x00FF0000, 0x00FF00FF, 0x00FFFF00, 0x00808000, 0x00008000, 0x00008080, 
-  0x0000FF00, 0x00800080, 0x00000080, 0x000000FF, 0x0000FFFF }; 
+  0x00FF0000, 0x00FF00FF, 0x00FFFF00, 0x00808000, 0x00008000, 0x00008080,
+  0x0000FF00, 0x00800080, 0x00000080, 0x000000FF, 0x0000FFFF };
 
 static char *ppsz_color_descriptions[] = {
   N_("Black"), N_("Gray"), N_("Silver"), N_("White"), N_("Maroon"),
@@ -314,13 +320,18 @@ static int RenderText( filter_t *p_filter, subpicture_region_t *p_region_out,
 #endif
     if( !psz_string || !*psz_string ) return VLC_EGENERIC;
 
-    i_font_color = __MAX( __MIN( p_region_in->i_text_color, 0xFFFFFF ), 0 );
-    if( i_font_color == 0xFFFFFF ) i_font_color = p_sys->i_font_color;
-
-    i_font_alpha = __MAX( __MIN( p_region_in->i_text_alpha, 255 ), 0 );
-    if( !i_font_alpha ) i_font_alpha = 255 - p_sys->i_font_opacity;
-
-    i_font_size  = __MAX( __MIN( p_region_in->i_text_size, 255 ), 0 );
+    if( p_region_in->p_style )
+    {
+        i_font_color = __MAX( __MIN( p_region_in->p_style->i_font_color, 0xFFFFFF ), 0 );
+        i_font_alpha = __MAX( __MIN( p_region_in->p_style->i_font_alpha, 255 ), 0 );
+        i_font_size  = __MAX( __MIN( p_region_in->p_style->i_font_size, 255 ), 0 );
+    }
+    else
+    {
+        i_font_color = p_sys->i_font_color;
+        i_font_alpha = 255 - p_sys->i_font_opacity;
+        i_font_size = p_sys->i_default_font_size;
+    }
 
     SetFont( p_filter, i_font_size );
 
@@ -402,11 +413,11 @@ static int SetFont( filter_t *p_filter, int i_size )
         }
         if( i_size <= 0 )
         {
-            msg_Warn( p_filter, "Invalid fontsize, using 12" );
+            msg_Warn( p_filter, "invalid fontsize, using 12" );
             i_size = 12;
         }
 
-        msg_Dbg( p_filter, "Using fontsize: %i", i_size );
+        msg_Dbg( p_filter, "using fontsize: %i", i_size );
     }
 
     p_sys->i_font_size = i_size;

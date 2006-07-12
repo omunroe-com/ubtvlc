@@ -2,7 +2,7 @@
  * video.c: video decoder using the ffmpeg library
  *****************************************************************************
  * Copyright (C) 1999-2001 the VideoLAN team
- * $Id: video.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: video.c 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -187,6 +187,15 @@ static inline picture_t *ffmpeg_NewPictBuf( decoder_t *p_dec,
         }
     }
 
+    if( p_dec->fmt_out.video.i_frame_rate > 0 &&
+        p_dec->fmt_out.video.i_frame_rate_base > 0 )
+    {
+        p_dec->fmt_out.video.i_frame_rate =
+            p_dec->fmt_in.video.i_frame_rate;
+        p_dec->fmt_out.video.i_frame_rate_base =
+            p_dec->fmt_out.video.i_frame_rate_base;
+    }
+    else
 #if LIBAVCODEC_BUILD >= 4754
     if( p_context->time_base.num > 0 && p_context->time_base.den > 0 )
     {
@@ -245,9 +254,6 @@ int E_(InitVideoDec)( decoder_t *p_dec, AVCodecContext *p_context,
     p_sys->p_ff_pic = avcodec_alloc_frame();
 
     /* ***** Fill p_context with init values ***** */
-    /* FIXME: remove when ffmpeg deals properly with avc1 */
-    if( p_dec->fmt_in.i_codec != VLC_FOURCC('a','v','c','1') )
-    /* End FIXME */
     p_sys->p_context->codec_tag = ffmpeg_CodecTag( p_dec->fmt_in.i_codec );
     p_sys->p_context->width  = p_dec->fmt_in.video.i_width;
     p_sys->p_context->height = p_dec->fmt_in.video.i_height;
@@ -275,6 +281,16 @@ int E_(InitVideoDec)( decoder_t *p_dec, AVCodecContext *p_context,
     if( val.i_int > 0 && val.i_int <= 2 ) p_sys->p_context->lowres = val.i_int;
 #endif
 
+    var_Create( p_dec, "ffmpeg-skiploopfilter",
+                VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_dec, "ffmpeg-skiploopfilter", &val );
+#if LIBAVCODEC_BUILD >= 4758
+    if( val.i_int > 0 ) p_sys->p_context->skip_loop_filter = AVDISCARD_NONREF;
+    if( val.i_int > 1 ) p_sys->p_context->skip_loop_filter = AVDISCARD_BIDIR;
+    if( val.i_int > 2 ) p_sys->p_context->skip_loop_filter = AVDISCARD_NONKEY;
+    if( val.i_int > 3 ) p_sys->p_context->skip_loop_filter = AVDISCARD_ALL;
+#endif
+
     /* ***** ffmpeg frame skipping ***** */
     var_Create( p_dec, "ffmpeg-hurry-up", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
     var_Get( p_dec, "ffmpeg-hurry-up", &val );
@@ -285,12 +301,10 @@ int E_(InitVideoDec)( decoder_t *p_dec, AVCodecContext *p_context,
     var_Create( p_dec, "ffmpeg-dr", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
     var_Get( p_dec, "ffmpeg-dr", &val );
     if( val.b_bool && (p_sys->p_codec->capabilities & CODEC_CAP_DR1) &&
-        ffmpeg_PixFmtToChroma( p_sys->p_context->pix_fmt ) &&
         /* Apparently direct rendering doesn't work with YUV422P */
         p_sys->p_context->pix_fmt != PIX_FMT_YUV422P &&
         /* H264 uses too many reference frames */
         p_sys->i_codec_id != CODEC_ID_H264 &&
-        !(p_sys->p_context->width % 16) && !(p_sys->p_context->height % 16) &&
 #if LIBAVCODEC_BUILD >= 4698
         !p_sys->p_context->debug_mv )
 #else
@@ -908,7 +922,8 @@ static int ffmpeg_GetFrameBuf( struct AVCodecContext *p_context,
     p_ff_pic->linesize[2] = p_pic->p[2].i_pitch;
     p_ff_pic->linesize[3] = 0;
 
-    if( p_ff_pic->reference != 0 )
+    if( p_ff_pic->reference != 0 ||
+        p_sys->i_codec_id == CODEC_ID_H264 /* Bug in libavcodec */ )
     {
         p_dec->pf_picture_link( p_dec, p_pic );
     }
@@ -938,7 +953,8 @@ static void ffmpeg_ReleaseFrameBuf( struct AVCodecContext *p_context,
     p_ff_pic->data[2] = NULL;
     p_ff_pic->data[3] = NULL;
 
-    if( p_ff_pic->reference != 0 )
+    if( p_ff_pic->reference != 0 ||
+        p_dec->p_sys->i_codec_id == CODEC_ID_H264 /* Bug in libavcodec */ )
     {
         p_dec->pf_picture_unlink( p_dec, p_pic );
     }

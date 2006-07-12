@@ -1,11 +1,14 @@
-SUBDIRS =
 if HAVE_MPEG4IP_PLUG
-SUBDIRS += mpeg4ip
-endif
 if HAVE_XMMS
-SUBDIRS += xmms
+SUBDIRS = xmms mpeg4ip
+else
+SUBDIRS = mpeg4ip
 endif
-if HAVE_BMP
-SUBDIRS += bmp
+else
+if HAVE_XMMS
+SUBDIRS = xmms
+else
+SUBDIRS =
+endif
 endif
 

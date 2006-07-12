@@ -2,7 +2,7 @@
  * intf_eject.c: CD/DVD-ROM ejection handling functions
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: intf_eject.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: intf_eject.c 15025 2006-04-01 11:27:40Z fkuehne $
  *
  * Authors: Julien Blache <jb@technologeek.org> for the Linux part
  *                with code taken from the Linux "eject" command
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /**
@@ -101,7 +101,7 @@ int __intf_Eject( vlc_object_t *p_this, const char *psz_device )
 {
     int i_ret = VLC_SUCCESS;
 
-#ifdef SYS_DARWIN
+#ifdef __APPLE__
     FILE *p_eject;
     char *psz_disk;
     char sz_cmd[32];
@@ -208,7 +208,7 @@ int __intf_Eject( vlc_object_t *p_this, const char *psz_device )
     i_ret = ioctl( i_fd, CDROMEJECT, 0 );
 
 #else
-    msg_Warn( p_this, "CD-Rom ejection unsupported on this platform" );
+    msg_Warn( p_this, "CD-ROM ejection unsupported on this platform" );
     i_ret = -1;
 
 #endif

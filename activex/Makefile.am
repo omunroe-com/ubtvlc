@@ -59,7 +59,11 @@ DIST_misc = \
     test.html \
     $(NULL)
 
-LIBRARIES_libvlc = $(top_builddir)/lib/libvlc.a
+if BUILD_SHARED
+LIBRARIES_libvlc = $(top_builddir)/src/libvlc.dll.a
+else
+LIBRARIES_libvlc = $(top_builddir)/src/libvlc.a
+endif
 
 if BUILD_ACTIVEX
 
@@ -77,8 +81,11 @@ libaxvlc_a_DEPENDENCIES = axvlc.def $(DATA_axvlc_rc)
 axvlc$(LIBEXT): $(libaxvlc_a_OBJECTS) \
 	              $(libaxvlc_a_DEPENDENCIES) stamp-pic
 	$(CXXLINK) $(libaxvlc_a_OBJECTS) $(DATA_axvlc_rc) \
-	-Wl,--enable-stdcall-fixup $(srcdir)/axvlc.def \
-	  $(LIBRARIES_libvlc) -shared $(LDFLAGS_activex) $(LIBRARIES_libvlc) 
+	$(srcdir)/axvlc.def \
+	  $(LIBRARIES_libvlc) -shared $(LIBRARIES_libvlc) $(LDFLAGS_activex) \
+	  $(INCLUDED_LIBINTL)
+# Cygwin work-around
+	@if test -f "$@.exe"; then mv -f "$@.exe" "$@"; fi
 
 
 DATA_axvlc_tlb = $(axvlc_tlb_DATA)
@@ -103,7 +110,7 @@ DATA_axvlc_rc = $(noinst_axvlc_rc_DATA)
 noinst_axvlc_rc_DATA = axvlc_rc.$(OBJEXT)
 noinst_axvlc_rcdir = $(libdir)
 axvlc_rc.$(OBJEXT): axvlc_rc.rc inplace.bmp axvlc.tlb
-	$(WINDRES) -DVERSION=$(VERSION) -DVERSION_NUMBER=`echo $(VERSION).0.0.0 | sed 's/\([0-9]*\)[^.]*\.*\([0-9]*\)[^.]*\.*\([0-9]*\)[^.]*\.*\([0-9]*\).*/\1,\2,\3,\4/'` --include-dir $(srcdir) -i $< -o $@
+	$(WINDRES) -DVERSION=$(VERSION) -DVERSION_NUMBER=`echo $(VERSION).0.0.0 | sed 's/[^0-9]*\([0-9]*\)[^.]*\.*\([0-9]*\)[^.]*\.*\([0-9]*\)[^.]*\.*\([0-9]*\).*/\1,\2,\3,\4/'` --include-dir $(srcdir) -i $< -o $@
 
 else
 

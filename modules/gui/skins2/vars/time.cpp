@@ -2,10 +2,10 @@
  * time.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: time.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: time.cpp 15416 2006-04-29 13:34:17Z zorglub $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <stdio.h>  // snprintf
@@ -56,28 +56,28 @@ const string StreamTime::getAsStringPercent() const
 }
 
 
-const string StreamTime::getAsStringCurrTime() const
+const string StreamTime::getAsStringCurrTime( bool bShortFormat ) const
 {
     if( getIntf()->p_sys->p_input == NULL )
     {
         return "-:--:--";
     }
 
-    vlc_value_t pos;
+    vlc_value_t pos; pos.f_float = 0.0;
     var_Get( getIntf()->p_sys->p_input, "position", &pos );
     if( pos.f_float == 0.0 )
     {
         return "-:--:--";
     }
 
-    vlc_value_t time;
+    vlc_value_t time; time.i_time = 0L;
     var_Get( getIntf()->p_sys->p_input, "time", &time );
 
-    return formatTime( time.i_time / 1000000 );
+    return formatTime( time.i_time / 1000000, bShortFormat );
 }
 
 
-const string StreamTime::getAsStringTimeLeft() const
+const string StreamTime::getAsStringTimeLeft( bool bShortFormat ) const
 {
     if( getIntf()->p_sys->p_input == NULL )
     {
@@ -95,18 +95,19 @@ const string StreamTime::getAsStringTimeLeft() const
     var_Get( getIntf()->p_sys->p_input, "time", &time );
     var_Get( getIntf()->p_sys->p_input, "length", &duration );
 
-    return formatTime( (duration.i_time - time.i_time) / 1000000 );
+    return formatTime( (duration.i_time - time.i_time) / 1000000,
+                       bShortFormat );
 }
 
 
-const string StreamTime::getAsStringDuration() const
+const string StreamTime::getAsStringDuration( bool bShortFormat ) const
 {
     if( getIntf()->p_sys->p_input == NULL )
     {
         return "-:--:--";
     }
 
-    vlc_value_t pos;
+    vlc_value_t pos; pos.f_float = 0.0;
     var_Get( getIntf()->p_sys->p_input, "position", &pos );
     if( pos.f_float == 0.0 )
     {
@@ -116,17 +117,26 @@ const string StreamTime::getAsStringDuration() const
     vlc_value_t time;
     var_Get( getIntf()->p_sys->p_input, "length", &time );
 
-    return formatTime( time.i_time / 1000000 );
+    return formatTime( time.i_time / 1000000, bShortFormat );
 }
 
 
-const string StreamTime::formatTime( int seconds ) const
+const string StreamTime::formatTime( int seconds, bool bShortFormat ) const
 {
     char *psz_time = new char[MSTRTIME_MAX_SIZE];
-    snprintf( psz_time, MSTRTIME_MAX_SIZE, "%d:%02d:%02d",
-              (int) (seconds / (60 * 60)),
-              (int) (seconds / 60 % 60),
-              (int) (seconds % 60) );
+    if( bShortFormat && (seconds < 60 * 60) )
+    {
+        snprintf( psz_time, MSTRTIME_MAX_SIZE, "%02d:%02d",
+                  (int) (seconds / 60 % 60),
+                  (int) (seconds % 60) );
+    }
+    else
+    {
+        snprintf( psz_time, MSTRTIME_MAX_SIZE, "%d:%02d:%02d",
+                  (int) (seconds / (60 * 60)),
+                  (int) (seconds / 60 % 60),
+                  (int) (seconds % 60) );
+    }
 
     string ret = psz_time;
     delete[] psz_time;

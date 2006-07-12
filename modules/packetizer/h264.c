@@ -1,8 +1,8 @@
 /*****************************************************************************
  * h264.c: h264/avc video packetizer
  *****************************************************************************
- * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: h264.c 12544 2005-09-13 22:01:20Z gbazin $
+ * Copyright (C) 2001, 2002, 2006 the VideoLAN team
+ * $Id: h264.c 14918 2006-03-25 12:54:27Z fkuehne $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -44,7 +44,7 @@ static void Close( vlc_object_t * );
 vlc_module_begin();
     set_category( CAT_SOUT );
     set_subcategory( SUBCAT_SOUT_PACKETIZER );
-    set_description( _("H264 video packetizer") );
+    set_description( _("H.264 video packetizer") );
     set_capability( "packetizer", 50 );
     set_callbacks( Open, Close );
 vlc_module_end();
@@ -203,7 +203,7 @@ static int Open( vlc_object_t *p_this )
             ParseNALBlock( p_dec, p_pps );
             p += 2 + i_length;
         }
-        msg_Dbg( p_dec, "avcC length size=%d sps=%d pps=%d",
+        msg_Dbg( p_dec, "avcC length size=%d, sps=%d, pps=%d",
                  p_sys->i_avcC_length_size, i_sps, i_pps );
 
         /* Set callback */
@@ -242,6 +242,7 @@ static void Close( vlc_object_t *p_this )
     decoder_t *p_dec = (decoder_t*)p_this;
     decoder_sys_t *p_sys = p_dec->p_sys;
 
+    if( p_sys->p_frame ) block_ChainRelease( p_sys->p_frame );
     if( p_sys->p_sps ) block_Release( p_sys->p_sps );
     if( p_sys->p_pps ) block_Release( p_sys->p_pps );
     block_BytestreamRelease( &p_sys->bytestream );
@@ -384,6 +385,7 @@ static block_t *PacketizeAVC1( decoder_t *p_dec, block_t **pp_block )
         }
         p += i_size;
     }
+    block_Release( p_block );
 
     return p_ret;
 }

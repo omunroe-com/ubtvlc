@@ -2,7 +2,7 @@
  * dvb.c : DVB channel list import (szap/tzap/czap compatible channel lists)
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: dvb.c 12306 2005-08-20 18:10:24Z gbazin $
+ * $Id: dvb.c 14377 2006-02-18 20:34:32Z courmisch $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -29,6 +29,7 @@
 #include <vlc/vlc.h>
 #include <vlc/input.h>
 #include <vlc/intf.h>
+#include "charset.h"
 
 #include "playlist.h"
 
@@ -105,7 +106,7 @@ static int Demux( demux_t *p_demux )
     vlc_bool_t b_play;
 
     p_playlist = (playlist_t *) vlc_object_find( p_demux, VLC_OBJECT_PLAYLIST,
-                                                 FIND_PARENT );
+                                                 FIND_ANYWHERE );
     if( !p_playlist )
     {
         msg_Err( p_demux, "can't find playlist" );

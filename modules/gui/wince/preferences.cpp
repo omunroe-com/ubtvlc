@@ -2,7 +2,7 @@
  * preferences.cpp : WinCE gui plugin for VLC
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: preferences.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: preferences.cpp 14117 2006-02-01 18:02:40Z courmisch $
  *
  * Authors: Marodon Cedric <cedric_marodon@yahoo.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -271,7 +271,7 @@ LRESULT PrefsDialog::WndProc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
             case SB_BOTTOM       : newvalue = 0; break;
             case SB_TOP          : newvalue = config_data->panel->maxvalue; break;
             case SB_LINEDOWN     : newvalue += 10; break;
-            case SB_PAGEDOWN     : newvalue += rc.bottom - rc.top - 25; break; // faux ! une page c'est la longueur réelle de notebook
+            case SB_PAGEDOWN     : newvalue += rc.bottom - rc.top - 25; break; // wrong! one page is notebook actual length
             case SB_LINEUP       : newvalue -= 10; break;
             case SB_PAGEUP       : newvalue -= rc.bottom - rc.top - 25; break;
             case SB_THUMBPOSITION:

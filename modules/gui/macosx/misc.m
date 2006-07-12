@@ -2,7 +2,7 @@
  * misc.m: code not specific to vlc
  *****************************************************************************
  * Copyright (C) 2003-2005 the VideoLAN team
- * $Id: misc.m 12524 2005-09-12 13:00:05Z hartman $
+ * $Id: misc.m 15491 2006-04-30 21:09:16Z bigben $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <Cocoa/Cocoa.h>
@@ -26,6 +26,7 @@
 #include "intf.h"                                          /* VLCApplication */
 #include "misc.h"
 #include "playlist.h"
+#include "controls.h"
 
 /*****************************************************************************
  * VLCControllerWindow
@@ -46,7 +47,8 @@
 
 - (BOOL)performKeyEquivalent:(NSEvent *)o_event
 {
-    return [[VLCMain sharedInstance] hasDefinedShortcutKey:o_event];
+    return [[VLCMain sharedInstance] hasDefinedShortcutKey:o_event] ||
+           [(VLCControls *)[[VLCMain sharedInstance] getControls] keyEvent:o_event];
 }
 
 @end

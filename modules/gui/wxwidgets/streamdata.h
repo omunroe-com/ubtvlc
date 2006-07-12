@@ -2,9 +2,9 @@
  * streamdata.h: streaming/transcoding data
  *****************************************************************************
  * Copyright (C) 2000-2005 the VideoLAN team
- * $Id: wizard.cpp 7826 2004-05-30 14:43:12Z zorglub $
+ * $Id: streamdata.h 14671 2006-03-08 09:47:45Z zorglub $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 
 #define MUXERS_NUMBER 9
 
 // Do not count dummy here !
+#ifdef WIN32
+#define VCODECS_NUMBER 13
+#else
 #define VCODECS_NUMBER 12
+#endif
+
 #define ACODECS_NUMBER 9
 
 #define MUX_PS          0

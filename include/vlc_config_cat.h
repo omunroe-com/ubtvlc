@@ -2,9 +2,9 @@
  * vlc_help.h: Help strings
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: vlc_help.h 9171 2004-11-06 11:15:50Z zorglub $
+ * $Id: vlc_config_cat.h 15124 2006-04-06 23:00:24Z adn $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
  *          Anil Daoud <anil@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef _VLC_HELP_H
@@ -31,18 +31,21 @@
  */
 #define MAIN_TITLE N_( "VLC preferences" )
 #define MAIN_HELP N_( \
-    "Click on \"Advanced Options\" to see all options." )
+    "Select \"Advanced Options\" to see all options." )
 
 #define GENERAL_TITLE N_("General")
 
 /* Interface */
 #define INTF_TITLE N_("Interface")
-#define INTF_HELP  N_( "Settings for VLC interfaces" )
+#define INTF_HELP  N_( "Settings for VLC's interfaces" )
 
-#define INTF_GENERAL_HELP N_( "General interface setttings" )
+#define INTF_GENERAL_HELP N_( "General interface settings" )
+
+#define INTF_MAIN_TITLE  N_( "Main interfaces" )
+#define INTF_MAIN_HELP N_( "Settings for the main interface" )
 
 #define INTF_CONTROL_TITLE N_( "Control interfaces" )
-#define INTF_CONTROL_HELP N_( "Control interface settings" )
+#define INTF_CONTROL_HELP N_( "Settings for VLC's control interfaces" )
 
 #define INTF_HOTKEYS_TITLE N_( "Hotkeys settings" )
 #define INTF_HOTKEYS_HELP N_( "Hotkeys settings" )
@@ -56,7 +59,7 @@
 
 #define AFILTER_TITLE N_("Filters")
 #define AFILTER_HELP N_( \
-    "Audio filters are used to postprocess the audio stream" )
+    "Audio filters are used to postprocess the audio stream." )
 
 #define AVISUAL_TITLE N_("Visualizations")
 #define AVISUAL_HELP N_( \
@@ -66,7 +69,7 @@
 #define AOUT_HELP N_("These are general settings for audio output modules.")
 
 #define AMISC_TITLE N_("Miscellaneous")
-#define AMISC_HELP N_( "Miscellaneous audio settings and modules" )
+#define AMISC_HELP N_( "Miscellaneous audio settings and modules." )
 
 /* Video */
 #define VIDEO_TITLE N_("Video")
@@ -81,19 +84,21 @@
 
 #define VFILTER_TITLE N_("Filters" )
 #define VFILTER_HELP N_( \
-    "Video filters are used to postprocess the video stream" )
+    "Video filters are used to postprocess the video stream." )
 
 #define SUBPIC_TITLE N_( "Subtitles/OSD")
-#define SUBPIC_HELP N_( "Miscellaneous settings related to On Screen Display, subtitles and overlay subpictures")
-
+#define SUBPIC_HELP N_( "Miscellaneous settings related to On-Screen-Display,"\
+        " subtitles and \"overlay subpictures\".")
+/*
 #define TEXT_TITLE N_("Text rendering")
 #define TEXT_HELP N_( \
     "Use the settings of the \"freetype\" module to choose the font you " \
-    " want VLC to use for text rendering (to display subtitles for example).")
-
+    "want VLC to use for text rendering (to display subtitles for example).")
+*/
 /* Input */
 #define INPUT_TITLE N_( "Input / Codecs" )
-#define INPUT_HELP N_( "These are the settings for the input, demultiplexing and decoding parts of VLC. Encoder settings can also be found here" )
+#define INPUT_HELP N_( "These are the settings for the input, demultiplexing " \
+         "and decoding parts of VLC. Encoder settings can also be found here." )
 
 #define ACCESS_TITLE N_( "Access modules" )
 #define ACCESS_HELP N_( \
@@ -105,19 +110,19 @@
 #define ACCESS_FILTER_HELP N_( \
     "Access filters are special modules that allow advanced operations on " \
     "the input side of VLC. You should not touch anything here unless you " \
-    "know what you are doing.\n" )
+    "know what you are doing." )
 
 #define DEMUX_TITLE N_("Demuxers")
-#define DEMUX_HELP N_( "Demuxers are used to separate audio and video streams" )
+#define DEMUX_HELP N_( "Demuxers are used to separate audio and video streams." )
 
 #define VDEC_TITLE  N_( "Video codecs" )
-#define VDEC_HELP N_( "Settings for the video-only decoders and encoders" )
+#define VDEC_HELP N_( "Settings for the video-only decoders and encoders." )
 
 #define ADEC_TITLE  N_( "Audio codecs" )
-#define ADEC_HELP N_( "Settings for the audio-only decoders and encoders" )
+#define ADEC_HELP N_( "Settings for the audio-only decoders and encoders." )
 
 #define SDEC_TITLE N_( "Other codecs")
-#define SDEC_HELP N_( "Settings for audio+video and miscellaneous decoders and encoders" )
+#define SDEC_HELP N_( "Settings for audio+video and miscellaneous decoders and encoders." )
 
 #define ADVANCED_TITLE N_("General")
 #define ADVANCED_HELP N_( "General input settings. Use with care." )
@@ -131,28 +136,32 @@
       "module that can either save the stream to a file, or stream " \
       "it (UDP, HTTP, RTP/RTSP).\n" \
       "Sout streams modules allow advanced stream processing (transcoding, "\
-      "duplicating, ...")
+      "duplicating...).")
 
 #define SOUT_GENERAL_HELP N_( "General stream output settings")
 
 #define SOUT_MUX_TITLE N_( "Muxers" )
-#define SOUT_MUX_HELP N_( "Muxers are the encapsulation formats that are used to " \
-                          "put all the elementary streams (video, audio, ...) " \
-                          "together. This setting allows you to always force a muxer. " \
-                          "You should probably not do that.\n" \
-                          "You can also set default parameters for each muxer." )
+#define SOUT_MUX_HELP N_( \
+       "Muxers create the encapsulation formats that are used to " \
+       "put all the elementary streams (video, audio, ...) " \
+       "together. This setting allows you to always force a specific muxer. " \
+       "You should probably not do that.\n" \
+       "You can also set default parameters for each muxer." )
+
 #define SOUT_ACO_TITLE N_( "Access output" )
-#define SOUT_ACO_HELP N_( "Access output are the ways the muxed streams are sent. " \
-                          "This setting allows you to always force an access output. " \
-                          "You should probably not do that.\n" \
-                          "You can also set default parameters for each access output.")
+#define SOUT_ACO_HELP N_( \
+   "Access output modules control the ways the muxed streams are sent. " \
+   "This setting allows you to always force a specific access output method. " \
+   "You should probably not do that.\n" \
+   "You can also set default parameters for each access output.")
 
 #define SOUT_PACKET_TITLE N_( "Packetizers" )
-#define SOUT_PACKET_HELP N_( "Packetizers are used to \"preprocess\" the elementary "\
-                              "streams before muxing. " \
-                          "This setting allows you to always force a packetizer. " \
-                          "You should probably not do that.\n" \
-                          "You can also set default parameters for each packetizer." )
+#define SOUT_PACKET_HELP N_( \
+        "Packetizers are used to \"preprocess\" the elementary "\
+        "streams before muxing. " \
+        "This setting allows you to always force a packetizer. " \
+        "You should probably not do that.\n" \
+        "You can also set default parameters for each packetizer." )
 
 #define SOUT_STREAM_TITLE N_("Sout stream")
 #define SOUT_STREAM_HELP N_( "Sout stream modules allow to build a sout " \
@@ -161,8 +170,9 @@
                 "each sout stream module here.")
 
 #define SOUT_SAP_TITLE N_( "SAP" )
-#define SOUT_SAP_HELP N_( "SAP is a way to publically announce streams that are being"\
-                          " sent using multicast UDP or RTP." )
+#define SOUT_SAP_HELP N_( \
+                 "SAP is a way to publically announce streams that are being "\
+                 "sent using multicast UDP or RTP." )
 
 #define SOUT_VOD_TITLE N_( "VOD" )
 #define SOUT_VOD_HELP N_( "VLC's implementation of Video On Demand" )
@@ -170,25 +180,29 @@
 
 /* Playlist */
 #define PLAYLIST_TITLE N_( "Playlist" )
-#define PLAYLIST_HELP N_( "Settings related to playlist behaviour (playback mode, for example) and to modules that automatically add items to the playlist ('service discovery modules'")
+#define PLAYLIST_HELP N_( "Settings related to playlist behaviour " \
+        "(e.g. playback mode) and to modules that automatically add "\
+        "items to the playlist (\"service discovery\" modules).")
 
 #define PGENERAL_HELP N_( "General playlist behaviour")
 #define SD_TITLE N_("Services discovery")
-#define SD_HELP N_("Services discovery modules are modules that automatically add items to playlist")
+#define SD_HELP N_("Services discovery modules are facilities "\
+        "that automatically add items to playlist.")
 
 /* Advanced */
 #define AADVANCED_TITLE N_( "Advanced" )
 #define AADVANCED_HELP N_( "Advanced settings. Use with care.")
 
 #define CPU_TITLE N_( "CPU features" )
-#define CPU_HELP N_( "From here you can choose to disable some CPU accelerations. You should probably not touch that." )
+#define CPU_HELP N_( "You can choose to disable some CPU accelerations " \
+        "here. You should probably not change these settings." )
 
-#define MISC_TITLE N_( "Other" )
+#define MISC_TITLE N_( "Advanced settings" )
 #define MISC_HELP N_( "Other advanced settings")
 
 #define NETWORK_TITLE N_( "Network" )
 #define NETWORK_HELP N_( "These modules provide network functions to all " \
-                "other parts of VLC" )
+                "other parts of VLC." )
 
 /* OLD */
 
@@ -196,12 +210,12 @@
 #define CHROMA_HELP N_("These settings affect chroma transformation modules.")
 
 #define PACKETIZER_TITLE  N_("Packetizer modules settings" )
-#define PACKETIZER_HELP N_(" ")
+#define PACKETIZER_HELP "These are general settings for the "\
+        "packetizers used in VLC's stream output subsystem."
 
 #define ENCODER_TITLE N_("Encoders settings")
 #define ENCODER_HELP N_( \
     "These are general settings for video/audio/subtitles encoding modules.")
-
 
 
 #define DIALOGS_TITLE N_("Dialog providers settings")
@@ -214,14 +228,14 @@
     "for example by setting the subtitles type or file name.")
 
 #define VIDEO_FILTER2_TITLE N_("Video filters settings")
-#define VIDEO_FILTER2_HELP N_(" ")
+#define VIDEO_FILTER2_HELP " "
 
 /*
  *  A little help for modules with unknown capabilities
  */
 
 #define UNKNOWN_TITLE N_("No help available" )
-#define UNKNOWN_HELP N_("No help is available for these modules")
+#define UNKNOWN_HELP N_("There is no help available for these modules.")
 
 /*****************************************************************************
  * GetCapabilityHelp: Display the help for one capability.
@@ -284,6 +298,7 @@ static struct config_category_t categories_array[] =
     /* Interface */
     { CAT_INTERFACE, INTF_TITLE, INTF_HELP },
     { SUBCAT_INTERFACE_GENERAL, GENERAL_TITLE, INTF_GENERAL_HELP },
+    { SUBCAT_INTERFACE_MAIN, INTF_MAIN_TITLE, INTF_MAIN_HELP },
     { SUBCAT_INTERFACE_CONTROL, INTF_CONTROL_TITLE, INTF_CONTROL_HELP },
     { SUBCAT_INTERFACE_HOTKEYS, INTF_HOTKEYS_TITLE, INTF_HOTKEYS_HELP },
 
@@ -299,7 +314,6 @@ static struct config_category_t categories_array[] =
     { SUBCAT_VIDEO_VOUT, _VOUT_TITLE, VOUT_HELP },
     { SUBCAT_VIDEO_VFILTER, VFILTER_TITLE, VFILTER_HELP },
     { SUBCAT_VIDEO_SUBPIC, SUBPIC_TITLE, SUBPIC_HELP },
-//    { SUBCAT_VIDEO_TEXT, TEXT_TITLE, TEXT_HELP },
 
     { CAT_INPUT, INPUT_TITLE, INPUT_HELP },
     { SUBCAT_INPUT_GENERAL, ADVANCED_TITLE, ADVANCED_HELP },
@@ -326,7 +340,6 @@ static struct config_category_t categories_array[] =
     { CAT_ADVANCED, AADVANCED_TITLE, AADVANCED_HELP },
     { SUBCAT_ADVANCED_CPU, CPU_TITLE, CPU_HELP },
     { SUBCAT_ADVANCED_MISC, MISC_TITLE, MISC_HELP },
-    { SUBCAT_ADVANCED_NETWORK, NETWORK_TITLE, NETWORK_HELP },
 
     { -1, NULL, NULL }
 };

@@ -2,10 +2,10 @@
  * ctrl_slider.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_slider.cpp 12207 2005-08-15 15:54:32Z asmax $
+ * $Id: ctrl_slider.cpp 14118 2006-02-01 18:06:48Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "ctrl_slider.hpp"
@@ -159,18 +159,11 @@ void CtrlSliderCursor::draw( OSGraphics &rImage, int xDest, int yDest )
 }
 
 
-void CtrlSliderCursor::onUpdate( Subject<VarPercent> &rVariable )
+void CtrlSliderCursor::onUpdate( Subject<VarPercent,void*> &rVariable,
+                                 void *arg  )
 {
     // The position has changed
-    if( m_pImg )
-    {
-        notifyLayout( m_rCurve.getWidth() + m_pImg->getWidth(),
-                      m_rCurve.getHeight() + m_pImg->getHeight(),
-                      - m_pImg->getWidth() / 2,
-                      - m_pImg->getHeight() / 2 );
-    }
-    else
-        notifyLayout();
+    refreshLayout();
 }
 
 
@@ -195,16 +188,7 @@ void CtrlSliderCursor::CmdOverDown::execute()
 
     m_pParent->captureMouse();
     m_pParent->m_pImg = m_pParent->m_pImgDown;
-    if( m_pParent->m_pImg )
-    {
-        m_pParent->notifyLayout(
-            m_pParent->m_rCurve.getWidth() + m_pParent->m_pImg->getWidth(),
-            m_pParent->m_rCurve.getHeight() + m_pParent->m_pImg->getHeight(),
-            - m_pParent->m_pImg->getWidth() / 2,
-            - m_pParent->m_pImg->getHeight() / 2 );
-    }
-    else
-        m_pParent->notifyLayout();
+    m_pParent->refreshLayout();
 }
 
 
@@ -215,48 +199,21 @@ void CtrlSliderCursor::CmdDownOver::execute()
 
     m_pParent->releaseMouse();
     m_pParent->m_pImg = m_pParent->m_pImgUp;
-    if( m_pParent->m_pImg )
-    {
-        m_pParent->notifyLayout(
-            m_pParent->m_rCurve.getWidth() + m_pParent->m_pImg->getWidth(),
-            m_pParent->m_rCurve.getHeight() + m_pParent->m_pImg->getHeight(),
-            - m_pParent->m_pImg->getWidth() / 2,
-            - m_pParent->m_pImg->getHeight() / 2 );
-    }
-    else
-        m_pParent->notifyLayout();
+    m_pParent->refreshLayout();
 }
 
 
 void CtrlSliderCursor::CmdUpOver::execute()
 {
     m_pParent->m_pImg = m_pParent->m_pImgOver;
-    if( m_pParent->m_pImg )
-    {
-        m_pParent->notifyLayout(
-            m_pParent->m_rCurve.getWidth() + m_pParent->m_pImg->getWidth(),
-            m_pParent->m_rCurve.getHeight() + m_pParent->m_pImg->getHeight(),
-            - m_pParent->m_pImg->getWidth() / 2,
-            - m_pParent->m_pImg->getHeight() / 2 );
-    }
-    else
-        m_pParent->notifyLayout();
+    m_pParent->refreshLayout();
 }
 
 
 void CtrlSliderCursor::CmdOverUp::execute()
 {
     m_pParent->m_pImg = m_pParent->m_pImgUp;
-    if( m_pParent->m_pImg )
-    {
-        m_pParent->notifyLayout(
-            m_pParent->m_rCurve.getWidth() + m_pParent->m_pImg->getWidth(),
-            m_pParent->m_rCurve.getHeight() + m_pParent->m_pImg->getHeight(),
-            - m_pParent->m_pImg->getWidth() / 2,
-            - m_pParent->m_pImg->getHeight() / 2 );
-    }
-    else
-        m_pParent->notifyLayout();
+    m_pParent->refreshLayout();
 }
 
 
@@ -332,15 +289,60 @@ void CtrlSliderCursor::getResizeFactors( float &rFactorX,
 }
 
 
-
-CtrlSliderBg::CtrlSliderBg( intf_thread_t *pIntf, CtrlSliderCursor &rCursor,
-                            const Bezier &rCurve, VarPercent &rVariable,
-                            int thickness, VarBool *pVisible,
-                            const UString &rHelp ):
-    CtrlGeneric( pIntf, rHelp, pVisible ), m_rCursor( rCursor ),
-    m_rVariable( rVariable ), m_thickness( thickness ), m_rCurve( rCurve ),
-    m_width( rCurve.getWidth() ), m_height( rCurve.getHeight() )
+void CtrlSliderCursor::refreshLayout()
 {
+    if( m_pImg )
+    {
+        // Compute the resize factors
+        float factorX, factorY;
+        getResizeFactors( factorX, factorY );
+
+        notifyLayout( (int)(m_rCurve.getWidth() * factorX) + m_pImg->getWidth(),
+                      (int)(m_rCurve.getHeight() * factorY) + m_pImg->getHeight(),
+                      - m_pImg->getWidth() / 2,
+                      - m_pImg->getHeight() / 2 );
+    }
+    else
+        notifyLayout();
+}
+
+
+CtrlSliderBg::CtrlSliderBg( intf_thread_t *pIntf,
+                            const Bezier &rCurve, VarPercent &rVariable,
+                            int thickness, GenericBitmap *pBackground,
+                            int nbHoriz, int nbVert, int padHoriz, int padVert,
+                            VarBool *pVisible, const UString &rHelp ):
+    CtrlGeneric( pIntf, rHelp, pVisible ), m_pCursor( NULL ),
+    m_rVariable( rVariable ), m_thickness( thickness ), m_rCurve( rCurve ),
+    m_width( rCurve.getWidth() ), m_height( rCurve.getHeight() ),
+    m_pImgSeq( NULL ), m_nbHoriz( nbHoriz ), m_nbVert( nbVert ),
+    m_padHoriz( padHoriz ), m_padVert( padVert ), m_bgWidth( 0 ),
+    m_bgHeight( 0 ), m_position( 0 )
+{
+    if( pBackground )
+    {
+        // Build the background image sequence
+        OSFactory *pOsFactory = OSFactory::instance( getIntf() );
+        m_pImgSeq = pOsFactory->createOSGraphics( pBackground->getWidth(),
+                                                  pBackground->getHeight() );
+        m_pImgSeq->drawBitmap( *pBackground, 0, 0 );
+
+        m_bgWidth = (pBackground->getWidth() + m_padHoriz) / nbHoriz;
+        m_bgHeight = (pBackground->getHeight() + m_padVert) / nbVert;
+
+        // Observe the position variable
+        m_rVariable.addObserver( this );
+
+        // Initial position
+        m_position = (int)( m_rVariable.get() * (m_nbHoriz * m_nbVert - 1) );
+    }
+}
+
+
+CtrlSliderBg::~CtrlSliderBg()
+{
+    m_rVariable.delObserver( this );
+    delete m_pImgSeq;
 }
 
 
@@ -350,8 +352,22 @@ bool CtrlSliderBg::mouseOver( int x, int y ) const
     float factorX, factorY;
     getResizeFactors( factorX, factorY );
 
-    return (m_rCurve.getMinDist( (int)(x / factorX),
-                                 (int)(y / factorY) ) < m_thickness );
+    return (m_rCurve.getMinDist( (int)(x / factorX), (int)(y / factorY),
+                                 factorX, factorY ) < m_thickness );
+}
+
+
+void CtrlSliderBg::draw( OSGraphics &rImage, int xDest, int yDest )
+{
+    if( m_pImgSeq )
+    {
+        // Locate the right image in the background bitmap
+        int x = m_bgWidth * ( m_position % m_nbHoriz );
+        int y = m_bgHeight * ( m_position / m_nbHoriz );
+        // Draw the background image
+        rImage.drawGraphics( *m_pImgSeq, x, y, xDest, yDest,
+                             m_bgWidth - m_padHoriz, m_bgHeight - m_padVert );
+    }
 }
 
 
@@ -377,12 +393,12 @@ void CtrlSliderBg::handleEvent( EvtGeneric &rEvent )
         // Forward the clic to the cursor
         EvtMouse evt( getIntf(), x, y, EvtMouse::kLeft, EvtMouse::kDown );
         TopWindow *pWin = getWindow();
-        if( pWin )
+        if( pWin && m_pCursor )
         {
             EvtEnter evtEnter( getIntf() );
             // XXX It was not supposed to be implemented like that !!
-            pWin->forwardEvent( evtEnter, m_rCursor );
-            pWin->forwardEvent( evt, m_rCursor );
+            pWin->forwardEvent( evtEnter, *m_pCursor );
+            pWin->forwardEvent( evt, *m_pCursor );
         }
     }
     else if( rEvent.getAsString().find( "scroll" ) != string::npos )
@@ -401,6 +417,19 @@ void CtrlSliderBg::handleEvent( EvtGeneric &rEvent )
 
         m_rVariable.set( percentage );
     }
+}
+
+
+void CtrlSliderBg::associateCursor( CtrlSliderCursor &rCursor )
+{
+    m_pCursor = &rCursor;
+}
+
+
+void CtrlSliderBg::onUpdate( Subject<VarPercent, void*> &rVariable, void*arg )
+{
+    m_position = (int)( m_rVariable.get() * (m_nbHoriz * m_nbVert - 1) );
+    notifyLayout( m_bgWidth, m_bgHeight );
 }
 
 

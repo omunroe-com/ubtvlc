@@ -1,0 +1,96 @@
+Index: vlc-0.8.5-test3.debian/configure
+===================================================================
+--- vlc-0.8.5-test3.debian.orig/configure	2006-04-19 16:33:35.000000000 +0200
++++ vlc-0.8.5-test3.debian/configure	2006-04-24 17:52:16.000000000 +0200
+@@ -61706,8 +61706,8 @@
+ then
+   if test "${with_mozilla_sdk_path}" = ""
+   then
+-    # Extract the first word of "mozilla-config", so it can be a program name with args.
+-set dummy mozilla-config; ac_word=$2
++    # Extract the first word of "xulrunner-config", so it can be a program name with args.
++set dummy xulrunner-config; ac_word=$2
+ echo "$as_me:$LINENO: checking for $ac_word" >&5
+ echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+ if test "${ac_cv_path_MOZILLA_CONFIG+set}" = set; then
+@@ -61748,8 +61748,8 @@
+ 
+     if test "${MOZILLA_CONFIG}" = "no"
+     then
+-      { { echo "$as_me:$LINENO: error: Please install the Mozilla development tools, mozilla-config was not found." >&5
+-echo "$as_me: error: Please install the Mozilla development tools, mozilla-config was not found." >&2;}
++      { { echo "$as_me:$LINENO: error: Please install the Mozilla development tools, xulrunner-config was not found." >&5
++echo "$as_me: error: Please install the Mozilla development tools, xulrunner-config was not found." >&2;}
+    { (exit 1); exit 1; }; }
+     else
+       if ${MOZILLA_CONFIG} --defines | grep -q 'MOZ_X11=1'; then
+@@ -61846,7 +61846,7 @@
+ 
+ 
+   for element in mozilla; do
+-    eval "LDFLAGS_${element}="'"'"`${MOZILLA_CONFIG} --libs plugin xpcom` "'$'"{LDFLAGS_${element}} "'"'
++    eval "LDFLAGS_${element}="'"'"`${MOZILLA_CONFIG} --libs plugin` "'$'"{LDFLAGS_${element}} "'"'
+     am_modules_with_ldflags="${am_modules_with_ldflags} ${element}"
+   done
+ 
+@@ -62004,7 +62004,7 @@
+       MOZILLA_SDK_PATH="`${MOZILLA_CONFIG} --prefix`"
+       XPIDL_INCL="`${MOZILLA_CONFIG} --cflags plugin xpcom java` \
+       `${MOZILLA_CONFIG} --idlflags plugin xpcom java` "
+-      xpidl_path="`${MOZILLA_CONFIG} --prefix`/bin"
++      xpidl_path="`${MOZILLA_CONFIG} --prefix`/lib/xulrunner"
+     fi
+   else
+         if test "${SYS}" = "mingw32"
+@@ -62269,7 +62269,7 @@
+ 
+       MOZILLA_SDK_PATH="${real_mozilla_sdk}"
+       XPIDL_INCL="-I${real_mozilla_sdk}${mozilla_sdk_xpcom}/idl"
+-      xpidl_path="${real_mozilla_sdk}${mozilla_sdk_xpcom}/bin"
++      xpidl_path="${real_mozilla_sdk}${mozilla_sdk_xpcom}/lib/xulrunner"
+ 
+       if test -n "${CYGPATH}"; then
+         real_mozilla_sdk="`${CYGPATH} -w ${real_mozilla_sdk}`"
+Index: vlc-0.8.5-test3.debian/configure.ac
+===================================================================
+--- vlc-0.8.5-test3.debian.orig/configure.ac	2006-04-19 16:29:37.000000000 +0200
++++ vlc-0.8.5-test3.debian/configure.ac	2006-04-24 17:52:06.000000000 +0200
+@@ -5004,10 +5004,10 @@
+ then
+   if test "${with_mozilla_sdk_path}" = ""
+   then
+-    AC_PATH_PROG(MOZILLA_CONFIG, mozilla-config, no)
++    AC_PATH_PROG(MOZILLA_CONFIG, xulrunner-config, no)
+     if test "${MOZILLA_CONFIG}" = "no"
+     then
+-      AC_MSG_ERROR([Please install the Mozilla development tools, mozilla-config was not found.])
++      AC_MSG_ERROR([Please install the Mozilla development tools, xulrunner-config was not found.])
+     else
+       if ${MOZILLA_CONFIG} --defines | grep -q 'MOZ_X11=1'; then
+         LDFLAGS="${LDFLAGS_save} ${X_LIBS} ${X_PRE_LIBS}"
+@@ -5024,14 +5024,14 @@
+       mozilla=:
+       dnl Workaround for http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=150490
+       VLC_ADD_CPPFLAGS([mozilla],[[`${MOZILLA_CONFIG} --cflags plugin xpcom java | sed 's,-I\([^ ]*\)/mozilla/\([^ ]*\),-I\1/\2 -I\1/mozilla/\2,g' | xargs`]])
+-      VLC_ADD_LDFLAGS([mozilla],[`${MOZILLA_CONFIG} --libs plugin xpcom`])
++      VLC_ADD_LDFLAGS([mozilla],[`${MOZILLA_CONFIG} --libs plugin`])
+       CPPFLAGS="${CPPFLAGS_save} ${CPPFLAGS_mozilla}"
+       AC_CHECK_HEADERS(mozilla-config.h)
+       CPPFLAGS="${CPPFLAGS_save}"
+       MOZILLA_SDK_PATH="`${MOZILLA_CONFIG} --prefix`"
+       XPIDL_INCL="`${MOZILLA_CONFIG} --cflags plugin xpcom java` \
+       `${MOZILLA_CONFIG} --idlflags plugin xpcom java` "
+-      xpidl_path="`${MOZILLA_CONFIG} --prefix`/bin"
++      xpidl_path="`${MOZILLA_CONFIG} --prefix`/lib/xulrunner"
+     fi
+   else
+     dnl special case for mingw32
+@@ -5061,7 +5061,7 @@
+   
+       MOZILLA_SDK_PATH="${real_mozilla_sdk}"
+       XPIDL_INCL="-I${real_mozilla_sdk}${mozilla_sdk_xpcom}/idl"
+-      xpidl_path="${real_mozilla_sdk}${mozilla_sdk_xpcom}/bin"
++      xpidl_path="${real_mozilla_sdk}${mozilla_sdk_xpcom}/lib/xulrunner"
+   
+       if test -n "${CYGPATH}"; then
+         real_mozilla_sdk="`${CYGPATH} -w ${real_mozilla_sdk}`"

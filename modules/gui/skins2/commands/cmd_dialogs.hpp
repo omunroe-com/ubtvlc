@@ -2,10 +2,10 @@
  * cmd_dialogs.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: cmd_dialogs.hpp 12281 2005-08-20 00:31:27Z dionoea $
+ * $Id: cmd_dialogs.hpp 15008 2006-03-31 19:24:33Z zorglub $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CMD_DIALOGS_HPP
@@ -29,6 +29,7 @@
 #include "../src/dialogs.hpp"
 #include "cmd_change_skin.hpp"
 
+#include <vlc_interaction.h>
 
 template<int TYPE = 0> class CmdDialogs;
 
@@ -118,7 +119,7 @@ class CmdDialogs: public CmdGeneric
                     pDialogs->showStreamingWizard();
                     break;
                 default:
-                    msg_Warn( getIntf(), "Unknown dialog type" );
+                    msg_Warn( getIntf(), "unknown dialog type" );
                     break;
             }
         }
@@ -127,5 +128,36 @@ class CmdDialogs: public CmdGeneric
         virtual string getType() const { return "dialog"; }
 };
 
+class CmdInteraction: public CmdGeneric
+{
+    public:
+        CmdInteraction( intf_thread_t *pIntf, interaction_dialog_t *
+                        p_dialog ): CmdGeneric( pIntf ), m_pDialog( p_dialog )
+        {}
+        virtual ~CmdInteraction() {}
+
+        /// This method does the real job of the command
+        virtual void execute()
+        {
+            if( m_pDialog->i_type == INTERACT_PROGRESS )
+            {
+                 /// \todo Handle progress in the interface
+            }
+            else
+            {
+                /// Get the dialogs provider
+                Dialogs *pDialogs = Dialogs::instance( getIntf() );
+                if( pDialogs == NULL )
+                {
+                    return;
+                }
+                pDialogs->showInteraction( m_pDialog );
+            }
+        }
+
+        virtual string getType() const { return "interaction"; }
+    private:
+        interaction_dialog_t *m_pDialog;
+};
 
 #endif

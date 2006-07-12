@@ -2,7 +2,7 @@
  * threads.c : threads implementation for the VideoLAN client
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: threads.c 12854 2005-10-16 18:01:09Z hartman $
+ * $Id: threads.c 14103 2006-02-01 12:44:16Z sam $
  *
  * Authors: Jean-Marc Dressler <polux@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <vlc/vlc.h>
@@ -571,7 +571,7 @@ int __vlc_thread_create( vlc_object_t *p_this, char * psz_file, int i_line,
 #elif defined( PTHREAD_COND_T_IN_PTHREAD_H )
     i_ret = pthread_create( &p_this->thread_id, NULL, func, p_data );
 
-#ifndef SYS_DARWIN
+#ifndef __APPLE__
     if( config_GetInt( p_this, "rt-priority" ) )
 #endif
     {
@@ -601,7 +601,7 @@ int __vlc_thread_create( vlc_object_t *p_this, char * psz_file, int i_line,
             i_priority = 0;
         }
     }
-#ifndef SYS_DARWIN
+#ifndef __APPLE__
     else
     {
         i_priority = 0;
@@ -661,7 +661,7 @@ int __vlc_thread_set_priority( vlc_object_t *p_this, char * psz_file,
     }
 
 #elif defined( PTHREAD_COND_T_IN_PTHREAD_H )
-#ifndef SYS_DARWIN
+#ifndef __APPLE__
     if( config_GetInt( p_this, "rt-priority" ) )
 #endif
     {

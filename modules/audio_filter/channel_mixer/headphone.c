@@ -2,10 +2,10 @@
  * headphone.c : headphone virtual spatialization channel mixer module
  *               -> gives the feeling of a real room with a simple headphone
  *****************************************************************************
- * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: headphone.c 12917 2005-10-22 17:58:12Z babal $
+ * Copyright (C) 2002-2006 the VideoLAN team
+ * $Id: headphone.c 14997 2006-03-31 15:15:07Z fkuehne $
  *
- * Authors: Boris Dorès <babal@via.ecp.fr>
+ * Authors: Boris DorÃ¨s <babal@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -60,17 +60,16 @@ static void DoWork    ( aout_instance_t *, aout_filter_t *, aout_buffer_t *,
 #define HEADPHONE_COMPENSATE_TEXT N_("Compensate delay")
 #define HEADPHONE_COMPENSATE_LONGTEXT N_( \
      "The delay which is introduced by the physical algorithm may "\
-     "sometimes be disturbing for the lipsync. In that case, turn "\
-     "this on to compensate.")
+     "sometimes be disturbing for the synchronization between lips-movement "\
+     "and speech. In case, turn this on to compensate.")
 
 #define HEADPHONE_DOLBY_TEXT N_("No decoding of Dolby Surround")
 #define HEADPHONE_DOLBY_LONGTEXT N_( \
-     "If this option is turned on (not recommended), Dolby Surround "\
-     "encoded streams won't be decoded before being processed by this "\
-     "filter.")
+     "Dolby Surround encoded streams won't be decoded before being " \
+     "processed by this filter. Enabling this setting is not recommended.")
 
 vlc_module_begin();
-    set_description( N_("Headphone channel mixer with virtual spatialization effect") );
+    set_description( N_("Headphone virtual spatialization effect") );
     set_shortname( _("Headphone effect") );
     set_category( CAT_AUDIO );
     set_subcategory( SUBCAT_AUDIO_AFILTER );
@@ -315,12 +314,10 @@ static int Init ( aout_filter_t * p_filter , struct aout_filter_sys_t * p_data
     for ( i = 0 ; i < p_data->i_nb_atomic_operations ; i++ )
     {
         if ( p_data->i_overflow_buffer_size
-                < p_data->p_atomic_operations[i].i_delay * i_nb_channels
-                * sizeof (float) )
+                < p_data->p_atomic_operations[i].i_delay * 2 * sizeof (float) )
         {
             p_data->i_overflow_buffer_size
-                = p_data->p_atomic_operations[i].i_delay * i_nb_channels
-                * sizeof (float);
+                = p_data->p_atomic_operations[i].i_delay * 2 * sizeof (float);
         }
     }
     p_data->p_overflow_buffer = malloc ( p_data->i_overflow_buffer_size );
@@ -347,7 +344,7 @@ static int Create( vlc_object_t *p_this )
     if ( p_filter->output.i_physical_channels
             != (AOUT_CHAN_LEFT|AOUT_CHAN_RIGHT) )
     {
-        msg_Dbg( p_filter, "Filter discarded (incompatible format)" );
+        msg_Dbg( p_filter, "filter discarded (incompatible format)" );
         return VLC_EGENERIC;
     }
 
@@ -383,7 +380,7 @@ static int Create( vlc_object_t *p_this )
     }
     if ( ! b_fit )
     {
-        msg_Dbg( p_filter, "Requesting specific format" );
+        msg_Dbg( p_filter, "requesting specific format" );
         return VLC_EGENERIC;
     }
 
@@ -391,7 +388,7 @@ static int Create( vlc_object_t *p_this )
     p_filter->p_sys = malloc( sizeof(struct aout_filter_sys_t) );
     if ( p_filter->p_sys == NULL )
     {
-        msg_Err( p_filter, "Out of memory" );
+        msg_Err( p_filter, "out of memory" );
         return VLC_EGENERIC;
     }
     p_filter->p_sys->i_overflow_buffer_size = 0;
@@ -402,7 +399,7 @@ static int Create( vlc_object_t *p_this )
     if ( Init( p_filter , p_filter->p_sys
                 , aout_FormatNbChannels ( &p_filter->input )
                 , p_filter->input.i_physical_channels
-                ,  p_filter->input.i_rate ) < 0 )
+                , p_filter->input.i_rate ) < 0 )
     {
         return VLC_EGENERIC;
     }
@@ -449,8 +446,8 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
     byte_t * p_overflow;
     byte_t * p_slide;
 
-    size_t i_overflow_size;/* in bytes */
-    size_t i_out_size;/* in bytes */
+    size_t i_overflow_size;     /* in bytes */
+    size_t i_out_size;          /* in bytes */
 
     unsigned int i, j;
 

@@ -2,7 +2,7 @@
  * common.c : audio output management of common data structures
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: common.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: common.c 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -142,6 +142,7 @@ void aout_FormatPrepare( audio_sample_format_t * p_format )
         break;
 
     case VLC_FOURCC('s','p','d','i'):
+    case VLC_FOURCC('s','p','d','b'): /* Big endian spdif output */
     case VLC_FOURCC('a','5','2',' '):
     case VLC_FOURCC('d','t','s',' '):
     case VLC_FOURCC('m','p','g','a'):

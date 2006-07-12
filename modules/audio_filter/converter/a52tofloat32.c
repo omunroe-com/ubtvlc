@@ -4,16 +4,16 @@
  *   (http://liba52.sf.net/).
  *****************************************************************************
  * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: a52tofloat32.c 12805 2005-10-09 19:19:06Z babal $
+ * $Id: a52tofloat32.c 14954 2006-03-28 21:00:15Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
- *      
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -393,7 +393,7 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
         }
         else
         {
-            /* Interleave the *$£%ù samples. */
+            /* Interleave the *$Â£%Ã¹ samples. */
             Interleave( (float *)(p_out_buf->p_buffer + i * i_bytes_per_block),
                         p_samples, p_sys->i_nb_channels, p_sys->pi_chan_table);
         }

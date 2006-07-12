@@ -2,10 +2,10 @@
  * bezier.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: bezier.cpp 11786 2005-07-18 23:57:41Z asmax $
+ * $Id: bezier.cpp 14118 2006-02-01 18:06:48Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <vlc/vlc.h>
@@ -107,11 +107,12 @@ float Bezier::getNearestPercent( int x, int y ) const
 }
 
 
-float Bezier::getMinDist( int x, int y ) const
+float Bezier::getMinDist( int x, int y, float xScale, float yScale ) const
 {
     int nearest = findNearestPoint( x, y );
-    return sqrt( (double)((m_leftVect[nearest] - x) * (m_leftVect[nearest] - x) +
-                 (m_topVect[nearest] - y) * (m_topVect[nearest] - y)) );
+    double xDist = xScale * (m_leftVect[nearest] - x);
+    double yDist = yScale * (m_topVect[nearest] - y);
+    return sqrt( xDist * xDist + yDist * yDist );
 }
 
 

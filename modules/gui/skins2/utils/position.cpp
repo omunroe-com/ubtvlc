@@ -2,10 +2,10 @@
  * position.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: position.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: position.cpp 14118 2006-02-01 18:06:48Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "position.hpp"
+
+
+const string VarBox::m_type = "box";
 
 
 Rect::Rect( int left, int top, int right, int bottom ):
@@ -121,5 +124,31 @@ int Position::getWidth() const
 int Position::getHeight() const
 {
     return getBottom() - getTop() + 1;
+}
+
+
+VarBox::VarBox( intf_thread_t *pIntf, int width, int height ):
+    Variable( pIntf ), m_width( width ), m_height( height )
+{
+}
+
+
+int VarBox::getWidth() const
+{
+    return m_width;
+}
+
+
+int VarBox::getHeight() const
+{
+    return m_height;
+}
+
+
+void VarBox::setSize( int width, int height )
+{
+    m_width = width;
+    m_height = height;
+    notify();
 }
 

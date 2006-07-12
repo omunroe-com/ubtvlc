@@ -2,7 +2,7 @@
  * lirc.c : lirc module for vlc
  *****************************************************************************
  * Copyright (C) 2003-2005 the VideoLAN team
- * $Id: lirc.c 12836 2005-10-15 13:23:08Z sigmunau $
+ * $Id: lirc.c 14966 2006-03-29 15:03:17Z dionoea $
  *
  * Author: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -81,7 +81,7 @@ static int Open( vlc_object_t *p_this )
     i_fd = lirc_init( "vlc", 1 );
     if( i_fd == -1 )
     {
-        msg_Err( p_intf, "lirc_init failed" );
+        msg_Err( p_intf, "lirc initialisation failed" );
         free( p_intf->p_sys );
         return 1;
     }
@@ -91,7 +91,7 @@ static int Open( vlc_object_t *p_this )
 
     if( lirc_readconfig( NULL, &p_intf->p_sys->config, NULL ) != 0 )
     {
-        msg_Err( p_intf, "lirc_readconfig failed" );
+        msg_Err( p_intf, "failure while reading lirc config" );
         lirc_deinit();
         free( p_intf->p_sys );
         return 1;
@@ -144,7 +144,7 @@ static void Run( intf_thread_t *p_intf )
 
             if( strncmp( "key-", c, 4 ) )
             {
-                msg_Err( p_intf, "This doesn't appear to be a valid keycombo lirc sent us. Please look at the doc/lirc/example.lirc file in VLC" );
+                msg_Err( p_intf, "this doesn't appear to be a valid keycombo lirc sent us. Please look at the doc/lirc/example.lirc file in VLC" );
                 break;
             }
             keyval.i_int = config_GetInt( p_intf, c );

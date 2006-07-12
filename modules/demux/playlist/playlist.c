@@ -2,9 +2,9 @@
  * playlist.c :  Playlist import module
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: playlist.c 12821 2005-10-11 17:16:13Z zorglub $
+ * $Id: playlist.c 15386 2006-04-28 12:09:04Z dionoea $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -34,16 +34,21 @@
  * Module descriptor
  *****************************************************************************/
 #define AUTOSTART_TEXT N_( "Auto start" )
-#define AUTOSTART_LONGTEXT N_( "Automatically start the playlist when " \
-    "it's loaded.\n" )
+/// \bug [String] Why \n ?
+#define AUTOSTART_LONGTEXT N_( "Automatically start playing the playlist " \
+                "content once it's loaded.\n" )
+
+#define SHOW_ADULT_TEXT N_( "Show shoutcast adult content" )
+#define SHOW_ADULT_LONGTEXT N_( "Show NC17 rated video streams when " \
+                "using shoutcast video playlists." )
 
 vlc_module_begin();
     add_shortcut( "playlist" );
     set_category( CAT_INPUT );
     set_subcategory( SUBCAT_INPUT_DEMUX );
 
-    add_bool( "playlist-autostart", 1, NULL, AUTOSTART_TEXT, AUTOSTART_LONGTEXT,
-              VLC_FALSE );
+    add_bool( "playlist-autostart", 1, NULL,
+              AUTOSTART_TEXT, AUTOSTART_LONGTEXT, VLC_FALSE );
 
     set_shortname( _("Playlist") );
     set_description( _("Playlist") );
@@ -79,6 +84,23 @@ vlc_module_begin();
         add_shortcut( "dvb-open" );
         set_capability( "demux2", 10 );
         set_callbacks( E_(Import_DVB), E_(Close_DVB) );
+    add_submodule();
+        set_description( _("Podcast parser") );
+        add_shortcut( "podcast" );
+        set_capability( "demux2", 10 );
+        set_callbacks( E_(Import_podcast), E_(Close_podcast) );
+    add_submodule();
+        set_description( _("XSPF playlist import") );
+        add_shortcut( "xspf-open" );
+        set_capability( "demux2", 10 );
+        set_callbacks( E_(xspf_import_Activate), NULL );
+    add_submodule();
+        set_description( _("New winamp 5.2 shoutcast import") );
+        add_shortcut( "shout-winamp" );
+        set_capability( "demux2", 10 );
+        set_callbacks( E_(Import_Shoutcast), E_(Close_Shoutcast) );
+        add_bool( "shoutcast-show-adult", VLC_FALSE, NULL,
+                   SHOW_ADULT_TEXT, SHOW_ADULT_LONGTEXT, VLC_FALSE );
 vlc_module_end();
 
 

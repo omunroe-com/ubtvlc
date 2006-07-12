@@ -2,7 +2,7 @@
  * equalizer.m: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: equalizer.m 11818 2005-07-23 15:08:46Z fkuehne $
+ * $Id: equalizer.m 15199 2006-04-13 09:04:34Z zorglub $
  *
  * Authors: Jerome Decoodt <djc@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -139,11 +139,12 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
     int i;
     [o_btn_equalizer setToolTip: _NS("Equalizer")];
     [o_ckb_2pass setTitle: _NS("2 Pass")];
-    [o_ckb_2pass setToolTip: _NS("If you enable this settting, the "
-        "equalizer filter will be applied twice. The effect will be sharper.")];
+    [o_ckb_2pass setToolTip: _NS("Apply the"
+/// \bug [String] missing space
+        "equalizer filter twice. The effect will be sharper.")];
     [o_ckb_enable setTitle: _NS("Enable")];
-    [o_ckb_enable setToolTip: _NS("Enable the equalizer. You can either "
-        "manually change the bands or use a preset.")];
+    [o_ckb_enable setToolTip: _NS("Enable the equalizer. Bands can be set "
+        "manually or using a preset.")];
     [o_fld_preamp setStringValue: _NS("Preamp")];
 
     [o_popup_presets removeAllItems];

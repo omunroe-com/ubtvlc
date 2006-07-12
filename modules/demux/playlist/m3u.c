@@ -2,9 +2,9 @@
  * m3u.c : M3U playlist format import
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: m3u.c 12836 2005-10-15 13:23:08Z sigmunau $
+ * $Id: m3u.c 14377 2006-02-18 20:34:32Z courmisch $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
  *          Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -30,6 +30,7 @@
 #include <vlc/vlc.h>
 #include <vlc/input.h>
 #include <vlc/intf.h>
+#include "charset.h"
 
 #include <errno.h>                                                 /* ENOMEM */
 #include "playlist.h"
@@ -123,7 +124,7 @@ static int Demux( demux_t *p_demux )
     vlc_bool_t b_cleanup = VLC_FALSE;
 
     p_playlist = (playlist_t *) vlc_object_find( p_demux, VLC_OBJECT_PLAYLIST,
-                                                 FIND_PARENT );
+                                                 FIND_ANYWHERE );
     if( !p_playlist )
     {
         msg_Err( p_demux, "can't find playlist" );
@@ -206,8 +207,8 @@ static int Demux( demux_t *p_demux )
             }
             p_item->input.i_duration = i_duration;
             if ( psz_artist && *psz_artist )
-                vlc_input_item_AddInfo( &p_item->input, _("Meta-information"),
-                                        _("Artist"), "%s", psz_artist );
+                vlc_input_item_AddInfo( &p_item->input, _(VLC_META_INFO_CAT),
+                                        _(VLC_META_ARTIST), "%s", psz_artist );
             playlist_NodeAddItem( p_playlist, p_item,
                                   p_current->pp_parents[0]->i_view,
                                   p_current, PLAYLIST_APPEND,

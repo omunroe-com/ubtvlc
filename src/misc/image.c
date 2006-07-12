@@ -2,7 +2,7 @@
  * image.c : wrapper for image reading/writing facilities
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: image.c 11980 2005-08-03 14:52:17Z massiot $
+ * $Id: image.c 15019 2006-04-01 00:25:58Z dionoea $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /**
@@ -34,6 +34,8 @@
 #include <vlc/decoder.h>
 #include <vlc_filter.h>
 #include <vlc_image.h>
+#include <vlc_stream.h>
+#include <charset.h>
 
 static picture_t *ImageRead( image_handler_t *, block_t *,
                              video_format_t *, video_format_t * );
@@ -203,24 +205,24 @@ static picture_t *ImageReadUrl( image_handler_t *p_image, const char *psz_url,
 {
     block_t *p_block;
     picture_t *p_pic;
-    FILE *file;
+    stream_t *p_stream = NULL;
     int i_size;
 
-    file = fopen( psz_url, "rb" );
-    if( !file )
+    p_stream = stream_UrlNew( p_image->p_parent, psz_url );
+
+    if( !p_stream )
     {
-        msg_Dbg( p_image->p_parent, "could not open file %s for reading",
+        msg_Dbg( p_image->p_parent, "could not open %s for reading",
                  psz_url );
         return NULL;
     }
 
-    fseek( file, 0, SEEK_END );
-    i_size = ftell( file );
-    fseek( file, 0, SEEK_SET );
+    i_size = stream_Size( p_stream );
 
     p_block = block_New( p_image->p_parent, i_size );
-    fread( p_block->p_buffer, sizeof(char), i_size, file );
-    fclose( file );
+
+    stream_Read( p_stream, p_block->p_buffer, i_size );
+    stream_Delete( p_stream );
 
     if( !p_fmt_in->i_chroma )
     {
@@ -270,7 +272,7 @@ static block_t *ImageWrite( image_handler_t *p_image, picture_t *p_pic,
         p_image->p_enc->fmt_in.video.i_width != p_fmt_in->i_width ||
         p_image->p_enc->fmt_in.video.i_height != p_fmt_in->i_height )
     {
-        picture_t *p_pif;
+        picture_t *p_tmp_pic;
 
         if( p_image->p_filter )
         if( p_image->p_filter->fmt_in.video.i_chroma != p_fmt_in->i_chroma ||
@@ -309,12 +311,18 @@ static block_t *ImageWrite( image_handler_t *p_image, picture_t *p_pic,
 
         pf_release = p_pic->pf_release;
         p_pic->pf_release = PicRelease; /* Small hack */
-        p_pif = p_image->p_filter->pf_video_filter( p_image->p_filter, p_pic );
+        p_tmp_pic =
+            p_image->p_filter->pf_video_filter( p_image->p_filter, p_pic );
         p_pic->pf_release = pf_release;
-        p_pic = p_pif;
-    }
 
-    p_block = p_image->p_enc->pf_encode_video( p_image->p_enc, p_pic );
+        p_block = p_image->p_enc->pf_encode_video( p_image->p_enc, p_tmp_pic );
+
+        p_image->p_filter->pf_vout_buffer_del( p_image->p_filter, p_tmp_pic );
+    }
+    else
+    {
+        p_block = p_image->p_enc->pf_encode_video( p_image->p_enc, p_pic );
+    }
 
     if( !p_block )
     {
@@ -338,7 +346,7 @@ static int ImageWriteUrl( image_handler_t *p_image, picture_t *p_pic,
         p_fmt_out->i_chroma = Ext2Fourcc( psz_url );
     }
 
-    file = fopen( psz_url, "wb" );
+    file = utf8_fopen( psz_url, "wb" );
     if( !file )
     {
         msg_Dbg( p_image->p_parent, "could not open file %s for writing",

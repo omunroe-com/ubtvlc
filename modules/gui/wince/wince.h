@@ -2,7 +2,7 @@
  * wince.h: private WinCE interface descriptor
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: wince.h 11988 2005-08-03 19:01:44Z courmisch $
+ * $Id: wince.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Marodon Cedric <cedric_marodon@yahoo.fr>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef WINCE_RESOURCE

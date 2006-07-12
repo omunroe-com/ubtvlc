@@ -2,7 +2,7 @@
  * sap.c :  SAP interface module
  *****************************************************************************
  * Copyright (C) 2004-2005 the VideoLAN team
- * $Id: sap.c 12858 2005-10-16 19:21:08Z hartman $
+ * $Id: sap.c 14999 2006-03-31 15:30:21Z zorglub $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -77,35 +77,41 @@ static const char ipv6_scopes[] = "1456789ABCDE";
  * Module descriptor
  *****************************************************************************/
 #define SAP_ADDR_TEXT N_( "SAP multicast address" )
-#define SAP_ADDR_LONGTEXT N_( "Listen for SAP announcements on another address" )
-#define SAP_IPV4_TEXT N_( "IPv4-SAP listening" )
+#define SAP_ADDR_LONGTEXT N_( "The SAP module normally chooses itself the " \
+                              "right addresses to listen to. However, you " \
+                              "can specify a specific address." )
+#define SAP_IPV4_TEXT N_( "IPv4 SAP" )
 #define SAP_IPV4_LONGTEXT N_( \
-      "Set this if you want the SAP module to listen to IPv4 announcements " \
+      "Listen to IPv4 announcements " \
       "on the standard address." )
-#define SAP_IPV6_TEXT N_( "IPv6-SAP listening" )
+#define SAP_IPV6_TEXT N_( "IPv6 SAP" )
 #define SAP_IPV6_LONGTEXT N_( \
-      "Set this if you want the SAP module to listen to IPv6 announcements " \
-      "on the standard address." )
+      "Listen to IPv6 announcements " \
+      "on the standard addresses." )
 #define SAP_SCOPE_TEXT N_( "IPv6 SAP scope" )
 #define SAP_SCOPE_LONGTEXT N_( \
-       "Sets the scope for IPv6 announcements (default is 8)." )
+       "Scope for IPv6 announcements (default is 8)." )
 #define SAP_TIMEOUT_TEXT N_( "SAP timeout (seconds)" )
 #define SAP_TIMEOUT_LONGTEXT N_( \
-       "Sets the time before SAP items get deleted if no new announcement " \
+       "Delay after which SAP items get deleted if no new announcement " \
        "is received." )
-#define SAP_PARSE_TEXT N_( "Try to parse the SAP" )
+#define SAP_PARSE_TEXT N_( "Try to parse the announce" )
 #define SAP_PARSE_LONGTEXT N_( \
-       "When SAP can it will try to parse the SAP. If you don't select " \
-       "this, all announcements will be parsed by the livedotcom module." )
+       "This enables actual parsing of the announces by the SAP module. " \
+       "Otherwise, all announcements are parsed by the \"livedotcom\" " \
+       "(RTP/RTSP) module." )
 #define SAP_STRICT_TEXT N_( "SAP Strict mode" )
 #define SAP_STRICT_LONGTEXT N_( \
        "When this is set, the SAP parser will discard some non-compliant " \
        "announcements." )
 #define SAP_CACHE_TEXT N_("Use SAP cache")
 #define SAP_CACHE_LONGTEXT N_( \
-       "If this option is selected, a SAP caching mechanism will be used. " \
+       "This enables a SAP caching mechanism. " \
        "This will result in lower SAP startup time, but you could end up " \
-        "with items corresponding to legacy streams." )
+       "with items corresponding to legacy streams." )
+#define SAP_TIMESHIFT_TEXT N_("Allow timeshifting")
+#define SAP_TIMESHIFT_LONGTEXT N_( "This automatically enables timeshifting " \
+        "for streams discovered through SAP announcements." )
 
 /* Callbacks */
     static int  Open ( vlc_object_t * );
@@ -131,8 +137,12 @@ vlc_module_begin();
                SAP_PARSE_TEXT,SAP_PARSE_LONGTEXT, VLC_TRUE );
     add_bool( "sap-strict", 0 , NULL,
                SAP_STRICT_TEXT,SAP_STRICT_LONGTEXT, VLC_TRUE );
+#if 0
     add_bool( "sap-cache", 0 , NULL,
                SAP_CACHE_TEXT,SAP_CACHE_LONGTEXT, VLC_TRUE );
+#endif
+    add_bool( "sap-timeshift", 0 , NULL,
+              SAP_TIMESHIFT_TEXT,SAP_TIMESHIFT_LONGTEXT, VLC_TRUE );
 
     set_capability( "services_discovery", 0 );
     set_callbacks( Open, Close );
@@ -221,6 +231,7 @@ struct services_discovery_sys_t
     /* Modes */
     vlc_bool_t  b_strict;
     vlc_bool_t  b_parse;
+    vlc_bool_t  b_timeshift;
 
     int i_timeout;
 };
@@ -272,7 +283,6 @@ static int Open( vlc_object_t *p_this )
                                 malloc( sizeof( services_discovery_sys_t ) );
 
     playlist_view_t     *p_view;
-    char                *psz_addr;
     vlc_value_t         val;
 
     p_sys->i_timeout = var_CreateGetInteger( p_sd, "sap-timeout" );
@@ -286,41 +296,16 @@ static int Open( vlc_object_t *p_this )
     p_sys->b_strict = var_CreateGetInteger( p_sd, "sap-strict");
     p_sys->b_parse = var_CreateGetInteger( p_sd, "sap-parse" );
 
+#if 0
     if( var_CreateGetInteger( p_sd, "sap-cache" ) )
     {
         CacheLoad( p_sd );
     }
+#endif
 
-    if( var_CreateGetInteger( p_sd, "sap-ipv4" ) )
-    {
-        InitSocket( p_sd, SAP_V4_GLOBAL_ADDRESS, SAP_PORT );
-        InitSocket( p_sd, SAP_V4_ORG_ADDRESS, SAP_PORT );
-        InitSocket( p_sd, SAP_V4_LOCAL_ADDRESS, SAP_PORT );
-        InitSocket( p_sd, SAP_V4_LINK_ADDRESS, SAP_PORT );
-    }
-    if( var_CreateGetInteger( p_sd, "sap-ipv6" ) )
-    {
-        char psz_address[] = SAP_V6_1"0"SAP_V6_2;
-        const char *c_scope;
-
-        for( c_scope = ipv6_scopes; *c_scope; c_scope++ )
-        {
-            psz_address[sizeof(SAP_V6_1) - 1] = *c_scope;
-            InitSocket( p_sd, psz_address, SAP_PORT );
-        }
-    }
-
-    psz_addr = var_CreateGetString( p_sd, "sap-addr" );
-    if( psz_addr && *psz_addr )
-    {
-        InitSocket( p_sd, psz_addr, SAP_PORT );
-    }
-
-    if( p_sys->i_fd == 0 )
-    {
-        msg_Err( p_sd, "unable to read on any address" );
-        return VLC_EGENERIC;
-    }
+    /* Cache sap_timeshift value */
+    p_sys->b_timeshift = var_CreateGetInteger( p_sd, "sap-timeshift" )
+            ? VLC_TRUE : VLC_FALSE;
 
     /* Create our playlist node */
     p_sys->p_playlist = (playlist_t *)vlc_object_find( p_sd,
@@ -439,7 +424,7 @@ error:
     free( psz_sdp );
     if( p_sdp ) FreeSDP( p_sdp );
     stream_Seek( p_demux->s, 0 );
-    return VLC_EGENERIC;    
+    return VLC_EGENERIC;
 }
 
 /*****************************************************************************
@@ -458,10 +443,12 @@ static void Close( vlc_object_t *p_this )
     }
     FREE( p_sys->pi_fd );
 
+#if 0
     if( config_GetInt( p_sd, "sap-cache" ) )
     {
         CacheSave( p_sd );
     }
+#endif
 
     for( i = p_sys->i_announces  - 1;  i>= 0; i-- )
     {
@@ -496,7 +483,45 @@ static void CloseDemux( vlc_object_t *p_this )
 
 static void Run( services_discovery_t *p_sd )
 {
+    char *psz_addr;
     int i;
+
+    /* Braindead Winsock DNS resolver will get stuck over 2 seconds per failed
+     * DNS queries, even if the DNS server returns an error with milliseconds.
+     * You don't want to know why the bug (as of XP SP2) wasn't fixed since
+     * Winsock 1.1 from Windows 95, if not Windows 3.1.
+     * Anyway, to avoid a 30 seconds delay for failed IPv6 socket creation,
+     * we have to open sockets in Run() rather than Open(). */
+    if( var_CreateGetInteger( p_sd, "sap-ipv4" ) )
+    {
+        InitSocket( p_sd, SAP_V4_GLOBAL_ADDRESS, SAP_PORT );
+        InitSocket( p_sd, SAP_V4_ORG_ADDRESS, SAP_PORT );
+        InitSocket( p_sd, SAP_V4_LOCAL_ADDRESS, SAP_PORT );
+        InitSocket( p_sd, SAP_V4_LINK_ADDRESS, SAP_PORT );
+    }
+    if( var_CreateGetInteger( p_sd, "sap-ipv6" ) )
+    {
+        char psz_address[] = SAP_V6_1"0"SAP_V6_2;
+        const char *c_scope;
+
+        for( c_scope = ipv6_scopes; *c_scope; c_scope++ )
+        {
+            psz_address[sizeof(SAP_V6_1) - 1] = *c_scope;
+            InitSocket( p_sd, psz_address, SAP_PORT );
+        }
+    }
+
+    psz_addr = var_CreateGetString( p_sd, "sap-addr" );
+    if( psz_addr && *psz_addr )
+    {
+        InitSocket( p_sd, psz_addr, SAP_PORT );
+    }
+
+    if( p_sd->p_sys->i_fd == 0 )
+    {
+        msg_Err( p_sd, "unable to listen on any address" );
+        return;
+    }
 
     /* read SAP packets */
     while( !p_sd->b_die )
@@ -633,7 +658,7 @@ static int ParseSAP( services_discovery_t *p_sd, uint8_t *p_buffer, int i_read )
         psz_sdp += 4;
         if( i_read <= 9 )
         {
-            msg_Warn( p_sd, "too short SAP packet\n" );
+            msg_Warn( p_sd, "too short SAP packet" );
             return VLC_EGENERIC;
         }
     }
@@ -642,7 +667,7 @@ static int ParseSAP( services_discovery_t *p_sd, uint8_t *p_buffer, int i_read )
         psz_sdp += 16;
         if( i_read <= 21 )
         {
-            msg_Warn( p_sd, "too short SAP packet\n" );
+            msg_Warn( p_sd, "too short SAP packet" );
             return VLC_EGENERIC;
         }
     }
@@ -662,7 +687,7 @@ static int ParseSAP( services_discovery_t *p_sd, uint8_t *p_buffer, int i_read )
             free( p_decompressed_buffer );
         }
 #else
-        msg_Warn( p_sd, "Ignoring compressed sap packet" );
+        msg_Warn( p_sd, "ignoring compressed sap packet" );
         return VLC_EGENERIC;
 #endif
     }
@@ -693,7 +718,7 @@ static int ParseSAP( services_discovery_t *p_sd, uint8_t *p_buffer, int i_read )
     }
     if( ( psz_sdp != psz_foo ) && strcasecmp( psz_foo, "application/sdp" ) )
     {
-        msg_Dbg( p_sd, "unhandled content type: %s", psz_foo );        
+        msg_Dbg( p_sd, "unhandled content type: %s", psz_foo );
     }
     if( ( psz_sdp - (char *)p_buffer ) >= i_read )
     {
@@ -750,7 +775,7 @@ static int ParseSAP( services_discovery_t *p_sd, uint8_t *p_buffer, int i_read )
     /* Add item */
     if( p_sdp->i_media > 1 )
     {
-        msg_Dbg( p_sd, "passing to LIVE.COM" );
+        msg_Dbg( p_sd, "passing to liveMedia" );
     }
 
     CreateAnnounce( p_sd, i_hash, p_sdp );
@@ -765,8 +790,11 @@ sap_announce_t *CreateAnnounce( services_discovery_t *p_sd, uint16_t i_hash,
     char *psz_value;
     sap_announce_t *p_sap = (sap_announce_t *)malloc(
                                         sizeof(sap_announce_t ) );
+    services_discovery_sys_t *p_sys;
     if( p_sap == NULL )
         return NULL;
+
+    p_sys = p_sd->p_sys;
 
     EnsureUTF8( p_sdp->psz_sessionname );
     p_sap->i_last = mdate();
@@ -774,15 +802,17 @@ sap_announce_t *CreateAnnounce( services_discovery_t *p_sd, uint16_t i_hash,
     p_sap->p_sdp = p_sdp;
     p_sap->i_item_id = -1;
 
-    /* Create the playlist item here */
-    p_item = playlist_ItemNew( p_sd, p_sap->p_sdp->psz_uri,
-                               p_sdp->psz_sessionname );
+    /* Create the actual playlist item here */
+    p_item = playlist_ItemNew( p_sd, p_sap->p_sdp->psz_uri, p_sdp->psz_sessionname );
 
     if( !p_item )
     {
         free( p_sap );
         return NULL;
     }
+
+    if( p_sys->b_timeshift )
+        playlist_ItemAddOption( p_item, ":access-filter=timeshift" );
 
     psz_value = GetAttribute( p_sap->p_sdp, "tool" );
     if( psz_value != NULL )
@@ -803,35 +833,35 @@ sap_announce_t *CreateAnnounce( services_discovery_t *p_sd, uint16_t i_hash,
         psz_value = GetAttribute( p_sap->p_sdp, "plgroup" );
     }
 
+    /* Find or Create the group playlist non-playable item */
     if( psz_value != NULL )
     {
         EnsureUTF8( psz_value );
 
-        p_child = playlist_ChildSearchName( p_sd->p_sys->p_node, psz_value );
+        p_child = playlist_ChildSearchName( p_sys->p_node, psz_value );
 
         if( p_child == NULL )
         {
-            p_child = playlist_NodeCreate( p_sd->p_sys->p_playlist,
+            p_child = playlist_NodeCreate( p_sys->p_playlist,
                                            VIEW_CATEGORY, psz_value,
-                                           p_sd->p_sys->p_node );
+                                           p_sys->p_node );
             p_child->i_flags &= ~PLAYLIST_SKIP_FLAG;
         }
     }
     else
     {
-        p_child = p_sd->p_sys->p_node;
+        p_child = p_sys->p_node;
     }
 
     p_item->i_flags &= ~PLAYLIST_SKIP_FLAG;
     p_item->i_flags &= ~PLAYLIST_SAVE_FLAG;
 
-    playlist_NodeAddItem( p_sd->p_sys->p_playlist, p_item, VIEW_CATEGORY,
-                              p_child, PLAYLIST_APPEND, PLAYLIST_END );
+    playlist_NodeAddItem( p_sys->p_playlist, p_item, VIEW_CATEGORY, p_child,
+                          PLAYLIST_APPEND, PLAYLIST_END );
 
     p_sap->i_item_id = p_item->input.i_id;
 
-    TAB_APPEND( p_sd->p_sys->i_announces,
-                p_sd->p_sys->pp_announces, p_sap );
+    TAB_APPEND( p_sys->i_announces, p_sys->pp_announces, p_sap );
 
     return p_sap;
 }
@@ -859,6 +889,7 @@ static int ParseConnection( vlc_object_t *p_obj, sdp_t *p_sdp )
     char *psz_parse;
     char *psz_uri = NULL;
     char *psz_proto = NULL;
+    char psz_source[256];
     int i_port = 0;
 
     /* Parse c= field */
@@ -982,7 +1013,7 @@ static int ParseConnection( vlc_object_t *p_obj, sdp_t *p_sdp )
 
             psz_parse = psz_eof + 1;
             p_sdp->i_media_type = atoi( psz_parse );
-            
+
         }
         else
         {
@@ -1010,7 +1041,14 @@ static int ParseConnection( vlc_object_t *p_obj, sdp_t *p_sdp )
         i_port = 1234;
     }
 
-    asprintf( &p_sdp->psz_uri, "%s://@%s:%i", psz_proto, psz_uri, i_port );
+    /* handle SSM case */
+    psz_parse = GetAttribute( p_sdp, "source-filter" );
+    psz_source[0] = '\0';
+
+    if( psz_parse ) sscanf( psz_parse, " incl IN IP%*s %*s %255s ", psz_source);
+
+    asprintf( &p_sdp->psz_uri, "%s://%s@%s:%i", psz_proto, psz_source,
+              psz_uri, i_port );
 
     FREE( psz_uri );
     FREE( psz_proto );
@@ -1034,7 +1072,7 @@ static sdp_t *  ParseSDP( vlc_object_t *p_obj, char* psz_sdp )
 
     if( psz_sdp[0] != 'v' || psz_sdp[1] != '=' )
     {
-        msg_Warn( p_obj, "Bad packet" );
+        msg_Warn( p_obj, "bad packet" );
         return NULL;
     }
 
@@ -1218,7 +1256,7 @@ static sdp_t *  ParseSDP( vlc_object_t *p_obj, char* psz_sdp )
 static int InitSocket( services_discovery_t *p_sd, char *psz_address,
                        int i_port )
 {
-    int i_fd = net_OpenUDP( p_sd, psz_address, i_port, "", 0 );
+    int i_fd = net_OpenUDP( p_sd, psz_address, i_port, NULL, 0 );
 
     if( i_fd != -1 )
     {
@@ -1373,10 +1411,10 @@ static vlc_bool_t IsSameSession( sdp_t *p_sdp1, sdp_t *p_sdp2 )
 
 static void CacheLoad( services_discovery_t *p_sd )
 {
-    msg_Warn( p_sd, "Cache not implemented") ;
+    msg_Warn( p_sd, "cache not implemented") ;
 }
 
 static void CacheSave( services_discovery_t *p_sd )
 {
-    msg_Warn( p_sd, "Cache not implemented") ;
+    msg_Warn( p_sd, "cache not implemented") ;
 }

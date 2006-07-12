@@ -2,7 +2,7 @@
  * bitmap_font.cpp
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: bitmap_font.cpp 12501 2005-09-09 19:20:34Z gbazin $
+ * $Id: bitmap_font.cpp 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "bitmap_font.hpp"
@@ -43,6 +43,7 @@ BitmapFont::BitmapFont( intf_thread_t *pIntf, const GenericBitmap &rBitmap,
         {
             m_table['0'+i].m_xPos = i * m_width;
         }
+        m_table[(size_t)' '].m_xPos = 10 * m_width;
         m_table[(size_t)'-'].m_xPos = 11 * m_width;
     }
     else if( rType == "text" )
@@ -104,8 +105,11 @@ GenericBitmap *BitmapFont::drawString( const UString &rString,
         uint32_t c = *(pString++);
         if( c < 256 && m_table[c].m_xPos != -1 )
         {
-            pBmp->drawBitmap( m_rBitmap, m_table[c].m_xPos, m_table[c].m_yPos,
-                              xDest, 0, m_width, m_height );
+            bool res = pBmp->drawBitmap( m_rBitmap, m_table[c].m_xPos,
+                                         m_table[c].m_yPos, xDest, 0,
+                                         m_width, m_height );
+            if ( !res )
+                msg_Warn( getIntf(), "BitmapFont::drawString: ignoring char" );
             xDest += m_advance;
         }
         else

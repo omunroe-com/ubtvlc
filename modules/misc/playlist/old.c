@@ -2,7 +2,7 @@
  * old.c : Old playlist format import/export
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: old.c 12742 2005-10-02 12:47:49Z jpsaman $
+ * $Id: old.c 14932 2006-03-25 23:10:43Z xtophe $
  *
  * Authors: Cl�ent Stenac <zorglub@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -48,7 +48,7 @@ int Export_Old( vlc_object_t *p_this )
     playlist_export_t *p_export = (playlist_export_t *)p_playlist->p_private;
     int i;
 
-    msg_Dbg(p_playlist, "Saving using old format");
+    msg_Dbg(p_playlist, "saving using old format");
 
     /* Write header */
     fprintf( p_export->p_file , PLAYLIST_FILE_HEADER "\n" );

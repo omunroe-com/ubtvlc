@@ -2,7 +2,7 @@
  * http.h: Headers for the HTTP interface
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: http.c 12225 2005-08-18 10:01:30Z massiot $
+ * $Id: http.h 15082 2006-04-03 11:39:35Z courmisch $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef _HTTP_H_
@@ -30,6 +30,7 @@
  * Preamble
  *****************************************************************************/
 #include <stdlib.h>
+#include <strings.h>
 #include <ctype.h>
 #include <vlc/vlc.h>
 #include <vlc/intf.h>
@@ -127,8 +128,6 @@ char *E_(ExtractURIValue)( char *psz_uri, const char *psz_name,
                              char *psz_value, int i_value_max );
 /** \todo Describe this function */
 int E_(TestURIParam)( char *psz_uri, const char *psz_name );
-/** This function extracts the original value from an URL-encoded string */
-void E_(DecodeEncodedURI)( char *psz );
 
 /** This function parses a MRL */
 playlist_item_t *E_(MRLParse)( intf_thread_t *, char *psz, char *psz_name );
@@ -203,6 +202,9 @@ void     E_(mvar_AppendNewVar)( mvar_t *vars, const char *name,
 /** This function creates a set variable which represents a series of integer
  * The arg parameter must be of the form "start[:stop[:step]]"  */
 mvar_t *E_(mvar_IntegerSetNew)( const char *name, const char *arg );
+
+/** This function creates a set variable with a list of VLC objects */
+mvar_t *E_(mvar_ObjectSetNew)( intf_thread_t *p_intf, char *name, char *arg );
 
 /** This function creates a set variable with the contents of the playlist */
 mvar_t *E_(mvar_PlaylistSetNew)( intf_thread_t *p_intf, char *name,
@@ -381,6 +383,7 @@ struct intf_sys_t
     input_thread_t      *p_input;
     vlm_t               *p_vlm;
     char                *psz_html_type;
+    char                *psz_charset;
     vlc_iconv_t         iconv_from_utf8, iconv_to_utf8;
 
     char                *psz_address;
@@ -394,7 +397,7 @@ int E_(HttpCallback)( httpd_file_sys_t *p_args,
                       uint8_t **pp_data, int *pi_data );
 /** This function is the HTTPD Callback used for CGIs */
 int  E_(HandlerCallback)( httpd_handler_sys_t *p_args,
-                          httpd_handler_t *p_handler, uint8_t *_p_url,
+                          httpd_handler_t *p_handler, char *_p_url,
                           uint8_t *_p_request, int i_type,
                           uint8_t *_p_in, int i_in,
                           char *psz_remote_addr, char *psz_remote_host,

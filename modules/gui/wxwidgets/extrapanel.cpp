@@ -2,9 +2,9 @@
  * extrapanel.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004, 2003 the VideoLAN team
- * $Id: extrapanel.cpp 13180 2005-11-10 18:43:42Z gbazin $
+ * $Id: extrapanel.cpp 15039 2006-04-01 21:46:33Z zorglub $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -32,16 +32,14 @@
 
 #include <math.h>
 
-#include "wxwidgets.h"
+#include "extrapanel.hpp"
 
 /*****************************************************************************
  * Local class declarations.
  *****************************************************************************/
 
-/* FIXME */
-#define SMOOTH_TIP N_( "If this setting is not zero, the bands will move " \
-                "together when you move one. The higher the value is, the " \
-                "more correlated their movement will be." )
+#define SMOOTH_TIP N_( "Controls the blending of equalizer bands. The higher" \
+            " this value is, the more correlated their movement will be." )
 
 static int IntfBandsCallback( vlc_object_t *, char const *,
                               vlc_value_t, vlc_value_t, void * );
@@ -148,11 +146,11 @@ struct filter {
 static const struct filter vfilters[] =
 {
     { "clone", N_("Image clone"), N_("Creates several clones of the image") },
-    { "distort", N_("Distortion"), N_("Adds distorsion effects") },
-    { "invert", N_("Image inversion") , N_("Inverts the image colors") },
-    { "crop", N_("Image cropping"), N_("Crops the image") },
-    { "motionblur", N_("Blurring"), N_("Creates a motion blurring on the image") },
+    { "distort", N_("Distortion"), N_("Adds distortion effects") },
+    { "invert", N_("Image inversion") , N_("Inverts the colors of the image") },
+    { "motionblur", N_("Blurring"), N_("Adds motion blurring to the image") },
     { "transform",  N_("Transformation"), N_("Rotates or flips the image") },
+    { "magnify",  N_("Magnify"), N_("Magnifies part of the image") },
     { NULL, NULL, NULL } /* Do not remove this line */
 };
 
@@ -203,7 +201,7 @@ wxPanel *ExtraPanel::VideoPanel( wxWindow *parent )
 
     /* Create static box to surround the adjust controls */
     wxStaticBox *adjust_box =
-           new wxStaticBox( panel, -1, wxU(_("Adjust Image")) );
+           new wxStaticBox( panel, -1, wxU(_("Image adjustment" )) );
     wxStaticBoxSizer *adjust_sizer =
         new wxStaticBoxSizer( adjust_box, wxVERTICAL );
     adjust_sizer->SetMinSize( -1, 50 );
@@ -310,13 +308,13 @@ wxPanel *ExtraPanel::VideoPanel( wxWindow *parent )
     {
         wxCheckBox *box = new wxCheckBox( panel, Filter0_Event + i,
                                           wxU( _( vfilters[i].psz_name ) ) );
-        t_col_sizer->Add( box, 0, wxALL, 4 );
+        t_col_sizer->Add( box, 0, wxALL, 2 );
         box->SetToolTip( wxU( _( vfilters[i].psz_help ) ) );
     }
 
     filter_sizer->Add( t_col_sizer );
     filter_sizer->Add( new wxButton( panel, FiltersInfo_Event,
-                            wxU(_("More info" ) ) ), 0, wxALL, 4 );
+                            wxU(_("More Info" ) ) ), 0, wxALL, 4 );
 #if 0
     other_sizer->Add( video_sizer, 0, wxALL | wxEXPAND , 0);
     other_sizer->Add( filter_sizer, 0, wxALL | wxEXPAND , 0);
@@ -396,13 +394,13 @@ wxPanel *ExtraPanel::AudioPanel( wxWindow *parent )
 
     wxCheckBox * headphone_check = new wxCheckBox( panel, HeadPhone_Event,
                                     wxU(_("Headphone virtualization")));
-    headphone_check->SetToolTip( wxU(_("This filter gives the feeling of a "
-             "5.1 speaker set when using a headphone." ) ) );
+    headphone_check->SetToolTip( wxU(_("Imitates the effect of "
+             "surround sound when using headphones." ) ) );
 
     wxCheckBox * normvol_check = new wxCheckBox( panel, NormVol_Event,
                                     wxU(_("Volume normalization")));
-    normvol_check->SetToolTip( wxU(_("This filter prevents the audio output "
-                         "power from going over a defined value." ) ) );
+    normvol_check->SetToolTip( wxU(_("Prevents the audio output "
+                         "level from going over a predefined value." ) ) );
 
     wxStaticText *normvol_label = new wxStaticText( panel, -1,
                                    wxU( _("Maximum level") ) );
@@ -466,14 +464,14 @@ wxPanel *ExtraPanel::EqzPanel( wxWindow *parent )
     eq_chkbox =  new wxCheckBox( panel, EqEnable_Event,
                             wxU(_("Enable") ) );
     eq_chkbox->SetToolTip( wxU(_("Enable the equalizer. You can either "
-    "manually change the bands or use a preset (Audio Menu->Equalizer)." ) ) );
+    "manually adjust the bands or use a preset (Audio Menu->Equalizer)." ) ) );
     top_sizer->Add( eq_chkbox, 0, wxALL, 2 );
 
     eq_2p_chkbox =  new wxCheckBox( panel, Eq2Pass_Event,
                             wxU(_("2 Pass") ) );
 
-    eq_2p_chkbox->SetToolTip( wxU(_("If you enable this setting, the "
-     "equalizer filter will be applied twice. The effect will be sharper.") ) );
+    eq_2p_chkbox->SetToolTip( wxU(_("Apply the equalizer twice. "
+               "The resulting effect will be sharper.") ) );
 
     top_sizer->Add( eq_2p_chkbox, 0, wxALL, 2 );
 
@@ -998,17 +996,15 @@ void ExtraPanel::OnSelectFilter(wxCommandEvent& event)
 
 void ExtraPanel::OnFiltersInfo(wxCommandEvent& event)
 {
-    wxMessageBox( wxU( _("Select the video effects filters to apply. "
+    wxMessageBox( wxU( _("Filtering effects to apply to the video. "
                   "You must restart the stream for these settings to "
-                  "take effect.\n"
-                  "To configure the filters, go to the Preferences, "
-                  "and go to Modules/Video Filters. "
-                  "You can then configure each filter.\n"
-                  "If you want fine control over the filters ( to choose "
-                  "the order in which they are applied ), you need to enter "
-                  "manually a filters string (Preferences / Video / Filters)."
+                  "take effect.\n\n"
+                  "To configure these filters, go to Preferences / Video / "
+                  "Filters. In order to control the order in which they "
+                  "are applied, enter a filters string in the Video Filter "
+                  "Module inside the preferences."
                   ) ),
-                    wxU( _("More information" ) ), wxOK | wxICON_INFORMATION,
+                    wxU( _("More Information" ) ), wxOK | wxICON_INFORMATION,
                     this->p_parent );
 }
 /**********************************
@@ -1214,13 +1210,11 @@ ExtraWindow::ExtraWindow( intf_thread_t *_p_intf, wxWindow *p_parent,
        wxFrame( p_parent, -1, wxU(_("Extended controls")), wxDefaultPosition,
                  wxDefaultSize, wxDEFAULT_FRAME_STYLE )
 {
-        fprintf(stderr,"Creating extrawindow\n");
     p_intf = _p_intf;
     SetIcon( *p_intf->p_sys->p_icon );
 
     wxBoxSizer *window_sizer = new wxBoxSizer( wxVERTICAL );
     SetSizer( window_sizer );
-//    panel = new ExtraPanel(  p_intf, this );//_extra_panel;
 
     panel = _extra_panel;
     window_sizer->Add( panel );

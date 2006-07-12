@@ -2,10 +2,10 @@
  * window_manager.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: window_manager.hpp 12912 2005-10-22 11:57:29Z asmax $
+ * $Id: window_manager.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef WINDOW_MANAGER_HPP
@@ -37,6 +37,7 @@ class GenericFont;
 class GenericLayout;
 class Anchor;
 class Tooltip;
+class Popup;
 
 
 /// Window manager for skin windows
@@ -116,16 +117,25 @@ class WindowManager: public SkinObject
         /// Change the active layout of the given window
         void setActiveLayout( TopWindow &rWindow, GenericLayout &rLayout );
 
+        /// Mark the given popup as active
+        void setActivePopup( Popup &rPopup ) { m_pPopup = &rPopup; }
+
+        /// Return the active popup, or NULL if none is active
+        Popup * getActivePopup() const { return m_pPopup; }
+
     private:
         /// Some useful typedefs for lazy people like me
         typedef set<TopWindow*> WinSet_t;
         typedef list<Anchor*> AncList_t;
 
-        /// This map represents the graph of anchored windows: it associates
-        /// to a given window all the windows that are directly anchored by it.
-        /// This is not transitive, i.e. if a is in m_dep[b] and if b is in
-        /// m_dep[c], it doesn't mean that a is in m_dep[c] (in fact, it
-        /// would be extremely rare...)
+        /// Dependencies map
+        /**
+         * This map represents the graph of anchored windows: it associates
+         * to a given window all the windows that are directly anchored by it.
+         * This is not transitive, i.e. if a is in m_dep[b] and if b is in
+         * m_dep[c], it doesn't mean that a is in m_dep[c] (in fact, it
+         * would be extremely rare...)
+         */
         map<TopWindow*, WinSet_t> m_dependencies;
         /// Store all the windows
         WinSet_t m_allWindows;
@@ -142,12 +152,17 @@ class WindowManager: public SkinObject
         int m_moveAlpha;
         /// Tooltip
         Tooltip *m_pTooltip;
+        /// Active popup, if any
+        Popup *m_pPopup;
 
         /// Recursively build a set of windows anchored to the one given.
         void buildDependSet( WinSet_t &rWinSet, TopWindow *pWindow );
 
-        /// Check anchoring: this function updates xOffset and yOffset,
-        /// to take care of a new anchoring (if any)
+        /// Check anchoring
+        /**
+         * This function updates xOffset and yOffset, to take care of a new
+         * anchoring (if any)
+         */
         void checkAnchors( TopWindow *pWindow,
                            int &xOffset, int &yOffset ) const;
 };

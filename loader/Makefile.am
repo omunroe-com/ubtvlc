@@ -3,14 +3,14 @@
 # from VLC trunk
 #
 # by Rémi Denis-Courmont <rem # videolan.org>
-# $Id: Makefile.am 11593 2005-06-28 18:02:01Z courmisch $
+# $Id: Makefile.am 14921 2006-03-25 14:43:43Z courmisch $
 #
 # All other files in this directory (and subdirectories) are copyrighted
 # by their respective owner(s).
 #
 
 if LOADER
-noinst_LIBRARIES = libloader.a
+noinst_LTLIBRARIES = libloader.la
 endif
 
 # TODO: real check for vsscanf() and <sys/mmap.h>
@@ -27,7 +27,7 @@ noinst_HEADERS = com.h driver.h ext.h ldt_keeper.h loader.h registry.h \
 	wine/vfw.h wine/winbase.h wine/windef.h wine/winerror.h \
 	wine/winestring.h wine/winnt.h wine/winreg.h wine/winuser.h
 
-libloader_a_SOURCES = ldt_keeper.c pe_image.c module.c ext.c win32.c \
+libloader_la_SOURCES = ldt_keeper.c pe_image.c module.c ext.c win32.c \
 	driver.c pe_resource.c resource.c registry.c afl.c vfl.c \
 	wrapper.S stubs.s kludge.c
 

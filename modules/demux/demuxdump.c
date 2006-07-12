@@ -2,7 +2,7 @@
  * demuxdump.c : Pseudo demux module for vlc (dump raw stream)
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: demuxdump.c 12236 2005-08-18 15:58:05Z massiot $
+ * $Id: demuxdump.c 14719 2006-03-11 17:35:55Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -30,17 +30,17 @@
 
 #include <vlc/vlc.h>
 #include <vlc/input.h>
+#include "charset.h"
 
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
-#define FILE_TEXT N_("Filename of dump")
+#define FILE_TEXT N_("Dump filename")
 #define FILE_LONGTEXT N_( \
-    "Specify a file name to which the raw stream will be dumped." )
-#define APPEND_TEXT N_("Append")
+    "Name of the file to which the raw stream will be dumped." )
+#define APPEND_TEXT N_("Append to existing file")
 #define APPEND_LONGTEXT N_( \
-    "If the file exists and this option is selected, the existing file " \
-    "will not be overwritten." )
+    "If the file already exists, it will not be overwritten." )
 
 static int  Open( vlc_object_t * );
 static void Close ( vlc_object_t * );
@@ -49,7 +49,7 @@ vlc_module_begin();
     set_shortname("Dump");
     set_category( CAT_INPUT );
     set_subcategory( SUBCAT_INPUT_DEMUX );
-    set_description( _("Filedump demuxer") );
+    set_description( _("File dumpper") );
     set_capability( "demux2", 0 );
     add_file( "demuxdump-file", "stream-demux.dump", NULL, FILE_TEXT,
               FILE_LONGTEXT, VLC_FALSE );
@@ -121,7 +121,7 @@ static int Open( vlc_object_t * p_this )
         msg_Info( p_demux, "dumping raw stream to standard output" );
         p_sys->p_file = stdout;
     }
-    else if( ( p_sys->p_file = fopen( p_sys->psz_file, psz_mode ) ) == NULL )
+    else if( ( p_sys->p_file = utf8_fopen( p_sys->psz_file, psz_mode ) ) == NULL )
     {
         msg_Err( p_demux, "cannot create `%s' for writing", p_sys->psz_file );
 

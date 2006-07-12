@@ -2,10 +2,10 @@
  * var_percent.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: var_percent.hpp 11786 2005-07-18 23:57:41Z asmax $
+ * $Id: var_percent.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef VAR_PERCENT_HPP
@@ -32,7 +32,7 @@ class VarPercent;
 
 
 /// Percentage variable
-class VarPercent: public Variable, public Subject<VarPercent>
+class VarPercent: public Variable, public Subject<VarPercent, void*>
 {
     public:
         VarPercent( intf_thread_t *pIntf ): Variable( pIntf ), m_value( 0 ) {}

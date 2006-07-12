@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ipv6.c: IPv6 network abstraction layer
  *****************************************************************************
- * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: ipv6.c 12656 2005-09-22 21:19:33Z gbazin $
+ * Copyright (C) 2002-2006 the VideoLAN team
+ * $Id: ipv6.c 14932 2006-03-25 23:10:43Z xtophe $
  *
  * Authors: Alexis Guillard <alexis.guillard@bt.com>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -34,23 +34,17 @@
 
 #include <errno.h>
 
-#ifdef HAVE_FCNTL_H
-#   include <fcntl.h>
-#endif
-#ifdef HAVE_SYS_TYPES_H
-#   include <sys/types.h>
-#endif
-#ifdef HAVE_UNISTD_H
-#   include <unistd.h>
-#endif
-
 #ifdef WIN32
 #   include <winsock2.h>
 #   include <ws2tcpip.h>
-#elif !defined( SYS_BEOS ) && !defined( SYS_NTO )
+#   define if_nametoindex( str ) atoi( str )
+#else
+#   include <sys/types.h>
+#   include <unistd.h>
 #   include <netdb.h>                                         /* hostent ... */
 #   include <sys/socket.h>
 #   include <netinet/in.h>
+#   include <net/if.h>
 #endif
 
 #include "network.h"
@@ -254,20 +248,7 @@ static int OpenUDP( vlc_object_t * p_this )
         return 0;
     }
 
-    /* Allow broadcast reception if we bound on in6addr_any */
-    if( !*psz_bind_addr )
-    {
-        i_opt = 1;
-        if( setsockopt( i_handle, SOL_SOCKET, SO_BROADCAST,
-                        (void*) &i_opt, sizeof( i_opt ) ) == -1 )
-        {
-            msg_Warn( p_this, "IPv6 warning: cannot configure socket "
-                              "(SO_BROADCAST: %s)", strerror(errno) );
-        }
-    }
-
     /* Join the multicast group if the socket is a multicast address */
-#if defined( WIN32 ) || defined( HAVE_IF_NAMETOINDEX )
     if( IN6_IS_ADDR_MULTICAST(&sock.sin6_addr) )
     {
         if(*psz_server_addr)
@@ -300,11 +281,10 @@ static int OpenUDP( vlc_object_t * p_this )
 
                 msg_Err( p_this, "failed to join IP multicast group (%s)",
                                                           strerror(errno) );
-            }    
+            }
         }
         else
         {
-        
             struct ipv6_mreq     imr;
             int                  res;
 
@@ -323,19 +303,10 @@ static int OpenUDP( vlc_object_t * p_this )
             } 
         }
     }
-#else
-    msg_Warn( p_this, "Multicast IPv6 is not supported on your OS" );
-#endif
-
-
+    else
     if( *psz_server_addr )
     {
-        int ttl = p_socket->i_ttl;
-        if( ttl < 1 )
-        {
-            ttl = config_GetInt( p_this, "ttl" );
-        }
-        if( ttl < 1 ) ttl = 1;
+        int ttl;
 
         /* Build socket for remote connection */
         if ( BuildAddr( p_this, &sock, psz_server_addr, i_server_port ) == -1 )
@@ -355,9 +326,12 @@ static int OpenUDP( vlc_object_t * p_this )
         }
 
         /* Set the time-to-live */
-        if( ttl > 1 )
+        ttl = p_socket->i_ttl;
+        if( ttl <= 0 )
+            ttl = config_GetInt( p_this, "ttl" );
+
+        if( ttl > 0 )
         {
-#if defined( WIN32 ) || defined( HAVE_IF_NAMETOINDEX )
             if( IN6_IS_ADDR_MULTICAST(&sock.sin6_addr) )
             {
                 if( setsockopt( i_handle, IPPROTO_IPV6, IPV6_MULTICAST_HOPS,
@@ -368,13 +342,42 @@ static int OpenUDP( vlc_object_t * p_this )
                 }
             }
             else
-#endif
             {
                 if( setsockopt( i_handle, IPPROTO_IPV6, IPV6_UNICAST_HOPS,
                                 (void *)&ttl, sizeof( ttl ) ) < 0 )
                 {
                     msg_Err( p_this, "failed to set unicast ttl (%s)",
                               strerror(errno) );
+                }
+            }
+        }
+
+        /* Set multicast output interface */
+        if( IN6_IS_ADDR_MULTICAST(&sock.sin6_addr) )
+        {
+            char *psz_mif = config_GetPsz( p_this, "miface" );
+            if( psz_mif != NULL )
+            {
+                int intf = if_nametoindex( psz_mif );
+                free( psz_mif  );
+
+                if( intf != 0 )
+                {
+                    if( setsockopt( i_handle, IPPROTO_IPV6, IPV6_MULTICAST_IF,
+                        &intf, sizeof( intf ) ) < 0 )
+                    {
+                        msg_Err( p_this, "%s as multicast interface: %s",
+                                 psz_mif, strerror(errno) );
+                        close( i_handle );
+                        return 0;
+                    }
+                }
+                else
+                {
+                    msg_Err( p_this, "%s: bad IPv6 interface specification",
+                             psz_mif );
+                    close( i_handle );
+                    return 0;
                 }
             }
         }

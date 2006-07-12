@@ -2,7 +2,7 @@
  * freetype.c : Put text on the video, using freetype2
  *****************************************************************************
  * Copyright (C) 2002 - 2005 the VideoLAN team
- * $Id: freetype.c 13026 2005-10-30 15:32:11Z gbazin $
+ * $Id: freetype.c 15209 2006-04-14 09:37:39Z zorglub $
  *
  * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -48,7 +48,7 @@
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 
-#ifdef SYS_DARWIN
+#ifdef __APPLE__
 #define DEFAULT_FONT "/System/Library/Fonts/LucidaGrande.dfont"
 #elif defined( SYS_BEOS )
 #define DEFAULT_FONT "/boot/beos/etc/fonts/ttfonts/Swiss721.ttf"
@@ -81,24 +81,45 @@ static int SetFontSize( filter_t *, int );
  * Module descriptor
  *****************************************************************************/
 #define FONT_TEXT N_("Font")
-#define FONT_LONGTEXT N_("Font filename")
+#define FONT_LONGTEXT N_("Filename for the font you want to use")
 #define FONTSIZE_TEXT N_("Font size in pixels")
-#define FONTSIZE_LONGTEXT N_("The size of the fonts used by the osd module. " \
+/// \bug [String] Extra space
+#define FONTSIZE_LONGTEXT N_("This is the default size of the fonts " \
+    "that will be rendered on the video. " \
     "If set to something different than 0 this option will override the " \
-    "relative font size " )
-#define OPACITY_TEXT N_("Opacity, 0..255")
-#define OPACITY_LONGTEXT N_("The opacity (inverse of transparency) of " \
-    "overlay text. 0 = transparent, 255 = totally opaque. " )
-#define COLOR_TEXT N_("Text Default Color")
-#define COLOR_LONGTEXT N_("The color of overlay text. 1 byte for each color, "\
-    "hexadecimal. #000000 = all colors off, 0xFF0000 = just Red, " \
-    "0xFFFFFF = all color on [White]" )
-#define FONTSIZER_TEXT N_("Font size")
-#define FONTSIZER_LONGTEXT N_("The size of the fonts used by the osd module" )
+    "relative font size. " )
+#define OPACITY_TEXT N_("Opacity")
+#define OPACITY_LONGTEXT N_("The opacity (inverse of transparency) of the " \
+    "text that will be rendered on the video. 0 = transparent, " \
+    "255 = totally opaque. " )
+#define COLOR_TEXT N_("Text default color")
+#define COLOR_LONGTEXT N_("The color of the text that will be rendered on "\
+    "the video. This must be an hexadecimal (like HTML colors). The first two "\
+    "chars are for red, then green, then blue. #000000 = black, #FF0000 = red,"\
+    " #00FF00 = green, #FFFF00 = yellow (red + green), #FFFFFF = white" )
+#define FONTSIZER_TEXT N_("Relative font size")
+#define FONTSIZER_LONGTEXT N_("This is the relative default size of the " \
+    "fonts that will be rendered on the video. If absolute font size is set, "\
+    "relative size will be overriden." )
 
 static int   pi_sizes[] = { 20, 18, 16, 12, 6 };
 static char *ppsz_sizes_text[] = { N_("Smaller"), N_("Small"), N_("Normal"),
                                    N_("Large"), N_("Larger") };
+#define YUVP_TEXT N_("Use YUVP renderer")
+#define YUVP_LONGTEXT N_("This renders the font using \"paletized YUV\". " \
+  "This option is only needed if you want to encode into DVB subtitles" )
+#define EFFECT_TEXT N_("Font Effect")
+/// \bug [String] Missing space
+#define EFFECT_LONGTEXT N_("It is possible to apply effects to the rendered" \
+"text to improve its readability." )
+
+#define EFFECT_BACKGROUND  1 
+#define EFFECT_OUTLINE     2
+#define EFFECT_OUTLINE_FAT 3
+
+static int   pi_effects[] = { 1, 2, 3 };
+static char *ppsz_effects_text[] = { N_("Background"),N_("Outline"),
+                                     N_("Fat Outline") };
 static int pi_color_values[] = {
   0x00000000, 0x00808080, 0x00C0C0C0, 0x00FFFFFF, 0x00800000,
   0x00FF0000, 0x00FF00FF, 0x00FFFF00, 0x00808000, 0x00008000, 0x00008080, 
@@ -133,7 +154,12 @@ vlc_module_begin();
     add_integer( "freetype-rel-fontsize", 16, NULL, FONTSIZER_TEXT,
                  FONTSIZER_LONGTEXT, VLC_FALSE );
         change_integer_list( pi_sizes, ppsz_sizes_text, 0 );
+    add_integer( "freetype-effect", 2, NULL, EFFECT_TEXT,
+                 EFFECT_LONGTEXT, VLC_FALSE );
+        change_integer_list( pi_effects, ppsz_effects_text, 0 );
 
+    add_bool( "freetype-yuvp", 0, NULL, YUVP_TEXT,
+              YUVP_LONGTEXT, VLC_TRUE );
     set_capability( "text renderer", 100 );
     add_shortcut( "text" );
     set_callbacks( Create, Destroy );
@@ -172,6 +198,7 @@ struct filter_sys_t
     uint8_t        i_font_opacity;
     int            i_font_color;
     int            i_font_size;
+    int            i_effect;
 
     int            i_default_font_size;
     int            i_display_height;
@@ -210,13 +237,16 @@ static int Create( vlc_object_t *p_this )
                 VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
     var_Create( p_filter, "freetype-opacity",
                 VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Create( p_filter, "freetype-effect",
+                VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
     var_Get( p_filter, "freetype-opacity", &val );
     p_sys->i_font_opacity = __MAX( __MIN( val.i_int, 255 ), 0 );
     var_Create( p_filter, "freetype-color",
                 VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
     var_Get( p_filter, "freetype-color", &val );
     p_sys->i_font_color = __MAX( __MIN( val.i_int, 0xFFFFFF ), 0 );
-
+    p_sys->i_effect = var_GetInteger( p_filter, "freetype-effect" );
+    
     /* Look what method was requested */
     var_Get( p_filter, "freetype-font", &val );
     psz_fontfile = val.psz_string;
@@ -227,7 +257,7 @@ static int Create( vlc_object_t *p_this )
 #ifdef WIN32
         GetWindowsDirectory( psz_fontfile, PATH_MAX + 1 );
         strcat( psz_fontfile, "\\fonts\\arial.ttf" );
-#elif SYS_DARWIN
+#elif __APPLE__
         strcpy( psz_fontfile, DEFAULT_FONT );
 #else
         msg_Err( p_filter, "user didn't specify a font" );
@@ -258,7 +288,7 @@ static int Create( vlc_object_t *p_this )
     i_error = FT_Select_Charmap( p_sys->p_face, ft_encoding_unicode );
     if( i_error )
     {
-        msg_Err( p_filter, "Font has no unicode translation table" );
+        msg_Err( p_filter, "font has no unicode translation table" );
         goto error;
     }
 
@@ -379,11 +409,13 @@ static int Render( filter_t *p_filter, subpicture_region_t *p_region,
 
         if( p_line->i_width < i_width )
         {
-            if( p_region->i_text_align == SUBPICTURE_ALIGN_RIGHT )
+            if( ( p_region->p_style && p_region->p_style->i_text_align == SUBPICTURE_ALIGN_RIGHT ) ||
+                ( !p_region->p_style && (p_region->i_align & 0x3) == SUBPICTURE_ALIGN_RIGHT ) )
             {
                 i_align_offset = i_width - p_line->i_width;
             }
-            else if( p_region->i_text_align != SUBPICTURE_ALIGN_LEFT )
+            else if( ( p_region->p_style && p_region->p_style->i_text_align != SUBPICTURE_ALIGN_LEFT ) ||
+                ( !p_region->p_style && (p_region->i_align & 0x3) != SUBPICTURE_ALIGN_LEFT ) )
             {
                 i_align_offset = ( i_width - p_line->i_width ) / 2;
             }
@@ -438,6 +470,225 @@ static int Render( filter_t *p_filter, subpicture_region_t *p_region,
     return VLC_SUCCESS;
 }
 
+static void DrawBlack( line_desc_t *p_line, int i_width, subpicture_region_t *p_region, int xoffset, int yoffset )
+{
+    uint8_t *p_dst = p_region->picture.A_PIXELS;
+    int i_pitch = p_region->picture.A_PITCH;
+    int x,y;
+
+    for( ; p_line != NULL; p_line = p_line->p_next )
+    {
+        int i_glyph_tmax=0, i = 0;
+        int i_bitmap_offset, i_offset, i_align_offset = 0;
+        for( i = 0; p_line->pp_glyphs[i] != NULL; i++ )
+        {
+            FT_BitmapGlyph p_glyph = p_line->pp_glyphs[ i ];
+            i_glyph_tmax = __MAX( i_glyph_tmax, p_glyph->top );
+        }
+
+        if( p_line->i_width < i_width )
+        {
+            if( ( p_region->p_style && p_region->p_style->i_text_align == SUBPICTURE_ALIGN_RIGHT ) ||
+                ( !p_region->p_style && (p_region->i_align & 0x3) == SUBPICTURE_ALIGN_RIGHT ) )
+            {
+                i_align_offset = i_width - p_line->i_width;
+            }
+            else if( ( p_region->p_style && p_region->p_style->i_text_align != SUBPICTURE_ALIGN_LEFT ) ||
+                ( !p_region->p_style && (p_region->i_align & 0x3) != SUBPICTURE_ALIGN_LEFT ) )
+            {
+                i_align_offset = ( i_width - p_line->i_width ) / 2;
+            }
+        }
+
+        for( i = 0; p_line->pp_glyphs[i] != NULL; i++ )
+        {
+            FT_BitmapGlyph p_glyph = p_line->pp_glyphs[ i ];
+
+            i_offset = ( p_line->p_glyph_pos[ i ].y +
+                i_glyph_tmax - p_glyph->top + 3 + yoffset ) *
+                i_pitch + p_line->p_glyph_pos[ i ].x + p_glyph->left + 3 +
+                i_align_offset +xoffset;
+
+            for( y = 0, i_bitmap_offset = 0; y < p_glyph->bitmap.rows; y++ )
+            {
+                for( x = 0; x < p_glyph->bitmap.width; x++, i_bitmap_offset++ )
+                {
+                    if( p_glyph->bitmap.buffer[i_bitmap_offset] )
+                        if( p_dst[i_offset+x] <
+                            ((int)p_glyph->bitmap.buffer[i_bitmap_offset]) )
+                            p_dst[i_offset+x] =
+                                ((int)p_glyph->bitmap.buffer[i_bitmap_offset]);
+                }
+                i_offset += i_pitch;
+            }
+        }
+    }
+    
+}
+
+/*****************************************************************************
+ * Render: place string in picture
+ *****************************************************************************
+ * This function merges the previously rendered freetype glyphs into a picture
+ *****************************************************************************/
+static int RenderYUVA( filter_t *p_filter, subpicture_region_t *p_region,
+                   line_desc_t *p_line, int i_width, int i_height )
+{
+    static uint8_t pi_gamma[16] =
+        {0x00, 0x52, 0x84, 0x96, 0xb8, 0xca, 0xdc, 0xee, 0xff,
+          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+
+    uint8_t *p_dst_y,*p_dst_u,*p_dst_v,*p_dst_a;
+    video_format_t fmt;
+    int i, x, y, i_pitch, i_alpha;
+    uint8_t i_y, i_u, i_v; /* YUV values, derived from incoming RGB */
+    subpicture_region_t *p_region_tmp;
+
+    if( i_width == 0 || i_height == 0 )
+        return VLC_SUCCESS;
+
+    /* Create a new subpicture region */
+    memset( &fmt, 0, sizeof(video_format_t) );
+    fmt.i_chroma = VLC_FOURCC('Y','U','V','A');
+    fmt.i_aspect = 0;
+    fmt.i_width = fmt.i_visible_width = i_width + 6;
+    fmt.i_height = fmt.i_visible_height = i_height + 6;
+    fmt.i_x_offset = fmt.i_y_offset = 0;
+    p_region_tmp = spu_CreateRegion( p_filter, &fmt );
+    if( !p_region_tmp )
+    {
+        msg_Err( p_filter, "cannot allocate SPU region" );
+        return VLC_EGENERIC;
+    }
+
+    p_region->fmt = p_region_tmp->fmt;
+    p_region->picture = p_region_tmp->picture;
+    free( p_region_tmp );
+
+    /* Calculate text color components */
+    i_y = (uint8_t)__MIN(abs( 2104 * p_line->i_red  + 4130 * p_line->i_green +
+                      802 * p_line->i_blue + 4096 + 131072 ) >> 13, 235);
+    i_u = (uint8_t)__MIN(abs( -1214 * p_line->i_red  + -2384 * p_line->i_green +
+                     3598 * p_line->i_blue + 4096 + 1048576) >> 13, 240);
+    i_v = (uint8_t)__MIN(abs( 3598 * p_line->i_red + -3013 * p_line->i_green +
+                      -585 * p_line->i_blue + 4096 + 1048576) >> 13, 240);
+    i_alpha = p_line->i_alpha;
+
+    p_dst_y = p_region->picture.Y_PIXELS;
+    p_dst_u = p_region->picture.U_PIXELS;
+    p_dst_v = p_region->picture.V_PIXELS;
+    p_dst_a = p_region->picture.A_PIXELS;
+    i_pitch = p_region->picture.A_PITCH;
+
+    /* Initialize the region pixels */
+    if( p_filter->p_sys->i_effect != EFFECT_BACKGROUND )
+    {
+        memset( p_dst_y, 0x00, i_pitch * p_region->fmt.i_height );
+        memset( p_dst_u, 0x80, i_pitch * p_region->fmt.i_height );
+        memset( p_dst_v, 0x80, i_pitch * p_region->fmt.i_height );
+        memset( p_dst_a, 0, i_pitch * p_region->fmt.i_height );
+    }
+    else
+    {
+        memset( p_dst_y, 0x0, i_pitch * p_region->fmt.i_height );
+        memset( p_dst_u, 0x80, i_pitch * p_region->fmt.i_height );
+        memset( p_dst_v, 0x80, i_pitch * p_region->fmt.i_height );
+        memset( p_dst_a, 0x80, i_pitch * p_region->fmt.i_height );
+    }
+    if( p_filter->p_sys->i_effect == EFFECT_OUTLINE ||
+        p_filter->p_sys->i_effect == EFFECT_OUTLINE_FAT )
+    {
+        DrawBlack( p_line, i_width, p_region,  0,  0);
+        DrawBlack( p_line, i_width, p_region, -1,  0);
+        DrawBlack( p_line, i_width, p_region,  0, -1);
+        DrawBlack( p_line, i_width, p_region,  1,  0);
+        DrawBlack( p_line, i_width, p_region,  0,  1);
+    }
+    
+    if( p_filter->p_sys->i_effect == EFFECT_OUTLINE_FAT )
+    {
+        DrawBlack( p_line, i_width, p_region, -1, -1);
+        DrawBlack( p_line, i_width, p_region, -1,  1);
+        DrawBlack( p_line, i_width, p_region,  1, -1);
+        DrawBlack( p_line, i_width, p_region,  1,  1);
+
+        DrawBlack( p_line, i_width, p_region, -2,  0);
+        DrawBlack( p_line, i_width, p_region,  0, -2);
+        DrawBlack( p_line, i_width, p_region,  2,  0);
+        DrawBlack( p_line, i_width, p_region,  0,  2);
+
+        DrawBlack( p_line, i_width, p_region, -2, -2);
+        DrawBlack( p_line, i_width, p_region, -2,  2);
+        DrawBlack( p_line, i_width, p_region,  2, -2);
+        DrawBlack( p_line, i_width, p_region,  2,  2);
+
+        DrawBlack( p_line, i_width, p_region, -3,  0);
+        DrawBlack( p_line, i_width, p_region,  0, -3);
+        DrawBlack( p_line, i_width, p_region,  3,  0);
+        DrawBlack( p_line, i_width, p_region,  0,  3);
+    }
+
+    for( ; p_line != NULL; p_line = p_line->p_next )
+    {
+        int i_glyph_tmax = 0;
+        int i_bitmap_offset, i_offset, i_align_offset = 0;
+        for( i = 0; p_line->pp_glyphs[i] != NULL; i++ )
+        {
+            FT_BitmapGlyph p_glyph = p_line->pp_glyphs[ i ];
+            i_glyph_tmax = __MAX( i_glyph_tmax, p_glyph->top );
+        }
+
+        if( p_line->i_width < i_width )
+        {
+            if( ( p_region->p_style && p_region->p_style->i_text_align == SUBPICTURE_ALIGN_RIGHT ) ||
+                ( !p_region->p_style && (p_region->i_align & 0x3) == SUBPICTURE_ALIGN_RIGHT ) )
+            {
+                i_align_offset = i_width - p_line->i_width;
+            }
+            else if( ( p_region->p_style && p_region->p_style->i_text_align != SUBPICTURE_ALIGN_LEFT ) ||
+                ( !p_region->p_style && (p_region->i_align & 0x3) != SUBPICTURE_ALIGN_LEFT ) )
+            {
+                i_align_offset = ( i_width - p_line->i_width ) / 2;
+            }
+        }
+
+        for( i = 0; p_line->pp_glyphs[i] != NULL; i++ )
+        {
+            FT_BitmapGlyph p_glyph = p_line->pp_glyphs[ i ];
+
+            i_offset = ( p_line->p_glyph_pos[ i ].y +
+                i_glyph_tmax - p_glyph->top + 3 ) *
+                i_pitch + p_line->p_glyph_pos[ i ].x + p_glyph->left + 3 +
+                i_align_offset;
+
+            for( y = 0, i_bitmap_offset = 0; y < p_glyph->bitmap.rows; y++ )
+            {
+                for( x = 0; x < p_glyph->bitmap.width; x++, i_bitmap_offset++ )
+                {
+                    if( p_glyph->bitmap.buffer[i_bitmap_offset] )
+                    {
+                        p_dst_y[i_offset+x] = ((p_dst_y[i_offset+x] *(255-(int)p_glyph->bitmap.buffer[i_bitmap_offset])) +
+                                              i_y * ((int)p_glyph->bitmap.buffer[i_bitmap_offset])) >> 8;
+
+                        p_dst_u[i_offset+x] = i_u;
+                        p_dst_v[i_offset+x] = i_v;
+                        
+                        if( p_filter->p_sys->i_effect == EFFECT_BACKGROUND )
+                            p_dst_a[i_offset+x] = 0xff;
+                    }
+                }
+                i_offset += i_pitch;
+            }
+        }
+    }
+    
+    /* Apply the alpha setting */
+    for( i = 0; i < (int)fmt.i_height * i_pitch; i++ )
+        p_dst_a[i] = p_dst_a[i] * (255 - i_alpha) / 255;
+
+    return VLC_SUCCESS;
+}
+
 /**
  * This function renders a text subpicture region into another one.
  * It also calculates the size needed for this string, and renders the
@@ -466,13 +717,21 @@ static int RenderText( filter_t *p_filter, subpicture_region_t *p_region_out,
     psz_string = p_region_in->psz_text;
     if( !psz_string || !*psz_string ) return VLC_EGENERIC;
 
-    i_font_color = __MAX( __MIN( p_region_in->i_text_color, 0xFFFFFF ), 0 );
+    if( p_region_in->p_style )
+    {
+        i_font_color = __MAX( __MIN( p_region_in->p_style->i_font_color, 0xFFFFFF ), 0 );
+        i_font_alpha = __MAX( __MIN( p_region_in->p_style->i_font_alpha, 255 ), 0 );
+        i_font_size  = __MAX( __MIN( p_region_in->p_style->i_font_size, 255 ), 0 );
+    }
+    else
+    {
+        i_font_color = p_sys->i_font_color;
+        i_font_alpha = 255 - p_sys->i_font_opacity;
+        i_font_size  = p_sys->i_default_font_size;
+    }
+
     if( i_font_color == 0xFFFFFF ) i_font_color = p_sys->i_font_color;
-
-    i_font_alpha = __MAX( __MIN( p_region_in->i_text_alpha, 255 ), 0 );
     if( !i_font_alpha ) i_font_alpha = 255 - p_sys->i_font_opacity;
-
-    i_font_size  = __MAX( __MIN( p_region_in->i_text_size, 255 ), 0 );
     SetFontSize( p_filter, i_font_size );
 
     i_red   = ( i_font_color & 0x00FF0000 ) >> 16;
@@ -516,7 +775,7 @@ static int RenderText( filter_t *p_filter, subpicture_region_t *p_region_out,
         if( i_in_bytes )
         {
             msg_Warn( p_filter, "failed to convert string to unicode (%s), "
-                      "bytes left %d", strerror(errno), i_in_bytes );
+                      "bytes left %d", strerror(errno), (int)i_in_bytes );
             goto error;
         }
         *(uint32_t*)p_out_buffer = 0;
@@ -526,10 +785,35 @@ static int RenderText( filter_t *p_filter, subpicture_region_t *p_region_out,
 #if defined(HAVE_FRIBIDI)
     {
         uint32_t *p_fribidi_string;
-        FriBidiCharType base_dir = FRIBIDI_TYPE_ON;
+        int start_pos, pos = 0;
+        
         p_fribidi_string = malloc( (i_string_length + 1) * sizeof(uint32_t) );
-        fribidi_log2vis( (FriBidiChar*)psz_unicode, i_string_length,
-                         &base_dir, (FriBidiChar*)p_fribidi_string, 0, 0, 0 );
+
+        /* Do bidi conversion line-by-line */
+        while(pos < i_string_length)
+        {
+            while(pos < i_string_length) {
+                i_char = psz_unicode[pos];
+                if (i_char != '\r' && i_char != '\n')
+                    break;
+                p_fribidi_string[pos] = i_char;
+                ++pos;
+            }
+            start_pos = pos;
+            while(pos < i_string_length) {
+                i_char = psz_unicode[pos];
+                if (i_char == '\r' || i_char == '\n')
+                    break;
+                ++pos;
+            }
+            if (pos > start_pos)
+            {
+                FriBidiCharType base_dir = FRIBIDI_TYPE_LTR;
+                fribidi_log2vis((FriBidiChar*)psz_unicode + start_pos, pos - start_pos,
+                                &base_dir, (FriBidiChar*)p_fribidi_string + start_pos, 0, 0, 0);
+            }
+        }
+
         free( psz_unicode_orig );
         psz_unicode = psz_unicode_orig = p_fribidi_string;
         p_fribidi_string[ i_string_length ] = 0;
@@ -538,7 +822,7 @@ static int RenderText( filter_t *p_filter, subpicture_region_t *p_region_out,
 
     /* Calculate relative glyph positions and a bounding box for the
      * entire string */
-    if( !(p_line = NewLine( psz_string )) )
+    if( !(p_line = NewLine( (byte_t *)psz_string )) )
     {
         msg_Err( p_filter, "out of memory" );
         goto error;
@@ -562,7 +846,7 @@ static int RenderText( filter_t *p_filter, subpicture_region_t *p_region_out,
         if( i_char == '\n' )
         {
             psz_line_start = psz_unicode;
-            if( !(p_next = NewLine( psz_string )) )
+            if( !(p_next = NewLine( (byte_t *)psz_string )) )
             {
                 msg_Err( p_filter, "out of memory" );
                 goto error;
@@ -604,13 +888,15 @@ static int RenderText( filter_t *p_filter, subpicture_region_t *p_region_out,
         i_error = FT_Load_Glyph( face, i_glyph_index, FT_LOAD_DEFAULT );
         if( i_error )
         {
-            msg_Err( p_filter, "FT_Load_Glyph returned %d", i_error );
+            msg_Err( p_filter, "unable to render text FT_Load_Glyph returned"
+                               " %d", i_error );
             goto error;
         }
         i_error = FT_Get_Glyph( glyph, &tmp_glyph );
         if( i_error )
         {
-            msg_Err( p_filter, "FT_Get_Glyph returned %d", i_error );
+            msg_Err( p_filter, "unable to render text FT_Get_Glyph returned "
+                               "%d", i_error );
             goto error;
         }
         FT_Glyph_Get_CBox( tmp_glyph, ft_glyph_bbox_pixels, &glyph_size );
@@ -629,7 +915,7 @@ static int RenderText( filter_t *p_filter, subpicture_region_t *p_region_out,
         {
             p_line->pp_glyphs[ i ] = NULL;
             FreeLine( p_line );
-            p_line = NewLine( psz_string );
+            p_line = NewLine( (byte_t *)psz_string );
             if( p_prev ) p_prev->p_next = p_line;
             else p_lines = p_line;
 
@@ -676,7 +962,10 @@ static int RenderText( filter_t *p_filter, subpicture_region_t *p_region_out,
     p_region_out->i_x = p_region_in->i_x;
     p_region_out->i_y = p_region_in->i_y;
 
-    Render( p_filter, p_region_out, p_lines, result.x, result.y );
+    if( config_GetInt( p_filter, "freetype-yuvp" ) )
+        Render( p_filter, p_region_out, p_lines, result.x, result.y );
+    else
+        RenderYUVA( p_filter, p_region_out, p_lines, result.x, result.y );
 
     if( psz_unicode_orig ) free( psz_unicode_orig );
     FreeLines( p_lines );
@@ -725,7 +1014,7 @@ static line_desc_t *NewLine( byte_t *psz_string )
 
     /* We don't use CountUtf8Characters() here because we are not acutally
      * sure the string is utf8. Better be safe than sorry. */
-    i_count = strlen( psz_string );
+    i_count = strlen( (char *)psz_string );
 
     p_line->pp_glyphs = malloc( sizeof(FT_BitmapGlyph) * ( i_count + 1 ) );
     if( p_line->pp_glyphs == NULL )
@@ -773,11 +1062,11 @@ static int SetFontSize( filter_t *p_filter, int i_size )
         }
         if( i_size <= 0 )
         {
-            msg_Warn( p_filter, "Invalid fontsize, using 12" );
+            msg_Warn( p_filter, "invalid fontsize, using 12" );
             i_size = 12;
         }
 
-        msg_Dbg( p_filter, "Using fontsize: %i", i_size );
+        msg_Dbg( p_filter, "using fontsize: %i", i_size );
     }
 
     p_sys->i_font_size = i_size;

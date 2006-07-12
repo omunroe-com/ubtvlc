@@ -2,7 +2,7 @@
  * sgimb.c: a meta demux to parse sgimb referrer files
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: sgimb.c 12229 2005-08-18 15:14:02Z jpsaman $
+ * $Id: sgimb.c 14790 2006-03-18 02:06:16Z xtophe $
  *
  * Authors: Derk-Jan Hartman <hartman at videolan dot org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -110,7 +110,7 @@ static int  Activate  ( vlc_object_t * );
 static void Deactivate( vlc_object_t * );
 
 vlc_module_begin();
-    set_description( _("Kasenna MediaBase metademux") );
+    set_description( _("Kasenna MediaBase parser") );
     set_category( CAT_INPUT );
     set_subcategory( SUBCAT_INPUT_DEMUX );
     set_capability( "demux2", 170 );
@@ -337,7 +337,7 @@ static int Demux ( demux_t *p_demux )
     playlist_t      *p_playlist;
     playlist_item_t *p_item;
     playlist_item_t *p_child;
-    
+
     char            *psz_line;
 
     p_playlist = (playlist_t *) vlc_object_find( p_demux, VLC_OBJECT_PLAYLIST,
@@ -375,10 +375,10 @@ static int Demux ( demux_t *p_demux )
         if( p_sys->psz_server && p_sys->psz_location )
         {
             char *temp;
-            
+
             asprintf( &temp, "rtsp://" "%s:%i%s",
                      p_sys->psz_server, p_sys->i_port > 0 ? p_sys->i_port : 554, p_sys->psz_location );
-            
+
             p_sys->psz_uri = strdup( temp );
             free( temp );
         }
@@ -395,7 +395,7 @@ static int Demux ( demux_t *p_demux )
             msg_Err( p_demux, "no URI was found" );
             return -1;
         }
-        
+
         asprintf( &temp, "%s%%3FMeDiAbAsEshowingId=%d%%26MeDiAbAsEconcert%%3FMeDiAbAsE",
                 p_sys->psz_uri, p_sys->i_sid );
 
@@ -424,9 +424,9 @@ static int Demux ( demux_t *p_demux )
     if( !p_sys->psz_mcast_ip )
     {
         char *psz_option;
-	asprintf( &psz_option, "rtsp-caching=5000" );
-	playlist_ItemAddOption( p_child, psz_option );
-	free( psz_option );
+        asprintf( &psz_option, "rtsp-caching=5000" );
+        playlist_ItemAddOption( p_child, psz_option );
+        free( psz_option );
     }
     if( !p_sys->psz_mcast_ip && p_sys->b_rtsp_kasenna )
     {

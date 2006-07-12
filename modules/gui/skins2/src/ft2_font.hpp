@@ -2,10 +2,10 @@
  * ft2_font.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ft2_font.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: ft2_font.hpp 15014 2006-03-31 22:33:45Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef FT2_FONT_HPP
@@ -43,7 +43,7 @@ class FT2Font: public GenericFont
         FT2Font( intf_thread_t *pIntf, const string &rName, int size );
         virtual ~FT2Font();
 
-        /// Initalize the object. Returns false if it failed
+        /// Initialize the object. Returns false if it failed
         virtual bool init();
 
         /// Render a string on a bitmap.
