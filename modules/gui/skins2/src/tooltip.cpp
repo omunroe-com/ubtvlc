@@ -2,10 +2,10 @@
  * tooltip.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: tooltip.cpp 12207 2005-08-15 15:54:32Z asmax $
+ * $Id: tooltip.cpp 14118 2006-02-01 18:06:48Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "tooltip.hpp"
@@ -74,7 +74,7 @@ void Tooltip::hide()
 }
 
 
-void Tooltip::onUpdate( Subject<VarText> &rVariable )
+void Tooltip::onUpdate( Subject<VarText, void*> &rVariable , void *arg)
 {
     // Redisplay the tooltip
     displayText( ((VarText&)rVariable).get() );

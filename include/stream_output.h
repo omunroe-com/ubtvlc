@@ -2,7 +2,7 @@
  * stream_output.h : stream output module
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: stream_output.h 12932 2005-10-23 10:58:24Z zorglub $
+ * $Id: stream_output.h 14151 2006-02-04 00:08:50Z zorglub $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -105,6 +105,10 @@ struct sout_access_out_t
 
     char                    *psz_access;
     sout_cfg_t              *p_cfg;
+
+    int                      i_writes;
+    int64_t                  i_sent_bytes;      ///< This is a "local" counter that is reset each
+                                                // time it is transferred to stats
 
     char                    *psz_name;
     sout_access_out_sys_t   *p_sys;
@@ -209,7 +213,7 @@ struct sout_stream_t
 
     /* Subpicture unit */
     spu_t             *p_spu;
-    
+
     /* add, remove a stream */
     sout_stream_id_t *(*pf_add)( sout_stream_t *, es_format_t * );
     int               (*pf_del)( sout_stream_t *, sout_stream_id_t * );
@@ -257,7 +261,6 @@ struct session_descriptor_t
 };
 
 #define METHOD_TYPE_SAP 1
-#define METHOD_TYPE_SLP 2
 
 struct announce_method_t
 {

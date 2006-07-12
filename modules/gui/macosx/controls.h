@@ -2,7 +2,7 @@
  * controls.h: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: controls.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: controls.h 15491 2006-04-30 21:09:16Z bigben $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -32,6 +32,15 @@
 
     IBOutlet id o_btn_fullscreen;
     IBOutlet id o_volumeslider;
+
+    IBOutlet id o_specificTime_cancel_btn;
+    IBOutlet id o_specificTime_enter_fld;
+    IBOutlet id o_specificTime_goTo_lbl;
+    IBOutlet id o_specificTime_ok_btn;
+    IBOutlet id o_specificTime_win;
+    IBOutlet id o_specificTime_sec_lbl;
+    IBOutlet id o_specificTime_stepper;
+    IBOutlet id o_specificTime_mi;
 }
 
 - (IBAction)play:(id)sender;
@@ -54,6 +63,7 @@
 - (IBAction)volumeSliderUpdated:(id)sender;
 
 - (IBAction)windowAction:(id)sender;
+- (BOOL)keyEvent:(NSEvent *)o_event;
 
 - (void)setupVarMenuItem:(NSMenuItem *)o_mi
                     target:(vlc_object_t *)p_object
@@ -66,6 +76,8 @@
                     selector:(SEL)pf_callback;
 - (IBAction)toggleVar:(id)sender;
 - (int)toggleVarThread:(id)_o_data;
+
+- (IBAction)goToSpecificTime:(id)sender;
 
 @end
 
@@ -90,3 +102,15 @@
 - (int)type;
 
 @end
+
+/*****************************************************************************
+ * VLCTimeField interface 
+ *****************************************************************************
+ * we need the implementation to catch our click-event in the controller window
+ *****************************************************************************/
+
+@interface VLCTimeField : NSTextField
+{
+}
+@end
+

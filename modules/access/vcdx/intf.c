@@ -2,10 +2,10 @@
  * intf.c: Video CD interface to handle user interaction and still time
  *****************************************************************************
  * Copyright (C) 2002,2003 the VideoLAN team
- * $Id: intf.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: intf.c 14118 2006-02-01 18:06:48Z courmisch $
  *
  * Author: Rocky Bernstein <rocky@panix.com>
- *   from DVD code by Stéphane Borel <stef@via.ecp.fr>
+ *   from DVD code by StÃ©phane Borel <stef@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************

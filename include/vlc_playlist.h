@@ -2,7 +2,7 @@
  * vlc_playlist.h : Playlist functions
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: vlc_playlist.h 12564 2005-09-15 17:42:24Z zorglub $
+ * $Id: vlc_playlist.h 14616 2006-03-04 17:00:41Z dionoea $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /**
@@ -136,7 +136,7 @@ struct playlist_preparse_t
     VLC_COMMON_MEMBERS
     vlc_mutex_t     lock;
     int             i_waiting;
-    input_item_t  **pp_waiting;
+    int            *pi_waiting;
 };
 
 
@@ -212,6 +212,13 @@ struct playlist_t
     playlist_preparse_t     *p_preparse;
 
     vlc_mutex_t gc_lock;         /**< Lock to protect the garbage collection */
+
+    // The following members are about user interaction
+    // The playlist manages the user interaction to avoid creating another
+    // thread
+    interaction_t *p_interaction;
+
+    global_stats_t *p_stats;
 
     /*@}*/
 };
@@ -357,6 +364,7 @@ VLC_EXPORT( int, playlist_ItemAddOption, (playlist_item_t *, const char *) );
 #define playlist_SortGroup(p, i) playlist_Sort( p, SORT_GROUP, i)
 VLC_EXPORT( int,  playlist_Sort, ( playlist_t *, int, int) );
 VLC_EXPORT( int,  playlist_Move, ( playlist_t *, int, int ) );
+VLC_EXPORT( int,  playlist_TreeMove, ( playlist_t *, playlist_item_t *, playlist_item_t *, int, int ) );
 VLC_EXPORT( int,  playlist_NodeGroup, ( playlist_t *, int,playlist_item_t *,playlist_item_t **,int, int, int ) );
 VLC_EXPORT( int,  playlist_NodeSort, ( playlist_t *, playlist_item_t *,int, int ) );
 VLC_EXPORT( int,  playlist_RecursiveNodeSort, ( playlist_t *, playlist_item_t *,int, int ) );

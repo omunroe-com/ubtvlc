@@ -2,10 +2,10 @@
  * var_bool.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: var_bool.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: var_bool.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef VAR_BOOL_HPP
@@ -30,7 +30,7 @@
 
 
 /// Interface for read-only boolean variable
-class VarBool: public Variable, public Subject<VarBool>
+class VarBool: public Variable, public Subject<VarBool, void *>
 {
     public:
         /// Get the variable type
@@ -89,7 +89,7 @@ class VarBoolImpl: public VarBool
 
 
 /// Conjunction of two boolean variables (AND)
-class VarBoolAndBool: public VarBool, public Observer<VarBool>
+class VarBoolAndBool: public VarBool, public Observer<VarBool, void*>
 {
     public:
         VarBoolAndBool( intf_thread_t *pIntf, VarBool &rVar1, VarBool &rVar2 );
@@ -99,7 +99,7 @@ class VarBoolAndBool: public VarBool, public Observer<VarBool>
         virtual bool get() const { return m_rVar1.get() && m_rVar2.get(); }
 
         // Called when one of the observed variables is changed
-        void onUpdate( Subject<VarBool> &rVariable );
+        void onUpdate( Subject<VarBool, void*> &rVariable, void* );
 
     private:
         /// Boolean variables
@@ -108,7 +108,7 @@ class VarBoolAndBool: public VarBool, public Observer<VarBool>
 
 
 /// Disjunction of two boolean variables (OR)
-class VarBoolOrBool: public VarBool, public Observer<VarBool>
+class VarBoolOrBool: public VarBool, public Observer<VarBool, void*>
 {
     public:
         VarBoolOrBool( intf_thread_t *pIntf, VarBool &rVar1, VarBool &rVar2 );
@@ -118,7 +118,7 @@ class VarBoolOrBool: public VarBool, public Observer<VarBool>
         virtual bool get() const { return m_rVar1.get() || m_rVar2.get(); }
 
         // Called when one of the observed variables is changed
-        void onUpdate( Subject<VarBool> &rVariable );
+        void onUpdate( Subject<VarBool, void*> &rVariable, void* );
 
     private:
         /// Boolean variables
@@ -127,7 +127,7 @@ class VarBoolOrBool: public VarBool, public Observer<VarBool>
 
 
 /// Negation of a boolean variable (NOT)
-class VarNotBool: public VarBool, public Observer<VarBool>
+class VarNotBool: public VarBool, public Observer<VarBool, void*>
 {
     public:
         VarNotBool( intf_thread_t *pIntf, VarBool &rVar );
@@ -137,7 +137,7 @@ class VarNotBool: public VarBool, public Observer<VarBool>
         virtual bool get() const { return !m_rVar.get(); }
 
         // Called when the observed variable is changed
-        void onUpdate( Subject<VarBool> &rVariable );
+        void onUpdate( Subject<VarBool, void*> &rVariable, void* );
 
     private:
         /// Boolean variable

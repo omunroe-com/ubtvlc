@@ -2,7 +2,7 @@
  * control.c
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: control.c 12438 2005-08-31 20:37:23Z gbazin $
+ * $Id: control.c 14953 2006-03-28 20:29:28Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <stdlib.h>
@@ -533,7 +533,8 @@ static void NotifyPlaylist( input_thread_t *p_input )
                                        FIND_PARENT );
     if( p_playlist )
     {
-        var_SetInteger( p_playlist, "item-change", p_playlist->i_index );
+        var_SetInteger( p_playlist, "item-change",
+                        p_input->input.p_item->i_id );
         vlc_object_release( p_playlist );
     }
 }

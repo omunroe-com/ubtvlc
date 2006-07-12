@@ -2,7 +2,7 @@
  * mixer.c : audio output mixing operations
  *****************************************************************************
  * Copyright (C) 2002-2004 the VideoLAN team
- * $Id: mixer.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: mixer.c 14953 2006-03-28 20:29:28Z zorglub $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -46,7 +46,7 @@ int aout_MixerNew( aout_instance_t * p_aout )
     p_aout->mixer.p_module = module_Need( p_aout, "audio mixer", NULL, 0 );
     if ( p_aout->mixer.p_module == NULL )
     {
-        msg_Err( p_aout, "no suitable aout mixer" );
+        msg_Err( p_aout, "no suitable audio mixer" );
         return -1;
     }
     p_aout->mixer.b_error = 0;
@@ -140,6 +140,11 @@ static int MixBuffer( aout_instance_t * p_aout )
                           "trashing", mdate() - p_buffer->start_date );
                 p_buffer = aout_FifoPop( p_aout, p_fifo );
                 aout_BufferFree( p_buffer );
+                if( p_input->p_input_thread )
+                {
+//                    stats_UpdateInteger( p_input->p_input_thread,
+//                                         "lost_abuffers", 1 );
+                }
                 p_buffer = p_fifo->p_first;
                 p_input->p_first_byte_to_mix = NULL;
             }
@@ -197,6 +202,11 @@ static int MixBuffer( aout_instance_t * p_aout )
             msg_Warn( p_aout, "the mixer got a packet in the past ("I64Fd")",
                       start_date - p_buffer->end_date );
             aout_BufferFree( p_buffer );
+            if( p_input->p_input_thread )
+            {
+//                stats_UpdateInteger( p_input->p_input_thread,
+//                                     "lost_abuffers", 1 );
+            }
             p_fifo->p_first = p_buffer = p_next;
             p_input->p_first_byte_to_mix = NULL;
         }

@@ -2,7 +2,7 @@
  * cmd_playtree.cpp
  *****************************************************************************
  * Copyright (C) 2005 VideoLAN
- * $Id: cmd_playtree.cpp 12302 2005-08-20 13:57:15Z dionoea $
+ * $Id: cmd_playtree.cpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Antoine Cellerier <dionoea@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "cmd_playtree.hpp"
@@ -32,40 +32,14 @@ void CmdPlaytreeDel::execute()
 
 void CmdPlaytreeSort::execute()
 {
-    // TODO
-}
+    /// \todo Choose sort method/order - Need more commands
+    playlist_t *p_playlist = getIntf()->p_sys->p_playlist;
+    vlc_mutex_lock( &p_playlist->object_lock );
+    playlist_view_t* p_view = playlist_ViewFind( p_playlist, p_playlist->status.i_view );
+    playlist_RecursiveNodeSort( p_playlist, p_view->p_root , SORT_TITLE, ORDER_NORMAL );
+    vlc_mutex_unlock( &p_playlist->object_lock );
 
-void CmdPlaytreeNext::execute()
-{
-    // TODO
-}
-
-void CmdPlaytreePrevious::execute()
-{
-    // TODO
-}
-
-void CmdPlaytreeRandom::execute()
-{
-    // TODO
-}
-
-void CmdPlaytreeLoop::execute()
-{
-    // TODO
-}
-
-void CmdPlaytreeRepeat::execute()
-{
-    // TODO
-}
-
-void CmdPlaytreeLoad::execute()
-{
-    // TODO
-}
-
-void CmdPlaytreeSave::execute()
-{
-    // TODO
+    // Ask for rebuild
+    Playtree &rVar = VlcProc::instance( getIntf() )->getPlaytreeVar();
+    rVar.onChange();
 }

@@ -2,7 +2,7 @@
  * mms.c: MMS access plug-in
  *****************************************************************************
  * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: mmstu.c 12651 2005-09-22 20:48:59Z gbazin $
+ * $Id: mmstu.c 15016 2006-03-31 23:07:01Z xtophe $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 
@@ -48,6 +48,7 @@
 #endif
 
 #include "network.h"
+#include "vlc_url.h"
 #include "asf.h"
 #include "buffer.h"
 
@@ -458,7 +459,7 @@ static int MMSOpen( access_t  *p_access, vlc_url_t *p_url, int  i_proto )
 
     /* *** Open a TCP connection with server *** */
     msg_Dbg( p_access, "waiting for connection..." );
-    p_sys->i_handle_tcp = net_OpenTCP( p_access, p_url->psz_host, p_url->i_port );
+    p_sys->i_handle_tcp = net_ConnectTCP( p_access, p_url->psz_host, p_url->i_port );
     if( p_sys->i_handle_tcp < 0 )
     {
         msg_Err( p_access, "failed to open a connection (tcp)" );
@@ -649,10 +650,10 @@ static int MMSOpen( access_t  *p_access, vlc_url_t *p_url, int  i_proto )
     switch( GetDWLE( p_sys->p_cmd + MMS_CMD_HEADERSIZE ) )
     {
         case 0x0001:
-            msg_Dbg( p_access, "Media file name/path accepted" );
+            msg_Dbg( p_access, "media file name/path accepted" );
             break;
         case 0x0002:
-            msg_Dbg( p_access, "Authentication accepted" );
+            msg_Dbg( p_access, "authentication accepted" );
             break;
         case -1:
         default:
@@ -677,7 +678,7 @@ static int MMSOpen( access_t  *p_access, vlc_url_t *p_url, int  i_proto )
         GetDWLE( p_sys->p_cmd + MMS_CMD_HEADERSIZE + 60 );
 
     msg_Dbg( p_access,
-             "answer 0x06 flags:0x%8.8x media_length:%us packet_length:%u packet_count:%u max_bit_rate:%d header_size:%d",
+             "answer 0x06 flags:0x%8.8x media_length:%us packet_length:%lu packet_count:%u max_bit_rate:%d header_size:%d",
              p_sys->i_flags_broadcast,
              p_sys->i_media_length,
              p_sys->i_packet_length,
@@ -867,7 +868,7 @@ static int MMSStart( access_t  *p_access, uint32_t i_packet )
     {
         /* get a packet */
         mms_HeaderMediaRead( p_access, MMS_PACKET_MEDIA );
-        msg_Dbg( p_access, "Streaming started" );
+        msg_Dbg( p_access, "streaming started" );
         return( 0 );
     }
 }

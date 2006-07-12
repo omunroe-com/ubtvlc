@@ -2,10 +2,10 @@
  * observer.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: observer.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: observer.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef OBSERVER_HPP
@@ -28,11 +28,11 @@
 #include <set>
 
 // Forward declaration
-template <class S> class Observer;
+template <class S, class ARG> class Observer;
 
 
 /// Template for subjects in the Observer design pattern
-template <class S> class Subject
+template <class S, class ARG> class Subject
 {
     public:
         virtual ~Subject() {}
@@ -45,23 +45,23 @@ template <class S> class Subject
 
         /// Add an observer to this subject
         /// Note: adding twice the same observer is not harmful
-        virtual void addObserver( Observer<S>* pObserver )
+        virtual void addObserver( Observer<S, ARG>* pObserver )
         {
             m_observers.insert( pObserver );
         }
 
         /// Remove an observer from this subject
         /// Note: removing twice the same observer is not harmful
-        virtual void delObserver( Observer<S>* pObserver )
+        virtual void delObserver( Observer<S, ARG>* pObserver )
         {
             m_observers.erase( pObserver );
         }
 
         /// Notify the observers when the status has changed
-        virtual void notify()
+        virtual void notify( ARG arg )
         {
             // This stupid gcc 3.2 needs "typename"
-            typename set<Observer<S>*>::const_iterator iter;
+            typename set<Observer<S, ARG>*>::const_iterator iter;
             for( iter = m_observers.begin(); iter != m_observers.end();
                  iter++ )
             {
@@ -70,27 +70,30 @@ template <class S> class Subject
                     fprintf( stderr, "iter NULL !\n" );
                     return;
                 }
-                (*iter)->onUpdate( *this );
+                (*iter)->onUpdate( *this , arg );
             }
         }
+
+        /// Notify without any argument
+        virtual void notify() { notify( NULL ); }
 
     protected:
         Subject() {}
 
     private:
         /// Set of observers for this subject
-        set<Observer<S>*> m_observers;
+        set<Observer<S, ARG>*> m_observers;
 };
 
 
 /// Template for observers in the Observer design pattern
-template <class S> class Observer
+template <class S, class ARG> class Observer
 {
     public:
         virtual ~Observer() {}
 
         /// Method called when the subject is modified
-        virtual void onUpdate( Subject<S> &rSubject ) = 0;
+        virtual void onUpdate( Subject<S,ARG> &rSubject , ARG arg) = 0;
 
     protected:
         Observer() {}

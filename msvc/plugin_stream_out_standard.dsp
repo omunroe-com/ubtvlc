@@ -99,16 +99,6 @@ SOURCE="..\modules\stream_out\standard.c"
 # PROP Output_Dir "Debug\modules\stream_out"
 # PROP Intermediate_Dir "Debug\modules\stream_out"
 # End Source File
-# Begin Source File
-SOURCE="..\modules\stream_out\announce.c"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=stream_out_standard" /D "MODULE_NAME_IS_stream_out_standard" 
-!IF "$(CFG)" == "plugin_stream_out_standard - Win32 Release"
-# PROP Output_Dir "Release\modules\stream_out"
-# PROP Intermediate_Dir "Release\modules\stream_out"
-!ELSEIF "$(CFG)" == "plugin_stream_out_standard - Win32 Debug"
-# PROP Output_Dir "Debug\modules\stream_out"
-# PROP Intermediate_Dir "Debug\modules\stream_out"
-# End Source File
 
 # End Group
 
@@ -116,9 +106,6 @@ SOURCE="..\modules\stream_out\announce.c"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 
-# Begin Source File
-SOURCE="..\modules\stream_out\announce.h"
-# End Source File
 
 # End Group
 

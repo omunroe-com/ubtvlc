@@ -2,10 +2,10 @@
  * cmd_generic.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: cmd_generic.hpp 12207 2005-08-15 15:54:32Z asmax $
+ * $Id: cmd_generic.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CMD_GENERIC_HPP
@@ -72,6 +72,10 @@ class CmdGeneric: public SkinObject
 
         /// Return the type of the command
         virtual string getType() const { return ""; }
+
+        /// During queue reductions, check if we really want to remove
+        /// this command.
+        virtual bool checkRemove( CmdGeneric * ) const { return true; }
 
     protected:
         CmdGeneric( intf_thread_t *pIntf ): SkinObject( pIntf ) {}

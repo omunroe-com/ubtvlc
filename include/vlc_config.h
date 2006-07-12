@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /* Conventions regarding names of symbols and variables
@@ -47,7 +47,7 @@
 /* The configuration file and directory */
 #ifdef SYS_BEOS
 #  define CONFIG_DIR                    "config/settings/VideoLAN Client"
-#elif SYS_DARWIN
+#elif __APPLE__
 #  define CONFIG_DIR                    "Library/Preferences/VLC"
 #elif defined( WIN32 ) || defined( UNDER_CE )
 #  define CONFIG_DIR                    "vlc"

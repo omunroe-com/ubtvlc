@@ -2,7 +2,7 @@
  * vlcpeer.cpp: scriptable peer descriptor
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: vlcpeer.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: vlcpeer.cpp 14915 2006-03-25 12:15:49Z zorglub $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -167,9 +167,7 @@ NS_IMETHODIMP VlcPeer::Get_int_variable( const char *psz_var, PRInt64 *result )
     vlc_value_t val;
     if( p_plugin )
     {
-        fprintf(stderr, "Choppage de %s\n", psz_var );
         VLC_VariableGet( p_plugin->i_vlc, psz_var, &val );
-        fprintf(stderr, "Valeur %i\n", val.i_int );
         *result = (PRInt64)val.i_int;
     }
     return NS_OK;
@@ -191,7 +189,6 @@ NS_IMETHODIMP VlcPeer::Get_str_variable( const char *psz_var, char **result )
     vlc_value_t val;
     if( p_plugin )
     {
-        fprintf(stderr, "Choppage de %s\n", psz_var );
         VLC_VariableGet( p_plugin->i_vlc, psz_var, &val );
         if( val.psz_string )
         {

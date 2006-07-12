@@ -2,7 +2,7 @@
  * vout.h: Windows DirectX video output header file
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: vout.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: vout.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -110,6 +110,11 @@ struct vout_sys_t
     HDC hGLDC;
     HGLRC hGLRC;
 #endif
+
+    /* screensaver system settings to be restored when vout is closed */
+    UINT i_spi_lowpowertimeout;
+    UINT i_spi_powerofftimeout;
+    UINT i_spi_screensavetimeout;
 
     event_thread_t *p_event;
     vlc_mutex_t    lock;

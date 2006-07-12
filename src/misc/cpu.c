@@ -2,7 +2,7 @@
  * cpu.c: CPU detection code
  *****************************************************************************
  * Copyright (C) 1998-2004 the VideoLAN team
- * $Id: cpu.c 12727 2005-10-01 23:32:39Z sam $
+ * $Id: cpu.c 14103 2006-02-01 12:44:16Z sam $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -33,7 +33,7 @@
 #   include <setjmp.h>                                    /* longjmp, setjmp */
 #endif
 
-#ifdef SYS_DARWIN
+#if defined(__APPLE__) && (defined(__ppc__) || defined(__ppc64__))
 #include <sys/sysctl.h>
 #endif
 
@@ -66,7 +66,7 @@ uint32_t CPUCapabilities( void )
 {
     volatile uint32_t i_capabilities = CPU_CAPABILITY_NONE;
 
-#if defined( SYS_DARWIN )
+#if defined(__APPLE__) && (defined(__ppc__) || defined(__ppc64__))
     int selectors[2] = { CTL_HW, HW_VECTORUNIT };
     int i_has_altivec = 0;
     size_t i_length = sizeof( i_has_altivec );
@@ -267,7 +267,7 @@ uint32_t CPUCapabilities( void )
 #   endif
     return i_capabilities;
 
-#elif defined( __powerpc__ )
+#elif defined( __powerpc__ ) || defined( __ppc__ ) || defined( __ppc64__ )
 
 #   ifdef CAN_COMPILE_ALTIVEC && defined( HAVE_SIGNAL_H )
     void (*pf_sigill) (int) = signal( SIGILL, SigHandler );

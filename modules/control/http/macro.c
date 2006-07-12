@@ -2,7 +2,7 @@
  * macro.c : Custom <vlc> macro handling
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: http.c 12225 2005-08-18 10:01:30Z massiot $
+ * $Id: macro.c 15195 2006-04-12 21:22:51Z xtophe $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "http.h"
@@ -150,7 +150,7 @@ void E_(MacroDo)( httpd_file_sys_t *p_args,
     }
 #define PRINT( str ) \
     ALLOC( strlen( str ) + 1 ); \
-    *pp_dst += sprintf( *pp_dst, str );
+    *pp_dst += sprintf( *pp_dst, "%s", str );
 
 #define PRINTS( str, s ) \
     ALLOC( strlen( str ) + strlen( s ) + 1 ); \
@@ -236,7 +236,7 @@ void E_(MacroDo)( httpd_file_sys_t *p_args,
                 {
                     char value[30];
                     E_(ExtractURIValue)( p_request, "seek_value", value, 30 );
-                    E_(DecodeEncodedURI)( value );
+                    decode_URI( value );
                     E_(HandleSeek)( p_intf, value );
                     break;
                 }
@@ -248,7 +248,7 @@ void E_(MacroDo)( httpd_file_sys_t *p_args,
 
                     E_(ExtractURIValue)( p_request, "value", vol, 8 );
                     aout_VolumeGet( p_intf, &i_volume );
-                    E_(DecodeEncodedURI)( vol );
+                    decode_URI( vol );
 
                     if( vol[0] == '+' )
                     {
@@ -301,17 +301,32 @@ void E_(MacroDo)( httpd_file_sys_t *p_args,
                 /* playlist management */
                 case MVLC_ADD:
                 {
-                    char mrl[1024], psz_name[1024];
+                    char mrl[1024], psz_name[1024], tmp[1024];
+                    char *p, *str;
                     playlist_item_t *p_item;
 
-                    E_(ExtractURIValue)( p_request, "mrl", mrl, 1024 );
-                    E_(DecodeEncodedURI)( mrl );
+                    E_(ExtractURIValue)( p_request, "mrl", tmp, 1024 );
+                    decode_URI( tmp );
                     E_(ExtractURIValue)( p_request, "name", psz_name, 1024 );
-                    E_(DecodeEncodedURI)( psz_name );
+                    decode_URI( psz_name );
                     if( !*psz_name )
                     {
-                        memcpy( psz_name, mrl, 1024 );
+                        memcpy( psz_name, tmp, 1024 );
                     }
+                    /* addslashes for backward compatibility with the old
+                     * http intf */
+                    p = mrl; str = tmp;
+                    while( *str != '\0' )
+                    {
+                        if( *str == '"' || *str == '\'' || *str == '\\' )
+                        {
+                            *p++ = '\\';
+                        }
+                        *p++ = *str;
+                        str++;
+                    }
+                    *p = '\0';
+
                     p_item = E_(MRLParse)( p_intf, mrl, psz_name );
 
                     if( !p_item || !p_item->input.psz_uri ||
@@ -530,7 +545,7 @@ void E_(MacroDo)( httpd_file_sys_t *p_args,
                         char val[512];
                         E_(ExtractURIValue)( p_request,
                                                vlm_properties[i], val, 512 );
-                        E_(DecodeEncodedURI)( val );
+                        decode_URI( val );
                         if( strlen( val ) > 0 && i >= 4 )
                         {
                             p += sprintf( p, " %s %s", vlm_properties[i], val );
@@ -626,7 +641,7 @@ void E_(MacroDo)( httpd_file_sys_t *p_args,
                     if( p_intf->p_sys->p_vlm == NULL ) break;
 
                     E_(ExtractURIValue)( p_request, "file", file, 512 );
-                    E_(DecodeEncodedURI)( file );
+                    decode_URI( file );
 
                     if( E_(StrToMacroType)( control ) == MVLC_VLM_LOAD )
                         sprintf( psz, "load %s", file );
@@ -661,7 +676,7 @@ void E_(MacroDo)( httpd_file_sys_t *p_args,
                 break;
             }
             E_(ExtractURIValue)( p_request, m->param1,  value, 512 );
-            E_(DecodeEncodedURI)( value );
+            decode_URI( value );
 
             switch( E_(StrToMacroType)( m->param2 ) )
             {
@@ -687,6 +702,7 @@ void E_(MacroDo)( httpd_file_sys_t *p_args,
             int     i;
             float   f;
             char    *psz;
+            lldiv_t div;
 
             if( *m->param1  == '\0' )
             {
@@ -701,7 +717,9 @@ void E_(MacroDo)( httpd_file_sys_t *p_args,
                     break;
                 case MVLC_FLOAT:
                     f = config_GetFloat( p_intf, m->param1 );
-                    sprintf( value, "%f", f );
+                    div = lldiv( f * 1000000 , 1000000 );
+                    sprintf( value, I64Fd".%06u", div.quot,
+                            (unsigned int)div.rem );
                     break;
                 case MVLC_STRING:
                     psz = config_GetPsz( p_intf, m->param1 );
@@ -883,6 +901,8 @@ void E_(Execute)( httpd_file_sys_t *p_args,
                         strcpy( psz_file, m.param1 );
                     }
 
+                    /* We hereby assume that psz_file is in the
+                     * local character encoding */
                     if( ( f = fopen( psz_file, "r" ) ) == NULL )
                     {
                         msg_Warn( p_args->p_intf,
@@ -969,6 +989,12 @@ void E_(Execute)( httpd_file_sys_t *p_args,
                         {
                             char *arg = E_(SSPop)( &p_args->stack );
                             index = E_(mvar_FileSetNew)( p_intf, m.param1, arg );
+                            free( arg );
+                        }
+                        else if( !strcmp( m.param2, "object" ) )
+                        {
+                            char *arg = E_(SSPop)( &p_args->stack );
+                            index = E_(mvar_ObjectSetNew)( p_intf, m.param1, arg );
                             free( arg );
                         }
                         else if( !strcmp( m.param2, "playlist" ) )

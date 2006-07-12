@@ -2,7 +2,7 @@
  * ts.c: Transport Stream input module for VLC.
  *****************************************************************************
  * Copyright (C) 2004-2005 VideoLAN (Centrale Réseaux) and its contributors
- * $Id: ts.c 12692 2005-09-27 01:10:56Z hartman $
+ * $Id: ts.c 15427 2006-04-29 14:19:19Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Jean-Paul Saman <jpsaman #_at_# m2x.nl>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -33,6 +33,7 @@
 
 #include "iso_lang.h"
 #include "network.h"
+#include "charset.h"
 
 #include "../mux/mpeg/csa.h"
 
@@ -81,26 +82,29 @@ static void Close ( vlc_object_t * );
 
 #define PMT_TEXT N_("Extra PMT")
 #define PMT_LONGTEXT N_( \
-  "Allows a user to specify an extra pmt (pmt_pid=pid:stream_type[,...])" )
+  "Allows a user to specify an extra pmt (pmt_pid=pid:stream_type[,...])." )
 
 #define PID_TEXT N_("Set id of ES to PID")
-#define PID_LONGTEXT N_("set id of es to pid")
+#define PID_LONGTEXT N_("Set the internal ID of each elementary stream" \
+                       " handled by VLC to the same value as the PID in" \
+                       " the TS stream, instead of 1, 2, 3, etc. Useful to" \
+                       " do \'#duplicate{..., select=\"es=<pid>\"}\'.")
 
 #define TSOUT_TEXT N_("Fast udp streaming")
 #define TSOUT_LONGTEXT N_( \
-  "Sends TS to specific ip:port by udp (you must know what you are doing)")
+  "Sends TS to specific ip:port by udp (you must know what you are doing).")
 
 #define MTUOUT_TEXT N_("MTU for out mode")
-#define MTUOUT_LONGTEXT N_("MTU for out mode")
+#define MTUOUT_LONGTEXT N_("MTU for out mode.")
 
 #define CSA_TEXT N_("CSA ck")
-#define CSA_LONGTEXT N_("CSA ck")
+#define CSA_LONGTEXT N_("Control word for the CSA encryption algorithm")
 
 #define SILENT_TEXT N_("Silent mode")
-#define SILENT_LONGTEXT N_("do not complain on encrypted PES")
+#define SILENT_LONGTEXT N_("Do not complain on encrypted PES.")
 
 #define CAPMT_SYSID_TEXT N_("CAPMT System ID")
-#define CAPMT_SYSID_LONGTEXT N_("only forward descriptors from this SysID to the CAM")
+#define CAPMT_SYSID_LONGTEXT N_("Only forward descriptors from this SysID to the CAM.")
 
 #define CPKT_TEXT N_("Packet size in bytes to decrypt")
 #define CPKT_LONGTEXT N_("Specify the size of the TS packet to decrypt. " \
@@ -108,7 +112,7 @@ static void Close ( vlc_object_t * );
     "decrypting. " )
 
 #define TSDUMP_TEXT N_("Filename of dump")
-#define TSDUMP_LONGTEXT N_("Specify a filename where to dump the TS in")
+#define TSDUMP_LONGTEXT N_("Specify a filename where to dump the TS in.")
 
 #define APPEND_TEXT N_("Append")
 #define APPEND_LONGTEXT N_( \
@@ -127,12 +131,12 @@ vlc_module_begin();
     set_subcategory( SUBCAT_INPUT_DEMUX );
 
     add_string( "ts-extra-pmt", NULL, NULL, PMT_TEXT, PMT_LONGTEXT, VLC_TRUE );
-    add_bool( "ts-es-id-pid", 0, NULL, PID_TEXT, PID_LONGTEXT, VLC_TRUE );
+    add_bool( "ts-es-id-pid", 1, NULL, PID_TEXT, PID_LONGTEXT, VLC_TRUE );
     add_string( "ts-out", NULL, NULL, TSOUT_TEXT, TSOUT_LONGTEXT, VLC_TRUE );
     add_integer( "ts-out-mtu", 1500, NULL, MTUOUT_TEXT,
                  MTUOUT_LONGTEXT, VLC_TRUE );
     add_string( "ts-csa-ck", NULL, NULL, CSA_TEXT, CSA_LONGTEXT, VLC_TRUE );
-    add_integer( "ts-csa-pkt", 188, NULL, CPKT_TEXT, CPKT_LONGTEXT, VLC_TRUE );    
+    add_integer( "ts-csa-pkt", 188, NULL, CPKT_TEXT, CPKT_LONGTEXT, VLC_TRUE );
     add_bool( "ts-silent", 0, NULL, SILENT_TEXT, SILENT_LONGTEXT, VLC_TRUE );
 
     add_file( "ts-dump-file", NULL, NULL, TSDUMP_TEXT, TSDUMP_LONGTEXT, VLC_FALSE );
@@ -325,7 +329,7 @@ struct demux_sys_t
     FILE        *p_file;    /* filehandle */
     uint64_t    i_write;    /* bytes written */
     vlc_bool_t  b_file_out; /* dump mode enabled */
-    
+
     /* */
     vlc_bool_t  b_meta;
 };
@@ -361,6 +365,7 @@ static void              IODFree( iod_descriptor_t * );
 #define TS_PACKET_SIZE_192 192
 #define TS_PACKET_SIZE_204 204
 #define TS_PACKET_SIZE_MAX 204
+#define TS_TOPFIELD_HEADER 1320
 
 /*****************************************************************************
  * Open
@@ -377,25 +382,42 @@ static int Open( vlc_object_t *p_this )
     ts_pid_t    *pat;
     char        *psz_mode;
     vlc_bool_t   b_append;
+    vlc_bool_t   b_topfield = VLC_FALSE;
 
     vlc_value_t  val;
 
     if( stream_Peek( p_demux->s, &p_peek, TS_PACKET_SIZE_MAX ) <
         TS_PACKET_SIZE_MAX ) return VLC_EGENERIC;
 
+    if( p_peek[0] == 'T' && p_peek[1] == 'F' &&
+        p_peek[2] == 'r' && p_peek[3] == 'c' )
+    {
+        b_topfield = VLC_TRUE;
+        msg_Dbg( p_demux, "this is a topfield file" );
+    }
+
     /* Search first sync byte */
     for( i_sync = 0; i_sync < TS_PACKET_SIZE_MAX; i_sync++ )
     {
         if( p_peek[i_sync] == 0x47 ) break;
     }
-    if( i_sync >= TS_PACKET_SIZE_MAX )
+    if( i_sync >= TS_PACKET_SIZE_MAX && !b_topfield )
     {
         if( strcmp( p_demux->psz_demux, "ts" ) ) return VLC_EGENERIC;
         msg_Warn( p_demux, "this does not look like a TS stream, continuing" );
     }
 
-    /* Check next 3 sync bytes */
-    i_peek = TS_PACKET_SIZE_MAX * 3 + i_sync + 1;
+    if( b_topfield )
+    {
+        /* Read the entire Topfield header */
+        i_peek = TS_TOPFIELD_HEADER;
+    }
+    else
+    {
+        /* Check next 3 sync bytes */
+        i_peek = TS_PACKET_SIZE_MAX * 3 + i_sync + 1;
+    }
+    
     if( ( stream_Peek( p_demux->s, &p_peek, i_peek ) ) < i_peek )
     {
         msg_Err( p_demux, "cannot peek" );
@@ -422,6 +444,73 @@ static int Open( vlc_object_t *p_this )
     else if( !strcmp( p_demux->psz_demux, "ts" ) )
     {
         i_packet_size = TS_PACKET_SIZE_188;
+    }
+    else if( b_topfield )
+    {
+        i_packet_size = TS_PACKET_SIZE_188;
+#if 0
+        /* I used the TF5000PVR 2004 Firmware .doc header documentation, 
+         * http://www.i-topfield.com/data/product/firmware/Structure%20of%20Recorded%20File%20in%20TF5000PVR%20(Feb%2021%202004).doc
+         * but after the filename the offsets seem to be incorrect.  - DJ */
+        int i_duration, i_name;
+        char *psz_name = malloc(25);
+        char *psz_event_name;
+        char *psz_event_text = malloc(130);
+        char *psz_ext_text = malloc(1025);
+
+        // 2 bytes version Uimsbf (4,5)
+        // 2 bytes reserved (6,7)
+        // 2 bytes duration in minutes Uimsbf (8,9(
+        i_duration = (int) (p_peek[8] << 8) | p_peek[9];
+        msg_Dbg( p_demux, "Topfield recording length: +/- %d minutes", i_duration);
+        // 2 bytes service number in channel list (10, 11)
+        // 2 bytes service type Bslbf 0=TV 1=Radio Bslb (12, 13)
+        // 4 bytes of reserved + tuner info (14,15,16,17)
+        // 2 bytes of Service ID  Bslbf (18,19)
+        // 2 bytes of PMT PID  Uimsbf (20,21)
+        // 2 bytes of PCR PID  Uimsbf (22,23)
+        // 2 bytes of Video PID  Uimsbf (24,25)
+        // 2 bytes of Audio PID  Uimsbf (26,27)
+        // 24 bytes filename Bslbf
+        memcpy( psz_name, &p_peek[28], 24 );
+        psz_name[24] = '\0';
+        msg_Dbg( p_demux, "recordingname=%s", psz_name );
+        // 1 byte of sat index Uimsbf  (52)
+        // 3 bytes (1 bit of polarity Bslbf +23 bits reserved)
+        // 4 bytes of freq. Uimsbf (56,57,58,59)
+        // 2 bytes of symbol rate Uimsbf (60,61)
+        // 2 bytes of TS stream ID Uimsbf (62,63)
+        // 4 bytes reserved 
+        // 2 bytes reserved
+        // 2 bytes duration Uimsbf (70,71)
+        //i_duration = (int) (p_peek[70] << 8) | p_peek[71];
+        //msg_Dbg( p_demux, "Topfield 2nd duration field: +/- %d minutes", i_duration);
+        // 4 bytes EventID Uimsbf (72-75)
+        // 8 bytes of Start and End time info (76-83)
+        // 1 byte reserved (84)
+        // 1 byte event name length Uimsbf (89)
+        i_name = (int)(p_peek[89]&~0x81);
+        msg_Dbg( p_demux, "event name length = %d", i_name);
+        psz_event_name = malloc( i_name+1 );
+        // 1 byte parental rating (90)
+        // 129 bytes of event text
+        memcpy( psz_event_name, &p_peek[91], i_name );
+        psz_event_name[i_name] = '\0';
+        memcpy( psz_event_text, &p_peek[91+i_name], 129-i_name );
+        psz_event_text[129-i_name] = '\0';
+        msg_Dbg( p_demux, "event name=%s", psz_event_name );
+        msg_Dbg( p_demux, "event text=%s", psz_event_text );
+        // 12 bytes reserved (220)
+        // 6 bytes reserved
+        // 2 bytes Event Text Length Uimsbf
+        // 4 bytes EventID Uimsbf
+        // FIXME We just have 613 bytes. not enough for this entire text
+        // 1024 bytes Extended Event Text Bslbf
+        memcpy( psz_ext_text, p_peek+372, 1024 );
+        psz_ext_text[1024] = '\0';
+        msg_Dbg( p_demux, "extended event text=%s", psz_ext_text );
+        // 52 bytes reserved Bslbf
+#endif
     }
     else
     {
@@ -455,7 +544,7 @@ static int Open( vlc_object_t *p_this )
             msg_Info( p_demux, "dumping raw stream to standard output" );
             p_sys->p_file = stdout;
         }
-        else if( ( p_sys->p_file = fopen( p_sys->psz_file, psz_mode ) ) == NULL )
+        else if( ( p_sys->p_file = utf8_fopen( p_sys->psz_file, psz_mode ) ) == NULL )
         {
             msg_Err( p_demux, "cannot create `%s' for writing", p_sys->psz_file );
             p_sys->b_file_out = VLC_FALSE;
@@ -563,7 +652,7 @@ static int Open( vlc_object_t *p_this )
         if( i_port <= 0 ) i_port  = 1234;
         msg_Dbg( p_demux, "resend ts to '%s:%d'", val.psz_string, i_port );
 
-        p_sys->fd = net_OpenUDP( p_demux, "", 0, val.psz_string, i_port );
+        p_sys->fd = net_ConnectUDP( p_demux, val.psz_string, i_port, 0 );
         if( p_sys->fd < 0 )
         {
             msg_Err( p_demux, "failed to open udp socket, send disabled" );
@@ -806,11 +895,12 @@ static void Close( vlc_object_t *p_this )
             fclose( p_sys->p_file );
             p_sys->p_file = NULL;
         }
-        free( p_sys->psz_file );
-        p_sys->psz_file = NULL;
 
         free( p_sys->buffer );
     }
+
+    free( p_sys->psz_file );
+    p_sys->psz_file = NULL;
 
     free( p_sys );
 }
@@ -830,7 +920,7 @@ static int DemuxFile( demux_t *p_demux )
     i_data = stream_Read( p_demux->s, p_sys->buffer, i_bufsize );
     if( (i_data <= 0) && (i_data < p_sys->i_packet_size) )
     {
-        msg_Dbg( p_demux, "Error reading malformed packets" );
+        msg_Dbg( p_demux, "error reading malformed packets" );
         return i_data;
     }
 
@@ -880,7 +970,7 @@ static int DemuxFile( demux_t *p_demux )
         i_diff = ( i_cc - p_pid->i_cc )&0x0f;
         if( b_payload && i_diff == 1 )
         {
-            p_pid->i_cc++;
+            p_pid->i_cc = ( p_pid->i_cc + 1 ) & 0xf;
         }
         else
         {
@@ -1689,7 +1779,7 @@ static vlc_bool_t GatherPES( demux_t *p_demux, ts_pid_t *pid, block_t *p_bk )
     i_diff = ( i_cc - pid->i_cc )&0x0f;
     if( b_payload && i_diff == 1 )
     {
-        pid->i_cc++;
+        pid->i_cc = ( pid->i_cc + 1 ) & 0xf;
     }
     else
     {
@@ -1823,9 +1913,7 @@ static int PIDFillFormat( ts_pid_t *pid, int i_stream_type )
         case 0x92:  /* DVD_SPU vls (sub) */
             es_format_Init( fmt, SPU_ES, VLC_FOURCC( 's', 'p', 'u', 'b' ) );
             break;
-        case 0x93:  /* LPCM vls (audio) */
-            es_format_Init( fmt, AUDIO_ES, VLC_FOURCC( 'l', 'p', 'c', 'b' ) );
-            break;
+
         case 0x94:  /* SDDS (audio) */
             es_format_Init( fmt, AUDIO_ES, VLC_FOURCC( 's', 'd', 'd', 'b' ) );
             break;
@@ -1943,13 +2031,13 @@ static iod_descriptor_t *IODNew( int i_data, uint8_t *p_data )
     byte1 = IODGetByte( &i_data, &p_data );
     byte2 = IODGetByte( &i_data, &p_data );
     byte3 = IODGetByte( &i_data, &p_data );
-    if( byte2 == 0x02 )	//old vlc's buggy implementation of the IOD_descriptor
+    if( byte2 == 0x02 ) //old vlc's buggy implementation of the IOD_descriptor
     {
         p_iod->i_iod_label_scope = 0x11;
         p_iod->i_iod_label = byte1;
         i_iod_tag = byte2;
     }
-    else		//correct implementation of the IOD_descriptor
+    else  //correct implementation of the IOD_descriptor
     {
         p_iod->i_iod_label_scope = byte1;
         p_iod->i_iod_label = byte2;
@@ -2908,7 +2996,7 @@ static void PMTCallBack( demux_t *p_demux, dvbpsi_pmt_t *p_pmt )
                 {
                     dvbpsi_stream_identifier_dr_t *si;
                     si = dvbpsi_DecodeStreamIdentifierDr( p_dr );
-                    
+
                     msg_Dbg( p_demux, "    * Stream Component Identifier: %d", si->i_component_tag );
                 }
 #endif

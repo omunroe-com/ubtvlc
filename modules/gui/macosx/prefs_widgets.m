@@ -2,10 +2,10 @@
  * prefs_widgets.m: Preferences controls
  *****************************************************************************
  * Copyright (C) 2002-2003 the VideoLAN team
- * $Id: prefs_widgets.m 12274 2005-08-19 16:16:34Z hartman $
+ * $Id: prefs_widgets.m 14124 2006-02-01 19:40:01Z courmisch $
  *
  * Authors: Derk-Jan Hartman <hartman at videolan.org>
- *          Jérôme Decoodt <djc at videolan.org>
+ *          JÃ©rÃ´me Decoodt <djc at videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************

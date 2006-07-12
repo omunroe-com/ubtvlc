@@ -598,3 +598,47 @@ the Boston strangler is to the woman home alone.
 <sam> j'appelle mes variables Illl, lIll, lIlI, IllI, IlII, etc.
   -- #videolan
 %
+20:47:12 < glspi> can you get rid of the wxwidgets interface and only show the 
+                  video somehow?
+20:47:17 < zorglub> -I dummy
+20:50:10 < glspi> -I didn't work btw, in windows at least
+20:52:28 < glspi> i don't see it in interface/general either! ahhh :(
+20:58:46 < glspi> ok i thought you were calling ME dummy, not saying use -I 
+                  dummy :p
+  -- #videolan
+%
+-!- Bond631 [n=548d9042@krishna.via.ecp.fr] has joined #videolan
+<Bond631> hi
+<Bond631> how to activate hotkeys?
+-!- Bond631 [n=548d9042@krishna.via.ecp.fr] has quit [Client Quit]
+<Trax``> I think Bond631 found the hotkey for quit
+
+  -- #videolan
+%
+< dionoea> http://nightlies.videolan.org
+< arakis> lol....sounds like a porn site!!!
+
+  -- #videolan
+%
+-!- tumu [n=tumu@GYKMDCCCXXIX.dsl.saunalahti.fi] has quit ["~"]
+* Dnumgis notes that tumu must be one of very few with dsl in their sauna
+
+  -- #videolan
+%
+<Dnumgis> thedj: gibalou quits officially, or has he just generally
+          disappeared?
+<sam> he's probably getting married or something even worse :(
+
+  -- #videolan
+%
+<xtophe> kee-un: you need to slap zorglub
+<xtophe> kee-un: oups no i'm telling a lie
+<kee-un> xtophe: too late, I slapped him
+<kee-un> xtophe: I'm sure he deserved it for something else anyway
+
+  -- #videolan
+%
+VLC is the greatest thing since sliced bread!
+
+ -- http://forum.videolan.org/
+%

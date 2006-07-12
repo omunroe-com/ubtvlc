@@ -2,7 +2,7 @@
  * vlc_httpd.h: builtin HTTP/RTSP server.
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: vlc_httpd.h 12408 2005-08-26 18:15:21Z massiot $
+ * $Id: vlc_httpd.h 14811 2006-03-18 17:52:31Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef _VLC_HTTPD_H
@@ -61,6 +61,39 @@ enum
     HTTPD_MSG_MAX
 };
 
+/* each host run in his own thread */
+struct httpd_host_t
+{
+    VLC_COMMON_MEMBERS
+
+    httpd_t     *httpd;
+
+    /* ref count */
+    int         i_ref;
+
+    /* address/port and socket for listening at connections */
+    char        *psz_hostname;
+    int         i_port;
+    int         *fd;
+
+    vlc_mutex_t lock;
+
+    /* all registered url (becarefull that 2 httpd_url_t could point at the same url)
+     * This will slow down the url research but make my live easier
+     * All url will have their cb trigger, but only the first one can answer
+     * */
+    int         i_url;
+    httpd_url_t **url;
+
+    int            i_client;
+    httpd_client_t **client;
+
+    /* TLS data */
+    tls_server_t *p_tls;
+};
+
+
+
 enum
 {
     HTTPD_PROTO_NONE,
@@ -102,17 +135,6 @@ struct httpd_message_t
 
 };
 
-/* I keep the definition here, easier than looking at vlc_common.h
-
- * answer could be null, int this case no answer is requested
-typedef int (*httpd_callback_t)( httpd_callback_sys_t *, httpd_client_t *, httpd_message_t *answer, httpd_message_t *query );
-typedef struct httpd_callback_sys_t httpd_callback_sys_t;
-
-typedef struct httpd_file_t     httpd_file_t;
-typedef struct httpd_file_sys_t httpd_file_sys_t;
-typedef int (*httpd_file_callback_t)( httpd_file_sys_t*, httpd_file_t *, uint8_t *psz_request, uint8_t **pp_data, int *pi_data );
-*/
-
 /* create a new host */
 VLC_EXPORT( httpd_host_t *, httpd_HostNew, ( vlc_object_t *, const char *psz_host, int i_port ) );
 VLC_EXPORT( httpd_host_t *, httpd_TLSHostNew, ( vlc_object_t *, const char *, int, const char *, const char *, const char *, const char * ) );
@@ -131,8 +153,8 @@ VLC_EXPORT( void,           httpd_UrlDelete, ( httpd_url_t * ) );
 /* Default client mode is FILE, use these to change it */
 VLC_EXPORT( void,           httpd_ClientModeStream, ( httpd_client_t *cl ) );
 VLC_EXPORT( void,           httpd_ClientModeBidir, ( httpd_client_t *cl ) );
-VLC_EXPORT( char*,          httpd_ClientIP, ( httpd_client_t *cl, char *psz_ip ) );
-VLC_EXPORT( char*,          httpd_ServerIP, ( httpd_client_t *cl, char *psz_ip ) );
+VLC_EXPORT( char*,          httpd_ClientIP, ( const httpd_client_t *cl, char *psz_ip ) );
+VLC_EXPORT( char*,          httpd_ServerIP, ( const httpd_client_t *cl, char *psz_ip ) );
 
 /* High level */
 

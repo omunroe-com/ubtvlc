@@ -2,9 +2,10 @@
  * shout.c:  Shoutcast services discovery module
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: shout.c 12836 2005-10-15 13:23:08Z sigmunau $
+ * $Id: shout.c 15555 2006-05-06 12:50:08Z xtophe $
  *
  * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
+ *          Antoine Cellerier <dionoea -@T- videolan -d.t- org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -28,6 +29,7 @@
 
 #include <vlc/vlc.h>
 #include <vlc/intf.h>
+#include <vlc_interaction.h>
 
 #include <vlc/input.h>
 
@@ -47,7 +49,7 @@
  ************************************************************************/
 
 #define MAX_LINE_LENGTH 256
-
+#define SHOUTCAST_BASE_URL "http/shout-winamp://www.shoutcast.com/sbin/newxml.phtml"
 
 /*****************************************************************************
  * Module descriptor
@@ -57,17 +59,14 @@
     static int  Open ( vlc_object_t * );
     static void Close( vlc_object_t * );
 
-#define LIMIT_TEXT N_("Maximum number of shoutcast servers to be listed")
-#define LIMIT_LONGTEXT LIMIT_TEXT
-
 vlc_module_begin();
     set_shortname( "Shoutcast");
     set_description( _("Shoutcast radio listings") );
+    add_shortcut( "shoutcast" );
     set_category( CAT_PLAYLIST );
     set_subcategory( SUBCAT_PLAYLIST_SD );
 
-    add_integer( "shoutcast-limit", 1000, NULL, LIMIT_TEXT,
-                    LIMIT_LONGTEXT, VLC_TRUE );
+    add_suppressed_integer( "shoutcast-limit" );
 
     set_capability( "services_discovery", 0 );
     set_callbacks( Open, Close );
@@ -81,10 +80,8 @@ vlc_module_end();
 
 struct services_discovery_sys_t
 {
-    /* playlist node */
-    playlist_item_t *p_node;
-    input_thread_t *p_input;
-
+    playlist_item_t *p_item;
+    vlc_bool_t b_dialog;
 };
 
 /*****************************************************************************
@@ -108,10 +105,6 @@ static int Open( vlc_object_t *p_this )
     playlist_view_t     *p_view;
     playlist_item_t     *p_item;
 
-    int i_limit;
-    char *psz_shoutcast_url;
-    char *psz_shoutcast_title;
-
     p_sd->pf_run = Run;
     p_sd->p_sys  = p_sys;
 
@@ -124,34 +117,16 @@ static int Open( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
 
-    i_limit = config_GetInt( p_this->p_libvlc, "shoutcast-limit" );
-    #define SHOUTCAST_BASE_URL "http/shout-b4s://www.shoutcast.com/sbin/xmllister.phtml?service=vlc&no_compress=1&limit="
-    psz_shoutcast_url = (char *)malloc( strlen( SHOUTCAST_BASE_URL ) + 20 );
-    psz_shoutcast_title = (char *)malloc( 6 + 20 );
-
-    sprintf( psz_shoutcast_url, SHOUTCAST_BASE_URL "%d", i_limit );
-    sprintf( psz_shoutcast_title, "Top %d", i_limit );
-
     p_view = playlist_ViewFind( p_playlist, VIEW_CATEGORY );
-    p_sys->p_node = playlist_NodeCreate( p_playlist, VIEW_CATEGORY,
-                                         _("Shoutcast"), p_view->p_root );
-    p_item = playlist_ItemNew( p_playlist, psz_shoutcast_url,
-                                     psz_shoutcast_title );
-    free( psz_shoutcast_url );
-    free( psz_shoutcast_title );
-    playlist_NodeAddItem( p_playlist, p_item,
-                          p_sys->p_node->pp_parents[0]->i_view,
-                          p_sys->p_node, PLAYLIST_APPEND,
+
+    p_sys->p_item =
+    p_item = playlist_ItemNew( p_playlist, SHOUTCAST_BASE_URL, _("Shoutcast") );
+    playlist_NodeAddItem( p_playlist, p_item, p_view->i_id,
+                          p_view->p_root, PLAYLIST_APPEND,
                           PLAYLIST_END );
 
-    /* We need to declare the parents of the node as the same of the
-     * parent's ones */
-    playlist_CopyParents( p_sys->p_node, p_item );
-    
+    p_sys->p_item->i_flags |= PLAYLIST_RO_FLAG;
 
-    p_sys->p_input = input_CreateThread( p_playlist, &p_item->input );
-
-    p_sys->p_node->i_flags |= PLAYLIST_RO_FLAG;
     val.b_bool = VLC_TRUE;
     var_Set( p_playlist, "intf-change", val );
 
@@ -169,17 +144,9 @@ static void Close( vlc_object_t *p_this )
     services_discovery_sys_t *p_sys  = p_sd->p_sys;
     playlist_t *p_playlist =  (playlist_t *) vlc_object_find( p_sd,
                                  VLC_OBJECT_PLAYLIST, FIND_ANYWHERE );
-    if( p_sd->p_sys->p_input )
-    {
-        input_StopThread( p_sd->p_sys->p_input );
-        input_DestroyThread( p_sd->p_sys->p_input );
-        vlc_object_detach( p_sd->p_sys->p_input );
-        vlc_object_destroy( p_sd->p_sys->p_input );
-        p_sd->p_sys->p_input = NULL;        
-    }
     if( p_playlist )
     {
-        playlist_NodeDelete( p_playlist, p_sys->p_node, VLC_TRUE, VLC_TRUE );
+        playlist_NodeDelete( p_playlist, p_sys->p_item, VLC_TRUE, VLC_TRUE );
         vlc_object_release( p_playlist );
     }
     free( p_sys );
@@ -190,17 +157,38 @@ static void Close( vlc_object_t *p_this )
  *****************************************************************************/
 static void Run( services_discovery_t *p_sd )
 {
+    services_discovery_sys_t *p_sys  = p_sd->p_sys;
+    int i_id = input_Read( p_sd, &p_sys->p_item->input, VLC_FALSE );
+    int i_dialog_id;
+
+    i_dialog_id = intf_UserProgress( p_sd, "Shoutcast" , "Connecting...", 0.0 );
+
+    p_sys->b_dialog = VLC_TRUE;
     while( !p_sd->b_die )
     {
-        if( p_sd->p_sys->p_input &&
-            ( p_sd->p_sys->p_input->b_eof || p_sd->p_sys->p_input->b_error ) )
+        input_thread_t *p_input = (input_thread_t *)vlc_object_get( p_sd,
+                                                                    i_id );
+
+        /* The Shoutcast server does not return a content-length so we
+         * can't know where we are. Use the number of inserted items
+         * as a hint */
+        if( p_input != NULL )
         {
-            input_StopThread( p_sd->p_sys->p_input );
-            input_DestroyThread( p_sd->p_sys->p_input );
-            vlc_object_detach( p_sd->p_sys->p_input );
-            vlc_object_destroy( p_sd->p_sys->p_input );
-            p_sd->p_sys->p_input = NULL;
+            int i_state = var_GetInteger( p_input, "state" );
+            if( i_state == PLAYING_S )
+            {
+                float f_pos = (float)(p_sys->p_item->i_children)* 2 *100.0 /
+                              260 /* gruiiik FIXME */;
+                intf_UserProgressUpdate( p_sd, i_dialog_id, "Downloading",
+                                         f_pos );
+            }
+            vlc_object_release( p_input );
         }
-        msleep( 100000 );
+        else if( p_sys->b_dialog )
+        {
+            p_sys->b_dialog  = VLC_FALSE;
+            intf_UserHide( p_sd, i_dialog_id );
+        }
+        msleep( 10000 );
     }
 }

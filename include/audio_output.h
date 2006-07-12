@@ -2,7 +2,7 @@
  * audio_output.h : audio output interface
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: audio_output.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: audio_output.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 #ifndef _VLC_AUDIO_OUTPUT_H
 #define _VLC_AUDIO_OUTPUT_H 1
@@ -41,14 +41,17 @@
 #   define AOUT_FMT_S16_NE VLC_FOURCC('s','1','6','b')
 #   define AOUT_FMT_U16_NE VLC_FOURCC('u','1','6','b')
 #   define AOUT_FMT_S24_NE VLC_FOURCC('s','2','4','b')
+#   define AOUT_FMT_SPDIF_NE VLC_FOURCC('s','p','d','b')
 #else
 #   define AOUT_FMT_S16_NE VLC_FOURCC('s','1','6','l')
 #   define AOUT_FMT_U16_NE VLC_FOURCC('u','1','6','l')
 #   define AOUT_FMT_S24_NE VLC_FOURCC('s','2','4','l')
+#   define AOUT_FMT_SPDIF_NE VLC_FOURCC('s','p','d','i')
 #endif
 
 #define AOUT_FMT_NON_LINEAR( p_format )                                    \
     ( ((p_format)->i_format == VLC_FOURCC('s','p','d','i'))                \
+       || ((p_format)->i_format == VLC_FOURCC('s','p','d','b'))            \
        || ((p_format)->i_format == VLC_FOURCC('a','5','2',' '))            \
        || ((p_format)->i_format == VLC_FOURCC('d','t','s',' ')) )
 

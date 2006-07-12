@@ -2,9 +2,9 @@
  * xosd.c : X On Screen Display interface
  *****************************************************************************
  * Copyright (C) 2001 the VideoLAN team
- * $Id: xosd.c 12288 2005-08-20 09:48:31Z zorglub $
+ * $Id: xosd.c 14903 2006-03-24 11:05:28Z zorglub $
  *
- * Authors: Loïc Minier <lool@videolan.org>
+ * Authors: LoÃ¯c Minier <lool@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -61,25 +61,28 @@ static int PlaylistNext( vlc_object_t *p_this, const char *psz_variable,
  * Module descriptor
  *****************************************************************************/
 #define POSITION_TEXT N_("Flip vertical position")
-#define POSITION_LONGTEXT N_("Display xosd output on the bottom of the " \
-                             "screen instead of the top")
+#define POSITION_LONGTEXT N_("Display XOSD output at the bottom of the " \
+                             "screen instead of the top.")
 
 #define TXT_OFS_TEXT N_("Vertical offset")
-#define TXT_OFS_LONGTEXT N_("Vertical offset in pixels of the displayed text")
+#define TXT_OFS_LONGTEXT N_("Vertical offset between the border of the screen "\
+                            "and the displayed text (in pixels, defaults to "\
+                            "30 pixels)." )
 
 #define SHD_OFS_TEXT N_("Shadow offset")
-#define SHD_OFS_LONGTEXT N_("Offset in pixels of the shadow")
+#define SHD_OFS_LONGTEXT N_("Offset between the text and the shadow (in " \
+                            "pixels, defaults to 2 pixels)." )
 
 #define FONT_TEXT N_("Font")
-#define FONT_LONGTEXT N_("Font used to display text in the xosd output")
-/* FIXME FIXME FIXME: Gettextize */
-#define COLOUR_TEXT ("Colour")
-#define COLOUR_LONGTEXT ("Colour used to display text in the xosd output")
+#define FONT_LONGTEXT N_("Font used to display text in the XOSD output.")
+#define COLOUR_TEXT N_("Color")
+#define COLOUR_LONGTEXT N_("Color used to display text in the XOSD output.")
 
 vlc_module_begin();
     set_category( CAT_INTERFACE );
     set_subcategory( SUBCAT_INTERFACE_CONTROL );
     set_description( _("XOSD interface") );
+    set_shortname( "XOSD" );
     add_bool( "xosd-position", 1, NULL, POSITION_TEXT, POSITION_LONGTEXT, VLC_TRUE );
     add_integer( "xosd-text-offset", 30, NULL, TXT_OFS_TEXT, TXT_OFS_LONGTEXT, VLC_TRUE );
     add_integer( "xosd-shadow-offset", 2, NULL,
@@ -232,14 +235,12 @@ static void Run( intf_thread_t *p_intf )
             }
             if( p_playlist->status.i_status == PLAYLIST_STOPPED )
             {
-                psz_display = (char *)malloc( sizeof(char )*strlen(_("Stop")));
-                sprintf( psz_display,_("Stop") );
+                psz_display = strdup(_("Stop"));
                 vlc_object_release( p_playlist );
             }
             else if( p_playlist->status.i_status == PLAYLIST_PAUSED )
             {
-                psz_display = (char *)malloc( sizeof(char )*strlen(_("Pause")));
-                sprintf( psz_display,_("Pause") );
+                psz_display = strdup(_("Pause"));
                 vlc_object_release( p_playlist );
             }
             else

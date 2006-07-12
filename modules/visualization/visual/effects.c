@@ -2,9 +2,9 @@
  * effects.c : Effects for the visualization system
  *****************************************************************************
  * Copyright (C) 2002 the VideoLAN team
- * $Id: effects.c 12905 2005-10-20 22:37:14Z zcot $
+ * $Id: effects.c 14903 2006-03-24 11:05:28Z zorglub $
  *
- * Authors: Clément Stenac <zorglub@via.ecp.fr>
+ * Authors: ClÃ©ment Stenac <zorglub@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -95,7 +95,7 @@ int spectrum_Run(visual_effect_t * p_effect, aout_instance_t *p_aout,
 
     if( !p_s16_buff )
     {
-        msg_Err(p_aout,"Out of memory");
+        msg_Err(p_aout,"out of memory");
         return -1;
     }
 
@@ -120,7 +120,7 @@ int spectrum_Run(visual_effect_t * p_effect, aout_instance_t *p_aout,
         p_effect->p_data=(void *)malloc(i_nb_bands * sizeof(int) );
         if( !p_effect->p_data)
         {
-            msg_Err(p_aout,"Out of memory");
+            msg_Err(p_aout,"out of memory");
             return -1;
         }
         peaks = (int *)p_effect->p_data;
@@ -139,7 +139,7 @@ int spectrum_Run(visual_effect_t * p_effect, aout_instance_t *p_aout,
     height = (int *)malloc( i_nb_bands * sizeof(int) );
     if( !height)
     {
-        msg_Err(p_aout,"Out of memory");
+        msg_Err(p_aout,"out of memory");
         return -1;
     }
     /* Convert the buffer to int16_t  */
@@ -157,7 +157,7 @@ int spectrum_Run(visual_effect_t * p_effect, aout_instance_t *p_aout,
     p_state  = visual_fft_init();
     if( !p_state)
     {
-        msg_Err(p_aout,"Unable to initialize FFT transform");
+        msg_Err(p_aout,"unable to initialize FFT transform");
         return -1;
     }
     p_buffs = p_s16_buff;
@@ -391,7 +391,7 @@ int spectrometer_Run(visual_effect_t * p_effect, aout_instance_t *p_aout,
 
     if( !p_s16_buff )
     {
-        msg_Err(p_aout,"Out of memory");
+        msg_Err(p_aout,"out of memory");
         return -1;
     }
 
@@ -425,7 +425,7 @@ int spectrometer_Run(visual_effect_t * p_effect, aout_instance_t *p_aout,
         p_effect->p_data=(void *)malloc(i_nb_bands * sizeof(int) );
         if( !p_effect->p_data)
         {
-            msg_Err(p_aout,"Out of memory");
+            msg_Err(p_aout,"out of memory");
             return -1;
         }
         peaks = (int *)p_effect->p_data;
@@ -442,7 +442,7 @@ int spectrometer_Run(visual_effect_t * p_effect, aout_instance_t *p_aout,
     height = (int *)malloc( i_nb_bands * sizeof(int) );
     if( !height)
     {
-        msg_Err(p_aout,"Out of memory");
+        msg_Err(p_aout,"out of memory");
         return -1;
     }
 
@@ -461,7 +461,7 @@ int spectrometer_Run(visual_effect_t * p_effect, aout_instance_t *p_aout,
     p_state  = visual_fft_init();
     if( !p_state)
     {
-        msg_Err(p_aout,"Unable to initialize FFT transform");
+        msg_Err(p_aout,"unable to initialize FFT transform");
         return -1;
     }
     p_buffs = p_s16_buff;
@@ -831,56 +831,3 @@ int scope_Run(visual_effect_t * p_effect, aout_instance_t *p_aout,
         }
         return 0;
 }
-
-/*****************************************************************************
- * blur_Run:  blur effect
- *****************************************************************************/
-#if 0
-  /* This code is totally crappy */
-int blur_Run(visual_effect_t * p_effect, aout_instance_t *p_aout,
-              aout_buffer_t * p_buffer , picture_t * p_picture)
-{
-    uint8_t * p_pictures;
-    int i,j;
-    int i_size;   /* Total size of one image */
-
-    i_size = (p_picture->p[0].i_pitch * p_picture->p[0].i_lines +
-              p_picture->p[1].i_pitch * p_picture->p[1].i_lines +
-              p_picture->p[2].i_pitch * p_picture->p[2].i_lines );
-
-    if( !p_effect->p_data )
-    {
-        p_effect->p_data=(void *)malloc( 5 * i_size *sizeof(uint8_t));
-
-        if( !p_effect->p_data)
-        {
-            msg_Err(p_aout,"Out of memory");
-            return -1;
-        }
-        p_pictures = (uint8_t *)p_effect->p_data;
-    }
-    else
-    {
-        p_pictures =(uint8_t *)p_effect->p_data;
-    }
-
-    for( i = 0 ; i < 5 ; i++)
-    {
-        for ( j = 0 ; j< p_picture->p[0].i_pitch * p_picture->p[0].i_lines; i++)
-            p_picture->p[0].p_pixels[j] =
-                    p_pictures[i * i_size + j] * (100 - 20 * i) /100 ;
-        for ( j = 0 ; j< p_picture->p[1].i_pitch * p_picture->p[1].i_lines; i++)
-            p_picture->p[1].p_pixels[j] =
-                    p_pictures[i * i_size +
-                    p_picture->p[0].i_pitch * p_picture->p[0].i_lines + j ];
-        for ( j = 0 ; j< p_picture->p[2].i_pitch * p_picture->p[2].i_lines; i++)
-            p_picture->p[2].p_pixels[j] =
-                    p_pictures[i * i_size +
-                    p_picture->p[0].i_pitch * p_picture->p[0].i_lines +
-                    p_picture->p[1].i_pitch * p_picture->p[1].i_lines
-                    + j ];
-    }
-
-    memcpy ( &p_pictures[ i_size ] , &p_pictures[0] , 4 * i_size * sizeof(uint8_t) );
-}
-#endif

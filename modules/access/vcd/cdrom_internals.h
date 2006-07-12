@@ -2,7 +2,7 @@
  * cdrom_internals.h: cdrom tools private header
  *****************************************************************************
  * Copyright (C) 1998-2001 the VideoLAN team
- * $Id: cdrom_internals.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: cdrom_internals.h 14422 2006-02-20 12:21:15Z hartman $
  *
  * Authors: Johan Bilien <jobi@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -66,7 +66,7 @@ struct vcddev_s
 /*****************************************************************************
  * Platform specifics
  *****************************************************************************/
-#if defined( SYS_DARWIN )
+#if defined( __APPLE__ )
 #define darwin_freeTOC( p ) free( (void*)p )
 #define CD_MIN_TRACK_NO 01
 #define CD_MAX_TRACK_NO 99
@@ -204,9 +204,8 @@ struct SRB_ExecSCSICmd
 static int    OpenVCDImage( vlc_object_t *, const char *, struct vcddev_s * );
 static void   CloseVCDImage( vlc_object_t *, struct vcddev_s * );
 
-#if defined( SYS_DARWIN )
+#if defined( __APPLE__ )
 static CDTOC *darwin_getTOC( vlc_object_t *, const struct vcddev_s * );
-static int    darwin_getNumberOfDescriptors( CDTOC * );
 static int    darwin_getNumberOfTracks( CDTOC *, int );
 
 #elif defined( WIN32 )

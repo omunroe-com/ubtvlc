@@ -2,10 +2,10 @@
  * ctrl_generic.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_generic.hpp 12207 2005-08-15 15:54:32Z asmax $
+ * $Id: ctrl_generic.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CTRL_GENERIC_HPP
@@ -27,11 +27,11 @@
 
 #include "../src/skin_common.hpp"
 #include "../utils/pointer.hpp"
-#include "../utils/fsm.hpp"
 #include "../utils/ustring.hpp"
 #include "../utils/observer.hpp"
 #include "../commands/cmd_generic.hpp"
 
+class Box;
 class EvtGeneric;
 class OSGraphics;
 class GenericLayout;
@@ -41,7 +41,7 @@ class VarBool;
 
 
 /// Base class for controls
-class CtrlGeneric: public SkinObject, public Observer<VarBool>
+class CtrlGeneric: public SkinObject, public Observer<VarBool, void*>
 {
     public:
         virtual ~CtrlGeneric();
@@ -95,8 +95,8 @@ class CtrlGeneric: public SkinObject, public Observer<VarBool>
 
         /// Same as notifyLayout(), but takes optional images as parameters.
         /// The maximum size(s) of the images will be used for repainting.
-        void notifyLayoutMaxSize( const OSGraphics *pImg1 = NULL,
-                                  const OSGraphics *pImg2 = NULL );
+        void notifyLayoutMaxSize( const Box *pImg1 = NULL,
+                                  const Box *pImg2 = NULL );
 
         /// Ask the layout to capture the mouse
         virtual void captureMouse() const;
@@ -128,7 +128,7 @@ class CtrlGeneric: public SkinObject, public Observer<VarBool>
         VarBool *m_pVisible;
 
         /// Method called when an observed bool variable is changed
-        virtual void onUpdate( Subject<VarBool> &rVariable );
+        virtual void onUpdate( Subject<VarBool, void*> &rVariable , void* );
 };
 
 typedef CountedPtr<CtrlGeneric> CtrlGenericPtr;

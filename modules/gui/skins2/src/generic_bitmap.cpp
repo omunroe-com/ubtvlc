@@ -2,7 +2,7 @@
  * generic_bitmap.cpp
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: generic_bitmap.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: generic_bitmap.cpp 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -18,15 +18,22 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "generic_bitmap.hpp"
 
 
-BitmapImpl::BitmapImpl( intf_thread_t *pIntf, int width, int height ):
-    GenericBitmap( pIntf ), m_width( width ), m_height( height ),
-    m_pData( NULL )
+GenericBitmap::GenericBitmap( intf_thread_t *pIntf, int nbFrames, int fps ):
+    SkinObject( pIntf ), m_nbFrames( nbFrames ), m_frameRate( fps )
+{
+}
+
+
+BitmapImpl::BitmapImpl( intf_thread_t *pIntf, int width, int height,
+                        int nbFrames, int fps ):
+    GenericBitmap( pIntf, nbFrames, fps ), m_width( width ),
+    m_height( height ), m_pData( NULL )
 {
     m_pData = new uint8_t[width * height * 4];
     memset( m_pData, 0, width * height * 4 );
@@ -39,11 +46,28 @@ BitmapImpl::~BitmapImpl()
 }
 
 
-void BitmapImpl::drawBitmap( const GenericBitmap &rSource, int xSrc, int ySrc,
+bool BitmapImpl::drawBitmap( const GenericBitmap &rSource, int xSrc, int ySrc,
                              int xDest, int yDest, int width, int height )
 {
     int srcWidth = rSource.getWidth();
     uint32_t *pSrc = (uint32_t*)rSource.getData() + ySrc * srcWidth + xSrc;
+    if( !pSrc )
+    {
+        return false;
+    }
+    if( xSrc < 0 || xSrc + width > srcWidth ||
+        ySrc < 0 || ySrc + height > rSource.getHeight() )
+    {
+        msg_Warn( getIntf(), "drawBitmap: source rect too small, ignoring" );
+        return false;
+    }
+    if( xDest < 0 || xDest + width > m_width ||
+        yDest < 0 || yDest + height > m_height )
+    {
+        msg_Warn( getIntf(), "drawBitmap: dest rect too small, ignoring" );
+        return false;
+    }
+
     uint32_t *pDest = (uint32_t*)m_pData + yDest * m_width + xDest ;
     for( int y = 0; y < height; y++ )
     {
@@ -51,5 +75,6 @@ void BitmapImpl::drawBitmap( const GenericBitmap &rSource, int xSrc, int ySrc,
         pSrc += srcWidth;
         pDest += m_width;
     }
+    return true;
 }
 

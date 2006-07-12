@@ -2,7 +2,7 @@
  * sdl.c: SDL video output display method
  *****************************************************************************
  * Copyright (C) 1998-2001 the VideoLAN team
- * $Id: sdl.c 12875 2005-10-18 07:12:27Z md $
+ * $Id: sdl.c 15002 2006-03-31 16:12:31Z fkuehne $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Pierre Baillet <oct@zoy.org>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -930,7 +930,7 @@ static void SetPalette( vout_thread_t *p_vout,
     /* Set palette */
     if( SDL_SetColors( p_vout->p_sys->p_display, colors, 0, 256 ) == 0 )
     {
-        msg_Err( p_vout, "failed setting palette" );
+        msg_Err( p_vout, "failed to set palette" );
     }
 }
 

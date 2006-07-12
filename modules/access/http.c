@@ -2,7 +2,7 @@
  * http.c: HTTP input module
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: http.c 12821 2005-10-11 17:16:13Z zorglub $
+ * $Id: http.c 15169 2006-04-11 09:27:46Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -31,9 +31,11 @@
 #include <vlc/vlc.h>
 #include <vlc/input.h>
 
+#include "vlc_interaction.h"
 #include "vlc_playlist.h"
 #include "vlc_meta.h"
 #include "network.h"
+#include "vlc_url.h"
 #include "vlc_tls.h"
 
 /*****************************************************************************
@@ -44,31 +46,35 @@ static void Close( vlc_object_t * );
 
 #define PROXY_TEXT N_("HTTP proxy")
 #define PROXY_LONGTEXT N_( \
-    "You can specify an HTTP proxy to use. It must be of the form " \
+    "HTTP proxy to be usesd It must be of the form " \
     "http://[user[:pass]@]myproxy.mydomain:myport/ ; " \
     "if empty, the http_proxy environment variable will be tried." )
 
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for http streams. This " \
-    "value should be set in millisecond units." )
+    "Caching value for HTTP streams. This " \
+    "value should be set in milliseconds." )
 
 #define AGENT_TEXT N_("HTTP user agent")
-#define AGENT_LONGTEXT N_("Allows you to modify the user agent that will be " \
+#define AGENT_LONGTEXT N_("User agent that will be " \
     "used for the connection.")
 
 #define RECONNECT_TEXT N_("Auto re-connect")
-#define RECONNECT_LONGTEXT N_("Will automatically attempt a re-connection " \
-    "in case it was untimely closed.")
+#define RECONNECT_LONGTEXT N_( \
+    "Automatically try to reconnect to the stream in case of a sudden " \
+    "disconnect." )
 
+/// \bug missing space before you should
 #define CONTINUOUS_TEXT N_("Continuous stream")
-#define CONTINUOUS_LONGTEXT N_("Enable this option to read a file that is " \
-    "being constantly updated (for example, a JPG file on a server)")
+#define CONTINUOUS_LONGTEXT N_("Read a file that is " \
+    "being constantly updated (for example, a JPG file on a server)." \
+    "You should not globally enable this option as it will break all other " \
+    "types of HTTP streams." )
 
 vlc_module_begin();
     set_description( _("HTTP input") );
     set_capability( "access2", 0 );
-    set_shortname( _( "HTTP/HTTPS" ) );
+    set_shortname( _( "HTTP(S)" ) );
     set_category( CAT_INPUT );
     set_subcategory( SUBCAT_INPUT_ACCESS );
 
@@ -187,6 +193,7 @@ static int Open( vlc_object_t *p_this )
     p_sys->psz_icy_title = NULL;
     p_sys->i_remaining = 0;
 
+
     /* Parse URI - remove spaces */
     p = psz = strdup( p_access->psz_path );
     while( (p = strchr( p, ' ' )) != NULL )
@@ -264,6 +271,7 @@ static int Open( vlc_object_t *p_this )
     p_sys->b_reconnect = var_CreateGetBool( p_access, "http-reconnect" );
     p_sys->b_continuous = var_CreateGetBool( p_access, "http-continuous" );
 
+connect:
     /* Connect */
     if( Connect( p_access, 0 ) )
     {
@@ -273,6 +281,31 @@ static int Open( vlc_object_t *p_this )
         if( p_access->b_die ||
             Connect( p_access, 0 ) )
         {
+            goto error;
+        }
+    }
+
+    if( p_sys->i_code == 401 )
+    {
+        char *psz_login = NULL; char *psz_password = NULL;
+        int i_ret;
+        msg_Dbg( p_access, "authentication failed" );
+        i_ret = intf_UserLoginPassword( p_access, "HTTP authentication",
+                         "Please enter a valid login and password.", &psz_login, &psz_password );
+        if( i_ret == DIALOG_OK_YES )
+        {
+            msg_Dbg( p_access, "retrying with user=%s, pwd=%s",
+                        psz_login, psz_password );
+            if( psz_login ) p_sys->url.psz_username = strdup( psz_login );
+            if( psz_password ) p_sys->url.psz_password = strdup( psz_password );
+            if( psz_login ) free( psz_login );
+            if( psz_password ) free( psz_password );
+            goto connect;
+        }
+        else
+        {
+            if( psz_login ) free( psz_login );
+            if( psz_password ) free( psz_password );
             goto error;
         }
     }
@@ -332,7 +365,7 @@ static int Open( vlc_object_t *p_this )
 
     if( p_sys->b_mms )
     {
-        msg_Dbg( p_access, "This is actually a live mms server, BAIL" );
+        msg_Dbg( p_access, "this is actually a live mms server, BAIL" );
         goto error;
     }
 
@@ -372,6 +405,9 @@ static int Open( vlc_object_t *p_this )
         /* Grrrr! detect ultravox server and force NSV demuxer */
         p_access->psz_demux = strdup( "nsv" );
     }
+    else if( p_sys->psz_mime &&
+             !strcasecmp( p_sys->psz_mime, "application/xspf+xml" ) )
+        p_access->psz_demux = strdup( "xspf-open" );
 
     if( p_sys->b_reconnect ) msg_Dbg( p_access, "auto re-connect enabled" );
 
@@ -761,7 +797,7 @@ static int Connect( access_t *p_access, int64_t i_tell )
 
 
     /* Open connection */
-    p_sys->fd = net_OpenTCP( p_access, srv.psz_host, srv.i_port );
+    p_sys->fd = net_ConnectTCP( p_access, srv.psz_host, srv.i_port );
     if( p_sys->fd < 0 )
     {
         msg_Err( p_access, "cannot connect to %s:%d", srv.psz_host, srv.i_port );
@@ -986,7 +1022,13 @@ static int Request( access_t *p_access, int64_t i_tell )
     {
         p_sys->b_seekable = VLC_FALSE;
     }
-    if( p_sys->i_code >= 400 )
+    /* Authentication error - We'll have to display the dialog */
+    if( p_sys->i_code == 401 )
+    {
+
+    }
+    /* Other fatal error */
+    else if( p_sys->i_code >= 400 )
     {
         msg_Err( p_access, "error: %s", psz );
         free( psz );

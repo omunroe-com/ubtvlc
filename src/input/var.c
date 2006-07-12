@@ -2,7 +2,7 @@
  * var.c: object variables for input thread
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: input.c 7955 2004-06-07 22:21:33Z fenrir $
+ * $Id: var.c 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -388,12 +388,16 @@ void input_ConfigVarInit ( input_thread_t *p_input )
     /* Create Object Variables for private use only */
     var_Create( p_input, "video", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
     var_Create( p_input, "audio", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
+    var_Create( p_input, "spu", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
 
     var_Create( p_input, "audio-track", VLC_VAR_INTEGER|VLC_VAR_DOINHERIT );
     var_Create( p_input, "sub-track", VLC_VAR_INTEGER|VLC_VAR_DOINHERIT );
 
     var_Create( p_input, "audio-language", VLC_VAR_STRING|VLC_VAR_DOINHERIT );
     var_Create( p_input, "sub-language", VLC_VAR_STRING|VLC_VAR_DOINHERIT );
+
+    var_Create( p_input, "audio-track-id", VLC_VAR_INTEGER|VLC_VAR_DOINHERIT );
+    var_Create( p_input, "sub-track-id", VLC_VAR_INTEGER|VLC_VAR_DOINHERIT );
 
     var_Create( p_input, "sub-file", VLC_VAR_FILE | VLC_VAR_DOINHERIT );
     var_Create( p_input, "sub-autodetect-file", VLC_VAR_BOOL |
@@ -407,6 +411,7 @@ void input_ConfigVarInit ( input_thread_t *p_input )
     var_Create( p_input, "sout-all",   VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
     var_Create( p_input, "sout-audio", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
     var_Create( p_input, "sout-video", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
+    var_Create( p_input, "sout-spu", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
     var_Create( p_input, "sout-keep",  VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
 
     var_Create( p_input, "input-repeat", VLC_VAR_INTEGER|VLC_VAR_DOINHERIT );

@@ -2,7 +2,7 @@
  * caca.c: Color ASCII Art video output plugin using libcaca
  *****************************************************************************
  * Copyright (C) 2003, 2004 the VideoLAN team
- * $Id: caca.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: caca.c 14881 2006-03-22 17:51:17Z sam $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -67,7 +67,13 @@ vlc_module_end();
  *****************************************************************************/
 struct vout_sys_t
 {
+#ifdef CACA_API_VERSION_1
+    struct cucul_context *p_qq;
+    struct caca_context *p_kk;
+    struct cucul_bitmap *p_bitmap;
+#else
     struct caca_bitmap *p_bitmap;
+#endif
 };
 
 /*****************************************************************************
@@ -142,6 +148,27 @@ static int Create( vlc_object_t *p_this )
         return VLC_ENOMEM;
     }
 
+#ifdef CACA_API_VERSION_1
+    p_vout->p_sys->p_qq = cucul_init(0, 0);
+    if( !p_vout->p_sys->p_qq )
+    {
+        msg_Err( p_vout, "cannot initialize libcucul" );
+        free( p_vout->p_sys );
+        return VLC_EGENERIC;
+    }
+
+    p_vout->p_sys->p_kk = caca_attach( p_vout->p_sys->p_qq );
+    if( !p_vout->p_sys->p_kk )
+    {
+        msg_Err( p_vout, "cannot initialize libcaca" );
+        cucul_end( p_vout->p_sys->p_qq );
+        free( p_vout->p_sys );
+        return VLC_EGENERIC;
+    }
+
+    caca_set_window_title( p_vout->p_sys->p_kk,
+                           VOUT_TITLE " - Colour AsCii Art (caca)" );
+#else
     if( caca_init() )
     {
         msg_Err( p_vout, "cannot initialize libcaca" );
@@ -150,6 +177,7 @@ static int Create( vlc_object_t *p_this )
     }
 
     caca_set_window_title( VOUT_TITLE " - Colour AsCii Art (caca)" );
+#endif
 
     p_vout->pf_init = Init;
     p_vout->pf_end = End;
@@ -181,14 +209,16 @@ static int Init( vout_thread_t *p_vout )
 
     /* Create the libcaca bitmap */
     p_vout->p_sys->p_bitmap =
-        caca_create_bitmap( 32,
-                            p_vout->output.i_width,
-                            p_vout->output.i_height,
-                            4 * ((p_vout->output.i_width + 15) & ~15),
-                            p_vout->output.i_rmask,
-                            p_vout->output.i_gmask,
-                            p_vout->output.i_bmask,
-                            0x00000000 );
+#ifdef CACA_API_VERSION_1
+        cucul_create_bitmap
+#else
+        caca_create_bitmap
+#endif
+                       ( 32, p_vout->output.i_width, p_vout->output.i_height,
+                         4 * ((p_vout->output.i_width + 15) & ~15),
+                         p_vout->output.i_rmask, p_vout->output.i_gmask,
+                         p_vout->output.i_bmask, 0x00000000 );
+
     if( !p_vout->p_sys->p_bitmap )
     {
         msg_Err( p_vout, "could not create libcaca bitmap" );
@@ -233,7 +263,11 @@ static int Init( vout_thread_t *p_vout )
  *****************************************************************************/
 static void End( vout_thread_t *p_vout )
 {
+#ifdef CACA_API_VERSION_1
+    cucul_free_bitmap( p_vout->p_sys->p_bitmap );
+#else
     caca_free_bitmap( p_vout->p_sys->p_bitmap );
+#endif
 }
 
 /*****************************************************************************
@@ -245,7 +279,12 @@ static void Destroy( vlc_object_t *p_this )
 {
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
 
+#ifdef CACA_API_VERSION_1
+    caca_detach( p_vout->p_sys->p_kk );
+    cucul_end( p_vout->p_sys->p_qq );
+#else
     caca_end();
+#endif
 
 #if defined( WIN32 ) && !defined( UNDER_CE )
     FreeConsole();
@@ -265,12 +304,21 @@ static int Manage( vout_thread_t *p_vout )
     int event;
     vlc_value_t val;
 
+#ifdef CACA_API_VERSION_1
+    while(( event = caca_get_event(p_vout->p_sys->p_kk,
+                                   CACA_EVENT_KEY_PRESS | CACA_EVENT_RESIZE) ))
+#else
     while(( event = caca_get_event(CACA_EVENT_KEY_PRESS | CACA_EVENT_RESIZE) ))
+#endif
     {
         if( event == CACA_EVENT_RESIZE )
         {
             /* Acknowledge the resize */
+#ifdef CACA_API_VERSION_1
+            caca_display( p_vout->p_sys->p_kk );
+#else
             caca_refresh();
+#endif
             continue;
         }
 
@@ -297,9 +345,18 @@ static int Manage( vout_thread_t *p_vout )
  *****************************************************************************/
 static void Render( vout_thread_t *p_vout, picture_t *p_pic )
 {
+#ifdef CACA_API_VERSION_1
+    cucul_clear( p_vout->p_sys->p_qq );
+    cucul_draw_bitmap( p_vout->p_sys->p_qq,
+                       0, 0,
+                       cucul_get_width( p_vout->p_sys->p_qq ) - 1,
+                       cucul_get_height( p_vout->p_sys->p_qq ) - 1,
+                       p_vout->p_sys->p_bitmap, p_pic->p->p_pixels );
+#else
     caca_clear();
     caca_draw_bitmap( 0, 0, caca_get_width() - 1, caca_get_height() - 1,
                       p_vout->p_sys->p_bitmap, p_pic->p->p_pixels );
+#endif
 }
 
 /*****************************************************************************
@@ -307,6 +364,10 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
  *****************************************************************************/
 static void Display( vout_thread_t *p_vout, picture_t *p_pic )
 {
+#ifdef CACA_API_VERSION_1
+    caca_display( p_vout->p_sys->p_kk );
+#else
     caca_refresh();
+#endif
 }
 

@@ -2,10 +2,10 @@
  * x11_loop.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: x11_loop.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: x11_loop.cpp 15008 2006-03-31 19:24:33Z zorglub $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifdef X11_SKINS
@@ -77,6 +77,8 @@ X11Loop::X11Loop( intf_thread_t *pIntf, X11Display &rDisplay ):
     keysymToVlcKey[XK_End] = KEY_END;
     keysymToVlcKey[XK_Prior] = KEY_PAGEUP;
     keysymToVlcKey[XK_Next] = KEY_PAGEDOWN;
+    keysymToVlcKey[XK_Delete] = KEY_DELETE;
+    keysymToVlcKey[XK_Insert] = KEY_INSERT;
 }
 
 
@@ -173,7 +175,7 @@ void X11Loop::handleX11Event()
 
     if( !pWin )
     {
-        msg_Dbg( getIntf(), "No associated generic window !!" );
+        msg_Warn( getIntf(), "no associated generic window" );
         return;
     }
 
@@ -368,7 +370,7 @@ void X11Loop::handleX11Event()
                 ((X11Factory*)pOsFactory)->m_dndMap[event.xany.window];
             if( !pDnd )
             {
-                msg_Err( getIntf(), "No associated D&D object !!" );
+                msg_Err( getIntf(), "no associated D&D object" );
                 return;
             }
 

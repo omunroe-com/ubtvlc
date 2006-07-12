@@ -1,8 +1,8 @@
 /*****************************************************************************
  * modules_inner.h : Macros used from within a module.
  *****************************************************************************
- * Copyright (C) 2001 the VideoLAN team
- * $Id: modules_inner.h 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2001-2006 the VideoLAN team
+ * $Id: modules_inner.h 15056 2006-04-02 13:34:21Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -43,10 +43,10 @@
  * this can't easily be done with the C preprocessor, thus a few ugly hacks.
  */
 
-/* I can't believe I need to do this to change « foo » to « "foo" » */
+/* I can't believe I need to do this to change Â« foo Â» to Â« "foo" Â» */
 #define STRINGIFY( z )   UGLY_KLUDGE( z )
 #define UGLY_KLUDGE( z ) #z
-/* And I need to do _this_ to change « foo bar » to « module_foo_bar » ! */
+/* And I need to do _this_ to change Â« foo bar Â» to Â« module_foo_bar Â» ! */
 #define CONCATENATE( y, z ) CRUDE_HACK( y, z )
 #define CRUDE_HACK( y, z )  y##__##z
 
@@ -99,7 +99,12 @@
     {                                                                         \
         int i_shortcut = 1, i_config = -1;                                    \
         module_config_t *p_config = NULL;                                     \
-        static module_config_t config_end = {CONFIG_HINT_END};            \
+        static module_config_t config_end = {                                 \
+            CONFIG_HINT_END, NULL, NULL, 0, NULL, NULL, NULL, 0, 0., 0, 0,    \
+            0., 0., NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, NULL,     \
+            VLC_FALSE, NULL, VLC_FALSE, VLC_FALSE, NULL, 0, 0., NULL, 0, 0.,  \
+            VLC_FALSE                                                         \
+        };                                                                    \
         STORE_SYMBOLS;                                                        \
         p_module->b_submodule = VLC_FALSE;                                    \
         p_module->b_unloadable = VLC_TRUE;                                    \
@@ -122,8 +127,17 @@
         }                                                                     \
         if( p_config )                                                        \
         {                                                                     \
+            int i;                                                            \
             p_config[ ++i_config ] = config_end;                              \
             config_Duplicate( p_module, p_config );                           \
+            for( i = 0; i < i_config; i++ )                                   \
+            {                                                                 \
+                if( p_config[ i ].i_action )                                  \
+                {                                                             \
+                    free( p_config[ i ].ppf_action );                         \
+                    free( p_config[ i ].ppsz_action_text );                   \
+                }                                                             \
+            }                                                                 \
             free( p_config );                                                 \
         }                                                                     \
         else config_Duplicate( p_module, &config_end );                       \

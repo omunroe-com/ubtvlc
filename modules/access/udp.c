@@ -2,14 +2,14 @@
  * udp.c: raw UDP & RTP input module
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: udp.c 13312 2005-11-22 07:51:20Z md $
+ * $Id: udp.c 15016 2006-03-31 23:07:01Z xtophe $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Tristan Leteurtre <tooney@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
  *          Jean-Paul Saman <jpsaman #_at_# m2x dot nl>
  *
- * Reviewed: 23 October 2003, Jean-Paul Saman <jpsaman@wxs.nl>
+ * Reviewed: 23 October 2003, Jean-Paul Saman <jpsaman _at_ videolan _dot_ org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -41,18 +41,18 @@
  *****************************************************************************/
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for UDP streams. This " \
-    "value should be set in millisecond units." )
+    "Caching value for UDP streams. This " \
+    "value should be set in milliseconds." )
 
 #define AUTO_MTU_TEXT N_("Autodetection of MTU")
 #define AUTO_MTU_LONGTEXT N_( \
-    "Allows growing the MTU if truncated packets are found" )
+    "Automatically detect the line's MTU. This will increase the size if" \
+    " truncated packets are found" )
 
 #define RTP_LATE_TEXT N_("RTP reordering timeout in ms")
 #define RTP_LATE_LONGTEXT N_( \
-    "Allows you to modify the RTP reordering behaviour. " \
-    "RTP input will wait for late packets upto " \
-    "the specified timeout in milisecond units." )
+    "VLC reorders RTP packets. The input will wait for late packets at most "\
+    "the time specified here (in milliseconds)." )
 
 static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
@@ -492,7 +492,7 @@ static block_t *BlockPrebufferRTP( access_t *p_access, block_t *p_block )
         p = BlockParseRTP( p_access, BlockUDP( p_access ));
         if( !p && (i_date - i_first) > p_sys->i_rtp_late ) 
         {
-            msg_Err( p_access, "Error in RTP prebuffering!" );
+            msg_Err( p_access, "error in RTP prebuffering!" );
             break;
         }
     }

@@ -2,7 +2,7 @@
  * win32_specific.c: Win32 specific features
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: win32_specific.c 12816 2005-10-11 09:01:00Z damienf $
+ * $Id: win32_specific.c 15139 2006-04-07 21:52:33Z dionoea $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 #include <string.h>                                              /* strdup() */
 #include <stdlib.h>                                                /* free() */
@@ -149,7 +149,9 @@ void system_Configure( vlc_t *p_this, int *pi_argc, char *ppsz_argv[] )
         }
     }
 
-    if( config_GetInt( p_this, "one-instance" ) )
+    if( config_GetInt( p_this, "one-instance" )
+        || ( config_GetInt( p_this, "one-instance-when-started-from-file" )
+             && config_GetInt( p_this, "started-from-file" ) ) )
     {
         HANDLE hmutex;
 

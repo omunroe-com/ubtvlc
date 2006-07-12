@@ -2,7 +2,7 @@
  * ntservice.c: Windows NT/2K/XP service interface
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: ntservice.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: ntservice.c 14985 2006-03-30 15:46:31Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -38,21 +38,21 @@ static void Close   ( vlc_object_t * );
 
 #define INSTALL_TEXT N_( "Install Windows Service" )
 #define INSTALL_LONGTEXT N_( \
-    "If enabled the interface will install the Service and exit." )
+    "Install the Service and exit." )
 #define UNINSTALL_TEXT N_( "Uninstall Windows Service" )
 #define UNINSTALL_LONGTEXT N_( \
-    "If enabled the interface will uninstall the Service and exit." )
+    "Uninstall the Service and exit." )
 #define NAME_TEXT N_( "Display name of the Service" )
 #define NAME_LONGTEXT N_( \
-    "This allows you to change the display name of the Service." )
+    "Change the display name of the Service." )
 #define OPTIONS_TEXT N_("Configuration options")
 #define OPTIONS_LONGTEXT N_( \
-    "This option allows you to specify configuration options that will be " \
+    "Configuration options that will be " \
     "used by the Service (eg. --foo=bar --no-foobar). It should be specified "\
     "at install time so the Service is properly configured.")
 #define EXTRAINTF_TEXT N_("Extra interface modules")
 #define EXTRAINTF_LONGTEXT N_( \
-    "This option allows you to select additional interfaces spawned by the " \
+    "Additional interfaces spawned by the " \
     "Service. It should be specified at install time so the Service is " \
     "properly configured. Use a comma separated list of interface modules. " \
     "(common values are: logger, sap, rc, http)")
@@ -149,7 +149,7 @@ static void Run( intf_thread_t *p_intf )
 
     if( StartServiceCtrlDispatcher( dispatchTable ) == 0 )
     {
-        msg_Err( p_intf, "StartServiceCtrlDispatcher failed" );
+        msg_Err( p_intf, "StartServiceCtrlDispatcher failed" ); /* str review */
     }
 
     free( p_intf->p_sys->psz_service );
@@ -177,7 +177,8 @@ static int NTServiceInstall( intf_thread_t *p_intf )
     SC_HANDLE handle = OpenSCManager( NULL, NULL, SC_MANAGER_ALL_ACCESS );
     if( handle == NULL )
     {
-        msg_Err( p_intf, "could not connect to SCM database" );
+        msg_Err( p_intf,
+                 "could not connect to Services Control Manager database" );
         return VLC_EGENERIC;
     }
 
@@ -241,7 +242,8 @@ static int NTServiceUninstall( intf_thread_t *p_intf )
     SC_HANDLE handle = OpenSCManager( NULL, NULL, SC_MANAGER_ALL_ACCESS );
     if( handle == NULL )
     {
-        msg_Err( p_intf, "could not connect to SCM database" );
+        msg_Err( p_intf,
+                 "could not connect to Services Control Manager database" );
         return VLC_EGENERIC;
     }
 
@@ -313,7 +315,7 @@ static void WINAPI ServiceDispatch( DWORD numArgs, char **args )
             sprintf( psz_temp, "%s,none", psz_module );
 
             /* Try to create the interface */
-            p_new_intf = intf_Create( p_intf, psz_temp );
+            p_new_intf = intf_Create( p_intf, psz_temp, 0, NULL );
             if( p_new_intf == NULL )
             {
                 msg_Err( p_intf, "interface \"%s\" initialization failed",

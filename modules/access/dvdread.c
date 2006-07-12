@@ -2,7 +2,7 @@
  * dvdread.c : DvdRead input module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: dvdread.c 12862 2005-10-16 20:08:22Z jpsaman $
+ * $Id: dvdread.c 15016 2006-03-31 23:07:01Z xtophe $
  *
  * Authors: St�hane Borel <stef@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -56,12 +56,12 @@
  *****************************************************************************/
 #define ANGLE_TEXT N_("DVD angle")
 #define ANGLE_LONGTEXT N_( \
-    "Allows you to select the default DVD angle." )
+    "Default DVD angle." )
 
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for DVDread streams. " \
-    "This value should be set in millisecond units." )
+    "Caching value for DVDs. " \
+    "This value should be set in milliseconds." )
 
 #define CSSMETHOD_TEXT N_("Method used by libdvdcss for decryption")
 #define CSSMETHOD_LONGTEXT N_( \
@@ -387,10 +387,10 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
         }
         case DEMUX_GET_TIME:
             pi64 = (int64_t*)va_arg( args, int64_t * );
-            if( p_sys->i_mux_rate > 0 )
+            if( p_demux->info.i_title >= 0 && p_demux->info.i_title < p_sys->i_titles )
             {
-                *pi64 = (int64_t)1000000 * DVD_VIDEO_LB_LEN *
-                        p_sys->i_title_offset / 50 / p_sys->i_mux_rate;
+                *pi64 = (int64_t) dvdtime_to_time( &p_sys->p_cur_pgc->playback_time, 0 ) / 
+                        p_sys->i_title_blocks * p_sys->i_title_offset;
                 return VLC_SUCCESS;
             }
             *pi64 = 0;
@@ -398,10 +398,9 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
 
         case DEMUX_GET_LENGTH:
             pi64 = (int64_t*)va_arg( args, int64_t * );
-            if( p_sys->i_mux_rate > 0 )
+            if( p_demux->info.i_title >= 0 && p_demux->info.i_title < p_sys->i_titles )
             {
-                *pi64 = (int64_t)1000000 * DVD_VIDEO_LB_LEN *
-                        p_sys->i_title_blocks / 50 / p_sys->i_mux_rate;
+                *pi64 = (int64_t)dvdtime_to_time( &p_sys->p_cur_pgc->playback_time, 0 );
                 return VLC_SUCCESS;
             }
             *pi64 = 0;

@@ -2,7 +2,7 @@
  * vlcshell.cpp: a VLC plugin for Mozilla
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: vlcshell.cpp 13236 2005-11-14 00:52:36Z adn $
+ * $Id: vlcshell.cpp 15273 2006-04-19 09:13:26Z damienf $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /* XXX: disable VLC here */
@@ -45,36 +45,15 @@
 #include <nsISupports.h>
 #include <nsMemory.h>
 #include <npapi.h>
+#include <npruntime.h>
 
 /* This is from mozilla java, do we really need it? */
 #if 0
 #include <jri.h>
 #endif
 
-#if !defined(XP_MACOSX) && !defined(XP_UNIX) && !defined(XP_WIN)
-#define XP_UNIX 1
-#elif defined(XP_MACOSX)
-#undef XP_UNIX
-#endif
-
-#ifdef XP_WIN
-    /* Windows stuff */
-#endif
-
-#ifdef XP_MACOSX
-    /* Mac OS X stuff */
-#   include <Quickdraw.h>
-#endif
-
-#ifdef XP_UNIX
-    /* X11 stuff */
-#   include <X11/Xlib.h>
-#   include <X11/Intrinsic.h>
-#   include <X11/StringDefs.h>
-#endif
-
-#include "vlcpeer.h"
 #include "vlcplugin.h"
+#include "vlcruntime.h"
 
 #if USE_LIBVLC
 #   define WINDOW_TEXT "(no picture)"
@@ -90,7 +69,7 @@
 ******************************************************************************/
 #ifdef XP_UNIX
 #   define VOUT_PLUGINS "xvideo,x11,dummy"
-#   define AOUT_PLUGINS "alsa,oss,dummy"
+#   define AOUT_PLUGINS "esd,arts,alsa,oss,dummy"
 
 static unsigned int i_previous_height = 100000;
 static unsigned int i_previous_width = 100000;
@@ -103,8 +82,8 @@ static void Resize( Widget w, XtPointer closure, XEvent *event );
  * MacOS-only declarations
 ******************************************************************************/
 #ifdef XP_MACOSX
-#   define VOUT_PLUGINS "macosx"
-#   define AOUT_PLUGINS "macosx"
+#   define VOUT_PLUGINS "macosx,dummy"
+#   define AOUT_PLUGINS "auhal,macosx,dummy"
 
 #endif
 
@@ -181,6 +160,15 @@ NPError NPP_GetValue( NPP instance, NPPVariable variable, void *value )
             **(nsIID**)value = nsid;
             break;
 
+        case NPPVpluginScriptableNPObject:
+            static VlcRuntimeClass<VlcRuntimeRootObject> *rootClass = new VlcRuntimeClass<VlcRuntimeRootObject>;
+            *(NPObject**)value = NPN_CreateObject(instance, rootClass);
+            if( *(NPObject**)value == NULL )
+            {
+                return NPERR_OUT_OF_MEMORY_ERROR;
+            }
+            break;
+
         default:
             return NPERR_GENERIC_ERROR;
     }
@@ -194,26 +182,67 @@ NPError NPP_GetValue( NPP instance, NPPVariable variable, void *value )
 #ifdef XP_MACOSX
 int16 NPP_HandleEvent( NPP instance, void * event )
 {
-    VlcPlugin *p_plugin = (VlcPlugin*)instance->pdata;
-    vlc_value_t value;
-
     if( instance == NULL )
     {
         return false;
     }
 
-    EventRecord *pouetEvent = (EventRecord*)event;
+    VlcPlugin *p_plugin = (VlcPlugin*)instance->pdata;
+    EventRecord *myEvent = (EventRecord*)event;
 
-    if (pouetEvent->what == 6)
+    switch( myEvent->what )
     {
-        value.i_int = 1;
-        VLC_VariableSet( p_plugin->i_vlc, "drawableredraw", value );
-        return true;
+        case nullEvent:
+            break;
+        case mouseDown:
+        case mouseUp:
+            return true;
+        case keyUp:
+        case keyDown:
+        case autoKey:
+            return true;
+        case updateEvt:
+        {
+            NPWindow *npwindow = p_plugin->window;
+            NP_Port *npport = (NP_Port *)(npwindow->window);
+
+            SetPort( npport->port );
+            //SetOrigin( npport->portx , npport->porty);
+
+            /* draw the beautiful "No Picture" */
+
+            ForeColor(blackColor);
+            PenMode( patCopy );
+
+	    Rect rect;
+            rect.left = 0;
+            rect.top = 0;
+            rect.right = npwindow->width;
+            rect.bottom = npwindow->height;
+            PaintRect( &rect );
+
+            ForeColor(whiteColor);
+            char *text = strdup( WINDOW_TEXT );
+            MoveTo( (npwindow->width-80)/ 2  , npwindow->height / 2 );
+            DrawText( text , 0 , strlen(text) );
+            free(text);
+
+            return true;
+        }
+        case activateEvt:
+            return false;
+        case NPEventType_GetFocusEvent:
+        case NPEventType_LoseFocusEvent:
+            return true;
+        case NPEventType_AdjustCursorEvent:
+            return false;
+	case NPEventType_ScrollingBeginsEvent:
+	case NPEventType_ScrollingEndsEvent:
+            return true;
+        default:
+            ;
     }
-
-    Boolean eventHandled = false;
-
-    return eventHandled;
+    return false;
 }
 #endif /* XP_MACOSX */
 
@@ -287,20 +316,14 @@ NPError NPP_New( NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
 
     {
 #ifdef XP_MACOSX
-        char *home_user;
-        char *directory;
-        char *plugin_path;
-        char *ppsz_argv[] = { "vlc", "--plugin-path", NULL };
-
-        home_user = strdup( getenv("HOME") );
-        directory = strdup( "/Library/Internet Plug-Ins/VLC Plugin.plugin/"
-                            "Contents/MacOS/modules" );
-        plugin_path = malloc( strlen( directory ) + strlen( home_user ) );
-        memcpy( plugin_path , home_user , strlen(home_user) );
-        memcpy( plugin_path + strlen( home_user ) , directory ,
-                strlen( directory ) );
-
-        ppsz_argv[2] = plugin_path;
+        char *ppsz_argv[] =
+        {
+            "vlc",
+            "-vvvv",
+            "--plugin-path",
+            "/Library/Internet Plug-Ins/VLC Plugin.plugin/"
+            "Contents/MacOS/modules"
+        };
 
 #elif defined(XP_WIN)
         char *ppsz_argv[] = { NULL, "-vv" };
@@ -328,7 +351,8 @@ NPError NPP_New( NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
         char *ppsz_argv[] =
         {
             "vlc"
-            /*, "--plugin-path", "/home/sam/videolan/vlc_MAIN/plugins"*/
+            "-vvvv"
+            /*, "--plugin-path", ""*/
         };
 
 #endif /* XP_MACOSX */
@@ -350,11 +374,6 @@ NPError NPP_New( NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
         i_ret = VLC_Init( p_plugin->i_vlc, sizeof(ppsz_argv)/sizeof(char*),
                           ppsz_argv );
 
-#ifdef XP_MACOSX
-        free( home_user );
-        free( directory );
-        free( plugin_path );
-#endif /* XP_MACOSX */
     }
 
     if( i_ret )
@@ -519,8 +538,7 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
     vlc_value_t valuer;
     vlc_value_t valueportx;
     vlc_value_t valueporty;
-    Rect black_rect;
-    char * text;
+    vlc_value_t valueredraw;
 #endif /* XP_MACOSX */
 
     if( instance == NULL )
@@ -534,7 +552,7 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
 #if USE_LIBVLC
 
 #ifdef XP_MACOSX
-    value.i_int = ((NP_Port*) (window->window))->port;
+    value.i_int = (int)(((NP_Port*) (window->window))->port);
     VLC_VariableSet( p_plugin->i_vlc, "drawable", value );
 
     valueportx.i_int = ((NP_Port*) (window->window))->portx;
@@ -562,29 +580,14 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
 
     p_plugin->window = window;
 
-    /* draw the beautiful "No Picture" */
-
-    black_rect.top = valuet.i_int - valuey.i_int;
-    black_rect.left = valuel.i_int - valuex.i_int;
-    black_rect.bottom = valueb.i_int - valuey.i_int;
-    black_rect.right = valuer.i_int - valuex.i_int;
-
-    SetPort( value.i_int );
-    SetOrigin( valueportx.i_int , valueporty.i_int );
-    ForeColor(blackColor);
-    PenMode( patCopy );
-    PaintRect( &black_rect );
-
-    ForeColor(whiteColor);
-    text = strdup( WINDOW_TEXT );
-    MoveTo( valuew.i_int / 2 - 40 , valueh.i_int / 2 );
-    DrawText( text , 0 , strlen(text) );
-    free(text);
+    valueredraw.i_int = 1;
+    VLC_VariableSet( p_plugin->i_vlc, "drawableredraw", valueredraw );
 
 #else /* XP_MACOSX */
     /* FIXME: this cast sucks */
     value.i_int = (int) (ptrdiff_t) (void *) window->window;
     VLC_VariableSet( p_plugin->i_vlc, "drawable", value );
+
 #endif /* XP_MACOSX */
 
 #endif /* USE_LIBVLC */

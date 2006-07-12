@@ -2,10 +2,10 @@
  * ctrl_button.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_button.hpp 12053 2005-08-06 23:38:31Z asmax $
+ * $Id: ctrl_button.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CTRL_BUTTON_HPP
@@ -27,14 +27,14 @@
 
 #include "ctrl_generic.hpp"
 #include "../utils/fsm.hpp"
+#include "../src/anim_bitmap.hpp"
 
 class GenericBitmap;
-class OSGraphics;
 class CmdGeneric;
 
 
 /// Base class for button controls
-class CtrlButton: public CtrlGeneric
+class CtrlButton: public CtrlGeneric, public Observer<AnimBitmap, void*>
 {
     public:
         /// Create a button with 3 images
@@ -69,9 +69,9 @@ class CtrlButton: public CtrlGeneric
         /// Tooltip text
         const UString m_tooltip;
         /// Images of the button in the different states
-        OSGraphics *m_pImgUp, *m_pImgOver, *m_pImgDown;
+        AnimBitmap m_imgUp, m_imgOver, m_imgDown;
         /// Current image
-        OSGraphics *m_pImg;
+        AnimBitmap *m_pImg;
 
         /// Callback objects
         DEFINE_CALLBACK( CtrlButton, UpOverDownOver )
@@ -83,6 +83,12 @@ class CtrlButton: public CtrlGeneric
         DEFINE_CALLBACK( CtrlButton, DownUp )
         DEFINE_CALLBACK( CtrlButton, UpHidden )
         DEFINE_CALLBACK( CtrlButton, HiddenUp )
+
+        /// Change the current image
+        void setImage( AnimBitmap *pImg );
+
+        /// Method called when an animated bitmap changes
+        virtual void onUpdate( Subject<AnimBitmap, void*> &rBitmap, void* );
 };
 
 

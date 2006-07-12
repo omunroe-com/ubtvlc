@@ -2,7 +2,7 @@
  * araw.c: Pseudo audio decoder; for raw pcm data
  *****************************************************************************
  * Copyright (C) 2001, 2003 the VideoLAN team
- * $Id: araw.c 12741 2005-10-02 12:22:29Z jpsaman $
+ * $Id: araw.c 14989 2006-03-30 22:58:23Z xtophe $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -174,6 +174,7 @@ static int DecoderOpen( vlc_object_t *p_this )
     {
     /* from wav/avi/asf file */
     case VLC_FOURCC('a','r','a','w'):
+    case VLC_FOURCC('p','c','m',' '):
     case VLC_FOURCC('a','f','l','t'):
     /* _signed_ big endian samples (mov)*/
     case VLC_FOURCC('t','w','o','s'):
@@ -203,7 +204,8 @@ static int DecoderOpen( vlc_object_t *p_this )
     if( p_dec->fmt_in.audio.i_channels <= 0 ||
         p_dec->fmt_in.audio.i_channels > 8 )
     {
-        msg_Err( p_dec, "bad channels count (1-8)" );
+        msg_Err( p_dec, "bad channels count (1-8): %i",
+                 p_dec->fmt_in.audio.i_channels );
         return VLC_EGENERIC;
     }
 
@@ -276,7 +278,8 @@ static int DecoderOpen( vlc_object_t *p_this )
             return VLC_EGENERIC;
         }
     }
-    else if( p_dec->fmt_in.i_codec == VLC_FOURCC( 'a', 'r', 'a', 'w' ) )
+    else if( p_dec->fmt_in.i_codec == VLC_FOURCC( 'a', 'r', 'a', 'w' ) ||
+             p_dec->fmt_in.i_codec == VLC_FOURCC( 'p', 'c', 'm', ' ' ) )
     {
         switch( ( p_dec->fmt_in.audio.i_bitspersample + 7 ) / 8 )
         {
@@ -352,6 +355,7 @@ static int DecoderOpen( vlc_object_t *p_this )
         p_sys->p_logtos16  = ulawtos16;
         p_dec->fmt_in.audio.i_bitspersample = 8;
     }
+    else return VLC_EGENERIC;
 
     /* Set output properties */
     p_dec->fmt_out.i_cat = AUDIO_ES;

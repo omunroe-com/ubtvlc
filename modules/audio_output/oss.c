@@ -2,7 +2,7 @@
  * oss.c : OSS /dev/dsp module for vlc
  *****************************************************************************
  * Copyright (C) 2000-2002 the VideoLAN team
- * $Id: oss.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: oss.c 14997 2006-03-31 15:15:07Z fkuehne $
  *
  * Authors: Michel Kaempf <maxx@via.ecp.fr>
  *          Sam Hocevar <sam@zoy.org>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -155,7 +155,7 @@ static void Probe( aout_instance_t * p_aout )
         {
             if ( !(i_chanmask & DSP_BIND_FRONT) )
             {
-                msg_Err( p_aout, "No front channels ! (%x)",
+                msg_Err( p_aout, "no front channels! (%x)",
                          i_chanmask );
                 return;
             }
@@ -167,7 +167,7 @@ static void Probe( aout_instance_t * p_aout )
                          | AOUT_CHAN_LFE)) )
             {
                 val.i_int = AOUT_VAR_5_1;
-                text.psz_string = N_("5.1");
+                text.psz_string = "5.1";
                 var_Change( p_aout, "audio-device",
                             VLC_VAR_ADDCHOICE, &val, &text );
             }
@@ -254,7 +254,7 @@ static void Probe( aout_instance_t * p_aout )
         }
         else if( config_GetInt( p_aout, "spdif" ) )
         {
-            msg_Warn( p_aout, "s/pdif not supported by card" );
+            msg_Warn( p_aout, "S/PDIF not supported by card" );
         }
     }
 

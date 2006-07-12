@@ -100,17 +100,7 @@ SOURCE="..\modules\control\corba\corba.c"
 # PROP Intermediate_Dir "Debug\modules\control\corba"
 # End Source File
 # Begin Source File
-SOURCE="..\modules\control\corba\mediacontrol-core.c"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=corba" /D "MODULE_NAME_IS_corba" 
-!IF "$(CFG)" == "plugin_corba - Win32 Release"
-# PROP Output_Dir "Release\modules\control\corba"
-# PROP Intermediate_Dir "Release\modules\control\corba"
-!ELSEIF "$(CFG)" == "plugin_corba - Win32 Debug"
-# PROP Output_Dir "Debug\modules\control\corba"
-# PROP Intermediate_Dir "Debug\modules\control\corba"
-# End Source File
-# Begin Source File
-SOURCE="..\modules\control\corba\mediacontrol-plugin.c"
+SOURCE="..\modules\control\corba\..\..\..\src\control\mediacontrol_plugin.c"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=corba" /D "MODULE_NAME_IS_corba" 
 !IF "$(CFG)" == "plugin_corba - Win32 Release"
 # PROP Output_Dir "Release\modules\control\corba"

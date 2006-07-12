@@ -2,7 +2,7 @@
  * flac.c: flac decoder/packetizer/encoder module making use of libflac
  *****************************************************************************
  * Copyright (C) 1999-2001 the VideoLAN team
- * $Id: flac.c 12836 2005-10-15 13:23:08Z sigmunau $
+ * $Id: flac.c 15181 2006-04-11 22:09:20Z hartman $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Sigmund Augdal Helberg <dnumgis@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -211,7 +211,7 @@ static int OpenDecoder( vlc_object_t *p_this )
     aout_DateSet( &p_sys->end_date, 0 );
     p_sys->i_state = STATE_NOSYNC;
     p_sys->b_stream_info = VLC_FALSE;
-
+    p_sys->p_block=NULL;
     p_sys->bytestream = block_BytestreamInit( p_dec );
 
 #ifdef USE_LIBFLAC
@@ -650,8 +650,8 @@ static void DecoderErrorCallback( const FLAC__StreamDecoder *decoder,
     switch( status )
     {
     case FLAC__STREAM_DECODER_ERROR_STATUS_LOST_SYNC:
-        msg_Err( p_dec, "an error in the stream caused the decoder to "
-                 "lose synchronization." );
+        msg_Warn( p_dec, "an error in the stream caused the decoder to "
+                 "loose synchronization." );
         break;
     case FLAC__STREAM_DECODER_ERROR_STATUS_BAD_HEADER:
         msg_Err( p_dec, "the decoder encountered a corrupted frame header." );
@@ -705,28 +705,28 @@ static void decoder_state_error( decoder_t *p_dec,
     switch ( state )
     {
     case FLAC__STREAM_DECODER_SEARCH_FOR_METADATA:
-        msg_Err( p_dec, "the decoder is ready to search for metadata." );
+        msg_Dbg( p_dec, "the decoder is ready to search for metadata." );
         break;
     case FLAC__STREAM_DECODER_READ_METADATA:
-        msg_Err( p_dec, "the decoder is ready to or is in the process of "
+        msg_Dbg( p_dec, "the decoder is ready to or is in the process of "
                  "reading metadata." );
         break;
     case FLAC__STREAM_DECODER_SEARCH_FOR_FRAME_SYNC:
-        msg_Err( p_dec, "the decoder is ready to or is in the process of "
+        msg_Dbg( p_dec, "the decoder is ready to or is in the process of "
                  "searching for the frame sync code." );
         break;
     case FLAC__STREAM_DECODER_READ_FRAME:
-        msg_Err( p_dec, "the decoder is ready to or is in the process of "
+        msg_Dbg( p_dec, "the decoder is ready to or is in the process of "
                  "reading a frame." );
         break;
     case FLAC__STREAM_DECODER_END_OF_STREAM:
-        msg_Err( p_dec, "the decoder has reached the end of the stream." );
+        msg_Dbg( p_dec, "the decoder has reached the end of the stream." );
         break;
     case FLAC__STREAM_DECODER_ABORTED:
-        msg_Err( p_dec, "the decoder was aborted by the read callback." );
+        msg_Warn( p_dec, "the decoder was aborted by the read callback." );
         break;
     case FLAC__STREAM_DECODER_UNPARSEABLE_STREAM:
-        msg_Err( p_dec, "the decoder encountered reserved fields in use "
+        msg_Warn( p_dec, "the decoder encountered reserved fields in use "
                  "in the stream." );
         break;
     case FLAC__STREAM_DECODER_MEMORY_ALLOCATION_ERROR:
@@ -745,7 +745,7 @@ static void decoder_state_error( decoder_t *p_dec,
         msg_Err( p_dec, "decoder in uninitialized state." );
         break;
     default:
-        msg_Err(p_dec, "unknown error" );
+        msg_Warn(p_dec, "unknown error" );
     }
 }
 #endif

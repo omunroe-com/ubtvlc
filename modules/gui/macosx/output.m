@@ -2,7 +2,7 @@
  * output.m: MacOS X Output Dialog
  *****************************************************************************
  * Copyright (C) 2002-2003 the VideoLAN team
- * $Id: output.m 13349 2005-11-23 19:38:15Z fkuehne $
+ * $Id: output.m 14827 2006-03-19 13:13:09Z bigben $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -133,12 +133,12 @@
     NSArray *o_v_codecs = [NSArray arrayWithObjects: @"mp1v", @"mp2v", @"mp4v", @"DIV1",
         @"DIV2", @"DIV3", @"h263", @"h264", @"WMV1", @"WMV2", @"MJPG", @"theo", nil];
 
-    [o_output_ckbox setTitle: _NS("Advanced output:")];
+    [o_output_ckbox setTitle: _NS("Streaming/Saving:")];
     [o_output_settings setTitle: _NS("Settings...")];
     [o_btn_ok setTitle: _NS("OK")];
 
-    [o_options_lbl setTitle: _NS("Output Options")];
-    [o_display setTitle: _NS("Play locally")];
+    [o_options_lbl setTitle: _NS("Streaming and Transcoding Options")];
+    [o_display setTitle: _NS("Display the stream locally")];
     [[o_method cellAtRow:0 column:0] setTitle: _NS("File")];
     [[o_method cellAtRow:1 column:0] setTitle: _NS("Stream")];
     [o_dump_chkbox setTitle: _NS("Dump raw input")];
@@ -156,7 +156,7 @@
     [o_mux_selector removeAllItems];
     [o_mux_selector addItemsWithTitles: o_muxers];
 
-    [o_transcode_lbl setTitle: _NS("Transcode options")];
+    [o_transcode_lbl setTitle: _NS("Transcoding options")];
     [o_transcode_video_chkbox setTitle: _NS("Video")];
     [o_transcode_video_selector removeAllItems];
     [o_transcode_video_selector addItemsWithTitles: o_v_codecs];
@@ -179,7 +179,6 @@
 
     [o_misc_lbl setTitle: _NS("Stream Announcing")];
     [o_sap_chkbox setTitle: _NS("SAP announce")];
-    [o_slp_chkbox setTitle: _NS("SLP announce")];
     [o_rtsp_chkbox setTitle: _NS("RTSP announce")];
     [o_http_chkbox setTitle:_NS("HTTP announce")];
     [o_file_chkbox setTitle:_NS("Export SDP as file")];
@@ -221,7 +220,6 @@
     o_mode = [[o_method selectedCell] title];
 
     [o_sap_chkbox setEnabled: NO];
-    [o_slp_chkbox setEnabled: NO];
     [o_http_chkbox setEnabled: NO];
     [o_rtsp_chkbox setEnabled: NO];
     [o_file_chkbox setEnabled: NO];
@@ -306,7 +304,6 @@
             [[o_mux_selector itemAtIndex: 7] setEnabled: NO];
             [[o_mux_selector itemAtIndex: 8] setEnabled: YES];
             [o_sap_chkbox setEnabled: YES];
-            [o_slp_chkbox setEnabled: YES];
             [o_channel_name setEnabled: YES];
         }
         else if( [o_mode isEqualToString: @"RTP"] )
@@ -325,7 +322,6 @@
             [[o_mux_selector itemAtIndex: 8] setEnabled: YES];
             [o_mux_selector selectItemAtIndex: 8];
             [o_sap_chkbox setEnabled: YES];
-            [o_slp_chkbox setEnabled: NO];
             [o_rtsp_chkbox setEnabled: YES];
             [o_http_chkbox setEnabled: YES];
             [o_file_chkbox setEnabled: YES];
@@ -388,7 +384,7 @@
         else
         {
                 [o_mrl_string appendFormat:
-                        @"std{access=file,mux=%@,url=\"%@\"}",
+                        @"std{access=file,mux=%@,dst=\"%@\"}",
                         o_mux_string, [o_file_field stringValue]];
         }
     }
@@ -413,14 +409,6 @@
                         @",sap,name=%@", [o_channel_name stringValue]];
                 else
                     [o_announce appendFormat:@",sap"];
-            }
-            if( [o_slp_chkbox state] == NSOnState )
-            {
-               if ( ![[o_channel_name stringValue] isEqualToString: @""] )
-                    [o_announce appendFormat:@
-                            "slp,name=%@",[o_channel_name stringValue]];
-                else
-                    [o_announce appendString: @",slp"];
             }
         }
         if ( ![o_mode isEqualToString: @"RTP"] )
@@ -454,7 +442,7 @@
             }
             
             [o_mrl_string appendFormat:
-                        @"std{access=%@,mux=%@,url=%@%@}",
+                        @"std{access=%@,mux=%@,dst=%@%@}",
                         o_mode, o_mux_string, o_finalStreamAddress, o_announce];
         }
         else
@@ -598,7 +586,8 @@
         o_transcode_string = [NSMutableString stringWithString:@"transcode{"];
         if ( [o_transcode_video_chkbox state] == NSOnState )
         {
-            [o_transcode_string appendFormat: @"vcodec=\"%@\",vb=\"%@\",scale=\"%@\"",
+            [o_transcode_string appendFormat: @"vcodec=\"%@\",vb=\"%@\"" \
+                                                            ",scale=\"%@\"",
                 [o_transcode_video_selector titleOfSelectedItem],
                 [o_transcode_video_bitrate stringValue],
                 [o_transcode_video_scale stringValue]];
@@ -633,8 +622,8 @@
 {
     NSString *o_mode;
     o_mode = [[o_stream_type selectedCell] title];
-    [o_channel_name setEnabled: [o_sap_chkbox state] || [o_slp_chkbox state]
-                || [o_mode isEqualToString: @"RTP"]];
+    [o_channel_name setEnabled: [o_sap_chkbox state] ||
+                [o_mode isEqualToString: @"RTP"]];
 
     if ([o_mode isEqualToString: @"RTP"])
     {

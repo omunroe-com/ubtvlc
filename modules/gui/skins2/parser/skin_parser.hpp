@@ -2,7 +2,7 @@
  * skin_parser.hpp
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: skin_parser.hpp 12517 2005-09-11 20:03:18Z ipkiss $
+ * $Id: skin_parser.hpp 15249 2006-04-17 15:18:05Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef SKIN_PARSER_HPP
@@ -34,19 +34,30 @@ class SkinParser: public XMLParser
 {
     public:
         SkinParser( intf_thread_t *pIntf, const string &rFileName,
-                    const string &rPath );
-        virtual ~SkinParser() {}
+                    const string &rPath, bool useDTD = true,
+                    BuilderData *pData = NULL );
+        virtual ~SkinParser();
 
-        const BuilderData &getData() const { return m_data; }
+        const BuilderData &getData() const { return *m_pData; }
+
+        static int convertColor( const char *transcolor );
 
     private:
+        /// Path of the theme
+        const string m_path;
         /// Container for mapping data from the XML
-        BuilderData m_data;
+        BuilderData *m_pData;
+        /// Indicate whether the class owns the data
+        bool m_ownData;
         /// Current IDs
+        string m_curBitmapId;
         string m_curWindowId;
         string m_curLayoutId;
+        string m_curPopupId;
         string m_curListId;
         string m_curTreeId;
+        /// Current position of menu items in the popups
+        list<int> m_popupPosList;
         /// Current offset of the controls
         int m_xOffset, m_yOffset;
         list<int> m_xOffsetList, m_yOffsetList;
@@ -54,8 +65,6 @@ class SkinParser: public XMLParser
         int m_curLayer;
         /// Set of used id
         set<string> m_idSet;
-        /// Path of the XML file being parsed
-        const string m_path;
 
         /// Callbacks
         virtual void handleBeginElement( const string &rName,
@@ -65,8 +74,6 @@ class SkinParser: public XMLParser
         /// Helper functions
         //@{
         bool convertBoolean( const char *value ) const;
-        int convertColor( const char *transcolor ) const;
-        string convertFileName( const char *fileName ) const;
         /// Transform to int, and check that it is in the given range (if not,
         /// the closest range boundary will be used)
         int convertInRange( const char *value, int minValue, int maxValue,

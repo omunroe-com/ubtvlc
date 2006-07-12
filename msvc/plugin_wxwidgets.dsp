@@ -100,6 +100,26 @@ SOURCE="..\modules\gui\wxwidgets\wxwidgets.cpp"
 # PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
 # End Source File
 # Begin Source File
+SOURCE="..\modules\gui\wxwidgets\wxwidgets.hpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\streamdata.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
 SOURCE="..\modules\gui\wxwidgets\interface.cpp"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
 !IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
@@ -120,107 +140,7 @@ SOURCE="..\modules\gui\wxwidgets\extrapanel.cpp"
 # PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
 # End Source File
 # Begin Source File
-SOURCE="..\modules\gui\wxwidgets\dialogs.cpp"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
-!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
-# PROP Output_Dir "Release\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
-!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
-# PROP Output_Dir "Debug\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
-# End Source File
-# Begin Source File
-SOURCE="..\modules\gui\wxwidgets\open.cpp"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
-!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
-# PROP Output_Dir "Release\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
-!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
-# PROP Output_Dir "Debug\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
-# End Source File
-# Begin Source File
-SOURCE="..\modules\gui\wxwidgets\streamout.cpp"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
-!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
-# PROP Output_Dir "Release\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
-!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
-# PROP Output_Dir "Debug\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
-# End Source File
-# Begin Source File
-SOURCE="..\modules\gui\wxwidgets\wizard.cpp"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
-!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
-# PROP Output_Dir "Release\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
-!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
-# PROP Output_Dir "Debug\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
-# End Source File
-# Begin Source File
-SOURCE="..\modules\gui\wxwidgets\streamdata.cpp"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
-!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
-# PROP Output_Dir "Release\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
-!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
-# PROP Output_Dir "Debug\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
-# End Source File
-# Begin Source File
-SOURCE="..\modules\gui\wxwidgets\messages.cpp"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
-!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
-# PROP Output_Dir "Release\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
-!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
-# PROP Output_Dir "Debug\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
-# End Source File
-# Begin Source File
-SOURCE="..\modules\gui\wxwidgets\playlist.cpp"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
-!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
-# PROP Output_Dir "Release\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
-!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
-# PROP Output_Dir "Debug\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
-# End Source File
-# Begin Source File
-SOURCE="..\modules\gui\wxwidgets\iteminfo.cpp"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
-!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
-# PROP Output_Dir "Release\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
-!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
-# PROP Output_Dir "Debug\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
-# End Source File
-# Begin Source File
 SOURCE="..\modules\gui\wxwidgets\menus.cpp"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
-!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
-# PROP Output_Dir "Release\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
-!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
-# PROP Output_Dir "Debug\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
-# End Source File
-# Begin Source File
-SOURCE="..\modules\gui\wxwidgets\preferences.cpp"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
-!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
-# PROP Output_Dir "Release\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
-!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
-# PROP Output_Dir "Debug\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
-# End Source File
-# Begin Source File
-SOURCE="..\modules\gui\wxwidgets\preferences_widgets.cpp"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
 !IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
 # PROP Output_Dir "Release\modules\gui\wxwidgets"
@@ -240,37 +160,277 @@ SOURCE="..\modules\gui\wxwidgets\timer.cpp"
 # PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
 # End Source File
 # Begin Source File
-SOURCE="..\modules\gui\wxwidgets\fileinfo.cpp"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
-!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
-# PROP Output_Dir "Release\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
-!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
-# PROP Output_Dir "Debug\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
-# End Source File
-# Begin Source File
-SOURCE="..\modules\gui\wxwidgets\subtitles.cpp"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
-!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
-# PROP Output_Dir "Release\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
-!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
-# PROP Output_Dir "Debug\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
-# End Source File
-# Begin Source File
-SOURCE="..\modules\gui\wxwidgets\bookmarks.cpp"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
-!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
-# PROP Output_Dir "Release\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
-!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
-# PROP Output_Dir "Debug\modules\gui\wxwidgets"
-# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
-# End Source File
-# Begin Source File
 SOURCE="..\modules\gui\wxwidgets\video.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\input_manager.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\playlist_manager.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\open.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\interaction.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\streamout.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\wizard.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\messages.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\playlist.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\iteminfo.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\infopanels.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\preferences.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\preferences_widgets.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\fileinfo.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\updatevlc.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\subtitles.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\bookmarks.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\vlm\vlm_slider_manager.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\vlm\vlm_slider_manager.hpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\vlm\vlm_stream.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\vlm\vlm_stream.hpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\vlm\vlm_wrapper.hpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\vlm\vlm_wrapper.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\vlm\vlm_streampanel.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\vlm\vlm_streampanel.hpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\vlm\vlm_panel.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
+!IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Release\modules\gui\wxwidgets"
+!ELSEIF "$(CFG)" == "plugin_wxwidgets - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwidgets"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwidgets"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwidgets\dialogs\vlm\vlm_panel.hpp"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwidgets" /D "MODULE_NAME_IS_wxwidgets" 
 !IF "$(CFG)" == "plugin_wxwidgets - Win32 Release"
 # PROP Output_Dir "Release\modules\gui\wxwidgets"
@@ -287,13 +447,10 @@ SOURCE="..\modules\gui\wxwidgets\video.cpp"
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 
 # Begin Source File
-SOURCE="..\modules\gui\wxwidgets\wxwidgets.h"
-# End Source File
-# Begin Source File
 SOURCE="..\modules\gui\wxwidgets\streamdata.h"
 # End Source File
 # Begin Source File
-SOURCE="..\modules\gui\wxwidgets\preferences_widgets.h"
+SOURCE="..\modules\gui\wxwidgets\dialogs\preferences_widgets.h"
 # End Source File
 
 # End Group

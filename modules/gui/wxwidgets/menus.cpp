@@ -2,7 +2,7 @@
  * menus.cpp : wxWidgets plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: menus.cpp 12056 2005-08-07 10:56:07Z ipkiss $
+ * $Id: menus.cpp 15500 2006-05-01 10:22:41Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -32,7 +32,8 @@
 #include <vlc/vlc.h>
 #include <vlc/intf.h>
 
-#include "wxwidgets.h"
+#include "wxwidgets.hpp"
+#include "interface.hpp"
 
 class wxMenuItemExt: public wxMenuItem
 {
@@ -65,9 +66,9 @@ public:
     void Clear();
 
 private:
-    wxMenu *Menu::CreateDummyMenu();
-    void   Menu::CreateMenuItem( wxMenu *, char *, vlc_object_t * );
-    wxMenu *Menu::CreateChoicesMenu( char *, vlc_object_t *, bool );
+    wxMenu *CreateDummyMenu();
+    void   CreateMenuItem( wxMenu *, char *, vlc_object_t * );
+    wxMenu *CreateChoicesMenu( char *, vlc_object_t *, bool );
 
     DECLARE_EVENT_TABLE();
 
@@ -258,9 +259,11 @@ void PopupMenu( intf_thread_t *p_intf, wxWindow *p_parent,
                                                 FIND_PARENT );
     if( p_object != NULL )
     {
+#ifndef WIN32
 #if (wxCHECK_VERSION(2,5,0))
         ppsz_varnames[i] = "intf-switch";
         pi_objects[i++] = p_object->i_object_id;
+#endif
 #endif
         ppsz_varnames[i] = "intf-add";
         pi_objects[i++] = p_object->i_object_id;
@@ -637,6 +640,8 @@ static bool IsMenuEmpty( char *psz_var, vlc_object_t *p_object,
 
     if( (i_type & VLC_VAR_TYPE) != VLC_VAR_VARIABLE )
     {
+        /* Very evil hack ! intf-switch can have only one value */
+        if( !strcmp( psz_var, "intf-switch" ) ) return FALSE;
         if( val.i_int == 1 && b_root ) return TRUE;
         else return FALSE;
     }

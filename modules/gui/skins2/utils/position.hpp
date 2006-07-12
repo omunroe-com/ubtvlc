@@ -2,10 +2,10 @@
  * position.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: position.hpp 11699 2005-07-11 08:52:14Z sam $
+ * $Id: position.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef POSITION_HPP
 #define POSITION_HPP
+
+#include "variable.hpp"
+#include "observer.hpp"
 
 
 /// Interface for rectangular objects
@@ -65,7 +68,7 @@ class Position
 {
     public:
         /// Type for reference edge/corner
-        typedef enum
+        enum Ref_t
         {
             /// Coordinates are relative to the upper left corner
             kLeftTop,
@@ -75,7 +78,7 @@ class Position
             kLeftBottom,
             /// Coordinates are relative to the lower right corner
             kRightBottom
-        } Ref_t;
+        };
 
         /// Create a new position relative to the given box
         Position( int left, int top, int right, int bottom, const Box &rBox,
@@ -102,6 +105,32 @@ class Position
         const Box &m_rBox;
         Ref_t m_refLeftTop;
         Ref_t m_refRighBottom;
+};
+
+
+/// Variable implementing the Box interface
+class VarBox: public Variable, public Box, public Subject<VarBox, void*>
+{
+    public:
+        VarBox( intf_thread_t *pIntf, int width = 0, int height = 0 );
+
+        virtual ~VarBox() {}
+
+        /// Get the variable type
+        virtual const string &getType() const { return m_type; }
+
+        /// Get the size of the box
+        virtual int getWidth() const;
+        virtual int getHeight() const;
+
+        /// Change the size of the box
+        void setSize( int width, int height );
+
+    private:
+        /// Variable type
+        static const string m_type;
+        /// Size
+        int m_width, m_height;
 };
 
 

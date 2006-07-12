@@ -1,8 +1,8 @@
 /*****************************************************************************
- * vlc_objects.h: vlc_object_t definition.
+ * vlc_objects.h: vlc_object_t definition and manipulation methods
  *****************************************************************************
  * Copyright (C) 2002 the VideoLAN team
- * $Id: vlc_objects.h 12116 2005-08-10 22:08:50Z jpsaman $
+ * $Id: vlc_objects.h 14811 2006-03-18 17:52:31Z zorglub $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /**
@@ -60,6 +60,8 @@
 #define VLC_OBJECT_SD         (-26)
 #define VLC_OBJECT_XML        (-27)
 #define VLC_OBJECT_OSDMENU    (-28)
+#define VLC_OBJECT_STATS      (-29)
+#define VLC_OBJECT_HTTPD_HOST (-30)
 
 #define VLC_OBJECT_GENERIC  (-666)
 
@@ -69,6 +71,11 @@
 #define FIND_ANYWHERE       0x0003
 
 #define FIND_STRICT         0x0010
+
+/* Object flags */
+#define OBJECT_FLAGS_NODBG       0x0001
+#define OBJECT_FLAGS_QUIET       0x0002
+#define OBJECT_FLAGS_NOINTERACT  0x0004
 
 /*****************************************************************************
  * The vlc_object_t type. Yes, it's that simple :-)
@@ -92,7 +99,7 @@ VLC_EXPORT( void, __vlc_object_yield, ( vlc_object_t * ) );
 VLC_EXPORT( void, __vlc_object_release, ( vlc_object_t * ) );
 VLC_EXPORT( vlc_list_t *, __vlc_list_find, ( vlc_object_t *, int, int ) );
 VLC_EXPORT( void, vlc_list_release, ( vlc_list_t * ) );
-
+VLC_EXPORT( vlc_t *, vlc_current_object, ( int ) );
 /*}@*/
 
 #define vlc_object_create(a,b) \

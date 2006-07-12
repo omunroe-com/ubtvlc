@@ -2,7 +2,7 @@
  * directx.c: Windows DirectX audio output method
  *****************************************************************************
  * Copyright (C) 2001 the VideoLAN team
- * $Id: directx.c 13375 2005-11-25 07:55:31Z gbazin $
+ * $Id: directx.c 14997 2006-03-31 15:15:07Z fkuehne $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,14 +18,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <errno.h>                                                 /* ENOMEM */
-#include <fcntl.h>                                       /* open(), O_WRONLY */
 #include <string.h>                                            /* strerror() */
 
 #include <stdlib.h>                            /* calloc(), malloc(), free() */
@@ -414,7 +412,7 @@ static void Probe( aout_instance_t * p_aout )
             == VLC_SUCCESS )
         {
             val.i_int = AOUT_VAR_5_1;
-            text.psz_string = N_("5.1");
+            text.psz_string = "5.1";
             var_Change( p_aout, "audio-device",
                         VLC_VAR_ADDCHOICE, &val, &text );
             msg_Dbg( p_aout, "device supports 5.1 channels" );
@@ -584,7 +582,7 @@ static void CloseAudio( vlc_object_t *p_this )
     aout_instance_t * p_aout = (aout_instance_t *)p_this;
     aout_sys_t *p_sys = p_aout->output.p_sys;
 
-    msg_Dbg( p_aout, "CloseAudio" );
+    msg_Dbg( p_aout, "closing audio device" );
 
     /* kill the position notification thread, if any */
     if( p_sys->p_notif )

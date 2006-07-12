@@ -1,10 +1,10 @@
 /*****************************************************************************
  * visual.c : Visualisation system
  *****************************************************************************
- * Copyright (C) 2002 the VideoLAN team
- * $Id: visual.c 12905 2005-10-20 22:37:14Z zcot $
+ * Copyright (C) 2002-2006 the VideoLAN team
+ * $Id: visual.c 15003 2006-03-31 16:22:19Z zorglub $
  *
- * Authors: Clément Stenac <zorglub@via.ecp.fr>
+ * Authors: ClÃ©ment Stenac <zorglub@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -38,7 +38,7 @@
 #define ELIST_TEXT N_( "Effects list" )
 #define ELIST_LONGTEXT N_( \
       "A list of visual effect, separated by commas.\n"  \
-      "Current effects include: dummy, scope, spectrum" )
+      "Current effects include: dummy, scope, spectrum." )
 
 #define WIDTH_TEXT N_( "Video width" )
 #define WIDTH_LONGTEXT N_( \
@@ -52,7 +52,7 @@
 #define NBBANDS_LONGTEXT N_( \
       "Number of bands used by spectrum analyzer, should be 20 or 80." )
 #define SPNBBANDS_LONGTEXT N_( \
-      "Number of bands used by the spectrOmeter, from 20 to 80." )
+      "Number of bands used by the spectrometer, from 20 to 80." )
 
 #define SEPAR_TEXT N_( "Band separator" )
 #define SEPAR_LONGTEXT N_( \
@@ -64,15 +64,15 @@
 
 #define PEAKS_TEXT N_( "Enable peaks" )
 #define PEAKS_LONGTEXT N_( \
-        "Defines whether to draw peaks." )
+        "Draw \"peaks\" in the spectrum analyzer." )
 
 #define ORIG_TEXT N_( "Enable original graphic spectrum" )
 #define ORIG_LONGTEXT N_( \
-        "Defines whether to draw the original spectrum graphic routine." )
+        "Enable the \"flat\" spectrum analyzer in the spectrometer." )
 
 #define BANDS_TEXT N_( "Enable bands" )
 #define BANDS_LONGTEXT N_( \
-        "Defines whether to draw the bands." )
+        "Draw bands in the spectrometer." )
 
 #define BASE_TEXT N_( "Enable base" )
 #define BASE_LONGTEXT N_( \
@@ -82,13 +82,13 @@
 #define RADIUS_LONGTEXT N_( \
         "Defines radius size in pixels, of base of bands(beginning)." )
 
-#define SECT_TEXT N_( "Spectral sections" )
-#define SECT_LONGTEXT N_( \
+#define SSECT_TEXT N_( "Spectral sections" )
+#define SSECT_LONGTEXT N_( \
         "Determines how many sections of spectrum will exist." )
 
 #define PEAK_HEIGHT_TEXT N_( "Peak height" )
 #define PEAK_HEIGHT_LONGTEXT N_( \
-        "This is the total pixel height of the peak items." )
+        "Total pixel height of the peak items." )
 
 #define PEAK_WIDTH_TEXT N_( "Peak extra width" )
 #define PEAK_WIDTH_LONGTEXT N_( \
@@ -100,7 +100,7 @@
 
 #define STARS_TEXT N_( "Number of stars" )
 #define STARS_LONGTEXT N_( \
-        "Defines the number of stars to draw with random effect." )
+        "Number of stars to draw with random effect." )
 
 static int  Open         ( vlc_object_t * );
 static void Close        ( vlc_object_t * );
@@ -134,7 +134,7 @@ vlc_module_begin();
     add_integer("spect-radius", 42, NULL,
              RADIUS_TEXT, RADIUS_LONGTEXT, VLC_TRUE );
     add_integer("spect-sections", 3, NULL,
-             SECT_TEXT, SECT_LONGTEXT, VLC_TRUE );
+             SSECT_TEXT, SSECT_LONGTEXT, VLC_TRUE );
     add_integer("spect-color", 80, NULL,
              COLOR1_TEXT, COLOR1_LONGTEXT, VLC_TRUE );
     add_bool("spect-show-bands", VLC_TRUE, NULL,
@@ -261,7 +261,7 @@ static int Open( vlc_object_t *p_this )
 
                 if( ( psz_eoa = strchr( psz_parser, '}') ) == NULL )
                 {
-                   msg_Err( p_filter, "Unable to parse effect list. Aborting");
+                   msg_Err( p_filter, "unable to parse effect list. Aborting");
                    break;
                 }
                 p_effect->psz_args =
@@ -319,7 +319,6 @@ static int Open( vlc_object_t *p_this )
     p_filter->pf_do_work = DoWork;
     p_filter->b_in_place= 1;
 
-    msg_Dbg( p_filter,"Visualizer initialized");
     return VLC_SUCCESS;
 }
 
@@ -422,7 +421,7 @@ static int FilterCallback( vlc_object_t *p_this, char const *psz_cmd,
 {
     aout_filter_t     *p_filter = (aout_filter_t *)p_this;
     /* restart this baby */
-    msg_Dbg( p_filter, "We should restart the visual filter" );
+    msg_Dbg( p_filter, "we should restart the visual filter" );
     return VLC_SUCCESS;
 }
 

@@ -2,10 +2,10 @@
  * transforms_yuvmmx.h: MMX YUV transformation assembly
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: i420_rgb_mmx.h 12683 2005-09-26 10:14:46Z sam $
+ * $Id: i420_rgb_mmx.h 14124 2006-02-01 19:40:01Z courmisch $
  *
  * Authors: Olie Lho <ollie@sis.com.tw>
- *          Gaël Hendryckx <jimmy@via.ecp.fr>
+ *          GaÃ«l Hendryckx <jimmy@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /* hope these constant values are cache line aligned */

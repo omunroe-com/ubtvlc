@@ -1,8 +1,8 @@
 /*****************************************************************************
- * vlc.h: global header for vlc
+ * vlc.h: global header for libvlc (old-style)
  *****************************************************************************
  * Copyright (C) 1998-2004 the VideoLAN team
- * $Id: vlc.h 12455 2005-09-03 09:16:11Z gbazin $
+ * $Id: vlc.h 13960 2006-01-21 16:44:36Z zorglub $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -21,12 +21,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /**
- * \defgroup libvlc Libvlc
+ * \defgroup libvlc_old Libvlc Old
  * This is libvlc, the base library of the VLC program.
+ * This is the legacy API. Please consider using the new libvlc API
  *
  * @{
  */
@@ -141,6 +142,7 @@ struct vlc_list_t
 #define PLAYLIST_APPEND          0x0004
 #define PLAYLIST_GO              0x0008
 #define PLAYLIST_CHECK_INSERT    0x0010
+#define PLAYLIST_PREPARSE        0x0020
 
 #define PLAYLIST_END           -666
 
@@ -286,7 +288,7 @@ int     VLC_CleanUp( int );
  *
  * This function requests the running threads to finish, waits for their
  * termination, and destroys their structure.
- * Then it will de-init all VLC object initializations. 
+ * Then it will de-init all VLC object initializations.
  *
  * \param i_object a vlc object id
  * \return VLC_SUCCESS on success
@@ -571,5 +573,11 @@ int             VLC_FullScreen( int );
 # ifdef __cplusplus
 }
 # endif
+
+#define LICENSE_MSG \
+  _("This program comes with NO WARRANTY, to the extent permitted by " \
+    "law.\nYou may redistribute it under the terms of the GNU General " \
+    "Public License;\nsee the file named COPYING for details.\n" \
+    "Written by the VideoLAN team; see the AUTHORS file.\n")
 
 #endif /* <vlc/vlc.h> */

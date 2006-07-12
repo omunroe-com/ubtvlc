@@ -2,7 +2,7 @@
  * timeshift.c: access filter implementing timeshifting capabilities
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: timeshift.c 12924 2005-10-23 09:33:13Z courmisch $
+ * $Id: timeshift.c 15209 2006-04-14 09:37:39Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -31,6 +31,8 @@
 
 #include <vlc/vlc.h>
 #include <vlc/input.h>
+#include "charset.h"
+
 #include <unistd.h>
 
 /*****************************************************************************
@@ -40,8 +42,9 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 #define GRANULARITY_TEXT N_("Timeshift granularity")
-#define GRANULARITY_LONGTEXT N_( "Size of the temporary files use to store " \
-  "the timeshifted stream." )
+/// \bug [String] typo
+#define GRANULARITY_LONGTEXT N_( "This is the size of the temporary files " \
+  "tha will be used to store the timeshifted streams." )
 #define DIR_TEXT N_("Timeshift directory")
 #define DIR_LONGTEXT N_( "Directory used to store the timeshift temporary " \
   "files." )
@@ -375,7 +378,7 @@ static int WriteBlockToFile( access_t *p_access, block_t *p_block )
 
         sprintf( p_sys->psz_filename, "%s%i.dat",
                  p_sys->psz_filename_base, p_sys->i_files );
-        file = fopen( p_sys->psz_filename, "w+b" );
+        file = utf8_fopen( p_sys->psz_filename, "w+b" );
 
         if( !file && p_sys->i_files < 2 )
         {
@@ -535,35 +538,38 @@ static char *GetTmpFilePath( access_t *p_access )
     char *psz_dir = var_GetString( p_access, "timeshift-dir" );
     char *psz_filename_base;
 
-    if( psz_dir && !*psz_dir )
+    if( ( psz_dir != NULL ) && ( psz_dir[0] == '\0' ) )
     {
         free( psz_dir );
-        psz_dir = 0;
+        psz_dir = NULL;
     }
 
-    if( !psz_dir )
+    if( psz_dir == NULL )
     {
 #ifdef WIN32
+        char psz_local_dir[MAX_PATH];
         int i_size;
 
-        psz_dir = malloc( MAX_PATH + 1 );
-        i_size = GetTempPath( MAX_PATH, psz_dir );
+        i_size = GetTempPath( MAX_PATH, psz_local_dir );
         if( i_size <= 0 || i_size > MAX_PATH )
         {
-            if( !getcwd( psz_dir, MAX_PATH ) ) strcpy( psz_dir, "c:" );
+            if( !getcwd( psz_local_dir, MAX_PATH ) )
+                strcpy( psz_local_dir, "C:" );
         }
+
+        psz_dir = FromLocaleDup( psz_local_dir );
 
         /* remove last \\ if any */
         if( psz_dir[strlen(psz_dir)-1] == '\\' )
             psz_dir[strlen(psz_dir)-1] = '\0';
 #else
-
         psz_dir = strdup( "/tmp" );
 #endif
     }
 
     asprintf( &psz_filename_base, "%s/vlc-timeshift-%d-%d-",
               psz_dir, getpid(), p_access->i_object_id );
+    free( psz_dir );
 
     return psz_filename_base;
 }

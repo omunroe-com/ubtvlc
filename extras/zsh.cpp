@@ -2,7 +2,7 @@
  * zsh.cpp: create zsh completion rule for vlc
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: zsh.cpp 12836 2005-10-15 13:23:08Z sigmunau $
+ * $Id: zsh.cpp 14196 2006-02-09 12:31:17Z xtophe $
  *
  * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <stdio.h>
@@ -40,7 +40,6 @@ void PrintModuleList( vlc_t *p_vlc, mmap &mods, mcmap &mods2 );
 void ParseOption( module_config_t *p_item, mmap &mods, mcmap &mods2 );
 void PrintOption( char *psz_option, char i_short, char *psz_exlusive,
                    char *psz_text, char *psz_longtext, char *psz_args );
-extern "C"{ vlc_t * vlc_current_object( int i_object );}
 
 int main( int i_argc, char **ppsz_argv )
 {
@@ -49,7 +48,7 @@ int main( int i_argc, char **ppsz_argv )
     /* Create a libvlc structure */
     int i_ret = VLC_Create();
     vlc_t *p_vlc;
-    
+
     if( i_ret < 0 )
     {
         return i_ret;
@@ -211,7 +210,6 @@ void ParseOption( module_config_t *p_item, mmap &mods, mcmap &mods2 )
         while( range.first != range.second )
         {
             list = list.append( " " );
-            printf("%s",range.first->second.c_str());
             list = list.append( range.first->second );
             ++range.first;
         }

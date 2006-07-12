@@ -2,7 +2,7 @@
  * crossbar.c : DirectShow access module for vlc
  *****************************************************************************
  * Copyright (C) 2002 the VideoLAN team
- * $Id: crossbar.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: crossbar.cpp 15016 2006-03-31 23:07:01Z xtophe $
  *
  * Author: Damien Fouilleul <damien dot fouilleul at laposte dot net>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -208,7 +208,7 @@ HRESULT FindCrossbarRoutes( vlc_object_t *p_this, access_sys_t *p_sys,
                 // remember connector type
                 physicalType = inputPinPhysicalType;
                 
-                msg_Dbg( p_this, "Found Existing Route For ouput %ld (type %ld) to input %ld (type %ld)",
+                msg_Dbg( p_this, "found existing route for ouput %ld (type %ld) to input %ld (type %ld)",
                          outputPinIndex, outputPinPhysicalType, inputPinIndex,
                          inputPinPhysicalType );
                          
@@ -259,7 +259,7 @@ HRESULT FindCrossbarRoutes( vlc_object_t *p_this, access_sys_t *p_sys,
             p_sys->crossbar_routes[depth].AudioInputIndex = inputPinIndexRelated;
             p_sys->crossbar_routes[depth].AudioOutputIndex = outputPinIndexRelated;
 
-            msg_Dbg( p_this, "Crossbar at depth %d, Found Route For "
+            msg_Dbg( p_this, "crossbar at depth %d, found route for "
                      "ouput %ld (type %ld) to input %ld (type %ld)", depth,
                      outputPinIndex, outputPinPhysicalType, inputPinIndex,
                      inputPinPhysicalType );

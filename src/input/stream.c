@@ -2,7 +2,7 @@
  * stream.c
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: stream.c 12954 2005-10-24 17:08:54Z md $
+ * $Id: stream.c 15149 2006-04-08 21:41:53Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <stdlib.h>
@@ -26,6 +26,8 @@
 #include <vlc/input.h>
 
 #include "input_internal.h"
+
+#undef STREAM_DEBUG
 
 /* TODO:
  *  - tune the 2 methods
@@ -161,7 +163,7 @@ struct stream_sys_t
     access_t       *p_list_access;
 
     /* Preparse mode ? */
-    vlc_bool_t b_quick;
+    vlc_bool_t      b_quick;
 };
 
 /* Method 1: */
@@ -237,6 +239,11 @@ stream_t *stream_AccessNew( access_t *p_access, vlc_bool_t b_quick )
     s->pf_destroy = AStreamDestroy;
 
     s->p_sys = p_sys = malloc( sizeof( stream_sys_t ) );
+
+    /* UTF16 and UTF32 text file conversion */
+    s->i_char_width = 1;
+    s->b_little_endian = VLC_FALSE;
+    s->conv = (vlc_iconv_t)(-1);
 
     /* Common field */
     p_sys->p_access = p_access;
@@ -618,7 +625,7 @@ static void AStreamPrebufferBlock( stream_t *s )
             b = b->p_next;
         }
 
-        if( p_access->info.b_prebuffered ) 
+        if( p_access->info.b_prebuffered )
         {
             /* Access has already prebufferred - update stats and exit */
             p_sys->stat.i_bytes = p_sys->block.i_size;
@@ -800,7 +807,7 @@ static int AStreamSeekBlock( stream_t *s, int64_t i_pos )
 
         if( !b_aseek )
         {
-            msg_Err( s, "backward seek impossible (access non seekable)" );
+            msg_Err( s, "backward seeking impossible (access not seekable)" );
             return VLC_EGENERIC;
         }
 
@@ -872,7 +879,7 @@ static int AStreamSeekBlock( stream_t *s, int64_t i_pos )
     }
     else
     {
-        /* Read enought data */
+        /* Read enough data */
         while( p_sys->block.i_start + p_sys->block.i_size < i_pos )
         {
             if( AStreamRefillBlock( s ) )
@@ -992,7 +999,7 @@ static int AStreamReadStream( stream_t *s, void *p_read, int i_read )
             return AStreamSeekStream( s, p_sys->i_pos + i_read ) ? 0 : i_read;
     }
 
-#if 0
+#ifdef STREAM_DEBUG
     msg_Dbg( s, "AStreamReadStream: %d pos="I64Fd" tk=%d start="I64Fd
              " offset=%d end="I64Fd,
              i_read, p_sys->i_pos, p_sys->stream.i_tk,
@@ -1047,7 +1054,7 @@ static int AStreamPeekStream( stream_t *s, uint8_t **pp_peek, int i_read )
 
     if( tk->i_start >= tk->i_end ) return 0; /* EOF */
 
-#if 0
+#ifdef STREAM_DEBUG
     msg_Dbg( s, "AStreamPeekStream: %d pos="I64Fd" tk=%d "
              "start="I64Fd" offset=%d end="I64Fd,
              i_read, p_sys->i_pos, p_sys->stream.i_tk,
@@ -1110,9 +1117,9 @@ static int AStreamSeekStream( stream_t *s, int64_t i_pos )
     int i_new;
     int i;
 
-#if 0
+#ifdef STREAM_DEBUG
     msg_Dbg( s, "AStreamSeekStream: to "I64Fd" pos="I64Fd
-             "tk=%d start="I64Fd" offset=%d end="I64Fd,
+             " tk=%d start="I64Fd" offset=%d end="I64Fd,
              i_pos, p_sys->i_pos, p_sys->stream.i_tk,
              p_sys->stream.tk[p_sys->stream.i_tk].i_start,
              p_sys->stream.i_offset,
@@ -1124,9 +1131,27 @@ static int AStreamSeekStream( stream_t *s, int64_t i_pos )
     if( i_pos >= p_sys->stream.tk[p_sys->stream.i_tk].i_start &&
         i_pos < p_sys->stream.tk[p_sys->stream.i_tk].i_end )
     {
-        //msg_Dbg( s, "AStreamSeekStream: current track" );
+        stream_track_t *tk = &p_sys->stream.tk[p_sys->stream.i_tk];
+#ifdef STREAM_DEBUG
+        msg_Dbg( s, "AStreamSeekStream: current track" );
+#endif
         p_sys->i_pos = i_pos;
-        p_sys->stream.i_offset = i_pos - p_sys->stream.tk[p_sys->stream.i_tk].i_start;
+        p_sys->stream.i_offset = i_pos - tk->i_start;
+
+        /* If there is not enough data left in the track, refill  */
+        /* \todo How to get a correct value for
+         *    - refilling threshold
+         *    - how much to refill
+         */
+        if( (tk->i_end - tk->i_start ) - p_sys->stream.i_offset <
+                                             p_sys->stream.i_read_size )
+        {
+            if( p_sys->stream.i_used < STREAM_READ_ATONCE / 2  )
+            {
+                p_sys->stream.i_used = STREAM_READ_ATONCE / 2 ;
+                AStreamRefillStream( s );
+            }
+        }
         return VLC_SUCCESS;
     }
 
@@ -1148,10 +1173,11 @@ static int AStreamSeekStream( stream_t *s, int64_t i_pos )
 
         if( i_pos >= tk->i_start && i_pos <= tk->i_end )
         {
-#if 0
+#ifdef STREAM_DEBUG
             msg_Dbg( s, "AStreamSeekStream: reusing %d start="I64Fd
                      " end="I64Fd, i, tk->i_start, tk->i_end );
 #endif
+
             /* Seek at the end of the buffer */
             if( ASeek( s, tk->i_end ) ) return VLC_EGENERIC;
 
@@ -1235,7 +1261,10 @@ static int AStreamRefillStream( stream_t *s )
 
     if( i_toread <= 0 ) return VLC_EGENERIC; /* EOF */
 
-    /* msg_Dbg( s, "AStreamRefillStream: toread=%d", i_toread ); */
+#ifdef STREAM_DEBUG
+    msg_Dbg( s, "AStreamRefillStream: used=%d toread=%d",
+                 p_sys->stream.i_used, i_toread );
+#endif
 
     i_start = mdate();
     while( i_toread > 0 )
@@ -1298,7 +1327,7 @@ static void AStreamPrebufferStream( stream_t *s )
         ( (p_access->info.i_title > 1 || p_access->info.i_seekpoint > 1) ?
           STREAM_CACHE_PREBUFFER_SIZE : STREAM_CACHE_TRACK_SIZE / 3 );
 
-    msg_Dbg( s, "pre buffering" );
+    msg_Dbg( s, "pre-buffering..." );
     i_start = mdate();
     for( ;; )
     {
@@ -1318,7 +1347,7 @@ static void AStreamPrebufferStream( stream_t *s )
             i_byterate = ( I64C(1000000) * p_sys->stat.i_bytes ) /
                          (p_sys->stat.i_read_time+1);
 
-            msg_Dbg( s, "prebuffering done "I64Fd" bytes in "I64Fd"s - "
+            msg_Dbg( s, "pre-buffering done "I64Fd" bytes in "I64Fd"s - "
                      I64Fd" kbytes/s",
                      p_sys->stat.i_bytes,
                      p_sys->stat.i_read_time / I64C(1000000),
@@ -1360,11 +1389,11 @@ static void AStreamPrebufferStream( stream_t *s )
 /**
  * Read from the stream untill first newline.
  * \param s Stream handle to read from
- * \return A null-terminated string. This must be freed,
+ * \return A pointer to the allocated output string. You need to free this when you are done.
  */
 #define STREAM_PROBE_LINE 2048
 #define STREAM_LINE_MAX (2048*100)
-char *stream_ReadLine( stream_t *s )
+char * stream_ReadLine( stream_t *s )
 {
     char *p_line = NULL;
     int i_line = 0, i_read = 0;
@@ -1374,19 +1403,108 @@ char *stream_ReadLine( stream_t *s )
         char *psz_eol;
         uint8_t *p_data;
         int i_data;
+        int64_t i_pos;
 
         /* Probe new data */
         i_data = stream_Peek( s, &p_data, STREAM_PROBE_LINE );
         if( i_data <= 0 ) break; /* No more data */
 
+        /* BOM detection */
+        i_pos = stream_Tell( s );
+        if( i_pos == 0 && i_data > 4 )
+        {
+            int i_bom_size = 0;
+            char *psz_encoding = NULL;
+            
+            if( p_data[0] == 0xEF && p_data[1] == 0xBB && p_data[2] == 0xBF )
+            {
+                psz_encoding = strdup( "UTF-8" );
+                i_bom_size = 3;
+            }
+            else if( p_data[0] == 0x00 && p_data[1] == 0x00 )
+            {
+                if( p_data[2] == 0xFE && p_data[3] == 0xFF )
+                {
+                    psz_encoding = strdup( "UTF-32BE" );
+                    s->i_char_width = 4;
+                    i_bom_size = 4;
+                }
+            }
+            else if( p_data[0] == 0xFF && p_data[1] == 0xFE )
+            {
+                if( p_data[2] == 0x00 && p_data[3] == 0x00 )
+                {
+                    psz_encoding = strdup( "UTF-32LE" );
+                    s->i_char_width = 4;
+                    s->b_little_endian = VLC_TRUE;
+                    i_bom_size = 4;
+                }
+                else
+                {
+                    psz_encoding = strdup( "UTF-16LE" );
+                    s->b_little_endian = VLC_TRUE;
+                    s->i_char_width = 2;
+                    i_bom_size = 2;
+                }
+            }
+            else if( p_data[0] == 0xFE && p_data[1] == 0xFF )
+            {
+                psz_encoding = strdup( "UTF-16BE" );
+                s->i_char_width = 2;
+                i_bom_size = 2;
+            }
+
+            /* Seek past the BOM */
+            if( i_bom_size )
+            {
+                stream_Seek( s, i_bom_size );
+                p_data += i_bom_size;
+                i_data -= i_bom_size;
+            }
+
+            /* Open the converter if we need it */
+            if( psz_encoding != NULL )
+            {
+                input_thread_t *p_input;
+                msg_Dbg( s, "%s BOM detected", psz_encoding );
+                if( s->i_char_width > 1 )
+                {
+                    s->conv = vlc_iconv_open( "UTF-8", psz_encoding );
+                    if( s->conv == (vlc_iconv_t)-1 )
+                    {
+                        msg_Err( s, "iconv_open failed" );
+                    }
+                    var_Create( s->p_parent->p_parent, "subsdec-encoding", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
+                    var_SetString( s->p_parent->p_parent, "subsdec-encoding", "UTF-8" );
+                }
+                p_input = (input_thread_t *)vlc_object_find( s, VLC_OBJECT_INPUT, FIND_PARENT );
+                if( p_input != NULL)
+                {
+                    var_Create( p_input, "subsdec-encoding", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
+                    var_SetString( p_input, "subsdec-encoding", "UTF-8" );
+                    vlc_object_release( p_input );
+                }
+                if( psz_encoding ) free( psz_encoding );
+            }
+        }
+
+        if( i_data % s->i_char_width )
+        {
+            msg_Warn( s, "the read is not i_char_width compatible");
+        }
+
         /* Check if there is an EOL */
         if( ( psz_eol = memchr( p_data, '\n', i_data ) ) )
         {
+            if( s->b_little_endian == VLC_TRUE && s->i_char_width > 1 )
+            {
+                psz_eol += ( s->i_char_width - 1 );
+            }
             i_data = (psz_eol - (char *)p_data) + 1;
-            p_line = realloc( p_line, i_line + i_data + 1 );
+            p_line = realloc( p_line, i_line + i_data + s->i_char_width ); /* add \0 */
             i_data = stream_Read( s, &p_line[i_line], i_data );
             if( i_data <= 0 ) break; /* Hmmm */
-            i_line += (i_data - 1);
+            i_line += i_data - s->i_char_width; /* skip \n */;
             i_read += i_data;
 
             /* We have our line */
@@ -1394,25 +1512,58 @@ char *stream_ReadLine( stream_t *s )
         }
 
         /* Read data (+1 for easy \0 append) */
-        p_line = realloc( p_line, i_line + STREAM_PROBE_LINE + 1 );
+        p_line = realloc( p_line, i_line + STREAM_PROBE_LINE + s->i_char_width );
         i_data = stream_Read( s, &p_line[i_line], STREAM_PROBE_LINE );
         if( i_data <= 0 ) break; /* Hmmm */
         i_line += i_data;
         i_read += i_data;
     }
 
-    /* Remove trailing LF/CR */
-    while( i_line > 0 && ( p_line[i_line-1] == '\r' ||
-           p_line[i_line-1] == '\n') ) i_line--;
-
     if( i_read > 0 )
     {
-        p_line[i_line] = '\0';
+        int j;
+        for( j = 0; j < s->i_char_width; j++ )
+        {
+            p_line[i_line + j] = '\0';
+        }
+        i_line += s->i_char_width; /* the added \0 */
+        if( s->i_char_width > 1 )
+        {
+            size_t i_in = 0, i_out = 0;
+            const char * p_in = NULL;
+            char * p_out = NULL;
+            char * psz_new_line = NULL;
+            
+            /* iconv */
+            psz_new_line = malloc( i_line );
+            
+            i_in = i_out = (size_t)i_line;
+            p_in = p_line;
+            p_out = psz_new_line;
+            
+            if( vlc_iconv( s->conv, &p_in, &i_in, &p_out, &i_out ) == (size_t)-1 )
+            {
+                msg_Err( s, "iconv failed" );
+                msg_Dbg( s, "original: %d, in %d, out %d", i_line, (int)i_in, (int)i_out );
+            }
+            if( p_line ) free( p_line );
+            p_line = psz_new_line;
+            i_line = (size_t)i_line - i_out; /* does not include \0 */
+        }
+
+        /* Remove trailing LF/CR */
+        while( i_line > 0 && ( p_line[i_line-2] == '\r' ||
+            p_line[i_line-2] == '\n') ) i_line--;
+
+        /* Make sure the \0 is there */
+        p_line[i_line-1] = '\0';
+
         return p_line;
     }
 
     /* We failed to read any data, probably EOF */
     if( p_line ) free( p_line );
+    if( s->conv != (vlc_iconv_t)(-1) ) vlc_iconv_close( s->conv );
     return NULL;
 }
 
@@ -1424,10 +1575,17 @@ static int AReadStream( stream_t *s, void *p_read, int i_read )
     stream_sys_t *p_sys = s->p_sys;
     access_t *p_access = p_sys->p_access;
     int i_read_orig = i_read;
+    int i_total;
 
     if( !p_sys->i_list )
     {
         i_read = p_access->pf_read( p_access, p_read, i_read );
+        stats_UpdateInteger( s->p_parent->p_parent , STATS_READ_BYTES, i_read,
+                             &i_total );
+        stats_UpdateFloat( s->p_parent->p_parent , STATS_INPUT_BITRATE,
+                           (float)i_total, NULL );
+        stats_UpdateInteger( s->p_parent->p_parent , STATS_READ_PACKETS, 1,
+                             NULL );
         return i_read;
     }
 
@@ -1455,6 +1613,12 @@ static int AReadStream( stream_t *s, void *p_read, int i_read )
         return AReadStream( s, p_read, i_read_orig );
     }
 
+    /* Update read bytes in input */
+    stats_UpdateInteger( s->p_parent->p_parent ,  STATS_READ_BYTES, i_read,
+                         &i_total );
+    stats_UpdateFloat( s->p_parent->p_parent ,  STATS_INPUT_BITRATE,
+                      (float)i_total, NULL );
+    stats_UpdateInteger( s->p_parent->p_parent ,  STATS_READ_PACKETS, 1, NULL );
     return i_read;
 }
 
@@ -1464,11 +1628,20 @@ static block_t *AReadBlock( stream_t *s, vlc_bool_t *pb_eof )
     access_t *p_access = p_sys->p_access;
     block_t *p_block;
     vlc_bool_t b_eof;
+    int i_total;
 
     if( !p_sys->i_list )
     {
         p_block = p_access->pf_block( p_access );
         if( pb_eof ) *pb_eof = p_access->info.b_eof;
+        if( p_block && p_access->p_libvlc->b_stats )
+        {
+            stats_UpdateInteger( s->p_parent->p_parent,  STATS_READ_BYTES,
+                                 p_block->i_buffer, &i_total );
+            stats_UpdateFloat( s->p_parent->p_parent ,  STATS_INPUT_BITRATE,
+                              (float)i_total, NULL );
+            stats_UpdateInteger( s->p_parent->p_parent ,  STATS_READ_PACKETS, 1, NULL );
+        }
         return p_block;
     }
 
@@ -1495,6 +1668,15 @@ static block_t *AReadBlock( stream_t *s, vlc_bool_t *pb_eof )
 
         /* We have to read some data */
         return AReadBlock( s, pb_eof );
+    }
+    if( p_block )
+    {
+        stats_UpdateInteger( s->p_parent->p_parent,  STATS_READ_BYTES,
+                             p_block->i_buffer, &i_total );
+        stats_UpdateFloat( s->p_parent->p_parent ,  STATS_INPUT_BITRATE,
+                          (float)i_total, NULL );
+        stats_UpdateInteger( s->p_parent->p_parent ,  STATS_READ_PACKETS,
+                             1 , NULL);
     }
 
     return p_block;

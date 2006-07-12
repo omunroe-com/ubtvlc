@@ -2,7 +2,7 @@
  * gnomevfs.c: GnomeVFS input
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: gnomevfs.c 12714 2005-09-30 17:18:45Z bigben $
+ * $Id: gnomevfs.c 15016 2006-03-31 23:07:01Z xtophe $
  *
  * Authors: Benjamin Pracht <bigben -AT- videolan -DOT- org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -33,7 +33,7 @@
 #include <stdio.h>
 
 #include "charset.h"
-#include "network.h"
+#include "vlc_url.h"
 
 /*****************************************************************************
  * Module descriptor
@@ -43,12 +43,12 @@ static void Close( vlc_object_t * );
 
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for GnomeVFS streams."\
-    "This value should be set in millisecond units." )
+    "Caching value for GnomeVFS streams."\
+    "This value should be set in milliseconds." )
 
 vlc_module_begin();
-    set_description( _("GnomeVFS filesystem file input") );
-    set_shortname( _("GnomeVFS") );
+    set_description( _("GnomeVFS input") );
+    set_shortname( "GnomeVFS" );
     set_category( CAT_INPUT );
     set_subcategory( SUBCAT_INPUT_ACCESS );
     add_integer( "gnomevfs-caching", DEFAULT_PTS_DELAY / 1000, NULL, CACHING_TEXT, CACHING_LONGTEXT, VLC_TRUE );
@@ -189,11 +189,11 @@ static int Open( vlc_object_t *p_this )
     {
         p_sys->p_file_info = gnome_vfs_file_info_new();
         i_ret = gnome_vfs_get_file_info_uri( p_uri,
-                                                p_sys->p_file_info, 8 ); 
+                                                p_sys->p_file_info, 8 );
 
         if( i_ret )
         {
-            msg_Err( p_access, "cannot get file info for uri %s (%s)", 
+            msg_Warn( p_access, "cannot get file info for uri %s (%s)",
                                 psz_uri, gnome_vfs_result_to_string( i_ret ) );
             gnome_vfs_file_info_unref( p_sys->p_file_info );
             gnome_vfs_uri_unref( p_uri);
@@ -221,7 +221,7 @@ static int Open( vlc_object_t *p_this )
 
         gnome_vfs_uri_unref( p_uri);
         g_free( psz_uri );
-        free( p_sys ); 
+        free( p_sys );
         free( psz_name );
         return VLC_EGENERIC;
     }
@@ -231,7 +231,7 @@ static int Open( vlc_object_t *p_this )
         p_sys->b_local = VLC_TRUE;
     }
 
-    if( p_sys->p_file_info->type == GNOME_VFS_FILE_TYPE_REGULAR || 
+    if( p_sys->p_file_info->type == GNOME_VFS_FILE_TYPE_REGULAR ||
         p_sys->p_file_info->type == GNOME_VFS_FILE_TYPE_CHARACTER_DEVICE ||
         p_sys->p_file_info->type == GNOME_VFS_FILE_TYPE_BLOCK_DEVICE )
     {
@@ -252,7 +252,7 @@ static int Open( vlc_object_t *p_this )
     if( p_sys->b_seekable && !p_access->info.i_size )
     {
         /* FIXME that's bad because all others access will be probed */
-        msg_Err( p_access, "file %s is empty, aborting", psz_name );
+        msg_Warn( p_access, "file %s is empty, aborting", psz_name );
         gnome_vfs_file_info_unref( p_sys->p_file_info );
         gnome_vfs_uri_unref( p_uri);
         free( p_sys );

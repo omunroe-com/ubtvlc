@@ -2,9 +2,9 @@
  * pls.c : PLS playlist format import
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: pls.c 12836 2005-10-15 13:23:08Z sigmunau $
+ * $Id: pls.c 14790 2006-03-18 02:06:16Z xtophe $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
  * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -76,7 +76,7 @@ int E_(Import_PLS)( vlc_object_t *p_this )
     p_demux->p_sys = malloc( sizeof(demux_sys_t) );
     if( p_demux->p_sys == NULL )
     {
-        msg_Err( p_demux, "Out of memory" );
+        msg_Err( p_demux, "out of memory" );
         return VLC_ENOMEM;
     }
     p_demux->p_sys->psz_prefix = E_(FindPrefix)( p_demux );
@@ -114,7 +114,7 @@ static int Demux( demux_t *p_demux )
     vlc_bool_t b_play;
 
     p_playlist = (playlist_t *) vlc_object_find( p_demux, VLC_OBJECT_PLAYLIST,
-                                                 FIND_PARENT );
+                                                 FIND_ANYWHERE );
     if( !p_playlist )
     {
         msg_Err( p_demux, "can't find playlist" );

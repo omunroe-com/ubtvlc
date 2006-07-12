@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef __PLUGIN_H__
@@ -109,8 +109,15 @@ public:
     };
     inline BOOL getAutoLoop(void) { return _b_autoloop;};
 
+    void setVolume(int volume);
+    int getVolume(void) { return _i_volume; };
+
     void setVisible(BOOL fVisible);
     BOOL getVisible(void) { return _b_visible; };
+    BOOL isVisible(void) { return _b_visible || (! _b_usermode); };
+
+    void setTime(int time);
+    int  getTime(void) { return _i_time; };
 
     // control size in HIMETRIC
     inline void setExtent(const SIZEL& extent)
@@ -159,13 +166,13 @@ public:
     inline void setDirty(BOOL dirty) { _b_dirty = dirty; };
 
     inline BOOL isRunning(void) { return 0 != _i_vlc; };
+    HRESULT getVLCObject(int *i_vlc);
+
 
     // control geometry within container
     RECT getPosRect(void) { return _posRect; }; 
     inline HWND getInPlaceWindow(void) const { return _inplacewnd; };
     BOOL isInPlaceActive(void);
-
-    inline int getVLCObject(void) const { return _i_vlc; };
 
     /*
     ** container events
@@ -222,19 +229,23 @@ private:
     VLCPluginClass *_p_class;
     ULONG _i_ref;
 
-    LPPICTURE _p_pict;
     UINT _i_codepage;
     BOOL _b_usermode;
+    int  _i_vlc;
+    RECT _posRect;
+
+    // persistable properties
     BSTR _bstr_mrl;
     BOOL _b_autoplay;
     BOOL _b_autoloop;
     BOOL _b_visible;
     BOOL _b_mute;
-    BOOL _b_dirty;
-    int  _i_vlc;
-
+    int  _i_volume;
+    int  _i_time;
     SIZEL _extent;
-    RECT _posRect;
+    LPPICTURE _p_pict;
+    // indicates whether properties needs persisting
+    BOOL _b_dirty;
 };
 
 #endif

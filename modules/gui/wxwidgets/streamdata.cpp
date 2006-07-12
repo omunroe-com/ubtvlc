@@ -2,9 +2,9 @@
  * streamdata.cpp: streaming/transcoding data
  *****************************************************************************
  * Copyright (C) 2000-2005 the VideoLAN team
- * $Id: wizard.cpp 7826 2004-05-30 14:43:12Z zorglub $
+ * $Id: streamdata.cpp 15044 2006-04-02 07:58:36Z zorglub $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <vlc/vlc.h>
@@ -50,10 +50,10 @@ const struct codec vcodecs_array[] =
     { "DIVX 3" ,"DIV3",N_("DivX third version (useable with MPEG TS, MPEG1, ASF" \
         " and OGG)") ,
        {MUX_TS , MUX_MPEG , MUX_ASF , MUX_OGG , -1 , -1,-1,-1,-1 } },
-    { "H 263" , "H263" , N_("H263 is a video codec optimized for videoconference " \
+    { "H 263" , "h263" , N_("H263 is a video codec optimized for videoconference " \
         "(low rates, useable with MPEG TS)") ,
        { MUX_TS, -1, -1,-1,-1,-1,-1,-1,-1 } },
-    { "H 264" , "H264" , N_("H264 is a new video codec (useable with MPEG TS " \
+    { "H 264" , "h264" , N_("H264 is a new video codec (useable with MPEG TS " \
         "and MPEG4)") ,
        { MUX_TS, MUX_MP4, MUX_ASF,-1,-1,-1,-1,-1,-1 } },
     { "WMV 1" , "WMV1", N_("WMV (Windows Media Video) 7 (useable with MPEG TS, " \
@@ -72,7 +72,7 @@ const struct codec vcodecs_array[] =
        {MUX_TS , MUX_MPEG , MUX_ASF , MUX_OGG , -1 , -1,-1,-1,-1 } },
     { "Theora" , "theo", N_("Theora is a free general-purpose codec (useable " \
         "with MPEG TS)"),
-       {MUX_TS, -1,-1,-1,-1,-1,-1,-1,-1} },
+       {MUX_TS, MUX_OGG,-1,-1,-1,-1,-1,-1,-1} },
     { "Dummy", "dummy", N_("Dummy codec (do not transcode, useable with all " \
         "encapsulation formats)") ,
       {MUX_PS,MUX_TS,MUX_MPEG,MUX_ASF,MUX_MP4,MUX_OGG,MUX_WAV,MUX_RAW,MUX_MOV}},
@@ -119,19 +119,19 @@ const struct codec acodecs_array[] =
 
 const struct method methods_array[] =
 {
-    {"udp:",N_("UDP Unicast"), N_("Use this to stream to a single computer."),
+    {"rtp",N_("RTP Unicast"), N_("Stream to a single computer."),
      N_("Enter the address of the computer to stream to."),
      { MUX_TS, -1,-1,-1,-1,-1,-1,-1,-1 } },
-    {"udp:",N_("UDP Multicast"),
-     N_("Use this to stream to a dynamic group of computers on a "
+    {"rtp",N_("RTP Multicast"),
+     N_("Stream to a dynamic group of computers on a "
      "multicast-enabled network. This is the most efficient method "
-     "to stream to several computers, but it does not work over Internet."),
-     N_("Enter the multicast address to stream to in this field. "
+     "to stream to several computers, but it does not work over the Internet."),
+     N_("Enter the multicast address to stream to. "
      "This must be an IP address between 224.0.0.0 an 239.255.255.255. "
-     "For a private use, enter an address beginning with 239.255."),
+     "For private use, enter an address beginning with 239.255."),
      { MUX_TS, -1,-1,-1,-1,-1,-1,-1,-1 } },
-    {"http://","HTTP",
-     N_("Use this to stream to several computers. This method is "
+    {"http","HTTP",
+     N_("Stream to several computers. This method is "
      "less efficient, as the server needs to send the "
      "stream several times."),
      N_("Enter the local addresses you want to listen to. Do not enter "

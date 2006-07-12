@@ -6,7 +6,7 @@
  * thread, and destroy a previously oppened video output thread.
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: video_output.c 13026 2005-10-30 15:32:11Z gbazin $
+ * $Id: video_output.c 15328 2006-04-23 13:56:24Z bigben $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -23,7 +23,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -43,7 +43,7 @@
 #include <vlc/input.h>                 /* for input_thread_t and i_pts_delay */
 #include "vlc_playlist.h"
 
-#if defined( SYS_DARWIN )
+#if defined( __APPLE__ )
 #include "darwin_specific.h"
 #endif
 
@@ -228,6 +228,11 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
         msg_Err( p_parent, "out of memory" );
         return NULL;
     }
+
+    stats_Create( p_vout, "displayed_pictures",STATS_DISPLAYED_PICTURES,
+                  VLC_VAR_INTEGER, STATS_COUNTER );
+    stats_Create( p_vout, "lost_pictures", STATS_LOST_PICTURES,
+                  VLC_VAR_INTEGER, STATS_COUNTER );
 
     /* Initialize pictures - translation tables and functions
      * will be initialized later in InitThread */
@@ -786,9 +791,12 @@ static void RunThread( vout_thread_t *p_vout)
             p_vout->p_fps_sample[ p_vout->c_fps_samples++ % VOUT_FPS_SAMPLES ]
                 = display_date;
 
+            /* XXX: config_GetInt is slow, but this kind of frame dropping
+             * should not happen that often. */
             if( !p_picture->b_force &&
                 p_picture != p_last_picture &&
-                display_date < current_date + p_vout->render_time )
+                display_date < current_date + p_vout->render_time &&
+                config_GetInt( p_vout, "drop-late-frames" ) )
             {
                 /* Picture is late: it will be destroyed and the thread
                  * will directly choose the next picture */
@@ -807,6 +815,7 @@ static void RunThread( vout_thread_t *p_vout)
                 }
                 msg_Warn( p_vout, "late picture skipped ("I64Fd")",
                                   current_date - display_date );
+                stats_UpdateInteger( p_vout, STATS_LOST_PICTURES, 1 , NULL);
                 vlc_mutex_unlock( &p_vout->picture_lock );
 
                 continue;
@@ -829,6 +838,7 @@ static void RunThread( vout_thread_t *p_vout)
                     p_picture->i_status = DESTROYED_PICTURE;
                     p_vout->i_heap_size--;
                 }
+                stats_UpdateInteger( p_vout, STATS_LOST_PICTURES, 1, NULL );
                 msg_Warn( p_vout, "vout warning: early picture skipped "
                           "("I64Fd")", display_date - current_date
                           - p_vout->i_pts_delay );
@@ -886,6 +896,7 @@ static void RunThread( vout_thread_t *p_vout)
         /*
          * Perform rendering
          */
+        stats_UpdateInteger( p_vout, STATS_DISPLAYED_PICTURES, 1, NULL );
         p_directbuffer = vout_RenderPicture( p_vout, p_picture, p_subpic );
 
         /*
@@ -1205,12 +1216,15 @@ static void MaskToShift( int *pi_left, int *pi_right, uint32_t i_mask )
     }
 
     /* Get bits */
-    i_low =  i_mask & (- (int32_t)i_mask);          /* lower bit of the mask */
-    i_high = i_mask + i_low;                       /* higher bit of the mask */
+    i_low = i_high = i_mask;
 
-    /* Transform bits into an index */
+    i_low &= - (int32_t)i_low;          /* lower bit of the mask */
+    i_high += i_low;                    /* higher bit of the mask */
+
+    /* Transform bits into an index. Also deal with i_high overflow, which
+     * is faster than changing the BinaryLog code to handle 64 bit integers. */
     i_low =  BinaryLog (i_low);
-    i_high = BinaryLog (i_high);
+    i_high = i_high ? BinaryLog (i_high) : 32;
 
     /* Update pointers and return */
     *pi_left =   i_low;

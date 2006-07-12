@@ -1,7 +1,7 @@
 /*
  * Modified for use with MPlayer, detailed CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: driver.c 11593 2005-06-28 18:02:01Z courmisch $
+ * $Id: driver.c 14920 2006-03-25 14:43:10Z courmisch $
  */
 
 #include "config.h"

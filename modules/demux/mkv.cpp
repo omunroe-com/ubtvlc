@@ -2,7 +2,7 @@
  * mkv.cpp : matroska demuxer
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: mkv.cpp 12999 2005-10-28 14:31:32Z robUx4 $
+ * $Id: mkv.cpp 14332 2006-02-16 07:22:57Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Steve Lhomme <steve.lhomme@free.fr>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -281,19 +281,19 @@ typedef struct {
 } ATTRIBUTE_PACKED hl_gi_t;
 
 
-/** 
- * Button Color Information Table 
+/**
+ * Button Color Information Table
  * Each entry beeing a 32bit word that contains the color indexs and alpha
  * values to use.  They are all represented by 4 bit number and stored
  * like this [Ci3, Ci2, Ci1, Ci0, A3, A2, A1, A0].   The actual palette
  * that the indexes reference is in the PGC.
- * @TODO split the uint32_t into a struct
+ * \todo split the uint32_t into a struct
  */
 typedef struct {
   uint32_t btn_coli[3][2];  /**< [button color number-1][select:0/action:1] */
 } ATTRIBUTE_PACKED btn_colit_t;
 
-/** 
+/**
  * Button Information
  *
  * NOTE: I've had to change the structure from the disk layout to get
@@ -492,7 +492,7 @@ static void MkvTree( demux_t & demuxer, int i_level, char *psz_format, ... )
     psz_foo2[ 4 * i_level ] = '+';
     psz_foo2[ 4 * i_level + 1 ] = ' ';
     strcpy( &psz_foo2[ 4 * i_level + 2 ], psz_format );
-    __msg_GenericVa( VLC_OBJECT(&demuxer), VLC_MSG_DBG, "mkv", psz_foo2, args );
+    __msg_GenericVa( VLC_OBJECT(&demuxer), MSG_QUEUE_NORMAL, VLC_MSG_DBG, "mkv", psz_foo2, args );
     free( psz_foo2 );
     va_end( args );
 }
@@ -1041,21 +1041,14 @@ public:
             {
                 delete tracks[i_track]->p_compression_data;
             }
-            if( tracks[i_track]->fmt.psz_description )
-            {
-                free( tracks[i_track]->fmt.psz_description );
-            }
+            es_format_Clean( &tracks[i_track]->fmt );
+            if( tracks[i_track]->p_extra_data )
+                free( tracks[i_track]->p_extra_data );
             if( tracks[i_track]->psz_codec )
-            {
                 free( tracks[i_track]->psz_codec );
-            }
-            if( tracks[i_track]->fmt.psz_language )
-            {
-                free( tracks[i_track]->fmt.psz_language );
-            }
             delete tracks[i_track];
         }
-        
+
         if( psz_writing_application )
         {
             free( psz_writing_application );
@@ -1334,6 +1327,11 @@ public:
             delete opened_segments[i];
         for ( i=0; i<used_segments.size(); i++ )
             delete used_segments[i];
+        if( meta ) vlc_meta_Delete( meta );
+
+        while( titles.size() )
+        { vlc_input_title_Delete( titles.back() ); titles.pop_back();}
+
         vlc_mutex_destroy( &lock_demuxer );
     }
 
@@ -2423,6 +2421,12 @@ bool matroska_segment_c::Select( mtime_t i_start_time )
         {
             tracks[i_track]->fmt.i_codec = VLC_FOURCC( 's', 's', 'a', ' ' );
             tracks[i_track]->fmt.subs.psz_encoding = strdup( "UTF-8" );
+            if( tracks[i_track]->i_extra_data ) 
+            {
+                tracks[i_track]->fmt.i_extra = tracks[i_track]->i_extra_data;
+                tracks[i_track]->fmt.p_extra = malloc( tracks[i_track]->i_extra_data );
+                memcpy( tracks[i_track]->fmt.p_extra, tracks[i_track]->p_extra_data, tracks[i_track]->i_extra_data );
+            }
         }
         else if( !strcmp( tracks[i_track]->psz_codec, "S_VOBSUB" ) )
         {
@@ -4614,7 +4618,7 @@ void matroska_segment_c::ParseInfo( KaxInfo *info )
 
             msg_Dbg( &sys.demuxer, "|   |   + family=%d", *(uint32*)uid->GetBuffer() );
         }
-#if defined( HAVE_GMTIME_R ) && !defined( SYS_DARWIN )
+#if defined( HAVE_GMTIME_R ) && !defined( __APPLE__ )
         else if( MKV_IS_ID( l, KaxDateUTC ) )
         {
             KaxDateUTC &date = *(KaxDateUTC*)l;
@@ -5193,9 +5197,9 @@ void demux_sys_t::PreloadLinked( matroska_segment_c *p_segment )
             // create a name if there is none
             if ( p_title->psz_name == NULL )
             {
-                sz_name = N_("Segment ");
+                sz_name = N_("Segment");
                 char psz_str[6];
-                sprintf( psz_str, "%d", (int)i );
+                sprintf( psz_str, " %d", (int)i );
                 sz_name += psz_str;
                 p_title->psz_name = strdup( sz_name.c_str() );
             }

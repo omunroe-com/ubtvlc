@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mpegvideo.c: parse and packetize an MPEG1/2 video stream
  *****************************************************************************
- * Copyright (C) 2001-2005 VideoLAN (Centrale Réseaux) and its contributors
- * $Id: mpegvideo.c 12115 2005-08-10 21:47:13Z jpsaman $
+ * Copyright (C) 2001-2006 the VideoLAN team
+ * $Id: mpegvideo.c 15118 2006-04-06 17:54:21Z massiot $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -49,10 +49,10 @@
 
 #include "vlc_block_helper.h"
 
-#define SYNC_INTRAFRAME_TEXT N_("Sync on intraframe")
+#define SYNC_INTRAFRAME_TEXT N_("Sync on Intra Frame")
 #define SYNC_INTRAFRAME_LONGTEXT N_("Normally the packetizer would " \
     "sync on the next full frame. This flags instructs the packetizer " \
-    "to sync on the first intraframe found.")
+    "to sync on the first Intra Frame found.")
 
 /*****************************************************************************
  * Module descriptor
@@ -121,7 +121,7 @@ struct decoder_sys_t
 
     /* Number of pictures since last sequence header */
     int i_seq_old;
-    
+
     /* Sync behaviour */
     vlc_bool_t  b_sync_on_intra_frame;
     vlc_bool_t  b_discontinuity;
@@ -189,8 +189,8 @@ static int Open( vlc_object_t *p_this )
     p_sys->b_discontinuity = VLC_FALSE;
     p_sys->b_sync_on_intra_frame = var_CreateGetBool( p_dec, "packetizer-mpegvideo-sync-iframe" );
     if( p_sys->b_sync_on_intra_frame )
-        msg_Dbg( p_dec, "syncing happens on intraframe now." );
-        
+        msg_Dbg( p_dec, "syncing on intra frame now" );
+
     return VLC_SUCCESS;
 }
 
@@ -216,7 +216,7 @@ static void Close( vlc_object_t *p_this )
     {
         block_ChainRelease( p_sys->p_frame );
     }
-    
+
     var_Destroy( p_dec, "packetizer-mpegvideo-sync-iframe" );
 
     free( p_sys );
@@ -240,7 +240,7 @@ static block_t *Packetize( decoder_t *p_dec, block_t **pp_block )
         p_sys->i_state = STATE_NOSYNC;
         p_sys->b_discontinuity = VLC_TRUE;
         if( p_sys->p_frame )
-            block_ChainRelease( p_sys->p_frame );        
+            block_ChainRelease( p_sys->p_frame );
         p_sys->p_frame = NULL;
         p_sys->pp_last = &p_sys->p_frame;
         p_sys->b_frame_slice = VLC_FALSE;
@@ -322,17 +322,19 @@ static block_t *Packetize( decoder_t *p_dec, block_t **pp_block )
             {
                 if( p_pic->i_flags & BLOCK_FLAG_TYPE_I )
                 {
-                    msg_Dbg( p_dec, "synced on Intra frame" );
+                    msg_Dbg( p_dec, "synced on intra frame" );
                     p_sys->b_discontinuity = VLC_FALSE;
                     p_pic->i_flags |= BLOCK_FLAG_DISCONTINUITY;
                 }
                 else
                 {
+                    msg_Dbg( p_dec, "waiting on intra frame" );
                     p_sys->i_state = STATE_NOSYNC;
+                    block_Release( p_pic );
                     break;
                 }
             }
-            
+
             /* We've just started the stream, wait for the first PTS.
              * We discard here so we can still get the sequence header. */
             if( p_sys->i_dts <= 0 && p_sys->i_pts <= 0 &&
@@ -552,7 +554,7 @@ static block_t *ParseMPEGBlock( decoder_t *p_dec, block_t *p_frag )
 
         if ( !p_sys->b_inited )
         {
-            msg_Dbg( p_dec, "Size %dx%d fps=%.3f",
+            msg_Dbg( p_dec, "size %dx%d fps=%.3f",
                  p_dec->fmt_out.video.i_width, p_dec->fmt_out.video.i_height,
                  p_sys->i_frame_rate / (float)p_sys->i_frame_rate_base );
             p_sys->b_inited = 1;
@@ -562,7 +564,7 @@ static block_t *ParseMPEGBlock( decoder_t *p_dec, block_t *p_frag )
     {
         int i_type = p_frag->p_buffer[4] >> 4;
 
-        /* Extention start code */
+        /* Extension start code */
         if( i_type == 0x01 )
         {
 #if 0
@@ -574,7 +576,7 @@ static block_t *ParseMPEGBlock( decoder_t *p_dec, block_t *p_frag )
             };
 #endif
 
-            /* sequence extention */
+            /* sequence extension */
             if( p_sys->p_ext) block_Release( p_sys->p_ext );
             p_sys->p_ext = block_Duplicate( p_frag );
 
@@ -602,7 +604,7 @@ static block_t *ParseMPEGBlock( decoder_t *p_dec, block_t *p_frag )
         }
         else if( i_type == 0x08 )
         {
-            /* picture extention */
+            /* picture extension */
             p_sys->i_picture_structure = p_frag->p_buffer[6]&0x03;
             p_sys->i_top_field_first   = p_frag->p_buffer[7] >> 7;
             p_sys->i_repeat_first_field= (p_frag->p_buffer[7]>>1)&0x01;

@@ -2,7 +2,7 @@
  * mac.c: Screen capture module for the Mac.
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: x11.c 8290 2004-07-26 20:29:24Z gbazin $
+ * $Id: mac.c 14554 2006-03-01 17:47:27Z fkuehne $
  *
  * Authors: Derk-Jan Hartman <hartman at videolan dot org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -62,10 +62,10 @@ int screen_InitCapture( demux_t *p_demux )
     p_sys->p_data = p_data =
         (screen_data_t *)malloc( sizeof( screen_data_t ) );
 
-    p_data->gConnection = NULL;
+    p_data->gConnection = nil;
     p_data->gMainDevice = NULL;
     p_data->gDevicePix = NULL;
-    p_data->gDeviceState = NULL;
+    p_data->gDeviceState = nil;
     p_data->LocalBufferGW = NULL;
     p_data->LocalBufferPix = NULL;
 
@@ -92,7 +92,7 @@ int screen_InitCapture( demux_t *p_demux )
         i_offset = 4;
         break;
     default:
-        msg_Err( p_demux, "unknown screen depth: %d", CGDisplaySamplesPerPixel(p_data->displayID) * CGDisplayBitsPerSample(p_data->displayID) );
+        msg_Err( p_demux, "unknown screen depth: %d", (int)(CGDisplaySamplesPerPixel(p_data->displayID) * CGDisplayBitsPerSample(p_data->displayID)) );
         return VLC_EGENERIC;
     }
 

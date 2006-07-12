@@ -2,7 +2,7 @@
  * osd_widgets.c : OSD widgets manipulation functions
  *****************************************************************************
  * Copyright (C) 2004-2005 the VideoLAN team
- * $Id: osd_widgets.c 12412 2005-08-27 16:40:23Z jpsaman $
+ * $Id: osd_widgets.c 15123 2006-04-06 22:41:06Z dionoea $
  *
  * Author: Yoann Peronneau <yoann@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -213,6 +213,7 @@ subpicture_t *osd_CreateWidget( spu_t *p_spu, int i_channel )
  *****************************************************************************/
 int osd_Slider( vlc_object_t *p_this, spu_t *p_spu,
     int i_render_width, int i_render_height,
+    int i_margin_left, int i_margin_bottom,
     int i_channel, int i_position, short i_type )
 {
     subpicture_t *p_subpic;
@@ -225,7 +226,9 @@ int osd_Slider( vlc_object_t *p_this, spu_t *p_spu,
     }
 
     i_y_margin = i_render_height / 10;
-    i_x_margin = i_y_margin;
+    i_x_margin = i_y_margin + i_margin_left;
+    i_y_margin += i_margin_bottom;
+
     if( i_type == OSD_HOR_SLIDER )
     {
         i_width = i_render_width - 2 * i_x_margin;
@@ -272,7 +275,8 @@ int osd_Slider( vlc_object_t *p_this, spu_t *p_spu,
  * Types are: OSD_PLAY_ICON, OSD_PAUSE_ICON, OSD_SPEAKER_ICON, OSD_MUTE_ICON
  *****************************************************************************/
 int osd_Icon( vlc_object_t *p_this, spu_t *p_spu,
-    int i_render_width, int i_render_height, int i_channel, short i_type )
+    int i_render_width, int i_render_height, int i_margin_right,
+    int i_margin_top, int i_channel, short i_type )
 {
     subpicture_t *p_subpic;
     int i_x_margin, i_y_margin, i_x, i_y, i_width, i_height;
@@ -284,7 +288,8 @@ int osd_Icon( vlc_object_t *p_this, spu_t *p_spu,
     }
 
     i_y_margin = i_render_height / 15;
-    i_x_margin = i_y_margin;
+    i_x_margin = i_y_margin + i_margin_right;
+    i_y_margin += i_margin_top;
     i_width = i_render_width / 20;
     i_height = i_width;
     i_x = i_render_width - i_x_margin - i_width;

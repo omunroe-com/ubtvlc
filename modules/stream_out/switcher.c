@@ -2,7 +2,7 @@
  * switcher.c: MPEG2 video switcher module
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: switcher.c 12081 2005-08-09 13:40:18Z jpsaman $
+ * $Id: switcher.c 14820 2006-03-19 01:27:21Z xtophe $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -32,7 +32,8 @@
 #include <vlc/sout.h>
 #include <vlc/vout.h>
 
-#include "network.h"
+#include <charset.h>
+#include <network.h>
 
 #define HAVE_MMX
 #ifdef HAVE_FFMPEG_AVCODEC_H
@@ -320,8 +321,8 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
         id->b_switcher_video = VLC_TRUE;
         p_fmt->i_codec = VLC_FOURCC('m', 'p', 'g', 'v');
         msg_Dbg( p_stream,
-                 "creating video switcher for fcc=`%4.4s'",
-                 (char*)&p_fmt->i_codec );
+                 "creating video switcher for fcc=`%4.4s' cmd:%d",
+                 (char*)&p_fmt->i_codec, p_sys->i_cmd );
     }
     else if ( p_fmt->i_cat == AUDIO_ES
                && p_fmt->i_codec == VLC_FOURCC('m', 'p', 'g', 'a')
@@ -332,8 +333,8 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
 
         id->b_switcher_audio = VLC_TRUE;
         msg_Dbg( p_stream,
-                 "creating audio switcher for fcc=`%4.4s'",
-                 (char*)&p_fmt->i_codec );
+                 "creating audio switcher for fcc=`%4.4s' cmd:%d",
+                 (char*)&p_fmt->i_codec, p_sys->i_cmd );
 
         /* Allocate the encoder right now. */
         if( i_ff_codec == 0 )
@@ -398,7 +399,7 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
         }
         if ( i == MAX_AUDIO )
         {
-            msg_Err( p_stream, "too many audio streams !" );
+            msg_Err( p_stream, "too many audio streams!" );
             free( id );
             return NULL;
         }
@@ -585,7 +586,7 @@ static int UnpackFromFile( sout_stream_t *p_stream, const char *psz_file,
                            picture_t *p_pic )
 {
     int i, j;
-    FILE *p_file = fopen( psz_file, "r" );
+    FILE *p_file = utf8_fopen( psz_file, "r" );
 
     if ( p_file == NULL )
     {
@@ -663,6 +664,9 @@ static void NetCommand( sout_stream_t *p_stream )
         }
 
         p_sys->i_cmd = i_cmd;
+
+        msg_Dbg( p_stream, "new command: %d old:%d", p_sys->i_cmd,
+                 p_sys->i_old_cmd );
     }
 }
 

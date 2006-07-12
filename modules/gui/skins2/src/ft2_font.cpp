@@ -2,10 +2,10 @@
  * ft2_font.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ft2_font.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: ft2_font.cpp 15014 2006-03-31 22:33:45Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "ft2_font.hpp"
@@ -65,10 +65,10 @@ bool FT2Font::init()
 {
     int err;
 
-    // Initalise libfreetype
+    // Initialize libfreetype
     if( FT_Init_FreeType( &m_lib ) )
     {
-        msg_Err( getIntf(), "Failed to initalize libfreetype" );
+        msg_Err( getIntf(), "failed to initialize freetype" );
         return false;
     }
 
@@ -76,11 +76,11 @@ bool FT2Font::init()
     FILE *file = fopen( m_name.c_str(), "rb" );
     if( file )
     {
-        msg_Dbg( getIntf(), "Loading font %s", m_name.c_str() );
+        msg_Dbg( getIntf(), "loading font %s", m_name.c_str() );
     }
     else
     {
-        msg_Dbg( getIntf(), "Unable to open the font %s", m_name.c_str() );
+        msg_Dbg( getIntf(), "unable to open the font %s", m_name.c_str() );
         return false;
     }
     // Get the file size
@@ -91,7 +91,7 @@ bool FT2Font::init()
     m_buffer = malloc( size );
     if( !m_buffer )
     {
-        msg_Err( getIntf(), "Not enough memory for the font %s",
+        msg_Err( getIntf(), "not enough memory for the font %s",
                  m_name.c_str() );
         return false;
     }
@@ -104,26 +104,26 @@ bool FT2Font::init()
                               &m_face );
     if ( err == FT_Err_Unknown_File_Format )
     {
-        msg_Err( getIntf(), "Unsupported font format (%s)", m_name.c_str() );
+        msg_Err( getIntf(), "unsupported font format (%s)", m_name.c_str() );
         return false;
     }
     else if ( err )
     {
-        msg_Err( getIntf(), "Error opening font (%s)", m_name.c_str() );
+        msg_Err( getIntf(), "error opening font (%s)", m_name.c_str() );
         return false;
     }
 
     // Select the charset
     if( FT_Select_Charmap( m_face, ft_encoding_unicode ) )
     {
-        msg_Err( getIntf(), "Font has no UNICODE table (%s)", m_name.c_str() );
+        msg_Err( getIntf(), "font has no UNICODE table (%s)", m_name.c_str() );
         return false;
     }
 
     // Set the pixel size
     if( FT_Set_Pixel_Sizes( m_face, 0, m_size ) )
     {
-        msg_Warn( getIntf(), "Cannot set a pixel size of %d (%s)", m_size,
+        msg_Warn( getIntf(), "cannot set a pixel size of %d (%s)", m_size,
                   m_name.c_str() );
     }
 

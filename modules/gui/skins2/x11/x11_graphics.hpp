@@ -2,10 +2,10 @@
  * x11_graphics.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: x11_graphics.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: x11_graphics.hpp 14204 2006-02-10 16:25:57Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef X11_GRAPHICS_HPP
@@ -98,10 +98,10 @@ class X11Graphics: public OSGraphics
         GC m_gc;
 
         /// Add an horizontal segment in a region
-        void X11Graphics::addHSegmentInRegion( Region &rMask, int xStart,
+        void addHSegmentInRegion( Region &rMask, int xStart,
                                                int xEnd, int y );
         /// Add a vertical segment in a region
-        void X11Graphics::addVSegmentInRegion( Region &rMask, int yStart,
+        void addVSegmentInRegion( Region &rMask, int yStart,
                                                int yEnd, int x );
 };
 

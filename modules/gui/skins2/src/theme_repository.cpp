@@ -2,7 +2,7 @@
  * theme_repository.cpp
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: theme_repository.cpp 12476 2005-09-04 21:50:18Z ipkiss $
+ * $Id: theme_repository.cpp 15008 2006-03-31 19:24:33Z zorglub $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "theme_repository.hpp"
@@ -109,7 +109,7 @@ void ThemeRepository::parseDirectory( const string &rDir )
     if( pDir == NULL )
     {
         // An error occurred
-        msg_Dbg( getIntf(), "Cannot open directory %s", rDir.c_str() );
+        msg_Dbg( getIntf(), "cannot open directory %s", rDir.c_str() );
         return;
     }
 
@@ -120,7 +120,12 @@ void ThemeRepository::parseDirectory( const string &rDir )
     while( pDirContent != NULL )
     {
         string name = pDirContent->d_name;
-        if( name.size() > 4 && name.substr( name.size() - 4, 4 ) == ".vlt" )
+        string extension;
+        if( name.size() > 4 )
+        {
+            extension = name.substr( name.size() - 4, 4 );
+        }
+        if( extension == ".vlt" || extension == ".wsz" )
         {
             string path = rDir + sep + name;
             msg_Dbg( getIntf(), "found skin %s", path.c_str() );
@@ -163,7 +168,6 @@ int ThemeRepository::changeSkin( vlc_object_t *pIntf, char const *pCmd,
         CmdChangeSkin *pCmd = new CmdChangeSkin( pThis->getIntf(),
                                                  newval.psz_string );
         AsyncQueue *pQueue = AsyncQueue::instance( pThis->getIntf() );
-        pQueue->remove( "change skin" );
         pQueue->push( CmdGenericPtr( pCmd ) );
     }
 

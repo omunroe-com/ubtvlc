@@ -1,12 +1,12 @@
 /*****************************************************************************
  * m3u.c: a meta demux to parse pls, m3u, asx et b4s playlists
  *****************************************************************************
- * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: m3u.c 12836 2005-10-15 13:23:08Z sigmunau $
+ * Copyright (C) 2001-2006 the VideoLAN team
+ * $Id: m3u.c 15118 2006-04-06 17:54:21Z massiot $
  *
  * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *          Gildas Bazin <gbazin@videolan.org>
- *          Clément Stenac <zorglub@via.ecp.fr>
+ *          ClÃ©ment Stenac <zorglub@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -119,7 +119,7 @@ static int Activate( vlc_object_t * p_this )
         i_type = TYPE_B4S;
     }
 
-    /* we had no luck looking at the file extention, so we have a look
+    /* we had no luck looking at the file extension, so we have a look
      * at the content. This is useful for .asp, .php and similar files
      * that are actually html. Also useful for some asx files that have
      * another extension */
@@ -191,7 +191,7 @@ static int Activate( vlc_object_t * p_this )
     /* Allocate p_m3u */
     p_demux->p_sys = malloc( sizeof( demux_sys_t ) );
     p_demux->p_sys->i_type = i_type;
-    msg_Dbg( p_this, "Playlist type: %d - %d", i_type, i_type2 );
+    msg_Dbg( p_this, "playlist type: %d - %d", i_type, i_type2 );
 
     return VLC_SUCCESS;
 }
@@ -217,12 +217,17 @@ static void XMLSpecialChars ( char *str )
     {
         if( *src == '&' )
         {
-            if( !strncasecmp( src, "&#xe0;", 6 ) ) *dst++ = 'à';
-            else if( !strncasecmp( src, "&#xee;", 6 ) ) *dst++ = 'î';
+            /* FIXME:
+             * - should probably accept any sequence, rather than only those
+             *   commonly found in French.
+             * - output may have to be UTF-8 encoded (cannot assume Latin-1)
+             */
+            if( !strncasecmp( src, "&#xe0;", 6 ) ) *dst++ = '\xe0';
+            else if( !strncasecmp( src, "&#xee;", 6 ) ) *dst++ = '\xee';
             else if( !strncasecmp( src, "&apos;", 6 ) ) *dst++ = '\'';
-            else if( !strncasecmp( src, "&#xe8;", 6 ) ) *dst++ = 'è';
-            else if( !strncasecmp( src, "&#xe9;", 6 ) ) *dst++ = 'é';
-            else if( !strncasecmp( src, "&#xea;", 6 ) ) *dst++ = 'ê';
+            else if( !strncasecmp( src, "&#xe8;", 6 ) ) *dst++ = '\xe8';
+            else if( !strncasecmp( src, "&#xe9;", 6 ) ) *dst++ = '\xe9';
+            else if( !strncasecmp( src, "&#xea;", 6 ) ) *dst++ = '\xea';
             else
             {
                 *dst++ = '?';
@@ -328,7 +333,8 @@ static int ParseLine( demux_t *p_demux, char *psz_line, char *psz_data,
             psz_bol++;
             if( !strncasecmp( psz_bol, "http://", sizeof("http://") -1 ) )
             {
-                psz_bol[0] = 'm'; psz_bol[1] = 'm'; psz_bol[2] = 's'; psz_bol[3] = 'h';
+                psz_bol++;
+                psz_bol[0] = 'm'; psz_bol[1] = 'm'; psz_bol[2] = 's';
             }
         }
         else

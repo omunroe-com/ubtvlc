@@ -1,8 +1,8 @@
 /*****************************************************************************
  * prefs.m: MacOS X module for vlc
  *****************************************************************************
- * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: prefs.m 12757 2005-10-02 19:49:05Z fkuehne $
+ * Copyright (C) 2002-2006 the VideoLAN team
+ * $Id: prefs.m 15170 2006-04-11 12:37:47Z fkuehne $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Derk-Jan Hartman <hartman at videolan dot org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /* VLCPrefs manages the main preferences dialog 
@@ -142,7 +142,7 @@ static VLCPrefs *_o_sharedMainInstance = nil;
     NSBeginInformationalAlertSheet(_NS("Reset Preferences"), _NS("Cancel"),
         _NS("Continue"), nil, o_prefs_window, self,
         @selector(sheetDidEnd: returnCode: contextInfo:), NULL, nil,
-        _NS("Beware this will reset your VLC media player preferences.\n"
+        _NS("Beware this will reset the VLC media player preferences.\n"
             "Are you sure you want to continue?") );
 }
 
@@ -202,7 +202,7 @@ static VLCPrefs *_o_sharedMainInstance = nil;
 
 - (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item {
     return (item == nil) ? [[VLCTreeItem rootItem] childAtIndex:index] :
-                            [item childAtIndex:index];
+                            (id)[item childAtIndex:index];
 }
 
 - (id)outlineView:(NSOutlineView *)outlineView
@@ -293,7 +293,7 @@ static VLCTreeItem *o_root_item = nil;
             if( p_module == NULL )
             {
                 msg_Err( p_intf,
-                    "could not find the main module in our preferences" );
+                    "could not load the preferences" );
                 return nil;
             }
             if( i_index < p_list->i_count )
@@ -312,11 +312,13 @@ static VLCTreeItem *o_root_item = nil;
                     switch( p_item->i_type )
                     {
                     case CONFIG_CATEGORY:
+			            if( p_item->i_value == -1 ) break;
+
                         o_child_name = [[VLCMain sharedInstance]
-                            localizedString: config_CategoryNameGet( p_item->i_value ) ];
+                            localizedString: config_CategoryNameGet( p_item->i_value )];
                         o_child_title = o_child_name;
                         o_child_help = [[VLCMain sharedInstance]
-                            localizedString: config_CategoryHelpGet( p_item->i_value ) ];
+                            localizedString: config_CategoryHelpGet( p_item->i_value )];
                         p_last_category = [VLCTreeItem alloc];
                         [o_children addObject:[p_last_category
                             initWithName: o_child_name
@@ -329,14 +331,22 @@ static VLCTreeItem *o_root_item = nil;
                             whithCategory: p_item - p_module->p_config]];
                         break;
                     case CONFIG_SUBCATEGORY:
-                        o_child_name = [[VLCMain sharedInstance]
-                            localizedString: config_CategoryNameGet( p_item->i_value ) ];
-                        o_child_title = o_child_name;
-                        o_child_help = [[VLCMain sharedInstance]
-                            localizedString: config_CategoryHelpGet( p_item->i_value ) ];
+			            if( p_item->i_value == -1 ) break;
+
                         if( p_item->i_value != SUBCAT_PLAYLIST_GENERAL &&
                             p_item->i_value != SUBCAT_VIDEO_GENERAL &&
+                            p_item->i_value != SUBCAT_INPUT_GENERAL &&
+                            p_item->i_value != SUBCAT_INTERFACE_GENERAL &&
+                            p_item->i_value != SUBCAT_SOUT_GENERAL &&
+                            p_item->i_value != SUBCAT_ADVANCED_MISC &&
                             p_item->i_value != SUBCAT_AUDIO_GENERAL )
+                        {
+                            o_child_name = [[VLCMain sharedInstance]
+                                localizedString: config_CategoryNameGet( p_item->i_value ) ];
+                            o_child_title = o_child_name;
+                            o_child_help = [[VLCMain sharedInstance]
+                                localizedString: config_CategoryHelpGet( p_item->i_value ) ];
+
                             [p_last_category->o_children
                                 addObject:[[VLCTreeItem alloc]
                                 initWithName: o_child_name
@@ -347,6 +357,8 @@ static VLCTreeItem *o_root_item = nil;
                                 children:[[NSMutableArray alloc]
                                     initWithCapacity:10]
                                 whithCategory: p_item - p_module->p_config]];
+                        }
+                        
                         break;
                     default:
                         break;
@@ -434,7 +446,7 @@ static VLCTreeItem *o_root_item = nil;
                     parent:p_subcategory_item
                     children:IsALeafNode
                     whithCategory: -1]];
-            }
+                }
         }
         vlc_list_release( p_list );
     }
@@ -534,7 +546,6 @@ static VLCTreeItem *o_root_item = nil;
                 return nil;
             }
             p_item = p_parser->p_config;
-            int i = 0;
 
             p_item = p_parser->p_config + 1;
 
@@ -542,7 +553,7 @@ static VLCTreeItem *o_root_item = nil;
             {
                 if( !p_item )
                 {
-                    msg_Err( p_intf, "null item found" );
+                    msg_Err( p_intf, "invalid preference item found" );
                     break;
                 }
                 switch(p_item->i_type)
@@ -577,7 +588,6 @@ static VLCTreeItem *o_root_item = nil;
         }
         else
         {
-            int i = 0;
             int i_index;
             p_list = vlc_list_find( p_intf, VLC_OBJECT_MODULE, FIND_ANYWHERE );
             if( !p_list ) return o_view;
@@ -593,15 +603,17 @@ static VLCTreeItem *o_root_item = nil;
             }
             if( p_parser == NULL )
             {
-                msg_Err( p_intf, "could not find the main module in our "
-                                    "preferences" );
+                msg_Err( p_intf, "could not load preferences" );
                 return o_view;
             }
             p_item = (p_parser->p_config + i_object_category);
             if( ( p_item->i_type == CONFIG_CATEGORY ) &&
               ( ( p_item->i_value == CAT_PLAYLIST )  ||
                 ( p_item->i_value == CAT_AUDIO )  ||
-                ( p_item->i_value == CAT_VIDEO ) ) )
+                ( p_item->i_value == CAT_VIDEO ) ||
+                ( p_item->i_value == CAT_INTERFACE ) ||
+                ( p_item->i_value == CAT_INPUT ) ||
+                ( p_item->i_value == CAT_SOUT ) ) )
                 p_item++;
 
             do
@@ -609,7 +621,7 @@ static VLCTreeItem *o_root_item = nil;
                 p_item++;
                 if( !p_item )
                 {
-                    msg_Err( p_intf, "null item found" );
+                    msg_Err( p_intf, "invalid preference item found" );
                     break;
                 }
                 switch( p_item->i_type )
@@ -700,8 +712,8 @@ static VLCTreeItem *o_root_item = nil;
             [o_label setBordered: NO];
             [o_label setEditable: NO];
             [o_label setSelectable: NO];
-            [o_label setStringValue: _NS("Some options are available but " \
-                                "hidden. Check \"Advanced\" to see them.")];
+            [o_label setStringValue: _NS("Some options are hidden. " \
+                                "Check \"Advanced\" to display them.")];
             [o_label setFont:[NSFont systemFontOfSize:10]];
             [o_label sizeToFit];
             [o_view addSubview:o_label];

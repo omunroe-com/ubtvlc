@@ -1,10 +1,10 @@
 /*****************************************************************************
  * image.c : image video output
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: snapshot.c 8644 2004-09-05 16:53:04Z fkuehne $
+ * Copyright (C) 2004-2006 the VideoLAN team
+ * $Id: image.c 14977 2006-03-30 08:40:51Z zorglub $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -46,18 +46,24 @@ static void Display   ( vout_thread_t *, picture_t * );
  * Module descriptor
  *****************************************************************************/
 #define FORMAT_TEXT N_( "Image format" )
-#define FORMAT_LONGTEXT N_( "Set the format of the output image." )
+#define FORMAT_LONGTEXT N_( "Format of the output images (png or jpg)." )
 
 #define RATIO_TEXT N_( "Recording ratio" )
-#define RATIO_LONGTEXT N_( "Set the ratio of images that are recorded. "\
+#define RATIO_LONGTEXT N_( "Ratio of images to record. "\
                            "3 means that one image out of three is recorded." )
 
 #define PREFIX_TEXT N_( "Filename prefix" )
-#define PREFIX_LONGTEXT N_( "Set the prefix of the filename. Output filename "\
-                            "will have the form prefixNUMBER.format" )
+#define PREFIX_LONGTEXT N_( "Prefix of the output images filenames. Output " \
+                            "filenames will have the \"prefixNUMBER.format\" "\
+                            "form." )
 
-static char *psz_format_list[] = { "png" };
-static char *psz_format_list_text[] = { "PNG" };
+#define REPLACE_TEXT N_( "Always write to the same file" )
+#define REPLACE_LONGTEXT N_( "Always write to the same file instead of " \
+                            "creating one file per image. In this case, " \
+                             "the number is not appended to the filename." )
+
+static char *psz_format_list[] = { "png", "jpeg" };
+static char *psz_format_list_text[] = { "PNG", "JPEG" };
 
 vlc_module_begin( );
     set_shortname( _( "Image file" ) );
@@ -72,7 +78,9 @@ vlc_module_begin( );
     add_integer( "image-out-ratio", 3 , NULL,  RATIO_TEXT, RATIO_LONGTEXT,
                                                   VLC_FALSE );
     add_string( "image-out-prefix", "img", NULL, PREFIX_TEXT, PREFIX_LONGTEXT,
-                                                 VLC_FALSE );
+                                                  VLC_FALSE );
+    add_bool( "image-out-replace", 0, NULL, REPLACE_TEXT, REPLACE_LONGTEXT,
+                                                  VLC_FALSE );
     set_callbacks( Create, Destroy );
 vlc_module_end();
 
@@ -81,11 +89,14 @@ vlc_module_end();
  *****************************************************************************/
 struct vout_sys_t
 {
-    char        *psz_prefix;    /* Prefix */
-    int         i_ratio;    /* Image ratio */
+    char        *psz_prefix;          /* Prefix */
+    char        *psz_format;          /* Format */
+    int         i_ratio;         /* Image ratio */
 
-    int         i_current;  /* Current image */
-    int         i_frames;  /* Number of frames */
+    int         i_current;     /* Current image */
+    int         i_frames;   /* Number of frames */
+
+    vlc_bool_t  b_replace;
 
     image_handler_t *p_image;
 };
@@ -108,8 +119,12 @@ static int Create( vlc_object_t *p_this )
 
     p_vout->p_sys->psz_prefix =
             var_CreateGetString( p_this, "image-out-prefix" );
+    p_vout->p_sys->psz_format =
+            var_CreateGetString( p_this, "image-out-format" );
     p_vout->p_sys->i_ratio =
             var_CreateGetInteger( p_this, "image-out-ratio" );
+    p_vout->p_sys->b_replace =
+            var_CreateGetBool( p_this, "image-out-replace" );
     p_vout->p_sys->i_current = 0;
     p_vout->p_sys->p_image = image_HandlerCreate( p_vout );
 
@@ -204,6 +219,7 @@ static void Destroy( vlc_object_t *p_this )
     /* Destroy structure */
     image_HandlerDelete( p_vout->p_sys->p_image );
     FREE( p_vout->p_sys->psz_prefix );
+    FREE( p_vout->p_sys->psz_format );
     FREE( p_vout->p_sys );
 }
 
@@ -224,22 +240,30 @@ static void Display( vout_thread_t *p_vout, picture_t *p_pic )
         return;
     }
     p_vout->p_sys->i_frames++;
-    psz_filename = (char *)malloc( strlen( p_vout->p_sys->psz_prefix ) +
-                                         10 );
+    psz_filename = (char *)malloc( 10 + strlen( p_vout->p_sys->psz_prefix )
+                                      + strlen( p_vout->p_sys->psz_format ) );
 
     fmt_in.i_chroma = p_vout->render.i_chroma;
     fmt_out.i_width = fmt_in.i_width = p_vout->render.i_width;
     fmt_out.i_height = fmt_in.i_height = p_vout->render.i_height;
 
-    p_vout->p_sys->i_current++;
-
-    sprintf( psz_filename, "%s%.6i.%s", p_vout->p_sys->psz_prefix,
-                                      p_vout->p_sys->i_current,
-                                      "png" );
-
+    if( p_vout->p_sys->b_replace )
+    {
+        sprintf( psz_filename, "%s.%s", p_vout->p_sys->psz_prefix,
+                                            p_vout->p_sys->psz_format );
+    }
+    else
+    {
+        sprintf( psz_filename, "%s%.6i.%s", p_vout->p_sys->psz_prefix,
+                                            p_vout->p_sys->i_current,
+                                            p_vout->p_sys->psz_format );
+    }
     image_WriteUrl( p_vout->p_sys->p_image, p_pic,
                     &fmt_in, &fmt_out, psz_filename ) ;
     free( psz_filename );
+
+    p_vout->p_sys->i_current++;
+
     return;
 }
 

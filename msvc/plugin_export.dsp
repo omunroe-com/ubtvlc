@@ -110,6 +110,16 @@ SOURCE="..\modules\misc\playlist\m3u.c"
 # PROP Intermediate_Dir "Debug\modules\misc\playlist"
 # End Source File
 # Begin Source File
+SOURCE="..\modules\misc\playlist\xspf.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=export" /D "MODULE_NAME_IS_export" 
+!IF "$(CFG)" == "plugin_export - Win32 Release"
+# PROP Output_Dir "Release\modules\misc\playlist"
+# PROP Intermediate_Dir "Release\modules\misc\playlist"
+!ELSEIF "$(CFG)" == "plugin_export - Win32 Debug"
+# PROP Output_Dir "Debug\modules\misc\playlist"
+# PROP Intermediate_Dir "Debug\modules\misc\playlist"
+# End Source File
+# Begin Source File
 SOURCE="..\modules\misc\playlist\old.c"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=export" /D "MODULE_NAME_IS_export" 
 !IF "$(CFG)" == "plugin_export - Win32 Release"
@@ -126,6 +136,9 @@ SOURCE="..\modules\misc\playlist\old.c"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 
+# Begin Source File
+SOURCE="..\modules\misc\playlist\xspf.h"
+# End Source File
 
 # End Group
 

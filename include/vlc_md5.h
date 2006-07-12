@@ -2,7 +2,7 @@
  * vlc_md5.h: MD5 hash
  *****************************************************************************
  * Copyright (C) 2004-2005 the VideoLAN team
- * $Id: vlc_md5.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: vlc_md5.h 14186 2006-02-07 16:24:30Z courmisch $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Sam Hocevar <sam@zoy.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef _VLC_MD5_H

@@ -1,12 +1,13 @@
 /*****************************************************************************
  * vout_synchro.h: frame-dropping structures
+ * Only used in libmpeg2 decoder at the moment
  *****************************************************************************
  * Copyright (C) 1999-2005 the VideoLAN team
- * $Id: vout_synchro.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: vout_synchro.h 14121 2006-02-01 19:20:17Z courmisch $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Jean-Marc Dressler <polux@via.ecp.fr>
- *          Stéphane Borel <stef@via.ecp.fr>
+ *          StÃ©phane Borel <stef@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************

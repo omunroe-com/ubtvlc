@@ -2,7 +2,7 @@
  * about.h: MacOS X About Panel
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: about.h 12527 2005-09-12 19:11:43Z fkuehne $
+ * $Id: about.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Derk-Jan Hartman <thedj@users.sourceforge.net>
  * 
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************

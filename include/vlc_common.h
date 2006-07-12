@@ -3,7 +3,7 @@
  * Collection of useful common types and macros definitions
  *****************************************************************************
  * Copyright (C) 1998-2005 the VideoLAN team
- * $Id: vlc_common.h 12649 2005-09-22 20:14:20Z gbazin $
+ * $Id: vlc_common.h 14871 2006-03-22 11:14:24Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@via.ecp.fr>
  *          Vincent Seguin <seguin@via.ecp.fr>
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /**
@@ -202,9 +202,11 @@ typedef struct libvlc_t libvlc_t;
 typedef struct vlc_t vlc_t;
 typedef struct variable_t variable_t;
 typedef struct date_t date_t;
+typedef struct hashtable_entry_t hashtable_entry_t;
 
 /* Messages */
 typedef struct msg_bank_t msg_bank_t;
+typedef struct msg_queue_t msg_queue_t;
 typedef struct msg_subscription_t msg_subscription_t;
 
 /* Playlist */
@@ -223,7 +225,7 @@ typedef enum {
     PLAYLIST_STOP,      /**< No arg                             res=can fail*/
     PLAYLIST_SKIP,      /**< arg1=int,                          res=can fail*/
     PLAYLIST_GOTO,      /**< arg1=int                           res=can fail */
-    PLAYLIST_VIEWGOTO,      /**< arg1=int                       res=can fail */
+    PLAYLIST_VIEWGOTO   /**< arg1=int                           res=can fail */
 } playlist_command_t;
 
 
@@ -250,22 +252,24 @@ typedef struct intf_thread_t intf_thread_t;
 typedef struct intf_sys_t intf_sys_t;
 typedef struct intf_console_t intf_console_t;
 typedef struct intf_msg_t intf_msg_t;
-typedef struct intf_channel_t intf_channel_t;
+typedef struct interaction_t interaction_t;
+typedef struct interaction_dialog_t interaction_dialog_t;
+typedef struct user_widget_t user_widget_t;
 
 /* Input */
 typedef struct input_thread_t input_thread_t;
 typedef struct input_thread_sys_t input_thread_sys_t;
 typedef struct input_item_t input_item_t;
-typedef struct input_area_t input_area_t;
-typedef struct input_buffers_t input_buffers_t;
-typedef struct input_socket_t input_socket_t;
+typedef struct access_t access_t;
 typedef struct access_sys_t access_sys_t;
+typedef struct stream_t     stream_t;
+typedef struct stream_sys_t stream_sys_t;
+typedef struct demux_t  demux_t;
 typedef struct demux_sys_t demux_sys_t;
+typedef struct es_out_t     es_out_t;
+typedef struct es_out_id_t  es_out_id_t;
+typedef struct es_out_sys_t es_out_sys_t;
 typedef struct es_descriptor_t es_descriptor_t;
-typedef struct es_sys_t es_sys_t;
-typedef struct pgrm_descriptor_t pgrm_descriptor_t;
-typedef struct pgrm_sys_t pgrm_sys_t;
-typedef struct stream_descriptor_t stream_descriptor_t;
 typedef struct seekpoint_t seekpoint_t;
 typedef struct info_t info_t;
 typedef struct info_category_t info_category_t;
@@ -276,15 +280,6 @@ typedef struct video_format_t video_format_t;
 typedef struct subs_format_t subs_format_t;
 typedef struct es_format_t es_format_t;
 typedef struct video_palette_t video_palette_t;
-
-/* NInput */
-typedef struct stream_sys_t stream_sys_t;
-typedef struct stream_t     stream_t;
-typedef struct es_out_t     es_out_t;
-typedef struct es_out_id_t  es_out_id_t;
-typedef struct es_out_sys_t es_out_sys_t;
-typedef struct demux_t  demux_t;
-typedef struct access_t access_t;
 
 /* Audio */
 typedef struct aout_instance_t aout_instance_t;
@@ -307,6 +302,7 @@ typedef struct picture_t picture_t;
 typedef struct picture_sys_t picture_sys_t;
 typedef struct picture_heap_t picture_heap_t;
 
+/* Subpictures */
 typedef struct spu_t spu_t;
 typedef struct subpicture_t subpicture_t;
 typedef struct subpicture_sys_t subpicture_sys_t;
@@ -338,7 +334,6 @@ typedef struct session_descriptor_t session_descriptor_t;
 typedef struct announce_method_t announce_method_t;
 typedef struct announce_handler_t announce_handler_t;
 typedef struct sap_handler_t sap_handler_t;
-//typedef struct slp_session_t    slp_session_t;
 
 /* Decoders */
 typedef struct decoder_t      decoder_t;
@@ -352,17 +347,15 @@ typedef struct encoder_sys_t  encoder_sys_t;
 typedef struct filter_t filter_t;
 typedef struct filter_sys_t filter_sys_t;
 
-/* Misc */
-typedef struct data_packet_t data_packet_t;
-typedef struct data_buffer_t data_buffer_t;
-typedef struct stream_ctrl_t stream_ctrl_t;
-typedef struct pes_packet_t pes_packet_t;
+/* Network */
 typedef struct network_socket_t network_socket_t;
 typedef struct virtual_socket_t v_socket_t;
-typedef struct iso639_lang_t iso639_lang_t;
 typedef struct sockaddr sockaddr;
 typedef struct addrinfo addrinfo;
 typedef struct vlc_acl_t vlc_acl_t;
+
+/* Misc */
+typedef struct iso639_lang_t iso639_lang_t;
 
 /* block */
 typedef struct block_t      block_t;
@@ -381,7 +374,7 @@ typedef struct httpd_file_sys_t httpd_file_sys_t;
 typedef int (*httpd_file_callback_t)( httpd_file_sys_t *, httpd_file_t *, uint8_t *psz_request, uint8_t **pp_data, int *pi_data );
 typedef struct httpd_handler_t  httpd_handler_t;
 typedef struct httpd_handler_sys_t httpd_handler_sys_t;
-typedef int (*httpd_handler_callback_t)( httpd_handler_sys_t *, httpd_handler_t *, uint8_t *psz_url, uint8_t *psz_request, int i_type, uint8_t *p_in, int i_in, char *psz_remote_addr, char *psz_remote_host, uint8_t **pp_data, int *pi_data );
+typedef int (*httpd_handler_callback_t)( httpd_handler_sys_t *, httpd_handler_t *, char *psz_url, uint8_t *psz_request, int i_type, uint8_t *p_in, int i_in, char *psz_remote_addr, char *psz_remote_host, uint8_t **pp_data, int *pi_data );
 typedef struct httpd_redirect_t httpd_redirect_t;
 typedef struct httpd_stream_t httpd_stream_t;
 
@@ -424,6 +417,16 @@ typedef struct vlm_schedule_t vlm_schedule_t;
 /* divers */
 typedef struct vlc_meta_t    vlc_meta_t;
 
+/* Stats */
+typedef struct counter_t     counter_t;
+typedef struct counter_sample_t counter_sample_t;
+typedef struct stats_handler_t stats_handler_t;
+typedef struct input_stats_t input_stats_t;
+typedef struct global_stats_t global_stats_t;
+
+/* Update */
+typedef struct update_t update_t;
+typedef struct update_iterator_t update_iterator_t;
 
 /*****************************************************************************
  * Variable callbacks
@@ -437,8 +440,12 @@ typedef int ( * vlc_callback_t ) ( vlc_object_t *,      /* variable's object */
 /*****************************************************************************
  * Plug-in stuff
  *****************************************************************************/
-#ifndef __PLUGIN__
-#   define VLC_EXPORT( type, name, args ) type name args
+#if !defined (__PLUGIN__) || defined (HAVE_SHARED_LIBVLC)
+#   ifdef __cplusplus
+#      define VLC_EXPORT( type, name, args ) extern "C" type name args
+#   else
+#      define VLC_EXPORT( type, name, args ) type name args
+#   endif
 #else
 #   define VLC_EXPORT( type, name, args ) struct _u_n_u_s_e_d_
     extern module_symbols_t* p_symbols;
@@ -471,8 +478,12 @@ typedef int ( * vlc_callback_t ) ( vlc_object_t *,      /* variable's object */
 /**@{*/                                                                     \
     int   i_object_id;                                                      \
     int   i_object_type;                                                    \
-    char *psz_object_type;                                                  \
+    const char *psz_object_type;                                            \
     char *psz_object_name;                                                  \
+                                                                            \
+    /* Messages header */                                                   \
+    char *psz_header;                                                       \
+    int  i_flags;                                                           \
                                                                             \
     /* Thread properties, if any */                                         \
     vlc_bool_t   b_thread;                                                  \
@@ -636,6 +647,20 @@ static int64_t GCD( int64_t a, int64_t b )
         }                                       \
     }
 
+/* Hash tables handling */
+struct hashtable_entry_t
+{
+    int       i_id;
+    char     *psz_name;
+    uint64_t  i_hash;
+    void     *p_data;
+};
+
+VLC_EXPORT( void, vlc_HashInsert, (hashtable_entry_t **, int *, int, const char *, void *));
+VLC_EXPORT( void*, vlc_HashRetrieve, (hashtable_entry_t*, int, int, const char *) );
+VLC_EXPORT( int, vlc_HashLookup, (hashtable_entry_t *, int, int, const char *) );
+
+
 /* MSB (big endian)/LSB (little endian) conversions - network order is always
  * MSB, and should be used for both network communications and files. Note that
  * byte orders other than little and big endians are not supported, but only
@@ -794,14 +819,14 @@ static inline void _SetQWBE( uint8_t *p, uint64_t i_qw )
 #   define vlc_strdup NULL
 #endif
 
-#if !defined(HAVE_VASPRINTF) || defined(SYS_DARWIN) || defined(SYS_BEOS)
+#if !defined(HAVE_VASPRINTF) || defined(__APPLE__) || defined(SYS_BEOS)
 #   define vasprintf vlc_vasprintf
     VLC_EXPORT( int, vlc_vasprintf, (char **, const char *, va_list ) );
 #elif !defined(__PLUGIN__)
 #   define vlc_vasprintf NULL
 #endif
 
-#if !defined(HAVE_ASPRINTF) || defined(SYS_DARWIN) || defined(SYS_BEOS)
+#if !defined(HAVE_ASPRINTF) || defined(__APPLE__) || defined(SYS_BEOS)
 #   define asprintf vlc_asprintf
     VLC_EXPORT( int, vlc_asprintf, (char **, const char *, ... ) );
 #elif !defined(__PLUGIN__)
@@ -846,6 +871,17 @@ static inline void _SetQWBE( uint8_t *p, uint64_t i_qw )
     VLC_EXPORT( int64_t, vlc_strtoll, ( const char *nptr, char **endptr, int base ) );
 #elif !defined(__PLUGIN__)
 #   define vlc_strtoll NULL
+#endif
+
+#if defined(SYS_BEOS)
+    typedef struct {
+        long long quot; /* Quotient. */
+        long long rem;  /* Remainder. */
+    } lldiv_t;
+#   define lldiv vlc_lldiv
+    VLC_EXPORT( lldiv_t, vlc_lldiv, ( long long numer, long long denom ) );
+#elif !defined(__PLUGIN__)
+#   define vlc_lldiv NULL
 #endif
 
 #ifndef HAVE_SCANDIR
@@ -1044,12 +1080,12 @@ VLC_EXPORT( char **, vlc_parse_cmdline, ( const char *, int * ) );
 
 /* vlc_wraptext (defined in src/extras/libc.c) */
 #define wraptext vlc_wraptext
-VLC_EXPORT( char *, vlc_wraptext, ( const char *, int, vlc_bool_t ) );
+VLC_EXPORT( char *, vlc_wraptext, ( const char *, int ) );
 
 /* iconv wrappers (defined in src/extras/libc.c) */
 typedef void *vlc_iconv_t;
 VLC_EXPORT( vlc_iconv_t, vlc_iconv_open, ( const char *, const char * ) );
-VLC_EXPORT( size_t, vlc_iconv, ( vlc_iconv_t, char **, size_t *, char **, size_t * ) );
+VLC_EXPORT( size_t, vlc_iconv, ( vlc_iconv_t, const char **, size_t *, char **, size_t * ) );
 VLC_EXPORT( int, vlc_iconv_close, ( vlc_iconv_t ) );
 
 /* execve wrapper (defined in src/extras/libc.c) */
@@ -1074,7 +1110,9 @@ VLC_EXPORT( int, __vlc_execve, ( vlc_object_t *p_object, int i_argc, char **pp_a
 /*****************************************************************************
  * I18n stuff
  *****************************************************************************/
+#if defined (WIN32) || !defined (HAVE_SHARED_LIBVLC)
 VLC_EXPORT( char *, vlc_dgettext, ( const char *package, const char *msgid ) );
+#endif
 
 #if defined( ENABLE_NLS ) && \
      (defined(MODULE_NAME_IS_gnome)||defined(MODULE_NAME_IS_gnome_main)||\
@@ -1088,7 +1126,11 @@ VLC_EXPORT( char *, vlc_dgettext, ( const char *package, const char *msgid ) );
 #       include <libintl.h>
 #   endif
 #   undef _
-#   define _(String) vlc_dgettext (PACKAGE_NAME, String)
+#   if defined (WIN32) || !defined (HAVE_SHARED_LIBVLC)
+#       define _(String) vlc_dgettext (PACKAGE_NAME, String)
+#   else
+#       define _(String) dgettext(PACKAGE_NAME, String)
+#   endif
 #   define N_(String) ((char*)(String))
 #else
 #   define _(String) ((char*)(String))
@@ -1103,13 +1145,17 @@ VLC_EXPORT( const char *, VLC_CompileBy, ( void ) );
 VLC_EXPORT( const char *, VLC_CompileHost, ( void ) );
 VLC_EXPORT( const char *, VLC_CompileDomain, ( void ) );
 VLC_EXPORT( const char *, VLC_Compiler, ( void ) );
-VLC_EXPORT( const char *, VLC_Changeset, ( void ) );
 VLC_EXPORT( const char *, VLC_Error, ( int ) );
 
 /*****************************************************************************
  * Additional vlc stuff
  *****************************************************************************/
-#include "vlc_symbols.h"
+#ifndef HAVE_SHARED_LIBVLC
+VLC_EXPORT( const char *, VLC_Changeset, ( void ) );
+#   include "vlc_symbols.h"
+#else
+#   define VLC_Changeset( ) ("exported")
+#endif
 #include "os_specific.h"
 #include "vlc_messages.h"
 #include "variables.h"

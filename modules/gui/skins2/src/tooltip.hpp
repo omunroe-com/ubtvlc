@@ -2,10 +2,10 @@
  * tooltip.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: tooltip.hpp 12207 2005-08-15 15:54:32Z asmax $
+ * $Id: tooltip.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef TOOLTIP_HPP
@@ -35,7 +35,7 @@ class OSGraphics;
 class UString;
 
 
-class Tooltip: public SkinObject, public Observer<VarText>
+class Tooltip: public SkinObject, public Observer<VarText, void*>
 {
     public:
         /// Create a tooltip with the given font and delay (in milliseconds)
@@ -65,7 +65,7 @@ class Tooltip: public SkinObject, public Observer<VarText>
         int m_xPos, m_yPos;
 
         /// Method called when the observed variable is modified
-        virtual void onUpdate( Subject<VarText> &rVariable );
+        virtual void onUpdate( Subject<VarText,void*> &rVariable, void * );
 
         /// Display text of the tooltip
         void displayText( const UString &rText );

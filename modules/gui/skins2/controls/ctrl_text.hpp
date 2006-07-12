@@ -2,10 +2,10 @@
  * ctrl_text.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_text.hpp 12207 2005-08-15 15:54:32Z asmax $
+ * $Id: ctrl_text.hpp 15486 2006-04-30 19:14:31Z dionoea $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CTRL_TEXT_HPP
@@ -38,13 +38,33 @@ class VarText;
 
 
 /// Class for control text
-class CtrlText: public CtrlGeneric, public Observer<VarText>
+class CtrlText: public CtrlGeneric, public Observer<VarText, void*>
 {
     public:
+        enum Align_t
+        {
+            kLeft,
+            kCenter,
+            kRight
+        };
+
+        enum Scrolling_t
+        {
+            // The text starts scrolling automatically if it is larger than the
+            // width of the control. The user can still stop it or make it
+            // scroll manually with the mouse.
+            kAutomatic,
+            // Only manual scrolling is allowed (with the mouse)
+            kManual,
+            // No scrolling of the text is allowed
+            kNone
+        };
+
         /// Create a text control with the optional given color
         CtrlText( intf_thread_t *pIntf, VarText &rVariable,
                   const GenericFont &rFont, const UString &rHelp,
-                  uint32_t color, VarBool *pVisible );
+                  uint32_t color, VarBool *pVisible, Scrolling_t scrollMode,
+                  Align_t alignment);
         virtual ~CtrlText();
 
         /// Handle an event
@@ -79,6 +99,10 @@ class CtrlText: public CtrlGeneric, public Observer<VarText>
         const GenericFont &m_rFont;
         /// Color of the text
         uint32_t m_color;
+        /// Scrolling mode
+        Scrolling_t m_scrollMode;
+        /// Type of alignment
+        Align_t m_alignment;
         /// Image of the text
         GenericBitmap *m_pImg;
         /// Image of the text, repeated twice and with some blank between;
@@ -86,7 +110,7 @@ class CtrlText: public CtrlGeneric, public Observer<VarText>
         GenericBitmap *m_pImgDouble;
         /// Current image (should always be equal to m_pImg or m_pImgDouble)
         GenericBitmap *m_pCurrImg;
-        /// Position of the left side of the moving text
+        /// Position of the left side of the moving text (always <= 0)
         int m_xPos;
         /// Offset between the mouse pointer and the left side of the
         /// moving text
@@ -98,7 +122,7 @@ class CtrlText: public CtrlGeneric, public Observer<VarText>
         DEFINE_CALLBACK( CtrlText, UpdateText );
 
         /// Method called when the observed variable is modified
-        virtual void onUpdate( Subject<VarText> &rVariable );
+        virtual void onUpdate( Subject<VarText,void*> &rVariable, void* );
 
         /// Display the text on the control
         void displayText( const UString &rText );

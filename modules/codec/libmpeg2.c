@@ -2,7 +2,7 @@
  * libmpeg2.c: mpeg2 video decoder module making use of libmpeg2.
  *****************************************************************************
  * Copyright (C) 1999-2001 the VideoLAN team
- * $Id: libmpeg2.c 13118 2005-11-02 23:32:56Z gbazin $
+ * $Id: libmpeg2.c 14290 2006-02-13 11:49:38Z sam $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -161,7 +161,7 @@ static int OpenDecoder( vlc_object_t *p_this )
         i_accel |= MPEG2_ACCEL_X86_MMXEXT;
     }
 
-#elif defined( __powerpc__ ) || defined( SYS_DARWIN )
+#elif defined( __powerpc__ ) || defined( __ppc__ ) || defined( __ppc64__ )
     if( p_dec->p_libvlc->i_cpu & CPU_CAPABILITY_ALTIVEC )
     {
         i_accel |= MPEG2_ACCEL_PPC_ALTIVEC;
@@ -240,6 +240,7 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
                     if( (p_pic = GetNewPicture( p_dec, buf )) == NULL )
                         break;
                     mpeg2_set_buf( p_sys->p_mpeg2dec, buf, p_pic );
+                    mpeg2_stride( p_sys->p_mpeg2dec, p_pic->format.i_width );
                 }
                 p_sys->p_picture_to_destroy = p_pic;
 
@@ -316,6 +317,7 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
             }
 
             mpeg2_set_buf( p_sys->p_mpeg2dec, buf, p_pic );
+            mpeg2_stride( p_sys->p_mpeg2dec, p_pic->format.i_width );
 
             /* This picture will never go through display_picture. */
             p_pic->date = 0;
@@ -439,6 +441,7 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
                 }
 
                 mpeg2_set_buf( p_sys->p_mpeg2dec, buf, p_pic );
+                mpeg2_stride( p_sys->p_mpeg2dec, p_pic->format.i_width );
             }
         }
         break;
@@ -520,6 +523,7 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
                 if( (p_pic = GetNewPicture( p_dec, buf )) == NULL )
                     break;
                 mpeg2_set_buf( p_sys->p_mpeg2dec, buf, p_pic );
+                mpeg2_stride( p_sys->p_mpeg2dec, p_pic->format.i_width );
             }
             p_sys->p_picture_to_destroy = p_pic;
 

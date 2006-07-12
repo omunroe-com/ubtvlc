@@ -2,9 +2,10 @@
  * dshow.cpp : DirectShow access module for vlc
  *****************************************************************************
  * Copyright (C) 2002, 2003 the VideoLAN team
- * $Id: dshow.cpp 12821 2005-10-11 17:16:13Z zorglub $
+ * $Id: dshow.cpp 15435 2006-04-29 15:02:03Z damienf $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
+ *         Damien Fouilleul <damienf@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -78,21 +79,22 @@ static char *ppsz_tuner_input_text[] =
 
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for DirectShow streams. " \
-    "This value should be set in milliseconds units." )
+    "Caching value for DirectShow streams. " \
+    "This value should be set in millisecondss." )
 #define VDEV_TEXT N_("Video device name")
 #define VDEV_LONGTEXT N_( \
-    "You can specify the name of the video device that will be used by the " \
+    "Name of the video device that will be used by the " \
     "DirectShow plugin. If you don't specify anything, the default device " \
     "will be used.")
+/// \bug [String] size stuff should be on video !
 #define ADEV_TEXT N_("Audio device name")
 #define ADEV_LONGTEXT N_( \
-    "You can specify the name of the audio device that will be used by the " \
+    "Name of the audio device that will be used by the " \
     "DirectShow plugin. If you don't specify anything, the default device " \
-    "will be used.")
+    "will be used. You can specify a standard size (cif, d1, ...) or <width>x<height>")
 #define SIZE_TEXT N_("Video size")
 #define SIZE_LONGTEXT N_( \
-    "You can specify the size of the video that will be displayed by the " \
+    "Size of the video that will be displayed by the " \
     "DirectShow plugin. If you don't specify anything the default size for " \
     "your device will be used.")
 #define CHROMA_TEXT N_("Video input chroma format")
@@ -112,15 +114,30 @@ static char *ppsz_tuner_input_text[] =
     "Show the tuner properties [channel selection] page." )
 #define CHANNEL_TEXT N_("Tuner TV Channel")
 #define CHANNEL_LONGTEXT N_( \
-    "Allows you to set the TV channel the tuner will set to " \
+    "Set the TV channel the tuner will set to " \
     "(0 means default)." )
 #define COUNTRY_TEXT N_("Tuner country code")
 #define COUNTRY_LONGTEXT N_( \
-    "Allows you to set the tuner country code that establishes the current " \
+    "Set the tuner country code that establishes the current " \
     "channel-to-frequency mapping (0 means default)." )
 #define TUNER_INPUT_TEXT N_("Tuner input type")
 #define TUNER_INPUT_LONGTEXT N_( \
-    "Allows you to select the tuner input type (Cable/Antenna)." )
+    "Select the tuner input type (Cable/Antenna)." )
+#define VIDEO_IN_TEXT N_("Video input pin")
+#define VIDEO_IN_LONGTEXT N_( \
+  "Select the video input source, such as composite, s-video, " \
+  "or tuner. Since these settings are hardware-specfic, you should find good " \
+  "settings in the \"Device config\" area, and use those numbers here. -1 " \
+  "means that settings will not be changed.")
+#define AUDIO_IN_TEXT N_("Audio input pin")
+#define AUDIO_IN_LONGTEXT N_( \
+  "Select the audio input source. See the \"video input\" option." )
+#define VIDEO_OUT_TEXT N_("Video output pin")
+#define VIDEO_OUT_LONGTEXT N_( \
+  "Select the video output type. See the \"video input\" option." )
+#define AUDIO_OUT_TEXT N_("Audio output pin")
+#define AUDIO_OUT_LONGTEXT N_( \
+  "Select the audio output type. See the \"video input\" option." )
 
 static int  CommonOpen ( vlc_object_t *, access_sys_t *, vlc_bool_t );
 static void CommonClose( vlc_object_t *, access_sys_t * );
@@ -173,6 +190,18 @@ vlc_module_begin();
                  TUNER_INPUT_LONGTEXT, VLC_TRUE );
         change_integer_list( pi_tuner_input, ppsz_tuner_input_text, 0 );
 
+    add_integer( "dshow-video-input",  -1, NULL, VIDEO_IN_TEXT,
+                 VIDEO_IN_LONGTEXT, VLC_TRUE );
+
+    add_integer( "dshow-audio-input",  -1, NULL, AUDIO_IN_TEXT,
+                 AUDIO_IN_LONGTEXT, VLC_TRUE );
+
+    add_integer( "dshow-video-output", -1, NULL, VIDEO_OUT_TEXT,
+                 VIDEO_OUT_LONGTEXT, VLC_TRUE );
+
+    add_integer( "dshow-audio-output", -1, NULL, AUDIO_OUT_TEXT,
+                 AUDIO_OUT_LONGTEXT, VLC_TRUE );
+
     add_shortcut( "dshow" );
     set_capability( "access_demux", 0 );
     set_callbacks( DemuxOpen, DemuxClose );
@@ -206,7 +235,6 @@ typedef struct dshow_stream_t
     es_out_id_t     *p_es;
 
     vlc_bool_t      b_pts;
-
 } dshow_stream_t;
 
 /*****************************************************************************
@@ -282,7 +310,6 @@ static int CommonOpen( vlc_object_t *p_this, access_sys_t *p_sys,
 
     var_Create( p_this, "dshow-config", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
     var_Create( p_this, "dshow-tuner", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
-
     var_Create( p_this, "dshow-vdev", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
     var_Get( p_this, "dshow-vdev", &val );
     if( val.psz_string ) vdevname = string( val.psz_string );
@@ -295,7 +322,7 @@ static int CommonOpen( vlc_object_t *p_this, access_sys_t *p_sys,
 
     static struct {char *psz_size; int  i_width; int  i_height;} size_table[] =
     { { "subqcif", 128, 96 }, { "qsif", 160, 120 }, { "qcif", 176, 144 },
-      { "sif", 320, 240 }, { "cif", 352, 288 }, { "cif", 640, 480 },
+      { "sif", 320, 240 }, { "cif", 352, 288 }, { "d1", 640, 480 },
       { 0, 0, 0 },
     };
 
@@ -320,17 +347,19 @@ static int CommonOpen( vlc_object_t *p_this, access_sys_t *p_sys,
             {
                 i_height = strtol( psz_parser + 1, &psz_parser, 0 );
             }
-            msg_Dbg( p_this, "Width x Height %dx%d", i_width, i_height );
+            msg_Dbg( p_this, "width x height %dx%d", i_width, i_height );
         }
     }
     if( val.psz_string ) free( val.psz_string );
 
+    p_sys->b_chroma = VLC_FALSE;
     var_Create( p_this, "dshow-chroma", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
     var_Get( p_this, "dshow-chroma", &val );
     if( val.psz_string && strlen( val.psz_string ) >= 4 )
     {
         i_chroma = VLC_FOURCC( val.psz_string[0], val.psz_string[1],
                                val.psz_string[2], val.psz_string[3] );
+        p_sys->b_chroma = VLC_TRUE;
     }
     if( val.psz_string ) free( val.psz_string );
 
@@ -343,6 +372,11 @@ static int CommonOpen( vlc_object_t *p_this, access_sys_t *p_sys,
                 VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
 
     var_Create( p_this, "dshow-caching", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+
+    var_Create( p_this, "dshow-video-input", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Create( p_this, "dshow-audio-input", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Create( p_this, "dshow-video-output", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Create( p_this, "dshow-audio-output", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
 
     /* Initialize OLE/COM */
     CoInitialize( 0 );
@@ -421,6 +455,19 @@ static int CommonOpen( vlc_object_t *p_this, access_sys_t *p_sys,
 
     for( i = p_sys->i_crossbar_route_depth-1; i >= 0 ; --i )
     {
+            var_Get( p_this, "dshow-video-input", &val );
+            if( val.i_int > 0 )
+                    p_sys->crossbar_routes[i].VideoInputIndex=val.i_int;
+            var_Get( p_this, "dshow-video-output", &val );
+            if( val.i_int > 0 )
+                    p_sys->crossbar_routes[i].VideoOutputIndex=val.i_int;
+            var_Get( p_this, "dshow-audio-input", &val );
+            if( val.i_int > 0 )
+                    p_sys->crossbar_routes[i].AudioInputIndex=val.i_int;
+            var_Get( p_this, "dshow-audio-output", &val );
+            if( val.i_int > 0 )
+                    p_sys->crossbar_routes[i].AudioOutputIndex=val.i_int;
+
         IAMCrossbar *pXbar = p_sys->crossbar_routes[i].pXbar;
         LONG VideoInputIndex = p_sys->crossbar_routes[i].VideoInputIndex;
         LONG VideoOutputIndex = p_sys->crossbar_routes[i].VideoOutputIndex;
@@ -429,8 +476,8 @@ static int CommonOpen( vlc_object_t *p_this, access_sys_t *p_sys,
 
         if( SUCCEEDED(pXbar->Route(VideoOutputIndex, VideoInputIndex)) )
         {
-            msg_Dbg( p_this, "Crossbar at depth %d, Routed video "
-                     "ouput %ld to video input %ld", i, VideoOutputIndex,
+            msg_Dbg( p_this, "crossbar at depth %d, routed video "
+                     "output %ld to video input %ld", i, VideoOutputIndex,
                      VideoInputIndex );
 
             if( AudioOutputIndex != -1 && AudioInputIndex != -1 )
@@ -438,8 +485,8 @@ static int CommonOpen( vlc_object_t *p_this, access_sys_t *p_sys,
                 if( SUCCEEDED( pXbar->Route(AudioOutputIndex,
                                             AudioInputIndex)) )
                 {
-                    msg_Dbg(p_this, "Crossbar at depth %d, Routed audio "
-                            "ouput %ld to audio input %ld", i,
+                    msg_Dbg(p_this, "crossbar at depth %d, routed audio "
+                            "output %ld to audio input %ld", i,
                             AudioOutputIndex, AudioInputIndex );
                 }
             }
@@ -616,7 +663,7 @@ static int AccessOpen( vlc_object_t *p_this )
  *****************************************************************************/
 static void CommonClose( vlc_object_t *p_this, access_sys_t *p_sys )
 {
-    msg_Dbg( p_this, "Releasing DirectShow");
+    msg_Dbg( p_this, "releasing DirectShow");
 
     DeleteDirectShowGraph( p_sys );
 
@@ -828,92 +875,15 @@ static int OpenDevice( vlc_object_t *p_this, access_sys_t *p_sys,
     // Retreive acceptable media types supported by device
     AM_MEDIA_TYPE media_types[MAX_MEDIA_TYPES];
     size_t media_count =
-        EnumDeviceCaps( p_this, p_device_filter, p_sys->i_chroma,
+        EnumDeviceCaps( p_this, p_device_filter, b_audio ? 0 : p_sys->i_chroma,
                         p_sys->i_width, p_sys->i_height,
                         0, 0, 0, media_types, MAX_MEDIA_TYPES );
 
-    /* Find out if the pin handles MEDIATYPE_Stream, in which case we
-     * won't add a prefered media type as this doesn't seem to work well
-     * -- to investigate. */
-    vlc_bool_t b_stream_type = VLC_FALSE;
-    for( size_t i = 0; i < media_count; i++ )
-    {
-        if( media_types[i].majortype == MEDIATYPE_Stream )
-        {
-            b_stream_type = VLC_TRUE;
-            break;
-        }
-    }
-
-    size_t mt_count = 0;
     AM_MEDIA_TYPE *mt = NULL;
-
-    if( !b_stream_type && !b_audio )
-    {
-        // Insert prefered video media type
-        AM_MEDIA_TYPE mtr;
-        VIDEOINFOHEADER vh;
-
-        mtr.majortype            = MEDIATYPE_Video;
-        mtr.subtype              = MEDIASUBTYPE_I420;
-        mtr.bFixedSizeSamples    = TRUE;
-        mtr.bTemporalCompression = FALSE;
-        mtr.pUnk                 = NULL;
-        mtr.formattype           = FORMAT_VideoInfo;
-        mtr.cbFormat             = sizeof(vh);
-        mtr.pbFormat             = (BYTE *)&vh;
-
-        memset(&vh, 0, sizeof(vh));
-
-        vh.bmiHeader.biSize   = sizeof(vh.bmiHeader);
-        vh.bmiHeader.biWidth  = p_sys->i_width > 0 ? p_sys->i_width : 320;
-        vh.bmiHeader.biHeight = p_sys->i_height > 0 ? p_sys->i_height : 240;
-        vh.bmiHeader.biPlanes      = 3;
-        vh.bmiHeader.biBitCount    = 12;
-        vh.bmiHeader.biCompression = VLC_FOURCC('I','4','2','0');
-        vh.bmiHeader.biSizeImage   = vh.bmiHeader.biWidth * 12 *
-            vh.bmiHeader.biHeight / 8;
-        mtr.lSampleSize            = vh.bmiHeader.biSizeImage;
-
-        mt_count = 1;
-        mt = (AM_MEDIA_TYPE *)malloc( sizeof(AM_MEDIA_TYPE)*mt_count );
-        CopyMediaType(mt, &mtr);
-    }
-    else if( !b_stream_type )
-    {
-        // Insert prefered audio media type
-        AM_MEDIA_TYPE mtr;
-        WAVEFORMATEX wf;
-
-        mtr.majortype            = MEDIATYPE_Audio;
-        mtr.subtype              = MEDIASUBTYPE_PCM;
-        mtr.bFixedSizeSamples    = TRUE;
-        mtr.bTemporalCompression = FALSE;
-        mtr.lSampleSize          = 0;
-        mtr.pUnk                 = NULL;
-        mtr.formattype           = FORMAT_WaveFormatEx;
-        mtr.cbFormat             = sizeof(wf);
-        mtr.pbFormat             = (BYTE *)&wf;
-
-        memset(&wf, 0, sizeof(wf));
-
-        wf.wFormatTag = WAVE_FORMAT_PCM;
-        wf.nChannels = 2;
-        wf.nSamplesPerSec = 44100;
-        wf.wBitsPerSample = 16;
-        wf.nBlockAlign = wf.nSamplesPerSec * wf.wBitsPerSample / 8;
-        wf.nAvgBytesPerSec = wf.nSamplesPerSec * wf.nBlockAlign;
-        wf.cbSize = 0;
-
-        mt_count = 1;
-        mt = (AM_MEDIA_TYPE *)malloc( sizeof(AM_MEDIA_TYPE)*mt_count );
-        CopyMediaType(mt, &mtr);
-    }
 
     if( media_count > 0 )
     {
-        mt = (AM_MEDIA_TYPE *)realloc( mt, sizeof(AM_MEDIA_TYPE) *
-                                       (mt_count + media_count) );
+        mt = (AM_MEDIA_TYPE *)CoTaskMemAlloc(sizeof(AM_MEDIA_TYPE) * media_count);
 
         // Order and copy returned media types according to arbitrary
         // fourcc priority
@@ -934,20 +904,25 @@ static int OpenDevice( vlc_object_t *p_this, access_sys_t *p_sys,
             }
             if( slot_copy != c )
             {
-                mt[c+mt_count] = media_types[slot_copy];
+                mt[c] = media_types[slot_copy];
                 media_types[slot_copy] = media_types[c];
             }
             else
             {
-                mt[c+mt_count] = media_types[c];
+                mt[c] = media_types[c];
             }
         }
-        mt_count += media_count;
+    }
+    else {
+        /* capture device */
+        msg_Err( p_this, "capture device '%s' does not support required parameters !", devicename.c_str() );
+        p_device_filter->Release();
+        return VLC_EGENERIC;
     }
 
     /* Create and add our capture filter */
     CaptureFilter *p_capture_filter =
-        new CaptureFilter( p_this, p_sys, mt, mt_count );
+        new CaptureFilter( p_this, p_sys, mt, media_count );
     p_sys->p_graph->AddFilter( p_capture_filter, 0 );
 
     /* Add the device filter to the graph (seems necessary with VfW before
@@ -1217,15 +1192,18 @@ static size_t EnumDeviceCaps( vlc_object_t *p_this, IBaseFilter *p_filter,
                 BYTE *pSCC= (BYTE *)CoTaskMemAlloc(piSize);
                 if( NULL != pSCC )
                 {
+                    int i_priority = -1;
                     for( int i=0; i<piCount; ++i )
                     {
                         if( SUCCEEDED(pSC->GetStreamCaps(i, &p_mt, pSCC)) )
                         {
                             int i_current_fourcc = GetFourCCFromMediaType( *p_mt );
+                            int i_current_priority = GetFourCCPriority(i_current_fourcc);
 
-                            if( !i_current_fourcc || (i_fourcc && (i_current_fourcc != i_fourcc)) )
+                            if( (i_fourcc && (i_current_fourcc != i_fourcc))
+                             || (i_priority > i_current_priority) )
                             {
-                                // incompatible or unrecognized chroma, try next media type
+                                // unwanted chroma, try next media type
                                 FreeMediaType( *p_mt );
                                 CoTaskMemFree( (PVOID)p_mt );
                                 continue;
@@ -1291,11 +1269,11 @@ static size_t EnumDeviceCaps( vlc_object_t *p_this, IBaseFilter *p_filter,
                                 // select this format as default
                                 if( SUCCEEDED( pSC->SetFormat(p_mt) ) )
                                 {
-                                    msg_Dbg( p_this, "EnumDeviceCaps: input pin video format configured");
-                                    // no need to check any more media types 
-                                    i = piCount;
+                                    i_priority = i_current_priority;
+                                    if( i_fourcc )
+                                        // no need to check any more media types 
+                                        i = piCount;
                                 }
-                                else FreeMediaType( *p_mt );
                             }
                             else if( p_mt->majortype == MEDIATYPE_Audio
                                     && p_mt->formattype == FORMAT_WaveFormatEx )
@@ -1303,54 +1281,66 @@ static size_t EnumDeviceCaps( vlc_object_t *p_this, IBaseFilter *p_filter,
                                 AUDIO_STREAM_CONFIG_CAPS *pASCC = reinterpret_cast<AUDIO_STREAM_CONFIG_CAPS*>(pSCC);
                                 WAVEFORMATEX *pWfx = reinterpret_cast<WAVEFORMATEX*>(p_mt->pbFormat);
 
-                                if( i_channels )
+                                if( i_current_fourcc && (WAVE_FORMAT_PCM == pWfx->wFormatTag) )
                                 {
-                                    if( i_channels % pASCC->ChannelsGranularity
-                                     || (unsigned int)i_channels < pASCC->MinimumChannels
-                                     || (unsigned int)i_channels > pASCC->MaximumChannels )
+                                    int val = i_channels;
+                                    if( ! val )
+                                        val = 2;
+
+                                    if( val % pASCC->ChannelsGranularity
+                                     || (unsigned int)val < pASCC->MinimumChannels
+                                     || (unsigned int)val > pASCC->MaximumChannels )
                                     {
-                                        // required channels not compatible, try next media type
+                                        // required number channels not available, try next media type
                                         FreeMediaType( *p_mt );
                                         CoTaskMemFree( (PVOID)p_mt );
                                         continue;
                                     }
-                                    pWfx->nChannels = i_channels;
-                                }
+                                    pWfx->nChannels = val;
 
-                                if( i_samplespersec )
-                                {
-                                    if( i_samplespersec % pASCC->BitsPerSampleGranularity
-                                     || (unsigned int)i_samplespersec < pASCC->MinimumSampleFrequency
-                                     || (unsigned int)i_samplespersec > pASCC->MaximumSampleFrequency )
+                                    val = i_samplespersec;
+                                    if( ! val )
+                                        val = 44100;
+
+                                    if( val % pASCC->SampleFrequencyGranularity
+                                     || (unsigned int)val < pASCC->MinimumSampleFrequency
+                                     || (unsigned int)val > pASCC->MaximumSampleFrequency )
                                     {
-                                        // required sampling rate not compatible, try next media type
+                                        // required sampling rate not available, try next media type
                                         FreeMediaType( *p_mt );
                                         CoTaskMemFree( (PVOID)p_mt );
                                         continue;
                                     }
-                                    pWfx->nSamplesPerSec = i_samplespersec;
-                                }
-
-                                if( i_bitspersample )
-                                {
-                                    if( i_bitspersample % pASCC->BitsPerSampleGranularity
-                                     || (unsigned int)i_bitspersample < pASCC->MinimumBitsPerSample
-                                     || (unsigned int)i_bitspersample > pASCC->MaximumBitsPerSample )
+                                    pWfx->nSamplesPerSec = val;
+ 
+                                    val = i_bitspersample; 
+                                    if( ! val )
                                     {
-                                        // required sample size not compatible, try next media type
+                                        if( VLC_FOURCC('f', 'l', '3', '2') == i_current_fourcc )
+                                            val = 32;
+                                        else
+                                            val = 16;
+                                    }
+
+                                    if( val % pASCC->BitsPerSampleGranularity
+                                     || (unsigned int)val < pASCC->MinimumBitsPerSample
+                                     || (unsigned int)val > pASCC->MaximumBitsPerSample )
+                                    {
+                                        // required sample size not available, try next media type
                                         FreeMediaType( *p_mt );
                                         CoTaskMemFree( (PVOID)p_mt );
                                         continue;
                                     }
-                                    pWfx->wBitsPerSample = i_bitspersample;
-                                }
 
-                                // select this format as default
-                                if( SUCCEEDED( pSC->SetFormat(p_mt) ) )
-                                {
-                                    msg_Dbg( p_this, "EnumDeviceCaps: input pin default format configured");
-                                    // no need to check any more media types 
-                                    i = piCount;
+                                    pWfx->wBitsPerSample = val;
+                                    pWfx->nBlockAlign = (pWfx->wBitsPerSample * pWfx->nChannels)/8;
+                                    pWfx->nAvgBytesPerSec = pWfx->nSamplesPerSec * pWfx->nBlockAlign;
+
+                                    // select this format as default
+                                    if( SUCCEEDED( pSC->SetFormat(p_mt) ) )
+                                    {
+                                        i_priority = i_current_priority;
+                                    }
                                 }
                             }
                             FreeMediaType( *p_mt );
@@ -1358,6 +1348,8 @@ static size_t EnumDeviceCaps( vlc_object_t *p_this, IBaseFilter *p_filter,
                         }
                     }
                     CoTaskMemFree( (LPVOID)pSCC );
+                    if( i_priority >= 0 )
+                        msg_Dbg( p_this, "EnumDeviceCaps: input pin default format configured");
                 }
             }
             pSC->Release();
@@ -1372,7 +1364,6 @@ static size_t EnumDeviceCaps( vlc_object_t *p_this, IBaseFilter *p_filter,
             p_output_pin->Release();
             continue;
         }
-
 
         while( p_enummt->Next( 1, &p_mt, NULL ) == S_OK )
         {
@@ -1471,11 +1462,70 @@ static size_t EnumDeviceCaps( vlc_object_t *p_this, IBaseFilter *p_filter,
                 if( p_mt->majortype == MEDIATYPE_Video ) psz_type = "video";
                 if( p_mt->majortype == MEDIATYPE_Audio ) psz_type = "audio";
                 if( p_mt->majortype == MEDIATYPE_Stream ) psz_type = "stream";
-                msg_Dbg( p_this, "EnumDeviceCaps: input pin media: unknown format "
+                msg_Dbg( p_this, "EnumDeviceCaps: input pin media: unsupported format "
                          "(%s %4.4s)", psz_type, (char *)&p_mt->subtype );
+
                 FreeMediaType( *p_mt );
             }
             CoTaskMemFree( (PVOID)p_mt );
+        }
+
+        if( !mt_count && p_enummt->Reset() == S_OK )
+        {
+            // VLC did not find any supported MEDIATYPE for this output pin.
+            // However the graph builder might insert converter filters in
+            // the graph if we use a different codec in VLC filter input pin.
+            // however, in order to avoid nasty surprises, make use of this
+            // facility only for known unsupported codecs.
+
+            while( !mt_count && p_enummt->Next( 1, &p_mt, NULL ) == S_OK )
+            {
+                // the first four bytes of subtype GUID contains the codec FOURCC
+                const char *pfcc = (char *)&p_mt->subtype;
+                int i_current_fourcc = VLC_FOURCC(pfcc[0], pfcc[1], pfcc[2], pfcc[3]);
+                if( VLC_FOURCC('H','C','W','2') == i_current_fourcc
+                 && p_mt->majortype == MEDIATYPE_Video )
+                {
+                    // output format for 'Hauppauge WinTV PVR PCI II Capture'
+                    // try I420 as an input format
+                    i_current_fourcc = VLC_FOURCC('I','4','2','0');
+                    if( !i_fourcc || i_fourcc == i_current_fourcc )
+                    {
+                        // return alternative media type  
+                        AM_MEDIA_TYPE mtr;  
+                        VIDEOINFOHEADER vh;  
+             
+                        mtr.majortype            = MEDIATYPE_Video;  
+                        mtr.subtype              = MEDIASUBTYPE_I420;  
+                        mtr.bFixedSizeSamples    = TRUE;  
+                        mtr.bTemporalCompression = FALSE;  
+                        mtr.pUnk                 = NULL;  
+                        mtr.formattype           = FORMAT_VideoInfo;  
+                        mtr.cbFormat             = sizeof(vh);  
+                        mtr.pbFormat             = (BYTE *)&vh;  
+             
+                        memset(&vh, 0, sizeof(vh));  
+             
+                        vh.bmiHeader.biSize   = sizeof(vh.bmiHeader);  
+                        vh.bmiHeader.biWidth  = i_width > 0 ? i_width :
+                            ((VIDEOINFOHEADER *)p_mt->pbFormat)->bmiHeader.biWidth;  
+                        vh.bmiHeader.biHeight = i_height > 0 ? i_height :
+                            ((VIDEOINFOHEADER *)p_mt->pbFormat)->bmiHeader.biHeight;  
+                        vh.bmiHeader.biPlanes      = 3; 
+                        vh.bmiHeader.biBitCount    = 12;  
+                        vh.bmiHeader.biCompression = VLC_FOURCC('I','4','2','0');  
+                        vh.bmiHeader.biSizeImage   = vh.bmiHeader.biWidth * 12 *  
+                            vh.bmiHeader.biHeight / 8;  
+                        mtr.lSampleSize            = vh.bmiHeader.biSizeImage;  
+             
+                        msg_Dbg( p_this, "EnumDeviceCaps: input pin media: using 'I420' in place of unsupported format 'HCW2'");
+
+                        if( SUCCEEDED(CopyMediaType(mt+mt_count, &mtr)) )
+                            ++mt_count;
+                    }
+                }
+                FreeMediaType( *p_mt );
+            }
         }
 
         p_enummt->Release();
@@ -1870,7 +1920,7 @@ static void ShowDeviceProperties( vlc_object_t *p_this,
                                   vlc_bool_t b_audio )
 {
     HRESULT hr;
-    msg_Dbg( p_this, "Configuring Device Properties" );
+    msg_Dbg( p_this, "configuring Device Properties" );
 
     /*
      * Video or audio capture filter page
@@ -1884,7 +1934,7 @@ static void ShowDeviceProperties( vlc_object_t *p_this,
     {
         IAMStreamConfig *p_SC;
 
-        msg_Dbg( p_this, "Showing WDM Audio Configuration Pages" );
+        msg_Dbg( p_this, "showing WDM Audio Configuration Pages" );
 
         hr = p_graph->FindInterface( &PIN_CATEGORY_CAPTURE,
                                      &MEDIATYPE_Audio, p_device_filter,
@@ -1916,7 +1966,7 @@ static void ShowDeviceProperties( vlc_object_t *p_this,
     {
         IAMStreamConfig *p_SC;
 
-        msg_Dbg( p_this, "Showing WDM Video Configuration Pages" );
+        msg_Dbg( p_this, "showing WDM Video Configuration Pages" );
 
         hr = p_graph->FindInterface( &PIN_CATEGORY_CAPTURE,
                                      &MEDIATYPE_Interleaved, p_device_filter,
@@ -1949,7 +1999,7 @@ static void ShowTunerProperties( vlc_object_t *p_this,
                                  vlc_bool_t b_audio )
 {
     HRESULT hr;
-    msg_Dbg( p_this, "Configuring Tuner Properties" );
+    msg_Dbg( p_this, "configuring Tuner Properties" );
 
     if( !p_graph || b_audio ) return;
 

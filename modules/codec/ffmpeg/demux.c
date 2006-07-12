@@ -2,7 +2,7 @@
  * demux.c: demuxer using ffmpeg (libavformat).
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: demux.c 13101 2005-11-02 18:16:58Z gbazin $
+ * $Id: demux.c 15164 2006-04-10 21:32:26Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -32,7 +32,7 @@
 #include "vlc_meta.h"
 
 /* ffmpeg header */
-#ifdef HAVE_FFMPEG_AVCODEC_H
+#ifdef HAVE_FFMPEG_AVFORMAT_H
 #   include <ffmpeg/avformat.h>
 #else
 #   include <avformat.h>
@@ -43,7 +43,7 @@
 //#define AVFORMAT_DEBUG 1
 
 /* Version checking */
-#if (LIBAVFORMAT_BUILD >= 4629) && defined(HAVE_LIBAVFORMAT)
+#if (LIBAVFORMAT_BUILD >= 4629) && (defined(HAVE_FFMPEG_AVFORMAT_H) || defined(HAVE_LIBAVFORMAT_TREE))
 
 /*****************************************************************************
  * demux_sys_t: demux descriptor

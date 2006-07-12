@@ -1,8 +1,8 @@
 /*****************************************************************************
- * vlc_vlm.h: VLM interface plugin
+ * vlc_vlm.h: VLM core structures
  *****************************************************************************
  * Copyright (C) 2000, 2001 the VideoLAN team
- * $Id: vlc_vlm.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: vlc_vlm.h 14375 2006-02-18 20:28:47Z jpsaman $
  *
  * Authors: Simon Latapie <garf@videolan.org>
  *          Laurent Aimar <fenrir@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef _VLC_VLM_H
@@ -78,7 +78,6 @@ struct vlm_media_t
 
 };
 
-
 struct vlm_schedule_t
 {
     /* names "schedule" is reserved */
@@ -133,17 +132,18 @@ struct vlm_t
 #define vlm_New( a ) __vlm_New( VLC_OBJECT(a) )
 VLC_EXPORT( vlm_t *, __vlm_New, ( vlc_object_t * ) );
 VLC_EXPORT( void, vlm_Delete, ( vlm_t * ) );
-VLC_EXPORT( int, vlm_ExecuteCommand, ( vlm_t *, char *, vlm_message_t ** ) );
+VLC_EXPORT( int, vlm_ExecuteCommand, ( vlm_t *, const char *, vlm_message_t ** ) );
 VLC_EXPORT( void, vlm_MessageDelete, ( vlm_message_t * ) );
-VLC_EXPORT( vlm_media_t *, vlm_MediaNew, ( vlm_t *, char *, int ) );
-VLC_EXPORT( void, vlm_MediaDelete, ( vlm_t *, vlm_media_t *, char * ) );
-VLC_EXPORT( int, vlm_MediaSetup, ( vlm_t *, vlm_media_t *, char *, char * ) );
-VLC_EXPORT( int, vlm_MediaControl, ( vlm_t *, vlm_media_t *, char *, char *, char * ) );
-VLC_EXPORT( vlm_schedule_t *, vlm_ScheduleNew, ( vlm_t *, char * ) );
-VLC_EXPORT( void, vlm_ScheduleDelete, ( vlm_t *, vlm_schedule_t *, char * ) );
-VLC_EXPORT( int, vlm_ScheduleSetup, ( vlm_schedule_t *, char *, char * ) );
-VLC_EXPORT( int, vlm_MediaVodControl, ( void *, vod_media_t *, char *, int, va_list ) );
-VLC_EXPORT( int, vlm_Save, ( vlm_t *, char * ) );
-VLC_EXPORT( int, vlm_Load, ( vlm_t *, char * ) );
+VLC_EXPORT( vlm_media_t *, vlm_MediaNew, ( vlm_t *, const char *, int ) );
+VLC_EXPORT( void, vlm_MediaDelete, ( vlm_t *, vlm_media_t *, const char * ) );
+VLC_EXPORT( int, vlm_MediaSetup, ( vlm_t *, vlm_media_t *, const char *, const char * ) );
+VLC_EXPORT( int, vlm_MediaControl, ( vlm_t *, vlm_media_t *, const char *, const char *, const char * ) );
+VLC_EXPORT( vlm_media_t* , vlm_MediaSearch,( vlm_t *, const char *) );
+VLC_EXPORT( vlm_schedule_t *, vlm_ScheduleNew, ( vlm_t *, const char * ) );
+VLC_EXPORT( void, vlm_ScheduleDelete, ( vlm_t *, vlm_schedule_t *, const char * ) );
+VLC_EXPORT( int, vlm_ScheduleSetup, ( vlm_schedule_t *, const char *, const char * ) );
+VLC_EXPORT( int, vlm_MediaVodControl, ( void *, vod_media_t *, const char *, int, va_list ) );
+VLC_EXPORT( int, vlm_Save, ( vlm_t *, const char * ) );
+VLC_EXPORT( int, vlm_Load, ( vlm_t *, const char * ) );
 
 #endif

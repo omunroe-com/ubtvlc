@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "plugin.h"
@@ -81,9 +81,7 @@ STDMETHODIMP VLCOleInPlaceObject::UIDeactivate(void)
     if( _p_instance->isInPlaceActive() )
     {
         if( _p_instance->hasFocus() )
-        {
             _p_instance->setFocus(FALSE);
-        }
 
         LPOLEOBJECT p_oleObject;
         if( SUCCEEDED(QueryInterface(IID_IOleObject, (void**)&p_oleObject)) ) 
@@ -95,6 +93,25 @@ STDMETHODIMP VLCOleInPlaceObject::UIDeactivate(void)
 
                 if( SUCCEEDED(p_clientSite->QueryInterface(IID_IOleInPlaceSite, (void**)&p_inPlaceSite)) )
                 {
+                    LPOLEINPLACEFRAME p_inPlaceFrame;
+                    LPOLEINPLACEUIWINDOW p_inPlaceUIWindow;
+                    OLEINPLACEFRAMEINFO oleFrameInfo;
+                    RECT posRect, clipRect;
+
+                    oleFrameInfo.cb = sizeof(OLEINPLACEFRAMEINFO);
+                    if( SUCCEEDED(p_inPlaceSite->GetWindowContext(&p_inPlaceFrame, &p_inPlaceUIWindow, &posRect, &clipRect, &oleFrameInfo)) )
+                    {
+                        if( p_inPlaceFrame )
+                        {
+                            p_inPlaceFrame->SetActiveObject(NULL, NULL);
+                            p_inPlaceFrame->Release();
+                        }
+                        if( p_inPlaceUIWindow )
+                        {
+                            p_inPlaceUIWindow->SetActiveObject(NULL, NULL);
+                            p_inPlaceUIWindow->Release();
+                        }
+                    }
                     p_inPlaceSite->OnUIDeactivate(FALSE);
                     p_inPlaceSite->Release();
                 }

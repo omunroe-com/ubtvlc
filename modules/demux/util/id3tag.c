@@ -2,7 +2,7 @@
  * id3tag.c: id3 tag parser/skipper based on libid3tag
  *****************************************************************************
  * Copyright (C) 2002-2004 the VideoLAN team
- * $Id: id3tag.c 12836 2005-10-15 13:23:08Z sigmunau $
+ * $Id: id3tag.c 14719 2006-03-11 17:35:55Z zorglub $
  *
  * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -47,9 +47,9 @@ static int  ParseID3Tags ( vlc_object_t * );
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-set_description( _("ID3 tag parser using libid3tag" ) );
-set_capability( "id3", 70 );
-set_callbacks( ParseID3Tags, NULL );
+    set_description( _("ID3 tags parser" ) );
+    set_capability( "id3", 70 );
+    set_callbacks( ParseID3Tags, NULL );
 vlc_module_end();
 
 /*****************************************************************************
@@ -106,6 +106,26 @@ static void ParseID3Tag( demux_t *p_demux, uint8_t *p_data, int i_size )
             {
                 vlc_meta_Add( (vlc_meta_t *)p_demux->p_private,
                               VLC_META_ARTIST, psz_temp );
+            }
+            else if( !strcmp(p_frame->id, ID3_FRAME_YEAR ) )
+            {
+                vlc_meta_Add( (vlc_meta_t *)p_demux->p_private,
+                              VLC_META_DATE, psz_temp );
+            }
+            else if( !strcmp(p_frame->id, ID3_FRAME_COMMENT ) )
+            {
+                vlc_meta_Add( (vlc_meta_t *)p_demux->p_private,
+                              VLC_META_DESCRIPTION, psz_temp );
+            }
+            else if( strstr( (char*)p_frame->description, "Copyright" ) )
+            {
+                vlc_meta_Add( (vlc_meta_t *)p_demux->p_private,
+                              VLC_META_COPYRIGHT, psz_temp );
+            }
+            else if( strstr( (char*)p_frame->description, "Publisher" ) )
+            {
+                vlc_meta_Add( (vlc_meta_t *)p_demux->p_private,
+                              VLC_META_PUBLISHER, psz_temp );
             }
             else
             {

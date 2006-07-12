@@ -2,7 +2,7 @@
  * svcdsub.c : Overlay Graphics Text (SVCD subtitles) decoder
  *****************************************************************************
  * Copyright (C) 2003, 2004 the VideoLAN team
- * $Id: svcdsub.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: svcdsub.c 14993 2006-03-31 13:46:39Z zorglub $
  *
  * Authors: Rocky Bernstein
  *          Gildas Bazin <gbazin@videolan.org>
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -40,7 +40,7 @@ static int  PacketizerOpen( vlc_object_t * );
 static void DecoderClose  ( vlc_object_t * );
 
 #define DEBUG_TEXT \
-     "If nonzero, this gives additional debug information." \
+     "Enable debug"
 
 #define DEBUG_LONGTEXT \
     "This integer when viewed in binary is a debugging mask\n" \

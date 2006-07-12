@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mvar.c : Variables handling for the HTTP Interface
  *****************************************************************************
- * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: http.c 12225 2005-08-18 10:01:30Z massiot $
+ * Copyright (C) 2001-2006 the VideoLAN team
+ * $Id: mvar.c 14967 2006-03-29 16:56:20Z dionoea $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -20,21 +20,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "http.h"
 
 /* Utility function for scandir */
-static int Filter( const struct dirent *foo )
+static int Filter( const char *foo )
 {
-    return VLC_TRUE;
+    return strcmp( foo, "." );
 };
 
-static int InsensitiveAlphasort( const struct dirent **foo1,
-                                 const struct dirent **foo2 )
+static int InsensitiveAlphasort( const char **foo1,
+                                 const char **foo2 )
 {
-    return strcasecmp( (*foo1)->d_name, (*foo2)->d_name );
+    return strcasecmp( *foo1, *foo2 );
 };
 
 
@@ -335,8 +335,8 @@ mvar_t *E_(mvar_InfoSetNew)( intf_thread_t *p_intf, char *name,
             char *psz_name = E_(FromUTF8)( p_intf, p_info->psz_name );
             char *psz_value = E_(FromUTF8)( p_intf, p_info->psz_value );
 
-            msg_Dbg( p_input, "adding info name=%s value=%s",
-                     psz_name, psz_value );
+            /* msg_Dbg( p_input, "adding info name=%s value=%s",
+                     psz_name, psz_value ); */
             E_(mvar_AppendNewVar)( info, "name",  psz_name );
             E_(mvar_AppendNewVar)( info, "value", psz_value );
             free( psz_name );
@@ -346,6 +346,34 @@ mvar_t *E_(mvar_InfoSetNew)( intf_thread_t *p_intf, char *name,
         E_(mvar_AppendVar)( s, cat );
     }
     vlc_mutex_unlock( &p_input->input.p_item->lock );
+
+    return s;
+}
+
+mvar_t *E_(mvar_ObjectSetNew)( intf_thread_t *p_intf, char *psz_name,
+                               char *psz_capability )
+{
+    mvar_t *s = E_(mvar_New)( psz_name, "set" );
+    int i;
+
+    vlc_list_t *p_list = vlc_list_find( p_intf, VLC_OBJECT_MODULE,
+                                        FIND_ANYWHERE );
+
+    for( i = 0; i < p_list->i_count; i++ )
+    {
+        module_t *p_parser = (module_t *)p_list->p_values[i].p_object;
+        if( !strcmp( p_parser->psz_capability, psz_capability ) )
+        {
+            mvar_t *sd = E_(mvar_New)( "sd", p_parser->psz_object_name );
+            E_(mvar_AppendNewVar)( sd, "name",
+                p_parser->psz_longname ? p_parser->psz_longname
+                : ( p_parser->psz_shortname ? p_parser->psz_shortname
+                : p_parser->psz_object_name ) );
+            E_(mvar_AppendVar)( s, sd );
+        }
+    }
+
+    vlc_list_release( p_list );
 
     return s;
 }
@@ -498,25 +526,23 @@ mvar_t *E_(mvar_FileSetNew)( intf_thread_t *p_intf, char *name,
                              char *psz_dir )
 {
     mvar_t *s = E_(mvar_New)( name, "set" );
-    char          tmp[MAX_DIR_SIZE];
 #ifdef HAVE_SYS_STAT_H
     struct stat   stat_info;
 #endif
-    struct dirent **pp_dir_content;
+    char        **ppsz_dir_content;
     int           i_dir_content, i;
-    char          sep;
-
     /* convert all / to native separator */
 #if defined( WIN32 )
-    sep = '\\';
+    const char sep = '\\';
 #else
-    sep = '/';
+    const char sep = '/';
 #endif
 
     psz_dir = E_(RealPath)( p_intf, psz_dir );
 
 #ifdef HAVE_SYS_STAT_H
-    if( (stat( psz_dir, &stat_info ) == -1 || !S_ISDIR( stat_info.st_mode ))
+    if( (utf8_stat( psz_dir, &stat_info ) == -1 )
+     || !S_ISDIR( stat_info.st_mode )
 #   if defined( WIN32 )
           && psz_dir[0] != '\0' && (psz_dir[0] != '\\' || psz_dir[1] != '\0')
 #   endif
@@ -528,10 +554,10 @@ mvar_t *E_(mvar_FileSetNew)( intf_thread_t *p_intf, char *name,
 #endif
 
     /* parse psz_src dir */
-    if( ( i_dir_content = scandir( psz_dir, &pp_dir_content, Filter,
-                                   InsensitiveAlphasort ) ) == -1 )
+    if( ( i_dir_content = utf8_scandir( psz_dir, &ppsz_dir_content, Filter,
+                                        InsensitiveAlphasort ) ) == -1 )
     {
-        msg_Warn( p_intf, "scandir error on %s (%s)", psz_dir,
+        msg_Warn( p_intf, "error while scanning dir %s (%s)", psz_dir,
                   strerror(errno) );
         free( psz_dir );
         return s;
@@ -539,50 +565,52 @@ mvar_t *E_(mvar_FileSetNew)( intf_thread_t *p_intf, char *name,
 
     for( i = 0; i < i_dir_content; i++ )
     {
-        struct dirent *p_dir_content = pp_dir_content[i];
+        char *psz_dir_content = ppsz_dir_content[i];
+        char psz_tmp[strlen( psz_dir ) + 1 + strlen( psz_dir_content ) + 1];
         mvar_t *f;
-        const char *psz_ext;
-        char *psz_name, *psz_tmp;
-
-        if( !strcmp( p_dir_content->d_name, "." ) )
-        {
-            continue;
-        }
+        char *psz_name, *psz_ext, *psz_dummy;
 
 #if defined( WIN32 )
         if( psz_dir[0] == '\0' || (psz_dir[0] == '\\' && psz_dir[1] == '\0') )
         {
-            snprintf( tmp, sizeof(tmp), "%s", p_dir_content->d_name );
+            strcpy( psz_tmp, psz_dir_content );
         }
         else
 #endif
         {
-            snprintf( tmp, sizeof(tmp), "%s%c%s", psz_dir, sep,
-                      p_dir_content->d_name );
+            sprintf( psz_tmp, "%s%c%s", psz_dir, sep, psz_dir_content );
 
 #ifdef HAVE_SYS_STAT_H
-            if( stat( tmp, &stat_info ) == -1 )
+            if( utf8_stat( psz_tmp, &stat_info ) == -1 )
             {
+                free( psz_dir_content );
                 continue;
             }
 #endif
         }
         f = E_(mvar_New)( name, "set" );
 
-        psz_tmp = vlc_fix_readdir_charset( p_intf, p_dir_content->d_name );
-        psz_name = E_(FromUTF8)( p_intf, psz_tmp );
-        free( psz_tmp );
+        /* FIXME: merge vlc_fix_readdir_charset with utf8_readir */
+        psz_dummy = vlc_fix_readdir_charset( p_intf, psz_dir_content );
+        psz_name = E_(FromUTF8)( p_intf, psz_dummy );
+        free( psz_dummy );
 
-        /* put file extension in 'ext' */
+        /* put lower-case file extension in 'ext' */
         psz_ext = strrchr( psz_name, '.' );
-        E_(mvar_AppendNewVar)( f, "ext", psz_ext != NULL ? psz_ext + 1 : "" );
+        psz_ext = strdup( psz_ext != NULL ? psz_ext + 1 : "" );
+        for( psz_dummy = psz_ext; *psz_dummy != '\0'; psz_dummy++ )
+            *psz_dummy = tolower( *psz_dummy );
+
+        E_(mvar_AppendNewVar)( f, "ext", psz_ext );
+        free( psz_ext );
 
 #if defined( WIN32 )
         if( psz_dir[0] == '\0' || (psz_dir[0] == '\\' && psz_dir[1] == '\0') )
         {
-            snprintf( tmp, sizeof(tmp), "%c:", psz_name[0] );
+            char psz_tmp[3];
+            sprintf( psz_tmp, "%c:", psz_name[0] );
             E_(mvar_AppendNewVar)( f, "name", psz_name );
-            E_(mvar_AppendNewVar)( f, "basename", tmp );
+            E_(mvar_AppendNewVar)( f, "basename", psz_tmp );
             E_(mvar_AppendNewVar)( f, "type", "directory" );
             E_(mvar_AppendNewVar)( f, "size", "unknown" );
             E_(mvar_AppendNewVar)( f, "date", "unknown" );
@@ -590,8 +618,11 @@ mvar_t *E_(mvar_FileSetNew)( intf_thread_t *p_intf, char *name,
         else
 #endif
         {
-            snprintf( tmp, sizeof(tmp), "%s%c%s", psz_dir, sep, psz_name );
-            E_(mvar_AppendNewVar)( f, "name", tmp );
+            char psz_ctime[26];
+            char psz_tmp[strlen( psz_dir ) + 1 + strlen( psz_name ) + 1];
+
+            sprintf( psz_tmp, "%s%c%s", psz_dir, sep, psz_name );
+            E_(mvar_AppendNewVar)( f, "name", psz_tmp );
             E_(mvar_AppendNewVar)( f, "basename", psz_name );
 
 #ifdef HAVE_SYS_STAT_H
@@ -608,13 +639,13 @@ mvar_t *E_(mvar_FileSetNew)( intf_thread_t *p_intf, char *name,
                 E_(mvar_AppendNewVar)( f, "type", "unknown" );
             }
 
-            sprintf( tmp, I64Fd, (int64_t)stat_info.st_size );
-            E_(mvar_AppendNewVar)( f, "size", tmp );
+            sprintf( psz_ctime, I64Fd, (int64_t)stat_info.st_size );
+            E_(mvar_AppendNewVar)( f, "size", psz_ctime );
 
             /* FIXME memory leak FIXME */
 #   ifdef HAVE_CTIME_R
-            ctime_r( &stat_info.st_mtime, tmp );
-            E_(mvar_AppendNewVar)( f, "date", tmp );
+            ctime_r( &stat_info.st_mtime, psz_ctime );
+            E_(mvar_AppendNewVar)( f, "date", psz_ctime );
 #   else
             E_(mvar_AppendNewVar)( f, "date", ctime( &stat_info.st_mtime ) );
 #   endif
@@ -629,10 +660,50 @@ mvar_t *E_(mvar_FileSetNew)( intf_thread_t *p_intf, char *name,
         E_(mvar_AppendVar)( s, f );
 
         free( psz_name );
+        free( psz_dir_content );
     }
 
     free( psz_dir );
+    if( ppsz_dir_content != NULL )
+        free( ppsz_dir_content );
     return s;
+}
+
+void E_(mvar_VlmSetNewLoop)( char *name, vlm_t *vlm, mvar_t *s, vlm_message_t *el, vlc_bool_t b_name );
+void E_(mvar_VlmSetNewLoop)( char *name, vlm_t *vlm, mvar_t *s, vlm_message_t *el, vlc_bool_t b_name )
+{
+    /* Over name */
+    mvar_t        *set;
+    int k;
+
+    /* Add a node with name and info */
+    set = E_(mvar_New)( name, "set" );
+    if( b_name == VLC_TRUE )
+    {
+        E_(mvar_AppendNewVar)( set, "name", el->psz_name );
+    }
+
+    for( k = 0; k < el->i_child; k++ )
+    {
+        vlm_message_t *ch = el->child[k];
+        if( ch->i_child > 0 )
+        {
+            E_(mvar_VlmSetNewLoop)( ch->psz_name, vlm, set, ch, VLC_FALSE );
+        }
+        else
+        {
+            if( ch->psz_value )
+            {
+                E_(mvar_AppendNewVar)( set, ch->psz_name, ch->psz_value );
+            }
+            else
+            {
+                E_(mvar_AppendNewVar)( set, el->psz_name, ch->psz_name );
+            }
+        }
+    }
+
+    E_(mvar_AppendVar)( s, set );
 }
 
 mvar_t *E_(mvar_VlmSetNew)( char *name, vlm_t *vlm )
@@ -659,49 +730,16 @@ mvar_t *E_(mvar_VlmSetNew)( char *name, vlm_t *vlm )
             /* Over name */
             vlm_message_t *el = ch->child[j];
             vlm_message_t *inf, *desc;
-            mvar_t        *set;
             char          psz[500];
-            int k;
 
             sprintf( psz, "show %s", el->psz_name );
             if( vlm_ExecuteCommand( vlm, psz, &inf ) )
                 continue;
             desc = inf->child[0];
 
-            /* Add a node with name and info */
-            set = E_(mvar_New)( name, "set" );
-            E_(mvar_AppendNewVar)( set, "name", el->psz_name );
+            E_(mvar_VlmSetNewLoop)( el->psz_name, vlm, s, desc, VLC_TRUE );
 
-            for( k = 0; k < desc->i_child; k++ )
-            {
-                vlm_message_t *ch = desc->child[k];
-                if( ch->i_child > 0 )
-                {
-                    int c;
-                    mvar_t *n = E_(mvar_New)( ch->psz_name, "set" );
-
-                    for( c = 0; c < ch->i_child; c++ )
-                    {
-                        if( ch->child[c]->psz_value )
-                        {
-                            E_(mvar_AppendNewVar)( n, ch->child[c]->psz_name, ch->child[c]->psz_value );
-                        }
-                        else
-                        {
-                            mvar_t *in = E_(mvar_New)( ch->psz_name, ch->child[c]->psz_name );
-                            E_(mvar_AppendVar)( n, in );
-                        }
-                    }
-                    E_(mvar_AppendVar)( set, n );
-                }
-                else
-                {
-                    E_(mvar_AppendNewVar)( set, ch->psz_name, ch->psz_value );
-                }
-            }
             vlm_MessageDelete( inf );
-
-            E_(mvar_AppendVar)( s, set );
         }
     }
     vlm_MessageDelete( msg );

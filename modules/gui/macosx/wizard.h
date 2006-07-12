@@ -2,9 +2,9 @@
  * wizard.h: MacOS X Streaming Wizard
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: wizard.h 12859 2005-10-16 19:44:44Z fkuehne $
+ * $Id: wizard.h 14779 2006-03-17 20:07:25Z fkuehne $
  *
- * Authors: Felix Kühne <fkuehne@users.sf.net> 
+ * Authors: Felix KÃ¼hne <fkuehne@users.sf.net> 
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -35,10 +35,6 @@
     IBOutlet id o_btn_forward;
     IBOutlet id o_tab_pageHolder;
     IBOutlet id o_wizard_window;
-    IBOutlet id o_wizardhelp_window;
-    IBOutlet id o_wh_txt_title;
-    IBOutlet id o_wh_txt_text;
-    IBOutlet id o_wh_btn_okay;
     IBOutlet id o_playlist_wizard;
     
     /* page one ("Hello") */
@@ -151,6 +147,8 @@
     NSArray * o_encapFormats;
     NSArray * o_strmgMthds;
     NSString * o_opts;
+    
+    BOOL * keepSettingsOrNot;
 }
 - (IBAction)cancelRun:(id)sender;
 - (IBAction)nextTab:(id)sender;
@@ -170,7 +168,6 @@
 - (IBAction)t6_mrInfo_sap:(id)sender;
 - (IBAction)t67_mrInfo_local:(id)sender;
 - (IBAction)t7_selectTrnscdDestFile:(id)sender;
-- (IBAction)wh_closeSheet:(id)sender;
 
 + (VLCWizard *)sharedInstance;
 

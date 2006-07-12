@@ -2,9 +2,9 @@
  * announce.c : announce handler
  *****************************************************************************
  * Copyright (C) 2002-2004 the VideoLAN team
- * $Id: announce.c 12932 2005-10-23 10:58:24Z zorglub $
+ * $Id: announce.c 15025 2006-04-01 11:27:40Z fkuehne $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -69,7 +69,7 @@ int sout_AnnounceRegister( sout_instance_t *p_sout,
             return VLC_ENOMEM;
         }
         vlc_object_yield( p_announce );
-        msg_Dbg( p_sout,"Creation done" );
+        msg_Dbg( p_sout, "creation done" );
     }
 
     i_ret = announce_Register( p_announce, p_session, p_method );
@@ -110,7 +110,7 @@ session_descriptor_t *sout_AnnounceRegisterSDP( sout_instance_t *p_sout,
 
     if( p_method->i_type != METHOD_TYPE_SAP )
     {
-        msg_Warn( p_sout,"forcing SAP announcement");
+        msg_Warn( p_sout, "forcing SAP announcement");
     }
 
     p_session = sout_AnnounceSessionCreate();
@@ -139,7 +139,7 @@ int sout_AnnounceUnRegister( sout_instance_t *p_sout,
                                               FIND_ANYWHERE );
     if( !p_announce )
     {
-        msg_Dbg( p_sout, "Unable to remove announce: no announce handler" );
+        msg_Dbg( p_sout, "unable to remove announce: no announce handler" );
         return VLC_ENOOBJ;
     }
     i_ret  = announce_UnRegister( p_announce, p_session );
@@ -194,7 +194,7 @@ void sout_AnnounceSessionDestroy( session_descriptor_t *p_session )
 /**
  * Create and initialize an announcement method structure
  *
- * \param i_type METHOD_TYPE_SAP or METHOD_TYPE_SLP
+ * \param i_type METHOD_TYPE_SAP
  * \return a new announce_method structure
  */
 announce_method_t * sout_AnnounceMethodCreate( int i_type )
@@ -287,14 +287,9 @@ int announce_Register( announce_handler_t *p_announce,
         msg_Dbg( p_announce, "adding SAP session");
         p_announce->p_sap->pf_add( p_announce->p_sap, p_session );
     }
-    else if( p_method->i_type == METHOD_TYPE_SLP )
-    {
-        msg_Dbg( p_announce, "SLP unsupported at the moment" );
-        return VLC_EGENERIC;
-    }
     else
     {
-        msg_Dbg( p_announce, "Announce type unsupported" );
+        msg_Dbg( p_announce, "announce type unsupported" );
         return VLC_EGENERIC;
     }
     return VLC_SUCCESS;;

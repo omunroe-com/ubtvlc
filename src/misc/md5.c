@@ -2,7 +2,7 @@
  * md5.c: not so strong MD5 hashing
  *****************************************************************************
  * Copyright (C) 2004-2005 the VideoLAN team
- * $Id: md5.c 12747 2005-10-02 16:33:02Z jpsaman $
+ * $Id: md5.c 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Sam Hocevar <sam@zoy.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <string.h>

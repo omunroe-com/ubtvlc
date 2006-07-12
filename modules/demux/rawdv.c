@@ -2,7 +2,7 @@
  * rawdv.c : raw DV input module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: rawdv.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: rawdv.c 14790 2006-03-18 02:06:16Z xtophe $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -36,7 +36,8 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 vlc_module_begin();
-    set_description( _("raw DV demuxer") );
+    set_shortname( "DV" );
+    set_description( _("DV (Digital Video) demuxer") );
     set_capability( "demux2", 2 );
     set_category( CAT_INPUT );
     set_subcategory( SUBCAT_INPUT_DEMUX );
@@ -395,7 +396,7 @@ static block_t *dv_extract_audio( demux_t *p_demux,
     i_audio_quant = p_buf[4] & 0x07; /* 0 - 16bit, 1 - 12bit */
     if( i_audio_quant > 1 )
     {
-        msg_Dbg( p_demux, "Unsupported quantization for DV audio");
+        msg_Dbg( p_demux, "unsupported quantization for DV audio");
         return NULL;
     }
 
@@ -450,7 +451,7 @@ static block_t *dv_extract_audio( demux_t *p_demux,
                 else
                 {
                     /* 12bit quantization */
-                    lc = ((uint16_t)p_frame[d] << 4) | 
+                    lc = ((uint16_t)p_frame[d] << 4) |
                          ((uint16_t)p_frame[d+2] >> 4);
                     lc = (lc == 0x800 ? 0 : dv_audio_12to16(lc));
 

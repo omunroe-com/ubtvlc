@@ -2,7 +2,7 @@
  * vout_synchro.c : frame dropping routines
  *****************************************************************************
  * Copyright (C) 1999-2005 the VideoLAN team
- * $Id: vout_synchro.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: vout_synchro.c 14118 2006-02-01 18:06:48Z courmisch $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Samuel Hocevar <sam@via.ecp.fr>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*
@@ -48,7 +48,7 @@
  * T            : Picture period, T = 1/frame_rate.
  * tau[I,P,B]   : Mean time to decode an [I,P,B] picture.
  * tauYUV       : Mean time to render a picture (given by the video_output).
- * tau´[I,P,B] = 2 * tau[I,P,B] + tauYUV
+ * tauÂ´[I,P,B] = 2 * tau[I,P,B] + tauYUV
  *              : Mean time + typical difference (estimated to tau/2, that
  *                needs to be confirmed) + render time.
  * DELTA        : A given error margin.
@@ -66,23 +66,23 @@
  * Otherwise :
  * We can decode an I picture if we simply have enough time to decode it
  * before displaying :
- *      t0 - t > tau´I + DELTA
+ *      t0 - t > tauÂ´I + DELTA
  *
  * 5. Decoding of a P picture
  *    =======================
  * On fast machines, we decode all P's.
  * Otherwise :
  * First criterion : have time to decode it.
- *      t2 - t > tau´P + DELTA
+ *      t2 - t > tauÂ´P + DELTA
  *
  * Second criterion : it shouldn't prevent us from displaying the forthcoming
  * I picture, which is more important.
- *      t12 - t > tau´P + tau´I + DELTA
+ *      t12 - t > tauÂ´P + tauÂ´I + DELTA
  *
  * 6. Decoding of a B picture
  *    =======================
  * On fast machines, we decode all B's. Otherwise :
- *      t1 - t > tau´B + DELTA
+ *      t1 - t > tauÂ´B + DELTA
  * Since the next displayed I or P is already decoded, we don't have to
  * worry about it.
  *

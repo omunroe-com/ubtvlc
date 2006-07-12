@@ -2,10 +2,10 @@
  * ctrl_radialslider.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_radialslider.cpp 12207 2005-08-15 15:54:32Z asmax $
+ * $Id: ctrl_radialslider.cpp 14118 2006-02-01 18:06:48Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <math.h>
@@ -98,7 +98,8 @@ void CtrlRadialSlider::draw( OSGraphics &rImage, int xDest, int yDest )
 }
 
 
-void CtrlRadialSlider::onUpdate( Subject<VarPercent> &rVariable )
+void CtrlRadialSlider::onUpdate( Subject<VarPercent,void*> &rVariable,
+                                 void *arg  )
 {
     m_position = (int)( m_rVariable.get() * m_numImg );
     notifyLayout( m_width, m_height );

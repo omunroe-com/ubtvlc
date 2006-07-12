@@ -2,10 +2,10 @@
  * vlcproc.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: vlcproc.hpp 12281 2005-08-20 00:31:27Z dionoea $
+ * $Id: vlcproc.hpp 15241 2006-04-15 16:29:24Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier Teuliï¿½e <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef VLCPROC_HPP
@@ -27,15 +27,18 @@
 
 #include <set>
 
+#include "../vars/equalizer.hpp"
 #include "../vars/playlist.hpp"
 #include "../vars/playtree.hpp"
 #include "../vars/time.hpp"
 #include "../vars/volume.hpp"
+#include "../utils/position.hpp"
 #include "../utils/var_text.hpp"
 #include "../commands/cmd_generic.hpp"
 
 class OSTimer;
 class VarBool;
+struct aout_instance_t;
 
 
 /// Singleton object handling VLC internal state and playlist
@@ -68,6 +71,17 @@ class VlcProc: public SkinObject
         /// Getter for the stream URI variable
         VarText &getStreamURIVar()
             { return *((VarText*)(m_cVarStreamURI.get())); }
+
+        /// Getter for the stream bitrate variable
+        VarText &getStreamBitRateVar()
+            { return *((VarText*)(m_cVarStreamBitRate.get())); }
+
+        /// Getter for the stream sample rate variable
+        VarText &getStreamSampleRateVar()
+            { return *((VarText*)(m_cVarStreamSampleRate.get())); }
+
+        /// Getter for the vout size variable
+        VarBox &getVoutSizeVar() { return m_varVoutSize; }
 
         /// Set the vout window handle
         void registerVoutWindow( void *pVoutWindow );
@@ -104,6 +118,8 @@ class VlcProc: public SkinObject
         /// Variable for current stream properties
         VariablePtr m_cVarStreamName;
         VariablePtr m_cVarStreamURI;
+        VariablePtr m_cVarStreamBitRate;
+        VariablePtr m_cVarStreamSampleRate;
         /// Variable for the "mute" state
         VariablePtr m_cVarMute;
         /// Variables related to the input
@@ -111,6 +127,16 @@ class VlcProc: public SkinObject
         VariablePtr m_cVarStopped;
         VariablePtr m_cVarPaused;
         VariablePtr m_cVarSeekable;
+        /// Variables related to the vout
+        VariablePtr m_cVarFullscreen;
+        VarBox m_varVoutSize;
+        VariablePtr m_cVarHasVout;
+        /// Equalizer variables
+        EqualizerBands m_varEqBands;
+        VariablePtr m_cVarEqPreamp;
+        VariablePtr m_cVarEqualizer;
+        /// Variable for DVD detection
+        VariablePtr m_cVarDvdActive;
 
         /// Set of handles of vout windows
         /**
@@ -120,6 +146,8 @@ class VlcProc: public SkinObject
         set<void *> m_handleSet;
         /// Vout thread
         vout_thread_t *m_pVout;
+        /// Audio output
+        aout_instance_t *m_pAout;
 
         /**
          * Poll VLC internals to update the status (volume, current time in
@@ -132,6 +160,9 @@ class VlcProc: public SkinObject
 
         /// Define the command that calls manage()
         DEFINE_CALLBACK( VlcProc, Manage );
+
+        /// Refresh audio variables
+        void refreshAudio();
 
         /// Update the stream name variable
         void updateStreamName( playlist_t *p_playlist );
@@ -151,6 +182,17 @@ class VlcProc: public SkinObject
                                  vlc_value_t oldVal, vlc_value_t newVal,
                                  void *pParam );
 
+        /// Callback for item-change variable
+        static int onItemAppend( vlc_object_t *pObj, const char *pVariable,
+                                 vlc_value_t oldVal, vlc_value_t newVal,
+                                 void *pParam );
+
+        /// Callback for item-change variable
+        static int onItemDelete( vlc_object_t *pObj, const char *pVariable,
+                                 vlc_value_t oldVal, vlc_value_t newVal,
+                                 void *pParam );
+
+
         /// Callback for playlist-current variable
         static int onPlaylistChange( vlc_object_t *pObj, const char *pVariable,
                                      vlc_value_t oldVal, vlc_value_t newVal,
@@ -160,6 +202,11 @@ class VlcProc: public SkinObject
         static int onSkinToLoad( vlc_object_t *pObj, const char *pVariable,
                                  vlc_value_t oldVal, vlc_value_t newVal,
                                  void *pParam );
+
+        /// Callback for interaction variable
+        static int onInteraction( vlc_object_t *pObj, const char *pVariable,
+                                  vlc_value_t oldVal, vlc_value_t newVal,
+                                  void *pParam );
 
         /// Callback to request a vout window
         static void *getWindow( intf_thread_t *pIntf, vout_thread_t *pVout,
@@ -173,6 +220,16 @@ class VlcProc: public SkinObject
         /// Callback to change a vout window
         static int controlWindow( intf_thread_t *pIntf, void *pWindow,
                                   int query, va_list args );
+
+        /// Callback for equalizer-bands variable
+        static int onEqBandsChange( vlc_object_t *pObj, const char *pVariable,
+                                    vlc_value_t oldVal, vlc_value_t newVal,
+                                    void *pParam );
+
+        /// Callback for equalizer-preamp variable
+        static int onEqPreampChange( vlc_object_t *pObj, const char *pVariable,
+                                     vlc_value_t oldVal, vlc_value_t newVal,
+                                     void *pParam );
 };
 
 

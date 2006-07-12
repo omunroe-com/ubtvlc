@@ -2,10 +2,10 @@
  * interpreter.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: interpreter.cpp 12281 2005-08-20 00:31:27Z dionoea $
+ * $Id: interpreter.cpp 15366 2006-04-26 18:03:19Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +19,18 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "interpreter.hpp"
 #include "expr_evaluator.hpp"
+#include "../commands/cmd_audio.hpp"
 #include "../commands/cmd_muxer.hpp"
 #include "../commands/cmd_playlist.hpp"
 #include "../commands/cmd_playtree.hpp"
 #include "../commands/cmd_dialogs.hpp"
 #include "../commands/cmd_dummy.hpp"
+#include "../commands/cmd_dvd.hpp"
 #include "../commands/cmd_layout.hpp"
 #include "../commands/cmd_quit.hpp"
 #include "../commands/cmd_minimize.hpp"
@@ -36,6 +38,7 @@
 #include "../commands/cmd_fullscreen.hpp"
 #include "../commands/cmd_on_top.hpp"
 #include "../commands/cmd_show_window.hpp"
+#include "../commands/cmd_snapshot.hpp"
 #include "../src/theme.hpp"
 #include "../src/var_manager.hpp"
 #include "../src/vlcproc.hpp"
@@ -59,6 +62,11 @@ Interpreter::Interpreter( intf_thread_t *pIntf ): SkinObject( pIntf )
     REGISTER_CMD( "dialogs.fileInfo()", CmdDlgFileInfo )
     REGISTER_CMD( "dialogs.streamingWizard()", CmdDlgStreamingWizard )
     REGISTER_CMD( "dialogs.popup()", CmdDlgShowPopupMenu )
+    REGISTER_CMD( "dvd.nextTitle()", CmdDvdNextTitle )
+    REGISTER_CMD( "dvd.previousTitle()", CmdDvdPreviousTitle )
+    REGISTER_CMD( "dvd.nextChapter()", CmdDvdNextChapter )
+    REGISTER_CMD( "dvd.previousChapter()", CmdDvdPreviousChapter )
+    REGISTER_CMD( "dvd.rootMenu()", CmdDvdRootMenu )
     REGISTER_CMD( "playlist.load()", CmdDlgPlaylistLoad )
     REGISTER_CMD( "playlist.save()", CmdDlgPlaylistSave )
     REGISTER_CMD( "playlist.add()", CmdDlgAdd )
@@ -80,27 +88,10 @@ Interpreter::Interpreter( intf_thread_t *pIntf ): SkinObject( pIntf )
         CmdGenericPtr( new CmdPlaylistRepeat( getIntf(), true ) );
     m_commandMap["playlist.setRepeat(false)"] =
         CmdGenericPtr( new CmdPlaylistRepeat( getIntf(), false ) );
-    REGISTER_CMD( "playtree.load()", CmdDlgPlaytreeLoad )
-    REGISTER_CMD( "playtree.save()", CmdDlgPlaytreeSave )
-    REGISTER_CMD( "playtree.add()", CmdDlgAdd )
     VarTree &rVarTree = VlcProc::instance( getIntf() )->getPlaytreeVar();
     m_commandMap["playtree.del()"] =
         CmdGenericPtr( new CmdPlaytreeDel( getIntf(), rVarTree ) );
-    REGISTER_CMD( "playtree.next()", CmdPlaytreeNext )
-    REGISTER_CMD( "playtree.previous()", CmdPlaytreePrevious )
     REGISTER_CMD( "playtree.sort()", CmdPlaytreeSort )
-    m_commandMap["playtree.setRandom(true)"] =
-        CmdGenericPtr( new CmdPlaytreeRandom( getIntf(), true ) );
-    m_commandMap["playtree.setRandom(false)"] =
-        CmdGenericPtr( new CmdPlaytreeRandom( getIntf(), false ) );
-    m_commandMap["playtree.setLoop(true)"] =
-        CmdGenericPtr( new CmdPlaytreeLoop( getIntf(), true ) );
-    m_commandMap["playtree.setLoop(false)"] =
-        CmdGenericPtr( new CmdPlaytreeLoop( getIntf(), false ) );
-    m_commandMap["playtree.setRepeat(true)"] =
-        CmdGenericPtr( new CmdPlaytreeRepeat( getIntf(), true ) );
-    m_commandMap["playtree.setRepeat(false)"] =
-        CmdGenericPtr( new CmdPlaytreeRepeat( getIntf(), false ) );
     REGISTER_CMD( "vlc.fullscreen()", CmdFullscreen )
     REGISTER_CMD( "vlc.play()", CmdPlay )
     REGISTER_CMD( "vlc.pause()", CmdPause )
@@ -112,7 +103,12 @@ Interpreter::Interpreter( intf_thread_t *pIntf ): SkinObject( pIntf )
     REGISTER_CMD( "vlc.volumeDown()", CmdVolumeDown )
     REGISTER_CMD( "vlc.minimize()", CmdMinimize )
     REGISTER_CMD( "vlc.onTop()", CmdOnTop )
+    REGISTER_CMD( "vlc.snapshot()", CmdSnapshot )
     REGISTER_CMD( "vlc.quit()", CmdQuit )
+    m_commandMap["equalizer.enable()"] =
+        CmdGenericPtr( new CmdSetEqualizer( getIntf(), true ) );
+    m_commandMap["equalizer.disable()"] =
+        CmdGenericPtr( new CmdSetEqualizer( getIntf(), false ) );
 
     // Register the constant bool variables in the var manager
     VarManager *pVarManager = VarManager::instance( getIntf() );
@@ -166,7 +162,7 @@ CmdGeneric *Interpreter::parseAction( const string &rAction, Theme *pTheme )
         string::size_type pos = rightPart.find( ";" );
         while( pos != string::npos )
         {
-            string leftPart = rightPart.substr( 0, rightPart.find( ";" ) );
+            string leftPart = rightPart.substr( 0, pos );
             // Remove any whitespace at the end of the left part, and parse it
             leftPart =
                 leftPart.substr( 0, leftPart.find_last_not_of( " \t" ) + 1 );
@@ -174,6 +170,14 @@ CmdGeneric *Interpreter::parseAction( const string &rAction, Theme *pTheme )
             // Now remove any whitespace at the beginning of the right part,
             // and go on checking for further actions in it...
             rightPart = rightPart.substr( pos, rightPart.size() );
+            if ( rightPart.find_first_not_of( " \t;" ) == string::npos )
+            {
+                // The right part is completely buggy, it's time to leave the
+                // loop...
+                rightPart = "";
+                break;
+            }
+
             rightPart =
                 rightPart.substr( rightPart.find_first_not_of( " \t;" ),
                                   rightPart.size() );
@@ -194,7 +198,27 @@ CmdGeneric *Interpreter::parseAction( const string &rAction, Theme *pTheme )
         int rightPos = rAction.find( ")", windowId.size() + 11 );
         string layoutId = rAction.substr( windowId.size() + 11,
                                           rightPos - (windowId.size() + 11) );
-        pCommand = new CmdLayout( getIntf(), windowId, layoutId );
+
+        TopWindow *pWin = pTheme->getWindowById( windowId );
+        GenericLayout *pLayout = pTheme->getLayoutById( layoutId );
+        if( !pWin )
+        {
+            msg_Err( getIntf(), "unknown window (%s)", windowId.c_str() );
+        }
+        else if( !pLayout )
+        {
+            msg_Err( getIntf(), "unknown layout (%s)", layoutId.c_str() );
+        }
+        // Check that the layout doesn't correspond to another window
+        else if( pWin != pLayout->getWindow() )
+        {
+            msg_Err( getIntf(), "layout %s is not associated to window %s",
+                     layoutId.c_str(), windowId.c_str() );
+        }
+        else
+        {
+            pCommand = new CmdLayout( getIntf(), *pWin, *pLayout );
+        }
     }
     else if( rAction.find( ".show()" ) != string::npos )
     {
@@ -208,7 +232,17 @@ CmdGeneric *Interpreter::parseAction( const string &rAction, Theme *pTheme )
         }
         else
         {
-            msg_Err( getIntf(), "Unknown window (%s)", windowId.c_str() );
+            // It was maybe the id of a popup
+            Popup *pPopup = pTheme->getPopupById( windowId );
+            if( pPopup )
+            {
+                pCommand = new CmdShowPopup( getIntf(), *pPopup );
+            }
+            else
+            {
+                msg_Err( getIntf(), "unknown window or popup (%s)",
+                         windowId.c_str() );
+            }
         }
     }
     else if( rAction.find( ".hide()" ) != string::npos )
@@ -223,7 +257,7 @@ CmdGeneric *Interpreter::parseAction( const string &rAction, Theme *pTheme )
         }
         else
         {
-            msg_Err( getIntf(), "Unknown window (%s)", windowId.c_str() );
+            msg_Err( getIntf(), "unknown window (%s)", windowId.c_str() );
         }
     }
 
@@ -234,7 +268,7 @@ CmdGeneric *Interpreter::parseAction( const string &rAction, Theme *pTheme )
     }
     else
     {
-        msg_Warn( getIntf(), "Unknown action: %s", rAction.c_str() );
+        msg_Warn( getIntf(), "unknown action: %s", rAction.c_str() );
     }
 
     return pCommand;
@@ -260,7 +294,7 @@ VarBool *Interpreter::getVarBool( const string &rName, Theme *pTheme )
             // Get the 2 last variables on the stack
             if( varStack.empty() )
             {
-                msg_Err( getIntf(), "Invalid boolean expression: %s",
+                msg_Err( getIntf(), "invalid boolean expression: %s",
                          rName.c_str());
                 return NULL;
             }
@@ -268,7 +302,7 @@ VarBool *Interpreter::getVarBool( const string &rName, Theme *pTheme )
             varStack.pop_back();
             if( varStack.empty() )
             {
-                msg_Err( getIntf(), "Invalid boolean expression: %s",
+                msg_Err( getIntf(), "invalid boolean expression: %s",
                          rName.c_str());
                 return NULL;
             }
@@ -286,7 +320,7 @@ VarBool *Interpreter::getVarBool( const string &rName, Theme *pTheme )
             // Get the 2 last variables on the stack
             if( varStack.empty() )
             {
-                msg_Err( getIntf(), "Invalid boolean expression: %s",
+                msg_Err( getIntf(), "invalid boolean expression: %s",
                          rName.c_str());
                 return NULL;
             }
@@ -294,7 +328,7 @@ VarBool *Interpreter::getVarBool( const string &rName, Theme *pTheme )
             varStack.pop_back();
             if( varStack.empty() )
             {
-                msg_Err( getIntf(), "Invalid boolean expression: %s",
+                msg_Err( getIntf(), "invalid boolean expression: %s",
                          rName.c_str());
                 return NULL;
             }
@@ -312,7 +346,7 @@ VarBool *Interpreter::getVarBool( const string &rName, Theme *pTheme )
             // Get the last variable on the stack
             if( varStack.empty() )
             {
-                msg_Err( getIntf(), "Invalid boolean expression: %s",
+                msg_Err( getIntf(), "invalid boolean expression: %s",
                          rName.c_str());
                 return NULL;
             }
@@ -337,7 +371,7 @@ VarBool *Interpreter::getVarBool( const string &rName, Theme *pTheme )
             }
             else
             {
-                msg_Err( getIntf(), "Unknown window (%s)", windowId.c_str() );
+                msg_Err( getIntf(), "unknown window (%s)", windowId.c_str() );
                 return NULL;
             }
         }
@@ -347,7 +381,7 @@ VarBool *Interpreter::getVarBool( const string &rName, Theme *pTheme )
             VarBool *pVar = (VarBool*)pVarManager->getVar( token, "bool" );
             if( !pVar )
             {
-                msg_Err( getIntf(), "Cannot resolve boolean variable: %s",
+                msg_Err( getIntf(), "cannot resolve boolean variable: %s",
                          token.c_str());
                 return NULL;
             }
@@ -360,7 +394,7 @@ VarBool *Interpreter::getVarBool( const string &rName, Theme *pTheme )
     // The stack should contain a single variable
     if( varStack.size() != 1 )
     {
-        msg_Err( getIntf(), "Invalid boolean expression: %s", rName.c_str() );
+        msg_Err( getIntf(), "invalid boolean expression: %s", rName.c_str() );
         return NULL;
     }
     return varStack.back();
@@ -384,6 +418,7 @@ VarList *Interpreter::getVarList( const string &rName, Theme *pTheme )
     return pVar;
 }
 
+
 VarTree *Interpreter::getVarTree( const string &rName, Theme *pTheme )
 {
     // Try to get the variable from the variable manager
@@ -391,3 +426,17 @@ VarTree *Interpreter::getVarTree( const string &rName, Theme *pTheme )
     VarTree *pVar = (VarTree*)pVarManager->getVar( rName, "tree" );
     return pVar;
 }
+
+
+string Interpreter::getConstant( const string &rValue )
+{
+    // Check if the value is a registered constant
+    string val = VarManager::instance( getIntf() )->getConst( rValue );
+    if( val.empty() )
+    {
+        // if not, keep the value as is
+        val = rValue;
+    }
+    return val;
+}
+

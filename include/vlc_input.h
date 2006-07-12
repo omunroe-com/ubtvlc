@@ -1,8 +1,8 @@
 /*****************************************************************************
- * vlc_input.h:
+ * vlc_input.h: Core input structures
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: input_ext-intf.h 7954 2004-06-07 22:19:12Z fenrir $
+ * $Id: vlc_input.h 14015 2006-01-26 16:51:47Z sigmunau $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /* __ is need because conflict with <vlc/input.h> */
@@ -64,6 +64,8 @@ struct input_item_t
 
     vlc_bool_t  b_fixed_name;        /**< Can the interface change the name ?*/
 
+    input_stats_t *p_stats;          /**< Statistics */
+
     vlc_mutex_t lock;                /**< Item cannot be changed without this lock */
 };
 
@@ -91,6 +93,10 @@ static inline void vlc_input_item_Init( vlc_object_t *p_o, input_item_t *p_i )
     p_i->es = 0;
     p_i->i_type = ITEM_TYPE_UNKNOWN;
     p_i->b_fixed_name = VLC_TRUE;
+
+    p_i->p_stats = (input_stats_t*) malloc( sizeof( input_stats_t ) );
+    vlc_mutex_init( p_o, &p_i->p_stats->lock );
+
     vlc_mutex_init( p_o, &p_i->lock );
 }
 
@@ -113,6 +119,7 @@ static inline void vlc_input_item_Clean( input_item_t *p_i )
 {
     if( p_i->psz_name ) free( p_i->psz_name );
     if( p_i->psz_uri ) free( p_i->psz_uri );
+    if( p_i->p_stats ) free( p_i->p_stats );
     p_i->psz_name = 0;
     p_i->psz_uri = 0;
 
@@ -409,8 +416,13 @@ struct input_thread_t
  *****************************************************************************/
 #define input_CreateThread(a,b) __input_CreateThread(VLC_OBJECT(a),b)
 VLC_EXPORT( input_thread_t *, __input_CreateThread, ( vlc_object_t *, input_item_t * ) );
+#define input_CreateThread2(a,b,c) __input_CreateThread2(VLC_OBJECT(a),b,c)
+VLC_EXPORT( input_thread_t *, __input_CreateThread2, ( vlc_object_t *, input_item_t *, char * ) );
 #define input_Preparse(a,b) __input_Preparse(VLC_OBJECT(a),b)
 VLC_EXPORT( int, __input_Preparse, ( vlc_object_t *, input_item_t * ) );
+
+#define input_Read(a,b,c) __input_Read(VLC_OBJECT(a),b, c)
+VLC_EXPORT( int, __input_Read, ( vlc_object_t *, input_item_t *, vlc_bool_t ) );
 VLC_EXPORT( void,             input_StopThread,     ( input_thread_t * ) );
 VLC_EXPORT( void,             input_DestroyThread,  ( input_thread_t * ) );
 

@@ -2,7 +2,7 @@
  * objects.c: vlc_object_t handling
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: objects.c 12116 2005-08-10 22:08:50Z jpsaman $
+ * $Id: objects.c 15025 2006-04-01 11:27:40Z fkuehne $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /**
@@ -99,7 +99,7 @@ static vlc_mutex_t    structure_lock;
 void * __vlc_object_create( vlc_object_t *p_this, int i_type )
 {
     vlc_object_t * p_new;
-    char *         psz_type;
+    const char   * psz_type;
     size_t         i_size;
 
     switch( i_type )
@@ -122,7 +122,7 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
             break;
         case VLC_OBJECT_DIALOGS:
             i_size = sizeof(intf_thread_t);
-            psz_type = "dialogs provider";
+            psz_type = "dialogs";
             break;
         case VLC_OBJECT_PLAYLIST:
             i_size = sizeof(playlist_t);
@@ -170,7 +170,7 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
             break;
         case VLC_OBJECT_SPU:
             i_size = sizeof(spu_t);
-            psz_type = "subpicture unit";
+            psz_type = "subpicture";
             break;
         case VLC_OBJECT_AOUT:
             i_size = sizeof(aout_instance_t);
@@ -182,7 +182,11 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
             break;
         case VLC_OBJECT_HTTPD:
             i_size = sizeof( httpd_t );
-            psz_type = "http daemon";
+            psz_type = "http server";
+            break;
+        case VLC_OBJECT_HTTPD_HOST:
+            i_size = sizeof( httpd_host_t );
+            psz_type = "http server";
             break;
         case VLC_OBJECT_VLM:
             i_size = sizeof( vlm_t );
@@ -202,21 +206,23 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
             break;
         case VLC_OBJECT_OPENGL:
             i_size = sizeof( vout_thread_t );
-            psz_type = "opengl provider";
+            psz_type = "opengl";
             break;
         case VLC_OBJECT_ANNOUNCE:
             i_size = sizeof( announce_handler_t );
-            psz_type = "announce handler";
+            psz_type = "announce";
             break;
         case VLC_OBJECT_OSDMENU:
             i_size = sizeof( osd_menu_t );
             psz_type = "osd menu";
             break;
+        case VLC_OBJECT_STATS:
+            i_size = sizeof( stats_handler_t );
+            psz_type = "statistics";
+            break;
         default:
-            i_size = i_type > 0
-                      ? i_type > (int)sizeof(vlc_object_t)
-                         ? i_type : (int)sizeof(vlc_object_t)
-                      : (int)sizeof(vlc_object_t);
+            i_size = i_type > (int)sizeof(vlc_object_t)
+                         ? i_type : (int)sizeof(vlc_object_t);
             i_type = VLC_OBJECT_GENERIC;
             psz_type = "generic";
             break;
@@ -243,6 +249,16 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
     p_new->b_dead = VLC_FALSE;
     p_new->b_attached = VLC_FALSE;
     p_new->b_force = VLC_FALSE;
+
+    p_new->psz_header = NULL;
+
+    p_new->i_flags = 0;
+    if( p_this->i_flags & OBJECT_FLAGS_NODBG )
+        p_new->i_flags |= OBJECT_FLAGS_NODBG;
+    if( p_this->i_flags & OBJECT_FLAGS_QUIET )
+        p_new->i_flags |= OBJECT_FLAGS_QUIET;
+    if( p_this->i_flags & OBJECT_FLAGS_NOINTERACT )
+        p_new->i_flags |= OBJECT_FLAGS_NOINTERACT;
 
     p_new->i_vars = 0;
     p_new->p_vars = (variable_t *)malloc( 16 * sizeof( variable_t ) );
@@ -362,7 +378,7 @@ void __vlc_object_destroy( vlc_object_t *p_this )
         else if( i_delay == 20 )
         {
             msg_Err( p_this,
-                  "we waited too long, cancelling destruction (id=%d,type=%d)",
+                  "waited too long, cancelling destruction (id=%d,type=%d)",
                   p_this->i_object_id, p_this->i_object_type );
             return;
         }
@@ -379,6 +395,8 @@ void __vlc_object_destroy( vlc_object_t *p_this )
 
     free( p_this->p_vars );
     vlc_mutex_destroy( &p_this->var_lock );
+
+    if( p_this->psz_header ) free( p_this->psz_header );
 
     if( p_this->i_object_type == VLC_OBJECT_ROOT )
     {

@@ -2,9 +2,9 @@
  * equalizer.h: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: equalizer.h 11818 2005-07-23 15:08:46Z fkuehne $
+ * $Id: equalizer.h 14129 2006-02-01 20:04:09Z courmisch $
  *
- * Authors: Jérôme Decoodt <djc@videolan.org>
+ * Authors: J√©r√¥me Decoodt <djc@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************

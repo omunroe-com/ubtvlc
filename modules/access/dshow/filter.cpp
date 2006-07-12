@@ -2,7 +2,7 @@
  * filter.c : DirectShow access module for vlc
  *****************************************************************************
  * Copyright (C) 2002 the VideoLAN team
- * $Id: filter.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: filter.cpp 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -47,7 +47,7 @@
 
 /*****************************************************************************
  * DirectShow GUIDs.
- * Easier to define them hear as mingw doesn't provide them all.
+ * Easier to define them here as mingw doesn't provide them all.
  *****************************************************************************/
 const GUID CLSID_SystemDeviceEnum = {0x62be5d10, 0x60eb, 0x11d0, {0xbd, 0x3b, 0x00, 0xa0, 0xc9, 0x11, 0xce, 0x86}};
 const GUID CLSID_VideoInputDeviceCategory = {0x860BB310,0x5D01,0x11d0,{0xBD,0x3B,0x00,0xA0,0xC9,0x11,0xCE,0x86}};

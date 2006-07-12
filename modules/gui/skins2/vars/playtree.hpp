@@ -2,7 +2,7 @@
  * playtree.hpp
  *****************************************************************************
  * Copyright (C) 2005 VideoLAN
- * $Id: playlist.hpp 8659 2004-09-07 21:16:49Z gbazin $
+ * $Id: playtree.hpp 14646 2006-03-05 15:33:02Z dionoea $
  *
  * Authors: Antoine Cellerier <dionoea@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef PLAYTREE_HPP
@@ -43,7 +43,16 @@ class Playtree: public VarTree
         void onChange();
 
         /// Function called to notify playlist item update
-        void onUpdate( int id );
+        void onUpdateItem( int id );
+
+        /// Function called to notify playlist item append
+        void onAppend( playlist_add_t * );
+
+        /// Function called to notify playlist item delete
+        void onDelete( int );
+
+        /// Items waiting to be appended
+        int i_items_to_append;
 
     private:
         /// VLC playlist object

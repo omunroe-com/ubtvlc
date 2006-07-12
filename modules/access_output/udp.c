@@ -2,7 +2,7 @@
  * udp.c
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: udp.c 12981 2005-10-27 07:31:15Z md $
+ * $Id: udp.c 14974 2006-03-30 05:37:29Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -74,21 +74,21 @@ static void Close( vlc_object_t * );
 
 #define CACHING_TEXT N_("Caching value (ms)")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for UDP streams. This " \
-    "value should be set in millisecond units." )
+    "Default caching value for outbound UDP streams. This " \
+    "value should be set in milliseconds." )
 
-#define TTL_TEXT N_("Time To Live")
-#define TTL_LONGTEXT N_("Allows you to define the time to live of the " \
+#define TTL_TEXT N_("Time-To-Live (TTL)")
+#define TTL_LONGTEXT N_("Time-To-Live of the " \
                         "outgoing stream.")
 
 #define GROUP_TEXT N_("Group packets")
 #define GROUP_LONGTEXT N_("Packets can be sent one by one at the right time " \
-                          "or by groups. This allows you to give the number " \
+                          "or by groups. You can choose the number " \
                           "of packets that will be sent at a time. It " \
                           "helps reducing the scheduling load on " \
                           "heavily-loaded systems." )
 #define RAW_TEXT N_("Raw write")
-#define RAW_LONGTEXT N_("If you enable this option, packets will be sent " \
+#define RAW_LONGTEXT N_("Packets will be sent " \
                        "directly, without trying to fill the MTU (ie, " \
                        "without trying to make the biggest possible packets " \
                        "in order to improve streaming)." )
@@ -145,9 +145,7 @@ typedef struct sout_access_thread_t
     int64_t     i_caching;
     int         i_group;
 
-    vlc_mutex_t blocks_lock;
-    block_t     *p_empty_blocks;
-    int         i_empty_depth;
+    block_fifo_t *p_empty_blocks;
 
 } sout_access_thread_t;
 
@@ -180,8 +178,7 @@ static int Open( vlc_object_t *p_this )
     char                *psz_dst_addr;
     int                 i_dst_port;
 
-    module_t            *p_network;
-    network_socket_t    socket_desc;
+    int                 i_handle;
 
     vlc_value_t         val;
 
@@ -241,45 +238,23 @@ static int Open( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
 
+    vlc_object_attach( p_sys->p_thread, p_access );
     p_sys->p_thread->p_sout = p_access->p_sout;
     p_sys->p_thread->b_die  = 0;
     p_sys->p_thread->b_error= 0;
     p_sys->p_thread->p_fifo = block_FifoNew( p_access );
-    p_sys->p_thread->p_empty_blocks = NULL;
-    p_sys->p_thread->i_empty_depth = 0;
-    vlc_mutex_init( p_access, &p_sys->p_thread->blocks_lock );
-
-    /* FIXME: use net_OpenUDP API */
-    socket_desc.psz_server_addr = psz_dst_addr;
-    socket_desc.i_server_port   = i_dst_port;
-    socket_desc.psz_bind_addr   = "";
-    socket_desc.i_bind_port     = 0;
-    socket_desc.i_handle        = -1;
-    socket_desc.v6only          = 0;
+    p_sys->p_thread->p_empty_blocks = block_FifoNew( p_access );
 
     var_Get( p_access, SOUT_CFG_PREFIX "ttl", &val );
-    socket_desc.i_ttl = val.i_int;
-
-    p_sys->p_thread->p_private = (void*)&socket_desc;
-    p_network = module_Need( p_sys->p_thread, "network", "ipv4", VLC_TRUE );
-    if( p_network != NULL )
-        module_Unneed( p_sys->p_thread, p_network );
-
-    if( socket_desc.i_handle == -1 )
+    i_handle = net_ConnectUDP( p_this, psz_dst_addr, i_dst_port, val.i_int );
+    if( i_handle == -1 )
     {
-        p_network = module_Need( p_sys->p_thread, "network", "ipv6", VLC_TRUE );
-        if( p_network != NULL )
-            module_Unneed( p_sys->p_thread, p_network );
-
-        if( socket_desc.i_handle == -1 )
-        {
-            msg_Err( p_access, "failed to open a connection (udp)" );
-            return VLC_EGENERIC;
-        }
+         msg_Err( p_access, "failed to open a connection (udp)" );
+         return VLC_EGENERIC;
     }
 
-    p_sys->p_thread->i_handle = socket_desc.i_handle;
-    net_StopRecv( socket_desc.i_handle );
+    p_sys->p_thread->i_handle = i_handle;
+    net_StopRecv( i_handle );
 
     var_Get( p_access, SOUT_CFG_PREFIX "caching", &val );
     p_sys->p_thread->i_caching = (int64_t)val.i_int * 1000;
@@ -287,7 +262,7 @@ static int Open( vlc_object_t *p_this )
     var_Get( p_access, SOUT_CFG_PREFIX "group", &val );
     p_sys->p_thread->i_group = val.i_int;
 
-    p_sys->i_mtu = socket_desc.i_mtu;
+    p_sys->i_mtu = var_CreateGetInteger( p_this, "mtu" );
 
     if( vlc_thread_create( p_sys->p_thread, "sout write thread", ThreadWrite,
                            VLC_THREAD_PRIORITY_HIGHEST, VLC_FALSE ) )
@@ -341,18 +316,14 @@ static void Close( vlc_object_t * p_this )
     vlc_thread_join( p_sys->p_thread );
 
     block_FifoRelease( p_sys->p_thread->p_fifo );
+    block_FifoRelease( p_sys->p_thread->p_empty_blocks );
 
     if( p_sys->p_buffer ) block_Release( p_sys->p_buffer );
-    while ( p_sys->p_thread->p_empty_blocks != NULL )
-    {
-        block_t *p_next = p_sys->p_thread->p_empty_blocks->p_next;
-        block_Release( p_sys->p_thread->p_empty_blocks );
-        p_sys->p_thread->p_empty_blocks = p_next;
-    }
-    vlc_mutex_destroy( &p_sys->p_thread->blocks_lock );
 
     net_Close( p_sys->p_thread->i_handle );
 
+    vlc_object_detach( p_sys->p_thread );
+    vlc_object_destroy( p_sys->p_thread );
     /* update p_sout->i_out_pace_nocontrol */
     p_access->p_sout->i_out_pace_nocontrol--;
 
@@ -449,18 +420,11 @@ static int WriteRaw( sout_access_out_t *p_access, block_t *p_buffer )
     sout_access_out_sys_t   *p_sys = p_access->p_sys;
     block_t *p_buf;
 
-    vlc_mutex_lock( &p_sys->p_thread->blocks_lock );
-    while ( p_sys->p_thread->i_empty_depth >= MAX_EMPTY_BLOCKS )
+    while ( p_sys->p_thread->p_empty_blocks->i_depth >= MAX_EMPTY_BLOCKS )
     {
-        p_buf = p_sys->p_thread->p_empty_blocks;
-        p_sys->p_thread->p_empty_blocks =
-                    p_sys->p_thread->p_empty_blocks->p_next;
-        p_sys->p_thread->i_empty_depth--;
-        vlc_mutex_unlock( &p_sys->p_thread->blocks_lock );
+        p_buf = block_FifoGet(p_sys->p_thread->p_empty_blocks);
         block_Release( p_buf );
-        vlc_mutex_lock( &p_sys->p_thread->blocks_lock );
     }
-    vlc_mutex_unlock( &p_sys->p_thread->blocks_lock );
 
     block_FifoPut( p_sys->p_thread->p_fifo, p_buffer );
 
@@ -484,32 +448,21 @@ static block_t *NewUDPPacket( sout_access_out_t *p_access, mtime_t i_dts)
     sout_access_out_sys_t *p_sys = p_access->p_sys;
     block_t *p_buffer;
 
-    vlc_mutex_lock( &p_sys->p_thread->blocks_lock );
-    while ( p_sys->p_thread->i_empty_depth > MAX_EMPTY_BLOCKS )
+    while ( p_sys->p_thread->p_empty_blocks->i_depth > MAX_EMPTY_BLOCKS )
     {
-        p_buffer = p_sys->p_thread->p_empty_blocks;
-        p_sys->p_thread->p_empty_blocks =
-                    p_sys->p_thread->p_empty_blocks->p_next;
-        p_sys->p_thread->i_empty_depth--;
-        vlc_mutex_unlock( &p_sys->p_thread->blocks_lock );
+        p_buffer = block_FifoGet( p_sys->p_thread->p_empty_blocks );
         block_Release( p_buffer );
-        vlc_mutex_lock( &p_sys->p_thread->blocks_lock );
     }
-    p_buffer = p_sys->p_thread->p_empty_blocks;
-    if ( p_buffer != NULL )
+
+    if( p_sys->p_thread->p_empty_blocks->i_depth == 0 )
     {
-        p_sys->p_thread->p_empty_blocks =
-                    p_sys->p_thread->p_empty_blocks->p_next;
-        p_sys->p_thread->i_empty_depth--;
-        vlc_mutex_unlock( &p_sys->p_thread->blocks_lock );
-        p_buffer->p_next = NULL;
-        p_buffer->i_flags = 0;
-        p_buffer = block_Realloc( p_buffer, 0, p_sys->i_mtu );
+        p_buffer = block_New( p_access->p_sout, p_sys->i_mtu );
     }
     else
     {
-        vlc_mutex_unlock( &p_sys->p_thread->blocks_lock );
-        p_buffer = block_New( p_access->p_sout, p_sys->i_mtu );
+        p_buffer = block_FifoGet(p_sys->p_thread->p_empty_blocks );       
+        p_buffer->i_flags = 0;
+        p_buffer = block_Realloc( p_buffer, 0, p_sys->i_mtu );
     }
 
     p_buffer->i_dts = i_dts;
@@ -561,7 +514,18 @@ static void ThreadWrite( vlc_object_t *p_this )
     {
         block_t *p_pk;
         mtime_t       i_date, i_sent;
-
+#if 0
+        if( (i++ % 1000)==0 ) {
+          int i = 0;
+          int j = 0;
+          block_t *p_tmp = p_thread->p_empty_blocks->p_first;
+          while( p_tmp ) { p_tmp = p_tmp->p_next; i++;}
+          p_tmp = p_thread->p_fifo->p_first;
+          while( p_tmp ) { p_tmp = p_tmp->p_next; j++;}
+	  msg_Err( p_thread, "fifo depth: %d/%d, empty blocks: %d/%d",
+                   p_thread->p_fifo->i_depth, j,p_thread->p_empty_blocks->i_depth,i );
+	}
+#endif
         p_pk = block_FifoGet( p_thread->p_fifo );
 
         i_date = p_thread->i_caching + p_pk->i_dts;
@@ -573,11 +537,7 @@ static void ThreadWrite( vlc_object_t *p_this )
                     msg_Dbg( p_thread, "mmh, hole ("I64Fd" > 2s) -> drop",
                              i_date - i_date_last );
 
-                vlc_mutex_lock( &p_thread->blocks_lock );
-                p_pk->p_next = p_thread->p_empty_blocks;
-                p_thread->p_empty_blocks = p_pk;
-                p_thread->i_empty_depth++;
-                vlc_mutex_unlock( &p_thread->blocks_lock );
+                block_FifoPut( p_thread->p_empty_blocks, p_pk );
 
                 i_date_last = i_date;
                 i_dropped_packets++;
@@ -618,11 +578,7 @@ static void ThreadWrite( vlc_object_t *p_this )
         }
 #endif
 
-        vlc_mutex_lock( &p_thread->blocks_lock );
-        p_pk->p_next = p_thread->p_empty_blocks;
-        p_thread->p_empty_blocks = p_pk;
-        p_thread->i_empty_depth++;
-        vlc_mutex_unlock( &p_thread->blocks_lock );
+        block_FifoPut( p_thread->p_empty_blocks, p_pk );
 
         i_date_last = i_date;
     }

@@ -2,10 +2,10 @@
  * dialogs.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: dialogs.hpp 12056 2005-08-07 10:56:07Z ipkiss $
+ * $Id: dialogs.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef DIALOGS_HPP
@@ -28,6 +28,7 @@
 #include "skin_common.hpp"
 #include <string>
 
+struct interaction_dialog_t ;
 
 // Dialogs provider
 class Dialogs: public SkinObject
@@ -88,6 +89,9 @@ class Dialogs: public SkinObject
         /// Show the popup menu
         void showPopupMenu( bool bShow );
 
+        /// Show an interaction dialog
+        void showInteraction( interaction_dialog_t * );
+
     private:
         // Private because it's a singleton
         Dialogs( intf_thread_t *pIntf );
@@ -97,12 +101,12 @@ class Dialogs: public SkinObject
         typedef void DlgCallback( intf_dialog_args_t *pArg );
 
         /// Possible flags for the open/save dialog
-        typedef enum
+        enum flags_t
         {
             kOPEN     = 0x01,
             kSAVE     = 0x02,
             kMULTIPLE = 0x04
-        } flags_t;
+        };
 
         /// Initialization method
         bool init();

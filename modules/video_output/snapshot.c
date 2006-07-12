@@ -2,7 +2,7 @@
  * snapshot.c : snapshot plugin for vlc
  *****************************************************************************
  * Copyright (C) 2002 the VideoLAN team
- * $Id: snapshot.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: snapshot.c 15002 2006-03-31 16:12:31Z fkuehne $
  *
  * Authors: Olivier Aubert <oaubert@lisi.univ-lyon1.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -57,21 +57,22 @@ static void Display   ( vout_thread_t *, picture_t * );
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
-#define WIDTH_TEXT N_( "snapshot width" )
-#define WIDTH_LONGTEXT N_( "Set the width of the snapshot image." )
+#define WIDTH_TEXT N_( "Snapshot width" )
+#define WIDTH_LONGTEXT N_( "Width of the snapshot image." )
 
-#define HEIGHT_TEXT N_( "snapshot height" )
-#define HEIGHT_LONGTEXT N_( "Set the height of the snapshot image." )
+#define HEIGHT_TEXT N_( "Snapshot height" )
+#define HEIGHT_LONGTEXT N_( "Height of the snapshot image." )
 
-#define CHROMA_TEXT N_( "chroma" )
-#define CHROMA_LONGTEXT N_( "Set the desired chroma for the snapshot image (a 4 character string)." )
+#define CHROMA_TEXT N_( "Chroma" )
+#define CHROMA_LONGTEXT N_( "Output chroma for the snapshot image " \
+                            "(a 4 character string, like \"RV32\")." )
 
-#define CACHE_TEXT N_( "cache size (number of images)" )
-#define CACHE_LONGTEXT N_( "Set the cache size (number of images to keep)." )
+#define CACHE_TEXT N_( "Cache size (number of images)" )
+#define CACHE_LONGTEXT N_( "Snapshot cache size (number of images to keep)." )
 
 
 vlc_module_begin( );
-    set_description( _( "snapshot module" ) );
+    set_description( _( "Snapshot module" ) );
     set_shortname( N_("Snapshot") );
 
     set_category( CAT_VIDEO );
@@ -149,7 +150,7 @@ static int Init( vout_thread_t *p_vout )
     {
         if( strlen( psz_chroma ) < 4 )
         {
-            msg_Err( p_vout, "snapshot-chroma should be 4 characters long." );
+            msg_Err( p_vout, "snapshot-chroma should be 4 characters long" );
             return VLC_EGENERIC;
         }
         i_chroma = VLC_FOURCC( psz_chroma[0], psz_chroma[1],

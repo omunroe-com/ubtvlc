@@ -2,7 +2,7 @@
  * video_text.c : text manipulation functions
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: video_text.c 12836 2005-10-15 13:23:08Z sigmunau $
+ * $Id: video_text.c 15123 2006-04-06 22:41:06Z dionoea $
  *
  * Author: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 #include <vlc/vout.h>
 #include <vlc_block.h>
@@ -129,7 +129,11 @@ void __vout_OSDMessage( vlc_object_t *p_caller, int i_channel,
         vasprintf( &psz_string, psz_format, args );
 
         vout_ShowTextRelative( p_vout, i_channel, psz_string, NULL,
-                               OSD_ALIGN_TOP|OSD_ALIGN_RIGHT, 30,20,1000000 );
+                               OSD_ALIGN_TOP|OSD_ALIGN_RIGHT,
+                               30 + p_vout->fmt_in.i_width
+                                  - p_vout->fmt_in.i_visible_width
+                                  - p_vout->fmt_in.i_x_offset,
+                               20 + p_vout->fmt_in.i_y_offset, 1000000 );
 
         vlc_object_release( p_vout );
         free( psz_string );

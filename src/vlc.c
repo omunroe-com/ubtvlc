@@ -2,7 +2,7 @@
  * vlc.c: the vlc player
  *****************************************************************************
  * Copyright (C) 1998-2004 the VideoLAN team
- * $Id: vlc.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: vlc.c 14707 2006-03-10 17:30:32Z courmisch $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -22,7 +22,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "config.h"
@@ -45,6 +45,8 @@
 static void SigHandler  ( int i_signal );
 #endif
 
+extern void rootwrap( void );
+
 /*****************************************************************************
  * main: parse command line, start interface and spawn threads.
  *****************************************************************************/
@@ -52,7 +54,7 @@ int main( int i_argc, char *ppsz_argv[] )
 {
     int i_ret;
 
-#ifndef SYS_DARWIN
+#ifndef __APPLE__
     /* This clutters OSX GUI error logs */
     fprintf( stderr, "VLC media player %s\n", VLC_Version() );
 #endif
@@ -73,6 +75,8 @@ int main( int i_argc, char *ppsz_argv[] )
     }
 #endif
 
+    rootwrap ();
+    
     /* Create a libvlc structure */
     i_ret = VLC_Create();
     if( i_ret < 0 )

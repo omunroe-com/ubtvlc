@@ -2,7 +2,7 @@
  * fake.c: decoder reading from a fake stream, outputting a fixed image
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: fake.c 12447 2005-09-02 16:01:23Z massiot $
+ * $Id: fake.c 14993 2006-03-31 13:46:39Z zorglub $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -29,6 +29,7 @@
 
 #include "vlc_image.h"
 #include "vlc_filter.h"
+#include "charset.h"
 
 /*****************************************************************************
  * Local prototypes
@@ -43,25 +44,25 @@ static picture_t *DecodeBlock  ( decoder_t *, block_t ** );
  *****************************************************************************/
 #define FILE_TEXT N_("Image file")
 #define FILE_LONGTEXT N_( \
-    "Path of the image file when using the fake input." )
+    "Path of the image file for fake input." )
 #define WIDTH_TEXT N_("Video width")
 #define WIDTH_LONGTEXT N_( \
-    "Allows you to specify the output video width." )
+    "Output video width." )
 #define HEIGHT_TEXT N_("Video height")
 #define HEIGHT_LONGTEXT N_( \
-    "Allows you to specify the output video height." )
+    "Output video height." )
 #define KEEP_AR_TEXT N_("Keep aspect ratio")
 #define KEEP_AR_LONGTEXT N_( \
-    "If selected, width and height will be considered as maximum values." )
+    "Consider width and height as maximum values." )
 #define ASPECT_RATIO_TEXT N_("Background aspect ratio")
 #define ASPECT_RATIO_LONGTEXT N_( \
     "Aspect ratio of the image file (4:3, 16:9). Default is square pixels." )
 #define DEINTERLACE_TEXT N_("Deinterlace video")
 #define DEINTERLACE_LONGTEXT N_( \
-    "Allows you to deinterlace the image after loading." )
+    "Deinterlace the image after loading it." )
 #define DEINTERLACE_MODULE_TEXT N_("Deinterlace module")
 #define DEINTERLACE_MODULE_LONGTEXT N_( \
-    "Specifies the deinterlace module to use." )
+    "Deinterlace module to use." )
 
 static char *ppsz_deinterlace_type[] =
 {

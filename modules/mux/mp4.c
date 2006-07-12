@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mp4.c: mp4/mov muxer
  *****************************************************************************
- * Copyright (C) 2001, 2002, 2003 the VideoLAN team
- * $Id: mp4.c 12698 2005-09-28 18:56:36Z dionoea $
+ * Copyright (C) 2001, 2002, 2003, 2006 the VideoLAN team
+ * $Id: mp4.c 15006 2006-03-31 16:39:23Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin at videolan dot org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -42,11 +42,12 @@
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
-#define FASTSTART_TEXT N_("Create \"Fast start\" files")
+#define FASTSTART_TEXT N_("Create \"Fast Start\" files")
 #define FASTSTART_LONGTEXT N_( \
-    "When this option is turned on, \"Fast start\" files will be created. " \
-    "(\"Fast start\" files are optimized for download, allowing the user " \
-    "to start previewing the file while it is downloading).")
+    "Create \"Fast Start\" files. " \
+    "\"Fast Start\" files are optimized for downloads and allow the user " \
+    "to start previewing the file while it is downloading.")
+
 static int  Open   ( vlc_object_t * );
 static void Close  ( vlc_object_t * );
 
@@ -58,7 +59,8 @@ vlc_module_begin();
     set_subcategory( SUBCAT_SOUT_MUX );
     set_shortname( "MP4" );
 
-    add_bool( SOUT_CFG_PREFIX "faststart", 1, NULL, FASTSTART_TEXT, FASTSTART_LONGTEXT,
+    add_bool( SOUT_CFG_PREFIX "faststart", 1, NULL,
+              FASTSTART_TEXT, FASTSTART_LONGTEXT,
               VLC_TRUE );
     set_capability( "sout mux", 5 );
     add_shortcut( "mp4" );
@@ -302,7 +304,7 @@ static void Close( vlc_object_t * p_this )
                                 p_sys->i_mdat_pos + i_size - i_chunk );
             if( sout_AccessOutRead( p_mux->p_access, p_buf ) < i_chunk )
             {
-                msg_Warn( p_this, "read() not supported by acces output, "
+                msg_Warn( p_this, "read() not supported by access output, "
                           "won't create a fast start file" );
                 p_sys->b_fast_start = VLC_FALSE;
                 block_Release( p_buf );
@@ -627,7 +629,7 @@ static int Mux( sout_mux_t *p_mux )
             if( i_length != 0 )
             {
                 /* TODO */
-                msg_Dbg( p_mux, "writing a empty subs" ) ;
+                msg_Dbg( p_mux, "writing an empty sub" ) ;
 
                 /* Append a idx entry */
                 p_stream->entry[p_stream->i_entry_count].i_pos    = p_sys->i_pos;
@@ -686,7 +688,7 @@ static void ConvertAVC1( sout_mux_t *p_mux, mp4_stream_t *tk, block_t *p_block )
 
 
     /* Replace the 4 bytes start code with 4 bytes size,
-     * FIXME are all startcode 4 bytes ? (I don't think :( */
+     * FIXME are all startcodes 4 bytes ? (I don't think :( */
     while( dat < end )
     {
         int i_size;

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mpeg4video.c: mpeg 4 video packetizer
  *****************************************************************************
- * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: mpeg4video.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2001, 2002, 2006 the VideoLAN team
+ * $Id: mpeg4video.c 14918 2006-03-25 12:54:27Z fkuehne $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -159,7 +159,7 @@ static int Open( vlc_object_t *p_this )
         memcpy( p_dec->fmt_out.p_extra, p_dec->fmt_in.p_extra,
                 p_dec->fmt_in.i_extra );
 
-        msg_Dbg( p_dec, "opening with vol size:%d", p_dec->fmt_in.i_extra );
+        msg_Dbg( p_dec, "opening with vol size: %d", p_dec->fmt_in.i_extra );
         m4v_VOLParse( p_dec, &p_dec->fmt_out,
                       p_dec->fmt_out.p_extra, p_dec->fmt_out.i_extra );
     }

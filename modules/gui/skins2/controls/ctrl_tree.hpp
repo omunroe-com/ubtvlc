@@ -2,7 +2,7 @@
  * ctrl_tree.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_tree.hpp 12464 2005-09-03 15:17:57Z ipkiss $
+ * $Id: ctrl_tree.hpp 14771 2006-03-16 16:59:41Z dionoea $
  *
  * Authors: Antoine Cellerier
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CTRL_TREE_HPP
@@ -33,8 +33,8 @@ class GenericFont;
 class GenericBitmap;
 
 /// Class for control tree
-class CtrlTree: public CtrlGeneric, public Observer<VarTree>,
-    public Observer<VarPercent>
+class CtrlTree: public CtrlGeneric, public Observer<VarTree, tree_update*>,
+    public Observer<VarPercent, void*>
 {
     public:
         CtrlTree( intf_thread_t *pIntf,
@@ -50,7 +50,8 @@ class CtrlTree: public CtrlGeneric, public Observer<VarTree>,
                   uint32_t bgColor2,
                   uint32_t selColor,
                   const UString &rHelp,
-                  VarBool *pVisible );
+                  VarBool *pVisible,
+                  VarBool *pFlat );
         virtual ~CtrlTree();
 
         /// Handle an event on the control
@@ -70,6 +71,16 @@ class CtrlTree: public CtrlGeneric, public Observer<VarTree>,
 
         /// Get the type of control (custom RTTI)
         virtual string getType() const { return "tree"; }
+
+        /// Make sure an item is visible
+        /// \param item an iterator to a tree item
+        /// \return true if it changed the position
+        bool ensureVisible( VarTree::Iterator item );
+
+        /// Make sure an item is visible
+        /// \param itemIndex the absolute index in the tree
+        /// \return true if it changed the position
+        bool ensureVisible( int itemIndex );
 
     private:
         /// Tree associated to the control
@@ -98,14 +109,21 @@ class CtrlTree: public CtrlGeneric, public Observer<VarTree>,
         VarTree *m_pLastSelected;
         /// Image of the control
         OSGraphics *m_pImage;
-        /// Last position
-        VarTree::Iterator m_lastPos;
+        /// First item in the visible area
+        VarTree::Iterator m_firstPos;
+
+        /// Don't move if the position variable is updated
+        bool m_dontMove;
+
+        /// Do we want to "flaten" the tree ?
+        bool m_flat;
 
         /// Method called when the tree variable is modified
-        virtual void onUpdate( Subject<VarTree> &rTree );
+        virtual void onUpdate( Subject<VarTree, tree_update*> &rTree ,
+                               tree_update *);
 
         // Method called when the position variable of the tree is modified
-        virtual void onUpdate( Subject<VarPercent> &rPercent );
+        virtual void onUpdate( Subject<VarPercent, void *> &rPercent , void *);
 
         /// Called when the position is set
         virtual void onPositionChange();

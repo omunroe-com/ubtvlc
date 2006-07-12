@@ -2,9 +2,9 @@
  * xa.c : xa file input module for vlc
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: xa.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: xa.c 14980 2006-03-30 13:57:58Z courmisch $
  *
- * Authors: Remi Denis-Courmont <rem # videolan.org>
+ * Authors: Rémi Denis-Courmont <rem # videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************

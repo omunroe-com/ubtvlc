@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ipv4.c: IPv4 network abstraction layer
  *****************************************************************************
- * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: ipv4.c 12947 2005-10-23 16:43:48Z gbazin $
+ * Copyright (C) 2001-2006 the VideoLAN team
+ * $Id: ipv4.c 14932 2006-03-25 23:10:43Z xtophe $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Mathias Kretschmer <mathias@research.att.com>
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -91,11 +91,6 @@ static int OpenUDP( vlc_object_t * );
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
-#define MIFACE_TEXT N_("Multicast output interface")
-#define MIFACE_LONGTEXT N_( \
-    "Indicate here the multicast output interface. " \
-    "This overrides the routing table.")
-
 vlc_module_begin();
     set_shortname( "IPv4" );
     set_description( _("UDP/IPv4 network abstraction layer") );
@@ -103,47 +98,34 @@ vlc_module_begin();
     set_category( CAT_INPUT );
     set_subcategory( SUBCAT_INPUT_GENERAL );
     set_callbacks( OpenUDP, NULL );
-    add_string( "miface-addr", NULL, NULL, MIFACE_TEXT, MIFACE_LONGTEXT, VLC_TRUE );
 vlc_module_end();
 
 /*****************************************************************************
  * BuildAddr: utility function to build a struct sockaddr_in
  *****************************************************************************/
-static int BuildAddr( struct sockaddr_in * p_socket,
+static int BuildAddr( vlc_object_t *p_obj, struct sockaddr_in * p_socket,
                       const char * psz_address, int i_port )
 {
-    /* Reset struct */
-    memset( p_socket, 0, sizeof( struct sockaddr_in ) );
-    p_socket->sin_family = AF_INET;                                /* family */
-    p_socket->sin_port = htons( (uint16_t)i_port );
-    if( !*psz_address )
-    {
-        p_socket->sin_addr.s_addr = INADDR_ANY;
-    }
-    else
-    {
-        struct hostent    * p_hostent;
+    struct addrinfo hints, *res;
+    int i_val;
 
-        /* Try to convert address directly from in_addr - this will work if
-         * psz_address is dotted decimal. */
-#ifdef HAVE_ARPA_INET_H
-        if( !inet_aton( psz_address, &p_socket->sin_addr ) )
-#else
-        p_socket->sin_addr.s_addr = inet_addr( psz_address );
-        if( p_socket->sin_addr.s_addr == INADDR_NONE )
-#endif
-        {
-            /* We have a fqdn, try to find its address */
-            if ( (p_hostent = gethostbyname( psz_address )) == NULL )
-            {
-                return( -1 );
-            }
+    memset( &hints, 0, sizeof( hints ) );
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_PASSIVE;
 
-            /* Copy the first address of the host in the socket address */
-            memcpy( &p_socket->sin_addr, p_hostent->h_addr_list[0],
-                     p_hostent->h_length );
-        }
+    msg_Dbg( p_obj, "resolving %s:%d...", psz_address, i_port );
+    i_val = vlc_getaddrinfo( p_obj, psz_address, i_port, &hints, &res );
+    if( i_val )
+    {
+        msg_Warn( p_obj, "%s: %s", psz_address, vlc_gai_strerror( i_val ) );
+        return -1;
     }
+
+    /* Copy the first address of the host in the socket address */
+    memcpy( p_socket, res->ai_addr, sizeof( *p_socket ) );
+    vlc_freeaddrinfo( res );
+
     return( 0 );
 }
 
@@ -249,10 +231,11 @@ static int OpenUDP( vlc_object_t * p_this )
 #if defined( WIN32 ) || defined( UNDER_CE )
     /* Under Win32 and for multicasting, we bind to INADDR_ANY,
      * so let's call BuildAddr with "" instead of psz_bind_addr */
-    if( BuildAddr( &sock, IN_MULTICAST( ntohl( inet_addr(psz_bind_addr) ) ) ?
+    if( BuildAddr( p_this, &sock,
+        IN_MULTICAST( ntohl( inet_addr(psz_bind_addr) ) ) ?
                    "" : psz_bind_addr, i_bind_port ) == -1 )
 #else
-    if( BuildAddr( &sock, psz_bind_addr, i_bind_port ) == -1 )
+    if( BuildAddr( p_this, &sock, psz_bind_addr, i_bind_port ) == -1 )
 #endif
     {
         msg_Dbg( p_this, "could not build local address" );
@@ -272,7 +255,7 @@ static int OpenUDP( vlc_object_t * p_this )
     /* Restore the sock struct so we can spare a few #ifdef WIN32 later on */
     if( IN_MULTICAST( ntohl( inet_addr(psz_bind_addr) ) ) )
     {
-        if ( BuildAddr( &sock, psz_bind_addr, i_bind_port ) == -1 )
+        if ( BuildAddr( p_this, &sock, psz_bind_addr, i_bind_port ) == -1 )
         {
             msg_Dbg( p_this, "could not build local address" );
             close( i_handle );
@@ -349,11 +332,11 @@ static int OpenUDP( vlc_object_t * p_this )
 #if defined (WIN32) || defined (UNDER_CE)
             else
             {
-				typedef DWORD (CALLBACK * GETBESTINTERFACE) ( IPAddr, PDWORD );
-				typedef DWORD (CALLBACK * GETIPADDRTABLE) ( PMIB_IPADDRTABLE, PULONG, BOOL );
+                typedef DWORD (CALLBACK * GETBESTINTERFACE) ( IPAddr, PDWORD );
+                typedef DWORD (CALLBACK * GETIPADDRTABLE) ( PMIB_IPADDRTABLE, PULONG, BOOL );
 
                 GETBESTINTERFACE OurGetBestInterface;
-				GETIPADDRTABLE OurGetIpAddrTable;
+                GETIPADDRTABLE OurGetIpAddrTable;
                 HINSTANCE hiphlpapi = LoadLibrary(_T("Iphlpapi.dll"));
                 DWORD i_index;
 
@@ -417,12 +400,12 @@ static int OpenUDP( vlc_object_t * p_this )
             }
          }
     }
+    else
 #endif
-
     if( *psz_server_addr )
     {
         /* Build socket for remote connection */
-        if ( BuildAddr( &sock, psz_server_addr, i_server_port ) == -1 )
+        if ( BuildAddr( p_this, &sock, psz_server_addr, i_server_port ) == -1 )
         {
             msg_Warn( p_this, "cannot build remote address" );
             close( i_handle );
@@ -443,8 +426,7 @@ static int OpenUDP( vlc_object_t * p_this )
         {
             /* set the time-to-live */
             int i_ttl = p_socket->i_ttl;
-            unsigned char ttl;
-            
+
             /* set the multicast interface */
             char * psz_mif_addr = config_GetPsz( p_this, "miface-addr" );
             if( psz_mif_addr )
@@ -462,35 +444,30 @@ static int OpenUDP( vlc_object_t * p_this )
                 }
             }
 
-            if( i_ttl < 1 )
-            {
-                if( var_Get( p_this, "ttl", &val ) != VLC_SUCCESS )
-                {
-                    var_Create( p_this, "ttl",
-                                VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
-                    var_Get( p_this, "ttl", &val );
-                }
-                i_ttl = val.i_int;
-            }
-            if( i_ttl < 1 ) i_ttl = 1;
-            ttl = (unsigned char) i_ttl;
+            if( i_ttl <= 0 )
+                i_ttl = config_GetInt( p_this, "ttl" );
 
-            /* There is some confusion in the world whether IP_MULTICAST_TTL 
-             * takes a byte or an int as an argument.
-             * BSD seems to indicate byte so we are going with that and use
-             * int as a fallback to be safe */
-            if( setsockopt( i_handle, IPPROTO_IP, IP_MULTICAST_TTL,
-                            &ttl, sizeof( ttl ) ) < 0 )
+            if( i_ttl > 0 )
             {
-                msg_Dbg( p_this, "failed to set ttl (%s). Let's try it "
-                         "the integer way.", strerror(errno) );
+                unsigned char ttl = (unsigned char) i_ttl;
+
+                /* There is some confusion in the world whether IP_MULTICAST_TTL 
+                * takes a byte or an int as an argument.
+                * BSD seems to indicate byte so we are going with that and use
+                * int as a fallback to be safe */
                 if( setsockopt( i_handle, IPPROTO_IP, IP_MULTICAST_TTL,
-                                &i_ttl, sizeof( i_ttl ) ) <0 )
+                                &ttl, sizeof( ttl ) ) < 0 )
                 {
-                    msg_Err( p_this, "failed to set ttl (%s)",
-                             strerror(errno) );
-                    close( i_handle );
-                    return 0;
+                    msg_Dbg( p_this, "failed to set ttl (%s). Let's try it "
+                            "the integer way.", strerror(errno) );
+                    if( setsockopt( i_handle, IPPROTO_IP, IP_MULTICAST_TTL,
+                                    &i_ttl, sizeof( i_ttl ) ) <0 )
+                    {
+                        msg_Err( p_this, "failed to set ttl (%s)",
+                                strerror(errno) );
+                        close( i_handle );
+                        return 0;
+                    }
                 }
             }
         }

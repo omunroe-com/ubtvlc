@@ -2,9 +2,9 @@
  * voc.c : Creative Voice File (.VOC) demux module for vlc
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: voc.c 11666 2005-07-09 18:54:38Z courmisch $
+ * $Id: voc.c 14980 2006-03-30 13:57:58Z courmisch $
  *
- * Authors: Remi Denis-Courmont <rem # videolan.org>
+ * Authors: Rémi Denis-Courmont <rem # videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -156,7 +156,6 @@ static unsigned int fix_voc_sr( unsigned int sr )
     }
     return sr;
 }
-        
 
 static int ReadBlockHeader( demux_t *p_demux )
 {
@@ -189,7 +188,7 @@ static int ReadBlockHeader( demux_t *p_demux )
 
             if( buf[1] )
             {
-                msg_Err( p_demux, "Unsupported compression" );
+                msg_Err( p_demux, "unsupported compression" );
                 return VLC_EGENERIC;
             }
 
@@ -265,7 +264,7 @@ static int ReadBlockHeader( demux_t *p_demux )
 
             if( buf[2] )
             {
-                msg_Err( p_demux, "Unsupported compression" );
+                msg_Err( p_demux, "unsupported compression" );
                 return VLC_EGENERIC;
             }
 
@@ -295,7 +294,7 @@ static int ReadBlockHeader( demux_t *p_demux )
 
             if( buf[1] )
             {
-                msg_Err( p_demux, "Unsupported compression" );
+                msg_Err( p_demux, "unsupported compression" );
                 return VLC_EGENERIC;
             }
 
@@ -328,7 +327,7 @@ static int ReadBlockHeader( demux_t *p_demux )
                             break;
 
                         default:
-                            msg_Err( p_demux, "Unsupported bit res.: %u bits",
+                            msg_Err( p_demux, "unsupported bit res.: %u bits",
                                      new_fmt.audio.i_bitspersample );
                             return VLC_EGENERIC;
                     }
@@ -346,14 +345,14 @@ static int ReadBlockHeader( demux_t *p_demux )
                             break;
 
                         default:
-                            msg_Err( p_demux, "Unsupported bit res.: %u bits",
+                            msg_Err( p_demux, "unsupported bit res.: %u bits",
                                      new_fmt.audio.i_bitspersample );
                             return VLC_EGENERIC;
                     }
                     break;
 
                 default: 
-                    msg_Err( p_demux, "Unsupported compression" );
+                    msg_Err( p_demux, "unsupported compression" );
                     return VLC_EGENERIC;
             }
 
@@ -366,7 +365,7 @@ static int ReadBlockHeader( demux_t *p_demux )
             break;
 
         default:
-            msg_Dbg( p_demux, "Unknown block type %u - skipping block",
+            msg_Dbg( p_demux, "unknown block type %u - skipping block",
                      (unsigned)*buf);
         case 4: /* blocks of non-audio types can be skipped */
         case 5:

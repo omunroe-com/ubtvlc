@@ -1,10 +1,10 @@
 /*****************************************************************************
- * normvol.c :  volume normalizer
+ * normvol.c: volume normalizer
  *****************************************************************************
- * Copyright (C) 2001 the VideoLAN team
- * $Id: normvol.c 12676 2005-09-25 16:49:40Z babal $
+ * Copyright (C) 2001, 2006 the VideoLAN team
+ * $Id: normvol.c 14997 2006-03-31 15:15:07Z fkuehne $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*
@@ -69,8 +69,8 @@ typedef struct aout_filter_sys_t
 #define BUFF_TEXT N_("Number of audio buffers" )
 #define BUFF_LONGTEXT N_("This is the number of audio buffers on which the " \
                 "power measurement is made. A higher number of buffers will " \
-                "increase the response time of the filter to a high " \
-                "power but will make it less sensitive to short variations." )
+                "increase the response time of the filter to a spike " \
+                "but will make it less sensitive to short variations." )
 
 #define LEVEL_TEXT N_("Max level" )
 #define LEVEL_LONGTEXT N_("If the average power over the last N buffers " \
@@ -109,7 +109,7 @@ static int Open( vlc_object_t *p_this )
         b_fit = VLC_FALSE;
         p_filter->input.i_format = VLC_FOURCC('f','l','3','2');
         p_filter->output.i_format = VLC_FOURCC('f','l','3','2');
-        msg_Warn( p_filter, "Bad input or output format" );
+        msg_Warn( p_filter, "bad input or output format" );
     }
 
     if ( !AOUT_FMTS_SIMILAR( &p_filter->input, &p_filter->output ) )
@@ -181,7 +181,7 @@ static int Open( vlc_object_t *p_this )
         p_in += i_channels;
     }
 
-    /* sum now contains for each channel the sigma(value²) */
+    /* sum now contains for each channel the sigma(valueÂ²) */
     for( i_chan = 0; i_chan < i_channels; i_chan++ )
     {
         /* Shift our lastbuff */
@@ -189,7 +189,7 @@ static int Open( vlc_object_t *p_this )
                         &p_sys->p_last[i_chan * p_sys->i_nb + 1],
                  (p_sys->i_nb-1) * sizeof( float ) );
 
-        /* Insert the new average : sqrt(sigma(value²)) */
+        /* Insert the new average : sqrt(sigma(valueÂ²)) */
         p_sys->p_last[ i_chan * p_sys->i_nb + p_sys->i_nb - 1] =
                 sqrt( pf_sum[i_chan] );
 

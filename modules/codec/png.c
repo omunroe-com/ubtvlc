@@ -2,7 +2,7 @@
  * png.c: png decoder module making use of libpng.
  *****************************************************************************
  * Copyright (C) 1999-2001 the VideoLAN team
- * $Id: png.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: png.c 15115 2006-04-06 15:53:06Z massiot $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -137,9 +137,32 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
     p_sys->b_error = VLC_FALSE;
 
     p_png = png_create_read_struct( PNG_LIBPNG_VER_STRING, 0, 0, 0 );
+    if( p_png == NULL )
+    {
+        block_Release( p_block ); *pp_block = NULL;
+        return NULL;
+    }
+    
     p_info = png_create_info_struct( p_png );
+    if( p_info == NULL )
+    {
+        png_destroy_read_struct( &p_png, png_infopp_NULL, png_infopp_NULL );
+        block_Release( p_block ); *pp_block = NULL;
+        return NULL;
+    }
+
     p_end_info = png_create_info_struct( p_png );
+    if( p_end_info == NULL )
+    {
+        png_destroy_read_struct( &p_png, &p_info, png_infopp_NULL );
+        block_Release( p_block ); *pp_block = NULL;
+        return NULL;
+    }
  
+    /* libpng longjmp's there in case of error */
+    if( setjmp( png_jmpbuf( p_png ) ) )
+        goto error;
+
     png_set_read_fn( p_png, (void *)p_block, user_read );
     png_set_error_fn( p_png, (void *)p_dec, user_error, user_warning );
 

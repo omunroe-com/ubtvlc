@@ -1,8 +1,8 @@
 /*****************************************************************************
  * asf.c: asf muxer module for vlc
  *****************************************************************************
- * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: asf.c 12696 2005-09-28 18:49:52Z dionoea $
+ * Copyright (C) 2003-2004, 2006 the VideoLAN team
+ * $Id: asf.c 15118 2006-04-06 17:54:21Z massiot $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -46,22 +46,17 @@ static void Close  ( vlc_object_t * );
 #define SOUT_CFG_PREFIX "sout-asf-"
 
 #define TITLE_TEXT N_("Title")
-#define TITLE_LONGTEXT N_("Allows you to define the title that will be put " \
-                          "in ASF comments.")
+#define TITLE_LONGTEXT N_("Title to put in ASF comments." )
 #define AUTHOR_TEXT N_("Author")
-#define AUTHOR_LONGTEXT N_("Allows you to define the author that will be put "\
-                           "in ASF comments.")
+#define AUTHOR_LONGTEXT N_("Author to put in ASF comments." )
 #define COPYRIGHT_TEXT N_("Copyright")
-#define COPYRIGHT_LONGTEXT N_("Allows you to define the copyright string " \
-                              "that will be put in ASF comments.")
+#define COPYRIGHT_LONGTEXT N_("Copyright string to put in ASF comments." )
 #define COMMENT_TEXT N_("Comment")
-#define COMMENT_LONGTEXT N_("Allows you to define the comment that will be " \
-                            "put in ASF comments.")
+#define COMMENT_LONGTEXT N_("Comment to put in ASF comments." )
 #define RATING_TEXT N_("Rating")
-#define RATING_LONGTEXT N_("Allows you to define the \"rating\" that will " \
-                           "be put in ASF comments.")
+#define RATING_LONGTEXT N_("\"Rating\" to put in ASF comments." )
 #define PACKETSIZE_TEXT N_("Packet Size")
-#define PACKETSIZE_LONGTEXT N_("The ASF packet size -- default is 4096 bytes")
+#define PACKETSIZE_LONGTEXT N_("ASF packet size -- default is 4096 bytes")
 
 vlc_module_begin();
     set_description( _("ASF muxer") );
@@ -186,7 +181,7 @@ static int Open( vlc_object_t *p_this )
     vlc_value_t    val;
     int i;
 
-    msg_Dbg( p_mux, "Asf muxer opened" );
+    msg_Dbg( p_mux, "asf muxer opened" );
     sout_CfgParse( p_mux, SOUT_CFG_PREFIX, ppsz_sout_options, p_mux->p_cfg );
 
     p_mux->pf_control   = Control;
@@ -241,8 +236,8 @@ static int Open( vlc_object_t *p_this )
     var_Get( p_mux, SOUT_CFG_PREFIX "rating", &val );
     p_sys->psz_rating = val.psz_string;
 
-    msg_Dbg( p_mux, "meta data: title='%s' author='%s' copyright='%s' "
-             "comment='%s' rating='%s'",
+    msg_Dbg( p_mux, "meta data: title='%s', author='%s', copyright='%s', "
+             "comment='%s', rating='%s'",
              p_sys->psz_title, p_sys->psz_author, p_sys->psz_copyright,
              p_sys->psz_comment, p_sys->psz_rating );
 
@@ -334,7 +329,7 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
     msg_Dbg( p_mux, "adding input" );
     if( p_sys->i_track >= MAX_ASF_TRACKS )
     {
-        msg_Dbg( p_mux, "cannot add this track (too much track)" );
+        msg_Dbg( p_mux, "cannot add this track (too much tracks)" );
         return VLC_EGENERIC;
     }
 
@@ -766,7 +761,7 @@ static const guid_t asf_object_file_properties_guid =
 {0x8cabdca1, 0xa947, 0x11cf, {0x8e, 0xe4, 0x00, 0xC0, 0x0C, 0x20, 0x53, 0x65}};
 static const guid_t asf_object_stream_properties_guid =
 {0xB7DC0791, 0xA9B7, 0x11CF, {0x8E, 0xE6, 0x00, 0xC0, 0x0C, 0x20, 0x53, 0x65}};
-static const guid_t asf_object_header_extention_guid =
+static const guid_t asf_object_header_extension_guid =
 {0x5FBF03B5, 0xA92E, 0x11CF, {0x8E, 0xE3, 0x00, 0xC0, 0x0C, 0x20, 0x53, 0x65}};
 static const guid_t asf_object_stream_type_audio =
 {0xF8699E40, 0x5B4D, 0x11CF, {0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B}};
@@ -898,10 +893,10 @@ static block_t *asf_header_create( sout_mux_t *p_mux, vlc_bool_t b_broadcast )
     bo_addle_u32( &bo, p_sys->i_packet_size );  /* packet size max */
     bo_addle_u32( &bo, p_sys->i_bitrate );      /* maxbitrate */
 
-    /* header extention */
+    /* header extension */
     if( i_header_ext_size )
     {
-        bo_add_guid ( &bo, &asf_object_header_extention_guid );
+        bo_add_guid ( &bo, &asf_object_header_extension_guid );
         bo_addle_u64( &bo, i_header_ext_size );
         bo_add_guid ( &bo, &asf_guid_reserved_1 );
         bo_addle_u16( &bo, 6 );

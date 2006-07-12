@@ -2,10 +2,10 @@
  * window_manager.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: window_manager.cpp 12912 2005-10-22 11:57:29Z asmax $
+ * $Id: window_manager.cpp 15008 2006-03-31 19:24:33Z zorglub $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "window_manager.hpp"
@@ -33,7 +33,7 @@
 
 
 WindowManager::WindowManager( intf_thread_t *pIntf ):
-    SkinObject( pIntf ), m_magnet( 0 ), m_pTooltip( NULL )
+    SkinObject( pIntf ), m_magnet( 0 ), m_pTooltip( NULL ), m_pPopup( NULL )
 {
     // Create and register a variable for the "on top" status
     VarManager *pVarManager = VarManager::instance( getIntf() );
@@ -381,7 +381,7 @@ void WindowManager::createTooltip( const GenericFont &rTipFont )
     }
     else
     {
-        msg_Warn( getIntf(), "Tooltip already created!");
+        msg_Warn( getIntf(), "tooltip already created!");
     }
 }
 

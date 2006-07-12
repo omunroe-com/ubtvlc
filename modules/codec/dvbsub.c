@@ -3,8 +3,8 @@
  *            DVB subtitles encoder (developed for Anevia, www.anevia.com)
  *****************************************************************************
  * Copyright (C) 2003 ANEVIA
- * Copyright (C) 2003-2005 VideoLAN (Centrale Réseaux) and its contributors
- * $Id: dvbsub.c 12708 2005-09-29 14:31:26Z jpsaman $
+ * Copyright (C) 2003-2005 the VideoLAN team
+ * $Id: dvbsub.c 15134 2006-04-07 17:45:35Z massiot $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Damien LUCAS <damien.lucas@anevia.com>
@@ -23,7 +23,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 /*****************************************************************************
  * Preamble
@@ -42,28 +42,22 @@
 
 /* #define DEBUG_DVBSUB 1 */
 
-#define POSX_TEXT N_("X coordinate of the subpicture")
-#define POSX_LONGTEXT N_("You can reposition the subpicture by providing another value here." )
+#define POSX_TEXT N_("Decoding X coordinate")
+#define POSX_LONGTEXT N_("X coordinate of the rendered subtitle")
 
-#define POSY_TEXT N_("Y coordinate of the subpicture")
-#define POSY_LONGTEXT N_("You can reposition the subpicture by providing another value here." )
+#define POSY_TEXT N_("Decoding Y coordinate")
+#define POSY_LONGTEXT N_("Y coordinate of the rendered subtitle") 
 
 #define POS_TEXT N_("Subpicture position")
 #define POS_LONGTEXT N_( \
   "You can enforce the subpicture position on the video " \
   "(0=center, 1=left, 2=right, 4=top, 8=bottom, you can " \
-  "also use combinations of these values).")
+  "also use combinations of these values, e.g. 6=top-right).")
 
-#define ENC_POSX_TEXT N_("X coordinate of the encoded subpicture")
-#define ENC_POSX_LONGTEXT N_("You can reposition the subpicture by providing another value here." )
-
-#define ENC_POSY_TEXT N_("Y coordinate of encoded the subpicture")
-#define ENC_POSY_LONGTEXT N_("You can reposition the subpicture by providing another value here." )
-
-#define TIMEOUT_TEXT N_("Timeout of subpictures")
-#define TIMEOUT_LONGTEXT N_( \
-    "Subpictures get a default timeout of 15 seconds added to their remaining time." \
-    "This will ensure that they are at least the specified time visible.")
+#define ENC_POSX_TEXT N_("Encoding X coordinate")
+#define ENC_POSX_LONGTEXT N_("X coordinate of the encoded subtitle" )
+#define ENC_POSY_TEXT N_("Encoding Y coordinate")
+#define ENC_POSY_LONGTEXT N_("Y coordinate of the encoded subtitle" )
 
 static int pi_pos_values[] = { 0, 1, 2, 4, 8, 5, 6, 9, 10 };
 static char *ppsz_pos_descriptions[] =
@@ -102,10 +96,10 @@ vlc_module_begin();
 
     add_integer( ENC_CFG_PREFIX "x", -1, NULL, ENC_POSX_TEXT, ENC_POSX_LONGTEXT, VLC_FALSE );
     add_integer( ENC_CFG_PREFIX "y", -1, NULL, ENC_POSY_TEXT, ENC_POSY_LONGTEXT, VLC_FALSE );
-    add_integer( ENC_CFG_PREFIX "timeout", 15, NULL, TIMEOUT_TEXT, TIMEOUT_LONGTEXT, VLC_FALSE );    
+    add_suppressed_integer( ENC_CFG_PREFIX "timeout" ); /* Suppressed since 0.8.5 */
 vlc_module_end();
 
-static const char *ppsz_enc_options[] = { NULL };
+static const char *ppsz_enc_options[] = { "x", "y", NULL };
 
 /****************************************************************************
  * Local structures
@@ -241,7 +235,7 @@ struct decoder_sys_t
 /* List of different Page Composition Segment state */
 /* According to EN 300-743, 7.2.1 table 3 */
 #define DVBSUB_PCS_STATE_ACQUISITION    0x01
-#define DVBSUB_PCS_STATE_CHANGE         0x10
+#define DVBSUB_PCS_STATE_CHANGE         0x02
 
 /*****************************************************************************
  * Local prototypes
@@ -837,7 +831,8 @@ static void decode_region_composition( decoder_t *p_dec, bs_t *s )
     {
         if( p_region->p_pixbuf )
         {
-            msg_Dbg( p_dec, "region size changed (not allowed)" );
+            msg_Dbg( p_dec, "region size changed (%dx%d->%dx%d)",
+                     p_region->i_width, p_region->i_height, i_width, i_height );
             free( p_region->p_pixbuf );
         }
 
@@ -922,7 +917,7 @@ static void decode_object( decoder_t *p_dec, bs_t *s )
 
     if( i_coding_method > 1 )
     {
-        msg_Dbg( p_dec, "Unknown DVB subtitling coding %d is not handled!", i_coding_method );
+        msg_Dbg( p_dec, "unknown DVB subtitling coding %d is not handled!", i_coding_method );
         bs_skip( s, 8 * (i_segment_length - 2) - 6 );
         return;
     }
@@ -1497,7 +1492,6 @@ struct encoder_sys_t
     /* subpicture positioning */
     int i_offset_x;
     int i_offset_y;
-    int i_timeout_delay;
 };
 
 static void encode_page_composition( encoder_t *, bs_t *, subpicture_t * );
@@ -1546,9 +1540,6 @@ static int OpenEncoder( vlc_object_t *p_this )
     var_Create( p_this, ENC_CFG_PREFIX "y", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
     var_Get( p_this, ENC_CFG_PREFIX "y", &val );
     p_sys->i_offset_y = val.i_int;
-    var_Create( p_this, ENC_CFG_PREFIX "timeout", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
-    var_Get( p_this, ENC_CFG_PREFIX "timeout", &val );
-    p_sys->i_timeout_delay = val.i_int;
 
     return VLC_SUCCESS;
 }
@@ -1912,10 +1903,8 @@ static void encode_page_composition( encoder_t *p_enc, bs_t *s,
             p_sys->p_regions[i_regions].i_width =
                 p_region->fmt.i_visible_width;
         }
-        if( ( p_sys->p_regions[i_regions].i_height <
-             (int)p_region->fmt.i_visible_height ) ||
-            ( p_sys->p_regions[i_regions].i_height >
-              (int)p_region->fmt.i_visible_height ) )
+        if( p_sys->p_regions[i_regions].i_height <
+             (int)p_region->fmt.i_visible_height )
         {
             b_mode_change = VLC_TRUE;
             msg_Dbg( p_enc, "region %i height change: %i -> %i",
@@ -1935,7 +1924,7 @@ static void encode_page_composition( encoder_t *p_enc, bs_t *s,
         i_timeout = (p_subpic->i_stop - p_subpic->i_start) / 1000000;
     }
 
-    bs_write( s, 8, i_timeout + p_sys->i_timeout_delay ); /* Timeout */
+    bs_write( s, 8, i_timeout ); /* Timeout */
     bs_write( s, 4, p_sys->i_page_ver++ );
     bs_write( s, 2, b_mode_change ?
               DVBSUB_PCS_STATE_CHANGE : DVBSUB_PCS_STATE_ACQUISITION );
