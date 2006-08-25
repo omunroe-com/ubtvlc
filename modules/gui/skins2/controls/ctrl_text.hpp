@@ -2,7 +2,7 @@
  * ctrl_text.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_text.hpp 15486 2006-04-30 19:14:31Z dionoea $
+ * $Id: ctrl_text.hpp 16234 2006-08-06 16:36:30Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -38,7 +38,7 @@ class VarText;
 
 
 /// Class for control text
-class CtrlText: public CtrlGeneric, public Observer<VarText, void*>
+class CtrlText: public CtrlGeneric, public Observer<VarText>
 {
     public:
         enum Align_t
@@ -122,7 +122,7 @@ class CtrlText: public CtrlGeneric, public Observer<VarText, void*>
         DEFINE_CALLBACK( CtrlText, UpdateText );
 
         /// Method called when the observed variable is modified
-        virtual void onUpdate( Subject<VarText,void*> &rVariable, void* );
+        virtual void onUpdate( Subject<VarText> &rVariable, void* );
 
         /// Display the text on the control
         void displayText( const UString &rText );
@@ -131,7 +131,9 @@ class CtrlText: public CtrlGeneric, public Observer<VarText, void*>
         void adjust( int &position );
 
         /// Update the behaviour of the text whenever the control size changes
-        virtual void onChangePosition();
+        virtual void onPositionChange();
+        /// Update the behaviour of the text whenever the control size changes
+        virtual void onResize();
 };
 
 

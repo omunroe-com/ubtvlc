@@ -1,10 +1,10 @@
 /*****************************************************************************
  * dvdread.c : DvdRead input module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: dvdread.c 15016 2006-03-31 23:07:01Z xtophe $
+ * Copyright (C) 2001-2006 the VideoLAN team
+ * $Id: dvdread.c 16319 2006-08-22 23:22:14Z fkuehne $
  *
- * Authors: St�hane Borel <stef@via.ecp.fr>
+ * Authors: Stéphane Borel <stef@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,7 @@
 
 #include <vlc/vlc.h>
 #include <vlc/input.h>
+#include <vlc_interaction.h>
 
 #include "iso_lang.h"
 
@@ -232,6 +233,8 @@ static int Open( vlc_object_t *p_this )
     if( !(p_dvdread = DVDOpen( psz_name )) )
     {
         msg_Err( p_demux, "DVDRead cannot open source: %s", psz_name );
+        intf_UserFatal( p_demux, VLC_FALSE, _("Playback failure"), 
+                        _("DVDRead could not open disk \"%s\"."), psz_name );
         free( psz_name );
         return VLC_EGENERIC;
     }
@@ -246,10 +249,7 @@ static int Open( vlc_object_t *p_this )
     msg_Dbg( p_demux, "VMG opened" );
 
     /* Fill p_demux field */
-    p_demux->pf_demux = Demux;
-    p_demux->pf_control = Control;
-    p_demux->p_sys = p_sys = malloc( sizeof( demux_sys_t ) );
-    memset( p_sys, 0, sizeof( demux_sys_t ) );
+    STANDARD_DEMUX_INIT; p_sys = p_demux->p_sys;
 
     ps_track_init( p_sys->tk );
     p_sys->i_aspect = -1;
@@ -492,6 +492,9 @@ static int Demux( demux_t *p_demux )
                            1, p_buffer ) != 1 )
         {
             msg_Err( p_demux, "read failed for block %d", p_sys->i_next_vobu );
+            intf_UserWarn( p_demux, _("Playback failure"), 
+                            _("DVDRead could not read block %d."),
+                           p_sys->i_next_vobu );
             return -1;
         }
 
@@ -551,6 +554,9 @@ static int Demux( demux_t *p_demux )
     {
         msg_Err( p_demux, "read failed for %d/%d blocks at 0x%02x",
                  i_read, i_blocks_once, p_sys->i_cur_block );
+        intf_UserFatal( p_demux, VLC_FALSE, _("Playback failure"), 
+                        _("DVDRead could not read %d/%d blocks at 0x%02x."),
+                        i_read, i_blocks_once, p_sys->i_cur_block );
         return -1;
     }
 

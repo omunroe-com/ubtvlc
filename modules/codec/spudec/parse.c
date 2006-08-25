@@ -2,7 +2,7 @@
  * parse.c: SPU parser
  *****************************************************************************
  * Copyright (C) 2000-2001, 2005, 2006 the VideoLAN team
- * $Id: parse.c 15130 2006-04-07 16:33:51Z massiot $
+ * $Id: parse.c 15691 2006-05-20 11:45:33Z jpsaman $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -145,8 +145,6 @@ static int ParseControlSeq( decoder_t *p_dec, subpicture_t *p_spu,
     uint8_t i_command = SPU_CMD_END;
     mtime_t date = 0;
 
-    unsigned int i, pi_alpha[4];
-
     /* Initialize the structure */
     p_spu->i_start = p_spu->i_stop = 0;
     p_spu->b_ephemer = VLC_FALSE;
@@ -216,6 +214,7 @@ static int ParseControlSeq( decoder_t *p_dec, subpicture_t *p_spu,
             if( p_dec->fmt_in.subs.spu.palette[0] == 0xBeeF )
             {
                 unsigned int idx[4];
+                int i;
 
                 p_spu_data->b_palette = VLC_TRUE;
 
@@ -556,9 +555,10 @@ static int ParseRLE( decoder_t *p_dec, subpicture_t * p_spu,
     /* Crop if necessary */
     if( i_skipped_top || i_skipped_bottom )
     {
+#ifdef DEBUG_SPUDEC
         int i_y = p_spu->i_y + i_skipped_top;
         int i_height = p_spu->i_height - (i_skipped_top + i_skipped_bottom);
-
+#endif
         p_spu_data->i_y_top_offset = i_skipped_top;
         p_spu_data->i_y_bottom_offset = i_skipped_bottom;
 #ifdef DEBUG_SPUDEC

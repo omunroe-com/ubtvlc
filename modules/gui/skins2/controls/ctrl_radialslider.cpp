@@ -2,7 +2,7 @@
  * ctrl_radialslider.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_radialslider.cpp 14118 2006-02-01 18:06:48Z courmisch $
+ * $Id: ctrl_radialslider.cpp 15803 2006-06-04 13:55:41Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -98,7 +98,7 @@ void CtrlRadialSlider::draw( OSGraphics &rImage, int xDest, int yDest )
 }
 
 
-void CtrlRadialSlider::onUpdate( Subject<VarPercent,void*> &rVariable,
+void CtrlRadialSlider::onUpdate( Subject<VarPercent> &rVariable,
                                  void *arg  )
 {
     m_position = (int)( m_rVariable.get() * m_numImg );

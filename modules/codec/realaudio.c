@@ -2,7 +2,7 @@
  * realaudio.c: a realaudio decoder that uses the realaudio library/dll
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: realaudio.c 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: realaudio.c 15754 2006-05-27 23:12:26Z sam $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -107,20 +107,20 @@ struct decoder_sys_t
 #endif
 
     void *win32_dll;
-    unsigned long WINAPI (*wraCloseCodec)(void*);
-    unsigned long WINAPI (*wraDecode)(void*, char*, unsigned long, char*,
+    unsigned long (WINAPI *wraCloseCodec)(void*);
+    unsigned long (WINAPI *wraDecode)(void*, char*, unsigned long, char*,
                                       unsigned int*, long);
-    unsigned long WINAPI (*wraFlush)(unsigned long, unsigned long,
+    unsigned long (WINAPI *wraFlush)(unsigned long, unsigned long,
                                      unsigned long);
-    unsigned long WINAPI (*wraFreeDecoder)(void*);
-    void*         WINAPI (*wraGetFlavorProperty)(void*, unsigned long,
+    unsigned long (WINAPI *wraFreeDecoder)(void*);
+    void*         (WINAPI *wraGetFlavorProperty)(void*, unsigned long,
                                                  unsigned long, int*);
-    unsigned long WINAPI (*wraInitDecoder)(void*, void*);
-    unsigned long WINAPI (*wraOpenCodec)(void*);
-    unsigned long WINAPI (*wraOpenCodec2)(void*, void*);
-    unsigned long WINAPI (*wraSetFlavor)(void*, unsigned long);
-    void          WINAPI (*wraSetDLLAccessPath)(char*);
-    void          WINAPI (*wraSetPwd)(char*, char*);
+    unsigned long (WINAPI *wraInitDecoder)(void*, void*);
+    unsigned long (WINAPI *wraOpenCodec)(void*);
+    unsigned long (WINAPI *wraOpenCodec2)(void*, void*);
+    unsigned long (WINAPI *wraSetFlavor)(void*, unsigned long);
+    void          (WINAPI *wraSetDLLAccessPath)(char*);
+    void          (WINAPI *wraSetPwd)(char*, char*);
 };
 
 /* linux dlls doesn't need packing */

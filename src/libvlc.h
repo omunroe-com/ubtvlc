@@ -2,7 +2,7 @@
  * libvlc.h: main libvlc header
  *****************************************************************************
  * Copyright (C) 1998-2006 the VideoLAN team
- * $Id: libvlc.h 15450 2006-04-30 13:36:41Z dionoea $
+ * $Id: libvlc.h 16140 2006-07-27 20:12:41Z zorglub $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -27,17 +27,20 @@
 #define Nothing here, this is just to prevent update-po from being stupid
 #include "vlc_keys.h"
 
+#if defined (WIN32) || defined (__APPLE__)
 static char *ppsz_language[] =
-{ "auto", "en", "en_GB", "ca", "da", "de", "es", "fr", "gl", "he", "hi", "hu", "it", "ja",
-"ka","ko", "nl", "oc", "pt_BR", "ro", "ru", "sv", "tr", "zh_CN", "zh_TW" };
+{ "auto", "en", "en_GB", "ca", "cs", "da", "de", "es", "fr", "gl", "he", "hu",
+  "it", "ja", "ka", "ko", "nl", "oc", "pt_BR", "ro", "ru", "sv", "tr",
+  "zh_CN", "zh_TW" };
 
 static char *ppsz_language_text[] =
 { N_("Auto"), N_("American English"), N_("British English"),
-N_("Catalan"), N_("Danish"), N_("German"), N_("Spanish"), N_("French"),
-N_("Galician"), N_("Hebrew"), N_("Hindi"), N_("Hungarian"), N_("Italian"),
-N_("Japanese"), N_("Georgian"), N_("Korean"), N_("Dutch"), N_("Occitan"),
+N_("Catalan"), N_("Czech"), N_("Danish"), N_("German"), N_("Spanish"),
+N_("French"), N_("Galician"), N_("Hebrew"), N_("Hungarian"),N_("Italian"),
+N_("Japanese"),N_("Georgian"), N_("Korean"), N_("Dutch"), N_("Occitan"),
 N_("Brazilian Portuguese"), N_("Romanian"), N_("Russian"), N_("Swedish"),
 N_("Turkish"), N_("Simplified Chinese"), N_("Chinese Traditional") };
+#endif
 
 static char *ppsz_snap_formats[] =
 { "png", "jpg" };
@@ -109,6 +112,11 @@ static char *ppsz_snap_formats[] =
 #define SHOWINTF_LONGTEXT N_( \
     "When this is enabled, the interface is shown when you move the mouse to "\
     "the edge of the screen in fullscreen mode." )
+
+#define INTERACTION_TEXT N_("Interface interaction")
+#define INTERACTION_LONGTEXT N_( \
+    "When this is enabled, the interface will show a dialog box each time " \
+    "some user input is required." )
 
 
 /*****************************************************************************
@@ -288,15 +296,25 @@ static char *ppsz_align_descriptions[] =
     "VLC can avoid creating window caption, frames, etc... around the video" \
     ", giving a \"minimal\" window.")
 
-#define FILTER_TEXT N_("Video filter module")
-#define FILTER_LONGTEXT N_( \
+#define VOUT_FILTER_TEXT N_("Video output filter module")
+#define VOUT_FILTER_LONGTEXT N_( \
     "This adds post-processing filters to enhance the " \
     "picture quality, for instance deinterlacing, or to clone or distort " \
     "the video window.")
 
-#define SNAP_PATH_TEXT N_("Video snapshot directory")
+#define VIDEO_FILTER_TEXT N_("Video filter module")
+#define VIDEO_FILTER_LONGTEXT N_( \
+    "This adds post-processing filters to enhance the " \
+    "picture quality, for instance deinterlacing, or distort" \
+    "the video.")
+
+#define SNAP_PATH_TEXT N_("Video snapshot directory (or filename)")
 #define SNAP_PATH_LONGTEXT N_( \
     "Directory where the video snapshots will be stored.")
+
+#define SNAP_PREFIX_TEXT N_("Video snapshot file prefix")
+#define SNAP_PREFIX_LONGTEXT N_( \
+    "Video snapshot file prefix" )
 
 #define SNAP_FORMAT_TEXT N_("Video snapshot format")
 #define SNAP_FORMAT_LONGTEXT N_( \
@@ -305,6 +323,10 @@ static char *ppsz_align_descriptions[] =
 #define SNAP_PREVIEW_TEXT N_("Display video snapshot preview")
 #define SNAP_PREVIEW_LONGTEXT N_( \
     "Display the snapshot preview in the screen's top-left corner.")
+
+#define SNAP_SEQUENTIAL_TEXT N_("Use sequential numbers instead of timestamps")
+#define SNAP_SEQUENTIAL_LONGTEXT N_( \
+    "Use sequential numbers instead of timestamps for snapshot numbering")
 
 #define CROP_TEXT N_("Video cropping")
 #define CROP_LONGTEXT N_( \
@@ -320,6 +342,16 @@ static char *ppsz_align_descriptions[] =
     "Accepted formats are x:y (4:3, 16:9, etc.) expressing the global image " \
     "aspect, or a float value (1.25, 1.3333, etc.) expressing pixel " \
     "squareness.")
+
+#define CUSTOM_CROP_RATIOS_TEXT N_("Custom crop ratios list")
+#define CUSTOM_CROP_RATIOS_LONGTEXT N_( \
+    "Comma seperated list of crop ratios which will be added in the " \
+    "interface's crop ratios list.")
+
+#define CUSTOM_ASPECT_RATIOS_TEXT N_("Custom aspect ratios list")
+#define CUSTOM_ASPECT_RATIOS_LONGTEXT N_( \
+    "Comma seperated list of aspect ratios which will be added in the " \
+    "interface's aspect ratio list.")
 
 #define HDTV_FIX_TEXT N_("Fix HDTV height")
 #define HDTV_FIX_LONGTEXT N_( \
@@ -359,6 +391,10 @@ static char *ppsz_align_descriptions[] =
     "These options allow you to modify the behavior of the input " \
     "subsystem, such as the DVD or VCD device, the network interface " \
     "settings or the subtitle channel.")
+
+#define FRANCE_LONGTEXT N_( \
+    "If you live in France, it is not allowed to workaround any Digital " \
+    "Restrictions Management measure." )
 
 #define CR_AVERAGE_TEXT N_("Clock reference average counter")
 #define CR_AVERAGE_LONGTEXT N_( \
@@ -817,6 +853,10 @@ static char *ppsz_clock_descriptions[] =
 #define DAEMON_LONGTEXT N_( \
      "Runs VLC as a background daemon process.")
 
+#define PIDFILE_TEXT N_("Write process id to file")
+#define PIDFILE_LONGTEXT N_( \
+       "Writes process id into specified file.")
+
 #define FILE_LOG_TEXT N_( "Log to file" )
 #define FILE_LOG_LONGTEXT N_( \
     "Log all VLC messages to a text file." )
@@ -838,9 +878,9 @@ static char *ppsz_clock_descriptions[] =
     "Tell VLC that it is being launched due to a file association in the OS" )
 
 #define ONEINSTANCEWHENSTARTEDFROMFILE_TEXT N_( \
-    "Allow only on running instance when started from file")
+    "One instance when started from file")
 #define ONEINSTANCEWHENSTARTEDFROMFILE_LONGTEXT N_( \
-    "Allow only on running instance when started from file")
+    "Allow only one running instance when started from file.")
 
 #define HPRIORITY_TEXT N_("Increase the priority of the process")
 #define HPRIORITY_LONGTEXT N_( \
@@ -909,6 +949,21 @@ static char *ppsz_clock_descriptions[] =
 #define PAS_TEXT N_("Play and stop")
 #define PAS_LONGTEXT N_( \
     "Stop the playlist after each played playlist item." )
+
+#define ML_TEXT N_("Use media library")
+#define ML_LONGTEXT N_( \
+    "The media library is automatically saved and reloaded each time you " \
+    "start VLC." )
+
+#define PLTREE_TEXT N_("Use playlist tree")
+#define PLTREE_LONGTEXT N_( \
+    "The playlist can use a tree to categorize some items, like the " \
+    "contents of a directory. \"Default\" means that the tree will only " \
+    "be used when really needed." )
+static int pi_pltree_values[] = { 0, 1, 2 };
+static char *ppsz_pltree_descriptions[] = { N_("Default"), N_("Always"), N_("Never") };
+
+
 
 /*****************************************************************************
  * Hotkeys
@@ -1071,6 +1126,32 @@ static char *ppsz_clock_descriptions[] =
 #define RECORD_KEY_TEXT N_("Record")
 #define RECORD_KEY_LONGTEXT N_("Record access filter start/stop.")
 
+#define ZOOM_KEY_TEXT N_("Zoom")
+#define ZOOM_KEY_LONGTEXT N_("Zoom")
+
+#define UNZOOM_KEY_TEXT N_("Un-Zoom")
+#define UNZOOM_KEY_LONGTEXT N_("Un-Zoom")
+
+#define CROP_TOP_KEY_TEXT N_("Crop one pixel from the top of the video")
+#define CROP_TOP_KEY_LONGTEXT N_("Crop one pixel from the top of the video")
+#define UNCROP_TOP_KEY_TEXT N_("Uncrop one pixel from the top of the video")
+#define UNCROP_TOP_KEY_LONGTEXT N_("Uncrop one pixel from the top of the video")
+
+#define CROP_LEFT_KEY_TEXT N_("Crop one pixel from the left of the video")
+#define CROP_LEFT_KEY_LONGTEXT N_("Crop one pixel from the left of the video")
+#define UNCROP_LEFT_KEY_TEXT N_("Uncrop one pixel from the left of the video")
+#define UNCROP_LEFT_KEY_LONGTEXT N_("Uncrop one pixel from the left of the video")
+
+#define CROP_BOTTOM_KEY_TEXT N_("Crop one pixel from the bottom of the video")
+#define CROP_BOTTOM_KEY_LONGTEXT N_("Crop one pixel from the bottom of the video")
+#define UNCROP_BOTTOM_KEY_TEXT N_("Uncrop one pixel from the bottom of the video")
+#define UNCROP_BOTTOM_KEY_LONGTEXT N_("Uncrop one pixel from the bottom of the video")
+
+#define CROP_RIGHT_KEY_TEXT N_("Crop one pixel from the right of the video")
+#define CROP_RIGHT_KEY_LONGTEXT N_("Crop one pixel from the right of the video")
+#define UNCROP_RIGHT_KEY_TEXT N_("Uncrop one pixel from the right of the video")
+#define UNCROP_RIGHT_KEY_LONGTEXT N_("Uncrop one pixel from the right of the video")
+
 
 #define VLC_USAGE N_( \
     "Usage: %s [options] [stream] ..." \
@@ -1186,11 +1267,15 @@ vlc_module_begin();
     set_section( N_("Snapshot") , NULL );
     add_directory( "snapshot-path", NULL, NULL, SNAP_PATH_TEXT,
                    SNAP_PATH_LONGTEXT, VLC_FALSE );
+    add_string( "snapshot-prefix", "vlcsnap-", NULL, SNAP_PREFIX_TEXT,
+                   SNAP_PREFIX_LONGTEXT, VLC_FALSE );
     add_string( "snapshot-format", "png", NULL, SNAP_FORMAT_TEXT,
                    SNAP_FORMAT_LONGTEXT, VLC_FALSE );
         change_string_list( ppsz_snap_formats, NULL, 0 );
     add_bool( "snapshot-preview", VLC_TRUE, NULL, SNAP_PREVIEW_TEXT,
               SNAP_PREVIEW_LONGTEXT, VLC_FALSE );
+    add_bool( "snapshot-sequential", VLC_FALSE, NULL, SNAP_SEQUENTIAL_TEXT,
+              SNAP_SEQUENTIAL_LONGTEXT, VLC_FALSE );
 
     set_section( N_("Window properties" ), NULL );
     add_integer( "width", -1, NULL, WIDTH_TEXT, WIDTH_LONGTEXT, VLC_TRUE );
@@ -1198,10 +1283,14 @@ vlc_module_begin();
     add_integer( "video-x", -1, NULL, VIDEOX_TEXT, VIDEOX_LONGTEXT, VLC_TRUE );
     add_integer( "video-y", -1, NULL, VIDEOY_TEXT, VIDEOY_LONGTEXT, VLC_TRUE );
     add_string( "crop", NULL, NULL, CROP_TEXT, CROP_LONGTEXT, VLC_FALSE );
+    add_string( "custom-crop-ratios", NULL, NULL, CUSTOM_CROP_RATIOS_TEXT,
+                CUSTOM_CROP_RATIOS_LONGTEXT, VLC_FALSE );
     add_string( "aspect-ratio", NULL, NULL,
                 ASPECT_RATIO_TEXT, ASPECT_RATIO_LONGTEXT, VLC_FALSE );
     add_string( "monitor-par", NULL, NULL,
                 MASPECT_RATIO_TEXT, MASPECT_RATIO_LONGTEXT, VLC_TRUE );
+    add_string( "custom-aspect-ratios", NULL, NULL, CUSTOM_ASPECT_RATIOS_TEXT,
+                CUSTOM_ASPECT_RATIOS_LONGTEXT, VLC_FALSE );
     add_bool( "hdtv-fix", 1, NULL, HDTV_FIX_TEXT, HDTV_FIX_LONGTEXT, VLC_TRUE );
     add_bool( "video-deco", 1, NULL, VIDEO_DECO_TEXT,
               VIDEO_DECO_LONGTEXT, VLC_TRUE );
@@ -1219,8 +1308,13 @@ vlc_module_begin();
 
     set_subcategory( SUBCAT_VIDEO_VFILTER );
     add_module_list_cat( "vout-filter", SUBCAT_VIDEO_VFILTER, NULL, NULL,
-                FILTER_TEXT, FILTER_LONGTEXT, VLC_FALSE );
+                VOUT_FILTER_TEXT, VOUT_FILTER_LONGTEXT, VLC_FALSE );
        add_deprecated( "filter", VLC_FALSE ); /*deprecated since 0.8.2 */
+
+    set_subcategory( SUBCAT_VIDEO_VFILTER2 );
+    add_module_list_cat( "video-filter", SUBCAT_VIDEO_VFILTER2, NULL, NULL,
+                VIDEO_FILTER_TEXT, VIDEO_FILTER_LONGTEXT, VLC_FALSE );
+
 #if 0
     add_string( "pixel-ratio", "1", NULL, PIXEL_RATIO_TEXT, PIXEL_RATIO_TEXT );
 #endif
@@ -1259,6 +1353,8 @@ vlc_module_begin();
 /* Input options */
     set_category( CAT_INPUT );
     set_subcategory( SUBCAT_INPUT_GENERAL );
+
+    add_bool( "france", VLC_FALSE, NULL, "France", FRANCE_LONGTEXT, VLC_TRUE );
 
     set_section( N_( "Track settings" ), NULL );
     add_integer( "program", 0, NULL,
@@ -1433,15 +1529,22 @@ vlc_module_begin();
     set_subcategory( SUBCAT_ADVANCED_CPU );
     add_category_hint( N_("CPU"), CPU_CAT_LONGTEXT, VLC_TRUE );
     add_bool( "fpu", 1, NULL, FPU_TEXT, FPU_LONGTEXT, VLC_TRUE );
+        change_need_restart();
 #if defined( __i386__ ) || defined( __x86_64__ )
     add_bool( "mmx", 1, NULL, MMX_TEXT, MMX_LONGTEXT, VLC_TRUE );
+        change_need_restart();
     add_bool( "3dn", 1, NULL, THREE_DN_TEXT, THREE_DN_LONGTEXT, VLC_TRUE );
+        change_need_restart();
     add_bool( "mmxext", 1, NULL, MMXEXT_TEXT, MMXEXT_LONGTEXT, VLC_TRUE );
+        change_need_restart();
     add_bool( "sse", 1, NULL, SSE_TEXT, SSE_LONGTEXT, VLC_TRUE );
+        change_need_restart();
     add_bool( "sse2", 1, NULL, SSE2_TEXT, SSE2_LONGTEXT, VLC_TRUE );
+        change_need_restart();
 #endif
 #if defined( __powerpc__ ) || defined( __ppc__ ) || defined( __ppc64__ )
     add_bool( "altivec", 1, NULL, ALTIVEC_TEXT, ALTIVEC_LONGTEXT, VLC_TRUE );
+        change_need_restart();
 #endif
 
 /* Misc options */
@@ -1451,25 +1554,31 @@ vlc_module_begin();
     add_module( "memcpy", "memcpy", NULL, NULL, MEMCPY_TEXT,
                 MEMCPY_LONGTEXT, VLC_TRUE );
         change_short('A');
+        change_need_restart();
 
     set_section( N_("Plugins" ), NULL );
     add_bool( "plugins-cache", VLC_TRUE, NULL, PLUGINS_CACHE_TEXT,
               PLUGINS_CACHE_LONGTEXT, VLC_TRUE );
+        change_need_restart();
     add_directory( "plugin-path", NULL, NULL, PLUGIN_PATH_TEXT,
                    PLUGIN_PATH_LONGTEXT, VLC_TRUE );
+        change_need_restart();
 
     set_section( N_("Performance options"), NULL );
     add_bool( "minimize-threads", 0, NULL, MINIMIZE_THREADS_TEXT,
               MINIMIZE_THREADS_LONGTEXT, VLC_TRUE );
+        change_need_restart();
 
 #if !defined(__APPLE__) && !defined(SYS_BEOS) && defined(PTHREAD_COND_T_IN_PTHREAD_H)
     add_bool( "rt-priority", VLC_FALSE, NULL, RT_PRIORITY_TEXT,
               RT_PRIORITY_LONGTEXT, VLC_TRUE );
+        change_need_restart();
 #endif
 
 #if !defined(SYS_BEOS) && defined(PTHREAD_COND_T_IN_PTHREAD_H)
     add_integer( "rt-offset", 0, NULL, RT_OFFSET_TEXT,
                  RT_OFFSET_LONGTEXT, VLC_TRUE );
+        change_need_restart();
 #endif
 
 #if defined(WIN32)
@@ -1484,10 +1593,13 @@ vlc_module_begin();
               PLAYLISTENQUEUE_LONGTEXT, VLC_TRUE );
     add_bool( "high-priority", 0, NULL, HPRIORITY_TEXT,
               HPRIORITY_LONGTEXT, VLC_FALSE );
+        change_need_restart();
     add_bool( "fast-mutex", 0, NULL, FAST_MUTEX_TEXT,
               FAST_MUTEX_LONGTEXT, VLC_TRUE );
+        change_need_restart();
     add_integer( "win9x-cv-method", 1, NULL, WIN9X_CV_TEXT,
                   WIN9X_CV_LONGTEXT, VLC_TRUE );
+        change_need_restart();
 #endif
 
 /* Playlist options */
@@ -1501,15 +1613,22 @@ vlc_module_begin();
     add_bool( "repeat", 0, NULL, REPEAT_TEXT, REPEAT_LONGTEXT, VLC_FALSE );
         change_short('R');
     add_bool( "play-and-stop", 0, NULL, PAS_TEXT, PAS_LONGTEXT, VLC_FALSE );
+    add_bool( "media-library", 1, NULL, ML_TEXT, ML_LONGTEXT, VLC_FALSE );
+    add_integer( "playlist-tree", 0, NULL, PLTREE_TEXT, PLTREE_LONGTEXT,
+                 VLC_TRUE );
+        change_integer_list( pi_pltree_values, ppsz_pltree_descriptions, 0 );
 
     add_string( "open", "", NULL, OPEN_TEXT, OPEN_LONGTEXT, VLC_FALSE );
+        change_need_restart();
 
-    add_bool( "auto-preparse", VLC_TRUE, NULL, PREPARSE_TEXT, PREPARSE_LONGTEXT, VLC_FALSE );
+    add_bool( "auto-preparse", VLC_TRUE, NULL, PREPARSE_TEXT,
+              PREPARSE_LONGTEXT, VLC_FALSE );
 
     set_subcategory( SUBCAT_PLAYLIST_SD );
     add_module_list_cat( "services-discovery", SUBCAT_PLAYLIST_SD, NULL,
                           NULL, SD_TEXT, SD_LONGTEXT, VLC_FALSE );
         change_short('S');
+        change_need_restart();
 
 /* Interface options */
     set_category( CAT_INTERFACE );
@@ -1523,39 +1642,58 @@ vlc_module_begin();
 #if !defined(WIN32)
     add_bool( "daemon", 0, NULL, DAEMON_TEXT, DAEMON_LONGTEXT, VLC_TRUE );
         change_short('d');
+        change_need_restart();
+
+    add_string( "pidfile", NULL, NULL, PIDFILE_TEXT, PIDFILE_LONGTEXT,
+                                       VLC_FALSE );
+        change_need_restart();
 #endif
 
     add_bool( "file-logging", VLC_FALSE, NULL, FILE_LOG_TEXT, FILE_LOG_LONGTEXT,
               VLC_TRUE );
+        change_need_restart();
 #if HAVE_SYSLOG_H
     add_bool ( "syslog", VLC_FALSE, NULL, SYSLOG_TEXT, SYSLOG_LONGTEXT,
                VLC_TRUE );
+        change_need_restart();
 #endif
 
+#if defined (WIN32) || defined (__APPLE__)
     add_string( "language", "auto", NULL, LANGUAGE_TEXT, LANGUAGE_LONGTEXT,
                 VLC_FALSE );
         change_string_list( ppsz_language, ppsz_language_text, 0 );
+        change_need_restart();
+#endif
+
     add_bool( "color", 0, NULL, COLOR_TEXT, COLOR_LONGTEXT, VLC_TRUE );
     add_bool( "advanced", 0, NULL, ADVANCED_TEXT, ADVANCED_LONGTEXT,
                     VLC_FALSE );
+        change_need_restart();
+    add_bool( "interact", VLC_FALSE, NULL, INTERACTION_TEXT,
+              INTERACTION_LONGTEXT, VLC_FALSE );
 
     add_bool( "show-intf", VLC_FALSE, NULL, SHOWINTF_TEXT, SHOWINTF_LONGTEXT,
               VLC_FALSE );
+        change_need_restart();
 
     add_bool ( "stats", VLC_TRUE, NULL, STATS_TEXT, STATS_LONGTEXT, VLC_TRUE );
+        change_need_restart();
 
     set_subcategory( SUBCAT_INTERFACE_MAIN );
     add_module_cat( "intf", SUBCAT_INTERFACE_MAIN, NULL, NULL, INTF_TEXT,
                 INTF_LONGTEXT, VLC_FALSE );
         change_short('I');
+        change_need_restart();
     add_module_list_cat( "extraintf", SUBCAT_INTERFACE_MAIN,
                          NULL, NULL, EXTRAINTF_TEXT,
                          EXTRAINTF_LONGTEXT, VLC_FALSE );
+        change_need_restart();
 
 
     set_subcategory( SUBCAT_INTERFACE_CONTROL );
     add_module_list_cat( "control", SUBCAT_INTERFACE_CONTROL, NULL, NULL,
                          CONTROL_TEXT, CONTROL_LONGTEXT, VLC_FALSE );
+        change_need_restart();
 
 /* Hotkey options*/
     set_subcategory( SUBCAT_INTERFACE_HOTKEYS );
@@ -1634,6 +1772,17 @@ vlc_module_begin();
 #   define KEY_CHAPTER_PREV       KEY_MODIFIER_CTRL|'u'
 #   define KEY_CHAPTER_NEXT       KEY_MODIFIER_CTRL|'d'
 #   define KEY_SNAPSHOT           KEY_MODIFIER_COMMAND|KEY_MODIFIER_ALT|'s'
+#   define KEY_ZOOM               'z'
+#   define KEY_UNZOOM             KEY_MODIFIER_SHIFT|'z'
+
+#   define KEY_CROP_TOP           KEY_MODIFIER_ALT|'i'
+#   define KEY_UNCROP_TOP         KEY_MODIFIER_ALT|KEY_MODIFIER_SHIFT|'i'
+#   define KEY_CROP_LEFT          KEY_MODIFIER_ALT|'j'
+#   define KEY_UNCROP_LEFT        KEY_MODIFIER_ALT|KEY_MODIFIER_SHIFT|'j'
+#   define KEY_CROP_BOTTOM        KEY_MODIFIER_ALT|'k'
+#   define KEY_UNCROP_BOTTOM      KEY_MODIFIER_ALT|KEY_MODIFIER_SHIFT|'k'
+#   define KEY_CROP_RIGHT         KEY_MODIFIER_ALT|'l'
+#   define KEY_UNCROP_RIGHT       KEY_MODIFIER_ALT|KEY_MODIFIER_SHIFT|'l'
 
 #   define KEY_SET_BOOKMARK1      KEY_MODIFIER_COMMAND|KEY_F1
 #   define KEY_SET_BOOKMARK2      KEY_MODIFIER_COMMAND|KEY_F2
@@ -1701,10 +1850,21 @@ vlc_module_begin();
 #   define KEY_INTF_HIDE          'I'
 #   define KEY_DISC_MENU          KEY_MODIFIER_CTRL|'m'
 #   define KEY_TITLE_PREV         KEY_MODIFIER_CTRL|'p'
-#   define KEY_TITLE_NEXT         KEY_MODIFIER_CTRL|'n'
+#   define KEY_TITLE_NEXT         KEY_MODIFIER_CTRL|'f'
 #   define KEY_CHAPTER_PREV       KEY_MODIFIER_CTRL|'u'
 #   define KEY_CHAPTER_NEXT       KEY_MODIFIER_CTRL|'d'
 #   define KEY_SNAPSHOT           KEY_MODIFIER_CTRL|KEY_MODIFIER_ALT|'s'
+#   define KEY_ZOOM               'z'
+#   define KEY_UNZOOM             KEY_MODIFIER_SHIFT|'z'
+
+#   define KEY_CROP_TOP           KEY_MODIFIER_ALT|'i'
+#   define KEY_UNCROP_TOP         KEY_MODIFIER_ALT|KEY_MODIFIER_SHIFT|'i'
+#   define KEY_CROP_LEFT          KEY_MODIFIER_ALT|'j'
+#   define KEY_UNCROP_LEFT        KEY_MODIFIER_ALT|KEY_MODIFIER_SHIFT|'j'
+#   define KEY_CROP_BOTTOM        KEY_MODIFIER_ALT|'k'
+#   define KEY_UNCROP_BOTTOM      KEY_MODIFIER_ALT|KEY_MODIFIER_SHIFT|'k'
+#   define KEY_CROP_RIGHT         KEY_MODIFIER_ALT|'l'
+#   define KEY_UNCROP_RIGHT       KEY_MODIFIER_ALT|KEY_MODIFIER_SHIFT|'l'
 
 #   define KEY_SET_BOOKMARK1      KEY_MODIFIER_CTRL|KEY_F1
 #   define KEY_SET_BOOKMARK2      KEY_MODIFIER_CTRL|KEY_F2
@@ -1826,6 +1986,27 @@ vlc_module_begin();
              HISTORY_FORWARD_TEXT, HISTORY_FORWARD_LONGTEXT, VLC_TRUE );
     add_key( "key-record", KEY_RECORD, NULL,
              RECORD_KEY_TEXT, RECORD_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-zoom", KEY_ZOOM, NULL,
+             ZOOM_KEY_TEXT, ZOOM_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-unzoom", KEY_UNZOOM, NULL,
+             UNZOOM_KEY_TEXT, UNZOOM_KEY_LONGTEXT, VLC_TRUE );
+
+    add_key( "key-crop-top", KEY_CROP_TOP, NULL,
+             CROP_TOP_KEY_TEXT, CROP_TOP_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-uncrop-top", KEY_UNCROP_TOP, NULL,
+             UNCROP_TOP_KEY_TEXT, UNCROP_TOP_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-crop-left", KEY_CROP_LEFT, NULL,
+             CROP_LEFT_KEY_TEXT, CROP_LEFT_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-uncrop-left", KEY_UNCROP_LEFT, NULL,
+             UNCROP_LEFT_KEY_TEXT, UNCROP_LEFT_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-crop-bottom", KEY_CROP_BOTTOM, NULL,
+             CROP_BOTTOM_KEY_TEXT, CROP_BOTTOM_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-uncrop-bottom", KEY_UNCROP_BOTTOM, NULL,
+             UNCROP_BOTTOM_KEY_TEXT, UNCROP_BOTTOM_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-crop-right", KEY_CROP_RIGHT, NULL,
+             CROP_RIGHT_KEY_TEXT, CROP_RIGHT_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-uncrop-right", KEY_UNCROP_RIGHT, NULL,
+             UNCROP_RIGHT_KEY_TEXT, UNCROP_RIGHT_KEY_LONGTEXT, VLC_TRUE );
 
     set_section ( N_("Jump sizes" ), NULL );
     add_integer( "extrashort-jump-size", 3, NULL, JIEXTRASHORT_TEXT,
@@ -1915,7 +2096,7 @@ static module_config_t p_help_config[] =
     { CONFIG_ITEM_BOOL, NULL, "help", 'h',
       N_("print help for VLC (can be combined with --advanced)") },
     { CONFIG_ITEM_BOOL, NULL, "longhelp", 'H',
-      N_("print help for VLC and all it's modules (can be combined with --advanced)") },
+      N_("print help for VLC and all its modules (can be combined with --advanced)") },
     { CONFIG_ITEM_BOOL, NULL, "advanced", '\0',
       N_("print help for the advanced options") },
     { CONFIG_ITEM_BOOL, NULL, "help-verbose", '\0',
@@ -1980,6 +2161,16 @@ static struct hotkey p_hotkeys[] =
     { "key-intf-show", ACTIONID_INTF_SHOW, 0, 0, 0, 0 },
     { "key-intf-hide", ACTIONID_INTF_HIDE, 0, 0, 0, 0 },
     { "key-snapshot", ACTIONID_SNAPSHOT, 0, 0, 0, 0 },
+    { "key-zoom", ACTIONID_ZOOM, 0, 0, 0, 0 },
+    { "key-unzoom", ACTIONID_UNZOOM, 0, 0, 0, 0 },
+    { "key-crop-top", ACTIONID_CROP_TOP, 0, 0, 0, 0 },
+    { "key-uncrop-top", ACTIONID_UNCROP_TOP, 0, 0, 0, 0 },
+    { "key-crop-left", ACTIONID_CROP_LEFT, 0, 0, 0, 0 },
+    { "key-uncrop-left", ACTIONID_UNCROP_LEFT, 0, 0, 0, 0 },
+    { "key-crop-bottom", ACTIONID_CROP_BOTTOM, 0, 0, 0, 0 },
+    { "key-uncrop-bottom", ACTIONID_UNCROP_BOTTOM, 0, 0, 0, 0 },
+    { "key-crop-right", ACTIONID_CROP_RIGHT, 0, 0, 0, 0 },
+    { "key-uncrop-right", ACTIONID_UNCROP_RIGHT, 0, 0, 0, 0 },
     { "key-nav-activate", ACTIONID_NAV_ACTIVATE, 0, 0, 0, 0 },
     { "key-nav-up", ACTIONID_NAV_UP, 0, 0, 0, 0 },
     { "key-nav-down", ACTIONID_NAV_DOWN, 0, 0, 0, 0 },

@@ -2,7 +2,7 @@
  * playlist.h: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: playlist.h 14335 2006-02-16 20:05:18Z fkuehne $
+ * $Id: playlist.h 15655 2006-05-16 19:22:02Z fkuehne $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Derk-Jan Hartman <hartman at videolan dot org>
@@ -42,7 +42,6 @@
     IBOutlet id o_outline_view;
 
     NSMutableDictionary *o_outline_dict;
-    int i_current_view;
 }
 
 - (void)initStrings;
@@ -96,6 +95,11 @@
     IBOutlet id o_mm_mi_services;
     IBOutlet id o_mm_mu_services;
 
+    IBOutlet id o_save_accessory_view;
+    IBOutlet id o_save_accessory_popup;
+    IBOutlet id o_save_accessory_text;
+
+
     NSImage *o_descendingSortingImage;
     NSImage *o_ascendingSortingImage;
 
@@ -133,9 +137,10 @@
 - (IBAction)recursiveExpandNode:(id)sender;
 
 - (IBAction)addNode:(id)sender;
+- (void)addNodeThreadedly;
 
 - (void)appendArray:(NSArray*)o_array atPos:(int)i_position enqueue:(BOOL)b_enqueue;
-- (void)appendNodeArray:(NSArray*)o_array inNode:(playlist_item_t *)p_node atPos:(int)i_position inView:(int)i_view enqueue:(BOOL)b_enqueue;
+- (void)appendNodeArray:(NSArray*)o_array inNode:(playlist_item_t *)p_node atPos:(int)i_position enqueue:(BOOL)b_enqueue;
 
 
 @end

@@ -2,7 +2,7 @@
  * libmp4.c : LibMP4 library for mp4 module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: libmp4.c 15203 2006-04-13 14:47:20Z hartman $
+ * $Id: libmp4.c 16204 2006-08-03 16:58:10Z zorglub $
  *
  * Author: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -67,9 +67,9 @@
 #define MP4_GETSTRINGZ( p_str ) \
     if( ( i_read > 0 )&&(p_peek[0] ) ) \
     { \
-        p_str = calloc( sizeof( char ), __MIN( strlen( p_peek ), i_read )+1);\
-        memcpy( p_str, p_peek, __MIN( strlen( p_peek ), i_read ) ); \
-        p_str[__MIN( strlen( p_peek ), i_read )] = 0; \
+        p_str = calloc( sizeof( char ), __MIN( strlen( (char*)p_peek ), i_read )+1);\
+        memcpy( p_str, p_peek, __MIN( strlen( (char*)p_peek ), i_read ) ); \
+        p_str[__MIN( strlen( (char*)p_peek ), i_read )] = 0; \
         p_peek += strlen( p_str ) + 1; \
         i_read -= strlen( p_str ) + 1; \
     } \
@@ -80,14 +80,15 @@
 
 
 #define MP4_READBOX_ENTER( MP4_Box_data_TYPE_t ) \
-    int64_t  i_read = p_box->i_size; \
+    uint64_t  i_read = p_box->i_size; \
     uint8_t *p_peek, *p_buff; \
-    i_read = p_box->i_size; \
+    int i_actually_read; \
     if( !( p_peek = p_buff = malloc( i_read ) ) ) \
     { \
         return( 0 ); \
     } \
-    if( stream_Read( p_stream, p_peek, i_read ) < i_read )\
+    i_actually_read = stream_Read( p_stream, p_peek, i_read ); \
+    if( i_actually_read < 0 || (uint64_t)i_actually_read < i_read )\
     { \
         free( p_buff ); \
         return( 0 ); \
@@ -107,10 +108,6 @@
         msg_Warn( p_stream, "Not enough data" ); \
     } \
     return( i_code )
-
-#define FREE( p ) \
-    if( p ) {free( p ); p = NULL; }
-
 
 
 /* Some assumptions:
@@ -376,7 +373,7 @@ static int MP4_ReadBox_ftyp( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_ftyp( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_ftyp->i_compatible_brands );
+    FREENULL( p_box->data.p_ftyp->i_compatible_brands );
 }
 
 
@@ -619,7 +616,7 @@ static int MP4_ReadBox_hdlr( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_hdlr( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_hdlr->psz_name );
+    FREENULL( p_box->data.p_hdlr->psz_name );
 }
 
 static int MP4_ReadBox_vmhd( stream_t *p_stream, MP4_Box_t *p_box )
@@ -708,7 +705,7 @@ static int MP4_ReadBox_url( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_url( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_url->psz_location )
+    FREENULL( p_box->data.p_url->psz_location )
 }
 
 static int MP4_ReadBox_urn( stream_t *p_stream, MP4_Box_t *p_box )
@@ -729,8 +726,8 @@ static int MP4_ReadBox_urn( stream_t *p_stream, MP4_Box_t *p_box )
 }
 static void MP4_FreeBox_urn( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_urn->psz_name );
-    FREE( p_box->data.p_urn->psz_location );
+    FREENULL( p_box->data.p_urn->psz_name );
+    FREENULL( p_box->data.p_urn->psz_location );
 }
 
 
@@ -783,8 +780,8 @@ static int MP4_ReadBox_stts( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_stts( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_stts->i_sample_count );
-    FREE( p_box->data.p_stts->i_sample_delta );
+    FREENULL( p_box->data.p_stts->i_sample_count );
+    FREENULL( p_box->data.p_stts->i_sample_delta );
 }
 
 static int MP4_ReadBox_ctts( stream_t *p_stream, MP4_Box_t *p_box )
@@ -817,11 +814,11 @@ static int MP4_ReadBox_ctts( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_ctts( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_ctts->i_sample_count );
-    FREE( p_box->data.p_ctts->i_sample_offset );
+    FREENULL( p_box->data.p_ctts->i_sample_count );
+    FREENULL( p_box->data.p_ctts->i_sample_offset );
 }
 
-static int MP4_ReadLengthDescriptor( uint8_t **pp_peek, int64_t  *i_read )
+static int MP4_ReadLengthDescriptor( uint8_t **pp_peek, uint64_t  *i_read )
 {
     unsigned int i_b;
     unsigned int i_len = 0;
@@ -941,12 +938,12 @@ static int MP4_ReadBox_esds( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_esds( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_esds->es_descriptor.psz_URL );
+    FREENULL( p_box->data.p_esds->es_descriptor.psz_URL );
     if( p_box->data.p_esds->es_descriptor.p_decConfigDescr )
     {
-        FREE( p_box->data.p_esds->es_descriptor.p_decConfigDescr->p_decoder_specific_info );
+        FREENULL( p_box->data.p_esds->es_descriptor.p_decConfigDescr->p_decoder_specific_info );
     }
-    FREE( p_box->data.p_esds->es_descriptor.p_decConfigDescr );
+    FREENULL( p_box->data.p_esds->es_descriptor.p_decConfigDescr );
 }
 
 static int MP4_ReadBox_avcC( stream_t *p_stream, MP4_Box_t *p_box )
@@ -1033,14 +1030,14 @@ static void MP4_FreeBox_avcC( MP4_Box_t *p_box )
 
     for( i = 0; i < p_avcC->i_sps; i++ )
     {
-        FREE( p_avcC->sps[i] );
+        FREENULL( p_avcC->sps[i] );
     }
     for( i = 0; i < p_avcC->i_pps; i++ )
     {
-        FREE( p_avcC->pps[i] );
+        FREENULL( p_avcC->pps[i] );
     }
-    if( p_avcC->i_sps > 0 ) FREE( p_avcC->sps );
-    if( p_avcC->i_pps > 0 ) FREE( p_avcC->pps );
+    if( p_avcC->i_sps > 0 ) FREENULL( p_avcC->sps );
+    if( p_avcC->i_pps > 0 ) FREENULL( p_avcC->pps );
 }
 
 static int MP4_ReadBox_sample_soun( stream_t *p_stream, MP4_Box_t *p_box )
@@ -1192,7 +1189,7 @@ static int MP4_ReadBox_sample_soun( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_sample_soun( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_sample_soun->p_qt_description );
+    FREENULL( p_box->data.p_sample_soun->p_qt_description );
 
     if( p_box->i_type == FOURCC_drms )
     {
@@ -1271,7 +1268,7 @@ int MP4_ReadBox_sample_vide( stream_t *p_stream, MP4_Box_t *p_box )
 
 void MP4_FreeBox_sample_vide( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_sample_vide->p_qt_image_description );
+    FREENULL( p_box->data.p_sample_vide->p_qt_image_description );
 }
 
 static int MP4_ReadBox_sample_mp4s( stream_t *p_stream, MP4_Box_t *p_box )
@@ -1368,7 +1365,7 @@ static int MP4_ReadBox_sample_tx3g( stream_t *p_stream, MP4_Box_t *p_box )
 /* We can't easily call it, and anyway ~ 20 bytes lost isn't a real problem */
 static void MP4_FreeBox_sample_text( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_sample_text->psz_text_name );
+    FREENULL( p_box->data.p_sample_text->psz_text_name );
 }
 #endif
 
@@ -1429,7 +1426,7 @@ static int MP4_ReadBox_stsz( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_stsz( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_stsz->i_entry_size );
+    FREENULL( p_box->data.p_stsz->i_entry_size );
 }
 
 static int MP4_ReadBox_stsc( stream_t *p_stream, MP4_Box_t *p_box )
@@ -1466,9 +1463,9 @@ static int MP4_ReadBox_stsc( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_stsc( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_stsc->i_first_chunk );
-    FREE( p_box->data.p_stsc->i_samples_per_chunk );
-    FREE( p_box->data.p_stsc->i_sample_description_index );
+    FREENULL( p_box->data.p_stsc->i_first_chunk );
+    FREENULL( p_box->data.p_stsc->i_samples_per_chunk );
+    FREENULL( p_box->data.p_stsc->i_sample_description_index );
 }
 
 static int MP4_ReadBox_stco_co64( stream_t *p_stream, MP4_Box_t *p_box )
@@ -1514,7 +1511,7 @@ static int MP4_ReadBox_stco_co64( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_stco_co64( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_co64->i_chunk_offset );
+    FREENULL( p_box->data.p_co64->i_chunk_offset );
 }
 
 static int MP4_ReadBox_stss( stream_t *p_stream, MP4_Box_t *p_box )
@@ -1548,7 +1545,7 @@ static int MP4_ReadBox_stss( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_stss( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_stss->i_sample_number )
+    FREENULL( p_box->data.p_stss->i_sample_number )
 }
 
 static int MP4_ReadBox_stsh( stream_t *p_stream, MP4_Box_t *p_box )
@@ -1585,8 +1582,8 @@ static int MP4_ReadBox_stsh( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_stsh( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_stsh->i_shadowed_sample_number )
-    FREE( p_box->data.p_stsh->i_sync_sample_number )
+    FREENULL( p_box->data.p_stsh->i_shadowed_sample_number )
+    FREENULL( p_box->data.p_stsh->i_sync_sample_number )
 }
 
 
@@ -1617,7 +1614,7 @@ static int MP4_ReadBox_stdp( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_stdp( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_stdp->i_priority )
+    FREENULL( p_box->data.p_stdp->i_priority )
 }
 
 static int MP4_ReadBox_padb( stream_t *p_stream, MP4_Box_t *p_box )
@@ -1661,10 +1658,10 @@ static int MP4_ReadBox_padb( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_padb( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_padb->i_reserved1 );
-    FREE( p_box->data.p_padb->i_pad2 );
-    FREE( p_box->data.p_padb->i_reserved2 );
-    FREE( p_box->data.p_padb->i_pad1 );
+    FREENULL( p_box->data.p_padb->i_reserved1 );
+    FREENULL( p_box->data.p_padb->i_pad2 );
+    FREENULL( p_box->data.p_padb->i_reserved2 );
+    FREENULL( p_box->data.p_padb->i_pad1 );
 }
 
 static int MP4_ReadBox_elst( stream_t *p_stream, MP4_Box_t *p_box )
@@ -1720,10 +1717,10 @@ static int MP4_ReadBox_elst( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_elst( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_elst->i_segment_duration );
-    FREE( p_box->data.p_elst->i_media_time );
-    FREE( p_box->data.p_elst->i_media_rate_integer );
-    FREE( p_box->data.p_elst->i_media_rate_fraction );
+    FREENULL( p_box->data.p_elst->i_segment_duration );
+    FREENULL( p_box->data.p_elst->i_media_time );
+    FREENULL( p_box->data.p_elst->i_media_rate_integer );
+    FREENULL( p_box->data.p_elst->i_media_rate_fraction );
 }
 
 static int MP4_ReadBox_cprt( stream_t *p_stream, MP4_Box_t *p_box )
@@ -1757,7 +1754,7 @@ static int MP4_ReadBox_cprt( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_cprt( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_cprt->psz_notice );
+    FREENULL( p_box->data.p_cprt->psz_notice );
 }
 
 
@@ -1804,7 +1801,7 @@ static int MP4_ReadBox_cmvd( stream_t *p_stream, MP4_Box_t *p_box )
 }
 static void MP4_FreeBox_cmvd( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_cmvd->p_data );
+    FREENULL( p_box->data.p_cmvd->p_data );
 }
 
 
@@ -1967,7 +1964,7 @@ static int MP4_ReadBox_rdrf( stream_t *p_stream, MP4_Box_t *p_box )
 
 static void MP4_FreeBox_rdrf( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_rdrf->psz_ref )
+    FREENULL( p_box->data.p_rdrf->psz_ref )
 }
 
 
@@ -2035,8 +2032,16 @@ static int MP4_ReadBox_drms( stream_t *p_stream, MP4_Box_t *p_box )
 
     if( p_drms_box && p_drms_box->data.p_sample_soun->p_drms )
     {
-        int i_ret = drms_init( p_drms_box->data.p_sample_soun->p_drms,
+        int i_ret;
+        if( config_GetInt( p_stream, "france" ) )
+        {
+            i_ret = -7;
+        }
+        else
+        {
+            i_ret= drms_init( p_drms_box->data.p_sample_soun->p_drms,
                                p_box->i_type, p_peek, i_read );
+        }
         if( i_ret )
         {
             char *psz_error;
@@ -2049,6 +2054,7 @@ static int MP4_ReadBox_drms( stream_t *p_stream, MP4_Box_t *p_box )
                 case -4: psz_error = "could not get SCI data"; break;
                 case -5: psz_error = "no user key found in SCI data"; break;
                 case -6: psz_error = "invalid user key"; break;
+                case -7: psz_error = "you live in France"; break;
                 default: psz_error = "unknown error"; break;
             }
 
@@ -2065,7 +2071,7 @@ static int MP4_ReadBox_drms( stream_t *p_stream, MP4_Box_t *p_box )
 
 static int MP4_ReadBox_0xa9xxx( stream_t *p_stream, MP4_Box_t *p_box )
 {
-    int16_t i_length, i_dummy;
+    uint16_t i_length, i_dummy;
 
     MP4_READBOX_ENTER( MP4_Box_data_0xa9xxx_t );
 
@@ -2096,7 +2102,7 @@ static int MP4_ReadBox_0xa9xxx( stream_t *p_stream, MP4_Box_t *p_box )
 }
 static void MP4_FreeBox_0xa9xxx( MP4_Box_t *p_box )
 {
-    FREE( p_box->data.p_0xa9xxx->psz_text );
+    FREENULL( p_box->data.p_0xa9xxx->psz_text );
 }
 
 /* For generic */
@@ -2597,7 +2603,7 @@ static void __MP4_BoxGet( MP4_Box_t **pp_result,
 
     if( !psz_path || !psz_path[0] )
     {
-        FREE( psz_path );
+        FREENULL( psz_path );
         *pp_result = NULL;
         return;
     }
@@ -2614,7 +2620,7 @@ static void __MP4_BoxGet( MP4_Box_t **pp_result,
 //                 psz_path,psz_token,i_number );
         if( !psz_token )
         {
-            FREE( psz_token );
+            FREENULL( psz_token );
             free( psz_fmt );
             *pp_result = p_box;
             return;
@@ -2703,7 +2709,7 @@ static void __MP4_BoxGet( MP4_Box_t **pp_result,
         else
         {
 //            fprintf( stderr, "Argg malformed token \"%s\"",psz_token );
-            FREE( psz_token );
+            FREENULL( psz_token );
             free( psz_fmt );
             *pp_result = NULL;
             return;

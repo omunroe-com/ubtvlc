@@ -2,7 +2,7 @@
  * video.cpp : wxWidgets plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004, 2003 the VideoLAN team
- * $Id: video.cpp 14992 2006-03-31 12:51:59Z zorglub $
+ * $Id: video.cpp 16272 2006-08-15 22:10:37Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -154,11 +154,11 @@ VideoWindow::~VideoWindow()
         if( !p_intf->psz_switch_intf )
         {
             if( vout_Control( p_vout, VOUT_CLOSE ) != VLC_SUCCESS )
-                vout_Control( p_vout, VOUT_REPARENT );
+                vout_Control( p_vout, VOUT_REPARENT, 0 );
         }
         else
         {
-            if( vout_Control( p_vout, VOUT_REPARENT ) != VLC_SUCCESS )
+            if( vout_Control( p_vout, VOUT_REPARENT, 0 ) != VLC_SUCCESS )
                 vout_Control( p_vout, VOUT_CLOSE );
         }
     }
@@ -352,10 +352,8 @@ int VideoWindow::ControlWindow( void *p_window, int i_query, va_list args )
             unsigned int i_width  = va_arg( args, unsigned int );
             unsigned int i_height = va_arg( args, unsigned int );
 
-            vlc_mutex_lock( &lock );
             if( !i_width && p_vout ) i_width = p_vout->i_window_width;
             if( !i_height && p_vout ) i_height = p_vout->i_window_height;
-            vlc_mutex_unlock( &lock );
 
             /* Update dimensions */
             wxSizeEvent event( wxSize( i_width, i_height ), UpdateSize_Event );

@@ -4,7 +4,7 @@
  * interface, such as message output.
  *****************************************************************************
  * Copyright (C) 1999, 2000 the VideoLAN team
- * $Id: vlc_interface.h 14947 2006-03-28 13:57:36Z zorglub $
+ * $Id: vlc_interface.h 15755 2006-05-28 12:04:19Z zorglub $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -162,6 +162,9 @@ VLC_EXPORT( void,              intf_Destroy,    ( intf_thread_t * ) );
 #define INTF_DIALOG_BOOKMARKS  14
 
 #define INTF_DIALOG_POPUPMENU  20
+#define INTF_DIALOG_AUDIOPOPUPMENU  21
+#define INTF_DIALOG_VIDEOPOPUPMENU  22
+#define INTF_DIALOG_MISCPOPUPMENU  23
 
 #define INTF_DIALOG_FILE_GENERIC 30
 #define INTF_DIALOG_INTERACTION 50
@@ -173,3 +176,14 @@ VLC_EXPORT( void,              intf_Destroy,    ( intf_thread_t * ) );
 
 /* Useful text messages shared by interfaces */
 #define INTF_ABOUT_MSG LICENSE_MSG
+
+#define EXTENSIONS_AUDIO "*.a52;*.aac;*.ac3;*.dts;*.flac;*.m4a;*.m4p;*.mka;" \
+                         "*.mod;*.mp1;*.mp2;*.mp3;*.ogg;*.spx;*.wav;*.wma;*.xm"
+
+#define EXTENSIONS_VIDEO "*.asf;*.avi;*.divx;*.dv;*.m1v;*.m2v;*.m4v;*.mkv;" \
+                         "*.mov;*.mp2;*.mp4;*.mpeg;*.mpeg1;*.mpeg2;*.mpeg4;" \
+                         "*.mpg;*.ogg;*.ogm;*.ps;*.ts;*.vob;*.wmv"
+
+#define EXTENSIONS_PLAYLIST "*.asx;*.b4s;*.m3u;*.pls;*.vlc;*.xspf"
+
+#define EXTENSIONS_SUBTITLE "*.idx;*.srt;*.sub;*.utf"

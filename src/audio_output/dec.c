@@ -2,7 +2,7 @@
  * dec.c : audio output API towards decoders
  *****************************************************************************
  * Copyright (C) 2002-2004 the VideoLAN team
- * $Id: dec.c 14157 2006-02-04 16:26:23Z zorglub $
+ * $Id: dec.c 15995 2006-07-08 19:11:05Z xtophe $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -312,8 +312,11 @@ int aout_DecPlay( aout_instance_t * p_aout, aout_input_t * p_input,
                   p_buffer->start_date - mdate());
         if( p_input->p_input_thread )
         {
-            stats_UpdateInteger( p_input->p_input_thread, STATS_LOST_ABUFFERS, 1,
-                                 NULL );
+            vlc_mutex_lock( &p_input->p_input_thread->counters.counters_lock);
+            stats_UpdateInteger( p_aout,
+                           p_input->p_input_thread->counters.p_lost_abuffers,
+                           1, NULL );
+            vlc_mutex_unlock( &p_input->p_input_thread->counters.counters_lock);
         }
         aout_BufferFree( p_buffer );
         return -1;
@@ -367,8 +370,11 @@ int aout_DecPlay( aout_instance_t * p_aout, aout_input_t * p_input,
     aout_MixerRun( p_aout );
     if( p_input->p_input_thread )
     {
-        stats_UpdateInteger( p_input->p_input_thread,
-                             STATS_PLAYED_ABUFFERS, 1, NULL );
+        vlc_mutex_lock( &p_input->p_input_thread->counters.counters_lock);
+        stats_UpdateInteger( p_aout,
+                             p_input->p_input_thread->counters.p_played_abuffers,
+                             1, NULL );
+        vlc_mutex_unlock( &p_input->p_input_thread->counters.counters_lock);
     }
     vlc_mutex_unlock( &p_aout->mixer_lock );
 

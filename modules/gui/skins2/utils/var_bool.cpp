@@ -2,7 +2,7 @@
  * var_bool.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: var_bool.cpp 14118 2006-02-01 18:06:48Z courmisch $
+ * $Id: var_bool.cpp 15803 2006-06-04 13:55:41Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -60,7 +60,7 @@ VarBoolAndBool::~VarBoolAndBool()
 }
 
 
-void VarBoolAndBool::onUpdate( Subject<VarBool,void *> &rVariable, void *arg )
+void VarBoolAndBool::onUpdate( Subject<VarBool> &rVariable, void *arg )
 {
     notify();
 }
@@ -82,7 +82,7 @@ VarBoolOrBool::~VarBoolOrBool()
 }
 
 
-void VarBoolOrBool::onUpdate( Subject<VarBool,void*> &rVariable , void*arg)
+void VarBoolOrBool::onUpdate( Subject<VarBool> &rVariable , void*arg)
 {
     notify();
 }
@@ -101,7 +101,7 @@ VarNotBool::~VarNotBool()
 }
 
 
-void VarNotBool::onUpdate( Subject<VarBool, void*> &rVariable, void*arg )
+void VarNotBool::onUpdate( Subject<VarBool> &rVariable, void*arg )
 {
     notify();
 }

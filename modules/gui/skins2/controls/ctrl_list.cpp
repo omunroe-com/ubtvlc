@@ -2,7 +2,7 @@
  * ctrl_list.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_list.cpp 14118 2006-02-01 18:06:48Z courmisch $
+ * $Id: ctrl_list.cpp 15803 2006-06-04 13:55:41Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -72,14 +72,14 @@ CtrlList::~CtrlList()
 }
 
 
-void CtrlList::onUpdate( Subject<VarList, void*> &rList, void *arg  )
+void CtrlList::onUpdate( Subject<VarList> &rList, void *arg  )
 {
     autoScroll();
     m_pLastSelected = NULL;
 }
 
 
-void CtrlList::onUpdate( Subject<VarPercent, void*> &rPercent, void *arg  )
+void CtrlList::onUpdate( Subject<VarPercent> &rPercent, void *arg  )
 {
     // Get the size of the control
     const Position *pPos = getPosition();

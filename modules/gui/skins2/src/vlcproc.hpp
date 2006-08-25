@@ -2,7 +2,7 @@
  * vlcproc.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: vlcproc.hpp 15241 2006-04-15 16:29:24Z asmax $
+ * $Id: vlcproc.hpp 15629 2006-05-14 18:29:00Z zorglub $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teuli�e <ipkiss@via.ecp.fr>
@@ -28,7 +28,6 @@
 #include <set>
 
 #include "../vars/equalizer.hpp"
-#include "../vars/playlist.hpp"
 #include "../vars/playtree.hpp"
 #include "../vars/time.hpp"
 #include "../vars/volume.hpp"
@@ -51,9 +50,6 @@ class VlcProc: public SkinObject
 
         /// Delete the instance of VlcProc
         static void destroy( intf_thread_t *pIntf );
-
-        /// Getter for the playlist variable
-        Playlist &getPlaylistVar() { return *((Playlist*)m_cPlaylist.get()); }
 
         /// Getter for the playtree variable
         Playtree &getPlaytreeVar() { return *((Playtree*)m_cPlaytree.get()); }
@@ -104,9 +100,7 @@ class VlcProc: public SkinObject
     private:
         /// Timer to call manage() regularly (via doManage())
         OSTimer *m_pTimer;
-        /// Playlist variable
-        VariablePtr m_cPlaylist;
-        /// Playtree variable FIXME
+        /// Playtree variable
         VariablePtr m_cPlaytree;
         VariablePtr m_cVarRandom;
         VariablePtr m_cVarLoop;
@@ -131,6 +125,8 @@ class VlcProc: public SkinObject
         VariablePtr m_cVarFullscreen;
         VarBox m_varVoutSize;
         VariablePtr m_cVarHasVout;
+        /// Variables related to audio
+        VariablePtr m_cVarHasAudio;
         /// Equalizer variables
         EqualizerBands m_varEqBands;
         VariablePtr m_cVarEqPreamp;
@@ -163,6 +159,10 @@ class VlcProc: public SkinObject
 
         /// Refresh audio variables
         void refreshAudio();
+        /// Refresh playlist variables
+        void refreshPlaylist();
+        /// Refresh input variables
+        void refreshInput();
 
         /// Update the stream name variable
         void updateStreamName( playlist_t *p_playlist );

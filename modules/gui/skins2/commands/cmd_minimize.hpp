@@ -2,7 +2,7 @@
  * cmd_minimize.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: cmd_minimize.hpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: cmd_minimize.hpp 15598 2006-05-13 17:54:21Z ipkiss $
  *
  * Authors: Mohammed Adnène Trojette     <adn@via.ecp.fr>
  *
@@ -27,7 +27,11 @@
 #include "cmd_generic.hpp"
 
 
-/// Command to minimize VLC
 DEFINE_COMMAND(Minimize, "minimize" )
+DEFINE_COMMAND(Restore, "restore" )
+DEFINE_COMMAND(AddInTray, "add in tray" )
+DEFINE_COMMAND(RemoveFromTray, "remove from tray" )
+DEFINE_COMMAND(AddInTaskBar, "add in taskbar" )
+DEFINE_COMMAND(RemoveFromTaskBar, "remove from taskbar" )
 
 #endif

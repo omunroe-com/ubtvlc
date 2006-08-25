@@ -2,11 +2,13 @@
  * encoder.c: video and audio encoder using the ffmpeg library
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: encoder.c 13905 2006-01-12 23:10:04Z dionoea $
+ * $Id: encoder.c 16319 2006-08-22 23:22:14Z fkuehne $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
+ * Part of the file Copyright (C) FFMPEG Project Developers
+ * (mpeg4_default matrixes)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +33,7 @@
 #include <vlc/aout.h>
 #include <vlc/sout.h>
 #include <vlc/decoder.h>
+#include <vlc_interaction.h>
 
 /* ffmpeg header */
 #define HAVE_MMX 1
@@ -166,11 +169,32 @@ static const uint16_t mpa_bitrate_tab[2][15] =
 static const uint16_t mpa_freq_tab[6] =
 { 44100, 48000, 32000, 22050, 24000, 16000 };
 
+static const int16_t mpeg4_default_intra_matrix[64] = {
+  8, 17, 18, 19, 21, 23, 25, 27,
+ 17, 18, 19, 21, 23, 25, 27, 28,
+ 20, 21, 22, 23, 24, 26, 28, 30,
+ 21, 22, 23, 24, 26, 28, 30, 32,
+ 22, 23, 24, 26, 28, 30, 32, 35,
+ 23, 24, 26, 28, 30, 32, 35, 38,
+ 25, 26, 28, 30, 32, 35, 38, 41,
+ 27, 28, 30, 32, 35, 38, 41, 45,
+};
+
+static const int16_t mpeg4_default_non_intra_matrix[64] = {
+ 16, 17, 18, 19, 20, 21, 22, 23,
+ 17, 18, 19, 20, 21, 22, 23, 24,
+ 18, 19, 20, 21, 22, 23, 24, 25,
+ 19, 20, 21, 22, 23, 24, 26, 27,
+ 20, 21, 22, 23, 25, 26, 27, 28,
+ 21, 22, 23, 24, 26, 27, 28, 30,
+ 22, 23, 24, 26, 27, 28, 30, 31,
+ 23, 24, 25, 27, 28, 30, 31, 33,
+};
+
+
 /*****************************************************************************
  * OpenEncoder: probe the encoder
  *****************************************************************************/
-extern int16_t IMPORT_SYMBOL ff_mpeg4_default_intra_matrix[];
-extern int16_t IMPORT_SYMBOL ff_mpeg4_default_non_intra_matrix[];
 
 int E_(OpenEncoder)( vlc_object_t *p_this )
 {
@@ -198,30 +222,35 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
         psz_namecodec = "Raw video";
     }
 
-
     if( p_enc->fmt_out.i_cat == VIDEO_ES && i_cat != VIDEO_ES )
     {
         msg_Err( p_enc, "\"%s\" is not a video encoder", psz_namecodec );
+        intf_UserFatal( p_enc, VLC_FALSE, _("Streaming / Transcoding failed"), 
+                        _("\"%s\" is no video encoder."), psz_namecodec );
         return VLC_EGENERIC;
     }
 
     if( p_enc->fmt_out.i_cat == AUDIO_ES && i_cat != AUDIO_ES )
     {
         msg_Err( p_enc, "\"%s\" is not an audio encoder", psz_namecodec );
+        intf_UserFatal( p_enc, VLC_FALSE, _("Streaming / Transcoding failed"), 
+                        _("\"%s\" is no audio encoder."), psz_namecodec );
         return VLC_EGENERIC;
     }
 
-    /* Initialization must be done before avcodec_find_decoder() */
+    /* Initialization must be done before avcodec_find_encoder() */
     E_(InitLibavcodec)(p_this);
 
     p_codec = avcodec_find_encoder( i_codec_id );
     if( !p_codec )
     {
         msg_Err( p_enc, "cannot find encoder %s", psz_namecodec );
+        intf_UserFatal( p_enc, VLC_FALSE, _("Streaming / Transcoding failed"), 
+                        _("VLC could not find encoder \"%s\"."), psz_namecodec );
         return VLC_EGENERIC;
     }
 
-    /* Allocate the memory needed to store the decoder's structure */
+    /* Allocate the memory needed to store the encoder's structure */
     if( ( p_sys = (encoder_sys_t *)malloc(sizeof(encoder_sys_t)) ) == NULL )
     {
         msg_Err( p_enc, "out of memory" );
@@ -444,8 +473,8 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
 
         if ( p_sys->b_mpeg4_matrix )
         {
-            p_context->intra_matrix = ff_mpeg4_default_intra_matrix;
-            p_context->inter_matrix = ff_mpeg4_default_non_intra_matrix;
+            p_context->intra_matrix = mpeg4_default_intra_matrix;
+            p_context->inter_matrix = mpeg4_default_non_intra_matrix;
         }
 
         if ( p_sys->b_pre_me )
@@ -587,6 +616,8 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
             {
                 vlc_mutex_unlock( lockval.p_address );
                 msg_Err( p_enc, "cannot open encoder" );
+                intf_UserFatal( p_enc, VLC_FALSE, _("Streaming / Transcoding failed"), 
+                                _("VLC could not open the encoder.") );
                 free( p_sys );
                 return VLC_EGENERIC;
             }
@@ -594,6 +625,8 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
         else
         {
             msg_Err( p_enc, "cannot open encoder" );
+            intf_UserFatal( p_enc, VLC_FALSE, _("Streaming / Transcoding failed"), 
+                            _("VLC could not open the encoder.") );
             free( p_sys );
             return VLC_EGENERIC;
         }

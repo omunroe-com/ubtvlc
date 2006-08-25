@@ -2,7 +2,7 @@
  * observer.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: observer.hpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: observer.hpp 15805 2006-06-04 14:17:46Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -32,7 +32,7 @@ template <class S, class ARG> class Observer;
 
 
 /// Template for subjects in the Observer design pattern
-template <class S, class ARG> class Subject
+template <class S, class ARG = void> class Subject
 {
     public:
         virtual ~Subject() {}
@@ -58,7 +58,7 @@ template <class S, class ARG> class Subject
         }
 
         /// Notify the observers when the status has changed
-        virtual void notify( ARG arg )
+        virtual void notify( ARG *arg )
         {
             // This stupid gcc 3.2 needs "typename"
             typename set<Observer<S, ARG>*>::const_iterator iter;
@@ -87,13 +87,13 @@ template <class S, class ARG> class Subject
 
 
 /// Template for observers in the Observer design pattern
-template <class S, class ARG> class Observer
+template <class S, class ARG = void> class Observer
 {
     public:
         virtual ~Observer() {}
 
         /// Method called when the subject is modified
-        virtual void onUpdate( Subject<S,ARG> &rSubject , ARG arg) = 0;
+        virtual void onUpdate( Subject<S, ARG> &rSubject, ARG *arg) = 0;
 
     protected:
         Observer() {}

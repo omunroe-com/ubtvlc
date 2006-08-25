@@ -1,10 +1,11 @@
 /*****************************************************************************
  * file.c: file input (file: access plug-in)
  *****************************************************************************
- * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: file.c 15016 2006-03-31 23:07:01Z xtophe $
+ * Copyright (C) 2001-2006 the VideoLAN team
+ * $Id: file.c 16319 2006-08-22 23:22:14Z fkuehne $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
+ *          Rémi Denis-Courmont <rem # videolan # org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,15 +27,13 @@
  *****************************************************************************/
 #include <vlc/vlc.h>
 #include <vlc/input.h>
+#include <vlc_interaction.h>
 
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #ifdef HAVE_SYS_TYPES_H
 #   include <sys/types.h>
-#endif
-#ifdef HAVE_SYS_TIME_H
-#   include <sys/time.h>
 #endif
 #ifdef HAVE_SYS_STAT_H
 #   include <sys/stat.h>
@@ -43,10 +42,11 @@
 #   include <fcntl.h>
 #endif
 
-#ifdef HAVE_UNISTD_H
-#   include <unistd.h>
-#elif defined( WIN32 ) && !defined( UNDER_CE )
+#if defined( WIN32 ) && !defined( UNDER_CE )
 #   include <io.h>
+#else
+#   include <unistd.h>
+#   include <poll.h>
 #endif
 
 #if defined( WIN32 ) && !defined( UNDER_CE )
@@ -154,11 +154,8 @@ static int Open( vlc_object_t *p_this )
 #ifdef HAVE_SYS_STAT_H
     struct stat         stat_info;
 #endif
-    vlc_bool_t          b_stdin;
-
     file_entry_t *      p_file;
-
-    b_stdin = psz_name[0] == '-' && psz_name[1] == '\0';
+    vlc_bool_t          b_stdin = psz_name[0] == '-' && psz_name[1] == '\0';
 
     if( !b_stdin )
     {
@@ -179,7 +176,7 @@ static int Open( vlc_object_t *p_this )
             ** explorer can open path such as file:/C:/ or file:///C:/...
             ** hence remove leading / if found
             */
-            ++psz_name;
+            strcpy( psz_name, p_access->psz_path + 1 );
         }
 #endif
 
@@ -193,17 +190,7 @@ static int Open( vlc_object_t *p_this )
 #endif
     }
 
-    p_access->pf_read = Read;
-    p_access->pf_block = NULL;
-    p_access->pf_seek = Seek;
-    p_access->pf_control = Control;
-    p_access->info.i_update = 0;
-    p_access->info.i_size = 0;
-    p_access->info.i_pos = 0;
-    p_access->info.b_eof = VLC_FALSE;
-    p_access->info.i_title = 0;
-    p_access->info.i_seekpoint = 0;
-    p_access->p_sys = p_sys = malloc( sizeof( access_sys_t ) );
+    STANDARD_READ_ACCESS_INIT;
     p_sys->i_nb_reads = 0;
     p_sys->b_kfir = VLC_FALSE;
     p_sys->file = NULL;
@@ -258,6 +245,10 @@ static int Open( vlc_object_t *p_this )
         else
         {
             msg_Err( p_access, "unknown file type for `%s'", psz_name );
+            intf_UserFatal( p_access, VLC_FALSE, _("File reading failed"), 
+                            _("\"%s\"'s file type is unknown."),
+                            psz_name );
+            free( psz_name );
             return VLC_EGENERIC;
         }
     }
@@ -374,35 +365,30 @@ static int Read( access_t *p_access, uint8_t *p_buffer, int i_len )
         if( !p_sys->b_kfir )
         {
             /* Find if some data is available. This won't work under Windows. */
-            struct timeval  timeout;
-            fd_set          fds;
-
-            /* Initialize file descriptor set */
-            FD_ZERO( &fds );
-            FD_SET( p_sys->fd, &fds );
-
-            /* We'll wait 0.5 second if nothing happens */
-            timeout.tv_sec = 0;
-            timeout.tv_usec = 500000;
-
-            /* Find if some data is available */
-            while( (i_ret = select( p_sys->fd + 1, &fds, NULL, NULL, &timeout )) == 0
-                    || (i_ret < 0 && errno == EINTR) )
+            do
             {
-                FD_ZERO( &fds );
-                FD_SET( p_sys->fd, &fds );
-                timeout.tv_sec = 0;
-                timeout.tv_usec = 500000;
+                struct pollfd ufd;
 
                 if( p_access->b_die )
                     return 0;
-            }
 
-            if( i_ret < 0 )
-            {
-                msg_Err( p_access, "select error (%s)", strerror(errno) );
-                return -1;
+                memset (&ufd, 0, sizeof (ufd));
+                ufd.fd = p_sys->fd;
+                ufd.events = POLLIN;
+
+                i_ret = poll( &ufd, 1, 500 );
+                if( i_ret == -1 )
+                {
+                    if( errno != EINTR )
+                    {
+                        msg_Err( p_access, "poll error: %s",
+                                 strerror( errno ) );
+                        return -1;
+                    }
+                    i_ret = 0;
+                }
             }
+            while( i_ret == 0 );
 
             i_ret = read( p_sys->fd, p_buffer, i_len );
         }
@@ -426,7 +412,12 @@ static int Read( access_t *p_access, uint8_t *p_buffer, int i_len )
     if( i_ret < 0 )
     {
         if( errno != EINTR && errno != EAGAIN )
+        {
             msg_Err( p_access, "read failed (%s)", strerror(errno) );
+            intf_UserFatal( p_access, VLC_FALSE, _("File reading failed"), 
+                            _("VLC could not read file \"%s\"."),
+                            strerror(errno) );
+        }
 
         /* Delay a bit to avoid consuming all the CPU. This is particularly
          * useful when reading from an unconnected FIFO. */
@@ -525,6 +516,10 @@ static int Seek( access_t *p_access, int64_t i_pos )
     if( p_access->info.i_size < p_access->info.i_pos )
     {
         msg_Err( p_access, "seeking too far" );
+        intf_UserFatal( p_access, VLC_FALSE, _("File reading failed"), 
+                        _("VLC seeked in the file too far. This usually means "
+                          "that your file is broken and therefore cannot be "
+                          "played." ) );
         p_access->info.i_pos = p_access->info.i_size;
     }
     else if( p_access->info.i_pos < 0 )
@@ -608,6 +603,8 @@ static int _OpenFile( access_t * p_access, const char * psz_name )
     if ( !p_sys->fd )
     {
         msg_Err( p_access, "cannot open file %s", psz_name );
+        intf_UserFatal( p_access, VLC_FALSE, _("File reading failed"), 
+                        _("VLC could not open file \"%s\"."), psz_name );
         return VLC_EGENERIC;
     }
 
@@ -623,12 +620,17 @@ static int _OpenFile( access_t * p_access, const char * psz_name )
         return VLC_EGENERIC;
     }
 
+    // FIXME: support non-ANSI filenames on Win32
     p_sys->fd = open( psz_localname, O_NONBLOCK /*| O_LARGEFILE*/ );
     LocaleFree( psz_localname );
+
     if ( p_sys->fd == -1 )
     {
         msg_Err( p_access, "cannot open file %s (%s)", psz_name,
                  strerror(errno) );
+        intf_UserFatal( p_access, VLC_FALSE, _("File reading failed"), 
+                        _("VLC could not open file \"%s\" (%s)."),
+                        psz_name, strerror(errno) );
         return VLC_EGENERIC;
     }
 

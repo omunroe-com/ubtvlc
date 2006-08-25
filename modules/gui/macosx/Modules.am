@@ -1,4 +1,6 @@
 SOURCES_macosx = \
+	AppleRemote.h \
+	AppleRemote.m \
 	about.h \
 	about.m \
 	applescript.h \
@@ -36,6 +38,8 @@ SOURCES_macosx = \
 	extended.m \
 	bookmarks.h \
 	bookmarks.m \
+	sfilters.h \
+	sfilters.m \
 	embeddedwindow.h \
 	embeddedwindow.m \
 	update.h \

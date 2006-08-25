@@ -2,7 +2,7 @@
  * smb.c: SMB input module
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: smb.c 15016 2006-03-31 23:07:01Z xtophe $
+ * $Id: smb.c 16083 2006-07-19 09:33:41Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -235,11 +235,12 @@ static int Open( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
 
-    p_access->info.i_size = 0;
+    /* Init p_access */
+    STANDARD_READ_ACCESS_INIT;
+
     i_ret = p_smb->fstat( p_smb, p_file, &filestat );
     if( i_ret ) msg_Err( p_access, "stat failed (%s)", strerror(errno) );
     else p_access->info.i_size = filestat.st_size;
-
 #else
 
 #ifndef WIN32
@@ -258,26 +259,15 @@ static int Open( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
 
-    p_access->info.i_size = 0;
+    /* Init p_access */
+    STANDARD_READ_ACCESS_INIT;
+
     i_ret = smbc_fstat( i_smb, &filestat );
     if( i_ret ) msg_Err( p_access, "stat failed (%s)", strerror(i_ret) );
     else p_access->info.i_size = filestat.st_size;
 #endif
 
     free( psz_uri );
-
-    /* Init p_access */
-    p_access->pf_read = Read;
-    p_access->pf_block = NULL;
-    p_access->pf_seek = Seek;
-    p_access->pf_control = Control;
-    p_access->info.i_update = 0;
-    p_access->info.i_pos = 0;
-    p_access->info.b_eof = VLC_FALSE;
-    p_access->info.i_title = 0;
-    p_access->info.i_seekpoint = 0;
-    p_access->p_sys = p_sys = malloc( sizeof( access_sys_t ) );
-    memset( p_sys, 0, sizeof( access_sys_t ) );
 
 #ifdef USE_CTX
     p_sys->p_smb = p_smb;
@@ -457,17 +447,15 @@ static void Win32AddConnection( access_t *p_access, char *psz_path,
     net_resource.dwType = RESOURCETYPE_DISK;
 
     /* Find out server and share names */
-    psz_server[0] = psz_share[0] = 0;
+    strlcpy( psz_server, psz_path, sizeof( psz_server ) );
+    psz_share[0] = 0;
     psz_parser = strchr( psz_path, '/' );
     if( psz_parser )
     {
-        char *psz_parser2;
-        strncat( psz_server, psz_path, psz_parser - psz_path );
-        psz_parser2 = strchr( psz_parser+1, '/' );
+        char *psz_parser2 = strchr( ++psz_parser, '/' );
         if( psz_parser2 )
-            strncat( psz_share, psz_parser+1, psz_parser2 - psz_parser -1 );
-    }
-    else strncat( psz_server, psz_path, MAX_PATH );
+            strlcpy( psz_share, psz_parser, sizeof( psz_share ) );
+   }
 
     sprintf( psz_remote, "\\\\%s\\%s", psz_server, psz_share );
     net_resource.lpRemoteName = psz_remote;

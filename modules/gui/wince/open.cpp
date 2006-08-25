@@ -2,7 +2,7 @@
  * open.cpp : WinCE gui plugin for VLC
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: open.cpp 13905 2006-01-12 23:10:04Z dionoea $
+ * $Id: open.cpp 15768 2006-05-31 20:40:54Z zorglub $
  *
  * Authors: Marodon Cedric <cedric_marodon@yahoo.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -636,12 +636,16 @@ void OpenDialog::OnOk()
             }
         }
 
-        playlist_AddItem( p_playlist, p_item,
-                          PLAYLIST_APPEND, PLAYLIST_END );
 
         if( b_start )
         {
-            playlist_Control( p_playlist, PLAYLIST_ITEMPLAY , p_item );
+            playlist_AddItem( p_playlist, p_item,
+                              PLAYLIST_APPEND|PLAYLIST_GO, PLAYLIST_END );
+        }
+        else
+        {
+            playlist_AddItem( p_playlist, p_item,
+                              PLAYLIST_APPEND, PLAYLIST_END );
         }
     }
 

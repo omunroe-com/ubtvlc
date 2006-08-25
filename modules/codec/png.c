@@ -2,7 +2,7 @@
  * png.c: png decoder module making use of libpng.
  *****************************************************************************
  * Copyright (C) 1999-2001 the VideoLAN team
- * $Id: png.c 15115 2006-04-06 15:53:06Z massiot $
+ * $Id: png.c 15962 2006-06-29 20:52:30Z hartman $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -65,7 +65,8 @@ static int OpenDecoder( vlc_object_t *p_this )
     decoder_t *p_dec = (decoder_t*)p_this;
     decoder_sys_t *p_sys;
 
-    if( p_dec->fmt_in.i_codec != VLC_FOURCC('p','n','g',' ') )
+    if( p_dec->fmt_in.i_codec != VLC_FOURCC('p','n','g',' ') &&
+        p_dec->fmt_in.i_codec != VLC_FOURCC('M','P','N','G') )
     {
         return VLC_EGENERIC;
     }
@@ -221,6 +222,8 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
 
     png_destroy_read_struct( &p_png, &p_info, &p_end_info );
     free( p_row_pointers );
+
+    p_pic->date = p_block->i_pts > 0 ? p_block->i_pts : p_block->i_dts;
 
     block_Release( p_block ); *pp_block = NULL;
     return p_pic;

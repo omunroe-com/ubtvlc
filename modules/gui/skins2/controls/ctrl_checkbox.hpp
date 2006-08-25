@@ -2,7 +2,7 @@
  * ctrl_checkbox.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_checkbox.hpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: ctrl_checkbox.hpp 15804 2006-06-04 14:03:54Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -36,7 +36,7 @@ class CmdGeneric;
 
 
 /// Base class for checkbox controls
-class CtrlCheckbox: public CtrlGeneric, public Observer<AnimBitmap, void*>
+class CtrlCheckbox: public CtrlGeneric, public Observer<AnimBitmap>
 {
     public:
         /// Create a checkbox with 6 images
@@ -109,7 +109,7 @@ class CtrlCheckbox: public CtrlGeneric, public Observer<AnimBitmap, void*>
         virtual void onVarBoolUpdate( VarBool &rVariable );
 
         /// Method called when an animated bitmap changes
-        virtual void onUpdate( Subject<AnimBitmap, void*> &rBitmap, void* );
+        virtual void onUpdate( Subject<AnimBitmap> &rBitmap, void* );
 
         /// Change the current image
         void setImage( AnimBitmap *pImg );

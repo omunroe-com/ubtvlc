@@ -2,7 +2,7 @@
  * transform.c : transform image module for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: transform.c 13905 2006-01-12 23:10:04Z dionoea $
+ * $Id: transform.c 15973 2006-07-04 12:26:08Z sam $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -210,13 +210,9 @@ static int Init( vout_thread_t *p_vout )
 
         fmt.i_sar_num = p_vout->fmt_out.i_sar_den;
         fmt.i_sar_den = p_vout->fmt_out.i_sar_num;
+    }
 
-        p_vout->p_sys->p_vout = vout_Create( p_vout, &fmt );
-    }
-    else
-    {
-        p_vout->p_sys->p_vout = vout_Create( p_vout, &fmt );
-    }
+    p_vout->p_sys->p_vout = vout_Create( p_vout, &fmt );
 
     /* Everything failed */
     if( p_vout->p_sys->p_vout == NULL )

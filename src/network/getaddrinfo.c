@@ -3,7 +3,7 @@
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
  * Copyright (C) 2002-2004 Rémi Denis-Courmont
- * $Id: getaddrinfo.c 15025 2006-04-01 11:27:40Z fkuehne $
+ * $Id: getaddrinfo.c 15929 2006-06-20 14:37:45Z courmisch $
  *
  * Author: Rémi Denis-Courmont <rem # videolan.org>
  *
@@ -25,7 +25,7 @@
 #include <vlc/vlc.h>
 
 #include <stddef.h> /* size_t */
-#include <string.h> /* strncpy(), strlen(), memcpy(), memset(), strchr() */
+#include <string.h> /* strlen(), memcpy(), memset(), strchr() */
 #include <stdlib.h> /* malloc(), free(), strtoul() */
 #include <errno.h>
 
@@ -175,8 +175,7 @@ __getnameinfo( const struct sockaddr *sa, socklen_t salen,
 
                 if (hent != NULL)
                 {
-                    strncpy (host, hent->h_name, hostlen);
-                    host[hostlen - 1] = '\0';
+                    strlcpy (host, hent->h_name, hostlen);
 
                     /*
                      * only keep first part of hostname
@@ -199,11 +198,8 @@ __getnameinfo( const struct sockaddr *sa, socklen_t salen,
             }
 
             if (!solved)
-            {
                 /* inet_ntoa() can't fail */
-                strncpy (host, inet_ntoa (addr->sin_addr), hostlen);
-                host[hostlen - 1] = '\0';
-            }
+                strlcpy (host, inet_ntoa (addr->sin_addr), hostlen);
         }
 
         if (serv != NULL)
@@ -222,8 +218,7 @@ __getnameinfo( const struct sockaddr *sa, socklen_t salen,
                                      ? "udp" : "tcp");
                 if (sent != NULL)
                 {
-                    strncpy (serv, sent->s_name, servlen);
-                    serv[servlen - 1] = 0;
+                    strlcpy (serv, sent->s_name, servlen);
                     solved = 1;
                 }
             }
@@ -517,7 +512,7 @@ int vlc_getnameinfo( const struct sockaddr *sa, int salen,
      */
     typedef int (CALLBACK * GETNAMEINFO) ( const struct sockaddr*, socklen_t,
                                            char*, DWORD, char*, DWORD, int );
-    HINSTANCE wship6_module;
+    HINSTANCE module;
     GETNAMEINFO ws2_getnameinfo;
 #endif
 
@@ -533,24 +528,24 @@ int vlc_getnameinfo( const struct sockaddr *sa, int salen,
         i_servlen = 0;
     }
 #if defined( WIN32 ) && !defined( UNDER_CE )
-    wship6_module = LoadLibrary( "wship6.dll" );
-    if( wship6_module != NULL )
+    /* Production IPv6 stack releases are in WS2_32.DLL */
+    module = LoadLibrary( "ws2_32.dll" );
+    if( module != NULL )
     {
-        ws2_getnameinfo = (GETNAMEINFO)GetProcAddress( wship6_module,
-                                                       "getnameinfo" );
+        ws2_getnameinfo = (GETNAMEINFO)GetProcAddress( module, "getnameinfo" );
 
         if( ws2_getnameinfo != NULL )
         {
             i_val = ws2_getnameinfo( sa, salen, host, hostlen, psz_serv,
                                      i_servlen, flags );
-            FreeLibrary( wship6_module );
+            FreeLibrary( module );
 
             if( portnum != NULL )
                 *portnum = atoi( psz_serv );
             return i_val;
         }
             
-        FreeLibrary( wship6_module );
+        FreeLibrary( module );
     }
 #endif
 #if defined( HAVE_GETNAMEINFO ) || defined( UNDER_CE )
@@ -636,8 +631,7 @@ int vlc_getaddrinfo( vlc_object_t *p_this, const char *node,
     }
     else
     {
-        strncpy( psz_buf, node, NI_MAXHOST );
-        psz_buf[NI_MAXHOST - 1] = '\0';
+        strlcpy( psz_buf, node, NI_MAXHOST );
 
         psz_node = psz_buf;
 
@@ -659,25 +653,24 @@ int vlc_getaddrinfo( vlc_object_t *p_this, const char *node,
         typedef int (CALLBACK * GETADDRINFO) ( const char *, const char *,
                                             const struct addrinfo *,
                                             struct addrinfo ** );
-        HINSTANCE wship6_module;
+        HINSTANCE module;
         GETADDRINFO ws2_getaddrinfo;
 
-        wship6_module = LoadLibrary( "wship6.dll" );
-        if( wship6_module != NULL )
+        module = LoadLibrary( "ws2_32.dll" );
+        if( module != NULL )
         {
-            ws2_getaddrinfo = (GETADDRINFO)GetProcAddress( wship6_module,
-                                                        "getaddrinfo" );
+            ws2_getaddrinfo = (GETADDRINFO)GetProcAddress( module, "getaddrinfo" );
 
             if( ws2_getaddrinfo != NULL )
             {
                 int i_ret;
 
                 i_ret = ws2_getaddrinfo( psz_node, psz_service, &hints, res );
-                FreeLibrary( wship6_module ); /* is this wise ? */
+                FreeLibrary( module ); /* is this wise ? */
                 return i_ret;
             }
 
-            FreeLibrary( wship6_module );
+            FreeLibrary( module );
         }
     }
 #endif
@@ -730,27 +723,26 @@ void vlc_freeaddrinfo( struct addrinfo *infos )
 {
 #if defined( WIN32 ) && !defined( UNDER_CE )
     typedef void (CALLBACK * FREEADDRINFO) ( struct addrinfo * );
-    HINSTANCE wship6_module;
+    HINSTANCE module;
     FREEADDRINFO ws2_freeaddrinfo;
      
-    wship6_module = LoadLibrary( "wship6.dll" );
-    if( wship6_module != NULL )
+    module = LoadLibrary( "ws2_32.dll" );
+    if( module != NULL )
     {
-        ws2_freeaddrinfo = (FREEADDRINFO)GetProcAddress( wship6_module,
-                                                         "freeaddrinfo" );
+        ws2_freeaddrinfo = (FREEADDRINFO)GetProcAddress( module, "freeaddrinfo" );
 
         /*
-         * NOTE: it is assumed that wship6.dll defines either both
-         * getaddrinfo and freeaddrinfo or none of them.
+         * NOTE: it is assumed that ws2_32.dll defines either both or neither
+         * getaddrinfo() and freeaddrinfo().
          */
         if( ws2_freeaddrinfo != NULL )
         {
             ws2_freeaddrinfo( infos );
-            FreeLibrary( wship6_module );
+            FreeLibrary( module );
             return;
         }
 
-        FreeLibrary( wship6_module );
+        FreeLibrary( module );
     }
 #endif
 #if defined( HAVE_GETADDRINFO ) || defined( UNDER_CE )

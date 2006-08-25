@@ -2,7 +2,7 @@
  * interpreter.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: interpreter.cpp 15366 2006-04-26 18:03:19Z ipkiss $
+ * $Id: interpreter.cpp 16302 2006-08-20 08:48:53Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -57,11 +57,17 @@ Interpreter::Interpreter( intf_thread_t *pIntf ): SkinObject( pIntf )
     REGISTER_CMD( "dialogs.directory()", CmdDlgDirectory )
     REGISTER_CMD( "dialogs.disc()", CmdDlgDisc )
     REGISTER_CMD( "dialogs.net()", CmdDlgNet )
+    REGISTER_CMD( "dialogs.playlist()", CmdDlgPlaylist )
     REGISTER_CMD( "dialogs.messages()", CmdDlgMessages )
     REGISTER_CMD( "dialogs.prefs()", CmdDlgPrefs )
     REGISTER_CMD( "dialogs.fileInfo()", CmdDlgFileInfo )
     REGISTER_CMD( "dialogs.streamingWizard()", CmdDlgStreamingWizard )
+
     REGISTER_CMD( "dialogs.popup()", CmdDlgShowPopupMenu )
+    REGISTER_CMD( "dialogs.audioPopup()", CmdDlgShowAudioPopupMenu )
+    REGISTER_CMD( "dialogs.videoPopup()", CmdDlgShowVideoPopupMenu )
+    REGISTER_CMD( "dialogs.miscPopup()", CmdDlgShowMiscPopupMenu )
+
     REGISTER_CMD( "dvd.nextTitle()", CmdDvdNextTitle )
     REGISTER_CMD( "dvd.previousTitle()", CmdDvdPreviousTitle )
     REGISTER_CMD( "dvd.nextChapter()", CmdDvdNextChapter )
@@ -70,12 +76,8 @@ Interpreter::Interpreter( intf_thread_t *pIntf ): SkinObject( pIntf )
     REGISTER_CMD( "playlist.load()", CmdDlgPlaylistLoad )
     REGISTER_CMD( "playlist.save()", CmdDlgPlaylistSave )
     REGISTER_CMD( "playlist.add()", CmdDlgAdd )
-    VarList &rVar = VlcProc::instance( getIntf() )->getPlaylistVar();
-    m_commandMap["playlist.del()"] =
-        CmdGenericPtr( new CmdPlaylistDel( getIntf(), rVar ) );
     REGISTER_CMD( "playlist.next()", CmdPlaylistNext )
     REGISTER_CMD( "playlist.previous()", CmdPlaylistPrevious )
-    REGISTER_CMD( "playlist.sort()", CmdPlaylistSort )
     m_commandMap["playlist.setRandom(true)"] =
         CmdGenericPtr( new CmdPlaylistRandom( getIntf(), true ) );
     m_commandMap["playlist.setRandom(false)"] =
@@ -89,8 +91,11 @@ Interpreter::Interpreter( intf_thread_t *pIntf ): SkinObject( pIntf )
     m_commandMap["playlist.setRepeat(false)"] =
         CmdGenericPtr( new CmdPlaylistRepeat( getIntf(), false ) );
     VarTree &rVarTree = VlcProc::instance( getIntf() )->getPlaytreeVar();
+    m_commandMap["playlist.del()"] =
+        CmdGenericPtr( new CmdPlaytreeDel( getIntf(), rVarTree ) );
     m_commandMap["playtree.del()"] =
         CmdGenericPtr( new CmdPlaytreeDel( getIntf(), rVarTree ) );
+    REGISTER_CMD( "playlist.sort()", CmdPlaytreeSort )
     REGISTER_CMD( "playtree.sort()", CmdPlaytreeSort )
     REGISTER_CMD( "vlc.fullscreen()", CmdFullscreen )
     REGISTER_CMD( "vlc.play()", CmdPlay )
@@ -224,24 +229,41 @@ CmdGeneric *Interpreter::parseAction( const string &rAction, Theme *pTheme )
     {
         int leftPos = rAction.find( ".show()" );
         string windowId = rAction.substr( 0, leftPos );
-        TopWindow *pWin = pTheme->getWindowById( windowId );
-        if( pWin )
+
+        if( windowId == "playlist_window" &&
+            !config_GetInt( getIntf(), "skinned-playlist") )
         {
-            pCommand = new CmdShowWindow( getIntf(), pTheme->getWindowManager(),
-                                          *pWin );
+            list<CmdGeneric *> list;
+            list.push_back( new CmdDlgPlaylist( getIntf() ) );
+            TopWindow *pWin = pTheme->getWindowById( windowId );
+            if( pWin )
+                list.push_back( new CmdHideWindow( getIntf(),
+                                                   pTheme->getWindowManager(),
+                                                   *pWin ) );
+            pCommand = new CmdMuxer( getIntf(), list );
         }
         else
         {
-            // It was maybe the id of a popup
-            Popup *pPopup = pTheme->getPopupById( windowId );
-            if( pPopup )
+            TopWindow *pWin = pTheme->getWindowById( windowId );
+            if( pWin )
             {
-                pCommand = new CmdShowPopup( getIntf(), *pPopup );
+                pCommand = new CmdShowWindow( getIntf(),
+                                              pTheme->getWindowManager(),
+                                              *pWin );
             }
             else
             {
-                msg_Err( getIntf(), "unknown window or popup (%s)",
-                         windowId.c_str() );
+                // It was maybe the id of a popup
+                Popup *pPopup = pTheme->getPopupById( windowId );
+                if( pPopup )
+                {
+                    pCommand = new CmdShowPopup( getIntf(), *pPopup );
+                }
+                else
+                {
+                    msg_Err( getIntf(), "unknown window or popup (%s)",
+                             windowId.c_str() );
+                }
             }
         }
     }
@@ -249,15 +271,31 @@ CmdGeneric *Interpreter::parseAction( const string &rAction, Theme *pTheme )
     {
         int leftPos = rAction.find( ".hide()" );
         string windowId = rAction.substr( 0, leftPos );
-        TopWindow *pWin = pTheme->getWindowById( windowId );
-        if( pWin )
+        if( windowId == "playlist_window" &&
+           ! config_GetInt( getIntf(), "skinned-playlist") )
         {
-            pCommand = new CmdHideWindow( getIntf(), pTheme->getWindowManager(),
-                                          *pWin );
+            list<CmdGeneric *> list;
+            list.push_back( new CmdDlgPlaylist( getIntf() ) );
+            TopWindow *pWin = pTheme->getWindowById( windowId );
+            if( pWin )
+                list.push_back( new CmdHideWindow( getIntf(),
+                                                   pTheme->getWindowManager(),
+                                                   *pWin ) );
+            pCommand = new CmdMuxer( getIntf(), list );
         }
         else
         {
-            msg_Err( getIntf(), "unknown window (%s)", windowId.c_str() );
+            TopWindow *pWin = pTheme->getWindowById( windowId );
+            if( pWin )
+            {
+                pCommand = new CmdHideWindow( getIntf(),
+                                              pTheme->getWindowManager(),
+                                              *pWin );
+            }
+            else
+            {
+                msg_Err( getIntf(), "unknown window (%s)", windowId.c_str() );
+            }
         }
     }
 
@@ -359,33 +397,55 @@ VarBool *Interpreter::getVarBool( const string &rName, Theme *pTheme )
             // Register this variable in the manager
             pVarManager->registerVar( VariablePtr( pNewVar ) );
         }
-        else if( token.find( ".isVisible" ) != string::npos )
-        {
-            int leftPos = token.find( ".isVisible" );
-            string windowId = token.substr( 0, leftPos );
-            TopWindow *pWin = pTheme->getWindowById( windowId );
-            if( pWin )
-            {
-                // Push the visibility variable on the stack
-                varStack.push_back( &pWin->getVisibleVar() );
-            }
-            else
-            {
-                msg_Err( getIntf(), "unknown window (%s)", windowId.c_str() );
-                return NULL;
-            }
-        }
         else
         {
-            // Try to get the variable from the variable manager
+            // Try first to get the variable from the variable manager
+            // Indeed, if the skin designer is stupid enough to call a layout
+            // "dvd", we want "dvd.isActive" to resolve as the built-in action
+            // and not as the "layoutId.isActive" one.
             VarBool *pVar = (VarBool*)pVarManager->getVar( token, "bool" );
-            if( !pVar )
+            if( pVar )
+            {
+                varStack.push_back( pVar );
+            }
+            else if( token.find( ".isVisible" ) != string::npos )
+            {
+                int leftPos = token.find( ".isVisible" );
+                string windowId = token.substr( 0, leftPos );
+                TopWindow *pWin = pTheme->getWindowById( windowId );
+                if( pWin )
+                {
+                    // Push the visibility variable onto the stack
+                    varStack.push_back( &pWin->getVisibleVar() );
+                }
+                else
+                {
+                    msg_Err( getIntf(), "unknown window (%s)", windowId.c_str() );
+                    return NULL;
+                }
+            }
+            else if( token.find( ".isActive" ) != string::npos )
+            {
+                int leftPos = token.find( ".isActive" );
+                string layoutId = token.substr( 0, leftPos );
+                GenericLayout *pLayout = pTheme->getLayoutById( layoutId );
+                if( pLayout )
+                {
+                    // Push the isActive variable onto the stack
+                    varStack.push_back( &pLayout->getActiveVar() );
+                }
+                else
+                {
+                    msg_Err( getIntf(), "unknown layout (%s)", layoutId.c_str() );
+                    return NULL;
+                }
+            }
+            else
             {
                 msg_Err( getIntf(), "cannot resolve boolean variable: %s",
                          token.c_str());
                 return NULL;
             }
-            varStack.push_back( pVar );
         }
         // Get the first token from the RPN stack
         token = evaluator.getToken();

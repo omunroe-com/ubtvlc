@@ -1,14 +1,15 @@
 /*****************************************************************************
  * libc.c: Extra libc function for some systems.
  *****************************************************************************
- * Copyright (C) 2002 the VideoLAN team
- * $Id: libc.c 14953 2006-03-28 20:29:28Z zorglub $
+ * Copyright (C) 2002-2006 the VideoLAN team
+ * $Id: libc.c 15432 2006-04-29 14:30:49Z courmisch $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Samuel Hocevar <sam@zoy.org>
  *          Gildas Bazin <gbazin@videolan.org>
  *          Derk-Jan Hartman <hartman at videolan dot org>
  *          Christophe Massiot <massiot@via.ecp.fr>
+ *          Rémi Denis-Courmont <rem à videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -353,6 +354,36 @@ lldiv_t vlc_lldiv( long long numer, long long denom )
     d.quot = numer / denom;
     d.rem  = numer % denom;
     return d;
+}
+#endif
+
+
+/**
+ * Copy a string to a sized buffer. The result is always nul-terminated
+ * (contrary to strncpy()).
+ *
+ * @param dest destination buffer
+ * @param src string to be copied
+ * @param len maximum number of characters to be copied plus one for the
+ * terminating nul.
+ *
+ * @return strlen(src)
+ */
+#ifndef HAVE_STRLCPY
+extern size_t vlc_strlcpy (char *tgt, const char *src, size_t bufsize)
+{
+    size_t length;
+
+    for (length = 1; (length < bufsize) && *src; length++)
+        *tgt++ = *src++;
+
+    if (bufsize)
+        *tgt = '\0';
+
+    while (*src++)
+        length++;
+
+    return length - 1;
 }
 #endif
 

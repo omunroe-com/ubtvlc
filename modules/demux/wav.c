@@ -2,7 +2,7 @@
  * wav.c : wav file input module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2003 the VideoLAN team
- * $Id: wav.c 14790 2006-03-18 02:06:16Z xtophe $
+ * $Id: wav.c 15571 2006-05-08 09:46:51Z damienf $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -231,6 +231,7 @@ static int Open( vlc_object_t * p_this )
     case VLC_FOURCC( 'a', 'f', 'l', 't' ):
     case VLC_FOURCC( 'u', 'l', 'a', 'w' ):
     case VLC_FOURCC( 'a', 'l', 'a', 'w' ):
+    case VLC_FOURCC( 'm', 'l', 'a', 'w' ):
     case VLC_FOURCC( 'p', 'c', 'm', ' ' ):
         FrameInfo_PCM( p_demux, &p_sys->i_frame_size,
                        &p_sys->i_frame_samples );

@@ -19,7 +19,7 @@ endif
 
 # MMX/SSE optims
 ifeq ($(ARCH),X86)
-SRCS   += common/i386/mc-c.c common/i386/dct-c.c common/i386/predict-c.c
+SRCS   += common/i386/mc-c.c common/i386/predict-c.c
 ASMSRC  = common/i386/dct-a.asm common/i386/cpu-a.asm \
           common/i386/pixel-a.asm common/i386/mc-a.asm \
           common/i386/mc-a2.asm common/i386/predict-a.asm \
@@ -31,7 +31,7 @@ endif
 
 # MMX/SSE optims
 ifeq ($(ARCH),X86_64)
-SRCS   += common/i386/mc-c.c common/i386/dct-c.c common/i386/predict-c.c
+SRCS   += common/i386/mc-c.c common/i386/predict-c.c
 ASMSRC  = common/amd64/dct-a.asm common/amd64/cpu-a.asm \
           common/amd64/pixel-a.asm common/amd64/mc-a.asm \
           common/amd64/mc-a2.asm common/amd64/predict-a.asm \
@@ -60,7 +60,7 @@ OBJS = $(SRCS:%.c=%.o)
 OBJCLI = $(SRCCLI:%.c=%.o)
 DEP  = depend
 
-.PHONY: default fprofiled clean distclean install uninstall
+.PHONY: default fprofiled clean distclean install install-gtk uninstall
 default: $(DEP) x264$(EXE)
 
 libx264.a: .depend $(OBJS) $(OBJASM)
@@ -74,7 +74,10 @@ x264$(EXE): $(OBJCLI) libx264.a
 	$(CC) -o $@ $+ $(LDFLAGS)
 
 x264vfw.dll: libx264.a $(wildcard vfw/*.c vfw/*.h)
-	make -C vfw/build/cygwin
+	$(MAKE) -C vfw/build/cygwin
+
+libx264gtk.a: muxers.o libx264.a
+	$(MAKE) -C gtk
 
 checkasm: tools/checkasm.o libx264.a
 	$(CC) -o $@ $+ $(LDFLAGS)
@@ -110,14 +113,14 @@ fprofiled:
 	@echo 'i.e. YUV with resolution in the filename, or avisynth.'
 else
 fprofiled:
-	make clean
+	$(MAKE) clean
 	mv config.mak config.mak2
 	sed -e 's/CFLAGS.*/& -fprofile-generate/; s/LDFLAGS.*/& -fprofile-generate/' config.mak2 > config.mak
-	make x264$(EXE)
+	$(MAKE) x264$(EXE)
 	$(foreach V, $(VIDS), $(foreach I, 0 1 2, ./x264$(EXE) $(OPT$I) $(V) --progress -o $(DEVNULL) ;))
 	rm -f $(SRC2:%.c=%.o)
 	sed -e 's/CFLAGS.*/& -fprofile-use/; s/LDFLAGS.*/& -fprofile-use/' config.mak2 > config.mak
-	make
+	$(MAKE)
 	rm -f $(SRC2:%.c=%.gcda) $(SRC2:%.c=%.gcno)
 	mv config.mak2 config.mak
 endif
@@ -129,10 +132,11 @@ clean:
 	rm -rf vfw/build/cygwin/bin
 	rm -f $(SRC2:%.c=%.gcda) $(SRC2:%.c=%.gcno)
 	- sed -e 's/ *-fprofile-\(generate\|use\)//g' config.mak > config.mak2 && mv config.mak2 config.mak
-	make -C gtk clean
+	$(MAKE) -C gtk clean
 
 distclean: clean
-	rm -f config.mak config.h vfw/build/cygwin/config.mak gtk/config.mak x264.pc
+	rm -f config.mak config.h vfw/build/cygwin/config.mak x264.pc
+	$(MAKE) -C gtk distclean
 
 install: x264 $(SONAME)
 	install -d $(DESTDIR)$(bindir) $(DESTDIR)$(includedir)
@@ -142,13 +146,17 @@ install: x264 $(SONAME)
 	install -m 644 x264.pc $(DESTDIR)$(libdir)/pkgconfig
 	install x264 $(DESTDIR)$(bindir)
 	ranlib $(DESTDIR)$(libdir)/libx264.a
-	$(if $(SONAME), ln -sf $(DESTDIR)$(libdir)/$(SONAME) $(DESTDIR)$(libdir)/libx264.so)
+	$(if $(SONAME), ln -sf $(SONAME) $(DESTDIR)$(libdir)/libx264.so)
 	$(if $(SONAME), install -m 755 $(SONAME) $(DESTDIR)$(libdir))
+
+install-gtk: libx264gtk.a
+	$(MAKE) -C gtk install
 
 uninstall:
 	rm -f $(DESTDIR)$(includedir)/x264.h $(DESTDIR)$(libdir)/libx264.a
 	rm -f $(DESTDIR)$(bindir)/x264 $(DESTDIR)$(libdir)/pkgconfig/x264.pc
 	$(if $(SONAME), rm -f $(DESTDIR)$(libdir)/$(SONAME) $(DESTDIR)$(libdir)/libx264.so)
+	$(MAKE) -C gtk uninstall
 
 etags: TAGS
 

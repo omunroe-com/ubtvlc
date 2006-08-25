@@ -2,7 +2,7 @@
  * ctrl_slider.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_slider.hpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: ctrl_slider.hpp 16276 2006-08-16 07:03:52Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -37,7 +37,7 @@ class VarPercent;
 
 
 /// Cursor of a slider
-class CtrlSliderCursor: public CtrlGeneric, public Observer<VarPercent, void*>
+class CtrlSliderCursor: public CtrlGeneric, public Observer<VarPercent>
 {
     public:
         /// Create a cursor with 3 images (which are NOT copied, be careful)
@@ -98,7 +98,7 @@ class CtrlSliderCursor: public CtrlGeneric, public Observer<VarPercent, void*>
         const Bezier &m_rCurve;
 
         /// Method called when the position variable is modified
-        virtual void onUpdate( Subject<VarPercent,void*> &rVariable, void * );
+        virtual void onUpdate( Subject<VarPercent> &rVariable, void * );
 
         /// Method to compute the resize factors
         void getResizeFactors( float &rFactorX, float &rFactorY ) const;
@@ -109,7 +109,7 @@ class CtrlSliderCursor: public CtrlGeneric, public Observer<VarPercent, void*>
 
 
 /// Slider background
-class CtrlSliderBg: public CtrlGeneric, public Observer<VarPercent, void*>
+class CtrlSliderBg: public CtrlGeneric, public Observer<VarPercent>
 {
     public:
         CtrlSliderBg( intf_thread_t *pIntf,
@@ -127,6 +127,9 @@ class CtrlSliderBg: public CtrlGeneric, public Observer<VarPercent, void*>
 
         /// Handle an event
         virtual void handleEvent( EvtGeneric &rEvent );
+
+        /// Method called when the control is resized
+        virtual void onResize();
 
         /// Get the type of control (custom RTTI)
         virtual string getType() const { return "slider_bg"; }
@@ -146,7 +149,7 @@ class CtrlSliderBg: public CtrlGeneric, public Observer<VarPercent, void*>
         /// Initial size of the control
         int m_width, m_height;
         /// Background image sequence (optional)
-        OSGraphics *m_pImgSeq;
+        GenericBitmap *m_pImgSeq;
         /// Number of images in the background bitmap
         int m_nbHoriz, m_nbVert;
         /// Number of pixels between two images
@@ -157,7 +160,7 @@ class CtrlSliderBg: public CtrlGeneric, public Observer<VarPercent, void*>
         int m_position;
 
         /// Method called when the observed variable is modified
-        virtual void onUpdate( Subject<VarPercent,void*> &rVariable, void* );
+        virtual void onUpdate( Subject<VarPercent> &rVariable, void* );
 
         /// Method to compute the resize factors
         void getResizeFactors( float &rFactorX, float &rFactorY ) const;

@@ -2,7 +2,7 @@
  * ctrl_resize.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_resize.cpp 14118 2006-02-01 18:06:48Z courmisch $
+ * $Id: ctrl_resize.cpp 16270 2006-08-15 18:59:40Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -33,10 +33,12 @@
 #include "../commands/cmd_resize.hpp"
 
 
-CtrlResize::CtrlResize( intf_thread_t *pIntf, CtrlFlat &rCtrl,
-                        GenericLayout &rLayout, const UString &rHelp,
-                        VarBool *pVisible, Direction_t direction ):
-    CtrlFlat( pIntf, rHelp, pVisible ), m_fsm( pIntf ), m_rCtrl( rCtrl ),
+CtrlResize::CtrlResize( intf_thread_t *pIntf, WindowManager &rWindowManager,
+                        CtrlFlat &rCtrl, GenericLayout &rLayout,
+                        const UString &rHelp, VarBool *pVisible,
+                        WindowManager::Direction_t direction ):
+    CtrlFlat( pIntf, rHelp, pVisible ), m_fsm( pIntf ),
+    m_rWindowManager( rWindowManager ), m_rCtrl( rCtrl ),
     m_rLayout( rLayout ), m_direction( direction ),  m_cmdOutStill( this ),
     m_cmdStillOut( this ),
     m_cmdStillStill( this ),
@@ -93,6 +95,12 @@ const Position *CtrlResize::getPosition() const
 }
 
 
+void CtrlResize::onResize()
+{
+    m_rCtrl.onResize();
+}
+
+
 void CtrlResize::handleEvent( EvtGeneric &rEvent )
 {
     m_pEvt = &rEvent;
@@ -103,16 +111,16 @@ void CtrlResize::handleEvent( EvtGeneric &rEvent )
 }
 
 
-void CtrlResize::changeCursor( Direction_t direction ) const
+void CtrlResize::changeCursor( WindowManager::Direction_t direction ) const
 {
     OSFactory *pOsFactory = OSFactory::instance( getIntf() );
-    if( direction == kResizeSE )
+    if( direction == WindowManager::kResizeSE )
         pOsFactory->changeCursor( OSFactory::kResizeNWSE );
-    else if( direction == kResizeS )
+    else if( direction == WindowManager::kResizeS )
         pOsFactory->changeCursor( OSFactory::kResizeNS );
-    else if( direction == kResizeE )
+    else if( direction == WindowManager::kResizeE )
         pOsFactory->changeCursor( OSFactory::kResizeWE );
-    else if( direction == kNone )
+    else if( direction == WindowManager::kNone )
         pOsFactory->changeCursor( OSFactory::kDefaultArrow );
 }
 
@@ -125,7 +133,7 @@ void CtrlResize::CmdOutStill::execute()
 
 void CtrlResize::CmdStillOut::execute()
 {
-    m_pParent->changeCursor( kNone );
+    m_pParent->changeCursor( WindowManager::kNone );
 }
 
 
@@ -149,6 +157,9 @@ void CtrlResize::CmdStillResize::execute()
 
     m_pParent->m_width = m_pParent->m_rLayout.getWidth();
     m_pParent->m_height = m_pParent->m_rLayout.getHeight();
+
+    m_pParent->m_rWindowManager.startResize( m_pParent->m_rLayout,
+                                             m_pParent->m_direction);
 }
 
 
@@ -158,6 +169,8 @@ void CtrlResize::CmdResizeStill::execute()
     m_pParent->changeCursor( m_pParent->m_direction );
 
     m_pParent->releaseMouse();
+
+    m_pParent->m_rWindowManager.stopResize();
 }
 
 
@@ -169,17 +182,18 @@ void CtrlResize::CmdResizeResize::execute()
     m_pParent->changeCursor( m_pParent->m_direction );
 
     int newWidth = m_pParent->m_width;
+    newWidth += pEvtMotion->getXPos() - m_pParent->m_xPos;
     int newHeight = m_pParent->m_height;
-    if( m_pParent->m_direction != kResizeS )
-        newWidth += pEvtMotion->getXPos() - m_pParent->m_xPos;
-    if( m_pParent->m_direction != kResizeE )
-        newHeight += pEvtMotion->getYPos() - m_pParent->m_yPos;
+    newHeight += pEvtMotion->getYPos() - m_pParent->m_yPos;
 
-    // Create a resize command
+    // Create a resize command, instead of calling the window manager directly.
+    // Thanks to this trick, the duplicate resizing commands will be trashed
+    // in the asynchronous queue, thus making resizing faster
     CmdGeneric *pCmd = new CmdResize( m_pParent->getIntf(),
+                                      m_pParent->m_rWindowManager,
                                       m_pParent->m_rLayout,
                                       newWidth, newHeight );
     // Push the command in the asynchronous command queue
-    AsyncQueue *pQueue = AsyncQueue::instance( m_pParent->getIntf() );
+    AsyncQueue *pQueue = AsyncQueue::instance( getIntf() );
     pQueue->push( CmdGenericPtr( pCmd ) );
 }

@@ -2,7 +2,7 @@
  * ctrl_list.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_list.hpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: ctrl_list.hpp 15804 2006-06-04 14:03:54Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -35,8 +35,8 @@ class GenericBitmap;
 
 
 /// Class for control list
-class CtrlList: public CtrlGeneric, public Observer<VarList, void*>,
-    public Observer<VarPercent, void *>
+class CtrlList: public CtrlGeneric, public Observer<VarList>,
+    public Observer<VarPercent>
 {
     public:
         CtrlList( intf_thread_t *pIntf, VarList &rList,
@@ -88,10 +88,10 @@ class CtrlList: public CtrlGeneric, public Observer<VarList, void*>,
         int m_lastPos;
 
         /// Method called when the list variable is modified
-        virtual void onUpdate( Subject<VarList, void*> &rList, void* );
+        virtual void onUpdate( Subject<VarList> &rList, void* );
 
         /// Method called when the position variable of the list is modified
-        virtual void onUpdate( Subject<VarPercent, void*> &rPercent, void*  );
+        virtual void onUpdate( Subject<VarPercent> &rPercent, void*  );
 
         /// Called when the position is set
         virtual void onPositionChange();

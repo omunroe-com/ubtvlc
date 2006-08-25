@@ -16,7 +16,7 @@ SUFFIXES = _plugin$(LIBEXT) _plugin.a
 
 libvlcdir = $(libdir)/vlc/$(basedir)
 
-EXTRA_LIBRARIES =  libm4a_plugin.a libm4a.a libm4a_pic.a libm4v_plugin.a libm4v.a libm4v_pic.a libmpga_plugin.a libmpga.a libmpga_pic.a libmpgv_plugin.a libmpgv.a libmpgv_pic.a libh264_plugin.a libh264.a libh264_pic.a
+EXTRA_LIBRARIES =  libm4a_plugin.a libm4a.a libm4v_plugin.a libm4v.a libmpga_plugin.a libmpga.a libmpgv_plugin.a libmpgv.a libh264_plugin.a libh264.a
 EXTRA_LTLIBRARIES =  libm4a_plugin.la libm4a_builtin.la libm4v_plugin.la libm4v_builtin.la libmpga_plugin.la libmpga_builtin.la libmpgv_plugin.la libmpgv_builtin.la libh264_plugin.la libh264_builtin.la
 
 include Modules.am
@@ -24,11 +24,14 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
+LIBVLC = -L$(top_builddir)/src -lvlc
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
+
+nice:
+	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -42,7 +45,6 @@ else
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
 	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --list plugin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
 	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" = "pic"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 endif
@@ -79,9 +81,6 @@ else
 	mkdir -p -- "$(DESTDIR)$(libvlcdir)"
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" ; 	      $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" || exit $$?; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-endif
 endif
 
 uninstall-local:
@@ -90,9 +89,6 @@ if USE_LIBTOOL
 else
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" ; 	      rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" || true; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" || true; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" || true; 	      ;; 	  esac; 	done
-endif
 endif
 
 # The m4a plugin
@@ -106,19 +102,14 @@ libm4a_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin m4a`
 libm4a_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin m4a`
 libm4a_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin m4a`
 libm4a_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin m4a` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libm4a_plugin_la_LIBADD = $(LTLIBVLC)
-
-libm4a_pic_a_SOURCES = $(SOURCES_m4a)
-libm4a_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic m4a`
-libm4a_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic m4a`
-libm4a_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic m4a`
 
 libm4a_a_SOURCES = $(SOURCES_m4a)
 libm4a_builtin_la_SOURCES = $(SOURCES_m4a)
-libm4a_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin m4a`
-libm4a_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin m4a`
-libm4a_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin m4a`
+libm4a_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) m4a`
+libm4a_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) m4a`
+libm4a_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) m4a`
 libm4a_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin m4a`
 libm4a_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin m4a`
 libm4a_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin m4a`
@@ -134,19 +125,14 @@ libm4v_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin m4v`
 libm4v_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin m4v`
 libm4v_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin m4v`
 libm4v_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin m4v` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libm4v_plugin_la_LIBADD = $(LTLIBVLC)
-
-libm4v_pic_a_SOURCES = $(SOURCES_m4v)
-libm4v_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic m4v`
-libm4v_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic m4v`
-libm4v_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic m4v`
 
 libm4v_a_SOURCES = $(SOURCES_m4v)
 libm4v_builtin_la_SOURCES = $(SOURCES_m4v)
-libm4v_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin m4v`
-libm4v_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin m4v`
-libm4v_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin m4v`
+libm4v_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) m4v`
+libm4v_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) m4v`
+libm4v_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) m4v`
 libm4v_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin m4v`
 libm4v_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin m4v`
 libm4v_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin m4v`
@@ -162,19 +148,14 @@ libmpga_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin mpga`
 libmpga_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mpga`
 libmpga_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mpga`
 libmpga_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin mpga` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libmpga_plugin_la_LIBADD = $(LTLIBVLC)
-
-libmpga_pic_a_SOURCES = $(SOURCES_mpga)
-libmpga_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mpga`
-libmpga_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mpga`
-libmpga_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mpga`
 
 libmpga_a_SOURCES = $(SOURCES_mpga)
 libmpga_builtin_la_SOURCES = $(SOURCES_mpga)
-libmpga_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mpga`
-libmpga_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mpga`
-libmpga_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mpga`
+libmpga_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) mpga`
+libmpga_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) mpga`
+libmpga_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) mpga`
 libmpga_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin mpga`
 libmpga_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mpga`
 libmpga_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mpga`
@@ -190,19 +171,14 @@ libmpgv_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin mpgv`
 libmpgv_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mpgv`
 libmpgv_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mpgv`
 libmpgv_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin mpgv` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libmpgv_plugin_la_LIBADD = $(LTLIBVLC)
-
-libmpgv_pic_a_SOURCES = $(SOURCES_mpgv)
-libmpgv_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mpgv`
-libmpgv_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mpgv`
-libmpgv_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mpgv`
 
 libmpgv_a_SOURCES = $(SOURCES_mpgv)
 libmpgv_builtin_la_SOURCES = $(SOURCES_mpgv)
-libmpgv_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mpgv`
-libmpgv_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mpgv`
-libmpgv_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mpgv`
+libmpgv_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) mpgv`
+libmpgv_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) mpgv`
+libmpgv_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) mpgv`
 libmpgv_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin mpgv`
 libmpgv_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mpgv`
 libmpgv_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mpgv`
@@ -218,19 +194,14 @@ libh264_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin h264`
 libh264_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin h264`
 libh264_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin h264`
 libh264_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin h264` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libh264_plugin_la_LIBADD = $(LTLIBVLC)
-
-libh264_pic_a_SOURCES = $(SOURCES_h264)
-libh264_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic h264`
-libh264_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic h264`
-libh264_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic h264`
 
 libh264_a_SOURCES = $(SOURCES_h264)
 libh264_builtin_la_SOURCES = $(SOURCES_h264)
-libh264_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin h264`
-libh264_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin h264`
-libh264_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin h264`
+libh264_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) h264`
+libh264_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) h264`
+libh264_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) h264`
 libh264_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin h264`
 libh264_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin h264`
 libh264_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin h264`

@@ -11,12 +11,12 @@ noinst_LTLIBRARIES =
 EXTRA_DIST = Modules.am
 BUILT_SOURCES =
 clean_modules =
-SUBDIRS = beos pda macosx qnx skins2 wxwidgets wince
+SUBDIRS = beos pda macosx qnx qt4 skins2 wxwidgets wince
 SUFFIXES = _plugin$(LIBEXT) _plugin.a
 
 libvlcdir = $(libdir)/vlc/$(basedir)
 
-EXTRA_LIBRARIES =  libncurses_plugin.a libncurses.a libncurses_pic.a
+EXTRA_LIBRARIES =  libncurses_plugin.a libncurses.a
 EXTRA_LTLIBRARIES =  libncurses_plugin.la libncurses_builtin.la
 
 include Modules.am
@@ -24,11 +24,14 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
+LIBVLC = -L$(top_builddir)/src -lvlc
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
+
+nice:
+	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -42,7 +45,6 @@ else
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
 	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --list plugin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
 	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" = "pic"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 endif
@@ -79,9 +81,6 @@ else
 	mkdir -p -- "$(DESTDIR)$(libvlcdir)"
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" ; 	      $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" || exit $$?; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-endif
 endif
 
 uninstall-local:
@@ -90,9 +89,6 @@ if USE_LIBTOOL
 else
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" ; 	      rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" || true; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" || true; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" || true; 	      ;; 	  esac; 	done
-endif
 endif
 
 # The ncurses plugin
@@ -106,19 +102,14 @@ libncurses_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin ncurses`
 libncurses_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin ncurses`
 libncurses_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin ncurses`
 libncurses_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin ncurses` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libncurses_plugin_la_LIBADD = $(LTLIBVLC)
-
-libncurses_pic_a_SOURCES = $(SOURCES_ncurses)
-libncurses_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ncurses`
-libncurses_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ncurses`
-libncurses_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ncurses`
 
 libncurses_a_SOURCES = $(SOURCES_ncurses)
 libncurses_builtin_la_SOURCES = $(SOURCES_ncurses)
-libncurses_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin ncurses`
-libncurses_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ncurses`
-libncurses_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ncurses`
+libncurses_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) ncurses`
+libncurses_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) ncurses`
+libncurses_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) ncurses`
 libncurses_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin ncurses`
 libncurses_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ncurses`
 libncurses_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ncurses`

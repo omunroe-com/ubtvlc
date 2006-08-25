@@ -57,7 +57,7 @@ typedef struct
 
     /* Sub 4x8 */
     int       i_cost4x8[4]; /* cost per 8x8 partition */
-    x264_me_t me4x8[4][4];
+    x264_me_t me4x8[4][2];
 
     /* 16x8 */
     int       i_cost16x8;
@@ -150,7 +150,7 @@ static const int i_qp0_cost2_table[52] = {
 };
 
 /* TODO: calculate CABAC costs */
-static const int i_mb_b_cost_table[19] = {
+static const int i_mb_b_cost_table[X264_MBTYPE_MAX] = {
     9, 9, 9, 9, 0, 0, 0, 1, 3, 7, 7, 7, 3, 7, 7, 7, 5, 9, 0
 };
 static const int i_mb_b16x8_cost_table[17] = {
@@ -422,7 +422,7 @@ static void x264_mb_analyse_intra_chroma( x264_t *h, x264_mb_analysis_t *a )
     int i;
 
     int i_max;
-    int predict_mode[9];
+    int predict_mode[4];
 
     uint8_t *p_dstc[2], *p_srcc[2];
 
@@ -1914,10 +1914,10 @@ static void refine_bidir( x264_t *h, x264_mb_analysis_t *a )
 static inline void x264_mb_analyse_transform( x264_t *h )
 {
     h->mb.cache.b_transform_8x8_allowed =
-        h->param.analyse.b_transform_8x8
+        h->pps->b_transform_8x8_mode
         && !IS_INTRA( h->mb.i_type ) && x264_mb_transform_8x8_allowed( h );
 
-    if( h->mb.cache.b_transform_8x8_allowed )
+    if( h->mb.cache.b_transform_8x8_allowed && h->param.analyse.b_transform_8x8 )
     {
         int i_cost4, i_cost8;
         /* FIXME only luma mc is needed */
@@ -1935,9 +1935,9 @@ static inline void x264_mb_analyse_transform( x264_t *h )
 static inline void x264_mb_analyse_transform_rd( x264_t *h, x264_mb_analysis_t *a, int *i_satd, int *i_rd )
 {
     h->mb.cache.b_transform_8x8_allowed =
-        h->param.analyse.b_transform_8x8 && x264_mb_transform_8x8_allowed( h );
+        h->pps->b_transform_8x8_mode && x264_mb_transform_8x8_allowed( h );
 
-    if( h->mb.cache.b_transform_8x8_allowed )
+    if( h->mb.cache.b_transform_8x8_allowed && h->param.analyse.b_transform_8x8 )
     {
         int i_rd8;
         x264_analyse_update_cache( h, a );

@@ -3,7 +3,7 @@
  *****************************************************************************
  * Copyright (C) 2002-2004 the xine project
  * Copyright (C) 2005 VideoLAN
- * $Id: real.c 15109 2006-04-06 07:36:57Z zorglub $
+ * $Id: real.c 15689 2006-05-20 11:42:40Z jpsaman $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Adapted from xine which itself adapted it from joschkas real tools.
@@ -608,7 +608,7 @@ rmff_header_t  *real_setup_and_get_header(rtsp_client_t *rtsp_session, int bandw
 
   char *description=NULL;
   char *session_id=NULL;
-  rmff_header_t *h;
+  rmff_header_t *h=NULL;
   char *challenge1 = NULL;
   char challenge2[64];
   char checksum[34];

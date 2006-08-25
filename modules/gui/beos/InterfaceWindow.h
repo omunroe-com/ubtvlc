@@ -2,7 +2,7 @@
  * InterfaceWindow.h: BeOS interface window class prototype
  *****************************************************************************
  * Copyright (C) 1999, 2000, 2001 the VideoLAN team
- * $Id: InterfaceWindow.h 13905 2006-01-12 23:10:04Z dionoea $
+ * $Id: InterfaceWindow.h 15735 2006-05-25 18:27:39Z zorglub $
  *
  * Authors: Jean-Marc Dressler <polux@via.ecp.fr>
  *          Tony Castley <tcastley@mail.powerup.com.au>
@@ -32,7 +32,9 @@
 
 class BMenuBar;
 class MediaControlView;
+#if 0
 class PlayListWindow;
+#endif
 class BFilePanel;
 class PreferencesWindow;
 class MessagesWindow;
@@ -126,7 +128,9 @@ class InterfaceWindow : public BWindow
     bool                    b_playlist_update;
 
     BFilePanel*             fFilePanel;
-    PlayListWindow*         fPlaylistWindow;
+#if 0
+	PlayListWindow*         fPlaylistWindow;
+#endif
     PreferencesWindow*      fPreferencesWindow;
     BMenuBar*               fMenuBar;
     BMenuItem*              fGotoMenuMI;

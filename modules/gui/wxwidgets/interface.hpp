@@ -2,7 +2,7 @@
  * interface.hpp: Main interface headers
  *****************************************************************************
  * Copyright (C) 1999-2005 the VideoLAN team
- * $Id: interface.hpp 14556 2006-03-01 19:56:34Z fkuehne $
+ * $Id: interface.hpp 15879 2006-06-11 11:56:39Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -164,6 +164,7 @@ namespace wxvlc
         Timer *timer;
         intf_thread_t *p_intf;
 
+        unsigned int i_update_counter;
         int i_old_playing_status;
 
         /* For auto-generated menus */
@@ -239,6 +240,9 @@ namespace wxvlc
 };
 
 void PopupMenu( intf_thread_t *, wxWindow *, const wxPoint& );
+void AudioPopupMenu( intf_thread_t *, wxWindow *, const wxPoint& );
+void VideoPopupMenu( intf_thread_t *, wxWindow *, const wxPoint& );
+void MiscPopupMenu( intf_thread_t *, wxWindow *, const wxPoint& );
 wxMenu *SettingsMenu( intf_thread_t *, wxWindow *, wxMenu * = NULL );
 wxMenu *AudioMenu( intf_thread_t *, wxWindow *, wxMenu * = NULL );
 wxMenu *VideoMenu( intf_thread_t *, wxWindow *, wxMenu * = NULL );

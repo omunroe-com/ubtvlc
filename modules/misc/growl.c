@@ -2,7 +2,7 @@
  * growl.c : growl notification plugin
  *****************************************************************************
  * Copyright (C) 2006 the VideoLAN team
- * $Id: growl.c 15209 2006-04-14 09:37:39Z zorglub $
+ * $Id: growl.c 15814 2006-06-04 20:53:54Z djc $
  *
  * Authors: Jérôme Decoodt <djc -at- videolan -dot- org>
  *
@@ -145,7 +145,7 @@ static int ItemChange( vlc_object_t *p_this, const char *psz_var,
     char *psz_album = NULL;
     input_thread_t *p_input;
 
-    p_playlist = (playlist_t *)vlc_object_find( p_this, VLC_OBJECT_INPUT,
+    p_playlist = (playlist_t *)vlc_object_find( p_this, VLC_OBJECT_PLAYLIST,
                                                 FIND_ANYWHERE );
     if( !p_playlist ) return VLC_EGENERIC;
 
@@ -162,12 +162,12 @@ static int ItemChange( vlc_object_t *p_this, const char *psz_var,
     }
 
     /* Playing something ... */
-    psz_artist = vlc_input_item_GetInfo( p_input->input.p_item,
-                                         _("Meta-information"),
-                                         _(VLC_META_ARTIST) );
-    psz_album = vlc_input_item_GetInfo( p_input->input.p_item,
-                                         _("Meta-information"),
-                                         _("Album/movie/show title" ) );
+    psz_artist = p_input->input.p_item->p_meta->psz_artist ?
+                  strdup( p_input->input.p_item->p_meta->psz_artist ) :
+                  strdup( "" );
+    psz_album = p_input->input.p_item->p_meta->psz_album ?
+                  strdup( p_input->input.p_item->p_meta->psz_album ) :
+                  strdup( "" );
     psz_title = strdup( p_input->input.p_item->psz_name );
     if( psz_title == NULL ) psz_title = strdup( N_("(no title)") );
     if( psz_artist == NULL ) psz_artist = strdup( N_("(no artist)") );

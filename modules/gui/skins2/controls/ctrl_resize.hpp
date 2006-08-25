@@ -2,7 +2,7 @@
  * ctrl_resize.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_resize.hpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: ctrl_resize.hpp 16270 2006-08-15 18:59:40Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -27,24 +27,20 @@
 
 #include "ctrl_flat.hpp"
 #include "../commands/cmd_generic.hpp"
+#include "../src/window_manager.hpp"
 #include "../utils/fsm.hpp"
+
+class WindowManager;
 
 
 /// Control decorator for resizing windows
 class CtrlResize: public CtrlFlat
 {
     public:
-        enum Direction_t
-        {
-            kResizeE,   // East
-            kResizeSE,  // South-East
-            kResizeS,   // South
-            kNone       // Reserved for internal use
-        };
-
-        CtrlResize( intf_thread_t *pIntf, CtrlFlat &rCtrl,
-                    GenericLayout &rLayout, const UString &rHelp,
-                    VarBool *pVisible, Direction_t direction );
+        CtrlResize( intf_thread_t *pIntf, WindowManager &rWindowManager,
+                    CtrlFlat &rCtrl, GenericLayout &rLayout,
+                    const UString &rHelp, VarBool *pVisible,
+                    WindowManager::Direction_t direction );
         virtual ~CtrlResize() {}
 
         /// Handle an event
@@ -63,11 +59,16 @@ class CtrlResize: public CtrlFlat
         /// Get the position of the decorated control in the layout, if any
         virtual const Position *getPosition() const;
 
+        /// Method called when the control is resized
+        virtual void onResize();
+
         /// Get the type of control (custom RTTI)
         virtual string getType() const { return m_rCtrl.getType(); }
 
     private:
         FSM m_fsm;
+        /// Window manager
+        WindowManager &m_rWindowManager;
         /// Decorated CtrlFlat
         CtrlFlat &m_rCtrl;
         /// The layout resized by this control
@@ -77,10 +78,10 @@ class CtrlResize: public CtrlFlat
         /// Position of the click that started the resizing
         int m_xPos, m_yPos;
         /// Direction of the resizing
-        Direction_t m_direction;
+        WindowManager::Direction_t m_direction;
 
         /// Change the cursor, based on the given direction
-        void changeCursor( Direction_t direction ) const;
+        void changeCursor( WindowManager::Direction_t direction ) const;
 
         /// Callback objects
         DEFINE_CALLBACK( CtrlResize, OutStill )

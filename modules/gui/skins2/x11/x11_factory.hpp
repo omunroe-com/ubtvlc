@@ -2,7 +2,7 @@
  * x11_factory.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: x11_factory.hpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: x11_factory.hpp 15598 2006-05-13 17:54:21Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -62,8 +62,23 @@ class X11Factory: public OSFactory
         /// Instantiate an OSTimer with the given command
         virtual OSTimer *createOSTimer( CmdGeneric &rCmd );
 
-        ///
+        /// Minimize all the windows
         virtual void minimize();
+
+        /// Restore the minimized windows
+        virtual void restore();
+
+        /// Add an icon in the system tray
+        virtual void addInTray();
+
+        /// Remove the icon from the system tray
+        virtual void removeFromTray();
+
+        /// Show the task in the task bar
+        virtual void addInTaskBar();
+
+        /// Remove the task from the task bar
+        virtual void removeFromTaskBar();
 
         /// Instantiate an OSWindow object
         virtual OSWindow *createOSWindow( GenericWindow &rWindow,

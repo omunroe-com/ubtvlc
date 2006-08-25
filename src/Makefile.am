@@ -57,6 +57,7 @@ HEADERS_include = \
 	../include/os_specific.h \
 	../include/snapshot.h \
 	../include/stream_output.h \
+	../include/vlc_streaming.h \
 	../include/variables.h \
 	../include/video_output.h \
 	../include/vlc_access.h \
@@ -77,6 +78,7 @@ HEADERS_include = \
 	../include/vlc_httpd.h \
 	../include/vlc_tls.h \
 	../include/vlc_md5.h \
+	../include/vlc_devices.h \
 	../include/vlc_image.h \
 	../include/vlc_input.h \
 	../include/vlc_interaction.h \
@@ -127,18 +129,17 @@ if USE_LIBTOOL
         		../modules/*.a) echo $$c ;; \
 		esac ; \
 	done | \
-	sed -e 's/^\(.*\)\/\([^\/]*\)\.a$$/cd \1 \&\& $(MAKE) \2_builtin.la/g' | \
+	sed -e 's,^\(.*\)/\([^/]*\)\.a$$,cd \1 \&\& $(MAKE) \2_builtin.la,g' | \
 	while read cmd; do echo $$cmd; eval "($$cmd)" || exit $$? ; done
 endif
 if BUILD_SHARED
-	@if test "$(pic)" = "pic"; then ext="_pic.a"; else ext=".a"; fi ; \
-	for c in `$(VLC_CONFIG) --libs builtin`; do \
+	@for c in `$(VLC_CONFIG) --libs builtin`; do \
 		case $$c in \
 			../modules/*.a) echo $$c ;; \
 		esac ; \
 	done | \
-	sed -e 's/^\(.*\)\/\([^\/]*\)\.a$$/cd \1 \&\& $(MAKE) \2/g' | \
-	while read cmd; do echo $$cmd$$ext; eval "($$cmd$$ext)" || exit $$? ; done
+	sed -e 's,^\(.*\)/\([^/]*\)\.a$$,cd \1 \&\& $(MAKE) \2,g' | \
+	while read cmd; do echo $$cmd.a; eval "($$cmd.a)" || exit $$? ; done
 endif
 	touch $@
 
@@ -147,14 +148,9 @@ endif
 ###############################################################################
 
 libvlc_a_SOURCES = $(SOURCES_libvlc)
-libvlc_a_CFLAGS = `$(VLC_CONFIG) --cflags vlc`
-libvlc_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags vlc`
-libvlc_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags vlc`
-
-libvlc_pic_a_SOURCES = $(SOURCES_libvlc)
-libvlc_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags vlc pic`
-libvlc_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags vlc pic`
-libvlc_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags vlc pic`
+libvlc_a_CFLAGS = `$(VLC_CONFIG) --cflags vlc $(pic)`
+libvlc_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags vlc $(pic)`
+libvlc_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags vlc $(pic)`
 
 libvlc_la_SOURCES = $(SOURCES_libvlc)
 libvlc_la_LIBADD = $(INCLUDED_LIBINTL)
@@ -162,7 +158,7 @@ libvlc_la_CFLAGS = `$(VLC_CONFIG) --cflags vlc`
 libvlc_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags vlc`
 libvlc_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags vlc`
 libvlc_la_LDFLAGS = `$(VLC_CONFIG) --libs vlc builtin|sed -e 's/\(modules\/[^ ]*\)\.a /\1_builtin.la /g'` \
-		-avoid-version -no-undefined
+		-no-undefined
 libvlc_la_DEPENDENCIES = stamp-builtins
 
 
@@ -190,17 +186,15 @@ if USE_LIBTOOL
 lib_LTLIBRARIES = libvlc.la
 else
 lib_LIBRARIES = libvlc.a
-if BUILD_PIC
-lib_LIBRARIES += libvlc_pic.a
-endif
 endif
 
 if HAVE_WIN32
 if BUILD_SHARED
-DATA_noinst_libvlc = libvlc$(LIBEXT)
+DATA_noinst_libvlc = libvlc$(LIBEXT) libvlc$(LIBEXT).a
 endif
 
 libvlc.dll.a: libvlc$(LIBEXT)
+	$(DLLTOOL) --export-all-symbols -l $@ -D $< $(libvlc_a_OBJECTS)
 
 libvlc$(LIBEXT): $(OBJECTS_libvlc_so) stamp-builtins
 	@ldfl="`$(VLC_CONFIG) --libs plugin vlc builtin $(pic)` $(INCLUDED_LIBINTL)" ; \
@@ -211,12 +205,12 @@ libvlc$(LIBEXT): $(OBJECTS_libvlc_so) stamp-builtins
 	esac ; \
 	echo $$ld $(OBJECTS_libvlc_so) $(LDFLAGS_libvlc_so) $$ldfl; \
 	$$ld $(libvlc_a_OBJECTS) \
-		-Wl,--out-implib,$(top_builddir)/src/libvlc.dll.a $$ldfl
+		$$ldfl
 # It sucks big time, but we have to do that to link vlc properly
 # on non-PIC OSes, otherwise ld will favor builtins-less libvlc.a over
 # libvlc$(LIBEXT)
 	rm -f libvlc.a
-# Cygwin work-around
+# Cygwin libtool work-around
 	@if test -f "$@.exe"; then mv -f "$@.exe" "$@"; fi
 endif
 
@@ -256,13 +250,16 @@ SOURCES_libvlc_common = \
 	interface/interface.c \
 	interface/intf_eject.c \
 	interface/interaction.c \
-	playlist/playlist.c \
+	playlist/thread.c \
+	playlist/control.c \
+	playlist/engine.c \
 	playlist/sort.c \
 	playlist/loadsave.c \
-	playlist/view.c \
+	playlist/tree.c \
 	playlist/item.c \
-	playlist/item-ext.c \
+	playlist/search.c \
 	playlist/services_discovery.c \
+	input/item.c \
 	input/access.c \
 	input/clock.c \
 	input/control.c \
@@ -292,6 +289,7 @@ SOURCES_libvlc_common = \
 	audio_output/intf.c \
 	stream_output/stream_output.c \
 	stream_output/announce.c \
+	stream_output/profiles.c \
 	stream_output/sap.c \
 	osd/osd.c \
 	osd/osd_parser.c \
@@ -327,7 +325,8 @@ SOURCES_libvlc_common = \
 	misc/update.c \
 	misc/vlm.c \
 	misc/xml.c \
-	misc/hashtables.c \
+	misc/dict.c \
+	misc/devices.c \
 	extras/libc.c \
 	control/core.c \
 	control/playlist.c \
@@ -352,16 +351,10 @@ SOURCES_libvlc = \
 	$(OPT_SOURCES_libvlc_getopt) \
 	$(NULL)
 
-
 if !USE_LIBTOOL
 if !BUILD_SHARED
 SOURCES_libvlc += misc/version.c
 CLEANFILES += misc/version.c
-
-misc/version.c: FORCE
-	$(TOOLBOX) --update-version
-FORCE:
-
 endif
 
 # Install shared libvlc
@@ -372,6 +365,9 @@ install-exec-local:
 uninstall-local:
 	test -z "$(DATA_noinst_libvlc)" || rm -f "$(DESTDIR)$(libdir)/$(DATA_noinst_libvlc)"
 endif
+
+misc/version.c: FORCE
+	$(TOOLBOX) --update-version
 
 ###############################################################################
 # Stamp rules
@@ -399,3 +395,4 @@ test_url_LDADD = libvlc.la
 test_url_CFLAGS = $(CFLAGS_tests)
 endif
 
+FORCE:

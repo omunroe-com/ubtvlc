@@ -3,7 +3,7 @@
  *****************************************************************************
  * Copyright (C) 2004-2005 the VideoLAN team
  * Copyright (C) 2005-2006 Rémi Denis-Courmont
- * $Id: tcp.c 15496 2006-05-01 08:29:23Z courmisch $
+ * $Id: tcp.c 16025 2006-07-13 14:19:35Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@videolan.org>
  *          Rémi Denis-Courmont <rem # videolan.org>
@@ -416,11 +416,20 @@ int __net_Accept( vlc_object_t *p_this, int *pi_fd, mtime_t i_wait )
             if( i_val < 0 )
                 msg_Err( p_this, "accept failed (%s)",
                          net_strerror( net_errno ) );
+#ifndef WIN32
+            else if( i_val >= FD_SETSIZE )
+            {
+                net_Close( i_val ); /* avoid future overflows in FD_SET */
+                msg_Err( p_this, "accept failed (too many sockets opened)" );
+            }
+#endif
             else
             {
                 const int yes = 1;
                 setsockopt( i_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof( yes ));
-
+#ifdef FD_CLOEXEC
+                fcntl( i_fd, F_SETFD, FD_CLOEXEC );
+#endif
                 /*
                  * This round-robin trick ensures that the first sockets in
                  * pi_fd won't prevent the last ones from getting accept'ed.

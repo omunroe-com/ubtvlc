@@ -2,7 +2,7 @@
  * theora.c: theora decoder module making use of libtheora.
  *****************************************************************************
  * Copyright (C) 1999-2001 the VideoLAN team
- * $Id: theora.c 15005 2006-03-31 16:28:03Z xtophe $
+ * $Id: theora.c 15943 2006-06-27 13:32:30Z jpsaman $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -294,8 +294,8 @@ static int ProcessHeaders( decoder_t *p_dec )
     if( p_sys->ti.aspect_denominator && p_sys->ti.aspect_numerator )
     {
         p_dec->fmt_out.video.i_aspect = ((int64_t)VOUT_ASPECT_FACTOR) *
-            ( p_sys->ti.aspect_numerator * p_sys->ti.width ) /
-            ( p_sys->ti.aspect_denominator * p_sys->ti.height );
+            ( p_sys->ti.aspect_numerator * p_dec->fmt_out.video.i_width ) /
+            ( p_sys->ti.aspect_denominator * p_dec->fmt_out.video.i_height );
     }
     else
     {
@@ -557,7 +557,7 @@ static void theora_CopyPicture( decoder_t *p_dec, picture_t *p_pic,
             i_src_yoffset /= 2;
         }
 
-        p_src += (i_src_yoffset * i_src_stride + i_src_yoffset);
+        p_src += (i_src_yoffset * i_src_stride + i_src_xoffset);
 
         for( i_line = 0; i_line < p_pic->p[i_plane].i_visible_lines; i_line++ )
         {

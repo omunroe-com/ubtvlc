@@ -2,7 +2,7 @@
  * cmd_dialogs.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: cmd_dialogs.hpp 15008 2006-03-31 19:24:33Z zorglub $
+ * $Id: cmd_dialogs.hpp 16174 2006-07-30 22:35:04Z fkuehne $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -42,8 +42,7 @@ typedef CmdDialogs<5> CmdDlgNet;
 typedef CmdDialogs<6> CmdDlgMessages;
 typedef CmdDialogs<7> CmdDlgPrefs;
 typedef CmdDialogs<8> CmdDlgFileInfo;
-typedef CmdDialogs<9> CmdDlgShowPopupMenu;
-typedef CmdDialogs<10> CmdDlgHidePopupMenu;
+
 typedef CmdDialogs<11> CmdDlgAdd;
 typedef CmdDialogs<12> CmdDlgPlaylistLoad;
 typedef CmdDialogs<13> CmdDlgPlaylistSave;
@@ -51,6 +50,16 @@ typedef CmdDialogs<14> CmdDlgDirectory;
 typedef CmdDialogs<15> CmdDlgStreamingWizard;
 typedef CmdDialogs<16> CmdDlgPlaytreeLoad;
 typedef CmdDialogs<17> CmdDlgPlaytreeSave;
+typedef CmdDialogs<18> CmdDlgPlaylist;
+
+typedef CmdDialogs<30> CmdDlgShowPopupMenu;
+typedef CmdDialogs<31> CmdDlgHidePopupMenu;
+typedef CmdDialogs<32> CmdDlgShowAudioPopupMenu;
+typedef CmdDialogs<33> CmdDlgHideAudioPopupMenu;
+typedef CmdDialogs<34> CmdDlgShowVideoPopupMenu;
+typedef CmdDialogs<35> CmdDlgHideVideoPopupMenu;
+typedef CmdDialogs<36> CmdDlgShowMiscPopupMenu;
+typedef CmdDialogs<37> CmdDlgHideMiscPopupMenu;
 
 
 /// Generic "Open dialog" command
@@ -97,13 +106,7 @@ class CmdDialogs: public CmdGeneric
                 case 8:
                     pDialogs->showFileInfo();
                     break;
-                case 9:
-                    pDialogs->showPopupMenu( true );
-                    break;
-                case 10:
-                    pDialogs->showPopupMenu( false );
-                    break;
-                case 11:
+               case 11:
                     pDialogs->showFile( false );
                     break;
                 case 12:
@@ -117,6 +120,33 @@ class CmdDialogs: public CmdGeneric
                     break;
                 case 15:
                     pDialogs->showStreamingWizard();
+                    break;
+                case 18:
+                    pDialogs->showPlaylist();
+                    break;
+                case 30:
+                    pDialogs->showPopupMenu( true, INTF_DIALOG_POPUPMENU );
+                    break;
+                case 31:
+                    pDialogs->showPopupMenu( false, INTF_DIALOG_POPUPMENU );
+                    break;
+                case 32:
+                    pDialogs->showPopupMenu( true, INTF_DIALOG_AUDIOPOPUPMENU );
+                    break;
+                case 33:
+                    pDialogs->showPopupMenu( false,INTF_DIALOG_AUDIOPOPUPMENU );
+                    break;
+                case 34:
+                    pDialogs->showPopupMenu( true, INTF_DIALOG_VIDEOPOPUPMENU );
+                    break;
+                case 35:
+                    pDialogs->showPopupMenu( false,INTF_DIALOG_VIDEOPOPUPMENU );
+                    break;
+                 case 36:
+                    pDialogs->showPopupMenu( true, INTF_DIALOG_MISCPOPUPMENU );
+                    break;
+                case 37:
+                    pDialogs->showPopupMenu( false,INTF_DIALOG_MISCPOPUPMENU );
                     break;
                 default:
                     msg_Warn( getIntf(), "unknown dialog type" );
@@ -139,20 +169,13 @@ class CmdInteraction: public CmdGeneric
         /// This method does the real job of the command
         virtual void execute()
         {
-            if( m_pDialog->i_type == INTERACT_PROGRESS )
+            /// Get the dialogs provider
+            Dialogs *pDialogs = Dialogs::instance( getIntf() );
+            if( pDialogs == NULL )
             {
-                 /// \todo Handle progress in the interface
+                return;
             }
-            else
-            {
-                /// Get the dialogs provider
-                Dialogs *pDialogs = Dialogs::instance( getIntf() );
-                if( pDialogs == NULL )
-                {
-                    return;
-                }
-                pDialogs->showInteraction( m_pDialog );
-            }
+            pDialogs->showInteraction( m_pDialog );
         }
 
         virtual string getType() const { return "interaction"; }

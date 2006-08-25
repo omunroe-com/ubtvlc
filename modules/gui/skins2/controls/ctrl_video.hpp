@@ -2,7 +2,7 @@
  * ctrl_video.hpp
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: ctrl_video.hpp 15481 2006-04-30 18:07:40Z asmax $
+ * $Id: ctrl_video.hpp 15804 2006-06-04 14:03:54Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -30,7 +30,7 @@
 class VoutWindow;
 
 /// Control video
-class CtrlVideo: public CtrlGeneric, public Observer<VarBox, void*>
+class CtrlVideo: public CtrlGeneric, public Observer<VarBox>
 {
     public:
         CtrlVideo( intf_thread_t *pIntf, GenericLayout &rLayout,
@@ -56,7 +56,7 @@ class CtrlVideo: public CtrlGeneric, public Observer<VarBox, void*>
         virtual string getType() const { return "video"; }
 
         /// Method called when the vout size is updated
-        virtual void onUpdate( Subject<VarBox,void*> &rVoutSize, void* );
+        virtual void onUpdate( Subject<VarBox> &rVoutSize, void* );
 
         /// Called by the layout when the control is show/hidden
         void setVisible( bool visible );
