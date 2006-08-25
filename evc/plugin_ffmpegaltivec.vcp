@@ -684,5 +684,15 @@ SOURCE="..\modules\codec\ffmpeg\demux.c"
 # PROP Intermediate_Dir "Debug\modules\codec\ffmpeg"
 # End Source File
 # Begin Source File
+SOURCE="..\modules\codec\ffmpeg\mux.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=ffmpegaltivec" /D "MODULE_NAME_IS_ffmpegaltivec" 
+!IF "$(CFG)" == "plugin_ffmpegaltivec - Win32 Release"
+# PROP Output_Dir "Release\modules\codec\ffmpeg"
+# PROP Intermediate_Dir "Release\modules\codec\ffmpeg"
+!ELSEIF "$(CFG)" == "plugin_ffmpegaltivec - Win32 Debug"
+# PROP Output_Dir "Debug\modules\codec\ffmpeg"
+# PROP Intermediate_Dir "Debug\modules\codec\ffmpeg"
+# End Source File
+# Begin Source File
 SOURCE="..\modules\codec\ffmpeg\ffmpeg.h"
 # End Source File

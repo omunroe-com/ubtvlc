@@ -2,7 +2,7 @@
  * unicode.c: Unicode <-> locale functions
  *****************************************************************************
  * Copyright (C) 2005-2006 the VideoLAN team
- * $Id: unicode.c 15542 2006-05-05 20:07:48Z dionoea $
+ * $Id: unicode.c 15978 2006-07-05 11:12:06Z xtophe $
  *
  * Authors: Rémi Denis-Courmont <rem # videolan.org>
  *
@@ -140,7 +140,7 @@ static char *MB2MB( const char *string, UINT fromCP, UINT toCP )
     int len;
 
     len = MultiByteToWideChar( fromCP, 0, string, -1, NULL, 0 );
-    if( len == 0 );
+    if( len == 0 )
         return NULL;
 
     wchar_t wide[len];

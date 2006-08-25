@@ -2,7 +2,7 @@
  * ts.c: Transport Stream input module for VLC.
  *****************************************************************************
  * Copyright (C) 2004-2005 VideoLAN (Centrale Réseaux) and its contributors
- * $Id: ts.c 15427 2006-04-29 14:19:19Z dionoea $
+ * $Id: ts.c 16067 2006-07-18 08:48:53Z sigmunau $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Jean-Paul Saman <jpsaman #_at_# m2x.nl>
@@ -74,6 +74,7 @@
  *  - ...
  */
 
+#define vlc_meta_Add(a,b,c) fprintf(stderr, "FIXME: TS demuxer meta is broken\n" )
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
@@ -970,7 +971,7 @@ static int DemuxFile( demux_t *p_demux )
         i_diff = ( i_cc - p_pid->i_cc )&0x0f;
         if( b_payload && i_diff == 1 )
         {
-            p_pid->i_cc = ( p_pid->i_cc + 1 ) & 0xf;
+            p_pid->i_cc++;
         }
         else
         {
@@ -1779,7 +1780,7 @@ static vlc_bool_t GatherPES( demux_t *p_demux, ts_pid_t *pid, block_t *p_bk )
     i_diff = ( i_cc - pid->i_cc )&0x0f;
     if( b_payload && i_diff == 1 )
     {
-        pid->i_cc = ( pid->i_cc + 1 ) & 0xf;
+        pid->i_cc++;
     }
     else
     {
@@ -2432,8 +2433,8 @@ static void SDTCallBack( demux_t *p_demux, dvbpsi_sdt_t *p_sdt )
                 msg_Dbg( p_demux, "    - type=%d provider=%s name=%s",
                         pD->i_service_type, str1, str2 );
 
-                vlc_meta_Add( p_meta, "Name", str2 );
-                vlc_meta_Add( p_meta, "Provider", str1 );
+                vlc_meta_SetTitle( p_meta, str2 );
+                vlc_meta_SetPublisher( p_meta, str1 );
                 if( pD->i_service_type >= 0x01 && pD->i_service_type <= 0x10 )
                     vlc_meta_Add( p_meta, "Type", psz_type[pD->i_service_type] );
             }
@@ -2449,7 +2450,6 @@ static void SDTCallBack( demux_t *p_demux, dvbpsi_sdt_t *p_sdt )
             vlc_meta_Add( p_meta, "Status", "Running" );
         else
             vlc_meta_Add( p_meta, "Status", "Unknown" );
-
 
         es_out_Control( p_demux->out, ES_OUT_SET_GROUP_META,
                         p_srv->i_service_id, p_meta );
@@ -2486,7 +2486,7 @@ static void EITEventFixString( unsigned char *psz )
      * caracters encoding, for now lets skip it */
     if( psz[0] >= 0x20 )
             return;
-    if( ( i_len = strlen( psz ) ) > 0 )
+    if( ( i_len = strlen( (char *) psz ) ) > 0 )
         memmove( &psz[0], &psz[1], i_len ); /* Copy the \0 too */
 }
 static void EITCallBack( demux_t *p_demux, dvbpsi_eit_t *p_eit )
@@ -2555,8 +2555,8 @@ static void EITCallBack( demux_t *p_demux, dvbpsi_eit_t *p_eit )
                     memcpy( psz_text, pE->i_text, pE->i_text_length );
                     psz_text[pE->i_text_length] = '\0';
 
-                    EITEventFixString(psz_name);
-                    EITEventFixString(psz_text);
+                    EITEventFixString((unsigned char *)&psz_name);
+                    EITEventFixString((unsigned char *)&psz_text);
                     msg_Dbg( p_demux, "    - short event lang=%3.3s '%s' : '%s'",
                              pE->i_iso_639_code, psz_name, psz_text );
                 }
@@ -2577,12 +2577,12 @@ static void EITCallBack( demux_t *p_demux, dvbpsi_eit_t *p_eit )
                         memcpy( str1, pE->i_item_description[i],
                                 pE->i_item_description_length[i] );
                         str1[pE->i_item_description_length[i]] = '\0';
-                        EITEventFixString(str1);
+                        EITEventFixString((unsigned char *)&str1);
 
                         memcpy( str2, pE->i_item[i],
                                 pE->i_item_length[i] );
                         str2[pE->i_item_length[i]] = '\0';
-                        EITEventFixString(str2);
+                        EITEventFixString((unsigned char *)&str2);
 
                         msg_Dbg( p_demux, "       - desc='%s' item='%s'", str1, str2 );
                         psz_extra = realloc( psz_extra,
@@ -2596,7 +2596,7 @@ static void EITCallBack( demux_t *p_demux, dvbpsi_eit_t *p_eit )
 
                     memcpy( str1, pE->i_text, pE->i_text_length );
                     str1[pE->i_text_length] = '\0';
-                    EITEventFixString(str1);
+                    EITEventFixString((unsigned char *)&str1);
 
                     msg_Dbg( p_demux, "       - text='%s'", str1 );
                     psz_extra = realloc( psz_extra,
@@ -2621,7 +2621,7 @@ static void EITCallBack( demux_t *p_demux, dvbpsi_eit_t *p_eit )
 
         if( p_evt->i_running_status == 0x04 )
         {
-            vlc_meta_Add( p_meta, VLC_META_NOW_PLAYING, psz_name );
+            vlc_meta_SetNowPlaying( p_meta, psz_name );
             b_event_active = VLC_TRUE;
         }
 
@@ -2630,7 +2630,7 @@ static void EITCallBack( demux_t *p_demux, dvbpsi_eit_t *p_eit )
     }
 
     if( !b_event_active )
-        vlc_meta_Add( p_meta, VLC_META_NOW_PLAYING, "" );
+        vlc_meta_SetNowPlaying( p_meta, "" );
     es_out_Control( p_demux->out, ES_OUT_SET_GROUP_META,
                     p_eit->i_service_id, p_meta );
     vlc_meta_Delete( p_meta );
@@ -3122,10 +3122,76 @@ static void PMTCallBack( demux_t *p_demux, dvbpsi_pmt_t *p_pmt )
 
                 if( p_decoded )
                 {
+#if DR_0A_API_VER >= 2
+                    pid->es->fmt.psz_language = malloc( 4 );
+                    memcpy( pid->es->fmt.psz_language,
+                            p_decoded->code[0].iso_639_code, 3 );
+                    pid->es->fmt.psz_language[3] = 0;
+                    msg_Dbg( p_demux, "found language: %s", pid->es->fmt.psz_language);
+                    switch( p_decoded->code[0].i_audio_type ) {
+                    case 0:
+                        pid->es->fmt.psz_description = NULL;
+                        break;
+                    case 1:
+                        pid->es->fmt.psz_description =
+                            strdup(_("clean effects"));
+                        break;
+                    case 2:
+                        pid->es->fmt.psz_description =
+                            strdup(_("hearing impaired"));
+                        break;
+                    case 3:
+                        pid->es->fmt.psz_description =
+                            strdup(_("visual impaired commentary"));
+                        break;
+                    default:
+                        msg_Dbg( p_demux, "unknown audio type: %d",
+                                 p_decoded->code[0].i_audio_type);
+                        pid->es->fmt.psz_description = NULL;
+                        break;
+                    }
+                    pid->es->fmt.i_extra_languages = p_decoded->i_code_count-1;
+                    pid->es->fmt.p_extra_languages =
+                        malloc( sizeof(*pid->es->fmt.p_extra_languages) *
+                                pid->es->fmt.i_extra_languages );
+                    for( i = 0; i < pid->es->fmt.i_extra_languages; i++ ) {
+                        msg_Dbg( p_demux, "bang" );
+                        pid->es->fmt.p_extra_languages[i].psz_language =
+                            malloc(4);
+                        memcpy(pid->es->fmt.p_extra_languages[i].psz_language,
+                               p_decoded->code[i+1].iso_639_code, 3 );
+                        pid->es->fmt.p_extra_languages[i].psz_language[3] = '\0';
+                        switch( p_decoded->code[i].i_audio_type ) {
+                        case 0:
+                            pid->es->fmt.p_extra_languages[i].psz_description =
+                                NULL;
+                            break;
+                        case 1:
+                            pid->es->fmt.p_extra_languages[i].psz_description =
+                                strdup(_("clean effects"));
+                            break;
+                        case 2:
+                            pid->es->fmt.p_extra_languages[i].psz_description =
+                                strdup(_("hearing impaired"));
+                            break;
+                        case 3:
+                            pid->es->fmt.p_extra_languages[i].psz_description =
+                                strdup(_("visual impaired commentary"));
+                            break;
+                        default:
+                            msg_Dbg( p_demux, "unknown audio type: %d",
+                                     p_decoded->code[i].i_audio_type);
+                            pid->es->fmt.psz_description = NULL;
+                            break;
+                        }
+
+                    }
+#else
                     pid->es->fmt.psz_language = malloc( 4 );
                     memcpy( pid->es->fmt.psz_language,
                             p_decoded->i_iso_639_code, 3 );
                     pid->es->fmt.psz_language[3] = 0;
+#endif
                 }
             }
         }

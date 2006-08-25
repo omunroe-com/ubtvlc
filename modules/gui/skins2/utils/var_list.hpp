@@ -2,7 +2,7 @@
  * var_list.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: var_list.hpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: var_list.hpp 15803 2006-06-04 13:55:41Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -34,7 +34,7 @@
 
 
 /// List variable
-class VarList: public Variable, public Subject<VarList, void* >
+class VarList: public Variable, public Subject<VarList>
 {
     public:
         VarList( intf_thread_t *pIntf );

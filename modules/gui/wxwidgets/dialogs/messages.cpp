@@ -2,7 +2,7 @@
  * messages.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: messages.cpp 15370 2006-04-26 23:20:48Z xtophe $
+ * $Id: messages.cpp 15588 2006-05-11 18:56:20Z xtophe $
  *
  * Authors: Olivier Teulière <ipkiss@via.ecp.fr>
  *
@@ -28,12 +28,6 @@
  *****************************************************************************/
 
 /* IDs for the controls and the menu commands */
-enum
-{
-    Close_Event,
-    Clear_Event,
-    Save_Log_Event
-};
 
 BEGIN_EVENT_TABLE(Messages, wxFrame)
     /* Button events */

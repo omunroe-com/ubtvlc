@@ -2,7 +2,7 @@
  * macosx_factory.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: macosx_factory.cpp 13905 2006-01-12 23:10:04Z dionoea $
+ * $Id: macosx_factory.cpp 15598 2006-05-13 17:54:21Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -74,6 +74,31 @@ void MacOSXFactory::minimize()
     // TODO
 }
 
+void MacOSXFactory::restore()
+{
+    // TODO
+}
+
+void MacOSXFactory::addInTray()
+{
+    // TODO
+}
+
+void MacOSXFactory::removeFromTray()
+{
+    // TODO
+}
+
+void MacOSXFactory::addInTaskBar()
+{
+    // TODO
+}
+
+void MacOSXFactory::removeFromTaskBar()
+{
+    // TODO
+}
+
 OSTimer *MacOSXFactory::createOSTimer( const Callback &rCallback )
 {
     return new MacOSXTimer( getIntf(), rCallback );
@@ -84,7 +109,7 @@ OSWindow *MacOSXFactory::createOSWindow( GenericWindow &rWindow, bool dragDrop,
                                       bool playOnDrop, OSWindow *pParent )
 {
     return new MacOSXWindow( getIntf(), rWindow, dragDrop,
-                          playOnDrop, (MacOSXWindow*)pParent );
+                             playOnDrop, (MacOSXWindow*)pParent );
 }
 
 

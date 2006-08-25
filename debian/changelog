@@ -1,3 +1,60 @@
+vlc (0.8.6-svn20060823.debian-3ubuntu1) edgy; urgency=low
+
+  * Merge from Debian unstable. The remaining Ubuntu changes are:
+    - debian/control:
+      + Build-Depend on firefox-dev, not libxul-dev and xulrunner,
+      + Build-Depend on linux-libc-dev, not linux-kernel-headers,
+      + Remove libtwolame-dev (not in Ubuntu) from Build-Depends,
+      + Loosen build-dependency for libcaca-dev to (>= 0.9),
+        NOTE: This change may result in subpar colour ASCII
+        rendering. Please see http://bugs.debian.org/385174 for
+        rationale,
+      + Set the maintainer field to
+        MOTU Media Team <motumedia@tauware.de> (we're responsible
+        for Ubuntu vlc breakage, not Debian), =)
+    - debian/patches/21_gnome-screensaver-support.dpatch: Drop.
+      Upstream has merged a version using DBUS.
+    - debian/rules:
+      + Retain UBUNTU_ENV, still using firefox,
+      + Add --enable-dmo --enable-loader to $(vlc_confflags) on i386,
+        allowing use of proprietary codecs,
+      + Remove --enable-twolame (see above change to debian/control),
+  * Fix installation of .desktop file (closes Ubuntu: #53471).
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sat, 26 Aug 2006 00:38:20 +0100
+
+vlc (0.8.6-svn20060823.debian-3) unstable; urgency=low
+
+  * debian/control:
+    + Added missing build-dep on libdc1394-13-dev (Closes: #384568, #384582).
+    + Build-depend on a newer libcaca for better colour ASCII rendering.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Fri, 25 Aug 2006 11:19:00 +0200
+
+vlc (0.8.6-svn20060823.debian-2) unstable; urgency=low
+
+  * debian/control:
+    + Added missing build-dep on libraw1394-dev.
+  * debian/rules:
+    + Replaced --enable-livedotcom with --enable-live555.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Fri, 25 Aug 2006 09:37:47 +0200
+
+vlc (0.8.6-svn20060823.debian-1) unstable; urgency=low
+
+  * New upstream SVN snapshot.
+  * debian/rules:
+    + Distribute a shared version of libvlc.
+    + Activated the twolame encoder.
+  * debian/control:
+    + Build-depend on a newer libavcodec so as to get WMV3 decoding support.
+    + Cleaned up package dependencies a bit.
+
+  * debian/patches/000_ltmain.diff:
+    + Work around libtool not wanting to install our plugins.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Thu, 24 Aug 2006 18:06:12 +0200
+
 vlc (0.8.5.debian-2ubuntu1) edgy; urgency=low
 
   * Merge from debian unstable:

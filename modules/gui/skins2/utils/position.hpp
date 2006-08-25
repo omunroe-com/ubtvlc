@@ -2,7 +2,7 @@
  * position.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: position.hpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: position.hpp 16210 2006-08-05 13:37:06Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -82,8 +82,8 @@ class Position
 
         /// Create a new position relative to the given box
         Position( int left, int top, int right, int bottom, const Box &rBox,
-                  Ref_t refLeftTop = kLeftTop,
-                  Ref_t refRightBottom = kLeftTop );
+                  Ref_t refLeftTop, Ref_t refRightBottom,
+                  bool xKeepRatio, bool yKeepRatio );
 
         ~Position() {}
 
@@ -95,6 +95,9 @@ class Position
         /// Get the size of the rectangle
         int getWidth() const;
         int getHeight() const;
+        /// Get the reference corners
+        Ref_t getRefLeftTop() const { return m_refLeftTop; }
+        Ref_t getRefRightBottom() const { return m_refRighBottom; }
 
     private:
         /// Position and reference edge/corner
@@ -105,11 +108,18 @@ class Position
         const Box &m_rBox;
         Ref_t m_refLeftTop;
         Ref_t m_refRighBottom;
+        /// "Keep ratio" mode
+        bool m_xKeepRatio;
+        bool m_yKeepRatio;
+        /// Initial width ratio (usually between 0 and 1)
+        double m_xRatio;
+        /// Initial height ratio (usually between 0 and 1)
+        double m_yRatio;
 };
 
 
 /// Variable implementing the Box interface
-class VarBox: public Variable, public Box, public Subject<VarBox, void*>
+class VarBox: public Variable, public Box, public Subject<VarBox>
 {
     public:
         VarBox( intf_thread_t *pIntf, int width = 0, int height = 0 );

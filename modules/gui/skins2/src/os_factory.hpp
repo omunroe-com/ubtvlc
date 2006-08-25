@@ -2,7 +2,7 @@
  * os_factory.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: os_factory.hpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: os_factory.hpp 15598 2006-05-13 17:54:21Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -78,8 +78,23 @@ class OSFactory: public SkinObject
         /// Destroy the instance of OSLoop
         virtual void destroyOSLoop() = 0;
 
-        ///
+        /// Minimize all the windows
         virtual void minimize() = 0;
+
+        /// Restore the minimized windows
+        virtual void restore() = 0;
+
+        /// Add an icon in the system tray
+        virtual void addInTray() = 0;
+
+        /// Remove the icon from the system tray
+        virtual void removeFromTray() = 0;
+
+        /// Show the task in the task bar
+        virtual void addInTaskBar() = 0;
+
+        /// Remove the task from the task bar
+        virtual void removeFromTaskBar() = 0;
 
         /// Instantiate an OSTimer with the given command
         virtual OSTimer *createOSTimer( CmdGeneric &rCmd ) = 0;

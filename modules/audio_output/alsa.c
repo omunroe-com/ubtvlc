@@ -2,7 +2,7 @@
  * alsa.c : alsa plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2001 the VideoLAN team
- * $Id: alsa.c 15495 2006-05-01 08:26:18Z courmisch $
+ * $Id: alsa.c 16319 2006-08-22 23:22:14Z fkuehne $
  *
  * Authors: Henri Fallon <henri@videolan.org> - Original Author
  *          Jeffrey Baker <jwbaker@acm.org> - Port to ALSA 1.0 API
@@ -34,6 +34,7 @@
 #include <vlc/vlc.h>
 
 #include <vlc/aout.h>
+#include <vlc_interaction.h>
 
 #include "aout_internal.h"
 
@@ -322,6 +323,9 @@ static int Open( vlc_object_t *p_this )
     if( (psz_device = config_GetPsz( p_aout, "alsadev" )) == NULL )
     {
         msg_Err( p_aout, "no audio device given (maybe \"default\" ?)" );
+        intf_UserFatal( p_aout, VLC_FALSE, _("No Audio Device"), 
+                        _("No audio device name was given. You might want to " \
+                          "enter \"default\".") );
         free( p_sys );
         return VLC_EGENERIC;
     }
@@ -427,6 +431,9 @@ static int Open( vlc_object_t *p_this )
         {
             msg_Err( p_aout, "cannot open ALSA device `%s' (%s)",
                              psz_iec_device, snd_strerror( i_snd_rc ) );
+            intf_UserFatal( p_aout, VLC_FALSE, _("Audio output failed"), 
+                            _("VLC could not open the ALSA device \"%s\" (%s)."),
+                            psz_iec_device, snd_strerror( i_snd_rc ) );
             free( p_sys );
             free( psz_device );
             return VLC_EGENERIC;
@@ -459,8 +466,14 @@ static int Open( vlc_object_t *p_this )
                    SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK ) ) == -EBUSY )
             {
                 if( i ) msleep( 100000 /* 100ms */ );
-                else msg_Err( p_aout, "audio device: %s is already in use",
+                else
+                {
+                    msg_Err( p_aout, "audio device: %s is already in use",
                               psz_device );
+                    intf_UserFatal( p_aout, VLC_FALSE, _("Audio output failed"), 
+                                    _("The audio device \"%s\" is already in use."),
+                                    psz_device );
+                }
                 continue;
             }
             break;
@@ -469,6 +482,9 @@ static int Open( vlc_object_t *p_this )
         {
             msg_Err( p_aout, "cannot open ALSA device `%s' (%s)",
                              psz_device, snd_strerror( i_snd_rc ) );
+            intf_UserFatal( p_aout, VLC_FALSE, _("Audio output failed"), 
+                            _("VLC could not open the ALSA device \"%s\" (%s)."),
+                            psz_device, snd_strerror( i_snd_rc ) );
             free( p_sys );
             free( psz_device );
             return VLC_EGENERIC;
@@ -761,10 +777,8 @@ static int ALSAThread( aout_instance_t * p_aout )
 static void ALSAFill( aout_instance_t * p_aout )
 {
     struct aout_sys_t * p_sys = p_aout->output.p_sys;
-
     aout_buffer_t * p_buffer;
     snd_pcm_status_t * p_status = p_sys->p_status;
-    snd_timestamp_t ts_next;
     int i_snd_rc;
     mtime_t next_date;
 
@@ -833,7 +847,6 @@ static void ALSAFill( aout_instance_t * p_aout )
                 /* With screwed ALSA drivers the timestamp is always zero;
                  * use another method then */
                 snd_pcm_sframes_t delay = 0;
-                ssize_t i_bytes = 0;
 
                 snd_pcm_delay( p_sys->p_snd_pcm, &delay );
                 next_date = mdate() + (mtime_t)(delay) * 1000000 /

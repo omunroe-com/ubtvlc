@@ -2,11 +2,12 @@
  * intf.m: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2006 the VideoLAN team
- * $Id: intf.m 15285 2006-04-19 16:08:51Z fkuehne $
+ * $Id: intf.m 16288 2006-08-18 14:05:45Z fkuehne $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
  *          Derk-Jan Hartman <hartman at videolan.org>
+ *          Felix KŸhne <fkuehne at videolan dot org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,9 +42,11 @@
 #include "wizard.h"
 #include "extended.h"
 #include "bookmarks.h"
+#include "sfilters.h"
 #include "interaction.h"
 #include "embeddedwindow.h"
 #include "update.h"
+#include "AppleRemote.h"
 
 /*****************************************************************************
  * Local prototypes.
@@ -338,9 +341,14 @@ static VLCMain *_o_sharedMainInstance = nil;
     o_bookmarks = [[VLCBookmarks alloc] init];
     o_embedded_list = [[VLCEmbeddedList alloc] init];
     o_interaction_list = [[VLCInteractionList alloc] init];
+    o_sfilters = nil;
     o_update = [[VLCUpdate alloc] init];
 
     i_lastShownVolume = -1;
+
+    o_remote = [[AppleRemote alloc] init];
+    [o_remote setDelegate: _o_sharedMainInstance];
+    
     return _o_sharedMainInstance;
 }
 
@@ -590,6 +598,7 @@ static VLCMain *_o_sharedMainInstance = nil;
     [o_mi_playlist setTitle: _NS("Playlist")];
     [o_mi_info setTitle: _NS("Information")];
     [o_mi_messages setTitle: _NS("Messages")];
+    [o_mi_errorsAndWarnings setTitle: _NS("Errors and Warnings")];
 
     [o_mi_bring_atf setTitle: _NS("Bring All to Front")];
 
@@ -608,16 +617,17 @@ static VLCMain *_o_sharedMainInstance = nil;
     [o_dmi_next setTitle: _NS("Next")];
     [o_dmi_previous setTitle: _NS("Previous")];
     [o_dmi_mute setTitle: _NS("Mute")];
-
-    /* error panel */
-    [o_error setTitle: _NS("Error")];
-    [o_err_lbl setStringValue: _NS("An error has occurred which probably " \
-        "prevented the proper execution of the program:")];
-    [o_err_bug_lbl setStringValue: _NS("If you believe that it is a bug, " \
-        "please follow the instructions at:")];
-    [o_err_btn_msgs setTitle: _NS("Open Messages Window")];
-    [o_err_btn_dismiss setTitle: _NS("Dismiss")];
-    [o_err_ckbk_surpress setTitle: _NS("Do not display further errors")];
+    
+    /* vout menu */
+    [o_vmi_play setTitle: _NS("Play")];
+    [o_vmi_stop setTitle: _NS("Stop")];
+    [o_vmi_prev setTitle: _NS("Previous")];
+    [o_vmi_next setTitle: _NS("Next")];
+    [o_vmi_volup setTitle: _NS("Volume Up")];
+    [o_vmi_voldown setTitle: _NS("Volume Down")];
+    [o_vmi_mute setTitle: _NS("Mute")];
+    [o_vmi_fullscreen setTitle: _NS("Fullscreen")];
+    [o_vmi_snapshot setTitle: _NS("Snapshot")];
 
     [o_info_window setTitle: _NS("Information")];
 }
@@ -680,6 +690,39 @@ static VLCMain *_o_sharedMainInstance = nil;
     }
 
     return( o_str );
+}
+
+/* Listen to the remote in exclusive mode, only when VLC is the active
+   application */
+- (void)applicationDidBecomeActive:(NSNotification *)aNotification
+{
+    [o_remote startListening: self];
+}
+- (void)applicationDidResignActive:(NSNotification *)aNotification
+{
+    [o_remote stopListening: self];
+}
+
+/* Apple Remote callback */
+- (void)appleRemoteButton:(AppleRemoteEventIdentifier)buttonIdentifier
+    pressedDown:(BOOL)pressedDown
+{
+    switch( buttonIdentifier )
+    {
+        case kRemoteButtonPlay:
+            [o_controls play: self];
+            break;
+        case kRemoteButtonVolume_Plus:
+            [o_controls volumeUp: self];
+            break;
+        case kRemoteButtonVolume_Minus:
+            [o_controls volumeDown: self];
+            break;
+
+        default:
+            /* Add here whatever you want other buttons to do */
+            break;
+    }
 }
 
 - (char *)delocalizeString:(NSString *)id
@@ -873,6 +916,27 @@ static VLCMain *_o_sharedMainInstance = nil;
     return nil;
 }
 
+- (id)getMainIntfPgbar
+{
+    if( o_main_pgbar )
+        return o_main_pgbar;
+
+    msg_Err( p_intf, "main interface progress bar item wasn't found" );
+    return nil;
+}
+
+- (id)getControllerWindow
+{
+    if( o_window )
+        return o_window;
+    return nil;
+}
+
+- (id)getVoutMenu
+{
+    return o_vout_menu;
+}
+
 - (void)manage
 {
     playlist_t * p_playlist;
@@ -941,7 +1005,6 @@ static VLCMain *_o_sharedMainInstance = nil;
         return;
     }
 
-#define p_input p_intf->p_sys->p_input
     if( p_intf->p_sys->b_input_update )
     {
         /* Called when new input is opened */
@@ -963,18 +1026,18 @@ static VLCMain *_o_sharedMainInstance = nil;
 
         vlc_object_release( p_playlist );
 
-        if( ( b_input = ( p_input != NULL ) ) )
+        if( ( b_input = ( p_intf->p_sys->p_input != NULL ) ) )
         {
-            vlc_object_yield( p_input );
+            vlc_object_yield( p_intf->p_sys->p_input );
             /* seekable streams */
-            b_seekable = var_GetBool( p_input, "seekable" );
+            b_seekable = var_GetBool( p_intf->p_sys->p_input, "seekable" );
 
             /* check wether slow/fast motion is possible*/
-            b_control = p_input->input.b_can_pace_control;
+            b_control = p_intf->p_sys->p_input->input.b_can_pace_control;
 
             /* chapters & titles */
-            //b_chapters = p_input->stream.i_area_nb > 1;
-            vlc_object_release( p_input );
+            //b_chapters = p_intf->p_sys->p_input->stream.i_area_nb > 1;
+            vlc_object_release( p_intf->p_sys->p_input );
         }
 
         [o_btn_stop setEnabled: b_input];
@@ -1021,7 +1084,7 @@ static VLCMain *_o_sharedMainInstance = nil;
         p_intf->p_sys->b_intf_show = VLC_FALSE;
     }
 
-    if( p_input && !p_input->b_die )
+    if( p_intf->p_sys->p_input && !p_intf->p_sys->p_input->b_die )
     {
         vlc_value_t val;
 
@@ -1037,13 +1100,13 @@ static VLCMain *_o_sharedMainInstance = nil;
                 return;
             }
             o_temp = [NSString stringWithUTF8String:
-                p_playlist->status.p_item->input.psz_name];
+                p_playlist->status.p_item->p_input->psz_name];
             if( o_temp == NULL )
                 o_temp = [NSString stringWithCString:
-                    p_playlist->status.p_item->input.psz_name];
+                    p_playlist->status.p_item->p_input->psz_name];
             [self setScrollField: o_temp stopAfter:-1];
 
-            p_vout = vlc_object_find( p_input, VLC_OBJECT_VOUT,
+            p_vout = vlc_object_find( p_intf->p_sys->p_input, VLC_OBJECT_VOUT,
                                                     FIND_PARENT );
             if( p_vout != NULL )
             {
@@ -1067,7 +1130,7 @@ static VLCMain *_o_sharedMainInstance = nil;
             p_intf->p_sys->b_current_title_update = FALSE;
         }
 
-        if( p_input && [o_timeslider isEnabled] )
+        if( p_intf->p_sys->p_input && [o_timeslider isEnabled] )
         {
             /* Update the slider */
             vlc_value_t time;
@@ -1076,11 +1139,11 @@ static VLCMain *_o_sharedMainInstance = nil;
             vlc_value_t pos;
             float f_updated;
 
-            var_Get( p_input, "position", &pos );
+            var_Get( p_intf->p_sys->p_input, "position", &pos );
             f_updated = 10000. * pos.f_float;
             [o_timeslider setFloatValue: f_updated];
 
-            var_Get( p_input, "time", &time );
+            var_Get( p_intf->p_sys->p_input, "time", &time );
             i_seconds = time.i_time / 1000000;
 
             o_time = [NSString stringWithFormat: @"%d:%02d:%02d",
@@ -1106,7 +1169,7 @@ static VLCMain *_o_sharedMainInstance = nil;
         }
 
         /* Manage Playing status */
-        var_Get( p_input, "state", &val );
+        var_Get( p_intf->p_sys->p_input, "state", &val );
         if( p_intf->p_sys->i_play_status != val.i_int )
         {
             p_intf->p_sys->i_play_status = val.i_int;
@@ -1123,7 +1186,6 @@ static VLCMain *_o_sharedMainInstance = nil;
         [self setSubmenusEnabled: FALSE];
     }
 
-#undef p_input
 
     [self updateMessageArray];
 
@@ -1223,8 +1285,7 @@ static VLCMain *_o_sharedMainInstance = nil;
 - (void)resetScrollField
 {
     i_end_scroll = -1;
-#define p_input p_intf->p_sys->p_input
-    if( p_input && !p_input->b_die )
+    if( p_intf->p_sys->p_input && !p_intf->p_sys->p_input->b_die )
     {
         NSString *o_temp;
         playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
@@ -1234,22 +1295,20 @@ static VLCMain *_o_sharedMainInstance = nil;
             return;
         }
         o_temp = [NSString stringWithUTF8String:
-                  p_playlist->status.p_item->input.psz_name];
+                  p_playlist->status.p_item->p_input->psz_name];
         if( o_temp == NULL )
             o_temp = [NSString stringWithCString:
-                    p_playlist->status.p_item->input.psz_name];
+                    p_playlist->status.p_item->p_input->psz_name];
         [self setScrollField: o_temp stopAfter:-1];
         vlc_object_release( p_playlist );
         return;
     }
-#undef p_input
     [self setScrollField: _NS("VLC media player") stopAfter:-1];
 }
 
 - (void)updateMessageArray
 {
     int i_start, i_stop;
-    vlc_value_t quiet;
 
     vlc_mutex_lock( p_intf->p_sys->p_sub->p_lock );
     i_stop = *p_intf->p_sys->p_sub->pi_stop;
@@ -1303,23 +1362,6 @@ static VLCMain *_o_sharedMainInstance = nil;
             [o_msg_arr addObject: [o_msg_color autorelease]];
 
             [o_msg_lock unlock];
-
-            var_Get( p_intf->p_vlc, "verbose", &quiet );
-
-            if( i_type == 1 && quiet.i_int > -1 )
-            {
-                NSString *o_my_msg = [NSString stringWithFormat: @"%s: %s\n",
-                    p_intf->p_sys->p_sub->p_msg[i_start].psz_module,
-                    p_intf->p_sys->p_sub->p_msg[i_start].psz_msg];
-
-                NSRange s_r = NSMakeRange( [[o_err_msg string] length], 0 );
-                [o_err_msg setEditable: YES];
-                [o_err_msg setSelectedRange: s_r];
-                [o_err_msg insertText: o_my_msg];
-
-                [o_error makeKeyAndOrderFront: self];
-                [o_err_msg setEditable: NO];
-            }
         }
 
         vlc_mutex_lock( p_intf->p_sys->p_sub->p_lock );
@@ -1337,6 +1379,7 @@ static VLCMain *_o_sharedMainInstance = nil;
         [o_btn_play setToolTip: _NS("Pause")];
         [o_mi_play setTitle: _NS("Pause")];
         [o_dmi_play setTitle: _NS("Pause")];
+        [o_vmi_play setTitle: _NS("Pause")];
     }
     else
     {
@@ -1345,6 +1388,7 @@ static VLCMain *_o_sharedMainInstance = nil;
         [o_btn_play setToolTip: _NS("Play")];
         [o_mi_play setTitle: _NS("Play")];
         [o_dmi_play setTitle: _NS("Play")];
+        [o_vmi_play setTitle: _NS("Play")];
     }
 }
 
@@ -1620,6 +1664,22 @@ static VLCMain *_o_sharedMainInstance = nil;
     }
 }
 
+- (IBAction)showSFilters:(id)sender
+{
+    if ( o_sfilters == nil )
+    {
+        o_sfilters = [[VLCsFilters alloc] init];
+    }
+    if (!nib_sfilters_loaded)
+    {
+        nib_sfilters_loaded = [NSBundle loadNibNamed:@"SFilters" owner:self];
+        [o_sfilters initStrings];
+        [o_sfilters showAsPanel];
+    } else {
+        [o_sfilters showAsPanel];
+    }
+}
+
 - (IBAction)showBookmarks:(id)sender
 {
     /* we need the wizard-nib for the bookmarks's extract functionality */
@@ -1666,19 +1726,6 @@ static VLCMain *_o_sharedMainInstance = nil;
     } else {
         [o_update showUpdateWindow];
     }
-}
-
-- (IBAction)closeError:(id)sender
-{
-    vlc_value_t val;
-
-    if( [o_err_ckbk_surpress state] == NSOnState )
-    {
-        val.i_int = -1;
-        var_Set( p_intf->p_vlc, "verbose", val );
-    }
-    [o_err_msg setString: @""];
-    [o_error performClose: self];
 }
 
 - (IBAction)openReadMe:(id)sender
@@ -1752,6 +1799,16 @@ static VLCMain *_o_sharedMainInstance = nil;
         NSBeginInformationalAlertSheet(_NS("No CrashLog found"), @"Continue", nil, nil, o_msgs_panel, self, NULL, NULL, nil, _NS("Couldn't find any trace of a previous crash.") );
 
     }
+}
+
+- (IBAction)viewErrorsAndWarnings:(id)sender
+{
+    [[[self getInteractionList] getErrorPanel] showPanel];
+}
+
+- (IBAction)showMessagesPanel:(id)sender
+{
+    [o_msgs_panel makeKeyAndOrderFront: sender];
 }
 
 - (void)windowDidBecomeKey:(NSNotification *)o_notification

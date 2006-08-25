@@ -2,7 +2,7 @@
  * ctrl_button.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_button.cpp 14118 2006-02-01 18:06:48Z courmisch $
+ * $Id: ctrl_button.cpp 15803 2006-06-04 13:55:41Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -131,7 +131,7 @@ void CtrlButton::setImage( AnimBitmap *pImg )
 }
 
 
-void CtrlButton::onUpdate( Subject<AnimBitmap, void*> &rBitmap, void *arg )
+void CtrlButton::onUpdate( Subject<AnimBitmap> &rBitmap, void *arg )
 {
     notifyLayout();
 }

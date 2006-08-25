@@ -2,7 +2,7 @@
  * iteminfo.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: iteminfo.cpp 15370 2006-04-26 23:20:48Z xtophe $
+ * $Id: iteminfo.cpp 15629 2006-05-14 18:29:00Z zorglub $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -70,7 +70,7 @@ ItemInfoDialog::ItemInfoDialog( intf_thread_t *_p_intf,
 
     /* Create the standard info panel */
     info_panel = new MetaDataPanel(p_intf, panel, true );
-    info_panel->Update( &(p_item->input) );
+    info_panel->Update( p_item->p_input );
     /* Separation */
     wxStaticLine *static_line = new wxStaticLine( panel, wxID_OK );
 
@@ -81,16 +81,15 @@ ItemInfoDialog::ItemInfoDialog( intf_thread_t *_p_intf,
                                             wxU(_("&Cancel")) );
 
     /* Place everything in sizers */
-    wxBoxSizer *button_sizer = new wxBoxSizer( wxHORIZONTAL );
-    button_sizer->Add( ok_button, 0, wxALL, 5 );
-    button_sizer->Add( cancel_button, 0, wxALL, 5 );
-    button_sizer->Layout();
+    wxStdDialogButtonSizer *button_sizer = new wxStdDialogButtonSizer;
+    button_sizer->AddButton( ok_button );
+    button_sizer->AddButton( cancel_button );
+    button_sizer->Realize();
     wxBoxSizer *main_sizer = new wxBoxSizer( wxVERTICAL );
     wxBoxSizer *panel_sizer = new wxBoxSizer( wxVERTICAL );
     panel_sizer->Add( info_panel, 1, wxEXPAND | wxALL, 5 );
     panel_sizer->Add( static_line, 0, wxEXPAND | wxALL, 5 );
-    panel_sizer->Add( button_sizer, 0, wxALIGN_LEFT | wxALIGN_BOTTOM |
-                      wxALL, 5 );
+    panel_sizer->Add( button_sizer, 0, wxEXPAND | wxALL, 5 );
     panel_sizer->Layout();
     panel->SetSizerAndFit( panel_sizer );
     main_sizer->Add( panel, 1, wxGROW, 0 );
@@ -108,10 +107,10 @@ ItemInfoDialog::~ItemInfoDialog()
  *****************************************************************************/
 void ItemInfoDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
 {
-    vlc_mutex_lock( &p_item->input.lock );
-    p_item->input.psz_name = info_panel->GetName();
-    p_item->input.psz_uri = info_panel->GetURI();
-    vlc_mutex_unlock( &p_item->input.lock );
+    vlc_mutex_lock( &p_item->p_input->lock );
+    p_item->p_input->psz_name = info_panel->GetName();
+    p_item->p_input->psz_uri = info_panel->GetURI();
+    vlc_mutex_unlock( &p_item->p_input->lock );
     EndModal( wxID_OK );
 }
 

@@ -9,11 +9,11 @@ NULL =
 # which have makefiles with distribution information.
 #  - intl should come before modules and . because all the code uses gettext
 #  - modules should come before . because vlc needs the builtins
-#  - . should come before mozilla/bindings because the plugin needs libvlc_pic.a
+#  - . should come before mozilla/bindings because the plugin needs libvlc.a
 #  - po should come before . because VLC.app needs the pofiles
 #  - loader should come before modules because some plugins need it
 SUBDIRS = intl loader src modules po . mozilla bindings activex share m4 doc
-DIST_SUBDIRS = $(SUBDIRS) debian ipkg
+DIST_SUBDIRS = $(SUBDIRS)  ipkg
 
 EXTRA_DIST = \
 	HACKING \
@@ -47,10 +47,6 @@ endif
 # Tell aclocal to use -I m4. Wonder if it really works.
 ACLOCAL_AMFLAGS = -I m4
 
-# XXX: these flags could be set in configure.ac, but we set them here
-# because old versions of automake don't support them in configure.ac.
-AUTOMAKE_OPTIONS = dist-bzip2
-
 ###############################################################################
 # MacOS X project
 ###############################################################################
@@ -77,12 +73,18 @@ EXTRA_DIST += \
 	extras/MacOSX/Resources/English.lproj/Extended.nib/classes.nib \
 	extras/MacOSX/Resources/English.lproj/Extended.nib/info.nib \
 	extras/MacOSX/Resources/English.lproj/Extended.nib/keyedobjects.nib \
+	extras/MacOSX/Resources/English.lproj/SFilters.nib/classes.nib \
+	extras/MacOSX/Resources/English.lproj/SFilters.nib/info.nib \
+	extras/MacOSX/Resources/English.lproj/SFilters.nib/keyedobjects.nib \
 	extras/MacOSX/Resources/English.lproj/Update.nib/classes.nib \
 	extras/MacOSX/Resources/English.lproj/Update.nib/info.nib \
 	extras/MacOSX/Resources/English.lproj/Update.nib/keyedobjects.nib \
 	extras/MacOSX/Resources/English.lproj/Interaction.nib/classes.nib \
 	extras/MacOSX/Resources/English.lproj/Interaction.nib/info.nib \
 	extras/MacOSX/Resources/English.lproj/Interaction.nib/keyedobjects.nib \
+	extras/MacOSX/Resources/English.lproj/InteractionErrorPanel.nib/classes.nib \
+	extras/MacOSX/Resources/English.lproj/InteractionErrorPanel.nib/info.nib \
+	extras/MacOSX/Resources/English.lproj/InteractionErrorPanel.nib/keyedobjects.nib \
 	extras/MacOSX/Resources/English.lproj/InfoPlist.strings \
 	extras/MacOSX/Resources/a52.icns \
 	extras/MacOSX/Resources/aac.icns \
@@ -161,11 +163,11 @@ EXTRA_DIST += \
 	extras/MacOSX/Delete_Preferences.app/Contents/Resources/applet.icns \
 	extras/MacOSX/Delete_Preferences.app/Contents/Resources/applet.rsrc \
 	extras/MacOSX/Delete_Preferences.app/Contents/Resources/Scripts/main.scpt \
-	extras/MacOSX/plugin/English.lproj/InfoPlist.strings \
-	extras/MacOSX/plugin/InstallerInfo.plist \
 	extras/MacOSX/plugin/Info.plist \
-	extras/MacOSX/plugin/pbdevelopment.plist \
+	extras/MacOSX/plugin/InstallerInfo.plist \
 	extras/MacOSX/plugin/InstallerDescription.plist \
+	extras/MacOSX/plugin/pbdevelopment.plist \
+	extras/MacOSX/plugin/English.lproj/InfoPlist.strings \
 	$(NULL)
 
 ###############################################################################
@@ -212,9 +214,11 @@ bin_SCRIPTS = vlc-config
 vlc-config: $(top_builddir)/config.status $(top_builddir)/vlc-config.in
 	$(SHELL) ./config.status --file=$@
 	chmod 0755 $@
+	touch $@
 
 vlc-config.in: vlc-config.in.in
 	./config.status --recheck
+	touch $@
 
 CLEANFILES = $(BUILT_SOURCES_clean) stamp-builtin
 DISTCLEANFILES = $(BUILT_SOURCES_distclean) vlc-config.in compile
@@ -242,7 +246,7 @@ vlc_LDADD = $(DATA_win32_rc) $(LIBVLC)
 
 vlc_CFLAGS = `$(VLC_CONFIG) --cflags vlc`
 if USE_LIBTOOL
-vlc_LDFLAGS = `$(VLC_CONFIG) --libs vlc`
+vlc_LDFLAGS = `$(VLC_CONFIG) --libs vlc` -version-info 0:0:0
 LIB_libvlc = libvlc.la
 LIBVLC = src/$(LIB_libvlc)
 else
@@ -345,6 +349,8 @@ VLC-release.app: vlc
 	mkdir -p $(top_builddir)/tmp/modules/audio_output
 	mkdir -p $(top_builddir)/tmp/modules/gui/macosx
 	for i in \
+	    AppleRemote.h \
+	    AppleRemote.m \
 	    about.h \
 	    about.m \
 	    applescript.h \
@@ -379,6 +385,8 @@ VLC-release.app: vlc
 	    extended.m \
 	    bookmarks.h \
 	    bookmarks.m \
+	    sfilters.h \
+	    sfilters.m \
 	    update.h \
 	    update.m \
 	    interaction.h \
@@ -481,6 +489,8 @@ VLC.app: vlc
 	mkdir -p $(top_builddir)/tmp/modules/audio_output
 	mkdir -p $(top_builddir)/tmp/modules/gui/macosx
 	for i in \
+	    AppleRemote.h \
+	    AppleRemote.m \
 	    about.h \
 	    about.m \
 	    applescript.h \
@@ -515,6 +525,8 @@ VLC.app: vlc
 	    extended.m \
 	    bookmarks.h \
 	    bookmarks.m \
+	    sfilters.h \
+	    sfilters.m \
 	    update.h \
 	    update.m \
 	    interaction.h \
@@ -922,8 +934,9 @@ update-po:
 	    | sort ; \
 	  echo "" ; \
 	  echo "# modules" ; \
-	  find modules -name '*.[chm]' -o -name '*.[ch]pp' \
+	  find modules -name '*.[chm]' -o -name '*.[ch]pp' -o -name 'qt4/ui/*.ui'\
 	    | grep -v '\(\.moc\.\|gui/gtk2/\)' \
+	    | grep -vE 'qt4/ui/.*.h' |grep -v qt4/resources.cpp \
 	    | sort ; \
 	} > $(top_srcdir)/po/POTFILES.in
 	rm -f $(top_srcdir)/po/vlc.pot

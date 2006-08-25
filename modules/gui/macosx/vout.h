@@ -2,7 +2,7 @@
  * vout.h: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2001-2006 the VideoLAN team
- * $Id: vout.h 15096 2006-04-04 20:41:44Z fkuehne $
+ * $Id: vout.h 15984 2006-07-06 23:19:12Z damienf $
  *
  * Authors: Colin Delacroix <colin@zoy.org>
  *          Florian G. Pflug <fgp@phlo.org>
@@ -119,7 +119,6 @@
     NSRect        * s_frame;
 
     vout_thread_t * p_real_vout;
-    Ptr             p_fullscreen_state;
     vlc_bool_t      b_init_ok;
     vlc_bool_t      b_black;
 }

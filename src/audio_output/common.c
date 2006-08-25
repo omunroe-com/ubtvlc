@@ -2,7 +2,7 @@
  * common.c : audio output management of common data structures
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: common.c 13905 2006-01-12 23:10:04Z dionoea $
+ * $Id: common.c 16009 2006-07-12 12:34:07Z sam $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -294,6 +294,11 @@ void aout_FormatsPrint( aout_instance_t * p_aout, const char * psz_text,
 void aout_FifoInit( aout_instance_t * p_aout, aout_fifo_t * p_fifo,
                     uint32_t i_rate )
 {
+    if( i_rate == 0 )
+    {
+        msg_Err( p_aout, "initialising fifo with zero divider" );
+    }
+
     p_fifo->p_first = NULL;
     p_fifo->pp_last = &p_fifo->p_first;
     aout_DateInit( &p_fifo->end_date, i_rate );

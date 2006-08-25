@@ -2,7 +2,7 @@
  * about.m: MacOS X About Panel
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: about.m 13905 2006-01-12 23:10:04Z dionoea $
+ * $Id: about.m 15292 2006-04-20 20:32:14Z fkuehne $
  *
  * Authors: Derk-Jan Hartman <thedj@users.sourceforge.net>
  *
@@ -76,9 +76,13 @@ static VLAboutBox *_o_sharedInstance = nil;
         o_version = [o_info_dict objectForKey:@"CFBundleVersion"];
         
         /* setup the creator / revision field */
+        if( VLC_Changeset() != "exported" )
         [o_revision_field setStringValue: [NSString stringWithFormat: \
             _NS("Compiled by %s, based on SVN revision %s"), VLC_CompileBy(), \
             VLC_Changeset()]];
+        else
+        [o_revision_field setStringValue: [NSString stringWithFormat: \
+            _NS("Compiled by %s"), VLC_CompileBy()]];
     
         /* Setup the nameversion field */
         o_name_version = [NSString stringWithFormat:@"Version %@", o_version];

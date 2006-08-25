@@ -16,7 +16,7 @@ SUFFIXES = _plugin$(LIBEXT) _plugin.a
 
 libvlcdir = $(libdir)/vlc/$(basedir)
 
-EXTRA_LIBRARIES =  libmux_dummy_plugin.a libmux_dummy.a libmux_dummy_pic.a libmux_avi_plugin.a libmux_avi.a libmux_avi_pic.a libmux_ogg_plugin.a libmux_ogg.a libmux_ogg_pic.a libmux_mp4_plugin.a libmux_mp4.a libmux_mp4_pic.a libmux_asf_plugin.a libmux_asf.a libmux_asf_pic.a libmux_wav_plugin.a libmux_wav.a libmux_wav_pic.a libmux_mpjpeg_plugin.a libmux_mpjpeg.a libmux_mpjpeg_pic.a
+EXTRA_LIBRARIES =  libmux_dummy_plugin.a libmux_dummy.a libmux_avi_plugin.a libmux_avi.a libmux_ogg_plugin.a libmux_ogg.a libmux_mp4_plugin.a libmux_mp4.a libmux_asf_plugin.a libmux_asf.a libmux_wav_plugin.a libmux_wav.a libmux_mpjpeg_plugin.a libmux_mpjpeg.a
 EXTRA_LTLIBRARIES =  libmux_dummy_plugin.la libmux_dummy_builtin.la libmux_avi_plugin.la libmux_avi_builtin.la libmux_ogg_plugin.la libmux_ogg_builtin.la libmux_mp4_plugin.la libmux_mp4_builtin.la libmux_asf_plugin.la libmux_asf_builtin.la libmux_wav_plugin.la libmux_wav_builtin.la libmux_mpjpeg_plugin.la libmux_mpjpeg_builtin.la
 
 include Modules.am
@@ -24,11 +24,14 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
+LIBVLC = -L$(top_builddir)/src -lvlc
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
+
+nice:
+	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -42,7 +45,6 @@ else
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
 	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --list plugin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
 	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" = "pic"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 endif
@@ -79,9 +81,6 @@ else
 	mkdir -p -- "$(DESTDIR)$(libvlcdir)"
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" ; 	      $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" || exit $$?; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-endif
 endif
 
 uninstall-local:
@@ -90,9 +89,6 @@ if USE_LIBTOOL
 else
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" ; 	      rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" || true; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" || true; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" || true; 	      ;; 	  esac; 	done
-endif
 endif
 
 # The mux_dummy plugin
@@ -106,19 +102,14 @@ libmux_dummy_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin mux_dummy`
 libmux_dummy_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mux_dummy`
 libmux_dummy_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mux_dummy`
 libmux_dummy_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin mux_dummy` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libmux_dummy_plugin_la_LIBADD = $(LTLIBVLC)
-
-libmux_dummy_pic_a_SOURCES = $(SOURCES_mux_dummy)
-libmux_dummy_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mux_dummy`
-libmux_dummy_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mux_dummy`
-libmux_dummy_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mux_dummy`
 
 libmux_dummy_a_SOURCES = $(SOURCES_mux_dummy)
 libmux_dummy_builtin_la_SOURCES = $(SOURCES_mux_dummy)
-libmux_dummy_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_dummy`
-libmux_dummy_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_dummy`
-libmux_dummy_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_dummy`
+libmux_dummy_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) mux_dummy`
+libmux_dummy_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) mux_dummy`
+libmux_dummy_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) mux_dummy`
 libmux_dummy_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_dummy`
 libmux_dummy_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_dummy`
 libmux_dummy_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_dummy`
@@ -134,19 +125,14 @@ libmux_avi_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin mux_avi`
 libmux_avi_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mux_avi`
 libmux_avi_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mux_avi`
 libmux_avi_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin mux_avi` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libmux_avi_plugin_la_LIBADD = $(LTLIBVLC)
-
-libmux_avi_pic_a_SOURCES = $(SOURCES_mux_avi)
-libmux_avi_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mux_avi`
-libmux_avi_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mux_avi`
-libmux_avi_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mux_avi`
 
 libmux_avi_a_SOURCES = $(SOURCES_mux_avi)
 libmux_avi_builtin_la_SOURCES = $(SOURCES_mux_avi)
-libmux_avi_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_avi`
-libmux_avi_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_avi`
-libmux_avi_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_avi`
+libmux_avi_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) mux_avi`
+libmux_avi_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) mux_avi`
+libmux_avi_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) mux_avi`
 libmux_avi_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_avi`
 libmux_avi_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_avi`
 libmux_avi_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_avi`
@@ -162,19 +148,14 @@ libmux_ogg_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin mux_ogg`
 libmux_ogg_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mux_ogg`
 libmux_ogg_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mux_ogg`
 libmux_ogg_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin mux_ogg` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libmux_ogg_plugin_la_LIBADD = $(LTLIBVLC)
-
-libmux_ogg_pic_a_SOURCES = $(SOURCES_mux_ogg)
-libmux_ogg_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mux_ogg`
-libmux_ogg_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mux_ogg`
-libmux_ogg_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mux_ogg`
 
 libmux_ogg_a_SOURCES = $(SOURCES_mux_ogg)
 libmux_ogg_builtin_la_SOURCES = $(SOURCES_mux_ogg)
-libmux_ogg_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_ogg`
-libmux_ogg_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_ogg`
-libmux_ogg_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_ogg`
+libmux_ogg_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) mux_ogg`
+libmux_ogg_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) mux_ogg`
+libmux_ogg_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) mux_ogg`
 libmux_ogg_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_ogg`
 libmux_ogg_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_ogg`
 libmux_ogg_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_ogg`
@@ -190,19 +171,14 @@ libmux_mp4_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin mux_mp4`
 libmux_mp4_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mux_mp4`
 libmux_mp4_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mux_mp4`
 libmux_mp4_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin mux_mp4` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libmux_mp4_plugin_la_LIBADD = $(LTLIBVLC)
-
-libmux_mp4_pic_a_SOURCES = $(SOURCES_mux_mp4)
-libmux_mp4_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mux_mp4`
-libmux_mp4_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mux_mp4`
-libmux_mp4_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mux_mp4`
 
 libmux_mp4_a_SOURCES = $(SOURCES_mux_mp4)
 libmux_mp4_builtin_la_SOURCES = $(SOURCES_mux_mp4)
-libmux_mp4_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_mp4`
-libmux_mp4_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_mp4`
-libmux_mp4_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_mp4`
+libmux_mp4_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) mux_mp4`
+libmux_mp4_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) mux_mp4`
+libmux_mp4_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) mux_mp4`
 libmux_mp4_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_mp4`
 libmux_mp4_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_mp4`
 libmux_mp4_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_mp4`
@@ -218,19 +194,14 @@ libmux_asf_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin mux_asf`
 libmux_asf_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mux_asf`
 libmux_asf_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mux_asf`
 libmux_asf_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin mux_asf` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libmux_asf_plugin_la_LIBADD = $(LTLIBVLC)
-
-libmux_asf_pic_a_SOURCES = $(SOURCES_mux_asf)
-libmux_asf_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mux_asf`
-libmux_asf_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mux_asf`
-libmux_asf_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mux_asf`
 
 libmux_asf_a_SOURCES = $(SOURCES_mux_asf)
 libmux_asf_builtin_la_SOURCES = $(SOURCES_mux_asf)
-libmux_asf_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_asf`
-libmux_asf_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_asf`
-libmux_asf_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_asf`
+libmux_asf_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) mux_asf`
+libmux_asf_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) mux_asf`
+libmux_asf_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) mux_asf`
 libmux_asf_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_asf`
 libmux_asf_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_asf`
 libmux_asf_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_asf`
@@ -246,19 +217,14 @@ libmux_wav_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin mux_wav`
 libmux_wav_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mux_wav`
 libmux_wav_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mux_wav`
 libmux_wav_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin mux_wav` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libmux_wav_plugin_la_LIBADD = $(LTLIBVLC)
-
-libmux_wav_pic_a_SOURCES = $(SOURCES_mux_wav)
-libmux_wav_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mux_wav`
-libmux_wav_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mux_wav`
-libmux_wav_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mux_wav`
 
 libmux_wav_a_SOURCES = $(SOURCES_mux_wav)
 libmux_wav_builtin_la_SOURCES = $(SOURCES_mux_wav)
-libmux_wav_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_wav`
-libmux_wav_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_wav`
-libmux_wav_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_wav`
+libmux_wav_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) mux_wav`
+libmux_wav_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) mux_wav`
+libmux_wav_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) mux_wav`
 libmux_wav_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_wav`
 libmux_wav_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_wav`
 libmux_wav_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_wav`
@@ -274,19 +240,14 @@ libmux_mpjpeg_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin mux_mpjpeg`
 libmux_mpjpeg_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mux_mpjpeg`
 libmux_mpjpeg_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mux_mpjpeg`
 libmux_mpjpeg_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin mux_mpjpeg` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libmux_mpjpeg_plugin_la_LIBADD = $(LTLIBVLC)
-
-libmux_mpjpeg_pic_a_SOURCES = $(SOURCES_mux_mpjpeg)
-libmux_mpjpeg_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mux_mpjpeg`
-libmux_mpjpeg_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mux_mpjpeg`
-libmux_mpjpeg_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mux_mpjpeg`
 
 libmux_mpjpeg_a_SOURCES = $(SOURCES_mux_mpjpeg)
 libmux_mpjpeg_builtin_la_SOURCES = $(SOURCES_mux_mpjpeg)
-libmux_mpjpeg_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_mpjpeg`
-libmux_mpjpeg_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_mpjpeg`
-libmux_mpjpeg_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_mpjpeg`
+libmux_mpjpeg_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) mux_mpjpeg`
+libmux_mpjpeg_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) mux_mpjpeg`
+libmux_mpjpeg_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) mux_mpjpeg`
 libmux_mpjpeg_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_mpjpeg`
 libmux_mpjpeg_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_mpjpeg`
 libmux_mpjpeg_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_mpjpeg`

@@ -2,7 +2,7 @@
  * cmd_minimize.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: cmd_minimize.cpp 14118 2006-02-01 18:06:48Z courmisch $
+ * $Id: cmd_minimize.cpp 15598 2006-05-13 17:54:21Z ipkiss $
  *
  * Authors: Mohammed Adnène Trojette     <adn@via.ecp.fr>
  *
@@ -24,10 +24,51 @@
 #include "cmd_minimize.hpp"
 #include "../src/os_factory.hpp"
 
+
 void CmdMinimize::execute()
 {
     // Get the instance of OSFactory
     OSFactory *pOsFactory = OSFactory::instance( getIntf() );
     pOsFactory->minimize();
+}
+
+
+void CmdRestore::execute()
+{
+    // Get the instance of OSFactory
+    OSFactory *pOsFactory = OSFactory::instance( getIntf() );
+    pOsFactory->restore();
+}
+
+
+void CmdAddInTray::execute()
+{
+    // Get the instance of OSFactory
+    OSFactory *pOsFactory = OSFactory::instance( getIntf() );
+    pOsFactory->addInTray();
+}
+
+
+void CmdRemoveFromTray::execute()
+{
+    // Get the instance of OSFactory
+    OSFactory *pOsFactory = OSFactory::instance( getIntf() );
+    pOsFactory->removeFromTray();
+}
+
+
+void CmdAddInTaskBar::execute()
+{
+    // Get the instance of OSFactory
+    OSFactory *pOsFactory = OSFactory::instance( getIntf() );
+    pOsFactory->addInTaskBar();
+}
+
+
+void CmdRemoveFromTaskBar::execute()
+{
+    // Get the instance of OSFactory
+    OSFactory *pOsFactory = OSFactory::instance( getIntf() );
+    pOsFactory->removeFromTaskBar();
 }
 

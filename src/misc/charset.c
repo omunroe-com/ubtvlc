@@ -4,7 +4,7 @@
  * See also unicode.c for Unicode to locale conversion helpers.
  *
  * Copyright (C) 2003-2006 the VideoLAN team
- * $Id: charset.c 15081 2006-04-03 01:39:59Z hartman $
+ * $Id: charset.c 15615 2006-05-14 13:04:48Z courmisch $
  *
  * Authors: Derk-Jan Hartman <thedj at users.sf.net>
  *          Christophe Massiot
@@ -37,12 +37,11 @@
 #if !defined WIN32
 # if HAVE_LANGINFO_CODESET
 #  include <langinfo.h>
-# else
-#  if HAVE_SETLOCALE
-#   include <locale.h>
-#  endif
 # endif
-#elif defined WIN32
+# if HAVE_LOCALE_H
+#  include <locale.h>
+# endif
+#else
 # include <windows.h>
 #endif
 
@@ -284,7 +283,7 @@ vlc_bool_t vlc_current_charset( char **psz_charset )
     char buf[2 + 10 + 1];
 
     /* Woe32 has a function returning the locale's codepage as a number.  */
-    sprintf( buf, "CP%u", GetACP() );
+    snprintf( buf, sizeof( buf ), "CP%u", GetACP() );
     psz_codeset = buf;
 
 #elif defined OS2
@@ -313,7 +312,7 @@ vlc_bool_t vlc_current_charset( char **psz_charset )
             psz_codeset = "";
         else
         {
-            sprintf( buf, "CP%u", cp[0] );
+            snprintf( buf, sizeof( buf ), "CP%u", cp[0] );
             psz_codeset = buf;
         }
     }
@@ -565,11 +564,12 @@ const char *FindFallbackEncoding( const char *locale )
  */
 const char *GetFallbackEncoding( void )
 {
+#ifndef WIN32
     const char *psz_lang = NULL;
 
     /* Some systems (like Darwin, SunOS 4 or DJGPP) have only the C locale.
      * Therefore we don't use setlocale here; it would return "C". */
-#  if HAVE_SETLOCALE && !__APPLE__
+#  if defined (HAVE_SETLOCALE) && !defined ( __APPLE__)
     psz_lang = setlocale( LC_ALL, NULL );
 #  endif
     if( psz_lang == NULL || psz_lang[0] == '\0' )
@@ -584,6 +584,17 @@ const char *GetFallbackEncoding( void )
     }
 
     return FindFallbackEncoding( psz_lang );
+#else
+    /*
+     * This should be thread-safe given GetACP() should always return
+     * the same result.
+     */
+    static char buf[2 + 10 + 1] = "";
+
+    if( buf[0] == 0 )
+        snprintf( buf, sizeof( buf ), "CP%u", GetACP() );
+    return buf;
+#endif
 }
 
 /**

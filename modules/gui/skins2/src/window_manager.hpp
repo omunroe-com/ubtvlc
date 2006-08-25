@@ -2,7 +2,7 @@
  * window_manager.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: window_manager.hpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: window_manager.hpp 16164 2006-07-30 12:07:45Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -44,41 +44,74 @@ class Popup;
 class WindowManager: public SkinObject
 {
     public:
+        /// Direction of the resizing
+        enum Direction_t
+        {
+            kResizeE,   // East
+            kResizeSE,  // South-East
+            kResizeS,   // South
+            kNone       // Reserved for internal use
+        };
+
         /// Constructor
         WindowManager( intf_thread_t *pIntf);
 
         /// Destructor
         virtual ~WindowManager();
 
-        /// Add a window to the list of known windows. Necessary if you want
-        /// your window to be movable...
+        /**
+         * Add a window to the list of known windows. Necessary if you want
+         * your window to be movable...
+         */
         void registerWindow( TopWindow &rWindow );
 
         /// Remove a previously registered window
         void unregisterWindow( TopWindow &rWindow );
 
-        /// Tell the window manager that a move is initiated for pWindow.
+        /// Tell the window manager that a move is initiated for rWindow
         void startMove( TopWindow &rWindow );
 
-        /// Tell the window manager that the current move ended.
+        /// Tell the window manager that the current move ended
         void stopMove();
 
-        /// Move the pWindow window to (left, top), and move all its
-        /// anchored windows.
-        /// If a new anchoring is detected, the windows will move accordingly.
+        /**
+         * Move the rWindow window to (left, top), and move all its
+         * anchored windows.
+         * If a new anchoring is detected, the windows will move accordingly.
+         */
         void move( TopWindow &rWindow, int left, int top ) const;
+
+        /// Tell the window manager that a resize is initiated for rWindow
+        void startResize( GenericLayout &rLayout, Direction_t direction );
+
+        /// Tell the window manager that the current resizing ended
+        void stopResize();
+
+        /**
+         * Resize the rWindow window to (width, height), and move all its
+         * anchored windows, if some anchors are moved during the resizing.
+         * If a new anchoring is detected, the windows will move (or resize)
+         * accordingly.
+         */
+        void resize( GenericLayout &rLayout, int width, int height ) const;
 
         /// Raise all the registered windows
         void raiseAll() const;
 
         /// Show all the registered windows
-        void showAll(bool firstTime = false) const;
+        void showAll( bool firstTime = false ) const;
 
         /// Hide all the registered windows
         void hideAll() const;
 
         /// Synchronize the windows with their visibility variable
         void synchVisibility() const;
+
+        /// Save the current visibility of the windows
+        void saveVisibility();
+
+        /// Restore the saved visibility of the windows
+        void restoreVisibility() const;
 
         /// Raise the given window
         void raise( TopWindow &rWindow ) const { rWindow.raise(); }
@@ -139,9 +172,25 @@ class WindowManager: public SkinObject
         map<TopWindow*, WinSet_t> m_dependencies;
         /// Store all the windows
         WinSet_t m_allWindows;
-        /// Store the moving windows; this set is updated at every start of
-        /// move.
+        /**
+         * Store the windows that were visible when saveVisibility() was
+         * last called.
+         */
+        WinSet_t m_savedWindows;
+        /// Store the moving windows
+        /**
+         * This set is updated at every start of move.
+         */
         WinSet_t m_movingWindows;
+        /**
+         * Store the moving windows in the context of resizing
+         * These sets are updated at every start of move
+         */
+        //@{
+        WinSet_t m_resizeMovingE;
+        WinSet_t m_resizeMovingS;
+        WinSet_t m_resizeMovingSE;
+        //@}
         /// Indicate whether the windows are currently on top
         VariablePtr m_cVarOnTop;
         /// Magnetism of the screen edges (= scope of action)
@@ -150,6 +199,8 @@ class WindowManager: public SkinObject
         int m_alpha;
         /// Alpha value of the moving windows
         int m_moveAlpha;
+        /// Direction of the current resizing
+        Direction_t m_direction;
         /// Tooltip
         Tooltip *m_pTooltip;
         /// Active popup, if any

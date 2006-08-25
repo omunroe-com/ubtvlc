@@ -2,7 +2,7 @@
  * win32_loop.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: win32_loop.cpp 14246 2006-02-11 18:01:42Z ipkiss $
+ * $Id: win32_loop.cpp 15704 2006-05-21 22:01:14Z dionoea $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -72,6 +72,20 @@ Win32Loop::Win32Loop( intf_thread_t *pIntf ): OSLoop( pIntf )
     virtKeyToVlcKey[VK_END] = KEY_END;
     virtKeyToVlcKey[VK_PRIOR] = KEY_PAGEUP;
     virtKeyToVlcKey[VK_NEXT] = KEY_PAGEDOWN;
+    virtKeyToVlcKey[VK_BROWSER_BACK] = KEY_BROWSER_BACK;
+    virtKeyToVlcKey[VK_BROWSER_FORWARD] = KEY_BROWSER_FORWARD;
+    virtKeyToVlcKey[VK_BROWSER_REFRESH] = KEY_BROWSER_REFRESH;
+    virtKeyToVlcKey[VK_BROWSER_STOP] = KEY_BROWSER_STOP;
+    virtKeyToVlcKey[VK_BROWSER_SEARCH] = KEY_BROWSER_SEARCH;
+    virtKeyToVlcKey[VK_BROWSER_FAVORITES] = KEY_BROWSER_FAVORITES;
+    virtKeyToVlcKey[VK_BROWSER_HOME] = KEY_BROWSER_HOME;
+    virtKeyToVlcKey[VK_VOLUME_MUTE] = KEY_VOLUME_MUTE;
+    virtKeyToVlcKey[VK_VOLUME_DOWN] = KEY_VOLUME_DOWN;
+    virtKeyToVlcKey[VK_VOLUME_UP] = KEY_VOLUME_UP;
+    virtKeyToVlcKey[VK_MEDIA_NEXT_TRACK] = KEY_MEDIA_NEXT_TRACK;
+    virtKeyToVlcKey[VK_MEDIA_PREV_TRACK] = KEY_MEDIA_PREV_TRACK;
+    virtKeyToVlcKey[VK_MEDIA_STOP] = KEY_MEDIA_STOP;
+    virtKeyToVlcKey[VK_MEDIA_PLAY_PAUSE] = KEY_MEDIA_PLAY_PAUSE;
 }
 
 

@@ -2,7 +2,7 @@
  * generic_layout.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: generic_layout.cpp 15508 2006-05-01 13:34:54Z ipkiss $
+ * $Id: generic_layout.cpp 16166 2006-07-30 13:04:27Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -26,8 +26,10 @@
 #include "top_window.hpp"
 #include "os_factory.hpp"
 #include "os_graphics.hpp"
+#include "var_manager.hpp"
 #include "../controls/ctrl_generic.hpp"
 #include "../controls/ctrl_video.hpp"
+#include "../utils/var_bool.hpp"
 
 
 GenericLayout::GenericLayout( intf_thread_t *pIntf, int width, int height,
@@ -36,12 +38,16 @@ GenericLayout::GenericLayout( intf_thread_t *pIntf, int width, int height,
     SkinObject( pIntf ), m_pWindow( NULL ), m_width( width ),
     m_height( height ), m_minWidth( minWidth ), m_maxWidth( maxWidth ),
     m_minHeight( minHeight ), m_maxHeight( maxHeight ), m_pVideoControl( NULL ),
-    m_visible( false )
+    m_visible( false ), m_pVarActive( NULL )
 {
     // Get the OSFactory
     OSFactory *pOsFactory = OSFactory::instance( getIntf() );
     // Create the graphics buffer
     m_pImage = pOsFactory->createOSGraphics( width, height );
+
+    // Create the "active layout" variable and register it in the manager
+    m_pVarActive = new VarBoolImpl( pIntf );
+    VarManager::instance( pIntf )->registerVar( VariablePtr( m_pVarActive ) );
 }
 
 
@@ -152,29 +158,6 @@ void GenericLayout::onControlUpdate( const CtrlGeneric &rCtrl,
 
 void GenericLayout::resize( int width, int height )
 {
-    // Check boundaries
-    if( width < m_minWidth )
-    {
-        width = m_minWidth;
-    }
-    if( width > m_maxWidth )
-    {
-        width = m_maxWidth;
-    }
-    if( height < m_minHeight )
-    {
-        height = m_minHeight;
-    }
-    if( height > m_maxHeight )
-    {
-        height = m_maxHeight;
-    }
-
-    if( width == m_width && height == m_height )
-    {
-        return;
-    }
-
     // Update the window size
     m_width = width;
     m_height = height;
@@ -247,8 +230,8 @@ void GenericLayout::refreshRect( int x, int y, int width, int height )
         if( y + height > m_height )
             height = m_height - y;
 
-        // Refresh the window... but do not paint on a video control!
-        if( !m_pVideoControl )
+        // Refresh the window... but do not paint on a visible video control!
+        if( !m_pVideoControl || !m_pVideoControl->isVisible() )
         {
             // No video control, we can safely repaint the rectangle
             pWindow->refresh( x, y, width, height );

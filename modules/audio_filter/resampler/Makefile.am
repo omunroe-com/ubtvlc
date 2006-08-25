@@ -16,7 +16,7 @@ SUFFIXES = _plugin$(LIBEXT) _plugin.a
 
 libvlcdir = $(libdir)/vlc/$(basedir)
 
-EXTRA_LIBRARIES =  libtrivial_resampler_plugin.a libtrivial_resampler.a libtrivial_resampler_pic.a libugly_resampler_plugin.a libugly_resampler.a libugly_resampler_pic.a liblinear_resampler_plugin.a liblinear_resampler.a liblinear_resampler_pic.a libbandlimited_resampler_plugin.a libbandlimited_resampler.a libbandlimited_resampler_pic.a
+EXTRA_LIBRARIES =  libtrivial_resampler_plugin.a libtrivial_resampler.a libugly_resampler_plugin.a libugly_resampler.a liblinear_resampler_plugin.a liblinear_resampler.a libbandlimited_resampler_plugin.a libbandlimited_resampler.a
 EXTRA_LTLIBRARIES =  libtrivial_resampler_plugin.la libtrivial_resampler_builtin.la libugly_resampler_plugin.la libugly_resampler_builtin.la liblinear_resampler_plugin.la liblinear_resampler_builtin.la libbandlimited_resampler_plugin.la libbandlimited_resampler_builtin.la
 
 include Modules.am
@@ -24,11 +24,14 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
+LIBVLC = -L$(top_builddir)/src -lvlc
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
+
+nice:
+	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -42,7 +45,6 @@ else
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
 	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --list plugin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
 	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" = "pic"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 endif
@@ -79,9 +81,6 @@ else
 	mkdir -p -- "$(DESTDIR)$(libvlcdir)"
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" ; 	      $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" || exit $$?; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-endif
 endif
 
 uninstall-local:
@@ -90,9 +89,6 @@ if USE_LIBTOOL
 else
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" ; 	      rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" || true; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" || true; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" || true; 	      ;; 	  esac; 	done
-endif
 endif
 
 # The trivial_resampler plugin
@@ -106,19 +102,14 @@ libtrivial_resampler_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin trivial_r
 libtrivial_resampler_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin trivial_resampler`
 libtrivial_resampler_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin trivial_resampler`
 libtrivial_resampler_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin trivial_resampler` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libtrivial_resampler_plugin_la_LIBADD = $(LTLIBVLC)
-
-libtrivial_resampler_pic_a_SOURCES = $(SOURCES_trivial_resampler)
-libtrivial_resampler_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic trivial_resampler`
-libtrivial_resampler_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic trivial_resampler`
-libtrivial_resampler_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic trivial_resampler`
 
 libtrivial_resampler_a_SOURCES = $(SOURCES_trivial_resampler)
 libtrivial_resampler_builtin_la_SOURCES = $(SOURCES_trivial_resampler)
-libtrivial_resampler_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin trivial_resampler`
-libtrivial_resampler_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin trivial_resampler`
-libtrivial_resampler_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin trivial_resampler`
+libtrivial_resampler_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) trivial_resampler`
+libtrivial_resampler_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) trivial_resampler`
+libtrivial_resampler_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) trivial_resampler`
 libtrivial_resampler_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin trivial_resampler`
 libtrivial_resampler_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin trivial_resampler`
 libtrivial_resampler_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin trivial_resampler`
@@ -134,19 +125,14 @@ libugly_resampler_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin ugly_resampl
 libugly_resampler_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin ugly_resampler`
 libugly_resampler_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin ugly_resampler`
 libugly_resampler_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin ugly_resampler` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libugly_resampler_plugin_la_LIBADD = $(LTLIBVLC)
-
-libugly_resampler_pic_a_SOURCES = $(SOURCES_ugly_resampler)
-libugly_resampler_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ugly_resampler`
-libugly_resampler_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ugly_resampler`
-libugly_resampler_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ugly_resampler`
 
 libugly_resampler_a_SOURCES = $(SOURCES_ugly_resampler)
 libugly_resampler_builtin_la_SOURCES = $(SOURCES_ugly_resampler)
-libugly_resampler_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin ugly_resampler`
-libugly_resampler_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ugly_resampler`
-libugly_resampler_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ugly_resampler`
+libugly_resampler_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) ugly_resampler`
+libugly_resampler_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) ugly_resampler`
+libugly_resampler_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) ugly_resampler`
 libugly_resampler_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin ugly_resampler`
 libugly_resampler_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ugly_resampler`
 libugly_resampler_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ugly_resampler`
@@ -162,19 +148,14 @@ liblinear_resampler_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin linear_res
 liblinear_resampler_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin linear_resampler`
 liblinear_resampler_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin linear_resampler`
 liblinear_resampler_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin linear_resampler` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 liblinear_resampler_plugin_la_LIBADD = $(LTLIBVLC)
-
-liblinear_resampler_pic_a_SOURCES = $(SOURCES_linear_resampler)
-liblinear_resampler_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic linear_resampler`
-liblinear_resampler_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic linear_resampler`
-liblinear_resampler_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic linear_resampler`
 
 liblinear_resampler_a_SOURCES = $(SOURCES_linear_resampler)
 liblinear_resampler_builtin_la_SOURCES = $(SOURCES_linear_resampler)
-liblinear_resampler_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin linear_resampler`
-liblinear_resampler_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin linear_resampler`
-liblinear_resampler_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin linear_resampler`
+liblinear_resampler_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) linear_resampler`
+liblinear_resampler_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) linear_resampler`
+liblinear_resampler_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) linear_resampler`
 liblinear_resampler_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin linear_resampler`
 liblinear_resampler_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin linear_resampler`
 liblinear_resampler_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin linear_resampler`
@@ -190,19 +171,14 @@ libbandlimited_resampler_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin bandl
 libbandlimited_resampler_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin bandlimited_resampler`
 libbandlimited_resampler_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin bandlimited_resampler`
 libbandlimited_resampler_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin bandlimited_resampler` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libbandlimited_resampler_plugin_la_LIBADD = $(LTLIBVLC)
-
-libbandlimited_resampler_pic_a_SOURCES = $(SOURCES_bandlimited_resampler)
-libbandlimited_resampler_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic bandlimited_resampler`
-libbandlimited_resampler_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic bandlimited_resampler`
-libbandlimited_resampler_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic bandlimited_resampler`
 
 libbandlimited_resampler_a_SOURCES = $(SOURCES_bandlimited_resampler)
 libbandlimited_resampler_builtin_la_SOURCES = $(SOURCES_bandlimited_resampler)
-libbandlimited_resampler_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin bandlimited_resampler`
-libbandlimited_resampler_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin bandlimited_resampler`
-libbandlimited_resampler_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin bandlimited_resampler`
+libbandlimited_resampler_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) bandlimited_resampler`
+libbandlimited_resampler_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) bandlimited_resampler`
+libbandlimited_resampler_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) bandlimited_resampler`
 libbandlimited_resampler_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin bandlimited_resampler`
 libbandlimited_resampler_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin bandlimited_resampler`
 libbandlimited_resampler_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin bandlimited_resampler`

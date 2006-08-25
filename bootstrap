@@ -51,40 +51,27 @@ if test -d extras/contrib/bin; then
 fi
 
 # Check for automake
-amvers="none"
-if automake-1.9 --version >/dev/null 2>&1; then
-  amvers="-1.9"
-elif automake-1.8 --version >/dev/null 2>&1; then
-  amvers="-1.8"
-elif automake-1.7 --version >/dev/null 2>&1; then
-  amvers="-1.7"
-elif automake-1.6 --version >/dev/null 2>&1; then
-  amvers="-1.6"
-  if expr "`automake-1.6 --version | sed -e '1s/[^0-9]*//' -e q`" "<=" "1.6.1" > /dev/null 2>&1; then
-    AUTOMAKESUCKS=yes
+amvers="no"
+for v in "-1.9" "19" "-1.8" "18" "-1.7" "17"; do
+  if automake${v} --version >/dev/null 2>&1; then
+    amsuff="${v}"
+    amvers="${v}"
+    break
   fi
-elif automake-1.5 --version >/dev/null 2>&1; then
-  INSTALLSUCKS=yes
-  amvers="-1.5"
-elif automake --version > /dev/null 2>&1; then
-  amvers=""
-  case "`automake --version | sed -e '1s/[^0-9]*//' -e q`" in
-    0|0.*|1|1.[01234]|1.[01234][-.]*)
-      amvers="none" ;;
-    1.5|1.5.*)
-      INSTALLSUCKS=yes ;;
-    1.6|1.6.0|1.6.1)
-      AUTOMAKESUCKS=yes ;;
-    1.9|1.9.2)
-      ;;
-  esac
+done
+
+if test "${amvers}" = "no" && automake --version > /dev/null 2>&1; then
+  amvers="`automake --version | sed -e '1s/[^0-9]*//' -e q`"
+  amsuff=""
 fi
 
-if test "${amvers}" = "none"; then
-  set +x
-  echo "$0: you need automake version 1.5 or later"
-  exit 1
-fi
+case "${amvers}" in
+  no|1.[0123456]|1.[0123456].*|1[0123456])
+    set +x
+    echo "$0: you need automake version 1.7 or later"
+    exit 1
+    ;;
+esac
 
 # Check for libtool
 libtoolize="no"
@@ -199,7 +186,7 @@ do
   extra_ltlibs=""
   for mod in $mods
   do
-    extra_libs="${extra_libs} lib${mod}_plugin.a lib${mod}.a lib${mod}_pic.a"
+    extra_libs="${extra_libs} lib${mod}_plugin.a lib${mod}.a"
     extra_ltlibs="${extra_ltlibs} lib${mod}_plugin.la lib${mod}_builtin.la"
   done
   rm -f "${makf}" && cat > "${makf}" << EOF
@@ -229,11 +216,14 @@ include Modules.am
 LTLIBVLC = \$(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = \$(top_builddir)/src/libvlc\$(LIBEXT)
+LIBVLC = -L\$(top_builddir)/src -lvlc
 LIBADD = \$(LIBVLC)
 endif
 
 all: all-modules
+
+nice:
+	\$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -247,7 +237,6 @@ else
 	@set fnord \$\$MAKEFLAGS; amf=\$\$2; targets=\`\\
 	if test "\$(plugin)" != "no"; then z=\$\$(\$(VLC_CONFIG) --list plugin); for mod in \$(mods); do case "\$\$z " in *\ \$\${mod}\ *) echo lib\$\${mod}_plugin\$(LIBEXT);; esac; done; fi; \\
 	if test "\$(builtin)" != "no"; then z=\$\$(\$(VLC_CONFIG) --list builtin); for mod in \$(mods); do case "\$\$z " in *\ \$\${mod}\ *) echo lib\$\${mod}.a;; esac; done; fi; \\
-	if test "\$(pic)" = "pic"; then z=\$\$(\$(VLC_CONFIG) --list builtin); for mod in \$(mods); do case "\$\$z " in *\ \$\${mod}\ *) echo lib\$\${mod}_pic.a;; esac; done; fi; \\
 	\`; case "\$\$targets" in *lib*) \$(MAKE) \$(AM_MAKEFLAGS) \$\$targets || case "\$\$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \\
 	test -z "\$\$fail"
 endif
@@ -312,17 +301,6 @@ else
 	      ;; \
 	  esac; \
 	done
-if BUILD_MOZILLA
-	@z=\$\$(\$(VLC_CONFIG) --list builtin); \
-	for mod in \$(mods); do \
-	  case "\$\$z " \
-	    in *\ \$\${mod}\ *) \
-	      echo \$(INSTALL_DATA) "lib\$\${mod}_pic.a" "\$(DESTDIR)\$(libdir)/vlc/" ; \
-	      \$(INSTALL_DATA) "lib\$\${mod}_pic.a" "\$(DESTDIR)\$(libdir)/vlc/" || exit \$\$?; \
-	      ;; \
-	  esac; \
-	done
-endif
 endif
 
 uninstall-local:
@@ -352,17 +330,6 @@ else
 	      ;; \
 	  esac; \
 	done
-if BUILD_MOZILLA
-	@z=\$\$(\$(VLC_CONFIG) --list builtin); \
-	for mod in \$(mods); do \
-	  case "\$\$z " \
-	    in *\ \$\${mod}\ *) \
-	      echo rm -f "\$(DESTDIR)\$(libdir)/vlc/lib\$\${mod}_pic.a" ; \
-	      rm -f "\$(DESTDIR)\$(libdir)/vlc/lib\$\${mod}_pic.a" || true; \
-	      ;; \
-	  esac; \
-	done
-endif
 endif
 
 EOF
@@ -413,19 +380,8 @@ lib${mod}_plugin_la_CFLAGS = \`\$(VLC_CONFIG) --cflags plugin ${mod}\`
 lib${mod}_plugin_la_CXXFLAGS = \`\$(VLC_CONFIG) --cxxflags plugin ${mod}\`
 lib${mod}_plugin_la_OBJCFLAGS = \`\$(VLC_CONFIG) --objcflags plugin ${mod}\`
 lib${mod}_plugin_la_LDFLAGS = \`\$(VLC_CONFIG) --libs plugin ${mod}\` \\
-	-rpath '\$(libvlcdir)' -module -shrext \$(LIBEXT)
+	-rpath '\$(libvlcdir)' -avoid-version -module -shrext \$(LIBEXT)
 lib${mod}_plugin_la_LIBADD = \$(LTLIBVLC)
-
-lib${mod}_pic_a_SOURCES = \$(SOURCES_${mod})
-EOF
-    if [ "${NODIST}" != "#" ]; then cat >> "${makf}" << EOF
-nodist_lib${mod}_pic_a_SOURCES = \$(nodist_SOURCES_${mod})
-EOF
-    fi
-    cat >> "${makf}" << EOF
-lib${mod}_pic_a_CFLAGS = \`\$(VLC_CONFIG) --cflags builtin pic ${mod}\`
-lib${mod}_pic_a_CXXFLAGS = \`\$(VLC_CONFIG) --cxxflags builtin pic ${mod}\`
-lib${mod}_pic_a_OBJCFLAGS = \`\$(VLC_CONFIG) --objcflags builtin pic ${mod}\`
 
 lib${mod}_a_SOURCES = \$(SOURCES_${mod})
 lib${mod}_builtin_la_SOURCES = \$(SOURCES_${mod})
@@ -436,9 +392,9 @@ nodist_lib${mod}_builtin_la_SOURCES = \$(nodist_SOURCES_${mod})
 EOF
     fi
     cat >> "${makf}" << EOF
-lib${mod}_a_CFLAGS = \`\$(VLC_CONFIG) --cflags builtin ${mod}\`
-lib${mod}_a_CXXFLAGS = \`\$(VLC_CONFIG) --cxxflags builtin ${mod}\`
-lib${mod}_a_OBJCFLAGS = \`\$(VLC_CONFIG) --objcflags builtin ${mod}\`
+lib${mod}_a_CFLAGS = \`\$(VLC_CONFIG) --cflags builtin \$(pic) ${mod}\`
+lib${mod}_a_CXXFLAGS = \`\$(VLC_CONFIG) --cxxflags builtin \$(pic) ${mod}\`
+lib${mod}_a_OBJCFLAGS = \`\$(VLC_CONFIG) --objcflags builtin \$(pic) ${mod}\`
 lib${mod}_builtin_la_CFLAGS = \`\$(VLC_CONFIG) --cflags builtin ${mod}\`
 lib${mod}_builtin_la_CXXFLAGS = \`\$(VLC_CONFIG) --cxxflags builtin ${mod}\`
 lib${mod}_builtin_la_OBJCFLAGS = \`\$(VLC_CONFIG) --objcflags builtin ${mod}\`
@@ -485,9 +441,7 @@ rm -f ltmain.sh libtool ltconfig
 # remove gettext cruft
 rm -f ABOUT-NLS
 rm -Rf intl
-# remove old vlc cruft
-rm -f m4/oldgettext.m4 stamp-pic configure.ac.in Modules.am
-# remove new vlc cruft
+# remove vlc cruft
 rm -f stamp-builtin stamp-h* mozilla/stamp-pic
 
 # Automake complains if these are not present
@@ -510,7 +464,7 @@ ${autopoint} -f
 ${aclocal} ${ACLOCAL_ARGS}
 ${autoconf}
 ${autoheader}
-${automake} --add-missing --copy
+${automake} --add-missing --copy -Wall
 
 ##
 ##  files which need to be regenerated
@@ -543,28 +497,6 @@ if [ "$PKGCONFIG" = "no" ]; then
 NOTE: you do not have the "pkg-config" utility on your system;
 detection of the Gtk-2.0 and GNOME 2.0 libraries will not be
 reliable.
-EOF
-fi
-
-if [ "$AUTOMAKESUCKS" = "yes" ]; then
-  cat << EOF
-
-=============================================================
-IMPORTANT NOTE: your version of automake has a bug which will
-prevent proper plugin compilation. Either compile VLC with
-the --disable-plugins flag, or use a version of automake newer
-than 1.6.1 (1.6.2 is OK, and so are the 1.5 series).
-EOF
-fi
-
-if [ "$INSTALLSUCKS" = "yes" ]; then
-  cat << EOF
-
-=============================================================
-IMPORTANT NOTE: your version of automake has a bug which will
-prevent proper installation. Do not use "make install" with this
-version of automake, or use a version of automake newer than 1.5
-(such as 1.6 or 1.7).
 EOF
 fi
 

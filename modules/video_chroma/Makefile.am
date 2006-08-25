@@ -16,7 +16,7 @@ SUFFIXES = _plugin$(LIBEXT) _plugin.a
 
 libvlcdir = $(libdir)/vlc/$(basedir)
 
-EXTRA_LIBRARIES =  libi420_rgb_plugin.a libi420_rgb.a libi420_rgb_pic.a libi420_rgb_mmx_plugin.a libi420_rgb_mmx.a libi420_rgb_mmx_pic.a libi420_yuy2_plugin.a libi420_yuy2.a libi420_yuy2_pic.a libi420_yuy2_mmx_plugin.a libi420_yuy2_mmx.a libi420_yuy2_mmx_pic.a libi420_yuy2_altivec_plugin.a libi420_yuy2_altivec.a libi420_yuy2_altivec_pic.a libi422_yuy2_plugin.a libi422_yuy2.a libi422_yuy2_pic.a libi422_yuy2_mmx_plugin.a libi422_yuy2_mmx.a libi422_yuy2_mmx_pic.a libi420_ymga_plugin.a libi420_ymga.a libi420_ymga_pic.a libi420_ymga_mmx_plugin.a libi420_ymga_mmx.a libi420_ymga_mmx_pic.a
+EXTRA_LIBRARIES =  libi420_rgb_plugin.a libi420_rgb.a libi420_rgb_mmx_plugin.a libi420_rgb_mmx.a libi420_yuy2_plugin.a libi420_yuy2.a libi420_yuy2_mmx_plugin.a libi420_yuy2_mmx.a libi420_yuy2_altivec_plugin.a libi420_yuy2_altivec.a libi422_yuy2_plugin.a libi422_yuy2.a libi422_yuy2_mmx_plugin.a libi422_yuy2_mmx.a libi420_ymga_plugin.a libi420_ymga.a libi420_ymga_mmx_plugin.a libi420_ymga_mmx.a
 EXTRA_LTLIBRARIES =  libi420_rgb_plugin.la libi420_rgb_builtin.la libi420_rgb_mmx_plugin.la libi420_rgb_mmx_builtin.la libi420_yuy2_plugin.la libi420_yuy2_builtin.la libi420_yuy2_mmx_plugin.la libi420_yuy2_mmx_builtin.la libi420_yuy2_altivec_plugin.la libi420_yuy2_altivec_builtin.la libi422_yuy2_plugin.la libi422_yuy2_builtin.la libi422_yuy2_mmx_plugin.la libi422_yuy2_mmx_builtin.la libi420_ymga_plugin.la libi420_ymga_builtin.la libi420_ymga_mmx_plugin.la libi420_ymga_mmx_builtin.la
 
 include Modules.am
@@ -24,11 +24,14 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
+LIBVLC = -L$(top_builddir)/src -lvlc
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
+
+nice:
+	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -42,7 +45,6 @@ else
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
 	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --list plugin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
 	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" = "pic"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 endif
@@ -79,9 +81,6 @@ else
 	mkdir -p -- "$(DESTDIR)$(libvlcdir)"
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" ; 	      $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" || exit $$?; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-endif
 endif
 
 uninstall-local:
@@ -90,9 +89,6 @@ if USE_LIBTOOL
 else
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" ; 	      rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" || true; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" || true; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" || true; 	      ;; 	  esac; 	done
-endif
 endif
 
 # The i420_rgb plugin
@@ -106,19 +102,14 @@ libi420_rgb_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin i420_rgb`
 libi420_rgb_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin i420_rgb`
 libi420_rgb_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin i420_rgb`
 libi420_rgb_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin i420_rgb` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libi420_rgb_plugin_la_LIBADD = $(LTLIBVLC)
-
-libi420_rgb_pic_a_SOURCES = $(SOURCES_i420_rgb)
-libi420_rgb_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic i420_rgb`
-libi420_rgb_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic i420_rgb`
-libi420_rgb_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic i420_rgb`
 
 libi420_rgb_a_SOURCES = $(SOURCES_i420_rgb)
 libi420_rgb_builtin_la_SOURCES = $(SOURCES_i420_rgb)
-libi420_rgb_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin i420_rgb`
-libi420_rgb_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i420_rgb`
-libi420_rgb_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i420_rgb`
+libi420_rgb_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) i420_rgb`
+libi420_rgb_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) i420_rgb`
+libi420_rgb_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) i420_rgb`
 libi420_rgb_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin i420_rgb`
 libi420_rgb_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i420_rgb`
 libi420_rgb_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i420_rgb`
@@ -134,19 +125,14 @@ libi420_rgb_mmx_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin i420_rgb_mmx`
 libi420_rgb_mmx_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin i420_rgb_mmx`
 libi420_rgb_mmx_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin i420_rgb_mmx`
 libi420_rgb_mmx_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin i420_rgb_mmx` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libi420_rgb_mmx_plugin_la_LIBADD = $(LTLIBVLC)
-
-libi420_rgb_mmx_pic_a_SOURCES = $(SOURCES_i420_rgb_mmx)
-libi420_rgb_mmx_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic i420_rgb_mmx`
-libi420_rgb_mmx_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic i420_rgb_mmx`
-libi420_rgb_mmx_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic i420_rgb_mmx`
 
 libi420_rgb_mmx_a_SOURCES = $(SOURCES_i420_rgb_mmx)
 libi420_rgb_mmx_builtin_la_SOURCES = $(SOURCES_i420_rgb_mmx)
-libi420_rgb_mmx_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin i420_rgb_mmx`
-libi420_rgb_mmx_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i420_rgb_mmx`
-libi420_rgb_mmx_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i420_rgb_mmx`
+libi420_rgb_mmx_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) i420_rgb_mmx`
+libi420_rgb_mmx_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) i420_rgb_mmx`
+libi420_rgb_mmx_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) i420_rgb_mmx`
 libi420_rgb_mmx_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin i420_rgb_mmx`
 libi420_rgb_mmx_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i420_rgb_mmx`
 libi420_rgb_mmx_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i420_rgb_mmx`
@@ -162,19 +148,14 @@ libi420_yuy2_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin i420_yuy2`
 libi420_yuy2_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin i420_yuy2`
 libi420_yuy2_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin i420_yuy2`
 libi420_yuy2_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin i420_yuy2` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libi420_yuy2_plugin_la_LIBADD = $(LTLIBVLC)
-
-libi420_yuy2_pic_a_SOURCES = $(SOURCES_i420_yuy2)
-libi420_yuy2_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic i420_yuy2`
-libi420_yuy2_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic i420_yuy2`
-libi420_yuy2_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic i420_yuy2`
 
 libi420_yuy2_a_SOURCES = $(SOURCES_i420_yuy2)
 libi420_yuy2_builtin_la_SOURCES = $(SOURCES_i420_yuy2)
-libi420_yuy2_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin i420_yuy2`
-libi420_yuy2_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i420_yuy2`
-libi420_yuy2_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i420_yuy2`
+libi420_yuy2_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) i420_yuy2`
+libi420_yuy2_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) i420_yuy2`
+libi420_yuy2_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) i420_yuy2`
 libi420_yuy2_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin i420_yuy2`
 libi420_yuy2_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i420_yuy2`
 libi420_yuy2_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i420_yuy2`
@@ -190,19 +171,14 @@ libi420_yuy2_mmx_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin i420_yuy2_mmx
 libi420_yuy2_mmx_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin i420_yuy2_mmx`
 libi420_yuy2_mmx_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin i420_yuy2_mmx`
 libi420_yuy2_mmx_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin i420_yuy2_mmx` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libi420_yuy2_mmx_plugin_la_LIBADD = $(LTLIBVLC)
-
-libi420_yuy2_mmx_pic_a_SOURCES = $(SOURCES_i420_yuy2_mmx)
-libi420_yuy2_mmx_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic i420_yuy2_mmx`
-libi420_yuy2_mmx_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic i420_yuy2_mmx`
-libi420_yuy2_mmx_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic i420_yuy2_mmx`
 
 libi420_yuy2_mmx_a_SOURCES = $(SOURCES_i420_yuy2_mmx)
 libi420_yuy2_mmx_builtin_la_SOURCES = $(SOURCES_i420_yuy2_mmx)
-libi420_yuy2_mmx_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin i420_yuy2_mmx`
-libi420_yuy2_mmx_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i420_yuy2_mmx`
-libi420_yuy2_mmx_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i420_yuy2_mmx`
+libi420_yuy2_mmx_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) i420_yuy2_mmx`
+libi420_yuy2_mmx_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) i420_yuy2_mmx`
+libi420_yuy2_mmx_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) i420_yuy2_mmx`
 libi420_yuy2_mmx_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin i420_yuy2_mmx`
 libi420_yuy2_mmx_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i420_yuy2_mmx`
 libi420_yuy2_mmx_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i420_yuy2_mmx`
@@ -218,19 +194,14 @@ libi420_yuy2_altivec_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin i420_yuy2
 libi420_yuy2_altivec_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin i420_yuy2_altivec`
 libi420_yuy2_altivec_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin i420_yuy2_altivec`
 libi420_yuy2_altivec_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin i420_yuy2_altivec` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libi420_yuy2_altivec_plugin_la_LIBADD = $(LTLIBVLC)
-
-libi420_yuy2_altivec_pic_a_SOURCES = $(SOURCES_i420_yuy2_altivec)
-libi420_yuy2_altivec_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic i420_yuy2_altivec`
-libi420_yuy2_altivec_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic i420_yuy2_altivec`
-libi420_yuy2_altivec_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic i420_yuy2_altivec`
 
 libi420_yuy2_altivec_a_SOURCES = $(SOURCES_i420_yuy2_altivec)
 libi420_yuy2_altivec_builtin_la_SOURCES = $(SOURCES_i420_yuy2_altivec)
-libi420_yuy2_altivec_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin i420_yuy2_altivec`
-libi420_yuy2_altivec_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i420_yuy2_altivec`
-libi420_yuy2_altivec_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i420_yuy2_altivec`
+libi420_yuy2_altivec_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) i420_yuy2_altivec`
+libi420_yuy2_altivec_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) i420_yuy2_altivec`
+libi420_yuy2_altivec_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) i420_yuy2_altivec`
 libi420_yuy2_altivec_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin i420_yuy2_altivec`
 libi420_yuy2_altivec_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i420_yuy2_altivec`
 libi420_yuy2_altivec_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i420_yuy2_altivec`
@@ -246,19 +217,14 @@ libi422_yuy2_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin i422_yuy2`
 libi422_yuy2_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin i422_yuy2`
 libi422_yuy2_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin i422_yuy2`
 libi422_yuy2_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin i422_yuy2` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libi422_yuy2_plugin_la_LIBADD = $(LTLIBVLC)
-
-libi422_yuy2_pic_a_SOURCES = $(SOURCES_i422_yuy2)
-libi422_yuy2_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic i422_yuy2`
-libi422_yuy2_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic i422_yuy2`
-libi422_yuy2_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic i422_yuy2`
 
 libi422_yuy2_a_SOURCES = $(SOURCES_i422_yuy2)
 libi422_yuy2_builtin_la_SOURCES = $(SOURCES_i422_yuy2)
-libi422_yuy2_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin i422_yuy2`
-libi422_yuy2_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i422_yuy2`
-libi422_yuy2_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i422_yuy2`
+libi422_yuy2_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) i422_yuy2`
+libi422_yuy2_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) i422_yuy2`
+libi422_yuy2_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) i422_yuy2`
 libi422_yuy2_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin i422_yuy2`
 libi422_yuy2_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i422_yuy2`
 libi422_yuy2_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i422_yuy2`
@@ -274,19 +240,14 @@ libi422_yuy2_mmx_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin i422_yuy2_mmx
 libi422_yuy2_mmx_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin i422_yuy2_mmx`
 libi422_yuy2_mmx_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin i422_yuy2_mmx`
 libi422_yuy2_mmx_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin i422_yuy2_mmx` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libi422_yuy2_mmx_plugin_la_LIBADD = $(LTLIBVLC)
-
-libi422_yuy2_mmx_pic_a_SOURCES = $(SOURCES_i422_yuy2_mmx)
-libi422_yuy2_mmx_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic i422_yuy2_mmx`
-libi422_yuy2_mmx_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic i422_yuy2_mmx`
-libi422_yuy2_mmx_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic i422_yuy2_mmx`
 
 libi422_yuy2_mmx_a_SOURCES = $(SOURCES_i422_yuy2_mmx)
 libi422_yuy2_mmx_builtin_la_SOURCES = $(SOURCES_i422_yuy2_mmx)
-libi422_yuy2_mmx_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin i422_yuy2_mmx`
-libi422_yuy2_mmx_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i422_yuy2_mmx`
-libi422_yuy2_mmx_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i422_yuy2_mmx`
+libi422_yuy2_mmx_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) i422_yuy2_mmx`
+libi422_yuy2_mmx_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) i422_yuy2_mmx`
+libi422_yuy2_mmx_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) i422_yuy2_mmx`
 libi422_yuy2_mmx_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin i422_yuy2_mmx`
 libi422_yuy2_mmx_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i422_yuy2_mmx`
 libi422_yuy2_mmx_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i422_yuy2_mmx`
@@ -302,19 +263,14 @@ libi420_ymga_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin i420_ymga`
 libi420_ymga_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin i420_ymga`
 libi420_ymga_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin i420_ymga`
 libi420_ymga_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin i420_ymga` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libi420_ymga_plugin_la_LIBADD = $(LTLIBVLC)
-
-libi420_ymga_pic_a_SOURCES = $(SOURCES_i420_ymga)
-libi420_ymga_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic i420_ymga`
-libi420_ymga_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic i420_ymga`
-libi420_ymga_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic i420_ymga`
 
 libi420_ymga_a_SOURCES = $(SOURCES_i420_ymga)
 libi420_ymga_builtin_la_SOURCES = $(SOURCES_i420_ymga)
-libi420_ymga_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin i420_ymga`
-libi420_ymga_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i420_ymga`
-libi420_ymga_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i420_ymga`
+libi420_ymga_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) i420_ymga`
+libi420_ymga_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) i420_ymga`
+libi420_ymga_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) i420_ymga`
 libi420_ymga_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin i420_ymga`
 libi420_ymga_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i420_ymga`
 libi420_ymga_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i420_ymga`
@@ -330,19 +286,14 @@ libi420_ymga_mmx_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin i420_ymga_mmx
 libi420_ymga_mmx_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin i420_ymga_mmx`
 libi420_ymga_mmx_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin i420_ymga_mmx`
 libi420_ymga_mmx_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin i420_ymga_mmx` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libi420_ymga_mmx_plugin_la_LIBADD = $(LTLIBVLC)
-
-libi420_ymga_mmx_pic_a_SOURCES = $(SOURCES_i420_ymga_mmx)
-libi420_ymga_mmx_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic i420_ymga_mmx`
-libi420_ymga_mmx_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic i420_ymga_mmx`
-libi420_ymga_mmx_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic i420_ymga_mmx`
 
 libi420_ymga_mmx_a_SOURCES = $(SOURCES_i420_ymga_mmx)
 libi420_ymga_mmx_builtin_la_SOURCES = $(SOURCES_i420_ymga_mmx)
-libi420_ymga_mmx_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin i420_ymga_mmx`
-libi420_ymga_mmx_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i420_ymga_mmx`
-libi420_ymga_mmx_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i420_ymga_mmx`
+libi420_ymga_mmx_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) i420_ymga_mmx`
+libi420_ymga_mmx_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) i420_ymga_mmx`
+libi420_ymga_mmx_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) i420_ymga_mmx`
 libi420_ymga_mmx_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin i420_ymga_mmx`
 libi420_ymga_mmx_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin i420_ymga_mmx`
 libi420_ymga_mmx_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin i420_ymga_mmx`

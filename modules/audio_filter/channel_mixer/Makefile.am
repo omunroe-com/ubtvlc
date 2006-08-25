@@ -16,7 +16,7 @@ SUFFIXES = _plugin$(LIBEXT) _plugin.a
 
 libvlcdir = $(libdir)/vlc/$(basedir)
 
-EXTRA_LIBRARIES =  libtrivial_channel_mixer_plugin.a libtrivial_channel_mixer.a libtrivial_channel_mixer_pic.a libsimple_channel_mixer_plugin.a libsimple_channel_mixer.a libsimple_channel_mixer_pic.a libheadphone_channel_mixer_plugin.a libheadphone_channel_mixer.a libheadphone_channel_mixer_pic.a libdolby_surround_decoder_plugin.a libdolby_surround_decoder.a libdolby_surround_decoder_pic.a
+EXTRA_LIBRARIES =  libtrivial_channel_mixer_plugin.a libtrivial_channel_mixer.a libsimple_channel_mixer_plugin.a libsimple_channel_mixer.a libheadphone_channel_mixer_plugin.a libheadphone_channel_mixer.a libdolby_surround_decoder_plugin.a libdolby_surround_decoder.a
 EXTRA_LTLIBRARIES =  libtrivial_channel_mixer_plugin.la libtrivial_channel_mixer_builtin.la libsimple_channel_mixer_plugin.la libsimple_channel_mixer_builtin.la libheadphone_channel_mixer_plugin.la libheadphone_channel_mixer_builtin.la libdolby_surround_decoder_plugin.la libdolby_surround_decoder_builtin.la
 
 include Modules.am
@@ -24,11 +24,14 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
+LIBVLC = -L$(top_builddir)/src -lvlc
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
+
+nice:
+	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -42,7 +45,6 @@ else
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
 	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --list plugin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
 	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" = "pic"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 endif
@@ -79,9 +81,6 @@ else
 	mkdir -p -- "$(DESTDIR)$(libvlcdir)"
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" ; 	      $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" || exit $$?; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-endif
 endif
 
 uninstall-local:
@@ -90,9 +89,6 @@ if USE_LIBTOOL
 else
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" ; 	      rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" || true; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" || true; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" || true; 	      ;; 	  esac; 	done
-endif
 endif
 
 # The trivial_channel_mixer plugin
@@ -106,19 +102,14 @@ libtrivial_channel_mixer_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin trivi
 libtrivial_channel_mixer_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin trivial_channel_mixer`
 libtrivial_channel_mixer_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin trivial_channel_mixer`
 libtrivial_channel_mixer_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin trivial_channel_mixer` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libtrivial_channel_mixer_plugin_la_LIBADD = $(LTLIBVLC)
-
-libtrivial_channel_mixer_pic_a_SOURCES = $(SOURCES_trivial_channel_mixer)
-libtrivial_channel_mixer_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic trivial_channel_mixer`
-libtrivial_channel_mixer_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic trivial_channel_mixer`
-libtrivial_channel_mixer_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic trivial_channel_mixer`
 
 libtrivial_channel_mixer_a_SOURCES = $(SOURCES_trivial_channel_mixer)
 libtrivial_channel_mixer_builtin_la_SOURCES = $(SOURCES_trivial_channel_mixer)
-libtrivial_channel_mixer_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin trivial_channel_mixer`
-libtrivial_channel_mixer_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin trivial_channel_mixer`
-libtrivial_channel_mixer_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin trivial_channel_mixer`
+libtrivial_channel_mixer_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) trivial_channel_mixer`
+libtrivial_channel_mixer_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) trivial_channel_mixer`
+libtrivial_channel_mixer_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) trivial_channel_mixer`
 libtrivial_channel_mixer_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin trivial_channel_mixer`
 libtrivial_channel_mixer_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin trivial_channel_mixer`
 libtrivial_channel_mixer_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin trivial_channel_mixer`
@@ -134,19 +125,14 @@ libsimple_channel_mixer_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin simple
 libsimple_channel_mixer_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin simple_channel_mixer`
 libsimple_channel_mixer_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin simple_channel_mixer`
 libsimple_channel_mixer_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin simple_channel_mixer` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libsimple_channel_mixer_plugin_la_LIBADD = $(LTLIBVLC)
-
-libsimple_channel_mixer_pic_a_SOURCES = $(SOURCES_simple_channel_mixer)
-libsimple_channel_mixer_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic simple_channel_mixer`
-libsimple_channel_mixer_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic simple_channel_mixer`
-libsimple_channel_mixer_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic simple_channel_mixer`
 
 libsimple_channel_mixer_a_SOURCES = $(SOURCES_simple_channel_mixer)
 libsimple_channel_mixer_builtin_la_SOURCES = $(SOURCES_simple_channel_mixer)
-libsimple_channel_mixer_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin simple_channel_mixer`
-libsimple_channel_mixer_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin simple_channel_mixer`
-libsimple_channel_mixer_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin simple_channel_mixer`
+libsimple_channel_mixer_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) simple_channel_mixer`
+libsimple_channel_mixer_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) simple_channel_mixer`
+libsimple_channel_mixer_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) simple_channel_mixer`
 libsimple_channel_mixer_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin simple_channel_mixer`
 libsimple_channel_mixer_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin simple_channel_mixer`
 libsimple_channel_mixer_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin simple_channel_mixer`
@@ -162,19 +148,14 @@ libheadphone_channel_mixer_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin hea
 libheadphone_channel_mixer_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin headphone_channel_mixer`
 libheadphone_channel_mixer_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin headphone_channel_mixer`
 libheadphone_channel_mixer_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin headphone_channel_mixer` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libheadphone_channel_mixer_plugin_la_LIBADD = $(LTLIBVLC)
-
-libheadphone_channel_mixer_pic_a_SOURCES = $(SOURCES_headphone_channel_mixer)
-libheadphone_channel_mixer_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic headphone_channel_mixer`
-libheadphone_channel_mixer_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic headphone_channel_mixer`
-libheadphone_channel_mixer_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic headphone_channel_mixer`
 
 libheadphone_channel_mixer_a_SOURCES = $(SOURCES_headphone_channel_mixer)
 libheadphone_channel_mixer_builtin_la_SOURCES = $(SOURCES_headphone_channel_mixer)
-libheadphone_channel_mixer_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin headphone_channel_mixer`
-libheadphone_channel_mixer_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin headphone_channel_mixer`
-libheadphone_channel_mixer_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin headphone_channel_mixer`
+libheadphone_channel_mixer_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) headphone_channel_mixer`
+libheadphone_channel_mixer_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) headphone_channel_mixer`
+libheadphone_channel_mixer_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) headphone_channel_mixer`
 libheadphone_channel_mixer_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin headphone_channel_mixer`
 libheadphone_channel_mixer_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin headphone_channel_mixer`
 libheadphone_channel_mixer_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin headphone_channel_mixer`
@@ -190,19 +171,14 @@ libdolby_surround_decoder_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin dolb
 libdolby_surround_decoder_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin dolby_surround_decoder`
 libdolby_surround_decoder_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin dolby_surround_decoder`
 libdolby_surround_decoder_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin dolby_surround_decoder` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libdolby_surround_decoder_plugin_la_LIBADD = $(LTLIBVLC)
-
-libdolby_surround_decoder_pic_a_SOURCES = $(SOURCES_dolby_surround_decoder)
-libdolby_surround_decoder_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic dolby_surround_decoder`
-libdolby_surround_decoder_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic dolby_surround_decoder`
-libdolby_surround_decoder_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic dolby_surround_decoder`
 
 libdolby_surround_decoder_a_SOURCES = $(SOURCES_dolby_surround_decoder)
 libdolby_surround_decoder_builtin_la_SOURCES = $(SOURCES_dolby_surround_decoder)
-libdolby_surround_decoder_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin dolby_surround_decoder`
-libdolby_surround_decoder_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin dolby_surround_decoder`
-libdolby_surround_decoder_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin dolby_surround_decoder`
+libdolby_surround_decoder_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) dolby_surround_decoder`
+libdolby_surround_decoder_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) dolby_surround_decoder`
+libdolby_surround_decoder_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) dolby_surround_decoder`
 libdolby_surround_decoder_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin dolby_surround_decoder`
 libdolby_surround_decoder_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin dolby_surround_decoder`
 libdolby_surround_decoder_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin dolby_surround_decoder`

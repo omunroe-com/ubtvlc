@@ -2,7 +2,7 @@
  * playlist.hpp: Header for the playlist
  *****************************************************************************
  * Copyright (C) 1999-2005 the VideoLAN team
- * $Id: playlist.hpp 14633 2006-03-04 22:48:20Z dionoea $
+ * $Id: playlist.hpp 15643 2006-05-15 12:26:49Z zorglub $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -26,6 +26,7 @@
 
 #include "wxwidgets.hpp"
 
+#include <wx/listctrl.h>
 #include <wx/treectrl.h>
 #include <wx/dnd.h>
 
@@ -90,8 +91,6 @@ private:
     wxButton *search_button;
     wxTreeItemId search_current;
 
-    void OnEnDis( wxCommandEvent& event );
-
     /* Sort */
     int i_sort_mode;
     void OnSort( wxCommandEvent& event );
@@ -136,6 +135,9 @@ private:
     void OnPopupEna( wxCommandEvent& event );
     void OnPopupInfo( wxCommandEvent& event );
     void OnPopupAddNode( wxCommandEvent& event );
+
+    /* List */
+    void OnSourceSelected( wxListEvent &event );
 protected:
     void Rebuild( vlc_bool_t );
 private:
@@ -151,11 +153,15 @@ private:
     /* Search (internal) */
     int CountItems( wxTreeItemId);
     wxTreeItemId FindItem( wxTreeItemId, int );
+    wxTreeItemId FindItemByInput( wxTreeItemId, int );
+    wxTreeItemId FindItemInner( wxTreeItemId, int , bool );
     wxTreeItemId FindItemByName( wxTreeItemId, wxString,
                                  wxTreeItemId, vlc_bool_t *);
 
     wxTreeItemId saved_tree_item;
+    wxTreeItemId saved_input_tree_item;
     int i_saved_id;
+    int i_saved_input_id;
 
 protected:
     playlist_t *p_playlist;
@@ -179,7 +185,10 @@ private:
 protected:
     intf_thread_t *p_intf;
     wxTreeCtrl *treectrl;
+    wxListView *source_sel;
     int i_current_view;
+    playlist_item_t *p_current_treeroot;
+    playlist_item_t *p_current_viewroot;
 
 friend class PlaylistFileDropTarget;
 };

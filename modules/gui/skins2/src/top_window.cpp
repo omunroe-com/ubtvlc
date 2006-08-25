@@ -2,7 +2,7 @@
  * top_window.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: top_window.cpp 15481 2006-04-30 18:07:40Z asmax $
+ * $Id: top_window.cpp 16303 2006-08-20 09:14:00Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -323,9 +323,14 @@ void TopWindow::refresh( int left, int top, int width, int height )
 void TopWindow::setActiveLayout( GenericLayout *pLayout )
 {
     bool isVisible = getVisibleVar().get();
-    if( m_pActiveLayout && isVisible )
+    if( m_pActiveLayout )
     {
-        m_pActiveLayout->onHide();
+        if( isVisible )
+        {
+            m_pActiveLayout->onHide();
+        }
+        // The current layout becomes inactive
+        m_pActiveLayout->getActiveVar().set( false );
     }
 
     pLayout->setWindow( this );
@@ -338,6 +343,9 @@ void TopWindow::setActiveLayout( GenericLayout *pLayout )
     {
         pLayout->onShow();
     }
+
+    // The new layout is active
+    pLayout->getActiveVar().set( true );
 }
 
 
@@ -431,9 +439,18 @@ void TopWindow::onTooltipChange( const CtrlGeneric &rCtrl )
     // Check that the control is the active one
     if( m_pLastHitControl && m_pLastHitControl == &rCtrl )
     {
-        // Set the tooltip text variable
-        VarManager *pVarManager = VarManager::instance( getIntf() );
-        pVarManager->getTooltipText().set( rCtrl.getTooltipText() );
+        if( rCtrl.getTooltipText().size() )
+        {
+            // Set the tooltip text variable
+            VarManager *pVarManager = VarManager::instance( getIntf() );
+            pVarManager->getTooltipText().set( rCtrl.getTooltipText() );
+            m_rWindowManager.showTooltip();
+        }
+        else
+        {
+            // Nothing to display, so hide the tooltip
+            m_rWindowManager.hideTooltip();
+        }
     }
 }
 

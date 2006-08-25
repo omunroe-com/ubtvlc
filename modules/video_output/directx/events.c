@@ -2,7 +2,7 @@
  * events.c: Windows DirectX video output events handler
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: events.c 15002 2006-03-31 16:12:31Z fkuehne $
+ * $Id: events.c 16094 2006-07-20 13:21:16Z damienf $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -32,7 +32,7 @@
 #include <string.h>                                            /* strerror() */
 
 #ifndef _WIN32_WINNT
-#   define _WIN32_WINNT 0x0400
+#   define _WIN32_WINNT 0x0500
 #endif
 
 #include <vlc/vlc.h>
@@ -44,7 +44,15 @@
 #include <windowsx.h>
 #include <shellapi.h>
 
+#ifdef MODULE_NAME_IS_vout_directx
 #include <ddraw.h>
+#endif
+#ifdef MODULE_NAME_IS_direct3d
+#include <d3d9.h>
+#endif
+#ifdef MODULE_NAME_IS_glwin32
+#include <GL/gl.h>
+#endif
 
 #include "vlc_keys.h"
 #include "vout.h"
@@ -301,7 +309,11 @@ void E_(DirectXEventThread)( event_thread_t *p_event )
 
 #ifdef MODULE_NAME_IS_glwin32
                 val.psz_string = strdup( VOUT_TITLE " (OpenGL output)" );
-#else
+#endif
+#ifdef MODULE_NAME_IS_direct3d
+                val.psz_string = strdup( VOUT_TITLE " (Direct3D output)" );
+#endif
+#ifdef MODULE_NAME_IS_directx
                 if( p_event->p_vout->p_sys->b_using_overlay ) val.psz_string = 
                 strdup( VOUT_TITLE " (hardware YUV overlay DirectX output)" );
                 else if( p_event->p_vout->p_sys->b_hw_yuv ) val.psz_string = 
@@ -481,9 +493,9 @@ static int DirectXCreateWindow( vout_thread_t *p_vout )
                     _T(VOUT_TITLE) _T(" (DirectX Output)"),  /* window title */
                     i_style,                                 /* window style */
                     (p_vout->p_sys->i_window_x < 0) ? CW_USEDEFAULT :
-                        p_vout->p_sys->i_window_x,   /* default X coordinate */
+                        (UINT)p_vout->p_sys->i_window_x,   /* default X coordinate */
                     (p_vout->p_sys->i_window_y < 0) ? CW_USEDEFAULT :
-                        p_vout->p_sys->i_window_y,   /* default Y coordinate */
+                        (UINT)p_vout->p_sys->i_window_y,   /* default Y coordinate */
                     rect_window.right - rect_window.left,    /* window width */
                     rect_window.bottom - rect_window.top,   /* window height */
                     p_vout->p_sys->hparent,                 /* parent window */
@@ -519,19 +531,32 @@ static int DirectXCreateWindow( vout_thread_t *p_vout )
                             NULL, NULL, hInstance, NULL );
     }
 
-    /* Now display the window */
-    ShowWindow( p_vout->p_sys->hwnd, SW_SHOW );
-
-    /* Create video sub-window. This sub window will always exactly match
-     * the size of the video, which allows us to use crazy overlay colorkeys
-     * without having them shown outside of the video area. */
-    SendMessage( p_vout->p_sys->hwnd, WM_VLC_CREATE_VIDEO_WIN, 0, 0 );
-
     /* Append a "Always On Top" entry in the system menu */
     hMenu = GetSystemMenu( p_vout->p_sys->hwnd, FALSE );
     AppendMenu( hMenu, MF_SEPARATOR, 0, _T("") );
     AppendMenu( hMenu, MF_STRING | MF_UNCHECKED,
                        IDM_TOGGLE_ON_TOP, _T("Always on &Top") );
+
+    /* Create video sub-window. This sub window will always exactly match
+     * the size of the video, which allows us to use crazy overlay colorkeys
+     * without having them shown outside of the video area. */
+    p_vout->p_sys->hvideownd =
+	CreateWindow( _T("VLC DirectX video"), _T(""),   /* window class */
+		WS_CHILD | WS_VISIBLE,                   /* window style */
+		0, 0,
+		p_vout->render.i_width,			/* default width */
+		p_vout->render.i_height,		/* default height */
+		p_vout->p_sys->hwnd,                    /* parent window */
+		NULL, hInstance,
+		(LPVOID)p_vout );            /* send p_vout to WM_CREATE */
+
+    if( !p_vout->p_sys->hvideownd )
+	msg_Warn( p_vout, "can't create video sub-window" );
+    else
+	msg_Dbg( p_vout, "created video sub-window" );
+
+    /* Now display the window */
+    ShowWindow( p_vout->p_sys->hwnd, SW_SHOW );
 
     return VLC_SUCCESS;
 }
@@ -613,6 +638,7 @@ void E_(DirectXUpdateRects)( vout_thread_t *p_vout, vlc_bool_t b_force )
     rect_dest.top = point.y + i_y;
     rect_dest.bottom = rect_dest.top + i_height;
 
+#ifdef MODULE_NAME_IS_vout_directx
     /* Apply overlay hardware constraints */
     if( p_vout->p_sys->b_using_overlay )
     {
@@ -626,6 +652,7 @@ void E_(DirectXUpdateRects)( vout_thread_t *p_vout, vlc_bool_t b_force )
                 p_vout->p_sys->i_align_dest_size / 2 ) & 
                 ~p_vout->p_sys->i_align_dest_size) + rect_dest.left;
     }
+#endif
 
     /* UpdateOverlay directdraw function doesn't automatically clip to the
      * display size so we need to do it otherwise it will fail */
@@ -675,6 +702,7 @@ void E_(DirectXUpdateRects)( vout_thread_t *p_vout, vlc_bool_t b_force )
       (rect_dest.bottom - rect_dest_clipped.bottom) *
       p_vout->fmt_out.i_visible_height / (rect_dest.bottom - rect_dest.top);
 
+#ifdef MODULE_NAME_IS_vout_directx
     /* Apply overlay hardware constraints */
     if( p_vout->p_sys->b_using_overlay )
     {
@@ -689,6 +717,7 @@ void E_(DirectXUpdateRects)( vout_thread_t *p_vout, vlc_bool_t b_force )
                 p_vout->p_sys->i_align_src_size / 2 ) & 
                 ~p_vout->p_sys->i_align_src_size) + rect_src_clipped.left;
     }
+#endif
 
 #if 0
     msg_Dbg( p_vout, "DirectXUpdateRects image_src_clipped"
@@ -704,8 +733,10 @@ void E_(DirectXUpdateRects)( vout_thread_t *p_vout, vlc_bool_t b_force )
     rect_dest_clipped.top -= p_vout->p_sys->rect_display.top;
     rect_dest_clipped.bottom -= p_vout->p_sys->rect_display.top;
 
+#ifdef MODULE_NAME_IS_vout_directx
     if( p_vout->p_sys->b_using_overlay )
         E_(DirectXUpdateOverlay)( p_vout );
+#endif
 
     /* Signal the change in size/position */
     p_vout->p_sys->i_changes |= DX_POSITION_CHANGE;
@@ -808,23 +839,6 @@ static long FAR PASCAL DirectXEventProc( HWND hwnd, UINT message,
         }
         break;
 
-    case WM_VLC_CREATE_VIDEO_WIN:
-        /* Create video sub-window */
-        p_vout->p_sys->hvideownd =
-            CreateWindow( _T("VLC DirectX video"), _T(""),   /* window class */
-                    WS_CHILD | WS_VISIBLE,                   /* window style */
-                    CW_USEDEFAULT, CW_USEDEFAULT,     /* default coordinates */
-                    CW_USEDEFAULT, CW_USEDEFAULT,
-                    hwnd,                                   /* parent window */
-                    NULL, GetModuleHandle(NULL),
-                    (LPVOID)p_vout );            /* send p_vout to WM_CREATE */
-
-        if( !p_vout->p_sys->hvideownd )
-            msg_Warn( p_vout, "can't create video sub-window" );
-        else
-            msg_Dbg( p_vout, "created video sub-window" );
-        break;
-
     case WM_PAINT:
     case WM_NCPAINT:
     case WM_ERASEBKGND:
@@ -874,6 +888,21 @@ static struct
     { VK_CONTROL, 0 },
     { VK_SHIFT, 0 },
     { VK_MENU, 0 },
+
+    { VK_BROWSER_BACK, KEY_BROWSER_BACK },
+    { VK_BROWSER_FORWARD, KEY_BROWSER_FORWARD },
+    { VK_BROWSER_REFRESH, KEY_BROWSER_REFRESH },
+    { VK_BROWSER_STOP, KEY_BROWSER_STOP },
+    { VK_BROWSER_SEARCH, KEY_BROWSER_SEARCH },
+    { VK_BROWSER_FAVORITES, KEY_BROWSER_FAVORITES },
+    { VK_BROWSER_HOME, KEY_BROWSER_HOME },
+    { VK_VOLUME_MUTE, KEY_VOLUME_MUTE },
+    { VK_VOLUME_DOWN, KEY_VOLUME_DOWN },
+    { VK_VOLUME_UP, KEY_VOLUME_UP },
+    { VK_MEDIA_NEXT_TRACK, KEY_MEDIA_NEXT_TRACK },
+    { VK_MEDIA_PREV_TRACK, KEY_MEDIA_PREV_TRACK },
+    { VK_MEDIA_STOP, KEY_MEDIA_STOP },
+    { VK_MEDIA_PLAY_PAUSE, KEY_MEDIA_PLAY_PAUSE },
 
     { 0, 0 }
 };

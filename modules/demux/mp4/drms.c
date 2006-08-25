@@ -2,7 +2,7 @@
  * drms.c: DRMS
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: drms.c 14377 2006-02-18 20:34:32Z courmisch $
+ * $Id: drms.c 15694 2006-05-20 13:05:21Z jpsaman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Sam Hocevar <sam@zoy.org>
@@ -334,7 +334,7 @@ int drms_init( void *_p_drms, uint32_t i_type,
             break;
 
         case FOURCC_name:
-            p_drms->p_name = strdup( p_info );
+            p_drms->p_name = (uint8_t*) strdup( (char *)p_info );
 
             if( p_drms->p_name == NULL )
             {
@@ -354,7 +354,7 @@ int drms_init( void *_p_drms, uint32_t i_type,
             }
 
             InitMD5( &md5 );
-            AddMD5( &md5, p_drms->p_name, strlen( p_drms->p_name ) );
+            AddMD5( &md5, p_drms->p_name, strlen( (char *)p_drms->p_name ) );
             AddMD5( &md5, p_drms->p_iviv, 16 );
             EndMD5( &md5 );
 
@@ -1634,10 +1634,10 @@ static int GetUserKey( void *_p_drms, uint32_t *p_user_key )
     struct aes_s aes;
     struct shuffle_s shuffle;
     uint32_t i, y;
-    uint32_t *p_sci_data;
+    uint32_t *p_sci_data = NULL;
     uint32_t i_user, i_key;
     uint32_t p_sys_key[ 4 ];
-    uint32_t i_sci_size, i_blocks, i_remaining;
+    uint32_t i_sci_size = 0, i_blocks, i_remaining;
     uint32_t *p_sci0, *p_sci1, *p_buffer;
     uint32_t p_sci_key[ 4 ];
     char *psz_ipod;
@@ -1797,8 +1797,7 @@ static int GetSCIData( char *psz_ipod, uint32_t **pp_sci,
                                          NULL, 0, p_tmp ) ) )
         {
             strncat( p_tmp, p_filename, min( strlen( p_filename ),
-                     (sizeof(p_tmp)/sizeof(p_tmp[0]) - 1) -
-                     strlen( p_tmp ) ) );
+                     (sizeof(p_tmp) - 1) - strlen( p_tmp ) ) );
 
             psz_path = FromLocale( p_tmp );
             strncpy( p_tmp, psz_path, sizeof( p_tmp ) - 1 );
@@ -1818,7 +1817,7 @@ static int GetSCIData( char *psz_ipod, uint32_t **pp_sci,
 #define ISCINFO "iSCInfo"
         if( strstr( psz_ipod, ISCINFO ) == NULL )
         {
-            snprintf( p_tmp, sizeof(p_tmp)/sizeof(p_tmp[0]) - 1,
+            snprintf( p_tmp, sizeof(p_tmp) - 1,
                       "%s/iPod_Control/iTunes/" ISCINFO "2", psz_ipod );
             psz_path = p_tmp;
         }

@@ -16,7 +16,7 @@ SUFFIXES = _plugin$(LIBEXT) _plugin.a
 
 libvlcdir = $(libdir)/vlc/$(basedir)
 
-EXTRA_LIBRARIES =  libaccess_output_dummy_plugin.a libaccess_output_dummy.a libaccess_output_dummy_pic.a libaccess_output_file_plugin.a libaccess_output_file.a libaccess_output_file_pic.a libaccess_output_udp_plugin.a libaccess_output_udp.a libaccess_output_udp_pic.a libaccess_output_http_plugin.a libaccess_output_http.a libaccess_output_http_pic.a libaccess_output_shout_plugin.a libaccess_output_shout.a libaccess_output_shout_pic.a
+EXTRA_LIBRARIES =  libaccess_output_dummy_plugin.a libaccess_output_dummy.a libaccess_output_file_plugin.a libaccess_output_file.a libaccess_output_udp_plugin.a libaccess_output_udp.a libaccess_output_http_plugin.a libaccess_output_http.a libaccess_output_shout_plugin.a libaccess_output_shout.a
 EXTRA_LTLIBRARIES =  libaccess_output_dummy_plugin.la libaccess_output_dummy_builtin.la libaccess_output_file_plugin.la libaccess_output_file_builtin.la libaccess_output_udp_plugin.la libaccess_output_udp_builtin.la libaccess_output_http_plugin.la libaccess_output_http_builtin.la libaccess_output_shout_plugin.la libaccess_output_shout_builtin.la
 
 include Modules.am
@@ -24,11 +24,14 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
+LIBVLC = -L$(top_builddir)/src -lvlc
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
+
+nice:
+	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -42,7 +45,6 @@ else
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
 	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --list plugin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
 	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" = "pic"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 endif
@@ -79,9 +81,6 @@ else
 	mkdir -p -- "$(DESTDIR)$(libvlcdir)"
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" ; 	      $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" || exit $$?; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-endif
 endif
 
 uninstall-local:
@@ -90,9 +89,6 @@ if USE_LIBTOOL
 else
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" ; 	      rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" || true; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" || true; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" || true; 	      ;; 	  esac; 	done
-endif
 endif
 
 # The access_output_dummy plugin
@@ -106,19 +102,14 @@ libaccess_output_dummy_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin access_
 libaccess_output_dummy_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin access_output_dummy`
 libaccess_output_dummy_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin access_output_dummy`
 libaccess_output_dummy_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin access_output_dummy` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libaccess_output_dummy_plugin_la_LIBADD = $(LTLIBVLC)
-
-libaccess_output_dummy_pic_a_SOURCES = $(SOURCES_access_output_dummy)
-libaccess_output_dummy_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_output_dummy`
-libaccess_output_dummy_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_output_dummy`
-libaccess_output_dummy_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_output_dummy`
 
 libaccess_output_dummy_a_SOURCES = $(SOURCES_access_output_dummy)
 libaccess_output_dummy_builtin_la_SOURCES = $(SOURCES_access_output_dummy)
-libaccess_output_dummy_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_output_dummy`
-libaccess_output_dummy_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_output_dummy`
-libaccess_output_dummy_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_output_dummy`
+libaccess_output_dummy_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_output_dummy`
+libaccess_output_dummy_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_output_dummy`
+libaccess_output_dummy_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_output_dummy`
 libaccess_output_dummy_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_output_dummy`
 libaccess_output_dummy_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_output_dummy`
 libaccess_output_dummy_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_output_dummy`
@@ -134,19 +125,14 @@ libaccess_output_file_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin access_o
 libaccess_output_file_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin access_output_file`
 libaccess_output_file_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin access_output_file`
 libaccess_output_file_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin access_output_file` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libaccess_output_file_plugin_la_LIBADD = $(LTLIBVLC)
-
-libaccess_output_file_pic_a_SOURCES = $(SOURCES_access_output_file)
-libaccess_output_file_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_output_file`
-libaccess_output_file_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_output_file`
-libaccess_output_file_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_output_file`
 
 libaccess_output_file_a_SOURCES = $(SOURCES_access_output_file)
 libaccess_output_file_builtin_la_SOURCES = $(SOURCES_access_output_file)
-libaccess_output_file_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_output_file`
-libaccess_output_file_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_output_file`
-libaccess_output_file_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_output_file`
+libaccess_output_file_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_output_file`
+libaccess_output_file_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_output_file`
+libaccess_output_file_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_output_file`
 libaccess_output_file_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_output_file`
 libaccess_output_file_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_output_file`
 libaccess_output_file_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_output_file`
@@ -162,19 +148,14 @@ libaccess_output_udp_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin access_ou
 libaccess_output_udp_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin access_output_udp`
 libaccess_output_udp_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin access_output_udp`
 libaccess_output_udp_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin access_output_udp` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libaccess_output_udp_plugin_la_LIBADD = $(LTLIBVLC)
-
-libaccess_output_udp_pic_a_SOURCES = $(SOURCES_access_output_udp)
-libaccess_output_udp_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_output_udp`
-libaccess_output_udp_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_output_udp`
-libaccess_output_udp_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_output_udp`
 
 libaccess_output_udp_a_SOURCES = $(SOURCES_access_output_udp)
 libaccess_output_udp_builtin_la_SOURCES = $(SOURCES_access_output_udp)
-libaccess_output_udp_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_output_udp`
-libaccess_output_udp_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_output_udp`
-libaccess_output_udp_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_output_udp`
+libaccess_output_udp_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_output_udp`
+libaccess_output_udp_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_output_udp`
+libaccess_output_udp_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_output_udp`
 libaccess_output_udp_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_output_udp`
 libaccess_output_udp_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_output_udp`
 libaccess_output_udp_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_output_udp`
@@ -190,19 +171,14 @@ libaccess_output_http_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin access_o
 libaccess_output_http_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin access_output_http`
 libaccess_output_http_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin access_output_http`
 libaccess_output_http_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin access_output_http` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libaccess_output_http_plugin_la_LIBADD = $(LTLIBVLC)
-
-libaccess_output_http_pic_a_SOURCES = $(SOURCES_access_output_http)
-libaccess_output_http_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_output_http`
-libaccess_output_http_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_output_http`
-libaccess_output_http_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_output_http`
 
 libaccess_output_http_a_SOURCES = $(SOURCES_access_output_http)
 libaccess_output_http_builtin_la_SOURCES = $(SOURCES_access_output_http)
-libaccess_output_http_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_output_http`
-libaccess_output_http_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_output_http`
-libaccess_output_http_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_output_http`
+libaccess_output_http_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_output_http`
+libaccess_output_http_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_output_http`
+libaccess_output_http_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_output_http`
 libaccess_output_http_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_output_http`
 libaccess_output_http_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_output_http`
 libaccess_output_http_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_output_http`
@@ -218,19 +194,14 @@ libaccess_output_shout_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin access_
 libaccess_output_shout_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin access_output_shout`
 libaccess_output_shout_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin access_output_shout`
 libaccess_output_shout_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin access_output_shout` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libaccess_output_shout_plugin_la_LIBADD = $(LTLIBVLC)
-
-libaccess_output_shout_pic_a_SOURCES = $(SOURCES_access_output_shout)
-libaccess_output_shout_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_output_shout`
-libaccess_output_shout_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_output_shout`
-libaccess_output_shout_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_output_shout`
 
 libaccess_output_shout_a_SOURCES = $(SOURCES_access_output_shout)
 libaccess_output_shout_builtin_la_SOURCES = $(SOURCES_access_output_shout)
-libaccess_output_shout_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_output_shout`
-libaccess_output_shout_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_output_shout`
-libaccess_output_shout_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_output_shout`
+libaccess_output_shout_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_output_shout`
+libaccess_output_shout_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_output_shout`
+libaccess_output_shout_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_output_shout`
 libaccess_output_shout_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_output_shout`
 libaccess_output_shout_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_output_shout`
 libaccess_output_shout_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_output_shout`

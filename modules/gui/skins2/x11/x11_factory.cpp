@@ -2,7 +2,7 @@
  * x11_factory.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: x11_factory.cpp 14118 2006-02-01 18:06:48Z courmisch $
+ * $Id: x11_factory.cpp 15598 2006-05-13 17:54:21Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -101,6 +101,31 @@ void X11Factory::minimize()
 {
     XIconifyWindow( m_pDisplay->getDisplay(), m_pDisplay->getMainWindow(),
                     DefaultScreen( m_pDisplay->getDisplay() ) );
+}
+
+void X11Factory::restore()
+{
+    // TODO
+}
+
+void X11Factory::addInTray()
+{
+    // TODO
+}
+
+void X11Factory::removeFromTray()
+{
+    // TODO
+}
+
+void X11Factory::addInTaskBar()
+{
+    // TODO
+}
+
+void X11Factory::removeFromTaskBar()
+{
+    // TODO
 }
 
 OSTimer *X11Factory::createOSTimer( CmdGeneric &rCmd )
