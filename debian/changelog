@@ -1,3 +1,107 @@
+vlc (0.8.6-svn20060918.debian-1ubuntu1) edgy; urgency=low
+
+  * Merge from Debian unstable. The following Ubuntu changes remain:
+    - debian/control:
+      + Build-Depend on firefox-dev, not libxul-dev and xulrunner,
+      + Build-Depend on linux-libc-dev, not linux-kernel-headers,
+      + Remove libtwolame-dev (not in Ubuntu) from Build-Depends,
+      + Loosen build-dependency for libcaca-dev to (>= 0.9),
+        NOTE: This change may result in subpar colour ASCII
+        rendering. Please see http://bugs.debian.org/385174 for
+        rationale,
+      + Set the maintainer field to
+        MOTU Media Team <motumedia@tauware.de> (we're responsible
+        for Ubuntu vlc breakage, not Debian), =)
+    - debian/rules:
+      + Retain UBUNTU_ENV, still using firefox,
+      + Add --enable-dmo --enable-loader to $(vlc_confflags) on i386,
+        allowing use of proprietary codecs,
+      + Remove --enable-twolame (see above change to debian/control).
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 24 Sep 2006 01:04:58 -0400
+
+vlc (0.8.6-svn20060918.debian-1) unstable; urgency=low
+
+  * New upstream SVN snapshot, with a slightly saner version number.
+  * debian/rules:
+    + Call dh_install with -si so that it does not try to install files that
+      are not for us (Closes: #387873).
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Mon, 18 Sep 2006 12:38:26 +0200
+
+vlc (0.8.6-svn20060911.0.8.5-1-svn.debian-5) unstable; urgency=low
+
+  * debian/control:
+    + Added proper conflicts/replaces to the libvlc0 package because it
+      overwrites files from old vlc packages (Closes: #387844).
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Sun, 17 Sep 2006 01:38:24 +0200
+
+vlc (0.8.6-svn20060911.0.8.5-1-svn.debian-4) unstable; urgency=low
+
+  * debian/control:
+    + Add libsdl-image1.2-dev to the build-dependencies.
+    + Shorten short descriptions and add “without X support” to the vlc-nox
+      short description.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Sat, 16 Sep 2006 20:08:53 +0200
+
+vlc (0.8.6-svn20060911.0.8.5-1-svn.debian-3) unstable; urgency=low
+
+  * debian/control:
+    + Distribute libvlc0 in a separate package.
+    + Created vlc-nox package that contains VLC and all its non-X related
+      plugins.
+  * debian/rules:
+    + Use dh_install.
+    + Bail out with an error if a plugin from vlc-nox got linked to libX11.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Thu, 14 Sep 2006 18:39:59 +0200
+
+vlc (0.8.6-svn20060911.0.8.5-1-svn.debian-2) unstable; urgency=low
+
+  * debian/patches/000_dup_builtins.diff:
+    + Fix a powerpc FTBFS due to duplicate libraries in link lines.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Mon, 11 Sep 2006 18:32:04 +0200
+
+vlc (0.8.6-svn20060911.0.8.5-1-svn.debian-1) unstable; urgency=low
+
+  * New upstream SVN snapshot, fixes an amd64 FTBFS.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Mon, 11 Sep 2006 13:56:19 +0200
+
+vlc (0.8.6-svn20060910.0.8.5-1-svn.debian-1) unstable; urgency=low
+
+  * New upstream SVN snapshot, from the forthcoming 0.8.5-1 branch.
+  * This branch's playlist window does not crash like the 0.8.6 does
+    (Closes: #375213, #385036, #384869).
+
+  * Upstream fixed implicit pointer functions (Closes: #385192).
+  * Upstream's x264 build system now uses config.guess instead of uname to
+    detect system and CPU types (Closes: #385535).
+  * Upstream removed debug messages from the ts plugin (Closes: #385008,
+    Closes: #385323).
+  * Aspect ration in mkv files was fixed (Closes: #385876).
+
+  * debian/control:
+    + Build-depend on libcaca-dev (>= 0.99.beta4-1) so that we no longer pull
+      useless build dependencies (Closes: #385536).
+    + Have VLC depend on ttf-dejavu again. It's used for subtitles and the
+      default skin.
+  * debian/copyright:
+    + Full copyright holders and license audit (Closes: #324978).
+  * debian/rules:
+    + No longer install old copyright files (Closes: #385200).
+    + Re-activated the speex module (Closes: #386204).
+    + Don't install TTF fonts, use the ones from ttf-dejavu instead.
+
+  * debian/patches/020_freetype_font.diff:
+    + Renamed this patch into 020_dejavu_font.diff and made it use dejavu
+      fonts.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Sun, 10 Sep 2006 19:02:17 +0200
+
 vlc (0.8.6-svn20060823.debian-3ubuntu1) edgy; urgency=low
 
   * Merge from Debian unstable. The remaining Ubuntu changes are:

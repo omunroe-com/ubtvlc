@@ -3,7 +3,7 @@
 # DO NOT EDIT - edit Modules.am or $(top_srcdir)/bootstrap instead
 
 basedir = control
-mods = gestures showintf telnet netsync ntservice hotkeys lirc rc motion
+mods = gestures showintf telnet netsync ntservice hotkeys lirc rc
 
 NULL =
 libvlc_LTLIBRARIES =
@@ -16,22 +16,19 @@ SUFFIXES = _plugin$(LIBEXT) _plugin.a
 
 libvlcdir = $(libdir)/vlc/$(basedir)
 
-EXTRA_LIBRARIES =  libgestures_plugin.a libgestures.a libshowintf_plugin.a libshowintf.a libtelnet_plugin.a libtelnet.a libnetsync_plugin.a libnetsync.a libntservice_plugin.a libntservice.a libhotkeys_plugin.a libhotkeys.a liblirc_plugin.a liblirc.a librc_plugin.a librc.a libmotion_plugin.a libmotion.a
-EXTRA_LTLIBRARIES =  libgestures_plugin.la libgestures_builtin.la libshowintf_plugin.la libshowintf_builtin.la libtelnet_plugin.la libtelnet_builtin.la libnetsync_plugin.la libnetsync_builtin.la libntservice_plugin.la libntservice_builtin.la libhotkeys_plugin.la libhotkeys_builtin.la liblirc_plugin.la liblirc_builtin.la librc_plugin.la librc_builtin.la libmotion_plugin.la libmotion_builtin.la
+EXTRA_LIBRARIES =  libgestures_plugin.a libgestures.a libshowintf_plugin.a libshowintf.a libtelnet_plugin.a libtelnet.a libnetsync_plugin.a libnetsync.a libntservice_plugin.a libntservice.a libhotkeys_plugin.a libhotkeys.a liblirc_plugin.a liblirc.a librc_plugin.a librc.a
+EXTRA_LTLIBRARIES =  libgestures_plugin.la libgestures_builtin.la libshowintf_plugin.la libshowintf_builtin.la libtelnet_plugin.la libtelnet_builtin.la libnetsync_plugin.la libnetsync_builtin.la libntservice_plugin.la libntservice_builtin.la libhotkeys_plugin.la libhotkeys_builtin.la liblirc_plugin.la liblirc_builtin.la librc_plugin.la librc_builtin.la
 
 include Modules.am
 
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = -L$(top_builddir)/src -lvlc
+LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
-
-nice:
-	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -107,9 +104,9 @@ libgestures_plugin_la_LIBADD = $(LTLIBVLC)
 
 libgestures_a_SOURCES = $(SOURCES_gestures)
 libgestures_builtin_la_SOURCES = $(SOURCES_gestures)
-libgestures_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) gestures`
-libgestures_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) gestures`
-libgestures_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) gestures`
+libgestures_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic gestures`
+libgestures_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic gestures`
+libgestures_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic gestures`
 libgestures_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin gestures`
 libgestures_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin gestures`
 libgestures_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin gestures`
@@ -130,9 +127,9 @@ libshowintf_plugin_la_LIBADD = $(LTLIBVLC)
 
 libshowintf_a_SOURCES = $(SOURCES_showintf)
 libshowintf_builtin_la_SOURCES = $(SOURCES_showintf)
-libshowintf_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) showintf`
-libshowintf_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) showintf`
-libshowintf_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) showintf`
+libshowintf_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic showintf`
+libshowintf_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic showintf`
+libshowintf_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic showintf`
 libshowintf_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin showintf`
 libshowintf_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin showintf`
 libshowintf_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin showintf`
@@ -153,9 +150,9 @@ libtelnet_plugin_la_LIBADD = $(LTLIBVLC)
 
 libtelnet_a_SOURCES = $(SOURCES_telnet)
 libtelnet_builtin_la_SOURCES = $(SOURCES_telnet)
-libtelnet_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) telnet`
-libtelnet_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) telnet`
-libtelnet_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) telnet`
+libtelnet_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic telnet`
+libtelnet_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic telnet`
+libtelnet_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic telnet`
 libtelnet_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin telnet`
 libtelnet_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin telnet`
 libtelnet_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin telnet`
@@ -176,9 +173,9 @@ libnetsync_plugin_la_LIBADD = $(LTLIBVLC)
 
 libnetsync_a_SOURCES = $(SOURCES_netsync)
 libnetsync_builtin_la_SOURCES = $(SOURCES_netsync)
-libnetsync_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) netsync`
-libnetsync_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) netsync`
-libnetsync_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) netsync`
+libnetsync_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic netsync`
+libnetsync_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic netsync`
+libnetsync_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic netsync`
 libnetsync_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin netsync`
 libnetsync_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin netsync`
 libnetsync_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin netsync`
@@ -199,9 +196,9 @@ libntservice_plugin_la_LIBADD = $(LTLIBVLC)
 
 libntservice_a_SOURCES = $(SOURCES_ntservice)
 libntservice_builtin_la_SOURCES = $(SOURCES_ntservice)
-libntservice_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) ntservice`
-libntservice_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) ntservice`
-libntservice_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) ntservice`
+libntservice_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ntservice`
+libntservice_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ntservice`
+libntservice_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ntservice`
 libntservice_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin ntservice`
 libntservice_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ntservice`
 libntservice_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ntservice`
@@ -222,9 +219,9 @@ libhotkeys_plugin_la_LIBADD = $(LTLIBVLC)
 
 libhotkeys_a_SOURCES = $(SOURCES_hotkeys)
 libhotkeys_builtin_la_SOURCES = $(SOURCES_hotkeys)
-libhotkeys_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) hotkeys`
-libhotkeys_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) hotkeys`
-libhotkeys_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) hotkeys`
+libhotkeys_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic hotkeys`
+libhotkeys_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic hotkeys`
+libhotkeys_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic hotkeys`
 libhotkeys_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin hotkeys`
 libhotkeys_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin hotkeys`
 libhotkeys_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin hotkeys`
@@ -245,9 +242,9 @@ liblirc_plugin_la_LIBADD = $(LTLIBVLC)
 
 liblirc_a_SOURCES = $(SOURCES_lirc)
 liblirc_builtin_la_SOURCES = $(SOURCES_lirc)
-liblirc_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) lirc`
-liblirc_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) lirc`
-liblirc_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) lirc`
+liblirc_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic lirc`
+liblirc_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic lirc`
+liblirc_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic lirc`
 liblirc_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin lirc`
 liblirc_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin lirc`
 liblirc_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin lirc`
@@ -268,33 +265,10 @@ librc_plugin_la_LIBADD = $(LTLIBVLC)
 
 librc_a_SOURCES = $(SOURCES_rc)
 librc_builtin_la_SOURCES = $(SOURCES_rc)
-librc_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) rc`
-librc_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) rc`
-librc_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) rc`
+librc_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic rc`
+librc_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic rc`
+librc_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic rc`
 librc_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin rc`
 librc_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin rc`
 librc_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin rc`
-
-# The motion plugin
-
-libmotion_plugin_a_SOURCES = $(SOURCES_motion)
-libmotion_plugin_la_SOURCES = $(SOURCES_motion)
-libmotion_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin motion`
-libmotion_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin motion`
-libmotion_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin motion`
-libmotion_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin motion`
-libmotion_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin motion`
-libmotion_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin motion`
-libmotion_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin motion` \
-	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
-libmotion_plugin_la_LIBADD = $(LTLIBVLC)
-
-libmotion_a_SOURCES = $(SOURCES_motion)
-libmotion_builtin_la_SOURCES = $(SOURCES_motion)
-libmotion_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) motion`
-libmotion_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) motion`
-libmotion_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) motion`
-libmotion_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin motion`
-libmotion_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin motion`
-libmotion_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin motion`
 

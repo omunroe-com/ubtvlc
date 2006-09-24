@@ -3,7 +3,7 @@
 # DO NOT EDIT - edit Modules.am or $(top_srcdir)/bootstrap instead
 
 basedir = access
-mods = access_file access_directory access_dv access_udp access_tcp access_http access_ftp access_smb access_gnomevfs dvdnav dvdread access_fake pvr v4l cdda
+mods = access_file access_directory access_dv access_udp access_tcp access_http access_ftp access_smb access_gnomevfs dvdnav dvdread access_fake cdda
 
 NULL =
 libvlc_LTLIBRARIES =
@@ -11,27 +11,24 @@ noinst_LTLIBRARIES =
 EXTRA_DIST = Modules.am
 BUILT_SOURCES =
 clean_modules =
-SUBDIRS = dshow dvb mms cdda rtsp vcd vcdx screen
+SUBDIRS = dshow dvb mms pvr v4l cdda rtsp vcd vcdx screen
 SUFFIXES = _plugin$(LIBEXT) _plugin.a
 
 libvlcdir = $(libdir)/vlc/$(basedir)
 
-EXTRA_LIBRARIES =  libaccess_file_plugin.a libaccess_file.a libaccess_directory_plugin.a libaccess_directory.a libaccess_dv_plugin.a libaccess_dv.a libaccess_udp_plugin.a libaccess_udp.a libaccess_tcp_plugin.a libaccess_tcp.a libaccess_http_plugin.a libaccess_http.a libaccess_ftp_plugin.a libaccess_ftp.a libaccess_smb_plugin.a libaccess_smb.a libaccess_gnomevfs_plugin.a libaccess_gnomevfs.a libdvdnav_plugin.a libdvdnav.a libdvdread_plugin.a libdvdread.a libaccess_fake_plugin.a libaccess_fake.a libpvr_plugin.a libpvr.a libv4l_plugin.a libv4l.a libcdda_plugin.a libcdda.a
-EXTRA_LTLIBRARIES =  libaccess_file_plugin.la libaccess_file_builtin.la libaccess_directory_plugin.la libaccess_directory_builtin.la libaccess_dv_plugin.la libaccess_dv_builtin.la libaccess_udp_plugin.la libaccess_udp_builtin.la libaccess_tcp_plugin.la libaccess_tcp_builtin.la libaccess_http_plugin.la libaccess_http_builtin.la libaccess_ftp_plugin.la libaccess_ftp_builtin.la libaccess_smb_plugin.la libaccess_smb_builtin.la libaccess_gnomevfs_plugin.la libaccess_gnomevfs_builtin.la libdvdnav_plugin.la libdvdnav_builtin.la libdvdread_plugin.la libdvdread_builtin.la libaccess_fake_plugin.la libaccess_fake_builtin.la libpvr_plugin.la libpvr_builtin.la libv4l_plugin.la libv4l_builtin.la libcdda_plugin.la libcdda_builtin.la
+EXTRA_LIBRARIES =  libaccess_file_plugin.a libaccess_file.a libaccess_directory_plugin.a libaccess_directory.a libaccess_dv_plugin.a libaccess_dv.a libaccess_udp_plugin.a libaccess_udp.a libaccess_tcp_plugin.a libaccess_tcp.a libaccess_http_plugin.a libaccess_http.a libaccess_ftp_plugin.a libaccess_ftp.a libaccess_smb_plugin.a libaccess_smb.a libaccess_gnomevfs_plugin.a libaccess_gnomevfs.a libdvdnav_plugin.a libdvdnav.a libdvdread_plugin.a libdvdread.a libaccess_fake_plugin.a libaccess_fake.a libcdda_plugin.a libcdda.a
+EXTRA_LTLIBRARIES =  libaccess_file_plugin.la libaccess_file_builtin.la libaccess_directory_plugin.la libaccess_directory_builtin.la libaccess_dv_plugin.la libaccess_dv_builtin.la libaccess_udp_plugin.la libaccess_udp_builtin.la libaccess_tcp_plugin.la libaccess_tcp_builtin.la libaccess_http_plugin.la libaccess_http_builtin.la libaccess_ftp_plugin.la libaccess_ftp_builtin.la libaccess_smb_plugin.la libaccess_smb_builtin.la libaccess_gnomevfs_plugin.la libaccess_gnomevfs_builtin.la libdvdnav_plugin.la libdvdnav_builtin.la libdvdread_plugin.la libdvdread_builtin.la libaccess_fake_plugin.la libaccess_fake_builtin.la libcdda_plugin.la libcdda_builtin.la
 
 include Modules.am
 
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = -L$(top_builddir)/src -lvlc
+LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
-
-nice:
-	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -107,9 +104,9 @@ libaccess_file_plugin_la_LIBADD = $(LTLIBVLC)
 
 libaccess_file_a_SOURCES = $(SOURCES_access_file)
 libaccess_file_builtin_la_SOURCES = $(SOURCES_access_file)
-libaccess_file_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_file`
-libaccess_file_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_file`
-libaccess_file_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_file`
+libaccess_file_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_file`
+libaccess_file_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_file`
+libaccess_file_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_file`
 libaccess_file_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_file`
 libaccess_file_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_file`
 libaccess_file_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_file`
@@ -130,9 +127,9 @@ libaccess_directory_plugin_la_LIBADD = $(LTLIBVLC)
 
 libaccess_directory_a_SOURCES = $(SOURCES_access_directory)
 libaccess_directory_builtin_la_SOURCES = $(SOURCES_access_directory)
-libaccess_directory_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_directory`
-libaccess_directory_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_directory`
-libaccess_directory_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_directory`
+libaccess_directory_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_directory`
+libaccess_directory_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_directory`
+libaccess_directory_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_directory`
 libaccess_directory_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_directory`
 libaccess_directory_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_directory`
 libaccess_directory_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_directory`
@@ -153,9 +150,9 @@ libaccess_dv_plugin_la_LIBADD = $(LTLIBVLC)
 
 libaccess_dv_a_SOURCES = $(SOURCES_access_dv)
 libaccess_dv_builtin_la_SOURCES = $(SOURCES_access_dv)
-libaccess_dv_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_dv`
-libaccess_dv_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_dv`
-libaccess_dv_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_dv`
+libaccess_dv_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_dv`
+libaccess_dv_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_dv`
+libaccess_dv_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_dv`
 libaccess_dv_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_dv`
 libaccess_dv_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_dv`
 libaccess_dv_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_dv`
@@ -176,9 +173,9 @@ libaccess_udp_plugin_la_LIBADD = $(LTLIBVLC)
 
 libaccess_udp_a_SOURCES = $(SOURCES_access_udp)
 libaccess_udp_builtin_la_SOURCES = $(SOURCES_access_udp)
-libaccess_udp_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_udp`
-libaccess_udp_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_udp`
-libaccess_udp_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_udp`
+libaccess_udp_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_udp`
+libaccess_udp_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_udp`
+libaccess_udp_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_udp`
 libaccess_udp_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_udp`
 libaccess_udp_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_udp`
 libaccess_udp_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_udp`
@@ -199,9 +196,9 @@ libaccess_tcp_plugin_la_LIBADD = $(LTLIBVLC)
 
 libaccess_tcp_a_SOURCES = $(SOURCES_access_tcp)
 libaccess_tcp_builtin_la_SOURCES = $(SOURCES_access_tcp)
-libaccess_tcp_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_tcp`
-libaccess_tcp_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_tcp`
-libaccess_tcp_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_tcp`
+libaccess_tcp_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_tcp`
+libaccess_tcp_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_tcp`
+libaccess_tcp_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_tcp`
 libaccess_tcp_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_tcp`
 libaccess_tcp_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_tcp`
 libaccess_tcp_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_tcp`
@@ -222,9 +219,9 @@ libaccess_http_plugin_la_LIBADD = $(LTLIBVLC)
 
 libaccess_http_a_SOURCES = $(SOURCES_access_http)
 libaccess_http_builtin_la_SOURCES = $(SOURCES_access_http)
-libaccess_http_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_http`
-libaccess_http_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_http`
-libaccess_http_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_http`
+libaccess_http_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_http`
+libaccess_http_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_http`
+libaccess_http_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_http`
 libaccess_http_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_http`
 libaccess_http_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_http`
 libaccess_http_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_http`
@@ -245,9 +242,9 @@ libaccess_ftp_plugin_la_LIBADD = $(LTLIBVLC)
 
 libaccess_ftp_a_SOURCES = $(SOURCES_access_ftp)
 libaccess_ftp_builtin_la_SOURCES = $(SOURCES_access_ftp)
-libaccess_ftp_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_ftp`
-libaccess_ftp_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_ftp`
-libaccess_ftp_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_ftp`
+libaccess_ftp_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_ftp`
+libaccess_ftp_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_ftp`
+libaccess_ftp_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_ftp`
 libaccess_ftp_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_ftp`
 libaccess_ftp_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_ftp`
 libaccess_ftp_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_ftp`
@@ -268,9 +265,9 @@ libaccess_smb_plugin_la_LIBADD = $(LTLIBVLC)
 
 libaccess_smb_a_SOURCES = $(SOURCES_access_smb)
 libaccess_smb_builtin_la_SOURCES = $(SOURCES_access_smb)
-libaccess_smb_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_smb`
-libaccess_smb_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_smb`
-libaccess_smb_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_smb`
+libaccess_smb_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_smb`
+libaccess_smb_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_smb`
+libaccess_smb_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_smb`
 libaccess_smb_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_smb`
 libaccess_smb_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_smb`
 libaccess_smb_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_smb`
@@ -291,9 +288,9 @@ libaccess_gnomevfs_plugin_la_LIBADD = $(LTLIBVLC)
 
 libaccess_gnomevfs_a_SOURCES = $(SOURCES_access_gnomevfs)
 libaccess_gnomevfs_builtin_la_SOURCES = $(SOURCES_access_gnomevfs)
-libaccess_gnomevfs_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_gnomevfs`
-libaccess_gnomevfs_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_gnomevfs`
-libaccess_gnomevfs_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_gnomevfs`
+libaccess_gnomevfs_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_gnomevfs`
+libaccess_gnomevfs_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_gnomevfs`
+libaccess_gnomevfs_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_gnomevfs`
 libaccess_gnomevfs_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_gnomevfs`
 libaccess_gnomevfs_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_gnomevfs`
 libaccess_gnomevfs_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_gnomevfs`
@@ -314,9 +311,9 @@ libdvdnav_plugin_la_LIBADD = $(LTLIBVLC)
 
 libdvdnav_a_SOURCES = $(SOURCES_dvdnav)
 libdvdnav_builtin_la_SOURCES = $(SOURCES_dvdnav)
-libdvdnav_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) dvdnav`
-libdvdnav_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) dvdnav`
-libdvdnav_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) dvdnav`
+libdvdnav_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic dvdnav`
+libdvdnav_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic dvdnav`
+libdvdnav_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic dvdnav`
 libdvdnav_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin dvdnav`
 libdvdnav_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin dvdnav`
 libdvdnav_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin dvdnav`
@@ -337,9 +334,9 @@ libdvdread_plugin_la_LIBADD = $(LTLIBVLC)
 
 libdvdread_a_SOURCES = $(SOURCES_dvdread)
 libdvdread_builtin_la_SOURCES = $(SOURCES_dvdread)
-libdvdread_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) dvdread`
-libdvdread_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) dvdread`
-libdvdread_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) dvdread`
+libdvdread_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic dvdread`
+libdvdread_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic dvdread`
+libdvdread_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic dvdread`
 libdvdread_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin dvdread`
 libdvdread_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin dvdread`
 libdvdread_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin dvdread`
@@ -360,58 +357,12 @@ libaccess_fake_plugin_la_LIBADD = $(LTLIBVLC)
 
 libaccess_fake_a_SOURCES = $(SOURCES_access_fake)
 libaccess_fake_builtin_la_SOURCES = $(SOURCES_access_fake)
-libaccess_fake_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_fake`
-libaccess_fake_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_fake`
-libaccess_fake_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_fake`
+libaccess_fake_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_fake`
+libaccess_fake_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_fake`
+libaccess_fake_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_fake`
 libaccess_fake_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_fake`
 libaccess_fake_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_fake`
 libaccess_fake_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_fake`
-
-# The pvr plugin
-
-libpvr_plugin_a_SOURCES = $(SOURCES_pvr)
-libpvr_plugin_la_SOURCES = $(SOURCES_pvr)
-libpvr_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin pvr`
-libpvr_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin pvr`
-libpvr_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin pvr`
-libpvr_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin pvr`
-libpvr_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin pvr`
-libpvr_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin pvr`
-libpvr_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin pvr` \
-	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
-libpvr_plugin_la_LIBADD = $(LTLIBVLC)
-
-libpvr_a_SOURCES = $(SOURCES_pvr)
-libpvr_builtin_la_SOURCES = $(SOURCES_pvr)
-libpvr_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) pvr`
-libpvr_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) pvr`
-libpvr_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) pvr`
-libpvr_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin pvr`
-libpvr_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pvr`
-libpvr_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pvr`
-
-# The v4l plugin
-
-libv4l_plugin_a_SOURCES = $(SOURCES_v4l)
-libv4l_plugin_la_SOURCES = $(SOURCES_v4l)
-libv4l_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin v4l`
-libv4l_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin v4l`
-libv4l_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin v4l`
-libv4l_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin v4l`
-libv4l_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin v4l`
-libv4l_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin v4l`
-libv4l_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin v4l` \
-	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
-libv4l_plugin_la_LIBADD = $(LTLIBVLC)
-
-libv4l_a_SOURCES = $(SOURCES_v4l)
-libv4l_builtin_la_SOURCES = $(SOURCES_v4l)
-libv4l_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) v4l`
-libv4l_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) v4l`
-libv4l_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) v4l`
-libv4l_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin v4l`
-libv4l_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin v4l`
-libv4l_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin v4l`
 
 # The cdda plugin
 
@@ -429,9 +380,9 @@ libcdda_plugin_la_LIBADD = $(LTLIBVLC)
 
 libcdda_a_SOURCES = $(SOURCES_cdda)
 libcdda_builtin_la_SOURCES = $(SOURCES_cdda)
-libcdda_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) cdda`
-libcdda_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) cdda`
-libcdda_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) cdda`
+libcdda_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic cdda`
+libcdda_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic cdda`
+libcdda_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic cdda`
 libcdda_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin cdda`
 libcdda_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin cdda`
 libcdda_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin cdda`

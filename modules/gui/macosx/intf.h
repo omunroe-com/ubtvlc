@@ -2,7 +2,7 @@
  * intf.h: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2006 the VideoLAN team
- * $Id: intf.h 16185 2006-07-31 22:15:13Z fkuehne $
+ * $Id: intf.h 16647 2006-09-14 14:58:57Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -99,7 +99,6 @@ struct intf_sys_t
     id o_bookmarks;             /* VLCBookmarks   */
     id o_embedded_list;         /* VLCEmbeddedList*/
     id o_interaction_list;      /* VLCInteractionList*/
-    id o_sfilters;              /* VLCsFilters    */
     id o_update;                /* VLCUpdate      */
     BOOL nib_main_loaded;       /* reference to the main-nib */
     BOOL nib_open_loaded;       /* reference to the open-nib */
@@ -107,7 +106,6 @@ struct intf_sys_t
     BOOL nib_wizard_loaded;     /* reference to the wizard-nib */
     BOOL nib_extended_loaded;   /* reference to the extended-nib */
     BOOL nib_bookmarks_loaded;  /* reference to the bookmarks-nib */
-    BOOL nib_sfilters_loaded;   /* reference to the sfilters-nib */
     BOOL nib_update_loaded;     /* reference to the update-nib */
 
     IBOutlet id o_window;       /* main window    */
@@ -120,7 +118,6 @@ struct intf_sys_t
     float f_slider_old;         /* old slider val */
     IBOutlet id o_volumeslider; /* volume slider  */
 
-    IBOutlet id o_main_pgbar;   /* main interface progress bar */
     IBOutlet id o_btn_prev;     /* btn previous   */
     IBOutlet id o_btn_rewind;   /* btn rewind     */
     IBOutlet id o_btn_play;     /* btn play       */
@@ -144,6 +141,14 @@ struct intf_sys_t
     NSMutableArray * o_msg_arr; /* messages array */
     NSLock * o_msg_lock;        /* messages lock  */
     IBOutlet id o_msgs_btn_crashlog;    /* messages open crashlog */
+
+    IBOutlet id o_error;        /* error panel    */
+    IBOutlet id o_err_msg;      /* NSTextView     */
+    IBOutlet id o_err_lbl;
+    IBOutlet id o_err_bug_lbl;
+    IBOutlet id o_err_btn_msgs; /* Open Messages  */
+    IBOutlet id o_err_btn_dismiss;
+    IBOutlet id o_err_ckbk_surpress;
 
     IBOutlet id o_info_window;  /* Info panel     */
 
@@ -255,7 +260,6 @@ struct intf_sys_t
     IBOutlet id o_mi_license;
     IBOutlet id o_mi_donation;
     IBOutlet id o_mi_forum;
-    IBOutlet id o_mi_errorsAndWarnings;
 
     /* dock menu */
     IBOutlet id o_dmi_play;
@@ -299,8 +303,6 @@ struct intf_sys_t
 - (id)getBookmarks;
 - (id)getEmbeddedList;
 - (id)getInteractionList;
-- (id)getMainIntfPgbar;
-- (id)getControllerWindow;
 - (id)getVoutMenu;
 - (void)terminate;
 - (NSString *)localizedString:(char *)psz;
@@ -333,11 +335,11 @@ struct intf_sys_t
 - (IBAction)showWizard:(id)sender;
 - (IBAction)showExtended:(id)sender;
 - (IBAction)showBookmarks:(id)sender;
-- (IBAction)showSFilters:(id)sender;
 
 - (IBAction)viewAbout:(id)sender;
 - (IBAction)viewPreferences:(id)sender;
 - (IBAction)checkForUpdate:(id)sender;
+- (IBAction)closeError:(id)sender;
 - (IBAction)openReadMe:(id)sender;
 - (IBAction)openDocumentation:(id)sender;
 - (IBAction)reportABug:(id)sender;
@@ -346,8 +348,6 @@ struct intf_sys_t
 - (IBAction)openForum:(id)sender;
 - (IBAction)openDonate:(id)sender;
 - (IBAction)openCrashLog:(id)sender;
-- (IBAction)viewErrorsAndWarnings:(id)sender;
-- (IBAction)showMessagesPanel:(id)sender;
 
 - (IBAction)togglePlaylist:(id)sender;
 - (void)updateTogglePlaylistState;

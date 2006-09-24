@@ -2,7 +2,7 @@
  * plugin.c:
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: plugin.c 16165 2006-07-30 12:22:00Z asmax $
+ * $Id: plugin.c 16647 2006-09-14 14:58:57Z hartman $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *          Implementation of the winamp plugin MilkDrop

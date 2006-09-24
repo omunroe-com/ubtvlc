@@ -24,14 +24,11 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = -L$(top_builddir)/src -lvlc
+LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
-
-nice:
-	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -107,9 +104,9 @@ libffmpeg_plugin_la_LIBADD = $(LTLIBVLC)
 
 libffmpeg_a_SOURCES = $(SOURCES_ffmpeg)
 libffmpeg_builtin_la_SOURCES = $(SOURCES_ffmpeg)
-libffmpeg_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) ffmpeg`
-libffmpeg_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) ffmpeg`
-libffmpeg_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) ffmpeg`
+libffmpeg_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ffmpeg`
+libffmpeg_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ffmpeg`
+libffmpeg_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ffmpeg`
 libffmpeg_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin ffmpeg`
 libffmpeg_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ffmpeg`
 libffmpeg_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ffmpeg`
@@ -130,9 +127,9 @@ libffmpegaltivec_plugin_la_LIBADD = $(LTLIBVLC)
 
 libffmpegaltivec_a_SOURCES = $(SOURCES_ffmpegaltivec)
 libffmpegaltivec_builtin_la_SOURCES = $(SOURCES_ffmpegaltivec)
-libffmpegaltivec_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) ffmpegaltivec`
-libffmpegaltivec_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) ffmpegaltivec`
-libffmpegaltivec_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) ffmpegaltivec`
+libffmpegaltivec_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ffmpegaltivec`
+libffmpegaltivec_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ffmpegaltivec`
+libffmpegaltivec_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ffmpegaltivec`
 libffmpegaltivec_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin ffmpegaltivec`
 libffmpegaltivec_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ffmpegaltivec`
 libffmpegaltivec_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ffmpegaltivec`

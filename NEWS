@@ -1,23 +1,41 @@
-$Id: NEWS 16062 2006-07-16 21:02:33Z dionoea $
+$Id: NEWS 16713 2006-09-17 21:37:22Z zorglub $
 
-Changes between 0.8.5 and 0.8.6-svn (not released yet)
---------------------------------------------------
-Core support:
- * New playlist core
- * Video Filter2 filters can now be selected for local display using --video-filter
+Changes between 0.8.5 and 0.8.6:
+--------------------------------
 
-Video Filters:
- * Adjust, Invert and Distort (now splited into Wave, Ripple, Gradient and Psychedelic) video filters have been ported to the Video Filter2 API. They can now be streamed.
+Playlist:
+ * Shoutcast TV listings support
 
-Nix Port
- * Notification plugin.
+Input:
+ * Support for RTSP authentication
+ * Support for adding subtitles on the fly
+ * Fixed MPEG-PS duration calculation
+ * ATSC support for DVB
+
+Decoders:
+ * Native WMV3 / VC-1 support
+ * WMA Speech support (through binary codecs)
+
+Video output:
+ * Additional OpenGL effects (cylinder, torus, sphere, ...)
+ * Improved libcaca support
+
+Interfaces:
+ * New hotkeys for crop and zoom
+ * Systray support in skins (Windows only)
+ * Support for Apple Remote control
+ * Notifications using notification-daemon on Linux
+ * Support for snapshots from the HTTP interface
 
 Localization:
- * Add Czech 
+ * Add Czech
+
+Developers:
+ * Updates to the libvlc API
 
 
-Changes between 0.8.4a and 0.8.5
----------------------------------
+Changes between 0.8.4a and 0.8.5:
+----------------------------------
 
 Core support:
  * Statistics collection (bitrates, packets, connections, ...)

@@ -24,14 +24,11 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = -L$(top_builddir)/src -lvlc
+LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
-
-nice:
-	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -107,9 +104,9 @@ libmacosx_plugin_la_LIBADD = $(LTLIBVLC)
 
 libmacosx_a_SOURCES = $(SOURCES_macosx)
 libmacosx_builtin_la_SOURCES = $(SOURCES_macosx)
-libmacosx_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) macosx`
-libmacosx_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) macosx`
-libmacosx_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) macosx`
+libmacosx_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic macosx`
+libmacosx_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic macosx`
+libmacosx_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic macosx`
 libmacosx_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin macosx`
 libmacosx_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin macosx`
 libmacosx_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin macosx`

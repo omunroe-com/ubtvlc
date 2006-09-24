@@ -24,14 +24,11 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = -L$(top_builddir)/src -lvlc
+LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
-
-nice:
-	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -107,9 +104,9 @@ libaccess_filter_timeshift_plugin_la_LIBADD = $(LTLIBVLC)
 
 libaccess_filter_timeshift_a_SOURCES = $(SOURCES_access_filter_timeshift)
 libaccess_filter_timeshift_builtin_la_SOURCES = $(SOURCES_access_filter_timeshift)
-libaccess_filter_timeshift_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_filter_timeshift`
-libaccess_filter_timeshift_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_filter_timeshift`
-libaccess_filter_timeshift_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_filter_timeshift`
+libaccess_filter_timeshift_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_filter_timeshift`
+libaccess_filter_timeshift_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_filter_timeshift`
+libaccess_filter_timeshift_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_filter_timeshift`
 libaccess_filter_timeshift_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_filter_timeshift`
 libaccess_filter_timeshift_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_filter_timeshift`
 libaccess_filter_timeshift_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_filter_timeshift`
@@ -130,9 +127,9 @@ libaccess_filter_record_plugin_la_LIBADD = $(LTLIBVLC)
 
 libaccess_filter_record_a_SOURCES = $(SOURCES_access_filter_record)
 libaccess_filter_record_builtin_la_SOURCES = $(SOURCES_access_filter_record)
-libaccess_filter_record_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_filter_record`
-libaccess_filter_record_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_filter_record`
-libaccess_filter_record_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_filter_record`
+libaccess_filter_record_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_filter_record`
+libaccess_filter_record_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_filter_record`
+libaccess_filter_record_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_filter_record`
 libaccess_filter_record_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_filter_record`
 libaccess_filter_record_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_filter_record`
 libaccess_filter_record_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_filter_record`
