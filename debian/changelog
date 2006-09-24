@@ -1,3 +1,12 @@
+vlc (0.8.6-svn20060918.debian-1ubuntu2) edgy; urgency=low
+
+  * debian/rules: Remove --enable-dmo --enable-loader from i386
+    $(vlc_confflags). With the dh_install -si --fail-missing
+    semantics, arch-specific exceptions aren't possible. Fixes
+    FTBFS on i386.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 24 Sep 2006 19:08:38 -0400
+
 vlc (0.8.6-svn20060918.debian-1ubuntu1) edgy; urgency=low
 
   * Merge from Debian unstable. The following Ubuntu changes remain:
