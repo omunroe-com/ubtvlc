@@ -85,7 +85,6 @@ vlc_confflags += --enable-x264 --with-x264-tree=extras/x264
 ifeq ($(shell dpkg-architecture -qDEB_BUILD_ARCH_CPU),i386)
 vlc_confflags += --enable-glide
 vlc_confflags += --enable-svgalib
-vlc_confflags += --enable-dmo --enable-loader
 endif
 
 # Remove --without-dvdcss in non-totalitarian countries
