@@ -24,14 +24,11 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = -L$(top_builddir)/src -lvlc
+LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
-
-nice:
-	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -107,9 +104,9 @@ libscreen_plugin_la_LIBADD = $(LTLIBVLC)
 
 libscreen_a_SOURCES = $(SOURCES_screen)
 libscreen_builtin_la_SOURCES = $(SOURCES_screen)
-libscreen_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) screen`
-libscreen_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) screen`
-libscreen_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) screen`
+libscreen_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic screen`
+libscreen_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic screen`
+libscreen_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic screen`
 libscreen_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin screen`
 libscreen_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin screen`
 libscreen_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin screen`

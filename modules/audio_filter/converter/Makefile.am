@@ -3,7 +3,7 @@
 # DO NOT EDIT - edit Modules.am or $(top_srcdir)/bootstrap instead
 
 basedir = audio_filter
-mods = float32tos16 float32tos8 float32tou16 float32tou8 a52tospdif a52tofloat32 dtstospdif dtstofloat32 fixed32tos16 s16tofixed32 fixed32tofloat32 s16tofloat32 s16tofloat32swab s8tofloat32 u8tofixed32 u8tofloat32 mpgatofixed32 mono
+mods = float32tos16 float32tos8 float32tou16 float32tou8 a52tospdif a52tofloat32 dtstospdif dtstofloat32 fixed32tos16 s16tofixed32 fixed32tofloat32 s16tofloat32 s16tofloat32swab s8tofloat32 u8tofixed32 u8tofloat32 mpgatofixed32
 
 NULL =
 libvlc_LTLIBRARIES =
@@ -16,22 +16,19 @@ SUFFIXES = _plugin$(LIBEXT) _plugin.a
 
 libvlcdir = $(libdir)/vlc/$(basedir)
 
-EXTRA_LIBRARIES =  libfloat32tos16_plugin.a libfloat32tos16.a libfloat32tos8_plugin.a libfloat32tos8.a libfloat32tou16_plugin.a libfloat32tou16.a libfloat32tou8_plugin.a libfloat32tou8.a liba52tospdif_plugin.a liba52tospdif.a liba52tofloat32_plugin.a liba52tofloat32.a libdtstospdif_plugin.a libdtstospdif.a libdtstofloat32_plugin.a libdtstofloat32.a libfixed32tos16_plugin.a libfixed32tos16.a libs16tofixed32_plugin.a libs16tofixed32.a libfixed32tofloat32_plugin.a libfixed32tofloat32.a libs16tofloat32_plugin.a libs16tofloat32.a libs16tofloat32swab_plugin.a libs16tofloat32swab.a libs8tofloat32_plugin.a libs8tofloat32.a libu8tofixed32_plugin.a libu8tofixed32.a libu8tofloat32_plugin.a libu8tofloat32.a libmpgatofixed32_plugin.a libmpgatofixed32.a libmono_plugin.a libmono.a
-EXTRA_LTLIBRARIES =  libfloat32tos16_plugin.la libfloat32tos16_builtin.la libfloat32tos8_plugin.la libfloat32tos8_builtin.la libfloat32tou16_plugin.la libfloat32tou16_builtin.la libfloat32tou8_plugin.la libfloat32tou8_builtin.la liba52tospdif_plugin.la liba52tospdif_builtin.la liba52tofloat32_plugin.la liba52tofloat32_builtin.la libdtstospdif_plugin.la libdtstospdif_builtin.la libdtstofloat32_plugin.la libdtstofloat32_builtin.la libfixed32tos16_plugin.la libfixed32tos16_builtin.la libs16tofixed32_plugin.la libs16tofixed32_builtin.la libfixed32tofloat32_plugin.la libfixed32tofloat32_builtin.la libs16tofloat32_plugin.la libs16tofloat32_builtin.la libs16tofloat32swab_plugin.la libs16tofloat32swab_builtin.la libs8tofloat32_plugin.la libs8tofloat32_builtin.la libu8tofixed32_plugin.la libu8tofixed32_builtin.la libu8tofloat32_plugin.la libu8tofloat32_builtin.la libmpgatofixed32_plugin.la libmpgatofixed32_builtin.la libmono_plugin.la libmono_builtin.la
+EXTRA_LIBRARIES =  libfloat32tos16_plugin.a libfloat32tos16.a libfloat32tos8_plugin.a libfloat32tos8.a libfloat32tou16_plugin.a libfloat32tou16.a libfloat32tou8_plugin.a libfloat32tou8.a liba52tospdif_plugin.a liba52tospdif.a liba52tofloat32_plugin.a liba52tofloat32.a libdtstospdif_plugin.a libdtstospdif.a libdtstofloat32_plugin.a libdtstofloat32.a libfixed32tos16_plugin.a libfixed32tos16.a libs16tofixed32_plugin.a libs16tofixed32.a libfixed32tofloat32_plugin.a libfixed32tofloat32.a libs16tofloat32_plugin.a libs16tofloat32.a libs16tofloat32swab_plugin.a libs16tofloat32swab.a libs8tofloat32_plugin.a libs8tofloat32.a libu8tofixed32_plugin.a libu8tofixed32.a libu8tofloat32_plugin.a libu8tofloat32.a libmpgatofixed32_plugin.a libmpgatofixed32.a
+EXTRA_LTLIBRARIES =  libfloat32tos16_plugin.la libfloat32tos16_builtin.la libfloat32tos8_plugin.la libfloat32tos8_builtin.la libfloat32tou16_plugin.la libfloat32tou16_builtin.la libfloat32tou8_plugin.la libfloat32tou8_builtin.la liba52tospdif_plugin.la liba52tospdif_builtin.la liba52tofloat32_plugin.la liba52tofloat32_builtin.la libdtstospdif_plugin.la libdtstospdif_builtin.la libdtstofloat32_plugin.la libdtstofloat32_builtin.la libfixed32tos16_plugin.la libfixed32tos16_builtin.la libs16tofixed32_plugin.la libs16tofixed32_builtin.la libfixed32tofloat32_plugin.la libfixed32tofloat32_builtin.la libs16tofloat32_plugin.la libs16tofloat32_builtin.la libs16tofloat32swab_plugin.la libs16tofloat32swab_builtin.la libs8tofloat32_plugin.la libs8tofloat32_builtin.la libu8tofixed32_plugin.la libu8tofixed32_builtin.la libu8tofloat32_plugin.la libu8tofloat32_builtin.la libmpgatofixed32_plugin.la libmpgatofixed32_builtin.la
 
 include Modules.am
 
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = -L$(top_builddir)/src -lvlc
+LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
-
-nice:
-	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -107,9 +104,9 @@ libfloat32tos16_plugin_la_LIBADD = $(LTLIBVLC)
 
 libfloat32tos16_a_SOURCES = $(SOURCES_float32tos16)
 libfloat32tos16_builtin_la_SOURCES = $(SOURCES_float32tos16)
-libfloat32tos16_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) float32tos16`
-libfloat32tos16_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) float32tos16`
-libfloat32tos16_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) float32tos16`
+libfloat32tos16_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic float32tos16`
+libfloat32tos16_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic float32tos16`
+libfloat32tos16_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic float32tos16`
 libfloat32tos16_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin float32tos16`
 libfloat32tos16_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin float32tos16`
 libfloat32tos16_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin float32tos16`
@@ -130,9 +127,9 @@ libfloat32tos8_plugin_la_LIBADD = $(LTLIBVLC)
 
 libfloat32tos8_a_SOURCES = $(SOURCES_float32tos8)
 libfloat32tos8_builtin_la_SOURCES = $(SOURCES_float32tos8)
-libfloat32tos8_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) float32tos8`
-libfloat32tos8_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) float32tos8`
-libfloat32tos8_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) float32tos8`
+libfloat32tos8_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic float32tos8`
+libfloat32tos8_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic float32tos8`
+libfloat32tos8_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic float32tos8`
 libfloat32tos8_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin float32tos8`
 libfloat32tos8_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin float32tos8`
 libfloat32tos8_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin float32tos8`
@@ -153,9 +150,9 @@ libfloat32tou16_plugin_la_LIBADD = $(LTLIBVLC)
 
 libfloat32tou16_a_SOURCES = $(SOURCES_float32tou16)
 libfloat32tou16_builtin_la_SOURCES = $(SOURCES_float32tou16)
-libfloat32tou16_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) float32tou16`
-libfloat32tou16_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) float32tou16`
-libfloat32tou16_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) float32tou16`
+libfloat32tou16_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic float32tou16`
+libfloat32tou16_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic float32tou16`
+libfloat32tou16_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic float32tou16`
 libfloat32tou16_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin float32tou16`
 libfloat32tou16_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin float32tou16`
 libfloat32tou16_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin float32tou16`
@@ -176,9 +173,9 @@ libfloat32tou8_plugin_la_LIBADD = $(LTLIBVLC)
 
 libfloat32tou8_a_SOURCES = $(SOURCES_float32tou8)
 libfloat32tou8_builtin_la_SOURCES = $(SOURCES_float32tou8)
-libfloat32tou8_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) float32tou8`
-libfloat32tou8_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) float32tou8`
-libfloat32tou8_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) float32tou8`
+libfloat32tou8_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic float32tou8`
+libfloat32tou8_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic float32tou8`
+libfloat32tou8_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic float32tou8`
 libfloat32tou8_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin float32tou8`
 libfloat32tou8_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin float32tou8`
 libfloat32tou8_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin float32tou8`
@@ -199,9 +196,9 @@ liba52tospdif_plugin_la_LIBADD = $(LTLIBVLC)
 
 liba52tospdif_a_SOURCES = $(SOURCES_a52tospdif)
 liba52tospdif_builtin_la_SOURCES = $(SOURCES_a52tospdif)
-liba52tospdif_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) a52tospdif`
-liba52tospdif_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) a52tospdif`
-liba52tospdif_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) a52tospdif`
+liba52tospdif_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic a52tospdif`
+liba52tospdif_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic a52tospdif`
+liba52tospdif_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic a52tospdif`
 liba52tospdif_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin a52tospdif`
 liba52tospdif_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin a52tospdif`
 liba52tospdif_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin a52tospdif`
@@ -222,9 +219,9 @@ liba52tofloat32_plugin_la_LIBADD = $(LTLIBVLC)
 
 liba52tofloat32_a_SOURCES = $(SOURCES_a52tofloat32)
 liba52tofloat32_builtin_la_SOURCES = $(SOURCES_a52tofloat32)
-liba52tofloat32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) a52tofloat32`
-liba52tofloat32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) a52tofloat32`
-liba52tofloat32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) a52tofloat32`
+liba52tofloat32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic a52tofloat32`
+liba52tofloat32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic a52tofloat32`
+liba52tofloat32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic a52tofloat32`
 liba52tofloat32_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin a52tofloat32`
 liba52tofloat32_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin a52tofloat32`
 liba52tofloat32_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin a52tofloat32`
@@ -245,9 +242,9 @@ libdtstospdif_plugin_la_LIBADD = $(LTLIBVLC)
 
 libdtstospdif_a_SOURCES = $(SOURCES_dtstospdif)
 libdtstospdif_builtin_la_SOURCES = $(SOURCES_dtstospdif)
-libdtstospdif_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) dtstospdif`
-libdtstospdif_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) dtstospdif`
-libdtstospdif_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) dtstospdif`
+libdtstospdif_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic dtstospdif`
+libdtstospdif_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic dtstospdif`
+libdtstospdif_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic dtstospdif`
 libdtstospdif_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin dtstospdif`
 libdtstospdif_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin dtstospdif`
 libdtstospdif_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin dtstospdif`
@@ -268,9 +265,9 @@ libdtstofloat32_plugin_la_LIBADD = $(LTLIBVLC)
 
 libdtstofloat32_a_SOURCES = $(SOURCES_dtstofloat32)
 libdtstofloat32_builtin_la_SOURCES = $(SOURCES_dtstofloat32)
-libdtstofloat32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) dtstofloat32`
-libdtstofloat32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) dtstofloat32`
-libdtstofloat32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) dtstofloat32`
+libdtstofloat32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic dtstofloat32`
+libdtstofloat32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic dtstofloat32`
+libdtstofloat32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic dtstofloat32`
 libdtstofloat32_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin dtstofloat32`
 libdtstofloat32_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin dtstofloat32`
 libdtstofloat32_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin dtstofloat32`
@@ -291,9 +288,9 @@ libfixed32tos16_plugin_la_LIBADD = $(LTLIBVLC)
 
 libfixed32tos16_a_SOURCES = $(SOURCES_fixed32tos16)
 libfixed32tos16_builtin_la_SOURCES = $(SOURCES_fixed32tos16)
-libfixed32tos16_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) fixed32tos16`
-libfixed32tos16_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) fixed32tos16`
-libfixed32tos16_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) fixed32tos16`
+libfixed32tos16_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic fixed32tos16`
+libfixed32tos16_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic fixed32tos16`
+libfixed32tos16_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic fixed32tos16`
 libfixed32tos16_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin fixed32tos16`
 libfixed32tos16_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin fixed32tos16`
 libfixed32tos16_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin fixed32tos16`
@@ -314,9 +311,9 @@ libs16tofixed32_plugin_la_LIBADD = $(LTLIBVLC)
 
 libs16tofixed32_a_SOURCES = $(SOURCES_s16tofixed32)
 libs16tofixed32_builtin_la_SOURCES = $(SOURCES_s16tofixed32)
-libs16tofixed32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) s16tofixed32`
-libs16tofixed32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) s16tofixed32`
-libs16tofixed32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) s16tofixed32`
+libs16tofixed32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic s16tofixed32`
+libs16tofixed32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic s16tofixed32`
+libs16tofixed32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic s16tofixed32`
 libs16tofixed32_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin s16tofixed32`
 libs16tofixed32_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin s16tofixed32`
 libs16tofixed32_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin s16tofixed32`
@@ -337,9 +334,9 @@ libfixed32tofloat32_plugin_la_LIBADD = $(LTLIBVLC)
 
 libfixed32tofloat32_a_SOURCES = $(SOURCES_fixed32tofloat32)
 libfixed32tofloat32_builtin_la_SOURCES = $(SOURCES_fixed32tofloat32)
-libfixed32tofloat32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) fixed32tofloat32`
-libfixed32tofloat32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) fixed32tofloat32`
-libfixed32tofloat32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) fixed32tofloat32`
+libfixed32tofloat32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic fixed32tofloat32`
+libfixed32tofloat32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic fixed32tofloat32`
+libfixed32tofloat32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic fixed32tofloat32`
 libfixed32tofloat32_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin fixed32tofloat32`
 libfixed32tofloat32_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin fixed32tofloat32`
 libfixed32tofloat32_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin fixed32tofloat32`
@@ -360,9 +357,9 @@ libs16tofloat32_plugin_la_LIBADD = $(LTLIBVLC)
 
 libs16tofloat32_a_SOURCES = $(SOURCES_s16tofloat32)
 libs16tofloat32_builtin_la_SOURCES = $(SOURCES_s16tofloat32)
-libs16tofloat32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) s16tofloat32`
-libs16tofloat32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) s16tofloat32`
-libs16tofloat32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) s16tofloat32`
+libs16tofloat32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic s16tofloat32`
+libs16tofloat32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic s16tofloat32`
+libs16tofloat32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic s16tofloat32`
 libs16tofloat32_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin s16tofloat32`
 libs16tofloat32_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin s16tofloat32`
 libs16tofloat32_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin s16tofloat32`
@@ -383,9 +380,9 @@ libs16tofloat32swab_plugin_la_LIBADD = $(LTLIBVLC)
 
 libs16tofloat32swab_a_SOURCES = $(SOURCES_s16tofloat32swab)
 libs16tofloat32swab_builtin_la_SOURCES = $(SOURCES_s16tofloat32swab)
-libs16tofloat32swab_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) s16tofloat32swab`
-libs16tofloat32swab_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) s16tofloat32swab`
-libs16tofloat32swab_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) s16tofloat32swab`
+libs16tofloat32swab_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic s16tofloat32swab`
+libs16tofloat32swab_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic s16tofloat32swab`
+libs16tofloat32swab_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic s16tofloat32swab`
 libs16tofloat32swab_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin s16tofloat32swab`
 libs16tofloat32swab_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin s16tofloat32swab`
 libs16tofloat32swab_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin s16tofloat32swab`
@@ -406,9 +403,9 @@ libs8tofloat32_plugin_la_LIBADD = $(LTLIBVLC)
 
 libs8tofloat32_a_SOURCES = $(SOURCES_s8tofloat32)
 libs8tofloat32_builtin_la_SOURCES = $(SOURCES_s8tofloat32)
-libs8tofloat32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) s8tofloat32`
-libs8tofloat32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) s8tofloat32`
-libs8tofloat32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) s8tofloat32`
+libs8tofloat32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic s8tofloat32`
+libs8tofloat32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic s8tofloat32`
+libs8tofloat32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic s8tofloat32`
 libs8tofloat32_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin s8tofloat32`
 libs8tofloat32_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin s8tofloat32`
 libs8tofloat32_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin s8tofloat32`
@@ -429,9 +426,9 @@ libu8tofixed32_plugin_la_LIBADD = $(LTLIBVLC)
 
 libu8tofixed32_a_SOURCES = $(SOURCES_u8tofixed32)
 libu8tofixed32_builtin_la_SOURCES = $(SOURCES_u8tofixed32)
-libu8tofixed32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) u8tofixed32`
-libu8tofixed32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) u8tofixed32`
-libu8tofixed32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) u8tofixed32`
+libu8tofixed32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic u8tofixed32`
+libu8tofixed32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic u8tofixed32`
+libu8tofixed32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic u8tofixed32`
 libu8tofixed32_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin u8tofixed32`
 libu8tofixed32_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin u8tofixed32`
 libu8tofixed32_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin u8tofixed32`
@@ -452,9 +449,9 @@ libu8tofloat32_plugin_la_LIBADD = $(LTLIBVLC)
 
 libu8tofloat32_a_SOURCES = $(SOURCES_u8tofloat32)
 libu8tofloat32_builtin_la_SOURCES = $(SOURCES_u8tofloat32)
-libu8tofloat32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) u8tofloat32`
-libu8tofloat32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) u8tofloat32`
-libu8tofloat32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) u8tofloat32`
+libu8tofloat32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic u8tofloat32`
+libu8tofloat32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic u8tofloat32`
+libu8tofloat32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic u8tofloat32`
 libu8tofloat32_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin u8tofloat32`
 libu8tofloat32_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin u8tofloat32`
 libu8tofloat32_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin u8tofloat32`
@@ -475,33 +472,10 @@ libmpgatofixed32_plugin_la_LIBADD = $(LTLIBVLC)
 
 libmpgatofixed32_a_SOURCES = $(SOURCES_mpgatofixed32)
 libmpgatofixed32_builtin_la_SOURCES = $(SOURCES_mpgatofixed32)
-libmpgatofixed32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) mpgatofixed32`
-libmpgatofixed32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) mpgatofixed32`
-libmpgatofixed32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) mpgatofixed32`
+libmpgatofixed32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mpgatofixed32`
+libmpgatofixed32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mpgatofixed32`
+libmpgatofixed32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mpgatofixed32`
 libmpgatofixed32_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin mpgatofixed32`
 libmpgatofixed32_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mpgatofixed32`
 libmpgatofixed32_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mpgatofixed32`
-
-# The mono plugin
-
-libmono_plugin_a_SOURCES = $(SOURCES_mono)
-libmono_plugin_la_SOURCES = $(SOURCES_mono)
-libmono_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin mono`
-libmono_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mono`
-libmono_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mono`
-libmono_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin mono`
-libmono_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mono`
-libmono_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mono`
-libmono_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin mono` \
-	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
-libmono_plugin_la_LIBADD = $(LTLIBVLC)
-
-libmono_a_SOURCES = $(SOURCES_mono)
-libmono_builtin_la_SOURCES = $(SOURCES_mono)
-libmono_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) mono`
-libmono_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) mono`
-libmono_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) mono`
-libmono_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin mono`
-libmono_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mono`
-libmono_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mono`
 

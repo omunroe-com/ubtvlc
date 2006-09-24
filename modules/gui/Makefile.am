@@ -11,7 +11,7 @@ noinst_LTLIBRARIES =
 EXTRA_DIST = Modules.am
 BUILT_SOURCES =
 clean_modules =
-SUBDIRS = beos pda macosx qnx qt4 skins2 wxwidgets wince
+SUBDIRS = beos pda macosx qnx skins2 wxwidgets wince
 SUFFIXES = _plugin$(LIBEXT) _plugin.a
 
 libvlcdir = $(libdir)/vlc/$(basedir)
@@ -24,14 +24,11 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = -L$(top_builddir)/src -lvlc
+LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
-
-nice:
-	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -107,9 +104,9 @@ libncurses_plugin_la_LIBADD = $(LTLIBVLC)
 
 libncurses_a_SOURCES = $(SOURCES_ncurses)
 libncurses_builtin_la_SOURCES = $(SOURCES_ncurses)
-libncurses_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) ncurses`
-libncurses_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) ncurses`
-libncurses_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) ncurses`
+libncurses_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic ncurses`
+libncurses_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic ncurses`
+libncurses_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic ncurses`
 libncurses_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin ncurses`
 libncurses_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin ncurses`
 libncurses_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin ncurses`

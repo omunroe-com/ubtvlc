@@ -2,7 +2,7 @@
  * ctrl_generic.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_generic.hpp 16167 2006-07-30 14:34:21Z ipkiss $
+ * $Id: ctrl_generic.hpp 16647 2006-09-14 14:58:57Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
