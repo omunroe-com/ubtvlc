@@ -1,3 +1,10 @@
+vlc (0.8.6-svn20060918.debian-1ubuntu3) edgy; urgency=low
+
+  * Backport fixes from Debian's 0925 snapshot, fixing failure to
+    read rtsp streams from Freebox (Closes Ubuntu: #62856, #63135).
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sat, 30 Sep 2006 22:07:46 -0400
+
 vlc (0.8.6-svn20060918.debian-1ubuntu2) edgy; urgency=low
 
   * debian/rules: Remove --enable-dmo --enable-loader from i386

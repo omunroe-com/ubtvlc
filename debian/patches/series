@@ -1,6 +1,8 @@
 000_ltmain.diff
+001_0925.fixes.diff
 010_no-wx-updates.diff 
 010_osdmenu-paths.diff 
+020_certificates_paths.diff
 #020_xulrunner.diff
 020_dejavu_font.diff
 #020_notify.diff
