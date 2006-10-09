@@ -1,7 +1,18 @@
+vlc (0.8.6-svn20060918.debian-1ubuntu4) edgy; urgency=low
+
+  * Backport fixes from Debian's 10/08 snapshot, fixing heap smashing
+    with HTTP interface (Closes Ubuntu: #63833),
+  * Realign packaging with Debian's 10/08 snapshot, updating rules
+    and *.install,
+  * Correct previous changelog entry that erroneously marked Ubuntu
+    #62856 as resolved.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Mon,  9 Oct 2006 15:46:37 -0400
+
 vlc (0.8.6-svn20060918.debian-1ubuntu3) edgy; urgency=low
 
-  * Backport fixes from Debian's 0925 snapshot, fixing failure to
-    read rtsp streams from Freebox (Closes Ubuntu: #62856, #63135).
+  * Backport fixes from Debian's 09/25 snapshot, fixing failure to
+    read rtsp streams from Freebox (Closes Ubuntu: #63135).
 
  -- Daniel T Chen <crimsun@ubuntu.com>  Sat, 30 Sep 2006 22:07:46 -0400
 
