@@ -75,6 +75,7 @@ vlc_confflags += \
 	--enable-vcd \
 	--enable-vcdx \
 	--enable-xosd \
+	--enable-notify \
 	$(NULL)
 
 # These ones are currently shipped with VLC
