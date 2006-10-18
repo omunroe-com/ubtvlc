@@ -1,3 +1,81 @@
+vlc (0.8.6-svn20061012.debian-1ubuntu1) edgy; urgency=low
+
+  * Merge from Debian unstable, remaining Ubuntu changes:
+    - debian/control: Don't build-depend on libtwolame-dev, a newer
+      version of libcaca-dev, or linux-kernel-headers (Ubuntu Edgy
+      does not have them),
+    - debian/patches/001_1008snap.{fixes,translations}.diff: Remove,
+      this is a new upstream version, fixes FTBFS on translations,
+    - debian/rules: Use Ubuntu-specific configure options (firefox).
+  * New upstream snapshot fixes wxvlc not stopping when 'close
+    button' is clicked (Closes Ubuntu: #54630).
+  * New upstream snapshot has more robust x264 support
+    (Closes: Ubuntu #62217).
+  * Segfault when using HTTP interface was fixed in
+    0.8.6-svn20060918.debian-1ubuntu4 (Closes Ubuntu: #63833).
+  * New upstream snapshot should resolve issues with skins2/wxw
+    interfaces (Closes: Ubuntu #64975).
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 18 Oct 2006 01:31:36 -0400
+
+vlc (0.8.6-svn20061012.debian-1) unstable; urgency=low
+
+  * New upstream SVN snapshot.
+  * Upstream fixed the BadWindow request issue (Closes: #392207).
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Thu, 12 Oct 2006 20:43:45 +0200
+
+vlc (0.8.6-svn20061008.debian-1) unstable; urgency=high
+
+  * New upstream SVN snapshot. Fixes a heap smashing bug.
+  * debian/control:
+    + Build-depend on libgtk2.0-dev to work around #388521 (Closes: #391739).
+    + Replace XS-X-Vcs-Svn with -XS-Vcs-Svn.
+
+  * debian/patches/020_notify.diff:
+    + Fix notify support. Thanks to Christophe Mutricy.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Sun,  8 Oct 2006 18:54:30 +0200
+
+vlc (0.8.6-svn20061001.debian-4) unstable; urgency=low
+
+  * Build-depend on libnotify and explicitly activate the libnotify plugin
+    (Closes: #391308).
+  * Re-enable DV support. libraw1394 is not waiting for us anyway.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Fri,  6 Oct 2006 10:24:26 +0200
+
+vlc (0.8.6-svn20061001.debian-2) unstable; urgency=high
+
+  * Temporarily disable DV support because the libraw1394 transition does
+    not look like it will happen soon.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Wed,  4 Oct 2006 14:00:16 +0200
+
+vlc (0.8.6-svn20061001.debian-1) unstable; urgency=low
+
+  * New upstream SVN snapshot.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Sun,  1 Oct 2006 17:57:57 +0200
+
+vlc (0.8.6-svn20060925.debian-1) unstable; urgency=low
+
+  [ Sam Hocevar ]
+  * New upstrean SVN snapshot.
+  * This release fixes issues with the French Freebox device (Closes: #388332).
+
+  * debian/control:
+    + Added Clément Stenac to the uploaders.
+
+  * 020_certificates_paths.diff:
+    + New patch from upstream that looks for SSL certificates in
+      /etc/ssl/certs/ca-certificates.crt (Closes: #365239).
+
+  [ Clément Stenac ]
+  * Add VCS information to control
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Mon, 25 Sep 2006 14:00:46 +0200
+
 vlc (0.8.6-svn20060918.debian-1ubuntu4) edgy; urgency=low
 
   * Backport fixes from Debian's 10/08 snapshot, fixing heap smashing

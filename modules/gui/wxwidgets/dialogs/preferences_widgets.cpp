@@ -2,7 +2,7 @@
  * preferences_widgets.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: preferences_widgets.cpp 16441 2006-08-30 21:36:35Z hartman $
+ * $Id: preferences_widgets.cpp 17012 2006-10-09 22:11:32Z xtophe $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Sigmund Augdal Helberg <dnumgis@videolan.org>
@@ -573,7 +573,7 @@ StringListConfigControl::StringListConfigControl( vlc_object_t *p_this,
     {
         wxButton *button =
             new wxButton( this, wxID_HIGHEST+i,
-                          wxU(p_item->ppsz_action_text[i]) );
+                          wxU(_(p_item->ppsz_action_text[i])) );
         sizer->Add( button, 0, wxALIGN_CENTER_VERTICAL | wxALL, 5);
     }
 
@@ -709,7 +709,7 @@ void FileConfigControl::OnBrowse( wxCommandEvent& event )
 #if defined( __WXMSW__ )
                              wxOPEN
 #else
-                             wxOPEN | wxSAVE
+                             wxOPEN
 #endif
                            );
         if( dialog.ShowModal() == wxID_OK )

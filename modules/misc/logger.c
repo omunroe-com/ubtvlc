@@ -2,7 +2,7 @@
  * logger.c : file logging plugin for vlc
  *****************************************************************************
  * Copyright (C) 2002 the VideoLAN team
- * $Id: logger.c 15045 2006-04-02 09:44:19Z courmisch $
+ * $Id: logger.c 17012 2006-10-09 22:11:32Z xtophe $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -126,7 +126,7 @@ static char *mode_list_text[] = { N_("Text"), "HTML"
 #endif
 
 vlc_module_begin();
-    set_shortname( N_( "Logging" ) );
+    set_shortname( _( "Logging" ) );
     set_description( _("File logging") );
 
     set_category( CAT_ADVANCED );
@@ -243,7 +243,7 @@ static int Open( vlc_object_t *p_this )
 
         /* Open the log file and remove any buffering for the stream */
         msg_Dbg( p_intf, "opening logfile `%s'", psz_file );
-        p_intf->p_sys->p_file = utf8_fopen( psz_file, "wt" );
+        p_intf->p_sys->p_file = utf8_fopen( psz_file, "at" );
         if( p_intf->p_sys->p_file == NULL )
         {
             msg_Err( p_intf, "error opening logfile `%s'", psz_file );

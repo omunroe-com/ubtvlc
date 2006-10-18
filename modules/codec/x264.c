@@ -2,7 +2,7 @@
  * x264.c: h264 video encoder
  *****************************************************************************
  * Copyright (C) 2004-2006 the VideoLAN team
- * $Id: x264.c 16595 2006-09-10 18:51:22Z sam $
+ * $Id: x264.c 17011 2006-10-09 19:17:26Z Trax $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -102,6 +102,20 @@ static void Close( vlc_object_t * );
 #define FILTER_LONGTEXT N_( "Loop filter AlphaC0 and Beta parameters. " \
     "Range -6 to 6 for both alpha and beta parameters. -6 means light " \
     "filter, 6 means strong.")
+    
+#define LEVEL_TEXT N_("H.264 level")
+#define LEVEL_LONGTEXT N_( "Specify H.264 level (as defined by Annex A " \
+    "of the standard). Levels are not enforced; it's up to the user to select " \
+    "a level compatible with the rest of the encoding options. Range 1 to 5.1 " \
+    "(10 to 51 is also allowed).")
+
+/* In order to play an interlaced output stream encoded by x264, a decoder needs
+   mbaff support. r570 is using the 'mb' part and not 'aff' yet; so it's really
+   'pure-interlaced' mode */
+#if X264_BUILD >= 51 /* r570 */
+#define INTERLACED_TEXT N_("Interlaced mode")
+#define INTERLACED_LONGTEXT N_( "Pure-interlaced mode.")
+#endif
 
 /* Ratecontrol */
 
@@ -173,6 +187,14 @@ static void Close( vlc_object_t * );
 
 #define DIRECT_PRED_TEXT N_("Direct MV prediction mode")
 #define DIRECT_PRED_LONGTEXT N_( "Direct MV prediction mode.")
+
+#if X264_BUILD >= 52 /* r573 */
+#define DIRECT_PRED_SIZE_TEXT N_("Direct prediction size")
+#define DIRECT_PRED_SIZE_LONGTEXT N_( "Direct prediction size: "\
+    " -  0: 4x4\n" \
+    " -  1: 8x8\n" \
+    " - -1: smallest possible according to level\n" )
+#endif
 
 #define WEIGHTB_TEXT N_("Weighted prediction for B-frames")
 #define WEIGHTB_LONGTEXT N_( "Weighted prediction for B-frames.")
@@ -248,6 +270,16 @@ static void Close( vlc_object_t * );
 #define NR_LONGTEXT N_( "Dct-domain noise reduction. Adaptive pseudo-deadzone. " \
     "10 to 1000 seems to be a useful range." )
 
+#if X264_BUILD >= 52 /* r573 */
+#define DEADZONE_INTER_TEXT N_("Inter luma quantization deadzone")
+#define DEADZONE_INTER_LONGTEXT N_( "Set the size of the inter luma quantization deadzone. " \
+    "Range 0 to 32." )
+
+#define DEADZONE_INTRA_TEXT N_("Intra luma quantization deadzone")
+#define DEADZONE_INTRA_LONGTEXT N_( "Set the size of the intra luma quantization deadzone. " \
+    "Range 0 to 32." )
+#endif
+
 /* Input/Output */
 
 #define ASM_TEXT N_("CPU optimizations")
@@ -266,6 +298,15 @@ static void Close( vlc_object_t * );
 
 #define VERBOSE_TEXT N_("Statistics")
 #define VERBOSE_LONGTEXT N_( "Print stats for each frame.")
+
+#if X264_BUILD >= 47 /* r518 */
+#define SPS_ID_TEXT N_("SPS and PPS id numbers")
+#define SPS_ID_LONGTEXT N_( "Set SPS and PPS id numbers to allow concatenating " \
+    "streams with different settings.")
+#endif
+
+#define AUD_TEXT N_("Access unit delimiters")
+#define AUD_LONGTEXT N_( "Generate access unit delimiter NAL units.")
 
 #if X264_BUILD >= 24
 static char *enc_me_list[] =
@@ -340,8 +381,17 @@ vlc_module_begin();
               NF_LONGTEXT, VLC_FALSE );
         add_deprecated( SOUT_CFG_PREFIX "loopfilter", VLC_FALSE ); /* Deprecated since 0.8.5 */
 
-    add_string( SOUT_CFG_PREFIX "filter", "", NULL, FILTER_TEXT,
+    add_string( SOUT_CFG_PREFIX "deblock", "", NULL, FILTER_TEXT,
                  FILTER_LONGTEXT, VLC_FALSE );
+        add_deprecated( SOUT_CFG_PREFIX "filter", VLC_FALSE ); /* Deprecated since 0.8.6 */
+
+    add_string( SOUT_CFG_PREFIX "level", "5.1", NULL, LEVEL_TEXT,
+               LEVEL_LONGTEXT, VLC_FALSE );
+
+#if X264_BUILD >= 51 /* r570 */
+    add_bool( SOUT_CFG_PREFIX "interlaced", 0, NULL, INTERLACED_TEXT, INTERLACED_LONGTEXT,
+              VLC_FALSE );
+#endif
 
 /* Ratecontrol */
 
@@ -409,14 +459,21 @@ vlc_module_begin();
 
 /* Analysis */
 
-    /* x264 analyse = none (default). set at least "normal" mode. */
-    add_string( SOUT_CFG_PREFIX "analyse", "normal", NULL, ANALYSE_TEXT,
+    /* x264 partitions = none (default). set at least "normal" mode. */
+    add_string( SOUT_CFG_PREFIX "partitions", "normal", NULL, ANALYSE_TEXT,
                 ANALYSE_LONGTEXT, VLC_FALSE );
+        add_deprecated( SOUT_CFG_PREFIX "analyse", VLC_FALSE ); /* Deprecated since 0.8.6 */
         change_string_list( enc_analyse_list, enc_analyse_list_text, 0 );
 
     add_string( SOUT_CFG_PREFIX "direct", "spatial", NULL, DIRECT_PRED_TEXT,
                 DIRECT_PRED_LONGTEXT, VLC_FALSE );
         change_string_list( direct_pred_list, direct_pred_list_text, 0 );
+
+#if X264_BUILD >= 52 /* r573 */
+    add_integer( SOUT_CFG_PREFIX "direct-8x8", 0, NULL, DIRECT_PRED_SIZE_TEXT,
+                 DIRECT_PRED_SIZE_LONGTEXT, VLC_FALSE );
+        change_integer_range( -1, 1 );
+#endif
 
 #if X264_BUILD >= 0x0012 /* r134 */
     add_bool( SOUT_CFG_PREFIX "weightb", 0, NULL, WEIGHTB_TEXT,
@@ -485,10 +542,25 @@ vlc_module_begin();
         change_integer_range( 0, 1000 );
 #endif
 
+#if X264_BUILD >= 52 /* r573 */
+    add_integer( SOUT_CFG_PREFIX "deadzone-inter", 21, NULL, DEADZONE_INTER_TEXT,
+                 DEADZONE_INTRA_LONGTEXT, VLC_FALSE );
+        change_integer_range( 0, 32 );
+
+    add_integer( SOUT_CFG_PREFIX "deadzone-intra", 11, NULL, DEADZONE_INTRA_TEXT,
+                 DEADZONE_INTRA_LONGTEXT, VLC_FALSE );
+        change_integer_range( 0, 32 );
+#endif
+
 /* Input/Output */
 
+#if defined(__DARWIN__) && defined(__INTEL__)
+    add_bool( SOUT_CFG_PREFIX "asm", 0, NULL, ASM_TEXT,
+              ASM_LONGTEXT, VLC_FALSE );
+#else
     add_bool( SOUT_CFG_PREFIX "asm", 1, NULL, ASM_TEXT,
               ASM_LONGTEXT, VLC_FALSE );
+#endif
 
     /* x264 psnr = 1 (default). disable PSNR computation for speed. */
     add_bool( SOUT_CFG_PREFIX "psnr", 0, NULL, PSNR_TEXT,
@@ -503,6 +575,14 @@ vlc_module_begin();
     add_bool( SOUT_CFG_PREFIX "quiet", 0, NULL, QUIET_TEXT,
               QUIET_LONGTEXT, VLC_FALSE );
 
+#if X264_BUILD >= 47 /* r518 */
+    add_integer( SOUT_CFG_PREFIX "sps-id", 0, NULL, SPS_ID_TEXT,
+                 SPS_ID_LONGTEXT, VLC_FALSE );
+#endif
+
+    add_bool( SOUT_CFG_PREFIX "aud", 0, NULL, AUD_TEXT,
+              AUD_LONGTEXT, VLC_FALSE );
+
 #if X264_BUILD >= 0x000e /* r81 */
     add_bool( SOUT_CFG_PREFIX "verbose", 0, NULL, VERBOSE_TEXT,
               VERBOSE_LONGTEXT, VLC_FALSE );
@@ -514,15 +594,16 @@ vlc_module_end();
  * Local prototypes
  *****************************************************************************/
 static const char *ppsz_sout_options[] = {
-    "8x8dct", "analyse", "asm", "bframes", "bime", "bpyramid", "b-adapt",
-    "b-bias", "b-rdo", "cabac", "chroma-me", "chroma-qp-offset", "cplxblur",
-    "crf", "dct-decimate", "direct", "filter", "fast-pskip", "frameref",
-    "ipratio", "keyint", "keyint-min", "loopfilter", "me", "merange",
-    "min-keyint", "mixed-refs", "nf", "nr", "pbratio", "psnr", "qblur",
-    "qp", "qcomp", "qpstep", "qpmax", "qpmin", "qp-max", "qp-min", "quiet",
-    "ratetol", "ref", "scenecut", "ssim", "subme", "subpel", "tolerance",
-    "trellis", "verbose", "vbv-bufsize", "vbv-init", "vbv-maxrate",
-    "weightb", NULL
+    "8x8dct", "analyse", "asm", "aud", "bframes", "bime", "bpyramid",
+    "b-adapt", "b-bias", "b-rdo", "cabac", "chroma-me", "chroma-qp-offset",
+    "cplxblur", "crf", "dct-decimate", "deadzone-inter", "deadzone-intra",
+    "deblock", "direct", "direct-8x8", "filter", "fast-pskip", "frameref",
+    "interlaced", "ipratio", "keyint", "keyint-min", "level", "loopfilter",
+    "me", "merange", "min-keyint", "mixed-refs", "nf", "nr", "partitions",
+    "pbratio", "psnr", "qblur", "qp", "qcomp", "qpstep", "qpmax", "qpmin",
+    "qp-max", "qp-min", "quiet", "ratetol", "ref", "scenecut", "sps-id",
+    "ssim", "subme", "subpel", "tolerance", "trellis", "verbose",
+    "vbv-bufsize", "vbv-init", "vbv-maxrate", "weightb", NULL
 };
 
 static block_t *Encode( encoder_t *, picture_t * );
@@ -558,7 +639,7 @@ static int  Open ( vlc_object_t *p_this )
 
 #if X264_BUILD < 37
     if( p_enc->fmt_in.video.i_width % 16 != 0 ||
-        p_enc->fmt_in.video.i_height % 16!= 0 )
+        p_enc->fmt_in.video.i_height % 16 != 0 )
     {
         msg_Warn( p_enc, "size is not a multiple of 16 (%ix%i)",
                   p_enc->fmt_in.video.i_width, p_enc->fmt_in.video.i_height );
@@ -659,7 +740,7 @@ static int  Open ( vlc_object_t *p_this )
     var_Get( p_enc, SOUT_CFG_PREFIX "nf", &val );
     p_sys->param.b_deblocking_filter = !val.b_bool;
 
-    var_Get( p_enc, SOUT_CFG_PREFIX "filter", &val );
+    var_Get( p_enc, SOUT_CFG_PREFIX "deblock", &val );
     if( val.psz_string )
     {
         char *p = strchr( val.psz_string, ':' );
@@ -667,6 +748,21 @@ static int  Open ( vlc_object_t *p_this )
         p_sys->param.i_deblocking_filter_beta = p ? atoi( p+1 ) : p_sys->param.i_deblocking_filter_alphac0;
         free( val.psz_string );
     }
+
+    var_Get( p_enc, SOUT_CFG_PREFIX "level", &val );
+    if( val.psz_string )
+    {
+        if( atof (val.psz_string) < 6 )
+            p_sys->param.i_level_idc = (int) ( 10 * atof (val.psz_string) + .5);
+        else
+            p_sys->param.i_level_idc = atoi (val.psz_string);
+        free( val.psz_string );
+    }
+
+#if X264_BUILD >= 51 /* r570 */
+    var_Get( p_enc, SOUT_CFG_PREFIX "interlaced", &val );
+    p_sys->param.b_interlaced = val.b_bool;
+#endif
 
     var_Get( p_enc, SOUT_CFG_PREFIX "ipratio", &val );
     p_sys->param.rc.f_ip_factor = val.f_float;
@@ -690,6 +786,14 @@ static int  Open ( vlc_object_t *p_this )
 
     var_Get( p_enc, SOUT_CFG_PREFIX "quiet", &val );
     if( val.b_bool ) p_sys->param.i_log_level = X264_LOG_NONE;
+
+#if X264_BUILD >= 47 /* r518 */
+    var_Get( p_enc, SOUT_CFG_PREFIX "sps-id", &val );
+    if( val.i_int >= 0 ) p_sys->param.i_sps_id = val.i_int;
+#endif
+
+    var_Get( p_enc, SOUT_CFG_PREFIX "aud", &val );
+    if( val.b_bool ) p_sys->param.b_aud = val.b_bool;
 
     var_Get( p_enc, SOUT_CFG_PREFIX "keyint", &val );
 #if X264_BUILD >= 0x000e
@@ -851,13 +955,27 @@ static int  Open ( vlc_object_t *p_this )
     p_sys->param.analyse.b_dct_decimate = val.b_bool;
 #endif
 
+#if X264_BUILD >= 52
+    var_Get( p_enc, SOUT_CFG_PREFIX "deadzone-inter", &val );
+    if( val.i_int >= 0 && val.i_int <= 32 )
+        p_sys->param.analyse.i_luma_deadzone[0] = val.i_int;
+
+    var_Get( p_enc, SOUT_CFG_PREFIX "deadzone-intra", &val );
+    if( val.i_int >= 0 && val.i_int <= 32 )
+        p_sys->param.analyse.i_luma_deadzone[1] = val.i_int;   
+
+    var_Get( p_enc, SOUT_CFG_PREFIX "direct-8x8", &val );
+    if( val.i_int >= -1 && val.i_int <= 1 )
+        p_sys->param.analyse.i_direct_8x8_inference = val.i_int; 
+#endif
+
     var_Get( p_enc, SOUT_CFG_PREFIX "asm", &val );
     if( !val.b_bool ) p_sys->param.cpu = 0;
 
 #ifndef X264_ANALYSE_BSUB16x16
 #   define X264_ANALYSE_BSUB16x16 0
 #endif
-    var_Get( p_enc, SOUT_CFG_PREFIX "analyse", &val );
+    var_Get( p_enc, SOUT_CFG_PREFIX "partitions", &val );
     if( !strcmp( val.psz_string, "none" ) )
     {
         p_sys->param.analyse.inter = 0;
@@ -906,7 +1024,7 @@ static int  Open ( vlc_object_t *p_this )
     if( p_enc->fmt_in.video.i_aspect > 0 )
     {
         int64_t i_num, i_den;
-        int i_dst_num, i_dst_den;
+        unsigned int i_dst_num, i_dst_den;
 
         i_num = p_enc->fmt_in.video.i_aspect *
             (int64_t)p_enc->fmt_in.video.i_height;

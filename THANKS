@@ -1,4 +1,4 @@
-$Id: THANKS 16544 2006-09-07 23:05:11Z hartman $
+$Id: THANKS 17033 2006-10-12 12:01:35Z funman $
 
 VLC makes extensive use of the following persons' code:
 
@@ -60,6 +60,8 @@ Eurodata Computer Club <retron.info> - VLC icon design (v0.8.4)
 Fran√ßois Seingier <francois.seingier at club-internet.fr> - TTL setting in the wx stream output dialog
 Frank Chao <frank0624 at gmail.com> - Chinese Traditional translation
 Fumio Nakayama <endymion at ca2.so-net.ne.jp> - Japanese translation
+Georgi Chorbadzhiyski <gf at unixsol dot org> - HTTP access error handling fix
+Greg Farrell <greg at gregfarell dot org> - rc interface "enqueue" command
 Gregory Hazel <ghazel at gmail dot com> - wxWidgets fixes and improvements
 Goetz Waschk <waschk at informatik.uni-rostock dot de> - Mandrake packages
 Haakon Meland Eriksen - Norwegian translation
@@ -87,8 +89,10 @@ Kevin H. Patterson <kevpatt at khptech dot com> - Theora framesize calculation p
 Laurent Jonqueres <laurent_jonqueres at yahoo.fr> - Occitan localization
 Laurent Mutricy <laurent.mutricy at ecl2005 dot ec-lyon dot fr> - HTTP interface fixes
 Lorena Gomes - Catalan translation
+Mahrazi Mohd Kamal <mahrazi at gmail.com> - Malay Translation
 Marc Nolette <nolette at videotron.ca> - PVR support in DirectShow input
 Marco Munderloh <Marco.Munderloh at web.de> - HTTP fix for Win32 to URL filenames
+Mari·n HikanÌk- <podnety _at_ mojepreklady _dot_ net> - Slovak localisation
 Mark Gritter <mgritter at kealia.com> - fix for netlist packet leak in demuxPSI
 Markus Kern <markus-kern at gmx dot net> - video output window fixes (win32)
 Markus Kuespert <ltlBeBoy at beosmail.com> - BeOS CSS support
@@ -147,4 +151,4 @@ Xavier Maillard <zedek at fxgsproject.org> - audio converters
 Xavier Marchesini <xav at alarue.net> - Win32 fixes
 X√®nia Alb√† Cantero <xenia_alba at hotmail.com> - Catalan translation
 Yves Duret <yves at zarb.org> - RPM packages
-
+Ye zhang <yzhang90003 _at_ gmail dot com> - Fix for VLM RTSP concurent LEAVE make VLC crash
