@@ -1,6 +1,4 @@
 000_ltmain.diff
-001_1008snap.fixes.diff
-001_1008snap.translations.diff
 010_no-wx-updates.diff 
 010_osdmenu-paths.diff 
 #020_xulrunner.diff

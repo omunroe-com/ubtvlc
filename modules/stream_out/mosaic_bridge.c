@@ -2,7 +2,7 @@
  * mosaic_bridge.c:
  *****************************************************************************
  * Copyright (C) 2004-2005 the VideoLAN team
- * $Id: mosaic_bridge.c 14912 2006-03-25 10:57:34Z zorglub $
+ * $Id: mosaic_bridge.c 16987 2006-10-08 12:54:12Z jpsaman $
  *
  * Authors: Antoine Cellerier <dionoea@videolan.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -48,7 +48,7 @@ struct sout_stream_sys_t
     decoder_t       *p_decoder;
     image_handler_t *p_image; /* filter for resizing */
     int i_height, i_width;
-    int i_sar_num, i_sar_den;
+    unsigned int i_sar_num, i_sar_den;
     char *psz_id;
     vlc_bool_t b_inited;
 };
@@ -431,7 +431,10 @@ static int Send( sout_stream_t *p_stream, sout_stream_id_t *id,
 
         if ( p_sys->i_height || p_sys->i_width )
         {
-            video_format_t fmt_out = {0}, fmt_in = {0};
+            video_format_t fmt_out, fmt_in;
+
+            memset( &fmt_in, 0, sizeof(video_format_t) );
+            memset( &fmt_out, 0, sizeof(video_format_t) );
             fmt_in = p_sys->p_decoder->fmt_out.video;
 
             fmt_out.i_chroma = VLC_FOURCC('Y','U','V','A');

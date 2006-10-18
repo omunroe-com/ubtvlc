@@ -2,7 +2,7 @@
  * input.c: input thread
  *****************************************************************************
  * Copyright (C) 1998-2004 the VideoLAN team
- * $Id: input.c 16460 2006-08-31 22:01:13Z hartman $
+ * $Id: input.c 16994 2006-10-08 14:40:02Z jpsaman $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -323,7 +323,7 @@ int __input_Preparse( vlc_object_t *p_parent, input_item_t *p_item )
 
     /* Allocate descriptor */
     p_input = Create( p_parent, p_item, NULL, VLC_TRUE );
-    p_input->i_flags |= OBJECT_FLAGS_NODBG;
+    p_input->i_flags |= OBJECT_FLAGS_QUIET;
     p_input->i_flags |= OBJECT_FLAGS_NOINTERACT;
 
     /* Now we can attach our new input */
@@ -449,7 +449,7 @@ static int Run( input_thread_t *p_input )
         p_input->b_eof = VLC_TRUE;
     }
 
-    /* Wait we are asked to die */
+    /* Wait until we are asked to die */
     if( !p_input->b_die )
     {
         Error( p_input );
@@ -481,7 +481,7 @@ static int RunAndClean( input_thread_t *p_input )
 
     if( !p_input->b_eof && !p_input->b_error && p_input->input.b_eof )
     {
-        /* We have finish to demux data but not to play them */
+        /* We have finished demuxing data but not playing it */
         while( !p_input->b_die )
         {
             if( input_EsOutDecodersEmpty( p_input->p_es_out ) )
@@ -491,6 +491,7 @@ static int RunAndClean( input_thread_t *p_input )
 
             msleep( INPUT_IDLE_SLEEP );
         }
+
         /* We have finished */
         p_input->b_eof = VLC_TRUE;
     }
@@ -997,7 +998,7 @@ static int Init( input_thread_t * p_input, vlc_bool_t b_quick )
             }
 
             msg_Dbg( p_input, "starting in %s mode",
-                     p_input->b_out_pace_control ? "asynch" : "synch" );
+                     p_input->b_out_pace_control ? "async" : "sync" );
         }
     }
 
@@ -1084,10 +1085,7 @@ static int Init( input_thread_t * p_input, vlc_bool_t b_quick )
     }
 
     /* initialization is complete */
-    p_input->i_state = PLAYING_S;
-
-    val.i_int = PLAYING_S;
-    var_Change( p_input, "state", VLC_VAR_SETVALUE, &val, NULL );
+    input_ChangeState(p_input, PLAYING_S);
 
     return VLC_SUCCESS;
 
@@ -1127,16 +1125,12 @@ static void Error( input_thread_t *p_input )
  *****************************************************************************/
 static void End( input_thread_t * p_input )
 {
-    vlc_value_t val;
     int i;
 
     msg_Dbg( p_input, "closing input" );
 
     /* We are at the end */
-    p_input->i_state = END_S;
-
-    val.i_int = END_S;
-    var_Change( p_input, "state", VLC_VAR_SETVALUE, &val, NULL );
+    input_ChangeState(p_input, END_S);
 
     /* Clean control variables */
     input_ControlVarClean( p_input );
@@ -1295,7 +1289,7 @@ static vlc_bool_t Control( input_thread_t *p_input, int i_type,
             }
             if( f_pos < 0.0 ) f_pos = 0.0;
             if( f_pos > 1.0 ) f_pos = 1.0;
-            /* Reset the decoders states and clock synch (before calling the demuxer */
+            /* Reset the decoders states and clock sync (before calling the demuxer */
             es_out_Control( p_input->p_es_out, ES_OUT_RESET_PCR );
             input_EsOutDiscontinuity( p_input->p_es_out, VLC_FALSE );
             if( demux2_Control( p_input->input.p_demux, DEMUX_SET_POSITION,
@@ -1333,7 +1327,7 @@ static vlc_bool_t Control( input_thread_t *p_input, int i_type,
             }
             if( i_time < 0 ) i_time = 0;
 
-            /* Reset the decoders states and clock synch (before calling the demuxer */
+            /* Reset the decoders states and clock sync (before calling the demuxer */
             es_out_Control( p_input->p_es_out, ES_OUT_RESET_PCR );
             input_EsOutDiscontinuity( p_input->p_es_out, VLC_FALSE );
 
@@ -2047,8 +2041,8 @@ static int InputSourceInit( input_thread_t *p_input,
     {
         psz_path = psz_mrl;
         msg_Dbg( p_input, "trying to pre-parse %s",  psz_path );
-        psz_demux = strdup( "" );
-        psz_access = strdup( "file" );
+        psz_demux = "";
+        psz_access = "file";
     }
 
     if( in->p_demux )
@@ -2081,6 +2075,8 @@ static int InputSourceInit( input_thread_t *p_input,
     else
     {
         int64_t i_pts_delay;
+
+        input_ChangeState( p_input, OPENING_S);
 
         /* Now try a real access */
         in->p_access = access2_New( p_input, psz_access, psz_demux, psz_path,
@@ -2175,6 +2171,8 @@ static int InputSourceInit( input_thread_t *p_input,
                              &val.b_bool );
             var_Set( p_input, "seekable", val );
         }
+
+        input_ChangeState( p_input, BUFFERING_S);
 
         /* Create the stream_t */
         in->p_stream = stream_AccessNew( in->p_access, b_quick );
