@@ -2,7 +2,7 @@
  * access.c : CD digital audio input module for vlc using libcdio
  *****************************************************************************
  * Copyright (C) 2000, 2003, 2004, 2005 the VideoLAN team
- * $Id: access.c 15016 2006-03-31 23:07:01Z xtophe $
+ * $Id: access.c 17183 2006-10-20 21:33:16Z hartman $
  *
  * Authors: Rocky Bernstein <rocky@panix.com>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -495,7 +495,7 @@ CDDASeek( access_t * p_access, int64_t i_pos )
     }
     
     p_access->info.i_pos = i_pos;
-
+    p_access->info.b_eof = VLC_FALSE;
     return VLC_SUCCESS;
 }
 
