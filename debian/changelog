@@ -1,3 +1,14 @@
+vlc (0.8.6.release-0ubuntu1) feisty; urgency=low
+
+  * New upstream release (0.8.6):
+    - Autostart in mozilla plugin reenabled (Closes Ubuntu: #67402),
+    - ffmpeg demux fixed (Closes Ubuntu: #69849),
+    - Segfault with SAP playlist announcement loading fixed
+      (Closes Ubuntu: #70664).
+  * debian/patches/020_notify.diff: Rediff.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Fri, 15 Dec 2006 20:57:59 -0500
+
 vlc (0.8.6-svn20061012.debian-1ubuntu1) edgy; urgency=low
 
   * Merge from Debian unstable, remaining Ubuntu changes:
