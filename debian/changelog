@@ -1,3 +1,10 @@
+vlc (0.8.4.debian-1ubuntu6.1) dapper-security; urgency=low
+
+  * Fix format string vulnerability with patch taken from Debian BTS
+    MOAB-02-01-2007-CVE-2007-0017.dpatch, CVE-2007-0017. Closes Malone: #78610
+
+ -- Martin Jürgens <martin@gamesplace.info>  Sat, 27 Jan 2007 18:39:58 +0100
+
 vlc (0.8.4.debian-1ubuntu6) dapper; urgency=low
 
   "'Time to race', she said, 'Race the downhill'."
