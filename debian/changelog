@@ -1,3 +1,13 @@
+vlc (0.8.6-svn20061012.debian-1ubuntu1.1) edgy-security; urgency=low
+
+  * SECURITY UPDATE: arbitrary code execution via format strings.
+  * MOAB-02-01-2007-CVE-2007-0017.patch: Fix format string vulnerability
+    with patch taken from Debian BTS (Closes LP#78610).
+  * References:
+    CVE-2007-0017
+
+ -- Martin Jürgens <martin@gamesplace.info>  Sat, 27 Jan 2007 16:25:34 +0100
+
 vlc (0.8.6-svn20061012.debian-1ubuntu1) edgy; urgency=low
 
   * Merge from Debian unstable, remaining Ubuntu changes:
