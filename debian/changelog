@@ -1,3 +1,9 @@
+vlc (0.8.6.release-0ubuntu1~edgy1) edgy-backports; urgency=low
+
+  * Automated backport upload; no source changes.
+
+ -- John Dong <john.dong@gmail.com>  Wed,  7 Mar 2007 23:12:48 +0000
+
 vlc (0.8.6.release-0ubuntu1) feisty; urgency=low
 
   * New upstream release (0.8.6):
