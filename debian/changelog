@@ -1,3 +1,15 @@
+vlc (0.8.6.release-0ubuntu2) feisty; urgency=low
+
+  * debian/control:
+    - Adhere to DebianMaintainerField,
+    - Build against libwxgtk2.8-dev, Closes:
+      LP: #54548
+      LP: #84098
+  * debian/patches: Add 030_CVE-2007-0017.diff to quilt's series
+    - Reference: CVE-2007-0017
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Fri,  9 Mar 2007 22:10:50 -0500
+
 vlc (0.8.6.release-0ubuntu1) feisty; urgency=low
 
   * New upstream release (0.8.6):
