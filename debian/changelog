@@ -1,3 +1,9 @@
+vlc (0.8.6.release-0ubuntu3) feisty; urgency=low
+
+  * debian/control: Work around LP #91086.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sat, 10 Mar 2007 05:13:52 -0500
+
 vlc (0.8.6.release-0ubuntu2) feisty; urgency=low
 
   * debian/control:
