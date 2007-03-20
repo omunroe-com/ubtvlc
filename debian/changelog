@@ -1,3 +1,10 @@
+vlc (0.8.6.release-0ubuntu4) feisty; urgency=low
+
+  * debian/control: Revert back to building against  libwxgtk2.6-dev 
+    (Closes LP: #91248)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 20 Mar 2007 16:32:06 +1100
+
 vlc (0.8.6.release-0ubuntu3) feisty; urgency=low
 
   * debian/control: Work around LP #91086.
