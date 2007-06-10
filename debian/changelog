@@ -1,3 +1,11 @@
+vlc (0.8.6.release-0ubuntu5) gutsy; urgency=low
+
+  * debian/patches/020_flac.diff:
+   - Patch from upstream trunk to fix FTBFS with libflac8
+     (http://trac.videolan.org/vlc/changeset/18855)
+
+ -- Matti Lindell <mlind@cs.joensuu.fi>  Sun, 10 Jun 2007 17:06:18 +0300
+
 vlc (0.8.6.release-0ubuntu4) feisty; urgency=low
 
   * debian/control: Revert back to building against  libwxgtk2.6-dev 
