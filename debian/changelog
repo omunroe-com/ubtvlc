@@ -1,3 +1,17 @@
+vlc (0.8.6.release.c-0ubuntu1) gutsy; urgency=low
+
+  * SECURITY UPDATE: Format string injection in multiple plugins could
+    lead to arbitrary code execution and/or DoS.
+  * New upstream security and bugfix release, 0.8.6c (LP: #121511).
+  * References
+    CVE-2007-0256
+    CVE-2007-3316
+  * debian/patches/: Remove 020_flac.diff and 030_CVE-2007-0017.diff
+    (subsumed by new upstream release).
+  * debian/vlc-nox.install: Add libtelx_plugin.so (fixes FTBFS).
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Mon, 25 Jun 2007 01:53:37 -0400
+
 vlc (0.8.6.release-0ubuntu5) gutsy; urgency=low
 
   * debian/patches/020_flac.diff:
