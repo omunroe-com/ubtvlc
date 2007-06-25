@@ -1,3 +1,11 @@
+vlc (0.8.6.release.c-0ubuntu2) gutsy; urgency=low
+
+  * debian/control: added Xb-Npp-xxx tags accordingly to "firefox distro
+    add-on suport" spec,
+    (https://blueprints.launchpad.net/ubuntu/+spec/firefox-distro-addon-support)
+
+ -- Hilario Montoliu <hmontoliu@gmail.com>  Mon, 25 Jun 2007 16:28:20 +0200
+
 vlc (0.8.6.release.c-0ubuntu1) gutsy; urgency=low
 
   * SECURITY UPDATE: Format string injection in multiple plugins could
