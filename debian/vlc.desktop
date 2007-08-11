@@ -2,7 +2,7 @@
 Encoding=UTF-8
 Version=0.9.2
 Name=VLC media player
-Name[fr]=lecteur multimédia VLC
+Name[fr]=Lecteur multimédia VLC
 Comment=Universal movies and music player
 Comment[fr]=Lecteur universel pour films et musique
 Exec=wxvlc
