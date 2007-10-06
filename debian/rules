@@ -237,10 +237,8 @@ ifeq ($(shell dpkg-architecture -qDEB_BUILD_ARCH_CPU),i386)
 endif
 
 	# links for firefox
-	mkdir -p debian/mozilla-plugin-vlc/usr/lib/mozilla-firefox/plugins/
-	ln -s ../../mozilla/plugins/libvlcplugin.so debian/mozilla-plugin-vlc/usr/lib/mozilla-firefox/plugins/
-	mkdir -p debian/mozilla-plugin-vlc/usr/lib/mozilla-firefox/components/
-	ln -s ../../mozilla/components/vlcintf.xpt debian/mozilla-plugin-vlc/usr/lib/mozilla-firefox/components/
+	mkdir -p debian/mozilla-plugin-vlc/usr/lib/firefox/plugins/
+	ln -s ../../mozilla/plugins/libvlcplugin.so debian/mozilla-plugin-vlc/usr/lib/firefox/plugins/
 
 	cp debian/vlc/$(VIDDIR)/vlc.xpm debian/vlc/$(VIDDIR)/wxvlc.xpm
 

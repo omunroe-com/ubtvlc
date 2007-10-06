@@ -1,3 +1,11 @@
+vlc (0.8.6.release.c-0ubuntu4) gutsy; urgency=low
+
+  * Move firefox plugin into /usr/lib/firefox. (LP: #99810)
+  * Don't attempt to install a symlink for firefox to vlcintf.xpt - it doesn't
+    exist any more.
+
+ -- William Grant <william.grant@ubuntu.org.au>  Sat, 06 Oct 2007 15:54:55 +1000
+
 vlc (0.8.6.release.c-0ubuntu3) gutsy; urgency=low
 
   * Fix typo error in .desktop file (LP: #131691)
