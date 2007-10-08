@@ -1,0 +1,13 @@
+Index: vlc-0.8.6.release.c/share/applications/vlc.desktop
+===================================================================
+--- vlc-0.8.6.release.c.orig/share/applications/vlc.desktop	2007-10-08 23:46:04.000000000 +0200
++++ vlc-0.8.6.release.c/share/applications/vlc.desktop	2007-10-08 23:46:30.000000000 +0200
+@@ -5,7 +5,7 @@
+ Name[fr]=lecteur multimédia VLC
+ Comment=Universal movies and music player
+ Comment[fr]=Lecteur universel pour films et musique
+-Exec=wxvlc
++Exec=wxvlc %F
+ Icon=vlc
+ Terminal=false
+ Type=Application

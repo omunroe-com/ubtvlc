@@ -1,3 +1,10 @@
+vlc (0.8.6.release.c-0ubuntu5) gutsy; urgency=low
+
+  * Add patch 030_fix_exec_field_code:
+    - fix opening multiple files leads to multiple instances (LP: #124712)
+
+ -- Cesare Tirabassi <norsetto@ubuntu.com>  Mon, 08 Oct 2007 23:41:44 +0200
+
 vlc (0.8.6.release.c-0ubuntu4) gutsy; urgency=low
 
   * Move firefox plugin into /usr/lib/firefox. (LP: #99810)
