@@ -2,7 +2,7 @@
 # src/packages.mak : Archive locations
 # ***************************************************************************
 # Copyright (C) 2003 - 2007 the VideoLAN team
-# $Id: packages.mak 20491 2007-06-09 16:50:22Z fkuehne $
+# $Id: packages.mak 23180 2007-11-20 03:27:16Z jb $
 #
 # Authors: Christophe Massiot <massiot@via.ecp.fr>
 #          Derk-Jan Hartman <hartman at videolan dot org>
@@ -23,7 +23,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
 # ***************************************************************************
 
-GNU=http://ftp.belnet.be/mirror/ftp.gnu.org/gnu
+GNU=http://ftp.heanet.ie/mirrors/ftp.gnu.org/gnu
 SF=http://heanet.dl.sourceforge.net/sourceforge
 VIDEOLAN=http://download.videolan.org/pub/videolan
 PERL_VERSION=5.8.8
@@ -45,7 +45,7 @@ GETTEXT_URL=$(GNU)/gettext/gettext-$(GETTEXT_VERSION).tar.gz
 FREETYPE2_VERSION=2.1.9
 FREETYPE2_URL=$(SF)/freetype/freetype-$(FREETYPE2_VERSION).tar.gz
 FRIBIDI_VERSION=0.10.4
-FRIBIDI_URL=http://fribidi.org/download/fribidi-$(FRIBIDI_VERSION).tar.gz
+FRIBIDI_URL=$(SF)/fribidi/fribidi-$(FRIBIDI_VERSION).tar.gz
 A52DEC_VERSION=0.7.4
 A52DEC_URL=$(VIDEOLAN)/testing/contrib/a52dec-$(A52DEC_VERSION).tar.gz
 MPEG2DEC_VERSION=0.4.1
@@ -64,7 +64,7 @@ VORBIS_VERSION=1.1.2
 VORBIS_URL=http://downloads.xiph.org/releases/vorbis/libvorbis-$(VORBIS_VERSION).tar.gz
 THEORA_VERSION=1.0alpha7
 THEORA_URL=http://downloads.xiph.org/releases/theora/libtheora-$(THEORA_VERSION).tar.bz2
-FLAC_VERSION=1.1.2
+FLAC_VERSION=1.2.1
 FLAC_URL=$(SF)/flac/flac-$(FLAC_VERSION).tar.gz
 SPEEX_VERSION=1.2beta1
 SPEEX_URL=http://downloads.us.xiph.org/releases/speex/speex-$(SPEEX_VERSION).tar.gz

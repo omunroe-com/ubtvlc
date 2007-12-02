@@ -2,7 +2,7 @@
  * alsa.c : alsa plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2001 the VideoLAN team
- * $Id: alsa.c 16441 2006-08-30 21:36:35Z hartman $
+ * $Id: alsa.c 23055 2007-11-13 17:12:18Z funman $
  *
  * Authors: Henri Fallon <henri@videolan.org> - Original Author
  *          Jeffrey Baker <jwbaker@acm.org> - Port to ALSA 1.0 API
@@ -815,28 +815,12 @@ static void ALSAFill( aout_instance_t * p_aout )
         {
             /* Here the device should be either in the RUNNING state.
              * p_status is valid. */
-
-#if 0
-    /* This apparently does not work correctly in Alsa 1.0.11 */
-            snd_pcm_status_get_tstamp( p_status, &ts_next );
-            next_date = (mtime_t)ts_next.tv_sec * 1000000 + ts_next.tv_usec;
-            if( next_date )
-            {
-                next_date += (mtime_t)snd_pcm_status_get_delay(p_status)
-                        * 1000000 / p_aout->output.output.i_rate;
-            }
-            else
-#endif
-            {
-                /* With screwed ALSA drivers the timestamp is always zero;
-                 * use another method then */
-                snd_pcm_sframes_t delay = 0;
-
-                snd_pcm_delay( p_sys->p_snd_pcm, &delay );
-                next_date = mdate() + (mtime_t)(delay) * 1000000 /
-                          p_aout->output.output.i_rate
-                        * p_aout->output.output.i_frame_length;
-            }
+            snd_pcm_sframes_t delay = snd_pcm_status_get_delay( p_status );
+            int i_bytes = snd_pcm_frames_to_bytes( p_sys->p_snd_pcm, delay );
+            next_date = mdate() + ( (mtime_t)i_bytes * 1000000
+                    / p_aout->output.output.i_bytes_per_frame
+                    / p_aout->output.output.i_rate
+                    * p_aout->output.output.i_frame_length );
         }
 
         p_buffer = aout_OutputNextBuffer( p_aout, next_date,

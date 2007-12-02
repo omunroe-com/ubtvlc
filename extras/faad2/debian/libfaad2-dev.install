@@ -1,0 +1,6 @@
+debian/tmp/usr/lib/libfaad.a* usr/lib
+debian/tmp/usr/lib/libfaad.so usr/lib
+debian/tmp/usr/lib/libmp4ff.a* usr/lib
+debian/tmp/usr/lib/libmp4ff.so usr/lib
+debian/tmp/usr/include/faad.h usr/include
+debian/tmp/usr/include/mp4ff.h usr/include

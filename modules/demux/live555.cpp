@@ -2,7 +2,7 @@
  * live555.cpp : LIVE555 Streaming Media support.
  *****************************************************************************
  * Copyright (C) 2003-2006 the VideoLAN team
- * $Id: live555.cpp 20512 2007-06-11 12:53:18Z damienf $
+ * $Id: live555.cpp 23229 2007-11-21 22:11:12Z jpsaman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -153,6 +153,7 @@ struct timeout_thread_t
     VLC_COMMON_MEMBERS
 
     int64_t      i_remain;
+    vlc_bool_t   b_handle_keep_alive;
     demux_sys_t  *p_sys;
 };
 
@@ -717,6 +718,20 @@ createnew:
                  p_sys->env->getResultMsg() );
         return VLC_EGENERIC;
     }
+
+    /* Kasenna enables KeepAlive by analysing the User-Agent string. 
+     * Appending _KA to the string should be enough to enable this feature, 
+     * however, there is a bug where the _KA doesn't get parsed from the 
+     * standard User-Agent string as used above. The but is probably due to
+     * spaces in the string or the string being too long when Live55 also
+     * appends it's own name to the string */
+    if( var_CreateGetBool( p_demux, "rtsp-kasenna" ))
+    {
+#if LIVEMEDIA_LIBRARY_VERSION_INT > 1130457500
+        p_sys->rtsp->setUserAgentString( "VLC_MEDIA_PLAYER_KA" );
+#endif
+    }
+
     psz_url = (char*)malloc( strlen( p_sys->psz_path ) + 8 );
     sprintf( psz_url, "rtsp://%s", p_sys->psz_path );
 
@@ -1163,6 +1178,19 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
                     msg_Err( p_demux, "PLAY or PAUSE failed %s", p_sys->env->getResultMsg() );
                     return VLC_EGENERIC;
             }
+
+            /* When we Pause, we'll need the TimeoutPrevention thread to
+             * handle sending the "Keep Alive" message to the server. 
+             * Unfortunately Live555 isn't thread safe and so can't 
+             * do this normally while the main Demux thread is handling
+             * a live stream. We end up with the Timeout thread blocking
+             * waiting for a response from the server. So when we PAUSE
+             * we set a flag that the TimeoutPrevention function will check
+             * and if it's set, it will trigger the GET_PARAMETER message */
+            if( b_bool && p_sys->p_timeout != NULL )
+                p_sys->p_timeout->b_handle_keep_alive = VLC_TRUE;
+            else if( !b_bool && p_sys->p_timeout != NULL ) 
+                p_sys->p_timeout->b_handle_keep_alive = VLC_FALSE;
 #if 0
             /* reset PCR and PCR start, mmh won't work well for multi-stream I fear */
             for( i = 0; i < p_sys->i_track; i++ )
@@ -1510,10 +1538,21 @@ static void TimeoutPrevention( timeout_thread_t *p_timeout )
     {
         if( p_timeout->i_remain <= 0 )
         {
+            char *psz_bye = NULL;
             p_timeout->i_remain = (int64_t)p_timeout->p_sys->i_timeout -2;
             p_timeout->i_remain *= 1000000;
-            p_timeout->p_sys->b_timeout_call = VLC_TRUE;
             msg_Dbg( p_timeout, "reset the timeout timer" );
+            if( p_timeout->b_handle_keep_alive == VLC_TRUE)
+            {
+#if LIVEMEDIA_LIBRARY_VERSION_INT >= 1138089600
+                p_timeout->p_sys->rtsp->getMediaSessionParameter( *p_timeout->p_sys->ms, NULL, psz_bye );
+#endif
+                p_timeout->p_sys->b_timeout_call = VLC_FALSE;
+            }
+            else
+            {
+                p_timeout->p_sys->b_timeout_call = VLC_TRUE;
+            }
         }
         p_timeout->i_remain -= 200000;
         msleep( 200000 ); /* 200 ms */

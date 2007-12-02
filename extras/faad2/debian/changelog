@@ -1,0 +1,90 @@
+faad2 (2.0.0+cvs20040908+mp4v2+bmp-0ubuntu5) gutsy; urgency=low
+
+  * 10_libmp4_sample_check.diff: fixed SIGSEGV while listening to m4a
+    files (LP: 40043)
+  * Update Maintainer field in debian/control
+
+ -- Luca Falavigna <dktrkranz@ubuntu.com>  Tue, 12 Jun 2007 13:17:39 +0200
+
+faad2 (2.0.0+cvs20040908+mp4v2+bmp-0ubuntu4) gutsy; urgency=low
+
+  * rebuild for libgcc2
+
+ -- LaMont Jones <lamont@ubuntu.com>  Tue, 12 Jun 2007 06:53:25 -0600
+
+faad2 (2.0.0+cvs20040908+mp4v2+bmp-0ubuntu3) dapper; urgency=low
+
+  * 01_systems.h.diff:
+    + Fix the config.h include to mp4_config.h and copy config.h to
+      /usr/include/mp4_config.h. Bad bad upstream
+
+ -- Sebastian Dröge <slomo@ubuntu.com>  Wed,  9 Nov 2005 18:42:24 +0100
+
+faad2 (2.0.0+cvs20040908+mp4v2+bmp-0ubuntu2) breezy; urgency=low
+
+  * Added libmp4-0 to Conflicts/Replaces for libmp4v2-0
+
+ -- Sebastian Dröge <slomo@ubuntu.com>  Sun,  9 Oct 2005 15:47:08 +0200
+
+faad2 (2.0.0+cvs20040908+mp4v2+bmp-0ubuntu1) breezy; urgency=low
+
+  * The "Go Open videos are playable now" release
+  * Sync from CVS (newest version we can ship because of license changes)
+  * Added bmp plugin and libmp4v2 to tarball
+  * Added autotools stuff to tarball
+  * Removed 01_bmp-plugin.diff, 02_Make.am.diff, 03_autoreconf.diff,
+    05_option_w.diff, 08_amd64.diff
+  * Updated 09_amd64.diff
+  * Fixed the API to be compatible again with 2.0.0
+  * libmp4ff isn't shipped by default anymore: for compatibility reasons we
+    ship it
+
+ -- Sebastian Dröge <mail@slomosnail.de>  Wed,  7 Sep 2005 12:25:29 +0200
+
+faad2 (2.0.0clean-0ubuntu5) breezy; urgency=low
+
+  * debian/patches/08_amd64.diff:
+    + removed some bogus stuff. Really works now on amd64
+
+ -- Sebastian Dröge <mail@slomosnail.de>  Tue, 30 Aug 2005 17:20:22 +0200
+
+faad2 (2.0.0clean-0ubuntu4) breezy; urgency=low
+
+  * Added Replaces/Conflicts: libmp4 to libmp4v2 as Marillat calls it just
+    libmp4 and some users are using his repository
+  * debian/patches/08_amd64.diff:
+    + Some amd64 fixes from Marillat
+  * debian/patches/09_amd64-2.diff:
+    + Further amd64 fixes from Gentoo
+
+ -- Sebastian Dröge <mail@slomosnail.de>  Mon, 29 Aug 2005 23:49:34 +0200
+
+faad2 (2.0.0clean-0ubuntu3) breezy; urgency=low
+
+  * Add Replaces: libfaad2-0 (<< 2.0.0clean-0ubuntu2) to properly handle the
+    transition from -0ubuntu2
+
+ -- Matt Zimmerman <mdz@ubuntu.com>  Thu, 18 Aug 2005 19:12:36 -0700
+
+faad2 (2.0.0clean-0ubuntu2) breezy; urgency=low
+
+  * Added parameters for dh_makeshlibs to create
+    dependencies >= $UPSTREAM_VERSION
+  * Removed .so links from binary packages and moved them to the -dev ones
+ 
+ -- Sebastian Dröge <mail@slomosnail.de>  Thu, 18 Aug 2005 16:46:31 +0200
+ 
+faad2 (2.0.0clean-0ubuntu1) breezy; urgency=low
+
+  * Complete rewrite from scratch of marillat's package. Only package
+    descriptions are taken from marillat.
+  * Use a clean upstream tarball
+  * Include a patch which copies plugins/xmms to plugins/bmp and changes some
+    Makefiles to build a beep-media-player plugin
+
+  Changes from Reinhard Tartler
+
+  * fixed ftbfs with broken pure virtual methods decls
+
+ -- Sebastian Dröge <mail@slomosnail.de>  Thu, 07 Jun 2005 11:07:01 +0200
+

@@ -19,6 +19,7 @@ endif
 
 # MMX/SSE optims
 ifeq ($(ARCH),X86)
+ifneq ($(AS),)
 SRCS   += common/i386/mc-c.c common/i386/predict-c.c
 ASMSRC  = common/i386/dct-a.asm common/i386/cpu-a.asm \
           common/i386/pixel-a.asm common/i386/mc-a.asm \
@@ -28,9 +29,11 @@ ASMSRC  = common/i386/dct-a.asm common/i386/cpu-a.asm \
 OBJASM  = $(ASMSRC:%.asm=%.o)
 ASFLAGS += -Icommon/i386/
 endif
+endif
 
 # MMX/SSE optims
 ifeq ($(ARCH),X86_64)
+ifneq ($(AS),)
 SRCS   += common/i386/mc-c.c common/i386/predict-c.c
 ASMSRC  = common/amd64/dct-a.asm common/amd64/cpu-a.asm \
           common/amd64/pixel-a.asm common/amd64/mc-a.asm \
@@ -40,10 +43,14 @@ ASMSRC  = common/amd64/dct-a.asm common/amd64/cpu-a.asm \
 OBJASM  = $(ASMSRC:%.asm=%.o)
 ASFLAGS += -Icommon/amd64
 endif
+endif
 
 # AltiVec optims
 ifeq ($(ARCH),PPC)
-SRCS += common/ppc/mc.c common/ppc/pixel.c common/ppc/dct.c
+ALTIVECSRC += common/ppc/mc.c common/ppc/pixel.c common/ppc/dct.c \
+              common/ppc/quant.c common/ppc/deblock.c
+SRCS += $(ALTIVECSRC)
+$(ALTIVECSRC:%.c=%.o): CFLAGS += $(ALTIVECFLAGS)
 endif
 
 # VIS optims
@@ -60,7 +67,9 @@ OBJS = $(SRCS:%.c=%.o)
 OBJCLI = $(SRCCLI:%.c=%.o)
 DEP  = depend
 
-.PHONY: default fprofiled clean distclean install install-gtk uninstall
+.PHONY: all default fprofiled clean distclean install install-gtk uninstall dox test testclean
+all: default
+
 default: $(DEP) x264$(EXE)
 
 libx264.a: .depend $(OBJS) $(OBJASM)
@@ -73,9 +82,6 @@ $(SONAME): .depend $(OBJS) $(OBJASM)
 x264$(EXE): $(OBJCLI) libx264.a 
 	$(CC) -o $@ $+ $(LDFLAGS)
 
-x264vfw.dll: libx264.a $(wildcard vfw/*.c vfw/*.h)
-	$(MAKE) -C vfw/build/cygwin
-
 libx264gtk.a: muxers.o libx264.a
 	$(MAKE) -C gtk
 
@@ -86,11 +92,13 @@ common/amd64/*.o: common/amd64/amd64inc.asm
 common/i386/*.o: common/i386/i386inc.asm
 %.o: %.asm
 	$(AS) $(ASFLAGS) -o $@ $<
+# delete local/anonymous symbols, so they don't show up in oprofile
+	-@ strip -x $@
 
 .depend: config.mak
 	rm -f .depend
 # Hacky - because gcc 2.9x doesn't have -MT
-	$(foreach SRC, $(SRCS) $(SRCCLI), ( echo -n "`dirname $(SRC)`/" && $(CC) $(CFLAGS) $(SRC) -MM -g0 ) 1>> .depend;)
+	$(foreach SRC, $(SRCS) $(SRCCLI), ( $(ECHON) "`dirname $(SRC)`/" && $(CC) $(CFLAGS) $(ALTIVECFLAGS) $(SRC) -MM -g0 ) 1>> .depend;)
 
 config.mak: $(wildcard .svn/entries */.svn/entries */*/.svn/entries)
 	./configure $(CONFIGURE_ARGS)
@@ -104,13 +112,13 @@ SRC2 = $(SRCS) $(SRCCLI)
 # These should cover most of the important codepaths
 OPT0 = --crf 30 -b1 -m1 -r1 --me dia --no-cabac
 OPT1 = --crf 18 -b2 -m3 -r3 --me hex -8 --cqm jvt --direct spatial
-OPT2 = --crf 24 -b3 -m6 -r6 --me umh -8 -w -t1 -A all --b-pyramid --b-rdo --mixed-refs
+OPT2 = --crf 24 -b3 -m7 -r5 --me umh -8 -w -t1 -A all --b-pyramid --b-rdo --mixed-refs --direct auto
 
 ifeq (,$(VIDS))
 fprofiled:
 	@echo 'usage: make fprofiled VIDS="infile1 infile2 ..."'
 	@echo 'where infiles are anything that x264 understands,'
-	@echo 'i.e. YUV with resolution in the filename, or avisynth.'
+	@echo 'i.e. YUV with resolution in the filename, y4m, or avisynth.'
 else
 fprofiled:
 	$(MAKE) clean
@@ -129,13 +137,13 @@ clean:
 	rm -f $(OBJS) $(OBJASM) $(OBJCLI) $(SONAME) *.a x264 x264.exe .depend TAGS
 	rm -f checkasm checkasm.exe tools/checkasm.o
 	rm -f tools/avc2avi tools/avc2avi.exe tools/avc2avi.o
-	rm -rf vfw/build/cygwin/bin
 	rm -f $(SRC2:%.c=%.gcda) $(SRC2:%.c=%.gcno)
 	- sed -e 's/ *-fprofile-\(generate\|use\)//g' config.mak > config.mak2 && mv config.mak2 config.mak
 	$(MAKE) -C gtk clean
 
 distclean: clean
-	rm -f config.mak config.h vfw/build/cygwin/config.mak x264.pc
+	rm -f config.mak config.h x264.pc
+	rm -rf test/
 	$(MAKE) -C gtk distclean
 
 install: x264 $(SONAME)
@@ -162,3 +170,20 @@ etags: TAGS
 
 TAGS:
 	etags $(SRCS)
+
+dox:
+	doxygen Doxyfile
+
+ifeq (,$(VIDS))
+test:
+	@echo 'usage: make test VIDS="infile1 infile2 ..."'
+	@echo 'where infiles are anything that x264 understands,'
+	@echo 'i.e. YUV with resolution in the filename, y4m, or avisynth.'
+else
+test:
+	perl tools/regression-test.pl --version=head,current --options='$(OPT0)' --options='$(OPT1)' --options='$(OPT2)' $(VIDS:%=--input=%)
+endif
+
+testclean:
+	rm -f test/*.log test/*.264
+	$(foreach DIR, $(wildcard test/x264-r*/), cd $(DIR) ; make clean ; cd ../.. ;)

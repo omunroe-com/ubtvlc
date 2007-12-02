@@ -1,0 +1,18 @@
+--- ../faad2-old/common/mp4ff/mp4ff.h	2004-01-11 16:52:18.000000000 +0100
++++ ./common/mp4ff/mp4ff.h	2005-07-07 18:24:43.284890888 +0200
+@@ -32,7 +32,7 @@
+ extern "C" {
+ #endif /* __cplusplus */
+ 
+-#include "mp4ff_int_types.h"
++#include <stdint.h>
+ 
+ /* file callback structure */
+ typedef struct
+@@ -125,4 +125,4 @@
+ }
+ #endif /* __cplusplus */
+ 
+-#endif
+\ Kein Zeilenumbruch am Dateiende.
++#endif

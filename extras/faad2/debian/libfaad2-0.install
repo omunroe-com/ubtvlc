@@ -1,0 +1,2 @@
+debian/tmp/usr/lib/libfaad.so.* usr/lib
+debian/tmp/usr/lib/libmp4ff.so.* usr/lib

@@ -1,0 +1,3 @@
+debian/tmp/usr/lib/libmp4v2.a* usr/lib
+debian/tmp/usr/lib/libmp4v2.so usr/lib
+debian/tmp/usr/include/{mp4,mpeg4ip,systems,mp4_config}.h usr/include

@@ -1,4 +1,4 @@
-$Id: THANKS 20581 2007-06-16 11:15:56Z jb $
+$Id: THANKS 23228 2007-11-21 22:00:20Z jpsaman $
 
 VLC makes extensive use of the following persons' code:
 
@@ -70,6 +70,7 @@ Frank Chao <frank0624 at gmail.com> - Chinese Traditional translation
 Fumio Nakayama <endymion at ca2.so-net.ne.jp> - Japanese translation
 Gabor Kelemen <kelemeng at gnome.hu> - Hungarian translation
 Georgi Chorbadzhiyski <gf at unixsol dot org> - HTTP access error handling fix
+Glen Gray <slaine at slaine dot org> - RTSP Keepalive fixes
 Greg Farrell <greg at gregfarell dot org> - rc interface "enqueue" command
 Gregory Hazel <ghazel at gmail dot com> - wxWidgets fixes and improvements
 Goetz Waschk <waschk at informatik.uni-rostock dot de> - Mandrake packages
@@ -114,6 +115,7 @@ Mats Rojestal <mats.rojestal at bredband dot net> - compilation fixes for Solari
 Matthieu Lochegnies <lochegm1 at cti.ecp.fr> - MPEG audio emphasis fix
 Max Rudberg <max_08 at mac.com> - Mac OS X controller art (v0.7.0)
 Michael Mondragon <mammon at lokmail.net> - ncurses compilation fix
+Michał Trzebiatowski <hippie_1968 at hotmail dot com> - Polish translation
 Mickael Hoerdt <hoerdt at clarinet.u-strasbg.fr> - IPv6 SSM multicast patch
 Mike Schrag <mschrag at pobox dot com> - directx device selection
 Michel Lanners <mlan at cpu.lu> - fixed typos and AltiVec detection

@@ -1,0 +1,26 @@
+#!/usr/bin/make -f
+
+include /usr/share/cdbs/1/rules/simple-patchsys.mk
+include /usr/share/cdbs/1/rules/debhelper.mk
+include /usr/share/cdbs/1/class/autotools.mk
+
+DEB_CONFIGURE_EXTRA_FLAGS := --with-xmms --with-bmp --with-drm --with-mp4v2 --disable-mpeg4ip
+
+DEB_NOREVISION_VERSION := $(shell dpkg-parsechangelog | egrep '^Version:' | \
+   cut -f 2 -d ' ' | cut -f 1 -d '-')
+
+DEB_DH_MAKESHLIBS_ARGS_libfaad2-0 := -V"libfaad2-0 \
+        (>= $(DEB_NOREVISION_VERSION))"
+DEB_DH_MAKESHLIBS_ARGS_libmp4v2-0 := -V"libmp4v2-0 \
+        (>= $(DEB_NOREVISION_VERSION))"
+	
+DEB_SHLIBDEPS_INCLUDE := debian/libfaad2-0/usr/lib debian/libmp4v2-0/usr/lib
+
+configure/faad::
+	ln -sf config.h mp4_config.h
+
+install/libmp4v2-dev::
+	cp config.h debian/tmp/usr/include/mp4_config.h
+	
+clean::
+	rm -f mp4_config.h

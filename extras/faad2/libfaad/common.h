@@ -1,6 +1,6 @@
 /*
 ** FAAD2 - Freeware Advanced Audio (AAC) Decoder including SBR decoding
-** Copyright (C) 2003-2005 M. Bakker, Ahead Software AG, http://www.nero.com
+** Copyright (C) 2003-2005 M. Bakker, Nero AG, http://www.nero.com
 **  
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,15 +19,15 @@
 ** Any non-GPL usage of this software or parts of this software is strictly
 ** forbidden.
 **
-** Software using this code must display the following message visibly in the
-** software:
-** "FAAD2 AAC/HE-AAC/HE-AACv2/DRM decoder (c) Ahead Software, www.nero.com"
+** Software using this code must display the following message visibly in or
+** on each copy of the software:
+** "Code from FAAD2 is copyright (c) Nero AG, www.nero.com"
 ** in, for example, the about-box or help/startup screen.
 **
 ** Commercial non-GPL licensing of this software is possible.
-** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
+** For more info contact Nero AG through Mpeg4AAClicense@nero.com.
 **
-** $Id: common.h,v 1.66 2005/02/01 13:23:35 menno Exp $
+** $Id: common.h,v 1.71 2007/10/11 18:41:50 menno Exp $
 **/
 
 #ifndef __COMMON_H__
@@ -72,6 +72,10 @@ extern "C" {
 //#define PREFER_POINTERS
 
 #ifdef _WIN32_WCE
+#define FIXED_POINT
+#endif
+
+#ifdef __BFIN__
 #define FIXED_POINT
 #endif
 
@@ -321,7 +325,9 @@ char *strchr(), *strrchr();
         }
         return i;
     }
-  #elif (defined(__i386__) && defined(__GNUC__))
+  #elif (defined(__i386__) && defined(__GNUC__) && \
+	!defined(__CYGWIN__) && !defined(__MINGW32__))
+    #ifndef HAVE_LRINTF
     #define HAS_LRINTF
     // from http://www.stereopsis.com/FPU.html
     static INLINE int lrintf(float f)
@@ -334,6 +340,7 @@ char *strchr(), *strrchr();
             : "m" (f));
         return i;
     }
+    #endif /* HAVE_LRINTF */
   #endif
 
 
@@ -399,7 +406,7 @@ typedef real_t complex_t[2];
 
 /* common functions */
 uint8_t cpu_has_sse(void);
-uint32_t random_int(void);
+uint32_t ne_rng(uint32_t *__r1, uint32_t *__r2);
 uint32_t ones32(uint32_t x);
 uint32_t floor_log2(uint32_t x);
 uint32_t wl_min_lzc(uint32_t x);

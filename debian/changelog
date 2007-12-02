@@ -1,3 +1,28 @@
+vlc (0.8.6.release.d-0ubuntu1) hardy; urgency=low
+
+  * New upstream version. (LP: #173550)
+    - Fixes ALSA/SPDIF. (LP: #153641)
+  * Build with JACK support. (LP: #151895)
+  * debian/rules:
+    - Add a get-orig-source target for easily rebuilding with current
+      x264 and faad2.
+  * Rebuild with faad2 2.0.0+cvs20040908+mp4v2+bmp-0ubuntu5.
+  * Rebuild with x264 1:0.svn20070930-0.0ubuntu2.
+  * debian/control:
+    - Add subversion to build dependencies to allow version checking
+      during build identification.
+    - Add libjack-dev to build dependencies
+    - Make sure we depend on libcaca >=0.99.beta13b-2 to prevent a FTBFS.
+    - Make sure we depend on libvcdinfo >=0.7.23-4ubuntu1 to prevent a FTBFS.
+  * Disable 010_no-wx-updates.diff patch, upstream has disabled update
+    checking for now already.
+  * Drop 030_fix_exec_field_code.diff patch, because upstream has added
+    support for files and URLs directly from calling the vlc binary.
+  * Fix lintian warning for debian-rules-ignores-make-clean-error.
+  * Fix lintian warning for substvar-source-version-is-deprecated.
+
+ -- Mario Limonciello <superm1@ubuntu.com>  Sun, 02 Dec 2007 15:41:50 -0600
+
 vlc (0.8.6.release.c-0ubuntu5) gutsy; urgency=low
 
   * Add patch 030_fix_exec_field_code:

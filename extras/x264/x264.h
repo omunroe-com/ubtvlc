@@ -35,10 +35,10 @@
 
 #include <stdarg.h>
 
-#define X264_BUILD 50
+#define X264_BUILD 56
 
 /* x264_t:
- *      opaque handler for decoder and encoder */
+ *      opaque handler for encoder */
 typedef struct x264_t x264_t;
 
 /****************************************************************************
@@ -53,6 +53,8 @@ typedef struct x264_t x264_t;
 #define X264_CPU_3DNOW      0x000010    /* 3dnow! */
 #define X264_CPU_3DNOWEXT   0x000020    /* 3dnow! ext */
 #define X264_CPU_ALTIVEC    0x000040    /* altivec */
+#define X264_CPU_SSE3       0x000080    /* sse 3 */
+#define X264_CPU_SSSE3      0x000100    /* ssse 3 */
 
 /* Analyse flags
  */
@@ -72,7 +74,7 @@ typedef struct x264_t x264_t;
 #define X264_CQM_FLAT                0
 #define X264_CQM_JVT                 1
 #define X264_CQM_CUSTOM              2
-
+#define X264_RC_NONE                 -1
 #define X264_RC_CQP                  0
 #define X264_RC_CRF                  1
 #define X264_RC_ABR                  2
@@ -98,6 +100,7 @@ static const char * const x264_colmatrix_names[] = { "GBR", "bt709", "undef", ""
 #define X264_CSP_RGB            0x0006  /* rgb 24bits       */
 #define X264_CSP_BGR            0x0007  /* bgr 24bits       */
 #define X264_CSP_BGRA           0x0008  /* bgr 32bits       */
+#define X264_CSP_MAX            0x0009  /* end of list */
 #define X264_CSP_VFLIP          0x1000  /* */
 
 /* Slice type
@@ -119,19 +122,24 @@ static const char * const x264_colmatrix_names[] = { "GBR", "bt709", "undef", ""
 #define X264_LOG_INFO           2
 #define X264_LOG_DEBUG          3
 
+/* Zones: override ratecontrol or other options for specific sections of the video.
+ * See x264_encoder_reconfig() for which options can be changed.
+ * If zones overlap, whichever comes later in the list takes precedence. */
 typedef struct
 {
-    int i_start, i_end;
-    int b_force_qp;
+    int i_start, i_end; /* range of frame numbers */
+    int b_force_qp; /* whether to use qp vs bitrate factor */
     int i_qp;
     float f_bitrate_factor;
+    struct x264_param_t *param;
 } x264_zone_t;
 
-typedef struct
+typedef struct x264_param_t
 {
     /* CPU flags */
     unsigned int cpu;
-    int         i_threads;  /* divide each frame into multiple slices, encode in parallel */
+    int         i_threads;       /* encode multiple frames in parallel */
+    int         b_deterministic; /* whether to allow non-deterministic optimizations when threaded */
 
     /* Video Properties */
     int         i_width;
@@ -165,6 +173,7 @@ typedef struct
     int         i_keyint_max;       /* Force an IDR keyframe at this interval */
     int         i_keyint_min;       /* Scenecuts closer together than this are coded as I, not IDR. */
     int         i_scenecut_threshold; /* how aggressively to insert extra I frames */
+    int         b_pre_scenecut;     /* compute scenecut on lowres frames */
     int         i_bframe;   /* how many b-frame between 2 references pictures */
     int         b_bframe_adaptive;
     int         i_bframe_bias;
@@ -176,6 +185,8 @@ typedef struct
 
     int         b_cabac;
     int         i_cabac_init_idc;
+
+    int         b_interlaced;
 
     int         i_cqm_preset;
     char        *psz_cqm_file;      /* JM format */
@@ -201,11 +212,13 @@ typedef struct
         int          b_transform_8x8;
         int          b_weighted_bipred; /* implicit weighting for B-frames */
         int          i_direct_mv_pred; /* spatial vs temporal mv prediction */
+        int          i_direct_8x8_inference; /* forbid 4x4 direct partitions. -1 = auto, based on level */
         int          i_chroma_qp_offset;
 
         int          i_me_method; /* motion estimation algorithm to use (X264_ME_*) */
         int          i_me_range; /* integer pixel motion estimation search range (from predicted mv) */
-        int          i_mv_range; /* maximum length of a mv (in pixels) */
+        int          i_mv_range; /* maximum length of a mv (in pixels). -1 = auto, based on level */
+        int          i_mv_range_thread; /* minimum space between threads. -1 = auto, based on number of threads. */
         int          i_subpel_refine; /* subpixel motion estimation quality */
         int          b_bidir_me; /* jointly optimize both MVs in B-frames */
         int          b_chroma_me; /* chroma ME for subpel and mode decision in P-frames */
@@ -215,6 +228,9 @@ typedef struct
         int          b_fast_pskip; /* early SKIP detection on P-frames */
         int          b_dct_decimate; /* transform coefficient thresholding on P-frames */
         int          i_noise_reduction; /* adaptive pseudo-deadzone */
+
+        /* the deadzone size that will be used in luma quantization */
+        int          i_luma_deadzone[2]; /* {inter, intra} */
 
         int          b_psnr;    /* compute and print PSNR stats */
         int          b_ssim;    /* compute and print SSIM stats */
@@ -231,11 +247,11 @@ typedef struct
         int         i_qp_step;      /* max QP step between frames */
 
         int         i_bitrate;
-        int         i_rf_constant;  /* 1pass VBR, nominal QP */
+        float       f_rf_constant;  /* 1pass VBR, nominal QP */
         float       f_rate_tolerance;
         int         i_vbv_max_bitrate;
         int         i_vbv_buffer_size;
-        float       f_vbv_buffer_init;
+        float       f_vbv_buffer_init; /* <=1: fraction of buffer_size. >1: kbit */
         float       f_ip_factor;
         float       f_pb_factor;
 
@@ -251,7 +267,7 @@ typedef struct
         float       f_qblur;        /* temporally blur quants */
         float       f_complexity_blur; /* temporally blur complexity */
         x264_zone_t *zones;         /* ratecontrol overrides */
-        int         i_zones;        /* sumber of zone_t's */
+        int         i_zones;        /* number of zone_t's */
         char        *psz_zones;     /* alternate method of specifying zones */
     } rc;
 
@@ -263,17 +279,17 @@ typedef struct
 
 typedef struct {
     int level_idc;
-    int mbps;        // max macroblock processing rate (macroblocks/sec)
-    int frame_size;  // max frame size (macroblocks)
-    int dpb;         // max decoded picture buffer (bytes)
-    int bitrate;     // max bitrate (kbit/sec)
-    int cpb;         // max vbv buffer (kbit)
-    int mv_range;    // max vertical mv component range (pixels)
-    int mvs_per_2mb; // max mvs per 2 consecutive mbs.
-    int slice_rate;  // ??
-    int bipred8x8;   // limit bipred to >=8x8
-    int direct8x8;   // limit b_direct to >=8x8
-    int frame_only;  // forbid interlacing
+    int mbps;        /* max macroblock processing rate (macroblocks/sec) */
+    int frame_size;  /* max frame size (macroblocks) */
+    int dpb;         /* max decoded picture buffer (bytes) */
+    int bitrate;     /* max bitrate (kbit/sec) */
+    int cpb;         /* max vbv buffer (kbit) */
+    int mv_range;    /* max vertical mv component range (pixels) */
+    int mvs_per_2mb; /* max mvs per 2 consecutive mbs. */
+    int slice_rate;  /* ?? */
+    int bipred8x8;   /* limit bipred to >=8x8 */
+    int direct8x8;   /* limit b_direct to >=8x8 */
+    int frame_only;  /* forbid interlacing */
 } x264_level_t;
 
 /* all of the levels defined in the standard, terminated by .level_idc=0 */
@@ -284,10 +300,12 @@ extern const x264_level_t x264_levels[];
 void    x264_param_default( x264_param_t * );
 
 /* x264_param_parse:
- *      set one parameter by name.
- *      returns 0 on success, or returns one of the following errors.
- *      note: bad value occurs only if it can't even parse the value,
- *      numerical range is not checked until x264_encoder_open() or x264_encoder_reconfig(). */
+ *  set one parameter by name.
+ *  returns 0 on success, or returns one of the following errors.
+ *  note: BAD_VALUE occurs only if it can't even parse the value,
+ *  numerical range is not checked until x264_encoder_open() or
+ *  x264_encoder_reconfig().
+ *  value=NULL means "true" for boolean options, but is a BAD_VALUE for non-booleans. */
 #define X264_PARAM_BAD_NAME  (-1)
 #define X264_PARAM_BAD_VALUE (-2)
 int x264_param_parse( x264_param_t *, const char *name, const char *value );
@@ -393,20 +411,5 @@ int     x264_encoder_encode ( x264_t *, x264_nal_t **, int *, x264_picture_t *, 
 /* x264_encoder_close:
  *      close an encoder handler */
 void    x264_encoder_close  ( x264_t * );
-
-/* XXX: decoder isn't working so no need to export it */
-
-/****************************************************************************
- * Private stuff for internal usage:
- ****************************************************************************/
-#ifdef __X264__
-#   ifdef _MSC_VER
-#       define inline __inline
-#       define DECLARE_ALIGNED( type, var, n ) __declspec(align(n)) type var
-#		define strncasecmp(s1, s2, n) strnicmp(s1, s2, n)
-#   else
-#       define DECLARE_ALIGNED( type, var, n ) type var __attribute__((aligned(n)))
-#   endif
-#endif
 
 #endif

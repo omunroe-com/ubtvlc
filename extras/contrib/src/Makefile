@@ -2,7 +2,7 @@
 # src/Makefile : Dearchive and compile all files necessary
 # ***************************************************************************
 # Copyright (C) 2003 - 2007 the VideoLAN team
-# $Id: Makefile 20480 2007-06-08 14:22:20Z fkuehne $
+# $Id: Makefile 23327 2007-11-25 16:54:29Z fkuehne $
 #
 # Authors: Christophe Massiot <massiot@via.ecp.fr>
 #          Derk-Jan Hartman <hartman at videolan dot org>
@@ -743,7 +743,7 @@ flac-$(FLAC_VERSION).tar.gz:
 flac: flac-$(FLAC_VERSION).tar.gz
 	$(EXTRACT_GZ)
 ifdef HAVE_DARWIN_OS
-	patch -p 0 < Patches/flac-mactel.patch
+	(patch -p 0 < Patches/flac-mactel.patch)
 endif
 ifneq ($(HOST),$(BUILD))
 	(patch -p 0 < Patches/flac-cross.patch && cd $@ && autoconf)
@@ -754,7 +754,11 @@ ifdef HAVE_WIN32
 	(cd $<; $(HOSTCC) ./configure $(HOSTCONF) --prefix=$(PREFIX) --disable-oggtest --disable-asm-optimizations && cd src&& make -C libFLAC&& make -C libFLAC install  && cd .. && make -C include install)
 else
 ifdef HAVE_DARWIN_OS
-	(cd $<; autoconf && $(HOSTCC) ./configure $(HOSTCONF) --prefix=$(PREFIX) --disable-oggtest && sed -e 's%-Wl,-syslibroot,%-syslibroot %' -i.orig src/libFLAC/Makefile && cd src && make -C libFLAC && make -C libFLAC install  && cd .. && make -C include install)
+ifdef HAVE_DARWIN_OS_ON_INTEL
+	(cd $<; autoconf && $(HOSTCC) ./configure $(HOSTCONF) --prefix=$(PREFIX) --disable-oggtest --disable-asm-optimizations && sed -e 's%-Wl,-syslibroot,%-syslibroot %' -i.orig src/libFLAC/Makefile && cd src && make -C libFLAC && make -C libFLAC install  && cd .. && make -C include install)
+else
+	(cd $<; autoconf && $(HOSTCC) ./configure $(HOSTCONF) --prefix=$(PREFIX) --disable-oggtest && cd src && make -C libFLAC && make -C libFLAC install  && cd .. && make -C include install)
+endif
 else
 	(cd $<; autoconf && $(HOSTCC) ./configure $(HOSTCONF) --prefix=$(PREFIX) --disable-oggtest && cd src && make -C libFLAC && make -C libFLAC install  && cd .. && make -C include install)
 endif
@@ -1078,8 +1082,10 @@ endif
 ifdef HAVE_DARWIN_OS
 	patch -p0 < Patches/live-osx.patch
 endif
-	patch -p0 < Patches/live-starttime.patch
-	patch -p0 < Patches/live-config.patch
+	(cd live/liveMedia/include; \
+		mv liveMedia_version.hh liveMedia_version.hh.bak; \
+	sed -e 's/.*LIVEMEDIA_LIBRARY_VERSION_INT.*/#define LIVEMEDIA_LIBRARY_VERSION_INT         9999999999/' liveMedia_version.hh.bak > liveMedia_version.hh )
+	patch -Np0 < Patches/live-config.patch
 ifdef HAVE_UCLIBC
 	patch -p0 < Patches/live-noapps.patch
 endif
@@ -1195,9 +1201,12 @@ CLEAN_PKG += libdca
 
 ifdef SVN
 x264: 
-	$(SVN) co svn://svn.videolan.org/x264/trunk/ -r 604 x264
+	$(SVN) co svn://svn.videolan.org/x264/trunk/ -r 701 x264
 ifdef HAVE_WIN32
-	(cd x264; patch -p 0 < ../Patches/x264-svn-win32.patch )
+	(cd $@; patch -p 0 < ../Patches/x264-svn-win32.patch )
+endif
+ifdef HAVE_DARWIN_OS
+	(cd $@; patch -p 0 < ../Patches/x264-svn-darwin.patch )
 endif
 else
 x264-$(X264_VERSION).tar.gz:
