@@ -2,7 +2,7 @@
  * intf.h: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2006 the VideoLAN team
- * $Id: intf.h 20490 2007-06-09 15:36:51Z pdherbemont $
+ * $Id: intf.h 23381 2007-11-27 19:26:51Z fkuehne $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -99,7 +99,7 @@ struct intf_sys_t
     id o_bookmarks;             /* VLCBookmarks   */
     id o_embedded_list;         /* VLCEmbeddedList*/
     id o_interaction_list;      /* VLCInteractionList*/
-    id o_update;                /* VLCUpdate      */
+    /*id o_update;                * VLCUpdate      * disabled until further action */
     BOOL nib_main_loaded;       /* reference to the main-nib */
     BOOL nib_open_loaded;       /* reference to the open-nib */
     BOOL nib_about_loaded;      /* reference to the about-nib */
@@ -156,7 +156,7 @@ struct intf_sys_t
 
     IBOutlet id o_mi_about;
     IBOutlet id o_mi_prefs;
-    IBOutlet id o_mi_checkForUpdate;
+    /*IBOutlet id o_mi_checkForUpdate;*/
     IBOutlet id o_mi_add_intf;
     IBOutlet id o_mu_add_intf;
     IBOutlet id o_mi_services;
@@ -289,7 +289,7 @@ struct intf_sys_t
     int     i_lastShownVolume;
 
     AppleRemote * o_remote;
-    BOOL b_left_right_remote_button_hold; /* true as long as the user holds the left or right button on the remote control */
+    BOOL b_remote_button_hold; /* true as long as the user holds the left,right,plus or minus on the remote control */
 }
 
 + (VLCMain *)sharedInstance;
@@ -339,7 +339,7 @@ struct intf_sys_t
 
 - (IBAction)viewAbout:(id)sender;
 - (IBAction)viewPreferences:(id)sender;
-- (IBAction)checkForUpdate:(id)sender;
+/* - (IBAction)checkForUpdate:(id)sender; */
 - (IBAction)closeError:(id)sender;
 - (IBAction)openReadMe:(id)sender;
 - (IBAction)openDocumentation:(id)sender;

@@ -1,0 +1,298 @@
+--- include/faad.h.old	2005-09-07 12:37:52.265782664 +0200
++++ include/faad.h	2005-09-07 12:44:22.634437608 +0200
+@@ -66,6 +66,10 @@
+   #endif
+ #endif
+ 
++/* needed for standard integer types */
++#define __STDC_LIMIT_MACROS
++#include <stdint.h>
++	
+ #define FAAD2_VERSION "2.0"
+ 
+ /* object types for AAC */
+@@ -136,90 +140,90 @@
+ typedef struct mp4AudioSpecificConfig
+ {
+     /* Audio Specific Info */
+-    unsigned char objectTypeIndex;
+-    unsigned char samplingFrequencyIndex;
+-    unsigned long samplingFrequency;
+-    unsigned char channelsConfiguration;
++    uint8_t objectTypeIndex;
++    uint8_t samplingFrequencyIndex;
++    uint32_t samplingFrequency;
++    uint8_t channelsConfiguration;
+ 
+     /* GA Specific Info */
+-    unsigned char frameLengthFlag;
+-    unsigned char dependsOnCoreCoder;
+-    unsigned short coreCoderDelay;
+-    unsigned char extensionFlag;
+-    unsigned char aacSectionDataResilienceFlag;
+-    unsigned char aacScalefactorDataResilienceFlag;
+-    unsigned char aacSpectralDataResilienceFlag;
+-    unsigned char epConfig;
+-
+-    char sbr_present_flag;
+-    char forceUpSampling;
+-    char downSampledSBR;
++    uint8_t frameLengthFlag;
++    uint8_t dependsOnCoreCoder;
++    uint16_t coreCoderDelay;
++    uint8_t extensionFlag;
++    uint8_t aacSectionDataResilienceFlag;
++    uint8_t aacScalefactorDataResilienceFlag;
++    uint8_t aacSpectralDataResilienceFlag;
++    uint8_t epConfig;
++
++    int8_t sbr_present_flag;
++    int8_t forceUpSampling;
++    int8_t downSampledSBR;
+ } mp4AudioSpecificConfig;
+ 
+ typedef struct faacDecConfiguration
+ {
+-    unsigned char defObjectType;
+-    unsigned long defSampleRate;
+-    unsigned char outputFormat;
+-    unsigned char downMatrix;
+-    unsigned char useOldADTSFormat;
+-    unsigned char dontUpSampleImplicitSBR;
++    uint8_t defObjectType;
++    uint32_t defSampleRate;
++    uint8_t outputFormat;
++    uint8_t downMatrix;
++    uint8_t useOldADTSFormat;
++    uint8_t dontUpSampleImplicitSBR;
+ } faacDecConfiguration, *faacDecConfigurationPtr;
+ 
+ typedef struct faacDecFrameInfo
+ {
+-    unsigned long bytesconsumed;
+-    unsigned long samples;
+-    unsigned char channels;
+-    unsigned char error;
+-    unsigned long samplerate;
++    uint32_t bytesconsumed;
++    uint32_t samples;
++    uint8_t channels;
++    uint8_t error;
++    uint32_t samplerate;
+ 
+     /* SBR: 0: off, 1: on; upsample, 2: on; downsampled, 3: off; upsampled */
+-    unsigned char sbr;
++    uint8_t sbr;
+ 
+     /* MPEG-4 ObjectType */
+-    unsigned char object_type;
++    uint8_t object_type;
+ 
+     /* AAC header type; MP4 will be signalled as RAW also */
+-    unsigned char header_type;
++    uint8_t header_type;
+ 
+     /* multichannel configuration */
+-    unsigned char num_front_channels;
+-    unsigned char num_side_channels;
+-    unsigned char num_back_channels;
+-    unsigned char num_lfe_channels;
+-    unsigned char channel_position[64];
++    uint8_t num_front_channels;
++    uint8_t num_side_channels;
++    uint8_t num_back_channels;
++    uint8_t num_lfe_channels;
++    uint8_t channel_position[64];
+ 
+     /* PS: 0: off, 1: on */
+     unsigned char ps;
+ } faacDecFrameInfo;
+ 
+-char* FAADAPI faacDecGetErrorMessage(unsigned char errcode);
++int8_t* FAADAPI faacDecGetErrorMessage(uint8_t errcode);
+ 
+-unsigned long FAADAPI faacDecGetCapabilities(void);
++uint32_t FAADAPI faacDecGetCapabilities(void);
+ 
+ faacDecHandle FAADAPI faacDecOpen(void);
+ 
+ faacDecConfigurationPtr FAADAPI faacDecGetCurrentConfiguration(faacDecHandle hDecoder);
+ 
+-unsigned char FAADAPI faacDecSetConfiguration(faacDecHandle hDecoder,
++uint8_t FAADAPI faacDecSetConfiguration(faacDecHandle hDecoder,
+                                                    faacDecConfigurationPtr config);
+ 
+ /* Init the library based on info from the AAC file (ADTS/ADIF) */
+ long FAADAPI faacDecInit(faacDecHandle hDecoder,
+-                              unsigned char *buffer,
+-                              unsigned long buffer_size,
+-                              unsigned long *samplerate,
+-                              unsigned char *channels);
++                              uint8_t *buffer,
++                              uint32_t buffer_size,
++                              uint32_t *samplerate,
++                              uint8_t *channels);
+ 
+ /* Init the library using a DecoderSpecificInfo */
+-char FAADAPI faacDecInit2(faacDecHandle hDecoder, unsigned char *pBuffer,
+-                               unsigned long SizeOfDecoderSpecificInfo,
+-                               unsigned long *samplerate, unsigned char *channels);
++int8_t FAADAPI faacDecInit2(faacDecHandle hDecoder, uint8_t *pBuffer,
++                               uint32_t SizeOfDecoderSpecificInfo,
++                               uint32_t *samplerate, uint8_t *channels);
+ 
+ /* Init the library for DRM */
+-char FAADAPI faacDecInitDRM(faacDecHandle *hDecoder, unsigned long samplerate,
+-                                 unsigned char channels);
++int8_t FAADAPI faacDecInitDRM(faacDecHandle *hDecoder, uint32_t samplerate,
++                                 uint8_t channels);
+ 
+ void FAADAPI faacDecPostSeekReset(faacDecHandle hDecoder, long frame);
+ 
+@@ -227,18 +231,18 @@
+ 
+ void* FAADAPI faacDecDecode(faacDecHandle hDecoder,
+                                  faacDecFrameInfo *hInfo,
+-                                 unsigned char *buffer,
+-                                 unsigned long buffer_size);
++                                 uint8_t *buffer,
++                                 uint32_t buffer_size);
+ 
+ void* FAADAPI faacDecDecode2(faacDecHandle hDecoder,
+                                   faacDecFrameInfo *hInfo,
+-                                  unsigned char *buffer,
+-                                  unsigned long buffer_size,
++                                  uint8_t *buffer,
++                                  uint32_t buffer_size,
+                                   void **sample_buffer,
+-                                  unsigned long sample_buffer_size);
++                                  uint32_t sample_buffer_size);
+ 
+-char FAADAPI faacDecAudioSpecificConfig(unsigned char *pBuffer,
+-                                             unsigned long buffer_size,
++int8_t FAADAPI faacDecAudioSpecificConfig(uint8_t *pBuffer,
++                                             uint32_t buffer_size,
+                                              mp4AudioSpecificConfig *mp4ASC);
+ 
+ #ifdef _WIN32
+--- libfaad/common.h.old	2005-09-07 12:45:17.209140992 +0200
++++ libfaad/common.h	2005-09-07 12:47:34.732234304 +0200
+@@ -193,8 +193,16 @@
+ #else
+ # if HAVE_STDINT_H
+ #  include <stdint.h>
++# elif defined(__x86_64__)
++typedef unsigned long uint64_t;
++typedef unsigned int uint32_t;
++typedef unsigned short uint16_t;
++typedef unsigned char uint8_t;
++typedef long int64_t;
++typedef int int32_t;
++typedef short int16_t;
++typedef char int8_t;
+ # else
+-/* we need these... */
+ typedef unsigned long long uint64_t;
+ typedef unsigned long uint32_t;
+ typedef unsigned short uint16_t;
+--- libfaad/structs.h.old	2005-09-07 14:29:47.764871624 +0200
++++ libfaad/structs.h	2005-09-07 14:32:45.799806200 +0200
+@@ -310,62 +310,62 @@
+ typedef struct mp4AudioSpecificConfig
+ {
+     /* Audio Specific Info */
+-    /*uint8_t*/ unsigned char objectTypeIndex;
+-    /*uint8_t*/ unsigned char samplingFrequencyIndex;
+-    /*uint32_t*/ unsigned long samplingFrequency;
+-    /*uint8_t*/ unsigned char channelsConfiguration;
++    uint8_t objectTypeIndex;
++    uint8_t samplingFrequencyIndex;
++    uint32_t samplingFrequency;
++    uint8_t channelsConfiguration;
+ 
+     /* GA Specific Info */
+-    /*uint8_t*/ unsigned char frameLengthFlag;
+-    /*uint8_t*/ unsigned char dependsOnCoreCoder;
+-    /*uint16_t*/ unsigned short coreCoderDelay;
+-    /*uint8_t*/ unsigned char extensionFlag;
+-    /*uint8_t*/ unsigned char aacSectionDataResilienceFlag;
+-    /*uint8_t*/ unsigned char aacScalefactorDataResilienceFlag;
+-    /*uint8_t*/ unsigned char aacSpectralDataResilienceFlag;
+-    /*uint8_t*/ unsigned char epConfig;
+-
+-    /*uint8_t*/ char sbr_present_flag;
+-    /*uint8_t*/ char forceUpSampling;
+-    /*uint8_t*/ char downSampledSBR;
++    uint8_t frameLengthFlag;
++    uint8_t dependsOnCoreCoder;
++    uint16_t coreCoderDelay;
++    uint8_t extensionFlag;
++    uint8_t aacSectionDataResilienceFlag;
++    uint8_t aacScalefactorDataResilienceFlag;
++    uint8_t aacSpectralDataResilienceFlag;
++    uint8_t epConfig;
++
++    uint8_t sbr_present_flag;
++    uint8_t forceUpSampling;
++    uint8_t downSampledSBR;
+ } mp4AudioSpecificConfig;
+ 
+ typedef struct faacDecConfiguration
+ {
+-    /*uint8_t*/ unsigned char defObjectType;
+-    /*uint32_t*/ unsigned long defSampleRate;
+-    /*uint8_t*/ unsigned char outputFormat;
+-    /*uint8_t*/ unsigned char downMatrix;
+-    /*uint8_t*/ unsigned char useOldADTSFormat;
+-    /*uint8_t*/ unsigned char dontUpSampleImplicitSBR;
++    uint8_t defObjectType;
++    uint32_t defSampleRate;
++    uint8_t outputFormat;
++    uint8_t downMatrix;
++    uint8_t useOldADTSFormat;
++    uint8_t dontUpSampleImplicitSBR;
+ } faacDecConfiguration, *faacDecConfigurationPtr;
+ 
+ typedef struct faacDecFrameInfo
+ {
+-    /*uint32_t*/ unsigned long bytesconsumed;
+-    /*uint32_t*/ unsigned long samples;
+-    /*uint8_t*/ unsigned char channels;
+-    /*uint8_t*/ unsigned char error;
+-    /*uint32_t*/ unsigned long samplerate;
++    uint32_t bytesconsumed;
++    uint32_t samples;
++    uint8_t channels;
++    uint8_t error;
++    uint32_t samplerate;
+ 
+     /* SBR: 0: off, 1: on; normal, 2: on; downsampled */
+-    /*uint8_t*/ unsigned char sbr;
++    uint8_t sbr;
+ 
+     /* MPEG-4 ObjectType */
+-    /*uint8_t*/ unsigned char object_type;
++    uint8_t object_type;
+ 
+     /* AAC header type; MP4 will be signalled as RAW also */
+-    /*uint8_t*/ unsigned char header_type;
++    uint8_t header_type;
+ 
+     /* multichannel configuration */
+-    /*uint8_t*/ unsigned char num_front_channels;
+-    /*uint8_t*/ unsigned char num_side_channels;
+-    /*uint8_t*/ unsigned char num_back_channels;
+-    /*uint8_t*/ unsigned char num_lfe_channels;
+-    /*uint8_t*/ unsigned char channel_position[MAX_CHANNELS];
++    uint8_t num_front_channels;
++    uint8_t num_side_channels;
++    uint8_t num_back_channels;
++    uint8_t num_lfe_channels;
++    uint8_t channel_position[MAX_CHANNELS];
+ 
+     /* PS: 0: off, 1: on */
+-    /*uint8_t*/ unsigned char ps;
++    uint8_t ps;
+ } faacDecFrameInfo;
+ 
+ typedef struct

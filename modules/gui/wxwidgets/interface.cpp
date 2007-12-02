@@ -2,7 +2,7 @@
  * interface.cpp : wxWidgets plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2006 the VideoLAN team
- * $Id: interface.cpp 20542 2007-06-12 21:19:23Z Trax $
+ * $Id: interface.cpp 23379 2007-11-27 19:10:16Z fkuehne $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -606,8 +606,9 @@ void Interface::CreateOurMenuBar()
     /* Create the "Help" menu */
     wxMenu *help_menu = new wxMenu;
     help_menu->Append( About_Event, wxU(_("About...")) );
-    help_menu->AppendSeparator();
-    help_menu->Append( UpdateVLC_Event, wxU(_("Check for Updates...")) );
+    /* updating disabled until further action
+     * help_menu->AppendSeparator();
+     * help_menu->Append( UpdateVLC_Event, wxU(_("Check for Updates...")) ); */
 
     /* Append the freshly created menus to the menu bar... */
     wxMenuBar *menubar = new wxMenuBar();

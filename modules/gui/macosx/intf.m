@@ -2,7 +2,7 @@
  * intf.m: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2006 the VideoLAN team
- * $Id: intf.m 20490 2007-06-09 15:36:51Z pdherbemont $
+ * $Id: intf.m 23388 2007-11-27 22:14:22Z fkuehne $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -45,7 +45,7 @@
 #import "bookmarks.h"
 #import "interaction.h"
 #import "embeddedwindow.h"
-#import "update.h"
+/* #import "update.h" */
 #import "AppleRemote.h"
 
 /*****************************************************************************
@@ -346,11 +346,13 @@ static VLCMain *_o_sharedMainInstance = nil;
     o_bookmarks = [[VLCBookmarks alloc] init];
     o_embedded_list = [[VLCEmbeddedList alloc] init];
     o_interaction_list = [[VLCInteractionList alloc] init];
-    o_update = [[VLCUpdate alloc] init];
+    /* disabled until further action 
+    o_update = [[VLCUpdate alloc] init]; */
 
     i_lastShownVolume = -1;
 
     o_remote = [[AppleRemote alloc] init];
+    [o_remote setClickCountEnabledButtons: kRemoteButtonPlay];
     [o_remote setDelegate: _o_sharedMainInstance];
     
     return _o_sharedMainInstance;
@@ -474,8 +476,6 @@ static VLCMain *_o_sharedMainInstance = nil;
         var_AddCallback( p_playlist, "fullscreen", FullscreenChanged, self);
         var_AddCallback( p_playlist, "intf-show", ShowController, self);
 
-        [o_embedded_window setFullscreen: var_GetBool( p_playlist,
-                                                            "fullscreen" )];
         vlc_object_release( p_playlist );
     }
     
@@ -513,7 +513,7 @@ static VLCMain *_o_sharedMainInstance = nil;
     /* main menu */
     [o_mi_about setTitle: [_NS("About VLC media player") \
         stringByAppendingString: @"..."]];
-    [o_mi_checkForUpdate setTitle: _NS("Check for Update...")];
+ /*   [o_mi_checkForUpdate setTitle: _NS("Check for Update...")]; */
     [o_mi_prefs setTitle: _NS("Preferences...")];
     [o_mi_add_intf setTitle: _NS("Add Interface")];
     [o_mu_add_intf setTitle: _NS("Add Interface")];
@@ -673,6 +673,21 @@ static VLCMain *_o_sharedMainInstance = nil;
     [o_controls setupVarMenuItem: o_mi_add_intf target: (vlc_object_t *)p_intf
         var: "intf-add" selector: @selector(toggleVar:)];
 
+    /* check whether the user runs a valid version of OSX; alert is auto-released */
+    if( MACOS_VERSION < 10.4f )
+    {
+        NSAlert *ourAlert;
+        int i_returnValue;
+        ourAlert = [NSAlert alertWithMessageText: _NS("Your version of Mac OS X is not supported")
+                        defaultButton: _NS("Quit")
+                      alternateButton: NULL
+                          otherButton: NULL
+            informativeTextWithFormat: _NS("VLC media player requires Mac OS X 10.4 or higher.")];
+        [ourAlert setAlertStyle: NSCriticalAlertStyle];
+        i_returnValue = [ourAlert runModal];
+        [NSApp terminate: self];
+    }
+
     vlc_thread_set_priority( p_intf, VLC_THREAD_PRIORITY_LOW );
 }
 
@@ -719,52 +734,60 @@ static VLCMain *_o_sharedMainInstance = nil;
     [o_remote stopListening: self];
 }
 
-/* Helper method for the remote control interface in order to trigger forward/backward
-   as long as the user holds the left/right button */
-- (void) triggerMovieStepForRemoteButton: (NSNumber*) buttonIdentifierNumber 
+/* Helper method for the remote control interface in order to trigger forward/backward and volume
+increase/decrease as long as the user holds the left/right, plus/minus button */
+- (void) executeHoldActionForRemoteButton: (NSNumber*) buttonIdentifierNumber
 {
-    if (b_left_right_remote_button_hold) {
-        switch([buttonIdentifierNumber intValue]) {
-            case kRemoteButtonRight_Hold:       
+    if (b_remote_button_hold)
+    {
+        switch([buttonIdentifierNumber intValue])
+        {
+            case kRemoteButtonRight_Hold:
                 [o_controls forward: self];
-            break;
+                break;
             case kRemoteButtonLeft_Hold:
                 [o_controls backward: self];
-            break;          
+                break;
+            case kRemoteButtonVolume_Plus_Hold:
+                [o_controls volumeUp: self];
+                break;
+            case kRemoteButtonVolume_Minus_Hold:
+                [o_controls volumeDown: self];
+                break;
         }
-        if (b_left_right_remote_button_hold) {
+        if (b_remote_button_hold)
+        {
             /* trigger event */
-            [self performSelector:@selector(triggerMovieStepForRemoteButton:) 
+            [self performSelector:@selector(executeHoldActionForRemoteButton:)
                        withObject:buttonIdentifierNumber
-                       afterDelay:0.25];         
+                       afterDelay:0.25];
         }
     }
 }
 
 /* Apple Remote callback */
-- (void)appleRemoteButton:(AppleRemoteEventIdentifier)buttonIdentifier
-    pressedDown:(BOOL)pressedDown
+- (void) appleRemoteButton: (AppleRemoteEventIdentifier)buttonIdentifier
+               pressedDown: (BOOL) pressedDown
+                clickCount: (unsigned int) count
 {
     switch( buttonIdentifier )
     {
         case kRemoteButtonPlay:
-            [o_controls play: self];
+            if (count >= 2) 
+            {
+                /* we're cheating here to convince o_controls to toggle fullscreen */
+                [o_controls windowAction: o_mi_fullscreen];
+            } 
+            else 
+            {
+                [o_controls play: self];
+            }
             break;
         case kRemoteButtonVolume_Plus:
-            /* there are two events when the plus or minus button is pressed
-               one when the button is pressed down and one when the button is released */
-            if( pressedDown )
-            {
-                [o_controls volumeUp: self];
-            }
+            [o_controls volumeUp: self];
             break;
         case kRemoteButtonVolume_Minus:
-            /* there are two events when the plus or minus button is pressed
-               one when the button is pressed down and one when the button is released */
-            if( pressedDown )
-            {
-                [o_controls volumeDown: self];
-            }
+            [o_controls volumeDown: self];
             break;
         case kRemoteButtonRight:
             [o_controls next: self];
@@ -774,17 +797,20 @@ static VLCMain *_o_sharedMainInstance = nil;
             break;
         case kRemoteButtonRight_Hold:
         case kRemoteButtonLeft_Hold:
+        case kRemoteButtonVolume_Plus_Hold:
+        case kRemoteButtonVolume_Minus_Hold:
             /* simulate an event as long as the user holds the button */
-            b_left_right_remote_button_hold = pressedDown;
+            b_remote_button_hold = pressedDown;
             if( pressedDown )
-            {                
-                NSNumber* buttonIdentifierNumber = [NSNumber numberWithInt: buttonIdentifier];	
-                [self performSelector:@selector(triggerMovieStepForRemoteButton:) 
+            {
+                NSNumber* buttonIdentifierNumber = [NSNumber numberWithInt: buttonIdentifier];
+                [self performSelector:@selector(executeHoldActionForRemoteButton:)
                            withObject:buttonIdentifierNumber];
             }
-            break;
+                break;
         case kRemoteButtonMenu:
-            [o_controls windowAction: self];
+            /* we're cheating here to convince o_controls to toggle fullscreen */
+            [o_controls windowAction: o_mi_fullscreen];
             break;
         default:
             /* Add here whatever you want other buttons to do */
@@ -1524,9 +1550,10 @@ static VLCMain *_o_sharedMainInstance = nil;
 
 - (void)applicationWillTerminate:(NSNotification *)notification
 {
-    NSLog(@"applicationWillTerminate");
     playlist_t * p_playlist;
     vout_thread_t * p_vout;
+    
+    msg_Dbg( p_intf, "applicationWillTerminate" );
 
 #define p_input p_intf->p_sys->p_input
     if( p_input )
@@ -1761,6 +1788,7 @@ static VLCMain *_o_sharedMainInstance = nil;
     [o_prefs showPrefs];
 }
 
+/* removed until further action
 - (IBAction)checkForUpdate:(id)sender
 {
     if (!nib_update_loaded)
@@ -1771,7 +1799,7 @@ static VLCMain *_o_sharedMainInstance = nil;
         [o_update showUpdateWindow];
     }
 }
-
+*/
 - (IBAction)closeError:(id)sender
 {
     vlc_value_t val;

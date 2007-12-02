@@ -76,6 +76,7 @@ vlc_confflags += \
 	--enable-vcdx \
 	--enable-xosd \
 	--enable-notify \
+	--enable-jack \
 	$(NULL)
 
 # These ones are currently shipped with VLC
@@ -96,10 +97,31 @@ VIDDIR = usr/share/vlc
 PIXDIR = usr/share/pixmaps
 APPDIR = usr/share/applications
 
+DEB_UPSTREAM_VERSION+=0.8.6.release.d
+VERSION=$(shell echo $(DEB_UPSTREAM_VERSION) | sed 's/.release.//')
 
 #
 # Build rules
 #
+
+get-orig-source:
+	wget http://download.videolan.org/pub/videolan/vlc/$(VERSION)/vlc-$(VERSION).tar.gz
+	tar xzzf vlc-$(VERSION).tar.gz
+	rm vlc-$(VERSION).tar.gz
+
+	apt-get source faad2 -d
+	dpkg-source -x faad2*dsc vlc-$(VERSION)/extras/faad2
+	rm vlc-$(VERSION)/extras/faad2/debian -rf
+	rm faad2* -rf
+
+	apt-get source x264 -d
+	dpkg-source -x x264*dsc vlc-$(VERSION)/extras/x264
+	rm vlc-$(VERSION)/extras/x264/debian -rf
+	rm x264* -rf
+
+	mv vlc-$(VERSION) vlc-$(DEB_UPSTREAM_VERSION)
+	tar czf $(CURDIR)/../vlc_$(DEB_UPSTREAM_VERSION).orig.tar.gz vlc-$(DEB_UPSTREAM_VERSION)
+	rm vlc-$(DEB_UPSTREAM_VERSION) -rf
 
 configure: configure-stamp
 configure-stamp:
@@ -168,7 +190,7 @@ clean:
 	test -d extras/faad2
 	-cd extras/faad2 && $(MAKE) distclean
 	# Clean VLC
-	-$(MAKE) distclean
+	[ ! -f Makefile ] || $(MAKE) distclean
 	# Clean zsh completion stuff
 	rm -f extras/zsh
 	# Removed ugly cruft

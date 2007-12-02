@@ -4,6 +4,7 @@
 ;* Copyright (C) 2005 x264 project
 ;*
 ;* Authors: Alex Izvorski <aizvorksi@gmail.com>
+;*          Loren Merritt <lorenm@u.washington.edu>
 ;*
 ;* This program is free software; you can redistribute it and/or modify
 ;* it under the terms of the GNU General Public License as published by
@@ -39,37 +40,15 @@ mask_ff: times 16 db 0xff
 
 SECTION .text
 
-
-cglobal x264_pixel_sad_16x16_sse2
-cglobal x264_pixel_sad_16x8_sse2
-cglobal x264_pixel_sad_x3_16x16_sse2
-cglobal x264_pixel_sad_x3_16x8_sse2
-cglobal x264_pixel_sad_x4_16x16_sse2
-cglobal x264_pixel_sad_x4_16x8_sse2
-cglobal x264_pixel_ssd_16x16_sse2
-cglobal x264_pixel_ssd_16x8_sse2
-cglobal x264_pixel_satd_8x4_sse2
-cglobal x264_pixel_satd_8x8_sse2
-cglobal x264_pixel_satd_16x8_sse2
-cglobal x264_pixel_satd_8x16_sse2
-cglobal x264_pixel_satd_16x16_sse2
-cglobal x264_pixel_ssim_4x4x2_core_sse2
-cglobal x264_pixel_ssim_end4_sse2
-
-
-%macro SBUTTERFLY 5
-    mov%1       %5, %3
-    punpckl%2   %3, %4
-    punpckh%2   %5, %4
+%macro HADDW 2    ; sum junk
+    ; ebx is no longer used at this point, so no push needed
+    picgetgot ebx
+    pmaddwd %1, [pw_1 GOT_ebx]
+    movhlps %2, %1
+    paddd   %1, %2
+    pshuflw %2, %1, 0xE 
+    paddd   %1, %2
 %endmacro
-
-%macro TRANSPOSE4x4D 5   ; abcd-t -> adtc
-    SBUTTERFLY dqa, dq,  %1, %2, %5
-    SBUTTERFLY dqa, dq,  %3, %4, %2
-    SBUTTERFLY dqa, qdq, %1, %3, %4
-    SBUTTERFLY dqa, qdq, %5, %2, %3
-%endmacro
-
 
 %macro SAD_INC_4x16P_SSE2 0
     movdqu  xmm1,   [ecx]
@@ -109,11 +88,10 @@ cglobal x264_pixel_ssim_end4_sse2
     ret
 %endmacro
 
-ALIGN 16
 ;-----------------------------------------------------------------------------
 ;   int __cdecl x264_pixel_sad_16x16_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
-x264_pixel_sad_16x16_sse2:
+cglobal x264_pixel_sad_16x16_sse2
     SAD_START_SSE2
     movdqu xmm0, [ecx]
     movdqu xmm1, [ecx+edx]
@@ -178,11 +156,10 @@ x264_pixel_sad_16x16_sse2:
     paddw  xmm0, xmm7
     SAD_END_SSE2
 
-ALIGN 16
 ;-----------------------------------------------------------------------------
 ;   int __cdecl x264_pixel_sad_16x8_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
-x264_pixel_sad_16x8_sse2:
+cglobal x264_pixel_sad_16x8_sse2
     SAD_START_SSE2
     pxor    xmm0,   xmm0
     SAD_INC_4x16P_SSE2
@@ -320,14 +297,12 @@ x264_pixel_sad_16x8_sse2:
     ret
 %endmacro
 
-ALIGN 16
 ;-----------------------------------------------------------------------------
 ;  void x264_pixel_sad_x3_16x16_sse2( uint8_t *fenc, uint8_t *pix0, uint8_t *pix1,
 ;                                     uint8_t *pix2, int i_stride, int scores[3] )
 ;-----------------------------------------------------------------------------
 %macro SAD_X 3
-ALIGN 16
-x264_pixel_sad_x%1_%2x%3_sse2:
+cglobal x264_pixel_sad_x%1_%2x%3_sse2
     SAD_X%1_2x%2P 1
 %rep %3/2-1
     SAD_X%1_2x%2P 0
@@ -403,137 +378,76 @@ SAD_X 4, 16,  8
     ret
 %endmacro
 
-ALIGN 16
 ;-----------------------------------------------------------------------------
 ;   int __cdecl x264_pixel_ssd_16x16_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
-x264_pixel_ssd_16x16_sse2:
+cglobal x264_pixel_ssd_16x16_sse2
     SSD_START_SSE2
 %rep 8
     SSD_INC_2x16P_SSE2
 %endrep
     SSD_END_SSE2
 
-ALIGN 16
 ;-----------------------------------------------------------------------------
 ;   int __cdecl x264_pixel_ssd_16x8_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
-x264_pixel_ssd_16x8_sse2:
+cglobal x264_pixel_ssd_16x8_sse2
     SSD_START_SSE2
 %rep 4
     SSD_INC_2x16P_SSE2
 %endrep
     SSD_END_SSE2
 
-; %1=(row2, row0) %2=(row3, row1) %3=junk
-; output in %1=(row3, row0) and %3=(row2, row1)
-%macro HADAMARD4x4_SSE2 3
-    movdqa     %3, %1
-    paddw      %1, %2
-    psubw      %3, %2
-    movdqa     %2, %1
-    punpcklqdq %1, %3
-    punpckhqdq %2, %3
-    movdqa     %3, %1
-    paddw      %1, %2
-    psubw      %3, %2
+
+
+%macro SUMSUB_BADC 4
+    paddw   %1, %2
+    paddw   %3, %4
+    paddw   %2, %2
+    paddw   %4, %4
+    psubw   %2, %1
+    psubw   %4, %3  
+%endmacro
+    
+%macro HADAMARD1x4 4
+    SUMSUB_BADC %1, %2, %3, %4
+    SUMSUB_BADC %1, %3, %2, %4
+%endmacro
+    
+%macro SBUTTERFLY 5
+    mov%1       %5, %3
+    punpckl%2   %3, %4
+    punpckh%2   %5, %4
+%endmacro
+    
+%macro SBUTTERFLY2 5  ; not really needed, but allows transpose4x4 to not shuffle registers
+    mov%1       %5, %3
+    punpckh%2   %3, %4
+    punpckl%2   %5, %4
 %endmacro
 
-;;; two HADAMARD4x4_SSE2 running side-by-side
-%macro HADAMARD4x4_TWO_SSE2 6    ; a02 a13 junk1 b02 b13 junk2 (1=4 2=5 3=6)
-    movdqa     %3, %1
-    movdqa     %6, %4
-    paddw      %1, %2
-    paddw      %4, %5
-    psubw      %3, %2
-    psubw      %6, %5
-    movdqa     %2, %1
-    movdqa     %5, %4
-    punpcklqdq %1, %3
-    punpcklqdq %4, %6
-    punpckhqdq %2, %3
-    punpckhqdq %5, %6
-    movdqa     %3, %1
-    movdqa     %6, %4
-    paddw      %1, %2
-    paddw      %4, %5
-    psubw      %3, %2
-    psubw      %6, %5
+%macro TRANSPOSE4x4D 5   ; ABCD-T -> ADTC
+    SBUTTERFLY dqa, dq,  %1, %2, %5
+    SBUTTERFLY dqa, dq,  %3, %4, %2
+    SBUTTERFLY dqa, qdq, %1, %3, %4
+    SBUTTERFLY dqa, qdq, %5, %2, %3
 %endmacro
 
-%macro TRANSPOSE4x4_TWIST_SSE2 3    ; %1=(row3, row0) %2=(row2, row1) %3=junk, output in %1 and %2
-    movdqa     %3, %1
-    punpcklwd  %1, %2
-    punpckhwd  %2, %3             ; backwards because the high quadwords are already swapped
-
-    movdqa     %3, %1
-    punpckldq  %1, %2
-    punpckhdq  %3, %2
-
-    movdqa     %2, %1
-    punpcklqdq %1, %3
-    punpckhqdq %2, %3
+%macro TRANSPOSE2x4x4W 5   ; ABCD-T -> ABCD
+    SBUTTERFLY  dqa, wd,  %1, %2, %5
+    SBUTTERFLY  dqa, wd,  %3, %4, %2
+    SBUTTERFLY  dqa, dq,  %1, %3, %4
+    SBUTTERFLY2 dqa, dq,  %5, %2, %3
+    SBUTTERFLY  dqa, qdq, %1, %3, %2
+    SBUTTERFLY2 dqa, qdq, %4, %5, %3
 %endmacro
 
-;;; two TRANSPOSE4x4_TWIST_SSE2 running side-by-side
-%macro TRANSPOSE4x4_TWIST_TWO_SSE2 6    ; a02 a13 junk1 b02 b13 junk2 (1=4 2=5 3=6)
-    movdqa     %3, %1
-    movdqa     %6, %4
-    punpcklwd  %1, %2
-    punpcklwd  %4, %5
-    punpckhwd  %2, %3
-    punpckhwd  %5, %6
-    movdqa     %3, %1
-    movdqa     %6, %4
-    punpckldq  %1, %2
-    punpckldq  %4, %5
-    punpckhdq  %3, %2
-    punpckhdq  %6, %5
-    movdqa     %2, %1
-    movdqa     %5, %4
-    punpcklqdq %1, %3
-    punpcklqdq %4, %6
-    punpckhqdq %2, %3
-    punpckhqdq %5, %6
-%endmacro
-
-;;; loads the difference of two 4x4 blocks into xmm0,xmm1 and xmm4,xmm5 in interleaved-row order
-;;; destroys xmm2, 3
-;;; the value in xmm7 doesn't matter: it's only subtracted from itself
-%macro LOAD4x8_DIFF_SSE2 0
-    movq      xmm0, [eax]
-    movq      xmm4, [ecx]
-    punpcklbw xmm0, xmm7
-    punpcklbw xmm4, xmm7
-    psubw     xmm0, xmm4
-
-    movq      xmm1, [eax+ebx]
-    movq      xmm5, [ecx+edx]
-    lea       eax,  [eax+2*ebx]
-    lea       ecx,  [ecx+2*edx]
-    punpcklbw xmm1, xmm7
-    punpcklbw xmm5, xmm7
-    psubw     xmm1, xmm5
-
-    movq       xmm2, [eax]
-    movq       xmm4, [ecx]
-    punpcklbw  xmm2, xmm7
-    punpcklbw  xmm4, xmm7
-    psubw      xmm2, xmm4
-    movdqa     xmm4, xmm0
-    punpcklqdq xmm0, xmm2        ; rows 0 and 2
-    punpckhqdq xmm4, xmm2        ; next 4x4 rows 0 and 2
-
-    movq       xmm3, [eax+ebx]
-    movq       xmm5, [ecx+edx]
-    lea        eax,  [eax+2*ebx]
-    lea        ecx,  [ecx+2*edx]
-    punpcklbw  xmm3, xmm7
-    punpcklbw  xmm5, xmm7
-    psubw      xmm3, xmm5
-    movdqa     xmm5, xmm1
-    punpcklqdq xmm1, xmm3        ; rows 1 and 3
-    punpckhqdq xmm5, xmm3        ; next 4x4 rows 1 and 3
+%macro LOAD_DIFF_8P 4  ; MMP, MMT, [pix1], [pix2]
+    movq        %1, %3
+    movq        %2, %4
+    punpcklbw   %1, %2
+    punpcklbw   %2, %2
+    psubw       %1, %2
 %endmacro
 
 %macro SUM4x4_SSE2 4    ; 02 13 junk sum
@@ -549,8 +463,7 @@ x264_pixel_ssd_16x8_sse2:
     paddusw %4, %2
 %endmacro
 
-;;; two SUM4x4_SSE2 running side-by-side
-%macro SUM4x4_TWO_SSE2 7    ; a02 a13 junk1 b02 b13 junk2 (1=4 2=5 3=6) sum
+%macro SUM8x4_SSE2 7    ; a02 a13 junk1 b02 b13 junk2 (1=4 2=5 3=6) sum
     pxor    %3, %3
     pxor    %6, %6
     psubw   %3, %1
@@ -569,22 +482,31 @@ x264_pixel_ssd_16x8_sse2:
     paddusw %7, %4
 %endmacro
 
-%macro HADDW 2    ; sum junk
-    ; ebx is no longer used at this point, so no push needed
-    picgetgot ebx
-    pmaddwd %1, [pw_1 GOT_ebx]
-    movhlps %2, %1
-    paddd   %1, %2
-    pshuflw %2, %1, 0xE 
-    paddd   %1, %2
+%macro SUM8x4_SSSE3 7    ; a02 a13 . b02 b13 . sum
+    pabsw   %1, %1
+    pabsw   %2, %2
+    pabsw   %4, %4
+    pabsw   %5, %5
+    paddusw %1, %2
+    paddusw %4, %5
+    paddusw %7, %1
+    paddusw %7, %4
 %endmacro
 
 %macro SATD_TWO_SSE2 0
-    LOAD4x8_DIFF_SSE2
-    HADAMARD4x4_TWO_SSE2        xmm0, xmm1, xmm2, xmm4, xmm5, xmm3
-    TRANSPOSE4x4_TWIST_TWO_SSE2 xmm0, xmm2, xmm1, xmm4, xmm3, xmm5
-    HADAMARD4x4_TWO_SSE2        xmm0, xmm2, xmm1, xmm4, xmm3, xmm5
-    SUM4x4_TWO_SSE2             xmm0, xmm1, xmm2, xmm4, xmm5, xmm3, xmm6
+    LOAD_DIFF_8P xmm0, xmm4, [eax], [ecx]
+    LOAD_DIFF_8P xmm1, xmm5, [eax+ebx], [ecx+edx]
+    lea          eax,  [eax+2*ebx]
+    lea          ecx,  [ecx+2*edx]
+    LOAD_DIFF_8P xmm2, xmm4, [eax], [ecx]
+    LOAD_DIFF_8P xmm3, xmm5, [eax+ebx], [ecx+edx]
+    lea          eax,  [eax+2*ebx]
+    lea          ecx,  [ecx+2*edx]
+
+    HADAMARD1x4       xmm0, xmm1, xmm2, xmm3
+    TRANSPOSE2x4x4W   xmm0, xmm1, xmm2, xmm3, xmm4
+    HADAMARD1x4       xmm0, xmm1, xmm2, xmm3
+    SUM8x4            xmm0, xmm1, xmm4, xmm2, xmm3, xmm5, xmm6
 %endmacro
 
 %macro SATD_START 0
@@ -607,86 +529,76 @@ x264_pixel_ssd_16x8_sse2:
     ret
 %endmacro
 
-ALIGN 16
+%macro SATDS 1
 ;-----------------------------------------------------------------------------
 ;   int __cdecl x264_pixel_satd_16x16_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
-x264_pixel_satd_16x16_sse2:
+cglobal x264_pixel_satd_16x16_%1
     SATD_START
-
     SATD_TWO_SSE2
     SATD_TWO_SSE2
     SATD_TWO_SSE2
     SATD_TWO_SSE2
-
     mov     eax,    [esp+ 8]
     mov     ecx,    [esp+16]
-    lea     eax,    [eax+8]
-    lea     ecx,    [ecx+8]
-
+    add     eax,    8
+    add     ecx,    8
     SATD_TWO_SSE2
     SATD_TWO_SSE2
     SATD_TWO_SSE2
     SATD_TWO_SSE2
-
     SATD_END
 
-ALIGN 16
 ;-----------------------------------------------------------------------------
 ;   int __cdecl x264_pixel_satd_8x16_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
-x264_pixel_satd_8x16_sse2:
+cglobal x264_pixel_satd_8x16_%1
     SATD_START
-
     SATD_TWO_SSE2
     SATD_TWO_SSE2
     SATD_TWO_SSE2
     SATD_TWO_SSE2
-
     SATD_END
 
-ALIGN 16
 ;-----------------------------------------------------------------------------
 ;   int __cdecl x264_pixel_satd_16x8_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
-x264_pixel_satd_16x8_sse2:
+cglobal x264_pixel_satd_16x8_%1
     SATD_START
-
     SATD_TWO_SSE2
     SATD_TWO_SSE2
-
     mov     eax,    [esp+ 8]
     mov     ecx,    [esp+16]
-    lea     eax,    [eax+8]
-    lea     ecx,    [ecx+8]
-
+    add     eax,    8
+    add     ecx,    8
     SATD_TWO_SSE2
     SATD_TWO_SSE2
-
     SATD_END
 
-ALIGN 16
 ;-----------------------------------------------------------------------------
 ;   int __cdecl x264_pixel_satd_8x8_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
-x264_pixel_satd_8x8_sse2:
+cglobal x264_pixel_satd_8x8_%1
     SATD_START
-
     SATD_TWO_SSE2
     SATD_TWO_SSE2
-
     SATD_END
 
-ALIGN 16
 ;-----------------------------------------------------------------------------
 ;   int __cdecl x264_pixel_satd_8x4_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
-x264_pixel_satd_8x4_sse2:
+cglobal x264_pixel_satd_8x4_%1
     SATD_START
-
     SATD_TWO_SSE2
-
     SATD_END
+%endmacro ; SATDS
+
+%define SUM8x4 SUM8x4_SSE2
+SATDS sse2
+%ifdef HAVE_SSE3
+%define SUM8x4 SUM8x4_SSSE3
+SATDS ssse3
+%endif
 
 
 
@@ -694,8 +606,7 @@ x264_pixel_satd_8x4_sse2:
 ; void x264_pixel_ssim_4x4x2_core_sse2( const uint8_t *pix1, int stride1,
 ;                                       const uint8_t *pix2, int stride2, int sums[2][4] )
 ;-----------------------------------------------------------------------------
-ALIGN 16
-x264_pixel_ssim_4x4x2_core_sse2:
+cglobal x264_pixel_ssim_4x4x2_core_sse2
     push      ebx
     mov       eax,  [esp+ 8]
     mov       ebx,  [esp+12]
@@ -751,8 +662,7 @@ x264_pixel_ssim_4x4x2_core_sse2:
 ;-----------------------------------------------------------------------------
 ; float x264_pixel_ssim_end_sse2( int sum0[5][4], int sum1[5][4], int width )
 ;-----------------------------------------------------------------------------
-ALIGN 16
-x264_pixel_ssim_end4_sse2:
+cglobal x264_pixel_ssim_end4_sse2
     mov      eax,  [esp+ 4]
     mov      ecx,  [esp+ 8]
     mov      edx,  [esp+12]

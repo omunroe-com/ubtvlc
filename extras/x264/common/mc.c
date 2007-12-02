@@ -21,13 +21,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#include <stdio.h>
-#include <string.h>
-
 #include "common.h"
 #include "clip1.h"
 
-#ifdef HAVE_MMXEXT
+#ifdef HAVE_MMX
 #include "i386/mc.h"
 #endif
 #ifdef ARCH_PPC
@@ -228,7 +225,7 @@ static const int hpel_ref1[16] = {0,0,0,0,2,2,3,2,2,2,3,2,2,2,3,2};
 
 static void mc_luma( uint8_t *src[4], int i_src_stride,
                      uint8_t *dst,    int i_dst_stride,
-                     int mvx,int mvy,
+                     int mvx, int mvy,
                      int i_width, int i_height )
 {
     int qpel_idx = ((mvy&3)<<2) + (mvx&3);
@@ -238,7 +235,6 @@ static void mc_luma( uint8_t *src[4], int i_src_stride,
     if( qpel_idx & 5 ) /* qpel interpolation needed */
     {
         uint8_t *src2 = src[hpel_ref1[qpel_idx]] + offset + ((mvx&3) == 3);
-
         pixel_avg( dst, i_dst_stride, src1, i_src_stride,
                    src2, i_src_stride, i_width, i_height );
     }
@@ -249,8 +245,8 @@ static void mc_luma( uint8_t *src[4], int i_src_stride,
 }
 
 static uint8_t *get_ref( uint8_t *src[4], int i_src_stride,
-                         uint8_t *dst,    int * i_dst_stride,
-                         int mvx,int mvy,
+                         uint8_t *dst,   int *i_dst_stride,
+                         int mvx, int mvy,
                          int i_width, int i_height )
 {
     int qpel_idx = ((mvy&3)<<2) + (mvx&3);
@@ -260,10 +256,8 @@ static uint8_t *get_ref( uint8_t *src[4], int i_src_stride,
     if( qpel_idx & 5 ) /* qpel interpolation needed */
     {
         uint8_t *src2 = src[hpel_ref1[qpel_idx]] + offset + ((mvx&3) == 3);
-
         pixel_avg( dst, *i_dst_stride, src1, i_src_stride,
                    src2, i_src_stride, i_width, i_height );
-
         return dst;
     }
     else
@@ -316,6 +310,24 @@ MC_COPY( 16 )
 MC_COPY( 8 )
 MC_COPY( 4 )
 
+static void plane_copy( uint8_t *dst, int i_dst,
+                        uint8_t *src, int i_src, int w, int h)
+{
+    while( h-- )
+    {
+        memcpy( dst, src, w );
+        dst += i_dst;
+        src += i_src;
+    }
+}
+
+void prefetch_fenc_null( uint8_t *pix_y, int stride_y,
+                         uint8_t *pix_uv, int stride_uv, int mb_x )
+{}
+
+void prefetch_ref_null( uint8_t *pix, int stride, int parity )
+{}
+
 void x264_mc_init( int cpu, x264_mc_functions_t *pf )
 {
     pf->mc_luma   = mc_luma;
@@ -348,13 +360,16 @@ void x264_mc_init( int cpu, x264_mc_functions_t *pf )
     pf->copy[PIXEL_8x8]   = mc_copy_w8;
     pf->copy[PIXEL_4x4]   = mc_copy_w4;
 
-#ifdef HAVE_MMXEXT
+    pf->plane_copy = plane_copy;
+
+    pf->prefetch_fenc = prefetch_fenc_null;
+    pf->prefetch_ref  = prefetch_ref_null;
+
+#ifdef HAVE_MMX
     if( cpu&X264_CPU_MMXEXT ) {
         x264_mc_mmxext_init( pf );
         pf->mc_chroma = x264_mc_chroma_mmxext;
     }
-#endif
-#ifdef HAVE_SSE2
     if( cpu&X264_CPU_SSE2 )
         x264_mc_sse2_init( pf );
 #endif
@@ -364,79 +379,87 @@ void x264_mc_init( int cpu, x264_mc_functions_t *pf )
 #endif
 }
 
-extern void x264_horizontal_filter_mmxext( uint8_t *dst, int i_dst_stride,
-                                           uint8_t *src, int i_src_stride,
-                                           int i_width, int i_height );
-extern void x264_center_filter_mmxext( uint8_t *dst1, int i_dst1_stride,
-                                       uint8_t *dst2, int i_dst2_stride,
-                                       uint8_t *src, int i_src_stride,
-                                       int i_width, int i_height );
+extern void x264_hpel_filter_mmxext( uint8_t *dsth, uint8_t *dstv, uint8_t *dstc, uint8_t *src,
+                                     int i_stride, int i_width, int i_height );
 
-void x264_frame_filter( int cpu, x264_frame_t *frame )
+void x264_frame_filter( int cpu, x264_frame_t *frame, int b_interlaced, int mb_y, int b_end )
 {
     const int x_inc = 16, y_inc = 16;
-    const int stride = frame->i_stride[0];
+    const int stride = frame->i_stride[0] << b_interlaced;
+    int start = (mb_y*16 >> b_interlaced) - 8;
+    int height = ((b_end ? frame->i_lines[0] : mb_y*16) >> b_interlaced) + 8;
     int x, y;
 
-    pf_mc_t int_h = mc_hh;
-    pf_mc_t int_v = mc_hv;
-    pf_mc_t int_hv = mc_hc;
+    if( mb_y & b_interlaced )
+        return;
+    mb_y >>= b_interlaced;
 
-#ifdef HAVE_MMXEXT
+#ifdef HAVE_MMX
     if ( cpu & X264_CPU_MMXEXT )
     {
-        x264_horizontal_filter_mmxext(frame->filtered[1] - 8 * stride - 8, stride,
-            frame->plane[0] - 8 * stride - 8, stride,
-            stride - 48, frame->i_lines[0] + 16);
-        x264_center_filter_mmxext(frame->filtered[2] - 8 * stride - 8, stride,
-            frame->filtered[3] - 8 * stride - 8, stride,
-            frame->plane[0] - 8 * stride - 8, stride,
-            stride - 48, frame->i_lines[0] + 16);
+        // buffer = 4 for deblock + 3 for 6tap, rounded to 8
+        int offs = start*stride - 8;
+        x264_hpel_filter_mmxext(
+            frame->filtered[1] + offs,
+            frame->filtered[2] + offs,
+            frame->filtered[3] + offs,
+            frame->plane[0] + offs,
+            stride, stride - 48, height - start );
     }
     else
 #endif
     {
-        for( y = -8; y < frame->i_lines[0]+8; y += y_inc )
+        for( y = start; y < height; y += y_inc )
         {
             uint8_t *p_in = frame->plane[0] + y * stride - 8;
             uint8_t *p_h  = frame->filtered[1] + y * stride - 8;
             uint8_t *p_v  = frame->filtered[2] + y * stride - 8;
-            uint8_t *p_hv = frame->filtered[3] + y * stride - 8;
+            uint8_t *p_c  = frame->filtered[3] + y * stride - 8;
             for( x = -8; x < stride - 64 + 8; x += x_inc )
             {
-                int_h(  p_in, stride, p_h,  stride, x_inc, y_inc );
-                int_v(  p_in, stride, p_v,  stride, x_inc, y_inc );
-                int_hv( p_in, stride, p_hv, stride, x_inc, y_inc );
+                mc_hh( p_in, stride, p_h, stride, x_inc, y_inc );
+                mc_hv( p_in, stride, p_v, stride, x_inc, y_inc );
+                mc_hc( p_in, stride, p_c, stride, x_inc, y_inc );
 
                 p_h += x_inc;
                 p_v += x_inc;
-                p_hv += x_inc;
+                p_c += x_inc;
                 p_in += x_inc;
             }
         }
     }
 
     /* generate integral image:
-     * each entry in frame->integral is the sum of all luma samples above and
-     * to the left of its location (inclusive).
-     * this allows us to calculate the DC of any rectangle by looking only
-     * at the corner entries.
-     * individual entries will overflow 16 bits, but that's ok:
-     * we only need the differences between entries, and those will be correct
-     * as long as we don't try to evaluate a rectangle bigger than 16x16.
-     * likewise, we don't really have to init the edges to 0, leaving garbage
-     * there wouldn't affect the results.*/
+     * frame->integral contains 2 planes. in the upper plane, each element is
+     * the sum of an 8x8 pixel region with top-left corner on that point.
+     * in the lower plane, 4x4 sums (needed only with --partitions p4x4). */
 
     if( frame->integral )
     {
-        memset( frame->integral - 32 * stride - 32, 0, stride * sizeof(uint16_t) );
-        for( y = -31; y < frame->i_lines[0] + 32; y++ )
+        if( start < 0 )
+        {
+            memset( frame->integral - 32 * stride - 32, 0, stride * sizeof(uint16_t) );
+            start = -32;
+        }
+        if( b_end )
+            height += 24;
+        for( y = start; y < height; y++ )
         {
             uint8_t  *ref  = frame->plane[0] + y * stride - 32;
-            uint16_t *line = frame->integral + y * stride - 32;
+            uint16_t *line = frame->integral + (y+1) * stride - 31;
             uint16_t v = line[0] = 0;
-            for( x = 1; x < stride; x++ )
+            for( x = 0; x < stride-1; x++ )
                 line[x] = v += ref[x] + line[x-stride] - line[x-stride-1];
+            line -= 8*stride;
+            if( y >= 8-31 )
+            {
+                uint16_t *sum4 = line + frame->i_stride[0] * (frame->i_lines[0] + 64);
+                for( x = 1; x < stride-8; x++, line++, sum4++ )
+                {
+                    sum4[0] =  line[4+4*stride] - line[4] - line[4*stride] + line[0];
+                    line[0] += line[8+8*stride] - line[8] - line[8*stride];
+                }
+            }
         }
     }
 }

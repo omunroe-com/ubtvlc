@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /G6 /W3 /GX /O2 /Ob2 /I "./common" /I "./encode" /I "./decode" /I "../../extras" /I "../.." /D "NDEBUG" /D "_LIB" /D "WIN32" /D "_MBCS" /D "__X264__" /D "HAVE_MMXEXT" /D "HAVE_SSE2" /D "ARCH_X86" /D "HAVE_STDINT_H" /FD /c
+# ADD CPP /nologo /G6 /W3 /GX /O2 /Ob2 /I "./common" /I "./encode" /I "./decode" /I "../../extras" /I "../.." /D "NDEBUG" /D "_LIB" /D "WIN32" /D "_MBCS" /D "__X264__" /D "HAVE_MMX" /D "ARCH_X86" /D "HAVE_STDINT_H" /FD /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x804 /d "NDEBUG"
 # ADD RSC /l 0x804 /d "NDEBUG"
@@ -65,7 +65,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "./common" /I "./encode" /I "./decode" /I "../../extras" /I "../.." /D "_DEBUG" /D "_LIB" /D "WIN32" /D "_MBCS" /D "__X264__" /D "HAVE_MMXEXT" /D "HAVE_SSE2" /D "ARCH_X86" /D "HAVE_STDINT_H" /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "./common" /I "./encode" /I "./decode" /I "../../extras" /I "../.." /D "_DEBUG" /D "_LIB" /D "WIN32" /D "_MBCS" /D "__X264__" /D "HAVE_MMX" /D "ARCH_X86" /D "HAVE_STDINT_H" /FD /GZ /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x804 /d "_DEBUG"
 # ADD RSC /l 0x804 /d "_DEBUG"
@@ -802,127 +802,6 @@ SOURCE=..\..\common\i386\mc-c.c
 !ELSEIF  "$(CFG)" == "libx264 - Win32 Debug"
 
 # PROP Intermediate_Dir "obj/core_debug"
-
-!ENDIF 
-
-# End Source File
-# End Group
-# Begin Group "Dec"
-
-# PROP Default_Filter ".c"
-# Begin Group "dec_h"
-
-# PROP Default_Filter ".h"
-# Begin Source File
-
-SOURCE=..\..\decoder\macroblock.h
-
-!IF  "$(CFG)" == "libx264 - Win32 Release"
-
-# PROP Intermediate_Dir "obj/dec_release"
-
-!ELSEIF  "$(CFG)" == "libx264 - Win32 Debug"
-
-# PROP Intermediate_Dir "obj/dec_debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\decoder\set.h
-
-!IF  "$(CFG)" == "libx264 - Win32 Release"
-
-# PROP Intermediate_Dir "obj/dec_release"
-
-!ELSEIF  "$(CFG)" == "libx264 - Win32 Debug"
-
-# PROP Intermediate_Dir "obj/dec_debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\decoder\vlc.h
-
-!IF  "$(CFG)" == "libx264 - Win32 Release"
-
-# PROP Intermediate_Dir "obj/dec_release"
-
-!ELSEIF  "$(CFG)" == "libx264 - Win32 Debug"
-
-# PROP Intermediate_Dir "obj/dec_debug"
-
-!ENDIF 
-
-# End Source File
-# End Group
-# Begin Source File
-
-SOURCE=..\..\decoder\decoder.c
-
-!IF  "$(CFG)" == "libx264 - Win32 Release"
-
-# PROP Intermediate_Dir "obj/dec_release"
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "libx264 - Win32 Debug"
-
-# PROP Intermediate_Dir "obj/dec_debug"
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\decoder\macroblock.c
-
-!IF  "$(CFG)" == "libx264 - Win32 Release"
-
-# PROP Intermediate_Dir "obj/dec_release"
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "libx264 - Win32 Debug"
-
-# PROP Intermediate_Dir "obj/dec_debug"
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\decoder\set.c
-
-!IF  "$(CFG)" == "libx264 - Win32 Release"
-
-# PROP Intermediate_Dir "obj/dec_release"
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "libx264 - Win32 Debug"
-
-# PROP Intermediate_Dir "obj/dec_debug"
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\decoder\vlc.c
-
-!IF  "$(CFG)" == "libx264 - Win32 Release"
-
-# PROP Intermediate_Dir "obj/dec_release"
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "libx264 - Win32 Debug"
-
-# PROP Intermediate_Dir "obj/dec_debug"
-# PROP Exclude_From_Build 1
 
 !ENDIF 
 

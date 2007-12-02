@@ -1,0 +1,12 @@
+diff -Nur faad2-2.0.0+cvs20040908+mp4v2+bmp/plugins/xmms/src/libmp4.c faad2-2.0.0+cvs20040908+mp4v2+bmp.new/plugins/xmms/src/libmp4.c
+--- faad2-2.0.0+cvs20040908+mp4v2+bmp/plugins/xmms/src/libmp4.c	2005-09-07 11:48:34.000000000 +0200
++++ faad2-2.0.0+cvs20040908+mp4v2+bmp.new/plugins/xmms/src/libmp4.c	2007-06-12 13:17:13.000000000 +0200
+@@ -384,7 +384,7 @@
+ 			   frameInfo.samples<<1,
+ 			   sampleBuffer);
+ 	mp4_ip.output->write_audio(sampleBuffer, frameInfo.samples<<1);
+-	if(sampleID > numSamples){
++	if(sampleID >= numSamples){
+           break;
+ 	}
+       }

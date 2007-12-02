@@ -3,12 +3,11 @@ if HAVE_XMMS
 SUBDIRS = xmms mpeg4ip
 else
 SUBDIRS = mpeg4ip
-endif
+endif #HAVE_XMMS
 else
 if HAVE_XMMS
 SUBDIRS = xmms
 else
 SUBDIRS =
-endif
-endif
-
+endif #HAVE_XMMS
+endif #HAVE_MPEG4IP_PLUG
