@@ -18,6 +18,7 @@ usr/lib/vlc/audio_filter
 usr/lib/vlc/audio_mixer
 usr/lib/vlc/audio_output/libalsa_plugin.so
 usr/lib/vlc/audio_output/libaout_file_plugin.so
+usr/lib/vlc/audio_output/libjack_plugin.so
 usr/lib/vlc/audio_output/liboss_plugin.so
 usr/lib/vlc/codec/libcmml_plugin.so
 usr/lib/vlc/codec/libffmpeg_plugin.so
