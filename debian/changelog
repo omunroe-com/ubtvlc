@@ -1,3 +1,13 @@
+vlc (0.8.6.release.d-0ubuntu2) hardy; urgency=low
+
+  [ Matt Lindell ]
+  * Add jack plugin to vlc-nox package. (LP: #173391)
+
+  [ Mario Limonciello ]
+  * Loosen dependencies on libcaca and libvcdinfo.
+
+ -- Mario Limonciello <superm1@ubuntu.com>  Wed, 05 Dec 2007 01:05:24 -0600
+
 vlc (0.8.6.release.d-0ubuntu1) hardy; urgency=low
 
   * New upstream version. (LP: #173550)
