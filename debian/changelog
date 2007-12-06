@@ -1,3 +1,9 @@
+vlc (0.8.6.release.d-0ubuntu3) hardy; urgency=low
+
+  * When building on amd64, build x264 specifically with --enable-pic.
+
+ -- Mario Limonciello <superm1@ubuntu.com>  Thu, 06 Dec 2007 10:53:42 -0600
+
 vlc (0.8.6.release.d-0ubuntu2) hardy; urgency=low
 
   [ Matt Lindell ]
