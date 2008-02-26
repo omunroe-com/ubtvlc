@@ -1,3 +1,24 @@
+vlc (0.8.6.release.d-0ubuntu4) hardy; urgency=low
+
+  [ Emanuele Gentili ]
+  * SECURITY UPDATE: 
+    - debian/patches/021_CVE-2008-0984.diff (LP: #195949)
+     + VLC media player's MPEG-4 file format parser (a.k.a. the MP4 demuxer) suffers 
+       from an arbitrary memory overwrite vulnerability when using crash the player 
+       instance.
+
+  * References
+    - http://nvd.nist.gov/nvd.cfm?cvename=CVE-2008-0984
+    - http://www.videolan.org/security/sa0802.html
+
+  [ Mario Limonciello ]
+  * debian/control:
+    - Build debian on libxul-dev instead of firefox-dev
+  * debian/rules:
+    - Use xulrunner-config rather than firefox-config (LP: #194907)
+
+ -- Emanuele Gentili <emgent@emanuele-gentili.com>  Wed, 27 Feb 2008 00:33:06 +0100
+
 vlc (0.8.6.release.d-0ubuntu3) hardy; urgency=low
 
   * When building on amd64, build x264 specifically with --enable-pic.
