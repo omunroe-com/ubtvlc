@@ -16,8 +16,7 @@ confflags = --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE)
 #
 # Compilation options
 #
-UBUNTU_ENV = MOZILLA_CONFIG=/usr/bin/firefox-config \
-	XPIDL=/usr/lib/firefox/xpidl
+UBUNTU_ENV = XULRUNNER_CONFIG=/usr/bin/xulrunner-config
 vlc_confflags = --enable-release --prefix=/usr
 vlc_confflags += \
 	--enable-libtool \
@@ -263,9 +262,9 @@ ifeq ($(shell dpkg-architecture -qDEB_BUILD_ARCH_CPU),i386)
 	ln -s vlc debian/vlc-plugin-svgalib/usr/share/doc/vlc-plugin-svgalib
 endif
 
-	# links for firefox
-	mkdir -p debian/mozilla-plugin-vlc/usr/lib/firefox/plugins/
-	ln -s ../../mozilla/plugins/libvlcplugin.so debian/mozilla-plugin-vlc/usr/lib/firefox/plugins/
+	# links for xulrunner 1.9
+	mkdir -p debian/mozilla-plugin-vlc/usr/lib/xulrunner-addons/plugins/
+	ln -s ../../mozilla/plugins/libvlcplugin.so debian/mozilla-plugin-vlc/usr/lib/xulrunner-addons/plugins/
 
 	cp debian/vlc/$(VIDDIR)/vlc.xpm debian/vlc/$(VIDDIR)/wxvlc.xpm
 
