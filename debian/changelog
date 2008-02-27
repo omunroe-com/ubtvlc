@@ -1,3 +1,17 @@
+vlc (0.8.6.release-0ubuntu4.1) feisty-security; urgency=low
+
+  * SECURITY UPDATE: 
+    - debian/patches/031_CVE-2008-0984.diff (LP: #195949)
+     + VLC media player's MPEG-4 file format parser (a.k.a. the MP4 demuxer)
+       suffers from an arbitrary memory overwrite vulnerability when using
+       crash the player instance.
+
+  * References
+    - http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2008-0984
+    - http://www.videolan.org/security/sa0802.html
+
+ -- Emanuele Gentili <emgent@emanuele-gentili.com>  Wed, 27 Feb 2008 02:48:48 +0100
+
 vlc (0.8.6.release-0ubuntu4) feisty; urgency=low
 
   * debian/control: Revert back to building against  libwxgtk2.6-dev 
