@@ -1,3 +1,11 @@
+vlc (0.8.6.release.d-0ubuntu5) hardy; urgency=low
+
+  * debian/patches/022_no_cpu_consumption.diff: (LP: #104698)
+    - Fix CPU consumption when fake-tty mode is enabled
+      Thx to bma (No Real Name) for providing the patch
+
+ -- Stephan Hermann <sh@sourcecode.de>  Thu, 06 Mar 2008 21:53:50 +0100
+
 vlc (0.8.6.release.d-0ubuntu4) hardy; urgency=low
 
   [ Emanuele Gentili ]

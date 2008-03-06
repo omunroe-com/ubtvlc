@@ -1,0 +1,32 @@
+Index: vlc-0.8.6.release.d/modules/control/rc.c
+===================================================================
+--- vlc-0.8.6.release.d.orig/modules/control/rc.c	2008-03-06 21:51:00.008658499 +0100
++++ vlc-0.8.6.release.d/modules/control/rc.c	2008-03-06 21:51:52.439409619 +0100
+@@ -141,8 +141,12 @@
+ 
+     if( p_intf->p_sys->i_socket == -1 )
+     {
+-        utf8_vfprintf( stdout, psz_fmt, args );
+-        printf( "\r\n" );
++        if (!config_GetInt( p_intf, "rc-fake-tty" ))
++        {
++            utf8_vfprintf( stdout, psz_fmt, args );
++            printf( "\r\n" );
++        }
++
+     }
+     else
+     {
+@@ -2297,6 +2301,12 @@
+     }
+ #endif
+ 
++   if (p_intf->p_sys->i_socket == -1 && config_GetInt( p_intf, "rc-fake-tty" ))
++   {
++        msleep( INTF_IDLE_SLEEP );
++        return VLC_FALSE;
++   }
++
+     while( !p_intf->b_die && *pi_size < MAX_LINE_LENGTH &&
+            (i_read = net_ReadNonBlock( p_intf, p_intf->p_sys->i_socket == -1 ?
+                        0 /*STDIN_FILENO*/ : p_intf->p_sys->i_socket, NULL,
