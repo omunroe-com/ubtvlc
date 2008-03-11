@@ -1,3 +1,16 @@
+vlc (0.8.6.release.d-0ubuntu7) hardy; urgency=low
+
+  * Add new package with pulse output plugin (LP: #196417) 
+    - debian/patches/030_pulse.diff:
+      + patch from upstream trunk to support pulseaudio output
+    - debian/rules:
+      + enable pulseaudio
+    - debian/control:
+      + add dependencies to libpulse-dev
+      + new package description
+
+ -- Martin Hamrle <hamrle@post.cz>  Tue, 11 Mar 2008 23:09:49 +0100
+
 vlc (0.8.6.release.d-0ubuntu6) hardy; urgency=low
 
   [ Andrew Starr-Bochicchio (andrewsomething) ]

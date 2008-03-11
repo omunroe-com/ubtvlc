@@ -27,6 +27,7 @@ vlc_confflags += \
 	--enable-ggi \
 	--enable-sdl \
 	--enable-esd \
+	--enable-pulse \
 	--disable-qt \
 	--enable-mad \
 	--enable-arts \
@@ -253,6 +254,7 @@ endif
 	ln -s vlc debian/vlc-nox/usr/share/doc/vlc-nox
 	ln -s libvlc0 debian/libvlc0-dev/usr/share/doc/libvlc0-dev
 	ln -s vlc debian/vlc-plugin-esd/usr/share/doc/vlc-plugin-esd
+	ln -s vlc debian/vlc-plugin-pulse/usr/share/doc/vlc-plugin-pulse
 	ln -s vlc debian/vlc-plugin-sdl/usr/share/doc/vlc-plugin-sdl
 	ln -s vlc debian/vlc-plugin-ggi/usr/share/doc/vlc-plugin-ggi
 	ln -s vlc debian/vlc-plugin-arts/usr/share/doc/vlc-plugin-arts
