@@ -6,4 +6,5 @@
 020_notify.diff
 020_certificates_paths.diff
 021_CVE-2008-0984.diff
+030_pulse.diff
 022_no_cpu_consumption.diff
