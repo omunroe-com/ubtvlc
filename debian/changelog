@@ -1,3 +1,15 @@
+vlc (0.8.6.release.d-0ubuntu6) hardy; urgency=low
+
+  [ Andrew Starr-Bochicchio (andrewsomething) ]
+  * Added Catalan, Spanish, and Polish translations to .desktop file in debian/. (LP: #199413)
+   - Thanks to Siegfried Gevatter (RainCT) and Tomasz Dominikowski.
+
+  [ Siegfried-Angel Gevatter Pujals ]
+  * debian/vlc.desktop:
+    - Update .desktop file to the current FD.o specifications.
+
+ -- Andrew Starr-Bochicchio (andrewsomething) <a.starr.b@gmail.com>  Tue, 18 Mar 2008 01:45:06 +0100
+
 vlc (0.8.6.release.d-0ubuntu5) hardy; urgency=low
 
   * debian/patches/022_no_cpu_consumption.diff: (LP: #104698)
