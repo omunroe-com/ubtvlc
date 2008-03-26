@@ -2,7 +2,7 @@
  * intf.m: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2006 the VideoLAN team
- * $Id: intf.m 23388 2007-11-27 22:14:22Z fkuehne $
+ * $Id: intf.m 24166 2008-01-07 14:55:36Z fkuehne $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -191,10 +191,14 @@ static int PlaylistChanged( vlc_object_t *p_this, const char *psz_variable,
                      vlc_value_t old_val, vlc_value_t new_val, void *param )
 {
     intf_thread_t * p_intf = VLCIntf;
-    p_intf->p_sys->b_playlist_update = VLC_TRUE;
-    p_intf->p_sys->b_intf_update = VLC_TRUE;
-    p_intf->p_sys->b_playmode_update = VLC_TRUE;
-    return VLC_SUCCESS;
+    if( p_intf && !p_intf->b_die )
+    {
+        p_intf->p_sys->b_playlist_update = VLC_TRUE;
+        p_intf->p_sys->b_intf_update = VLC_TRUE;
+        p_intf->p_sys->b_playmode_update = VLC_TRUE;
+        return VLC_SUCCESS;
+    }
+    return VLC_EGENERIC;
 }
 
 /*****************************************************************************
@@ -339,7 +343,7 @@ static VLCMain *_o_sharedMainInstance = nil;
     }
 
     o_about = [[VLAboutBox alloc] init];
-    o_prefs = nil;
+    o_prefs = [[VLCPrefs alloc] init];
     o_open = [[VLCOpen alloc] init];
     o_wizard = [[VLCWizard alloc] init];
     o_extended = nil;
@@ -672,21 +676,6 @@ static VLCMain *_o_sharedMainInstance = nil;
 
     [o_controls setupVarMenuItem: o_mi_add_intf target: (vlc_object_t *)p_intf
         var: "intf-add" selector: @selector(toggleVar:)];
-
-    /* check whether the user runs a valid version of OSX; alert is auto-released */
-    if( MACOS_VERSION < 10.4f )
-    {
-        NSAlert *ourAlert;
-        int i_returnValue;
-        ourAlert = [NSAlert alertWithMessageText: _NS("Your version of Mac OS X is not supported")
-                        defaultButton: _NS("Quit")
-                      alternateButton: NULL
-                          otherButton: NULL
-            informativeTextWithFormat: _NS("VLC media player requires Mac OS X 10.4 or higher.")];
-        [ourAlert setAlertStyle: NSCriticalAlertStyle];
-        i_returnValue = [ourAlert runModal];
-        [NSApp terminate: self];
-    }
 
     vlc_thread_set_priority( p_intf, VLC_THREAD_PRIORITY_LOW );
 }
@@ -1552,8 +1541,6 @@ increase/decrease as long as the user holds the left/right, plus/minus button */
 {
     playlist_t * p_playlist;
     vout_thread_t * p_vout;
-    
-    msg_Dbg( p_intf, "applicationWillTerminate" );
 
 #define p_input p_intf->p_sys->p_input
     if( p_input )
@@ -1597,6 +1584,9 @@ increase/decrease as long as the user holds the left/right, plus/minus button */
      * will be called later on -- FK (10/6/05) */
     if( nib_about_loaded && o_about )
         [o_about release];
+    
+    if( nib_prefs_loaded && o_prefs )
+        [o_prefs release];
     
     if( nib_open_loaded && o_open )
         [o_open release];
@@ -1772,19 +1762,16 @@ increase/decrease as long as the user holds the left/right, plus/minus button */
 - (IBAction)viewAbout:(id)sender
 {
     if (!nib_about_loaded)
-    {
         nib_about_loaded = [NSBundle loadNibNamed:@"About" owner:self];
-        [o_about showPanel];
-    } else {
-        [o_about showPanel];
-    }
+        
+    [o_about showPanel];
 }
 
 - (IBAction)viewPreferences:(id)sender
 {
-/* GRUIIIIIIIK */
-    if( o_prefs == nil )
-        o_prefs = [[VLCPrefs alloc] init];
+    if (!nib_prefs_loaded)
+        nib_prefs_loaded = [NSBundle loadNibNamed:@"Preferences" owner:self];
+
     [o_prefs showPrefs];
 }
 

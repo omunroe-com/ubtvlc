@@ -1,26 +1,109 @@
 #!/usr/bin/make -f
 
-include /usr/share/cdbs/1/rules/simple-patchsys.mk
-include /usr/share/cdbs/1/rules/debhelper.mk
-include /usr/share/cdbs/1/class/autotools.mk
+#export DH_VERBOSE=1
 
-DEB_CONFIGURE_EXTRA_FLAGS := --with-xmms --with-bmp --with-drm --with-mp4v2 --disable-mpeg4ip
+include /usr/share/dpatch/dpatch.make
 
-DEB_NOREVISION_VERSION := $(shell dpkg-parsechangelog | egrep '^Version:' | \
-   cut -f 2 -d ' ' | cut -f 1 -d '-')
+version := $(shell sed -n 's/Package: \(.*\)/\1/p' debian/control | head -n 1)
 
-DEB_DH_MAKESHLIBS_ARGS_libfaad2-0 := -V"libfaad2-0 \
-        (>= $(DEB_NOREVISION_VERSION))"
-DEB_DH_MAKESHLIBS_ARGS_libmp4v2-0 := -V"libmp4v2-0 \
-        (>= $(DEB_NOREVISION_VERSION))"
-	
-DEB_SHLIBDEPS_INCLUDE := debian/libfaad2-0/usr/lib debian/libmp4v2-0/usr/lib
+DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
-configure/faad::
-	ln -sf config.h mp4_config.h
+ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
+	INSTALL_PROGRAM += -s
+endif
 
-install/libmp4v2-dev::
-	cp config.h debian/tmp/usr/include/mp4_config.h
-	
-clean::
-	rm -f mp4_config.h
+CFLAGS = -Wall -g -fPIC
+
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -O0
+else
+	CFLAGS += -O2
+endif
+
+configure: configure-stamp
+configure-stamp: patch-stamp
+	dh_testdir
+
+	ln -sf /usr/share/misc/config.sub .
+	ln -sf /usr/share/misc/config.guess .
+	rm -f config.cache
+
+	chmod a+x configure
+
+	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
+	--prefix=/usr CFLAGS="$(CFLAGS)" --with-mp4v2 --disable-mpeg4ip
+#	Should only be used when building a Digital Radio Mondiale specific decoder
+#	--with-drm
+
+	touch configure-stamp 
+
+build: build-stamp
+build-stamp: configure-stamp
+	dh_testdir
+
+	$(MAKE)
+
+	touch build-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+
+	[ ! -f Makefile ] || $(MAKE) uninstall DESTDIR=$(CURDIR)/debian/${version}
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+	debian/rules unpatch
+
+	dh_clean plugins/mpeg4ip/faad2.loT
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/${version}
+
+	dh_movefiles --sourcedir=debian/${version}
+
+# Prune empty directories
+	find debian -iwholename '*/.svn*' -prune -o -type d | xargs rmdir -p --ignore-fail-on-non-empty
+
+# Build architecture-independent files here.
+binary-indep: 
+	dh_testdir
+	dh_testroot
+	dh_installdocs -i
+	dh_installchangelogs -i ChangeLog
+	dh_compress -i
+	dh_fixperms -i
+	dh_installdeb -i
+	dh_gencontrol -i
+	dh_md5sums -i
+	dh_builddeb -i
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installdocs -a NEWS README TODO
+	dh_installexamples -a
+	dh_installmenu -a
+	dh_installman -a
+	dh_installinfo -a
+	dh_installchangelogs -a ChangeLog
+	dh_link -a
+	dh_strip -a
+	dh_compress -a
+	dh_fixperms -a
+	dh_makeshlibs -a -p${version} -V
+	dh_installdeb -a
+	dh_shlibdeps -a -ldebian/${version}/usr/lib
+	dh_gencontrol -a
+	dh_md5sums -a
+	dh_builddeb -a
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure patch unpatch

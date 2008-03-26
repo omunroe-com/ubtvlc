@@ -2,7 +2,7 @@
 # src/packages.mak : Archive locations
 # ***************************************************************************
 # Copyright (C) 2003 - 2007 the VideoLAN team
-# $Id: packages.mak 23180 2007-11-20 03:27:16Z jb $
+# $Id: packages.mak 24880 2008-02-05 04:14:56Z jb $
 #
 # Authors: Christophe Massiot <massiot@via.ecp.fr>
 #          Derk-Jan Hartman <hartman at videolan dot org>
@@ -121,13 +121,14 @@ CDIO_URL=$(GNU)/libcdio/libcdio-$(CDIO_VERSION).tar.gz
 PNG_VERSION=1.2.12
 PNG_URL=$(SF)/libpng/libpng-$(PNG_VERSION).tar.bz2
 GPGERROR_VERSION=1.3
-GPGERROR_URL=http://ftp.gnupg.org/gcrypt/libgpg-error/libgpg-error-$(GPGERROR_VERSION).tar.gz
-#GPGERROR_URL=$(VIDEOLAN)/testing/contrib/libgpg-error-$(GPGERROR_VERSION).tar.gz
+#GPGERROR_URL=http://ftp.gnupg.org/gcrypt/libgpg-error/libgpg-error-$(GPGERROR_VERSION).tar.gz
+GPGERROR_URL=$(VIDEOLAN)/testing/contrib/libgpg-error-$(GPGERROR_VERSION).tar.gz
 GCRYPT_VERSION=1.2.3
-GCRYPT_URL=http://ftp.gnupg.org/gcrypt/libgcrypt/libgcrypt-$(GCRYPT_VERSION).tar.bz2
-#GCRYPT_URL=$(VIDEOLAN)/testing/contrib/libgcrypt-$(GCRYPT_VERSION).tar.bz2
+#GCRYPT_URL=http://ftp.gnupg.org/gcrypt/libgcrypt/libgcrypt-$(GCRYPT_VERSION).tar.bz2
+GCRYPT_URL=$(VIDEOLAN)/testing/contrib/libgcrypt-$(GCRYPT_VERSION).tar.bz2
 GNUTLS_VERSION=1.6.1
-GNUTLS_URL=http://ftp.gnupg.org/gcrypt/gnutls/gnutls-$(GNUTLS_VERSION).tar.bz2
+#GNUTLS_URL=http://ftp.gnupg.org/gcrypt/gnutls/gnutls-$(GNUTLS_VERSION).tar.bz2
+GNUTLS_URL=$(VIDEOLAN)/testing/contrib/gnutls-$(GNUTLS_VERSION).tar.bz2
 DAAP_VERSION=0.4.0
 DAAP_URL=http://craz.net/programs/itunes/files/libopendaap-$(DAAP_VERSION).tar.bz2
 GLIB_VERSION=1.2.10
@@ -155,11 +156,11 @@ SDL_IMAGE_URL=$(SF)/libsdl/SDL_image-$(SDL_IMAGE_VERSION).tar.gz
 MUSE_VERSION=1.2.2
 #MUSE_URL=http://files.musepack.net/source/libmpcdec-$(MUSE_VERSION).tar.bz2
 MUSE_URL=http://files2.musepack.net/source/libmpcdec-$(MUSE_VERSION).tar.bz2
-WXWIDGETS_VERSION=2.6.3
+WXWIDGETS_VERSION=2.6.4
 WXWIDGETS_URL=$(SF)/wxwindows/wxWidgets-$(WXWIDGETS_VERSION).tar.gz
 ZLIB_VERSION=1.2.3
 ZLIB_URL=$(SF)/libpng/zlib-$(ZLIB_VERSION).tar.gz
-XML_VERSION=2.6.26
+XML_VERSION=2.6.31
 XML_URL=ftp://xmlsoft.org/libxml2/libxml2-$(XML_VERSION).tar.gz
 DIRAC_VERSION=0.5.4
 DIRAC_URL=$(SF)/dirac/dirac-$(DIRAC_VERSION).tar.gz

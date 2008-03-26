@@ -2,7 +2,7 @@
  * alsa.c : alsa plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2001 the VideoLAN team
- * $Id: alsa.c 23055 2007-11-13 17:12:18Z funman $
+ * $Id: alsa.c 25261 2008-02-22 17:31:20Z thresh $
  *
  * Authors: Henri Fallon <henri@videolan.org> - Original Author
  *          Jeffrey Baker <jwbaker@acm.org> - Port to ALSA 1.0 API
@@ -571,20 +571,6 @@ static int Open( vlc_object_t *p_this )
                 p_aout->output.output.i_rate );
         }
 
-        /* Set buffer size. */
-#ifdef HAVE_ALSA_NEW_API
-        if ( ( i_snd_rc = snd_pcm_hw_params_set_buffer_size_near( p_sys->p_snd_pcm,
-                                    p_hw, &i_buffer_size ) ) < 0 )
-#else
-        if ( ( i_snd_rc = snd_pcm_hw_params_set_buffer_size_near( p_sys->p_snd_pcm,
-                                    p_hw, i_buffer_size ) ) < 0 )
-#endif
-        {
-            msg_Err( p_aout, "unable to set buffer size (%s)",
-                         snd_strerror( i_snd_rc ) );
-            goto error;
-        }
-
         /* Set period size. */
 #ifdef HAVE_ALSA_NEW_API
         if ( ( i_snd_rc = snd_pcm_hw_params_set_period_size_near( p_sys->p_snd_pcm,
@@ -599,6 +585,20 @@ static int Open( vlc_object_t *p_this )
             goto error;
         }
         p_aout->output.i_nb_samples = i_period_size;
+
+/* Set buffer size. */
+#ifdef HAVE_ALSA_NEW_API
+        if ( ( i_snd_rc = snd_pcm_hw_params_set_buffer_size_near( p_sys->p_snd_pcm,
+                                    p_hw, &i_buffer_size ) ) < 0 )
+#else
+        if ( ( i_snd_rc = snd_pcm_hw_params_set_buffer_size_near( p_sys->p_snd_pcm,
+                                    p_hw, i_buffer_size ) ) < 0 )
+#endif
+        {
+            msg_Err( p_aout, "unable to set buffer size (%s)",
+                         snd_strerror( i_snd_rc ) );
+            goto error;
+        }
 
         /* Commit hardware parameters. */
         if ( ( i_snd_rc = snd_pcm_hw_params( p_sys->p_snd_pcm, p_hw ) ) < 0 )
@@ -816,6 +816,10 @@ static void ALSAFill( aout_instance_t * p_aout )
             /* Here the device should be either in the RUNNING state.
              * p_status is valid. */
             snd_pcm_sframes_t delay = snd_pcm_status_get_delay( p_status );
+            if( delay == 0 )/* sometimes snd_pcm_status_get_delay() returns 0 */
+                if( snd_pcm_delay( p_sys->p_snd_pcm, &delay ) < 0 )
+                    delay = 0;
+
             int i_bytes = snd_pcm_frames_to_bytes( p_sys->p_snd_pcm, delay );
             next_date = mdate() + ( (mtime_t)i_bytes * 1000000
                     / p_aout->output.output.i_bytes_per_frame

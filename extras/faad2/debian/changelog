@@ -1,90 +1,149 @@
-faad2 (2.0.0+cvs20040908+mp4v2+bmp-0ubuntu5) gutsy; urgency=low
+faad2 (2.6.1-2) unstable; urgency=low
 
-  * 10_libmp4_sample_check.diff: fixed SIGSEGV while listening to m4a
-    files (LP: 40043)
-  * Update Maintainer field in debian/control
+  * Remove XMMS plugin as XMMS is being removed (Closes: #456724)
 
- -- Luca Falavigna <dktrkranz@ubuntu.com>  Tue, 12 Jun 2007 13:17:39 +0200
+ -- Matthew W. S. Bell <matthew@bells23.org.uk>  Fri, 21 Dec 2007 00:04:17 +0000
 
-faad2 (2.0.0+cvs20040908+mp4v2+bmp-0ubuntu4) gutsy; urgency=low
+faad2 (2.6.1-1) unstable; urgency=low
 
-  * rebuild for libgcc2
+  * Import new upstream version containing new license text
+    (Closes: #451948)
+  * Change build system to call autoreconf at build time, as
+    upstream no longer ships generated files
+  * Update debian/copyright to reflect new license text
+  * Remove Build-Depends on libsndfile1-dev (Closes: #452362)
 
- -- LaMont Jones <lamont@ubuntu.com>  Tue, 12 Jun 2007 06:53:25 -0600
+ -- Matthew W. S. Bell <matthew@bells23.org.uk>  Wed, 28 Nov 2007 23:45:05 +0000
 
-faad2 (2.0.0+cvs20040908+mp4v2+bmp-0ubuntu3) dapper; urgency=low
+faad2 (2.6-1) unstable; urgency=low
 
-  * 01_systems.h.diff:
-    + Fix the config.h include to mp4_config.h and copy config.h to
-      /usr/include/mp4_config.h. Bad bad upstream
+  * Import new 2.6 release. Includes several small off-by-one scale
+    fixes.
+  * Update the copyright as new code includes a clarification of the license 
+    text, which indicates that the entire work is under the GPLv2 (closes:
+    #419339).
 
- -- Sebastian Dröge <slomo@ubuntu.com>  Wed,  9 Nov 2005 18:42:24 +0100
+ -- Matthew W. S. Bell <matthew@bells23.org.uk>  Mon, 15 Oct 2007 00:16:21 +0100
 
-faad2 (2.0.0+cvs20040908+mp4v2+bmp-0ubuntu2) breezy; urgency=low
+faad2 (2.5-5) unstable; urgency=low
 
-  * Added libmp4-0 to Conflicts/Replaces for libmp4v2-0
+  * Make packages depends bin-NMU safe
 
- -- Sebastian Dröge <slomo@ubuntu.com>  Sun,  9 Oct 2005 15:47:08 +0200
+ -- Matthew W. S. Bell <matthew@bells23.org.uk>  Fri, 17 Aug 2007 16:07:59 +0100
 
-faad2 (2.0.0+cvs20040908+mp4v2+bmp-0ubuntu1) breezy; urgency=low
+faad2 (2.5-4) unstable; urgency=low
 
-  * The "Go Open videos are playable now" release
-  * Sync from CVS (newest version we can ship because of license changes)
-  * Added bmp plugin and libmp4v2 to tarball
-  * Added autotools stuff to tarball
-  * Removed 01_bmp-plugin.diff, 02_Make.am.diff, 03_autoreconf.diff,
-    05_option_w.diff, 08_amd64.diff
-  * Updated 09_amd64.diff
-  * Fixed the API to be compatible again with 2.0.0
-  * libmp4ff isn't shipped by default anymore: for compatibility reasons we
-    ship it
+  * Add mp4ff headers to libfaad-dev package (Closes: 409648) 
 
- -- Sebastian Dröge <mail@slomosnail.de>  Wed,  7 Sep 2005 12:25:29 +0200
+ -- Matthew W. S. Bell <matthew@bells23.org.uk>  Fri, 11 May 2007 19:44:22 +0100
 
-faad2 (2.0.0clean-0ubuntu5) breezy; urgency=low
+faad2 (2.5-3) unstable; urgency=low
 
-  * debian/patches/08_amd64.diff:
-    + removed some bogus stuff. Really works now on amd64
+  * Add patch to stabilise/sanitise headers (Closes: 404279)
+  * Port several fixes from Ubuntu
+  * Add an mp4ff static library
 
- -- Sebastian Dröge <mail@slomosnail.de>  Tue, 30 Aug 2005 17:20:22 +0200
+ -- Matthew W. S. Bell <matthew@bells23.org.uk>  Sun, 15 Apr 2007 04:23:35 +0100
 
-faad2 (2.0.0clean-0ubuntu4) breezy; urgency=low
+faad2 (2.5-2) unstable; urgency=low
 
-  * Added Replaces/Conflicts: libmp4 to libmp4v2 as Marillat calls it just
-    libmp4 and some users are using his repository
-  * debian/patches/08_amd64.diff:
-    + Some amd64 fixes from Marillat
-  * debian/patches/09_amd64-2.diff:
-    + Further amd64 fixes from Gentoo
+  * add xmms-mp4 desription read not like nonsense (Closes: #399457)
+  * Compile without Digital Radio Mondiale support, as it breaks base
+    functionality
+  * Update debian/copyright (See: #403117)
 
- -- Sebastian Dröge <mail@slomosnail.de>  Mon, 29 Aug 2005 23:49:34 +0200
+ -- Matthew W. S. Bell <m.bell@bvrh.co.uk>  Mon,  4 Dec 2006 19:56:22 +0000
 
-faad2 (2.0.0clean-0ubuntu3) breezy; urgency=low
+faad2 (2.5-1) unstable; urgency=low
 
-  * Add Replaces: libfaad2-0 (<< 2.0.0clean-0ubuntu2) to properly handle the
-    transition from -0ubuntu2
+  * Call make install with DESTDIR instead of prefix
+  * Change configure/Makefile to provide xmms config differently
+  * Add manual page for faad utility
+  * Call make uninstall in clean
+  * Add dummy libfaad2-0 pacakge to satisfy some third-party dependencies
+  * Upload into main (Closes: #306366) 
 
- -- Matt Zimmerman <mdz@ubuntu.com>  Thu, 18 Aug 2005 19:12:36 -0700
+ -- Matthew W. S. Bell <m.bell@bvrh.co.uk>  Wed, 18 Oct 2006 23:41:32 +0100
 
-faad2 (2.0.0clean-0ubuntu2) breezy; urgency=low
+faad2 (2.5-0.0) unstable; urgency=low
 
-  * Added parameters for dh_makeshlibs to create
-    dependencies >= $UPSTREAM_VERSION
-  * Removed .so links from binary packages and moved them to the -dev ones
- 
- -- Sebastian Dröge <mail@slomosnail.de>  Thu, 18 Aug 2005 16:46:31 +0200
- 
-faad2 (2.0.0clean-0ubuntu1) breezy; urgency=low
+  * New upstream release.
+  * Add drm (Digital Radio Mondiale) support.
 
-  * Complete rewrite from scratch of marillat's package. Only package
-    descriptions are taken from marillat.
-  * Use a clean upstream tarball
-  * Include a patch which copies plugins/xmms to plugins/bmp and changes some
-    Makefiles to build a beep-media-player plugin
+ -- Christian Marillat <marillat@debian.org>  Wed,  6 Sep 2006 20:18:25 +0200
 
-  Changes from Reinhard Tartler
+faad2 (2.0.0+cvs20060416-0.1) unstable; urgency=low
 
-  * fixed ftbfs with broken pure virtual methods decls
+  * Rebuild for amd64.
 
- -- Sebastian Dröge <mail@slomosnail.de>  Thu, 07 Jun 2005 11:07:01 +0200
+ -- Christian Marillat <marillat@debian.org>  Sat, 13 May 2006 08:58:34 +0200
+
+faad2 (2.0.0+cvs20060416-0.0) unstable; urgency=low
+
+  * CVS release.
+
+ -- Christian Marillat <marillat@debian.org>  Sun, 16 Apr 2006 17:15:00 +0200
+
+faad2 (2.0.0-0.7) unstable; urgency=low
+
+  * Rebuild for gcc 4.0
+
+ -- Christian Marillat <marillat@debian.org>  Sat, 16 Jul 2005 17:34:28 +0200
+
+faad2 (2.0.0-0.6) unstable; urgency=low
+
+  * New patch from Gentoo to fix amd64 problem with some files. Thanks to
+    Carl Schneidinger.
+
+ -- Christian Marillat <marillat@debian.org>  Fri, 20 May 2005 18:42:23 +0200
+
+faad2 (2.0.0-0.5) unstable; urgency=low
+
+  * Apply patch from Arnaud Rouanet to fix the -w option in faad.
+
+ -- Christian Marillat <marillat@debian.org>  Mon, 21 Mar 2005 10:13:05 +0100
+
+faad2 (2.0.0-0.4) unstable; urgency=low
+
+  * New patch 04_mp4ff.h to replace "mp4ff_int_types.h" include by <stdint.h>
+
+ -- Christian Marillat <marillat@debian.org>  Wed,  9 Mar 2005 08:59:35 +0100
+
+faad2 (2.0.0-0.3) unstable; urgency=low
+
+  * Add libfaac-dev in Build-Depends.
+  * Little hack to not build the mpeg4ip plugin.
+
+ -- Christian Marillat <marillat@debian.org>  Wed, 26 Jan 2005 07:36:25 +0100
+
+faad2 (2.0.0-0.2) unstable; urgency=low
+
+  * Build with libmp4
+  * Add new package xmms-mp4
+
+ -- Christian Marillat <marillat@debian.org>  Mon, 25 Oct 2004 10:19:52 +0200
+
+faad2 (2.0.0-0.1) unstable; urgency=low
+
+  * Really apply my patch to link against -lm
+
+ -- Christian Marillat <marillat@debian.org>  Thu, 29 Jul 2004 15:48:22 +0200
+
+faad2 (2.0.0-0.0) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Christian Marillat <marillat@debian.org>  Sun,  4 Jul 2004 00:26:23 +0200
+
+faad2 (2.0-rc3-0.0) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Christian Marillat <marillat@debian.org>  Tue,  9 Dec 2003 10:57:01 +0100
+
+faad2 (1.1-0.0) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Christian Marillat <marillat@debian.org>  Sun, 29 Dec 2002 23:09:33 +0100
 

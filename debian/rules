@@ -27,6 +27,7 @@ vlc_confflags += \
 	--enable-ggi \
 	--enable-sdl \
 	--enable-esd \
+	--enable-pulse \
 	--disable-qt \
 	--enable-mad \
 	--enable-arts \
@@ -101,7 +102,7 @@ ifeq "$(DEB_BUILD_ARCH)" "amd64"
 	X264_OPTS += --enable-pic
 endif
 
-DEB_UPSTREAM_VERSION+=0.8.6.release.d
+DEB_UPSTREAM_VERSION+=0.8.6.release.e
 VERSION=$(shell echo $(DEB_UPSTREAM_VERSION) | sed 's/.release.//')
 
 #
@@ -109,18 +110,16 @@ VERSION=$(shell echo $(DEB_UPSTREAM_VERSION) | sed 's/.release.//')
 #
 
 get-orig-source:
-	wget http://download.videolan.org/pub/videolan/vlc/$(VERSION)/vlc-$(VERSION).tar.gz
+	wget http://mirrors.optralan.com/videolan/vlc/$(VERSION)/vlc-$(VERSION).tar.gz
 	tar xzzf vlc-$(VERSION).tar.gz
 	rm vlc-$(VERSION).tar.gz
 
 	apt-get source faad2 -d
 	dpkg-source -x faad2*dsc vlc-$(VERSION)/extras/faad2
-	rm vlc-$(VERSION)/extras/faad2/debian -rf
 	rm faad2* -rf
 
 	apt-get source x264 -d
 	dpkg-source -x x264*dsc vlc-$(VERSION)/extras/x264
-	rm vlc-$(VERSION)/extras/x264/debian -rf
 	rm x264* -rf
 
 	mv vlc-$(VERSION) vlc-$(DEB_UPSTREAM_VERSION)
@@ -148,10 +147,10 @@ configure-stamp:
 	test -d extras/faad2
 	cd extras/faad2 \
 	 && touch `find . -name configure.in` \
-	 && touch `find . -name aclocal.m4` \
-	 && touch `find . -name configure` \
-	 && touch `find . -name config.h.in` \
-	 && touch `find . -name Makefile.in` \
+	 && dpatch apply-all \
+	 && ln -sf /usr/share/misc/config.sub . \
+	 && ln -sf /usr/share/misc/config.guess . \
+	 && chmod a+x configure \
 	 && ./configure $(confflags) --disable-shared \
 	 && cd libfaad \
 	 && $(MAKE)
@@ -253,6 +252,7 @@ endif
 	ln -s vlc debian/vlc-nox/usr/share/doc/vlc-nox
 	ln -s libvlc0 debian/libvlc0-dev/usr/share/doc/libvlc0-dev
 	ln -s vlc debian/vlc-plugin-esd/usr/share/doc/vlc-plugin-esd
+	ln -s vlc debian/vlc-plugin-pulse/usr/share/doc/vlc-plugin-pulse
 	ln -s vlc debian/vlc-plugin-sdl/usr/share/doc/vlc-plugin-sdl
 	ln -s vlc debian/vlc-plugin-ggi/usr/share/doc/vlc-plugin-ggi
 	ln -s vlc debian/vlc-plugin-arts/usr/share/doc/vlc-plugin-arts

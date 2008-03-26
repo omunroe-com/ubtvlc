@@ -1,14 +1,32 @@
-This package was debianized by Sebastian Dröge <mail@slomosnail.de> on
-Thu, 07 Jul 2005 11:15:41 +0200.
+- Original:
+ This package was debianized by Aubin Paul <aubin@outlyer.org> on Sun,  8 Dec 
+ 2002 12:05:10 -0500.
 
-It was downloaded from http://www.audiocoding.com
+ It was downloaded from http://faac.sourceforge.net/index.php.
 
-Upstream Authors: menno (menno@audiocoding.com)
-                  Alexander Kurpiers (a.kurpiers@nt.tu-darmstadt.de)
+- Debian/main:
+ This package was prepared for inclusion in Debian by Matthew W. S. Bell 
+ <matthew@bells23.org.uk> in May 2006 
+
+ Official website is now at http://www.audiocoding.com/
+ CVS is still hosted by SourceForge.net
+
+ Upstream Authors: menno		<menno@audiocoding.com>
+ 		   Alexander Kurpiers	<a.kurpiers@nt.tu-darmstadt.de>
+ 		   M. Bakker		<mbakker@nero.com>
+		   Ahead Software AG
+		   Nero AG
+
+ Other Authors:	   John Edwards
+ 		   Quinnware
+		   VideoLAN
 
 Copyright:
+ This program is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License Version 2, found on
+ Debian systems in the file /usr/share/common-licenses/GPL.
 
-  This program is free software; you can redistribute it and/or modify it
-  under the terms of the GNU General Public License Version 2, found on
-  Debian systems in the file /usr/share/common-licenses/GPL.
+ The following clarification applies to all original files:
 
+ The "appropriate copyright message" mentioned in section 2c of the GPLv2
+ must read: "Code from FAAD2 is copyright (c) Nero AG, www.nero.com"
