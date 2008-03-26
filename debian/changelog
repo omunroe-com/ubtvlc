@@ -1,3 +1,37 @@
+vlc (0.8.6.release.e+x264svn20071224+faad2.6.1-0ubuntu1) hardy; urgency=low
+
+  [ Mario Limonciello ]
+  * New upstream version. (LP: #206918)
+    - New versioning scheme to bring attention to the fact that
+      faad and x264 are in the .orig.tar.gz.
+    - Fixes 6 CVEs (LP: #196452)
+      + CVE: 2007-6681
+      + CVE: 2007-6682
+      + CVE: 2007-6683
+      + CVE: 2008-0295
+      + CVE: 2008-0296
+  * Drop 021_CVE-2008-0984 as it's included upstream.
+  * debian/rules:
+    - Adjust items touched for faad2 when building.
+    - Apply all faad2 patches when building
+  * debian/control:
+    - Add dpatch, libfaad-dev, and autotools-dev to build-depends to allow 
+      faad2 to build again.
+    - Add automake, cvs, and libtool to build depends (now needed for building VLC)
+
+  [ Martin Hamrle ]
+   * Add new package with pulse output plugin (LP: #196417)
+     - debian/patches/030_pulse.diff:
+       + patch from upstream trunk to support pulseaudio output
+     - debian/rules:
+       + enable pulseaudio
+     - debian/control:
+       + add dependencies to libpulse-dev
+       + new package description
+     - Creates a NEW binary package, requiring FFe (LP: #204050)
+
+ -- Mario Limonciello <superm1@ubuntu.com>  Tue, 25 Mar 2008 20:08:07 -0500
+
 vlc (0.8.6.release.d-0ubuntu6) hardy; urgency=low
 
   [ Andrew Starr-Bochicchio (andrewsomething) ]

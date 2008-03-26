@@ -1,24 +1,39 @@
 Source: faad2
 Section: libs
 Priority: optional
-Maintainer: Ubuntu MOTU Developers <ubuntu-motu@lists.ubuntu.com>
-XSBC-Original-Maintainer: Sebastian Dröge <mail@slomosnail.de>
-Build-Depends: debhelper (>= 4.1.0), cdbs, libsndfile1-dev, xmms-dev, beep-media-player-dev, libid3-dev
-Standards-Version: 3.6.2
+Maintainer: Matthew W. S. Bell <matthew@bells23.org.uk>
+Standards-Version: 3.7.2
+Build-Depends: debhelper (>> 4), dpatch, libtool, libid3-dev
+Build-Conflicts: autoconf2.13, automake1.4
 
-Package: libfaad2-0
+
+Package: libfaad0
 Architecture: any
 Depends: ${shlibs:Depends}
+Conflicts: libfaad2-0 (<< ${source:Version})
+Replaces: libfaad2-0
 Description: freeware Advanced Audio Decoder - runtime files
  FAAD2 is the fastest ISO AAC audio decoder available. FAAD2 correctly
  decodes all MPEG-4 and MPEG-2 MAIN, LOW, LTP, LD and ER object type AAC
  files.
 
-Package: libfaad2-dev
+Package: libfaad2-0
+Architecture: all
+Depends: libfaad0 (>= ${source:Version})
+Description: freeware Advanced Audio Decoder - dummy package
+ FAAD2 is the fastest ISO AAC audio decoder available. FAAD2 correctly
+ decodes all MPEG-4 and MPEG-2 MAIN, LOW, LTP, LD and ER object type AAC
+ files.
+ .
+ This package is a dummy package that satisfies dependencies on libfaad 
+ for most third-party packages 
+
+Package: libfaad-dev
 Section: libdevel
 Architecture: any
-Depends: libfaad2-0 (= ${Source-Version}), libc6-dev | libc-dev
-Replaces: libfaad2-0 (<< 2.0.0clean-0ubuntu2)
+Depends: libfaad0 (= ${binary:Version}), libc6-dev | libc-dev
+Conflicts: libfaad2-dev
+Replaces: libfaad2-dev
 Description: freeware Advanced Audio Decoder - development files
  FAAD2 is the fastest ISO AAC audio decoder available. FAAD2 correctly
  decodes all MPEG-4 and MPEG-2 MAIN, LOW, LTP, LD and ER object type AAC
@@ -26,59 +41,15 @@ Description: freeware Advanced Audio Decoder - development files
  .
  This package contains development files.
 
-Package: libmp4v2-0
-Architecture: any
-Depends: ${shlibs:Depends}
-Replaces: libmp4, libmp4-0
-Conflicts: libmp4, libmp4-0
-Description: MP4 container library - runtime files
- FAAD2 is the fastest ISO AAC audio decoder available. FAAD2 correctly
- decodes all MPEG-4 and MPEG-2 MAIN, LOW, LTP, LD and ER object type AAC
- files.
- .
- This package contains runtime files of the optional library for
- accessing MP4 files. Needed by the player plugins.
-
-Package: libmp4v2-dev
-Section: libdevel
-Architecture: any
-Depends: libmp4v2-0 (= ${Source-Version}), libc6-dev | libc-dev
-Description: MP4 container library - development files
- FAAD2 is the fastest ISO AAC audio decoder available. FAAD2 correctly
- decodes all MPEG-4 and MPEG-2 MAIN, LOW, LTP, LD and ER object type AAC
- files.
- .
- This package contains development files of the optional library for
- accessing MP4 files. Needed by the player plugins.
-
 Package: faad
 Section: sound
 Architecture: any
 Depends: ${shlibs:Depends}
+Conflicts: faad2
+Replaces: faad2
 Description: freeware Advanced Audio Decoder player
  FAAD2 is the fastest ISO AAC audio decoder available. FAAD2 correctly
  decodes all MPEG-4 and MPEG-2 MAIN, LOW, LTP, LD and ER object type AAC
  files.
  .
- This package contains a binary to play AAC or MP4 files.
-
-Package: xmms-mp4
-Section: sound
-Architecture: any
-Depends: ${shlibs:Depends}
-Description: a mp4/aac audio player for xmms
- This plugin is a merge between aac and mp4 plugin. so now you could read
- all new and old files encoded with different encoder and different format
- (for the aac part). This is possible since the libfaad2 allow to read old
- aac ADTS format.
-
-Package: bmp-mp4
-Section: sound
-Architecture: any
-Depends: ${shlibs:Depends}
-Description: a mp4/aac audio player for bmp
- This plugin is a merge between aac and mp4 plugin. so now you could read
- all new and old files encoded with different encoder and different format
- (for the aac part). This is possible since the libfaad2 allow to read old
- aac ADTS format.
-
+ This package contains a command line interface to play AAC or MP4 files.

@@ -2,7 +2,7 @@
  * dmo.c : DirectMedia Object decoder module for vlc
  *****************************************************************************
  * Copyright (C) 2002, 2003 the VideoLAN team
- * $Id: dmo.c 23362 2007-11-26 19:34:14Z Trax $
+ * $Id: dmo.c 23470 2007-12-06 00:59:36Z Trax $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -1225,7 +1225,7 @@ static int EncoderSetAudioType( encoder_t *p_enc, IMediaObject *p_dmo )
 
     if( i_selected < 0 )
     {
-        msg_Err( p_enc, "couldn't find a matching ouput" );
+        msg_Err( p_enc, "couldn't find a matching output" );
         return VLC_EGENERIC;
     }
 
