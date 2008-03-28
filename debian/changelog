@@ -1,3 +1,10 @@
+vlc (0.8.6.release.e+x264svn20071224+faad2.6.1-0ubuntu2) hardy; urgency=low
+
+  * Add 031_CVE_2008_1489.diff from git head
+    to fix CVE-2008-1489. (LP: #207284)
+
+ -- Mario Limonciello <superm1@ubuntu.com>  Thu, 27 Mar 2008 21:55:17 -0500
+
 vlc (0.8.6.release.e+x264svn20071224+faad2.6.1-0ubuntu1) hardy; urgency=low
 
   [ Mario Limonciello ]

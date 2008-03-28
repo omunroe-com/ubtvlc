@@ -7,3 +7,4 @@
 020_certificates_paths.diff
 022_no_cpu_consumption.diff
 030_pulse.diff
+031_CVE_2008_1489.diff
