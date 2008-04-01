@@ -1,3 +1,18 @@
+vlc (0.8.4.debian-1ubuntu6.3) dapper-security; urgency=low
+
+  * SECURITY UPDATE: (LP: #207284)
+   + debian/patches/031_CVE-2008-1489.dpatch
+    - Integer overflow in the MP4_ReadBox_rdrf function in libmp4.c allows
+      remote attackers to cause a denial of service (crash) and possibly 
+      execute arbitrary code via a crafted MP4 RDRF box that triggers a 
+      heap-based buffer overflow.
+
+  * References
+   + http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=2008-1489
+   + http://trac.videolan.org/vlc/changeset/09572892df7e72c0d4e598c0b5e076cf330d8b0a
+
+ -- Emanuele Gentili <emgent@emanuele-gentili.com>  Tue, 01 Apr 2008 03:48:00 +0200
+
 vlc (0.8.4.debian-1ubuntu6.2) dapper-security; urgency=low
 
   * SECURITY UPDATE: 
