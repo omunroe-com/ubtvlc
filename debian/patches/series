@@ -7,3 +7,4 @@
 020_certificates_paths.diff
 030_fix_exec_field_code.diff
 031_CVE-2008-0984.diff
+031_CVE-2008-1489.diff
