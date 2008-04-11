@@ -10,7 +10,7 @@ XS-Vcs-Svn: svn://svn.videolan.org/pkg-multimedia/unstable/vlc/
 Package: vlc
 Section: graphics
 Architecture: any
-Depends: vlc-nox (= ${source:Version}), ${shlibs:Depends}, ${misc:Depends}, ttf-dejavu
+Depends: vlc-nox (= ${source:Version}), ${shlibs:Depends}, ${misc:Depends}, ttf-dejavu, vlc-plugin-pulse
 Recommends: videolan-doc
 Suggests: mozilla-plugin-vlc
 Replaces: vlc-plugin-dvb (<< 0.5.2-2), vlc-plugin-xosd (<< 0.5.2-2), vlc-plugin-dv (<< 0.5.2-2), vlc-plugin-mad (<< 0.5.2-2), vlc-mad (<< 0.5.0), vlc-plugin-a52 (<< 0.5.2-2), vlc-plugin-ogg (<< 0.5.2-2), vlc-plugin-lirc (<< 0.5.2-2), vlc-lirc (<< 0.5.0), vlc-plugin-aa (<< 0.5.2-2), vlc-aa (<< 0.5.0), wxvlc (<< 0.8.5-test3.debian-4), vlc-plugin-alsa (<< 0.8.5-test3.debian-4)
