@@ -8,3 +8,4 @@
 022_no_cpu_consumption.diff
 030_pulse.diff
 031_CVE_2008_1489.diff
+demuxer-build-fix.diff

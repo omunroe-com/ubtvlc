@@ -1,0 +1,21 @@
+diff -urN vlc-0.8.6.release.e/modules/demux/mkv.cpp vlc-0.8.6.release.e.new/modules/demux/mkv.cpp
+--- vlc-0.8.6.release.e/modules/demux/mkv.cpp	2008-02-25 06:01:53.000000000 +1100
++++ vlc-0.8.6.release.e.new/modules/demux/mkv.cpp	2008-04-12 09:15:25.621995377 +1000
+@@ -5845,7 +5845,7 @@
+             binary *p_data = (*index)->GetBuffer();
+             size_t i_size = *p_data++;
+             // avoid reading too much from the buffer
+-            i_size = min( i_size, ((*index)->GetSize() - 1) >> 3 );
++            i_size = min<size_t>( i_size, ((*index)->GetSize() - 1) >> 3 );
+             for ( ; i_size > 0; i_size--, p_data += 8 )
+             {
+                 msg_Dbg( &sys.demuxer, "Matroska DVD enter command" );
+@@ -5868,7 +5868,7 @@
+             binary *p_data = (*index)->GetBuffer();
+             size_t i_size = *p_data++;
+             // avoid reading too much from the buffer
+-            i_size = min( i_size, ((*index)->GetSize() - 1) >> 3 );
++            i_size = min<size_t>( i_size, ((*index)->GetSize() - 1) >> 3 );
+             for ( ; i_size > 0; i_size--, p_data += 8 )
+             {
+                 msg_Dbg( &sys.demuxer, "Matroska DVD leave command" );

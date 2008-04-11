@@ -1,3 +1,12 @@
+vlc (0.8.6.release.e+x264svn20071224+faad2.6.1-0ubuntu3) hardy; urgency=low
+
+  * debian/control: Make vlc-plugin-pulse a dependency of vlc, to enable pulseaudio
+    by default. (LP: #208579)
+  * debian/patches/demuxer-fix.diff: Patch to fix FTBFS, thanks to Gentoo bug
+    214809.
+
+ -- Luke Yelavich <luke.yelavich@canonical.com>  Sat, 12 Apr 2008 09:23:55 +1000
+
 vlc (0.8.6.release.e+x264svn20071224+faad2.6.1-0ubuntu2) hardy; urgency=low
 
   * Add 031_CVE_2008_1489.diff from git head
