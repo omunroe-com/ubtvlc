@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ctrl_move.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_move.cpp 7073 2004-03-14 14:33:12Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: ctrl_move.cpp 16767 2006-09-21 14:32:45Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "ctrl_move.hpp"
@@ -37,9 +37,9 @@ CtrlMove::CtrlMove( intf_thread_t *pIntf, WindowManager &rWindowManager,
     CtrlFlat( pIntf, rHelp, pVisible ), m_fsm( pIntf ),
     m_rWindowManager( rWindowManager ),
     m_rCtrl( rCtrl ), m_rWindow( rWindow ),
-    m_cmdMovingMoving( this, &transMovingMoving ),
-    m_cmdStillMoving( this, &transStillMoving ),
-    m_cmdMovingStill( this, &transMovingStill )
+    m_cmdMovingMoving( this ),
+    m_cmdStillMoving( this ),
+    m_cmdMovingStill( this )
 {
     m_pEvt = NULL;
     m_xPos = 0;
@@ -86,6 +86,12 @@ const Position *CtrlMove::getPosition() const
 }
 
 
+void CtrlMove::onResize()
+{
+    m_rCtrl.onResize();
+}
+
+
 void CtrlMove::handleEvent( EvtGeneric &rEvent )
 {
     m_pEvt = &rEvent;
@@ -96,39 +102,35 @@ void CtrlMove::handleEvent( EvtGeneric &rEvent )
 }
 
 
-void CtrlMove::transStillMoving( SkinObject *pCtrl )
+void CtrlMove::CmdStillMoving::execute()
 {
-    CtrlMove *pThis = (CtrlMove*)pCtrl;
-    EvtMouse *pEvtMouse = (EvtMouse*)pThis->m_pEvt;
+    EvtMouse *pEvtMouse = (EvtMouse*)m_pParent->m_pEvt;
 
-    pThis->m_xPos = pEvtMouse->getXPos();
-    pThis->m_yPos = pEvtMouse->getYPos();
+    m_pParent->m_xPos = pEvtMouse->getXPos();
+    m_pParent->m_yPos = pEvtMouse->getYPos();
 
-    pThis->captureMouse();
+    m_pParent->captureMouse();
 
-    pThis->m_rWindowManager.startMove( pThis->m_rWindow );
+    m_pParent->m_rWindowManager.startMove( m_pParent->m_rWindow );
 }
 
 
-void CtrlMove::transMovingMoving( SkinObject *pCtrl )
+void CtrlMove::CmdMovingMoving::execute()
 {
-    CtrlMove *pThis = (CtrlMove*)pCtrl;
-    EvtMotion *pEvtMotion = (EvtMotion*)pThis->m_pEvt;
+    EvtMotion *pEvtMotion = (EvtMotion*)m_pParent->m_pEvt;
 
-    int xNewLeft = pEvtMotion->getXPos() - pThis->m_xPos +
-                   pThis->m_rWindow.getLeft();
-    int yNewTop = pEvtMotion->getYPos() - pThis->m_yPos +
-                  pThis->m_rWindow.getTop();
+    int xNewLeft = pEvtMotion->getXPos() - m_pParent->m_xPos +
+                   m_pParent->m_rWindow.getLeft();
+    int yNewTop = pEvtMotion->getYPos() - m_pParent->m_yPos +
+                  m_pParent->m_rWindow.getTop();
 
-    pThis->m_rWindowManager.move( pThis->m_rWindow, xNewLeft, yNewTop );
+    m_pParent->m_rWindowManager.move( m_pParent->m_rWindow, xNewLeft, yNewTop );
 }
 
 
-void CtrlMove::transMovingStill( SkinObject *pCtrl )
+void CtrlMove::CmdMovingStill::execute()
 {
-    CtrlMove *pThis = (CtrlMove*)pCtrl;
+    m_pParent->releaseMouse();
 
-    pThis->releaseMouse();
-
-    pThis->m_rWindowManager.stopMove();
+    m_pParent->m_rWindowManager.stopMove();
 }

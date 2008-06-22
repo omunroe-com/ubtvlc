@@ -1,8 +1,8 @@
 /*****************************************************************************
  * sdl.c : SDL audio output plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000-2002 VideoLAN
- * $Id: sdl.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2000-2002 the VideoLAN team
+ * $Id: sdl.c 14568 2006-03-02 13:35:43Z courmisch $
  *
  * Authors: Michel Kaempf <maxx@via.ecp.fr>
  *          Sam Hocevar <sam@zoy.org>
@@ -21,14 +21,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <errno.h>                                                 /* ENOMEM */
-#include <fcntl.h>                                       /* open(), O_WRONLY */
 #include <string.h>                                            /* strerror() */
 #include <unistd.h>                                      /* write(), close() */
 #include <stdlib.h>                            /* calloc(), malloc(), free() */
@@ -65,8 +63,11 @@ static void SDLCallback ( void *, byte_t *, int );
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+    set_shortname( "SDL" );
     set_description( _("Simple DirectMedia Layer audio output") );
     set_capability( "audio output", 40 );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_AOUT );
     add_shortcut( "sdl" );
     set_callbacks( Open, Close );
 vlc_module_end();

@@ -1,13 +1,13 @@
 /*****************************************************************************
  * mpeg_audio.c: parse MPEG audio sync info and packetize the stream
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: mpeg_audio.c 7209 2004-03-31 20:52:31Z gbazin $
+ * Copyright (C) 2001-2003 the VideoLAN team
+ * $Id: mpeg_audio.c 16962 2006-10-07 15:30:51Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
- *          Gildas Bazin <gbazin@netcourrier.com>
+ *          Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -103,9 +103,11 @@ static int SyncInfo( uint32_t i_header, unsigned int * pi_channels,
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( _("MPEG audio layer I/II/III parser") );
-#if defined(SYS_DARWIN)
-    set_capability( "decoder", 5 );
+    set_description( _("MPEG audio layer I/II/III decoder") );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACODEC );
+#if defined(UNDER_CE)
+   set_capability( "decoder", 5 );
 #else
     set_capability( "decoder", 100 );
 #endif
@@ -130,6 +132,13 @@ static int OpenDecoder( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
 
+    /* HACK: Don't use this codec if we don't have an mpga audio filter */
+    if( p_dec->i_object_type == VLC_OBJECT_DECODER &&
+        !config_FindModule( p_this, "mpgatofixed32" ) )
+    {
+        return VLC_EGENERIC;
+    }
+
     /* Allocate the memory needed to store the decoder's structure */
     if( ( p_dec->p_sys = p_sys =
           (decoder_sys_t *)malloc(sizeof(decoder_sys_t)) ) == NULL )
@@ -147,6 +156,7 @@ static int OpenDecoder( vlc_object_t *p_this )
     /* Set output properties */
     p_dec->fmt_out.i_cat = AUDIO_ES;
     p_dec->fmt_out.i_codec = VLC_FOURCC('m','p','g','a');
+    p_dec->fmt_out.audio.i_rate = 0; /* So end_date gets initialized */
 
     /* Set callback */
     p_dec->pf_decode_audio = (aout_buffer_t *(*)(decoder_t *, block_t **))
@@ -193,7 +203,7 @@ static void *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
         return NULL;
     }
 
-    if( (*pp_block)->i_flags&BLOCK_FLAG_DISCONTINUITY )
+    if( (*pp_block)->i_flags&(BLOCK_FLAG_DISCONTINUITY|BLOCK_FLAG_CORRUPTED) )
     {
         p_sys->i_state = STATE_NOSYNC;
     }
@@ -463,7 +473,7 @@ static uint8_t *GetOutBuffer( decoder_t *p_dec, void **pp_out_buffer )
 
     if( p_dec->fmt_out.audio.i_rate != p_sys->i_rate )
     {
-        msg_Info( p_dec, "MPGA channels:%d samplerate:%d bitrate:%d",
+        msg_Dbg( p_dec, "MPGA channels:%d samplerate:%d bitrate:%d",
                   p_sys->i_channels, p_sys->i_rate, p_sys->i_bit_rate );
 
         aout_DateInit( &p_sys->end_date, p_sys->i_rate );
@@ -480,7 +490,7 @@ static uint8_t *GetOutBuffer( decoder_t *p_dec, void **pp_out_buffer )
     p_dec->fmt_out.audio.i_physical_channels =
         p_sys->i_channels_conf & AOUT_CHAN_PHYSMASK;
 
-    p_dec->fmt_out.i_bitrate = p_sys->i_bit_rate;
+    p_dec->fmt_out.i_bitrate = p_sys->i_bit_rate * 1000;
 
     if( p_sys->b_packetizer )
     {

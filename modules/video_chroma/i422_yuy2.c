@@ -1,8 +1,8 @@
 /*****************************************************************************
  * i422_yuy2.c : YUV to YUV conversion module for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: i422_yuy2.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id: i422_yuy2.c 20505 2007-06-11 11:21:05Z damienf $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -142,7 +142,8 @@ static int Activate( vlc_object_t *p_this )
 static void I422_YUY2( vout_thread_t *p_vout, picture_t *p_source,
                                               picture_t *p_dest )
 {
-    uint8_t *p_line = p_dest->p->p_pixels;
+    uint8_t *p_pixels = p_dest->p->p_pixels;
+    int      i_pitch  = p_dest->p->i_pitch;
     uint8_t *p_y = p_source->Y_PIXELS;
     uint8_t *p_u = p_source->U_PIXELS;
     uint8_t *p_v = p_source->V_PIXELS;
@@ -151,6 +152,7 @@ static void I422_YUY2( vout_thread_t *p_vout, picture_t *p_source,
 
     for( i_y = p_vout->render.i_height ; i_y-- ; )
     {
+	uint8_t *p_line = p_pixels;
         for( i_x = p_vout->render.i_width / 8 ; i_x-- ; )
         {
 #if defined (MODULE_NAME_IS_i422_yuy2)
@@ -159,18 +161,18 @@ static void I422_YUY2( vout_thread_t *p_vout, picture_t *p_source,
             C_YUV422_YUYV( p_line, p_y, p_u, p_v );
             C_YUV422_YUYV( p_line, p_y, p_u, p_v );
 #else
-            __asm__( ".align 8" MMX_YUV422_YUYV
+            __asm__( ".p2align 3" MMX_YUV422_YUYV
                      : : "r" (p_line), "r" (p_y), "r" (p_u), "r" (p_v) ); 
 
-            p_line += 8; p_y += 4; p_u += 2; p_v += 2;
-
-            __asm__( ".align 8" MMX_YUV422_YUYV
-                     : : "r" (p_line), "r" (p_y), "r" (p_u), "r" (p_v) ); 
-
-            p_line += 8; p_y += 4; p_u += 2; p_v += 2;
+            p_line += 16; p_y += 8; p_u += 4; p_v += 4;
 #endif
         }
+	p_pixels += i_pitch;
     }
+#if defined (MODULE_NAME_IS_i422_yuy2_mmx)
+    /* re-enable FPU registers */
+    __asm__ __volatile__ ("emms");
+#endif
 }
 
 /*****************************************************************************
@@ -179,7 +181,8 @@ static void I422_YUY2( vout_thread_t *p_vout, picture_t *p_source,
 static void I422_YVYU( vout_thread_t *p_vout, picture_t *p_source,
                                               picture_t *p_dest )
 {
-    uint8_t *p_line = p_dest->p->p_pixels;
+    uint8_t *p_pixels = p_dest->p->p_pixels;
+    int      i_pitch  = p_dest->p->i_pitch;
     uint8_t *p_y = p_source->Y_PIXELS;
     uint8_t *p_u = p_source->U_PIXELS;
     uint8_t *p_v = p_source->V_PIXELS;
@@ -188,6 +191,7 @@ static void I422_YVYU( vout_thread_t *p_vout, picture_t *p_source,
 
     for( i_y = p_vout->render.i_height ; i_y-- ; )
     {
+	uint8_t *p_line = p_pixels;
         for( i_x = p_vout->render.i_width / 8 ; i_x-- ; )
         {
 #if defined (MODULE_NAME_IS_i422_yuy2)
@@ -196,18 +200,18 @@ static void I422_YVYU( vout_thread_t *p_vout, picture_t *p_source,
             C_YUV422_YVYU( p_line, p_y, p_u, p_v );
             C_YUV422_YVYU( p_line, p_y, p_u, p_v );
 #else
-            __asm__( ".align 8" MMX_YUV422_YVYU
+            __asm__( ".p2align 3" MMX_YUV422_YVYU
                      : : "r" (p_line), "r" (p_y), "r" (p_u), "r" (p_v) ); 
 
-            p_line += 8; p_y += 4; p_u += 2; p_v += 2;
-
-            __asm__( ".align 8" MMX_YUV422_YVYU
-                     : : "r" (p_line), "r" (p_y), "r" (p_u), "r" (p_v) ); 
-
-            p_line += 8; p_y += 4; p_u += 2; p_v += 2;
+            p_line += 16; p_y += 8; p_u += 4; p_v += 4;
 #endif
         }
+	p_pixels += i_pitch;
     }
+#if defined (MODULE_NAME_IS_i422_yuy2_mmx)
+    /* re-enable FPU registers */
+    __asm__ __volatile__ ("emms");
+#endif
 }
 
 /*****************************************************************************
@@ -216,7 +220,8 @@ static void I422_YVYU( vout_thread_t *p_vout, picture_t *p_source,
 static void I422_UYVY( vout_thread_t *p_vout, picture_t *p_source,
                                               picture_t *p_dest )
 {
-    uint8_t *p_line = p_dest->p->p_pixels;
+    uint8_t *p_pixels = p_dest->p->p_pixels;
+    int      i_pitch  = p_dest->p->i_pitch;
     uint8_t *p_y = p_source->Y_PIXELS;
     uint8_t *p_u = p_source->U_PIXELS;
     uint8_t *p_v = p_source->V_PIXELS;
@@ -225,6 +230,7 @@ static void I422_UYVY( vout_thread_t *p_vout, picture_t *p_source,
 
     for( i_y = p_vout->render.i_height ; i_y-- ; )
     {
+	uint8_t *p_line = p_pixels;
         for( i_x = p_vout->render.i_width / 8 ; i_x-- ; )
         {
 #if defined (MODULE_NAME_IS_i422_yuy2)
@@ -233,18 +239,18 @@ static void I422_UYVY( vout_thread_t *p_vout, picture_t *p_source,
             C_YUV422_UYVY( p_line, p_y, p_u, p_v );
             C_YUV422_UYVY( p_line, p_y, p_u, p_v );
 #else
-            __asm__( ".align 8" MMX_YUV422_UYVY
+            __asm__( ".p2align 3" MMX_YUV422_UYVY
                      : : "r" (p_line), "r" (p_y), "r" (p_u), "r" (p_v) ); 
 
-            p_line += 8; p_y += 4; p_u += 2; p_v += 2;
-
-            __asm__( ".align 8" MMX_YUV422_UYVY
-                     : : "r" (p_line), "r" (p_y), "r" (p_u), "r" (p_v) ); 
-
-            p_line += 8; p_y += 4; p_u += 2; p_v += 2;
+            p_line += 16; p_y += 8; p_u += 4; p_v += 4;
 #endif
         }
+	p_pixels += i_pitch;
     }
+#if defined (MODULE_NAME_IS_i422_yuy2_mmx)
+    /* re-enable FPU registers */
+    __asm__ __volatile__ ("emms");
+#endif
 }
 
 /*****************************************************************************
@@ -263,7 +269,7 @@ static void I422_IUYV( vout_thread_t *p_vout, picture_t *p_source,
 static void I422_cyuv( vout_thread_t *p_vout, picture_t *p_source,
                                               picture_t *p_dest )
 {
-    uint8_t *p_line = p_dest->p->p_pixels + p_dest->p->i_lines * p_dest->p->i_pitch;
+    uint8_t *p_line = p_dest->p->p_pixels + p_dest->p->i_visible_lines * p_dest->p->i_pitch;
     uint8_t *p_y = p_source->Y_PIXELS;
     uint8_t *p_u = p_source->U_PIXELS;
     uint8_t *p_v = p_source->V_PIXELS;
@@ -282,18 +288,17 @@ static void I422_cyuv( vout_thread_t *p_vout, picture_t *p_source,
             C_YUV422_UYVY( p_line, p_y, p_u, p_v );
             C_YUV422_UYVY( p_line, p_y, p_u, p_v );
 #else
-            __asm__( ".align 8" MMX_YUV422_UYVY
+            __asm__( ".p2align 3" MMX_YUV422_UYVY
                      : : "r" (p_line), "r" (p_y), "r" (p_u), "r" (p_v) ); 
 
-            p_line += 8; p_y += 4; p_u += 2; p_v += 2;
-
-            __asm__( ".align 8" MMX_YUV422_UYVY
-                     : : "r" (p_line), "r" (p_y), "r" (p_u), "r" (p_v) ); 
-
-            p_line += 8; p_y += 4; p_u += 2; p_v += 2;
+            p_line += 16; p_y += 8; p_u += 4; p_v += 4;
 #endif
         }
     }
+#if defined (MODULE_NAME_IS_i422_yuy2_mmx)
+    /* re-enable FPU registers */
+    __asm__ __volatile__ ("emms");
+#endif
 }
 
 /*****************************************************************************
@@ -303,7 +308,7 @@ static void I422_cyuv( vout_thread_t *p_vout, picture_t *p_source,
 static void I422_Y211( vout_thread_t *p_vout, picture_t *p_source,
                                               picture_t *p_dest )
 {
-    uint8_t *p_line = p_dest->p->p_pixels + p_dest->p->i_lines * p_dest->p->i_pitch;
+    uint8_t *p_line = p_dest->p->p_pixels + p_dest->p->i_visible_lines * p_dest->p->i_pitch;
     uint8_t *p_y = p_source->Y_PIXELS;
     uint8_t *p_u = p_source->U_PIXELS;
     uint8_t *p_v = p_source->V_PIXELS;

@@ -1,12 +1,13 @@
 /*****************************************************************************
  * ipv6.c: IPv6 network abstraction layer
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: ipv6.c 7403 2004-04-21 01:46:41Z hartman $
+ * Copyright (C) 2002-2006 the VideoLAN team
+ * $Id: ipv6.c 18124 2006-11-28 10:37:07Z md $
  *
  * Authors: Alexis Guillard <alexis.guillard@bt.com>
  *          Christophe Massiot <massiot@via.ecp.fr>
  *          Remco Poortinga <poortinga@telin.nl>
+ *          Rémi Denis-Courmont <rem # videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,245 +21,176 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <string.h>
-#include <errno.h>
-#include <fcntl.h>
 
 #include <vlc/vlc.h>
 
-#ifdef HAVE_UNISTD_H
-#   include <unistd.h>
-#elif defined( _MSC_VER ) && defined( _WIN32 )
-#   include <io.h>
-#endif
+#include <errno.h>
 
 #ifdef WIN32
 #   include <winsock2.h>
 #   include <ws2tcpip.h>
-#elif !defined( SYS_BEOS ) && !defined( SYS_NTO )
+#   define if_nametoindex( str ) atoi( str )
+#else
+#   include <sys/types.h>
+#   include <unistd.h>
 #   include <netdb.h>                                         /* hostent ... */
 #   include <sys/socket.h>
 #   include <netinet/in.h>
 #   include <net/if.h>
-#   ifdef HAVE_ARPA_INET_H
-#       include <arpa/inet.h>                    /* inet_ntoa(), inet_aton() */
-#   endif
 #endif
 
 #include "network.h"
 
 #if defined(WIN32)
 static const struct in6_addr in6addr_any = {{IN6ADDR_ANY_INIT}};
-/* the following will have to be removed when w32api defines them */
-#ifndef IPPROTO_IPV6
-#   define IPPROTO_IPV6 41 
+# define close closesocket
 #endif
-#ifndef IPV6_JOIN_GROUP
-#   define IPV6_JOIN_GROUP 12
-#endif
-#ifndef IPV6_MULTICAST_HOPS
-#   define IPV6_MULTICAST_HOPS 10
-#endif
-#ifndef IPV6_UNICAST_HOPS
-#   define IPV6_UNICAST_HOPS 4
-#endif
-#   define close closesocket
+
+#if defined (WIN32) && !defined (MCAST_JOIN_SOURCE_GROUP)
+/* Interim Vista definitions */
+#  define MCAST_JOIN_SOURCE_GROUP 45 /* from <ws2ipdef.h> */
+struct group_source_req
+{
+       uint32_t           gsr_interface;  /* interface index */
+       struct sockaddr_storage gsr_group;      /* group address */
+       struct sockaddr_storage gsr_source;     /* source address */
+};
 #endif
 
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
-static int Open( vlc_object_t * );
+static int OpenUDP( vlc_object_t * );
 
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( _("IPv6 network abstraction layer") );
+    set_description( _("UDP/IPv6 network abstraction layer") );
     set_capability( "network", 40 );
-    set_callbacks( Open, NULL );
+    set_callbacks( OpenUDP, NULL );
 vlc_module_end();
 
 /*****************************************************************************
  * BuildAddr: utility function to build a struct sockaddr_in6
  *****************************************************************************/
-static int BuildAddr( vlc_object_t * p_this, struct sockaddr_in6 * p_socket,
-                      const char * psz_bind_address, int i_port )
+static int BuildAddr( vlc_object_t *p_this, struct sockaddr_in6 *p_socket,
+                      const char *psz_address, int i_port )
 {
-    char * psz_multicast_interface = "";
-    char * psz_backup = strdup(psz_bind_address);
-    char * psz_address = psz_backup;
-
-#if defined(WIN32)
-    /* Try to get getaddrinfo() and freeaddrinfo() from wship6.dll */
-    typedef int (CALLBACK * GETADDRINFO) ( const char *nodename,
-                                            const char *servname,
-                                            const struct addrinfo *hints,
-                                            struct addrinfo **res );
-    typedef void (CALLBACK * FREEADDRINFO) ( struct addrinfo FAR *ai );
-
     struct addrinfo hints, *res;
-    GETADDRINFO _getaddrinfo = NULL;
-    FREEADDRINFO _freeaddrinfo = NULL;
+    int i;
 
-    HINSTANCE wship6_dll = LoadLibrary("wship6.dll");
-    if( wship6_dll )
-    {
-        _getaddrinfo = (GETADDRINFO) GetProcAddress( wship6_dll,
-                                                     "getaddrinfo" );
-        _freeaddrinfo = (FREEADDRINFO) GetProcAddress( wship6_dll,
-                                                       "freeaddrinfo" );
-    }
-    if( !_getaddrinfo || !_freeaddrinfo )
-    {
-        msg_Warn( p_this, "no IPv6 stack installed" );
-        if( wship6_dll ) FreeLibrary( wship6_dll );
-        free( psz_backup );
-        return( -1 );
-    }
-#endif
+    memset( &hints, 0, sizeof( hints ) );
+    hints.ai_family = AF_INET6;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_PASSIVE;
 
-    /* Reset struct */
-    memset( p_socket, 0, sizeof( struct sockaddr_in6 ) );
-    p_socket->sin6_family = AF_INET6;                              /* family */
+    i = vlc_getaddrinfo( p_this, psz_address, 0, &hints, &res );
+    if( i )
+    {
+        msg_Dbg( p_this, "%s: %s", psz_address, vlc_gai_strerror( i ) );
+        return -1;
+    }
+    if ( res->ai_addrlen > sizeof (struct sockaddr_in6) )
+    {
+        vlc_freeaddrinfo( res );
+        return -1;
+    }
+
+    memcpy( p_socket, res->ai_addr, res->ai_addrlen );
+    vlc_freeaddrinfo( res );
     p_socket->sin6_port = htons( i_port );
-    if( !*psz_address )
-    {
-        p_socket->sin6_addr = in6addr_any;
-    }
-    else if( psz_address[0] == '['
-              && psz_address[strlen(psz_address) - 1] == ']' )
-    {
-        psz_address[strlen(psz_address) - 1] = '\0';
-        psz_address++;
 
-        /* see if there is an interface name in there... */
-        if( (psz_multicast_interface = strchr(psz_address, '%')) != NULL )
-        {
-            *psz_multicast_interface = '\0';
-            psz_multicast_interface++;
-            msg_Dbg( p_this, "Interface name specified: \"%s\"",
-                             psz_multicast_interface );
-
-            /* now convert that interface name to an index */
-#if defined( WIN32 )
-            /* FIXME ?? */
-            p_socket->sin6_scope_id = atol(psz_multicast_interface);
-#elif defined( HAVE_IF_NAMETOINDEX )
-            p_socket->sin6_scope_id = if_nametoindex(psz_multicast_interface);
-#endif
-            msg_Dbg( p_this, " = #%i", p_socket->sin6_scope_id );
-        }
-
-#if !defined( WIN32 )
-        inet_pton(AF_INET6, psz_address, &p_socket->sin6_addr.s6_addr); 
-
-#else
-        memset(&hints, 0, sizeof(hints));
-        hints.ai_family = AF_INET6;
-
-        if( _getaddrinfo( psz_address, NULL, &hints, &res ) != 0 )
-        {
-            FreeLibrary( wship6_dll );
-            free( psz_backup );
-            return( -1 );
-        }
-        memcpy( &p_socket->sin6_addr,
-                &((struct sockaddr_in6 *)res->ai_addr)->sin6_addr,
-                sizeof(struct in6_addr) );
-        _freeaddrinfo( res );
-
-#endif
-    }
-    else
-    {
-#ifdef HAVE_GETHOSTBYNAME2
-        struct hostent    * p_hostent;
-
-        /* We have a fqdn, try to find its address */
-        if ( (p_hostent = gethostbyname2( psz_address, AF_INET6 )) == NULL )
-        {
-            msg_Warn( p_this, "IPv6 error: unknown host %s", psz_address );
-            free( psz_backup );
-            return( -1 );
-        }
-
-        /* Copy the first address of the host in the socket address */
-        memcpy( &p_socket->sin6_addr, p_hostent->h_addr_list[0],
-                 p_hostent->h_length );
-
-#elif defined(WIN32)
-        memset(&hints, 0, sizeof(hints));
-        hints.ai_family = AF_INET6;
-
-        if( _getaddrinfo( psz_address, NULL, &hints, &res ) != 0 )
-        {
-            FreeLibrary( wship6_dll );
-            free( psz_backup );
-            return( -1 );
-        }
-        memcpy( &p_socket->sin6_addr,
-                &((struct sockaddr_in6 *)res->ai_addr)->sin6_addr,
-                sizeof(struct in6_addr) );
-        _freeaddrinfo( res );
-
-#else
-        msg_Warn( p_this, "IPv6 error: IPv6 address %s is invalid",
-                 psz_address );
-        free( psz_backup );
-        return( -1 );
-#endif
-    }
-
-#if defined(WIN32)
-    FreeLibrary( wship6_dll );
-#endif
-
-    free( psz_backup );
     return 0;
 }
+
+#if defined(WIN32) || defined(UNDER_CE)
+# define WINSOCK_STRERROR_SIZE 20
+static const char *winsock_strerror( char *buf )
+{
+    snprintf( buf, WINSOCK_STRERROR_SIZE, "Winsock error %d",
+              WSAGetLastError( ) );
+    buf[WINSOCK_STRERROR_SIZE - 1] = '\0';
+    return buf;
+}
+#endif
+
 
 /*****************************************************************************
  * OpenUDP: open a UDP socket
  *****************************************************************************
  * psz_bind_addr, i_bind_port : address and port used for the bind()
  *   system call. If psz_bind_addr == NULL, the socket is bound to
- *   in6addr_any and broadcast reception is enabled. If i_bind_port == 0,
- *   1234 is used. If psz_bind_addr is a multicast (class D) address,
- *   join the multicast group.
+ *   in6addr_any and broadcast reception is enabled. If psz_bind_addr is a
+ *   multicast (FF00::/8) address, join the multicast group.
  * psz_server_addr, i_server_port : address and port used for the connect()
  *   system call. It can avoid receiving packets from unauthorized IPs.
  *   Its use leads to great confusion and is currently discouraged.
  * This function returns -1 in case of error.
  *****************************************************************************/
-static int OpenUDP( vlc_object_t * p_this, network_socket_t * p_socket )
+static int OpenUDP( vlc_object_t * p_this )
 {
-    char * psz_bind_addr = p_socket->psz_bind_addr;
+    network_socket_t *p_socket = p_this->p_private;
+    const char *psz_bind_addr = p_socket->psz_bind_addr;
     int i_bind_port = p_socket->i_bind_port;
-    char * psz_server_addr = p_socket->psz_server_addr;
+    const char *psz_server_addr = p_socket->psz_server_addr;
     int i_server_port = p_socket->i_server_port;
-
     int i_handle, i_opt;
-    socklen_t i_opt_size;
-    struct sockaddr_in6 sock;
+    struct sockaddr_in6 loc, rem;
     vlc_value_t val;
+    vlc_bool_t do_connect = VLC_TRUE;
+#if defined(WIN32) || defined(UNDER_CE)
+    char strerror_buf[WINSOCK_STRERROR_SIZE];
+# define strerror( x ) winsock_strerror( strerror_buf )
+#endif
+
+    p_socket->i_handle = -1;
+
+    /* Build the local socket */
+    if ( BuildAddr( p_this, &loc, psz_bind_addr, i_bind_port )
+    /* Build socket for remote connection */
+      || BuildAddr( p_this, &rem, psz_server_addr, i_server_port ) )
+        return 0;
 
     /* Open a SOCK_DGRAM (UDP) socket, in the AF_INET6 domain, automatic (0)
      * protocol */
     if( (i_handle = socket( AF_INET6, SOCK_DGRAM, 0 )) == -1 )
     {
         msg_Warn( p_this, "cannot create socket (%s)", strerror(errno) );
-        return( -1 );
+        return 0;
     }
+
+#ifdef IPV6_V6ONLY
+    val.i_int = p_socket->v6only;
+
+    if( setsockopt( i_handle, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&val.i_int,
+                    sizeof( val.i_int ) ) )
+    {
+        msg_Warn( p_this, "IPV6_V6ONLY: %s", strerror( errno ) );
+        p_socket->v6only = 1;
+    }
+#else
+    p_socket->v6only = 1;
+#endif
+
+#ifdef WIN32
+# ifndef IPV6_PROTECTION_LEVEL
+#   define IPV6_PROTECTION_LEVEL 23
+#  endif
+    {
+        int i_val = 10 /*PROTECTION_LEVEL_UNRESTRICTED*/;
+        setsockopt( i_handle, IPPROTO_IPV6, IPV6_PROTECTION_LEVEL, &i_val,
+                    sizeof( i_val ) );
+    }
+#endif
 
     /* We may want to reuse an already used socket */
     i_opt = 1;
@@ -268,7 +200,7 @@ static int OpenUDP( vlc_object_t * p_this, network_socket_t * p_socket )
         msg_Warn( p_this, "cannot configure socket (SO_REUSEADDR: %s)",
                          strerror(errno) );
         close( i_handle );
-        return( -1 );
+        return 0;
     }
 
     /* Increase the receive buffer size to 1/2MB (8Mb/s during 1/2s) to avoid
@@ -281,148 +213,162 @@ static int OpenUDP( vlc_object_t * p_this, network_socket_t * p_socket )
                           strerror(errno) );
     }
 
-    /* Check if we really got what we have asked for, because Linux, etc.
-     * will silently limit the max buffer size to net.core.rmem_max which
-     * is typically only 65535 bytes */
-    i_opt = 0;
-    i_opt_size = sizeof( i_opt );
-    if( getsockopt( i_handle, SOL_SOCKET, SO_RCVBUF,
-                    (void*) &i_opt, &i_opt_size ) == -1 )
-    {
-        msg_Warn( p_this, "cannot query socket (SO_RCVBUF: %s)",
-                          strerror(errno) );
-    }
-    else if( i_opt < 0x80000 )
-    {
-        msg_Warn( p_this, "Socket buffer size is 0x%x instead of 0x%x",
-                          i_opt, 0x80000 );
-    }
-
-    /* Build the local socket */
-    if ( BuildAddr( p_this, &sock, psz_bind_addr, i_bind_port ) == -1 )        
-    {
-        close( i_handle );
-        return( -1 );
-    }
-
 #if defined(WIN32)
     /* Under Win32 and for multicasting, we bind to IN6ADDR_ANY */
-    if( IN6_IS_ADDR_MULTICAST(&sock.sin6_addr) )
+    if( IN6_IS_ADDR_MULTICAST(&loc.sin6_addr) )
     {
-        struct sockaddr_in6 sockany = sock;
+        struct sockaddr_in6 sockany = loc;
         sockany.sin6_addr = in6addr_any;
         sockany.sin6_scope_id = 0;
 
         /* Bind it */
-        if( bind( i_handle, (struct sockaddr *)&sockany, sizeof( sock ) ) < 0 )
+        if( bind( i_handle, (struct sockaddr *)&sockany, sizeof( sockany ) ) < 0 )
         {
             msg_Warn( p_this, "cannot bind socket (%s)", strerror(errno) );
             close( i_handle );
-            return( -1 );
+            return 0;
         }
-    } else
+    }
+    else
 #endif
     /* Bind it */
-    if( bind( i_handle, (struct sockaddr *)&sock, sizeof( sock ) ) < 0 )
+    if( bind( i_handle, (struct sockaddr *)&loc, sizeof( loc ) ) < 0 )
     {
         msg_Warn( p_this, "cannot bind socket (%s)", strerror(errno) );
         close( i_handle );
-        return( -1 );
-    }
-
-    /* Allow broadcast reception if we bound on in6addr_any */
-    if( !*psz_bind_addr )
-    {
-        i_opt = 1;
-        if( setsockopt( i_handle, SOL_SOCKET, SO_BROADCAST,
-                        (void*) &i_opt, sizeof( i_opt ) ) == -1 )
-        {
-            msg_Warn( p_this, "IPv6 warning: cannot configure socket "
-                              "(SO_BROADCAST: %s)", strerror(errno) );
-        }
+        return 0;
     }
 
     /* Join the multicast group if the socket is a multicast address */
-#if defined( WIN32 ) || defined( HAVE_IF_NAMETOINDEX )
-    if( IN6_IS_ADDR_MULTICAST(&sock.sin6_addr) )
+    if( IN6_IS_ADDR_MULTICAST(&loc.sin6_addr) )
     {
-        struct ipv6_mreq     imr;
-        int                  res;
+        if (memcmp (&rem.sin6_addr, &in6addr_any, 16)
+         /*&& ((U32_AT (&sock.sin6_addr) & 0xff30ffff) == 0xff300000)*/)
+        {
+#ifndef MCAST_JOIN_SOURCE_GROUP
+            errno = ENOSYS;
+#else
+            struct group_source_req imr;
+            struct sockaddr_in6 *p_sin6;
 
-        imr.ipv6mr_interface = sock.sin6_scope_id;
-        imr.ipv6mr_multiaddr = sock.sin6_addr;
-        res = setsockopt(i_handle, IPPROTO_IPV6, IPV6_JOIN_GROUP, (void*) &imr,
+            memset (&imr, 0, sizeof (imr));
+            imr.gsr_group.ss_family = AF_INET6;
+            imr.gsr_source.ss_family = AF_INET6;
+            p_sin6 = (struct sockaddr_in6 *)&imr.gsr_group;
+            p_sin6->sin6_addr = loc.sin6_addr;
+            p_sin6 = (struct sockaddr_in6 *)&imr.gsr_source;
+            p_sin6->sin6_addr = rem.sin6_addr;
+
+            msg_Dbg( p_this, "MCAST_JOIN_SOURCE_GROUP multicast request" );
+            if( setsockopt( i_handle, IPPROTO_IPV6, MCAST_JOIN_SOURCE_GROUP,
+                           (void *)&imr, sizeof(struct group_source_req) ) == 0 )
+                do_connect = VLC_FALSE;
+            else
+#endif
+            {
+
+                msg_Err( p_this, "Source specific multicast failed (%s) -"
+                          " check if your OS really supports MLDv2",
+                          strerror(errno) );
+                goto mldv1;
+            }
+        }
+        else
+mldv1:
+        {
+            struct ipv6_mreq     imr;
+
+            memset (&imr, 0, sizeof (imr));
+            imr.ipv6mr_interface = loc.sin6_scope_id;
+            imr.ipv6mr_multiaddr = loc.sin6_addr;
+            msg_Dbg( p_this, "IPV6_JOIN_GROUP multicast request" );
+            if (setsockopt(i_handle, IPPROTO_IPV6, IPV6_JOIN_GROUP, (void*) &imr,
 #if defined(WIN32)
-                         sizeof(imr) + 4); /* Doesn't work without this */
+                         sizeof(imr) + 4
+            /* Doesn't work without this
+             * - Really? because it's really a buffer overflow... */
 #else
-                         sizeof(imr));
+                         sizeof(imr)
 #endif
-
-        if( res == -1 )
-        {
-            msg_Err( p_this, "cannot join multicast group" );
-        } 
+                          ))
+            {
+                msg_Err( p_this, "cannot join multicast group" );
+                close( i_handle );
+                return 0;
+            }
+        }
     }
-#else
-    msg_Warn( p_this, "Multicast IPv6 is not supported on your OS" );
+
+#if !defined (__linux__) && !defined (WIN32)
+    else
 #endif
 
-
-    if( *psz_server_addr )
+    if( memcmp (&rem.sin6_addr, &in6addr_any, 16) )
     {
-        int ttl = p_socket->i_ttl;
-        if( ttl < 1 )
-        {
-            ttl = config_GetInt( p_this, "ttl" );
-        }
-        if( ttl < 1 ) ttl = 1;
-
-        /* Build socket for remote connection */
-        if ( BuildAddr( p_this, &sock, psz_server_addr, i_server_port ) == -1 )
-        {
-            msg_Warn( p_this, "cannot build remote address" );
-            close( i_handle );
-            return( -1 );
-        }
+        int ttl;
 
         /* Connect the socket */
-        if( connect( i_handle, (struct sockaddr *) &sock,
-                     sizeof( sock ) ) == (-1) )
+        if( do_connect
+         && connect( i_handle, (struct sockaddr *) &rem, sizeof( rem ) ) )
         {
             msg_Warn( p_this, "cannot connect socket (%s)", strerror(errno) );
             close( i_handle );
-            return( -1 );
+            return 0;
         }
 
         /* Set the time-to-live */
-        if( ttl > 1 )
+        ttl = p_socket->i_ttl;
+        if( ttl <= 0 )
+            ttl = config_GetInt( p_this, "ttl" );
+
+        if( ttl > 0 )
         {
-#if defined( WIN32 ) || defined( HAVE_IF_NAMETOINDEX )
-            if( IN6_IS_ADDR_MULTICAST(&sock.sin6_addr) )
+            if( IN6_IS_ADDR_MULTICAST(&rem.sin6_addr) )
             {
                 if( setsockopt( i_handle, IPPROTO_IPV6, IPV6_MULTICAST_HOPS,
                                 (void *)&ttl, sizeof( ttl ) ) < 0 )
                 {
-#ifdef HAVE_ERRNO_H
                     msg_Err( p_this, "failed to set multicast ttl (%s)",
                              strerror(errno) );
-#else
-                    msg_Err( p_this, "failed to set multicast ttl" );
-#endif
                 }
             }
             else
-#endif
             {
                 if( setsockopt( i_handle, IPPROTO_IPV6, IPV6_UNICAST_HOPS,
                                 (void *)&ttl, sizeof( ttl ) ) < 0 )
                 {
-#ifdef HAVE_ERRNO_H
                     msg_Err( p_this, "failed to set unicast ttl (%s)",
                               strerror(errno) );
-#else
-                    msg_Err( p_this, "failed to set unicast ttl" );
-#endif
+                }
+            }
+        }
+
+        /* Set multicast output interface */
+        if( IN6_IS_ADDR_MULTICAST(&rem.sin6_addr) )
+        {
+            char *psz_mif = config_GetPsz( p_this, "miface" );
+            if( psz_mif != NULL )
+            {
+                int intf = if_nametoindex( psz_mif );
+                free( psz_mif  );
+
+                if( intf != 0 )
+                {
+                    if( setsockopt( i_handle, IPPROTO_IPV6, IPV6_MULTICAST_IF,
+                        &intf, sizeof( intf ) ) < 0 )
+                    {
+                        msg_Err( p_this, "%s as multicast interface: %s",
+                                 psz_mif, strerror(errno) );
+                        close( i_handle );
+                        return 0;
+                    }
+                }
+                else
+                {
+                    msg_Err( p_this, "%s: bad IPv6 interface specification",
+                             psz_mif );
+                    close( i_handle );
+                    return 0;
                 }
             }
         }
@@ -434,73 +380,5 @@ static int OpenUDP( vlc_object_t * p_this, network_socket_t * p_socket )
     var_Get( p_this, "mtu", &val );
     p_socket->i_mtu = val.i_int;
 
-    return( 0 );
-}
-
-/*****************************************************************************
- * OpenTCP: open a TCP socket
- *****************************************************************************
- * psz_server_addr, i_server_port : address and port used for the connect()
- *   system call. If i_server_port == 0, 80 is used.
- * Other parameters are ignored.
- * This function returns -1 in case of error.
- *****************************************************************************/
-static int OpenTCP( vlc_object_t * p_this, network_socket_t * p_socket )
-{
-    char * psz_server_addr = p_socket->psz_server_addr;
-    int i_server_port = p_socket->i_server_port;
-
-    int i_handle;
-    struct sockaddr_in6 sock;
-
-    if( i_server_port == 0 )
-    {
-        i_server_port = 80;
-    }
-
-    /* Open a SOCK_STREAM (TCP) socket, in the AF_INET6 domain, automatic (0)
-     * protocol */
-    if( (i_handle = socket( AF_INET6, SOCK_STREAM, 0 )) == -1 )
-    {
-        msg_Warn( p_this, "cannot create socket (%s)", strerror(errno) );
-        return( -1 );
-    }
-
-    /* Build remote address */
-    if ( BuildAddr( p_this, &sock, psz_server_addr, i_server_port ) == -1 )
-    {
-        close( i_handle );
-        return( -1 );
-    }
-
-    /* Connect the socket */
-    if( connect( i_handle, (struct sockaddr *) &sock,
-                 sizeof( sock ) ) == (-1) )
-    {
-        msg_Warn( p_this, "cannot connect socket (%s)", strerror(errno) );
-        close( i_handle );
-        return( -1 );
-    }
-
-    p_socket->i_handle = i_handle;
-    p_socket->i_mtu = 0; /* There is no MTU notion in TCP */
-
-    return( 0 );
-}
-
-/*****************************************************************************
- * Open: wrapper around OpenUDP and OpenTCP
- *****************************************************************************/
-static int Open( vlc_object_t * p_this )
-{
-    network_socket_t * p_socket = p_this->p_private;
-
-    if( p_socket->i_type == NETWORK_UDP )
-    {
-        return OpenUDP( p_this, p_socket );
-    }
-    else
-    {
-        return OpenTCP( p_this, p_socket );
-    }
+    return 0;
 }

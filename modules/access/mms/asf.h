@@ -1,8 +1,8 @@
 /*****************************************************************************
  * asf.h: MMS access plug-in
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: asf.h 7058 2004-03-13 05:09:51Z fenrir $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: asf.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /****************************************************************************
@@ -32,7 +32,7 @@
 #define ASF_STREAM_AUDIO    0x0002
 #define ASF_STREAM_UNKNOWN  0xffff
 
-typedef struct asf_stream_s
+typedef struct
 {
     int i_cat;      /* ASF_STREAM_VIDEO, ASF_STREAM_AUDIO */
     int i_bitrate;  /* -1 if unknown */
@@ -130,4 +130,18 @@ static const guid_t asf_object_bitrate_mutual_exclusion_guid =
     { 0x90,0x34,0x00,0xA0,0xC9,0x03,0x49,0xBE }
 };
 
+static const guid_t asf_object_extended_stream_properties_guid =
+{
+    0x14E6A5CB,
+    0xC672,
+    0x4332,
+    { 0x83, 0x99, 0xA9, 0x69, 0x52, 0x06, 0x5B, 0x5A }
+};
 
+static const guid_t asf_object_header_extension_guid =
+{
+    0x5FBF03B5,
+    0xA92E,
+    0x11CF,
+    { 0x8E, 0xE3, 0x00, 0xC0, 0x0C, 0x20, 0x53, 0x65 }
+};

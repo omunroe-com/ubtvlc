@@ -1,8 +1,8 @@
 /*****************************************************************************
  * drms.h : DRMS
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: drms.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: drms.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Author: Jon Lech Johansen <jon-vl@nanocrew.net>
  *
@@ -18,8 +18,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
+
+#ifndef _VLC_DRMS_H
+#define _VLC_DRMS_H 1
 
 extern void *drms_alloc( char *psz_homedir );
 extern void drms_free( void *p_drms );
@@ -28,3 +31,4 @@ extern int drms_init( void *p_drms, uint32_t i_type,
 extern void drms_decrypt( void *p_drms, uint32_t *p_buffer,
                           uint32_t i_len );
 
+#endif

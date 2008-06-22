@@ -1,10 +1,10 @@
 /*****************************************************************************
  * demux.c: demux functions for dvdplay.
  *****************************************************************************
- * Copyright (C) 1998-2001 VideoLAN
- * $Id: demux.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1998-2001 the VideoLAN team
+ * $Id: demux.c 14118 2006-02-01 18:06:48Z courmisch $
  *
- * Author: Stéphane Borel <stef@via.ecp.fr>
+ * Author: StÃ©phane Borel <stef@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -31,8 +31,6 @@
 #include <vlc/vlc.h>
 #include <vlc/input.h>
 #include <vlc/intf.h>
-
-#include "../../demux/mpeg/system.h"
 
 #ifdef HAVE_UNISTD_H
 #   include <unistd.h>
@@ -72,15 +70,15 @@ struct demux_sys_t
 };
 
 /*****************************************************************************
- * InitVCD: initializes structures
+ * VCDInit: initializes structures
  *****************************************************************************/
-int E_(InitVCD) ( vlc_object_t *p_this )
+int E_(VCDInit) ( vlc_object_t *p_this )
 {
     input_thread_t *p_input = (input_thread_t *)p_this;
-    vcd_data_t *    p_vcd = (vcd_data_t *)p_input->p_access_data;
+    vcd_data_t *    p_vcd = (vcd_data_t *)p_input->p_sys;
     demux_sys_t *   p_demux;
 
-    printf("++++ InitVCD CALLED\n");
+    printf("++++ VCDInit CALLED\n");
     
 
     if( p_input->stream.i_method != INPUT_METHOD_VCD )
@@ -115,9 +113,9 @@ int E_(InitVCD) ( vlc_object_t *p_this )
 }
 
 /*****************************************************************************
- * EndVCD: frees unused data
+ * VCDEnd: frees unused data
  *****************************************************************************/
-void E_(EndVCD) ( vlc_object_t *p_this )
+void E_(VCDEnd) ( vlc_object_t *p_this )
 {
     input_thread_t *p_input = (input_thread_t *)p_this;
     vcd_data_t *    p_vcd = p_input->p_demux_data->p_vcd;
@@ -178,7 +176,7 @@ static int Demux( input_thread_t * p_input )
         pgrm_descriptor_t * p_pgrm;
 
         /* when we receive still_time flag, we have to pause immediately */
-        input_SetStatus( p_input, INPUT_STATUS_PAUSE );
+        var_SetInteger( p_input, "state", PAUSE_S );
 
         vcdIntfStillTime( p_vcd->p_intf, p_vcd->i_still_time );
         p_vcd->i_still_time = 0;

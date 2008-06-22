@@ -1,11 +1,11 @@
 /*****************************************************************************
  * cmd_input.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_input.cpp 7707 2004-05-17 20:48:39Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_input.cpp 14118 2006-02-01 18:06:48Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <vlc/aout.h>
 #include "cmd_input.hpp"
+#include "cmd_dialogs.hpp"
 
 
 void CmdPlay::execute()
@@ -34,7 +35,16 @@ void CmdPlay::execute()
         return;
     }
 
-    playlist_Play( pPlaylist );
+    if( pPlaylist->i_size )
+    {
+        playlist_Play( pPlaylist );
+    }
+    else
+    {
+        // If the playlist is empty, open a file requester instead
+        CmdDlgFile cmd( getIntf() );
+        cmd.execute();
+    }
 }
 
 
@@ -97,5 +107,17 @@ void CmdFaster::execute()
 void CmdMute::execute()
 {
     aout_VolumeMute( getIntf(), NULL );
+}
+
+
+void CmdVolumeUp::execute()
+{
+    aout_VolumeUp( getIntf(), 1, NULL );
+}
+
+
+void CmdVolumeDown::execute()
+{
+    aout_VolumeDown( getIntf(), 1, NULL );
 }
 

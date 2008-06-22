@@ -1,11 +1,11 @@
 /*****************************************************************************
  * top_window.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: top_window.cpp 7267 2004-04-03 20:17:06Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: top_window.cpp 16773 2006-09-21 18:46:25Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "top_window.hpp"
@@ -28,13 +28,15 @@
 #include "os_window.hpp"
 #include "os_factory.hpp"
 #include "theme.hpp"
-#include "dialogs.hpp"
 #include "var_manager.hpp"
 #include "../commands/cmd_on_top.hpp"
+#include "../commands/cmd_dialogs.hpp"
 #include "../controls/ctrl_generic.hpp"
+#include "../events/evt_refresh.hpp"
 #include "../events/evt_enter.hpp"
 #include "../events/evt_focus.hpp"
 #include "../events/evt_leave.hpp"
+#include "../events/evt_menu.hpp"
 #include "../events/evt_motion.hpp"
 #include "../events/evt_mouse.hpp"
 #include "../events/evt_key.hpp"
@@ -48,12 +50,11 @@
 
 TopWindow::TopWindow( intf_thread_t *pIntf, int left, int top,
                       WindowManager &rWindowManager,
-                      bool dragDrop, bool playOnDrop ):
-    GenericWindow( pIntf, left, top, dragDrop, playOnDrop,
-                   NULL),
-    m_rWindowManager( rWindowManager ), m_pActiveLayout( NULL ),
-    m_pLastHitControl( NULL ), m_pCapturingControl( NULL ),
-    m_pFocusControl( NULL ), m_currModifier( 0 )
+                      bool dragDrop, bool playOnDrop, bool visible ):
+    GenericWindow( pIntf, left, top, dragDrop, playOnDrop, NULL ),
+    m_visible( visible ), m_rWindowManager( rWindowManager ),
+    m_pActiveLayout( NULL ), m_pLastHitControl( NULL ),
+    m_pCapturingControl( NULL ), m_pFocusControl( NULL ), m_currModifier( 0 )
 {
     // Register as a moving window
     m_rWindowManager.registerWindow( *this );
@@ -67,9 +68,41 @@ TopWindow::~TopWindow()
 }
 
 
+void TopWindow::processEvent( EvtRefresh &rEvtRefresh )
+{
+    // We override the behaviour defined in GenericWindow, because we don't
+    // want to draw on a video control!
+    if( m_pActiveLayout == NULL )
+    {
+        GenericWindow::processEvent( rEvtRefresh );
+    }
+    else
+    {
+        m_pActiveLayout->refreshRect( rEvtRefresh.getXStart(),
+                                      rEvtRefresh.getYStart(),
+                                      rEvtRefresh.getWidth(),
+                                      rEvtRefresh.getHeight() );
+    }
+}
+
+
 void TopWindow::processEvent( EvtFocus &rEvtFocus )
 {
-//    fprintf(stderr, rEvtFocus.getAsString().c_str()) ;
+//    fprintf(stderr, rEvtFocus.getAsString().c_str());
+}
+
+
+void TopWindow::processEvent( EvtMenu &rEvtMenu )
+{
+    Popup *pPopup = m_rWindowManager.getActivePopup();
+    // We should never receive a menu event when there is no active popup!
+    if( pPopup == NULL )
+    {
+        msg_Warn( getIntf(), "unexpected menu event, ignoring" );
+        return;
+    }
+
+    pPopup->handleEvent( rEvtMenu );
 }
 
 
@@ -183,20 +216,17 @@ void TopWindow::processEvent( EvtKey &rEvtKey )
     // Only do the action when the key is down
     if( rEvtKey.getAsString().find( "key:down") != string::npos )
     {
-        //XXX not to be hardcoded !
+        //XXX not to be hardcoded!
         // Ctrl-S = Change skin
         if( (rEvtKey.getMod() & EvtInput::kModCtrl) &&
             rEvtKey.getKey() == 's' )
         {
-            Dialogs *pDialogs = Dialogs::instance( getIntf() );
-            if( pDialogs != NULL )
-            {
-                pDialogs->showChangeSkin();
-            }
+            CmdDlgChangeSkin cmd( getIntf() );
+            cmd.execute();
             return;
         }
 
-        //XXX not to be hardcoded !
+        //XXX not to be hardcoded!
         // Ctrl-T = Toggle on top
         if( (rEvtKey.getMod() & EvtInput::kModCtrl) &&
             rEvtKey.getKey() == 't' )
@@ -292,12 +322,30 @@ void TopWindow::refresh( int left, int top, int width, int height )
 
 void TopWindow::setActiveLayout( GenericLayout *pLayout )
 {
+    bool isVisible = getVisibleVar().get();
+    if( m_pActiveLayout )
+    {
+        if( isVisible )
+        {
+            m_pActiveLayout->onHide();
+        }
+        // The current layout becomes inactive
+        m_pActiveLayout->getActiveVar().set( false );
+    }
+
     pLayout->setWindow( this );
     m_pActiveLayout = pLayout;
     // Get the size of the layout and resize the window
     resize( pLayout->getWidth(), pLayout->getHeight() );
+
     updateShape();
-    pLayout->refreshAll();
+    if( isVisible )
+    {
+        pLayout->onShow();
+    }
+
+    // The new layout is active
+    pLayout->getActiveVar().set( true );
 }
 
 
@@ -313,13 +361,25 @@ void TopWindow::innerShow()
     if( m_pActiveLayout )
     {
         updateShape();
-        m_pActiveLayout->refreshAll();
+        m_pActiveLayout->onShow();
     }
     // Show the window
     GenericWindow::innerShow();
 }
 
- 
+
+void TopWindow::innerHide()
+{
+    if( m_pActiveLayout )
+    {
+        // Notify the active layout
+        m_pActiveLayout->onHide();
+    }
+    // Hide the window
+    GenericWindow::innerHide();
+}
+
+
 void TopWindow::updateShape()
 {
     // Set the shape of the window
@@ -350,7 +410,7 @@ void TopWindow::onControlRelease( const CtrlGeneric &rCtrl )
     }
     else
     {
-        msg_Dbg( getIntf(), "Control had not captured the mouse" );
+        msg_Dbg( getIntf(), "control had not captured the mouse" );
     }
 
     // Send an enter event to the control under the mouse, if it doesn't
@@ -379,9 +439,18 @@ void TopWindow::onTooltipChange( const CtrlGeneric &rCtrl )
     // Check that the control is the active one
     if( m_pLastHitControl && m_pLastHitControl == &rCtrl )
     {
-        // Set the tooltip text variable
-        VarManager *pVarManager = VarManager::instance( getIntf() );
-        pVarManager->getTooltipText().set( rCtrl.getTooltipText() );
+        if( rCtrl.getTooltipText().size() )
+        {
+            // Set the tooltip text variable
+            VarManager *pVarManager = VarManager::instance( getIntf() );
+            pVarManager->getTooltipText().set( rCtrl.getTooltipText() );
+            m_rWindowManager.showTooltip();
+        }
+        else
+        {
+            // Nothing to display, so hide the tooltip
+            m_rWindowManager.hideTooltip();
+        }
     }
 }
 
@@ -421,7 +490,7 @@ CtrlGeneric *TopWindow::findHitControl( int xPos, int yPos )
         }
         else
         {
-            msg_Dbg( getIntf(), "Control at NULL position" );
+            msg_Dbg( getIntf(), "control at NULL position" );
         }
     }
 

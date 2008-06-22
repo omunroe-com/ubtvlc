@@ -1,11 +1,11 @@
 /*****************************************************************************
  * generic_layout.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: generic_layout.hpp 7228 2004-04-01 21:04:43Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: generic_layout.hpp 16647 2006-09-14 14:58:57Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef GENERIC_LAYOUT_HPP
@@ -35,6 +35,8 @@
 class Anchor;
 class OSGraphics;
 class CtrlGeneric;
+class CtrlVideo;
+class VarBoolImpl;
 
 
 /// Control and its associated layer
@@ -75,6 +77,9 @@ class GenericLayout: public SkinObject, public Box
         /// Refresh the window
         virtual void refreshAll();
 
+        /// Refresh a rectangular portion of the window
+        virtual void refreshRect( int x, int y, int width, int height );
+
         /// Get the image of the layout
         virtual OSGraphics *getImage() const { return m_pImage; }
 
@@ -95,8 +100,10 @@ class GenericLayout: public SkinObject, public Box
         /// Resize the layout
         virtual void resize( int width, int height );
 
-        /// Add a control in the layout at the given position, and
-        /// the optional given layer
+        /**
+         * Add a control in the layout at the given position, and
+         * the optional given layer
+         */
         virtual void addControl( CtrlGeneric *pControl,
                                  const Position &rPosition,
                                  int layer );
@@ -105,13 +112,30 @@ class GenericLayout: public SkinObject, public Box
         virtual const list<LayeredControl> &getControlList() const;
 
         /// Called by a control when its image has changed
-        virtual void onControlUpdate( const CtrlGeneric &rCtrl );
+        /**
+         * The arguments indicate the size of the rectangle to refresh,
+         * and the offset (from the control position) of this rectangle.
+         * Use a negative width or height to refresh the layout completely
+         */
+        virtual void onControlUpdate( const CtrlGeneric &rCtrl,
+                                      int width, int height,
+                                      int xOffSet, int yOffSet );
 
         /// Get the list of the anchors of this layout
         virtual const list<Anchor*>& getAnchorList() const;
 
         /// Add an anchor to this layout
         virtual void addAnchor( Anchor *pAnchor );
+
+        /// Called when the layout is shown
+        virtual void onShow();
+
+        /// Called when the layout is hidden
+        virtual void onHide();
+
+        /// Give access to the "active layout" variable
+        // FIXME: we give read/write access
+        VarBoolImpl &getActiveVar() { return *m_pVarActive; }
 
     private:
         /// Parent window of the layout
@@ -124,8 +148,19 @@ class GenericLayout: public SkinObject, public Box
         OSGraphics *m_pImage;
         /// List of the controls in the layout
         list<LayeredControl> m_controlList;
+        //// Video control
+        CtrlVideo *m_pVideoControl;
         /// List of the anchors in the layout
         list<Anchor*> m_anchorList;
+        /// Flag to know if the layout is visible
+        bool m_visible;
+        /// Variable for the "active state" of the layout
+        /**
+         * Note: the layout is not an observer on this variable, because it
+         * cannot be changed externally (i.e. without an explicit change of
+         * layout). This way, we avoid using a setActiveLayoutInner method.
+         */
+        mutable VarBoolImpl *m_pVarActive;
 };
 
 

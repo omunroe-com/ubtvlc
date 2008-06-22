@@ -1,11 +1,11 @@
 /*****************************************************************************
  * playlist.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: playlist.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: playlist.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +19,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef PLAYLIST_HPP
 #define PLAYLIST_HPP
 
 #include "../utils/var_list.hpp"
-
-#ifndef iconv_t
-#  define iconv_t libiconv_t
-   typedef void* iconv_t;
-#endif
 
 /// Variable for VLC playlist
 class Playlist: public VarList
@@ -51,14 +46,9 @@ class Playlist: public VarList
     private:
         /// VLC playlist object
         playlist_t *m_pPlaylist;
-        /// Iconv handle
-        iconv_t iconvHandle;
 
         /// Build the list from the VLC playlist
         void buildList();
-
-        /// Convert a string to UTF8 from the current encoding
-        UString *convertName( const char *pName );
 };
 
 

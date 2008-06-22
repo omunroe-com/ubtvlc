@@ -1,10 +1,10 @@
 /*****************************************************************************
  * old.c : Old playlist format import
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: old.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: old.c 16994 2006-10-08 14:40:02Z jpsaman $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -27,7 +27,9 @@
 #include <stdlib.h>                                      /* malloc(), free() */
 
 #include <vlc/vlc.h>
+#include <vlc/input.h>
 #include <vlc/intf.h>
+#include "charset.h"
 
 #include <errno.h>                                                 /* ENOMEM */
 
@@ -36,35 +38,33 @@
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
-int Import_Old ( vlc_object_t * );
 static int Demux( demux_t *p_demux);
 static int Control( demux_t *p_demux, int i_query, va_list args );
 
 /*****************************************************************************
  * Import_Old : main import function
  *****************************************************************************/
-int Import_Old( vlc_object_t *p_this )
+int E_(Import_Old)( vlc_object_t *p_this )
 {
     demux_t *p_demux = (demux_t *)p_this;
     uint8_t *p_peek;
 
-    if( stream_Peek( p_demux->s, &p_peek, 31 ) < 31 )
-    {
-        msg_Err( p_demux, "cannot peek" );
-        return VLC_EGENERIC;
-    }
+    if( stream_Peek( p_demux->s, &p_peek, 31 ) < 31 ) return VLC_EGENERIC;
 
-    if( strncmp( p_peek, PLAYLIST_FILE_HEADER , 31 ) )
-    {
-        msg_Warn(p_demux, "old import module discarded: invalid file");
-        return VLC_EGENERIC;
-    }
+    if( strncmp( (char *)p_peek, PLAYLIST_FILE_HEADER , 31 ) ) return VLC_EGENERIC;
+
     msg_Dbg( p_demux, "found valid old playlist file");
 
     p_demux->pf_control = Control;
     p_demux->pf_demux = Demux;
 
     return VLC_SUCCESS;
+}
+
+void E_(Close_Old)( vlc_object_t *p_this )
+{
+    demux_t *p_demux = (demux_t *)p_this;
+    msg_Dbg( p_demux, "close old playlist file" );
 }
 
 static int Demux( demux_t *p_demux)
@@ -74,7 +74,7 @@ static int Demux( demux_t *p_demux)
     playlist_t *p_playlist;
 
     p_playlist = (playlist_t*)vlc_object_find( p_demux,
-                         VLC_OBJECT_PLAYLIST, FIND_PARENT );
+                         VLC_OBJECT_PLAYLIST, FIND_ANYWHERE );
     if( !p_playlist )
     {
         msg_Err( p_demux, "cannot attach playlist" );
@@ -84,6 +84,8 @@ static int Demux( demux_t *p_demux)
     p_playlist->pp_items[p_playlist->i_index]->b_autodeletion = VLC_TRUE;
     while( ( psz_line = stream_ReadLine( p_demux->s) ) != NULL )
     {
+        char *psz_unicode;
+
         if( ( psz_line[0] == '#' ) || (psz_line[0] == '\r') ||
             ( psz_line[0] == '\n') || (psz_line[0] == (char)0) )
         {
@@ -97,10 +99,13 @@ static int Demux( demux_t *p_demux)
             if( psz_line[strlen(psz_line) - 1 ] == '\r' )
                 psz_line[strlen(psz_line) - 1 ] = (char)0;
         }
-        playlist_Add( p_playlist, psz_line, psz_line, PLAYLIST_APPEND,
+
+        psz_unicode = FromLocale( psz_line );
+        playlist_Add( p_playlist, psz_unicode, psz_unicode, PLAYLIST_APPEND,
                       PLAYLIST_END );
 
         free( psz_line );
+        LocaleFree( psz_line );
     }
 
     p_demux->b_die = VLC_TRUE;

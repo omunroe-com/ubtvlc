@@ -1,8 +1,8 @@
 /*****************************************************************************
  * file.c : audio output which writes the samples to a file
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: file.c 7522 2004-04-27 16:35:15Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: file.c 17012 2006-10-09 22:11:32Z xtophe $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -31,6 +31,7 @@
 
 #include <vlc/vlc.h>
 #include <vlc/aout.h>
+#include "charset.h"
 
 #include "aout_internal.h"
 #include "codecs.h"
@@ -81,13 +82,13 @@ static void    Play        ( aout_instance_t * );
 #define FORMAT_LONGTEXT N_("One of \"u8\", \"s8\", \"u16\", \"s16\", " \
     "\"u16_le\", \"s16_le\", \"u16_be\", \"s16_be\", \"fixed32\", " \
     "\"float32\" or \"spdif\"")
-#define CHANNELS_TEXT N_("Output channels number")
+#define CHANNELS_TEXT N_("Number of output channels")
 #define CHANNELS_LONGTEXT N_("By default, all the channels of the incoming " \
     "will be saved but you can restrict the number of channels here.")
 
-#define WAV_TEXT N_("Add wave header")
+#define WAV_TEXT N_("Add WAVE header")
 #define WAV_LONGTEXT N_("Instead of writing a raw file, you can add a WAV " \
-                        "header to the file")
+                        "header to the file.")
 
 static char *format_list[] = { "u8", "s8", "u16", "s16", "u16_le", "s16_le",
                                "u16_be", "s16_be", "fixed32", "float32",
@@ -104,10 +105,13 @@ static int format_int[] = { VLC_FOURCC('u','8',' ',' '),
                             VLC_FOURCC('s','p','i','f') };
 
 #define FILE_TEXT N_("Output file")
-#define FILE_LONGTEXT N_("File to which the audio samples will be written to")
+#define FILE_LONGTEXT N_("File to which the audio samples will be written to.")
 
 vlc_module_begin();
-    set_description( N_("File audio output") );
+    set_description( _("File audio output") );
+    set_shortname( _("File") );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_AOUT );
 
     add_string( "audiofile-format", "s16", NULL,
                 FORMAT_TEXT, FORMAT_LONGTEXT, VLC_TRUE );
@@ -153,7 +157,7 @@ static int Open( vlc_object_t * p_this )
         return VLC_EGENERIC;
     }
 
-    p_aout->output.p_sys->p_file = fopen( psz_name, "wb" );
+    p_aout->output.p_sys->p_file = utf8_fopen( psz_name, "wb" );
     free( psz_name );
     if ( p_aout->output.p_sys->p_file == NULL )
     {

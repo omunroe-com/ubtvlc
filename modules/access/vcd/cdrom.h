@@ -1,8 +1,8 @@
 /****************************************************************************
  * cdrom.h: cdrom tools header
  *****************************************************************************
- * Copyright (C) 1998-2001 VideoLAN
- * $Id: cdrom.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1998-2001 the VideoLAN team
+ * $Id: cdrom.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Johan Bilien <jobi@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #define CDDA_TYPE 0
@@ -71,7 +71,7 @@ typedef struct msf_s
  *****************************************************************************/
 typedef struct entries_sect_s
 {
-    uint8_t psz_id[8];                              /* "ENTRYVCD" */
+    char psz_id[8];                                 /* "ENTRYVCD" */
     uint8_t i_version;                              /* 0x02 VCD2.0
                                                        0x01 SVCD  */
     uint8_t i_sys_prof_tag;                         /* 0x01 if VCD1.1

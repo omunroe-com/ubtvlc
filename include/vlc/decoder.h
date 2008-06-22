@@ -1,8 +1,8 @@
 /*****************************************************************************
  * decoder.h: header for vlc decoders
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: decoder.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: decoder.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef _VLC_DECODER_H
@@ -35,8 +35,6 @@ extern "C" {
  * Required internal headers
  *****************************************************************************/
 #include "vlc_block.h"
-#include "stream_control.h"
-#include "input_ext-dec.h"
 #include "vlc_video.h"
 #include "audio_output.h"
 #include "vlc_codec.h"

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * expr_evaluator.hpp
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: expr_evaluator.hpp 7561 2004-04-29 22:09:23Z asmax $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: expr_evaluator.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef EXPR_EVALUATOR_HPP

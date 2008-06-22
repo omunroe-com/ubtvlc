@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ListViews.h: BeOS interface list view class prototype
  *****************************************************************************
- * Copyright (C) 1999, 2000, 2001 VideoLAN
- * $Id: ListViews.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999, 2000, 2001 the VideoLAN team
+ * $Id: ListViews.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Stephan Aßmus <stippi@yellowbites.com>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef LIST_VIEWS_H
@@ -113,9 +113,9 @@ class DragSortableListView : public BListView
 class PlaylistView : public DragSortableListView
 {
  public:
-							PlaylistView( BRect frame,
+							PlaylistView( intf_thread_t * p_intf,
+							              BRect frame,
 										  InterfaceWindow* mainWindow,
-										  VlcWrapper* wrapper,
 										  BMessage* selectionChangeMessage = NULL );
 							~PlaylistView();
 
@@ -154,14 +154,14 @@ class PlaylistView : public DragSortableListView
 			BListItem*		_PlayingItem() const;
 			void			_SetPlayingIndex( BListItem* item );
 
+    intf_thread_t * p_intf;
+
 	int32					fCurrentIndex;
 	bool					fPlaying;
 	uint32					fDisplayMode;
 	InterfaceWindow*		fMainWindow;
 	BMessage*				fSelectionChangeMessage;
 	PlaylistItem*			fLastClickedItem;
-	
-	VlcWrapper*				fVlcWrapper;
 };
 
 #endif // LIST_VIEWS_H

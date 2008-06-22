@@ -1,8 +1,8 @@
 /*****************************************************************************
  * applescript.m: MacOS X AppleScript support
  *****************************************************************************
- * Copyright (C) 2002-2003 VideoLAN
- * $Id: applescript.m 7168 2004-03-25 20:25:04Z hartman $
+ * Copyright (C) 2002-2003 the VideoLAN team
+ * $Id: applescript.m 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Derk-Jan Hartman <thedj@users.sourceforge.net>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -41,7 +41,7 @@
 
     if ( [o_command isEqualToString:@"GetURL"] || [o_command isEqualToString:@"OpenURL"] )
     {
-        intf_thread_t * p_intf = [NSApp getIntf];
+        intf_thread_t * p_intf = VLCIntf;
         playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                         FIND_ANYWHERE );
         if( p_playlist == NULL )
@@ -84,7 +84,7 @@
 - (id)performDefaultImplementation {
     NSString *o_command = [[self commandDescription] commandName];
 
-    intf_thread_t * p_intf = [NSApp getIntf];
+    intf_thread_t * p_intf = VLCIntf;
     playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                     FIND_ANYWHERE );
     if( p_playlist == NULL )

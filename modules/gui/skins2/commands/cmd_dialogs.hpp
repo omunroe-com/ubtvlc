@@ -1,11 +1,11 @@
 /*****************************************************************************
  * cmd_dialogs.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_dialogs.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_dialogs.hpp 16431 2006-08-30 14:30:06Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CMD_DIALOGS_HPP
@@ -29,6 +29,7 @@
 #include "../src/dialogs.hpp"
 #include "cmd_change_skin.hpp"
 
+#include <vlc_interaction.h>
 
 template<int TYPE = 0> class CmdDialogs;
 
@@ -41,9 +42,24 @@ typedef CmdDialogs<5> CmdDlgNet;
 typedef CmdDialogs<6> CmdDlgMessages;
 typedef CmdDialogs<7> CmdDlgPrefs;
 typedef CmdDialogs<8> CmdDlgFileInfo;
-typedef CmdDialogs<9> CmdDlgShowPopupMenu;
-typedef CmdDialogs<10> CmdDlgHidePopupMenu;
+
 typedef CmdDialogs<11> CmdDlgAdd;
+typedef CmdDialogs<12> CmdDlgPlaylistLoad;
+typedef CmdDialogs<13> CmdDlgPlaylistSave;
+typedef CmdDialogs<14> CmdDlgDirectory;
+typedef CmdDialogs<15> CmdDlgStreamingWizard;
+typedef CmdDialogs<16> CmdDlgPlaytreeLoad;
+typedef CmdDialogs<17> CmdDlgPlaytreeSave;
+typedef CmdDialogs<18> CmdDlgPlaylist;
+
+typedef CmdDialogs<30> CmdDlgShowPopupMenu;
+typedef CmdDialogs<31> CmdDlgHidePopupMenu;
+typedef CmdDialogs<32> CmdDlgShowAudioPopupMenu;
+typedef CmdDialogs<33> CmdDlgHideAudioPopupMenu;
+typedef CmdDialogs<34> CmdDlgShowVideoPopupMenu;
+typedef CmdDialogs<35> CmdDlgHideVideoPopupMenu;
+typedef CmdDialogs<36> CmdDlgShowMiscPopupMenu;
+typedef CmdDialogs<37> CmdDlgHideMiscPopupMenu;
 
 
 /// Generic "Open dialog" command
@@ -90,17 +106,50 @@ class CmdDialogs: public CmdGeneric
                 case 8:
                     pDialogs->showFileInfo();
                     break;
-                case 9:
-                    pDialogs->showPopupMenu( true );
-                    break;
-                case 10:
-                    pDialogs->showPopupMenu( false );
-                    break;
-                case 11:
+               case 11:
                     pDialogs->showFile( false );
                     break;
+                case 12:
+                    pDialogs->showPlaylistLoad();
+                    break;
+                case 13:
+                    pDialogs->showPlaylistSave();
+                    break;
+                case 14:
+                    pDialogs->showDirectory( true );
+                    break;
+                case 15:
+                    pDialogs->showStreamingWizard();
+                    break;
+                case 18:
+                    pDialogs->showPlaylist();
+                    break;
+                case 30:
+                    pDialogs->showPopupMenu( true, INTF_DIALOG_POPUPMENU );
+                    break;
+                case 31:
+                    pDialogs->showPopupMenu( false, INTF_DIALOG_POPUPMENU );
+                    break;
+                case 32:
+                    pDialogs->showPopupMenu( true, INTF_DIALOG_AUDIOPOPUPMENU );
+                    break;
+                case 33:
+                    pDialogs->showPopupMenu( false,INTF_DIALOG_AUDIOPOPUPMENU );
+                    break;
+                case 34:
+                    pDialogs->showPopupMenu( true, INTF_DIALOG_VIDEOPOPUPMENU );
+                    break;
+                case 35:
+                    pDialogs->showPopupMenu( false,INTF_DIALOG_VIDEOPOPUPMENU );
+                    break;
+                 case 36:
+                    pDialogs->showPopupMenu( true, INTF_DIALOG_MISCPOPUPMENU );
+                    break;
+                case 37:
+                    pDialogs->showPopupMenu( false,INTF_DIALOG_MISCPOPUPMENU );
+                    break;
                 default:
-                    msg_Warn( getIntf(), "Unknown dialog type" );
+                    msg_Warn( getIntf(), "unknown dialog type" );
                     break;
             }
         }
@@ -109,5 +158,36 @@ class CmdDialogs: public CmdGeneric
         virtual string getType() const { return "dialog"; }
 };
 
+class CmdInteraction: public CmdGeneric
+{
+    public:
+        CmdInteraction( intf_thread_t *pIntf, interaction_dialog_t *
+                        p_dialog ): CmdGeneric( pIntf ), m_pDialog( p_dialog )
+        {}
+        virtual ~CmdInteraction() {}
+
+        /// This method does the real job of the command
+        virtual void execute()
+        {
+            if( m_pDialog->i_type == INTERACT_PROGRESS )
+            {
+                 /// \todo Handle progress in the interface
+            }
+            else
+            {
+                /// Get the dialogs provider
+                Dialogs *pDialogs = Dialogs::instance( getIntf() );
+                if( pDialogs == NULL )
+                {
+                    return;
+                }
+                pDialogs->showInteraction( m_pDialog );
+            }
+        }
+
+        virtual string getType() const { return "interaction"; }
+    private:
+        interaction_dialog_t *m_pDialog;
+};
 
 #endif

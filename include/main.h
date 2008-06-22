@@ -2,8 +2,8 @@
  * main.h: access to all program variables
  * Declaration and extern access to global program object.
  *****************************************************************************
- * Copyright (C) 1999, 2000, 2001, 2002 VideoLAN
- * $Id: main.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999, 2000, 2001, 2002 the VideoLAN team
+ * $Id: main.h 14256 2006-02-12 11:39:00Z courmisch $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -54,16 +54,27 @@ struct libvlc_t
     /* The module bank */
     module_bank_t *        p_module_bank;
 
+    /* Do stats ? - We keep this boolean to avoid unneeded lookups */
+    vlc_bool_t             b_stats;
+    stats_handler_t       *p_stats;
+
     /* Arch-specific variables */
+#if !defined( WIN32 )
+    vlc_bool_t             b_daemon;
+#endif
 #if defined( SYS_BEOS )
     vlc_object_t *         p_appthread;
     char *                 psz_vlcpath;
-#elif defined( SYS_DARWIN )
+#elif defined( __APPLE__ )
     char *                 psz_vlcpath;
+    vlc_iconv_t            iconv_macosx; /* for HFS+ file names */
+    vlc_mutex_t            iconv_lock;
 #elif defined( WIN32 ) && !defined( UNDER_CE )
     SIGNALOBJECTANDWAIT    SignalObjectAndWait;
     vlc_bool_t             b_fast_mutex;
     int                    i_win9x_cv;
+    char *                 psz_vlcpath;
+#elif defined( UNDER_CE )
     char *                 psz_vlcpath;
 #endif
 };
@@ -80,25 +91,21 @@ struct vlc_t
     /* Global properties */
     int                    i_argc;           /* command line arguments count */
     char **                ppsz_argv;              /* command line arguments */
-    char *                 psz_homedir;             /* user's home directory */
+    char *                 psz_homedir;           /* configuration directory */
+    char *                 psz_userdir;             /* user's home directory */
     char *                 psz_configfile;        /* location of config file */
 
     /* Fast memcpy plugin used */
     module_t *             p_memcpy_module;
-#if defined( UNDER_CE )
-    void* ( __cdecl *pf_memcpy ) ( void *, const void *, size_t );
-    void* ( __cdecl *pf_memset ) ( void *, int, size_t );
-#else
     void* ( *pf_memcpy ) ( void *, const void *, size_t );
     void* ( *pf_memset ) ( void *, int, size_t );
-#endif
 
     /* Shared data - these structures are accessed directly from p_vlc by
      * several modules */
 
     /* Locks */
     vlc_mutex_t            config_lock;          /* lock for the config file */
-#ifdef SYS_DARWIN
+#ifdef __APPLE__
     vlc_mutex_t            quicktime_lock;          /* QT is not thread safe on OSX */
 #endif
 
@@ -109,6 +116,10 @@ struct vlc_t
         int i_action;
         int i_key;
 
+        /* hotkey accounting information */
+        mtime_t i_delta_date;/*< minimum delta time between two key presses */
+        mtime_t i_last_date; /*< last date key was pressed */
+        int     i_times;     /*< n times pressed within delta date*/
     } *p_hotkeys;
 };
 

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * h264.c : H264 Video demuxer
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: h264.c 7426 2004-04-22 13:19:55Z fenrir $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id: h264.c 16965 2006-10-07 16:02:30Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -36,10 +36,17 @@
 static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
+#define FPS_TEXT N_("Frames per Second")
+#define FPS_LONGTEXT N_("Desired frame rate for the H264 stream.")
+
+
 vlc_module_begin();
+    set_shortname( "H264");
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_description( _("H264 video demuxer" ) );
     set_capability( "demux2", 0 );
-    add_float( "h264-fps", 25.0, NULL, "fps", "fps", VLC_TRUE );
+    add_float( "h264-fps", 25.0, NULL, FPS_TEXT, FPS_LONGTEXT, VLC_TRUE );
     set_callbacks( Open, Close );
     add_shortcut( "h264" );
 vlc_module_end();
@@ -68,33 +75,23 @@ static int Open( vlc_object_t * p_this )
 {
     demux_t     *p_demux = (demux_t*)p_this;
     demux_sys_t *p_sys;
-    vlc_bool_t   b_forced = VLC_FALSE;
-
     uint8_t     *p_peek;
     vlc_value_t val;
 
-    if( stream_Peek( p_demux->s, &p_peek, 5 ) < 5 )
-    {
-        msg_Err( p_demux, "cannot peek" );
-        return VLC_EGENERIC;
-    }
-
-    if( !strncmp( p_demux->psz_demux, "h264", 4 ) )
-    {
-        b_forced = VLC_TRUE;
-    }
+    if( stream_Peek( p_demux->s, &p_peek, 5 ) < 5 ) return VLC_EGENERIC;
 
     if( p_peek[0] != 0x00 || p_peek[1] != 0x00 ||
         p_peek[2] != 0x00 || p_peek[3] != 0x01 ||
         (p_peek[4]&0x1F) != 7 ) /* SPS */
     {
-        if( !b_forced )
+        if( !p_demux->b_force )
         {
             msg_Warn( p_demux, "h264 module discarded (no startcode)" );
             return VLC_EGENERIC;
         }
 
-        msg_Err( p_demux, "this doesn't look like a H264 ES stream, continuing" );
+        msg_Err( p_demux, "this doesn't look like a H264 ES stream, "
+                 "continuing anyway" );
     }
 
     p_demux->pf_demux  = Demux;
@@ -105,10 +102,7 @@ static int Open( vlc_object_t * p_this )
     var_Create( p_demux, "h264-fps", VLC_VAR_FLOAT|VLC_VAR_DOINHERIT );
     var_Get( p_demux, "h264-fps", &val );
     p_sys->f_fps = val.f_float;
-    if( val.f_float < 0.001 )
-    {
-        p_sys->f_fps = 0.001;
-    }
+    if( val.f_float < 0.001 ) p_sys->f_fps = 0.001;
     msg_Dbg( p_demux, "using %.2f fps", p_sys->f_fps );
 
     /*
@@ -175,25 +169,23 @@ static int Demux( demux_t *p_demux)
         {
             block_t *p_next = p_block_out->p_next;
 
-            es_out_Control( p_demux->out, ES_OUT_SET_PCR, p_sys->i_dts );
-
-            p_block_out->i_dts = p_sys->i_dts;
-            p_block_out->i_pts = p_sys->i_dts;
-
             p_block_out->p_next = NULL;
 
             if( p_sys->p_es == NULL )
             {
+                p_sys->p_packetizer->fmt_out.b_packetized = VLC_TRUE;
                 p_sys->p_es = es_out_Add( p_demux->out, &p_sys->p_packetizer->fmt_out);
             }
+
+            es_out_Control( p_demux->out, ES_OUT_SET_PCR, p_sys->i_dts );
+            p_block_out->i_dts = p_sys->i_dts;
+            p_block_out->i_pts = p_sys->i_dts;
 
             es_out_Send( p_demux->out, p_sys->p_es, p_block_out );
 
             p_block_out = p_next;
 
-            /* FIXME FIXME FIXME FIXME */
             p_sys->i_dts += (int64_t)((double)1000000.0 / p_sys->f_fps);
-            /* FIXME FIXME FIXME FIXME */
         }
     }
     return 1;

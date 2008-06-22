@@ -1,11 +1,11 @@
 /*****************************************************************************
  * cmd_resize.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_resize.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_resize.hpp 16454 2006-08-31 19:54:36Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CMD_RESIZE_HPP
@@ -27,6 +27,7 @@
 
 #include "cmd_generic.hpp"
 
+class WindowManager;
 class GenericLayout;
 
 
@@ -35,8 +36,8 @@ class CmdResize: public CmdGeneric
 {
     public:
         /// Resize the given layout
-        CmdResize( intf_thread_t *pIntf, GenericLayout &rLayout, int width,
-                   int height );
+        CmdResize( intf_thread_t *pIntf, const WindowManager &rWindowManager,
+                   GenericLayout &rLayout, int width, int height );
         virtual ~CmdResize() {}
 
         /// This method does the real job of the command
@@ -46,8 +47,31 @@ class CmdResize: public CmdGeneric
         virtual string getType() const { return "resize"; }
 
     private:
+        const WindowManager &m_rWindowManager;
         GenericLayout &m_rLayout;
         int m_width, m_height;
 };
+
+
+/// Command to resize the vout window
+class CmdResizeVout: public CmdGeneric
+{
+    public:
+        /// Resize the given layout
+        CmdResizeVout( intf_thread_t *pIntf, void *pWindow, int width,
+                       int height );
+        virtual ~CmdResizeVout() {}
+
+        /// This method does the real job of the command
+        virtual void execute();
+
+        /// Return the type of the command
+        virtual string getType() const { return "resize vout"; }
+
+    private:
+        void *m_pWindow;
+        int m_width, m_height;
+};
+
 
 #endif

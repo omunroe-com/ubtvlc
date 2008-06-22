@@ -1,8 +1,8 @@
 /*****************************************************************************
  * clone.c : Clone video plugin for vlc
  *****************************************************************************
- * Copyright (C) 2002, 2003 VideoLAN
- * $Id: clone.c 7522 2004-04-27 16:35:15Z sam $
+ * Copyright (C) 2002, 2003 the VideoLAN team
+ * $Id: clone.c 17012 2006-10-09 22:11:32Z xtophe $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -53,19 +53,23 @@ static int  SendEvents( vlc_object_t *, char const *,
  * Module descriptor
  *****************************************************************************/
 #define COUNT_TEXT N_("Number of clones")
-#define COUNT_LONGTEXT N_("Select the number of video windows in which to "\
-    "clone the video")
+#define COUNT_LONGTEXT N_("Number of video windows in which to "\
+    "clone the video.")
 
-#define VOUTLIST_TEXT N_("List of video output modules")
-#define VOUTLIST_LONGTEXT N_("Select the specific video output modules that you want to activate")
+#define VOUTLIST_TEXT N_("Video output modules")
+#define VOUTLIST_LONGTEXT N_("You can use specific video output modules " \
+        "for the clones. Use a comma-separated list of modules." )
 
 vlc_module_begin();
     set_description( _("Clone video filter") );
     set_capability( "video filter", 0 );
-    
+    set_shortname( _("Clone" ));
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VFILTER );
+
     add_integer( "clone-count", 2, NULL, COUNT_TEXT, COUNT_LONGTEXT, VLC_FALSE );
-    add_string ( "clone-vout-list", NULL, NULL, VOUTLIST_TEXT, VOUTLIST_LONGTEXT, VLC_FALSE );
-    
+    add_string ( "clone-vout-list", NULL, NULL, VOUTLIST_TEXT, VOUTLIST_LONGTEXT, VLC_TRUE );
+
     add_shortcut( "clone" );
     set_callbacks( Create, Destroy );
 vlc_module_end();
@@ -202,6 +206,7 @@ static int Init( vout_thread_t *p_vout )
     int   i_index, i_vout;
     picture_t *p_pic;
     char *psz_default_vout;
+    video_format_t fmt = {0};
 
     I_OUTPUTPICTURES = 0;
 
@@ -210,6 +215,8 @@ static int Init( vout_thread_t *p_vout )
     p_vout->output.i_width  = p_vout->render.i_width;
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
+    p_vout->fmt_out = p_vout->fmt_in;
+    fmt = p_vout->fmt_out;
 
     /* Try to open the real video output */
     msg_Dbg( p_vout, "spawning the real video outputs" );
@@ -224,9 +231,7 @@ static int Init( vout_thread_t *p_vout )
                            "default", 8 ) ) )
         {
             p_vout->p_sys->pp_vout[i_vout] =
-                vout_Create( p_vout, p_vout->render.i_width,
-                             p_vout->render.i_height, p_vout->render.i_chroma, 
-                             p_vout->render.i_aspect );
+                vout_Create( p_vout, &fmt );
         }
         else
         {
@@ -234,9 +239,7 @@ static int Init( vout_thread_t *p_vout )
             config_PutPsz( p_vout, "vout",
                            p_vout->p_sys->ppsz_vout_list[i_vout] );
             p_vout->p_sys->pp_vout[i_vout] =
-                vout_Create( p_vout, p_vout->render.i_width,
-                             p_vout->render.i_height, p_vout->render.i_chroma, 
-                             p_vout->render.i_aspect );
+                vout_Create( p_vout, &fmt );
 
             /* Reset the default value */
             config_PutPsz( p_vout, "vout", psz_default_vout );
@@ -341,11 +344,12 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
                  && i_out_pitch == i_copy_pitch )
             {
                 p_vout->p_vlc->pf_memcpy( p_out, p_in, i_in_pitch
-                                           * p_outpic->p[i_plane].i_lines );
+                                     * p_outpic->p[i_plane].i_visible_lines );
             }
             else
             {
-                p_in_end = p_in + i_in_pitch * p_outpic->p[i_plane].i_lines;
+                p_in_end = p_in + i_in_pitch *
+                    p_outpic->p[i_plane].i_visible_lines;
 
                 while( p_in < p_in_end )
                 {

@@ -3,9 +3,9 @@
  *****************************************************************************
  * Copyright (C) 2003-2004 Commonwealth Scientific and Industrial Research
  *                         Organisation (CSIRO) Australia
- * Copyright (C) 2000-2004 VideoLAN
+ * Copyright (C) 2000-2004 the VideoLAN team
  *
- * $Id: xtag.c 7397 2004-04-20 17:27:30Z sam $
+ * $Id: xtag.c 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Conrad Parker <Conrad.Parker@csiro.au>
  *          Andre Pang <Andre.Pang@csiro.au>
@@ -22,7 +22,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "config.h"
@@ -381,7 +381,7 @@ xtag_parse_tag (XTagParser * parser)
     xtag_assert_and_pass (parser, X_SLASH);
     name = xtag_slurp_to (parser, X_WHITESPACE | X_CLOSETAG, X_NONE);
     if (name) {
-      if (strcmp (name, tag->name)) {
+      if (name && tag->name && strcmp (name, tag->name)) {
 #ifdef XTAG_DEBUG
         printf ("got %s expected %s\n", name, tag->name);
 #endif
@@ -525,7 +525,7 @@ xtag_get_attribute (XTag * xtag, char * attribute)
 
   for (l = xtag->attributes; l; l = l->next) {
     if ((attr = (XAttribute *)l->data) != NULL) {
-      if (!strcmp (attr->name, attribute))
+      if (attr->name && attribute && !strcmp (attr->name, attribute))
         return attr->value;
     }
   }
@@ -551,7 +551,7 @@ xtag_first_child (XTag * xtag, char * name)
   for (; l; l = l->next) {
     child = (XTag *)l->data;
 
-    if (!strcmp(child->name, name)) {
+    if (child->name && name && !strcmp(child->name, name)) {
       xtag->current_child = l;
       return child;
     }
@@ -584,7 +584,7 @@ xtag_next_child (XTag * xtag, char * name)
   for (; l; l = l->next) {
     child = (XTag *)l->data;
 
-    if (!strcmp(child->name, name)) {
+    if (child->name && name && !strcmp(child->name, name)) {
       xtag->current_child = l;
       return child;
     }

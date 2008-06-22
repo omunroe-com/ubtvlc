@@ -2,11 +2,11 @@
  * mpgatofixed32.c: MPEG-1 & 2 audio layer I, II, III + MPEG 2.5 decoder,
  * using MAD (MPEG Audio Decoder)
  *****************************************************************************
- * Copyright (C) 2001 by Jean-Paul Saman
- * $Id: mpgatofixed32.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001-2005 the VideoLAN team
+ * $Id: mpgatofixed32.c 14688 2006-03-09 09:47:30Z jpsaman $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
- *          Jean-Paul Saman <jpsaman@wxs.nl>
+ *          Jean-Paul Saman <jpsaman _at_ videolan _dot_ org>
  *      
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -32,8 +32,9 @@
 #include <mad.h>
 
 #include <vlc/vlc.h>
-#include "audio_output.h"
+#include <vlc/decoder.h>
 #include "aout_internal.h"
+#include "vlc_filter.h"
 
 /*****************************************************************************
  * Local prototypes
@@ -43,10 +44,14 @@ static void Destroy   ( vlc_object_t * );
 static void DoWork    ( aout_instance_t *, aout_filter_t *, aout_buffer_t *,  
                         aout_buffer_t * );
 
+static int  OpenFilter ( vlc_object_t * );
+static void CloseFilter( vlc_object_t * );
+static block_t *Convert( filter_t *, block_t * );
+
 /*****************************************************************************
  * Local structures
  *****************************************************************************/
-struct aout_filter_sys_t
+struct filter_sys_t
 {
     struct mad_stream mad_stream;
     struct mad_frame mad_frame;
@@ -57,18 +62,25 @@ struct aout_filter_sys_t
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACODEC );
     set_description( _("MPEG audio decoder") );
     set_capability( "audio filter", 100 );
     set_callbacks( Create, Destroy );
+
+    add_submodule();
+    set_description( _("MPEG audio decoder") );
+    set_capability( "audio filter2", 100 );
+    set_callbacks( OpenFilter, CloseFilter );
 vlc_module_end();
 
 /*****************************************************************************
  * Create: 
  *****************************************************************************/
-static int Create( vlc_object_t * _p_filter )
+static int Create( vlc_object_t *p_this )
 {
-    aout_filter_t * p_filter = (aout_filter_t *)_p_filter;
-    struct aout_filter_sys_t * p_sys;
+    aout_filter_t *p_filter = (aout_filter_t *)p_this;
+    struct filter_sys_t *p_sys;
 
     if ( (p_filter->input.i_format != VLC_FOURCC('m','p','g','a')
            && p_filter->input.i_format != VLC_FOURCC('m','p','g','3'))
@@ -84,7 +96,8 @@ static int Create( vlc_object_t * _p_filter )
     }
 
     /* Allocate the memory needed to store the module's structure */
-    p_sys = p_filter->p_sys = malloc( sizeof(struct aout_filter_sys_t) );
+    p_sys = malloc( sizeof(filter_sys_t) );
+    p_filter->p_sys = (struct aout_filter_sys_t *)p_sys;
     if( p_sys == NULL )
     {
         msg_Err( p_filter, "out of memory" );
@@ -109,18 +122,18 @@ static int Create( vlc_object_t * _p_filter )
 static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
                     aout_buffer_t * p_in_buf, aout_buffer_t * p_out_buf )
 {
-    struct aout_filter_sys_t * p_sys = p_filter->p_sys;
+    filter_sys_t *p_sys = (filter_sys_t *)p_filter->p_sys;
 
     p_out_buf->i_nb_samples = p_in_buf->i_nb_samples;
     p_out_buf->i_nb_bytes = p_in_buf->i_nb_samples * sizeof(vlc_fixed_t) * 
-                               aout_FormatNbChannels( &p_filter->input );
+                               aout_FormatNbChannels( &p_filter->output );
 
     /* Do the actual decoding now. */
     mad_stream_buffer( &p_sys->mad_stream, p_in_buf->p_buffer,
                        p_in_buf->i_nb_bytes );
     if ( mad_frame_decode( &p_sys->mad_frame, &p_sys->mad_stream ) == -1 )
     {
-        msg_Warn( p_aout, "libmad error: %s",
+        msg_Dbg( p_aout, "libmad error: %s",
                   mad_stream_errorstr( &p_sys->mad_stream ) );
         if( p_filter->output.i_format == VLC_FOURCC('f','l','3','2') )
         {
@@ -152,10 +165,36 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
         switch ( p_pcm->channels )
         {
         case 2:
-            while ( i_samples-- )
+            if ( p_filter->output.i_physical_channels == AOUT_CHAN_CENTER )
             {
-                *p_samples++ = *p_left++;
-                *p_samples++ = *p_right++;
+                while ( i_samples-- )
+                {
+                    *p_samples++ = (*p_left++ >> 1) + (*p_right++ >> 1);
+                }
+            }
+            else if ( p_filter->output.i_original_channels == AOUT_CHAN_LEFT )
+            {
+                while ( i_samples-- )
+                {
+                    *p_samples++ = *p_left;
+                    *p_samples++ = *p_left++;
+                }
+            }
+            else if ( p_filter->output.i_original_channels == AOUT_CHAN_RIGHT )
+            {
+                while ( i_samples-- )
+                {
+                    *p_samples++ = *p_right;
+                    *p_samples++ = *p_right++;
+                }
+            }
+            else
+            {
+                while ( i_samples-- )
+                {
+                    *p_samples++ = *p_left++;
+                    *p_samples++ = *p_right++;
+                }
             }
             break;
 
@@ -165,7 +204,7 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
             break;
 
         default:
-            msg_Err( p_filter, "cannot interleave %i channels",
+            msg_Err( p_aout, "cannot interleave %i channels",
                      p_pcm->channels );
         }
     }
@@ -178,14 +217,41 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
         mad_fixed_t const * p_left = p_pcm->samples[0];
         mad_fixed_t const * p_right = p_pcm->samples[1];
         float f_temp = (float)FIXED32_ONE;
-        
-	switch ( p_pcm->channels )
+
+        switch ( p_pcm->channels )
         {
         case 2:
-            while ( i_samples-- )
+            if ( p_filter->output.i_physical_channels == AOUT_CHAN_CENTER )
             {
-                *p_samples++ = (float)*p_left++ / f_temp;
-                *p_samples++ = (float)*p_right++ / f_temp;
+                while ( i_samples-- )
+                {
+                    *p_samples++ = (float)*p_left++ / f_temp / 2 +
+                                   (float)*p_right++ / f_temp / 2;
+                }
+            }
+            else if ( p_filter->output.i_original_channels == AOUT_CHAN_LEFT )
+            {
+                while ( i_samples-- )
+                {
+                    *p_samples++ = (float)*p_left / f_temp;
+                    *p_samples++ = (float)*p_left++ / f_temp;
+                }
+            }
+            else if ( p_filter->output.i_original_channels == AOUT_CHAN_RIGHT )
+            {
+                while ( i_samples-- )
+                {
+                    *p_samples++ = (float)*p_right / f_temp;
+                    *p_samples++ = (float)*p_right++ / f_temp;
+                }
+            }
+            else
+            {
+                while ( i_samples-- )
+                {
+                    *p_samples++ = (float)*p_left++ / f_temp;
+                    *p_samples++ = (float)*p_right++ / f_temp;
+                }
             }
             break;
 
@@ -197,7 +263,7 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
             break;
 
         default:
-            msg_Err( p_filter, "cannot interleave %i channels",
+            msg_Err( p_aout, "cannot interleave %i channels",
                      p_pcm->channels );
         }
     }
@@ -206,10 +272,10 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
 /*****************************************************************************
  * Destroy : deallocate data structures
  *****************************************************************************/
-static void Destroy( vlc_object_t * _p_filter )
+static void Destroy( vlc_object_t *p_this )
 {
-    aout_filter_t * p_filter = (aout_filter_t *)_p_filter;
-    struct aout_filter_sys_t * p_sys = p_filter->p_sys;
+    aout_filter_t *p_filter = (aout_filter_t *)p_this;
+    filter_sys_t *p_sys = (filter_sys_t *)p_filter->p_sys;
 
     mad_synth_finish( &p_sys->mad_synth );
     mad_frame_finish( &p_sys->mad_frame );
@@ -217,3 +283,115 @@ static void Destroy( vlc_object_t * _p_filter )
     free( p_sys );
 }
 
+/*****************************************************************************
+ * OpenFilter: 
+ *****************************************************************************/
+static int OpenFilter( vlc_object_t *p_this )
+{
+    filter_t *p_filter = (filter_t *)p_this;
+    filter_sys_t *p_sys;
+
+    if( p_filter->fmt_in.i_codec != VLC_FOURCC('m','p','g','a') &&
+        p_filter->fmt_in.i_codec != VLC_FOURCC('m','p','g','3') )
+    {
+        return VLC_EGENERIC;
+    }
+
+    /* Allocate the memory needed to store the module's structure */
+    p_sys = p_filter->p_sys = malloc( sizeof(filter_sys_t) );
+    if( p_sys == NULL )
+    {
+        msg_Err( p_filter, "out of memory" );
+        return -1;
+    }
+
+    p_filter->pf_audio_filter = Convert;
+
+    /* Initialize libmad */
+    mad_stream_init( &p_sys->mad_stream );
+    mad_frame_init( &p_sys->mad_frame );
+    mad_synth_init( &p_sys->mad_synth );
+    mad_stream_options( &p_sys->mad_stream, MAD_OPTION_IGNORECRC );
+
+    if( p_this->p_libvlc->i_cpu & CPU_CAPABILITY_FPU )
+        p_filter->fmt_out.i_codec = VLC_FOURCC('f','l','3','2');
+    else
+        p_filter->fmt_out.i_codec = VLC_FOURCC('f','i','3','2');
+    p_filter->fmt_out.audio.i_format = p_filter->fmt_out.i_codec;
+
+    p_filter->fmt_out.audio.i_rate = p_filter->fmt_in.audio.i_rate;
+
+    msg_Dbg( p_this, "%4.4s->%4.4s, bits per sample: %i",
+             (char *)&p_filter->fmt_in.i_codec,
+             (char *)&p_filter->fmt_out.i_codec,
+             p_filter->fmt_in.audio.i_bitspersample );
+
+    return 0;
+}
+
+/*****************************************************************************
+ * CloseFilter : deallocate data structures
+ *****************************************************************************/
+static void CloseFilter( vlc_object_t *p_this )
+{
+    filter_t *p_filter = (filter_t *)p_this;
+    filter_sys_t *p_sys = p_filter->p_sys;
+
+    mad_synth_finish( &p_sys->mad_synth );
+    mad_frame_finish( &p_sys->mad_frame );
+    mad_stream_finish( &p_sys->mad_stream );
+    free( p_sys );
+}
+
+static block_t *Convert( filter_t *p_filter, block_t *p_block )
+{
+    aout_filter_t aout_filter;
+    aout_buffer_t in_buf, out_buf;
+    block_t *p_out;
+    int i_out_size;
+
+    if( !p_block || !p_block->i_samples )
+    {
+        if( p_block ) p_block->pf_release( p_block );
+        return NULL;
+    }
+
+    i_out_size = p_block->i_samples *
+      p_filter->fmt_out.audio.i_bitspersample *
+        p_filter->fmt_out.audio.i_channels / 8;
+
+    p_out = p_filter->pf_audio_buffer_new( p_filter, i_out_size );
+    if( !p_out )
+    {
+        msg_Warn( p_filter, "can't get output buffer" );
+        p_block->pf_release( p_block );
+        return NULL;
+    }
+
+    p_out->i_samples = p_block->i_samples;
+    p_out->i_dts = p_block->i_dts;
+    p_out->i_pts = p_block->i_pts;
+    p_out->i_length = p_block->i_length;
+
+    aout_filter.p_sys = (struct aout_filter_sys_t *)p_filter->p_sys;
+    aout_filter.input = p_filter->fmt_in.audio;
+    aout_filter.input.i_format = p_filter->fmt_in.i_codec;
+    aout_filter.output = p_filter->fmt_out.audio;
+    aout_filter.output.i_format = p_filter->fmt_out.i_codec;
+
+    in_buf.p_buffer = p_block->p_buffer;
+    in_buf.i_nb_bytes = p_block->i_buffer;
+    in_buf.i_nb_samples = p_block->i_samples;
+    out_buf.p_buffer = p_out->p_buffer;
+    out_buf.i_nb_bytes = p_out->i_buffer;
+    out_buf.i_nb_samples = p_out->i_samples;
+
+    DoWork( (aout_instance_t *)p_filter, &aout_filter, &in_buf, &out_buf );
+
+    p_block->pf_release( p_block );
+
+    p_out->i_buffer = out_buf.i_nb_bytes;
+    p_out->i_samples = out_buf.i_nb_samples;
+
+    return p_out;
+}

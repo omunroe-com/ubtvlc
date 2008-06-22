@@ -3,10 +3,10 @@
  * This file describes the programming interface for the configuration module.
  * It includes functions allowing to declare, get or set configuration options.
  *****************************************************************************
- * Copyright (C) 1999, 2000 VideoLAN
- * $Id: configuration.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999-2006 the VideoLAN team
+ * $Id: configuration.h 18150 2006-11-29 13:32:25Z courmisch $
  *
- * Authors: Gildas Bazin <gbazin@netcourrier.com>
+ * Authors: Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -28,11 +28,17 @@
  *****************************************************************************/
 
 /* Configuration hint types */
+
+
 #define CONFIG_HINT_END                     0x0001  /* End of config */
 #define CONFIG_HINT_CATEGORY                0x0002  /* Start of new category */
 #define CONFIG_HINT_SUBCATEGORY             0x0003  /* Start of sub-category */
 #define CONFIG_HINT_SUBCATEGORY_END         0x0004  /* End of sub-category */
 #define CONFIG_HINT_USAGE                   0x0005  /* Usage information */
+
+#define CONFIG_CATEGORY                     0x0006 /* Set category */
+#define CONFIG_SUBCATEGORY                  0x0007 /* Set subcategory */
+#define CONFIG_SECTION                      0x0008 /* Start of new section */
 
 #define CONFIG_HINT                         0x000F
 
@@ -45,8 +51,70 @@
 #define CONFIG_ITEM_FLOAT                   0x0060  /* Float option */
 #define CONFIG_ITEM_DIRECTORY               0x0070  /* Directory option */
 #define CONFIG_ITEM_KEY                     0x0080  /* Hot key option */
+#define CONFIG_ITEM_MODULE_CAT              0x0090  /* Module option */
+#define CONFIG_ITEM_MODULE_LIST             0x00A0  /* Module option */
+#define CONFIG_ITEM_MODULE_LIST_CAT         0x00B0  /* Module option */
 
 #define CONFIG_ITEM                         0x00F0
+
+/*******************************************************************
+ * All predefined categories and subcategories
+ *******************************************************************/
+#define CAT_INTERFACE 1
+   #define SUBCAT_INTERFACE_GENERAL 101
+   #define SUBCAT_INTERFACE_MAIN 102
+   #define SUBCAT_INTERFACE_CONTROL 103
+   #define SUBCAT_INTERFACE_HOTKEYS 104
+
+#define CAT_AUDIO 2
+   #define SUBCAT_AUDIO_GENERAL 201
+   #define SUBCAT_AUDIO_AOUT 202
+   #define SUBCAT_AUDIO_AFILTER 203
+   #define SUBCAT_AUDIO_VISUAL 204
+   #define SUBCAT_AUDIO_MISC 205
+
+#define CAT_VIDEO 3
+   #define SUBCAT_VIDEO_GENERAL 301
+   #define SUBCAT_VIDEO_VOUT 302
+   #define SUBCAT_VIDEO_VFILTER 303
+   #define SUBCAT_VIDEO_TEXT 304
+   #define SUBCAT_VIDEO_SUBPIC 305
+
+#define CAT_INPUT 4
+   #define SUBCAT_INPUT_GENERAL 401
+   #define SUBCAT_INPUT_ACCESS 402
+   #define SUBCAT_INPUT_ACCESS_FILTER 403
+   #define SUBCAT_INPUT_DEMUX 404
+   #define SUBCAT_INPUT_VCODEC 405
+   #define SUBCAT_INPUT_ACODEC 406
+   #define SUBCAT_INPUT_SCODEC 407
+
+#define CAT_SOUT 5
+   #define SUBCAT_SOUT_GENERAL 501
+   #define SUBCAT_SOUT_STREAM 502
+   #define SUBCAT_SOUT_MUX 503
+   #define SUBCAT_SOUT_ACO 504
+   #define SUBCAT_SOUT_PACKETIZER 505
+   #define SUBCAT_SOUT_SAP 506
+   #define SUBCAT_SOUT_VOD 507
+
+#define CAT_ADVANCED 6
+   #define SUBCAT_ADVANCED_CPU 601
+   #define SUBCAT_ADVANCED_MISC 602
+   #define SUBCAT_ADVANCED_NETWORK 603
+   #define SUBCAT_ADVANCED_XML 604
+
+#define CAT_PLAYLIST 7
+   #define SUBCAT_PLAYLIST_GENERAL 701
+   #define SUBCAT_PLAYLIST_SD 702
+   #define SUBCAT_PLAYLIST_EXPORT 703
+
+struct config_category_t
+{
+    int         i_id;
+    char       *psz_name;
+    char       *psz_help;
+};
 
 struct module_config_t
 {
@@ -79,6 +147,9 @@ struct module_config_t
     char           **ppsz_action_text;         /* Friendly names for actions */
     int            i_action;                            /* actions list size */
 
+    /* Deprecated */
+    char           *psz_current;   /* Good option name */
+    vlc_bool_t     b_strict;      /* Transitionnal or strict */
     /* Misc */
     vlc_mutex_t *p_lock;            /* Lock to use when modifying the config */
     vlc_bool_t   b_dirty;          /* Dirty flag to indicate a config change */
@@ -88,6 +159,12 @@ struct module_config_t
     char        *psz_value_orig;
     int          i_value_orig;
     float        f_value_orig;
+
+    /* Option values loaded from config file */
+    char        *psz_value_saved;
+    int          i_value_saved;
+    float        f_value_saved;
+    vlc_bool_t   b_autosave;       /* Config will be auto-saved at exit time */
 };
 
 /*****************************************************************************
@@ -104,6 +181,8 @@ VLC_EXPORT( void,   __config_PutPsz,   (vlc_object_t *, const char *, const char
 
 VLC_EXPORT( int,    __config_LoadCmdLine,  ( vlc_object_t *, int *, char *[], vlc_bool_t ) );
 VLC_EXPORT( char *,   config_GetHomeDir,     ( void ) );
+VLC_EXPORT( char *,   config_GetUserDir,     ( void ) );
+VLC_EXPORT( const char *, config_GetDataDir, ( const vlc_object_t * ) );
 VLC_EXPORT( int,    __config_LoadConfigFile, ( vlc_object_t *, const char * ) );
 VLC_EXPORT( int,    __config_SaveConfigFile, ( vlc_object_t *, const char * ) );
 VLC_EXPORT( void,   __config_ResetAll, ( vlc_object_t * ) );
@@ -130,10 +209,14 @@ VLC_EXPORT( void, config_UnsetCallbacks, ( module_config_t * ) );
 #define config_SaveConfigFile(a,b) __config_SaveConfigFile(VLC_OBJECT(a),b)
 #define config_ResetAll(a) __config_ResetAll(VLC_OBJECT(a))
 
+/* internal only */
+int config_CreateDir( vlc_object_t *, const char * );
+int config_AutoSaveConfigFile( vlc_object_t * );
+
 /*****************************************************************************
  * Macros used to build the configuration structure.
  *
- * Note that internally we support only 3 types of config data: int , float
+ * Note that internally we support only 3 types of config data: int, float
  *   and string.
  *   The other types declared here just map to one of these 3 basic types but
  *   have the advantage of also providing very good hints to a configuration
@@ -143,77 +226,137 @@ VLC_EXPORT( void, config_UnsetCallbacks, ( module_config_t * ) );
  *   allow for a more user friendly interface.
  *****************************************************************************/
 
-#define add_category_hint( text, longtext, advc ) \
+#define add_config_inner( ) \
     i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    { static module_config_t tmp = { CONFIG_HINT_CATEGORY, NULL, NULL, '\0', text, longtext }; p_config[ i_config ] = tmp; p_config[i_config].b_advanced = advc; }
-#define add_subcategory_hint( text, longtext ) \
-    i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    { static module_config_t tmp = { CONFIG_HINT_SUBCATEGORY, NULL, NULL, '\0', text, longtext }; p_config[ i_config ] = tmp; }
-#define end_subcategory_hint \
-    i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    { static module_config_t tmp = { CONFIG_HINT_SUBCATEGORY_END, NULL, NULL, '\0' }; p_config[ i_config ] = tmp; }
-#define add_usage_hint( text ) \
-    i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    { static module_config_t tmp = { CONFIG_HINT_USAGE, NULL, NULL, '\0', text }; p_config[ i_config ] = tmp; }
+    if( (i_config % 10) == 0 ) \
+        p_config = (module_config_t *) \
+             realloc(p_config, (i_config+11) * sizeof(module_config_t)); \
+    memset( p_config + i_config, 0, sizeof( *p_config ) )
 
-#define add_string( name, psz_value, p_callback, text, longtext, advc ) \
-    i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    { static module_config_t tmp = { CONFIG_ITEM_STRING, NULL, name, '\0', text, longtext, psz_value }; tmp.b_advanced = advc; p_config[ i_config ] = tmp; p_config[ i_config ].pf_callback = p_callback; }
-#define add_file( name, psz_value, p_callback, text, longtext, advc ) \
-    i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    { static module_config_t tmp = { CONFIG_ITEM_FILE, NULL, name, '\0', text, longtext, psz_value, 0, 0 }; p_config[ i_config ] = tmp; p_config[ i_config ].pf_callback = p_callback; p_config[i_config].b_advanced = advc; }
-#define add_directory( name, psz_value, p_callback, text, longtext, advc ) \
-    i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    { static module_config_t tmp = { CONFIG_ITEM_DIRECTORY, NULL, name, '\0', text, longtext, psz_value, 0, 0 }; p_config[ i_config ] = tmp; p_config[ i_config ].pf_callback = p_callback; p_config[i_config].b_advanced = advc; }
-#define add_module( name, psz_caps, psz_value, p_callback, text, longtext, advc ) \
-    i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    { static module_config_t tmp = { CONFIG_ITEM_MODULE, psz_caps, name, '\0', text, longtext, psz_value }; p_config[ i_config ] = tmp; p_config[ i_config ].pf_callback = p_callback; p_config[i_config].b_advanced = advc; }
-#define add_integer( name, i_value, p_callback, text, longtext, advc ) \
-    i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    { static module_config_t tmp = { CONFIG_ITEM_INTEGER, NULL, name, '\0', text, longtext, NULL, i_value }; p_config[ i_config ] = tmp; p_config[ i_config ].pf_callback = p_callback; p_config[i_config].b_advanced = advc; }
-#define add_key( name, i_value, p_callback, text, longtext, advc ) \
-    i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    { static module_config_t tmp = { CONFIG_ITEM_KEY, NULL, name, '\0', text, longtext, NULL, i_value }; p_config[ i_config ] = tmp; p_config[ i_config ].pf_callback = p_callback; p_config[i_config].b_advanced = advc; }
-#define add_integer_with_range( name, i_value, i_min, i_max, p_callback, text, longtext, advc ) \
-    i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    { static module_config_t tmp = { CONFIG_ITEM_INTEGER, NULL, name, '\0', text, longtext, NULL, i_value, 0, i_min, i_max }; p_config[ i_config ] = tmp; p_config[ i_config ].pf_callback = p_callback; p_config[i_config].b_advanced = advc; }
-#define add_float( name, f_value, p_callback, text, longtext, advc ) \
-    i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    { static module_config_t tmp = { CONFIG_ITEM_FLOAT, NULL, name, '\0', text, longtext, NULL, 0, f_value }; p_config[ i_config ] = tmp; p_config[ i_config ].pf_callback = p_callback; p_config[i_config].b_advanced = advc; }
-#define add_float_with_range( name, f_value, f_min, f_max, p_callback, text, longtext, advc ) \
-    i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    { static module_config_t tmp = { CONFIG_ITEM_FLOAT, NULL, name, '\0', text, longtext, NULL, 0, f_value, 0, 0, f_min, f_max }; p_config[ i_config ] = tmp; p_config[ i_config ].pf_callback = p_callback; p_config[i_config].b_advanced = advc; }
-#define add_bool( name, b_value, p_callback, text, longtext, advc ) \
-    i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    { static module_config_t tmp = { CONFIG_ITEM_BOOL, NULL, name, '\0', text, longtext, NULL, b_value }; p_config[ i_config ] = tmp; p_config[ i_config ].pf_callback = p_callback; p_config[i_config].b_advanced = advc; }
+#define add_type_inner( type ) \
+    add_config_inner( ); \
+    p_config[i_config].i_type = type
+
+#define add_typedesc_inner( type, text, longtext ) \
+    add_type_inner( type ); \
+    p_config[i_config].psz_text = text; \
+    p_config[i_config].psz_longtext = longtext
+
+#define add_typeadv_inner( type, text, longtext, advc ) \
+    add_typedesc_inner( type, text, longtext ); \
+    p_config[i_config].b_advanced = advc
+
+#define add_typename_inner( type, name, text, longtext, advc, cb ) \
+    add_typeadv_inner( type, text, longtext, advc ); \
+    p_config[i_config].psz_name = name; \
+    p_config[i_config].pf_callback = cb
+
+#define add_string_inner( type, name, text, longtext, advc, cb, value ) \
+    add_typename_inner( type, name, text, longtext, advc, cb ); \
+    p_config[i_config].psz_value = value
+
+#define add_int_inner( type, name, text, longtext, advc, cb, value ) \
+    add_typename_inner( type, name, text, longtext, advc, cb ); \
+    p_config[i_config].i_value = value
+
+
+#define set_category( i_id ) \
+    add_type_inner( CONFIG_CATEGORY ); \
+    p_config[i_config].i_value = i_id
+
+#define set_subcategory( i_id ) \
+    add_type_inner( CONFIG_SUBCATEGORY ); \
+    p_config[i_config].i_value = i_id
+
+#define set_section( text, longtext ) \
+    add_typedesc_inner( CONFIG_SECTION, text, longtext )
+
+#define add_category_hint( text, longtext, advc ) \
+    add_typeadv_inner( CONFIG_HINT_CATEGORY, text, longtext, advc )
+
+#define add_subcategory_hint( text, longtext ) \
+    add_typedesc_inner( CONFIG_HINT_SUBCATEGORY, text, longtext )
+
+#define end_subcategory_hint \
+    add_type_inner( CONFIG_HINT_SUBCATEGORY_END )
+
+#define add_usage_hint( text ) \
+    add_typedesc_inner( CONFIG_HINT_USAGE, text, NULL )
+
+#define add_string( name, value, p_callback, text, longtext, advc ) \
+    add_string_inner( CONFIG_ITEM_STRING, name, text, longtext, advc, p_callback, value )
+
+#define add_file( name, value, p_callback, text, longtext, advc ) \
+    add_string_inner( CONFIG_ITEM_FILE, name, text, longtext, advc, p_callback, value )
+
+#define add_directory( name, value, p_callback, text, longtext, advc ) \
+    add_string_inner( CONFIG_ITEM_DIRECTORY, name, text, longtext, advc, p_callback, value )
+
+#define add_module( name, psz_caps, value, p_callback, text, longtext, advc ) \
+    add_string_inner( CONFIG_ITEM_MODULE, name, text, longtext, advc, p_callback, value ); \
+    p_config[i_config].psz_type = psz_caps
+
+#define add_module_cat( name, i_subcategory, value, p_callback, text, longtext, advc ) \
+    add_string_inner( CONFIG_ITEM_MODULE_CAT, name, text, longtext, advc, p_callback, value ); \
+    p_config[i_config].i_min = i_subcategory /* gruik */
+
+#define add_module_list( name, psz_caps, value, p_callback, text, longtext, advc ) \
+    add_string_inner( CONFIG_ITEM_MODULE_LIST, name, text, longtext, advc, p_callback, value ); \
+    p_config[i_config].psz_type = psz_caps
+
+#define add_module_list_cat( name, i_subcategory, value, p_callback, text, longtext, advc ) \
+    add_string_inner( CONFIG_ITEM_MODULE_LIST_CAT, name, text, longtext, advc, p_callback, value ); \
+    p_config[i_config].i_min = i_subcategory /* gruik */
+
+#define add_integer( name, value, p_callback, text, longtext, advc ) \
+    add_int_inner( CONFIG_ITEM_INTEGER, name, text, longtext, advc, p_callback, value )
+
+#define add_key( name, value, p_callback, text, longtext, advc ) \
+    add_int_inner( CONFIG_ITEM_KEY, name, text, longtext, advc, p_callback, value )
+
+#define add_integer_with_range( name, value, i_min, i_max, p_callback, text, longtext, advc ) \
+    add_integer( name, value, p_callback, text, longtext, advc ); \
+    change_integer_range( i_min, i_max )
+
+#define add_float( name, value, p_callback, text, longtext, advc ) \
+    add_typename_inner( CONFIG_ITEM_FLOAT, name, text, longtext, advc, p_callback ); \
+    p_config[i_config].f_value = value
+
+#define add_float_with_range( name, value, f_min, f_max, p_callback, text, longtext, advc ) \
+    add_float( name, value, p_callback, text, longtext, advc ); \
+    change_float_range( f_min, f_max )
+
+#define add_bool( name, value, p_callback, text, longtext, advc ) \
+    add_typename_inner( CONFIG_ITEM_BOOL, name, text, longtext, advc, p_callback ); \
+    p_config[i_config].i_value = value
+
+/* For option renamed */
+#define add_deprecated( name, strict ) \
+    add_config_inner( ); \
+    p_config[ i_config ].i_type = p_config[ i_config -1 ].i_type; \
+    p_config[ i_config ].psz_name = name; \
+    p_config[i_config].b_strict = strict; \
+    p_config[ i_config ].psz_current = p_config[ i_config-1].psz_current \
+        ? p_config[ i_config-1 ].psz_current \
+        : p_config[ i_config-1 ].psz_name;
+
+/* For option suppressed*/
+#define add_suppressed_inner( name, type ) \
+    add_type_inner( type ); \
+    p_config[ i_config ].psz_name = name; \
+    p_config[ i_config ].psz_current = "SUPPRESSED";
+
+#define add_suppressed_bool( name ) \
+        add_suppressed_inner( name, CONFIG_ITEM_BOOL )
+
+#define add_suppressed_integer( name ) \
+        add_suppressed_inner( name, CONFIG_ITEM_INTEGER )
+
+#define add_suppressed_float( name ) \
+        add_suppressed_inner( name, CONFIG_ITEM_FLOAT )
+
+#define add_suppressed_string( name ) \
+        add_suppressed_inner( name, CONFIG_ITEM_STRING )
 
 /* Modifier macros for the config options (used for fine tuning) */
 #define change_short( ch ) \
@@ -229,6 +372,14 @@ VLC_EXPORT( void, config_UnsetCallbacks, ( module_config_t * ) );
     p_config[i_config].pi_list = list; \
     p_config[i_config].ppsz_list_text = list_text;
 
+#define change_integer_range( min, max ) \
+    p_config[i_config].i_min = min; \
+    p_config[i_config].i_max = max;
+
+#define change_float_range( min, max ) \
+    p_config[i_config].f_min = min; \
+    p_config[i_config].f_max = max;
+
 #define change_action_add( pf_action, action_text ) \
     if( !p_config[i_config].i_action ) \
     { p_config[i_config].ppsz_action_text = 0; \
@@ -243,3 +394,6 @@ VLC_EXPORT( void, config_UnsetCallbacks, ( module_config_t * ) );
     p_config[i_config].ppsz_action_text[p_config[i_config].i_action] = \
       action_text; \
     p_config[i_config].i_action++;
+
+#define change_autosave() \
+    p_config[i_config].b_autosave = VLC_TRUE;

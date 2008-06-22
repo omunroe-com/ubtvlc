@@ -7,8 +7,6 @@ doc_DATA = \
 	fortunes.txt \
 	intf-cdda.txt \
 	intf-vcd.txt \
-	web-streaming.html \
-	vlc-howto.sgml \
 	$(NULL)
 
 EXTRA_DIST = \
@@ -17,6 +15,8 @@ EXTRA_DIST = \
 	ChangeLog-2001 \
 	ChangeLog-2002 \
 	ChangeLog-2003 \
+	ChangeLog-2004 \
+	ChangeLog-2005 \
 	vlc.1 \
 	vlc-config.1 \
 	bugreport-howto.txt \
@@ -24,8 +24,6 @@ EXTRA_DIST = \
 	intf-cdda.txt \
 	intf-vcd.txt \
 	release-howto.txt \
-	web-streaming.html \
-	vlc-howto.sgml \
 	arm-crosscompile-howto.sgml \
 	Configure.help \
 	lirc/example.lircrc \
@@ -39,4 +37,5 @@ EXTRA_DIST = \
 	strings.txt \
 	translations.txt \
 	win32/Cross-Compile-Howto.txt \
+	demo.sh \
 	$(NULL)

@@ -1,6 +1,4 @@
 # Disabled modules
-EXTRA_DIST += dv.c xvid.c
-
 SOURCES_a52 = a52.c
 SOURCES_cinepak = cinepak.c
 SOURCES_dts = dts.c
@@ -20,5 +18,14 @@ SOURCES_quicktime = quicktime.c
 SOURCES_subsdec = subsdec.c
 SOURCES_faad = faad.c
 SOURCES_dvbsub = dvbsub.c
+SOURCES_telx = telx.c
 SOURCES_mash = mash.cpp
 SOURCES_x264 = x264.c
+SOURCES_twolame = twolame.c
+SOURCES_dirac = dirac.c
+SOURCES_png = png.c
+SOURCES_svcdsub = svcdsub.c
+SOURCES_cvdsub = cvdsub.c
+SOURCES_fake = fake.c
+SOURCES_realaudio = realaudio.c
+SOURCES_sdl_image = sdl_image.c

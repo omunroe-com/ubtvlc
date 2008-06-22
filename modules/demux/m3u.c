@@ -1,12 +1,12 @@
 /*****************************************************************************
  * m3u.c: a meta demux to parse pls, m3u, asx et b4s playlists
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: m3u.c 7442 2004-04-23 12:46:34Z gbazin $
+ * Copyright (C) 2001-2006 the VideoLAN team
+ * $Id: m3u.c 15118 2006-04-06 17:54:21Z massiot $
  *
- * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
- *          Gildas Bazin <gbazin@netcourrier.com>
- *          Clément Stenac <zorglub@via.ecp.fr>
+ * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
+ *          Gildas Bazin <gbazin@videolan.org>
+ *          ClÃ©ment Stenac <zorglub@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -43,6 +43,8 @@
 #define TYPE_HTML 3
 #define TYPE_PLS 4
 #define TYPE_B4S 5
+#define TYPE_WMP 6
+#define TYPE_RTSP 7
 
 struct demux_sys_t
 {
@@ -54,14 +56,17 @@ struct demux_sys_t
  *****************************************************************************/
 static int  Activate  ( vlc_object_t * );
 static void Deactivate( vlc_object_t * );
-static int  Demux ( input_thread_t * );
+static int  Demux     ( demux_t * );
+static int  Control   ( demux_t *, int, va_list );
 
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_description( _("Playlist metademux") );
-    set_capability( "demux", 180 );
+    set_capability( "demux2", 5 );
     set_callbacks( Activate, Deactivate );
     add_shortcut( "m3u" );
     add_shortcut( "asx" );
@@ -75,99 +80,106 @@ vlc_module_end();
  *****************************************************************************/
 static int Activate( vlc_object_t * p_this )
 {
-    input_thread_t *p_input = (input_thread_t *)p_this;
-    char           *psz_ext;
-    int             i_type  = TYPE_UNKNOWN;
-    int             i_type2 = TYPE_UNKNOWN;
+    demux_t *p_demux = (demux_t *)p_this;
+    char    *psz_ext;
+    int     i_type  = TYPE_UNKNOWN;
+    int     i_type2 = TYPE_UNKNOWN;
 
-    /* Initialize access plug-in structures. */
-    if( p_input->i_mtu == 0 )
-    {
-        /* Improve speed. */
-        p_input->i_bufsize = INPUT_DEFAULT_BUFSIZE;
-    }
-
-    p_input->pf_demux = Demux;
-    p_input->pf_rewind = NULL;
+    p_demux->pf_control = Control;
+    p_demux->pf_demux = Demux;
 
     /* Check for m3u/asx file extension or if the demux has been forced */
-    psz_ext = strrchr ( p_input->psz_name, '.' );
+    psz_ext = strrchr ( p_demux->psz_path, '.' );
 
     if( ( psz_ext && !strcasecmp( psz_ext, ".m3u") ) ||
-        ( p_input->psz_demux && !strcmp(p_input->psz_demux, "m3u") ) )
+        /* a .ram file can contain a single rtsp link */
+        ( psz_ext && !strcasecmp( psz_ext, ".ram") ) ||
+        ( p_demux->psz_demux && !strcmp(p_demux->psz_demux, "m3u") ) )
     {
         i_type = TYPE_M3U;
     }
     else if( ( psz_ext && !strcasecmp( psz_ext, ".asx") ) ||
-             ( p_input->psz_demux && !strcmp(p_input->psz_demux, "asx") ) )
+             ( p_demux->psz_demux && !strcmp(p_demux->psz_demux, "asx") ) )
     {
         i_type = TYPE_ASX;
     }
     else if( ( psz_ext && !strcasecmp( psz_ext, ".html") ) ||
-             ( p_input->psz_demux && !strcmp(p_input->psz_demux, "html") ) )
+             ( p_demux->psz_demux && !strcmp(p_demux->psz_demux, "html") ) )
     {
         i_type = TYPE_HTML;
     }
     else if( ( psz_ext && !strcasecmp( psz_ext, ".pls") ) ||
-             ( p_input->psz_demux && !strcmp(p_input->psz_demux, "pls") ) )
+             ( p_demux->psz_demux && !strcmp(p_demux->psz_demux, "pls") ) )
     {
         i_type = TYPE_PLS;
     }
     else if( ( psz_ext && !strcasecmp( psz_ext, ".b4s") ) ||
-             ( p_input->psz_demux && !strcmp(p_input->psz_demux, "b4s") ) )
+             ( p_demux->psz_demux && !strcmp(p_demux->psz_demux, "b4s") ) )
     {
         i_type = TYPE_B4S;
     }
 
-    /* we had no luck looking at the file extention, so we have a look
+    /* we had no luck looking at the file extension, so we have a look
      * at the content. This is useful for .asp, .php and similar files
      * that are actually html. Also useful for some asx files that have
      * another extension */
-    /* XXX we double check for file != m3u as some asx ... are just m3u file */
+    /* We double check for file != m3u as some asx are just m3u file */
     if( i_type != TYPE_M3U )
     {
-        byte_t *p_peek;
-        int i_size = input_Peek( p_input, &p_peek, MAX_LINE );
-        i_size -= sizeof("[playlist]") - 1;
-        if ( i_size > 0 ) {
-            while ( i_size
-                    && strncasecmp( p_peek, "[playlist]", sizeof("[playlist]") - 1 )
-                    && strncasecmp( p_peek, "<html>", sizeof("<html>") - 1 )
-                    && strncasecmp( p_peek, "<asx", sizeof("<asx") - 1 )
-                    && strncasecmp( p_peek, "<?xml", sizeof("<?xml") -1 ) )
+        char *p_peek;
+        int i_size = stream_Peek( p_demux->s, (uint8_t **)&p_peek, MAX_LINE );
+        i_size -= sizeof("[Reference]") - 1;
+
+        if( i_size > 0 )
+        {
+            while( i_size &&
+                   strncasecmp(p_peek, "[playlist]", sizeof("[playlist]") - 1)
+                   && strncasecmp( p_peek, "[Reference]", sizeof("[Reference]") - 1 )
+                   && strncasecmp( p_peek, "<html>", sizeof("<html>") - 1 )
+                   && strncasecmp( p_peek, "<asx", sizeof("<asx") - 1 )
+                   && strncasecmp( p_peek, "rtsptext", sizeof("rtsptext") - 1 )
+                   && strncasecmp( p_peek, "<?xml", sizeof("<?xml") -1 ) )
             {
                 p_peek++;
                 i_size--;
             }
-            if ( !i_size )
+            if( !i_size )
             {
                 ;
             }
-            else if ( !strncasecmp( p_peek, "[playlist]", sizeof("[playlist]") -1 ) )
+            else if( !strncasecmp( p_peek, "[playlist]", sizeof("[playlist]") -1 ) )
             {
                 i_type2 = TYPE_PLS;
             }
-            else if ( !strncasecmp( p_peek, "<html>", sizeof("<html>") -1 ) )
+            else if( !strncasecmp( p_peek, "[Reference]", sizeof("[Reference]") -1 ) )
+            {
+                i_type2 = TYPE_WMP;
+            }
+            else if( !strncasecmp( p_peek, "<html>", sizeof("<html>") -1 ) )
             {
                 i_type2 = TYPE_HTML;
             }
-            else if ( !strncasecmp( p_peek, "<asx", sizeof("<asx") -1 ) )
+            else if( !strncasecmp( p_peek, "<asx", sizeof("<asx") -1 ) )
             {
                 i_type2 = TYPE_ASX;
             }
+            else if( !strncasecmp( p_peek, "rtsptext", sizeof("rtsptext") -1 ) )
+            {
+                i_type2 = TYPE_RTSP;
+            }
 #if 0
-            else if ( !strncasecmp( p_peek, "<?xml", sizeof("<?xml") -1 ) )
+            else if( !strncasecmp( p_peek, "<?xml", sizeof("<?xml") -1 ) )
             {
                 i_type2 = TYPE_B4S;
             }
 #endif
         }
     }
-    if ( i_type == TYPE_UNKNOWN && i_type2 == TYPE_UNKNOWN)
+    if( i_type == TYPE_UNKNOWN && i_type2 == TYPE_UNKNOWN)
     {
         return VLC_EGENERIC;
     }
-    if ( i_type  != TYPE_UNKNOWN && i_type2 == TYPE_UNKNOWN )
+    if( i_type  != TYPE_UNKNOWN && i_type2 == TYPE_UNKNOWN )
     {
         i_type = TYPE_M3U;
     }
@@ -177,8 +189,9 @@ static int Activate( vlc_object_t * p_this )
     }
 
     /* Allocate p_m3u */
-    p_input->p_demux_data = malloc( sizeof( demux_sys_t ) );
-    p_input->p_demux_data->i_type = i_type;
+    p_demux->p_sys = malloc( sizeof( demux_sys_t ) );
+    p_demux->p_sys->i_type = i_type;
+    msg_Dbg( p_this, "playlist type: %d - %d", i_type, i_type2 );
 
     return VLC_SUCCESS;
 }
@@ -188,9 +201,8 @@ static int Activate( vlc_object_t * p_this )
  *****************************************************************************/
 static void Deactivate( vlc_object_t *p_this )
 {
-    input_thread_t *p_input = (input_thread_t *)p_this;
-
-    free( p_input->p_demux_data );
+    demux_t *p_demux = (demux_t *)p_this;
+    free( p_demux->p_sys );
 }
 
 /*****************************************************************************
@@ -205,12 +217,17 @@ static void XMLSpecialChars ( char *str )
     {
         if( *src == '&' )
         {
-            if( !strncasecmp( src, "&#xe0;", 6 ) ) *dst++ = 'à';
-            else if( !strncasecmp( src, "&#xee;", 6 ) ) *dst++ = 'î';
+            /* FIXME:
+             * - should probably accept any sequence, rather than only those
+             *   commonly found in French.
+             * - output may have to be UTF-8 encoded (cannot assume Latin-1)
+             */
+            if( !strncasecmp( src, "&#xe0;", 6 ) ) *dst++ = '\xe0';
+            else if( !strncasecmp( src, "&#xee;", 6 ) ) *dst++ = '\xee';
             else if( !strncasecmp( src, "&apos;", 6 ) ) *dst++ = '\'';
-            else if( !strncasecmp( src, "&#xe8;", 6 ) ) *dst++ = 'è';
-            else if( !strncasecmp( src, "&#xe9;", 6 ) ) *dst++ = 'é';
-            else if( !strncasecmp( src, "&#xea;", 6 ) ) *dst++ = 'ê';
+            else if( !strncasecmp( src, "&#xe8;", 6 ) ) *dst++ = '\xe8';
+            else if( !strncasecmp( src, "&#xe9;", 6 ) ) *dst++ = '\xe9';
+            else if( !strncasecmp( src, "&#xea;", 6 ) ) *dst++ = '\xea';
             else
             {
                 *dst++ = '?';
@@ -237,15 +254,14 @@ static void XMLSpecialChars ( char *str )
  * expand it
  *    psz_line is \0 terminated
  *****************************************************************************/
-static int ParseLine( input_thread_t *p_input, char *psz_line, char *psz_data,
-                      vlc_bool_t *pb_next )
+static int ParseLine( demux_t *p_demux, char *psz_line, char *psz_data,
+                      vlc_bool_t *pb_done )
 {
-    demux_sys_t   *p_m3u = p_input->p_demux_data;
-    char          *psz_bol, *psz_name;
+    demux_sys_t *p_m3u = p_demux->p_sys;
+    char        *psz_bol, *psz_name;
 
     psz_bol = psz_line;
-
-    *pb_next = VLC_FALSE;
+    *pb_done = VLC_FALSE;
 
     /* Remove unnecessary tabs or spaces at the beginning of line */
     while( *psz_bol == ' ' || *psz_bol == '\t' ||
@@ -289,7 +305,7 @@ static int ParseLine( input_thread_t *p_input, char *psz_line, char *psz_data,
         }
         /* If we don't have a comment, the line is directly the URI */
     }
-    else if ( p_m3u->i_type == TYPE_PLS )
+    else if( p_m3u->i_type == TYPE_PLS )
     {
         /* We are dealing with .pls files from shoutcast
          * We are looking for lines like "File1=http://..." */
@@ -305,7 +321,28 @@ static int ParseLine( input_thread_t *p_input, char *psz_line, char *psz_data,
             return 0;
         }
     }
-    else if ( p_m3u->i_type == TYPE_ASX )
+    else if( p_m3u->i_type == TYPE_WMP )
+    {
+        /* We are dealing with some weird WMP stream playlist format
+         * Hurray for idiotic M$. Lines look like: "Ref1=http://..." */
+        if( !strncasecmp( psz_bol, "Ref", sizeof("Ref") - 1 ) )
+        {
+            psz_bol += sizeof("Ref") - 1;
+            psz_bol = strchr( psz_bol, '=' );
+            if ( !psz_bol ) return 0;
+            psz_bol++;
+            if( !strncasecmp( psz_bol, "http://", sizeof("http://") -1 ) )
+            {
+                psz_bol++;
+                psz_bol[0] = 'm'; psz_bol[1] = 'm'; psz_bol[2] = 's';
+            }
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    else if( p_m3u->i_type == TYPE_ASX )
     {
         /* We are dealing with ASX files.
          * We are looking for "<ref href=" xml markups that
@@ -345,7 +382,7 @@ static int ParseLine( input_thread_t *p_input, char *psz_line, char *psz_data,
 
         *psz_eol = '\0';
     }
-    else if ( p_m3u->i_type == TYPE_HTML )
+    else if( p_m3u->i_type == TYPE_HTML )
     {
         /* We are dealing with a html file with embedded
          * video.  We are looking for "<param name="filename"
@@ -378,12 +415,12 @@ static int ParseLine( input_thread_t *p_input, char *psz_line, char *psz_data,
         *psz_eol = '\0';
 
     }
-    else if ( p_m3u->i_type == TYPE_B4S )
+    else if( p_m3u->i_type == TYPE_B4S )
     {
 
         char *psz_eol;
 
-        msg_Dbg( p_input, "b4s line=%s", psz_line );
+        msg_Dbg( p_demux, "b4s line=%s", psz_line );
         /* We are dealing with a B4S file from Winamp 3 */
 
         /* First, search for name *
@@ -416,15 +453,14 @@ static int ParseLine( input_thread_t *p_input, char *psz_line, char *psz_data,
         }
         else if( strstr( psz_bol, "</entry>" ) || strstr( psz_bol, "</Entry>" ))
         {
-            *pb_next = VLC_TRUE;
+            *pb_done = VLC_TRUE;
             return 0;
         }
 
-         /* We are looking for <entry Playstring="blabla"> */
+        /* We are looking for <entry Playstring="blabla"> */
 
-
-        while ( *psz_bol &&
-                strncasecmp( psz_bol,"Playstring",sizeof("Playstring") -1 ) )
+        while( *psz_bol &&
+               strncasecmp( psz_bol,"Playstring",sizeof("Playstring") -1 ) )
             psz_bol++;
 
         if( !*psz_bol ) return 0;
@@ -442,9 +478,16 @@ static int ParseLine( input_thread_t *p_input, char *psz_line, char *psz_data,
         /* Handle the XML special characters */
         XMLSpecialChars( psz_bol );
     }
+    else if( p_m3u->i_type == TYPE_RTSP )
+    {
+        /* We are dealing with rtsptext reference files
+         * Ignore anthying that doesn't start with rtsp://..." */
+        if( strncasecmp( psz_bol, "rtsp://", sizeof("rtsp://") - 1 ) )
+        /* ignore */ return 0;
+    }
     else
     {
-        msg_Warn( p_input, "unknown file type" );
+        msg_Warn( p_demux, "unknown file type" );
         return 0;
     }
 
@@ -496,7 +539,7 @@ static int ParseLine( input_thread_t *p_input, char *psz_line, char *psz_data,
 #endif
     {
         /* assume the path is relative to the path of the m3u file. */
-        char *psz_path = strdup( p_input->psz_name );
+        char *psz_path = strdup( p_demux->psz_path );
 
 #ifndef WIN32
         psz_name = strrchr( psz_path, '/' );
@@ -530,35 +573,29 @@ static int ParseLine( input_thread_t *p_input, char *psz_line, char *psz_data,
 
     if( p_m3u->i_type != TYPE_B4S )
     {
-       *pb_next = VLC_TRUE;
+       *pb_done = VLC_TRUE;
     }
 
     return 1;
 }
 
-static void ProcessLine ( input_thread_t *p_input, playlist_t *p_playlist,
-                          char *psz_line,
-                          char **ppsz_uri, char **ppsz_name,
+static void ProcessLine ( demux_t *p_demux, playlist_t *p_playlist,
+                          playlist_item_t *p_parent,
+                          char *psz_line, char **ppsz_uri, char **ppsz_name,
                           int *pi_options, char ***pppsz_options,
-                          int *pi_position )
+                          vlc_bool_t b_flush )
 {
-    char          psz_data[MAX_LINE];
-    vlc_bool_t    b_next;
+    char psz_data[MAX_LINE];
+    vlc_bool_t b_done;
 
-    switch( ParseLine( p_input, psz_line, psz_data, &b_next ) )
+    switch( ParseLine( p_demux, psz_line, psz_data, &b_done ) )
     {
         case 1:
-            if( *ppsz_uri )
-            {
-                free( *ppsz_uri );
-            }
+            if( *ppsz_uri ) free( *ppsz_uri );
             *ppsz_uri = strdup( psz_data );
             break;
         case 2:
-            if( *ppsz_name )
-            {
-                free( *ppsz_name );
-            }
+            if( *ppsz_name ) free( *ppsz_name );
             *ppsz_name = strdup( psz_data );
             break;
         case 3:
@@ -572,13 +609,27 @@ static void ProcessLine ( input_thread_t *p_input, playlist_t *p_playlist,
             break;
     }
 
-    if( b_next && *ppsz_uri )
+    if( (b_done || b_flush) && *ppsz_uri )
     {
-        playlist_AddExt( p_playlist, *ppsz_uri, *ppsz_name,
-                         PLAYLIST_INSERT, *pi_position,
-                         -1, (const char **)*pppsz_options, *pi_options );
+        playlist_item_t *p_item =
+            playlist_ItemNew( p_playlist, *ppsz_uri, *ppsz_name );
+        int i;
 
-        (*pi_position)++;
+        for( i = 0; i < *pi_options; i++ )
+        {
+            playlist_ItemAddOption( p_item, *pppsz_options[i] );
+        }
+
+        playlist_NodeAddItem( p_playlist, p_item,
+                              p_parent->pp_parents[0]->i_view,
+                              p_parent, PLAYLIST_APPEND, PLAYLIST_END );
+
+        /* We need to declare the parents of the node as the
+         * same of the parent's ones */
+        playlist_CopyParents( p_parent, p_item );
+
+        vlc_input_item_CopyOptions( &p_parent->input, &p_item->input );
+
         if( *ppsz_name ) free( *ppsz_name ); *ppsz_name = NULL;
         free( *ppsz_uri ); *ppsz_uri  = NULL;
 
@@ -591,20 +642,45 @@ static void ProcessLine ( input_thread_t *p_input, playlist_t *p_playlist,
     }
 }
 
+static vlc_bool_t FindItem( demux_t *p_demux, playlist_t *p_playlist,
+                            playlist_item_t **pp_item )
+{
+     vlc_bool_t b_play;
+
+     if( &p_playlist->status.p_item->input ==
+         ((input_thread_t *)p_demux->p_parent)->input.p_item )
+     {
+         msg_Dbg( p_playlist, "starting playlist playback" );
+         *pp_item = p_playlist->status.p_item;
+         b_play = VLC_TRUE;
+     }
+     else
+     {
+         input_item_t *p_current =
+             ((input_thread_t*)p_demux->p_parent)->input.p_item;
+         *pp_item = playlist_LockItemGetByInput( p_playlist, p_current );
+
+         if( !*pp_item )
+             msg_Dbg( p_playlist, "unable to find item in playlist");
+
+         b_play = VLC_FALSE;
+     }
+
+     return b_play;
+}
+
 /*****************************************************************************
  * Demux: reads and demuxes data packets
  *****************************************************************************
  * Returns -1 in case of error, 0 in case of EOF, 1 otherwise
  *****************************************************************************/
-static int Demux ( input_thread_t *p_input )
+static int Demux( demux_t *p_demux )
 {
-    demux_sys_t   *p_m3u = p_input->p_demux_data;
+    demux_sys_t   *p_m3u = p_demux->p_sys;
 
-    data_packet_t *p_data;
     char          psz_line[MAX_LINE];
-    char          *p_buf, eol_tok;
+    char          p_buf[MAX_LINE], eol_tok;
     int           i_size, i_bufpos, i_linepos = 0;
-    playlist_t    *p_playlist;
     vlc_bool_t    b_discard = VLC_FALSE;
 
     char          *psz_name = NULL;
@@ -612,18 +688,21 @@ static int Demux ( input_thread_t *p_input )
     int           i_options = 0;
     char          **ppsz_options = NULL;
 
-    int           i_position;
+    playlist_t      *p_playlist;
+    playlist_item_t *p_parent;
+    vlc_bool_t      b_play;
 
-    p_playlist = (playlist_t *) vlc_object_find( p_input, VLC_OBJECT_PLAYLIST,
+    p_playlist = (playlist_t *) vlc_object_find( p_demux, VLC_OBJECT_PLAYLIST,
                                                  FIND_ANYWHERE );
     if( !p_playlist )
     {
-        msg_Err( p_input, "can't find playlist" );
+        msg_Err( p_demux, "can't find playlist" );
         return -1;
     }
 
-    p_playlist->pp_items[p_playlist->i_index]->b_autodeletion = VLC_TRUE;
-    i_position = p_playlist->i_index + 1;
+    b_play = FindItem( p_demux, p_playlist, &p_parent );
+    playlist_ItemToNode( p_playlist, p_parent );
+    p_parent->input.i_type = ITEM_TYPE_PLAYLIST;
 
     /* Depending on wether we are dealing with an m3u/asf file, the end of
      * line token will be different */
@@ -632,9 +711,9 @@ static int Demux ( input_thread_t *p_input )
     else
         eol_tok = '\n';
 
-    while( ( i_size = input_SplitBuffer( p_input, &p_data, MAX_LINE ) ) > 0 )
+    while( ( i_size = stream_Read( p_demux->s, p_buf, MAX_LINE ) ) )
     {
-        i_bufpos = 0; p_buf = p_data->p_payload_start;
+        i_bufpos = 0;
 
         while( i_size )
         {
@@ -671,27 +750,19 @@ static int Demux ( input_thread_t *p_input )
             psz_line[i_linepos] = '\0';
             i_linepos = 0;
 
-            ProcessLine( p_input, p_playlist, psz_line, &psz_uri, &psz_name,
-                         &i_options, &ppsz_options, &i_position );
+            ProcessLine( p_demux, p_playlist, p_parent,
+                         psz_line, &psz_uri, &psz_name,
+                         &i_options, &ppsz_options, VLC_FALSE );
         }
-
-        input_DeletePacket( p_input->p_method_data, p_data );
     }
 
-    if ( i_linepos && b_discard != VLC_TRUE && eol_tok == '\n' )
+    if( i_linepos && b_discard != VLC_TRUE && eol_tok == '\n' )
     {
         psz_line[i_linepos] = '\0';
 
-        ProcessLine( p_input, p_playlist, psz_line, &psz_uri, &psz_name,
-                     &i_options, &ppsz_options, &i_position );
-
-        /* Is there a pendding uri without b_next */
-        if( psz_uri )
-        {
-            playlist_AddExt( p_playlist, psz_uri, psz_name,
-                             PLAYLIST_INSERT, i_position,
-                             -1, (const char **)ppsz_options, i_options );
-        }
+        ProcessLine( p_demux, p_playlist, p_parent,
+                     psz_line, &psz_uri, &psz_name,
+                     &i_options, &ppsz_options, VLC_TRUE );
     }
 
     if( psz_uri ) free( psz_uri );
@@ -702,7 +773,20 @@ static int Demux ( input_thread_t *p_input )
         if( i_options == 1 ) free( ppsz_options );
     }
 
+    /* Go back and play the playlist */
+    if( b_play )
+    {
+        playlist_Control( p_playlist, PLAYLIST_VIEWPLAY,
+                          p_playlist->status.i_view,
+                          p_playlist->status.p_item, NULL );
+    }
+
     vlc_object_release( p_playlist );
 
     return 0;
+}
+
+static int Control( demux_t *p_demux, int i_query, va_list args )
+{
+    return VLC_EGENERIC;
 }

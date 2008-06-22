@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout.c: Windows DirectX video output display method
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: directx.c 7719 2004-05-19 09:45:48Z damienf $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: directx.c 19729 2007-04-06 23:09:20Z damienf $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -44,8 +44,11 @@
 
 #include <windows.h>
 #include <ddraw.h>
+#include <commctrl.h>
 
-#include <multimon.h>
+#ifndef UNDER_CE
+#   include <multimon.h>
+#endif
 #undef GetSystemMetrics
 
 #ifndef MONITOR_DEFAULTTONEAREST
@@ -55,11 +58,26 @@
 #include "vout.h"
 
 /*****************************************************************************
+ * picture_sys_t: direct buffer method descriptor
+ *****************************************************************************
+ * This structure is part of the picture descriptor, it describes the
+ * DirectX specific properties of a direct buffer.
+ *****************************************************************************/
+struct picture_sys_t
+{
+    LPDIRECTDRAWSURFACE2 p_surface;
+    LPDIRECTDRAWSURFACE2 p_front_surface;
+    DDSURFACEDESC        ddsd;
+};
+
+/*****************************************************************************
  * DirectDraw GUIDs.
  * Defining them here allows us to get rid of the dxguid library during
  * the linking stage.
  *****************************************************************************/
 #include <initguid.h>
+#undef GUID_EXT
+#define GUID_EXT
 DEFINE_GUID( IID_IDirectDraw2, 0xB3A6F3E0,0x2B43,0x11CF,0xA2,0xDE,0x00,0xAA,0x00,0xB9,0x33,0x56 );
 DEFINE_GUID( IID_IDirectDrawSurface2, 0x57805885,0x6eec,0x11cf,0x94,0x41,0xa8,0x23,0x03,0xc1,0x0e,0x27 );
 
@@ -73,6 +91,8 @@ static int  Init      ( vout_thread_t * );
 static void End       ( vout_thread_t * );
 static int  Manage    ( vout_thread_t * );
 static void Display   ( vout_thread_t *, picture_t * );
+static void OverlayDisplay( vout_thread_t *, picture_t * );
+static void SetPalette( vout_thread_t *, uint16_t *, uint16_t *, uint16_t * );
 
 static int  NewPictureVec  ( vout_thread_t *, picture_t *, int );
 static void FreePictureVec ( vout_thread_t *, picture_t *, int );
@@ -91,11 +111,15 @@ static void DirectXGetDDrawCaps   ( vout_thread_t *p_vout );
 static int  DirectXLockSurface    ( vout_thread_t *p_vout, picture_t *p_pic );
 static int  DirectXUnlockSurface  ( vout_thread_t *p_vout, picture_t *p_pic );
 
-static DWORD DirectXFindColorkey( vout_thread_t *p_vout, uint32_t i_color );
+static DWORD DirectXFindColorkey( vout_thread_t *p_vout, uint32_t *i_color );
+
+void SwitchWallpaperMode( vout_thread_t *, vlc_bool_t );
 
 /* Object variables callbacks */
 static int FindDevicesCallback( vlc_object_t *, char const *,
                                 vlc_value_t, vlc_value_t, void * );
+static int WallpaperCallback( vlc_object_t *, char const *,
+                              vlc_value_t, vlc_value_t, void * );
 
 /*****************************************************************************
  * Module descriptor
@@ -123,10 +147,19 @@ static int FindDevicesCallback( vlc_object_t *, char const *,
     "window to open on. For example, \"\\\\.\\DISPLAY1\" or " \
     "\"\\\\.\\DISPLAY2\"." )
 
+#define WALLPAPER_TEXT N_("Enable wallpaper mode ")
+#define WALLPAPER_LONGTEXT N_( \
+    "The wallpaper mode allows you to display the video as the desktop " \
+    "background. Note that this feature only works in overlay mode and " \
+    "the desktop must not already have a wallpaper." )
+
 static char *ppsz_dev[] = { "" };
 static char *ppsz_dev_text[] = { N_("Default") };
 
 vlc_module_begin();
+    set_shortname( "DirectX" );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VOUT );
     add_bool( "directx-hw-yuv", 1, NULL, HW_YUV_TEXT, HW_YUV_LONGTEXT,
               VLC_TRUE );
     add_bool( "directx-use-sysmem", 0, NULL, SYSMEM_TEXT, SYSMEM_LONGTEXT,
@@ -139,10 +172,16 @@ vlc_module_begin();
         change_string_list( ppsz_dev, ppsz_dev_text, FindDevicesCallback );
         change_action_add( FindDevicesCallback, N_("Refresh list") );
 
+    add_bool( "directx-wallpaper", 0, NULL, WALLPAPER_TEXT, WALLPAPER_LONGTEXT,
+              VLC_TRUE );
+
     set_description( _("DirectX video output") );
     set_capability( "video output", 100 );
     add_shortcut( "directx" );
     set_callbacks( OpenVideo, CloseVideo );
+
+    /* FIXME: Hack to avoid unregistering our window class */
+    linked_with_a_crap_library_which_uses_atexit( );
 vlc_module_end();
 
 #if 0 /* FIXME */
@@ -185,8 +224,9 @@ static int OpenVideo( vlc_object_t *p_this )
     p_vout->p_sys->p_current_surface = NULL;
     p_vout->p_sys->p_clipper = NULL;
     p_vout->p_sys->hwnd = p_vout->p_sys->hvideownd = NULL;
-    p_vout->p_sys->hparent = NULL;
+    p_vout->p_sys->hparent = p_vout->p_sys->hfswnd = NULL;
     p_vout->p_sys->i_changes = 0;
+    p_vout->p_sys->b_wallpaper = 0;
     vlc_mutex_init( p_vout, &p_vout->p_sys->lock );
     SetRectEmpty( &p_vout->p_sys->rect_display );
     SetRectEmpty( &p_vout->p_sys->rect_parent );
@@ -196,12 +236,16 @@ static int OpenVideo( vlc_object_t *p_this )
     p_vout->p_sys->p_display_driver = NULL;
     p_vout->p_sys->MonitorFromWindow = NULL;
     p_vout->p_sys->GetMonitorInfo = NULL;
-    if( (huser32 = GetModuleHandle( "USER32" ) ) )
+    if( (huser32 = GetModuleHandle( _T("USER32") ) ) )
     {
-        p_vout->p_sys->MonitorFromWindow =
-            GetProcAddress( huser32, "MonitorFromWindow" );
+        p_vout->p_sys->MonitorFromWindow = (HMONITOR (WINAPI *)( HWND, DWORD ))
+            GetProcAddress( huser32, _T("MonitorFromWindow") );
         p_vout->p_sys->GetMonitorInfo =
+#ifndef UNICODE
             GetProcAddress( huser32, "GetMonitorInfoA" );
+#else
+            GetProcAddress( huser32, _T("GetMonitorInfoW") );
+#endif
     }
 
     var_Create( p_vout, "overlay", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
@@ -210,6 +254,7 @@ static int OpenVideo( vlc_object_t *p_this )
     var_Create( p_vout, "directx-3buffering", VLC_VAR_BOOL|VLC_VAR_DOINHERIT );
     var_Create( p_vout, "directx-device", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "video-title", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
+    var_Create( p_vout, "disable-screensaver", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
 
     p_vout->p_sys->b_cursor_hidden = 0;
     p_vout->p_sys->i_lastmoved = mdate();
@@ -230,7 +275,7 @@ static int OpenVideo( vlc_object_t *p_this )
         vlc_object_create( p_vout, sizeof(event_thread_t) );
     p_vout->p_sys->p_event->p_vout = p_vout;
     if( vlc_thread_create( p_vout->p_sys->p_event, "DirectX Events Thread",
-                           DirectXEventThread, 0, 1 ) )
+                           E_(DirectXEventThread), 0, 1 ) )
     {
         msg_Err( p_vout, "cannot create DirectXEventThread" );
         vlc_object_destroy( p_vout->p_sys->p_event );
@@ -266,6 +311,39 @@ static int OpenVideo( vlc_object_t *p_this )
     /* Trigger a callback right now */
     var_Get( p_vout, "video-on-top", &val );
     var_Set( p_vout, "video-on-top", val );
+
+    /* Variable to indicate if the window should be on top of others */
+    /* Trigger a callback right now */
+    var_Create( p_vout, "directx-wallpaper", VLC_VAR_BOOL|VLC_VAR_DOINHERIT );
+    val.psz_string = _("Wallpaper");
+    var_Change( p_vout, "directx-wallpaper", VLC_VAR_SETTEXT, &val, NULL );
+    var_AddCallback( p_vout, "directx-wallpaper", WallpaperCallback, NULL );
+    var_Get( p_vout, "directx-wallpaper", &val );
+    var_Set( p_vout, "directx-wallpaper", val );
+
+    /* disable screensaver by temporarily changing system settings */
+    p_vout->p_sys->i_spi_lowpowertimeout = 0;
+    p_vout->p_sys->i_spi_powerofftimeout = 0;
+    p_vout->p_sys->i_spi_screensavetimeout = 0;
+    var_Get( p_vout, "disable-screensaver", &val);
+    if( val.b_bool ) {
+        msg_Dbg(p_vout, "disabling screen saver");
+        SystemParametersInfo(SPI_GETLOWPOWERTIMEOUT,
+            0, &(p_vout->p_sys->i_spi_lowpowertimeout), 0);
+        if( 0 != p_vout->p_sys->i_spi_lowpowertimeout ) {
+            SystemParametersInfo(SPI_SETLOWPOWERTIMEOUT, 0, NULL, 0);
+        }
+        SystemParametersInfo(SPI_GETPOWEROFFTIMEOUT, 0,
+            &(p_vout->p_sys->i_spi_powerofftimeout), 0);
+        if( 0 != p_vout->p_sys->i_spi_powerofftimeout ) {
+            SystemParametersInfo(SPI_SETPOWEROFFTIMEOUT, 0, NULL, 0);
+        }
+        SystemParametersInfo(SPI_GETSCREENSAVETIMEOUT, 0,
+            &(p_vout->p_sys->i_spi_screensavetimeout), 0);
+        if( 0 != p_vout->p_sys->i_spi_screensavetimeout ) {
+            SystemParametersInfo(SPI_SETSCREENSAVETIMEOUT, 0, NULL, 0);
+        }
+    }
 
     return VLC_SUCCESS;
 
@@ -319,6 +397,8 @@ static int Init( vout_thread_t *p_vout )
     p_vout->output.i_width  = p_vout->render.i_width;
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
+    p_vout->fmt_out = p_vout->fmt_in;
+    E_(DirectXUpdateRects)( p_vout, VLC_TRUE );
 
 #define MAX_DIRECTBUFFERS 1
     /* Right now we use only 1 directbuffer because we don't want the
@@ -352,7 +432,7 @@ static int Init( vout_thread_t *p_vout )
     if( !I_OUTPUTPICTURES )
     {
         /* hmmm, it didn't work! Let's try commonly supported chromas */
-        if( p_vout->output.i_chroma != VLC_FOURCC('Y','V','1','2') )
+        if( p_vout->output.i_chroma != VLC_FOURCC('I','4','2','0') )
         {
             p_vout->output.i_chroma = VLC_FOURCC('Y','V','1','2');
             NewPictureVec( p_vout, p_vout->p_picture, MAX_DIRECTBUFFERS );
@@ -373,9 +453,15 @@ static int Init( vout_thread_t *p_vout )
         NewPictureVec( p_vout, p_vout->p_picture, MAX_DIRECTBUFFERS );
     }
 
+    if( p_vout->p_sys->b_using_overlay )
+    {
+        p_vout->pf_display = OverlayDisplay;
+    }
+
     /* Change the window title bar text */
     PostMessage( p_vout->p_sys->hwnd, WM_VLC_CHANGE_TEXT, 0, 0 );
 
+    p_vout->fmt_out.i_chroma = p_vout->output.i_chroma;
     return VLC_SUCCESS;
 }
 
@@ -426,6 +512,23 @@ static void CloseVideo( vlc_object_t *p_this )
 
     vlc_mutex_destroy( &p_vout->p_sys->lock );
 
+    /* Make sure the wallpaper is restored */
+    SwitchWallpaperMode( p_vout, VLC_FALSE );
+
+    /* restore screensaver system settings */
+    if( 0 != p_vout->p_sys->i_spi_lowpowertimeout ) {
+        SystemParametersInfo(SPI_SETLOWPOWERTIMEOUT,
+            p_vout->p_sys->i_spi_lowpowertimeout, NULL, 0);
+    }
+    if( 0 != p_vout->p_sys->i_spi_powerofftimeout ) {
+        SystemParametersInfo(SPI_SETPOWEROFFTIMEOUT,
+            p_vout->p_sys->i_spi_powerofftimeout, NULL, 0);
+    }
+    if( 0 != p_vout->p_sys->i_spi_screensavetimeout ) {
+        SystemParametersInfo(SPI_SETSCREENSAVETIMEOUT,
+            p_vout->p_sys->i_spi_screensavetimeout, NULL, 0);
+    }
+
     if( p_vout->p_sys )
     {
         free( p_vout->p_sys );
@@ -437,7 +540,7 @@ static void CloseVideo( vlc_object_t *p_this )
  * Manage: handle Sys events
  *****************************************************************************
  * This function should be called regularly by the video output thread.
- * It returns a non null value if an error occured.
+ * It returns a non null value if an error occurred.
  *****************************************************************************/
 static int Manage( vout_thread_t *p_vout )
 {
@@ -496,10 +599,35 @@ static int Manage( vout_thread_t *p_vout )
         }
     }
 
+    /* Check for cropping / aspect changes */
+    if( p_vout->i_changes & VOUT_CROP_CHANGE ||
+        p_vout->i_changes & VOUT_ASPECT_CHANGE )
+    {
+        p_vout->i_changes &= ~VOUT_CROP_CHANGE;
+        p_vout->i_changes &= ~VOUT_ASPECT_CHANGE;
+
+        p_vout->fmt_out.i_x_offset = p_vout->fmt_in.i_x_offset;
+        p_vout->fmt_out.i_y_offset = p_vout->fmt_in.i_y_offset;
+        p_vout->fmt_out.i_visible_width = p_vout->fmt_in.i_visible_width;
+        p_vout->fmt_out.i_visible_height = p_vout->fmt_in.i_visible_height;
+        p_vout->fmt_out.i_aspect = p_vout->fmt_in.i_aspect;
+        p_vout->fmt_out.i_sar_num = p_vout->fmt_in.i_sar_num;
+        p_vout->fmt_out.i_sar_den = p_vout->fmt_in.i_sar_den;
+        p_vout->output.i_aspect = p_vout->fmt_in.i_aspect;
+        E_(DirectXUpdateRects)( p_vout, VLC_TRUE );
+    }
+
     /* We used to call the Win32 PeekMessage function here to read the window
      * messages. But since window can stay blocked into this function for a
      * long time (for example when you move your window on the screen), I
      * decided to isolate PeekMessage in another thread. */
+
+    if( p_vout->p_sys->i_changes & DX_WALLPAPER_CHANGE )
+    {
+        SwitchWallpaperMode( p_vout, !p_vout->p_sys->b_wallpaper );
+        p_vout->p_sys->i_changes &= ~DX_WALLPAPER_CHANGE;
+        E_(DirectXUpdateOverlay)( p_vout );
+    }
 
     /*
      * Fullscreen change
@@ -507,63 +635,80 @@ static int Manage( vout_thread_t *p_vout )
     if( p_vout->i_changes & VOUT_FULLSCREEN_CHANGE
         || p_vout->p_sys->i_changes & VOUT_FULLSCREEN_CHANGE )
     {
-        int i_style = 0;
         vlc_value_t val;
+        HWND hwnd = (p_vout->p_sys->hparent && p_vout->p_sys->hfswnd) ?
+            p_vout->p_sys->hfswnd : p_vout->p_sys->hwnd;
 
         p_vout->b_fullscreen = ! p_vout->b_fullscreen;
 
         /* We need to switch between Maximized and Normal sized window */
         window_placement.length = sizeof(WINDOWPLACEMENT);
+        GetWindowPlacement( hwnd, &window_placement );
         if( p_vout->b_fullscreen )
         {
+            /* Change window style, no borders and no title bar */
+            int i_style = WS_CLIPCHILDREN | WS_VISIBLE;
+            SetWindowLong( hwnd, GWL_STYLE, i_style );
+
             if( p_vout->p_sys->hparent )
             {
-                POINT point;
-
-                /* Retrieve the window position */
-                point.x = point.y = 0;
+                /* Retrieve current window position so fullscreen will happen
+                 * on the right screen */
+                POINT point = {0,0};
+                RECT rect;
                 ClientToScreen( p_vout->p_sys->hwnd, &point );
-                SetParent( p_vout->p_sys->hwnd, GetDesktopWindow() );
-                SetWindowPos( p_vout->p_sys->hwnd, 0, point.x, point.y, 0, 0,
-                              SWP_NOSIZE|SWP_NOZORDER|SWP_FRAMECHANGED );
-                SetForegroundWindow( p_vout->p_sys->hwnd );
+                GetClientRect( p_vout->p_sys->hwnd, &rect );
+                SetWindowPos( hwnd, 0, point.x, point.y,
+                              rect.right, rect.bottom,
+                              SWP_NOZORDER|SWP_FRAMECHANGED );
+                GetWindowPlacement( hwnd, &window_placement );
             }
 
-            /* Maximized window */
-            GetWindowPlacement( p_vout->p_sys->hwnd, &window_placement );
+            /* Maximize window */
             window_placement.showCmd = SW_SHOWMAXIMIZED;
-            /* Change window style, no borders and no title bar */
-            i_style = WS_CLIPCHILDREN | WS_VISIBLE | WS_POPUP;
+            SetWindowPlacement( hwnd, &window_placement );
+            SetWindowPos( hwnd, 0, 0, 0, 0, 0,
+                          SWP_NOMOVE|SWP_NOSIZE|SWP_NOZORDER|SWP_FRAMECHANGED);
+
+            if( p_vout->p_sys->hparent )
+            {
+                RECT rect;
+                GetClientRect( hwnd, &rect );
+                SetParent( p_vout->p_sys->hwnd, hwnd );
+                SetWindowPos( p_vout->p_sys->hwnd, 0, 0, 0,
+                              rect.right, rect.bottom,
+                              SWP_NOZORDER|SWP_FRAMECHANGED );
+            }
+
+            SetForegroundWindow( hwnd );
         }
         else
         {
-            if( p_vout->p_sys->hparent )
-            {
-                SetParent( p_vout->p_sys->hwnd, p_vout->p_sys->hparent );
-                SetWindowPos( p_vout->p_sys->hwnd, 0, 0, 0, 0, 0,
-                              SWP_NOSIZE|SWP_NOZORDER|SWP_FRAMECHANGED );
-                i_style = WS_CLIPCHILDREN | WS_VISIBLE | WS_CHILD;
-                SetForegroundWindow( p_vout->p_sys->hparent );
-            }
-            else
-            {
-                i_style = WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW |
-                          WS_SIZEBOX | WS_VISIBLE;
-            }
+            /* Change window style, no borders and no title bar */
+            SetWindowLong( hwnd, GWL_STYLE, p_vout->p_sys->i_window_style );
 
             /* Normal window */
-            GetWindowPlacement( p_vout->p_sys->hwnd, &window_placement );
             window_placement.showCmd = SW_SHOWNORMAL;
+            SetWindowPlacement( hwnd, &window_placement );
+            SetWindowPos( hwnd, 0, 0, 0, 0, 0,
+                          SWP_NOMOVE|SWP_NOSIZE|SWP_NOZORDER|SWP_FRAMECHANGED);
+
+            if( p_vout->p_sys->hparent )
+            {
+                RECT rect;
+                GetClientRect( p_vout->p_sys->hparent, &rect );
+                SetParent( p_vout->p_sys->hwnd, p_vout->p_sys->hparent );
+                SetWindowPos( p_vout->p_sys->hwnd, 0, 0, 0,
+                              rect.right, rect.bottom,
+                              SWP_NOZORDER|SWP_FRAMECHANGED );
+
+                ShowWindow( hwnd, SW_HIDE );
+                SetForegroundWindow( p_vout->p_sys->hparent );
+            }
 
             /* Make sure the mouse cursor is displayed */
             PostMessage( p_vout->p_sys->hwnd, WM_VLC_SHOW_MOUSE, 0, 0 );
         }
-
-        /* Change window style, borders and title bar */
-        SetWindowLong( p_vout->p_sys->hwnd, GWL_STYLE, i_style );
-        SetWindowPlacement( p_vout->p_sys->hwnd, &window_placement );
-        SetWindowPos( p_vout->p_sys->hwnd, 0, 0, 0, 0, 0,
-                      SWP_NOMOVE|SWP_NOSIZE|SWP_NOZORDER|SWP_FRAMECHANGED );
 
         /* Update the object variable and trigger callback */
         val.b_bool = p_vout->b_fullscreen;
@@ -660,7 +805,7 @@ static void Display( vout_thread_t *p_vout, picture_t *p_pic )
     {
         if( IDirectDrawSurface2_Restore( p_vout->p_sys->p_display ) == DD_OK &&
             p_vout->p_sys->b_using_overlay )
-            DirectXUpdateOverlay( p_vout );
+            E_(DirectXUpdateOverlay)( p_vout );
     }
 
     if( !p_vout->p_sys->b_using_overlay )
@@ -683,7 +828,14 @@ static void Display( vout_thread_t *p_vout, picture_t *p_pic )
             msg_Warn( p_vout, "could not blit surface (error %li)", dxresult );
             return;
         }
-
+        else
+        {
+            /* if set, remove the black brush to avoid flickering in repaint operations */
+            if( 0UL != GetClassLong( p_vout->p_sys->hvideownd, GCL_HBRBACKGROUND) )
+            {
+                SetClassLong(p_vout->p_sys->hvideownd, GCL_HBRBACKGROUND, (ULONG)0UL);
+            }
+        }
     }
     else /* using overlay */
     {
@@ -712,6 +864,28 @@ static void Display( vout_thread_t *p_vout, picture_t *p_pic )
         }
         DirectXUnlockSurface( p_vout, p_pic );
     }
+}
+
+/*
+** this function is only used once when the first picture is received
+** The overlay colorkey replaces black as the background color on the
+** video window; this will cause the overlay surface to be displayed
+*/
+static void OverlayDisplay( vout_thread_t *p_vout, picture_t *p_pic )
+{
+    /* get initial picture rendered on overlay surface */
+    Display(p_vout, p_pic);
+
+    IDirectDraw_WaitForVerticalBlank(p_vout->p_sys->p_ddobject,
+            DDWAITVB_BLOCKBEGIN, NULL);
+
+    /* set the colorkey as the backgound brush for the video window */
+    SetClassLong( p_vout->p_sys->hvideownd, GCL_HBRBACKGROUND,
+                  (LONG)CreateSolidBrush( p_vout->p_sys->i_rgb_colorkey ) );
+    InvalidateRect( p_vout->p_sys->hvideownd, NULL, TRUE );
+
+    /* use and restores proper display function for further pictures */
+    p_vout->pf_display = Display;
 }
 
 /* following functions are local */
@@ -755,8 +929,8 @@ BOOL WINAPI DirectXEnumCallback( GUID* p_guid, LPTSTR psz_desc,
                 {
                     rect.left = monitor_info.rcWork.left;
                     rect.top = monitor_info.rcWork.top;
-                    msg_Dbg( p_vout, "DirectXEnumCallback: Setting window "
-                             "position to %d,%d", rect.left, rect.top );
+                    msg_Dbg( p_vout, "DirectXEnumCallback: setting window "
+                             "position to %ld,%ld", rect.left, rect.top );
                     SetWindowPos( p_vout->p_sys->hwnd, NULL,
                                   rect.left, rect.top, 0, 0,
                                   SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE );
@@ -797,7 +971,7 @@ static int DirectXInitDDraw( vout_thread_t *p_vout )
     msg_Dbg( p_vout, "DirectXInitDDraw" );
 
     /* Load direct draw DLL */
-    p_vout->p_sys->hddraw_dll = LoadLibrary("DDRAW.DLL");
+    p_vout->p_sys->hddraw_dll = LoadLibrary(_T("DDRAW.DLL"));
     if( p_vout->p_sys->hddraw_dll == NULL )
     {
         msg_Warn( p_vout, "DirectXInitDDraw failed loading ddraw.dll" );
@@ -805,7 +979,8 @@ static int DirectXInitDDraw( vout_thread_t *p_vout )
     }
 
     OurDirectDrawCreate =
-      (void *)GetProcAddress(p_vout->p_sys->hddraw_dll, "DirectDrawCreate");
+      (void *)GetProcAddress( p_vout->p_sys->hddraw_dll,
+                              _T("DirectDrawCreate") );
     if( OurDirectDrawCreate == NULL )
     {
         msg_Err( p_vout, "DirectXInitDDraw failed GetProcAddress" );
@@ -814,7 +989,11 @@ static int DirectXInitDDraw( vout_thread_t *p_vout )
 
     OurDirectDrawEnumerateEx =
       (void *)GetProcAddress( p_vout->p_sys->hddraw_dll,
+#ifndef UNICODE
                               "DirectDrawEnumerateExA" );
+#else
+                              _T("DirectDrawEnumerateExW") );
+#endif
 
     if( OurDirectDrawEnumerateEx && p_vout->p_sys->MonitorFromWindow )
     {
@@ -883,7 +1062,7 @@ static int DirectXInitDDraw( vout_thread_t *p_vout )
         p_vout->p_sys->rect_display.bottom = GetSystemMetrics(SM_CYSCREEN);
     }
 
-    msg_Dbg( p_vout, "screen dimensions (%ix%i,%ix%i)",
+    msg_Dbg( p_vout, "screen dimensions (%lix%li,%lix%li)",
              p_vout->p_sys->rect_display.left,
              p_vout->p_sys->rect_display.top,
              p_vout->p_sys->rect_display.right,
@@ -952,13 +1131,15 @@ static int DirectXCreateDisplay( vout_thread_t *p_vout )
     /* Make sure the colorkey will be painted */
     p_vout->p_sys->i_colorkey = 1;
     p_vout->p_sys->i_rgb_colorkey =
-        DirectXFindColorkey( p_vout, p_vout->p_sys->i_colorkey );
+        DirectXFindColorkey( p_vout, &p_vout->p_sys->i_colorkey );
 
-    /* Create the actual brush */
+    /* use black brush as the video background color,
+       if overlay video is used, this will be replaced by the
+       colorkey when the first picture is received */
     SetClassLong( p_vout->p_sys->hvideownd, GCL_HBRBACKGROUND,
-                  (LONG)CreateSolidBrush( p_vout->p_sys->i_rgb_colorkey ) );
+                  (LONG)GetStockObject( BLACK_BRUSH ) );
     InvalidateRect( p_vout->p_sys->hvideownd, NULL, TRUE );
-    DirectXUpdateRects( p_vout, VLC_TRUE );
+    E_(DirectXUpdateRects)( p_vout, VLC_TRUE );
 
     return VLC_SUCCESS;
 }
@@ -1126,7 +1307,7 @@ static int DirectXCreateSurface( vout_thread_t *p_vout,
         /* Check the overlay is useable as some graphics cards allow creating
          * several overlays but only one can be used at one time. */
         p_vout->p_sys->p_current_surface = *pp_surface_final;
-        if( DirectXUpdateOverlay( p_vout ) != VLC_SUCCESS )
+        if( E_(DirectXUpdateOverlay)( p_vout ) != VLC_SUCCESS )
         {
             IDirectDrawSurface2_Release( *pp_surface_final );
             *pp_surface_final = NULL;
@@ -1145,7 +1326,7 @@ static int DirectXCreateSurface( vout_thread_t *p_vout,
  * Ususally the overlay is moved by the user and thus, by a move or resize
  * event (in Manage).
  *****************************************************************************/
-int DirectXUpdateOverlay( vout_thread_t *p_vout )
+int E_(DirectXUpdateOverlay)( vout_thread_t *p_vout )
 {
     DDOVERLAYFX     ddofx;
     DWORD           dwFlags;
@@ -1154,6 +1335,25 @@ int DirectXUpdateOverlay( vout_thread_t *p_vout )
     RECT            rect_dest = p_vout->p_sys->rect_dest_clipped;
 
     if( !p_vout->p_sys->b_using_overlay ) return VLC_EGENERIC;
+
+    if( p_vout->p_sys->b_wallpaper )
+    {
+        int i_x, i_y, i_width, i_height;
+
+        rect_src.left = p_vout->fmt_out.i_x_offset;
+        rect_src.top = p_vout->fmt_out.i_y_offset;
+        rect_src.right = rect_src.left + p_vout->fmt_out.i_visible_width;
+        rect_src.bottom = rect_src.top + p_vout->fmt_out.i_visible_height;
+
+        rect_dest = p_vout->p_sys->rect_display;
+        vout_PlacePicture( p_vout, rect_dest.right, rect_dest.bottom,
+                           &i_x, &i_y, &i_width, &i_height );
+
+        rect_dest.left += i_x;
+        rect_dest.right = rect_dest.left + i_width;
+        rect_dest.top += i_y;
+        rect_dest.bottom = rect_dest.top + i_height;
+    }
 
     vlc_mutex_lock( &p_vout->p_sys->lock );
     if( p_vout->p_sys->p_current_surface == NULL )
@@ -1340,7 +1540,7 @@ static int NewPictureVec( vout_thread_t *p_vout, picture_t *p_pic,
             {
                 int i,j;
                 for( i = 0; i < front_pic.i_planes; i++ )
-                    for( j = 0; j < front_pic.p[i].i_lines; j++)
+                    for( j = 0; j < front_pic.p[i].i_visible_lines; j++)
                         memset( front_pic.p[i].p_pixels + j *
                                 front_pic.p[i].i_pitch, 127,
                                 front_pic.p[i].i_visible_pitch );
@@ -1348,7 +1548,7 @@ static int NewPictureVec( vout_thread_t *p_vout, picture_t *p_pic,
                 DirectXUnlockSurface( p_vout, &front_pic );
             }
 
-            DirectXUpdateOverlay( p_vout );
+            E_(DirectXUpdateOverlay)( p_vout );
             I_OUTPUTPICTURES = 1;
             msg_Dbg( p_vout, "YUV overlay created successfully" );
         }
@@ -1411,8 +1611,9 @@ static int NewPictureVec( vout_thread_t *p_vout, picture_t *p_pic,
             {
                 switch( ddpfPixelFormat.dwRGBBitCount )
                 {
-                case 8: /* FIXME: set the palette */
+                case 8:
                     p_vout->output.i_chroma = VLC_FOURCC('R','G','B','2');
+                    p_vout->output.pf_setpalette = SetPalette;
                     break;
                 case 15:
                     p_vout->output.i_chroma = VLC_FOURCC('R','V','1','5');
@@ -1481,6 +1682,7 @@ static int NewPictureVec( vout_thread_t *p_vout, picture_t *p_pic,
     {
         p_pic[i].i_status = DESTROYED_PICTURE;
         p_pic[i].i_type   = DIRECT_PICTURE;
+        p_pic[i].b_slow   = VLC_TRUE;
         p_pic[i].pf_lock  = DirectXLockSurface;
         p_pic[i].pf_unlock = DirectXUnlockSurface;
         PP_OUTPUTPICTURE[i] = &p_pic[i];
@@ -1544,6 +1746,7 @@ static int UpdatePictureStruct( vout_thread_t *p_vout, picture_t *p_pic,
         case VLC_FOURCC('R','V','3','2'):
             p_pic->p->p_pixels = p_pic->p_sys->ddsd.lpSurface;
             p_pic->p->i_lines = p_vout->output.i_height;
+            p_pic->p->i_visible_lines = p_vout->output.i_height;
             p_pic->p->i_pitch = p_pic->p_sys->ddsd.lPitch;
             switch( p_vout->output.i_chroma )
             {
@@ -1569,9 +1772,15 @@ static int UpdatePictureStruct( vout_thread_t *p_vout, picture_t *p_pic,
             break;
 
         case VLC_FOURCC('Y','V','1','2'):
+        case VLC_FOURCC('I','4','2','0'):
+
+            /* U and V inverted compared to I420
+             * Fixme: this should be handled by the vout core */
+            p_vout->output.i_chroma = VLC_FOURCC('I','4','2','0');
 
             p_pic->Y_PIXELS = p_pic->p_sys->ddsd.lpSurface;
             p_pic->p[Y_PLANE].i_lines = p_vout->output.i_height;
+            p_pic->p[Y_PLANE].i_visible_lines = p_vout->output.i_height;
             p_pic->p[Y_PLANE].i_pitch = p_pic->p_sys->ddsd.lPitch;
             p_pic->p[Y_PLANE].i_pixel_pitch = 1;
             p_pic->p[Y_PLANE].i_visible_pitch = p_vout->output.i_width *
@@ -1580,6 +1789,7 @@ static int UpdatePictureStruct( vout_thread_t *p_vout, picture_t *p_pic,
             p_pic->V_PIXELS =  p_pic->Y_PIXELS
               + p_pic->p[Y_PLANE].i_lines * p_pic->p[Y_PLANE].i_pitch;
             p_pic->p[V_PLANE].i_lines = p_vout->output.i_height / 2;
+            p_pic->p[V_PLANE].i_visible_lines = p_vout->output.i_height / 2;
             p_pic->p[V_PLANE].i_pitch = p_pic->p[Y_PLANE].i_pitch / 2;
             p_pic->p[V_PLANE].i_pixel_pitch = 1;
             p_pic->p[V_PLANE].i_visible_pitch = p_vout->output.i_width / 2 *
@@ -1588,6 +1798,7 @@ static int UpdatePictureStruct( vout_thread_t *p_vout, picture_t *p_pic,
             p_pic->U_PIXELS = p_pic->V_PIXELS
               + p_pic->p[V_PLANE].i_lines * p_pic->p[V_PLANE].i_pitch;
             p_pic->p[U_PLANE].i_lines = p_vout->output.i_height / 2;
+            p_pic->p[U_PLANE].i_visible_lines = p_vout->output.i_height / 2;
             p_pic->p[U_PLANE].i_pitch = p_pic->p[Y_PLANE].i_pitch / 2;
             p_pic->p[U_PLANE].i_pixel_pitch = 1;
             p_pic->p[U_PLANE].i_visible_pitch = p_vout->output.i_width / 2 *
@@ -1600,6 +1811,7 @@ static int UpdatePictureStruct( vout_thread_t *p_vout, picture_t *p_pic,
 
             p_pic->Y_PIXELS = p_pic->p_sys->ddsd.lpSurface;
             p_pic->p[Y_PLANE].i_lines = p_vout->output.i_height;
+            p_pic->p[Y_PLANE].i_visible_lines = p_vout->output.i_height;
             p_pic->p[Y_PLANE].i_pitch = p_pic->p_sys->ddsd.lPitch;
             p_pic->p[Y_PLANE].i_pixel_pitch = 1;
             p_pic->p[Y_PLANE].i_visible_pitch = p_vout->output.i_width *
@@ -1608,6 +1820,7 @@ static int UpdatePictureStruct( vout_thread_t *p_vout, picture_t *p_pic,
             p_pic->U_PIXELS = p_pic->Y_PIXELS
               + p_pic->p[Y_PLANE].i_lines * p_pic->p[Y_PLANE].i_pitch;
             p_pic->p[U_PLANE].i_lines = p_vout->output.i_height / 2;
+            p_pic->p[U_PLANE].i_visible_lines = p_vout->output.i_height / 2;
             p_pic->p[U_PLANE].i_pitch = p_pic->p[Y_PLANE].i_pitch / 2;
             p_pic->p[U_PLANE].i_pixel_pitch = 1;
             p_pic->p[U_PLANE].i_visible_pitch = p_vout->output.i_width / 2 *
@@ -1616,6 +1829,7 @@ static int UpdatePictureStruct( vout_thread_t *p_vout, picture_t *p_pic,
             p_pic->V_PIXELS =  p_pic->U_PIXELS
               + p_pic->p[U_PLANE].i_lines * p_pic->p[U_PLANE].i_pitch;
             p_pic->p[V_PLANE].i_lines = p_vout->output.i_height / 2;
+            p_pic->p[V_PLANE].i_visible_lines = p_vout->output.i_height / 2;
             p_pic->p[V_PLANE].i_pitch = p_pic->p[Y_PLANE].i_pitch / 2;
             p_pic->p[V_PLANE].i_pixel_pitch = 1;
             p_pic->p[V_PLANE].i_visible_pitch = p_vout->output.i_width / 2 *
@@ -1629,6 +1843,7 @@ static int UpdatePictureStruct( vout_thread_t *p_vout, picture_t *p_pic,
 
             p_pic->p->p_pixels = p_pic->p_sys->ddsd.lpSurface;
             p_pic->p->i_lines = p_vout->output.i_height;
+            p_pic->p->i_visible_lines = p_vout->output.i_height;
             p_pic->p->i_pitch = p_pic->p_sys->ddsd.lPitch;
             p_pic->p->i_pixel_pitch = 2;
             p_pic->p->i_visible_pitch = p_vout->output.i_width *
@@ -1771,8 +1986,10 @@ static int DirectXLockSurface( vout_thread_t *p_vout, picture_t *p_pic )
             dxresult = IDirectDrawSurface2_Lock( p_pic->p_sys->p_surface, NULL,
                                                  &p_pic->p_sys->ddsd,
                                                  DDLOCK_WAIT, NULL);
+#if 0
             if( dxresult == DDERR_SURFACELOST )
                 msg_Dbg( p_vout, "DirectXLockSurface: DDERR_SURFACELOST" );
+#endif
         }
         if( dxresult != DD_OK )
         {
@@ -1807,7 +2024,7 @@ static int DirectXUnlockSurface( vout_thread_t *p_vout, picture_t *p_pic )
 /*****************************************************************************
  * DirectXFindColorkey: Finds out the 32bits RGB pixel value of the colorkey
  *****************************************************************************/
-static DWORD DirectXFindColorkey( vout_thread_t *p_vout, uint32_t i_color )
+static DWORD DirectXFindColorkey( vout_thread_t *p_vout, uint32_t *pi_color )
 {
     DDSURFACEDESC ddsd;
     HRESULT dxresult;
@@ -1825,16 +2042,20 @@ static DWORD DirectXFindColorkey( vout_thread_t *p_vout, uint32_t i_color )
     switch( ddsd.ddpfPixelFormat.dwRGBBitCount )
     {
     case 4:
-        *(uint8_t *)ddsd.lpSurface = 0x11;
+        *(uint8_t *)ddsd.lpSurface = *pi_color | (*pi_color << 4);
         break;
     case 8:
-        *(uint8_t *)ddsd.lpSurface = 0x01;
+        *(uint8_t *)ddsd.lpSurface = *pi_color;
         break;
+    case 15:
     case 16:
-        *(uint16_t *)ddsd.lpSurface = 0x01;
+        *(uint16_t *)ddsd.lpSurface = *pi_color;
         break;
+    case 24:
+        /* Seems to be problematic so we'll just put black as the colorkey */
+        *pi_color = 0;
     default:
-        *(uint32_t *)ddsd.lpSurface = 0x01;
+        *(uint32_t *)ddsd.lpSurface = *pi_color;
         break;
     }
 
@@ -1856,6 +2077,48 @@ static DWORD DirectXFindColorkey( vout_thread_t *p_vout, uint32_t i_color )
     IDirectDrawSurface2_Unlock( p_vout->p_sys->p_display, NULL );
 
     return i_rgb;
+}
+
+/*****************************************************************************
+ * A few toolbox functions
+ *****************************************************************************/
+void SwitchWallpaperMode( vout_thread_t *p_vout, vlc_bool_t b_on )
+{
+    HWND hwnd;
+
+    if( p_vout->p_sys->b_wallpaper == b_on ) return; /* Nothing to do */
+
+    hwnd = FindWindow( _T("Progman"), NULL );
+    if( hwnd ) hwnd = FindWindowEx( hwnd, NULL, _T("SHELLDLL_DefView"), NULL );
+    if( hwnd ) hwnd = FindWindowEx( hwnd, NULL, _T("SysListView32"), NULL );
+    if( !hwnd )
+    {
+        msg_Warn( p_vout, "couldn't find \"SysListView32\" window, "
+                  "wallpaper mode not supported" );
+        return;
+    }
+
+    p_vout->p_sys->b_wallpaper = b_on;
+
+    msg_Dbg( p_vout, "wallpaper mode %s", b_on ? "enabled" : "disabled" );
+
+    if( p_vout->p_sys->b_wallpaper )
+    {
+        p_vout->p_sys->color_bkg = ListView_GetBkColor( hwnd );
+        p_vout->p_sys->color_bkgtxt = ListView_GetTextBkColor( hwnd );
+
+        ListView_SetBkColor( hwnd, p_vout->p_sys->i_rgb_colorkey );
+        ListView_SetTextBkColor( hwnd, p_vout->p_sys->i_rgb_colorkey );
+    }
+    else if( hwnd )
+    {
+        ListView_SetBkColor( hwnd, p_vout->p_sys->color_bkg );
+        ListView_SetTextBkColor( hwnd, p_vout->p_sys->color_bkgtxt );
+    }
+
+    /* Update desktop */
+    InvalidateRect( hwnd, NULL, TRUE );            
+    UpdateWindow( hwnd );
 }
 
 /*****************************************************************************
@@ -1912,11 +2175,15 @@ static int FindDevicesCallback( vlc_object_t *p_this, char const *psz_name,
     p_item->i_list = 1;
 
     /* Load direct draw DLL */
-    hddraw_dll = LoadLibrary("DDRAW.DLL");
+    hddraw_dll = LoadLibrary(_T("DDRAW.DLL"));
     if( hddraw_dll == NULL ) return VLC_SUCCESS;
 
     OurDirectDrawEnumerateEx =
+#ifndef UNICODE
       (void *)GetProcAddress( hddraw_dll, "DirectDrawEnumerateExA" );
+#else
+      (void *)GetProcAddress( hddraw_dll, _T("DirectDrawEnumerateExW") );
+#endif
 
     if( OurDirectDrawEnumerateEx )
     {
@@ -1931,4 +2198,43 @@ static int FindDevicesCallback( vlc_object_t *p_this, char const *psz_name,
     p_item->b_dirty = VLC_TRUE;
 
     return VLC_SUCCESS;
+}
+
+static int WallpaperCallback( vlc_object_t *p_this, char const *psz_cmd,
+                              vlc_value_t oldval, vlc_value_t newval,
+                              void *p_data )
+{
+    vout_thread_t *p_vout = (vout_thread_t *)p_this;
+
+    if( (newval.b_bool && !p_vout->p_sys->b_wallpaper) ||
+        (!newval.b_bool && p_vout->p_sys->b_wallpaper) )
+    {
+        playlist_t *p_playlist;
+
+        p_playlist =
+            (playlist_t *)vlc_object_find( p_this, VLC_OBJECT_PLAYLIST,
+                                           FIND_PARENT );
+        if( p_playlist )
+        {
+            /* Modify playlist as well because the vout might have to be
+             * restarted */
+            var_Create( p_playlist, "directx-wallpaper", VLC_VAR_BOOL );
+            var_Set( p_playlist, "directx-wallpaper", newval );
+
+            vlc_object_release( p_playlist );
+        }
+
+        p_vout->p_sys->i_changes |= DX_WALLPAPER_CHANGE;
+    }
+
+    return VLC_SUCCESS;
+}
+
+/*****************************************************************************
+ * SetPalette: sets an 8 bpp palette
+ *****************************************************************************/
+static void SetPalette( vout_thread_t *p_vout,
+                        uint16_t *red, uint16_t *green, uint16_t *blue )
+{
+    msg_Err( p_vout, "FIXME: SetPalette unimplemented" );
 }

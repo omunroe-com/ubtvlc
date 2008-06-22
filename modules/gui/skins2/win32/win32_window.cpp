@@ -1,11 +1,11 @@
 /*****************************************************************************
  * win32_window.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: win32_window.cpp 7574 2004-05-01 14:23:40Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: win32_window.cpp 14118 2006-02-01 18:06:48Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifdef WIN32_SKINS
@@ -38,11 +38,17 @@
 #endif
 
 
+// XXX layered windows are supposed to work only with at least win2k
+#ifndef WS_EX_LAYERED
+#   define WS_EX_LAYERED 0x00080000
+#endif
+
 Win32Window::Win32Window( intf_thread_t *pIntf, GenericWindow &rWindow,
                           HINSTANCE hInst, HWND hParentWindow,
                           bool dragDrop, bool playOnDrop,
                           Win32Window *pParentWindow ):
-    OSWindow( pIntf ), m_dragDrop( dragDrop ), m_isLayered( false )
+    OSWindow( pIntf ), m_dragDrop( dragDrop ), m_isLayered( false ),
+    m_pParent( pParentWindow )
 {
     // Create the window
     if( pParentWindow )
@@ -57,7 +63,8 @@ Win32Window::Win32Window( intf_thread_t *pIntf, GenericWindow &rWindow,
     {
         // Normal window
         m_hWnd = CreateWindowEx( WS_EX_TOOLWINDOW, "SkinWindowClass",
-            "default name", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT,
+            "default name", WS_POPUP | WS_CLIPCHILDREN,
+            CW_USEDEFAULT, CW_USEDEFAULT,
             CW_USEDEFAULT, CW_USEDEFAULT, hParentWindow, 0, hInst, NULL );
     }
 
@@ -80,16 +87,21 @@ Win32Window::Win32Window( intf_thread_t *pIntf, GenericWindow &rWindow,
         RegisterDragDrop( m_hWnd, m_pDropTarget );
     }
 
-    // XXX Set this window as the vout
-    if( pParentWindow )
+    // Set this window as a vout
+    if( m_pParent )
     {
-        VlcProc::instance( getIntf() )->setVoutWindow( (void*)m_hWnd );
+        VlcProc::instance( getIntf() )->registerVoutWindow( (void*)m_hWnd );
     }
 }
 
 
 Win32Window::~Win32Window()
 {
+    if( m_pParent )
+    {
+        VlcProc::instance( getIntf() )->unregisterVoutWindow( (void*)m_hWnd );
+    }
+
     Win32Factory *pFactory = (Win32Factory*)Win32Factory::instance( getIntf() );
     pFactory->m_windowMap[m_hWnd] = NULL;
 
@@ -127,7 +139,8 @@ void Win32Window::moveResize( int left, int top, int width, int height ) const
 
 void Win32Window::raise() const
 {
-    SetWindowPos( m_hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE );
+//     SetWindowPos( m_hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE );
+    SetForegroundWindow( m_hWnd );
 }
 
 

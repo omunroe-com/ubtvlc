@@ -1,8 +1,8 @@
 /*****************************************************************************
  * gather.c: gathering stream output module
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: gather.c 7046 2004-03-11 17:36:43Z fenrir $
+ * Copyright (C) 2003-2004 the VideoLAN team
+ * $Id: gather.c 18775 2007-02-10 20:34:15Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -76,7 +76,7 @@ static int Open( vlc_object_t *p_this )
     sout_stream_sys_t *p_sys;
 
     p_stream->p_sys = p_sys = malloc( sizeof( sout_stream_sys_t ) );
-    p_sys->p_out    = sout_stream_new( p_stream->p_sout, p_stream->psz_next );
+    p_sys->p_out    = sout_StreamNew( p_stream->p_sout, p_stream->psz_next );
     if( p_sys->p_out == NULL )
     {
         free( p_sys );
@@ -108,7 +108,7 @@ static void Close( vlc_object_t * p_this )
     }
     free( p_sys->id );
 
-    sout_stream_delete( p_sys->p_out );
+    sout_StreamDelete( p_sys->p_out );
     free( p_sys );
 }
 
@@ -150,7 +150,6 @@ static sout_stream_id_t * Add( sout_stream_t *p_stream, es_format_t *p_fmt )
         {
             TAB_REMOVE( p_sys->i_id, p_sys->id, id );
             p_sys->p_out->pf_del( p_sys->p_out, id );
-            free( id );
 
             i = 0;
             continue;

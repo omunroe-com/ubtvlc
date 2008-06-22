@@ -1,8 +1,8 @@
 /*****************************************************************************
  * test2.cpp : Empty C++ module for vlc
  *****************************************************************************
- * Copyright (C) 2000-2001 VideoLAN
- * $Id: test2.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2000-2001 the VideoLAN team
+ * $Id: test2.cpp 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************

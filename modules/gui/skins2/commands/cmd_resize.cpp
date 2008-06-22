@@ -1,11 +1,11 @@
 /*****************************************************************************
  * cmd_resize.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_resize.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_resize.cpp 16454 2006-08-31 19:54:36Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,17 +19,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "cmd_resize.hpp"
 #include "../src/generic_layout.hpp"
+#include "../src/window_manager.hpp"
+#include "../src/vlcproc.hpp"
 
 
-CmdResize::CmdResize( intf_thread_t *pIntf, GenericLayout &rLayout, int width,
-                      int height ):
-    CmdGeneric( pIntf ), m_rLayout( rLayout ), m_width( width ),
-    m_height( height )
+CmdResize::CmdResize( intf_thread_t *pIntf, const WindowManager &rWindowManager,
+                      GenericLayout &rLayout, int width, int height ):
+    CmdGeneric( pIntf ), m_rWindowManager( rWindowManager ),
+    m_rLayout( rLayout ), m_width( width ), m_height( height )
 {
 }
 
@@ -37,5 +39,21 @@ CmdResize::CmdResize( intf_thread_t *pIntf, GenericLayout &rLayout, int width,
 void CmdResize::execute()
 {
     // Resize the layout
-    m_rLayout.resize( m_width, m_height );
+    m_rWindowManager.resize( m_rLayout, m_width, m_height );
 }
+
+
+CmdResizeVout::CmdResizeVout( intf_thread_t *pIntf, void *pWindow, int width,
+                              int height ):
+    CmdGeneric( pIntf ), m_pWindow( pWindow ), m_width( width ),
+    m_height( height )
+{
+}
+
+
+void CmdResizeVout::execute()
+{
+    VarBox &rVoutSize = VlcProc::instance( getIntf() )->getVoutSizeVar();
+    rVoutSize.setSize( m_width, m_height );
+}
+

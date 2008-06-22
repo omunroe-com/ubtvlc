@@ -3,8 +3,8 @@
  * This library provides basic functions for threads to interact with user
  * interface, such as command line.
  *****************************************************************************
- * Copyright (C) 1998-2004 VideoLAN
- * $Id: interface.c 7695 2004-05-16 22:42:48Z gbazin $
+ * Copyright (C) 1998-2004 the VideoLAN team
+ * $Id: interface.c 20490 2007-06-09 15:36:51Z pdherbemont $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /**
@@ -37,16 +37,17 @@
 #include <string.h>                                            /* strerror() */
 
 #include <vlc/vlc.h>
-
-#include "stream_control.h"
-#include "input_ext-intf.h"
+#include <vlc/input.h>
 
 #include "audio_output.h"
 
 #include "vlc_interface.h"
-
 #include "vlc_video.h"
 #include "video_output.h"
+
+#ifdef __APPLE__
+#    include <Cocoa/Cocoa.h>
+#endif
 
 /*****************************************************************************
  * Local prototypes
@@ -59,6 +60,20 @@ static int SwitchIntfCallback( vlc_object_t *, char const *,
 static int AddIntfCallback( vlc_object_t *, char const *,
                             vlc_value_t , vlc_value_t , void * );
 
+#ifdef __APPLE__
+/*****************************************************************************
+ * VLCApplication interface
+ *****************************************************************************/
+@interface VLCApplication : NSApplication
+{
+   vlc_t *o_vlc;
+}
+
+- (void)setVLC: (vlc_t *)p_vlc;
+
+@end
+#endif
+
 /*****************************************************************************
  * intf_Create: prepare interface before main loop
  *****************************************************************************
@@ -67,14 +82,19 @@ static int AddIntfCallback( vlc_object_t *, char const *,
  *****************************************************************************/
 /**
  * Create the interface, and prepare it for main loop.
+ * You can give some additional options to be used for interface initialization
  *
  * \param p_this the calling vlc_object_t
  * \param psz_module a prefered interface module
+ * \param i_options number additional options
+ * \param ppsz_options additional option strings
  * \return a pointer to the created interface thread, NULL on error
  */
-intf_thread_t* __intf_Create( vlc_object_t *p_this, const char *psz_module )
+intf_thread_t* __intf_Create( vlc_object_t *p_this, const char *psz_module,
+                              int i_options, char **ppsz_options  )
 {
     intf_thread_t * p_intf;
+    int i;
 
     /* Allocate structure */
     p_intf = vlc_object_create( p_this, VLC_OBJECT_INTF );
@@ -87,13 +107,19 @@ intf_thread_t* __intf_Create( vlc_object_t *p_this, const char *psz_module )
     p_intf->pf_release_window = NULL;
     p_intf->pf_control_window = NULL;
     p_intf->b_play = VLC_FALSE;
+    p_intf->b_interaction = VLC_FALSE;
+
+    for( i = 0 ; i< i_options; i++ )
+    {
+        var_OptionParse( p_intf, ppsz_options[i] );
+    }
 
     /* Choose the best module */
-    p_intf->p_module = module_Need( p_intf, "interface", psz_module, 0 );
+    p_intf->p_module = module_Need( p_intf, "interface", psz_module, VLC_FALSE );
 
     if( p_intf->p_module == NULL )
     {
-        msg_Err( p_intf, "no suitable intf module" );
+        msg_Err( p_intf, "no suitable interface module" );
         vlc_object_destroy( p_intf );
         return NULL;
     }
@@ -104,8 +130,6 @@ intf_thread_t* __intf_Create( vlc_object_t *p_this, const char *psz_module )
 
     /* Initialize mutexes */
     vlc_mutex_init( p_intf, &p_intf->change_lock );
-
-    msg_Dbg( p_intf, "interface initialized" );
 
     /* Attach interface to its parent object */
     vlc_object_attach( p_intf, p_this );
@@ -129,6 +153,62 @@ intf_thread_t* __intf_Create( vlc_object_t *p_this, const char *psz_module )
  */
 int intf_RunThread( intf_thread_t *p_intf )
 {
+#ifdef __APPLE__
+    NSAutoreleasePool * o_pool;
+
+    if( p_intf->b_block )
+    {
+        /* This is the primary intf */
+        /* Run a manager thread, launch the interface, kill the manager */
+        if( vlc_thread_create( p_intf, "manage", Manager,
+                               VLC_THREAD_PRIORITY_LOW, VLC_FALSE ) )
+        {
+            msg_Err( p_intf, "cannot spawn manager thread" );
+            return VLC_EGENERIC;
+        }
+    }
+
+    if( p_intf->b_block && strncmp( p_intf->p_vlc->psz_object_name,
+                                    "clivlc", 6) )
+    {
+        o_pool = [[NSAutoreleasePool alloc] init];
+        [VLCApplication sharedApplication];
+        [NSApp setVLC: p_intf->p_vlc];
+    }
+
+    if( p_intf->b_block &&
+        ( !strncmp( p_intf->p_module->psz_object_name, "macosx" , 6 ) ||
+          !strncmp( p_intf->p_vlc->psz_object_name, "clivlc", 6 ) ) )
+    {
+        /* VLC in normal primary interface mode */
+        RunInterface( p_intf );
+        p_intf->b_die = VLC_TRUE;
+    }
+    else
+    {
+        /* Run the interface in a separate thread */
+        if( !strcmp( p_intf->p_module->psz_object_name, "macosx" ) )
+        {
+            msg_Err( p_intf, "You cannot run the MacOS X module as an "
+                             "extra interface. Please read the "
+                             "README.MacOSX.rtf file.");
+            return VLC_EGENERIC;
+        }
+        if( vlc_thread_create( p_intf, "interface", RunInterface,
+                               VLC_THREAD_PRIORITY_LOW, VLC_FALSE ) )
+        {
+            msg_Err( p_intf, "cannot spawn interface thread" );
+            return VLC_EGENERIC;
+        }
+
+        if( p_intf->b_block )
+        {
+            /* VLC in primary interface mode with a working macosx vout */
+            [NSApp run];
+            p_intf->b_die = VLC_TRUE;
+        }
+    }
+#else
     if( p_intf->b_block )
     {
         /* Run a manager thread, launch the interface, kill the manager */
@@ -142,7 +222,6 @@ int intf_RunThread( intf_thread_t *p_intf )
         RunInterface( p_intf );
 
         p_intf->b_die = VLC_TRUE;
-
         /* Do not join the thread... intf_StopThread will do it for us */
     }
     else
@@ -155,6 +234,7 @@ int intf_RunThread( intf_thread_t *p_intf )
             return VLC_EGENERIC;
         }
     }
+#endif
 
     return VLC_SUCCESS;
 }
@@ -230,6 +310,12 @@ static void Manager( intf_thread_t *p_intf )
         if( p_intf->p_vlc->b_die )
         {
             p_intf->b_die = VLC_TRUE;
+#ifdef __APPLE__
+    if( strncmp( p_intf->p_vlc->psz_object_name, "clivlc", 6 ) )
+    {
+        [NSApp stop: NULL];
+    }
+#endif
             return;
         }
     }
@@ -242,11 +328,10 @@ static void RunInterface( intf_thread_t *p_intf )
 {
     static char *ppsz_interfaces[] =
     {
-/*
-        "skins", "Skins",
         "skins2", "Skins 2",
-        "wxwindows", "wxWindows",
-*/
+#ifndef WIN32
+        "wxwidgets", "wxWidgets",
+#endif
         NULL, NULL
     };
     char **ppsz_parser;
@@ -273,7 +358,7 @@ static void RunInterface( intf_thread_t *p_intf )
             if( !strcmp( p_module->psz_object_name, ppsz_parser[0] ) )
             {
                 val.psz_string = ppsz_parser[0];
-                text.psz_string = ppsz_parser[1];
+                text.psz_string = _(ppsz_parser[1]);
                 var_Change( p_intf, "intf-switch", VLC_VAR_ADDCHOICE,
                             &val, &text );
                 break;
@@ -290,17 +375,15 @@ static void RunInterface( intf_thread_t *p_intf )
     text.psz_string = _("Add Interface");
     var_Change( p_intf, "intf-add", VLC_VAR_SETTEXT, &text, NULL );
 
-    val.psz_string = "rc"; text.psz_string = "Console";
+    val.psz_string = "rc"; text.psz_string = _("Console");
     var_Change( p_intf, "intf-add", VLC_VAR_ADDCHOICE, &val, &text );
-    val.psz_string = "telnet"; text.psz_string = "Telnet Interface";
+    val.psz_string = "telnet"; text.psz_string = _("Telnet Interface");
     var_Change( p_intf, "intf-add", VLC_VAR_ADDCHOICE, &val, &text );
-    val.psz_string = "http"; text.psz_string = "Web Interface";
+    val.psz_string = "http"; text.psz_string = _("Web Interface");
     var_Change( p_intf, "intf-add", VLC_VAR_ADDCHOICE, &val, &text );
-    val.psz_string = "logger"; text.psz_string = "Debug logging";
+    val.psz_string = "logger"; text.psz_string = _("Debug logging");
     var_Change( p_intf, "intf-add", VLC_VAR_ADDCHOICE, &val, &text );
-    val.psz_string = "sap"; text.psz_string = "SAP Playlist";
-    var_Change( p_intf, "intf-add", VLC_VAR_ADDCHOICE, &val, &text );
-    val.psz_string = "gestures"; text.psz_string = "Mouse Gestures";
+    val.psz_string = "gestures"; text.psz_string = _("Mouse Gestures");
     var_Change( p_intf, "intf-add", VLC_VAR_ADDCHOICE, &val, &text );
 
     var_AddCallback( p_intf, "intf-add", AddIntfCallback, NULL );
@@ -318,12 +401,12 @@ static void RunInterface( intf_thread_t *p_intf )
             break;
         }
 
+        /* Make sure the old interface is completely uninitialized */
+        module_Unneed( p_intf, p_intf->p_module );
+
         /* Provide ability to switch the main interface on the fly */
         psz_intf = p_intf->psz_switch_intf;
         p_intf->psz_switch_intf = NULL;
-
-        /* Make sure the old interface is completely uninitialized */
-        module_Unneed( p_intf, p_intf->p_module );
 
         vlc_mutex_lock( &p_intf->object_lock );
         p_intf->b_die = VLC_FALSE;
@@ -357,7 +440,7 @@ static int AddIntfCallback( vlc_object_t *p_this, char const *psz_cmd,
 
     /* Try to create the interface */
     sprintf( psz_intf, "%s,none", newval.psz_string );
-    p_intf = intf_Create( p_this->p_vlc, psz_intf );
+    p_intf = intf_Create( p_this->p_vlc, psz_intf, 0, NULL );
     free( psz_intf );
     if( p_intf == NULL )
     {
@@ -377,3 +460,41 @@ static int AddIntfCallback( vlc_object_t *p_this, char const *psz_cmd,
 
     return VLC_SUCCESS;
 }
+
+#ifdef __APPLE__
+/*****************************************************************************
+ * VLCApplication implementation 
+ *****************************************************************************/
+@implementation VLCApplication 
+
+- (void)setVLC: (vlc_t *) p_vlc
+{
+    o_vlc = p_vlc;
+}
+
+- (void)stop: (id)sender
+{
+    NSEvent *o_event;
+    NSAutoreleasePool *o_pool;
+    [super stop:sender];
+
+    o_pool = [[NSAutoreleasePool alloc] init];
+    /* send a dummy event to break out of the event loop */
+    o_event = [NSEvent mouseEventWithType: NSLeftMouseDown
+                location: NSMakePoint( 1, 1 ) modifierFlags: 0
+                timestamp: 1 windowNumber: [[NSApp mainWindow] windowNumber]
+                context: [NSGraphicsContext currentContext] eventNumber: 1
+                clickCount: 1 pressure: 0.0];
+    [NSApp postEvent: o_event atStart: YES];
+    [o_pool release];
+}
+
+- (void)terminate: (id)sender
+{
+    o_vlc->b_die = VLC_TRUE;
+    [super terminate: sender];
+}
+
+@end
+#endif
+

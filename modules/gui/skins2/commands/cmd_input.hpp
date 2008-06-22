@@ -1,11 +1,11 @@
 /*****************************************************************************
  * cmd_input.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_input.hpp 7707 2004-05-17 20:48:39Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_input.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CMD_INPUT_HPP
@@ -34,6 +34,8 @@ DEFINE_COMMAND( Stop, "stop" )
 DEFINE_COMMAND( Slower, "slower" )
 DEFINE_COMMAND( Faster, "faster" )
 DEFINE_COMMAND( Mute, "mute" )
+DEFINE_COMMAND( VolumeUp, "volume up" )
+DEFINE_COMMAND( VolumeDown, "volume down" )
 
 
 #endif

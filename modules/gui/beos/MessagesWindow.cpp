@@ -1,8 +1,8 @@
 /*****************************************************************************
  * MessagesWindow.cpp: beos interface
  *****************************************************************************
- * Copyright (C) 1999, 2000, 2001 VideoLAN
- * $Id: MessagesWindow.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999, 2000, 2001 the VideoLAN team
+ * $Id: MessagesWindow.cpp 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Eric Petit <titer@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /* BeOS headers */
@@ -30,7 +30,6 @@
 #include <vlc/intf.h>
 
 /* BeOS module headers */
-#include "VlcWrapper.h"
 #include "InterfaceWindow.h"
 #include "MessagesWindow.h"
 
@@ -95,14 +94,14 @@ void MessagesView::Pulse()
             if( LockLooper() )
             {
                 oldLength = TextLength();
-    	        BString string;
-    	        string << p_sub->p_msg[i_start].psz_module
-    	            << " " << psz_module_type << " : "
-    	            << p_sub->p_msg[i_start].psz_msg << "\n";
-    	        Insert( TextLength(), string.String(), strlen( string.String() ) );
-    	        SetFontAndColor( oldLength, TextLength(), NULL, 0, &color );
-    	        Draw( Bounds() );
-	            UnlockLooper();
+                BString string;
+                string << p_sub->p_msg[i_start].psz_module
+                    << " " << psz_module_type << " : "
+                    << p_sub->p_msg[i_start].psz_msg << "\n";
+                Insert( TextLength(), string.String(), strlen( string.String() ) );
+                SetFontAndColor( oldLength, TextLength(), NULL, 0, &color );
+                Draw( Bounds() );
+                UnlockLooper();
             }
         }
 
@@ -128,31 +127,32 @@ void MessagesView::Pulse()
 /*****************************************************************************
  * MessagesWindow::MessagesWindow
  *****************************************************************************/
-MessagesWindow::MessagesWindow( intf_thread_t * p_intf,
+MessagesWindow::MessagesWindow( intf_thread_t * _p_intf,
                                 BRect frame, const char * name )
-	: BWindow( frame, name, B_FLOATING_WINDOW_LOOK, B_NORMAL_WINDOW_FEEL,
-               B_NOT_ZOOMABLE )
+    : BWindow( frame, name, B_FLOATING_WINDOW_LOOK, B_NORMAL_WINDOW_FEEL,
+               B_NOT_ZOOMABLE ),
+    p_intf(_p_intf)
 {
-	this->p_intf = p_intf;
-
     SetSizeLimits( 400, 2000, 200, 2000 );
-	
-	BRect rect, textRect;
 
-	rect = Bounds();
-	rect.right -= B_V_SCROLL_BAR_WIDTH;
-	textRect = rect;
-	textRect.InsetBy( 5, 5 );
-	fMessagesView = new MessagesView( p_intf,
-	                                  rect, "messages", textRect,
-	                                  B_FOLLOW_ALL, B_WILL_DRAW );
-	fMessagesView->MakeEditable( false );
-	fMessagesView->SetStylable( true );
-	fScrollView = new BScrollView( "scrollview", fMessagesView, B_WILL_DRAW,
-	                               B_FOLLOW_ALL, false, true );
-	fMessagesView->fScrollBar = fScrollView->ScrollBar( B_VERTICAL );
-	AddChild( fScrollView );
-	
+    p_sub = msg_Subscribe( p_intf, MSG_QUEUE_NORMAL );
+    
+    BRect rect, textRect;
+
+    rect = Bounds();
+    rect.right -= B_V_SCROLL_BAR_WIDTH;
+    textRect = rect;
+    textRect.InsetBy( 5, 5 );
+    fMessagesView = new MessagesView( p_sub,
+                                      rect, "messages", textRect,
+                                      B_FOLLOW_ALL, B_WILL_DRAW );
+    fMessagesView->MakeEditable( false );
+    fMessagesView->SetStylable( true );
+    fScrollView = new BScrollView( "scrollview", fMessagesView, B_WILL_DRAW,
+                                   B_FOLLOW_ALL, false, true );
+    fMessagesView->fScrollBar = fScrollView->ScrollBar( B_VERTICAL );
+    AddChild( fScrollView );
+    
     /* start window thread in hidden state */
     Hide();
     Show();
@@ -163,6 +163,7 @@ MessagesWindow::MessagesWindow( intf_thread_t * p_intf,
  *****************************************************************************/
 MessagesWindow::~MessagesWindow()
 {
+     msg_Unsubscribe( p_intf, p_sub );
 }
 
 /*****************************************************************************

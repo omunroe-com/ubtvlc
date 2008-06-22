@@ -1,11 +1,14 @@
 /*****************************************************************************
- * charset.c: Determine a canonical name for the current locale's character
- *            encoding.
+ * charset.c: Locale's character encoding stuff.
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: charset.c 6961 2004-03-05 17:34:23Z sam $
+ * See also unicode.c for Unicode to locale conversion helpers.
  *
- * Author: Derk-Jan Hartman <thedj at users.sf.net>
+ * Copyright (C) 2003-2006 the VideoLAN team
+ * $Id: charset.c 23230 2007-11-21 22:17:44Z funman $
+ *
+ * Authors: Derk-Jan Hartman <thedj at users.sf.net>
+ *          Christophe Massiot
+ *          Rémi Denis-Courmont
  *
  * vlc_current_charset() an adaption of mp_locale_charset():
  *
@@ -24,7 +27,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <stdlib.h>
@@ -34,13 +37,17 @@
 #if !defined WIN32
 # if HAVE_LANGINFO_CODESET
 #  include <langinfo.h>
-# else
-#  if HAVE_SETLOCALE
-#   include <locale.h>
-#  endif
 # endif
-#elif defined WIN32
+# if HAVE_LOCALE_H
+#  include <locale.h>
+# endif
+#else
 # include <windows.h>
+#endif
+
+#ifdef __APPLE__
+#   include <errno.h>
+#   include <string.h>
 #endif
 
 #include "charset.h"
@@ -59,7 +66,7 @@ typedef struct VLCCharsetAlias
  * a lot of basic aliases (check it first by iconv -l).
  *
  */
-
+#if (defined OS2 || !HAVE_LANGINFO_CODESET) && !defined WIN32
 static const char* vlc_encoding_from_language( const char *l )
 {
     /* check for language (and perhaps country) codes */
@@ -91,7 +98,7 @@ static const char* vlc_encoding_from_language( const char *l )
     /* We don't know. This ain't working go to default. */
     return "ISO-8859-1";
 }
-
+#endif
 
 static const char* vlc_charset_aliases( const char *psz_name )
 {
@@ -184,12 +191,9 @@ static const char* vlc_charset_aliases( const char *psz_name )
     VLCCharsetAlias aliases[] = {{NULL, NULL}};
 #endif
 
-    if( aliases )
-    {
-        for (a = aliases; a->psz_alias; a++)
-            if (strcasecmp (a->psz_alias, psz_name) == 0)
-                return a->psz_name;
-    }
+    for (a = aliases; a->psz_alias; a++)
+        if (strcasecmp (a->psz_alias, psz_name) == 0)
+            return a->psz_name;
 
     /* we return original name beacuse iconv() probably will know
      * something better about name if we don't know it :-) */
@@ -197,14 +201,14 @@ static const char* vlc_charset_aliases( const char *psz_name )
 }
 
 /* Returns charset from "language_COUNTRY.charset@modifier" string */
-static char *vlc_encoding_from_locale( char *psz_locale )
+#if (defined OS2 || !HAVE_LANGINFO_CODESET) && !defined WIN32
+static void vlc_encoding_from_locale( char *psz_locale, char *psz_charset )
 {
     char *psz_dot = strchr( psz_locale, '.' );
 
     if( psz_dot != NULL )
     {
         const char *psz_modifier;
-        static char buf[2 + 10 + 1];
 
         psz_dot++;
 
@@ -212,36 +216,44 @@ static char *vlc_encoding_from_locale( char *psz_locale )
         psz_modifier = strchr( psz_dot, '@' );
 
         if( psz_modifier == NULL )
-            return psz_dot;
-        if( 0 < ( psz_modifier - psz_dot ) < sizeof( buf ))
         {
-            memcpy( buf, psz_dot, psz_modifier - psz_dot );
-            buf[ psz_modifier - psz_dot ] = '\0';
-            return buf;
+            strcpy( psz_charset, psz_dot );
+            return;
+        }
+        if( 0 < ( psz_modifier - psz_dot )
+             && ( psz_modifier - psz_dot ) < 2 + 10 + 1 )
+        {
+            memcpy( psz_charset, psz_dot, psz_modifier - psz_dot );
+            psz_charset[ psz_modifier - psz_dot ] = '\0';
+            return;
         }
     }
     /* try language mapping */
-    return (char *)vlc_encoding_from_language( psz_locale );
+    strcpy( psz_charset, vlc_encoding_from_language( psz_locale ) );
 }
+#endif
 
 vlc_bool_t vlc_current_charset( char **psz_charset )
 {
     const char *psz_codeset;
 
-#if !(defined WIN32 || defined OS2)
+#if !(defined WIN32 || defined OS2 || defined __APPLE__)
 
 # if HAVE_LANGINFO_CODESET
     /* Most systems support nl_langinfo( CODESET ) nowadays.  */
     psz_codeset = nl_langinfo( CODESET );
+    if( !strcmp( psz_codeset, "ANSI_X3.4-1968" ) )
+        psz_codeset = "ASCII";
 # else
     /* On old systems which lack it, use setlocale or getenv.  */
     const char *psz_locale = NULL;
+    char buf[2 + 10 + 1];
 
     /* But most old systems don't have a complete set of locales.  Some
      * (like SunOS 4 or DJGPP) have only the C locale.  Therefore we don't
      * use setlocale here; it would return "C" when it doesn't support the
      * locale name the user has set. Darwin's setlocale is broken. */
-#  if HAVE_SETLOCALE && !SYS_DARWIN
+#  if HAVE_SETLOCALE && !__APPLE__
     psz_locale = setlocale( LC_ALL, NULL );
 #  endif
     if( psz_locale == NULL || psz_locale[0] == '\0' )
@@ -257,21 +269,27 @@ vlc_bool_t vlc_current_charset( char **psz_charset )
 
     /* On some old systems, one used to set locale = "iso8859_1". On others,
      * you set it to "language_COUNTRY.charset". Darwin only has LANG :( */
-    psz_codeset = vlc_encoding_from_locale( (char *)psz_locale );
+    vlc_encoding_from_locale( (char *)psz_locale, buf );
+    psz_codeset =  buf;
 # endif /* HAVE_LANGINFO_CODESET */
+
+#elif defined __APPLE__
+
+    /* Darwin is always using UTF-8 internally. */
+    psz_codeset = "UTF-8";
 
 #elif defined WIN32
 
-    static char buf[2 + 10 + 1];
+    char buf[2 + 10 + 1];
 
     /* Woe32 has a function returning the locale's codepage as a number.  */
-    sprintf( buf, "CP%u", GetACP() );
+    snprintf( buf, sizeof( buf ), "CP%u", GetACP() );
     psz_codeset = buf;
 
 #elif defined OS2
 
     const char *psz_locale;
-    static char buf[2 + 10 + 1];
+    char buf[2 + 10 + 1];
     ULONG cp[3];
     ULONG cplen;
 
@@ -285,7 +303,8 @@ vlc_bool_t vlc_current_charset( char **psz_charset )
             locale = getenv( "LANG" );
     }
     if( psz_locale != NULL && psz_locale[0] != '\0' )
-        psz_codeset = vlc_encoding_from_locale( psz_locale );
+        vlc_encoding_from_locale( psz_locale, buf );
+        psz_codeset = buf;
     else
     {
         /* OS/2 has a function returning the locale's codepage as a number. */
@@ -293,7 +312,7 @@ vlc_bool_t vlc_current_charset( char **psz_charset )
             psz_codeset = "";
         else
         {
-            sprintf( buf, "CP%u", cp[0] );
+            snprintf( buf, sizeof( buf ), "CP%u", cp[0] );
             psz_codeset = buf;
         }
     }
@@ -315,11 +334,350 @@ vlc_bool_t vlc_current_charset( char **psz_charset )
     }
 
     if( psz_charset )
-        *psz_charset = strdup((char *)psz_codeset);
+        *psz_charset = strdup(psz_codeset);
 
     if( !strcasecmp(psz_codeset, "UTF8") || !strcasecmp(psz_codeset, "UTF-8") )
         return VLC_TRUE;
 
     return VLC_FALSE;
+}
+
+char *__vlc_fix_readdir_charset( vlc_object_t *p_this, const char *psz_string )
+{
+#ifdef __APPLE__
+    if ( p_this->p_libvlc->iconv_macosx != (vlc_iconv_t)-1 )
+    {
+        const char *psz_in = psz_string;
+        size_t i_in = strlen(psz_in);
+        size_t i_out = i_in * 2;
+        char *psz_utf8 = malloc(i_out + 1);
+        char *psz_out = psz_utf8;
+
+        vlc_mutex_lock( &p_this->p_libvlc->iconv_lock );
+        size_t i_ret = vlc_iconv( p_this->p_libvlc->iconv_macosx,
+                                  &psz_in, &i_in, &psz_out, &i_out );
+        vlc_mutex_unlock( &p_this->p_libvlc->iconv_lock );
+        if( i_ret == (size_t)-1 || i_in )
+        {
+            msg_Warn( p_this,
+                      "failed to convert \"%s\" from HFS+ charset (%s)",
+                      psz_string, strerror(errno) );
+            free( psz_utf8 );
+            return strdup( psz_string );
+        }
+
+        *psz_out = '\0';
+        return psz_utf8;
+    }
+#endif
+
+    (void)p_this;
+    return strdup( psz_string );
+}
+
+/**
+ * @return a fallback characters encoding to be used, given a locale.
+ */
+const char *FindFallbackEncoding( const char *locale )
+{
+    if( ( locale == NULL ) || ( strlen( locale ) < 2 ) )
+        return "ASCII";
+
+    switch( U16_AT( locale ) )
+    {
+        /*** The ISO-8859 series (anything but Asia) ***/
+        /* Latin-1 Western-European languages (ISO-8859-1) */
+        case 'aa':
+        case 'af':
+        case 'an':
+        case 'br':
+        case 'ca':
+        case 'da':
+        case 'de':
+        case 'en':
+        case 'es':
+        case 'et':
+        case 'eu':
+        case 'fi':
+        case 'fo':
+        case 'fr':
+        case 'ga':
+        case 'gd':
+        case 'gl':
+        case 'gv':
+        case 'id':
+        case 'is':
+        case 'it':
+        case 'kl':
+        case 'kw':
+        case 'mg':
+        case 'ms':
+        case 'nb':
+        case 'nl':
+        case 'nn':
+        case 'no':
+        case 'oc':
+        case 'om':
+        case 'pt':
+        case 'so':
+        case 'sq':
+        case 'st':
+        case 'sv':
+        case 'tl':
+        case 'uz':
+        case 'wa':
+        case 'xh':
+        case 'zu':
+            /* Compatible Microsoft superset */
+            return "CP1252";
+
+        /* Latin-2 Slavic languages (ISO-8859-2) */
+        case 'bs':
+        case 'cs':
+        case 'hr':
+        case 'hu':
+        case 'pl':
+        case 'ro':
+        case 'sk':
+        case 'sl':
+            /* CP1250 is more common, but incompatible */
+            return "CP1250";
+
+        /* Latin-3 Southern European languages (ISO-8859-3) */
+        case 'eo':
+        case 'mt':
+        /*case 'tr': Turkish uses ISO-8859-9 instead */
+            return "ISO-8859-3";
+
+        /* Latin-4 North-European languages (ISO-8859-4) */
+        /* All use Latin-1 or Latin-6 instead */
+
+        /* Cyrillic alphabet languages (ISO-8859-5) */
+        case 'be':
+        case 'bg':
+        case 'mk':
+        case 'ru':
+        case 'sr':
+            /* KOI8, ISO-8859-5 and CP1251 are supposedly incompatible */
+            return "CP1251";
+
+        /* Arabic (ISO-8859-6) */
+        case 'ar':
+            /* FIXME: someone check if we should return CP1256
+             * or ISO-8859-6 */
+            /* CP1256 is(?) more common, but incompatible(?) */
+            return "CP1256";
+
+        /* Greek (ISO-8859-7) */
+        case 'el':
+            /* FIXME: someone check if we should return CP1253
+            * or ISO-8859-7 */
+            /* CP1253 is(?) more common and partially compatible */
+            return "CP1253";
+
+        /* Hebrew (ISO-8859-8) */
+        case 'he':
+        case 'iw':
+        case 'yi':
+            /* Compatible Microsoft superset */
+            return "ISO-8859-8"; // CP1255 is reportedly screwed up 
+
+        /* Latin-5 Turkish (ISO-8859-9) */
+        case 'tr':
+        case 'ku':
+            /* Compatible Microsoft superset */
+            return "CP1254";
+
+        /* Latin-6 “North-European” languages (ISO-8859-10) */
+        /* It is so much north European that glibc only uses that for Luganda
+         * which is spoken in Uganda... unless someone complains, I'm not
+         * using this one; let's fallback to CP1252 here. */
+        /* ISO-8859-11 does arguably not exist. Thai is handled below. */
+        /* ISO-8859-12 really doesn't exist. */
+
+        /* Latin-7 Baltic languages (ISO-8859-13) */
+        case 'lt':
+        case 'lv':
+        case 'mi': /* FIXME: ??? that's in New Zealand, doesn't sound baltic */
+            /* Compatible Microsoft superset */
+            return "CP1257";
+
+        /* Latin-8 Celtic languages (ISO-8859-14) */
+        case 'cy':
+            return "ISO-8859-14";
+
+        /* Latin-9 (ISO-8859-15) -> see Latin-1 */
+        /* Latin-10 (ISO-8859-16) does not seem to be used */
+
+        /* KOI series */
+        /* For Russian, we use CP1251 */
+        case 'uk':
+            return "KOI8-U";
+        case 'tg':
+            return "KOI8-T";
+
+        /*** Asia ***/
+        case 'jp': /* Japanese */
+            /* Shift-JIS is way more common than EUC-JP */
+            return "SHIFT-JIS";
+        case 'ko': /* Korean */
+            return "EUC-KR";
+        case 'th': /* Thai */
+            return "TIS-620";
+        case 'vt': /* Vietnamese FIXME: infos needed */
+            /* VISCII is probably a bad idea as it is not extended ASCII */
+            /* glibc has TCVN5712-1, but I could find no infos on this one */
+            return "CP1258";
+
+        case 'kk': /* Kazakh FIXME: infos needed */
+            return "PT154";
+
+        case 'zh': /* Chinese, charset is country dependant */
+            if( ( strlen( locale ) >= 5 ) && ( locale[2] != '_' ) )
+                switch( U16_AT( locale + 3 ) )
+                {
+                    case 'HK': /* Hong Kong */
+                        /* FIXME: use something else? */
+                        return "BIG5-HKSCS";
+
+                    case 'TW': /* Taiwan */
+                        return "BIG5";
+                }
+            /* People's Republic of China */
+            /* Singapore */
+            /*
+             * GB18030 can represent any Unicode code point
+             * (like UTF-8), while remaining compatible with GBK
+             * FIXME: is it compatible with GB2312? if not, should we
+             * use GB2312 instead?
+             */
+            return "GB18030";
+    }
+
+    return "ASCII";
+}
+
+/**
+ * GetFallbackEncoding() suggests an encoding to be used for non UTF-8
+ * text files accord to the system's local settings. It is only a best
+ * guess.
+ */
+const char *GetFallbackEncoding( void )
+{
+#ifndef WIN32
+    const char *psz_lang = NULL;
+
+    /* Some systems (like Darwin, SunOS 4 or DJGPP) have only the C locale.
+     * Therefore we don't use setlocale here; it would return "C". */
+#  if defined (HAVE_SETLOCALE) && !defined ( __APPLE__)
+    psz_lang = setlocale( LC_ALL, NULL );
+#  endif
+    if( psz_lang == NULL || psz_lang[0] == '\0' )
+    {
+        psz_lang = getenv( "LC_ALL" );
+        if( psz_lang == NULL || psz_lang == '\0' )
+        {
+            psz_lang = getenv( "LC_CTYPE" );
+            if( psz_lang == NULL || psz_lang[0] == '\0')
+                psz_lang = getenv( "LANG" );
+        }
+    }
+
+    return FindFallbackEncoding( psz_lang );
+#else
+    /*
+     * This should be thread-safe given GetACP() should always return
+     * the same result.
+     */
+    static char buf[2 + 10 + 1] = "";
+
+    if( buf[0] == 0 )
+    {
+        int cp = GetACP ();
+        switch (cp)
+        {
+            case 1255: // Hebrew, CP1255 screws up somewhat
+                strcpy (buf, "ISO-8859-8");
+                break;
+            default:
+                snprintf (buf, sizeof (buf), "CP%u", cp);
+        }
+    }
+    return buf;
+#endif
+}
+
+/**
+ * There are two decimal separators in the computer world-wide locales:
+ * dot (which is the american default), and comma (which is used in France,
+ * the country with the most VLC developers, among others).
+ *
+ * i18n_strtod() has the same prototype as ANSI C strtod() but it accepts
+ * either decimal separator when deserializing the string to a float number,
+ * independant of the local computer setting.
+ */
+double i18n_strtod( const char *str, char **end )
+{
+    char *end_buf, e;
+    double d;
+
+    if( end == NULL )
+        end = &end_buf;
+    d = strtod( str, end );
+
+    e = **end;
+    if(( e == ',' ) || ( e == '.' ))
+    {
+        char dup[strlen( str ) + 1];
+        strcpy( dup, str );
+
+        if( dup == NULL )
+            return d;
+
+        dup[*end - str] = ( e == ',' ) ? '.' : ',';
+        d = strtod( dup, end );
+    }
+    return d;
+}
+
+/**
+ * i18n_atof() has the same prototype as ANSI C atof() but it accepts
+ * either decimal separator when deserializing the string to a float number,
+ * independant of the local computer setting.
+ */
+double i18n_atof( const char *str )
+{
+    return i18n_strtod( str, NULL );
+}
+
+
+/**
+ * us_strtod() has the same prototype as ANSI C strtod() but it expects
+ * a dot as decimal separator regardless of the system locale.
+ */
+double us_strtod( const char *str, char **end )
+{
+    char dup[strlen( str ) + 1], *ptr;
+    double d;
+    strcpy( dup, str );
+
+    ptr = strchr( dup, ',' );
+    if( ptr != NULL )
+        *ptr = '\0';
+
+    d = strtod( dup, &ptr );
+    if( end != NULL )
+        *end = (char *)&str[ptr - dup];
+
+    return d;
+}
+
+/**
+ * us_atof() has the same prototype as ANSI C atof() but it expects a dot
+ * as decimal separator, regardless of the system locale.
+ */
+double us_atof( const char *str )
+{
+    return us_strtod( str, NULL );
 }
 

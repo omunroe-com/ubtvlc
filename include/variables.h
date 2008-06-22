@@ -1,8 +1,8 @@
 /*****************************************************************************
  * variables.h: variables handling
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: variables.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id: variables.h 16434 2006-08-30 15:18:13Z hartman $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /**
@@ -87,26 +87,6 @@ struct variable_t
 #define VLC_VAR_TYPE      0x00ff
 #define VLC_VAR_FLAGS     0xff00
 
-/**
- * \defgroup var_type Variable types
- * These are the different types a vlc variable can have.
- * @{
- */
-#define VLC_VAR_VOID      0x0010
-#define VLC_VAR_BOOL      0x0020
-#define VLC_VAR_INTEGER   0x0030
-#define VLC_VAR_HOTKEY    0x0031
-#define VLC_VAR_STRING    0x0040
-#define VLC_VAR_MODULE    0x0041
-#define VLC_VAR_FILE      0x0042
-#define VLC_VAR_DIRECTORY 0x0043
-#define VLC_VAR_VARIABLE  0x0044
-#define VLC_VAR_FLOAT     0x0050
-#define VLC_VAR_TIME      0x0060
-#define VLC_VAR_ADDRESS   0x0070
-#define VLC_VAR_MUTEX     0x0080
-#define VLC_VAR_LIST      0x0090
-/**@}*/
 /** \defgroup var_flags Additive flags
  * These flags are added to the type field of the variable. Most as a result of
  * a __var_Change() call, but some may be added at creation time
@@ -183,6 +163,9 @@ VLC_EXPORT( int, __var_Type, ( vlc_object_t *, const char * ) );
 VLC_EXPORT( int, __var_Set, ( vlc_object_t *, const char *, vlc_value_t ) );
 VLC_EXPORT( int, __var_Get, ( vlc_object_t *, const char *, vlc_value_t * ) );
 
+#define var_OptionParse(a,b) __var_OptionParse( VLC_OBJECT( a ) , b )
+VLC_EXPORT( void, __var_OptionParse, ( vlc_object_t *, const char * ) );
+
 /**
  * __var_Create() with automatic casting.
  */
@@ -251,6 +234,20 @@ static inline int __var_SetInteger( vlc_object_t *p_obj, const char *psz_name, i
 }
 
 /**
+ * Set the value of an boolean variable
+ *
+ * \param p_obj The object that holds the variable
+ * \param psz_name The name of the variable
+ * \param b The new boolean value of this variable
+ */
+static inline int __var_SetBool( vlc_object_t *p_obj, const char *psz_name, vlc_bool_t b )
+{
+    vlc_value_t val;
+    val.b_bool = b;
+    return __var_Set( p_obj, psz_name, val );
+}
+
+/**
  * Set the value of a time variable
  *
  * \param p_obj The object that holds the variable
@@ -279,6 +276,20 @@ static inline int __var_SetFloat( vlc_object_t *p_obj, const char *psz_name, flo
 }
 
 /**
+ * Set the value of a string variable
+ *
+ * \param p_obj The object that holds the variable
+ * \param psz_name The name of the variable
+ * \param psz_string The new string value of this variable
+ */
+static inline int __var_SetString( vlc_object_t *p_obj, const char *psz_name, char *psz_string )
+{
+    vlc_value_t val;
+    val.psz_string = psz_string;
+    return __var_Set( p_obj, psz_name, val );
+}
+
+/**
  * Trigger the callbacks on a void variable
  *
  * \param p_obj The object that holds the variable
@@ -296,6 +307,11 @@ static inline int __var_SetVoid( vlc_object_t *p_obj, const char *psz_name )
  */
 #define var_SetInteger(a,b,c)   __var_SetInteger( VLC_OBJECT(a),b,c)
 /**
+ * __var_SetBool() with automatic casting
+ */
+#define var_SetBool(a,b,c)   __var_SetBool( VLC_OBJECT(a),b,c)
+
+/**
  * __var_SetTime() with automatic casting
  */
 #define var_SetTime(a,b,c)      __var_SetTime( VLC_OBJECT(a),b,c)
@@ -304,9 +320,216 @@ static inline int __var_SetVoid( vlc_object_t *p_obj, const char *psz_name )
  */
 #define var_SetFloat(a,b,c)     __var_SetFloat( VLC_OBJECT(a),b,c)
 /**
+ * __var_SetString() with automatic casting
+ */
+#define var_SetString(a,b,c)     __var_SetString( VLC_OBJECT(a),b,c)
+/**
  * __var_SetVoid() with automatic casting
  */
 #define var_SetVoid(a,b)        __var_SetVoid( VLC_OBJECT(a),b)
+
+/**
+ * Get a integer value
+ *
+ * \param p_obj The object that holds the variable
+ * \param psz_name The name of the variable
+ */
+static inline int __var_GetInteger( vlc_object_t *p_obj, const char *psz_name )
+{
+    vlc_value_t val;val.i_int = 0;
+    if( !__var_Get( p_obj, psz_name, &val ) )
+        return val.i_int;
+    else
+        return 0;
+}
+
+/**
+ * Get a boolean value
+ *
+ * \param p_obj The object that holds the variable
+ * \param psz_name The name of the variable
+ */
+static inline int __var_GetBool( vlc_object_t *p_obj, const char *psz_name )
+{
+    vlc_value_t val; val.b_bool = VLC_FALSE;
+    if( !__var_Get( p_obj, psz_name, &val ) )
+        return val.b_bool;
+    else
+        return VLC_FALSE;
+}
+
+/**
+ * Get a time value
+ *
+ * \param p_obj The object that holds the variable
+ * \param psz_name The name of the variable
+ */
+static inline int64_t __var_GetTime( vlc_object_t *p_obj, const char *psz_name )
+{
+    vlc_value_t val; val.i_time = 0L;
+    if( !__var_Get( p_obj, psz_name, &val ) )
+        return val.i_time;
+    else
+        return 0;
+}
+
+/**
+ * Get a float value
+ *
+ * \param p_obj The object that holds the variable
+ * \param psz_name The name of the variable
+ */
+static inline float __var_GetFloat( vlc_object_t *p_obj, const char *psz_name )
+{
+    vlc_value_t val; val.f_float = 0.0;
+    if( !__var_Get( p_obj, psz_name, &val ) )
+        return val.f_float;
+    else
+        return 0.0;
+}
+
+/**
+ * Get a string value
+ *
+ * \param p_obj The object that holds the variable
+ * \param psz_name The name of the variable
+ */
+static inline char *__var_GetString( vlc_object_t *p_obj, const char *psz_name )
+{
+    vlc_value_t val; val.psz_string = NULL;
+    if( !__var_Get( p_obj, psz_name, &val ) )
+        return val.psz_string;
+    else
+        return strdup( "" );
+}
+
+/**
+ * __var_GetInteger() with automatic casting
+ */
+#define var_GetInteger(a,b)   __var_GetInteger( VLC_OBJECT(a),b)
+/**
+ * __var_GetBool() with automatic casting
+ */
+#define var_GetBool(a,b)   __var_GetBool( VLC_OBJECT(a),b)
+/**
+ * __var_GetTime() with automatic casting
+ */
+#define var_GetTime(a,b)   __var_GetTime( VLC_OBJECT(a),b)
+/**
+ * __var_GetFloat() with automatic casting
+ */
+#define var_GetFloat(a,b)   __var_GetFloat( VLC_OBJECT(a),b)
+/**
+ * __var_GetString() with automatic casting
+ */
+#define var_GetString(a,b)   __var_GetString( VLC_OBJECT(a),b)
+
+
+/**
+ * Create a integer variable with inherit and get its value.
+ *
+ * \param p_obj The object that holds the variable
+ * \param psz_name The name of the variable
+ */
+static inline int __var_CreateGetInteger( vlc_object_t *p_obj, const char *psz_name )
+{
+    vlc_value_t val;
+
+    __var_Create( p_obj, psz_name, VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    if( !__var_Get( p_obj, psz_name, &val ) )
+        return val.i_int;
+    else
+        return 0;
+}
+
+/**
+ * Create a boolean variable with inherit and get its value.
+ *
+ * \param p_obj The object that holds the variable
+ * \param psz_name The name of the variable
+ */
+static inline int __var_CreateGetBool( vlc_object_t *p_obj, const char *psz_name )
+{
+    vlc_value_t val;
+
+    __var_Create( p_obj, psz_name, VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
+    if( !__var_Get( p_obj, psz_name, &val ) )
+        return val.b_bool;
+    else
+        return VLC_FALSE;
+}
+
+/**
+ * Create a time variable with inherit and get its value.
+ *
+ * \param p_obj The object that holds the variable
+ * \param psz_name The name of the variable
+ */
+static inline int64_t __var_CreateGetTime( vlc_object_t *p_obj, const char *psz_name )
+{
+    vlc_value_t val;
+
+    __var_Create( p_obj, psz_name, VLC_VAR_TIME | VLC_VAR_DOINHERIT );
+    if( !__var_Get( p_obj, psz_name, &val ) )
+        return val.i_time;
+    else
+        return 0;
+}
+
+/**
+ * Create a float variable with inherit and get its value.
+ *
+ * \param p_obj The object that holds the variable
+ * \param psz_name The name of the variable
+ */
+static inline float __var_CreateGetFloat( vlc_object_t *p_obj, const char *psz_name )
+{
+    vlc_value_t val;
+
+    __var_Create( p_obj, psz_name, VLC_VAR_FLOAT | VLC_VAR_DOINHERIT );
+    if( !__var_Get( p_obj, psz_name, &val ) )
+        return val.f_float;
+    else
+        return 0.0;
+}
+
+/**
+ * Create a string variable with inherit and get its value.
+ *
+ * \param p_obj The object that holds the variable
+ * \param psz_name The name of the variable
+ */
+static inline char *__var_CreateGetString( vlc_object_t *p_obj, const char *psz_name )
+{
+    vlc_value_t val;
+
+    __var_Create( p_obj, psz_name, VLC_VAR_STRING | VLC_VAR_DOINHERIT );
+    if( !__var_Get( p_obj, psz_name, &val ) )
+        return val.psz_string;
+    else
+        return strdup( "" );
+}
+
+/**
+ * __var_CreateGetInteger() with automatic casting
+ */
+#define var_CreateGetInteger(a,b)   __var_CreateGetInteger( VLC_OBJECT(a),b)
+/**
+ * __var_CreateGetBool() with automatic casting
+ */
+#define var_CreateGetBool(a,b)   __var_CreateGetBool( VLC_OBJECT(a),b)
+/**
+ * __var_CreateGetTime() with automatic casting
+ */
+#define var_CreateGetTime(a,b)   __var_CreateGetTime( VLC_OBJECT(a),b)
+/**
+ * __var_CreateGetFloat() with automatic casting
+ */
+#define var_CreateGetFloat(a,b)   __var_CreateGetFloat( VLC_OBJECT(a),b)
+/**
+ * __var_CreateGetString() with automatic casting
+ */
+#define var_CreateGetString(a,b)   __var_CreateGetString( VLC_OBJECT(a),b)
 
 /**
  * @}

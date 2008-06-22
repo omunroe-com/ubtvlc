@@ -1,148 +1,65 @@
-<?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD  XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml10/DTD/xhtml10transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
- <head>
-    <title>VLC media player</title>
-    <link href="/style.css" title="Default" rel="stylesheet" />
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - >
+<  index.html: VLC media player web interface
+< - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - >
+<  Copyright (C) 2005-2006 the VideoLAN team
+<  $Id: index.html 16767 2006-09-21 14:32:45Z hartman $
+< 
+<  Authors: Antoine Cellerier <dionoea -at- videolan -dot- org>
+< 
+<  This program is free software; you can redistribute it and/or modify
+<  it under the terms of the GNU General Public License as published by
+<  the Free Software Foundation; either version 2 of the License, or
+<  (at your option) any later version.
+< 
+<  This program is distributed in the hope that it will be useful,
+<  but WITHOUT ANY WARRANTY; without even the implied warranty of
+<  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<  GNU General Public License for more details.
+< 
+<  You should have received a copy of the GNU General Public License
+<  along with this program; if not, write to the Free Software
+<  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+< - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
-    <vlc id="if" param1="url_param"/>
-        <meta http-equiv="refresh" content="0;URL=/" />
-    <vlc id="end" />
+<html xmlns="http://www.w3.org/1999/xhtml">
 
-    <vlc id="control" param1="stop,pause,previous,next,add,sout,play,delete,empty,seek,fullscreen,keep,volume,sort,move" />
-    <vlc id="set" param1="sout" param2="string" />
- </head>
- <body>
-    <h2>
-     <a href="http://www.videolan.org/">VLC media player <vlc id="value" param1="version" /></a> (http interface)</h2>
-    <div class="sectitle">Control VLC</div>
-    <div class="section">
-     <table class="add">
-      <tr>
-       <td nowrap="nowrap">Current state: <vlc id="value" param1="stream_state" /></td>
-       <td align="right"><a href="info.html">Information</a> <a href="admin/">Administration</a></td>
-      </tr>
-      <tr>
-        <td nowrap="nowrap">
-          <form method="get" action="">
-            <input type="submit" name="control" value="stop" />
-            <input type="submit" name="control" value="pause" />
-            <input type="submit" name="control" value="previous" />
-            <input type="submit" name="control" value="next" />
-            <input type="submit" name="control" value="fullscreen" />
-          </form>
-        </td>
-      </tr>
-      <tr>
-       <td colspan="2">
-        <table>
-         <tr>
-           <td>
-             <form method="get" action="">
-               <input type="submit" name="seek_value" value="-1min"/><input type="hidden" name="control" value="seek"/>
-             </form>
-           </td>
-           <td>
-             <form method="get" action="">
-               <input type="text" name="seek_value" size="14"/><input type="hidden" name="control" value="seek"/>
-             </form>
-           </td>
-           <td>
-             <form method="get" action="">
-               <input type="submit" name="seek_value" value="+1min"/><input type="hidden" name="control" value="seek"/>
-             </form>
-           </td>
-           <td>
-            ( Seek Textbox: for example "+12min 42sec", "01:13:43", "-12%" etc... )
-           </td>
-         </tr>
-        </table>
-       </td>
-      </tr>
-      <tr>
-        <td>
-          <form method="get" action="">
-          Current volume level: <vlc id="value" param1="volume" /> <input type="text" name="value" size="5"/><button name="control" value="volume">Set</button>
-          </form>
-        </td>
-      </tr>
-     </table>
-    </div>
-    <div class="sectitle">Add</div>
-    <div class="section">
-     <form method="get" action="" enctype="text/plain" >
-      <table class="add">
-       <tr>
-        <td>Add a MRL (Media Resource Locator) to the playlist</td>
-        <td><input type="text" name="mrl" size="40" /><input type="submit" name="control" value="add" /></td>
-       </tr>
-       <tr>
-        <td>Stream Output:</td>
-        <td><input type="text" name="sout" size="40" value="<vlc id="get" param1="sout" param2="string" />" /><input type="submit" name="control" value="sout" /></td>
-       </tr>
-      </table>
-     </form>
-    </div>
+<head>
 
-    <div class="sectitle">Move Item</div>
-     <div class="section">
-      <form method="get" action="">
-       Move the item number <input type="text" name="psz_pos" size="5" /> to <input type="text" name="psz_newpos" size="5" /> <input type="submit" name="control" value="move" />
-      </form>
-     </div>
-    </div>
+  <title>VLC media player - Web Interface</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=<vlc id="value" param1="charset"/>" />
+  <link href="style.css" rel="stylesheet" type="text/css" />
+  <!--[if IE ]>
+  <link href="iehacks.css" rel="stylesheet" type="text/css" />
+  <![endif]-->
+  <script type="text/javascript" src="js/functions.js"></script>
 
-    <div class="sectitle">VLC Playlist</div>
-     <div class="section">
-      <form method="get" action="">
-      <table>
-        <tr>
-          <td>
-            <input type="submit" name="control" value="sort" /> by
-            <select name="type">
-              <option value="title">title</option>
-              <option value="group">group</option>
-              <option value="author">author</option>
-              <option value="shuffle">shuffle</option>
-            </select> with
-            <select name="order">
-              <option value="0">normal order</option>
-              <option value="1">reverse order</option>
-            </select>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <table>
-              <vlc id="foreach" param1="pl" param2="playlist" />
-              <tr class="<vlc id="if" param1="pl.index 2 % 0 =" />ligne1<vlc id="else" />ligne2<vlc id="end" />">
-                <td>
-                  <input type="checkbox" name="item" value="<vlc id="value" param1="pl.index" />"/>
-                  <vlc id="if" param1="pl.current" />
-                  <b>
-                  <vlc id="end" />
-                  <a href="?control=play&amp;item=<vlc id="value" param1="pl.index" />">
-                  <vlc id="value" param1="pl.index" /> - <vlc id="value" param1="pl.uri" /><vlc id="if" param1="pl.uri value pl.name value strcmp"/>  (<vlc id="value" param1="pl.name" />)<vlc id="end"/></a>
-                  <vlc id="if" param1="pl.current" />
-                  </b>
-                  <vlc id="end" />
-                </td>
-              </tr>
-              <vlc id="end" />
-            </table>
-          </td>
-        </tr>
-        <tr>  
-          <td>
-            <input type="submit" name="control" value="delete" />
-            <input type="submit" name="control" value="keep" />
-          </td>
-        </tr>
-      </table>
-      </form>
-    </div>
-    <hr/>
-    <p> <vlc id="value" param1="copyright" /> </p>
+  <!-- in case people had scripts that sent commands to the default
+       index.html page -->
+  <vlc id="control" param1="stop,pause,previous,next,add,sout,play,delete,empty,seek,fullscreen,keep,volume,sort,move" />
+  <vlc id="set" param1="sout" param2="string" />
+
+</head>
+
+<body onload="loop_refresh();">
+
+<noscript>
+  <hr/>
+  <p>
+  Warning: Your browser doesn't support javascript.
+  You should use the <a href="old/">old http interface</a>.
+  </p>
+  <hr/>
+</noscript>
+
+<vlc id="include" param1="dialogs/browse" />
+<vlc id="include" param1="dialogs/main" />
+<vlc id="include" param1="dialogs/input" />
+<vlc id="include" param1="dialogs/sout" />
+<vlc id="include" param1="dialogs/playlist" />
+<vlc id="include" param1="dialogs/footer" />
+
 </body>
+
 </html>

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * variables.c: routines for object variables handling
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: variables.c 7152 2004-03-23 23:30:49Z gbazin $
+ * Copyright (C) 2002-2006 the VideoLAN team
+ * $Id: variables.c 17050 2006-10-13 00:07:54Z hartman $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -63,16 +63,22 @@ static void DupList( vlc_value_t *p_val )
     int i;
     vlc_list_t *p_list = malloc( sizeof(vlc_list_t) );
 
+    p_list->i_count = p_val->p_list->i_count;
     if( p_val->p_list->i_count )
     {
-        p_list->i_count = p_val->p_list->i_count;
         p_list->p_values = malloc( p_list->i_count * sizeof(vlc_value_t) );
         p_list->pi_types = malloc( p_list->i_count * sizeof(int) );
+    }
+    else
+    {
+        p_list->p_values = NULL;
+        p_list->pi_types = NULL;
     }
 
     for( i = 0; i < p_list->i_count; i++ )
     {
         p_list->p_values[i] = p_val->p_list->p_values[i];
+        p_list->pi_types[i] = p_val->p_list->pi_types[i];
         switch( p_val->p_list->pi_types[i] & VLC_VAR_TYPE )
         {
         case VLC_VAR_STRING:
@@ -187,6 +193,7 @@ int __var_Create( vlc_object_t *p_this, const char *psz_name, int i_type )
     p_this->i_vars++;
 
     p_var = &p_this->p_vars[i_new];
+    memset( p_var, 0, sizeof(*p_var) );
 
     p_var->i_hash = HashString( psz_name );
     p_var->psz_name = strdup( psz_name );
@@ -268,7 +275,7 @@ int __var_Create( vlc_object_t *p_this, const char *psz_name, int i_type )
         vlc_value_t val;
 
         if( InheritValue( p_this, psz_name, &val, p_var->i_type )
-            == VLC_SUCCESS );
+            == VLC_SUCCESS )
         {
             /* Free data if needed */
             p_var->pf_free( &p_var->val );
@@ -612,7 +619,7 @@ int __var_Change( vlc_object_t *p_this, const char *psz_name,
                 vlc_value_t val;
 
                 if( InheritValue( p_this, psz_name, &val, p_var->i_type )
-                    == VLC_SUCCESS );
+                    == VLC_SUCCESS )
                 {
                     /* Duplicate already done */
 
@@ -910,6 +917,136 @@ int __var_DelCallback( vlc_object_t *p_this, const char *psz_name,
     return VLC_SUCCESS;
 }
 
+/** Parse a stringified option
+ * This function parse a string option and create the associated object
+ * variable
+ * The option must be of the form "[no[-]]foo[=bar]" where foo is the
+ * option name and bar is the value of the option.
+ * \param p_obj the object in which the variable must be created
+ * \param psz_option the option to parse
+ * \return nothing
+ */
+void __var_OptionParse( vlc_object_t *p_obj, const char *psz_option )
+{
+    char *psz_name, *psz_value = strchr( psz_option, '=' );
+    int  i_name_len, i_type;
+    vlc_bool_t b_isno = VLC_FALSE;
+    vlc_value_t val;
+
+    if( psz_value ) i_name_len = psz_value - psz_option;
+    else i_name_len = strlen( psz_option );
+
+    /* It's too much of an hassle to remove the ':' when we parse
+     * the cmd line :) */
+    if( i_name_len && *psz_option == ':' )
+    {
+        psz_option++;
+        i_name_len--;
+    }
+
+    if( i_name_len == 0 ) return;
+
+    psz_name = strndup( psz_option, i_name_len );
+    if( psz_value ) psz_value++;
+
+    /* FIXME: :programs should be handled generically */
+    if( !strcmp( psz_name, "programs" ) )
+        i_type = VLC_VAR_LIST;
+    else
+        i_type = config_GetType( p_obj, psz_name );
+
+    if( !i_type && !psz_value )
+    {
+        /* check for "no-foo" or "nofoo" */
+        if( !strncmp( psz_name, "no-", 3 ) )
+        {
+            memmove( psz_name, psz_name + 3, strlen(psz_name) + 1 - 3 );
+        }
+        else if( !strncmp( psz_name, "no", 2 ) )
+        {
+            memmove( psz_name, psz_name + 2, strlen(psz_name) + 1 - 2 );
+        }
+        else goto cleanup;           /* Option doesn't exist */
+
+        b_isno = VLC_TRUE;
+        i_type = config_GetType( p_obj, psz_name );
+
+        if( !i_type ) goto cleanup;  /* Option doesn't exist */
+    }
+    else if( !i_type ) goto cleanup; /* Option doesn't exist */
+
+    if( ( i_type != VLC_VAR_BOOL ) &&
+        ( !psz_value || !*psz_value ) ) goto cleanup; /* Invalid value */
+
+    /* Create the variable in the input object.
+     * Children of the input object will be able to retreive this value
+     * thanks to the inheritance property of the object variables. */
+    var_Create( p_obj, psz_name, i_type );
+
+    switch( i_type )
+    {
+    case VLC_VAR_BOOL:
+        val.b_bool = !b_isno;
+        break;
+
+    case VLC_VAR_INTEGER:
+        val.i_int = strtol( psz_value, NULL, 0 );
+        break;
+
+    case VLC_VAR_FLOAT:
+        val.f_float = atof( psz_value );
+        break;
+
+    case VLC_VAR_STRING:
+    case VLC_VAR_MODULE:
+    case VLC_VAR_FILE:
+    case VLC_VAR_DIRECTORY:
+        val.psz_string = psz_value;
+        break;
+
+    case VLC_VAR_LIST:
+    {
+        char *psz_orig, *psz_var;
+        vlc_list_t *p_list = malloc(sizeof(vlc_list_t));
+        val.p_list = p_list;
+        p_list->i_count = 0;
+
+        psz_var = psz_orig = strdup(psz_value);
+        while( psz_var && *psz_var )
+        {
+            char *psz_item = psz_var;
+            vlc_value_t val2;
+            while( *psz_var && *psz_var != ',' ) psz_var++;
+            if( *psz_var == ',' )
+            {
+                *psz_var = '\0';
+                psz_var++;
+            }
+            val2.i_int = strtol( psz_item, NULL, 0 );
+            INSERT_ELEM( p_list->p_values, p_list->i_count,
+                         p_list->i_count, val2 );
+            /* p_list->i_count is incremented twice by INSERT_ELEM */
+            p_list->i_count--;
+            INSERT_ELEM( p_list->pi_types, p_list->i_count,
+                         p_list->i_count, VLC_VAR_INTEGER );
+        }
+        if( psz_orig ) free( psz_orig );
+        break;
+    }
+
+    default:
+        goto cleanup;
+        break;
+    }
+
+    var_Set( p_obj, psz_name, val );
+
+  cleanup:
+    if( psz_name ) free( psz_name );
+    return;
+}
+
+
 /* Following functions are local */
 
 /*****************************************************************************
@@ -1114,7 +1251,7 @@ static int LookupInner( variable_t *p_vars, int i_count, uint32_t i_hash )
  * This function checks p_val's value against p_var's limitations such as
  * minimal and maximal value, step, in-list position, and modifies p_val if
  * necessary.
- *****************************************************************************/
+ ****************************************************************************/
 static void CheckValue ( variable_t *p_var, vlc_value_t *p_val )
 {
     /* Check that our variable is in the list */
@@ -1224,6 +1361,35 @@ static int InheritValue( vlc_object_t *p_this, const char *psz_name,
         case VLC_VAR_BOOL:
             p_val->b_bool = config_GetInt( p_this, psz_name );
             break;
+        case VLC_VAR_LIST:
+        {
+            char *psz_orig, *psz_var;
+            vlc_list_t *p_list = malloc(sizeof(vlc_list_t));
+            p_val->p_list = p_list;
+            p_list->i_count = 0;
+
+            psz_var = psz_orig = config_GetPsz( p_this, psz_name );
+            while( psz_var && *psz_var )
+            {
+                char *psz_item = psz_var;
+                vlc_value_t val;
+                while( *psz_var && *psz_var != ',' ) psz_var++;
+                if( *psz_var == ',' )
+                {
+                    *psz_var = '\0';
+                    psz_var++;
+                }
+                val.i_int = strtol( psz_item, NULL, 0 );
+                INSERT_ELEM( p_list->p_values, p_list->i_count,
+                             p_list->i_count, val );
+                /* p_list->i_count is incremented twice by INSERT_ELEM */
+                p_list->i_count--;
+                INSERT_ELEM( p_list->pi_types, p_list->i_count,
+                             p_list->i_count, VLC_VAR_INTEGER );
+            }
+            if( psz_orig ) free( psz_orig );
+            break;
+        }
         default:
             return VLC_ENOOBJ;
             break;

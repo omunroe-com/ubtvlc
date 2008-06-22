@@ -1,11 +1,11 @@
 /*****************************************************************************
  * theme_loader.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: theme_loader.cpp 7290 2004-04-06 19:56:57Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: theme_loader.cpp 19663 2007-04-04 14:21:33Z lool $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "theme_loader.hpp"
@@ -27,19 +27,24 @@
 #include "../parser/builder.hpp"
 #include "../parser/skin_parser.hpp"
 #include "../src/os_factory.hpp"
+#include "../src/vlcproc.hpp"
 #include "../src/window_manager.hpp"
+
+#include <cctype>
 
 #ifdef HAVE_FCNTL_H
 #   include <fcntl.h>
 #endif
-#if !defined( WIN32 )
+#ifdef HAVE_SYS_STAT_H
+#   include <sys/stat.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #   include <unistd.h>
-#else
+#elif defined( WIN32 ) && !defined( UNDER_CE )
 #   include <direct.h>
 #endif
 
-#if (!defined( WIN32 ) || defined(__MINGW32__))
-/* Mingw has its own version of dirent */
+#ifdef HAVE_DIRENT_H
 #   include <dirent.h>
 #endif
 
@@ -47,7 +52,10 @@
 #if defined( HAVE_ZLIB_H )
 #   include <zlib.h>
 #   include <errno.h>
-int gzopen_frontend( char *pathname, int oflags, int mode );
+int gzopen_frontend ( char *pathname, int oflags, int mode );
+int gzclose_frontend( int );
+int gzread_frontend ( int, void *, size_t );
+int gzwrite_frontend( int, const void *, size_t );
 #if defined( HAVE_LIBTAR_H )
 #   include <libtar.h>
 #else
@@ -55,21 +63,26 @@ typedef gzFile TAR;
 int tar_open        ( TAR **t, char *pathname, int oflags );
 int tar_extract_all ( TAR *t, char *prefix );
 int tar_close       ( TAR *t );
+int getoct( char *p, int width );
 #endif
+int makedir( const char *newdir );
 #endif
 
 #define DEFAULT_XML_FILE "theme.xml"
+#define WINAMP2_XML_FILE "winamp2.xml"
+#define ZIP_BUFFER_SIZE 4096
 
 
 bool ThemeLoader::load( const string &fileName )
 {
     // First, we try to un-targz the file, and if it fails we hope it's a XML
     // file...
+    string path = getFilePath( fileName );
 #if defined( HAVE_ZLIB_H )
-    if( ! extract( fileName ) && ! parse( fileName ) )
+    if( ! extract( sToLocale( fileName ) ) && ! parse( path, fileName ) )
         return false;
 #else
-    if( ! parse( fileName ) )
+    if( ! parse( path, fileName ) )
         return false;
 #endif
 
@@ -92,8 +105,12 @@ bool ThemeLoader::load( const string &fileName )
     {
         config_PutPsz( getIntf(), "skins2-last", fileName.c_str() );
         // Show the windows
-        pNewTheme->getWindowManager().showAll();
+        pNewTheme->getWindowManager().showAll( true );
     }
+    if( skin_last ) free( skin_last );
+
+    // The new theme cannot embed a video output yet
+    VlcProc::instance( getIntf() )->dropVout();
 
     return true;
 }
@@ -104,8 +121,10 @@ bool ThemeLoader::extractTarGz( const string &tarFile, const string &rootDir )
 {
     TAR *t;
 #if defined( HAVE_LIBTAR_H )
-    tartype_t gztype = { (openfunc_t) gzopen_frontend, (closefunc_t) gzclose,
-        (readfunc_t) gzread, (writefunc_t) gzwrite };
+    tartype_t gztype = { (openfunc_t) gzopen_frontend,
+                         (closefunc_t) gzclose_frontend,
+                         (readfunc_t) gzread_frontend,
+                         (writefunc_t) gzwrite_frontend };
 
     if( tar_open( &t, (char *)tarFile.c_str(), &gztype, O_RDONLY, 0,
                   TAR_GNU ) == -1 )
@@ -131,29 +150,193 @@ bool ThemeLoader::extractTarGz( const string &tarFile, const string &rootDir )
 }
 
 
+bool ThemeLoader::extractZip( const string &zipFile, const string &rootDir )
+{
+    // Try to open the ZIP file
+    unzFile file = unzOpen( zipFile.c_str() );
+    unz_global_info info;
+
+    if( unzGetGlobalInfo( file, &info ) != UNZ_OK )
+    {
+        return false;
+    }
+    // Extract all the files in the archive
+    for( unsigned long i = 0; i < info.number_entry; i++ )
+    {
+        if( !extractFileInZip( file, rootDir ) )
+        {
+            msg_Warn( getIntf(), "error while unzipping %s",
+                      zipFile.c_str() );
+            unzClose( file );
+            return false;
+        }
+
+        if( i < info.number_entry - 1 )
+        {
+            // Go the next file in the archive
+            if( unzGoToNextFile( file ) !=UNZ_OK )
+            {
+                msg_Warn( getIntf(), "error while unzipping %s",
+                          zipFile.c_str() );
+                unzClose( file );
+                return false;
+            }
+        }
+    }
+    unzClose( file );
+    return true;
+}
+
+
+bool ThemeLoader::extractFileInZip( unzFile file, const string &rootDir )
+{
+    // Read info for the current file
+    char filenameInZip[256];
+    unz_file_info fileInfo;
+    if( unzGetCurrentFileInfo( file, &fileInfo, filenameInZip,
+                               sizeof( filenameInZip), NULL, 0, NULL, 0 )
+        != UNZ_OK )
+    {
+        return false;
+    }
+
+    // Convert the file name to lower case, because some winamp skins
+    // use the wrong case...
+    for( size_t i=0; i< strlen( filenameInZip ); i++)
+    {
+        filenameInZip[i] = tolower( filenameInZip[i] );
+    }
+
+    // Allocate the buffer
+    void *pBuffer = malloc( ZIP_BUFFER_SIZE );
+    if( !pBuffer )
+    {
+        msg_Err( getIntf(), "failed to allocate memory" );
+        return false;
+    }
+
+    // Get the path of the file
+    OSFactory *pOsFactory = OSFactory::instance( getIntf() );
+    string fullPath = rootDir
+        + pOsFactory->getDirSeparator()
+        + fixDirSeparators( filenameInZip );
+    string basePath = getFilePath( fullPath );
+
+    // Extract the file if is not a directory
+    if( basePath != fullPath )
+    {
+        if( unzOpenCurrentFile( file ) )
+        {
+            free( pBuffer );
+            return false;
+        }
+        makedir( basePath.c_str() );
+        FILE *fout = fopen( fullPath.c_str(), "wb" );
+        if( fout == NULL )
+        {
+            msg_Err( getIntf(), "error opening %s", fullPath.c_str() );
+            free( pBuffer );
+            return false;
+        }
+
+        // Extract the current file
+        int n;
+        do
+        {
+            n = unzReadCurrentFile( file, pBuffer, ZIP_BUFFER_SIZE );
+            if( n < 0 )
+            {
+                msg_Err( getIntf(), "error while reading zip file" );
+                free( pBuffer );
+                return false;
+            }
+            else if( n > 0 )
+            {
+                if( fwrite( pBuffer, n , 1, fout) != 1 )
+                {
+                    msg_Err( getIntf(), "error while writing %s",
+                             fullPath.c_str() );
+                    free( pBuffer );
+                    return false;
+                }
+            }
+        } while( n > 0 );
+
+        fclose(fout);
+
+        if( unzCloseCurrentFile( file ) != UNZ_OK )
+        {
+            free( pBuffer );
+            return false;
+        }
+    }
+
+    free( pBuffer );
+    return true;
+}
+
+
 bool ThemeLoader::extract( const string &fileName )
 {
+    bool result = true;
     char *tmpdir = tempnam( NULL, "vlt" );
     string tempPath = tmpdir;
     free( tmpdir );
 
     // Extract the file in a temporary directory
-    if( ! extractTarGz( fileName, tempPath ) )
-        return false;
-
-    // Find the XML file and parse it
-    string xmlFile;
-    if( ! findThemeFile( tempPath, xmlFile ) || ! parse( xmlFile ) )
+    if( ! extractTarGz( fileName, tempPath ) &&
+        ! extractZip( fileName, tempPath ) )
     {
-        msg_Err( getIntf(), "%s doesn't contain a " DEFAULT_XML_FILE " file",
-                 fileName.c_str() );
         deleteTempFiles( tempPath );
         return false;
     }
 
+    string path;
+    string xmlFile;
+    OSFactory *pOsFactory = OSFactory::instance( getIntf() );
+    // Find the XML file in the theme
+    if( findFile( tempPath, DEFAULT_XML_FILE, xmlFile ) )
+    {
+        path = getFilePath( xmlFile );
+    }
+    else
+    {
+        // No XML file, check if it is a winamp2 skin
+        string mainBmp;
+        if( findFile( tempPath, "main.bmp", mainBmp ) )
+        {
+            msg_Dbg( getIntf(), "trying to load a winamp2 skin" );
+            path = getFilePath( mainBmp );
+
+            // Look for winamp2.xml in the resource path
+            list<string> resPath = pOsFactory->getResourcePath();
+            list<string>::const_iterator it;
+            for( it = resPath.begin(); it != resPath.end(); it++ )
+            {
+                if( findFile( sToLocale( *it ), WINAMP2_XML_FILE, xmlFile ) )
+                    break;
+            }
+        }
+    }
+
+    if( !xmlFile.empty() )
+    {
+        // Parse the XML file
+        if (! parse( path, xmlFile ) )
+        {
+            msg_Err( getIntf(), "error while parsing %s", xmlFile.c_str() );
+            result = false;
+        }
+    }
+    else
+    {
+        msg_Err( getIntf(), "no XML found in theme %s", fileName.c_str() );
+        result = false;
+    }
+
     // Clean-up
     deleteTempFiles( tempPath );
-    return true;
+    return result;
 }
 
 
@@ -164,41 +347,66 @@ void ThemeLoader::deleteTempFiles( const string &path )
 #endif // HAVE_ZLIB_H
 
 
-bool ThemeLoader::parse( const string &xmlFile )
+bool ThemeLoader::parse( const string &path, const string &xmlFile )
 {
     // File loaded
-    msg_Dbg( getIntf(), "Using skin file: %s", xmlFile.c_str() );
-
-    // Extract the path of the XML file
-    string path;
-    const string &sep = OSFactory::instance( getIntf() )->getDirSeparator();
-    unsigned int p = xmlFile.rfind( sep, xmlFile.size() );
-    if( p != string::npos )
-    {
-        path = xmlFile.substr( 0, p + 1 );
-    }
-    else
-    {
-        path = "";
-    }
+    msg_Dbg( getIntf(), "using skin file: %s", xmlFile.c_str() );
 
     // Start the parser
     SkinParser parser( getIntf(), xmlFile, path );
     if( ! parser.parse() )
     {
-        msg_Err( getIntf(), "Failed to parse %s", xmlFile.c_str() );
+        msg_Err( getIntf(), "failed to parse %s", xmlFile.c_str() );
         return false;
     }
 
     // Build and store the theme
-    Builder builder( getIntf(), parser.getData() );
+    Builder builder( getIntf(), parser.getData(), path );
     getIntf()->p_sys->p_theme = builder.build();
 
     return true;
 }
 
 
-bool ThemeLoader::findThemeFile( const string &rootDir, string &themeFilePath )
+string ThemeLoader::getFilePath( const string &rFullPath )
+{
+    OSFactory *pOsFactory = OSFactory::instance( getIntf() );
+    const string &sep = pOsFactory->getDirSeparator();
+    // Find the last separator ('/' or '\')
+    string::size_type p = rFullPath.rfind( sep, rFullPath.size() );
+    string basePath;
+    if( p != string::npos )
+    {
+        if( p < rFullPath.size() - 1)
+        {
+            basePath = rFullPath.substr( 0, p );
+        }
+        else
+        {
+            basePath = rFullPath;
+        }
+    }
+    return basePath;
+}
+
+
+string ThemeLoader::fixDirSeparators( const string &rPath )
+{
+    OSFactory *pOsFactory = OSFactory::instance( getIntf() );
+    const string &sep = pOsFactory->getDirSeparator();
+    string::size_type p = rPath.find( "/", 0 );
+    string newPath = rPath;
+    while( p != string::npos )
+    {
+        newPath = newPath.replace( p, 1, sep );
+        p = newPath.find( "/", p + 1 );
+    }
+    return newPath;
+}
+
+
+bool ThemeLoader::findFile( const string &rootDir, const string &rFileName,
+                            string &themeFilePath )
 {
     // Path separator
     const string &sep = OSFactory::instance( getIntf() )->getDirSeparator();
@@ -212,12 +420,12 @@ bool ThemeLoader::findThemeFile( const string &rootDir, string &themeFilePath )
     if( pCurrDir == NULL )
     {
         // An error occurred
-        msg_Dbg( getIntf(), "Cannot open directory %s", rootDir.c_str() );
+        msg_Dbg( getIntf(), "cannot open directory %s", rootDir.c_str() );
         return false;
     }
 
     // Get the first directory entry
-    pDirContent = readdir( pCurrDir );
+    pDirContent = (dirent*)readdir( pCurrDir );
 
     // While we still have entries in the directory
     while( pDirContent != NULL )
@@ -233,41 +441,39 @@ bool ThemeLoader::findThemeFile( const string &rootDir, string &themeFilePath )
             stat( newURI.c_str(), &stat_data );
             if( S_ISDIR(stat_data.st_mode) )
 #elif defined( DT_DIR )
-            if( pDirContent->d_type == DT_DIR )
+            if( pDirContent->d_type & DT_DIR )
 #else
             if( 0 )
 #endif
             {
-                // Can we find the theme file in this subdirectory?
-                if( findThemeFile( newURI, themeFilePath ) )
+                // Can we find the file in this subdirectory?
+                if( findFile( newURI, rFileName, themeFilePath ) )
                 {
+                    closedir( pCurrDir );
                     return true;
                 }
             }
             else
             {
                 // Found the theme file?
-                if( string( DEFAULT_XML_FILE ) ==
-                    string( pDirContent->d_name ) )
+                if( rFileName == string( pDirContent->d_name ) )
                 {
-                    themeFilePath = newURI;
+                    themeFilePath = sFromLocale( newURI );
+                    closedir( pCurrDir );
                     return true;
                 }
             }
         }
 
-        pDirContent = readdir( pCurrDir );
+        pDirContent = (dirent*)readdir( pCurrDir );
     }
 
+    closedir( pCurrDir );
     return false;
 }
 
 
 #if !defined( HAVE_LIBTAR_H ) && defined( HAVE_ZLIB_H )
-
-#ifdef WIN32
-#  define mkdir(dirname,mode) _mkdir(dirname)
-#endif
 
 /* Values used in typeflag field */
 #define REGTYPE  '0'            /* regular file */
@@ -304,9 +510,6 @@ union tar_buffer {
 };
 
 
-/* helper functions */
-int getoct( char *p, int width );
-int makedir( char *newdir );
 
 int tar_open( TAR **t, char *pathname, int oflags )
 {
@@ -468,6 +671,11 @@ int getoct( char *p, int width )
     return result;
 }
 
+#endif
+
+#ifdef WIN32
+#  define mkdir(dirname,mode) _mkdir(dirname)
+#endif
 
 /* Recursive make directory
  * Abort if you get an ENOENT errno somewhere in the middle
@@ -475,7 +683,7 @@ int getoct( char *p, int width )
  *
  * return 1 if OK, 0 on error
  */
-int makedir( char *newdir )
+int makedir( const char *newdir )
 {
     char *p, *buffer = strdup( newdir );
     int  len = strlen( buffer );
@@ -517,15 +725,18 @@ int makedir( char *newdir )
     free( buffer );
     return 1;
 }
-#endif
 
 #ifdef HAVE_ZLIB_H
+
+static int currentGzFd = -1;
+static void * currentGzVp = NULL;
+
 int gzopen_frontend( char *pathname, int oflags, int mode )
 {
     char *gzflags;
     gzFile gzf;
 
-    switch( oflags & O_ACCMODE )
+    switch( oflags )
     {
         case O_WRONLY:
             gzflags = "wb";
@@ -546,6 +757,40 @@ int gzopen_frontend( char *pathname, int oflags, int mode )
         return -1;
     }
 
-    return (int)gzf;
+    /** Hum ... */
+    currentGzFd = 42;
+    currentGzVp = gzf;
+
+    return currentGzFd;
 }
+
+int gzclose_frontend( int fd )
+{
+    if( currentGzVp != NULL && fd != -1 )
+    {
+        void *toClose = currentGzVp;
+        currentGzVp = NULL;  currentGzFd = -1;
+        return gzclose( toClose );
+    }
+    return -1;
+}
+
+int gzread_frontend( int fd, void *p_buffer, size_t i_length )
+{
+    if( currentGzVp != NULL && fd != -1 )
+    {
+        return gzread( currentGzVp, p_buffer, i_length );
+    }
+    return -1;
+}
+
+int gzwrite_frontend( int fd, const void * p_buffer, size_t i_length )
+{
+    if( currentGzVp != NULL && fd != -1 )
+    {
+        return gzwrite( currentGzVp, const_cast<void*>(p_buffer), i_length );
+    }
+    return -1;
+}
+
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * fastmemcpy.h : fast memcpy routines
  *****************************************************************************
- * $Id: fastmemcpy.h 6961 2004-03-05 17:34:23Z sam $
+ * $Id: fastmemcpy.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: various Linux kernel hackers
  *          various MPlayer hackers
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*
@@ -246,7 +246,7 @@ void * fast_memcpy(void * to, const void * from, size_t len)
 	}
 #else
 	/* Align destination at BLOCK_SIZE boundary */
-	for(; ((int)to & (BLOCK_SIZE-1)) && i>0; i--)
+	for(; ((ptrdiff_t)to & (BLOCK_SIZE-1)) && i>0; i--)
 	{
 		__asm__ __volatile__ (
 #ifndef HAVE_MMX1
@@ -273,7 +273,7 @@ void * fast_memcpy(void * to, const void * from, size_t len)
 		to = (void *) (((unsigned char *)to)+64);
 	}
 
-/*	printf(" %d %d\n", (int)from&1023, (int)to&1023); */
+/*	printf(" %p %p\n", (ptrdiff_t)from&1023, (ptrdiff_t)to&1023); */
 	/* Pure Assembly cuz gcc is a bit unpredictable ;) */
 # if 0
 	if(i>=BLOCK_SIZE/64)

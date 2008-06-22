@@ -1,13 +1,14 @@
 /*****************************************************************************
  * vout.h: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: vout.h 7710 2004-05-18 09:08:44Z titer $
+ * Copyright (C) 2001-2006 the VideoLAN team
+ * $Id: vout.h 23115 2007-11-18 00:22:06Z pdherbemont $
  *
  * Authors: Colin Delacroix <colin@zoy.org>
  *          Florian G. Pflug <fgp@phlo.org>
  *          Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Eric Petit <titer@m0k.org>
+ *          Benjamin Pracht <bigben at videolan dot org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,98 +22,123 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
- * VLCWindow interface
+ * VLCEmbeddedList interface
  *****************************************************************************/
-@interface VLCWindow : NSWindow
+@interface VLCEmbeddedList : NSObject
 {
-    vout_thread_t * p_vout;
+    NSMutableArray * o_embedded_array;
 }
 
-- (void)setVout:(vout_thread_t *)_p_vout;
-- (vout_thread_t *)getVout;
+- (id)getEmbeddedVout;
+- (void)releaseEmbeddedVout: (id)o_vout_view;
+- (void)addEmbeddedVout: (id)o_vout_view;
+- (BOOL)windowContainsEmbedded: (id)o_window;
+- (id)getViewForWindow: (id)o_window;
 
-- (void)scaleWindowWithFactor: (float)factor;
+@end
+
+/*****************************************************************************
+ * VLCVoutView interface
+ *****************************************************************************/
+@protocol VLCVoutViewResetting
++ (void)resetVout: (vout_thread_t *)p_vout;
+@end
+
+@interface VLCVoutView : NSView
+{
+    vout_thread_t * p_vout;
+    NSRect        * s_frame;
+
+    NSView <VLCVoutViewResetting> * o_view;
+    vout_thread_t * p_real_vout;
+    id              o_window;
+}
+- (BOOL)setVout: (vout_thread_t *) p_arg_vout subView: (NSView *) view
+                     frame: (NSRect *) s_arg_frame;
+- (void)closeVout;
+- (void)updateTitle;
+- (void)manage;
+- (void)scaleWindowWithFactor: (float)factor animate: (BOOL)animate;
+- (void)setOnTop:(BOOL)b_on_top;
 - (void)toggleFloatOnTop;
 - (void)toggleFullscreen;
 - (BOOL)isFullscreen;
-- (void)updateTitle;
+- (void)snapshot;
+- (id)getWindow;
+
++ (id)getVoutView: (vout_thread_t *)p_vout subView: (NSView *) view
+                            frame: (NSRect *) s_frame;
++ (vout_thread_t *)getRealVout: (vout_thread_t *)p_vout;
+
+- (void)enterFullscreen;
+- (void)leaveFullscreen;
+@end
+
+/*****************************************************************************
+ * VLCVoutDetachedView interface
+ *****************************************************************************/
+
+@interface VLCDetachedVoutView : VLCVoutView
+{
+    mtime_t i_time_mouse_last_moved;
+}
+
+- (void)hideMouse: (BOOL)b_hide;
+
+@end
+
+/*****************************************************************************
+ * VLCEmbeddedView interface
+ *****************************************************************************/
+
+@interface VLCEmbeddedVoutView : VLCVoutView
+{
+    BOOL b_used;
+}
+
+- (void)setUsed: (BOOL)b_new_used;
+- (BOOL)isUsed;
+
+@end
+
+/*****************************************************************************
+ * VLCDetachedEmbeddedView interface
+ *****************************************************************************/
+
+@interface VLCDetachedEmbeddedVoutView : VLCEmbeddedVoutView
+{
+    id o_embeddedwindow;
+}
+
+@end
+
+/*****************************************************************************
+ * VLCVoutWindow interface
+ *****************************************************************************/
+@interface VLCVoutWindow : NSWindow
+{
+    vout_thread_t * p_vout;
+    VLCVoutView   * o_view;
+    NSRect        * s_frame;
+
+    vout_thread_t * p_real_vout;
+    vlc_bool_t      b_init_ok;
+    vlc_bool_t      b_black;
+    vlc_bool_t      b_embedded;
+}
+
+- (id) initWithVout: (vout_thread_t *) p_vout view: (VLCVoutView *) view
+                     frame: (NSRect *) s_frame;
+- (id)initReal: (id) sender;
+- (void)close;
+- (void)closeWindow;
+- (id)closeReal: (id) sender;
+- (id)getVoutView;
 
 - (BOOL)windowShouldClose:(id)sender;
 
 @end
-
-/*****************************************************************************
- * VLCView interface
- *****************************************************************************/
-@interface VLCQTView : NSQuickDrawView
-{
-}
-
-@end
-
-/*****************************************************************************
- * VLCView interface
- *****************************************************************************/
-@interface VLCGLView : NSOpenGLView
-{
-    vout_thread_t   * p_vout;
-    int               i_effect;
-    unsigned long     pi_textures[2];
-    float             f_x;
-    float             f_y;
-    int               initDone;
-}
-
-- (id)   initWithFrame: (NSRect) frame vout: (vout_thread_t*) p_vout;
-- (void) initTextures;
-- (void) reloadTexture: (int) index;
-- (void) cleanUp;
-
-@end
-
-/*****************************************************************************
- * VLCVout interface
- *****************************************************************************/
-@interface VLCVout : NSObject
-{
-}
-
-- (void)createWindow:(NSValue *)o_value;
-- (void)destroyWindow:(NSValue *)o_value;
-
-@end
-
-/*****************************************************************************
- * vout_sys_t: MacOS X video output method descriptor
- *****************************************************************************/
-struct vout_sys_t
-{
-    int i_opengl;
-    
-    NSRect s_rect;
-    int b_pos_saved;
-    VLCWindow * o_window;
-
-    vlc_bool_t b_mouse_moved;
-    mtime_t i_time_mouse_last_moved;
-
-#ifdef __QUICKTIME__
-    CodecType i_codec;
-    CGrafPtr p_qdport;
-    ImageSequence i_seq;
-    MatrixRecordPtr p_matrix;
-    DecompressorComponent img_dc;
-    ImageDescriptionHandle h_img_descr;
-    Ptr p_fullscreen_state;
-#endif
-
-    /* OpenGL */
-    VLCGLView * o_glview;
-    uint8_t   * p_data[2];
-    uint8_t   * p_data_orig[2];
-    int         i_cur_pic;
-};

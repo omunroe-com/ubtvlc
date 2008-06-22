@@ -49,8 +49,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12 /out:"plugins\libexport_plugin.dll"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib comctl32.lib rpcrt4.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12 /opt:ref /out:"plugins\libexport_plugin.dll"
 
 !ELSEIF  "$(CFG)" == "plugin_export - Win32 Debug"
 
@@ -73,8 +73,9 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12 /pdb:"plugins\libexport_plugin.pdb" /out:"plugins\libexport_plugin.dll"
+# SUBTRACT BASE LINK32 /pdb:none
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib comctl32.lib rpcrt4.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12 /pdb:"plugins\libexport_plugin.pdb" /out:"plugins\libexport_plugin.dll"
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
@@ -109,6 +110,16 @@ SOURCE="..\modules\misc\playlist\m3u.c"
 # PROP Intermediate_Dir "Debug\modules\misc\playlist"
 # End Source File
 # Begin Source File
+SOURCE="..\modules\misc\playlist\xspf.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=export" /D "MODULE_NAME_IS_export" 
+!IF "$(CFG)" == "plugin_export - Win32 Release"
+# PROP Output_Dir "Release\modules\misc\playlist"
+# PROP Intermediate_Dir "Release\modules\misc\playlist"
+!ELSEIF "$(CFG)" == "plugin_export - Win32 Debug"
+# PROP Output_Dir "Debug\modules\misc\playlist"
+# PROP Intermediate_Dir "Debug\modules\misc\playlist"
+# End Source File
+# Begin Source File
 SOURCE="..\modules\misc\playlist\old.c"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=export" /D "MODULE_NAME_IS_export" 
 !IF "$(CFG)" == "plugin_export - Win32 Release"
@@ -125,6 +136,9 @@ SOURCE="..\modules\misc\playlist\old.c"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 
+# Begin Source File
+SOURCE="..\modules\misc\playlist\xspf.h"
+# End Source File
 
 # End Group
 

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * i420_ymga.c : YUV to YUV conversion module for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: i420_ymga.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id: i420_ymga.c 14019 2006-01-26 19:51:06Z sam $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -108,10 +108,10 @@ static void I420_YMGA( vout_thread_t *p_vout, picture_t *p_source,
 
     /* Copy the Y part */
     p_vout->p_vlc->pf_memcpy( p_dest->Y_PIXELS, p_source->Y_PIXELS,
-                 p_dest->p[Y_PLANE].i_pitch * p_dest->p[Y_PLANE].i_lines );
+                 p_dest->p[Y_PLANE].i_pitch * p_dest->p[Y_PLANE].i_visible_lines );
 
     /* Copy the U:V part */
-    for( i_x = p_dest->p[U_PLANE].i_pitch * p_dest->p[U_PLANE].i_lines / 64;
+    for( i_x = p_dest->p[U_PLANE].i_pitch * p_dest->p[U_PLANE].i_visible_lines / 64;
          i_x--; )
     {
 #if defined (MODULE_NAME_IS_i420_ymga)
@@ -124,7 +124,7 @@ static void I420_YMGA( vout_thread_t *p_vout, picture_t *p_source,
         *p_uv++ = *p_u++; *p_uv++ = *p_v++; *p_uv++ = *p_u++; *p_uv++ = *p_v++;
         *p_uv++ = *p_u++; *p_uv++ = *p_v++; *p_uv++ = *p_u++; *p_uv++ = *p_v++;
 #else
-        __asm__( ".align 32 \n\
+        __asm__( ".p2align 5 \n\
         movd       (%0), %%mm0  # Load 4 Cr   00 00 00 00 v3 v2 v1 v0     \n\
         movd      4(%0), %%mm2  # Load 4 Cr   00 00 00 00 v3 v2 v1 v0     \n\
         movd      8(%0), %%mm4  # Load 4 Cr   00 00 00 00 v3 v2 v1 v0     \n\

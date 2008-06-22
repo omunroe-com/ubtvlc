@@ -3,9 +3,9 @@
  *****************************************************************************
  * Copyright (C) 2004 Commonwealth Scientific and Industrial Research
  *                    Organisation (CSIRO) Australia
- * Copyright (C) 2004 VideoLAN
+ * Copyright (C) 2004 the VideoLAN team
  *
- * $Id: history.c 7397 2004-04-20 17:27:30Z sam $
+ * $Id: history.c 16441 2006-08-30 21:36:35Z hartman $
  *
  * Authors: Andre Pang <Andre.Pang@csiro.au>
  *
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <vlc/vlc.h>
@@ -107,7 +107,7 @@ static void history_Dump( history_t *p_history )
         void *pv_item;
 
         xarray_ObjectAtIndex( p_history->p_xarray, i, &pv_item );
-        
+
         p_item = (history_item_t *) pv_item;
 
         if( p_item == NULL )
@@ -203,7 +203,7 @@ void history_PruneAndInsert( history_t *p_history, history_item_t *p_item )
 
 unsigned int history_Count( history_t *p_history )
 {
-    int i_count;
+    unsigned int i_count;
     xarray_Count( p_history->p_xarray, &i_count );
     return i_count;
 }

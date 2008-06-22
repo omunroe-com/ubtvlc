@@ -1,11 +1,11 @@
 /*****************************************************************************
  * cmd_fullscreen.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_fullscreen.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_fullscreen.cpp 17101 2006-10-15 14:10:14Z funman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "cmd_fullscreen.hpp"
@@ -36,7 +36,10 @@ void CmdFullscreen::execute()
     }
 
     pVout = (vout_thread_t *)vlc_object_find( getIntf()->p_sys->p_input,
-                                              VLC_OBJECT_VOUT, FIND_CHILD );
+                                            VLC_OBJECT_VOUT, FIND_CHILD );
+    if( !pVout )
+        pVout = (vout_thread_t *)vlc_object_find( getIntf()->p_sys->p_input,
+                                            VLC_OBJECT_VOUT, FIND_ANYWHERE );
     if( pVout )
     {
         // Switch to fullscreen

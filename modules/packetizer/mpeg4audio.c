@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mpeg4audio.c: parse and packetize an MPEG 4 audio stream
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: mpeg4audio.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001, 2002, 2006 the VideoLAN team
+ * $Id: mpeg4audio.c 19599 2007-04-01 01:03:06Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -113,6 +113,8 @@ static int ADTSSyncInfo( decoder_t *, const byte_t * p_buf,
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_PACKETIZER );
     set_description( _("MPEG4 audio packetizer") );
     set_capability( "packetizer", 50 );
     set_callbacks( OpenPacketizer, ClosePacketizer );
@@ -151,7 +153,7 @@ static int OpenPacketizer( vlc_object_t *p_this )
     /* Set callback */
     p_dec->pf_packetize = PacketizeBlock;
 
-    msg_Info( p_dec, "running MPEG4 audio packetizer" );
+    msg_Dbg( p_dec, "running MPEG4 audio packetizer" );
 
     if( p_dec->fmt_in.i_extra > 0 )
     {
@@ -189,6 +191,8 @@ static int OpenPacketizer( vlc_object_t *p_this )
     else
     {
         msg_Dbg( p_dec, "no decoder specific info, must be an ADTS stream" );
+
+        aout_DateInit( &p_sys->end_date, p_dec->fmt_in.audio.i_rate );
 
         /* We will try to create a AAC Config from adts */
         p_dec->fmt_out.i_extra = 0;

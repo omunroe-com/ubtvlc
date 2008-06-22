@@ -1,8 +1,8 @@
 /*****************************************************************************
  * rawvideo.c: Pseudo video decoder/packetizer for raw video data
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: rawvideo.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id: rawvideo.c 19607 2007-04-01 01:28:22Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -40,6 +40,7 @@ struct decoder_sys_t
      * Input properties
      */
     int i_raw_size;
+    vlc_bool_t b_invert;
 
     /*
      * Common properties
@@ -66,6 +67,8 @@ static block_t   *SendFrame  ( decoder_t *, block_t * );
 vlc_module_begin();
     set_description( _("Pseudo raw video decoder") );
     set_capability( "decoder", 50 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_VCODEC );
     set_callbacks( OpenDecoder, CloseDecoder );
 
     add_submodule();
@@ -105,6 +108,10 @@ static int OpenDecoder( vlc_object_t *p_this )
         case VLC_FOURCC('R','V','1','5'):
             break;
 
+        case VLC_FOURCC('y','v','1','2'):
+            p_dec->fmt_in.i_codec = VLC_FOURCC('Y','V','1','2');
+            break;
+
         default:
             return VLC_EGENERIC;
     }
@@ -119,9 +126,17 @@ static int OpenDecoder( vlc_object_t *p_this )
     /* Misc init */
     p_dec->p_sys->b_packetizer = VLC_FALSE;
     p_sys->i_pts = 0;
+    p_sys->b_invert = 0;
 
-    if( p_dec->fmt_in.video.i_width <= 0 ||
-        p_dec->fmt_in.video.i_height <= 0 )
+    if( (int)p_dec->fmt_in.video.i_height < 0 )
+    {
+        /* Frames are coded from bottom to top */
+        p_dec->fmt_in.video.i_height =
+            (unsigned int)(-(int)p_dec->fmt_in.video.i_height);
+        p_sys->b_invert = VLC_TRUE;
+    }
+
+    if( p_dec->fmt_in.video.i_width <= 0 || p_dec->fmt_in.video.i_height <= 0 )
     {
         msg_Err( p_dec, "invalid display size %dx%d",
                  p_dec->fmt_in.video.i_width, p_dec->fmt_in.video.i_height );
@@ -139,11 +154,19 @@ static int OpenDecoder( vlc_object_t *p_this )
     /* Set output properties */
     p_dec->fmt_out.i_cat = VIDEO_ES;
     p_dec->fmt_out.i_codec = p_dec->fmt_in.i_codec;
-    //if( !p_dec->fmt_in.video.i_aspect )
+    if( !p_dec->fmt_in.video.i_aspect )
     {
         p_dec->fmt_out.video.i_aspect = VOUT_ASPECT_FACTOR *
             p_dec->fmt_out.video.i_width / p_dec->fmt_out.video.i_height;
     }
+    else p_dec->fmt_out.video.i_aspect = p_dec->fmt_in.video.i_aspect;
+
+    if( p_dec->fmt_in.video.i_rmask )
+        p_dec->fmt_out.video.i_rmask = p_dec->fmt_in.video.i_rmask;
+    if( p_dec->fmt_in.video.i_gmask )
+        p_dec->fmt_out.video.i_gmask = p_dec->fmt_in.video.i_gmask;
+    if( p_dec->fmt_in.video.i_bmask )
+        p_dec->fmt_out.video.i_bmask = p_dec->fmt_in.video.i_bmask;
 
     /* Set callbacks */
     p_dec->pf_decode_video = (picture_t *(*)(decoder_t *, block_t **))
@@ -226,21 +249,28 @@ static void FillPicture( decoder_t *p_dec, block_t *p_block, picture_t *p_pic )
 {
     uint8_t *p_src, *p_dst;
     int i_src, i_plane, i_line, i_width;
+    decoder_sys_t *p_sys = p_dec->p_sys;
 
-    p_src  = p_block->p_buffer;
+    p_src = p_block->p_buffer;
     i_src = p_block->i_buffer;
 
     for( i_plane = 0; i_plane < p_pic->i_planes; i_plane++ )
     {
         p_dst = p_pic->p[i_plane].p_pixels;
-        i_width = p_pic->p[i_plane].i_visible_pitch;
+        i_width = p_pic->p[i_plane].i_pitch;
 
-        for( i_line = 0; i_line < p_pic->p[i_plane].i_lines; i_line++ )
+        if( p_sys->b_invert )
+            p_src += (i_width * (p_pic->p[i_plane].i_visible_lines - 1));
+
+        for( i_line = 0; i_line < p_pic->p[i_plane].i_visible_lines; i_line++ )
         {
             p_dec->p_vlc->pf_memcpy( p_dst, p_src, i_width );
-            p_src += i_width;
-            p_dst += p_pic->p[i_plane].i_pitch;
+            p_src += p_sys->b_invert ? -i_width : i_width;
+            p_dst += i_width;
         }
+
+        if( p_sys->b_invert )
+            p_src += (i_width * (p_pic->p[i_plane].i_visible_lines + 1));
     }
 }
 
@@ -276,6 +306,49 @@ static block_t *SendFrame( decoder_t *p_dec, block_t *p_block )
     decoder_sys_t *p_sys = p_dec->p_sys;
 
     p_block->i_dts = p_block->i_pts = p_sys->i_pts;
+
+    if( p_sys->b_invert )
+    {
+        picture_t pic;
+        uint8_t *p_tmp, *p_pixels;
+        int i, j;
+
+        /* Fill in picture_t fields */
+        vout_InitPicture( VLC_OBJECT(p_dec), &pic, p_dec->fmt_out.i_codec,
+                          p_dec->fmt_out.video.i_width,
+                          p_dec->fmt_out.video.i_height, VOUT_ASPECT_FACTOR );
+
+        if( !pic.i_planes )
+        {
+            msg_Err( p_dec, "unsupported chroma" );
+            return p_block;
+        }
+
+        p_tmp = malloc( pic.p[0].i_pitch );
+        p_pixels = p_block->p_buffer;
+        for( i = 0; i < pic.i_planes; i++ )
+        {
+            int i_pitch = pic.p[i].i_pitch;
+            uint8_t *p_top = p_pixels;
+            uint8_t *p_bottom = p_pixels + i_pitch *
+                (pic.p[i].i_visible_lines - 1);
+
+            for( j = 0; j < pic.p[i].i_visible_lines / 2; j++ )
+            {
+                p_dec->p_vlc->pf_memcpy( p_tmp, p_bottom,
+                                         pic.p[i].i_visible_pitch  );
+                p_dec->p_vlc->pf_memcpy( p_bottom, p_top,
+                                         pic.p[i].i_visible_pitch  );
+                p_dec->p_vlc->pf_memcpy( p_top, p_tmp,
+                                         pic.p[i].i_visible_pitch  );
+                p_top += i_pitch;
+                p_bottom -= i_pitch;
+            }
+
+            p_pixels += i_pitch * pic.p[i].i_lines;
+        }
+        free( p_tmp );
+    }
 
     return p_block;
 }

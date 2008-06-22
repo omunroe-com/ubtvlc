@@ -49,8 +49,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12 /out:"plugins\libhttp_plugin.dll"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib comctl32.lib rpcrt4.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12 /opt:ref /out:"plugins\libhttp_plugin.dll"
 
 !ELSEIF  "$(CFG)" == "plugin_http - Win32 Debug"
 
@@ -73,8 +73,9 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12 /pdb:"plugins\libhttp_plugin.pdb" /out:"plugins\libhttp_plugin.dll"
+# SUBTRACT BASE LINK32 /pdb:none
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib comctl32.lib rpcrt4.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12 /pdb:"plugins\libhttp_plugin.pdb" /out:"plugins\libhttp_plugin.dll"
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
@@ -89,14 +90,54 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 
 # Begin Source File
-SOURCE="..\modules\control\http.c"
+SOURCE="..\modules\control\http\http.c"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=http" /D "MODULE_NAME_IS_http" 
 !IF "$(CFG)" == "plugin_http - Win32 Release"
-# PROP Output_Dir "Release\modules\control"
-# PROP Intermediate_Dir "Release\modules\control"
+# PROP Output_Dir "Release\modules\control\http"
+# PROP Intermediate_Dir "Release\modules\control\http"
 !ELSEIF "$(CFG)" == "plugin_http - Win32 Debug"
-# PROP Output_Dir "Debug\modules\control"
-# PROP Intermediate_Dir "Debug\modules\control"
+# PROP Output_Dir "Debug\modules\control\http"
+# PROP Intermediate_Dir "Debug\modules\control\http"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\control\http\rpn.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=http" /D "MODULE_NAME_IS_http" 
+!IF "$(CFG)" == "plugin_http - Win32 Release"
+# PROP Output_Dir "Release\modules\control\http"
+# PROP Intermediate_Dir "Release\modules\control\http"
+!ELSEIF "$(CFG)" == "plugin_http - Win32 Debug"
+# PROP Output_Dir "Debug\modules\control\http"
+# PROP Intermediate_Dir "Debug\modules\control\http"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\control\http\macro.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=http" /D "MODULE_NAME_IS_http" 
+!IF "$(CFG)" == "plugin_http - Win32 Release"
+# PROP Output_Dir "Release\modules\control\http"
+# PROP Intermediate_Dir "Release\modules\control\http"
+!ELSEIF "$(CFG)" == "plugin_http - Win32 Debug"
+# PROP Output_Dir "Debug\modules\control\http"
+# PROP Intermediate_Dir "Debug\modules\control\http"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\control\http\mvar.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=http" /D "MODULE_NAME_IS_http" 
+!IF "$(CFG)" == "plugin_http - Win32 Release"
+# PROP Output_Dir "Release\modules\control\http"
+# PROP Intermediate_Dir "Release\modules\control\http"
+!ELSEIF "$(CFG)" == "plugin_http - Win32 Debug"
+# PROP Output_Dir "Debug\modules\control\http"
+# PROP Intermediate_Dir "Debug\modules\control\http"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\control\http\util.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=http" /D "MODULE_NAME_IS_http" 
+!IF "$(CFG)" == "plugin_http - Win32 Release"
+# PROP Output_Dir "Release\modules\control\http"
+# PROP Intermediate_Dir "Release\modules\control\http"
+!ELSEIF "$(CFG)" == "plugin_http - Win32 Debug"
+# PROP Output_Dir "Debug\modules\control\http"
+# PROP Intermediate_Dir "Debug\modules\control\http"
 # End Source File
 
 # End Group
@@ -105,6 +146,12 @@ SOURCE="..\modules\control\http.c"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 
+# Begin Source File
+SOURCE="..\modules\control\http\http.h"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\control\http\macros.h"
+# End Source File
 
 # End Group
 

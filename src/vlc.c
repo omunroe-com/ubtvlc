@@ -1,12 +1,13 @@
 /*****************************************************************************
  * vlc.c: the vlc player
  *****************************************************************************
- * Copyright (C) 1998-2004 VideoLAN
- * $Id: vlc.c 7394 2004-04-20 15:05:24Z gbazin $
+ * Copyright (C) 1998-2004 the VideoLAN team
+ * $Id: vlc.c 19248 2007-03-08 14:41:12Z md $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
- *          Gildas Bazin <gbazin@netcourrier.com>
+ *          Gildas Bazin <gbazin@videolan.org>
+ *          Derk-Jan Hartman <hartman at videolan dot org>
  *          Lots of other people, see the libvlc AUTHORS file
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,7 +22,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "config.h"
@@ -37,21 +38,32 @@
 
 #include <vlc/vlc.h>
 
-/*****************************************************************************
- * Local prototypes.
- *****************************************************************************/
-#ifndef WIN32
-static void SigHandler  ( int i_signal );
+#ifdef WIN32
+#include <windows.h>
+extern void __wgetmainargs(int *argc, wchar_t ***wargv, wchar_t ***wenviron,
+                           int expand_wildcards, int *startupinfo);
 #endif
 
 /*****************************************************************************
- * main: parse command line, start interface and spawn threads
+ * Local prototypes.
+ *****************************************************************************/
+#if !defined(WIN32) && !defined(UNDER_CE)
+static void SigHandler  ( int i_signal );
+#endif
+
+extern void rootwrap( void );
+
+/*****************************************************************************
+ * main: parse command line, start interface and spawn threads.
  *****************************************************************************/
 int main( int i_argc, char *ppsz_argv[] )
 {
     int i_ret;
 
+#ifndef __APPLE__
+    /* This clutters OSX GUI error logs */
     fprintf( stderr, "VLC media player %s\n", VLC_Version() );
+#endif
 
 #ifdef HAVE_PUTENV
 #   ifdef DEBUG
@@ -69,6 +81,8 @@ int main( int i_argc, char *ppsz_argv[] )
     }
 #endif
 
+    rootwrap ();
+    
     /* Create a libvlc structure */
     i_ret = VLC_Create();
     if( i_ret < 0 )
@@ -76,7 +90,7 @@ int main( int i_argc, char *ppsz_argv[] )
         return i_ret;
     }
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(UNDER_CE)
     /* Set the signal handlers. SIGTERM is not intercepted, because we need at
      * least one method to kill the program when all other methods failed, and
      * when we don't want to use SIGKILL.
@@ -90,19 +104,59 @@ int main( int i_argc, char *ppsz_argv[] )
     signal( SIGPIPE, SIG_IGN );
 #endif
 
+#ifdef WIN32
+    /* Replace argv[1..n] with unicode for Windows NT and above */
+    if( GetVersion() < 0x80000000 )
+    {
+        wchar_t **wargv, **wenvp;
+        int i,i_wargc;
+        int si = { 0 };
+        __wgetmainargs(&i_wargc, &wargv, &wenvp, 0, &si);
+
+        for( i = 1; i < i_wargc; i++ )
+        { 
+            int len = WideCharToMultiByte(CP_UTF8, 0, wargv[i], -1, NULL, 0, NULL, NULL); 
+            if( len > 0 ) 
+            { 
+                if( len > 1 ) { 
+                    char *utf8arg = (char *)malloc(len); 
+                    if( NULL != utf8arg ) 
+                    { 
+                        WideCharToMultiByte(CP_UTF8, 0, wargv[i], -1, utf8arg, len, NULL, NULL); 
+                        ppsz_argv[i] = utf8arg; 
+                    } 
+                    else 
+                    { 
+                        /* failed!, quit */ 
+                        return -1; 
+                    } 
+                } 
+                else 
+                { 
+                    ppsz_argv[i] = strdup(""); 
+                } 
+            } 
+            else 
+            { 
+                /* failed!, quit */ 
+                return -1; 
+            } 
+        }
+    }
+#endif
+
     /* Initialize libvlc */
     i_ret = VLC_Init( 0, i_argc, ppsz_argv );
     if( i_ret < 0 )
     {
         VLC_Destroy( 0 );
-        return i_ret;
+        return i_ret == VLC_EEXITSUCCESS ? 0 : i_ret;
     }
 
-    /* Add a blocking interface, start playing, and keep the return value */
     i_ret = VLC_AddIntf( 0, NULL, VLC_TRUE, VLC_TRUE );
 
     /* Finish the threads */
-    VLC_Stop( 0 );
+    VLC_CleanUp( 0 );
 
     /* Destroy the libvlc structure */
     VLC_Destroy( 0 );
@@ -110,7 +164,7 @@ int main( int i_argc, char *ppsz_argv[] )
     return i_ret;
 }
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(UNDER_CE)
 /*****************************************************************************
  * SigHandler: system signal handler
  *****************************************************************************
@@ -153,3 +207,32 @@ static void SigHandler( int i_signal )
 }
 #endif
 
+#if defined(UNDER_CE)
+#   if defined( _MSC_VER ) && defined( UNDER_CE )
+#       include "vlc_common.h"
+#   endif
+/*****************************************************************************
+ * WinMain: parse command line, start interface and spawn threads. (WinCE only)
+ *****************************************************************************/
+int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
+                    LPTSTR lpCmdLine, int nCmdShow )
+{
+    char **argv, psz_cmdline[MAX_PATH];
+    int argc, i_ret;
+
+    WideCharToMultiByte( CP_ACP, 0, lpCmdLine, -1,
+                         psz_cmdline, MAX_PATH, NULL, NULL );
+
+    argv = vlc_parse_cmdline( psz_cmdline, &argc );
+    argv = realloc( argv, (argc + 1) * sizeof(char *) );
+    if( !argv ) return -1;
+
+    if( argc ) memmove( argv + 1, argv, argc * sizeof(char *) );
+    argv[0] = ""; /* Fake program path */
+
+    i_ret = main( argc + 1, argv );
+
+    /* No need to free the argv memory */
+    return i_ret;
+}
+#endif

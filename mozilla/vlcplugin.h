@@ -1,10 +1,11 @@
 /*****************************************************************************
  * vlcplugin.h: a VLC plugin for Mozilla
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: vlcplugin.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002-2006 the VideoLAN team
+ * $Id: vlcplugin.h 19481 2007-03-25 22:38:56Z damienf $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
+            Damien Fouilleul <damienf@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,68 +19,110 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*******************************************************************************
  * Instance state information about the plugin.
  ******************************************************************************/
+#ifndef __VLCPLUGIN_H__
+#define __VLCPLUGIN_H__
+
+#include <vlc/libvlc.h>
+#include <npapi.h>
+#include "control/nporuntime.h"
+
+#if !defined(XP_MACOSX) && !defined(XP_UNIX) && !defined(XP_WIN)
+#define XP_UNIX 1
+#elif defined(XP_MACOSX)
+#undef XP_UNIX
+#endif
+
+#ifdef XP_WIN
+    /* Windows stuff */
+#endif
+
+#ifdef XP_MACOSX
+    /* Mac OS X stuff */
+#   include <Quickdraw.h>
+#endif
+
+#ifdef XP_UNIX
+    /* X11 stuff */
+#   include <X11/Xlib.h>
+#   include <X11/Intrinsic.h>
+#   include <X11/StringDefs.h>
+#endif
 
 class VlcPlugin
 {
 public:
-             VlcPlugin( NPP ); 
+             VlcPlugin( NPP, uint16 ); 
     virtual ~VlcPlugin();
 
-    void     SetInstance( NPP );
-    NPP      GetInstance();
-    VlcIntf* GetPeer();
+    NPError             init(int argc, char* const argn[], char* const argv[]);
+    libvlc_instance_t*  getVLC() 
+                            { return libvlc_instance; };
+    NPP                 getBrowser()
+                            { return p_browser; };
+    char*               getAbsoluteURL(const char *url);
+    const NPWindow*     getWindow()
+                            { return &npwindow; };
+    void                setWindow(const NPWindow *window)
+                            { npwindow = *window; };
 
-    void     SetFileName( const char* );
+    NPClass*            getScriptClass()
+                            { return p_scriptClass; };
 
-    /* Window settings */
-    NPWindow* p_npwin;
-    uint16    i_npmode;
-    uint32    i_width, i_height;
-
-#ifdef XP_WIN
-    /* Windows data members */
-    HWND     p_hwnd;
-    WNDPROC  pf_wndproc;
+    void                setLog(libvlc_log_t *log)
+                            { libvlc_log = log; };
+    libvlc_log_t*       getLog()
+                            { return libvlc_log; };
+#if XP_WIN
+    WNDPROC             getWindowProc()
+                            { return pf_wndproc; };
+    void                setWindowProc(WNDPROC wndproc)
+                            { pf_wndproc = wndproc; };
 #endif
 
-#ifdef XP_UNIX
-    /* UNIX data members */
-    Window   window;
-    Display *p_display;
+#if XP_UNIX
+    int                 setSize(unsigned width, unsigned height);
 #endif
 
-#ifdef XP_MACOSX
-    /* MACOS data members */
-    NPWindow *window;
-#endif
+    uint16    i_npmode; /* either NP_EMBED or NP_FULL */
 
-
-    /* vlc data members */
-    int      i_vlc;
+    /* plugin properties */
     int      b_stream;
     int      b_autoplay;
     char *   psz_target;
 
 private:
-    NPP      p_instance;
-    VlcPeer* p_peer;
+    /* VLC reference */
+    libvlc_instance_t   *libvlc_instance;
+    libvlc_log_t        *libvlc_log;
+    NPClass             *p_scriptClass;
+
+    /* browser reference */
+    NPP     p_browser;
+    char*   psz_baseURL;
+
+    /* display settings */
+    NPWindow  npwindow;
+#if XP_WIN
+    WNDPROC   pf_wndproc;
+#endif
+#if XP_UNIX
+    unsigned int     i_width, i_height;
+#endif
 };
 
 /*******************************************************************************
  * Plugin properties.
  ******************************************************************************/
-#define PLUGIN_NAME         "VLC multimedia plugin"
+#define PLUGIN_NAME         "VLC Multimedia Plugin"
 #define PLUGIN_DESCRIPTION \
-    "VLC multimedia plugin <br>" \
-    " <br>" \
-    "version %s <br>" \
-    "VideoLAN WWW: <a href=\"http://www.videolan.org/\">http://www.videolan.org/</a>"
+    "Version %s, copyright 1996-2007 The VideoLAN Team" \
+    "<br><a href=\"http://www.videolan.org/\">http://www.videolan.org/</a>"
 
 #define PLUGIN_MIMETYPES \
     /* MPEG-1 and MPEG-2 */ \
@@ -98,13 +141,26 @@ private:
     "video/x-msvideo:avi:AVI video;" \
     /* QuickTime */ \
     "video/quicktime:mov,qt:QuickTime video;" \
-    /* Ogg */ \
+    /* OGG */ \
     "application/x-ogg:ogg:Ogg stream;" \
-    /* explicit plugin call */ \
-    "application/x-vlc-plugin::VLC plugin;" \
-    /* windows media */ \
+    "application/ogg:ogg:Ogg stream;" \
+    /* VLC */ \
+    "application/x-vlc-plugin:vlc:VLC plugin;" \
+    /* Windows Media */ \
     "video/x-ms-asf-plugin:asf,asx:Windows Media Video;" \
     "video/x-ms-asf:asf,asx:Windows Media Video;" \
     "application/x-mplayer2::Windows Media;" \
-    "video/x-ms-wmv:wmv:Windows Media" \
+    "video/x-ms-wmv:wmv:Windows Media;" \
+    /* Google VLC */ \
+    "application/x-google-vlc-plugin::Google VLC plugin;" \
+    /* WAV audio */ \
+    "audio/wav:wav:WAV audio;" \
+    "audio/x-wav:wav:WAV audio;" \
+    /* 3GPP */ \
+    "audio/3gpp:3gp,3gpp:3GPP audio;" \
+    "video/3gpp:3gp,3gpp:3GPP video;" \
+    /* 3GPP2 */ \
+    "audio/3gpp2:3g2,3gpp2:3GPP2 audio;" \
+    "video/3gpp2:3g2,3gpp2:3GPP2 video;" \
 
+#endif

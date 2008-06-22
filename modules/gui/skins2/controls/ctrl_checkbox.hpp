@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ctrl_checkbox.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_checkbox.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: ctrl_checkbox.hpp 16457 2006-08-31 20:51:12Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CTRL_CHECKBOX_HPP
@@ -28,6 +28,7 @@
 #include "ctrl_generic.hpp"
 #include "../utils/fsm.hpp"
 #include "../utils/observer.hpp"
+#include "../src/anim_bitmap.hpp"
 
 class GenericBitmap;
 class OSGraphics;
@@ -35,7 +36,7 @@ class CmdGeneric;
 
 
 /// Base class for checkbox controls
-class CtrlCheckbox: public CtrlGeneric
+class CtrlCheckbox: public CtrlGeneric, public Observer<AnimBitmap>
 {
     public:
         /// Create a checkbox with 6 images
@@ -65,6 +66,9 @@ class CtrlCheckbox: public CtrlGeneric
         /// Get the text of the tooltip XXX
         virtual UString getTooltipText() const { return *m_pTooltip; }
 
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return "checkbox"; }
+
     private:
         /// Finite state machine of the control
         FSM m_fsm;
@@ -78,41 +82,37 @@ class CtrlCheckbox: public CtrlGeneric
         const UString m_tooltip1, m_tooltip2;
         /// Current tooltip
         const UString *m_pTooltip;
-        /// Callbacks objects
-        Callback m_cmdUpOverDownOver;
-        Callback m_cmdDownOverUpOver;
-        Callback m_cmdDownOverDown;
-        Callback m_cmdDownDownOver;
-        Callback m_cmdUpOverUp;
-        Callback m_cmdUpUpOver;
-        Callback m_cmdDownUp;
-        Callback m_cmdUpHidden;
-        Callback m_cmdHiddenUp;
-        /// Images of the checkbox in the different states
-        OSGraphics *m_pImgUp1, *m_pImgOver1, *m_pImgDown1;
-        OSGraphics *m_pImgUp2, *m_pImgOver2, *m_pImgDown2;
+         /// Images of the checkbox in the different states
+        AnimBitmap m_imgUp1, m_imgOver1, m_imgDown1;
+        AnimBitmap m_imgUp2, m_imgOver2, m_imgDown2;
         /// Current set of images (pointing to 1 or 2)
         /// In fact, we consider here that a checkbox acts like 2 buttons, in a
         /// symetric way; this is a small trick to avoid multiplicating the
         /// callbacks (and it could be extended easily to support 3 buttons or
         /// more...)
-        OSGraphics *m_pImgUp, *m_pImgOver, *m_pImgDown;
+        AnimBitmap *m_pImgUp, *m_pImgOver, *m_pImgDown;
         /// Current image
-        OSGraphics *m_pImgCurrent;
+        AnimBitmap *m_pImgCurrent;
 
-        /// Callback functions
-        static void transUpOverDownOver( SkinObject *pCtrl );
-        static void transDownOverUpOver( SkinObject *pCtrl );
-        static void transDownOverDown( SkinObject *pCtrl );
-        static void transDownDownOver( SkinObject *pCtrl );
-        static void transUpOverUp( SkinObject *pCtrl );
-        static void transUpUpOver( SkinObject *pCtrl );
-        static void transDownUp( SkinObject *pCtrl );
-        static void transUpHidden( SkinObject *pCtrl );
-        static void transHiddenUp( SkinObject *pCtrl );
+        /// Callback objects
+        DEFINE_CALLBACK( CtrlCheckbox, UpOverDownOver )
+        DEFINE_CALLBACK( CtrlCheckbox, DownOverUpOver )
+        DEFINE_CALLBACK( CtrlCheckbox, DownOverDown )
+        DEFINE_CALLBACK( CtrlCheckbox, DownDownOver )
+        DEFINE_CALLBACK( CtrlCheckbox, UpOverUp )
+        DEFINE_CALLBACK( CtrlCheckbox, UpUpOver )
+        DEFINE_CALLBACK( CtrlCheckbox, DownUp )
+        DEFINE_CALLBACK( CtrlCheckbox, UpHidden )
+        DEFINE_CALLBACK( CtrlCheckbox, HiddenUp )
 
         /// Method called when the observed variable is modified
         virtual void onVarBoolUpdate( VarBool &rVariable );
+
+        /// Method called when an animated bitmap changes
+        virtual void onUpdate( Subject<AnimBitmap> &rBitmap, void* );
+
+        /// Change the current image
+        void setImage( AnimBitmap *pImg );
 
         /// Helper function to update the current state of images
         void changeButton();

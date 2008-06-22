@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ctrl_generic.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_generic.hpp 7073 2004-03-14 14:33:12Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: ctrl_generic.hpp 16647 2006-09-14 14:58:57Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CTRL_GENERIC_HPP
@@ -27,10 +27,11 @@
 
 #include "../src/skin_common.hpp"
 #include "../utils/pointer.hpp"
-#include "../utils/fsm.hpp"
 #include "../utils/ustring.hpp"
 #include "../utils/observer.hpp"
+#include "../commands/cmd_generic.hpp"
 
+class Box;
 class EvtGeneric;
 class OSGraphics;
 class GenericLayout;
@@ -65,8 +66,10 @@ class CtrlGeneric: public SkinObject, public Observer<VarBool>
         virtual UString getTooltipText() const
             { return UString( getIntf(), "" ); }
 
-        /// Overload this method if you want to do something special when
-        /// the layout is resized
+        /**
+         * Overload this method if you want to do something special when
+         * the layout is resized
+         */
         virtual void onResize() {}
 
         /// Get the help text
@@ -78,13 +81,28 @@ class CtrlGeneric: public SkinObject, public Observer<VarBool>
         /// Return true if the control is visible
         virtual bool isVisible() const;
 
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return ""; }
+
     protected:
         // If pVisible is NULL, the control is always visible
         CtrlGeneric( intf_thread_t *pIntf, const UString &rHelp,
                      VarBool *pVisible = NULL );
 
-        /// Tell the layout when the image has changed
-        virtual void notifyLayout() const;
+        /**
+         * Tell the layout when the image has changed, with the size of the
+         * rectangle to repaint and its offset.
+         * Use the default values to repaint the whole window
+         */
+        virtual void notifyLayout( int witdh = -1, int height = -1,
+                                   int xOffSet = 0, int yOffSet = 0 ) const;
+
+        /**
+         * Same as notifyLayout(), but takes optional images as parameters.
+         * The maximum size(s) of the images will be used for repainting.
+         */
+        void notifyLayoutMaxSize( const Box *pImg1 = NULL,
+                                  const Box *pImg2 = NULL );
 
         /// Ask the layout to capture the mouse
         virtual void captureMouse() const;
@@ -98,8 +116,10 @@ class CtrlGeneric: public SkinObject, public Observer<VarBool>
         /// Get the associated window, if any
         virtual TopWindow *getWindow() const;
 
-        /// Overload this method if you want to do something special when
-        /// the Position object is set
+        /**
+         * Overload this method if you want to do something special when
+         * the Position object is set
+         */
         virtual void onPositionChange() {}
 
         /// Overload this method to get notified of bool variable changes
@@ -116,7 +136,7 @@ class CtrlGeneric: public SkinObject, public Observer<VarBool>
         VarBool *m_pVisible;
 
         /// Method called when an observed bool variable is changed
-        virtual void onUpdate( Subject<VarBool> &rVariable );
+        virtual void onUpdate( Subject<VarBool> &rVariable , void* );
 };
 
 typedef CountedPtr<CtrlGeneric> CtrlGenericPtr;

@@ -1,10 +1,10 @@
 /*****************************************************************************
  * spudec.h : sub picture unit decoder thread interface
  *****************************************************************************
- * Copyright (C) 1999, 2000 VideoLAN
- * $Id: spudec.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999, 2000, 2006 the VideoLAN team
+ * $Id: spudec.h 15130 2006-04-07 16:33:51Z massiot $
  *
- * Authors: Samuel Hocevar <sam@zoy.org>
+ * Authors: Sam Hocevar <sam@zoy.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,26 +18,27 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
+
+/* #define DEBUG_SPUDEC 1 */
 
 struct decoder_sys_t
 {
     int b_packetizer;
 
     mtime_t i_pts;
-    int i_spu_size;
-    int i_rle_size;
-    int i_spu;
+    unsigned int i_spu_size;
+    unsigned int i_rle_size;
+    unsigned int i_spu;
 
     block_t *p_block;
 
-    uint8_t buffer[65536 + 20 ]; /* we will never overflow more than 11 bytes if I'm right */
-
-    vout_thread_t *p_vout;
+    /* We will never overflow */
+    uint8_t buffer[65536];
 };
 
-struct subpicture_sys_t
+typedef struct subpicture_data_t
 {
     mtime_t i_pts;                                 /* presentation timestamp */
 
@@ -49,14 +50,12 @@ struct subpicture_sys_t
     uint8_t    pi_alpha[4];
     uint8_t    pi_yuv[4][3];
 
-    /* Link to our input */
-    vlc_object_t * p_input;
+    /* Auto crop fullscreen subtitles */
+    vlc_bool_t b_auto_crop;
+    int i_y_top_offset;
+    int i_y_bottom_offset;
 
-    /* Cropping properties */
-    vlc_mutex_t  lock;
-    vlc_bool_t   b_crop;
-    unsigned int i_x_start, i_y_start, i_x_end, i_y_end;
-};
+} subpicture_data_t;
 
 /*****************************************************************************
  * Amount of bytes we GetChunk() in one go
@@ -78,7 +77,4 @@ struct subpicture_sys_t
 /*****************************************************************************
  * Prototypes
  *****************************************************************************/
-void E_(ParsePacket)( decoder_t * );
-
-void E_(RenderSPU)  ( vout_thread_t *, picture_t *, const subpicture_t * );
-
+subpicture_t * E_(ParsePacket)( decoder_t * );

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * duplicate.c: duplicate stream output module
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: duplicate.c 7479 2004-04-25 14:15:29Z gbazin $
+ * Copyright (C) 2003-2004 the VideoLAN team
+ * $Id: duplicate.c 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Author: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -41,6 +41,8 @@ vlc_module_begin();
     set_capability( "sout stream", 50 );
     add_shortcut( "duplicate" );
     add_shortcut( "dup" );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_STREAM );
     set_callbacks( Open, Close );
 vlc_module_end();
 
@@ -95,7 +97,7 @@ static int Open( vlc_object_t *p_this )
             sout_stream_t *s;
 
             msg_Dbg( p_stream, " * adding `%s'", p_cfg->psz_value );
-            s = sout_stream_new( p_stream->p_sout, p_cfg->psz_value );
+            s = sout_StreamNew( p_stream->p_sout, p_cfg->psz_value );
 
             if( s )
             {
@@ -144,7 +146,7 @@ static void Close( vlc_object_t * p_this )
     msg_Dbg( p_stream, "closing a duplication" );
     for( i = 0; i < p_sys->i_nb_streams; i++ )
     {
-        sout_stream_delete( p_sys->pp_streams[i] );
+        sout_StreamDelete( p_sys->pp_streams[i] );
         if( p_sys->ppsz_select[i] )
         {
             free( p_sys->ppsz_select[i] );
@@ -360,7 +362,7 @@ static vlc_bool_t ESSelected( es_format_t *fmt, char *psz_select )
         if( !strncmp( psz, "no-audio", strlen( "no-audio" ) ) ||
             !strncmp( psz, "noaudio", strlen( "noaudio" ) ) )
         {
-            if( i_cat != 1 )
+            if( i_cat == -1 )
             {
                 i_cat = fmt->i_cat != AUDIO_ES ? 1 : 0;
             }
@@ -368,7 +370,7 @@ static vlc_bool_t ESSelected( es_format_t *fmt, char *psz_select )
         else if( !strncmp( psz, "no-video", strlen( "no-video" ) ) ||
                  !strncmp( psz, "novideo", strlen( "novideo" ) ) )
         {
-            if( i_cat != 1 )
+            if( i_cat == -1 )
             {
                 i_cat = fmt->i_cat != VIDEO_ES ? 1 : 0;
             }
@@ -376,28 +378,28 @@ static vlc_bool_t ESSelected( es_format_t *fmt, char *psz_select )
         else if( !strncmp( psz, "no-spu", strlen( "no-spu" ) ) ||
                  !strncmp( psz, "nospu", strlen( "nospu" ) ) )
         {
-            if( i_cat != 1 )
+            if( i_cat == -1 )
             {
                 i_cat = fmt->i_cat != SPU_ES ? 1 : 0;
             }
         }
         else if( !strncmp( psz, "audio", strlen( "audio" ) ) )
         {
-            if( i_cat != 1 )
+            if( i_cat == -1 )
             {
                 i_cat = fmt->i_cat == AUDIO_ES ? 1 : 0;
             }
         }
         else if( !strncmp( psz, "video", strlen( "video" ) ) )
         {
-            if( i_cat != 1 )
+            if( i_cat == -1 )
             {
                 i_cat = fmt->i_cat == VIDEO_ES ? 1 : 0;
             }
         }
         else if( !strncmp( psz, "spu", strlen( "spu" ) ) )
         {
-            if( i_cat != 1 )
+            if( i_cat == -1 )
             {
                 i_cat = fmt->i_cat == SPU_ES ? 1 : 0;
             }
@@ -409,31 +411,31 @@ static vlc_bool_t ESSelected( es_format_t *fmt, char *psz_select )
 
             if( !strcmp( psz, "no-es" ) || !strcmp( psz, "noes" ) )
             {
-                if( i_es != 1 )
+                if( i_es == -1 )
                 {
-                    i_es = !NumInRange( psz_arg, fmt->i_id ) ? 1 : 0;
+                    i_es = NumInRange( psz_arg, fmt->i_id ) ? 0 : -1;
                 }
             }
             else if( !strcmp( psz, "es" ) )
             {
-                if( i_es != 1 )
+                if( i_es == -1 )
                 {
-                    i_es = NumInRange( psz_arg, fmt->i_id) ? 1 : 0;
+                    i_es = NumInRange( psz_arg, fmt->i_id) ? 1 : -1;
                 }
             }
             else if( !strcmp( psz, "no-prgm" ) || !strcmp( psz, "noprgm" ) ||
                       !strcmp( psz, "no-program" ) || !strcmp( psz, "noprogram" ) )
             {
-                if( fmt->i_group >= 0 && i_prgm != 1 )
+                if( fmt->i_group >= 0 && i_prgm == -1 )
                 {
-                    i_prgm = !NumInRange( psz_arg, fmt->i_group ) ? 1 : 0;
+                    i_prgm = NumInRange( psz_arg, fmt->i_group ) ? 0 : -1;
                 }
             }
             else if( !strcmp( psz, "prgm" ) || !strcmp( psz, "program" ) )
             {
-                if( fmt->i_group >= 0 && i_prgm != 1 )
+                if( fmt->i_group >= 0 && i_prgm == -1 )
                 {
-                    i_prgm = NumInRange( psz_arg, fmt->i_group ) ? 1 : 0;
+                    i_prgm = NumInRange( psz_arg, fmt->i_group ) ? 1 : -1;
                 }
             }
         }
@@ -447,10 +449,9 @@ static vlc_bool_t ESSelected( es_format_t *fmt, char *psz_select )
 
     free( psz_dup );
 
-    if( i_cat == 0 || i_es == 0 || i_prgm == 0 )
+    if( i_cat == 1 || i_es == 1 || i_prgm == 1 )
     {
-        /* One test failed */
-        return VLC_FALSE;
+        return VLC_TRUE;
     }
-    return VLC_TRUE;
+    return VLC_FALSE;
 }

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * cmd_layout.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_layout.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_layout.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,22 +19,23 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CMD_LAYOUT_HPP
 #define CMD_LAYOUT_HPP
 
 #include "cmd_generic.hpp"
-#include <string>
 
+class TopWindow;
+class GenericLayout;
 
 /// "Change layout" command
 class CmdLayout: public CmdGeneric
 {
     public:
-        CmdLayout( intf_thread_t *pIntf, const string &windowId,
-                   const string &layoutId );
+        CmdLayout( intf_thread_t *pIntf, TopWindow &rWindow,
+                   GenericLayout &rLayout );
         virtual ~CmdLayout() {}
 
         /// This method does the real job of the command
@@ -44,8 +45,8 @@ class CmdLayout: public CmdGeneric
         virtual string getType() const { return "change layout"; }
 
     private:
-        string m_windowId;
-        string m_layoutId;
+        TopWindow &m_rWindow;
+        GenericLayout &m_rLayout;
 };
 
 #endif

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * screensaver.c : disable screen savers when VLC is playing
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: screensaver.c 7125 2004-03-21 19:45:42Z hartman $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: screensaver.c 15343 2006-04-23 20:32:10Z bigben $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -84,6 +84,7 @@ static void Run( intf_thread_t *p_intf )
 
                 /* http://www.jwz.org/xscreensaver/faq.html#dvd */
                 system( "xscreensaver-command -deactivate >&- 2>&- &" );
+                system( "gnome-screensaver-command --poke >&- 2>&- &" );
 
                 /* FIXME: add support for other screensavers */
             }
