@@ -1,12 +1,13 @@
 /*****************************************************************************
  * vout_synchro.h: frame-dropping structures
+ * Only used in libmpeg2 decoder at the moment
  *****************************************************************************
- * Copyright (C) 1999-2003 VideoLAN
- * $Id: vout_synchro.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999-2005 the VideoLAN team
+ * $Id: vout_synchro.h 14121 2006-02-01 19:20:17Z courmisch $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Jean-Marc Dressler <polux@via.ecp.fr>
- *          Stéphane Borel <stef@via.ecp.fr>
+ *          StÃ©phane Borel <stef@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -36,6 +37,8 @@ struct vout_synchro_t
     vout_thread_t * p_vout;
     int             i_frame_rate;
     int             i_current_rate;
+    vlc_bool_t      b_no_skip;
+    vlc_bool_t      b_quiet;
 
     /* date of the beginning of the decoding of the current picture */
     mtime_t         decoding_start;
@@ -86,10 +89,10 @@ struct vout_synchro_t
 VLC_EXPORT( vout_synchro_t *, __vout_SynchroInit, ( vlc_object_t *, int ) );
 VLC_EXPORT( void, vout_SynchroRelease,        ( vout_synchro_t * ) );
 VLC_EXPORT( void, vout_SynchroReset,          ( vout_synchro_t * ) );
-VLC_EXPORT( vlc_bool_t, vout_SynchroChoose,   ( vout_synchro_t *, int, int ) );
+VLC_EXPORT( vlc_bool_t, vout_SynchroChoose,   ( vout_synchro_t *, int, int, vlc_bool_t ) );
 VLC_EXPORT( void, vout_SynchroTrash,          ( vout_synchro_t * ) );
 VLC_EXPORT( void, vout_SynchroDecode,         ( vout_synchro_t * ) );
 VLC_EXPORT( void, vout_SynchroEnd,            ( vout_synchro_t *, int, vlc_bool_t ) );
 VLC_EXPORT( mtime_t, vout_SynchroDate,        ( vout_synchro_t * ) );
-VLC_EXPORT( void, vout_SynchroNewPicture,     ( vout_synchro_t *, int, int, mtime_t, mtime_t, int ) );
+VLC_EXPORT( void, vout_SynchroNewPicture,     ( vout_synchro_t *, int, int, mtime_t, mtime_t, int, vlc_bool_t ) );
 

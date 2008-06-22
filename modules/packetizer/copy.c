@@ -1,8 +1,8 @@
 /*****************************************************************************
  * copy.c
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: copy.c 7338 2004-04-13 10:52:29Z gbazin $
+ * Copyright (C) 2001, 2002, 2006 the VideoLAN team
+ * $Id: copy.c 14918 2006-03-25 12:54:27Z fkuehne $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -38,6 +38,8 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 vlc_module_begin();
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_PACKETIZER );
     set_description( _("Copy packetizer") );
     set_capability( "packetizer", 1 );
     set_callbacks( Open, Close );
@@ -51,7 +53,8 @@ struct decoder_sys_t
     block_t *p_block;
 };
 
-static block_t *Packetize ( decoder_t *, block_t ** );
+static block_t *Packetize   ( decoder_t *, block_t ** );
+static block_t *PacketizeSub( decoder_t *, block_t ** );
 
 /*****************************************************************************
  * Open: probe the packetizer and return score
@@ -72,7 +75,10 @@ static int Open( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
 
-    p_dec->pf_packetize = Packetize;
+    if( p_dec->fmt_in.i_cat == SPU_ES )
+        p_dec->pf_packetize = PacketizeSub;
+    else
+        p_dec->pf_packetize = Packetize;
 
     /* Create the output format */
     es_format_Copy( &p_dec->fmt_out, &p_dec->fmt_in );
@@ -241,7 +247,7 @@ static void Close( vlc_object_t *p_this )
 }
 
 /*****************************************************************************
- * PacketizeStd: packetize an unit (here copy a complete block )
+ * Packetize: packetize an unit (here copy a complete block )
  *****************************************************************************/
 static block_t *Packetize ( decoder_t *p_dec, block_t **pp_block )
 {
@@ -274,4 +280,33 @@ static block_t *Packetize ( decoder_t *p_dec, block_t **pp_block )
     p_dec->p_sys->p_block = p_block;
 
     return p_ret;
+}
+
+/*****************************************************************************
+ * PacketizeSub: packetize an unit (here copy a complete block )
+ *****************************************************************************/
+static block_t *PacketizeSub( decoder_t *p_dec, block_t **pp_block )
+{
+    block_t *p_block;
+
+    if( pp_block == NULL || *pp_block == NULL )
+    {
+        return NULL;
+    }
+    p_block = *pp_block;
+    *pp_block = NULL;
+
+    if( p_block->i_dts <= 0 )
+    {
+        p_block->i_dts = p_block->i_pts;
+    }
+
+    if( p_block->i_dts <= 0 )
+    {
+        msg_Dbg( p_dec, "need dts > 0" );
+        block_Release( p_block );
+        return NULL;
+    }
+
+    return p_block;
 }

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * audio_output.h : audio output interface
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: audio_output.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002-2005 the VideoLAN team
+ * $Id: audio_output.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 #ifndef _VLC_AUDIO_OUTPUT_H
 #define _VLC_AUDIO_OUTPUT_H 1
@@ -40,13 +40,18 @@
 #ifdef WORDS_BIGENDIAN
 #   define AOUT_FMT_S16_NE VLC_FOURCC('s','1','6','b')
 #   define AOUT_FMT_U16_NE VLC_FOURCC('u','1','6','b')
+#   define AOUT_FMT_S24_NE VLC_FOURCC('s','2','4','b')
+#   define AOUT_FMT_SPDIF_NE VLC_FOURCC('s','p','d','b')
 #else
 #   define AOUT_FMT_S16_NE VLC_FOURCC('s','1','6','l')
 #   define AOUT_FMT_U16_NE VLC_FOURCC('u','1','6','l')
+#   define AOUT_FMT_S24_NE VLC_FOURCC('s','2','4','l')
+#   define AOUT_FMT_SPDIF_NE VLC_FOURCC('s','p','d','i')
 #endif
 
 #define AOUT_FMT_NON_LINEAR( p_format )                                    \
     ( ((p_format)->i_format == VLC_FOURCC('s','p','d','i'))                \
+       || ((p_format)->i_format == VLC_FOURCC('s','p','d','b'))            \
        || ((p_format)->i_format == VLC_FOURCC('a','5','2',' '))            \
        || ((p_format)->i_format == VLC_FOURCC('d','t','s',' ')) )
 
@@ -98,6 +103,7 @@ typedef int32_t vlc_fixed_t;
 #define AOUT_CHAN_REVERSESTEREO     0x40000
 
 #define AOUT_CHAN_PHYSMASK          0xFFFF
+#define AOUT_CHAN_MAX               9
 
 /* Values used for the audio-device and audio-channels object variables */
 #define AOUT_VAR_MONO               1
@@ -129,6 +135,13 @@ struct aout_buffer_t
     mtime_t                 start_date, end_date;
 
     struct aout_buffer_t *  p_next;
+
+    /** Private data (aout_buffer_t will disappear soon so no need for an
+     * aout_buffer_sys_t type) */
+    void * p_sys;
+
+    /** This way the release can be overloaded */
+    void (*pf_release)( aout_buffer_t * );
 };
 
 /* Size of a frame for S/PDIF output. */
@@ -159,6 +172,9 @@ VLC_EXPORT( void, aout_DateSet, ( audio_date_t *, mtime_t ) );
 VLC_EXPORT( void, aout_DateMove, ( audio_date_t *, mtime_t ) );
 VLC_EXPORT( mtime_t, aout_DateGet, ( const audio_date_t * ) );
 VLC_EXPORT( mtime_t, aout_DateIncrement, ( audio_date_t *, uint32_t ) );
+
+VLC_EXPORT( int, aout_CheckChannelReorder, ( const uint32_t *, const uint32_t *, uint32_t, int, int * ) );
+VLC_EXPORT( void, aout_ChannelReorder, ( uint8_t *, int, int, const int *, int ) );
 
 /* From dec.c : */
 #define aout_DecNew(a, b, c) __aout_DecNew(VLC_OBJECT(a), b, c)

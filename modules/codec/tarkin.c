@@ -1,8 +1,8 @@
 /*****************************************************************************
  * tarkin.c: tarkin decoder module making use of libtarkin.
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: tarkin.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001-2003 the VideoLAN team
+ * $Id: tarkin.c 15005 2006-03-31 16:28:03Z xtophe $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -74,6 +74,8 @@ static void tarkin_CopyPicture( decoder_t *, picture_t *, uint8_t *, int );
 vlc_module_begin();
     set_description( _("Tarkin decoder module") );
     set_capability( "decoder", 100 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_VCODEC );
     set_callbacks( OpenDecoder, CloseDecoder );
     add_shortcut( "tarkin" );
 vlc_module_end();
@@ -158,7 +160,7 @@ static void *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
         if( tarkin_synthesis_headerin( &p_sys->ti, &p_sys->tc, &oggpacket )
             < 0 )
         {
-            msg_Err( p_dec, "This bitstream does not contain Tarkin "
+            msg_Err( p_dec, "this bitstream does not contain Tarkin "
                      "video data.");
             block_Release( p_block );
             return NULL;
@@ -306,7 +308,7 @@ static void tarkin_CopyPicture( decoder_t *p_dec, picture_t *p_pic,
         i_dst_stride = p_pic->p[i_plane].i_pitch;
         i_src_stride = i_pitch;
 
-        for( i_line = 0; i_line < p_pic->p[i_plane].i_lines; i_line++ )
+        for( i_line = 0; i_line < p_pic->p[i_plane].i_visible_lines; i_line++ )
         {
             p_dec->p_vlc->pf_memcpy( p_dst, p_src, i_src_stride );
 

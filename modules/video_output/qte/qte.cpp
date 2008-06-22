@@ -1,11 +1,11 @@
 /*****************************************************************************
  * qte.cpp : QT Embedded plugin for vlc
  *****************************************************************************
- * Copyright (C) 1998-2003 VideoLAN
- * $Id: qte.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1998-2003 the VideoLAN team
+ * $Id: qte.cpp 15002 2006-03-31 16:12:31Z fkuehne $
  *
- * Authors: Gerald Hansink <gerald.hansink@ordain.nl>
- *          Jean-Paul Saman <jpsaman@wxs.nl>
+ * Authors: Gerald Hansink <gerald.hansink@ordina.nl>
+ *          Jean-Paul Saman <jpsaman _at_ videolan _dot_ org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -76,9 +76,9 @@ extern "C"
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
-#define DISPLAY_TEXT N_("QT Embedded display name")
+#define DISPLAY_TEXT N_("QT Embedded display")
 #define DISPLAY_LONGTEXT N_( \
-    "Specify the Qt Embedded hardware display you want to use. " \
+    "Qt Embedded hardware display to use. " \
     "By default VLC will use the value of the DISPLAY environment variable.")
 
 /*****************************************************************************
@@ -110,6 +110,8 @@ extern "C"
 {
 
 vlc_module_begin();
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VOUT );
 //    add_category_hint( N_("QT Embedded"), NULL );
 //    add_string( "qte-display", "landscape", NULL, DISPLAY_TEXT, DISPLAY_LONGTEXT);
     set_description( _("QT Embedded video output") );
@@ -462,6 +464,7 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
     p_pic->p->p_pixels = (p_pic->p_sys->pQImage->jumpTable())[0];
     p_pic->p->i_pitch = p_pic->p_sys->pQImage->bytesPerLine();
     p_pic->p->i_lines = p_vout->output.i_height;
+    p_pic->p->i_visible_lines = p_vout->output.i_height;
     p_pic->p->i_visible_pitch =
             p_pic->p->i_pixel_pitch * p_vout->output.i_width;
 
@@ -528,7 +531,7 @@ static int OpenDisplay( vout_thread_t *p_vout )
     p_vout->i_window_height = p_vout->p_sys->i_height;
 #endif
 
-    msg_Dbg( p_vout, "OpenDisplay (h=%d,w=%d)",p_vout->p_sys->i_height,p_vout->p_sys->i_width);
+    msg_Dbg( p_vout, "opening display (h=%d,w=%d)",p_vout->p_sys->i_height,p_vout->p_sys->i_width);
 
     /* create thread to exec the qpe application */
     if ( vlc_thread_create( p_vout->p_sys->p_event, "QT Embedded Thread",
@@ -586,7 +589,7 @@ static void CloseDisplay( vout_thread_t *p_vout )
  *****************************************************************************/
 static void RunQtThread(event_thread_t *p_event)
 {
-    msg_Dbg( p_event->p_vout, "RunQtThread Starting" );
+    msg_Dbg( p_event->p_vout, "RunQtThread starting" );
 
 #ifdef NEED_QTE_MAIN
     if (qApp)

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * memcpy.c : classic memcpy module
  *****************************************************************************
- * Copyright (C) 2001 VideoLAN
- * $Id: memcpy.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001 the VideoLAN team
+ * $Id: memcpy.c 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -77,6 +77,8 @@ static int Activate ( vlc_object_t *p_this )
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
+    set_category( CAT_ADVANCED );
+    set_subcategory( SUBCAT_ADVANCED_MISC );
 #ifdef MODULE_NAME_IS_memcpy
     set_description( _("libc memcpy") );
     add_shortcut( "c" );

@@ -1,10 +1,10 @@
 /*****************************************************************************
  * pda.h: private Gtk+ interface description
  *****************************************************************************
- * Copyright (C) 1999, 2000 VideoLAN
- * $Id: pda.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999, 2000 the VideoLAN team
+ * $Id: pda.h 14688 2006-03-09 09:47:30Z jpsaman $
  *
- * Authors: Jean-Paul Saman <jpsaman@wxs.nl>
+ * Authors: Jean-Paul Saman <jpsaman _at_ videolan _dot_ org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #define MAX_ATEXIT                 10

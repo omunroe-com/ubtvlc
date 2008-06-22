@@ -1,11 +1,11 @@
 /*****************************************************************************
  * decoder.c: AAC decoder using libfaad2
  *****************************************************************************
- * Copyright (C) 2001, 2003 VideoLAN
- * $Id: faad.c 7007 2004-03-07 22:34:22Z gbazin $
+ * Copyright (C) 2001, 2003 the VideoLAN team
+ * $Id: faad.c 25223 2008-02-21 08:51:03Z Trax $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
- *          Gildas Bazin <gbazin@netcourrier.com>
+ *          Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <vlc/vlc.h>
 #include <vlc/aout.h>
 #include <vlc/decoder.h>
+#include <vlc/input.h>
 
 #include <faad.h>
 
@@ -37,6 +38,8 @@ static void Close( vlc_object_t * );
 vlc_module_begin();
     set_description( _("AAC audio decoder (using libfaad2)") );
     set_capability( "decoder", 100 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACODEC );
     set_callbacks( Open, Close );
 vlc_module_end();
 
@@ -64,6 +67,8 @@ struct decoder_sys_t
 
     /* Channel positions of the current stream (for re-ordering) */
     uint32_t pi_channel_positions[MAX_CHANNEL_POSITIONS];
+
+    vlc_bool_t b_sbr, b_ps;
 };
 
 static const uint32_t pi_channels_in[MAX_CHANNEL_POSITIONS] =
@@ -164,6 +169,7 @@ static int Open( vlc_object_t *p_this )
     /* Faad2 can't deal with truncated data (eg. from MPEG TS) */
     p_dec->b_need_packetized = VLC_TRUE;
 
+    p_sys->b_sbr = p_sys->b_ps = VLC_FALSE;
     return VLC_SUCCESS;
 }
 
@@ -179,7 +185,7 @@ static aout_buffer_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
 
     p_block = *pp_block;
 
-    if( p_block->i_flags&BLOCK_FLAG_DISCONTINUITY )
+    if( p_block->i_flags&(BLOCK_FLAG_DISCONTINUITY|BLOCK_FLAG_CORRUPTED) )
     {
         block_Release( p_block );
         return NULL;
@@ -198,6 +204,22 @@ static aout_buffer_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
                 p_block->p_buffer, p_block->i_buffer );
         p_sys->i_buffer += p_block->i_buffer;
         p_block->i_buffer = 0;
+    }
+
+    if( p_dec->fmt_out.audio.i_rate == 0 && p_dec->fmt_in.i_extra > 0 )
+    {
+        /* We have a decoder config so init the handle */
+        unsigned long i_rate;
+        unsigned char i_channels;
+
+        if( faacDecInit2( p_sys->hfaad, p_dec->fmt_in.p_extra,
+                          p_dec->fmt_in.i_extra,
+                          &i_rate, &i_channels ) >= 0 )
+        {
+            p_dec->fmt_out.audio.i_rate = i_rate;
+            p_dec->fmt_out.audio.i_channels = i_channels;
+            aout_DateInit( &p_sys->date, i_rate );
+        }
     }
 
     if( p_dec->fmt_out.audio.i_rate == 0 && p_sys->i_buffer )
@@ -293,21 +315,50 @@ static aout_buffer_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
         p_dec->fmt_out.audio.i_rate = frame.samplerate;
         p_dec->fmt_out.audio.i_channels = frame.channels;
 
+        /* Adjust stream info when dealing with SBR/PS */
+        if( (p_sys->b_sbr != frame.sbr || p_sys->b_ps != frame.ps) &&
+            p_dec->p_parent->i_object_type == VLC_OBJECT_INPUT )
+        {
+          input_thread_t *p_input = (input_thread_t *)p_dec->p_parent;
+          char *psz_cat, *psz_ext = (frame.sbr && frame.ps) ? "SBR+PS" :
+            frame.sbr ? "SBR" : "PS";
+
+          msg_Dbg( p_dec, "AAC %s (channels: %u, samplerate: %lu)",
+                   psz_ext, frame.channels, frame.samplerate );
+
+          asprintf( &psz_cat, _("Stream %d"), p_dec->fmt_in.i_id );
+          input_Control( p_input, INPUT_ADD_INFO, psz_cat,
+                          _("AAC extension"), "%s", psz_ext );
+          input_Control( p_input, INPUT_ADD_INFO, psz_cat,
+                         _("Channels"), "%d", frame.channels );
+          input_Control( p_input, INPUT_ADD_INFO, psz_cat,
+                         _("Sample rate"), _("%d Hz"), frame.samplerate );
+          free( psz_cat );
+          p_sys->b_sbr = frame.sbr; p_sys->b_ps = frame.ps;
+        }
 
         /* Convert frame.channel_position to our own channel values */
+        p_dec->fmt_out.audio.i_physical_channels = 0;
         for( i = 0; i < frame.channels; i++ )
         {
             /* Find the channel code */
             for( j = 0; j < MAX_CHANNEL_POSITIONS; j++ )
             {
                 if( frame.channel_position[i] == pi_channels_in[j] )
-                {
-                    p_sys->pi_channel_positions[i] = pi_channels_out[j];
-                    p_dec->fmt_out.audio.i_physical_channels |=
-                        pi_channels_out[j];
                     break;
-                }
             }
+            if( j >= MAX_CHANNEL_POSITIONS )
+            {
+                msg_Warn( p_dec, "unknown channel ordering" );
+                /* Invent something */
+                j = i;
+            }
+            /* */
+            p_sys->pi_channel_positions[i] = pi_channels_out[j];
+            if( p_dec->fmt_out.audio.i_physical_channels & pi_channels_out[j] )
+                frame.channels--; /* We loose a duplicated channel */
+            else
+                p_dec->fmt_out.audio.i_physical_channels |= pi_channels_out[j];
         }
         p_dec->fmt_out.audio.i_original_channels =
             p_dec->fmt_out.audio.i_physical_channels;
@@ -351,6 +402,7 @@ static void Close( vlc_object_t *p_this )
     decoder_sys_t *p_sys = p_dec->p_sys;
 
     faacDecClose( p_sys->hfaad );
+    if( p_sys->p_buffer ) free( p_sys->p_buffer );
     free( p_sys );
 }
 
@@ -366,9 +418,9 @@ static void DoReordering( decoder_t *p_dec,
     int i, j, k;
 
     /* Find the channels mapping */
-    for( i = 0, j = 0; i < MAX_CHANNEL_POSITIONS; i++ )
+    for( k = 0, j = 0; k < i_nb_channels; k++ )
     {
-        for( k = 0; k < i_nb_channels; k++ )
+        for( i = 0; i < MAX_CHANNEL_POSITIONS; i++ )
         {
             if( pi_channels_ordered[i] == pi_chan_positions[k] )
             {

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mpgv.c : MPEG-I/II Video demuxer
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: mpgv.c 7239 2004-04-02 03:24:53Z fenrir $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: mpgv.c 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -37,6 +37,8 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 vlc_module_begin();
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_description( _("MPEG-I/II video demuxer" ) );
     set_capability( "demux2", 100 );
     set_callbacks( Open, Close );
@@ -86,22 +88,14 @@ static int Open( vlc_object_t * p_this )
 
     if( p_peek[0] != 0x00 || p_peek[1] != 0x00 || p_peek[2] != 0x01 )
     {
-        if( !b_forced )
-        {
-            msg_Warn( p_demux, "ES module discarded (no startcode)" );
-            return VLC_EGENERIC;
-        }
+        if( !b_forced ) return VLC_EGENERIC;
 
         msg_Err( p_demux, "this doesn't look like an MPEG ES stream, continuing" );
     }
 
     if( p_peek[3] > 0xb9 )
     {
-        if( !b_forced )
-        {
-            msg_Warn( p_demux, "ES module discarded (system startcode)" );
-            return VLC_EGENERIC;
-        }
+        if( !b_forced ) return VLC_EGENERIC;
         msg_Err( p_demux, "this seems to be a system stream (PS plug-in ?), but continuing" );
     }
 

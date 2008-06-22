@@ -1,8 +1,8 @@
 /*****************************************************************************
  * i420_yuy2.c : YUV to YUV conversion module for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: i420_yuy2.c 7589 2004-05-04 13:57:48Z titer $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id: i420_yuy2.c 20505 2007-06-11 11:21:05Z damienf $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -30,7 +30,7 @@
 #include <vlc/vlc.h>
 #include <vlc/vout.h>
 
-#ifdef HAVE_ALTIVEC_H
+#if defined (MODULE_NAME_IS_i420_yuy2_altivec) && defined(HAVE_ALTIVEC_H)
 #   include <altivec.h>
 #endif
 
@@ -249,8 +249,10 @@ static void I420_YUY2( vout_thread_t *p_vout, picture_t *p_source,
 #undef VEC_MERGE
 #endif
 
-    const int i_source_margin = p_source->p->i_pitch
-                                 - p_source->p->i_visible_pitch;
+    const int i_source_margin = p_source->p[0].i_pitch
+                                 - p_source->p[0].i_visible_pitch;
+    const int i_source_margin_c = p_source->p[1].i_pitch
+                                 - p_source->p[1].i_visible_pitch;
     const int i_dest_margin = p_dest->p->i_pitch
                                - p_dest->p->i_visible_pitch;
 
@@ -280,9 +282,15 @@ static void I420_YUY2( vout_thread_t *p_vout, picture_t *p_source,
 
         p_y1 += i_source_margin;
         p_y2 += i_source_margin;
+        p_u += i_source_margin_c;
+        p_v += i_source_margin_c;
         p_line1 += i_dest_margin;
         p_line2 += i_dest_margin;
     }
+#if defined (MODULE_NAME_IS_i420_yuy2_mmx)
+    /* re-enable FPU registers */
+    __asm__ __volatile__ ("emms");
+#endif
 
 #if defined (MODULE_NAME_IS_i420_yuy2_altivec)
     }
@@ -303,8 +311,10 @@ static void I420_YVYU( vout_thread_t *p_vout, picture_t *p_source,
 
     int i_x, i_y;
 
-    const int i_source_margin = p_source->p->i_pitch
-                                 - p_source->p->i_visible_pitch;
+    const int i_source_margin = p_source->p[0].i_pitch
+                                 - p_source->p[0].i_visible_pitch;
+    const int i_source_margin_c = p_source->p[1].i_pitch
+                                 - p_source->p[1].i_visible_pitch;
     const int i_dest_margin = p_dest->p->i_pitch
                                - p_dest->p->i_visible_pitch;
 
@@ -330,9 +340,15 @@ static void I420_YVYU( vout_thread_t *p_vout, picture_t *p_source,
 
         p_y1 += i_source_margin;
         p_y2 += i_source_margin;
+        p_u += i_source_margin_c;
+        p_v += i_source_margin_c;
         p_line1 += i_dest_margin;
         p_line2 += i_dest_margin;
     }
+#if defined (MODULE_NAME_IS_i420_yuy2_mmx)
+    /* re-enable FPU registers */
+    __asm__ __volatile__ ("emms");
+#endif
 }
 
 /*****************************************************************************
@@ -348,8 +364,10 @@ static void I420_UYVY( vout_thread_t *p_vout, picture_t *p_source,
 
     int i_x, i_y;
 
-    const int i_source_margin = p_source->p->i_pitch
-                                 - p_source->p->i_visible_pitch;
+    const int i_source_margin = p_source->p[0].i_pitch
+                                 - p_source->p[0].i_visible_pitch;
+    const int i_source_margin_c = p_source->p[1].i_pitch
+                                 - p_source->p[1].i_visible_pitch;
     const int i_dest_margin = p_dest->p->i_pitch
                                - p_dest->p->i_visible_pitch;
 
@@ -372,12 +390,22 @@ static void I420_UYVY( vout_thread_t *p_vout, picture_t *p_source,
             MMX_CALL( MMX_YUV420_UYVY );
 #endif
         }
+        for( i_x = ( p_vout->render.i_width % 8 ) / 2; i_x--; )
+        {
+            C_YUV420_UYVY( );
+        }
 
         p_y1 += i_source_margin;
         p_y2 += i_source_margin;
+        p_u += i_source_margin_c;
+        p_v += i_source_margin_c;
         p_line1 += i_dest_margin;
         p_line2 += i_dest_margin;
     }
+#if defined (MODULE_NAME_IS_i420_yuy2_mmx)
+    /* re-enable FPU registers */
+    __asm__ __volatile__ ("emms");
+#endif
 }
 
 /*****************************************************************************
@@ -397,18 +425,20 @@ static void I420_cyuv( vout_thread_t *p_vout, picture_t *p_source,
                                               picture_t *p_dest )
 {
     uint8_t *p_line1 = p_dest->p->p_pixels +
-                       p_dest->p->i_lines * p_dest->p->i_pitch
+                       p_dest->p->i_visible_lines * p_dest->p->i_pitch
                        + p_dest->p->i_pitch;
     uint8_t *p_line2 = p_dest->p->p_pixels +
-                       p_dest->p->i_lines * p_dest->p->i_pitch;
+                       p_dest->p->i_visible_lines * p_dest->p->i_pitch;
     uint8_t *p_y1, *p_y2 = p_source->Y_PIXELS;
     uint8_t *p_u = p_source->U_PIXELS;
     uint8_t *p_v = p_source->V_PIXELS;
 
     int i_x, i_y;
 
-    const int i_source_margin = p_source->p->i_pitch
-                                 - p_source->p->i_visible_pitch;
+    const int i_source_margin = p_source->p[0].i_pitch
+                                 - p_source->p[0].i_visible_pitch;
+    const int i_source_margin_c = p_source->p[1].i_pitch
+                                 - p_source->p[1].i_visible_pitch;
     const int i_dest_margin = p_dest->p->i_pitch
                                - p_dest->p->i_visible_pitch;
 
@@ -434,9 +464,15 @@ static void I420_cyuv( vout_thread_t *p_vout, picture_t *p_source,
 
         p_y1 += i_source_margin;
         p_y2 += i_source_margin;
+        p_u += i_source_margin_c;
+        p_v += i_source_margin_c;
         p_line1 += i_dest_margin;
         p_line2 += i_dest_margin;
     }
+#if defined (MODULE_NAME_IS_i420_yuy2_mmx)
+    /* re-enable FPU registers */
+    __asm__ __volatile__ ("emms");
+#endif
 }
 #endif // !defined (MODULE_NAME_IS_i420_yuy2_altivec)
 
@@ -454,8 +490,10 @@ static void I420_Y211( vout_thread_t *p_vout, picture_t *p_source,
 
     int i_x, i_y;
 
-    const int i_source_margin = p_source->p->i_pitch
-                                 - p_source->p->i_visible_pitch;
+    const int i_source_margin = p_source->p[0].i_pitch
+                                 - p_source->p[0].i_visible_pitch;
+    const int i_source_margin_c = p_source->p[1].i_pitch
+                                 - p_source->p[1].i_visible_pitch;
     const int i_dest_margin = p_dest->p->i_pitch
                                - p_dest->p->i_visible_pitch;
 
@@ -475,6 +513,8 @@ static void I420_Y211( vout_thread_t *p_vout, picture_t *p_source,
 
         p_y1 += i_source_margin;
         p_y2 += i_source_margin;
+        p_u += i_source_margin_c;
+        p_v += i_source_margin_c;
         p_line1 += i_dest_margin;
         p_line2 += i_dest_margin;
     }

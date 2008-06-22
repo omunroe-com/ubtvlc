@@ -1,8 +1,8 @@
 /*****************************************************************************
  * es.c: Elementary stream output module
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: es.c 7468 2004-04-24 12:49:53Z gbazin $
+ * Copyright (C) 2003-2004 the VideoLAN team
+ * $Id: es.c 15529 2006-05-02 20:08:41Z bigben $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -36,38 +36,34 @@
  *****************************************************************************/
 #define ACCESS_TEXT N_("Output access method")
 #define ACCESS_LONGTEXT N_( \
-    "Allows you to specify the output access method used for the streaming " \
-    "output." )
+    "This is the default output access method that will be used." )
+
 #define ACCESSA_TEXT N_("Audio output access method")
 #define ACCESSA_LONGTEXT N_( \
-    "Allows you to specify the output access method used for the audio " \
-    "streaming output." )
+    "This is the output access method that will be used for audio." )
 #define ACCESSV_TEXT N_("Video output access method")
 #define ACCESSV_LONGTEXT N_( \
-    "Allows you to specify the output access method used for the video " \
-    "streaming output." )
+    "This is the output access method that will be used for video." )
 
 #define MUX_TEXT N_("Output muxer")
 #define MUX_LONGTEXT N_( \
-    "Allows you to specify the muxer used for the streaming output." )
+    "This is the default muxer method that will be used." )
 #define MUXA_TEXT N_("Audio output muxer")
 #define MUXA_LONGTEXT N_( \
-    "Allows you to specify the muxer used for the audio streaming output." )
+    "This is the muxer that will be used for audio." )
 #define MUXV_TEXT N_("Video output muxer")
 #define MUXV_LONGTEXT N_( \
-    "Allows you to specify the muxer used for the video streaming output." )
+    "This is the muxer that will be used for video." )
 
 #define DEST_TEXT N_("Output URL")
 #define DEST_LONGTEXT N_( \
-    "Allows you to specify the output URL used for the streaming output." )
+    "This is the default output URI." )
 #define DESTA_TEXT N_("Audio output URL")
 #define DESTA_LONGTEXT N_( \
-    "Allows you to specify the output URL used for the audio streaming " \
-    "output." )
+    "This is the output URI that will be used for audio." )
 #define DESTV_TEXT N_("Video output URL")
 #define DESTV_LONGTEXT N_( \
-    "Allows you to specify the output URL used for the video streaming " \
-    "output." )
+    "This is the output URI that will be used for video." )
 
 static int      Open    ( vlc_object_t * );
 static void     Close   ( vlc_object_t * );
@@ -75,9 +71,12 @@ static void     Close   ( vlc_object_t * );
 #define SOUT_CFG_PREFIX "sout-es-"
 
 vlc_module_begin();
+    set_shortname( "ES" );
     set_description( _("Elementary stream output") );
     set_capability( "sout stream", 50 );
     add_shortcut( "es" );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_STREAM );
 
     add_string( SOUT_CFG_PREFIX "access", "", NULL, ACCESS_TEXT,
                 ACCESS_LONGTEXT, VLC_TRUE );
@@ -147,7 +146,7 @@ static int Open( vlc_object_t *p_this )
     sout_stream_sys_t   *p_sys;
     vlc_value_t         val;
 
-    sout_ParseCfg( p_stream, SOUT_CFG_PREFIX, ppsz_sout_options, p_stream->p_cfg );
+    sout_CfgParse( p_stream, SOUT_CFG_PREFIX, ppsz_sout_options, p_stream->p_cfg );
     p_sys                   = malloc( sizeof( sout_stream_sys_t ) );
 
     p_sys->i_count          = 0;
@@ -396,7 +395,7 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
 static int Del( sout_stream_t *p_stream, sout_stream_id_t *id )
 {
     sout_access_out_t *p_access = id->p_mux->p_access;
-
+    sout_MuxDelete( id->p_mux );
     sout_MuxDeleteStream( id->p_mux, id->p_input );
     sout_AccessOutDelete( p_access );
 

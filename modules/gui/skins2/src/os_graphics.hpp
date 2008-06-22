@@ -1,11 +1,11 @@
 /*****************************************************************************
  * os_graphics.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: os_graphics.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: os_graphics.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef OS_GRAPHICS_HPP
 #define OS_GRAPHICS_HPP
 
 #include "skin_common.hpp"
+#include "../utils/position.hpp"
 #include "../utils/pointer.hpp"
 
 class GenericBitmap;
@@ -33,7 +34,7 @@ class OSWindow;
 
 
 /// OS specific graphics class
-class OSGraphics: public SkinObject
+class OSGraphics: public SkinObject, public Box
 {
     public:
         virtual ~OSGraphics() {}
@@ -49,7 +50,8 @@ class OSGraphics: public SkinObject
         /// Render a bitmap on this graphics
         virtual void drawBitmap( const GenericBitmap &rBitmap, int xSrc = 0,
                                  int ySrc = 0, int xDest = 0, int yDest = 0,
-                                 int width = -1, int height = -1 ) = 0;
+                                 int width = -1, int height = -1,
+                                 bool blend = false) = 0;
 
         /// Draw a filled rectangle on the grahics (color is #RRGGBB)
         virtual void fillRect( int left, int top, int width, int height,
@@ -70,10 +72,6 @@ class OSGraphics: public SkinObject
 
         /// Tell whether the pixel at the given position is visible
         virtual bool hit( int x, int y ) const = 0;
-
-        /// Getters
-        virtual int getWidth() const = 0;
-        virtual int getHeight() const = 0;
 
     protected:
         OSGraphics( intf_thread_t *pIntf ): SkinObject( pIntf ) {}

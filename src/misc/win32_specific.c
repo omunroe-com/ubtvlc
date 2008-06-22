@@ -1,8 +1,8 @@
 /*****************************************************************************
  * win32_specific.c: Win32 specific features
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: win32_specific.c 7211 2004-03-31 22:04:54Z gbazin $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: win32_specific.c 19224 2007-03-06 20:17:40Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 #include <string.h>                                              /* strdup() */
 #include <stdlib.h>                                                /* free() */
@@ -27,6 +27,7 @@
 #include <vlc/vlc.h>
 #include <vlc/input.h>
 #include "vlc_playlist.h"
+#include "charset.h"
 
 #ifdef WIN32                       /* optind, getopt(), included in unistd.h */
 #   include "../extras/getopt.h"
@@ -35,61 +36,65 @@
 #if !defined( UNDER_CE )
 #   include <io.h>
 #   include <fcntl.h>
-#   include <winsock2.h>
 #endif
+
+#include <winsock.h>
 
 /*****************************************************************************
  * system_Init: initialize winsock and misc other things.
  *****************************************************************************/
 void system_Init( vlc_t *p_this, int *pi_argc, char *ppsz_argv[] )
 {
-#if !defined( UNDER_CE )
     WSADATA Data;
 
     /* Get our full path */
+    char psz_path[MAX_PATH];
+    char *psz_vlc;
+
+#if defined( UNDER_CE )
+    wchar_t psz_wpath[MAX_PATH];
+    if( GetModuleFileName( NULL, psz_wpath, MAX_PATH ) )
+    {
+        WideCharToMultiByte( CP_ACP, 0, psz_wpath, -1,
+                             psz_path, MAX_PATH, NULL, NULL );
+    }
+    else psz_path[0] = '\0';
+
+#else
     if( ppsz_argv[0] )
     {
-        char psz_path[MAX_PATH];
-        char *psz_vlc;
-
         GetFullPathName( ppsz_argv[0], MAX_PATH, psz_path, &psz_vlc );
-
-        if( psz_vlc > psz_path && psz_vlc[-1] == '\\' )
-        {
-            psz_vlc[-1] = '\0';
-            p_this->p_libvlc->psz_vlcpath = strdup( psz_path );
-        }
-        else
-        {
-            p_this->p_libvlc->psz_vlcpath = strdup( "" );
-        }
     }
-    else
+    else if( !GetModuleFileName( NULL, psz_path, MAX_PATH ) )
     {
-        p_this->p_libvlc->psz_vlcpath = strdup( "" );
+        psz_path[0] = '\0';
     }
+#endif
+
+    if( (psz_vlc = strrchr( psz_path, '\\' )) ) *psz_vlc = '\0';
+
+    p_this->p_libvlc->psz_vlcpath = strdup( psz_path );
 
     /* Set the default file-translation mode */
+#if !defined( UNDER_CE )
     _fmode = _O_BINARY;
     _setmode( _fileno( stdin ), _O_BINARY ); /* Needed for pipes */
+#endif
 
     /* Call mdate() once to make sure it is initialized properly */
     mdate();
 
     /* WinSock Library Init. */
-    if( !WSAStartup( MAKEWORD( 2, 0 ), &Data ) )
+    if( !WSAStartup( MAKEWORD( 2, 2 ), &Data ) )
     {
-        /* Confirm that the WinSock DLL supports 2.0.*/
-        if( LOBYTE( Data.wVersion ) != 2 || HIBYTE( Data.wVersion ) != 0 )
-        {
+        /* Aah, pretty useless check, we should always have Winsock 2.2
+         * since it appeared in Win98. */
+        if( LOBYTE( Data.wVersion ) != 2 || HIBYTE( Data.wVersion ) != 2 )
             /* We could not find a suitable WinSock DLL. */
             WSACleanup( );
-        }
         else
-        {
             /* Everything went ok. */
             return;
-        }
     }
 
     /* Let's try with WinSock 1.1 */
@@ -97,22 +102,14 @@ void system_Init( vlc_t *p_this, int *pi_argc, char *ppsz_argv[] )
     {
         /* Confirm that the WinSock DLL supports 1.1.*/
         if( LOBYTE( Data.wVersion ) != 1 || HIBYTE( Data.wVersion ) != 1 )
-        {
             /* We could not find a suitable WinSock DLL. */
             WSACleanup( );
-        }
         else
-        {
             /* Everything went ok. */
             return;
-        }
     }
 
     fprintf( stderr, "error: can't initialize WinSocks\n" );
-
-    return;
-
-#endif
 }
 
 /*****************************************************************************
@@ -144,14 +141,16 @@ void system_Configure( vlc_t *p_this, int *pi_argc, char *ppsz_argv[] )
         }
     }
 
-    if( config_GetInt( p_this, "one-instance" ) )
+    if( config_GetInt( p_this, "one-instance" )
+        || ( config_GetInt( p_this, "one-instance-when-started-from-file" )
+             && config_GetInt( p_this, "started-from-file" ) ) )
     {
         HANDLE hmutex;
 
         msg_Info( p_this, "one instance mode ENABLED");
 
         /* Use a named mutex to check if another instance is already running */
-        if( ( hmutex = CreateMutex( NULL, TRUE, "VLC ipc "VERSION ) ) == NULL )
+        if( !( hmutex = CreateMutex( 0, TRUE, _T("VLC ipc ") _T(VERSION) ) ) )
         {
             /* Failed for some reason. Just ignore the option and go on as
              * normal. */
@@ -190,8 +189,7 @@ void system_Configure( vlc_t *p_this, int *pi_argc, char *ppsz_argv[] )
 
             /* Locate the window created by the IPC helper thread of the
              * 1st instance */
-            if( ( ipcwindow = FindWindow( NULL, "VLC ipc "VERSION ) )
-                == NULL )
+            if( !( ipcwindow = FindWindow( 0, _T("VLC ipc ") _T(VERSION) ) ) )
             {
                 msg_Err( p_this, "one instance mode DISABLED "
                          "(couldn't find 1st instance of program)" );
@@ -208,12 +206,12 @@ void system_Configure( vlc_t *p_this, int *pi_argc, char *ppsz_argv[] )
                 char *p_data;
 
                 i_data = sizeof(int);
+
                 for( i_opt = optind; i_opt < *pi_argc; i_opt++ )
                 {
                     i_data += sizeof(int);
                     i_data += strlen( ppsz_argv[ i_opt ] ) + 1;
                 }
-
                 p_data = (char *)malloc( i_data );
                 *((int *)&p_data[0]) = *pi_argc - optind;
                 i_data = sizeof(int);
@@ -252,8 +250,8 @@ static void IPCHelperThread( vlc_object_t *p_this )
     MSG message;
 
     ipcwindow =
-        CreateWindow( "STATIC",                      /* name of window class */
-                  "VLC ipc "VERSION,                /* window title bar text */
+        CreateWindow( _T("STATIC"),                  /* name of window class */
+                  _T("VLC ipc ") _T(VERSION),       /* window title bar text */
                   0,                                         /* window style */
                   0,                                 /* default X coordinate */
                   0,                                 /* default Y coordinate */
@@ -322,12 +320,20 @@ LRESULT CALLBACK WMCOPYWNDPROC( HWND hwnd, UINT uMsg, WPARAM wParam,
                 {
                     i_options++;
                 }
-
-                playlist_AddExt( p_playlist, ppsz_argv[i_opt],ppsz_argv[i_opt],
-                    PLAYLIST_APPEND | (i_opt? 0 : PLAYLIST_GO),
+                if( i_opt || config_GetInt( p_this, "playlist-enqueue" ) )
+                {
+                  playlist_AddExt( p_playlist, ppsz_argv[i_opt],
+                    ppsz_argv[i_opt], PLAYLIST_APPEND ,
                     PLAYLIST_END, -1,
                     (char const **)( i_options ? &ppsz_argv[i_opt+1] : NULL ),
                     i_options );
+                } else {
+                  playlist_AddExt( p_playlist, ppsz_argv[i_opt],
+                    ppsz_argv[i_opt], PLAYLIST_APPEND | PLAYLIST_GO,
+                    PLAYLIST_END, -1,
+                    (char const **)( i_options ? &ppsz_argv[i_opt+1] : NULL ),
+                    i_options );
+                }
 
                 i_opt += i_options;
             }
@@ -346,7 +352,11 @@ LRESULT CALLBACK WMCOPYWNDPROC( HWND hwnd, UINT uMsg, WPARAM wParam,
  *****************************************************************************/
 void system_End( vlc_t *p_this )
 {
-#if !defined( UNDER_CE )
+    if( p_this && p_this->p_libvlc && p_this->p_libvlc->psz_vlcpath )
+    {
+        free( p_this->p_libvlc->psz_vlcpath );
+        p_this->p_libvlc->psz_vlcpath = NULL;
+    }
+
     WSACleanup();
-#endif
 }

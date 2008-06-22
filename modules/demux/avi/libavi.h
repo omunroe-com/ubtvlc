@@ -1,8 +1,8 @@
 /*****************************************************************************
  * libavi.h : LibAVI library
  ******************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: libavi.h 7512 2004-04-26 21:25:11Z gbazin $
+ * Copyright (C) 2001-2003 the VideoLAN team
+ * $Id: libavi.h 13905 2006-01-12 23:10:04Z dionoea $
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /* flags for use in <dwFlags> in AVIFileHdr */
@@ -224,10 +224,7 @@ int     AVI_ChunkReadRoot( stream_t *, avi_chunk_t *p_root );
 void    AVI_ChunkFreeRoot( stream_t *, avi_chunk_t  *p_chk );
 
 #define AVI_ChunkRead( s, p_chk, p_father ) \
-    _AVI_ChunkRead( s, \
-                    (avi_chunk_t*)p_chk, \
-                    (avi_chunk_t*)p_father )
-
+    _AVI_ChunkRead( s, p_chk, (avi_chunk_t*)p_father )
 #define AVI_ChunkCount( p_chk, i_fourcc ) \
     _AVI_ChunkCount( (avi_chunk_t*)p_chk, i_fourcc )
 #define AVI_ChunkFind( p_chk, i_fourcc, i_number ) \
@@ -259,6 +256,8 @@ void    AVI_ChunkFreeRoot( stream_t *, avi_chunk_t  *p_chk );
 #define AVIFOURCC_rec          VLC_FOURCC('r','e','c',' ')
 #define AVIFOURCC_auds         VLC_FOURCC('a','u','d','s')
 #define AVIFOURCC_vids         VLC_FOURCC('v','i','d','s')
+#define AVIFOURCC_txts         VLC_FOURCC('t','x','t','s')
+#define AVIFOURCC_mids         VLC_FOURCC('m','i','d','s')
 
 #define AVIFOURCC_IARL         VLC_FOURCC('I','A','R','L')
 #define AVIFOURCC_IART         VLC_FOURCC('I','A','R','T')

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * controls.h: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2002-2003 VideoLAN
- * $Id: controls.h 7178 2004-03-28 12:29:42Z bigben $
+ * Copyright (C) 2002-2005 the VideoLAN team
+ * $Id: controls.h 17491 2006-11-05 19:57:51Z fkuehne $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -20,19 +20,35 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
+
+#import "fspanel.h"
 
 /*****************************************************************************
  * VLCControls interface 
  *****************************************************************************/
 @interface VLCControls : NSObject
 {
-    IBOutlet id o_open;
     IBOutlet id o_main;
 
     IBOutlet id o_btn_fullscreen;
     IBOutlet id o_volumeslider;
+    
+    IBOutlet id o_btn_shuffle;
+    IBOutlet id o_btn_addNode;
+    IBOutlet id o_btn_repeat;
+
+    IBOutlet id o_specificTime_cancel_btn;
+    IBOutlet id o_specificTime_enter_fld;
+    IBOutlet id o_specificTime_goTo_lbl;
+    IBOutlet id o_specificTime_ok_btn;
+    IBOutlet id o_specificTime_win;
+    IBOutlet id o_specificTime_sec_lbl;
+    IBOutlet id o_specificTime_stepper;
+    IBOutlet id o_specificTime_mi;
+    
+    VLCFSPanel *o_fs_panel;
 }
 
 - (IBAction)play:(id)sender;
@@ -45,6 +61,13 @@
 - (IBAction)random:(id)sender;
 - (IBAction)repeat:(id)sender;
 - (IBAction)loop:(id)sender;
+- (IBAction)repeatButtonAction:(id)sender;
+
+/* the three ugly helpers again */
+- (void)repeatOne;
+- (void)repeatAll;
+- (void)repeatOff;
+- (void)shuffle;
 
 - (IBAction)forward:(id)sender;
 - (IBAction)backward:(id)sender;
@@ -53,9 +76,9 @@
 - (IBAction)volumeDown:(id)sender;
 - (IBAction)mute:(id)sender;
 - (IBAction)volumeSliderUpdated:(id)sender;
-- (void)updateVolumeSlider;
 
 - (IBAction)windowAction:(id)sender;
+- (BOOL)keyEvent:(NSEvent *)o_event;
 
 - (void)setupVarMenuItem:(NSMenuItem *)o_mi
                     target:(vlc_object_t *)p_object
@@ -69,6 +92,9 @@
 - (IBAction)toggleVar:(id)sender;
 - (int)toggleVarThread:(id)_o_data;
 
+- (IBAction)goToSpecificTime:(id)sender;
+
+- (id)getFSPanel;
 @end
 
 /*****************************************************************************
@@ -92,3 +118,15 @@
 - (int)type;
 
 @end
+
+/*****************************************************************************
+ * VLCTimeField interface 
+ *****************************************************************************
+ * we need the implementation to catch our click-event in the controller window
+ *****************************************************************************/
+
+@interface VLCTimeField : NSTextField
+{
+}
+@end
+

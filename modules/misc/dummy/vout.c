@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout_dummy.c: Dummy video output display method for testing purposes
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: vout.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id: vout.c 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -103,10 +103,11 @@ static int Init( vout_thread_t *p_vout )
     }
     else
     {
-        p_vout->output.i_chroma = VLC_FOURCC('R','V','1','6');
-        p_vout->output.i_rmask  = 0xf800;
-        p_vout->output.i_gmask  = 0x07e0;
-        p_vout->output.i_bmask  = 0x001f;
+        /* Use same chroma as input */
+        p_vout->output.i_chroma = p_vout->render.i_chroma;
+        p_vout->output.i_rmask  = p_vout->render.i_rmask;
+        p_vout->output.i_gmask  = p_vout->render.i_gmask;
+        p_vout->output.i_bmask  = p_vout->render.i_bmask;
         p_vout->output.i_width  = p_vout->render.i_width;
         p_vout->output.i_height = p_vout->render.i_height;
         p_vout->output.i_aspect = p_vout->render.i_aspect;

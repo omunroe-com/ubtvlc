@@ -1,8 +1,8 @@
 /****************************************************************************
  * cdrom.c: cdrom tools
  *****************************************************************************
- * Copyright (C) 1998-2001 VideoLAN
- * $Id: cdrom.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1998-2001 the VideoLAN team
+ * $Id: cdrom.c 17793 2006-11-15 21:00:03Z hartman $
  *
  * Authors: Johan Bilien <jobi@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -20,34 +20,36 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <vlc/vlc.h>
+#include <vlc/input.h>
 
 #ifdef HAVE_UNISTD_H
 #   include <unistd.h>
 #endif
 
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
-#ifdef HAVE_SYS_IOCTL_H
-#   include <sys/ioctl.h>
+#ifdef HAVE_SYS_TYPES_H
+#   include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
+#   include <sys/stat.h>
+#endif
+#ifdef HAVE_FCNTL_H 
+#   include <fcntl.h>
 #endif
 
 #if defined( SYS_BSDI )
 #   include <dvd.h>
-#elif defined ( SYS_DARWIN )
+#elif defined ( __APPLE__ )
 #   include <CoreFoundation/CFBase.h>
 #   include <IOKit/IOKitLib.h>
 #   include <IOKit/storage/IOCDTypes.h>
@@ -69,6 +71,7 @@
 
 #include "cdrom_internals.h"
 #include "cdrom.h"
+#include "charset.h"
 
 /*****************************************************************************
  * ioctl_Open: Opens a VCD device or file and returns an opaque handle
@@ -221,7 +224,7 @@ int ioctl_GetTracksMap( vlc_object_t *p_this, const vcddev_t *p_vcddev,
          *  vcd device mode
          */
 
-#if defined( SYS_DARWIN )
+#if defined( __APPLE__ )
 
         CDTOC *pTOC;
         int i_descriptors;
@@ -232,7 +235,7 @@ int ioctl_GetTracksMap( vlc_object_t *p_this, const vcddev_t *p_vcddev,
             return 0;
         }
 
-        i_descriptors = darwin_getNumberOfDescriptors( pTOC );
+        i_descriptors = CDTOCGetDescriptorCount( pTOC );
         i_tracks = darwin_getNumberOfTracks( pTOC, i_descriptors );
 
         if( pp_sectors )
@@ -251,7 +254,7 @@ int ioctl_GetTracksMap( vlc_object_t *p_this, const vcddev_t *p_vcddev,
 
             pTrackDescriptors = pTOC->descriptors;
 
-            for( i_tracks = 0, i = 0; i <= i_descriptors; i++ )
+            for( i_tracks = 0, i = 0; i < i_descriptors; i++ )
             {
                 track = pTrackDescriptors[i].point;
 
@@ -581,7 +584,7 @@ int ioctl_ReadSectors( vlc_object_t *p_this, const vcddev_t *p_vcddev,
          *  vcd device mode
          */
 
-#if defined( SYS_DARWIN )
+#if defined( __APPLE__ )
         dk_cd_read_t cd_read;
 
         memset( &cd_read, 0, sizeof(cd_read) );
@@ -829,14 +832,28 @@ static int OpenVCDImage( vlc_object_t * p_this, const char *psz_dev,
     int i_ret = -1;
     char *p_pos;
     char *psz_vcdfile = NULL;
+    char *psz_vcdfile2 = NULL;
     char *psz_cuefile = NULL;
-    FILE *cuefile;
+    FILE *cuefile     = NULL;
     char line[1024];
 
     /* Check if we are dealing with a .cue file */
     p_pos = strrchr( psz_dev, '.' );
     if( p_pos && !strcmp( p_pos, ".cue" ) )
     {
+        /* psz_dev must be the cue file. Let's assume there's a .bin
+         * file with the same filename */
+        if( p_pos )
+        {
+            psz_vcdfile = malloc( p_pos - psz_dev + 5 /* ".bin" */ );
+            strncpy( psz_vcdfile, psz_dev, p_pos - psz_dev );
+            strcpy( psz_vcdfile + (p_pos - psz_dev), ".bin");
+        }
+        else
+        {
+            psz_vcdfile = malloc( strlen(psz_dev) + 5 /* ".bin" */ );
+            sprintf( psz_vcdfile, "%s.bin", psz_dev );
+        }
         psz_cuefile = strdup( psz_dev );
     }
     else
@@ -854,14 +871,32 @@ static int OpenVCDImage( vlc_object_t * p_this, const char *psz_dev,
             psz_cuefile = malloc( strlen(psz_dev) + 5 /* ".cue" */ );
             sprintf( psz_cuefile, "%s.cue", psz_dev );
         }
+        /* If we need to look up the .cue file, then we don't have to look for the vcd */
+        psz_vcdfile = strdup( psz_dev );
     }
 
     /* Open the cue file and try to parse it */
     msg_Dbg( p_this,"trying .cue file: %s", psz_cuefile );
-    cuefile = fopen( psz_cuefile, "rt" );
-    if( cuefile && fscanf( cuefile, "FILE %c", line ) &&
+    cuefile = utf8_fopen( psz_cuefile, "rt" );
+    if( cuefile == NULL )
+    {
+        i_ret = -1;
+        msg_Dbg( p_this, "could not find .cue file" );
+        goto error;
+    }
+
+    psz_vcdfile2 = ToLocale( psz_vcdfile );
+    msg_Dbg( p_this,"using vcd image file: %s", psz_vcdfile );
+    p_vcddev->i_vcdimage_handle = open( psz_vcdfile2,
+                                    O_RDONLY | O_NONBLOCK | O_BINARY);
+    LocaleFree( psz_vcdfile2 );
+        
+    if( p_vcddev->i_vcdimage_handle == -1 && 
+        fscanf( cuefile, "FILE %c", line ) &&
         fgets( line, 1024, cuefile ) )
     {
+        /* We have a cue file, but no valid vcd file yet */
+        free( psz_vcdfile );
         p_pos = strchr( line, '"' );
         if( p_pos )
         {
@@ -878,15 +913,19 @@ static int OpenVCDImage( vlc_object_t * p_this, const char *psz_dev,
             }
             else psz_vcdfile = strdup( line );
         }
+        psz_vcdfile2 = ToLocale( (const char *)psz_vcdfile );
+        msg_Dbg( p_this,"using vcd image file: %s", psz_vcdfile );
+        p_vcddev->i_vcdimage_handle = open( psz_vcdfile2,
+                                        O_RDONLY | O_NONBLOCK | O_BINARY);
+        LocaleFree( psz_vcdfile2 );
     }
 
-    if( psz_vcdfile )
+    if( p_vcddev->i_vcdimage_handle == -1)
     {
-        msg_Dbg( p_this,"using vcd image file: %s", psz_vcdfile );
-        p_vcddev->i_vcdimage_handle = open( psz_vcdfile,
-                                        O_RDONLY | O_NONBLOCK | O_BINARY );
-        i_ret = (p_vcddev->i_vcdimage_handle == -1) ? -1 : 0;
+        i_ret = -1;
+        goto error;
     }
+    else i_ret = 0;
 
     /* Try to parse the i_tracks and p_sectors info so we can just forget
      * about the cuefile */
@@ -932,6 +971,7 @@ static int OpenVCDImage( vlc_object_t * p_this, const char *psz_dev,
 
     }
 
+error:
     if( cuefile ) fclose( cuefile );
     if( psz_cuefile ) free( psz_cuefile );
     if( psz_vcdfile ) free( psz_vcdfile );
@@ -953,7 +993,7 @@ static void CloseVCDImage( vlc_object_t * p_this, vcddev_t *p_vcddev )
         free( p_vcddev->p_sectors );
 }
 
-#if defined( SYS_DARWIN )
+#if defined( __APPLE__ )
 /****************************************************************************
  * darwin_getTOC: get the TOC
  ****************************************************************************/
@@ -1056,37 +1096,17 @@ static CDTOC *darwin_getTOC( vlc_object_t * p_this, const vcddev_t *p_vcddev )
 }
 
 /****************************************************************************
- * darwin_getNumberOfDescriptors: get number of descriptors in TOC 
- ****************************************************************************/
-static int darwin_getNumberOfDescriptors( CDTOC *pTOC )
-{
-    int i_descriptors;
-
-    /* get TOC length */
-    i_descriptors = pTOC->length;
-
-    /* remove the first and last session */
-    i_descriptors -= ( sizeof(pTOC->sessionFirst) +
-                       sizeof(pTOC->sessionLast) );
-
-    /* divide the length by the size of a single descriptor */
-    i_descriptors /= sizeof(CDTOCDescriptor);
-
-    return( i_descriptors );
-}
-
-/****************************************************************************
  * darwin_getNumberOfTracks: get number of tracks in TOC 
  ****************************************************************************/
 static int darwin_getNumberOfTracks( CDTOC *pTOC, int i_descriptors )
 {
     u_char track;
     int i, i_tracks = 0; 
-    CDTOCDescriptor *pTrackDescriptors;
+    CDTOCDescriptor *pTrackDescriptors = NULL;
 
-    pTrackDescriptors = pTOC->descriptors;
+    pTrackDescriptors = (CDTOCDescriptor *)pTOC->descriptors;
 
-    for( i = i_descriptors; i >= 0; i-- )
+    for( i = i_descriptors; i > 0; i-- )
     {
         track = pTrackDescriptors[i].point;
 
@@ -1098,7 +1118,7 @@ static int darwin_getNumberOfTracks( CDTOC *pTOC, int i_descriptors )
 
     return( i_tracks );
 }
-#endif /* SYS_DARWIN */
+#endif /* __APPLE__ */
 
 #if defined( WIN32 )
 /*****************************************************************************

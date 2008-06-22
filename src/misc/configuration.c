@@ -1,10 +1,10 @@
 /*****************************************************************************
  * configuration.c management of the modules configuration
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: configuration.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: configuration.c 19493 2007-03-27 08:41:07Z jpsaman $
  *
- * Authors: Gildas Bazin <gbazin@netcourrier.com>
+ * Authors: Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,17 +18,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <vlc/vlc.h>
 #include "vlc_keys.h"
+#include "charset.h"
 
 #include <stdio.h>                                              /* sprintf() */
 #include <stdlib.h>                                      /* free(), strtol() */
 #include <string.h>                                              /* strdup() */
-#ifdef HAVE_ERRNO_H
-#   include <errno.h>                                               /* errno */
+#include <errno.h>                                                  /* errno */
+
+#ifdef HAVE_LIMITS_H
+#   include <limits.h>
 #endif
 
 #ifdef HAVE_UNISTD_H
@@ -60,6 +63,11 @@
 #include <tchar.h>
 #endif
 
+#if defined( WIN32 ) || defined( UNDER_CE )
+#   define DIR_SEP "\\"
+#else
+#   define DIR_SEP "/"
+#endif
 
 static int ConfigStringToKey( char * );
 static char *ConfigKeyToString( int );
@@ -98,6 +106,9 @@ int __config_GetType( vlc_object_t *p_this, const char *psz_name )
         break;
 
     case CONFIG_ITEM_MODULE:
+    case CONFIG_ITEM_MODULE_CAT:
+    case CONFIG_ITEM_MODULE_LIST:
+    case CONFIG_ITEM_MODULE_LIST_CAT:
         i_type = VLC_VAR_MODULE;
         break;
 
@@ -205,11 +216,15 @@ char * __config_GetPsz( vlc_object_t *p_this, const char *psz_name )
     if( (p_config->i_type!=CONFIG_ITEM_STRING) &&
         (p_config->i_type!=CONFIG_ITEM_FILE) &&
         (p_config->i_type!=CONFIG_ITEM_DIRECTORY) &&
+        (p_config->i_type!=CONFIG_ITEM_MODULE_LIST) &&
+        (p_config->i_type!=CONFIG_ITEM_MODULE_LIST_CAT) &&
+        (p_config->i_type!=CONFIG_ITEM_MODULE_CAT) &&
         (p_config->i_type!=CONFIG_ITEM_MODULE) )
     {
         msg_Err( p_this, "option %s does not refer to a string", psz_name );
         return NULL;
     }
+
 
     /* return a copy of the string */
     vlc_mutex_lock( p_config->p_lock );
@@ -234,6 +249,7 @@ void __config_PutPsz( vlc_object_t *p_this,
 
     p_config = config_FindConfig( p_this, psz_name );
 
+
     /* sanity checks */
     if( !p_config )
     {
@@ -243,6 +259,9 @@ void __config_PutPsz( vlc_object_t *p_this,
     if( (p_config->i_type!=CONFIG_ITEM_STRING) &&
         (p_config->i_type!=CONFIG_ITEM_FILE) &&
         (p_config->i_type!=CONFIG_ITEM_DIRECTORY) &&
+        (p_config->i_type!=CONFIG_ITEM_MODULE_LIST) &&
+        (p_config->i_type!=CONFIG_ITEM_MODULE_CAT) &&
+        (p_config->i_type!=CONFIG_ITEM_MODULE_LIST_CAT) &&
         (p_config->i_type!=CONFIG_ITEM_MODULE) )
     {
         msg_Err( p_this, "option %s does not refer to a string", psz_name );
@@ -256,6 +275,8 @@ void __config_PutPsz( vlc_object_t *p_this,
 
     if( psz_value && *psz_value ) p_config->psz_value = strdup( psz_value );
     else p_config->psz_value = NULL;
+
+    p_config->b_dirty = VLC_TRUE;
 
     val.psz_string = p_config->psz_value;
 
@@ -320,6 +341,8 @@ void __config_PutInt( vlc_object_t *p_this, const char *psz_name, int i_value )
         p_config->i_value = i_value;
     }
 
+    p_config->b_dirty = VLC_TRUE;
+
     val.i_int = p_config->i_value;
 
     if( p_config->pf_callback )
@@ -375,6 +398,8 @@ void __config_PutFloat( vlc_object_t *p_this,
     {
         p_config->f_value = f_value;
     }
+
+    p_config->b_dirty = VLC_TRUE;
 
     val.f_float = p_config->f_value;
 
@@ -504,11 +529,16 @@ void config_Duplicate( module_t *p_module, module_config_t *p_orig )
 
         p_module->p_config[i].i_value_orig = p_orig[i].i_value;
         p_module->p_config[i].f_value_orig = p_orig[i].f_value;
+        p_module->p_config[i].i_value_saved = p_orig[i].i_value;
+        p_module->p_config[i].f_value_saved = p_orig[i].f_value;
+        p_module->p_config[i].psz_value_saved = 0;
 
         p_module->p_config[i].psz_type = p_orig[i].psz_type ?
                                    strdup( p_orig[i].psz_type ) : NULL;
         p_module->p_config[i].psz_name = p_orig[i].psz_name ?
                                    strdup( p_orig[i].psz_name ) : NULL;
+        p_module->p_config[i].psz_current = p_orig[i].psz_current?
+                                   strdup( p_orig[i].psz_current ) : NULL;
         p_module->p_config[i].psz_text = p_orig[i].psz_text ?
                                    strdup( _(p_orig[i].psz_text) ) : NULL;
         p_module->p_config[i].psz_longtext = p_orig[i].psz_longtext ?
@@ -530,8 +560,8 @@ void config_Duplicate( module_t *p_module, module_config_t *p_orig )
                 if( p_module->p_config[i].ppsz_list )
                 {
                     for( j = 0; j < p_orig[i].i_list; j++ )
-                        p_module->p_config[i].ppsz_list[j] =
-                            strdup( p_orig[i].ppsz_list[j] );
+                        p_module->p_config[i].ppsz_list[j] = p_orig[i].ppsz_list[j] ?
+                            strdup( p_orig[i].ppsz_list[j] ) : NULL ;
                     p_module->p_config[i].ppsz_list[j] = NULL;
                 }
             }
@@ -542,8 +572,8 @@ void config_Duplicate( module_t *p_module, module_config_t *p_orig )
                 if( p_module->p_config[i].ppsz_list_text )
                 {
                     for( j = 0; j < p_orig[i].i_list; j++ )
-                        p_module->p_config[i].ppsz_list_text[j] =
-                            strdup( _(p_orig[i].ppsz_list_text[j]) );
+                        p_module->p_config[i].ppsz_list_text[j] = _(p_orig[i].ppsz_list_text[j]) ?
+                            strdup( _(p_orig[i].ppsz_list_text[j] ) ) : NULL ;
                     p_module->p_config[i].ppsz_list_text[j] = NULL;
                 }
             }
@@ -607,6 +637,9 @@ void config_Free( module_t *p_module )
         if( p_item->psz_name )
             free( p_item->psz_name );
 
+        if( p_item->psz_current )
+            free( p_item->psz_current );
+
         if( p_item->psz_text )
             free( p_item->psz_text );
 
@@ -618,6 +651,9 @@ void config_Free( module_t *p_module )
 
         if( p_item->psz_value_orig )
             free( p_item->psz_value_orig );
+
+        if( p_item->psz_value_saved )
+            free( p_item->psz_value_saved );
 
         if( p_item->i_list )
         {
@@ -744,7 +780,8 @@ int __config_LoadConfigFile( vlc_object_t *p_this, const char *psz_module_name )
         psz_filename = (char *)malloc( sizeof("/" CONFIG_DIR "/" CONFIG_FILE) +
                                        strlen(psz_homedir) );
         if( psz_filename )
-            sprintf( psz_filename, "%s/" CONFIG_DIR "/" CONFIG_FILE,
+            sprintf( psz_filename,
+                     "%s" DIR_SEP CONFIG_DIR DIR_SEP CONFIG_FILE,
                      psz_homedir );
     }
     else
@@ -763,7 +800,7 @@ int __config_LoadConfigFile( vlc_object_t *p_this, const char *psz_module_name )
     /* Acquire config file lock */
     vlc_mutex_lock( &p_this->p_vlc->config_lock );
 
-    file = fopen( psz_filename, "rt" );
+    file = utf8_fopen( psz_filename, "rt" );
     if( !file )
     {
         msg_Warn( p_this, "config file %s does not exist yet", psz_filename );
@@ -777,6 +814,9 @@ int __config_LoadConfigFile( vlc_object_t *p_this, const char *psz_module_name )
 
     for( i_index = 0; i_index < p_list->i_count; i_index++ )
     {
+        char * (*convert) (const char *) = FromLocaleDup;
+        char bom[3];
+
         p_parser = (module_t *)p_list->p_values[i_index].p_object ;
 
         if( psz_module_name
@@ -788,6 +828,15 @@ int __config_LoadConfigFile( vlc_object_t *p_this, const char *psz_module_name )
         /* The config file is organized in sections, one per module. Look for
          * the interesting section ( a section is of the form [foo] ) */
         fseek( file, 0L, SEEK_SET );
+
+        /* Look for UTF-8 Byte Order Mark */
+
+        if ((fread (bom, 1, 3, file) == 3)
+         && (memcmp (bom, "\xEF\xBB\xBF", 3) == 0))
+            convert = strdup;
+        else
+            rewind (file); // no BOM, rewind
+
         while( fgets( line, 1024, file ) )
         {
             if( (line[0] == '[')
@@ -853,6 +902,7 @@ int __config_LoadConfigFile( vlc_object_t *p_this, const char *psz_module_name )
                         if( !*psz_option_value )
                             break;                    /* ignore empty option */
                         p_item->i_value = strtol( psz_option_value, 0, 0 );
+                        p_item->i_value_saved = p_item->i_value;
 #if 0
                         msg_Dbg( p_this, "option \"%s\", value %i",
                                  p_item->psz_name, p_item->i_value );
@@ -862,8 +912,9 @@ int __config_LoadConfigFile( vlc_object_t *p_this, const char *psz_module_name )
                     case CONFIG_ITEM_FLOAT:
                         if( !*psz_option_value )
                             break;                    /* ignore empty option */
-                        p_item->f_value = (float)atof( psz_option_value);
-#if O
+                        p_item->f_value = (float)i18n_atof( psz_option_value);
+                        p_item->f_value_saved = p_item->f_value;
+#if 0
                         msg_Dbg( p_this, "option \"%s\", value %f",
                                  p_item->psz_name, (double)p_item->f_value );
 #endif
@@ -871,7 +922,8 @@ int __config_LoadConfigFile( vlc_object_t *p_this, const char *psz_module_name )
                     case CONFIG_ITEM_KEY:
                         if( !*psz_option_value )
                             break;                    /* ignore empty option */
-                        p_item->i_value = ConfigStringToKey( psz_option_value );
+                        p_item->i_value = ConfigStringToKey(psz_option_value);
+                        p_item->i_value_saved = p_item->i_value;
                         break;
 
                     default:
@@ -882,7 +934,16 @@ int __config_LoadConfigFile( vlc_object_t *p_this, const char *psz_module_name )
                             free( p_item->psz_value );
 
                         p_item->psz_value = *psz_option_value ?
-                            strdup( psz_option_value ) : NULL;
+                            convert( psz_option_value ) : NULL;
+
+                        if( p_item->psz_value_saved )
+                            free( p_item->psz_value_saved );
+                        p_item->psz_value_saved = 0;
+                        if( !p_item->psz_value || !p_item->psz_value_orig ||
+                            (p_item->psz_value && p_item->psz_value_orig &&
+                             strcmp(p_item->psz_value,p_item->psz_value_orig)))
+                            p_item->psz_value_saved = p_item->psz_value ?
+                                strdup( p_item->psz_value ) : 0;
 
                         vlc_mutex_unlock( p_item->p_lock );
 
@@ -910,6 +971,23 @@ int __config_LoadConfigFile( vlc_object_t *p_this, const char *psz_module_name )
 }
 
 /*****************************************************************************
+ * config_CreateDir: Create configuration directory if it doesn't exist.
+ *****************************************************************************/
+int config_CreateDir( vlc_object_t *p_this, const char *psz_dirname )
+{
+    if( !psz_dirname && !*psz_dirname ) return -1;
+
+    if( utf8_mkdir( psz_dirname ) && ( errno != EEXIST ) )
+    {
+        msg_Err( p_this, "could not create %s (%s)",
+                 psz_dirname, strerror(errno) );
+        return -1;
+    }
+
+    return 0;
+}
+
+/*****************************************************************************
  * config_SaveConfigFile: Save a module's config options.
  *****************************************************************************
  * This will save the specified module's config options to the config file.
@@ -928,7 +1006,8 @@ int __config_LoadConfigFile( vlc_object_t *p_this, const char *psz_module_name )
  * save.
  * Really stupid no ?
  *****************************************************************************/
-int __config_SaveConfigFile( vlc_object_t *p_this, const char *psz_module_name )
+static int SaveConfigFile( vlc_object_t *p_this, const char *psz_module_name,
+                           vlc_bool_t b_autosave )
 {
     module_t *p_parser;
     vlc_list_t *p_list;
@@ -958,7 +1037,7 @@ int __config_SaveConfigFile( vlc_object_t *p_this, const char *psz_module_name )
                                        strlen(psz_homedir) );
 
         if( psz_filename )
-            sprintf( psz_filename, "%s/" CONFIG_DIR, psz_homedir );
+            sprintf( psz_filename, "%s" DIR_SEP CONFIG_DIR, psz_homedir );
 
         if( !psz_filename )
         {
@@ -967,37 +1046,9 @@ int __config_SaveConfigFile( vlc_object_t *p_this, const char *psz_module_name )
             return -1;
         }
 
-#if defined( UNDER_CE )
-        {
-            wchar_t psz_new[ MAX_PATH ];
-            MultiByteToWideChar( CP_ACP, 0, psz_filename, -1, psz_new,
-                                 MAX_PATH );
-            if( CreateDirectory( psz_new, NULL ) )
-            {
-                msg_Err( p_this, "could not create %s", psz_filename );
-            }
-        }
+        config_CreateDir( p_this, psz_filename );
 
-#elif defined( HAVE_ERRNO_H )
-#   if defined( WIN32 )
-        if( mkdir( psz_filename ) && errno != EEXIST )
-#   else
-        if( mkdir( psz_filename, 0755 ) && errno != EEXIST )
-#   endif
-        {
-            msg_Err( p_this, "could not create %s (%s)",
-                             psz_filename, strerror(errno) );
-        }
-
-#else
-        if( mkdir( psz_filename ) )
-        {
-            msg_Err( p_this, "could not create %s", psz_filename );
-        }
-
-#endif
-
-        strcat( psz_filename, "/" CONFIG_FILE );
+        strcat( psz_filename, DIR_SEP CONFIG_FILE );
     }
     else
     {
@@ -1012,7 +1063,7 @@ int __config_SaveConfigFile( vlc_object_t *p_this, const char *psz_module_name )
 
     msg_Dbg( p_this, "opening config file %s", psz_filename );
 
-    file = fopen( psz_filename, "rt" );
+    file = utf8_fopen( psz_filename, "rt" );
     if( !file )
     {
         msg_Warn( p_this, "config file %s does not exist yet", psz_filename );
@@ -1070,8 +1121,10 @@ int __config_SaveConfigFile( vlc_object_t *p_this, const char *psz_module_name )
                 /* we don't have this section in our list so we need to back
                  * it up */
                 *p_index2 = 0;
+#if 0
                 msg_Dbg( p_this, "backing up config for unknown module \"%s\"",
                                  &p_line[1] );
+#endif
                 *p_index2 = ']';
 
                 b_backup = 1;
@@ -1098,7 +1151,7 @@ int __config_SaveConfigFile( vlc_object_t *p_this, const char *psz_module_name )
      * Save module config in file
      */
 
-    file = fopen( psz_filename, "wt" );
+    file = utf8_fopen( psz_filename, "wt" );
     if( !file )
     {
         msg_Warn( p_this, "could not open config file %s for writing",
@@ -1108,8 +1161,18 @@ int __config_SaveConfigFile( vlc_object_t *p_this, const char *psz_module_name )
         vlc_mutex_unlock( &p_this->p_vlc->config_lock );
         return -1;
     }
+    
+#ifdef WIN32
+    /* Ugly kludge to not save --started-from-file (and not break the ABI). 
+     * See [17898] and   #871 */
+    /* Just use the first mofule found*/
+    config_PutInt( (module_t *)p_list->p_values[0].p_object, 
+                   "started-from-file", 0 );
 
-    fprintf( file, "###\n###  " COPYRIGHT_MESSAGE "\n###\n\n" );
+#endif
+
+    fprintf( file, "\xEF\xBB\xBF###\n###  " COPYRIGHT_MESSAGE "\n###\n\n"
+       "###\n### lines begining with a '#' character are comments\n###\n\n" );
 
     /* Look for the selected module, if NULL then save everything */
     for( i_index = 0; i_index < p_list->i_count; i_index++ )
@@ -1123,8 +1186,9 @@ int __config_SaveConfigFile( vlc_object_t *p_this, const char *psz_module_name )
         if( !p_parser->i_config_items )
             continue;
 
-        msg_Dbg( p_this, "saving config for module \"%s\"",
-                         p_parser->psz_object_name );
+        if( psz_module_name )
+            msg_Dbg( p_this, "saving config for module \"%s\"",
+                     p_parser->psz_object_name );
 
         fprintf( file, "[%s]", p_parser->psz_object_name );
         if( p_parser->psz_longname )
@@ -1136,10 +1200,28 @@ int __config_SaveConfigFile( vlc_object_t *p_this, const char *psz_module_name )
              p_item->i_type != CONFIG_HINT_END;
              p_item++ )
         {
-            char *psz_key;
+            char  *psz_key;
+            int   i_value = p_item->i_value;
+            float f_value = p_item->f_value;
+            char  *psz_value = p_item->psz_value;
+
             if( p_item->i_type & CONFIG_HINT )
                 /* ignore hints */
                 continue;
+            /* Ignore deprecated options */
+            if( p_item->psz_current )
+                continue;
+            if( b_autosave && !p_item->b_autosave )
+            {
+                i_value = p_item->i_value_saved;
+                f_value = p_item->f_value_saved;
+                psz_value = p_item->psz_value_saved;
+                if( !psz_value ) psz_value = p_item->psz_value_orig;
+            }
+            else
+            {
+                p_item->b_dirty = VLC_FALSE;
+            }
 
             switch( p_item->i_type )
             {
@@ -1149,46 +1231,61 @@ int __config_SaveConfigFile( vlc_object_t *p_this, const char *psz_module_name )
                     fprintf( file, "# %s (%s)\n", p_item->psz_text,
                              (p_item->i_type == CONFIG_ITEM_BOOL) ?
                              _("boolean") : _("integer") );
-                if( p_item->i_value == p_item->i_value_orig )
-                    fprintf( file, "#" );
-                fprintf( file, "%s=%i\n", p_item->psz_name, p_item->i_value );
+                if( i_value == p_item->i_value_orig )
+                    fputc( '#', file );
+                fprintf( file, "%s=%i\n", p_item->psz_name, i_value );
+
+                p_item->i_value_saved = i_value;
                 break;
+
             case CONFIG_ITEM_KEY:
                 if( p_item->psz_text )
                     fprintf( file, "# %s (%s)\n", p_item->psz_text,
                              _("key") );
-                if( p_item->i_value == p_item->i_value_orig )
-                    fprintf( file, "#" );
-                psz_key = ConfigKeyToString( p_item->i_value );
+                if( i_value == p_item->i_value_orig )
+                    fputc( '#', file );
+                psz_key = ConfigKeyToString( i_value );
                 fprintf( file, "%s=%s\n", p_item->psz_name,
                          psz_key ? psz_key : "" );
                 if ( psz_key ) free( psz_key );
+
+                p_item->i_value_saved = i_value;
                 break;
 
             case CONFIG_ITEM_FLOAT:
                 if( p_item->psz_text )
                     fprintf( file, "# %s (%s)\n", p_item->psz_text,
                              _("float") );
-                if( p_item->f_value == p_item->f_value_orig )
-                    fprintf( file, "#" );
-                fprintf( file, "%s=%f\n", p_item->psz_name,
-                         (double)p_item->f_value );
+                if( f_value == p_item->f_value_orig )
+                    fputc( '#', file );
+                fprintf( file, "%s=%f\n", p_item->psz_name, (double)f_value );
+
+                p_item->f_value_saved = f_value;
                 break;
 
             default:
                 if( p_item->psz_text )
                     fprintf( file, "# %s (%s)\n", p_item->psz_text,
                              _("string") );
-                if( (!p_item->psz_value && !p_item->psz_value_orig) ||
-                    (p_item->psz_value && p_item->psz_value_orig &&
-                     !strcmp( p_item->psz_value, p_item->psz_value_orig )) )
-                    fprintf( file, "#" );
+                if( (!psz_value && !p_item->psz_value_orig) ||
+                    (psz_value && p_item->psz_value_orig &&
+                     !strcmp( psz_value, p_item->psz_value_orig )) )
+                    fputc( '#', file );
                 fprintf( file, "%s=%s\n", p_item->psz_name,
-                         p_item->psz_value ? p_item->psz_value : "" );
+                         psz_value ? psz_value : "" );
+
+                if( b_autosave && !p_item->b_autosave ) break;
+
+                if( p_item->psz_value_saved ) free( p_item->psz_value_saved );
+                p_item->psz_value_saved = 0;
+                if( (psz_value && p_item->psz_value_orig &&
+                     strcmp( psz_value, p_item->psz_value_orig )) ||
+                    !psz_value || !p_item->psz_value_orig)
+                    p_item->psz_value_saved = psz_value ? strdup(psz_value):0;
             }
         }
 
-        fprintf( file, "\n" );
+        fputc( '\n', file );
     }
 
     vlc_list_release( p_list );
@@ -1204,6 +1301,43 @@ int __config_SaveConfigFile( vlc_object_t *p_this, const char *psz_module_name )
     vlc_mutex_unlock( &p_this->p_vlc->config_lock );
 
     return 0;
+}
+
+int config_AutoSaveConfigFile( vlc_object_t *p_this )
+{
+    vlc_list_t *p_list;
+    module_t *p_parser;
+    module_config_t *p_item;
+    int i_index, i_count;
+
+    /* Check if there's anything to save */
+    vlc_mutex_lock( &p_this->p_vlc->config_lock );
+    p_list = vlc_list_find( p_this, VLC_OBJECT_MODULE, FIND_ANYWHERE );
+    i_count = p_list->i_count;
+    for( i_index = 0; i_index < i_count; i_index++ )
+    {
+        p_parser = (module_t *)p_list->p_values[i_index].p_object ;
+
+        if( !p_parser->i_config_items ) continue;
+
+        for( p_item = p_parser->p_config;
+             p_item->i_type != CONFIG_HINT_END;
+             p_item++ )
+        {
+            if( p_item->b_autosave && p_item->b_dirty ) break;
+        }
+        if( p_item->i_type != CONFIG_HINT_END ) break;
+    }
+    vlc_list_release( p_list );
+    vlc_mutex_unlock( &p_this->p_vlc->config_lock );
+
+    if( i_index == i_count ) return VLC_SUCCESS;
+    return SaveConfigFile( p_this, 0, VLC_TRUE );
+}
+
+int __config_SaveConfigFile( vlc_object_t *p_this, const char *psz_module_name )
+{
+    return SaveConfigFile( p_this, psz_module_name, VLC_FALSE );
 }
 
 /*****************************************************************************
@@ -1233,8 +1367,8 @@ int __config_LoadCmdLine( vlc_object_t *p_this, int *pi_argc, char *ppsz_argv[],
     p_this->p_vlc->i_argc    = *pi_argc;
     p_this->p_vlc->ppsz_argv = ppsz_argv;
 
-#ifdef SYS_DARWIN
-    /* When vlc.app is run by double clicking in Mac OS X, the 2nd arg
+#ifdef __APPLE__
+    /* When VLC.app is run by double clicking in Mac OS X, the 2nd arg
      * is the PSN - process serial number (a unique PID-ish thingie)
      * still ok for real Darwin & when run from command line */
     if ( (*pi_argc > 1) && (strncmp( ppsz_argv[ 1 ] , "-psn" , 4 ) == 0) )
@@ -1267,7 +1401,7 @@ int __config_LoadCmdLine( vlc_object_t *p_this, int *pi_argc, char *ppsz_argv[],
         p_parser = (module_t *)p_list->p_values[i_modules_index].p_object ;
 
         /* count the number of exported configuration options (to allocate
-         * longopts). We also need to allocate space for too options when
+         * longopts). We also need to allocate space for two options when
          * dealing with boolean to allow for --foo and --no-foo */
         i_opts += p_parser->i_config_items
                      + 2 * p_parser->i_bool_items;
@@ -1401,7 +1535,7 @@ int __config_LoadCmdLine( vlc_object_t *p_this, int *pi_argc, char *ppsz_argv[],
      * Parse the command line options
      */
     opterr = 0;
-    optind = 1;
+    optind = 0; /* set to 0 to tell GNU getopt to reinitialize */
     while( ( i_cmd = getopt_long( *pi_argc, ppsz_argv, psz_shortopts,
                                   p_longopts, &i_index ) ) != EOF )
     {
@@ -1416,30 +1550,72 @@ int __config_LoadCmdLine( vlc_object_t *p_this, int *pi_argc, char *ppsz_argv[],
 
             /* Store the configuration option */
             p_conf = config_FindConfig( p_this, psz_name );
-
-            if( p_conf ) switch( p_conf->i_type )
+            if( p_conf )
             {
-            case CONFIG_ITEM_STRING:
-            case CONFIG_ITEM_FILE:
-            case CONFIG_ITEM_DIRECTORY:
-            case CONFIG_ITEM_MODULE:
-                config_PutPsz( p_this, psz_name, optarg );
-                break;
-            case CONFIG_ITEM_INTEGER:
-                config_PutInt( p_this, psz_name, strtol(optarg, 0, 0));
-                break;
-            case CONFIG_ITEM_FLOAT:
-                config_PutFloat( p_this, psz_name, (float)atof(optarg) );
-                break;
-            case CONFIG_ITEM_KEY:
-                config_PutInt( p_this, psz_name, ConfigStringToKey( optarg ) );
-                break;
-            case CONFIG_ITEM_BOOL:
-                config_PutInt( p_this, psz_name, !flag );
-                break;
-            }
+                /* Check if the option is deprecated */
+                if( p_conf->psz_current )
+                {
+                    if( !strcmp(p_conf->psz_current,"SUPPRESSED") )
+                    {
+                        if( !b_ignore_errors )
+                        {
+                            fprintf(stderr,
+                                    "Warning: option --%s is no longer used.\n",
+                                    p_conf->psz_name);
+                        }
+                       continue;
+                    }
+                    if( !b_ignore_errors )
+                    {
+                        if( p_conf->b_strict )
+                        {
+                            fprintf( stderr,
+                                     "Error: option --%s is deprecated. "
+                                     "Use --%s instead.\n",
+                                     p_conf->psz_name, p_conf->psz_current);
+                            /*free */
+                            for( i_index = 0; p_longopts[i_index].name; i_index++ )
+                                free( (char *)p_longopts[i_index].name );
 
-            continue;
+                            free( p_longopts );
+                            free( psz_shortopts );
+                            return -1;
+                        }
+                        fprintf(stderr,
+                                "Warning: option --%s is deprecated. "
+                                "You should use --%s instead.\n",
+                                p_conf->psz_name, p_conf->psz_current);
+                    }
+                    psz_name=p_conf->psz_current;
+                    p_conf = config_FindConfig( p_this, psz_name );
+                }
+
+                switch( p_conf->i_type )
+                {
+                    case CONFIG_ITEM_STRING:
+                    case CONFIG_ITEM_FILE:
+                    case CONFIG_ITEM_DIRECTORY:
+                    case CONFIG_ITEM_MODULE:
+                    case CONFIG_ITEM_MODULE_LIST:
+                    case CONFIG_ITEM_MODULE_LIST_CAT:
+                    case CONFIG_ITEM_MODULE_CAT:
+                        config_PutPsz( p_this, psz_name, optarg );
+                        break;
+                    case CONFIG_ITEM_INTEGER:
+                        config_PutInt( p_this, psz_name, strtol(optarg, 0, 0));
+                        break;
+                    case CONFIG_ITEM_FLOAT:
+                        config_PutFloat( p_this, psz_name, (float)atof(optarg) );
+                        break;
+                    case CONFIG_ITEM_KEY:
+                        config_PutInt( p_this, psz_name, ConfigStringToKey( optarg ) );
+                        break;
+                    case CONFIG_ITEM_BOOL:
+                        config_PutInt( p_this, psz_name, !flag );
+                        break;
+                }
+                continue;
+            }
         }
 
         /* A short option has been recognized */
@@ -1447,47 +1623,50 @@ int __config_LoadCmdLine( vlc_object_t *p_this, int *pi_argc, char *ppsz_argv[],
         {
             switch( pp_shortopts[i_cmd]->i_type )
             {
-            case CONFIG_ITEM_STRING:
-            case CONFIG_ITEM_FILE:
-            case CONFIG_ITEM_DIRECTORY:
-            case CONFIG_ITEM_MODULE:
-                config_PutPsz( p_this, pp_shortopts[i_cmd]->psz_name, optarg );
-                break;
-            case CONFIG_ITEM_INTEGER:
-                if( i_cmd == 'v' )
-                {
-                    if( optarg )
+                case CONFIG_ITEM_STRING:
+                case CONFIG_ITEM_FILE:
+                case CONFIG_ITEM_DIRECTORY:
+                case CONFIG_ITEM_MODULE:
+                case CONFIG_ITEM_MODULE_CAT:
+                case CONFIG_ITEM_MODULE_LIST:
+                case CONFIG_ITEM_MODULE_LIST_CAT:
+                    config_PutPsz( p_this, pp_shortopts[i_cmd]->psz_name, optarg );
+                    break;
+                case CONFIG_ITEM_INTEGER:
+                    if( i_cmd == 'v' )
                     {
-                        if( *optarg == 'v' ) /* eg. -vvv */
+                        if( optarg )
                         {
-                            i_verbose++;
-                            while( *optarg == 'v' )
+                            if( *optarg == 'v' ) /* eg. -vvv */
                             {
                                 i_verbose++;
-                                optarg++;
+                                while( *optarg == 'v' )
+                                {
+                                    i_verbose++;
+                                    optarg++;
+                                }
+                            }
+                            else
+                            {
+                                i_verbose += atoi( optarg ); /* eg. -v2 */
                             }
                         }
                         else
                         {
-                            i_verbose += atoi( optarg ); /* eg. -v2 */
+                            i_verbose++; /* -v */
                         }
+                        config_PutInt( p_this, pp_shortopts[i_cmd]->psz_name,
+                                               i_verbose );
                     }
                     else
                     {
-                        i_verbose++; /* -v */
+                        config_PutInt( p_this, pp_shortopts[i_cmd]->psz_name,
+                                               strtol(optarg, 0, 0) );
                     }
-                    config_PutInt( p_this, pp_shortopts[i_cmd]->psz_name,
-                                           i_verbose );
-                }
-                else
-                {
-                    config_PutInt( p_this, pp_shortopts[i_cmd]->psz_name,
-                                           strtol(optarg, 0, 0) );
-                }
-                break;
-            case CONFIG_ITEM_BOOL:
-                config_PutInt( p_this, pp_shortopts[i_cmd]->psz_name, 1 );
-                break;
+                    break;
+                case CONFIG_ITEM_BOOL:
+                    config_PutInt( p_this, pp_shortopts[i_cmd]->psz_name, 1 );
+                    break;
             }
 
             continue;
@@ -1496,8 +1675,9 @@ int __config_LoadCmdLine( vlc_object_t *p_this, int *pi_argc, char *ppsz_argv[],
         /* Internal error: unknown option */
         if( !b_ignore_errors )
         {
-            fprintf( stderr, "%s: unknown option ",
-                             p_this->p_vlc->psz_object_name );
+            fprintf( stderr, "%s: unknown option"
+                     " or missing mandatory argument ",
+                     p_this->p_vlc->psz_object_name );
             if( optopt )
             {
                 fprintf( stderr, "`-%c'\n", optopt );
@@ -1509,6 +1689,8 @@ int __config_LoadCmdLine( vlc_object_t *p_this, int *pi_argc, char *ppsz_argv[],
             fprintf( stderr, "Try `%s --help' for more information.\n",
                              p_this->p_vlc->psz_object_name );
 
+            for( i_index = 0; p_longopts[i_index].name; i_index++ )
+                free( (char *)p_longopts[i_index].name );
             free( p_longopts );
             free( psz_shortopts );
             return -1;
@@ -1525,27 +1707,60 @@ int __config_LoadCmdLine( vlc_object_t *p_this, int *pi_argc, char *ppsz_argv[],
     return 0;
 }
 
+/**
+ * config_GetDataDir: find directory where shared data is installed
+ *
+ * @return a string (always succeeds).
+ */
+const char *config_GetDataDir( const vlc_object_t *p_this )
+{
+#if defined (WIN32) || defined (UNDER_CE)
+    return p_this->p_libvlc->psz_vlcpath;
+#elif defined(__APPLE__) || defined (SYS_BEOS)
+    static char path[PATH_MAX] = "";
+
+    if( *path == '\0' )
+    {
+        snprintf( path, sizeof( path ), "%s/share",
+                  p_this->p_libvlc->psz_vlcpath );
+        path[sizeof( path ) - 1] = '\0';
+    }
+    return path;
+#else
+    return DATA_PATH;
+#endif
+}
+
 /*****************************************************************************
- * config_GetHomeDir: find the user's home directory.
+ * config_GetHomeDir, config_GetUserDir: find the user's home directory.
  *****************************************************************************
  * This function will try by different ways to find the user's home path.
  * Note that this function is not reentrant, it should be called only once
  * at the beginning of main where the result will be stored for later use.
  *****************************************************************************/
-char *config_GetHomeDir( void )
+static char *GetDir( vlc_bool_t b_appdata )
 {
-    char *p_tmp, *p_homedir = NULL;
+    char *psz_localhome = NULL;
 
 #if defined(HAVE_GETPWUID)
     struct passwd *p_pw = NULL;
 #endif
 
-#if defined(WIN32) || defined(UNDER_CE)
+#if defined(WIN32) && !defined(UNDER_CE)
     typedef HRESULT (WINAPI *SHGETFOLDERPATH)( HWND, int, HANDLE, DWORD,
                                                LPSTR );
+#ifndef CSIDL_FLAG_CREATE
 #   define CSIDL_FLAG_CREATE 0x8000
+#endif
+#ifndef CSIDL_APPDATA
 #   define CSIDL_APPDATA 0x1A
+#endif
+#ifndef CSIDL_PROFILE
+#   define CSIDL_PROFILE 0x28
+#endif
+#ifndef SHGFP_TYPE_CURRENT
 #   define SHGFP_TYPE_CURRENT 0
+#endif
 
     HINSTANCE shfolder_dll;
     SHGETFOLDERPATH SHGetFolderPath ;
@@ -1557,24 +1772,37 @@ char *config_GetHomeDir( void )
                                                   _T("SHGetFolderPathA") );
         if ( SHGetFolderPath != NULL )
         {
-            p_homedir = (char *)malloc( MAX_PATH );
-            if( !p_homedir )
-            {
-                return NULL;
-            }
+            char psz_ACPhome[MAX_PATH];
 
             /* get the "Application Data" folder for the current user */
             if( S_OK == SHGetFolderPath( NULL,
-                                         CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+                                         (b_appdata ? CSIDL_APPDATA :
+                                           CSIDL_PROFILE) | CSIDL_FLAG_CREATE,
                                          NULL, SHGFP_TYPE_CURRENT,
-                                         p_homedir ) )
+                                         psz_ACPhome ) )
             {
                 FreeLibrary( shfolder_dll );
-                return p_homedir;
+                return FromLocaleDup( psz_ACPhome );
             }
-            free( p_homedir );
         }
         FreeLibrary( shfolder_dll );
+    }
+
+#elif defined(UNDER_CE)
+
+#ifndef CSIDL_APPDATA
+#   define CSIDL_APPDATA 0x1A
+#endif
+
+    wchar_t p_whomedir[MAX_PATH];
+
+    /* get the "Application Data" folder for the current user */
+    if( SHGetSpecialFolderPath( NULL, p_whomedir, CSIDL_APPDATA, 1 ) )
+    {
+        char psz_ACPhome[2 * MAX_PATH];
+
+        sprintf( psz_ACPhome, "%ls", p_whomedir );
+        return FromLocaleDup( psz_ACPhome );
     }
 #endif
 
@@ -1582,24 +1810,30 @@ char *config_GetHomeDir( void )
     if( ( p_pw = getpwuid( getuid() ) ) == NULL )
 #endif
     {
-        if( ( p_tmp = getenv( "HOME" ) ) == NULL )
+        psz_localhome = getenv( "HOME" );
+        if( psz_localhome == NULL )
         {
-            if( ( p_tmp = getenv( "TMP" ) ) == NULL )
-            {
-                p_tmp = "/tmp";
-            }
+            psz_localhome = getenv( "TMP" );
+            if( psz_localhome == NULL )
+                psz_localhome = "/tmp";
         }
-
-        p_homedir = strdup( p_tmp );
     }
 #if defined(HAVE_GETPWUID)
     else
-    {
-        p_homedir = strdup( p_pw->pw_dir );
-    }
+        psz_localhome = p_pw->pw_dir;
 #endif
 
-    return p_homedir;
+    return FromLocaleDup( psz_localhome );
+}
+
+char *config_GetHomeDir( void )
+{
+    return GetDir( VLC_TRUE );
+}
+
+char *config_GetUserDir( void )
+{
+    return GetDir( VLC_FALSE );
 }
 
 

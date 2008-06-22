@@ -4,8 +4,8 @@
  * are a complete and portable C implementation, and may be replaced in certain
  * case by optimized functions.
  *****************************************************************************
- * Copyright (C) 1999, 2000 VideoLAN
- * $Id: i420_rgb_c.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999, 2000 the VideoLAN team
+ * $Id: i420_rgb_c.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************

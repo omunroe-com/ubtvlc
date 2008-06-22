@@ -49,8 +49,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12 /out:"plugins\libaccess_output_http_plugin.dll"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib comctl32.lib rpcrt4.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12 /opt:ref /out:"plugins\libaccess_output_http_plugin.dll"
 
 !ELSEIF  "$(CFG)" == "plugin_access_output_http - Win32 Debug"
 
@@ -73,8 +73,9 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12 /pdb:"plugins\libaccess_output_http_plugin.pdb" /out:"plugins\libaccess_output_http_plugin.dll"
+# SUBTRACT BASE LINK32 /pdb:none
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib comctl32.lib rpcrt4.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12 /pdb:"plugins\libaccess_output_http_plugin.pdb" /out:"plugins\libaccess_output_http_plugin.dll"
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
@@ -98,6 +99,16 @@ SOURCE="..\modules\access_output\http.c"
 # PROP Output_Dir "Debug\modules\access_output"
 # PROP Intermediate_Dir "Debug\modules\access_output"
 # End Source File
+# Begin Source File
+SOURCE="..\modules\access_output\bonjour.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=access_output_http" /D "MODULE_NAME_IS_access_output_http" 
+!IF "$(CFG)" == "plugin_access_output_http - Win32 Release"
+# PROP Output_Dir "Release\modules\access_output"
+# PROP Intermediate_Dir "Release\modules\access_output"
+!ELSEIF "$(CFG)" == "plugin_access_output_http - Win32 Debug"
+# PROP Output_Dir "Debug\modules\access_output"
+# PROP Intermediate_Dir "Debug\modules\access_output"
+# End Source File
 
 # End Group
 
@@ -105,6 +116,9 @@ SOURCE="..\modules\access_output\http.c"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 
+# Begin Source File
+SOURCE="..\modules\access_output\bonjour.h"
+# End Source File
 
 # End Group
 

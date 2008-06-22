@@ -1,8 +1,8 @@
 /*****************************************************************************
  * output.h: MacOS X Output Dialog
  *****************************************************************************
- * Copyright (C) 2002-2003 VideoLAN
- * $Id: output.h 7090 2004-03-15 19:33:18Z bigben $
+ * Copyright (C) 2002-2003 the VideoLAN team
+ * $Id: output.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -33,7 +33,7 @@
     IBOutlet id o_output_settings;
     IBOutlet id o_output_sheet;
     IBOutlet id o_btn_ok;
-        
+
     IBOutlet id o_options_lbl;
     IBOutlet id o_display;
     IBOutlet id o_method;
@@ -50,10 +50,10 @@
     IBOutlet id o_stream_ttl_lbl;
     IBOutlet id o_stream_type;
     IBOutlet id o_stream_type_lbl;
-    
+
     IBOutlet id o_mux_lbl;
     IBOutlet id o_mux_selector;
-    
+
     IBOutlet id o_transcode_audio_bitrate;
     IBOutlet id o_transcode_audio_bitrate_lbl;
     IBOutlet id o_transcode_audio_channels;
@@ -63,21 +63,28 @@
     IBOutlet id o_transcode_lbl;
     IBOutlet id o_transcode_video_bitrate;
     IBOutlet id o_transcode_video_bitrate_lbl;
+    IBOutlet id o_transcode_video_scale;
+    IBOutlet id o_transcode_video_scale_lbl;
     IBOutlet id o_transcode_video_chkbox;
     IBOutlet id o_transcode_video_selector;
-    
+
     IBOutlet id o_misc_lbl;
     IBOutlet id o_sap_chkbox;
-    IBOutlet id o_slp_chkbox;
     IBOutlet id o_channel_name;
     IBOutlet id o_channel_name_lbl;
-    
-    NSString *o_mrl;
+
+    IBOutlet id o_sdp_url;
+    IBOutlet id o_sdp_url_lbl;
+    IBOutlet id o_rtsp_chkbox;
+    IBOutlet id o_http_chkbox;
+    IBOutlet id o_file_chkbox;
+
+    NSArray *o_mrl;
     NSString *o_transcode;
 }
 
-- (void)setMRL:(NSString *)o_mrl_string;
-- (NSString *)getMRL;
+- (void)setMRL:(NSArray *)o_mrl_string;
+- (NSArray *)getMRL;
 - (void)setTranscode:(NSString *)o_transcode_string;
 
 - (void)initStrings;

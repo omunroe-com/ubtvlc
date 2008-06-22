@@ -8,8 +8,8 @@
  * 'm' stands for 'micro', since maximum resolution is the microsecond.
  * Functions prototyped are implemented in interface/mtime.c.
  *****************************************************************************
- * Copyright (C) 1996, 1997, 1998, 1999, 2000 VideoLAN
- * $Id: mtime.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1996, 1997, 1998, 1999, 2000 the VideoLAN team
+ * $Id: mtime.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -17,7 +17,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,7 +25,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -47,8 +47,13 @@
  *****************************************************************************/
 #define MSTRTIME_MAX_SIZE 22
 
+/* Well, Duh? But it does clue us in that we are converting from
+   millisecond quantity to a second quantity or vice versa.
+*/
+#define MILLISECONDS_PER_SEC 1000
+
 #define msecstotimestr(psz_buffer, msecs) \
-  secstotimestr( psz_buffer, (msecs / (int) 1000) )
+  secstotimestr( psz_buffer, (msecs / (int) MILLISECONDS_PER_SEC) )
 
 /*****************************************************************************
  * Prototypes
@@ -59,3 +64,20 @@ VLC_EXPORT( void,    mwait,    ( mtime_t date ) );
 VLC_EXPORT( void,    msleep,   ( mtime_t delay ) );
 VLC_EXPORT( char *,  secstotimestr, ( char *psz_buffer, int secs ) );
 
+/*****************************************************************************
+ * date_t: date incrementation without long-term rounding errors
+ *****************************************************************************/
+struct date_t
+{
+    mtime_t  date;
+    uint32_t i_divider_num;
+    uint32_t i_divider_den;
+    uint32_t i_remainder;
+};
+
+VLC_EXPORT( void,    date_Init,      ( date_t *, uint32_t, uint32_t ) );
+VLC_EXPORT( void,    date_Change,    ( date_t *, uint32_t, uint32_t ) );
+VLC_EXPORT( void,    date_Set,       ( date_t *, mtime_t ) );
+VLC_EXPORT( mtime_t, date_Get,       ( const date_t * ) );
+VLC_EXPORT( void,    date_Move,      ( date_t *, mtime_t ) );
+VLC_EXPORT( mtime_t, date_Increment, ( date_t *, uint32_t ) );

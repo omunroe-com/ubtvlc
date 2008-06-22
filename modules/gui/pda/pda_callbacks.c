@@ -1,10 +1,10 @@
 /*****************************************************************************
  * pda_callbacks.c : Callbacks for the pda Linux Gtk+ plugin.
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: pda_callbacks.c 7212 2004-03-31 22:55:48Z gbazin $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id: pda_callbacks.c 15092 2006-04-04 20:11:39Z jpsaman $
  *
- * Authors: Jean-Paul Saman <jpsaman@wxs.nl>
+ * Authors: Jean-Paul Saman <jpsaman _at_ videolan _dot_ org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -349,17 +349,15 @@ gboolean onPDADeleteEvent(GtkWidget *widget, GdkEvent *event, gpointer user_data
     return TRUE;
 }
 
-
 void onRewind(GtkButton *button, gpointer user_data)
 {
     intf_thread_t *p_intf = GtkGetIntf( button );
 
     if (p_intf->p_sys->p_input != NULL)
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_SLOWER );
+        var_SetVoid( p_intf->p_sys->p_input, "rate-slower" );
     }
 }
-
 
 void onPause(GtkButton *button, gpointer user_data)
 {
@@ -367,7 +365,7 @@ void onPause(GtkButton *button, gpointer user_data)
 
     if (p_intf->p_sys->p_input != NULL)
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_PAUSE );
+        var_SetInteger( p_intf->p_sys->p_input, "state", PAUSE_S );
     }
 }
 
@@ -394,7 +392,6 @@ void onPlay(GtkButton *button, gpointer user_data)
     }
 }
 
-
 void onStop(GtkButton *button, gpointer user_data)
 {
     intf_thread_t *p_intf = GtkGetIntf( GTK_WIDGET( button ) );
@@ -408,14 +405,13 @@ void onStop(GtkButton *button, gpointer user_data)
     }
 }
 
-
 void onForward(GtkButton *button, gpointer user_data)
 {
     intf_thread_t *p_intf = GtkGetIntf( button );
 
     if (p_intf->p_sys->p_input != NULL)
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_FASTER );
+        var_SetVoid( p_intf->p_sys->p_input, "rate-faster" );
     }
 }
 
@@ -432,7 +428,6 @@ void onAbout(GtkButton *button, gpointer user_data)
     }
 }
 
-
 gboolean SliderRelease(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
     intf_thread_t *p_intf = GtkGetIntf( widget );
@@ -445,7 +440,6 @@ gboolean SliderRelease(GtkWidget *widget, GdkEventButton *event, gpointer user_d
     return TRUE;
 }
 
-
 gboolean SliderPress(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
     intf_thread_t *p_intf = GtkGetIntf( widget );
@@ -455,7 +449,7 @@ gboolean SliderPress(GtkWidget *widget, GdkEventButton *event, gpointer user_dat
     p_intf->p_sys->b_slider_free = 0;
     vlc_mutex_unlock( &p_intf->change_lock );
 
-    return TRUE;
+    return FALSE;
 }
 
 void SliderMove(GtkRange *range, GtkScrollType scroll, gpointer user_data)
@@ -873,7 +867,7 @@ void onDeletePlaylist(GtkButton *button, gpointer user_data)
                  */
                 p_rows = g_list_reverse( p_rows );
             }
-    
+
             for (p_node=p_rows; p_node!=NULL; p_node = p_node->next)
             {
                 GtkTreeIter iter;
@@ -887,7 +881,7 @@ void onDeletePlaylist(GtkButton *button, gpointer user_data)
                         gint item;
 
                         gtk_tree_model_get(p_model, &iter, 2, &item, -1);
-                        playlist_Delete(p_playlist, item);
+                        playlist_LockDelete(p_playlist, item);
                     }
                 }
             }
@@ -929,7 +923,7 @@ void onClearPlaylist(GtkButton *button, gpointer user_data)
 
     for(item = p_playlist->i_size - 1; item >= 0 ;item-- )
     {
-        playlist_Delete( p_playlist, item);
+        playlist_LockDelete( p_playlist, item);
     }
     vlc_object_release( p_playlist );
 
@@ -1114,7 +1108,7 @@ void onAddTranscodeToPlaylist(GtkButton *button, gpointer user_data)
     if (i_pos>=VLC_MAX_MRL) ppsz_options[i_options][VLC_MAX_MRL-1] = '\0';
     i_pos += snprintf( &ppsz_options[i_options][i_pos], VLC_MAX_MRL - i_pos, "mux=%s,", (char*)p_std_muxer);
     if (i_pos>=VLC_MAX_MRL) ppsz_options[i_options][VLC_MAX_MRL-1] = '\0';
-    i_pos += snprintf( &ppsz_options[i_options][i_pos], VLC_MAX_MRL - i_pos, "url=%s", (char*)p_std_url);
+    i_pos += snprintf( &ppsz_options[i_options][i_pos], VLC_MAX_MRL - i_pos, "dst=%s", (char*)p_std_url);
     if (i_pos>=VLC_MAX_MRL) ppsz_options[i_options][VLC_MAX_MRL-1] = '\0';
 
     if (strncasecmp( (const char*)p_std_access, "udp", 3)==0)

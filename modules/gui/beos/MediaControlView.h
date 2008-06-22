@@ -1,8 +1,8 @@
 /*****************************************************************************
  * MediaControlView.h: beos interface
  *****************************************************************************
- * Copyright (C) 1999, 2000, 2001 VideoLAN
- * $Id: MediaControlView.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999, 2000, 2001 the VideoLAN team
+ * $Id: MediaControlView.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Tony Castley <tony@castley.net>
  *          Stephan Aßmus <stippi@yellowbites.com>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef BEOS_MEDIA_CONTROL_VIEW_H
@@ -38,7 +38,7 @@ class VolumeSlider;
 class MediaControlView : public BBox
 {
  public:
-								MediaControlView( BRect frame, intf_thread_t *p_intf );
+								MediaControlView( intf_thread_t * p_intf, BRect frame );
 	virtual						~MediaControlView();
 
 								// BBox
@@ -54,13 +54,10 @@ class MediaControlView : public BBox
 			void				SetStatus(int status, int rate); 
 			void				SetEnabled(bool enable);
 			void				SetAudioEnabled(bool enable);
-			uint32				GetSeekTo() const;
 			uint32				GetVolume() const;
 			void				SetSkippable(bool backward,
 											 bool forward);
 			void				SetMuted(bool mute);
-
-			sem_id				fScrubSem;
     
  private:
 			void				_LayoutControls(BRect frame) const;
@@ -70,6 +67,7 @@ class MediaControlView : public BBox
 											   bool resizeWidth = false,
 											   bool resizeHeight = false) const;
 
+			intf_thread_t *     p_intf;
 
 			VolumeSlider*		fVolumeSlider;
 			SeekSlider*			fSeekSlider;
@@ -88,17 +86,15 @@ class MediaControlView : public BBox
 			BRect				fOldBounds;
 			bool                fIsEnabled;
 			
-			intf_thread_t *     p_intf;
 };
 
 class SeekSlider : public BControl
 {
  public:
-								SeekSlider(BRect frame,
+								SeekSlider(intf_thread_t * p_intf,
+								           BRect frame,
 										   const char* name,
-										   MediaControlView* owner,
-										   int32 minValue,
-										   int32 maxValue);
+										   MediaControlView* owner );
 
 	virtual						~SeekSlider();
 
@@ -121,14 +117,10 @@ private:
 											 rgb_color top,
 											 rgb_color right,
 											 rgb_color bottom);
-			void				_BeginSeek();
-			void				_Seek();
-			void				_EndSeek();
 
+            intf_thread_t     * p_intf;
 			MediaControlView*	fOwner;	
 			bool				fTracking;
-			int32				fMinValue;
-			int32				fMaxValue;
 };
 
 class VolumeSlider : public BControl

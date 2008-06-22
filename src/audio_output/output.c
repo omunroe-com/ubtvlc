@@ -1,8 +1,8 @@
 /*****************************************************************************
  * output.c : internal management of output streams for the audio output
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: output.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id: output.c 20535 2007-06-12 18:27:18Z fenrir $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -57,7 +57,7 @@ int aout_OutputNew( aout_instance_t * p_aout,
     p_aout->output.p_module = module_Need( p_aout, "audio output", "$aout", 0);
     if ( p_aout->output.p_module == NULL )
     {
-        msg_Err( p_aout, "no suitable aout module" );
+        msg_Err( p_aout, "no suitable audio output module" );
         vlc_mutex_unlock( &p_aout->output_fifo_lock );
         return -1;
     }
@@ -186,15 +186,16 @@ int aout_OutputNew( aout_instance_t * p_aout,
         p_aout->mixer.mixer.i_format = p_format->i_format;
     }
 
-    aout_FormatPrint( p_aout, "mixer", &p_aout->output.output );
+    aout_FormatPrint( p_aout, "mixer", &p_aout->mixer.mixer );
 
     /* Create filters. */
+    p_aout->output.i_nb_filters = 0;
     if ( aout_FiltersCreatePipeline( p_aout, p_aout->output.pp_filters,
                                      &p_aout->output.i_nb_filters,
                                      &p_aout->mixer.mixer,
                                      &p_aout->output.output ) < 0 )
     {
-        msg_Err( p_aout, "couldn't set an output pipeline" );
+        msg_Err( p_aout, "couldn't create audio output pipeline" );
         module_Unneed( p_aout, p_aout->output.p_module );
         return -1;
     }
@@ -246,6 +247,12 @@ void aout_OutputPlay( aout_instance_t * p_aout, aout_buffer_t * p_buffer )
                       p_aout->output.i_nb_filters,
                       &p_buffer );
 
+    if( p_buffer->i_nb_bytes == 0 )
+    {
+        aout_BufferFree( p_buffer );
+        return;
+    }
+
     vlc_mutex_lock( &p_aout->output_fifo_lock );
     aout_FifoPush( p_aout, &p_aout->output.fifo, p_buffer );
     p_aout->output.pf_play( p_aout );
@@ -269,7 +276,12 @@ aout_buffer_t * aout_OutputNextBuffer( aout_instance_t * p_aout,
     vlc_mutex_lock( &p_aout->output_fifo_lock );
 
     p_buffer = p_aout->output.fifo.p_first;
-    while ( p_buffer && p_buffer->start_date < mdate() - AOUT_PTS_TOLERANCE )
+
+    /* Drop the audio sample if the audio output is really late.
+     * In the case of b_can_sleek, we don't use a resampler so we need to be
+     * a lot more severe. */
+    while ( p_buffer && p_buffer->start_date <
+            (b_can_sleek ? start_date : mdate()) - AOUT_PTS_TOLERANCE )
     {
         msg_Dbg( p_aout, "audio output is too slow ("I64Fd"), "
                  "trashing "I64Fd"us", mdate() - p_buffer->start_date,
@@ -284,7 +296,7 @@ aout_buffer_t * aout_OutputNextBuffer( aout_instance_t * p_aout,
         p_aout->output.fifo.pp_last = &p_aout->output.fifo.p_first;
 
 #if 0 /* This is bad because the audio output might just be trying to fill
-       * in it's internal buffers. And anyway, it's up to the audio output
+       * in its internal buffers. And anyway, it's up to the audio output
        * to deal with this kind of starvation. */
 
         /* Set date to 0, to allow the mixer to send a new buffer ASAP */
@@ -300,7 +312,8 @@ aout_buffer_t * aout_OutputNextBuffer( aout_instance_t * p_aout,
     }
 
     /* Here we suppose that all buffers have the same duration - this is
-     * generally true, and anyway if it's wrong it won't be a disaster. */
+     * generally true, and anyway if it's wrong it won't be a disaster.
+     */
     if ( p_buffer->start_date > start_date
                          + (p_buffer->end_date - p_buffer->start_date) )
     /*
@@ -310,10 +323,12 @@ aout_buffer_t * aout_OutputNextBuffer( aout_instance_t * p_aout,
      * --Gibalou
      */
     {
+        const mtime_t i_delta = p_buffer->start_date - start_date;
         vlc_mutex_unlock( &p_aout->output_fifo_lock );
+
         if ( !p_aout->output.b_starving )
             msg_Dbg( p_aout, "audio output is starving ("I64Fd"), "
-                     "playing silence", p_buffer->start_date - start_date );
+                     "playing silence", i_delta );
         p_aout->output.b_starving = 1;
         return NULL;
     }

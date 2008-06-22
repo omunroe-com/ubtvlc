@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ctrl_move.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_move.hpp 7073 2004-03-14 14:33:12Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: ctrl_move.hpp 16767 2006-09-21 14:32:45Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CTRL_MOVE_HPP
@@ -58,9 +58,11 @@ class CtrlMove: public CtrlFlat
         /// Get the position of the decorated control in the layout, if any
         virtual const Position *getPosition() const;
 
-        static void transMovingMoving( SkinObject *pCtrl );
-        static void transStillMoving( SkinObject *pCtrl );
-        static void transMovingStill( SkinObject *pCtrl );
+        /// Method called when the control is resized
+        virtual void onResize();
+
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return m_rCtrl.getType(); }
 
     private:
         FSM m_fsm;
@@ -74,10 +76,11 @@ class CtrlMove: public CtrlFlat
         EvtGeneric *m_pEvt;
         /// Position of the click that started the move
         int m_xPos, m_yPos;
-        /// Callbacks
-        Callback m_cmdMovingMoving;
-        Callback m_cmdStillMoving;
-        Callback m_cmdMovingStill;
-};
+
+        /// Callback objects
+        DEFINE_CALLBACK( CtrlMove, MovingMoving )
+        DEFINE_CALLBACK( CtrlMove, StillMoving )
+        DEFINE_CALLBACK( CtrlMove, MovingStill )
+ };
 
 #endif

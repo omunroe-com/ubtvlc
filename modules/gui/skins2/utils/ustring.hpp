@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ustring.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ustring.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: ustring.hpp 15154 2006-04-09 14:29:26Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef USTRING_HPP
@@ -81,6 +81,9 @@ class UString: public SkinObject
         /// Returns a string composed of copies of the lesser of n and size()
         /// characters in this string starting at index position
         UString substr( uint32_t position = 0, uint32_t n = npos) const;
+
+        /// Build a string from an integer
+        static UString fromInt(intf_thread_t *pIntf, int number);
 
         /// XXX: temporary
         void debug() const;

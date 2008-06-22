@@ -341,7 +341,8 @@ the Boston strangler is to the woman home alone.
 
   -- #videolan
 %
-<Meuuh> at the salsa lesson tonight, a girl told me that she was very happy to          dance with me
+<Meuuh> at the salsa lesson tonight, a girl told me that she was very happy to  
+        dance with me
 <Meuuh> do you think it means something ?
 <Dnumgis> Probably that she finally found someone that was worse at dancing 
           than she
@@ -526,5 +527,152 @@ the Boston strangler is to the woman home alone.
 -!- kixx_ changed the topic of #videolan to: VLC 0.7.0 :
           http://www.videolan.org/ | Fenrir ta cotiz !
 
+  -- #videolan
+%
+
+< zorglub> vlc file1.mpg :start-time=300 :stop-time=420 --sout 
+                    file/ps:file2.mpg
+< boggle> sgagers: use zorglubs command, it will copy the needed 
+                   timeslice to file2.mpeg
+< sgagers> boggle: zorglubs is an utility of ffmpeg?
+
+  -- #videolan
+%
+<Golf3r_1> hello
+<Golf3r_1> any place where I can get golf videos ?
+<E-bola> lol
+<E-bola> are u serious?
+<Golf3r_1> fuk off
+*** Signoff: Golf3r_1 ("Leaving")
+
+  -- #videolan
+%
+<Meuuh> and what's the news ?
+<nto> Mac OS 10.2 and 10.3 support hopefully
+<nto> Win98 maybe
+<Meuuh> haven't had any chance to test it ?
+<nto> I need to send a new version to a tester
+<E-bola> hire him meuuh :P
+<Meuuh> E-bola : we already did :p
+<E-bola> ahhh
+<E-bola> lol
+
+  -- #videolan
+%
+*** Bond470 (n=3e30a4ee@krishna.via.ecp.fr) has joined channel #videolan
+<Bond470> olas
+<Bond470> ;)
+<Meuuh> dionoea ?
+<Bond470> lisboa
+<Bond470> e tu?
+
+  -- #videolan
+%
+<thedj> lol, fen is a la(i)mer
+<thedj> fen [n=laimar@217.167.236.61]
+
+  -- #videolan
+%
+<E-bola> what is all the fortune.txt stuff?
+<E-bola> some internal french joke?
+<E-bola> lol
+<E-bola> ohh chan quotes
+<E-bola> wtf im in it lol
+
+  -- #videolan
+%
+<zorglub> gibalou: y'a un doc quelque part qui explique un peu plus le format
+          real ou fen a fait le demux directement en lisant des dumps / le
+          demuxer de mplayer ?
+<gibalou> zorglub: la meilleure doc c'est le code de mplayer/xine
+<zorglub> c'est bien ce que je craignais :)
+<zorglub> j'ai pas regardé xine ceci dit
+<zorglub> c'est plus agréable à lire que mplayer
+<sam> mouahaha
+<sam> non rien.
+<zorglub> ah bah si quand même
+<bigben> tu veux dire que les variables ont un nom qui reflète ce qu'elles
+         font ?
+<sam> avoir des noms de variables qu'on peut prononcer nuit fortement à la
+      lisibilité car cela détourne l'attention du vrai code, constitué des
+      mots-clés du langage et des divers opérateurs
+<sam> j'appelle mes variables Illl, lIll, lIlI, IllI, IlII, etc.
+  -- #videolan
+%
+20:47:12 < glspi> can you get rid of the wxwidgets interface and only show the 
+                  video somehow?
+20:47:17 < zorglub> -I dummy
+20:50:10 < glspi> -I didn't work btw, in windows at least
+20:52:28 < glspi> i don't see it in interface/general either! ahhh :(
+20:58:46 < glspi> ok i thought you were calling ME dummy, not saying use -I 
+                  dummy :p
+  -- #videolan
+%
+-!- Bond631 [n=548d9042@krishna.via.ecp.fr] has joined #videolan
+<Bond631> hi
+<Bond631> how to activate hotkeys?
+-!- Bond631 [n=548d9042@krishna.via.ecp.fr] has quit [Client Quit]
+<Trax``> I think Bond631 found the hotkey for quit
+
+  -- #videolan
+%
+< dionoea> http://nightlies.videolan.org
+< arakis> lol....sounds like a porn site!!!
+
+  -- #videolan
+%
+-!- tumu [n=tumu@GYKMDCCCXXIX.dsl.saunalahti.fi] has quit ["~"]
+* Dnumgis notes that tumu must be one of very few with dsl in their sauna
+
+  -- #videolan
+%
+<Dnumgis> thedj: gibalou quits officially, or has he just generally
+          disappeared?
+<sam> he's probably getting married or something even worse :(
+
+  -- #videolan
+%
+<xtophe> kee-un: you need to slap zorglub
+<xtophe> kee-un: oups no i'm telling a lie
+<kee-un> xtophe: too late, I slapped him
+<kee-un> xtophe: I'm sure he deserved it for something else anyway
+
+  -- #videolan
+%
+VLC is the greatest thing since sliced bread!
+
+ -- http://forum.videolan.org/
+%
+* E-bola is bouncing up and down while enjoying: HTTP/1.1 200 OK
+* E-bola is bouncing up and down while enjoying: Content-type: text/html; charset=UTF-8
+* E-bola is bouncing up and down while enjoying: Cache-Control: no-cache
+* E-bola is bouncing up and down while enjoying: Content-Length: 25
+* E-bola is bouncing up and down while enjoying: --
+%
+<Meuuh> sam : could you delete FK_ from the access list ?
+<sam> sure, why?
+<Meuuh> he's now known as feepk
+<sam> ah, ok
+<sam> I thought he was banned for sending a patch to mplayer
+  -- #videolan
+%
+< Dnumgis> Meuuh: munhoney is writing some fec system based on vlc
+< Meuuh> Dnumgis : a fuck system ? I may be interested !
+< Dnumgis> Meuuh: still single? :)
+< Meuuh> Dnumgis : and always will be
+  -- #videolan
+%
+<Dnumgis_> xtophe: look at it this way:
+<Dnumgis_> solve some bounties involving vlc and earn some extra money
+<Dnumgis_> use this money and your natural charm to get a girlfriend
+<Dnumgis_> make sure Meuuh sees it
+<Dnumgis_> Meuuh would become horribly jealous and try to repeat your trick
+           with great vigor and solv all remaining bugs with vlc
+<Dnumgis_> and the (vlc)world becomes a better place
+<j-b> Dnumgis_: do you have a girlfriend ?
+<Dnumgis_> j-b: not at the moment, no
+<j-b> Dnumgis_: so why don't you try this technick ?
+<Dnumgis_> j-b: I don't live close enough to Meuuh 
+<E-bola> thats some good norwegian reasoning
   -- #videolan
 %

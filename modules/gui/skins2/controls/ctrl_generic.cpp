@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ctrl_generic.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_generic.cpp 7073 2004-03-14 14:33:12Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: ctrl_generic.cpp 16457 2006-08-31 20:51:12Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "ctrl_generic.hpp"
@@ -69,12 +69,41 @@ void CtrlGeneric::setLayout( GenericLayout *pLayout,
 }
 
 
-void CtrlGeneric::notifyLayout() const
+void CtrlGeneric::notifyLayout( int width, int height,
+                                int xOffSet, int yOffSet ) const
 {
     // Notify the layout
     if( m_pLayout )
     {
-        m_pLayout->onControlUpdate( *this );
+        m_pLayout->onControlUpdate( *this, width, height, xOffSet, yOffSet );
+    }
+}
+
+
+void CtrlGeneric::notifyLayoutMaxSize( const Box *pImg1, const Box *pImg2 )
+{
+    if( pImg1 == NULL )
+    {
+        if( pImg2 == NULL )
+        {
+            notifyLayout();
+        }
+        else
+        {
+            notifyLayout( pImg2->getWidth(), pImg2->getHeight() );
+        }
+    }
+    else
+    {
+        if( pImg2 == NULL )
+        {
+            notifyLayout( pImg1->getWidth(), pImg1->getHeight() );
+        }
+        else
+        {
+            notifyLayout( max( pImg1->getWidth(), pImg2->getWidth() ),
+                          max( pImg1->getHeight(), pImg2->getHeight() ) );
+        }
     }
 }
 
@@ -126,9 +155,9 @@ bool CtrlGeneric::isVisible() const
 }
 
 
-void CtrlGeneric::onUpdate( Subject<VarBool> &rVariable )
+void CtrlGeneric::onUpdate( Subject<VarBool> &rVariable, void *arg  )
 {
-    // Is it the visibily variable ?
+    // Is it the visibility variable ?
     if( &rVariable == m_pVisible )
     {
         // Redraw the layout

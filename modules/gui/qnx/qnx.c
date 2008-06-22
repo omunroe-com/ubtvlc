@@ -1,7 +1,7 @@
 /*****************************************************************************
  * qnx.c : QNX RTOS plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
+ * Copyright (C) 2000, 2001 the VideoLAN team
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *      
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -44,6 +44,8 @@ vlc_module_begin();
     set_description( _("QNX RTOS video and audio output") );
     set_capability( "video output", 100 );
     set_callbacks( E_(OpenVideo), E_(CloseVideo) );
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_MAIN );
     add_submodule();
         set_capability( "audio output", 100 );
         set_callbacks( E_(OpenAudio), E_(CloseAudio) );

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * top_window.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: top_window.hpp 7259 2004-04-03 11:30:26Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: top_window.hpp 15481 2006-04-30 18:07:40Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef TOP_WINDOW_HPP
@@ -44,11 +44,13 @@ class TopWindow: public GenericWindow
     public:
         TopWindow( intf_thread_t *pIntf, int xPos, int yPos,
                    WindowManager &rWindowManager,
-                   bool dragDrop, bool playOnDrop );
+                   bool dragDrop, bool playOnDrop, bool visible );
         virtual ~TopWindow();
 
         /// Methods to process OS events.
+        virtual void processEvent( EvtRefresh &rEvtRefresh );
         virtual void processEvent( EvtFocus &rEvtFocus );
+        virtual void processEvent( EvtMenu &rEvtMenu );
         virtual void processEvent( EvtMotion &rEvtMotion );
         virtual void processEvent( EvtMouse &rEvtMouse );
         virtual void processEvent( EvtLeave &rEvtLeave );
@@ -76,14 +78,22 @@ class TopWindow: public GenericWindow
         /// Called by a control when its tooltip changed
         virtual void onTooltipChange( const CtrlGeneric &rCtrl );
 
+        /// Get the initial visibility status
+        bool isVisible() const { return m_visible; }
+
     protected:
         /// Actually show the window
         virtual void innerShow();
+
+        /// Actually hide the window
+        virtual void innerHide();
 
     private:
         /// Change the active layout
         virtual void setActiveLayout( GenericLayout *pLayout );
 
+        /// Initial visibility status
+        bool m_visible;
         /// Window manager
         WindowManager &m_rWindowManager;
         /// Current active layout of the window

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * var_bool.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: var_bool.hpp 7561 2004-04-29 22:09:23Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: var_bool.hpp 16457 2006-08-31 20:51:12Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef VAR_BOOL_HPP
@@ -99,7 +99,7 @@ class VarBoolAndBool: public VarBool, public Observer<VarBool>
         virtual bool get() const { return m_rVar1.get() && m_rVar2.get(); }
 
         // Called when one of the observed variables is changed
-        void onUpdate( Subject<VarBool> &rVariable );
+        void onUpdate( Subject<VarBool> &rVariable, void* );
 
     private:
         /// Boolean variables
@@ -118,7 +118,7 @@ class VarBoolOrBool: public VarBool, public Observer<VarBool>
         virtual bool get() const { return m_rVar1.get() || m_rVar2.get(); }
 
         // Called when one of the observed variables is changed
-        void onUpdate( Subject<VarBool> &rVariable );
+        void onUpdate( Subject<VarBool> &rVariable, void* );
 
     private:
         /// Boolean variables
@@ -137,7 +137,7 @@ class VarNotBool: public VarBool, public Observer<VarBool>
         virtual bool get() const { return !m_rVar.get(); }
 
         // Called when the observed variable is changed
-        void onUpdate( Subject<VarBool> &rVariable );
+        void onUpdate( Subject<VarBool> &rVariable, void* );
 
     private:
         /// Boolean variable

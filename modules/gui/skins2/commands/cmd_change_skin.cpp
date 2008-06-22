@@ -1,11 +1,11 @@
 /*****************************************************************************
  * cmd_change_skin.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_change_skin.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_change_skin.cpp 16647 2006-09-14 14:58:57Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "cmd_change_skin.hpp"
@@ -28,6 +28,7 @@
 #include "../src/os_loop.hpp"
 #include "../src/theme.hpp"
 #include "../src/theme_loader.hpp"
+#include "../src/window_manager.hpp"
 
 
 void CmdChangeSkin::execute()
@@ -37,6 +38,7 @@ void CmdChangeSkin::execute()
 
     if( pOldTheme )
     {
+        pOldTheme->getWindowManager().saveVisibility();
         pOldTheme->getWindowManager().hideAll();
     }
 
@@ -44,7 +46,7 @@ void CmdChangeSkin::execute()
     if( loader.load( m_file ) )
     {
         // Everything went well
-        msg_Dbg( getIntf(), "New theme successfully loaded (%s)",
+        msg_Info( getIntf(), "new theme successfully loaded (%s)",
                  m_file.c_str() );
         if( pOldTheme )
         {
@@ -53,14 +55,14 @@ void CmdChangeSkin::execute()
     }
     else if( pOldTheme )
     {
-        msg_Err( getIntf(), "A problem occurred when loading the new theme,"
+        msg_Warn( getIntf(), "a problem occurred when loading the new theme,"
                   " restoring the previous one" );
         getIntf()->p_sys->p_theme = pOldTheme;
-        pOldTheme->getWindowManager().showAll();
+        pOldTheme->getWindowManager().restoreVisibility();
     }
     else
     {
-        msg_Err( getIntf(), "Cannot load the theme, aborting" );
+        msg_Err( getIntf(), "cannot load the theme, aborting" );
         // Quit
         CmdQuit cmd( getIntf() );
         cmd.execute();

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * s16tofloat32.c : converter from signed 16 bits integer to float32
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: s16tofloat32.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002-2006 the VideoLAN team
+ * $Id: s16tofloat32.c 14997 2006-03-31 15:15:07Z fkuehne $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -38,12 +38,16 @@ static int  Create    ( vlc_object_t * );
 
 static void DoWork    ( aout_instance_t *, aout_filter_t *, aout_buffer_t *,
                         aout_buffer_t * );
+static void DoWork24  ( aout_instance_t *, aout_filter_t *, aout_buffer_t *,
+                        aout_buffer_t * );
 
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( _("audio filter for s16->float32 conversion") );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_MISC );
+    set_description( _("Audio filter for s16->float32 conversion") );
     set_capability( "audio filter", 1 );
     set_callbacks( Create, NULL );
 vlc_module_end();
@@ -57,7 +61,8 @@ static int Create( vlc_object_t *p_this )
 {
     aout_filter_t * p_filter = (aout_filter_t *)p_this;
 
-    if ( p_filter->input.i_format != AOUT_FMT_S16_NE
+    if ( ( p_filter->input.i_format != AOUT_FMT_S16_NE &&
+           p_filter->input.i_format != AOUT_FMT_S24_NE )
           || p_filter->output.i_format != VLC_FOURCC('f','l','3','2') )
     {
         return -1;
@@ -68,7 +73,11 @@ static int Create( vlc_object_t *p_this )
         return -1;
     }
 
-    p_filter->pf_do_work = DoWork;
+    if( p_filter->input.i_format == AOUT_FMT_S24_NE )
+        p_filter->pf_do_work = DoWork24;
+    else
+        p_filter->pf_do_work = DoWork;
+
     p_filter->b_in_place = VLC_TRUE;
 
     return 0;
@@ -95,9 +104,9 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
         /* This is walken's trick based on IEEE float format. On my PIII
          * this takes 16 seconds to perform one billion conversions, instead
          * of 19 seconds for the above division. */
-        int32_t i_out = *p_in + 0x43c00000;
-        float f_out = *(float *)(intptr_t)&i_out;
-        *p_out = f_out - 384.0;
+        union { float f; int32_t i; } u;
+        u.i = *p_in + 0x43c00000;
+        *p_out = u.f - 384.0;
 #endif
 
         p_in--; p_out--;
@@ -107,3 +116,27 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
     p_out_buf->i_nb_bytes = p_in_buf->i_nb_bytes * 2;
 }
 
+static void DoWork24( aout_instance_t * p_aout, aout_filter_t * p_filter,
+                      aout_buffer_t * p_in_buf, aout_buffer_t * p_out_buf )
+{
+    int i = p_in_buf->i_nb_samples * aout_FormatNbChannels( &p_filter->input );
+
+    /* We start from the end because b_in_place is true */
+    uint8_t * p_in = (uint8_t *)p_in_buf->p_buffer + (i - 1) * 3;
+    float * p_out = (float *)p_out_buf->p_buffer + i - 1;
+
+    while( i-- )
+    {
+#ifdef WORDS_BIGENDIAN
+        *p_out = ((float)( (((int32_t)*(int16_t *)(p_in)) << 8) + p_in[2]))
+#else
+        *p_out = ((float)( (((int32_t)*(int16_t *)(p_in+1)) << 8) + p_in[0]))
+#endif
+            / 8388608.0;
+
+        p_in -= 3; p_out--;
+    }
+
+    p_out_buf->i_nb_samples = p_in_buf->i_nb_samples;
+    p_out_buf->i_nb_bytes = p_in_buf->i_nb_bytes * 4 / 3;
+}

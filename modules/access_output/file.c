@@ -1,8 +1,8 @@
 /*****************************************************************************
  * file.c
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: file.c 7522 2004-04-27 16:35:15Z sam $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id: file.c 17451 2006-11-04 14:41:14Z md $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -29,11 +29,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <time.h>
 #include <fcntl.h>
 #include <errno.h>
 
 #include <vlc/vlc.h>
 #include <vlc/sout.h>
+#include "charset.h"
 
 #ifdef HAVE_UNISTD_H
 #   include <unistd.h>
@@ -42,14 +44,11 @@
 #endif
 
 /* For those platforms that don't use these */
-#ifndef S_IRGRP
-#   define S_IRGRP 0
-#endif
-#ifndef S_IROTH
-#   define S_IROTH 0
-#endif
 #ifndef STDOUT_FILENO
 #   define STDOUT_FILENO 1
+#endif
+#ifndef O_LARGEFILE
+#   define O_LARGEFILE 0
 #endif
 
 /*****************************************************************************
@@ -65,7 +64,10 @@ static void Close( vlc_object_t * );
 
 vlc_module_begin();
     set_description( _("File stream output") );
+    set_shortname( _("File" ));
     set_capability( "sout access", 50 );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_ACO );
     add_shortcut( "file" );
     add_shortcut( "stream" );
     add_bool( SOUT_CFG_PREFIX "append", 0, NULL, APPEND_TEXT,APPEND_LONGTEXT,
@@ -99,42 +101,95 @@ static int Open( vlc_object_t *p_this )
     int                 i_flags;
     vlc_value_t         val;
 
-    sout_ParseCfg( p_access, SOUT_CFG_PREFIX, ppsz_sout_options, p_access->p_cfg );
-
-    if( !( p_access->p_sys = malloc( sizeof( sout_access_out_sys_t ) ) ) )
-    {
-        msg_Err( p_access, "out of memory" );
-        return( VLC_EGENERIC );
-    }
+    sout_CfgParse( p_access, SOUT_CFG_PREFIX, ppsz_sout_options, p_access->p_cfg );
 
     if( !p_access->psz_name )
     {
         msg_Err( p_access, "no file name specified" );
         return VLC_EGENERIC;
     }
-    i_flags = O_RDWR|O_CREAT;
+
+    if( !( p_access->p_sys = malloc( sizeof( sout_access_out_sys_t ) ) ) )
+    {
+        return( VLC_ENOMEM );
+    }
+
+    i_flags = O_RDWR|O_CREAT|O_LARGEFILE;
 
     var_Get( p_access, SOUT_CFG_PREFIX "append", &val );
-    if( val.b_bool )
-    {
-        i_flags |= O_APPEND;
-    }
-    else
-    {
-        i_flags |= O_TRUNC;
-    }
+    i_flags |= val.b_bool ? O_APPEND : O_TRUNC;
+
     if( !strcmp( p_access->psz_name, "-" ) )
     {
+#if defined(WIN32)
+        setmode (STDOUT_FILENO, O_BINARY);
+#endif
         p_access->p_sys->i_handle = STDOUT_FILENO;
         msg_Dbg( p_access, "using stdout" );
     }
-    else if( ( p_access->p_sys->i_handle =
-               open( p_access->psz_name, i_flags,
-                     S_IWRITE | S_IREAD | S_IRGRP | S_IROTH ) ) == -1 )
+    else
     {
-        msg_Err( p_access, "cannot open `%s'", p_access->psz_name );
-        free( p_access->p_sys );
-        return( VLC_EGENERIC );
+        char *psz_tmp, *psz_tmp2, *psz_localname, *psz_rewriten;
+        int fd, i, i_length = strlen( p_access->psz_name );
+        for( i = 0, psz_tmp = p_access->psz_name ;
+             ( psz_tmp = strstr( psz_tmp, "%T" ) ) ; psz_tmp++, i++ )
+            ;
+        if( i )
+        {
+            i_length += 32 * i;
+            psz_rewriten = (char *) malloc( i_length );
+            if( ! psz_rewriten )
+                return ( VLC_EGENERIC );
+            psz_tmp  = p_access->psz_name;
+            psz_tmp2 = psz_rewriten;
+            while( *psz_tmp )
+            {
+                if( ( *psz_tmp == '%' ) && ( *(psz_tmp+1) == 'T' ) )
+                {
+                    time_t t;
+                    time( &t );
+                    psz_tmp2 += sprintf( psz_tmp2, "%d", (int) t );
+                    psz_tmp+=2;
+                }
+                else
+                    *psz_tmp2++ = *psz_tmp++;
+            }
+            *psz_tmp2 = *psz_tmp;
+        }
+        else
+        {
+            psz_rewriten =  p_access->psz_name;
+        }
+#if defined (WIN32)
+
+        if( GetVersion() < 0x80000000 )
+        {
+            /* for Windows NT and above */
+            wchar_t wpath[MAX_PATH + 1];
+
+            if( !MultiByteToWideChar( CP_UTF8, 0, psz_rewriten, -1,
+                wpath,MAX_PATH ) ) return VLC_EGENERIC;
+
+            wpath[MAX_PATH] = L'\0';
+
+            fd = _wopen( wpath, i_flags, 0666  );
+        }
+        else
+#endif
+        {
+            psz_localname = ToLocale( psz_rewriten );
+            fd = open( psz_localname, i_flags, 0666 );
+            LocaleFree( psz_localname );
+        }
+        if ( i ) free( psz_rewriten );
+        if( fd == -1 )
+        {
+            msg_Err( p_access, "cannot open `%s' (%s)", p_access->psz_name,
+                     strerror( errno ) );
+            free( p_access->p_sys );
+            return( VLC_EGENERIC );
+        }
+        p_access->p_sys->i_handle = fd;
     }
 
     p_access->pf_write = Write;

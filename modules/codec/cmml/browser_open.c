@@ -3,9 +3,9 @@
  *****************************************************************************
  * Copyright (C) 2004 Commonwealth Scientific and Industrial Research
  *                    Organisation (CSIRO) Australia
- * Copyright (C) 2004 VideoLAN
+ * Copyright (C) 2004 the VideoLAN team
  *
- * $Id: browser_open.c 7397 2004-04-20 17:27:30Z sam $
+ * $Id: browser_open.c 14104 2006-02-01 13:01:06Z sam $
  *
  * Authors: Andre Pang <Andre.Pang@csiro.au>
  *
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <stdlib.h>
@@ -29,15 +29,19 @@
 
 #include "xstrcat.h"
 
-int browser_Open( char *psz_url )
+int browser_Open( const char *psz_url )
 {
-#ifdef SYS_DARWIN
+#ifdef __APPLE__
     char *psz_open_commandline;
 
-    psz_open_commandline = strdup( "open " );
-    xstrcat( psz_open_commandline, psz_url );
-        
+    psz_open_commandline = strdup( "/usr/bin/open " );
+    psz_open_commandline = xstrcat( psz_open_commandline, psz_url );
+
     return system( psz_open_commandline );
+
+#elif defined( UNDER_CE )
+    return -1;
+
 #elif defined( WIN32 )
     char *psz_open_commandline;
 
@@ -45,23 +49,25 @@ int browser_Open( char *psz_url )
     xstrcat( psz_open_commandline, psz_url );
 
     return system( psz_open_commandline );
+
 #else
     /* Assume we're on a UNIX of some sort */
     char *psz_open_commandline;
+    int i_ret;
 
     /* Debian uses www-browser */
     psz_open_commandline = strdup( "www-browser" );
     xstrcat( psz_open_commandline, psz_url );
+    i_ret = system( psz_open_commandline );
 
-    if( system( psz_open_commandline ) != 0 )
-    {
-        free( psz_open_commandline );
+    if( i_ret == 0 ) return 0;
 
-        /* Try mozilla */
-        psz_open_commandline = strdup( "mozilla" );
-        xstrcat( psz_open_commandline, psz_url );
-        return system( psz_open_commandline );
-    }
+    free( psz_open_commandline );
+
+    /* Try mozilla */
+    psz_open_commandline = strdup( "mozilla" );
+    xstrcat( psz_open_commandline, psz_url );
+    return system( psz_open_commandline );
 #endif
 }
 

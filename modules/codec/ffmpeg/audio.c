@@ -1,11 +1,11 @@
 /*****************************************************************************
  * audio.c: audio decoder using ffmpeg library
  *****************************************************************************
- * Copyright (C) 1999-2003 VideoLAN
- * $Id: audio.c 7260 2004-04-03 13:33:38Z fenrir $
+ * Copyright (C) 1999-2003 the VideoLAN team
+ * $Id: audio.c 16457 2006-08-31 20:51:12Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
- *          Gildas Bazin <gbazin@netcourrier.com>
+ *          Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -37,7 +37,7 @@
 
 #include "ffmpeg.h"
 
-static unsigned int pi_channels_maps[6] =
+static unsigned int pi_channels_maps[7] =
 {
     0,
     AOUT_CHAN_CENTER,   AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT,
@@ -45,7 +45,9 @@ static unsigned int pi_channels_maps[6] =
     AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_REARLEFT
      | AOUT_CHAN_REARRIGHT,
     AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_CENTER
-     | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT
+     | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT,
+    AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_CENTER
+     | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT | AOUT_CHAN_LFE
 };
 
 /*****************************************************************************
@@ -107,14 +109,24 @@ int E_(InitAudioDec)( decoder_t *p_dec, AVCodecContext *p_context,
     p_sys->p_context->channels = p_dec->fmt_in.audio.i_channels;
     p_sys->p_context->block_align = p_dec->fmt_in.audio.i_blockalign;
     p_sys->p_context->bit_rate = p_dec->fmt_in.i_bitrate;
+    p_sys->p_context->bits_per_sample = p_dec->fmt_in.audio.i_bitspersample;
 
     if( ( p_sys->p_context->extradata_size = p_dec->fmt_in.i_extra ) > 0 )
     {
+        int i_offset = 0;
+
+        if( p_dec->fmt_in.i_codec == VLC_FOURCC( 'f', 'l', 'a', 'c' ) )
+            i_offset = 8;
+
+        p_sys->p_context->extradata_size -= i_offset;
         p_sys->p_context->extradata =
-            malloc( p_dec->fmt_in.i_extra + FF_INPUT_BUFFER_PADDING_SIZE );
+            malloc( p_sys->p_context->extradata_size +
+                    FF_INPUT_BUFFER_PADDING_SIZE );
         memcpy( p_sys->p_context->extradata,
-                p_dec->fmt_in.p_extra, p_dec->fmt_in.i_extra );
-        memset( p_sys->p_context->extradata + p_dec->fmt_in.i_extra, 0,
+                (char*)p_dec->fmt_in.p_extra + i_offset,
+                p_sys->p_context->extradata_size );
+        memset( (char*)p_sys->p_context->extradata +
+                p_sys->p_context->extradata_size, 0,
                 FF_INPUT_BUFFER_PADDING_SIZE );
     }
 
@@ -124,36 +136,43 @@ int E_(InitAudioDec)( decoder_t *p_dec, AVCodecContext *p_context,
     {
         vlc_mutex_unlock( lockval.p_address );
         msg_Err( p_dec, "cannot open codec (%s)", p_sys->psz_namecodec );
+        free( p_sys );
         return VLC_EGENERIC;
     }
     vlc_mutex_unlock( lockval.p_address );
 
     msg_Dbg( p_dec, "ffmpeg codec (%s) started", p_sys->psz_namecodec );
 
-    p_sys->p_output = malloc( 3 * AVCODEC_MAX_AUDIO_FRAME_SIZE );
+    p_sys->p_output = malloc( AVCODEC_MAX_AUDIO_FRAME_SIZE );
     p_sys->p_samples = NULL;
     p_sys->i_samples = 0;
 
-    aout_DateSet( &p_sys->end_date, 0 );
+    if( p_dec->fmt_in.audio.i_rate )
+    {
+        aout_DateInit( &p_sys->end_date, p_dec->fmt_in.audio.i_rate );
+        aout_DateSet( &p_sys->end_date, 0 );
+    }
 
     /* Set output properties */
     p_dec->fmt_out.i_cat = AUDIO_ES;
     p_dec->fmt_out.i_codec = AOUT_FMT_S16_NE;
+    p_dec->fmt_out.audio.i_bitspersample = 16;
 
     return VLC_SUCCESS;
 }
 
-/* XXX Needed as aout really doesn't like big audio chunk and wma produce easily > 30000 samples... */
+/*****************************************************************************
+ * SplitBuffer: Needed because aout really doesn't like big audio chunk and
+ * wma produces easily > 30000 samples...
+ *****************************************************************************/
 aout_buffer_t *SplitBuffer( decoder_t *p_dec )
 {
     decoder_sys_t *p_sys = p_dec->p_sys;
     int i_samples = __MIN( p_sys->i_samples, 4096 );
     aout_buffer_t *p_buffer;
 
-    if( i_samples == 0 )
-    {
-        return NULL;
-    }
+    if( i_samples == 0 ) return NULL;
+
     if( ( p_buffer = p_dec->pf_aout_buffer_new( p_dec, i_samples ) ) == NULL )
     {
         msg_Err( p_dec, "cannot get aout buffer" );
@@ -189,10 +208,7 @@ aout_buffer_t *E_( DecodeAudio )( decoder_t *p_dec, block_t **pp_block )
     {
         /* More data */
         p_buffer = SplitBuffer( p_dec );
-        if( p_buffer == NULL )
-        {
-            block_Release( p_block );
-        }
+        if( !p_buffer ) block_Release( p_block );
         return p_buffer;
     }
 
@@ -204,10 +220,16 @@ aout_buffer_t *E_( DecodeAudio )( decoder_t *p_dec, block_t **pp_block )
     }
 
     if( p_block->i_buffer <= 0 ||
-        ( p_block->i_flags&BLOCK_FLAG_DISCONTINUITY ) )
+        (p_block->i_flags & (BLOCK_FLAG_DISCONTINUITY|BLOCK_FLAG_CORRUPTED)) )
     {
         block_Release( p_block );
         return NULL;
+    }
+
+    if( p_block->i_buffer > AVCODEC_MAX_AUDIO_FRAME_SIZE )
+    {
+        /* Grow output buffer if necessary (eg. for PCM data) */
+        p_sys->p_output = realloc(p_sys->p_output, p_block->i_buffer);
     }
 
     i_used = avcodec_decode_audio( p_sys->p_context,
@@ -239,7 +261,7 @@ aout_buffer_t *E_( DecodeAudio )( decoder_t *p_dec, block_t **pp_block )
         return NULL;
     }
 
-    if( p_dec->fmt_out.audio.i_rate != p_sys->p_context->sample_rate )
+    if( p_dec->fmt_out.audio.i_rate != (unsigned int)p_sys->p_context->sample_rate )
     {
         aout_DateInit( &p_sys->end_date, p_sys->p_context->sample_rate );
         aout_DateSet( &p_sys->end_date, p_block->i_pts );
@@ -264,10 +286,7 @@ aout_buffer_t *E_( DecodeAudio )( decoder_t *p_dec, block_t **pp_block )
     p_sys->p_samples = p_sys->p_output;
 
     p_buffer = SplitBuffer( p_dec );
-    if( !p_buffer )
-    {
-        block_Release( p_block );
-    }
+    if( !p_buffer ) block_Release( p_block );
     return p_buffer;
 }
 

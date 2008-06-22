@@ -2,8 +2,8 @@
  * vlc_threads.h : threads implementation for the VideoLAN client
  * This header provides portable declarations for mutexes & conditions
  *****************************************************************************
- * Copyright (C) 1999, 2002 VideoLAN
- * $Id: vlc_threads.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999, 2002 the VideoLAN team
+ * $Id: vlc_threads.h 14104 2006-02-01 13:01:06Z sam $
  *
  * Authors: Jean-Marc Dressler <polux@via.ecp.fr>
  *          Samuel Hocevar <sam@via.ecp.fr>
@@ -22,7 +22,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <stdio.h>
@@ -69,12 +69,13 @@
  *****************************************************************************/
 
 /* Thread priorities */
-#ifdef SYS_DARWIN
+#ifdef __APPLE__
 #   define VLC_THREAD_PRIORITY_LOW (-47)
 #   define VLC_THREAD_PRIORITY_INPUT 37
 #   define VLC_THREAD_PRIORITY_AUDIO 37
 #   define VLC_THREAD_PRIORITY_VIDEO (-47)
 #   define VLC_THREAD_PRIORITY_OUTPUT 37
+#   define VLC_THREAD_PRIORITY_HIGHEST 37
 
 #elif defined(SYS_BEOS)
 #   define VLC_THREAD_PRIORITY_LOW 5
@@ -82,6 +83,7 @@
 #   define VLC_THREAD_PRIORITY_AUDIO 10
 #   define VLC_THREAD_PRIORITY_VIDEO 5
 #   define VLC_THREAD_PRIORITY_OUTPUT 15
+#   define VLC_THREAD_PRIORITY_HIGHEST 15
 
 #elif defined(PTHREAD_COND_T_IN_PTHREAD_H)
 #   define VLC_THREAD_PRIORITY_LOW 0
@@ -89,6 +91,7 @@
 #   define VLC_THREAD_PRIORITY_AUDIO 10
 #   define VLC_THREAD_PRIORITY_VIDEO 0
 #   define VLC_THREAD_PRIORITY_OUTPUT 30
+#   define VLC_THREAD_PRIORITY_HIGHEST 40
 
 #elif defined(WIN32) || defined(UNDER_CE)
 /* Define different priorities for WinNT/2K/XP and Win9x/Me */
@@ -110,6 +113,7 @@
 #   define VLC_THREAD_PRIORITY_AUDIO 0
 #   define VLC_THREAD_PRIORITY_VIDEO 0
 #   define VLC_THREAD_PRIORITY_OUTPUT 0
+#   define VLC_THREAD_PRIORITY_HIGHEST 0
 
 #endif
 
@@ -146,7 +150,7 @@ typedef struct
 #elif defined( WIN32 ) || defined( UNDER_CE )
 typedef HANDLE vlc_thread_t;
 typedef BOOL (WINAPI *SIGNALOBJECTANDWAIT) ( HANDLE, HANDLE, DWORD, BOOL );
-typedef unsigned (__stdcall *PTHREAD_START) (void *);
+typedef unsigned (WINAPI *PTHREAD_START) (void *);
 
 typedef struct
 {

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * block.c: MPEG2 video transrating module
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
+ * Copyright (C) 2003-2004 the VideoLAN team
  * Copyright (C) 2003 Antoine Missout
  * Copyright (C) 2000-2003 Michel Lespinasse <walken@zoy.org>
  * Copyright (C) 1999-2000 Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
- * $Id: block.c 7423 2004-04-22 09:26:15Z sam $
+ * $Id: block.c 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -25,7 +25,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************

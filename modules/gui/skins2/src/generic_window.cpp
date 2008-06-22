@@ -1,11 +1,11 @@
 /*****************************************************************************
  * generic_window.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: generic_window.cpp 7267 2004-04-03 20:17:06Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: generic_window.cpp 16457 2006-08-31 20:51:12Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "generic_window.hpp"
 #include "os_window.hpp"
 #include "os_factory.hpp"
+#include "var_manager.hpp"
 #include "../events/evt_refresh.hpp"
 
 
@@ -32,9 +33,9 @@ GenericWindow::GenericWindow( intf_thread_t *pIntf, int left, int top,
                               bool dragDrop, bool playOnDrop,
                               GenericWindow *pParent ):
     SkinObject( pIntf ), m_left( left ), m_top( top ), m_width( 0 ),
-    m_height( 0 ), m_varVisible( pIntf )
+    m_height( 0 ), m_pVarVisible( NULL )
 {
-   // Get the OSFactory
+    // Get the OSFactory
     OSFactory *pOsFactory = OSFactory::instance( getIntf() );
 
     // Get the parent OSWindow, if any
@@ -48,14 +49,18 @@ GenericWindow::GenericWindow( intf_thread_t *pIntf, int left, int top,
     m_pOsWindow = pOsFactory->createOSWindow( *this, dragDrop, playOnDrop,
                                               pOSParent );
 
+    // Create the visibility variable and register it in the manager
+    m_pVarVisible = new VarBoolImpl( pIntf );
+    VarManager::instance( pIntf )->registerVar( VariablePtr( m_pVarVisible ) );
+
     // Observe the visibility variable
-    m_varVisible.addObserver( this );
+    m_pVarVisible->addObserver( this );
 }
 
 
 GenericWindow::~GenericWindow()
 {
-    m_varVisible.delObserver( this );
+    m_pVarVisible->delObserver( this );
 
     if( m_pOsWindow )
     {
@@ -74,13 +79,13 @@ void GenericWindow::processEvent( EvtRefresh &rEvtRefresh )
 
 void GenericWindow::show() const
 {
-    m_varVisible.set( true );
+    m_pVarVisible->set( true );
 }
 
 
 void GenericWindow::hide() const
 {
-    m_varVisible.set( false );
+    m_pVarVisible->set( false );
 }
 
 
@@ -122,9 +127,9 @@ void GenericWindow::toggleOnTop( bool onTop ) const
 }
 
 
-void GenericWindow::onUpdate( Subject<VarBool> &rVariable )
+void GenericWindow::onUpdate( Subject<VarBool> &rVariable, void*arg )
 {
-    if( m_varVisible.get() )
+    if( m_pVarVisible->get() )
     {
         innerShow();
     }

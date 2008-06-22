@@ -1,11 +1,11 @@
 /*****************************************************************************
  * tooltip.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: tooltip.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: tooltip.hpp 16457 2006-08-31 20:51:12Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef TOOLTIP_HPP
 #define TOOLTIP_HPP
 
 #include "../utils/var_text.hpp"
+#include "../commands/cmd_generic.hpp"
 
 class GenericFont;
 class OSTooltip;
@@ -64,7 +65,7 @@ class Tooltip: public SkinObject, public Observer<VarText>
         int m_xPos, m_yPos;
 
         /// Method called when the observed variable is modified
-        virtual void onUpdate( Subject<VarText> &rVariable );
+        virtual void onUpdate( Subject<VarText> &rVariable, void * );
 
         /// Display text of the tooltip
         void displayText( const UString &rText );
@@ -72,8 +73,8 @@ class Tooltip: public SkinObject, public Observer<VarText>
         /// Build m_pImage with the given text
         void makeImage( const UString &rText );
 
-        /// Show the tooltip window
-        static void doShow( SkinObject *pObj );
+        /// Callback to show the tooltip window
+        DEFINE_CALLBACK( Tooltip, Show );
 };
 
 

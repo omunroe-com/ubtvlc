@@ -30,9 +30,6 @@
 #define _NO_PROTO
 #endif
 
-/* Overkill. */
-#include <vlc/vlc.h>
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -215,8 +212,6 @@ static char *posixly_correct;
 
 /* Avoid depending on library functions or files
    whose names are inconsistent.  */
-
-char *getenv();
 
 static char *
      my_index(str, chr)

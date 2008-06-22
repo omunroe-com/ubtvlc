@@ -1,8 +1,8 @@
 /*****************************************************************************
  * open.h: MacOS X module for vlc
  *****************************************************************************
- * Copyright (C) 2002-2003 VideoLAN
- * $Id: open.h 7090 2004-03-15 19:33:18Z bigben $
+ * Copyright (C) 2002-2005 the VideoLAN team
+ * $Id: open.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 NSArray *GetEjectableMediaOfClass( const char *psz_class );
@@ -69,6 +69,7 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class );
     IBOutlet id o_net_udpm_port_stp;
     IBOutlet id o_net_http_url;
     IBOutlet id o_net_http_url_lbl;
+    IBOutlet id o_net_timeshift_ckbox;
 
     IBOutlet id o_file_sub_ckbox;
     IBOutlet id o_file_sub_btn_settings;
@@ -82,29 +83,40 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class );
     IBOutlet id o_file_sub_fps;
     IBOutlet id o_file_sub_fps_lbl;
     IBOutlet id o_file_sub_fps_stp;
+    IBOutlet id o_file_sub_encoding_pop;
+    IBOutlet id o_file_sub_encoding_lbl;
+    IBOutlet id o_file_sub_size_pop;
+    IBOutlet id o_file_sub_size_lbl;
+    IBOutlet id o_file_sub_align_pop;
+    IBOutlet id o_file_sub_align_lbl;
     IBOutlet id o_file_sub_ok_btn;
-    
+    IBOutlet id o_file_sub_font_box;
+    IBOutlet id o_file_sub_file_box;
+
     IBOutlet id o_output_ckbox;
     IBOutlet id o_sout_options;
 }
 
++ (VLCOpen *)sharedInstance;
+
+- (void)setSubPanel;
 - (void)openTarget:(int)i_type;
 - (void)tabView:(NSTabView *)o_tv didSelectTabViewItem:(NSTabViewItem *)o_tvi;
 
-- (IBAction)openFileGeneric:(id)sender;
+- (void)openFileGeneric;
 - (void)openFilePathChanged:(NSNotification *)o_notification;
 - (IBAction)openFileBrowse:(id)sender;
 - (void) pathChosenInPanel: (NSOpenPanel *) sheet withReturn:(int)returnCode contextInfo:(void  *)contextInfo;
 - (IBAction)openFileStreamChanged:(id)sender;
 
-- (IBAction)openDisc:(id)sender;
+- (void)openDisc;
 - (IBAction)openDiscTypeChanged:(id)sender;
 - (IBAction)openDiscStepperChanged:(id)sender;
 - (void)openDiscInfoChanged:(NSNotification *)o_notification;
 - (IBAction)openDiscMenusChanged:(id)sender;
 - (IBAction)openVTSBrowse:(id)sender;
 
-- (IBAction)openNet:(id)sender;
+- (void)openNet;
 - (IBAction)openNetModeChanged:(id)sender;
 - (IBAction)openNetStepperChanged:(id)sender;
 - (void)openNetInfoChanged:(NSNotification *)o_notification;
@@ -120,6 +132,5 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class );
 - (IBAction)panelCancel:(id)sender;
 - (IBAction)panelOk:(id)sender;
 
-- (IBAction)openFile:(id)sender;
-
+- (void)openFile;
 @end

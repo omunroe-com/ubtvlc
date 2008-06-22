@@ -3,8 +3,8 @@
  * This library provides basic functions for threads to interact with user
  * interface, such as message output.
  *****************************************************************************
- * Copyright (C) 1999, 2000 VideoLAN
- * $Id: vlc_interface.h 7394 2004-04-20 15:05:24Z gbazin $
+ * Copyright (C) 1999, 2000 the VideoLAN team
+ * $Id: vlc_interface.h 16442 2006-08-30 22:15:52Z hartman $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -20,8 +20,9 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
+
 
 typedef struct intf_dialog_args_t intf_dialog_args_t;
 
@@ -64,6 +65,9 @@ struct intf_thread_t
     void ( *pf_show_dialog ) ( intf_thread_t *, int, int,
                                intf_dialog_args_t * );
 
+    /** Interaction stuff */
+    vlc_bool_t b_interaction;
+
     /** Video window callbacks */
     void * ( *pf_request_window ) ( intf_thread_t *, vout_thread_t *,
                                     int *, int *,
@@ -88,12 +92,8 @@ struct intf_thread_t
  *****************************************************************************/
 struct intf_dialog_args_t
 {
+    intf_thread_t *p_intf;
     char *psz_title;
-
-    vlc_bool_t  b_blocking;
-    vlc_bool_t  b_ready;
-    vlc_mutex_t lock;
-    vlc_cond_t  wait;
 
     char **psz_results;
     int  i_results;
@@ -105,13 +105,16 @@ struct intf_dialog_args_t
     char *psz_extensions;
     vlc_bool_t b_save;
     vlc_bool_t b_multiple;
+
+    /* Specific to INTF_DIALOG_INTERACTION */
+    interaction_dialog_t *p_dialog;
 };
 
 /*****************************************************************************
  * Prototypes
  *****************************************************************************/
-#define intf_Create(a,b) __intf_Create(VLC_OBJECT(a),b)
-VLC_EXPORT( intf_thread_t *, __intf_Create,     ( vlc_object_t *, const char * ) );
+#define intf_Create(a,b,c,d) __intf_Create(VLC_OBJECT(a),b,c,d)
+VLC_EXPORT( intf_thread_t *, __intf_Create,     ( vlc_object_t *, const char *, int, char ** ) );
 VLC_EXPORT( int,               intf_RunThread,  ( intf_thread_t * ) );
 VLC_EXPORT( void,              intf_StopThread, ( intf_thread_t * ) );
 VLC_EXPORT( void,              intf_Destroy,    ( intf_thread_t * ) );
@@ -123,15 +126,18 @@ VLC_EXPORT( void,              intf_Destroy,    ( intf_thread_t * ) );
  *****************************************************************************/
 #if defined( WIN32 ) && !defined( UNDER_CE )
 #    define CONSOLE_INTRO_MSG \
+         if( !getenv( "PWD" ) || !getenv( "PS1" ) ) /* detect cygwin shell */ \
+         { \
          AllocConsole(); \
          freopen( "CONOUT$", "w", stdout ); \
          freopen( "CONOUT$", "w", stderr ); \
          freopen( "CONIN$", "r", stdin ); \
+         } \
          msg_Info( p_intf, COPYRIGHT_MESSAGE ); \
          msg_Info( p_intf, _("\nWarning: if you can't access the GUI " \
-                             "anymore, open a dos command box, go to the " \
+                             "anymore, open a command-line window, go to the " \
                              "directory where you installed VLC and run " \
-                             "\"vlc -I wxwin\"\n") )
+                             "\"vlc -I wx\"\n") )
 #else
 #    define CONSOLE_INTRO_MSG
 #endif
@@ -144,6 +150,8 @@ VLC_EXPORT( void,              intf_Destroy,    ( intf_thread_t * ) );
 #define INTF_DIALOG_CAPTURE     5
 #define INTF_DIALOG_SAT         6
 
+#define INTF_DIALOG_DIRECTORY   7
+
 #define INTF_DIALOG_STREAMWIZARD 8
 #define INTF_DIALOG_WIZARD 9
 
@@ -154,18 +162,28 @@ VLC_EXPORT( void,              intf_Destroy,    ( intf_thread_t * ) );
 #define INTF_DIALOG_BOOKMARKS  14
 
 #define INTF_DIALOG_POPUPMENU  20
+#define INTF_DIALOG_AUDIOPOPUPMENU  21
+#define INTF_DIALOG_VIDEOPOPUPMENU  22
+#define INTF_DIALOG_MISCPOPUPMENU  23
 
 #define INTF_DIALOG_FILE_GENERIC 30
+#define INTF_DIALOG_INTERACTION 50
+
+#define INTF_DIALOG_UPDATEVLC   90
+#define INTF_DIALOG_VLM   91
 
 #define INTF_DIALOG_EXIT       99
 
 /* Useful text messages shared by interfaces */
-#define INTF_ABOUT_MSG \
-    _( "VLC is an open-source and cross-platform multimedia " \
-       "player for various audio and video formats (MPEG-1, MPEG-2, MPEG-4, " \
-       "DivX, mp3, Ogg, ...) as well as DVDs, VCDs, CD audio, and various " \
-       "streaming protocols.\n\n" \
-       "VLC is also a streaming server with transcoding capabilities " \
-       "(UDP unicast and multicast, HTTP, ...) mainly designed for " \
-       "high-bandwidth networks.\n\n"\
-       "For more information, have a look at the web site." )
+#define INTF_ABOUT_MSG LICENSE_MSG
+
+#define EXTENSIONS_AUDIO "*.a52;*.aac;*.ac3;*.dts;*.flac;*.m4a;*.m4p;*.mka;" \
+                         "*.mod;*.mp1;*.mp2;*.mp3;*.ogg;*.spx;*.wav;*.wma;*.xm"
+
+#define EXTENSIONS_VIDEO "*.asf;*.avi;*.divx;*.dv;*.m1v;*.m2v;*.m4v;*.mkv;" \
+                         "*.mov;*.mp2;*.mp4;*.mpeg;*.mpeg1;*.mpeg2;*.mpeg4;" \
+                         "*.mpg;*.ogg;*.ogm;*.ps;*.ts;*.vob;*.wmv"
+
+#define EXTENSIONS_PLAYLIST "*.asx;*.b4s;*.m3u;*.pls;*.vlc;*.xspf"
+
+#define EXTENSIONS_SUBTITLE "*.idx;*.srt;*.sub;*.utf"

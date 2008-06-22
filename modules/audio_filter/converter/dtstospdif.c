@@ -1,8 +1,8 @@
 /*****************************************************************************
  * dtstospdif.c : encapsulates DTS frames into S/PDIF packets
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: dtstospdif.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003, 2006 the VideoLAN team
+ * $Id: dtstospdif.c 23994 2008-01-01 19:07:13Z pdherbemont $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -65,7 +65,9 @@ static void DoWork    ( aout_instance_t *, aout_filter_t *, aout_buffer_t *,
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( _("audio filter for DTS->S/PDIF encapsulation") );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_MISC );
+    set_description( _("Audio filter for DTS->S/PDIF encapsulation") );
     set_capability( "audio filter", 10 );
     set_callbacks( Create, Close );
 vlc_module_end();
@@ -77,8 +79,9 @@ static int Create( vlc_object_t *p_this )
 {
     aout_filter_t * p_filter = (aout_filter_t *)p_this;
 
-    if ( p_filter->input.i_format != VLC_FOURCC('d','t','s',' ')
-          || p_filter->output.i_format != VLC_FOURCC('s','p','d','i') )
+    if( p_filter->input.i_format != VLC_FOURCC('d','t','s',' ') ||
+        ( p_filter->output.i_format != VLC_FOURCC('s','p','d','i') &&
+          p_filter->output.i_format != VLC_FOURCC('s','p','d','b') ) )
     {
         return -1;
     }
@@ -115,9 +118,11 @@ static void Close( vlc_object_t * p_this )
 static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
                     aout_buffer_t * p_in_buf, aout_buffer_t * p_out_buf )
 {
+    uint32_t i_ac5_spdif_type = 0;
     uint16_t i_fz = p_in_buf->i_nb_samples * 4;
     uint16_t i_frame, i_length = p_in_buf->i_nb_bytes;
-    static const uint8_t p_sync[6] = { 0x72, 0xF8, 0x1F, 0x4E, 0x00, 0x00 };
+    static const uint8_t p_sync_le[6] = { 0x72, 0xF8, 0x1F, 0x4E, 0x00, 0x00 };
+    static const uint8_t p_sync_be[6] = { 0xF8, 0x72, 0x4E, 0x1F, 0x00, 0x00 };
 
     if( p_in_buf->i_nb_bytes != p_filter->p_sys->i_frame_size )
     {
@@ -151,26 +156,39 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
 
     for( i_frame = 0; i_frame < 3; i_frame++ )
     {
+        uint16_t i_length_padded = i_length;
         byte_t * p_out = p_out_buf->p_buffer + (i_frame * i_fz);
         byte_t * p_in = p_filter->p_sys->p_buf + (i_frame * i_length);
 
-        /* Copy the S/PDIF headers. */
-        memcpy( p_out, p_sync, 6 );
-
         switch( p_in_buf->i_nb_samples )
         {
-            case  512: *(p_out + 4) = 0x0B; break;
-            case 1024: *(p_out + 4) = 0x0C; break;
-            case 2048: *(p_out + 4) = 0x0D; break;
+            case  512: i_ac5_spdif_type = 0x0B; break;
+            case 1024: i_ac5_spdif_type = 0x0C; break;
+            case 2048: i_ac5_spdif_type = 0x0D; break;
         }
 
-        *(p_out + 6) = (i_length * 8) & 0xff;
-        *(p_out + 7) = (i_length * 8) >> 8;
-
-        if( p_in[0] == 0x1f || p_in[0] == 0x7f )
+        /* Copy the S/PDIF headers. */
+        if( p_filter->output.i_format == VLC_FOURCC('s','p','d','b') )
         {
-            /* We are dealing with a big endian bitstream.
-             * Convert to little endian */
+            p_filter->p_vlc->pf_memcpy( p_out, p_sync_be, 6 );
+            p_out[5] = i_ac5_spdif_type;
+            p_out[6] = (( i_length ) >> 5 ) & 0xFF;
+            p_out[7] = ( i_length << 3 ) & 0xFF;
+        }
+        else
+        {
+            p_filter->p_vlc->pf_memcpy( p_out, p_sync_le, 6 );
+            p_out[4] = i_ac5_spdif_type;
+            p_out[6] = ( i_length << 3 ) & 0xFF;
+            p_out[7] = (( i_length ) >> 5 ) & 0xFF;
+        }
+
+        if( ( (p_in[0] == 0x1F || p_in[0] == 0x7F) && p_filter->output.i_format == VLC_FOURCC('s','p','d','i') ) ||
+            ( (p_in[0] == 0xFF || p_in[0] == 0xFE) && p_filter->output.i_format == VLC_FOURCC('s','p','d','b') ) )
+        {
+            /* We are dealing with a big endian bitstream and a little endian output
+             * or a little endian bitstream and a big endian output.
+             * Byteswap the stream */
 #ifdef HAVE_SWAB
             swab( p_in, p_out + 8, i_length );
 #else
@@ -185,17 +203,23 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
                 p_tmp += 2; p_in += 2;
             }
 #endif
+            /* If i_length is odd, we have to adjust swapping a bit.. */
+            if( i_length & 1 )
+            {
+                p_out[8+i_length-1] = 0;
+                p_out[8+i_length] = p_in[i_length-1];
+                i_length_padded++;
+            }
         }
         else
         {
-            /* Little endian */
-            memcpy( p_out + 8, p_in, i_length );
+            p_filter->p_vlc->pf_memcpy( p_out + 8, p_in, i_length );
         }
 
         if( i_fz > i_length + 8 )
         {
-            p_filter->p_vlc->pf_memset( p_out + 8 + i_length, 0,
-                                        i_fz - i_length - 8 );
+            p_filter->p_vlc->pf_memset( p_out + 8 + i_length_padded, 0,
+                                        i_fz - i_length_padded - 8 );
         }
     }
 

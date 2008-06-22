@@ -1,10 +1,10 @@
 /*****************************************************************************
  * chroma.c: chroma conversion using ffmpeg library
  *****************************************************************************
- * Copyright (C) 1999-2001 VideoLAN
- * $Id: chroma.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999-2001 the VideoLAN team
+ * $Id: chroma.c 13905 2006-01-12 23:10:04Z dionoea $
  *
- * Authors: Gildas Bazin <gbazin@netcourrier.com>
+ * Authors: Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -51,6 +51,8 @@ struct chroma_sys_t
     int i_src_ffmpeg_chroma;
     int i_dst_vlc_chroma;
     int i_dst_ffmpeg_chroma;
+    AVPicture tmp_pic;
+    ImgReSampleContext *p_rsc;
 };
 
 /*****************************************************************************
@@ -70,67 +72,8 @@ int E_(OpenChroma)( vlc_object_t *p_this )
     i_vlc_chroma[1] = p_vout->output.i_chroma;
     for( i = 0; i < 2; i++ )
     {
-        switch( i_vlc_chroma[i] )
-        {
-
-        /* Planar YUV formats */
-        case VLC_FOURCC('I','4','4','4'):
-            i_ffmpeg_chroma[i] = PIX_FMT_YUV444P;
-            break;
-
-        case VLC_FOURCC('I','4','2','2'):
-            i_ffmpeg_chroma[i] = PIX_FMT_YUV422P;
-            break;
-
-        case VLC_FOURCC('Y','V','1','2'):
-        case VLC_FOURCC('I','4','2','0'):
-        case VLC_FOURCC('I','Y','U','V'):
-            i_ffmpeg_chroma[i] = PIX_FMT_YUV420P;
-            break;
-
-        case VLC_FOURCC('I','4','1','1'):
-            i_ffmpeg_chroma[i] = PIX_FMT_YUV411P;
-            break;
-
-        case VLC_FOURCC('I','4','1','0'):
-        case VLC_FOURCC('Y','V','U','9'):
-            i_ffmpeg_chroma[i] = PIX_FMT_YUV410P;
-            break;
-
-        /* Packed YUV formats */
-
-        case VLC_FOURCC('Y','U','Y','2'):
-        case VLC_FOURCC('U','Y','V','Y'):
-            i_ffmpeg_chroma[i] = PIX_FMT_YUV422;
-            break;
-
-        /* Packed RGB formats */
-
-        case VLC_FOURCC('R','V','3','2'):
-            i_ffmpeg_chroma[i] = PIX_FMT_RGBA32;
-            break;
-
-        case VLC_FOURCC('R','V','2','4'):
-            i_ffmpeg_chroma[i] = PIX_FMT_RGB24;
-            //i_ffmpeg_chroma[i] = PIX_FMT_BGR24;
-            break;
-
-        case VLC_FOURCC('R','V','1','6'):
-            i_ffmpeg_chroma[i] = PIX_FMT_RGB565;
-            break;
-
-        case VLC_FOURCC('R','V','1','5'):
-            i_ffmpeg_chroma[i] = PIX_FMT_RGB555;
-            break;
-
-        case VLC_FOURCC('R','G','B','2'):
-            i_ffmpeg_chroma[i] = PIX_FMT_GRAY8;
-            break;
-
-        default:
-            return VLC_EGENERIC;
-            break;
-        }
+        i_ffmpeg_chroma[i] = E_(GetFfmpegChroma)( i_vlc_chroma[i] );
+        if( i_ffmpeg_chroma[i] < 0 ) return VLC_EGENERIC;
     }
 
     p_vout->chroma.pf_convert = ChromaConversion;
@@ -145,6 +88,26 @@ int E_(OpenChroma)( vlc_object_t *p_this )
     p_vout->chroma.p_sys->i_dst_vlc_chroma = p_vout->output.i_chroma;
     p_vout->chroma.p_sys->i_src_ffmpeg_chroma = i_ffmpeg_chroma[0];
     p_vout->chroma.p_sys->i_dst_ffmpeg_chroma = i_ffmpeg_chroma[1];
+
+    if( ( p_vout->render.i_height != p_vout->output.i_height ||
+          p_vout->render.i_width != p_vout->output.i_width ) &&
+        ( p_vout->chroma.p_sys->i_dst_vlc_chroma == VLC_FOURCC('I','4','2','0')  ||
+          p_vout->chroma.p_sys->i_dst_vlc_chroma == VLC_FOURCC('Y','V','1','2') ))
+        
+    {
+        msg_Dbg( p_vout, "preparing to resample picture" );
+        p_vout->chroma.p_sys->p_rsc =
+            img_resample_init( p_vout->output.i_width, p_vout->output.i_height,
+                               p_vout->render.i_width, p_vout->render.i_height );
+        avpicture_alloc( &p_vout->chroma.p_sys->tmp_pic,
+                         p_vout->chroma.p_sys->i_dst_ffmpeg_chroma,
+                         p_vout->render.i_width, p_vout->render.i_height );
+    }
+    else
+    {
+        msg_Dbg( p_vout, "no resampling" );
+        p_vout->chroma.p_sys->p_rsc = NULL;
+    }
 
     /* libavcodec needs to be initialized for some chroma conversions */
     E_(InitLibavcodec)(p_this);
@@ -189,10 +152,25 @@ static void ChromaConversion( vout_thread_t *p_vout,
         dest_pic.data[1] = p_dest->p[2].p_pixels;
         dest_pic.data[2] = p_dest->p[1].p_pixels;
     }
+    if( p_vout->chroma.p_sys->i_src_ffmpeg_chroma == PIX_FMT_RGB24 )
+        if( p_vout->render.i_bmask == 0x00ff0000 )
+            p_vout->chroma.p_sys->i_src_ffmpeg_chroma = PIX_FMT_BGR24;
 
-    img_convert( &dest_pic, p_vout->chroma.p_sys->i_dst_ffmpeg_chroma,
-                 &src_pic, p_vout->chroma.p_sys->i_src_ffmpeg_chroma,
-                 p_vout->render.i_width, p_vout->render.i_height );
+    if( p_vout->chroma.p_sys->p_rsc )
+    {
+        img_convert( &p_vout->chroma.p_sys->tmp_pic,
+                     p_vout->chroma.p_sys->i_dst_ffmpeg_chroma,
+                     &src_pic, p_vout->chroma.p_sys->i_src_ffmpeg_chroma,
+                     p_vout->render.i_width, p_vout->render.i_height );
+        img_resample( p_vout->chroma.p_sys->p_rsc, &dest_pic,
+                      &p_vout->chroma.p_sys->tmp_pic );
+    }
+    else
+    {
+        img_convert( &dest_pic, p_vout->chroma.p_sys->i_dst_ffmpeg_chroma,
+                     &src_pic, p_vout->chroma.p_sys->i_src_ffmpeg_chroma,
+                     p_vout->render.i_width, p_vout->render.i_height );
+    }
 }
 
 /*****************************************************************************
@@ -203,6 +181,10 @@ static void ChromaConversion( vout_thread_t *p_vout,
 void E_(CloseChroma)( vlc_object_t *p_this )
 {
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
-
+    if( p_vout->chroma.p_sys->p_rsc )
+    {
+        img_resample_close( p_vout->chroma.p_sys->p_rsc );
+        avpicture_free( &p_vout->chroma.p_sys->tmp_pic );
+    }
     free( p_vout->chroma.p_sys );
 }

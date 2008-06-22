@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ctrl_checkbox.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_checkbox.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: ctrl_checkbox.cpp 16457 2006-08-31 20:51:12Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "ctrl_checkbox.hpp"
@@ -47,38 +47,15 @@ CtrlCheckbox::CtrlCheckbox( intf_thread_t *pIntf,
     m_rVariable( rVariable ),
     m_rCommand1( rCommand1 ), m_rCommand2( rCommand2 ),
     m_tooltip1( rTooltip1 ), m_tooltip2( rTooltip2 ),
-    m_cmdUpOverDownOver( this, &transUpOverDownOver ),
-    m_cmdDownOverUpOver( this, &transDownOverUpOver ),
-    m_cmdDownOverDown( this, &transDownOverDown ),
-    m_cmdDownDownOver( this, &transDownDownOver ),
-    m_cmdUpOverUp( this, &transUpOverUp ),
-    m_cmdUpUpOver( this, &transUpUpOver ),
-    m_cmdDownUp( this, &transDownUp ),
-    m_cmdUpHidden( this, &transUpHidden ),
-    m_cmdHiddenUp( this, &transHiddenUp )
+    m_imgUp1( pIntf, rBmpUp1 ), m_imgOver1( pIntf, rBmpOver1 ),
+    m_imgDown1( pIntf, rBmpDown1 ), m_imgUp2( pIntf, rBmpUp2 ),
+    m_imgOver2( pIntf, rBmpOver2 ), m_imgDown2( pIntf, rBmpDown2 ),
+    m_cmdUpOverDownOver( this ), m_cmdDownOverUpOver( this ),
+    m_cmdDownOverDown( this ), m_cmdDownDownOver( this ),
+    m_cmdUpOverUp( this ), m_cmdUpUpOver( this ),
+    m_cmdDownUp( this ), m_cmdUpHidden( this ),
+    m_cmdHiddenUp( this )
 {
-    // Build the images of the checkbox
-    OSFactory *pOsFactory = OSFactory::instance( pIntf );
-    m_pImgUp1 = pOsFactory->createOSGraphics( rBmpUp1.getWidth(),
-                                              rBmpUp1.getHeight() );
-    m_pImgUp1->drawBitmap( rBmpUp1, 0, 0 );
-    m_pImgDown1 = pOsFactory->createOSGraphics( rBmpDown1.getWidth(),
-                                                rBmpDown1.getHeight() );
-    m_pImgDown1->drawBitmap( rBmpDown1, 0, 0 );
-    m_pImgOver1 = pOsFactory->createOSGraphics( rBmpOver1.getWidth(),
-                                                rBmpOver1.getHeight() );
-    m_pImgOver1->drawBitmap( rBmpOver1, 0, 0 );
-
-    m_pImgUp2 = pOsFactory->createOSGraphics( rBmpUp2.getWidth(),
-                                              rBmpUp2.getHeight() );
-    m_pImgUp2->drawBitmap( rBmpUp2, 0, 0 );
-    m_pImgDown2 = pOsFactory->createOSGraphics( rBmpDown2.getWidth(),
-                                                rBmpDown2.getHeight() );
-    m_pImgDown2->drawBitmap( rBmpDown2, 0, 0 );
-    m_pImgOver2 = pOsFactory->createOSGraphics( rBmpOver2.getWidth(),
-                                                rBmpOver2.getHeight() );
-    m_pImgOver2->drawBitmap( rBmpOver2, 0, 0 );
-
     // States
     m_fsm.addState( "up" );
     m_fsm.addState( "down" );
@@ -88,6 +65,8 @@ CtrlCheckbox::CtrlCheckbox( intf_thread_t *pIntf,
 
     // Transitions
     m_fsm.addTransition( "upOver", "mouse:left:down", "downOver",
+                         &m_cmdUpOverDownOver );
+    m_fsm.addTransition( "upOver", "mouse:left:dblclick", "downOver",
                          &m_cmdUpOverDownOver );
     m_fsm.addTransition( "downOver", "mouse:left:up", "upOver",
                          &m_cmdDownOverUpOver );
@@ -111,19 +90,19 @@ CtrlCheckbox::CtrlCheckbox( intf_thread_t *pIntf,
     m_fsm.setState( "up" );
     if( !m_rVariable.get() )
     {
-        m_pImgUp = m_pImgUp1;
-        m_pImgOver = m_pImgOver1;
-        m_pImgDown = m_pImgDown1;
+        m_pImgUp = &m_imgUp1;
+        m_pImgOver = &m_imgOver1;
+        m_pImgDown = &m_imgDown1;
         m_pImgCurrent = m_pImgUp;
         m_pCommand = &m_rCommand1;
         m_pTooltip = &m_tooltip1;
     }
     else
     {
-        m_pImgUp = m_pImgUp2;
-        m_pImgOver = m_pImgOver2;
-        m_pImgDown = m_pImgDown2;
-        m_pImgCurrent = m_pImgDown;
+        m_pImgUp = &m_imgUp2;
+        m_pImgOver = &m_imgOver2;
+        m_pImgDown = &m_imgDown2;
+        m_pImgCurrent = m_pImgUp;
         m_pCommand = &m_rCommand2;
         m_pTooltip = &m_tooltip2;
     }
@@ -133,12 +112,6 @@ CtrlCheckbox::CtrlCheckbox( intf_thread_t *pIntf,
 CtrlCheckbox::~CtrlCheckbox()
 {
     m_rVariable.delObserver( this );
-    SKINS_DELETE( m_pImgUp1 );
-    SKINS_DELETE( m_pImgDown1 );
-    SKINS_DELETE( m_pImgOver1 );
-    SKINS_DELETE( m_pImgUp2 );
-    SKINS_DELETE( m_pImgDown2 );
-    SKINS_DELETE( m_pImgOver2 );
 }
 
 
@@ -166,86 +139,104 @@ void CtrlCheckbox::draw( OSGraphics &rImage, int xDest, int yDest )
     if( m_pImgCurrent )
     {
         // Draw the current image
-        rImage.drawGraphics( *m_pImgCurrent, 0, 0, xDest, yDest );
+        m_pImgCurrent->draw( rImage, xDest, yDest );
     }
 }
 
 
-void CtrlCheckbox::transUpOverDownOver( SkinObject *pCtrl )
+void CtrlCheckbox::setImage( AnimBitmap *pImg )
 {
-    CtrlCheckbox *pThis = (CtrlCheckbox*)pCtrl;
-    pThis->captureMouse();
-    pThis->m_pImgCurrent = pThis->m_pImgDown;
-    pThis->notifyLayout();
+    AnimBitmap *pOldImg = m_pImgCurrent;
+    m_pImgCurrent = pImg;
+
+    if( pOldImg )
+    {
+        pOldImg->stopAnim();
+        pOldImg->delObserver( this );
+    }
+
+    if( pImg )
+    {
+        pImg->startAnim();
+        pImg->addObserver( this );
+    }
+
+    notifyLayoutMaxSize( pOldImg, pImg );
 }
 
 
-void CtrlCheckbox::transDownOverUpOver( SkinObject *pCtrl )
+void CtrlCheckbox::CmdUpOverDownOver::execute()
 {
-    CtrlCheckbox *pThis = (CtrlCheckbox*)pCtrl;
-    pThis->releaseMouse();
+    m_pParent->captureMouse();
+    m_pParent->setImage( m_pParent->m_pImgDown );
+}
+
+
+void CtrlCheckbox::CmdDownOverUpOver::execute()
+{
+    m_pParent->releaseMouse();
+
+    // There is a little trick here: since we update the image of the control
+    // before executing the command, there is no way that the observed variable
+    // can have changed, so changeButton() has not been called, and m_pImgUp is
+    // still the "old" up state. That's why we don't use it, and use the other
+    // one instead. Otherwise, we would notice a "phantom effect", where the
+    // old up image is displayed for a few milliseconds, until the variable is
+    // updated and the correct up image is displayed.
+    // Executing the action before refreshing the state wouldn't work, because
+    // the variable may be updated asynchronously (when triggered by a callback
+    // from an object variable).
 
     // Invert the state variable
-    pThis->m_pImgCurrent = pThis->m_pImgUp;
-    pThis->notifyLayout();
+    if( m_pParent->m_pImgUp == &m_pParent->m_imgUp1 )
+        m_pParent->setImage( &m_pParent->m_imgUp2 );
+    else
+        m_pParent->setImage( &m_pParent->m_imgUp1 );
 
     // Execute the command
-    pThis->m_pCommand->execute();
+    m_pParent->m_pCommand->execute();
 }
 
 
-void CtrlCheckbox::transDownOverDown( SkinObject *pCtrl )
+void CtrlCheckbox::CmdDownOverDown::execute()
 {
-    CtrlCheckbox *pThis = (CtrlCheckbox*)pCtrl;
-    pThis->m_pImgCurrent = pThis->m_pImgUp;
-    pThis->notifyLayout();
+    m_pParent->setImage( m_pParent->m_pImgUp );
 }
 
 
-void CtrlCheckbox::transDownDownOver( SkinObject *pCtrl )
+void CtrlCheckbox::CmdDownDownOver::execute()
 {
-    CtrlCheckbox *pThis = (CtrlCheckbox*)pCtrl;
-    pThis->m_pImgCurrent = pThis->m_pImgDown;
-    pThis->notifyLayout();
+    m_pParent->setImage( m_pParent->m_pImgDown );
 }
 
 
-void CtrlCheckbox::transUpUpOver( SkinObject *pCtrl )
+void CtrlCheckbox::CmdUpUpOver::execute()
 {
-    CtrlCheckbox *pThis = (CtrlCheckbox*)pCtrl;
-    pThis->m_pImgCurrent = pThis->m_pImgOver;
-    pThis->notifyLayout();
+    m_pParent->setImage( m_pParent->m_pImgOver );
 }
 
 
-void CtrlCheckbox::transUpOverUp( SkinObject *pCtrl )
+void CtrlCheckbox::CmdUpOverUp::execute()
 {
-    CtrlCheckbox *pThis = (CtrlCheckbox*)pCtrl;
-    pThis->m_pImgCurrent = pThis->m_pImgUp;
-    pThis->notifyLayout();
+    m_pParent->setImage( m_pParent->m_pImgUp );
 }
 
 
-void CtrlCheckbox::transDownUp( SkinObject *pCtrl )
+void CtrlCheckbox::CmdDownUp::execute()
 {
-    CtrlCheckbox *pThis = (CtrlCheckbox*)pCtrl;
-    pThis->releaseMouse();
+    m_pParent->releaseMouse();
 }
 
 
-void CtrlCheckbox::transUpHidden( SkinObject *pCtrl )
+void CtrlCheckbox::CmdUpHidden::execute()
 {
-    CtrlCheckbox *pThis = (CtrlCheckbox*)pCtrl;
-    pThis->m_pImgCurrent = NULL;
-    pThis->notifyLayout();
+    m_pParent->setImage( NULL );
 }
 
 
-void CtrlCheckbox::transHiddenUp( SkinObject *pCtrl )
+void CtrlCheckbox::CmdHiddenUp::execute()
 {
-    CtrlCheckbox *pThis = (CtrlCheckbox*)pCtrl;
-    pThis->m_pImgCurrent = pThis->m_pImgUp;
-    pThis->notifyLayout();
+    m_pParent->setImage( m_pParent->m_pImgUp );
 }
 
 
@@ -255,27 +246,33 @@ void CtrlCheckbox::onVarBoolUpdate( VarBool &rVariable )
 }
 
 
+void CtrlCheckbox::onUpdate( Subject<AnimBitmap> &rBitmap, void *arg )
+{
+    notifyLayout();
+}
+
+
 void CtrlCheckbox::changeButton()
 {
     // Are we using the first set of images or the second one?
-    if( m_pImgUp == m_pImgUp1 )
+    if( m_pImgUp == &m_imgUp1 )
     {
-        m_pImgUp = m_pImgUp2;
-        m_pImgOver = m_pImgOver2;
-        m_pImgDown = m_pImgDown2;
+        m_pImgUp = &m_imgUp2;
+        m_pImgOver = &m_imgOver2;
+        m_pImgDown = &m_imgDown2;
         m_pTooltip = &m_tooltip2;
         m_pCommand = &m_rCommand2;
     }
     else
     {
-        m_pImgUp = m_pImgUp1;
-        m_pImgOver = m_pImgOver1;
-        m_pImgDown = m_pImgDown1;
+        m_pImgUp = &m_imgUp1;
+        m_pImgOver = &m_imgOver1;
+        m_pImgDown = &m_imgDown1;
         m_pTooltip = &m_tooltip1;
         m_pCommand = &m_rCommand1;
     }
     // XXX: We assume that the checkbox is up
-    m_pImgCurrent = m_pImgUp;
+    setImage( m_pImgUp );
 
     // Notify the window the tooltip has changed
     notifyTooltipChange();

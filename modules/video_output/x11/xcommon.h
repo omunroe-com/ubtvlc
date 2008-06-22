@@ -1,8 +1,8 @@
 /*****************************************************************************
  * xcommon.h: Defines common to the X11 and XVideo plugins
  *****************************************************************************
- * Copyright (C) 1998-2001 VideoLAN
- * $Id: xcommon.h 7431 2004-04-23 05:44:18Z gbazin $
+ * Copyright (C) 1998-2001 the VideoLAN team
+ * $Id: xcommon.h 25069 2008-02-10 12:14:17Z courmisch $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -103,7 +103,7 @@ struct vout_sys_t
     /* X11 generic properties */
     vlc_bool_t          b_altfullscreen;          /* which fullscreen method */
 #ifdef HAVE_SYS_SHM_H
-    vlc_bool_t          b_shm;               /* shared memory extension flag */
+    int                 i_shm_opcode;      /* shared memory extension opcode */
 #endif
 
 #ifdef MODULE_NAME_IS_xvideo
@@ -117,10 +117,10 @@ struct vout_sys_t
 #endif
 
     /* Screen saver properties */
-    unsigned int        i_ss_timeout;                             /* timeout */
-    unsigned int        i_ss_interval;           /* interval between changes */
-    unsigned int        i_ss_blanking;                      /* blanking mode */
-    unsigned int        i_ss_exposure;                      /* exposure mode */
+    int                 i_ss_timeout;                             /* timeout */
+    int                 i_ss_interval;           /* interval between changes */
+    int                 i_ss_blanking;                      /* blanking mode */
+    int                 i_ss_exposure;                      /* exposure mode */
 #ifdef DPMSINFO_IN_DPMS_H
     BOOL                b_ss_dpms;                              /* DPMS mode */
 #endif
@@ -142,6 +142,13 @@ struct vout_sys_t
     vlc_bool_t          b_net_wm_state_stays_on_top;
     Atom                net_wm_state_below;
     vlc_bool_t          b_net_wm_state_below;
+
+#ifdef MODULE_NAME_IS_glx
+    /* GLX properties */
+    int                 b_glx13;
+    GLXContext          gwctx;
+    GLXWindow           gwnd;
+#endif
 };
 
 /*****************************************************************************
@@ -169,11 +176,12 @@ struct picture_sys_t
 #define PROP_MWM_HINTS_ELEMENTS 5
 typedef struct mwmhints_t
 {
-    uint32_t flags;
-    uint32_t functions;
-    uint32_t decorations;
-    int32_t  input_mode;
-    uint32_t status;
+    unsigned long flags;
+    unsigned long functions;
+    unsigned long decorations;
+    signed   long input_mode;
+    unsigned long status;
+
 } mwmhints_t;
 
 /*****************************************************************************

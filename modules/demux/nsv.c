@@ -1,8 +1,8 @@
 /*****************************************************************************
  * nsv.c: NullSoft Video demuxer.
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: nsv.c 7232 2004-04-01 23:21:13Z fenrir $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: nsv.c 19657 2007-04-03 21:23:26Z jb $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -44,6 +44,8 @@ static void Close  ( vlc_object_t * );
 vlc_module_begin();
     set_description( _("NullSoft demuxer" ) );
     set_capability( "demux2", 10 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_callbacks( Open, Close );
     add_shortcut( "nsv" );
 vlc_module_end();
@@ -87,16 +89,14 @@ static int Open( vlc_object_t *p_this )
     uint8_t     *p_peek;
 
     if( stream_Peek( p_demux->s, &p_peek, 8 ) < 8 )
-    {
-        msg_Err( p_demux, "cannot peek" );
         return VLC_EGENERIC;
-    }
-    if( strncmp( p_peek, "NSVf", 4 ) && strncmp( p_peek, "NSVs", 4 ))
+
+    if( strncmp( (char *)p_peek, "NSVf", 4 )
+            && strncmp( (char *)p_peek, "NSVs", 4 ))
     {
        /* In case we had force this demuxer we try to resynch */
         if( strcmp( p_demux->psz_demux, "nsv" ) || ReSynch( p_demux ) )
         {
-            msg_Warn( p_demux, "NSV module discarded" );
             return VLC_EGENERIC;
         }
     }
@@ -155,14 +155,14 @@ static int Demux( demux_t *p_demux )
             return 0;
         }
 
-        if( !strncmp( p_peek, "NSVf", 4 ) )
+        if( !strncmp( (char *)p_peek, "NSVf", 4 ) )
         {
             if( ReadNSVf( p_demux ) )
             {
                 return -1;
             }
         }
-        else if( !strncmp( p_peek, "NSVs", 4 ) )
+        else if( !strncmp( (char *)p_peek, "NSVs", 4 ) )
         {
             if( ReadNSVs( p_demux ) )
             {
@@ -382,7 +382,7 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
  *****************************************************************************/
 static int ReSynch( demux_t *p_demux )
 {
-    uint8_t *p_peek;
+    uint8_t  *p_peek;
     int      i_skip;
     int      i_peek;
 
@@ -396,7 +396,8 @@ static int ReSynch( demux_t *p_demux )
 
         while( i_skip < i_peek - 4 )
         {
-            if( !strncmp( p_peek, "NSVf", 4 ) || !strncmp( p_peek, "NSVs", 4 ) )
+            if( !strncmp( (char *)p_peek, "NSVf", 4 )
+                    || !strncmp( (char *)p_peek, "NSVs", 4 ) )
             {
                 if( i_skip > 0 )
                 {
@@ -448,7 +449,6 @@ static int ReadNSVs( demux_t *p_demux )
         return VLC_EGENERIC;
     }
 
-    msg_Dbg( p_demux, "new NSVs chunk" );
     /* Video */
     switch( ( fcc = VLC_FOURCC( header[4], header[5], header[6], header[7] ) ) )
     {
@@ -456,10 +456,13 @@ static int ReadNSVs( demux_t *p_demux )
         case VLC_FOURCC( 'V', 'P', '3', '1' ):
             fcc = VLC_FOURCC( 'V', 'P', '3', '1' );
             break;
+        case VLC_FOURCC( 'V', 'P', '6', '0' ):
+        case VLC_FOURCC( 'V', 'P', '6', '1' ):
+        case VLC_FOURCC( 'V', 'P', '6', '2' ):
         case VLC_FOURCC( 'N', 'O', 'N', 'E' ):
             break;
         default:
-            msg_Warn( p_demux, "unknown codec" );
+            msg_Warn( p_demux, "unknown codec %4.4s", (char *)&fcc );
             break;
     }
     if( fcc != VLC_FOURCC( 'N', 'O', 'N', 'E' ) && fcc != p_sys->fmt_video.i_codec  )
@@ -489,12 +492,13 @@ static int ReadNSVs( demux_t *p_demux )
             fcc = VLC_FOURCC( 'a', 'r', 'a', 'w' );
             break;
         case VLC_FOURCC( 'A', 'A', 'C', ' ' ):
+        case VLC_FOURCC( 'A', 'A', 'C', 'P' ):
             fcc = VLC_FOURCC( 'm', 'p', '4', 'a' );
             break;
         case VLC_FOURCC( 'N', 'O', 'N', 'E' ):
             break;
         default:
-            msg_Warn( p_demux, "unknown codec" );
+            msg_Warn( p_demux, "unknown codec %4.4s", (char *)&fcc );
             break;
     }
 
@@ -544,7 +548,7 @@ static int ReadNSVs( demux_t *p_demux )
         msg_Dbg( p_demux, "invalid fps (0x00)" );
         p_sys->i_pcr_inc = 40000;
     }
-    msg_Dbg( p_demux, "    - fps=%.3f", 1000000.0 / (double)p_sys->i_pcr_inc );
+    //msg_Dbg( p_demux, "    - fps=%.3f", 1000000.0 / (double)p_sys->i_pcr_inc );
 
     return VLC_SUCCESS;
 }

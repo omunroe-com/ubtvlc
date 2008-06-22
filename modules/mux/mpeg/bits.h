@@ -1,8 +1,8 @@
 /*****************************************************************************
  * bits.h
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: bits.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id: bits.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 typedef struct bits_buffer_s
@@ -43,18 +43,9 @@ static inline int bits_initwrite( bits_buffer_t *p_buffer,
     if( !p_buffer->p_data )
     {
         if( !( p_buffer->p_data = malloc( i_size ) ) )
-        {
-            return( -1 );
-        }
-        else
-        {
-            return( 0 );
-        }
+            return -1;
     }
-    else
-    {
-        return( 0 );
-    }
+    return 0;
 }
 
 static inline void bits_align( bits_buffer_t *p_buffer )

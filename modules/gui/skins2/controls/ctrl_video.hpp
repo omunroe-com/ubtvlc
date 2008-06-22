@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_video.hpp
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: ctrl_video.hpp 7073 2004-03-14 14:33:12Z asmax $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: ctrl_video.hpp 16457 2006-08-31 20:51:12Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -18,22 +18,23 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CTRL_VIDEO_HPP
 #define CTRL_VIDEO_HPP
 
 #include "ctrl_generic.hpp"
+#include "../utils/position.hpp"
 
 class VoutWindow;
 
 /// Control video
-class CtrlVideo: public CtrlGeneric
+class CtrlVideo: public CtrlGeneric, public Observer<VarBox>
 {
     public:
-        CtrlVideo( intf_thread_t *pIntf, const UString &rHelp,
-                   VarBool *pVisible );
+        CtrlVideo( intf_thread_t *pIntf, GenericLayout &rLayout,
+                   bool autoResize, const UString &rHelp, VarBool *pVisible );
         virtual ~CtrlVideo();
 
         /// Handle an event on the control
@@ -45,12 +46,28 @@ class CtrlVideo: public CtrlGeneric
         /// Callback for layout resize
         virtual void onResize();
 
+        /// Called when the Position is set
+        virtual void onPositionChange();
+
         /// Draw the control on the given graphics
         virtual void draw( OSGraphics &rImage, int xDest, int yDest );
+
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return "video"; }
+
+        /// Method called when the vout size is updated
+        virtual void onUpdate( Subject<VarBox> &rVoutSize, void* );
+
+        /// Called by the layout when the control is show/hidden
+        void setVisible( bool visible );
 
     private:
         /// Vout window
         VoutWindow *m_pVout;
+        /// Associated layout
+        GenericLayout &m_rLayout;
+        /// Difference between layout size and video size
+        int m_xShift, m_yShift;
 };
 
 #endif

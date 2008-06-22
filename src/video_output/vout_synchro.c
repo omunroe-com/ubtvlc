@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout_synchro.c : frame dropping routines
  *****************************************************************************
- * Copyright (C) 1999-2004 VideoLAN
- * $Id: vout_synchro.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999-2005 the VideoLAN team
+ * $Id: vout_synchro.c 14118 2006-02-01 18:06:48Z courmisch $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Samuel Hocevar <sam@via.ecp.fr>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*
@@ -48,7 +48,7 @@
  * T            : Picture period, T = 1/frame_rate.
  * tau[I,P,B]   : Mean time to decode an [I,P,B] picture.
  * tauYUV       : Mean time to render a picture (given by the video_output).
- * tau´[I,P,B] = 2 * tau[I,P,B] + tauYUV
+ * tauÂ´[I,P,B] = 2 * tau[I,P,B] + tauYUV
  *              : Mean time + typical difference (estimated to tau/2, that
  *                needs to be confirmed) + render time.
  * DELTA        : A given error margin.
@@ -66,23 +66,23 @@
  * Otherwise :
  * We can decode an I picture if we simply have enough time to decode it
  * before displaying :
- *      t0 - t > tau´I + DELTA
+ *      t0 - t > tauÂ´I + DELTA
  *
  * 5. Decoding of a P picture
  *    =======================
  * On fast machines, we decode all P's.
  * Otherwise :
  * First criterion : have time to decode it.
- *      t2 - t > tau´P + DELTA
+ *      t2 - t > tauÂ´P + DELTA
  *
  * Second criterion : it shouldn't prevent us from displaying the forthcoming
  * I picture, which is more important.
- *      t12 - t > tau´P + tau´I + DELTA
+ *      t12 - t > tauÂ´P + tauÂ´I + DELTA
  *
  * 6. Decoding of a B picture
  *    =======================
  * On fast machines, we decode all B's. Otherwise :
- *      t1 - t > tau´B + DELTA
+ *      t1 - t > tauÂ´B + DELTA
  * Since the next displayed I or P is already decoded, we don't have to
  * worry about it.
  *
@@ -99,9 +99,9 @@
 
 #include <vlc/vlc.h>
 #include <vlc/vout.h>
+#include <vlc/input.h>
 
 #include "vout_synchro.h"
-#include "stream_control.h"
 
 /*
  * Local prototypes
@@ -128,6 +128,9 @@ vout_synchro_t * __vout_SynchroInit( vlc_object_t * p_object,
         return NULL;
     }
     vlc_object_attach( p_synchro, p_object );
+
+    p_synchro->b_no_skip = !config_GetInt( p_object, "skip-frames" );
+    p_synchro->b_quiet = config_GetInt( p_object, "quiet-synchro" );
 
     /* We use a fake stream pattern, which is often right. */
     p_synchro->i_n_p = p_synchro->i_eta_p = DEFAULT_NB_P;
@@ -169,27 +172,33 @@ void vout_SynchroReset( vout_synchro_t * p_synchro )
  * vout_SynchroChoose : Decide whether we will decode a picture or not
  *****************************************************************************/
 vlc_bool_t vout_SynchroChoose( vout_synchro_t * p_synchro, int i_coding_type,
-                               int i_render_time )
+                               int i_render_time, vlc_bool_t b_low_delay )
 {
 #define TAU_PRIME( coding_type )    (p_synchro->p_tau[(coding_type)] \
                                     + (p_synchro->p_tau[(coding_type)] >> 1) \
                                     + p_synchro->i_render_time)
 #define S (*p_synchro)
-    /* VPAR_SYNCHRO_DEFAULT */
     mtime_t         now, period;
     mtime_t         pts = 0;
     vlc_bool_t      b_decode = 0;
 
+    if ( p_synchro->b_no_skip )
+        return 1;
+
     now = mdate();
     period = 1000000 * 1001 / p_synchro->i_frame_rate
-                     * p_synchro->i_current_rate / DEFAULT_RATE;
+                     * p_synchro->i_current_rate / INPUT_RATE_DEFAULT;
 
     p_synchro->i_render_time = i_render_time;
 
     switch( i_coding_type )
     {
     case I_CODING_TYPE:
-        if( S.backward_pts )
+        if( b_low_delay )
+        {
+            pts = S.current_pts;
+        }
+        else if( S.backward_pts )
         {
             pts = S.backward_pts;
         }
@@ -212,7 +221,7 @@ vlc_bool_t vout_SynchroChoose( vout_synchro_t * p_synchro, int i_coding_type,
         {
             b_decode = (pts - now) > (TAU_PRIME(I_CODING_TYPE) + DELTA);
         }
-        if( !b_decode )
+        if( !b_decode && !p_synchro->b_quiet )
         {
             msg_Warn( p_synchro,
                       "synchro trashing I ("I64Fd")", pts - now );
@@ -220,7 +229,11 @@ vlc_bool_t vout_SynchroChoose( vout_synchro_t * p_synchro, int i_coding_type,
         break;
 
     case P_CODING_TYPE:
-        if( S.backward_pts )
+        if( b_low_delay )
+        {
+            pts = S.current_pts;
+        }
+        else if( S.backward_pts )
         {
             pts = S.backward_pts;
         }
@@ -347,10 +360,11 @@ mtime_t vout_SynchroDate( vout_synchro_t * p_synchro )
  *****************************************************************************/
 void vout_SynchroNewPicture( vout_synchro_t * p_synchro, int i_coding_type,
                              int i_repeat_field, mtime_t next_pts,
-                             mtime_t next_dts, int i_current_rate )
+                             mtime_t next_dts, int i_current_rate,
+                             vlc_bool_t b_low_delay )
 {
     mtime_t         period = 1000000 * 1001 / p_synchro->i_frame_rate
-                              * i_current_rate / DEFAULT_RATE;
+                              * i_current_rate / INPUT_RATE_DEFAULT;
 #if 0
     mtime_t         now = mdate();
 #endif
@@ -362,9 +376,12 @@ void vout_SynchroNewPicture( vout_synchro_t * p_synchro, int i_coding_type,
         if( p_synchro->i_eta_p
              && p_synchro->i_eta_p != p_synchro->i_n_p )
         {
-            msg_Dbg( p_synchro,
-                     "stream periodicity changed from P[%d] to P[%d]",
-                     p_synchro->i_n_p, p_synchro->i_eta_p );
+#if 0
+            if( !p_synchro->b_quiet )
+                msg_Dbg( p_synchro,
+                         "stream periodicity changed from P[%d] to P[%d]",
+                         p_synchro->i_n_p, p_synchro->i_eta_p );
+#endif
             p_synchro->i_n_p = p_synchro->i_eta_p;
         }
         p_synchro->i_eta_p = p_synchro->i_eta_b = 0;
@@ -375,27 +392,29 @@ void vout_SynchroNewPicture( vout_synchro_t * p_synchro, int i_coding_type,
             p_synchro->i_dec_nb_ref = p_synchro->i_nb_ref;
 
 #if 0
-        msg_Dbg( p_synchro, "I("I64Fd") P("I64Fd")[%d] B("I64Fd")"
-              "[%d] YUV("I64Fd") : trashed %d:%d/%d",
-              p_synchro->p_tau[I_CODING_TYPE],
-              p_synchro->p_tau[P_CODING_TYPE],
-              p_synchro->i_n_p,
-              p_synchro->p_tau[B_CODING_TYPE],
-              p_synchro->i_n_b,
-              p_synchro->i_render_time,
-              p_synchro->i_not_chosen_pic,
-              p_synchro->i_trashed_pic -
-              p_synchro->i_not_chosen_pic,
-              p_synchro->i_pic );
+        if( !p_synchro->b_quiet )
+            msg_Dbg( p_synchro, "I("I64Fd") P("I64Fd")[%d] B("I64Fd")"
+                  "[%d] YUV("I64Fd") : trashed %d:%d/%d",
+                  p_synchro->p_tau[I_CODING_TYPE],
+                  p_synchro->p_tau[P_CODING_TYPE],
+                  p_synchro->i_n_p,
+                  p_synchro->p_tau[B_CODING_TYPE],
+                  p_synchro->i_n_b,
+                  p_synchro->i_render_time,
+                  p_synchro->i_not_chosen_pic,
+                  p_synchro->i_trashed_pic -
+                  p_synchro->i_not_chosen_pic,
+                  p_synchro->i_pic );
         p_synchro->i_trashed_pic = p_synchro->i_not_chosen_pic
             = p_synchro->i_pic = 0;
 #else
-        if ( p_synchro->i_pic >= 100 )
+        if( p_synchro->i_pic >= 100 )
         {
-            msg_Dbg( p_synchro, "decoded %d/%d pictures",
-                     p_synchro->i_pic
-                       - p_synchro->i_trashed_pic,
-                     p_synchro->i_pic );
+            if( !p_synchro->b_quiet && p_synchro->i_trashed_pic != 0 )
+                msg_Dbg( p_synchro, "decoded %d/%d pictures",
+                         p_synchro->i_pic
+                           - p_synchro->i_trashed_pic,
+                         p_synchro->i_pic );
             p_synchro->i_trashed_pic = p_synchro->i_not_chosen_pic
                 = p_synchro->i_pic = 0;
         }
@@ -407,9 +426,12 @@ void vout_SynchroNewPicture( vout_synchro_t * p_synchro, int i_coding_type,
         if( p_synchro->i_eta_b
              && p_synchro->i_eta_b != p_synchro->i_n_b )
         {
-            msg_Dbg( p_synchro,
-                     "stream periodicity changed from B[%d] to B[%d]",
-                     p_synchro->i_n_b, p_synchro->i_eta_b );
+#if 0
+            if( !p_synchro->b_quiet )
+                msg_Dbg( p_synchro,
+                         "stream periodicity changed from B[%d] to B[%d]",
+                         p_synchro->i_n_b, p_synchro->i_eta_b );
+#endif
             p_synchro->i_n_b = p_synchro->i_eta_b;
         }
         p_synchro->i_eta_b = 0;
@@ -428,7 +450,7 @@ void vout_SynchroNewPicture( vout_synchro_t * p_synchro, int i_coding_type,
                                         * (period >> 1);
 
 #define PTS_THRESHOLD   (period >> 2)
-    if( i_coding_type == B_CODING_TYPE )
+    if( i_coding_type == B_CODING_TYPE || b_low_delay )
     {
         /* A video frame can be displayed 1, 2 or 3 times, according to
          * repeat_first_field, top_field_first, progressive_sequence and
@@ -437,10 +459,10 @@ void vout_SynchroNewPicture( vout_synchro_t * p_synchro, int i_coding_type,
 
         if( next_pts )
         {
-            if( next_pts - p_synchro->current_pts
+            if( (next_pts - p_synchro->current_pts
                     > PTS_THRESHOLD
-                 || p_synchro->current_pts - next_pts
-                    > PTS_THRESHOLD )
+                  || p_synchro->current_pts - next_pts
+                    > PTS_THRESHOLD) && !p_synchro->b_quiet )
             {
                 msg_Warn( p_synchro, "vout synchro warning: pts != "
                           "current_date ("I64Fd")",
@@ -460,17 +482,17 @@ void vout_SynchroNewPicture( vout_synchro_t * p_synchro, int i_coding_type,
             if( next_dts &&
                 (next_dts - p_synchro->backward_pts
                     > PTS_THRESHOLD
-              || p_synchro->backward_pts - next_dts
-                    > PTS_THRESHOLD) )
+                  || p_synchro->backward_pts - next_dts
+                    > PTS_THRESHOLD) && !p_synchro->b_quiet )
             {
                 msg_Warn( p_synchro, "backward_pts != dts ("I64Fd")",
                            next_dts
                                - p_synchro->backward_pts );
             }
-            if( p_synchro->backward_pts - p_synchro->current_pts
+            if( (p_synchro->backward_pts - p_synchro->current_pts
                     > PTS_THRESHOLD
-                 || p_synchro->current_pts - p_synchro->backward_pts
-                    > PTS_THRESHOLD )
+                  || p_synchro->current_pts - p_synchro->backward_pts
+                    > PTS_THRESHOLD) && !p_synchro->b_quiet )
             {
                 msg_Warn( p_synchro,
                           "backward_pts != current_pts ("I64Fd")",
@@ -482,10 +504,10 @@ void vout_SynchroNewPicture( vout_synchro_t * p_synchro, int i_coding_type,
         }
         else if( next_dts )
         {
-            if( next_dts - p_synchro->current_pts
+            if( (next_dts - p_synchro->current_pts
                     > PTS_THRESHOLD
-                 || p_synchro->current_pts - next_dts
-                    > PTS_THRESHOLD )
+                  || p_synchro->current_pts - next_dts
+                    > PTS_THRESHOLD) && !p_synchro->b_quiet )
             {
                 msg_Warn( p_synchro, "dts != current_pts ("I64Fd")",
                           p_synchro->current_pts
@@ -511,8 +533,9 @@ void vout_SynchroNewPicture( vout_synchro_t * p_synchro, int i_coding_type,
     {
         /* We cannot be _that_ late, something must have happened, reinit
          * the dates. */
-        msg_Warn( p_synchro, "PTS << now ("I64Fd"), resetting",
-                   now - p_synchro->current_pts - DEFAULT_PTS_DELAY );
+        if( !p_synchro->b_quiet )
+            msg_Warn( p_synchro, "PTS << now ("I64Fd"), resetting",
+                      now - p_synchro->current_pts - DEFAULT_PTS_DELAY );
         p_synchro->current_pts = now + DEFAULT_PTS_DELAY;
     }
     if( p_synchro->backward_pts

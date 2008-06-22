@@ -1,8 +1,8 @@
 /*****************************************************************************
  * postprocess.c: video postprocessing using the ffmpeg library
  *****************************************************************************
- * Copyright (C) 1999-2001 VideoLAN
- * $Id: postprocess.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999-2001 the VideoLAN team
+ * $Id: postprocess.c 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <vlc/vlc.h>
@@ -41,6 +41,10 @@
 #   include <postproc/postprocess.h>
 #else
 #   include <libpostproc/postprocess.h>
+#endif
+
+#ifndef PP_CPU_CAPS_ALTIVEC
+#   define PP_CPU_CAPS_ALTIVEC 0
 #endif
 
 /*****************************************************************************
@@ -107,6 +111,8 @@ void *E_(OpenPostproc)( decoder_t *p_dec, vlc_bool_t *pb_pp )
     /* ***** Load post processing if enabled ***** */
     var_Get( p_dec, "ffmpeg-pp-q", &val );
     var_Set( p_dec, "ffmpeg-pp-q", val_orig );
+    if( val_orig.i_int )
+        *pb_pp = VLC_TRUE;
 
     return p_sys;
 }
@@ -121,6 +127,7 @@ int E_(InitPostproc)( decoder_t *p_dec, void *p_data,
     int32_t i_cpu = p_dec->p_libvlc->i_cpu;
     int i_flags = 0;
 
+    /* Set CPU capabilities */
     if( i_cpu & CPU_CAPABILITY_MMX )
     {
         i_flags |= PP_CPU_CAPS_MMX;
@@ -132,6 +139,10 @@ int E_(InitPostproc)( decoder_t *p_dec, void *p_data,
     if( i_cpu & CPU_CAPABILITY_3DNOW )
     {
         i_flags |= PP_CPU_CAPS_3DNOW;
+    }
+    if( i_cpu & CPU_CAPABILITY_ALTIVEC )
+    {
+        i_flags |= PP_CPU_CAPS_ALTIVEC;
     }
 
     switch( pix_fmt )

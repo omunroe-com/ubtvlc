@@ -1,8 +1,8 @@
 /*****************************************************************************
  * udp.c
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: udp.c 7522 2004-04-27 16:35:15Z sam $
+ * Copyright (C) 2001-2005 the VideoLAN team
+ * $Id: udp.c 19592 2007-04-01 00:31:04Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -51,6 +51,18 @@
 
 #include "network.h"
 
+#define MAX_EMPTY_BLOCKS 200
+
+#if defined(WIN32) || defined(UNDER_CE)
+# define WINSOCK_STRERROR_SIZE 20
+static const char *winsock_strerror( char *buf )
+{
+    snprintf( buf, WINSOCK_STRERROR_SIZE, "Winsock error %d",
+              WSAGetLastError( ) );
+    buf[WINSOCK_STRERROR_SIZE - 1] = '\0';
+    return buf;
+}
+#endif
 
 /*****************************************************************************
  * Module descriptor
@@ -62,38 +74,36 @@ static void Close( vlc_object_t * );
 
 #define CACHING_TEXT N_("Caching value (ms)")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for UDP streams. This " \
-    "value should be set in millisecond units." )
+    "Default caching value for outbound UDP streams. This " \
+    "value should be set in milliseconds." )
 
-#define TTL_TEXT N_("Time To Live")
-#define TTL_LONGTEXT N_("Allows you to define the time to live of the " \
+#define TTL_TEXT N_("Time-To-Live (TTL)")
+#define TTL_LONGTEXT N_("Time-To-Live of the " \
                         "outgoing stream.")
 
 #define GROUP_TEXT N_("Group packets")
 #define GROUP_LONGTEXT N_("Packets can be sent one by one at the right time " \
-                          "or by groups. This allows you to give the number " \
+                          "or by groups. You can choose the number " \
                           "of packets that will be sent at a time. It " \
                           "helps reducing the scheduling load on " \
                           "heavily-loaded systems." )
-#define LATE_TEXT N_("Late delay (ms)" )
-#define LATE_LONGTEXT N_("Late packets are dropped. This allows you to give " \
-                       "the time (in milliseconds) a packet is allowed to be" \
-                       " late.")
 #define RAW_TEXT N_("Raw write")
-#define RAW_LONGTEXT N_("If you enable this option, packets will be sent " \
+#define RAW_LONGTEXT N_("Packets will be sent " \
                        "directly, without trying to fill the MTU (ie, " \
                        "without trying to make the biggest possible packets " \
                        "in order to improve streaming)." )
 
 vlc_module_begin();
     set_description( _("UDP stream output") );
+    set_shortname( "UDP" );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_ACO );
     add_integer( SOUT_CFG_PREFIX "caching", DEFAULT_PTS_DELAY / 1000, NULL, CACHING_TEXT, CACHING_LONGTEXT, VLC_TRUE );
     add_integer( SOUT_CFG_PREFIX "ttl", 0, NULL,TTL_TEXT, TTL_LONGTEXT,
                                  VLC_TRUE );
     add_integer( SOUT_CFG_PREFIX "group", 1, NULL, GROUP_TEXT, GROUP_LONGTEXT,
                                  VLC_TRUE );
-    add_integer( SOUT_CFG_PREFIX "late", 0, NULL, LATE_TEXT, LATE_LONGTEXT,
-                                 VLC_TRUE );
+    add_suppressed_integer( SOUT_CFG_PREFIX "late" );
     add_bool( SOUT_CFG_PREFIX "raw",  0, NULL, RAW_TEXT, RAW_LONGTEXT,
                                  VLC_TRUE );
 
@@ -111,7 +121,6 @@ static const char *ppsz_sout_options[] = {
     "caching",
     "ttl",
     "group",
-    "late",
     "raw",
     NULL
 };
@@ -121,9 +130,7 @@ static int  WriteRaw( sout_access_out_t *, block_t * );
 static int  Seek    ( sout_access_out_t *, off_t  );
 
 static void ThreadWrite( vlc_object_t * );
-
 static block_t *NewUDPPacket( sout_access_out_t *, mtime_t );
-
 
 typedef struct sout_access_thread_t
 {
@@ -136,8 +143,9 @@ typedef struct sout_access_thread_t
     int         i_handle;
 
     int64_t     i_caching;
-    int64_t     i_late;
     int         i_group;
+
+    block_fifo_t *p_empty_blocks;
 
 } sout_access_thread_t;
 
@@ -147,12 +155,13 @@ struct sout_access_out_sys_t
     uint16_t            i_sequence_number;
     uint32_t            i_ssrc;
 
-    unsigned int        i_mtu;
+    int                 i_mtu;
 
     block_t             *p_buffer;
 
     sout_access_thread_t *p_thread;
 
+    vlc_bool_t          b_mtu_warning;
 };
 
 #define DEFAULT_PORT 1234
@@ -169,26 +178,24 @@ static int Open( vlc_object_t *p_this )
     char                *psz_dst_addr;
     int                 i_dst_port;
 
-    module_t            *p_network;
-    network_socket_t    socket_desc;
+    int                 i_handle;
 
     vlc_value_t         val;
 
-    sout_ParseCfg( p_access, SOUT_CFG_PREFIX, ppsz_sout_options, p_access->p_cfg );
+    sout_CfgParse( p_access, SOUT_CFG_PREFIX,
+                   ppsz_sout_options, p_access->p_cfg );
 
-    if( !( p_sys = p_access->p_sys =
-                malloc( sizeof( sout_access_out_sys_t ) ) ) )
+    if( !( p_sys = malloc( sizeof( sout_access_out_sys_t ) ) ) )
     {
         msg_Err( p_access, "not enough memory" );
         return VLC_EGENERIC;
     }
-
+    memset( p_sys, 0, sizeof(sout_access_out_sys_t) );
+    p_access->p_sys = p_sys;
 
     if( p_access->psz_access != NULL &&
         !strcmp( p_access->psz_access, "rtp" ) )
     {
-        msg_Warn( p_access, "be careful that rtp output only works with ts "
-                  "payload (not an error)" );
         p_sys->b_rtpts = 1;
     }
     else
@@ -231,29 +238,23 @@ static int Open( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
 
+    vlc_object_attach( p_sys->p_thread, p_access );
     p_sys->p_thread->p_sout = p_access->p_sout;
     p_sys->p_thread->b_die  = 0;
     p_sys->p_thread->b_error= 0;
     p_sys->p_thread->p_fifo = block_FifoNew( p_access );
-
-    socket_desc.i_type = NETWORK_UDP;
-    socket_desc.psz_server_addr = psz_dst_addr;
-    socket_desc.i_server_port   = i_dst_port;
-    socket_desc.psz_bind_addr   = "";
-    socket_desc.i_bind_port     = 0;
+    p_sys->p_thread->p_empty_blocks = block_FifoNew( p_access );
 
     var_Get( p_access, SOUT_CFG_PREFIX "ttl", &val );
-    socket_desc.i_ttl = val.i_int;
-
-    p_sys->p_thread->p_private = (void*)&socket_desc;
-    if( !( p_network = module_Need( p_sys->p_thread, "network", NULL, 0 ) ) )
+    i_handle = net_ConnectUDP( p_this, psz_dst_addr, i_dst_port, val.i_int );
+    if( i_handle == -1 )
     {
-        msg_Err( p_access, "failed to open a connection (udp)" );
-        return VLC_EGENERIC;
+         msg_Err( p_access, "failed to open a connection (udp)" );
+         return VLC_EGENERIC;
     }
-    module_Unneed( p_sys->p_thread, p_network );
 
-    p_sys->p_thread->i_handle = socket_desc.i_handle;
+    p_sys->p_thread->i_handle = i_handle;
+    net_StopRecv( i_handle );
 
     var_Get( p_access, SOUT_CFG_PREFIX "caching", &val );
     p_sys->p_thread->i_caching = (int64_t)val.i_int * 1000;
@@ -261,18 +262,10 @@ static int Open( vlc_object_t *p_this )
     var_Get( p_access, SOUT_CFG_PREFIX "group", &val );
     p_sys->p_thread->i_group = val.i_int;
 
-    var_Get( p_access, SOUT_CFG_PREFIX "late", &val );
-    p_sys->p_thread->i_late = (int64_t)val.i_int * 1000;
+    p_sys->i_mtu = var_CreateGetInteger( p_this, "mtu" );
 
-    p_sys->i_mtu = socket_desc.i_mtu;
-
-#ifdef WIN32
     if( vlc_thread_create( p_sys->p_thread, "sout write thread", ThreadWrite,
                            VLC_THREAD_PRIORITY_HIGHEST, VLC_FALSE ) )
-#else
-    if( vlc_thread_create( p_sys->p_thread, "sout write thread", ThreadWrite,
-                           VLC_THREAD_PRIORITY_OUTPUT, VLC_FALSE ) )
-#endif
     {
         msg_Err( p_access->p_sout, "cannot spawn sout access thread" );
         vlc_object_destroy( p_sys->p_thread );
@@ -285,18 +278,13 @@ static int Open( vlc_object_t *p_this )
     p_sys->i_ssrc            = rand()&0xffffffff;
 
     var_Get( p_access, SOUT_CFG_PREFIX "raw", &val );
-    if( val.b_bool )
-    {
-        p_access->pf_write = WriteRaw;
-    }
-    else
-    {
-        p_access->pf_write = Write;
-    }
+    if( val.b_bool )  p_access->pf_write = WriteRaw;
+    else p_access->pf_write = Write;
 
     p_access->pf_seek = Seek;
 
-    msg_Dbg( p_access, "udp access output opened(%s:%d)", psz_dst_addr, i_dst_port );
+    msg_Dbg( p_access, "udp access output opened(%s:%d)",
+             psz_dst_addr, i_dst_port );
 
     free( psz_dst_addr );
 
@@ -322,19 +310,20 @@ static void Close( vlc_object_t * p_this )
         p_dummy->i_dts = 0;
         p_dummy->i_pts = 0;
         p_dummy->i_length = 0;
+        memset( p_dummy->p_buffer, 0, p_dummy->i_buffer );
         block_FifoPut( p_sys->p_thread->p_fifo, p_dummy );
     }
     vlc_thread_join( p_sys->p_thread );
 
     block_FifoRelease( p_sys->p_thread->p_fifo );
+    block_FifoRelease( p_sys->p_thread->p_empty_blocks );
 
-    if( p_sys->p_buffer )
-    {
-        block_Release( p_sys->p_buffer );
-    }
+    if( p_sys->p_buffer ) block_Release( p_sys->p_buffer );
 
     net_Close( p_sys->p_thread->i_handle );
 
+    vlc_object_detach( p_sys->p_thread );
+    vlc_object_destroy( p_sys->p_thread );
     /* update p_sout->i_out_pace_nocontrol */
     p_access->p_sout->i_out_pace_nocontrol--;
 
@@ -348,46 +337,81 @@ static void Close( vlc_object_t * p_this )
 static int Write( sout_access_out_t *p_access, block_t *p_buffer )
 {
     sout_access_out_sys_t *p_sys = p_access->p_sys;
-    unsigned int i_write;
+    int i_len = 0;
 
     while( p_buffer )
     {
         block_t *p_next;
-        if( p_buffer->i_buffer > p_sys->i_mtu )
+        int i_packets = 0;
+
+        if( !p_sys->b_mtu_warning && p_buffer->i_buffer > p_sys->i_mtu )
         {
-            msg_Warn( p_access, "arggggggggggggg packet size > mtu" );
-            i_write = p_sys->i_mtu;
-        }
-        else
-        {
-            i_write = p_buffer->i_buffer;
+            msg_Warn( p_access, "packet size > MTU, you should probably "
+                      "increase the MTU" );
+            p_sys->b_mtu_warning = VLC_TRUE;
         }
 
-        /* if we have enough data, enque the buffer */
+        /* Check if there is enough space in the buffer */
         if( p_sys->p_buffer &&
-            p_sys->p_buffer->i_buffer + i_write > p_sys->i_mtu )
+            p_sys->p_buffer->i_buffer + p_buffer->i_buffer > p_sys->i_mtu )
         {
+            if( p_sys->p_buffer->i_dts + p_sys->p_thread->i_caching < mdate() )
+            {
+                msg_Dbg( p_access, "late packet for udp input (" I64Fd ")",
+                         mdate() - p_sys->p_buffer->i_dts
+                          - p_sys->p_thread->i_caching );
+            }
             block_FifoPut( p_sys->p_thread->p_fifo, p_sys->p_buffer );
             p_sys->p_buffer = NULL;
         }
 
-        if( !p_sys->p_buffer )
+        i_len += p_buffer->i_buffer;
+        while( p_buffer->i_buffer )
         {
-            p_sys->p_buffer = NewUDPPacket( p_access, p_buffer->i_dts );
-        }
+            int i_write = __MIN( p_buffer->i_buffer, p_sys->i_mtu );
 
-        if( p_buffer->i_buffer > 0 )
-        {
+            i_packets++;
+
+            if( !p_sys->p_buffer )
+            {
+                p_sys->p_buffer = NewUDPPacket( p_access, p_buffer->i_dts );
+                if( !p_sys->p_buffer ) break;
+            }
+
             memcpy( p_sys->p_buffer->p_buffer + p_sys->p_buffer->i_buffer,
                     p_buffer->p_buffer, i_write );
+
             p_sys->p_buffer->i_buffer += i_write;
+            p_buffer->p_buffer += i_write;
+            p_buffer->i_buffer -= i_write;
+            if ( p_buffer->i_flags & BLOCK_FLAG_CLOCK )
+            {
+                if ( p_sys->p_buffer->i_flags & BLOCK_FLAG_CLOCK )
+                    msg_Warn( p_access, "putting two PCRs at once" );
+                p_sys->p_buffer->i_flags |= BLOCK_FLAG_CLOCK;
+            }
+
+            if( p_sys->p_buffer->i_buffer == p_sys->i_mtu || i_packets > 1 )
+            {
+                /* Flush */
+                if( p_sys->p_buffer->i_dts + p_sys->p_thread->i_caching
+                      < mdate() )
+                {
+                    msg_Dbg( p_access, "late packet for udp input (" I64Fd ")",
+                             mdate() - p_sys->p_buffer->i_dts
+                              - p_sys->p_thread->i_caching );
+                }
+                block_FifoPut( p_sys->p_thread->p_fifo, p_sys->p_buffer );
+                p_sys->p_buffer = NULL;
+            }
         }
+
         p_next = p_buffer->p_next;
         block_Release( p_buffer );
         p_buffer = p_next;
     }
 
-    return( p_sys->p_thread->b_error ? -1 : 0 );
+    return( p_sys->p_thread->b_error ? -1 : i_len );
 }
 
 /*****************************************************************************
@@ -396,10 +420,19 @@ static int Write( sout_access_out_t *p_access, block_t *p_buffer )
 static int WriteRaw( sout_access_out_t *p_access, block_t *p_buffer )
 {
     sout_access_out_sys_t   *p_sys = p_access->p_sys;
+    block_t *p_buf;
+    int i_len;
 
+    while ( p_sys->p_thread->p_empty_blocks->i_depth >= MAX_EMPTY_BLOCKS )
+    {
+        p_buf = block_FifoGet(p_sys->p_thread->p_empty_blocks);
+        block_Release( p_buf );
+    }
+
+    i_len = p_buffer->i_buffer;
     block_FifoPut( p_sys->p_thread->p_fifo, p_buffer );
 
-    return( p_sys->p_thread->b_error ? -1 : 0 );
+    return( p_sys->p_thread->b_error ? -1 : i_len );
 }
 
 /*****************************************************************************
@@ -419,7 +452,23 @@ static block_t *NewUDPPacket( sout_access_out_t *p_access, mtime_t i_dts)
     sout_access_out_sys_t *p_sys = p_access->p_sys;
     block_t *p_buffer;
 
-    p_buffer = block_New( p_access->p_sout, p_sys->i_mtu );
+    while ( p_sys->p_thread->p_empty_blocks->i_depth > MAX_EMPTY_BLOCKS )
+    {
+        p_buffer = block_FifoGet( p_sys->p_thread->p_empty_blocks );
+        block_Release( p_buffer );
+    }
+
+    if( p_sys->p_thread->p_empty_blocks->i_depth == 0 )
+    {
+        p_buffer = block_New( p_access->p_sout, p_sys->i_mtu );
+    }
+    else
+    {
+        p_buffer = block_FifoGet(p_sys->p_thread->p_empty_blocks );       
+        p_buffer->i_flags = 0;
+        p_buffer = block_Realloc( p_buffer, 0, p_sys->i_mtu );
+    }
+
     p_buffer->i_dts = i_dts;
     p_buffer->i_buffer = 0;
 
@@ -460,12 +509,27 @@ static void ThreadWrite( vlc_object_t *p_this )
     mtime_t              i_date_last = -1;
     mtime_t              i_to_send = p_thread->i_group;
     int                  i_dropped_packets = 0;
+#if defined(WIN32) || defined(UNDER_CE)
+    char strerror_buf[WINSOCK_STRERROR_SIZE];
+# define strerror( x ) winsock_strerror( strerror_buf )
+#endif
 
     while( !p_thread->b_die )
     {
         block_t *p_pk;
         mtime_t       i_date, i_sent;
-
+#if 0
+        if( (i++ % 1000)==0 ) {
+          int i = 0;
+          int j = 0;
+          block_t *p_tmp = p_thread->p_empty_blocks->p_first;
+          while( p_tmp ) { p_tmp = p_tmp->p_next; i++;}
+          p_tmp = p_thread->p_fifo->p_first;
+          while( p_tmp ) { p_tmp = p_tmp->p_next; j++;}
+	  msg_Err( p_thread, "fifo depth: %d/%d, empty blocks: %d/%d",
+                   p_thread->p_fifo->i_depth, j,p_thread->p_empty_blocks->i_depth,i );
+	}
+#endif
         p_pk = block_FifoGet( p_thread->p_fifo );
 
         i_date = p_thread->i_caching + p_pk->i_dts;
@@ -474,46 +538,34 @@ static void ThreadWrite( vlc_object_t *p_this )
             if( i_date - i_date_last > 2000000 )
             {
                 if( !i_dropped_packets )
-                    msg_Dbg( p_thread, "mmh, hole > 2s -> drop" );
+                    msg_Dbg( p_thread, "mmh, hole ("I64Fd" > 2s) -> drop",
+                             i_date - i_date_last );
 
-                block_Release( p_pk  );
+                block_FifoPut( p_thread->p_empty_blocks, p_pk );
+
                 i_date_last = i_date;
                 i_dropped_packets++;
                 continue;
             }
-            else if( i_date - i_date_last < 0 )
+            else if( i_date - i_date_last < -1000 )
             {
                 if( !i_dropped_packets )
-                    msg_Dbg( p_thread, "mmh, paquets in the past -> drop" );
-
-                block_Release( p_pk  );
-                i_date_last = i_date;
-                i_dropped_packets++;
-                continue;
+                    msg_Dbg( p_thread, "mmh, packets in the past ("I64Fd")",
+                             i_date_last - i_date );
             }
-        }
-
-        i_sent = mdate();
-        if( p_thread->i_late > 0 && i_sent > i_date + p_thread->i_late )
-        {
-            if( !i_dropped_packets )
-            {
-                msg_Dbg( p_thread, "late packet to send (" I64Fd ") -> drop",
-                         i_sent - i_date );
-            }
-            block_Release( p_pk  );
-            i_date_last = i_date;
-            i_dropped_packets++;
-            continue;
         }
 
         i_to_send--;
-        if ( !i_to_send )
+        if( !i_to_send || (p_pk->i_flags & BLOCK_FLAG_CLOCK) )
         {
             mwait( i_date );
             i_to_send = p_thread->i_group;
         }
-        send( p_thread->i_handle, p_pk->p_buffer, p_pk->i_buffer, 0 );
+        if( send( p_thread->i_handle, p_pk->p_buffer, p_pk->i_buffer, 0 )
+              == -1 )
+        {
+            msg_Warn( p_thread, "send error: %s", strerror(errno) );
+        }
 
         if( i_dropped_packets )
         {
@@ -521,7 +573,7 @@ static void ThreadWrite( vlc_object_t *p_this )
             i_dropped_packets = 0;
         }
 
-#if 0
+#if 1
         i_sent = mdate();
         if ( i_sent > i_date + 20000 )
         {
@@ -530,7 +582,8 @@ static void ThreadWrite( vlc_object_t *p_this )
         }
 #endif
 
-        block_Release( p_pk  );
+        block_FifoPut( p_thread->p_empty_blocks, p_pk );
+
         i_date_last = i_date;
     }
 }

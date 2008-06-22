@@ -1,11 +1,11 @@
 /*****************************************************************************
  * var_bool.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: var_bool.cpp 7561 2004-04-29 22:09:23Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: var_bool.cpp 16457 2006-08-31 20:51:12Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "var_bool.hpp"
@@ -60,7 +60,7 @@ VarBoolAndBool::~VarBoolAndBool()
 }
 
 
-void VarBoolAndBool::onUpdate( Subject<VarBool> &rVariable )
+void VarBoolAndBool::onUpdate( Subject<VarBool> &rVariable, void *arg )
 {
     notify();
 }
@@ -82,7 +82,7 @@ VarBoolOrBool::~VarBoolOrBool()
 }
 
 
-void VarBoolOrBool::onUpdate( Subject<VarBool> &rVariable )
+void VarBoolOrBool::onUpdate( Subject<VarBool> &rVariable , void*arg)
 {
     notify();
 }
@@ -101,7 +101,7 @@ VarNotBool::~VarNotBool()
 }
 
 
-void VarNotBool::onUpdate( Subject<VarBool> &rVariable )
+void VarNotBool::onUpdate( Subject<VarBool> &rVariable, void*arg )
 {
     notify();
 }

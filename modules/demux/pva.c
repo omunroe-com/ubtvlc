@@ -1,8 +1,8 @@
 /*****************************************************************************
  * pva.c: PVA demuxer
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: pva.c 7232 2004-04-01 23:21:13Z fenrir $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: pva.c 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -42,6 +42,8 @@ static void Close  ( vlc_object_t * );
 vlc_module_begin();
     set_description( _("PVA demuxer" ) );
     set_capability( "demux2", 10 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_callbacks( Open, Close );
     add_shortcut( "pva" );
 vlc_module_end();
@@ -82,17 +84,12 @@ static int Open( vlc_object_t *p_this )
     es_format_t  fmt;
     uint8_t     *p_peek;
 
-    if( stream_Peek( p_demux->s, &p_peek, 5 ) < 5 )
-    {
-        msg_Err( p_demux, "cannot peek" );
-        return VLC_EGENERIC;
-    }
+    if( stream_Peek( p_demux->s, &p_peek, 5 ) < 5 ) return VLC_EGENERIC;
     if( p_peek[0] != 'A' || p_peek[1] != 'V' || p_peek[4] != 0x55 )
     {
         /* In case we had forced this demuxer we try to resynch */
         if( strcasecmp( p_demux->psz_demux, "pva" ) || ReSynch( p_demux ) )
         {
-            msg_Warn( p_demux, "PVA module discarded" );
             return VLC_EGENERIC;
         }
     }

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * i420_rgb8.c : YUV to bitmap RGB conversion module for vlc
  *****************************************************************************
- * Copyright (C) 2000 VideoLAN
- * $Id: i420_rgb8.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2000 the VideoLAN team
+ * $Id: i420_rgb8.c 16987 2006-10-08 12:54:12Z jpsaman $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -47,7 +47,7 @@ void E_(I420_RGB8)( vout_thread_t *p_vout, picture_t *p_src, picture_t *p_dest )
     uint8_t *p_v   = p_src->V_PIXELS;
 
     vlc_bool_t  b_hscale;                         /* horizontal scaling type */
-    unsigned int i_vscale;                          /* vertical scaling type */
+    int         i_vscale;                          /* vertical scaling type */
     unsigned int i_x, i_y;                /* horizontal and vertical indexes */
     unsigned int i_real_y;                                          /* y % 4 */
     int          i_right_margin;
@@ -60,6 +60,11 @@ void E_(I420_RGB8)( vout_thread_t *p_vout, picture_t *p_src, picture_t *p_dest )
     /* Offset array pointer */
     int *       p_offset_start = p_vout->chroma.p_sys->p_offset;
     int *       p_offset;
+
+    const int i_source_margin = p_src->p[0].i_pitch
+                                 - p_src->p[0].i_visible_pitch;
+    const int i_source_margin_c = p_src->p[1].i_pitch
+                                 - p_src->p[1].i_visible_pitch;
 
     /* The dithering matrices */
     static int dither10[4] = {  0x0,  0x8,  0x2,  0xa };
@@ -88,6 +93,13 @@ void E_(I420_RGB8)( vout_thread_t *p_vout, picture_t *p_src, picture_t *p_dest )
         /* Do horizontal and vertical scaling */
         SCALE_WIDTH_DITHER( 420 );
         SCALE_HEIGHT_DITHER( 420 );
+    }
+
+    p_y += i_source_margin;
+    if( i_y % 2 )
+    {
+        p_u += i_source_margin_c;
+        p_v += i_source_margin_c;
     }
 }
 

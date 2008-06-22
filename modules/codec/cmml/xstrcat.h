@@ -3,9 +3,9 @@
  *****************************************************************************
  * Copyright (C) 2004 Commonwealth Scientific and Industrial Research
  *                    Organisation (CSIRO) Australia
- * Copyright (C) 2004 VideoLAN
+ * Copyright (C) 2004 the VideoLAN team
  *
- * $Id: xstrcat.h 7397 2004-04-20 17:27:30Z sam $
+ * $Id: xstrcat.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Andre Pang <Andre.Pang@csiro.au>
  *
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef __XSTRCAT_H__
@@ -30,13 +30,13 @@
 /* like strcat, but realloc's enough memory for the new string too */
 
 static inline
-char *xstrcat( char *psz_string, char *psz_to_append )
+char *xstrcat( char *psz_string, const char *psz_to_append )
 {
     size_t i_new_string_length = strlen( psz_string ) +
         strlen( psz_to_append ) + 1;
 
     psz_string = (char *) realloc( psz_string, i_new_string_length );
-    
+
     return strcat( psz_string, psz_to_append );
 }
 

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * darwin_specific.m: Darwin specific features
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: darwin_specific.m 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: darwin_specific.m 20692 2007-06-25 22:48:02Z xtophe $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 #include <string.h>                                              /* strdup() */
 #include <stdlib.h>                                                /* free() */
@@ -27,6 +27,7 @@
 #include <vlc/vlc.h>
 
 #include <Cocoa/Cocoa.h>
+#include <CoreFoundation/CFString.h>
 
 #ifdef HAVE_LOCALE_H
 #   include <locale.h>
@@ -40,20 +41,39 @@ static int FindLanguage( const char * psz_lang )
     const char ** ppsz_parser;
     const char * ppsz_all[] =
     {
+	"Arabic", "ar",
+        "Catalan", "ca",
+	"Czech", "cs",
+        "Danish", "da",
         "German", "de",
         "British", "en_GB",
         "English", "en",
         "Spanish", "es",
+	"Persian", "fa",
         "French", "fr",
+        "Galician", "gl",
+        "Hebrew", "he",
+        "Hindu", "hi",
         "Hungarian", "hu",
         "Italian", "it",
         "Japanese", "ja",
-        "Dutch", "nl",
-        "Norwegian", "no",
-        "Polish", "pl",
-        "Brazillian Portuguese", "pt_BR",
+        "Korean", "ko",
+        "Georgian", "ka",
+        "Malay", "ms",
+	"Nepali", "ne",
+	"Dutch", "nl",
+        "Occitan", "oc",
+	"Polish", "pl",
+	"Brazilian Portuguese", "pt_BR",
+        "Romanian", "ro",
         "Russian", "ru",
+        "Slovak", "sk",
+        "Slovenian", "sl",
         "Swedish", "sv",
+	"Thai", "th",
+        "Turkish", "tr",
+        "Simplified Chinese", "zh_CN",
+        "Chinese Traditional", "zh_TW",
         NULL
     };
 
@@ -113,6 +133,9 @@ void system_Init( vlc_t *p_this, int *pi_argc, char *ppsz_argv[] )
 
         [o_pool release];
     }
+
+    vlc_mutex_init( p_this, &p_this->p_libvlc->iconv_lock );
+    p_this->p_libvlc->iconv_macosx = vlc_iconv_open( "UTF-8", "UTF-8-MAC" );
 }
 
 /*****************************************************************************
@@ -129,5 +152,9 @@ void system_Configure( vlc_t *p_this, int *pi_argc, char *ppsz_argv[] )
 void system_End( vlc_t *p_this )
 {
     free( p_this->p_libvlc->psz_vlcpath );
+
+    if ( p_this->p_libvlc->iconv_macosx != (vlc_iconv_t)-1 )
+        vlc_iconv_close( p_this->p_libvlc->iconv_macosx );
+    vlc_mutex_destroy( &p_this->p_libvlc->iconv_lock );
 }
 

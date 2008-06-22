@@ -1,8 +1,8 @@
 /*****************************************************************************
  * invert.c : Invert video plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001, 2002, 2003 VideoLAN
- * $Id: invert.c 7453 2004-04-23 20:01:59Z gbazin $
+ * Copyright (C) 2000, 2001, 2002, 2003 the VideoLAN team
+ * $Id: invert.c 17012 2006-10-09 22:11:32Z xtophe $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -50,6 +50,9 @@ static int  SendEvents( vlc_object_t *, char const *,
  *****************************************************************************/
 vlc_module_begin();
     set_description( _("Invert video filter") );
+    set_shortname( _("Color inversion" ));
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VFILTER );
     set_capability( "video filter", 0 );
     add_shortcut( "invert" );
     set_callbacks( Create, Destroy );
@@ -108,6 +111,7 @@ static int Init( vout_thread_t *p_vout )
 {
     int i_index;
     picture_t *p_pic;
+    video_format_t fmt = {0};
 
     I_OUTPUTPICTURES = 0;
 
@@ -116,13 +120,13 @@ static int Init( vout_thread_t *p_vout )
     p_vout->output.i_width  = p_vout->render.i_width;
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
+    p_vout->fmt_out = p_vout->fmt_in;
+    fmt = p_vout->fmt_out;
 
     /* Try to open the real video output */
     msg_Dbg( p_vout, "spawning the real video output" );
 
-    p_vout->p_sys->p_vout = vout_Create( p_vout,
-                           p_vout->render.i_width, p_vout->render.i_height,
-                           p_vout->render.i_chroma, p_vout->render.i_aspect );
+    p_vout->p_sys->p_vout = vout_Create( p_vout, &fmt );
 
     /* Everything failed */
     if( p_vout->p_sys->p_vout == NULL )
@@ -165,9 +169,12 @@ static void Destroy( vlc_object_t *p_this )
 {
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
 
-    DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
-    vlc_object_detach( p_vout->p_sys->p_vout );
-    vout_Destroy( p_vout->p_sys->p_vout );
+    if( p_vout->p_sys->p_vout )
+    {
+        DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
+        vlc_object_detach( p_vout->p_sys->p_vout );
+        vout_Destroy( p_vout->p_sys->p_vout );
+    }
 
     DEL_PARENT_CALLBACKS( SendEventsToChild );
 
@@ -205,28 +212,31 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
         uint8_t *p_in, *p_in_end, *p_line_end, *p_out;
 
         p_in = p_pic->p[i_index].p_pixels;
-        p_in_end = p_in + p_pic->p[i_index].i_lines
+        p_in_end = p_in + p_pic->p[i_index].i_visible_lines
                            * p_pic->p[i_index].i_pitch;
 
         p_out = p_outpic->p[i_index].p_pixels;
 
         for( ; p_in < p_in_end ; )
         {
+            uint64_t *p_in64, *p_out64;
+
             p_line_end = p_in + p_pic->p[i_index].i_visible_pitch - 64;
 
-            for( ; p_in < p_line_end ; )
+            p_in64 = (uint64_t*)p_in;
+            p_out64 = (uint64_t*)p_out;
+
+            for( ; (ptrdiff_t)p_in64 < (ptrdiff_t)p_line_end ; )
             {
                 /* Do 64 pixels at a time */
-                *((uint64_t*)p_out)++ = ~( *((uint64_t*)p_in)++ );
-                *((uint64_t*)p_out)++ = ~( *((uint64_t*)p_in)++ );
-                *((uint64_t*)p_out)++ = ~( *((uint64_t*)p_in)++ );
-                *((uint64_t*)p_out)++ = ~( *((uint64_t*)p_in)++ );
-                *((uint64_t*)p_out)++ = ~( *((uint64_t*)p_in)++ );
-                *((uint64_t*)p_out)++ = ~( *((uint64_t*)p_in)++ );
-                *((uint64_t*)p_out)++ = ~( *((uint64_t*)p_in)++ );
-                *((uint64_t*)p_out)++ = ~( *((uint64_t*)p_in)++ );
+                *p_out64++ = ~*p_in64++; *p_out64++ = ~*p_in64++;
+                *p_out64++ = ~*p_in64++; *p_out64++ = ~*p_in64++;
+                *p_out64++ = ~*p_in64++; *p_out64++ = ~*p_in64++;
+                *p_out64++ = ~*p_in64++; *p_out64++ = ~*p_in64++;
             }
 
+            p_in = (uint8_t*)p_in64;
+            p_out = (uint8_t*)p_out64;
             p_line_end += 64;
 
             for( ; p_in < p_line_end ; )

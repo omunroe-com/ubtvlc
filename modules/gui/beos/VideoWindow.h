@@ -1,8 +1,8 @@
 /*****************************************************************************
  * VideoWindow.h: BeOS video window class prototype
  *****************************************************************************
- * Copyright (C) 1999, 2000, 2001 VideoLAN
- * $Id: VideoWindow.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999, 2000, 2001 the VideoLAN team
+ * $Id: VideoWindow.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Jean-Marc Dressler <polux@via.ecp.fr>
  *          Tony Castley <tcastley@mail.powerup.com.au>
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef BEOS_VIDEO_WINDOW_H
@@ -117,7 +117,6 @@ class VLCView : public BView
 									   const BMessage* dragMessage);
 	virtual	void			Pulse();
 	virtual	void			Draw(BRect updateRect);
-	virtual	void			KeyUp(const char* bytes, int32 numBytes);
 
  private:
             vout_thread_t   *p_vout;
@@ -178,6 +177,7 @@ public:
 	volatile bool	teardownwindow;
     thread_id       fDrawThreadID;
     int             mode;
+    int             bitmap_count;
     int             colspace_index;
 
 private:
@@ -188,20 +188,6 @@ private:
 			void			_BlankBitmap(BBitmap* bitmap) const;
 			void			_SetVideoSize(uint32_t mode);
 			void			_SetToSettings();
-
-			void			_SaveScreenShot( BBitmap* bitmap,
-											 char* path,
-											 uint32_t translatorID ) const;
-	static	int32			_save_screen_shot( void* cookie );
-
-	struct screen_shot_info
-	{
-		BBitmap*	bitmap;
-		char*		path;
-		uint32_t	translatorID;
-		int32_t		width;
-		int32_t		height;
-	};
 
     vout_thread_t   *p_vout;
 

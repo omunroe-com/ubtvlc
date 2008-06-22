@@ -1,8 +1,8 @@
 /*****************************************************************************
  * bandlimited.c : band-limited interpolation resampler
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: bandlimited.c 7522 2004-04-27 16:35:15Z sam $
+ * Copyright (C) 2002, 2006 the VideoLAN team
+ * $Id: bandlimited.c 14997 2006-03-31 15:15:07Z fkuehne $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -79,7 +79,9 @@ struct aout_filter_sys_t
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( _("audio filter for band-limited interpolation resampling") );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_MISC );
+    set_description( _("Audio filter for band-limited interpolation resampling") );
     set_capability( "audio filter", 20 );
     set_callbacks( Create, Close );
 vlc_module_end();
@@ -104,7 +106,7 @@ static int Create( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
 
-#if !defined( SYS_DARWIN )
+#if !defined( __APPLE__ )
     if( !config_GetInt( p_this, "hq-resampling" ) )
     {
         return VLC_EGENERIC;

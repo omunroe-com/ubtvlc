@@ -49,8 +49,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12 /out:"plugins\libffmpeg_plugin.dll"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib comctl32.lib rpcrt4.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12 /opt:ref /out:"plugins\libffmpeg_plugin.dll"
 
 !ELSEIF  "$(CFG)" == "plugin_ffmpeg - Win32 Debug"
 
@@ -73,8 +73,9 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12 /pdb:"plugins\libffmpeg_plugin.pdb" /out:"plugins\libffmpeg_plugin.dll"
+# SUBTRACT BASE LINK32 /pdb:none
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib comctl32.lib rpcrt4.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12 /pdb:"plugins\libffmpeg_plugin.pdb" /out:"plugins\libffmpeg_plugin.dll"
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
@@ -119,6 +120,16 @@ SOURCE="..\modules\codec\ffmpeg\audio.c"
 # PROP Intermediate_Dir "Debug\modules\codec\ffmpeg"
 # End Source File
 # Begin Source File
+SOURCE="..\modules\codec\ffmpeg\video_filter.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=ffmpeg" /D "MODULE_NAME_IS_ffmpeg" 
+!IF "$(CFG)" == "plugin_ffmpeg - Win32 Release"
+# PROP Output_Dir "Release\modules\codec\ffmpeg"
+# PROP Intermediate_Dir "Release\modules\codec\ffmpeg"
+!ELSEIF "$(CFG)" == "plugin_ffmpeg - Win32 Debug"
+# PROP Output_Dir "Debug\modules\codec\ffmpeg"
+# PROP Intermediate_Dir "Debug\modules\codec\ffmpeg"
+# End Source File
+# Begin Source File
 SOURCE="..\modules\codec\ffmpeg\chroma.c"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=ffmpeg" /D "MODULE_NAME_IS_ffmpeg" 
 !IF "$(CFG)" == "plugin_ffmpeg - Win32 Release"
@@ -150,6 +161,16 @@ SOURCE="..\modules\codec\ffmpeg\postprocess.c"
 # End Source File
 # Begin Source File
 SOURCE="..\modules\codec\ffmpeg\demux.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=ffmpeg" /D "MODULE_NAME_IS_ffmpeg" 
+!IF "$(CFG)" == "plugin_ffmpeg - Win32 Release"
+# PROP Output_Dir "Release\modules\codec\ffmpeg"
+# PROP Intermediate_Dir "Release\modules\codec\ffmpeg"
+!ELSEIF "$(CFG)" == "plugin_ffmpeg - Win32 Debug"
+# PROP Output_Dir "Debug\modules\codec\ffmpeg"
+# PROP Intermediate_Dir "Debug\modules\codec\ffmpeg"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\codec\ffmpeg\mux.c"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=ffmpeg" /D "MODULE_NAME_IS_ffmpeg" 
 !IF "$(CFG)" == "plugin_ffmpeg - Win32 Release"
 # PROP Output_Dir "Release\modules\codec\ffmpeg"

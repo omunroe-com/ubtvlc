@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_block_helper.h: Helper functions for data blocks management.
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: vlc_block_helper.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: vlc_block_helper.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef _VLC_BLOCK_HELPER_H
@@ -460,7 +460,7 @@ static inline int block_FindStartcodeFromOffset(
     }
 
     /* Begin the search.
-     * We first look for an occurence of the 1st startcode byte and
+     * We first look for an occurrence of the 1st startcode byte and
      * if found, we do a more thorough check. */
     i_size = p_block->i_buffer + i_size;
     *pi_offset -= i_size;

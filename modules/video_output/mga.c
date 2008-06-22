@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mga.c : Matrox Graphic Array plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: mga.c 6971 2004-03-06 15:24:37Z zorglub $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id: mga.c 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
  *          Samuel Hocevar <sam@zoy.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -318,18 +318,21 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
 
     p_pic->Y_PIXELS = p_pic->p_data;
     p_pic->p[Y_PLANE].i_lines = p_vout->output.i_height;
+    p_pic->p[Y_PLANE].i_visible_lines = p_vout->output.i_height;
     p_pic->p[Y_PLANE].i_pitch = CEIL32( p_vout->output.i_width );
     p_pic->p[Y_PLANE].i_pixel_pitch = 1;
     p_pic->p[Y_PLANE].i_visible_pitch = p_vout->output.i_width;
 
     p_pic->U_PIXELS = p_pic->p_data + p_vout->p_sys->mga.frame_size * 2/4;
     p_pic->p[U_PLANE].i_lines = p_vout->output.i_height / 2;
+    p_pic->p[U_PLANE].i_visible_lines = p_vout->output.i_height / 2;
     p_pic->p[U_PLANE].i_pitch = CEIL32( p_vout->output.i_width ) / 2;
     p_pic->p[U_PLANE].i_pixel_pitch = 1;
     p_pic->p[U_PLANE].i_visible_pitch = p_pic->p[U_PLANE].i_pitch;
 
     p_pic->V_PIXELS = p_pic->p_data + p_vout->p_sys->mga.frame_size * 3/4;
     p_pic->p[V_PLANE].i_lines = p_vout->output.i_height / 2;
+    p_pic->p[V_PLANE].i_visible_lines = p_vout->output.i_height / 2;
     p_pic->p[V_PLANE].i_pitch = CEIL32( p_vout->output.i_width ) / 2;
     p_pic->p[V_PLANE].i_pixel_pitch = 1;
     p_pic->p[V_PLANE].i_visible_pitch = p_pic->p[V_PLANE].i_pitch;
