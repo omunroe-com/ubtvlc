@@ -9,3 +9,11 @@
 030_pulse.diff
 031_CVE_2008_1489.diff
 demuxer-build-fix.diff
+032_CVE-2007-6683.diff
+033_CVE-2008-0073.diff
+034_CVE-2008-1686.diff
+035_CVE-2008-1769.diff
+036_CVE-2008-1881.diff
+037_CVE-2008-2147.diff
+038_CVE-2008-1768.diff
+039_CVE-2008-2430.diff
