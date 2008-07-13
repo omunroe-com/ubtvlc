@@ -1,3 +1,39 @@
+vlc (0.8.6.release.e+x264svn20071224+faad2.6.1-0ubuntu3.1) hardy-security; urgency=low
+
+  * SECURITY UPDATE: multiple denials of service, arbitrary code execution and
+    arbitrary file overwriting vulnerabilities. (LP: #238873)
+    - debian/patches/032_CVE-2007-6683.diff: Assume unsafe Mozilla variable
+      settings. Fixes file overwriting. Patch from upstream git.
+    - debian/patches/033_CVE-2008-0073.diff: Check that the RTSP stream ID
+      isn't too large. Fixes arbitrary code execution. Patch from upstream git.
+    - debian/patches/034_CVE-2008-1686.diff: Check that the Speex header mode
+      is positive. Fixes arbitrary code execution. Patch from upstream git.
+    - debian/patches/038_CVE-2008-1768.diff: Fix a buffer overflow in the MP4
+      decoder, and an integer overflow in both the Cinepak and Real decoders.
+      Patches from upstream git.
+    - debian/patches/035_CVE-2008-1769.diff: Perform an appropriate boundary
+      check on frames in Cinepak streams. Fixes denial of service. Patch from
+      upstream git.
+    - debian/patches/036_CVE-2008-1881.diff: Fix subtitle format strings.
+      Properly fixes CVE-2007-6681, an arbitrary code execution vulnerability.
+      Patch from upstream git.
+    - debian/patches/037_CVE-2008-2147.diff: Only search for plugins in the
+      normal path. Fixes arbitrary code execution. Patch from upstream git.
+    - debian/patches/038_CVE-2008-2430.diff: Fix integer overflow in the WAV
+      demuxer. Fixes arbitrary code execution. Path from upstream git.
+    - References:
+      + CVE-2007-6681
+      + CVE-2007-6683
+      + CVE-2008-0073
+      + CVE-2008-1686
+      + CVE-2008-1768
+      + CVE-2008-1769
+      + CVE-2008-1881
+      + CVE-2008-2147
+      + CVE-2008-2430
+
+ -- William Grant <william@qeuni.net>  Sun, 13 Jul 2008 10:45:55 +1000
+
 vlc (0.8.6.release.e+x264svn20071224+faad2.6.1-0ubuntu3) hardy; urgency=low
 
   * debian/control: Make vlc-plugin-pulse a dependency of vlc, to enable pulseaudio
