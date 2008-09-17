@@ -3,9 +3,9 @@
  *****************************************************************************
  * Copyright (C) 2004 Commonwealth Scientific and Industrial Research
  *                    Organisation (CSIRO) Australia
- * Copyright (C) 2004 VideoLAN
+ * Copyright (C) 2004 the VideoLAN team
  *
- * $Id: history.h 7397 2004-04-20 17:27:30Z sam $
+ * $Id$
  *
  * Authors: Andre Pang <Andre.Pang@csiro.au>
  *
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef __VLC_HISTORY_H__
@@ -49,13 +49,13 @@ typedef struct history_t history_t;
 /*****************************************************************************
  * Exported prototypes
  *****************************************************************************/
-history_t       * history_New                        ();
-vlc_bool_t        history_GoBackSavingCurrentItem    ( history_t *,
+history_t       * history_New                        ( void );
+bool        history_GoBackSavingCurrentItem    ( history_t *,
                                                        history_item_t * );
-vlc_bool_t        history_GoForwardSavingCurrentItem ( history_t *,
+bool        history_GoForwardSavingCurrentItem ( history_t *,
                                                        history_item_t * );
-vlc_bool_t        history_CanGoBack                  ( history_t * );
-vlc_bool_t        history_CanGoForward               ( history_t * );
+bool        history_CanGoBack                  ( history_t * );
+bool        history_CanGoForward               ( history_t * );
 history_item_t  * history_Item                       ( history_t * );
 void              history_Prune                      ( history_t * );
 void              history_PruneAndInsert             ( history_t *,

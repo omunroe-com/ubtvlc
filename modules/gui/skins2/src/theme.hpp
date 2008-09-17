@@ -1,11 +1,11 @@
 /*****************************************************************************
  * theme.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: theme.hpp 7259 2004-04-03 11:30:26Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,19 +19,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef THEME_HPP
 #define THEME_HPP
 
-#include "../src/generic_bitmap.hpp"
-#include "../src/generic_font.hpp"
-#include "../src/generic_layout.hpp"
+#include "generic_bitmap.hpp"
+#include "generic_font.hpp"
+#include "generic_layout.hpp"
+#include "popup.hpp"
 #include "../src/window_manager.hpp"
 #include "../commands/cmd_generic.hpp"
 #include "../utils/bezier.hpp"
 #include "../utils/variable.hpp"
+#include "../utils/position.hpp"
 #include "../controls/ctrl_generic.hpp"
 #include <string>
 #include <list>
@@ -54,11 +56,13 @@ class Theme: public SkinObject
         void loadConfig();
         void saveConfig();
 
-        GenericBitmap *getBitmapById( const string &id );
-        GenericFont *getFontById( const string &id );
-        TopWindow *getWindowById( const string &id );
-        GenericLayout *getLayoutById( const string &id );
-        CtrlGeneric *getControlById( const string &id );
+        GenericBitmap *getBitmapById( const string &id ) const;
+        GenericFont *getFontById( const string &id ) const;
+        Popup *getPopupById( const string &id ) const;
+        TopWindow *getWindowById( const string &id ) const;
+        GenericLayout *getLayoutById( const string &id ) const;
+        CtrlGeneric *getControlById( const string &id ) const;
+        Position *getPositionById( const string &id ) const;
 
         WindowManager &getWindowManager() { return m_windowManager; }
 
@@ -67,12 +71,16 @@ class Theme: public SkinObject
         map<string, GenericBitmapPtr> m_bitmaps;
         /// Store the fonts by ID
         map<string, GenericFontPtr> m_fonts;
+        /// Store the popups by ID
+        map<string, PopupPtr> m_popups;
         /// Store the windows by ID
         map<string, TopWindowPtr> m_windows;
         /// Store the layouts by ID
         map<string, GenericLayoutPtr> m_layouts;
         /// Store the controls by ID
         map<string, CtrlGenericPtr> m_controls;
+        /// Store the panel positions by ID
+        map<string, PositionPtr> m_positions;
         /// Store the commands
         list<CmdGenericPtr> m_commands;
         /// Store the Bezier curves

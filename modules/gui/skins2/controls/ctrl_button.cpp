@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ctrl_button.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_button.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "ctrl_button.hpp"
@@ -37,28 +37,12 @@ CtrlButton::CtrlButton( intf_thread_t *pIntf, const GenericBitmap &rBmpUp,
                         VarBool *pVisible ):
     CtrlGeneric( pIntf, rHelp, pVisible ), m_fsm( pIntf ),
     m_rCommand( rCommand ), m_tooltip( rTooltip ),
-    m_cmdUpOverDownOver( this, &transUpOverDownOver ),
-    m_cmdDownOverUpOver( this, &transDownOverUpOver ),
-    m_cmdDownOverDown( this, &transDownOverDown ),
-    m_cmdDownDownOver( this, &transDownDownOver ),
-    m_cmdUpOverUp( this, &transUpOverUp ),
-    m_cmdUpUpOver( this, &transUpUpOver ),
-    m_cmdDownUp( this, &transDownUp ),
-    m_cmdUpHidden( this, &transUpHidden ),
-    m_cmdHiddenUp( this, &transHiddenUp )
+    m_imgUp( pIntf, rBmpUp ), m_imgOver( pIntf, rBmpOver ),
+    m_imgDown( pIntf, rBmpDown ), m_pImg( NULL ), m_cmdUpOverDownOver( this ),
+    m_cmdDownOverUpOver( this ), m_cmdDownOverDown( this ),
+    m_cmdDownDownOver( this ), m_cmdUpOverUp( this ), m_cmdUpUpOver( this ),
+    m_cmdDownUp( this ), m_cmdUpHidden( this ), m_cmdHiddenUp( this )
 {
-    // Build the images of the button
-    OSFactory *pOsFactory = OSFactory::instance( pIntf );
-    m_pImgUp = pOsFactory->createOSGraphics( rBmpUp.getWidth(),
-                                             rBmpUp.getHeight() );
-    m_pImgUp->drawBitmap( rBmpUp, 0, 0 );
-    m_pImgDown = pOsFactory->createOSGraphics( rBmpDown.getWidth(),
-                                               rBmpDown.getHeight() );
-    m_pImgDown->drawBitmap( rBmpDown, 0, 0 );
-    m_pImgOver = pOsFactory->createOSGraphics( rBmpOver.getWidth(),
-                                               rBmpOver.getHeight() );
-    m_pImgOver->drawBitmap( rBmpOver, 0, 0 );
-
     // States
     m_fsm.addState( "up" );
     m_fsm.addState( "down" );
@@ -68,6 +52,8 @@ CtrlButton::CtrlButton( intf_thread_t *pIntf, const GenericBitmap &rBmpUp,
 
     // Transitions
     m_fsm.addTransition( "upOver", "mouse:left:down", "downOver",
+                         &m_cmdUpOverDownOver );
+    m_fsm.addTransition( "upOver", "mouse:left:dblclick", "downOver",
                          &m_cmdUpOverDownOver );
     m_fsm.addTransition( "downOver", "mouse:left:up", "upOver",
                          &m_cmdDownOverUpOver );
@@ -86,15 +72,12 @@ CtrlButton::CtrlButton( intf_thread_t *pIntf, const GenericBitmap &rBmpUp,
 
     // Initial state
     m_fsm.setState( "up" );
-    m_pImg = m_pImgUp;
+    setImage( &m_imgUp );
 }
 
 
 CtrlButton::~CtrlButton()
 {
-    SKINS_DELETE( m_pImgUp );
-    SKINS_DELETE( m_pImgDown );
-    SKINS_DELETE( m_pImgOver );
 }
 
 
@@ -122,82 +105,92 @@ void CtrlButton::draw( OSGraphics &rImage, int xDest, int yDest )
     if( m_pImg )
     {
         // Draw the current image
-        rImage.drawGraphics( *m_pImg, 0, 0, xDest, yDest );
+        m_pImg->draw( rImage, xDest, yDest );
     }
 }
 
 
-void CtrlButton::transUpOverDownOver( SkinObject *pCtrl )
+void CtrlButton::setImage( AnimBitmap *pImg )
 {
-    CtrlButton *pThis = (CtrlButton*)pCtrl;
-    pThis->captureMouse();
-    pThis->m_pImg = pThis->m_pImgDown;
-    pThis->notifyLayout();
+    AnimBitmap *pOldImg = m_pImg;
+    m_pImg = pImg;
+
+    if( pOldImg )
+    {
+        pOldImg->stopAnim();
+        pOldImg->delObserver( this );
+    }
+
+    if( pImg )
+    {
+        pImg->startAnim();
+        pImg->addObserver( this );
+    }
+
+    notifyLayoutMaxSize( pOldImg, pImg );
 }
 
 
-void CtrlButton::transDownOverUpOver( SkinObject *pCtrl )
+void CtrlButton::onUpdate( Subject<AnimBitmap> &rBitmap, void *arg )
 {
-    CtrlButton *pThis = (CtrlButton*)pCtrl;
-    pThis->releaseMouse();
-    pThis->m_pImg = pThis->m_pImgUp;
-    pThis->notifyLayout();
+    notifyLayout();
+}
+
+
+void CtrlButton::CmdUpOverDownOver::execute()
+{
+    m_pParent->captureMouse();
+    m_pParent->setImage( &m_pParent->m_imgDown );
+}
+
+
+void CtrlButton::CmdDownOverUpOver::execute()
+{
+    m_pParent->releaseMouse();
+    m_pParent->setImage( &m_pParent->m_imgUp );
     // Execute the command associated to this button
-    pThis->m_rCommand.execute();
+    m_pParent->m_rCommand.execute();
 }
 
 
-void CtrlButton::transDownOverDown( SkinObject *pCtrl )
+void CtrlButton::CmdDownOverDown::execute()
 {
-    CtrlButton *pThis = (CtrlButton*)pCtrl;
-    pThis->m_pImg = pThis->m_pImgUp;
-    pThis->notifyLayout();
+    m_pParent->setImage( &m_pParent->m_imgUp );
 }
 
 
-void CtrlButton::transDownDownOver( SkinObject *pCtrl )
+void CtrlButton::CmdDownDownOver::execute()
 {
-    CtrlButton *pThis = (CtrlButton*)pCtrl;
-    pThis->m_pImg = pThis->m_pImgDown;
-    pThis->notifyLayout();
+    m_pParent->setImage( &m_pParent->m_imgDown );
 }
 
 
-void CtrlButton::transUpUpOver( SkinObject *pCtrl )
+void CtrlButton::CmdUpUpOver::execute()
 {
-    CtrlButton *pThis = (CtrlButton*)pCtrl;
-    pThis->m_pImg = pThis->m_pImgOver;
-    pThis->notifyLayout();
+    m_pParent->setImage( &m_pParent->m_imgOver );
 }
 
 
-void CtrlButton::transUpOverUp( SkinObject *pCtrl )
+void CtrlButton::CmdUpOverUp::execute()
 {
-    CtrlButton *pThis = (CtrlButton*)pCtrl;
-    pThis->m_pImg = pThis->m_pImgUp;
-    pThis->notifyLayout();
+    m_pParent->setImage( &m_pParent->m_imgUp );
 }
 
 
-void CtrlButton::transDownUp( SkinObject *pCtrl )
+void CtrlButton::CmdDownUp::execute()
 {
-    CtrlButton *pThis = (CtrlButton*)pCtrl;
-    pThis->releaseMouse();
+    m_pParent->releaseMouse();
 }
 
 
-void CtrlButton::transUpHidden( SkinObject *pCtrl )
+void CtrlButton::CmdUpHidden::execute()
 {
-    CtrlButton *pThis = (CtrlButton*)pCtrl;
-    pThis->m_pImg = NULL;
-    pThis->notifyLayout();
+    m_pParent->setImage( NULL );
 }
 
 
-void CtrlButton::transHiddenUp( SkinObject *pCtrl )
+void CtrlButton::CmdHiddenUp::execute()
 {
-    CtrlButton *pThis = (CtrlButton*)pCtrl;
-    pThis->m_pImg = pThis->m_pImgUp;
-    pThis->notifyLayout();
+    m_pParent->setImage( &m_pParent->m_imgUp );
 }
 

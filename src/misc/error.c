@@ -1,8 +1,8 @@
 /*****************************************************************************
  * error.c: error handling routine
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: error.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id$
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,19 +18,23 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <vlc/vlc.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
 
 /*****************************************************************************
  * vlc_error: strerror() equivalent
  *****************************************************************************
  * This function returns a string describing the error code passed in the
- * argument. A list of all errors can be found in include/vlc/vlc.h.
+ * argument. A list of all errors can be found in include/vlc_common.h.
  *****************************************************************************/
 char const * vlc_error ( int i_err )
 {
@@ -51,8 +55,6 @@ char const * vlc_error ( int i_err )
 
         case VLC_ENOOBJ:
             return "object not found";
-        case VLC_EBADOBJ:
-            return "bad object type";
 
         case VLC_ENOVAR:
             return "variable not found";

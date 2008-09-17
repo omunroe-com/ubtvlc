@@ -1,8 +1,8 @@
 /*****************************************************************************
  * pva.c: PVA demuxer
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: pva.c 7232 2004-04-01 23:21:13Z fenrir $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id$
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,20 +18,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                      /* malloc(), free() */
 
-#include <vlc/vlc.h>
-#include <vlc/input.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
-/* TODO:
- *  - ...
- */
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_demux.h>
 
 /*****************************************************************************
  * Module descriptor
@@ -40,8 +40,10 @@ static int  Open    ( vlc_object_t * );
 static void Close  ( vlc_object_t * );
 
 vlc_module_begin();
-    set_description( _("PVA demuxer" ) );
-    set_capability( "demux2", 10 );
+    set_description( N_("PVA demuxer" ) );
+    set_capability( "demux", 10 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_callbacks( Open, Close );
     add_shortcut( "pva" );
 vlc_module_end();
@@ -80,21 +82,14 @@ static int Open( vlc_object_t *p_this )
     demux_t     *p_demux = (demux_t*)p_this;
     demux_sys_t *p_sys;
     es_format_t  fmt;
-    uint8_t     *p_peek;
+    const uint8_t *p_peek;
 
-    if( stream_Peek( p_demux->s, &p_peek, 5 ) < 5 )
-    {
-        msg_Err( p_demux, "cannot peek" );
-        return VLC_EGENERIC;
-    }
+    if( stream_Peek( p_demux->s, &p_peek, 5 ) < 5 ) return VLC_EGENERIC;
     if( p_peek[0] != 'A' || p_peek[1] != 'V' || p_peek[4] != 0x55 )
     {
         /* In case we had forced this demuxer we try to resynch */
-        if( strcasecmp( p_demux->psz_demux, "pva" ) || ReSynch( p_demux ) )
-        {
-            msg_Warn( p_demux, "PVA module discarded" );
+        if( !p_demux->b_force || ReSynch( p_demux ) )
             return VLC_EGENERIC;
-        }
     }
 
     /* Fill p_demux field */
@@ -114,7 +109,7 @@ static int Open( vlc_object_t *p_this )
     p_sys->p_pes   = NULL;
     p_sys->p_es    = NULL;
 
-    p_sys->b_pcr_audio = VLC_FALSE;
+    p_sys->b_pcr_audio = false;
 
     return VLC_SUCCESS;
 }
@@ -141,7 +136,7 @@ static int Demux( demux_t *p_demux )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
 
-    uint8_t     *p_peek;
+    const uint8_t *p_peek;
     int         i_size;
     block_t     *p_frame;
     int64_t     i_pts;
@@ -345,11 +340,11 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
  *****************************************************************************/
 static int ReSynch( demux_t *p_demux )
 {
-    uint8_t *p_peek;
+    const uint8_t *p_peek;
     int      i_skip;
     int      i_peek;
 
-    while( !p_demux->b_die )
+    while( vlc_object_alive (p_demux) )
     {
         if( ( i_peek = stream_Peek( p_demux->s, &p_peek, 1024 ) ) < 8 )
         {
@@ -439,7 +434,7 @@ static void ParsePES( demux_t *p_demux )
     if( p_pes->i_pts > 0 )
     {
         es_out_Control( p_demux->out, ES_OUT_SET_PCR, (int64_t)p_pes->i_pts);
-        p_sys->b_pcr_audio = VLC_TRUE;
+        p_sys->b_pcr_audio = true;
     }
     es_out_Send( p_demux->out, p_sys->p_audio, p_pes );
 }

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * macosx.m: Mac OS X module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: macosx.m 7709 2004-05-18 06:46:05Z fkuehne $
+ * Copyright (C) 2001-2006 the VideoLAN team
+ * $Id$
  *
  * Authors: Colin Delacroix <colin@zoy.org>
  *          Eugenio Jarosiewicz <ej0@cise.ufl.edu>
@@ -13,7 +13,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -30,78 +30,103 @@
 #include <stdlib.h>                                      /* malloc(), free() */
 #include <string.h>
 
-#include <vlc/vlc.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
 
 /*****************************************************************************
  * External prototypes
  *****************************************************************************/
-int  E_(OpenIntf)     ( vlc_object_t * );
-void E_(CloseIntf)    ( vlc_object_t * );
+int  OpenIntf     ( vlc_object_t * );
+void CloseIntf    ( vlc_object_t * );
 
-int  E_(OpenVideo)    ( vlc_object_t * );
-void E_(CloseVideo)   ( vlc_object_t * );
+int  OpenVideoQT  ( vlc_object_t * );
+void CloseVideoQT ( vlc_object_t * );
+
+int  OpenVideoGL  ( vlc_object_t * );
+void CloseVideoGL ( vlc_object_t * );
 
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
 #define VDEV_TEXT N_("Video device")
-#define VDEV_LONGTEXT N_("Choose a number corresponding to " \
-    "a screen in you video device selection menu and this screen " \
-    "will be used by default as the screen for 'fullscreen'.")
+#define VDEV_LONGTEXT N_("Number of the screen to use by default to display " \
+                         "videos in 'fullscreen'. The screen number correspondance can be found in "\
+                         "the video device selection menu.")
 
 #define OPAQUENESS_TEXT N_("Opaqueness")
-#define OPAQUENESS_LONGTEXT N_( \
-    "Set the transparency of the video output. 1 is non-transparent (default) " \
-    "0 is fully transparent.")
-    
-#define STRETCH_TEXT N_("Stretch Aspect Ratio")
-#define STRETCH_LONGTEXT N_("Instead of keeping the aspect ratio " \
-        "of the movie when resizing the video, stretch the video " \
-        "to fill the entire window." )
+#define OPAQUENESS_LONGTEXT N_( "Set the transparency of the video output. 1 is non-transparent (default) " \
+                                "0 is fully transparent.")
 
-#define MACOSX_VOUT_TEXT N_("video rendering mode")
-#define MACOSX_VOUT_LONGTEXT N_("The default method is OpenGL " \
-        "for Quartz Extreme machines and Quartz for the others.")
+#define STRETCH_TEXT N_("Stretch video to fill window")
+#define STRETCH_LONGTEXT N_("Stretch the video to fill the entire window when "\
+                            "resizing the video instead of keeping the aspect ratio and "\
+                            "displaying black borders.")
 
-#define OPENGL_EFFECT_TEXT N_("OpenGL effect")
-#define OPENGL_EFFECT_LONGTEXT N_("Use 'None' to display the video " \
-        "without any fantasy, 'Cube' to let the video play on " \
-        "the faces of a rotating cube, 'Transparent cube' do make this " \
-        "cube transparent." )
+#define BLACK_TEXT N_("Black screens in fullscreen")
+#define BLACK_LONGTEXT N_("In fullscreen mode, keep screen where there is no " \
+                          "video displayed black" )
 
-#define FILL_TEXT N_("Fill fullscreen")
-#define FILL_LONGTEXT N_("In fullscreen mode, crop the picture if " \
-        "necessary in order to fill the screen without black " \
-        "borders (OpenGL only)." )
+#define BACKGROUND_TEXT N_("Use as Desktop Background")
+#define BACKGROUND_LONGTEXT N_("Use the video as the Desktop Background " \
+                               "Desktop icons cannot be interacted with in this mode." )
 
-static char * effect_list[] = { "none", "cube", "transparent-cube" };
-static char * effect_list_text[] = { N_("None"), N_("Cube"),
-                                     N_("Transparent cube") };
+#define FSPANEL_TEXT N_("Show Fullscreen controller")
+#define FSPANEL_LONGTEXT N_("Shows a lucent controller when moving the mouse " \
+                            "in fullscreen mode.")
 
-static char *ppsz_vout_list[] = { "auto", "quartz", "opengl" };
-static char *ppsz_vout_list_text[] = { N_("Auto"), "Quartz", "OpenGL" };
-    
+#define AUTOPLAY_OSX_TEST N_("Auto-playback of new items")
+#define AUTOPLAY_OSX_LONGTEXT N_("Start playback of new items immediately " \
+                                 "once they were added." )
+
+#define RECENT_ITEMS_TEXT N_("Keep Recent Items")
+#define RECENT_ITEMS_LONGTEXT N_("By default, VLC keeps a list of the last 10 items. " \
+                                 "This feature can be disabled here.")
+
+#define EQ_KEEP_TEXT N_("Keep current Equalizer settings")
+#define EQ_KEEP_LONGTEXT N_("By default, VLC keeps the last equalizer settings before " \
+                            "termination. This feature can be disabled here.")
+
 vlc_module_begin();
-    set_description( _("Mac OS X interface, sound and video") );
-    set_capability( "interface", 100 );
-    set_callbacks( E_(OpenIntf), E_(CloseIntf) );
+    set_description( N_("Mac OS X interface") );
+    set_capability( "interface", 200 );
+    set_callbacks( OpenIntf, CloseIntf );
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_MAIN );
+    add_bool( "macosx-autoplay", 1, NULL, AUTOPLAY_OSX_TEST, AUTOPLAY_OSX_LONGTEXT,
+              false );
+    add_bool( "macosx-recentitems", 1, NULL, RECENT_ITEMS_TEXT, RECENT_ITEMS_LONGTEXT,
+              false );
+    add_bool( "macosx-eq-keep", 1, NULL, EQ_KEEP_TEXT, EQ_KEEP_LONGTEXT,
+              false );
+    add_bool( "macosx-fspanel", 1, NULL, FSPANEL_TEXT, FSPANEL_LONGTEXT,
+              false );
+
     add_submodule();
-        set_capability( "video output", 200 );
-        set_callbacks( E_(OpenVideo), E_(CloseVideo) );
+        set_description( N_("Quartz video") );
+        set_capability( "video output", 100 );
+        set_category( CAT_VIDEO);
+        set_subcategory( SUBCAT_VIDEO_VOUT );
+        set_callbacks( OpenVideoQT, CloseVideoQT );
+
         add_integer( "macosx-vdev", 0, NULL, VDEV_TEXT, VDEV_LONGTEXT,
-                     VLC_FALSE );
+                     false );
         add_bool( "macosx-stretch", 0, NULL, STRETCH_TEXT, STRETCH_LONGTEXT,
-                     VLC_FALSE );
+                  false );
         add_float_with_range( "macosx-opaqueness", 1, 0, 1, NULL,
-                OPAQUENESS_TEXT, OPAQUENESS_LONGTEXT, VLC_TRUE );
-        add_string( "macosx-vout", "auto", NULL, MACOSX_VOUT_TEXT,
-                MACOSX_VOUT_LONGTEXT, VLC_TRUE );
-        change_string_list( ppsz_vout_list, ppsz_vout_list_text, 0 );
-        add_string( "macosx-opengl-effect", "none", NULL,
-                    OPENGL_EFFECT_TEXT, OPENGL_EFFECT_LONGTEXT,
-                    VLC_TRUE );
-        add_bool( "macosx-fill", 0, NULL, FILL_TEXT, FILL_LONGTEXT,
-                  VLC_TRUE );
-        change_string_list( effect_list, effect_list_text, 0 );
+                              OPAQUENESS_TEXT, OPAQUENESS_LONGTEXT, true );
+        add_bool( "macosx-black", 1, NULL, BLACK_TEXT, BLACK_LONGTEXT,
+                  false );
+        add_bool( "macosx-background", 0, NULL, BACKGROUND_TEXT, BACKGROUND_LONGTEXT,
+                  false );
+    add_submodule();
+        set_description( "Mac OS X OpenGL" );
+        set_capability( "opengl provider", 100 );
+        set_category( CAT_VIDEO);
+        set_subcategory( SUBCAT_VIDEO_VOUT );
+        set_callbacks( OpenVideoGL, CloseVideoGL );
 vlc_module_end();
 

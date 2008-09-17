@@ -1,11 +1,11 @@
 /*****************************************************************************
  * var_manager.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: var_manager.hpp 7561 2004-04-29 22:09:23Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef VAR_MANAGER_HPP
@@ -52,22 +52,30 @@ class VarManager: public SkinObject
         Variable *getVar( const string &rName, const string &rType );
 
         /// Get the tooltip text variable
-        VarText &getTooltipText() { return m_tooltipText; }
+        VarText &getTooltipText() { return *m_pTooltipText; }
 
         /// Get the help text variable
-        VarText &getHelpText() { return m_helpText; }
+        VarText &getHelpText() { return *m_pHelpText; }
+
+        /// Register a constant value
+        void registerConst( const string &rName, const string &rValue);
+
+        /// Get a constant value by its name
+        string getConst( const string &rName );
 
     private:
         /// Tooltip text
-        VarText m_tooltipText;
+        VarText *m_pTooltipText;
         /// Help text
-        VarText m_helpText;
+        VarText *m_pHelpText;
         /// Map of named registered variables
         map<string, VariablePtr> m_varMap;
         /// List of named registed variables
         list<string> m_varList;
         /// List of anonymous registed variables
         list<VariablePtr> m_anonVarList;
+        /// Map of constant values
+        map<string, string> m_constMap;
 
         /// Private because it is a singleton
         VarManager( intf_thread_t *pIntf );

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * output.c : internal management of output streams for the audio output
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: output.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id$
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -18,18 +18,18 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                            /* calloc(), malloc(), free() */
-#include <string.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
-#include <vlc/vlc.h>
-
-#include "audio_output.h"
+#include <vlc_common.h>
+#include <vlc_aout.h>
 #include "aout_internal.h"
 
 /*****************************************************************************
@@ -51,14 +51,14 @@ int aout_OutputNew( aout_instance_t * p_aout,
         p_aout->output.output.i_rate = i_rate;
     aout_FormatPrepare( &p_aout->output.output );
 
-    vlc_mutex_lock( &p_aout->output_fifo_lock );
+    aout_lock_output_fifo( p_aout );
 
     /* Find the best output plug-in. */
     p_aout->output.p_module = module_Need( p_aout, "audio output", "$aout", 0);
     if ( p_aout->output.p_module == NULL )
     {
-        msg_Err( p_aout, "no suitable aout module" );
-        vlc_mutex_unlock( &p_aout->output_fifo_lock );
+        msg_Err( p_aout, "no suitable audio output module" );
+        aout_unlock_output_fifo( p_aout );
         return -1;
     }
 
@@ -156,7 +156,7 @@ int aout_OutputNew( aout_instance_t * p_aout,
         var_AddCallback( p_aout, "audio-channels", aout_ChannelsRestart,
                          NULL );
     }
-    val.b_bool = VLC_TRUE;
+    val.b_bool = true;
     var_Set( p_aout, "intf-change", val );
 
     aout_FormatPrepare( &p_aout->output.output );
@@ -165,7 +165,7 @@ int aout_OutputNew( aout_instance_t * p_aout,
     aout_FifoInit( p_aout, &p_aout->output.fifo,
                    p_aout->output.output.i_rate );
 
-    vlc_mutex_unlock( &p_aout->output_fifo_lock );
+    aout_unlock_output_fifo( p_aout );
 
     aout_FormatPrint( p_aout, "output", &p_aout->output.output );
 
@@ -176,7 +176,7 @@ int aout_OutputNew( aout_instance_t * p_aout,
     {
         /* Non-S/PDIF mixer only deals with float32 or fixed32. */
         p_aout->mixer.mixer.i_format
-                     = (p_aout->p_libvlc->i_cpu & CPU_CAPABILITY_FPU) ?
+                     = (vlc_CPU() & CPU_CAPABILITY_FPU) ?
                         VLC_FOURCC('f','l','3','2') :
                         VLC_FOURCC('f','i','3','2');
         aout_FormatPrepare( &p_aout->mixer.mixer );
@@ -186,15 +186,16 @@ int aout_OutputNew( aout_instance_t * p_aout,
         p_aout->mixer.mixer.i_format = p_format->i_format;
     }
 
-    aout_FormatPrint( p_aout, "mixer", &p_aout->output.output );
+    aout_FormatPrint( p_aout, "mixer", &p_aout->mixer.mixer );
 
     /* Create filters. */
+    p_aout->output.i_nb_filters = 0;
     if ( aout_FiltersCreatePipeline( p_aout, p_aout->output.pp_filters,
                                      &p_aout->output.i_nb_filters,
                                      &p_aout->mixer.mixer,
                                      &p_aout->output.output ) < 0 )
     {
-        msg_Err( p_aout, "couldn't set an output pipeline" );
+        msg_Err( p_aout, "couldn't create audio output pipeline" );
         module_Unneed( p_aout, p_aout->output.p_module );
         return -1;
     }
@@ -230,9 +231,12 @@ void aout_OutputDelete( aout_instance_t * p_aout )
 
     aout_FiltersDestroyPipeline( p_aout, p_aout->output.pp_filters,
                                  p_aout->output.i_nb_filters );
-    aout_FifoDestroy( p_aout, &p_aout->output.fifo );
 
-    p_aout->output.b_error = VLC_TRUE;
+    aout_lock_output_fifo( p_aout );
+    aout_FifoDestroy( p_aout, &p_aout->output.fifo );
+    aout_unlock_output_fifo( p_aout );
+
+    p_aout->output.b_error = true;
 }
 
 /*****************************************************************************
@@ -246,10 +250,16 @@ void aout_OutputPlay( aout_instance_t * p_aout, aout_buffer_t * p_buffer )
                       p_aout->output.i_nb_filters,
                       &p_buffer );
 
-    vlc_mutex_lock( &p_aout->output_fifo_lock );
+    if( p_buffer->i_nb_bytes == 0 )
+    {
+        aout_BufferFree( p_buffer );
+        return;
+    }
+
+    aout_lock_output_fifo( p_aout );
     aout_FifoPush( p_aout, &p_aout->output.fifo, p_buffer );
     p_aout->output.pf_play( p_aout );
-    vlc_mutex_unlock( &p_aout->output_fifo_lock );
+    aout_unlock_output_fifo( p_aout );
 }
 
 /*****************************************************************************
@@ -262,17 +272,22 @@ void aout_OutputPlay( aout_instance_t * p_aout, aout_buffer_t * p_buffer )
  *****************************************************************************/
 aout_buffer_t * aout_OutputNextBuffer( aout_instance_t * p_aout,
                                        mtime_t start_date,
-                                       vlc_bool_t b_can_sleek )
+                                       bool b_can_sleek )
 {
     aout_buffer_t * p_buffer;
 
-    vlc_mutex_lock( &p_aout->output_fifo_lock );
+    aout_lock_output_fifo( p_aout );
 
     p_buffer = p_aout->output.fifo.p_first;
-    while ( p_buffer && p_buffer->start_date < mdate() - AOUT_PTS_TOLERANCE )
+
+    /* Drop the audio sample if the audio output is really late.
+     * In the case of b_can_sleek, we don't use a resampler so we need to be
+     * a lot more severe. */
+    while ( p_buffer && p_buffer->start_date <
+            (b_can_sleek ? start_date : mdate()) - AOUT_PTS_TOLERANCE )
     {
-        msg_Dbg( p_aout, "audio output is too slow ("I64Fd"), "
-                 "trashing "I64Fd"us", mdate() - p_buffer->start_date,
+        msg_Dbg( p_aout, "audio output is too slow (%"PRId64"), "
+                 "trashing %"PRId64"us", mdate() - p_buffer->start_date,
                  p_buffer->end_date - p_buffer->start_date );
         p_buffer = p_buffer->p_next;
         aout_BufferFree( p_aout->output.fifo.p_first );
@@ -284,7 +299,7 @@ aout_buffer_t * aout_OutputNextBuffer( aout_instance_t * p_aout,
         p_aout->output.fifo.pp_last = &p_aout->output.fifo.p_first;
 
 #if 0 /* This is bad because the audio output might just be trying to fill
-       * in it's internal buffers. And anyway, it's up to the audio output
+       * in its internal buffers. And anyway, it's up to the audio output
        * to deal with this kind of starvation. */
 
         /* Set date to 0, to allow the mixer to send a new buffer ASAP */
@@ -295,12 +310,13 @@ aout_buffer_t * aout_OutputNextBuffer( aout_instance_t * p_aout,
         p_aout->output.b_starving = 1;
 #endif
 
-        vlc_mutex_unlock( &p_aout->output_fifo_lock );
+        aout_unlock_output_fifo( p_aout );
         return NULL;
     }
 
     /* Here we suppose that all buffers have the same duration - this is
-     * generally true, and anyway if it's wrong it won't be a disaster. */
+     * generally true, and anyway if it's wrong it won't be a disaster.
+     */
     if ( p_buffer->start_date > start_date
                          + (p_buffer->end_date - p_buffer->start_date) )
     /*
@@ -310,10 +326,12 @@ aout_buffer_t * aout_OutputNextBuffer( aout_instance_t * p_aout,
      * --Gibalou
      */
     {
-        vlc_mutex_unlock( &p_aout->output_fifo_lock );
+        const mtime_t i_delta = p_buffer->start_date - start_date;
+        aout_unlock_output_fifo( p_aout );
+
         if ( !p_aout->output.b_starving )
-            msg_Dbg( p_aout, "audio output is starving ("I64Fd"), "
-                     "playing silence", p_buffer->start_date - start_date );
+            msg_Dbg( p_aout, "audio output is starving (%"PRId64"), "
+                     "playing silence", i_delta );
         p_aout->output.b_starving = 1;
         return NULL;
     }
@@ -328,9 +346,9 @@ aout_buffer_t * aout_OutputNextBuffer( aout_instance_t * p_aout,
         int i;
         mtime_t difference = start_date - p_buffer->start_date;
         msg_Warn( p_aout, "output date isn't PTS date, requesting "
-                  "resampling ("I64Fd")", difference );
+                  "resampling (%"PRId64")", difference );
 
-        vlc_mutex_lock( &p_aout->input_fifos_lock );
+        aout_lock_input_fifos( p_aout );
         for ( i = 0; i < p_aout->i_nb_inputs; i++ )
         {
             aout_fifo_t * p_fifo = &p_aout->pp_inputs[i]->fifo;
@@ -339,7 +357,7 @@ aout_buffer_t * aout_OutputNextBuffer( aout_instance_t * p_aout,
         }
 
         aout_FifoMoveDates( p_aout, &p_aout->output.fifo, difference );
-        vlc_mutex_unlock( &p_aout->input_fifos_lock );
+        aout_unlock_input_fifos( p_aout );
     }
 
     p_aout->output.fifo.p_first = p_buffer->p_next;
@@ -348,6 +366,6 @@ aout_buffer_t * aout_OutputNextBuffer( aout_instance_t * p_aout,
         p_aout->output.fifo.pp_last = &p_aout->output.fifo.p_first;
     }
 
-    vlc_mutex_unlock( &p_aout->output_fifo_lock );
+    aout_unlock_output_fifo( p_aout );
     return p_buffer;
 }

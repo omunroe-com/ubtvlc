@@ -1,8 +1,8 @@
 /*****************************************************************************
  * au.c : au file input module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: au.c 7665 2004-05-15 10:52:56Z fenrir $
+ * Copyright (C) 2001-2007 the VideoLAN team
+ * $Id$
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,16 +18,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                      /* malloc(), free() */
 
-#include <vlc/vlc.h>
-#include <vlc/input.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_demux.h>
 
 /* TODO:
  *  - all adpcm things (I _NEED_ samples)
@@ -41,8 +45,10 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 vlc_module_begin();
-    set_description( _("AU demuxer") );
-    set_capability( "demux2", 10 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
+    set_description( N_("AU demuxer") );
+    set_capability( "demux", 10 );
     set_callbacks( Open, Close );
     add_shortcut( "au" );
 vlc_module_end();
@@ -87,7 +93,7 @@ struct demux_sys_t
     int             i_header_size;
 };
 
-static int DemuxPCM( demux_t * );
+static int Demux( demux_t * );
 static int Control ( demux_t *, int i_query, va_list args );
 
 /*****************************************************************************
@@ -99,18 +105,14 @@ static int Open( vlc_object_t *p_this )
     demux_sys_t *p_sys;
 
     uint8_t      hdr[20];
-    uint8_t     *p_peek;
+    const uint8_t *p_peek;
     int          i_cat;
     int          i_samples, i_modulo;
 
-    if( stream_Peek( p_demux->s, &p_peek, 4 ) < 4 )
+    CHECK_PEEK( p_peek, 4 );
+
+    if( memcmp( p_peek, ".snd", 4 ) )
     {
-        msg_Warn( p_demux, "cannot peek" );
-        return VLC_EGENERIC;
-    }
-    if( strncmp( p_peek, ".snd", 4 ) )
-    {
-        msg_Warn( p_demux, "AU module discarded" );
         return VLC_EGENERIC;
     }
 
@@ -130,7 +132,7 @@ static int Open( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
 
-    p_sys = p_demux->p_sys = malloc( sizeof( demux_sys_t ) );
+    DEMUX_INIT_COMMON(); p_sys = p_demux->p_sys;
     p_sys->i_time = 1;
     p_sys->i_header_size = GetDWBE( &hdr[0] );
 
@@ -278,19 +280,15 @@ static int Open( vlc_object_t *p_this )
                             (mtime_t)i_samples /
                             (mtime_t)p_sys->fmt.audio.i_rate;
 
-    /* finish to set up p_demux */
-    p_demux->pf_demux   = DemuxPCM;
-    p_demux->pf_control = Control;
-
     return VLC_SUCCESS;
 }
 
 /*****************************************************************************
- * DemuxPCM: read packet and send them to decoders
+ * Demux: read packet and send them to decoders
  *****************************************************************************
  * Returns -1 in case of error, 0 in case of EOF, 1 otherwise
  *****************************************************************************/
-static int DemuxPCM( demux_t *p_demux )
+static int Demux( demux_t *p_demux )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
     block_t     *p_block;
@@ -332,7 +330,7 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
 
-    return demux2_vaControlHelper( p_demux->s, p_sys->i_header_size, -1,
+    return demux_vaControlHelper( p_demux->s, p_sys->i_header_size, -1,
                                    p_sys->fmt.i_bitrate, p_sys->fmt.audio.i_blockalign,
                                    i_query, args );
 }

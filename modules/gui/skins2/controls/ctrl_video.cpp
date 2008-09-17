@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_video.cpp
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: ctrl_video.cpp 7073 2004-03-14 14:33:12Z asmax $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -18,24 +18,39 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "ctrl_video.hpp"
 #include "../src/theme.hpp"
 #include "../src/vout_window.hpp"
 #include "../src/os_graphics.hpp"
+#include "../src/vlcproc.hpp"
+#include "../src/window_manager.hpp"
+#include "../commands/async_queue.hpp"
+#include "../commands/cmd_resize.hpp"
 
 
-CtrlVideo::CtrlVideo( intf_thread_t *pIntf, const UString &rHelp,
+CtrlVideo::CtrlVideo( intf_thread_t *pIntf, GenericLayout &rLayout,
+                      bool autoResize, const UString &rHelp,
                       VarBool *pVisible ):
-    CtrlGeneric( pIntf, rHelp, pVisible ), m_pVout( NULL )
+    CtrlGeneric( pIntf, rHelp, pVisible ), m_pVout( NULL ),
+    m_rLayout( rLayout ), m_xShift( 0 ), m_yShift( 0 )
 {
+    // Observe the vout size variable if the control is auto-resizable
+    if( autoResize )
+    {
+        VarBox &rVoutSize = VlcProc::instance( pIntf )->getVoutSizeVar();
+        rVoutSize.addObserver( this );
+    }
 }
 
 
 CtrlVideo::~CtrlVideo()
 {
+    VarBox &rVoutSize = VlcProc::instance( getIntf() )->getVoutSizeVar();
+    rVoutSize.delObserver( this );
+
     if( m_pVout )
     {
         delete m_pVout;
@@ -65,6 +80,14 @@ void CtrlVideo::onResize()
 }
 
 
+void CtrlVideo::onPositionChange()
+{
+    // Compute the difference between layout size and video size
+    m_xShift = m_rLayout.getWidth() - getPosition()->getWidth();
+    m_yShift = m_rLayout.getHeight() - getPosition()->getHeight();
+}
+
+
 void CtrlVideo::draw( OSGraphics &rImage, int xDest, int yDest )
 {
     GenericWindow *pParent = getWindow();
@@ -74,9 +97,39 @@ void CtrlVideo::draw( OSGraphics &rImage, int xDest, int yDest )
         // Draw a black rectangle under the video to avoid transparency
         rImage.fillRect( pPos->getLeft(), pPos->getTop(), pPos->getWidth(),
                          pPos->getHeight(), 0 );
+    }
+}
 
+
+void CtrlVideo::onUpdate( Subject<VarBox> &rVoutSize, void *arg )
+{
+    int newWidth = ((VarBox&)rVoutSize).getWidth() + m_xShift;
+    int newHeight = ((VarBox&)rVoutSize).getHeight() + m_yShift;
+
+    // Create a resize command
+    // FIXME: this way of getting the window manager kind of sucks
+    WindowManager &rWindowManager =
+        getIntf()->p_sys->p_theme->getWindowManager();
+    rWindowManager.startResize( m_rLayout, WindowManager::kResizeSE );
+    CmdGeneric *pCmd = new CmdResize( getIntf(), rWindowManager,
+                                      m_rLayout, newWidth, newHeight );
+    // Push the command in the asynchronous command queue
+    AsyncQueue *pQueue = AsyncQueue::instance( getIntf() );
+    pQueue->push( CmdGenericPtr( pCmd ) );
+
+    // FIXME: this should be a command too
+    rWindowManager.stopResize();
+}
+
+
+void CtrlVideo::setVisible( bool visible )
+{
+    if( visible )
+    {
+        GenericWindow *pParent = getWindow();
+        const Position *pPos = getPosition();
         // Create a child window for the vout if it doesn't exist yet
-        if (!m_pVout)
+        if( !m_pVout && pParent && pPos )
         {
             m_pVout = new VoutWindow( getIntf(), pPos->getLeft(),
                                       pPos->getTop(), false, false, *pParent );
@@ -84,4 +137,10 @@ void CtrlVideo::draw( OSGraphics &rImage, int xDest, int yDest )
             m_pVout->show();
         }
     }
+    else
+    {
+        delete m_pVout;
+        m_pVout = NULL;
+    }
 }
+

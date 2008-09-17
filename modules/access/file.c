@@ -1,16 +1,18 @@
 /*****************************************************************************
  * file.c: file input (file: access plug-in)
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: file.c 7522 2004-04-27 16:35:15Z sam $
+ * Copyright (C) 2001-2006 the VideoLAN team
+ * Copyright © 2006-2007 Rémi Denis-Courmont
+ * $Id$
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
+ *          Rémi Denis-Courmont <rem # videolan # org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,305 +20,176 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <vlc/vlc.h>
-#include <vlc/input.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
-#include <stdlib.h>
-#include <string.h>
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_input.h>
+#include <vlc_access.h>
+#include <vlc_interface.h>
+
+#include <assert.h>
+#include <errno.h>
 #ifdef HAVE_SYS_TYPES_H
 #   include <sys/types.h>
 #endif
-#ifdef HAVE_SYS_TIME_H
-#   include <sys/time.h>
-#endif
 #ifdef HAVE_SYS_STAT_H
 #   include <sys/stat.h>
-#endif
-#ifdef HAVE_ERRNO_H
-#   include <errno.h>
 #endif
 #ifdef HAVE_FCNTL_H
 #   include <fcntl.h>
 #endif
 
-#ifdef HAVE_UNISTD_H
-#   include <unistd.h>
-#elif defined( WIN32 ) && !defined( UNDER_CE )
-#   include <io.h>
-#endif
-
-/* stat() support for large files on win32 */
 #if defined( WIN32 ) && !defined( UNDER_CE )
-#define stat _stati64
-#define fstat(a,b) _fstati64(a,b)
+#   include <io.h>
+#   include <ctype.h>
+#else
+#   include <unistd.h>
+#   include <poll.h>
 #endif
 
-#ifdef UNDER_CE
-#   define close(a) CloseHandle((HANDLE)a)
+#if defined( WIN32 ) && !defined( UNDER_CE )
+#   ifdef lseek
+#      undef lseek
+#   endif
+#   define lseek _lseeki64
+#elif defined( UNDER_CE )
+#   ifdef read
+#      undef read
+#   endif
+#   define read(a,b,c) fread(b,1,c,a)
+#   define close(a) fclose(a)
+#   ifdef lseek
+#      undef lseek
+#   endif
+#   define lseek fseek
 #endif
 
-/*****************************************************************************
- * Exported prototypes
- *****************************************************************************/
-static int     Open   ( vlc_object_t * );
-static void    Close  ( vlc_object_t * );
-
-static void    Seek   ( input_thread_t *, off_t );
-static ssize_t Read   ( input_thread_t *, byte_t *, size_t );
-
-static int     _OpenFile( input_thread_t *, char * );
+#include <vlc_charset.h>
 
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
+static int  Open ( vlc_object_t * );
+static void Close( vlc_object_t * );
+
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for file streams. This " \
-    "value should be set in millisecond units." )
-#define CAT_TEXT N_("Concatenate with additional files")
-#define CAT_LONGTEXT N_( \
-    "Allows you to play split files as if they were part of a unique file. " \
-    "Specify a comma-separated list of files." )
+    "Caching value for files. This " \
+    "value should be set in milliseconds." )
 
 vlc_module_begin();
-    set_description( _("Standard filesystem file input") );
-    add_integer( "file-caching", DEFAULT_PTS_DELAY / 1000, NULL, CACHING_TEXT, CACHING_LONGTEXT, VLC_TRUE );
-    add_string( "file-cat", NULL, NULL, CAT_TEXT, CAT_LONGTEXT, VLC_TRUE );
+    set_description( N_("File input") );
+    set_shortname( N_("File") );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACCESS );
+    add_integer( "file-caching", DEFAULT_PTS_DELAY / 1000, NULL, CACHING_TEXT, CACHING_LONGTEXT, true );
+    add_obsolete_string( "file-cat" );
     set_capability( "access", 50 );
     add_shortcut( "file" );
     add_shortcut( "stream" );
-    add_shortcut( "kfir" );
     set_callbacks( Open, Close );
 vlc_module_end();
- 
+
+
 /*****************************************************************************
- * _input_socket_t: private access plug-in data, modified to add private
- *                  fields
+ * Exported prototypes
  *****************************************************************************/
-typedef struct file_entry_s
+static int  Seek( access_t *, int64_t );
+static ssize_t Read( access_t *, uint8_t *, size_t );
+static int  Control( access_t *, int, va_list );
+
+static int  open_file( access_t *, const char * );
+
+struct access_sys_t
 {
-    char     *psz_name;
-    int64_t  i_size;
+    unsigned int i_nb_reads;
 
-} file_entry_t;
+    int fd;
 
-typedef struct _input_socket_s
-{
-    input_socket_t      _socket;
-
-    unsigned int        i_nb_reads;
-    vlc_bool_t          b_kfir;
-
-    /* Files list */
-    file_entry_t **p_files;
-    int          i_files;
-
-    /* Current file */
-    int  i_index;
-
-} _input_socket_t;
+    /* */
+    bool b_seekable;
+    bool b_pace_control;
+};
 
 /*****************************************************************************
  * Open: open the file
  *****************************************************************************/
 static int Open( vlc_object_t *p_this )
 {
-    input_thread_t *    p_input = (input_thread_t *)p_this;
-    char *              psz_name = p_input->psz_name;
-#ifdef HAVE_SYS_STAT_H
-    int                 i_stat;
-    struct stat         stat_info;
-#endif
-    _input_socket_t *   p_access_data;
-    vlc_bool_t          b_stdin, b_kfir = 0;
-    vlc_value_t         val;
+    access_t     *p_access = (access_t*)p_this;
+    access_sys_t *p_sys;
 
-    file_entry_t *      p_file;
-
-    p_input->i_mtu = 0;
-
-    b_stdin = psz_name[0] == '-' && psz_name[1] == '\0';
-
-#ifdef HAVE_SYS_STAT_H
-    if( !b_stdin && (i_stat = stat( psz_name, &stat_info )) == (-1) )
-    {
-#   ifdef HAVE_ERRNO_H
-        msg_Warn( p_input, "cannot stat() file `%s' (%s)",
-                  psz_name, strerror(errno));
-#   else
-        msg_Warn( p_input, "cannot stat() file `%s'", psz_name );
-#   endif
-        return VLC_EGENERIC;
-    }
-#endif
-
-    p_input->pf_read = Read;
-    p_input->pf_set_program = input_SetProgram;
-    p_input->pf_set_area = NULL;
-    p_input->pf_seek = Seek;
-
-    vlc_mutex_lock( &p_input->stream.stream_lock );
-
-    if( *p_input->psz_access && !strncmp( p_input->psz_access, "stream", 7 ) )
-    {
-        /* stream:%s */
-        p_input->stream.b_pace_control = 0;
-        p_input->stream.b_seekable = 0;
-        p_input->stream.p_selected_area->i_size = 0;
-    }
-    else if( *p_input->psz_access &&
-             !strncmp( p_input->psz_access, "kfir", 7 ) )
-    {
-        /* stream:%s */
-        p_input->stream.b_pace_control = 0;
-        p_input->stream.b_seekable = 0;
-        p_input->stream.p_selected_area->i_size = 0;
-        b_kfir = 1;
-    }
-    else
-    {
-        /* file:%s or %s */
-        p_input->stream.b_pace_control = 1;
-
-        if( b_stdin )
-        {
-            p_input->stream.b_seekable = 0;
-            p_input->stream.p_selected_area->i_size = 0;
-        }
-#ifdef UNDER_CE
-        else if( VLC_TRUE )
-        {
-            /* We'll update i_size after it's been opened */
-            p_input->stream.b_seekable = 1;
-        }
-#elif defined( HAVE_SYS_STAT_H )
-        else if( S_ISREG(stat_info.st_mode) || S_ISCHR(stat_info.st_mode)
-                  || S_ISBLK(stat_info.st_mode) )
-        {
-            p_input->stream.b_seekable = 1;
-            p_input->stream.p_selected_area->i_size = stat_info.st_size;
-        }
-        else if( S_ISFIFO(stat_info.st_mode)
-#   if !defined( SYS_BEOS ) && !defined( WIN32 )
-                  || S_ISSOCK(stat_info.st_mode)
-#   endif
-               )
-        {
-            p_input->stream.b_seekable = 0;
-            p_input->stream.p_selected_area->i_size = 0;
-        }
-#endif
-        else
-        {
-            vlc_mutex_unlock( &p_input->stream.stream_lock );
-            msg_Err( p_input, "unknown file type for `%s'", psz_name );
-            return VLC_EGENERIC;
-        }
-    }
- 
-    p_input->stream.p_selected_area->i_tell = 0;
-    p_input->stream.i_method = INPUT_METHOD_FILE;
-    vlc_mutex_unlock( &p_input->stream.stream_lock );
- 
-    msg_Dbg( p_input, "opening file `%s'", psz_name );
-    p_access_data = malloc( sizeof(_input_socket_t) );
-    p_input->p_access_data = (void *)p_access_data;
-    if( p_access_data == NULL )
-    {
-        msg_Err( p_input, "out of memory" );
-        return VLC_ENOMEM;
-    }
-
-    p_access_data->i_nb_reads = 0;
-    p_access_data->b_kfir = b_kfir;
-    if( b_stdin )
-    {
-        p_access_data->_socket.i_handle = 0;
-    }
-    else
-    {
-        if( _OpenFile( p_input, psz_name ) != VLC_SUCCESS )
-        {
-            free( p_access_data );
-            return VLC_EGENERIC;
-        }
-    }
-
-    if ( p_input->stream.b_seekable
-          && !p_input->stream.p_selected_area->i_size )
-    {
-        msg_Err( p_input, "file %s is empty, aborting", psz_name );
-        free( p_access_data );
-        return VLC_EGENERIC;
-    }
+    bool    b_stdin = !strcmp (p_access->psz_path, "-");
 
     /* Update default_pts to a suitable value for file access */
-    var_Create( p_input, "file-caching", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
-    var_Get( p_input, "file-caching", &val );
-    p_input->i_pts_delay = val.i_int * 1000;
+    var_Create( p_access, "file-caching", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
 
-    /*
-     * Get the additional list of files
-     */
-    p_access_data->p_files = NULL;
-    p_access_data->i_files = p_access_data->i_index = 0;
-    p_file = (file_entry_t *)malloc( sizeof(file_entry_t) );
-    p_file->i_size = p_input->stream.p_selected_area->i_size;
-    p_file->psz_name = strdup( psz_name );
-    TAB_APPEND( p_access_data->i_files, p_access_data->p_files, p_file );
+    STANDARD_READ_ACCESS_INIT;
+    p_sys->i_nb_reads = 0;
+    int fd = p_sys->fd = -1;
 
-    var_Create( p_input, "file-cat", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
-    var_Get( p_input, "file-cat", &val );
-
-    if( val.psz_string && *val.psz_string )
+    if (!strcasecmp (p_access->psz_access, "stream"))
     {
-        char *psz_parser = psz_name = val.psz_string;
-        int64_t i_size;
-
-        while( psz_name && *psz_name )
-        {
-            psz_parser = strchr( psz_name, ',' );
-            if( psz_parser ) *psz_parser = 0;
-
-            psz_name = strdup( psz_name );
-            if( psz_name )
-            {
-                msg_Dbg( p_input, "adding file `%s'", psz_name );
-
-#ifdef HAVE_SYS_STAT_H
-                if( !stat( psz_name, &stat_info ) )
-                {
-                    p_input->stream.p_selected_area->i_size +=
-                        stat_info.st_size;
-                    i_size = stat_info.st_size;
-                }
-                else
-                {
-                    msg_Dbg( p_input, "cannot stat() file `%s'", psz_name );
-                    i_size = 0;
-                }
-#endif
-
-                p_file = (file_entry_t *)malloc( sizeof(file_entry_t) );
-                p_file->i_size = i_size;
-                p_file->psz_name = psz_name;
-
-                TAB_APPEND( p_access_data->i_files, p_access_data->p_files,
-                            p_file );
-            }
-
-            psz_name = psz_parser;
-            if( psz_name ) psz_name++;
-        }
+        p_sys->b_seekable = false;
+        p_sys->b_pace_control = false;
+    }
+    else
+    {
+        p_sys->b_seekable = true;
+        p_sys->b_pace_control = true;
     }
 
-    if( val.psz_string ) free( val.psz_string );
+    /* Open file */
+    msg_Dbg (p_access, "opening file `%s'", p_access->psz_path);
+
+    if (b_stdin)
+        fd = dup (0);
+    else
+        fd = open_file (p_access, p_access->psz_path);
+
+#ifdef HAVE_SYS_STAT_H
+    struct stat st;
+
+    while (fd != -1)
+    {
+        if (fstat (fd, &st))
+            msg_Err (p_access, "fstat(%d): %m", fd);
+        else
+        if (S_ISDIR (st.st_mode))
+            /* The directory plugin takes care of that */
+            msg_Dbg (p_access, "file is a directory, aborting");
+        else
+            break; // success
+
+        close (fd);
+        fd = -1;
+    }
+#endif
+
+    if (fd == -1)
+    {
+        free (p_sys);
+        return VLC_EGENERIC;
+    }
+    p_sys->fd = fd;
+
+#ifdef HAVE_SYS_STAT_H
+    p_access->info.i_size = st.st_size;
+    if (!S_ISREG (st.st_mode))
+        p_sys->b_seekable = false;
+#else
+    p_sys->b_seekable = !b_stdin;
+# warning File size not known!
+#endif
 
     return VLC_SUCCESS;
 }
@@ -324,261 +197,196 @@ static int Open( vlc_object_t *p_this )
 /*****************************************************************************
  * Close: close the target
  *****************************************************************************/
-static void Close( vlc_object_t * p_this )
+static void Close (vlc_object_t * p_this)
 {
-    input_thread_t *p_input = (input_thread_t *)p_this;
-    _input_socket_t *p_access_data = (_input_socket_t *)p_input->p_access_data;
-    int i;
+    access_t     *p_access = (access_t*)p_this;
+    access_sys_t *p_sys = p_access->p_sys;
 
-    msg_Info( p_input, "closing `%s/%s://%s'", 
-              p_input->psz_access, p_input->psz_demux, p_input->psz_name );
- 
-    close( p_access_data->_socket.i_handle );
-
-    for( i = 0; i < p_access_data->i_files; i++ )
-    {
-        free( p_access_data->p_files[i]->psz_name );
-        free( p_access_data->p_files[i] );
-    }
-    if( p_access_data->p_files ) free( p_access_data->p_files );
-
-    free( p_access_data );
+    close (p_sys->fd);
+    free (p_sys);
 }
 
 /*****************************************************************************
  * Read: standard read on a file descriptor.
  *****************************************************************************/
-static ssize_t Read( input_thread_t * p_input, byte_t * p_buffer, size_t i_len )
+static ssize_t Read( access_t *p_access, uint8_t *p_buffer, size_t i_len )
 {
-    _input_socket_t *p_access_data = (_input_socket_t *)p_input->p_access_data;
+    access_sys_t *p_sys = p_access->p_sys;
     ssize_t i_ret;
- 
-#ifdef UNDER_CE
-    if( !ReadFile( (HANDLE)p_access_data->_socket.i_handle, p_buffer, i_len,
-                   (LPDWORD)&i_ret, NULL ) )
+    int fd = p_sys->fd;
+
+#if !defined(WIN32) && !defined(UNDER_CE)
+    if( !p_sys->b_seekable )
     {
-        i_ret = -1;
+        /* Note that POSIX regular files (b_seekable) opened for read are
+         * guaranteed to always set POLLIN immediately, so we can spare
+         * poll()ing them. */
+        /* Wait until some data is available. Impossible on Windows. */
+        struct pollfd ufd[2] = {
+            { .fd = fd, .events = POLLIN, },
+            { .fd = vlc_object_waitpipe (p_access), .events = POLLIN, },
+        };
+
+        if (poll (ufd, 2, -1) < 0 || ufd[1].revents)
+            return -1;
     }
-#else
-#ifndef WIN32
-    if ( !p_input->stream.b_pace_control )
-    {
-        if ( !p_access_data->b_kfir )
-        {
-            /* Find if some data is available. This won't work under Windows. */
-            struct timeval  timeout;
-            fd_set          fds;
+#endif /* WIN32 || UNDER_CE */
 
-            /* Initialize file descriptor set */
-            FD_ZERO( &fds );
-            FD_SET( p_access_data->_socket.i_handle, &fds );
-
-            /* We'll wait 0.5 second if nothing happens */
-            timeout.tv_sec = 0;
-            timeout.tv_usec = 500000;
-
-            /* Find if some data is available */
-            while( (i_ret = select( p_access_data->_socket.i_handle + 1, &fds,
-                                    NULL, NULL, &timeout )) == 0
-                    || (i_ret < 0 && errno == EINTR) )
-            {
-                FD_ZERO( &fds );
-                FD_SET( p_access_data->_socket.i_handle, &fds );
-                timeout.tv_sec = 0;
-                timeout.tv_usec = 500000;
-
-                if( p_input->b_die || p_input->b_error )
-                {
-                    return 0;
-                }
-            }
-
-            if( i_ret < 0 )
-            {
-                msg_Err( p_input, "select error (%s)", strerror(errno) );
-                return -1;
-            }
-
-            i_ret = read( p_access_data->_socket.i_handle, p_buffer, i_len );
-        }
-        else
-        {
-            /* b_kfir ; work around a buggy poll() driver implementation */
-            while ( (i_ret = read( p_access_data->_socket.i_handle, p_buffer,
-                                   i_len )) == 0 &&
-                      !p_input->b_die && !p_input->b_error )
-            {
-                msleep(INPUT_ERROR_SLEEP);
-            }
-        }
-    }
-    else
-#   endif
-    {
-        /* b_pace_control || WIN32 */
-        i_ret = read( p_access_data->_socket.i_handle, p_buffer, i_len );
-    }
-#endif
-
+    i_ret = read (fd, p_buffer, i_len);
     if( i_ret < 0 )
     {
-#ifdef HAVE_ERRNO_H
-        if ( errno != EINTR && errno != EAGAIN )
-            msg_Err( p_input, "read failed (%s)", strerror(errno) );
-#else
-        msg_Err( p_input, "read failed" );
-#endif
+        switch (errno)
+        {
+            case EINTR:
+            case EAGAIN:
+                break;
 
-        /* Delay a bit to avoid consuming all the CPU. This is particularly
-         * useful when reading from an unconnected FIFO. */
-        msleep( INPUT_ERROR_SLEEP );
+            default:
+                msg_Err (p_access, "read failed (%m)");
+                intf_UserFatal (p_access, false, _("File reading failed"),
+                                _("VLC could not read the file."));
+        }
     }
- 
-    p_access_data->i_nb_reads++;
+    else if( i_ret > 0 )
+        p_access->info.i_pos += i_ret;
+    else if( i_ret == 0 )
+        p_access->info.b_eof = true;
+
+    p_sys->i_nb_reads++;
+
 #ifdef HAVE_SYS_STAT_H
-    if ( p_input->stream.p_selected_area->i_size != 0
-            && (p_access_data->i_nb_reads % INPUT_FSTAT_NB_READS) == 0 )
+    if( p_access->info.i_size != 0 &&
+        (p_sys->i_nb_reads % INPUT_FSTAT_NB_READS) == 0 )
     {
-        struct stat stat_info;
-        int i_file = p_access_data->i_index;
+        struct stat st;
 
-        if ( fstat( p_access_data->_socket.i_handle, &stat_info ) == -1 )
+        if ((fstat (fd, &st) == 0)
+         && (p_access->info.i_size != st.st_size))
         {
-#   ifdef HAVE_ERRNO_H
-            msg_Warn( p_input, "couldn't stat again the file (%s)",
-                      strerror(errno) );
-#   else
-            msg_Warn( p_input, "couldn't stat again the file" );
-#   endif
-        }
-        else if ( p_access_data->p_files[i_file]->i_size != stat_info.st_size )
-        {
-            p_input->stream.p_selected_area->i_size +=
-                (stat_info.st_size - p_access_data->p_files[i_file]->i_size);
-            p_input->stream.b_changed = 1;
+            p_access->info.i_size = st.st_size;
+            p_access->info.i_update |= INPUT_UPDATE_SIZE;
         }
     }
 #endif
-
-    /* If we reached an EOF then switch to the next file in the list */
-    if ( i_ret == 0 && p_access_data->i_index + 1 < p_access_data->i_files )
-    {
-        int i_handle = p_access_data->_socket.i_handle;
-        char *psz_name =
-            p_access_data->p_files[++p_access_data->i_index]->psz_name;
-
-        msg_Dbg( p_input, "opening file `%s'", psz_name );
-
-        if ( _OpenFile( p_input, psz_name ) != VLC_SUCCESS )
-        {
-            p_access_data->_socket.i_handle = i_handle;
-            return 0;
-        }
-
-        close( i_handle );
-
-        /* We have to read some data */
-        return Read( p_input, p_buffer, i_len );
-    }
-
     return i_ret;
 }
+
 
 /*****************************************************************************
  * Seek: seek to a specific location in a file
  *****************************************************************************/
-static void Seek( input_thread_t * p_input, off_t i_pos )
+static int Seek (access_t *p_access, int64_t i_pos)
 {
-#define S p_input->stream
-    _input_socket_t *p_access_data = (_input_socket_t *)p_input->p_access_data;
-    int64_t i_size = 0;
+    p_access->info.i_pos = i_pos;
+    p_access->info.b_eof = false;
 
-    /* Check which file we need to access */
-    if ( p_access_data->i_files > 1 )
-    {
-        int i, i_handle = p_access_data->_socket.i_handle;
-        char * psz_name;
-
-        for ( i = 0; i < p_access_data->i_files - 1; i++ )
-        {
-            if( i_pos < p_access_data->p_files[i]->i_size + i_size ) break;
-            i_size += p_access_data->p_files[i]->i_size;
-        }
-
-        psz_name = p_access_data->p_files[i]->psz_name;
-
-        msg_Dbg( p_input, "opening file `%s'", psz_name );
-        if ( i != p_access_data->i_index &&
-             _OpenFile( p_input, psz_name ) == VLC_SUCCESS )
-        {
-            /* Close old file */
-            close( i_handle );
-            p_access_data->i_index = i;
-        }
-        else
-        {
-            p_access_data->_socket.i_handle = i_handle;
-        }
-    }
-
-#if defined( WIN32 ) && !defined( UNDER_CE )
-    _lseeki64( p_access_data->_socket.i_handle, i_pos - i_size, SEEK_SET );
-#else
-    lseek( p_access_data->_socket.i_handle, i_pos - i_size, SEEK_SET );
-#endif
-
-    vlc_mutex_lock( &S.stream_lock );
-    S.p_selected_area->i_tell = i_pos;
-    if( S.p_selected_area->i_tell > S.p_selected_area->i_size )
-    {
-        msg_Err( p_input, "seeking too far" );
-        S.p_selected_area->i_tell = S.p_selected_area->i_size;
-    }
-    else if( S.p_selected_area->i_tell < 0 )
-    {
-        msg_Err( p_input, "seeking too early" );
-        S.p_selected_area->i_tell = 0;
-    }
-    vlc_mutex_unlock( &S.stream_lock );
-#undef S
+    lseek (p_access->p_sys->fd, i_pos, SEEK_SET);
+    return VLC_SUCCESS;
 }
 
 /*****************************************************************************
- * OpenFile: Opens a specific file
+ * Control:
  *****************************************************************************/
-static int _OpenFile( input_thread_t * p_input, char * psz_name )
+static int Control( access_t *p_access, int i_query, va_list args )
 {
-    input_socket_t * p_access_data = (input_socket_t *)p_input->p_access_data;
+    access_sys_t *p_sys = p_access->p_sys;
+    bool   *pb_bool;
+    int          *pi_int;
+    int64_t      *pi_64;
 
-#ifdef UNDER_CE
-    wchar_t psz_filename[MAX_PATH];
-    MultiByteToWideChar( CP_ACP, 0, psz_name, -1, psz_filename, MAX_PATH );
-
-    p_access_data->i_handle =
-       (int)CreateFile( psz_filename, GENERIC_READ, FILE_SHARE_READ,
-                        NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
-
-    if ( (HANDLE)p_access_data->i_handle == INVALID_HANDLE_VALUE )
+    switch( i_query )
     {
-        msg_Err( p_input, "cannot open file %s", psz_name );
-        return VLC_EGENERIC;
-    }
-    p_input->stream.p_selected_area->i_size =
-        GetFileSize( (HANDLE)p_access_data->i_handle, NULL );
-#else
+        /* */
+        case ACCESS_CAN_SEEK:
+        case ACCESS_CAN_FASTSEEK:
+            pb_bool = (bool*)va_arg( args, bool* );
+            *pb_bool = p_sys->b_seekable;
+            break;
 
-    p_access_data->i_handle = open( psz_name, O_NONBLOCK /*| O_LARGEFILE*/ );
-    if ( p_access_data->i_handle == -1 )
-    {
-#   ifdef HAVE_ERRNO_H
-        msg_Err( p_input, "cannot open file %s (%s)", psz_name,
-                 strerror(errno) );
-#   else
-        msg_Err( p_input, "cannot open file %s", psz_name );
-#   endif
-        return VLC_EGENERIC;
+        case ACCESS_CAN_PAUSE:
+        case ACCESS_CAN_CONTROL_PACE:
+            pb_bool = (bool*)va_arg( args, bool* );
+            *pb_bool = p_sys->b_pace_control;
+            break;
+
+        /* */
+        case ACCESS_GET_MTU:
+            pi_int = (int*)va_arg( args, int * );
+            *pi_int = 0;
+            break;
+
+        case ACCESS_GET_PTS_DELAY:
+            pi_64 = (int64_t*)va_arg( args, int64_t * );
+            *pi_64 = var_GetInteger( p_access, "file-caching" ) * INT64_C(1000);
+            break;
+
+        /* */
+        case ACCESS_SET_PAUSE_STATE:
+            /* Nothing to do */
+            break;
+
+        case ACCESS_GET_TITLE_INFO:
+        case ACCESS_SET_TITLE:
+        case ACCESS_SET_SEEKPOINT:
+        case ACCESS_SET_PRIVATE_ID_STATE:
+        case ACCESS_GET_META:
+        case ACCESS_GET_PRIVATE_ID_STATE:
+        case ACCESS_GET_CONTENT_TYPE:
+            return VLC_EGENERIC;
+
+        default:
+            msg_Warn( p_access, "unimplemented query %d in control", i_query );
+            return VLC_EGENERIC;
+
     }
+    return VLC_SUCCESS;
+}
+
+/*****************************************************************************
+ * open_file: Opens a specific file
+ *****************************************************************************/
+static int open_file (access_t *p_access, const char *path)
+{
+#if defined(WIN32)
+    if (!strcasecmp (p_access->psz_access, "file")
+      && ('/' == path[0]) && isalpha (path[1])
+      && (':' == path[2]) && ('/' == path[3]))
+        /* Explorer can open path such as file:/C:/ or file:///C:/
+         * hence remove leading / if found */
+        path++;
 #endif
 
-    return VLC_SUCCESS;
+#ifdef UNDER_CE
+    p_sys->fd = utf8_fopen( path, "rb" );
+    if ( !p_sys->fd )
+    {
+        msg_Err( p_access, "cannot open file %s", path );
+        intf_UserFatal( p_access, false, _("File reading failed"),
+                        _("VLC could not open the file \"%s\"."), path );
+        return VLC_EGENERIC;
+    }
+
+    fseek( p_sys->fd, 0, SEEK_END );
+    p_access->info.i_size = ftell( p_sys->fd );
+    p_access->info.i_update |= INPUT_UPDATE_SIZE;
+    fseek( p_sys->fd, 0, SEEK_SET );
+#else
+    int fd = utf8_open (path, O_RDONLY | O_NONBLOCK /* O_LARGEFILE*/, 0666);
+    if (fd == -1)
+    {
+        msg_Err (p_access, "cannot open file %s (%m)", path);
+        intf_UserFatal (p_access, false, _("File reading failed"),
+                        _("VLC could not open the file \"%s\"."), path);
+        return -1;
+    }
+
+# if defined(HAVE_FCNTL_H) && defined(F_FDAHEAD) && defined(F_NOCACHE)
+    /* We'd rather use any available memory for reading ahead
+     * than for caching what we've already seen/heard */
+    fcntl (fd, F_RDAHEAD, 1);
+    fcntl (fd, F_NOCACHE, 1);
+# endif
+#endif
+
+    return fd;
 }

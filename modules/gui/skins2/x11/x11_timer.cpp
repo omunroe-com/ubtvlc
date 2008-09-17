@@ -1,11 +1,11 @@
 /*****************************************************************************
  * x11_timer.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: x11_timer.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,20 +19,22 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifdef X11_SKINS
 
 #include <unistd.h>
 #include <fcntl.h>
+#include <poll.h>
 
 #include "x11_timer.hpp"
 #include "x11_factory.hpp"
+#include "../commands/cmd_generic.hpp"
 
 
-X11Timer::X11Timer( intf_thread_t *pIntf, const Callback &rCallback ):
-    OSTimer( pIntf ), m_callback( rCallback )
+X11Timer::X11Timer( intf_thread_t *pIntf, CmdGeneric &rCmd ):
+    OSTimer( pIntf ), m_rCommand( rCmd )
 {
     // Get the instance of timer loop
     X11Factory *m_pOsFactory = (X11Factory*)(OSFactory::instance( pIntf ) );
@@ -71,7 +73,7 @@ bool X11Timer::execute()
 {
     m_nextDate += m_interval;
     // Execute the callback
-    (*(m_callback.getFunc()))( m_callback.getObj() );
+    m_rCommand.execute();
 
     return !m_oneShot;
 }
@@ -145,20 +147,13 @@ void X11TimerLoop::waitNextTimer()
 
 bool X11TimerLoop::sleep( int delay )
 {
-    // Timeout delay
-    struct timeval tv;
-    tv.tv_sec = delay / 1000;
-    tv.tv_usec = 1000 * (delay % 1000);
-
-    // FD set for select()
-    fd_set rfds;
-    FD_ZERO( &rfds );
-    FD_SET( m_connectionNumber, &rfds );
+    struct pollfd ufd;
+    memset( &ufd, 0, sizeof (ufd) );
+    ufd.fd = m_connectionNumber;
+    ufd.events = POLLIN;
 
     // Wait for an X11 event, or timeout
-    int num = select( m_connectionNumber + 1, &rfds, NULL, NULL, &tv );
-
-    return ( num > 0 );
+    return poll( &ufd, 1, delay ) > 0;
 }
 
 

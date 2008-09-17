@@ -1,8 +1,8 @@
 /*****************************************************************************
  * asf.c: MMS access plug-in
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: asf.c 7058 2004-03-13 05:09:51Z fenrir $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id$
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,15 +18,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
-#include <stdlib.h>
 
-#include <vlc/vlc.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
 
 #include "asf.h"
 #include "buffer.h"
-
 
 static int CmpGuid( const guid_t *p_guid1, const guid_t *p_guid2 )
 {
@@ -43,7 +45,7 @@ static int CmpGuid( const guid_t *p_guid1, const guid_t *p_guid2 )
               p_guid1->v4[7] == p_guid2->v4[7] ) ? 1 : 0 );
 }
 
-void E_( GenerateGuid )( guid_t *p_guid )
+void  GenerateGuid ( guid_t *p_guid )
 {
     int i;
 
@@ -59,8 +61,8 @@ void E_( GenerateGuid )( guid_t *p_guid )
     }
 }
 
-void E_( asf_HeaderParse )  ( asf_header_t *hdr,
-                              uint8_t *p_header, int i_header )
+void  asf_HeaderParse ( asf_header_t *hdr,
+                            uint8_t *p_header, int i_header )
 {
     var_buffer_t buffer;
     guid_t      guid;
@@ -77,30 +79,19 @@ void E_( asf_HeaderParse )  ( asf_header_t *hdr,
         hdr->stream[i].i_bitrate = -1;
     }
 
-    //fprintf( stderr, " ---------------------header:%d\n", i_header );
     var_buffer_initread( &buffer, p_header, i_header );
-
     var_buffer_getguid( &buffer, &guid );
 
     if( !CmpGuid( &guid, &asf_object_header_guid ) )
     {
-//        XXX Error
-//        fprintf( stderr, " ---------------------ERROR------\n" );
+        /* ERROR: */
     }
     var_buffer_getmemory( &buffer, NULL, 30 - 16 );
 
     for( ;; )
     {
-        //fprintf( stderr, " ---------------------data:%d\n", buffer.i_data );
-
         var_buffer_getguid( &buffer, &guid );
         i_size = var_buffer_get64( &buffer );
-
-        //fprintf( stderr, "  guid=0x%8.8x-0x%4.4x-0x%4.4x-%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x size=%lld\n",
-        //                  guid.v1,guid.v2, guid.v3,
-        //                  guid.v4[0],guid.v4[1],guid.v4[2],guid.v4[3],
-        //                  guid.v4[4],guid.v4[5],guid.v4[6],guid.v4[7],
-        //                  i_size );
 
         if( CmpGuid( &guid, &asf_object_file_properties_guid ) )
         {
@@ -113,34 +104,73 @@ void E_( asf_HeaderParse )  ( asf_header_t *hdr,
 
             var_buffer_getmemory( &buffer, NULL, i_size - 24 - 16 - 8 - 8 - 8 - 8-8-8-4 - 4);
         }
+        else if( CmpGuid( &guid, &asf_object_header_extension_guid ) )
+        {
+            /* Enter it */
+            var_buffer_getmemory( &buffer, NULL, 46 - 24 );
+        }
+        else if( CmpGuid( &guid, &asf_object_extended_stream_properties_guid ) )
+        {
+            /* Grrrrrr */
+            int16_t i_count1, i_count2;
+            int i_subsize;
+            int i;
+
+            var_buffer_getmemory( &buffer, NULL, 84 - 24 );
+
+            i_count1 = var_buffer_get16( &buffer );
+            i_count2 = var_buffer_get16( &buffer );
+
+            i_subsize = 88;
+            for( i = 0; i < i_count1; i++ )
+            {
+                int i_len;
+
+                var_buffer_get16( &buffer );
+                i_len = var_buffer_get16( &buffer );
+                var_buffer_getmemory( &buffer, NULL, i_len );
+
+                i_subsize = 4 + i_len;
+            }
+
+            for( i = 0; i < i_count2; i++ )
+            {
+                int i_len;
+                var_buffer_getmemory( &buffer, NULL, 16 + 2 );
+                i_len = var_buffer_get32( &buffer );
+                var_buffer_getmemory( &buffer, NULL, i_len );
+
+                i_subsize += 16 + 6 + i_len;
+            }
+
+            if( i_size - i_subsize <= 24 )
+            {
+                var_buffer_getmemory( &buffer, NULL, i_size - i_subsize );
+            }
+            /* It's a hack we just skip the first part of the object until
+             * the embed stream properties if any (ugly, but whose fault ?) */
+        }
         else if( CmpGuid( &guid, &asf_object_stream_properties_guid ) )
         {
             int     i_stream_id;
             guid_t  stream_type;
-            //msg_Dbg( p_input, "found stream_properties" );
 
             var_buffer_getguid( &buffer, &stream_type );
             var_buffer_getmemory( &buffer, NULL, 32 );
-            i_stream_id = var_buffer_get8( &buffer ) & 0x7f;
 
-            //fprintf( stderr, " 1---------------------skip:%lld\n", i_size - 24 - 32 - 16 - 1 );
+            i_stream_id = var_buffer_get8( &buffer ) & 0x7f;
             var_buffer_getmemory( &buffer, NULL, i_size - 24 - 32 - 16 - 1);
 
             if( CmpGuid( &stream_type, &asf_object_stream_type_video ) )
             {
-                //fprintf( stderr, "\nvideo stream[%d] found\n", i_stream_id );
-                //msg_Dbg( p_input, "video stream[%d] found", i_stream_id );
                 hdr->stream[i_stream_id].i_cat = ASF_STREAM_VIDEO;
             }
             else if( CmpGuid( &stream_type, &asf_object_stream_type_audio ) )
             {
-                //fprintf( stderr, "\naudio stream[%d] found\n", i_stream_id );
-                //msg_Dbg( p_input, "audio stream[%d] found", i_stream_id );
                 hdr->stream[i_stream_id].i_cat = ASF_STREAM_AUDIO;
             }
             else
             {
-//                msg_Dbg( p_input, "unknown stream[%d] found", i_stream_id );
                 hdr->stream[i_stream_id].i_cat = ASF_STREAM_UNKNOWN;
             }
         }
@@ -158,26 +188,22 @@ void E_( asf_HeaderParse )  ( asf_header_t *hdr,
                 i_count--;
                 i_size -= 6;
             }
-            //fprintf( stderr, " 2---------------------skip:%lld\n", i_size - 24);
             var_buffer_getmemory( &buffer, NULL, i_size - 24 );
         }
         else
         {
-            //fprintf( stderr, " 3---------------------skip:%lld\n", i_size - 24);
             // skip unknown guid
             var_buffer_getmemory( &buffer, NULL, i_size - 24 );
         }
 
         if( var_buffer_readempty( &buffer ) )
-        {
             return;
-        }
     }
 }
 
-void E_( asf_StreamSelect ) ( asf_header_t *hdr,
+void  asf_StreamSelect  ( asf_header_t *hdr,
                               int i_bitrate_max,
-                              vlc_bool_t b_all, vlc_bool_t b_audio, vlc_bool_t b_video )
+                              bool b_all, bool b_audio, bool b_video )
 {
     /* XXX FIXME use mututal eclusion information */
     int i;
@@ -206,43 +232,10 @@ void E_( asf_StreamSelect ) ( asf_header_t *hdr,
     {
         for( i = 0; i < 128; i++ )
         {
-            hdr->stream[i].i_selected = 0; /* by default, not selected */
+            /* by default, not selected */
+            hdr->stream[i].i_selected = 0;
         }
     }
-
-#if 0
-    psz_stream = config_GetPsz( p_input, "mms-stream" );
-
-    if( psz_stream && *psz_stream )
-    {
-        char *psz_tmp = psz_stream;
-        while( *psz_tmp )
-        {
-            if( *psz_tmp == ',' )
-            {
-                psz_tmp++;
-            }
-            else
-            {
-                int i_stream;
-                i_stream = atoi( psz_tmp );
-                while( *psz_tmp != '\0' && *psz_tmp != ',' )
-                {
-                    psz_tmp++;
-                }
-
-                if( i_stream > 0 && i_stream < 128 &&
-                    stream[i_stream].i_cat != MMS_STREAM_UNKNOWN )
-                {
-                    stream[i_stream].i_selected = 1;
-                }
-            }
-        }
-        FREE( psz_stream );
-        return;
-    }
-    FREE( psz_stream );
-#endif
 
     /* big test:
      * select a stream if
@@ -300,7 +293,6 @@ void E_( asf_StreamSelect ) ( asf_header_t *hdr,
                         ) ) )  )
         {
             /* unselect old stream */
-
             if( i_video > 0 )
             {
                 hdr->stream[i_video].i_selected = 0;
@@ -319,19 +311,4 @@ void E_( asf_StreamSelect ) ( asf_header_t *hdr,
         }
 
     }
-#if 0
-    if( i_bitrate_max > 0 )
-    {
-        msg_Dbg( p_input,
-                 "requested bitrate:%d real bitrate:%d",
-                 i_bitrate_max, i_bitrate_total );
-    }
-    else
-    {
-        msg_Dbg( p_input,
-                 "total bitrate:%d",
-                 i_bitrate_total );
-    }
-#endif
 }
-

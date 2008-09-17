@@ -1,8 +1,8 @@
 /*****************************************************************************
  * m4v.c : MPEG-4 Video demuxer
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: m4v.c 7239 2004-04-02 03:24:53Z fenrir $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id: e98e2596194488674f85031499b86e3e46823e0a $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,16 +18,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                      /* malloc(), free() */
 
-#include <vlc/vlc.h>
-#include <vlc/input.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_demux.h>
 #include "vlc_codec.h"
 
 /*****************************************************************************
@@ -36,12 +40,19 @@
 static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
+#define FPS_TEXT N_("Frames per Second")
+#define FPS_LONGTEXT N_("This is the desired frame rate when " \
+    "playing MPEG4 video elementary streams.")
+
 vlc_module_begin();
-    set_description( _("MPEG-4 video demuxer" ) );
-    set_capability( "demux2", 0 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
+    set_description( N_("MPEG-4 video demuxer" ) );
+    set_capability( "demux", 0 );
     set_callbacks( Open, Close );
     add_shortcut( "m4v" );
     add_shortcut( "mp4v" );
+    add_float( "m4v-fps", 25, NULL, FPS_TEXT, FPS_LONGTEXT, false );
 vlc_module_end();
 
 /*****************************************************************************
@@ -51,6 +62,7 @@ struct demux_sys_t
 {
     mtime_t     i_dts;
     es_out_id_t *p_es;
+    float       f_fps;
 
     decoder_t *p_packetizer;
 };
@@ -67,33 +79,21 @@ static int Open( vlc_object_t * p_this )
 {
     demux_t     *p_demux = (demux_t*)p_this;
     demux_sys_t *p_sys;
-    vlc_bool_t   b_forced = VLC_FALSE;
+    const uint8_t *p_peek;
+    vlc_value_t val;
 
-    uint8_t     *p_peek;
+    if( stream_Peek( p_demux->s, &p_peek, 4 ) < 4 ) return VLC_EGENERIC;
 
-    es_format_t  fmt;
-
-    if( stream_Peek( p_demux->s, &p_peek, 4 ) < 4 )
+    if( p_peek[0] != 0x00 || p_peek[1] != 0x00 || p_peek[2] != 0x01 )
     {
-        msg_Err( p_demux, "cannot peek" );
-        return VLC_EGENERIC;
-    }
-
-    if( !strncmp( p_demux->psz_demux, "mp4v", 4 ) ||
-        !strncmp( p_demux->psz_demux, "m4v", 4 ) )
-    {
-        b_forced = VLC_TRUE;
-    }
-
-    if( p_peek[0] != 0x00 || p_peek[1] != 0x00 || p_peek[2] != 0x01 || p_peek[3] > 0x2f )
-    {
-        if( !b_forced )
+        if( !p_demux->b_force )
         {
             msg_Warn( p_demux, "m4v module discarded (no startcode)" );
             return VLC_EGENERIC;
         }
 
-        msg_Err( p_demux, "this doesn't look like an MPEG-4 ES stream, continuing" );
+        msg_Warn( p_demux, "this doesn't look like an MPEG-4 ES stream, "
+                  "continuing anyway" );
     }
 
     p_demux->pf_demux  = Demux;
@@ -102,33 +102,18 @@ static int Open( vlc_object_t * p_this )
     p_sys->p_es        = NULL;
     p_sys->i_dts       = 1;
 
-    /*
-     * Load the mpegvideo packetizer
-     */
-    p_sys->p_packetizer = vlc_object_create( p_demux, VLC_OBJECT_PACKETIZER );
-    p_sys->p_packetizer->pf_decode_audio = NULL;
-    p_sys->p_packetizer->pf_decode_video = NULL;
-    p_sys->p_packetizer->pf_decode_sub = NULL;
-    p_sys->p_packetizer->pf_packetize = NULL;
-    es_format_Init( &p_sys->p_packetizer->fmt_in, VIDEO_ES,
-                    VLC_FOURCC( 'm', 'p', '4', 'v' ) );
+    /*  Load the mpeg4video packetizer */
+    INIT_VPACKETIZER( p_sys->p_packetizer, 'm', 'p', '4', 'v' );
     es_format_Init( &p_sys->p_packetizer->fmt_out, UNKNOWN_ES, 0 );
-    p_sys->p_packetizer->p_module =
-        module_Need( p_sys->p_packetizer, "packetizer", NULL, 0 );
 
-    if( p_sys->p_packetizer->p_module == NULL)
-    {
-        vlc_object_destroy( p_sys->p_packetizer );
-        msg_Err( p_demux, "cannot find mp4v packetizer" );
-        free( p_sys );
-        return VLC_EGENERIC;
-    }
+    LOAD_PACKETIZER_OR_FAIL( p_sys->p_packetizer, "mpeg4 video" );
 
-    /*
-     * create the output
-     */
-    es_format_Init( &fmt, VIDEO_ES, VLC_FOURCC( 'm', 'p', '4', 'v' ) );
-    p_sys->p_es = es_out_Add( p_demux->out, &fmt );
+    /* We need to wait until we get p_extra (VOL header) from the packetizer
+     * before we create the output */
+
+    var_Create( p_demux, "m4v-fps", VLC_VAR_FLOAT | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "m4v-fps", &val );
+    p_sys->f_fps = val.f_float;
 
     return VLC_SUCCESS;
 }
@@ -141,8 +126,7 @@ static void Close( vlc_object_t * p_this )
     demux_t     *p_demux = (demux_t*)p_this;
     demux_sys_t *p_sys = p_demux->p_sys;
 
-    module_Unneed( p_sys->p_packetizer, p_sys->p_packetizer->p_module );
-    vlc_object_destroy( p_sys->p_packetizer );
+    DESTROY_PACKETIZER( p_sys->p_packetizer) ;
 
     free( p_sys );
 }
@@ -172,18 +156,31 @@ static int Demux( demux_t *p_demux)
         {
             block_t *p_next = p_block_out->p_next;
 
+            if( p_sys->p_es == NULL )
+            {
+                p_sys->p_packetizer->fmt_out.b_packetized = true;
+                p_sys->p_es = es_out_Add( p_demux->out, &p_sys->p_packetizer->fmt_out);
+            }
+
             es_out_Control( p_demux->out, ES_OUT_SET_PCR, p_sys->i_dts );
 
-            p_block_out->i_dts = p_sys->i_dts;
-            p_block_out->i_pts = 0;
-
             p_block_out->p_next = NULL;
+            if( p_block_out->i_pts == p_block_out->i_dts )
+            {
+                p_block_out->i_pts = p_sys->i_dts;
+            }
+            else
+            {
+                p_block_out->i_pts = 0;
+            }
+            p_block_out->i_dts = p_sys->i_dts;
+
             es_out_Send( p_demux->out, p_sys->p_es, p_block_out );
 
             p_block_out = p_next;
 
             /* FIXME FIXME FIXME FIXME */
-            p_sys->i_dts += (mtime_t)1000000 / 25;
+            p_sys->i_dts += (mtime_t)1000000 / p_sys->f_fps;
             /* FIXME FIXME FIXME FIXME */
         }
     }
@@ -200,7 +197,7 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
     if( i_query == DEMUX_SET_TIME )
         return VLC_EGENERIC;
     else
-        return demux2_vaControlHelper( p_demux->s,
+        return demux_vaControlHelper( p_demux->s,
                                        0, -1,
                                        0, 1, i_query, args );
 }

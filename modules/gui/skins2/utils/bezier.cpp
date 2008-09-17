@@ -1,11 +1,11 @@
 /*****************************************************************************
  * bezier.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: bezier.cpp 7217 2004-04-01 09:07:37Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,29 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-#include <vlc/vlc.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
 #include "bezier.hpp"
 #include <math.h>
 
+// XXX should be in VLC core
 #ifndef HAVE_LRINTF
-#   define lrintf(a) (int)rint(a)
+#   ifdef HAVE_LRINT
+#       define lrintf( x ) (int)rint( x )
+#   elif defined WIN32
+        __inline long int lrintf( float x )
+        {
+            int i;
+            _asm fld x __asm fistp i
+            return i;
+        }
+#   endif
 #endif
 
 Bezier::Bezier( intf_thread_t *p_intf, const vector<float> &rAbscissas,
@@ -97,11 +111,12 @@ float Bezier::getNearestPercent( int x, int y ) const
 }
 
 
-float Bezier::getMinDist( int x, int y ) const
+float Bezier::getMinDist( int x, int y, float xScale, float yScale ) const
 {
     int nearest = findNearestPoint( x, y );
-    return sqrt( (m_leftVect[nearest] - x) * (m_leftVect[nearest] - x) +
-                 (m_topVect[nearest] - y) * (m_topVect[nearest] - y) );
+    double xDist = xScale * (m_leftVect[nearest] - x);
+    double yDist = yScale * (m_topVect[nearest] - y);
+    return sqrt( xDist * xDist + yDist * yDist );
 }
 
 
@@ -133,9 +148,9 @@ int Bezier::getWidth() const
     int width = 0;
     for( int i = 0; i < m_nbPoints; i++ )
     {
-        if( m_leftVect[i] > width )
+        if( m_leftVect[i] >= width )
         {
-            width = m_leftVect[i];
+            width = m_leftVect[i] + 1;
         }
     }
     return width;
@@ -147,9 +162,9 @@ int Bezier::getHeight() const
     int height = 0;
     for( int i = 0; i < m_nbPoints; i++ )
     {
-        if( m_topVect[i] > height )
+        if( m_topVect[i] >= height )
         {
-            height = m_topVect[i];
+            height = m_topVect[i] + 1;
         }
     }
     return height;

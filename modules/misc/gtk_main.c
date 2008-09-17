@@ -1,8 +1,8 @@
 /*****************************************************************************
  * gtk_main.c : Gtk+ wrapper for gtk_main
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: gtk_main.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: 7834352beb8c5bfe894722e9c7db39421e1a1df7 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,15 +18,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <vlc/vlc.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
-#include <stdlib.h>                                              /* atexit() */
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+
 
 #include <gtk/gtk.h>
 
@@ -44,7 +48,7 @@
 static int  Open    ( vlc_object_t * );
 static void Close   ( vlc_object_t * );
 
-static void GtkMain ( vlc_object_t * );
+static void* GtkMain ( vlc_object_t * );
 
 /*****************************************************************************
  * Local variables (mutex-protected).
@@ -57,7 +61,7 @@ static vlc_object_t * p_gtk_main = NULL;
  *****************************************************************************/
 vlc_module_begin();
     int i_cap;
-    set_description( _("Gtk+ GUI helper") );
+    set_description( N_("Gtk+ GUI helper") );
 #if defined(MODULE_NAME_IS_gtk_main)
     i_cap = 90;
     add_shortcut( "gtk" );
@@ -83,23 +87,19 @@ vlc_module_end();
  *****************************************************************************/
 static int Open( vlc_object_t *p_this )
 {
-    vlc_value_t lockval;
+    vlc_mutex_t *lock;
 
-    /* FIXME: put this in the module (de)initialization ASAP */
-    var_Create( p_this->p_libvlc, "gtk", VLC_VAR_MUTEX );
-
-    var_Get( p_this->p_libvlc, "gtk", &lockval );
-    vlc_mutex_lock( lockval.p_address );
+    lock = var_AcquireMutex( "gtk" );
 
     if( i_refcount > 0 )
     {
         i_refcount++;
-        vlc_mutex_unlock( lockval.p_address );
+        vlc_mutex_unlock( lock );
 
         return VLC_SUCCESS;
     }
 
-    p_gtk_main = vlc_object_create( p_this, VLC_OBJECT_GENERIC );
+    p_gtk_main = vlc_object_create( p_this, sizeof( vlc_object_t ) );
 
     /* Only initialize gthreads if it's the first time we do it */
     if( !g_thread_supported() )
@@ -110,17 +110,16 @@ static int Open( vlc_object_t *p_this )
     /* Launch the gtk_main() thread. It will not return until it has
      * called gdk_threads_enter(), which ensures us thread safety. */
     if( vlc_thread_create( p_gtk_main, "gtk_main", GtkMain,
-                           VLC_THREAD_PRIORITY_LOW, VLC_TRUE ) )
+                           VLC_THREAD_PRIORITY_LOW, true ) )
     {
-        vlc_object_destroy( p_gtk_main );
+        vlc_object_release( p_gtk_main );
         i_refcount--;
-        vlc_mutex_unlock( lockval.p_address );
-        var_Destroy( p_this->p_libvlc, "gtk" );
+        vlc_mutex_unlock( lock );
         return VLC_ETHREAD;
     }
 
     i_refcount++;
-    vlc_mutex_unlock( lockval.p_address );
+    vlc_mutex_unlock( lock );
 
     return VLC_SUCCESS;
 }
@@ -130,28 +129,25 @@ static int Open( vlc_object_t *p_this )
  *****************************************************************************/
 static void Close( vlc_object_t *p_this )
 {
-    vlc_value_t lockval;
+    vlc_mutex_t *lock;
 
-    var_Get( p_this->p_libvlc, "gtk", &lockval );
-    vlc_mutex_lock( lockval.p_address );
+    lock = var_AcquireMutex( "gtk" );
 
     i_refcount--;
 
     if( i_refcount > 0 )
     {
-        vlc_mutex_unlock( lockval.p_address );
-        var_Destroy( p_this->p_libvlc, "gtk" );
+        vlc_mutex_unlock( lock );
         return;
     }
 
     gtk_main_quit();
     vlc_thread_join( p_gtk_main );
 
-    vlc_object_destroy( p_gtk_main );
+    vlc_object_release( p_gtk_main );
     p_gtk_main = NULL;
 
-    vlc_mutex_unlock( lockval.p_address );
-    var_Destroy( p_this->p_libvlc, "gtk" );
+    vlc_mutex_unlock( lock );
 }
 
 static gint foo( gpointer bar ) { return TRUE; }
@@ -162,7 +158,7 @@ static gint foo( gpointer bar ) { return TRUE; }
  * this part of the interface is in a separate thread so that we can call
  * gtk_main() from within it without annoying the rest of the program.
  *****************************************************************************/
-static void GtkMain( vlc_object_t *p_this )
+static void* GtkMain( vlc_object_t *p_this )
 {
     /* gtk_init needs to know the command line. We don't care, so we
      * give it an empty one */
@@ -178,7 +174,7 @@ static void GtkMain( vlc_object_t *p_this )
 #endif
 
 #if defined(MODULE_NAME_IS_gnome_main)
-    gnome_init( p_this->p_vlc->psz_object_name, VERSION, i_args, p_args );
+    gnome_init( p_this->p_libvlc->psz_object_name, VERSION, i_args, p_args );
 #elif defined(MODULE_NAME_IS_gnome2_main)
     gnome_program_init( PACKAGE, VERSION, LIBGNOMEUI_MODULE,
                         i_args, p_args,
@@ -201,5 +197,5 @@ static void GtkMain( vlc_object_t *p_this )
     gtk_main();
 
     gdk_threads_leave();
+    return NULL;
 }
-

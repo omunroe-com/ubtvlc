@@ -1,11 +1,11 @@
 /*****************************************************************************
  * generic_layout.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: generic_layout.hpp 7228 2004-04-01 21:04:43Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef GENERIC_LAYOUT_HPP
@@ -35,6 +35,8 @@
 class Anchor;
 class OSGraphics;
 class CtrlGeneric;
+class CtrlVideo;
+class VarBoolImpl;
 
 
 /// Control and its associated layer
@@ -51,7 +53,7 @@ struct LayeredControl
 
 
 /// Base class for layouts
-class GenericLayout: public SkinObject, public Box
+class GenericLayout: public SkinObject
 {
     public:
         GenericLayout( intf_thread_t *pIntf, int width, int height,
@@ -75,16 +77,27 @@ class GenericLayout: public SkinObject, public Box
         /// Refresh the window
         virtual void refreshAll();
 
+        /// Refresh a rectangular portion of the window
+        virtual void refreshRect( int x, int y, int width, int height );
+
         /// Get the image of the layout
         virtual OSGraphics *getImage() const { return m_pImage; }
 
         /// Get the position of the layout (relative to the screen)
+        /**
+         * Note: These values are different from the m_rect.getLeft() and
+         * m_rect.getTop(), which always return 0.
+         * The latter methods are there as a "root rect" for the panels and
+         * controls, since each control knows its parent rect, but returns
+         * coordinates relative to the root rect.
+         */
         virtual int getLeft() const { return m_pWindow->getLeft(); }
         virtual int getTop() const { return m_pWindow->getTop(); }
 
         /// Get the size of the layout
-        virtual int getWidth() const { return m_width; }
-        virtual int getHeight() const { return m_height; }
+        virtual int getWidth() const { return m_rect.getWidth(); }
+        virtual int getHeight() const { return m_rect.getHeight(); }
+        virtual const GenericRect &getRect() const { return m_rect; }
 
         /// Get the minimum and maximum size of the layout
         virtual int getMinWidth() const { return m_minWidth; }
@@ -95,8 +108,10 @@ class GenericLayout: public SkinObject, public Box
         /// Resize the layout
         virtual void resize( int width, int height );
 
-        /// Add a control in the layout at the given position, and
-        /// the optional given layer
+        /**
+         * Add a control in the layout at the given position, and
+         * the optional given layer
+         */
         virtual void addControl( CtrlGeneric *pControl,
                                  const Position &rPosition,
                                  int layer );
@@ -105,7 +120,14 @@ class GenericLayout: public SkinObject, public Box
         virtual const list<LayeredControl> &getControlList() const;
 
         /// Called by a control when its image has changed
-        virtual void onControlUpdate( const CtrlGeneric &rCtrl );
+        /**
+         * The arguments indicate the size of the rectangle to refresh,
+         * and the offset (from the control position) of this rectangle.
+         * Use a negative width or height to refresh the layout completely
+         */
+        virtual void onControlUpdate( const CtrlGeneric &rCtrl,
+                                      int width, int height,
+                                      int xOffSet, int yOffSet );
 
         /// Get the list of the anchors of this layout
         virtual const list<Anchor*>& getAnchorList() const;
@@ -113,19 +135,40 @@ class GenericLayout: public SkinObject, public Box
         /// Add an anchor to this layout
         virtual void addAnchor( Anchor *pAnchor );
 
+        /// Called when the layout is shown
+        virtual void onShow();
+
+        /// Called when the layout is hidden
+        virtual void onHide();
+
+        /// Give access to the "active layout" variable
+        // FIXME: we give read/write access
+        VarBoolImpl &getActiveVar() { return *m_pVarActive; }
+
     private:
         /// Parent window of the layout
         TopWindow *m_pWindow;
         /// Layout size
-        int m_width, m_height;
+        SkinsRect m_rect;
         int m_minWidth, m_maxWidth;
         int m_minHeight, m_maxHeight;
         /// Image of the layout
         OSGraphics *m_pImage;
         /// List of the controls in the layout
         list<LayeredControl> m_controlList;
+        /// Video control
+        CtrlVideo *m_pVideoControl;
         /// List of the anchors in the layout
         list<Anchor*> m_anchorList;
+        /// Flag to know if the layout is visible
+        bool m_visible;
+        /// Variable for the "active state" of the layout
+        /**
+         * Note: the layout is not an observer on this variable, because it
+         * cannot be changed externally (i.e. without an explicit change of
+         * layout). This way, we avoid using a setActiveLayoutInner method.
+         */
+        mutable VarBoolImpl *m_pVarActive;
 };
 
 

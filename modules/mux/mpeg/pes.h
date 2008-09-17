@@ -1,8 +1,8 @@
 /*****************************************************************************
  * pes.h
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: pes.h 7047 2004-03-11 17:37:50Z fenrir $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id$
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -11,7 +11,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,9 +19,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
-
 
 #define PES_PROGRAM_STREAM_MAP          0xbc
 #define PES_PRIVATE_STREAM_1            0xbd
@@ -33,7 +32,9 @@
 #define PES_DSMCC_STREAM                0xf2
 #define PES_ITU_T_H222_1_TYPE_E_STREAM  0xf8
 
+#define PES_PAYLOAD_SIZE_MAX 65500
 
-int E_( EStoPES )( sout_instance_t *p_sout,
-                   block_t **pp_pes, block_t *p_es,
-                   int i_stream_id, int b_mpeg2 );
+int  EStoPES ( sout_instance_t *p_sout, block_t **pp_pes, block_t *p_es,
+                   es_format_t *p_fmt, int i_stream_id,
+                   int b_mpeg2, int b_data_alignment, int i_header_size,
+                   int i_max_pes_size );

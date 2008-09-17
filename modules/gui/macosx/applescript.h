@@ -1,8 +1,8 @@
 /*****************************************************************************
  * applescript.h: MacOS X AppleScript support
  *****************************************************************************
- * Copyright (C) 2002-2003 VideoLAN
- * $Id: applescript.h 7090 2004-03-15 19:33:18Z bigben $
+ * Copyright (C) 2002-2003, 2005, 2007 the VideoLAN team
+ * $Id$
  *
  * Authors: Derk-Jan Hartman <thedj@users.sourceforge.net>
  *
@@ -10,7 +10,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,17 +18,26 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
- * VLGetURLScriptCommand interface 
+ * VLGetURLScriptCommand interface
  *****************************************************************************/
 @interface VLGetURLScriptCommand : NSScriptCommand
 @end
 
 /*****************************************************************************
- * VLControlScriptCommand interface 
+ * VLControlScriptCommand interface
  *****************************************************************************/
 @interface VLControlScriptCommand : NSScriptCommand
+@end
+
+/*****************************************************************************
+* Category that adds AppleScript support to NSApplication
+*****************************************************************************/
+@interface NSApplication(ScriptSupport)
+
+- (BOOL)scriptFullscreenMode;
+- (void)setScriptFullscreenMode: (BOOL)mode;
 @end

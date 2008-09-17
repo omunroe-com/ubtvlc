@@ -1,11 +1,11 @@
 /*****************************************************************************
  * fsm.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: fsm.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "fsm.hpp"
@@ -33,7 +33,7 @@ void FSM::addState( const string &state )
 
 
 void FSM::addTransition( const string &state1, const string &event,
-                         const string &state2, Callback *pCmd )
+                         const string &state2, CmdGeneric *pCmd )
 {
     // Check that we already know the states
     if( m_states.find( state1 ) == m_states.end() ||
@@ -100,9 +100,9 @@ void FSM::handleTransition( const string &event )
     m_currentState = (*it).second.first;
 
     // Call the callback, if any
-    Callback *pCmd = (*it).second.second;
+    CmdGeneric *pCmd = (*it).second.second;
     if( pCmd != NULL )
     {
-        (*(pCmd->getFunc()))( pCmd->getObj() );
+        pCmd->execute();
     }
 }

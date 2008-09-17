@@ -1,8 +1,8 @@
 /*****************************************************************************
  * libmp4.h : LibMP4 library for mp4 module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: libmp4.h 7670 2004-05-15 11:03:48Z fenrir $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id$
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,8 +17,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
+#ifndef _VLC_MP4_H
+#define _VLC_MP4_H 1
+
 
 #define FOURCC_uuid VLC_FOURCC( 'u', 'u', 'i', 'd' )
 
@@ -77,12 +80,14 @@
 #define FOURCC_iods VLC_FOURCC( 'i', 'o', 'd', 's' )
 
 #define FOURCC_nmhd VLC_FOURCC( 'n', 'm', 'h', 'd' )
+#define FOURCC_mp2v VLC_FOURCC( 'm', 'p', '2', 'v' )
 #define FOURCC_mp4v VLC_FOURCC( 'm', 'p', '4', 'v' )
 #define FOURCC_mp4a VLC_FOURCC( 'm', 'p', '4', 'a' )
 #define FOURCC_mp4s VLC_FOURCC( 'm', 'p', '4', 's' )
 #define FOURCC_vide VLC_FOURCC( 'v', 'i', 'd', 'e' )
 #define FOURCC_soun VLC_FOURCC( 's', 'o', 'u', 'n' )
 #define FOURCC_hint VLC_FOURCC( 'h', 'i', 'n', 't' )
+#define FOURCC_hdv2 VLC_FOURCC( 'h', 'd', 'v', '2' )
 
 #define FOURCC_dpnd VLC_FOURCC( 'd', 'p', 'n', 'd' )
 #define FOURCC_ipir VLC_FOURCC( 'i', 'p', 'i', 'r' )
@@ -110,7 +115,9 @@
 #define FOURCC_ulaw VLC_FOURCC( 'u', 'l', 'a', 'w' )
 #define FOURCC_Qclp VLC_FOURCC( 'Q', 'c', 'l', 'p' )
 #define FOURCC_samr VLC_FOURCC( 's', 'a', 'm', 'r' )
+#define FOURCC_sawb VLC_FOURCC( 's', 'a', 'w', 'b' )
 #define FOURCC_OggS VLC_FOURCC( 'O', 'g', 'g', 'S' )
+#define FOURCC_alac VLC_FOURCC( 'a', 'l', 'a', 'c' )
 
 #define FOURCC_zlib VLC_FOURCC( 'z', 'l', 'i', 'b' )
 #define FOURCC_SVQ1 VLC_FOURCC( 'S', 'V', 'Q', '1' )
@@ -127,6 +134,7 @@
 #define FOURCC_h263 VLC_FOURCC( 'h', '2', '6', '3' )
 #define FOURCC_s263 VLC_FOURCC( 's', '2', '6', '3' )
 #define FOURCC_DIVX VLC_FOURCC( 'D', 'I', 'V', 'X' )
+#define FOURCC_XVID VLC_FOURCC( 'X', 'V', 'I', 'D' )
 #define FOURCC_cvid VLC_FOURCC( 'c', 'v', 'i', 'd' )
 #define FOURCC_mjpa VLC_FOURCC( 'm', 'j', 'p', 'a' )
 #define FOURCC_mjpb VLC_FOURCC( 'm', 'j', 'q', 't' )
@@ -135,6 +143,7 @@
 #define FOURCC_VP31 VLC_FOURCC( 'V', 'P', '3', '1' )
 #define FOURCC_vp31 VLC_FOURCC( 'v', 'p', '3', '1' )
 #define FOURCC_h264 VLC_FOURCC( 'h', '2', '6', '4' )
+#define FOURCC_qdrw VLC_FOURCC( 'q', 'd', 'r', 'w' )
 
 #define FOURCC_avc1 VLC_FOURCC( 'a', 'v', 'c', '1' )
 #define FOURCC_avcC VLC_FOURCC( 'a', 'v', 'c', 'C' )
@@ -142,10 +151,14 @@
 
 #define FOURCC_dvc  VLC_FOURCC( 'd', 'v', 'c', ' ' )
 #define FOURCC_dvp  VLC_FOURCC( 'd', 'v', 'p', ' ' )
+#define FOURCC_dv5n VLC_FOURCC( 'd', 'v', '5', 'n' )
+#define FOURCC_dv5p VLC_FOURCC( 'd', 'v', '5', 'p' )
 #define FOURCC_raw  VLC_FOURCC( 'r', 'a', 'w', ' ' )
 
 #define FOURCC_jpeg VLC_FOURCC( 'j', 'p', 'e', 'g' )
 
+#define FOURCC_yv12 VLC_FOURCC( 'y', 'v', '1', '2' )
+#define FOURCC_yuv2 VLC_FOURCC( 'y', 'u', 'v', '2' )
 
 #define FOURCC_rmra VLC_FOURCC( 'r', 'm', 'r', 'a' )
 #define FOURCC_rmda VLC_FOURCC( 'r', 'm', 'd', 'a' )
@@ -168,6 +181,10 @@
 #define FOURCC_name VLC_FOURCC( 'n', 'a', 'm', 'e' )
 #define FOURCC_priv VLC_FOURCC( 'p', 'r', 'i', 'v' )
 
+#define FOURCC_text VLC_FOURCC( 't', 'e', 'x', 't' )
+#define FOURCC_tx3g VLC_FOURCC( 't', 'x', '3', 'g' )
+#define FOURCC_subp VLC_FOURCC( 's', 'u', 'b', 'p' )
+
 #define FOURCC_0xa9nam VLC_FOURCC( 0xa9, 'n', 'a', 'm' )
 #define FOURCC_0xa9aut VLC_FOURCC( 0xa9, 'a', 'u', 't' )
 #define FOURCC_0xa9swr VLC_FOURCC( 0xa9, 's', 'w', 'r' )
@@ -183,23 +200,28 @@
 #define FOURCC_0xa9prd VLC_FOURCC( 0xa9, 'p', 'r', 'd' )
 #define FOURCC_0xa9prf VLC_FOURCC( 0xa9, 'p', 'r', 'f' )
 #define FOURCC_0xa9src VLC_FOURCC( 0xa9, 's', 'r', 'c' )
+#define FOURCC_0xa9alb VLC_FOURCC( 0xa9, 'a', 'l', 'b' )
+#define FOURCC_0xa9dis VLC_FOURCC( 0xa9, 'd', 'i', 's' )
+#define FOURCC_0xa9enc VLC_FOURCC( 0xa9, 'e', 'n', 'c' )
+#define FOURCC_0xa9trk VLC_FOURCC( 0xa9, 't', 'r', 'k' )
+#define FOURCC_0xa9url VLC_FOURCC( 0xa9, 'u', 'r', 'l' )
+#define FOURCC_0xa9dsa VLC_FOURCC( 0xa9, 'd', 's', 'a' )
+#define FOURCC_0xa9hst VLC_FOURCC( 0xa9, 'h', 's', 't' )
+#define FOURCC_0xa9ope VLC_FOURCC( 0xa9, 'o', 'p', 'e' )
+#define FOURCC_0xa9wrt VLC_FOURCC( 0xa9, 'w', 'r', 't' )
+#define FOURCC_0xa9com VLC_FOURCC( 0xa9, 'c', 'o', 'm' )
+#define FOURCC_0xa9gen VLC_FOURCC( 0xa9, 'g', 'e', 'n' )
+#define FOURCC_chpl VLC_FOURCC( 'c', 'h', 'p', 'l' )
+#define FOURCC_WLOC VLC_FOURCC( 'W', 'L', 'O', 'C' )
+
+#define FOURCC_meta VLC_FOURCC( 'm', 'e', 't', 'a' )
+#define FOURCC_ilst VLC_FOURCC( 'i', 'l', 's', 't' )
+
+#define FOURCC_chap VLC_FOURCC( 'c', 'h', 'a', 'p' )
 
 /* Do you want some debug information on all read boxes ? */
 #define MP4_VERBOSE  1
 
-/* memory stream and file stream object */
-
-typedef struct MP4_Stream_s
-{
-    int     b_memory;   /* do we uses a memory buffer */
-
-    stream_t *s;
-
-    off_t   i_start; /* in the buffer position for memory stream */
-    off_t   i_stop;
-    uint8_t *p_buffer;
-
-} MP4_Stream_t;
 
 struct MP4_Box_s;
 
@@ -279,6 +301,7 @@ typedef struct MP4_Box_data_mdhd_s
     uint64_t i_duration;
 
     /* one bit for pad */
+    uint16_t      i_language_code;
     /* unsigned int(5)[3] language difference with 0x60*/
     unsigned char i_language[3];
     uint16_t i_predefined;
@@ -337,7 +360,7 @@ typedef struct MP4_Box_data_url_s
     uint8_t  i_version;
     uint32_t i_flags;
 
-    unsigned char *psz_location;
+    char *psz_location;
 
 } MP4_Box_data_url_t;
 
@@ -346,8 +369,8 @@ typedef struct MP4_Box_data_urn_s
     uint8_t  i_version;
     uint32_t i_flags;
 
-    unsigned char *psz_name;
-    unsigned char *psz_location;
+    char *psz_name;
+    char *psz_location;
 
 } MP4_Box_data_urn_t;
 
@@ -446,6 +469,47 @@ typedef struct MP4_Box_data_sample_vide_s
     uint8_t *p_qt_image_description;
 
 } MP4_Box_data_sample_vide_t;
+
+#define MP4_TEXT_DISPLAY_FLAG_DONT_DISPLAY       (1<<0)
+#define MP4_TEXT_DISPLAY_FLAG_AUTO_SCALE         (1<<1)
+#define MP4_TEXT_DISPLAY_FLAG_CLIP_TO_TEXT_BOX   (1<<2)
+#define MP4_TEXT_DISPLAY_FLAG_USE_MOVIE_BG_COLOR (1<<3)
+#define MP4_TEXT_DISPLAY_FLAG_SHRINK_TEXT_BOX_TO_FIT (1<<4)
+#define MP4_TEXT_DISPLAY_FLAG_SCROLL_IN          (1<<5)
+#define MP4_TEXT_DISPLAY_FLAG_SCROLL_OUT         (1<<6)
+#define MP4_TEXT_DISPLAY_FLAG_HORIZONTAL_SCROLL  (1<<7)
+#define MP4_TEXT_DISPLAY_FLAG_REVERSE_SCROLL     (1<<8)
+#define MP4_TEXT_DISPLAY_FLAG_CONTINUOUS_SCROLL  (1<<9)
+#define MP4_TEXT_DISPLAY_FLAG_FLOW_HORIZONTAL    (1<<10)
+#define MP4_TEXT_DISPLAY_FLAG_CONTINUOUS_KARAOKE (1<<11)
+#define MP4_TEXT_DISPLAY_FLAG_DROP_SHADOW        (1<<12)
+#define MP4_TEXT_DISPLAY_FLAG_ANTI_ALIAS         (1<<13)
+#define MP4_TEXT_DISPLAY_FLAG_KEYED_TEXT         (1<<14)
+#define MP4_TEXT_DISPLAY_FLAG_INVERSE_HILITE     (1<<15)
+#define MP4_TEXT_DISPLAY_FLAG_COLOR_HILITE       (1<<16)
+#define MP4_TEXT_DISPLAY_FLAG_WRITE_VERTICALLY   (1<<17)
+
+typedef struct
+{
+    uint32_t i_reserved1;
+    uint16_t i_reserved2;
+
+    uint16_t i_data_reference_index;
+
+    uint32_t i_display_flags;   // TextDescription and Tx3gDescription
+
+    int8_t i_justification_horizontal; // left(0), centered(1), right(-1)
+    int8_t i_justification_vertical;   // top(0), centered(1), bottom(-1)
+
+    uint16_t i_background_color[4];
+
+    uint16_t i_text_box_top;
+    uint16_t i_text_box_left;
+    uint16_t i_text_box_bottom;
+    uint16_t i_text_box_right;
+
+    // TODO to complete
+} MP4_Box_data_sample_text_t;
 
 typedef struct MP4_Box_data_sample_hint_s
 {
@@ -598,7 +662,7 @@ typedef struct MP4_Box_data_cprt_s
     /* 1 pad bit */
     unsigned char i_language[3];
 
-    unsigned char *psz_notice;
+    char *psz_notice;
 } MP4_Box_data_cprt_t;
 
 
@@ -734,6 +798,26 @@ typedef struct
 
 typedef struct
 {
+    uint32_t i_entry_count;
+    uint32_t *i_track_ID;
+
+} MP4_Box_data_tref_generic_t;
+
+typedef struct
+{
+    uint8_t  i_version;
+    uint32_t i_flags;
+
+    uint8_t i_chapter;
+    struct
+    {
+        char    *psz_name;
+        int64_t  i_start;
+    } chapter[256];
+} MP4_Box_data_chpl_t;
+
+typedef struct
+{
     uint8_t i_version;
     uint8_t i_profile;
     uint8_t i_profile_compatibility;
@@ -785,6 +869,7 @@ typedef union MP4_Box_data_s
     MP4_Box_data_stsd_t *p_stsd;
         MP4_Box_data_sample_vide_t *p_sample_vide;
         MP4_Box_data_sample_soun_t *p_sample_soun;
+        MP4_Box_data_sample_text_t *p_sample_text;
         MP4_Box_data_sample_hint_t *p_sample_hint;
 
         MP4_Box_data_esds_t *p_esds;
@@ -813,6 +898,8 @@ typedef union MP4_Box_data_s
     MP4_Box_data_rmvc_t *p_rmvc;
 
     MP4_Box_data_0xa9xxx_t *p_0xa9xxx;
+    MP4_Box_data_chpl_t *p_chpl;
+    MP4_Box_data_tref_generic_t *p_tref_generic;
 
     void                *p_data; /* for unknow type */
 } MP4_Box_data_t;
@@ -878,7 +965,7 @@ void MP4_BoxDumpStructure( stream_t *p_input, MP4_Box_t *p_box );
  * ex: /moov/trak[12]
  *     ../mdia
  *****************************************************************************/
-MP4_Box_t *MP4_BoxGet( MP4_Box_t *p_box, char *psz_fmt, ... );
+MP4_Box_t *MP4_BoxGet( MP4_Box_t *p_box, const char *psz_fmt, ... );
 
 /*****************************************************************************
  * MP4_BoxCount: find number of box given a path relative to p_box
@@ -889,5 +976,10 @@ MP4_Box_t *MP4_BoxGet( MP4_Box_t *p_box, char *psz_fmt, ... );
  * ex: /moov/trak
  *     ../mdia
  *****************************************************************************/
-int MP4_BoxCount( MP4_Box_t *p_box, char *psz_fmt, ... );
+int MP4_BoxCount( MP4_Box_t *p_box, const char *psz_fmt, ... );
 
+int MP4_ReadBoxCommon( stream_t *p_stream, MP4_Box_t *p_box );
+int MP4_ReadBox_sample_vide( stream_t *p_stream, MP4_Box_t *p_box );
+void MP4_FreeBox_sample_vide( MP4_Box_t *p_box );
+
+#endif

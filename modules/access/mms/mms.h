@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mms.h: MMS access plug-in
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: mms.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id$
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,37 +18,24 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
+
+#ifndef _MMS_H_
+#define _MMS_H_ 1
 
 #define MMS_PROTO_AUTO  0
 #define MMS_PROTO_TCP   1
 #define MMS_PROTO_UDP   2
 #define MMS_PROTO_HTTP  3
 
-
 /* mmst and mmsu */
-int  E_( MMSTUOpen )  ( input_thread_t * );
-void E_( MMSTUClose ) ( input_thread_t * );
+int   MMSTUOpen   ( access_t * );
+void  MMSTUClose  ( access_t * );
 
 /* mmsh */
-int  E_( MMSHOpen )  ( input_thread_t * );
-void E_( MMSHClose ) ( input_thread_t * );
+int   MMSHOpen   ( access_t * );
+void  MMSHClose  ( access_t * );
 
-#define FREE( p ) if( p ) { free( p ); (p) = NULL; }
-
-/* url: [/]host[:port][/path][@username[:password]] */
-typedef struct url_s
-{
-    char    *psz_host;
-    int     i_port;
-
-    char    *psz_path;
-
-    char    *psz_username;
-    char    *psz_password;
-} url_t;
-
-url_t *E_( url_new )  ( char * );
-void   E_( url_free ) ( url_t * );
+#endif
 

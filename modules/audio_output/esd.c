@@ -1,8 +1,8 @@
 /*****************************************************************************
  * esd.c : EsounD module
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: esd.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id$
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,23 +18,27 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
 #include <errno.h>                                                 /* ENOMEM */
-#include <fcntl.h>                                       /* open(), O_WRONLY */
-#include <string.h>                                            /* strerror() */
 #include <unistd.h>                                      /* write(), close() */
-#include <stdlib.h>                            /* calloc(), malloc(), free() */
 
-#include <vlc/vlc.h>
-#include <vlc/aout.h>
-#include "aout_internal.h"
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_aout.h>
 
 #include <sys/socket.h>
+
+#include <sys/time.h>
+#include <time.h>
 
 #include <esd.h>
 
@@ -63,8 +67,12 @@ static void Play         ( aout_instance_t * );
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( _("EsounD audio output") );
+    set_description( N_("EsounD audio output") );
+    set_shortname( "EsounD" );
     set_capability( "audio output", 50 );
+    add_string( "esdserver", "", NULL, N_("Esound server"), NULL, false );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_AOUT );
     set_callbacks( Open, Close );
     add_shortcut( "esound" );
 vlc_module_end();
@@ -76,16 +84,14 @@ static int Open( vlc_object_t *p_this )
 {
     aout_instance_t *p_aout = (aout_instance_t *)p_this;
     struct aout_sys_t * p_sys;
+    char * psz_server;
     int i_nb_channels;
-    int fl;
+    int i_newfd;
 
     /* Allocate structure */
     p_sys = malloc( sizeof( aout_sys_t ) );
     if( p_sys == NULL )
-    {
-        msg_Err( p_aout, "out of memory" );
         return VLC_ENOMEM;
-    }
 
     p_aout->output.p_sys = p_sys;
 
@@ -118,32 +124,65 @@ static int Open( vlc_object_t *p_this )
 
     /* Force the rate, otherwise the sound is very noisy */
     p_aout->output.output.i_rate = ESD_DEFAULT_RATE;
-    
-    /* open a socket for playing a stream
+    p_aout->output.i_nb_samples = ESD_BUF_SIZE * 2;
+
+    /* Open a socket for playing a stream
      * and try to open /dev/dsp if there's no EsounD */
-    p_sys->i_fd = esd_play_stream_fallback( p_sys->esd_format,
-                              p_aout->output.output.i_rate, NULL, "vlc" );
+    psz_server = config_GetPsz( p_aout, "esdserver" );
+    if( psz_server && *psz_server )
+    {
+        p_sys->i_fd = esd_play_stream_fallback( p_sys->esd_format,
+                                                p_aout->output.output.i_rate,
+                                                psz_server, "vlc" );
+    }
+    else
+    {
+        p_sys->i_fd = esd_play_stream_fallback( p_sys->esd_format,
+                                                p_aout->output.output.i_rate,
+                                                NULL, "vlc" );
+    }
+
     if( p_sys->i_fd < 0 )
     {
         msg_Err( p_aout, "cannot open esound socket (format 0x%08x at %d Hz)",
                          p_sys->esd_format, p_aout->output.output.i_rate );
+        free( psz_server );
         free( p_sys );
         return VLC_EGENERIC;
     }
 
-    p_aout->output.i_nb_samples = ESD_BUF_SIZE * 2;
+    if( psz_server && *psz_server )
+    {
+        struct timeval start, stop;
+        esd_server_info_t * p_info;
+
+        gettimeofday( &start, NULL );
+        p_info = esd_get_server_info( p_sys->i_fd );
+        gettimeofday( &stop, NULL );
+
+        p_sys->latency = (mtime_t)( stop.tv_sec - start.tv_sec )
+                           * (mtime_t)1000000;
+        p_sys->latency += stop.tv_usec - start.tv_usec;
+    }
+    else
+    {
+        p_sys->latency = 0;
+    }
 
     /* ESD latency is calculated for 44100 Hz. We don't have any way to get the
      * number of buffered samples, so I assume ESD_BUF_SIZE/2 */
-    p_sys->latency =
-        (mtime_t)( esd_get_latency( esd_open_sound(NULL) ) + ESD_BUF_SIZE/2
-                    * p_aout->output.output.i_bytes_per_frame
-                    * p_aout->output.output.i_rate
-                    / ESD_DEFAULT_RATE )
+    p_sys->latency +=
+        (mtime_t)( esd_get_latency( i_newfd = esd_open_sound(NULL) )
+                    + ESD_BUF_SIZE / 2
+                      * p_aout->output.output.i_bytes_per_frame
+                      * p_aout->output.output.i_rate
+                      / ESD_DEFAULT_RATE )
       * (mtime_t)1000000
       / p_aout->output.output.i_bytes_per_frame
       / p_aout->output.output.i_rate;
 
+    free( psz_server );
+    close( i_newfd );
     return VLC_SUCCESS;
 }
 
@@ -160,16 +199,16 @@ static void Play( aout_instance_t *p_aout )
 
     if ( p_buffer != NULL )
     {
-        int pos;
-        char *data = p_buffer->p_buffer;
+        unsigned int pos;
+        unsigned char *data = p_buffer->p_buffer;
 
-        for( pos = 0; pos + ESD_BUF_SIZE <= p_buffer->i_nb_bytes; 
+        for( pos = 0; pos + ESD_BUF_SIZE <= p_buffer->i_nb_bytes;
              pos += ESD_BUF_SIZE )
         {
             i_tmp = write( p_sys->i_fd, data + pos, ESD_BUF_SIZE );
             if( i_tmp < 0 )
             {
-                msg_Err( p_aout, "write failed (%s)", strerror(errno) );
+                msg_Err( p_aout, "write failed (%m)" );
             }
         }
         aout_BufferFree( p_buffer );
@@ -194,7 +233,7 @@ static void Close( vlc_object_t *p_this )
  *****************************************************************************
  * This function writes a buffer of i_length bytes in the socket
  *****************************************************************************/
-static void Play( aout_thread_t *p_aout, byte_t *buffer, int i_size )
+static void Play( aout_thread_t *p_aout, uint8_t *buffer, int i_size )
 {
     int i_amount;
 

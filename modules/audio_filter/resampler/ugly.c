@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ugly.c : ugly resampler (changes pitch)
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: ugly.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002, 2006 the VideoLAN team
+ * $Id$
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -10,7 +10,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,18 +18,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                      /* malloc(), free() */
-#include <string.h>
 
-#include <vlc/vlc.h>
-#include "audio_output.h"
-#include "aout_internal.h"
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_aout.h>
 
 /*****************************************************************************
  * Local prototypes
@@ -43,8 +45,10 @@ static void DoWork    ( aout_instance_t *, aout_filter_t *, aout_buffer_t *,
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( _("audio filter for ugly resampling") );
-    set_capability( "audio filter", 5 );
+    set_description( N_("Audio filter for ugly resampling") );
+    set_capability( "audio filter", 2 );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_MISC );
     set_callbacks( Create, NULL );
 vlc_module_end();
 
@@ -71,7 +75,7 @@ static int Create( vlc_object_t *p_this )
 
     /* We don't want a new buffer to be created because we're not sure we'll
      * actually need to resample anything. */
-    p_filter->b_in_place = VLC_TRUE;
+    p_filter->b_in_place = true;
 
     return VLC_SUCCESS;
 }
@@ -83,6 +87,9 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
                     aout_buffer_t * p_in_buf, aout_buffer_t * p_out_buf )
 {
     int32_t *p_in, *p_out = (int32_t*)p_out_buf->p_buffer;
+#ifndef HAVE_ALLOCA
+    int32_t *p_in_orig;
+#endif
 
     unsigned int i_nb_channels = aout_FormatNbChannels( &p_filter->input );
     unsigned int i_in_nb = p_in_buf->i_nb_samples;
@@ -100,14 +107,14 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
 #ifdef HAVE_ALLOCA
     p_in = (int32_t *)alloca( p_in_buf->i_nb_bytes );
 #else
-    p_in = (int32_t *)malloc( p_in_buf->i_nb_bytes );
+    p_in_orig = p_in = (int32_t *)malloc( p_in_buf->i_nb_bytes );
 #endif
     if( p_in == NULL )
     {
         return;
     }
 
-    p_aout->p_vlc->pf_memcpy( p_in, p_in_buf->p_buffer, p_in_buf->i_nb_bytes );
+    vlc_memcpy( p_in, p_in_buf->p_buffer, p_in_buf->i_nb_bytes );
 
     for( i_out = i_out_nb ; i_out-- ; )
     {
@@ -131,4 +138,9 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
     p_out_buf->start_date = p_in_buf->start_date;
     p_out_buf->end_date = p_out_buf->start_date + p_out_buf->i_nb_samples *
         1000000 / p_filter->output.i_rate;
+
+#ifndef HAVE_ALLOCA
+    free( p_in_orig );
+#endif
+
 }

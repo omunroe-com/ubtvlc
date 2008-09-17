@@ -1,11 +1,11 @@
 /*****************************************************************************
  * builder.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: builder.cpp 7626 2004-05-08 18:10:38Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,21 +19,26 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-#include <string.h>
 #include "builder.hpp"
 #include "builder_data.hpp"
 #include "interpreter.hpp"
-#include "../src/png_bitmap.hpp"
+#include "skin_parser.hpp"
+#include "../src/file_bitmap.hpp"
 #include "../src/os_factory.hpp"
 #include "../src/generic_bitmap.hpp"
 #include "../src/top_window.hpp"
 #include "../src/anchor.hpp"
 #include "../src/bitmap_font.hpp"
 #include "../src/ft2_font.hpp"
+#include "../src/ini_file.hpp"
+#include "../src/generic_layout.hpp"
+#include "../src/popup.hpp"
 #include "../src/theme.hpp"
+#include "../src/window_manager.hpp"
+#include "../commands/cmd_generic.hpp"
 #include "../controls/ctrl_button.hpp"
 #include "../controls/ctrl_checkbox.hpp"
 #include "../controls/ctrl_image.hpp"
@@ -43,17 +48,27 @@
 #include "../controls/ctrl_slider.hpp"
 #include "../controls/ctrl_radialslider.hpp"
 #include "../controls/ctrl_text.hpp"
+#include "../controls/ctrl_tree.hpp"
 #include "../controls/ctrl_video.hpp"
+#include "../utils/bezier.hpp"
 #include "../utils/position.hpp"
 #include "../utils/var_bool.hpp"
 #include "../utils/var_text.hpp"
 
+#include "vlc_image.h"
 
-Builder::Builder( intf_thread_t *pIntf, const BuilderData &rData):
-    SkinObject( pIntf ), m_rData( rData ), m_pTheme( NULL )
+
+Builder::Builder( intf_thread_t *pIntf, const BuilderData &rData,
+                  const string &rPath ):
+    SkinObject( pIntf ), m_rData( rData ), m_path( rPath ), m_pTheme( NULL )
 {
+    m_pImageHandler = image_HandlerCreate( pIntf );
 }
 
+Builder::~Builder()
+{
+    if( m_pImageHandler ) image_HandlerDelete( m_pImageHandler );
+}
 
 CmdGeneric *Builder::parseAction( const string &rAction )
 {
@@ -81,11 +96,17 @@ Theme *Builder::build()
 
     // Create everything from the data in the XML
     ADD_OBJECTS( Theme );
+    ADD_OBJECTS( IniFile );
     ADD_OBJECTS( Bitmap );
+    ADD_OBJECTS( SubBitmap );
     ADD_OBJECTS( BitmapFont );
     ADD_OBJECTS( Font );
     ADD_OBJECTS( Window );
+    // XXX: PopupMenus are created after the windows, so that the Win32Factory
+    // (at least) can give a valid window handle to the OSPopup objects
+    ADD_OBJECTS( PopupMenu );
     ADD_OBJECTS( Layout );
+    ADD_OBJECTS( Panel );
     ADD_OBJECTS( Anchor );
     ADD_OBJECTS( Button );
     ADD_OBJECTS( Checkbox );
@@ -94,7 +115,12 @@ Theme *Builder::build()
     ADD_OBJECTS( RadialSlider );
     ADD_OBJECTS( Slider );
     ADD_OBJECTS( List );
+    ADD_OBJECTS( Tree );
     ADD_OBJECTS( Video );
+    // MenuItems must be created after all the rest, so that the IDs of the
+    // other elements exist and can be parsed in the actions
+    ADD_OBJECTS( MenuItem );
+    ADD_OBJECTS( MenuSeparator );
 
     return m_pTheme;
 }
@@ -112,6 +138,25 @@ Theme *Builder::build()
         } \
     }
 
+
+// Macro to get the parent box of a control, given the panel ID
+#define GET_BOX( pRect, id, pLayout ) \
+    if( id == "none" ) \
+        pRect = &pLayout->getRect(); \
+    else \
+    { \
+        const Position *pParent = \
+            m_pTheme->getPositionById( rData.m_panelId ); \
+        if( pParent == NULL ) \
+        { \
+            msg_Err( getIntf(), "parent panel could not be found: %s", \
+                     rData.m_panelId.c_str() ); \
+            return; \
+        } \
+        pRect = pParent; \
+    }
+
+
 void Builder::addTheme( const BuilderData::Theme &rData )
 {
     WindowManager &rManager = m_pTheme->getWindowManager();
@@ -125,23 +170,83 @@ void Builder::addTheme( const BuilderData::Theme &rData )
     }
     else
     {
-        msg_Warn( getIntf(), "Invalid tooltip font: %s",
+        msg_Warn( getIntf(), "invalid tooltip font: %s",
                   rData.m_tooltipfont.c_str() );
     }
 }
 
 
+void Builder::addIniFile( const BuilderData::IniFile &rData )
+{
+    // Parse the INI file
+    IniFile iniFile( getIntf(), rData.m_id, getFilePath( rData.m_file ) );
+    iniFile.parseFile();
+}
+
+
 void Builder::addBitmap( const BuilderData::Bitmap &rData )
 {
-    GenericBitmap *pBmp = new PngBitmap( getIntf(), rData.m_fileName,
-                                         rData.m_alphaColor );
+    GenericBitmap *pBmp =
+        new FileBitmap( getIntf(), m_pImageHandler,
+                        getFilePath( rData.m_fileName ), rData.m_alphaColor,
+                        rData.m_nbFrames, rData.m_fps );
+    if( !pBmp->getData() )
+    {
+        // Invalid bitmap
+        delete pBmp;
+        return;
+    }
+    m_pTheme->m_bitmaps[rData.m_id] = GenericBitmapPtr( pBmp );
+}
+
+
+void Builder::addSubBitmap( const BuilderData::SubBitmap &rData )
+{
+    if( m_pTheme->m_bitmaps.find( rData.m_id ) != m_pTheme->m_bitmaps.end() )
+    {
+        msg_Dbg( getIntf(), "bitmap %s already exists", rData.m_id.c_str() );
+        return;
+    }
+
+    // Get the parent bitmap
+    GenericBitmap *pParentBmp = NULL;
+    GET_BMP( pParentBmp, rData.m_parent );
+
+    // Copy a region of the parent bitmap to the new one
+    BitmapImpl *pBmp =
+        new BitmapImpl( getIntf(), rData.m_width, rData.m_height,
+                        rData.m_nbFrames, rData.m_fps );
+    bool res = pBmp->drawBitmap( *pParentBmp, rData.m_x, rData.m_y, 0, 0,
+                                 rData.m_width, rData.m_height );
+    if( !res )
+    {
+        // Invalid sub-bitmap
+        delete pBmp;
+        msg_Warn( getIntf(), "sub-bitmap %s ignored", rData.m_id.c_str() );
+        return;
+    }
     m_pTheme->m_bitmaps[rData.m_id] = GenericBitmapPtr( pBmp );
 }
 
 
 void Builder::addBitmapFont( const BuilderData::BitmapFont &rData )
 {
-    GenericBitmap *pBmp = new PngBitmap( getIntf(), rData.m_file, 0 );
+    if( m_pTheme->m_fonts.find( rData.m_id ) != m_pTheme->m_fonts.end() )
+    {
+        msg_Dbg( getIntf(), "font %s already exists", rData.m_id.c_str() );
+        return;
+    }
+
+    GenericBitmap *pBmp =
+        new FileBitmap( getIntf(), m_pImageHandler,
+                        getFilePath( rData.m_file ), 0 );
+    if( !pBmp->getData() )
+    {
+        // Invalid bitmap
+        delete pBmp;
+        return;
+    }
+
     m_pTheme->m_bitmaps[rData.m_id] = GenericBitmapPtr( pBmp );
 
     GenericFont *pFont = new BitmapFont( getIntf(), *pBmp, rData.m_type );
@@ -158,7 +263,9 @@ void Builder::addBitmapFont( const BuilderData::BitmapFont &rData )
 
 void Builder::addFont( const BuilderData::Font &rData )
 {
-    GenericFont *pFont = new FT2Font( getIntf(), rData.m_fontFile,
+    // Try to load the font from the theme directory
+    GenericFont *pFont = new FT2Font( getIntf(),
+                                      getFilePath( rData.m_fontFile ),
                                       rData.m_size );
     if( pFont->init() )
     {
@@ -167,7 +274,70 @@ void Builder::addFont( const BuilderData::Font &rData )
     else
     {
         delete pFont;
+
+        // Font not found; try in the resource path
+        OSFactory *pOSFactory = OSFactory::instance( getIntf() );
+        const list<string> &resPath = pOSFactory->getResourcePath();
+        const string &sep = pOSFactory->getDirSeparator();
+
+        list<string>::const_iterator it;
+        for( it = resPath.begin(); it != resPath.end(); it++ )
+        {
+            string path = (*it) + sep + "fonts" + sep + rData.m_fontFile;
+            pFont = new FT2Font( getIntf(), path, rData.m_size );
+            if( pFont->init() )
+            {
+                // Font loaded successfully
+                m_pTheme->m_fonts[rData.m_id] = GenericFontPtr( pFont );
+                break;
+            }
+            else
+            {
+                delete pFont;
+            }
+        }
     }
+}
+
+
+void Builder::addPopupMenu( const BuilderData::PopupMenu &rData )
+{
+    Popup *pPopup = new Popup( getIntf(), m_pTheme->getWindowManager() );
+
+    m_pTheme->m_popups[rData.m_id] = PopupPtr( pPopup );
+}
+
+
+void Builder::addMenuItem( const BuilderData::MenuItem &rData )
+{
+    Popup *pPopup = m_pTheme->getPopupById( rData.m_popupId );
+    if( pPopup == NULL )
+    {
+        msg_Err( getIntf(), "unknown popup id: %s", rData.m_popupId.c_str() );
+        return;
+    }
+
+    CmdGeneric *pCommand = parseAction( rData.m_action );
+    if( pCommand == NULL )
+    {
+        msg_Err( getIntf(), "invalid action: %s", rData.m_action.c_str() );
+        return;
+    }
+
+    pPopup->addItem( rData.m_label, *pCommand, rData.m_pos );
+}
+
+
+void Builder::addMenuSeparator( const BuilderData::MenuSeparator &rData )
+{
+    Popup *pPopup = m_pTheme->getPopupById( rData.m_popupId );
+    if( pPopup == NULL )
+    {
+        msg_Err( getIntf(), "unknown popup id: %s", rData.m_popupId.c_str() );
+        return;
+    }
+
+    pPopup->addSeparator( rData.m_pos );
 }
 
 
@@ -175,8 +345,9 @@ void Builder::addWindow( const BuilderData::Window &rData )
 {
     TopWindow *pWin =
         new TopWindow( getIntf(), rData.m_xPos, rData.m_yPos,
-                           m_pTheme->getWindowManager(),
-                           rData.m_dragDrop, rData.m_playOnDrop );
+                       m_pTheme->getWindowManager(),
+                       rData.m_dragDrop, rData.m_playOnDrop,
+                       rData.m_visible );
 
     m_pTheme->m_windows[rData.m_id] = TopWindowPtr( pWin );
 }
@@ -184,7 +355,7 @@ void Builder::addWindow( const BuilderData::Window &rData )
 
 void Builder::addLayout( const BuilderData::Layout &rData )
 {
-    TopWindow *pWin = m_pTheme->getWindowById(rData.m_windowId);
+    TopWindow *pWin = m_pTheme->getWindowById( rData.m_windowId );
     if( pWin == NULL )
     {
         msg_Err( getIntf(), "unknown window id: %s", rData.m_windowId.c_str() );
@@ -210,7 +381,7 @@ void Builder::addLayout( const BuilderData::Layout &rData )
 
 void Builder::addAnchor( const BuilderData::Anchor &rData )
 {
-    GenericLayout *pLayout = m_pTheme->getLayoutById(rData.m_layoutId);
+    GenericLayout *pLayout = m_pTheme->getLayoutById( rData.m_layoutId );
     if( pLayout == NULL )
     {
         msg_Err( getIntf(), "unknown layout id: %s", rData.m_layoutId.c_str() );
@@ -220,14 +391,20 @@ void Builder::addAnchor( const BuilderData::Anchor &rData )
     Bezier *pCurve = getPoints( rData.m_points.c_str() );
     if( pCurve == NULL )
     {
-        msg_Err( getIntf(), "Invalid format in tag points=\"%s\"",
+        msg_Err( getIntf(), "invalid format in tag points=\"%s\"",
                  rData.m_points.c_str() );
         return;
     }
     m_pTheme->m_curves.push_back( BezierPtr( pCurve ) );
 
-    Anchor *pAnc = new Anchor( getIntf(), rData.m_xPos, rData.m_yPos,
-                               rData.m_range, rData.m_priority,
+    // Compute the position of the anchor
+    const Position pos = makePosition( rData.m_leftTop, rData.m_leftTop,
+                                       rData.m_xPos, rData.m_yPos,
+                                       pCurve->getWidth(),
+                                       pCurve->getHeight(),
+                                       pLayout->getRect() );
+
+    Anchor *pAnc = new Anchor( getIntf(), pos, rData.m_range, rData.m_priority,
                                *pCurve, *pLayout );
     pLayout->addAnchor( pAnc );
 }
@@ -245,7 +422,7 @@ void Builder::addButton( const BuilderData::Button &rData )
     GenericBitmap *pBmpOver = pBmpUp;
     GET_BMP( pBmpOver, rData.m_overId );
 
-    GenericLayout *pLayout = m_pTheme->getLayoutById(rData.m_layoutId);
+    GenericLayout *pLayout = m_pTheme->getLayoutById( rData.m_layoutId );
     if( pLayout == NULL )
     {
         msg_Err( getIntf(), "unknown layout id: %s", rData.m_layoutId.c_str() );
@@ -255,7 +432,7 @@ void Builder::addButton( const BuilderData::Button &rData )
     CmdGeneric *pCommand = parseAction( rData.m_actionId );
     if( pCommand == NULL )
     {
-        msg_Err( getIntf(), "Invalid action: %s", rData.m_actionId.c_str() );
+        msg_Err( getIntf(), "invalid action: %s", rData.m_actionId.c_str() );
         return;
     }
 
@@ -267,17 +444,19 @@ void Builder::addButton( const BuilderData::Button &rData )
     CtrlButton *pButton = new CtrlButton( getIntf(), *pBmpUp, *pBmpOver,
         *pBmpDown, *pCommand, UString( getIntf(), rData.m_tooltip.c_str() ),
         UString( getIntf(), rData.m_help.c_str() ), pVisible );
+    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pButton );
 
     // Compute the position of the control
     // XXX (we suppose all the images have the same size...)
+    const GenericRect *pRect;
+    GET_BOX( pRect, rData.m_panelId , pLayout);
     const Position pos = makePosition( rData.m_leftTop, rData.m_rightBottom,
                                        rData.m_xPos, rData.m_yPos,
                                        pBmpUp->getWidth(),
-                                       pBmpUp->getHeight(), *pLayout );
+                                       pBmpUp->getHeight(), *pRect,
+                                       rData.m_xKeepRatio, rData.m_yKeepRatio );
 
     pLayout->addControl( pButton, pos, rData.m_layer );
-
-    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pButton );
 }
 
 
@@ -302,7 +481,7 @@ void Builder::addCheckbox( const BuilderData::Checkbox &rData )
     GenericBitmap *pBmpOver2 = pBmpUp2;
     GET_BMP( pBmpOver2, rData.m_over2Id );
 
-    GenericLayout *pLayout = m_pTheme->getLayoutById(rData.m_layoutId);
+    GenericLayout *pLayout = m_pTheme->getLayoutById( rData.m_layoutId );
     if( pLayout == NULL )
     {
         msg_Err( getIntf(), "unknown layout id: %s", rData.m_layoutId.c_str() );
@@ -312,14 +491,14 @@ void Builder::addCheckbox( const BuilderData::Checkbox &rData )
     CmdGeneric *pCommand1 = parseAction( rData.m_action1 );
     if( pCommand1 == NULL )
     {
-        msg_Err( getIntf(), "Invalid action: %s", rData.m_action1.c_str() );
+        msg_Err( getIntf(), "invalid action: %s", rData.m_action1.c_str() );
         return;
     }
 
     CmdGeneric *pCommand2 = parseAction( rData.m_action2 );
     if( pCommand2 == NULL )
     {
-        msg_Err( getIntf(), "Invalid action: %s", rData.m_action2.c_str() );
+        msg_Err( getIntf(), "invalid action: %s", rData.m_action2.c_str() );
         return;
     }
 
@@ -342,17 +521,19 @@ void Builder::addCheckbox( const BuilderData::Checkbox &rData )
         *pCommand2, UString( getIntf(), rData.m_tooltip1.c_str() ),
         UString( getIntf(), rData.m_tooltip2.c_str() ), *pVar,
         UString( getIntf(), rData.m_help.c_str() ), pVisible );
+    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pCheckbox );
 
     // Compute the position of the control
     // XXX (we suppose all the images have the same size...)
+    const GenericRect *pRect;
+    GET_BOX( pRect, rData.m_panelId , pLayout);
     const Position pos = makePosition( rData.m_leftTop, rData.m_rightBottom,
                                        rData.m_xPos, rData.m_yPos,
                                        pBmpUp1->getWidth(),
-                                       pBmpUp1->getHeight(), *pLayout );
+                                       pBmpUp1->getHeight(), *pRect,
+                                       rData.m_xKeepRatio, rData.m_yKeepRatio );
 
     pLayout->addControl( pCheckbox, pos, rData.m_layer );
-
-    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pCheckbox );
 }
 
 
@@ -361,17 +542,24 @@ void Builder::addImage( const BuilderData::Image &rData )
     GenericBitmap *pBmp = NULL;
     GET_BMP( pBmp, rData.m_bmpId );
 
-    GenericLayout *pLayout = m_pTheme->getLayoutById(rData.m_layoutId);
+    GenericLayout *pLayout = m_pTheme->getLayoutById( rData.m_layoutId );
     if( pLayout == NULL )
     {
         msg_Err( getIntf(), "unknown layout id: %s", rData.m_layoutId.c_str() );
         return;
     }
 
-    TopWindow *pWindow = m_pTheme->getWindowById(rData.m_windowId);
+    TopWindow *pWindow = m_pTheme->getWindowById( rData.m_windowId );
     if( pWindow == NULL )
     {
         msg_Err( getIntf(), "unknown window id: %s", rData.m_windowId.c_str() );
+        return;
+    }
+
+    CmdGeneric *pCommand = parseAction( rData.m_action2Id );
+    if( pCommand == NULL )
+    {
+        msg_Err( getIntf(), "invalid action: %s", rData.m_action2Id.c_str() );
         return;
     }
 
@@ -380,41 +568,91 @@ void Builder::addImage( const BuilderData::Image &rData )
     Interpreter *pInterpreter = Interpreter::instance( getIntf() );
     VarBool *pVisible = pInterpreter->getVarBool( rData.m_visible, m_pTheme );
 
-    CtrlImage *pImage = new CtrlImage( getIntf(), *pBmp,
-        UString( getIntf(), rData.m_help.c_str() ), pVisible );
+    CtrlImage::resize_t resizeMethod =
+        (rData.m_resize == "scale" ? CtrlImage::kScale : CtrlImage::kMosaic);
+    CtrlImage *pImage = new CtrlImage( getIntf(), *pBmp, *pCommand,
+        resizeMethod, UString( getIntf(), rData.m_help.c_str() ), pVisible );
+    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pImage );
 
     // Compute the position of the control
+    const GenericRect *pRect;
+    GET_BOX( pRect, rData.m_panelId , pLayout);
     const Position pos = makePosition( rData.m_leftTop, rData.m_rightBottom,
-                                       rData.m_xPos,
-                                       rData.m_yPos, pBmp->getWidth(),
-                                       pBmp->getHeight(), *pLayout );
+                                       rData.m_xPos, rData.m_yPos,
+                                       pBmp->getWidth(), pBmp->getHeight(),
+                                       *pRect, rData.m_xKeepRatio,
+                                       rData.m_yKeepRatio );
 
-    // XXX: test to be changed! XXX
     if( rData.m_actionId == "move" )
     {
         CtrlMove *pMove = new CtrlMove( getIntf(), m_pTheme->getWindowManager(),
              *pImage, *pWindow, UString( getIntf(), rData.m_help.c_str() ),
-             NULL);
+             pVisible );
+        m_pTheme->m_controls[rData.m_id + "_move"] = CtrlGenericPtr( pMove );
         pLayout->addControl( pMove, pos, rData.m_layer );
+    }
+    else if( rData.m_actionId == "resizeS" )
+    {
+        CtrlResize *pResize = new CtrlResize( getIntf(),
+                m_pTheme->getWindowManager(), *pImage, *pLayout,
+                UString( getIntf(), rData.m_help.c_str() ), pVisible,
+                WindowManager::kResizeS );
+        m_pTheme->m_controls[rData.m_id + "_rsz"] = CtrlGenericPtr( pResize );
+        pLayout->addControl( pResize, pos, rData.m_layer );
+    }
+    else if( rData.m_actionId == "resizeE" )
+    {
+        CtrlResize *pResize = new CtrlResize( getIntf(),
+                m_pTheme->getWindowManager(), *pImage, *pLayout,
+                UString( getIntf(), rData.m_help.c_str() ), pVisible,
+                WindowManager::kResizeE );
+        m_pTheme->m_controls[rData.m_id + "_rsz"] = CtrlGenericPtr( pResize );
+        pLayout->addControl( pResize, pos, rData.m_layer );
     }
     else if( rData.m_actionId == "resizeSE" )
     {
-        CtrlResize *pResize = new CtrlResize( getIntf(), *pImage, *pLayout,
-                UString( getIntf(), rData.m_help.c_str() ), NULL );
+        CtrlResize *pResize = new CtrlResize( getIntf(),
+                m_pTheme->getWindowManager(), *pImage, *pLayout,
+                UString( getIntf(), rData.m_help.c_str() ), pVisible,
+                WindowManager::kResizeSE );
+        m_pTheme->m_controls[rData.m_id + "_rsz"] = CtrlGenericPtr( pResize );
         pLayout->addControl( pResize, pos, rData.m_layer );
     }
     else
     {
         pLayout->addControl( pImage, pos, rData.m_layer );
     }
+}
 
-    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pImage );
+
+void Builder::addPanel( const BuilderData::Panel &rData )
+{
+    // This method makes the assumption that the Panels are created in the
+    // order of the XML, because each child Panel expects its parent Panel
+    // in order to be fully created
+
+    GenericLayout *pLayout = m_pTheme->getLayoutById( rData.m_layoutId );
+    if( pLayout == NULL )
+    {
+        msg_Err( getIntf(), "unknown layout id: %s", rData.m_layoutId.c_str() );
+        return;
+    }
+
+    const GenericRect *pRect;
+    GET_BOX( pRect, rData.m_panelId , pLayout);
+    Position *pPos =
+        new Position( makePosition( rData.m_leftTop, rData.m_rightBottom,
+                                    rData.m_xPos, rData.m_yPos,
+                                    rData.m_width, rData.m_height,
+                                    *pRect, rData.m_xKeepRatio,
+                                    rData.m_yKeepRatio ) );
+    m_pTheme->m_positions[rData.m_id] = PositionPtr( pPos );
 }
 
 
 void Builder::addText( const BuilderData::Text &rData )
 {
-    GenericLayout *pLayout = m_pTheme->getLayoutById(rData.m_layoutId);
+    GenericLayout *pLayout = m_pTheme->getLayoutById( rData.m_layoutId );
     if( pLayout == NULL )
     {
         msg_Err( getIntf(), "unknown layout id: %s", rData.m_layoutId.c_str() );
@@ -424,14 +662,42 @@ void Builder::addText( const BuilderData::Text &rData )
     GenericFont *pFont = getFont( rData.m_fontId );
     if( pFont == NULL )
     {
-        msg_Err( getIntf(), "Unknown font id: %s", rData.m_fontId.c_str() );
+        msg_Err( getIntf(), "unknown font id: %s", rData.m_fontId.c_str() );
+        return;
+    }
+
+    // Convert the scrolling mode
+    CtrlText::Scrolling_t scrolling;
+    if( rData.m_scrolling == "auto" )
+        scrolling = CtrlText::kAutomatic;
+    else if( rData.m_scrolling == "manual" )
+        scrolling = CtrlText::kManual;
+    else if( rData.m_scrolling == "none" )
+        scrolling = CtrlText::kNone;
+    else
+    {
+        msg_Err( getIntf(), "invalid scrolling mode: %s",
+                 rData.m_scrolling.c_str() );
+        return;
+    }
+
+    // Convert the alignment
+    CtrlText::Align_t alignment;
+    if( rData.m_alignment == "left" )
+        alignment = CtrlText::kLeft;
+    else if( rData.m_alignment == "center" || rData.m_alignment == "centre" )
+        alignment = CtrlText::kCenter;
+    else if( rData.m_alignment == "right" )
+        alignment = CtrlText::kRight;
+    else
+    {
+        msg_Err( getIntf(), "invalid alignment: %s",
+                 rData.m_alignment.c_str() );
         return;
     }
 
     // Create a text variable
     VarText *pVar = new VarText( getIntf() );
-    UString msg( getIntf(), rData.m_text.c_str() );
-    pVar->set( msg );
     m_pTheme->m_vars.push_back( VariablePtr( pVar ) );
 
     // Get the visibility variable
@@ -440,16 +706,25 @@ void Builder::addText( const BuilderData::Text &rData )
     VarBool *pVisible = pInterpreter->getVarBool( rData.m_visible, m_pTheme );
 
     CtrlText *pText = new CtrlText( getIntf(), *pVar, *pFont,
-        UString( getIntf(), rData.m_help.c_str() ), rData.m_color, pVisible );
+        UString( getIntf(), rData.m_help.c_str() ), rData.m_color, pVisible,
+        scrolling, alignment );
+    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pText );
 
     int height = pFont->getSize();
 
-    pLayout->addControl( pText, Position( rData.m_xPos, rData.m_yPos,
-                                          rData.m_xPos + rData.m_width,
-                                          rData.m_yPos + height, *pLayout ),
-                         rData.m_layer );
+    // Compute the position of the control
+    const GenericRect *pRect;
+    GET_BOX( pRect, rData.m_panelId , pLayout);
+    const Position pos = makePosition( rData.m_leftTop, rData.m_rightBottom,
+                                       rData.m_xPos, rData.m_yPos,
+                                       rData.m_width, height, *pRect,
+                                       rData.m_xKeepRatio, rData.m_yKeepRatio );
 
-    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pText );
+    pLayout->addControl( pText, pos, rData.m_layer );
+
+    // Set the text of the control
+    UString msg( getIntf(), rData.m_text.c_str() );
+    pVar->set( msg );
 }
 
 
@@ -459,7 +734,7 @@ void Builder::addRadialSlider( const BuilderData::RadialSlider &rData )
     GenericBitmap *pSeq = NULL;
     GET_BMP( pSeq, rData.m_sequence );
 
-    GenericLayout *pLayout = m_pTheme->getLayoutById(rData.m_layoutId);
+    GenericLayout *pLayout = m_pTheme->getLayoutById( rData.m_layoutId );
     if( pLayout == NULL )
     {
         msg_Err( getIntf(), "unknown layout id: %s", rData.m_layoutId.c_str() );
@@ -471,7 +746,7 @@ void Builder::addRadialSlider( const BuilderData::RadialSlider &rData )
     VarPercent *pVar = pInterpreter->getVarPercent( rData.m_value, m_pTheme );
     if( pVar == NULL )
     {
-        msg_Err( getIntf(), "Unknown slider value: %s", rData.m_value.c_str() );
+        msg_Err( getIntf(), "unknown slider value: %s", rData.m_value.c_str() );
         return;
     }
 
@@ -485,33 +760,38 @@ void Builder::addRadialSlider( const BuilderData::RadialSlider &rData )
                               rData.m_minAngle, rData.m_maxAngle,
                               UString( getIntf(), rData.m_help.c_str() ),
                               pVisible );
+    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pRadial );
 
     // XXX: resizing is not supported
     // Compute the position of the control
-    const Position pos =
-        makePosition( rData.m_leftTop, rData.m_rightBottom, rData.m_xPos,
-                      rData.m_yPos, pSeq->getWidth(),
-                      pSeq->getHeight() / rData.m_nbImages, *pLayout );
+    const GenericRect *pRect;
+    GET_BOX( pRect, rData.m_panelId , pLayout);
+    const Position pos = makePosition( rData.m_leftTop, rData.m_rightBottom,
+                                       rData.m_xPos, rData.m_yPos,
+                                       pSeq->getWidth(),
+                                       pSeq->getHeight() / rData.m_nbImages,
+                                       *pRect,
+                                       rData.m_xKeepRatio, rData.m_yKeepRatio );
 
     pLayout->addControl( pRadial, pos, rData.m_layer );
-
-    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pRadial );
 }
 
 
 void Builder::addSlider( const BuilderData::Slider &rData )
 {
-    // Get the bitmaps of the slider
-    GenericBitmap *pBmpUp = NULL;
-    GET_BMP( pBmpUp, rData.m_upId );
+    // Add the background first, so that we will still have something almost
+    // functional if the cursor cannot be created properly (this happens for
+    // some winamp2 skins, where the images of the cursor are not always
+    // present)
 
-    GenericBitmap *pBmpDown = pBmpUp;
-    GET_BMP( pBmpDown, rData.m_downId );
+    // Get the bitmaps of the background
+    GenericBitmap *pBgImage = NULL;
+    if( rData.m_imageId != "none" )
+    {
+        GET_BMP( pBgImage, rData.m_imageId );
+    }
 
-    GenericBitmap *pBmpOver = pBmpUp;
-    GET_BMP( pBmpOver, rData.m_overId );
-
-    GenericLayout *pLayout = m_pTheme->getLayoutById(rData.m_layoutId);
+    GenericLayout *pLayout = m_pTheme->getLayoutById( rData.m_layoutId );
     if( pLayout == NULL )
     {
         msg_Err( getIntf(), "unknown layout id: %s", rData.m_layoutId.c_str() );
@@ -521,7 +801,7 @@ void Builder::addSlider( const BuilderData::Slider &rData )
     Bezier *pCurve = getPoints( rData.m_points.c_str() );
     if( pCurve == NULL )
     {
-        msg_Err( getIntf(), "Invalid format in tag points=\"%s\"",
+        msg_Err( getIntf(), "invalid format in tag points=\"%s\"",
                  rData.m_points.c_str() );
         return;
     }
@@ -536,37 +816,59 @@ void Builder::addSlider( const BuilderData::Slider &rData )
     VarPercent *pVar = pInterpreter->getVarPercent( rData.m_value, m_pTheme );
     if( pVar == NULL )
     {
-        msg_Err( getIntf(), "Unknown slider value: %s", rData.m_value.c_str() );
+        msg_Err( getIntf(), "unknown slider value: %s", rData.m_value.c_str() );
         return;
     }
 
-    // Create the cursor and background controls
+    // Create the background control
+    CtrlSliderBg *pBackground = new CtrlSliderBg( getIntf(),
+        *pCurve, *pVar, rData.m_thickness, pBgImage, rData.m_nbHoriz,
+        rData.m_nbVert, rData.m_padHoriz, rData.m_padVert,
+        pVisible, UString( getIntf(), rData.m_help.c_str() ) );
+    m_pTheme->m_controls[rData.m_id + "_bg"] = CtrlGenericPtr( pBackground );
+
+    // Compute the position of the control
+    const GenericRect *pRect;
+    GET_BOX( pRect, rData.m_panelId , pLayout);
+    const Position pos = makePosition( rData.m_leftTop, rData.m_rightBottom,
+                                       rData.m_xPos, rData.m_yPos,
+                                       pCurve->getWidth(), pCurve->getHeight(),
+                                       *pRect,
+                                       rData.m_xKeepRatio, rData.m_yKeepRatio );
+
+    pLayout->addControl( pBackground, pos, rData.m_layer );
+
+    // Get the bitmaps of the cursor
+    GenericBitmap *pBmpUp = NULL;
+    GET_BMP( pBmpUp, rData.m_upId );
+
+    GenericBitmap *pBmpDown = pBmpUp;
+    GET_BMP( pBmpDown, rData.m_downId );
+
+    GenericBitmap *pBmpOver = pBmpUp;
+    GET_BMP( pBmpOver, rData.m_overId );
+
+    // Create the cursor control
     CtrlSliderCursor *pCursor = new CtrlSliderCursor( getIntf(), *pBmpUp,
         *pBmpOver, *pBmpDown, *pCurve, *pVar, pVisible,
         UString( getIntf(), rData.m_tooltip.c_str() ),
         UString( getIntf(), rData.m_help.c_str() ) );
+    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pCursor );
 
-    CtrlSliderBg *pBackground = new CtrlSliderBg( getIntf(), *pCursor,
-        *pCurve, *pVar, rData.m_thickness, pVisible,
-        UString( getIntf(), rData.m_help.c_str() ) );
-
-    // Compute the position of the control
-    const Position pos = makePosition( rData.m_leftTop, rData.m_rightBottom,
-                                       rData.m_xPos, rData.m_yPos,
-                                       pCurve->getWidth(), pCurve->getHeight(),
-                                       *pLayout );
-
-    pLayout->addControl( pBackground, pos, rData.m_layer );
     pLayout->addControl( pCursor, pos, rData.m_layer );
 
-    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pCursor );
-    m_pTheme->m_controls[rData.m_id + "_bg"] = CtrlGenericPtr( pBackground );
+    // Associate the cursor to the background
+    pBackground->associateCursor( *pCursor );
 }
 
 
 void Builder::addList( const BuilderData::List &rData )
 {
-    GenericLayout *pLayout = m_pTheme->getLayoutById(rData.m_layoutId);
+    // Get the background bitmap, if any
+    GenericBitmap *pBgBmp = NULL;
+    GET_BMP( pBgBmp, rData.m_bgImageId );
+
+    GenericLayout *pLayout = m_pTheme->getLayoutById( rData.m_layoutId );
     if( pLayout == NULL )
     {
         msg_Err( getIntf(), "unknown layout id: %s", rData.m_layoutId.c_str() );
@@ -576,7 +878,7 @@ void Builder::addList( const BuilderData::List &rData )
     GenericFont *pFont = getFont( rData.m_fontId );
     if( pFont == NULL )
     {
-        msg_Err( getIntf(), "Unknown font id: %s", rData.m_fontId.c_str() );
+        msg_Err( getIntf(), "unknown font id: %s", rData.m_fontId.c_str() );
         return;
     }
 
@@ -585,7 +887,7 @@ void Builder::addList( const BuilderData::List &rData )
     VarList *pVar = pInterpreter->getVarList( rData.m_var, m_pTheme );
     if( pVar == NULL )
     {
-        msg_Err( getIntf(), "No such list variable: %s", rData.m_var.c_str() );
+        msg_Err( getIntf(), "no such list variable: %s", rData.m_var.c_str() );
         return;
     }
 
@@ -593,27 +895,100 @@ void Builder::addList( const BuilderData::List &rData )
     // XXX check when it is null
     VarBool *pVisible = pInterpreter->getVarBool( rData.m_visible, m_pTheme );
 
+    // Get the color values
+    uint32_t fgColor = getColor( rData.m_fgColor );
+    uint32_t playColor = getColor( rData.m_playColor );
+    uint32_t bgColor1 = getColor( rData.m_bgColor1 );
+    uint32_t bgColor2 = getColor( rData.m_bgColor2 );
+    uint32_t selColor = getColor( rData.m_selColor );
+
     // Create the list control
-    CtrlList *pList = new CtrlList( getIntf(), *pVar, *pFont,
-       rData.m_fgColor, rData.m_playColor, rData.m_bgColor1,
-       rData.m_bgColor2, rData.m_selColor,
+    CtrlList *pList = new CtrlList( getIntf(), *pVar, *pFont, pBgBmp,
+       fgColor, playColor, bgColor1, bgColor2, selColor,
        UString( getIntf(), rData.m_help.c_str() ), pVisible );
+    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pList );
 
     // Compute the position of the control
+    const GenericRect *pRect;
+    GET_BOX( pRect, rData.m_panelId , pLayout);
     const Position pos = makePosition( rData.m_leftTop, rData.m_rightBottom,
                                        rData.m_xPos, rData.m_yPos,
                                        rData.m_width, rData.m_height,
-                                       *pLayout );
+                                       *pRect,
+                                       rData.m_xKeepRatio, rData.m_yKeepRatio );
 
     pLayout->addControl( pList, pos, rData.m_layer );
-
-    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pList );
 }
 
+void Builder::addTree( const BuilderData::Tree &rData )
+{
+    // Get the bitmaps, if any
+    GenericBitmap *pBgBmp = NULL;
+    GenericBitmap *pItemBmp = NULL;
+    GenericBitmap *pOpenBmp = NULL;
+    GenericBitmap *pClosedBmp = NULL;
+    GET_BMP( pBgBmp, rData.m_bgImageId );
+    GET_BMP( pItemBmp, rData.m_itemImageId );
+    GET_BMP( pOpenBmp, rData.m_openImageId );
+    GET_BMP( pClosedBmp, rData.m_closedImageId );
+
+    GenericLayout *pLayout = m_pTheme->getLayoutById( rData.m_layoutId );
+    if( pLayout == NULL )
+    {
+        msg_Err( getIntf(), "unknown layout id: %s", rData.m_layoutId.c_str() );
+        return;
+    }
+
+    GenericFont *pFont = getFont( rData.m_fontId );
+    if( pFont == NULL )
+    {
+        msg_Err( getIntf(), "unknown font id: %s", rData.m_fontId.c_str() );
+        return;
+    }
+
+    // Get the list variable
+    Interpreter *pInterpreter = Interpreter::instance( getIntf() );
+    VarTree *pVar = pInterpreter->getVarTree( rData.m_var, m_pTheme );
+    if( pVar == NULL )
+    {
+        msg_Err( getIntf(), "no such list variable: %s", rData.m_var.c_str() );
+        return;
+    }
+
+    // Get the visibility variable
+    // XXX check when it is null
+    VarBool *pVisible = pInterpreter->getVarBool( rData.m_visible, m_pTheme );
+    VarBool *pFlat = pInterpreter->getVarBool( rData.m_flat, m_pTheme );
+
+    // Get the color values
+    uint32_t fgColor = getColor( rData.m_fgColor );
+    uint32_t playColor = getColor( rData.m_playColor );
+    uint32_t bgColor1 = getColor( rData.m_bgColor1 );
+    uint32_t bgColor2 = getColor( rData.m_bgColor2 );
+    uint32_t selColor = getColor( rData.m_selColor );
+
+    // Create the list control
+    CtrlTree *pTree = new CtrlTree( getIntf(), *pVar, *pFont, pBgBmp,
+       pItemBmp, pOpenBmp, pClosedBmp,
+       fgColor, playColor, bgColor1, bgColor2, selColor,
+       UString( getIntf(), rData.m_help.c_str() ), pVisible, pFlat );
+    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pTree );
+
+    // Compute the position of the control
+    const GenericRect *pRect;
+    GET_BOX( pRect, rData.m_panelId , pLayout);
+    const Position pos = makePosition( rData.m_leftTop, rData.m_rightBottom,
+                                       rData.m_xPos, rData.m_yPos,
+                                       rData.m_width, rData.m_height,
+                                       *pRect,
+                                       rData.m_xKeepRatio, rData.m_yKeepRatio );
+
+    pLayout->addControl( pTree, pos, rData.m_layer );
+}
 
 void Builder::addVideo( const BuilderData::Video &rData )
 {
-    GenericLayout *pLayout = m_pTheme->getLayoutById(rData.m_layoutId);
+    GenericLayout *pLayout = m_pTheme->getLayoutById( rData.m_layoutId );
     if( pLayout == NULL )
     {
         msg_Err( getIntf(), "unknown layout id: %s", rData.m_layoutId.c_str() );
@@ -625,32 +1000,36 @@ void Builder::addVideo( const BuilderData::Video &rData )
     Interpreter *pInterpreter = Interpreter::instance( getIntf() );
     VarBool *pVisible = pInterpreter->getVarBool( rData.m_visible, m_pTheme );
 
-    CtrlVideo *pVideo = new CtrlVideo( getIntf(),
-        UString( getIntf(), rData.m_help.c_str() ), pVisible );
+    CtrlVideo *pVideo = new CtrlVideo( getIntf(), *pLayout,
+        rData.m_autoResize, UString( getIntf(), rData.m_help.c_str() ),
+        pVisible );
+    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pVideo );
 
     // Compute the position of the control
+    const GenericRect *pRect;
+    GET_BOX( pRect, rData.m_panelId , pLayout);
     const Position pos = makePosition( rData.m_leftTop, rData.m_rightBottom,
                                        rData.m_xPos, rData.m_yPos,
                                        rData.m_width, rData.m_height,
-                                       *pLayout );
+                                       *pRect,
+                                       rData.m_xKeepRatio, rData.m_yKeepRatio );
 
     pLayout->addControl( pVideo, pos, rData.m_layer );
-
-    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pVideo );
 }
 
 
 const Position Builder::makePosition( const string &rLeftTop,
                                       const string &rRightBottom,
                                       int xPos, int yPos, int width,
-                                      int height, const Box &rBox ) const
+                                      int height, const GenericRect &rRect,
+                                      bool xKeepRatio, bool yKeepRatio ) const
 {
     int left = 0, top = 0, right = 0, bottom = 0;
     Position::Ref_t refLeftTop = Position::kLeftTop;
     Position::Ref_t refRightBottom = Position::kLeftTop;
 
-    int boxWidth = rBox.getWidth();
-    int boxHeight = rBox.getHeight();
+    int boxWidth = rRect.getWidth();
+    int boxHeight = rRect.getHeight();
 
     // Position of the left top corner
     if( rLeftTop == "lefttop" )
@@ -704,8 +1083,23 @@ const Position Builder::makePosition( const string &rLeftTop,
         refRightBottom = Position::kRightBottom;
     }
 
-    return Position( left, top, right, bottom, rBox, refLeftTop,
-                     refRightBottom );
+    // In "keep ratio" mode, overwrite the previously computed values with the
+    // actual ones
+    // XXX: this coupling between makePosition and the Position class should
+    // be reduced...
+    if( xKeepRatio )
+    {
+        left = xPos;
+        right = xPos + width;
+    }
+    if( yKeepRatio )
+    {
+        top = yPos;
+        bottom = yPos + height;
+    }
+
+    return Position( left, top, right, bottom, rRect, refLeftTop,
+                     refRightBottom, xKeepRatio, yKeepRatio );
 }
 
 
@@ -738,11 +1132,19 @@ GenericFont *Builder::getFont( const string &fontId )
         }
         if( !pFont )
         {
-            msg_Err( getIntf(), "Failed to open the default font" );
+            msg_Err( getIntf(), "failed to open the default font" );
         }
     }
     return pFont;
 }
+
+
+string Builder::getFilePath( const string &rFileName ) const
+{
+    OSFactory *pFactory = OSFactory::instance( getIntf() );
+    return m_path + pFactory->getDirSeparator() + sFromLocale( rFileName );
+}
+
 
 
 Bezier *Builder::getPoints( const char *pTag ) const
@@ -755,14 +1157,7 @@ Bezier *Builder::getPoints( const char *pTag ) const
         {
             return NULL;
         }
-#if 0
-        if( x < 0 || y < 0 )
-        {
-            msg_Err( getIntf(),
-                     "Slider points cannot have negative coordinates!" );
-            return NULL;
-        }
-#endif
+
         xBez.push_back( x );
         yBez.push_back( y );
         pTag += n;
@@ -778,5 +1173,16 @@ Bezier *Builder::getPoints( const char *pTag ) const
 
     // Create the Bezier curve
     return new Bezier( getIntf(), xBez, yBez );
+}
+
+
+uint32_t Builder::getColor( const string &rVal ) const
+{
+    // Check it the value is a registered constant
+    Interpreter *pInterpreter = Interpreter::instance( getIntf() );
+    string val = pInterpreter->getConstant( rVal );
+
+    // Convert to an int value
+    return SkinParser::convertColor( val.c_str() );
 }
 

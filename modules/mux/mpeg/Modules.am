@@ -11,11 +11,4 @@ SOURCES_mux_ts = ts.c \
                  bits.h \
                  $(NULL)
 
-SOURCES_mux_ts_dvbpsi = ts.c \
-                        pes.c \
-                        pes.h \
-                        csa.c \
-                        csa.h \
-                        bits.h \
-                        $(NULL)
-
+libvlc_LTLIBRARIES += libmux_ps_plugin.la

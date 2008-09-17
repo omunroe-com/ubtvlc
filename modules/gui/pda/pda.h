@@ -1,10 +1,10 @@
 /*****************************************************************************
  * pda.h: private Gtk+ interface description
  *****************************************************************************
- * Copyright (C) 1999, 2000 VideoLAN
- * $Id: pda.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999, 2000 the VideoLAN team
+ * $Id$
  *
- * Authors: Jean-Paul Saman <jpsaman@wxs.nl>
+ * Authors: Jean-Paul Saman <jpsaman _at_ videolan _dot_ org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #define MAX_ATEXIT                 10
@@ -45,12 +45,12 @@ struct intf_sys_t
     float               f_adj_oldvalue;  /* previous value -with FPU hardware*/
 
     /* special actions */
-    vlc_bool_t          b_playing;
-    vlc_bool_t          b_window_changed;        /* window display toggled ? */
-    vlc_bool_t          b_slider_free;                      /* slider status */
+    bool          b_playing;
+    bool          b_window_changed;        /* window display toggled ? */
+    bool          b_slider_free;                      /* slider status */
 
     /* Preference settings */
-    vlc_bool_t          b_autoplayfile;
+    bool          b_autoplayfile;
 
     /* The input thread */
     input_thread_t *    p_input;
@@ -62,6 +62,6 @@ struct intf_sys_t
 #define GTK_GET( type, nom ) GTK_##type( gtk_object_get_data( \
         GTK_OBJECT( p_intf->p_sys->p_window ), nom ) )
 
-            
-#define  GtkGetIntf( widget ) E_(__GtkGetIntf)( GTK_WIDGET( widget ) )
-void * E_(__GtkGetIntf)( GtkWidget * );
+ 
+#define  GtkGetIntf( widget ) __GtkGetIntf( GTK_WIDGET( widget ) )
+void * __GtkGetIntf( GtkWidget * );

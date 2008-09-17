@@ -2,7 +2,7 @@
 -->
 
 
-<!ELEMENT Theme (ThemeInfo,(Bitmap|BitmapFont|Font|Window)*)>
+<!ELEMENT Theme (ThemeInfo,(Include|IniFile|Bitmap|BitmapFont|Font|PopupMenu|Window)*)>
     <!ATTLIST Theme
         version     CDATA   #REQUIRED
         tooltipfont CDATA   "defaultfont"
@@ -12,11 +12,32 @@
     >
 
 <!-- main elements -->
-<!ELEMENT Bitmap EMPTY>
+<!ELEMENT IniFile EMPTY>
+    <!ATTLIST IniFile
+        id          CDATA   #REQUIRED
+        file        CDATA   #REQUIRED
+    >
+<!ELEMENT Include EMPTY>
+    <!ATTLIST Include
+        file        CDATA   #REQUIRED
+    >
+<!ELEMENT Bitmap (SubBitmap)*>
     <!ATTLIST Bitmap
         id          CDATA   #REQUIRED
         file        CDATA   #REQUIRED
         alphacolor  CDATA   #REQUIRED
+        nbframes    CDATA   "1"
+        fps         CDATA   "0"
+    >
+<!ELEMENT SubBitmap EMPTY>
+    <!ATTLIST SubBitmap
+        id          CDATA   #REQUIRED
+        x           CDATA   #REQUIRED
+        y           CDATA   #REQUIRED
+        width       CDATA   #REQUIRED
+        height      CDATA   #REQUIRED
+        nbframes    CDATA   "1"
+        fps         CDATA   "0"
     >
 <!ELEMENT Font EMPTY>
     <!ATTLIST Font
@@ -30,6 +51,16 @@
         file        CDATA   #REQUIRED
         type        CDATA   "digits"
     >
+<!ELEMENT PopupMenu (MenuItem|MenuSeparator)+>
+    <!ATTLIST PopupMenu
+        id          CDATA   #REQUIRED
+    >
+<!ELEMENT MenuItem EMPTY>
+    <!ATTLIST MenuItem
+        label       CDATA   #REQUIRED
+        action      CDATA   "none"
+    >
+<!ELEMENT MenuSeparator EMPTY>
 <!ELEMENT ThemeInfo EMPTY>
     <!ATTLIST ThemeInfo
         name        CDATA   #IMPLIED
@@ -46,8 +77,8 @@
         dragdrop    CDATA   "true"
         playondrop  CDATA   "true"
     >
-
-<!ELEMENT Layout (Group)>
+<!ELEMENT Layout (Group|Image|Button|Playlist|Slider|RadialSlider|Text|Checkbox|
+                  Anchor|Video|Playtree|Panel)+>
     <!ATTLIST Layout
         id          CDATA   "none"
         width       CDATA   #REQUIRED
@@ -57,11 +88,24 @@
         minheight   CDATA   "-1"
         maxheight   CDATA   "-1"
     >
+<!-- Grouping elements -->
 <!ELEMENT Group (Group|Image|Button|Playlist|Slider|RadialSlider|Text|Checkbox|
-                 Anchor|Video)+>
+                 Anchor|Video|Playtree|Panel)+>
     <!ATTLIST Group
         x           CDATA   "0"
         y           CDATA   "0"
+    >
+<!ELEMENT Panel (Group|Image|Button|Playlist|Slider|RadialSlider|Text|Checkbox|
+                 Anchor|Video|Playtree|Panel)+>
+    <!ATTLIST Panel
+        x           CDATA   "0"
+        y           CDATA   "0"
+        lefttop     CDATA   "lefttop"
+        rightbottom CDATA   "lefttop"
+        xkeepratio  CDATA   "false"
+        ykeepratio  CDATA   "false"
+        width       CDATA   #REQUIRED
+        height      CDATA   #REQUIRED
     >
 
 <!-- Anchors -->
@@ -69,6 +113,7 @@
     <!ATTLIST Anchor
         x           CDATA   "0"
         y           CDATA   "0"
+        lefttop     CDATA   "lefttop"
         priority    CDATA   #REQUIRED
         points      CDATA   "(0,0)"
         range       CDATA   "10"
@@ -83,8 +128,12 @@
         y           CDATA   "0"
         lefttop     CDATA   "lefttop"
         rightbottom CDATA   "lefttop"
+        xkeepratio  CDATA   "false"
+        ykeepratio  CDATA   "false"
         image       CDATA   #REQUIRED
         action      CDATA   "none"
+        action2     CDATA   "none"
+        resize      CDATA   "mosaic"
         help        CDATA   ""
     >
 <!ELEMENT Button EMPTY>
@@ -95,6 +144,8 @@
         y           CDATA   "0"
         lefttop     CDATA   "lefttop"
         rightbottom CDATA   "lefttop"
+        xkeepratio  CDATA   "false"
+        ykeepratio  CDATA   "false"
         up          CDATA   #REQUIRED
         down        CDATA   "none"
         over        CDATA   "none"
@@ -110,6 +161,8 @@
         y            CDATA   "0"
         lefttop      CDATA   "lefttop"
         rightbottom  CDATA   "lefttop"
+        xkeepratio  CDATA   "false"
+        ykeepratio  CDATA   "false"
         up1          CDATA   #REQUIRED
         down1        CDATA   "none"
         over1        CDATA   "none"
@@ -123,7 +176,7 @@
         tooltiptext2 CDATA   ""
         help         CDATA   ""
     >
-<!ELEMENT Slider EMPTY>
+<!ELEMENT Slider (SliderBackground)?>
     <!ATTLIST Slider
         id          CDATA   "none"
         visible     CDATA   "true"
@@ -131,14 +184,26 @@
         y           CDATA   "0"
         lefttop     CDATA   "lefttop"
         rightbottom CDATA   "lefttop"
+        xkeepratio  CDATA   "false"
+        ykeepratio  CDATA   "false"
         up          CDATA   #REQUIRED
         down        CDATA   "none"
         over        CDATA   "none"
         points      CDATA   #REQUIRED
         thickness   CDATA   "10"
         value       CDATA   "none"
+        background  CDATA   "none"
         tooltiptext CDATA   ""
         help        CDATA   ""
+    >
+<!ELEMENT SliderBackground EMPTY>
+    <!ATTLIST SliderBackground
+        id          CDATA   "none"
+        image       CDATA   #REQUIRED
+        nbhoriz     CDATA   "1"
+        nbvert      CDATA   "1"
+        padhoriz    CDATA   "0"
+        padvert     CDATA   "0"
     >
 <!ELEMENT RadialSlider EMPTY>
     <!ATTLIST RadialSlider
@@ -148,6 +213,8 @@
         y           CDATA   "0"
         lefttop     CDATA   "lefttop"
         rightbottom CDATA   "lefttop"
+        xkeepratio  CDATA   "false"
+        ykeepratio  CDATA   "false"
         sequence    CDATA   #REQUIRED
         nbimages    CDATA   #REQUIRED
         minangle    CDATA   "0"
@@ -162,13 +229,19 @@
         visible     CDATA   "true"
         x           CDATA   "0"
         y           CDATA   "0"
+        width       CDATA   "0"
+        lefttop     CDATA   "lefttop"
+        rightbottom CDATA   "lefttop"
+        xkeepratio  CDATA   "false"
+        ykeepratio  CDATA   "false"
         text        CDATA   ""
         font        CDATA   #REQUIRED
         color       CDATA   "#000000"
-        width       CDATA   "0"
+        scrolling   CDATA   "auto"
+        alignment   CDATA   "left"
         help        CDATA   ""
     >
-<!ELEMENT Playlist (Slider)>
+<!ELEMENT Playlist (Slider)?>
     <!ATTLIST Playlist
         id          CDATA   #REQUIRED
         visible     CDATA   "true"
@@ -178,13 +251,41 @@
         height      CDATA   "0"
         lefttop     CDATA   "lefttop"
         rightbottom CDATA   "lefttop"
+        xkeepratio  CDATA   "false"
+        ykeepratio  CDATA   "false"
         font        CDATA   #REQUIRED
+        bgimage     CDATA   "none"
         fgcolor     CDATA   "#000000"
         playcolor   CDATA   "#FF0000"
         bgcolor1    CDATA   "#FFFFFF"
         bgcolor2    CDATA   "#FFFFFF"
         selcolor    CDATA   "#0000FF"
         help        CDATA   ""
+    >
+<!ELEMENT Playtree (Slider)?>
+    <!ATTLIST Playtree
+        id          CDATA   #REQUIRED
+        visible     CDATA   "true"
+        x           CDATA   "0"
+        y           CDATA   "0"
+        width       CDATA   "0"
+        height      CDATA   "0"
+        lefttop     CDATA   "lefttop"
+        rightbottom CDATA   "lefttop"
+        xkeepratio  CDATA   "false"
+        ykeepratio  CDATA   "false"
+        font        CDATA   #REQUIRED
+        bgimage     CDATA   "none"
+        itemimage   CDATA   "none"
+        openimage   CDATA   "none"
+        closedimage CDATA   "none"
+        fgcolor     CDATA   "#000000"
+        playcolor   CDATA   "#FF0000"
+        bgcolor1    CDATA   "#FFFFFF"
+        bgcolor2    CDATA   "#FFFFFF"
+        selcolor    CDATA   "#0000FF"
+        help        CDATA   ""
+        flat        CDATA   "false"
     >
 <!ELEMENT Video EMPTY>
     <!ATTLIST Video
@@ -196,5 +297,8 @@
         height      CDATA   "0"
         lefttop     CDATA   "lefttop"
         rightbottom CDATA   "lefttop"
+        xkeepratio  CDATA   "false"
+        ykeepratio  CDATA   "false"
+        autoresize  CDATA   "true"
         help        CDATA   ""
     >

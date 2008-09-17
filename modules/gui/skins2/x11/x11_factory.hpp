@@ -1,11 +1,11 @@
 /*****************************************************************************
  * x11_factory.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: x11_factory.hpp 7327 2004-04-12 14:25:15Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef X11_FACTORY_HPP
@@ -50,25 +50,46 @@ class X11Factory: public OSFactory
         /// Initialization method
         virtual bool init();
 
-        /// Instantiate an object OSGraphics.
+        /// Instantiate an object OSGraphics
         virtual OSGraphics *createOSGraphics( int width, int height );
 
-        /// Get the instance of the singleton OSLoop.
+        /// Get the instance of the singleton OSLoop
         virtual OSLoop *getOSLoop();
 
-        /// Destroy the instance of OSLoop.
+        /// Destroy the instance of OSLoop
         virtual void destroyOSLoop();
 
-        /// Instantiate an OSTimer with the given callback
-        virtual OSTimer *createOSTimer( const Callback &rCallback );
+        /// Instantiate an OSTimer with the given command
+        virtual OSTimer *createOSTimer( CmdGeneric &rCmd );
+
+        /// Minimize all the windows
+        virtual void minimize();
+
+        /// Restore the minimized windows
+        virtual void restore();
+
+        /// Add an icon in the system tray
+        virtual void addInTray();
+
+        /// Remove the icon from the system tray
+        virtual void removeFromTray();
+
+        /// Show the task in the task bar
+        virtual void addInTaskBar();
+
+        /// Remove the task from the task bar
+        virtual void removeFromTaskBar();
 
         /// Instantiate an OSWindow object
         virtual OSWindow *createOSWindow( GenericWindow &rWindow,
                                           bool dragDrop, bool playOnDrop,
                                           OSWindow *pParent );
 
-        /// Instantiate an object OSTooltip.
+        /// Instantiate an object OSTooltip
         virtual OSTooltip *createOSTooltip();
+
+        /// Instantiate an object OSPopup
+        virtual OSPopup *createOSPopup();
 
         /// Get the directory separator
         virtual const string &getDirSeparator() const { return m_dirSep; }
@@ -82,7 +103,7 @@ class X11Factory: public OSFactory
         virtual int getScreenHeight() const;
 
         /// Get the work area (screen area without taskbars)
-        virtual Rect getWorkArea() const;
+        virtual SkinsRect getWorkArea() const;
 
         /// Get the position of the mouse
         virtual void getMousePos( int &rXPos, int &rYPos ) const;

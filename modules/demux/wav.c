@@ -1,8 +1,8 @@
 /*****************************************************************************
  * wav.c : wav file input module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: wav.c 7665 2004-05-15 10:52:56Z fenrir $
+ * Copyright (C) 2001-2008 the VideoLAN team
+ * $Id: 3a4fcfefa56f0e8b74195b9ea7a045bcbae36cdf $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,18 +18,22 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                      /* malloc(), free() */
 
-#include <vlc/vlc.h>
-#include <vlc/input.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
-#include <codecs.h>
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_demux.h>
+#include <vlc_aout.h>
+#include <vlc_codecs.h>
 
 /*****************************************************************************
  * Module descriptor
@@ -38,8 +42,10 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 vlc_module_begin();
-    set_description( _("WAV demuxer") );
-    set_capability( "demux2", 142 );
+    set_description( N_("WAV demuxer") );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
+    set_capability( "demux", 142 );
     set_callbacks( Open, Close );
 vlc_module_end();
 
@@ -57,18 +63,34 @@ struct demux_sys_t
     int64_t         i_data_pos;
     unsigned int    i_data_size;
 
-    mtime_t         i_time;
     unsigned int    i_frame_size;
-    mtime_t         i_frame_length;
+    int             i_frame_samples;
+
+    date_t          pts;
+
+    uint32_t i_channel_mask;
+    bool b_chan_reorder;              /* do we need channel reordering */
+    int pi_chan_table[AOUT_CHAN_MAX];
 };
 
-#define __EVEN( x ) ( ( (x)%2 != 0 ) ? ((x)+1) : (x) )
+#define __EVEN( x ) (((x) + 1) & ~1)
 
-static int ChunkFind( demux_t *, char *, unsigned int * );
+static int ChunkFind( demux_t *, const char *, unsigned int * );
 
-static void FrameInfo_IMA_ADPCM( demux_t *, unsigned int *, mtime_t * );
-static void FrameInfo_MS_ADPCM ( demux_t *, unsigned int *, mtime_t * );
-static void FrameInfo_PCM      ( demux_t *, unsigned int *, mtime_t * );
+static void FrameInfo_IMA_ADPCM( demux_t *, unsigned int *, int * );
+static void FrameInfo_MS_ADPCM ( demux_t *, unsigned int *, int * );
+static void FrameInfo_PCM      ( demux_t *, unsigned int *, int * );
+
+static const uint32_t pi_channels_src[] =
+    { WAVE_SPEAKER_FRONT_LEFT, WAVE_SPEAKER_FRONT_RIGHT,
+      WAVE_SPEAKER_FRONT_CENTER, WAVE_SPEAKER_LOW_FREQUENCY,
+      WAVE_SPEAKER_BACK_LEFT, WAVE_SPEAKER_BACK_RIGHT, WAVE_SPEAKER_BACK_CENTER,
+      WAVE_SPEAKER_SIDE_LEFT, WAVE_SPEAKER_SIDE_RIGHT, 0 };
+static const uint32_t pi_channels_in[] =
+    { AOUT_CHAN_LEFT, AOUT_CHAN_RIGHT,
+      AOUT_CHAN_CENTER, AOUT_CHAN_LFE,
+      AOUT_CHAN_REARLEFT, AOUT_CHAN_REARRIGHT, AOUT_CHAN_REARCENTER,
+      AOUT_CHAN_MIDDLELEFT, AOUT_CHAN_MIDDLERIGHT, 0 };
 
 /*****************************************************************************
  * Open: check file and initializes structures
@@ -78,20 +100,18 @@ static int Open( vlc_object_t * p_this )
     demux_t     *p_demux = (demux_t*)p_this;
     demux_sys_t *p_sys;
 
-    uint8_t     *p_peek;
-    unsigned int i_size, i_extended;
-    char        *psz_name;
+    const uint8_t *p_peek;
+    uint32_t     i_size;
+    unsigned int i_extended;
+    const char        *psz_name;
 
-    WAVEFORMATEXTENSIBLE *p_wf_ext;
-    WAVEFORMATEX         *p_wf;
+    WAVEFORMATEXTENSIBLE *p_wf_ext = NULL;
+    WAVEFORMATEX         *p_wf = NULL;
 
     /* Is it a wav file ? */
-    if( stream_Peek( p_demux->s, &p_peek, 12 ) < 12 )
-    {
-        msg_Warn( p_demux, "WAV module discarded (cannot peek)" );
-        return VLC_EGENERIC;
-    }
-    if( strncmp( p_peek, "RIFF", 4 ) || strncmp( &p_peek[8], "WAVE", 4 ) )
+    if( stream_Peek( p_demux->s, &p_peek, 12 ) < 12 ) return VLC_EGENERIC;
+
+    if( memcmp( p_peek, "RIFF", 4 ) || memcmp( &p_peek[8], "WAVE", 4 ) )
     {
         return VLC_EGENERIC;
     }
@@ -99,8 +119,12 @@ static int Open( vlc_object_t * p_this )
     p_demux->pf_demux   = Demux;
     p_demux->pf_control = Control;
     p_demux->p_sys      = p_sys = malloc( sizeof( demux_sys_t ) );
+    if( p_sys == NULL )
+        return VLC_ENOMEM;
+
     p_sys->p_es         = NULL;
-    p_sys->i_time       = 1;
+    p_sys->b_chan_reorder = 0;
+    p_sys->i_channel_mask = 0;
 
     /* skip riff header */
     stream_Read( p_demux->s, NULL, 12 );  /* cannot fail as peek succeed */
@@ -111,7 +135,8 @@ static int Open( vlc_object_t * p_this )
         msg_Err( p_demux, "cannot find 'fmt ' chunk" );
         goto error;
     }
-    if( i_size < sizeof( WAVEFORMATEX ) - 2 )   /* XXX -2 isn't a typo */
+    i_size += 2;
+    if( i_size < sizeof( WAVEFORMATEX ) )
     {
         msg_Err( p_demux, "invalid 'fmt ' chunk" );
         goto error;
@@ -119,11 +144,15 @@ static int Open( vlc_object_t * p_this )
     stream_Read( p_demux->s, NULL, 8 );   /* Cannot fail */
 
     /* load waveformatex */
-    p_wf_ext = malloc( __EVEN( i_size ) + 2 );
+    p_wf_ext = malloc( i_size );
+    if( p_wf_ext == NULL )
+         goto error;
+
     p_wf = (WAVEFORMATEX *)p_wf_ext;
     p_wf->cbSize = 0;
-    if( stream_Read( p_demux->s,
-                     p_wf, __EVEN( i_size ) ) < (int)__EVEN( i_size ) )
+    i_size -= 2;
+    if( stream_Read( p_demux->s, p_wf, i_size ) != (int)i_size
+     || ( ( i_size & 1 ) && stream_Read( p_demux->s, NULL, 1 ) != 1 ) )
     {
         msg_Err( p_demux, "cannot load 'fmt ' chunk" );
         goto error;
@@ -137,17 +166,56 @@ static int Open( vlc_object_t * p_this )
     p_sys->fmt.audio.i_blockalign = GetWLE( &p_wf->nBlockAlign );
     p_sys->fmt.i_bitrate = GetDWLE( &p_wf->nAvgBytesPerSec ) * 8;
     p_sys->fmt.audio.i_bitspersample = GetWLE( &p_wf->wBitsPerSample );
-    p_sys->fmt.i_extra = GetWLE( &p_wf->cbSize );
+    if( i_size >= sizeof(WAVEFORMATEX) )
+        p_sys->fmt.i_extra = __MIN( GetWLE( &p_wf->cbSize ), i_size - sizeof(WAVEFORMATEX) );
     i_extended = 0;
 
     /* Handle new WAVE_FORMAT_EXTENSIBLE wav files */
+    /* see the following link for more information:
+     * http://www.microsoft.com/whdc/device/audio/multichaud.mspx#EFAA */
     if( GetWLE( &p_wf->wFormatTag ) == WAVE_FORMAT_EXTENSIBLE &&
-        i_size >= sizeof( WAVEFORMATEXTENSIBLE ) )
+        i_size >= sizeof( WAVEFORMATEXTENSIBLE ) &&
+        ( p_sys->fmt.i_extra + sizeof( WAVEFORMATEX )
+            >= sizeof( WAVEFORMATEXTENSIBLE ) ) )
     {
-        wf_tag_to_fourcc( GetWLE( &p_wf_ext->SubFormat ),
-                          &p_sys->fmt.i_codec, &psz_name );
+        unsigned i, i_channel_mask;
+        GUID guid_subformat;
+
+        guid_subformat = p_wf_ext->SubFormat;
+        guid_subformat.Data1 = GetDWLE( &p_wf_ext->SubFormat.Data1 );
+        guid_subformat.Data2 = GetWLE( &p_wf_ext->SubFormat.Data2 );
+        guid_subformat.Data3 = GetWLE( &p_wf_ext->SubFormat.Data3 );
+
+        sf_tag_to_fourcc( &guid_subformat, &p_sys->fmt.i_codec, &psz_name );
+
         i_extended = sizeof( WAVEFORMATEXTENSIBLE ) - sizeof( WAVEFORMATEX );
         p_sys->fmt.i_extra -= i_extended;
+
+        i_channel_mask = GetDWLE( &p_wf_ext->dwChannelMask );
+        if( i_channel_mask )
+        {
+            for( i = 0; i < sizeof(pi_channels_src)/sizeof(uint32_t); i++ )
+            {
+                if( i_channel_mask & pi_channels_src[i] )
+                    p_sys->i_channel_mask |= pi_channels_in[i];
+            }
+
+            if( p_sys->fmt.i_codec == VLC_FOURCC('a','r','a','w') ||
+                p_sys->fmt.i_codec == VLC_FOURCC('p','c','m',' ') ||
+                p_sys->fmt.i_codec == VLC_FOURCC('a','f','l','t') )
+
+            p_sys->b_chan_reorder =
+                aout_CheckChannelReorder( pi_channels_in, NULL,
+                                          p_sys->i_channel_mask,
+                                          p_sys->fmt.audio.i_channels,
+                                          p_sys->pi_chan_table );
+
+            msg_Dbg( p_demux, "channel mask: %x, reordering: %i",
+                     p_sys->i_channel_mask, (int)p_sys->b_chan_reorder );
+        }
+        p_sys->fmt.audio.i_physical_channels =
+            p_sys->fmt.audio.i_original_channels =
+                p_sys->i_channel_mask;
     }
 
     if( p_sys->fmt.i_extra > 0 )
@@ -158,7 +226,7 @@ static int Open( vlc_object_t * p_this )
     }
 
     msg_Dbg( p_demux, "format: 0x%4.4x, fourcc: %4.4s, channels: %d, "
-             "freq: %d Hz, bitrate: %dKo/s, blockalign: %d, bits/samples: %d, "
+             "freq: %u Hz, bitrate: %uKo/s, blockalign: %d, bits/samples: %d, "
              "extra size: %d",
              GetWLE( &p_wf->wFormatTag ), (char *)&p_sys->fmt.i_codec,
              p_sys->fmt.audio.i_channels, p_sys->fmt.audio.i_rate,
@@ -166,6 +234,7 @@ static int Open( vlc_object_t * p_this )
              p_sys->fmt.audio.i_bitspersample, p_sys->fmt.i_extra );
 
     free( p_wf );
+    p_wf = NULL;
 
     switch( p_sys->fmt.i_codec )
     {
@@ -173,26 +242,29 @@ static int Open( vlc_object_t * p_this )
     case VLC_FOURCC( 'a', 'f', 'l', 't' ):
     case VLC_FOURCC( 'u', 'l', 'a', 'w' ):
     case VLC_FOURCC( 'a', 'l', 'a', 'w' ):
-        FrameInfo_PCM( p_demux, &p_sys->i_frame_size, &p_sys->i_frame_length );
+    case VLC_FOURCC( 'm', 'l', 'a', 'w' ):
+    case VLC_FOURCC( 'p', 'c', 'm', ' ' ):
+        FrameInfo_PCM( p_demux, &p_sys->i_frame_size,
+                       &p_sys->i_frame_samples );
         break;
     case VLC_FOURCC( 'm', 's', 0x00, 0x02 ):
         FrameInfo_MS_ADPCM( p_demux, &p_sys->i_frame_size,
-                            &p_sys->i_frame_length );
+                            &p_sys->i_frame_samples );
         break;
     case VLC_FOURCC( 'm', 's', 0x00, 0x11 ):
         FrameInfo_IMA_ADPCM( p_demux, &p_sys->i_frame_size,
-                             &p_sys->i_frame_length );
+                             &p_sys->i_frame_samples );
         break;
     case VLC_FOURCC( 'm', 's', 0x00, 0x61 ):
     case VLC_FOURCC( 'm', 's', 0x00, 0x62 ):
         /* FIXME not sure at all FIXME */
         FrameInfo_MS_ADPCM( p_demux, &p_sys->i_frame_size,
-                            &p_sys->i_frame_length );
+                            &p_sys->i_frame_samples );
         break;
     case VLC_FOURCC( 'm', 'p', 'g', 'a' ):
     case VLC_FOURCC( 'a', '5', '2', ' ' ):
         /* FIXME set end of area FIXME */
-        goto relay;
+        goto error;
     default:
         msg_Err( p_demux, "unsupported codec (%4.4s)",
                  (char*)&p_sys->fmt.i_codec );
@@ -212,14 +284,18 @@ static int Open( vlc_object_t * p_this )
     if( p_sys->fmt.i_bitrate <= 0 )
     {
         p_sys->fmt.i_bitrate = (mtime_t)p_sys->i_frame_size *
-            I64C(8000000) / p_sys->i_frame_length;
+            p_sys->fmt.audio.i_rate * 8 / p_sys->i_frame_samples;
     }
 
     p_sys->p_es = es_out_Add( p_demux->out, &p_sys->fmt );
+
+    date_Init( &p_sys->pts, p_sys->fmt.audio.i_rate, 1 );
+    date_Set( &p_sys->pts, 1 );
+
     return VLC_SUCCESS;
 
 error:
-relay:
+    free( p_wf );
     free( p_sys );
     return VLC_EGENERIC;
 }
@@ -249,14 +325,21 @@ static int Demux( demux_t *p_demux )
         msg_Warn( p_demux, "cannot read data" );
         return 0;
     }
-    p_block->i_dts = p_block->i_pts = p_sys->i_time;
+
+    p_block->i_dts = p_block->i_pts =
+        date_Increment( &p_sys->pts, p_sys->i_frame_samples );
 
     /* set PCR */
-    es_out_Control( p_demux->out, ES_OUT_SET_PCR, p_sys->i_time );
+    es_out_Control( p_demux->out, ES_OUT_SET_PCR, p_block->i_pts );
+
+    /* Do the channel reordering */
+    if( p_sys->b_chan_reorder )
+        aout_ChannelReorder( p_block->p_buffer, p_block->i_buffer,
+                             p_sys->fmt.audio.i_channels,
+                             p_sys->pi_chan_table,
+                             p_sys->fmt.audio.i_bitspersample );
 
     es_out_Send( p_demux->out, p_sys->p_es, p_block );
-
-    p_sys->i_time += p_sys->i_frame_length;
 
     return 1;
 }
@@ -279,39 +362,40 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
 {
     demux_sys_t *p_sys  = p_demux->p_sys;
     int64_t i_end = -1;
+
     if( p_sys->i_data_size > 0 )
     {
         i_end = p_sys->i_data_pos + p_sys->i_data_size;
     }
-    return demux2_vaControlHelper( p_demux->s,
-                                   p_sys->i_data_pos, i_end,
-                                   p_sys->fmt.i_bitrate, p_sys->fmt.audio.i_blockalign,
+
+    return demux_vaControlHelper( p_demux->s, p_sys->i_data_pos, i_end,
+                                   p_sys->fmt.i_bitrate,
+                                   p_sys->fmt.audio.i_blockalign,
                                    i_query, args );
 }
 
 /*****************************************************************************
  * Local functions
  *****************************************************************************/
-static int ChunkFind( demux_t *p_demux,
-                      char *fcc, unsigned int *pi_size )
+static int ChunkFind( demux_t *p_demux, const char *fcc, unsigned int *pi_size )
 {
-    uint8_t *p_peek;
+    const uint8_t *p_peek;
 
     for( ;; )
     {
-        int i_size;
+        uint32_t i_size;
 
         if( stream_Peek( p_demux->s, &p_peek, 8 ) < 8 )
         {
-            msg_Err( p_demux, "cannot peek()" );
+            msg_Err( p_demux, "cannot peek" );
             return VLC_EGENERIC;
         }
 
         i_size = GetDWLE( p_peek + 4 );
 
-        msg_Dbg( p_demux, "Chunk: fcc=`%4.4s` size=%d", p_peek, i_size );
+        msg_Dbg( p_demux, "chunk: fcc=`%4.4s` size=%"PRIu32, p_peek, i_size );
 
-        if( !strncmp( p_peek, fcc, 4 ) )
+        if( !memcmp( p_peek, fcc, 4 ) )
         {
             if( pi_size )
             {
@@ -320,34 +404,24 @@ static int ChunkFind( demux_t *p_demux,
             return VLC_SUCCESS;
         }
 
-        i_size = __EVEN( i_size ) + 8;
-        if( stream_Read( p_demux->s, NULL, i_size ) != i_size )
-        {
+        /* Skip chunk */
+        if( stream_Read( p_demux->s, NULL, 8 ) != 8
+         || stream_Read( p_demux->s, NULL, i_size ) != i_size
+         || ((i_size & 1) && stream_Read( p_demux->s, NULL, 1 ) != 1 ))
             return VLC_EGENERIC;
-        }
     }
 }
 
-static void FrameInfo_PCM( demux_t      *p_demux,
-                           unsigned int *pi_size,
-                           mtime_t      *pi_length )
+static void FrameInfo_PCM( demux_t *p_demux, unsigned int *pi_size,
+                           int *pi_samples )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
-
-    int i_samples;
-
-    int i_bytes;
-    int i_modulo;
+    int i_bytes, i_modulo;
 
     /* read samples for 50ms of */
-    i_samples = __MAX( p_sys->fmt.audio.i_rate / 20, 1 );
+    *pi_samples = __MAX( p_sys->fmt.audio.i_rate / 20, 1 );
 
-
-    *pi_length = (mtime_t)1000000 *
-                 (mtime_t)i_samples /
-                 (mtime_t)p_sys->fmt.audio.i_rate;
-
-    i_bytes = i_samples * p_sys->fmt.audio.i_channels *
+    i_bytes = *pi_samples * p_sys->fmt.audio.i_channels *
         ( (p_sys->fmt.audio.i_bitspersample + 7) / 8 );
 
     if( p_sys->fmt.audio.i_blockalign > 0 )
@@ -361,38 +435,24 @@ static void FrameInfo_PCM( demux_t      *p_demux,
     *pi_size = i_bytes;
 }
 
-static void FrameInfo_MS_ADPCM( demux_t      *p_demux,
-                                unsigned int *pi_size,
-                                mtime_t      *pi_length )
+static void FrameInfo_MS_ADPCM( demux_t *p_demux, unsigned int *pi_size,
+                                int *pi_samples )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
 
-    int i_samples;
-
-    i_samples = 2 + 2 * ( p_sys->fmt.audio.i_blockalign -
+    *pi_samples = 2 + 2 * ( p_sys->fmt.audio.i_blockalign -
         7 * p_sys->fmt.audio.i_channels ) / p_sys->fmt.audio.i_channels;
 
-    *pi_length = (mtime_t)1000000 * (mtime_t)i_samples /
-                 (mtime_t)p_sys->fmt.audio.i_rate;
-
     *pi_size = p_sys->fmt.audio.i_blockalign;
 }
 
-static void FrameInfo_IMA_ADPCM( demux_t      *p_demux,
-                                 unsigned int *pi_size,
-                                 mtime_t      *pi_length )
+static void FrameInfo_IMA_ADPCM( demux_t *p_demux, unsigned int *pi_size,
+                                 int *pi_samples )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
 
-    int i_samples;
-
-    i_samples = 2 * ( p_sys->fmt.audio.i_blockalign -
+    *pi_samples = 2 * ( p_sys->fmt.audio.i_blockalign -
         4 * p_sys->fmt.audio.i_channels ) / p_sys->fmt.audio.i_channels;
-
-    *pi_length = (mtime_t)1000000 * (mtime_t)i_samples /
-                 (mtime_t)p_sys->fmt.audio.i_rate;
 
     *pi_size = p_sys->fmt.audio.i_blockalign;
 }
-
-

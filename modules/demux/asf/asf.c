@@ -1,8 +1,8 @@
 /*****************************************************************************
  * asf.c : ASF demux module
  *****************************************************************************
- * Copyright (C) 2002-2003 VideoLAN
- * $Id: asf.c 7621 2004-05-07 15:36:01Z gbazin $
+ * Copyright (C) 2002-2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,21 +18,31 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                      /* malloc(), free() */
 
-#include <vlc/vlc.h>
-#include <vlc/input.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
-#include "vlc_meta.h"
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_demux.h>
+#include <vlc_interface.h>
 
-#include "codecs.h"                        /* BITMAPINFOHEADER, WAVEFORMATEX */
+#include <vlc_meta.h>
+#include <vlc_access.h>                /* GET_PRIVATE_ID_STATE */
+#include <vlc_codecs.h>                /* BITMAPINFOHEADER, WAVEFORMATEX */
 #include "libasf.h"
+
+/* TODO
+ *  - add support for the newly added object: language, bitrate,
+ *                                            extended stream properties.
+ */
 
 /*****************************************************************************
  * Module descriptor
@@ -41,8 +51,10 @@ static int  Open  ( vlc_object_t * );
 static void Close ( vlc_object_t * );
 
 vlc_module_begin();
-    set_description( _("ASF v1.0 demuxer") );
-    set_capability( "demux2", 200 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
+    set_description( N_("ASF v1.0 demuxer") );
+    set_capability( "demux", 200 );
     set_callbacks( Open, Close );
     add_shortcut( "asf" );
 vlc_module_end();
@@ -70,7 +82,7 @@ typedef struct
 
 struct demux_sys_t
 {
-    mtime_t             i_time;     /* µs */
+    mtime_t             i_time;     /* s */
     mtime_t             i_length;   /* length of file file */
     int64_t             i_bitrate;  /* global file bitrate */
 
@@ -78,11 +90,12 @@ struct demux_sys_t
     asf_object_file_properties_t *p_fp;
 
     unsigned int        i_track;
-    asf_track_t         *track[128];
+    asf_track_t         *track[128]; /* track number is stored on 7 bits */
 
     int64_t             i_data_begin;
     int64_t             i_data_end;
 
+    bool          b_index;
     vlc_meta_t          *meta;
 };
 
@@ -99,20 +112,13 @@ static int Open( vlc_object_t * p_this )
     demux_t     *p_demux = (demux_t *)p_this;
     demux_sys_t *p_sys;
     guid_t      guid;
-    uint8_t     *p_peek;
+    const uint8_t     *p_peek;
 
-    /* a little test to see if it could be a asf stream */
-    if( stream_Peek( p_demux->s, &p_peek, 16 ) < 16 )
-    {
-        msg_Warn( p_demux, "ASF plugin discarded (cannot peek)" );
-        return VLC_EGENERIC;
-    }
+    /* A little test to see if it could be a asf stream */
+    if( stream_Peek( p_demux->s, &p_peek, 16 ) < 16 ) return VLC_EGENERIC;
+
     ASF_GetGUID( &guid, p_peek );
-    if( !ASF_CmpGUID( &guid, &asf_object_header_guid ) )
-    {
-        msg_Warn( p_demux, "ASF plugin discarded (not a valid file)" );
-        return VLC_EGENERIC;
-    }
+    if( !ASF_CmpGUID( &guid, &asf_object_header_guid ) ) return VLC_EGENERIC;
 
     /* Set p_demux fields */
     p_demux->pf_demux = Demux;
@@ -123,6 +129,7 @@ static int Open( vlc_object_t * p_this )
     /* Load the headers */
     if( DemuxInit( p_demux ) )
     {
+        free( p_sys );
         return VLC_EGENERIC;
     }
     return VLC_SUCCESS;
@@ -138,15 +145,19 @@ static int Demux( demux_t *p_demux )
 
     for( ;; )
     {
-        uint8_t *p_peek;
+        const uint8_t *p_peek;
         mtime_t i_length;
         mtime_t i_time_begin = GetMoviePTS( p_sys );
         int i_result;
 
-        if( p_demux->b_die )
-        {
+        if( !vlc_object_alive (p_demux) )
             break;
-        }
+#if 0
+        /* FIXME: returns EOF too early for some mms streams */
+        if( p_sys->i_data_end >= 0 &&
+                stream_Tell( p_demux->s ) >= p_sys->i_data_end )
+            return 0; /* EOF */
+#endif
 
         /* Check if we have concatenated files */
         if( stream_Peek( p_demux->s, &p_peek, 16 ) == 16 )
@@ -156,7 +167,7 @@ static int Demux( demux_t *p_demux )
             ASF_GetGUID( &guid, p_peek );
             if( ASF_CmpGUID( &guid, &asf_object_header_guid ) )
             {
-                msg_Warn( p_demux, "Found a new ASF header" );
+                msg_Warn( p_demux, "found a new ASF header" );
                 /* We end this stream */
                 DemuxEnd( p_demux );
 
@@ -164,6 +175,8 @@ static int Demux( demux_t *p_demux )
                 if( DemuxInit( p_demux ) )
                 {
                     msg_Err( p_demux, "failed to load the new header" );
+                    intf_UserFatal( p_demux, false, _("Could not demux ASF stream"),
+                                    _("VLC failed to load the ASF header.") );
                     return 0;
                 }
                 continue;
@@ -182,10 +195,7 @@ static int Demux( demux_t *p_demux )
         else
         {
             i_length = GetMoviePTS( p_sys ) - i_time_begin;
-            if( i_length < 0 || i_length >= 40 * 1000 )
-            {
-                break;
-            }
+            if( i_length < 0 || i_length >= 40 * 1000 ) break;
         }
     }
 
@@ -212,43 +222,111 @@ static void Close( vlc_object_t * p_this )
 }
 
 /*****************************************************************************
+ * SeekIndex: goto to i_date or i_percent
+ *****************************************************************************/
+static int SeekIndex( demux_t *p_demux, mtime_t i_date, float f_pos )
+{
+    demux_sys_t *p_sys = p_demux->p_sys;
+    asf_object_index_t *p_index;
+    int64_t i_pos;
+
+    msg_Dbg( p_demux, "seek with index: %i seconds, position %f",
+             (int)(i_date/1000000), f_pos );
+
+    p_index = ASF_FindObject( p_sys->p_root, &asf_object_index_guid, 0 );
+
+    if( i_date < 0 ) i_date = p_sys->i_length * f_pos;
+
+    i_pos = i_date * 10 / p_index->i_index_entry_time_interval;
+    i_pos = p_index->index_entry[i_pos].i_packet_number *
+        p_sys->p_fp->i_min_data_packet_size;
+
+    return stream_Seek( p_demux->s, p_sys->i_data_begin + i_pos );
+}
+
+/*****************************************************************************
  * Control:
  *****************************************************************************/
 static int Control( demux_t *p_demux, int i_query, va_list args )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
-    int64_t     *pi64;
+    vlc_meta_t  *p_meta;
+    int64_t     i64, *pi64;
+    double      f, *pf;
     int         i;
-    vlc_meta_t **pp_meta;
 
     switch( i_query )
     {
-        case DEMUX_SET_TIME:
-            return VLC_EGENERIC;
+    case DEMUX_GET_LENGTH:
+        pi64 = (int64_t*)va_arg( args, int64_t * );
+        *pi64 = p_sys->i_length;
+        return VLC_SUCCESS;
 
-        case DEMUX_GET_LENGTH:
-            pi64 = (int64_t*)va_arg( args, int64_t * );
-            *pi64 = p_sys->i_length;
-            return VLC_SUCCESS;
+    case DEMUX_GET_TIME:
+        pi64 = (int64_t*)va_arg( args, int64_t * );
+        if( p_sys->i_time < 0 ) return VLC_EGENERIC;
+        *pi64 = p_sys->i_time;
+        return VLC_SUCCESS;
 
-        case DEMUX_GET_META:
-            pp_meta = (vlc_meta_t**)va_arg( args, vlc_meta_t** );
-            *pp_meta = vlc_meta_Duplicate( p_sys->meta );
-            return VLC_SUCCESS;
+    case DEMUX_SET_TIME:
+        p_sys->i_time = -1;
+        for( i = 0; i < 128 ; i++ )
+            if( p_sys->track[i] ) p_sys->track[i]->i_time = -1;
 
-        case DEMUX_SET_POSITION:
-            p_sys->i_time = -1;
-            for( i = 0; i < 128 ; i++ )
-            {
-                asf_track_t *tk = p_sys->track[i];
-                if( tk ) tk->i_time = -1;
-            }
-
-        default:
-            return demux2_vaControlHelper( p_demux->s,
-                                           p_sys->i_data_begin, p_sys->i_data_end,
-                                           p_sys->i_bitrate, p_sys->p_fp->i_min_data_packet_size,
+        if( p_sys->b_index && p_sys->i_length > 0 )
+        {
+            i64 = (int64_t)va_arg( args, int64_t );
+            return SeekIndex( p_demux, i64, -1 );
+        }
+        else
+        {
+            return demux_vaControlHelper( p_demux->s, p_sys->i_data_begin,
+                                           p_sys->i_data_end, p_sys->i_bitrate,
+                                           p_sys->p_fp->i_min_data_packet_size,
                                            i_query, args );
+        }
+
+    case DEMUX_GET_POSITION:
+        if( p_sys->i_time < 0 ) return VLC_EGENERIC;
+        if( p_sys->i_length > 0 )
+        {
+            pf = (double*)va_arg( args, double * );
+            *pf = p_sys->i_time / (double)p_sys->i_length;
+            return VLC_SUCCESS;
+        }
+        return demux_vaControlHelper( p_demux->s, p_sys->i_data_begin,
+                                       p_sys->i_data_end, p_sys->i_bitrate,
+                                       p_sys->p_fp->i_min_data_packet_size,
+                                       i_query, args );
+
+    case DEMUX_SET_POSITION:
+        p_sys->i_time = -1;
+        for( i = 0; i < 128 ; i++ )
+            if( p_sys->track[i] ) p_sys->track[i]->i_time = -1;
+
+        if( p_sys->b_index && p_sys->i_length > 0 )
+        {
+            f = (double)va_arg( args, double );
+            return SeekIndex( p_demux, -1, f );
+        }
+        else
+        {
+            return demux_vaControlHelper( p_demux->s, p_sys->i_data_begin,
+                                           p_sys->i_data_end, p_sys->i_bitrate,
+                                           p_sys->p_fp->i_min_data_packet_size,
+                                           i_query, args );
+        }
+
+    case DEMUX_GET_META:
+        p_meta = (vlc_meta_t*)va_arg( args, vlc_meta_t* );
+        vlc_meta_Merge( p_meta, p_sys->meta );
+        return VLC_SUCCESS;
+
+    default:
+        return demux_vaControlHelper( p_demux->s, p_sys->i_data_begin,
+                                       p_sys->i_data_end, p_sys->i_bitrate,
+                                       p_sys->p_fp->i_min_data_packet_size,
+                                       i_query, args );
     }
 }
 
@@ -257,24 +335,17 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
  *****************************************************************************/
 static mtime_t GetMoviePTS( demux_sys_t *p_sys )
 {
-    mtime_t i_time;
+    mtime_t i_time = -1;
     int     i;
 
-    i_time = -1;
     for( i = 0; i < 128 ; i++ )
     {
         asf_track_t *tk = p_sys->track[i];
 
         if( tk && tk->p_es && tk->i_time > 0)
         {
-            if( i_time < 0 )
-            {
-                i_time = tk->i_time;
-            }
-            else
-            {
-                i_time = __MIN( i_time, tk->i_time );
-            }
+            if( i_time < 0 ) i_time = tk->i_time;
+            else i_time = __MIN( i_time, tk->i_time );
         }
     }
 
@@ -295,7 +366,7 @@ static int DemuxPacket( demux_t *p_demux )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
     int         i_data_packet_min = p_sys->p_fp->i_min_data_packet_size;
-    uint8_t     *p_peek;
+    const uint8_t *p_peek;
     int         i_skip;
 
     int         i_packet_size_left;
@@ -363,12 +434,17 @@ static int DemuxPacket( demux_t *p_demux )
     GETVALUE2b( i_packet_flags >> 1, i_packet_sequence, 0 );
     GETVALUE2b( i_packet_flags >> 3, i_packet_padding_length, 0 );
 
+    if( i_packet_padding_length > i_packet_length )
+    {
+        msg_Warn( p_demux, "Too large padding: %d", i_packet_padding_length );
+        goto loop_error_recovery;
+    }
+
     i_packet_send_time = GetDWLE( p_peek + i_skip ); i_skip += 4;
     i_packet_duration  = GetWLE( p_peek + i_skip ); i_skip += 2;
 
-//        i_packet_size_left = i_packet_length;   // XXX données reellement lu
     /* FIXME I have to do that for some file, I don't known why */
-    i_packet_size_left = i_data_packet_min;
+    i_packet_size_left = i_data_packet_min /*i_packet_length*/ ;
 
     if( b_packet_multiple_payload )
     {
@@ -386,6 +462,7 @@ static int DemuxPacket( demux_t *p_demux )
     {
         asf_track_t   *tk;
 
+        int i_packet_keyframe;
         int i_stream_number;
         int i_media_object_number;
         int i_media_object_offset;
@@ -404,8 +481,8 @@ static int DemuxPacket( demux_t *p_demux )
             break;
         }
 
-        i_stream_number = p_peek[i_skip] & 0x7f;
-        i_skip++;
+        i_packet_keyframe = p_peek[i_skip] >> 7;
+        i_stream_number = p_peek[i_skip++] & 0x7f;
 
         GETVALUE2b( i_packet_property >> 4, i_media_object_number, 0 );
         GETVALUE2b( i_packet_property >> 2, i_tmp, 0 );
@@ -426,8 +503,7 @@ static int DemuxPacket( demux_t *p_demux )
         }
         else if( i_replicated_data_length == 1 )
         {
-
-            msg_Dbg( p_demux, "found compressed payload" );
+            /* msg_Dbg( p_demux, "found compressed payload" ); */
 
             i_pts = (mtime_t)i_tmp * 1000;
             i_pts_delta = (mtime_t)p_peek[i_skip] * 1000; i_skip++;
@@ -450,10 +526,10 @@ static int DemuxPacket( demux_t *p_demux )
         else
         {
             i_payload_data_length = i_packet_length -
-                                        i_packet_padding_length - i_skip;
+                                    i_packet_padding_length - i_skip;
         }
 
-        if( i_payload_data_length < 0 || i_skip + i_payload_data_length > i_packet_size_left )
+        if( i_payload_data_length < 0 || i_payload_data_length > i_packet_size_left )
         {
             break;
         }
@@ -553,10 +629,18 @@ static int DemuxPacket( demux_t *p_demux )
 
     if( i_packet_size_left > 0 )
     {
+#ifdef ASF_DEBUG
+        if( i_packet_size_left > i_packet_padding_length )
+            msg_Warn( p_demux, "Didn't read %d bytes in the packet",
+                            i_packet_size_left - i_packet_padding_length );
+        else if( i_packet_size_left < i_packet_padding_length )
+            msg_Warn( p_demux, "Read %d too much bytes in the packet",
+                            i_packet_padding_length - i_packet_size_left );
+#endif
         if( stream_Read( p_demux->s, NULL, i_packet_size_left )
                                                          < i_packet_size_left )
         {
-            msg_Warn( p_demux, "cannot skip data, EOF ?" );
+            msg_Err( p_demux, "cannot skip data, EOF ?" );
             return 0;
         }
     }
@@ -570,7 +654,11 @@ loop_error_recovery:
         msg_Err( p_demux, "unsupported packet header, fatal error" );
         return -1;
     }
-    stream_Read( p_demux->s, NULL, i_data_packet_min );
+    if( stream_Read( p_demux->s, NULL, i_data_packet_min ) != i_data_packet_min )
+    {
+        msg_Warn( p_demux, "cannot skip data, EOF ?" );
+        return 0;
+    }
 
     return 1;
 }
@@ -581,11 +669,11 @@ loop_error_recovery:
 static int DemuxInit( demux_t *p_demux )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
-    vlc_bool_t  b_seekable;
-    int         i;
-
-    unsigned int    i_stream;
+    bool b_seekable;
+    unsigned int i_stream, i;
     asf_object_content_description_t *p_cd;
+    asf_object_index_t *p_index;
+    bool b_index;
 
     /* init context */
     p_sys->i_time   = -1;
@@ -593,6 +681,7 @@ static int DemuxInit( demux_t *p_demux )
     p_sys->i_bitrate = 0;
     p_sys->p_root   = NULL;
     p_sys->p_fp     = NULL;
+    p_sys->b_index  = 0;
     p_sys->i_track  = 0;
     for( i = 0; i < 128; i++ )
     {
@@ -604,7 +693,7 @@ static int DemuxInit( demux_t *p_demux )
 
     /* Now load all object ( except raw data ) */
     stream_Control( p_demux->s, STREAM_CAN_FASTSEEK, &b_seekable );
-    if( (p_sys->p_root = ASF_ReadObjectRoot( p_demux->s, b_seekable )) == NULL )
+    if( !(p_sys->p_root = ASF_ReadObjectRoot(p_demux->s, b_seekable)) )
     {
         msg_Warn( p_demux, "ASF plugin discarded (not a valid file)" );
         return VLC_EGENERIC;
@@ -625,12 +714,17 @@ static int DemuxInit( demux_t *p_demux )
         goto error;
     }
 
+    /* check if index is available */
+    p_index = ASF_FindObject( p_sys->p_root, &asf_object_index_guid, 0 );
+    b_index = p_index && p_index->i_index_entry_count;
+
     msg_Dbg( p_demux, "found %d streams", p_sys->i_track );
 
     for( i_stream = 0; i_stream < p_sys->i_track; i_stream ++ )
     {
         asf_track_t    *tk;
         asf_object_stream_properties_t *p_sp;
+        bool b_access_selected;
 
         p_sp = ASF_FindObject( p_sys->p_root->p_hdr,
                                &asf_object_stream_properties_guid,
@@ -644,26 +738,43 @@ static int DemuxInit( demux_t *p_demux )
         tk->p_es = NULL;
         tk->p_frame = NULL;
 
+        /* Check (in case of mms) if this track is selected (ie will receive data) */
+        if( !stream_Control( p_demux->s, STREAM_CONTROL_ACCESS, ACCESS_GET_PRIVATE_ID_STATE,
+                             p_sp->i_stream_number, &b_access_selected ) &&
+            !b_access_selected )
+        {
+            tk->i_cat = UNKNOWN_ES;
+            msg_Dbg( p_demux, "ignoring not selected stream(ID:%d) (by access)",
+                     p_sp->i_stream_number );
+            continue;
+        }
+
         if( ASF_CmpGUID( &p_sp->i_stream_type, &asf_object_stream_type_audio ) &&
             p_sp->i_type_specific_data_length >= sizeof( WAVEFORMATEX ) - 2 )
         {
-            es_format_t  fmt;
-            uint8_t      *p_data = p_sp->p_type_specific_data;
+            es_format_t fmt;
+            uint8_t *p_data = p_sp->p_type_specific_data;
+            int i_format;
 
             es_format_Init( &fmt, AUDIO_ES, 0 );
-            wf_tag_to_fourcc( GetWLE( &p_data[0] ), &fmt.i_codec, NULL );
+            i_format = GetWLE( &p_data[0] );
+            wf_tag_to_fourcc( i_format, &fmt.i_codec, NULL );
             fmt.audio.i_channels        = GetWLE(  &p_data[2] );
             fmt.audio.i_rate      = GetDWLE( &p_data[4] );
             fmt.i_bitrate         = GetDWLE( &p_data[8] ) * 8;
             fmt.audio.i_blockalign      = GetWLE(  &p_data[12] );
             fmt.audio.i_bitspersample   = GetWLE(  &p_data[14] );
 
-            if( p_sp->i_type_specific_data_length > sizeof( WAVEFORMATEX ) )
+            if( p_sp->i_type_specific_data_length > sizeof( WAVEFORMATEX ) &&
+                i_format != WAVE_FORMAT_MPEGLAYER3 &&
+                i_format != WAVE_FORMAT_MPEG )
             {
                 fmt.i_extra = __MIN( GetWLE( &p_data[16] ),
-                                     p_sp->i_type_specific_data_length - sizeof( WAVEFORMATEX ) );
+                                     p_sp->i_type_specific_data_length -
+                                     sizeof( WAVEFORMATEX ) );
                 fmt.p_extra = malloc( fmt.i_extra );
-                memcpy( fmt.p_extra, &p_data[sizeof( WAVEFORMATEX )], fmt.i_extra );
+                memcpy( fmt.p_extra, &p_data[sizeof( WAVEFORMATEX )],
+                        fmt.i_extra );
             }
 
             tk->i_cat = AUDIO_ES;
@@ -673,31 +784,128 @@ static int DemuxInit( demux_t *p_demux )
             msg_Dbg( p_demux, "added new audio stream(codec:0x%x,ID:%d)",
                     GetWLE( p_data ), p_sp->i_stream_number );
         }
-        else if( ASF_CmpGUID( &p_sp->i_stream_type, &asf_object_stream_type_video ) &&
-                 p_sp->i_type_specific_data_length >= 11 + sizeof( BITMAPINFOHEADER ) )
+        else if( ASF_CmpGUID( &p_sp->i_stream_type,
+                              &asf_object_stream_type_video ) &&
+                 p_sp->i_type_specific_data_length >= 11 +
+                 sizeof( BITMAPINFOHEADER ) )
         {
             es_format_t  fmt;
             uint8_t      *p_data = &p_sp->p_type_specific_data[11];
 
             es_format_Init( &fmt, VIDEO_ES,
-                            VLC_FOURCC( p_data[16], p_data[17], p_data[18], p_data[19] ) );
+                            VLC_FOURCC( p_data[16], p_data[17],
+                                        p_data[18], p_data[19] ) );
             fmt.video.i_width = GetDWLE( p_data + 4 );
             fmt.video.i_height= GetDWLE( p_data + 8 );
 
-            if( p_sp->i_type_specific_data_length > 11 + sizeof( BITMAPINFOHEADER ) )
+
+            if( fmt.i_codec == VLC_FOURCC( 'D','V','R',' ') )
+            {
+                /* DVR-MS special ASF */
+                fmt.i_codec = VLC_FOURCC( 'm','p','g','2' ) ;
+                fmt.b_packetized = false;
+            }
+
+            if( p_sp->i_type_specific_data_length > 11 +
+                sizeof( BITMAPINFOHEADER ) )
             {
                 fmt.i_extra = __MIN( GetDWLE( p_data ),
-                                     p_sp->i_type_specific_data_length - 11 - sizeof( BITMAPINFOHEADER ) );
+                                     p_sp->i_type_specific_data_length - 11 -
+                                     sizeof( BITMAPINFOHEADER ) );
                 fmt.p_extra = malloc( fmt.i_extra );
-                memcpy( fmt.p_extra, &p_data[sizeof( BITMAPINFOHEADER )], fmt.i_extra );
+                memcpy( fmt.p_extra, &p_data[sizeof( BITMAPINFOHEADER )],
+                        fmt.i_extra );
             }
+
+            /* Look for an aspect ratio */
+            if( p_sys->p_root->p_metadata )
+            {
+                asf_object_metadata_t *p_meta = p_sys->p_root->p_metadata;
+                int i_aspect_x = 0, i_aspect_y = 0;
+                unsigned int i;
+
+                for( i = 0; i < p_meta->i_record_entries_count; i++ )
+                {
+                    if( !strcmp( p_meta->record[i].psz_name, "AspectRatioX" ) )
+                    {
+                        if( (!i_aspect_x && !p_meta->record[i].i_stream) ||
+                            p_meta->record[i].i_stream ==
+                            p_sp->i_stream_number )
+                            i_aspect_x = p_meta->record[i].i_val;
+                    }
+                    if( !strcmp( p_meta->record[i].psz_name, "AspectRatioY" ) )
+                    {
+                        if( (!i_aspect_y && !p_meta->record[i].i_stream) ||
+                            p_meta->record[i].i_stream ==
+                            p_sp->i_stream_number )
+                            i_aspect_y = p_meta->record[i].i_val;
+                    }
+                }
+
+                if( i_aspect_x && i_aspect_y )
+                {
+                    fmt.video.i_aspect = i_aspect_x *
+                        (int64_t)fmt.video.i_width * VOUT_ASPECT_FACTOR /
+                        fmt.video.i_height / i_aspect_y;
+                }
+        }
 
             tk->i_cat = VIDEO_ES;
             tk->p_es = es_out_Add( p_demux->out, &fmt );
             es_format_Clean( &fmt );
 
+            /* If there is a video track then use the index for seeking */
+            p_sys->b_index = b_index;
+
             msg_Dbg( p_demux, "added new video stream(ID:%d)",
                      p_sp->i_stream_number );
+        }
+        else if( ASF_CmpGUID( &p_sp->i_stream_type, &asf_object_extended_stream_header ) &&
+            p_sp->i_type_specific_data_length >= 64 )
+        {
+            /* Now follows a 64 byte header of which we don't know much */
+            es_format_t fmt;
+            guid_t  *p_ref  = (guid_t *)p_sp->p_type_specific_data;
+            uint8_t *p_data = p_sp->p_type_specific_data + 64;
+            unsigned int i_data = p_sp->i_type_specific_data_length - 64;
+
+            msg_Dbg( p_demux, "Ext stream header detected. datasize = %d", p_sp->i_type_specific_data_length );
+            if( ASF_CmpGUID( p_ref, &asf_object_extended_stream_type_audio ) &&
+                i_data >= sizeof( WAVEFORMATEX ) - 2)
+            {
+                int      i_format;
+                es_format_Init( &fmt, AUDIO_ES, 0 );
+                i_format = GetWLE( &p_data[0] );
+                if( i_format == 0 )
+                    fmt.i_codec = VLC_FOURCC( 'a','5','2',' ');
+                else
+                    wf_tag_to_fourcc( i_format, &fmt.i_codec, NULL );
+                fmt.audio.i_channels        = GetWLE(  &p_data[2] );
+                fmt.audio.i_rate      = GetDWLE( &p_data[4] );
+                fmt.i_bitrate         = GetDWLE( &p_data[8] ) * 8;
+                fmt.audio.i_blockalign      = GetWLE(  &p_data[12] );
+                fmt.audio.i_bitspersample   = GetWLE(  &p_data[14] );
+                fmt.b_packetized = true;
+
+                if( p_sp->i_type_specific_data_length > sizeof( WAVEFORMATEX ) &&
+                    i_format != WAVE_FORMAT_MPEGLAYER3 &&
+                    i_format != WAVE_FORMAT_MPEG )
+                {
+                    fmt.i_extra = __MIN( GetWLE( &p_data[16] ),
+                                         p_sp->i_type_specific_data_length -
+                                         sizeof( WAVEFORMATEX ) );
+                    fmt.p_extra = malloc( fmt.i_extra );
+                    memcpy( fmt.p_extra, &p_data[sizeof( WAVEFORMATEX )],
+                        fmt.i_extra );
+                }
+
+                tk->i_cat = AUDIO_ES;
+                tk->p_es = es_out_Add( p_demux->out, &fmt );
+                es_format_Clean( &fmt );
+
+                msg_Dbg( p_demux, "added new audio stream (codec:0x%x,ID:%d)",
+                    i_format, p_sp->i_stream_number );
+            }
         }
         else
         {
@@ -717,7 +925,6 @@ static int DemuxInit( demux_t *p_demux )
     { /* live/broacast */
         p_sys->i_data_end = -1;
     }
-
 
     /* go to first packet */
     stream_Seek( p_demux->s, p_sys->i_data_begin );
@@ -748,7 +955,7 @@ static int DemuxInit( demux_t *p_demux )
         }
     }
 
-    /* Create meta informations */
+    /* Create meta information */
     p_sys->meta = vlc_meta_New();
 
     if( ( p_cd = ASF_FindObject( p_sys->p_root->p_hdr,
@@ -756,25 +963,27 @@ static int DemuxInit( demux_t *p_demux )
     {
         if( p_cd->psz_title && *p_cd->psz_title )
         {
-            vlc_meta_Add( p_sys->meta, VLC_META_TITLE, p_cd->psz_title );
+            vlc_meta_SetTitle( p_sys->meta, p_cd->psz_title );
         }
-        if( p_cd->psz_author && *p_cd->psz_author )
+        if( p_cd->psz_artist && *p_cd->psz_artist )
         {
-             vlc_meta_Add( p_sys->meta, VLC_META_AUTHOR, p_cd->psz_author );
+             vlc_meta_SetArtist( p_sys->meta, p_cd->psz_artist );
         }
         if( p_cd->psz_copyright && *p_cd->psz_copyright )
         {
-            vlc_meta_Add( p_sys->meta, VLC_META_COPYRIGHT, p_cd->psz_copyright );
+            vlc_meta_SetCopyright( p_sys->meta, p_cd->psz_copyright );
         }
         if( p_cd->psz_description && *p_cd->psz_description )
         {
-            vlc_meta_Add( p_sys->meta, VLC_META_DESCRIPTION, p_cd->psz_description );
+            vlc_meta_SetDescription( p_sys->meta, p_cd->psz_description );
         }
         if( p_cd->psz_rating && *p_cd->psz_rating )
         {
-            vlc_meta_Add( p_sys->meta, VLC_META_RATING, p_cd->psz_rating );
+            vlc_meta_SetRating( p_sys->meta, p_cd->psz_rating );
         }
     }
+    /// \tood Fix Child meta for ASF tracks
+#if 0
     for( i_stream = 0, i = 0; i < 128; i++ )
     {
         asf_object_codec_list_t *p_cl = ASF_FindObject( p_sys->p_root->p_hdr,
@@ -803,6 +1012,7 @@ static int DemuxInit( demux_t *p_demux )
             i_stream++;
         }
     }
+#endif
 
     es_out_Control( p_demux->out, ES_OUT_RESET_PCR );
     return VLC_SUCCESS;

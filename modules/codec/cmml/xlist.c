@@ -3,9 +3,9 @@
  *****************************************************************************
  * Copyright (C) 2003-2004 Commonwealth Scientific and Industrial Research
  *                         Organisation (CSIRO) Australia
- * Copyright (C) 2000-2004 VideoLAN
+ * Copyright (C) 2000-2004 the VideoLAN team
  *
- * $Id: xlist.c 7397 2004-04-20 17:27:30Z sam $
+ * $Id$
  *
  * Authors: Conrad Parker <Conrad.Parker@csiro.au>
  *          Andre Pang <Andre.Pang@csiro.au>
@@ -22,8 +22,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #include <stdlib.h>
 
@@ -114,7 +117,7 @@ xlist_append (XList * list, void * data)
 
   last = xlist_tail (list);
   if (last) last->next = l;
-  l->prev = last; 
+  l->prev = last;
   return list;
 }
 
@@ -134,7 +137,7 @@ xlist_add_before (XList * list, void * data, XList * node)
   l->next = node;
   if (p) p->next = l;
   node->prev = l;
-  
+ 
   return list;
 }
 

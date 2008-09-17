@@ -1,8 +1,8 @@
 /*****************************************************************************
  * arts.c : aRts module
  *****************************************************************************
- * Copyright (C) 2001-2002 VideoLAN
- * $Id: arts.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001-2002 the VideoLAN team
+ * $Id$
  *
  * Authors: Emmanuel Blindauer <manu@agat.net>
  *          Samuel Hocevar <sam@zoy.org>
@@ -19,22 +19,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <errno.h>                                                 /* ENOMEM */
-#include <fcntl.h>                                       /* open(), O_WRONLY */
-#include <string.h>                                            /* strerror() */
 #include <unistd.h>                                      /* write(), close() */
-#include <stdlib.h>                            /* calloc(), malloc(), free() */
 
-#include <vlc/vlc.h>
-#include <vlc/aout.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
-#include "aout_internal.h"
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_aout.h>
 
 #include <artsc.h>
 
@@ -63,8 +62,11 @@ static void Play         ( aout_instance_t * );
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-   set_description( _("aRts audio output") );
+   set_shortname( "aRts" );
+   set_description( N_("aRts audio output") );
    set_capability( "audio output", 50 );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_AOUT );
    set_callbacks( Open, Close );
 vlc_module_end();
 
@@ -81,10 +83,7 @@ static int Open( vlc_object_t *p_this )
     /* Allocate structure */
     p_sys = malloc( sizeof( aout_sys_t ) );
     if( p_sys == NULL )
-    {
-        msg_Err( p_aout, "out of memory" );
         return VLC_ENOMEM;
-    }
     p_aout->output.p_sys = p_sys;
 
     i_err = arts_init();

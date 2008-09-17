@@ -1,0 +1,13 @@
+Index: vlc-debian/modules/misc/freetype.c
+===================================================================
+--- vlc-debian.orig/modules/misc/freetype.c	2008-06-01 00:46:01.000000000 +0200
++++ vlc-debian/modules/misc/freetype.c	2008-06-01 11:38:57.000000000 +0200
+@@ -61,7 +61,7 @@
+ #define DEFAULT_FONT "" /* Default font found at run-time */
+ #define FC_DEFAULT_FONT "Arial"
+ #else
+-#define DEFAULT_FONT "/usr/share/fonts/truetype/freefont/FreeSerifBold.ttf"
++#define DEFAULT_FONT "/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans-Bold.ttf"
+ #define FC_DEFAULT_FONT "Serif Bold"
+ #endif
+ 

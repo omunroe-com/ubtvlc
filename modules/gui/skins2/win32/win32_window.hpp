@@ -1,11 +1,11 @@
 /*****************************************************************************
  * win32_window.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: win32_window.hpp 7369 2004-04-18 18:11:51Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef WIN32_WINDOW_HPP
@@ -71,6 +71,8 @@ class Win32Window: public OSWindow
         LPDROPTARGET m_pDropTarget;
         /// Indicates whether the window is layered
         mutable bool m_isLayered;
+        /// Parent window
+        Win32Window *m_pParent;
 };
 
 

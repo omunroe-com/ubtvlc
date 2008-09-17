@@ -3,9 +3,9 @@
  *****************************************************************************
  * Copyright (C) 2003-2004 Commonwealth Scientific and Industrial Research
  *                         Organisation (CSIRO) Australia
- * Copyright (C) 2000-2004 VideoLAN
+ * Copyright (C) 2000-2004 the VideoLAN team
  *
- * $Id: xtag.c 7397 2004-04-20 17:27:30Z sam $
+ * $Id$
  *
  * Authors: Conrad Parker <Conrad.Parker@csiro.au>
  *          Andre Pang <Andre.Pang@csiro.au>
@@ -22,18 +22,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
-
-#include "config.h"
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #include <ctype.h>
-#include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <xlist.h>
+
+#include <assert.h>
 
 #undef XTAG_DEBUG
 
@@ -79,6 +82,15 @@ struct _XTagParser {
   char * start;
   char * end;
 };
+
+XTag * xtag_free (XTag * xtag);
+XTag * xtag_new_parse (const char * s, int n);
+char * xtag_get_name (XTag * xtag);
+char * xtag_get_pcdata (XTag * xtag);
+char * xtag_get_attribute (XTag * xtag, char * attribute);
+XTag * xtag_first_child (XTag * xtag, char * name);
+XTag * xtag_next_child (XTag * xtag, char * name);
+int    xtag_snprint (char * buf, int n, XTag * xtag);
 
 /* Character classes */
 #define X_NONE           0
@@ -176,7 +188,7 @@ xtag_skip_to (XTagParser * parser, int char_class)
     }
   }
 
-  return;  
+  return;
 }
 #endif
 
@@ -381,7 +393,7 @@ xtag_parse_tag (XTagParser * parser)
     xtag_assert_and_pass (parser, X_SLASH);
     name = xtag_slurp_to (parser, X_WHITESPACE | X_CLOSETAG, X_NONE);
     if (name) {
-      if (strcmp (name, tag->name)) {
+      if (name && tag->name && strcmp (name, tag->name)) {
 #ifdef XTAG_DEBUG
         printf ("got %s expected %s\n", name, tag->name);
 #endif
@@ -411,14 +423,14 @@ xtag_free (XTag * xtag)
 
   if (xtag == NULL) return NULL;
 
-  if (xtag->name) free (xtag->name);
-  if (xtag->pcdata) free (xtag->pcdata);
+  free( xtag->name );
+  free( xtag->pcdata );
 
   for (l = xtag->attributes; l; l = l->next) {
     if ((attr = (XAttribute *)l->data) != NULL) {
-      if (attr->name) free (attr->name);
-      if (attr->value) free (attr->value);
-      free (attr);
+      free( attr->name );
+      free( attr->value );
+      free( attr );
     }
   }
   xlist_free (xtag->attributes);
@@ -525,7 +537,7 @@ xtag_get_attribute (XTag * xtag, char * attribute)
 
   for (l = xtag->attributes; l; l = l->next) {
     if ((attr = (XAttribute *)l->data) != NULL) {
-      if (!strcmp (attr->name, attribute))
+      if (attr->name && attribute && !strcmp (attr->name, attribute))
         return attr->value;
     }
   }
@@ -551,7 +563,7 @@ xtag_first_child (XTag * xtag, char * name)
   for (; l; l = l->next) {
     child = (XTag *)l->data;
 
-    if (!strcmp(child->name, name)) {
+    if (child->name && name && !strcmp(child->name, name)) {
       xtag->current_child = l;
       return child;
     }
@@ -584,7 +596,7 @@ xtag_next_child (XTag * xtag, char * name)
   for (; l; l = l->next) {
     child = (XTag *)l->data;
 
-    if (!strcmp(child->name, name)) {
+    if (child->name && name && !strcmp(child->name, name)) {
       xtag->current_child = l;
       return child;
     }
@@ -609,7 +621,7 @@ xtag_snprints (char * buf, int n, ...)
   int len, to_copy, total = 0;
 
   va_start (ap, n);
-  
+ 
   for (s = va_arg (ap, char *); s; s = va_arg (ap, char *)) {
     len = strlen (s);
 
@@ -658,19 +670,19 @@ xtag_snprint (char * buf, int n, XTag * xtag)
 
     for (l = xtag->attributes; l; l = l->next) {
       attr = (XAttribute *)l->data;
-      
+ 
       nn = xtag_snprints (buf, n, " ", attr->name, "=\"", attr->value, "\"",
                           NULL);
       FORWARD(nn);
     }
-    
+ 
     if (xtag->children == NULL) {
       nn = xtag_snprints (buf, n, "/>", NULL);
       FORWARD(nn);
 
       return written;
     }
-    
+ 
     nn = xtag_snprints (buf, n, ">", NULL);
     FORWARD(nn);
   }

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * clone.c : Clone video plugin for vlc
  *****************************************************************************
- * Copyright (C) 2002, 2003 VideoLAN
- * $Id: clone.c 7522 2004-04-27 16:35:15Z sam $
+ * Copyright (C) 2002, 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,17 +18,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                      /* malloc(), free() */
-#include <string.h>
 
-#include <vlc/vlc.h>
-#include <vlc/vout.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_vout.h>
 
 #include "filter_common.h"
 
@@ -53,22 +56,32 @@ static int  SendEvents( vlc_object_t *, char const *,
  * Module descriptor
  *****************************************************************************/
 #define COUNT_TEXT N_("Number of clones")
-#define COUNT_LONGTEXT N_("Select the number of video windows in which to "\
-    "clone the video")
+#define COUNT_LONGTEXT N_("Number of video windows in which to "\
+    "clone the video.")
 
-#define VOUTLIST_TEXT N_("List of video output modules")
-#define VOUTLIST_LONGTEXT N_("Select the specific video output modules that you want to activate")
+#define VOUTLIST_TEXT N_("Video output modules")
+#define VOUTLIST_LONGTEXT N_("You can use specific video output modules " \
+        "for the clones. Use a comma-separated list of modules." )
+
+#define CFG_PREFIX "clone-"
 
 vlc_module_begin();
-    set_description( _("Clone video filter") );
+    set_description( N_("Clone video filter") );
     set_capability( "video filter", 0 );
-    
-    add_integer( "clone-count", 2, NULL, COUNT_TEXT, COUNT_LONGTEXT, VLC_FALSE );
-    add_string ( "clone-vout-list", NULL, NULL, VOUTLIST_TEXT, VOUTLIST_LONGTEXT, VLC_FALSE );
-    
+    set_shortname( N_("Clone" ));
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VFILTER );
+
+    add_integer( CFG_PREFIX "count", 2, NULL, COUNT_TEXT, COUNT_LONGTEXT, false );
+    add_string ( CFG_PREFIX "vout-list", NULL, NULL, VOUTLIST_TEXT, VOUTLIST_LONGTEXT, true );
+
     add_shortcut( "clone" );
     set_callbacks( Create, Destroy );
 vlc_module_end();
+
+static const char *const ppsz_filter_options[] = {
+    "count", "vout-list", NULL
+};
 
 /*****************************************************************************
  * vout_sys_t: Clone video output method descriptor
@@ -114,10 +127,7 @@ static int Create( vlc_object_t *p_this )
     /* Allocate structure */
     p_vout->p_sys = malloc( sizeof( vout_sys_t ) );
     if( p_vout->p_sys == NULL )
-    {
-        msg_Err( p_vout, "out of memory" );
         return VLC_ENOMEM;
-    }
 
     p_vout->pf_init = Init;
     p_vout->pf_end = End;
@@ -126,7 +136,11 @@ static int Create( vlc_object_t *p_this )
     p_vout->pf_display = NULL;
     p_vout->pf_control = Control;
 
-    psz_clonelist = config_GetPsz( p_vout, "clone-vout-list" );
+    config_ChainParse( p_vout, CFG_PREFIX, ppsz_filter_options,
+                       p_vout->p_cfg );
+
+    psz_clonelist = var_CreateGetNonEmptyString( p_vout,
+                                                 CFG_PREFIX "vout-list" );
     if( psz_clonelist )
     {
         int i_dummy;
@@ -146,7 +160,7 @@ static int Create( vlc_object_t *p_this )
                                                 * sizeof(char *) );
         if( !p_vout->p_sys->ppsz_vout_list )
         {
-            msg_Err( p_vout, "out of memory" );
+            free( psz_clonelist );
             free( p_vout->p_sys );
             return VLC_ENOMEM;
         }
@@ -174,7 +188,8 @@ static int Create( vlc_object_t *p_this )
     {
         /* No list was specified. We will use the default vout, and get
          * the number of clones from clone-count */
-        p_vout->p_sys->i_clones = config_GetInt( p_vout, "clone-count" );
+        p_vout->p_sys->i_clones =
+            var_CreateGetInteger( p_vout, CFG_PREFIX "count" );
         p_vout->p_sys->ppsz_vout_list = NULL;
     }
 
@@ -202,14 +217,18 @@ static int Init( vout_thread_t *p_vout )
     int   i_index, i_vout;
     picture_t *p_pic;
     char *psz_default_vout;
+    video_format_t fmt;
 
     I_OUTPUTPICTURES = 0;
+    memset( &fmt, 0, sizeof(video_format_t) );
 
     /* Initialize the output structure */
     p_vout->output.i_chroma = p_vout->render.i_chroma;
     p_vout->output.i_width  = p_vout->render.i_width;
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
+    p_vout->fmt_out = p_vout->fmt_in;
+    fmt = p_vout->fmt_out;
 
     /* Try to open the real video output */
     msg_Dbg( p_vout, "spawning the real video outputs" );
@@ -219,14 +238,12 @@ static int Init( vout_thread_t *p_vout )
 
     for( i_vout = 0; i_vout < p_vout->p_sys->i_clones; i_vout++ )
     {
-        if( p_vout->p_sys->ppsz_vout_list == NULL 
+        if( p_vout->p_sys->ppsz_vout_list == NULL
             || ( !strncmp( p_vout->p_sys->ppsz_vout_list[i_vout],
                            "default", 8 ) ) )
         {
             p_vout->p_sys->pp_vout[i_vout] =
-                vout_Create( p_vout, p_vout->render.i_width,
-                             p_vout->render.i_height, p_vout->render.i_chroma, 
-                             p_vout->render.i_aspect );
+                vout_Create( p_vout, &fmt );
         }
         else
         {
@@ -234,9 +251,7 @@ static int Init( vout_thread_t *p_vout )
             config_PutPsz( p_vout, "vout",
                            p_vout->p_sys->ppsz_vout_list[i_vout] );
             p_vout->p_sys->pp_vout[i_vout] =
-                vout_Create( p_vout, p_vout->render.i_width,
-                             p_vout->render.i_height, p_vout->render.i_chroma, 
-                             p_vout->render.i_aspect );
+                vout_Create( p_vout, &fmt );
 
             /* Reset the default value */
             config_PutPsz( p_vout, "vout", psz_default_vout );
@@ -247,7 +262,7 @@ static int Init( vout_thread_t *p_vout )
             msg_Err( p_vout, "failed to clone %i vout threads",
                      p_vout->p_sys->i_clones );
             p_vout->p_sys->i_clones = i_vout;
-            if( psz_default_vout ) free( psz_default_vout );
+            free( psz_default_vout );
             RemoveAllVout( p_vout );
             return VLC_EGENERIC;
         }
@@ -255,7 +270,7 @@ static int Init( vout_thread_t *p_vout )
         ADD_CALLBACKS( p_vout->p_sys->pp_vout[ i_vout ], SendEvents );
     }
 
-    if( psz_default_vout ) free( psz_default_vout );
+    free( psz_default_vout );
     ALLOCATE_DIRECTBUFFERS( VOUT_MAX_PICTURES );
 
     ADD_PARENT_CALLBACKS( SendEventsToChild );
@@ -270,12 +285,16 @@ static void End( vout_thread_t *p_vout )
 {
     int i_index;
 
+    DEL_PARENT_CALLBACKS( SendEventsToChild );
+
     /* Free the fake output buffers we allocated */
     for( i_index = I_OUTPUTPICTURES ; i_index ; )
     {
         i_index--;
         free( PP_OUTPUTPICTURE[ i_index ]->p_data_orig );
     }
+
+    RemoveAllVout( p_vout );
 }
 
 /*****************************************************************************
@@ -286,10 +305,6 @@ static void End( vout_thread_t *p_vout )
 static void Destroy( vlc_object_t *p_this )
 {
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
-
-    RemoveAllVout( p_vout );
-
-    DEL_PARENT_CALLBACKS( SendEventsToChild );
 
     free( p_vout->p_sys->pp_vout );
     free( p_vout->p_sys );
@@ -313,7 +328,7 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
             vout_CreatePicture( p_vout->p_sys->pp_vout[ i_vout ], 0, 0, 0 )
                ) == NULL )
         {
-            if( p_vout->b_die || p_vout->b_error )
+            if( !vlc_object_alive (p_vout) || p_vout->b_error )
             {
                 vout_DestroyPicture(
                     p_vout->p_sys->pp_vout[ i_vout ], p_outpic );
@@ -340,16 +355,17 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
             if( i_in_pitch == i_copy_pitch
                  && i_out_pitch == i_copy_pitch )
             {
-                p_vout->p_vlc->pf_memcpy( p_out, p_in, i_in_pitch
-                                           * p_outpic->p[i_plane].i_lines );
+                vlc_memcpy( p_out, p_in, i_in_pitch
+                                     * p_outpic->p[i_plane].i_visible_lines );
             }
             else
             {
-                p_in_end = p_in + i_in_pitch * p_outpic->p[i_plane].i_lines;
+                p_in_end = p_in + i_in_pitch *
+                    p_outpic->p[i_plane].i_visible_lines;
 
                 while( p_in < p_in_end )
                 {
-                    p_vout->p_vlc->pf_memcpy( p_out, p_in, i_copy_pitch );
+                    vlc_memcpy( p_out, p_in, i_copy_pitch );
                     p_in += i_in_pitch;
                     p_out += i_out_pitch;
                 }
@@ -371,8 +387,7 @@ static void RemoveAllVout( vout_thread_t *p_vout )
          --p_vout->p_sys->i_clones;
          DEL_CALLBACKS( p_vout->p_sys->pp_vout[p_vout->p_sys->i_clones],
                         SendEvents );
-         vlc_object_detach( p_vout->p_sys->pp_vout[p_vout->p_sys->i_clones] );
-         vout_Destroy( p_vout->p_sys->pp_vout[p_vout->p_sys->i_clones] );
+         vout_CloseAndRelease( p_vout->p_sys->pp_vout[p_vout->p_sys->i_clones] );
     }
 }
 
@@ -382,6 +397,7 @@ static void RemoveAllVout( vout_thread_t *p_vout )
 static int SendEvents( vlc_object_t *p_this, char const *psz_var,
                        vlc_value_t oldval, vlc_value_t newval, void *p_data )
 {
+    VLC_UNUSED(p_this); VLC_UNUSED(oldval);
     var_Set( (vlc_object_t *)p_data, psz_var, newval );
 
     return VLC_SUCCESS;
@@ -393,6 +409,7 @@ static int SendEvents( vlc_object_t *p_this, char const *psz_var,
 static int SendEventsToChild( vlc_object_t *p_this, char const *psz_var,
                        vlc_value_t oldval, vlc_value_t newval, void *p_data )
 {
+    VLC_UNUSED(p_data); VLC_UNUSED(oldval);
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
     int i_vout;
 

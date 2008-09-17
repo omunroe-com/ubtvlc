@@ -1,11 +1,11 @@
 /*****************************************************************************
  * var_manager.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: var_manager.cpp 7561 2004-04-29 22:09:23Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "var_manager.hpp"
 
 
 VarManager::VarManager( intf_thread_t *pIntf ): SkinObject( pIntf ),
-    m_tooltipText( pIntf ), m_helpText( pIntf )
+    m_pTooltipText( NULL ), m_pHelpText( NULL )
 {
+    m_pTooltipText = new VarText( pIntf );
+    m_pHelpText = new VarText( pIntf, false );
 }
 
 
@@ -45,6 +47,12 @@ VarManager::~VarManager()
     {
         m_anonVarList.pop_back();
     }
+
+    delete m_pTooltipText;
+
+    // Warning! the help text must be the last variable to be deleted,
+    // because VarText destructor references it (FIXME: find a cleaner way?)
+    delete m_pHelpText;
 }
 
 
@@ -107,7 +115,7 @@ Variable *VarManager::getVar( const string &rName, const string &rType )
         // Check the variable type
         if( pVar->getType() != rType )
         {
-            msg_Warn( getIntf(), "Variable %s has incorrect type (%s instead"
+            msg_Warn( getIntf(), "variable %s has incorrect type (%s instead"
                       " of (%s)", rName.c_str(), pVar->getType().c_str(),
                       rType.c_str() );
             return NULL;
@@ -121,5 +129,17 @@ Variable *VarManager::getVar( const string &rName, const string &rType )
     {
         return NULL;
     }
+}
+
+
+void VarManager::registerConst( const string &rName, const string &rValue)
+{
+    m_constMap[rName] = rValue;
+}
+
+
+string VarManager::getConst( const string &rName )
+{
+    return m_constMap[rName];
 }
 

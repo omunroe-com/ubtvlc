@@ -1,8 +1,8 @@
 /*****************************************************************************
  * misc.h: code not specific to vlc
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: misc.h 7723 2004-05-19 23:58:06Z hartman $
+ * Copyright (C) 2003-2007 the VideoLAN team
+ * $Id$
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *
@@ -18,12 +18,79 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
+
+#import <Cocoa/Cocoa.h>
+#import <ApplicationServices/ApplicationServices.h>
+
+/*****************************************************************************
+ * NSImage (VLCAddition)
+ *****************************************************************************/
+
+@interface NSImage (VLCAdditions)
++ (id)imageWithWarningIcon;
++ (id)imageWithErrorIcon;
+@end
+
+/*****************************************************************************
+ * NSAnimation (VLCAddition)
+ *****************************************************************************/
+
+@interface NSAnimation (VLCAdditions)
+- (void)setUserInfo: (void *)userInfo;
+- (void *)userInfo;
+@end
+
+/*****************************************************************************
+ * NSScreen (VLCAdditions)
+ *
+ *  Missing extension to NSScreen
+ *****************************************************************************/
+
+@interface NSScreen (VLCAdditions)
+
++ (NSScreen *)screenWithDisplayID: (CGDirectDisplayID)displayID;
+- (BOOL)isMainScreen;
+- (BOOL)isScreen: (NSScreen*)screen;
+- (CGDirectDisplayID)displayID;
+- (void)blackoutOtherScreens;
++ (void)unblackoutScreens;
+@end
+
+/*****************************************************************************
+ * VLCWindow
+ *
+ *  Missing extension to NSWindow
+ *****************************************************************************/
+
+@interface VLCWindow : NSWindow
+{
+    BOOL b_canBecomeKeyWindow;
+    BOOL b_isset_canBecomeKeyWindow;
+    NSViewAnimation *animation;
+}
+
+- (void)setCanBecomeKeyWindow: (BOOL)canBecomeKey;
+
+/* animate mode is only supported in >=10.4 */
+- (void)orderFront: (id)sender animate: (BOOL)animate;
+
+/* animate mode is only supported in >=10.4 */
+- (void)orderOut: (id)sender animate: (BOOL)animate;
+
+/* animate mode is only supported in >=10.4 */
+- (void)orderOut: (id)sender animate: (BOOL)animate callback:(NSInvocation *)callback;
+
+/* animate mode is only supported in >=10.4 */
+- (void)closeAndAnimate: (BOOL)animate;
+@end
+
 
 /*****************************************************************************
  * VLCControllerWindow
  *****************************************************************************/
+
 
 @interface VLCControllerWindow : NSWindow
 {
@@ -59,7 +126,30 @@
 
 @interface MPSlider : NSSlider
 {
-
 }
+
+@end
+
+/*****************************************************************************
+ * ITSlider
+ *****************************************************************************/
+
+@interface ITSlider : NSSlider
+{
+}
+
+@end
+
+/*****************************************************************************
+ * ITSliderCell
+ *****************************************************************************/
+
+@interface ITSliderCell : NSSliderCell
+{
+    NSImage *_knobOff;
+    NSImage *_knobOn;
+    BOOL b_mouse_down;
+}
+- (void)controlTintChanged;
 
 @end

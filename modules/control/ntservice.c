@@ -1,10 +1,10 @@
 /*****************************************************************************
  * ntservice.c: Windows NT/2K/XP service interface
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: ntservice.c 6963 2004-03-05 19:24:14Z murray $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: 52aa47c1ac58483f90bab2af55d918ad77f6c03b $
  *
- * Authors: Gildas Bazin <gbazin@netcourrier.com>
+ * Authors: Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>
-#include <vlc/vlc.h>
-#include <vlc/intf.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_interface.h>
 
 #define VLCSERVICENAME "VLC media player"
 
@@ -38,30 +42,40 @@ static void Close   ( vlc_object_t * );
 
 #define INSTALL_TEXT N_( "Install Windows Service" )
 #define INSTALL_LONGTEXT N_( \
-    "If enabled the interface will install the Service and exit." )
+    "Install the Service and exit." )
 #define UNINSTALL_TEXT N_( "Uninstall Windows Service" )
 #define UNINSTALL_LONGTEXT N_( \
-    "If enabled the interface will uninstall the Service and exit." )
+    "Uninstall the Service and exit." )
 #define NAME_TEXT N_( "Display name of the Service" )
 #define NAME_LONGTEXT N_( \
-    "This allows you to change the display name of the Service." )
+    "Change the display name of the Service." )
+#define OPTIONS_TEXT N_("Configuration options")
+#define OPTIONS_LONGTEXT N_( \
+    "Configuration options that will be " \
+    "used by the Service (eg. --foo=bar --no-foobar). It should be specified "\
+    "at install time so the Service is properly configured.")
 #define EXTRAINTF_TEXT N_("Extra interface modules")
 #define EXTRAINTF_LONGTEXT N_( \
-    "This option allows you to select additional interfaces spawned by the " \
+    "Additional interfaces spawned by the " \
     "Service. It should be specified at install time so the Service is " \
     "properly configured. Use a comma separated list of interface modules. " \
     "(common values are: logger, sap, rc, http)")
 
 vlc_module_begin();
-    set_description( _("Windows Service interface") );
+    set_shortname( N_("NT Service"));
+    set_description( N_("Windows Service interface") );
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_CONTROL );
     add_bool( "ntservice-install", 0, NULL,
-              INSTALL_TEXT, INSTALL_LONGTEXT, VLC_TRUE );
+              INSTALL_TEXT, INSTALL_LONGTEXT, true );
     add_bool( "ntservice-uninstall", 0, NULL,
-              UNINSTALL_TEXT, UNINSTALL_LONGTEXT, VLC_TRUE );
+              UNINSTALL_TEXT, UNINSTALL_LONGTEXT, true );
     add_string ( "ntservice-name", VLCSERVICENAME, NULL,
-                 NAME_TEXT, NAME_LONGTEXT, VLC_TRUE );
+                 NAME_TEXT, NAME_LONGTEXT, true );
+    add_string ( "ntservice-options", NULL, NULL,
+                 OPTIONS_TEXT, OPTIONS_LONGTEXT, true );
     add_string ( "ntservice-extraintf", NULL, NULL,
-                 EXTRAINTF_TEXT, EXTRAINTF_LONGTEXT, VLC_TRUE );
+                 EXTRAINTF_TEXT, EXTRAINTF_LONGTEXT, true );
 
     set_capability( "interface", 0 );
     set_callbacks( Activate, Close );
@@ -112,6 +126,7 @@ void Close( vlc_object_t *p_this )
  *****************************************************************************/
 static void Run( intf_thread_t *p_intf )
 {
+    intf_thread_t *p_extraintf;
     SERVICE_TABLE_ENTRY dispatchTable[] =
     {
         { VLCSERVICENAME, &ServiceDispatch },
@@ -138,13 +153,22 @@ static void Run( intf_thread_t *p_intf )
 
     if( StartServiceCtrlDispatcher( dispatchTable ) == 0 )
     {
-        msg_Err( p_intf, "StartServiceCtrlDispatcher failed" );
+        msg_Err( p_intf, "StartServiceCtrlDispatcher failed" ); /* str review */
     }
 
     free( p_intf->p_sys->psz_service );
 
+    /* Stop and destroy the interfaces we spawned */
+    while( (p_extraintf = vlc_object_find(p_intf, VLC_OBJECT_INTF, FIND_CHILD)))
+    {
+        intf_StopThread( p_extraintf );
+        vlc_object_detach( p_extraintf );
+        vlc_object_release( p_extraintf );
+        vlc_object_release( p_extraintf );
+    }
+
     /* Make sure we exit (In case other interfaces have been spawned) */
-    p_intf->p_vlc->b_die = VLC_TRUE;
+    vlc_object_kill( p_intf->p_libvlc );
 }
 
 /*****************************************************************************
@@ -153,11 +177,12 @@ static void Run( intf_thread_t *p_intf )
 static int NTServiceInstall( intf_thread_t *p_intf )
 {
     intf_sys_t *p_sys  = p_intf->p_sys;
-    char psz_path[MAX_PATH], psz_pathtmp[MAX_PATH], *psz_extraintf;
+    char psz_path[10*MAX_PATH], psz_pathtmp[MAX_PATH], *psz_extra;
     SC_HANDLE handle = OpenSCManager( NULL, NULL, SC_MANAGER_ALL_ACCESS );
     if( handle == NULL )
     {
-        msg_Err( p_intf, "could not connect to SCM database" );
+        msg_Err( p_intf,
+                 "could not connect to Services Control Manager database" );
         return VLC_EGENERIC;
     }
 
@@ -166,13 +191,21 @@ static int NTServiceInstall( intf_thread_t *p_intf )
     GetModuleFileName( NULL, psz_pathtmp, MAX_PATH );
     sprintf( psz_path, "\"%s\" -I "MODULE_STRING, psz_pathtmp );
 
-    psz_extraintf = config_GetPsz( p_intf, "ntservice-extraintf" );
-    if( psz_extraintf && *psz_extraintf )
+    psz_extra = config_GetPsz( p_intf, "ntservice-extraintf" );
+    if( psz_extra && *psz_extra )
     {
         strcat( psz_path, " --ntservice-extraintf " );
-        strcat( psz_path, psz_extraintf );
+        strcat( psz_path, psz_extra );
     }
-    if( psz_extraintf ) free( psz_extraintf );
+    free( psz_extra );
+
+    psz_extra = config_GetPsz( p_intf, "ntservice-options" );
+    if( psz_extra && *psz_extra )
+    {
+        strcat( psz_path, " " );
+        strcat( psz_path, psz_extra );
+    }
+    free( psz_extra );
 
     SC_HANDLE service =
         CreateService( handle, p_sys->psz_service, p_sys->psz_service,
@@ -213,7 +246,8 @@ static int NTServiceUninstall( intf_thread_t *p_intf )
     SC_HANDLE handle = OpenSCManager( NULL, NULL, SC_MANAGER_ALL_ACCESS );
     if( handle == NULL )
     {
-        msg_Err( p_intf, "could not connect to SCM database" );
+        msg_Err( p_intf,
+                 "could not connect to Services Control Manager database" );
         return VLC_EGENERIC;
     }
 
@@ -295,21 +329,17 @@ static void WINAPI ServiceDispatch( DWORD numArgs, char **args )
             }
 
             /* Try to run the interface */
-            p_new_intf->b_block = VLC_FALSE;
             if( intf_RunThread( p_new_intf ) )
             {
                 vlc_object_detach( p_new_intf );
-                intf_Destroy( p_new_intf );
+                vlc_object_release( p_new_intf );
                 msg_Err( p_intf, "interface \"%s\" cannot run", psz_temp );
             }
 
             free( psz_temp );
         }
     }
-    if( psz_modules )
-    {
-        free( psz_modules );
-    }
+    free( psz_modules );
 
     /* Initialization complete - report running status */
     p_sys->status.dwCurrentState = SERVICE_RUNNING;
