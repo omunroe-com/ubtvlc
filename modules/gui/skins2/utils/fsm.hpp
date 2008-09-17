@@ -1,11 +1,11 @@
 /*****************************************************************************
  * fsm.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: fsm.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef FSM_HPP
@@ -31,6 +31,7 @@
 #include <set>
 
 class EvtGeneric;
+class CmdGeneric;
 
 
 /// This class implements a Finite State Machine (FSM)
@@ -46,7 +47,7 @@ class FSM: public SkinObject
         /// Add a transition to the machine
         void addTransition( const string &state1, const string &event,
                             const string &state2,
-                            Callback *pCmd = NULL );
+                            CmdGeneric *pCmd = NULL );
 
         /// Retrieve the current state
         const string &getState() const { return m_currentState; }
@@ -65,7 +66,7 @@ class FSM: public SkinObject
 
         /// A Data_t contains the final state of a transition, and a callback
         /// to execute when the transition is applied
-        typedef pair<string, Callback*> Data_t;
+        typedef pair<string, CmdGeneric*> Data_t;
 
         /// Current state of the machine
         string m_currentState;

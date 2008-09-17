@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ustring.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ustring.cpp 7258 2004-04-03 10:55:51Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-#include <string.h>
+#include <sstream>
 #include "ustring.hpp"
 
 
@@ -71,7 +71,7 @@ UString::UString( intf_thread_t *pIntf, const char *pString ):
     }
     if( !pCur || *pCur )
     {
-        msg_Err( pIntf, "Invalid UTF8 string: %s", pString );
+        msg_Err( pIntf, "invalid UTF8 string: %s", pString );
         m_length = 0;
         m_pString = NULL;
         return;
@@ -315,7 +315,7 @@ UString UString::substr( uint32_t position, uint32_t n) const
     UString tmp( getIntf(), "" );
     if( position > size() )
     {
-        msg_Err( getIntf(), "Invalid position in UString::substr()" );
+        msg_Err( getIntf(), "invalid position in UString::substr()" );
         return tmp;
     }
     tmp.m_length = (n < size() - position) ? n : size() - position;
@@ -328,3 +328,12 @@ UString UString::substr( uint32_t position, uint32_t n) const
 
     return tmp;
 }
+
+
+UString UString::fromInt( intf_thread_t *pIntf, int number)
+{
+    stringstream ss;
+    ss << number;
+    return UString( pIntf, ss.str().c_str() );
+}
+

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * win32_graphics.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: win32_graphics.cpp 7326 2004-04-12 14:07:57Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,20 +19,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifdef WIN32_SKINS
 
 #define WINVER 0x500
-#ifndef AC_SRC_ALPHA
-#define AC_SRC_ALPHA 1
-#endif
 
 #include "win32_factory.hpp"
 #include "win32_graphics.hpp"
 #include "win32_window.hpp"
 #include "../src/generic_bitmap.hpp"
+
+#ifndef AC_SRC_ALPHA
+#define AC_SRC_ALPHA 1
+#endif
 
 Win32Graphics::Win32Graphics( intf_thread_t *pIntf, int width, int height ):
     OSGraphics( pIntf ), m_width( width ), m_height( height ), m_hDC( NULL )
@@ -68,7 +69,7 @@ void Win32Graphics::clear()
 
 void Win32Graphics::drawBitmap( const GenericBitmap &rBitmap,
                                 int xSrc, int ySrc, int xDest, int yDest,
-                                int width, int height )
+                                int width, int height, bool blend )
 {
     // Get the bitmap size if necessary
     if( width == -1 )
@@ -106,7 +107,7 @@ void Win32Graphics::drawBitmap( const GenericBitmap &rBitmap,
     bmpInfo.bmiHeader.biCompression = BI_RGB;
     bmpInfo.bmiHeader.biSizeImage = width * height * 4;
 
-    // Create a DIB (Device Independant Bitmap) and associate it with
+    // Create a DIB (Device Independent Bitmap) and associate it with
     // a temporary DC
     HDC hDC = CreateCompatibleDC( m_hDC );
     HBITMAP hBmp = CreateDIBSection( hDC, &bmpInfo, DIB_RGB_COLORS,
@@ -136,12 +137,8 @@ void Win32Graphics::drawBitmap( const GenericBitmap &rBitmap,
             uint8_t a = *(pBmpData++);
 
             // Draw the pixel
-            // Note: the colours are multiplied by a/255, because of the
-            // algorithm used by Windows for the AlphaBlending
             ((UINT32 *)pBits)[x + y * width] =
-                (a << 24) | (((r * a) >> 8) << 16) |
-                            (((g * a) >> 8) << 8) |
-                             ((b * a) >> 8);
+                (a << 24) | (r << 16) | (g << 8) | b;
 
             if( a > 0 )
             {
@@ -335,7 +332,7 @@ void Win32Graphics::copyToWindow( OSWindow &rWindow, int xSrc, int ySrc,
 
 bool Win32Graphics::hit( int x, int y ) const
 {
-    return PtInRegion( m_mask, x, y );
+    return PtInRegion( m_mask, x, y ) != 0;
 }
 
 

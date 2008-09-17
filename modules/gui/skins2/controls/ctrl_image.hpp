@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ctrl_image.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_image.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CTRL_IMAGE_HPP
@@ -30,14 +30,23 @@
 
 class GenericBitmap;
 class OSGraphics;
+class CmdGeneric;
 
 
 /// Control image
 class CtrlImage: public CtrlFlat
 {
     public:
+        /// Resize methods
+        enum resize_t
+        {
+            kMosaic,  // Repeat the base image in a mosaic
+            kScale    // Scale the base image
+        };
+
         // Create an image with the given bitmap (which is NOT copied)
         CtrlImage( intf_thread_t *pIntf, const GenericBitmap &rBitmap,
+                   CmdGeneric &rCommand, resize_t resizeMethod,
                    const UString &rHelp, VarBool *pVisible );
         virtual ~CtrlImage();
 
@@ -50,11 +59,18 @@ class CtrlImage: public CtrlFlat
         /// Draw the control on the given graphics
         virtual void draw( OSGraphics &rImage, int xDest, int yDest );
 
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return "image"; }
+
     private:
         /// Bitmap
         const GenericBitmap &m_rBitmap;
         /// Buffer to stored the rendered bitmap
         OSGraphics *m_pImage;
+        /// Command triggered by a double-click on the image
+        CmdGeneric &m_rCommand;
+        /// Resize method
+        resize_t m_resizeMethod;
 };
 
 #endif

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * bitmap_font.cpp
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: bitmap_font.cpp 7261 2004-04-03 13:57:46Z asmax $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "bitmap_font.hpp"
@@ -30,6 +30,8 @@ BitmapFont::BitmapFont( intf_thread_t *pIntf, const GenericBitmap &rBitmap,
                         const string &rType ):
     GenericFont( pIntf ), m_rBitmap( rBitmap )
 {
+    int i;
+
     // Build the character table
     if( rType == "digits" )
     {
@@ -37,10 +39,11 @@ BitmapFont::BitmapFont( intf_thread_t *pIntf, const GenericBitmap &rBitmap,
         m_height = 13;
         m_advance = 12;
         m_skip = 6;
-        for( int i = 0; i <= 9; i++ )
+        for( i = 0; i <= 9; i++ )
         {
             m_table['0'+i].m_xPos = i * m_width;
         }
+        m_table[(size_t)' '].m_xPos = 10 * m_width;
         m_table[(size_t)'-'].m_xPos = 11 * m_width;
     }
     else if( rType == "text" )
@@ -49,14 +52,14 @@ BitmapFont::BitmapFont( intf_thread_t *pIntf, const GenericBitmap &rBitmap,
         m_height = 6;
         m_advance = 5;
         m_skip = 5;
-        for( int i = 0; i < 26; i++ )
+        for( i = 0; i < 26; i++ )
         {
             m_table['A'+i].m_xPos = m_table['a'+i].m_xPos = i * m_width;
         }
         m_table[(size_t)'"'].m_xPos = 26 * m_width;
         m_table[(size_t)'@'].m_xPos = 27 * m_width;
         m_table[(size_t)' '].m_xPos = 29 * m_width;
-        for( int i = 0; i <= 9; i++ )
+        for( i = 0; i <= 9; i++ )
         {
             m_table['0'+i].m_xPos = i * m_width;
             m_table['0'+i].m_yPos = m_height;
@@ -64,7 +67,7 @@ BitmapFont::BitmapFont( intf_thread_t *pIntf, const GenericBitmap &rBitmap,
         static const char specialChars[] = {'.', ':', '(', ')', '-', '\'',
             '!', '_', '+', '\\', '/', '[', ']', '^', '&', '%', ',', '=', '$',
             '#'};
-        for( int i = 0; i < 19; i++ )
+        for( i = 0; i < 19; i++ )
         {
             m_table[(size_t)specialChars[i]].m_xPos = (11 + i) * m_width;
             m_table[(size_t)specialChars[i]].m_yPos = m_height;
@@ -102,8 +105,11 @@ GenericBitmap *BitmapFont::drawString( const UString &rString,
         uint32_t c = *(pString++);
         if( c < 256 && m_table[c].m_xPos != -1 )
         {
-            pBmp->drawBitmap( m_rBitmap, m_table[c].m_xPos, m_table[c].m_yPos,
-                              xDest, 0, m_width, m_height );
+            bool res = pBmp->drawBitmap( m_rBitmap, m_table[c].m_xPos,
+                                         m_table[c].m_yPos, xDest, 0,
+                                         m_width, m_height );
+            if ( !res )
+                msg_Warn( getIntf(), "BitmapFont::drawString: ignoring char" );
             xDest += m_advance;
         }
         else

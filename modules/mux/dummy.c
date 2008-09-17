@@ -1,8 +1,8 @@
 /*****************************************************************************
  * dummy.c: dummy muxer module for vlc
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: dummy.c 7047 2004-03-11 17:37:50Z fenrir $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id$
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -19,17 +19,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>
 
-#include <vlc/vlc.h>
-#include <vlc/sout.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_sout.h>
+#include <vlc_block.h>
 
 /*****************************************************************************
  * Module descriptor
@@ -38,8 +42,10 @@ static int  Open   ( vlc_object_t * );
 static void Close  ( vlc_object_t * );
 
 vlc_module_begin();
-    set_description( _("Dummy/Raw muxer") );
+    set_description( N_("Dummy/Raw muxer") );
     set_capability( "sout mux", 5 );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_MUX );
     add_shortcut( "dummy" );
     add_shortcut( "raw" );
     add_shortcut( "es" );
@@ -49,16 +55,16 @@ vlc_module_end();
 /*****************************************************************************
  * Exported prototypes
  *****************************************************************************/
-static int  Capability(sout_mux_t *, int, void *, void * );
-static int  AddStream( sout_mux_t *, sout_input_t * );
-static int  DelStream( sout_mux_t *, sout_input_t * );
-static int  Mux      ( sout_mux_t * );
+static int Control( sout_mux_t *, int, va_list );
+static int AddStream( sout_mux_t *, sout_input_t * );
+static int DelStream( sout_mux_t *, sout_input_t * );
+static int Mux      ( sout_mux_t * );
 
 struct sout_mux_sys_t
 {
     /* Some streams have special initialization data, we'll output this
      * data as an header in the stream. */
-    vlc_bool_t b_header;
+    bool b_header;
 };
 
 /*****************************************************************************
@@ -72,13 +78,15 @@ static int Open( vlc_object_t *p_this )
     msg_Dbg( p_mux, "Dummy/Raw muxer opened" );
     msg_Info( p_mux, "Open" );
 
-    p_mux->pf_capacity  = Capability;
+    p_mux->pf_control   = Control;
     p_mux->pf_addstream = AddStream;
     p_mux->pf_delstream = DelStream;
     p_mux->pf_mux       = Mux;
 
     p_mux->p_sys = p_sys = malloc( sizeof( sout_mux_sys_t ) );
-    p_sys->b_header      = VLC_TRUE;
+    if( !p_sys )
+        return VLC_ENOMEM;
+    p_sys->b_header      = true;
 
     return VLC_SUCCESS;
 }
@@ -96,27 +104,39 @@ static void Close( vlc_object_t * p_this )
     free( p_sys );
 }
 
-static int Capability( sout_mux_t *p_mux, int i_query,
-                       void *p_args, void *p_answer )
+static int Control( sout_mux_t *p_mux, int i_query, va_list args )
 {
-   switch( i_query )
-   {
-        case SOUT_MUX_CAP_GET_ADD_STREAM_ANY_TIME:
-            *(vlc_bool_t*)p_answer = VLC_TRUE;
-            return( SOUT_MUX_CAP_ERR_OK );
+    VLC_UNUSED(p_mux);
+    bool *pb_bool;
+
+    switch( i_query )
+    {
+        case MUX_CAN_ADD_STREAM_WHILE_MUXING:
+            pb_bool = (bool*)va_arg( args, bool * );
+            *pb_bool = true;
+            return VLC_SUCCESS;
+
+        case MUX_GET_ADD_STREAM_WAIT:
+            pb_bool = (bool*)va_arg( args, bool * );
+            *pb_bool = false;
+            return VLC_SUCCESS;
+
+        case MUX_GET_MIME:   /* Unknown */
         default:
-            return( SOUT_MUX_CAP_ERR_UNIMPLEMENTED );
+            return VLC_EGENERIC;
    }
 }
 
 static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
 {
+    VLC_UNUSED(p_input);
     msg_Dbg( p_mux, "adding input" );
     return VLC_SUCCESS;
 }
 
 static int DelStream( sout_mux_t *p_mux, sout_input_t *p_input )
 {
+    VLC_UNUSED(p_input);
     msg_Dbg( p_mux, "removing input" );
     return VLC_SUCCESS;
 }
@@ -145,7 +165,7 @@ static int Mux( sout_mux_t *p_mux )
         }
 
         p_fifo = p_mux->pp_inputs[i]->p_fifo;
-        i_count = p_fifo->i_depth;
+        i_count = block_FifoCount( p_fifo );
         while( i_count > 0 )
         {
             block_t *p_data = block_FifoGet( p_fifo );
@@ -155,7 +175,7 @@ static int Mux( sout_mux_t *p_mux )
             i_count--;
         }
     }
-    p_sys->b_header = VLC_FALSE;
+    p_sys->b_header = false;
 
     return VLC_SUCCESS;
 }

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * bandlimited.h : bandlimited interpolation resampler
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: bandlimited.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id$
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -10,7 +10,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /* Conversion constants */
@@ -46,7 +46,7 @@
 #define SMALL_FILTER_NMULT ((int16_t)13)
 #define SMALL_FILTER_SCALE 13128 /* Unity-gain scale factor */
 #define SMALL_FILTER_NWING 1536 /* Filter table length */
-static float SMALL_FILTER_FLOAT_IMP[] /* Impulse response */ = {
+static const float SMALL_FILTER_FLOAT_IMP[] /* Impulse response */ = {
 0.900000,
 0.899980,
 0.899920,
@@ -1585,7 +1585,7 @@ static float SMALL_FILTER_FLOAT_IMP[] /* Impulse response */ = {
 -0.000046
 };
 
-static float SMALL_FILTER_FLOAT_IMPD[] /* Impulse response */ = {
+static const float SMALL_FILTER_FLOAT_IMPD[] /* Impulse response */ = {
 -0.000020,
 -0.000060,
 -0.000100,

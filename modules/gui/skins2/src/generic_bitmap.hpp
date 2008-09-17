@@ -1,11 +1,11 @@
 /*****************************************************************************
  * generic_bitmap.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: generic_bitmap.hpp 7173 2004-03-27 00:21:13Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef GENERIC_BITMAP_HPP
@@ -27,26 +27,33 @@
 
 #include "skin_common.hpp"
 #include "../utils/pointer.hpp"
+#include "../utils/position.hpp"
 
 
 /// Generic interface for bitmaps
-class GenericBitmap: public SkinObject
+class GenericBitmap: public SkinObject, public Box
 {
     public:
         virtual ~GenericBitmap() {}
-
-        /// Get the width of the bitmap
-        virtual int getWidth() const = 0;
-
-        /// Get the heighth of the bitmap
-        virtual int getHeight() const = 0;
 
         /// Get a linear buffer containing the image data.
         /// Each pixel is stored in 4 bytes in the order B,G,R,A
         virtual uint8_t *getData() const = 0;
 
+        /// Get the number of frames in the bitmap
+        int getNbFrames() const { return m_nbFrames; }
+
+        /// Get the number of frames per second (for animated bitmaps)
+        int getFrameRate() const { return m_frameRate; }
+
     protected:
-        GenericBitmap( intf_thread_t *pIntf ): SkinObject( pIntf ) {}
+        GenericBitmap( intf_thread_t *pIntf, int nbFrames = 1, int fps = 0);
+
+    private:
+        /// Number of frames
+        int m_nbFrames;
+        /// Frame rate
+        int m_frameRate;
 };
 
 
@@ -55,7 +62,8 @@ class BitmapImpl: public GenericBitmap
 {
     public:
         /// Create an empty bitmap of the given size
-        BitmapImpl( intf_thread_t *pIntf, int width, int height );
+        BitmapImpl( intf_thread_t *pIntf, int width, int height,
+                    int nbFrames = 1, int fps = 0 );
         ~BitmapImpl();
 
         /// Get the width of the bitmap
@@ -69,7 +77,7 @@ class BitmapImpl: public GenericBitmap
         virtual uint8_t *getData() const { return m_pData; }
 
         // Copy a region of another bitmap on this bitmap
-        void drawBitmap( const GenericBitmap &rSource, int xSrc, int ySrc,
+        bool drawBitmap( const GenericBitmap &rSource, int xSrc, int ySrc,
                          int xDest, int yDest, int width, int height );
 
     private:

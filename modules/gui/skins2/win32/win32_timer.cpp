@@ -1,11 +1,11 @@
 /*****************************************************************************
  * win32_timer.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: win32_timer.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifdef WIN32_SKINS
 
 #include "win32_timer.hpp"
+#include "../commands/cmd_generic.hpp"
 
 
 void CALLBACK CallbackTimer( HWND hwnd, UINT uMsg,
@@ -38,9 +39,8 @@ void CALLBACK CallbackTimer( HWND hwnd, UINT uMsg,
 }
 
 
-Win32Timer::Win32Timer( intf_thread_t *pIntf, const Callback &rCallback,
-                        HWND hWnd ):
-    OSTimer( pIntf ), m_callback( rCallback ), m_hWnd( hWnd )
+Win32Timer::Win32Timer( intf_thread_t *pIntf, CmdGeneric &rCmd, HWND hWnd ):
+    OSTimer( pIntf ), m_rCommand( rCmd ), m_hWnd( hWnd )
 {
 }
 
@@ -68,7 +68,7 @@ void Win32Timer::stop()
 void Win32Timer::execute()
 {
     // Execute the callback
-    (*(m_callback.getFunc()))( m_callback.getObj() );
+    m_rCommand.execute();
 
     // Restart the timer if needed
     if( ! m_oneShot )

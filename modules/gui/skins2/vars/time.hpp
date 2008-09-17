@@ -1,11 +1,11 @@
 /*****************************************************************************
  * time.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: time.hpp 7574 2004-05-01 14:23:40Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef TIME_HPP
@@ -28,7 +28,7 @@
 #include "../utils/var_percent.hpp"
 #include <string>
 
-/// Variable for VLC strem time
+/// Variable for VLC stream time
 class StreamTime: public VarPercent
 {
     public:
@@ -42,15 +42,15 @@ class StreamTime: public VarPercent
         /// Return a string containing a value from 0 to 100
         virtual const string getAsStringPercent() const;
         /// Return the current time formatted as a time display (h:mm:ss)
-        virtual const string getAsStringCurrTime() const;
+        virtual const string getAsStringCurrTime( bool bShortFormat = false ) const;
         /// Return the time left formatted as a time display (h:mm:ss)
-        virtual const string getAsStringTimeLeft() const;
+        virtual const string getAsStringTimeLeft( bool bShortFormat = false ) const;
         /// Return the duration formatted as a time display (h:mm:ss)
-        virtual const string getAsStringDuration() const;
+        virtual const string getAsStringDuration( bool bShortFormat = false ) const;
 
     private:
         /// Convert a number of seconds into "h:mm:ss" format
-        const string formatTime( int seconds ) const;
+        const string formatTime( int seconds, bool bShortFormat ) const;
 };
 
 #endif

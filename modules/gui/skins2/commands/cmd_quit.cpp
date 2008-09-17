@@ -1,11 +1,11 @@
 /*****************************************************************************
  * cmd_quit.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_quit.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
+
+#ifdef HAVE_CONFIG_H
+#   include "config.h"
+#endif
+
+#include <vlc_osd.h>
+#include <vlc_playlist.h>
 
 #include "cmd_quit.hpp"
 #include "../src/os_factory.hpp"
@@ -29,9 +36,16 @@
 
 void CmdQuit::execute()
 {
+    // Stop the playlist
+    vout_OSDMessage( getIntf(), DEFAULT_CHAN, _( "Quit" ) );
+    playlist_Stop( getIntf()->p_sys->p_playlist );
+
     // Get the instance of OSFactory
     OSFactory *pOsFactory = OSFactory::instance( getIntf() );
 
     // Exit the main OS loop
     pOsFactory->getOSLoop()->exit();
+
+    // Kill libvlc
+    vlc_object_kill( getIntf()->p_libvlc );
 }

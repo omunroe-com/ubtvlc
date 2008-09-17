@@ -1,11 +1,11 @@
 /*****************************************************************************
  * win32_loop.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: win32_loop.cpp 7143 2004-03-22 21:18:12Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifdef WIN32_SKINS
@@ -29,6 +29,7 @@
 #include "../src/generic_window.hpp"
 #include "../events/evt_key.hpp"
 #include "../events/evt_leave.hpp"
+#include "../events/evt_menu.hpp"
 #include "../events/evt_motion.hpp"
 #include "../events/evt_mouse.hpp"
 #include "../events/evt_refresh.hpp"
@@ -65,10 +66,26 @@ Win32Loop::Win32Loop( intf_thread_t *pIntf ): OSLoop( pIntf )
     virtKeyToVlcKey[VK_RIGHT] = KEY_RIGHT;
     virtKeyToVlcKey[VK_UP] = KEY_UP;
     virtKeyToVlcKey[VK_DOWN] = KEY_DOWN;
+    virtKeyToVlcKey[VK_INSERT] = KEY_INSERT;
+    virtKeyToVlcKey[VK_DELETE] = KEY_DELETE;
     virtKeyToVlcKey[VK_HOME] = KEY_HOME;
     virtKeyToVlcKey[VK_END] = KEY_END;
     virtKeyToVlcKey[VK_PRIOR] = KEY_PAGEUP;
     virtKeyToVlcKey[VK_NEXT] = KEY_PAGEDOWN;
+    virtKeyToVlcKey[VK_BROWSER_BACK] = KEY_BROWSER_BACK;
+    virtKeyToVlcKey[VK_BROWSER_FORWARD] = KEY_BROWSER_FORWARD;
+    virtKeyToVlcKey[VK_BROWSER_REFRESH] = KEY_BROWSER_REFRESH;
+    virtKeyToVlcKey[VK_BROWSER_STOP] = KEY_BROWSER_STOP;
+    virtKeyToVlcKey[VK_BROWSER_SEARCH] = KEY_BROWSER_SEARCH;
+    virtKeyToVlcKey[VK_BROWSER_FAVORITES] = KEY_BROWSER_FAVORITES;
+    virtKeyToVlcKey[VK_BROWSER_HOME] = KEY_BROWSER_HOME;
+    virtKeyToVlcKey[VK_VOLUME_MUTE] = KEY_VOLUME_MUTE;
+    virtKeyToVlcKey[VK_VOLUME_DOWN] = KEY_VOLUME_DOWN;
+    virtKeyToVlcKey[VK_VOLUME_UP] = KEY_VOLUME_UP;
+    virtKeyToVlcKey[VK_MEDIA_NEXT_TRACK] = KEY_MEDIA_NEXT_TRACK;
+    virtKeyToVlcKey[VK_MEDIA_PREV_TRACK] = KEY_MEDIA_PREV_TRACK;
+    virtKeyToVlcKey[VK_MEDIA_STOP] = KEY_MEDIA_STOP;
+    virtKeyToVlcKey[VK_MEDIA_PLAY_PAUSE] = KEY_MEDIA_PLAY_PAUSE;
 }
 
 
@@ -129,6 +146,12 @@ void Win32Loop::run()
                                 Infos.rcPaint.right - Infos.rcPaint.left + 1,
                                 Infos.rcPaint.bottom - Infos.rcPaint.top + 1 );
                 EndPaint( msg.hwnd, &Infos );
+                win.processEvent( evt );
+                break;
+            }
+            case WM_COMMAND:
+            {
+                EvtMenu evt( getIntf(), LOWORD( msg.wParam ) );
                 win.processEvent( evt );
                 break;
             }

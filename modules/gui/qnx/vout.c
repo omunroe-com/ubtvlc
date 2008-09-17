@@ -1,7 +1,7 @@
 /*****************************************************************************
  * vout.c: QNX RTOS video output display method
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
+ * Copyright (C) 2001, 2002 the VideoLAN team
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Pascal Levesque <Pascal.Levesque@mindready.com>
@@ -18,24 +18,26 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
 #include <errno.h>                                                 /* ENOMEM */
-#include <stdlib.h>                                                /* free() */
-#include <string.h>                                            /* strerror() */
 
 #include <photon/PtWidget.h>
 #include <photon/PtWindow.h>
 #include <photon/PtLabel.h>
 #include <photon/PdDirect.h>
 
-#include <vlc/vlc.h>
-#include <vlc/intf.h>
-#include <vlc/vout.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_interface.h>
+#include <vlc_vout.h>
 
 /*****************************************************************************
  * vout_sys_t: video output QNX method descriptor
@@ -128,7 +130,7 @@ static void SetPalette     ( vout_thread_t *, uint16_t *, uint16_t *, uint16_t *
  * vout properties to choose the window size, and change them according to the
  * actual properties of the display.
  *****************************************************************************/
-int E_(OpenVideo) ( vlc_object_t *p_this )
+int OpenVideo ( vlc_object_t *p_this )
 {
     vout_thread_t * p_vout = (vout_thread_t *)p_this;
 
@@ -276,7 +278,7 @@ static void QNXEnd( vout_thread_t *p_vout )
  *****************************************************************************
  * Terminate an output method created by QNXCreate
  *****************************************************************************/
-void E_(CloseVideo) ( vlc_object_t *p_this )
+void CloseVideo ( vlc_object_t *p_this )
 {
     vout_thread_t * p_vout = (vout_thread_t *)p_this;
 
@@ -297,9 +299,9 @@ static int QNXManage( vout_thread_t *p_vout )
 {
     int i_ev,  i_buflen;
     PhEvent_t *p_event;
-    vlc_bool_t b_repos = 0;
+    bool b_repos = 0;
 
-    if (p_vout->b_die == 1)
+    if (!vlc_object_alive (p_vout))
     {
         return ( 0 );
     }
@@ -338,7 +340,7 @@ static int QNXManage( vout_thread_t *p_vout )
                 switch( p_ev->event_f )
                 {
                 case Ph_WM_CLOSE:
-                    p_vout->p_vlc->b_die = 1;
+                    p_vout->p_libvlc->b_die = true;
                     break;
 
                 case Ph_WM_MOVE:
@@ -368,7 +370,7 @@ static int QNXManage( vout_thread_t *p_vout )
                     {
                     case Pk_q:
                     case Pk_Q:
-                        p_vout->p_vlc->b_die = 1;
+                        p_vout->p_libvlc->b_die = true;
                         break;
 
                     case Pk_f:
@@ -757,6 +759,7 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic, int index )
 
         p_pic->p->p_pixels = p_pic->p_sys->p_image->image;
         p_pic->p->i_lines = p_pic->p_sys->p_image->size.h;
+        p_pic->p->i_visible_lines = p_pic->p_sys->p_image->size.h;
         p_pic->p->i_pitch = p_pic->p_sys->p_image->bpl;
         p_pic->p->i_pixel_pitch = p_vout->p_sys->i_bytes_per_pixel;
         p_pic->p->i_visible_pitch = p_vout->p_sys->i_bytes_per_pixel
@@ -792,6 +795,7 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic, int index )
 
         p_pic->p->p_pixels = p_pic->p_sys->p_buf[0];
         p_pic->p->i_lines = p_pic->p_sys->p_ctx[0]->dim.h;
+        p_pic->p->i_visible_lines = p_pic->p_sys->p_ctx[0]->dim.h;
         p_pic->p->i_pitch = p_pic->p_sys->p_ctx[0]->pitch;
         p_pic->p->i_pixel_pitch = p_vout->p_sys->i_bytes_per_pixel;
         p_pic->p->i_visible_pitch = p_vout->p_sys->i_bytes_per_pixel
@@ -837,18 +841,21 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic, int index )
 
                 p_pic->Y_PIXELS = p_pic->p_sys->p_buf[Y_PLANE];
                 p_pic->p[Y_PLANE].i_lines = p_pic->p_sys->p_ctx[Y_PLANE]->dim.h;
+                p_pic->p[Y_PLANE].i_visible_lines = p_pic->p_sys->p_ctx[Y_PLANE]->dim.h;
                 p_pic->p[Y_PLANE].i_pitch = p_pic->p_sys->p_ctx[Y_PLANE]->pitch;
                 p_pic->p[Y_PLANE].i_pixel_pitch = 1;
                 p_pic->p[Y_PLANE].i_visible_pitch = p_pic->p[Y_PLANE].i_pitch;
 
                 p_pic->U_PIXELS = p_pic->p_sys->p_buf[U_PLANE];
                 p_pic->p[U_PLANE].i_lines = p_pic->p_sys->p_ctx[U_PLANE]->dim.h;
+                p_pic->p[U_PLANE].i_visible_lines = p_pic->p_sys->p_ctx[U_PLANE]->dim.h;
                 p_pic->p[U_PLANE].i_pitch = p_pic->p_sys->p_ctx[U_PLANE]->pitch;
                 p_pic->p[U_PLANE].i_pixel_pitch = 1;
                 p_pic->p[U_PLANE].i_visible_pitch = p_pic->p[U_PLANE].i_pitch;
 
                 p_pic->V_PIXELS = p_pic->p_sys->p_buf[V_PLANE];
                 p_pic->p[V_PLANE].i_lines = p_pic->p_sys->p_ctx[V_PLANE]->dim.h;
+                p_pic->p[V_PLANE].i_visible_lines = p_pic->p_sys->p_ctx[V_PLANE]->dim.h;
                 p_pic->p[V_PLANE].i_pitch = p_pic->p_sys->p_ctx[V_PLANE]->pitch;
                 p_pic->p[V_PLANE].i_pixel_pitch = 1;
                 p_pic->p[V_PLANE].i_visible_pitch = p_pic->p[V_PLANE].i_pitch;
@@ -871,18 +878,21 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic, int index )
 
                 p_pic->Y_PIXELS = p_pic->p_sys->p_buf[Y_PLANE];
                 p_pic->p[Y_PLANE].i_lines = p_pic->p_sys->p_ctx[Y_PLANE]->dim.h;
+                p_pic->p[Y_PLANE].i_visible_lines = p_pic->p_sys->p_ctx[Y_PLANE]->dim.h;
                 p_pic->p[Y_PLANE].i_pitch = p_pic->p_sys->p_ctx[Y_PLANE]->pitch;
                 p_pic->p[Y_PLANE].i_pixel_pitch = 1;
                 p_pic->p[Y_PLANE].i_visible_pitch = p_pic->p[Y_PLANE].i_pitch;
 
                 p_pic->U_PIXELS = p_pic->p_sys->p_buf[U_PLANE];
                 p_pic->p[U_PLANE].i_lines = p_pic->p_sys->p_ctx[U_PLANE]->dim.h;
+                p_pic->p[U_PLANE].i_visible_lines = p_pic->p_sys->p_ctx[U_PLANE]->dim.h;
                 p_pic->p[U_PLANE].i_pitch = p_pic->p_sys->p_ctx[U_PLANE]->pitch;
                 p_pic->p[U_PLANE].i_pixel_pitch = 1;
                 p_pic->p[U_PLANE].i_visible_pitch = p_pic->p[U_PLANE].i_pitch;
 
                 p_pic->V_PIXELS = p_pic->p_sys->p_buf[V_PLANE];
                 p_pic->p[V_PLANE].i_lines = p_pic->p_sys->p_ctx[V_PLANE]->dim.h;
+                p_pic->p[V_PLANE].i_visible_lines = p_pic->p_sys->p_ctx[V_PLANE]->dim.h;
                 p_pic->p[V_PLANE].i_pitch = p_pic->p_sys->p_ctx[V_PLANE]->pitch;
                 p_pic->p[V_PLANE].i_pixel_pitch = 1;
                 p_pic->p[V_PLANE].i_visible_pitch = p_pic->p[V_PLANE].i_pitch;
@@ -903,6 +913,7 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic, int index )
 
                 p_pic->p->p_pixels = p_pic->p_sys->p_buf[Y_PLANE];
                 p_pic->p->i_lines = p_pic->p_sys->p_ctx[Y_PLANE]->dim.h;
+                p_pic->p->i_visible_lines = p_pic->p_sys->p_ctx[Y_PLANE]->dim.h;
                 p_pic->p->i_pitch = p_pic->p_sys->p_ctx[Y_PLANE]->pitch;
                 p_pic->p->i_pixel_pitch = 4;
                 p_pic->p->i_visible_pitch = p_pic->p->i_pitch;
@@ -918,6 +929,7 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic, int index )
 
                 p_pic->p->p_pixels = p_pic->p_sys->p_buf[Y_PLANE];
                 p_pic->p->i_lines = p_pic->p_sys->p_ctx[Y_PLANE]->dim.h;
+                p_pic->p->i_visible_lines = p_pic->p_sys->p_ctx[Y_PLANE]->dim.h;
                 p_pic->p->i_pitch = p_pic->p_sys->p_ctx[Y_PLANE]->pitch;
                 p_pic->p->i_pixel_pitch = 2;
                 p_pic->p->i_visible_pitch = 2 * p_pic->p_sys->p_ctx[Y_PLANE]->dim.w;
@@ -933,6 +945,7 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic, int index )
 
                 p_pic->p->p_pixels = p_pic->p_sys->p_buf[Y_PLANE];
                 p_pic->p->i_lines = p_pic->p_sys->p_ctx[Y_PLANE]->dim.h;
+                p_pic->p->i_visible_lines = p_pic->p_sys->p_ctx[Y_PLANE]->dim.h;
                 p_pic->p->i_pitch = p_pic->p_sys->p_ctx[Y_PLANE]->pitch;
                 p_pic->p->i_pixel_pitch = 4;
                 p_pic->p->i_visible_pitch = 4 * p_pic->p_sys->p_ctx[Y_PLANE]->dim.w;
@@ -948,6 +961,7 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic, int index )
 
                 p_pic->p->p_pixels = p_pic->p_sys->p_buf[Y_PLANE];
                 p_pic->p->i_lines = p_pic->p_sys->p_ctx[Y_PLANE]->dim.h;
+                p_pic->p->i_visible_lines = p_pic->p_sys->p_ctx[Y_PLANE]->dim.h;
                 p_pic->p->i_pitch = p_pic->p_sys->p_ctx[Y_PLANE]->pitch;
                 p_pic->p->i_pixel_pitch = 4;
                 p_pic->p->i_visible_pitch = 4 * p_pic->p_sys->p_ctx[Y_PLANE]->dim.w;
@@ -965,6 +979,7 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic, int index )
             p_pic->p->p_pixels = p_pic->p_sys->p_image->data
                                   + p_pic->p_sys->p_image->offsets[0];
             p_pic->p->i_lines = p_vout->output.i_height;
+            p_pic->p->i_visible_lines = p_vout->output.i_height;
             /* XXX: this just looks so plain wrong... check it out ! */
             p_pic->p->i_pitch = p_pic->p_sys->p_image->pitches[0] / 4;
             p_pic->p->i_pixel_pitch = 4;

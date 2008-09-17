@@ -1,10 +1,11 @@
 /*****************************************************************************
  * rawdv.c : raw DV input module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: rawdv.c 7665 2004-05-15 10:52:56Z fenrir $
+ * Copyright (C) 2001-2007 the VideoLAN team
+ * $Id$
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
+ *          Paul Corke <paul dot corke at datatote dot co dot uk>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,26 +19,38 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                      /* malloc(), free() */
 
-#include <vlc/vlc.h>
-#include <vlc/input.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_demux.h>
 
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
+#define HURRYUP_TEXT N_( "Hurry up" )
+#define HURRYUP_LONGTEXT N_( "The demuxer will advance timestamps if the " \
+                "input can't keep up with the rate." )
+
 static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 vlc_module_begin();
-    set_description( _("raw DV demuxer") );
-    set_capability( "demux2", 2 );
+    set_shortname( "DV" );
+    set_description( N_("DV (Digital Video) demuxer") );
+    set_capability( "demux", 3 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
+    add_bool( "rawdv-hurry-up", 0, NULL, HURRYUP_TEXT, HURRYUP_LONGTEXT, false );
     set_callbacks( Open, Close );
     add_shortcut( "rawdv" );
 vlc_module_end();
@@ -101,6 +114,7 @@ struct demux_sys_t
 
     /* program clock reference (in units of 90kHz) */
     mtime_t i_pcr;
+    bool b_hurry_up;
 };
 
 /*****************************************************************************
@@ -120,12 +134,11 @@ static int Open( vlc_object_t * p_this )
     demux_t     *p_demux = (demux_t*)p_this;
     demux_sys_t *p_sys;
 
-    byte_t      *p_peek, *p_peek_backup;
+    const uint8_t *p_peek, *p_peek_backup;
 
     uint32_t    i_dword;
     dv_header_t dv_header;
     dv_id_t     dv_id;
-    char        *psz_ext;
 
     /* It isn't easy to recognize a raw DV stream. The chances that we'll
      * mistake a stream from another type for a raw DV stream are too high, so
@@ -133,12 +146,8 @@ static int Open( vlc_object_t * p_this )
      * it is possible to force this demux. */
 
     /* Check for DV file extension */
-    psz_ext = strrchr( p_demux->psz_path, '.' );
-    if( ( !psz_ext || strcasecmp( psz_ext, ".dv") ) &&
-        strcmp(p_demux->psz_demux, "rawdv") )
-    {
+    if( !demux_IsPathExtension( p_demux, ".dv" ) && !p_demux->b_force )
         return VLC_EGENERIC;
-    }
 
     if( stream_Peek( p_demux->s, &p_peek, DV_PAL_FRAME_SIZE ) <
         DV_NTSC_FRAME_SIZE )
@@ -193,11 +202,15 @@ static int Open( vlc_object_t * p_this )
 
     p_peek += 72;                                  /* skip rest of DIF block */
 
-
     /* Set p_input field */
     p_demux->pf_demux   = Demux;
     p_demux->pf_control = Control;
     p_demux->p_sys      = p_sys = malloc( sizeof( demux_sys_t ) );
+    if( !p_sys )
+        return VLC_ENOMEM;
+
+    p_sys->b_hurry_up = var_CreateGetBool( p_demux, "rawdv-hurry-up" );
+    msg_Dbg( p_demux, "Realtime DV Source: %s", (p_sys->b_hurry_up)?"Yes":"No" );
 
     p_sys->i_dsf = dv_header.dsf;
     p_sys->frame_size = dv_header.dsf ? 12 * 150 * 80 : 10 * 150 * 80;
@@ -261,6 +274,7 @@ static void Close( vlc_object_t *p_this )
     demux_t     *p_demux = (demux_t*)p_this;
     demux_sys_t *p_sys  = p_demux->p_sys;
 
+    var_Destroy( p_demux, "rawdv-hurry-up");
     free( p_sys );
 }
 
@@ -273,12 +287,18 @@ static int Demux( demux_t *p_demux )
 {
     demux_sys_t *p_sys  = p_demux->p_sys;
     block_t     *p_block;
-    vlc_bool_t  b_audio = VLC_FALSE;
+    bool  b_audio = false;
+
+    if( p_sys->b_hurry_up )
+    {
+         /* 3 frames */
+        p_sys->i_pcr = mdate() + (p_sys->i_dsf ? 120000 : 90000);
+    }
 
     /* Call the pace control */
     es_out_Control( p_demux->out, ES_OUT_SET_PCR, p_sys->i_pcr );
-
-    if( ( p_block = stream_Block( p_demux->s, p_sys->frame_size ) ) == NULL )
+    p_block = stream_Block( p_demux->s, p_sys->frame_size );
+    if( p_block == NULL )
     {
         /* EOF */
         return 0;
@@ -306,7 +326,10 @@ static int Demux( demux_t *p_demux )
 
     es_out_Send( p_demux->out, p_sys->p_es_video, p_block );
 
-    p_sys->i_pcr += ( I64C(1000000) / p_sys->f_rate );
+    if( !p_sys->b_hurry_up )
+    {
+        p_sys->i_pcr += ( INT64_C(1000000) / p_sys->f_rate );
+    }
 
     return 1;
 }
@@ -319,7 +342,7 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
     demux_sys_t *p_sys  = p_demux->p_sys;
 
     /* XXX: DEMUX_SET_TIME is precise here */
-    return demux2_vaControlHelper( p_demux->s,
+    return demux_vaControlHelper( p_demux->s,
                                    0, -1,
                                    p_sys->frame_size * p_sys->f_rate * 8,
                                    p_sys->frame_size, i_query, args );
@@ -393,7 +416,7 @@ static block_t *dv_extract_audio( demux_t *p_demux,
     i_audio_quant = p_buf[4] & 0x07; /* 0 - 16bit, 1 - 12bit */
     if( i_audio_quant > 1 )
     {
-        msg_Dbg( p_demux, "Unsupported quantization for DV audio");
+        msg_Dbg( p_demux, "unsupported quantization for DV audio");
         return NULL;
     }
 
@@ -448,7 +471,7 @@ static block_t *dv_extract_audio( demux_t *p_demux,
                 else
                 {
                     /* 12bit quantization */
-                    lc = ((uint16_t)p_frame[d] << 4) | 
+                    lc = ((uint16_t)p_frame[d] << 4) |
                          ((uint16_t)p_frame[d+2] >> 4);
                     lc = (lc == 0x800 ? 0 : dv_audio_12to16(lc));
 
@@ -469,5 +492,3 @@ static block_t *dv_extract_audio( demux_t *p_demux,
 
     return p_block;
 }
-
-

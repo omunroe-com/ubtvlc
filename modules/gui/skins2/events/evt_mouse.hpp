@@ -1,11 +1,11 @@
 /*****************************************************************************
  * evt_mouse.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: evt_mouse.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef EVT_MOUSE_HPP
@@ -32,19 +32,19 @@
 class EvtMouse: public EvtInput
 {
     public:
-        typedef enum
+        enum ButtonType_t
         {
             kLeft,
             kMiddle,
             kRight
-        } ButtonType_t;
+        };
 
-        typedef enum
+        enum ActionType_t
         {
             kDown,
             kUp,
             kDblClick
-        } ActionType_t;
+        };
 
         EvtMouse( intf_thread_t *pIntf, int xPos, int yPos, ButtonType_t button,
                   ActionType_t action, int mod = kModNone ):

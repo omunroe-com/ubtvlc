@@ -1,11 +1,11 @@
 /*****************************************************************************
  * win32_factory.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: win32_factory.cpp 7567 2004-04-30 15:35:56Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifdef WIN32_SKINS
@@ -29,7 +29,15 @@
 #include "win32_timer.hpp"
 #include "win32_window.hpp"
 #include "win32_tooltip.hpp"
+#include "win32_popup.hpp"
 #include "win32_loop.hpp"
+#include "../src/theme.hpp"
+#include "../src/window_manager.hpp"
+#include "../commands/cmd_dialogs.hpp"
+#include "../commands/cmd_minimize.hpp"
+
+// Custom message for the notifications of the system tray
+#define MY_WM_TRAYACTION (WM_APP + 1)
 
 
 LRESULT CALLBACK Win32Proc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
@@ -65,11 +73,26 @@ LRESULT CALLBACK Win32Proc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
             }
             else
             {
-                msg_Err( p_intf, "WM_SYSCOMMAND %i", wParam );
+                msg_Dbg( p_intf, "WM_SYSCOMMAND %i", wParam );
             }
-//            if( (Event *)wParam != NULL )
-//                ( (Event *)wParam )->SendEvent();
-//            return 0;
+        }
+        // Handle systray notifications
+        else if( uMsg == MY_WM_TRAYACTION )
+        {
+            if( (UINT)lParam == WM_LBUTTONDOWN )
+            {
+                p_intf->p_sys->p_theme->getWindowManager().raiseAll();
+            }
+            else if( (UINT)lParam == WM_RBUTTONDOWN )
+            {
+                CmdDlgShowPopupMenu aCmdPopup( p_intf );
+                aCmdPopup.execute();
+            }
+            else if( (UINT)lParam == WM_LBUTTONDBLCLK )
+            {
+                CmdRestore aCmdRestore( p_intf );
+                aCmdRestore.execute();
+            }
         }
     }
 
@@ -100,13 +123,13 @@ bool Win32Factory::init()
     WNDCLASS skinWindowClass;
     skinWindowClass.style = CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS;
     skinWindowClass.lpfnWndProc = (WNDPROC) Win32Proc;
-    skinWindowClass.lpszClassName = "SkinWindowClass";
+    skinWindowClass.lpszClassName = _T("SkinWindowClass");
     skinWindowClass.lpszMenuName = NULL;
     skinWindowClass.cbClsExtra = 0;
     skinWindowClass.cbWndExtra = 0;
-    skinWindowClass.hbrBackground = HBRUSH (COLOR_WINDOW);
+    skinWindowClass.hbrBackground = NULL;
     skinWindowClass.hCursor = LoadCursor( NULL , IDC_ARROW );
-    skinWindowClass.hIcon = LoadIcon( m_hInst, "VLC_ICON" );
+    skinWindowClass.hIcon = LoadIcon( m_hInst, _T("VLC_ICON") );
     skinWindowClass.hInstance = m_hInst;
 
     // Register class and check it
@@ -116,74 +139,102 @@ bool Win32Factory::init()
 
         // Check why it failed. If it's because the class already exists
         // then fine, otherwise return with an error.
-        if( !GetClassInfo( m_hInst, "SkinWindowClass", &wndclass ) )
+        if( !GetClassInfo( m_hInst, _T("SkinWindowClass"), &wndclass ) )
         {
-            msg_Err( getIntf(), "Cannot register window class" );
+            msg_Err( getIntf(), "cannot register window class" );
             return false;
         }
     }
 
     // Create Window
-    m_hParentWindow = CreateWindowEx( WS_EX_APPWINDOW, "SkinWindowClass",
-        "VLC media player", WS_SYSMENU, -200, -200, 0, 0, 0, 0, m_hInst, 0 );
+    m_hParentWindow = CreateWindowEx( WS_EX_TOOLWINDOW, _T("SkinWindowClass"),
+        _T("VLC media player"), WS_SYSMENU|WS_POPUP,
+        -200, -200, 0, 0, 0, 0, m_hInst, 0 );
     if( m_hParentWindow == NULL )
     {
-        msg_Err( getIntf(), "Cannot create parent window" );
+        msg_Err( getIntf(), "cannot create parent window" );
         return false;
     }
+
+    // Store with it a pointer to the interface thread
+    SetWindowLongPtr( m_hParentWindow, GWLP_USERDATA, (LONG_PTR)getIntf() );
 
     // We do it this way otherwise CreateWindowEx will fail
     // if WS_EX_LAYERED is not supported
     SetWindowLongPtr( m_hParentWindow, GWL_EXSTYLE,
-                      GetWindowLong( m_hParentWindow, GWL_EXSTYLE )
-                      | WS_EX_LAYERED );
+                      GetWindowLong( m_hParentWindow, GWL_EXSTYLE ) |
+                      WS_EX_LAYERED );
 
-    // Store with it a pointer to the interface thread
-    SetWindowLongPtr( m_hParentWindow, GWLP_USERDATA, (LONG_PTR)getIntf() );
     ShowWindow( m_hParentWindow, SW_SHOW );
+
+    // Initialize the systray icon
+    m_trayIcon.cbSize = sizeof( NOTIFYICONDATA );
+    m_trayIcon.hWnd = m_hParentWindow;
+    m_trayIcon.uID = 42;
+    m_trayIcon.uFlags = NIF_ICON|NIF_TIP|NIF_MESSAGE;
+    m_trayIcon.uCallbackMessage = MY_WM_TRAYACTION;
+    m_trayIcon.hIcon = LoadIcon( m_hInst, _T("VLC_ICON") );
+    strcpy( m_trayIcon.szTip, "VLC media player" );
+
+    // Show the systray icon if needed
+    if( config_GetInt( getIntf(), "skins2-systray" ) )
+    {
+        addInTray();
+    }
+
+    // Show the task in the task bar if needed
+    if( config_GetInt( getIntf(), "skins2-taskbar" ) )
+    {
+        addInTaskBar();
+    }
 
     // Initialize the OLE library (for drag & drop)
     OleInitialize( NULL );
 
     // We dynamically load msimg32.dll to get a pointer to TransparentBlt()
-    m_hMsimg32 = LoadLibrary( "msimg32.dll" );
+    m_hMsimg32 = LoadLibrary( _T("msimg32.dll") );
     if( !m_hMsimg32 ||
         !( TransparentBlt =
             (BOOL (WINAPI*)(HDC, int, int, int, int,
                             HDC, int, int, int, int, unsigned int))
-            GetProcAddress( m_hMsimg32, "TransparentBlt" ) ) )
+            GetProcAddress( m_hMsimg32, _T("TransparentBlt") ) ) )
     {
         TransparentBlt = NULL;
-        msg_Dbg( getIntf(), "Couldn't find TransparentBlt(), "
+        msg_Dbg( getIntf(), "couldn't find TransparentBlt(), "
                  "falling back to BitBlt()" );
     }
     if( !m_hMsimg32 ||
         !( AlphaBlend =
             (BOOL (WINAPI*)( HDC, int, int, int, int, HDC, int, int,
                               int, int, BLENDFUNCTION ))
-            GetProcAddress( m_hMsimg32, "AlphaBlend" ) ) )
+            GetProcAddress( m_hMsimg32, _T("AlphaBlend") ) ) )
     {
         AlphaBlend = NULL;
-        msg_Dbg( getIntf(), "Couldn't find AlphaBlend()" );
+        msg_Dbg( getIntf(), "couldn't find AlphaBlend()" );
     }
 
     // Idem for user32.dll and SetLayeredWindowAttributes()
-    m_hUser32 = LoadLibrary( "user32.dll" );
+    m_hUser32 = LoadLibrary( _T("user32.dll") );
     if( !m_hUser32 ||
         !( SetLayeredWindowAttributes =
             (BOOL (WINAPI *)(HWND, COLORREF, BYTE, DWORD))
-            GetProcAddress( m_hUser32, "SetLayeredWindowAttributes" ) ) )
+            GetProcAddress( m_hUser32, _T("SetLayeredWindowAttributes") ) ) )
     {
         SetLayeredWindowAttributes = NULL;
-        msg_Dbg( getIntf(), "Couldn't find SetLayeredWindowAttributes()" );
+        msg_Dbg( getIntf(), "couldn't find SetLayeredWindowAttributes()" );
     }
 
     // Initialize the resource path
-    m_resourcePath.push_back( (string)getIntf()->p_vlc->psz_homedir +
-                               "\\" + CONFIG_DIR + "\\skins2" );
-    m_resourcePath.push_back( (string)getIntf()->p_libvlc->psz_vlcpath +
+    char *datadir = config_GetUserDataDir();
+    m_resourcePath.push_back( (string)datadir + "\\skins" );
+    free( datadir );
+    m_resourcePath.push_back( (string)config_GetDataDir() +
+                              "\\skins" );
+    m_resourcePath.push_back( (string)config_GetDataDir() +
                               "\\skins2" );
-    m_resourcePath.push_back( (string)getIntf()->p_libvlc->psz_vlcpath +
+    m_resourcePath.push_back( (string)config_GetDataDir() +
+                              "\\share\\skins" );
+    m_resourcePath.push_back( (string)config_GetDataDir() +
                               "\\share\\skins2" );
 
     // All went well
@@ -195,6 +246,9 @@ Win32Factory::~Win32Factory()
 {
     // Uninitialize the OLE library
     OleUninitialize();
+
+    // Remove the systray icon
+    removeFromTray();
 
     if( m_hParentWindow ) DestroyWindow( m_hParentWindow );
 
@@ -223,10 +277,48 @@ void Win32Factory::destroyOSLoop()
     Win32Loop::destroy( getIntf() );
 }
 
-
-OSTimer *Win32Factory::createOSTimer( const Callback &rCallback )
+void Win32Factory::minimize()
 {
-    return new Win32Timer( getIntf(), rCallback, m_hParentWindow );
+    /* Make sure no tooltip is visible first */
+    getIntf()->p_sys->p_theme->getWindowManager().hideTooltip();
+
+    ShowWindow( m_hParentWindow, SW_MINIMIZE );
+}
+
+void Win32Factory::restore()
+{
+    ShowWindow( m_hParentWindow, SW_RESTORE );
+}
+
+void Win32Factory::addInTray()
+{
+    Shell_NotifyIcon( NIM_ADD, &m_trayIcon );
+}
+
+void Win32Factory::removeFromTray()
+{
+    Shell_NotifyIcon( NIM_DELETE, &m_trayIcon );
+}
+
+void Win32Factory::addInTaskBar()
+{
+    ShowWindow( m_hParentWindow, SW_HIDE );
+    SetWindowLongPtr( m_hParentWindow, GWL_EXSTYLE,
+                      WS_EX_LAYERED|WS_EX_APPWINDOW );
+    ShowWindow( m_hParentWindow, SW_SHOW );
+}
+
+void Win32Factory::removeFromTaskBar()
+{
+    ShowWindow( m_hParentWindow, SW_HIDE );
+    SetWindowLongPtr( m_hParentWindow, GWL_EXSTYLE,
+                      WS_EX_LAYERED|WS_EX_TOOLWINDOW );
+    ShowWindow( m_hParentWindow, SW_SHOW );
+}
+
+OSTimer *Win32Factory::createOSTimer( CmdGeneric &rCmd )
+{
+    return new Win32Timer( getIntf(), rCmd, m_hParentWindow );
 }
 
 
@@ -244,6 +336,23 @@ OSTooltip *Win32Factory::createOSTooltip()
 }
 
 
+OSPopup *Win32Factory::createOSPopup()
+{
+    // XXX FIXME: this way of getting the handle really sucks!
+    // In fact, the clean way would be to have in Builder::addPopup() a call
+    // to pPopup->associateToWindow() (to be written)... but the problem is
+    // that there is no way to access the OS-dependent window handle from a
+    // GenericWindow (we cannot even access the OSWindow).
+    if( m_windowMap.begin() == m_windowMap.end() )
+    {
+        msg_Err( getIntf(), "no window has been created before the popup!" );
+        return NULL;
+    }
+
+    return new Win32Popup( getIntf(), m_windowMap.begin()->first );
+}
+
+
 int Win32Factory::getScreenWidth() const
 {
     return GetSystemMetrics(SM_CXSCREEN);
@@ -257,13 +366,12 @@ int Win32Factory::getScreenHeight() const
 }
 
 
-Rect Win32Factory::getWorkArea() const
+SkinsRect Win32Factory::getWorkArea() const
 {
     RECT r;
     SystemParametersInfo( SPI_GETWORKAREA, 0, &r, 0 );
     // Fill a Rect object
-    Rect rect( r.left, r.top, r.right, r.bottom );
-    return rect;
+    return  SkinsRect( r.left, r.top, r.right, r.bottom );
 }
 
 
@@ -342,6 +450,5 @@ void Win32Factory::rmDir( const string &rPath )
     FindClose( handle );
     RemoveDirectory( rPath.c_str() );
 }
-
 
 #endif

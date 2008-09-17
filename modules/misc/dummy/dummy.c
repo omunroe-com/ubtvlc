@@ -1,8 +1,8 @@
 /*****************************************************************************
  * dummy.c : dummy plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: dummy.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id$
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,16 +18,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                      /* malloc(), free() */
-#include <string.h>
 
-#include <vlc/vlc.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
 
 #include "dummy.h"
 
@@ -42,8 +45,8 @@
 
 #define SAVE_TEXT N_("Save raw codec data")
 #define SAVE_LONGTEXT N_( \
-    "This option allows you to save the raw codec data if you have " \
-    "selected/forced the dummy decoder in the main options." )
+    "Save the raw codec data if you have selected/forced the dummy " \
+    "decoder in the main options." )
 
 #ifdef WIN32
 #define QUIET_TEXT N_("Do not open a DOS command box interface")
@@ -55,44 +58,48 @@
 #endif
 
 vlc_module_begin();
-    set_description( _("Dummy interface function") );
+    set_shortname( N_("Dummy"));
+    set_description( N_("Dummy interface function") );
     set_capability( "interface", 0 );
     add_shortcut( "vlc" );
-    set_callbacks( E_(OpenIntf), NULL );
+    set_callbacks( OpenIntf, NULL );
 #ifdef WIN32
-    add_category_hint( N_("Interface"), NULL, VLC_FALSE );
-    add_bool( "dummy-quiet", 0, NULL, QUIET_TEXT, QUIET_LONGTEXT, VLC_FALSE );
+    set_section( N_( "Dummy Interface" ), NULL );
+    add_category_hint( N_("Interface"), NULL, false );
+    add_bool( "dummy-quiet", 0, NULL, QUIET_TEXT, QUIET_LONGTEXT, false );
 #endif
     add_submodule();
-        set_description( _("Dummy access function") );
+        set_description( N_("Dummy access function") );
         set_capability( "access", 0 );
-        set_callbacks( E_(OpenAccess), NULL );
+        set_callbacks( OpenAccess, NULL );
     add_submodule();
-        set_description( _("Dummy demux function") );
+        set_description( N_("Dummy demux function") );
         set_capability( "demux", 0 );
-        set_callbacks( E_(OpenDemux), E_(CloseDemux) );
+        set_callbacks( OpenDemux, CloseDemux );
     add_submodule();
-        set_description( _("Dummy decoder function") );
+        set_section( N_( "Dummy decoder" ), NULL );
+        set_description( N_("Dummy decoder function") );
         set_capability( "decoder", 0 );
-        set_callbacks( E_(OpenDecoder), E_(CloseDecoder) );
-        add_bool( "dummy-save-es", 0, NULL, SAVE_TEXT, SAVE_LONGTEXT, VLC_FALSE );
+        set_callbacks( OpenDecoder, CloseDecoder );
+        add_bool( "dummy-save-es", 0, NULL, SAVE_TEXT, SAVE_LONGTEXT, true );
     add_submodule();
-        set_description( _("Dummy encoder function") );
+        set_description( N_("Dummy encoder function") );
         set_capability( "encoder", 0 );
-        set_callbacks( E_(OpenEncoder), E_(CloseEncoder) );
+        set_callbacks( OpenEncoder, CloseEncoder );
     add_submodule();
-        set_description( _("Dummy audio output function") );
+        set_description( N_("Dummy audio output function") );
         set_capability( "audio output", 1 );
-        set_callbacks( E_(OpenAudio), NULL );
+        set_callbacks( OpenAudio, NULL );
     add_submodule();
-        set_description( _("Dummy video output function") );
+        set_description( N_("Dummy video output function") );
+        set_section( N_( "Dummy Video output" ), NULL );
         set_capability( "video output", 1 );
-        set_callbacks( E_(OpenVideo), NULL );
-        add_category_hint( N_("Video"), NULL, VLC_FALSE );
-        add_string( "dummy-chroma", NULL, NULL, CHROMA_TEXT, CHROMA_LONGTEXT, VLC_FALSE );
+        set_callbacks( OpenVideo, NULL );
+        add_category_hint( N_("Video"), NULL, false );
+        add_string( "dummy-chroma", NULL, NULL, CHROMA_TEXT, CHROMA_LONGTEXT, true );
     add_submodule();
-        set_description( _("Dummy font renderer function") );
+        set_description( N_("Dummy font renderer function") );
         set_capability( "text renderer", 1 );
-        set_callbacks( E_(OpenRenderer), NULL );
+        set_callbacks( OpenRenderer, NULL );
 vlc_module_end();
 

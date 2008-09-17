@@ -1,8 +1,8 @@
 /*****************************************************************************
  * encoder.c: dummy encoder plugin for vlc.
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: encoder.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id$
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -18,14 +18,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <vlc/vlc.h>
-#include <vlc/decoder.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_codec.h>
+#include "dummy.h"
 
 /*****************************************************************************
  * Local prototypes
@@ -36,7 +41,7 @@ static block_t *EncodeAudio( encoder_t *p_enc, aout_buffer_t *p_buf );
 /*****************************************************************************
  * OpenDecoder: open the dummy encoder.
  *****************************************************************************/
-int E_(OpenEncoder) ( vlc_object_t *p_this )
+int OpenEncoder ( vlc_object_t *p_this )
 {
     encoder_t *p_enc = (encoder_t *)p_this;
 
@@ -51,6 +56,7 @@ int E_(OpenEncoder) ( vlc_object_t *p_this )
  ****************************************************************************/
 static block_t *EncodeVideo( encoder_t *p_enc, picture_t *p_pict )
 {
+    VLC_UNUSED(p_enc); VLC_UNUSED(p_pict);
     return NULL;
 }
 
@@ -59,12 +65,14 @@ static block_t *EncodeVideo( encoder_t *p_enc, picture_t *p_pict )
  ****************************************************************************/
 static block_t *EncodeAudio( encoder_t *p_enc, aout_buffer_t *p_buf )
 {
+    VLC_UNUSED(p_enc); VLC_UNUSED(p_buf);
     return NULL;
 }
 
 /*****************************************************************************
  * CloseDecoder: decoder destruction
  *****************************************************************************/
-void E_(CloseEncoder) ( vlc_object_t *p_this )
+void CloseEncoder ( vlc_object_t *p_this )
 {
+    VLC_UNUSED(p_this);
 }

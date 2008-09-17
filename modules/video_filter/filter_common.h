@@ -1,8 +1,8 @@
 /*****************************************************************************
  * filter_common.h: Common filter functions
  *****************************************************************************
- * Copyright (C) 2001, 2002, 2003 VideoLAN
- * $Id: filter_common.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001, 2002, 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #define ALLOCATE_DIRECTBUFFERS( i_max ) \
@@ -68,6 +68,7 @@
 static int SetParentVal( vlc_object_t *p_this, char const *psz_var,
                        vlc_value_t oldval, vlc_value_t newval, void *p_data )
 {
+    VLC_UNUSED(p_this); VLC_UNUSED(oldval);
     var_Change( (vlc_object_t *)p_data, psz_var, VLC_VAR_SETVALUE,
                  &newval, NULL );
     return VLC_SUCCESS;

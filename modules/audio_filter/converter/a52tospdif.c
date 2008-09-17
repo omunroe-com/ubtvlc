@@ -1,17 +1,17 @@
 /*****************************************************************************
  * a52tospdif.c : encapsulates A/52 frames into S/PDIF packets
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: a52tospdif.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002, 2006 the VideoLAN team
+ * $Id$
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
- *          Stéphane Borel <stef@via.ecp.fr>
+ *          StÃ©phane Borel <stef@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,23 +19,25 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                      /* malloc(), free() */
-#include <string.h>
 
-#include <vlc/vlc.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
 
 #ifdef HAVE_UNISTD_H
 #   include <unistd.h>
 #endif
 
-#include "audio_output.h"
-#include "aout_internal.h"
+#include <vlc_aout.h>
 
 /*****************************************************************************
  * Local prototypes
@@ -48,7 +50,9 @@ static void DoWork    ( aout_instance_t *, aout_filter_t *, aout_buffer_t *,
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( _("audio filter for A/52->S/PDIF encapsulation") );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_MISC );
+    set_description( N_("Audio filter for A/52->S/PDIF encapsulation") );
     set_capability( "audio filter", 10 );
     set_callbacks( Create, NULL );
 vlc_module_end();
@@ -60,8 +64,9 @@ static int Create( vlc_object_t *p_this )
 {
     aout_filter_t * p_filter = (aout_filter_t *)p_this;
 
-    if ( p_filter->input.i_format != VLC_FOURCC('a','5','2',' ')
-          || p_filter->output.i_format != VLC_FOURCC('s','p','d','i') )
+    if ( p_filter->input.i_format != VLC_FOURCC('a','5','2',' ') ||
+         ( p_filter->output.i_format != VLC_FOURCC('s','p','d','b') &&
+           p_filter->output.i_format != VLC_FOURCC('s','p','d','i') ) )
     {
         return -1;
     }
@@ -78,43 +83,50 @@ static int Create( vlc_object_t *p_this )
 static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
                     aout_buffer_t * p_in_buf, aout_buffer_t * p_out_buf )
 {
-    /* It is not entirely clear which endianness the AC3 stream should have.
-     * I have been told endianness does not matter, AC3 can be both endian.
-     * But then, I could not get it to work on Mac OS X and a JVC RX-6000R
-     * decoder without using little endian. So right now, I convert to little
-     * endian.
+    VLC_UNUSED(p_aout);
+    /* AC3 is natively big endian. Most SPDIF devices have the native
+     * endianness of the computer system.
+     * On Mac OS X however, little endian devices are also common.
      */
-
-    static const uint8_t p_sync[6] = { 0x72, 0xF8, 0x1F, 0x4E, 0x01, 0x00 };
+    static const uint8_t p_sync_le[6] = { 0x72, 0xF8, 0x1F, 0x4E, 0x01, 0x00 };
+    static const uint8_t p_sync_be[6] = { 0xF8, 0x72, 0x4E, 0x1F, 0x00, 0x01 };
 #ifndef HAVE_SWAB
-    byte_t * p_tmp;
+    uint8_t * p_tmp;
     uint16_t i;
 #endif
-    uint16_t i_length = p_in_buf->i_nb_bytes;
-    uint8_t * pi_length;
-    byte_t * p_in = p_in_buf->p_buffer;
-    byte_t * p_out = p_out_buf->p_buffer;
+    uint16_t i_frame_size = p_in_buf->i_nb_bytes / 2;
+    uint8_t * p_in = p_in_buf->p_buffer;
+    uint8_t * p_out = p_out_buf->p_buffer;
 
     /* Copy the S/PDIF headers. */
-    memcpy( p_out, p_sync, 6 );
-    pi_length = (p_out + 6);
-    *pi_length = (i_length * 8) & 0xff;
-    *(pi_length + 1) = (i_length * 8) >> 8;
-
-#ifdef HAVE_SWAB
-    swab( p_in, p_out + 8, i_length );
-#else
-    p_tmp = p_out + 8;
-    for ( i = i_length / 2 ; i-- ; )
+    if( p_filter->output.i_format == VLC_FOURCC('s','p','d','b') )
     {
-        p_tmp[0] = p_in[1];
-        p_tmp[1] = p_in[0];
-        p_tmp += 2; p_in += 2;
+        vlc_memcpy( p_out, p_sync_be, 6 );
+        p_out[4] = p_in[5] & 0x7; /* bsmod */
+        p_out[6] = (i_frame_size >> 4) & 0xff;
+        p_out[7] = (i_frame_size << 4) & 0xff;
+        vlc_memcpy( &p_out[8], p_in, i_frame_size * 2 );
     }
+    else
+    {
+        vlc_memcpy( p_out, p_sync_le, 6 );
+        p_out[5] = p_in[5] & 0x7; /* bsmod */
+        p_out[6] = (i_frame_size << 4) & 0xff;
+        p_out[7] = (i_frame_size >> 4) & 0xff;
+#ifdef HAVE_SWAB
+        swab( p_in, &p_out[8], i_frame_size * 2 );
+#else
+        p_tmp = &p_out[8];
+        for( i = i_frame_size; i-- ; )
+        {
+            p_tmp[0] = p_in[1];
+            p_tmp[1] = p_in[0];
+            p_tmp += 2; p_in += 2;
+        }
 #endif
-
-    p_filter->p_vlc->pf_memset( p_out + 8 + i_length, 0,
-                               AOUT_SPDIF_SIZE - i_length - 8 );
+    }
+    vlc_memset( p_out + 8 + i_frame_size * 2, 0,
+                AOUT_SPDIF_SIZE - i_frame_size * 2 - 8 );
 
     p_out_buf->i_nb_samples = p_in_buf->i_nb_samples;
     p_out_buf->i_nb_bytes = AOUT_SPDIF_SIZE;

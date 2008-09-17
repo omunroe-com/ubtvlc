@@ -1,8 +1,8 @@
 /*****************************************************************************
  * es.c: Elementary stream output module
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: es.c 7468 2004-04-24 12:49:53Z gbazin $
+ * Copyright (C) 2003-2004 the VideoLAN team
+ * $Id: 52bb86d7b38642f76529e5c8ed760c4e1cf94b39 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,56 +18,56 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>
-#include <string.h>
 
-#include <vlc/vlc.h>
-#include <vlc/input.h>
-#include <vlc/sout.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_input.h>
+#include <vlc_sout.h>
+#include <vlc_interface.h>
 
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
 #define ACCESS_TEXT N_("Output access method")
 #define ACCESS_LONGTEXT N_( \
-    "Allows you to specify the output access method used for the streaming " \
-    "output." )
+    "This is the default output access method that will be used." )
+
 #define ACCESSA_TEXT N_("Audio output access method")
 #define ACCESSA_LONGTEXT N_( \
-    "Allows you to specify the output access method used for the audio " \
-    "streaming output." )
+    "This is the output access method that will be used for audio." )
 #define ACCESSV_TEXT N_("Video output access method")
 #define ACCESSV_LONGTEXT N_( \
-    "Allows you to specify the output access method used for the video " \
-    "streaming output." )
+    "This is the output access method that will be used for video." )
 
 #define MUX_TEXT N_("Output muxer")
 #define MUX_LONGTEXT N_( \
-    "Allows you to specify the muxer used for the streaming output." )
+    "This is the default muxer method that will be used." )
 #define MUXA_TEXT N_("Audio output muxer")
 #define MUXA_LONGTEXT N_( \
-    "Allows you to specify the muxer used for the audio streaming output." )
+    "This is the muxer that will be used for audio." )
 #define MUXV_TEXT N_("Video output muxer")
 #define MUXV_LONGTEXT N_( \
-    "Allows you to specify the muxer used for the video streaming output." )
+    "This is the muxer that will be used for video." )
 
 #define DEST_TEXT N_("Output URL")
 #define DEST_LONGTEXT N_( \
-    "Allows you to specify the output URL used for the streaming output." )
+    "This is the default output URI." )
 #define DESTA_TEXT N_("Audio output URL")
 #define DESTA_LONGTEXT N_( \
-    "Allows you to specify the output URL used for the audio streaming " \
-    "output." )
+    "This is the output URI that will be used for audio." )
 #define DESTV_TEXT N_("Video output URL")
 #define DESTV_LONGTEXT N_( \
-    "Allows you to specify the output URL used for the video streaming " \
-    "output." )
+    "This is the output URI that will be used for video." )
 
 static int      Open    ( vlc_object_t * );
 static void     Close   ( vlc_object_t * );
@@ -75,40 +75,44 @@ static void     Close   ( vlc_object_t * );
 #define SOUT_CFG_PREFIX "sout-es-"
 
 vlc_module_begin();
-    set_description( _("Elementary stream output") );
+    set_shortname( "ES" );
+    set_description( N_("Elementary stream output") );
     set_capability( "sout stream", 50 );
     add_shortcut( "es" );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_STREAM );
 
     add_string( SOUT_CFG_PREFIX "access", "", NULL, ACCESS_TEXT,
-                ACCESS_LONGTEXT, VLC_TRUE );
+                ACCESS_LONGTEXT, true );
     add_string( SOUT_CFG_PREFIX "access-audio", "", NULL, ACCESSA_TEXT,
-                ACCESSA_LONGTEXT, VLC_TRUE );
+                ACCESSA_LONGTEXT, true );
     add_string( SOUT_CFG_PREFIX "access-video", "", NULL, ACCESSV_TEXT,
-                ACCESSV_LONGTEXT, VLC_TRUE );
+                ACCESSV_LONGTEXT, true );
 
     add_string( SOUT_CFG_PREFIX "mux", "", NULL, MUX_TEXT,
-                MUX_LONGTEXT, VLC_TRUE );
+                MUX_LONGTEXT, true );
     add_string( SOUT_CFG_PREFIX "mux-audio", "", NULL, MUXA_TEXT,
-                MUXA_LONGTEXT, VLC_TRUE );
+                MUXA_LONGTEXT, true );
     add_string( SOUT_CFG_PREFIX "mux-video", "", NULL, MUXV_TEXT,
-                MUXV_LONGTEXT, VLC_TRUE );
+                MUXV_LONGTEXT, true );
 
     add_string( SOUT_CFG_PREFIX "dst", "", NULL, DEST_TEXT,
-                DEST_LONGTEXT, VLC_TRUE );
+                DEST_LONGTEXT, true );
+        change_unsafe();
     add_string( SOUT_CFG_PREFIX "dst-audio", "", NULL, DESTA_TEXT,
-                DESTA_LONGTEXT, VLC_TRUE );
+                DESTA_LONGTEXT, true );
+        change_unsafe();
     add_string( SOUT_CFG_PREFIX "dst-video", "", NULL, DESTV_TEXT,
-                DESTV_LONGTEXT, VLC_TRUE );
+                DESTV_LONGTEXT, true );
+        change_unsafe();
 
     set_callbacks( Open, Close );
 vlc_module_end();
 
-
-#define FREE( p ) if( p ) { free( p ); (p) = NULL; }
 /*****************************************************************************
  * Exported prototypes
  *****************************************************************************/
-static const char *ppsz_sout_options[] = {
+static const char *const ppsz_sout_options[] = {
     "access", "access-audio", "access-video",
     "mux", "mux-audio", "mux-video",
     "dst", "dst-audio", "dst-video",
@@ -147,7 +151,7 @@ static int Open( vlc_object_t *p_this )
     sout_stream_sys_t   *p_sys;
     vlc_value_t         val;
 
-    sout_ParseCfg( p_stream, SOUT_CFG_PREFIX, ppsz_sout_options, p_stream->p_cfg );
+    config_ChainParse( p_stream, SOUT_CFG_PREFIX, ppsz_sout_options, p_stream->p_cfg );
     p_sys                   = malloc( sizeof( sout_stream_sys_t ) );
 
     p_sys->i_count          = 0;
@@ -221,10 +225,12 @@ static char * es_print_url( char *psz_fmt, vlc_fourcc_t i_fourcc, int i_count,
 
     if( psz_fmt == NULL || !*psz_fmt )
     {
-        psz_fmt = "stream-%n-%c.%m";
+        psz_fmt = (char*)"stream-%n-%c.%m";
     }
 
     p = psz_dst = malloc( 4096 );
+    if( !psz_dst )
+        return NULL;
     memset( p, 0, 4096 );
     for( ;; )
     {
@@ -363,6 +369,12 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
     {
         msg_Err( p_stream, "no suitable sout access module for `%s/%s://%s'",
                  psz_access, psz_mux, psz_dst );
+        intf_UserFatal( p_stream, false,
+                    _("Streaming / Transcoding failed"),
+                    _("There is no suitable stream-output access module for \"%s/%s://%s\"."),
+                          psz_access,
+                          psz_mux, psz_dst );
+        free( psz_dst );
         return( NULL );
     }
 
@@ -372,18 +384,29 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
     {
         msg_Err( p_stream, "no suitable sout mux module for `%s/%s://%s'",
                  psz_access, psz_mux, psz_dst );
+        intf_UserFatal( p_stream, false,
+                        _("Streaming / Transcoding failed"),
+                        _("There is no suitable stream-output access module "\
+                          "for \"%s/%s://%s\"."),
+                          psz_access, psz_mux, psz_dst );
         sout_AccessOutDelete( p_access );
+        free( psz_dst );
         return( NULL );
     }
+    free( psz_dst );
 
     id = malloc( sizeof( sout_stream_id_t ) );
+    if( !id )
+    {
+        sout_MuxDelete( p_mux );
+        sout_AccessOutDelete( p_access );
+        return NULL;
+    }
     id->p_mux = p_mux;
     id->p_input = sout_MuxAddStream( p_mux, p_fmt );
 
     if( id->p_input == NULL )
     {
-        free( id );
-
         sout_MuxDelete( p_mux );
         sout_AccessOutDelete( p_access );
         free( id );
@@ -395,8 +418,9 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
 
 static int Del( sout_stream_t *p_stream, sout_stream_id_t *id )
 {
+    VLC_UNUSED(p_stream);
     sout_access_out_t *p_access = id->p_mux->p_access;
-
+    sout_MuxDelete( id->p_mux );
     sout_MuxDeleteStream( id->p_mux, id->p_input );
     sout_AccessOutDelete( p_access );
 
@@ -407,6 +431,7 @@ static int Del( sout_stream_t *p_stream, sout_stream_id_t *id )
 static int Send( sout_stream_t *p_stream, sout_stream_id_t *id,
                  block_t *p_buffer )
 {
+    VLC_UNUSED(p_stream);
     sout_MuxSendBuffer( id->p_mux, id->p_input, p_buffer );
 
     return VLC_SUCCESS;

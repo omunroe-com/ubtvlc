@@ -1,8 +1,8 @@
 /*****************************************************************************
  * trivial.c : trivial mixer plug-in (1 input, no downmixing)
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: trivial.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id$
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -18,18 +18,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                      /* malloc(), free() */
-#include <string.h>
 
-#include <vlc/vlc.h>
-#include "audio_output.h"
-#include "aout_internal.h"
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <stddef.h>
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_aout.h>
 
 /*****************************************************************************
  * Local prototypes
@@ -42,7 +45,9 @@ static void DoWork    ( aout_instance_t *, aout_buffer_t * );
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( _("Trivial audio mixer") );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_MISC );
+    set_description( N_("Trivial audio mixer") );
     set_capability( "audio mixer", 1 );
     set_callbacks( Create, NULL );
 vlc_module_end();
@@ -75,8 +80,8 @@ static void DoWork( aout_instance_t * p_aout, aout_buffer_t * p_buffer )
     int i_nb_channels = aout_FormatNbChannels( &p_aout->mixer.mixer );
     int i_nb_bytes = p_buffer->i_nb_samples * sizeof(int32_t)
                       * i_nb_channels;
-    byte_t * p_in;
-    byte_t * p_out;
+    uint8_t * p_in;
+    uint8_t * p_out;
 
     while ( p_input->b_error )
     {
@@ -99,8 +104,7 @@ static void DoWork( aout_instance_t * p_aout, aout_buffer_t * p_buffer )
         {
             aout_buffer_t * p_old_buffer;
 
-            if ( i_available_bytes > 0 )
-                p_aout->p_vlc->pf_memcpy( p_out, p_in, i_available_bytes );
+            vlc_memcpy( p_out, p_in, i_available_bytes );
             i_nb_bytes -= i_available_bytes;
             p_out += i_available_bytes;
 
@@ -116,8 +120,7 @@ static void DoWork( aout_instance_t * p_aout, aout_buffer_t * p_buffer )
         }
         else
         {
-            if ( i_nb_bytes > 0 )
-                p_aout->p_vlc->pf_memcpy( p_out, p_in, i_nb_bytes );
+            vlc_memcpy( p_out, p_in, i_nb_bytes );
             p_input->p_first_byte_to_mix = p_in + i_nb_bytes;
             break;
         }

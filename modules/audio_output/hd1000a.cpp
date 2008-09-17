@@ -1,8 +1,8 @@
 /*****************************************************************************
  * hd1000a.cpp : Roku HD1000 audio output
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: hd1000a.cpp 7107 2004-03-18 16:53:56Z jlj $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: 3604c6ea017394289044a28e04e5e52ae7062d67 $
  *
  * Author: Jon Lech Johansen <jon-vl@nanocrew.net>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -26,12 +26,15 @@
  *****************************************************************************/
 extern "C"
 {
-#include <string.h>
-#include <stdlib.h>
 #include <errno.h>
 
-#include <vlc/vlc.h>
-#include <vlc/aout.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_aout.h>
 
 #include "aout_internal.h"
 }
@@ -64,7 +67,7 @@ static int     Open        ( vlc_object_t * );
 static void    Close       ( vlc_object_t * );
 
 static void    Play        ( aout_instance_t * );
-static int     Thread      ( aout_instance_t * );
+static void*   Thread      ( vlc_object_t * );
 
 static void    InterleaveS16( int16_t *, int16_t * );
 
@@ -72,8 +75,11 @@ static void    InterleaveS16( int16_t *, int16_t * );
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( N_("HD1000 audio output") );
+    set_shortname( "Roku HD1000" );
+    set_description( N_("Roku HD1000 audio output") );
     set_capability( "audio output", 100 );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_AOUT );
     set_callbacks( Open, Close );
 vlc_module_end();
 
@@ -91,18 +97,14 @@ static int Open( vlc_object_t * p_this )
     p_aout->output.p_sys = p_sys =
         (aout_sys_t *)malloc( sizeof( aout_sys_t ) );
     if( p_aout->output.p_sys == NULL )
-    {
-        msg_Err( p_aout, "out of memory" );
-        return VLC_EGENERIC;
-    }
+        return VLC_ENOMEM;
 
     /* New PCMAudioPlayer */
     p_sys->pPlayer = pPlayer = new PCMAudioPlayer();
     if( p_sys->pPlayer == NULL )
     {
-        msg_Err( p_aout, "out of memory" );
         free( p_sys );
-        return VLC_EGENERIC;
+        return VLC_ENOMEM;
     }
 
     /* Get Buffer Requirements */
@@ -114,17 +116,16 @@ static int Open( vlc_object_t * p_this )
         delete pPlayer;
         free( p_sys );
         return VLC_EGENERIC;
-    } 
+    }
 
     p_sys->nBuffers = __MIN( p_sys->nBuffers, 4 );
 
     p_sys->ppBuffers = (void **)malloc( p_sys->nBuffers * sizeof( void * ) );
     if( p_sys->ppBuffers == NULL )
     {
-        msg_Err( p_aout, "out of memory" );
         delete pPlayer;
         free( p_sys );
-        return VLC_EGENERIC;
+        return VLC_ENOMEM;
     }
 
     /* Open PCMAudioPlayer */
@@ -162,14 +163,14 @@ static int Open( vlc_object_t * p_this )
     p_aout->output.pf_play = Play;
     aout_VolumeSoftInit( p_aout );
 
-    i_volume = config_GetInt( p_aout->p_vlc, "volume" );
+    i_volume = config_GetInt( p_aout->p_libvlc, "volume" );
     pPlayer->SetVolume( (u32)__MIN( i_volume * 64, 0xFFFF ) );
 
     /* Create thread and wait for its readiness. */
     if( vlc_thread_create( p_aout, "aout", Thread,
-                           VLC_THREAD_PRIORITY_OUTPUT, VLC_FALSE ) )
+                           VLC_THREAD_PRIORITY_OUTPUT, false ) )
     {
-        msg_Err( p_aout, "cannot create OSS thread (%s)", strerror(errno) );
+        msg_Err( p_aout, "cannot create OSS thread (%m)" );
         pPlayer->Close();
         delete pPlayer;
         free( p_sys->ppBuffers );
@@ -189,9 +190,9 @@ static void Close( vlc_object_t * p_this )
     aout_instance_t * p_aout = (aout_instance_t *)p_this;
     struct aout_sys_t * p_sys = p_aout->output.p_sys;
 
-    p_aout->b_die = VLC_TRUE;
+    vlc_object_kill( p_aout );
     vlc_thread_join( p_aout );
-    p_aout->b_die = VLC_FALSE;
+    p_aout->b_die = false;
 
     do
     {
@@ -215,13 +216,14 @@ static void Play( aout_instance_t * p_aout )
 /*****************************************************************************
  * Thread: thread used to DMA the data to the device
  *****************************************************************************/
-static int Thread( aout_instance_t * p_aout )
+static void* Thread( vlc_object_t *p_this )
 {
+    aout_instance_t * p_aout = (aout_instance_t*)p_this;
     aout_buffer_t * p_buffer;
     struct aout_sys_t * p_sys = p_aout->output.p_sys;
     PCMAudioPlayer * pPlayer = p_sys->pPlayer;
 
-    while( !p_aout->b_die )
+    while( vlc_object_alive (p_aout) )
     {
         pPlayer->WaitForBuffer();
 
@@ -232,8 +234,8 @@ static int Thread( aout_instance_t * p_aout )
 #define i p_sys->nNextBufferIndex
         if( p_buffer == NULL )
         {
-            p_aout->p_vlc->pf_memset( p_sys->ppBuffers[ i ], 0,
-                                      p_sys->nBufferSize ); 
+            vlc_memset( p_aout, p_sys->ppBuffers[ i ], 0,
+                                      p_sys->nBufferSize );
         }
         else
         {
@@ -246,13 +248,13 @@ static int Thread( aout_instance_t * p_aout )
                                    p_sys->nBufferSize / 2 ) )
         {
             msg_Err( p_aout, "QueueBuffer failed" );
-        } 
+        }
 
         i = (i + 1) % p_sys->nBuffers;
 #undef i
     }
 
-    return VLC_SUCCESS;
+    return NULL;
 }
 
 /*****************************************************************************

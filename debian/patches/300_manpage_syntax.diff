@@ -1,0 +1,16 @@
+Index: vlc-debian/doc/vlc.1
+===================================================================
+--- vlc-debian.orig/doc/vlc.1	2008-01-20 00:13:51.000000000 +0000
++++ vlc-debian/doc/vlc.1	2008-01-20 00:16:31.000000000 +0000
+@@ -70,6 +70,11 @@
+ (close VLC).
+ 
+ .SH SEE ALSO
++The
++.B videolan-doc
++package contains comprehensive documents on how to use
++.B VLC
++both as a media player and as a streaming server.
+ Online documentation: http://www.videolan.org/doc/
+ .PP
+ .SH AUTHOR

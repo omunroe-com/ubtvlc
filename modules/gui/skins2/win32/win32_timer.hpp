@@ -1,11 +1,11 @@
 /*****************************************************************************
  * win32_timer.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: win32_timer.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef WIN32_TIMER_HPP
@@ -27,13 +27,13 @@
 
 #include "../src/os_timer.hpp"
 
+class CmdGeneric;
 
 // Win32 specific timer
 class Win32Timer: public OSTimer
 {
     public:
-        Win32Timer( intf_thread_t *pIntf, const Callback &rCallback,
-                    HWND hWnd );
+        Win32Timer( intf_thread_t *pIntf, CmdGeneric &rCmd, HWND hWnd );
         virtual ~Win32Timer();
 
         /// (Re)start the timer with the given delay (in ms). If oneShot is
@@ -47,8 +47,8 @@ class Win32Timer: public OSTimer
         void execute();
 
     private:
-        /// Callback to execute
-        Callback m_callback;
+        /// Command to execute
+        CmdGeneric &m_rCommand;
 
         /// Delay between two execute
         mtime_t m_interval;

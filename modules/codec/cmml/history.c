@@ -3,9 +3,9 @@
  *****************************************************************************
  * Copyright (C) 2004 Commonwealth Scientific and Industrial Research
  *                    Organisation (CSIRO) Australia
- * Copyright (C) 2004 VideoLAN
+ * Copyright (C) 2004 the VideoLAN team
  *
- * $Id: history.c 7397 2004-04-20 17:27:30Z sam $
+ * $Id$
  *
  * Authors: Andre Pang <Andre.Pang@csiro.au>
  *
@@ -21,10 +21,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-#include <vlc/vlc.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_input.h>
 
 #include "history.h"
 
@@ -49,10 +54,10 @@ static void history_Dump( history_t *p_history );
  * Actual history code
  *****************************************************************************/
 
-history_t *history_New()
+history_t *history_New( void )
 {
    history_t *p_new_history;
-   
+ 
    p_new_history = calloc( 1, sizeof( struct history_t ) );
    if( p_new_history == NULL ) return NULL;
 
@@ -76,7 +81,7 @@ history_t *history_New()
    return p_new_history;
 }
 
-vlc_bool_t history_GoBackSavingCurrentItem ( history_t *p_history,
+bool history_GoBackSavingCurrentItem ( history_t *p_history,
                                              history_item_t *p_item )
 {
     history_PruneAndInsert( p_history, p_item );
@@ -90,7 +95,7 @@ vlc_bool_t history_GoBackSavingCurrentItem ( history_t *p_history,
 #ifdef HISTORY_DEBUG
     history_Dump( p_history );
 #endif
-    return VLC_TRUE;
+    return true;
 }
 
 static void history_Dump( history_t *p_history )
@@ -107,18 +112,20 @@ static void history_Dump( history_t *p_history )
         void *pv_item;
 
         xarray_ObjectAtIndex( p_history->p_xarray, i, &pv_item );
-        
+
         p_item = (history_item_t *) pv_item;
 
         if( p_item == NULL )
             fprintf( stderr, "HISTORY: [%d] NULL\n", i );
         else
+        {
             fprintf( stderr, "HISTORY: [%d] %p (%p->%s)\n", i, p_item,
                      p_item->psz_uri, p_item->psz_uri );
+        }
     }
 }
 
-vlc_bool_t history_GoForwardSavingCurrentItem ( history_t *p_history,
+bool history_GoForwardSavingCurrentItem ( history_t *p_history,
                                                 history_item_t *p_item )
 {
 #ifdef HISTORY_DEBUG
@@ -129,33 +136,33 @@ vlc_bool_t history_GoForwardSavingCurrentItem ( history_t *p_history,
         == XARRAY_SUCCESS )
     {
         p_history->i_index++;
-        return VLC_TRUE;
+        return true;
     }
     else
     {
-        return VLC_FALSE;
+        return false;
     }
 }
 
-vlc_bool_t history_CanGoBack( history_t *p_history )
+bool history_CanGoBack( history_t *p_history )
 {
     if( p_history->i_index > 0 )
-        return VLC_TRUE;
+        return true;
     else
-        return VLC_FALSE;
+        return false;
 }
 
-vlc_bool_t history_CanGoForward( history_t *p_history )
+bool history_CanGoForward( history_t *p_history )
 {
     unsigned int i_count;
 
     if( xarray_Count( p_history->p_xarray, &i_count ) != XARRAY_SUCCESS )
-        return VLC_FALSE;
+        return false;
 
     if( p_history->i_index < i_count )
-        return VLC_TRUE;
+        return true;
     else
-        return VLC_FALSE;
+        return false;
 }
 
 history_item_t *history_Item( history_t *p_history )
@@ -203,7 +210,7 @@ void history_PruneAndInsert( history_t *p_history, history_item_t *p_item )
 
 unsigned int history_Count( history_t *p_history )
 {
-    int i_count;
+    unsigned int i_count;
     xarray_Count( p_history->p_xarray, &i_count );
     return i_count;
 }

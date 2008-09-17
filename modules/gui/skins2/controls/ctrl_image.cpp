@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ctrl_image.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_image.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "ctrl_image.hpp"
@@ -32,8 +32,10 @@
 
 
 CtrlImage::CtrlImage( intf_thread_t *pIntf, const GenericBitmap &rBitmap,
+                      CmdGeneric &rCommand, resize_t resizeMethod,
                       const UString &rHelp, VarBool *pVisible ):
-    CtrlFlat( pIntf, rHelp, pVisible ), m_rBitmap( rBitmap )
+    CtrlFlat( pIntf, rHelp, pVisible ), m_rBitmap( rBitmap ),
+    m_rCommand( rCommand ), m_resizeMethod( resizeMethod )
 {
     OSFactory *pOsFactory = OSFactory::instance( pIntf );
     // Create an initial unscaled image in the buffer
@@ -52,7 +54,7 @@ CtrlImage::~CtrlImage()
 void CtrlImage::handleEvent( EvtGeneric &rEvent )
 {
     // No FSM for this simple transition
-    if( rEvent.getAsString() == "mouse:right:down:none" )
+    if( rEvent.getAsString() == "mouse:right:up:none" )
     {
         CmdDlgShowPopupMenu cmd( getIntf() );
         cmd.execute();
@@ -62,13 +64,28 @@ void CtrlImage::handleEvent( EvtGeneric &rEvent )
         CmdDlgHidePopupMenu cmd( getIntf() );
         cmd.execute();
     }
-
+    else if( rEvent.getAsString() == "mouse:left:dblclick:none" )
+    {
+        m_rCommand.execute();
+    }
 }
 
 
 bool CtrlImage::mouseOver( int x, int y ) const
 {
-    return m_pImage->hit( x, y );
+    if( m_resizeMethod == kMosaic &&
+        x >= 0 && x < getPosition()->getWidth() &&
+        y >= 0 && y < getPosition()->getHeight() )
+    {
+        // In mosaic mode, convert the coordinates to make them fit to the
+        // size of the original image
+        return m_pImage->hit( x % m_pImage->getWidth(),
+                              y % m_pImage->getHeight() );
+    }
+    else
+    {
+        return m_pImage->hit( x, y );
+    }
 }
 
 
@@ -79,16 +96,45 @@ void CtrlImage::draw( OSGraphics &rImage, int xDest, int yDest )
     {
         int width = pPos->getWidth();
         int height = pPos->getHeight();
-        if( width != m_pImage->getWidth() || height != m_pImage->getHeight() )
+
+        if( m_resizeMethod == kScale )
         {
-            OSFactory *pOsFactory = OSFactory::instance( getIntf() );
-            // Rescale the image with the actual size of the control
-            ScaledBitmap bmp( getIntf(), m_rBitmap, width, height );
-            SKINS_DELETE( m_pImage );
-            m_pImage = pOsFactory->createOSGraphics( width, height );
-            m_pImage->drawBitmap( bmp, 0, 0 );
+            // Use scaling method
+            if( width > 0 && height > 0 )
+            {
+                if( width != m_pImage->getWidth() ||
+                    height != m_pImage->getHeight() )
+                {
+                    OSFactory *pOsFactory = OSFactory::instance( getIntf() );
+                    // Rescale the image with the actual size of the control
+                    ScaledBitmap bmp( getIntf(), m_rBitmap, width, height );
+                    SKINS_DELETE( m_pImage );
+                    m_pImage = pOsFactory->createOSGraphics( width, height );
+                    m_pImage->drawBitmap( bmp, 0, 0 );
+                }
+                rImage.drawGraphics( *m_pImage, 0, 0, xDest, yDest );
+            }
         }
-        rImage.drawGraphics( *m_pImage, 0, 0, xDest, yDest );
+        else
+        {
+            // Use mosaic method
+            while( width > 0 )
+            {
+                int curWidth = __MIN( width, m_pImage->getWidth() );
+                height = pPos->getHeight();
+                int curYDest = yDest;
+                while( height > 0 )
+                {
+                    int curHeight = __MIN( height, m_pImage->getHeight() );
+                    rImage.drawGraphics( *m_pImage, 0, 0, xDest, curYDest,
+                                         curWidth, curHeight );
+                    curYDest += curHeight;
+                    height -= m_pImage->getHeight();
+                }
+                xDest += curWidth;
+                width -= m_pImage->getWidth();
+            }
+        }
     }
 }
 

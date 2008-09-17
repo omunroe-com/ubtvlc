@@ -1,8 +1,8 @@
 /*****************************************************************************
  * dummy.c
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: dummy.c 7522 2004-04-27 16:35:15Z sam $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id$
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -19,16 +19,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>
 
-#include <vlc/vlc.h>
-#include <vlc/sout.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_sout.h>
+#include <vlc_block.h>
 
 /*****************************************************************************
  * Module descriptor
@@ -37,8 +42,11 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 vlc_module_begin();
-    set_description( _("Dummy stream output") );
+    set_description( N_("Dummy stream output") );
+    set_shortname( N_( "Dummy" ));
     set_capability( "sout access", 0 );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_ACO );
     add_shortcut( "dummy" );
     set_callbacks( Open, Close );
 vlc_module_end();
@@ -47,7 +55,7 @@ vlc_module_end();
 /*****************************************************************************
  * Exported prototypes
  *****************************************************************************/
-static int     Write( sout_access_out_t *, block_t * );
+static ssize_t Write( sout_access_out_t *, block_t * );
 static int     Seek ( sout_access_out_t *, off_t  );
 
 /*****************************************************************************
@@ -77,9 +85,9 @@ static void Close( vlc_object_t * p_this )
 /*****************************************************************************
  * Read: standard read on a file descriptor.
  *****************************************************************************/
-static int Write( sout_access_out_t *p_access, block_t *p_buffer )
+static ssize_t Write( sout_access_out_t *p_access, block_t *p_buffer )
 {
-    int64_t i_write = 0;
+    size_t i_write = 0;
     block_t *b = p_buffer;
 
     while( b )
@@ -91,6 +99,7 @@ static int Write( sout_access_out_t *p_access, block_t *p_buffer )
 
     block_ChainRelease( p_buffer );
 
+    (void)p_access;
     return i_write;
 }
 
@@ -99,6 +108,7 @@ static int Write( sout_access_out_t *p_access, block_t *p_buffer )
  *****************************************************************************/
 static int Seek( sout_access_out_t *p_access, off_t i_pos )
 {
+    (void)p_access; (void)i_pos;
     return 0;
 }
 

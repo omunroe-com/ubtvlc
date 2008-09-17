@@ -1,8 +1,8 @@
 /*****************************************************************************
  * dts.c: parse DTS audio sync info and packetize the stream
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: dts.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003-2005 the VideoLAN team
+ * $Id$
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -19,16 +19,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <vlc/vlc.h>
-#include <vlc/decoder.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
-#include "vlc_block_helper.h"
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_codec.h>
+#include <vlc_aout.h>
+#include <vlc_block_helper.h>
 
 #define DTS_HEADER_SIZE 14
 
@@ -38,7 +43,7 @@
 struct decoder_sys_t
 {
     /* Module mode */
-    vlc_bool_t b_packetizer;
+    bool b_packetizer;
 
     /*
      * Input properties
@@ -54,8 +59,12 @@ struct decoder_sys_t
 
     mtime_t i_pts;
 
-    int i_frame_size, i_bit_rate;
-    unsigned int i_frame_length, i_rate, i_channels, i_channels_conf;
+    unsigned int i_bit_rate;
+    unsigned int i_frame_size;
+    unsigned int i_frame_length;
+    unsigned int i_rate;
+    unsigned int i_channels;
+    unsigned int i_channels_conf;
 };
 
 enum {
@@ -88,14 +97,14 @@ static block_t       *GetSoutBuffer( decoder_t * );
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( _("DTS parser") );
+    set_description( N_("DTS parser") );
     set_capability( "decoder", 100 );
     set_callbacks( OpenDecoder, CloseDecoder );
 
     add_submodule();
-    set_description( _("DTS audio packetizer") );
+    set_description( N_("DTS audio packetizer") );
     set_capability( "packetizer", 10 );
-    set_callbacks( OpenPacketizer, NULL );
+    set_callbacks( OpenPacketizer, CloseDecoder );
 vlc_module_end();
 
 /*****************************************************************************
@@ -115,21 +124,19 @@ static int OpenDecoder( vlc_object_t *p_this )
     /* Allocate the memory needed to store the decoder's structure */
     if( ( p_dec->p_sys = p_sys =
           (decoder_sys_t *)malloc(sizeof(decoder_sys_t)) ) == NULL )
-    {
-        msg_Err( p_dec, "out of memory" );
-        return VLC_EGENERIC;
-    }
+        return VLC_ENOMEM;
 
     /* Misc init */
-    p_sys->b_packetizer = VLC_FALSE;
+    p_sys->b_packetizer = false;
     p_sys->i_state = STATE_NOSYNC;
     aout_DateSet( &p_sys->end_date, 0 );
 
-    p_sys->bytestream = block_BytestreamInit( p_dec );
+    p_sys->bytestream = block_BytestreamInit();
 
     /* Set output properties */
     p_dec->fmt_out.i_cat = AUDIO_ES;
     p_dec->fmt_out.i_codec = VLC_FOURCC('d','t','s',' ');
+    p_dec->fmt_out.audio.i_rate = 0; /* So end_date gets initialized */
 
     /* Set callback */
     p_dec->pf_decode_audio = (aout_buffer_t *(*)(decoder_t *, block_t **))
@@ -146,7 +153,7 @@ static int OpenPacketizer( vlc_object_t *p_this )
 
     int i_ret = OpenDecoder( p_this );
 
-    if( i_ret == VLC_SUCCESS ) p_dec->p_sys->b_packetizer = VLC_TRUE;
+    if( i_ret == VLC_SUCCESS ) p_dec->p_sys->b_packetizer = true;
 
     return i_ret;
 }
@@ -165,16 +172,23 @@ static void *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
 
     if( !pp_block || !*pp_block ) return NULL;
 
+    if( (*pp_block)->i_flags&(BLOCK_FLAG_DISCONTINUITY|BLOCK_FLAG_CORRUPTED) )
+    {
+        if( (*pp_block)->i_flags&BLOCK_FLAG_CORRUPTED )
+        {
+            p_sys->i_state = STATE_NOSYNC;
+            block_BytestreamFlush( &p_sys->bytestream );
+        }
+//        aout_DateSet( &p_sys->end_date, 0 );
+        block_Release( *pp_block );
+        return NULL;
+    }
+
     if( !aout_DateGet( &p_sys->end_date ) && !(*pp_block)->i_pts )
     {
         /* We've just started the stream, wait for the first PTS. */
         block_Release( *pp_block );
         return NULL;
-    }
-
-    if( (*pp_block)->i_flags&BLOCK_FLAG_DISCONTINUITY )
-    {
-        p_sys->i_state = STATE_NOSYNC;
     }
 
     block_BytestreamPush( &p_sys->bytestream, *pp_block );
@@ -278,7 +292,7 @@ static void *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
         case STATE_SEND_DATA:
             if( !(p_buf = GetOutBuffer( p_dec, &p_out_buffer )) )
             {
-                //p_dec->b_error = VLC_TRUE;
+                //p_dec->b_error = true;
                 return NULL;
             }
 

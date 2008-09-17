@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout_pictures.h : picture management definitions
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: vout_pictures.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id: 456f3102a8942cae356890473350a19608d89279 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -44,9 +44,13 @@
 /* Packed RGB 32bpp, usually 0x00ff0000, 0x0000ff00, 0x000000ff */
 #define FOURCC_RV32         VLC_FOURCC('R','V','3','2')
 
+/* Packed RGBA 32bpp, like RV32 with 0xff000000 used for alpha */
+#define FOURCC_RGBA         VLC_FOURCC('R','G','B','A')
+
 /* Planar YUV 4:2:0, Y:U:V */
 #define FOURCC_I420         VLC_FOURCC('I','4','2','0')
 #define FOURCC_IYUV         VLC_FOURCC('I','Y','U','V')
+#define FOURCC_J420         VLC_FOURCC('J','4','2','0')
 
 /* Planar YUV 4:2:0, Y:V:U */
 #define FOURCC_YV12         VLC_FOURCC('Y','V','1','2')
@@ -84,7 +88,54 @@
 
 /* Planar 4:2:2, Y:U:V */
 #define FOURCC_I422         VLC_FOURCC('I','4','2','2')
+#define FOURCC_J422         VLC_FOURCC('J','4','2','2')
+
+/* Planar 4:4:0, Y:U:V */
+#define FOURCC_I440         VLC_FOURCC('I','4','4','0')
+#define FOURCC_J440         VLC_FOURCC('J','4','4','0')
 
 /* Planar 4:4:4, Y:U:V */
 #define FOURCC_I444         VLC_FOURCC('I','4','4','4')
+#define FOURCC_J444         VLC_FOURCC('J','4','4','4')
+
+/* Planar 4:4:4:4 Y:U:V:A */
+#define FOURCC_YUVA         VLC_FOURCC('Y','U','V','A')
+
+/* Palettized YUV with palette element Y:U:V:A */
+#define FOURCC_YUVP         VLC_FOURCC('Y','U','V','P')
+
+/* Planar 8-bit grayscale */
+#define FOURCC_GREY         VLC_FOURCC('G','R','E','Y')
+#define FOURCC_Y800         VLC_FOURCC('Y','8','0','0')
+#define FOURCC_Y8           VLC_FOURCC('Y','8',' ',' ')
+
+/* Alignment of critical dynamic data structure
+ *
+ * Not all platforms support memalign so we provide a vlc_memalign wrapper
+ * void *vlc_memalign( size_t align, size_t size, void **pp_orig )
+ * *pp_orig is the pointer that has to be freed afterwards.
+ */
+static inline
+void *vlc_memalign (void **pp, size_t align, size_t size)
+{
+#if defined (HAVE_POSIX_MEMALIGN)
+    return posix_memalign (pp, align, size) ? NULL : *pp;
+#elif defined (HAVE_MEMALIGN)
+    return *pp = memalign (align, size);
+#else
+    unsigned char *ptr;
+
+    if (align < 1)
+        return NULL;
+
+    align--;
+    ptr = malloc (size + align);
+    if (ptr == NULL)
+        return NULL;
+
+    *pp = ptr;
+    ptr += align;
+    return (void *)(((uintptr_t)ptr) & ~align);
+#endif
+}
 

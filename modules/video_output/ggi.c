@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ggi.c : GGI plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: ggi.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id$
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -19,21 +19,24 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                      /* malloc(), free() */
-#include <string.h>
 #include <errno.h>                                                 /* ENOMEM */
 
 #include <ggi/ggi.h>
 
-#include <vlc/vlc.h>
-#include <vlc/intf.h>
-#include <vlc/vout.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_interface.h>
+#include <vlc_vout.h>
 
 /*****************************************************************************
  * Local prototypes
@@ -53,14 +56,14 @@ static void SetPalette     ( vout_thread_t *, uint16_t *, uint16_t *, uint16_t *
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
-#define DISPLAY_TEXT N_("X11 display name")
+#define DISPLAY_TEXT N_("X11 display")
 #define DISPLAY_LONGTEXT N_( \
-            "Specify the X11 hardware display you want to use.\n" \
+            "X11 hardware display to use.\n" \
             "By default, VLC will use the value of the DISPLAY " \
             "environment variable.")
 
 vlc_module_begin();
-    add_string( "ggi-display", NULL, NULL, DISPLAY_TEXT, DISPLAY_LONGTEXT, VLC_TRUE );
+    add_string( "ggi-display", NULL, NULL, DISPLAY_TEXT, DISPLAY_LONGTEXT, true );
     set_description( "General Graphics Interface video output" );
     set_capability( "video output", 30 );
     set_callbacks( Create, Destroy );
@@ -74,7 +77,7 @@ vlc_module_end();
  *****************************************************************************/
 struct vout_sys_t
 {
-    /* GGI system informations */
+    /* GGI system information */
     ggi_visual_t        p_display;                         /* display device */
 
     ggi_mode            mode;                             /* mode descriptor */
@@ -84,7 +87,7 @@ struct vout_sys_t
     ggi_directbuffer *  pp_buffer[2];                             /* buffers */
     int                 i_index;
 
-    vlc_bool_t          b_must_acquire;   /* must be acquired before writing */
+    bool          b_must_acquire;   /* must be acquired before writing */
 };
 
 /*****************************************************************************
@@ -101,10 +104,7 @@ static int Create( vlc_object_t *p_this )
     /* Allocate structure */
     p_vout->p_sys = malloc( sizeof( vout_sys_t ) );
     if( p_vout->p_sys == NULL )
-    {
-        msg_Err( p_vout, "out of memory" );
         return( 1 );
-    }
 
     /* Open and initialize device */
     if( OpenDisplay( p_vout ) )
@@ -190,6 +190,7 @@ static int Init( vout_thread_t *p_vout )
     p_pic->p->p_pixels = p_b[ 0 ]->write;
     p_pic->p->i_pixel_pitch = p_b[ 0 ]->buffer.plb.pixelformat->size / 8;
     p_pic->p->i_lines = p_vout->p_sys->mode.visible.y;
+    p_pic->p->i_visible_lines = p_vout->p_sys->mode.visible.y;
 
     p_pic->p->i_pitch = p_b[ 0 ]->buffer.plb.stride;
 
@@ -266,7 +267,7 @@ static void Destroy( vlc_object_t *p_this )
  * Manage: handle GGI events
  *****************************************************************************
  * This function should be called regularly by video output thread. It returns
- * a non null value if an error occured.
+ * a non null value if an error occurred.
  *****************************************************************************/
 static int Manage( vout_thread_t *p_vout )
 {
@@ -292,7 +293,7 @@ static int Manage( vout_thread_t *p_vout )
                     case 'q':
                     case 'Q':
                     case GIIUC_Escape:
-                        p_vout->p_vlc->b_die = 1;
+                        vlc_object_kill( p_vout->p_libvlc );
                         break;
 
                     default:
@@ -305,7 +306,7 @@ static int Manage( vout_thread_t *p_vout )
                 switch( event.pbutton.button )
                 {
                     case GII_PBUTTON_LEFT:
-                        val.b_bool = VLC_TRUE;
+                        val.b_bool = true;
                         var_Set( p_vout, "mouse-clicked", val );
                         break;
 
@@ -392,7 +393,7 @@ static int OpenDisplay( vout_thread_t *p_vout )
     psz_display = config_GetPsz( p_vout, "ggi_display" );
 
     p_vout->p_sys->p_display = ggiOpen( psz_display, NULL );
-    if( psz_display ) free( psz_display );
+    free( psz_display );
 
     if( p_vout->p_sys->p_display == NULL )
     {
@@ -529,7 +530,7 @@ static void SetPalette( vout_thread_t *p_vout,
     /* Set palette */
     if( ggiSetPalette( p_vout->p_sys->p_display, 0, 256, colors ) < 0 )
     {
-        msg_Err( p_vout, "failed setting palette" );
+        msg_Err( p_vout, "failed to set palette" );
     }
 }
 

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * buffer.h: MMS access plug-in
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: buffer.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id$
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -10,7 +10,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,10 +18,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-typedef struct var_buffer_s
+#ifndef _MMS_BUFFER_H_
+#define _MMS_BUFFER_H_ 1
+
+typedef struct
 {
     uint8_t *p_data;    // pointer on data
     int     i_data;     // number of bytes set in p_data
@@ -30,9 +33,8 @@ typedef struct var_buffer_s
     int    i_size;     // size of p_data memory allocated
 } var_buffer_t;
 
-
 /*****************************************************************************
- * Macro/Function to create/manipulate buffer 
+ * Macro/Function to create/manipulate buffer
  *****************************************************************************/
 int  var_buffer_initwrite( var_buffer_t *p_buf, int i_default_size );
 int  var_buffer_reinitwrite( var_buffer_t *p_buf, int i_default_size );
@@ -41,7 +43,7 @@ void var_buffer_add16( var_buffer_t *p_buf, uint16_t i_word );
 void var_buffer_add32( var_buffer_t *p_buf, uint32_t i_word );
 void var_buffer_add64( var_buffer_t *p_buf, uint64_t i_word );
 void var_buffer_addmemory( var_buffer_t *p_buf, void *p_mem, int i_mem );
-void var_buffer_addUTF16( var_buffer_t *p_buf, char *p_str );
+void var_buffer_addUTF16( var_buffer_t *p_buf, const char *p_str );
 void var_buffer_free( var_buffer_t *p_buf );
 
 
@@ -54,3 +56,4 @@ int       var_buffer_getmemory ( var_buffer_t *p_buf, void *p_mem, int64_t i_mem
 int       var_buffer_readempty( var_buffer_t *p_buf );
 void      var_buffer_getguid( var_buffer_t *p_buf, guid_t *p_guid );
 
+#endif

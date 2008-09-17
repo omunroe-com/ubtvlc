@@ -1,8 +1,8 @@
 /*****************************************************************************
  * svgalib.c : SVGAlib plugin for vlc
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: svgalib.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id$
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,16 +18,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>
 
-#include <vlc/vlc.h>
-#include <vlc/vout.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_vout.h>
 
 #include <vga.h>
 #include <vgagl.h>
@@ -50,7 +54,10 @@ static void SetPalette( vout_thread_t *, uint16_t *, uint16_t *, uint16_t * );
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( _("SVGAlib video output") );
+    set_shortname( "SVGAlib" );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VOUT );
+    set_description( N_("SVGAlib video output") );
     set_capability( "video output", 0 );
     set_callbacks( Create, Destroy );
     linked_with_a_crap_library_which_uses_atexit();
@@ -228,7 +235,7 @@ static int Manage( vout_thread_t *p_vout )
     if( keyboard_keypressed(SCANCODE_ESCAPE)
          || keyboard_keypressed(SCANCODE_Q ) )
     {
-        p_vout->p_vlc->b_die = VLC_TRUE;
+        vlc_object_kill( p_vout->p_libvlc );
     }
 
     return VLC_SUCCESS;

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * x11.c : X11 plugin for vlc
  *****************************************************************************
- * Copyright (C) 1998-2001 VideoLAN
- * $Id: x11.c 7522 2004-04-27 16:35:15Z sam $
+ * Copyright (C) 1998-2001 the VideoLAN team
+ * $Id$
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -20,22 +20,25 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                      /* malloc(), free() */
-#include <string.h>                                            /* strerror() */
 
-#include <vlc/vlc.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
 
 /*****************************************************************************
  * Exported prototypes
  *****************************************************************************/
-extern int  E_(Activate)   ( vlc_object_t * );
-extern void E_(Deactivate) ( vlc_object_t * );
+extern int  Activate   ( vlc_object_t * );
+extern void Deactivate ( vlc_object_t * );
 
 /*****************************************************************************
  * Module descriptor
@@ -49,31 +52,34 @@ extern void E_(Deactivate) ( vlc_object_t * );
     "2) Completely bypass the window manager, but then nothing will be able " \
     "to show on top of the video.")
 
-#define DISPLAY_TEXT N_("X11 display name")
+#define DISPLAY_TEXT N_("X11 display")
 #define DISPLAY_LONGTEXT N_( \
-    "Specify the X11 hardware display you want to use. By default VLC will " \
+    "X11 hardware display to use. By default VLC will " \
     "use the value of the DISPLAY environment variable.")
 
 #define SHM_TEXT N_("Use shared memory")
 #define SHM_LONGTEXT N_( \
     "Use shared memory to communicate between VLC and the X server.")
 
-#define SCREEN_TEXT N_("choose the screen to be used for fullscreen mode.")
+#define SCREEN_TEXT N_("Screen for fullscreen mode.")
 #define SCREEN_LONGTEXT N_( \
-    "Choose the screen you want to use in fullscreen mode. For instance " \
+    "Screen to use in fullscreen mode. For instance " \
     "set it to 0 for first screen, 1 for the second.")
 
 vlc_module_begin();
-    add_string( "x11-display", NULL, NULL, DISPLAY_TEXT, DISPLAY_LONGTEXT, VLC_TRUE );
-    add_bool( "x11-altfullscreen", 0, NULL, ALT_FS_TEXT, ALT_FS_LONGTEXT, VLC_TRUE );
+    set_shortname( "X11" );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VOUT );
+    add_string( "x11-display", NULL, NULL, DISPLAY_TEXT, DISPLAY_LONGTEXT, true );
+    add_bool( "x11-altfullscreen", 0, NULL, ALT_FS_TEXT, ALT_FS_LONGTEXT, true );
 #ifdef HAVE_SYS_SHM_H
-    add_bool( "x11-shm", 1, NULL, SHM_TEXT, SHM_LONGTEXT, VLC_TRUE );
+    add_bool( "x11-shm", 1, NULL, SHM_TEXT, SHM_LONGTEXT, true );
 #endif
 #ifdef HAVE_XINERAMA
-    add_integer ( "x11-xineramascreen", 0, NULL, SCREEN_TEXT, SCREEN_LONGTEXT, VLC_TRUE );
+    add_integer ( "x11-xineramascreen", 0, NULL, SCREEN_TEXT, SCREEN_LONGTEXT, true );
 #endif
-    set_description( _("X11 video output") );
-    set_capability( "video output", 50 );
-    set_callbacks( E_(Activate), E_(Deactivate) );
+    set_description( N_("X11 video output") );
+    set_capability( "video output", 70 );
+    set_callbacks( Activate, Deactivate );
 vlc_module_end();
 

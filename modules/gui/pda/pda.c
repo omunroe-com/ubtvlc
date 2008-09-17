@@ -1,10 +1,10 @@
 /*****************************************************************************
  * pda.c : PDA Gtk2 plugin for vlc
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: pda.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: 15719707632955b6c90b5457560578033c0bd00c $
  *
- * Authors: Jean-Paul Saman <jpsaman@wxs.nl>
+ * Authors: Jean-Paul Saman <jpsaman  _at_ videolan _dot_ org>
  *          Marc Ariberti <marcari@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,19 +19,23 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                      /* malloc(), free() */
 #include <errno.h>                                                 /* ENOMEM */
-#include <string.h>                                            /* strerror() */
-#include <stdio.h>
 
-#include <vlc/vlc.h>
-#include <vlc/intf.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_input.h>
+#include <vlc_interface.h>
+#include <vlc_playlist.h>
 
 #include <gtk/gtk.h>
 
@@ -49,8 +53,8 @@ static void Run          ( intf_thread_t * );
 
 void GtkAutoPlayFile     ( vlc_object_t * );
 static int Manage        ( intf_thread_t *p_intf );
-void E_(GtkDisplayDate)  ( GtkAdjustment *p_adj, gpointer userdata );
-gint E_(GtkModeManage)   ( intf_thread_t * p_intf );
+void GtkDisplayDate  ( GtkAdjustment *p_adj, gpointer userdata );
+gint GtkModeManage   ( intf_thread_t * p_intf );
 
 /*****************************************************************************
  * Module descriptor
@@ -64,8 +68,10 @@ gint E_(GtkModeManage)   ( intf_thread_t * p_intf );
  *****************************************************************************/
 vlc_module_begin();
     set_description( N_("PDA Linux Gtk2+ interface") );
-//    add_bool( "pda-autoplayfile", 1, GtkAutoPlayFile, AUTOPLAYFILE_TEXT, AUTOPLAYFILE_LONGTEXT, VLC_TRUE );
-    set_capability( "interface", 70 );
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_MAIN );
+//    add_bool( "pda-autoplayfile", 1, GtkAutoPlayFile, AUTOPLAYFILE_TEXT, AUTOPLAYFILE_LONGTEXT, true );
+    set_capability( "interface", 0 );
     set_callbacks( Open, Close );
     add_shortcut( "pda" );
 vlc_module_end();
@@ -88,7 +94,7 @@ static int Open( vlc_object_t *p_this )
 #ifdef NEED_GTK2_MAIN
     msg_Dbg( p_intf, "Using gui-helper" );
     p_intf->p_sys->p_gtk_main =
-        module_Need( p_this, "gui-helper", "gtk2", VLC_TRUE );
+        module_Need( p_this, "gui-helper", "gtk2", true );
     if( p_intf->p_sys->p_gtk_main == NULL )
     {
         free( p_intf->p_sys );
@@ -162,14 +168,7 @@ static void Run( intf_thread_t *p_intf )
 #endif
 
     /* Create some useful widgets that will certainly be used */
-/* FIXME: magic path */
-    add_pixmap_directory("share");
-    add_pixmap_directory("/usr/share/vlc");
-
-    /* Path for pixmaps under linupy 1.4 */
-    add_pixmap_directory("/usr/local/share/pixmaps/vlc");
-    /* Path for pixmaps under linupy 2.0 */
-    add_pixmap_directory("/usr/share/pixmaps/vlc");
+    add_pixmap_directory(config_GetDataDir());
 
     p_intf->p_sys->p_window = create_pda();
     if (p_intf->p_sys->p_window == NULL)
@@ -202,7 +201,7 @@ static void Run( intf_thread_t *p_intf )
     if (p_intf->p_sys->p_adj == NULL)
         msg_Err( p_intf, "Adjustment range not found." );
     g_signal_connect( GTK_OBJECT( p_intf->p_sys->p_adj ), "value_changed",
-                         G_CALLBACK( E_(GtkDisplayDate) ), p_intf );
+                         G_CALLBACK( GtkDisplayDate ), p_intf );
     p_intf->p_sys->f_adj_oldvalue = 0;
     p_intf->p_sys->i_adj_oldvalue = 0;
 
@@ -251,7 +250,7 @@ static void Run( intf_thread_t *p_intf )
                 G_TYPE_UINT64, /* File size */
                 G_TYPE_STRING, /* Owner */
                 G_TYPE_STRING);/* Group */
-    ReadDirectory(p_intf, p_filelist, ".");
+    ReadDirectory(p_intf, p_filelist, (char*)".");
     gtk_tree_view_set_model(GTK_TREE_VIEW(p_intf->p_sys->p_tvfile), GTK_TREE_MODEL(p_filelist));
     g_object_unref(p_filelist);     /* Model will be released by GtkTreeView */
     gtk_tree_selection_set_mode(gtk_tree_view_get_selection(GTK_TREE_VIEW(p_intf->p_sys->p_tvfile)),GTK_SELECTION_MULTIPLE);
@@ -289,15 +288,15 @@ static void Run( intf_thread_t *p_intf )
     gtk_tree_view_column_set_sort_column_id(p_column, 2);
 #endif
     /* update the playlist */
-    p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST, FIND_ANYWHERE );
+    p_playlist = pl_Yield( p_intf );
     p_playlist_store = gtk_list_store_new (3,
                 G_TYPE_STRING, /* Filename */
                 G_TYPE_STRING, /* Time */
                 G_TYPE_UINT);  /* Hidden index */
-    PlaylistRebuildListStore(p_playlist_store, p_playlist);
+    PlaylistRebuildListStore(p_intf,p_playlist_store, p_playlist);
     gtk_tree_view_set_model(GTK_TREE_VIEW(p_intf->p_sys->p_tvplaylist), GTK_TREE_MODEL(p_playlist_store));
     g_object_unref(p_playlist_store);
-    vlc_object_release(p_playlist); /* Free the playlist */
+    pl_Release( p_intf ); /* Free the playlist */
     gtk_tree_selection_set_mode(gtk_tree_view_get_selection(GTK_TREE_VIEW(p_intf->p_sys->p_tvplaylist)),GTK_SELECTION_MULTIPLE);
 
     /* Column properties */
@@ -317,14 +316,14 @@ static void Run( intf_thread_t *p_intf )
 
 #ifdef NEED_GTK2_MAIN
     msg_Dbg( p_intf, "Manage GTK keyboard events using threads" );
-    while( !p_intf->b_die )
+    while( !intf_ShouldDie( p_intf ) )
     {
         Manage( p_intf );
 
         /* Sleep to avoid using all CPU - since some interfaces need to
          * access keyboard events, a 100ms delay is a good compromise */
         gdk_threads_leave();
-        if (p_intf->p_libvlc->i_cpu & CPU_CAPABILITY_FPU)
+        if (vlc_CPU() & CPU_CAPABILITY_FPU)
             msleep( INTF_IDLE_SLEEP );
         else
             msleep( 1000 );
@@ -334,7 +333,7 @@ static void Run( intf_thread_t *p_intf )
     msg_Dbg( p_intf, "Manage GTK keyboard events using timeouts" );
     /* Sleep to avoid using all CPU - since some interfaces needs to access
      * keyboard events, a 1000ms delay is a good compromise */
-    if (p_intf->p_libvlc->i_cpu & CPU_CAPABILITY_FPU)
+    if (vlc_CPU() & CPU_CAPABILITY_FPU)
         i_dummy = gtk_timeout_add( INTF_IDLE_SLEEP / 1000, (GtkFunction)Manage, p_intf );
     else
         i_dummy = gtk_timeout_add( 1000, (GtkFunction)Manage, p_intf );
@@ -366,7 +365,7 @@ void GtkAutoPlayFile( vlc_object_t *p_this )
     {
         p_intf = (intf_thread_t *)p_list->p_values[i_index].p_object ;
 
-        if( strcmp( MODULE_STRING, p_intf->p_module->psz_object_name ) )
+        if( strcmp( MODULE_STRING, module_GetObjName(p_intf->p_module) ) )
         {
             continue;
         }
@@ -376,11 +375,11 @@ void GtkAutoPlayFile( vlc_object_t *p_this )
 
         if( !config_GetInt( p_this, "pda-autoplayfile" ) )
         {
-            p_intf->p_sys->b_autoplayfile = VLC_FALSE;
+            p_intf->p_sys->b_autoplayfile = false;
         }
         else
         {
-            p_intf->p_sys->b_autoplayfile = VLC_TRUE;
+            p_intf->p_sys->b_autoplayfile = true;
         }
         gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( cbautoplay ),
                                       p_intf->p_sys->b_autoplayfile );
@@ -416,40 +415,38 @@ static int Manage( intf_thread_t *p_intf )
     if( p_intf->p_sys->p_input )
     {
         input_thread_t *p_input = p_intf->p_sys->p_input;
+        int64_t i_time = 0, i_length = 0;
 
-        vlc_mutex_lock( &p_input->stream.stream_lock );
-        if( !p_input->b_die )
+        vlc_object_lock( p_input );
+        if( vlc_object_alive (p_input) )
         {
-            /* New input or stream map change */
-            if( p_input->stream.b_changed )
+            playlist_t *p_playlist;
+
+            GtkModeManage( p_intf );
+            p_intf->p_sys->b_playing = 1;
+
+            /* update playlist interface */
+            p_playlist = pl_Yield( p_intf );
+            if (p_playlist != NULL)
             {
-                playlist_t *p_playlist;
-
-                E_(GtkModeManage)( p_intf );
-                p_intf->p_sys->b_playing = 1;
-
-                /* update playlist interface */
-                p_playlist = (playlist_t *) vlc_object_find(
-                        p_intf, VLC_OBJECT_PLAYLIST, FIND_ANYWHERE );
-                if (p_playlist != NULL)
-                {
-                    p_liststore = gtk_list_store_new (3,
-                                               G_TYPE_STRING,
-                                               G_TYPE_STRING,
-                                               G_TYPE_UINT);  /* Hidden index */
-                    PlaylistRebuildListStore(p_liststore, p_playlist);
-                    gtk_tree_view_set_model(p_intf->p_sys->p_tvplaylist, (GtkTreeModel*) p_liststore);
-                    g_object_unref(p_liststore);
-                    vlc_object_release( p_playlist );
-                }
+                p_liststore = gtk_list_store_new (3,
+                                            G_TYPE_STRING,
+                                            G_TYPE_STRING,
+                                            G_TYPE_UINT);  /* Hidden index */
+                PlaylistRebuildListStore(p_intf, p_liststore, p_playlist);
+                gtk_tree_view_set_model(p_intf->p_sys->p_tvplaylist, (GtkTreeModel*) p_liststore);
+                g_object_unref(p_liststore);
+                pl_Release( p_intf );
             }
 
             /* Manage the slider */
-#define p_area p_input->stream.p_selected_area
-            if (p_intf->p_libvlc->i_cpu & CPU_CAPABILITY_FPU)
+            i_time = var_GetTime( p_intf->p_sys->p_input, "time" );
+            i_length = var_GetTime( p_intf->p_sys->p_input, "length" );
+
+            if (vlc_CPU() & CPU_CAPABILITY_FPU)
             {
                 /* Manage the slider for CPU_CAPABILITY_FPU hardware */
-                if( p_input->stream.b_seekable && p_intf->p_sys->b_playing )
+                if( p_intf->p_sys->b_playing )
                 {
                     float newvalue = p_intf->p_sys->p_adj->value;
 
@@ -460,7 +457,7 @@ static int Manage( intf_thread_t *p_intf )
                         /* Update the value */
                         p_intf->p_sys->p_adj->value =
                         p_intf->p_sys->f_adj_oldvalue =
-                            ( 100. * p_area->i_tell ) / p_area->i_size;
+                            ( 100 * i_time ) / i_length;
                         g_signal_emit_by_name( GTK_OBJECT( p_intf->p_sys->p_adj ),
                                                  "value_changed" );
                     }
@@ -468,12 +465,12 @@ static int Manage( intf_thread_t *p_intf )
                      * finished dragging the slider */
                     else if( p_intf->p_sys->b_slider_free )
                     {
-                        off_t i_seek = ( newvalue * p_area->i_size ) / 100;
+                        double f_pos = (double)newvalue / 100.0;
 
                         /* release the lock to be able to seek */
-                        vlc_mutex_unlock( &p_input->stream.stream_lock );
-                        input_Seek( p_input, i_seek, INPUT_SEEK_SET );
-                        vlc_mutex_lock( &p_input->stream.stream_lock );
+                        vlc_object_unlock( p_input );
+                        var_SetFloat( p_input, "position", f_pos );
+                        vlc_object_lock( p_input );
 
                         /* Update the old value */
                         p_intf->p_sys->f_adj_oldvalue = newvalue;
@@ -483,7 +480,7 @@ static int Manage( intf_thread_t *p_intf )
             else
             {
                 /* Manage the slider without CPU_CAPABILITY_FPU hardware */
-                if( p_input->stream.b_seekable && p_intf->p_sys->b_playing )
+                if( p_intf->p_sys->b_playing )
                 {
                     off_t newvalue = p_intf->p_sys->p_adj->value;
 
@@ -494,7 +491,7 @@ static int Manage( intf_thread_t *p_intf )
                         /* Update the value */
                         p_intf->p_sys->p_adj->value =
                         p_intf->p_sys->i_adj_oldvalue =
-                            ( 100 * p_area->i_tell ) / p_area->i_size;
+                            ( 100 * i_time ) / i_length;
                         g_signal_emit_by_name( GTK_OBJECT( p_intf->p_sys->p_adj ),
                                                  "value_changed" );
                     }
@@ -502,30 +499,29 @@ static int Manage( intf_thread_t *p_intf )
                      * finished dragging the slider */
                     else if( p_intf->p_sys->b_slider_free )
                     {
-                        off_t i_seek = ( newvalue * p_area->i_size ) / 100;
+                        double f_pos = (double)newvalue / 100.0;
 
                         /* release the lock to be able to seek */
-                        vlc_mutex_unlock( &p_input->stream.stream_lock );
-                        input_Seek( p_input, i_seek, INPUT_SEEK_SET );
-                        vlc_mutex_lock( &p_input->stream.stream_lock );
+                        vlc_object_unlock( p_input );
+                        var_SetFloat( p_input, "position", f_pos );
+                        vlc_object_lock( p_input );
 
                         /* Update the old value */
                         p_intf->p_sys->i_adj_oldvalue = newvalue;
                     }
                 }
             }
-#undef p_area
         }
-        vlc_mutex_unlock( &p_input->stream.stream_lock );
+        vlc_object_unlock( p_input );
     }
-    else if( p_intf->p_sys->b_playing && !p_intf->b_die )
+    else if( p_intf->p_sys->b_playing && !intf_ShouldDie( p_intf ) )
     {
-        E_(GtkModeManage)( p_intf );
+        GtkModeManage( p_intf );
         p_intf->p_sys->b_playing = 0;
     }
 
 #ifndef NEED_GTK2_MAIN
-    if( p_intf->b_die )
+    if( intf_ShouldDie( p_intf ) )
     {
         vlc_mutex_unlock( &p_intf->change_lock );
 
@@ -548,8 +544,10 @@ static int Manage( intf_thread_t *p_intf )
  * the stream. It is called whenever the slider changes its value.
  * The lock has to be taken before you call the function.
  *****************************************************************************/
-void E_(GtkDisplayDate)( GtkAdjustment *p_adj, gpointer userdata )
+void GtkDisplayDate( GtkAdjustment *p_adj, gpointer userdata )
 {
+    (void)p_adj;
+
     intf_thread_t *p_intf;
 
     p_intf = (intf_thread_t*) userdata;
@@ -558,13 +556,14 @@ void E_(GtkDisplayDate)( GtkAdjustment *p_adj, gpointer userdata )
 
     if( p_intf->p_sys->p_input )
     {
-#define p_area p_intf->p_sys->p_input->stream.p_selected_area
         char psz_time[ MSTRTIME_MAX_SIZE ];
+        int64_t i_seconds;
+
+        i_seconds = var_GetTime( p_intf->p_sys->p_input, "time" ) / INT64_C(1000000 );
+        secstotimestr( psz_time, i_seconds );
 
         gtk_label_set_text( GTK_LABEL( p_intf->p_sys->p_slider_label ),
-                        input_OffsetToTime( p_intf->p_sys->p_input, psz_time,
-                                   ( p_area->i_size * p_adj->value ) / 100 ) );
-#undef p_area
+                            psz_time );
      }
 }
 
@@ -574,10 +573,10 @@ void E_(GtkDisplayDate)( GtkAdjustment *p_adj, gpointer userdata )
  *****************************************************************************
  * The lock has to be taken before you call the function.
  *****************************************************************************/
-gint E_(GtkModeManage)( intf_thread_t * p_intf )
+gint GtkModeManage( intf_thread_t * p_intf )
 {
     GtkWidget *     p_slider = NULL;
-    vlc_bool_t      b_control;
+    bool      b_control;
 
     if ( p_intf->p_sys->p_window == NULL )
         msg_Err( p_intf, "Main widget not found" );
@@ -593,20 +592,13 @@ gint E_(GtkModeManage)( intf_thread_t * p_intf )
     if( p_intf->p_sys->p_input )
     {
         /* initialize and show slider for seekable streams */
-        if( p_intf->p_sys->p_input->stream.b_seekable )
         {
             gtk_widget_show( GTK_WIDGET( p_slider ) );
         }
-        else
-        {
-            /* hide slider */
-            gtk_widget_hide( GTK_WIDGET( p_slider ) );
-        }
 
         /* control buttons for free pace streams */
-        b_control = p_intf->p_sys->p_input->stream.b_pace_control;
+        b_control = p_intf->p_sys->p_input->b_can_pace_control;
 
-        p_intf->p_sys->p_input->stream.b_changed = 0;
         msg_Dbg( p_intf, "stream has changed, refreshing interface" );
     }
 
@@ -616,4 +608,3 @@ gint E_(GtkModeManage)( intf_thread_t * p_intf )
     gtk_widget_set_sensitive( lookup_widget( p_intf->p_sys->p_window, "tbForward"), b_control );
     return TRUE;
 }
-

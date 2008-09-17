@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cinepak.c: cinepak video decoder
  *****************************************************************************
- * Copyright (C) 1999-2001 VideoLAN
- * $Id: cinepak.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999-2001 the VideoLAN team
+ * $Id: b7642ec24911bb3240bfc7db3d6aa194f99b9c93 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,15 +18,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <vlc/vlc.h>
-#include <vlc/vout.h>
-#include <vlc/decoder.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_vout.h>
+#include <vlc_codec.h>
 
 /*****************************************************************************
  * Module descriptor
@@ -35,8 +40,10 @@ static int  OpenDecoder ( vlc_object_t * );
 static void CloseDecoder( vlc_object_t * );
 
 vlc_module_begin();
-    set_description( _("Cinepak video decoder") );
-    set_capability( "decoder", 100 );
+    set_description( N_("Cinepak video decoder") );
+    set_capability( "decoder", 50 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_VCODEC );
     set_callbacks( OpenDecoder, CloseDecoder );
 vlc_module_end();
 
@@ -57,8 +64,8 @@ typedef struct
 {
     int b_grayscale; /* force to grayscale */
 
-    int i_width;
-    int i_height;
+    unsigned int i_width;
+    unsigned int i_height;
 
     int i_stride_x;
     int i_stride_y;
@@ -87,7 +94,7 @@ struct decoder_sys_t
 
 static picture_t *DecodeBlock ( decoder_t *, block_t ** );
 
-static int cinepak_decode_frame( cinepak_context_t *, int, uint8_t * );
+static int cinepak_decode_frame( cinepak_context_t *, size_t, uint8_t * );
 
 /*****************************************************************************
  * OpenDecoder: probe the decoder and return score
@@ -109,10 +116,7 @@ static int OpenDecoder( vlc_object_t *p_this )
 
     /* Allocate the memory needed to store the decoder's structure */
     if( ( p_dec->p_sys = p_sys = malloc(sizeof(decoder_sys_t)) ) == NULL )
-    {
-        msg_Err( p_dec, "out of memory" );
-        return VLC_EGENERIC;
-    }
+        return VLC_ENOMEM;
     memset( &p_sys->context, 0, sizeof( cinepak_context_t ) );
 
     var_Create( p_dec, "grayscale", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
@@ -150,7 +154,7 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
                                      p_block->p_buffer );
     if( i_status < 0 )
     {
-        msg_Warn( p_dec, "cannot decode one frame (%d bytes)",
+        msg_Warn( p_dec, "cannot decode one frame (%zu bytes)",
                   p_block->i_buffer );
         block_Release( p_block );
         return NULL;
@@ -173,7 +177,7 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
             p_src = p_sys->context.p_pix[i_plane];
 
             i_lines = __MIN( p_sys->context.i_lines[i_plane],
-                             p_pic->p[i_plane].i_lines );
+                             p_pic->p[i_plane].i_visible_lines );
             for( i_line = 0; i_line < i_lines; i_line++ )
             {
                 memcpy( p_dst, p_src,
@@ -203,9 +207,7 @@ static void CloseDecoder( vlc_object_t *p_this )
     msg_Dbg( p_dec, "cinepak decoder stopped" );
 
     for( i = 0; i < 3; i++ )
-    {
-        if( p_sys->context.p_pix[i] ) free( p_sys->context.p_pix[i] );
-    }
+        free( p_sys->context.p_pix[i] );
 
     free( p_sys );
 }
@@ -222,9 +224,6 @@ static void CloseDecoder( vlc_object_t *p_this )
 
 #define GET4BYTES( p ) \
     GetDWBE( p ); p+= 4;
-
-#define FREE( p ) \
-    if( p ) free( p )
 
 static void cinepak_LoadCodebook( cinepak_codebook_t *p_codebook,
                                   uint8_t *p_data, int b_grayscale )
@@ -275,10 +274,20 @@ static void cinepak_LoadCodebook( cinepak_codebook_t *p_codebook,
 
 static void cinepak_Getv4( cinepak_context_t *p_context,
                            int i_strip, int i_x, int i_y,
-                           int i_x2, int i_y2, uint8_t *p_data )
+                           uint8_t *p_data )
 {
     uint8_t i_index[4];
     int i,j;
+
+    size_t y_max = p_context->i_stride[0] * ( i_y + 5 ) + i_x + 5;
+    size_t u_max = p_context->i_stride[1] * ( ( i_y/2 ) + 2 ) + 2 + ( i_x / 2 );
+    size_t v_max = p_context->i_stride[2] * ( ( i_y/2 ) + 2 ) + 2 + ( i_x / 2 );
+    size_t y_siz = p_context->i_stride[0] * p_context->i_lines[0];
+    size_t u_siz = p_context->i_stride[1] * p_context->i_lines[1];
+    size_t v_siz = p_context->i_stride[2] * p_context->i_lines[2];
+    /* boundary check */
+    if( y_max >= y_siz || u_max >= u_siz || v_max >= v_siz )
+        return;
 
     uint8_t *p_dst_y, *p_dst_u, *p_dst_v;
 #define PIX_SET_Y( x, y, v ) \
@@ -322,10 +331,20 @@ static void cinepak_Getv4( cinepak_context_t *p_context,
 
 static void cinepak_Getv1( cinepak_context_t *p_context,
                            int i_strip, int i_x,  int i_y,
-                           int i_x2, int i_y2, uint8_t *p_data )
+                           uint8_t *p_data )
 {
     uint8_t i_index;
     int i,j;
+
+    size_t y_max = p_context->i_stride[0] * ( i_y + 5 ) + i_x + 5;
+    size_t u_max = p_context->i_stride[1] * ( ( i_y/2 ) + 2 ) + 2 + ( i_x / 2 );
+    size_t v_max = p_context->i_stride[2] * ( ( i_y/2 ) + 2 ) + 2 + ( i_x / 2 );
+    size_t y_siz = p_context->i_stride[0] * p_context->i_lines[0];
+    size_t u_siz = p_context->i_stride[1] * p_context->i_lines[1];
+    size_t v_siz = p_context->i_stride[2] * p_context->i_lines[2];
+    /* boundary check */
+    if( y_max >= y_siz || u_max >= u_siz || v_max >= v_siz )
+        return;
 
     uint8_t *p_dst_y, *p_dst_u, *p_dst_v;
 #define PIX_SET_Y( x, y, v ) \
@@ -369,14 +388,14 @@ static void cinepak_Getv1( cinepak_context_t *p_context,
  * The function that decode one frame
  *****************************************************************************/
 static int cinepak_decode_frame( cinepak_context_t *p_context,
-                                 int i_length, uint8_t *p_data )
+                                 size_t i_length, uint8_t *p_data )
 {
     int i_strip;
 
-    int i_frame_flags;
-    int i_frame_size;
-    int i_width, i_height;
-    int i_frame_strips;
+    int8_t i_frame_flags;
+    uint32_t i_frame_size;
+    uint16_t i_width, i_height;
+    uint16_t i_frame_strips;
     int i_index;
     int i_strip_x1 =0, i_strip_y1=0;
     int i_strip_x2 =0, i_strip_y2=0;
@@ -394,7 +413,8 @@ static int cinepak_decode_frame( cinepak_context_t *p_context,
     i_height = GET2BYTES( p_data );
     i_frame_strips = GET2BYTES( p_data );
 
-    if( !i_frame_size || !i_width || !i_height )
+    if( !i_frame_size || !i_width || !i_height ||
+        i_width > 0xffff-3 || i_height > 0xffff-3)
     {
         /* Broken header */
         return( -1 );
@@ -407,7 +427,7 @@ static int cinepak_decode_frame( cinepak_context_t *p_context,
         int i;
         for( i = 0; i < 3; i++ )
         {
-            FREE( p_context->p_pix[i] );
+            free( p_context->p_pix[i] );
         }
 
         p_context->i_width = i_width;
@@ -425,6 +445,8 @@ static int cinepak_decode_frame( cinepak_context_t *p_context,
         {
             p_context->p_pix[i] = malloc( p_context->i_stride[i] *
                                           p_context->i_lines[i] );
+            if( p_context->p_pix[i] == NULL )
+                return -1;
             /* Set it to all black */
             memset( p_context->p_pix[i], ( i == 0 ) ? 0 : 128 ,
                     p_context->i_stride[i] * p_context->i_lines[i] );
@@ -445,18 +467,18 @@ static int cinepak_decode_frame( cinepak_context_t *p_context,
     /* Now decode each strip */
     for( i_strip = 0; i_strip < i_frame_strips; i_strip++ )
     {
-        int i_strip_id;
-        int i_strip_size;
+        uint16_t i_strip_size;
 
         if( i_length <= 12 )
         {
             break;
         }
 
-        i_strip_id   = GET2BYTES( p_data );
+        p_data += 2; /* int16_t i_strip_id   = GET2BYTES( p_data ); */
+
         i_strip_size = GET2BYTES( p_data );
         i_strip_size = __MIN( i_strip_size, i_length );
-        /* FIXME I don't really understand how it's work; */
+        /* FIXME I don't really understand how it works; */
         i_strip_y1  = i_strip_y2 + GET2BYTES( p_data );
         i_strip_x1  = GET2BYTES( p_data );
         i_strip_y2  = i_strip_y2 + GET2BYTES( p_data );
@@ -584,7 +606,6 @@ static int cinepak_decode_frame( cinepak_context_t *p_context,
                                            i_strip,
                                            i_strip_x1 + i_x,
                                            i_strip_y1 + i_y,
-                                           i_strip_x2, i_strip_y2,
                                            p_data );
                             p_data += 4;
                             i_chunk_size -= 4;
@@ -595,7 +616,6 @@ static int cinepak_decode_frame( cinepak_context_t *p_context,
                                            i_strip,
                                            i_strip_x1 + i_x,
                                            i_strip_y1 + i_y,
-                                           i_strip_x2, i_strip_y2,
                                            p_data );
                             p_data++;
                             i_chunk_size--;
@@ -643,7 +663,6 @@ static int cinepak_decode_frame( cinepak_context_t *p_context,
                                                i_strip,
                                                i_strip_x1 + i_x,
                                                i_strip_y1 + i_y,
-                                               i_strip_x2, i_strip_y2,
                                                p_data );
                                 p_data += 4;
                                 i_chunk_size -= 4;
@@ -655,7 +674,6 @@ static int cinepak_decode_frame( cinepak_context_t *p_context,
                                                i_strip,
                                                i_strip_x1 + i_x,
                                                i_strip_y1 + i_y,
-                                               i_strip_x2, i_strip_y2,
                                                p_data );
                                 p_data++;
                                 i_chunk_size--;
@@ -681,7 +699,6 @@ static int cinepak_decode_frame( cinepak_context_t *p_context,
                                    i_strip,
                                    i_strip_x1 + i_x,
                                    i_strip_y1 + i_y,
-                                   i_strip_x2, i_strip_y2,
                                    p_data );
                     p_data++;
                     i_chunk_size--;

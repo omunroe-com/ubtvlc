@@ -1,8 +1,8 @@
 /*****************************************************************************
  * decoder.c: dummy decoder plugin for vlc.
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: decoder.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id$
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,14 +18,18 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <vlc/vlc.h>
-#include <vlc/decoder.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_codec.h>
 
 #ifdef HAVE_UNISTD_H
 #   include <unistd.h> /* write(), close() */
@@ -42,11 +46,10 @@
 #   include <fcntl.h>
 #endif
 
-#ifdef HAVE_LIMITS_H
-#   include <limits.h> /* PATH_MAX */
-#endif
+#include <limits.h> /* PATH_MAX */
 
-#include <stdio.h> /* sprintf() */
+
+#include "dummy.h"
 
 /*****************************************************************************
  * decoder_sys_t : theora decoder descriptor
@@ -64,7 +67,7 @@ static void *DecodeBlock( decoder_t *p_dec, block_t **pp_block );
 /*****************************************************************************
  * OpenDecoder: Open the decoder
  *****************************************************************************/
-int E_(OpenDecoder) ( vlc_object_t *p_this )
+int OpenDecoder ( vlc_object_t *p_this )
 {
     decoder_t *p_dec = (decoder_t*)p_this;
     decoder_sys_t *p_sys;
@@ -107,6 +110,8 @@ int E_(OpenDecoder) ( vlc_object_t *p_this )
         DecodeBlock;
     p_dec->pf_decode_audio = (aout_buffer_t *(*)(decoder_t *, block_t **))
         DecodeBlock;
+    p_dec->pf_decode_sub = (subpicture_t *(*)(decoder_t *, block_t **))
+        DecodeBlock;
 
     return VLC_SUCCESS;
 }
@@ -130,7 +135,7 @@ static void *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
         write( p_sys->i_fd, p_block->p_buffer, p_block->i_buffer );
 #endif
 
-        msg_Dbg( p_dec, "dumped %i bytes", p_block->i_buffer );
+        msg_Dbg( p_dec, "dumped %zu bytes", p_block->i_buffer );
     }
 
     block_Release( p_block );
@@ -140,7 +145,7 @@ static void *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
 /*****************************************************************************
  * CloseDecoder: decoder destruction
  *****************************************************************************/
-void E_(CloseDecoder) ( vlc_object_t *p_this )
+void CloseDecoder ( vlc_object_t *p_this )
 {
     decoder_t *p_dec = (decoder_t *)p_this;
     decoder_sys_t *p_sys = p_dec->p_sys;

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout_dummy.c: Dummy video output display method for testing purposes
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: vout.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id$
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,21 +18,25 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                                /* free() */
-#include <string.h>                                            /* strerror() */
 
-#include <vlc/vlc.h>
-#include <vlc/vout.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_vout.h>
 
 #define DUMMY_WIDTH 16
 #define DUMMY_HEIGHT 16
 #define DUMMY_MAX_DIRECTBUFFERS 10
+
+#include "dummy.h"
 
 /*****************************************************************************
  * Local prototypes
@@ -43,13 +47,14 @@ static int  Manage     ( vout_thread_t * );
 static void Render     ( vout_thread_t *, picture_t * );
 static void Display    ( vout_thread_t *, picture_t * );
 static void SetPalette ( vout_thread_t *, uint16_t *, uint16_t *, uint16_t * );
+static int  Control   ( vout_thread_t *, int, va_list );
 
 /*****************************************************************************
  * OpenVideo: activates dummy video thread output method
  *****************************************************************************
  * This function initializes a dummy vout method.
  *****************************************************************************/
-int E_(OpenVideo) ( vlc_object_t *p_this )
+int OpenVideo ( vlc_object_t *p_this )
 {
     vout_thread_t * p_vout = (vout_thread_t *)p_this;
 
@@ -58,9 +63,23 @@ int E_(OpenVideo) ( vlc_object_t *p_this )
     p_vout->pf_manage = Manage;
     p_vout->pf_render = Render;
     p_vout->pf_display = Display;
+    p_vout->pf_control = Control;
 
     return VLC_SUCCESS;
 }
+
+/*****************************************************************************
+ * Control: control facility for the vout
+ *****************************************************************************/
+static int Control( vout_thread_t *p_vout, int i_query, va_list args )
+{
+    switch( i_query )
+    {
+       default:
+            return vout_vaControlDefault( p_vout, i_query, args );
+    }
+}
+
 
 /*****************************************************************************
  * Init: initialize dummy video thread output method
@@ -70,7 +89,7 @@ static int Init( vout_thread_t *p_vout )
     int i_index, i_chroma;
     char *psz_chroma;
     picture_t *p_pic;
-    vlc_bool_t b_chroma = 0;
+    bool b_chroma = 0;
 
     psz_chroma = config_GetPsz( p_vout, "dummy-chroma" );
     if( psz_chroma )
@@ -103,10 +122,11 @@ static int Init( vout_thread_t *p_vout )
     }
     else
     {
-        p_vout->output.i_chroma = VLC_FOURCC('R','V','1','6');
-        p_vout->output.i_rmask  = 0xf800;
-        p_vout->output.i_gmask  = 0x07e0;
-        p_vout->output.i_bmask  = 0x001f;
+        /* Use same chroma as input */
+        p_vout->output.i_chroma = p_vout->render.i_chroma;
+        p_vout->output.i_rmask  = p_vout->render.i_rmask;
+        p_vout->output.i_gmask  = p_vout->render.i_gmask;
+        p_vout->output.i_bmask  = p_vout->render.i_bmask;
         p_vout->output.i_width  = p_vout->render.i_width;
         p_vout->output.i_height = p_vout->render.i_height;
         p_vout->output.i_aspect = p_vout->render.i_aspect;
@@ -176,6 +196,7 @@ static void End( vout_thread_t *p_vout )
  *****************************************************************************/
 static int Manage( vout_thread_t *p_vout )
 {
+    VLC_UNUSED(p_vout);
     return( 0 );
 }
 
@@ -184,6 +205,7 @@ static int Manage( vout_thread_t *p_vout )
  *****************************************************************************/
 static void Render( vout_thread_t *p_vout, picture_t *p_pic )
 {
+    VLC_UNUSED(p_vout); VLC_UNUSED(p_pic);
     /* No need to do anything, the fake direct buffers stay as they are */
 }
 
@@ -192,6 +214,7 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
  *****************************************************************************/
 static void Display( vout_thread_t *p_vout, picture_t *p_pic )
 {
+    VLC_UNUSED(p_vout); VLC_UNUSED(p_pic);
     /* No need to do anything, the fake direct buffers stay as they are */
 }
 
@@ -201,5 +224,6 @@ static void Display( vout_thread_t *p_vout, picture_t *p_pic )
 static void SetPalette ( vout_thread_t *p_vout,
                          uint16_t *red, uint16_t *green, uint16_t *blue )
 {
+    VLC_UNUSED(p_vout); VLC_UNUSED(red); VLC_UNUSED(green); VLC_UNUSED(blue);
     /* No need to do anything, the fake direct buffers stay as they are */
 }

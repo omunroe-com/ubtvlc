@@ -3,9 +3,9 @@
  *****************************************************************************
  * Copyright (C) 2003-2004 Commonwealth Scientific and Industrial Research
  *                         Organisation (CSIRO) Australia
- * Copyright (C) 2004 VideoLAN
+ * Copyright (C) 2004 the VideoLAN team
  *
- * $Id: cmml.c 7397 2004-04-20 17:27:30Z sam $
+ * $Id$
  *
  * Author: Andre Pang <Andre.Pang@csiro.au>
  *
@@ -21,23 +21,26 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <vlc/vlc.h>
-#include <vlc/decoder.h>
-#include <vlc/intf.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
-#include <osd.h>
-
-#include "charset.h"
-
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_input.h>
+#include <vlc_codec.h>
+#include <vlc_osd.h>
+#include <vlc_charset.h>
+#include <vlc_interface.h>
 #include "xtag.h"
 
-#undef CMML_DEBUG
+#undef  CMML_DEBUG
 
 /*****************************************************************************
  * decoder_sys_t : decoder descriptor
@@ -50,31 +53,31 @@ struct decoder_sys_t
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
-static int  OpenDecoder   ( vlc_object_t * );
-static void CloseDecoder  ( vlc_object_t * );
+static int           OpenDecoder   ( vlc_object_t * );
+static void          CloseDecoder  ( vlc_object_t * );
 
-static void DecodeBlock   ( decoder_t *, block_t ** );
+static subpicture_t *DecodeBlock   ( decoder_t *, block_t ** );
 
-static void ParseText     ( decoder_t *, block_t * );
+static void          ParseText     ( decoder_t *, block_t * );
 
 /*****************************************************************************
  * Exported prototypes
  *****************************************************************************/
-int  E_(OpenIntf)  ( vlc_object_t * );
-void E_(CloseIntf) ( vlc_object_t * );
+int  OpenIntf  ( vlc_object_t * );
+void CloseIntf ( vlc_object_t * );
 
 /*****************************************************************************
  * Module descriptor.
  *****************************************************************************/
 vlc_module_begin();
-    set_description( _("CMML annotations decoder") );
+    set_description( N_("CMML annotations decoder") );
     set_capability( "decoder", 50 );
     set_callbacks( OpenDecoder, CloseDecoder );
     add_shortcut( "cmml" );
 
     add_submodule();
         set_capability( "interface", 0 );
-        set_callbacks( E_(OpenIntf), E_(CloseIntf) );
+        set_callbacks( OpenIntf, CloseIntf );
 vlc_module_end();
 
 /*****************************************************************************
@@ -98,14 +101,13 @@ static int OpenDecoder( vlc_object_t *p_this )
     p_dec->pf_decode_sub = DecodeBlock;
 
 #ifdef CMML_DEBUG
-    msg_Dbg( p_dec, "I am at %p", p_dec );
+    msg_Dbg( p_dec, "i am at %p", p_dec );
 #endif
 
     /* Allocate the memory needed to store the decoder's structure */
     if( ( p_dec->p_sys = p_sys =
           (decoder_sys_t *)malloc(sizeof(decoder_sys_t)) ) == NULL )
     {
-        msg_Err( p_dec, "out of memory" );
         return VLC_EGENERIC;
     }
 
@@ -129,7 +131,6 @@ static int OpenDecoder( vlc_object_t *p_this )
 
     /* initialise the CMML responder interface */
     p_sys->p_intf = intf_Create( p_dec, "cmml" );
-    p_sys->p_intf->b_block = VLC_FALSE;
     intf_RunThread( p_sys->p_intf );
 
     return VLC_SUCCESS;
@@ -140,17 +141,32 @@ static int OpenDecoder( vlc_object_t *p_this )
  ****************************************************************************
  * This function must be fed with complete subtitles units.
  ****************************************************************************/
-static void DecodeBlock( decoder_t *p_dec, block_t **pp_block )
+static subpicture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
 {
+    subpicture_t *p_spu;
+
     if( !pp_block || *pp_block == NULL )
     {
-        return;
+        return NULL;
     }
 
     ParseText( p_dec, *pp_block );
 
     block_Release( *pp_block );
     *pp_block = NULL;
+
+    /* allocate an empty subpicture to return.  the actual subpicture
+     * displaying is done in the DisplayAnchor function in intf.c (called from
+     * DisplayPendingAnchor, which in turn is called from the main RunIntf
+     * loop). */
+    p_spu = p_dec->pf_spu_buffer_new( p_dec );
+    if( !p_spu )
+    {
+        msg_Dbg( p_dec, "couldn't allocate new subpicture" );
+        return NULL;
+    }
+
+    return p_spu;
 }
 
 /*****************************************************************************
@@ -172,7 +188,7 @@ static void CloseDecoder( vlc_object_t *p_this )
         intf_StopThread( p_intf );
         vlc_object_detach( p_intf );
         vlc_object_release( p_intf );
-        intf_Destroy( p_intf );
+        vlc_object_release( p_intf );
     }
 
     p_sys->p_intf = NULL;
@@ -214,7 +230,7 @@ static void ParseText( decoder_t *p_dec, block_t *p_block )
 #ifdef CMML_DEBUG
     msg_Dbg( p_dec, "psz_cmml is \"%s\"", psz_cmml );
 #endif
-    
+ 
     /* Parse the <clip> part of the CMML */
     p_clip_parser = xtag_new_parse( psz_cmml, p_block->i_buffer );
     if( !p_clip_parser )
@@ -247,7 +263,7 @@ static void ParseText( decoder_t *p_dec, block_t *p_block )
     if( psz_url )
     {
         char *psz_tmp = strdup( psz_url );
-        
+ 
         val.p_address = psz_tmp;
         if( var_Set( p_dec, "psz-current-anchor-url", val ) != VLC_SUCCESS )
         {
@@ -275,10 +291,10 @@ static void ParseText( decoder_t *p_dec, block_t *p_block )
 
     }
 
-    if( psz_subtitle ) free( psz_subtitle );
-    if( psz_cmml ) free( psz_cmml );
-    if( p_anchor ) free( p_anchor );
-    if( p_clip_parser ) free( p_clip_parser );
-    if( psz_url ) free( psz_url );
+    free( psz_subtitle );
+    free( psz_cmml );
+    free( p_anchor );
+    free( p_clip_parser );
+    free( psz_url );
 }
 

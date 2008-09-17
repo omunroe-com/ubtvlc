@@ -7,16 +7,23 @@ doc_DATA = \
 	fortunes.txt \
 	intf-cdda.txt \
 	intf-vcd.txt \
-	web-streaming.html \
-	vlc-howto.sgml \
 	$(NULL)
 
-EXTRA_DIST = \
+CHANGELOGS = \
 	ChangeLog-1999 \
 	ChangeLog-2000 \
 	ChangeLog-2001 \
 	ChangeLog-2002 \
 	ChangeLog-2003 \
+	ChangeLog-2004 \
+	ChangeLog-2005 \
+	ChangeLog-2006 \
+	ChangeLog-2007 \
+	ChangeLog-2008 \
+	$(NULL)
+
+EXTRA_DIST = \
+	$(CHANGELOGS) \
 	vlc.1 \
 	vlc-config.1 \
 	bugreport-howto.txt \
@@ -24,9 +31,8 @@ EXTRA_DIST = \
 	intf-cdda.txt \
 	intf-vcd.txt \
 	release-howto.txt \
-	web-streaming.html \
-	vlc-howto.sgml \
 	arm-crosscompile-howto.sgml \
+	Doxyfile.in \
 	Configure.help \
 	lirc/example.lircrc \
 	skins/skins-howto.txt \
@@ -39,4 +45,30 @@ EXTRA_DIST = \
 	strings.txt \
 	translations.txt \
 	win32/Cross-Compile-Howto.txt \
+	demo.sh \
 	$(NULL)
+
+DISTCLEANFILES = $(CHANGELOGS) Doxyfile
+
+Doxyfile: Doxyfile.in $(top_builddir)/config.status
+	cd $(top_builddir) && $(SHELL) ./config.status --file=$(subdir)/$@
+
+doc: Doxyfile
+	doxygen
+
+$(CHANGELOGS): Makefile.am
+	if test -d "$(top_srcdir)/.git"; then \
+		y="$@"; y="$${y##ChangeLog-}" ; \
+		git --git-dir="$(top_srcdir)/.git" log \
+			--since="$$y-01-01" \
+			--until="$$y-12-31 23:00:00 -0100" \
+			> "$@" ; \
+	fi
+
+# This one needs to be rebuilt all the time :)
+.PHONY: ChangeLog-2008 changelogs doc
+
+changelogs: $(CHANGELOGS)
+
+#distclean-hook:
+#	test "$(srcdir)" = "$(builddir)" || rm -f -- $(CHANGELOGS)

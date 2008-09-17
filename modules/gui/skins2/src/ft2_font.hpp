@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ft2_font.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ft2_font.hpp 7141 2004-03-22 20:38:15Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef FT2_FONT_HPP
@@ -29,6 +29,7 @@
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 #include <string>
+#include <map>
 
 #include "generic_font.hpp"
 
@@ -42,7 +43,7 @@ class FT2Font: public GenericFont
         FT2Font( intf_thread_t *pIntf, const string &rName, int size );
         virtual ~FT2Font();
 
-        /// Initalize the object. Returns false if it failed
+        /// Initialize the object. Returns false if it failed
         virtual bool init();
 
         /// Render a string on a bitmap.
@@ -54,6 +55,15 @@ class FT2Font: public GenericFont
         virtual int getSize() const { return m_height; }
 
     private:
+        typedef struct
+        {
+            FT_Glyph m_glyph;
+            FT_BBox m_size;
+            int m_index;
+            int m_advance;
+        } Glyph_t;
+        typedef map<uint32_t,Glyph_t> GlyphMap_t;
+
         /// File name
         const string m_name;
         /// Buffer to store the font
@@ -66,11 +76,11 @@ class FT2Font: public GenericFont
         FT_Face m_face;
         /// Font metrics
         int m_height, m_ascender, m_descender;
-        /// Index, glyph, width and advance of the dot symbol
-        int m_dotIndex;
-        FT_Glyph m_dotGlyph;
-        int m_dotWidth;
-        int m_dotAdvance;
+        /// Glyph cache
+        mutable GlyphMap_t m_glyphCache;
+
+        /// Get the glyph corresponding to the given code
+        Glyph_t &getGlyph( uint32_t code ) const;
 };
 
 

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * InterfaceWindow.h: BeOS interface window class prototype
  *****************************************************************************
- * Copyright (C) 1999, 2000, 2001 VideoLAN
- * $Id: InterfaceWindow.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999, 2000, 2001 the VideoLAN team
+ * $Id$
  *
  * Authors: Jean-Marc Dressler <polux@via.ecp.fr>
  *          Tony Castley <tcastley@mail.powerup.com.au>
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef BEOS_INTERFACE_WINDOW_H
@@ -32,11 +32,12 @@
 
 class BMenuBar;
 class MediaControlView;
+#if 0
 class PlayListWindow;
+#endif
 class BFilePanel;
 class PreferencesWindow;
 class MessagesWindow;
-class VlcWrapper;
 
 class CDMenu : public BMenu
 {
@@ -53,16 +54,16 @@ class CDMenu : public BMenu
 class LanguageMenu : public BMenu
 {
  public:
-                            LanguageMenu( const char* name,
-                                          int menu_kind,
-                                          VlcWrapper *p_wrapper );
+                            LanguageMenu( intf_thread_t * p_intf,
+                                          const char * psz_name,
+                                          char * psz_variable );
     virtual                 ~LanguageMenu();
 
     virtual void            AttachedToWindow();
 
  private:
-    VlcWrapper *            p_wrapper;
-    int                     kind;
+    intf_thread_t         * p_intf;
+    char                  * psz_variable;
 };
 
 class TitleMenu : public BMenu
@@ -91,9 +92,9 @@ class ChapterMenu : public BMenu
 class InterfaceWindow : public BWindow
 {
  public:
-                            InterfaceWindow( BRect frame,
-                                             const char* name,
-                                             intf_thread_t* p_interface );
+                            InterfaceWindow( intf_thread_t * p_intf,
+                                             BRect frame,
+                                             const char * name );
     virtual                 ~InterfaceWindow();
 
                             // BWindow
@@ -103,28 +104,33 @@ class InterfaceWindow : public BWindow
 
                             // InterfaceWindow
             void            UpdateInterface();
+            void            UpdatePlaylist();
+
             bool            IsStopped() const;
-        
+ 
     MediaControlView*        p_mediaControl;
     MessagesWindow*         fMessagesWindow;
 
- private:    
-            void            _UpdatePlaylist();
+ private:
             void            _SetMenusEnabled( bool hasFile,
                                               bool hasChapters = false,
                                               bool hasTitles = false );
             void            _UpdateSpeedMenu( int rate );
-            void			_ShowFilePanel( uint32 command,
-            								const char* windowTitle );
-			void			_RestoreSettings();
-			void			_StoreSettings();
+            void            _ShowFilePanel( uint32 command,
+                                            const char* windowTitle );
+            void            _RestoreSettings();
+            void            _StoreSettings();
 
-    intf_thread_t*          p_intf;
-    es_descriptor_t*        p_spu_es;
+    intf_thread_t         * p_intf;
+    input_thread_t        * p_input;
+    playlist_t            * p_playlist;
+    es_descriptor_t       * p_spu_es;
+    bool                    b_playlist_update;
 
-    bool                    fPlaylistIsEmpty;
     BFilePanel*             fFilePanel;
+#if 0
     PlayListWindow*         fPlaylistWindow;
+#endif
     PreferencesWindow*      fPreferencesWindow;
     BMenuBar*               fMenuBar;
     BMenuItem*              fGotoMenuMI;
@@ -149,20 +155,19 @@ class InterfaceWindow : public BWindow
     BMenu*                  fSpeedMenu;
     BMenu*                  fShowMenu;
     bigtime_t               fLastUpdateTime;
-	BMessage*				fSettings;	// we keep the message arround
-										// for forward compatibility
-    VlcWrapper*				p_wrapper;
+    BMessage*               fSettings;  // we keep the message arround
+                                        // for forward compatibility
 };
 
 
 // some global support functions
 status_t load_settings( BMessage* message,
-						const char* fileName,
-						const char* folder = NULL );
+                        const char* fileName,
+                        const char* folder = NULL );
 
 status_t save_settings( BMessage* message,
-						const char* fileName,
-						const char* folder = NULL );
+                        const char* fileName,
+                        const char* folder = NULL );
 
 
 #endif    // BEOS_INTERFACE_WINDOW_H

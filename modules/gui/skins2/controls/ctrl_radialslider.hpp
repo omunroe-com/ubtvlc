@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ctrl_radialslider.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_radialslider.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CTRL_RADIALSLIDER_HPP
@@ -57,6 +57,9 @@ class CtrlRadialSlider: public CtrlGeneric, public Observer<VarPercent>
         /// Draw the control on the given graphics
         virtual void draw( OSGraphics &rImage, int xDest, int yDest );
 
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return "radial_slider"; }
+
     private:
         /// Finite state machine of the control
         FSM m_fsm;
@@ -66,10 +69,6 @@ class CtrlRadialSlider: public CtrlGeneric, public Observer<VarPercent>
         VarPercent &m_rVariable;
         /// Min and max angles of the button
         float m_minAngle, m_maxAngle;
-        /// Callbacks objects
-        Callback m_cmdUpDown;
-        Callback m_cmdDownUp;
-        Callback m_cmdMove;
         /// Position of the cursor
         int m_position;
         /// Size of an image
@@ -81,13 +80,13 @@ class CtrlRadialSlider: public CtrlGeneric, public Observer<VarPercent>
         /// Last saved position
         int m_lastPos;
 
-        /// Callback functions
-        static void transUpDown( SkinObject *pCtrl );
-        static void transDownUp( SkinObject *pCtrl );
-        static void transMove( SkinObject *pCtrl );
+        /// Callback objects
+        DEFINE_CALLBACK( CtrlRadialSlider, UpDown )
+        DEFINE_CALLBACK( CtrlRadialSlider, DownUp )
+        DEFINE_CALLBACK( CtrlRadialSlider, Move )
 
         /// Method called when the observed variable is modified
-        virtual void onUpdate( Subject<VarPercent> &rVariable );
+        virtual void onUpdate( Subject<VarPercent> &rVariable, void* );
 
         /// Change the position of the cursor, with the given position of
         /// the mouse (relative to the layout). Is blocking is true, the

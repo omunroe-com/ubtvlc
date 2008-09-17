@@ -1,8 +1,8 @@
 /*****************************************************************************
  * drms.c: DRMS
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: drms.c 7647 2004-05-12 21:44:59Z jlj $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id$
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Sam Hocevar <sam@zoy.org>
@@ -19,10 +19,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-#include <stdlib.h>                                      /* malloc(), free() */
+#ifdef __LIBVLC__
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#   include <vlc_common.h>
+#   include <vlc_md5.h>
+#   include "libmp4.h"
+#   include <vlc_charset.h>
+#else
+#   include "drmsvl.h"
+#endif
 
 #ifdef WIN32
 #   include <io.h>
@@ -30,13 +41,14 @@
 #   include <stdio.h>
 #endif
 
-#include <vlc/vlc.h>
-
 #ifdef HAVE_ERRNO_H
 #   include <errno.h>
 #endif
 
 #ifdef WIN32
+#   if !defined( UNDER_CE )
+#       include <direct.h>
+#   endif
 #   include <tchar.h>
 #   include <shlobj.h>
 #   include <windows.h>
@@ -50,11 +62,9 @@
 #endif
 
 /* In Solaris (and perhaps others) PATH_MAX is in limits.h. */
-#ifdef HAVE_LIMITS_H
-#   include <limits.h>
-#endif
+#include <limits.h>
 
-#ifdef SYS_DARWIN
+#ifdef __APPLE__
 #   include <mach/mach.h>
 #   include <IOKit/IOKitLib.h>
 #   include <CoreFoundation/CFNumber.h>
@@ -67,8 +77,7 @@
 #include "drms.h"
 #include "drmstables.h"
 
-#include "libmp4.h"
-
+#if !defined( UNDER_CE )
 /*****************************************************************************
  * aes_s: AES keys structure
  *****************************************************************************
@@ -81,6 +90,9 @@ struct aes_s
     uint32_t pp_dec_keys[ AES_KEY_COUNT + 1 ][ 4 ];
 };
 
+#ifdef __LIBVLC__
+# define Digest DigestMD5
+#else
 /*****************************************************************************
  * md5_s: MD5 message structure
  *****************************************************************************
@@ -93,6 +105,7 @@ struct md5_s
     uint32_t p_digest[4]; /* The MD5 digest */
     uint32_t p_data[16];  /* Buffer to cache non-aligned writes */
 };
+#endif
 
 /*****************************************************************************
  * shuffle_s: shuffle structure
@@ -133,10 +146,12 @@ struct drms_s
 static void InitAES       ( struct aes_s *, uint32_t * );
 static void DecryptAES    ( struct aes_s *, uint32_t *, const uint32_t * );
 
+#ifndef __LIBVLC__
 static void InitMD5       ( struct md5_s * );
 static void AddMD5        ( struct md5_s *, const uint8_t *, uint32_t );
 static void EndMD5        ( struct md5_s * );
 static void Digest        ( struct md5_s *, uint32_t * );
+#endif
 
 static void InitShuffle   ( struct shuffle_s *, uint32_t *, uint32_t );
 static void DoShuffle     ( struct shuffle_s *, uint32_t *, uint32_t );
@@ -155,7 +170,7 @@ static void TinyShuffle7  ( uint32_t * );
 static void TinyShuffle8  ( uint32_t * );
 static void DoExtShuffle  ( uint32_t * );
 
-static int GetSystemKey   ( uint32_t *, vlc_bool_t );
+static int GetSystemKey   ( uint32_t *, bool );
 static int WriteUserKey   ( void *, uint32_t * );
 static int ReadUserKey    ( void *, uint32_t * );
 static int GetUserKey     ( void *, uint32_t * );
@@ -198,7 +213,7 @@ static inline void BlockXOR( uint32_t *p_dest, uint32_t *p_s1, uint32_t *p_s2 )
 /*****************************************************************************
  * drms_alloc: allocate a DRMS structure
  *****************************************************************************/
-void *drms_alloc( char *psz_homedir )
+void *drms_alloc( const char *psz_homedir )
 {
     struct drms_s *p_drms;
 
@@ -270,6 +285,15 @@ void drms_decrypt( void *_p_drms, uint32_t *p_buffer, uint32_t i_bytes )
 
 /*****************************************************************************
  * drms_init: initialise a DRMS structure
+ *****************************************************************************
+ * Return values:
+ *  0: success
+ * -1: unimplemented
+ * -2: invalid argument
+ * -3: could not get system key
+ * -4: could not get SCI data
+ * -5: no user key found in SCI data
+ * -6: invalid user key
  *****************************************************************************/
 int drms_init( void *_p_drms, uint32_t i_type,
                uint8_t *p_info, uint32_t i_len )
@@ -282,7 +306,7 @@ int drms_init( void *_p_drms, uint32_t i_type,
         case FOURCC_user:
             if( i_len < sizeof(p_drms->i_user) )
             {
-                i_ret = -1;
+                i_ret = -2;
                 break;
             }
 
@@ -292,7 +316,7 @@ int drms_init( void *_p_drms, uint32_t i_type,
         case FOURCC_key:
             if( i_len < sizeof(p_drms->i_key) )
             {
-                i_ret = -1;
+                i_ret = -2;
                 break;
             }
 
@@ -302,7 +326,7 @@ int drms_init( void *_p_drms, uint32_t i_type,
         case FOURCC_iviv:
             if( i_len < sizeof(p_drms->p_key) )
             {
-                i_ret = -1;
+                i_ret = -2;
                 break;
             }
 
@@ -310,11 +334,11 @@ int drms_init( void *_p_drms, uint32_t i_type,
             break;
 
         case FOURCC_name:
-            p_drms->p_name = strdup( p_info );
+            p_drms->p_name = (uint8_t*) strdup( (char *)p_info );
 
             if( p_drms->p_name == NULL )
             {
-                i_ret = -1;
+                i_ret = -2;
             }
             break;
 
@@ -325,19 +349,28 @@ int drms_init( void *_p_drms, uint32_t i_type,
 
             if( i_len < 64 )
             {
-                i_ret = -1;
+                i_ret = -2;
                 break;
             }
 
             InitMD5( &md5 );
-            AddMD5( &md5, p_drms->p_name, strlen( p_drms->p_name ) );
+            AddMD5( &md5, p_drms->p_name, strlen( (char *)p_drms->p_name ) );
             AddMD5( &md5, p_drms->p_iviv, 16 );
             EndMD5( &md5 );
 
-            if( GetUserKey( p_drms, p_drms->p_key ) )
+            if( p_drms->i_user == 0 && p_drms->i_key == 0 )
             {
-                i_ret = -1;
-                break;
+                static const char p_secret[] = "tr1-th3n.y00_by3";
+                memcpy( p_drms->p_key, p_secret, 16 );
+                REVERSE( p_drms->p_key, 4 );
+            }
+            else
+            {
+                i_ret = GetUserKey( p_drms, p_drms->p_key );
+                if( i_ret )
+                {
+                    break;
+                }
             }
 
             InitAES( &p_drms->aes, p_drms->p_key );
@@ -349,7 +382,7 @@ int drms_init( void *_p_drms, uint32_t i_type,
 
             if( p_priv[ 0 ] != 0x6e757469 ) /* itun */
             {
-                i_ret = -1;
+                i_ret = -6;
                 break;
             }
 
@@ -471,6 +504,7 @@ static void DecryptAES( struct aes_s *p_aes,
     }
 }
 
+#ifndef __LIBVLC__
 /*****************************************************************************
  * InitMD5: initialise an MD5 message
  *****************************************************************************
@@ -657,6 +691,7 @@ static void Digest( struct md5_s *p_md5, uint32_t *p_input )
     p_md5->p_digest[ 2 ] += c;
     p_md5->p_digest[ 3 ] += d;
 }
+#endif
 
 /*****************************************************************************
  * InitShuffle: initialise a shuffle structure
@@ -668,8 +703,8 @@ static void InitShuffle( struct shuffle_s *p_shuffle, uint32_t *p_sys_key,
                          uint32_t i_version )
 {
     char p_secret1[] = "Tv!*";
-    static char const p_secret2[] = "v8rhvsaAvOKMFfUH%798=[;."
-                                    "f8677680a634ba87fnOIf)(*";
+    static const char p_secret2[] = "____v8rhvsaAvOKM____FfUH%798=[;."
+                                    "____f8677680a634____ba87fnOIf)(*";
     unsigned int i;
 
     p_shuffle->i_version = i_version;
@@ -681,8 +716,8 @@ static void InitShuffle( struct shuffle_s *p_shuffle, uint32_t *p_sys_key,
         int32_t i_hash;
 
         InitMD5( &md5 );
-        AddMD5( &md5, (uint8_t *)p_sys_key, 16 );
-        AddMD5( &md5, (uint8_t *)p_secret1, 4 );
+        AddMD5( &md5, (const uint8_t *)p_sys_key, 16 );
+        AddMD5( &md5, (const uint8_t *)p_secret1, 4 );
         EndMD5( &md5 );
 
         p_secret1[ 3 ]++;
@@ -694,10 +729,10 @@ static void InitShuffle( struct shuffle_s *p_shuffle, uint32_t *p_sys_key,
     }
 
     /* Fill p_bordel with completely meaningless initial values. */
+    memcpy( p_shuffle->p_bordel, p_secret2, 64 );
     for( i = 0; i < 4; i++ )
     {
         p_shuffle->p_bordel[ 4 * i ] = U32_AT(p_sys_key + i);
-        memcpy( p_shuffle->p_bordel + 4 * i + 1, p_secret2 + 12 * i, 12 );
         REVERSE( p_shuffle->p_bordel + 4 * i + 1, 3 );
     }
 }
@@ -716,9 +751,7 @@ static void DoShuffle( struct shuffle_s *p_shuffle,
     uint32_t *p_bordel = p_shuffle->p_bordel;
     unsigned int i;
 
-    static uint32_t i_secret = 0;
-
-    static uint32_t p_secret1[] =
+    static const uint32_t p_secret3[] =
     {
         0xAAAAAAAA, 0x01757700, 0x00554580, 0x01724500, 0x00424580,
         0x01427700, 0x00000080, 0xC1D59D01, 0x80144981, 0x815C8901,
@@ -728,21 +761,11 @@ static void DoShuffle( struct shuffle_s *p_shuffle,
         0xD5DDB938, 0x5455A092, 0x5D95A013, 0x4415A192, 0xC5DD393A,
         0x00000080, 0x55555555
     };
+    static const uint32_t i_secret3 = sizeof(p_secret3)/sizeof(p_secret3[0]);
 
-    static char p_secret2[] =
+    static const char p_secret4[] =
         "pbclevtug (p) Nccyr Pbzchgre, Vap.  Nyy Evtugf Erfreirq.";
-
-    if( i_secret == 0 )
-    {
-        REVERSE( p_secret1, sizeof(p_secret1)/sizeof(p_secret1[ 0 ]) );
-        for( ; p_secret2[ i_secret ] != '\0'; i_secret++ )
-        {
-#define ROT13(c) (((c)>='A'&&(c)<='Z')?(((c)-'A'+13)%26)+'A':\
-                  ((c)>='a'&&(c)<='z')?(((c)-'a'+13)%26)+'a':c)
-            p_secret2[ i_secret ] = ROT13(p_secret2[ i_secret ]);
-        }
-        i_secret++; /* include zero terminator */
-    }
+    static const uint32_t i_secret4 = sizeof(p_secret4)/sizeof(p_secret4[0]); /* It include the terminal '\0' */
 
     /* Using the MD5 hash of a memory block is probably not one-way enough
      * for the iTunes people. This function randomises p_bordel depending on
@@ -789,11 +812,23 @@ static void DoShuffle( struct shuffle_s *p_shuffle,
     {
         p_big_bordel[ i ] = U32_AT(p_bordel + i);
     }
-    AddMD5( &md5, (uint8_t *)p_big_bordel, 64 );
+    AddMD5( &md5, (const uint8_t *)p_big_bordel, 64 );
     if( p_shuffle->i_version == 0x01000300 )
     {
-        AddMD5( &md5, (uint8_t *)p_secret1, sizeof(p_secret1) );
-        AddMD5( &md5, (uint8_t *)p_secret2, i_secret );
+        uint32_t p_tmp3[i_secret3];
+        char     p_tmp4[i_secret4];
+
+        memcpy( p_tmp3, p_secret3, sizeof(p_secret3) );
+        REVERSE( p_tmp3, i_secret3 );
+
+#define ROT13(c) (((c)>='A'&&(c)<='Z')?(((c)-'A'+13)%26)+'A':\
+                      ((c)>='a'&&(c)<='z')?(((c)-'a'+13)%26)+'a':c)
+        for( uint32_t i = 0; i < i_secret4; i++ )
+            p_tmp4[i] = ROT13( p_secret4[i] );
+#undef ROT13
+
+        AddMD5( &md5, (const uint8_t *)p_tmp3, sizeof(p_secret3) );
+        AddMD5( &md5, (const uint8_t *)p_tmp4, i_secret4 );
     }
     EndMD5( &md5 );
 
@@ -1469,10 +1504,10 @@ static void TinyShuffle8( uint32_t * p_bordel )
  *****************************************************************************
  * Compute the system key from various system information, see HashSystemInfo.
  *****************************************************************************/
-static int GetSystemKey( uint32_t *p_sys_key, vlc_bool_t b_ipod )
+static int GetSystemKey( uint32_t *p_sys_key, bool b_ipod )
 {
-    static char const p_secret1[ 8 ] = "YuaFlafu";
-    static char const p_secret2[ 8 ] = "zPif98ga";
+    static const char p_secret5[ 8 ] = "YuaFlafu";
+    static const char p_secret6[ 8 ] = "zPif98ga";
     struct md5_s md5;
     int64_t i_ipod_id;
     uint32_t p_system_hash[ 4 ];
@@ -1487,21 +1522,21 @@ static int GetSystemKey( uint32_t *p_sys_key, vlc_bool_t b_ipod )
     /* Combine our system info hash with additional secret data. The resulting
      * MD5 hash will be our system key. */
     InitMD5( &md5 );
-    AddMD5( &md5, p_secret1, 8 );
+    AddMD5( &md5, (const uint8_t*)p_secret5, 8 );
 
     if( !b_ipod )
     {
-        AddMD5( &md5, (uint8_t *)p_system_hash, 6 );
-        AddMD5( &md5, (uint8_t *)p_system_hash, 6 );
-        AddMD5( &md5, (uint8_t *)p_system_hash, 6 );
-        AddMD5( &md5, p_secret2, 8 );
+        AddMD5( &md5, (const uint8_t *)p_system_hash, 6 );
+        AddMD5( &md5, (const uint8_t *)p_system_hash, 6 );
+        AddMD5( &md5, (const uint8_t *)p_system_hash, 6 );
+        AddMD5( &md5, (const uint8_t *)p_secret6, 8 );
     }
     else
     {
         i_ipod_id = U64_AT(&i_ipod_id);
-        AddMD5( &md5, (uint8_t *)&i_ipod_id, sizeof(i_ipod_id) );
-        AddMD5( &md5, (uint8_t *)&i_ipod_id, sizeof(i_ipod_id) );
-        AddMD5( &md5, (uint8_t *)&i_ipod_id, sizeof(i_ipod_id) );
+        AddMD5( &md5, (const uint8_t *)&i_ipod_id, sizeof(i_ipod_id) );
+        AddMD5( &md5, (const uint8_t *)&i_ipod_id, sizeof(i_ipod_id) );
+        AddMD5( &md5, (const uint8_t *)&i_ipod_id, sizeof(i_ipod_id) );
     }
 
     EndMD5( &md5 );
@@ -1546,7 +1581,7 @@ static int WriteUserKey( void *_p_drms, uint32_t *p_user_key )
         snprintf( psz_path, PATH_MAX - 1, "%s/" DRMS_DIRNAME "/%08X.%03d",
                   p_drms->psz_homedir, p_drms->i_user, p_drms->i_key );
 
-        file = fopen( psz_path, "wb" );
+        file = utf8_fopen( psz_path, "wb" );
         if( file != NULL )
         {
             i_ret = fwrite( p_user_key, sizeof(uint32_t),
@@ -1574,7 +1609,7 @@ static int ReadUserKey( void *_p_drms, uint32_t *p_user_key )
               "%s/" DRMS_DIRNAME "/%08X.%03d", p_drms->psz_homedir,
               p_drms->i_user, p_drms->i_key );
 
-    file = fopen( psz_path, "rb" );
+    file = utf8_fopen( psz_path, "rb" );
     if( file != NULL )
     {
         i_ret = fread( p_user_key, sizeof(uint32_t),
@@ -1594,21 +1629,21 @@ static int ReadUserKey( void *_p_drms, uint32_t *p_user_key )
  *****************************************************************************/
 static int GetUserKey( void *_p_drms, uint32_t *p_user_key )
 {
-    static char const p_secret[] = "mUfnpognadfgf873";
+    static const char p_secret7[] = "mUfnpognadfgf873";
     struct drms_s *p_drms = (struct drms_s *)_p_drms;
     struct aes_s aes;
     struct shuffle_s shuffle;
     uint32_t i, y;
-    uint32_t *p_sci_data;
+    uint32_t *p_sci_data = NULL;
     uint32_t i_user, i_key;
     uint32_t p_sys_key[ 4 ];
-    uint32_t i_sci_size, i_blocks, i_remaining;
+    uint32_t i_sci_size = 0, i_blocks, i_remaining;
     uint32_t *p_sci0, *p_sci1, *p_buffer;
     uint32_t p_sci_key[ 4 ];
     char *psz_ipod;
-    int i_ret = -1;
+    int i_ret = -5;
 
-    if( !ReadUserKey( p_drms, p_user_key ) )
+    if( ReadUserKey( p_drms, p_user_key ) == 0 )
     {
         REVERSE( p_user_key, 4 );
         return 0;
@@ -1616,14 +1651,14 @@ static int GetUserKey( void *_p_drms, uint32_t *p_user_key )
 
     psz_ipod = getenv( "IPOD" );
 
-    if( GetSystemKey( p_sys_key, psz_ipod ? VLC_TRUE : VLC_FALSE ) )
+    if( GetSystemKey( p_sys_key, psz_ipod ? true : false ) )
     {
-        return -1;
+        return -3;
     }
 
     if( GetSCIData( psz_ipod, &p_sci_data, &i_sci_size ) )
     {
-        return -1;
+        return -4;
     }
 
     /* Phase 1: unscramble the SCI data using the system key and shuffle
@@ -1640,7 +1675,7 @@ static int GetUserKey( void *_p_drms, uint32_t *p_user_key )
     REVERSE( p_sci_data, 1 );
     InitShuffle( &shuffle, p_sys_key, p_sci_data[ 0 ] );
 
-    memcpy( p_sci_key, p_secret, 16 );
+    memcpy( p_sci_key, p_secret7, 16 );
     REVERSE( p_sci_key, 4 );
 
     while( i_blocks-- )
@@ -1665,9 +1700,8 @@ static int GetUserKey( void *_p_drms, uint32_t *p_user_key )
 
     if( i_remaining >= 4 )
     {
-        i_remaining /= 4;
-        REVERSE( p_buffer, i_remaining );
-        DoShuffle( &shuffle, p_buffer, i_remaining );
+        REVERSE( p_buffer, i_remaining / 4 );
+        DoShuffle( &shuffle, p_buffer, i_remaining / 4 );
     }
 
     /* Phase 2: look for the user key in the generated data. I must admit I
@@ -1739,32 +1773,41 @@ static int GetSCIData( char *psz_ipod, uint32_t **pp_sci,
 {
     FILE *file;
     char *psz_path = NULL;
-    char p_tmp[ PATH_MAX ];
+    char p_tmp[ 4 * PATH_MAX ];
     int i_ret = -1;
 
     if( psz_ipod == NULL )
     {
 #ifdef WIN32
-        char *p_filename = "\\Apple Computer\\iTunes\\SC Info\\SC Info.sidb";
+        const wchar_t *wfile =
+                L"\\Apple Computer\\iTunes\\SC Info\\SC Info.sidb";
         typedef HRESULT (WINAPI *SHGETFOLDERPATH)( HWND, int, HANDLE, DWORD,
-                                                   LPSTR );
+                                                   LPWSTR );
         HINSTANCE shfolder_dll = NULL;
         SHGETFOLDERPATH dSHGetFolderPath = NULL;
+        wchar_t wpath[PATH_MAX];
 
         if( ( shfolder_dll = LoadLibrary( _T("SHFolder.dll") ) ) != NULL )
         {
             dSHGetFolderPath =
                 (SHGETFOLDERPATH)GetProcAddress( shfolder_dll,
-                                                 _T("SHGetFolderPathA") );
+                                                 _T("SHGetFolderPathW") );
         }
 
         if( dSHGetFolderPath != NULL &&
             SUCCEEDED( dSHGetFolderPath( NULL, CSIDL_COMMON_APPDATA,
-                                         NULL, 0, p_tmp ) ) )
+                                         NULL, 0, wpath ) ) )
         {
-            strncat( p_tmp, p_filename, min( strlen( p_filename ),
-                     (sizeof(p_tmp)/sizeof(p_tmp[0]) - 1) -
-                     strlen( p_tmp ) ) );
+            if (wcslen( wpath ) + wcslen( wfile ) >= PATH_MAX )
+            {
+                return -1;
+            }
+            wcscat( wpath, wfile );
+
+            psz_path = FromWide( wpath );
+            strncpy( p_tmp, psz_path, sizeof( p_tmp ) - 1 );
+            p_tmp[sizeof( p_tmp ) - 1] = '\0';
+            free( psz_path );
             psz_path = p_tmp;
         }
 
@@ -1779,7 +1822,7 @@ static int GetSCIData( char *psz_ipod, uint32_t **pp_sci,
 #define ISCINFO "iSCInfo"
         if( strstr( psz_ipod, ISCINFO ) == NULL )
         {
-            snprintf( p_tmp, sizeof(p_tmp)/sizeof(p_tmp[0]) - 1,
+            snprintf( p_tmp, sizeof(p_tmp) - 1,
                       "%s/iPod_Control/iTunes/" ISCINFO "2", psz_ipod );
             psz_path = p_tmp;
         }
@@ -1794,7 +1837,7 @@ static int GetSCIData( char *psz_ipod, uint32_t **pp_sci,
         return -1;
     }
 
-    file = fopen( psz_path, "rb" );
+    file = utf8_fopen( psz_path, "rb" );
     if( file != NULL )
     {
         struct stat st;
@@ -1842,7 +1885,7 @@ static int HashSystemInfo( uint32_t *p_system_hash )
     DWORD i_serial;
     LPBYTE p_reg_buf;
 
-    static LPCTSTR p_reg_keys[ 3 ][ 2 ] =
+    static const LPCTSTR p_reg_keys[ 3 ][ 2 ] =
     {
         {
             _T("HARDWARE\\DESCRIPTION\\System"),
@@ -1867,7 +1910,7 @@ static int HashSystemInfo( uint32_t *p_system_hash )
 
     GetVolumeInformation( _T("C:\\"), NULL, 0, &i_serial,
                           NULL, NULL, NULL, 0 );
-    AddMD5( &md5, (uint8_t *)&i_serial, 4 );
+    AddMD5( &md5, (const uint8_t *)&i_serial, 4 );
 
     for( i = 0; i < sizeof(p_reg_keys) / sizeof(p_reg_keys[ 0 ]); i++ )
     {
@@ -1892,7 +1935,7 @@ static int HashSystemInfo( uint32_t *p_system_hash )
                                  NULL, NULL, p_reg_buf,
                                  &i_size ) == ERROR_SUCCESS )
             {
-                AddMD5( &md5, (uint8_t *)p_reg_buf, i_size );
+                AddMD5( &md5, (const uint8_t *)p_reg_buf, i_size );
             }
 
             free( p_reg_buf );
@@ -1931,25 +1974,35 @@ static int GetiPodID( int64_t *p_ipod_id )
         return 0;
     }
 
-#ifdef SYS_DARWIN
+#ifdef __APPLE__
     CFTypeRef value;
     mach_port_t port;
     io_object_t device;
     io_iterator_t iterator;
-    CFMutableDictionaryRef matching_dic;
+    CFMutableDictionaryRef match_dic;
+    CFMutableDictionaryRef smatch_dic;
 
     if( IOMasterPort( MACH_PORT_NULL, &port ) == KERN_SUCCESS )
     {
-        if( ( matching_dic = IOServiceMatching( "IOFireWireUnit" ) ) != NULL )
+        smatch_dic = IOServiceMatching( "IOFireWireUnit" );
+        match_dic = CFDictionaryCreateMutable( kCFAllocatorDefault, 0,
+                                           &kCFTypeDictionaryKeyCallBacks,
+                                           &kCFTypeDictionaryValueCallBacks );
+
+        if( smatch_dic != NULL && match_dic != NULL )
         {
-            CFDictionarySetValue( matching_dic,
+            CFDictionarySetValue( smatch_dic,
                                   CFSTR("FireWire Vendor Name"),
                                   CFSTR(VENDOR_NAME) );
-            CFDictionarySetValue( matching_dic,
+            CFDictionarySetValue( smatch_dic,
                                   CFSTR("FireWire Product Name"),
                                   CFSTR(PROD_NAME) );
 
-            if( IOServiceGetMatchingServices( port, matching_dic,
+            CFDictionarySetValue( match_dic,
+                                  CFSTR(kIOPropertyMatchKey),
+                                  smatch_dic );
+
+            if( IOServiceGetMatchingServices( port, match_dic,
                                               &iterator ) == KERN_SUCCESS )
             {
                 while( ( device = IOIteratorNext( iterator ) ) != NULL )
@@ -1984,7 +2037,7 @@ static int GetiPodID( int64_t *p_ipod_id )
         mach_port_deallocate( mach_task_self(), port );
     }
 
-#elif HAVE_SYSFS_LIBSYSFS_H
+#elif defined (HAVE_SYSFS_LIBSYSFS_H)
     struct sysfs_bus *bus = NULL;
     struct dlist *devlist = NULL;
     struct dlist *attributes = NULL;
@@ -2014,7 +2067,7 @@ static int GetiPodID( int64_t *p_ipod_id )
                             break;
                         }
                     }
-                }
+               }
 
                 if( !i_ret ) break;
             }
@@ -2027,3 +2080,11 @@ static int GetiPodID( int64_t *p_ipod_id )
     return i_ret;
 }
 
+#else /* !defined( UNDER_CE ) */
+
+void *drms_alloc( char *psz_homedir ){ return 0; }
+void drms_free( void *a ){}
+void drms_decrypt( void *a, uint32_t *b, uint32_t c  ){}
+int drms_init( void *a, uint32_t b, uint8_t *c, uint32_t d ){ return -1; }
+
+#endif /* defined( UNDER_CE ) */

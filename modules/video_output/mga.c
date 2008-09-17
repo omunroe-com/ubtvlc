@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mga.c : Matrox Graphic Array plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: mga.c 6971 2004-03-06 15:24:37Z zorglub $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id$
  *
  * Authors: Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
  *          Samuel Hocevar <sam@zoy.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -27,14 +27,17 @@
  *****************************************************************************/
 #include <errno.h>                                                 /* ENOMEM */
 #include <unistd.h>                                               /* close() */
-#include <stdlib.h>                                                /* free() */
-#include <string.h>                                            /* strerror() */
 #include <fcntl.h>                                                 /* open() */
 #include <sys/ioctl.h>                                            /* ioctl() */
 #include <sys/mman.h>                                          /* PROT_WRITE */
 
-#include <vlc/vlc.h>
-#include <vlc/vout.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_vout.h>
 
 #ifdef SYS_BSD
 #include <sys/types.h>                                     /* typedef ushort */
@@ -56,7 +59,7 @@ static int  NewPicture     ( vout_thread_t *, picture_t * );
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( _("Matrox Graphic Array video output") );
+    set_description( N_("Matrox Graphic Array video output") );
     set_capability( "video output", 10 );
     set_callbacks( Create, Destroy );
 vlc_module_end();
@@ -112,7 +115,7 @@ struct vout_sys_t
 {
     mga_vid_config_t    mga;
     int                 i_fd;
-    byte_t *            p_video;
+    uint8_t *           p_video;
 };
 
 struct picture_sys_t
@@ -134,10 +137,7 @@ static int Create( vlc_object_t *p_this )
     /* Allocate structure */
     p_vout->p_sys = malloc( sizeof( vout_sys_t ) );
     if( p_vout->p_sys == NULL )
-    {
-        msg_Err( p_vout, "out of memory" );
         return( 1 );
-    }
 
     p_vout->p_sys->i_fd = open( "/dev/mga_vid", O_RDWR );
     if( p_vout->p_sys->i_fd == -1 )
@@ -318,18 +318,21 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
 
     p_pic->Y_PIXELS = p_pic->p_data;
     p_pic->p[Y_PLANE].i_lines = p_vout->output.i_height;
+    p_pic->p[Y_PLANE].i_visible_lines = p_vout->output.i_height;
     p_pic->p[Y_PLANE].i_pitch = CEIL32( p_vout->output.i_width );
     p_pic->p[Y_PLANE].i_pixel_pitch = 1;
     p_pic->p[Y_PLANE].i_visible_pitch = p_vout->output.i_width;
 
     p_pic->U_PIXELS = p_pic->p_data + p_vout->p_sys->mga.frame_size * 2/4;
     p_pic->p[U_PLANE].i_lines = p_vout->output.i_height / 2;
+    p_pic->p[U_PLANE].i_visible_lines = p_vout->output.i_height / 2;
     p_pic->p[U_PLANE].i_pitch = CEIL32( p_vout->output.i_width ) / 2;
     p_pic->p[U_PLANE].i_pixel_pitch = 1;
     p_pic->p[U_PLANE].i_visible_pitch = p_pic->p[U_PLANE].i_pitch;
 
     p_pic->V_PIXELS = p_pic->p_data + p_vout->p_sys->mga.frame_size * 3/4;
     p_pic->p[V_PLANE].i_lines = p_vout->output.i_height / 2;
+    p_pic->p[V_PLANE].i_visible_lines = p_vout->output.i_height / 2;
     p_pic->p[V_PLANE].i_pitch = CEIL32( p_vout->output.i_width ) / 2;
     p_pic->p[V_PLANE].i_pixel_pitch = 1;
     p_pic->p[V_PLANE].i_visible_pitch = p_pic->p[V_PLANE].i_pitch;

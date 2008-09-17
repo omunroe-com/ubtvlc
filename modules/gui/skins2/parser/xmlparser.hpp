@@ -1,8 +1,8 @@
 /*****************************************************************************
  * xmlparser.hpp
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: xmlparser.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -18,21 +18,27 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef XMLPARSER_HPP
 #define XMLPARSER_HPP
 
 #include "../src/skin_common.hpp"
-#include <libxml/xmlreader.h>
+#include "vlc_block.h"
+#include "vlc_stream.h"
+#include "vlc_xml.h"
 #include <map>
+
+// Current DTD version
+#define SKINS_DTD_VERSION "2.0"
 
 /// XML parser using libxml2 text reader API
 class XMLParser: public SkinObject
 {
     public:
-        XMLParser( intf_thread_t *pIntf, const string &rFileName );
+        XMLParser( intf_thread_t *pIntf, const string &rFileName,
+                   bool useDTD = true );
         virtual ~XMLParser();
 
         /// Parse the file. Returns true on success
@@ -54,17 +60,17 @@ class XMLParser: public SkinObject
         bool m_errors;
 
         /// Callbacks
-        virtual void handleBeginElement( const string &rName, AttrList_t &attr ) {}
+        virtual void handleBeginElement( const string &rName,
+                                         AttrList_t &attr ) {}
         virtual void handleEndElement( const string &rName ) {}
 
     private:
-        /// Reader context
-        xmlTextReaderPtr m_pReader;
+        void LoadCatalog();
 
-        /// Callback for validation errors
-        static void handleError( void *pArg,  const char *pMsg,
-                                 xmlParserSeverities severity,
-                                 xmlTextReaderLocatorPtr locator);
+        /// Reader context
+        xml_t *m_pXML;
+        xml_reader_t *m_pReader;
+        stream_t *m_pStream;
 };
 
 #endif

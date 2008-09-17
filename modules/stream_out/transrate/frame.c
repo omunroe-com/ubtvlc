@@ -1,15 +1,15 @@
 /*****************************************************************************
  * frame.c: MPEG2 video transrating module
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * Copyright (C) 2003 Antoine Missout
+ * Copyright (C) 2003-2004 the VideoLAN team
+ * Copyright (C) 2003 Antoine Missout <antoine.missout@metakine.com>
  * Copyright (C) 2000-2003 Michel Lespinasse <walken@zoy.org>
  * Copyright (C) 1999-2000 Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
- * $Id: frame.c 7411 2004-04-21 15:54:09Z massiot $
+ * $Id: 5d7a02e3ffdc8380cea90fcacbabe818a213c823 $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
- *          Antoine Missout
+ *          Antoine Missout <antoine.missout@metakine.com>
  *          Michel Lespinasse <walken@zoy.org>
  *          Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
  *
@@ -25,21 +25,23 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdio.h>
-#include <stdlib.h>
 #define NDEBUG 1
 #include <assert.h>
 #include <math.h>
 
-#include <vlc/vlc.h>
-#include <vlc/sout.h>
-#include <vlc/input.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_sout.h>
+#include <vlc_codec.h>
 
 #include "transrate.h"
 
@@ -718,7 +720,7 @@ static void mpeg2_slice( transrate_t *tr, const int code )
                 bs_write( bs, *(dc + i), *(dc_len + i) );
                 putintrablk( bs, new_block[i], tr->intra_vlc_format );
             }
-    
+ 
         }
         else
         {

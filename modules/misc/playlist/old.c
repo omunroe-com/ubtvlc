@@ -1,10 +1,10 @@
 /*****************************************************************************
  * old.c : Old playlist format import/export
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: old.c 7209 2004-03-31 20:52:31Z gbazin $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id$
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,22 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                      /* malloc(), free() */
 
-#include <vlc/vlc.h>
-#include <vlc/intf.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_interface.h>
+#include <vlc_playlist.h>
+#include <vlc_input.h>
+#include <vlc_charset.h>
 
 #include <errno.h>                                                 /* ENOMEM */
 
@@ -47,15 +53,14 @@ int Export_Old( vlc_object_t *p_this )
     playlist_export_t *p_export = (playlist_export_t *)p_playlist->p_private;
     int i;
 
-    msg_Dbg(p_playlist, "Saving using old format");
+    msg_Dbg(p_playlist, "saving using old format");
 
     /* Write header */
     fprintf( p_export->p_file , PLAYLIST_FILE_HEADER "\n" );
 
-    for ( i = 0 ; i < p_playlist->i_size ; i++ )
-    {
-        fprintf( p_export->p_file , "%s\n" ,
-        p_playlist->pp_items[i]->input.psz_uri );
-    }
+    for ( i = 0 ; i < p_export->p_root->i_children ; i++ )
+        utf8_fprintf( p_export->p_file , "%s\n" ,
+                      p_export->p_root->pp_children[i]->p_input->psz_name );
+
     return VLC_SUCCESS;
 }

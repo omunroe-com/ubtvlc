@@ -1,8 +1,8 @@
 /*****************************************************************************
  * transrate.c: MPEG2 video transrating module
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: transrate.c 7411 2004-04-21 15:54:09Z massiot $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: 98ce0836b7952dce346e9acd60a416febb8948fb $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -19,21 +19,24 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdio.h>
-#include <stdlib.h>
 #define NDEBUG 1
 #include <assert.h>
 #include <math.h>
 
-#include <vlc/vlc.h>
-#include <vlc/sout.h>
-#include <vlc/input.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <vlc_common.h>
+#include <vlc_plugin.h>
+#include <vlc_sout.h>
+#include <vlc_input.h>
 
 #include "transrate.h"
 
@@ -53,7 +56,9 @@ static int  transrate_video_process( sout_stream_t *, sout_stream_id_t *, block_
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( _("MPEG2 video transrating stream output") );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_STREAM );
+    set_description( N_("MPEG2 video transrating stream output") );
     set_capability( "sout stream", 50 );
     add_shortcut( "transrate" );
     set_callbacks( Open, Close );
@@ -80,7 +85,7 @@ static int Open( vlc_object_t *p_this )
     char *val;
 
     p_sys = malloc( sizeof( sout_stream_sys_t ) );
-    p_sys->p_out = sout_stream_new( p_stream->p_sout, p_stream->psz_next );
+    p_sys->p_out = sout_StreamNew( p_stream->p_sout, p_stream->psz_next );
 
     p_sys->i_vbitrate   = 0;
 
@@ -104,7 +109,7 @@ static int Open( vlc_object_t *p_this )
         if( p_sys->i_shaping_delay <= 0 )
         {
             msg_Err( p_stream,
-                     "invalid shaping ("I64Fd"ms) reseting to 500ms",
+                     "invalid shaping (%"PRId64"ms) reseting to 500ms",
                      p_sys->i_shaping_delay / 1000 );
             p_sys->i_shaping_delay = 500000;
         }
@@ -116,7 +121,7 @@ static int Open( vlc_object_t *p_this )
         p_sys->b_mpeg4_matrix = 1;
     }
 
-    msg_Dbg( p_stream, "codec video %dkb/s max gop="I64Fd"us",
+    msg_Dbg( p_stream, "codec video %dkb/s max gop=%"PRId64"us",
              p_sys->i_vbitrate / 1024, p_sys->i_shaping_delay );
 
     if( !p_sys->p_out )
@@ -142,7 +147,7 @@ static void Close( vlc_object_t * p_this )
     sout_stream_t       *p_stream = (sout_stream_t *)p_this;
     sout_stream_sys_t   *p_sys = p_stream->p_sys;
 
-    sout_stream_delete( p_sys->p_out );
+    sout_StreamDelete( p_sys->p_out );
     free( p_sys );
 }
 
@@ -172,13 +177,13 @@ static sout_stream_id_t * Add( sout_stream_t *p_stream, es_format_t *p_fmt )
 
         /* open output stream */
         id->id = p_sys->p_out->pf_add( p_sys->p_out, p_fmt );
-        id->b_transrate = VLC_TRUE;
+        id->b_transrate = true;
     }
     else
     {
         msg_Dbg( p_stream, "not transrating a stream (fcc=`%4.4s')", (char*)&p_fmt->i_codec );
         id->id = p_sys->p_out->pf_add( p_sys->p_out, p_fmt );
-        id->b_transrate = VLC_FALSE;
+        id->b_transrate = false;
 
         if( id->id == NULL )
         {

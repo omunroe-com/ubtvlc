@@ -1,9 +1,9 @@
-# $Id: AUTHORS 7388 2004-04-20 01:00:29Z hartman $
+# $Id$
 # 
 # The format of this file was inspired by the Linux kernel CREDITS file.
 # Authors are listed alphabetically.
 # 
-# The fields are: name (N), email (E), web-address (W), CVS account login (C),
+# The fields are: name (N), email (E), web-address (W), SVN account login (C),
 # PGP key ID and fingerprint (P), description (D), and snail-mail address (S).
 
 N: Laurent Aimar
@@ -13,10 +13,11 @@ D: input and decoders core improvements
 D: avi, asf/wmv/wma, mp4/mov, mp3, aac, wav demultiplexers
 D: MPEG-4, Div & OpenDivX and various decoders (ffmpeg)
 D: AAC decoder (libfaad2)
-D: cinepak, adpcm, araw decoders
+D: cinepak, adpcm, araw, musepack decoders
 D: Subtile file parser.
 D: mms, ftp access
 D: Stream output
+D: VLM
 S: France
 
 N: Marc Ariberti
@@ -33,19 +34,20 @@ D: BeOS module fixes and enhancements
 S: Germany
 
 N: Olivier Aubert
-E: oaubert at lisi dot univ-lyon1 dot fr
-D: CORBA interface
+E: olivier.aubert at liris dot cnrs dot fr
+D: Mediacontrol API, Python bindings, svg module
 S: France
 
-N: Sigmund Augdal
-E: sigmunau@idi.ntnu.no
+N: Sigmund Augdal Helberg
+E: dnumgis@videolan.org
 C: sigmunau
 D: lirc plugin
-D: norwegian translation
 D: aalib plugin
-D: KDE plug-in
 D: Subtitles and freetype
 D: Hotkeys
+D: Shoutcast discovery module and b4s playlist parser
+D: wxWidgets preferences
+D: File-Info and metadata handling
 S: Norway
 
 N: Pierre Baillet
@@ -66,6 +68,7 @@ D: mpeg1/2 video decoder (libmpeg2), bandlimited resampling
 D: Ogg and Raw DV demultiplexers
 D: Configuration file infrastructure
 D: wxWindows and http interfaces
+D: Pocket PC port
 S: France
 
 N: Rocky Bernstein
@@ -83,7 +86,7 @@ D: Satellite input
 D: libdvbpsi support
 S: France
 
-N: St�phane Borel
+N: Stéphane Borel
 E: stef@via.ecp.fr
 C: stef
 D: MPEG video decoder
@@ -97,11 +100,37 @@ C: bozo
 D: SDL video output
 S: France
 
+N: Filippo Carone 
+E: filippo[dontspam]@carone.org
+C: littlejohn
+D: Java bindings
+S: Italy
+
+N: Rafaël "Hanz, David" Carré
+E: funman@videolanorg
+C: funman
+P: C0AFF10F
+D: D-Bus control, Audioscrobbler, Telepathy, Taglib meta reader/writer
+D: Ncurses enhancements, Power management inhibition
+D: PGP update core
+D: Spread bugfixes
+S: Netherlands
+
 N: Tony Castley
 E: tony@castley.net
 C: tcastley
 D: BeOS interface, BeOS Video
 S: Australia
+
+N: Antoine Cellerier
+E: dionoea@videolan.org
+C: dionoea
+D: Video Filters: mosaic, gradient and edge detection, magnify, rss, croppadd, erase, extract, gaussianblur, motion detect, puzzle, rotate, bluescreen, alphamask, psychedelic
+D: Demux: podcast, shoutcast
+D: Access: v4l2
+D: HTTP interface pages
+D: Lua (interface, meta fetcher, playlist, ...) modules
+S: France
 
 N: Renaud Dartus
 E: reno@via.ecp.fr
@@ -115,20 +144,37 @@ C: asmax
 D: Audio output
 D: skins module (X11 port)
 D: skins2 module (core and X11 port)
+D: JACK audio output
 S: France
+
+N: Rémi Denis-Courmont
+E: rem#videolan.org
+C: courmisch
+D: network/DNS
+D: SSL/TLS support (core, HTTP server, HTTP input)
+D: VOC files demultiplexer
+S: Finland
 
 N: Colin Delacroix
-E: colin@zoy.org
+E: colin#zoy.org
 C: colin
-D: MacOS X sound support
+D: initial MacOS X port
 S: France
 
-N: Boris Dor�s
+N: Pierre d'Herbemont
+E: pdherbemont#videolan.org
+C: pdherbemont
+D: Mac OS X Framework
+D: LibVLC enhancements
+S: France
+
+N: Boris Dorès
 E: babal(at)via.ecp.fr
 C: babal
 D: Win32 network input
 D: Win32 interface
-D: Headphone channel mixer
+D: Headphone channel mixer, Dolby Surround decoder
+D: Audio output core enhancements
 S: France
 
 N: Jean-Marc Dressler
@@ -151,6 +197,16 @@ E: amf@cus.org.uk
 D: text subtitler and font scripts
 S: United Kingdom
 
+N: Damien Fouilleul
+E: Damien.Fouilleul@laposte.net
+C: Quovodis
+D: ActiveX control
+D: Safari/Firefox plugin for MacOS X
+D: Direct3D Video output
+D: SSE2 chroma converters
+D: improved MMX chroma converters
+S: Ireland
+
 N: Alexis Guillard
 E: alexis.guillard@bt.com
 D: IPv6 support
@@ -168,15 +224,24 @@ D: XVideo video output
 D: Gnome and Gtk+ interface enhancements
 S: United Kingdom
 
+N: Dugal Harris
+E: dugalh (at) protoclea .dot co dot. za
+D: OpenCV video filter
+S: South Africa
+
 N: Derk-Jan Hartman
 E: hartman@videolan.org
 C: hartman
 D: Mac OS X interface
 D: Dutch translation
 D: Directory input
+D: Mac OS X Video Output
+D: Mac OS X Audio Output
+D: Kasenna client support
+D: contrib system for 3rd party libraries
 S: Netherlands
 
-N: Ga�l Hendryckx
+N: Gaël Hendryckx
 E: jimmy@via.ecp.fr
 C: jimmy
 D: IDCT and YUV transforms
@@ -219,17 +284,43 @@ D: AC3 decoder
 D: MPEG audio decoder
 S: France
 
+N: Jean-Baptiste Kempf
+E: jb@videolan.org
+C: jb
+D: Qt4 Interface
+D: Contribs system
+S: France
+
+N: Pavlov Konstantin
+E: thresh@videolan.org
+C: thresh
+D: Build system/linkage fixes
+D: Pidfile creation on daemon mode
+D: Parts of Russian translation
+D: ALTLinux VLC maintainer
+S: Russia
+
+N: Felix Paul Kühne
+E: fkuehne@videolan.org
+C: fkuehne
+D: MacOS X Interface (wizard, structure, extended controls panel, bookmarks window, fullscreen controller)
+D: Interface Interaction (core and OSX)
+D: contrib system for 3rd party libraries
+D: German translation
+S: Germany
+
 N: Simon Latapie
 E: garf@via.ecp.fr
 C: garf
-D: contrast/HSB, and logo  video filters
+D: contrast/HSB, and logo video filters
 D: HTTP interface
+D: VLM
 S: France
 
 N: Pascal Levesque
 E: pascal.levesque@mindready.com
 D: QNX RTOS video output and audio output
-S: Canada, Qu�bec
+S: Canada, Québec
 
 N: Christophe Massiot
 E: massiot@via.ecp.fr
@@ -238,16 +329,30 @@ D: decoder and input core functions
 D: audio output
 D: MPEG video decoder
 D: Many ports (Mac OS X, iPAQ, *BSD, Solaris...)
+D: DVB input
+D: mosaic
+D: TS muxer/demuxer improvements
+D: contrib system for 3rd party libraries
 D: documentation
+D: fortunes maintainer
 S: France
 
-N: Lo�c Minier
+N: Loïc Minier
 E: lool@via.ecp.fr
 C: lool
 D: Gtk/gnome enhancements
 D: xosd interface plug-in
 D: SLP
 S: France
+
+N: Christophe Mutricy
+E: xtophe at videolan d0t org
+C: xtophe
+D: libnotify plugin
+D: contrib system for 3rd party libraries
+D: win32 binary contribs
+D: Varios fixes (configure.ac, wxWidgets, M3U, ...)
+S: England
 
 N: Florian G. Pflug
 E: fgp@phlo.org
@@ -260,13 +365,26 @@ E: heiko.panther@web.de
 D: Mac OS X audio device selection framework
 S: Germany
 
+N: Vincent Penne
+E: ziggy at sashipa dot com
+D: teletext decoder
+S: France
+
 N: Eric Petit
 E: titer@videolan.org
 C: titer
 D: BeOS module fixes and enhancements
 D: Stream output
 D: Mac OS X OpenGL video output
+D: contrib system for 3rd party libraries
 S: France
+
+N: Benjamin Pracht
+E: bigben+spam@videolan.org
+C: bigben
+D: MacOS X Interface (playlist)
+D: documentation
+S: France / Germany
 
 N: Emmanuel Puig
 E: karibu@videolan.org
@@ -274,14 +392,21 @@ C: karibu
 D: skins module (core and win32 port)
 S: France
 
+N: Frédéric Ruget
+E: frederic.ruget@free.fr
+D: Portaudio audio output
+S: France
+
 N: Jean-Paul Saman
-E: jpsaman@wxs.nl
+E: jp_dot_saman#videolan_dot_nl
 D: libmad plug-in
 D: iPAQ port
-D: Familiar and PDA Linux interface
-D: Opie PDA Linux interface
+D: PDA (Familiar Linux) interface 
 D: Dutch Translation
 D: DVB-S/C/T on v4l2 API
+D: HD1000 port 
+D: OSD menu
+D: Digital Video (Firewire/IEEE1394/I-Link)
 S: Netherlands
 
 N: Arnaud Schauly
@@ -300,22 +425,47 @@ D: YUV transforms
 D: X11 and GGI video outputs
 S: France
 
+N: Ken Self
+E: kens@campoz.fslife.co.uk
+C: kenS
+D: BDA module
+S: United Kingdom
+
 N: Richard Shepherd
 E: richard@rshepherd.demon.co.uk
 C: richards
 D: BeOS video output (BBitmap and Overlay)
 S: United Kingdom
 
+N: Clément Stenac
+E: zorglub@videolan.org
+C: zorglub
+D: Playlist core and demuxers, SAP parser
+D: wxWidgets and joystick interfaces
+D: Announce system
+D: visualisation, volume normalizer
+S: France
+
 N: Peter Surda
 E: shurdeek@panorama.sth.ac.at
 D: rc plugin for VLC control through /dev/stdin
 S: Austria
 
-N: Olivier Teuli�re
+N: Olivier Teulière
 E: ipkiss@via.ecp.fr
 C: ipkiss
 D: Win32 interface
 D: skins module (core and win32 port)
 D: skins2 module (core and win32 port)
 S: France
+
+N: Yuehua Zhao
+E: zhao908@hotmail.com
+D: real video codec
+S: China
+
+N: Bo Wang
+E: silencewang@msn.com
+D: real file/rtsp pause and seek support
+S: China
 

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * pls.c : PLS playlist format import
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: pls.c 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id$
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
- * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
+ * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +19,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include <stdlib.h>                                      /* malloc(), free() */
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
-#include <vlc/vlc.h>
-#include <vlc/intf.h>
+#include <vlc_common.h>
+#include <vlc_demux.h>
 
-#include <errno.h>                                                 /* ENOMEM */
 #include "playlist.h"
 
 struct demux_sys_t
@@ -50,42 +51,17 @@ static int Control( demux_t *p_demux, int i_query, va_list args );
 int Import_PLS( vlc_object_t *p_this )
 {
     demux_t *p_demux = (demux_t *)p_this;
+    const uint8_t *p_peek;
+    CHECK_PEEK( p_peek, 10 );
 
-    uint8_t *p_peek;
-    char    *psz_ext;
-
-    if( stream_Peek( p_demux->s , &p_peek, 7 ) < 7 )
-    {
-        msg_Err( p_demux, "cannot peek" );
-        return VLC_EGENERIC;
-    }
-    psz_ext = strrchr ( p_demux->psz_path, '.' );
-
-    if( !strncasecmp( p_peek, "[playlist]", 10 ) )
+    if( POKE( p_peek, "[playlist]", 10 ) || POKE( p_peek, "[Reference]", 10 ) ||
+        demux_IsPathExtension( p_demux, ".pls" )   || demux_IsForced( p_demux, "pls" ) )
     {
         ;
     }
-    else if( ( psz_ext && !strcasecmp( psz_ext, ".pls") ) ||
-             ( p_demux->psz_demux && !strcmp(p_demux->psz_demux, "pls") ) )
-    {
-        ;
-    }
-    else
-    {
-        msg_Warn(p_demux, "pls import module discarded");
-        return VLC_EGENERIC;
-        
-    }
-    msg_Dbg( p_demux, "found valid PLS playlist file");
+    else return VLC_EGENERIC;
 
-    p_demux->pf_control = Control;
-    p_demux->pf_demux = Demux;
-    p_demux->p_sys = malloc( sizeof(demux_sys_t) );
-    if( p_demux->p_sys == NULL )
-    {
-        msg_Err( p_demux, "Out of memory" );
-        return VLC_ENOMEM;
-    }
+    STANDARD_DEMUX_INIT_MSG(  "found valid PLS playlist file");
     p_demux->p_sys->psz_prefix = FindPrefix( p_demux );
 
     return VLC_SUCCESS;
@@ -97,40 +73,30 @@ int Import_PLS( vlc_object_t *p_this )
 void Close_PLS( vlc_object_t *p_this )
 {
     demux_t *p_demux = (demux_t *)p_this;
-    if( p_demux->p_sys->psz_prefix )
-    {
-        free( p_demux->p_sys->psz_prefix );
-    }
+    free( p_demux->p_sys->psz_prefix );
     free( p_demux->p_sys );
 }
 
 static int Demux( demux_t *p_demux )
 {
     mtime_t        i_duration = -1;
-    char          *psz_name = NULL;    
+    char          *psz_name = NULL;
     char          *psz_line;
     char          *psz_mrl = NULL;
+    char          *psz_mrl_orig = NULL;
     char          *psz_key;
     char          *psz_value;
-    playlist_t    *p_playlist;
-    int            i_position;
     int            i_item = -1;
     int            i_new_item = 0;
     int            i_key_length;
+    input_item_t *p_input;
 
-    p_playlist = (playlist_t *) vlc_object_find( p_demux, VLC_OBJECT_PLAYLIST,
-                                                 FIND_PARENT );
-    if( !p_playlist )
-    {
-        msg_Err( p_demux, "can't find playlist" );
-        return -1;
-    }
+    INIT_PLAYLIST_STUFF;
 
-    p_playlist->pp_items[p_playlist->i_index]->b_autodeletion = VLC_TRUE;
-    i_position = p_playlist->i_index + 1;
     while( ( psz_line = stream_ReadLine( p_demux->s ) ) )
     {
-        if( !strncasecmp( psz_line, "[playlist]", sizeof("[playlist]")-1 ) )
+        if( !strncasecmp( psz_line, "[playlist]", sizeof("[playlist]")-1 ) ||
+            !strncasecmp( psz_line, "[Reference]", sizeof("[Reference]")-1 ) )
         {
             free( psz_line );
             continue;
@@ -154,17 +120,27 @@ static int Demux( demux_t *p_demux )
             free( psz_line );
             continue;
         }
+        if( !strcasecmp( psz_key, "numberofentries" ) )
+        {
+            msg_Dbg( p_demux, "pls should have %d entries", atoi(psz_value) );
+            free( psz_line);
+            continue;
+        }
         /* find the number part of of file1, title1 or length1 etc */
         i_key_length = strlen( psz_key );
-        if( i_key_length >= 5 ) /* file1 type case */
+        if( i_key_length >= 4 ) /* Ref1 type case */
         {
-            i_new_item = atoi( psz_key + 4 );
-            if( i_new_item == 0 && i_key_length >= 6 ) /* title1 type case */
+            i_new_item = atoi( psz_key + 3 );
+            if( i_new_item == 0 && i_key_length >= 5 ) /* file1 type case */
             {
-                i_new_item = atoi( psz_key + 5 );
-                if( i_new_item == 0 && i_key_length >= 7 ) /* length1 type case */
+                i_new_item = atoi( psz_key + 4 );
+                if( i_new_item == 0 && i_key_length >= 6 ) /* title1 type case */
                 {
-                    i_new_item = atoi( psz_key + 6 );
+                    i_new_item = atoi( psz_key + 5 );
+                    if( i_new_item == 0 && i_key_length >= 7 ) /* length1 type case */
+                    {
+                        i_new_item = atoi( psz_key + 6 );
+                    }
                 }
             }
         }
@@ -183,35 +159,43 @@ static int Demux( demux_t *p_demux )
         {
             if( psz_mrl )
             {
-                playlist_Add( p_playlist, psz_mrl, psz_name,
-                              PLAYLIST_INSERT, i_position );
-                if( i_duration != -1 )
-                {
-                    playlist_SetDuration( p_playlist, i_position, i_duration );
-                }
-                i_position++;
-                free( psz_mrl );
-                psz_mrl = NULL;
+                p_input = input_item_NewExt( p_demux, psz_mrl, psz_name,
+                                            0, NULL, -1 );
+                input_item_CopyOptions( p_current_input, p_input );
+                input_item_AddSubItem( p_current_input, p_input );
+                vlc_gc_decref( p_input );
             }
             else
             {
                 msg_Warn( p_demux, "no file= part found for item %d", i_item );
             }
-            if( psz_name )
-            {
-                free( psz_name );
-                psz_name = NULL;
-            }
+            free( psz_name );
+            psz_name = NULL;
             i_duration = -1;
             i_item = i_new_item;
             i_new_item = 0;
         }
-        if( !strncasecmp( psz_key, "file", sizeof("file") -1 ) )
+        if( !strncasecmp( psz_key, "file", sizeof("file") -1 ) ||
+            !strncasecmp( psz_key, "Ref", sizeof("Ref") -1 ) )
         {
+            free( psz_mrl_orig );
+            psz_mrl_orig =
             psz_mrl = ProcessMRL( psz_value, p_demux->p_sys->psz_prefix );
+
+            if( !strncasecmp( psz_key, "Ref", sizeof("Ref") -1 ) )
+            {
+                if( !strncasecmp( psz_mrl, "http://", sizeof("http://") -1 ) )
+                {
+                    psz_mrl++;
+                    psz_mrl[0] = 'm';
+                    psz_mrl[1] = 'm';
+                    psz_mrl[2] = 's';
+                }
+            }
         }
         else if( !strncasecmp( psz_key, "title", sizeof("title") -1 ) )
         {
+            free( psz_name );
             psz_name = strdup( psz_value );
         }
         else if( !strncasecmp( psz_key, "length", sizeof("length") -1 ) )
@@ -231,31 +215,26 @@ static int Demux( demux_t *p_demux )
     /* Add last object */
     if( psz_mrl )
     {
-        playlist_Add( p_playlist, psz_mrl, psz_name,
-                      PLAYLIST_INSERT, i_position );
-        if( i_duration != -1 )
-        {
-                    playlist_SetDuration( p_playlist, i_position, i_duration );
-        }
-        i_position++;
-        free( psz_mrl );
+        p_input = input_item_NewExt( p_demux, psz_mrl, psz_name,0, NULL, -1 );
+        input_item_CopyOptions( p_current_input, p_input );
+        input_item_AddSubItem( p_current_input, p_input );
+        vlc_gc_decref( p_input );
+        free( psz_mrl_orig );
         psz_mrl = NULL;
     }
     else
     {
         msg_Warn( p_demux, "no file= part found for item %d", i_item );
     }
-    if( psz_name )
-    {
-        free( psz_name );
-        psz_name = NULL;
-    }
+    free( psz_name );
+    psz_name = NULL;
 
-    vlc_object_release( p_playlist );
-    return VLC_SUCCESS;
+    HANDLE_PLAY_AND_RELEASE;
+    return 0; /* Needed for correct operation of go back */
 }
 
 static int Control( demux_t *p_demux, int i_query, va_list args )
 {
+    VLC_UNUSED(p_demux); VLC_UNUSED(i_query); VLC_UNUSED(args);
     return VLC_EGENERIC;
 }

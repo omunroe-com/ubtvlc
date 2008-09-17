@@ -1,11 +1,11 @@
 /*****************************************************************************
  * x11_window.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: x11_window.cpp 7574 2004-05-01 14:23:40Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifdef X11_SKINS
@@ -76,7 +76,7 @@ X11Window::X11Window( intf_thread_t *pIntf, GenericWindow &rWindow,
         unsigned long flags;
         unsigned long functions;
         unsigned long decorations;
-        long input_mode;
+        signed   long input_mode;
         unsigned long status;
     } motifWmHints;
     Atom hints_atom = XInternAtom( XDISPLAY, "_MOTIF_WM_HINTS", False );
@@ -84,7 +84,7 @@ X11Window::X11Window( intf_thread_t *pIntf, GenericWindow &rWindow,
     motifWmHints.decorations = 0;
     XChangeProperty( XDISPLAY, m_wnd, hints_atom, hints_atom, 32,
                      PropModeReplace, (unsigned char *)&motifWmHints,
-                     sizeof( motifWmHints ) / sizeof( long ) );
+                     sizeof( motifWmHints ) / sizeof( uint32_t ) );
 
     // Drag & drop
     if( m_dragDrop )
@@ -109,10 +109,10 @@ X11Window::X11Window( intf_thread_t *pIntf, GenericWindow &rWindow,
     // Associate the window to the main "parent" window
     XSetTransientForHint( XDISPLAY, m_wnd, m_rDisplay.getMainWindow() );
 
-    // XXX Set this window as the vout
+    // Set this window as a vout
     if( m_pParent )
     {
-        VlcProc::instance( getIntf() )->setVoutWindow( (void*)m_wnd );
+        VlcProc::instance( getIntf() )->registerVoutWindow( (void*)m_wnd );
     }
 
 }
@@ -120,10 +120,9 @@ X11Window::X11Window( intf_thread_t *pIntf, GenericWindow &rWindow,
 
 X11Window::~X11Window()
 {
-    // XXX This window is no more the vout
     if( m_pParent )
     {
-        VlcProc::instance( getIntf() )->setVoutWindow( NULL );
+        VlcProc::instance( getIntf() )->unregisterVoutWindow( (void*)m_wnd );
     }
 
     X11Factory *pFactory = (X11Factory*)X11Factory::instance( getIntf() );
@@ -174,7 +173,81 @@ void X11Window::setOpacity( uint8_t value ) const
 
 void X11Window::toggleOnTop( bool onTop ) const
 {
-    // TODO
+    int i_ret, i_format;
+    unsigned long i, i_items, i_bytesafter;
+    Atom net_wm_supported, net_wm_state, net_wm_state_on_top,net_wm_state_above;
+    union { Atom *p_atom; unsigned char *p_char; } p_args;
+
+    p_args.p_atom = NULL;
+
+    net_wm_supported = XInternAtom( XDISPLAY, "_NET_SUPPORTED", False );
+
+    i_ret = XGetWindowProperty( XDISPLAY, DefaultRootWindow( XDISPLAY ),
+                                net_wm_supported,
+                                0, 16384, False, AnyPropertyType,
+                                &net_wm_supported,
+                                &i_format, &i_items, &i_bytesafter,
+                                (unsigned char **)&p_args );
+
+    if( i_ret != Success || i_items == 0 ) return; /* Not supported */
+
+    net_wm_state = XInternAtom( XDISPLAY, "_NET_WM_STATE", False );
+    net_wm_state_on_top = XInternAtom( XDISPLAY, "_NET_WM_STATE_STAYS_ON_TOP",
+                                       False );
+
+    for( i = 0; i < i_items; i++ )
+    {
+        if( p_args.p_atom[i] == net_wm_state_on_top ) break;
+    }
+
+    if( i == i_items )
+    { /* use _NET_WM_STATE_ABOVE if window manager
+       * doesn't handle _NET_WM_STATE_STAYS_ON_TOP */
+
+        net_wm_state_above = XInternAtom( XDISPLAY, "_NET_WM_STATE_ABOVE",
+                                          False);
+        for( i = 0; i < i_items; i++ )
+        {
+            if( p_args.p_atom[i] == net_wm_state_above ) break;
+        }
+ 
+        XFree( p_args.p_atom );
+        if( i == i_items )
+            return; /* Not supported */
+
+        /* Switch "on top" status */
+        XClientMessageEvent event;
+        memset( &event, 0, sizeof( XClientMessageEvent ) );
+
+        event.type = ClientMessage;
+        event.message_type = net_wm_state;
+        event.display = XDISPLAY;
+        event.window = m_wnd;
+        event.format = 32;
+        event.data.l[ 0 ] = onTop; /* set property */
+        event.data.l[ 1 ] = net_wm_state_above;
+
+        XSendEvent( XDISPLAY, DefaultRootWindow( XDISPLAY ),
+                    False, SubstructureRedirectMask, (XEvent*)&event );
+        return;
+    }
+
+    XFree( p_args.p_atom );
+
+    /* Switch "on top" status */
+    XClientMessageEvent event;
+    memset( &event, 0, sizeof( XClientMessageEvent ) );
+
+    event.type = ClientMessage;
+    event.message_type = net_wm_state;
+    event.display = XDISPLAY;
+    event.window = m_wnd;
+    event.format = 32;
+    event.data.l[ 0 ] = onTop; /* set property */
+    event.data.l[ 1 ] = net_wm_state_on_top;
+
+    XSendEvent( XDISPLAY, DefaultRootWindow( XDISPLAY ),
+                False, SubstructureRedirectMask, (XEvent*)&event );
 }
 
 #endif

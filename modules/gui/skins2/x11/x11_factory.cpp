@@ -1,11 +1,11 @@
 /*****************************************************************************
  * x11_factory.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: x11_factory.cpp 7335 2004-04-12 21:48:18Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifdef X11_SKINS
@@ -33,6 +33,7 @@
 #include "x11_display.hpp"
 #include "x11_graphics.hpp"
 #include "x11_loop.hpp"
+#include "x11_popup.hpp"
 #include "x11_timer.hpp"
 #include "x11_window.hpp"
 #include "x11_tooltip.hpp"
@@ -70,10 +71,11 @@ bool X11Factory::init()
                                      ConnectionNumber( pDisplay ) );
 
     // Initialize the resource path
-    m_resourcePath.push_back( (string)getIntf()->p_vlc->psz_homedir +
-        m_dirSep + CONFIG_DIR + "/skins2" );
+    char *datadir = config_GetUserDataDir();
+    m_resourcePath.push_back( (string)datadir + "/skins2" );
+    free( datadir );
     m_resourcePath.push_back( (string)"share/skins2" );
-    m_resourcePath.push_back( (string)DATA_PATH + "/skins2" );
+    m_resourcePath.push_back( (string)config_GetDataDir () + "/skins2" );
 
     return true;
 }
@@ -96,10 +98,40 @@ void X11Factory::destroyOSLoop()
     X11Loop::destroy( getIntf() );
 }
 
-
-OSTimer *X11Factory::createOSTimer( const Callback &rCallback )
+void X11Factory::minimize()
 {
-    return new X11Timer( getIntf(), rCallback );
+    XIconifyWindow( m_pDisplay->getDisplay(), m_pDisplay->getMainWindow(),
+                    DefaultScreen( m_pDisplay->getDisplay() ) );
+}
+
+void X11Factory::restore()
+{
+    // TODO
+}
+
+void X11Factory::addInTray()
+{
+    // TODO
+}
+
+void X11Factory::removeFromTray()
+{
+    // TODO
+}
+
+void X11Factory::addInTaskBar()
+{
+    // TODO
+}
+
+void X11Factory::removeFromTaskBar()
+{
+    // TODO
+}
+
+OSTimer *X11Factory::createOSTimer( CmdGeneric &rCmd )
+{
+    return new X11Timer( getIntf(), rCmd );
 }
 
 
@@ -114,6 +146,12 @@ OSWindow *X11Factory::createOSWindow( GenericWindow &rWindow, bool dragDrop,
 OSTooltip *X11Factory::createOSTooltip()
 {
     return new X11Tooltip( getIntf(), *m_pDisplay );
+}
+
+
+OSPopup *X11Factory::createOSPopup()
+{
+    return new X11Popup( getIntf(), *m_pDisplay );
 }
 
 
@@ -133,10 +171,10 @@ int X11Factory::getScreenHeight() const
 }
 
 
-Rect X11Factory::getWorkArea() const
+SkinsRect X11Factory::getWorkArea() const
 {
     // XXX
-    return Rect( 0, 0, getScreenWidth(), getScreenHeight() );
+    return SkinsRect( 0, 0, getScreenWidth(), getScreenHeight() );
 }
 
 

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * win32_tooltip.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: win32_tooltip.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef WIN32_TOOLTIP_HPP
@@ -38,10 +38,10 @@ class Win32Tooltip: public OSTooltip
 
         virtual ~Win32Tooltip();
 
-        // Show the tooltip
+        /// Show the tooltip
         virtual void show( int left, int top, OSGraphics &rText );
 
-        // Hide the tooltip
+        /// Hide the tooltip
         virtual void hide();
 
     private:

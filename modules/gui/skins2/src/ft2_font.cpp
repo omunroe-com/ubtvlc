@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ft2_font.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ft2_font.cpp 7327 2004-04-12 14:25:15Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id$
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,26 +19,32 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "ft2_font.hpp"
 #include "ft2_bitmap.hpp"
 #include "../utils/ustring.hpp"
 
+#ifdef HAVE_FRIBIDI
+#include <fribidi/fribidi.h>
+#endif
+
 
 FT2Font::FT2Font( intf_thread_t *pIntf, const string &rName, int size ):
     GenericFont( pIntf ), m_name( rName ), m_buffer( NULL ), m_size( size ),
-    m_lib( NULL ), m_face( NULL ), m_dotGlyph( NULL )
+    m_lib( NULL ), m_face( NULL )
 {
 }
 
 
 FT2Font::~FT2Font()
 {
-    if( m_dotGlyph )
+    // Clear the glyph cache
+    GlyphMap_t::iterator iter;
+    for( iter = m_glyphCache.begin(); iter != m_glyphCache.end(); ++iter )
     {
-        FT_Done_Glyph( m_dotGlyph );
+        FT_Done_Glyph( (*iter).second.m_glyph );
     }
     if( m_face )
     {
@@ -48,10 +54,7 @@ FT2Font::~FT2Font()
     {
         FT_Done_FreeType( m_lib );
     }
-    if( m_buffer )
-    {
-        free( m_buffer );
-    }
+    free( m_buffer );
 }
 
 
@@ -59,10 +62,10 @@ bool FT2Font::init()
 {
     int err;
 
-    // Initalise libfreetype
+    // Initialize libfreetype
     if( FT_Init_FreeType( &m_lib ) )
     {
-        msg_Err( getIntf(), "Failed to initalize libfreetype" );
+        msg_Err( getIntf(), "failed to initialize freetype" );
         return false;
     }
 
@@ -70,11 +73,11 @@ bool FT2Font::init()
     FILE *file = fopen( m_name.c_str(), "rb" );
     if( file )
     {
-        msg_Dbg( getIntf(), "Loading font %s", m_name.c_str() );
+        msg_Dbg( getIntf(), "loading font %s", m_name.c_str() );
     }
     else
     {
-        msg_Dbg( getIntf(), "Unable to open the font %s", m_name.c_str() );
+        msg_Dbg( getIntf(), "unable to open the font %s", m_name.c_str() );
         return false;
     }
     // Get the file size
@@ -85,7 +88,7 @@ bool FT2Font::init()
     m_buffer = malloc( size );
     if( !m_buffer )
     {
-        msg_Err( getIntf(), "Not enough memory for the font %s",
+        msg_Err( getIntf(), "not enough memory for the font %s",
                  m_name.c_str() );
         return false;
     }
@@ -98,26 +101,26 @@ bool FT2Font::init()
                               &m_face );
     if ( err == FT_Err_Unknown_File_Format )
     {
-        msg_Err( getIntf(), "Unsupported font format (%s)", m_name.c_str() );
+        msg_Err( getIntf(), "unsupported font format (%s)", m_name.c_str() );
         return false;
     }
     else if ( err )
     {
-        msg_Err( getIntf(), "Error opening font (%s)", m_name.c_str() );
+        msg_Err( getIntf(), "error opening font (%s)", m_name.c_str() );
         return false;
     }
 
     // Select the charset
     if( FT_Select_Charmap( m_face, ft_encoding_unicode ) )
     {
-        msg_Err( getIntf(), "Font has no UNICODE table (%s)", m_name.c_str() );
+        msg_Err( getIntf(), "font has no UNICODE table (%s)", m_name.c_str() );
         return false;
     }
 
     // Set the pixel size
     if( FT_Set_Pixel_Sizes( m_face, 0, m_size ) )
     {
-        msg_Warn( getIntf(), "Cannot set a pixel size of %d (%s)", m_size,
+        msg_Warn( getIntf(), "cannot set a pixel size of %d (%s)", m_size,
                   m_name.c_str() );
     }
 
@@ -126,16 +129,6 @@ bool FT2Font::init()
     m_ascender = m_face->size->metrics.ascender >> 6;
     m_descender = m_face->size->metrics.descender >> 6;
 
-    // Render the '.' symbol and compute its size
-    m_dotIndex = FT_Get_Char_Index( m_face, '.' );
-    FT_Load_Glyph( m_face, m_dotIndex, FT_LOAD_DEFAULT );
-    FT_Get_Glyph( m_face->glyph, &m_dotGlyph );
-    FT_BBox dotSize;
-    FT_Glyph_Get_CBox( m_dotGlyph, ft_glyph_bbox_pixels, &dotSize );
-    m_dotWidth = dotSize.xMax - dotSize.xMin;
-    m_dotAdvance = m_face->glyph->advance.x >> 6;
-    FT_Glyph_To_Bitmap( &m_dotGlyph, ft_render_mode_normal, NULL, 1 );
-
     return true;
 }
 
@@ -143,7 +136,6 @@ bool FT2Font::init()
 GenericBitmap *FT2Font::drawString( const UString &rString, uint32_t color,
                                     int maxWidth ) const
 {
-    int err;
     uint32_t code;
     int n;
     int penX = 0;
@@ -160,8 +152,21 @@ GenericBitmap *FT2Font::drawString( const UString &rString, uint32_t color,
     // Get the length of the string
     int len = rString.length();
 
+    // Use fribidi if available
+#ifdef HAVE_FRIBIDI
+    uint32_t *pFribidiString = NULL;
+    if( len > 0 )
+    {
+        pFribidiString = new uint32_t[len+1];
+        FriBidiCharType baseDir = FRIBIDI_TYPE_ON;
+        fribidi_log2vis( (FriBidiChar*)pString, len, &baseDir,
+                         (FriBidiChar*)pFribidiString, 0, 0, 0 );
+        pString = pFribidiString;
+    }
+#endif
+
     // Array of glyph bitmaps and position
-    FT_Glyph *glyphs = new FT_Glyph[len];
+    FT_BitmapGlyphRec **glyphs = new FT_BitmapGlyphRec*[len];
     int *pos = new int[len];
 
     // Does the font support kerning ?
@@ -172,42 +177,36 @@ GenericBitmap *FT2Font::drawString( const UString &rString, uint32_t color,
     int maxIndex = 0;
     // Position of the first trailing dot
     int firstDotX = 0;
+    /// Get the dot glyph
+    Glyph_t &dotGlyph = getGlyph( '.' );
 
     // First, render all the glyphs
     for( n = 0; n < len; n++ )
     {
         code = *(pString++);
-        // Load the glyph
-        int glyphIndex = FT_Get_Char_Index( m_face, code );
-        err = FT_Load_Glyph( m_face, glyphIndex, FT_LOAD_DEFAULT );
-        err = FT_Get_Glyph( m_face->glyph, &glyphs[n] );
+        // Get the glyph for this character
+        Glyph_t &glyph = getGlyph( code );
+        glyphs[n] = (FT_BitmapGlyphRec*)(glyph.m_glyph);
 
         // Retrieve kerning distance and move pen position
-        if( useKerning && previous && glyphIndex )
+        if( useKerning && previous && glyph.m_index )
         {
             FT_Vector delta;
-            FT_Get_Kerning( m_face, previous, glyphIndex,
+            FT_Get_Kerning( m_face, previous, glyph.m_index,
                             ft_kerning_default, &delta );
             penX += delta.x >> 6;
         }
 
-        // Get the glyph size
-        FT_BBox glyphSize;
-        FT_Glyph_Get_CBox( glyphs[n], ft_glyph_bbox_pixels, &glyphSize );
-
-        // Render the glyph
-        err = FT_Glyph_To_Bitmap( &glyphs[n], ft_render_mode_normal, NULL, 1 );
-
         pos[n] = penX;
-        width1 = penX + glyphSize.xMax - glyphSize.xMin;
-        yMin = __MIN( yMin, glyphSize.yMin );
-        yMax = __MAX( yMax, glyphSize.yMax );
+        width1 = penX + glyph.m_size.xMax - glyph.m_size.xMin;
+        yMin = __MIN( yMin, glyph.m_size.yMin );
+        yMax = __MAX( yMax, glyph.m_size.yMax );
 
         // Next position
-        penX += m_face->glyph->advance.x >> 6;
+        penX += glyph.m_advance;
 
         // Save glyph index
-        previous = glyphIndex;
+        previous = glyph.m_index;
 
         if( maxWidth != -1 )
         {
@@ -216,13 +215,15 @@ GenericBitmap *FT2Font::drawString( const UString &rString, uint32_t color,
             if( useKerning )
             {
                 FT_Vector delta;
-                FT_Get_Kerning( m_face, glyphIndex, m_dotIndex,
+                FT_Get_Kerning( m_face, glyph.m_index, dotGlyph.m_index,
                                 ft_kerning_default, &delta );
                 curX += delta.x >> 6;
             }
-            if( curX + 2 * m_dotAdvance + m_dotWidth < maxWidth )
+            int dotWidth = 2 * dotGlyph.m_advance +
+                dotGlyph.m_size.xMax - dotGlyph.m_size.xMin;
+            if( curX + dotWidth < maxWidth )
             {
-                width2 = curX + 2 * m_dotAdvance + m_dotWidth;
+                width2 = curX + dotWidth;
                 maxIndex++;
                 firstDotX = curX;
             }
@@ -241,6 +242,13 @@ GenericBitmap *FT2Font::drawString( const UString &rString, uint32_t color,
         }
     }
 
+#ifdef HAVE_FRIBIDI
+    if( len > 0 )
+    {
+        delete[] pFribidiString;
+    }
+#endif
+
     // Adjust the size for vertical padding
     yMax = __MAX( yMax, m_ascender );
     yMin = __MIN( yMin, m_descender );
@@ -255,21 +263,18 @@ GenericBitmap *FT2Font::drawString( const UString &rString, uint32_t color,
         FT_BitmapGlyphRec *pBmpGlyph = (FT_BitmapGlyphRec*)glyphs[n];
         // Draw the glyph on the bitmap
         pBmp->draw( pBmpGlyph->bitmap, pos[n], yMax - pBmpGlyph->top, color );
-
-        // Free the glyph
-        FT_Done_Glyph( glyphs[n] );
     }
     // Draw the trailing dots if the text is truncated
     if( maxIndex < len )
     {
         int penX = firstDotX;
-        FT_BitmapGlyphRec *pBmpGlyph = (FT_BitmapGlyphRec*)m_dotGlyph;
+        FT_BitmapGlyphRec *pBmpGlyph = (FT_BitmapGlyphRec*)dotGlyph.m_glyph;
         for( n = 0; n < 3; n++ )
         {
             // Draw the glyph on the bitmap
             pBmp->draw( pBmpGlyph->bitmap, penX, yMax - pBmpGlyph->top,
                         color );
-            penX += m_dotAdvance;
+            penX += dotGlyph.m_advance;
         }
     }
 
@@ -278,3 +283,30 @@ GenericBitmap *FT2Font::drawString( const UString &rString, uint32_t color,
 
     return pBmp;
 }
+
+
+FT2Font::Glyph_t &FT2Font::getGlyph( uint32_t code ) const
+{
+    // Try to find the glyph in the cache
+    GlyphMap_t::iterator iter = m_glyphCache.find( code );
+    if( iter != m_glyphCache.end() )
+    {
+        return (*iter).second;
+    }
+    else
+    {
+        // Add a new glyph in the cache
+        Glyph_t &glyph = m_glyphCache[code];
+
+        // Load and render the glyph
+        glyph.m_index = FT_Get_Char_Index( m_face, code );
+        FT_Load_Glyph( m_face, glyph.m_index, FT_LOAD_DEFAULT );
+        FT_Get_Glyph( m_face->glyph, &glyph.m_glyph );
+        FT_Glyph_Get_CBox( glyph.m_glyph, ft_glyph_bbox_pixels,
+                           &glyph.m_size );
+        glyph.m_advance = m_face->glyph->advance.x >> 6;
+        FT_Glyph_To_Bitmap( &glyph.m_glyph, ft_render_mode_normal, NULL, 1 );
+        return glyph;
+    }
+}
+
