@@ -1,3 +1,18 @@
+vlc (0.8.6.release.e+x264svn20071224+faad2.6.1-0ubuntu3.2) hardy-security; urgency=low
+
+  * SECURITY UPDATE: multiple denials of service and arbitrary code execution
+    vulnerabilities. (LP: #262705)
+    - debian/patches/040_CVE-2008-3732.diff: Fix TTA integer handling. Fixes
+      arbitrary code execution. Patch from upstream git.
+    - debian/patches/041_CVE-2008-3794.diff: Fix MMS integer handling. Fixes
+      arbitrary code execution. Patch from upstream git.
+    - References:
+      + http://www.videolan.org/security/sa0807.html
+      + CVE-2008-3732
+      + CVE-2008-3794
+
+ -- William Grant <wgrant@ubuntu.com>  Sun, 21 Sep 2008 14:00:25 +1000
+
 vlc (0.8.6.release.e+x264svn20071224+faad2.6.1-0ubuntu3.1) hardy-security; urgency=low
 
   * SECURITY UPDATE: multiple denials of service, arbitrary code execution and
