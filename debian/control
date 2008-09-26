@@ -188,8 +188,8 @@ Section: libs
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends}
-Replaces: vlc (<< 0.8.6.c-6), libvlc0, libvlc1
-Conflicts: vlc (<< 0.8.6.c-6), libvlc0, libvlc1
+Replaces: vlc (<< 0.8.6.c-6)
+Conflicts: vlc (<< 0.8.6.c-6)
 Description: multimedia player and streamer library
  This package contains the shared library required by applications using VLC
  features.
