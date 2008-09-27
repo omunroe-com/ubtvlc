@@ -1,3 +1,32 @@
+vlc (0.9.3-0ubuntu1) intrepid; urgency=low
+
+  [ Reinhard Tartler ]
+  * new upstream bugfix only Releases LP: #274721
+
+  Relevant fixes from NEWS file:
+  
+    Various bugfixes:
+   * Fixed DTS channel order on 5.1 systems
+   * Fixed pausing behavior for subtitles and for Audio-CD
+   * Multiple subtitles and podcast fixes
+   * Various crashes fixed in PS, SSA, mkv, xspf, freetype
+   * Fixed update system bugs
+   * Other bug fixes (dvd language selection, subtitle colours, HTTP keep-alive...)
+  
+  Qt4 interface:
+   * Added Faster/Slower icons to the controller panel
+   * Fixed lost playlist columns when switching the playlist view
+   * Added needed options to Simple preferences (to avoid NVIDIA drivers issues)
+   * Fullscreen controller: added time label, remembering of last position
+   * Fixed drag'n drop behaviour on the playlist
+   * Multiple other fixes (Enter hotkey in preferences, Skins selection...)
+
+  [ Saïvann Carignan ]
+  * debian/patches/301_DVD_media.diff: Change %U to %f
+    in VLC .desktop file . (LP: #275043) 
+
+ -- Reinhard Tartler <siretart@tauware.de>  Sat, 27 Sep 2008 09:30:04 +0200
+
 vlc (0.9.2-1ubuntu2) intrepid; urgency=low
 
   * remove spurious conflicts on libvlc2. LP: #274614

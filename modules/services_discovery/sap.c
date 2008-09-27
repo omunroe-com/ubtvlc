@@ -3,7 +3,7 @@
  *****************************************************************************
  * Copyright (C) 2004-2005 the VideoLAN team
  * Copyright © 2007 Rémi Denis-Courmont
- * $Id: ec84aa964e2cbc2b4197e3fdc7ac45ef9ee9379d $
+ * $Id: 1d0db59c6d9cf0575cc8e5fd96a2ce65b788be92 $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Rémi Denis-Courmont
@@ -212,7 +212,7 @@ struct  sdp_t
 struct attribute_t
 {
     const char *value;
-    char name[0];
+    char name[];
 };
 
 struct sap_announce_t
