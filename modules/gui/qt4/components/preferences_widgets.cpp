@@ -2,7 +2,7 @@
  * preferences_widgets.cpp : Widgets for preferences displays
  ****************************************************************************
  * Copyright (C) 2006-2007 the VideoLAN team
- * $Id$
+ * $Id: 4f3757ac794eacc5c8ac240402db8488ee052808 $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Antoine Cellerier <dionoea@videolan.org>
@@ -304,7 +304,7 @@ void FileConfigControl::updateField()
     QString file = QFileDialog::getOpenFileName( NULL,
                   qtr( "Select File" ), qfu( config_GetHomeDir() ) );
     if( file.isNull() ) return;
-    text->setText( file );
+    text->setText( toNativeSeparators( file ) );
 }
 
 void FileConfigControl::finish()
@@ -334,10 +334,10 @@ void DirectoryConfigControl::updateField()
                       qtr( "Select Directory" ),
                       text->text().isEmpty() ?
                         qfu( config_GetHomeDir() ) : text->text(),
-                      QFileDialog::ShowDirsOnly |
-                        QFileDialog::DontResolveSymlinks );
+                  QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks );
+
     if( dir.isNull() ) return;
-    text->setText( dir );
+    text->setText( toNativeSepNoSlash( dir ) );
 }
 
 #if 0

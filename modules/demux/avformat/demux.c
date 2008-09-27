@@ -2,7 +2,7 @@
  * demux.c: demuxer using ffmpeg (libavformat).
  *****************************************************************************
  * Copyright (C) 2004-2007 the VideoLAN team
- * $Id$
+ * $Id: 11bea18bb68cc8653a1d9a887391e666bbeaa48c $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -488,6 +488,7 @@ static int IORead( void *opaque, uint8_t *buf, int buf_size )
 {
     URLContext *p_url = opaque;
     demux_t *p_demux = p_url->priv_data;
+    if( buf_size < 0 ) return -1;
     int i_ret = stream_Read( p_demux->s, buf, buf_size );
     return i_ret ? i_ret : -1;
 }

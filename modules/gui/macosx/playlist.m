@@ -2,7 +2,7 @@
  * playlist.m: MacOS X interface module
  *****************************************************************************
 * Copyright (C) 2002-2008 the VideoLAN team
- * $Id: a03cbd1c60f0ce4fb24aaf72252bb5212443f84d $
+ * $Id: 0b933317eb790a9036d5f79c3018032be7749d32 $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Derk-Jan Hartman <hartman at videola/n dot org>
@@ -171,6 +171,7 @@
     NSValue *o_value;
     playlist_t * p_playlist = pl_Yield( VLCIntf );
 
+    PL_LOCK;
     if( item == nil )
     {
         /* root object */
@@ -182,7 +183,8 @@
     }
     if( p_item && index < p_item->i_children && index >= 0 )
         p_return = p_item->pp_children[index];
- 
+    PL_UNLOCK;
+
     vlc_object_release( p_playlist );
 
     o_value = [o_outline_dict objectForKey:[NSString stringWithFormat: @"%p", p_return]];

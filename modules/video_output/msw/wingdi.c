@@ -2,7 +2,7 @@
  * wingdi.c : Win32 / WinCE GDI video output plugin for vlc
  *****************************************************************************
  * Copyright (C) 2002 the VideoLAN team
- * $Id: 310d3ea4657e282eb40700355a5ed199b6755f3a $
+ * $Id: d03b6186c690a071106adea3e1f25047b3a7a8f5 $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Samuel Hocevar <sam@zoy.org>
@@ -38,9 +38,7 @@
 
 #include <commctrl.h>
 
-#include "vout.h"
-
-#ifdef MODULE_NAME_IS_wingapi
+/*#ifdef MODULE_NAME_IS_wingapi
     typedef struct GXDisplayProperties {
         DWORD cxWidth;
         DWORD cyHeight;
@@ -73,6 +71,8 @@
 #   endif
 #endif /* MODULE_NAME_IS_wingapi */
 
+#include "vout.h"
+
 #define MAX_DIRECTBUFFERS 10
 
 #ifdef UNDER_CE
@@ -85,9 +85,9 @@
 #ifndef WS_EX_APPWINDOW
 #define WS_EX_APPWINDOW 0x40000
 #endif
-#define SetWindowLongPtr SetWindowLong
-#define GetWindowLongPtr GetWindowLong
-#define GWLP_USERDATA GWL_USERDATA
+//#define SetWindowLongPtr SetWindowLong
+//#define GetWindowLongPtr GetWindowLong
+//#define GWLP_USERDATA GWL_USERDATA
 #define AdjustWindowRect(a,b,c)
 #endif //UNDER_CE
 

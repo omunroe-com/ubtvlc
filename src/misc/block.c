@@ -2,7 +2,7 @@
  * block.c: Data blocks management functions
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: 3909d33bb232b2737a7369c47c4779f6ac6b4663 $
+ * $Id: 80832f5773eff6acfa0114229580484c286d23de $
  *
  * Authors: Laurent Aimar <fenrir@videolan.org>
  *
@@ -40,7 +40,7 @@ struct block_sys_t
 {
     block_t     self;
     size_t      i_allocated_buffer;
-    uint8_t     p_allocated_buffer[0];
+    uint8_t     p_allocated_buffer[];
 };
 
 #ifndef NDEBUG
