@@ -2,7 +2,7 @@
  * interface_widgets.cpp : Custom widgets for the main interface
  ****************************************************************************
  * Copyright ( C ) 2006 the VideoLAN team
- * $Id: fce9c91162f7ada2211fc70eaedd014726420851 $
+ * $Id: 6fca0caa224c4c3fddb350e4379286d106e0f5e9 $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jean-Baptiste Kempf <jb@videolan.org>
@@ -829,7 +829,7 @@ void ControlsWidget::toggleTeletextTransparency()
     }
     else
     {
-        telexTransparent->setIcon( QIcon( ":/tvtelx-transparent" ) );
+        telexTransparent->setIcon( QIcon( ":/tvtelx-trans" ) );
         telexTransparent->setToolTip( qtr( "Transparent" ) );
         b_telexTransparent = true;
     }
@@ -845,7 +845,11 @@ void ControlsWidget::play()
     if( THEPL->current.i_size == 0 )
     {
         /* The playlist is empty, open a file requester */
+#ifndef WIN32
         THEDP->openFileDialog();
+#else
+        THEDP->simpleOpenDialog();
+#endif
         setStatus( 0 );
         return;
     }
@@ -1440,17 +1444,6 @@ void FullscreenControllerWidget::fullscreenChanged( vout_thread_t *p_vout,
         /* Force fs hidding */
         IMEvent *eHide = new IMEvent( FullscreenControlHide_Type, 0 );
         QApplication::postEvent( this, static_cast<QEvent *>(eHide) );
-#ifdef WIN32
-        /* This is a big, a huge HACK around the windows Video Output,
-         Since the Vout fusion the Vout Windows, with the main windows
-         (very nice indeed for Alt-Tab), at the end of the film, when Vout quits
-         fullscreen, MI isn't properly put in the good state again...
-         (hidden still)...
-         Of course this is not good, but we will have to live with it temporarly
-         */
-        p_intf->p_sys->p_mi->hide();
-        p_intf->p_sys->p_mi->show();
-#endif
     }
     vlc_mutex_unlock( &lock );
 }

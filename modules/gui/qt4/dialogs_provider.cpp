@@ -2,7 +2,7 @@
  * dialogs_provider.cpp : Dialog Provider
  *****************************************************************************
  * Copyright (C) 2006-2008 the VideoLAN team
- * $Id: 671511630cea175cbfa2da06dfbc28c5aa6d430e $
+ * $Id: e57b6ebc95dd52ad0b4c92eb7c5ce9a6ae0c65d3 $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jean-Baptiste Kempf <jb@videolan.org>
@@ -386,8 +386,7 @@ void DialogsProvider::addFromSimple( bool pl, bool go)
     int i = 0;
     foreach( QString file, files )
     {
-        const char * psz_utf8 = qtu( toNativeSeparators( file ) );
-        playlist_Add( THEPL, psz_utf8, NULL,
+        playlist_Add( THEPL, qtu( toNativeSeparators( file ) ), NULL,
                       go ? ( PLAYLIST_APPEND | ( i ? 0 : PLAYLIST_GO ) |
                                                ( i ? PLAYLIST_PREPARSE : 0 ) )
                          : ( PLAYLIST_APPEND | PLAYLIST_PREPARSE ),

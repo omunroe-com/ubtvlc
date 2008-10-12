@@ -2,7 +2,7 @@
  * events.c: Windows DirectX video output events handler
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: 623f43943e8c040a46e57082a13f4d0606d0da7a $
+ * $Id: 7d05ac744eab8220858e6e4a194564fad235a4fc $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -1201,8 +1201,11 @@ void Win32ToggleFullscreen( vout_thread_t *p_vout )
                           rect.right, rect.bottom,
                           SWP_NOZORDER|SWP_FRAMECHANGED );
 
-            //HWND topLevelParent = GetParent( p_vout->p_sys->hparent );
+#ifdef UNDER_CE
+            HWND topLevelParent = GetParent( p_vout->p_sys->hparent );
+#else
             HWND topLevelParent = GetAncestor( p_vout->p_sys->hparent, GA_ROOT );
+#endif
             ShowWindow( topLevelParent, SW_HIDE );
         }
 
@@ -1226,8 +1229,11 @@ void Win32ToggleFullscreen( vout_thread_t *p_vout )
                           rect.right, rect.bottom,
                           SWP_NOZORDER|SWP_FRAMECHANGED );
 
-            // HWND topLevelParent = GetParent( p_vout->p_sys->hparent );
+#ifdef UNDER_CE
+            HWND topLevelParent = GetParent( p_vout->p_sys->hparent );
+#else
             HWND topLevelParent = GetAncestor( p_vout->p_sys->hparent, GA_ROOT );
+#endif
             ShowWindow( topLevelParent, SW_SHOW );
             SetForegroundWindow( p_vout->p_sys->hparent );
             ShowWindow( hwnd, SW_HIDE );
