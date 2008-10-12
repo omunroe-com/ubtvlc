@@ -2,7 +2,7 @@
  * infopanels.cpp : Panels for the information dialogs
  ****************************************************************************
  * Copyright (C) 2006-2007 the VideoLAN team
- * $Id: 202e4956d231bb34580e8c08b7a4552adbb798c4 $
+ * $Id: 191c993ec7294ddade15b26b641aadd597dfd554 $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jean-Baptiste Kempf <jb@videolan.org>
@@ -543,8 +543,7 @@ InputStatsPanel::InputStatsPanel( QWidget *parent,
     audio->setExpanded( true );
 
     StatsTree->resizeColumnToContents( 0 );
-    StatsTree->resizeColumnToContents( 1 );
-    StatsTree->setColumnWidth( 2 , 100 );
+    StatsTree->setColumnWidth( 1 , 200 );
 
     layout->addWidget(StatsTree, 1, 0 );
 }

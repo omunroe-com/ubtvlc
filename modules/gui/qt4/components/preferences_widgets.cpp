@@ -2,7 +2,7 @@
  * preferences_widgets.cpp : Widgets for preferences displays
  ****************************************************************************
  * Copyright (C) 2006-2007 the VideoLAN team
- * $Id: 4f3757ac794eacc5c8ac240402db8488ee052808 $
+ * $Id: 920196dd63a8d9c771ffe015044a08c708e71819 $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Antoine Cellerier <dionoea@videolan.org>
@@ -613,7 +613,7 @@ ModuleListConfigControl::ModuleListConfigControl( vlc_object_t *_p_this,
     /* Special Hack */
     if( !p_item->psz_text ) return;
 
-    groupBox = new QGroupBox ( qtr(p_item->psz_text) );
+    groupBox = new QGroupBox ( qtr(p_item->psz_text), _parent );
     text = new QLineEdit;
     QGridLayout *layoutGroupBox = new QGridLayout( groupBox );
 

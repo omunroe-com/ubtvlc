@@ -2,7 +2,7 @@
  * wingdi.c : Win32 / WinCE GDI video output plugin for vlc
  *****************************************************************************
  * Copyright (C) 2002 the VideoLAN team
- * $Id: d03b6186c690a071106adea3e1f25047b3a7a8f5 $
+ * $Id: b8b519441c8bb3ebefeeb7d4421a329084e4a047 $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Samuel Hocevar <sam@zoy.org>
@@ -312,6 +312,14 @@ error:
 static void CloseVideo ( vlc_object_t *p_this )
 {
     vout_thread_t * p_vout = (vout_thread_t *)p_this;
+
+    if( p_vout->b_fullscreen )
+    {
+        msg_Dbg( p_vout, "Quitting fullscreen" );
+        Win32ToggleFullscreen( p_vout );
+        /* Force fullscreen in the core for the next video */
+        var_SetBool( p_vout, "fullscreen", true );
+    }
 
     if( p_vout->p_sys->p_event )
     {
