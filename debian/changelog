@@ -1,3 +1,12 @@
+vlc (0.9.4-1ubuntu3) intrepid; urgency=low
+
+  * link vlc to unicode enabled curses library. Thanks to Rafaël Carré for
+    reporting.(LP: #282644)
+  * enable emedded video (LP: #282582)
+  * Autodetect screen while using Xinerama to toggle fullscreen (LP: #115419)
+
+ -- Reinhard Tartler <siretart@tauware.de>  Mon, 13 Oct 2008 21:47:13 +0200
+
 vlc (0.9.4-1ubuntu2) intrepid; urgency=low
 
   * add new plugin database meta fields Xb-Npp-Description and Xb-Npp-File
