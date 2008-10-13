@@ -1,3 +1,12 @@
+vlc (0.9.4-1ubuntu2) intrepid; urgency=low
+
+  * add new plugin database meta fields Xb-Npp-Description and Xb-Npp-File
+    - update debian/control
+  * link plugin binary to /usr/lib/xulrunner-addons/plugins/
+    - update debian/mozilla-plugin-vlc.links
+
+ -- Alexander Sack <asac@ubuntu.com>  Mon, 13 Oct 2008 17:45:51 +0200
+
 vlc (0.9.4-1ubuntu1) intrepid; urgency=low
 
   * merge from debian/experimental
