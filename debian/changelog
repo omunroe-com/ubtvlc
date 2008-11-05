@@ -1,3 +1,19 @@
+vlc (0.8.6.h-4+lenny2) testing-security; urgency=high
+
+  * Non-maintainer upload by the Security Team.
+  * Fix buffer overflow in CUE demuxer
+    (No CVE id yet; Closes: #504639).
+
+ -- Nico Golde <nion@debian.org>  Thu, 06 Nov 2008 00:32:12 +0100
+
+vlc (0.8.6.h-4+lenny1) testing-security; urgency=high
+
+  * Non-maintainer upload by the Security Team.
+  * Fix integer overflows that could possibly lead to arbitrary
+    code execution (CVE-2008-4686.diff; Closes: #503118).
+
+ -- Nico Golde <nion@debian.org>  Mon, 03 Nov 2008 14:41:58 +0100
+
 vlc (0.8.6.h-4) unstable; urgency=high
 
   * Security: Fix integer overflow in mms module
