@@ -5,5 +5,4 @@
 200_osdmenu_paths.diff
 300_manpage_syntax.diff
 301_DVD_media.diff
-400_enable_embedded_video.diff
 401_detect_xinerama_fullscreen.diff

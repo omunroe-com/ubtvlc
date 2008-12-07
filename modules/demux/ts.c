@@ -2,7 +2,7 @@
  * ts.c: Transport Stream input module for VLC.
  *****************************************************************************
  * Copyright (C) 2004-2005 the VideoLAN team
- * $Id: e93ffa9f7bf03963b48a999684f8ab77f97cd6da $
+ * $Id: d4d607c11aee93a3453d8190701da9b4cf0236be $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Jean-Paul Saman <jpsaman #_at_# m2x.nl>
@@ -29,6 +29,8 @@
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
+
+#include <assert.h>
 
 #include <vlc_common.h>
 #include <vlc_plugin.h>
@@ -846,7 +848,6 @@ static void Close( vlc_object_t *p_this )
     if( p_sys->b_udp_out )
     {
         net_Close( p_sys->fd );
-        free( p_sys->buffer );
     }
     vlc_mutex_lock( &p_sys->csa_lock );
     if( p_sys->csa )
@@ -878,10 +879,9 @@ static void Close( vlc_object_t *p_this )
             fclose( p_sys->p_file );
             p_sys->p_file = NULL;
         }
-
-        free( p_sys->buffer );
     }
 
+    free( p_sys->buffer );
     free( p_sys->psz_file );
     p_sys->psz_file = NULL;
 
@@ -1535,15 +1535,15 @@ static void PIDInit( ts_pid_t *pid, bool b_psi, ts_psi_t *p_owner )
 
         if( !b_old_valid )
         {
-            free( pid->psi );
             pid->psi = malloc( sizeof( ts_psi_t ) );
             if( pid->psi )
             {
-                pid->psi->handle= NULL;
-                pid->psi->i_prg = 0;
-                pid->psi->prg   = NULL;
+                pid->psi->handle = NULL;
+                TAB_INIT( pid->psi->i_prg, pid->psi->prg );
             }
         }
+        assert( pid->psi );
+
         pid->psi->i_pat_version  = -1;
         pid->psi->i_sdt_version  = -1;
         if( p_owner )
@@ -1637,7 +1637,7 @@ static void PIDClean( es_out_t *out, ts_pid_t *pid )
 static void ParsePES( demux_t *p_demux, ts_pid_t *pid )
 {
     block_t *p_pes = pid->es->p_pes;
-    uint8_t header[30];
+    uint8_t header[34];
     int     i_pes_size = 0;
     int     i_skip = 0;
     mtime_t i_dts = -1;
@@ -1652,7 +1652,7 @@ static void ParsePES( demux_t *p_demux, ts_pid_t *pid )
     pid->es->pp_last = &pid->es->p_pes;
 
     /* FIXME find real max size */
-    i_max = block_ChainExtract( p_pes, header, 30 );
+    i_max = block_ChainExtract( p_pes, header, 34 );
 
 
     if( header[0] != 0 || header[1] != 0 || header[2] != 1 )
@@ -3138,7 +3138,7 @@ static void PMTCallBack( demux_t *p_demux, dvbpsi_pmt_t *p_pmt )
                  * parsing the SDT/EDT */
                 dvbpsi_DetachDemux( pid->psi->handle );
                 free( pid->psi );
-                pid->psi = 0;
+                pid->psi = NULL;
             }
             else
             {

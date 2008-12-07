@@ -1,3 +1,71 @@
+vlc (0.9.8a-1ubuntu1) jaunty; urgency=low
+
+  * merge from debian. LP: #300328, #305100, #289263
+  * Fixes CVE-2008-5276
+  * remaining changes
+    - build against libxul-dev instead of iceape-dev
+    - build against libdca-dev, libass-dev and libx264-dev
+    - build against and install libx264 plugin
+    - adjust Vcs-Bzr Headers in debian/control
+    - add Xb-Npp header to vlc package
+    - debian/patches/301_DVD_media.diff: Change %U to %f
+       in VLC .desktop file, cf LP #275043
+
+ -- Reinhard Tartler <siretart@tauware.de>  Sun, 07 Dec 2008 23:12:27 +0100
+
+vlc (0.9.8a-1) experimental; urgency=low
+
+  * New upstream release
+    + Fix integer overflow in Real demux (VideoLAN SA-2008-11, CVE-2008-5276)
+  * Enable RealRTSP access module
+  * Depends on libv4l-dev to add support of some webcam 
+  * Don't rebootstrap. The packages causing troubles previously have been fixed
+
+ -- Christophe Mutricy <xtophe@videolan.org>  Wed, 03 Dec 2008 20:20:52 +0100
+
+vlc (0.9.6-1ubuntu1) jaunty; urgency=low
+
+  * merge from debian/experimental, fixes LP: #289263
+    remaining changes:
+    - build against libxul-dev instead of iceape-dev
+    - build against libdca-dev, libass-dev and libx264-dev
+    - build against and install libx264 plugin
+    - adjust Vcs-Bzr Headers in debian/control
+    - add Xb-Npp header to vlc package
+    - debian/patches/301_DVD_media.diff: Change %U to %f
+       in VLC .desktop file, cf LP #275043
+
+ -- Reinhard Tartler <siretart@tauware.de>  Sat, 15 Nov 2008 15:45:06 +0100
+
+vlc (0.9.6-1) experimental; urgency=low
+
+  [ Reinhard Tartler ]
+  * Build against libass. Closes: #499063, LP: #210354, #199870
+  * Explicitly build against libdca in debian/rules
+  * Tighten build depends on a libass-dev version that ships without .la file
+
+  [ Christophe Mutricy ]
+  * New bugfix upstream releases
+    + Remove 402_tivo_overflow.diff
+    + Fix buffer overflow in CUE demuxer (Closes: #504639)
+    + Fix buffer overflow in Realtext decoder
+  * Honor DEB_BUILD_OPTIONS 
+  * Rebootstrap in order to avoid problem with .la
+
+ -- Christophe Mutricy <xtophe@videolan.org>  Sat, 08 Nov 2008 03:14:29 +0100
+
+vlc (0.9.4-2) experimental; urgency=low
+
+  * Fix buffer overflow in Tivo demuxer
+    + Closes: #502726, VideoLAN SA-0809
+    + 402_tivo_overflow.diff taken from upstream
+  * Better xinerama fullscreen behaviour
+    + 401_detect_xinerama_fullscreen.diff taken from upstream
+  * Builddepends on libcursesw5-dev rather than libcurses5-dev 
+    for proper wide char handling 
+
+ -- Christophe Mutricy <xtophe@videolan.org>  Mon, 20 Oct 2008 23:23:46 +0200
+
 vlc (0.9.4-1ubuntu3) intrepid; urgency=low
 
   * link vlc to unicode enabled curses library. Thanks to Rafaël Carré for

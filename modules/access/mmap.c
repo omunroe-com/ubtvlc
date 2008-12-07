@@ -2,7 +2,7 @@
  * mmap.c: memory-mapped file input
  *****************************************************************************
  * Copyright © 2007-2008 Rémi Denis-Courmont
- * $Id: e49c0412e4a7b0f3bb6ec7dcc5c1c821bf8a3256 $
+ * $Id: 32eea02d00097675b32f45d98caf16972ece76e2 $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,8 +58,7 @@ vlc_module_begin();
     set_capability ("access", 52);
     add_shortcut ("file");
     set_callbacks (Open, Close);
-
-    add_bool ("file-mmap", true, NULL,
+    add_bool ("file-mmap", false, NULL,
               FILE_MMAP_TEXT, FILE_MMAP_LONGTEXT, true);
 vlc_module_end();
 
@@ -83,6 +82,8 @@ static int Open (vlc_object_t *p_this)
     const char *path = p_access->psz_path;
     int fd;
 
+    assert ((INT64_C(1) << 63) == ((off_t)(INT64_C(1) << 63)));
+
     if (!var_CreateGetBool (p_this, "file-mmap"))
         return VLC_EGENERIC; /* disabled */
 
@@ -101,6 +102,7 @@ static int Open (vlc_object_t *p_this)
         msg_Warn (p_access, "cannot open %s: %m", path);
         goto error;
     }
+    fcntl (fd, F_SETFD, fcntl (fd, F_GETFD) | FD_CLOEXEC);
 
     /* mmap() is only safe for regular and block special files.
      * For other types, it may be some idiosyncrasic interface (e.g. packet
@@ -191,13 +193,13 @@ static block_t *Block (access_t *p_access)
 #ifdef MMAP_DEBUG
     int64_t dbgpos = lseek (p_sys->fd, 0, SEEK_CUR);
     if (dbgpos != p_access->info.i_pos)
-        msg_Err (p_access, "position: 0x%08llx instead of 0x%08llx",
+        msg_Err (p_access, "position: 0x%016"PRIx64" instead of 0x%016"PRIx64,
                  p_access->info.i_pos, dbgpos);
 #endif
 
     const uintptr_t page_mask = p_sys->page_size - 1;
     /* Start the mapping on a page boundary: */
-    off_t  outer_offset = p_access->info.i_pos & ~page_mask;
+    off_t  outer_offset = p_access->info.i_pos & ~(off_t)page_mask;
     /* Skip useless bytes at the beginning of the first page: */
     size_t inner_offset = p_access->info.i_pos & page_mask;
     /* Map no more bytes than remain: */
@@ -234,16 +236,16 @@ static block_t *Block (access_t *p_access)
     block->i_buffer -= inner_offset;
 
 #ifdef MMAP_DEBUG
-    msg_Dbg (p_access, "mapped 0x%lx bytes at %p from offset 0x%lx",
-             (unsigned long)length, addr, (unsigned long)outer_offset);
+    msg_Dbg (p_access, "mapped 0x%zx bytes at %p from offset 0x%"PRIx64,
+             length, addr, (uint64_t)outer_offset);
 
     /* Compare normal I/O with memory mapping */
     char *buf = malloc (block->i_buffer);
     ssize_t i_read = read (p_sys->fd, buf, block->i_buffer);
 
     if (i_read != (ssize_t)block->i_buffer)
-        msg_Err (p_access, "read %u instead of %u bytes", (unsigned)i_read,
-                 (unsigned)block->i_buffer);
+        msg_Err (p_access, "read %zd instead of %zu bytes", i_read,
+                 block->i_buffer);
     if (memcmp (buf, block->p_buffer, block->i_buffer))
         msg_Err (p_access, "inconsistent data buffer");
     free (buf);

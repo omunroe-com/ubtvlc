@@ -2,7 +2,7 @@
  * live555.cpp : LIVE555 Streaming Media support.
  *****************************************************************************
  * Copyright (C) 2003-2007 the VideoLAN team
- * $Id: a82520ef9c9359cafcb6dc93023e62ab0c1d2793 $
+ * $Id: f986baf876997c6031e7af1d59ce281e8193de03 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Derk-Jan Hartman <hartman at videolan. org>
@@ -555,7 +555,7 @@ describe:
         p_sys->b_get_param = strstr( psz_options, "GET_PARAMETER" ) ? true : false ;
     delete [] psz_options;
 
-    p_sdp = p_sys->rtsp->describeURL( psz_url, &authenticator,
+    p_sdp = p_sys->rtsp->describeWithPassword( psz_url, (const char*)psz_user, (const char*)psz_pwd,
                          var_GetBool( p_demux, "rtsp-kasenna" ) );
     if( p_sdp == NULL )
     {
@@ -774,6 +774,7 @@ static int SessionsSetup( demux_t *p_demux )
             tk->p_buffer    = (uint8_t *)malloc( 65536 );
             if( !tk->p_buffer )
             {
+                free( tk );
                 delete iter;
                 return VLC_ENOMEM;
             }
