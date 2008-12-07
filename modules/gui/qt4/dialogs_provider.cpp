@@ -2,7 +2,7 @@
  * dialogs_provider.cpp : Dialog Provider
  *****************************************************************************
  * Copyright (C) 2006-2008 the VideoLAN team
- * $Id: e57b6ebc95dd52ad0b4c92eb7c5ce9a6ae0c65d3 $
+ * $Id: 0182f352b8915ea4ca0a39b205f3adab9aa85a37 $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jean-Baptiste Kempf <jb@videolan.org>
@@ -370,7 +370,7 @@ QStringList DialogsProvider::showSimpleOpen( QString help,
     fileTypes.replace(QString(";*"), QString(" *"));
 
     return QFileDialog::getOpenFileNames( NULL,
-        help.isEmpty() ? qfu(I_OP_SEL_FILES ) : help,
+        help.isEmpty() ? qtr(I_OP_SEL_FILES ) : help,
         path.isEmpty() ? qfu( p_intf->p_sys->psz_filepath ) : path,
         fileTypes );
 }
@@ -423,8 +423,14 @@ static void openDirectory( intf_thread_t *p_intf, bool pl, bool go )
 
     if (!dir.isEmpty() )
     {
-        input_item_t *p_input = input_item_NewExt( THEPL,
-                              qtu( "directory://" + toNativeSeparators(dir) ),
+        QString dir2 ;
+        if( dir.endsWith( "VIDEO_TS", Qt::CaseInsensitive ) )
+            dir2 = "dvd://" + dir;
+        else
+            dir2 = "directory://" + dir;
+
+        msg_Dbg( p_intf, "Directory opening: %s", qtu( dir2 ) );
+        input_item_t *p_input = input_item_NewExt( THEPL, qtu( dir2 ),
                               NULL, 0, NULL, -1 );
 
         /* FIXME: playlist_AddInput() can fail */
