@@ -1,3 +1,11 @@
+vlc (0.9.4-1ubuntu3.1) intrepid-security; urgency=low
+
+  * SECURITY UPDATE: Fix buffer overflow in CUE image file support
+    - Patch from upstream Rémi Denis-Courmont (LP: #294243)
+    - CVE-2008-5032
+
+ -- Jamie Strandboge <jamie@ubuntu.com>  Tue, 24 Feb 2009 14:55:44 -0600
+
 vlc (0.9.4-1ubuntu3) intrepid; urgency=low
 
   * link vlc to unicode enabled curses library. Thanks to Rafaël Carré for
