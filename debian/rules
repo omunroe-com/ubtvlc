@@ -44,7 +44,6 @@ confflags += \
 	--enable-sdl \
 	--enable-esd \
 	--enable-mad \
-	--enable-arts \
 	--enable-jack \
 	--enable-pulse \
 	--enable-lirc \
@@ -52,7 +51,7 @@ confflags += \
 	--enable-aa \
 	--enable-dvbpsi \
 	--enable-mozilla \
-	--with-mozilla-pkg=iceape-plugin \
+	--with-mozilla-pkg=libxul-plugin \
 	--disable-kde \
 	--enable-mp4 \
 	--enable-dvb \
@@ -93,13 +92,13 @@ confflags += \
 	--disable-zvbi \
 	--enable-telx \
 	--enable-mediacontrol-bindings \
-	--disable-x264 \
 	--disable-atmo \
 	--enable-taglib \
 	--enable-libass \
 	--enable-libdca \
 	--enable-realrtsp \
 	--disable-dv \
+	--enable-x264 \
 	$(NULL)
 
 #	--enable-dts \
