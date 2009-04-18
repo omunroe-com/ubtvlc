@@ -1,7 +1,8 @@
 Source: vlc
 Section: video
 Priority: optional
-Maintainer: Debian multimedia packages maintainers <pkg-multimedia-maintainers@lists.alioth.debian.org>
+Maintainer: Ubuntu MOTU Developers <ubuntu-motu@lists.ubuntu.com>
+XSBC-Original-Maintainer: Debian multimedia packages maintainers <pkg-multimedia-maintainers@lists.alioth.debian.org>
 Uploaders: Sam Hocevar (Debian packages) <sam+deb@zoy.org>,
            Clément Stenac <zorglub@debian.org>,
            Loic Minier <lool@dooz.org>,
@@ -13,10 +14,10 @@ Build-Depends: debhelper (>= 7),
                quilt,
                nasm,
                yasm [amd64 kfreebsd-amd64],
-               iceape-dev (>=  1.1.9-4),
+               libass-dev,
+               libxul-dev,
                liba52-0.7.4-dev,
                libaa1-dev,
-               libarts1-dev (>= 1.4.2),
                libasound2-dev (>= 0.9.0beta10a) [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
                libass-dev (>= 0.9.5-2),
                libaudiofile-dev,
@@ -75,6 +76,7 @@ Build-Depends: debhelper (>= 7),
                libvcdinfo-dev,
                libvorbis-dev,
                libx11-dev,
+               libx264-dev,
                libxext-dev,
                libxml2-dev,
                libxpm-dev,
@@ -112,10 +114,9 @@ Description: multimedia player and streamer
  VLC has support for on-the-fly transcoding of audio and video formats, either
  for broadcasting purposes or for movie format transformations. Support for
  most output methods is provided by this package, but features can be added
- by installing additional audio plugins (vlc-plugin-esd, vlc-plugin-sdl,
- vlc-plugin-arts) or video plugins (vlc-plugin-sdl, vlc-plugin-ggi,
- vlc-plugin-svgalib). There is also a web browser plugin in the 
- mozilla-plugin-vlc package.
+ by installing additional audio plugins (vlc-plugin-esd, vlc-plugin-sdl) or
+ video plugins (vlc-plugin-sdl, vlc-plugin-ggi, vlc-plugin-svgalib). There is
+ also a web browser plugin in the mozilla-plugin-vlc package.
 
 Package: vlc-dbg
 Section: debug
@@ -252,21 +253,14 @@ Description: GGI video output plugin for VLC
  DivX, MOV, WMV, QuickTime, mp3, Ogg/Vorbis files, DVDs, VCDs, and multimedia
  streams from various network sources.
 
-Package: vlc-plugin-arts
-Architecture: any
-Depends: vlc-nox, ${shlibs:Depends}, ${misc:Depends}
-Description: aRts audio output plugin for VLC
- This plugin adds support for the aRts Sound System to the VLC media
- player. To activate it, use the `--aout arts' flag or select the `arts'
- audio output plugin from the preferences menu.
- .
- VLC is the VideoLAN project's media player. It plays MPEG, MPEG2, MPEG4,
- DivX, MOV, WMV, QuickTime, mp3, Ogg/Vorbis files, DVDs, VCDs, and multimedia
- streams from various network sources.
-
 Package: mozilla-plugin-vlc
 Architecture: any
 Depends: vlc-nox (= ${binary:Version}), vlc, ${shlibs:Depends}, ${misc:Depends}
+Xb-Npp-Applications: ec8030f7-c20a-464f-9b0e-13a3a9e97384, 92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a
+Xb-Npp-Name: VLC Multimedia Plugin
+Xb-Npp-Description: play video and audio in firefox using the VLC Multimedai Player
+Xb-Npp-File: libvlcplugin.so
+Xb-Npp-MimeType: audio/mpeg, audio/x-mpeg, video/mpeg, video/x-mpeg, video/mpeg-system, video/x-mpeg-system, video/mpeg4, audio/mpeg4, application/mpeg4-iod, application/mpeg4-muxcodetable, video/x-msvideo, video/quicktime, application/x-ogg, application/ogg, application/x-vlc-plugin, video/x-ms-asf-plugin, video/x-ms-asf, application/x-mplayer2, video/x-ms-wmv, application/x-google-vlc-plugin, audio/wav, audio/x-wav, audio/3gpp, video/3gpp, audio/3gpp2, video/3gpp2
 Description: multimedia plugin for web browsers based on VLC
  This plugin adds support for MPEG, MPEG2, DVD, DivX, Ogg/Vorbis and many
  more formats to your Gecko-based web browser (Firefox, Galeon, etc.). The
