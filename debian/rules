@@ -16,11 +16,17 @@ confflags := --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE)
 endif
 
 ifneq (,$(filter noopt,$(DEB_BUILD_OPTIONS)))
-confflags += --disable-optimizations
+confflags += --disable-optimizations --disable-mmx --disable-sse --disable-altivec
 endif
 ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
 NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
 MAKEFLAGS += -j$(NUMJOBS)
+else
+# on i386 and amd64, we query the system unless overriden by DEB_BUILD_OPTIONS
+ifneq (,$(filter $(DEB_HOST_ARCH),i386 amd64))
+NUMJOBS := $(shell getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)
+MAKEFLAGS += -j$(NUMJOBS)
+endif
 endif
 
 
@@ -30,15 +36,12 @@ include /usr/share/quilt/quilt.make
 LDFLAGS = -Wl,--as-needed
 
 # configure flags
-confflags += --enable-maintainer-mode --enable-release --prefix=/usr
+confflags += --disable-maintainer-mode --enable-release --prefix=/usr
 confflags += \
-	--enable-libtool \
+	--config-cache \
 	--enable-fast-install \
 	--with-binary-version=$(DEBIAN_VERSION) \
 	--disable-update-check \
-	--disable-gnome \
-	--disable-gtk \
-	--disable-familiar \
 	--disable-fb \
 	--enable-ggi \
 	--enable-sdl \
@@ -53,18 +56,12 @@ confflags += \
 	--enable-dvbpsi \
 	--enable-mozilla \
 	--with-mozilla-pkg=iceape-plugin \
-	--disable-kde \
-	--enable-mp4 \
 	--enable-dvb \
-	--disable-satellite \
 	--enable-ogg \
 	--enable-vorbis \
 	--enable-shout \
 	--enable-qt4 \
-	--disable-slp \
 	--enable-flac \
-	--disable-skins \
-	--disable-basic-skins \
 	--enable-skins2 \
 	--enable-freetype \
 	--enable-mkv \
@@ -73,13 +70,10 @@ confflags += \
 	--enable-live555 \
 	--enable-libmpeg2 \
 	--enable-fribidi \
-	--enable-cdio \
 	--enable-mod \
 	--enable-theora \
-	--enable-modplug \
 	--enable-dvdnav \
 	--enable-gnutls \
-	--enable-ffmpeg \
 	--enable-ncurses \
 	--enable-smb \
 	--disable-gnomevfs \
@@ -92,17 +86,15 @@ confflags += \
 	--enable-faad \
 	--disable-zvbi \
 	--enable-telx \
-	--enable-mediacontrol-bindings \
 	--disable-x264 \
 	--disable-atmo \
 	--enable-taglib \
 	--enable-libass \
-	--enable-libdca \
+	--enable-dca \
 	--enable-realrtsp \
 	--disable-dv \
 	$(NULL)
 
-#	--enable-dts \
 
 # Linux specific flags
 ifeq ($(DEB_HOST_ARCH_OS),linux)
@@ -114,9 +106,6 @@ ifneq ($(filter $(DEB_HOST_ARCH), amd64 i386),)
 confflags += --enable-svgalib
 endif
 
-# Remove --without-dvdcss in non-totalitarian countries
-confflags += --enable-dvd --without-dvdcss
-
 # A few shortcuts
 VIDDIR := usr/share/vlc
 PIXDIR := usr/share/pixmaps
@@ -124,28 +113,42 @@ PIXDIR := usr/share/pixmaps
 build: build-stamp
 build-stamp: $(QUILT_STAMPFN)
 	dh_testdir
+	# We need to build the static library apart
+	# Else it's a mess when we build the modules
 	./configure --enable-static $(confflags)
 	$(MAKE) -C src libvlccore.la libvlc.la
 	mkdir -p tmp
 	cp src/.libs/libvlccore.a tmp/libvlccore.a
 	cp src/.libs/libvlc.a tmp/libvlc.a
+	# build an altivec free version on powerpc for the G3
+ifneq ($(filter $(DEB_HOST_ARCH), powerpc),)
+	./configure --disable-altivec $(confflags)
+	cp -vd src/.libs/libvlccore.so.* tmp/
+endif
 	./configure $(confflags)
 	$(MAKE)
 ifeq ($(filter nocheck,$(DEB_BUILD_OPTIONS)),)
 ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
 	# Check which plugins were built and whether they load properly.
-	./vlc -vvv --reset-plugins-cache --list --no-color  
+	@if test $$( id -u ) -eq 0 ; then \
+	   echo "Not runing the test as you are compiling as root"; \
+	   echo "Use 'dpkg-buildpackage -rfakeroot' rather than 'fakeroot dpkg-buildpackage'"; \
+	else \
+	   command="./vlc -vvv --ignore-config --no-plugins-cache --list --no-color"; \
+	   echo "$${command}"; $${command} ; \
+	fi
 endif
 endif
 	touch $@
 
-clean: clean-real unpatch
-clean-real:
+clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp
 	# Clean VLC
-	[ ! -f Makefile ] || $(MAKE) clean
+	cp -vf ChangeLog debian/Changelog.upstream
+	[ ! -f Makefile ] || $(MAKE) distclean
+	mv -vf debian/Changelog.upstream ChangeLog 
 	rm -rf tmp/
 	# Clean zsh completion stuff
 	rm -f extras/zsh
@@ -155,6 +158,7 @@ clean-real:
 	# Remove spurious autotools stuff
 	rm -f config.log confdefs.h
 	# Unpatch package
+	$(MAKE) -f debian/rules unpatch
 	dh_clean
 
 install: build
@@ -169,6 +173,11 @@ install: build
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp/
 	cp tmp/libvlc.a debian/tmp/usr/lib
 	cp tmp/libvlccore.a debian/tmp/usr/lib
+ifneq ($(filter $(DEB_HOST_ARCH), powerpc),)
+	mkdir -p debian/tmp/usr/lib/altivec/
+	mv -v debian/tmp/usr/lib/libvlccore.so.* debian/tmp/usr/lib/altivec/
+	cp -vd tmp/libvlccore.so.* debian/tmp/usr/lib/
+endif
 	# Clean up libtool crap
 	find debian/tmp -name '*.la' -exec rm '{}' ';'
 	# Remove useless stuff
@@ -185,7 +194,7 @@ install: build
 	# move .hosts
 	mkdir -p debian/vlc-data/etc/vlc/http
 	mv debian/vlc-data/usr/share/vlc/http/.hosts debian/vlc-data/etc/vlc/http
-	ln -s /etc/vlc/http/hosts debian/vlc-data/usr/share/vlc/http/.hosts
+	ln -s /etc/vlc/http/.hosts debian/vlc-data/usr/share/vlc/http/.hosts
 
 	#install BTS stuff
 	mkdir -p  debian/vlc-nox/usr/share/bug/vlc-nox
