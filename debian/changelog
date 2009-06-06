@@ -1,9 +1,34 @@
+vlc (0.9.9a-3) unstable; urgency=medium
+
+  * Correct typo in 0.9.9a-2 changelog entry
+  * Disable more optimization with DEB_BUILD_OPTIONS=noopt
+  * Cache the configure test results as we're running configure several
+    times
+  * Fix building as root
+  * Fix the clean target
+  * Remove unexistant config options
+  * Better check commad line
+  * Use all the procs on i386 and amd64
+  * Build a version of libvlccore without altivec (Closes: #523035)
+  * Fix typo (thanks to Salvatore Bonaccorso)(Closes: #528044)
+  * Reword the command line to get full logs in bug/presubj (Closes: #527012)
+  * Remove duplicate "extended Settings" entry in context menu
+   (Closes: #526603) - thanks to Matt Kraai
+  * Disable the logging facility in the javascript of moz plugin
+    This was a privacy hole. (urgency=medium)(Closes: #529633)
+  * Patch to support libmpc new API (Closes: #476375) - thanks to Yavor
+    Doganov
+  * Disable-maintener mode
+  * Make sure unpatch is last in the clean target
+
+ -- Christophe Mutricy <xtophe@videolan.org>  Sat, 06 Jun 2009 16:56:16 +0200
+
 vlc (0.9.9a-2) unstable; urgency=medium
 
   * Security fix
-  * The default /usr/share/http/{old}/.hosts was wrong in VLC 0.9.8 and 0.9.
-    World access of the htp interface was possible when activated in
-    contradiction of what is said in Chagelog.Debian and NEWS.Debian.
+  * The default /usr/share/http/{old}/.hosts was wrong in VLC 0.9.8 and 0.9.9.
+    World access of the http interface was possible when activated in
+    contradiction of what is said in Changelog.Debian and NEWS.Debian.
 
  -- Christophe Mutricy <xtophe@videolan.org>  Tue, 07 Apr 2009 23:06:48 +0200
 
