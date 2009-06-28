@@ -8,3 +8,8 @@
 400_enable_embedded_video.diff
 401_detect_xinerama_fullscreen.diff
 900_CVE-2008-5032.patch
+901_CVE-2008-4654.patch
+902_CVE-2008-4686.patch
+903_CVE-2008-5036.patch
+904_CVE-2008-5276.patch
+905_CVE-2009-1045.patch
