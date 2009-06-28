@@ -1,3 +1,32 @@
+vlc (0.9.4-1ubuntu3.2) intrepid-security; urgency=low
+
+  * SECURITY UPDATE: Arbitrary code execution via stack-based overflow in
+    the Ty demux plugin (LP: #285922)
+    - debian/patches/901_CVE-2008-4654.patch: don't overflow mst_buf in
+      modules/demux/ty.c
+    - CVE-2008-4654
+  * SECURITY UPDATE: Arbitrary code execution via integer overflows in
+    the Ty demux plugin (LP: #285922)
+    - debian/patches/902_CVE-2008-4686.patch: make some variables unsigned
+      in modules/demux/ty.c so they don't overflow.
+    - CVE-2008-4686
+  * SECURITY UPDATE: Arbitrary code execution via stack-based buffer
+    overflow via invalid RealText subtitle file.
+    - debian/patches/903_CVE-2008-5036.patch: limit sscanf sizes in
+      modules/demux/subtitle.c
+    - CVE-2008-5036
+  * SECURITY UPDATE: Arbitrary code execution via heap-based buffer
+    overflow via malformed RealMedia file.
+    - debian/patches/904_CVE-2008-5276.patch: replace malloc with calloc in
+      modules/demux/real.c
+    - CVE-2008-5276
+  * SECURITY UPDATE: Denial of service via long input argument.
+    - debian/patches/905_CVE-2009-1045.patch: make sure we can't overflow
+      psz_dup in src/input/input.c
+    - CVE-2009-1045
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Sun, 28 Jun 2009 12:13:15 -0400
+
 vlc (0.9.4-1ubuntu3.1) intrepid-security; urgency=low
 
   * SECURITY UPDATE: Fix buffer overflow in CUE image file support
