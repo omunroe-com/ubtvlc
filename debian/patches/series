@@ -19,3 +19,4 @@ demuxer-build-fix.diff
 039_CVE-2008-2430.diff
 040_CVE-2008-3732.diff
 041_CVE-2008-3794.diff
+042_CVE-2008-5032.diff
