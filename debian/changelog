@@ -1,3 +1,13 @@
+vlc (0.8.6.release.e+x264svn20071224+faad2.6.1-0ubuntu3.3) hardy-security; urgency=low
+
+  * SECURITY UPDATE: aribrary code execution via invalid cue image file.
+    (LP: #294243)
+    - debian/patches/042_CVE-2008-5032.diff: make sure we don't overflow
+      p_sectors in modules/access/vcd/cdrom.c
+    - CVE-2008-5032
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Sun, 28 Jun 2009 10:11:40 -0400
+
 vlc (0.8.6.release.e+x264svn20071224+faad2.6.1-0ubuntu3.2) hardy-security; urgency=low
 
   * SECURITY UPDATE: multiple denials of service and arbitrary code execution
