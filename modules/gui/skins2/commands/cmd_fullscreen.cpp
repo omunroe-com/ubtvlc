@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_fullscreen.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 04f14a991763e1929f91b609e81f63edcbcb12b8 $
+ * Copyright (C) 2003-2009 the VideoLAN team
+ * $Id: b3bae4fcf0a2ebe9387e40a4720280424c30e137 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -29,19 +29,15 @@
 
 void CmdFullscreen::execute()
 {
-    vout_thread_t *pVout;
 
     if( getIntf()->p_sys->p_input == NULL )
-    {
         return;
-    }
 
-    pVout = (vout_thread_t *)vlc_object_find( getIntf()->p_sys->p_input,
-                                              VLC_OBJECT_VOUT, FIND_ANYWHERE );
+    vout_thread_t *pVout = input_GetVout( getIntf()->p_sys->p_input );
     if( pVout )
     {
         // Switch to fullscreen
-        pVout->i_changes |= VOUT_FULLSCREEN_CHANGE;
+        var_SetBool( pVout, "fullscreen", !var_GetBool( pVout, "fullscreen" ) );
         vlc_object_release( pVout );
     }
 }

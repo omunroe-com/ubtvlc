@@ -1,8 +1,30 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * Safari/Mozilla/Firefox plugin for VLC
+ * Copyright (C) 2009, Jean-Paul Saman <jpsaman@videolan.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //
 // npmac.cpp
 //
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+#include "config.h"
 
 #include <string.h>
 
@@ -54,7 +76,11 @@
 #undef XP_UNIX
 #endif
 
+#ifdef HAVE_NPFUNCTIONS_H
+#include "npfunctions.h"
+#else
 #include "npupp.h"
+#endif
 
 #include "../vlcshell.h"
 
@@ -131,7 +157,7 @@ static inline void* SetupFPtoTVGlue(TFPtoTVGlue* functionGlue, void* fp)
 
 // glue for mapping netscape TVectors to Macho function pointers
 struct TTVtoFPGlue {
-    uint32 glue[6];
+    uint32_t glue[6];
 };
 
 static struct {
@@ -198,9 +224,7 @@ static void* SetupTVtoFPGlue(TTVtoFPGlue* functionGlue, void* tvp)
 
 #endif /* XP_MACOSX */
 
-
 #pragma mark -
-
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //
@@ -222,7 +246,6 @@ NPNetscapeFuncs    gNetscapeFuncs;      // Function table for procs in Netscape 
 // about the function table and call macros in npupp.h.
 //
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
 
 void NPN_Version(int* plugin_major, int* plugin_minor, int* netscape_major, int* netscape_minor)
 {
@@ -253,7 +276,7 @@ NPError NPN_GetURL(NPP instance, const char* url, const char* window)
     return CallNPN_GetURLProc(gNetscapeFuncs.geturl, instance, url, window);
 }
 
-NPError NPN_PostURLNotify(NPP instance, const char* url, const char* window, uint32 len, const char* buf, NPBool file, void* notifyData)
+NPError NPN_PostURLNotify(NPP instance, const char* url, const char* window, uint32_t len, const char* buf, NPBool file, void* notifyData)
 {
     int navMinorVers = gNetscapeFuncs.version & 0xFF;
     NPError err;
@@ -270,7 +293,7 @@ NPError NPN_PostURLNotify(NPP instance, const char* url, const char* window, uin
     return err;
 }
 
-NPError NPN_PostURL(NPP instance, const char* url, const char* window, uint32 len, const char* buf, NPBool file)
+NPError NPN_PostURL(NPP instance, const char* url, const char* window, uint32_t len, const char* buf, NPBool file)
 {
     return CallNPN_PostURLProc(gNetscapeFuncs.posturl, instance, url, window, len, buf, file);
 }
@@ -296,7 +319,7 @@ NPError NPN_NewStream(NPP instance, NPMIMEType type, const char* window, NPStrea
     return err;
 }
 
-int32 NPN_Write(NPP instance, NPStream* stream, int32 len, void* buffer)
+int32_t NPN_Write(NPP instance, NPStream* stream, int32_t len, void* buffer)
 {
     int navMinorVers = gNetscapeFuncs.version & 0xFF;
     NPError err;
@@ -338,7 +361,7 @@ const char* NPN_UserAgent(NPP instance)
     return CallNPN_UserAgentProc(gNetscapeFuncs.uagent, instance);
 }
 
-void* NPN_MemAlloc(uint32 size)
+void* NPN_MemAlloc(uint32_t size)
 {
     return CallNPN_MemAllocProc(gNetscapeFuncs.memalloc, size);
 }
@@ -348,7 +371,7 @@ void NPN_MemFree(void* ptr)
     CallNPN_MemFreeProc(gNetscapeFuncs.memfree, ptr);
 }
 
-uint32 NPN_MemFlush(uint32 size)
+uint32_t NPN_MemFlush(uint32_t size)
 {
     return CallNPN_MemFlushProc(gNetscapeFuncs.memflush, size);
 }
@@ -595,18 +618,18 @@ void NPN_SetException(NPObject *npobj, const NPUTF8 *message)
 
 NPError     Private_Initialize(void);
 void        Private_Shutdown(void);
-NPError     Private_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, char* argn[], char* argv[], NPSavedData* saved);
+NPError     Private_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved);
 NPError     Private_Destroy(NPP instance, NPSavedData** save);
 NPError     Private_SetWindow(NPP instance, NPWindow* window);
 NPError     Private_GetValue( NPP instance, NPPVariable variable, void *value );
 NPError     Private_SetValue( NPP instance, NPPVariable variable, void *value );
-NPError     Private_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16* stype);
+NPError     Private_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype);
 NPError     Private_DestroyStream(NPP instance, NPStream* stream, NPError reason);
-int32       Private_WriteReady(NPP instance, NPStream* stream);
-int32       Private_Write(NPP instance, NPStream* stream, int32 offset, int32 len, void* buffer);
+int32_t     Private_WriteReady(NPP instance, NPStream* stream);
+int32_t     Private_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buffer);
 void        Private_StreamAsFile(NPP instance, NPStream* stream, const char* fname);
 void        Private_Print(NPP instance, NPPrint* platformPrint);
-int16       Private_HandleEvent(NPP instance, void* event);
+int16_t     Private_HandleEvent(NPP instance, void* event);
 void        Private_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData);
 jobject     Private_GetJavaClass(void);
 
@@ -634,7 +657,7 @@ void Private_Shutdown(void)
     ExitCodeResource();
 }
 
-NPError    Private_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, char* argn[], char* argv[], NPSavedData* saved)
+NPError    Private_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved)
 {
     EnterCodeResource();
     NPError ret = NPP_New(pluginType, instance, mode, argc, argn, argv, saved);
@@ -683,7 +706,7 @@ NPError Private_SetValue( NPP instance, NPNVariable variable, void *value )
     return err;
 }
 
-NPError Private_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16* stype)
+NPError Private_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype)
 {
     NPError err;
     EnterCodeResource();
@@ -693,9 +716,9 @@ NPError Private_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBoo
     return err;
 }
 
-int32 Private_WriteReady(NPP instance, NPStream* stream)
+int32_t Private_WriteReady(NPP instance, NPStream* stream)
 {
-    int32 result;
+    int32_t result;
     EnterCodeResource();
     PLUGINDEBUGSTR("\pWriteReady;g;");
     result = NPP_WriteReady(instance, stream);
@@ -703,9 +726,9 @@ int32 Private_WriteReady(NPP instance, NPStream* stream)
     return result;
 }
 
-int32 Private_Write(NPP instance, NPStream* stream, int32 offset, int32 len, void* buffer)
+int32_t Private_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buffer)
 {
-    int32 result;
+    int32_t result;
     EnterCodeResource();
     PLUGINDEBUGSTR("\pWrite;g;");
     result = NPP_Write(instance, stream, offset, len, buffer);
@@ -731,9 +754,9 @@ NPError Private_DestroyStream(NPP instance, NPStream* stream, NPError reason)
     return err;
 }
 
-int16 Private_HandleEvent(NPP instance, void* event)
+int16_t Private_HandleEvent(NPP instance, void* event)
 {
-    int16 result;
+    int16_t result;
     EnterCodeResource();
     PLUGINDEBUGSTR("\pHandleEvent;g;");
     result = NPP_HandleEvent(instance, event);
@@ -994,6 +1017,7 @@ DEFINE_API_C(NPError) main(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs,
         //
         pluginFuncs->version        = (NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR;
         pluginFuncs->size           = sizeof(NPPluginFuncs);
+#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
         pluginFuncs->newp           = NewNPP_NewProc(PLUGIN_TO_HOST_GLUE(newp, Private_New));
         pluginFuncs->destroy        = NewNPP_DestroyProc(PLUGIN_TO_HOST_GLUE(destroy, Private_Destroy));
         pluginFuncs->setwindow      = NewNPP_SetWindowProc(PLUGIN_TO_HOST_GLUE(setwindow, Private_SetWindow));
@@ -1005,9 +1029,26 @@ DEFINE_API_C(NPError) main(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs,
         pluginFuncs->print          = NewNPP_PrintProc(PLUGIN_TO_HOST_GLUE(print, Private_Print));
         pluginFuncs->event          = NewNPP_HandleEventProc(PLUGIN_TO_HOST_GLUE(event, Private_HandleEvent));
         pluginFuncs->getvalue       = NewNPP_GetValueProc(PLUGIN_TO_HOST_GLUE(getvalue, Private_GetValue));
+#else
+        pluginFuncs->newp           = (NPP_NewProcPtr)(PLUGIN_TO_HOST_GLUE(newp, Private_New));
+        pluginFuncs->destroy        = (NPP_DestroyProcPtr)(PLUGIN_TO_HOST_GLUE(destroy, Private_Destroy));
+        pluginFuncs->setwindow      = (NPP_SetWindowProcPtr)(PLUGIN_TO_HOST_GLUE(setwindow, Private_SetWindow));
+        pluginFuncs->newstream      = (NPP_NewStreamProcPtr)(PLUGIN_TO_HOST_GLUE(newstream, Private_NewStream));
+        pluginFuncs->destroystream  = (NPP_DestroyStreamProcPtr)(PLUGIN_TO_HOST_GLUE(destroystream, Private_DestroyStream));
+        pluginFuncs->asfile         = (NPP_StreamAsFileProcPtr)(PLUGIN_TO_HOST_GLUE(asfile, Private_StreamAsFile));
+        pluginFuncs->writeready     = (NPP_WriteReadyProcPtr)(PLUGIN_TO_HOST_GLUE(writeready, Private_WriteReady));
+        pluginFuncs->write          = (NPP_WriteProcPtr)(PLUGIN_TO_HOST_GLUE(write, Private_Write));
+        pluginFuncs->print          = (NPP_PrintProcPtr)(PLUGIN_TO_HOST_GLUE(print, Private_Print));
+        pluginFuncs->event          = (NPP_HandleEventProcPtr)(PLUGIN_TO_HOST_GLUE(event, Private_HandleEvent));
+        pluginFuncs->getvalue       = (NPP_GetValueProcPtr)(PLUGIN_TO_HOST_GLUE(getvalue, Private_GetValue));
+#endif
         if( navMinorVers >= NPVERS_HAS_NOTIFICATION )
         {
+#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
             pluginFuncs->urlnotify = NewNPP_URLNotifyProc(PLUGIN_TO_HOST_GLUE(urlnotify, Private_URLNotify));
+#else
+            pluginFuncs->urlnotify = (NPP_URLNotifyProcPtr)(PLUGIN_TO_HOST_GLUE(urlnotify, Private_URLNotify));
+#endif
         }
 #ifdef OJI
         if( navMinorVers >= NPVERS_HAS_LIVECONNECT )
@@ -1017,8 +1058,11 @@ DEFINE_API_C(NPError) main(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs,
 #else
         pluginFuncs->javaClass = NULL;
 #endif
+#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
         *unloadUpp = NewNPP_ShutdownProc(PLUGIN_TO_HOST_GLUE(shutdown, Private_Shutdown));
-
+#else
+        *unloadUpp = (NPP_ShutdownProcPtr)(PLUGIN_TO_HOST_GLUE(shutdown, Private_Shutdown));
+#endif
         SetUpQD();
         err = Private_Initialize();
     }
@@ -1153,6 +1197,7 @@ NPError NP_GetEntryPoints(NPPluginFuncs* pluginFuncs)
 
     pluginFuncs->version    = (NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR;
     pluginFuncs->size       = sizeof(NPPluginFuncs);
+#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
     pluginFuncs->newp       = NewNPP_NewProc(Private_New);
     pluginFuncs->destroy    = NewNPP_DestroyProc(Private_Destroy);
     pluginFuncs->setwindow  = NewNPP_SetWindowProc(Private_SetWindow);
@@ -1165,6 +1210,20 @@ NPError NP_GetEntryPoints(NPPluginFuncs* pluginFuncs)
     pluginFuncs->event      = NewNPP_HandleEventProc(Private_HandleEvent);
     pluginFuncs->getvalue   = NewNPP_GetValueProc(Private_GetValue);
     pluginFuncs->setvalue   = NewNPP_SetValueProc(Private_SetValue);
+#else
+    pluginFuncs->newp       = (NPP_NewProcPtr)(Private_New);
+    pluginFuncs->destroy    = (NPP_DestroyProcPtr)(Private_Destroy);
+    pluginFuncs->setwindow  = (NPP_SetWindowProcPtr)(Private_SetWindow);
+    pluginFuncs->newstream  = (NPP_NewStreamProcPtr)(Private_NewStream);
+    pluginFuncs->destroystream = (NPP_DestroyStreamProcPtr)(Private_DestroyStream);
+    pluginFuncs->asfile     = (NPP_StreamAsFileProcPtr)(Private_StreamAsFile);
+    pluginFuncs->writeready = (NPP_WriteReadyProcPtr)(Private_WriteReady);
+    pluginFuncs->write      = (NPP_WriteProcPtr)(Private_Write);
+    pluginFuncs->print      = (NPP_PrintProcPtr)(Private_Print);
+    pluginFuncs->event      = (NPP_HandleEventProcPtr)(Private_HandleEvent);
+    pluginFuncs->getvalue   = (NPP_GetValueProcPtr)(Private_GetValue);
+    pluginFuncs->setvalue   = (NPP_SetValueProcPtr)(Private_SetValue);
+#endif
     if( navMinorVers >= NPVERS_HAS_NOTIFICATION )
     {
         pluginFuncs->urlnotify = Private_URLNotify;

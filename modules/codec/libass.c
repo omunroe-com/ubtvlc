@@ -1,8 +1,8 @@
 /*****************************************************************************
  * SSA/ASS subtitle decoder using libass.
  *****************************************************************************
- * Copyright (C) 2008 the VideoLAN team
- * $Id: 58da2e7f7f4ca1c95901f89f6027fe99725b6537 $
+ * Copyright (C) 2008-2009 the VideoLAN team
+ * $Id: d36824ce451a90f1e042a234056894e9bcc04b0c $
  *
  * Authors: Laurent Aimar <fenrir@videolan.org>
  *
@@ -40,6 +40,7 @@
 #include <vlc_codec.h>
 #include <vlc_osd.h>
 #include <vlc_input.h>
+#include <vlc_dialog.h>
 
 #include <ass/ass.h>
 
@@ -53,36 +54,35 @@
 static int  Create ( vlc_object_t * );
 static void Destroy( vlc_object_t * );
 
-vlc_module_begin();
-    set_shortname( N_("Subtitles (advanced)"));
-    set_description( N_("Subtitle renderers using libass") );
-    set_capability( "decoder", 100 );
-    set_category( CAT_INPUT );
-    set_subcategory( SUBCAT_INPUT_SCODEC );
-    set_callbacks( Create, Destroy );
-vlc_module_end();
+vlc_module_begin ()
+    set_shortname( N_("Subtitles (advanced)"))
+    set_description( N_("Subtitle renderers using libass") )
+    set_capability( "decoder", 100 )
+    set_category( CAT_INPUT )
+    set_subcategory( SUBCAT_INPUT_SCODEC )
+    set_callbacks( Create, Destroy )
+vlc_module_end ()
 
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
 static subpicture_t *DecodeBlock( decoder_t *, block_t ** );
 static void DestroySubpicture( subpicture_t * );
-static void PreRender( video_format_t *, spu_t *, subpicture_t * );
-static void UpdateRegions( video_format_t *, spu_t *,
-                           subpicture_t *, mtime_t );
+static void PreRender( spu_t *, subpicture_t *, const video_format_t * );
+static void UpdateRegions( spu_t *,
+                           subpicture_t *, const video_format_t *, mtime_t );
 
 /* Yes libass sux with threads */
 typedef struct 
 {
     vlc_object_t   *p_libvlc;
 
-    vlc_mutex_t     *p_lock;
     int             i_refcount;
     ass_library_t   *p_library;
     ass_renderer_t  *p_renderer;
     video_format_t  fmt;
 } ass_handle_t;
-static ass_handle_t *AssHandleYield( decoder_t *p_dec );
+static ass_handle_t *AssHandleHold( decoder_t *p_dec );
 static void AssHandleRelease( ass_handle_t * );
 
 /* */
@@ -102,13 +102,14 @@ struct decoder_sys_t
     subpicture_t *p_spu_final;
 };
 static void DecSysRelease( decoder_sys_t *p_sys );
-static void DecSysYield( decoder_sys_t *p_sys );
+static void DecSysHold( decoder_sys_t *p_sys );
 
 struct subpicture_sys_t
 {
     decoder_sys_t *p_dec_sys;
-    void *p_subs_data;
-    int i_subs_len;
+    void          *p_subs_data;
+    int           i_subs_len;
+    mtime_t       i_pts;
 };
 
 typedef struct
@@ -122,6 +123,8 @@ typedef struct
 static int BuildRegions( spu_t *p_spu, rectangle_t *p_region, int i_max_region, ass_image_t *p_img_list, int i_width, int i_height );
 static void SubpictureReleaseRegions( spu_t *p_spu, subpicture_t *p_subpic );
 static void RegionDraw( subpicture_region_t *p_region, ass_image_t *p_img );
+
+static vlc_mutex_t libass_lock = VLC_STATIC_MUTEX;
 
 //#define DEBUG_REGION
 
@@ -144,7 +147,7 @@ static int Create( vlc_object_t *p_this )
         return VLC_ENOMEM;
 
     /* */
-    p_sys->p_ass = AssHandleYield( p_dec );
+    p_sys->p_ass = AssHandleHold( p_dec );
     if( !p_sys->p_ass )
     {
         free( p_sys );
@@ -154,16 +157,19 @@ static int Create( vlc_object_t *p_this )
     p_sys->i_refcount = 1;
 
     /* Add a track */
-    vlc_mutex_lock( p_sys->p_ass->p_lock );
+    vlc_mutex_lock( &libass_lock );
     p_sys->p_track = p_track = ass_new_track( p_sys->p_ass->p_library );
     if( !p_track )
     {
-        vlc_mutex_unlock( p_sys->p_ass->p_lock );
+        vlc_mutex_unlock( &libass_lock );
         DecSysRelease( p_sys );
         return VLC_EGENERIC;
     }
     ass_process_codec_private( p_track, p_dec->fmt_in.p_extra, p_dec->fmt_in.i_extra );
-    vlc_mutex_unlock( p_sys->p_ass->p_lock );
+    vlc_mutex_unlock( &libass_lock );
+
+    p_dec->fmt_out.i_cat = SPU_ES;
+    p_dec->fmt_out.i_codec = VLC_FOURCC('R','G','B','A');
 
     return VLC_SUCCESS;
 }
@@ -178,7 +184,7 @@ static void Destroy( vlc_object_t *p_this )
     DecSysRelease( p_dec->p_sys );
 }
 
-static void DecSysYield( decoder_sys_t *p_sys )
+static void DecSysHold( decoder_sys_t *p_sys )
 {
     vlc_mutex_lock( &p_sys->lock );
     p_sys->i_refcount++;
@@ -197,10 +203,10 @@ static void DecSysRelease( decoder_sys_t *p_sys )
     vlc_mutex_unlock( &p_sys->lock );
     vlc_mutex_destroy( &p_sys->lock );
 
-    vlc_mutex_lock( p_sys->p_ass->p_lock );
+    vlc_mutex_lock( &libass_lock );
     if( p_sys->p_track )
         ass_free_track( p_sys->p_track );
-    vlc_mutex_unlock( p_sys->p_ass->p_lock );
+    vlc_mutex_unlock( &libass_lock );
 
     AssHandleRelease( p_sys->p_ass );
     free( p_sys );
@@ -222,24 +228,9 @@ static subpicture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
     p_block = *pp_block;
     if( p_block->i_flags & (BLOCK_FLAG_DISCONTINUITY|BLOCK_FLAG_CORRUPTED) )
     {
-        msg_Dbg( p_dec, "Resetting libass track after time discontinuity" );
-        /* We need to reset our tracks for the time discontinuity to be
-         * handled */
-        vlc_mutex_lock( p_sys->p_ass->p_lock );
-        if( p_sys->p_track )
-            ass_free_track( p_sys->p_track );
-
-        p_sys->p_track = ass_new_track( p_sys->p_ass->p_library );
-        if( p_sys->p_track  )
-            ass_process_codec_private( p_sys->p_track,
-                                       p_dec->fmt_in.p_extra, p_dec->fmt_in.i_extra );
-        vlc_mutex_unlock( p_sys->p_ass->p_lock );
-
         block_Release( p_block );
         return NULL;
     }
-    if( p_block->i_rate != 0 )
-        p_block->i_length = p_block->i_length * p_block->i_rate / INPUT_RATE_DEFAULT;
     *pp_block = NULL;
 
     if( p_block->i_buffer == 0 || p_block->p_buffer[0] == '\0' )
@@ -248,7 +239,7 @@ static subpicture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
         return NULL;
     }
 
-    p_spu = p_dec->pf_spu_buffer_new( p_dec );
+    p_spu = decoder_NewSubpicture( p_dec );
     if( !p_spu )
     {
         msg_Warn( p_dec, "can't get spu buffer" );
@@ -259,7 +250,7 @@ static subpicture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
     p_spu->p_sys = malloc( sizeof( subpicture_sys_t ));
     if( !p_spu->p_sys )
     {
-        p_dec->pf_spu_buffer_del( p_dec, p_spu );
+        decoder_DeleteSubpicture( p_dec, p_spu );
         block_Release( p_block );
         return NULL;
     }
@@ -269,35 +260,33 @@ static subpicture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
     if( !p_spu->p_sys->p_subs_data )
     {
         free( p_spu->p_sys );
-        p_dec->pf_spu_buffer_del( p_dec, p_spu );
+        decoder_DeleteSubpicture( p_dec, p_spu );
         block_Release( p_block );
         return NULL;
     }
     memcpy( p_spu->p_sys->p_subs_data, p_block->p_buffer,
             p_block->i_buffer );
+    p_spu->p_sys->i_pts = p_block->i_pts;
 
-    p_spu->i_x = 0;
-    p_spu->i_y = 0;
     p_spu->i_start = p_block->i_pts;
     p_spu->i_stop = p_block->i_pts + p_block->i_length;
     p_spu->b_ephemer = true;
     p_spu->b_absolute = true;
-    p_spu->b_pausable = true; /* ? */
 
-    vlc_mutex_lock( p_sys->p_ass->p_lock );
+    vlc_mutex_lock( &libass_lock );
     if( p_sys->p_track )
     {
         ass_process_chunk( p_sys->p_track, p_spu->p_sys->p_subs_data, p_spu->p_sys->i_subs_len,
                            p_spu->i_start / 1000, (p_spu->i_stop-p_spu->i_start) / 1000 );
     }
-    vlc_mutex_unlock( p_sys->p_ass->p_lock );
+    vlc_mutex_unlock( &libass_lock );
 
     p_spu->pf_pre_render = PreRender;
     p_spu->pf_update_regions = UpdateRegions;
     p_spu->pf_destroy = DestroySubpicture;
     p_spu->p_sys->p_dec_sys = p_sys;
 
-    DecSysYield( p_sys );
+    DecSysHold( p_sys );
 
     block_Release( p_block );
 
@@ -315,8 +304,8 @@ static void DestroySubpicture( subpicture_t *p_subpic )
     free( p_subpic->p_sys );
 }
 
-static void PreRender( video_format_t *p_fmt, spu_t *p_spu,
-                       subpicture_t *p_subpic )
+static void PreRender( spu_t *p_spu, subpicture_t *p_subpic,
+                       const video_format_t *p_fmt )
 {
     decoder_sys_t *p_dec_sys = p_subpic->p_sys->p_dec_sys;
 
@@ -325,8 +314,8 @@ static void PreRender( video_format_t *p_fmt, spu_t *p_spu,
     VLC_UNUSED(p_spu);
 }
 
-static void UpdateRegions( video_format_t *p_fmt, spu_t *p_spu,
-                           subpicture_t *p_subpic, mtime_t i_ts )
+static void UpdateRegions( spu_t *p_spu, subpicture_t *p_subpic,
+                           const video_format_t *p_fmt, mtime_t i_ts )
 {
     decoder_sys_t *p_sys = p_subpic->p_sys->p_dec_sys;
     ass_handle_t *p_ass = p_sys->p_ass;
@@ -340,7 +329,7 @@ static void UpdateRegions( video_format_t *p_fmt, spu_t *p_spu,
         return;
     }
 
-    vlc_mutex_lock( p_ass->p_lock );
+    vlc_mutex_lock( &libass_lock );
 
     /* */
     fmt = *p_fmt;
@@ -360,12 +349,14 @@ static void UpdateRegions( video_format_t *p_fmt, spu_t *p_spu,
     }
 
     /* */
+    const mtime_t i_stream_date = p_subpic->p_sys->i_pts + (i_ts - p_subpic->i_start);
     int i_changed;
-    ass_image_t *p_img = ass_render_frame( p_ass->p_renderer, p_sys->p_track, i_ts/1000, &i_changed );
+    ass_image_t *p_img = ass_render_frame( p_ass->p_renderer, p_sys->p_track,
+                                           i_stream_date/1000, &i_changed );
 
     if( !i_changed && !b_fmt_changed )
     {
-        vlc_mutex_unlock( p_ass->p_lock );
+        vlc_mutex_unlock( &libass_lock );
         return;
     }
 
@@ -386,7 +377,7 @@ static void UpdateRegions( video_format_t *p_fmt, spu_t *p_spu,
 
     if( i_region <= 0 )
     {
-        vlc_mutex_unlock( p_ass->p_lock );
+        vlc_mutex_unlock( &libass_lock );
         return;
     }
 
@@ -406,7 +397,7 @@ static void UpdateRegions( video_format_t *p_fmt, spu_t *p_spu,
         fmt_region.i_height =
         fmt_region.i_visible_height = region[i].y1 - region[i].y0;
 
-        pp_region[i] = r = p_subpic->pf_create_region( VLC_OBJECT(p_spu), &fmt_region );
+        pp_region[i] = r = subpicture_region_New( &fmt_region );
         if( !r )
             break;
         r->i_x = region[i].x0;
@@ -420,7 +411,7 @@ static void UpdateRegions( video_format_t *p_fmt, spu_t *p_spu,
         *pp_region_last = r;
         pp_region_last = &r->p_next;
     }
-    vlc_mutex_unlock( p_ass->p_lock );
+    vlc_mutex_unlock( &libass_lock );
 }
 
 static rectangle_t r_create( int x0, int y0, int x1, int y1 )
@@ -576,7 +567,7 @@ static int BuildRegions( spu_t *p_spu, rectangle_t *p_region, int i_max_region, 
 
 static void RegionDraw( subpicture_region_t *p_region, ass_image_t *p_img )
 {
-    const plane_t *p = &p_region->picture.p[0];
+    const plane_t *p = &p_region->p_picture->p[0];
     const int i_x = p_region->i_x;
     const int i_y = p_region->i_y;
     const int i_width  = p_region->fmt.i_width;
@@ -627,21 +618,15 @@ static void RegionDraw( subpicture_region_t *p_region, ass_image_t *p_img )
 
 static void SubpictureReleaseRegions( spu_t *p_spu, subpicture_t *p_subpic )
 {
-    while( p_subpic->p_region )
-    {
-        subpicture_region_t *p_region = p_subpic->p_region;
-        p_subpic->p_region = p_region->p_next;
-        spu_DestroyRegion( p_spu, p_region );
-    }
+    VLC_UNUSED( p_spu );
+    subpicture_region_ChainDelete( p_subpic->p_region );
     p_subpic->p_region = NULL;
 }
 
 /* */
-static ass_handle_t *AssHandleYield( decoder_t *p_dec )
+static ass_handle_t *AssHandleHold( decoder_t *p_dec )
 {
-    vlc_mutex_t *p_lock = var_AcquireMutex( "libass" );
-    if( !p_lock )
-        return NULL;
+    vlc_mutex_lock( &libass_lock );
 
     ass_handle_t *p_ass = NULL;
     ass_library_t *p_library = NULL;
@@ -658,7 +643,7 @@ static ass_handle_t *AssHandleYield( decoder_t *p_dec )
 
         p_ass->i_refcount++;
 
-        vlc_mutex_unlock( p_lock );
+        vlc_mutex_unlock( &libass_lock );
         return p_ass;
     }
 
@@ -669,7 +654,6 @@ static ass_handle_t *AssHandleYield( decoder_t *p_dec )
 
     /* */
     p_ass->p_libvlc = VLC_OBJECT(p_dec->p_libvlc);
-    p_ass->p_lock = p_lock;
     p_ass->i_refcount = 1;
 
     /* Create libass library */
@@ -702,7 +686,13 @@ static ass_handle_t *AssHandleYield( decoder_t *p_dec )
 
     char *psz_font_dir = NULL;
 
+
 #if defined(WIN32)
+    dialog_progress_bar_t *p_dialog = dialog_ProgressCreate( p_dec,
+        _("Building font cache"),
+        _( "Please wait while your font cache is rebuild.\n"
+        "This should take less than a minute." ), NULL );
+    /* This makes Windows build of VLC hang */
     const UINT uPath = GetSystemWindowsDirectoryW( NULL, 0 );
     if( uPath > 0 )
     {
@@ -721,14 +711,17 @@ static ass_handle_t *AssHandleYield( decoder_t *p_dec )
         }
     }
 #endif
-
     if( !psz_font_dir )
         psz_font_dir = config_GetCacheDir();
 
     if( !psz_font_dir )
         goto error;
+    msg_Dbg( p_dec, "Setting libass fontdir: %s", psz_font_dir );
     ass_set_fonts_dir( p_library, psz_font_dir );
     free( psz_font_dir );
+#ifdef WIN32
+    dialog_ProgressSet( p_dialog, NULL, 0.1 );
+#endif
 
     ass_set_extract_fonts( p_library, true );
     ass_set_style_overrides( p_library, NULL );
@@ -747,8 +740,15 @@ static ass_handle_t *AssHandleYield( decoder_t *p_dec )
 
     const char *psz_font = NULL; /* We don't ship a default font with VLC */
     const char *psz_family = "Arial"; /* Use Arial if we can't find anything more suitable */
+
 #ifdef HAVE_FONTCONFIG
+#ifdef WIN32
+    dialog_ProgressSet( p_dialog, NULL, 0.2 );
+#endif
     ass_set_fonts( p_renderer, psz_font, psz_family );  // setup default font/family
+#ifdef WIN32
+    dialog_ProgressSet( p_dialog, NULL, 1.0 );
+#endif
 #else
     /* FIXME you HAVE to give him a font if no fontconfig */
     ass_set_fonts_nofc( p_renderer, psz_font, psz_family );
@@ -760,7 +760,10 @@ static ass_handle_t *AssHandleYield( decoder_t *p_dec )
     var_Set( p_dec->p_libvlc, "libass-handle", val );
 
     /* */
-    vlc_mutex_unlock( p_ass->p_lock );
+    vlc_mutex_unlock( &libass_lock );
+#ifdef WIN32
+    dialog_ProgressDestroy( p_dialog );
+#endif
     return p_ass;
 
 error:
@@ -769,17 +772,19 @@ error:
     if( p_library )
         ass_library_done( p_library );
 
+    msg_Warn( p_dec, "Libass creation failed" );
+
     free( p_ass );
-    vlc_mutex_unlock( p_lock );
+    vlc_mutex_unlock( &libass_lock );
     return NULL;
 }
 static void AssHandleRelease( ass_handle_t *p_ass )
 {
-    vlc_mutex_lock( p_ass->p_lock );
+    vlc_mutex_lock( &libass_lock );
     p_ass->i_refcount--;
     if( p_ass->i_refcount > 0 )
     {
-        vlc_mutex_unlock( p_ass->p_lock );
+        vlc_mutex_unlock( &libass_lock );
         return;
     }
 
@@ -790,7 +795,7 @@ static void AssHandleRelease( ass_handle_t *p_ass )
     val.p_address = NULL;
     var_Set( p_ass->p_libvlc, "libass-handle", val );
 
-    vlc_mutex_unlock( p_ass->p_lock );
+    vlc_mutex_unlock( &libass_lock );
     free( p_ass );
 }
 

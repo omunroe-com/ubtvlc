@@ -2,7 +2,7 @@
  * glx.c: GLX OpenGL provider
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: a54e7626d1113ac11242bb2aff5f8aa6e96a3ddb $
+ * $Id: 14ac5ed03ff4a8f00df1eda2aadfc1f75ccc2694 $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -115,24 +115,24 @@ static void SwitchContext( vout_thread_t * );
     "Screen to use in fullscreen mode. For instance " \
     "set it to 0 for first screen, 1 for the second.")
 
-vlc_module_begin();
-    set_shortname( "OpenGL(GLX)" );
-    set_category( CAT_VIDEO );
-    set_subcategory( SUBCAT_VIDEO_VOUT );
-    set_description( N_("OpenGL(GLX) provider") );
-    set_capability( "opengl provider", 50 );
-    set_callbacks( CreateOpenGL, DestroyOpenGL );
+vlc_module_begin ()
+    set_shortname( "OpenGL(GLX)" )
+    set_category( CAT_VIDEO )
+    set_subcategory( SUBCAT_VIDEO_VOUT )
+    set_description( N_("OpenGL(GLX) provider") )
+    set_capability( "opengl provider", 50 )
+    set_callbacks( CreateOpenGL, DestroyOpenGL )
 
-    add_string( "glx-display", NULL, NULL, DISPLAY_TEXT, DISPLAY_LONGTEXT, true );
-    add_integer( "glx-adaptor", -1, NULL, ADAPTOR_TEXT, ADAPTOR_LONGTEXT, true );
-    add_bool( "glx-altfullscreen", 0, NULL, ALT_FS_TEXT, ALT_FS_LONGTEXT, true );
+    add_string( "glx-display", NULL, NULL, DISPLAY_TEXT, DISPLAY_LONGTEXT, true )
+    add_integer( "glx-adaptor", -1, NULL, ADAPTOR_TEXT, ADAPTOR_LONGTEXT, true )
+    add_bool( "glx-altfullscreen", 0, NULL, ALT_FS_TEXT, ALT_FS_LONGTEXT, true )
 #ifdef HAVE_SYS_SHM_H
-    add_bool( "glx-shm", 1, NULL, SHM_TEXT, SHM_LONGTEXT, true );
+    add_bool( "glx-shm", 1, NULL, SHM_TEXT, SHM_LONGTEXT, true )
 #endif
 #ifdef HAVE_XINERAMA
-    add_integer ( "glx-xineramascreen", 0, NULL, SCREEN_TEXT, SCREEN_LONGTEXT, true );
+    add_integer ( "glx-xineramascreen", -1, NULL, SCREEN_TEXT, SCREEN_LONGTEXT, true )
 #endif
-vlc_module_end();
+vlc_module_end ()
 
 /*****************************************************************************
  * Exported prototypes
@@ -234,7 +234,7 @@ int InitGLX13( vout_thread_t *p_vout )
 {
     vout_sys_t *p_sys = p_vout->p_sys;
     int i_nb, ret = VLC_EGENERIC;
-    GLXFBConfig *p_fbconfs = NULL, fbconf;
+    GLXFBConfig *p_fbconfs = NULL, fbconf = NULL;
     XWindowAttributes att;
     static const int p_attr[] = {
         GLX_RED_SIZE, 5, GLX_GREEN_SIZE, 5, GLX_BLUE_SIZE, 5,
