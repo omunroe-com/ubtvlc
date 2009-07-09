@@ -1,8 +1,8 @@
 /*****************************************************************************
  * darwin_specific.m: Darwin specific features
  *****************************************************************************
- * Copyright (C) 2001-2007 the VideoLAN team
- * $Id: 6e68ee1241dea61c9f0cc69414c11b3f5d89529d $
+ * Copyright (C) 2001-2009 the VideoLAN team
+ * $Id: 23ef2ff28f2439b0062a248bcdc16bb9a656ec69 $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -44,33 +44,6 @@
 # define MAXPATHLEN 1024
 #endif
 
-/* CFLocaleCopyAvailableLocaleIdentifiers is present only on post-10.4 */
-extern CFArrayRef CFLocaleCopyAvailableLocaleIdentifiers(void) __attribute__((weak_import));
-
-/* emulate CFLocaleCopyAvailableLocaleIdentifiers on pre-10.4 */
-static CFArrayRef copy_all_locale_indentifiers(void)
-{
-    CFMutableArrayRef available_locales;
-    DIR * dir;
-    struct dirent *file;
-
-    dir = opendir( "/usr/share/locale" );
-    available_locales = CFArrayCreateMutable( kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks );
-
-    while ( (file = readdir(dir)) )
-    {
-        /* we should probably filter out garbage */
-        /* we can't use CFStringCreateWithFileSystemRepresentation as it is
-         * supported only on post-10.4 (and this function is only for pre-10.4) */
-        CFStringRef locale = CFStringCreateWithCString( kCFAllocatorDefault, file->d_name, kCFStringEncodingUTF8 );
-        CFArrayAppendValue( available_locales, (void*)locale );
-        CFRelease( locale );
-    }
-
-    closedir( dir );
-    return available_locales;
-}
-
 /*****************************************************************************
  * system_Init: fill in program path & retrieve language
  *****************************************************************************/
@@ -84,7 +57,6 @@ void system_Init( libvlc_int_t *p_this, int *pi_argc, const char *ppsz_argv[] )
     (void)pi_argc;
 
     /* Get the full program path and name */
-
     /* First try to see if we are linked to the framework */
     for (i = 0; i < _dyld_image_count(); i++)
     {
@@ -123,7 +95,8 @@ void system_Init( libvlc_int_t *p_this, int *pi_argc, const char *ppsz_argv[] )
         p_char = strdup( ppsz_argv[ 0 ] );
     }
 
-    vlc_global()->psz_vlcpath = p_char;
+    free(psz_vlcpath);
+    psz_vlcpath = p_char;
 
     /* Remove trailing program name */
     for( ; *p_char ; )
@@ -134,12 +107,11 @@ void system_Init( libvlc_int_t *p_this, int *pi_argc, const char *ppsz_argv[] )
             *p_char = '\0';
             p_oldchar = p_char;
         }
-
         p_char++;
     }
 
     /* Check if $LANG is set. */
-    if ( (p_char = getenv("LANG")) == NULL )
+    if( NULL == getenv("LANG") )
     {
         /*
            Retrieve the preferred language as chosen in  System Preferences.app
@@ -149,10 +121,7 @@ void system_Init( libvlc_int_t *p_this, int *pi_argc, const char *ppsz_argv[] )
         CFArrayRef all_locales, preferred_locales;
         char psz_locale[50];
 
-        if( CFLocaleCopyAvailableLocaleIdentifiers )
-            all_locales = CFLocaleCopyAvailableLocaleIdentifiers();
-        else
-            all_locales = copy_all_locale_indentifiers();
+        all_locales = CFLocaleCopyAvailableLocaleIdentifiers();
 
         preferred_locales = CFBundleCopyLocalizationsForPreferences( all_locales, NULL );
 
@@ -186,6 +155,7 @@ void system_Configure( libvlc_int_t *p_this, int *pi_argc, const char *ppsz_argv
 void system_End( libvlc_int_t *p_this )
 {
     (void)p_this;
-    free( vlc_global()->psz_vlcpath );
+    free( psz_vlcpath );
+    psz_vlcpath = NULL;
 }
 

@@ -2,7 +2,7 @@
  * cmd_resize.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: c554c1800fe2241775cd1451f0604d6e7cd9be83 $
+ * $Id: 78f2bfa019e42c337d48880e53bcae56a2577971 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -26,9 +26,12 @@
 #define CMD_RESIZE_HPP
 
 #include "cmd_generic.hpp"
+#include <vlc_vout.h>
 
 class WindowManager;
 class GenericLayout;
+class CtrlVideo;
+class VoutWindow;
 
 
 /// Command to resize a layout
@@ -58,8 +61,8 @@ class CmdResizeVout: public CmdGeneric
 {
     public:
         /// Resize the given layout
-        CmdResizeVout( intf_thread_t *pIntf, void *pWindow, int width,
-                       int height );
+        CmdResizeVout( intf_thread_t *pIntf, VoutWindow *pVoutWindow,
+                       int width, int height );
         virtual ~CmdResizeVout() {}
 
         /// This method does the real job of the command
@@ -69,9 +72,27 @@ class CmdResizeVout: public CmdGeneric
         virtual string getType() const { return "resize vout"; }
 
     private:
-        void *m_pWindow;
+        VoutWindow *m_pVoutWindow;
         int m_width, m_height;
 };
 
+
+/// Command to resize the inner vout window
+class CmdResizeInnerVout: public CmdGeneric
+{
+    public:
+        /// Resize the given layout
+        CmdResizeInnerVout( intf_thread_t *pIntf, CtrlVideo* pCtrlVideo );
+        virtual ~CmdResizeInnerVout() {}
+
+        /// This method does the real job of the command
+        virtual void execute();
+
+        /// Return the type of the command
+        virtual string getType() const { return "resize inner vout"; }
+
+    private:
+        CtrlVideo* m_pCtrlVideo;
+};
 
 #endif

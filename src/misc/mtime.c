@@ -4,7 +4,7 @@
  *****************************************************************************
  * Copyright (C) 1998-2007 the VideoLAN team
  * Copyright © 2006-2007 Rémi Denis-Courmont
- * $Id: 3ee71fdc1d44a074b9a87dd912656a8ee267ea39 $
+ * $Id: a0c24e8e39d84d6169f4bc9d89a453e29add6764 $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Rémi Denis-Courmont <rem$videolan,org>
@@ -52,15 +52,12 @@
 #   include <mmsystem.h>
 #endif
 
-#if defined( UNDER_CE )
-#   include <windows.h>
-#endif
-
 #if defined(HAVE_SYS_TIME_H)
 #   include <sys/time.h>
 #endif
 
-#if defined(__APPLE__) && !defined(__powerpc__) && !defined( __ppc__ ) && !defined( __ppc64__ )
+#if defined(__APPLE__) && !defined(__powerpc__) && !defined(__ppc__) && !defined(__ppc64__)
+#define USE_APPLE_MACH 1
 #   include <mach/mach.h>
 #   include <mach/mach_time.h>
 #endif
@@ -177,7 +174,7 @@ static inline unsigned mprec( void )
 #endif
 }
 
-#if defined(__APPLE__) && !defined(__powerpc__) && !defined( __ppc__ ) && !defined( __ppc64__ )
+#ifdef USE_APPLE_MACH
 static mach_timebase_info_data_t mtime_timebase_info;
 static pthread_once_t mtime_timebase_info_once = PTHREAD_ONCE_INIT;
 static void mtime_init_timebase(void)
@@ -211,7 +208,7 @@ mtime_t mdate( void )
 #elif defined( HAVE_KERNEL_OS_H )
     res = real_time_clock_usecs();
 
-#elif defined(__APPLE__) && !defined(__powerpc__) && !defined( __ppc__ ) && !defined( __ppc64__ )
+#elif defined( USE_APPLE_MACH )
     pthread_once(&mtime_timebase_info_once, mtime_init_timebase);
     uint64_t date = mach_absolute_time();
 
@@ -289,7 +286,7 @@ mtime_t mdate( void )
     }
     else
     {
-        /* Fallback on timeGetTime() which has a milisecond resolution
+        /* Fallback on timeGetTime() which has a millisecond resolution
          * (actually, best case is about 5 ms resolution)
          * timeGetTime() only returns a DWORD thus will wrap after
          * about 49.7 days so we try to detect the wrapping. */
@@ -327,6 +324,11 @@ mtime_t mdate( void )
         i_previous_time = res;
         LeaveCriticalSection( &date_lock );
     }
+#elif USE_APPLE_MACH /* The version that should be used, if it was cancelable */
+    pthread_once(&mtime_timebase_info_once, mtime_init_timebase);
+    uint64_t mach_time = date * 1000 * mtime_timebase_info.denom / mtime_timebase_info.numer;
+    mach_wait_until(mach_time);
+
 #else
     struct timeval tv_date;
 
@@ -338,6 +340,7 @@ mtime_t mdate( void )
     return res;
 }
 
+#undef mwait
 /**
  * Wait for a date
  *
@@ -364,14 +367,20 @@ void mwait( mtime_t date )
         ts.tv_sec = d.quot; ts.tv_nsec = d.rem * 1000;
         while( clock_nanosleep( CLOCK_REALTIME, 0, &ts, NULL ) == EINTR );
     }
-#elif defined(__APPLE__) && !defined(__powerpc__) && !defined( __ppc__ ) && !defined( __ppc64__ )
-    /* The version that should be used, if it was cancelable */
-    pthread_once(&mtime_timebase_info_once, mtime_init_timebase);
-    uint64_t mach_time = date * 1000 * mtime_timebase_info.denom / mtime_timebase_info.numer;
-    mach_wait_until(mach_time);
+
+#elif defined (WIN32)
+    mtime_t i_total;
+
+    while( (i_total = (date - mdate())) > 0 )
+    {
+        const mtime_t i_sleep = i_total / 1000;
+        DWORD i_delay = (i_sleep > 0x7fffffff) ? 0x7fffffff : i_sleep;
+        vlc_testcancel();
+        SleepEx( i_delay, TRUE );
+    }
+    vlc_testcancel();
 
 #else
-
     mtime_t delay = date - mdate();
     if( delay > 0 )
         msleep( delay );
@@ -379,10 +388,13 @@ void mwait( mtime_t date )
 #endif
 }
 
+
+#include "libvlc.h" /* vlc_backtrace() */
+#undef msleep
+
 /**
- * More precise sleep()
+ * Portable usleep(). Cancellation point.
  *
- * Portable usleep() function.
  * \param delay the amount of time to sleep
  */
 void msleep( mtime_t delay )
@@ -403,9 +415,7 @@ void msleep( mtime_t delay )
     snooze( delay );
 
 #elif defined( WIN32 ) || defined( UNDER_CE )
-    for (delay /= 1000; delay > 0x7fffffff; delay -= 0x7fffffff)
-        Sleep (0x7fffffff);
-    Sleep (delay);
+    mwait (mdate () + delay);
 
 #elif defined( HAVE_NANOSLEEP )
     struct timespec ts_delay;
@@ -415,8 +425,7 @@ void msleep( mtime_t delay )
 
     while( nanosleep( &ts_delay, &ts_delay ) && ( errno == EINTR ) );
 
-#elif defined( __APPLE__) && !defined(__powerpc__) && !defined( __ppc__ ) && !defined( __ppc64__ )
-    /* The version that should be used, if it was cancelable */
+#elif USE_APPLE_MACH /* The version that should be used, if it was cancelable */
     pthread_once(&mtime_timebase_info_once, mtime_init_timebase);
     uint64_t mach_time = delay * 1000 * mtime_timebase_info.denom / mtime_timebase_info.numer;
     mach_wait_until(mach_time + mach_absolute_time());
@@ -524,6 +533,33 @@ mtime_t date_Increment( date_t *p_date, uint32_t i_nb_samples )
         p_date->date += 1;
         p_date->i_remainder -= p_date->i_divider_num;
     }
+
+    return p_date->date;
+}
+
+/**
+ * Decrement the date and return the result, taking into account
+ * rounding errors.
+ *
+ * \param date to decrement
+ * \param decrementation in number of samples
+ * \return date value
+ */
+mtime_t date_Decrement( date_t *p_date, uint32_t i_nb_samples )
+{
+    mtime_t i_dividend = (mtime_t)i_nb_samples * 1000000 * p_date->i_divider_den;
+    p_date->date -= i_dividend / p_date->i_divider_num;
+    unsigned i_rem_adjust = i_dividend % p_date->i_divider_num;
+
+    if( p_date->i_remainder < i_rem_adjust )
+    {
+        /* This is Bresenham algorithm. */
+        assert( p_date->i_remainder > -p_date->i_divider_num);
+        p_date->date -= 1;
+        p_date->i_remainder += p_date->i_divider_num;
+    }
+
+    p_date->i_remainder -= i_rem_adjust;
 
     return p_date->date;
 }

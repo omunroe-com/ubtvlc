@@ -2,7 +2,7 @@
  * folder.c
  *****************************************************************************
  * Copyright (C) 2006 the VideoLAN team
- * $Id: e6493e0e2e8d5545a72a26397196d8cba7843f78 $
+ * $Id: 5a0c3a007b420c7d8eeb447b1dd615c8a7c71992 $
  *
  * Authors: Antoine Cellerier <dionoea -at- videolan -dot- org>
  *
@@ -31,11 +31,9 @@
 
 #include <vlc_common.h>
 #include <vlc_plugin.h>
-#include <vlc_interface.h>
-#include <vlc_meta.h>
 #include <vlc_playlist.h>
-#include <vlc_input.h>
 #include <vlc_charset.h>
+#include <vlc_url.h>
 
 #ifdef HAVE_SYS_STAT_H
 #   include <sys/stat.h>
@@ -54,20 +52,19 @@ static int FindMeta( vlc_object_t * );
  * Module descriptor
  *****************************************************************************/
 
-vlc_module_begin();
-    set_shortname( N_( "Folder" ) );
-    set_description( N_("Folder meta data") );
+vlc_module_begin ()
+    set_shortname( N_( "Folder" ) )
+    set_description( N_("Folder meta data") )
 
-    set_capability( "art finder", 90 );
-    set_callbacks( FindMeta, NULL );
-vlc_module_end();
+    set_capability( "art finder", 90 )
+    set_callbacks( FindMeta, NULL )
+vlc_module_end ()
 
 /*****************************************************************************
  *****************************************************************************/
 static int FindMeta( vlc_object_t *p_this )
 {
-    playlist_t *p_playlist = (playlist_t *)p_this;
-    input_item_t *p_item = (input_item_t *)(p_playlist->p_private);
+    input_item_t *p_item = (input_item_t *)p_this->p_private;
     bool b_have_art = false;
 
     int i = 0;
@@ -102,26 +99,31 @@ static int FindMeta( vlc_object_t *p_this )
             case 0:
             /* Windows Folder.jpg */
             snprintf( psz_filename, MAX_PATH,
-                      "file://%sFolder.jpg", psz_path );
+                      "%sFolder.jpg", psz_path );
             break;
 
             case 1:
             /* Windows AlbumArtSmall.jpg == small version of Folder.jpg */
             snprintf( psz_filename, MAX_PATH,
-                  "file://%sAlbumArtSmall.jpg", psz_path );
+                  "%sAlbumArtSmall.jpg", psz_path );
             break;
 
             case 2:
             /* KDE (?) .folder.png */
             snprintf( psz_filename, MAX_PATH,
-                  "file://%s.folder.png", psz_path );
+                  "%s.folder.png", psz_path );
             break;
         }
 
-        if( utf8_stat( psz_filename+7, &a ) != -1 )
+        if( utf8_stat( psz_filename, &a ) != -1 )
         {
-            input_item_SetArtURL( p_item, psz_filename );
-            b_have_art = true;
+            char *psz_uri = make_URI( psz_filename );
+            if( psz_uri )
+            {
+                input_item_SetArtURL( p_item, psz_uri );
+                free( psz_uri );
+                b_have_art = true;
+            }
         }
     }
 

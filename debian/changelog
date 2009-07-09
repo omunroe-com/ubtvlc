@@ -1,3 +1,43 @@
+vlc (1.0.0-1) unstable; urgency=low
+
+  * New Upstream Release
+    + Closes: #536081
+    + Closes: #536081, LP: #396548
+    + Refresh patches
+  * no longer closes when pausing from the notification area, LP: #371515
+  * Don't install the alsa and OSS access module on kfreeBSD (Closes:
+    #535101) - thanks to Javier Mendez Gomez
+  * Force at least libvlc 1.0.0 becasue of tha soname change of
+    libvlccore
+  * Delete a symbols who was present by mistake.
+  * No need for dh_desktop. It's a no-op
+  * New standard version. No change needed
+  * Fix make distclean. New patch taken from upstream
+  * Upstream make distcheck has been fixed. No need to save Changelog
+
+ -- Christophe Mutricy <xtophe@videolan.org>  Thu, 09 Jul 2009 13:04:20 +0000
+
+vlc (1.0.0~rc2-1) experimental; urgency=low
+
+  * New Upstream Release Candidate
+    + Closes: #527010, #491441, #508618, #522824
+  * Delete patches which were picked from upstream
+  * Refresh patches
+  * Remove vlc-plugin-esd and vlc-plugin-arts as they have been removed
+    by upstream
+  * SONAME change for libvlccore
+  * Add new symbols for libvlc2
+  * Fix static libs compile
+  * Use vlc-wrapper manpage from upstream
+  * vlc.install: add drawable and screen was renamed x11_screen
+  * vlc-nox.install: Add and remove modules added/removed upstream
+  * Point out in NEWS the modules renamed or splited
+  * Add links to upstream NEWS and co in vlc-nox
+  * Version the depedency of libvlcore2 on vlc-data
+  * Remove unnecessary "Section:" in debian/control
+
+ -- Christophe Mutricy <xtophe@videolan.org>  Wed, 03 Jun 2009 17:55:10 +0200
+
 vlc (0.9.9a-3) unstable; urgency=medium
 
   * Correct typo in 0.9.9a-2 changelog entry

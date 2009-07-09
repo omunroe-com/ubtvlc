@@ -2,7 +2,7 @@
  * media_list_player.c: libvlc new API media_list player functions
  *****************************************************************************
  * Copyright (C) 2007 the VideoLAN team
- * $Id: c5f04511cdfbdca0ec95ff72be555a8502945a50 $
+ * $Id: ee9a8e0a3663d0993f3891607f96252b7d9cd0f7 $
  *
  * Authors: Pierre d'Herbemont <pdherbemont # videolan.org>
  *
@@ -20,9 +20,31 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
-#include "libvlc_internal.h"
+
 #include <vlc/libvlc.h>
+#include <vlc/libvlc_media.h>
+#include <vlc/libvlc_media_list.h>
+#include <vlc/libvlc_media_player.h>
+#include <vlc/libvlc_media_list_player.h>
+#include <vlc/libvlc_events.h>
+
+#include "libvlc_internal.h"
+
+#include "media_internal.h" // Abuse, could and should be removed
 #include "media_list_path.h"
+
+
+struct libvlc_media_list_player_t
+{
+    libvlc_event_manager_t *    p_event_manager;
+    libvlc_instance_t *         p_libvlc_instance;
+    int                         i_refcount;
+    vlc_mutex_t                 object_lock;
+    libvlc_media_list_path_t    current_playing_item_path;
+    libvlc_media_t *            p_current_playing_item;
+    libvlc_media_list_t *       p_mlist;
+    libvlc_media_player_t *     p_mi;
+};
 
 /*
  * Private functions
@@ -64,7 +86,7 @@ get_next_path( libvlc_media_list_player_t * p_mlp )
                             p_mlp->p_mlist,
                             p_mlp->current_playing_item_path );
 
-    int deepness = libvlc_media_list_path_deepness( p_mlp->current_playing_item_path );
+    int deepness = libvlc_media_list_path_depth( p_mlp->current_playing_item_path );
     if( deepness < 1 || !p_parent_of_playing_item )
         return NULL;
 
@@ -282,7 +304,31 @@ libvlc_media_list_player_new( libvlc_instance_t * p_instance,
  **************************************************************************/
 void libvlc_media_list_player_release( libvlc_media_list_player_t * p_mlp )
 {
-    free(p_mlp);
+    if( !p_mlp )
+        return;
+
+    vlc_mutex_lock( &p_mlp->object_lock );
+
+    p_mlp->i_refcount--;
+    if( p_mlp->i_refcount > 0 )
+    {
+        vlc_mutex_unlock( &p_mlp->object_lock );
+        return;
+    }
+    vlc_mutex_unlock( &p_mlp->object_lock );
+    vlc_mutex_destroy( &p_mlp->object_lock );
+
+    libvlc_event_manager_release( p_mlp->p_event_manager );
+    libvlc_media_player_release( p_mlp->p_mi );
+
+    if( p_mlp->p_mlist )
+    {
+        uninstall_playlist_observer( p_mlp );
+        libvlc_media_list_release( p_mlp->p_mlist );
+    }
+
+    free( p_mlp->current_playing_item_path );
+    free( p_mlp );
 }
 
 /**************************************************************************
@@ -319,6 +365,13 @@ void libvlc_media_list_player_set_media_list(
                                      libvlc_exception_t * p_e )
 {
     vlc_mutex_lock( &p_mlp->object_lock );
+
+    if(!p_mlist)
+    {
+        libvlc_exception_raise( p_e, "No media list provided");
+        vlc_mutex_unlock( &p_mlp->object_lock );
+        return;
+    }
 
     if( libvlc_media_list_player_is_playing( p_mlp, p_e ) )
     {
@@ -376,7 +429,6 @@ libvlc_media_list_player_is_playing( libvlc_media_list_player_t * p_mlp,
 {
     libvlc_state_t state = libvlc_media_player_get_state( p_mlp->p_mi, p_e );
     return (state == libvlc_Opening) || (state == libvlc_Buffering) ||
-           (state == libvlc_Forward) || (state == libvlc_Backward) ||
            (state == libvlc_Playing);
 }
 
