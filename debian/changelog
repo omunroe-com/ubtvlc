@@ -1,3 +1,19 @@
+vlc (1.0.3-1) unstable; urgency=low
+
+  * New upstream release
+
+  [ Reinhard Tartler ]
+  * Decrease alsa buffer size. That improves the behaviour of the alsa output
+    module on pulseaudio system. But note that vlc-plugin-pulse provides a
+    native pulseaudio output module (Closes: #472811, LP: #243152)
+
+  [ Christophe Mutricy ]
+  * No longer need to build an extra libvlccore without altivec
+  * Add the upnp access module (LP: #172938)
+  * Activate the new udev SD module on linux archs
+
+ -- Christophe Mutricy <xtophe@videolan.org>  Thu, 05 Nov 2009 12:39:35 +0100
+
 vlc (1.0.2-1) unstable; urgency=high
 
   * New upstream release
@@ -260,7 +276,7 @@ vlc (0.9.2-1) experimental; urgency=low
       - vlc-plugin-jack: access_jack
     + Distribute the .pc for libvlc and vlc-plugin (Closes: #289507)
     + Remove wx interface and glide plugin as they've been dropped by upstream
-      LP: #205325, #88487, #90603, 
+      LP: #205325, #88487, #90603, #150380
     + The Python and java bindings are no longer part of the upstream tarballs 
       (Closes: #469011)
     + Temporarly disable libdca module until a pkg with the new 
