@@ -1,3 +1,13 @@
+vlc (1.0.2-1ubuntu2.1) karmic-proposed; urgency=low
+
+  * add libupnp3-dev as build-dep to enable UPnP module (LP: #481448) 
+  * add libcddb2-dev as build-dep to enable CDDB in the CDDA
+    module (LP: #439131)
+  * add libxcb-keysyms1-dev as build-dep to enable globalhotkeys
+    module (LP: #439077)
+
+ -- Whoopie <whoopie79@gmx.net>  Thu, 12 Nov 2009 17:32:43 +0100
+
 vlc (1.0.2-1ubuntu2) karmic; urgency=low
 
   * PulseAudio: higher priority than ALSA, LP: #402018
