@@ -13,15 +13,16 @@ Build-Depends: debhelper (>= 7),
                quilt,
                nasm,
                yasm [amd64 kfreebsd-amd64],
-               iceape-dev (>=  1.1.9-4),
                liba52-0.7.4-dev,
                libaa1-dev,
                libasound2-dev (>= 0.9.0beta10a) [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
                libass-dev (>= 0.9.5-2),
                libavahi-client-dev,
+               libavc1394-dev,
                libavcodec-dev (>= 0.cvs20060823),
                libavformat-dev (>= 0.cvs20060823),
                libcaca-dev (>= 0.99.beta4),
+               libcddb2-dev,
                libcdio-dev,
                libdca-dev,
                libdvbpsi5-dev | libdvbpsi-dev,
@@ -39,7 +40,7 @@ Build-Depends: debhelper (>= 7),
                libid3tag0-dev,
                libjack-dev,
                liblircclient-dev,
-               liblivemedia-dev (>= 2008.07.24),
+               liblivemedia-dev (>= 2009.11.27),
                liblua5.1-0-dev,
                libmad0-dev,
                libmatroska-dev (>= 0.8.0),
@@ -53,6 +54,8 @@ Build-Depends: debhelper (>= 7),
                libpostproc-dev (>= 0.cvs20060823),
                libpulse-dev,
                libqt4-dev,
+               libraw1394-dev,
+               librsvg2-dev,
                libschroedinger-dev (>= 1.0.7-1~),
                libsdl-image1.2-dev,
                libsdl1.2-dev (>= 1.2.7+1.2.8cvs20041007-5.3),
@@ -72,12 +75,14 @@ Build-Depends: debhelper (>= 7),
                libvcdinfo-dev,
                libvorbis-dev,
                libx11-dev,
+               libxcb-keysyms1-dev,
                libxext-dev,
                libxml2-dev,
                libxpm-dev,
                libxt-dev,
                libxv-dev,
                pkg-config,
+               xulrunner-dev,
                zlib1g-dev
 Standards-Version: 3.8.3
 Homepage: http://www.videolan.org/vlc
@@ -90,10 +95,11 @@ Depends: vlc-nox (= ${binary:Version}),
          ${shlibs:Depends},
          ${misc:Depends},
          ttf-dejavu-core
+Recommends: vlc-plugin-pulse (= ${binary:Version})
 Suggests: mozilla-plugin-vlc,
           videolan-doc
-Replaces: vlc-nox (<< 0.9.2-1)
-Conflicts: vlc-nox (<< 0.9.2-1)
+Replaces: vlc-nox (<< 1.0.3-1)
+Conflicts: vlc-nox (<< 1.0.3-1)
 Provides: mp3-decoder
 Description: multimedia player and streamer
  VLC is the VideoLAN project's media player. It plays MPEG, MPEG2, MPEG4,
@@ -284,6 +290,21 @@ Description: PulseAudio plugin for VLC
  This plugin adds support for PulseAudio to the VLC media player. To
  activate the audio output module, use the `--aout pulse' flag or
  select the `pulse' audio output plugin from the preferences menu.
+ .
+ VLC is the VideoLAN project's media player. It plays MPEG, MPEG2, MPEG4,
+ DivX, MOV, WMV, QuickTime, mp3, Ogg/Vorbis files, DVDs, VCDs, and multimedia
+ streams from various network sources.
+
+Package: vlc-plugin-svg
+Architecture: any
+Depends: vlc-nox (= ${binary:Version}),
+         ${shlibs:Depends},
+         ${misc:Depends}
+Description: SVG plugin for VLC
+ This plugin allows you to render SVG graphics on top of the video.It is a
+ text renderer, and  must be activated through the  '--text-renderer svg'
+ option. When sent non-SVG data, it will convert it to SVG using a template
+ that can be specified by the svg-template-file option.
  .
  VLC is the VideoLAN project's media player. It plays MPEG, MPEG2, MPEG4,
  DivX, MOV, WMV, QuickTime, mp3, Ogg/Vorbis files, DVDs, VCDs, and multimedia
