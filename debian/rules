@@ -52,7 +52,7 @@ confflags += \
 	--disable-gnomevfs \
 	--disable-kate \
 	--disable-mtp \
-	--disable-x264 \
+	--enable-x264 \
 	--disable-zvbi \
 	--enable-a52 \
 	--enable-aa \
