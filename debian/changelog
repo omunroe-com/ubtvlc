@@ -1,3 +1,17 @@
+vlc (1.0.6-1ubuntu1) lucid; urgency=low
+
+  * Merge from Debian unstable, remaining changes:
+    - build and install the libx264 plugin
+    - add Xb-Npp header to vlc package
+    - Add patches 519-526 to fix FTBFS with xulruner-1.9.2 from upstream
+    - Add 600-drop-OJI-xul-192.patch to drop OJI support as xulrunner-1.9.2 on
+      Linux doesn't support it
+    - Add apport hook to include more vlc dependencies in bug reports
+    - Drop --sourcedir=debian/tmp from dh_install to install apport hook
+  * Drop 527-spanish-desktop.patch (merged upstream).
+
+ -- Benjamin Drung <bdrung@ubuntu.com>  Fri, 23 Apr 2010 12:16:15 +0200
+
 vlc (1.0.6-1) unstable; urgency=low
 
   * New upstream version 1.0.6
@@ -8,6 +22,40 @@ vlc (1.0.6-1) unstable; urgency=low
   * Remove patches merged upstream
 
  -- Christophe Mutricy <xtophe@videolan.org>  Fri, 23 Apr 2010 11:49:18 +0200
+
+vlc (1.0.5-2ubuntu3) lucid; urgency=low
+
+  * debian/patches/527-spanish-desktop.patch: Add Spanish translation,
+    thanks Ricardo Pérez López (LP: #534312).
+  * Add apport hook to include more vlc dependencies in bug reports;
+    thanks to Brian Murray for it (LP: #538719).
+  * Drop --sourcedir=debian/tmp from dh_install to install apport hook.
+
+ -- Benjamin Drung <bdrung@ubuntu.com>  Thu, 15 Apr 2010 12:32:03 +0200
+
+vlc (1.0.5-2ubuntu2) lucid; urgency=low
+
+  * Add patches to fix FTBFS with xulruner-1.9.2 from upstream (LP: #558981)
+    - add debian/patches/519-Typedef-changes-from-xulrunner-1.9.1.patch
+    - add debian/patches/520-Don-t-hardcode-OJI-define-deprecated-xith-libxul-1.9.patch
+    - add debian/patches/521-Untracked-API-change-utf8-to-UTF8.patch
+    - add debian/patches/522-Mozilla-do-not-hard-code-autoconf-file-descriptors.patch
+    - add debian/patches/523-Require-xul-1.9.2-explicitly.patch
+    - add debian/patches/524-Mozilla-More-fixes-for-XulRunner-1.9.2.patch
+    - add debian/patches/525-Mozilla-more-fixes.patch
+    - add debian/patches/526-Mozilla-More-final-Win32-compile-fixes-for-XulRunner.patch
+  * Add patch to drop OJI support as xulrunner-1.9.2 on Linux doesn't support it
+    - add debian/patches/600-drop-OJI-xul-192.patch
+
+ -- Micah Gersten <micahg@ubuntu.com>  Tue, 13 Apr 2010 10:09:58 -0500
+
+vlc (1.0.5-2ubuntu1) lucid; urgency=low
+
+  * Merge from Debian unstable, remaining changes:
+    - build and install the libx264 plugin
+    - add Xb-Npp header to vlc package
+
+ -- Benjamin Drung <bdrung@ubuntu.com>  Sun, 07 Mar 2010 16:26:55 +0100
 
 vlc (1.0.5-2) unstable; urgency=medium
 
@@ -23,6 +71,14 @@ vlc (1.0.5-2) unstable; urgency=medium
   * Install icons in all available sizes (LP: #521744).
 
  -- Christophe Mutricy <xtophe@videolan.org>  Tue, 02 Mar 2010 00:30:56 +0100
+
+vlc (1.0.5-1ubuntu1) lucid; urgency=low
+
+  * Merge from Debian unstable, remaining changes:
+    - build and install the libx264 plugin
+    - add Xb-Npp header to vlc package
+
+ -- Benjamin Drung <bdrung@ubuntu.com>  Wed, 17 Feb 2010 13:38:29 +0100
 
 vlc (1.0.5-1) unstable; urgency=low
 
@@ -46,6 +102,20 @@ vlc (1.0.5-1) unstable; urgency=low
 
  -- Christophe Mutricy <xtophe@videolan.org>  Sat, 13 Feb 2010 15:52:30 +0000
 
+vlc (1.0.4-2ubuntu2) lucid; urgency=low
+
+  * rebuild for ffmpeg versioned symbols
+
+ -- Reinhard Tartler <siretart@tauware.de>  Tue, 19 Jan 2010 21:40:22 +0100
+
+vlc (1.0.4-2ubuntu1) lucid; urgency=low
+
+  * Merge from Debian unstable, remaining changes:
+    - build and install the libx264 plugin
+    - add Xb-Npp header to vlc package
+
+ -- Benjamin Drung <bdrung@ubuntu.com>  Wed, 06 Jan 2010 18:35:23 +0100
+
 vlc (1.0.4-2) unstable; urgency=low
 
   * Report libavutil50 presence the correct way
@@ -57,6 +127,14 @@ vlc (1.0.4-2) unstable; urgency=low
   * Disable access_dv on non-Linux archs
 
  -- Christophe Mutricy <xtophe@videolan.org>  Tue, 05 Jan 2010 23:31:56 +0100
+
+vlc (1.0.4-1ubuntu1) lucid; urgency=low
+
+  * merge from debian. Remaining changes:
+    - build and install the libx264 plugin
+    - add Xb-Npp header to vlc package
+
+ -- Reinhard Tartler <siretart@tauware.de>  Wed, 30 Dec 2009 18:23:36 +0100
 
 vlc (1.0.4-1) unstable; urgency=low
 
@@ -89,6 +167,31 @@ vlc (1.0.4-1) unstable; urgency=low
 
  -- Christophe Mutricy <xtophe@videolan.org>  Wed, 30 Dec 2009 12:56:49 +0100
 
+vlc (1.0.3-1ubuntu2) lucid; urgency=low
+
+  [ Reinhard Tartler ]
+  * don't crash when cairo-dock is running. LP: #416294
+    Very ugly patch from upstream to disable ARGB channel usage 
+    in libqt4
+  * enable and install the fb module on Linux systems. Closes: #556228
+
+  [ Whoopie ]
+  * enable CDDB in the CDDA module (LP: #439131) and enable
+    globalhotkeys module (LP: #439077)
+
+ -- Reinhard Tartler <siretart@tauware.de>  Sat, 21 Nov 2009 22:11:48 +0100
+
+vlc (1.0.3-1ubuntu1) lucid; urgency=low
+
+  * Merge from Debian unstable (LP: #435524), remaining changes:
+    - build against xulrunner-dev instead of iceape-dev
+    - build against libx264-dev and install libx264 plugin
+    - add Xb-Npp header to vlc package
+    - recommend vlc-plugin-pulse for vlc
+    - backport patch "402_increase_pulseaudio_score.diff"
+
+ -- Reinhard Tartler <siretart@tauware.de>  Thu, 12 Nov 2009 15:29:11 +0100
+
 vlc (1.0.3-1) unstable; urgency=low
 
   * New upstream release
@@ -105,6 +208,22 @@ vlc (1.0.3-1) unstable; urgency=low
 
  -- Christophe Mutricy <xtophe@videolan.org>  Thu, 05 Nov 2009 12:39:35 +0100
 
+vlc (1.0.2-1ubuntu2) karmic; urgency=low
+
+  * PulseAudio: higher priority than ALSA, LP: #402018
+
+ -- Reinhard Tartler <siretart@tauware.de>  Mon, 19 Oct 2009 21:19:26 +0200
+
+vlc (1.0.2-1ubuntu1) karmic; urgency=low
+
+  * Merge from Debian unstable (LP: #435524), remaining changes:
+    - build against xulrunner-dev instead of iceape-dev
+    - build against libx264-dev and install libx264 plugin
+    - add Xb-Npp header to vlc package
+    - recommend vlc-plugin-pulse for vlc
+
+ -- Benjamin Drung <bdrung@ubuntu.com>  Fri, 25 Sep 2009 14:44:17 +0200
+
 vlc (1.0.2-1) unstable; urgency=high
 
   * New upstream release
@@ -120,6 +239,17 @@ vlc (1.0.2-1) unstable; urgency=high
 
  -- Christophe Mutricy <xtophe@videolan.org>  Sun, 20 Sep 2009 01:08:41 +0200
 
+vlc (1.0.1-2ubuntu1) karmic; urgency=low
+
+  * Merge from Debian unstable (LP: #426693), remaining changes:
+    - build against xulrunner-dev instead of iceape-dev
+    - build against libx264-dev and install libx264 plugin
+    - add Xb-Npp header to vlc package
+  * Recommend vlc-plugin-pulse for vlc, so that pulse can be used as default
+    output.
+
+ -- Benjamin Drung <bdrung@ubuntu.com>  Wed, 09 Sep 2009 10:24:09 +0200
+
 vlc (1.0.1-2) unstable; urgency=low
 
   * Fix typo in debian/changelog
@@ -132,6 +262,22 @@ vlc (1.0.1-2) unstable; urgency=low
   * Don't distribute the *.install-kfreebsd* files as they are generated 
 
  -- Christophe Mutricy <xtophe@videolan.org>  Sun, 06 Sep 2009 19:07:24 +0200
+
+vlc (1.0.1-1ubuntu2) karmic; urgency=low
+
+  * No-change rebuild to pick up new ffmpeg shlibs file.
+
+ -- Stefan Potyra <sistpoty@ubuntu.com>  Fri, 28 Aug 2009 22:02:06 +0200
+
+vlc (1.0.1-1ubuntu1) karmic; urgency=low
+
+  * Merge from Debian unstable (LP: #406602, #407570), remaining changes:
+    - build against xulrunner-dev instead of iceape-dev
+    - build against libass-dev and libx264-dev
+    - build against and install libx264 plugin
+    - add Xb-Npp header to vlc package
+
+ -- أحمد المحمودي (Ahmed El-Mahmoudy) <aelmahmoudy@users.sourceforge.net>  Sat, 01 Aug 2009 05:54:24 +0300
 
 vlc (1.0.1-1) unstable; urgency=low
 
@@ -149,6 +295,16 @@ vlc (1.0.1-1) unstable; urgency=low
   * Remove patches applied upstream
 
  -- Christophe Mutricy <xtophe@videolan.org>  Wed, 29 Jul 2009 00:21:39 +0200
+
+vlc (1.0.0-1ubuntu1) karmic; urgency=low
+
+  * Remaining changes to debian:
+    - build against libxul-dev instead of iceape-dev
+    - build against libass-dev and libx264-dev
+    - build against and install libx264 plugin
+    - add Xb-Npp header to vlc package
+
+ -- Reinhard Tartler <siretart@tauware.de>  Fri, 10 Jul 2009 16:18:23 +0200
 
 vlc (1.0.0-1) unstable; urgency=low
 
@@ -169,6 +325,17 @@ vlc (1.0.0-1) unstable; urgency=low
   * Upstream make distcheck has been fixed. No need to save Changelog
 
  -- Christophe Mutricy <xtophe@videolan.org>  Thu, 09 Jul 2009 13:04:20 +0000
+
+vlc (1.0.0~rc2-1ubuntu1) karmic; urgency=low
+
+  * New upstream version.
+  * tighten build-dependencies on libschroedinger-dev, fixes FTBFS.
+  * Following bugs have an associated and now closed upstream ticket in
+    Launchpad: LP: #281295, #73449, #282567, #117640, #172938, #260918,
+    #273685, #275043, #277834, #282394, #290753, #294136, #298925, #304265,
+    #309728, #311742, #314038
+  
+ -- Reinhard Tartler <siretart@tauware.de>  Fri, 05 Jun 2009 12:28:15 +0200
 
 vlc (1.0.0~rc2-1) experimental; urgency=low
 
@@ -216,6 +383,36 @@ vlc (0.9.9a-3) unstable; urgency=medium
 
  -- Christophe Mutricy <xtophe@videolan.org>  Sat, 06 Jun 2009 16:56:16 +0200
 
+vlc (0.9.9a-2ubuntu2) karmic; urgency=low
+
+  * Rebuild for libass1 -> libass3 transistion.
+
+ -- Steve Kowalik <stevenk@ubuntu.com>  Mon, 25 May 2009 23:29:31 +1000
+
+vlc (0.9.9a-2ubuntu1) jaunty; urgency=low
+
+  * Merge from debian which includes a small security fix.
+  * Adjusted Vcs fields to point to pkg-multimedia's git branch. The
+    package is maintained in the 'jaunty' branch.
+  * Remaining changes to debian:
+    - build against libxul-dev instead of iceape-dev
+    - build against libass-dev and libx264-dev
+    - build against and install libx264 plugin
+    - add Xb-Npp header to vlc package
+    - debian/patches/301_DVD_media.diff: Change %U to %f
+       in VLC .desktop file, cf LP #275043
+    - Remove arts from dependencies. (LP: #320915)
+      - debian/control:
+        - Remove libarts1-dev from build depends
+        - Don't build package vlc-plugin-arts
+        - Remove all notions of vlc-plugin-arts from packages descriptions
+      - debian/rules:
+        - Remove --enable-arts from confflags
+      - Delete debian/vlc-plugin-arts.install
+      - Delete debian/vlc-plugin-arts.links
+
+ -- Reinhard Tartler <siretart@tauware.de>  Sat, 18 Apr 2009 19:52:57 +0200
+
 vlc (0.9.9a-2) unstable; urgency=medium
 
   * Security fix
@@ -224,6 +421,29 @@ vlc (0.9.9a-2) unstable; urgency=medium
     contradiction of what is said in Changelog.Debian and NEWS.Debian.
 
  -- Christophe Mutricy <xtophe@videolan.org>  Tue, 07 Apr 2009 23:06:48 +0200
+
+vlc (0.9.9a-1ubuntu1) jaunty; urgency=low
+
+  * Merge from Debian. (LP: #356310)
+  * Remaining changes:
+    - build against libxul-dev instead of iceape-dev
+    - build against libass-dev and libx264-dev
+    - build against and install libx264 plugin
+    - adjust Vcs-Bzr Headers in debian/control
+    - add Xb-Npp header to vlc package
+    - debian/patches/301_DVD_media.diff: Change %U to %f
+       in VLC .desktop file, cf LP #275043
+    - Remove arts from dependencies. (LP: #320915)
+      - debian/control:
+        - Remove libarts1-dev from build depends
+        - Don't build package vlc-plugin-arts
+        - Remove all notions of vlc-plugin-arts from packages descriptions
+      - debian/rules:
+        - Remove --enable-arts from confflags
+      - Delete debian/vlc-plugin-arts.install
+      - Delete debian/vlc-plugin-arts.links
+
+ -- أحمد المحمودي (Ahmed El-Mahmoudy) <aelmahmoudy@users.sourceforge.net>  Mon, 06 Apr 2009 13:58:06 +0200
 
 vlc (0.9.9a-1) unstable; urgency=low
 
@@ -276,6 +496,50 @@ vlc (0.9.8a-2) unstable; urgency=low
 
  -- Christophe Mutricy <xtophe@videolan.org>  Tue, 24 Feb 2009 16:00:31 +0100
 
+vlc (0.9.8a-1ubuntu4) jaunty; urgency=low
+
+  [ Cody Russell ]
+  * Check whether the server allows actions before trying to send them.
+    (LP: #328605)
+
+ -- James Westby <james.westby@ubuntu.com>  Wed, 25 Feb 2009 11:37:57 +0000
+
+vlc (0.9.8a-1ubuntu3) jaunty; urgency=low
+
+  [ Andreas Wenning ]
+  * Remove arts from dependencies. (LP: #320915)
+    - debian/control:
+      - Remove libarts1-dev from build depends
+      - Don't build package vlc-plugin-arts
+      - Remove all notions of vlc-plugin-arts from packages descriptions
+    - debian/rules:
+      - Remove --enable-arts from confflags
+    - Delete debian/vlc-plugin-arts.install
+    - Delete debian/vlc-plugin-arts.links
+
+ -- Mario Limonciello <mario_limonciello@dell.com>  Thu, 12 Feb 2009 14:58:45 -0600
+
+vlc (0.9.8a-1ubuntu2) jaunty; urgency=low
+
+  * no change rebuild to pick up new libx264, LP: #325720
+
+ -- Reinhard Tartler <siretart@tauware.de>  Sat, 07 Feb 2009 20:40:56 +0100
+
+vlc (0.9.8a-1ubuntu1) jaunty; urgency=low
+
+  * merge from debian. LP: #300328, #305100, #289263
+  * Fixes CVE-2008-5276
+  * remaining changes
+    - build against libxul-dev instead of iceape-dev
+    - build against libdca-dev, libass-dev and libx264-dev
+    - build against and install libx264 plugin
+    - adjust Vcs-Bzr Headers in debian/control
+    - add Xb-Npp header to vlc package
+    - debian/patches/301_DVD_media.diff: Change %U to %f
+       in VLC .desktop file, cf LP #275043
+
+ -- Reinhard Tartler <siretart@tauware.de>  Sun, 07 Dec 2008 23:12:27 +0100
+
 vlc (0.9.8a-1) experimental; urgency=low
 
   * New upstream release
@@ -285,6 +549,20 @@ vlc (0.9.8a-1) experimental; urgency=low
   * Don't rebootstrap. The packages causing troubles previously have been fixed
 
  -- Christophe Mutricy <xtophe@videolan.org>  Wed, 03 Dec 2008 20:20:52 +0100
+
+vlc (0.9.6-1ubuntu1) jaunty; urgency=low
+
+  * merge from debian/experimental, fixes LP: #289263
+    remaining changes:
+    - build against libxul-dev instead of iceape-dev
+    - build against libdca-dev, libass-dev and libx264-dev
+    - build against and install libx264 plugin
+    - adjust Vcs-Bzr Headers in debian/control
+    - add Xb-Npp header to vlc package
+    - debian/patches/301_DVD_media.diff: Change %U to %f
+       in VLC .desktop file, cf LP #275043
+
+ -- Reinhard Tartler <siretart@tauware.de>  Sat, 15 Nov 2008 15:45:06 +0100
 
 vlc (0.9.6-1) experimental; urgency=low
 
@@ -315,6 +593,38 @@ vlc (0.9.4-2) experimental; urgency=low
 
  -- Christophe Mutricy <xtophe@videolan.org>  Mon, 20 Oct 2008 23:23:46 +0200
 
+vlc (0.9.4-1ubuntu3) intrepid; urgency=low
+
+  * link vlc to unicode enabled curses library. Thanks to Rafaël Carré for
+    reporting.(LP: #282644)
+  * enable emedded video (LP: #282582)
+  * Autodetect screen while using Xinerama to toggle fullscreen (LP: #115419)
+
+ -- Reinhard Tartler <siretart@tauware.de>  Mon, 13 Oct 2008 21:47:13 +0200
+
+vlc (0.9.4-1ubuntu2) intrepid; urgency=low
+
+  * add new plugin database meta fields Xb-Npp-Description and Xb-Npp-File
+    - update debian/control
+  * link plugin binary to /usr/lib/xulrunner-addons/plugins/
+    - update debian/mozilla-plugin-vlc.links
+
+ -- Alexander Sack <asac@ubuntu.com>  Mon, 13 Oct 2008 17:45:51 +0200
+
+vlc (0.9.4-1ubuntu1) intrepid; urgency=low
+
+  * merge from debian/experimental
+  * New upstream release fixes LP: #280081, #280378
+  * remaining changes:
+    - build against libxul-dev instead of iceape-dev
+    - build against libdca-dev, libass-dev and libx264-dev
+    - adjust Vcs-Bzr Headers in debian/control
+    - add Xb-Npp header to vlc package
+    - debian/patches/301_DVD_media.diff: Change %U to %f
+       in VLC .desktop file, cf LP #275043
+
+ -- Reinhard Tartler <siretart@tauware.de>  Sun, 12 Oct 2008 11:37:03 +0200
+
 vlc (0.9.4-1) experimental; urgency=low
 
   * New upstream bugfix version
@@ -338,6 +648,70 @@ vlc (0.9.3-1) experimental; urgency=low
   * remove spurious conflicts on libvlc2. LP: #274614
 
  -- Christophe Mutricy <xtophe@videolan.org>  Fri, 26 Sep 2008 23:49:48 +0200
+
+vlc (0.9.3-0ubuntu1) intrepid; urgency=low
+
+  [ Reinhard Tartler ]
+  * new upstream bugfix only Releases LP: #274721
+
+  Relevant fixes from NEWS file:
+  
+    Various bugfixes:
+   * Fixed DTS channel order on 5.1 systems
+   * Fixed pausing behavior for subtitles and for Audio-CD
+   * Multiple subtitles and podcast fixes
+   * Various crashes fixed in PS, SSA, mkv, xspf, freetype
+   * Fixed update system bugs
+   * Other bug fixes (dvd language selection, subtitle colours, HTTP keep-alive...)
+  
+  Qt4 interface:
+   * Added Faster/Slower icons to the controller panel
+   * Fixed lost playlist columns when switching the playlist view
+   * Added needed options to Simple preferences (to avoid NVIDIA drivers issues)
+   * Fullscreen controller: added time label, remembering of last position
+   * Fixed drag'n drop behaviour on the playlist
+   * Multiple other fixes (Enter hotkey in preferences, Skins selection...)
+
+  [ Saïvann Carignan ]
+  * debian/patches/301_DVD_media.diff: Change %U to %f
+    in VLC .desktop file . (LP: #275043) 
+
+ -- Reinhard Tartler <siretart@tauware.de>  Sat, 27 Sep 2008 09:30:04 +0200
+
+vlc (0.9.2-1ubuntu2) intrepid; urgency=low
+
+  * remove spurious conflicts on libvlc2. LP: #274614
+  * fix FTBFS on all archs other than i386/lpia and amd64. Patch from
+    pkg-multimedia svn, Closes: #499860
+
+ -- Reinhard Tartler <siretart@tauware.de>  Fri, 26 Sep 2008 08:35:29 +0200
+
+vlc (0.9.2-1ubuntu1) intrepid; urgency=low
+
+  * New Upstream Release, exception granted by
+      - dktrkranz, norsetto, Hobbsee (via irc). LP: #270404
+  
+  Changes done in ubuntu:
+  
+  * add libxul-dev to build-depends
+  * make sure that vlc is build against libxul in configure. This doesn't
+    change anything in the package, but makes it more robust if building
+    in an 'unclean' chroot or when modifying the package.
+  * debian/control: make Vcs-* fields point to the motumedia branch
+  * add libx264-dev and libass-dev to build-depends
+    LP: #210354, #199870
+  * actually enable libass support by passing --enable-libass to configure
+  * enable libdca: add libdca-dev to build depends and --enable-libdca
+  * install the x264 plugin.
+
+  Changes already in the pkg-multimedia branch in debian:
+  
+  * don't install usr/share/vlc/mozilla in debian/mozilla-plugin-vlc.install  
+  * new upstream .desktop file now registers flash video mimetype LP: #261567
+  * add Xb-Npp-Applications to mozilla-plugin-vlc
+  * remove duplicate entries in debian/vlc-nox.install
+
+ -- Reinhard Tartler <siretart@tauware.de>  Wed, 17 Sep 2008 21:56:14 +0200
 
 vlc (0.9.2-1) experimental; urgency=low
 
