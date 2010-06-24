@@ -47000,39 +47000,33 @@ $as_echo "$as_me: Checking for Mozilla" >&6;}
       found=1
     else
       if test -n "$PKG_CONFIG"; then
-	for i in "${with_mozilla_pkg}" libxul {seamonkey,iceape,xulrunner,firefox,iceweasel,mozilla}-plugin; do
+        for i in "${with_mozilla_pkg}" libxul {seamonkey,iceape,xulrunner,firefox,iceweasel,mozilla}-plugin; do
           if test -n "$i"
           then
             echo "Trying to find $i package" >&5
-            if $PKG_CONFIG --exists --print-errors "$i" 2>&5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $i >= 1.9.2" >&5
+$as_echo_n "checking for $i >= 1.9.2... " >&6; }
+            if $PKG_CONFIG --exists --print-errors "$i >= 1.9.2" 2>&5
             then
               echo "Using $i pkg-config package." >&5
               echo "Using $i package." >&6
               found=1
               MOZILLA_CFLAGS=$(eval $PKG_CONFIG --cflags "$i" )
               MOZILLA_LIBS=$(eval $PKG_CONFIG --libs "$i" )
+              { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
               break
             fi
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
           fi
-	done
+        done
       fi
     fi
     if test $found = 1; then :
 
         CPPFLAGS="${CPPFLAGS_save} ${MOZILLA_CFLAGS}"
         MOZILLA_REQUIRED_HEADERS=1
-        for ac_header in npfunctions.h
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "npfunctions.h" "ac_cv_header_npfunctions_h" "$ac_includes_default"
-if test "x$ac_cv_header_npfunctions_h" = x""yes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_NPFUNCTIONS_H 1
-_ACEOF
-
-fi
-
-done
-
         for ac_header in npapi.h
 do :
   ac_fn_cxx_check_header_mongrel "$LINENO" "npapi.h" "ac_cv_header_npapi_h" "$ac_includes_default"
@@ -47066,7 +47060,7 @@ fi
 done
 
         if test "${MOZILLA_REQUIRED_HEADERS}" = "0"; then
-            as_fn_error "Please install the Firefox development tools; mozilla-config.h, plugin/npapi.h and plugin/npruntime.h were not found." "$LINENO" 5
+            as_fn_error "Please install the Firefox development tools; plugin/npapi.h and/or plugin/npruntime.h were not found." "$LINENO" 5
         fi
         MOZILLA_REQUIRED_HEADERS=
         mozilla=:
@@ -47074,12 +47068,11 @@ done
 
 
 
-
-    eval "CPPFLAGS_mozilla="'"$'"{CPPFLAGS_mozilla} -DXP_UNIX -DOJI"'"'
+    eval "CPPFLAGS_mozilla="'"$'"{CPPFLAGS_mozilla} -DXP_UNIX"'"'
     am_modules_with_cppflags="${am_modules_with_cppflags} mozilla"
 
 
-	   if  test "${SYS}" != "darwin"; then :
+           if  test "${SYS}" != "darwin"; then :
 
 
 pkg_failed=no
@@ -47139,13 +47132,13 @@ fi
 	echo "$XPM_PKG_ERRORS" >&5
 
 
-		as_fn_error "Please install the libXpm and libXt development files." "$LINENO" 5
+                as_fn_error "Please install the libXpm and libXt development files." "$LINENO" 5
 
 elif test $pkg_failed = untried; then
      	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
-		as_fn_error "Please install the libXpm and libXt development files." "$LINENO" 5
+                as_fn_error "Please install the libXpm and libXt development files." "$LINENO" 5
 
 else
 	XPM_CFLAGS=$pkg_cv_XPM_CFLAGS
@@ -47159,6 +47152,11 @@ $as_echo "yes" >&6; }
     am_modules_with_cppflags="${am_modules_with_cppflags} mozilla"
 
 
+
+fi
+             if test "${have_xcb_keysyms}" != "yes"; then :
+
+               as_fn_error "Please install xcb-keysyms from xcb-utils." "$LINENO" 5
 
 fi
 
@@ -47236,7 +47234,7 @@ fi
 done
 test -n "$MOZILLA_CONFIG" || MOZILLA_CONFIG="no"
 
-            test "${MOZILLA_CONFIG}" = "no" && as_fn_error "Please install the Mozilla development tools. mozilla-config was not found." "$LINENO" 5
+            test "${MOZILLA_CONFIG}" = "no" && as_fn_error "Please install the Mozilla development tools (version 1.9.2 or higher) or use --disable-mozilla." "$LINENO" 5
 
 
 fi
@@ -47494,22 +47492,8 @@ fi
     fi
 
     real_mozilla_sdk="`cd ${with_mozilla_sdk_path} 2>/dev/null && pwd`"
-    CPPFLAGS="${CPPFLAGS_save} -I${real_mozilla_sdk} -I${real_mozilla_sdk}/include"
+    CPPFLAGS="${CPPFLAGS_save} -I${real_mozilla_sdk}/include"
     MOZILLA_REQUIRED_HEADERS=1
-    for ac_header in mozilla-config.h
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "mozilla-config.h" "ac_cv_header_mozilla_config_h" "$ac_includes_default"
-if test "x$ac_cv_header_mozilla_config_h" = x""yes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_MOZILLA_CONFIG_H 1
-_ACEOF
-
-else
-  MOZILLA_REQUIRED_HEADERS=0
-fi
-
-done
-
     for ac_header in npapi.h
 do :
   ac_fn_cxx_check_header_mongrel "$LINENO" "npapi.h" "ac_cv_header_npapi_h" "$ac_includes_default"
@@ -47551,29 +47535,10 @@ done
     PLUGINS_BINDINGS="${PLUGINS_BINDINGS} mozilla"
 
 
-    eval "CPPFLAGS_mozilla="'"$'"{CPPFLAGS_mozilla} -DXPCOM_GLUE -DHAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX -I${real_mozilla_sdk} -I${real_mozilla_sdk}/include -I${real_mozilla_sdk}/embedstring/include -I${real_mozilla_sdk}/xpcom/include -I${real_mozilla_sdk}/nspr/include -I${real_mozilla_sdk}/string/include -I${real_mozilla_sdk}/plugin/include -I${real_mozilla_sdk}/java/include"'"'
+    eval "CPPFLAGS_mozilla="'"$'"{CPPFLAGS_mozilla} -DXPCOM_GLUE -DHAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX -I${real_mozilla_sdk}/include"'"'
     am_modules_with_cppflags="${am_modules_with_cppflags} mozilla"
 
 
-    if ${need_xpcom_libs}; then
-
-
-    eval "LIBS_mozilla="'"'"-L${real_mozilla_sdk}/embedstring/bin -L${real_mozilla_sdk}/xpcom/bin -L${real_mozilla_sdk}/nspr/bin -L${real_mozilla_sdk}/string/bin -L${real_mozilla_sdk}/lib -lnspr4 -lplds4 -lplc4 -lxpcomglue "'$'"{LIBS_mozilla}"'"'
-    am_modules_with_libs="${am_modules_with_libs} mozilla"
-
-
-      if test "${SYS}" = "mingw32"; then
-                if test -d "${real_mozilla_sdk}/embedstring/bin"
-        then
-
-
-    eval "LIBS_mozilla="'"'"-lembedstring "'$'"{LIBS_mozilla}"'"'
-    am_modules_with_libs="${am_modules_with_libs} mozilla"
-
-
-        fi
-      fi
-    fi
     MOZILLA_SDK_PATH="${real_mozilla_sdk}"
 
     if test -n "${CYGPATH}"; then
