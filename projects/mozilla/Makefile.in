@@ -740,7 +740,8 @@ DIST_sources = $(SOURCES_mozilla_common) \
 @BUILD_MOZILLA_TRUE@@HAVE_DARWIN_TRUE@@HAVE_WIN32_FALSE@	-F/System/Library/Frameworks/CoreFoundation.framework $(moz_CFLAGS) \
 @BUILD_MOZILLA_TRUE@@HAVE_DARWIN_TRUE@@HAVE_WIN32_FALSE@	-I/Developer/Headers/FlatCarbon -fno-common -fpascal-strings \
 @BUILD_MOZILLA_TRUE@@HAVE_DARWIN_TRUE@@HAVE_WIN32_FALSE@	-Wmost -Wno-four-char-constants -Wno-unknown-pragmas -DXP_MACOSX=1 \
-@BUILD_MOZILLA_TRUE@@HAVE_DARWIN_TRUE@@HAVE_WIN32_FALSE@	-DNO_X11=1 -DUSE_SYSTEM_CONSOLE=1 -pipe -fmessage-length=0 
+@BUILD_MOZILLA_TRUE@@HAVE_DARWIN_TRUE@@HAVE_WIN32_FALSE@	-DNO_X11=1 -DUSE_SYSTEM_CONSOLE=1 -pipe -fmessage-length=0 \
+@BUILD_MOZILLA_TRUE@@HAVE_DARWIN_TRUE@@HAVE_WIN32_FALSE@	-include mozilla-config.h
 
 @BUILD_MOZILLA_TRUE@@HAVE_WIN32_TRUE@CPPFLAGS_mozilla_EXTRA = -DXP_WIN -DXP_WIN32
 @BUILD_MOZILLA_TRUE@@HAVE_DARWIN_TRUE@@HAVE_WIN32_FALSE@LDFLAGS_mozilla_EXTRA = -no-undefined -bundle -Wl,-read_only_relocs -Wl,suppress \

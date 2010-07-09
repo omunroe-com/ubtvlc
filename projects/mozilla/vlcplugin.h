@@ -30,16 +30,10 @@
 #define __VLCPLUGIN_H__
 
 #include <vlc/vlc.h>
+#include <npapi.h>
+#include <vector>
 
-// Setup XP_MACOSX, XP_UNIX, XP_WIN
-#if defined(_WIN32)
-#define XP_WIN 1
-#elif defined(__APPLE__)
-#define XP_MACOSX 1
-#else
-#define XP_UNIX 1
-#define MOZ_X11 1
-#endif
+#include "control/nporuntime.h"
 
 #if !defined(XP_MACOSX) && !defined(XP_UNIX) && !defined(XP_WIN)
 #define XP_UNIX 1
@@ -49,7 +43,6 @@
 
 #ifdef XP_WIN
     /* Windows stuff */
-#   include <windows.h>
 #   include <winbase.h>
 #endif
 
@@ -77,12 +70,6 @@
 #ifndef __MIN
 #   define __MIN(a, b)   ( ((a) < (b)) ? (a) : (b) )
 #endif
-
-#include <npapi.h>
-#include <vector>
-
-#include "control/nporuntime.h"
-
 
 typedef struct {
 #if defined(XP_UNIX)
@@ -186,11 +173,7 @@ private:
 class VlcPlugin
 {
 public:
-#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
              VlcPlugin( NPP, uint16 );
-#else
-             VlcPlugin( NPP, uint16_t );
-#endif
     virtual ~VlcPlugin();
 
     NPError             init(int argc, char* const argn[], char* const argv[]);
@@ -243,11 +226,7 @@ public:
     vlc_toolbar_clicked_t getToolbarButtonClicked( int i_xpos, int i_ypos );
 #endif
 
-#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
     uint16    i_npmode; /* either NP_EMBED or NP_FULL */
-#else
-    uint16_t  i_npmode; /* either NP_EMBED or NP_FULL */
-#endif
 
     /* plugin properties */
     int      b_stream;

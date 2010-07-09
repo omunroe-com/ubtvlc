@@ -27,16 +27,21 @@
 #include <string.h>
 #include <stdlib.h>
 
+/* Mozilla stuff */
+#ifdef HAVE_MOZILLA_CONFIG_H
+#   include <mozilla-config.h>
+#endif
+
 #include "nporuntime.h"
 #include "vlcplugin.h"
 
 char* RuntimeNPObject::stringValue(const NPString &s)
 {
-    NPUTF8 *val = static_cast<NPUTF8*>(malloc((s.UTF8Length+1) * sizeof(*val)));
+    NPUTF8 *val = static_cast<NPUTF8*>(malloc((s.utf8length+1) * sizeof(*val)));
     if( val )
     {
-        strncpy(val, s.UTF8Characters, s.UTF8Length);
-        val[s.UTF8Length] = '\0';
+        strncpy(val, s.utf8characters, s.utf8length);
+        val[s.utf8length] = '\0';
     }
     return val;
 }
