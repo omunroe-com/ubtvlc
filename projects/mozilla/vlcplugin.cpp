@@ -28,14 +28,11 @@
  *****************************************************************************/
 #include "config.h"
 
-#ifdef HAVE_MOZILLA_CONFIG_H
-#   include <mozilla-config.h>
-#endif
-
 #include "vlcplugin.h"
 #include "control/npolibvlc.h"
 
 #include <ctype.h>
+
 #if defined(XP_UNIX)
 #   include <pthread.h>
 #elif defined(XP_WIN)
@@ -46,6 +43,8 @@
 #endif
 
 #include <stdio.h>
+#include <assert.h>
+#include <stdlib.h>
 
 /*****************************************************************************
  * utilitiy functions
@@ -105,7 +104,11 @@ static void plugin_unlock(plugin_lock_t *lock)
 /*****************************************************************************
  * VlcPlugin constructor and destructor
  *****************************************************************************/
+#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
 VlcPlugin::VlcPlugin( NPP instance, uint16 mode ) :
+#else
+VlcPlugin::VlcPlugin( NPP instance, uint16_t mode ) :
+#endif
     i_npmode(mode),
     b_stream(0),
     b_autoplay(1),
@@ -230,7 +233,7 @@ inline EventObj::event_t EventObj::find_event(const char *s) const
 
 bool EventObj::insert(const NPString &s, NPObject *l, bool b)
 {
-    event_t e = find_event(s.utf8characters);
+    event_t e = find_event(s.UTF8Characters);
     if( e>=maxbit() )
         return false;
 
@@ -255,7 +258,7 @@ bool EventObj::insert(const NPString &s, NPObject *l, bool b)
 
 bool EventObj::remove(const NPString &s, NPObject *l, bool b)
 {
-    event_t e = find_event(s.utf8characters);
+    event_t e = find_event(s.UTF8Characters);
     if( e>=maxbit() || !get(e) )
         return false;
 
@@ -450,8 +453,8 @@ NPError VlcPlugin::init(int argc, char* const argn[], char* const argv[])
         NPString script;
         NPVariant result;
 
-        script.utf8characters = docLocHref;
-        script.utf8length = sizeof(docLocHref)-1;
+        script.UTF8Characters = docLocHref;
+        script.UTF8Length = sizeof(docLocHref)-1;
 
         if( NPN_Evaluate(p_browser, plugin, &script, &result) )
         {
@@ -459,11 +462,11 @@ NPError VlcPlugin::init(int argc, char* const argn[], char* const argv[])
             {
                 NPString &location = NPVARIANT_TO_STRING(result);
 
-                psz_baseURL = (char *) malloc(location.utf8length+1);
+                psz_baseURL = (char *) malloc(location.UTF8Length+1);
                 if( psz_baseURL )
                 {
-                    strncpy(psz_baseURL, location.utf8characters, location.utf8length);
-                    psz_baseURL[location.utf8length] = '\0';
+                    strncpy(psz_baseURL, location.UTF8Characters, location.UTF8Length);
+                    psz_baseURL[location.UTF8Length] = '\0';
                 }
             }
             NPN_ReleaseVariantValue(&result);
