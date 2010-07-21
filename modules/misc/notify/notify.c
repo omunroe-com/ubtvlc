@@ -225,14 +225,7 @@ static int ItemChange( vlc_object_t *p_this, const char *psz_var,
     else /* else we show state-of-the art logo */
     {
         GError *p_error = NULL;
-        char *psz_pixbuf;
-        char *psz_data = config_GetDataDir( p_this );
-        if( asprintf( &psz_pixbuf, "%s/vlc48x48.png", psz_data ) >= 0 )
-        {
-            pix = gdk_pixbuf_new_from_file( psz_pixbuf, &p_error );
-            free( psz_pixbuf );
-        }
-        free( psz_data );
+        pix = gdk_pixbuf_new_from_file( "/usr/share/icons/hicolor/48x48/apps/vlc.png", &p_error );
     }
 
     free( psz_arturl );
