@@ -67,7 +67,7 @@
 #define DEFAULT_FONT "/usr/share/fonts/nokia/nosnb.ttf"
 #define FC_DEFAULT_FONT "Nokia Sans Bold"
 #else
-#define DEFAULT_FONT "/usr/share/fonts/truetype/freefont/FreeSerifBold.ttf"
+#define DEFAULT_FONT "/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans-Bold.ttf"
 #define FC_DEFAULT_FONT "Serif Bold"
 #endif
 
