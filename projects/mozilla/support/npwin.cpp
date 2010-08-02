@@ -30,15 +30,19 @@
 
 //#define OJI 1
 
-#include "../vlcplugin.h"
+#ifdef HAVE_MOZILLA_CONFIG_H
+#   include <mozilla-config.h>
+#endif
 
 #ifndef _NPAPI_H_
 #   include "npapi.h"
 #endif
-#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
-#include "npupp.h" 
+#ifdef HAVE_NPFUNCTIONS_H
+#   include "npfunctions.h"
 #else
-#include "npfunctions.h"
+#   ifndef _NPUPP_H_
+#      include "npupp.h"
+#   endif
 #endif
 
 #include "../vlcshell.h"
@@ -542,7 +546,7 @@ const char* NPN_UserAgent(NPP instance)
 /* allocates memory from the Navigator's memory space.  Necessary so that
  * saved instance data may be freed by Navigator when exiting.
  */
-void *NPN_MemAlloc(uint32_t size)
+void *NPN_MemAlloc(uint32 size)
 {
     return g_pNavigatorFuncs->memalloc(size);
 }

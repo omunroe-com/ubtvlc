@@ -31,6 +31,11 @@
 #include <string.h>
 #include <stdlib.h>
 
+/* Mozilla stuff */
+#ifdef HAVE_MOZILLA_CONFIG_H
+#   include <mozilla-config.h>
+#endif
+
 /* This is from mozilla java, do we really need it? */
 #if 0
 #include <jri.h>
@@ -269,24 +274,17 @@ NPError NPP_Initialize( void )
     return NPERR_NO_ERROR;
 }
 
-#ifdef OJI
 jref NPP_GetJavaClass( void )
 {
     return NULL;
 }
-#endif
 
 void NPP_Shutdown( void )
 {
     ;
 }
 
-NPError NPP_New( NPMIMEType pluginType, NPP instance,
-#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
-                 uint16 mode, int16 argc,
-#else
-                 uint16_t mode, int16_t argc,
-#endif
+NPError NPP_New( NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
                  char* argn[], char* argv[], NPSavedData* saved )
 {
     NPError status;
@@ -557,11 +555,7 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
 }
 
 NPError NPP_NewStream( NPP instance, NPMIMEType type, NPStream *stream,
-#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
                        NPBool seekable, uint16 *stype )
-#else
-                       NPBool seekable, uint16_t *stype )
-#endif
 {
     if( NULL == instance  )
     {
@@ -590,23 +584,14 @@ NPError NPP_NewStream( NPP instance, NPMIMEType type, NPStream *stream,
     return NPERR_GENERIC_ERROR;
 }
 
-#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
 int32 NPP_WriteReady( NPP instance, NPStream *stream )
-#else
-int32_t NPP_WriteReady( NPP instance, NPStream *stream )
-#endif
 {
     /* TODO */
     return 8*1024;
 }
 
-#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
 int32 NPP_Write( NPP instance, NPStream *stream, int32 offset,
                  int32 len, void *buffer )
-#else
-int32_t NPP_Write( NPP instance, NPStream *stream, int32_t offset,
-                 int32_t len, void *buffer )
-#endif
 {
     /* TODO */
     return len;

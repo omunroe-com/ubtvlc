@@ -4557,29 +4557,27 @@ then
       found=1
     else
       if test -n "$PKG_CONFIG"; then
-        for i in "${with_mozilla_pkg}" libxul {seamonkey,iceape,xulrunner,firefox,iceweasel,mozilla}-plugin; do
+	for i in "${with_mozilla_pkg}" libxul {seamonkey,iceape,xulrunner,firefox,iceweasel,mozilla}-plugin; do
           if test -n "$i"
           then
             echo "Trying to find $i package" >&AS_MESSAGE_LOG_FD
-            AC_MSG_CHECKING([for $i >= 1.9.2])
-            if $PKG_CONFIG --exists --print-errors "$i >= 1.9.2" 2>&AS_MESSAGE_LOG_FD
+            if $PKG_CONFIG --exists --print-errors "$i" 2>&AS_MESSAGE_LOG_FD
             then
               echo "Using $i pkg-config package." >&AS_MESSAGE_LOG_FD
               echo "Using $i package." >&AS_MESSAGE_FD
               found=1
               MOZILLA_CFLAGS=$(eval $PKG_CONFIG --cflags "$i" )
               MOZILLA_LIBS=$(eval $PKG_CONFIG --libs "$i" )
-              AC_MSG_RESULT([yes])
               break
             fi
-            AC_MSG_RESULT([no])
           fi
-        done
+	done
       fi
     fi
     AS_IF( [test $found = 1],[
         CPPFLAGS="${CPPFLAGS_save} ${MOZILLA_CFLAGS}"
         MOZILLA_REQUIRED_HEADERS=1
+        AC_CHECK_HEADERS([npfunctions.h])
         AC_CHECK_HEADERS(npapi.h,,MOZILLA_REQUIRED_HEADERS=0)
         AC_CHECK_HEADERS(npruntime.h,,MOZILLA_REQUIRED_HEADERS=0,
           [#if HAVE_NPAPI_H
@@ -4587,24 +4585,22 @@ then
            #endif
           ])
         if test "${MOZILLA_REQUIRED_HEADERS}" = "0"; then
-            AC_MSG_ERROR([Please install the Firefox development tools; plugin/npapi.h and/or plugin/npruntime.h were not found.])
+            AC_MSG_ERROR([Please install the Firefox development tools; mozilla-config.h, plugin/npapi.h and plugin/npruntime.h were not found.])
         fi
         MOZILLA_REQUIRED_HEADERS=
         mozilla=:
         AS_IF([ test "${SYS}" != "mingw32" -a "${SYS}" != "mingwce"],[
-           VLC_ADD_CPPFLAGS([mozilla],[-DXP_UNIX])
-           AS_IF([ test "${SYS}" != "darwin"],[
-             PKG_CHECK_MODULES(XPM, [xpm xt],[
-                VLC_ADD_CPPFLAGS([mozilla],[-DMOZ_X11])
-             ],[
-                AC_MSG_ERROR([Please install the libXpm and libXt development files.])
-             ])
-             AS_IF([test "${have_xcb_keysyms}" != "yes"], [
-               AC_MSG_ERROR([Please install xcb-keysyms from xcb-utils.])
-             ])
+
+	   VLC_ADD_CPPFLAGS([mozilla],[-DXP_UNIX -DOJI])
+	   AS_IF([ test "${SYS}" != "darwin"],[
+	     PKG_CHECK_MODULES(XPM, [xpm xt],[
+		VLC_ADD_CPPFLAGS([mozilla],[-DMOZ_X11])
+	     ],[
+		AC_MSG_ERROR([Please install the libXpm and libXt development files.])
+	     ])
           ])
         ])
-        VLC_ADD_CPPFLAGS([mozilla],[${CPPFLAGS} ${XPM_CFLAGS}])
+	VLC_ADD_CPPFLAGS([mozilla],[${CPPFLAGS} ${XPM_CFLAGS}])
         VLC_ADD_LIBS([mozilla],[${MOZILLA_LIBS} ${XPM_LIBS}])
         VLC_ADD_PLUGIN([mozilla])
         PLUGINS_BINDINGS="${PLUGINS_BINDINGS} mozilla"
@@ -4613,9 +4609,9 @@ then
           ],
           [
             AC_PATH_PROGS(MOZILLA_CONFIG,
-            [mozilla-config seamonkey-config xulrunner-config],
+	    [mozilla-config seamonkey-config xulrunner-config],
         [no])
-            test "${MOZILLA_CONFIG}" = "no" && AC_MSG_ERROR([Please install the Mozilla development tools (version 1.9.2 or higher) or use --disable-mozilla.])
+            test "${MOZILLA_CONFIG}" = "no" && AC_MSG_ERROR([Please install the Mozilla development tools. mozilla-config was not found.])
           ]
         )
     dnl pkg-config failed but we might have found a mozilla-config
@@ -4671,8 +4667,9 @@ then
     fi
 
     real_mozilla_sdk="`cd ${with_mozilla_sdk_path} 2>/dev/null && pwd`"
-    CPPFLAGS="${CPPFLAGS_save} -I${real_mozilla_sdk}/include"
+    CPPFLAGS="${CPPFLAGS_save} -I${real_mozilla_sdk} -I${real_mozilla_sdk}/include"
     MOZILLA_REQUIRED_HEADERS=1
+    AC_CHECK_HEADERS(mozilla-config.h,,MOZILLA_REQUIRED_HEADERS=0)
     AC_CHECK_HEADERS(npapi.h,,MOZILLA_REQUIRED_HEADERS=0)
     AC_CHECK_HEADERS(npruntime.h,,MOZILLA_REQUIRED_HEADERS=0,
         [#if HAVE_NPAPI_H
@@ -4686,7 +4683,17 @@ then
     MOZILLA_REQUIRED_HEADERS=
     mozilla=:
     PLUGINS_BINDINGS="${PLUGINS_BINDINGS} mozilla"
-    VLC_ADD_CPPFLAGS([mozilla],[-DXPCOM_GLUE -DHAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX -I${real_mozilla_sdk}/include])
+    VLC_ADD_CPPFLAGS([mozilla],[-DXPCOM_GLUE -DHAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX -I${real_mozilla_sdk} -I${real_mozilla_sdk}/include -I${real_mozilla_sdk}/embedstring/include -I${real_mozilla_sdk}/xpcom/include -I${real_mozilla_sdk}/nspr/include -I${real_mozilla_sdk}/string/include -I${real_mozilla_sdk}/plugin/include -I${real_mozilla_sdk}/java/include])
+    if ${need_xpcom_libs}; then
+       VLC_ADD_LIBS([mozilla],[-L${real_mozilla_sdk}/embedstring/bin -L${real_mozilla_sdk}/xpcom/bin -L${real_mozilla_sdk}/nspr/bin -L${real_mozilla_sdk}/string/bin -L${real_mozilla_sdk}/lib -lnspr4 -lplds4 -lplc4 -lxpcomglue])
+      if test "${SYS}" = "mingw32"; then
+        dnl latest gecko sdk does not have embedstring
+        if test -d "${real_mozilla_sdk}/embedstring/bin"
+        then
+          VLC_ADD_LIBS([mozilla],[-lembedstring])
+        fi
+      fi
+    fi
     MOZILLA_SDK_PATH="${real_mozilla_sdk}"
 
     if test -n "${CYGPATH}"; then
