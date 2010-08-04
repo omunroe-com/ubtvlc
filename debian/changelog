@@ -1,3 +1,15 @@
+vlc (1.1.2-1+exp1) experimental; urgency=low
+
+  [ Christophe Mutricy ]
+  * Depends on xulrunner-dev >= 1.9.2
+  * Activate VA-API (Closes: #587792, LP: #539406)
+
+  [ Benjamin Drung ]
+  * Switch to dh7.
+  * Move libavcodec plugin from vlc-nox to vlc.
+
+ -- Benjamin Drung <bdrung@ubuntu.com>  Thu, 05 Aug 2010 01:42:50 +0200
+
 vlc (1.1.2-1) unstable; urgency=low
 
   [ Christophe Mutricy ]
