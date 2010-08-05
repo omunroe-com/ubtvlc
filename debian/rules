@@ -83,6 +83,7 @@ confflags += \
 	--enable-vcd \
 	--enable-vcdx \
 	--enable-vorbis \
+	--enable-x264 \
 	--enable-zvbi \
 	--with-kde-solid=/usr/share/kde4/apps/ \
 	--with-mozilla-pkg=libxul \
@@ -96,7 +97,6 @@ confflags += \
 # projectm -> broken
 # sqlite -> still in development
 # telx -> incompatible with zvbi
-# x264 -> not in Debian
 confflags += \
 	--disable-dxva2 \
 	--disable-gnomevfs \
@@ -106,7 +106,6 @@ confflags += \
 	--disable-projectm \
 	--disable-sqlite \
 	--disable-telx \
-	--disable-x264 \
 	$(NULL)
 
 # Linux specific flags
