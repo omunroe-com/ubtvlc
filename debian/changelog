@@ -1,3 +1,9 @@
+vlc (1.1.1-1+exp1ubuntu2) maverick; urgency=low
+
+  * No change rebuild.
+
+ -- Mario Limonciello <Mario_Limonciello@Dell.com>  Wed, 04 Aug 2010 23:44:56 -0500
+
 vlc (1.1.1-1+exp1ubuntu1) maverick; urgency=low
 
   * Merge from Debian experimental, remaining changes:
