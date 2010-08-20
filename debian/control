@@ -8,6 +8,7 @@ Uploaders: Sam Hocevar (Debian packages) <sam+deb@zoy.org>,
            Christophe Mutricy <xtophe@videolan.org>,
            Mohammed Adnène Trojette <adn+deb@diwi.org>,
            Benjamin Drung <bdrung@ubuntu.com>
+DM-Upload-Allowed: yes
 Build-Depends: debhelper (>= 7.2.3~),
                dh-buildinfo,
                gettext,
@@ -174,7 +175,7 @@ Description: multimedia plugin for web browsers based on VLC
 
 Package: vlc
 Architecture: any
-Depends: ttf-dejavu-core,
+Depends: ttf-freefont,
          vlc-nox (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}

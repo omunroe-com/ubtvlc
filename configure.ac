@@ -2,10 +2,10 @@ dnl Autoconf settings for vlc
 
 AC_COPYRIGHT([Copyright 2002-2010 the VideoLAN team])
 
-AC_INIT(vlc, 1.1.2)
+AC_INIT(vlc, 1.1.3)
 VERSION_MAJOR="1"
 VERSION_MINOR="1"
-VERSION_REVISION="2"
+VERSION_REVISION="3"
 VERSION_EXTRA=""
 PKGDIR="vlc"
 AC_SUBST(PKGDIR)
@@ -827,12 +827,16 @@ AC_EGREP_HEADER(strncasecmp,strings.h,[
 
 dnl Check for headers
 AC_CHECK_HEADERS(getopt.h strings.h locale.h xlocale.h)
-AC_CHECK_HEADERS(fcntl.h sys/time.h sys/ioctl.h sys/stat.h sys/mount.h)
+AC_CHECK_HEADERS(fcntl.h sys/time.h sys/ioctl.h sys/stat.h)
 AC_CHECK_HEADERS([arpa/inet.h netinet/in.h netinet/udplite.h sys/eventfd.h])
 AC_CHECK_HEADERS([net/if.h], [], [],
   [
     #include <sys/types.h>
     #include <sys/socket.h>
+  ])
+AC_CHECK_HEADERS([sys/mount.h], [], [],
+  [
+    #include <sys/param.h>
   ])
 if test "${SYS}" != "mingw32" -a "${SYS}" != "mingwce"; then
 AC_CHECK_HEADERS(machine/param.h sys/shm.h)
@@ -1377,7 +1381,10 @@ AS_IF([test "${enable_neon}" != "no"], [
   AC_CACHE_CHECK([if $CC groks NEON inline assembly], [ac_cv_neon_inline], [
     CFLAGS="${CFLAGS_save} -mfpu=neon"
     AC_COMPILE_IFELSE([
-      AC_LANG_PROGRAM(,[[asm volatile("vqmovun.s64 d0, q1":::"d0");]])
+      AC_LANG_PROGRAM(,[[
+asm volatile("vqmovun.s64 d0, q1":::"d0");
+asm volatile("ssat r0, #1, r0":::"r0"); /* assume ARMv6 */
+]])
     ], [
       ac_cv_neon_inline="-mfpu=neon"
     ], [
@@ -4557,7 +4564,7 @@ then
       found=1
     else
       if test -n "$PKG_CONFIG"; then
-	for i in "${with_mozilla_pkg}" libxul {seamonkey,iceape,xulrunner,firefox,iceweasel,mozilla}-plugin; do
+        for i in "${with_mozilla_pkg}" libxul {seamonkey,iceape,xulrunner,firefox,iceweasel,mozilla}-plugin; do
           if test -n "$i"
           then
             echo "Trying to find $i package" >&AS_MESSAGE_LOG_FD
@@ -4600,7 +4607,7 @@ then
 	     ])
           ])
         ])
-	VLC_ADD_CPPFLAGS([mozilla],[${CPPFLAGS} ${XPM_CFLAGS}])
+        VLC_ADD_CPPFLAGS([mozilla],[${CPPFLAGS} ${XPM_CFLAGS}])
         VLC_ADD_LIBS([mozilla],[${MOZILLA_LIBS} ${XPM_LIBS}])
         VLC_ADD_PLUGIN([mozilla])
         PLUGINS_BINDINGS="${PLUGINS_BINDINGS} mozilla"
@@ -4609,7 +4616,7 @@ then
           ],
           [
             AC_PATH_PROGS(MOZILLA_CONFIG,
-	    [mozilla-config seamonkey-config xulrunner-config],
+            [mozilla-config seamonkey-config xulrunner-config],
         [no])
             test "${MOZILLA_CONFIG}" = "no" && AC_MSG_ERROR([Please install the Mozilla development tools. mozilla-config was not found.])
           ]

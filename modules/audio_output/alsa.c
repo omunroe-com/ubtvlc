@@ -78,7 +78,7 @@ struct aout_sys_t
    number of channel(s) (eg. 2 for stereo) and the size of a sample (eg.
    2 for int16_t). */
 #define ALSA_DEFAULT_PERIOD_SIZE        1024
-#define ALSA_DEFAULT_BUFFER_SIZE        ( ALSA_DEFAULT_PERIOD_SIZE << 4 )
+#define ALSA_DEFAULT_BUFFER_SIZE        ( ALSA_DEFAULT_PERIOD_SIZE << 8 )
 #define ALSA_SPDIF_PERIOD_SIZE          A52_FRAME_NB
 #define ALSA_SPDIF_BUFFER_SIZE          ( ALSA_SPDIF_PERIOD_SIZE << 4 )
 /* Why << 4 ? --Meuuh */
