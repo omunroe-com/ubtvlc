@@ -1,7 +1,8 @@
 Source: vlc
 Section: video
 Priority: optional
-Maintainer: Debian multimedia packages maintainers <pkg-multimedia-maintainers@lists.alioth.debian.org>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Debian multimedia packages maintainers <pkg-multimedia-maintainers@lists.alioth.debian.org>
 Uploaders: Sam Hocevar (Debian packages) <sam+deb@zoy.org>,
            Clément Stenac <zorglub@debian.org>,
            Loic Minier <lool@dooz.org>,
@@ -79,6 +80,7 @@ Build-Depends: debhelper (>= 7.2.3~),
                libvorbis-dev,
                libx11-dev,
                libx11-xcb-dev,
+               libx264-dev,
                libxcb-keysyms1-dev,
                libxcb-randr0-dev,
                libxcb-shm0-dev,
