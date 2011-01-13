@@ -1,3 +1,11 @@
+vlc (1.1.5-3ubuntu2) natty; urgency=low
+
+  * Add 0101-pulse-Disable-xlib-in-pulse.-libpulse-now-uses-xcb-o.patch
+    from upstream, use xcb instead of xlib, stops crashes with pulse LP:
+    #702493
+
+ -- Jonathan Riddell <jriddell@ubuntu.com>  Thu, 13 Jan 2011 17:43:09 +0000
+
 vlc (1.1.5-3ubuntu1) natty; urgency=low
 
   * Merge from Debian experimental, remaining changes:

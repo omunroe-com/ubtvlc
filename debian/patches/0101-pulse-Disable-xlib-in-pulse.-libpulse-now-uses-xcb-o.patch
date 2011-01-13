@@ -1,0 +1,34 @@
+From 3e5a315671f1c5da966d1f207a5eddb503f359a6 Mon Sep 17 00:00:00 2001
+From: Colin Guthrie <cguthrie@mandriva.org>
+Date: Thu, 25 Nov 2010 12:40:50 +0000
+Subject: [PATCH 101/101] pulse: Disable xlib in pulse. libpulse now uses xcb only.
+
+---
+ modules/audio_output/pulse.c |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
+
+Index: vlc-1.1.4/modules/audio_output/pulse.c
+===================================================================
+--- vlc-1.1.4.orig/modules/audio_output/pulse.c	2011-01-05 18:19:13.383813000 +0100
++++ vlc-1.1.4/modules/audio_output/pulse.c	2011-01-05 18:19:25.211813001 +0100
+@@ -34,10 +34,6 @@
+ #include <vlc_cpu.h>
+ 
+ #include <pulse/pulseaudio.h>
+-#ifdef X_DISPLAY_MISSING
+-# error Xlib required due to PulseAudio bug 799!
+-#endif
+-#include <vlc_xlib.h>
+ 
+ #include <assert.h>
+ 
+@@ -122,9 +118,6 @@
+     struct pa_buffer_attr a;
+     struct pa_channel_map map;
+ 
+-    if( !vlc_xlib_init( p_this ) )
+-        return VLC_EGENERIC;
+-
+     /* Allocate structures */
+     p_aout->output.p_sys = p_sys = calloc( 1, sizeof( aout_sys_t ) );
+     if( p_sys == NULL )
