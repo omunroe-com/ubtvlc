@@ -2,3 +2,4 @@
 200_osdmenu_paths.diff
 300_transcode_aspect_ratio.diff
 Fix-for-KDE-device-actions.patch
+0101-pulse-Disable-xlib-in-pulse.-libpulse-now-uses-xcb-o.patch
