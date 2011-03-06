@@ -1,3 +1,12 @@
+vlc (1.1.7-3) unstable; urgency=low
+
+  * adjust debian/source/local-options to team guidelines
+  * Fix building against libmatroska 1.1, Closes: #614088
+  * Add myself to Uploaders.
+  * build against libmatroska 1.1.0
+
+ -- Reinhard Tartler <siretart@tauware.de>  Sun, 06 Mar 2011 11:16:48 +0100
+
 vlc (1.1.7-2) unstable; urgency=low
 
   * Upload to unstable.
