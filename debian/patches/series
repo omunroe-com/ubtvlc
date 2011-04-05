@@ -13,3 +13,11 @@
 407-mms-overflow.diff
 408-CVE-2008-4686.diff
 409-cue-overflow.diff
+410-rtsp-integer-underflow.diff
+CVE-2010-0522.patch
+CVE-2010-1441.patch
+CVE-2010-1442-1.patch
+CVE-2010-1442-2.patch
+CVE-2010-1442-3.patch
+CVE-2010-3275-CVE-2010-3276.patch
+CVE-2011-0531.patch
