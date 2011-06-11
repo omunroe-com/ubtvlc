@@ -1,0 +1,16 @@
+From: Rémi Denis-Courmont <remi@remlab.net>
+Subject: XSPF: fix realloc() integer overflow
+Origin: upstream, http://git.videolan.org/?p=vlc/vlc-1.1.git;a=commit;h=74d34b63fdda947c4e92f19e43cac0c51aabc4d7
+
+--- a/modules/demux/playlist/xspf.c
++++ b/modules/demux/playlist/xspf.c
+@@ -517,7 +517,8 @@
+                     }
+                     free( psz_uri );
+ 
+-                    if( p_demux->p_sys->i_track_id < 0 )
++                    if( p_demux->p_sys->i_track_id < 0
++                     || p_demux->p_sys->i_track_id >= (SIZE_MAX / sizeof(p_new_input)) )
+                     {
+                         input_item_AddSubItem( p_input_item, p_new_input );
+                         vlc_gc_decref( p_new_input );
