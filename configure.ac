@@ -2,10 +2,10 @@ dnl Autoconf settings for vlc
 
 AC_COPYRIGHT([Copyright 2002-2011 the VideoLAN team])
 
-AC_INIT(vlc, 1.1.9)
+AC_INIT(vlc, 1.1.10)
 VERSION_MAJOR="1"
 VERSION_MINOR="1"
-VERSION_REVISION="9"
+VERSION_REVISION="10"
 VERSION_EXTRA=""
 PKGDIR="vlc"
 AC_SUBST(PKGDIR)
@@ -3068,7 +3068,7 @@ PKG_ENABLE_MODULES_VLC([DIRAC], [], [dirac >= 0.10.0], [dirac encoder], [auto])
 dnl
 dnl  schroedinger decoder plugin (for dirac format video)
 dnl
-PKG_ENABLE_MODULES_VLC([SCHROEDINGER], [], [schroedinger-1.0 >= 1.0.10], [dirac decoder and encoder using schroedinger], [auto])
+PKG_ENABLE_MODULES_VLC([SCHROEDINGER], [], [schroedinger-1.0 >= 1.0.9], [dirac decoder and encoder using schroedinger], [auto])
 
 dnl
 dnl  PNG decoder module
@@ -3449,7 +3449,7 @@ then
       have_freetype=yes
       VLC_ADD_CPPFLAGS([freetype skins2],[${FREETYPE_CFLAGS}])
       if test "${SYS}" = "mingw32"; then
-        VLC_ADD_LIBS([freetype],[-liconv -lz])
+        VLC_ADD_LIBS([freetype],[-liconv -lz -lgdi32])
       fi
       VLC_ADD_LIBS([freetype skins2],[${FREETYPE_LIBS}])
       if test "${enable_fontconfig}" != "no"
