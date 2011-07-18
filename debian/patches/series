@@ -6,3 +6,5 @@ backport-pulse-rewrite.patch
 backport-fix-NULL-derefence.patch
 backport-fullscreen-fix.patch
 backport-firefox-4-compatibility.patch
+CVE-2011-2587.patch
+CVE-2011-2588.patch
