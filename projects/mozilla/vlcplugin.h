@@ -2,7 +2,7 @@
  * vlcplugin.h: a VLC plugin for Mozilla
  *****************************************************************************
  * Copyright (C) 2002-2009 the VideoLAN team
- * $Id: 2ec8e576b1faf3a453f6b74e93f1ea6b94ecf823 $
+ * $Id: 0a40670289fb84ab5da4bf6e431788905633d87d $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Damien Fouilleul <damienf@videolan.org>
@@ -186,6 +186,10 @@ private:
     void unask_for_event(event_t e);
 };
 
+#ifdef XP_WIN
+HMODULE DllGetModule();
+#include "vlc_win32_fullscreen.h"
+#endif
 
 class VlcPlugin
 {
@@ -213,8 +217,7 @@ public:
     char*               getAbsoluteURL(const char *url);
     NPWindow&           getWindow()
                             { return npwindow; };
-    void                setWindow(const NPWindow &window)
-                            { npwindow = window; };
+    void                setWindow(const NPWindow &window);
 
     NPClass*            getScriptClass()
                             { return p_scriptClass; };
@@ -337,6 +340,7 @@ private:
     NPWindow  npwindow;
 #if defined(XP_WIN)
     WNDPROC   pf_wndproc;
+    VLCWindowsManager _WindowsManager;
 #endif
 #if defined(XP_UNIX)
     unsigned int     i_width, i_height;
