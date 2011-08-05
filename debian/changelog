@@ -1,3 +1,9 @@
+vlc (1.1.11-2build1) oneiric; urgency=low
+
+  * Rebuild for fluidsynth transition LP: #821346
+
+ -- Alessio Treglia <quadrispro@ubuntu.com>  Fri, 05 Aug 2011 18:37:20 +0200
+
 vlc (1.1.11-2) unstable; urgency=low
 
   * Use linux-any instead of hardcoded list of non-Linux architectures.
