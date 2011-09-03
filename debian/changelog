@@ -1,3 +1,9 @@
+vlc (1.1.11-2build2) oneiric; urgency=low
+
+  * Rebuild to drop dependencies on superseded libraries.
+
+ -- Matthias Klose <doko@ubuntu.com>  Sat, 03 Sep 2011 22:04:14 +0000
+
 vlc (1.1.11-2build1) oneiric; urgency=low
 
   * Rebuild for fluidsynth transition LP: #821346
