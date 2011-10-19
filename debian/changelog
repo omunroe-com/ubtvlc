@@ -1,3 +1,9 @@
+vlc (1.1.12-2~oneiric1) oneiric-proposed; urgency=low
+
+  * No-change backport to oneiric to fix PulseAudio support and other bugs.
+
+ -- Benjamin Drung <bdrung@debian.org>  Wed, 19 Oct 2011 21:18:35 +0200
+
 vlc (1.1.12-2) unstable; urgency=low
 
   * Apply patches from upstream's 1.1 maintenance branch.
