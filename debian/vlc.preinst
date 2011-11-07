@@ -1,0 +1,14 @@
+#! /bin/sh
+set -e
+
+case "$1" in
+	upgrade)
+		# Make sure /usr/share/doc/vlc doesn't exist or is a symlink
+		# before the unpacking (which will put the link back) - #613121
+		if dpkg --compare-versions "$2" le "1.1.12-2.1~" && [ ! -L "/usr/share/doc/vlc" ]; then
+			rm -Rf /usr/share/doc/vlc/
+		fi
+		;;
+esac
+
+#DEBHELPER#
