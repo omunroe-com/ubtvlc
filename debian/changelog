@@ -1,3 +1,9 @@
+vlc (1.1.12-2build1) precise; urgency=low
+
+  * Rebuild for libmatroska5 and libx264-118.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Fri, 11 Nov 2011 23:24:13 +0000
+
 vlc (1.1.12-2) unstable; urgency=low
 
   * Apply patches from upstream's 1.1 maintenance branch.
