@@ -26,9 +26,11 @@
  *
  */
 
-#include "config.h"
-
 //#define OJI 1
+
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #include "../vlcplugin.h"
 
@@ -184,7 +186,7 @@ NP_Shutdown()
     return NPERR_NO_ERROR;
 }
 
-char * NP_GetMIMEDescription()
+NPP_GET_MIME_CONST char * NP_GetMIMEDescription()
 {
   return NPP_GetMIMEDescription();
 }
