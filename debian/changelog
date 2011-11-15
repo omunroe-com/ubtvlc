@@ -1,3 +1,11 @@
+vlc (1.1.12-2ubuntu1) precise; urgency=low
+
+  * debian/patches/vlc-firefox-npapi-mime.patch: deal with whether NPP_/NP_
+    GetMIMEDescription function returns const or not; patch from upstream git.
+    (LP: #890911)
+
+ -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Tue, 15 Nov 2011 17:53:42 -0500
+
 vlc (1.1.12-2build1) precise; urgency=low
 
   * Rebuild for libmatroska5 and libx264-118.
