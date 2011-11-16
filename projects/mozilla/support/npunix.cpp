@@ -43,7 +43,9 @@
  *----------------------------------------------------------------------
  */
 
-#include "config.h"
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #define XP_UNIX 1
 
@@ -767,7 +769,7 @@ Private_GetJavaClass(void)
  *  - Netscape uses the return value to identify when an object instance
  *    of this plugin should be created.
  */
-char *
+NPP_GET_MIME_CONST char *
 NP_GetMIMEDescription(void)
 {
     return NPP_GetMIMEDescription();
