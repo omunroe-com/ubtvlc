@@ -6,7 +6,7 @@ Bug-Ubuntu: https://launchpad.net/bugs/890911
 
 --- a/configure.ac
 +++ b/configure.ac
-@@ -4595,6 +4595,25 @@
+@@ -4600,6 +4600,25 @@
          if test "${MOZILLA_REQUIRED_HEADERS}" = "0"; then
              AC_MSG_ERROR([Please install the Firefox development tools; plugin/npapi.h and/or plugin/npruntime.h were not found.])
          fi
@@ -32,7 +32,7 @@ Bug-Ubuntu: https://launchpad.net/bugs/890911
          MOZILLA_REQUIRED_HEADERS=
          mozilla=:
          AS_IF([ test "${SYS}" != "mingw32" -a "${SYS}" != "mingwce"],[
-@@ -4660,6 +4679,25 @@
+@@ -4665,6 +4684,25 @@
        then
          AC_MSG_ERROR([Please install the Mozilla development tools, required headers were not found.])
        fi
