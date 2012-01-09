@@ -25,7 +25,9 @@
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#include "config.h"
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -71,7 +73,7 @@ static LRESULT CALLBACK Manage( HWND p_hwnd, UINT i_msg, WPARAM wpar, LPARAM lpa
 /******************************************************************************
  * UNIX-only API calls
  *****************************************************************************/
-char * NPP_GetMIMEDescription( void )
+NPP_GET_MIME_CONST char * NPP_GetMIMEDescription( void )
 {
     static char mimetype[] = PLUGIN_MIMETYPES;
     return mimetype;

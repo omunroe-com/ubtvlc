@@ -4600,6 +4600,25 @@ then
         if test "${MOZILLA_REQUIRED_HEADERS}" = "0"; then
             AC_MSG_ERROR([Please install the Firefox development tools; plugin/npapi.h and/or plugin/npruntime.h were not found.])
         fi
+AC_MSG_CHECKING([if NPP_GetMIMEDescription() returns const])
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+   #ifdef WIN32
+   # define XP_WIN 1
+   #else
+  # ifdef __APPLE__
+   #  define XP_MACOSX 1
+   # endif
+   # define XP_UNIX 1
+   #endif
+  #include <npapi.h>
+  const char *NPP_GetMIMEDescription(void);
+])],[
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(NPP_GET_MIME_CONST, [const], [Wether NPP_GetMIMEDescription returns const])
+],[
+  AC_MSG_RESULT(no)
+  AC_DEFINE(NPP_GET_MIME_CONST, [], [Wether NPP_GetMIMEDescription returns const])
+])
         MOZILLA_REQUIRED_HEADERS=
         mozilla=:
         AS_IF([ test "${SYS}" != "mingw32" -a "${SYS}" != "mingwce"],[
@@ -4665,6 +4684,25 @@ then
       then
         AC_MSG_ERROR([Please install the Mozilla development tools, required headers were not found.])
       fi
+AC_MSG_CHECKING([if NPP_GetMIMEDescription() returns const])
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+   #ifdef WIN32
+   # define XP_WIN 1
+   #else
+  # ifdef __APPLE__
+   #  define XP_MACOSX 1
+   # endif
+   # define XP_UNIX 1
+   #endif
+  #include <npapi.h>
+  const char *NPP_GetMIMEDescription(void);
+])],[
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(NPP_GET_MIME_CONST, [const], [Wether NPP_GetMIMEDescription returns const])
+],[
+  AC_MSG_RESULT(no)
+  AC_DEFINE(NPP_GET_MIME_CONST, [], [Wether NPP_GetMIMEDescription returns const])
+])
       MOZILLA_REQUIRED_HEADERS=
       CPPFLAGS="${CPPFLAGS_save}"
       MOZILLA_SDK_PATH="`${MOZILLA_CONFIG} --prefix`"
