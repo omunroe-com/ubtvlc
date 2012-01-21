@@ -1,3 +1,9 @@
+vlc (1.1.13-1build2) precise; urgency=low
+
+  * No changes rebuild for libx264-120 transition
+
+ -- Angel Abad <angelabad@ubuntu.com>  Sun, 22 Jan 2012 00:21:31 +0100
+
 vlc (1.1.13-1build1) precise; urgency=low
 
   * No changes rebuild for libcdio13 transition
