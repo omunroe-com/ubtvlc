@@ -69,6 +69,7 @@ confflags += \
 	--enable-ncurses \
 	--enable-notify \
 	--enable-ogg \
+	--enable-oss \
 	--enable-pulse \
 	--enable-qt4 \
 	--enable-realrtsp \
@@ -116,10 +117,10 @@ confflags += \
 	--enable-atmo \
 	--enable-dc1394 \
 	--enable-dv \
-	--enable-libv4l2 \
 	--enable-libva \
 	--enable-pvr \
 	--enable-udev \
+	--enable-v4l2 \
 	$(NULL)
 endif
 
@@ -178,9 +179,9 @@ override_dh_install:
 	        fi ; \
 	done
 	# Remove some modules on non-linux arch
-	sed -e '/\(lib\|libaccess_\)\(alsa\|atmo\|dc1394\|dv\|dvb\|fb\|pvr\|udev\)_/d' \
+	sed -e '/\(lib\|libaccess_\)\(alsa\|atmo\|dc1394\|dv\|fb\|pvr\|udev\)_/d' \
 	 debian/vlc-nox.install > debian/vlc-nox.install.kfreebsd
-	sed -e '/\(lib\|libaccess_\)\(probe_hal\|v4l2\)_/d' \
+	sed -e '/\(lib\|libaccess_\)v4l2_/d' \
 	 debian/vlc-nox.install.kfreebsd > debian/vlc-nox.install.hurd
 	cp tmp/libvlc.a debian/tmp/usr/lib
 	cp tmp/libvlccore.a debian/tmp/usr/lib
