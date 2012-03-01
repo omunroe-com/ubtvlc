@@ -33,7 +33,14 @@
 # warning Please update Video4Linux2 headers!
 # define V4L2_CTRL_FLAG_VOLATILE 0x0080
 #endif
-#ifndef V4L2_CTRL_TYPE_BITMASK /* 3.1 */
+#ifdef __linux__
+# include <linux/version.h>
+# if LINUX_VERSION_CODE < KERNEL_VERSION(3,1,0)
+#  define V4L2_CTRL_TYPE_BITMASK 8
+# endif
+#endif
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+/* FreeBSD 10 and earlier does not have V4L2_CTRL_TYPE_BITMASK */
 # define V4L2_CTRL_TYPE_BITMASK 8
 #endif
 #ifndef V4L2_CID_ILLUMINATORS_1 /* 2.6.37 */
