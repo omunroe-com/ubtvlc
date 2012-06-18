@@ -1,3 +1,9 @@
+vlc (2.0.1-4build1) quantal; urgency=low
+
+  * Rebuild for x264 transition
+
+ -- Bhavani Shankar <bhavi@ubuntu.com>  Mon, 18 Jun 2012 18:26:05 +0530
+
 vlc (2.0.1-4) unstable; urgency=high
 
   * Add missing Breaks and Replaces for moving the documentation from vlc-data
