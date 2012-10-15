@@ -1,7 +1,8 @@
 Source: vlc
 Section: video
 Priority: optional
-Maintainer: Debian Multimedia Maintainers <pkg-multimedia-maintainers@lists.alioth.debian.org>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Debian Multimedia Maintainers <pkg-multimedia-maintainers@lists.alioth.debian.org>
 Uploaders: Sam Hocevar (Debian packages) <sam+deb@zoy.org>,
            Clément Stenac <zorglub@debian.org>,
            Loic Minier <lool@dooz.org>,
@@ -59,6 +60,7 @@ Build-Depends: autopoint,
                libnotify-dev,
                libogg-dev (>= 1.0),
                libomxil-bellagio-dev [linux-any],
+               libopus-dev,
                libpng-dev,
                libpostproc-dev (>= 4:0.6),
                libproxy-dev,
@@ -76,6 +78,7 @@ Build-Depends: autopoint,
                libsmbclient-dev,
                libspeex-dev (>= 1.0.5),
                libspeexdsp-dev (>= 1.0.5),
+               libssh2-1-dev,
                libsvga1-dev [amd64 i386],
                libswscale-dev (>= 4:0.6),
                libtag1-dev (>= 1.5),
