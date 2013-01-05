@@ -2,7 +2,7 @@
  * freetype.c : Put text on the video, using freetype2
  *****************************************************************************
  * Copyright (C) 2002 - 2012 the VideoLAN team
- * $Id: b862bb4498639daa8b7152997d9493cc20289538 $
+ * $Id: 622bb115be764802e1bc4302954abfbaabf8c79b $
  *
  * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -505,6 +505,7 @@ static char* FontConfig_Select( FcConfig* config, const char* family,
     FcPattern *pat, *p_pat;
     FcChar8* val_s;
     FcBool val_b;
+    char *ret = NULL;
 
     /* Create a pattern and fills it */
     pat = FcPatternCreate();
@@ -561,14 +562,11 @@ static char* FontConfig_Select( FcConfig* config, const char* family,
                             "the requested one: '%s' != '%s'\n",
                             (const char*)val_s, family );   */
 
-    if( FcResultMatch != FcPatternGetString( p_pat, FC_FILE, 0, &val_s ) )
-    {
-        FcPatternDestroy( p_pat );
-        return NULL;
-    }
+    if( FcResultMatch == FcPatternGetString( p_pat, FC_FILE, 0, &val_s ) )
+        ret = strdup( (const char*)val_s );
 
     FcPatternDestroy( p_pat );
-    return strdup( (const char*)val_s );
+    return ret;
 }
 #endif
 
@@ -1792,8 +1790,10 @@ static FT_Face LoadEmbeddedFace( filter_sys_t *p_sys, const text_style_t *p_styl
             {
                 int i_style_received = ((p_face->style_flags & FT_STYLE_FLAG_BOLD)    ? STYLE_BOLD   : 0) |
                                        ((p_face->style_flags & FT_STYLE_FLAG_ITALIC ) ? STYLE_ITALIC : 0);
-                if( !strcasecmp( p_face->family_name, p_style->psz_fontname ) &&
-                    (p_style->i_style_flags & (STYLE_BOLD | STYLE_ITALIC)) == i_style_received )
+                if( p_face->family_name != NULL
+                 && !strcasecmp( p_face->family_name, p_style->psz_fontname )
+                 && (p_style->i_style_flags & (STYLE_BOLD | STYLE_ITALIC))
+                                                          == i_style_received )
                     return p_face;
 
                 FT_Done_Face( p_face );

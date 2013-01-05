@@ -24,13 +24,13 @@ EXTRA_DIST = \
 	extras/package/win32/vlc.win32.nsi.in \
 	extras/package/win32/spad.nsi.in \
 	extras/package/win32/UAC.nsh \
-	extras/package/win32/UAC.dll \
 	extras/package/win32/languages/declaration.nsh \
 	extras/package/win32/languages/bengali.nsh \
 	extras/package/win32/languages/basque.nsh \
 	extras/package/win32/languages/brazilian_portuguese.nsh \
 	extras/package/win32/languages/bulgarian.nsh \
 	extras/package/win32/languages/catalan.nsh \
+	extras/package/win32/languages/croatian.nsh \
 	extras/package/win32/languages/danish.nsh \
 	extras/package/win32/languages/dutch.nsh \
 	extras/package/win32/languages/english.nsh \
@@ -50,11 +50,13 @@ EXTRA_DIST = \
 	extras/package/win32/languages/russian.nsh
 	extras/package/win32/languages/romanian.nsh \
 	extras/package/win32/languages/schinese.nsh \
+	extras/package/win32/languages/serbian.nsh \
 	extras/package/win32/languages/slovak.nsh \
 	extras/package/win32/languages/slovenian.nsh \
 	extras/package/win32/languages/sorani.nsh \
 	extras/package/win32/languages/spanish.nsh \
-	extras/package/win32/languages/swedish.nsh
+	extras/package/win32/languages/swedish.nsh \
+	extras/package/win32/languages/ukrainian.nsh
 
 dist_noinst_SCRIPTS = bootstrap
 nodist_noinst_SCRIPTS = compile
@@ -90,7 +92,7 @@ AUTOMAKE_OPTIONS = \
 ChangeLog: Makefile.am
 	rm -f -- "$@"
 	cd doc && $(MAKE) $(AM_MAKEFLAGS) changelogs
-	$(LN_S) -f doc/ChangeLog-2009 "$@"
+	$(LN_S) -f doc/ChangeLog-2012 "$@"
 
 ###############################################################################
 # Mac OS X project
@@ -210,6 +212,8 @@ EXTRA_DIST += \
 	extras/package/macosx/Resources/mainwindow/effects-one-button-blue@2x.png \
 	extras/package/macosx/Resources/mainwindow/effects-one-button.png \
 	extras/package/macosx/Resources/mainwindow/effects-one-button@2x.png \
+	extras/package/macosx/Resources/mainwindow/effects-one-button-pressed.png \
+	extras/package/macosx/Resources/mainwindow/effects-one-button-pressed@2x.png \
 	extras/package/macosx/Resources/mainwindow/forward-pressed.png \
 	extras/package/macosx/Resources/mainwindow/forward-pressed@2x.png \
 	extras/package/macosx/Resources/mainwindow/forward.png \
@@ -309,6 +313,8 @@ EXTRA_DIST += \
 	extras/package/macosx/Resources/mainwindow_dark/effects-double-buttons_dark@2x.png \
 	extras/package/macosx/Resources/mainwindow_dark/effects-one-button-blue_dark.png \
 	extras/package/macosx/Resources/mainwindow_dark/effects-one-button-blue_dark@2x.png \
+	extras/package/macosx/Resources/mainwindow_dark/effects-one-button-pressed-dark.png \
+	extras/package/macosx/Resources/mainwindow_dark/effects-one-button-pressed-dark@2x.png \
 	extras/package/macosx/Resources/mainwindow_dark/effects-one-button_dark.png \
 	extras/package/macosx/Resources/mainwindow_dark/effects-one-button_dark@2x.png \
 	extras/package/macosx/Resources/mainwindow_dark/forward-pressed_dark.png \

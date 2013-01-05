@@ -2,7 +2,7 @@
  * libvlc-module.c: Options for the main (libvlc itself) module
  *****************************************************************************
  * Copyright (C) 1998-2009 VLC authors and VideoLAN
- * $Id: 3723f5281220d1863a459782414b36a18b806a73 $
+ * $Id: a7c995d72b90b881831b7098e8458794d0141c20 $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -50,6 +50,7 @@ static const char *const ppsz_language[] =
     "auto",
     "en",
     "ar",
+    "ast",
     "be",
     "bg",
     "bn",
@@ -65,6 +66,7 @@ static const char *const ppsz_language[] =
     "et",
     "eu",
     "fa",
+    "ff",
     "fi",
     "fr",
     "ga",
@@ -117,6 +119,7 @@ static const char *const ppsz_language_text[] =
     N_("Auto"),
     "American English",
     "ﻉﺮﺒﻳ",
+    "Asturianu",
     "Беларуская",
     "български език",
     "বাংলা",
@@ -132,6 +135,7 @@ static const char *const ppsz_language_text[] =
     "eesti keel",
     "Euskara",
     "ﻑﺍﺮﺳی",
+    "Pulaar-Fulfulde",
     "Suomi",
     "Français",
     "Gaeilge",
@@ -762,7 +766,7 @@ static const char *const ppsz_clock_descriptions[] =
     "When several video formats are available, select one whose " \
     "resolution is closest to (but not higher than) this setting, " \
     "in number of lines. Use this option if you don't have enough CPU " \
-    "power or network bandwith to play higher resolutions.")
+    "power or network bandwidth to play higher resolutions.")
 static const int pi_prefres[] = { -1, 1080, 720, 576, 320 };
 static const char *const ppsz_prefres[] = {
     N_("Best available"), N_("Full HD (1080p)"), N_("HD (720p)"),

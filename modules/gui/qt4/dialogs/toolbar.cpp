@@ -2,7 +2,7 @@
  * ToolbarEdit.cpp : ToolbarEdit dialog
  ****************************************************************************
  * Copyright (C) 2008-2009 the VideoLAN team
- * $Id: 0e3c7d06469e49d9e5a0449e2feef809e31d28c6 $
+ * $Id: ab11b2f75e721ceb0b50c63f0458b2891cdeb251 $
  *
  * Authors: Jean-Baptiste Kempf <jb (at) videolan.org>
  *
@@ -184,6 +184,7 @@ ToolbarEditDialog::ToolbarEditDialog( QWidget *_w, intf_thread_t *_p_intf)
        user might hit on delete a bit too much, but discussion is opened. -- jb */
     if( i_size == 0 )
     {
+        profileCombo->addItem( PROFILE_NAME_6, QString( VALUE_6 ) );
         profileCombo->addItem( PROFILE_NAME_1, QString( VALUE_1 ) );
         profileCombo->addItem( PROFILE_NAME_2, QString( VALUE_2 ) );
         profileCombo->addItem( PROFILE_NAME_3, QString( VALUE_3 ) );
@@ -721,11 +722,6 @@ void DroppingController::dropEvent( QDropEvent *event )
 {
     int i = getParentPosInLayout( event->pos() );
 
-    /* Workaround: do not let the item move to its current
-       position + 1 as it breaks the widgetList */
-    if ( i - 1 == i_dragIndex )
-        --i;
-
     QByteArray data = event->mimeData()->data( "vlc/button-bar" );
     QDataStream dataStream(&data, QIODevice::ReadOnly);
 
@@ -799,11 +795,11 @@ bool DroppingController::eventFilter( QObject *obj, QEvent *event )
             /* Remove before the drag to not mess DropEvent,
                that will createAndAddWidget */
             widgetList.removeAt( i );
+            controlLayout->removeWidget( widg );
+            widg->hide();
 
             /* Start the effective drag */
             drag->exec(Qt::CopyAction | Qt::MoveAction, Qt::MoveAction);
-            widg->hide();
-            controlLayout->removeWidget( widg );
             b_draging = false;
             }
             return true;
