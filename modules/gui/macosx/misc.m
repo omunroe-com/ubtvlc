@@ -2,7 +2,7 @@
  * misc.m: code not specific to vlc
  *****************************************************************************
  * Copyright (C) 2003-2011 VLC authors and VideoLAN
- * $Id: 9c313b0c3f228ec587e9cb9bda7f0ebadf546677 $
+ * $Id: ef8ee5c550406701b1cf1c58d2478b66ba36efe8 $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Felix Paul Kühne <fkuehne at videolan dot org>
@@ -180,7 +180,6 @@ static NSMutableArray *blackoutWindows = NULL;
     self = [super initWithContentRect:contentRect styleMask:styleMask backing:backingType defer:flag];
     if( self )
     {
-        b_isFullscreen = NO;
         b_isset_canBecomeKeyWindow = NO;
         /* we don't want this window to be restored on relaunch */
         if (OSX_LION)
@@ -367,16 +366,6 @@ static NSMutableArray *blackoutWindows = NULL;
         if ((invoc = [anim userInfo]))
             [invoc invoke];
     }
-}
-
-- (void)setFullscreen:(BOOL)b_var
-{
-    b_isFullscreen = b_var;
-}
-
-- (BOOL)isFullscreen
-{
-    return b_isFullscreen;
 }
 
 - (IBAction)fullscreen:(id)sender
@@ -657,7 +646,7 @@ void _drawFrameInRect(NSRect frameRect)
     {
         o_string_shadow = [[NSShadow alloc] init];
         [o_string_shadow setShadowColor: [NSColor colorWithCalibratedWhite:1.0 alpha:0.5]];
-        [o_string_shadow setShadowOffset:NSMakeSize(0.0, -1.5)];
+        [o_string_shadow setShadowOffset:NSMakeSize(0.0, -1.0)];
         [o_string_shadow setShadowBlurRadius:0.0];
     }
 
