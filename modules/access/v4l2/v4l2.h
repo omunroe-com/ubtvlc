@@ -39,6 +39,10 @@
 #  define V4L2_CTRL_TYPE_BITMASK 8
 # endif
 #endif
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+/* FreeBSD 10 and earlier does not have V4L2_CTRL_TYPE_BITMASK */
+# define V4L2_CTRL_TYPE_BITMASK 8
+#endif
 #ifndef V4L2_CID_ILLUMINATORS_1 /* 2.6.37 */
 # define V4L2_CID_ILLUMINATORS_1 (V4L2_CID_BASE+38)
 # define V4L2_CID_ILLUMINATORS_2 (V4L2_CID_BASE+37)
