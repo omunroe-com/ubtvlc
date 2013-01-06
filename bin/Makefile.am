@@ -16,7 +16,7 @@ AM_CFLAGS = $(CFLAGS_vlc)
 if !HAVE_WIN32
 if !HAVE_WINCE
 bin_PROGRAMS += vlc-wrapper
-vlc_SOURCES = vlc.c override.c
+vlc_SOURCES = vlc.c override.c dummy.cpp
 endif
 endif
 
