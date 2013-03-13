@@ -1,3 +1,9 @@
+vlc (2.0.5-1build1) raring; urgency=low
+
+  * No-change rebuild against libudev1
+
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Wed, 13 Mar 2013 07:08:11 +0000
+
 vlc (2.0.5-1) unstable; urgency=low
 
   * New upstream release.
