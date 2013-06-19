@@ -38,8 +38,8 @@
 #include <vlc_codec.h>
 #include <vlc_aout.h>
 
-#include <stream_decoder.h>
-#include <stream_encoder.h>
+#include <FLAC/stream_decoder.h>
+#include <FLAC/stream_encoder.h>
 
 #include <vlc_block_helper.h>
 #include <vlc_bits.h>
