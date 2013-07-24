@@ -55,6 +55,8 @@
 # include <dvbpsi/dr.h>
 # include <dvbpsi/psi.h>
 
+#include "dvbpsi_compat.h"
+
 /*
  * TODO:
  *  - check PCR frequency requirement
@@ -364,6 +366,9 @@ struct sout_mux_sys_t
     int             i_audio_bound;
     int             i_video_bound;
 
+#if (DVBPSI_VERSION_INT >= DVBPSI_VERSION_WANTED(1,0,0))
+    dvbpsi_t        *p_dvbpsi;
+#endif
     bool            b_es_id_pid;
     bool            b_sdt;
     int             i_pid_video;
@@ -513,6 +518,16 @@ static int Open( vlc_object_t *p_this )
 
     p_sys->i_audio_bound = 0;
     p_sys->i_video_bound = 0;
+
+#if (DVBPSI_VERSION_INT >= DVBPSI_VERSION_WANTED(1,0,0))
+    p_sys->p_dvbpsi = dvbpsi_new( &dvbpsi_messages, DVBPSI_MSG_DEBUG );
+    if( !p_sys->p_dvbpsi )
+    {
+        free( p_sys );
+        return VLC_ENOMEM;
+    }
+    p_sys->p_dvbpsi->p_sys = (void *) p_mux;
+#endif
 
     p_sys->b_es_id_pid = var_GetBool( p_mux, SOUT_CFG_PREFIX "es-id-pid" );
 
@@ -838,6 +853,11 @@ static void Close( vlc_object_t * p_this )
     sout_mux_t          *p_mux = (sout_mux_t*)p_this;
     sout_mux_sys_t      *p_sys = p_mux->p_sys;
     int i;
+
+#if (DVBPSI_VERSION_INT >= DVBPSI_VERSION_WANTED(1,0,0))
+    if( p_sys->p_dvbpsi )
+        dvbpsi_delete( p_sys->p_dvbpsi );
+#endif
 
     if( p_sys->csa )
     {
@@ -2322,6 +2342,11 @@ static block_t *WritePSISection( sout_instance_t *p_sout,
     }
 
     return( p_first );
+
+error:
+    if( p_first )
+        block_ChainRelease( p_first );
+    return NULL;
 }
 
 static void GetPAT( sout_mux_t *p_mux,
@@ -2341,9 +2366,12 @@ static void GetPAT( sout_mux_t *p_mux,
                               p_sys->i_pmt_program_number[i],
                               p_sys->pmt[i].i_pid );
 
+#if (DVBPSI_VERSION_INT >= DVBPSI_VERSION_WANTED(1,0,0))
+    p_section = dvbpsi_pat_sections_generate( p_sys->p_dvbpsi, &pat, 0 );
+#else
     p_section = dvbpsi_GenPATSections( &pat,
                                        0 );     /* max program per section */
-
+#endif
     p_pat = WritePSISection( p_mux->p_sout, p_section );
 
     PEStoTS( p_mux->p_sout, c, p_pat, &p_sys->pat );
@@ -2435,9 +2463,16 @@ static void GetPMT( sout_mux_t *p_mux, sout_buffer_chain_t *c )
                     memcpy( &psz_sdt_desc[3+strlen(psz_sdtprov)], psz_sdtserv,
                             strlen(psz_sdtserv) );
 
+#if (DVBPSI_VERSION_INT >= DVBPSI_VERSION_WANTED(1,0,0))
+                    dvbpsi_sdt_service_descriptor_add( p_service, 0x48,
+                            (3 + strlen(psz_sdtprov) + strlen(psz_sdtserv)),
+                            (uint8_t *)psz_sdt_desc );
+#else
+
                     dvbpsi_SDTServiceAddDescriptor( p_service, 0x48,
                             3 + strlen(psz_sdtprov) + strlen(psz_sdtserv),
                             (uint8_t *)psz_sdt_desc );
+#endif
                     free( psz_sdt_desc );
                     psz_sdt_desc = NULL;
                 }
@@ -2739,7 +2774,11 @@ static void GetPMT( sout_mux_t *p_mux, sout_buffer_chain_t *c )
 
     for( i = 0; i < p_sys->i_num_pmt; i++ )
     {
+#if (DVBPSI_VERSION_INT >= DVBPSI_VERSION_WANTED(1,0,0))
+        p_section[i] = dvbpsi_pmt_sections_generate( p_sys->p_dvbpsi, &p_sys->dvbpmt[i] );
+#else
         p_section[i] = dvbpsi_GenPMTSections( &p_sys->dvbpmt[i] );
+#endif
         p_pmt[i] = WritePSISection( p_mux->p_sout, p_section[i] );
         PEStoTS( p_mux->p_sout, c, p_pmt[i], &p_sys->pmt[i] );
         dvbpsi_DeletePSISections( p_section[i] );
@@ -2748,7 +2787,11 @@ static void GetPMT( sout_mux_t *p_mux, sout_buffer_chain_t *c )
 
     if( p_sys->b_sdt )
     {
+#if (DVBPSI_VERSION_INT >= DVBPSI_VERSION_WANTED(1,0,0))
+        p_section2 = dvbpsi_sdt_sections_generate( p_sys->p_dvbpsi, &sdt );
+#else
         p_section2 = dvbpsi_GenSDTSections( &sdt );
+#endif
         p_sdt = WritePSISection( p_mux->p_sout, p_section2 );
         PEStoTS( p_mux->p_sout, c, p_sdt, &p_sys->sdt );
         dvbpsi_DeletePSISections( p_section2 );
