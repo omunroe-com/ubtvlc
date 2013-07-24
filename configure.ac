@@ -411,7 +411,7 @@ LT_INIT([dlopen win32-dll shared disable-static])
 LT_LANG([C++])
 LT_LANG([Windows Resource])
 
-m4_undefine([AC_DEPLIBS_CHECK_METHOD])
+m4_ifdef([AC_DEPLIBS_CHECK_METHOD], [m4_undefine([AC_DEPLIBS_CHECK_METHOD])])
 m4_defun([AC_DEPLIBS_CHECK_METHOD],[])
 
 lt_cv_deplibs_check_method=pass_all
