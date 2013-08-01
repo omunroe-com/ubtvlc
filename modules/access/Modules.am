@@ -194,7 +194,7 @@ if HAVE_LINUX_DVB
 libdtv_plugin_la_SOURCES += dtv/linux.c
 libdtv_plugin_la_CFLAGS += -DHAVE_LINUX_DVB
 if HAVE_DVBPSI
-libdtv_plugin_la_SOURCES += dtv/en50221.c dtv/en50221.h
+libdtv_plugin_la_SOURCES += dtv/en50221.c dtv/en50221.h ../mux/mpeg/dvbpsi_compat.h
 libdtv_plugin_la_CFLAGS += -DHAVE_DVBPSI $(DVBPSI_CFLAGS)
 libdtv_plugin_la_LIBADD += $(DVBPSI_LIBS)
 endif
