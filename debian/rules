@@ -22,11 +22,12 @@ ifneq (,$(filter noopt,$(DEB_BUILD_OPTIONS)))
 confflags += --disable-optimizations --disable-mmx --disable-sse --disable-altivec
 endif
 
+CFLAGS := $(shell dpkg-buildflags --get CFLAGS)
+CXXFLAGS := $(shell dpkg-buildflags --get CXXFLAGS)
+
 # configure flags
 confflags += \
-	CFLAGS="$(shell dpkg-buildflags --get CFLAGS)" \
 	CPPFLAGS="$(shell dpkg-buildflags --get CPPFLAGS)" \
-	CXXFLAGS="$(shell dpkg-buildflags --get CXXFLAGS)" \
 	LDFLAGS="$(shell dpkg-buildflags --get LDFLAGS)" \
 	--config-cache \
 	--disable-maintainer-mode \
@@ -45,6 +46,7 @@ confflags += \
 	--enable-bluray \
 	--enable-bonjour \
 	--enable-caca \
+	--enable-chromaprint \
 	--enable-dbus \
 	--enable-dca \
 	--enable-dirac \
@@ -60,8 +62,8 @@ confflags += \
 	--enable-jack \
 	--enable-kate \
 	--enable-libass \
+	--enable-libfreerdp \
 	--enable-libmpeg2 \
-	--enable-libproxy \
 	--enable-libxml2 \
 	--enable-lirc \
 	--enable-live555 \
@@ -77,7 +79,7 @@ confflags += \
 	--enable-opus \
 	--enable-oss \
 	--enable-pulse \
-	--enable-qt4 \
+	--enable-qt \
 	--enable-realrtsp \
 	--enable-samplerate \
 	--enable-schroedinger \
@@ -85,7 +87,7 @@ confflags += \
 	--enable-sftp \
 	--enable-shout \
 	--enable-skins2 \
-	--enable-smb \
+	--enable-smbclient \
 	--enable-speex \
 	--enable-svg \
 	--enable-taglib \
@@ -103,18 +105,16 @@ confflags += \
 # dxva2 -> Windows only
 # gnomevfs -> poorly maintained
 # goom -> not in Debian
-# portaudio -> not needed
 # projectm -> broken
-# sqlite -> still in development
 # telx -> incompatible with zvbi
+# opencv -> developer plugin not required by end users
 confflags += \
 	--disable-dxva2 \
 	--disable-gnomevfs \
 	--disable-goom \
-	--disable-portaudio \
 	--disable-projectm \
-	--disable-sqlite \
 	--disable-telx \
+	--disable-opencv \
 	$(NULL)
 
 # Linux specific flags
@@ -125,12 +125,10 @@ confflags += \
 	--enable-alsa \
 	--enable-atmo \
 	--enable-dc1394 \
-	--enable-dv \
-	--enable-fbosd \
+	--enable-dv1394 \
 	--enable-libva \
 	--enable-linsys \
 	--enable-omxil \
-	--enable-pvr \
 	--enable-udev \
 	$(NULL)
 else
@@ -138,12 +136,10 @@ confflags += \
 	--disable-alsa \
 	--disable-atmo \
 	--disable-dc1394 \
-	--disable-dv \
-	--disable-fbosd \
+	--disable-dv1394 \
 	--disable-libva \
 	--disable-linsys \
 	--disable-omxil \
-	--disable-pvr \
 	--disable-udev \
 	$(NULL)
 removeplugins += \
@@ -153,10 +149,8 @@ removeplugins += \
 	libdtv \
 	libaccess_dv \
 	libfb \
-	libfbosd \
 	libomxil \
 	linsys \
-	libpvr \
 	libudev \
 	$(NULL)
 endif
@@ -182,7 +176,6 @@ ifeq (,$(filter-out amd64 i386,$(DEB_HOST_ARCH_CPU)))
 confflags += --enable-mmx --enable-sse
 else
 confflags += --disable-mmx --disable-sse
-removeplugins += 3dn mmx mmxext sse2
 endif
 
 # ARM specific optimizations
@@ -203,8 +196,14 @@ endif
 
 # PowerPCSPE specific optimizations
 ifeq (,$(filter-out powerpcspe,$(DEB_HOST_ARCH)))
-confflags += --with-tuning=8548
+CFLAGS += -mtune=8548
+CXXFLAGS += -mtune=8548
 endif
+
+confflags += \
+	CFLAGS="$(CFLAGS)" \
+	CXXFLAGS="$(CXXFLAGS)" \
+	$(NULL)
 
 %:
 	dh $@ --parallel --with autoreconf
@@ -214,19 +213,9 @@ override_dh_autoreconf:
 
 override_dh_auto_clean:
 	[ ! -f debian/vlc-nox.install.bak ] || mv -f debian/vlc-nox.install.bak debian/vlc-nox.install
-	rm -rf tmp/
 	dh_auto_clean
 
 override_dh_auto_configure:
-	# We need to build the static library apart
-	# Else it's a mess when we build the modules
-	./configure --enable-static $(confflags)
-	$(MAKE) -C compat
-	$(MAKE) -C src libvlccore.la
-	$(MAKE) -C lib libvlc.la
-	mkdir -p tmp
-	cp src/.libs/libvlccore.a tmp/libvlccore.a
-	cp lib/.libs/libvlc.a tmp/libvlc.a
 	dh_auto_configure -- $(confflags)
 
 override_dh_auto_test:
@@ -247,8 +236,6 @@ override_dh_install:
 	# Remove disabled plugins
 	test -f debian/vlc-nox.install.bak || cp debian/vlc-nox.install debian/vlc-nox.install.bak
 	sed -i "/\($(shell echo $(removeplugins) | sed 's/ /\\|/g')\)_/d" debian/vlc-nox.install
-	cp tmp/libvlc.a debian/tmp/usr/lib
-	cp tmp/libvlccore.a debian/tmp/usr/lib
 	# Clean up libtool crap
 	find debian/tmp -name '*.la' -delete
 	# Remove useless stuff
@@ -259,14 +246,6 @@ override_dh_install:
 	find debian/tmp -name LICENSE -delete
 	# Install stuff
 	dh_install --fail-missing
-	# move .hosts
-	if test -d debian/vlc-data; then \
-		mkdir -p debian/vlc-data/etc/vlc/lua/http/dialogs && \
-		mv debian/vlc-data/usr/share/vlc/lua/http/dialogs/.hosts debian/vlc-data/etc/vlc/lua/http/dialogs && \
-		ln -s /etc/vlc/lua/http/dialogs/.hosts debian/vlc-data/usr/share/vlc/lua/http/dialogs/.hosts && \
-		mv debian/vlc-data/usr/share/vlc/lua/http/.hosts debian/vlc-data/etc/vlc/lua/http && \
-		ln -s /etc/vlc/lua/http/.hosts debian/vlc-data/usr/share/vlc/lua/http/.hosts; \
-	fi
 ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
 	# Check that we did not install a plugin linked with libX11 or
 	# libxcb in vlc-nox

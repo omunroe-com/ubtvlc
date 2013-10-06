@@ -7,7 +7,8 @@ Uploaders: Clément Stenac <zorglub@debian.org>,
            Christophe Mutricy <xtophe@videolan.org>,
            Mohammed Adnène Trojette <adn+deb@diwi.org>,
            Reinhard Tartler <siretart@tauware.de>,
-           Benjamin Drung <bdrung@debian.org>
+           Benjamin Drung <bdrung@debian.org>,
+           Edward Wang <edward.c.wang@compdigitec.com>
 Build-Depends: autopoint,
                debhelper (>= 8),
                dh-autoreconf,
@@ -25,6 +26,7 @@ Build-Depends: autopoint,
                libcaca-dev (>= 0.99.beta4),
                libcddb2-dev,
                libcdio-dev (>= 0.78.2),
+               libchromaprint-dev,
                libcrystalhd-dev [amd64 i386],
                libdc1394-22-dev (>= 2.1.0) [linux-any],
                libdca-dev,
@@ -36,17 +38,19 @@ Build-Depends: autopoint,
                libfaad-dev,
                libflac-dev (>= 1.1.2-3),
                libfluidsynth-dev,
+               libfreerdp-dev,
                libfreetype6-dev,
                libfribidi-dev,
                libgl1-mesa-dev,
-               libgnutls-dev (>= 2.0.0),
+               libgnutls28-dev (>= 3.0.20),
                libgtk2.0-dev,
+               libidn11-dev,
                libiso9660-dev (>= 0.72),
                libjack-dev,
                libkate-dev (>= 0.3.0),
                liblircclient-dev,
                liblivemedia-dev (>= 2011.12.23),
-               liblua5.1-0-dev,
+               liblua5.2-dev,
                libmad0-dev,
                libmatroska-dev (>= 1.0.0),
                libmodplug-dev (>= 1:0.8.8.1),
@@ -60,7 +64,6 @@ Build-Depends: autopoint,
                libopus-dev,
                libpng-dev,
                libpostproc-dev (>= 4:0.6),
-               libproxy-dev,
                libpulse-dev (>= 0.9.11),
                libqt4-dev (>= 4:4.6.0),
                libraw1394-dev (>= 2.0.1) [linux-any],
@@ -100,7 +103,8 @@ Build-Depends: autopoint,
                libxml2-dev,
                libxpm-dev,
                libzvbi-dev (>= 0.2.28),
-               lua5.1,
+               lua5.2,
+               oss4-dev,
                pkg-config,
                zlib1g-dev
 Standards-Version: 3.9.4
@@ -140,7 +144,7 @@ Package: libvlccore-dev
 Section: libdevel
 Architecture: any
 Pre-Depends: dpkg (>= 1.15.6~)
-Depends: libvlccore5 (= ${binary:Version}), pkg-config, ${misc:Depends}
+Depends: libvlccore7 (= ${binary:Version}), pkg-config, ${misc:Depends}
 Description: development files for libvlccore
  This package contains headers and a static library required to build plugins
  for VLC.
@@ -149,11 +153,14 @@ Description: development files for libvlccore
  DivX, MOV, WMV, QuickTime, WebM, FLAC, MP3, Ogg/Vorbis files, DVDs, VCDs,
  podcasts, and multimedia streams from various network sources.
 
-Package: libvlccore5
+Package: libvlccore7
 Section: libs
 Architecture: any
 Pre-Depends: dpkg (>= 1.15.6~)
-Depends: vlc-data (= ${source:Version}), ${misc:Depends}, ${shlibs:Depends}
+Depends: libproxy-tools,
+         vlc-data (= ${source:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
 Description: base library for VLC and its modules
  This package contains the shared library required by VLC modules and libvlc.
  .
@@ -222,7 +229,9 @@ Package: vlc-nox
 Architecture: any
 Pre-Depends: dpkg (>= 1.15.6~)
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Replaces: vlc (<< 1.1.0)
+Recommends: libdvdcss2
+Breaks: vlc (<< 2.1.0)
+Replaces: vlc (<< 2.1.0)
 Provides: mp3-decoder
 Description: multimedia player and streamer (without X support)
  VLC is the VideoLAN project's media player. It plays MPEG, MPEG-2, MPEG-4,
