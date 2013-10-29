@@ -36,6 +36,7 @@ confflags += \
 	--enable-fast-install \
 	--prefix=/usr \
 	--docdir=/usr/share/doc/vlc-nox \
+	--libdir=/usr/lib \
 	--sysconfdir=/etc \
 	--with-binary-version=$(DEBIAN_VERSION) \
 	$(NULL)
@@ -102,19 +103,33 @@ confflags += \
 	--with-kde-solid=/usr/share/kde4/apps/solid/actions/ \
 	$(NULL)
 # Reasons for disabling features:
+# decklink -> not in Debian
 # dxva2 -> Windows only
+# fdkaac -> in Debian non-free
 # gnomevfs -> poorly maintained
 # goom -> not in Debian
-# projectm -> broken
-# telx -> incompatible with zvbi
+# libvnc -> libvncserver-dev (containing libvncclient) conflicts with gnutls28
 # opencv -> developer plugin not required by end users
+# projectm -> broken
+# quicksync -> currently not supported on Linux
+# sndio -> not in Debian
+# telx -> incompatible with zvbi
+# vsxu -> not in Debian
+# wasapi -> Windows only
 confflags += \
+	--disable-decklink \
 	--disable-dxva2 \
+	--disable-fdkaac \
 	--disable-gnomevfs \
 	--disable-goom \
-	--disable-projectm \
-	--disable-telx \
+	--disable-libvnc \
 	--disable-opencv \
+	--disable-projectm \
+	--disable-quicksync \
+	--disable-sndio \
+	--disable-telx \
+	--disable-vsxu \
+	--disable-wasapi \
 	$(NULL)
 
 # Linux specific flags
@@ -126,7 +141,6 @@ confflags += \
 	--enable-atmo \
 	--enable-dc1394 \
 	--enable-dv1394 \
-	--enable-libva \
 	--enable-linsys \
 	--enable-omxil \
 	--enable-udev \
@@ -137,7 +151,6 @@ confflags += \
 	--disable-atmo \
 	--disable-dc1394 \
 	--disable-dv1394 \
-	--disable-libva \
 	--disable-linsys \
 	--disable-omxil \
 	--disable-udev \
@@ -147,7 +160,8 @@ removeplugins += \
 	libatmo \
 	libdc1394 \
 	libdtv \
-	libaccess_dv \
+	libdvb \
+	libdv1394 \
 	libfb \
 	libomxil \
 	linsys \
@@ -157,6 +171,15 @@ endif
 
 # Linux and kFreeBSD specific flags
 ifeq (,$(filter-out linux kfreebsd,$(DEB_HOST_ARCH_OS)))
+confflags += --enable-libva
+else
+confflags += --disable-libva
+removeplugins += libvaapi
+endif
+
+# Linux and kFreeBSD specific flags
+# kfreebsd disabled due to a build failure
+ifeq (,$(filter-out linux,$(DEB_HOST_ARCH_OS)))
 confflags += --enable-v4l2
 else
 confflags += --disable-v4l2
@@ -176,6 +199,7 @@ ifeq (,$(filter-out amd64 i386,$(DEB_HOST_ARCH_CPU)))
 confflags += --enable-mmx --enable-sse
 else
 confflags += --disable-mmx --disable-sse
+removeplugins += mmx sse2
 endif
 
 # ARM specific optimizations
@@ -212,7 +236,7 @@ override_dh_autoreconf:
 	dh_autoreconf --as-needed
 
 override_dh_auto_clean:
-	[ ! -f debian/vlc-nox.install.bak ] || mv -f debian/vlc-nox.install.bak debian/vlc-nox.install
+	rm -f debian/vlc.install debian/vlc-nox.install
 	dh_auto_clean
 
 override_dh_auto_configure:
@@ -234,8 +258,8 @@ endif
 
 override_dh_install:
 	# Remove disabled plugins
-	test -f debian/vlc-nox.install.bak || cp debian/vlc-nox.install debian/vlc-nox.install.bak
-	sed -i "/\($(shell echo $(removeplugins) | sed 's/ /\\|/g')\)_/d" debian/vlc-nox.install
+	sed "/\($(shell echo $(removeplugins) | sed 's/ /\\|/g')\)_/d" debian/vlc.install.in > debian/vlc.install
+	sed "/\($(shell echo $(removeplugins) | sed 's/ /\\|/g')\)_/d" debian/vlc-nox.install.in > debian/vlc-nox.install
 	# Clean up libtool crap
 	find debian/tmp -name '*.la' -delete
 	# Remove useless stuff
