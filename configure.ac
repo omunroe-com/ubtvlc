@@ -1424,6 +1424,8 @@ dnl - Others: test should fail
         [ac_cv_c_altivec="-faltivec"],
         dnl Below this are the Linux tests
         [# Linux/PPC test (gcc 4.x)
+         VLC_RESTORE_FLAGS
+         VLC_SAVE_FLAGS
          CFLAGS="${CFLAGS} -maltivec"
          AC_TRY_COMPILE([#include <altivec.h>],
            [vec_ld(0, (unsigned char *)0);],
