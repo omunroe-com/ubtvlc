@@ -1,3 +1,9 @@
+vlc (2.1.2-2build1) trusty; urgency=medium
+
+  * Rebuild against liblivemedia23.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Wed, 05 Feb 2014 07:11:26 +0000
+
 vlc (2.1.2-2) unstable; urgency=medium
 
   * Team upload.
