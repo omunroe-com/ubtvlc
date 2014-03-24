@@ -1,3 +1,9 @@
+vlc (2.1.2-2build2) trusty; urgency=medium
+
+  * No-change rebuild for x264 soname bump.
+
+ -- Matthias Klose <doko@ubuntu.com>  Mon, 24 Mar 2014 05:56:23 +0000
+
 vlc (2.1.2-2build1) trusty; urgency=medium
 
   * Rebuild against liblivemedia23.
