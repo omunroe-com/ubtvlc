@@ -1,3 +1,9 @@
+vlc (2.1.4-1build1) utopic; urgency=medium
+
+  * Rebuild against libgnutls-deb0-28.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Fri, 06 Jun 2014 15:38:04 +0100
+
 vlc (2.1.4-1) unstable; urgency=medium
 
   * New upstream release (Closes: #742625, LP: #1276650)
