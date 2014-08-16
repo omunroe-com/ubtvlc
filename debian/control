@@ -34,8 +34,8 @@ Build-Depends: autopoint,
                libdirac-dev,
                libdirectfb-dev,
                libdvbpsi-dev | libdvbpsi5-dev,
-               libdvdnav-dev,
-               libdvdread-dev (>= 0.9.5),
+               libdvdnav-dev (>> 4.9.0),
+               libdvdread-dev (>> 4.9.0),
                libfaad-dev,
                libflac-dev (>= 1.1.2-3),
                libfluidsynth-dev (>= 1.1.2),
@@ -82,7 +82,6 @@ Build-Depends: autopoint,
                libssh2-1-dev,
                libswscale-dev (>= 4:0.6) | libswscale-ffmpeg-dev,
                libtag1-dev (>= 1.6.1),
-               libtar-dev,
                libtheora-dev (>= 1.0),
                libtwolame-dev (>= 0.3.8),
                libudev-dev [linux-any],
@@ -146,7 +145,7 @@ Package: libvlccore-dev
 Section: libdevel
 Architecture: any
 Pre-Depends: dpkg (>= 1.15.6~)
-Depends: libvlccore7 (= ${binary:Version}), pkg-config, ${misc:Depends}
+Depends: libvlccore8 (= ${binary:Version}), pkg-config, ${misc:Depends}
 Description: development files for libvlccore
  This package contains headers and a static library required to build plugins
  for VLC.
@@ -155,7 +154,7 @@ Description: development files for libvlccore
  DivX, MOV, WMV, QuickTime, WebM, FLAC, MP3, Ogg/Vorbis files, DVDs, VCDs,
  podcasts, and multimedia streams from various network sources.
 
-Package: libvlccore7
+Package: libvlccore8
 Section: libs
 Architecture: any
 Pre-Depends: dpkg (>= 1.15.6~)
