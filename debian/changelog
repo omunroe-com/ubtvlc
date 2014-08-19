@@ -1,3 +1,57 @@
+vlc (2.2.0~pre2-2git1) utopic; urgency=medium
+
+  [ Sebastian Ramacher ]
+  * debian/control:
+    - Bump libavcodec-dev to >= 6:9 to make sure VDPAU decoding is available.
+      (Closes: #728039)
+    - Make Breaks and Replaces backport friendly.
+    - Fix description of the transitional vlc-plugin-pulse package.
+    - Added to Build-Depends: libegl1-mesa-dev, libvncserver-dev (>= 0.9.9),
+      libgles1-mesa-dev, libgles2-mesa-dev.
+    - Bump required versions in Build-Depends: libdbus-1-dev, libpulse-dev,
+      libtag1-dev.
+  * debian/rules:
+    - Fix post{inst,rm}-has-useless-call-to-ldconfig lintian warning.
+    - Enable OpenGL ES v1 and v2 plugins.
+    - Enable VNC plugin support.
+    - Disable svgdev plugin until libcairo2-dev >= 1.13 is available.
+    - Rename configure options that are no longer available (--enable-dirac)
+      and update nameing changes (--enable-libfreerdp -> --enable-freerdp,
+      --disable-quicksync -> --disable-mfx).
+  * debian/vlc-nox.links: Fix broken /usr/share/bug/vlc-nox symlink.
+
+  [ Benjamin Drung ]
+  * Bump required versions of libbluray-dev and libopus-dev (according to
+    configure).
+  * Release current git status to Ubuntu (because VLC waits in Debian NEW)
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Tue, 19 Aug 2014 21:32:36 +0200
+
+vlc (2.2.0~pre2-2) unstable; urgency=medium
+
+  * Add vlc-plugin-samba package shipping the Samba plugin. (Closes: #729238)
+    - debian/control: Add new vlc-plugin-samba package and add it to vlc's
+      Recommends.
+    - debian/vlc-{nox,plugin-samba}.install: Move Samba plugin to
+      vlc-plugin-samba.
+  * Remove vlc-plugin-pulse and put PulseAudio plugins to vlc.
+    - debian/control: Turn vlc-plugin-pulse into a transitional package and
+      remove it from vlc's Recommends.
+    - debian/vlc-{plugin-pulse,}.install: Move PulseAudio plugins to vlc.
+  * debian/rules: Improve check if plugins from vlc-nox are linked against
+    libX11 or libxcb.
+  * debian/vlc{-nox,}.install.in: Move RDP plugin to vlc to get rid of all
+    libX11 and libxcb dependencies in vlc-nox.
+  * debian/control:
+    - Remove obsolete Replaces.
+    - Remove obsolete Pre-Depends. dpkg (>= 1.15.6+) is even available in
+      squeeze.
+    - Mention all plugin packages in the Description.
+    - Explicitly list libdbus-1-dev in Build-Depends.
+    - Add myself to Uploaders.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Tue, 19 Aug 2014 21:12:27 +0200
+
 vlc (2.2.0~pre2-1) unstable; urgency=medium
 
   [ Sebastian Ramacher ]
