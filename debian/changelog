@@ -1,3 +1,11 @@
+vlc (2.2.0~pre2-2git1ubuntu1) utopic; urgency=medium
+
+  * Stop trying to manually install
+    /usr/lib/vlc/plugins/altivec/libi420_yuy2_altivec_plugin.so on powerpc;
+    this is in the video_chroma directory now, all of which is installed.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Thu, 21 Aug 2014 02:10:17 +0100
+
 vlc (2.2.0~pre2-2git1) utopic; urgency=medium
 
   [ Sebastian Ramacher ]
