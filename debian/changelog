@@ -1,3 +1,9 @@
+vlc (2.2.0~pre2-4build1) utopic; urgency=medium
+
+  * Rebuild against libav11.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Fri, 05 Sep 2014 02:47:06 +0100
+
 vlc (2.2.0~pre2-4) unstable; urgency=medium
 
   * debian/vlc-nox.install.in: libi420_yuy2_altivec_plugin.so moved to
