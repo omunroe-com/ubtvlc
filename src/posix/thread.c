@@ -300,7 +300,7 @@ void vlc_cond_init (vlc_cond_t *p_condvar)
 
     if (unlikely(pthread_condattr_init (&attr)))
         abort ();
-#if (_POSIX_CLOCK_SELECTION > 0)
+#if (_POSIX_TIMERS > 0) && (_POSIX_CLOCK_SELECTION > 0)
     vlc_clock_setup ();
     pthread_condattr_setclock (&attr, vlc_clock_id);
 #endif
@@ -874,7 +874,7 @@ mtime_t mdate (void)
  */
 void mwait (mtime_t deadline)
 {
-#if (_POSIX_CLOCK_SELECTION > 0)
+#if (_POSIX_TIMERS > 0) && (_POSIX_CLOCK_SELECTION > 0)
     vlc_clock_setup ();
     /* If the deadline is already elapsed, or within the clock precision,
      * do not even bother the system timer. */
@@ -901,7 +901,7 @@ void msleep (mtime_t delay)
 {
     struct timespec ts = mtime_to_ts (delay);
 
-#if (_POSIX_CLOCK_SELECTION > 0)
+#if (_POSIX_TIMERS > 0) && (_POSIX_CLOCK_SELECTION > 0)
     vlc_clock_setup ();
     while (clock_nanosleep (vlc_clock_id, 0, &ts, &ts) == EINTR);
 
