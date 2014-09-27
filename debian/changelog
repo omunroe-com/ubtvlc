@@ -1,3 +1,27 @@
+vlc (2.2.0~pre3-1) unstable; urgency=medium
+
+  [ Mateusz Łukasik ]
+  * Fix typo in changelog
+
+  [ Benjamin Drung ]
+  * New upstream release.
+  * Disable vpx plugin (not needed when having libavcodec)
+  * Remove hurd.patch, because this is a bug in Hurd and not in VLC.
+  * Disable OSS on Linux (Use ALSA on Linux instead of OSS.)
+
+  [ Sebastian Ramacher ]
+  * Disable FreeRDP plugin as requested by the Release Team because FreeRDP is
+    currently broken. This allows us to finish the libav and libvlccore
+    transition. As soon as FreeRDP is fixed, this change can be reverted:
+    - debian/control: Remove libfreerdp-dev from Build-Depends.
+    - debian/rules: Build with --disable-freerdp.
+    - debian/vlc.install: Do not install the FreeRDP plugin.
+  * debian/control:
+    - Remove libdirac-dev from Build-Depends. It is no longer needed.
+    - Bump Standars-Version. No changes required.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Sat, 27 Sep 2014 18:13:50 +0200
+
 vlc (2.2.0~pre2-4) unstable; urgency=medium
 
   * debian/vlc-nox.install.in: libi420_yuy2_altivec_plugin.so moved to
@@ -5,7 +29,7 @@ vlc (2.2.0~pre2-4) unstable; urgency=medium
   * Enable shine and vpx plugins:
     - debian/control: Add libshine-dev and libvpx-dev to B-D.
     - debian/rules: Pass --enable-shine and --enable-vpx.
-    - debian/vlc-nox.isntall.in: Install new plugins.
+    - debian/vlc-nox.install.in: Install new plugins.
   * debian/rules: Explicitly disable libtar support.
   * debian/control: Lower Recommends: libdvdcss2 to Suggests to comply with
     Policy §2.2.1. Thanks to Thorsten Alteholz.
