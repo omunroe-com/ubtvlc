@@ -56,7 +56,6 @@ confflags += \
 	--enable-faad \
 	--enable-flac \
 	--enable-fluidsynth \
-	--enable-freerdp \
 	--enable-freetype \
 	--enable-fribidi \
 	--enable-gles1 \
@@ -101,7 +100,6 @@ confflags += \
 	--enable-vdpau \
 	--enable-vnc \
 	--enable-vorbis \
-	--enable-vpx \
 	--enable-x264 \
 	--enable-zvbi \
 	--with-kde-solid=/usr/share/kde4/apps/solid/actions/ \
@@ -110,6 +108,7 @@ confflags += \
 # decklink -> not in Debian
 # dxva2 -> Windows only
 # fdkaac -> in Debian non-free
+# freerdp -> currently broken (#757605, #762591 and others)
 # gnomevfs -> poorly maintained
 # goom -> not in Debian
 # libtar -> security issue (#737534)
@@ -119,12 +118,14 @@ confflags += \
 # sndio -> not in Debian
 # svgdev -> libcairo2-dev is not new enough
 # telx -> incompatible with zvbi
+# vpx -> not needed when having libavcodec
 # vsxu -> not in Debian
 # wasapi -> Windows only
 confflags += \
 	--disable-decklink \
 	--disable-dxva2 \
 	--disable-fdkaac \
+	--disable-freerdp \
 	--disable-gnomevfs \
 	--disable-goom \
 	--disable-libtar \
@@ -134,6 +135,7 @@ confflags += \
 	--disable-sndio \
 	--disable-svgdec \
 	--disable-telx \
+	--disable-vpx \
 	--disable-vsxu \
 	--disable-wasapi \
 	$(NULL)
@@ -141,7 +143,8 @@ confflags += \
 # Linux specific flags
 ifeq ($(DEB_HOST_ARCH_OS),linux)
 # omxil should be enabled on all systems, but libomxil-bellagio does
-# not build on kfreebsd and hurd (currently)
+# not build on kfreebsd and hurd (currently).
+# V4L2 is disabled on kFreeBSD due to a build failure.
 confflags += \
 	--enable-alsa \
 	--enable-atmo \
@@ -150,6 +153,7 @@ confflags += \
 	--enable-linsys \
 	--enable-omxil \
 	--enable-udev \
+	--enable-v4l2 \
 	$(NULL)
 else
 confflags += \
@@ -160,6 +164,7 @@ confflags += \
 	--disable-linsys \
 	--disable-omxil \
 	--disable-udev \
+	--disable-v4l2 \
 	$(NULL)
 removeplugins += \
 	alsa \
@@ -172,41 +177,26 @@ removeplugins += \
 	libomxil \
 	linsys \
 	libudev \
+	libv4l2 \
 	$(NULL)
 endif
 
-# Hurd specific flags
-ifeq (,$(filter-out hurd,$(DEB_HOST_ARCH_OS)))
-confflags += \
-	--disable-oss \
-	--disable-vcd
-removeplugins += \
-	oss \
-	cdda \
-	vcd \
-	$(NULL)
-else
-confflags += \
-	--enable-oss \
-	--enable-vcd \
-	$(NULL)
-endif
-
-# Linux and kFreeBSD specific flags
+# Linux and kFreeBSD specific flags (disabled on Hurd)
 ifeq (,$(filter-out linux kfreebsd,$(DEB_HOST_ARCH_OS)))
-confflags += --enable-libva
+confflags += --enable-libva --enable-vcd
 else
-confflags += --disable-libva
-removeplugins += libvaapi
+confflags += --disable-libva --disable-vcd
+removeplugins += cdda libvaapi vcd
 endif
 
-# Linux and kFreeBSD specific flags
-# kfreebsd disabled due to a build failure
-ifeq (,$(filter-out linux,$(DEB_HOST_ARCH_OS)))
-confflags += --enable-v4l2
+# kFreeBSD specific flags
+ifeq (,$(filter-out kfreebsd,$(DEB_HOST_ARCH_OS)))
+confflags += --enable-oss
 else
-confflags += --disable-v4l2
-removeplugins += libv4l2
+# Note: Use ALSA on Linux instead of OSS.
+#       Ubuntu has disabled OSS support in their Linux kernel.
+confflags += --disable-oss
+removeplugins += oss
 endif
 
 # Linux amd64 and i386 specific flags
