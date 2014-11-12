@@ -1,3 +1,9 @@
+vlc (2.2.0~rc1-1build1) vivid; urgency=medium
+
+  * No-change rebuild for new freerdp
+
+ -- Iain Lane <iain@orangesquash.org.uk>  Wed, 12 Nov 2014 12:11:24 +0000
+
 vlc (2.2.0~rc1-1) unstable; urgency=low
 
   * New upstream release.
