@@ -217,6 +217,9 @@
 #define ATOM_0xa9aut VLC_FOURCC( 0xa9, 'a', 'u', 't' )
 #define ATOM_0xa9cpy VLC_FOURCC( 0xa9, 'c', 'p', 'y' )
 #define ATOM_0xa9inf VLC_FOURCC( 0xa9, 'i', 'n', 'f' )
+#define ATOM_0xa9isr VLC_FOURCC( 0xa9, 'i', 's', 'r' )
+#define ATOM_0xa9lab VLC_FOURCC( 0xa9, 'l', 'a', 'b' )
+#define ATOM_0xa9lal VLC_FOURCC( 0xa9, 'l', 'a', 'l' )
 #define ATOM_0xa9ART VLC_FOURCC( 0xa9, 'A', 'R', 'T' )
 #define ATOM_0xa9des VLC_FOURCC( 0xa9, 'd', 'e', 's' )
 #define ATOM_0xa9dir VLC_FOURCC( 0xa9, 'd', 'i', 'r' )
@@ -242,6 +245,7 @@
 #define ATOM_0xa9wrn VLC_FOURCC( 0xa9, 'w', 'r', 'n' )
 #define ATOM_0xa9swr VLC_FOURCC( 0xa9, 's', 'w', 'r' )
 #define ATOM_0xa9mak VLC_FOURCC( 0xa9, 'm', 'a', 'k' )
+#define ATOM_0xa9mal VLC_FOURCC( 0xa9, 'm', 'a', 'l' )
 #define ATOM_0xa9mod VLC_FOURCC( 0xa9, 'm', 'o', 'd' )
 #define ATOM_0xa9PRD VLC_FOURCC( 0xa9, 'P', 'R', 'D' )
 #define ATOM_0xa9grp VLC_FOURCC( 0xa9, 'g', 'r', 'p' )
@@ -257,9 +261,11 @@
 #define ATOM_0xa9phg VLC_FOURCC( 0xa9, 'p', 'h', 'g' )
 #define ATOM_0xa9pub VLC_FOURCC( 0xa9, 'p', 'u', 'b' )
 #define ATOM_0xa9sne VLC_FOURCC( 0xa9, 's', 'n', 'e' )
+#define ATOM_0xa9snm VLC_FOURCC( 0xa9, 's', 'n', 'm' )
 #define ATOM_0xa9sol VLC_FOURCC( 0xa9, 's', 'o', 'l' )
 #define ATOM_0xa9thx VLC_FOURCC( 0xa9, 't', 'h', 'x' )
 #define ATOM_0xa9xpd VLC_FOURCC( 0xa9, 'x', 'p', 'd' )
+#define ATOM_0xa9xyz VLC_FOURCC( 0xa9, 'x', 'y', 'z' )
 #define ATOM_chpl VLC_FOURCC( 'c', 'h', 'p', 'l' )
 #define ATOM_WLOC VLC_FOURCC( 'W', 'L', 'O', 'C' )
 
@@ -379,10 +385,9 @@ typedef struct MP4_Box_data_mdhd_s
     uint32_t i_timescale;
     uint64_t i_duration;
 
-    /* one bit for pad */
-    uint16_t      i_language_code;
-    /* unsigned int(5)[3] language difference with 0x60*/
-    unsigned char i_language[3];
+    char     rgs_language[3]; /* ISO-639-2/T or Mac lang table */
+    bool     b_mac_encoding;  /* media using mac encoding */
+
     uint16_t i_predefined;
 
 } MP4_Box_data_mdhd_t;
@@ -749,8 +754,8 @@ typedef struct MP4_Box_data_cprt_s
 {
     uint8_t  i_version;
     uint32_t i_flags;
-    /* 1 pad bit */
-    unsigned char i_language[3];
+
+    char     rgs_language[3]; /* ISO-639-2/T */
 
     char *psz_notice;
 } MP4_Box_data_cprt_t;
@@ -1282,6 +1287,7 @@ typedef struct MP4_Box_s
 
     uint32_t     i_type;
     uint32_t     i_shortsize;
+    uint32_t     i_handler;  /* stsd handler */
 
     UUID_t       i_uuid;  /* Set if i_type == "uuid" */
 

@@ -1,3 +1,12 @@
+vlc (2.2.0-0ubuntu0.14.10.1) utopic-security; urgency=medium
+
+  * Update to final 2.2.0 release to fix multiple security issues
+  * d/p/codec-schroedinger-fix-potential-buffer-overflow.patch: add
+    patch from vivid package to fix overflow.
+  * debian/vlc-nox.install.in: added libsftp_plugin.so.
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Thu, 26 Mar 2015 08:33:14 -0400
+
 vlc (2.2.0~pre2-4build1) utopic; urgency=medium
 
   * Rebuild against libav11.

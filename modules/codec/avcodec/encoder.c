@@ -2,7 +2,7 @@
  * encoder.c: video and audio encoder using the libavcodec library
  *****************************************************************************
  * Copyright (C) 1999-2004 VLC authors and VideoLAN
- * $Id: 3e18086b82785999ff820f454d0f406a2b504fa6 $
+ * $Id: 0b25b6c3f5658f9c0defa34532fb4ecd123d8613 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -280,6 +280,9 @@ int OpenEncoder( vlc_object_t *p_this )
         i_codec_id = AV_CODEC_ID_RAWVIDEO;
         psz_namecodec = "Raw video";
     }
+
+    if( i_cat == UNKNOWN_ES )
+        return VLC_EGENERIC;
 
     if( p_enc->fmt_out.i_cat == VIDEO_ES && i_cat != VIDEO_ES )
     {
@@ -624,7 +627,7 @@ int OpenEncoder( vlc_object_t *p_this )
 
         p_context->mb_decision = p_sys->i_hq;
 
-        if( p_sys->i_quality )
+        if( p_sys->i_quality && !p_enc->fmt_out.i_bitrate )
         {
             p_context->flags |= CODEC_FLAG_QSCALE;
             p_context->global_quality = p_sys->i_quality;

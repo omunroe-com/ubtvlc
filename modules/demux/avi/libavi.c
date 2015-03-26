@@ -2,7 +2,7 @@
  * libavi.c : LibAVI
  *****************************************************************************
  * Copyright (C) 2001 VLC authors and VideoLAN
- * $Id: 075d7d9cb2111e3f016e8d40753849efb14c50d1 $
+ * $Id: d0cfe714168642e90d09d6b72e1b0c986f051146 $
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -460,9 +460,10 @@ static int AVI_ChunkRead_strf( stream_t *s, avi_chunk_t *p_chk )
             {
                 p_chk->strf.vids.p_bih->biSize = p_chk->common.i_chunk_size;
             }
-            uint64_t i_extrasize = p_chk->common.i_chunk_size - sizeof(VLC_BITMAPINFOHEADER);
-            if( i_extrasize > 0 )
+            if ( p_chk->common.i_chunk_size > sizeof(VLC_BITMAPINFOHEADER) )
             {
+                uint64_t i_extrasize = p_chk->common.i_chunk_size - sizeof(VLC_BITMAPINFOHEADER);
+
                 /* There's a color palette appended, set up VLC_BITMAPINFO */
                 memcpy( &p_chk->strf.vids.p_bih[1],
                         p_buff + 8 + sizeof(VLC_BITMAPINFOHEADER), /* 8=fourrc+size */
@@ -471,12 +472,12 @@ static int AVI_ChunkRead_strf( stream_t *s, avi_chunk_t *p_chk )
                 if ( !p_chk->strf.vids.p_bih->biClrUsed )
                     p_chk->strf.vids.p_bih->biClrUsed = (1 << p_chk->strf.vids.p_bih->biBitCount);
 
-                if( i_extrasize > (UINT32_MAX * sizeof(uint32_t)) )
+                if( i_extrasize / sizeof(uint32_t) > UINT32_MAX )
                     p_chk->strf.vids.p_bih->biClrUsed = UINT32_MAX;
                 else
                 {
                     p_chk->strf.vids.p_bih->biClrUsed =
-                            __MAX( i_extrasize / sizeof(uint32_t),
+                            __MIN( i_extrasize / sizeof(uint32_t),
                                    p_chk->strf.vids.p_bih->biClrUsed );
                 }
 
@@ -762,8 +763,19 @@ static const struct
     { AVIFOURCC_ISTR, "Starring" },
     { AVIFOURCC_IFRM, "Total number of parts" },
     { AVIFOURCC_strn, "Stream name" },
+    { AVIFOURCC_IAS1, "First Language" },
+    { AVIFOURCC_IAS2, "Second Language" },
+    { AVIFOURCC_IAS3, "Third Language" },
+    { AVIFOURCC_IAS4, "Fourth Language" },
+    { AVIFOURCC_IAS5, "Fifth Language" },
+    { AVIFOURCC_IAS6, "Sixth Language" },
+    { AVIFOURCC_IAS7, "Seventh Language" },
+    { AVIFOURCC_IAS8, "Eighth Language" },
+    { AVIFOURCC_IAS9, "Ninth Language" },
+
     { 0,              "???" }
 };
+
 static int AVI_ChunkRead_strz( stream_t *s, avi_chunk_t *p_chk )
 {
     int i_index;
@@ -872,6 +884,15 @@ static const struct
     { AVIFOURCC_ICNT, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
     { AVIFOURCC_ISTR, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
     { AVIFOURCC_IFRM, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
+    { AVIFOURCC_IAS1, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
+    { AVIFOURCC_IAS2, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
+    { AVIFOURCC_IAS3, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
+    { AVIFOURCC_IAS4, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
+    { AVIFOURCC_IAS5, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
+    { AVIFOURCC_IAS6, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
+    { AVIFOURCC_IAS7, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
+    { AVIFOURCC_IAS8, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
+    { AVIFOURCC_IAS9, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
 
 
     { AVIFOURCC_strn, AVI_ChunkRead_strz, AVI_ChunkFree_strz },

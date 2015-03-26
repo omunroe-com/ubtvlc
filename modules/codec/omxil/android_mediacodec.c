@@ -46,7 +46,10 @@
 #define INFO_OUTPUT_FORMAT_CHANGED  -2
 #define INFO_TRY_AGAIN_LATER        -1
 
-extern JavaVM *myVm;
+#define THREAD_NAME "android_mediacodec"
+
+extern int jni_attach_thread(JNIEnv **env, const char *thread_name);
+extern void jni_detach_thread();
 /* JNI functions to get/set an Android Surface object. */
 extern jobject jni_LockAndGetAndroidJavaSurface();
 extern void jni_UnlockAndroidSurface();
@@ -327,7 +330,7 @@ static int OpenDecoder(vlc_object_t *p_this)
     p_dec->b_need_packetized = true;
 
     JNIEnv* env = NULL;
-    (*myVm)->AttachCurrentThread(myVm, &env, NULL);
+    jni_attach_thread(&env, THREAD_NAME);
 
     for (int i = 0; classes[i].name; i++) {
         *(jclass*)((uint8_t*)p_sys + classes[i].offset) =
@@ -378,21 +381,27 @@ static int OpenDecoder(vlc_object_t *p_this)
     jobject codec_name = NULL;
 
     for (int i = 0; i < num_codecs; i++) {
-        jobject info = (*env)->CallStaticObjectMethod(env, p_sys->media_codec_list_class,
-                                                      p_sys->get_codec_info_at, i);
-        if ((*env)->CallBooleanMethod(env, info, p_sys->is_encoder)) {
-            (*env)->DeleteLocalRef(env, info);
-            continue;
-        }
-
-        jobject codec_capabilities = (*env)->CallObjectMethod(env, info, p_sys->get_capabilities_for_type,
-                                                              (*env)->NewStringUTF(env, mime));
+        jobject codec_capabilities = NULL;
         jobject profile_levels = NULL;
-        int profile_levels_len = 0;
+        jobject info = NULL;
+        jobject name = NULL;
+        jobject types = NULL;
+        jsize name_len = 0;
+        int profile_levels_len = 0, num_types = 0;
+        const char *name_ptr = NULL;
+        bool found = false;
+
+        info = (*env)->CallStaticObjectMethod(env, p_sys->media_codec_list_class,
+                                              p_sys->get_codec_info_at, i);
+        if ((*env)->CallBooleanMethod(env, info, p_sys->is_encoder))
+            goto loopclean;
+
+        codec_capabilities = (*env)->CallObjectMethod(env, info, p_sys->get_capabilities_for_type,
+                                                      (*env)->NewStringUTF(env, mime));
         if ((*env)->ExceptionOccurred(env)) {
             msg_Warn(p_dec, "Exception occurred in MediaCodecInfo.getCapabilitiesForType");
             (*env)->ExceptionClear(env);
-            break;
+            goto loopclean;
         } else if (codec_capabilities) {
             profile_levels = (*env)->GetObjectField(env, codec_capabilities, p_sys->profile_levels_field);
             if (profile_levels)
@@ -400,9 +409,15 @@ static int OpenDecoder(vlc_object_t *p_this)
         }
         msg_Dbg(p_dec, "Number of profile levels: %d", profile_levels_len);
 
-        jobject types = (*env)->CallObjectMethod(env, info, p_sys->get_supported_types);
-        int num_types = (*env)->GetArrayLength(env, types);
-        bool found = false;
+        types = (*env)->CallObjectMethod(env, info, p_sys->get_supported_types);
+        num_types = (*env)->GetArrayLength(env, types);
+        name = (*env)->CallObjectMethod(env, info, p_sys->get_name);
+        name_len = (*env)->GetStringUTFLength(env, name);
+        name_ptr = (*env)->GetStringUTFChars(env, name, NULL);
+        found = false;
+
+        if (!strncmp(name_ptr, "OMX.google.", __MIN(11, name_len)))
+            goto loopclean;
         for (int j = 0; j < num_types && !found; j++) {
             jobject type = (*env)->GetObjectArrayElement(env, types, j);
             if (!jstrcmp(env, type, mime)) {
@@ -415,6 +430,7 @@ static int OpenDecoder(vlc_object_t *p_this)
 
                         int omx_profile = (*env)->GetIntField(env, profile_level, p_sys->profile_field);
                         size_t codec_profile = convert_omx_to_profile_idc(omx_profile);
+                        (*env)->DeleteLocalRef(env, profile_level);
                         if (codec_profile != fmt_profile)
                             continue;
                         /* Some encoders set the level too high, thus we ignore it for the moment.
@@ -428,18 +444,25 @@ static int OpenDecoder(vlc_object_t *p_this)
             (*env)->DeleteLocalRef(env, type);
         }
         if (found) {
-            jobject name = (*env)->CallObjectMethod(env, info, p_sys->get_name);
-            jsize name_len = (*env)->GetStringUTFLength(env, name);
-            const char *name_ptr = (*env)->GetStringUTFChars(env, name, NULL);
             msg_Dbg(p_dec, "using %.*s", name_len, name_ptr);
             p_sys->name = malloc(name_len + 1);
             memcpy(p_sys->name, name_ptr, name_len);
             p_sys->name[name_len] = '\0';
-            (*env)->ReleaseStringUTFChars(env, name, name_ptr);
             codec_name = name;
-            break;
         }
-        (*env)->DeleteLocalRef(env, info);
+loopclean:
+        if (name)
+            (*env)->ReleaseStringUTFChars(env, name, name_ptr);
+        if (profile_levels)
+            (*env)->DeleteLocalRef(env, profile_levels);
+        if (types)
+            (*env)->DeleteLocalRef(env, types);
+        if (codec_capabilities)
+            (*env)->DeleteLocalRef(env, codec_capabilities);
+        if (info)
+            (*env)->DeleteLocalRef(env, info);
+        if (found)
+            break;
     }
 
     if (!codec_name) {
@@ -537,7 +560,7 @@ static int OpenDecoder(vlc_object_t *p_this)
         goto error;
     (*env)->DeleteLocalRef(env, format);
 
-    (*myVm)->DetachCurrentThread(myVm);
+    jni_detach_thread();
 
     const int timestamp_fifo_size = 32;
     p_sys->timestamp_fifo = timestamp_FifoNew(timestamp_fifo_size);
@@ -547,7 +570,7 @@ static int OpenDecoder(vlc_object_t *p_this)
     return VLC_SUCCESS;
 
  error:
-    (*myVm)->DetachCurrentThread(myVm);
+    jni_detach_thread();
     CloseDecoder(p_this);
     return VLC_EGENERIC;
 }
@@ -565,7 +588,7 @@ static void CloseDecoder(vlc_object_t *p_this)
      * to prevent the vout from using destroyed output buffers. */
     if (p_sys->direct_rendering)
         InvalidateAllPictures(p_dec);
-    (*myVm)->AttachCurrentThread(myVm, &env, NULL);
+    jni_attach_thread(&env, THREAD_NAME);
     if (p_sys->input_buffers)
         (*env)->DeleteGlobalRef(env, p_sys->input_buffers);
     if (p_sys->output_buffers)
@@ -591,7 +614,7 @@ static void CloseDecoder(vlc_object_t *p_this)
     }
     if (p_sys->buffer_info)
         (*env)->DeleteGlobalRef(env, p_sys->buffer_info);
-    (*myVm)->DetachCurrentThread(myVm);
+    jni_detach_thread();
 
     free(p_sys->name);
     ArchitectureSpecificCopyHooksDestroy(p_sys->pixel_format, &p_sys->architecture_specific_data);
@@ -625,14 +648,14 @@ static void DisplayBuffer(picture_sys_t* p_picsys, bool b_render)
 
     /* Release the MediaCodec buffer. */
     JNIEnv *env = NULL;
-    (*myVm)->AttachCurrentThread(myVm, &env, NULL);
+    jni_attach_thread(&env, THREAD_NAME);
     (*env)->CallVoidMethod(env, p_sys->codec, p_sys->release_output_buffer, i_index, b_render);
     if ((*env)->ExceptionOccurred(env)) {
         msg_Err(p_dec, "Exception in MediaCodec.releaseOutputBuffer (DisplayBuffer)");
         (*env)->ExceptionClear(env);
     }
 
-    (*myVm)->DetachCurrentThread(myVm);
+    jni_detach_thread();
     p_picsys->b_valid = false;
 
     vlc_mutex_unlock(get_android_opaque_mutex());
@@ -829,8 +852,14 @@ static void GetOutput(decoder_t *p_dec, JNIEnv *env, picture_t **pp_pic, jlong t
                     sar_den = p_dec->fmt_in.video.i_sar_den;
                 }
                 jni_SetAndroidSurfaceSizeEnv(env, width, height, width, height, sar_num, sar_den);
-            } else
-                GetVlcChromaFormat(p_sys->pixel_format, &p_dec->fmt_out.i_codec, &name);
+            } else {
+                if (!GetVlcChromaFormat(p_sys->pixel_format,
+                                        &p_dec->fmt_out.i_codec, &name)) {
+                    msg_Err(p_dec, "color-format not recognized");
+                    p_sys->error_state = true;
+                    return;
+                }
+            }
 
             msg_Dbg(p_dec, "output: %d %s, %dx%d stride %d %d, crop %d %d %d %d",
                     p_sys->pixel_format, name, width, height, p_sys->stride, p_sys->slice_height,
@@ -888,7 +917,7 @@ static picture_t *DecodeVideo(decoder_t *p_dec, block_t **pp_block)
         return NULL;
     }
 
-    (*myVm)->AttachCurrentThread(myVm, &env, NULL);
+    jni_attach_thread(&env, THREAD_NAME);
 
     if (p_block->i_flags & (BLOCK_FLAG_DISCONTINUITY|BLOCK_FLAG_CORRUPTED)) {
         block_Release(p_block);
@@ -908,7 +937,7 @@ static picture_t *DecodeVideo(decoder_t *p_dec, block_t **pp_block)
             }
         }
         p_sys->decoded = false;
-        (*myVm)->DetachCurrentThread(myVm);
+        jni_detach_thread();
         return NULL;
     }
 
@@ -934,13 +963,15 @@ static picture_t *DecodeVideo(decoder_t *p_dec, block_t **pp_block)
 
         if (index < 0) {
             GetOutput(p_dec, env, &p_pic, timeout);
+            if (p_sys->error_state)
+                break;
             if (p_pic) {
                 /* If we couldn't get an available input buffer but a
                  * decoded frame is available, we return the frame
                  * without assigning NULL to *pp_block. The next call
                  * to DecodeVideo will try to send the input packet again.
                  */
-                (*myVm)->DetachCurrentThread(myVm);
+                jni_detach_thread();
                 return p_pic;
             }
             timeout = 30 * 1000;
@@ -966,7 +997,7 @@ static picture_t *DecodeVideo(decoder_t *p_dec, block_t **pp_block)
                     block_Release(p_block);
                     *pp_block = NULL;
                 }
-                (*myVm)->DetachCurrentThread(myVm);
+                jni_detach_thread();
                 return invalid_picture;
             }
             continue;
@@ -996,9 +1027,15 @@ static picture_t *DecodeVideo(decoder_t *p_dec, block_t **pp_block)
         p_sys->decoded = true;
         break;
     }
+    if (p_sys->error_state) {
+        if (p_pic)
+            decoder_DeletePicture(p_dec, p_pic);
+        jni_detach_thread();
+        return NULL;
+    }
     if (!p_pic)
         GetOutput(p_dec, env, &p_pic, 0);
-    (*myVm)->DetachCurrentThread(myVm);
+    jni_detach_thread();
 
     block_Release(p_block);
     *pp_block = NULL;
