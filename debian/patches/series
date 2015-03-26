@@ -1,1 +1,2 @@
 hurd.patch
+codec-schroedinger-fix-potential-buffer-overflow.patch

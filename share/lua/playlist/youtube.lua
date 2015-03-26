@@ -88,8 +88,8 @@ function js_descramble( sig, js_url )
         -- Buffer lines for later, so we don't have to make a second
         -- HTTP request later
         table.insert( lines, line )
-        -- c&&(b.signature=ij(c));
-        descrambler = string.match( line, "%.signature=(.-)%(" )
+        -- c&&a.set("signature",br(c));
+        descrambler = string.match( line, "%.set%(\"signature\",(.-)%(" )
     end
 
     -- Fetch the code of the descrambler function. The function is
@@ -215,6 +215,7 @@ function probe()
     return (  string.match( vlc.path, "/watch%?" ) -- the html page
             or string.match( vlc.path, "/get_video_info%?" ) -- info API
             or string.match( vlc.path, "/v/" ) -- video in swf player
+            or string.match( vlc.path, "/embed/" ) -- embedded player iframe
             or string.match( vlc.path, "/player2.swf" ) ) -- another player url
 end
 
@@ -255,21 +256,21 @@ function parse()
             -- "SWF_ARGS", "swfArgs", "PLAYER_CONFIG", "playerConfig" ...
             if string.match( line, "ytplayer%.config" ) then
 
-                local js_url = string.match( line, "\"js\": \"(.-)\"" )
+                local js_url = string.match( line, "\"js\": *\"(.-)\"" )
                 if js_url then
                     js_url = string.gsub( js_url, "\\/", "/" )
                     js_url = string.gsub( js_url, "^//", vlc.access.."://" )
                 end
 
                 if not fmt then
-                    fmt_list = string.match( line, "\"fmt_list\": \"(.-)\"" )
+                    fmt_list = string.match( line, "\"fmt_list\": *\"(.-)\"" )
                     if fmt_list then
                         fmt_list = string.gsub( fmt_list, "\\/", "/" )
                         fmt = get_fmt( fmt_list )
                     end
                 end
 
-                url_map = string.match( line, "\"url_encoded_fmt_stream_map\": \"(.-)\"" )
+                url_map = string.match( line, "\"url_encoded_fmt_stream_map\": *\"(.-)\"" )
                 if url_map then
                     -- FIXME: do this properly
                     url_map = string.gsub( url_map, "\\u0026", "&" )
@@ -279,7 +280,7 @@ function parse()
                 if not path then
                     -- If this is a live stream, the URL map will be empty
                     -- and we get the URL from this field instead 
-                    local hlsvp = string.match( line, "\"hlsvp\": \"(.-)\"" )
+                    local hlsvp = string.match( line, "\"hlsvp\": *\"(.-)\"" )
                     if hlsvp then
                         hlsvp = string.gsub( hlsvp, "\\/", "/" )
                         path = hlsvp
@@ -372,6 +373,9 @@ function parse()
         video_id = get_url_param( vlc.path, "video_id" )
         if not video_id then
             _,_,video_id = string.find( vlc.path, "/v/([^?]*)" )
+        end
+        if not video_id then
+            video_id = string.match( vlc.path, "/embed/([^?]*)" )
         end
         if not video_id then
             vlc.msg.err( "Couldn't extract youtube video URL" )

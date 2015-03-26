@@ -306,8 +306,12 @@ vlc_AudioSessionEvents_OnChannelVolumeChanged(IAudioSessionEvents *this,
     aout_sys_t *sys = vlc_AudioSessionEvents_sys(this);
     audio_output_t *aout = sys->aout;
 
-    msg_Dbg(aout, "channel volume %lu of %lu changed: %f", changed, count,
-            vols[changed]);
+    if (changed != (DWORD)-1)
+        msg_Dbg(aout, "channel volume %lu of %lu changed: %f", changed, count,
+                vols[changed]);
+    else
+        msg_Dbg(aout, "%lu channels volume changed", count);
+
     (void) ctx;
     return S_OK;
 }
@@ -971,7 +975,7 @@ static HRESULT MMSession(audio_output_t *aout, IMMDeviceEnumerator *it)
         {
             msg_Dbg(aout, "volume from %+f dB to %+f dB with %f dB increments",
                     min, max, inc);
-            base_volume = powf(10.f, max / 20.f + .3f);
+            base_volume = powf(10.f, max / 20.f);
         }
         else
             msg_Err(aout, "cannot get volume range (error 0x%lx)", hr);

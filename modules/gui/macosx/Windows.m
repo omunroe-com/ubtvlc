@@ -2,7 +2,7 @@
  * Windows.m: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2012-2014 VLC authors and VideoLAN
- * $Id: 4f6bfc62659b244f7d91990d86f07ddbf4019006 $
+ * $Id: 331da6158e814dd141d4403357b7d5ef340d594b $
  *
  * Authors: Felix Paul Kühne <fkuehne -at- videolan -dot- org>
  *          David Fuhrmann <david dot fuhrmann at googlemail dot com>
@@ -256,7 +256,7 @@
 
     BOOL b_inFullscreen = [self fullscreen] || ([self respondsToSelector:@selector(inFullscreenTransition)] && [(VLCVideoWindowCommon *)self inFullscreenTransition]);
 
-    if(OSX_MAVERICKS && b_inFullscreen && constrainedRect.size.width == screenRect.size.width
+    if((OSX_MAVERICKS || OSX_YOSEMITE) && b_inFullscreen && constrainedRect.size.width == screenRect.size.width
           && constrainedRect.size.height != screenRect.size.height
           && abs(screenRect.size.height - constrainedRect.size.height) <= 25.) {
 
@@ -335,9 +335,8 @@
 
     if (b_nativeFullscreenMode) {
         [self setCollectionBehavior: NSWindowCollectionBehaviorFullScreenPrimary];
-    } else {
-        [o_titlebar_view setFullscreenButtonHidden: YES];
     }
+
 
     [super awakeFromNib];
 }
@@ -646,6 +645,17 @@
 }
 
 #pragma mark -
+#pragma mark Key events
+
+- (void)flagsChanged:(NSEvent *)theEvent
+{
+    BOOL b_alt_pressed = ([theEvent modifierFlags] & NSAlternateKeyMask) != 0;
+    [o_titlebar_view informModifierPressed: b_alt_pressed];
+
+    [super flagsChanged:theEvent];
+}
+
+#pragma mark -
 #pragma mark Lion native fullscreen handling
 
 - (void)becomeKeyWindow
@@ -710,12 +720,13 @@
 
 - (void)windowWillEnterFullScreen:(NSNotification *)notification
 {
-    i_originalLevel = [self level];
     b_windowShouldExitFullscreenWhenFinished = [[VLCMain sharedInstance] activeVideoPlayback];
 
+    NSInteger i_currLevel = [self level];
     // b_fullscreen and b_in_fullscreen_transition must not be true yet
     [[[VLCMain sharedInstance] voutController] updateWindowLevelForHelperWindows: NSNormalWindowLevel];
     [self setLevel:NSNormalWindowLevel];
+    i_originalLevel = i_currLevel;
 
     b_in_fullscreen_transition = YES;
 
@@ -867,10 +878,11 @@
         [screen blackoutOtherScreens];
 
     /* Make sure we don't see the window flashes in float-on-top mode */
-    i_originalLevel = [self level];
+    NSInteger i_currLevel = [self level];
     // b_fullscreen must not be true yet
     [[[VLCMain sharedInstance] voutController] updateWindowLevelForHelperWindows: NSNormalWindowLevel];
     [self setLevel:NSNormalWindowLevel];
+    i_originalLevel = i_currLevel; // would be overwritten by previous call
 
     /* Only create the o_fullscreen_window if we are not in the middle of the zooming animation */
     if (!o_fullscreen_window) {

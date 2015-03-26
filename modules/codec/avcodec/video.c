@@ -2,7 +2,7 @@
  * video.c: video decoder using the libavcodec library
  *****************************************************************************
  * Copyright (C) 1999-2001 VLC authors and VideoLAN
- * $Id: 2e119d04c40c0f0b79d6d4c24726c4a87a207259 $
+ * $Id: a063754229315e3383bca4dce2aa6c026aa26bc0 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -351,6 +351,21 @@ int InitVideoDec( decoder_t *p_dec, AVCodecContext *p_context,
 # endif
     }
 
+    /* Workaround: frame multithreading is not compatible with
+     * DXVA2. When a frame is being copied to host memory, the frame
+     * is locked and cannot be used as a reference frame
+     * simultaneously and thus decoding fails for some frames. This
+     * causes major image corruption. */
+# if defined(_WIN32)
+    char *avcodec_hw = var_InheritString( p_dec, "avcodec-hw" );
+    if( avcodec_hw == NULL || strcasecmp( avcodec_hw, "none" ) )
+    {
+        msg_Warn( p_dec, "threaded frame decoding is not compatible with DXVA2, disabled" );
+        p_sys->p_context->thread_type &= ~FF_THREAD_FRAME;
+    }
+    free( avcodec_hw );
+# endif
+
     if( p_sys->p_context->thread_type & FF_THREAD_FRAME )
         p_dec->i_extra_picture_buffers = 2 * p_sys->p_context->thread_count;
 #endif
@@ -420,11 +435,14 @@ int InitVideoDec( decoder_t *p_dec, AVCodecContext *p_context,
     if( ffmpeg_OpenCodec( p_dec ) < 0 )
     {
         msg_Err( p_dec, "cannot open codec (%s)", p_sys->psz_namecodec );
-        av_free( p_sys->p_ff_pic );
+        avcodec_free_frame( &p_sys->p_ff_pic );
         vlc_sem_destroy( &p_sys->sem_mt );
         free( p_sys );
         return VLC_EGENERIC;
     }
+
+    if ( p_dec->fmt_in.i_codec == VLC_CODEC_VP9 )
+        p_dec->b_need_packetized = true;
 
     return VLC_SUCCESS;
 }
@@ -797,7 +815,7 @@ void EndVideoDec( decoder_t *p_dec )
     wait_mt( p_sys );
 
     if( p_sys->p_ff_pic )
-        av_free( p_sys->p_ff_pic );
+        avcodec_free_frame( &p_sys->p_ff_pic );
 
     if( p_sys->p_va )
         vlc_va_Delete( p_sys->p_va );

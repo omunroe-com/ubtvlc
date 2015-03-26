@@ -2,7 +2,7 @@
  * ps.h: Program Stream demuxer helper
  *****************************************************************************
  * Copyright (C) 2004-2009 VLC authors and VideoLAN
- * $Id: c36bdcdb0b585418628b1e27968ccc1d60cc7ade $
+ * $Id: ab2d0db1a2b7a33886f8dca75c43b3bc79136d28 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -190,6 +190,12 @@ static inline int ps_track_fill( ps_track_t *tk, ps_psm_t *p_psm, int i_id )
         {
             es_format_Init( &tk->fmt, AUDIO_ES, VLC_CODEC_MPGA );
         }
+        else if( i_id == 0xe2 || /* Primary H.264 in evob */
+                 i_id == 0xe3 )  /* Seconday H.264 in evob */
+        {
+                es_format_Init( &tk->fmt, VIDEO_ES, VLC_CODEC_H264 );
+        }
+
 
         if( tk->fmt.i_cat == UNKNOWN_ES && ( i_id&0xf0 ) == 0xe0 )
         {
@@ -648,7 +654,7 @@ static inline int ps_psm_fill( ps_psm_t *p_psm, block_t *p_pkt,
             }
         }
 
-        tmp_es = realloc_or_free( p_psm->es, sizeof(ps_es_t *) * (p_psm->i_es+1) );
+        tmp_es = realloc( p_psm->es, sizeof(ps_es_t *) * (p_psm->i_es+1) );
         if( tmp_es )
         {
             p_psm->es = tmp_es;

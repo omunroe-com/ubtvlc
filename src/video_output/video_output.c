@@ -6,7 +6,7 @@
  * thread, and destroy a previously oppened video output thread.
  *****************************************************************************
  * Copyright (C) 2000-2007 VLC authors and VideoLAN
- * $Id: 18f22ce495e5f72519ce8ac33c6ea4c266558ceb $
+ * $Id: bc1fd6c5f849cbdbb0207f2d3c14758b56b11d6c $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -806,6 +806,8 @@ static void ThreadChangeFilters(vout_thread_t *vout,
         }
     }
 
+    es_format_Clean(&fmt_target);
+
     if (vout->p->filter.configuration != filters) {
         free(vout->p->filter.configuration);
         vout->p->filter.configuration = filters ? strdup(filters) : NULL;
@@ -1121,6 +1123,7 @@ static int ThreadDisplayPicture(vout_thread_t *vout, mtime_t *deadline)
         date_refresh = vout->p->displayed.date + VOUT_REDISPLAY_DELAY - render_delay;
         refresh = date_refresh <= date;
     }
+    bool force_refresh = !drop_next_frame && refresh;
 
     if (!first && !refresh && !drop_next_frame) {
         if (!frame_by_frame) {
@@ -1142,8 +1145,9 @@ static int ThreadDisplayPicture(vout_thread_t *vout, mtime_t *deadline)
         return VLC_EGENERIC;
 
     /* display the picture immediately */
-    bool is_forced = frame_by_frame || (!drop_next_frame && refresh) || vout->p->displayed.current->b_force;
-    return ThreadDisplayRenderPicture(vout, is_forced);
+    bool is_forced = frame_by_frame || force_refresh || vout->p->displayed.current->b_force;
+    int ret = ThreadDisplayRenderPicture(vout, is_forced);
+    return force_refresh ? VLC_EGENERIC : ret;
 }
 
 static void ThreadDisplaySubpicture(vout_thread_t *vout,
@@ -1260,7 +1264,14 @@ static void ThreadStep(vout_thread_t *vout, mtime_t *duration)
 
 static void ThreadChangeFullscreen(vout_thread_t *vout, bool fullscreen)
 {
-    vout_SetDisplayFullscreen(vout->p->display.vd, fullscreen);
+    vout_window_t *window = vout->p->window.object;
+
+    if (window != NULL)
+        vout_window_SetFullScreen(window, fullscreen);
+    else
+    if (vout->p->display.vd != NULL)
+        vout_display_SendEvent(vout->p->display.vd,
+                               VOUT_DISPLAY_EVENT_FULLSCREEN, fullscreen);
 }
 
 static void ThreadChangeWindowState(vout_thread_t *vout, unsigned state)
@@ -1448,8 +1459,17 @@ static int ThreadReinit(vout_thread_t *vout,
     }
     state.sar.num = 0;
     state.sar.den = 0;
+
     /* FIXME current vout "variables" are not in sync here anymore
      * and I am not sure what to do */
+    if (state.cfg.display.sar.num <= 0 || state.cfg.display.sar.den <= 0) {
+        state.cfg.display.sar.num = 1;
+        state.cfg.display.sar.den = 1;
+    }
+    if (state.cfg.zoom.num <= 0 || state.cfg.zoom.den <= 0) {
+        state.cfg.zoom.num = 1;
+        state.cfg.zoom.den = 1;
+    }
 
     vout->p->original = original;
     vout->p->dpb_size = cfg->dpb_size;
