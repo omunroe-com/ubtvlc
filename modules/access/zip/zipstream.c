@@ -2,7 +2,7 @@
  * zipstream.c: stream_filter that creates a XSPF playlist from a Zip archive
  *****************************************************************************
  * Copyright (C) 2009 VLC authors and VideoLAN
- * $Id: f5057386695b1ef0a72f14005fdaf28d7a500de6 $
+ * $Id: 3bb9232caa6374d72585e155f6b99ef162c7170c $
  *
  * Authors: Jean-Philippe André <jpeg@videolan.org>
  *
@@ -715,7 +715,7 @@ static node* findOrCreateParentNode( node *root, const char *fullpath )
 
     while( current )
     {
-        if( !strcmp( current->name, folder ) )
+        if( current->name && !strcmp( current->name, folder ) )
         {
             /* We found the folder, go recursively deeper */
             return findOrCreateParentNode( current, sep );

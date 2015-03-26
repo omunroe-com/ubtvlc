@@ -2,7 +2,7 @@
  * dmo.c : DirectMedia Object decoder module for vlc
  *****************************************************************************
  * Copyright (C) 2002, 2003 VLC authors and VideoLAN
- * $Id: 6595f70acb2a76809e54851c1d0a2f27dffdc3bf $
+ * $Id: dd1fbbca9ffd21c102ff66b6fa15e89a3fdcece1 $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -1310,6 +1310,9 @@ static int EncoderSetAudioType( encoder_t *p_enc, IMediaObject *p_dmo )
         msg_Dbg( p_enc, "found cbSize: %i", p_wf->cbSize );
         p_enc->fmt_out.i_extra = p_wf->cbSize;
         p_enc->fmt_out.p_extra = malloc( p_enc->fmt_out.i_extra );
+        if( p_enc->fmt_out.p_extra == NULL)
+            return VLC_EGENERIC;
+
         memcpy( p_enc->fmt_out.p_extra, &p_wf[1], p_enc->fmt_out.i_extra );
     }
 

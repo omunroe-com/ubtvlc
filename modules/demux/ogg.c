@@ -2,7 +2,7 @@
  * ogg.c : ogg stream demux module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2007 VLC authors and VideoLAN
- * $Id: 967438d86cc195b77d71bd9fea1c21d3e4039b6f $
+ * $Id: 28e7cf07b97411864886118fb2dd18071d6df0f6 $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *          Andre Pang <Andre.Pang@csiro.au> (Annodex support)
@@ -1018,6 +1018,13 @@ static void Ogg_DecodePacket( demux_t *p_demux,
         /* We remove the header from the packet */
         i_header_len = (*p_oggpacket->packet & PACKET_LEN_BITS01) >> 6;
         i_header_len |= (*p_oggpacket->packet & PACKET_LEN_BITS2) << 1;
+
+        if( i_header_len >= p_oggpacket->bytes )
+        {
+            msg_Dbg( p_demux, "discarding invalid packet" );
+            block_Release( p_block );
+            return;
+        }
 
         if( p_stream->fmt.i_codec == VLC_CODEC_SUBT)
         {

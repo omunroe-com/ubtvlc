@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vlc\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2014-02-21 15:55+0100\n"
+"POT-Creation-Date: 2015-02-26 21:34+0100\n"
 "PO-Revision-Date: 2010-09-21 15:58+0400\n"
 "Last-Translator: Eduard Babayan <edo248@gmail.com>\n"
 "Language-Team: VLC Armenian <edo248@gmail.com>\n"
@@ -20,7 +20,7 @@ msgstr ""
 "X-Poedit-Language: Armenian\n"
 "X-Poedit-Country: ARMENIA\n"
 
-#: include/vlc_common.h:922
+#: include/vlc_common.h:923
 #, fuzzy
 msgid ""
 "This program comes with NO WARRANTY, to the extent permitted by law.\n"
@@ -91,7 +91,6 @@ msgstr "Կոճակների կարգավորումներ"
 #: modules/services_discovery/mediadirs.c:76 modules/stream_out/es.c:93
 #: modules/stream_out/transcode/transcode.c:191
 #: share/lua/http/dialogs/create_stream.html:150
-#: modules/gui/qt4/ui/profiles.h:704 modules/gui/qt4/ui/profiles.h:735
 msgid "Audio"
 msgstr "Ձայն"
 
@@ -104,7 +103,6 @@ msgid "General audio settings"
 msgstr "Ընդհանուր ձայնային կարգավորումներ"
 
 #: include/vlc_config_cat.h:58 include/vlc_config_cat.h:80
-#: modules/gui/qt4/ui/profiles.h:733 modules/gui/qt4/ui/profiles.h:743
 msgid "Filters"
 msgstr "Զտիչներ"
 
@@ -152,8 +150,6 @@ msgstr "Տարբեր ձայնային կարգավորումներ եւ մոդո
 #: modules/services_discovery/mediadirs.c:69 modules/stream_out/es.c:101
 #: modules/stream_out/transcode/transcode.c:161
 #: share/lua/http/dialogs/create_stream.html:147
-#: modules/gui/qt4/ui/profiles.h:705 modules/gui/qt4/ui/profiles.h:709
-#: modules/gui/qt4/ui/sprefs_video.h:353
 msgid "Video"
 msgstr "Վիդեո"
 
@@ -413,7 +409,6 @@ msgstr ""
 "երգացանկում."
 
 #: include/vlc_config_cat.h:180 src/libvlc-module.c:1799
-#: modules/gui/qt4/ui/video_effects.h:1401
 msgid "Advanced"
 msgstr "Ընդլայնված "
 
@@ -427,7 +422,6 @@ msgstr "Ընդլայնված կարգավորումներ"
 
 #: include/vlc_config_cat.h:188 modules/gui/macosx/open.m:133
 #: modules/gui/macosx/open.m:597 modules/gui/macosx/simple_prefs.m:340
-#: modules/gui/qt4/ui/sprefs_input.h:354
 msgid "Network"
 msgstr "Ցանց"
 
@@ -528,10 +522,10 @@ msgstr "&Ծրագրի Մասին"
 #: include/vlc_intf_strings.h:65 modules/control/rc.c:72
 #: modules/gui/macosx/ControlsBar.m:438 modules/gui/macosx/MainMenu.m:350
 #: modules/gui/macosx/MainMenu.m:457 modules/gui/macosx/MainMenu.m:464
-#: modules/gui/macosx/MainMenu.m:1194 modules/gui/macosx/MainMenu.m:1195
-#: modules/gui/macosx/MainMenu.m:1196 modules/gui/macosx/playlist.m:517
+#: modules/gui/macosx/MainMenu.m:1202 modules/gui/macosx/MainMenu.m:1203
+#: modules/gui/macosx/MainMenu.m:1204 modules/gui/macosx/playlist.m:519
 #: modules/gui/qt4/components/controller.hpp:115
-#: modules/gui/qt4/dialogs/vlm.cpp:550 modules/gui/qt4/ui/open.h:243
+#: modules/gui/qt4/dialogs/vlm.cpp:550
 msgid "Play"
 msgstr "Միացնել"
 
@@ -568,17 +562,17 @@ msgid "Save..."
 msgstr "Պահել..."
 
 #: include/vlc_intf_strings.h:77 modules/gui/macosx/CoreInteraction.m:404
-#: modules/gui/macosx/MainMenu.m:364 modules/gui/macosx/MainMenu.m:1475
+#: modules/gui/macosx/MainMenu.m:364 modules/gui/macosx/MainMenu.m:1479
 msgid "Repeat All"
 msgstr "Կրկնել բոլորը"
 
 #: include/vlc_intf_strings.h:78 modules/gui/macosx/CoreInteraction.m:424
-#: modules/gui/macosx/MainMenu.m:363 modules/gui/macosx/MainMenu.m:1470
+#: modules/gui/macosx/MainMenu.m:363 modules/gui/macosx/MainMenu.m:1474
 msgid "Repeat One"
 msgstr "Կրկնել Մեկը"
 
 #: include/vlc_intf_strings.h:79 src/libvlc-module.c:1398
-#: modules/gui/macosx/MainMenu.m:362 modules/gui/macosx/MainMenu.m:1465
+#: modules/gui/macosx/MainMenu.m:362 modules/gui/macosx/MainMenu.m:1469
 #: modules/gui/qt4/components/controller.hpp:119
 #: modules/gui/qt4/components/controller.hpp:132
 msgid "Random"
@@ -614,7 +608,6 @@ msgid "Search"
 msgstr "Որոնել"
 
 #: include/vlc_intf_strings.h:97 modules/gui/macosx/VideoEffects.m:159
-#: modules/gui/qt4/ui/video_effects.h:1399
 msgid "Waves"
 msgstr "Ալիքներ"
 
@@ -751,9 +744,7 @@ msgstr "Ստերեո"
 #: modules/gui/macosx/VideoEffects.m:169 modules/gui/macosx/VideoEffects.m:191
 #: modules/video_filter/audiobargraph_v.c:74 modules/video_filter/logo.c:79
 #: modules/video_filter/marq.c:139 modules/video_filter/mosaic.c:170
-#: modules/video_filter/rss.c:173 modules/gui/qt4/ui/video_effects.h:1318
-#: modules/gui/qt4/ui/video_effects.h:1361
-#: modules/gui/qt4/ui/video_effects.h:1371
+#: modules/video_filter/rss.c:173
 msgid "Left"
 msgstr "Ձախ"
 
@@ -766,7 +757,7 @@ msgstr "Ձախ"
 #: modules/gui/macosx/VideoEffects.m:171 modules/gui/macosx/VideoEffects.m:193
 #: modules/video_filter/audiobargraph_v.c:74 modules/video_filter/logo.c:79
 #: modules/video_filter/marq.c:139 modules/video_filter/mosaic.c:170
-#: modules/video_filter/rss.c:173 modules/gui/qt4/ui/video_effects.h:1319
+#: modules/video_filter/rss.c:173
 msgid "Right"
 msgstr "Աջ"
 
@@ -993,10 +984,8 @@ msgstr "Ման գալ"
 msgid "Browser Stop"
 msgstr "Ման գալ"
 
-#: src/config/keys.c:66 modules/gui/macosx/playlist.m:518
+#: src/config/keys.c:66 modules/gui/macosx/playlist.m:520
 #: modules/gui/qt4/dialogs/bookmarks.cpp:50
-#: modules/gui/qt4/ui/podcast_configuration.h:104
-#: modules/gui/qt4/ui/streampanel.h:172
 msgid "Delete"
 msgstr "Ջնջել"
 
@@ -1367,14 +1356,12 @@ msgstr "բնօրինակը ID-ն"
 #: src/input/es_out.c:2891 src/input/es_out.c:2894 modules/access/imem.c:67
 #: modules/gui/macosx/ConvertAndSave.m:177
 #: modules/gui/macosx/ConvertAndSave.m:187 modules/gui/macosx/wizard.m:382
-#: modules/gui/qt4/ui/profiles.h:711 modules/gui/qt4/ui/profiles.h:737
-#: modules/gui/qt4/ui/profiles.h:746
 msgid "Codec"
 msgstr "Կոդեկ"
 
 #: src/input/es_out.c:2898 src/input/meta.c:66 modules/access/imem.c:71
 #: modules/gui/macosx/MainMenu.m:76 modules/gui/macosx/simple_prefs.m:355
-#: modules/stream_out/setid.c:49 modules/gui/qt4/ui/sprefs_interface.h:513
+#: modules/stream_out/setid.c:49
 msgid "Language"
 msgstr "Լեզու"
 
@@ -1385,7 +1372,7 @@ msgid "Description"
 msgstr "Նկարագրություն"
 
 #: src/input/es_out.c:2910 modules/gui/macosx/ConvertAndSave.m:189
-#: modules/gui/macosx/output.m:167 modules/gui/qt4/ui/profiles.h:739
+#: modules/gui/macosx/output.m:167
 msgid "Channels"
 msgstr "Կանալներ"
 
@@ -1406,8 +1393,7 @@ msgstr "Բիթ/կտորում"
 #: src/input/es_out.c:2930 modules/access_output/shout.c:92
 #: modules/demux/playlist/shoutcast.c:325
 #: modules/gui/macosx/ConvertAndSave.m:178
-#: modules/gui/macosx/ConvertAndSave.m:188 modules/gui/qt4/ui/profiles.h:712
-#: modules/gui/qt4/ui/profiles.h:738
+#: modules/gui/macosx/ConvertAndSave.m:188
 msgid "Bitrate"
 msgstr "Բիթրեյթ"
 
@@ -1432,7 +1418,6 @@ msgid "%.2f dB"
 msgstr "%.2f դբ"
 
 #: src/input/es_out.c:2954 modules/gui/macosx/ConvertAndSave.m:180
-#: modules/gui/qt4/ui/profiles.h:732
 msgid "Resolution"
 msgstr "Թույլատվություն"
 
@@ -1484,11 +1469,10 @@ msgstr ""
 #: modules/gui/macosx/playlistinfo.m:74 modules/gui/macosx/wizard.m:345
 #: modules/gui/qt4/components/open_panels.cpp:483
 #: modules/gui/qt4/components/open_panels.cpp:497 modules/mux/asf.c:56
-#: modules/gui/qt4/ui/open_disk.h:309
 msgid "Title"
 msgstr "Վերնագիր"
 
-#: src/input/meta.c:56 modules/gui/macosx/playlist.m:1130
+#: src/input/meta.c:56 modules/gui/macosx/playlist.m:1132
 #: modules/gui/macosx/playlistinfo.m:75
 msgid "Artist"
 msgstr "Արտիստ"
@@ -1524,7 +1508,6 @@ msgid "Setting"
 msgstr "Կարգավորումը"
 
 #: src/input/meta.c:65 modules/gui/macosx/open.m:186
-#: modules/gui/qt4/ui/podcast_configuration.h:102
 msgid "URL"
 msgstr "URL"
 
@@ -1560,7 +1543,7 @@ msgstr "Ծրագրեր"
 
 #: src/input/var.c:182 modules/gui/macosx/MainMenu.m:374
 #: modules/gui/macosx/MainMenu.m:375 modules/gui/macosx/open.m:175
-#: modules/gui/macosx/open.m:177 modules/gui/qt4/ui/open_disk.h:310
+#: modules/gui/macosx/open.m:177
 msgid "Chapter"
 msgstr "Բաժին"
 
@@ -1829,7 +1812,7 @@ msgstr ""
 "ավտոմատ կերպով ընտրել լավագույն եղանակը հասանելի."
 
 #: src/libvlc-module.c:133 modules/gui/macosx/simple_prefs.m:310
-#: modules/stream_out/display.c:40 modules/gui/qt4/ui/sprefs_audio.h:421
+#: modules/stream_out/display.c:40
 msgid "Enable audio"
 msgstr "Միացնել ձայնը"
 
@@ -1911,7 +1894,6 @@ msgstr ""
 "ինչպես նաեւ ձայնային հոսքի են խաղացել)."
 
 #: src/libvlc-module.c:166 modules/gui/macosx/simple_prefs.m:316
-#: modules/gui/qt4/ui/sprefs_audio.h:429
 #, fuzzy
 msgid "Use S/PDIF when available"
 msgstr "Օգտագործել S / PDIF, երբ մատչելի է`"
@@ -1949,7 +1931,6 @@ msgstr ""
 #: modules/gui/qt4/components/simple_preferences.cpp:125
 #: modules/gui/qt4/components/sout/profile_selector.cpp:558
 #: modules/video_output/kva.c:62 modules/video_output/xcb/xvideo.c:878
-#: modules/gui/qt4/ui/profiles.h:727 modules/gui/qt4/ui/profiles.h:730
 msgid "Auto"
 msgstr "Ավտոմատ"
 
@@ -2083,7 +2064,7 @@ msgstr ""
 "վարքն է ավտոմատ կերպով ընտրել լավագույն եղանակը հասանելի."
 
 #: src/libvlc-module.c:249 modules/gui/macosx/simple_prefs.m:396
-#: modules/stream_out/display.c:42 modules/gui/qt4/ui/sprefs_video.h:340
+#: modules/stream_out/display.c:42
 msgid "Enable video"
 msgstr "Միացնել վիդեոն"
 
@@ -2197,9 +2178,7 @@ msgstr "Կենտրոն"
 #: modules/gui/macosx/VideoEffects.m:173 modules/gui/macosx/VideoEffects.m:195
 #: modules/video_filter/audiobargraph_v.c:74 modules/video_filter/logo.c:79
 #: modules/video_filter/marq.c:139 modules/video_filter/mosaic.c:170
-#: modules/video_filter/rss.c:173 modules/gui/qt4/ui/video_effects.h:1316
-#: modules/gui/qt4/ui/video_effects.h:1359
-#: modules/gui/qt4/ui/video_effects.h:1370
+#: modules/video_filter/rss.c:173
 msgid "Top"
 msgstr "Վերեւի"
 
@@ -2208,7 +2187,7 @@ msgstr "Վերեւի"
 #: modules/gui/macosx/VideoEffects.m:175 modules/gui/macosx/VideoEffects.m:197
 #: modules/video_filter/audiobargraph_v.c:74 modules/video_filter/logo.c:79
 #: modules/video_filter/marq.c:139 modules/video_filter/mosaic.c:170
-#: modules/video_filter/rss.c:173 modules/gui/qt4/ui/video_effects.h:1320
+#: modules/video_filter/rss.c:173
 msgid "Bottom"
 msgstr "Ներքեւի"
 
@@ -2305,7 +2284,7 @@ msgstr ""
 "մատուցել վիդեո ուղղակիորեն). VLC փորձելու է օգտագործել այն կողմից լռելյայն."
 
 #: src/libvlc-module.c:311 src/video_output/vout_intf.c:274
-#: modules/gui/macosx/simple_prefs.m:399 modules/gui/qt4/ui/sprefs_video.h:347
+#: modules/gui/macosx/simple_prefs.m:399
 msgid "Always on top"
 msgstr "Միշտ երևացող"
 
@@ -2447,7 +2426,6 @@ msgstr ""
 "համակարգչային լինելով կասեցվել պատճառով անգործությունը."
 
 #: src/libvlc-module.c:374 modules/gui/macosx/simple_prefs.m:398
-#: modules/gui/qt4/ui/sprefs_video.h:343
 msgid "Window decorations"
 msgstr "Պատուհանի արտաքին դեսք"
 
@@ -2859,7 +2837,6 @@ msgstr "Հիմնական"
 #: src/libvlc-module.c:540 modules/gui/macosx/AudioEffects.m:112
 #: modules/gui/macosx/MainWindow.m:998 modules/gui/macosx/wizard.m:351
 #: modules/gui/qt4/components/extended_panels.cpp:1024
-#: modules/gui/qt4/ui/equalizer.h:133 modules/gui/qt4/ui/vlm.h:289
 msgid "Enable"
 msgstr "Միացնել"
 
@@ -2939,7 +2916,7 @@ msgstr ""
 "համարները (SIDs). Համար օգտագործեք միայն սա, եթե ցանկանում եք կարդալ "
 "բազմաբնույթ ծրագիր հոսքային (ինչպես DVB հոսքերի օրինակ)."
 
-#: src/libvlc-module.c:578 modules/gui/qt4/ui/open_disk.h:312
+#: src/libvlc-module.c:578
 msgid "Audio track"
 msgstr "Ձայնային գիծ"
 
@@ -2948,7 +2925,7 @@ msgstr "Ձայնային գիծ"
 msgid "Stream number of the audio track to use (from 0 to n)."
 msgstr "հոսք համարը ձայնային ալիքը օգտագործել են (0 n)."
 
-#: src/libvlc-module.c:583 modules/gui/qt4/ui/open_disk.h:313
+#: src/libvlc-module.c:583
 #, fuzzy
 msgid "Subtitle track"
 msgstr "Ենթագրերի  գիծ"
@@ -3149,7 +3126,6 @@ msgstr ""
 "հայեցողության-բայտ-շեղում },{...}  \""
 
 #: src/libvlc-module.c:662 modules/gui/macosx/simple_prefs.m:332
-#: modules/gui/qt4/ui/sprefs_input.h:350
 msgid "Record directory or filename"
 msgstr "Գրանցել պանակ կամ ֆայլ"
 
@@ -3223,7 +3199,7 @@ msgstr ""
 "\"modules բաժինը. Եք կարող են նաեւ սահմանել շատ տարբեր Ենթանկարներ "
 "ընտրանքներ \"."
 
-#: src/libvlc-module.c:694 modules/gui/qt4/ui/sprefs_subtitles.h:302
+#: src/libvlc-module.c:694
 msgid "Force subtitle position"
 msgstr "Պարտադրել ենթագրի դիրքը"
 
@@ -3249,7 +3225,6 @@ msgstr "Դուք կարող եք լիովին անջատել ենթահանձն�
 #: src/libvlc-module.c:703 src/libvlc-module.c:1634 src/text/iso-639_def.h:145
 #: modules/gui/macosx/simple_prefs.m:385
 #: modules/stream_out/transcode/transcode.c:219
-#: modules/gui/qt4/ui/sprefs_subtitles.h:286
 msgid "On Screen Display"
 msgstr "On Screen Display"
 
@@ -4074,7 +4049,7 @@ msgstr "VLC է սկսել ֆայլի միություն"
 msgid "Tell VLC that it is being launched due to a file association in the OS"
 msgstr "Tell VLC, որ դա է մեկնարկել պայմանավորված է մի ֆայլ ասոցիացիայի է OS"
 
-#: src/libvlc-module.c:1085 modules/gui/qt4/ui/sprefs_interface.h:538
+#: src/libvlc-module.c:1085
 #, fuzzy
 msgid "Use only one instance when started from file manager"
 msgstr "Մեկ օրինակ, երբ սկսել է ֆայլը"
@@ -4101,7 +4076,7 @@ msgstr ""
 "ժամանակ, եւ ցույց է տրվում ամբողջ համակարգի unresponsive, որը կարող է "
 "պահանջում reboot ձեր մեքենայի ."
 
-#: src/libvlc-module.c:1097 modules/gui/qt4/ui/sprefs_interface.h:534
+#: src/libvlc-module.c:1097
 #, fuzzy
 msgid "Enqueue items into playlist in one instance mode"
 msgstr "Հերթի մեջ դնել տարրե¥ր է երգացանկ, եԀԡ¢ մեկ օրինակ ռեժիմում"
@@ -4271,7 +4246,7 @@ msgstr "Մեդիա գրադարան"
 msgid "Enable this option to load the SQL-based Media Library at VLC startup"
 msgstr ""
 
-#: src/libvlc-module.c:1175 modules/gui/qt4/ui/sprefs_interface.h:533
+#: src/libvlc-module.c:1175
 #, fuzzy
 msgid "Display playlist tree"
 msgstr "Ցույց տալ երգացանկ ծառ"
@@ -4319,10 +4294,9 @@ msgstr ""
 
 #: src/libvlc-module.c:1203 src/video_output/vout_intf.c:284
 #: modules/gui/macosx/MainMenu.m:395 modules/gui/macosx/MainMenu.m:471
-#: modules/gui/macosx/MainMenu.m:1502 modules/gui/macosx/MainMenu.m:1512
+#: modules/gui/macosx/MainMenu.m:1506 modules/gui/macosx/MainMenu.m:1516
 #: modules/gui/macosx/simple_prefs.m:397
 #: modules/gui/qt4/components/controller.hpp:116
-#: modules/gui/qt4/ui/sprefs_video.h:342
 msgid "Fullscreen"
 msgstr "Ողջ էկրանով"
 
@@ -4412,11 +4386,10 @@ msgstr "Ավելի դանդաղ (չնչին)"
 #: modules/gui/macosx/about.m:261 modules/gui/macosx/ControlsBar.m:760
 #: modules/gui/macosx/ControlsBar.m:761 modules/gui/macosx/fspanel.m:420
 #: modules/gui/macosx/MainMenu.m:361 modules/gui/macosx/MainMenu.m:459
-#: modules/gui/macosx/MainMenu.m:467 modules/gui/macosx/MainMenu.m:1461
+#: modules/gui/macosx/MainMenu.m:467 modules/gui/macosx/MainMenu.m:1465
 #: modules/gui/macosx/wizard.m:306 modules/gui/macosx/wizard.m:318
 #: modules/gui/macosx/wizard.m:1559
 #: modules/gui/qt4/components/controller.hpp:120 modules/notify/notify.c:339
-#: modules/gui/qt4/ui/streampanel.h:181
 msgid "Next"
 msgstr "Հաջորդ"
 
@@ -4429,7 +4402,7 @@ msgstr "Ընտրեք կոճակ օգտագործել է ցատկանցելու �
 #: modules/gui/macosx/about.m:262 modules/gui/macosx/ControlsBar.m:749
 #: modules/gui/macosx/ControlsBar.m:750 modules/gui/macosx/fspanel.m:416
 #: modules/gui/macosx/MainMenu.m:360 modules/gui/macosx/MainMenu.m:460
-#: modules/gui/macosx/MainMenu.m:466 modules/gui/macosx/MainMenu.m:1460
+#: modules/gui/macosx/MainMenu.m:466 modules/gui/macosx/MainMenu.m:1464
 #: modules/gui/qt4/components/controller.hpp:120 modules/notify/notify.c:337
 msgid "Previous"
 msgstr "Նախորդ"
@@ -4441,9 +4414,9 @@ msgstr "Ընտրեք կոճակ օգտագործել է ցատկանցելու �
 
 #: src/libvlc-module.c:1227 modules/gui/macosx/ControlsBar.m:470
 #: modules/gui/macosx/MainMenu.m:351 modules/gui/macosx/MainMenu.m:458
-#: modules/gui/macosx/MainMenu.m:465 modules/gui/macosx/MainMenu.m:1456
+#: modules/gui/macosx/MainMenu.m:465 modules/gui/macosx/MainMenu.m:1460
 #: modules/gui/qt4/components/controller.hpp:115
-#: modules/gui/qt4/dialogs/vlm.cpp:556 modules/gui/qt4/ui/streampanel.h:180
+#: modules/gui/qt4/dialogs/vlm.cpp:556
 msgid "Stop"
 msgstr "Կանգնեցնել"
 
@@ -4456,8 +4429,7 @@ msgstr "Ընտրեք կոճակ դադարեցնել ընթացք\"."
 #: modules/gui/macosx/bookmarks.m:108 modules/gui/macosx/ControlsBar.m:64
 #: modules/gui/macosx/fspanel.m:444 modules/gui/macosx/VideoEffects.m:165
 #: modules/gui/macosx/VideoEffects.m:187 modules/video_filter/marq.c:161
-#: modules/video_filter/rss.c:200 modules/gui/qt4/ui/sprefs_subtitles.h:289
-#: modules/gui/qt4/ui/video_effects.h:1367
+#: modules/video_filter/rss.c:200
 msgid "Position"
 msgstr "Դիրք"
 
@@ -4702,7 +4674,7 @@ msgstr "Ընտրել բանալին նվազում ձայն ծավալով\"."
 #: src/libvlc-module.c:1296 modules/access/v4l2/v4l2.c:181
 #: modules/gui/macosx/ControlsBar.m:489 modules/gui/macosx/MainMenu.m:380
 #: modules/gui/macosx/MainMenu.m:461 modules/gui/macosx/MainMenu.m:470
-#: modules/gui/macosx/MainMenu.m:1493
+#: modules/gui/macosx/MainMenu.m:1497
 msgid "Mute"
 msgstr "Անջատել ձայնը"
 
@@ -5159,7 +5131,7 @@ msgstr "Հերթով անցնել  առկա ձայնային սարքերով"
 
 #: src/libvlc-module.c:1560 src/video_output/vout_intf.c:290
 #: modules/gui/macosx/MainMenu.m:397 modules/gui/macosx/MainMenu.m:472
-#: modules/gui/macosx/MainMenu.m:1501
+#: modules/gui/macosx/MainMenu.m:1505
 #: modules/gui/qt4/components/controller.hpp:117
 msgid "Snapshot"
 msgstr "Վիդեոյից Նկար"
@@ -5177,8 +5149,6 @@ msgstr "Ենթանկարներ"
 #: modules/demux/xiph_metadata.h:60 modules/gui/macosx/ConvertAndSave.m:173
 #: modules/gui/macosx/ConvertAndSave.m:191 modules/gui/macosx/MainMenu.m:413
 #: share/lua/http/dialogs/create_stream.html:153
-#: modules/gui/qt4/ui/profiles.h:701 modules/gui/qt4/ui/profiles.h:745
-#: modules/gui/qt4/ui/profiles.h:748
 msgid "Subtitles"
 msgstr "Ենթագրեր "
 
@@ -5327,37 +5297,37 @@ msgstr "Տպագիր տարբերակ տեղեկություններ"
 msgid "main program"
 msgstr "գլխավոր ծրագիրը"
 
-#: src/misc/update.c:468
+#: src/misc/update.c:475
 #, c-format
 msgid "%.1f GiB"
 msgstr "%.1f ԳԲ"
 
-#: src/misc/update.c:470
+#: src/misc/update.c:477
 #, c-format
 msgid "%.1f MiB"
 msgstr "%.1f ՄԲ"
 
-#: src/misc/update.c:472 modules/gui/macosx/playlistinfo.m:162
+#: src/misc/update.c:479 modules/gui/macosx/playlistinfo.m:162
 #: modules/gui/macosx/playlistinfo.m:164 modules/gui/macosx/playlistinfo.m:174
 #, c-format
 msgid "%.1f KiB"
 msgstr "%.1f ԿԲ"
 
-#: src/misc/update.c:474
+#: src/misc/update.c:481
 #, c-format
 msgid "%ld B"
 msgstr "%ld Բ"
 
-#: src/misc/update.c:566
+#: src/misc/update.c:573
 msgid "Saving file failed"
 msgstr "Ֆայլի պահպանումը ձախողվեց"
 
-#: src/misc/update.c:567
+#: src/misc/update.c:574
 #, c-format
 msgid "Failed to open \"%s\" for writing"
 msgstr "Չհաջողվեց բացել \"%s\" գրելու համար"
 
-#: src/misc/update.c:580
+#: src/misc/update.c:587
 #, c-format
 msgid ""
 "%s\n"
@@ -5366,11 +5336,11 @@ msgstr ""
 "%s\n"
 "Բեռնվում է... %s/%s %.1f%%-ը պատրաստ է."
 
-#: src/misc/update.c:584
+#: src/misc/update.c:591
 msgid "Downloading ..."
 msgstr "Բեռնում..."
 
-#: src/misc/update.c:585 src/misc/update.c:712 modules/demux/avi/avi.c:2390
+#: src/misc/update.c:592 src/misc/update.c:719 modules/demux/avi/avi.c:2390
 #: modules/gui/macosx/AudioEffects.m:387 modules/gui/macosx/AudioEffects.m:402
 #: modules/gui/macosx/AudioEffects.m:641 modules/gui/macosx/AudioEffects.m:741
 #: modules/gui/macosx/bookmarks.m:105 modules/gui/macosx/controls.m:54
@@ -5383,15 +5353,15 @@ msgstr "Բեռնում..."
 #: modules/gui/macosx/open.m:128 modules/gui/macosx/open.m:190
 #: modules/gui/macosx/prefs.m:208 modules/gui/macosx/simple_prefs.m:324
 #: modules/gui/macosx/simple_prefs.m:352 modules/gui/macosx/simple_prefs.m:413
-#: modules/gui/macosx/simple_prefs.m:839 modules/gui/macosx/VideoEffects.m:879
-#: modules/gui/macosx/VideoEffects.m:943 modules/gui/macosx/wizard.m:317
+#: modules/gui/macosx/simple_prefs.m:839 modules/gui/macosx/VideoEffects.m:881
+#: modules/gui/macosx/VideoEffects.m:945 modules/gui/macosx/wizard.m:317
 #: modules/gui/qt4/components/open_panels.cpp:1343
 #: modules/gui/qt4/components/preferences_widgets.cpp:1424
 #: modules/gui/qt4/components/sout/profile_selector.cpp:427
 msgid "Cancel"
 msgstr "Ոչինչ չանել"
 
-#: src/misc/update.c:605
+#: src/misc/update.c:612
 #, fuzzy, c-format
 msgid ""
 "%s\n"
@@ -5400,11 +5370,11 @@ msgstr ""
 "%s \n"
 " Ներլցման ...%s /%s -%.1f%% արել`"
 
-#: src/misc/update.c:637
+#: src/misc/update.c:644
 msgid "File could not be verified"
 msgstr "Ֆայլը հնարավոր չէ ստուգել"
 
-#: src/misc/update.c:638
+#: src/misc/update.c:645
 #, fuzzy, c-format
 msgid ""
 "It was not possible to download a cryptographic signature for the downloaded "
@@ -5413,11 +5383,11 @@ msgstr ""
 "Դա հնարավոր չէ ստանալ մի cryptographic ստորագրման համար բեռնել ֆայլը \"%s  "
 "\". Այսպիսով, այն էր ջնջված է."
 
-#: src/misc/update.c:649 src/misc/update.c:661
+#: src/misc/update.c:656 src/misc/update.c:668
 msgid "Invalid signature"
 msgstr "Անվավեր ստորագրություն"
 
-#: src/misc/update.c:650 src/misc/update.c:662
+#: src/misc/update.c:657 src/misc/update.c:669
 #, fuzzy, c-format
 msgid ""
 "The cryptographic signature for the downloaded file \"%s\" was invalid and "
@@ -5426,11 +5396,11 @@ msgstr ""
 "ՀՀ cryptographic ստորագրման համար բեռնել ֆայլը \"%s  \"սխալ է եւ չի կարող "
 "օգտագործվել ապահով ստուգել այն. Այսպիսով, ֆայլը ջնջված է."
 
-#: src/misc/update.c:674
+#: src/misc/update.c:681
 msgid "File not verifiable"
 msgstr "Ֆայլը չստուգվող է"
 
-#: src/misc/update.c:675
+#: src/misc/update.c:682
 #, fuzzy, c-format
 msgid ""
 "It was not possible to securely verify the downloaded file \"%s\". Thus, it "
@@ -5439,20 +5409,20 @@ msgstr ""
 "Դա հնարավոր չէ ապահով ստուգել բեռնել ֆայլը \"%s  \". Այսպիսով, այն էր ջնջված "
 "է."
 
-#: src/misc/update.c:686 src/misc/update.c:698
+#: src/misc/update.c:693 src/misc/update.c:705
 msgid "File corrupted"
 msgstr "Ֆայլը վնասված է"
 
-#: src/misc/update.c:687 src/misc/update.c:699
+#: src/misc/update.c:694 src/misc/update.c:706
 #, c-format
 msgid "Downloaded file \"%s\" was corrupted. Thus, it was deleted."
 msgstr "Բեռնված ֆայլը \"%s\" վնասված էր և ջնջվել է:"
 
-#: src/misc/update.c:710
+#: src/misc/update.c:717
 msgid "Update VLC media player"
 msgstr "Թարմացնել VLC-ն"
 
-#: src/misc/update.c:711
+#: src/misc/update.c:718
 #, fuzzy
 msgid ""
 "The new version was successfully downloaded. Do you want to close VLC and "
@@ -5461,7 +5431,7 @@ msgstr ""
 "նոր տարբերակի հաջողությամբ ներբեռնել. Դուք ցանկանում եք փակել VLC եւ "
 "տեղադրեք այն հիմա`"
 
-#: src/misc/update.c:712
+#: src/misc/update.c:719
 #, fuzzy
 msgid "Install"
 msgstr "Install"
@@ -6152,7 +6122,7 @@ msgstr "Ձգման գործակից"
 
 #: src/video_output/vout_intf.c:218 modules/gui/macosx/MainMenu.m:402
 #: modules/gui/macosx/MainMenu.m:403 modules/gui/macosx/VideoEffects.m:82
-#: modules/video_filter/croppadd.c:86 modules/gui/qt4/ui/video_effects.h:1326
+#: modules/video_filter/croppadd.c:86
 msgid "Crop"
 msgstr "Եզրերից կտրել"
 
@@ -6160,7 +6130,7 @@ msgstr "Եզրերից կտրել"
 #: modules/access/linsys/linsys_hdsdi.c:78
 #: modules/access/linsys/linsys_sdi.c:73 modules/demux/rawvid.c:59
 #: modules/gui/macosx/MainMenu.m:400 modules/gui/macosx/MainMenu.m:401
-#: modules/gui/macosx/MainMenu.m:1315
+#: modules/gui/macosx/MainMenu.m:1323
 msgid "Aspect ratio"
 msgstr "Չափերի հարաբերությունը"
 
@@ -6273,7 +6243,6 @@ msgid "Use Blu-ray menus. If disabled, the movie will start directly"
 msgstr ""
 
 #: modules/access/bluray.c:69 modules/services_discovery/udev.c:596
-#: modules/gui/qt4/ui/open_disk.h:299
 #, fuzzy
 msgid "Blu-ray"
 msgstr "Blu-Ray"
@@ -6335,7 +6304,6 @@ msgid "Blu-ray error"
 msgstr "Blu-Ray"
 
 #: modules/access/cdda.c:62 modules/gui/macosx/open.m:162
-#: modules/gui/qt4/ui/open_disk.h:300
 msgid "Audio CD"
 msgstr "Աուդիո CD"
 
@@ -7490,7 +7458,7 @@ msgstr "Ֆայլ մուտք"
 msgid "File"
 msgstr "Ֆայլ"
 
-#: modules/access/fs.c:72 modules/gui/qt4/ui/sprefs_video.h:359
+#: modules/access/fs.c:72
 msgid "Directory"
 msgstr "Պանակ"
 
@@ -7741,7 +7709,6 @@ msgstr "Ձայնային տարրական հոսքի Կանալների քանա
 #: modules/gui/qt4/components/extended_panels.cpp:1402
 #: modules/video_filter/mosaic.c:94 modules/video_output/vmem.c:42
 #: share/lua/http/dialogs/mosaic_window.html:108
-#: modules/gui/qt4/ui/profiles.h:726
 msgid "Width"
 msgstr "Լայնություն"
 
@@ -7754,7 +7721,6 @@ msgstr "Լայնություն վիդեո կամ լուսագրային տարր
 #: modules/demux/rawvid.c:52 modules/gui/macosx/ConvertAndSave.m:183
 #: modules/video_filter/mosaic.c:92 modules/video_output/vmem.c:45
 #: share/lua/http/dialogs/mosaic_window.html:126
-#: modules/gui/qt4/ui/profiles.h:729
 msgid "Height"
 msgstr "Բարձրություն"
 
@@ -8548,36 +8514,36 @@ msgstr "Ձայն"
 msgid "PulseAudio input"
 msgstr "Ձայնային մուտք"
 
-#: modules/access/qtcapture.m:43
+#: modules/access/qtcapture.m:45
 #, fuzzy
 msgid "Video Capture width"
 msgstr "Վիդեոյից արված նկարի բարձրություն"
 
-#: modules/access/qtcapture.m:44
+#: modules/access/qtcapture.m:46
 #, fuzzy
 msgid "Video Capture width in pixel"
 msgstr "Վիդեո գրավում (Video4Linux)"
 
-#: modules/access/qtcapture.m:45
+#: modules/access/qtcapture.m:47
 #, fuzzy
 msgid "Video Capture height"
 msgstr "Վիդեոյից արված նկարի բարձրություն"
 
-#: modules/access/qtcapture.m:46
+#: modules/access/qtcapture.m:48
 #, fuzzy
 msgid "Video Capture height in pixel"
 msgstr "Վիդեոյից արված նկարի բարձրություն"
 
-#: modules/access/qtcapture.m:60 modules/access/qtcapture.m:61
+#: modules/access/qtcapture.m:62 modules/access/qtcapture.m:63
 #, fuzzy
 msgid "Quicktime Capture"
 msgstr "Quicktime Վերցնել"
 
-#: modules/access/qtcapture.m:248 modules/access/qtcapture.m:278
+#: modules/access/qtcapture.m:250 modules/access/qtcapture.m:280
 msgid "No Input device found"
 msgstr "Մուտքային սարք չի հայտնաբերվել"
 
-#: modules/access/qtcapture.m:249 modules/access/qtcapture.m:279
+#: modules/access/qtcapture.m:251 modules/access/qtcapture.m:281
 #, fuzzy
 msgid ""
 "Your Mac does not seem to be equipped with a suitable input device. Please "
@@ -9211,7 +9177,6 @@ msgstr "Վերականգնել վերահսկում է լռությամբ"
 
 #: modules/access/v4l2/v4l2.c:84 modules/gui/macosx/VideoEffects.m:92
 #: modules/video_filter/atmo/atmo.cpp:263
-#: modules/gui/qt4/ui/video_effects.h:1304
 msgid "Brightness"
 msgstr "Պայծառություն"
 
@@ -9230,7 +9195,6 @@ msgid "Automatically adjust the picture brightness."
 msgstr "Ավտոմատ փրկել ծավալների մասին ելքը`"
 
 #: modules/access/v4l2/v4l2.c:89 modules/gui/macosx/VideoEffects.m:91
-#: modules/gui/qt4/ui/video_effects.h:1306
 msgid "Contrast"
 msgstr "Կոնտրաստ"
 
@@ -9240,8 +9204,6 @@ msgstr ""
 
 #: modules/access/v4l2/v4l2.c:91 modules/gui/macosx/VideoEffects.m:94
 #: modules/gui/macosx/VideoEffects.m:134
-#: modules/gui/qt4/ui/video_effects.h:1307
-#: modules/gui/qt4/ui/video_effects.h:1339
 msgid "Saturation"
 msgstr "Հագեցում"
 
@@ -9250,7 +9212,6 @@ msgid "Picture saturation or chroma gain."
 msgstr ""
 
 #: modules/access/v4l2/v4l2.c:93 modules/gui/macosx/VideoEffects.m:90
-#: modules/gui/qt4/ui/video_effects.h:1303
 msgid "Hue"
 msgstr "Երանգ"
 
@@ -9308,7 +9269,6 @@ msgid "Blue chroma balance."
 msgstr "Կապույտի բալանս"
 
 #: modules/access/v4l2/v4l2.c:111 modules/gui/macosx/VideoEffects.m:95
-#: modules/gui/qt4/ui/video_effects.h:1308
 msgid "Gamma"
 msgstr "Գամմա"
 
@@ -9451,7 +9411,7 @@ msgid "Black & white"
 msgstr "Սեւ անցք"
 
 #: modules/access/v4l2/v4l2.c:164 modules/gui/macosx/VideoEffects.m:136
-#: modules/video_filter/sepia.c:65 modules/gui/qt4/ui/video_effects.h:1341
+#: modules/video_filter/sepia.c:65
 msgid "Sepia"
 msgstr ""
 
@@ -9562,6 +9522,7 @@ msgstr ""
 
 #: modules/access/v4l2/v4l2.c:242 modules/codec/avcodec/avcodec.c:68
 #: modules/codec/x264.c:429 modules/control/hotkeys.c:193
+#: modules/gui/qt4/dialogs/convert.cpp:133
 #: modules/gui/qt4/dialogs/preferences.cpp:75
 msgid "All"
 msgstr "Բոլոր"
@@ -9715,7 +9676,7 @@ msgstr "Ձայնը Սահմանել"
 
 #: modules/access/vcdx/info.c:69 modules/gui/macosx/ControlsBar.m:486
 #: modules/gui/macosx/fspanel.m:463 modules/gui/qt4/dialogs/toolbar.cpp:365
-#: modules/stream_out/raop.c:150 modules/gui/qt4/ui/sprefs_audio.h:422
+#: modules/stream_out/raop.c:150
 msgid "Volume"
 msgstr "Ձայնի բարձրություն"
 
@@ -9729,7 +9690,7 @@ msgstr "համակարգի Id"
 msgid "Entries"
 msgstr "Գրառումներ"
 
-#: modules/access/vcdx/info.c:75 modules/gui/qt4/ui/sprefs_audio.h:437
+#: modules/access/vcdx/info.c:75
 #, fuzzy
 msgid "Tracks"
 msgstr "հետքերը`"
@@ -12637,7 +12598,7 @@ msgid "Maroon"
 msgstr "պարապ - սարապ ման գալ\":"
 
 #: modules/codec/kate.c:211 modules/gui/macosx/MainMenu.m:427
-#: modules/gui/macosx/MainMenu.m:1006 modules/text_renderer/freetype.c:208
+#: modules/gui/macosx/MainMenu.m:1014 modules/text_renderer/freetype.c:208
 #: modules/text_renderer/quartztext.c:116 modules/text_renderer/win32text.c:90
 #: modules/video_filter/ball.c:119 modules/video_filter/colorthres.c:64
 #: modules/video_filter/marq.c:61 modules/video_filter/rss.c:72
@@ -12652,7 +12613,7 @@ msgid "Fuchsia"
 msgstr "Fuchsia"
 
 #: modules/codec/kate.c:211 modules/gui/macosx/MainMenu.m:429
-#: modules/gui/macosx/MainMenu.m:1010 modules/text_renderer/freetype.c:208
+#: modules/gui/macosx/MainMenu.m:1018 modules/text_renderer/freetype.c:208
 #: modules/text_renderer/quartztext.c:116 modules/text_renderer/win32text.c:90
 #: modules/video_filter/colorthres.c:64 modules/video_filter/marq.c:62
 #: modules/video_filter/rss.c:73
@@ -12666,7 +12627,7 @@ msgid "Olive"
 msgstr "Ձիթապտղագույն"
 
 #: modules/codec/kate.c:211 modules/gui/macosx/MainMenu.m:428
-#: modules/gui/macosx/MainMenu.m:1008 modules/text_renderer/freetype.c:208
+#: modules/gui/macosx/MainMenu.m:1016 modules/text_renderer/freetype.c:208
 #: modules/text_renderer/quartztext.c:116 modules/text_renderer/win32text.c:90
 #: modules/video_filter/ball.c:119 modules/video_filter/marq.c:62
 #: modules/video_filter/rss.c:73
@@ -12701,7 +12662,7 @@ msgid "Navy"
 msgstr "Մուգ կապույտ"
 
 #: modules/codec/kate.c:212 modules/gui/macosx/MainMenu.m:430
-#: modules/gui/macosx/MainMenu.m:1012 modules/text_renderer/freetype.c:209
+#: modules/gui/macosx/MainMenu.m:1020 modules/text_renderer/freetype.c:209
 #: modules/text_renderer/quartztext.c:117 modules/text_renderer/win32text.c:91
 #: modules/video_filter/ball.c:120 modules/video_filter/colorthres.c:64
 #: modules/video_filter/marq.c:63 modules/video_filter/rss.c:74
@@ -13514,8 +13475,6 @@ msgstr "MP3 ֆիքսված կետի աուդիո կոդավորիչ"
 
 #: modules/codec/speex.c:59 modules/codec/speex.c:799
 #: modules/gui/macosx/open.m:193 modules/gui/macosx/VideoEffects.m:140
-#: modules/gui/qt4/ui/sprefs_video.h:356
-#: modules/gui/qt4/ui/video_effects.h:1333
 msgid "Mode"
 msgstr "Ռեժիմ"
 
@@ -14973,7 +14932,6 @@ msgid "Quiet mode"
 msgstr "Հանդարտ ռեժիմ"
 
 #: modules/codec/x264.c:394 modules/gui/macosx/playlistinfo.m:80
-#: modules/gui/qt4/ui/streampanel.h:170
 msgid "Statistics"
 msgstr "Վիճակագրություն"
 
@@ -15599,8 +15557,8 @@ msgid "Opening"
 msgstr "Բացում"
 
 #: modules/control/rc.c:73 modules/gui/macosx/ControlsBar.m:431
-#: modules/gui/macosx/MainMenu.m:1201 modules/gui/macosx/MainMenu.m:1202
-#: modules/gui/macosx/MainMenu.m:1203 modules/gui/qt4/menus.cpp:818
+#: modules/gui/macosx/MainMenu.m:1209 modules/gui/macosx/MainMenu.m:1210
+#: modules/gui/macosx/MainMenu.m:1211 modules/gui/qt4/menus.cpp:818
 msgid "Pause"
 msgstr "Ընդմիջել"
 
@@ -16377,7 +16335,6 @@ msgid "Use chapter codecs found in the segment."
 msgstr "Օգտագործել գլուխ կոդեկներ հայտնաբերվել է սեգմենտը."
 
 #: modules/demux/mkv/mkv.cpp:62 modules/gui/macosx/simple_prefs.m:345
-#: modules/gui/qt4/ui/sprefs_input.h:353
 msgid "Preload MKV files in the same directory"
 msgstr ""
 
@@ -16749,7 +16706,6 @@ msgstr "New wave"
 
 #: modules/demux/mp4/id3genres.h:99 modules/gui/macosx/VideoEffects.m:160
 #: modules/video_filter/psychedelic.c:55
-#: modules/gui/qt4/ui/video_effects.h:1390
 msgid "Psychedelic"
 msgstr "Փսիքոդելիկ"
 
@@ -17797,7 +17753,7 @@ msgid "MPEG Transport Stream demuxer"
 msgstr "MPEG տրանսպորտի Stream դեմուլտիպլեքսոր"
 
 #: modules/demux/ts.c:171 modules/gui/macosx/MainMenu.m:424
-#: modules/gui/macosx/MainMenu.m:1538 modules/gui/qt4/dialogs/toolbar.cpp:429
+#: modules/gui/macosx/MainMenu.m:1542 modules/gui/qt4/dialogs/toolbar.cpp:429
 msgid "Teletext"
 msgstr "Տելետեքստ"
 
@@ -18000,17 +17956,16 @@ msgid "VLC media player Help"
 msgstr "VLC մեդիա նվագարկչի Օգնություն"
 
 #: modules/gui/macosx/about.m:263 modules/gui/macosx/MainMenu.m:426
-#: modules/gui/macosx/MainMenu.m:1004
+#: modules/gui/macosx/MainMenu.m:1012
 msgid "Index"
 msgstr "Ինդեքս"
 
-#: modules/gui/macosx/AudioEffects.m:113 modules/gui/qt4/ui/equalizer.h:134
+#: modules/gui/macosx/AudioEffects.m:113
 msgid "2 Pass"
 msgstr "Կրկնակի"
 
 #: modules/gui/macosx/AudioEffects.m:114
 #: modules/gui/qt4/components/extended_panels.cpp:1216
-#: modules/gui/qt4/ui/equalizer.h:136
 msgid "Preamp"
 msgstr "Նախաուժեղացում"
 
@@ -18083,13 +18038,13 @@ msgstr "Ջնջել ընթացիկ անձնագիր"
 msgid "Organize Profiles..."
 msgstr " բացումը ֆայլի ... "
 
-#: modules/gui/macosx/AudioEffects.m:385 modules/gui/macosx/VideoEffects.m:877
+#: modules/gui/macosx/AudioEffects.m:385 modules/gui/macosx/VideoEffects.m:879
 msgid "Duplicate current profile for a new profile"
 msgstr ""
 
 #: modules/gui/macosx/AudioEffects.m:386
 #: modules/gui/macosx/ConvertAndSave.m:367
-#: modules/gui/macosx/VideoEffects.m:878
+#: modules/gui/macosx/VideoEffects.m:880
 #, fuzzy
 msgid "Enter a name for the new profile:"
 msgstr "Մուտքագրեք անունը համար նոր թղթապանակը:"
@@ -18097,28 +18052,27 @@ msgstr "Մուտքագրեք անունը համար նոր թղթապանակը
 #: modules/gui/macosx/AudioEffects.m:388 modules/gui/macosx/AudioEffects.m:642
 #: modules/gui/macosx/ConvertAndSave.m:369
 #: modules/gui/macosx/ConvertAndSave.m:401 modules/gui/macosx/output.m:457
-#: modules/gui/macosx/playlist.m:716 modules/gui/macosx/prefs.m:207
+#: modules/gui/macosx/playlist.m:718 modules/gui/macosx/prefs.m:207
 #: modules/gui/macosx/simple_prefs.m:351 modules/gui/macosx/simple_prefs.m:415
-#: modules/gui/macosx/VideoEffects.m:880
+#: modules/gui/macosx/VideoEffects.m:882
 #: modules/gui/qt4/components/sout/profile_selector.cpp:424
-#: modules/gui/qt4/ui/vlm.h:301
 msgid "Save"
 msgstr "Պահել"
 
 #: modules/gui/macosx/AudioEffects.m:399 modules/gui/macosx/AudioEffects.m:738
-#: modules/gui/macosx/VideoEffects.m:940
+#: modules/gui/macosx/VideoEffects.m:942
 #, fuzzy
 msgid "Remove a preset"
 msgstr "Հեռացնել Ընտրվածը"
 
 #: modules/gui/macosx/AudioEffects.m:400 modules/gui/macosx/AudioEffects.m:739
-#: modules/gui/macosx/VideoEffects.m:941
+#: modules/gui/macosx/VideoEffects.m:943
 msgid "Select the preset you would like to remove:"
 msgstr ""
 
 #: modules/gui/macosx/AudioEffects.m:401 modules/gui/macosx/AudioEffects.m:740
 #: modules/gui/macosx/bookmarks.m:95 modules/gui/macosx/ConvertAndSave.m:381
-#: modules/gui/macosx/VideoEffects.m:942 modules/gui/qt4/ui/open_file.h:154
+#: modules/gui/macosx/VideoEffects.m:944
 msgid "Remove"
 msgstr "Հեռացնել"
 
@@ -18140,12 +18094,12 @@ msgstr ""
 msgid "Enter a name for the new preset:"
 msgstr "Մուտքագրեք անունը համար նոր պանակ:"
 
-#: modules/gui/macosx/AudioEffects.m:705 modules/gui/macosx/VideoEffects.m:903
+#: modules/gui/macosx/AudioEffects.m:705 modules/gui/macosx/VideoEffects.m:905
 #, fuzzy
 msgid "Please enter a unique name for the new profile."
 msgstr "Մուտքագրեք Ձեր նոր անձնագիր անունը."
 
-#: modules/gui/macosx/AudioEffects.m:706 modules/gui/macosx/VideoEffects.m:904
+#: modules/gui/macosx/AudioEffects.m:706 modules/gui/macosx/VideoEffects.m:906
 msgid "Multiple profiles with the same name are not allowed."
 msgstr ""
 
@@ -18154,14 +18108,12 @@ msgid "Bookmarks"
 msgstr "Էջանիշեր"
 
 #: modules/gui/macosx/bookmarks.m:91
-#: modules/gui/qt4/ui/podcast_configuration.h:103
-#: modules/gui/qt4/ui/sout.h:209 modules/gui/qt4/ui/vlm.h:299
 msgid "Add"
 msgstr "Ավելացնել"
 
 #: modules/gui/macosx/bookmarks.m:92 modules/gui/macosx/MainMenu.m:334
 #: modules/gui/macosx/simple_prefs.m:326
-#: modules/gui/qt4/dialogs/bookmarks.cpp:53 modules/gui/qt4/ui/vlm.h:300
+#: modules/gui/qt4/dialogs/bookmarks.cpp:53
 msgid "Clear"
 msgstr "Մաքրել"
 
@@ -18204,7 +18156,7 @@ msgstr "Հիշել"
 msgid "Name"
 msgstr "Անուն"
 
-#: modules/gui/macosx/bookmarks.m:136 modules/gui/macosx/playlist.m:713
+#: modules/gui/macosx/bookmarks.m:136 modules/gui/macosx/playlist.m:715
 msgid "Untitled"
 msgstr "Անանուն"
 
@@ -18250,7 +18202,7 @@ msgstr "Մուտք չի հայտնաբերվել"
 msgid "The stream must be playing or paused for bookmarks to work."
 msgstr "ՀՀ հոսքի պետք է խաղում կամ Ընդմիջված համար էջանիշները աշխատելու\"."
 
-#: modules/gui/macosx/controls.m:53 modules/gui/macosx/MainMenu.m:1487
+#: modules/gui/macosx/controls.m:53 modules/gui/macosx/MainMenu.m:1491
 msgid "Jump To Time"
 msgstr "Անցնել Ժամանակի պահին"
 
@@ -18370,7 +18322,6 @@ msgid "Click to play the audio at maximum volume."
 msgstr "Մտածեք, լայնությունը եւ բարձրությունը, որպես առավելագույն արժեքները\"."
 
 #: modules/gui/macosx/ControlsBar.m:496 modules/gui/macosx/simple_prefs.m:309
-#: modules/gui/qt4/ui/sprefs_audio.h:430
 msgid "Effects"
 msgstr "էֆեկտներ"
 
@@ -18435,9 +18386,6 @@ msgstr ""
 #: modules/gui/qt4/components/preferences_widgets.cpp:263
 #: modules/gui/qt4/components/simple_preferences.cpp:421
 #: modules/gui/qt4/components/sout/sout_widgets.cpp:98
-#: modules/gui/qt4/ui/open.h:263 modules/gui/qt4/ui/open_disk.h:307
-#: modules/gui/qt4/ui/open_file.h:147 modules/gui/qt4/ui/sprefs_audio.h:428
-#: modules/gui/qt4/ui/sprefs_input.h:351 modules/gui/qt4/ui/sprefs_video.h:358
 msgid "Browse..."
 msgstr "Հայտնաբերել..."
 
@@ -18467,33 +18415,31 @@ msgstr "Կիրառել"
 msgid "Save as new Profile..."
 msgstr "Ստեղծել նոր անձնագիր"
 
-#: modules/gui/macosx/ConvertAndSave.m:170 modules/gui/qt4/ui/profiles.h:708
+#: modules/gui/macosx/ConvertAndSave.m:170
 #, fuzzy
 msgid "Encapsulation"
 msgstr "Encapsulation"
 
 #: modules/gui/macosx/ConvertAndSave.m:171
 #: share/lua/http/dialogs/create_stream.html:160
-#: modules/gui/qt4/ui/profiles.h:734
 msgid "Video codec"
 msgstr "Վիդեոյի կոդեկ"
 
 #: modules/gui/macosx/ConvertAndSave.m:172
 #: share/lua/http/dialogs/create_stream.html:178
-#: modules/gui/qt4/ui/profiles.h:744
 msgid "Audio codec"
 msgstr "Աուդիո կոդեկ"
 
-#: modules/gui/macosx/ConvertAndSave.m:176 modules/gui/qt4/ui/profiles.h:710
+#: modules/gui/macosx/ConvertAndSave.m:176
 #, fuzzy
 msgid "Keep original video track"
 msgstr "Պահել բնօրինակը վիդեո են տանում`"
 
-#: modules/gui/macosx/ConvertAndSave.m:179 modules/gui/qt4/ui/profiles.h:713
+#: modules/gui/macosx/ConvertAndSave.m:179
 msgid "Frame Rate"
 msgstr "Կադրերի արագութուն"
 
-#: modules/gui/macosx/ConvertAndSave.m:181 modules/gui/qt4/ui/profiles.h:723
+#: modules/gui/macosx/ConvertAndSave.m:181
 #, fuzzy
 msgid ""
 "You just need to fill one of the three following parameters, VLC will "
@@ -18503,16 +18449,15 @@ msgstr ""
 "autodetect այլ օգտագործելով բնօրինակը առումով հարաբերակցությունը"
 
 #: modules/gui/macosx/ConvertAndSave.m:184 modules/gui/macosx/output.m:157
-#: modules/gui/qt4/ui/profiles.h:724
 msgid "Scale"
 msgstr "Ձգել"
 
-#: modules/gui/macosx/ConvertAndSave.m:186 modules/gui/qt4/ui/profiles.h:736
+#: modules/gui/macosx/ConvertAndSave.m:186
 #, fuzzy
 msgid "Keep original audio track"
 msgstr "Պահել բնօրինակը աուդիո են տանում`"
 
-#: modules/gui/macosx/ConvertAndSave.m:192 modules/gui/qt4/ui/profiles.h:747
+#: modules/gui/macosx/ConvertAndSave.m:192
 #, fuzzy
 msgid "Overlay subtitles on the video"
 msgstr "խուփ ենթագրերով վրա վիդեո"
@@ -18685,8 +18630,6 @@ msgid "Click to exit fullscreen playback."
 msgstr ""
 
 #: modules/gui/macosx/intf.m:842 modules/gui/qt4/dialogs/messages.cpp:77
-#: modules/gui/qt4/ui/messages_panel.h:138
-#: modules/gui/qt4/ui/messages_panel.h:142
 msgid "Messages"
 msgstr "Հաղորդագրություններ"
 
@@ -18968,7 +18911,7 @@ msgid ""
 "This option allows the interface to change its icon on various occasions."
 msgstr ""
 
-#: modules/gui/macosx/macosx.m:110 modules/gui/macosx/MainMenu.m:1317
+#: modules/gui/macosx/macosx.m:110 modules/gui/macosx/MainMenu.m:1325
 msgid "Lock Aspect Ratio"
 msgstr "Ֆիքսել չափերի հարաբերությունը"
 
@@ -19166,7 +19109,7 @@ msgstr "Կրկնակել"
 msgid "Paste"
 msgstr "Paste"
 
-#: modules/gui/macosx/MainMenu.m:335 modules/gui/macosx/playlist.m:520
+#: modules/gui/macosx/MainMenu.m:335 modules/gui/macosx/playlist.m:522
 msgid "Select All"
 msgstr "Ընտրել բոլորը"
 
@@ -19200,15 +19143,15 @@ msgstr "&Համաժամացում"
 msgid "A→B Loop"
 msgstr "A-> B Ցիկլ"
 
-#: modules/gui/macosx/MainMenu.m:366 modules/gui/macosx/MainMenu.m:1480
+#: modules/gui/macosx/MainMenu.m:366 modules/gui/macosx/MainMenu.m:1484
 msgid "Quit after Playback"
 msgstr "Անջատել Աշխատացնելուց հետո"
 
-#: modules/gui/macosx/MainMenu.m:367 modules/gui/macosx/MainMenu.m:1485
+#: modules/gui/macosx/MainMenu.m:367 modules/gui/macosx/MainMenu.m:1489
 msgid "Step Forward"
 msgstr "Քայլ Առաջ"
 
-#: modules/gui/macosx/MainMenu.m:368 modules/gui/macosx/MainMenu.m:1486
+#: modules/gui/macosx/MainMenu.m:368 modules/gui/macosx/MainMenu.m:1490
 msgid "Step Backward"
 msgstr "Քայլ Ետ"
 
@@ -19224,25 +19167,25 @@ msgstr "Իջացնել Ձայնը"
 msgid "Audio Device"
 msgstr "Ձայնային Սարք"
 
-#: modules/gui/macosx/MainMenu.m:391 modules/gui/macosx/MainMenu.m:1497
+#: modules/gui/macosx/MainMenu.m:391 modules/gui/macosx/MainMenu.m:1501
 msgid "Half Size"
 msgstr "Կես չափ"
 
-#: modules/gui/macosx/MainMenu.m:392 modules/gui/macosx/MainMenu.m:1498
-#: modules/gui/macosx/MainMenu.m:1537
+#: modules/gui/macosx/MainMenu.m:392 modules/gui/macosx/MainMenu.m:1502
+#: modules/gui/macosx/MainMenu.m:1541
 msgid "Normal Size"
 msgstr "Նորմալ Չափ"
 
-#: modules/gui/macosx/MainMenu.m:393 modules/gui/macosx/MainMenu.m:1499
+#: modules/gui/macosx/MainMenu.m:393 modules/gui/macosx/MainMenu.m:1503
 msgid "Double Size"
 msgstr "Կրկնակի Չափ"
 
-#: modules/gui/macosx/MainMenu.m:394 modules/gui/macosx/MainMenu.m:1500
+#: modules/gui/macosx/MainMenu.m:394 modules/gui/macosx/MainMenu.m:1504
 msgid "Fit to Screen"
 msgstr "Տեղավորել Էկրանին"
 
-#: modules/gui/macosx/MainMenu.m:396 modules/gui/macosx/MainMenu.m:1503
-#: modules/gui/macosx/MainMenu.m:1509
+#: modules/gui/macosx/MainMenu.m:396 modules/gui/macosx/MainMenu.m:1507
+#: modules/gui/macosx/MainMenu.m:1513
 msgid "Float on Top"
 msgstr "float մասին Վերեւ"
 
@@ -19257,7 +19200,7 @@ msgstr "Ողջ էկրանով ռեժիմի Վիդեո Սարք"
 msgid "Post processing"
 msgstr "գրառումը մշակման"
 
-#: modules/gui/macosx/MainMenu.m:414 modules/gui/macosx/MainMenu.m:1522
+#: modules/gui/macosx/MainMenu.m:414 modules/gui/macosx/MainMenu.m:1526
 #, fuzzy
 msgid "Add Subtitle File..."
 msgstr "Ենթագրերով Ֆայլ"
@@ -19334,7 +19277,7 @@ msgstr "Էջանիշեր ..."
 msgid "Playlist..."
 msgstr "Երգացանկ ..."
 
-#: modules/gui/macosx/MainMenu.m:441 modules/gui/macosx/playlist.m:521
+#: modules/gui/macosx/MainMenu.m:441 modules/gui/macosx/playlist.m:523
 msgid "Media Information..."
 msgstr "Ֆայլի Տեղեկություն..."
 
@@ -19503,7 +19446,7 @@ msgstr "Զուգահեռ ուրիշ ֆայլ միացնել"
 
 #: modules/gui/macosx/open.m:143 modules/gui/macosx/open.m:365
 #: modules/gui/macosx/simple_prefs.m:379 modules/gui/macosx/wizard.m:343
-#: modules/gui/macosx/wizard.m:411 modules/gui/qt4/ui/sprefs_interface.h:530
+#: modules/gui/macosx/wizard.m:411
 msgid "Choose..."
 msgstr "Ընտրեք ..."
 
@@ -19707,7 +19650,6 @@ msgid "Subtitle encoding"
 msgstr "Ենթագրերի  կոդավորում"
 
 #: modules/gui/macosx/open.m:376 modules/gui/macosx/simple_prefs.m:381
-#: modules/gui/qt4/ui/sprefs_subtitles.h:296
 msgid "Font size"
 msgstr "Տառատեսակի չափը"
 
@@ -19729,7 +19671,7 @@ msgid "Subtitle File"
 msgstr "Ենթագրերով Ֆայլ"
 
 #: modules/gui/macosx/open.m:670 modules/gui/macosx/open.m:745
-#: modules/gui/macosx/open.m:1545 modules/gui/qt4/ui/open_file.h:142
+#: modules/gui/macosx/open.m:1545
 msgid "Open File"
 msgstr "Բացել Ֆայլ"
 
@@ -19802,62 +19744,62 @@ msgstr "SDP URL"
 msgid "Save File"
 msgstr "Պահել Ֆայլը"
 
-#: modules/gui/macosx/playlist.m:516
+#: modules/gui/macosx/playlist.m:518
 msgid "Save Playlist..."
 msgstr "Պահել Երգացանկը..."
 
-#: modules/gui/macosx/playlist.m:519
+#: modules/gui/macosx/playlist.m:521
 msgid "Expand Node"
 msgstr "Բացել հանգույց"
 
-#: modules/gui/macosx/playlist.m:522
+#: modules/gui/macosx/playlist.m:524
 msgid "Download Cover Art"
 msgstr "Քաշել դիսկի նկարը"
 
-#: modules/gui/macosx/playlist.m:523
+#: modules/gui/macosx/playlist.m:525
 #, fuzzy
 msgid "Fetch Meta Data"
 msgstr "կանչը Meta Data"
 
-#: modules/gui/macosx/playlist.m:524 modules/gui/macosx/playlist.m:525
+#: modules/gui/macosx/playlist.m:526 modules/gui/macosx/playlist.m:527
 #, fuzzy
 msgid "Reveal in Finder"
 msgstr "Վերհանեն է որոնիչ"
 
-#: modules/gui/macosx/playlist.m:527
+#: modules/gui/macosx/playlist.m:529
 msgid "Sort Node by Name"
 msgstr "Տեսակավորել հանգույցը ըստ անվան"
 
-#: modules/gui/macosx/playlist.m:528
+#: modules/gui/macosx/playlist.m:530
 msgid "Sort Node by Author"
 msgstr "Տեսակավորել հանգույցը ըստ հեղինակի"
 
-#: modules/gui/macosx/playlist.m:530 modules/gui/macosx/playlist.m:531
+#: modules/gui/macosx/playlist.m:532 modules/gui/macosx/playlist.m:533
 msgid "Search in Playlist"
 msgstr "Որոնել երգացանկում"
 
-#: modules/gui/macosx/playlist.m:533
+#: modules/gui/macosx/playlist.m:535
 msgid "File Format:"
 msgstr "Ֆայլի Ֆորմատը՝"
 
-#: modules/gui/macosx/playlist.m:534
+#: modules/gui/macosx/playlist.m:536
 msgid "Extended M3U"
 msgstr "Ընդլայնված M3U"
 
-#: modules/gui/macosx/playlist.m:535
+#: modules/gui/macosx/playlist.m:537
 msgid "XML Shareable Playlist Format (XSPF)"
 msgstr "XML Shareable Playlist Format (XSPF)"
 
-#: modules/gui/macosx/playlist.m:536 modules/gui/qt4/dialogs_provider.cpp:582
+#: modules/gui/macosx/playlist.m:538 modules/gui/qt4/dialogs_provider.cpp:582
 #, fuzzy
 msgid "HTML playlist"
 msgstr "HTML երգացանկ"
 
-#: modules/gui/macosx/playlist.m:715
+#: modules/gui/macosx/playlist.m:717
 msgid "Save Playlist"
 msgstr "Պահել &Երգացանկը"
 
-#: modules/gui/macosx/playlist.m:1130
+#: modules/gui/macosx/playlist.m:1132
 msgid "Meta-information"
 msgstr "Մետատվյալներ"
 
@@ -20025,7 +19967,7 @@ msgstr "Վիզուալիզացում"
 msgid "Keep audio level between sessions"
 msgstr "Հիշել ձայնի մակարդակը անկախ անջատել/միացնելուց"
 
-#: modules/gui/macosx/simple_prefs.m:319 modules/gui/qt4/ui/sprefs_audio.h:424
+#: modules/gui/macosx/simple_prefs.m:319
 msgid "Always reset audio start level to:"
 msgstr "Միշտ սկսել այս մակարդակով՝"
 
@@ -20058,7 +20000,7 @@ msgstr "Վերականքնել AVI Ֆայլերը"
 msgid "Default Caching Level"
 msgstr "Քեշացման հիմնական մակարդակ"
 
-#: modules/gui/macosx/simple_prefs.m:337 modules/gui/qt4/ui/open.h:248
+#: modules/gui/macosx/simple_prefs.m:337
 msgid "Caching"
 msgstr "Քեշացում"
 
@@ -20128,7 +20070,6 @@ msgid "Show Fullscreen Controller"
 msgstr "Ցույց տալ Ողջ էկրանով Controller"
 
 #: modules/gui/macosx/simple_prefs.m:363
-#: modules/gui/qt4/ui/sprefs_interface.h:539
 msgid "Privacy / Network Interaction"
 msgstr "Գաղտնիության / Ցանցի սահմանափակումներ"
 
@@ -20161,14 +20102,12 @@ msgid "Display Settings"
 msgstr "Ցույց տալ Կառավարում"
 
 #: modules/gui/macosx/simple_prefs.m:380
-#: modules/gui/qt4/ui/sprefs_subtitles.h:297
 msgid "Font color"
 msgstr "Տառատեսակի գույնը"
 
 #: modules/gui/macosx/simple_prefs.m:382 modules/text_renderer/freetype.c:155
 #: modules/text_renderer/quartztext.c:92 modules/text_renderer/win32text.c:59
 #: modules/video_filter/marq.c:167 modules/video_filter/rss.c:206
-#: modules/gui/qt4/ui/sprefs_subtitles.h:295
 msgid "Font"
 msgstr "Տառատեսակ"
 
@@ -20178,7 +20117,6 @@ msgid "Subtitle languages"
 msgstr "Ենթագրեր  լեզուներով,"
 
 #: modules/gui/macosx/simple_prefs.m:384
-#: modules/gui/qt4/ui/sprefs_subtitles.h:292
 #, fuzzy
 msgid "Preferred subtitle language"
 msgstr "Նախընտրած ենթագրերի լեզու"
@@ -20198,13 +20136,11 @@ msgid "Force bold"
 msgstr "Force մոնո աուդիո"
 
 #: modules/gui/macosx/simple_prefs.m:389 modules/text_renderer/freetype.c:185
-#: modules/gui/qt4/ui/sprefs_subtitles.h:299
 #, fuzzy
 msgid "Outline color"
 msgstr "Շրջանակ"
 
 #: modules/gui/macosx/simple_prefs.m:390 modules/text_renderer/freetype.c:186
-#: modules/gui/qt4/ui/sprefs_subtitles.h:298
 msgid "Outline thickness"
 msgstr ""
 
@@ -20214,11 +20150,10 @@ msgid "Black screens in Fullscreen mode"
 msgstr "Սեւ էկրանների է Ողջ էկրանով ռեժիմում"
 
 #: modules/gui/macosx/simple_prefs.m:395 modules/stream_out/display.c:53
-#: modules/gui/qt4/ui/sprefs_video.h:341
 msgid "Display"
 msgstr "Էկրան"
 
-#: modules/gui/macosx/simple_prefs.m:401 modules/gui/qt4/ui/sprefs_video.h:357
+#: modules/gui/macosx/simple_prefs.m:401
 msgid "Video snapshots"
 msgstr "Վիդեոյից նկարներ"
 
@@ -20226,15 +20161,15 @@ msgstr "Վիդեոյից նկարներ"
 msgid "Folder"
 msgstr "Պանակ"
 
-#: modules/gui/macosx/simple_prefs.m:404 modules/gui/qt4/ui/sprefs_video.h:362
+#: modules/gui/macosx/simple_prefs.m:404
 msgid "Format"
 msgstr "Ֆորմատ"
 
-#: modules/gui/macosx/simple_prefs.m:405 modules/gui/qt4/ui/sprefs_video.h:360
+#: modules/gui/macosx/simple_prefs.m:405
 msgid "Prefix"
 msgstr "Նախածանց"
 
-#: modules/gui/macosx/simple_prefs.m:406 modules/gui/qt4/ui/sprefs_video.h:363
+#: modules/gui/macosx/simple_prefs.m:406
 msgid "Sequential numbering"
 msgstr "Հաջորդական համարակալում"
 
@@ -20417,16 +20352,13 @@ msgid "Basic"
 msgstr "Հիմնական"
 
 #: modules/gui/macosx/VideoEffects.m:83
-#: modules/gui/qt4/ui/video_effects.h:1355
 msgid "Geometry"
 msgstr "Երկրաչափություն"
 
 #: modules/gui/macosx/VideoEffects.m:84 modules/gui/macosx/VideoEffects.m:133
 #: modules/gui/macosx/VideoEffects.m:148 modules/gui/macosx/VideoEffects.m:151
 #: modules/video_filter/colorthres.c:54 modules/video_filter/marq.c:125
-#: modules/video_filter/rss.c:154 modules/gui/qt4/ui/video_effects.h:1328
-#: modules/gui/qt4/ui/video_effects.h:1334
-#: modules/gui/qt4/ui/video_effects.h:1337
+#: modules/video_filter/rss.c:154
 msgid "Color"
 msgstr "Գույն"
 
@@ -20436,56 +20368,45 @@ msgid "Image Adjust"
 msgstr "Պատկերի շտկում"
 
 #: modules/gui/macosx/VideoEffects.m:93
-#: modules/gui/qt4/ui/video_effects.h:1305
 #, fuzzy
 msgid "Brightness Threshold"
 msgstr "Պայծառության շեմ"
 
 #: modules/gui/macosx/VideoEffects.m:97 modules/video_filter/sharpen.c:67
-#: modules/gui/qt4/ui/video_effects.h:1309
 msgid "Sharpen"
 msgstr "Հստակեցում"
 
 #: modules/gui/macosx/VideoEffects.m:98
-#: modules/gui/qt4/ui/video_effects.h:1310
-#: modules/gui/qt4/ui/video_effects.h:1397
 msgid "Sigma"
 msgstr "Սիգմա"
 
 #: modules/gui/macosx/VideoEffects.m:99
-#: modules/gui/qt4/ui/video_effects.h:1311
 msgid "Banding removal"
 msgstr ""
 
 #: modules/gui/macosx/VideoEffects.m:100 modules/video_filter/gradfun.c:49
-#: modules/gui/qt4/ui/video_effects.h:1312
 msgid "Radius"
 msgstr ""
 
 #: modules/gui/macosx/VideoEffects.m:101
-#: modules/gui/qt4/ui/video_effects.h:1313
 #, fuzzy
 msgid "Film Grain"
 msgstr "Գրեյն"
 
 #: modules/gui/macosx/VideoEffects.m:102 modules/video_filter/grain.c:53
-#: modules/gui/qt4/ui/video_effects.h:1314
 #, fuzzy
 msgid "Variance"
 msgstr "Trance"
 
 #: modules/gui/macosx/VideoEffects.m:107
-#: modules/gui/qt4/ui/video_effects.h:1322
 msgid "Synchronize top and bottom"
 msgstr "Վերևն ու ներքևը նույնը վերցնել"
 
 #: modules/gui/macosx/VideoEffects.m:108
-#: modules/gui/qt4/ui/video_effects.h:1323
 msgid "Synchronize left and right"
 msgstr "Ձախն ու աջը նույնը վերցնել"
 
 #: modules/gui/macosx/VideoEffects.m:110
-#: modules/gui/qt4/ui/video_effects.h:1348
 msgid "Transform"
 msgstr "Ձևափոխում"
 
@@ -20514,58 +20435,46 @@ msgid "Magnification/Zoom"
 msgstr "Մեծացում / Խոշորացում"
 
 #: modules/gui/macosx/VideoEffects.m:123
-#: modules/gui/qt4/ui/video_effects.h:1351
 msgid "Puzzle game"
 msgstr "Հանելուկ խաղ"
 
 #: modules/gui/macosx/VideoEffects.m:124 modules/gui/macosx/VideoEffects.m:129
 #: share/lua/http/dialogs/mosaic_window.html:96
-#: modules/gui/qt4/ui/video_effects.h:1346
-#: modules/gui/qt4/ui/video_effects.h:1352
 msgid "Rows"
 msgstr "Տողեր"
 
 #: modules/gui/macosx/VideoEffects.m:125 modules/gui/macosx/VideoEffects.m:130
 #: share/lua/http/dialogs/mosaic_window.html:114
-#: modules/gui/qt4/ui/video_effects.h:1347
-#: modules/gui/qt4/ui/video_effects.h:1353
 msgid "Columns"
 msgstr "Սյուներ"
 
 #: modules/gui/macosx/VideoEffects.m:126 modules/video_filter/clone.c:57
-#: modules/gui/qt4/ui/video_effects.h:1393
 msgid "Clone"
 msgstr "Կլոն"
 
 #: modules/gui/macosx/VideoEffects.m:127 modules/video_filter/clone.c:39
-#: modules/gui/qt4/ui/video_effects.h:1394
 msgid "Number of clones"
 msgstr "Կրկնօրինակների քանակ"
 
 #: modules/gui/macosx/VideoEffects.m:128
-#: modules/gui/qt4/ui/video_effects.h:1345
 msgid "Wall"
 msgstr "Պատ"
 
 #: modules/gui/macosx/VideoEffects.m:132 modules/video_filter/colorthres.c:70
-#: modules/gui/qt4/ui/video_effects.h:1336
 msgid "Color threshold"
 msgstr "Գույնը շեմը"
 
 #: modules/gui/macosx/VideoEffects.m:135
-#: modules/gui/qt4/ui/video_effects.h:1340
 msgid "Similarity"
 msgstr "Նմանություն"
 
 #: modules/gui/macosx/VideoEffects.m:137
-#: modules/gui/qt4/ui/video_effects.h:1342
 #, fuzzy
 msgid "Intensity"
 msgstr "Ինտերնետ"
 
 #: modules/gui/macosx/VideoEffects.m:139 modules/gui/macosx/VideoEffects.m:142
 #: modules/video_filter/gradient.c:76 modules/video_filter/gradient.c:82
-#: modules/gui/qt4/ui/video_effects.h:1332
 msgid "Gradient"
 msgstr "Գրադիենտ"
 
@@ -20580,12 +20489,10 @@ msgid "Hough"
 msgstr "ծնկատակի ջլեր"
 
 #: modules/gui/macosx/VideoEffects.m:149
-#: modules/gui/qt4/ui/video_effects.h:1335
 msgid "Cartoon"
 msgstr "Մուլտեր"
 
 #: modules/gui/macosx/VideoEffects.m:150
-#: modules/gui/qt4/ui/video_effects.h:1327
 msgid "Color extraction"
 msgstr "Գունաբաժանում"
 
@@ -20594,7 +20501,6 @@ msgid "Invert colors"
 msgstr "Շրջել գույները"
 
 #: modules/gui/macosx/VideoEffects.m:153 modules/video_filter/posterize.c:68
-#: modules/gui/qt4/ui/video_effects.h:1331
 #, fuzzy
 msgid "Posterize"
 msgstr "ստերեո"
@@ -20604,12 +20510,10 @@ msgid "Posterize level"
 msgstr ""
 
 #: modules/gui/macosx/VideoEffects.m:155 modules/video_filter/motionblur.c:59
-#: modules/gui/qt4/ui/video_effects.h:1387
 msgid "Motion blur"
 msgstr "Շարժման լղոզում"
 
 #: modules/gui/macosx/VideoEffects.m:156
-#: modules/gui/qt4/ui/video_effects.h:1388
 msgid "Factor"
 msgstr "Գործակից"
 
@@ -20619,7 +20523,6 @@ msgid "Motion Detect"
 msgstr "Շարժման բացահայտում"
 
 #: modules/gui/macosx/VideoEffects.m:158
-#: modules/gui/qt4/ui/video_effects.h:1395
 msgid "Water effect"
 msgstr "Ջրի էֆեկտ"
 
@@ -20628,28 +20531,24 @@ msgid "Anaglyph"
 msgstr ""
 
 #: modules/gui/macosx/VideoEffects.m:163
-#: modules/gui/qt4/ui/video_effects.h:1366
 msgid "Add text"
 msgstr "Ավելացնել տեքս"
 
 #: modules/gui/macosx/VideoEffects.m:164 modules/misc/logger.c:108
-#: modules/video_filter/marq.c:87 modules/gui/qt4/ui/video_effects.h:1368
+#: modules/video_filter/marq.c:87
 msgid "Text"
 msgstr "Տեքստ"
 
 #: modules/gui/macosx/VideoEffects.m:185
-#: modules/gui/qt4/ui/video_effects.h:1356
 msgid "Add logo"
 msgstr "Ավելացնել տարբերանշան"
 
 #: modules/gui/macosx/VideoEffects.m:186
-#: modules/gui/qt4/ui/video_effects.h:1357
 msgid "Logo"
 msgstr "Տարբերանշան"
 
 #: modules/gui/macosx/VideoEffects.m:207
 #: modules/stream_out/mosaic_bridge.c:128 modules/video_filter/mosaic.c:87
-#: modules/gui/qt4/ui/video_effects.h:1364
 msgid "Transparency"
 msgstr "Թափանցիկություն"
 
@@ -22227,7 +22126,6 @@ msgid "File names:"
 msgstr "Ֆայլերի անուններ՝"
 
 #: modules/gui/qt4/components/open_panels.cpp:161
-#: modules/gui/qt4/ui/sprefs_interface.h:542
 msgid "Filter:"
 msgstr "Զտիչ՝"
 
@@ -22627,7 +22525,6 @@ msgid "File/Folder"
 msgstr "Ֆայլ/Պանակ"
 
 #: modules/gui/qt4/components/sout/sout_widgets.cpp:47
-#: modules/gui/qt4/ui/sout.h:202
 msgid "Source"
 msgstr "Աղբյուր"
 
@@ -22748,7 +22645,6 @@ msgid "Convert"
 msgstr "Փոխել ֆորմատը "
 
 #: modules/gui/qt4/dialogs/convert.cpp:58
-#: modules/gui/qt4/ui/sprefs_audio.h:427
 msgid "Destination file:"
 msgstr "Նպատակային ֆայլը՝"
 
@@ -22775,7 +22671,7 @@ msgstr "&Սկիզբ"
 
 #: modules/gui/qt4/dialogs/convert.cpp:132
 #, fuzzy
-msgid "Containers (*"
+msgid "Containers"
 msgstr "Շարունակել"
 
 #: modules/gui/qt4/dialogs/errors.cpp:40
@@ -22874,7 +22770,7 @@ msgstr "&Այո"
 msgid "&No"
 msgstr "&ոչ"
 
-#: modules/gui/qt4/dialogs/help.cpp:222 modules/gui/qt4/ui/update.h:147
+#: modules/gui/qt4/dialogs/help.cpp:222
 msgid "VLC media player updates"
 msgstr "VLC-ի թարմացումները"
 
@@ -23178,7 +23074,7 @@ msgstr "Ենթագրերով Ֆայլեր"
 msgid "All Files"
 msgstr "Բոլոր Ֆայլերը"
 
-#: modules/gui/qt4/dialogs/sout.cpp:45 modules/gui/qt4/ui/sout.h:201
+#: modules/gui/qt4/dialogs/sout.cpp:45
 msgid "Stream Output"
 msgstr "Ելքը Հոսք դարձնել"
 
@@ -23285,7 +23181,7 @@ msgstr "Ջնջել ընթացիկ անձնագիր"
 msgid "Cl&ose"
 msgstr "&Փակել"
 
-#: modules/gui/qt4/dialogs/toolbar.cpp:228 modules/gui/qt4/ui/profiles.h:749
+#: modules/gui/qt4/dialogs/toolbar.cpp:228
 #, fuzzy
 msgid "Profile Name"
 msgstr "անձնագիրը Անունը"
@@ -23367,7 +23263,6 @@ msgid "Repeat delay:"
 msgstr "Կրկնման հապաղում՝"
 
 #: modules/gui/qt4/dialogs/vlm.cpp:111
-#: modules/gui/qt4/ui/sprefs_interface.h:540
 msgid " days"
 msgstr " օր"
 
@@ -25160,7 +25055,6 @@ msgid "Local drives"
 msgstr "Օպտիկական սարք"
 
 #: modules/services_discovery/podcast.c:57
-#: modules/gui/qt4/ui/podcast_configuration.h:101
 #, fuzzy
 msgid "Podcast URLs list"
 msgstr "Podcast հղումները ցուցակում"
@@ -25286,7 +25180,7 @@ msgstr "Ձայնի գրանցում (ALSA)"
 msgid "CD"
 msgstr "CD"
 
-#: modules/services_discovery/udev.c:594 modules/gui/qt4/ui/open_disk.h:298
+#: modules/services_discovery/udev.c:594
 msgid "DVD"
 msgstr "DVD"
 
@@ -26860,7 +26754,7 @@ msgstr "Set պատկերը գամմա, միջեւ, 0.01 եւ 10. Նախնակա�
 msgid "Image properties filter"
 msgstr "Պատկերի գույքի զտիչ"
 
-#: modules/video_filter/adjust.c:83 modules/gui/qt4/ui/video_effects.h:1302
+#: modules/video_filter/adjust.c:83
 msgid "Image adjust"
 msgstr "Պատկերի շտկում"
 
@@ -27288,7 +27182,6 @@ msgstr ""
 " ին Windows սովորաբար նման բան է COM1 կամ COM2. Ին Linux / dev/ttyS01 ֆե"
 
 #: modules/video_filter/atmo/atmo.cpp:260
-#: modules/gui/qt4/ui/video_effects.h:1378
 msgid "Edge weightning"
 msgstr "Եզրերի հաստացում"
 
@@ -27307,7 +27200,6 @@ msgid "Overall brightness of your LED stripes"
 msgstr "ընդհանուր պայծառությունը Ձեր LED շերտեր`"
 
 #: modules/video_filter/atmo/atmo.cpp:265
-#: modules/gui/qt4/ui/video_effects.h:1381
 #, fuzzy
 msgid "Darkness limit"
 msgstr "Darknesslimit"
@@ -27337,7 +27229,6 @@ msgid "Sat windowing"
 msgstr "Sat windowing"
 
 #: modules/video_filter/atmo/atmo.cpp:274
-#: modules/gui/qt4/ui/video_effects.h:1383
 msgid "Filter length (ms)"
 msgstr "Զտիչի երկարություն (մվ)"
 
@@ -27359,7 +27250,6 @@ msgid "How much a color has to be changed for an immediate color change."
 msgstr "Որքան գունավոր պետք է փոխել համար անմիջական գույնը փոխել\"."
 
 #: modules/video_filter/atmo/atmo.cpp:280
-#: modules/gui/qt4/ui/video_effects.h:1385
 msgid "Filter smoothness (%)"
 msgstr "Զտիչի հարթություն (%-ով)"
 
@@ -27545,8 +27435,6 @@ msgid "AtmoLight Filter"
 msgstr "AtmoLight Զտիչ"
 
 #: modules/video_filter/atmo/atmo.cpp:367
-#: modules/gui/qt4/ui/video_effects.h:1377
-#: modules/gui/qt4/ui/video_effects.h:1386
 msgid "AtmoLight"
 msgstr "AtmoLight"
 
@@ -28260,7 +28148,6 @@ msgstr "դինամիկ վիդեո խուփ"
 
 #: modules/video_filter/dynamicoverlay/dynamicoverlay.c:68
 #: share/lua/http/dialogs/create_stream.html:245
-#: modules/gui/qt4/ui/video_effects.h:1376
 #, fuzzy
 msgid "Overlay"
 msgstr "խուփ"
@@ -29692,7 +29579,7 @@ msgstr "Ցուցադրել շարժման վեկտորները"
 msgid "Rotate video filter"
 msgstr "պտտել վիդեո զտիչ"
 
-#: modules/video_filter/rotate.c:67 modules/gui/qt4/ui/video_effects.h:1349
+#: modules/video_filter/rotate.c:67
 msgid "Rotate"
 msgstr "Պտտել"
 
@@ -30463,7 +30350,7 @@ msgstr "Նվազագույն Mac OS X OpenGL վիդեո ելք (բացում ա 
 msgid "iOS OpenGL video output"
 msgstr "OpenGL Վիդեո ելք"
 
-#: modules/video_output/kva.c:50 modules/gui/qt4/ui/sprefs_video.h:352
+#: modules/video_output/kva.c:50
 msgid "Enable a workaround for T23"
 msgstr ""
 
@@ -30473,7 +30360,7 @@ msgid ""
 "size is equal to or smaller than the movie size."
 msgstr ""
 
-#: modules/video_output/kva.c:55 modules/gui/qt4/ui/sprefs_video.h:351
+#: modules/video_output/kva.c:55
 #, fuzzy
 msgid "Video mode"
 msgstr "Վիդեո կոդեկ"
@@ -30545,7 +30432,7 @@ msgstr ""
 msgid "Direct3D video output"
 msgstr "Direct3D վիդեո ելք"
 
-#: modules/video_output/msw/directx.c:66 modules/gui/qt4/ui/sprefs_video.h:344
+#: modules/video_output/msw/directx.c:66
 msgid "Use hardware YUV->RGB conversions"
 msgstr "Օգտագործել սառքային մակարդակի YUV-> RGB փոխակերպում"
 
@@ -31145,7 +31032,6 @@ msgid "Play List"
 msgstr "Երգացանկ"
 
 #: share/lua/http/dialogs/create_stream.html:156
-#: modules/gui/qt4/ui/sprefs_audio.h:425 modules/gui/qt4/ui/sprefs_video.h:346
 msgid "Output"
 msgstr "Ելք"
 
@@ -31283,7 +31169,7 @@ msgstr "&Համաժամացում"
 msgid "VLM Batch Commands"
 msgstr "Հրամաններ"
 
-#: share/lua/http/index.html:240 modules/gui/qt4/ui/vlm.h:298
+#: share/lua/http/index.html:240
 msgid "Loop"
 msgstr "Ցիկլ"
 
@@ -31357,904 +31243,648 @@ msgstr ""
 msgid "Are you sure you wish to create the stream?"
 msgstr ""
 
-#: modules/gui/qt4/ui/about.h:287 modules/gui/qt4/ui/open.h:242
-#: modules/gui/qt4/ui/podcast_configuration.h:100
-msgid "Dialog"
-msgstr "Պատուհան"
+#~ msgid "Dialog"
+#~ msgstr "Պատուհան"
 
-#: modules/gui/qt4/ui/about.h:288 modules/gui/qt4/ui/about.h:289
-msgid "Update"
-msgstr "Թարմացնել"
+#~ msgid "Update"
+#~ msgstr "Թարմացնել"
 
-#: modules/gui/qt4/ui/equalizer.h:132 modules/gui/qt4/ui/open_disk.h:296
-#: modules/gui/qt4/ui/open_net.h:96 modules/gui/qt4/ui/sprefs_audio.h:420
-#: modules/gui/qt4/ui/sprefs_input.h:340
-#: modules/gui/qt4/ui/sprefs_interface.h:512
-#: modules/gui/qt4/ui/sprefs_subtitles.h:285
-#: modules/gui/qt4/ui/sprefs_video.h:339 modules/gui/qt4/ui/streampanel.h:167
-msgid "Form"
-msgstr "Ֆորմա"
+#~ msgid "Form"
+#~ msgstr "Ֆորմա"
 
-#: modules/gui/qt4/ui/equalizer.h:135
-msgid "Preset"
-msgstr "Պատրաստի"
+#~ msgid "Preset"
+#~ msgstr "Պատրաստի"
 
-#: modules/gui/qt4/ui/equalizer.h:137
-msgid "0.00 dB"
-msgstr ""
-
-#: modules/gui/qt4/ui/messages_panel.h:139
 #, fuzzy
-msgid "&Verbosity:"
-msgstr "Մանրամասնում"
+#~ msgid "&Verbosity:"
+#~ msgstr "Մանրամասնում"
 
-#: modules/gui/qt4/ui/messages_panel.h:140
 #, fuzzy
-msgid "&Filter:"
-msgstr "Զտիչ՝"
+#~ msgid "&Filter:"
+#~ msgstr "Զտիչ՝"
 
-#: modules/gui/qt4/ui/messages_panel.h:141
-msgid "&Save as..."
-msgstr "&Պահել որպես ..."
+#~ msgid "&Save as..."
+#~ msgstr "&Պահել որպես ..."
 
-#: modules/gui/qt4/ui/messages_panel.h:143
 #, fuzzy
-msgid "Modules Tree"
-msgstr "Մոդուլների ծառ"
+#~ msgid "Modules Tree"
+#~ msgstr "Մոդուլների ծառ"
 
-#: modules/gui/qt4/ui/open.h:245
-msgid "Show extended options"
-msgstr "Ընդլայնված ընտրանքներ"
+#~ msgid "Show extended options"
+#~ msgstr "Ընդլայնված ընտրանքներ"
 
-#: modules/gui/qt4/ui/open.h:247
-msgid "Show &more options"
-msgstr "&Լրացուցիչ հնարավորություններ"
+#~ msgid "Show &more options"
+#~ msgstr "&Լրացուցիչ հնարավորություններ"
 
-#: modules/gui/qt4/ui/open.h:250
-msgid "Change the caching for the media"
-msgstr "Փոխել է տվյալների քեշացումը"
+#~ msgid "Change the caching for the media"
+#~ msgstr "Փոխել է տվյալների քեշացումը"
 
-#: modules/gui/qt4/ui/open.h:252
-msgid " ms"
-msgstr " մվ"
+#~ msgid " ms"
+#~ msgstr " մվ"
 
-#: modules/gui/qt4/ui/open.h:253
-msgid "MRL"
-msgstr "MRL"
+#~ msgid "MRL"
+#~ msgstr "MRL"
 
-#: modules/gui/qt4/ui/open.h:254
-msgid "Start Time"
-msgstr "Սկսելու Ժամանակ"
+#~ msgid "Start Time"
+#~ msgstr "Սկսելու Ժամանակ"
 
-#: modules/gui/qt4/ui/open.h:255
-msgid "Edit Options"
-msgstr "Ընտրանքներ"
+#~ msgid "Edit Options"
+#~ msgstr "Ընտրանքներ"
 
-#: modules/gui/qt4/ui/open.h:256
-msgid "Extra media"
-msgstr "Լրացուցիչ"
+#~ msgid "Extra media"
+#~ msgstr "Լրացուցիչ"
 
-#: modules/gui/qt4/ui/open.h:258
-msgid "Complete MRL for VLC internal"
-msgstr "Ամբողջական հասցե VLC-ի ներքին նպատակների համար "
+#~ msgid "Complete MRL for VLC internal"
+#~ msgstr "Ամբողջական հասցե VLC-ի ներքին նպատակների համար "
 
-#: modules/gui/qt4/ui/open.h:261
-msgid "Select the file"
-msgstr "Ընտրել ֆայլը"
+#~ msgid "Select the file"
+#~ msgstr "Ընտրել ֆայլը"
 
-#: modules/gui/qt4/ui/open.h:265
-msgid "Change the start time for the media"
-msgstr "Փոխել սկսելու ժամանակը"
+#~ msgid "Change the start time for the media"
+#~ msgstr "Փոխել սկսելու ժամանակը"
 
-#: modules/gui/qt4/ui/open.h:267
-msgid "HH'H':mm'm':ss's'.zzz"
-msgstr ""
+#~ msgid "Play another media synchronously (extra audio file, ...)"
+#~ msgstr "Զուգահեռ ուրիշ ֆայլ միացնել (լրացուցիչ ձայնային ֆայլ, ...)"
 
-#: modules/gui/qt4/ui/open.h:268
-msgid "Play another media synchronously (extra audio file, ...)"
-msgstr "Զուգահեռ ուրիշ ֆայլ միացնել (լրացուցիչ ձայնային ֆայլ, ...)"
+#~ msgid "Capture mode"
+#~ msgstr "Գրանցման ռեժիմ"
 
-#: modules/gui/qt4/ui/open_capture.h:97
-msgid "Capture mode"
-msgstr "Գրանցման ռեժիմ"
+#~ msgid "Select the capture device type"
+#~ msgstr "Ընտրեք գրանցող սարքի տեսակը"
 
-#: modules/gui/qt4/ui/open_capture.h:99
-msgid "Select the capture device type"
-msgstr "Ընտրեք գրանցող սարքի տեսակը"
+#~ msgid "Device Selection"
+#~ msgstr "Սարքի ընտրություն"
 
-#: modules/gui/qt4/ui/open_capture.h:101
-msgid "Device Selection"
-msgstr "Սարքի ընտրություն"
+#~ msgid "Options"
+#~ msgstr "Ընտրանքներ"
 
-#: modules/gui/qt4/ui/open_capture.h:102
-msgid "Options"
-msgstr "Ընտրանքներ"
+#~ msgid "Access advanced options to tweak the device"
+#~ msgstr "Անցնել սարքի ընդլայնված ընտրանքներին"
 
-#: modules/gui/qt4/ui/open_capture.h:104
-msgid "Access advanced options to tweak the device"
-msgstr "Անցնել սարքի ընդլայնված ընտրանքներին"
+#~ msgid "Advanced options..."
+#~ msgstr "Ընդլայնված ընտարնքներ..."
 
-#: modules/gui/qt4/ui/open_capture.h:106
-msgid "Advanced options..."
-msgstr "Ընդլայնված ընտարնքներ..."
+#~ msgid "Disc Selection"
+#~ msgstr "Սկավառակի ընտրություն"
 
-#: modules/gui/qt4/ui/open_disk.h:297
-msgid "Disc Selection"
-msgstr "Սկավառակի ընտրություն"
+#~ msgid "SVCD/VCD"
+#~ msgstr "SVCD/VCD"
 
-#: modules/gui/qt4/ui/open_disk.h:301
-msgid "SVCD/VCD"
-msgstr "SVCD/VCD"
-
-#: modules/gui/qt4/ui/open_disk.h:303
 #, fuzzy
-msgid "Disable Disc Menus"
-msgstr "DVD ընտրացանկեր"
+#~ msgid "Disable Disc Menus"
+#~ msgstr "DVD ընտրացանկեր"
 
-#: modules/gui/qt4/ui/open_disk.h:305
 #, fuzzy
-msgid "No disc menus"
-msgstr "Առանց DVD մենյուների"
+#~ msgid "No disc menus"
+#~ msgstr "Առանց DVD մենյուների"
 
-#: modules/gui/qt4/ui/open_disk.h:306
-msgid "Disc device"
-msgstr "Սկավառակի սարք"
+#~ msgid "Disc device"
+#~ msgstr "Սկավառակի սարք"
 
-#: modules/gui/qt4/ui/open_disk.h:308
-msgid "Starting Position"
-msgstr "Սկզբնական դիրք"
+#~ msgid "Starting Position"
+#~ msgstr "Սկզբնական դիրք"
 
-#: modules/gui/qt4/ui/open_disk.h:311
-msgid "Audio and Subtitles"
-msgstr "Ձայն եւ ենթագրեր"
+#~ msgid "Audio and Subtitles"
+#~ msgstr "Ձայն եւ ենթագրեր"
 
-#: modules/gui/qt4/ui/open_file.h:143
 #, fuzzy
-msgid "Use a sub&title file"
-msgstr "Օգտագործել &ենթագրերով ֆայլը"
+#~ msgid "Use a sub&title file"
+#~ msgstr "Օգտագործել &ենթագրերով ֆայլը"
 
-#: modules/gui/qt4/ui/open_file.h:145
 #, fuzzy
-msgid "Select the subtitle file"
-msgstr "Ընտրեք ենթագրերով ֆայլը"
+#~ msgid "Select the subtitle file"
+#~ msgstr "Ընտրեք ենթագրերով ֆայլը"
 
-#: modules/gui/qt4/ui/open_file.h:149
-msgid "Choose one or more media file to open"
-msgstr "Ընտրեք մեկ կամ ավելի մեդիա ֆայլ բացելու համար"
+#~ msgid "Choose one or more media file to open"
+#~ msgstr "Ընտրեք մեկ կամ ավելի մեդիա ֆայլ բացելու համար"
 
-#: modules/gui/qt4/ui/open_file.h:151
-msgid "File Selection"
-msgstr "Ֆայլի ընտրություն"
+#~ msgid "File Selection"
+#~ msgstr "Ֆայլի ընտրություն"
 
-#: modules/gui/qt4/ui/open_file.h:152
-msgid "You can select local files with the following list and buttons."
-msgstr "Ընտրել ֆայլեր ցանկի եւ կոճակների օգնությամբ"
+#~ msgid "You can select local files with the following list and buttons."
+#~ msgstr "Ընտրել ֆայլեր ցանկի եւ կոճակների օգնությամբ"
 
-#: modules/gui/qt4/ui/open_file.h:153
-msgid "Add..."
-msgstr "Ավելացնել ..."
+#~ msgid "Add..."
+#~ msgstr "Ավելացնել ..."
 
-#: modules/gui/qt4/ui/open_net.h:97
-msgid "Network Protocol"
-msgstr "Ցանցի պրոտոկոլ"
+#~ msgid "Network Protocol"
+#~ msgstr "Ցանցի պրոտոկոլ"
 
-#: modules/gui/qt4/ui/open_net.h:98
-msgid "Please enter a network URL:"
-msgstr "Մուտքագրեք ցանցային հասցե՝"
+#~ msgid "Please enter a network URL:"
+#~ msgstr "Մուտքագրեք ցանցային հասցե՝"
 
-#: modules/gui/qt4/ui/profiles.h:686
 #, fuzzy
-msgid "Profile edition"
-msgstr "Անձնագիրի անունը Բացակայում է"
+#~ msgid "Profile edition"
+#~ msgstr "Անձնագիրի անունը Բացակայում է"
 
-#: modules/gui/qt4/ui/profiles.h:687
-msgid "MPEG-TS"
-msgstr "MPEG-TS"
+#~ msgid "MPEG-TS"
+#~ msgstr "MPEG-TS"
 
-#: modules/gui/qt4/ui/profiles.h:688
-msgid "MPEG-PS"
-msgstr "MPEG-PS"
+#~ msgid "MPEG-PS"
+#~ msgstr "MPEG-PS"
 
-#: modules/gui/qt4/ui/profiles.h:689
-msgid "MPEG 1"
-msgstr "MPEG 1"
+#~ msgid "MPEG 1"
+#~ msgstr "MPEG 1"
 
-#: modules/gui/qt4/ui/profiles.h:690
-msgid "ASF/WMV"
-msgstr "ASF/WMV"
+#~ msgid "ASF/WMV"
+#~ msgstr "ASF/WMV"
 
-#: modules/gui/qt4/ui/profiles.h:691
-msgid "Webm"
-msgstr ""
+#~ msgid "MJPEG"
+#~ msgstr "MJPEG"
 
-#: modules/gui/qt4/ui/profiles.h:692
-msgid "MJPEG"
-msgstr "MJPEG"
+#~ msgid "MKV"
+#~ msgstr "MKV"
 
-#: modules/gui/qt4/ui/profiles.h:693
-msgid "MKV"
-msgstr "MKV"
+#~ msgid "Ogg/Ogm"
+#~ msgstr "Ogg/Ogm"
 
-#: modules/gui/qt4/ui/profiles.h:694
-msgid "Ogg/Ogm"
-msgstr "Ogg/Ogm"
+#~ msgid "WAV"
+#~ msgstr "WAV"
 
-#: modules/gui/qt4/ui/profiles.h:695
-msgid "WAV"
-msgstr "WAV"
+#~ msgid "RAW"
+#~ msgstr "RAW"
 
-#: modules/gui/qt4/ui/profiles.h:696
-msgid "RAW"
-msgstr "RAW"
+#~ msgid "MP4/MOV"
+#~ msgstr "MP4/MOV"
 
-#: modules/gui/qt4/ui/profiles.h:697
-msgid "MP4/MOV"
-msgstr "MP4/MOV"
+#~ msgid "FLV"
+#~ msgstr "FLV"
 
-#: modules/gui/qt4/ui/profiles.h:698
-msgid "FLV"
-msgstr "FLV"
+#~ msgid "AVI"
+#~ msgstr "AVI"
 
-#: modules/gui/qt4/ui/profiles.h:699
-msgid "AVI"
-msgstr "AVI"
-
-#: modules/gui/qt4/ui/profiles.h:700
 #, fuzzy
-msgid "Features"
-msgstr "Ակնարկ"
+#~ msgid "Features"
+#~ msgstr "Ակնարկ"
 
-#: modules/gui/qt4/ui/profiles.h:702
 #, fuzzy
-msgid "Streamable"
-msgstr "հոսք\" անունը "
+#~ msgid "Streamable"
+#~ msgstr "հոսք\" անունը "
 
-#: modules/gui/qt4/ui/profiles.h:703
 #, fuzzy
-msgid "Chapters"
-msgstr "Բաժին"
+#~ msgid "Chapters"
+#~ msgstr "Բաժին"
 
-#: modules/gui/qt4/ui/profiles.h:706
 #, fuzzy
-msgid "Menus"
-msgstr "Մենյու"
+#~ msgid "Menus"
+#~ msgstr "Մենյու"
 
-#: modules/gui/qt4/ui/profiles.h:714
 #, fuzzy
-msgid "Same as source"
-msgstr "Տարբերանշանի ենթազտիչ"
+#~ msgid "Same as source"
+#~ msgstr "Տարբերանշանի ենթազտիչ"
 
-#: modules/gui/qt4/ui/profiles.h:716
-msgid " fps"
-msgstr " կադր/վ"
+#~ msgid " fps"
+#~ msgstr " կադր/վ"
 
-#: modules/gui/qt4/ui/profiles.h:717
 #, fuzzy
-msgid "Custom options"
-msgstr "Հնարավոր եզրերից կտրման գործակիցների ցուցակ"
+#~ msgid "Custom options"
+#~ msgstr "Հնարավոր եզրերից կտրման գործակիցների ցուցակ"
 
-#: modules/gui/qt4/ui/profiles.h:718
-msgid "Quality"
-msgstr "Որակ"
+#~ msgid "Quality"
+#~ msgstr "Որակ"
 
-#: modules/gui/qt4/ui/profiles.h:719 modules/gui/qt4/ui/profiles.h:720
 #, fuzzy
-msgid "Not Used"
-msgstr "Ընտրված չէ"
+#~ msgid "Not Used"
+#~ msgstr "Ընտրված չէ"
 
-#: modules/gui/qt4/ui/profiles.h:721 modules/gui/qt4/ui/profiles.h:740
-msgid " kb/s"
-msgstr " կբ/վ"
+#~ msgid " kb/s"
+#~ msgstr " կբ/վ"
 
-#: modules/gui/qt4/ui/profiles.h:722 modules/gui/qt4/ui/profiles.h:742
 #, fuzzy
-msgid "Encoding parameters"
-msgstr "Կոդավորում X կորդինատով"
+#~ msgid "Encoding parameters"
+#~ msgstr "Կոդավորում X կորդինատով"
 
-#: modules/gui/qt4/ui/profiles.h:725
 #, fuzzy
-msgid "Frame size"
-msgstr "Կադրերի արագութուն"
+#~ msgid "Frame size"
+#~ msgstr "Կադրերի արագութուն"
 
-#: modules/gui/qt4/ui/profiles.h:728 modules/gui/qt4/ui/profiles.h:731
 #, fuzzy
-msgid "px"
-msgstr " պքս"
+#~ msgid "px"
+#~ msgstr " պքս"
 
-#: modules/gui/qt4/ui/profiles.h:741
-msgid "Sample Rate"
-msgstr "Դիսկրետացման հաճախություն"
+#~ msgid "Sample Rate"
+#~ msgstr "Դիսկրետացման հաճախություն"
 
-#: modules/gui/qt4/ui/sout.h:203
-msgid "Set up media sources to stream"
-msgstr ""
-
-#: modules/gui/qt4/ui/sout.h:205
 #, fuzzy
-msgid "Destination Setup"
-msgstr "Հասցե"
+#~ msgid "Destination Setup"
+#~ msgstr "Հասցե"
 
-#: modules/gui/qt4/ui/sout.h:206
 #, fuzzy
-msgid "Select destinations to stream to"
-msgstr "Ընտրել հոսք"
+#~ msgid "Select destinations to stream to"
+#~ msgstr "Ընտրել հոսք"
 
-#: modules/gui/qt4/ui/sout.h:207
-msgid ""
-"Add destinations following the streaming methods you need. Be sure to check "
-"with transcoding that the format is compatible with the method used."
-msgstr ""
-"Ավելացնել ուղղություններ ըստ ձեզ անհրաժեշտ հոսքային մեթոդի: Համոզվեք, որ "
-"կոդավորման ձեւաչափը համատեղելի է օգտագործվոց եղանակի հետ:"
+#~ msgid ""
+#~ "Add destinations following the streaming methods you need. Be sure to "
+#~ "check with transcoding that the format is compatible with the method used."
+#~ msgstr ""
+#~ "Ավելացնել ուղղություններ ըստ ձեզ անհրաժեշտ հոսքային մեթոդի: Համոզվեք, որ "
+#~ "կոդավորման ձեւաչափը համատեղելի է օգտագործվոց եղանակի հետ:"
 
-#: modules/gui/qt4/ui/sout.h:208
-msgid "New destination"
-msgstr "Նոր ուղղություն"
+#~ msgid "New destination"
+#~ msgstr "Նոր ուղղություն"
 
-#: modules/gui/qt4/ui/sout.h:210
-msgid "Display locally"
-msgstr "Տեղում ցույց տալ"
+#~ msgid "Display locally"
+#~ msgstr "Տեղում ցույց տալ"
 
-#: modules/gui/qt4/ui/sout.h:212
 #, fuzzy
-msgid "Transcoding Options"
-msgstr "Transcoding ընտրանքներ"
+#~ msgid "Transcoding Options"
+#~ msgstr "Transcoding ընտրանքներ"
 
-#: modules/gui/qt4/ui/sout.h:213
 #, fuzzy
-msgid "Select and choose transcoding options"
-msgstr "Հոսքի եւ Transcoding Options"
+#~ msgid "Select and choose transcoding options"
+#~ msgstr "Հոսքի եւ Transcoding Options"
 
-#: modules/gui/qt4/ui/sout.h:214
-msgid "Activate Transcoding"
-msgstr "Ակտիվացնել Վերակոդավորումը"
+#~ msgid "Activate Transcoding"
+#~ msgstr "Ակտիվացնել Վերակոդավորումը"
 
-#: modules/gui/qt4/ui/sout.h:215
 #, fuzzy
-msgid "Option Setup"
-msgstr "Ընտրանք / Alt"
+#~ msgid "Option Setup"
+#~ msgstr "Ընտրանք / Alt"
 
-#: modules/gui/qt4/ui/sout.h:216
 #, fuzzy
-msgid "Set up any additional options for streaming"
-msgstr "սահմանում է մի քանի լրացուցիչ պարամետրերի համար հոսքի\"."
+#~ msgid "Set up any additional options for streaming"
+#~ msgstr "սահմանում է մի քանի լրացուցիչ պարամետրերի համար հոսքի\"."
 
-#: modules/gui/qt4/ui/sout.h:217
-msgid "Miscellaneous Options"
-msgstr "Տարբեր Հնարավորություններ"
+#~ msgid "Miscellaneous Options"
+#~ msgstr "Տարբեր Հնարավորություններ"
 
-#: modules/gui/qt4/ui/sout.h:218
-msgid "Stream all elementary streams"
-msgstr "Հոսք ուղարկել բոլոր տարրական հոսքերը"
+#~ msgid "Stream all elementary streams"
+#~ msgstr "Հոսք ուղարկել բոլոր տարրական հոսքերը"
 
-#: modules/gui/qt4/ui/sout.h:219
-msgid "Generated stream output string"
-msgstr "Գեներացված ելքի հոսքավորման տող"
+#~ msgid "Generated stream output string"
+#~ msgstr "Գեներացված ելքի հոսքավորման տող"
 
-#: modules/gui/qt4/ui/sprefs_audio.h:423
-msgid " %"
-msgstr " %"
+#~ msgid " %"
+#~ msgstr " %"
 
-#: modules/gui/qt4/ui/sprefs_audio.h:426
-msgid "Output module:"
-msgstr "Ելքային մոդուլը`"
+#~ msgid "Output module:"
+#~ msgstr "Ելքային մոդուլը`"
 
-#: modules/gui/qt4/ui/sprefs_audio.h:431
-msgid "Visualization:"
-msgstr "Վիզուալիզացում՝"
+#~ msgid "Visualization:"
+#~ msgstr "Վիզուալիզացում՝"
 
-#: modules/gui/qt4/ui/sprefs_audio.h:432
-msgid "Enable Time-Stretching audio"
-msgstr "Թույլ տալ ձգել ձայնը ըստ ժամանակ"
+#~ msgid "Enable Time-Stretching audio"
+#~ msgstr "Թույլ տալ ձգել ձայնը ըստ ժամանակ"
 
-#: modules/gui/qt4/ui/sprefs_audio.h:433
-msgid "Dolby Surround:"
-msgstr "Dolby Surround՝"
+#~ msgid "Dolby Surround:"
+#~ msgstr "Dolby Surround՝"
 
-#: modules/gui/qt4/ui/sprefs_audio.h:434
-msgid "Replay gain mode:"
-msgstr "Կրկնման ռեժիմ՝"
+#~ msgid "Replay gain mode:"
+#~ msgstr "Կրկնման ռեժիմ՝"
 
-#: modules/gui/qt4/ui/sprefs_audio.h:435
-msgid "Headphone surround effect"
-msgstr "Ականջակալների տարածական էֆֆեկտ"
+#~ msgid "Headphone surround effect"
+#~ msgstr "Ականջակալների տարածական էֆֆեկտ"
 
-#: modules/gui/qt4/ui/sprefs_audio.h:436
-msgid "Normalize volume to:"
-msgstr "Հավասարեցնել ձայնը դեպի"
+#~ msgid "Normalize volume to:"
+#~ msgstr "Հավասարեցնել ձայնը դեպի"
 
-#: modules/gui/qt4/ui/sprefs_audio.h:438
-msgid "Preferred audio language:"
-msgstr "Նախընտրած ձայնի լեզուն:"
+#~ msgid "Preferred audio language:"
+#~ msgstr "Նախընտրած ձայնի լեզուն:"
 
-#: modules/gui/qt4/ui/sprefs_audio.h:439
-msgid "Password:"
-msgstr "Գաղտնաբառ`"
+#~ msgid "Password:"
+#~ msgstr "Գաղտնաբառ`"
 
-#: modules/gui/qt4/ui/sprefs_audio.h:440
-msgid "Username:"
-msgstr "Մականուն՝"
+#~ msgid "Username:"
+#~ msgstr "Մականուն՝"
 
-#: modules/gui/qt4/ui/sprefs_audio.h:441
-msgid "Submit played tracks stats to Last.fm"
-msgstr "Ուղարկել վիճակագրությունը Last.fm"
+#~ msgid "Submit played tracks stats to Last.fm"
+#~ msgstr "Ուղարկել վիճակագրությունը Last.fm"
 
-#: modules/gui/qt4/ui/sprefs_input.h:341
-msgid "Codecs"
-msgstr "Կոդեկներ"
+#~ msgid "Codecs"
+#~ msgstr "Կոդեկներ"
 
-#: modules/gui/qt4/ui/sprefs_input.h:342
-msgid "x264 profile and level selection"
-msgstr ""
-
-#: modules/gui/qt4/ui/sprefs_input.h:343
-msgid "x264 preset and tuning selection"
-msgstr ""
-
-#: modules/gui/qt4/ui/sprefs_input.h:344
 #, fuzzy
-msgid "Hardware-accelerated decoding"
-msgstr "Սարքավորումներ ապակոդավորման"
+#~ msgid "Hardware-accelerated decoding"
+#~ msgstr "Սարքավորումներ ապակոդավորման"
 
-#: modules/gui/qt4/ui/sprefs_input.h:345
-msgid "Skip H.264 in-loop deblocking filter"
-msgstr "Շրջանցել H.264-ի ցիկլային deblocking զտիչը"
+#~ msgid "Skip H.264 in-loop deblocking filter"
+#~ msgstr "Շրջանցել H.264-ի ցիկլային deblocking զտիչը"
 
-#: modules/gui/qt4/ui/sprefs_input.h:346
-msgid "Video quality post-processing level"
-msgstr "Վիդեո որակի հետմշակման մակարդակ"
+#~ msgid "Video quality post-processing level"
+#~ msgstr "Վիդեո որակի հետմշակման մակարդակ"
 
-#: modules/gui/qt4/ui/sprefs_input.h:347
-msgid "Optical drive"
-msgstr "Օպտիկական սարք"
+#~ msgid "Optical drive"
+#~ msgstr "Օպտիկական սարք"
 
-#: modules/gui/qt4/ui/sprefs_input.h:348
-msgid "Default optical device"
-msgstr "Հիմնական օպտիկական սարք"
+#~ msgid "Default optical device"
+#~ msgstr "Հիմնական օպտիկական սարք"
 
-#: modules/gui/qt4/ui/sprefs_input.h:349
-msgid "Files"
-msgstr "Ֆայլեր"
+#~ msgid "Files"
+#~ msgstr "Ֆայլեր"
 
-#: modules/gui/qt4/ui/sprefs_input.h:352
-msgid "Damaged or incomplete AVI file"
-msgstr "Վնասված կամ թերի AVI file"
+#~ msgid "Damaged or incomplete AVI file"
+#~ msgstr "Վնասված կամ թերի AVI file"
 
-#: modules/gui/qt4/ui/sprefs_input.h:355
-msgid "HTTP proxy URL"
-msgstr "HTTP պրոքսիի URL"
+#~ msgid "HTTP proxy URL"
+#~ msgstr "HTTP պրոքսիի URL"
 
-#: modules/gui/qt4/ui/sprefs_input.h:356
-msgid "HTTP (default)"
-msgstr "HTTP (լռությամբ)"
+#~ msgid "HTTP (default)"
+#~ msgstr "HTTP (լռությամբ)"
 
-#: modules/gui/qt4/ui/sprefs_input.h:357
-msgid "RTP over RTSP (TCP)"
-msgstr "RTP-ն  RTSP-ով (TCP)"
+#~ msgid "RTP over RTSP (TCP)"
+#~ msgstr "RTP-ն  RTSP-ով (TCP)"
 
-#: modules/gui/qt4/ui/sprefs_input.h:358
-msgid "Live555 stream transport"
-msgstr "Live555 հոսքի տեղափոխում"
+#~ msgid "Live555 stream transport"
+#~ msgstr "Live555 հոսքի տեղափոխում"
 
-#: modules/gui/qt4/ui/sprefs_input.h:359
-msgid "Default caching policy"
-msgstr "Քեշացման հիմնական կանոններ"
+#~ msgid "Default caching policy"
+#~ msgstr "Քեշացման հիմնական կանոններ"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:514
-msgid "Menus language:"
-msgstr "Մենյուների լեզուն`"
+#~ msgid "Menus language:"
+#~ msgstr "Մենյուների լեզուն`"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:515
-msgid "Look and feel"
-msgstr "Տեսք և վարք"
+#~ msgid "Look and feel"
+#~ msgstr "Տեսք և վարք"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:516
-msgid "Use custom skin"
-msgstr "Օգտագործել սեփական սկին"
+#~ msgid "Use custom skin"
+#~ msgstr "Օգտագործել սեփական սկին"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:518
-msgid "This is VLC's default interface, with a native look and feel."
-msgstr "Սա VLCի հիմնական ինտերֆեյսն է, հարազատ տեսքով և վարքով."
+#~ msgid "This is VLC's default interface, with a native look and feel."
+#~ msgstr "Սա VLCի հիմնական ինտերֆեյսն է, հարազատ տեսքով և վարքով."
 
-#: modules/gui/qt4/ui/sprefs_interface.h:520
-msgid "Use native style"
-msgstr "Օգտագործել ստանդարտ ոճ"
+#~ msgid "Use native style"
+#~ msgstr "Օգտագործել ստանդարտ ոճ"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:521
-msgid "Resize interface to video size"
-msgstr "Ջգվել ըստ վիդեոյի չափի"
+#~ msgid "Resize interface to video size"
+#~ msgstr "Ջգվել ըստ վիդեոյի չափի"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:522
-msgid "Show controls in full screen mode"
-msgstr ""
-"Ցույց տալ վահանակներ\n"
-"ողջ էկրանով ռեժիմում"
+#~ msgid "Show controls in full screen mode"
+#~ msgstr ""
+#~ "Ցույց տալ վահանակներ\n"
+#~ "ողջ էկրանով ռեժիմում"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:523
 #, fuzzy
-msgid "Pause playback when minimized"
-msgstr ""
-"Փոքրացված վիճակում\n"
-"ցույց տալ տեղեկացումներ"
+#~ msgid "Pause playback when minimized"
+#~ msgstr ""
+#~ "Փոքրացված վիճակում\n"
+#~ "ցույց տալ տեղեկացումներ"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:524
-msgid "Show media change popup:"
-msgstr ""
-
-#: modules/gui/qt4/ui/sprefs_interface.h:525
 #, fuzzy
-msgid "Start in minimal view mode"
-msgstr "Սկսել է նվազագույն դիտել (առանց ընտրացանկերում)"
+#~ msgid "Start in minimal view mode"
+#~ msgstr "Սկսել է նվազագույն դիտել (առանց ընտրացանկերում)"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:526
-msgid "Force window style:"
-msgstr "Պահպանել պատուհանի ոճը"
+#~ msgid "Force window style:"
+#~ msgstr "Պահպանել պատուհանի ոճը"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:527
 #, fuzzy
-msgid "Integrate video in interface"
-msgstr "ինտեգրվում վիդեո է ինտերֆեյսի"
+#~ msgid "Integrate video in interface"
+#~ msgstr "ինտեգրվում վիդեո է ինտերֆեյսի"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:528
-msgid "Show systray icon"
-msgstr ""
-"Ցույց տալ պատկերակ\n"
-"համակարգի վահանակում"
+#~ msgid "Show systray icon"
+#~ msgstr ""
+#~ "Ցույց տալ պատկերակ\n"
+#~ "համակարգի վահանակում"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:529
-msgid "Skin resource file:"
-msgstr "Սկինի հասցե՝"
+#~ msgid "Skin resource file:"
+#~ msgstr "Սկինի հասցե՝"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:531
 #, fuzzy
-msgid "Playlist and Instances"
-msgstr "Lua երգացանկ Պարսեր Ինտերֆեյս"
+#~ msgid "Playlist and Instances"
+#~ msgstr "Lua երգացանկ Պարսեր Ինտերֆեյս"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:532
-msgid "Album art download policy:"
-msgstr "Ալբոմի շապիկի բեռնման կանոն՝"
+#~ msgid "Album art download policy:"
+#~ msgstr "Ալբոմի շապիկի բեռնման կանոն՝"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:535
-msgid "Pause on the last frame of a video"
-msgstr ""
+#~ msgid "Allow only one instance"
+#~ msgstr "Թույլ տալ միայն մեկ օրինակ"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:536
-msgid "Allow only one instance"
-msgstr "Թույլ տալ միայն մեկ օրինակ"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:537
 #, fuzzy
-msgid "Configure Media Library"
-msgstr "Մեդիա գրադարան"
+#~ msgid "Configure Media Library"
+#~ msgstr "Մեդիա գրադարան"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:541
-msgid "Every "
-msgstr "Ամեն "
+#~ msgid "Every "
+#~ msgstr "Ամեն "
 
-#: modules/gui/qt4/ui/sprefs_interface.h:544
-msgid "Separate words by | (without space)"
-msgstr "Առանձնացնել բառերը ըստ | (առանց բացատի)"
+#~ msgid "Separate words by | (without space)"
+#~ msgstr "Առանձնացնել բառերը ըստ | (առանց բացատի)"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:546
-msgid "Save recently played items"
-msgstr "Պահպանել վերջերս աշխատացվածները"
+#~ msgid "Save recently played items"
+#~ msgstr "Պահպանել վերջերս աշխատացվածները"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:547
 #, fuzzy
-msgid "Activate updates notifier"
-msgstr "Ակտիվացնել թարմացման հիշեցումը"
+#~ msgid "Activate updates notifier"
+#~ msgstr "Ակտիվացնել թարմացման հիշեցումը"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:548
 #, fuzzy
-msgid "Operating System Integration"
-msgstr "Ստանալ Stream Տեղեկություն"
+#~ msgid "Operating System Integration"
+#~ msgstr "Ստանալ Stream Տեղեկություն"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:549
 #, fuzzy
-msgid "File extensions association"
-msgstr "Ֆայլերի ավտոմատ բացում"
+#~ msgid "File extensions association"
+#~ msgstr "Ֆայլերի ավտոմատ բացում"
 
-#: modules/gui/qt4/ui/sprefs_interface.h:550
-msgid "Set up associations..."
-msgstr "Սահմանել VLC-ով ֆայլեր բացում..."
+#~ msgid "Set up associations..."
+#~ msgstr "Սահմանել VLC-ով ֆայլեր բացում..."
 
-#: modules/gui/qt4/ui/sprefs_subtitles.h:287
-msgid "Enable On Screen Display (OSD)"
-msgstr "Միացնել On Screen Display (OSD)"
+#~ msgid "Enable On Screen Display (OSD)"
+#~ msgstr "Միացնել On Screen Display (OSD)"
 
-#: modules/gui/qt4/ui/sprefs_subtitles.h:288
-msgid "Show media title on video start"
-msgstr "Ցույց տալ վերնագիրը վիդեոյի սկսելու ժամանակ"
+#~ msgid "Show media title on video start"
+#~ msgstr "Ցույց տալ վերնագիրը վիդեոյի սկսելու ժամանակ"
 
-#: modules/gui/qt4/ui/sprefs_subtitles.h:290
 #, fuzzy
-msgid "Enable subtitles"
-msgstr "Միացնել ենթա - նկարներ"
+#~ msgid "Enable subtitles"
+#~ msgstr "Միացնել ենթա - նկարներ"
 
-#: modules/gui/qt4/ui/sprefs_subtitles.h:291
 #, fuzzy
-msgid "Subtitle Language"
-msgstr "Ենթագրերի Լեզուներ"
+#~ msgid "Subtitle Language"
+#~ msgstr "Ենթագրերի Լեզուներ"
 
-#: modules/gui/qt4/ui/sprefs_subtitles.h:293
-msgid "Default encoding"
-msgstr "Հիմնական կոդավորում"
+#~ msgid "Default encoding"
+#~ msgstr "Հիմնական կոդավորում"
 
-#: modules/gui/qt4/ui/sprefs_subtitles.h:294
 #, fuzzy
-msgid "Subtitle effects"
-msgstr "Ենթագրերի  կոդեկներ"
+#~ msgid "Subtitle effects"
+#~ msgstr "Ենթագրերի  կոդեկներ"
 
-#: modules/gui/qt4/ui/sprefs_subtitles.h:300
-msgid "Add a shadow"
-msgstr ""
-
-#: modules/gui/qt4/ui/sprefs_subtitles.h:301
 #, fuzzy
-msgid "Add a background"
-msgstr "Ֆոն"
+#~ msgid "Add a background"
+#~ msgstr "Ֆոն"
 
-#: modules/gui/qt4/ui/sprefs_subtitles.h:303
-#: modules/gui/qt4/ui/video_effects.h:1317
-#: modules/gui/qt4/ui/video_effects.h:1321
-#: modules/gui/qt4/ui/video_effects.h:1324
-#: modules/gui/qt4/ui/video_effects.h:1325
-#: modules/gui/qt4/ui/video_effects.h:1360
-#: modules/gui/qt4/ui/video_effects.h:1362
-#: modules/gui/qt4/ui/video_effects.h:1372
-#: modules/gui/qt4/ui/video_effects.h:1373
-msgid " px"
-msgstr " պքս"
+#~ msgid " px"
+#~ msgstr " պքս"
 
-#: modules/gui/qt4/ui/sprefs_video.h:345
-msgid "Accelerated video output (Overlay)"
-msgstr "Արագացված վիդեո ելք (վրադիր)"
+#~ msgid "Accelerated video output (Overlay)"
+#~ msgstr "Արագացված վիդեո ելք (վրադիր)"
 
-#: modules/gui/qt4/ui/sprefs_video.h:348
-msgid "DirectX"
-msgstr "DirectX"
+#~ msgid "DirectX"
+#~ msgstr "DirectX"
 
-#: modules/gui/qt4/ui/sprefs_video.h:349
-msgid "Display device"
-msgstr "Ցուցադրող սարք"
+#~ msgid "Display device"
+#~ msgstr "Ցուցադրող սարք"
 
-#: modules/gui/qt4/ui/sprefs_video.h:350
 #, fuzzy
-msgid "KVA"
-msgstr "MKV"
+#~ msgid "KVA"
+#~ msgstr "MKV"
 
-#: modules/gui/qt4/ui/sprefs_video.h:354
 #, fuzzy
-msgid "Deinterlacing"
-msgstr "Deinterlacing"
+#~ msgid "Deinterlacing"
+#~ msgstr "Deinterlacing"
 
-#: modules/gui/qt4/ui/sprefs_video.h:355
-msgid "Force Aspect Ratio"
-msgstr "Պարտադրել չափերի հարաբերությունը"
+#~ msgid "Force Aspect Ratio"
+#~ msgstr "Պարտադրել չափերի հարաբերությունը"
 
-#: modules/gui/qt4/ui/sprefs_video.h:361
-msgid "vlc-snap"
-msgstr "vlc-snap"
+#~ msgid "vlc-snap"
+#~ msgstr "vlc-snap"
 
-#: modules/gui/qt4/ui/streampanel.h:169
-msgid "1"
-msgstr "1"
+#~ msgid "1"
+#~ msgstr "1"
 
-#: modules/gui/qt4/ui/streampanel.h:171
-msgid "Stuff"
-msgstr "Բաներ"
+#~ msgid "Stuff"
+#~ msgstr "Բաներ"
 
-#: modules/gui/qt4/ui/streampanel.h:173
-msgid "Edit settings"
-msgstr "Խմբագրել կարգավորումները"
+#~ msgid "Edit settings"
+#~ msgstr "Խմբագրել կարգավորումները"
 
-#: modules/gui/qt4/ui/streampanel.h:174
-msgid "Control"
-msgstr "Ղեկավարում"
+#~ msgid "Control"
+#~ msgstr "Ղեկավարում"
 
-#: modules/gui/qt4/ui/streampanel.h:175
 #, fuzzy
-msgid "Run manually"
-msgstr "Run ձեռքով`"
+#~ msgid "Run manually"
+#~ msgstr "Run ձեռքով`"
 
-#: modules/gui/qt4/ui/streampanel.h:176
 #, fuzzy
-msgid "Setup schedule"
-msgstr "Ստեղծեք գրաֆիկը`"
+#~ msgid "Setup schedule"
+#~ msgstr "Ստեղծեք գրաֆիկը`"
 
-#: modules/gui/qt4/ui/streampanel.h:177
 #, fuzzy
-msgid "Run on schedule"
-msgstr "Run ժամանակացույցի"
+#~ msgid "Run on schedule"
+#~ msgstr "Run ժամանակացույցի"
 
-#: modules/gui/qt4/ui/streampanel.h:178
-msgid "Status"
-msgstr "Վիճակ,"
+#~ msgid "Status"
+#~ msgstr "Վիճակ,"
 
-#: modules/gui/qt4/ui/streampanel.h:179
-msgid "P/P"
-msgstr "P/P"
+#~ msgid "P/P"
+#~ msgstr "P/P"
 
-#: modules/gui/qt4/ui/streampanel.h:182
-msgid "Prev"
-msgstr "Նախորդ"
+#~ msgid "Prev"
+#~ msgstr "Նախորդ"
 
-#: modules/gui/qt4/ui/streampanel.h:183
-msgid "Add Input"
-msgstr "Ավելացնել մուտք"
+#~ msgid "Add Input"
+#~ msgstr "Ավելացնել մուտք"
 
-#: modules/gui/qt4/ui/streampanel.h:184
-msgid "Edit Input"
-msgstr "Խմբագրել մուտքը"
+#~ msgid "Edit Input"
+#~ msgstr "Խմբագրել մուտքը"
 
-#: modules/gui/qt4/ui/streampanel.h:185
-msgid "Clear List"
-msgstr "Ջնջել Ցուցակը"
+#~ msgid "Clear List"
+#~ msgstr "Ջնջել Ցուցակը"
 
-#: modules/gui/qt4/ui/update.h:148
 #, fuzzy
-msgid "Check for VLC updates"
-msgstr "Ստուգել թարմացումները"
+#~ msgid "Check for VLC updates"
+#~ msgstr "Ստուգել թարմացումները"
 
-#: modules/gui/qt4/ui/update.h:149
-msgid "Launching an update request..."
-msgstr "Սկսվում է թարմացման պահանջ..."
+#~ msgid "Launching an update request..."
+#~ msgstr "Սկսվում է թարմացման պահանջ..."
 
-#: modules/gui/qt4/ui/update.h:150
 #, fuzzy
-msgid "Do you want to download it?"
-msgstr ""
-"\n"
-" Դուք ցանկանո՞ւմ եք բեռնել այն: \n"
+#~ msgid "Do you want to download it?"
+#~ msgstr ""
+#~ "\n"
+#~ " Դուք ցանկանո՞ւմ եք բեռնել այն: \n"
 
-#: modules/gui/qt4/ui/video_effects.h:1315
 #, fuzzy
-msgid "Essential"
-msgstr "տարածական"
+#~ msgid "Essential"
+#~ msgstr "տարածական"
 
-#: modules/gui/qt4/ui/video_effects.h:1329
-#: modules/gui/qt4/ui/video_effects.h:1338
-msgid ">HHHHHH;#"
-msgstr ">HHHHHH;#"
+#~ msgid ">HHHHHH;#"
+#~ msgstr ">HHHHHH;#"
 
-#: modules/gui/qt4/ui/video_effects.h:1330
 #, fuzzy
-msgid "Negate colors"
-msgstr "Շրջել գույները"
+#~ msgid "Negate colors"
+#~ msgstr "Շրջել գույները"
 
-#: modules/gui/qt4/ui/video_effects.h:1343
 #, fuzzy
-msgid "Colors"
-msgstr "Գույն"
+#~ msgid "Colors"
+#~ msgstr "Գույն"
 
-#: modules/gui/qt4/ui/video_effects.h:1344
 #, fuzzy
-msgid "Interactive Zoom"
-msgstr "Ինտերակտիվ Խոշորացնել"
+#~ msgid "Interactive Zoom"
+#~ msgstr "Ինտերակտիվ Խոշորացնել"
 
-#: modules/gui/qt4/ui/video_effects.h:1350
-msgid "Angle"
-msgstr "Անկյուն"
+#~ msgid "Angle"
+#~ msgstr "Անկյուն"
 
-#: modules/gui/qt4/ui/video_effects.h:1354
 #, fuzzy
-msgid "Black Slot"
-msgstr "Սեւ անցք"
+#~ msgid "Black Slot"
+#~ msgstr "Սեւ անցք"
 
-#: modules/gui/qt4/ui/video_effects.h:1358
-#: modules/gui/qt4/ui/video_effects.h:1375
 #, fuzzy
-msgid "..."
-msgstr "Ավելացնել ..."
+#~ msgid "..."
+#~ msgstr "Ավելացնել ..."
 
-#: modules/gui/qt4/ui/video_effects.h:1363
-msgid "full"
-msgstr ""
+#~ msgid "none"
+#~ msgstr "ոչ-մի"
 
-#: modules/gui/qt4/ui/video_effects.h:1365
-msgid "none"
-msgstr "ոչ-մի"
+#~ msgid "Logo erase"
+#~ msgstr "Տարբերանշանը ջնջել"
 
-#: modules/gui/qt4/ui/video_effects.h:1369
-msgid "Logo erase"
-msgstr "Տարբերանշանը ջնջել"
+#~ msgid "Mask"
+#~ msgstr "Դիմակ"
 
-#: modules/gui/qt4/ui/video_effects.h:1374
-msgid "Mask"
-msgstr "Դիմակ"
-
-#: modules/gui/qt4/ui/video_effects.h:1379
 #, fuzzy
-msgid "Output Color Filtermode"
-msgstr "Ելքային Գույնը Filtermode"
+#~ msgid "Output Color Filtermode"
+#~ msgstr "Ելքային Գույնը Filtermode"
 
-#: modules/gui/qt4/ui/video_effects.h:1380
-msgid "Brightness (%)"
-msgstr "Պայծառություն (%)"
+#~ msgid "Brightness (%)"
+#~ msgstr "Պայծառություն (%)"
 
-#: modules/gui/qt4/ui/video_effects.h:1382
 #, fuzzy
-msgid "Mark analyzed Pixels"
-msgstr "Mark վերլուծվում պիքսել"
+#~ msgid "Mark analyzed Pixels"
+#~ msgstr "Mark վերլուծվում պիքսել"
 
-#: modules/gui/qt4/ui/video_effects.h:1384
-msgid "Filter threshold (%)"
-msgstr "Զտիչի շեմը (%-ով)"
+#~ msgid "Filter threshold (%)"
+#~ msgstr "Զտիչի շեմը (%-ով)"
 
-#: modules/gui/qt4/ui/video_effects.h:1389
-msgid "Motion detect"
-msgstr "Շարժման բացահայտում"
+#~ msgid "Motion detect"
+#~ msgstr "Շարժման բացահայտում"
 
-#: modules/gui/qt4/ui/video_effects.h:1391
-msgid "Anti-Flickering"
-msgstr ""
-
-#: modules/gui/qt4/ui/video_effects.h:1392
 #, fuzzy
-msgid "Soften"
-msgstr "Մեղմ"
+#~ msgid "Soften"
+#~ msgstr "Մեղմ"
 
-#: modules/gui/qt4/ui/video_effects.h:1396
 #, fuzzy
-msgid "Spatial blur"
-msgstr "Տարածական ընդլայնում"
+#~ msgid "Spatial blur"
+#~ msgstr "Տարածական ընդլայնում"
 
-#: modules/gui/qt4/ui/video_effects.h:1398
 #, fuzzy
-msgid "Mirror"
-msgstr "Սխալ"
+#~ msgid "Mirror"
+#~ msgstr "Սխալ"
 
-#: modules/gui/qt4/ui/video_effects.h:1400
-msgid "Anaglyph 3D"
-msgstr ""
+#~ msgid "VLM configurator"
+#~ msgstr "VLM Լարում"
 
-#: modules/gui/qt4/ui/vlm.h:286
-msgid "VLM configurator"
-msgstr "VLM Լարում"
+#~ msgid "Media Manager Edition"
+#~ msgstr "Մեդիա Ղեկավարաման Տարբերակ"
 
-#: modules/gui/qt4/ui/vlm.h:287
-msgid "Media Manager Edition"
-msgstr "Մեդիա Ղեկավարաման Տարբերակ"
+#~ msgid "Name:"
+#~ msgstr "Անուն՝"
 
-#: modules/gui/qt4/ui/vlm.h:288
-msgid "Name:"
-msgstr "Անուն՝"
+#~ msgid "Input:"
+#~ msgstr "Մուտք՝"
 
-#: modules/gui/qt4/ui/vlm.h:290
-msgid "Input:"
-msgstr "Մուտք՝"
+#~ msgid "Select Input"
+#~ msgstr "Ընտրել մուտք"
 
-#: modules/gui/qt4/ui/vlm.h:291
-msgid "Select Input"
-msgstr "Ընտրել մուտք"
+#~ msgid "Output:"
+#~ msgstr "Ելք՝"
 
-#: modules/gui/qt4/ui/vlm.h:292
-msgid "Output:"
-msgstr "Ելք՝"
+#~ msgid "Select Output"
+#~ msgstr "Ընտրել Ելք"
 
-#: modules/gui/qt4/ui/vlm.h:293
-msgid "Select Output"
-msgstr "Ընտրել Ելք"
+#~ msgid "Time Control"
+#~ msgstr "Ժամանակի  Վերահսկում"
 
-#: modules/gui/qt4/ui/vlm.h:294
-msgid "Time Control"
-msgstr "Ժամանակի  Վերահսկում"
+#~ msgid "Mux Control"
+#~ msgstr "Մուլտիպլեքսորի Վերահսկում"
 
-#: modules/gui/qt4/ui/vlm.h:295
-msgid "Mux Control"
-msgstr "Մուլտիպլեքսորի Վերահսկում"
+#~ msgid "Muxer:"
+#~ msgstr "Մուլտիպլեքսոր՝"
 
-#: modules/gui/qt4/ui/vlm.h:296
-msgid "Muxer:"
-msgstr "Մուլտիպլեքսոր՝"
+#~ msgid "AAAA; "
+#~ msgstr "AAAA; "
 
-#: modules/gui/qt4/ui/vlm.h:297
-msgid "AAAA; "
-msgstr "AAAA; "
-
-#: modules/gui/qt4/ui/vlm.h:302
-msgid "Media Manager List"
-msgstr "Մեդիա Ղեկավարումների Ցուցակ"
+#~ msgid "Media Manager List"
+#~ msgstr "Մեդիա Ղեկավարումների Ցուցակ"
 
 #~ msgid "Output module"
 #~ msgstr "Ելքային մոդուլ"

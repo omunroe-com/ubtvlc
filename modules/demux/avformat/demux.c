@@ -2,7 +2,7 @@
  * demux.c: demuxer using libavformat
  *****************************************************************************
  * Copyright (C) 2004-2009 VLC authors and VideoLAN
- * $Id: 3bb1266fc9b2ccfe0932f5d90214cd19e0b3de5f $
+ * $Id: 902ef0171b3f10a3c7a8ee31e7ba84b14dd4ae42 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -106,7 +106,7 @@ int OpenDemux( vlc_object_t *p_this )
 {
     demux_t       *p_demux = (demux_t*)p_this;
     demux_sys_t   *p_sys;
-    AVProbeData   pd;
+    AVProbeData   pd = { };
     AVInputFormat *fmt = NULL;
     unsigned int  i;
     int64_t       i_start_time = -1;

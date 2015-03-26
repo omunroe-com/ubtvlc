@@ -60,7 +60,7 @@ libpuzzle_plugin_la_SOURCES = \
 	puzzle_mgt.c puzzle_mgt.h \
 	puzzle_pce.c puzzle_pce.h
 libpuzzle_plugin_la_CFLAGS = $(AM_CFLAGS)
-libpuzzle_plugin_la_LIBADD = $(AM_LIBADD)
+libpuzzle_plugin_la_LIBADD = $(AM_LIBADD) $(LIBM)
 libvlc_LTLIBRARIES += libpuzzle_plugin.la
 
 SOURCES_magnify = magnify.c
