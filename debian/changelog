@@ -1,3 +1,12 @@
+vlc (2.2.0-0ubuntu1) vivid; urgency=medium
+
+  * Update to final 2.2.0 release
+  * Removed upstream patches:
+    - d/p/demux-mp4-fix-buffer-overflow-in-parsing-of-string-b.patch
+    - d/p/stream_out-rtp-don-t-use-VLA-for-user-controlled-dat.patch
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Thu, 26 Mar 2015 07:40:50 -0400
+
 vlc (2.2.0~rc2-2) unstable; urgency=medium
 
   * debian/patches: Apply upstream patches for security vulnerabilities.
