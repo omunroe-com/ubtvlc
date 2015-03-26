@@ -3,7 +3,7 @@
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
  * Copyright © 2007 Rémi Denis-Courmont
- * $Id: 7b71588545b3bafd0e558e4455fd887ce3ae843e $
+ * $Id: f441efb94a39b59ab28763b8df4bba1520d05ce7 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -540,7 +540,11 @@ int rtp_packetize_xiph_config( sout_stream_id_t *id, const char *fmtp,
     char *end = strchr(start, ';');
     assert(end != NULL);
     size_t len = end - start;
-    char b64[len + 1];
+
+    char *b64 = malloc(len + 1);
+    if(!b64)
+        return VLC_EGENERIC;
+
     memcpy(b64, start, len);
     b64[len] = '\0';
 
@@ -550,6 +554,7 @@ int rtp_packetize_xiph_config( sout_stream_id_t *id, const char *fmtp,
     int i_data;
 
     i_data = vlc_b64_decode_binary(&p_orig, b64);
+    free(b64);
     if (i_data == 0)
         return VLC_EGENERIC;
     assert(i_data > 9);

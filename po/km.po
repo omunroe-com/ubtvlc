@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VLC - Trans\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2014-02-21 15:55+0100\n"
+"POT-Creation-Date: 2015-02-26 21:34+0100\n"
 "PO-Revision-Date: 2013-11-22 08:13+0000\n"
 "Last-Translator: soksophea <sophea@open.org.kh>\n"
 "Language-Team: Khmer (http://www.transifex.com/projects/p/vlc-trans/language/"
@@ -21,7 +21,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: include/vlc_common.h:922
+#: include/vlc_common.h:923
 msgid ""
 "This program comes with NO WARRANTY, to the extent permitted by law.\n"
 "You may redistribute it under the terms of the GNU General Public License;\n"
@@ -86,7 +86,6 @@ msgstr "ការ​កំណត់​គ្រាប់ចុច​រហ័ស
 #: modules/services_discovery/mediadirs.c:76 modules/stream_out/es.c:93
 #: modules/stream_out/transcode/transcode.c:191
 #: share/lua/http/dialogs/create_stream.html:150
-#: modules/gui/qt4/ui/profiles.h:704 modules/gui/qt4/ui/profiles.h:735
 msgid "Audio"
 msgstr "អូឌីយ៉ូ"
 
@@ -99,7 +98,6 @@ msgid "General audio settings"
 msgstr "ការ​កំណត់​អូឌីយ៉ូ​ទូទៅ"
 
 #: include/vlc_config_cat.h:58 include/vlc_config_cat.h:80
-#: modules/gui/qt4/ui/profiles.h:733 modules/gui/qt4/ui/profiles.h:743
 msgid "Filters"
 msgstr "តម្រង"
 
@@ -146,8 +144,6 @@ msgstr "ម៉ូឌុល និង​ការ​កំណត់​អូឌ�
 #: modules/services_discovery/mediadirs.c:69 modules/stream_out/es.c:101
 #: modules/stream_out/transcode/transcode.c:161
 #: share/lua/http/dialogs/create_stream.html:147
-#: modules/gui/qt4/ui/profiles.h:705 modules/gui/qt4/ui/profiles.h:709
-#: modules/gui/qt4/ui/sprefs_video.h:353
 msgid "Video"
 msgstr "វីដេអូ"
 
@@ -368,7 +364,6 @@ msgid ""
 msgstr "ម៉ូឌុល​ការ​រក​ឃើញ​សេវា​គឺ​ងាយស្រួល​ត្រង់ថា វា​បន្ថែម​ធាតុ​ដោយ​ស្វ័យប្រវត្តិ​ទៅកាន់​បញ្ជី​ចាក់ ។"
 
 #: include/vlc_config_cat.h:180 src/libvlc-module.c:1799
-#: modules/gui/qt4/ui/video_effects.h:1401
 msgid "Advanced"
 msgstr "កម្រិត​ខ្ពស់"
 
@@ -382,7 +377,6 @@ msgstr "ការ​កំណត់​កម្រិត​ខ្ពស់"
 
 #: include/vlc_config_cat.h:188 modules/gui/macosx/open.m:133
 #: modules/gui/macosx/open.m:597 modules/gui/macosx/simple_prefs.m:340
-#: modules/gui/qt4/ui/sprefs_input.h:354
 msgid "Network"
 msgstr "បណ្ដាញ"
 
@@ -475,10 +469,10 @@ msgstr "អំពី"
 #: include/vlc_intf_strings.h:65 modules/control/rc.c:72
 #: modules/gui/macosx/ControlsBar.m:438 modules/gui/macosx/MainMenu.m:350
 #: modules/gui/macosx/MainMenu.m:457 modules/gui/macosx/MainMenu.m:464
-#: modules/gui/macosx/MainMenu.m:1194 modules/gui/macosx/MainMenu.m:1195
-#: modules/gui/macosx/MainMenu.m:1196 modules/gui/macosx/playlist.m:517
+#: modules/gui/macosx/MainMenu.m:1202 modules/gui/macosx/MainMenu.m:1203
+#: modules/gui/macosx/MainMenu.m:1204 modules/gui/macosx/playlist.m:519
 #: modules/gui/qt4/components/controller.hpp:115
-#: modules/gui/qt4/dialogs/vlm.cpp:550 modules/gui/qt4/ui/open.h:243
+#: modules/gui/qt4/dialogs/vlm.cpp:550
 msgid "Play"
 msgstr "ចាក់"
 
@@ -515,17 +509,17 @@ msgid "Save..."
 msgstr "រក្សាទុក..."
 
 #: include/vlc_intf_strings.h:77 modules/gui/macosx/CoreInteraction.m:404
-#: modules/gui/macosx/MainMenu.m:364 modules/gui/macosx/MainMenu.m:1475
+#: modules/gui/macosx/MainMenu.m:364 modules/gui/macosx/MainMenu.m:1479
 msgid "Repeat All"
 msgstr "ចាក់​ឡើងវិញ​ទាំងអស់"
 
 #: include/vlc_intf_strings.h:78 modules/gui/macosx/CoreInteraction.m:424
-#: modules/gui/macosx/MainMenu.m:363 modules/gui/macosx/MainMenu.m:1470
+#: modules/gui/macosx/MainMenu.m:363 modules/gui/macosx/MainMenu.m:1474
 msgid "Repeat One"
 msgstr "ចាក់​ឡើងវិញ​តែ​មួយ​បទ"
 
 #: include/vlc_intf_strings.h:79 src/libvlc-module.c:1398
-#: modules/gui/macosx/MainMenu.m:362 modules/gui/macosx/MainMenu.m:1465
+#: modules/gui/macosx/MainMenu.m:362 modules/gui/macosx/MainMenu.m:1469
 #: modules/gui/qt4/components/controller.hpp:119
 #: modules/gui/qt4/components/controller.hpp:132
 msgid "Random"
@@ -561,7 +555,6 @@ msgid "Search"
 msgstr "ស្វែងរក"
 
 #: include/vlc_intf_strings.h:97 modules/gui/macosx/VideoEffects.m:159
-#: modules/gui/qt4/ui/video_effects.h:1399
 msgid "Waves"
 msgstr "រលក"
 
@@ -686,9 +679,7 @@ msgstr "ស្តេរ៉េអូ"
 #: modules/gui/macosx/VideoEffects.m:169 modules/gui/macosx/VideoEffects.m:191
 #: modules/video_filter/audiobargraph_v.c:74 modules/video_filter/logo.c:79
 #: modules/video_filter/marq.c:139 modules/video_filter/mosaic.c:170
-#: modules/video_filter/rss.c:173 modules/gui/qt4/ui/video_effects.h:1318
-#: modules/gui/qt4/ui/video_effects.h:1361
-#: modules/gui/qt4/ui/video_effects.h:1371
+#: modules/video_filter/rss.c:173
 msgid "Left"
 msgstr "ឆ្វេង"
 
@@ -701,7 +692,7 @@ msgstr "ឆ្វេង"
 #: modules/gui/macosx/VideoEffects.m:171 modules/gui/macosx/VideoEffects.m:193
 #: modules/video_filter/audiobargraph_v.c:74 modules/video_filter/logo.c:79
 #: modules/video_filter/marq.c:139 modules/video_filter/mosaic.c:170
-#: modules/video_filter/rss.c:173 modules/gui/qt4/ui/video_effects.h:1319
+#: modules/video_filter/rss.c:173
 msgid "Right"
 msgstr "ស្ដាំ"
 
@@ -908,10 +899,8 @@ msgstr "ស្វែងរក​កម្មវិធី​អ៊ឺនធឺណ
 msgid "Browser Stop"
 msgstr "បញ្ឈប់​កម្មវិធី​អ៊ឺនធឺណិត"
 
-#: src/config/keys.c:66 modules/gui/macosx/playlist.m:518
+#: src/config/keys.c:66 modules/gui/macosx/playlist.m:520
 #: modules/gui/qt4/dialogs/bookmarks.cpp:50
-#: modules/gui/qt4/ui/podcast_configuration.h:104
-#: modules/gui/qt4/ui/streampanel.h:172
 msgid "Delete"
 msgstr "លុប"
 
@@ -1240,14 +1229,12 @@ msgstr "លេខ​សម្គាល់​ច្បាប់​ដើម"
 #: src/input/es_out.c:2891 src/input/es_out.c:2894 modules/access/imem.c:67
 #: modules/gui/macosx/ConvertAndSave.m:177
 #: modules/gui/macosx/ConvertAndSave.m:187 modules/gui/macosx/wizard.m:382
-#: modules/gui/qt4/ui/profiles.h:711 modules/gui/qt4/ui/profiles.h:737
-#: modules/gui/qt4/ui/profiles.h:746
 msgid "Codec"
 msgstr "កូដិក"
 
 #: src/input/es_out.c:2898 src/input/meta.c:66 modules/access/imem.c:71
 #: modules/gui/macosx/MainMenu.m:76 modules/gui/macosx/simple_prefs.m:355
-#: modules/stream_out/setid.c:49 modules/gui/qt4/ui/sprefs_interface.h:513
+#: modules/stream_out/setid.c:49
 msgid "Language"
 msgstr "ភាសា"
 
@@ -1258,7 +1245,7 @@ msgid "Description"
 msgstr "សេចក្ដី​ពណ៌នា"
 
 #: src/input/es_out.c:2910 modules/gui/macosx/ConvertAndSave.m:189
-#: modules/gui/macosx/output.m:167 modules/gui/qt4/ui/profiles.h:739
+#: modules/gui/macosx/output.m:167
 msgid "Channels"
 msgstr "ឆានែល"
 
@@ -1279,8 +1266,7 @@ msgstr "ប៊ីត​ក្នុង​មួយ​គំរូ"
 #: src/input/es_out.c:2930 modules/access_output/shout.c:92
 #: modules/demux/playlist/shoutcast.c:325
 #: modules/gui/macosx/ConvertAndSave.m:178
-#: modules/gui/macosx/ConvertAndSave.m:188 modules/gui/qt4/ui/profiles.h:712
-#: modules/gui/qt4/ui/profiles.h:738
+#: modules/gui/macosx/ConvertAndSave.m:188
 msgid "Bitrate"
 msgstr "អត្រា​​ប៊ីត"
 
@@ -1303,7 +1289,6 @@ msgid "%.2f dB"
 msgstr "%.2f dB"
 
 #: src/input/es_out.c:2954 modules/gui/macosx/ConvertAndSave.m:180
-#: modules/gui/qt4/ui/profiles.h:732
 msgid "Resolution"
 msgstr "គុណភាព​បង្ហាញ"
 
@@ -1348,11 +1333,10 @@ msgstr "មិន​អាច​លុប​ទ្រង់ទ្រាយ '%s' 
 #: modules/gui/macosx/playlistinfo.m:74 modules/gui/macosx/wizard.m:345
 #: modules/gui/qt4/components/open_panels.cpp:483
 #: modules/gui/qt4/components/open_panels.cpp:497 modules/mux/asf.c:56
-#: modules/gui/qt4/ui/open_disk.h:309
 msgid "Title"
 msgstr "ចំណងជើង"
 
-#: src/input/meta.c:56 modules/gui/macosx/playlist.m:1130
+#: src/input/meta.c:56 modules/gui/macosx/playlist.m:1132
 #: modules/gui/macosx/playlistinfo.m:75
 msgid "Artist"
 msgstr "សិល្បករ"
@@ -1388,7 +1372,6 @@ msgid "Setting"
 msgstr "ការ​កំណត់"
 
 #: src/input/meta.c:65 modules/gui/macosx/open.m:186
-#: modules/gui/qt4/ui/podcast_configuration.h:102
 msgid "URL"
 msgstr "URL"
 
@@ -1423,7 +1406,7 @@ msgstr "កម្មវិធី"
 
 #: src/input/var.c:182 modules/gui/macosx/MainMenu.m:374
 #: modules/gui/macosx/MainMenu.m:375 modules/gui/macosx/open.m:175
-#: modules/gui/macosx/open.m:177 modules/gui/qt4/ui/open_disk.h:310
+#: modules/gui/macosx/open.m:177
 msgid "Chapter"
 msgstr "ជំពូក"
 
@@ -1659,7 +1642,7 @@ msgstr ""
 "វិធីសាស្ត្រ​​ល្អ​បំផុត​ដែល​មាន​​ ។"
 
 #: src/libvlc-module.c:133 modules/gui/macosx/simple_prefs.m:310
-#: modules/stream_out/display.c:40 modules/gui/qt4/ui/sprefs_audio.h:421
+#: modules/stream_out/display.c:40
 msgid "Enable audio"
 msgstr "បើក​អូឌីយ៉ូ"
 
@@ -1726,7 +1709,6 @@ msgstr ""
 "បើ​ផ្នែក​រឹង​របស់​អ្នក​គាំទ្រ​វា នោះ​ស្ទ្រីម​អូឌីយ៉ូ​ក៏​ត្រូវ​បាន​ចាក់​ផង​ដែរ) ។"
 
 #: src/libvlc-module.c:166 modules/gui/macosx/simple_prefs.m:316
-#: modules/gui/qt4/ui/sprefs_audio.h:429
 msgid "Use S/PDIF when available"
 msgstr "ប្រើ S/PDIF នៅ​ពេល​ដែល​អាច​រក​បាន"
 
@@ -1760,7 +1742,6 @@ msgstr ""
 #: modules/gui/qt4/components/simple_preferences.cpp:125
 #: modules/gui/qt4/components/sout/profile_selector.cpp:558
 #: modules/video_output/kva.c:62 modules/video_output/xcb/xvideo.c:878
-#: modules/gui/qt4/ui/profiles.h:727 modules/gui/qt4/ui/profiles.h:730
 msgid "Auto"
 msgstr "ស្វ័យប្រវត្តិ"
 
@@ -1871,7 +1852,7 @@ msgstr ""
 "មាន​ដោយ​ស្វ័យប្រវត្តិ ។"
 
 #: src/libvlc-module.c:249 modules/gui/macosx/simple_prefs.m:396
-#: modules/stream_out/display.c:42 modules/gui/qt4/ui/sprefs_video.h:340
+#: modules/stream_out/display.c:42
 msgid "Enable video"
 msgstr "បើក​វីដេអូ"
 
@@ -1969,9 +1950,7 @@ msgstr "កណ្ដាល"
 #: modules/gui/macosx/VideoEffects.m:173 modules/gui/macosx/VideoEffects.m:195
 #: modules/video_filter/audiobargraph_v.c:74 modules/video_filter/logo.c:79
 #: modules/video_filter/marq.c:139 modules/video_filter/mosaic.c:170
-#: modules/video_filter/rss.c:173 modules/gui/qt4/ui/video_effects.h:1316
-#: modules/gui/qt4/ui/video_effects.h:1359
-#: modules/gui/qt4/ui/video_effects.h:1370
+#: modules/video_filter/rss.c:173
 msgid "Top"
 msgstr "កំពូល"
 
@@ -1980,7 +1959,7 @@ msgstr "កំពូល"
 #: modules/gui/macosx/VideoEffects.m:175 modules/gui/macosx/VideoEffects.m:197
 #: modules/video_filter/audiobargraph_v.c:74 modules/video_filter/logo.c:79
 #: modules/video_filter/marq.c:139 modules/video_filter/mosaic.c:170
-#: modules/video_filter/rss.c:173 modules/gui/qt4/ui/video_effects.h:1320
+#: modules/video_filter/rss.c:173
 msgid "Bottom"
 msgstr "បាត"
 
@@ -2068,7 +2047,7 @@ msgstr ""
 "ផ្ទាល់) ។ VLC នឹង​សាកល្បង​ប្រើ​វា​ជា​លំនាំដើម ។"
 
 #: src/libvlc-module.c:311 src/video_output/vout_intf.c:274
-#: modules/gui/macosx/simple_prefs.m:399 modules/gui/qt4/ui/sprefs_video.h:347
+#: modules/gui/macosx/simple_prefs.m:399
 msgid "Always on top"
 msgstr "នៅលើ​គេ​ជានិច្ច"
 
@@ -2186,7 +2165,6 @@ msgstr ""
 "រារាំង​ដេមិន​គ្រប់គ្រង​ថាមពល​នៅ​អំឡុង​ពេល​ចាក់​ឡើងវិញ ដើម្បី​កុំឲ្យ​កុំព្យូទ័រ​ផ្អាក​ដោយសារ​តែ​ភាព​មិន​សកម្ម ។"
 
 #: src/libvlc-module.c:374 modules/gui/macosx/simple_prefs.m:398
-#: modules/gui/qt4/ui/sprefs_video.h:343
 msgid "Window decorations"
 msgstr "ការ​តុបតែង​បង្អួច"
 
@@ -2529,7 +2507,6 @@ msgstr "លំនាំដើម"
 #: src/libvlc-module.c:540 modules/gui/macosx/AudioEffects.m:112
 #: modules/gui/macosx/MainWindow.m:998 modules/gui/macosx/wizard.m:351
 #: modules/gui/qt4/components/extended_panels.cpp:1024
-#: modules/gui/qt4/ui/equalizer.h:133 modules/gui/qt4/ui/vlm.h:289
 msgid "Enable"
 msgstr "បើក"
 
@@ -2593,7 +2570,7 @@ msgstr ""
 "ជ្រើសរើស​កម្មវិធី​ដើម្បី​បើក​ដោយ​​ផ្ដល់​នូវ​លេខ​សម្គាល់​សេវាកម្ម​បញ្ជី​បំបែក​ដោយ​សញ្ញា​ក្បៀស (SIDs) ។ ប្រើ​"
 "ជម្រើស​នេះ​​នៅ​ពេល​ដែល​អ្នក​ចង់​អាន​ស្ទ្រីម​​ពហុ​កម្មវិធី​តែប៉ុណ្ណោះ (ឧទាហរណ៍ DVB) ។"
 
-#: src/libvlc-module.c:578 modules/gui/qt4/ui/open_disk.h:312
+#: src/libvlc-module.c:578
 msgid "Audio track"
 msgstr "បទ​អូឌីយ៉ូ"
 
@@ -2601,7 +2578,7 @@ msgstr "បទ​អូឌីយ៉ូ"
 msgid "Stream number of the audio track to use (from 0 to n)."
 msgstr "លេខ​ស្ទ្រីម​របស់​បទ​អូឌីយ៉ូ​ដែល​ត្រូវ​ប្រើ (ពី 0 ទៅ n) ។"
 
-#: src/libvlc-module.c:583 modules/gui/qt4/ui/open_disk.h:313
+#: src/libvlc-module.c:583
 msgid "Subtitle track"
 msgstr "បទ​ចំណងជើង​រង"
 
@@ -2776,7 +2753,6 @@ msgstr ""
 "time=optional-time-offset,bytes=optional-byte-offset},{...}\""
 
 #: src/libvlc-module.c:662 modules/gui/macosx/simple_prefs.m:332
-#: modules/gui/qt4/ui/sprefs_input.h:350
 msgid "Record directory or filename"
 msgstr "កត់ត្រា​ថត ឬ​ឈ្មោះ​ឯកសារ"
 
@@ -2841,7 +2817,7 @@ msgstr ""
 "រូបភាព​រង (រូប​សញ្ញា ។ល។) ។ បើក​តម្រង​នេះ​នៅ​ទី​នេះ ហើយ​កំណត់​រចនាសម្ព័ន្ធ​វា​នៅ​ក្នុង \"តម្រង​ប្រភព​រង"
 "\" ជម្រើស​ម៉ូឌុល ។ អ្នក​អាច​កំណត់​ជម្រើស​​រូបភាព​រង​ផ្សេងៗ​​ជា​ច្រើន ។"
 
-#: src/libvlc-module.c:694 modules/gui/qt4/ui/sprefs_subtitles.h:302
+#: src/libvlc-module.c:694
 msgid "Force subtitle position"
 msgstr "បង្ខំ​ទីតាំង​ចំណងជើង​រង"
 
@@ -2864,7 +2840,6 @@ msgstr "អ្នក​អាច​បិទ​ដំណើរការ​រូ
 #: src/libvlc-module.c:703 src/libvlc-module.c:1634 src/text/iso-639_def.h:145
 #: modules/gui/macosx/simple_prefs.m:385
 #: modules/stream_out/transcode/transcode.c:219
-#: modules/gui/qt4/ui/sprefs_subtitles.h:286
 msgid "On Screen Display"
 msgstr "បង្ហាញ​លើ​អេក្រង់"
 
@@ -3583,7 +3558,7 @@ msgstr "VLC ត្រូវ​បាន​ចាប់ផ្ដើម​​ព�
 msgid "Tell VLC that it is being launched due to a file association in the OS"
 msgstr "VLC ​ត្រូវ​បាន​ចាប់ផ្ដើម​ដោយសារ​តែ​ភ្ជាប់​​ឯកសារ​នៅ​ក្នុង​ប្រព័ន្ធ​ប្រតិបត្តិការ"
 
-#: src/libvlc-module.c:1085 modules/gui/qt4/ui/sprefs_interface.h:538
+#: src/libvlc-module.c:1085
 msgid "Use only one instance when started from file manager"
 msgstr "ប្រើ​តែ​ធាតុ​មួយ​ប៉ុណ្ណោះ​ពេល​ចាប់ផ្ដើម​ពី​កម្មវិធី​គ្រប់គ្រង​ឯកសារ"
 
@@ -3605,7 +3580,7 @@ msgstr ""
 "ដឹង​ថា​នៅ​ក្នុង​កាលៈទេសៈ​ជាក់លាក់ (កំហុស) VLC អាច​ប្រើ​ពេលវេលា​ប្រព័ន្ធ​ដំណើរការ​ទាំងអស់​ និង​បង្ហាញ​​នូវ​ភាព​"
 "មិន​ឆ្លើយតប​របស់​ប្រព័ន្ធ​ទាំងស្រុង​ដែល​អាច​តម្រូវ​ឲ្យ​ចាប់ផ្ដើម​ម៉ាស៊ីន​របស់​អ្នក​ឡើងវិញ ។"
 
-#: src/libvlc-module.c:1097 modules/gui/qt4/ui/sprefs_interface.h:534
+#: src/libvlc-module.c:1097
 msgid "Enqueue items into playlist in one instance mode"
 msgstr "ដាក់​ធាតុ​ជា​ជួរ​ក្នុង​បញ្ជី​ចាក់​នៃ​របៀប​ធាតុ​មួយ"
 
@@ -3750,7 +3725,7 @@ msgstr "ផ្ទុក​បណ្ណាល័យ​មេឌៀ"
 msgid "Enable this option to load the SQL-based Media Library at VLC startup"
 msgstr "បើក​ជម្រើស​នេះ ដើម្បី​ផ្ទុក​ SQL ដែល​ផ្អែក​លើ​បណ្ណាល័យ​មេឌៀ​នៅ​ពេល​ចាប់ផ្ដើម​ VLC"
 
-#: src/libvlc-module.c:1175 modules/gui/qt4/ui/sprefs_interface.h:533
+#: src/libvlc-module.c:1175
 msgid "Display playlist tree"
 msgstr "បង្ហាញ​មែកធាង​បញ្ជី​ចាក់"
 
@@ -3790,10 +3765,9 @@ msgstr ""
 
 #: src/libvlc-module.c:1203 src/video_output/vout_intf.c:284
 #: modules/gui/macosx/MainMenu.m:395 modules/gui/macosx/MainMenu.m:471
-#: modules/gui/macosx/MainMenu.m:1502 modules/gui/macosx/MainMenu.m:1512
+#: modules/gui/macosx/MainMenu.m:1506 modules/gui/macosx/MainMenu.m:1516
 #: modules/gui/macosx/simple_prefs.m:397
 #: modules/gui/qt4/components/controller.hpp:116
-#: modules/gui/qt4/ui/sprefs_video.h:342
 msgid "Fullscreen"
 msgstr "ពេញ​អេក្រង់"
 
@@ -3874,11 +3848,10 @@ msgstr "យឺត​ជាង (ល្អ)"
 #: modules/gui/macosx/about.m:261 modules/gui/macosx/ControlsBar.m:760
 #: modules/gui/macosx/ControlsBar.m:761 modules/gui/macosx/fspanel.m:420
 #: modules/gui/macosx/MainMenu.m:361 modules/gui/macosx/MainMenu.m:459
-#: modules/gui/macosx/MainMenu.m:467 modules/gui/macosx/MainMenu.m:1461
+#: modules/gui/macosx/MainMenu.m:467 modules/gui/macosx/MainMenu.m:1465
 #: modules/gui/macosx/wizard.m:306 modules/gui/macosx/wizard.m:318
 #: modules/gui/macosx/wizard.m:1559
 #: modules/gui/qt4/components/controller.hpp:120 modules/notify/notify.c:339
-#: modules/gui/qt4/ui/streampanel.h:181
 msgid "Next"
 msgstr "បន្ទាប់"
 
@@ -3890,7 +3863,7 @@ msgstr "ជ្រើស​គ្រាប់ចុច​រហ័ស​ដែល
 #: modules/gui/macosx/about.m:262 modules/gui/macosx/ControlsBar.m:749
 #: modules/gui/macosx/ControlsBar.m:750 modules/gui/macosx/fspanel.m:416
 #: modules/gui/macosx/MainMenu.m:360 modules/gui/macosx/MainMenu.m:460
-#: modules/gui/macosx/MainMenu.m:466 modules/gui/macosx/MainMenu.m:1460
+#: modules/gui/macosx/MainMenu.m:466 modules/gui/macosx/MainMenu.m:1464
 #: modules/gui/qt4/components/controller.hpp:120 modules/notify/notify.c:337
 msgid "Previous"
 msgstr "មុន"
@@ -3901,9 +3874,9 @@ msgstr "ជ្រើស​គ្រាប់ចុច​រហ័ស​ដែល
 
 #: src/libvlc-module.c:1227 modules/gui/macosx/ControlsBar.m:470
 #: modules/gui/macosx/MainMenu.m:351 modules/gui/macosx/MainMenu.m:458
-#: modules/gui/macosx/MainMenu.m:465 modules/gui/macosx/MainMenu.m:1456
+#: modules/gui/macosx/MainMenu.m:465 modules/gui/macosx/MainMenu.m:1460
 #: modules/gui/qt4/components/controller.hpp:115
-#: modules/gui/qt4/dialogs/vlm.cpp:556 modules/gui/qt4/ui/streampanel.h:180
+#: modules/gui/qt4/dialogs/vlm.cpp:556
 msgid "Stop"
 msgstr "ឈប់"
 
@@ -3915,8 +3888,7 @@ msgstr "ជ្រើស​គ្រាប់ចុច​រហ័ស​ដើម
 #: modules/gui/macosx/bookmarks.m:108 modules/gui/macosx/ControlsBar.m:64
 #: modules/gui/macosx/fspanel.m:444 modules/gui/macosx/VideoEffects.m:165
 #: modules/gui/macosx/VideoEffects.m:187 modules/video_filter/marq.c:161
-#: modules/video_filter/rss.c:200 modules/gui/qt4/ui/sprefs_subtitles.h:289
-#: modules/gui/qt4/ui/video_effects.h:1367
+#: modules/video_filter/rss.c:200
 msgid "Position"
 msgstr "ទីតាំង"
 
@@ -4138,7 +4110,7 @@ msgstr "ជ្រើស​គ្រាប់ចុច​ដើម្បី​ប
 #: src/libvlc-module.c:1296 modules/access/v4l2/v4l2.c:181
 #: modules/gui/macosx/ControlsBar.m:489 modules/gui/macosx/MainMenu.m:380
 #: modules/gui/macosx/MainMenu.m:461 modules/gui/macosx/MainMenu.m:470
-#: modules/gui/macosx/MainMenu.m:1493
+#: modules/gui/macosx/MainMenu.m:1497
 msgid "Mute"
 msgstr "បិទ​សំឡេង"
 
@@ -4552,7 +4524,7 @@ msgstr "បង្វិល​តាម​ឧបករណ៍​អូឌីយ៉
 
 #: src/libvlc-module.c:1560 src/video_output/vout_intf.c:290
 #: modules/gui/macosx/MainMenu.m:397 modules/gui/macosx/MainMenu.m:472
-#: modules/gui/macosx/MainMenu.m:1501
+#: modules/gui/macosx/MainMenu.m:1505
 #: modules/gui/qt4/components/controller.hpp:117
 msgid "Snapshot"
 msgstr "រូបថត"
@@ -4570,8 +4542,6 @@ msgstr "រូបភាព​រង"
 #: modules/demux/xiph_metadata.h:60 modules/gui/macosx/ConvertAndSave.m:173
 #: modules/gui/macosx/ConvertAndSave.m:191 modules/gui/macosx/MainMenu.m:413
 #: share/lua/http/dialogs/create_stream.html:153
-#: modules/gui/qt4/ui/profiles.h:701 modules/gui/qt4/ui/profiles.h:745
-#: modules/gui/qt4/ui/profiles.h:748
 msgid "Subtitles"
 msgstr "ចំណង​ជើង​រង"
 
@@ -4699,37 +4669,37 @@ msgstr "ព័ត៌មាន​កំណែ​បោះពុម្ព"
 msgid "main program"
 msgstr "កម្មវិធី​មេ"
 
-#: src/misc/update.c:468
+#: src/misc/update.c:475
 #, c-format
 msgid "%.1f GiB"
 msgstr "%.1f ជីកាបៃ"
 
-#: src/misc/update.c:470
+#: src/misc/update.c:477
 #, c-format
 msgid "%.1f MiB"
 msgstr "%.1f មេកាបៃ"
 
-#: src/misc/update.c:472 modules/gui/macosx/playlistinfo.m:162
+#: src/misc/update.c:479 modules/gui/macosx/playlistinfo.m:162
 #: modules/gui/macosx/playlistinfo.m:164 modules/gui/macosx/playlistinfo.m:174
 #, c-format
 msgid "%.1f KiB"
 msgstr "%.1f គីឡូបៃ"
 
-#: src/misc/update.c:474
+#: src/misc/update.c:481
 #, c-format
 msgid "%ld B"
 msgstr "%ld បៃ"
 
-#: src/misc/update.c:566
+#: src/misc/update.c:573
 msgid "Saving file failed"
 msgstr "បាន​បរាជ័យ​ក្នុង​ការ​រក្សាទុក​ឯកសារ"
 
-#: src/misc/update.c:567
+#: src/misc/update.c:574
 #, c-format
 msgid "Failed to open \"%s\" for writing"
 msgstr "បាន​បរាជ័យ​ក្នុង​កា​របើក \"%s\" ដើម្បី​សរសេរ"
 
-#: src/misc/update.c:580
+#: src/misc/update.c:587
 #, c-format
 msgid ""
 "%s\n"
@@ -4738,11 +4708,11 @@ msgstr ""
 "%s\n"
 "កំពុង​ទាញ​យក... %s/%s %.1f%% បាន​ធ្វើ​រួច"
 
-#: src/misc/update.c:584
+#: src/misc/update.c:591
 msgid "Downloading ..."
 msgstr "កំពុង​ទាញ​យក..."
 
-#: src/misc/update.c:585 src/misc/update.c:712 modules/demux/avi/avi.c:2390
+#: src/misc/update.c:592 src/misc/update.c:719 modules/demux/avi/avi.c:2390
 #: modules/gui/macosx/AudioEffects.m:387 modules/gui/macosx/AudioEffects.m:402
 #: modules/gui/macosx/AudioEffects.m:641 modules/gui/macosx/AudioEffects.m:741
 #: modules/gui/macosx/bookmarks.m:105 modules/gui/macosx/controls.m:54
@@ -4755,15 +4725,15 @@ msgstr "កំពុង​ទាញ​យក..."
 #: modules/gui/macosx/open.m:128 modules/gui/macosx/open.m:190
 #: modules/gui/macosx/prefs.m:208 modules/gui/macosx/simple_prefs.m:324
 #: modules/gui/macosx/simple_prefs.m:352 modules/gui/macosx/simple_prefs.m:413
-#: modules/gui/macosx/simple_prefs.m:839 modules/gui/macosx/VideoEffects.m:879
-#: modules/gui/macosx/VideoEffects.m:943 modules/gui/macosx/wizard.m:317
+#: modules/gui/macosx/simple_prefs.m:839 modules/gui/macosx/VideoEffects.m:881
+#: modules/gui/macosx/VideoEffects.m:945 modules/gui/macosx/wizard.m:317
 #: modules/gui/qt4/components/open_panels.cpp:1343
 #: modules/gui/qt4/components/preferences_widgets.cpp:1424
 #: modules/gui/qt4/components/sout/profile_selector.cpp:427
 msgid "Cancel"
 msgstr "បោះបង់"
 
-#: src/misc/update.c:605
+#: src/misc/update.c:612
 #, c-format
 msgid ""
 "%s\n"
@@ -4772,11 +4742,11 @@ msgstr ""
 "%s\n"
 "កំពុង​ទាញ​យក... %s/%s - %.1f%% បាន​ធ្វើ​រួច"
 
-#: src/misc/update.c:637
+#: src/misc/update.c:644
 msgid "File could not be verified"
 msgstr "មិន​អាច​ផ្ទៀងផ្ទាត់​ឯកសារ​បានទេ"
 
-#: src/misc/update.c:638
+#: src/misc/update.c:645
 #, c-format
 msgid ""
 "It was not possible to download a cryptographic signature for the downloaded "
@@ -4785,11 +4755,11 @@ msgstr ""
 "វា​មិន​អាច​ទាញ​យក​ហត្ថលេខា​គ្រីប​សម្រាប់​ឯកសារ \"%s\" ដែល​បាន​ទាញ​យក​នេះ​ទេ ។ ដូច្នេះ វា​គឺ​ត្រូវ​បាន​លុប "
 "។"
 
-#: src/misc/update.c:649 src/misc/update.c:661
+#: src/misc/update.c:656 src/misc/update.c:668
 msgid "Invalid signature"
 msgstr "ហត្ថលេខា​មិន​ត្រឹមត្រូវ"
 
-#: src/misc/update.c:650 src/misc/update.c:662
+#: src/misc/update.c:657 src/misc/update.c:669
 #, c-format
 msgid ""
 "The cryptographic signature for the downloaded file \"%s\" was invalid and "
@@ -4798,11 +4768,11 @@ msgstr ""
 "ហត្ថលេខា​ការ​គ្រីប​សម្រាប់​ឯកសារ \"%s\" ដែល​បាន​ទាញ​យក​គឺ​មិន​ត្រឹមត្រូវ ហើយ​មិន​អាច​ប្រើ​ដើម្បី​ផ្ទៀតផ្ទាត់​វា​"
 "ដោយ​សុវត្ថិភាព​បាន​ទេ ។ ដូច្នេះ​ឯកសារ​គឺ​ត្រូវ​បាន​លុប ។"
 
-#: src/misc/update.c:674
+#: src/misc/update.c:681
 msgid "File not verifiable"
 msgstr "ឯកសារ​គឺ​មិន​អាច​ផ្ទៀងផ្ទាត់​បានទេ"
 
-#: src/misc/update.c:675
+#: src/misc/update.c:682
 #, c-format
 msgid ""
 "It was not possible to securely verify the downloaded file \"%s\". Thus, it "
@@ -4810,26 +4780,26 @@ msgid ""
 msgstr ""
 "វា​មិន​អាច​ផ្ទៀងផ្ទាត់​សុវត្ថិភាព​ឯកសារ \"%s\" ដែល​បាន​ទាញ​យក​បានទេ ។ ដូច្នេះ​វា​ត្រូវ​បាន​លុប ។"
 
-#: src/misc/update.c:686 src/misc/update.c:698
+#: src/misc/update.c:693 src/misc/update.c:705
 msgid "File corrupted"
 msgstr "ឯកសារ​បាន​ខូច"
 
-#: src/misc/update.c:687 src/misc/update.c:699
+#: src/misc/update.c:694 src/misc/update.c:706
 #, c-format
 msgid "Downloaded file \"%s\" was corrupted. Thus, it was deleted."
 msgstr "ឯកសារ \"%s\" ដែល​បាន​ទាញ​យក​គឺ​ខូច ។ ដូច្នេះ​វា​ត្រូវ​បាន​លុប ។"
 
-#: src/misc/update.c:710
+#: src/misc/update.c:717
 msgid "Update VLC media player"
 msgstr "ធ្វើ​បច្ចុប្បន្នភាព​កម្មវិធី​ចាក់​មេឌៀ VLC"
 
-#: src/misc/update.c:711
+#: src/misc/update.c:718
 msgid ""
 "The new version was successfully downloaded. Do you want to close VLC and "
 "install it now?"
 msgstr "កំណែ​ថ្មី​ត្រូវ​បាន​ទាញ​យក​ដោយ​ជោគជ័យ ។ តើ​អ្នក​ចង់​បិទ​ VLC ហើយ​ដំឡើង​វា​ឥឡូវនេះ​ដែរឬទេ ?"
 
-#: src/misc/update.c:712
+#: src/misc/update.c:719
 msgid "Install"
 msgstr "ដំឡើង"
 
@@ -5514,7 +5484,7 @@ msgstr "កត្តា​ធ្វើ​មាត្រដ្ឋាន"
 
 #: src/video_output/vout_intf.c:218 modules/gui/macosx/MainMenu.m:402
 #: modules/gui/macosx/MainMenu.m:403 modules/gui/macosx/VideoEffects.m:82
-#: modules/video_filter/croppadd.c:86 modules/gui/qt4/ui/video_effects.h:1326
+#: modules/video_filter/croppadd.c:86
 msgid "Crop"
 msgstr "ច្រឹប"
 
@@ -5522,7 +5492,7 @@ msgstr "ច្រឹប"
 #: modules/access/linsys/linsys_hdsdi.c:78
 #: modules/access/linsys/linsys_sdi.c:73 modules/demux/rawvid.c:59
 #: modules/gui/macosx/MainMenu.m:400 modules/gui/macosx/MainMenu.m:401
-#: modules/gui/macosx/MainMenu.m:1315
+#: modules/gui/macosx/MainMenu.m:1323
 msgid "Aspect ratio"
 msgstr "សមាមាត្រ"
 
@@ -5631,7 +5601,6 @@ msgid "Use Blu-ray menus. If disabled, the movie will start directly"
 msgstr "ប្រើ​ម៉ឺនុយ Blu-ray ។ បើ​បិទ ភាពយន្ត​នឹង​ចាប់ផ្ដើម​ដោយ​ផ្ទាល់"
 
 #: modules/access/bluray.c:69 modules/services_discovery/udev.c:596
-#: modules/gui/qt4/ui/open_disk.h:299
 msgid "Blu-ray"
 msgstr "Blu-ray"
 
@@ -5688,7 +5657,6 @@ msgid "Blu-ray error"
 msgstr "Blu-ray មាន​បញ្ហា"
 
 #: modules/access/cdda.c:62 modules/gui/macosx/open.m:162
-#: modules/gui/qt4/ui/open_disk.h:300
 msgid "Audio CD"
 msgstr "ស៊ីឌី​អូឌីយ៉ូ"
 
@@ -6749,7 +6717,7 @@ msgstr "ឯកសារ​ព័ត៌មាន​បញ្ចូល"
 msgid "File"
 msgstr "ឯកសារ"
 
-#: modules/access/fs.c:72 modules/gui/qt4/ui/sprefs_video.h:359
+#: modules/access/fs.c:72
 msgid "Directory"
 msgstr "ថត"
 
@@ -6972,7 +6940,6 @@ msgstr "ចំនួន​ឆានែល​របស់​អូឌីយ៉ូ
 #: modules/gui/qt4/components/extended_panels.cpp:1402
 #: modules/video_filter/mosaic.c:94 modules/video_output/vmem.c:42
 #: share/lua/http/dialogs/mosaic_window.html:108
-#: modules/gui/qt4/ui/profiles.h:726
 msgid "Width"
 msgstr "ទទឹង​"
 
@@ -6984,7 +6951,6 @@ msgstr "ទទឹង​វីដេអូ ឬ​ចំណងជើង​រង�
 #: modules/demux/rawvid.c:52 modules/gui/macosx/ConvertAndSave.m:183
 #: modules/video_filter/mosaic.c:92 modules/video_output/vmem.c:45
 #: share/lua/http/dialogs/mosaic_window.html:126
-#: modules/gui/qt4/ui/profiles.h:729
 msgid "Height"
 msgstr "កម្ពស់"
 
@@ -7667,31 +7633,31 @@ msgstr "PulseAudio"
 msgid "PulseAudio input"
 msgstr "លទ្ធផល PulseAudio"
 
-#: modules/access/qtcapture.m:43
+#: modules/access/qtcapture.m:45
 msgid "Video Capture width"
 msgstr "ចាប់​យក​ទទឹង​វីដេអូ"
 
-#: modules/access/qtcapture.m:44
+#: modules/access/qtcapture.m:46
 msgid "Video Capture width in pixel"
 msgstr "ចាប់​យក​ទទឹង​វីដេអូ​គិត​ជា​ភីកសែល"
 
-#: modules/access/qtcapture.m:45
+#: modules/access/qtcapture.m:47
 msgid "Video Capture height"
 msgstr "ចាប់​យក​កម្ពស់​វីដេអូ"
 
-#: modules/access/qtcapture.m:46
+#: modules/access/qtcapture.m:48
 msgid "Video Capture height in pixel"
 msgstr "ចាប់​យក​កម្ពស់​វីដេអូ​គិត​ជា​ភីកសែល"
 
-#: modules/access/qtcapture.m:60 modules/access/qtcapture.m:61
+#: modules/access/qtcapture.m:62 modules/access/qtcapture.m:63
 msgid "Quicktime Capture"
 msgstr "ការ​ចាប់យក Quicktime"
 
-#: modules/access/qtcapture.m:248 modules/access/qtcapture.m:278
+#: modules/access/qtcapture.m:250 modules/access/qtcapture.m:280
 msgid "No Input device found"
 msgstr "រក​មិន​ឃើញ​ឧបករណ៍​បញ្ចូល"
 
-#: modules/access/qtcapture.m:249 modules/access/qtcapture.m:279
+#: modules/access/qtcapture.m:251 modules/access/qtcapture.m:281
 msgid ""
 "Your Mac does not seem to be equipped with a suitable input device. Please "
 "check your connectors and drivers."
@@ -8236,7 +8202,6 @@ msgstr "កំណត់​វត្ថុ​បញ្ជា​ឡើង​វិ
 
 #: modules/access/v4l2/v4l2.c:84 modules/gui/macosx/VideoEffects.m:92
 #: modules/video_filter/atmo/atmo.cpp:263
-#: modules/gui/qt4/ui/video_effects.h:1304
 msgid "Brightness"
 msgstr "ពន្លឺ"
 
@@ -8253,7 +8218,6 @@ msgid "Automatically adjust the picture brightness."
 msgstr "លៃ​តម្រូវ​ពន្លឺ​រូបភាព​ដោយ​ស្វ័យប្រវត្តិ ។"
 
 #: modules/access/v4l2/v4l2.c:89 modules/gui/macosx/VideoEffects.m:91
-#: modules/gui/qt4/ui/video_effects.h:1306
 msgid "Contrast"
 msgstr "កម្រិត​ពណ៌​"
 
@@ -8263,8 +8227,6 @@ msgstr "កម្រិត​ពណ៌​រូបភាព ឬ​លូម៉�
 
 #: modules/access/v4l2/v4l2.c:91 modules/gui/macosx/VideoEffects.m:94
 #: modules/gui/macosx/VideoEffects.m:134
-#: modules/gui/qt4/ui/video_effects.h:1307
-#: modules/gui/qt4/ui/video_effects.h:1339
 msgid "Saturation"
 msgstr "តិត្ថិភាព"
 
@@ -8273,7 +8235,6 @@ msgid "Picture saturation or chroma gain."
 msgstr "តិត្ថិភាព​រូបភាព ឬ​ក្រូម៉ា​កើន​ឡើង ។"
 
 #: modules/access/v4l2/v4l2.c:93 modules/gui/macosx/VideoEffects.m:90
-#: modules/gui/qt4/ui/video_effects.h:1303
 msgid "Hue"
 msgstr "ពណ៌​លាំៗ"
 
@@ -8325,7 +8286,6 @@ msgid "Blue chroma balance."
 msgstr "តុល្យភាព​ក្រូម៉ា​ពណ៌​ខៀវ ។"
 
 #: modules/access/v4l2/v4l2.c:111 modules/gui/macosx/VideoEffects.m:95
-#: modules/gui/qt4/ui/video_effects.h:1308
 msgid "Gamma"
 msgstr "ហ្គាម៉ា"
 
@@ -8449,7 +8409,7 @@ msgid "Black & white"
 msgstr "ស និង​ខ្មៅ"
 
 #: modules/access/v4l2/v4l2.c:164 modules/gui/macosx/VideoEffects.m:136
-#: modules/video_filter/sepia.c:65 modules/gui/qt4/ui/video_effects.h:1341
+#: modules/video_filter/sepia.c:65
 msgid "Sepia"
 msgstr "ពណ៌​សូកូឡា"
 
@@ -8543,6 +8503,7 @@ msgstr ""
 
 #: modules/access/v4l2/v4l2.c:242 modules/codec/avcodec/avcodec.c:68
 #: modules/codec/x264.c:429 modules/control/hotkeys.c:193
+#: modules/gui/qt4/dialogs/convert.cpp:133
 #: modules/gui/qt4/dialogs/preferences.cpp:75
 msgid "All"
 msgstr "ទាំងអស់"
@@ -8681,7 +8642,7 @@ msgstr "កំណត់​កម្រិត​សំឡេង"
 
 #: modules/access/vcdx/info.c:69 modules/gui/macosx/ControlsBar.m:486
 #: modules/gui/macosx/fspanel.m:463 modules/gui/qt4/dialogs/toolbar.cpp:365
-#: modules/stream_out/raop.c:150 modules/gui/qt4/ui/sprefs_audio.h:422
+#: modules/stream_out/raop.c:150
 msgid "Volume"
 msgstr "កម្រិត​សំឡេង"
 
@@ -8693,7 +8654,7 @@ msgstr "លេខ​សម្គាល់​ប្រព័ន្ធ"
 msgid "Entries"
 msgstr "ធាតុ"
 
-#: modules/access/vcdx/info.c:75 modules/gui/qt4/ui/sprefs_audio.h:437
+#: modules/access/vcdx/info.c:75
 msgid "Tracks"
 msgstr "បទ"
 
@@ -11193,7 +11154,7 @@ msgid "Maroon"
 msgstr "ត្នោត​ចាស់"
 
 #: modules/codec/kate.c:211 modules/gui/macosx/MainMenu.m:427
-#: modules/gui/macosx/MainMenu.m:1006 modules/text_renderer/freetype.c:208
+#: modules/gui/macosx/MainMenu.m:1014 modules/text_renderer/freetype.c:208
 #: modules/text_renderer/quartztext.c:116 modules/text_renderer/win32text.c:90
 #: modules/video_filter/ball.c:119 modules/video_filter/colorthres.c:64
 #: modules/video_filter/marq.c:61 modules/video_filter/rss.c:72
@@ -11208,7 +11169,7 @@ msgid "Fuchsia"
 msgstr "ស៊ីជម្ពូរ"
 
 #: modules/codec/kate.c:211 modules/gui/macosx/MainMenu.m:429
-#: modules/gui/macosx/MainMenu.m:1010 modules/text_renderer/freetype.c:208
+#: modules/gui/macosx/MainMenu.m:1018 modules/text_renderer/freetype.c:208
 #: modules/text_renderer/quartztext.c:116 modules/text_renderer/win32text.c:90
 #: modules/video_filter/colorthres.c:64 modules/video_filter/marq.c:62
 #: modules/video_filter/rss.c:73
@@ -11222,7 +11183,7 @@ msgid "Olive"
 msgstr "អូលីវ"
 
 #: modules/codec/kate.c:211 modules/gui/macosx/MainMenu.m:428
-#: modules/gui/macosx/MainMenu.m:1008 modules/text_renderer/freetype.c:208
+#: modules/gui/macosx/MainMenu.m:1016 modules/text_renderer/freetype.c:208
 #: modules/text_renderer/quartztext.c:116 modules/text_renderer/win32text.c:90
 #: modules/video_filter/ball.c:119 modules/video_filter/marq.c:62
 #: modules/video_filter/rss.c:73
@@ -11255,7 +11216,7 @@ msgid "Navy"
 msgstr "ខៀវ​ចាស់"
 
 #: modules/codec/kate.c:212 modules/gui/macosx/MainMenu.m:430
-#: modules/gui/macosx/MainMenu.m:1012 modules/text_renderer/freetype.c:209
+#: modules/gui/macosx/MainMenu.m:1020 modules/text_renderer/freetype.c:209
 #: modules/text_renderer/quartztext.c:117 modules/text_renderer/win32text.c:91
 #: modules/video_filter/ball.c:120 modules/video_filter/colorthres.c:64
 #: modules/video_filter/marq.c:63 modules/video_filter/rss.c:74
@@ -12000,8 +11961,6 @@ msgstr "អ៊ិនកូដឌ័រ​អូឌីយ៉ូ​ចំណុច
 
 #: modules/codec/speex.c:59 modules/codec/speex.c:799
 #: modules/gui/macosx/open.m:193 modules/gui/macosx/VideoEffects.m:140
-#: modules/gui/qt4/ui/sprefs_video.h:356
-#: modules/gui/qt4/ui/video_effects.h:1333
 msgid "Mode"
 msgstr "របៀប​"
 
@@ -13268,7 +13227,6 @@ msgid "Quiet mode"
 msgstr "របៀប​ស្ងាត់"
 
 #: modules/codec/x264.c:394 modules/gui/macosx/playlistinfo.m:80
-#: modules/gui/qt4/ui/streampanel.h:170
 msgid "Statistics"
 msgstr "ស្ថិតិ"
 
@@ -13808,8 +13766,8 @@ msgid "Opening"
 msgstr "កំពុង​បើក"
 
 #: modules/control/rc.c:73 modules/gui/macosx/ControlsBar.m:431
-#: modules/gui/macosx/MainMenu.m:1201 modules/gui/macosx/MainMenu.m:1202
-#: modules/gui/macosx/MainMenu.m:1203 modules/gui/qt4/menus.cpp:818
+#: modules/gui/macosx/MainMenu.m:1209 modules/gui/macosx/MainMenu.m:1210
+#: modules/gui/macosx/MainMenu.m:1211 modules/gui/qt4/menus.cpp:818
 msgid "Pause"
 msgstr "ផ្អាក"
 
@@ -14477,7 +14435,6 @@ msgid "Use chapter codecs found in the segment."
 msgstr "ប្រើ​កូដិក​ជំពូក​ដែល​បាន​រកឃើញ​នៅ​ក្នុង​ចម្រៀក ។"
 
 #: modules/demux/mkv/mkv.cpp:62 modules/gui/macosx/simple_prefs.m:345
-#: modules/gui/qt4/ui/sprefs_input.h:353
 msgid "Preload MKV files in the same directory"
 msgstr "ផ្ទុក​ឯកសារ MKV រួចស្រេច​នៅ​ក្នុង​ថត​ដូចគ្នា"
 
@@ -14819,7 +14776,6 @@ msgstr "New Wave"
 
 #: modules/demux/mp4/id3genres.h:99 modules/gui/macosx/VideoEffects.m:160
 #: modules/video_filter/psychedelic.c:55
-#: modules/gui/qt4/ui/video_effects.h:1390
 msgid "Psychedelic"
 msgstr "រវើរវាយ"
 
@@ -15721,7 +15677,7 @@ msgid "MPEG Transport Stream demuxer"
 msgstr "ឧបករណ៍​មិន​ទ្វេ​ទិស​ស្ទ្រីម​បញ្ជូន MPEG"
 
 #: modules/demux/ts.c:171 modules/gui/macosx/MainMenu.m:424
-#: modules/gui/macosx/MainMenu.m:1538 modules/gui/qt4/dialogs/toolbar.cpp:429
+#: modules/gui/macosx/MainMenu.m:1542 modules/gui/qt4/dialogs/toolbar.cpp:429
 msgid "Teletext"
 msgstr "ព័ត៌មាន​ទូរទស្សន៍"
 
@@ -15907,17 +15863,16 @@ msgid "VLC media player Help"
 msgstr "ជំនួយ​កម្មវិធី​ចាក់​មេឌៀ VLC"
 
 #: modules/gui/macosx/about.m:263 modules/gui/macosx/MainMenu.m:426
-#: modules/gui/macosx/MainMenu.m:1004
+#: modules/gui/macosx/MainMenu.m:1012
 msgid "Index"
 msgstr "លិបិក្រម"
 
-#: modules/gui/macosx/AudioEffects.m:113 modules/gui/qt4/ui/equalizer.h:134
+#: modules/gui/macosx/AudioEffects.m:113
 msgid "2 Pass"
 msgstr "2 Pass"
 
 #: modules/gui/macosx/AudioEffects.m:114
 #: modules/gui/qt4/components/extended_panels.cpp:1216
-#: modules/gui/qt4/ui/equalizer.h:136
 msgid "Preamp"
 msgstr "អំភ្លី"
 
@@ -15981,40 +15936,39 @@ msgstr "ស្ទួន​ប្រវត្តិរូប​បច្ចុប
 msgid "Organize Profiles..."
 msgstr "រៀបចំ​ប្រវត្តិរូប..."
 
-#: modules/gui/macosx/AudioEffects.m:385 modules/gui/macosx/VideoEffects.m:877
+#: modules/gui/macosx/AudioEffects.m:385 modules/gui/macosx/VideoEffects.m:879
 msgid "Duplicate current profile for a new profile"
 msgstr "ស្ទួន​ប្រវត្តិរូប​បច្ចុប្បន្ន​សម្រាប់​ប្រវត្តិរូប​ថ្មី"
 
 #: modules/gui/macosx/AudioEffects.m:386
 #: modules/gui/macosx/ConvertAndSave.m:367
-#: modules/gui/macosx/VideoEffects.m:878
+#: modules/gui/macosx/VideoEffects.m:880
 msgid "Enter a name for the new profile:"
 msgstr "បញ្ចូល​ឈ្មោះ​សម្រាប់​ប្រវត្តិរូប​ថ្មី៖"
 
 #: modules/gui/macosx/AudioEffects.m:388 modules/gui/macosx/AudioEffects.m:642
 #: modules/gui/macosx/ConvertAndSave.m:369
 #: modules/gui/macosx/ConvertAndSave.m:401 modules/gui/macosx/output.m:457
-#: modules/gui/macosx/playlist.m:716 modules/gui/macosx/prefs.m:207
+#: modules/gui/macosx/playlist.m:718 modules/gui/macosx/prefs.m:207
 #: modules/gui/macosx/simple_prefs.m:351 modules/gui/macosx/simple_prefs.m:415
-#: modules/gui/macosx/VideoEffects.m:880
+#: modules/gui/macosx/VideoEffects.m:882
 #: modules/gui/qt4/components/sout/profile_selector.cpp:424
-#: modules/gui/qt4/ui/vlm.h:301
 msgid "Save"
 msgstr "រក្សាទុក"
 
 #: modules/gui/macosx/AudioEffects.m:399 modules/gui/macosx/AudioEffects.m:738
-#: modules/gui/macosx/VideoEffects.m:940
+#: modules/gui/macosx/VideoEffects.m:942
 msgid "Remove a preset"
 msgstr "លុប​ការ​កំណត់​ស្រេច​ចេញ"
 
 #: modules/gui/macosx/AudioEffects.m:400 modules/gui/macosx/AudioEffects.m:739
-#: modules/gui/macosx/VideoEffects.m:941
+#: modules/gui/macosx/VideoEffects.m:943
 msgid "Select the preset you would like to remove:"
 msgstr "ជ្រើស​ការ​កំណត់​ស្រេច​ដែល​អ្នក​ចង់​លុបចេញ៖"
 
 #: modules/gui/macosx/AudioEffects.m:401 modules/gui/macosx/AudioEffects.m:740
 #: modules/gui/macosx/bookmarks.m:95 modules/gui/macosx/ConvertAndSave.m:381
-#: modules/gui/macosx/VideoEffects.m:942 modules/gui/qt4/ui/open_file.h:154
+#: modules/gui/macosx/VideoEffects.m:944
 msgid "Remove"
 msgstr "យកចេញ"
 
@@ -16034,11 +15988,11 @@ msgstr "រក្សាទុក​ជម្រើស​បច្ចុប្ប
 msgid "Enter a name for the new preset:"
 msgstr "បញ្ចូល​ឈ្មោះ​សម្រាប់​ការ​កំណត់​ស្រេច​ថ្មី៖"
 
-#: modules/gui/macosx/AudioEffects.m:705 modules/gui/macosx/VideoEffects.m:903
+#: modules/gui/macosx/AudioEffects.m:705 modules/gui/macosx/VideoEffects.m:905
 msgid "Please enter a unique name for the new profile."
 msgstr "សូម​បញ្ចូល​ឈ្មោះ​តែមួយ​សម្រាប់​ការ​កំណត់​ស្រេច​ថ្មី។"
 
-#: modules/gui/macosx/AudioEffects.m:706 modules/gui/macosx/VideoEffects.m:904
+#: modules/gui/macosx/AudioEffects.m:706 modules/gui/macosx/VideoEffects.m:906
 msgid "Multiple profiles with the same name are not allowed."
 msgstr "មិន​អនុញ្ញាត​ប្រវត្តិរូប​ច្រើន​ដែល​មាន​ឈ្មោះ​ដូចគ្នា​ទេ។"
 
@@ -16047,14 +16001,12 @@ msgid "Bookmarks"
 msgstr "ចំណាំ"
 
 #: modules/gui/macosx/bookmarks.m:91
-#: modules/gui/qt4/ui/podcast_configuration.h:103
-#: modules/gui/qt4/ui/sout.h:209 modules/gui/qt4/ui/vlm.h:299
 msgid "Add"
 msgstr "បន្ថែម"
 
 #: modules/gui/macosx/bookmarks.m:92 modules/gui/macosx/MainMenu.m:334
 #: modules/gui/macosx/simple_prefs.m:326
-#: modules/gui/qt4/dialogs/bookmarks.cpp:53 modules/gui/qt4/ui/vlm.h:300
+#: modules/gui/qt4/dialogs/bookmarks.cpp:53
 msgid "Clear"
 msgstr "សម្អាត"
 
@@ -16097,7 +16049,7 @@ msgstr "យល់ព្រម"
 msgid "Name"
 msgstr "ឈ្មោះ"
 
-#: modules/gui/macosx/bookmarks.m:136 modules/gui/macosx/playlist.m:713
+#: modules/gui/macosx/bookmarks.m:136 modules/gui/macosx/playlist.m:715
 msgid "Untitled"
 msgstr "គ្មាន​ចំណងជើង"
 
@@ -16138,7 +16090,7 @@ msgstr "រក​មិន​ឃើញ​ព័ត៌មាន​បញ្ចូ
 msgid "The stream must be playing or paused for bookmarks to work."
 msgstr "ស្ទ្រីម​ត្រូវតែ​បាន​ចាក់ ឬ​ផ្អាក​ទើប​អាច​ចំណាំ​បាន ។"
 
-#: modules/gui/macosx/controls.m:53 modules/gui/macosx/MainMenu.m:1487
+#: modules/gui/macosx/controls.m:53 modules/gui/macosx/MainMenu.m:1491
 msgid "Jump To Time"
 msgstr "ទៅកាន់​ពេលវេលា"
 
@@ -16251,7 +16203,6 @@ msgid "Click to play the audio at maximum volume."
 msgstr "ចុច​ដើម្បី​ចាក់​សំឡេង​នៅ​កម្រិត​អតិបរមា។"
 
 #: modules/gui/macosx/ControlsBar.m:496 modules/gui/macosx/simple_prefs.m:309
-#: modules/gui/qt4/ui/sprefs_audio.h:430
 msgid "Effects"
 msgstr "បែបផែន"
 
@@ -16308,9 +16259,6 @@ msgstr "ជ្រើស​ទីតាំង​បង្ហាញ"
 #: modules/gui/qt4/components/preferences_widgets.cpp:263
 #: modules/gui/qt4/components/simple_preferences.cpp:421
 #: modules/gui/qt4/components/sout/sout_widgets.cpp:98
-#: modules/gui/qt4/ui/open.h:263 modules/gui/qt4/ui/open_disk.h:307
-#: modules/gui/qt4/ui/open_file.h:147 modules/gui/qt4/ui/sprefs_audio.h:428
-#: modules/gui/qt4/ui/sprefs_input.h:351 modules/gui/qt4/ui/sprefs_video.h:358
 msgid "Browse..."
 msgstr "រក​មើល..."
 
@@ -16337,31 +16285,29 @@ msgstr "អនុវត្ត"
 msgid "Save as new Profile..."
 msgstr "រក្សាទុក​ជា​ប្រវត្តិរូប​ថ្មី..."
 
-#: modules/gui/macosx/ConvertAndSave.m:170 modules/gui/qt4/ui/profiles.h:708
+#: modules/gui/macosx/ConvertAndSave.m:170
 msgid "Encapsulation"
 msgstr "ការ​ស្រោប"
 
 #: modules/gui/macosx/ConvertAndSave.m:171
 #: share/lua/http/dialogs/create_stream.html:160
-#: modules/gui/qt4/ui/profiles.h:734
 msgid "Video codec"
 msgstr "កូដិក​វីដេអូ​"
 
 #: modules/gui/macosx/ConvertAndSave.m:172
 #: share/lua/http/dialogs/create_stream.html:178
-#: modules/gui/qt4/ui/profiles.h:744
 msgid "Audio codec"
 msgstr "កូដិក​អូឌីយ៉ូ"
 
-#: modules/gui/macosx/ConvertAndSave.m:176 modules/gui/qt4/ui/profiles.h:710
+#: modules/gui/macosx/ConvertAndSave.m:176
 msgid "Keep original video track"
 msgstr "រក្សា​បទ​វីដេអូ​ដើម"
 
-#: modules/gui/macosx/ConvertAndSave.m:179 modules/gui/qt4/ui/profiles.h:713
+#: modules/gui/macosx/ConvertAndSave.m:179
 msgid "Frame Rate"
 msgstr "អត្រា​ស៊ុម"
 
-#: modules/gui/macosx/ConvertAndSave.m:181 modules/gui/qt4/ui/profiles.h:723
+#: modules/gui/macosx/ConvertAndSave.m:181
 msgid ""
 "You just need to fill one of the three following parameters, VLC will "
 "autodetect the other using the original aspect ratio"
@@ -16370,15 +16316,14 @@ msgstr ""
 "ការ​ប្រើប្រាស់​សមាមាត្រ​ដើម​ផ្សេង​ទៀត ។"
 
 #: modules/gui/macosx/ConvertAndSave.m:184 modules/gui/macosx/output.m:157
-#: modules/gui/qt4/ui/profiles.h:724
 msgid "Scale"
 msgstr "មាត្រដ្ឋាន"
 
-#: modules/gui/macosx/ConvertAndSave.m:186 modules/gui/qt4/ui/profiles.h:736
+#: modules/gui/macosx/ConvertAndSave.m:186
 msgid "Keep original audio track"
 msgstr "រក្សា​បទ​អូឌីយ៉ូ​ដើម"
 
-#: modules/gui/macosx/ConvertAndSave.m:192 modules/gui/qt4/ui/profiles.h:747
+#: modules/gui/macosx/ConvertAndSave.m:192
 msgid "Overlay subtitles on the video"
 msgstr "តម្រួត​ចំណងជើង​រង​នៅ​លើ​វីដេអូ"
 
@@ -16536,8 +16481,6 @@ msgid "Click to exit fullscreen playback."
 msgstr "ចុច​ដើម្បី​ចេញពី​​ការ​ចាក់​ពេញ​អេក្រង់។"
 
 #: modules/gui/macosx/intf.m:842 modules/gui/qt4/dialogs/messages.cpp:77
-#: modules/gui/qt4/ui/messages_panel.h:138
-#: modules/gui/qt4/ui/messages_panel.h:142
 msgid "Messages"
 msgstr "សារ"
 
@@ -16785,7 +16728,7 @@ msgid ""
 "This option allows the interface to change its icon on various occasions."
 msgstr "ជម្រើស​នេះ​​អនុញ្ញាត​ឲ្យ​​ចំណុចប្រទាក់​ផ្លាស់ប្ដូរ​រូបតំណាង​របស់​វា​​តាម​ពេល​វេលា ។"
 
-#: modules/gui/macosx/macosx.m:110 modules/gui/macosx/MainMenu.m:1317
+#: modules/gui/macosx/macosx.m:110 modules/gui/macosx/MainMenu.m:1325
 msgid "Lock Aspect Ratio"
 msgstr "ចាក់សោ​សមាមាត្រ"
 
@@ -16972,7 +16915,7 @@ msgstr "ចម្លង"
 msgid "Paste"
 msgstr "បិទភ្ជាប់"
 
-#: modules/gui/macosx/MainMenu.m:335 modules/gui/macosx/playlist.m:520
+#: modules/gui/macosx/MainMenu.m:335 modules/gui/macosx/playlist.m:522
 msgid "Select All"
 msgstr "ជ្រើស​ទាំងអស់"
 
@@ -17001,15 +16944,15 @@ msgstr "ការ​ធ្វើ​សមកាលកម្ម​បទ"
 msgid "A→B Loop"
 msgstr "រង្វិល​ជុំ A→B"
 
-#: modules/gui/macosx/MainMenu.m:366 modules/gui/macosx/MainMenu.m:1480
+#: modules/gui/macosx/MainMenu.m:366 modules/gui/macosx/MainMenu.m:1484
 msgid "Quit after Playback"
 msgstr "បិទ​បន្ទាប់ពី​ចាក់​ឡើងវិញ"
 
-#: modules/gui/macosx/MainMenu.m:367 modules/gui/macosx/MainMenu.m:1485
+#: modules/gui/macosx/MainMenu.m:367 modules/gui/macosx/MainMenu.m:1489
 msgid "Step Forward"
 msgstr "ទៅមុខ​មួយ​ជំហាន"
 
-#: modules/gui/macosx/MainMenu.m:368 modules/gui/macosx/MainMenu.m:1486
+#: modules/gui/macosx/MainMenu.m:368 modules/gui/macosx/MainMenu.m:1490
 msgid "Step Backward"
 msgstr "ថយ​ក្រោយ​មួយ​ជំហាន"
 
@@ -17025,25 +16968,25 @@ msgstr "បន្ថយ​កម្រិត​សំឡេង"
 msgid "Audio Device"
 msgstr "ឧបករណ៍​អូឌីយ៉ូ"
 
-#: modules/gui/macosx/MainMenu.m:391 modules/gui/macosx/MainMenu.m:1497
+#: modules/gui/macosx/MainMenu.m:391 modules/gui/macosx/MainMenu.m:1501
 msgid "Half Size"
 msgstr "ទំហំ​ពាក់​កណ្ដាល"
 
-#: modules/gui/macosx/MainMenu.m:392 modules/gui/macosx/MainMenu.m:1498
-#: modules/gui/macosx/MainMenu.m:1537
+#: modules/gui/macosx/MainMenu.m:392 modules/gui/macosx/MainMenu.m:1502
+#: modules/gui/macosx/MainMenu.m:1541
 msgid "Normal Size"
 msgstr "ទំហំ​ធម្មតា"
 
-#: modules/gui/macosx/MainMenu.m:393 modules/gui/macosx/MainMenu.m:1499
+#: modules/gui/macosx/MainMenu.m:393 modules/gui/macosx/MainMenu.m:1503
 msgid "Double Size"
 msgstr "ទំហំ​ទ្វេ"
 
-#: modules/gui/macosx/MainMenu.m:394 modules/gui/macosx/MainMenu.m:1500
+#: modules/gui/macosx/MainMenu.m:394 modules/gui/macosx/MainMenu.m:1504
 msgid "Fit to Screen"
 msgstr "សម​ទៅ​នឹង​អេក្រង់"
 
-#: modules/gui/macosx/MainMenu.m:396 modules/gui/macosx/MainMenu.m:1503
-#: modules/gui/macosx/MainMenu.m:1509
+#: modules/gui/macosx/MainMenu.m:396 modules/gui/macosx/MainMenu.m:1507
+#: modules/gui/macosx/MainMenu.m:1513
 msgid "Float on Top"
 msgstr "អណ្ដែត​នៅលើ​កំពូល"
 
@@ -17057,7 +17000,7 @@ msgstr "ឧបករណ៍​វីដេអូ​ពេញ​អេក្រង
 msgid "Post processing"
 msgstr "ការ​ដំណើរការ​តាម​ក្រោយ"
 
-#: modules/gui/macosx/MainMenu.m:414 modules/gui/macosx/MainMenu.m:1522
+#: modules/gui/macosx/MainMenu.m:414 modules/gui/macosx/MainMenu.m:1526
 msgid "Add Subtitle File..."
 msgstr "បន្ថែម​ឯកសារ​ចំណងជើង​រង..."
 
@@ -17125,7 +17068,7 @@ msgstr "ចំណាំ..."
 msgid "Playlist..."
 msgstr "បញ្ជី​ចាក់..."
 
-#: modules/gui/macosx/MainMenu.m:441 modules/gui/macosx/playlist.m:521
+#: modules/gui/macosx/MainMenu.m:441 modules/gui/macosx/playlist.m:523
 msgid "Media Information..."
 msgstr "ព័ត៌មាន​មេឌៀ..."
 
@@ -17295,7 +17238,7 @@ msgstr "ចាក់​មេឌៀ​ផ្សេង​ទៀត​ដំណា
 
 #: modules/gui/macosx/open.m:143 modules/gui/macosx/open.m:365
 #: modules/gui/macosx/simple_prefs.m:379 modules/gui/macosx/wizard.m:343
-#: modules/gui/macosx/wizard.m:411 modules/gui/qt4/ui/sprefs_interface.h:530
+#: modules/gui/macosx/wizard.m:411
 msgid "Choose..."
 msgstr "ជ្រើស..."
 
@@ -17475,7 +17418,6 @@ msgid "Subtitle encoding"
 msgstr "ការ​ដាក់​លេខ​កូដ​ចំណងជើង​រង"
 
 #: modules/gui/macosx/open.m:376 modules/gui/macosx/simple_prefs.m:381
-#: modules/gui/qt4/ui/sprefs_subtitles.h:296
 msgid "Font size"
 msgstr "ទំហំ​ពុម្ពអក្សរ"
 
@@ -17496,7 +17438,7 @@ msgid "Subtitle File"
 msgstr "ឯកសារ​ចំណងជើង​រង"
 
 #: modules/gui/macosx/open.m:670 modules/gui/macosx/open.m:745
-#: modules/gui/macosx/open.m:1545 modules/gui/qt4/ui/open_file.h:142
+#: modules/gui/macosx/open.m:1545
 msgid "Open File"
 msgstr "បើក​ឯកសារ"
 
@@ -17563,59 +17505,59 @@ msgstr "SDP URL"
 msgid "Save File"
 msgstr "រក្សាទុក​ឯកសារ"
 
-#: modules/gui/macosx/playlist.m:516
+#: modules/gui/macosx/playlist.m:518
 msgid "Save Playlist..."
 msgstr "រក្សាទុក​បញ្ជី​ចាក់..."
 
-#: modules/gui/macosx/playlist.m:519
+#: modules/gui/macosx/playlist.m:521
 msgid "Expand Node"
 msgstr "ពង្រីក​ថ្នាំង"
 
-#: modules/gui/macosx/playlist.m:522
+#: modules/gui/macosx/playlist.m:524
 msgid "Download Cover Art"
 msgstr "ទាញ​យក​សិល្បៈ​គម្រប"
 
-#: modules/gui/macosx/playlist.m:523
+#: modules/gui/macosx/playlist.m:525
 msgid "Fetch Meta Data"
 msgstr "ទៅ​ប្រមូល​យក​ទិន្នន័យ​មេតា"
 
-#: modules/gui/macosx/playlist.m:524 modules/gui/macosx/playlist.m:525
+#: modules/gui/macosx/playlist.m:526 modules/gui/macosx/playlist.m:527
 msgid "Reveal in Finder"
 msgstr "បង្ហាញ​ក្នុង​កម្មវិធី​រក"
 
-#: modules/gui/macosx/playlist.m:527
+#: modules/gui/macosx/playlist.m:529
 msgid "Sort Node by Name"
 msgstr "តម្រៀប​ថ្នាំង​តាម​ឈ្មោះ"
 
-#: modules/gui/macosx/playlist.m:528
+#: modules/gui/macosx/playlist.m:530
 msgid "Sort Node by Author"
 msgstr "តម្រៀប​ថ្នាំង​តាម​អ្នក​និពន្ធ"
 
-#: modules/gui/macosx/playlist.m:530 modules/gui/macosx/playlist.m:531
+#: modules/gui/macosx/playlist.m:532 modules/gui/macosx/playlist.m:533
 msgid "Search in Playlist"
 msgstr "ស្វែងរក​ក្នុង​បញ្ជី​ចាក់"
 
-#: modules/gui/macosx/playlist.m:533
+#: modules/gui/macosx/playlist.m:535
 msgid "File Format:"
 msgstr "ទ្រង់ទ្រាយ​ឯកសារ ៖"
 
-#: modules/gui/macosx/playlist.m:534
+#: modules/gui/macosx/playlist.m:536
 msgid "Extended M3U"
 msgstr "M3U ដែល​បាន​បន្ថែម"
 
-#: modules/gui/macosx/playlist.m:535
+#: modules/gui/macosx/playlist.m:537
 msgid "XML Shareable Playlist Format (XSPF)"
 msgstr "XML Shareable Playlist Format (XSPF)"
 
-#: modules/gui/macosx/playlist.m:536 modules/gui/qt4/dialogs_provider.cpp:582
+#: modules/gui/macosx/playlist.m:538 modules/gui/qt4/dialogs_provider.cpp:582
 msgid "HTML playlist"
 msgstr "បញ្ជី​ចាក់ HTML"
 
-#: modules/gui/macosx/playlist.m:715
+#: modules/gui/macosx/playlist.m:717
 msgid "Save Playlist"
 msgstr "រក្សាទុក​បញ្ជី​ចាក់"
 
-#: modules/gui/macosx/playlist.m:1130
+#: modules/gui/macosx/playlist.m:1132
 msgid "Meta-information"
 msgstr "ព័ត៌មាន​មេតា"
 
@@ -17776,7 +17718,7 @@ msgstr "រូបភាព​មើល​ឃើញ"
 msgid "Keep audio level between sessions"
 msgstr "រក្សាទុក​កម្រិត​អូឌីយ៉ូ​រវាង​សម័យ"
 
-#: modules/gui/macosx/simple_prefs.m:319 modules/gui/qt4/ui/sprefs_audio.h:424
+#: modules/gui/macosx/simple_prefs.m:319
 msgid "Always reset audio start level to:"
 msgstr "តែងតែ​កំណត់​កម្រិត​អូឌីយ៉ូ​ចាប់ផ្ដើម​ឡើងវិញ​ទៅ ៖"
 
@@ -17809,7 +17751,7 @@ msgstr "ជួសជុល​ឯកសារ AVI"
 msgid "Default Caching Level"
 msgstr "កម្រិត​ឃ្លាំង​សម្ងាត់​លំនាំដើម"
 
-#: modules/gui/macosx/simple_prefs.m:337 modules/gui/qt4/ui/open.h:248
+#: modules/gui/macosx/simple_prefs.m:337
 msgid "Caching"
 msgstr "ដាក់​ក្នុង​ឃ្លាំង​សម្ងាត់"
 
@@ -17870,7 +17812,6 @@ msgid "Show Fullscreen Controller"
 msgstr "បង្ហាញ​វត្ថុ​បញ្ជា​ពេញ​អេក្រង់"
 
 #: modules/gui/macosx/simple_prefs.m:363
-#: modules/gui/qt4/ui/sprefs_interface.h:539
 msgid "Privacy / Network Interaction"
 msgstr "ភាព​ឯកជន/អន្តរកម្ម​បណ្ដាញ"
 
@@ -17901,14 +17842,12 @@ msgid "Display Settings"
 msgstr "កំណត់​ការ​បង្ហាញ"
 
 #: modules/gui/macosx/simple_prefs.m:380
-#: modules/gui/qt4/ui/sprefs_subtitles.h:297
 msgid "Font color"
 msgstr "ពណ៌​ពុម្ពអក្សរ"
 
 #: modules/gui/macosx/simple_prefs.m:382 modules/text_renderer/freetype.c:155
 #: modules/text_renderer/quartztext.c:92 modules/text_renderer/win32text.c:59
 #: modules/video_filter/marq.c:167 modules/video_filter/rss.c:206
-#: modules/gui/qt4/ui/sprefs_subtitles.h:295
 msgid "Font"
 msgstr "ពុម្ពអក្សរ"
 
@@ -17917,7 +17856,6 @@ msgid "Subtitle languages"
 msgstr "ភាសា​ចំណងជើង​រង"
 
 #: modules/gui/macosx/simple_prefs.m:384
-#: modules/gui/qt4/ui/sprefs_subtitles.h:292
 msgid "Preferred subtitle language"
 msgstr "ភាសា​ចំណងជើង​រង​ដែល​ចូលចិត្ត"
 
@@ -17935,12 +17873,10 @@ msgid "Force bold"
 msgstr "បង្ខំ​ដិត"
 
 #: modules/gui/macosx/simple_prefs.m:389 modules/text_renderer/freetype.c:185
-#: modules/gui/qt4/ui/sprefs_subtitles.h:299
 msgid "Outline color"
 msgstr "ពណ៌​គ្រោង"
 
 #: modules/gui/macosx/simple_prefs.m:390 modules/text_renderer/freetype.c:186
-#: modules/gui/qt4/ui/sprefs_subtitles.h:298
 msgid "Outline thickness"
 msgstr "កម្រាស់​គ្រោង"
 
@@ -17949,11 +17885,10 @@ msgid "Black screens in Fullscreen mode"
 msgstr "អេក្រង់​ខ្មៅ​នៅ​ក្នុង​របៀប​ពេញ​អេក្រង់"
 
 #: modules/gui/macosx/simple_prefs.m:395 modules/stream_out/display.c:53
-#: modules/gui/qt4/ui/sprefs_video.h:341
 msgid "Display"
 msgstr "បង្ហាញ"
 
-#: modules/gui/macosx/simple_prefs.m:401 modules/gui/qt4/ui/sprefs_video.h:357
+#: modules/gui/macosx/simple_prefs.m:401
 msgid "Video snapshots"
 msgstr "រូបថត​វីដេអូ"
 
@@ -17961,15 +17896,15 @@ msgstr "រូបថត​វីដេអូ"
 msgid "Folder"
 msgstr "ថត"
 
-#: modules/gui/macosx/simple_prefs.m:404 modules/gui/qt4/ui/sprefs_video.h:362
+#: modules/gui/macosx/simple_prefs.m:404
 msgid "Format"
 msgstr "ទ្រង់ទ្រាយ"
 
-#: modules/gui/macosx/simple_prefs.m:405 modules/gui/qt4/ui/sprefs_video.h:360
+#: modules/gui/macosx/simple_prefs.m:405
 msgid "Prefix"
 msgstr "បុព្វបទ"
 
-#: modules/gui/macosx/simple_prefs.m:406 modules/gui/qt4/ui/sprefs_video.h:363
+#: modules/gui/macosx/simple_prefs.m:406
 msgid "Sequential numbering"
 msgstr "ការ​ដាក់​លេខរៀងតាម​លំដាប់"
 
@@ -18151,16 +18086,13 @@ msgid "Basic"
 msgstr "មូលដ្ឋាន"
 
 #: modules/gui/macosx/VideoEffects.m:83
-#: modules/gui/qt4/ui/video_effects.h:1355
 msgid "Geometry"
 msgstr "ធរណីមាត្រ"
 
 #: modules/gui/macosx/VideoEffects.m:84 modules/gui/macosx/VideoEffects.m:133
 #: modules/gui/macosx/VideoEffects.m:148 modules/gui/macosx/VideoEffects.m:151
 #: modules/video_filter/colorthres.c:54 modules/video_filter/marq.c:125
-#: modules/video_filter/rss.c:154 modules/gui/qt4/ui/video_effects.h:1328
-#: modules/gui/qt4/ui/video_effects.h:1334
-#: modules/gui/qt4/ui/video_effects.h:1337
+#: modules/video_filter/rss.c:154
 msgid "Color"
 msgstr "ពណ៌"
 
@@ -18169,53 +18101,42 @@ msgid "Image Adjust"
 msgstr "កែសម្រួល​រូបភាព"
 
 #: modules/gui/macosx/VideoEffects.m:93
-#: modules/gui/qt4/ui/video_effects.h:1305
 msgid "Brightness Threshold"
 msgstr "កម្រិត​ពន្លឺ"
 
 #: modules/gui/macosx/VideoEffects.m:97 modules/video_filter/sharpen.c:67
-#: modules/gui/qt4/ui/video_effects.h:1309
 msgid "Sharpen"
 msgstr "ច្បាស់"
 
 #: modules/gui/macosx/VideoEffects.m:98
-#: modules/gui/qt4/ui/video_effects.h:1310
-#: modules/gui/qt4/ui/video_effects.h:1397
 msgid "Sigma"
 msgstr "ស៊ិគម៉ា"
 
 #: modules/gui/macosx/VideoEffects.m:99
-#: modules/gui/qt4/ui/video_effects.h:1311
 msgid "Banding removal"
 msgstr "បដិសេធ​ការ​យកចេញ"
 
 #: modules/gui/macosx/VideoEffects.m:100 modules/video_filter/gradfun.c:49
-#: modules/gui/qt4/ui/video_effects.h:1312
 msgid "Radius"
 msgstr "កាំ"
 
 #: modules/gui/macosx/VideoEffects.m:101
-#: modules/gui/qt4/ui/video_effects.h:1313
 msgid "Film Grain"
 msgstr "Film Grain"
 
 #: modules/gui/macosx/VideoEffects.m:102 modules/video_filter/grain.c:53
-#: modules/gui/qt4/ui/video_effects.h:1314
 msgid "Variance"
 msgstr "រ៉ាដ្យង់"
 
 #: modules/gui/macosx/VideoEffects.m:107
-#: modules/gui/qt4/ui/video_effects.h:1322
 msgid "Synchronize top and bottom"
 msgstr "ធ្វើ​សមកាលកម្ម​កំពូល និង​បាត"
 
 #: modules/gui/macosx/VideoEffects.m:108
-#: modules/gui/qt4/ui/video_effects.h:1323
 msgid "Synchronize left and right"
 msgstr "ធ្វើ​សមកាលកម្ម​ខាងឆ្វេង និង​ខាងស្ដាំ"
 
 #: modules/gui/macosx/VideoEffects.m:110
-#: modules/gui/qt4/ui/video_effects.h:1348
 msgid "Transform"
 msgstr "ប្លែង"
 
@@ -18244,57 +18165,45 @@ msgid "Magnification/Zoom"
 msgstr "ការ​ពង្រីក/ពង្រីក"
 
 #: modules/gui/macosx/VideoEffects.m:123
-#: modules/gui/qt4/ui/video_effects.h:1351
 msgid "Puzzle game"
 msgstr "ល្បែង​ផ្គុំ​រូប"
 
 #: modules/gui/macosx/VideoEffects.m:124 modules/gui/macosx/VideoEffects.m:129
 #: share/lua/http/dialogs/mosaic_window.html:96
-#: modules/gui/qt4/ui/video_effects.h:1346
-#: modules/gui/qt4/ui/video_effects.h:1352
 msgid "Rows"
 msgstr "ជួរដេក"
 
 #: modules/gui/macosx/VideoEffects.m:125 modules/gui/macosx/VideoEffects.m:130
 #: share/lua/http/dialogs/mosaic_window.html:114
-#: modules/gui/qt4/ui/video_effects.h:1347
-#: modules/gui/qt4/ui/video_effects.h:1353
 msgid "Columns"
 msgstr "ជួរឈរ"
 
 #: modules/gui/macosx/VideoEffects.m:126 modules/video_filter/clone.c:57
-#: modules/gui/qt4/ui/video_effects.h:1393
 msgid "Clone"
 msgstr "ក្លូន"
 
 #: modules/gui/macosx/VideoEffects.m:127 modules/video_filter/clone.c:39
-#: modules/gui/qt4/ui/video_effects.h:1394
 msgid "Number of clones"
 msgstr "ចំនួន​ក្លូន"
 
 #: modules/gui/macosx/VideoEffects.m:128
-#: modules/gui/qt4/ui/video_effects.h:1345
 msgid "Wall"
 msgstr "ជញ្ជាំង"
 
 #: modules/gui/macosx/VideoEffects.m:132 modules/video_filter/colorthres.c:70
-#: modules/gui/qt4/ui/video_effects.h:1336
 msgid "Color threshold"
 msgstr "កម្រិត​ពន្លឺ​ពណ៌"
 
 #: modules/gui/macosx/VideoEffects.m:135
-#: modules/gui/qt4/ui/video_effects.h:1340
 msgid "Similarity"
 msgstr "ភាព​ស្រដៀង​គ្នា"
 
 #: modules/gui/macosx/VideoEffects.m:137
-#: modules/gui/qt4/ui/video_effects.h:1342
 msgid "Intensity"
 msgstr "អាំងតង់ស៊ីតេ"
 
 #: modules/gui/macosx/VideoEffects.m:139 modules/gui/macosx/VideoEffects.m:142
 #: modules/video_filter/gradient.c:76 modules/video_filter/gradient.c:82
-#: modules/gui/qt4/ui/video_effects.h:1332
 msgid "Gradient"
 msgstr "ជម្រាល​"
 
@@ -18307,12 +18216,10 @@ msgid "Hough"
 msgstr "កែង"
 
 #: modules/gui/macosx/VideoEffects.m:149
-#: modules/gui/qt4/ui/video_effects.h:1335
 msgid "Cartoon"
 msgstr "តុក្កតា"
 
 #: modules/gui/macosx/VideoEffects.m:150
-#: modules/gui/qt4/ui/video_effects.h:1327
 msgid "Color extraction"
 msgstr "ការ​ស្រង់​ពណ៌​ចេញ"
 
@@ -18321,7 +18228,6 @@ msgid "Invert colors"
 msgstr "ត្រឡប់​ពណ៌"
 
 #: modules/gui/macosx/VideoEffects.m:153 modules/video_filter/posterize.c:68
-#: modules/gui/qt4/ui/video_effects.h:1331
 msgid "Posterize"
 msgstr "រូបភាព​ប័ណ្ណប្រកាស"
 
@@ -18330,12 +18236,10 @@ msgid "Posterize level"
 msgstr "កម្រិត​រូបភាព​ប័ណ្ណប្រកាស"
 
 #: modules/gui/macosx/VideoEffects.m:155 modules/video_filter/motionblur.c:59
-#: modules/gui/qt4/ui/video_effects.h:1387
 msgid "Motion blur"
 msgstr "ចលនា​​ព្រិល"
 
 #: modules/gui/macosx/VideoEffects.m:156
-#: modules/gui/qt4/ui/video_effects.h:1388
 msgid "Factor"
 msgstr "កត្តា"
 
@@ -18345,7 +18249,6 @@ msgid "Motion Detect"
 msgstr "ការ​រកឃើញ​ចលនា"
 
 #: modules/gui/macosx/VideoEffects.m:158
-#: modules/gui/qt4/ui/video_effects.h:1395
 msgid "Water effect"
 msgstr "បែបផែន​ទឹក"
 
@@ -18354,28 +18257,24 @@ msgid "Anaglyph"
 msgstr "Anaglyph"
 
 #: modules/gui/macosx/VideoEffects.m:163
-#: modules/gui/qt4/ui/video_effects.h:1366
 msgid "Add text"
 msgstr "បន្ថែម​អត្ថបទ"
 
 #: modules/gui/macosx/VideoEffects.m:164 modules/misc/logger.c:108
-#: modules/video_filter/marq.c:87 modules/gui/qt4/ui/video_effects.h:1368
+#: modules/video_filter/marq.c:87
 msgid "Text"
 msgstr "អត្ថបទ"
 
 #: modules/gui/macosx/VideoEffects.m:185
-#: modules/gui/qt4/ui/video_effects.h:1356
 msgid "Add logo"
 msgstr "បន្ថែម​រូប​សញ្ញា"
 
 #: modules/gui/macosx/VideoEffects.m:186
-#: modules/gui/qt4/ui/video_effects.h:1357
 msgid "Logo"
 msgstr "រូប​សញ្ញា"
 
 #: modules/gui/macosx/VideoEffects.m:207
 #: modules/stream_out/mosaic_bridge.c:128 modules/video_filter/mosaic.c:87
-#: modules/gui/qt4/ui/video_effects.h:1364
 msgid "Transparency"
 msgstr "ភាពថ្លា"
 
@@ -19747,7 +19646,6 @@ msgid "File names:"
 msgstr "ឈ្មោះ​ឯកសារ ៖"
 
 #: modules/gui/qt4/components/open_panels.cpp:161
-#: modules/gui/qt4/ui/sprefs_interface.h:542
 msgid "Filter:"
 msgstr "តម្រង ៖"
 
@@ -20114,7 +20012,6 @@ msgid "File/Folder"
 msgstr "ឯកសារ/ថត"
 
 #: modules/gui/qt4/components/sout/sout_widgets.cpp:47
-#: modules/gui/qt4/ui/sout.h:202
 msgid "Source"
 msgstr "ប្រភព"
 
@@ -20226,7 +20123,6 @@ msgid "Convert"
 msgstr "បម្លែង"
 
 #: modules/gui/qt4/dialogs/convert.cpp:58
-#: modules/gui/qt4/ui/sprefs_audio.h:427
 msgid "Destination file:"
 msgstr "ឯកសារ​ទិសដៅ ៖"
 
@@ -20251,7 +20147,8 @@ msgid "&Start"
 msgstr "ចាប់ផ្ដើម"
 
 #: modules/gui/qt4/dialogs/convert.cpp:132
-msgid "Containers (*"
+#, fuzzy
+msgid "Containers"
 msgstr "ឧបករណ៍​ផ្ទុក (*"
 
 #: modules/gui/qt4/dialogs/errors.cpp:40
@@ -20352,7 +20249,7 @@ msgstr "បាទ/ចាស"
 msgid "&No"
 msgstr "ទេ"
 
-#: modules/gui/qt4/dialogs/help.cpp:222 modules/gui/qt4/ui/update.h:147
+#: modules/gui/qt4/dialogs/help.cpp:222
 msgid "VLC media player updates"
 msgstr "ធ្វើ​បច្ចុប្បន្នភាព​កម្មវិធី​ចាក់​មេឌៀ VLC"
 
@@ -20632,7 +20529,7 @@ msgstr "ឯកសារ​ចំណងជើង​រង"
 msgid "All Files"
 msgstr "ឯកសារ​ទាំង​អស់"
 
-#: modules/gui/qt4/dialogs/sout.cpp:45 modules/gui/qt4/ui/sout.h:201
+#: modules/gui/qt4/dialogs/sout.cpp:45
 msgid "Stream Output"
 msgstr "លទ្ធផល​ស្ទ្រីម"
 
@@ -20734,7 +20631,7 @@ msgstr "លុប​ទម្រង់​បច្ចុប្បន្ន"
 msgid "Cl&ose"
 msgstr "បិទ"
 
-#: modules/gui/qt4/dialogs/toolbar.cpp:228 modules/gui/qt4/ui/profiles.h:749
+#: modules/gui/qt4/dialogs/toolbar.cpp:228
 msgid "Profile Name"
 msgstr "ឈ្មោះ​ទម្រង់"
 
@@ -20811,7 +20708,6 @@ msgid "Repeat delay:"
 msgstr "ពន្យារ​ការ​ចាក់​ឡើងវិញ ៖"
 
 #: modules/gui/qt4/dialogs/vlm.cpp:111
-#: modules/gui/qt4/ui/sprefs_interface.h:540
 msgid " days"
 msgstr " ថ្ងៃ"
 
@@ -22412,7 +22308,6 @@ msgid "Local drives"
 msgstr "ដ្រាយ​មូលដ្ឋាន"
 
 #: modules/services_discovery/podcast.c:57
-#: modules/gui/qt4/ui/podcast_configuration.h:101
 msgid "Podcast URLs list"
 msgstr "បញ្ជី URL ផតខាស"
 
@@ -22520,7 +22415,7 @@ msgstr "ការ​ចាប់​យក​អូឌីយ៉ូ (ALSA)"
 msgid "CD"
 msgstr "ស៊ីឌី"
 
-#: modules/services_discovery/udev.c:594 modules/gui/qt4/ui/open_disk.h:298
+#: modules/services_discovery/udev.c:594
 msgid "DVD"
 msgstr "ឌីវីឌី"
 
@@ -23857,7 +23752,7 @@ msgstr "កំណត់​ហ្កាម៉ា​រូបភាព ចន្�
 msgid "Image properties filter"
 msgstr "តម្រង​លក្ខណសម្បត្តិ​រូបភាព"
 
-#: modules/video_filter/adjust.c:83 modules/gui/qt4/ui/video_effects.h:1302
+#: modules/video_filter/adjust.c:83
 msgid "Image adjust"
 msgstr "ការ​លៃ​តម្រូវ​រូបភាព"
 
@@ -24214,7 +24109,6 @@ msgstr ""
 "នៅ​លើ​វីនដូ ជាទូទៅ​គឺ COM1 ឬ COM2 ។ នៅ​លើ​លីនុច​គឺ /dev/ttyS01 f.e ។"
 
 #: modules/video_filter/atmo/atmo.cpp:260
-#: modules/gui/qt4/ui/video_effects.h:1378
 msgid "Edge weightning"
 msgstr "ការថ្លឹង​គែម"
 
@@ -24229,7 +24123,6 @@ msgid "Overall brightness of your LED stripes"
 msgstr "ភាព​ភ្លឺ​ទាំងមូល​នៃ​ក្រឡា​ឆ្នូត LED របស់​អ្នក"
 
 #: modules/video_filter/atmo/atmo.cpp:265
-#: modules/gui/qt4/ui/video_effects.h:1381
 msgid "Darkness limit"
 msgstr "ដែន​កំណត់​ភាព​ងងឹត"
 
@@ -24255,7 +24148,6 @@ msgid "Sat windowing"
 msgstr "ការ​ដាក់​តិត្ថិភាព​ឲ្យ​បង្អួច"
 
 #: modules/video_filter/atmo/atmo.cpp:274
-#: modules/gui/qt4/ui/video_effects.h:1383
 msgid "Filter length (ms)"
 msgstr "ប្រវែង​តម្រង (មិ.វិ.)"
 
@@ -24273,7 +24165,6 @@ msgid "How much a color has to be changed for an immediate color change."
 msgstr "ចំនួន​ពណ៌​ដែល​បាន​ប្ដូរ​សម្រាប់​ការ​ផ្លាស់ប្ដូរ​ពណ៌​បន្ទាន់ ។"
 
 #: modules/video_filter/atmo/atmo.cpp:280
-#: modules/gui/qt4/ui/video_effects.h:1385
 msgid "Filter smoothness (%)"
 msgstr "តម្រង​ភាព​រលោង (%)"
 
@@ -24433,8 +24324,6 @@ msgid "AtmoLight Filter"
 msgstr "តម្រង AtmoLight"
 
 #: modules/video_filter/atmo/atmo.cpp:367
-#: modules/gui/qt4/ui/video_effects.h:1377
-#: modules/gui/qt4/ui/video_effects.h:1386
 msgid "AtmoLight"
 msgstr "AtmoLight"
 
@@ -25040,7 +24929,6 @@ msgstr "ការ​តម្រួត​វីដេអូ​ថាមវន្
 
 #: modules/video_filter/dynamicoverlay/dynamicoverlay.c:68
 #: share/lua/http/dialogs/create_stream.html:245
-#: modules/gui/qt4/ui/video_effects.h:1376
 msgid "Overlay"
 msgstr "ត្រួត​គ្នា"
 
@@ -26248,7 +26136,7 @@ msgstr "ប្រើ​ឧបករណ៍​ចាប់​សញ្ញា​ច
 msgid "Rotate video filter"
 msgstr "បង្វិល​តម្រង​វីដេអូ"
 
-#: modules/video_filter/rotate.c:67 modules/gui/qt4/ui/video_effects.h:1349
+#: modules/video_filter/rotate.c:67
 msgid "Rotate"
 msgstr "បង្វិល"
 
@@ -26922,7 +26810,7 @@ msgstr "លទ្ធផល​វីដេអូ iOS OpenGL ES (ទាមទា�
 msgid "iOS OpenGL video output"
 msgstr "លទ្ធផល​វីដេអូ iOS OpenGL"
 
-#: modules/video_output/kva.c:50 modules/gui/qt4/ui/sprefs_video.h:352
+#: modules/video_output/kva.c:50
 msgid "Enable a workaround for T23"
 msgstr "បើក​ការងារ​ជុំវិញ​សម្រាប់ T23"
 
@@ -26933,7 +26821,7 @@ msgid ""
 msgstr ""
 "បើក​ជម្រើស​នេះ​ប្រសិនបើ​អង្កត់​ទ្រូង​ឆ្នូត​ត្រូវ​បាន​បង្ហាញ​នៅ​ពេល​ដែល​ទំហំ​បង្អួច​ស្មើ ឬ​តូចជាង​ទំហំ​ភាពយន្ត ។"
 
-#: modules/video_output/kva.c:55 modules/gui/qt4/ui/sprefs_video.h:351
+#: modules/video_output/kva.c:55
 msgid "Video mode"
 msgstr "របៀប​វីដេអូ"
 
@@ -26993,7 +26881,7 @@ msgstr "លទ្ធផល​វីដេអូ​ដែល​បាន​ផ្
 msgid "Direct3D video output"
 msgstr "លទ្ធផល​វីដេអូ Direct3D"
 
-#: modules/video_output/msw/directx.c:66 modules/gui/qt4/ui/sprefs_video.h:344
+#: modules/video_output/msw/directx.c:66
 msgid "Use hardware YUV->RGB conversions"
 msgstr "ប្រើ​ការ​បម្លែង​ផ្នែក​រឹង YUV->RGB"
 
@@ -27508,7 +27396,6 @@ msgid "Play List"
 msgstr "បញ្ជី​ចាក់"
 
 #: share/lua/http/dialogs/create_stream.html:156
-#: modules/gui/qt4/ui/sprefs_audio.h:425 modules/gui/qt4/ui/sprefs_video.h:346
 msgid "Output"
 msgstr "លទ្ធផល"
 
@@ -27623,7 +27510,7 @@ msgstr "ការ​ធ្វើ​សមកាលកម្ម​បទ"
 msgid "VLM Batch Commands"
 msgstr "ពាក្យ​បញ្ជា​បាច់ VLM"
 
-#: share/lua/http/index.html:240 modules/gui/qt4/ui/vlm.h:298
+#: share/lua/http/index.html:240
 msgid "Loop"
 msgstr "រង្វិល​ជុំ"
 
@@ -27696,841 +27583,621 @@ msgstr "ដើម្បី​បញ្ឈប់​ស្ទ្រីម និ�
 msgid "Are you sure you wish to create the stream?"
 msgstr "តើ​អ្នក​ពិតជា​ចង់​បង្កើត​ស្ទ្រីម​មែន​ឬ?"
 
-#: modules/gui/qt4/ui/about.h:287 modules/gui/qt4/ui/open.h:242
-#: modules/gui/qt4/ui/podcast_configuration.h:100
-msgid "Dialog"
-msgstr "ប្រអប់"
-
-#: modules/gui/qt4/ui/about.h:288 modules/gui/qt4/ui/about.h:289
-msgid "Update"
-msgstr "ធ្វើ​បច្ចុប្បន្នភាព"
-
-#: modules/gui/qt4/ui/equalizer.h:132 modules/gui/qt4/ui/open_disk.h:296
-#: modules/gui/qt4/ui/open_net.h:96 modules/gui/qt4/ui/sprefs_audio.h:420
-#: modules/gui/qt4/ui/sprefs_input.h:340
-#: modules/gui/qt4/ui/sprefs_interface.h:512
-#: modules/gui/qt4/ui/sprefs_subtitles.h:285
-#: modules/gui/qt4/ui/sprefs_video.h:339 modules/gui/qt4/ui/streampanel.h:167
-msgid "Form"
-msgstr "សំណុំ​បែបបទ"
-
-#: modules/gui/qt4/ui/equalizer.h:135
-msgid "Preset"
-msgstr "ការ​កំណត់​ស្រេច"
-
-#: modules/gui/qt4/ui/equalizer.h:137
-msgid "0.00 dB"
-msgstr "0.00 dB"
-
-#: modules/gui/qt4/ui/messages_panel.h:139
-msgid "&Verbosity:"
-msgstr "បរិយាយ៖"
-
-#: modules/gui/qt4/ui/messages_panel.h:140
-msgid "&Filter:"
-msgstr "តម្រង៖"
-
-#: modules/gui/qt4/ui/messages_panel.h:141
-msgid "&Save as..."
-msgstr "រក្សាទុក​ជា..."
-
-#: modules/gui/qt4/ui/messages_panel.h:143
-msgid "Modules Tree"
-msgstr "មែកធាង​ម៉ូឌុល"
-
-#: modules/gui/qt4/ui/open.h:245
-msgid "Show extended options"
-msgstr "បង្ហាញ​ជម្រើស​បន្ថែម"
-
-#: modules/gui/qt4/ui/open.h:247
-msgid "Show &more options"
-msgstr "បង្ហាញ​ជម្រើស​ច្រើន​ទៀត"
-
-#: modules/gui/qt4/ui/open.h:250
-msgid "Change the caching for the media"
-msgstr "ផ្លាស់ប្ដូរ​ឃ្លាំង​សម្ងាត់​សម្រាប់​មេឌៀ"
-
-#: modules/gui/qt4/ui/open.h:252
-msgid " ms"
-msgstr " ms"
-
-#: modules/gui/qt4/ui/open.h:253
-msgid "MRL"
-msgstr "MRL"
-
-#: modules/gui/qt4/ui/open.h:254
-msgid "Start Time"
-msgstr "ពេលវេលា​ចាប់ផ្ដើម"
-
-#: modules/gui/qt4/ui/open.h:255
-msgid "Edit Options"
-msgstr "ជម្រើស​កែសម្រួល"
-
-#: modules/gui/qt4/ui/open.h:256
-msgid "Extra media"
-msgstr "មេឌៀ​បន្ថែម "
-
-#: modules/gui/qt4/ui/open.h:258
-msgid "Complete MRL for VLC internal"
-msgstr "បំពេញ MRL សម្រាប់ VLC ខាងក្នុង"
-
-#: modules/gui/qt4/ui/open.h:261
-msgid "Select the file"
-msgstr "ជ្រើស​​ឯកសារ"
-
-#: modules/gui/qt4/ui/open.h:265
-msgid "Change the start time for the media"
-msgstr "ផ្លាស់ប្ដូរ​ពេលវេលា​ចាប់ផ្ដើម​សម្រាប់​មេឌៀ"
-
-#: modules/gui/qt4/ui/open.h:267
-msgid "HH'H':mm'm':ss's'.zzz"
-msgstr "HH'H':mm'm':ss's'.zzz"
-
-#: modules/gui/qt4/ui/open.h:268
-msgid "Play another media synchronously (extra audio file, ...)"
-msgstr "ចាក់​មេឌៀ​ផ្សេង​ទៀត​ដំណាល​គ្នា (ឯកសារ​អូឌីយ៉ូ​បន្ថែម...)"
-
-#: modules/gui/qt4/ui/open_capture.h:97
-msgid "Capture mode"
-msgstr "របៀប​ចាប់​យក"
-
-#: modules/gui/qt4/ui/open_capture.h:99
-msgid "Select the capture device type"
-msgstr "ជ្រើស​ប្រភេទ​ឧបករណ៍​ចាប់​យក"
-
-#: modules/gui/qt4/ui/open_capture.h:101
-msgid "Device Selection"
-msgstr "ជម្រើស​​ឧបករណ៍"
-
-#: modules/gui/qt4/ui/open_capture.h:102
-msgid "Options"
-msgstr "ជម្រើស"
-
-#: modules/gui/qt4/ui/open_capture.h:104
-msgid "Access advanced options to tweak the device"
-msgstr "ចូល​ដំណើរការ​ជម្រើស​កម្រិត​ខ្ពស់​ដើម្បី​លៃ​តម្រូវ​ឧបករណ៍"
-
-#: modules/gui/qt4/ui/open_capture.h:106
-msgid "Advanced options..."
-msgstr "ជម្រើស​កម្រិត​ខ្ពស់..."
-
-#: modules/gui/qt4/ui/open_disk.h:297
-msgid "Disc Selection"
-msgstr "ជម្រើស​​ថាស"
-
-#: modules/gui/qt4/ui/open_disk.h:301
-msgid "SVCD/VCD"
-msgstr "អេស​វីស៊ីឌី/វីស៊ីឌី"
-
-#: modules/gui/qt4/ui/open_disk.h:303
-msgid "Disable Disc Menus"
-msgstr "បិទ​ម៉ឺនុយ​ថាស"
-
-#: modules/gui/qt4/ui/open_disk.h:305
-msgid "No disc menus"
-msgstr "គ្មាន​ម៉ឺនុយ​ថាស"
-
-#: modules/gui/qt4/ui/open_disk.h:306
-msgid "Disc device"
-msgstr "ឧបករណ៍​ថាស"
-
-#: modules/gui/qt4/ui/open_disk.h:308
-msgid "Starting Position"
-msgstr "ទីតាំង​ចាប់ផ្ដើម"
-
-#: modules/gui/qt4/ui/open_disk.h:311
-msgid "Audio and Subtitles"
-msgstr "អូឌីយ៉ូ និង​ចំណងជើង​រង"
-
-#: modules/gui/qt4/ui/open_file.h:143
-msgid "Use a sub&title file"
-msgstr "ប្រើ​ឯកសារ​ចំណងជើង​រង"
-
-#: modules/gui/qt4/ui/open_file.h:145
-msgid "Select the subtitle file"
-msgstr "ជ្រើស​ឯកសារ​ចំណងជើង​រង"
-
-#: modules/gui/qt4/ui/open_file.h:149
-msgid "Choose one or more media file to open"
-msgstr "ជ្រើស​ឯកសារ​មួយ ឬ​ច្រើន​ដែល​ត្រូវ​បើក"
-
-#: modules/gui/qt4/ui/open_file.h:151
-msgid "File Selection"
-msgstr "ជម្រើស​ឯកសារ"
-
-#: modules/gui/qt4/ui/open_file.h:152
-msgid "You can select local files with the following list and buttons."
-msgstr "អ្នក​អាច​ជ្រើស​ឯកសារ​មូលដ្ឋាន​ដោយ​ប្រើ​បញ្ជី​ និង​ប៊ូតុង​ដូច​ខាងក្រោម ។"
-
-#: modules/gui/qt4/ui/open_file.h:153
-msgid "Add..."
-msgstr "បន្ថែម​..."
-
-#: modules/gui/qt4/ui/open_net.h:97
-msgid "Network Protocol"
-msgstr "ពិធីការ​បណ្ដាញ"
-
-#: modules/gui/qt4/ui/open_net.h:98
-msgid "Please enter a network URL:"
-msgstr "សូម​បញ្ចូល URL បណ្ដាញ ៖"
-
-#: modules/gui/qt4/ui/profiles.h:686
-msgid "Profile edition"
-msgstr "កំណែ​ប្រវត្តិរូប"
-
-#: modules/gui/qt4/ui/profiles.h:687
-msgid "MPEG-TS"
-msgstr "MPEG-TS"
-
-#: modules/gui/qt4/ui/profiles.h:688
-msgid "MPEG-PS"
-msgstr "MPEG-PS"
-
-#: modules/gui/qt4/ui/profiles.h:689
-msgid "MPEG 1"
-msgstr "MPEG 1"
-
-#: modules/gui/qt4/ui/profiles.h:690
-msgid "ASF/WMV"
-msgstr "ASF/WMV"
-
-#: modules/gui/qt4/ui/profiles.h:691
-msgid "Webm"
-msgstr "Webm"
-
-#: modules/gui/qt4/ui/profiles.h:692
-msgid "MJPEG"
-msgstr "MJPEG"
-
-#: modules/gui/qt4/ui/profiles.h:693
-msgid "MKV"
-msgstr "MKV"
-
-#: modules/gui/qt4/ui/profiles.h:694
-msgid "Ogg/Ogm"
-msgstr "Ogg/Ogm"
-
-#: modules/gui/qt4/ui/profiles.h:695
-msgid "WAV"
-msgstr "WAV"
-
-#: modules/gui/qt4/ui/profiles.h:696
-msgid "RAW"
-msgstr "RAW"
-
-#: modules/gui/qt4/ui/profiles.h:697
-msgid "MP4/MOV"
-msgstr "MP4/MOV"
-
-#: modules/gui/qt4/ui/profiles.h:698
-msgid "FLV"
-msgstr "FLV"
-
-#: modules/gui/qt4/ui/profiles.h:699
-msgid "AVI"
-msgstr "AVI"
-
-#: modules/gui/qt4/ui/profiles.h:700
-msgid "Features"
-msgstr "លក្ខណៈ"
-
-#: modules/gui/qt4/ui/profiles.h:702
-msgid "Streamable"
-msgstr "អាច​ស្ទ្រីម​បាន"
-
-#: modules/gui/qt4/ui/profiles.h:703
-msgid "Chapters"
-msgstr "ជំពូក"
-
-#: modules/gui/qt4/ui/profiles.h:706
-msgid "Menus"
-msgstr "ម៉ឺនុយ"
-
-#: modules/gui/qt4/ui/profiles.h:714
-msgid "Same as source"
-msgstr "ដូច​ប្រភព"
-
-#: modules/gui/qt4/ui/profiles.h:716
-msgid " fps"
-msgstr " fps"
-
-#: modules/gui/qt4/ui/profiles.h:717
-msgid "Custom options"
-msgstr "ជម្រើស​ផ្ទាល់ខ្លួន"
-
-#: modules/gui/qt4/ui/profiles.h:718
-msgid "Quality"
-msgstr "គុណភាព"
-
-#: modules/gui/qt4/ui/profiles.h:719 modules/gui/qt4/ui/profiles.h:720
-msgid "Not Used"
-msgstr "មិន​បាន​ប្រើ"
-
-#: modules/gui/qt4/ui/profiles.h:721 modules/gui/qt4/ui/profiles.h:740
-msgid " kb/s"
-msgstr " kb/s"
-
-#: modules/gui/qt4/ui/profiles.h:722 modules/gui/qt4/ui/profiles.h:742
-msgid "Encoding parameters"
-msgstr "ប៉ារ៉ាម៉ែត្រ​ការ​ដាក់​លេខ​កូដ"
-
-#: modules/gui/qt4/ui/profiles.h:725
-msgid "Frame size"
-msgstr "ទំហំ​ស៊ុម"
-
-#: modules/gui/qt4/ui/profiles.h:728 modules/gui/qt4/ui/profiles.h:731
-msgid "px"
-msgstr "ភីកសែល"
-
-#: modules/gui/qt4/ui/profiles.h:741
-msgid "Sample Rate"
-msgstr "អត្រា​គំរូ"
-
-#: modules/gui/qt4/ui/sout.h:203
-msgid "Set up media sources to stream"
-msgstr "កំណត់​ប្រភព​មេឌៀ​ដើម្បី​ស្ទ្រីម"
-
-#: modules/gui/qt4/ui/sout.h:205
-msgid "Destination Setup"
-msgstr "ការ​រៀបចំ​ទិសដៅ"
-
-#: modules/gui/qt4/ui/sout.h:206
-msgid "Select destinations to stream to"
-msgstr "ជ្រើស​ទិសដៅ​ដែល​ត្រូវ​ស្ទ្រីម​ទៅ"
-
-#: modules/gui/qt4/ui/sout.h:207
-msgid ""
-"Add destinations following the streaming methods you need. Be sure to check "
-"with transcoding that the format is compatible with the method used."
-msgstr ""
-"បន្ថែម​ទិសដៅ​វិធីសាស្ត្រ​ស្ទ្រីម​ដូច​ខាងក្រោម​ដែល​អ្នក​ត្រូវការ ។ សូម​ប្រាកដ​ថា​ត្រូវ​ពិនិត្យមើល​ការ​បម្លែង​ត្រឡប់​"
-"ដែល​ទ្រង់​ទ្រាយ​ឆបគ្នា​ជា​មួយ​វិធីសាស្ត្រ​ដែល​បាន​ប្រើ ។"
-
-#: modules/gui/qt4/ui/sout.h:208
-msgid "New destination"
-msgstr "ទិសដៅ​ថ្មី"
-
-#: modules/gui/qt4/ui/sout.h:210
-msgid "Display locally"
-msgstr "បង្ហាញ​ក្នុង​មូលដ្ឋាន"
-
-#: modules/gui/qt4/ui/sout.h:212
-msgid "Transcoding Options"
-msgstr "ជម្រើស​បម្លែង​ត្រឡប់"
-
-#: modules/gui/qt4/ui/sout.h:213
-msgid "Select and choose transcoding options"
-msgstr "ជ្រើស​ជម្រើស​បម្លែង​ត្រឡប់"
-
-#: modules/gui/qt4/ui/sout.h:214
-msgid "Activate Transcoding"
-msgstr "ធ្វើឲ្យ​ការ​បម្លែង​ត្រឡប់​សកម្ម"
-
-#: modules/gui/qt4/ui/sout.h:215
-msgid "Option Setup"
-msgstr "ការ​រៀបចំ​ជម្រើស"
-
-#: modules/gui/qt4/ui/sout.h:216
-msgid "Set up any additional options for streaming"
-msgstr "រៀបចំ​ជម្រើស​បន្ថែម​សម្រាប់​ការ​ស្ទ្រីម"
-
-#: modules/gui/qt4/ui/sout.h:217
-msgid "Miscellaneous Options"
-msgstr "ជម្រើស​ផ្សេងៗ"
-
-#: modules/gui/qt4/ui/sout.h:218
-msgid "Stream all elementary streams"
-msgstr "ស្ទ្រីម​នូវ​ស្ទ្រីម​ដំបូង​ទាំងអស់"
-
-#: modules/gui/qt4/ui/sout.h:219
-msgid "Generated stream output string"
-msgstr "ខ្សែអក្សរ​លទ្ធផល​ស្ទ្រីម​ដែល​បាន​បង្កើត"
-
-#: modules/gui/qt4/ui/sprefs_audio.h:423
-msgid " %"
-msgstr " %"
-
-#: modules/gui/qt4/ui/sprefs_audio.h:426
-msgid "Output module:"
-msgstr "ម៉ូឌុល​លទ្ធផល ៖"
-
-#: modules/gui/qt4/ui/sprefs_audio.h:431
-msgid "Visualization:"
-msgstr "រូបភាព​មើល​ឃើញ ៖"
-
-#: modules/gui/qt4/ui/sprefs_audio.h:432
-msgid "Enable Time-Stretching audio"
-msgstr "​​បើក​​អូឌីយ៉ូ​ពេលវេលា​ការ​ប្រមូល​យក"
-
-#: modules/gui/qt4/ui/sprefs_audio.h:433
-msgid "Dolby Surround:"
-msgstr "ដុលប៊ី​សឹរោន ៖"
-
-#: modules/gui/qt4/ui/sprefs_audio.h:434
-msgid "Replay gain mode:"
-msgstr "របៀប​ចាក់​កើន​ឡើងវិញ ៖"
-
-#: modules/gui/qt4/ui/sprefs_audio.h:435
-msgid "Headphone surround effect"
-msgstr "បែបផែន​កាស​ស្ដាប់ត្រចៀក"
-
-#: modules/gui/qt4/ui/sprefs_audio.h:436
-msgid "Normalize volume to:"
-msgstr "ធ្វើឲ្យ​កម្រិត​សំឡេង​ធម្មតា​ទៅ ៖"
-
-#: modules/gui/qt4/ui/sprefs_audio.h:438
-msgid "Preferred audio language:"
-msgstr "ភាសា​អូឌីយ៉ូ​ដែល​ចូលចិត្ត ៖"
-
-#: modules/gui/qt4/ui/sprefs_audio.h:439
-msgid "Password:"
-msgstr "ពាក្យសម្ងាត់ ៖"
-
-#: modules/gui/qt4/ui/sprefs_audio.h:440
-msgid "Username:"
-msgstr "ឈ្មោះ​អ្នកប្រើ ៖"
-
-#: modules/gui/qt4/ui/sprefs_audio.h:441
-msgid "Submit played tracks stats to Last.fm"
-msgstr "ដាក់​ស្នើ​សភាព​បទ​ចម្រៀង​ដែល​បាន​ចាក់​ទៅ last.fm"
-
-#: modules/gui/qt4/ui/sprefs_input.h:341
-msgid "Codecs"
-msgstr "កូដិក"
-
-#: modules/gui/qt4/ui/sprefs_input.h:342
-msgid "x264 profile and level selection"
-msgstr "ទម្រង់ x264 និង​ការ​ជ្រើស​កម្រិត"
-
-#: modules/gui/qt4/ui/sprefs_input.h:343
-msgid "x264 preset and tuning selection"
-msgstr "ការ​កំណត់​ស្រេច x264 និង​ជម្រើស​មួល​ប៉ុស្តិ៍"
-
-#: modules/gui/qt4/ui/sprefs_input.h:344
-msgid "Hardware-accelerated decoding"
-msgstr "ការ​ដាក់​លេខ​កូដ​ផ្នែក​រឹង​ដែល​បាន​បន្ថែម​ល្បឿន"
-
-#: modules/gui/qt4/ui/sprefs_input.h:345
-msgid "Skip H.264 in-loop deblocking filter"
-msgstr "រំលង​តម្រង​មិន​ទប់ស្កាត់  H.264 in-loop"
-
-#: modules/gui/qt4/ui/sprefs_input.h:346
-msgid "Video quality post-processing level"
-msgstr "កម្រិត​ដំណើរការ​ក្រោយ​គុណភាព​វីដេអូ"
-
-#: modules/gui/qt4/ui/sprefs_input.h:347
-msgid "Optical drive"
-msgstr "ដ្រាយ​អុបទិក"
-
-#: modules/gui/qt4/ui/sprefs_input.h:348
-msgid "Default optical device"
-msgstr "ឧបករណ៍​អុបទិក​លំនាំដើម"
-
-#: modules/gui/qt4/ui/sprefs_input.h:349
-msgid "Files"
-msgstr "ឯកសារ"
-
-#: modules/gui/qt4/ui/sprefs_input.h:352
-msgid "Damaged or incomplete AVI file"
-msgstr "ឯកសារ AVI ដែល​ខូច ឬ​មិន​ពេញលេញ"
-
-#: modules/gui/qt4/ui/sprefs_input.h:355
-msgid "HTTP proxy URL"
-msgstr "URL ប្រូកស៊ី​របស់ HTTP"
-
-#: modules/gui/qt4/ui/sprefs_input.h:356
-msgid "HTTP (default)"
-msgstr "HTTP (លំនាំដើម)"
-
-#: modules/gui/qt4/ui/sprefs_input.h:357
-msgid "RTP over RTSP (TCP)"
-msgstr "RTP លើ RTSP (TCP)"
-
-#: modules/gui/qt4/ui/sprefs_input.h:358
-msgid "Live555 stream transport"
-msgstr "ការ​បញ្ជូន​ស្ទ្រីម Live555"
-
-#: modules/gui/qt4/ui/sprefs_input.h:359
-msgid "Default caching policy"
-msgstr "គោលការណ៍​ឃ្លាំង​សម្ងាត់​លំនាំដើម"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:514
-msgid "Menus language:"
-msgstr "ភាសា​ម៉ឺនុយ ៖"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:515
-msgid "Look and feel"
-msgstr "រូបរាង និង​មុខងារ"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:516
-msgid "Use custom skin"
-msgstr "ប្រើ​ស្បែក​ផ្ទាល់ខ្លួន"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:518
-msgid "This is VLC's default interface, with a native look and feel."
-msgstr "នេះ​ជា​ចំណុច​ប្រទាក់​លំនាំដើម​របស់ VLC ជាមួយ​រូបរាង និង​មុខងារ​ដើម ។"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:520
-msgid "Use native style"
-msgstr "ប្រើ​រចនាប័ទ្ម​ដើម"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:521
-msgid "Resize interface to video size"
-msgstr "ប្ដូរ​ទំហំ​ចំណុច​ប្រទាក់​ទៅ​តាម​ទំហំ​វីដេអូ"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:522
-msgid "Show controls in full screen mode"
-msgstr "បង្ហាញ​វត្ថុ​បញ្ជា​ក្នុង​របៀប​ពេញ​អេក្រង់"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:523
-msgid "Pause playback when minimized"
-msgstr "ផ្អាក​ការ​ចាក់​ឡើងវិញ ពេល​បាន​បង្រួម​អប្បបរមា"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:524
-msgid "Show media change popup:"
-msgstr "បង្ហាញ​ប្រអប់​លេចឡើង​នៃ​ការ​ផ្លាស់ប្ដូរ​មេឌៀ៖"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:525
-msgid "Start in minimal view mode"
-msgstr "ចាប់ផ្ដើម​ក្នុង​របៀប​ទិដ្ឋភាព​អប្បបរមា"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:526
-msgid "Force window style:"
-msgstr "បង្ខំ​រចនាប័ទ្ម​បង្អួច ៖"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:527
-msgid "Integrate video in interface"
-msgstr "បញ្ចូល​វីដេអូ​ក្នុង​ចំណុច​ប្រទាក់"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:528
-msgid "Show systray icon"
-msgstr "បង្ហាញ​រូបតំណាង​ថាស​ប្រព័ន្ធ"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:529
-msgid "Skin resource file:"
-msgstr "ឯកសារ​ធនធាន​រូបរាង ៖"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:531
-msgid "Playlist and Instances"
-msgstr "ធាតុ និង​បញ្ជី​ចាក់"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:532
-msgid "Album art download policy:"
-msgstr "គោលការណ៍​​ទាញ​យក​សិល្បៈ​អាល់ប៊ុម ៖"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:535
-msgid "Pause on the last frame of a video"
-msgstr "ផ្អាក​ស៊ុម​វីដេអូ​ចុងក្រោយ"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:536
-msgid "Allow only one instance"
-msgstr "អនុញ្ញាត​តែ​វត្ថុមួយ​ប៉ុណ្ណោះ"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:537
-msgid "Configure Media Library"
-msgstr "កំណត់​រចនាសម្ព័ន្ធ​បណ្ណាល័យ​មេឌៀ"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:541
-msgid "Every "
-msgstr "រាល់"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:544
-msgid "Separate words by | (without space)"
-msgstr "បំបែក​ពាក្យ​ដោយ | (មិន​ដកឃ្លា)"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:546
-msgid "Save recently played items"
-msgstr "រក្សាទុក​ធាតុ​ដែល​បាន​ចាក់​បច្ចុប្បន្ន"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:547
-msgid "Activate updates notifier"
-msgstr "ធ្វើ​ឲ្យ​កម្មវិធី​ជូនដំណឹង​បច្ចុប្បន្នភាព​សកម្ម"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:548
-msgid "Operating System Integration"
-msgstr "ការ​បញ្ចូល​ប្រព័ន្ធ​ប្រតិបត្តិការ"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:549
-msgid "File extensions association"
-msgstr "កន្ទុយ​ឯកសារ​ដែល​ពាក់ព័ន្ធ"
-
-#: modules/gui/qt4/ui/sprefs_interface.h:550
-msgid "Set up associations..."
-msgstr "ការ​កំណត់​ដែល​ពាក់ព័ន្ធ..."
-
-#: modules/gui/qt4/ui/sprefs_subtitles.h:287
-msgid "Enable On Screen Display (OSD)"
-msgstr "បើក On Screen Display (OSD)"
-
-#: modules/gui/qt4/ui/sprefs_subtitles.h:288
-msgid "Show media title on video start"
-msgstr "បង្ហាញ​ចំណងជើង​មេឌៀ​នៅ​ពេល​ចាប់ផ្ដើម​វីដេអូ"
-
-#: modules/gui/qt4/ui/sprefs_subtitles.h:290
-msgid "Enable subtitles"
-msgstr "បើក​ចំណងជើង​រង"
-
-#: modules/gui/qt4/ui/sprefs_subtitles.h:291
-msgid "Subtitle Language"
-msgstr "ភាសា​ចំណងជើង​រង"
-
-#: modules/gui/qt4/ui/sprefs_subtitles.h:293
-msgid "Default encoding"
-msgstr "ការ​អ៊ិនកូដ​លំនាំដើម"
-
-#: modules/gui/qt4/ui/sprefs_subtitles.h:294
-msgid "Subtitle effects"
-msgstr "បែបផែន​ចំណងជើង​រង"
-
-#: modules/gui/qt4/ui/sprefs_subtitles.h:300
-msgid "Add a shadow"
-msgstr "បន្ថែម​ស្រមោល"
-
-#: modules/gui/qt4/ui/sprefs_subtitles.h:301
-msgid "Add a background"
-msgstr "បន្ថែម​ផ្ទៃ​ខាងក្រោយ"
-
-#: modules/gui/qt4/ui/sprefs_subtitles.h:303
-#: modules/gui/qt4/ui/video_effects.h:1317
-#: modules/gui/qt4/ui/video_effects.h:1321
-#: modules/gui/qt4/ui/video_effects.h:1324
-#: modules/gui/qt4/ui/video_effects.h:1325
-#: modules/gui/qt4/ui/video_effects.h:1360
-#: modules/gui/qt4/ui/video_effects.h:1362
-#: modules/gui/qt4/ui/video_effects.h:1372
-#: modules/gui/qt4/ui/video_effects.h:1373
-msgid " px"
-msgstr " px"
-
-#: modules/gui/qt4/ui/sprefs_video.h:345
-msgid "Accelerated video output (Overlay)"
-msgstr "លទ្ធផល​វីដេអូ​ដែល​បាន​បង្កើន​ល្បឿន (តម្រួត)"
-
-#: modules/gui/qt4/ui/sprefs_video.h:348
-msgid "DirectX"
-msgstr "DirectX"
-
-#: modules/gui/qt4/ui/sprefs_video.h:349
-msgid "Display device"
-msgstr "ឧបករណ៍​បង្ហាញ"
-
-#: modules/gui/qt4/ui/sprefs_video.h:350
-msgid "KVA"
-msgstr "KVA"
-
-#: modules/gui/qt4/ui/sprefs_video.h:354
-msgid "Deinterlacing"
-msgstr "មិន​អង្កាញ់"
-
-#: modules/gui/qt4/ui/sprefs_video.h:355
-msgid "Force Aspect Ratio"
-msgstr "បង្ខំ​សមាមាត្រ"
-
-#: modules/gui/qt4/ui/sprefs_video.h:361
-msgid "vlc-snap"
-msgstr "vlc-snap"
-
-#: modules/gui/qt4/ui/streampanel.h:169
-msgid "1"
-msgstr "១"
-
-#: modules/gui/qt4/ui/streampanel.h:171
-msgid "Stuff"
-msgstr "ធាតុ"
-
-#: modules/gui/qt4/ui/streampanel.h:173
-msgid "Edit settings"
-msgstr "កែសម្រួល​ការ​កំណត់"
-
-#: modules/gui/qt4/ui/streampanel.h:174
-msgid "Control"
-msgstr "វត្ថុ​បញ្ជា"
-
-#: modules/gui/qt4/ui/streampanel.h:175
-msgid "Run manually"
-msgstr "ដំណើរការ​ដោយ​ដៃ"
-
-#: modules/gui/qt4/ui/streampanel.h:176
-msgid "Setup schedule"
-msgstr "រៀបចំ​កាលវិភាគ"
-
-#: modules/gui/qt4/ui/streampanel.h:177
-msgid "Run on schedule"
-msgstr "ដំណើរការ​តាម​កាលវិភាគ"
-
-#: modules/gui/qt4/ui/streampanel.h:178
-msgid "Status"
-msgstr "ស្ថានភាព"
-
-#: modules/gui/qt4/ui/streampanel.h:179
-msgid "P/P"
-msgstr "P/P"
-
-#: modules/gui/qt4/ui/streampanel.h:182
-msgid "Prev"
-msgstr "មុន​"
-
-#: modules/gui/qt4/ui/streampanel.h:183
-msgid "Add Input"
-msgstr "បន្ថែម​ព័ត៌មាន​បញ្ចូល"
-
-#: modules/gui/qt4/ui/streampanel.h:184
-msgid "Edit Input"
-msgstr "កែសម្រួល​ព័ត៌មាន​បញ្ចូល"
-
-#: modules/gui/qt4/ui/streampanel.h:185
-msgid "Clear List"
-msgstr "សម្អាត​បញ្ជី"
-
-#: modules/gui/qt4/ui/update.h:148
-msgid "Check for VLC updates"
-msgstr "ពិនិត្យមើល​បច្ចុប្បន្នភាព VLC"
-
-#: modules/gui/qt4/ui/update.h:149
-msgid "Launching an update request..."
-msgstr "កំពុង​ដំណើរការ​សំណើ​បច្ចុប្បន្នភាព..."
-
-#: modules/gui/qt4/ui/update.h:150
-msgid "Do you want to download it?"
-msgstr "តើ​អ្នក​ចង់​ទាញ​យក​វា​ឬ?"
-
-#: modules/gui/qt4/ui/video_effects.h:1315
-msgid "Essential"
-msgstr "សំខាន់"
-
-#: modules/gui/qt4/ui/video_effects.h:1329
-#: modules/gui/qt4/ui/video_effects.h:1338
-msgid ">HHHHHH;#"
-msgstr ">HHHHHH;#"
-
-#: modules/gui/qt4/ui/video_effects.h:1330
-msgid "Negate colors"
-msgstr "បដិសេធ​ពណ៌"
-
-#: modules/gui/qt4/ui/video_effects.h:1343
-msgid "Colors"
-msgstr "ពណ៌"
-
-#: modules/gui/qt4/ui/video_effects.h:1344
-msgid "Interactive Zoom"
-msgstr "ពង្រីក​អន្តរសកម្ម"
-
-#: modules/gui/qt4/ui/video_effects.h:1350
-msgid "Angle"
-msgstr "មុំ"
-
-#: modules/gui/qt4/ui/video_effects.h:1354
-msgid "Black Slot"
-msgstr "រន្ធ​ពណ៌ខ្មៅ"
-
-#: modules/gui/qt4/ui/video_effects.h:1358
-#: modules/gui/qt4/ui/video_effects.h:1375
-msgid "..."
-msgstr "..."
-
-#: modules/gui/qt4/ui/video_effects.h:1363
-msgid "full"
-msgstr "ពេញ"
-
-#: modules/gui/qt4/ui/video_effects.h:1365
-msgid "none"
-msgstr "គ្មាន"
-
-#: modules/gui/qt4/ui/video_effects.h:1369
-msgid "Logo erase"
-msgstr "លុប​រូបសញ្ញា"
-
-#: modules/gui/qt4/ui/video_effects.h:1374
-msgid "Mask"
-msgstr "របាំង"
-
-#: modules/gui/qt4/ui/video_effects.h:1379
-msgid "Output Color Filtermode"
-msgstr "របៀប​ត្រង​ពណ៌​លទ្ធផល"
-
-#: modules/gui/qt4/ui/video_effects.h:1380
-msgid "Brightness (%)"
-msgstr "ពន្លឺ (%)"
-
-#: modules/gui/qt4/ui/video_effects.h:1382
-msgid "Mark analyzed Pixels"
-msgstr "សម្គាល់​ភីកសែល​ដែល​បាន​វិភាគ"
-
-#: modules/gui/qt4/ui/video_effects.h:1384
-msgid "Filter threshold (%)"
-msgstr "តម្រង​កម្រិត​ពន្លឺ (%)"
-
-#: modules/gui/qt4/ui/video_effects.h:1389
-msgid "Motion detect"
-msgstr "រក​ឃើញ​ចលនា"
-
-#: modules/gui/qt4/ui/video_effects.h:1391
-msgid "Anti-Flickering"
-msgstr "ប្រឆាំង​ភ្លឹបភ្លែត"
-
-#: modules/gui/qt4/ui/video_effects.h:1392
-msgid "Soften"
-msgstr "ទន់"
-
-#: modules/gui/qt4/ui/video_effects.h:1396
-msgid "Spatial blur"
-msgstr "ព្រិល​លំហ"
-
-#: modules/gui/qt4/ui/video_effects.h:1398
-msgid "Mirror"
-msgstr "កញ្ចក់"
-
-#: modules/gui/qt4/ui/video_effects.h:1400
-msgid "Anaglyph 3D"
-msgstr "Anaglyph 3D"
-
-#: modules/gui/qt4/ui/vlm.h:286
-msgid "VLM configurator"
-msgstr "កម្មវិធី​កំណត់​រចនាសម្ព័ន្ធ VLM"
-
-#: modules/gui/qt4/ui/vlm.h:287
-msgid "Media Manager Edition"
-msgstr "ការ​កែសម្រួល​កម្មវិធី​គ្រប់គ្រង​មេឌៀ"
-
-#: modules/gui/qt4/ui/vlm.h:288
-msgid "Name:"
-msgstr "ឈ្មោះ ៖"
-
-#: modules/gui/qt4/ui/vlm.h:290
-msgid "Input:"
-msgstr "ព័ត៌មាន​បញ្ចូល ៖"
-
-#: modules/gui/qt4/ui/vlm.h:291
-msgid "Select Input"
-msgstr "ជ្រើស​ព័ត៌មាន​បញ្ចូល"
-
-#: modules/gui/qt4/ui/vlm.h:292
-msgid "Output:"
-msgstr "លទ្ធផល ៖"
-
-#: modules/gui/qt4/ui/vlm.h:293
-msgid "Select Output"
-msgstr "ជ្រើស​លទ្ធផល"
-
-#: modules/gui/qt4/ui/vlm.h:294
-msgid "Time Control"
-msgstr "ការ​គ្រប់គ្រង​ពេលវេលា"
-
-#: modules/gui/qt4/ui/vlm.h:295
-msgid "Mux Control"
-msgstr "វត្ថុ​បញ្ជា​ការ​ទ្វេ​ទិស"
-
-#: modules/gui/qt4/ui/vlm.h:296
-msgid "Muxer:"
-msgstr "កម្មវិធី​ទ្វេ​ទិស ៖"
-
-#: modules/gui/qt4/ui/vlm.h:297
-msgid "AAAA; "
-msgstr "AAAA;"
-
-#: modules/gui/qt4/ui/vlm.h:302
-msgid "Media Manager List"
-msgstr "បញ្ជី​គ្រប់គ្រង​មេឌៀ"
+#~ msgid "Dialog"
+#~ msgstr "ប្រអប់"
+
+#~ msgid "Update"
+#~ msgstr "ធ្វើ​បច្ចុប្បន្នភាព"
+
+#~ msgid "Form"
+#~ msgstr "សំណុំ​បែបបទ"
+
+#~ msgid "Preset"
+#~ msgstr "ការ​កំណត់​ស្រេច"
+
+#~ msgid "0.00 dB"
+#~ msgstr "0.00 dB"
+
+#~ msgid "&Verbosity:"
+#~ msgstr "បរិយាយ៖"
+
+#~ msgid "&Filter:"
+#~ msgstr "តម្រង៖"
+
+#~ msgid "&Save as..."
+#~ msgstr "រក្សាទុក​ជា..."
+
+#~ msgid "Modules Tree"
+#~ msgstr "មែកធាង​ម៉ូឌុល"
+
+#~ msgid "Show extended options"
+#~ msgstr "បង្ហាញ​ជម្រើស​បន្ថែម"
+
+#~ msgid "Show &more options"
+#~ msgstr "បង្ហាញ​ជម្រើស​ច្រើន​ទៀត"
+
+#~ msgid "Change the caching for the media"
+#~ msgstr "ផ្លាស់ប្ដូរ​ឃ្លាំង​សម្ងាត់​សម្រាប់​មេឌៀ"
+
+#~ msgid " ms"
+#~ msgstr " ms"
+
+#~ msgid "MRL"
+#~ msgstr "MRL"
+
+#~ msgid "Start Time"
+#~ msgstr "ពេលវេលា​ចាប់ផ្ដើម"
+
+#~ msgid "Edit Options"
+#~ msgstr "ជម្រើស​កែសម្រួល"
+
+#~ msgid "Extra media"
+#~ msgstr "មេឌៀ​បន្ថែម "
+
+#~ msgid "Complete MRL for VLC internal"
+#~ msgstr "បំពេញ MRL សម្រាប់ VLC ខាងក្នុង"
+
+#~ msgid "Select the file"
+#~ msgstr "ជ្រើស​​ឯកសារ"
+
+#~ msgid "Change the start time for the media"
+#~ msgstr "ផ្លាស់ប្ដូរ​ពេលវេលា​ចាប់ផ្ដើម​សម្រាប់​មេឌៀ"
+
+#~ msgid "HH'H':mm'm':ss's'.zzz"
+#~ msgstr "HH'H':mm'm':ss's'.zzz"
+
+#~ msgid "Play another media synchronously (extra audio file, ...)"
+#~ msgstr "ចាក់​មេឌៀ​ផ្សេង​ទៀត​ដំណាល​គ្នា (ឯកសារ​អូឌីយ៉ូ​បន្ថែម...)"
+
+#~ msgid "Capture mode"
+#~ msgstr "របៀប​ចាប់​យក"
+
+#~ msgid "Select the capture device type"
+#~ msgstr "ជ្រើស​ប្រភេទ​ឧបករណ៍​ចាប់​យក"
+
+#~ msgid "Device Selection"
+#~ msgstr "ជម្រើស​​ឧបករណ៍"
+
+#~ msgid "Options"
+#~ msgstr "ជម្រើស"
+
+#~ msgid "Access advanced options to tweak the device"
+#~ msgstr "ចូល​ដំណើរការ​ជម្រើស​កម្រិត​ខ្ពស់​ដើម្បី​លៃ​តម្រូវ​ឧបករណ៍"
+
+#~ msgid "Advanced options..."
+#~ msgstr "ជម្រើស​កម្រិត​ខ្ពស់..."
+
+#~ msgid "Disc Selection"
+#~ msgstr "ជម្រើស​​ថាស"
+
+#~ msgid "SVCD/VCD"
+#~ msgstr "អេស​វីស៊ីឌី/វីស៊ីឌី"
+
+#~ msgid "Disable Disc Menus"
+#~ msgstr "បិទ​ម៉ឺនុយ​ថាស"
+
+#~ msgid "No disc menus"
+#~ msgstr "គ្មាន​ម៉ឺនុយ​ថាស"
+
+#~ msgid "Disc device"
+#~ msgstr "ឧបករណ៍​ថាស"
+
+#~ msgid "Starting Position"
+#~ msgstr "ទីតាំង​ចាប់ផ្ដើម"
+
+#~ msgid "Audio and Subtitles"
+#~ msgstr "អូឌីយ៉ូ និង​ចំណងជើង​រង"
+
+#~ msgid "Use a sub&title file"
+#~ msgstr "ប្រើ​ឯកសារ​ចំណងជើង​រង"
+
+#~ msgid "Select the subtitle file"
+#~ msgstr "ជ្រើស​ឯកសារ​ចំណងជើង​រង"
+
+#~ msgid "Choose one or more media file to open"
+#~ msgstr "ជ្រើស​ឯកសារ​មួយ ឬ​ច្រើន​ដែល​ត្រូវ​បើក"
+
+#~ msgid "File Selection"
+#~ msgstr "ជម្រើស​ឯកសារ"
+
+#~ msgid "You can select local files with the following list and buttons."
+#~ msgstr "អ្នក​អាច​ជ្រើស​ឯកសារ​មូលដ្ឋាន​ដោយ​ប្រើ​បញ្ជី​ និង​ប៊ូតុង​ដូច​ខាងក្រោម ។"
+
+#~ msgid "Add..."
+#~ msgstr "បន្ថែម​..."
+
+#~ msgid "Network Protocol"
+#~ msgstr "ពិធីការ​បណ្ដាញ"
+
+#~ msgid "Please enter a network URL:"
+#~ msgstr "សូម​បញ្ចូល URL បណ្ដាញ ៖"
+
+#~ msgid "Profile edition"
+#~ msgstr "កំណែ​ប្រវត្តិរូប"
+
+#~ msgid "MPEG-TS"
+#~ msgstr "MPEG-TS"
+
+#~ msgid "MPEG-PS"
+#~ msgstr "MPEG-PS"
+
+#~ msgid "MPEG 1"
+#~ msgstr "MPEG 1"
+
+#~ msgid "ASF/WMV"
+#~ msgstr "ASF/WMV"
+
+#~ msgid "Webm"
+#~ msgstr "Webm"
+
+#~ msgid "MJPEG"
+#~ msgstr "MJPEG"
+
+#~ msgid "MKV"
+#~ msgstr "MKV"
+
+#~ msgid "Ogg/Ogm"
+#~ msgstr "Ogg/Ogm"
+
+#~ msgid "WAV"
+#~ msgstr "WAV"
+
+#~ msgid "RAW"
+#~ msgstr "RAW"
+
+#~ msgid "MP4/MOV"
+#~ msgstr "MP4/MOV"
+
+#~ msgid "FLV"
+#~ msgstr "FLV"
+
+#~ msgid "AVI"
+#~ msgstr "AVI"
+
+#~ msgid "Features"
+#~ msgstr "លក្ខណៈ"
+
+#~ msgid "Streamable"
+#~ msgstr "អាច​ស្ទ្រីម​បាន"
+
+#~ msgid "Chapters"
+#~ msgstr "ជំពូក"
+
+#~ msgid "Menus"
+#~ msgstr "ម៉ឺនុយ"
+
+#~ msgid "Same as source"
+#~ msgstr "ដូច​ប្រភព"
+
+#~ msgid " fps"
+#~ msgstr " fps"
+
+#~ msgid "Custom options"
+#~ msgstr "ជម្រើស​ផ្ទាល់ខ្លួន"
+
+#~ msgid "Quality"
+#~ msgstr "គុណភាព"
+
+#~ msgid "Not Used"
+#~ msgstr "មិន​បាន​ប្រើ"
+
+#~ msgid " kb/s"
+#~ msgstr " kb/s"
+
+#~ msgid "Encoding parameters"
+#~ msgstr "ប៉ារ៉ាម៉ែត្រ​ការ​ដាក់​លេខ​កូដ"
+
+#~ msgid "Frame size"
+#~ msgstr "ទំហំ​ស៊ុម"
+
+#~ msgid "px"
+#~ msgstr "ភីកសែល"
+
+#~ msgid "Sample Rate"
+#~ msgstr "អត្រា​គំរូ"
+
+#~ msgid "Set up media sources to stream"
+#~ msgstr "កំណត់​ប្រភព​មេឌៀ​ដើម្បី​ស្ទ្រីម"
+
+#~ msgid "Destination Setup"
+#~ msgstr "ការ​រៀបចំ​ទិសដៅ"
+
+#~ msgid "Select destinations to stream to"
+#~ msgstr "ជ្រើស​ទិសដៅ​ដែល​ត្រូវ​ស្ទ្រីម​ទៅ"
+
+#~ msgid ""
+#~ "Add destinations following the streaming methods you need. Be sure to "
+#~ "check with transcoding that the format is compatible with the method used."
+#~ msgstr ""
+#~ "បន្ថែម​ទិសដៅ​វិធីសាស្ត្រ​ស្ទ្រីម​ដូច​ខាងក្រោម​ដែល​អ្នក​ត្រូវការ ។ សូម​ប្រាកដ​ថា​ត្រូវ​ពិនិត្យមើល​ការ​បម្លែង​"
+#~ "ត្រឡប់​ដែល​ទ្រង់​ទ្រាយ​ឆបគ្នា​ជា​មួយ​វិធីសាស្ត្រ​ដែល​បាន​ប្រើ ។"
+
+#~ msgid "New destination"
+#~ msgstr "ទិសដៅ​ថ្មី"
+
+#~ msgid "Display locally"
+#~ msgstr "បង្ហាញ​ក្នុង​មូលដ្ឋាន"
+
+#~ msgid "Transcoding Options"
+#~ msgstr "ជម្រើស​បម្លែង​ត្រឡប់"
+
+#~ msgid "Select and choose transcoding options"
+#~ msgstr "ជ្រើស​ជម្រើស​បម្លែង​ត្រឡប់"
+
+#~ msgid "Activate Transcoding"
+#~ msgstr "ធ្វើឲ្យ​ការ​បម្លែង​ត្រឡប់​សកម្ម"
+
+#~ msgid "Option Setup"
+#~ msgstr "ការ​រៀបចំ​ជម្រើស"
+
+#~ msgid "Set up any additional options for streaming"
+#~ msgstr "រៀបចំ​ជម្រើស​បន្ថែម​សម្រាប់​ការ​ស្ទ្រីម"
+
+#~ msgid "Miscellaneous Options"
+#~ msgstr "ជម្រើស​ផ្សេងៗ"
+
+#~ msgid "Stream all elementary streams"
+#~ msgstr "ស្ទ្រីម​នូវ​ស្ទ្រីម​ដំបូង​ទាំងអស់"
+
+#~ msgid "Generated stream output string"
+#~ msgstr "ខ្សែអក្សរ​លទ្ធផល​ស្ទ្រីម​ដែល​បាន​បង្កើត"
+
+#~ msgid " %"
+#~ msgstr " %"
+
+#~ msgid "Output module:"
+#~ msgstr "ម៉ូឌុល​លទ្ធផល ៖"
+
+#~ msgid "Visualization:"
+#~ msgstr "រូបភាព​មើល​ឃើញ ៖"
+
+#~ msgid "Enable Time-Stretching audio"
+#~ msgstr "​​បើក​​អូឌីយ៉ូ​ពេលវេលា​ការ​ប្រមូល​យក"
+
+#~ msgid "Dolby Surround:"
+#~ msgstr "ដុលប៊ី​សឹរោន ៖"
+
+#~ msgid "Replay gain mode:"
+#~ msgstr "របៀប​ចាក់​កើន​ឡើងវិញ ៖"
+
+#~ msgid "Headphone surround effect"
+#~ msgstr "បែបផែន​កាស​ស្ដាប់ត្រចៀក"
+
+#~ msgid "Normalize volume to:"
+#~ msgstr "ធ្វើឲ្យ​កម្រិត​សំឡេង​ធម្មតា​ទៅ ៖"
+
+#~ msgid "Preferred audio language:"
+#~ msgstr "ភាសា​អូឌីយ៉ូ​ដែល​ចូលចិត្ត ៖"
+
+#~ msgid "Password:"
+#~ msgstr "ពាក្យសម្ងាត់ ៖"
+
+#~ msgid "Username:"
+#~ msgstr "ឈ្មោះ​អ្នកប្រើ ៖"
+
+#~ msgid "Submit played tracks stats to Last.fm"
+#~ msgstr "ដាក់​ស្នើ​សភាព​បទ​ចម្រៀង​ដែល​បាន​ចាក់​ទៅ last.fm"
+
+#~ msgid "Codecs"
+#~ msgstr "កូដិក"
+
+#~ msgid "x264 profile and level selection"
+#~ msgstr "ទម្រង់ x264 និង​ការ​ជ្រើស​កម្រិត"
+
+#~ msgid "x264 preset and tuning selection"
+#~ msgstr "ការ​កំណត់​ស្រេច x264 និង​ជម្រើស​មួល​ប៉ុស្តិ៍"
+
+#~ msgid "Hardware-accelerated decoding"
+#~ msgstr "ការ​ដាក់​លេខ​កូដ​ផ្នែក​រឹង​ដែល​បាន​បន្ថែម​ល្បឿន"
+
+#~ msgid "Skip H.264 in-loop deblocking filter"
+#~ msgstr "រំលង​តម្រង​មិន​ទប់ស្កាត់  H.264 in-loop"
+
+#~ msgid "Video quality post-processing level"
+#~ msgstr "កម្រិត​ដំណើរការ​ក្រោយ​គុណភាព​វីដេអូ"
+
+#~ msgid "Optical drive"
+#~ msgstr "ដ្រាយ​អុបទិក"
+
+#~ msgid "Default optical device"
+#~ msgstr "ឧបករណ៍​អុបទិក​លំនាំដើម"
+
+#~ msgid "Files"
+#~ msgstr "ឯកសារ"
+
+#~ msgid "Damaged or incomplete AVI file"
+#~ msgstr "ឯកសារ AVI ដែល​ខូច ឬ​មិន​ពេញលេញ"
+
+#~ msgid "HTTP proxy URL"
+#~ msgstr "URL ប្រូកស៊ី​របស់ HTTP"
+
+#~ msgid "HTTP (default)"
+#~ msgstr "HTTP (លំនាំដើម)"
+
+#~ msgid "RTP over RTSP (TCP)"
+#~ msgstr "RTP លើ RTSP (TCP)"
+
+#~ msgid "Live555 stream transport"
+#~ msgstr "ការ​បញ្ជូន​ស្ទ្រីម Live555"
+
+#~ msgid "Default caching policy"
+#~ msgstr "គោលការណ៍​ឃ្លាំង​សម្ងាត់​លំនាំដើម"
+
+#~ msgid "Menus language:"
+#~ msgstr "ភាសា​ម៉ឺនុយ ៖"
+
+#~ msgid "Look and feel"
+#~ msgstr "រូបរាង និង​មុខងារ"
+
+#~ msgid "Use custom skin"
+#~ msgstr "ប្រើ​ស្បែក​ផ្ទាល់ខ្លួន"
+
+#~ msgid "This is VLC's default interface, with a native look and feel."
+#~ msgstr "នេះ​ជា​ចំណុច​ប្រទាក់​លំនាំដើម​របស់ VLC ជាមួយ​រូបរាង និង​មុខងារ​ដើម ។"
+
+#~ msgid "Use native style"
+#~ msgstr "ប្រើ​រចនាប័ទ្ម​ដើម"
+
+#~ msgid "Resize interface to video size"
+#~ msgstr "ប្ដូរ​ទំហំ​ចំណុច​ប្រទាក់​ទៅ​តាម​ទំហំ​វីដេអូ"
+
+#~ msgid "Show controls in full screen mode"
+#~ msgstr "បង្ហាញ​វត្ថុ​បញ្ជា​ក្នុង​របៀប​ពេញ​អេក្រង់"
+
+#~ msgid "Pause playback when minimized"
+#~ msgstr "ផ្អាក​ការ​ចាក់​ឡើងវិញ ពេល​បាន​បង្រួម​អប្បបរមា"
+
+#~ msgid "Show media change popup:"
+#~ msgstr "បង្ហាញ​ប្រអប់​លេចឡើង​នៃ​ការ​ផ្លាស់ប្ដូរ​មេឌៀ៖"
+
+#~ msgid "Start in minimal view mode"
+#~ msgstr "ចាប់ផ្ដើម​ក្នុង​របៀប​ទិដ្ឋភាព​អប្បបរមា"
+
+#~ msgid "Force window style:"
+#~ msgstr "បង្ខំ​រចនាប័ទ្ម​បង្អួច ៖"
+
+#~ msgid "Integrate video in interface"
+#~ msgstr "បញ្ចូល​វីដេអូ​ក្នុង​ចំណុច​ប្រទាក់"
+
+#~ msgid "Show systray icon"
+#~ msgstr "បង្ហាញ​រូបតំណាង​ថាស​ប្រព័ន្ធ"
+
+#~ msgid "Skin resource file:"
+#~ msgstr "ឯកសារ​ធនធាន​រូបរាង ៖"
+
+#~ msgid "Playlist and Instances"
+#~ msgstr "ធាតុ និង​បញ្ជី​ចាក់"
+
+#~ msgid "Album art download policy:"
+#~ msgstr "គោលការណ៍​​ទាញ​យក​សិល្បៈ​អាល់ប៊ុម ៖"
+
+#~ msgid "Pause on the last frame of a video"
+#~ msgstr "ផ្អាក​ស៊ុម​វីដេអូ​ចុងក្រោយ"
+
+#~ msgid "Allow only one instance"
+#~ msgstr "អនុញ្ញាត​តែ​វត្ថុមួយ​ប៉ុណ្ណោះ"
+
+#~ msgid "Configure Media Library"
+#~ msgstr "កំណត់​រចនាសម្ព័ន្ធ​បណ្ណាល័យ​មេឌៀ"
+
+#~ msgid "Every "
+#~ msgstr "រាល់"
+
+#~ msgid "Separate words by | (without space)"
+#~ msgstr "បំបែក​ពាក្យ​ដោយ | (មិន​ដកឃ្លា)"
+
+#~ msgid "Save recently played items"
+#~ msgstr "រក្សាទុក​ធាតុ​ដែល​បាន​ចាក់​បច្ចុប្បន្ន"
+
+#~ msgid "Activate updates notifier"
+#~ msgstr "ធ្វើ​ឲ្យ​កម្មវិធី​ជូនដំណឹង​បច្ចុប្បន្នភាព​សកម្ម"
+
+#~ msgid "Operating System Integration"
+#~ msgstr "ការ​បញ្ចូល​ប្រព័ន្ធ​ប្រតិបត្តិការ"
+
+#~ msgid "File extensions association"
+#~ msgstr "កន្ទុយ​ឯកសារ​ដែល​ពាក់ព័ន្ធ"
+
+#~ msgid "Set up associations..."
+#~ msgstr "ការ​កំណត់​ដែល​ពាក់ព័ន្ធ..."
+
+#~ msgid "Enable On Screen Display (OSD)"
+#~ msgstr "បើក On Screen Display (OSD)"
+
+#~ msgid "Show media title on video start"
+#~ msgstr "បង្ហាញ​ចំណងជើង​មេឌៀ​នៅ​ពេល​ចាប់ផ្ដើម​វីដេអូ"
+
+#~ msgid "Enable subtitles"
+#~ msgstr "បើក​ចំណងជើង​រង"
+
+#~ msgid "Subtitle Language"
+#~ msgstr "ភាសា​ចំណងជើង​រង"
+
+#~ msgid "Default encoding"
+#~ msgstr "ការ​អ៊ិនកូដ​លំនាំដើម"
+
+#~ msgid "Subtitle effects"
+#~ msgstr "បែបផែន​ចំណងជើង​រង"
+
+#~ msgid "Add a shadow"
+#~ msgstr "បន្ថែម​ស្រមោល"
+
+#~ msgid "Add a background"
+#~ msgstr "បន្ថែម​ផ្ទៃ​ខាងក្រោយ"
+
+#~ msgid " px"
+#~ msgstr " px"
+
+#~ msgid "Accelerated video output (Overlay)"
+#~ msgstr "លទ្ធផល​វីដេអូ​ដែល​បាន​បង្កើន​ល្បឿន (តម្រួត)"
+
+#~ msgid "DirectX"
+#~ msgstr "DirectX"
+
+#~ msgid "Display device"
+#~ msgstr "ឧបករណ៍​បង្ហាញ"
+
+#~ msgid "KVA"
+#~ msgstr "KVA"
+
+#~ msgid "Deinterlacing"
+#~ msgstr "មិន​អង្កាញ់"
+
+#~ msgid "Force Aspect Ratio"
+#~ msgstr "បង្ខំ​សមាមាត្រ"
+
+#~ msgid "vlc-snap"
+#~ msgstr "vlc-snap"
+
+#~ msgid "1"
+#~ msgstr "១"
+
+#~ msgid "Stuff"
+#~ msgstr "ធាតុ"
+
+#~ msgid "Edit settings"
+#~ msgstr "កែសម្រួល​ការ​កំណត់"
+
+#~ msgid "Control"
+#~ msgstr "វត្ថុ​បញ្ជា"
+
+#~ msgid "Run manually"
+#~ msgstr "ដំណើរការ​ដោយ​ដៃ"
+
+#~ msgid "Setup schedule"
+#~ msgstr "រៀបចំ​កាលវិភាគ"
+
+#~ msgid "Run on schedule"
+#~ msgstr "ដំណើរការ​តាម​កាលវិភាគ"
+
+#~ msgid "Status"
+#~ msgstr "ស្ថានភាព"
+
+#~ msgid "P/P"
+#~ msgstr "P/P"
+
+#~ msgid "Prev"
+#~ msgstr "មុន​"
+
+#~ msgid "Add Input"
+#~ msgstr "បន្ថែម​ព័ត៌មាន​បញ្ចូល"
+
+#~ msgid "Edit Input"
+#~ msgstr "កែសម្រួល​ព័ត៌មាន​បញ្ចូល"
+
+#~ msgid "Clear List"
+#~ msgstr "សម្អាត​បញ្ជី"
+
+#~ msgid "Check for VLC updates"
+#~ msgstr "ពិនិត្យមើល​បច្ចុប្បន្នភាព VLC"
+
+#~ msgid "Launching an update request..."
+#~ msgstr "កំពុង​ដំណើរការ​សំណើ​បច្ចុប្បន្នភាព..."
+
+#~ msgid "Do you want to download it?"
+#~ msgstr "តើ​អ្នក​ចង់​ទាញ​យក​វា​ឬ?"
+
+#~ msgid "Essential"
+#~ msgstr "សំខាន់"
+
+#~ msgid ">HHHHHH;#"
+#~ msgstr ">HHHHHH;#"
+
+#~ msgid "Negate colors"
+#~ msgstr "បដិសេធ​ពណ៌"
+
+#~ msgid "Colors"
+#~ msgstr "ពណ៌"
+
+#~ msgid "Interactive Zoom"
+#~ msgstr "ពង្រីក​អន្តរសកម្ម"
+
+#~ msgid "Angle"
+#~ msgstr "មុំ"
+
+#~ msgid "Black Slot"
+#~ msgstr "រន្ធ​ពណ៌ខ្មៅ"
+
+#~ msgid "..."
+#~ msgstr "..."
+
+#~ msgid "full"
+#~ msgstr "ពេញ"
+
+#~ msgid "none"
+#~ msgstr "គ្មាន"
+
+#~ msgid "Logo erase"
+#~ msgstr "លុប​រូបសញ្ញា"
+
+#~ msgid "Mask"
+#~ msgstr "របាំង"
+
+#~ msgid "Output Color Filtermode"
+#~ msgstr "របៀប​ត្រង​ពណ៌​លទ្ធផល"
+
+#~ msgid "Brightness (%)"
+#~ msgstr "ពន្លឺ (%)"
+
+#~ msgid "Mark analyzed Pixels"
+#~ msgstr "សម្គាល់​ភីកសែល​ដែល​បាន​វិភាគ"
+
+#~ msgid "Filter threshold (%)"
+#~ msgstr "តម្រង​កម្រិត​ពន្លឺ (%)"
+
+#~ msgid "Motion detect"
+#~ msgstr "រក​ឃើញ​ចលនា"
+
+#~ msgid "Anti-Flickering"
+#~ msgstr "ប្រឆាំង​ភ្លឹបភ្លែត"
+
+#~ msgid "Soften"
+#~ msgstr "ទន់"
+
+#~ msgid "Spatial blur"
+#~ msgstr "ព្រិល​លំហ"
+
+#~ msgid "Mirror"
+#~ msgstr "កញ្ចក់"
+
+#~ msgid "Anaglyph 3D"
+#~ msgstr "Anaglyph 3D"
+
+#~ msgid "VLM configurator"
+#~ msgstr "កម្មវិធី​កំណត់​រចនាសម្ព័ន្ធ VLM"
+
+#~ msgid "Media Manager Edition"
+#~ msgstr "ការ​កែសម្រួល​កម្មវិធី​គ្រប់គ្រង​មេឌៀ"
+
+#~ msgid "Name:"
+#~ msgstr "ឈ្មោះ ៖"
+
+#~ msgid "Input:"
+#~ msgstr "ព័ត៌មាន​បញ្ចូល ៖"
+
+#~ msgid "Select Input"
+#~ msgstr "ជ្រើស​ព័ត៌មាន​បញ្ចូល"
+
+#~ msgid "Output:"
+#~ msgstr "លទ្ធផល ៖"
+
+#~ msgid "Select Output"
+#~ msgstr "ជ្រើស​លទ្ធផល"
+
+#~ msgid "Time Control"
+#~ msgstr "ការ​គ្រប់គ្រង​ពេលវេលា"
+
+#~ msgid "Mux Control"
+#~ msgstr "វត្ថុ​បញ្ជា​ការ​ទ្វេ​ទិស"
+
+#~ msgid "Muxer:"
+#~ msgstr "កម្មវិធី​ទ្វេ​ទិស ៖"
+
+#~ msgid "AAAA; "
+#~ msgstr "AAAA;"
+
+#~ msgid "Media Manager List"
+#~ msgstr "បញ្ជី​គ្រប់គ្រង​មេឌៀ"
 
 #~ msgid "Output module"
 #~ msgstr "ម៉ូឌុល​លទ្ធផល"

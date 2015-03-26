@@ -7,9 +7,9 @@ ifeq ($(call need_pkg,"libbluray >= 0.2.1"),)
 PKGS_FOUND += bluray
 endif
 
-DEPS_bluray = libxml2 $(DEPS_libxml2)
+DEPS_bluray = libxml2 $(DEPS_libxml2) freetype2 $(DEPS_freetype2)
 
-BLURAY_VERSION := 0.4.0
+BLURAY_VERSION := 0.5.0
 BLURAY_URL := http://ftp.videolan.org/pub/videolan/libbluray/$(BLURAY_VERSION)/libbluray-$(BLURAY_VERSION).tar.bz2
 
 $(TARBALLS)/libbluray-$(BLURAY_VERSION).tar.bz2:

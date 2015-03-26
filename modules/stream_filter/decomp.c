@@ -207,7 +207,7 @@ static int Read (stream_t *stream, void *buf, unsigned int buflen)
         p_sys->offset += length;
 
         if (buflen > 0)
-            length += Read (stream, ((char *)buf) + length, buflen - length);
+            length += Read (stream, buf, buflen);
         return length;
     }
     assert ((buf != NULL) || (buflen == 0));

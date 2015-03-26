@@ -1,11 +1,11 @@
 dnl Autoconf settings for vlc
 
-AC_COPYRIGHT([Copyright 2002-2014 VLC authors and VideoLAN])
+AC_COPYRIGHT([Copyright 1999-2015 VLC authors and VideoLAN])
 
-AC_INIT(vlc, 2.1.4)
+AC_INIT(vlc, 2.1.6)
 VERSION_MAJOR=2
 VERSION_MINOR=1
-VERSION_REVISION=4
+VERSION_REVISION=6
 VERSION_EXTRA=0
 VERSION_DEV=
 
@@ -14,7 +14,7 @@ AC_SUBST(PKGDIR)
 
 CONFIGURE_LINE="`echo "$0 $ac_configure_args" | sed -e 's/\\\/\\\\\\\/g'`"
 CODENAME="Rincewind"
-COPYRIGHT_YEARS="1996-2014"
+COPYRIGHT_YEARS="1996-2015"
 
 AC_CONFIG_SRCDIR(src/libvlc.c)
 AC_CONFIG_AUX_DIR(autotools)
@@ -266,7 +266,7 @@ case "${host_os}" in
     ;;
   *os2*)
     SYS=os2
-    LDFLAGS="${LDFLAGS} -Zomf -Zbin-files -Zargs-wild"
+    LDFLAGS="${LDFLAGS} -Zomf -Zbin-files -Zargs-wild -Zhigh-mem"
     ;;
   *)
     SYS="${host_os}"
@@ -2053,6 +2053,7 @@ if test "${enable_mod}" != "no" ; then
     PKG_CHECK_MODULES(LIBMODPLUG, [libmodplug >= 0.8.4 libmodplug != 0.8.8], [
           VLC_ADD_PLUGIN([mod])
           VLC_ADD_CXXFLAGS([mod],[$LIBMODPLUG_CFLAGS])
+          VLC_ADD_CFLAGS([mod],[$LIBMODPLUG_CFLAGS]) #modules/demux/mod.c needs CFLAGS_mod, not CXXFLAGS_mod
           VLC_ADD_LIBS([mod],[$LIBMODPLUG_LIBS])
     ],[
        AS_IF([test -n "${enable_mod}"],
