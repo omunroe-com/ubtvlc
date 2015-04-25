@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+export DEB_LDFLAGS_MAINT_APPEND=-Wl,--as-needed
+
 DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 DEB_HOST_ARCH      ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 DEB_HOST_ARCH_CPU  ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
@@ -100,6 +102,7 @@ confflags += \
 	--enable-vnc \
 	--enable-vorbis \
 	--enable-x264 \
+	--enable-x265 \
 	--enable-zvbi \
 	--with-kde-solid=/usr/share/kde4/apps/solid/actions/ \
 	$(NULL)
@@ -252,6 +255,14 @@ override_dh_auto_clean:
 override_dh_auto_configure:
 	dh_auto_configure -- $(confflags)
 
+override_dh_auto_build:
+	dh_auto_build
+ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
+	# Build zsh completion
+	BUILDDIR=$(CURDIR) \
+	cd extras/analyser && ./zsh_completion.sh
+endif
+
 override_dh_auto_test:
 ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
 ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
@@ -267,6 +278,8 @@ endif
 endif
 
 override_dh_install:
+	# Remove plugin cache
+	rm debian/tmp/usr/lib/vlc/plugins/plugins.dat
 	# Remove disabled plugins
 	sed "/\($(shell echo $(removeplugins) | sed 's/ /\\|/g')\)_/d" debian/vlc.install.in > debian/vlc.install
 	sed "/\($(shell echo $(removeplugins) | sed 's/ /\\|/g')\)_/d" debian/vlc-nox.install.in > debian/vlc-nox.install
@@ -292,6 +305,8 @@ ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
 		fi; \
 	done; \
 	if test "$$BORKED" = yes; then exit 1; fi
+	# Install zsh completion
+	dh_install -pvlc-nox extras/analyser/_vlc usr/share/zsh/vendor-completions
 endif
 	$(if $(shell dpkg-vendor --is Ubuntu && echo true),dh_install -pvlc-nox debian/source_vlc.py usr/share/apport/package-hooks/)
 	dh_buildinfo -p vlc-nox
