@@ -1,3 +1,18 @@
+vlc (2.2.1-2) unstable; urgency=medium
+
+  * debian/rules:
+    - Enable svgdec plugin
+    - Remove obsolete dh_builddeb override.
+    - Explicitly pass --enable-sdl-image.
+  * debian/control:
+    - Switch Build-Depends from Qt4 to Qt5.
+    - Remove obsolete Breaks+Replaces.
+    - Drop libdvbpsi5-dev from Build-Depenss.
+    - Add libcairo2-dev to Build-Depends for svgdec plugin.
+  * debian/vlc.install.in: Install svgdec plugin.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Tue, 02 Jun 2015 22:15:28 +0200
+
 vlc (2.2.1-1) unstable; urgency=medium
 
   [ Sebastian Ramacher ]
