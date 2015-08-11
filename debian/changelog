@@ -1,3 +1,9 @@
+vlc (2.2.1-2build1) wily; urgency=medium
+
+  * No-change rebuild against libjack-jackd2-0v5
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 11 Aug 2015 07:13:45 +0000
+
 vlc (2.2.1-2) unstable; urgency=medium
 
   * debian/rules:
