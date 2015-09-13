@@ -182,7 +182,6 @@ Depends: fonts-freefont-ttf,
 Recommends: vlc-plugin-notify (= ${binary:Version}),
             vlc-plugin-samba (= ${binary:Version}),
             xdg-utils
-Suggests: videolan-doc
 Breaks: vlc-nox (<< 2.2.0~pre2-2~),
         vlc-plugin-pulse (<< 2.2.0~pre2-2~)
 Replaces: vlc-nox (<< 2.2.0~pre2-2~),
@@ -230,8 +229,6 @@ Package: vlc-nox
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Suggests: libdvdcss2
-Breaks: vlc (<< 2.1.0)
-Replaces: vlc (<< 2.1.0)
 Provides: mp3-decoder
 Description: multimedia player and streamer (without X support)
  VLC is the VideoLAN project's media player. It plays MPEG, MPEG-2, MPEG-4,
@@ -343,12 +340,3 @@ Description: Samba plugin for VLC
  VLC is the VideoLAN project's media player. It plays MPEG, MPEG-2, MPEG-4,
  DivX, MOV, WMV, QuickTime, WebM, FLAC, MP3, Ogg/Vorbis files, DVDs, VCDs,
  podcasts, and multimedia streams from various network sources.
-
-Package: vlc-plugin-pulse
-Architecture: all
-Depends: vlc (>= ${source:Version}),
-         vlc-data (= ${source:Version}),
-         ${misc:Depends}
-Description: transitional dummy package for vlc
- This is a transitional dummy package for vlc. The PulseAudio plugin is now
- included in vlc. This package can safely be removed.
