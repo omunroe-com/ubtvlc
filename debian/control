@@ -108,6 +108,7 @@ Build-Depends: autopoint,
                libxcb-xv0-dev (>= 1.1.90.1),
                libxcb1-dev (>= 1.6),
                libxext-dev,
+               libxi-dev,
                libxinerama-dev,
                libxml2-dev,
                libxpm-dev,
@@ -183,9 +184,9 @@ Recommends: vlc-plugin-notify (= ${binary:Version}),
             vlc-plugin-samba (= ${binary:Version}),
             xdg-utils
 Breaks: vlc-nox (<< 2.2.0~pre2-2~),
-        vlc-plugin-pulse (<< 2.2.0~pre2-2~)
+        vlc-plugin-pulse (<< 2.2.1-4~)
 Replaces: vlc-nox (<< 2.2.0~pre2-2~),
-          vlc-plugin-pulse (<< 2.2.0~pre2-2~)
+          vlc-plugin-pulse (<< 2.2.1-4~)
 Provides: mp3-decoder
 Description: multimedia player and streamer
  VLC is the VideoLAN project's media player. It plays MPEG, MPEG-2, MPEG-4,
@@ -241,9 +242,9 @@ Description: multimedia player and streamer (without X support)
  .
  VLC has support for on-the-fly transcoding of audio and video formats, either
  for broadcasting purposes or for movie format transformations. Support for
- most output methods is provided by this package, but features can be added
- by installing additional audio plugins (vlc-plugin-pulse, vlc-plugin-sdl,
- vlc-plugin-jack) or video plugins (vlc-plugin-sdl).
+ most output methods is provided by this package, but features can be added by
+ installing additional audio plugins (vlc-plugin-sdl,  vlc-plugin-jack) or
+ video plugins (vlc-plugin-sdl).
  .
  This package contains a version of VLC that does not require X and that is
  thus suitable for headless servers.
