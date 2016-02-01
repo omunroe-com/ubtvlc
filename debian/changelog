@@ -1,3 +1,31 @@
+vlc (2.2.2-1) unstable; urgency=medium
+
+  * New upstream release.
+    - pulse: compute latency correctly if negative. (Closes: #784640)
+    - Fix build failure with newer libdvdread-dev. (Closes: #797207)
+  * Migrate to automatic debug packages.
+  * Tell reportbug to report bugs against src:vlc and install reportbug
+    control files in every package.
+  * Remove some of the /usr/share/doc/<pkg> symlinks to clean up dependencies.
+  * debian/vlc.menu: Removed since vlc contains a desktop file.
+  * debian/rules:
+    - Remove some parts that are handled by dpkg-dev and debhelper.
+    - Install NEWS as upstream changelog.
+    - Remove options passed twice to configure.
+  * debian/README.{Debian,source}: Removed, outdated.
+  * debian/libvlc-dev.examples: Install programming examples.
+  * debian/{vlc.,source/}lintian-overrides: Override false positives.
+  * debian/NEWS: Fix spelling error.
+  * debian/control: Update Vcs-Git.
+  * debian/patches:
+    - Removed all patches applied upstream.
+    - freenchtv-links.patch: Fix links to French TV icons. Thanks to Mathieu
+      Malaterre (Closes: #782229).
+  * debian/libvlc5.symbols: Bump version of libvlc_event_type_name for new
+    event names.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Mon, 01 Feb 2016 20:43:05 +0100
+
 vlc (2.2.1-5) unstable; urgency=medium
 
   * debian/control:
