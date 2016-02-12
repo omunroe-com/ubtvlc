@@ -1,3 +1,9 @@
+vlc (2.2.2-3build1) xenial; urgency=medium
+
+  * No-change rebuild for x265 transition.
+
+ -- Matthias Klose <doko@ubuntu.com>  Fri, 12 Feb 2016 09:46:32 +0000
+
 vlc (2.2.2-3) unstable; urgency=medium
 
   * debian/*.maintscript: Handle all cases.
