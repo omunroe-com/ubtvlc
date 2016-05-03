@@ -1,3 +1,19 @@
+vlc (2.1.6-0ubuntu14.04.2) trusty-security; urgency=medium
+
+  * SECURITY UPDATE: denial of service via crafted FLV file
+    - debian/patches/CVE-2014-9597.patch: properly handle ref count in
+      src/misc/picture_pool.c.
+    - CVE-2014-9597
+  * SECURITY UPDATE: XSS in web interface
+    - debian/patches/CVE-2014-9743.patch: fix XSS in src/network/httpd.c.
+    - CVE-2014-9743
+  * SECURITY UPDATE: denial of service via crafted wav file (LP: #1533633)
+    - debian/patches/CVE-2016-3941.patch: seek across eof correctly in
+      src/input/stream.c.
+    - CVE-2016-3941
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Mon, 02 May 2016 20:10:10 -0400
+
 vlc (2.1.6-0ubuntu14.04.1) trusty-security; urgency=medium
 
   * New upstream release to fix multiple security issues (LP: #1419176)

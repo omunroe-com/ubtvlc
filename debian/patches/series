@@ -1,1 +1,4 @@
 pnap-grammar.patch
+CVE-2014-9597.patch
+CVE-2014-9743.patch
+CVE-2016-3941.patch
