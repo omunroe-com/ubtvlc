@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vlc\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2016-01-18 22:17+0100\n"
+"POT-Creation-Date: 2016-06-01 13:47+0200\n"
 "PO-Revision-Date: 2005-02-01 14:25+0000\n"
 "Last-Translator: Adi Nugroho <adi@internux.co.id>\n"
 "Language-Team: Tagalog\n"
@@ -81,7 +81,7 @@ msgstr ""
 #: modules/services_discovery/mediadirs.c:76 modules/stream_out/es.c:93
 #: modules/stream_out/transcode/transcode.c:183
 #: share/lua/http/dialogs/create_stream.html:150
-#: modules/gui/qt4/ui/profiles.h:704 modules/gui/qt4/ui/profiles.h:735
+#: modules/gui/qt4/ui/profiles.h:721 modules/gui/qt4/ui/profiles.h:752
 #, fuzzy
 msgid "Audio"
 msgstr "M_adungan"
@@ -96,7 +96,7 @@ msgid "General audio settings"
 msgstr ""
 
 #: include/vlc_config_cat.h:58 include/vlc_config_cat.h:79
-#: modules/gui/qt4/ui/profiles.h:733 modules/gui/qt4/ui/profiles.h:743
+#: modules/gui/qt4/ui/profiles.h:750 modules/gui/qt4/ui/profiles.h:760
 #, fuzzy
 msgid "Filters"
 msgstr "_Fayl"
@@ -145,7 +145,7 @@ msgstr ""
 #: modules/services_discovery/mediadirs.c:69 modules/stream_out/es.c:101
 #: modules/stream_out/transcode/transcode.c:154
 #: share/lua/http/dialogs/create_stream.html:147
-#: modules/gui/qt4/ui/profiles.h:705 modules/gui/qt4/ui/profiles.h:709
+#: modules/gui/qt4/ui/profiles.h:722 modules/gui/qt4/ui/profiles.h:726
 #: modules/gui/qt4/ui/sprefs_video.h:334
 #, fuzzy
 msgid "Video"
@@ -1010,7 +1010,7 @@ msgstr "_Fayl"
 msgid "Media View"
 msgstr "_Fayl"
 
-#: src/config/keys.c:104 modules/gui/qt4/components/controller.cpp:542
+#: src/config/keys.c:104 modules/gui/qt4/components/controller.cpp:543
 msgid "Menu"
 msgstr ""
 
@@ -1221,8 +1221,8 @@ msgstr ""
 #: src/input/es_out.c:2911 src/input/es_out.c:2914 modules/access/imem.c:67
 #: modules/gui/macosx/ConvertAndSave.m:177
 #: modules/gui/macosx/ConvertAndSave.m:187 modules/gui/macosx/wizard.m:382
-#: modules/gui/qt4/ui/profiles.h:711 modules/gui/qt4/ui/profiles.h:737
-#: modules/gui/qt4/ui/profiles.h:746
+#: modules/gui/qt4/ui/profiles.h:728 modules/gui/qt4/ui/profiles.h:754
+#: modules/gui/qt4/ui/profiles.h:763
 msgid "Codec"
 msgstr ""
 
@@ -1239,7 +1239,7 @@ msgid "Description"
 msgstr ""
 
 #: src/input/es_out.c:2930 modules/gui/macosx/ConvertAndSave.m:189
-#: modules/gui/macosx/output.m:167 modules/gui/qt4/ui/profiles.h:739
+#: modules/gui/macosx/output.m:167 modules/gui/qt4/ui/profiles.h:756
 msgid "Channels"
 msgstr ""
 
@@ -1260,8 +1260,8 @@ msgstr ""
 #: src/input/es_out.c:2950 modules/access_output/shout.c:92
 #: modules/demux/playlist/shoutcast.c:335
 #: modules/gui/macosx/ConvertAndSave.m:178
-#: modules/gui/macosx/ConvertAndSave.m:188 modules/gui/qt4/ui/profiles.h:712
-#: modules/gui/qt4/ui/profiles.h:738
+#: modules/gui/macosx/ConvertAndSave.m:188 modules/gui/qt4/ui/profiles.h:729
+#: modules/gui/qt4/ui/profiles.h:755
 msgid "Bitrate"
 msgstr ""
 
@@ -1284,7 +1284,7 @@ msgid "%.2f dB"
 msgstr ""
 
 #: src/input/es_out.c:2974 modules/gui/macosx/ConvertAndSave.m:180
-#: modules/gui/qt4/ui/profiles.h:732
+#: modules/gui/qt4/ui/profiles.h:749
 msgid "Resolution"
 msgstr ""
 
@@ -1750,9 +1750,9 @@ msgstr ""
 #: modules/audio_output/kai.c:106 modules/codec/x264.c:442
 #: modules/gui/macosx/simple_prefs.m:122
 #: modules/gui/qt4/components/simple_preferences.cpp:136
-#: modules/gui/qt4/components/sout/profile_selector.cpp:561
+#: modules/gui/qt4/components/sout/profile_selector.cpp:563
 #: modules/video_output/kva.c:62 modules/video_output/xcb/xvideo.c:870
-#: modules/gui/qt4/ui/profiles.h:727 modules/gui/qt4/ui/profiles.h:730
+#: modules/gui/qt4/ui/profiles.h:744 modules/gui/qt4/ui/profiles.h:747
 #, fuzzy
 msgid "Auto"
 msgstr "M_adungan"
@@ -2475,8 +2475,9 @@ msgstr ""
 #: src/video_output/vout_intf.c:116 modules/access/dshow/dshow.cpp:92
 #: modules/access/dshow/dshow.cpp:99 modules/access/dshow/dshow.cpp:119
 #: modules/access/dshow/dshow.cpp:2017 modules/audio_output/alsa.c:746
-#: modules/audio_output/directsound.c:1021 modules/gui/macosx/AudioEffects.m:86
-#: modules/gui/macosx/MainMenu.m:641 modules/gui/macosx/prefs_widgets.m:1221
+#: modules/audio_output/directsound.c:1021
+#: modules/gui/macosx/AudioEffects.m:86 modules/gui/macosx/MainMenu.m:641
+#: modules/gui/macosx/prefs_widgets.m:1221
 #: modules/gui/macosx/prefs_widgets.m:1284
 #: modules/gui/macosx/simple_prefs.m:690 modules/gui/macosx/VideoEffects.m:55
 #: modules/gui/qt4/components/preferences_widgets.cpp:547
@@ -3603,7 +3604,7 @@ msgstr ""
 msgid "These settings are the global VLC key bindings, known as \"hotkeys\"."
 msgstr ""
 
-#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1846
+#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1848
 msgid "Ignore"
 msgstr ""
 
@@ -4440,8 +4441,8 @@ msgstr ""
 #: modules/demux/xiph_metadata.h:62 modules/gui/macosx/ConvertAndSave.m:173
 #: modules/gui/macosx/ConvertAndSave.m:191 modules/gui/macosx/MainMenu.m:459
 #: share/lua/http/dialogs/create_stream.html:153
-#: modules/gui/qt4/ui/profiles.h:701 modules/gui/qt4/ui/profiles.h:745
-#: modules/gui/qt4/ui/profiles.h:748
+#: modules/gui/qt4/ui/profiles.h:718 modules/gui/qt4/ui/profiles.h:762
+#: modules/gui/qt4/ui/profiles.h:765
 msgid "Subtitles"
 msgstr ""
 
@@ -6571,8 +6572,9 @@ msgstr ""
 msgid "EyeTV input"
 msgstr "M_adungan"
 
-#: modules/access/file.c:177 modules/access/file.c:304 modules/access/mtp.c:195
-#: modules/access/mtp.c:286 modules/access/vdr.c:374 modules/access/vdr.c:541
+#: modules/access/file.c:177 modules/access/file.c:304
+#: modules/access/mtp.c:195 modules/access/mtp.c:286 modules/access/vdr.c:374
+#: modules/access/vdr.c:541
 msgid "File reading failed"
 msgstr ""
 
@@ -6652,8 +6654,8 @@ msgstr "M_adungan"
 #: modules/audio_output/file.c:113 modules/gui/macosx/open.m:130
 #: modules/gui/macosx/open.m:590 modules/gui/macosx/output.m:133
 #: modules/gui/macosx/output.m:217 modules/gui/macosx/output.m:341
-#: modules/gui/qt4/dialogs/plugins.cpp:1413 modules/gui/qt4/dialogs/sout.cpp:69
-#: modules/gui/qt4/dialogs/sout.cpp:121
+#: modules/gui/qt4/dialogs/plugins.cpp:1413
+#: modules/gui/qt4/dialogs/sout.cpp:69 modules/gui/qt4/dialogs/sout.cpp:121
 #: share/lua/http/dialogs/create_stream.html:204
 #: share/lua/http/dialogs/stream_config_window.html:36
 #: share/lua/http/dialogs/stream_window.html:95
@@ -6887,7 +6889,7 @@ msgstr ""
 #: modules/gui/qt4/components/extended_panels.cpp:1432
 #: modules/video_filter/mosaic.c:94 modules/video_output/vmem.c:42
 #: share/lua/http/dialogs/mosaic_window.html:108
-#: modules/gui/qt4/ui/profiles.h:726
+#: modules/gui/qt4/ui/profiles.h:743
 msgid "Width"
 msgstr ""
 
@@ -6899,7 +6901,7 @@ msgstr ""
 #: modules/demux/rawvid.c:52 modules/gui/macosx/ConvertAndSave.m:183
 #: modules/video_filter/mosaic.c:92 modules/video_output/vmem.c:45
 #: share/lua/http/dialogs/mosaic_window.html:126
-#: modules/gui/qt4/ui/profiles.h:729
+#: modules/gui/qt4/ui/profiles.h:746
 msgid "Height"
 msgstr ""
 
@@ -8535,7 +8537,8 @@ msgstr ""
 
 #: modules/access/v4l2/v4l2.c:242 modules/codec/avcodec/avcodec.c:68
 #: modules/codec/x264.c:437 modules/control/hotkeys.c:193
-#: modules/gui/macosx/AddonManager.m:93 modules/gui/qt4/dialogs/convert.cpp:136
+#: modules/gui/macosx/AddonManager.m:93
+#: modules/gui/qt4/dialogs/convert.cpp:136
 #: modules/gui/qt4/dialogs/plugins.cpp:372
 #: modules/gui/qt4/dialogs/preferences.cpp:77
 msgid "All"
@@ -9373,7 +9376,8 @@ msgstr ""
 msgid "Flat"
 msgstr ""
 
-#: modules/audio_filter/equalizer_presets.h:54 modules/demux/mp4/id3genres.h:64
+#: modules/audio_filter/equalizer_presets.h:54
+#: modules/demux/mp4/id3genres.h:64
 msgid "Classical"
 msgstr ""
 
@@ -9382,7 +9386,8 @@ msgstr ""
 msgid "Club"
 msgstr ""
 
-#: modules/audio_filter/equalizer_presets.h:54 modules/demux/mp4/id3genres.h:35
+#: modules/audio_filter/equalizer_presets.h:54
+#: modules/demux/mp4/id3genres.h:35
 msgid "Dance"
 msgstr ""
 
@@ -9415,19 +9420,23 @@ msgstr "_Fayl"
 msgid "Party"
 msgstr ""
 
-#: modules/audio_filter/equalizer_presets.h:56 modules/demux/mp4/id3genres.h:45
+#: modules/audio_filter/equalizer_presets.h:56
+#: modules/demux/mp4/id3genres.h:45
 msgid "Pop"
 msgstr ""
 
-#: modules/audio_filter/equalizer_presets.h:56 modules/demux/mp4/id3genres.h:48
+#: modules/audio_filter/equalizer_presets.h:56
+#: modules/demux/mp4/id3genres.h:48
 msgid "Reggae"
 msgstr ""
 
-#: modules/audio_filter/equalizer_presets.h:57 modules/demux/mp4/id3genres.h:49
+#: modules/audio_filter/equalizer_presets.h:57
+#: modules/demux/mp4/id3genres.h:49
 msgid "Rock"
 msgstr ""
 
-#: modules/audio_filter/equalizer_presets.h:57 modules/demux/mp4/id3genres.h:53
+#: modules/audio_filter/equalizer_presets.h:57
+#: modules/demux/mp4/id3genres.h:53
 msgid "Ska"
 msgstr ""
 
@@ -9439,7 +9448,8 @@ msgstr ""
 msgid "Soft rock"
 msgstr ""
 
-#: modules/audio_filter/equalizer_presets.h:57 modules/demux/mp4/id3genres.h:50
+#: modules/audio_filter/equalizer_presets.h:57
+#: modules/demux/mp4/id3genres.h:50
 msgid "Techno"
 msgstr ""
 
@@ -13343,14 +13353,14 @@ msgstr ""
 #: modules/control/dbus/dbus_root.c:81 modules/gui/macosx/MainWindow.m:209
 #: modules/gui/macosx/MainWindow.m:742 modules/gui/macosx/MainWindow.m:748
 #: modules/gui/macosx/MainWindow.m:1372 modules/gui/ncurses.c:1042
-#: modules/gui/qt4/dialogs/help.cpp:91 modules/gui/qt4/main_interface.cpp:1102
-#: modules/gui/qt4/main_interface.cpp:1106
-#: modules/gui/qt4/main_interface.cpp:1145
-#: modules/gui/qt4/main_interface.cpp:1147
-#: modules/gui/qt4/main_interface.cpp:1255
-#: modules/gui/qt4/main_interface.cpp:1272
-#: modules/gui/qt4/main_interface.cpp:1280
-#: modules/gui/qt4/main_interface.cpp:1303 modules/lua/libs/httpd.c:80
+#: modules/gui/qt4/dialogs/help.cpp:91 modules/gui/qt4/main_interface.cpp:1156
+#: modules/gui/qt4/main_interface.cpp:1160
+#: modules/gui/qt4/main_interface.cpp:1199
+#: modules/gui/qt4/main_interface.cpp:1201
+#: modules/gui/qt4/main_interface.cpp:1309
+#: modules/gui/qt4/main_interface.cpp:1326
+#: modules/gui/qt4/main_interface.cpp:1334
+#: modules/gui/qt4/main_interface.cpp:1357 modules/lua/libs/httpd.c:80
 #: modules/notify/growl.m:281 modules/video_output/xcb/window.c:313
 msgid "VLC media player"
 msgstr ""
@@ -14093,7 +14103,7 @@ msgstr ""
 msgid "ASF/WMV demuxer"
 msgstr "_Makit-an"
 
-#: modules/demux/asf/asf.c:215 modules/demux/asf/asf.c:1197
+#: modules/demux/asf/asf.c:215 modules/demux/asf/asf.c:1194
 msgid "Could not demux ASF stream"
 msgstr ""
 
@@ -14101,7 +14111,7 @@ msgstr ""
 msgid "VLC failed to load the ASF header."
 msgstr ""
 
-#: modules/demux/asf/asf.c:1198
+#: modules/demux/asf/asf.c:1195
 msgid "DRM protected streams are not supported."
 msgstr ""
 
@@ -14331,8 +14341,8 @@ msgstr "_Makit-an"
 
 #: modules/demux/mjpeg.c:46 modules/demux/mpeg/es.c:50
 #: modules/demux/mpeg/h264.c:43 modules/demux/mpeg/hevc.c:46
-#: modules/demux/rawvid.c:44 modules/demux/subtitle.c:75 modules/demux/vc1.c:43
-#: modules/gui/macosx/open.m:203
+#: modules/demux/rawvid.c:44 modules/demux/subtitle.c:75
+#: modules/demux/vc1.c:43 modules/gui/macosx/open.m:203
 msgid "Frames per Second"
 msgstr ""
 
@@ -15929,7 +15939,8 @@ msgstr ""
 
 #: modules/gui/macosx/AudioEffects.m:118 modules/gui/macosx/AudioEffects.m:129
 #: modules/gui/macosx/TrackSynchronization.m:60
-#: modules/gui/macosx/VideoEffects.m:94 modules/gui/qt4/dialogs/gototime.cpp:66
+#: modules/gui/macosx/VideoEffects.m:94
+#: modules/gui/qt4/dialogs/gototime.cpp:66
 #, fuzzy
 msgid "Reset"
 msgstr "_Fayl"
@@ -16065,8 +16076,8 @@ msgid "Bookmarks"
 msgstr ""
 
 #: modules/gui/macosx/bookmarks.m:97
-#: modules/gui/qt4/ui/podcast_configuration.h:103 modules/gui/qt4/ui/sout.h:209
-#: modules/gui/qt4/ui/vlm.h:299
+#: modules/gui/qt4/ui/podcast_configuration.h:103
+#: modules/gui/qt4/ui/sout.h:209 modules/gui/qt4/ui/vlm.h:299
 msgid "Add"
 msgstr ""
 
@@ -16407,47 +16418,47 @@ msgstr ""
 msgid "Save as new Profile..."
 msgstr "_Fayl"
 
-#: modules/gui/macosx/ConvertAndSave.m:170 modules/gui/qt4/ui/profiles.h:708
+#: modules/gui/macosx/ConvertAndSave.m:170 modules/gui/qt4/ui/profiles.h:725
 #, fuzzy
 msgid "Encapsulation"
 msgstr "Mahitungod sa Aplikasyon"
 
 #: modules/gui/macosx/ConvertAndSave.m:171
 #: share/lua/http/dialogs/create_stream.html:160
-#: modules/gui/qt4/ui/profiles.h:734
+#: modules/gui/qt4/ui/profiles.h:751
 #, fuzzy
 msgid "Video codec"
 msgstr "_Makit-an"
 
 #: modules/gui/macosx/ConvertAndSave.m:172
 #: share/lua/http/dialogs/create_stream.html:178
-#: modules/gui/qt4/ui/profiles.h:744
+#: modules/gui/qt4/ui/profiles.h:761
 #, fuzzy
 msgid "Audio codec"
 msgstr "M_adungan"
 
-#: modules/gui/macosx/ConvertAndSave.m:176 modules/gui/qt4/ui/profiles.h:710
+#: modules/gui/macosx/ConvertAndSave.m:176 modules/gui/qt4/ui/profiles.h:727
 #, fuzzy
 msgid "Keep original video track"
 msgstr "_Makit-an"
 
-#: modules/gui/macosx/ConvertAndSave.m:181 modules/gui/qt4/ui/profiles.h:723
+#: modules/gui/macosx/ConvertAndSave.m:181 modules/gui/qt4/ui/profiles.h:740
 msgid ""
 "You just need to fill one of the three following parameters, VLC will "
 "autodetect the other using the original aspect ratio"
 msgstr ""
 
 #: modules/gui/macosx/ConvertAndSave.m:184 modules/gui/macosx/output.m:157
-#: modules/gui/qt4/ui/profiles.h:724
+#: modules/gui/qt4/ui/profiles.h:741
 msgid "Scale"
 msgstr ""
 
-#: modules/gui/macosx/ConvertAndSave.m:186 modules/gui/qt4/ui/profiles.h:736
+#: modules/gui/macosx/ConvertAndSave.m:186 modules/gui/qt4/ui/profiles.h:753
 #, fuzzy
 msgid "Keep original audio track"
 msgstr "_Makit-an"
 
-#: modules/gui/macosx/ConvertAndSave.m:192 modules/gui/qt4/ui/profiles.h:747
+#: modules/gui/macosx/ConvertAndSave.m:192 modules/gui/qt4/ui/profiles.h:764
 #, fuzzy
 msgid "Overlay subtitles on the video"
 msgstr "_Fayl"
@@ -16622,20 +16633,20 @@ msgstr ""
 msgid "Click to exit fullscreen playback."
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1548 modules/gui/macosx/intf.m:1565
+#: modules/gui/macosx/intf.m:1550 modules/gui/macosx/intf.m:1567
 msgid "VLC media playback"
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1844
+#: modules/gui/macosx/intf.m:1846
 #, fuzzy
 msgid "Remove old preferences?"
 msgstr "_Preperenses"
 
-#: modules/gui/macosx/intf.m:1845
+#: modules/gui/macosx/intf.m:1847
 msgid "We just found an older version of VLC's preferences files."
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1846
+#: modules/gui/macosx/intf.m:1848
 msgid "Move To Trash and Relaunch VLC"
 msgstr ""
 
@@ -18313,7 +18324,8 @@ msgid ""
 "Set 0 to disable."
 msgstr ""
 
-#: modules/gui/macosx/VideoEffects.m:74 modules/gui/qt4/dialogs/extended.cpp:84
+#: modules/gui/macosx/VideoEffects.m:74
+#: modules/gui/qt4/dialogs/extended.cpp:84
 #, fuzzy
 msgid "Video Effects"
 msgstr "_Makit-an"
@@ -18322,7 +18334,8 @@ msgstr "_Makit-an"
 msgid "Basic"
 msgstr ""
 
-#: modules/gui/macosx/VideoEffects.m:81 modules/gui/qt4/ui/video_effects.h:1444
+#: modules/gui/macosx/VideoEffects.m:81
+#: modules/gui/qt4/ui/video_effects.h:1444
 #, fuzzy
 msgid "Geometry"
 msgstr "_Makit-an"
@@ -18341,7 +18354,8 @@ msgstr ""
 msgid "Image Adjust"
 msgstr "_Nabigit"
 
-#: modules/gui/macosx/VideoEffects.m:91 modules/gui/qt4/ui/video_effects.h:1394
+#: modules/gui/macosx/VideoEffects.m:91
+#: modules/gui/qt4/ui/video_effects.h:1394
 #, fuzzy
 msgid "Brightness Threshold"
 msgstr "_Fayl"
@@ -18351,12 +18365,14 @@ msgstr "_Fayl"
 msgid "Sharpen"
 msgstr ""
 
-#: modules/gui/macosx/VideoEffects.m:96 modules/gui/qt4/ui/video_effects.h:1399
+#: modules/gui/macosx/VideoEffects.m:96
+#: modules/gui/qt4/ui/video_effects.h:1399
 #: modules/gui/qt4/ui/video_effects.h:1483
 msgid "Sigma"
 msgstr ""
 
-#: modules/gui/macosx/VideoEffects.m:97 modules/gui/qt4/ui/video_effects.h:1400
+#: modules/gui/macosx/VideoEffects.m:97
+#: modules/gui/qt4/ui/video_effects.h:1400
 msgid "Banding removal"
 msgstr ""
 
@@ -18365,7 +18381,8 @@ msgstr ""
 msgid "Radius"
 msgstr ""
 
-#: modules/gui/macosx/VideoEffects.m:99 modules/gui/qt4/ui/video_effects.h:1402
+#: modules/gui/macosx/VideoEffects.m:99
+#: modules/gui/qt4/ui/video_effects.h:1402
 msgid "Film Grain"
 msgstr ""
 
@@ -18518,7 +18535,8 @@ msgstr ""
 msgid "Factor"
 msgstr "M_adungan"
 
-#: modules/gui/macosx/VideoEffects.m:155 modules/video_filter/motiondetect.c:49
+#: modules/gui/macosx/VideoEffects.m:155
+#: modules/video_filter/motiondetect.c:49
 msgid "Motion Detect"
 msgstr ""
 
@@ -18555,8 +18573,9 @@ msgstr "M_adungan"
 msgid "Logo"
 msgstr "_Fayl"
 
-#: modules/gui/macosx/VideoEffects.m:205 modules/stream_out/mosaic_bridge.c:128
-#: modules/video_filter/mosaic.c:87 modules/gui/qt4/ui/video_effects.h:1453
+#: modules/gui/macosx/VideoEffects.m:205
+#: modules/stream_out/mosaic_bridge.c:128 modules/video_filter/mosaic.c:87
+#: modules/gui/qt4/ui/video_effects.h:1453
 msgid "Transparency"
 msgstr ""
 
@@ -18839,7 +18858,8 @@ msgstr ""
 msgid "UDP Multicast"
 msgstr ""
 
-#: modules/gui/macosx/wizard.m:373 modules/stream_out/transcode/transcode.c:147
+#: modules/gui/macosx/wizard.m:373
+#: modules/stream_out/transcode/transcode.c:147
 msgid "Transcode"
 msgstr ""
 
@@ -19392,26 +19412,26 @@ msgstr "M_adungan"
 msgid "Shift+L"
 msgstr ""
 
-#: modules/gui/qt4/components/controller.cpp:445
+#: modules/gui/qt4/components/controller.cpp:446
 msgid "Click to toggle between loop all, loop one and no loop"
 msgstr ""
 
-#: modules/gui/qt4/components/controller.cpp:536
+#: modules/gui/qt4/components/controller.cpp:537
 #, fuzzy
 msgid "Previous Chapter/Title"
 msgstr "M_adungan"
 
-#: modules/gui/qt4/components/controller.cpp:548
+#: modules/gui/qt4/components/controller.cpp:549
 #, fuzzy
 msgid "Next Chapter/Title"
 msgstr "_Fayl"
 
-#: modules/gui/qt4/components/controller.cpp:581
+#: modules/gui/qt4/components/controller.cpp:582
 #, fuzzy
 msgid "Teletext Activation"
 msgstr "_Fayl"
 
-#: modules/gui/qt4/components/controller.cpp:597
+#: modules/gui/qt4/components/controller.cpp:598
 msgid "Toggle Transparency "
 msgstr ""
 
@@ -20119,12 +20139,12 @@ msgstr ""
 msgid "Decrease"
 msgstr "_Makit-an"
 
-#: modules/gui/qt4/components/playlist/standardpanel.cpp:391
+#: modules/gui/qt4/components/playlist/standardpanel.cpp:387
 #, fuzzy
 msgid "Playlist View Mode"
 msgstr "_Fayl"
 
-#: modules/gui/qt4/components/playlist/standardpanel.cpp:560
+#: modules/gui/qt4/components/playlist/standardpanel.cpp:556
 msgid ""
 "Playlist is currently empty.\n"
 "Drop a file here or select a media source from the left."
@@ -20307,8 +20327,8 @@ msgstr ""
 
 #: modules/gui/qt4/components/simple_preferences.cpp:1381
 #: modules/gui/qt4/dialogs/convert.cpp:109
-#: modules/gui/qt4/dialogs/gototime.cpp:49 modules/gui/qt4/dialogs/open.cpp:108
-#: modules/gui/qt4/dialogs/openurl.cpp:61
+#: modules/gui/qt4/dialogs/gototime.cpp:49
+#: modules/gui/qt4/dialogs/open.cpp:108 modules/gui/qt4/dialogs/openurl.cpp:61
 #: modules/gui/qt4/dialogs/podcast_configuration.cpp:37
 #: modules/gui/qt4/dialogs/preferences.cpp:94
 #: modules/gui/qt4/dialogs/toolbar.cpp:196
@@ -20340,19 +20360,19 @@ msgstr ""
 msgid "Create"
 msgstr "M_adungan"
 
-#: modules/gui/qt4/components/sout/profile_selector.cpp:604
+#: modules/gui/qt4/components/sout/profile_selector.cpp:606
 msgid "This muxer is not provided directly by VLC: It could be missing."
 msgstr ""
 
-#: modules/gui/qt4/components/sout/profile_selector.cpp:609
+#: modules/gui/qt4/components/sout/profile_selector.cpp:612
 msgid "This muxer is missing. Using this profile will fail"
 msgstr ""
 
-#: modules/gui/qt4/components/sout/profile_selector.cpp:753
+#: modules/gui/qt4/components/sout/profile_selector.cpp:756
 msgid " Profile Name Missing"
 msgstr ""
 
-#: modules/gui/qt4/components/sout/profile_selector.cpp:754
+#: modules/gui/qt4/components/sout/profile_selector.cpp:757
 #, fuzzy
 msgid "You must set a name for the profile."
 msgstr "_Fayl"
@@ -20465,8 +20485,8 @@ msgstr ""
 
 #: modules/gui/qt4/dialogs/bookmarks.cpp:62
 #: modules/gui/qt4/dialogs/errors.cpp:49
-#: modules/gui/qt4/dialogs/extended.cpp:110 modules/gui/qt4/dialogs/help.cpp:66
-#: modules/gui/qt4/dialogs/help.cpp:212
+#: modules/gui/qt4/dialogs/extended.cpp:110
+#: modules/gui/qt4/dialogs/help.cpp:66 modules/gui/qt4/dialogs/help.cpp:212
 #: modules/gui/qt4/dialogs/mediainfo.cpp:80
 #: modules/gui/qt4/dialogs/messages.cpp:81
 #: modules/gui/qt4/dialogs/plugins.cpp:88
@@ -20486,7 +20506,8 @@ msgstr ""
 msgid "Convert"
 msgstr ""
 
-#: modules/gui/qt4/dialogs/convert.cpp:58 modules/gui/qt4/ui/sprefs_audio.h:432
+#: modules/gui/qt4/dialogs/convert.cpp:58
+#: modules/gui/qt4/ui/sprefs_audio.h:432
 #, fuzzy
 msgid "Destination file:"
 msgstr "_Nabigit"
@@ -20593,7 +20614,8 @@ msgstr ""
 msgid "Go to time"
 msgstr ""
 
-#: modules/gui/qt4/dialogs/help.cpp:86 modules/gui/qt4/dialogs/plugins.cpp:1360
+#: modules/gui/qt4/dialogs/help.cpp:86
+#: modules/gui/qt4/dialogs/plugins.cpp:1360
 #: modules/gui/qt4/dialogs/plugins.cpp:1443
 #, fuzzy
 msgid "About"
@@ -21111,7 +21133,7 @@ msgstr "M_adungan"
 msgid "Cl&ose"
 msgstr "Gawas sa Program"
 
-#: modules/gui/qt4/dialogs/toolbar.cpp:224 modules/gui/qt4/ui/profiles.h:749
+#: modules/gui/qt4/dialogs/toolbar.cpp:224
 #, fuzzy
 msgid "Profile Name"
 msgstr "_Fayl"
@@ -21242,11 +21264,11 @@ msgstr ""
 msgid "&Continue"
 msgstr ""
 
-#: modules/gui/qt4/main_interface.cpp:1256
+#: modules/gui/qt4/main_interface.cpp:1310
 msgid "Control menu for the player"
 msgstr ""
 
-#: modules/gui/qt4/main_interface.cpp:1300
+#: modules/gui/qt4/main_interface.cpp:1354
 msgid "Paused"
 msgstr ""
 
@@ -23474,7 +23496,8 @@ msgid "Transparency of the mosaic picture."
 msgstr ""
 
 #: modules/stream_out/mosaic_bridge.c:132 modules/video_filter/marq.c:95
-#: modules/video_filter/rss.c:142 share/lua/http/dialogs/mosaic_window.html:100
+#: modules/video_filter/rss.c:142
+#: share/lua/http/dialogs/mosaic_window.html:100
 msgid "X offset"
 msgstr ""
 
@@ -23483,7 +23506,8 @@ msgid "X coordinate of the upper left corner in the mosaic if non negative."
 msgstr ""
 
 #: modules/stream_out/mosaic_bridge.c:136 modules/video_filter/marq.c:97
-#: modules/video_filter/rss.c:144 share/lua/http/dialogs/mosaic_window.html:118
+#: modules/video_filter/rss.c:144
+#: share/lua/http/dialogs/mosaic_window.html:118
 msgid "Y offset"
 msgstr ""
 
@@ -24301,64 +24325,64 @@ msgstr ""
 msgid "RV32 conversion filter"
 msgstr "_Makit-an"
 
-#: modules/video_chroma/swscale.c:56
+#: modules/video_chroma/swscale.c:57
 msgid "Scaling mode"
 msgstr ""
 
-#: modules/video_chroma/swscale.c:57
+#: modules/video_chroma/swscale.c:58
 msgid "Scaling mode to use."
 msgstr ""
 
-#: modules/video_chroma/swscale.c:61
+#: modules/video_chroma/swscale.c:62
 msgid "Fast bilinear"
 msgstr ""
 
-#: modules/video_chroma/swscale.c:61
+#: modules/video_chroma/swscale.c:62
 msgid "Bilinear"
 msgstr ""
 
-#: modules/video_chroma/swscale.c:61
+#: modules/video_chroma/swscale.c:62
 msgid "Bicubic (good quality)"
 msgstr ""
 
-#: modules/video_chroma/swscale.c:62
+#: modules/video_chroma/swscale.c:63
 msgid "Experimental"
 msgstr ""
 
-#: modules/video_chroma/swscale.c:62
+#: modules/video_chroma/swscale.c:63
 msgid "Nearest neighbour (bad quality)"
 msgstr ""
 
-#: modules/video_chroma/swscale.c:63
+#: modules/video_chroma/swscale.c:64
 msgid "Area"
 msgstr ""
 
-#: modules/video_chroma/swscale.c:63
+#: modules/video_chroma/swscale.c:64
 msgid "Luma bicubic / chroma bilinear"
 msgstr ""
 
-#: modules/video_chroma/swscale.c:63
+#: modules/video_chroma/swscale.c:64
 msgid "Gauss"
 msgstr ""
 
-#: modules/video_chroma/swscale.c:64
+#: modules/video_chroma/swscale.c:65
 msgid "SincR"
 msgstr ""
 
-#: modules/video_chroma/swscale.c:64
+#: modules/video_chroma/swscale.c:65
 msgid "Lanczos"
 msgstr ""
 
-#: modules/video_chroma/swscale.c:64
+#: modules/video_chroma/swscale.c:65
 msgid "Bicubic spline"
 msgstr ""
 
-#: modules/video_chroma/swscale.c:67 modules/video_filter/scale.c:47
+#: modules/video_chroma/swscale.c:68 modules/video_filter/scale.c:47
 #, fuzzy
 msgid "Video scaling filter"
 msgstr "_Makit-an"
 
-#: modules/video_chroma/swscale.c:68
+#: modules/video_chroma/swscale.c:69
 msgid "Swscale"
 msgstr ""
 
@@ -28522,138 +28546,151 @@ msgstr "_Set-ap"
 msgid "Please enter a network URL:"
 msgstr ""
 
-#: modules/gui/qt4/ui/profiles.h:686
+#: modules/gui/qt4/ui/profiles.h:701
 #, fuzzy
 msgid "Profile edition"
 msgstr "_Fayl"
 
-#: modules/gui/qt4/ui/profiles.h:687
-#, fuzzy
-msgid "MPEG-TS"
-msgstr "_Makit-an"
+#: modules/gui/qt4/ui/profiles.h:702
+msgid "FLAC"
+msgstr ""
 
-#: modules/gui/qt4/ui/profiles.h:688
+#: modules/gui/qt4/ui/profiles.h:703
+msgid "MP&4/MOV"
+msgstr ""
+
+#: modules/gui/qt4/ui/profiles.h:704
+msgid "Ogg/Ogm"
+msgstr ""
+
+#: modules/gui/qt4/ui/profiles.h:705
+msgid "M&KV"
+msgstr ""
+
+#: modules/gui/qt4/ui/profiles.h:706
+msgid "M&JPEG"
+msgstr ""
+
+#: modules/gui/qt4/ui/profiles.h:707
 #, fuzzy
 msgid "MPEG-PS"
 msgstr "_Makit-an"
 
-#: modules/gui/qt4/ui/profiles.h:689
+#: modules/gui/qt4/ui/profiles.h:708
+msgid "F&LV"
+msgstr ""
+
+#: modules/gui/qt4/ui/profiles.h:709
 #, fuzzy
-msgid "MPEG 1"
+msgid "&MPEG-TS"
 msgstr "_Makit-an"
 
-#: modules/gui/qt4/ui/profiles.h:690
-#, fuzzy
-msgid "ASF/WMV"
-msgstr "_Makit-an"
-
-#: modules/gui/qt4/ui/profiles.h:691
-msgid "Webm"
-msgstr ""
-
-#: modules/gui/qt4/ui/profiles.h:692
-msgid "MJPEG"
-msgstr ""
-
-#: modules/gui/qt4/ui/profiles.h:693
-msgid "MKV"
-msgstr ""
-
-#: modules/gui/qt4/ui/profiles.h:694
-msgid "Ogg/Ogm"
-msgstr ""
-
-#: modules/gui/qt4/ui/profiles.h:695
-msgid "WAV"
-msgstr ""
-
-#: modules/gui/qt4/ui/profiles.h:696
+#: modules/gui/qt4/ui/profiles.h:710
 msgid "RAW"
 msgstr ""
 
-#: modules/gui/qt4/ui/profiles.h:697
-msgid "MP4/MOV"
+#: modules/gui/qt4/ui/profiles.h:711
+msgid "WAV"
 msgstr ""
 
-#: modules/gui/qt4/ui/profiles.h:698
-msgid "FLV"
-msgstr ""
-
-#: modules/gui/qt4/ui/profiles.h:699
-msgid "AVI"
-msgstr ""
-
-#: modules/gui/qt4/ui/profiles.h:700
-#, fuzzy
-msgid "Features"
-msgstr "M_adungan"
-
-#: modules/gui/qt4/ui/profiles.h:702
-#, fuzzy
-msgid "Streamable"
-msgstr "_Set-ap"
-
-#: modules/gui/qt4/ui/profiles.h:703
-msgid "Chapters"
-msgstr ""
-
-#: modules/gui/qt4/ui/profiles.h:706
-msgid "Menus"
+#: modules/gui/qt4/ui/profiles.h:712
+msgid "Webm"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:713
 #, fuzzy
-msgid "Frame Rate"
-msgstr "_Fayl"
+msgid "MPEG &1"
+msgstr "_Makit-an"
 
 #: modules/gui/qt4/ui/profiles.h:714
+msgid "AVI"
+msgstr ""
+
+#: modules/gui/qt4/ui/profiles.h:715
+#, fuzzy
+msgid "ASF/WMV"
+msgstr "_Makit-an"
+
+#: modules/gui/qt4/ui/profiles.h:716
+msgid "MP&3"
+msgstr ""
+
+#: modules/gui/qt4/ui/profiles.h:717
+#, fuzzy
+msgid "Features"
+msgstr "M_adungan"
+
+#: modules/gui/qt4/ui/profiles.h:719
+#, fuzzy
+msgid "Streamable"
+msgstr "_Set-ap"
+
+#: modules/gui/qt4/ui/profiles.h:720
+msgid "Chapters"
+msgstr ""
+
+#: modules/gui/qt4/ui/profiles.h:723
+msgid "Menus"
+msgstr ""
+
+#: modules/gui/qt4/ui/profiles.h:730
+#, fuzzy
+msgid "Fra&me Rate"
+msgstr "_Fayl"
+
+#: modules/gui/qt4/ui/profiles.h:731
 #, fuzzy
 msgid "Same as source"
 msgstr "_Makit-an"
 
-#: modules/gui/qt4/ui/profiles.h:716
+#: modules/gui/qt4/ui/profiles.h:733
 #, fuzzy
 msgid " fps"
 msgstr " "
 
-#: modules/gui/qt4/ui/profiles.h:717
+#: modules/gui/qt4/ui/profiles.h:734
 #, fuzzy
 msgid "Custom options"
 msgstr "Mahitungod sa Aplikasyon"
 
-#: modules/gui/qt4/ui/profiles.h:718
+#: modules/gui/qt4/ui/profiles.h:735
 #, fuzzy
-msgid "Quality"
+msgid "&Quality"
 msgstr "_Nabigit"
 
-#: modules/gui/qt4/ui/profiles.h:719 modules/gui/qt4/ui/profiles.h:720
+#: modules/gui/qt4/ui/profiles.h:736 modules/gui/qt4/ui/profiles.h:737
 #, fuzzy
 msgid "Not Used"
 msgstr "_Makit-an"
 
-#: modules/gui/qt4/ui/profiles.h:721 modules/gui/qt4/ui/profiles.h:740
+#: modules/gui/qt4/ui/profiles.h:738 modules/gui/qt4/ui/profiles.h:757
 #, fuzzy
 msgid " kb/s"
 msgstr " "
 
-#: modules/gui/qt4/ui/profiles.h:722 modules/gui/qt4/ui/profiles.h:742
+#: modules/gui/qt4/ui/profiles.h:739 modules/gui/qt4/ui/profiles.h:759
 #, fuzzy
 msgid "Encoding parameters"
 msgstr "_Makit-an"
 
-#: modules/gui/qt4/ui/profiles.h:725
+#: modules/gui/qt4/ui/profiles.h:742
 #, fuzzy
 msgid "Frame size"
 msgstr "_Fayl"
 
-#: modules/gui/qt4/ui/profiles.h:728 modules/gui/qt4/ui/profiles.h:731
+#: modules/gui/qt4/ui/profiles.h:745 modules/gui/qt4/ui/profiles.h:748
 msgid "px"
 msgstr ""
 
-#: modules/gui/qt4/ui/profiles.h:741
+#: modules/gui/qt4/ui/profiles.h:758
 #, fuzzy
-msgid "Sample Rate"
+msgid "Sa&mple Rate"
 msgstr "Mahitungod sa Aplikasyon"
+
+#: modules/gui/qt4/ui/profiles.h:766
+#, fuzzy
+msgid "Profile &Name"
+msgstr "_Fayl"
 
 #: modules/gui/qt4/ui/sout.h:203
 #, fuzzy

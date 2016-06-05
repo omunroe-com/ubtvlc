@@ -2,7 +2,7 @@
  * input_manager.cpp : Manage an input and interact with its GUI elements
  ****************************************************************************
  * Copyright (C) 2006-2008 the VideoLAN team
- * $Id: 707f114314c246ca9d8ad2275ec67631fc8a705d $
+ * $Id: fd45f4a89e7999ab5d4b02f1d83e6a8e0ccd87f9 $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Ilkka Ollakka  <ileoo@videolan.org>
@@ -143,7 +143,7 @@ void InputManager::setInput( input_thread_t *_p_input )
             playlist_Lock( THEPL );
             // Add root items only
             playlist_item_t* p_node = playlist_CurrentPlayingItem( THEPL );
-            if ( p_node != NULL && ( p_node->p_parent == NULL || p_node->i_children == -1 ) )
+            if ( p_node != NULL && p_node->p_parent != NULL && p_node->p_parent->i_id == THEPL->p_playing->i_id )
             {
                 // Save the latest URI to avoid asking to restore the
                 // position on the same input file.
@@ -1319,4 +1319,10 @@ static int PLItemRemoved
         QApplication::postEvent( mim, event );
     }
     return VLC_SUCCESS;
+}
+
+void MainInputManager::changeFullscreen( bool new_val )
+{
+    if ( var_GetBool( THEPL, "fullscreen" ) != new_val)
+	var_SetBool( THEPL, "fullscreen", new_val );
 }

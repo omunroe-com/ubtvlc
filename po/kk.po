@@ -1,17 +1,17 @@
 # Kazakh translation
-# Copyright (C) 2015 VideoLAN
-# This file is distributed under the same license as the VLC package.
+# Copyright (C) 2016 VideoLAN
+# This file is distributed under the same license as the vlc package.
 #
 # Translators:
-# Kerimbekov Galym <kegalym2@mail.ru>, 2015
+# Kerimbekov Galym <kegalym2@mail.ru>, 2015-2016
 # Kypchak Kypchak <kypchak@gmail.com>, 2009
 msgid ""
 msgstr ""
 "Project-Id-Version: VLC - Trans\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2016-01-18 22:17+0100\n"
-"PO-Revision-Date: 2015-12-04 10:01+0000\n"
-"Last-Translator: Christoph Miebach <christoph.miebach@web.de>\n"
+"POT-Creation-Date: 2016-06-01 13:47+0200\n"
+"PO-Revision-Date: 2016-02-05 13:10+0000\n"
+"Last-Translator: Kerimbekov Galym <kegalym2@mail.ru>\n"
 "Language-Team: Kazakh (http://www.transifex.com/yaron/vlc-trans/language/"
 "kk/)\n"
 "Language: kk\n"
@@ -81,7 +81,7 @@ msgstr "Жылдамдату пернелерінің баптаулары"
 #: modules/services_discovery/mediadirs.c:76 modules/stream_out/es.c:93
 #: modules/stream_out/transcode/transcode.c:183
 #: share/lua/http/dialogs/create_stream.html:150
-#: modules/gui/qt4/ui/profiles.h:704 modules/gui/qt4/ui/profiles.h:735
+#: modules/gui/qt4/ui/profiles.h:721 modules/gui/qt4/ui/profiles.h:752
 msgid "Audio"
 msgstr "Дыбыс"
 
@@ -94,7 +94,7 @@ msgid "General audio settings"
 msgstr "Дыбыстың жалпы баптаулары"
 
 #: include/vlc_config_cat.h:58 include/vlc_config_cat.h:79
-#: modules/gui/qt4/ui/profiles.h:733 modules/gui/qt4/ui/profiles.h:743
+#: modules/gui/qt4/ui/profiles.h:750 modules/gui/qt4/ui/profiles.h:760
 msgid "Filters"
 msgstr "Фильтрлер"
 
@@ -141,7 +141,7 @@ msgstr "Басқа түрлі дыбыс баптаулары және моду�
 #: modules/services_discovery/mediadirs.c:69 modules/stream_out/es.c:101
 #: modules/stream_out/transcode/transcode.c:154
 #: share/lua/http/dialogs/create_stream.html:147
-#: modules/gui/qt4/ui/profiles.h:705 modules/gui/qt4/ui/profiles.h:709
+#: modules/gui/qt4/ui/profiles.h:722 modules/gui/qt4/ui/profiles.h:726
 #: modules/gui/qt4/ui/sprefs_video.h:334
 msgid "Video"
 msgstr "Бейне"
@@ -1018,7 +1018,7 @@ msgstr "Медиалық уақыт"
 msgid "Media View"
 msgstr "Медиалық көрініс"
 
-#: src/config/keys.c:104 modules/gui/qt4/components/controller.cpp:542
+#: src/config/keys.c:104 modules/gui/qt4/components/controller.cpp:543
 msgid "Menu"
 msgstr "Меню"
 
@@ -1222,8 +1222,8 @@ msgstr "Бастапқы ID"
 #: src/input/es_out.c:2911 src/input/es_out.c:2914 modules/access/imem.c:67
 #: modules/gui/macosx/ConvertAndSave.m:177
 #: modules/gui/macosx/ConvertAndSave.m:187 modules/gui/macosx/wizard.m:382
-#: modules/gui/qt4/ui/profiles.h:711 modules/gui/qt4/ui/profiles.h:737
-#: modules/gui/qt4/ui/profiles.h:746
+#: modules/gui/qt4/ui/profiles.h:728 modules/gui/qt4/ui/profiles.h:754
+#: modules/gui/qt4/ui/profiles.h:763
 msgid "Codec"
 msgstr "Кодек"
 
@@ -1240,7 +1240,7 @@ msgid "Description"
 msgstr "Сипаттама"
 
 #: src/input/es_out.c:2930 modules/gui/macosx/ConvertAndSave.m:189
-#: modules/gui/macosx/output.m:167 modules/gui/qt4/ui/profiles.h:739
+#: modules/gui/macosx/output.m:167 modules/gui/qt4/ui/profiles.h:756
 msgid "Channels"
 msgstr "Арналар"
 
@@ -1261,8 +1261,8 @@ msgstr "Бір іріктемедегі бит саны"
 #: src/input/es_out.c:2950 modules/access_output/shout.c:92
 #: modules/demux/playlist/shoutcast.c:335
 #: modules/gui/macosx/ConvertAndSave.m:178
-#: modules/gui/macosx/ConvertAndSave.m:188 modules/gui/qt4/ui/profiles.h:712
-#: modules/gui/qt4/ui/profiles.h:738
+#: modules/gui/macosx/ConvertAndSave.m:188 modules/gui/qt4/ui/profiles.h:729
+#: modules/gui/qt4/ui/profiles.h:755
 msgid "Bitrate"
 msgstr "Ағындық қарқыны"
 
@@ -1285,7 +1285,7 @@ msgid "%.2f dB"
 msgstr "%.2f dB"
 
 #: src/input/es_out.c:2974 modules/gui/macosx/ConvertAndSave.m:180
-#: modules/gui/qt4/ui/profiles.h:732
+#: modules/gui/qt4/ui/profiles.h:749
 msgid "Resolution"
 msgstr "Ажыратылымдық"
 
@@ -1637,13 +1637,15 @@ msgstr ""
 
 #: src/libvlc-module.c:107
 msgid "Interface interaction"
-msgstr "Тілдесу әрекеттесуі"
+msgstr "Интерфейс арқылы әрекеттесуі"
 
 #: src/libvlc-module.c:109
 msgid ""
 "When this is enabled, the interface will show a dialog box each time some "
 "user input is required."
 msgstr ""
+"Осы параметр қолданған кезде пайдаланушының әр дайым ақпарат енгізуге "
+"қажеттілігі болған сайын интерфейстің сұхбат терезесі ашылады."
 
 #: src/libvlc-module.c:119
 msgid ""
@@ -1652,70 +1654,82 @@ msgid ""
 "(spectrum analyzer, etc.). Enable these filters here, and configure them in "
 "the \"audio filters\" modules section."
 msgstr ""
+"Келесі параметрлер аудио жүйесінің қызмет түрін өзгертуге және "
+"постпроцессинг немесе бейне эффектілер (спектрлік сараптауыш және т.б,) үшін "
+"қолданатын аудио фильтрлерді қосуға мүмкіндік береді. Фильтрлерді осы жерде "
+"іске қосып, оларды \"аудио фильтрлер\" модульдік бөлімінде үйлестіріңіз."
 
 #: src/libvlc-module.c:125
 msgid "Audio output module"
-msgstr "Дыбыстық шығасын модулі"
+msgstr "Дыбыс шығару модулі"
 
 #: src/libvlc-module.c:127
 msgid ""
 "This is the audio output method used by VLC. The default behavior is to "
 "automatically select the best method available."
 msgstr ""
+"Бұл VLC-да қолданатын дыбыс шығару тәсілі. Әдепкі қызмет түрі қолданыстағы "
+"ең жақсы тәсілді автоматты түрде таңдауға бейімделген."
 
 #: src/libvlc-module.c:131 modules/gui/macosx/simple_prefs.m:335
 #: modules/stream_out/display.c:40 modules/gui/qt4/ui/sprefs_audio.h:426
 msgid "Enable audio"
-msgstr "Дыбысты қосу"
+msgstr "Дыбысты іске қосу"
 
 #: src/libvlc-module.c:133
 msgid ""
 "You can completely disable the audio output. The audio decoding stage will "
 "not take place, thus saving some processing power."
 msgstr ""
+"Сіз дыбыс шығарылуын толық сөндіре аласыз. Аудиодекодтау кезені "
+"орындалмайтындықтан, бұл сонымен өндеу қорын шамалы үнемдейді."
 
 #: src/libvlc-module.c:136
 msgid "Audio gain"
-msgstr ""
+msgstr "Дыбысты күшейту"
 
 #: src/libvlc-module.c:138
 msgid "This linear gain will be applied to outputted audio."
-msgstr ""
+msgstr "Сызықтық күшейту шығатын дыбысқа қолданатын болады."
 
 #: src/libvlc-module.c:140
 msgid "Audio output volume step"
-msgstr "Дыбыстық шығасын деңгейінің қадамы"
+msgstr "Дыбыс шығу деңгейінің қадамы"
 
 #: src/libvlc-module.c:142
 msgid "The step size of the volume is adjustable using this option."
-msgstr ""
+msgstr "Дыбыс мөлшерінің қадам көлемі осы параметр арқылы реттелінеді."
 
 #: src/libvlc-module.c:145
 msgid "Remember the audio volume"
-msgstr ""
+msgstr "Дыбыс мөлшерін есте сақтау"
 
 #: src/libvlc-module.c:147
 msgid ""
 "The volume can be recorded and automatically restored next time VLC is used."
 msgstr ""
+"Дыбыс мөлшері VLC келесі рет пайдаланған жағдайда автоматты түрде жазылып, "
+"қалпына келеді."
 
 #: src/libvlc-module.c:150
 msgid "Audio desynchronization compensation"
-msgstr "Дыбыс бейқдамдастырылуның өтемі"
+msgstr "Дыбыс бейқадамдастырылуның өтемі"
 
 #: src/libvlc-module.c:152
 msgid ""
 "This delays the audio output. The delay must be given in milliseconds. This "
 "can be handy if you notice a lag between the video and the audio."
 msgstr ""
+"Бұл дыбыстың шығуын кідіртеді. Кідірту миллисекундта белгіленуі тиіс. Дыбыс "
+"және бейне арасындағы кідірту байқалған кезде қолдануы мүмкін."
 
 #: src/libvlc-module.c:155
 msgid "Audio resampler"
-msgstr ""
+msgstr "Дыбыс ресэмплдеуші"
 
 #: src/libvlc-module.c:157
 msgid "This selects which plugin to use for audio resampling."
-msgstr ""
+msgstr "Дыбыс ресэмплдеушіні қолдану үшін қосымша бағдарламаны таңдау."
 
 #: src/libvlc-module.c:160
 msgid ""
@@ -1723,11 +1737,14 @@ msgid ""
 "possible (ie. if your hardware supports it as well as the audio stream being "
 "played)."
 msgstr ""
+"Дыбыс шығару арналарын қолжетімді болғанда әдепкі қалып режимінде қолдануды "
+"белгілейді (мысалы, егер сіздің жабдық мұны қолдаса, сондай-ақ дыбыс ағыны "
+"ойнатылған кезде)."
 
 #: src/libvlc-module.c:164 modules/gui/macosx/simple_prefs.m:341
 #: modules/gui/qt4/ui/sprefs_audio.h:434
 msgid "Use S/PDIF when available"
-msgstr "Қатынаулы болғанда S/PDIF қолдану"
+msgstr "Қолжетімді болғанда S/PDIF қолдану"
 
 #: src/libvlc-module.c:166
 msgid ""
@@ -1737,7 +1754,7 @@ msgstr ""
 
 #: src/libvlc-module.c:169 modules/gui/macosx/simple_prefs.m:333
 msgid "Force detection of Dolby Surround"
-msgstr "Dolby Surround байқауын екпіндету"
+msgstr "Dolby Surround анықтауын екпіндету"
 
 #: src/libvlc-module.c:171
 msgid ""
@@ -1746,14 +1763,19 @@ msgid ""
 "actually encoded with Dolby Surround, turning on this option might enhance "
 "your experience, especially when combined with the Headphone Channel Mixer."
 msgstr ""
+"Осы параметрді егер ағыныңыз Dolby Surround арқылы кодталғаның (немесе "
+"кодталмағаның) білсеңіз, бірақ сол сияқты болғаны анықталмай қалған жағдайда "
+"қолданыңыз. Ағын Dolby Surround арқылы кодталмаған болған жағдайда да, осы "
+"параметрді әсіресе құлаққап арналарының микшерімен бірге іске қосу сіздің "
+"пайдаланушы тәжірибеңізді жақсартуы мүмкін."
 
 #: src/libvlc-module.c:178 src/win32/thread.c:885
 #: modules/audio_output/kai.c:106 modules/codec/x264.c:442
 #: modules/gui/macosx/simple_prefs.m:122
 #: modules/gui/qt4/components/simple_preferences.cpp:136
-#: modules/gui/qt4/components/sout/profile_selector.cpp:561
+#: modules/gui/qt4/components/sout/profile_selector.cpp:563
 #: modules/video_output/kva.c:62 modules/video_output/xcb/xvideo.c:870
-#: modules/gui/qt4/ui/profiles.h:727 modules/gui/qt4/ui/profiles.h:730
+#: modules/gui/qt4/ui/profiles.h:744 modules/gui/qt4/ui/profiles.h:747
 msgid "Auto"
 msgstr "Өздігінен"
 
@@ -1771,41 +1793,46 @@ msgstr "Өшірілген"
 
 #: src/libvlc-module.c:180
 msgid "Stereo audio output mode"
-msgstr ""
+msgstr "Стереодыбыс шығару режимі"
 
 #: src/libvlc-module.c:192
 msgid "This adds audio post processing filters, to modify the sound rendering."
 msgstr ""
+"Дыбыстың көрінісін өзгерту үшін дыбыстық постпроцессинг фильтрлерін қосады."
 
 #: src/libvlc-module.c:197
 msgid "This adds visualization modules (spectrum analyzer, etc.)."
-msgstr ""
+msgstr "Бейнелеу модулдерін (спектрлік сараптауыш ж.т.б.) қосады."
 
 #: src/libvlc-module.c:201
 msgid "Replay gain mode"
-msgstr "Қайталау күшею режімі"
+msgstr "Қайталауды күшейту режімі"
 
 #: src/libvlc-module.c:203
 msgid "Select the replay gain mode"
-msgstr "Қайталау күшею режімін бөлектеу"
+msgstr "Қайталауды күшейту режімін белгілеу"
 
 #: src/libvlc-module.c:205
 msgid "Replay preamp"
-msgstr "Қайталаудың алдын-ала күшеюі"
+msgstr "Қайталауды алдын-ала күшейту"
 
 #: src/libvlc-module.c:207
 msgid ""
 "This allows you to change the default target level (89 dB) for stream with "
 "replay gain information"
 msgstr ""
+"Қайталануы күшейтілген жөнінде мәліметі бар ағынның (89 dB) әдепкі нысаналық "
+"деңгейін өзгертуге мүмкіндік береді."
 
 #: src/libvlc-module.c:210
 msgid "Default replay gain"
-msgstr "Қайталау әдепкі күшеюі"
+msgstr "Әдепкі қайталауды күшейту"
 
 #: src/libvlc-module.c:212
 msgid "This is the gain used for stream without replay gain information"
 msgstr ""
+"Бұл күшейту режимі қайталануы күшейтілген жөнінде мәліметі жоқ ағын үшін "
+"қолданылған"
 
 #: src/libvlc-module.c:214
 msgid "Peak protection"
@@ -1813,17 +1840,19 @@ msgstr "Шың қорғанысы"
 
 #: src/libvlc-module.c:216
 msgid "Protect against sound clipping"
-msgstr ""
+msgstr "Дыбыстың қиылуынан қорғау"
 
 #: src/libvlc-module.c:219
 msgid "Enable time stretching audio"
-msgstr ""
+msgstr "Уақыты созылған дыбысты іске қосу"
 
 #: src/libvlc-module.c:221
 msgid ""
 "This allows playing audio at lower or higher speed without affecting the "
 "audio pitch"
 msgstr ""
+"Дыбысты төмен және жоғары жылдамдықта дыбыс тонына әсер етпей ойнатуға "
+"мүмкіндік береді"
 
 #: src/libvlc-module.c:228 modules/access/dshow/dshow.cpp:2019
 #: modules/access/dtv/access.c:107 modules/access/dtv/access.c:141
@@ -1846,6 +1875,11 @@ msgid ""
 "\"video filters\" modules section. You can also set many miscellaneous video "
 "options."
 msgstr ""
+"Мына параметрлер бейнені шығару жүйесінің әдетін өзгертуге мүмкіндік береді. "
+"Мысалы, бейне фильтрлерді іске қосуға болады (деинтерлейсинг, бейнені реттеу "
+"ж.т.б.). Осы фильтрлерді мұнда іске қосып, оларды модульдердің \"бейне "
+"фильтрлер\" атты бөлімінде баптаңыз. Сондай-ақ осы жерде әртүрлі көптеген "
+"бейне фильтрлерді орнатуға болады."
 
 #: src/libvlc-module.c:242
 msgid "Video output module"
@@ -1856,6 +1890,8 @@ msgid ""
 "This is the the video output method used by VLC. The default behavior is to "
 "automatically select the best method available."
 msgstr ""
+"VLC қолданатын бейнені шығару әдісін орнату. Әдепкі әдетте қолжетімді ең "
+"жақсы әдісті автоматты түрде таңдайды."
 
 #: src/libvlc-module.c:247 modules/gui/macosx/simple_prefs.m:422
 #: modules/stream_out/display.c:42 modules/gui/qt4/ui/sprefs_video.h:321
@@ -1867,6 +1903,8 @@ msgid ""
 "You can completely disable the video output. The video decoding stage will "
 "not take place, thus saving some processing power."
 msgstr ""
+"Сіз толығымен бейнені шығаруды сөндіре аласыз. Бейнені декодтау кезеңі "
+"жүргізілмейтін болғандықтан, өндеу күші неғұрлым үнемделеді."
 
 #: src/libvlc-module.c:252 modules/stream_out/mosaic_bridge.c:109
 #: modules/stream_out/transcode/transcode.c:67
@@ -1880,6 +1918,8 @@ msgid ""
 "You can enforce the video width. By default (-1) VLC will adapt to the video "
 "characteristics."
 msgstr ""
+"Бейне енің мәжбүрлі түрде белгілей аласыз. Әдетте, (-1) VLC бейне "
+"сипаттамасына бейімдейді."
 
 #: src/libvlc-module.c:257 modules/stream_out/mosaic_bridge.c:112
 #: modules/stream_out/transcode/transcode.c:70
@@ -1893,26 +1933,32 @@ msgid ""
 "You can enforce the video height. By default (-1) VLC will adapt to the "
 "video characteristics."
 msgstr ""
+"Бейне биіктігін мәжбүрлі түрде белгілей аласыз. Әдетте, (-1) VLC бейне "
+"сипаттамасына бейімдейді."
 
 #: src/libvlc-module.c:262
 msgid "Video X coordinate"
-msgstr "Бейненің X тұрағиаты"
+msgstr "Бейненің X координатасы"
 
 #: src/libvlc-module.c:264
 msgid ""
 "You can enforce the position of the top left corner of the video window (X "
 "coordinate)."
 msgstr ""
+"Бейне терезесінің жоғарғы сол бұрыш орналасуын мәжбүрлі түрде белгілей "
+"аласыз (X координатасы)."
 
 #: src/libvlc-module.c:267
 msgid "Video Y coordinate"
-msgstr "Бейненің Y тұрағиаты"
+msgstr "Бейненің Y координатасы"
 
 #: src/libvlc-module.c:269
 msgid ""
 "You can enforce the position of the top left corner of the video window (Y "
 "coordinate)."
 msgstr ""
+"Бейне терезесінің жоғарғы сол бұрыш орналасуын мәжбүрлі түрде белгілей "
+"аласыз (Y координатасы)."
 
 #: src/libvlc-module.c:272
 msgid "Video title"
@@ -2463,8 +2509,9 @@ msgstr ""
 #: src/video_output/vout_intf.c:116 modules/access/dshow/dshow.cpp:92
 #: modules/access/dshow/dshow.cpp:99 modules/access/dshow/dshow.cpp:119
 #: modules/access/dshow/dshow.cpp:2017 modules/audio_output/alsa.c:746
-#: modules/audio_output/directsound.c:1021 modules/gui/macosx/AudioEffects.m:86
-#: modules/gui/macosx/MainMenu.m:641 modules/gui/macosx/prefs_widgets.m:1221
+#: modules/audio_output/directsound.c:1021
+#: modules/gui/macosx/AudioEffects.m:86 modules/gui/macosx/MainMenu.m:641
+#: modules/gui/macosx/prefs_widgets.m:1221
 #: modules/gui/macosx/prefs_widgets.m:1284
 #: modules/gui/macosx/simple_prefs.m:690 modules/gui/macosx/VideoEffects.m:55
 #: modules/gui/qt4/components/preferences_widgets.cpp:547
@@ -3576,7 +3623,7 @@ msgstr ""
 msgid "These settings are the global VLC key bindings, known as \"hotkeys\"."
 msgstr ""
 
-#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1846
+#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1848
 msgid "Ignore"
 msgstr "Елемеу"
 
@@ -4406,8 +4453,8 @@ msgstr "Суретшелер"
 #: modules/demux/xiph_metadata.h:62 modules/gui/macosx/ConvertAndSave.m:173
 #: modules/gui/macosx/ConvertAndSave.m:191 modules/gui/macosx/MainMenu.m:459
 #: share/lua/http/dialogs/create_stream.html:153
-#: modules/gui/qt4/ui/profiles.h:701 modules/gui/qt4/ui/profiles.h:745
-#: modules/gui/qt4/ui/profiles.h:748
+#: modules/gui/qt4/ui/profiles.h:718 modules/gui/qt4/ui/profiles.h:762
+#: modules/gui/qt4/ui/profiles.h:765
 msgid "Subtitles"
 msgstr "Субтитрлер"
 
@@ -6464,8 +6511,9 @@ msgstr ""
 msgid "EyeTV input"
 msgstr "EyeTV кіресіні"
 
-#: modules/access/file.c:177 modules/access/file.c:304 modules/access/mtp.c:195
-#: modules/access/mtp.c:286 modules/access/vdr.c:374 modules/access/vdr.c:541
+#: modules/access/file.c:177 modules/access/file.c:304
+#: modules/access/mtp.c:195 modules/access/mtp.c:286 modules/access/vdr.c:374
+#: modules/access/vdr.c:541
 msgid "File reading failed"
 msgstr "Файл оқуы сәтсіз"
 
@@ -6542,8 +6590,8 @@ msgstr "Файл кіресіні"
 #: modules/audio_output/file.c:113 modules/gui/macosx/open.m:130
 #: modules/gui/macosx/open.m:590 modules/gui/macosx/output.m:133
 #: modules/gui/macosx/output.m:217 modules/gui/macosx/output.m:341
-#: modules/gui/qt4/dialogs/plugins.cpp:1413 modules/gui/qt4/dialogs/sout.cpp:69
-#: modules/gui/qt4/dialogs/sout.cpp:121
+#: modules/gui/qt4/dialogs/plugins.cpp:1413
+#: modules/gui/qt4/dialogs/sout.cpp:69 modules/gui/qt4/dialogs/sout.cpp:121
 #: share/lua/http/dialogs/create_stream.html:204
 #: share/lua/http/dialogs/stream_config_window.html:36
 #: share/lua/http/dialogs/stream_window.html:95
@@ -6767,7 +6815,7 @@ msgstr ""
 #: modules/gui/qt4/components/extended_panels.cpp:1432
 #: modules/video_filter/mosaic.c:94 modules/video_output/vmem.c:42
 #: share/lua/http/dialogs/mosaic_window.html:108
-#: modules/gui/qt4/ui/profiles.h:726
+#: modules/gui/qt4/ui/profiles.h:743
 msgid "Width"
 msgstr "Ені"
 
@@ -6779,7 +6827,7 @@ msgstr ""
 #: modules/demux/rawvid.c:52 modules/gui/macosx/ConvertAndSave.m:183
 #: modules/video_filter/mosaic.c:92 modules/video_output/vmem.c:45
 #: share/lua/http/dialogs/mosaic_window.html:126
-#: modules/gui/qt4/ui/profiles.h:729
+#: modules/gui/qt4/ui/profiles.h:746
 msgid "Height"
 msgstr "Биіктігі"
 
@@ -8309,7 +8357,8 @@ msgstr ""
 
 #: modules/access/v4l2/v4l2.c:242 modules/codec/avcodec/avcodec.c:68
 #: modules/codec/x264.c:437 modules/control/hotkeys.c:193
-#: modules/gui/macosx/AddonManager.m:93 modules/gui/qt4/dialogs/convert.cpp:136
+#: modules/gui/macosx/AddonManager.m:93
+#: modules/gui/qt4/dialogs/convert.cpp:136
 #: modules/gui/qt4/dialogs/plugins.cpp:372
 #: modules/gui/qt4/dialogs/preferences.cpp:77
 msgid "All"
@@ -9111,7 +9160,8 @@ msgstr "Экуалайзер"
 msgid "Flat"
 msgstr "Тегіс"
 
-#: modules/audio_filter/equalizer_presets.h:54 modules/demux/mp4/id3genres.h:64
+#: modules/audio_filter/equalizer_presets.h:54
+#: modules/demux/mp4/id3genres.h:64
 msgid "Classical"
 msgstr "Классикалық"
 
@@ -9120,7 +9170,8 @@ msgstr "Классикалық"
 msgid "Club"
 msgstr "Клаб"
 
-#: modules/audio_filter/equalizer_presets.h:54 modules/demux/mp4/id3genres.h:35
+#: modules/audio_filter/equalizer_presets.h:54
+#: modules/demux/mp4/id3genres.h:35
 msgid "Dance"
 msgstr "Данс"
 
@@ -9152,19 +9203,23 @@ msgstr "Лайв"
 msgid "Party"
 msgstr "Сауық"
 
-#: modules/audio_filter/equalizer_presets.h:56 modules/demux/mp4/id3genres.h:45
+#: modules/audio_filter/equalizer_presets.h:56
+#: modules/demux/mp4/id3genres.h:45
 msgid "Pop"
 msgstr "Поп"
 
-#: modules/audio_filter/equalizer_presets.h:56 modules/demux/mp4/id3genres.h:48
+#: modules/audio_filter/equalizer_presets.h:56
+#: modules/demux/mp4/id3genres.h:48
 msgid "Reggae"
 msgstr "Регги"
 
-#: modules/audio_filter/equalizer_presets.h:57 modules/demux/mp4/id3genres.h:49
+#: modules/audio_filter/equalizer_presets.h:57
+#: modules/demux/mp4/id3genres.h:49
 msgid "Rock"
 msgstr "Рок"
 
-#: modules/audio_filter/equalizer_presets.h:57 modules/demux/mp4/id3genres.h:53
+#: modules/audio_filter/equalizer_presets.h:57
+#: modules/demux/mp4/id3genres.h:53
 msgid "Ska"
 msgstr "Ска"
 
@@ -9176,7 +9231,8 @@ msgstr "Софт"
 msgid "Soft rock"
 msgstr "Софт-рок"
 
-#: modules/audio_filter/equalizer_presets.h:57 modules/demux/mp4/id3genres.h:50
+#: modules/audio_filter/equalizer_presets.h:57
+#: modules/demux/mp4/id3genres.h:50
 msgid "Techno"
 msgstr "Техно"
 
@@ -12891,14 +12947,14 @@ msgstr "D-Bus басқару тілдесуі"
 #: modules/control/dbus/dbus_root.c:81 modules/gui/macosx/MainWindow.m:209
 #: modules/gui/macosx/MainWindow.m:742 modules/gui/macosx/MainWindow.m:748
 #: modules/gui/macosx/MainWindow.m:1372 modules/gui/ncurses.c:1042
-#: modules/gui/qt4/dialogs/help.cpp:91 modules/gui/qt4/main_interface.cpp:1102
-#: modules/gui/qt4/main_interface.cpp:1106
-#: modules/gui/qt4/main_interface.cpp:1145
-#: modules/gui/qt4/main_interface.cpp:1147
-#: modules/gui/qt4/main_interface.cpp:1255
-#: modules/gui/qt4/main_interface.cpp:1272
-#: modules/gui/qt4/main_interface.cpp:1280
-#: modules/gui/qt4/main_interface.cpp:1303 modules/lua/libs/httpd.c:80
+#: modules/gui/qt4/dialogs/help.cpp:91 modules/gui/qt4/main_interface.cpp:1156
+#: modules/gui/qt4/main_interface.cpp:1160
+#: modules/gui/qt4/main_interface.cpp:1199
+#: modules/gui/qt4/main_interface.cpp:1201
+#: modules/gui/qt4/main_interface.cpp:1309
+#: modules/gui/qt4/main_interface.cpp:1326
+#: modules/gui/qt4/main_interface.cpp:1334
+#: modules/gui/qt4/main_interface.cpp:1357 modules/lua/libs/httpd.c:80
 #: modules/notify/growl.m:281 modules/video_output/xcb/window.c:313
 msgid "VLC media player"
 msgstr "VLC мультимедия ойнатқышы"
@@ -13617,7 +13673,7 @@ msgstr "AIFF демуксері"
 msgid "ASF/WMV demuxer"
 msgstr ""
 
-#: modules/demux/asf/asf.c:215 modules/demux/asf/asf.c:1197
+#: modules/demux/asf/asf.c:215 modules/demux/asf/asf.c:1194
 msgid "Could not demux ASF stream"
 msgstr "ASF ағынының демуксі мүмкін емес"
 
@@ -13625,7 +13681,7 @@ msgstr "ASF ағынының демуксі мүмкін емес"
 msgid "VLC failed to load the ASF header."
 msgstr ""
 
-#: modules/demux/asf/asf.c:1198
+#: modules/demux/asf/asf.c:1195
 msgid "DRM protected streams are not supported."
 msgstr ""
 
@@ -13833,8 +13889,8 @@ msgstr ""
 
 #: modules/demux/mjpeg.c:46 modules/demux/mpeg/es.c:50
 #: modules/demux/mpeg/h264.c:43 modules/demux/mpeg/hevc.c:46
-#: modules/demux/rawvid.c:44 modules/demux/subtitle.c:75 modules/demux/vc1.c:43
-#: modules/gui/macosx/open.m:203
+#: modules/demux/rawvid.c:44 modules/demux/subtitle.c:75
+#: modules/demux/vc1.c:43 modules/gui/macosx/open.m:203
 msgid "Frames per Second"
 msgstr "Бір секундтағы кадр саны"
 
@@ -15354,7 +15410,8 @@ msgstr ""
 
 #: modules/gui/macosx/AudioEffects.m:118 modules/gui/macosx/AudioEffects.m:129
 #: modules/gui/macosx/TrackSynchronization.m:60
-#: modules/gui/macosx/VideoEffects.m:94 modules/gui/qt4/dialogs/gototime.cpp:66
+#: modules/gui/macosx/VideoEffects.m:94
+#: modules/gui/qt4/dialogs/gototime.cpp:66
 msgid "Reset"
 msgstr "Ысыру"
 
@@ -15474,8 +15531,8 @@ msgid "Bookmarks"
 msgstr "Бетбелгілер"
 
 #: modules/gui/macosx/bookmarks.m:97
-#: modules/gui/qt4/ui/podcast_configuration.h:103 modules/gui/qt4/ui/sout.h:209
-#: modules/gui/qt4/ui/vlm.h:299
+#: modules/gui/qt4/ui/podcast_configuration.h:103
+#: modules/gui/qt4/ui/sout.h:209 modules/gui/qt4/ui/vlm.h:299
 msgid "Add"
 msgstr "Үстеу"
 
@@ -15791,42 +15848,42 @@ msgstr ""
 msgid "Save as new Profile..."
 msgstr ""
 
-#: modules/gui/macosx/ConvertAndSave.m:170 modules/gui/qt4/ui/profiles.h:708
+#: modules/gui/macosx/ConvertAndSave.m:170 modules/gui/qt4/ui/profiles.h:725
 msgid "Encapsulation"
 msgstr "Тыстау"
 
 #: modules/gui/macosx/ConvertAndSave.m:171
 #: share/lua/http/dialogs/create_stream.html:160
-#: modules/gui/qt4/ui/profiles.h:734
+#: modules/gui/qt4/ui/profiles.h:751
 msgid "Video codec"
 msgstr "Бейнелік кодек"
 
 #: modules/gui/macosx/ConvertAndSave.m:172
 #: share/lua/http/dialogs/create_stream.html:178
-#: modules/gui/qt4/ui/profiles.h:744
+#: modules/gui/qt4/ui/profiles.h:761
 msgid "Audio codec"
 msgstr "Дыбыстық кодек"
 
-#: modules/gui/macosx/ConvertAndSave.m:176 modules/gui/qt4/ui/profiles.h:710
+#: modules/gui/macosx/ConvertAndSave.m:176 modules/gui/qt4/ui/profiles.h:727
 msgid "Keep original video track"
 msgstr "Бастапқы бейнелік жолшығын сақтап қалу"
 
-#: modules/gui/macosx/ConvertAndSave.m:181 modules/gui/qt4/ui/profiles.h:723
+#: modules/gui/macosx/ConvertAndSave.m:181 modules/gui/qt4/ui/profiles.h:740
 msgid ""
 "You just need to fill one of the three following parameters, VLC will "
 "autodetect the other using the original aspect ratio"
 msgstr ""
 
 #: modules/gui/macosx/ConvertAndSave.m:184 modules/gui/macosx/output.m:157
-#: modules/gui/qt4/ui/profiles.h:724
+#: modules/gui/qt4/ui/profiles.h:741
 msgid "Scale"
 msgstr "Шәкіл"
 
-#: modules/gui/macosx/ConvertAndSave.m:186 modules/gui/qt4/ui/profiles.h:736
+#: modules/gui/macosx/ConvertAndSave.m:186 modules/gui/qt4/ui/profiles.h:753
 msgid "Keep original audio track"
 msgstr "Бастапқы дыбыстық жолшықты сақтап қалу"
 
-#: modules/gui/macosx/ConvertAndSave.m:192 modules/gui/qt4/ui/profiles.h:747
+#: modules/gui/macosx/ConvertAndSave.m:192 modules/gui/qt4/ui/profiles.h:764
 msgid "Overlay subtitles on the video"
 msgstr ""
 
@@ -15990,19 +16047,19 @@ msgstr "(еш бірлік ойнатылуда емес)"
 msgid "Click to exit fullscreen playback."
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1548 modules/gui/macosx/intf.m:1565
+#: modules/gui/macosx/intf.m:1550 modules/gui/macosx/intf.m:1567
 msgid "VLC media playback"
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1844
+#: modules/gui/macosx/intf.m:1846
 msgid "Remove old preferences?"
 msgstr "Ескі теңшелімдерді жоямыз ба?"
 
-#: modules/gui/macosx/intf.m:1845
+#: modules/gui/macosx/intf.m:1847
 msgid "We just found an older version of VLC's preferences files."
 msgstr "VLC теңшелімдер файлдарының ескі нобайы табылды."
 
-#: modules/gui/macosx/intf.m:1846
+#: modules/gui/macosx/intf.m:1848
 msgid "Move To Trash and Relaunch VLC"
 msgstr "Бұны себетке жылжытып VLC қайта іске қосу"
 
@@ -17549,7 +17606,8 @@ msgid ""
 "Set 0 to disable."
 msgstr ""
 
-#: modules/gui/macosx/VideoEffects.m:74 modules/gui/qt4/dialogs/extended.cpp:84
+#: modules/gui/macosx/VideoEffects.m:74
+#: modules/gui/qt4/dialogs/extended.cpp:84
 msgid "Video Effects"
 msgstr "Бейнелік әсерлер"
 
@@ -17557,7 +17615,8 @@ msgstr "Бейнелік әсерлер"
 msgid "Basic"
 msgstr "Негізгі"
 
-#: modules/gui/macosx/VideoEffects.m:81 modules/gui/qt4/ui/video_effects.h:1444
+#: modules/gui/macosx/VideoEffects.m:81
+#: modules/gui/qt4/ui/video_effects.h:1444
 msgid "Geometry"
 msgstr "Геометриялық"
 
@@ -17574,7 +17633,8 @@ msgstr "Түс"
 msgid "Image Adjust"
 msgstr ""
 
-#: modules/gui/macosx/VideoEffects.m:91 modules/gui/qt4/ui/video_effects.h:1394
+#: modules/gui/macosx/VideoEffects.m:91
+#: modules/gui/qt4/ui/video_effects.h:1394
 msgid "Brightness Threshold"
 msgstr ""
 
@@ -17583,12 +17643,14 @@ msgstr ""
 msgid "Sharpen"
 msgstr "Анықтығын үлкейту"
 
-#: modules/gui/macosx/VideoEffects.m:96 modules/gui/qt4/ui/video_effects.h:1399
+#: modules/gui/macosx/VideoEffects.m:96
+#: modules/gui/qt4/ui/video_effects.h:1399
 #: modules/gui/qt4/ui/video_effects.h:1483
 msgid "Sigma"
 msgstr "Сигма"
 
-#: modules/gui/macosx/VideoEffects.m:97 modules/gui/qt4/ui/video_effects.h:1400
+#: modules/gui/macosx/VideoEffects.m:97
+#: modules/gui/qt4/ui/video_effects.h:1400
 msgid "Banding removal"
 msgstr ""
 
@@ -17597,7 +17659,8 @@ msgstr ""
 msgid "Radius"
 msgstr ""
 
-#: modules/gui/macosx/VideoEffects.m:99 modules/gui/qt4/ui/video_effects.h:1402
+#: modules/gui/macosx/VideoEffects.m:99
+#: modules/gui/qt4/ui/video_effects.h:1402
 msgid "Film Grain"
 msgstr ""
 
@@ -17741,7 +17804,8 @@ msgstr "Қимылды бұлдырлату"
 msgid "Factor"
 msgstr "Ықпал"
 
-#: modules/gui/macosx/VideoEffects.m:155 modules/video_filter/motiondetect.c:49
+#: modules/gui/macosx/VideoEffects.m:155
+#: modules/video_filter/motiondetect.c:49
 msgid "Motion Detect"
 msgstr "Қимылды байқау"
 
@@ -17774,8 +17838,9 @@ msgstr "Рәміз үстеу"
 msgid "Logo"
 msgstr "Рәміз"
 
-#: modules/gui/macosx/VideoEffects.m:205 modules/stream_out/mosaic_bridge.c:128
-#: modules/video_filter/mosaic.c:87 modules/gui/qt4/ui/video_effects.h:1453
+#: modules/gui/macosx/VideoEffects.m:205
+#: modules/stream_out/mosaic_bridge.c:128 modules/video_filter/mosaic.c:87
+#: modules/gui/qt4/ui/video_effects.h:1453
 msgid "Transparency"
 msgstr "Мөлдірлік"
 
@@ -18064,7 +18129,8 @@ msgstr "UDP біржақты тарату"
 msgid "UDP Multicast"
 msgstr "UDP топтық таратуы"
 
-#: modules/gui/macosx/wizard.m:373 modules/stream_out/transcode/transcode.c:147
+#: modules/gui/macosx/wizard.m:373
+#: modules/stream_out/transcode/transcode.c:147
 msgid "Transcode"
 msgstr "Қайта кодтау"
 
@@ -18594,23 +18660,23 @@ msgstr ""
 msgid "Shift+L"
 msgstr "Shift+L"
 
-#: modules/gui/qt4/components/controller.cpp:445
+#: modules/gui/qt4/components/controller.cpp:446
 msgid "Click to toggle between loop all, loop one and no loop"
 msgstr ""
 
-#: modules/gui/qt4/components/controller.cpp:536
+#: modules/gui/qt4/components/controller.cpp:537
 msgid "Previous Chapter/Title"
 msgstr "Алдыңғы бөлім/тақырып"
 
-#: modules/gui/qt4/components/controller.cpp:548
+#: modules/gui/qt4/components/controller.cpp:549
 msgid "Next Chapter/Title"
 msgstr "Келесі бөлім/тақырып"
 
-#: modules/gui/qt4/components/controller.cpp:581
+#: modules/gui/qt4/components/controller.cpp:582
 msgid "Teletext Activation"
 msgstr "Телетекст белсендіру"
 
-#: modules/gui/qt4/components/controller.cpp:597
+#: modules/gui/qt4/components/controller.cpp:598
 msgid "Toggle Transparency "
 msgstr "Мөлдірлікті ажырата қосу"
 
@@ -19258,11 +19324,11 @@ msgstr ""
 msgid "Decrease"
 msgstr ""
 
-#: modules/gui/qt4/components/playlist/standardpanel.cpp:391
+#: modules/gui/qt4/components/playlist/standardpanel.cpp:387
 msgid "Playlist View Mode"
 msgstr ""
 
-#: modules/gui/qt4/components/playlist/standardpanel.cpp:560
+#: modules/gui/qt4/components/playlist/standardpanel.cpp:556
 msgid ""
 "Playlist is currently empty.\n"
 "Drop a file here or select a media source from the left."
@@ -19434,8 +19500,8 @@ msgstr "Қолдану"
 
 #: modules/gui/qt4/components/simple_preferences.cpp:1381
 #: modules/gui/qt4/dialogs/convert.cpp:109
-#: modules/gui/qt4/dialogs/gototime.cpp:49 modules/gui/qt4/dialogs/open.cpp:108
-#: modules/gui/qt4/dialogs/openurl.cpp:61
+#: modules/gui/qt4/dialogs/gototime.cpp:49
+#: modules/gui/qt4/dialogs/open.cpp:108 modules/gui/qt4/dialogs/openurl.cpp:61
 #: modules/gui/qt4/dialogs/podcast_configuration.cpp:37
 #: modules/gui/qt4/dialogs/preferences.cpp:94
 #: modules/gui/qt4/dialogs/toolbar.cpp:196
@@ -19463,19 +19529,19 @@ msgstr "Жаңа бейін жасау "
 msgid "Create"
 msgstr "Жасау"
 
-#: modules/gui/qt4/components/sout/profile_selector.cpp:604
+#: modules/gui/qt4/components/sout/profile_selector.cpp:606
 msgid "This muxer is not provided directly by VLC: It could be missing."
 msgstr ""
 
-#: modules/gui/qt4/components/sout/profile_selector.cpp:609
+#: modules/gui/qt4/components/sout/profile_selector.cpp:612
 msgid "This muxer is missing. Using this profile will fail"
 msgstr ""
 
-#: modules/gui/qt4/components/sout/profile_selector.cpp:753
+#: modules/gui/qt4/components/sout/profile_selector.cpp:756
 msgid " Profile Name Missing"
 msgstr " Бейін атауы айырлған"
 
-#: modules/gui/qt4/components/sout/profile_selector.cpp:754
+#: modules/gui/qt4/components/sout/profile_selector.cpp:757
 msgid "You must set a name for the profile."
 msgstr "Бейінге атау беруіңіз жөн."
 
@@ -19578,8 +19644,8 @@ msgstr "Бетбелгілер бәрін жою"
 
 #: modules/gui/qt4/dialogs/bookmarks.cpp:62
 #: modules/gui/qt4/dialogs/errors.cpp:49
-#: modules/gui/qt4/dialogs/extended.cpp:110 modules/gui/qt4/dialogs/help.cpp:66
-#: modules/gui/qt4/dialogs/help.cpp:212
+#: modules/gui/qt4/dialogs/extended.cpp:110
+#: modules/gui/qt4/dialogs/help.cpp:66 modules/gui/qt4/dialogs/help.cpp:212
 #: modules/gui/qt4/dialogs/mediainfo.cpp:80
 #: modules/gui/qt4/dialogs/messages.cpp:81
 #: modules/gui/qt4/dialogs/plugins.cpp:88
@@ -19599,7 +19665,8 @@ msgstr "Байты"
 msgid "Convert"
 msgstr "Түрлендіру"
 
-#: modules/gui/qt4/dialogs/convert.cpp:58 modules/gui/qt4/ui/sprefs_audio.h:432
+#: modules/gui/qt4/dialogs/convert.cpp:58
+#: modules/gui/qt4/ui/sprefs_audio.h:432
 msgid "Destination file:"
 msgstr "Жеткілімдік файл:"
 
@@ -19694,7 +19761,8 @@ msgstr "Өту"
 msgid "Go to time"
 msgstr "Уақытқа өту"
 
-#: modules/gui/qt4/dialogs/help.cpp:86 modules/gui/qt4/dialogs/plugins.cpp:1360
+#: modules/gui/qt4/dialogs/help.cpp:86
+#: modules/gui/qt4/dialogs/plugins.cpp:1360
 #: modules/gui/qt4/dialogs/plugins.cpp:1443
 msgid "About"
 msgstr "VLC туралы"
@@ -20156,7 +20224,7 @@ msgstr ""
 msgid "Cl&ose"
 msgstr "Жабу"
 
-#: modules/gui/qt4/dialogs/toolbar.cpp:224 modules/gui/qt4/ui/profiles.h:749
+#: modules/gui/qt4/dialogs/toolbar.cpp:224
 msgid "Profile Name"
 msgstr "Бейін атауы"
 
@@ -20277,11 +20345,11 @@ msgstr ""
 msgid "&Continue"
 msgstr ""
 
-#: modules/gui/qt4/main_interface.cpp:1256
+#: modules/gui/qt4/main_interface.cpp:1310
 msgid "Control menu for the player"
 msgstr "Ойнатқыштың басқару мәзірі"
 
-#: modules/gui/qt4/main_interface.cpp:1300
+#: modules/gui/qt4/main_interface.cpp:1354
 msgid "Paused"
 msgstr "Аялданған"
 
@@ -22370,7 +22438,8 @@ msgid "Transparency of the mosaic picture."
 msgstr "Зертасты сурет мөлдірлігі."
 
 #: modules/stream_out/mosaic_bridge.c:132 modules/video_filter/marq.c:95
-#: modules/video_filter/rss.c:142 share/lua/http/dialogs/mosaic_window.html:100
+#: modules/video_filter/rss.c:142
+#: share/lua/http/dialogs/mosaic_window.html:100
 msgid "X offset"
 msgstr "X ығысуы"
 
@@ -22379,7 +22448,8 @@ msgid "X coordinate of the upper left corner in the mosaic if non negative."
 msgstr ""
 
 #: modules/stream_out/mosaic_bridge.c:136 modules/video_filter/marq.c:97
-#: modules/video_filter/rss.c:144 share/lua/http/dialogs/mosaic_window.html:118
+#: modules/video_filter/rss.c:144
+#: share/lua/http/dialogs/mosaic_window.html:118
 msgid "Y offset"
 msgstr "Y ығысуы"
 
@@ -23168,63 +23238,63 @@ msgstr ""
 msgid "RV32 conversion filter"
 msgstr "RV32 түрлендіру сүзгісі"
 
-#: modules/video_chroma/swscale.c:56
+#: modules/video_chroma/swscale.c:57
 msgid "Scaling mode"
 msgstr "Шәкілдестіру режімі"
 
-#: modules/video_chroma/swscale.c:57
+#: modules/video_chroma/swscale.c:58
 msgid "Scaling mode to use."
 msgstr "Колданбақ шәкілдестіру режімі"
 
-#: modules/video_chroma/swscale.c:61
+#: modules/video_chroma/swscale.c:62
 msgid "Fast bilinear"
 msgstr "Тез қос сызықтық"
 
-#: modules/video_chroma/swscale.c:61
+#: modules/video_chroma/swscale.c:62
 msgid "Bilinear"
 msgstr "Қос сызықтық"
 
-#: modules/video_chroma/swscale.c:61
+#: modules/video_chroma/swscale.c:62
 msgid "Bicubic (good quality)"
 msgstr "Қос текшелік (сапасы жақсы)"
 
-#: modules/video_chroma/swscale.c:62
+#: modules/video_chroma/swscale.c:63
 msgid "Experimental"
 msgstr "Сынақтық әдіс"
 
-#: modules/video_chroma/swscale.c:62
+#: modules/video_chroma/swscale.c:63
 msgid "Nearest neighbour (bad quality)"
 msgstr "Ең жақын көршілес (сапасы жаман)"
 
-#: modules/video_chroma/swscale.c:63
+#: modules/video_chroma/swscale.c:64
 msgid "Area"
 msgstr "Аумақ"
 
-#: modules/video_chroma/swscale.c:63
+#: modules/video_chroma/swscale.c:64
 msgid "Luma bicubic / chroma bilinear"
 msgstr "Нұрлық қос текшелік / түстік қос сызықтық"
 
-#: modules/video_chroma/swscale.c:63
+#: modules/video_chroma/swscale.c:64
 msgid "Gauss"
 msgstr "Гаусс"
 
-#: modules/video_chroma/swscale.c:64
+#: modules/video_chroma/swscale.c:65
 msgid "SincR"
 msgstr "SincR"
 
-#: modules/video_chroma/swscale.c:64
+#: modules/video_chroma/swscale.c:65
 msgid "Lanczos"
 msgstr "Ланцоштікі"
 
-#: modules/video_chroma/swscale.c:64
+#: modules/video_chroma/swscale.c:65
 msgid "Bicubic spline"
 msgstr "Қос текшелік сплайн"
 
-#: modules/video_chroma/swscale.c:67 modules/video_filter/scale.c:47
+#: modules/video_chroma/swscale.c:68 modules/video_filter/scale.c:47
 msgid "Video scaling filter"
 msgstr "Бейне шәкілдестіру сүзгісі"
 
-#: modules/video_chroma/swscale.c:68
+#: modules/video_chroma/swscale.c:69
 msgid "Swscale"
 msgstr "Swscale"
 
@@ -27120,121 +27190,141 @@ msgstr "Желілік хаттама"
 msgid "Please enter a network URL:"
 msgstr ""
 
-#: modules/gui/qt4/ui/profiles.h:686
+#: modules/gui/qt4/ui/profiles.h:701
 msgid "Profile edition"
 msgstr ""
 
-#: modules/gui/qt4/ui/profiles.h:687
-msgid "MPEG-TS"
-msgstr "MPEG-TS"
-
-#: modules/gui/qt4/ui/profiles.h:688
-msgid "MPEG-PS"
-msgstr "MPEG-PS"
-
-#: modules/gui/qt4/ui/profiles.h:689
-msgid "MPEG 1"
-msgstr "MPEG 1"
-
-#: modules/gui/qt4/ui/profiles.h:690
-msgid "ASF/WMV"
-msgstr "ASF/WMV"
-
-#: modules/gui/qt4/ui/profiles.h:691
-msgid "Webm"
-msgstr ""
-
-#: modules/gui/qt4/ui/profiles.h:692
-msgid "MJPEG"
-msgstr "MJPEG"
-
-#: modules/gui/qt4/ui/profiles.h:693
-msgid "MKV"
-msgstr "MKV"
-
-#: modules/gui/qt4/ui/profiles.h:694
-msgid "Ogg/Ogm"
-msgstr "Ogg/Ogm"
-
-#: modules/gui/qt4/ui/profiles.h:695
-msgid "WAV"
-msgstr "WAV"
-
-#: modules/gui/qt4/ui/profiles.h:696
-msgid "RAW"
-msgstr "RAW"
-
-#: modules/gui/qt4/ui/profiles.h:697
-msgid "MP4/MOV"
-msgstr "MP4/MOV"
-
-#: modules/gui/qt4/ui/profiles.h:698
-msgid "FLV"
-msgstr "FLV"
-
-#: modules/gui/qt4/ui/profiles.h:699
-msgid "AVI"
-msgstr "AVI"
-
-#: modules/gui/qt4/ui/profiles.h:700
-msgid "Features"
-msgstr ""
-
 #: modules/gui/qt4/ui/profiles.h:702
-msgid "Streamable"
+msgid "FLAC"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:703
-msgid "Chapters"
+#, fuzzy
+msgid "MP&4/MOV"
+msgstr "MP4/MOV"
+
+#: modules/gui/qt4/ui/profiles.h:704
+msgid "Ogg/Ogm"
+msgstr "Ogg/Ogm"
+
+#: modules/gui/qt4/ui/profiles.h:705
+msgid "M&KV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:706
-msgid "Menus"
-msgstr "Мәзір"
+#, fuzzy
+msgid "M&JPEG"
+msgstr "MJPEG"
 
-#: modules/gui/qt4/ui/profiles.h:713
-msgid "Frame Rate"
-msgstr "Кадр қарқыны"
+#: modules/gui/qt4/ui/profiles.h:707
+msgid "MPEG-PS"
+msgstr "MPEG-PS"
 
-#: modules/gui/qt4/ui/profiles.h:714
-msgid "Same as source"
+#: modules/gui/qt4/ui/profiles.h:708
+msgid "F&LV"
 msgstr ""
 
+#: modules/gui/qt4/ui/profiles.h:709
+#, fuzzy
+msgid "&MPEG-TS"
+msgstr "MPEG-TS"
+
+#: modules/gui/qt4/ui/profiles.h:710
+msgid "RAW"
+msgstr "RAW"
+
+#: modules/gui/qt4/ui/profiles.h:711
+msgid "WAV"
+msgstr "WAV"
+
+#: modules/gui/qt4/ui/profiles.h:712
+msgid "Webm"
+msgstr ""
+
+#: modules/gui/qt4/ui/profiles.h:713
+#, fuzzy
+msgid "MPEG &1"
+msgstr "MPEG 1"
+
+#: modules/gui/qt4/ui/profiles.h:714
+msgid "AVI"
+msgstr "AVI"
+
+#: modules/gui/qt4/ui/profiles.h:715
+msgid "ASF/WMV"
+msgstr "ASF/WMV"
+
 #: modules/gui/qt4/ui/profiles.h:716
-msgid " fps"
+msgid "MP&3"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:717
+msgid "Features"
+msgstr ""
+
+#: modules/gui/qt4/ui/profiles.h:719
+msgid "Streamable"
+msgstr ""
+
+#: modules/gui/qt4/ui/profiles.h:720
+msgid "Chapters"
+msgstr ""
+
+#: modules/gui/qt4/ui/profiles.h:723
+msgid "Menus"
+msgstr "Мәзір"
+
+#: modules/gui/qt4/ui/profiles.h:730
+#, fuzzy
+msgid "Fra&me Rate"
+msgstr "Кадр қарқыны"
+
+#: modules/gui/qt4/ui/profiles.h:731
+msgid "Same as source"
+msgstr ""
+
+#: modules/gui/qt4/ui/profiles.h:733
+msgid " fps"
+msgstr ""
+
+#: modules/gui/qt4/ui/profiles.h:734
 msgid "Custom options"
 msgstr ""
 
-#: modules/gui/qt4/ui/profiles.h:718
-msgid "Quality"
-msgstr ""
+#: modules/gui/qt4/ui/profiles.h:735
+#, fuzzy
+msgid "&Quality"
+msgstr "Сапа деңгейі"
 
-#: modules/gui/qt4/ui/profiles.h:719 modules/gui/qt4/ui/profiles.h:720
+#: modules/gui/qt4/ui/profiles.h:736 modules/gui/qt4/ui/profiles.h:737
 msgid "Not Used"
 msgstr ""
 
-#: modules/gui/qt4/ui/profiles.h:721 modules/gui/qt4/ui/profiles.h:740
+#: modules/gui/qt4/ui/profiles.h:738 modules/gui/qt4/ui/profiles.h:757
 msgid " kb/s"
 msgstr " kb/s"
 
-#: modules/gui/qt4/ui/profiles.h:722 modules/gui/qt4/ui/profiles.h:742
+#: modules/gui/qt4/ui/profiles.h:739 modules/gui/qt4/ui/profiles.h:759
 msgid "Encoding parameters"
 msgstr ""
 
-#: modules/gui/qt4/ui/profiles.h:725
+#: modules/gui/qt4/ui/profiles.h:742
 msgid "Frame size"
 msgstr ""
 
-#: modules/gui/qt4/ui/profiles.h:728 modules/gui/qt4/ui/profiles.h:731
+#: modules/gui/qt4/ui/profiles.h:745 modules/gui/qt4/ui/profiles.h:748
 msgid "px"
 msgstr ""
 
-#: modules/gui/qt4/ui/profiles.h:741
-msgid "Sample Rate"
+#: modules/gui/qt4/ui/profiles.h:758
+#, fuzzy
+msgid "Sa&mple Rate"
 msgstr "Іріктеме қарқыны"
+
+#: modules/gui/qt4/ui/profiles.h:766
+#, fuzzy
+msgid "Profile &Name"
+msgstr "Бейін атауы"
 
 #: modules/gui/qt4/ui/sout.h:203
 msgid "Set up media sources to stream"
@@ -27794,6 +27884,12 @@ msgstr "AAAA; "
 #: modules/gui/qt4/ui/vlm.h:302
 msgid "Media Manager List"
 msgstr "Тасушы меңгеру тізімі"
+
+#~ msgid "MKV"
+#~ msgstr "MKV"
+
+#~ msgid "FLV"
+#~ msgstr "FLV"
 
 #~ msgid "First Played"
 #~ msgstr "Бірінші ойнатылған"
@@ -29434,7 +29530,7 @@ msgstr "Тасушы меңгеру тізімі"
 
 #, fuzzy
 #~ msgid "AVFoundation video capture module."
-#~ msgstr "Дыбыстық шығасын модулі"
+#~ msgstr "Дыбыс шығару модулі"
 
 #, fuzzy
 #~ msgid "No video devices found"
@@ -29731,7 +29827,7 @@ msgstr "Тасушы меңгеру тізімі"
 
 #, fuzzy
 #~ msgid "Default audio volume"
-#~ msgstr "Әдепкі өң түсі"
+#~ msgstr "Дыбыс мөлшерін есте сақтау"
 
 #, fuzzy
 #~ msgid "Audio output frequency (Hz)"
@@ -30215,7 +30311,7 @@ msgstr "Тасушы меңгеру тізімі"
 
 #, fuzzy
 #~ msgid "Enable Audio"
-#~ msgstr "Дыбысты қосу"
+#~ msgstr "Дыбысты іске қосу"
 
 #, fuzzy
 #~ msgid "HTTP Proxy"
@@ -30901,7 +30997,7 @@ msgstr "Тасушы меңгеру тізімі"
 
 #, fuzzy
 #~ msgid "Audio output saved volume"
-#~ msgstr "Дыбыстық шығасын деңгейінің қадамы"
+#~ msgstr "Дыбыс шығу деңгейінің қадамы"
 
 #, fuzzy
 #~ msgid "Video output filter module"
@@ -31072,7 +31168,7 @@ msgstr "Тасушы меңгеру тізімі"
 
 #, fuzzy
 #~ msgid "Auto gain"
-#~ msgstr "Автоматты түрде"
+#~ msgstr "Дыбысты күшейту"
 
 #, fuzzy
 #~ msgid "Horizontal centering"
@@ -31488,11 +31584,11 @@ msgstr "Тасушы меңгеру тізімі"
 
 #, fuzzy
 #~ msgid "Enable peaks"
-#~ msgstr "Дыбысты қосу"
+#~ msgstr "Дыбысты іске қосу"
 
 #, fuzzy
 #~ msgid "Enable bands"
-#~ msgstr "Дыбысты қосу"
+#~ msgstr "Дыбысты іске қосу"
 
 #, fuzzy
 #~ msgid "Enable base"
@@ -31946,7 +32042,7 @@ msgstr "Тасушы меңгеру тізімі"
 
 #, fuzzy
 #~ msgid "Select play mode"
-#~ msgstr "Қайталау күшею режімін бөлектеу"
+#~ msgstr "Қайталауды күшейту режімін белгілеу"
 
 #, fuzzy
 #~ msgid "Alignment:"
