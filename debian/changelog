@@ -1,3 +1,15 @@
+vlc (2.2.4-3) unstable; urgency=medium
+
+  [ Mateusz Łukasik ]
+  * debian/control:
+    - Remove Clément Stenac from Uploaders. Thanks for your job!
+
+  [ Sebastian Ramacher ]
+  * debian/patches/{vlc_atomic*,Fix-build-using-old-GCC-intrinsics}.patch: Fix
+    FTBFS with GCC 6 (Closes: #831199)
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Fri, 29 Jul 2016 00:52:06 +0200
+
 vlc (2.2.4-2) unstable; urgency=medium
 
   * Build ffmpeg without libopenjpeg (Closes: #826827)
