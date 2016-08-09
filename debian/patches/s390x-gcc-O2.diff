@@ -1,0 +1,12 @@
+Index: b/ffmpeg-2-8-7/configure
+===================================================================
+--- a/ffmpeg-2-8-7/configure
++++ b/ffmpeg-2-8-7/configure
+@@ -3559,6 +3559,7 @@ probe_cc(){
+         _depflags='-MMD -MF $(@:.o=.d) -MT $@'
+         _cflags_speed='-O3'
+         _cflags_size='-Os'
++        case "$(uname -m)" in s390*) _cflags_speed='-O2'; esac
+     elif $_cc -v 2>&1 | grep -qi ^gcc; then
+         _type=gcc
+         gcc_version=$($_cc --version | head -n1)
