@@ -1,3 +1,9 @@
+vlc (2.2.4-3ubuntu2) yakkety; urgency=medium
+
+  * Work around GCC issue PR target/72851 (s390x).
+
+ -- Matthias Klose <doko@ubuntu.com>  Wed, 10 Aug 2016 13:21:13 +0200
+
 vlc (2.2.4-3build1) yakkety; urgency=medium
 
   * No-change rebuild against libwebp6
