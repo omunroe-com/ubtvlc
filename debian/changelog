@@ -1,3 +1,12 @@
+vlc (2.2.4-4ubuntu0.16.10.1) yakkety; urgency=medium
+
+  [ Sebastian Ramacher ]
+  * debian/patches/VLSub-don-t-pretend-to-support-HTTP-1.1.patch: Apply
+    upstream to fix VLSub incorrectly announcing HTTP 1.1 support.
+    (Closes: #847559; LP: #1639750)
+
+ -- Andrew Shadura <andrewsh@debian.org>  Fri, 09 Dec 2016 18:01:48 +0100
+
 vlc (2.2.4-4) unstable; urgency=medium
 
   [ Pino Toscano ]
