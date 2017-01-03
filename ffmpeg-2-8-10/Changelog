@@ -1,6 +1,17 @@
 Entries are sorted chronologically from oldest to youngest within each release,
 releases are sorted from youngest to oldest.
 
+version 2.8.10
+- avformat/http: Match chunksize checks to master..3.0
+- Changelog: fix typos
+- ffserver: Check chunk size
+- Avoid using the term "file" and prefer "url" in some docs and comments
+- avformat/rtmppkt: Check for packet size mismatches
+- zmqsend: Initialize ret to 0
+- configure: check for strtoull on msvc
+- http: move chunk handling from http_read_stream() to http_buf_read().
+- http: make length/offset-related variables unsigned.
+
 version 2.8.9
 - avcodec/flacdec: Fix undefined shift in decode_subframe()
 - avcodec/get_bits: Fix get_sbits_long(0)
@@ -106,7 +117,7 @@ version 2.8.8
 - avfilter/vf_telecine: Make frame writable before writing into it
 - avcodec/mpc8: Correct end truncation
 - avcodec/mpegvideo: Do not clear the parse context during init
-- MAINTAINERs cleanup (remove myself from things i de facto dont maintain)
+- MAINTAINERs cleanup (remove myself from things i de facto do not maintain)
 - avcodec/h264: Fix off by 1 context count
 - avcodec/alsdec: Check r to prevent out of array read
 - avcodec/alsdec: fix max bits in ltp prefix code
@@ -116,7 +127,7 @@ version 2.8.8
 - avcodec/bmp_parser: reset state
 - avcodec/bmp_parser: Fix remaining size
 - avcodec/bmp_parser: Fix frame_start_found in cross frame cases
-- avfilter/af_amix: dont fail if there are no samples in output_frame()
+- avfilter/af_amix: do not fail if there are no samples in output_frame()
 - avformat/allformats: Making av_register_all() thread-safe.
 - avcodec/mpegvideo: Deallocate last/next picture earlier
 - avcodec/bmp_parser: Fix state
