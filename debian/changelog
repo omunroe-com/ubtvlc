@@ -1,3 +1,9 @@
+vlc (2.2.4-13ubuntu1) zesty; urgency=medium
+
+  * Don't build against libgles1-mesa, mesa has dropped it.
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Mon, 13 Feb 2017 15:46:22 +0200
+
 vlc (2.2.4-13build1) zesty; urgency=medium
 
   * No-change rebuild against libx265-102.
