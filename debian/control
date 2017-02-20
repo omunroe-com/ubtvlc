@@ -1,7 +1,8 @@
 Source: vlc
 Section: video
 Priority: optional
-Maintainer: Debian Multimedia Maintainers <pkg-multimedia-maintainers@lists.alioth.debian.org>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Debian Multimedia Maintainers <pkg-multimedia-maintainers@lists.alioth.debian.org>
 Uploaders: Loic Minier <lool@dooz.org>,
            Christophe Mutricy <xtophe@videolan.org>,
            Mohammed Adnène Trojette <adn+deb@diwi.org>,
@@ -43,7 +44,6 @@ Build-Depends: autopoint,
                libfreetype6-dev,
                libfribidi-dev,
                libgl1-mesa-dev,
-               libgles1-mesa-dev,
                libgles2-mesa-dev,
                libgnutls28-dev (>= 3.0.20),
                libgtk2.0-dev,
