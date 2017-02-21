@@ -1,3 +1,11 @@
+vlc (2.2.2-5ubuntu0.16.04.1) xenial; urgency=medium
+
+  [ Sebastian Ramacher ]
+  * debian/patches: Apply upstream to fix VLSub incorrectly announcing HTTP
+    1.1 support. (LP: #1639750)
+
+ -- Brian Murray <brian@ubuntu.com>  Tue, 21 Feb 2017 15:23:51 -0800
+
 vlc (2.2.2-5) unstable; urgency=medium
 
   * debian/patches:

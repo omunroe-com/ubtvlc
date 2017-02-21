@@ -4,3 +4,4 @@ fix-translation.patch
 qt4-Fix-resume-where-you-left-off.patch
 qt4-input_manager-Always-reset-lastURI-when-stopping.patch
 avcodec-pass-consistent-dimensions-to-hardware-decod.patch
+VLSub-don-t-pretend-to-support-HTTP-1.1.patch
