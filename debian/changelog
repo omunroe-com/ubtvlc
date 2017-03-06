@@ -1,3 +1,9 @@
+vlc (2.2.4-14ubuntu2) zesty; urgency=medium
+
+  * No-change rebuild against latest libbluray
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Mon, 06 Mar 2017 07:29:06 -0500
+
 vlc (2.2.4-14ubuntu1) zesty; urgency=medium
 
   [ Sebastian Ramacher ]
