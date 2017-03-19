@@ -2,7 +2,7 @@
  * views.cpp : Views for the Playlist
  ****************************************************************************
  * Copyright © 2010 the VideoLAN team
- * $Id: 59f6535d7ccf01c7e44d3cf05bc8449953db2a36 $
+ * $Id: 00662051294b010755a7c6ed953b340efa96f464 $
  *
  * Authors:         Jean-Baptiste Kempf <jb@videolan.org>
  *

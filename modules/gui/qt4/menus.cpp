@@ -2,7 +2,7 @@
  * menus.cpp : Qt menus
  *****************************************************************************
  * Copyright © 2006-2011 the VideoLAN team
- * $Id: 116e98c8c45ab96ee18e36c2c5f2354fe63c5d6c $
+ * $Id: 46240b0344b4bde5079dc8ee69a85ad2ec26d185 $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jean-Baptiste Kempf <jb@videolan.org>

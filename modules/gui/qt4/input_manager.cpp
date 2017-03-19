@@ -2,7 +2,7 @@
  * input_manager.cpp : Manage an input and interact with its GUI elements
  ****************************************************************************
  * Copyright (C) 2006-2008 the VideoLAN team
- * $Id: fd45f4a89e7999ab5d4b02f1d83e6a8e0ccd87f9 $
+ * $Id: c50cb6ccaa1163da7816f60d2f09d003eee8d130 $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Ilkka Ollakka  <ileoo@videolan.org>
