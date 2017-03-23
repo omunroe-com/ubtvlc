@@ -1,3 +1,20 @@
+vlc (2.2.5-2) experimental; urgency=medium
+
+  [ Mateusz Łukasik ]
+  * debian/{control,rules,vlc-plugin-video-output.install}: Disable OpenGL
+    ES 1 support, mesa has dropped it. (Closes: #855117)
+
+  [ Sebastian Ramacher ]
+  * debian/: Major package clean up.
+    - Remove vlc-nox binary package.
+    - Update tests to new package layout.
+    - Remove obsolete Breaks+Replaces.
+  * debian/rules: Be explicit about GLES 1
+  * debian/{rules,libvlc-bin.*}: Fix warning from about non-empty directory
+    (Closes: #854928)
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Thu, 23 Mar 2017 17:56:16 +0100
+
 vlc (2.2.5-1) unstable; urgency=medium
 
   * New upstream releases. (Closes: #850529)
