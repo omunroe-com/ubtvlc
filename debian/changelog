@@ -1,3 +1,9 @@
+vlc (2.2.2-5ubuntu0.16.04.2) xenial; urgency=medium
+
+  * Don't enable GLESv1 support. (LP: #1676845)
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Tue, 28 Mar 2017 14:23:57 +0300
+
 vlc (2.2.2-5ubuntu0.16.04.1) xenial; urgency=medium
 
   [ Sebastian Ramacher ]
