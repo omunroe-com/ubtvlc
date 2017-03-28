@@ -1,3 +1,9 @@
+vlc (2.2.4-4ubuntu0.16.10.2) yakkety; urgency=medium
+
+  * Don't build with GLESv1 support. (LP: #1676845)
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Tue, 28 Mar 2017 18:10:43 +0300
+
 vlc (2.2.4-4ubuntu0.16.10.1) yakkety; urgency=medium
 
   [ Sebastian Ramacher ]
