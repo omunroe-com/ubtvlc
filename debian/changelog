@@ -1,3 +1,9 @@
+vlc (2.2.5-3build1) artful; urgency=medium
+
+  * No-change rebuild against libass9.
+
+ -- Mattia Rizzolo <mapreri@ubuntu.com>  Sun, 23 Apr 2017 19:10:33 +0200
+
 vlc (2.2.5-3) experimental; urgency=medium
 
   * Fix typos in changelog.
