@@ -1,3 +1,9 @@
+vlc (2.2.5-4build1) artful; urgency=medium
+
+  * No-change rebuild against libx265-116.
+
+ -- Mattia Rizzolo <mapreri@ubuntu.com>  Sat, 06 May 2017 15:28:08 +0200
+
 vlc (2.2.5-4) experimental; urgency=medium
 
   * debian/rules: Revert "Also enable NEON on arm64". (LP: #1685444)
