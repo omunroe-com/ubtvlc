@@ -1,3 +1,15 @@
+vlc (2.2.5.1-1~deb9u1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/patches/fix-translation.patch: Refreshed.
+  * debian/*.maintscript: Bump all versions to 2.2.5.1-1~z. This is necessary
+    to properly handle symlink to directory conversions once 2.2.5.1 is
+    available in jessie.
+  * debian/control: Bump Breaks + Replaces to 2.2.5.1-1~deb9u1 where necessary
+    to ensure proper upgrades from jessie. (Closes: #862474)
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Sat, 13 May 2017 15:24:45 +0200
+
 vlc (2.2.5-1) unstable; urgency=medium
 
   * New upstream releases. (Closes: #850529)
@@ -6,7 +18,7 @@ vlc (2.2.5-1) unstable; urgency=medium
     - Removed patches taken from upstream included in 2.2.5.
   * debian/*.maintscript: Bump all versions to 2.2.5-1~z. This is necessary to
     properly handle symlink to directory conversions once 2.2.5 is available
-    in stretch.
+    in jessie.
 
  -- Sebastian Ramacher <sramacher@debian.org>  Sun, 19 Mar 2017 21:50:23 +0100
 
