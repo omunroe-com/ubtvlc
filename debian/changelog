@@ -1,3 +1,14 @@
+vlc (2.2.5.1-1~deb9u2) unstable; urgency=medium
+
+  * debian/control:
+    - Bump Breaks + Replaces to 2.2.5.1-1~deb9u1 also in vlc-plugin-qt and
+      vlc-plugin-skins2. Files moved from vlc to those two packages since
+      jessie.
+    - Remove Breaks + Replaces from libvlc-bin. While files moved from vlc-nox
+      to libvlc-bin, they also changed their path.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Sat, 20 May 2017 10:41:05 +0200
+
 vlc (2.2.5.1-1~deb9u1) unstable; urgency=medium
 
   * New upstream release.
