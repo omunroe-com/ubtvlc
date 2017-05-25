@@ -1,5 +1,5 @@
 # Sinhala translation
-# Copyright (C) 2016 VideoLAN
+# Copyright (C) 2017 VideoLAN
 # This file is distributed under the same license as the vlc package.
 #
 # Translators:
@@ -7,14 +7,15 @@
 # dushmantha <dushmantharupasinghe@gmail.com>, 2014
 # H.Shalitha Vikum  <HSVIKUM at sinhalaya dot com>, 2010
 # Prabath Swarna <prab4th@gmail.com>, 2013
+# Miyuru Sankalpa <miyuru@live.com>, 2016
 # Pasindu Kavinda <pkavinda@gmail.com>, 2013-2015
 msgid ""
 msgstr ""
 "Project-Id-Version: VLC - Trans\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2017-02-03 12:10+0100\n"
-"PO-Revision-Date: 2015-12-19 10:48+0000\n"
-"Last-Translator: Pasindu Kavinda <pkavinda@gmail.com>\n"
+"POT-Creation-Date: 2017-05-24 15:01+0200\n"
+"PO-Revision-Date: 2017-02-06 13:43+0000\n"
+"Last-Translator: Christoph Miebach <christoph.miebach@web.de>\n"
 "Language-Team: Sinhala (http://www.transifex.com/yaron/vlc-trans/language/"
 "si/)\n"
 "Language: si\n"
@@ -164,7 +165,7 @@ msgstr "ප්‍රධාන වීඩියෝ සැකසුම්"
 
 #: include/vlc_config_cat.h:77
 msgid "General settings for video output modules."
-msgstr ""
+msgstr "වීඩියෝ ප්‍රතිදාන මොඩියුල සඳහා ප්‍රධාන සැකසුම්."
 
 #: include/vlc_config_cat.h:80
 msgid "Video filters are used to process the video stream."
@@ -453,11 +454,11 @@ msgstr "ෆෝල්ඩරයක් තනන්න..."
 
 #: include/vlc_intf_strings.h:70
 msgid "Rename Directory..."
-msgstr ""
+msgstr "නාමාවලිය නම් කරන්න..."
 
 #: include/vlc_intf_strings.h:71
 msgid "Rename Folder..."
-msgstr ""
+msgstr "ෆෝල්ඩරය නම් කරන්න..."
 
 #: include/vlc_intf_strings.h:72
 msgid "Show Containing Directory..."
@@ -588,7 +589,7 @@ msgstr "ශ්‍රව්‍ය පෙරීම අසාර්ථක විය
 #: src/audio_output/filters.c:248
 #, c-format
 msgid "The maximum number of filters (%u) was reached."
-msgstr ""
+msgstr "උපරිම ෆිල්ටර් සංඛයාවට (%u) ලං වී ඇත."
 
 #: src/audio_output/output.c:229 src/config/core.c:408 src/input/es_out.c:904
 #: src/libvlc-module.c:538 modules/gui/macosx/MainMenu.m:279
@@ -785,6 +786,8 @@ msgid ""
 "\n"
 "Dumped content to vlc-help.txt file.\n"
 msgstr ""
+"\n"
+"අන්තර්ගතය vlc-help.txt ගොනුවට දමන ලදි.\n"
 
 #: src/config/help.c:713
 msgid ""
@@ -959,7 +962,7 @@ msgstr "මාධ්‍ය පුනරාවර්තනය"
 
 #: src/config/keys.c:97
 msgid "Media Rewind"
-msgstr ""
+msgstr "මාධ්‍ය නැවැත නැරැඹීම"
 
 #: src/config/keys.c:98
 msgid "Media Select"
@@ -1022,7 +1025,7 @@ msgstr "විරාමය"
 
 #: src/config/keys.c:112
 msgid "Print"
-msgstr ""
+msgstr "මුද්‍රණය"
 
 #: src/config/keys.c:114 modules/demux/mp4/id3genres.h:76
 msgid "Space"
@@ -1060,7 +1063,7 @@ msgstr "විශාලනය"
 
 #: src/config/keys.c:122
 msgid "Zoom Out"
-msgstr ""
+msgstr "විශාලනය අඩු කරන්න"
 
 #: src/config/keys.c:250
 msgid "Ctrl+"
@@ -1080,11 +1083,11 @@ msgstr "Meta+"
 
 #: src/config/keys.c:254
 msgid "Command+"
-msgstr ""
+msgstr "විධානය+"
 
 #: src/darwin/error.c:37
 msgid "Unknown error"
-msgstr ""
+msgstr "නොදන්නා දෝෂයක්"
 
 #: src/input/control.c:226
 #, c-format
@@ -1117,11 +1120,11 @@ msgstr "විකේතත මොඩියුලය විවෘත කිරී
 
 #: src/input/decoder.c:691
 msgid "No description for this codec"
-msgstr ""
+msgstr "මේ codec වර්ගය සඳහා විස්තරයක් ඇතුළත් නොවේ"
 
 #: src/input/decoder.c:693
 msgid "Codec not supported"
-msgstr ""
+msgstr "මේ codec වර්ගය සහය නොදක්වයි"
 
 #: src/input/decoder.c:694
 #, c-format
@@ -1130,11 +1133,11 @@ msgstr ""
 
 #: src/input/decoder.c:698
 msgid "Unidentified codec"
-msgstr ""
+msgstr "නාඳුනන codec වර්ගයක්"
 
 #: src/input/decoder.c:699
 msgid "VLC could not identify the audio or video codec"
-msgstr ""
+msgstr "VLCට ඔඩියෝ හෝ විඩියෝ කොඩෙකය හදුනාගත නොහැක"
 
 #: src/input/es_out.c:924 src/input/es_out.c:929 src/libvlc-module.c:228
 #: modules/access/vcdx/access.c:455 modules/access/vcdx/info.c:226
@@ -1155,7 +1158,7 @@ msgstr "ක්‍රමලේඛය"
 
 #: src/input/es_out.c:1339 src/input/es_out.c:1341
 msgid "Scrambled"
-msgstr ""
+msgstr "අවුල්ලූ"
 
 #: src/input/es_out.c:1339
 msgid "Yes"
@@ -1367,27 +1370,27 @@ msgstr "පථ හැඳුනුම"
 
 #: src/input/meta.c:73
 msgid "Number of Tracks"
-msgstr ""
+msgstr "ගීත ගණන"
 
 #: src/input/meta.c:74
 msgid "Director"
-msgstr ""
+msgstr "අධ්‍යක්ෂක"
 
 #: src/input/meta.c:75
 msgid "Season"
-msgstr ""
+msgstr "සිසන්"
 
 #: src/input/meta.c:76
 msgid "Episode"
-msgstr ""
+msgstr "කථාංග"
 
 #: src/input/meta.c:77
 msgid "Show Name"
-msgstr ""
+msgstr "කතාවේ නම"
 
 #: src/input/meta.c:78
 msgid "Actors"
-msgstr ""
+msgstr "නලුවන්"
 
 #: src/input/var.c:158
 msgid "Bookmark"
@@ -1712,7 +1715,7 @@ msgid ""
 "your experience, especially when combined with the Headphone Channel Mixer."
 msgstr ""
 
-#: src/libvlc-module.c:178 src/win32/thread.c:885
+#: src/libvlc-module.c:178 src/win32/thread.c:904
 #: modules/audio_output/kai.c:106 modules/codec/x264.c:442
 #: modules/gui/macosx/simple_prefs.m:122
 #: modules/gui/qt4/components/simple_preferences.cpp:136
@@ -2282,7 +2285,7 @@ msgstr ""
 
 #: src/libvlc-module.c:453
 msgid "Fix HDTV height"
-msgstr ""
+msgstr "HDTV උස නිවරදි කරන්න"
 
 #: src/libvlc-module.c:455
 msgid ""
@@ -3570,7 +3573,7 @@ msgstr ""
 msgid "These settings are the global VLC key bindings, known as \"hotkeys\"."
 msgstr ""
 
-#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1854
+#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1860
 msgid "Ignore"
 msgstr "නොසලකන්න"
 
@@ -16004,19 +16007,19 @@ msgstr ""
 msgid "Click to exit fullscreen playback."
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1556 modules/gui/macosx/intf.m:1573
+#: modules/gui/macosx/intf.m:1562 modules/gui/macosx/intf.m:1579
 msgid "VLC media playback"
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1852
+#: modules/gui/macosx/intf.m:1858
 msgid "Remove old preferences?"
 msgstr "පැරණි අභිරුචි ඉවත් කරන්නද?"
 
-#: modules/gui/macosx/intf.m:1853
+#: modules/gui/macosx/intf.m:1859
 msgid "We just found an older version of VLC's preferences files."
 msgstr "VLC හි පැරණි අනුවාදයක අභිරුචි ගොනු අපට සොයා ගැනීමට හැකිවිය."
 
-#: modules/gui/macosx/intf.m:1854
+#: modules/gui/macosx/intf.m:1860
 msgid "Move To Trash and Relaunch VLC"
 msgstr "පිළිසකර බඳුනට ගෙන යන්න සහ VLC යළි ධාවනය කරන්න"
 
@@ -25358,7 +25361,7 @@ msgstr "තිරය මත දර්ශනය කළ යුතු උපරි�
 
 #: modules/video_filter/rss.c:136
 msgid "Refresh time"
-msgstr ""
+msgstr "කාලය අලුත් කරන්න"
 
 #: modules/video_filter/rss.c:137
 msgid ""
@@ -25386,7 +25389,7 @@ msgstr ""
 
 #: modules/video_filter/rss.c:160
 msgid "Text position"
-msgstr ""
+msgstr "අකුරු ස්ථානය"
 
 #: modules/video_filter/rss.c:162
 msgid ""
@@ -25433,7 +25436,7 @@ msgstr "RSS සහ Atom පෝෂක පෙන්වන්න"
 
 #: modules/video_filter/scene.c:59
 msgid "Image format"
-msgstr ""
+msgstr "රූප ආකෘතිය"
 
 #: modules/video_filter/scene.c:60
 msgid "Format of the output images (png, jpeg, ...)."
@@ -25532,7 +25535,7 @@ msgstr "සමෝච්ච අතර අසමතාවය වර්ධනය �
 
 #: modules/video_filter/sharpen.c:66
 msgid "Sharpen video filter"
-msgstr ""
+msgstr "වීඩියෝ මුවහත් පෙරනය"
 
 #: modules/video_filter/subsdelay.c:45
 msgid "Change subtitle delay"
@@ -25623,7 +25626,7 @@ msgstr ""
 
 #: modules/video_filter/subsdelay.c:274
 msgid "Subsdelay"
-msgstr ""
+msgstr "උප පමාද"
 
 #: modules/video_filter/subsdelay.c:291
 msgid "Overlap fix"
@@ -25667,7 +25670,7 @@ msgstr ""
 
 #: modules/video_filter/wave.c:54
 msgid "Wave"
-msgstr ""
+msgstr "තරංග"
 
 #: modules/video_filter/yuvp.c:47
 msgid "YUVP converter"
@@ -26032,7 +26035,7 @@ msgstr ""
 
 #: modules/video_output/msw/direct3d.c:72
 msgid "HLSL File"
-msgstr ""
+msgstr "HLSL ගොනුව"
 
 #: modules/video_output/msw/direct3d.c:74
 msgid "Recommended video output for Windows Vista and later versions"
@@ -26163,7 +26166,7 @@ msgstr "වීඩි‍යෝ මතක බෆරයේ තාරතාවය �
 
 #: modules/video_output/vmem.c:51
 msgid "Chroma"
-msgstr ""
+msgstr "කොරොමා"
 
 #: modules/video_output/vmem.c:52
 msgid ""
@@ -26603,7 +26606,7 @@ msgstr "projectM හි පෙර සැකසූ ඩ්රෙක්ටරිය
 
 #: modules/visualization/projectm.cpp:62
 msgid "Title font"
-msgstr ""
+msgstr "මාතෘකා අක්ෂර"
 
 #: modules/visualization/projectm.cpp:63
 msgid "Font used for the titles"
@@ -27176,9 +27179,8 @@ msgid "FLAC"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:703
-#, fuzzy
 msgid "MP&4/MOV"
-msgstr "MP4/MOV"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:704
 msgid "Ogg/Ogm"
@@ -27189,9 +27191,8 @@ msgid "M&KV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:706
-#, fuzzy
 msgid "M&JPEG"
-msgstr "MJPEG"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:707
 msgid "MPEG-PS"
@@ -27202,9 +27203,8 @@ msgid "F&LV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:709
-#, fuzzy
 msgid "&MPEG-TS"
-msgstr "MPEG-TS"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:710
 msgid "RAW"
@@ -27219,9 +27219,8 @@ msgid "Webm"
 msgstr "Webm"
 
 #: modules/gui/qt4/ui/profiles.h:713
-#, fuzzy
 msgid "MPEG &1"
-msgstr "MPEG 1"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:714
 msgid "AVI"
@@ -27245,16 +27244,15 @@ msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:720
 msgid "Chapters"
-msgstr ""
+msgstr "පරිච්ඡේද"
 
 #: modules/gui/qt4/ui/profiles.h:723
 msgid "Menus"
 msgstr "මෙනු"
 
 #: modules/gui/qt4/ui/profiles.h:730
-#, fuzzy
 msgid "Fra&me Rate"
-msgstr "රාමු අනුපාතය"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:731
 msgid "Same as source"
@@ -27269,9 +27267,8 @@ msgid "Custom options"
 msgstr "රිසිකළ විකල්ප"
 
 #: modules/gui/qt4/ui/profiles.h:735
-#, fuzzy
 msgid "&Quality"
-msgstr "ගුණත්වය"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:736 modules/gui/qt4/ui/profiles.h:737
 msgid "Not Used"
@@ -27294,14 +27291,12 @@ msgid "px"
 msgstr "px"
 
 #: modules/gui/qt4/ui/profiles.h:758
-#, fuzzy
 msgid "Sa&mple Rate"
-msgstr "නියැදි අනුපාතය"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:766
-#, fuzzy
 msgid "Profile &Name"
-msgstr "පැතිකඩේ නම"
+msgstr ""
 
 #: modules/gui/qt4/ui/sout.h:203
 msgid "Set up media sources to stream"
@@ -27859,9 +27854,6 @@ msgstr "AAAA; "
 msgid "Media Manager List"
 msgstr "මාධ්‍ය කළමණාකරණ ලැයිස්තුව"
 
-#~ msgid "MKV"
-#~ msgstr "MKV"
-
 #~ msgid "FLV"
 #~ msgstr "FLV"
 
@@ -28009,9 +28001,6 @@ msgstr "මාධ්‍ය කළමණාකරණ ලැයිස්තුව"
 #~ msgid "3D Now! memcpy"
 #~ msgstr "3D Now! memcpy"
 
-#~ msgid "Refresh list"
-#~ msgstr "ලැයිස්තුව නැවුම් කරන්න"
-
 #~ msgid "RTMP"
 #~ msgstr "RTMP"
 
@@ -28091,9 +28080,6 @@ msgstr "මාධ්‍ය කළමණාකරණ ලැයිස්තුව"
 #~ msgid "Port for the database"
 #~ msgstr "අනුරුවෙහි ක්ලෝනය"
 
-#~ msgid "Title format string"
-#~ msgstr "මාතෘකා හැඩතලයෙහි අනුලකුණු වැල"
-
 #, fuzzy
 #~ msgid "Command UDP port"
 #~ msgstr "UDP තොට"
@@ -28151,10 +28137,6 @@ msgstr "මාධ්‍ය කළමණාකරණ ලැයිස්තුව"
 
 #~ msgid "dbus"
 #~ msgstr "dbus"
-
-#, fuzzy
-#~ msgid "Refresh Streams"
-#~ msgstr "ලැයිස්තුව නැවුම් කරන්න"
 
 #~ msgid "Disable DVD Menus (for compatibility)"
 #~ msgstr "ඩීවීඩී මෙනු අක්‍රිය කරන්න (අනුකූලතාවය වෙනුවෙන්)"
@@ -28505,9 +28487,6 @@ msgstr "මාධ්‍ය කළමණාකරණ ලැයිස්තුව"
 #~ msgid "VLC was brought to you by:"
 #~ msgstr "VLC ඔබ වෙත ගෙන එන්නේ:"
 
-#~ msgid "Rewind"
-#~ msgstr "පසුධාවනය"
-
 #~ msgid "Apply the equalizer filter twice. The effect will be sharper."
 #~ msgstr "සමානකරණ පෙරනය දෙවරක් යොදන්න. මෙමගින් ප්‍රතිඵලය වඩාත් තියුණු වනු ඇත."
 
@@ -28733,12 +28712,32 @@ msgstr "මාධ්‍ය කළමණාකරණ ලැයිස්තුව"
 #~ msgstr "යවන්න එපා"
 
 #, fuzzy
+#~ msgid "MKV"
+#~ msgstr "KVA"
+
+#, fuzzy
+#~ msgid "Refresh list"
+#~ msgstr "කාලය අලුත් කරන්න"
+
+#, fuzzy
+#~ msgid "Title format string"
+#~ msgstr "මාතෘකා අක්ෂර"
+
+#, fuzzy
+#~ msgid "Refresh Streams"
+#~ msgstr "කාලය අලුත් කරන්න"
+
+#, fuzzy
+#~ msgid "Rewind"
+#~ msgstr "මාධ්‍ය නැවැත නැරැඹීම"
+
+#, fuzzy
 #~ msgid "Subtitle track added"
 #~ msgstr "උපසිරැසි පථය"
 
 #, fuzzy
 #~ msgid "Media in Zip"
-#~ msgstr "මාධ්‍ය මෙනුව"
+#~ msgstr "මාධ්‍ය නැවැත නැරැඹීම"
 
 #, fuzzy
 #~ msgid "AVFoundation Video Capture"
@@ -28967,7 +28966,7 @@ msgstr "මාධ්‍ය කළමණාකරණ ලැයිස්තුව"
 
 #, fuzzy
 #~ msgid "Image clone"
-#~ msgstr "Page Down"
+#~ msgstr "රූප ආකෘතිය"
 
 #, fuzzy
 #~ msgid "Clone the image"
@@ -29116,7 +29115,7 @@ msgstr "මාධ්‍ය කළමණාකරණ ලැයිස්තුව"
 
 #, fuzzy
 #~ msgid "Image file"
-#~ msgstr "ගොනුව සුරකින්න..."
+#~ msgstr "රූප ආකෘතිය"
 
 #, fuzzy
 #~ msgid "Transparency of the image"
@@ -29136,7 +29135,7 @@ msgstr "මාධ්‍ය කළමණාකරණ ලැයිස්තුව"
 
 #, fuzzy
 #~ msgid "Commands"
-#~ msgstr "පරිකථන"
+#~ msgstr "විධානය+"
 
 #, fuzzy
 #~ msgid "Maemo hildon interface"
@@ -29368,7 +29367,7 @@ msgstr "මාධ්‍ය කළමණාකරණ ලැයිස්තුව"
 
 #, fuzzy
 #~ msgid "Flip vertical position"
-#~ msgstr "උපසිරැසි ස්ථානය බලාත්මක කරන්න"
+#~ msgstr "අකුරු ස්ථානය"
 
 #, fuzzy
 #~ msgid "Display XOSD output at the bottom of the screen instead of the top."
@@ -29436,7 +29435,7 @@ msgstr "මාධ්‍ය කළමණාකරණ ලැයිස්තුව"
 
 #, fuzzy
 #~ msgid "Menu position"
-#~ msgstr "ස්ථානය"
+#~ msgstr "අකුරු ස්ථානය"
 
 #, fuzzy
 #~ msgid ""
@@ -30108,7 +30107,7 @@ msgstr "මාධ්‍ය කළමණාකරණ ලැයිස්තුව"
 
 #, fuzzy
 #~ msgid "About the video filters"
-#~ msgstr "දර්ශන වීඩියෝ පෙරණය"
+#~ msgstr "වීඩියෝ මුවහත් පෙරනය"
 
 #, fuzzy
 #~ msgid "Controller..."

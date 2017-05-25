@@ -1,9 +1,10 @@
 # Bengali (India) translation
-# Copyright (C) 2016 VideoLAN
+# Copyright (C) 2017 VideoLAN
 # This file is distributed under the same license as the vlc package.
 #
 # Translators:
-# Biraj Karmakar <brnet00@gmail.com>, 2012
+# Asif Mahmud <typeamahmud@gmail.com>, 2016
+# BIRAJ KARMAKAR <brnet00@gmail.com>, 2012
 # Hemanta Nandi <hemantanandi2@gmail.com>, 2012
 # Mehzad Galib, 2016
 # Umesh Agarwal <umesh.agarwal1@gmail.com>, 2012
@@ -11,9 +12,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VLC - Trans\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2017-02-03 12:10+0100\n"
-"PO-Revision-Date: 2016-02-17 01:41+0000\n"
-"Last-Translator: Mehzad Galib\n"
+"POT-Creation-Date: 2017-05-24 15:01+0200\n"
+"PO-Revision-Date: 2017-02-06 13:43+0000\n"
+"Last-Translator: Christoph Miebach <christoph.miebach@web.de>\n"
 "Language-Team: Bengali (India) (http://www.transifex.com/yaron/vlc-trans/"
 "language/bn_IN/)\n"
 "Language: bn_IN\n"
@@ -873,31 +874,31 @@ msgstr "উজ্জ্বলতা বৃদ্ধি করি"
 
 #: src/config/keys.c:59
 msgid "Browser Back"
-msgstr ""
+msgstr "ব্রাউজার পেছনে "
 
 #: src/config/keys.c:60
 msgid "Browser Favorites"
-msgstr ""
+msgstr "ব্রাউজার পছন্দগুলো "
 
 #: src/config/keys.c:61
 msgid "Browser Forward"
-msgstr ""
+msgstr "ব্রাউজার সামনে"
 
 #: src/config/keys.c:62
 msgid "Browser Home"
-msgstr ""
+msgstr "ব্রাউজার হোম"
 
 #: src/config/keys.c:63
 msgid "Browser Refresh"
-msgstr ""
+msgstr "ব্রাউজার পুনরায় লোড"
 
 #: src/config/keys.c:64
 msgid "Browser Search"
-msgstr ""
+msgstr "ব্রাউজার খোঁজ"
 
 #: src/config/keys.c:65
 msgid "Browser Stop"
-msgstr ""
+msgstr "ব্রাউজার বন্ধ"
 
 #: src/config/keys.c:66 modules/gui/macosx/playlist.m:584
 #: modules/gui/qt4/dialogs/bookmarks.cpp:50
@@ -908,7 +909,7 @@ msgstr "মুছে ফেলা হবে"
 
 #: src/config/keys.c:67
 msgid "Down"
-msgstr ""
+msgstr "নিচে"
 
 #: src/config/keys.c:68 modules/control/rc.c:72
 msgid "End"
@@ -920,7 +921,7 @@ msgstr ""
 
 #: src/config/keys.c:70
 msgid "Esc"
-msgstr ""
+msgstr "প্রস্থান"
 
 #: src/config/keys.c:71
 msgid "F1"
@@ -976,7 +977,7 @@ msgstr ""
 
 #: src/config/keys.c:84
 msgid "Insert"
-msgstr ""
+msgstr "প্রবেশ"
 
 #: src/config/keys.c:86
 msgid "Media Angle"
@@ -988,15 +989,15 @@ msgstr ""
 
 #: src/config/keys.c:88
 msgid "Media Forward"
-msgstr ""
+msgstr "মিডিয়া সামনে"
 
 #: src/config/keys.c:89
 msgid "Media Menu"
-msgstr ""
+msgstr "মিডিয়া মেনু"
 
 #: src/config/keys.c:90
 msgid "Media Next Frame"
-msgstr ""
+msgstr "মিডিয়া পরের ফ্রেম"
 
 #: src/config/keys.c:91
 msgid "Media Next Track"
@@ -1008,7 +1009,7 @@ msgstr ""
 
 #: src/config/keys.c:93
 msgid "Media Prev Frame"
-msgstr ""
+msgstr "মিডিয়া আগের ফ্রেম"
 
 #: src/config/keys.c:94
 msgid "Media Prev Track"
@@ -1024,11 +1025,11 @@ msgstr ""
 
 #: src/config/keys.c:97
 msgid "Media Rewind"
-msgstr ""
+msgstr "মিডিয়া পিছনে"
 
 #: src/config/keys.c:98
 msgid "Media Select"
-msgstr ""
+msgstr "মিডিয়া পছন্দ"
 
 #: src/config/keys.c:99
 msgid "Media Shuffle"
@@ -1036,7 +1037,7 @@ msgstr ""
 
 #: src/config/keys.c:100
 msgid "Media Stop"
-msgstr ""
+msgstr "মিডিয়া বন্ধ"
 
 #: src/config/keys.c:101
 msgid "Media Subtitle"
@@ -1044,11 +1045,11 @@ msgstr ""
 
 #: src/config/keys.c:102
 msgid "Media Time"
-msgstr ""
+msgstr "মিডিয়া সময়"
 
 #: src/config/keys.c:103
 msgid "Media View"
-msgstr ""
+msgstr "মিডিয়া দেখা"
 
 #: src/config/keys.c:104 modules/gui/qt4/components/controller.cpp:545
 msgid "Menu"
@@ -1056,27 +1057,27 @@ msgstr "মেনু"
 
 #: src/config/keys.c:105
 msgid "Mouse Wheel Down"
-msgstr ""
+msgstr "মাউস নিচে"
 
 #: src/config/keys.c:106
 msgid "Mouse Wheel Left"
-msgstr ""
+msgstr "মাউস বামে"
 
 #: src/config/keys.c:107
 msgid "Mouse Wheel Right"
-msgstr ""
+msgstr "মাউস ডানে"
 
 #: src/config/keys.c:108
 msgid "Mouse Wheel Up"
-msgstr ""
+msgstr "মাউস উপরে"
 
 #: src/config/keys.c:109
 msgid "Page Down"
-msgstr ""
+msgstr "পাতা নিচে"
 
 #: src/config/keys.c:110
 msgid "Page Up"
-msgstr ""
+msgstr "পাতা উপরে"
 
 #: src/config/keys.c:111 modules/control/rc.c:71
 #: modules/gui/macosx/ControlsBar.m:434 modules/gui/macosx/MainMenu.m:1315
@@ -1113,7 +1114,7 @@ msgstr "ভলিউম কমান"
 
 #: src/config/keys.c:119
 msgid "Volume Mute"
-msgstr ""
+msgstr "শব্দ বন্ধ"
 
 #: src/config/keys.c:120 modules/gui/macosx/MainMenu.m:514
 msgid "Volume Up"
@@ -1149,7 +1150,7 @@ msgstr ""
 
 #: src/darwin/error.c:37
 msgid "Unknown error"
-msgstr ""
+msgstr "অজানা ভুল"
 
 #: src/input/control.c:226
 #, c-format
@@ -1182,11 +1183,11 @@ msgstr "VLC সঙ্কেতমোচক মডিউল খোলা যা�
 
 #: src/input/decoder.c:691
 msgid "No description for this codec"
-msgstr ""
+msgstr "এই কোডেক এর বর্ননা নেই"
 
 #: src/input/decoder.c:693
 msgid "Codec not supported"
-msgstr ""
+msgstr "কোডেক অননুমোদিত"
 
 #: src/input/decoder.c:694
 #, c-format
@@ -1432,7 +1433,7 @@ msgstr "গতিপথ আই-ডি"
 
 #: src/input/meta.c:73
 msgid "Number of Tracks"
-msgstr ""
+msgstr "ট্র্যাক সংখ্যা"
 
 #: src/input/meta.c:74
 msgid "Director"
@@ -1452,7 +1453,7 @@ msgstr ""
 
 #: src/input/meta.c:78
 msgid "Actors"
-msgstr ""
+msgstr "অভিনেতা/অভিনেত্রী"
 
 #: src/input/var.c:158
 msgid "Bookmark"
@@ -1731,16 +1732,16 @@ msgstr "অডিও আউটপুট ভলিউম পদক্ষেপ"
 
 #: src/libvlc-module.c:142
 msgid "The step size of the volume is adjustable using this option."
-msgstr ""
+msgstr "ভলিউমের ধাপের আকার এই অপশন থেকে ঠিক করা যাবে"
 
 #: src/libvlc-module.c:145
 msgid "Remember the audio volume"
-msgstr ""
+msgstr "শব্দের ভলিউম মনে রাখা"
 
 #: src/libvlc-module.c:147
 msgid ""
 "The volume can be recorded and automatically restored next time VLC is used."
-msgstr ""
+msgstr "পরেরবার ভিএলসি ব্যবহার করলে স্বয়ংক্রিয়ভাবে ভলিউম রেকর্ড ও ফিরিয়ে আনা যাবে"
 
 #: src/libvlc-module.c:150
 msgid "Audio desynchronization compensation"
@@ -1800,7 +1801,7 @@ msgstr ""
 "এনকোড Dolby পারিপার্শ্বিক সাথে না, এই অপশনটি চালু আপনার অভিজ্ঞতা উন্নত হতে পারে, "
 "বিশেষত যখন মাথায় বাঁধিয়া ব্যবহার্য বেতারযন্ত্র চ্যানেল মিশুক সঙ্গে সংযুক্ত."
 
-#: src/libvlc-module.c:178 src/win32/thread.c:885
+#: src/libvlc-module.c:178 src/win32/thread.c:904
 #: modules/audio_output/kai.c:106 modules/codec/x264.c:442
 #: modules/gui/macosx/simple_prefs.m:122
 #: modules/gui/qt4/components/simple_preferences.cpp:136
@@ -2708,7 +2709,7 @@ msgstr ""
 
 #: src/libvlc-module.c:596
 msgid "Menu language"
-msgstr ""
+msgstr "মেনু ভাষা"
 
 #: src/libvlc-module.c:598
 msgid ""
@@ -3844,7 +3845,7 @@ msgstr ""
 msgid "These settings are the global VLC key bindings, known as \"hotkeys\"."
 msgstr "এই সেটিংগুলো গ্লোবাল VLC কী বাইন্ডিং, যা \"হট কী\" নামে পরিচিত।"
 
-#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1854
+#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1860
 msgid "Ignore"
 msgstr "উপেক্ষা করা হবে"
 
@@ -16770,19 +16771,19 @@ msgstr "(কোনো উপাদান প্রদর্শন করা হ�
 msgid "Click to exit fullscreen playback."
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1556 modules/gui/macosx/intf.m:1573
+#: modules/gui/macosx/intf.m:1562 modules/gui/macosx/intf.m:1579
 msgid "VLC media playback"
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1852
+#: modules/gui/macosx/intf.m:1858
 msgid "Remove old preferences?"
 msgstr "পুরনো পছন্দসমূহ মুছে ফেলা হবে?"
 
-#: modules/gui/macosx/intf.m:1853
+#: modules/gui/macosx/intf.m:1859
 msgid "We just found an older version of VLC's preferences files."
 msgstr "আমরা এইমাত্র VLC এর পছন্দসমূহ ফাইলের একটি পুরাতন সংস্করন খুজে পেয়েছি।"
 
-#: modules/gui/macosx/intf.m:1854
+#: modules/gui/macosx/intf.m:1860
 msgid "Move To Trash and Relaunch VLC"
 msgstr "ট্র্যাশে সরিয়ে নিন এবং VLC পুনরায় চালু করা"
 
@@ -28446,9 +28447,8 @@ msgid "FLAC"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:703
-#, fuzzy
 msgid "MP&4/MOV"
-msgstr "MP4/MOV"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:704
 msgid "Ogg/Ogm"
@@ -28459,9 +28459,8 @@ msgid "M&KV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:706
-#, fuzzy
 msgid "M&JPEG"
-msgstr "MJPEG"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:707
 msgid "MPEG-PS"
@@ -28472,9 +28471,8 @@ msgid "F&LV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:709
-#, fuzzy
 msgid "&MPEG-TS"
-msgstr "MPEG-TS"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:710
 msgid "RAW"
@@ -28489,9 +28487,8 @@ msgid "Webm"
 msgstr "Webm"
 
 #: modules/gui/qt4/ui/profiles.h:713
-#, fuzzy
 msgid "MPEG &1"
-msgstr "MPEG 1"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:714
 msgid "AVI"
@@ -28522,9 +28519,8 @@ msgid "Menus"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:730
-#, fuzzy
 msgid "Fra&me Rate"
-msgstr "ফ্রেমের রেট"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:731
 msgid "Same as source"
@@ -28539,9 +28535,8 @@ msgid "Custom options"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:735
-#, fuzzy
 msgid "&Quality"
-msgstr "গুণগত মানের স্তর"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:736 modules/gui/qt4/ui/profiles.h:737
 msgid "Not Used"
@@ -28564,14 +28559,12 @@ msgid "px"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:758
-#, fuzzy
 msgid "Sa&mple Rate"
-msgstr "নমুনা হার"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:766
-#, fuzzy
 msgid "Profile &Name"
-msgstr "বৃত্তান্তের নাম"
+msgstr ""
 
 #: modules/gui/qt4/ui/sout.h:203
 msgid "Set up media sources to stream"
@@ -29131,9 +29124,6 @@ msgstr "AAAA; "
 msgid "Media Manager List"
 msgstr "মিডিয়া ম্যানেজার তালিকা"
 
-#~ msgid "MKV"
-#~ msgstr "MKV"
-
 #~ msgid "FLV"
 #~ msgstr "FLV"
 
@@ -29267,13 +29257,6 @@ msgstr "মিডিয়া ম্যানেজার তালিকা"
 #~ msgstr ""
 #~ "আপনি ডিফল্ট অডিও আউটপুট ভলিউম সেট এখানে 0 থেকে 1024 একটা সীমার মধ্যে, করতে "
 #~ "পারেন."
-
-#~ msgid ""
-#~ "The step size of the volume is adjustable using this option, in a range "
-#~ "from 0 to 1024."
-#~ msgstr ""
-#~ "ভলিউমের ধাপের জন্য এই বিকল্পটি ব্যবহার করে স্থায়ী হয় 0 থেকে 1024 একটা সীমার "
-#~ "মধ্যে,."
 
 #~ msgid ""
 #~ "You can force the audio output frequency here. Common values are 0 "
@@ -29997,9 +29980,6 @@ msgstr "মিডিয়া ম্যানেজার তালিকা"
 #~ msgid "Icon View"
 #~ msgstr "আইকন আকারে প্রদর্শন"
 
-#~ msgid "Detailed View"
-#~ msgstr "বিস্তারিত প্রদর্শন"
-
 #~ msgid "Warning: the key is already assigned to \""
 #~ msgstr "সতর্কীকরণ: এই কী ইতোমধ্যেই \" এর জন্য নিয়োগ করা রয়েছে"
 
@@ -30586,6 +30566,20 @@ msgstr "মিডিয়া ম্যানেজার তালিকা"
 #~ msgstr "সর্বনিম্ন ম্যাক OS X OpenGL ভিডিও আউটপুট (drawable-nsobject প্রয়োজন)"
 
 #, fuzzy
+#~ msgid "MKV"
+#~ msgstr "KVA"
+
+#, fuzzy
+#~ msgid ""
+#~ "The step size of the volume is adjustable using this option, in a range "
+#~ "from 0 to 1024."
+#~ msgstr "ভলিউমের ধাপের আকার এই অপশন থেকে ঠিক করা যাবে"
+
+#, fuzzy
+#~ msgid "Detailed View"
+#~ msgstr "মিডিয়া দেখা"
+
+#, fuzzy
 #~ msgid "---  DVD Menu"
 #~ msgstr "DVD মেনু"
 
@@ -30611,7 +30605,7 @@ msgstr "মিডিয়া ম্যানেজার তালিকা"
 
 #, fuzzy
 #~ msgid "Media in Zip"
-#~ msgstr "মিডিয়া ফাইল"
+#~ msgstr "মিডিয়া পিছনে"
 
 #, fuzzy
 #~ msgid "Path to the media in the Zip archive"
@@ -31939,7 +31933,7 @@ msgstr "মিডিয়া ম্যানেজার তালিকা"
 
 #, fuzzy
 #~ msgid "List View"
-#~ msgstr "তালিকার ID"
+#~ msgstr "মিডিয়া দেখা"
 
 #, fuzzy
 #~ msgid "PictureFlow View "

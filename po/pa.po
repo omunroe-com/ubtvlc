@@ -1,16 +1,17 @@
 # Punjabi translation
-# Copyright (C) 2015 VideoLAN
-# This file is distributed under the same license as the VLC package.
+# Copyright (C) 2017 VideoLAN
+# This file is distributed under the same license as the vlc package.
 #
 # Translators:
-# A S Alam <apreet.alam@gmail.com>, 2009-2015
+# A S Alam <apreet.alam@gmail.com>, 2009-2016
 # Navpreet Kaur <passionate.preet3@gmail.com>, 2014
+# Punjabi Fied <towtruckerwiki@gmail.com>, 2016
 msgid ""
 msgstr ""
 "Project-Id-Version: VLC - Trans\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2017-02-03 12:10+0100\n"
-"PO-Revision-Date: 2015-12-04 10:01+0000\n"
+"POT-Creation-Date: 2017-05-24 15:01+0200\n"
+"PO-Revision-Date: 2017-02-06 13:43+0000\n"
 "Last-Translator: Christoph Miebach <christoph.miebach@web.de>\n"
 "Language-Team: Panjabi (Punjabi) (http://www.transifex.com/yaron/vlc-trans/"
 "language/pa/)\n"
@@ -87,7 +88,7 @@ msgstr "ਹਾਟ-ਕੀ ਸੈਟਿੰਗ"
 #: share/lua/http/dialogs/create_stream.html:150
 #: modules/gui/qt4/ui/profiles.h:721 modules/gui/qt4/ui/profiles.h:752
 msgid "Audio"
-msgstr "ਆਡਿਓ"
+msgstr "ਆਡੀਓ"
 
 #: include/vlc_config_cat.h:54
 msgid "Audio settings"
@@ -152,11 +153,11 @@ msgstr "ਵਿਡੀਓ"
 
 #: include/vlc_config_cat.h:72
 msgid "Video settings"
-msgstr "ਵਿਡੀਓ ਸਥਾਪਨ"
+msgstr "ਵਿਡੀਓ ਸੈਟਿੰਗਾਂ"
 
 #: include/vlc_config_cat.h:74
 msgid "General video settings"
-msgstr "ਸਧਾਰਨ ਵਿਡੀਓ ਸਥਾਪਨ"
+msgstr "ਸਧਾਰਨ ਵਿਡੀਓ  ਸੈਟਿੰਗਾਂ"
 
 #: include/vlc_config_cat.h:77
 msgid "General settings for video output modules."
@@ -452,11 +453,11 @@ msgstr "ਫੋਲਡਰ ਬਣਾਓ..."
 
 #: include/vlc_intf_strings.h:70
 msgid "Rename Directory..."
-msgstr "...ਡਾਇਰੈਕਟਰੀ ਨਾਂ ਬਦਲੋ"
+msgstr "...ਡਾਇਰੈਕਟਰੀ ਦਾ ਨਾਂ ਬਦਲੋ"
 
 #: include/vlc_intf_strings.h:71
 msgid "Rename Folder..."
-msgstr "...ਫੋਲਡਰ ਨਾਂ ਬਦਲੋ"
+msgstr "...ਫੋਲਡਰ ਦਾ ਨਾਂ ਬਦਲੋ"
 
 #: include/vlc_intf_strings.h:72
 msgid "Show Containing Directory..."
@@ -740,12 +741,12 @@ msgstr ""
 #: src/config/help.c:666
 #, c-format
 msgid "VLC version %s (%s)\n"
-msgstr "VLC ਵਰਜਨ %s (%s)\n"
+msgstr "VLC ਵਰਜ਼ਨ %s (%s)\n"
 
 #: src/config/help.c:667
 #, c-format
 msgid "Compiled by %s on %s (%s)\n"
-msgstr "ਕੰਪਾਇਲ ਕੀਤਾ %s ਵਲੋਂ %s (%s) ਉੱਤੇ\n"
+msgstr "%s ਵਲੋਂ %s (%s) ਉੱਤੇ ਕੰਪਾਇਲ ਕੀਤਾ\n"
 
 #: src/config/help.c:669
 #, c-format
@@ -934,7 +935,7 @@ msgstr "ਮੀਡੀਆ ਦੁਹਰਾਓ"
 
 #: src/config/keys.c:97
 msgid "Media Rewind"
-msgstr ""
+msgstr "ਮੀਡੀਆ ਰਿਵਾਇੰਡ"
 
 #: src/config/keys.c:98
 msgid "Media Select"
@@ -966,19 +967,19 @@ msgstr "ਮੇਨੂ"
 
 #: src/config/keys.c:105
 msgid "Mouse Wheel Down"
-msgstr ""
+msgstr "ਮਾਊਸ ਵੀਲ ਥੱਲੇ"
 
 #: src/config/keys.c:106
 msgid "Mouse Wheel Left"
-msgstr ""
+msgstr "ਮਾਊਸ ਵੀਲ ਖੱਬੇ"
 
 #: src/config/keys.c:107
 msgid "Mouse Wheel Right"
-msgstr ""
+msgstr "ਮਾਊਸ ਵੀਲ ਸੱਜੇ"
 
 #: src/config/keys.c:108
 msgid "Mouse Wheel Up"
-msgstr ""
+msgstr "ਮਾਊਸ ਵੀਲ ਉੱਪਰ"
 
 #: src/config/keys.c:109
 msgid "Page Down"
@@ -997,7 +998,7 @@ msgstr "ਵਿਰਾਮ"
 
 #: src/config/keys.c:112
 msgid "Print"
-msgstr ""
+msgstr "ਛਾਪੋ"
 
 #: src/config/keys.c:114 modules/demux/mp4/id3genres.h:76
 msgid "Space"
@@ -1130,7 +1131,7 @@ msgstr "ਪਰੋਗਰਾਮ"
 
 #: src/input/es_out.c:1339 src/input/es_out.c:1341
 msgid "Scrambled"
-msgstr ""
+msgstr "ਅਵਿਵਸਥਿਤ"
 
 #: src/input/es_out.c:1339
 msgid "Yes"
@@ -1139,7 +1140,7 @@ msgstr "ਹਾਂ"
 #: src/input/es_out.c:2018
 #, c-format
 msgid "Closed captions %u"
-msgstr "ਬੰਦ ਸੁਰਖੀਆਂ %u"
+msgstr "%u ਸੁਰਖੀਆਂ ਬੰਦ ਕੀਤੀਆਂ"
 
 #: src/input/es_out.c:2876
 #, c-format
@@ -1687,7 +1688,7 @@ msgid ""
 "your experience, especially when combined with the Headphone Channel Mixer."
 msgstr ""
 
-#: src/libvlc-module.c:178 src/win32/thread.c:885
+#: src/libvlc-module.c:178 src/win32/thread.c:904
 #: modules/audio_output/kai.c:106 modules/codec/x264.c:442
 #: modules/gui/macosx/simple_prefs.m:122
 #: modules/gui/qt4/components/simple_preferences.cpp:136
@@ -2979,7 +2980,7 @@ msgstr ""
 
 #: src/libvlc-module.c:854
 msgid "SOCKS user name"
-msgstr "SOCKS ਯੂਜ਼ਰ ਨਾਂ"
+msgstr "SOCKS ਵਰਤੋਂਕਾਰ ਨਾਂ"
 
 #: src/libvlc-module.c:856
 msgid "User name to be used for connection to the SOCKS proxy."
@@ -3526,7 +3527,7 @@ msgstr ""
 msgid "These settings are the global VLC key bindings, known as \"hotkeys\"."
 msgstr ""
 
-#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1854
+#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1860
 msgid "Ignore"
 msgstr "ਅਣਡਿੱਠਾ"
 
@@ -4145,7 +4146,7 @@ msgstr ""
 
 #: src/libvlc-module.c:1352
 msgid "Toggle subtitles"
-msgstr ""
+msgstr "ਸਬ-ਟਾਈਟਲਾਂ ਨੂੰ ਬਦਲੋ"
 
 #: src/libvlc-module.c:1353
 msgid "Toggle subtitle track visibility."
@@ -4399,7 +4400,7 @@ msgstr "ਕਾਰਗੁਜ਼ਾਰੀ ਚੋਣਾਂ"
 
 #: src/libvlc-module.c:1984
 msgid "Clock source"
-msgstr ""
+msgstr "ਘੜੀ ਸਰੋਤ"
 
 #: src/libvlc-module.c:2093
 msgid "Hot keys"
@@ -6088,7 +6089,7 @@ msgstr ""
 
 #: modules/access/dtv/access.c:156
 msgid "Pilot"
-msgstr ""
+msgstr "ਪਾਇਲਟ"
 
 #: modules/access/dtv/access.c:158
 msgid "Roll-off factor"
@@ -6230,7 +6231,7 @@ msgstr ""
 
 #: modules/access/dtv/access.c:223
 msgid "Satellite elevation"
-msgstr ""
+msgstr "ਸੈਟੇਲਾਈਟ ਉਚਾਈ"
 
 #: modules/access/dtv/access.c:224
 msgid "Satellite elevation in tenths of degree"
@@ -6238,7 +6239,7 @@ msgstr ""
 
 #: modules/access/dtv/access.c:225
 msgid "Satellite longitude"
-msgstr ""
+msgstr "ਸੈਟੇਲਾਈਟ ਲੰਬਕਾਰ"
 
 #: modules/access/dtv/access.c:227
 msgid "Satellite longitude in tenths of degree. West is negative."
@@ -6773,7 +6774,7 @@ msgstr "ਸਾਈਜ਼"
 
 #: modules/access/imem.c:115
 msgid "Size of stream in bytes"
-msgstr ""
+msgstr "ਬਾਈਟਸ ਵਿੱਚ ਸਟਰੀਮ ਦਾ ਆਕਾਰ"
 
 #: modules/access/imem.c:118 modules/access/imem.c:119
 msgid "Memory input"
@@ -6963,7 +6964,7 @@ msgstr ""
 
 #: modules/access/live555.cpp:632
 msgid "RTSP authentication"
-msgstr ""
+msgstr "RTSP ਪ੍ਰਮਾਣਿਕਤਾ"
 
 #: modules/access/live555.cpp:633
 msgid "Please enter a valid login name and a password."
@@ -7146,7 +7147,7 @@ msgstr ""
 
 #: modules/access_output/http.c:61
 msgid "Metacube"
-msgstr ""
+msgstr "ਮੈਟਾਕਿਯੂਬ"
 
 #: modules/access_output/http.c:62
 msgid ""
@@ -7176,7 +7177,7 @@ msgstr ""
 
 #: modules/access_output/livehttp.c:74
 msgid "Number of segments"
-msgstr ""
+msgstr "ਹਿੱਸਿਆਂ ਦੀ ਗਿਣਤੀ"
 
 #: modules/access_output/livehttp.c:75
 msgid "Number of segments to include in index"
@@ -7208,7 +7209,7 @@ msgstr ""
 
 #: modules/access_output/livehttp.c:87
 msgid "Delete segments"
-msgstr ""
+msgstr "ਹਿੱਸੇ ਹਟਾਓ"
 
 #: modules/access_output/livehttp.c:88
 msgid "Delete segments when they are no longer needed"
@@ -7420,15 +7421,15 @@ msgstr ""
 
 #: modules/access/rdp.c:65
 msgid "RDP auth username"
-msgstr ""
+msgstr "RDP ਪਰਮਾਣਕਿਤਾ ਵਰਤੋਂਕਾਰ-ਨਾਂ"
 
 #: modules/access/rdp.c:66
 msgid "RDP auth password"
-msgstr ""
+msgstr "RDP ਪ੍ਰਮਾਣਕਿਤਾ ਪਾਸਵਰਡ"
 
 #: modules/access/rdp.c:67
 msgid "RDP Password"
-msgstr ""
+msgstr "RDP ਪਾਸਵਰਡ"
 
 #: modules/access/rdp.c:68
 msgid "Encrypted connexion"
@@ -7828,7 +7829,7 @@ msgstr "TCP ਇੰਪੁੱਟ"
 
 #: modules/access/timecode.c:43
 msgid "Time code"
-msgstr ""
+msgstr "ਟਾਈਮ ਕੋਡ"
 
 #: modules/access/timecode.c:44
 msgid "Time code subpicture elementary stream generator"
@@ -9375,7 +9376,7 @@ msgstr ""
 
 #: modules/audio_filter/stereo_widen.c:64
 msgid "Crossfeed"
-msgstr ""
+msgstr "ਕਰੌਸਫੀਡ"
 
 #: modules/audio_filter/stereo_widen.c:65
 msgid ""
@@ -9855,7 +9856,7 @@ msgstr "FFmpeg ਡੀਬੱਗ ਮਾਸਕ ਸੈੱਟ ਕਰੋ"
 
 #: modules/codec/avcodec/avcodec.h:115
 msgid "Codec name"
-msgstr ""
+msgstr "Codec ਨਾਂ"
 
 #: modules/codec/avcodec/avcodec.h:116
 msgid "Internal libavcodec codec name"
@@ -10846,7 +10847,7 @@ msgstr ""
 
 #: modules/codec/opus.c:68 modules/codec/opus.c:75
 msgid "Opus"
-msgstr ""
+msgstr "ਓਪਸ"
 
 #: modules/codec/opus.c:73
 msgid "Opus audio encoder"
@@ -10883,7 +10884,7 @@ msgstr ""
 
 #: modules/codec/qsv.c:67
 msgid "Codec Level"
-msgstr ""
+msgstr "Codec ਪੱਧਰ"
 
 #: modules/codec/qsv.c:69
 msgid ""
@@ -12705,7 +12706,7 @@ msgstr "tesa"
 
 #: modules/codec/x264.c:437
 msgid "Fast"
-msgstr ""
+msgstr "ਤੇਜ਼"
 
 #: modules/codec/x264.c:437 modules/gui/macosx/MainMenu.m:403
 #: modules/gui/macosx/simple_prefs.m:745
@@ -12718,7 +12719,7 @@ msgstr "ਨਾਰਮਲ"
 
 #: modules/codec/x264.c:437
 msgid "Slow"
-msgstr ""
+msgstr "ਹੌਲੀ"
 
 #: modules/codec/x264.c:442
 msgid "Spatial"
@@ -12906,7 +12907,7 @@ msgstr "ਹਾਟ-ਸਵਿੱਚਾਂ ਪਰਬੰਧ ਇੰਟਰਫੇਸ"
 
 #: modules/control/hotkeys.c:188
 msgid "One"
-msgstr ""
+msgstr "ਇੱਕ"
 
 #: modules/control/hotkeys.c:195
 #, c-format
@@ -13913,7 +13914,7 @@ msgstr "ਬਲਿਊ"
 
 #: modules/demux/mp4/id3genres.h:33
 msgid "Classic Rock"
-msgstr ""
+msgstr "ਕਲਾਸਿਕ ਰੌਕ"
 
 #: modules/demux/mp4/id3genres.h:34
 msgid "Country"
@@ -13933,7 +13934,7 @@ msgstr ""
 
 #: modules/demux/mp4/id3genres.h:39
 msgid "Hip-Hop"
-msgstr ""
+msgstr "ਹਿੱਪ - ਹੋਪ"
 
 #: modules/demux/mp4/id3genres.h:40
 msgid "Jazz"
@@ -13969,7 +13970,7 @@ msgstr ""
 
 #: modules/demux/mp4/id3genres.h:52
 msgid "Alternative"
-msgstr ""
+msgstr "ਅਲਟਰਨੇਟਿਵ"
 
 #: modules/demux/mp4/id3genres.h:54
 msgid "Death Metal"
@@ -14085,7 +14086,7 @@ msgstr ""
 
 #: modules/demux/mp4/id3genres.h:84
 msgid "Electronic"
-msgstr ""
+msgstr "ਇਲੈਕਟ੍ਰਾਨਿਕ"
 
 #: modules/demux/mp4/id3genres.h:85
 msgid "Pop-Folk"
@@ -14121,11 +14122,11 @@ msgstr "ਟਾਪ ੪੦"
 
 #: modules/demux/mp4/id3genres.h:93
 msgid "Christian Rap"
-msgstr ""
+msgstr "ਮਸੀਹੀ ਰੈਪ"
 
 #: modules/demux/mp4/id3genres.h:94
 msgid "Pop/Funk"
-msgstr ""
+msgstr "ਪੋਪ/ਫੰਕ"
 
 #: modules/demux/mp4/id3genres.h:95
 msgid "Jungle"
@@ -14141,7 +14142,7 @@ msgstr "ਕੈਬਰੇਟ"
 
 #: modules/demux/mp4/id3genres.h:98
 msgid "New Wave"
-msgstr ""
+msgstr "ਨਵੀਂ ਵੇਵ"
 
 #: modules/demux/mp4/id3genres.h:99 modules/gui/macosx/VideoEffects.m:158
 #: modules/video_filter/psychedelic.c:55
@@ -14171,11 +14172,11 @@ msgstr ""
 
 #: modules/demux/mp4/id3genres.h:105
 msgid "Acid Punk"
-msgstr ""
+msgstr "ਐਸਿਡ ਪੰਕ"
 
 #: modules/demux/mp4/id3genres.h:106
 msgid "Acid Jazz"
-msgstr ""
+msgstr "ਐਸਿਡ ਜੈਜ਼"
 
 #: modules/demux/mp4/id3genres.h:107
 msgid "Polka"
@@ -14183,7 +14184,7 @@ msgstr "ਪੋਲਕਾ"
 
 #: modules/demux/mp4/id3genres.h:108
 msgid "Retro"
-msgstr ""
+msgstr "ਰੈਟਰੋ"
 
 #: modules/demux/mp4/id3genres.h:109
 msgid "Musical"
@@ -14195,23 +14196,23 @@ msgstr ""
 
 #: modules/demux/mp4/id3genres.h:111
 msgid "Hard Rock"
-msgstr ""
+msgstr "ਹਾਰਡ ਰੌਕ"
 
 #: modules/demux/mp4/id3genres.h:112
 msgid "Folk"
-msgstr ""
+msgstr "ਫੋਲਕ"
 
 #: modules/demux/mp4/id3genres.h:113
 msgid "Folk-Rock"
-msgstr ""
+msgstr "ਫੋਲਕ-ਰੌਕ "
 
 #: modules/demux/mp4/id3genres.h:114
 msgid "National Folk"
-msgstr ""
+msgstr "ਨੈਸ਼ਨਲ ਫੋਕ"
 
 #: modules/demux/mp4/id3genres.h:115
 msgid "Swing"
-msgstr ""
+msgstr "ਸਵਿੰਗ"
 
 #: modules/demux/mp4/id3genres.h:116
 msgid "Fast Fusion"
@@ -14283,7 +14284,7 @@ msgstr ""
 
 #: modules/demux/mp4/id3genres.h:135
 msgid "Opera"
-msgstr ""
+msgstr "ਓਪੇਰਾ"
 
 #: modules/demux/mp4/id3genres.h:136
 msgid "Chamber Music"
@@ -14291,7 +14292,7 @@ msgstr ""
 
 #: modules/demux/mp4/id3genres.h:137
 msgid "Sonata"
-msgstr ""
+msgstr "ਸੋਨਾਟਾ"
 
 #: modules/demux/mp4/id3genres.h:138
 msgid "Symphony"
@@ -14351,7 +14352,7 @@ msgstr ""
 
 #: modules/demux/mp4/id3genres.h:153
 msgid "Punk Rock"
-msgstr ""
+msgstr "ਪੰਕ ਰੌਕ "
 
 #: modules/demux/mp4/id3genres.h:154
 msgid "Drum Solo"
@@ -14371,7 +14372,7 @@ msgstr ""
 
 #: modules/demux/mp4/id3genres.h:158
 msgid "Goa"
-msgstr ""
+msgstr "ਗੋਆ"
 
 #: modules/demux/mp4/id3genres.h:159
 msgid "Drum & Bass"
@@ -14407,7 +14408,7 @@ msgstr ""
 
 #: modules/demux/mp4/id3genres.h:167
 msgid "Beat"
-msgstr ""
+msgstr "ਬੀਟ"
 
 #: modules/demux/mp4/id3genres.h:168
 msgid "Christian Gangsta Rap"
@@ -14439,7 +14440,7 @@ msgstr ""
 
 #: modules/demux/mp4/id3genres.h:175
 msgid "Salsa"
-msgstr ""
+msgstr "ਸਾਲਸਾ"
 
 #: modules/demux/mp4/id3genres.h:176
 msgid "Thrash Metal"
@@ -14447,15 +14448,15 @@ msgstr ""
 
 #: modules/demux/mp4/id3genres.h:177
 msgid "Anime"
-msgstr ""
+msgstr "ਐਨੀਮੇ"
 
 #: modules/demux/mp4/id3genres.h:178
 msgid "JPop"
-msgstr ""
+msgstr "ਜੇ-ਪੌਪ"
 
 #: modules/demux/mp4/id3genres.h:179
 msgid "Synthpop"
-msgstr ""
+msgstr "ਸਿਨਥਪੌਪ"
 
 #: modules/demux/mp4/mp4.c:52
 msgid "MP4 stream demuxer"
@@ -14467,7 +14468,7 @@ msgstr "MP4"
 
 #: modules/demux/mp4/mp4.c:1455
 msgid "Writer"
-msgstr ""
+msgstr "ਲੇਖਕ"
 
 #: modules/demux/mp4/mp4.c:1456
 msgid "Composer"
@@ -15284,7 +15285,7 @@ msgstr "2 ਪਾਸ"
 #: modules/gui/qt4/components/extended_panels.cpp:1246
 #: modules/gui/qt4/ui/equalizer.h:136
 msgid "Preamp"
-msgstr ""
+msgstr "ਪ੍ਰੀਐਮਪ"
 
 #: modules/gui/macosx/AudioEffects.m:117
 msgid "Enable dynamic range compressor"
@@ -15657,7 +15658,7 @@ msgstr ""
 
 #: modules/gui/macosx/ConvertAndSave.m:152
 msgid "Convert & Stream"
-msgstr ""
+msgstr " ਬਦਲੋ ਤੇ ਸਟਰੀਮ ਕਰੋ"
 
 #: modules/gui/macosx/ConvertAndSave.m:153
 msgid "Go!"
@@ -15707,7 +15708,7 @@ msgstr "...ਸਟਰੀਮ ਸੈਟਅੱਪ"
 
 #: modules/gui/macosx/ConvertAndSave.m:163
 msgid "Select Streaming Method"
-msgstr ""
+msgstr "ਸਟਰੀਮ ਕਰਨ ਦਾ ਢੰਗ ਚੁਣੋ"
 
 #: modules/gui/macosx/ConvertAndSave.m:164
 msgid "Save as File"
@@ -15843,15 +15844,15 @@ msgstr ""
 
 #: modules/gui/macosx/ConvertAndSave.m:373
 msgid "Save as new profile"
-msgstr ""
+msgstr "ਨਵੇਂ ਪਰੋਫਾਈਲ ਵਜੋਂ ਸੰਭਾਲੋ"
 
 #: modules/gui/macosx/ConvertAndSave.m:386
 msgid "Remove a profile"
-msgstr ""
+msgstr "ਪਰੋਫਾਈਲ ਨੂੰ ਹਟਾਓ"
 
 #: modules/gui/macosx/ConvertAndSave.m:387
 msgid "Select the profile you would like to remove:"
-msgstr ""
+msgstr "ਉਹ ਪਰੋਫਾਈਲ ਨੂੰ ਚੁਣੋ, ਜਿਸ ਨੂੰ ਤੁਸੀਂ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ:"
 
 #: modules/gui/macosx/ConvertAndSave.m:475
 msgid "%@ stream to %@:%@"
@@ -15928,19 +15929,19 @@ msgstr "(ਚਲਾਉਣ ਲਈ ਕੋਈ ਆਈਟਮ ਨਹੀਂ ਹੈ)"
 msgid "Click to exit fullscreen playback."
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1556 modules/gui/macosx/intf.m:1573
+#: modules/gui/macosx/intf.m:1562 modules/gui/macosx/intf.m:1579
 msgid "VLC media playback"
 msgstr "ਵੀਐਲਸੀ ਮੀਡਿਆ ਪਲੇਅਬੈ"
 
-#: modules/gui/macosx/intf.m:1852
+#: modules/gui/macosx/intf.m:1858
 msgid "Remove old preferences?"
 msgstr "ਪੁਰਾਣੀ ਪਸੰਦ ਹਟਾਉਣੀ ਹੈ?"
 
-#: modules/gui/macosx/intf.m:1853
+#: modules/gui/macosx/intf.m:1859
 msgid "We just found an older version of VLC's preferences files."
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1854
+#: modules/gui/macosx/intf.m:1860
 msgid "Move To Trash and Relaunch VLC"
 msgstr "ਰੱਦੀ  ਵਿੱਚ ਭੇਜੋ ਅਤੇ VLC ਮੁੜ-ਚਾਲੂ"
 
@@ -17533,7 +17534,7 @@ msgstr ""
 #: modules/gui/macosx/VideoEffects.m:98 modules/video_filter/gradfun.c:49
 #: modules/gui/qt4/ui/video_effects.h:1401
 msgid "Radius"
-msgstr ""
+msgstr "ਵਿਆਸ"
 
 #: modules/gui/macosx/VideoEffects.m:99 modules/gui/qt4/ui/video_effects.h:1402
 msgid "Film Grain"
@@ -17719,7 +17720,7 @@ msgstr "ਟਰਾਂਸਪਰੇਸੀ"
 
 #: modules/gui/macosx/VideoEffects.m:257
 msgid "Organize profiles..."
-msgstr ""
+msgstr "...ਪਰੋਫਾਈਲਾਂ ਦਾ ਪਰਬੰਧ ਕਰੋ"
 
 #: modules/gui/macosx/wizard.m:116
 msgid "MPEG-1 Video codec (usable with MPEG PS, MPEG TS, MPEG1, OGG and RAW)"
@@ -19754,7 +19755,7 @@ msgstr "ਬਦਲੋ(&o)"
 
 #: modules/gui/qt4/dialogs/open.cpp:205
 msgid "C&onvert / Save"
-msgstr ""
+msgstr "ਬਦਲੋ/ਸੰਭਾਲੋ(&o)"
 
 #: modules/gui/qt4/dialogs/openurl.cpp:48
 msgid "Open URL"
@@ -19766,7 +19767,7 @@ msgstr "URL ਇੱਥੇ ਦਿਓ..."
 
 #: modules/gui/qt4/dialogs/openurl.cpp:68
 msgid "Please enter the URL or path to the media you want to play."
-msgstr ""
+msgstr "ਮੀਡੀਏ ਲਈ URL ਜਾਂ ਮਾਰਗ ਦਿਓ, ਜਿਸ ਨੂੰ ਤੁਸੀਂ ਚਲਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ।"
 
 #: modules/gui/qt4/dialogs/openurl.cpp:72
 msgid ""
@@ -20372,7 +20373,7 @@ msgstr "ਆਡੀਓ ਜੰਤਰ(&D)"
 
 #: modules/gui/qt4/menus.cpp:620
 msgid "&Stereo Mode"
-msgstr ""
+msgstr "ਸਟੀਰਿਓ ਮੋਡ(&S)"
 
 #: modules/gui/qt4/menus.cpp:623
 msgid "&Visualizations"
@@ -20464,7 +20465,7 @@ msgstr "ਅੱਗੇ(&x)"
 
 #: modules/gui/qt4/menus.cpp:863
 msgid "Sp&eed"
-msgstr ""
+msgstr "ਗਤੀ(&e)"
 
 #: modules/gui/qt4/menus.cpp:869
 msgid "&Faster"
@@ -22216,7 +22217,7 @@ msgstr ""
 
 #: modules/stream_out/langfromtelx.c:45
 msgid "Magazine"
-msgstr ""
+msgstr "ਮੈਗਜ਼ੀਨ"
 
 #: modules/stream_out/langfromtelx.c:47
 msgid "Specify the magazine containing the language page"
@@ -27042,9 +27043,8 @@ msgid "FLAC"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:703
-#, fuzzy
 msgid "MP&4/MOV"
-msgstr "MP4/MOV"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:704
 msgid "Ogg/Ogm"
@@ -27055,9 +27055,8 @@ msgid "M&KV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:706
-#, fuzzy
 msgid "M&JPEG"
-msgstr "MJPEG"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:707
 msgid "MPEG-PS"
@@ -27068,9 +27067,8 @@ msgid "F&LV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:709
-#, fuzzy
 msgid "&MPEG-TS"
-msgstr "MPEG-TS"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:710
 msgid "RAW"
@@ -27085,9 +27083,8 @@ msgid "Webm"
 msgstr "ਵੈੱਬਐਮ"
 
 #: modules/gui/qt4/ui/profiles.h:713
-#, fuzzy
 msgid "MPEG &1"
-msgstr "MPEG 1"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:714
 msgid "AVI"
@@ -27118,9 +27115,8 @@ msgid "Menus"
 msgstr "ਮੇਨੂ"
 
 #: modules/gui/qt4/ui/profiles.h:730
-#, fuzzy
 msgid "Fra&me Rate"
-msgstr "ਫਰੇਮ ਰੇਟ"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:731
 msgid "Same as source"
@@ -27135,9 +27131,8 @@ msgid "Custom options"
 msgstr "ਪਸੰਦ ਚੋਣਾਂ"
 
 #: modules/gui/qt4/ui/profiles.h:735
-#, fuzzy
 msgid "&Quality"
-msgstr "ਕੁਆਲਟੀ"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:736 modules/gui/qt4/ui/profiles.h:737
 msgid "Not Used"
@@ -27160,14 +27155,12 @@ msgid "px"
 msgstr "px"
 
 #: modules/gui/qt4/ui/profiles.h:758
-#, fuzzy
 msgid "Sa&mple Rate"
-msgstr "ਸੈਂਪਲ ਰੇਟ"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:766
-#, fuzzy
 msgid "Profile &Name"
-msgstr "ਪਰੋਫਾਇਲ ਨਾਂ"
+msgstr ""
 
 #: modules/gui/qt4/ui/sout.h:203
 msgid "Set up media sources to stream"
@@ -27725,9 +27718,6 @@ msgstr "AAAA; "
 msgid "Media Manager List"
 msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
-#~ msgid "MKV"
-#~ msgstr "MKV"
-
 #~ msgid "FLV"
 #~ msgstr "FLV"
 
@@ -28037,12 +28027,6 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 #~ msgid "Please provide one of the following parameters:"
 #~ msgstr "ਅੱਗੇ ਦਿੱਤੇ ਪੈਰਾਮੀਟਰਾਂ ਵਿੱਚ ਇੱਕ ਦਿਓ ਜੀ:"
 
-#~ msgid "Pop/funk"
-#~ msgstr "ਪੋਪ/ਫੰਕ"
-
-#~ msgid "Hard rock"
-#~ msgstr "ਹਾਰਡ ਰੌਕ"
-
 #~ msgid "Use the native fullscreen mode on OS X Lion"
 #~ msgstr "OS X Lion ਉੱਤੇ ਨੇਟਿਵ ਪੂਰੀ ਸਕਰਨੀ ਮੋਡ ਵਰਤੋਂ"
 
@@ -28349,9 +28333,6 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #~ msgid "VLC was brought to you by:"
 #~ msgstr "VLC ਨੂੰ ਤੁਹਾਡੇ ਲਈ ਲੈ ਕੇ ਆਏ ਹਨ:"
-
-#~ msgid "Rewind"
-#~ msgstr "ਰੀਵਾਈਡ"
 
 #~ msgid "Shows more information about the available video filters."
 #~ msgstr "ਉਪਲੱਬਧ ਵਿਡੀਓ ਫਿਲਟਰਾਂ ਬਾਰੇ ਹੋਰ ਜਾਣਕਾਰੀ ਵੇਖੋ।"
@@ -28830,6 +28811,30 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 #~ msgstr "ਐਲਬਮ ਆਰਟ ਡਾਊਨਲੋਡ ਪਾਲਸੀ"
 
 #, fuzzy
+#~ msgid "MJPEG:"
+#~ msgstr "MJPEG"
+
+#, fuzzy
+#~ msgid "MOV"
+#~ msgstr "MKV"
+
+#, fuzzy
+#~ msgid "MKV"
+#~ msgstr "KVA"
+
+#, fuzzy
+#~ msgid "Pop/funk"
+#~ msgstr "ਪੋਪ/ਫੰਕ"
+
+#, fuzzy
+#~ msgid "Hard rock"
+#~ msgstr "ਹਾਰਡ ਰੌਕ"
+
+#, fuzzy
+#~ msgid "Rewind"
+#~ msgstr "ਮੀਡੀਆ ਰਿਵਾਇੰਡ"
+
+#, fuzzy
 #~ msgid "---  DVD Menu"
 #~ msgstr "DVD ਮੇਨੂ"
 
@@ -28855,7 +28860,7 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "Media in Zip"
-#~ msgstr "ਮੀਡਿਆ ਮੇਨੂ"
+#~ msgstr "ਮੀਡੀਆ ਰਿਵਾਇੰਡ"
 
 #, fuzzy
 #~ msgid "No video devices found"
@@ -29056,11 +29061,11 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "Chroma modules settings"
-#~ msgstr "ਸਧਾਰਨ ਵਿਡੀਓ ਸਥਾਪਨ"
+#~ msgstr "ਸਧਾਰਨ ਵਿਡੀਓ  ਸੈਟਿੰਗਾਂ"
 
 #, fuzzy
 #~ msgid "Packetizer modules settings"
-#~ msgstr "ਸਧਾਰਨ ਵਿਡੀਓ ਸਥਾਪਨ"
+#~ msgstr "ਸਧਾਰਨ ਵਿਡੀਓ  ਸੈਟਿੰਗਾਂ"
 
 #, fuzzy
 #~ msgid "Encoders settings"
@@ -29073,7 +29078,7 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "Dialog providers settings"
-#~ msgstr "ਸਧਾਰਨ ਵਿਡੀਓ ਸਥਾਪਨ"
+#~ msgstr "ਸਧਾਰਨ ਵਿਡੀਓ  ਸੈਟਿੰਗਾਂ"
 
 #, fuzzy
 #~ msgid "Subtitle demuxer settings"
@@ -29229,7 +29234,7 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "GSM Audio"
-#~ msgstr "ਆਡਿਓ"
+#~ msgstr "ਆਡੀਓ"
 
 #, fuzzy
 #~ msgid "ALSA audio capture input"
@@ -29477,7 +29482,7 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "Classic rock"
-#~ msgstr "ਕਲਾਸਿਕ"
+#~ msgstr "ਕਲਾਸਿਕ ਰੌਕ"
 
 #, fuzzy
 #~ msgid "Sound clip"
@@ -29485,11 +29490,11 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "Alternative rock"
-#~ msgstr "ਇੰਟਰਐਕਟਿਵ ਜ਼ੂਮ"
+#~ msgstr "ਅਲਟਰਨੇਟਿਵ"
 
 #, fuzzy
 #~ msgid "New wave"
-#~ msgstr "ਨਿਊ ਏਜ਼"
+#~ msgstr "ਨਵੀਂ ਵੇਵ"
 
 #, fuzzy
 #~ msgid "Text subtitles parser"
@@ -29617,7 +29622,7 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "General Video Settings"
-#~ msgstr "ਸਧਾਰਨ ਵਿਡੀਓ ਸਥਾਪਨ"
+#~ msgstr "ਸਧਾਰਨ ਵਿਡੀਓ  ਸੈਟਿੰਗਾਂ"
 
 #, fuzzy
 #~ msgid "Subtitles & OSD"
@@ -29777,7 +29782,7 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "Preamp\n"
-#~ msgstr "ਡਰੀਮ"
+#~ msgstr "ਪ੍ਰੀਐਮਪ"
 
 #, fuzzy
 #~ msgid " dB"
@@ -29845,7 +29850,7 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "&Convert / Save"
-#~ msgstr "ਬਦਲੋ /ਸੰਭਾਲੋ(&r)..."
+#~ msgstr "ਬਦਲੋ/ਸੰਭਾਲੋ(&o)"
 
 #, fuzzy
 #~ msgid "Subtitles Files"
@@ -30129,7 +30134,7 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "Preamp: "
-#~ msgstr "ਡਰੀਮ"
+#~ msgstr "ਪ੍ਰੀਐਮਪ"
 
 #, fuzzy
 #~ msgid "Licence"
@@ -30281,7 +30286,7 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "Create Stream"
-#~ msgstr "ਸਟਰੀਮ ਪਰਬੰਧ"
+#~ msgstr " ਬਦਲੋ ਤੇ ਸਟਰੀਮ ਕਰੋ"
 
 #, fuzzy
 #~ msgid "Media File"
@@ -30313,7 +30318,7 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "Create New Stream"
-#~ msgstr "ਨਵਾਂ ਪਰੋਫਾਇਲ ਬਣਾਓ"
+#~ msgstr " ਬਦਲੋ ਤੇ ਸਟਰੀਮ ਕਰੋ"
 
 #, fuzzy
 #~ msgid "Delete All Streams"
@@ -30680,7 +30685,7 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "Keep current Equalizer settings"
-#~ msgstr "ਸਧਾਰਨ ਵਿਡੀਓ ਸਥਾਪਨ"
+#~ msgstr "ਸਧਾਰਨ ਵਿਡੀਓ  ਸੈਟਿੰਗਾਂ"
 
 #, fuzzy
 #~ msgid "No device connected"
@@ -31145,7 +31150,7 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "MPEG-4 V"
-#~ msgstr "MPEG 1"
+#~ msgstr "MPEG-4 ਵਿਡੀਓ"
 
 #, fuzzy
 #~ msgid "Prev Title"
@@ -31273,7 +31278,7 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "Audio:"
-#~ msgstr "ਆਡਿਓ"
+#~ msgstr "ਆਡੀਓ"
 
 #, fuzzy
 #~ msgid "Channel:"
@@ -31297,15 +31302,11 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "Quality:"
-#~ msgstr "ਕੁਆਲਟੀ"
+#~ msgstr "VBR ਕੁਆਲਟੀ"
 
 #, fuzzy
 #~ msgid "Tuner:"
 #~ msgstr "ਟਿਊਨਰ"
-
-#, fuzzy
-#~ msgid "MJPEG:"
-#~ msgstr "MJPEG"
 
 #, fuzzy
 #~ msgid "pal"
@@ -31325,11 +31326,7 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "MPEG1"
-#~ msgstr "MPEG 1"
-
-#, fuzzy
-#~ msgid "MOV"
-#~ msgstr "MKV"
+#~ msgstr "MPEG-PS"
 
 #, fuzzy
 #~ msgid "ASF"
@@ -31644,7 +31641,7 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "Compiled by %s, based on Git commit %s"
-#~ msgstr "ਕੰਪਾਇਲ ਕੀਤਾ %s ਵਲੋਂ %s (%s) ਉੱਤੇ\n"
+#~ msgstr "%s ਵਲੋਂ %s (%s) ਉੱਤੇ ਕੰਪਾਇਲ ਕੀਤਾ\n"
 
 #, fuzzy
 #~ msgid "Quick Open File..."
@@ -31844,7 +31841,7 @@ msgstr "ਮੀਡਿਆ ਮੈਨੇਜਰ ਲਿਸਟ"
 
 #, fuzzy
 #~ msgid "Video Options"
-#~ msgstr "ਵਿਡੀਓ ਸਥਾਪਨ"
+#~ msgstr "ਵਿਡੀਓ ਸੈਟਿੰਗਾਂ"
 
 #, fuzzy
 #~ msgid "More Information"

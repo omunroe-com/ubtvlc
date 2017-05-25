@@ -1,11 +1,11 @@
 # Traditional Chinese translation
-# Copyright (C) 2016 VideoLAN
+# Copyright (C) 2017 VideoLAN
 # This file is distributed under the same license as the vlc package.
 #
 # Translators:
 # BISHAN LI <jurtobe@gmail.com>, 2015
 # BrLi <rainman59118@gmail.com>, 2013
-# cges30901 <cges30901@gmail.com>, 2016
+# Hsiu-Ming Chang <cges30901@gmail.com>, 2016
 # Ethan Chan <yunsangc207@gmail.com>, 2015
 # Ethan <ethan42411@gmail.com>, 2014
 # Frank Chao <frank0624@gmail.com>, 2013,2015
@@ -17,13 +17,15 @@
 # Timo Liu <timoliu@gmail.com>, 2016
 # Chen Wang <iwangce@gmail.com>, 2013
 # x4r <xatierlike@gmail.com>, 2014
+# Zakk <zakk0610@gmail.com>, 2017
+# Jeff Huang <s8321414@gmail.com>, 2014
 msgid ""
 msgstr ""
 "Project-Id-Version: VLC - Trans\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2017-02-03 12:10+0100\n"
-"PO-Revision-Date: 2016-05-07 06:56+0000\n"
-"Last-Translator: Timo Liu <timoliu@gmail.com>\n"
+"POT-Creation-Date: 2017-05-24 15:01+0200\n"
+"PO-Revision-Date: 2017-02-06 13:43+0000\n"
+"Last-Translator: Christoph Miebach <christoph.miebach@web.de>\n"
 "Language-Team: Chinese (Taiwan) (http://www.transifex.com/yaron/vlc-trans/"
 "language/zh_TW/)\n"
 "Language: zh_TW\n"
@@ -1766,7 +1768,7 @@ msgstr ""
 "比環繞編碼，開啟本選項能增強使用者體驗，特別是與耳機聲道混音器一起使用的時"
 "候。"
 
-#: src/libvlc-module.c:178 src/win32/thread.c:885
+#: src/libvlc-module.c:178 src/win32/thread.c:904
 #: modules/audio_output/kai.c:106 modules/codec/x264.c:442
 #: modules/gui/macosx/simple_prefs.m:122
 #: modules/gui/qt4/components/simple_preferences.cpp:136
@@ -3542,7 +3544,7 @@ msgstr "自動預先分析加入播放清單的檔案(擷取詮釋資料)。"
 #: modules/gui/qt4/dialogs/firstrun.cpp:98
 #: modules/gui/qt4/ui/sprefs_interface.h:551
 msgid "Allow metadata network access"
-msgstr ""
+msgstr "允許元數據網路存取"
 
 #: src/libvlc-module.c:1118
 msgid "Services discovery modules"
@@ -3644,7 +3646,7 @@ msgstr "播放清單可以像目錄一樣以樹狀結構整理播放項目。"
 msgid "These settings are the global VLC key bindings, known as \"hotkeys\"."
 msgstr "這些設定為 VLC 的全域按鍵綁定，也就是「熱鍵」。"
 
-#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1854
+#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1860
 msgid "Ignore"
 msgstr "忽略"
 
@@ -3808,7 +3810,7 @@ msgstr "極短程向前跳轉"
 
 #: src/libvlc-module.c:1220
 msgid "Select the hotkey to make a very short backwards jump."
-msgstr ""
+msgstr "選擇作為非常短向後跳轉的熱鍵"
 
 #: src/libvlc-module.c:1221
 msgid "Short backwards jump"
@@ -3816,7 +3818,7 @@ msgstr "短程向前跳轉"
 
 #: src/libvlc-module.c:1223
 msgid "Select the hotkey to make a short backwards jump."
-msgstr ""
+msgstr "選擇作為短向後跳轉的熱鍵"
 
 #: src/libvlc-module.c:1224
 msgid "Medium backwards jump"
@@ -3824,7 +3826,7 @@ msgstr "中程向前跳轉"
 
 #: src/libvlc-module.c:1226
 msgid "Select the hotkey to make a medium backwards jump."
-msgstr ""
+msgstr "選擇作為中向後跳轉的熱鍵"
 
 #: src/libvlc-module.c:1227
 msgid "Long backwards jump"
@@ -3832,7 +3834,7 @@ msgstr "長程向前跳轉"
 
 #: src/libvlc-module.c:1229
 msgid "Select the hotkey to make a long backwards jump."
-msgstr ""
+msgstr "選擇作為長向後跳轉的熱鍵"
 
 #: src/libvlc-module.c:1231
 msgid "Very short forward jump"
@@ -3840,7 +3842,7 @@ msgstr "極短程向後跳轉"
 
 #: src/libvlc-module.c:1233
 msgid "Select the hotkey to make a very short forward jump."
-msgstr ""
+msgstr "選擇作為非常短向前跳轉的熱鍵"
 
 #: src/libvlc-module.c:1234
 msgid "Short forward jump"
@@ -3848,7 +3850,7 @@ msgstr "短程向後跳轉"
 
 #: src/libvlc-module.c:1236
 msgid "Select the hotkey to make a short forward jump."
-msgstr ""
+msgstr "選擇作為短向前跳轉的熱鍵"
 
 #: src/libvlc-module.c:1237
 msgid "Medium forward jump"
@@ -3856,7 +3858,7 @@ msgstr "中程向後跳轉"
 
 #: src/libvlc-module.c:1239
 msgid "Select the hotkey to make a medium forward jump."
-msgstr ""
+msgstr "選擇作為中向前跳轉的熱鍵"
 
 #: src/libvlc-module.c:1240
 msgid "Long forward jump"
@@ -3864,7 +3866,7 @@ msgstr "長程向後跳轉"
 
 #: src/libvlc-module.c:1242
 msgid "Select the hotkey to make a long forward jump."
-msgstr ""
+msgstr "選擇作為長向前跳轉的熱鍵"
 
 #: src/libvlc-module.c:1243 modules/control/hotkeys.c:402
 msgid "Next frame"
@@ -3872,7 +3874,7 @@ msgstr "下一張畫面"
 
 #: src/libvlc-module.c:1245
 msgid "Select the hotkey to got to the next video frame."
-msgstr ""
+msgstr "選擇跳轉到下一個畫格的熱鍵"
 
 #: src/libvlc-module.c:1247
 msgid "Very short jump length"
@@ -16097,19 +16099,19 @@ msgstr ""
 msgid "Click to exit fullscreen playback."
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1556 modules/gui/macosx/intf.m:1573
+#: modules/gui/macosx/intf.m:1562 modules/gui/macosx/intf.m:1579
 msgid "VLC media playback"
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1852
+#: modules/gui/macosx/intf.m:1858
 msgid "Remove old preferences?"
 msgstr "移除舊的偏好設定？"
 
-#: modules/gui/macosx/intf.m:1853
+#: modules/gui/macosx/intf.m:1859
 msgid "We just found an older version of VLC's preferences files."
 msgstr "我們發現了一個舊版的 VLC 偏好設定檔。"
 
-#: modules/gui/macosx/intf.m:1854
+#: modules/gui/macosx/intf.m:1860
 msgid "Move To Trash and Relaunch VLC"
 msgstr ""
 
@@ -22183,7 +22185,7 @@ msgstr "平穩串流中"
 
 #: modules/stream_out/autodel.c:46
 msgid "Autodel"
-msgstr ""
+msgstr "自動刪除"
 
 #: modules/stream_out/autodel.c:47
 msgid "Automatically add/delete input streams"
@@ -22214,7 +22216,7 @@ msgstr ""
 
 #: modules/stream_out/bridge.c:56
 msgid "ID Offset"
-msgstr ""
+msgstr "ID 偏移"
 
 #: modules/stream_out/bridge.c:57
 msgid ""
@@ -27268,9 +27270,8 @@ msgid "FLAC"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:703
-#, fuzzy
 msgid "MP&4/MOV"
-msgstr "MP4/MOV"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:704
 msgid "Ogg/Ogm"
@@ -27281,9 +27282,8 @@ msgid "M&KV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:706
-#, fuzzy
 msgid "M&JPEG"
-msgstr "MJPEG"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:707
 msgid "MPEG-PS"
@@ -27294,9 +27294,8 @@ msgid "F&LV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:709
-#, fuzzy
 msgid "&MPEG-TS"
-msgstr "MPEG-TS"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:710
 msgid "RAW"
@@ -27311,9 +27310,8 @@ msgid "Webm"
 msgstr "Webm"
 
 #: modules/gui/qt4/ui/profiles.h:713
-#, fuzzy
 msgid "MPEG &1"
-msgstr "MPEG 1"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:714
 msgid "AVI"
@@ -27344,9 +27342,8 @@ msgid "Menus"
 msgstr "選單"
 
 #: modules/gui/qt4/ui/profiles.h:730
-#, fuzzy
 msgid "Fra&me Rate"
-msgstr "畫面張數"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:731
 msgid "Same as source"
@@ -27361,9 +27358,8 @@ msgid "Custom options"
 msgstr "自訂選項"
 
 #: modules/gui/qt4/ui/profiles.h:735
-#, fuzzy
 msgid "&Quality"
-msgstr "品質"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:736 modules/gui/qt4/ui/profiles.h:737
 msgid "Not Used"
@@ -27386,14 +27382,12 @@ msgid "px"
 msgstr "px"
 
 #: modules/gui/qt4/ui/profiles.h:758
-#, fuzzy
 msgid "Sa&mple Rate"
-msgstr "取樣率"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:766
-#, fuzzy
 msgid "Profile &Name"
-msgstr "設定檔名稱"
+msgstr ""
 
 #: modules/gui/qt4/ui/sout.h:203
 msgid "Set up media sources to stream"
@@ -27950,9 +27944,6 @@ msgstr "AAAA; "
 #: modules/gui/qt4/ui/vlm.h:302
 msgid "Media Manager List"
 msgstr "媒體管理員清單"
-
-#~ msgid "MKV"
-#~ msgstr "MKV"
 
 #~ msgid "FLV"
 #~ msgstr "FLV"
@@ -29960,6 +29951,18 @@ msgstr "媒體管理員清單"
 #, fuzzy
 #~ msgid "SessionManager"
 #~ msgstr "視訊管理員"
+
+#, fuzzy
+#~ msgid "MJPEG:"
+#~ msgstr "MJPEG"
+
+#, fuzzy
+#~ msgid "MOV"
+#~ msgstr "MKV"
+
+#, fuzzy
+#~ msgid "MKV"
+#~ msgstr "KVA"
 
 #, fuzzy
 #~ msgid "/dev/video"
@@ -32337,7 +32340,7 @@ msgstr "媒體管理員清單"
 
 #, fuzzy
 #~ msgid "MPEG-4 V"
-#~ msgstr "MPEG 1"
+#~ msgstr "MPEG-4 音訊"
 
 #, fuzzy
 #~ msgid "Use DVD Menus"
@@ -32505,15 +32508,11 @@ msgstr "媒體管理員清單"
 
 #, fuzzy
 #~ msgid "Quality:"
-#~ msgstr "品質"
+#~ msgstr "品質等級"
 
 #, fuzzy
 #~ msgid "Tuner:"
 #~ msgstr "調諧器"
-
-#, fuzzy
-#~ msgid "MJPEG:"
-#~ msgstr "MJPEG"
 
 #, fuzzy
 #~ msgid "Decimation:"
@@ -32549,11 +32548,7 @@ msgstr "媒體管理員清單"
 
 #, fuzzy
 #~ msgid "MPEG1"
-#~ msgstr "MPEG 1"
-
-#, fuzzy
-#~ msgid "MOV"
-#~ msgstr "MKV"
+#~ msgstr "MPEG-PS"
 
 #, fuzzy
 #~ msgid "ASF"
@@ -32824,7 +32819,7 @@ msgstr "媒體管理員清單"
 
 #, fuzzy
 #~ msgid "Autodetect"
-#~ msgstr "動態偵測"
+#~ msgstr "自動刪除"
 
 #, fuzzy
 #~ msgid "Remaining time: %i seconds"
@@ -34287,7 +34282,7 @@ msgstr "媒體管理員清單"
 
 #, fuzzy
 #~ msgid "Select the hotkey to jump 10 seconds backwards."
-#~ msgstr "選擇用於暫停的熱鍵。"
+#~ msgstr "選擇作為長向後跳轉的熱鍵"
 
 #, fuzzy
 #~ msgid "Jump 1 minute backwards"
@@ -34303,7 +34298,7 @@ msgstr "媒體管理員清單"
 
 #, fuzzy
 #~ msgid "Select the hotkey to jump 10 seconds forward."
-#~ msgstr "選擇快速前進熱鍵"
+#~ msgstr "選擇作為長向前跳轉的熱鍵"
 
 #, fuzzy
 #~ msgid "Jump 1 minute forward"
@@ -34315,7 +34310,7 @@ msgstr "媒體管理員清單"
 
 #, fuzzy
 #~ msgid "Select the hotkey to jump 5 minutes forward."
-#~ msgstr "選擇快速前進熱鍵"
+#~ msgstr "選擇作為中向前跳轉的熱鍵"
 
 #, fuzzy
 #~ msgid "Windows GAPI"

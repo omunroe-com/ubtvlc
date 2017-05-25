@@ -1,5 +1,5 @@
 # English (United Kingdom) translation
-# Copyright (C) 2016 VideoLAN
+# Copyright (C) 2017 VideoLAN
 # This file is distributed under the same license as the vlc package.
 #
 # Translators:
@@ -22,9 +22,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VLC - Trans\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2017-02-03 12:10+0100\n"
-"PO-Revision-Date: 2016-03-12 15:02+0000\n"
-"Last-Translator: Andi Chandler <andi@gowling.com>\n"
+"POT-Creation-Date: 2017-05-24 15:01+0200\n"
+"PO-Revision-Date: 2017-02-06 13:43+0000\n"
+"Last-Translator: Christoph Miebach <christoph.miebach@web.de>\n"
 "Language-Team: English (United Kingdom) (http://www.transifex.com/yaron/vlc-"
 "trans/language/en_GB/)\n"
 "Language: en_GB\n"
@@ -480,7 +480,7 @@ msgstr "Play"
 
 #: include/vlc_intf_strings.h:66
 msgid "Remove Selected"
-msgstr ""
+msgstr "Remove Selected"
 
 #: include/vlc_intf_strings.h:67
 msgid "Information..."
@@ -557,7 +557,7 @@ msgstr "Add Folder..."
 
 #: include/vlc_intf_strings.h:89
 msgid "Save Playlist to &File..."
-msgstr ""
+msgstr "Save Playlist to &File..."
 
 #: include/vlc_intf_strings.h:91 modules/gui/macosx/MainWindow.m:174
 #: modules/gui/qt4/components/preferences_widgets.cpp:1139
@@ -567,7 +567,7 @@ msgstr "Search"
 #: include/vlc_intf_strings.h:99 modules/gui/macosx/VideoEffects.m:157
 #: modules/gui/qt4/ui/video_effects.h:1479
 msgid "Waves"
-msgstr ""
+msgstr "Waves"
 
 #: include/vlc_intf_strings.h:100
 msgid ""
@@ -615,7 +615,7 @@ msgstr "Disable"
 
 #: src/audio_output/output.c:232 modules/visualization/visual/visual.c:142
 msgid "Spectrometer"
-msgstr ""
+msgstr "Spectrometer"
 
 #: src/audio_output/output.c:235
 msgid "Scope"
@@ -627,7 +627,7 @@ msgstr "Spectrum"
 
 #: src/audio_output/output.c:241
 msgid "Vu meter"
-msgstr ""
+msgstr "Vu meter"
 
 #: src/audio_output/output.c:282 src/libvlc-module.c:190
 msgid "Audio filters"
@@ -635,12 +635,12 @@ msgstr "Audio filters"
 
 #: src/audio_output/output.c:293
 msgid "Replay gain"
-msgstr ""
+msgstr "Replay gain"
 
 #: src/audio_output/output.c:387 modules/gui/macosx/MainMenu.m:429
 #: modules/gui/macosx/MainMenu.m:430
 msgid "Stereo audio mode"
-msgstr ""
+msgstr "Stereo audio mode"
 
 #: src/audio_output/output.c:422 src/libvlc-module.c:187
 msgid "Dolby Surround"
@@ -692,27 +692,27 @@ msgstr "Reverse stereo"
 #: modules/access/v4l2/v4l2.c:137
 #: modules/gui/qt4/components/open_panels.cpp:958
 msgid "Automatic"
-msgstr ""
+msgstr "Automatic"
 
 #: src/config/file.c:460
 msgid "boolean"
-msgstr ""
+msgstr "boolean"
 
 #: src/config/file.c:460 src/config/help.c:397
 msgid "integer"
-msgstr ""
+msgstr "integer"
 
 #: src/config/file.c:468 src/config/help.c:423
 msgid "float"
-msgstr ""
+msgstr "float"
 
 #: src/config/file.c:481 src/config/help.c:379
 msgid "string"
-msgstr ""
+msgstr "string"
 
 #: src/config/help.c:161
 msgid "To get exhaustive help, use '-H'."
-msgstr ""
+msgstr "To get exhaustive help, use '-H'."
 
 #: src/config/help.c:165
 #, c-format
@@ -750,6 +750,38 @@ msgid ""
 "  vlc://quit                     Special item to quit VLC\n"
 "\n"
 msgstr ""
+"Usage: %s [options] [stream] ...\n"
+"You can specify multiple streams on the commandline.\n"
+"They will be enqueued in the playlist.\n"
+"The first item specified will be played first.\n"
+"\n"
+"Options-styles:\n"
+"  --option  A global option that is set for the duration of the program.\n"
+"   -option  A single letter version of a global --option.\n"
+"   :option  An option that only applies to the stream directly before it\n"
+"            and that overrides previous settings.\n"
+"\n"
+"Stream MRL syntax:\n"
+"  [[access][/demux]://]URL[#[title][:chapter][-[title][:chapter]]]\n"
+"  [:option=value ...]\n"
+"\n"
+"  Many of the global --options can also be used as MRL specific :options.\n"
+"  Multiple :option=value pairs can be specified.\n"
+"\n"
+"URL syntax:\n"
+"  file:///path/file              Plain media file\n"
+"  http://host[:port]/file        HTTP URL\n"
+"  ftp://host[:port]/file         FTP URL\n"
+"  mms://host[:port]/file         MMS URL\n"
+"  screen://                      Screen capture\n"
+"  dvd://[device]                 DVD device\n"
+"  vcd://[device]                 VCD device\n"
+"  cdda://[device]                Audio CD device\n"
+"  udp://[[<source address>]@[<bind address>][:<bind port>]]\n"
+"                                 UDP stream sent by a streaming server\n"
+"  vlc://pause:<seconds>          Pause the playlist for a certain time\n"
+"  vlc://quit                     Special item to quit VLC\n"
+"\n"
 
 #: src/config/help.c:435
 msgid " (default enabled)"
@@ -1746,7 +1778,7 @@ msgid ""
 "your experience, especially when combined with the Headphone Channel Mixer."
 msgstr ""
 
-#: src/libvlc-module.c:178 src/win32/thread.c:885
+#: src/libvlc-module.c:178 src/win32/thread.c:904
 #: modules/audio_output/kai.c:106 modules/codec/x264.c:442
 #: modules/gui/macosx/simple_prefs.m:122
 #: modules/gui/qt4/components/simple_preferences.cpp:136
@@ -3623,7 +3655,7 @@ msgstr ""
 msgid "These settings are the global VLC key bindings, known as \"hotkeys\"."
 msgstr ""
 
-#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1854
+#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1860
 msgid "Ignore"
 msgstr ""
 
@@ -16069,19 +16101,19 @@ msgstr ""
 msgid "Click to exit fullscreen playback."
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1556 modules/gui/macosx/intf.m:1573
+#: modules/gui/macosx/intf.m:1562 modules/gui/macosx/intf.m:1579
 msgid "VLC media playback"
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1852
+#: modules/gui/macosx/intf.m:1858
 msgid "Remove old preferences?"
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1853
+#: modules/gui/macosx/intf.m:1859
 msgid "We just found an older version of VLC's preferences files."
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1854
+#: modules/gui/macosx/intf.m:1860
 msgid "Move To Trash and Relaunch VLC"
 msgstr ""
 
@@ -27340,14 +27372,12 @@ msgid "px"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:758
-#, fuzzy
 msgid "Sa&mple Rate"
-msgstr "Sample rate"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:766
-#, fuzzy
 msgid "Profile &Name"
-msgstr "Profile Name"
+msgstr ""
 
 #: modules/gui/qt4/ui/sout.h:203
 msgid "Set up media sources to stream"
@@ -28447,10 +28477,6 @@ msgstr ""
 #~ "<left offset> + <top offset>."
 
 #, fuzzy
-#~ msgid "Automatic cropping"
-#~ msgstr "Video crop left"
-
-#, fuzzy
 #~ msgid "Manual ratio"
 #~ msgstr "Polarisation"
 
@@ -28622,10 +28648,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Create Mosaic"
 #~ msgstr "Sample rate"
-
-#, fuzzy
-#~ msgid "Remove Stream"
-#~ msgstr "no input\n"
 
 #, fuzzy
 #~ msgid "Configure Stream Defaults"
@@ -31020,6 +31042,14 @@ msgstr ""
 #~ "Allows you to modify the user name that will be used for the connection."
 
 #, fuzzy
+#~ msgid "Automatic cropping"
+#~ msgstr "Automatic"
+
+#, fuzzy
+#~ msgid "Remove Stream"
+#~ msgstr "Remove Selected"
+
+#, fuzzy
 #~ msgid "AVFoundation video capture module."
 #~ msgstr "Audio output module"
 
@@ -32073,7 +32103,7 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "&Load Playlist File..."
-#~ msgstr "Save Playlist…"
+#~ msgstr "Save Playlist to &File..."
 
 #, fuzzy
 #~ msgid "Brazilian Portuguese"

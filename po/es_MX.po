@@ -1,30 +1,31 @@
 # Spanish (Mexico) translation
-# Copyright (C) 2016 VideoLAN
+# Copyright (C) 2017 VideoLAN
 # This file is distributed under the same license as the vlc package.
 #
 # Translators:
 # Adolfo Angel Zapata Porras <waipmendez23@gmail.com>, 2015
 # Alfredo Chaves <achaves.blg@gmail.com>, 2015
+# Fernando Reyes <fernando.reyes@gmail.com>, 2016
 # Giovanni Ybarias Monzón <g.ybariasmonzon@gmail.com>, 2015
-# Giovanny Garciliano <xivanni@hotmail.com>, 2016
+# Giovanni Alfredo Garciliano Diaz <xivanni@hotmail.com>, 2016
 # Jorge Arturo <jorgeartware@gmail.com>, 2014
 # Jose lopez <rlockc@gmail.com>, 2013
 # kio-13, 2014
 # Rocio Braud, 2014
-# Luis Jaramillo <luizja@gmail.com>, 2013
+# Luis Jaramillo <luizja+tf@gmail.com>, 2013
 # Naresu Tenshi <naresutenshi@gmail.com>, 2014
 # Raquel Gonzalez Orea <r4k3ll3@gmail.com>, 2014
 # Rodrigo Barcelata <rodrobe@gmail.com>, 2015
 # walt santos <walt.eh93@gmail.com>, 2015
-# william beltran <wbeltranc@gmail.com>, 2015-2016
+# William Beltrán <wbeltranc@gmail.com>, 2015-2016
 # Yusuf (Josè) Luis <alagunajs@gmail.com>, 2016
 msgid ""
 msgstr ""
 "Project-Id-Version: VLC - Trans\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2017-02-03 12:10+0100\n"
-"PO-Revision-Date: 2016-05-01 18:15+0000\n"
-"Last-Translator: Giovanny Garciliano <xivanni@hotmail.com>\n"
+"POT-Creation-Date: 2017-05-24 15:01+0200\n"
+"PO-Revision-Date: 2017-02-06 13:43+0000\n"
+"Last-Translator: Christoph Miebach <christoph.miebach@web.de>\n"
 "Language-Team: Spanish (Mexico) (http://www.transifex.com/yaron/vlc-trans/"
 "language/es_MX/)\n"
 "Language: es_MX\n"
@@ -1837,7 +1838,7 @@ msgstr ""
 "mejorar su experiencia, especialmente cuando se combina con el mezclador de "
 "canal de auriculares."
 
-#: src/libvlc-module.c:178 src/win32/thread.c:885
+#: src/libvlc-module.c:178 src/win32/thread.c:904
 #: modules/audio_output/kai.c:106 modules/codec/x264.c:442
 #: modules/gui/macosx/simple_prefs.m:122
 #: modules/gui/qt4/components/simple_preferences.cpp:136
@@ -3961,7 +3962,7 @@ msgstr ""
 "Estas opciones son las teclas enlazadas globales de VLC, conocidas como "
 "«atajos de teclado»."
 
-#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1854
+#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1860
 msgid "Ignore"
 msgstr "Ignorar"
 
@@ -16516,7 +16517,7 @@ msgstr "Índice"
 #: modules/gui/macosx/AddonManager.m:98 modules/gui/macosx/AddonManager.m:351
 #: modules/gui/qt4/dialogs/plugins.cpp:378
 msgid "Playlist parsers"
-msgstr ""
+msgstr "Analizadores de lista de reproducción"
 
 #: modules/gui/macosx/AddonManager.m:100 modules/gui/macosx/AddonManager.m:353
 #: modules/gui/qt4/dialogs/plugins.cpp:382
@@ -17040,7 +17041,7 @@ msgstr "Configurar Emisión..."
 
 #: modules/gui/macosx/ConvertAndSave.m:163
 msgid "Select Streaming Method"
-msgstr ""
+msgstr "Método de selección de transmisión"
 
 #: modules/gui/macosx/ConvertAndSave.m:164
 msgid "Save as File"
@@ -17270,21 +17271,21 @@ msgstr "(no se está reproduciendo nada)"
 msgid "Click to exit fullscreen playback."
 msgstr "Clic para salir de la reproducción de pantalla completa."
 
-#: modules/gui/macosx/intf.m:1556 modules/gui/macosx/intf.m:1573
+#: modules/gui/macosx/intf.m:1562 modules/gui/macosx/intf.m:1579
 msgid "VLC media playback"
 msgstr "Reproducción de medio VLC"
 
-#: modules/gui/macosx/intf.m:1852
+#: modules/gui/macosx/intf.m:1858
 msgid "Remove old preferences?"
 msgstr "¿Eliminar preferencias antiguas?"
 
-#: modules/gui/macosx/intf.m:1853
+#: modules/gui/macosx/intf.m:1859
 msgid "We just found an older version of VLC's preferences files."
 msgstr ""
 "Se ha encontrado una versión más antigua de los archivos de preferencias de "
 "VLC."
 
-#: modules/gui/macosx/intf.m:1854
+#: modules/gui/macosx/intf.m:1860
 msgid "Move To Trash and Relaunch VLC"
 msgstr "Mover a la papelera y reiniciar VLC"
 
@@ -17517,7 +17518,7 @@ msgstr ""
 
 #: modules/gui/macosx/macosx.m:124
 msgid "Use large text for list views"
-msgstr ""
+msgstr "Usar texto grande para vista de lista"
 
 #: modules/gui/macosx/macosx.m:129
 msgid "Do nothing"
@@ -17540,6 +17541,8 @@ msgid ""
 "VLC will store playback positions of the last 30 items you played. If you re-"
 "open one of those, playback will continue."
 msgstr ""
+"VLC guardará la posición de reproducción de los últimos 30 elementos "
+"reproducidos. Si vuelve a abrir uno de ellos, la reproducción continuará"
 
 #: modules/gui/macosx/macosx.m:138 modules/gui/qt4/qt4.cpp:200
 msgid "Ask"
@@ -17930,11 +17933,11 @@ msgstr "Seleccione el podcast que usted desea darse de baja:"
 
 #: modules/gui/macosx/MainWindow.m:243
 msgid "Check for album art and metadata?"
-msgstr ""
+msgstr "¿Verificar foto de album y metadatos?"
 
 #: modules/gui/macosx/MainWindow.m:243
 msgid "Enable Metadata Retrieval"
-msgstr ""
+msgstr "Activar Recuperación de Metadatos"
 
 #: modules/gui/macosx/MainWindow.m:243
 msgid "No, Thanks"
@@ -17947,6 +17950,11 @@ msgid ""
 "provide this functionality, VLC will send information about your contents to "
 "trusted services in an anonymized form."
 msgstr ""
+"VLC puede buscar en línea la foto de album y metadatos para enriquecer la "
+"experiencia de reproducción, por ejemplo, proveyendo información de "
+"canciones al reproducir un CD de audio. Para proveer dicha funcionalidad, "
+"VLC enviará información del contenido a servicios confiables de manera "
+"anónima."
 
 #: modules/gui/macosx/MainWindow.m:328
 msgid "LIBRARY"
@@ -18076,7 +18084,7 @@ msgstr "Reproducción personalizada"
 
 #: modules/gui/macosx/open.m:157
 msgid "Open VIDEO_TS / BDMV folder"
-msgstr ""
+msgstr "Abrir carpeta VIDEO_TS / BDMV"
 
 #: modules/gui/macosx/open.m:158
 msgid "Insert Disc"
@@ -18501,7 +18509,7 @@ msgstr "Reiniciar reproducción"
 
 #: modules/gui/macosx/ResumeDialogController.m:70
 msgid "Playback of \"%@\" will continue at %@"
-msgstr ""
+msgstr "Reproducción de \"%@\" continuará en %@"
 
 #: modules/gui/macosx/simple_prefs.m:294
 #: modules/gui/qt4/components/simple_preferences.cpp:294
@@ -19864,15 +19872,15 @@ msgstr " f                      Cambiar a pantalla completa"
 
 #: modules/gui/ncurses.c:895
 msgid " c                      Cycle through audio tracks"
-msgstr ""
+msgstr " c                      Moverse en las pistas de audio"
 
 #: modules/gui/ncurses.c:896
 msgid " v                      Cycle through subtitles tracks"
-msgstr ""
+msgstr " v                      Moverse en las pistas de subtítulos"
 
 #: modules/gui/ncurses.c:897
 msgid " b                      Cycle through video tracks"
-msgstr ""
+msgstr " b                      Moverse en las pistas de video"
 
 #: modules/gui/ncurses.c:898
 msgid " n, p                   Next/Previous playlist item"
@@ -23364,7 +23372,7 @@ msgstr "Muxor JPEG multiparte"
 
 #: modules/mux/ogg.c:47
 msgid "Index interval"
-msgstr ""
+msgstr "Intervalo de indexado"
 
 #: modules/mux/ogg.c:48
 msgid ""
@@ -23373,7 +23381,7 @@ msgstr ""
 
 #: modules/mux/ogg.c:50
 msgid "Index size ratio"
-msgstr ""
+msgstr "Tamaño de radio de indexado."
 
 #: modules/mux/ogg.c:52
 msgid "Set index size ratio. Alters default (60min content) or estimated size."
@@ -26855,7 +26863,7 @@ msgstr "Filtro de vídeo para detección de movimiento"
 
 #: modules/video_filter/oldmovie.c:185
 msgid "Old movie effect video filter"
-msgstr ""
+msgstr "Efecto de filtro de video Película vieja."
 
 #: modules/video_filter/oldmovie.c:186
 msgid "Old movie"
@@ -27661,7 +27669,7 @@ msgstr ""
 
 #: modules/video_output/decklink.cpp:76
 msgid "Picture to display on input signal loss."
-msgstr ""
+msgstr "Imagen para mostrar en señal de entrada perdida."
 
 #: modules/video_output/decklink.cpp:79
 msgid "Output card"
@@ -27975,7 +27983,7 @@ msgstr "Sombreador de pixeles"
 
 #: modules/video_output/msw/direct3d.c:68
 msgid "Choose a pixel shader to apply."
-msgstr ""
+msgstr "Elige un sombreador de 'píxel' para aplicar."
 
 #: modules/video_output/msw/direct3d.c:69
 msgid "Path to HLSL file"
@@ -28069,7 +28077,7 @@ msgstr "Fondo de escritorio"
 
 #: modules/video_output/msw/glwin32.c:45
 msgid "GPU affinity"
-msgstr ""
+msgstr "Afinidad GPU"
 
 #: modules/video_output/msw/glwin32.c:51
 msgid "OpenGL video output"
@@ -29208,9 +29216,8 @@ msgid "FLAC"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:703
-#, fuzzy
 msgid "MP&4/MOV"
-msgstr "MP4/MOV"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:704
 msgid "Ogg/Ogm"
@@ -29221,9 +29228,8 @@ msgid "M&KV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:706
-#, fuzzy
 msgid "M&JPEG"
-msgstr "MJPEG"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:707
 msgid "MPEG-PS"
@@ -29234,9 +29240,8 @@ msgid "F&LV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:709
-#, fuzzy
 msgid "&MPEG-TS"
-msgstr "MPEG-TS"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:710
 msgid "RAW"
@@ -29251,9 +29256,8 @@ msgid "Webm"
 msgstr "Webm"
 
 #: modules/gui/qt4/ui/profiles.h:713
-#, fuzzy
 msgid "MPEG &1"
-msgstr "MPEG 1"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:714
 msgid "AVI"
@@ -29284,9 +29288,8 @@ msgid "Menus"
 msgstr "Menús"
 
 #: modules/gui/qt4/ui/profiles.h:730
-#, fuzzy
 msgid "Fra&me Rate"
-msgstr "Tasa de fotogramas"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:731
 msgid "Same as source"
@@ -29301,9 +29304,8 @@ msgid "Custom options"
 msgstr "Opciones personalizadas"
 
 #: modules/gui/qt4/ui/profiles.h:735
-#, fuzzy
 msgid "&Quality"
-msgstr "Calidad"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:736 modules/gui/qt4/ui/profiles.h:737
 msgid "Not Used"
@@ -29326,14 +29328,12 @@ msgid "px"
 msgstr "px"
 
 #: modules/gui/qt4/ui/profiles.h:758
-#, fuzzy
 msgid "Sa&mple Rate"
-msgstr "Tasa de muestreo"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:766
-#, fuzzy
 msgid "Profile &Name"
-msgstr "Nombre de perfil"
+msgstr ""
 
 #: modules/gui/qt4/ui/sout.h:203
 msgid "Set up media sources to stream"
@@ -29896,9 +29896,6 @@ msgstr "AAAA; "
 msgid "Media Manager List"
 msgstr "Lista del administrador multimedia"
 
-#~ msgid "MKV"
-#~ msgstr "MKV"
-
 #~ msgid "FLV"
 #~ msgstr "FLV"
 
@@ -30211,6 +30208,10 @@ msgstr "Lista del administrador multimedia"
 #~ msgstr "Política de descarga de arte de álbum"
 
 #, fuzzy
+#~ msgid "MKV"
+#~ msgstr "KVA"
+
+#, fuzzy
 #~ msgid "---  DVD Menu"
 #~ msgstr "Menús DVD"
 
@@ -30477,7 +30478,7 @@ msgstr "Lista del administrador multimedia"
 
 #, fuzzy
 #~ msgid "Open BDMV folder"
-#~ msgstr "Abrir carpeta..."
+#~ msgstr "Abrir carpeta VIDEO_TS / BDMV"
 
 #, fuzzy
 #~ msgid "Output module"

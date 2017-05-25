@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VLC - Trans\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2017-02-03 12:10+0100\n"
+"POT-Creation-Date: 2017-05-24 15:01+0200\n"
 "PO-Revision-Date: 2015-03-12 22:30+0000\n"
 "Last-Translator: Emin Mastizada <emin@mastizada.com>\n"
 "Language-Team: Azerbaijani (http://www.transifex.com/projects/p/vlc-trans/"
@@ -1667,7 +1667,7 @@ msgid ""
 "your experience, especially when combined with the Headphone Channel Mixer."
 msgstr ""
 
-#: src/libvlc-module.c:178 src/win32/thread.c:885
+#: src/libvlc-module.c:178 src/win32/thread.c:904
 #: modules/audio_output/kai.c:106 modules/codec/x264.c:442
 #: modules/gui/macosx/simple_prefs.m:122
 #: modules/gui/qt4/components/simple_preferences.cpp:136
@@ -3492,7 +3492,7 @@ msgstr ""
 msgid "These settings are the global VLC key bindings, known as \"hotkeys\"."
 msgstr ""
 
-#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1854
+#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1860
 msgid "Ignore"
 msgstr ""
 
@@ -15886,19 +15886,19 @@ msgstr ""
 msgid "Click to exit fullscreen playback."
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1556 modules/gui/macosx/intf.m:1573
+#: modules/gui/macosx/intf.m:1562 modules/gui/macosx/intf.m:1579
 msgid "VLC media playback"
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1852
+#: modules/gui/macosx/intf.m:1858
 msgid "Remove old preferences?"
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1853
+#: modules/gui/macosx/intf.m:1859
 msgid "We just found an older version of VLC's preferences files."
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1854
+#: modules/gui/macosx/intf.m:1860
 msgid "Move To Trash and Relaunch VLC"
 msgstr ""
 
@@ -26877,8 +26877,9 @@ msgid "Start Time"
 msgstr ""
 
 #: modules/gui/qt4/ui/open.h:255
+#, fuzzy
 msgid "Edit Options"
-msgstr ""
+msgstr "Səs nizamlamaları"
 
 #: modules/gui/qt4/ui/open.h:256
 msgid "Extra media"
@@ -26931,8 +26932,9 @@ msgid "Advanced options..."
 msgstr "&Təkmilləşmiş Aç..."
 
 #: modules/gui/qt4/ui/open_disk.h:297
+#, fuzzy
 msgid "Disc Selection"
-msgstr ""
+msgstr "Seçilənləri Qaldır"
 
 #: modules/gui/qt4/ui/open_disk.h:301
 msgid "SVCD/VCD"
@@ -26972,8 +26974,9 @@ msgid "Choose one or more media file to open"
 msgstr ""
 
 #: modules/gui/qt4/ui/open_file.h:151
+#, fuzzy
 msgid "File Selection"
-msgstr ""
+msgstr "Seçilənləri Qaldır"
 
 #: modules/gui/qt4/ui/open_file.h:152
 msgid "You can select local files with the following list and buttons."
@@ -27122,8 +27125,9 @@ msgid "Profile &Name"
 msgstr ""
 
 #: modules/gui/qt4/ui/sout.h:203
+#, fuzzy
 msgid "Set up media sources to stream"
-msgstr ""
+msgstr "Bütün seçimləri görmək üçün \"Ətraflı Seçimlər\" seçin."
 
 #: modules/gui/qt4/ui/sout.h:205
 msgid "Destination Setup"
@@ -27149,8 +27153,9 @@ msgid "Display locally"
 msgstr ""
 
 #: modules/gui/qt4/ui/sout.h:212
+#, fuzzy
 msgid "Transcoding Options"
-msgstr ""
+msgstr "Bütün seçimləri görmək üçün \"Ətraflı Seçimlər\" seçin."
 
 #: modules/gui/qt4/ui/sout.h:213
 #, fuzzy
@@ -27166,8 +27171,9 @@ msgid "Option Setup"
 msgstr ""
 
 #: modules/gui/qt4/ui/sout.h:216
+#, fuzzy
 msgid "Set up any additional options for streaming"
-msgstr ""
+msgstr "Bütün seçimləri görmək üçün \"Ətraflı Seçimlər\" seçin."
 
 #: modules/gui/qt4/ui/sout.h:217
 msgid "Miscellaneous Options"
@@ -27512,8 +27518,9 @@ msgid "Add Input"
 msgstr "İnterfeys əlavə et"
 
 #: modules/gui/qt4/ui/streampanel.h:184
+#, fuzzy
 msgid "Edit Input"
-msgstr ""
+msgstr "İnterfeys əlavə et"
 
 #: modules/gui/qt4/ui/streampanel.h:185
 msgid "Clear List"
@@ -27657,16 +27664,19 @@ msgid "Name:"
 msgstr "Ad"
 
 #: modules/gui/qt4/ui/vlm.h:290
+#, fuzzy
 msgid "Input:"
-msgstr ""
+msgstr "İnterfeys əlavə et"
 
 #: modules/gui/qt4/ui/vlm.h:291
+#, fuzzy
 msgid "Select Input"
-msgstr ""
+msgstr "Axın çıxışı"
 
 #: modules/gui/qt4/ui/vlm.h:292
+#, fuzzy
 msgid "Output:"
-msgstr ""
+msgstr "Çıxış modulları"
 
 #: modules/gui/qt4/ui/vlm.h:293
 #, fuzzy

@@ -1,5 +1,5 @@
 # Welsh translation
-# Copyright (C) 2016 VideoLAN
+# Copyright (C) 2017 VideoLAN
 # This file is distributed under the same license as the vlc package.
 #
 # Translators:
@@ -9,9 +9,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VLC - Trans\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2017-02-03 12:10+0100\n"
-"PO-Revision-Date: 2016-01-23 09:07+0000\n"
-"Last-Translator: Aled Powell <cymrodor@gmail.com>\n"
+"POT-Creation-Date: 2017-05-24 15:01+0200\n"
+"PO-Revision-Date: 2017-02-06 13:43+0000\n"
+"Last-Translator: Christoph Miebach <christoph.miebach@web.de>\n"
 "Language-Team: Welsh (http://www.transifex.com/yaron/vlc-trans/language/"
 "cy/)\n"
 "Language: cy\n"
@@ -1752,7 +1752,7 @@ msgid ""
 "your experience, especially when combined with the Headphone Channel Mixer."
 msgstr ""
 
-#: src/libvlc-module.c:178 src/win32/thread.c:885
+#: src/libvlc-module.c:178 src/win32/thread.c:904
 #: modules/audio_output/kai.c:106 modules/codec/x264.c:442
 #: modules/gui/macosx/simple_prefs.m:122
 #: modules/gui/qt4/components/simple_preferences.cpp:136
@@ -3714,7 +3714,7 @@ msgstr ""
 msgid "These settings are the global VLC key bindings, known as \"hotkeys\"."
 msgstr ""
 
-#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1854
+#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1860
 msgid "Ignore"
 msgstr "Anwybyddu"
 
@@ -5733,6 +5733,8 @@ msgid ""
 "DeckLink capture card to use, if multiple exist. The cards are numbered from "
 "0."
 msgstr ""
+"Cerdyn cipio Decklink i'w ddefnyddio, os oes mwy nag un. Mae'r cardiau wedi "
+"eu rhifo o 0."
 
 #: modules/access/decklink.cpp:51
 msgid "Desired input video mode. Leave empty for autodetection."
@@ -5743,6 +5745,8 @@ msgid ""
 "Desired input video mode for DeckLink captures. This value should be a "
 "FOURCC code in textual form, e.g. \"ntsc\"."
 msgstr ""
+"Modd mewnbwn fideo yr hoffet ar gyfer cipiadau Decklink. Rhaid i'r gwerth "
+"fod yn god FOURCC mewn ffurf testun, e.e. \"ntsc\"."
 
 #: modules/access/decklink.cpp:57 modules/video_output/decklink.cpp:90
 msgid "Audio connection"
@@ -16208,19 +16212,19 @@ msgstr "(does dim eitem yn chwarae)"
 msgid "Click to exit fullscreen playback."
 msgstr "Cliciwch i adael y sgrin lawn."
 
-#: modules/gui/macosx/intf.m:1556 modules/gui/macosx/intf.m:1573
+#: modules/gui/macosx/intf.m:1562 modules/gui/macosx/intf.m:1579
 msgid "VLC media playback"
 msgstr "Chwarae gyda VLC"
 
-#: modules/gui/macosx/intf.m:1852
+#: modules/gui/macosx/intf.m:1858
 msgid "Remove old preferences?"
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1853
+#: modules/gui/macosx/intf.m:1859
 msgid "We just found an older version of VLC's preferences files."
 msgstr ""
 
-#: modules/gui/macosx/intf.m:1854
+#: modules/gui/macosx/intf.m:1860
 msgid "Move To Trash and Relaunch VLC"
 msgstr "Symud i'r Sbwriel ac Ailddechrau VLC"
 
@@ -26087,6 +26091,7 @@ msgstr ""
 #: modules/video_output/decklink.cpp:81
 msgid "DeckLink output card, if multiple exist. The cards are numbered from 0."
 msgstr ""
+"Cerdyn allbwn Decklink, os oes mwy nag un. Mae'r cardiau wedi eu rhifo o 0."
 
 #: modules/video_output/decklink.cpp:84
 msgid "Desired output mode"
@@ -26097,25 +26102,31 @@ msgid ""
 "Desired output mode for DeckLink output. This value should be a FOURCC code "
 "in textual form, e.g. \"ntsc\"."
 msgstr ""
+"Modd allbwn yr hoffet ar gyfer allbwn Decklink. Rhaid i'r gwerth fod yn god "
+"FOURCC mewn ffurf testun, e.e. \"ntsc\"."
 
 #: modules/video_output/decklink.cpp:92
 msgid "Audio connection for DeckLink output."
-msgstr ""
+msgstr "Cysylltiad sain ar gyfer allbwn Decklink."
 
 #: modules/video_output/decklink.cpp:97
 msgid ""
 "Audio sampling rate (in hertz) for DeckLink output. 0 disables audio output."
 msgstr ""
+"Cydradd samplo sain (mewn hertz) ar gyfer allbwn Decklink. Mae 0 yn "
+"analluogi allbwn sain."
 
 #: modules/video_output/decklink.cpp:102
 msgid ""
 "Number of output channels for DeckLink output. Must be 2, 8 or 16. 0 "
 "disables audio output."
 msgstr ""
+"Nifer o sianeli allbwn ar gyfer allbwn Decklink. Rhaid bod yn 2, 8 neu 16. "
+"Mae 0 yn analluogi allbwn sain."
 
 #: modules/video_output/decklink.cpp:107
 msgid "Video connection for DeckLink output."
-msgstr ""
+msgstr "Cysylltiad fideo ar gyfer allbwn Decklink."
 
 #: modules/video_output/decklink.cpp:111
 msgid "Use 10 bits per pixel for video frames."
@@ -26123,7 +26134,7 @@ msgstr ""
 
 #: modules/video_output/decklink.cpp:177
 msgid "DecklinkOutput"
-msgstr ""
+msgstr "Allbwn Decklink"
 
 #: modules/video_output/decklink.cpp:178
 msgid "output module to write to Blackmagic SDI card"
@@ -26131,23 +26142,23 @@ msgstr ""
 
 #: modules/video_output/decklink.cpp:179
 msgid "Decklink General Options"
-msgstr ""
+msgstr "Dewisiadau Cyffredin Decklink"
 
 #: modules/video_output/decklink.cpp:184
 msgid "Decklink Video Output module"
-msgstr ""
+msgstr "Modiwl Allbwn Fideo Decklink"
 
 #: modules/video_output/decklink.cpp:189
 msgid "Decklink Video Options"
-msgstr ""
+msgstr "Dewisiadau Fideo Decklink"
 
 #: modules/video_output/decklink.cpp:204
 msgid "Decklink Audio Output module"
-msgstr ""
+msgstr "Modiwl Allbwn Sain Decklink"
 
 #: modules/video_output/decklink.cpp:209
 msgid "Decklink Audio Options"
-msgstr ""
+msgstr "Dewisiadau Sain Decklink"
 
 #: modules/video_output/directfb.c:50
 msgid "DirectFB video output http://www.directfb.org/"
@@ -27539,9 +27550,8 @@ msgid "FLAC"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:703
-#, fuzzy
 msgid "MP&4/MOV"
-msgstr "MP4/MOV"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:704
 msgid "Ogg/Ogm"
@@ -27552,9 +27562,8 @@ msgid "M&KV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:706
-#, fuzzy
 msgid "M&JPEG"
-msgstr "MJPEG"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:707
 msgid "MPEG-PS"
@@ -27565,9 +27574,8 @@ msgid "F&LV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:709
-#, fuzzy
 msgid "&MPEG-TS"
-msgstr "MPEG-TS"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:710
 msgid "RAW"
@@ -27582,9 +27590,8 @@ msgid "Webm"
 msgstr "Webm"
 
 #: modules/gui/qt4/ui/profiles.h:713
-#, fuzzy
 msgid "MPEG &1"
-msgstr "MPEG 1"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:714
 msgid "AVI"
@@ -27615,9 +27622,8 @@ msgid "Menus"
 msgstr "Dewislenni"
 
 #: modules/gui/qt4/ui/profiles.h:730
-#, fuzzy
 msgid "Fra&me Rate"
-msgstr "Cyflymdra Fframiau"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:731
 msgid "Same as source"
@@ -27632,9 +27638,8 @@ msgid "Custom options"
 msgstr "Dewisiadau addasedig"
 
 #: modules/gui/qt4/ui/profiles.h:735
-#, fuzzy
 msgid "&Quality"
-msgstr "Ansawdd"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:736 modules/gui/qt4/ui/profiles.h:737
 msgid "Not Used"
@@ -27657,14 +27662,12 @@ msgid "px"
 msgstr "px"
 
 #: modules/gui/qt4/ui/profiles.h:758
-#, fuzzy
 msgid "Sa&mple Rate"
-msgstr "Cyfradd Sampl"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:766
-#, fuzzy
 msgid "Profile &Name"
-msgstr "Enw'r Proffil"
+msgstr ""
 
 #: modules/gui/qt4/ui/sout.h:203
 msgid "Set up media sources to stream"
@@ -28226,9 +28229,6 @@ msgstr "AAAA; "
 msgid "Media Manager List"
 msgstr "Rhestr Rheolwyr Cyfryngau"
 
-#~ msgid "MKV"
-#~ msgstr "MKV"
-
 #~ msgid "FLV"
 #~ msgstr "FLV"
 
@@ -28573,6 +28573,10 @@ msgstr "Rhestr Rheolwyr Cyfryngau"
 #, fuzzy
 #~ msgid "Album art download policy:"
 #~ msgstr "Polisi lawrlwytho delweddau albymau"
+
+#, fuzzy
+#~ msgid "MKV"
+#~ msgstr "KVA"
 
 #, fuzzy
 #~ msgid "---  DVD Menu"

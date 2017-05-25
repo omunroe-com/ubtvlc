@@ -24,7 +24,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VLC - Trans\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2017-02-03 12:10+0100\n"
+"POT-Creation-Date: 2017-05-24 15:01+0200\n"
 "PO-Revision-Date: 2016-04-05 14:02+0000\n"
 "Last-Translator: Tobias Bannert <tobannert@gmail.com>\n"
 "Language-Team: German (http://www.transifex.com/yaron/vlc-trans/language/"
@@ -1846,7 +1846,7 @@ msgstr ""
 "Option zu einer hörbaren Verbesserung der Klangqualität führen, speziell in "
 "Verbindung mit einem Kopfhörer."
 
-#: src/libvlc-module.c:178 src/win32/thread.c:885
+#: src/libvlc-module.c:178 src/win32/thread.c:904
 #: modules/audio_output/kai.c:106 modules/codec/x264.c:442
 #: modules/gui/macosx/simple_prefs.m:122
 #: modules/gui/qt4/components/simple_preferences.cpp:136
@@ -3994,7 +3994,7 @@ msgstr ""
 "Diese Einstellungen sind die globalen Tastenkombinationen von VLC, bekannt "
 "als \"Hotkeys\"."
 
-#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1854
+#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1860
 msgid "Ignore"
 msgstr "Ignorieren"
 
@@ -17315,20 +17315,20 @@ msgstr "(es wird nichts wiedergegeben)"
 msgid "Click to exit fullscreen playback."
 msgstr "Klicken, um die Vollbildschirmwiedergabe zu beenden."
 
-#: modules/gui/macosx/intf.m:1556 modules/gui/macosx/intf.m:1573
+#: modules/gui/macosx/intf.m:1562 modules/gui/macosx/intf.m:1579
 msgid "VLC media playback"
 msgstr "VLC Medienwiedergabe"
 
-#: modules/gui/macosx/intf.m:1852
+#: modules/gui/macosx/intf.m:1858
 msgid "Remove old preferences?"
 msgstr "Alte Einstellungen entfernen?"
 
-#: modules/gui/macosx/intf.m:1853
+#: modules/gui/macosx/intf.m:1859
 msgid "We just found an older version of VLC's preferences files."
 msgstr ""
 "Wir haben gerade eine alte Version von VLCs Einstellungsdatei gefunden."
 
-#: modules/gui/macosx/intf.m:1854
+#: modules/gui/macosx/intf.m:1860
 msgid "Move To Trash and Relaunch VLC"
 msgstr "In den Papierkorb legen und VLC neustarten"
 
