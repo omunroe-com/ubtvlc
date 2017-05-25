@@ -1,5 +1,5 @@
 # Italian translation
-# Copyright (C) 2016 VideoLAN
+# Copyright (C) 2017 VideoLAN
 # This file is distributed under the same license as the vlc package.
 #
 # Translators:
@@ -40,14 +40,14 @@
 # sara.nocentini <sara.nocentini@gmail.com>, 2014
 # Marco Esposito <antani125@yahoo.it>, 2013
 # Veronica Di Giorgio <verodigiorgio@gmail.com>, 2013
-# Vincenzo Reale <vinx.reale@gmail.com>, 2014-2015
+# Vincenzo Reale <vinx.reale@gmail.com>, 2014-2016
 msgid ""
 msgstr ""
 "Project-Id-Version: VLC - Trans\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2017-02-03 12:10+0100\n"
-"PO-Revision-Date: 2016-05-24 20:56+0000\n"
-"Last-Translator: Claudio Diana <carbonis@rocketmail.com>\n"
+"POT-Creation-Date: 2017-05-24 15:01+0200\n"
+"PO-Revision-Date: 2017-02-06 13:43+0000\n"
+"Last-Translator: Christoph Miebach <christoph.miebach@web.de>\n"
 "Language-Team: Italian (http://www.transifex.com/yaron/vlc-trans/language/"
 "it/)\n"
 "Language: it\n"
@@ -1870,7 +1870,7 @@ msgstr ""
 "attivare questa opzione potrebbe migliorare la tua esperienza, specialmente "
 "quando è combinata con il canale mixer delle cuffie."
 
-#: src/libvlc-module.c:178 src/win32/thread.c:885
+#: src/libvlc-module.c:178 src/win32/thread.c:904
 #: modules/audio_output/kai.c:106 modules/codec/x264.c:442
 #: modules/gui/macosx/simple_prefs.m:122
 #: modules/gui/qt4/components/simple_preferences.cpp:136
@@ -4014,7 +4014,7 @@ msgstr ""
 msgid "These settings are the global VLC key bindings, known as \"hotkeys\"."
 msgstr "Parametri di controllo via tastiera, conosciuti come \"hotkeys\"."
 
-#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1854
+#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1860
 msgid "Ignore"
 msgstr "Ignora"
 
@@ -11835,17 +11835,17 @@ msgstr "Decodificatore Media Foundation Transform"
 #: modules/codec/mmal.c:50
 msgid "Decode frames directly into RPI VideoCore instead of host memory."
 msgstr ""
-"Decodifica i frame direttamente nel VideoCore RPI invece che nella memoria "
-"primaria."
+"Decodifica i fotogrammi direttamente nel VideoCore RPI invece che nella "
+"memoria primaria."
 
 #: modules/codec/mmal.c:51
 msgid ""
 "Decode frames directly into RPI VideoCore instead of host memory. This "
 "option must only be used with the MMAL video output plugin."
 msgstr ""
-"Decodifica i frame direttamente nel VideoCore RPI invece che nella memoria "
-"primaria. Questa opzione deve essere usata solamente con il plugin "
-"dell'output video MMAL."
+"Decodifica i fotogrammi direttamente nel VideoCore RPI invece che nella "
+"memoria primaria. Questa opzione deve essere usata solamente con il plugin "
+"dell'uscita video MMAL."
 
 #: modules/codec/mmal.c:57
 msgid "MMAL decoder"
@@ -11869,7 +11869,7 @@ msgstr "Rendering diretto Android"
 
 #: modules/codec/omxil/android_mediacodec.c:268
 msgid "Enable Android direct rendering using opaque buffers."
-msgstr "Attiva il rendering diretto su Android utilizzando buffers opachi"
+msgstr "Attiva il rendering diretto su Android utilizzando buffer opachi."
 
 #: modules/codec/omxil/android_mediacodec.c:273
 msgid "Video decoder using Android MediaCodec"
@@ -11944,9 +11944,10 @@ msgid ""
 "the correct profile from other sources, such as resolution and bitrate. E.g. "
 "'4.2' for mpeg4-part10 or 'low' for mpeg2"
 msgstr ""
-"Specifica esplicitamente il livello del codec. Se non lo fai, il codec "
-"determinerà il profilo corretto da altre sorgenti, come la risoluzione e il "
-"bitrate. Ad esempio \"4.2\" per mpeg4-part10 o \"bassa\" per mpeg2"
+"Specifica esplicitamente il livello del codificatore. Se non lo fai, il "
+"codificatore determinerà il profilo corretto da altre sorgenti, come la "
+"risoluzione e il bitrate. Ad esempio \"4.2\" per mpeg4-part10 o \"bassa\" "
+"per mpeg2"
 
 #: modules/codec/qsv.c:73
 msgid "Group of Picture size"
@@ -11983,7 +11984,7 @@ msgid ""
 "The target usage allow to choose between different trade-offs between "
 "quality and speed. Allowed values are : 'speed', 'balanced' and 'quality'."
 msgstr ""
-"L'uso dell'obiettivo permette di scegliere tra diversi compromessi tra "
+"L'utilizzo di destinazione consente di scegliere tra diversi compromessi tra "
 "qualità e velocità. I valori ammessi sono : \"velocità\", \"bilanciato\" e "
 "\"qualità\"."
 
@@ -12000,14 +12001,14 @@ msgid ""
 "the sequence header before every Nth I-frame. If IdrInterval=0 (default), "
 "SDK inserts the sequence header once at the beginning of the stream. "
 msgstr ""
-"Per H.264, l'intervallo IDR specifica l'intervallo del frame IDR in termini "
-"di frame I; se l'intervallo IDR=0, ogni frame I è un frame IDR. Se "
-"l'intervallo IDR=1, ogni altro frame I è un frame IDR, etc. Per MPEG2, "
-"l'intervallo IDR definisce l'intervallo della testata della sequenza in "
-"termini di frame I. Se l'intervallo IDR=N, SDK inserisce la testata della "
-"sequenza prima di ogni ennesimo frame I. Se l'intervallo IDR=0 "
-"(predefinito), SDK inserisce la testata della sequenza una volta all'inizio "
-"del flusso."
+"Per H.264, l'intervallo IDR specifica l'intervallo del fotogramma IDR in "
+"termini di fotogrammi I; se l'intervallo IDR=0, ogni fotogramma I è un "
+"fotogramma IDR. Se l'intervallo IDR=1, ogni altro fotogramma I è un "
+"fotogramma IDR, etc. Per MPEG2, l'intervallo IDR definisce l'intervallo "
+"dell'intestazione della sequenza in termini di fotogrammi I. Se l'intervallo "
+"IDR=N, SDK inserisce l'intestazione della sequenza prima di ogni ennesimo "
+"fotogramma I. Se l'intervallo IDR=0 (predefinito), SDK inserisce "
+"l'intestazione della sequenza una volta all'inizio del flusso."
 
 #: modules/codec/qsv.c:100
 msgid "Rate Control Method"
@@ -12082,9 +12083,9 @@ msgid ""
 "method. If not set, this parameter. is computed from other sources such as "
 "bitrate, profile, level, etc."
 msgstr ""
-"Definisce il bitrate massimo in Kbps (1000 bits/s) per il metodo di "
-"controllo del rate VBR. Se non è impostato, questo parametro. È calcolato da "
-"altre sorgenti come il bitrate, il profilo, il livello, etc."
+"Definisce il bitrate massimo in Kbps (1000 bit/s) per il metodo di controllo "
+"del VBR. Se non è impostato, questo parametro è calcolato da altre sorgenti "
+"come il bitrate, il profilo, il livello, ecc."
 
 #: modules/codec/qsv.c:127
 msgid "Accuracy of RateControl"
@@ -16421,7 +16422,7 @@ msgid ""
 "Seek and position based on a percent byte position, not a PCR generated time "
 "position. If seeking doesn't work property, turn on this option."
 msgstr ""
-"Ricerca e posiziona in base ad una posizione in percentuale di byte, non una "
+"Ricerca e posiziona in base a una posizione in percentuale di byte, non una "
 "posizione nel tempo generata da PCR. Se la ricerca non funziona "
 "correttamente, attiva questa opzione."
 
@@ -16431,7 +16432,7 @@ msgstr "Considera affidabile il flusso PCR in ingresso"
 
 #: modules/demux/ts.c:127
 msgid "Use the stream PCR as a reference."
-msgstr "Usa il flusso PCR come referenza"
+msgstr "Usa il flusso PCR come riferimento. "
 
 #: modules/demux/ts.c:130
 msgid "MPEG Transport Stream demuxer"
@@ -17381,20 +17382,20 @@ msgstr "(nessun elemento in riproduzione)"
 msgid "Click to exit fullscreen playback."
 msgstr "Clic per uscire dalla riproduzione a schermo intero."
 
-#: modules/gui/macosx/intf.m:1556 modules/gui/macosx/intf.m:1573
+#: modules/gui/macosx/intf.m:1562 modules/gui/macosx/intf.m:1579
 msgid "VLC media playback"
 msgstr "Riproduzione media di VLC"
 
-#: modules/gui/macosx/intf.m:1852
+#: modules/gui/macosx/intf.m:1858
 msgid "Remove old preferences?"
 msgstr "Rimuovere le vecchie preferenze?"
 
-#: modules/gui/macosx/intf.m:1853
+#: modules/gui/macosx/intf.m:1859
 msgid "We just found an older version of VLC's preferences files."
 msgstr ""
 "Abbiamo rilevato una versione precedente dei file delle preferenze di VLC."
 
-#: modules/gui/macosx/intf.m:1854
+#: modules/gui/macosx/intf.m:1860
 msgid "Move To Trash and Relaunch VLC"
 msgstr "Sposta nel cestino e riavvia VLC"
 
@@ -17628,7 +17629,7 @@ msgstr ""
 
 #: modules/gui/macosx/macosx.m:124
 msgid "Use large text for list views"
-msgstr "Utilizzare il testo di grandi dimensioni per visualizzazioni elenco"
+msgstr "Utilizza il testo di grandi dimensioni per le visualizzazioni a elenco"
 
 #: modules/gui/macosx/macosx.m:129
 msgid "Do nothing"
@@ -18621,7 +18622,7 @@ msgstr "Riavvia la riproduzione"
 
 #: modules/gui/macosx/ResumeDialogController.m:70
 msgid "Playback of \"%@\" will continue at %@"
-msgstr "Il Playback di \"%@\" continuerà a %@"
+msgstr "La riproduzione di \"%@\" continuerà a %@"
 
 #: modules/gui/macosx/simple_prefs.m:294
 #: modules/gui/qt4/components/simple_preferences.cpp:294
@@ -21759,7 +21760,7 @@ msgstr "Pulsante piatto"
 
 #: modules/gui/qt4/dialogs/toolbar.cpp:76
 msgid "Next widget style"
-msgstr "Prossimo stile widget"
+msgstr "Stile widget successivo"
 
 #: modules/gui/qt4/dialogs/toolbar.cpp:77
 msgid "Big Button"
@@ -22494,7 +22495,7 @@ msgstr ""
 
 #: modules/gui/qt4/qt4.cpp:186
 msgid "Fullscreen controller mouse sensitivity"
-msgstr "Sensibilità del mouse controller a schermo intero"
+msgstr "Sensibilità del mouse per il controllo a schermo intero"
 
 #: modules/gui/qt4/qt4.cpp:194
 msgid "When minimized"
@@ -23731,8 +23732,9 @@ msgid ""
 "This enables actual parsing of the announces by the SAP module. Otherwise, "
 "all announcements are parsed by the \"live555\" (RTP/RTSP) module."
 msgstr ""
-"Questo permette il parsing attuale degli annunci tramite il modulo SAP. "
-"Altrimenti, tutti gli annunci saranno letti dal modulo \"live555\" (RTP/RTSP)"
+"Questo permette l'elaborazione attuale degli annunci tramite il modulo SAP. "
+"Altrimenti, tutti gli annunci saranno letti dal modulo \"live555\" (RTP/"
+"RTSP)."
 
 #: modules/services_discovery/sap.c:94
 msgid "SAP Strict mode"
@@ -24955,9 +24957,9 @@ msgid ""
 "This is the relative default size of the fonts that will be rendered on the "
 "video. If absolute font size is set, relative size will be overridden."
 msgstr ""
-"Questa è la dimensione di default relativa dei font che verranno "
-"renderizzati a video. Se una dimensione assoluta dei font è impostata, la "
-"dimensione relativa verrà sovrascritta."
+"Questa è la dimensione di default relativa dei caratteri che verranno resi a "
+"video. Se una dimensione assoluta dei caratteri è impostata, la dimensione "
+"relativa sarà sovrascritta."
 
 #: modules/text_renderer/freetype.c:121
 msgid "Background opacity"
@@ -25242,7 +25244,7 @@ msgstr "Maschera di trasparenza"
 #: modules/video_filter/alphamask.c:44
 msgid "Alpha blending transparency mask. Uses a png alpha channel."
 msgstr ""
-"Maschera di trasparenza alpha blending. Usa un canale di trasparenza png."
+"Maschera di trasparenza alfa blending. Usa un canale di trasparenza png."
 
 #: modules/video_filter/alphamask.c:63
 msgid "Alpha mask video filter"
@@ -25768,12 +25770,12 @@ msgid ""
 "on top, and one zone on left and right and no summary zone the mapping for "
 "classic AtmoLight would be -1,3,2,1,0"
 msgstr ""
-"Per i device con più di cinque canali /zone scritte per ogni canale scrivere "
-"qui sotto per ogni canale il numero della zona da mostrare e separare i "
-"valori con , o ; e usare -1 per non usare alcuni canali. Per la classica "
-"AtmoLight la sequenza 4,3,1,0,2 impostare il mapping di default canale/zona. "
-"Per avere soltanto due zone in cima e una zona a destra e a sinistra e "
-"nessuna zona sommario  il mapping per il classico AtmoLight sarà -1,3,2,1,0"
+"per i dispositivi con più di cinque canali / zone scrivi qui per ogni canale "
+"il numero della zona da mostrare e separa i valori con , o ; e usa -1 per "
+"non usare alcuni canali. Per AtmoLight classico la sequenza 4,3,1,0,2 "
+"imposta la mappatura predefinita canale/zona. Per avere soltanto due zone in "
+"cima e una zona a destra e a sinistra e nessuna zona sommario, la "
+"mappaturaper AtmoLight classico sarà -1,3,2,1,0"
 
 #: modules/video_filter/atmo/atmo.cpp:332
 msgid "Zone 0: Top gradient"
@@ -26079,7 +26081,7 @@ msgstr ""
 "Questo effetto, conosciuto anche come \"schermo verde\" o \"cromakey\", "
 "miscela le parti blu dell'immagine in primo piano nel mosaico con lo sfondo "
 "(come nelle previsioni del tempo). Potete scegliere il colore \"chiave\" per "
-"il mix (di default è il blu)"
+"la miscela (il predefinito è il blu)"
 
 #: modules/video_filter/bluescreen.c:42
 msgid "Bluescreen U value"
@@ -26356,6 +26358,21 @@ msgid ""
 "Upconvert: output in 4:2:2 format (independent chroma for each field). Best "
 "simulation, but requires more CPU and memory bandwidth."
 msgstr ""
+"Scegli la gestione dei colori nei fotogrammi in uscita che cadono ai bordi "
+"dei fotogrammi in ingresso.\n"
+"\n"
+"Più recente: prende la crominanza solo dal nuovo campo (luminoso). Buono per "
+"un ingresso interlacciato, come i video da una videocamera.\n"
+"\n"
+"AltLine: prende la riga 1 di crominanza dal campo superiore, la riga 2 dal "
+"campo inferiore, ecc.\n"
+"Predefinito, buono per un ingresso di film NTSC (DVD anime, ecc.)\n"
+"\n"
+"Miscela: crominanze medie dei campi. Potrebbe anche distorcere i colori del "
+"nuovo campo (luminoso).\n"
+"\n"
+"Upconvert: uscita nel formato 4:2:2 (crominanza indipendente per ogni "
+"campo). Miglior simulazione, ma richiede più CPU e ampiezza di banda."
 
 #: modules/video_filter/deinterlace/deinterlace.c:88
 msgid "Phosphor old field dimmer strength"
@@ -26843,7 +26860,7 @@ msgid ""
 "opaque (default)."
 msgstr ""
 "Trasparenza delle immagini in primo piano del mosaico. 0 indica trasparente, "
-"255 opaco (predefinito)"
+"255 opaco (predefinito)."
 
 #: modules/video_filter/mosaic.c:93
 msgid "Total height of the mosaic, in pixels."
@@ -26895,9 +26912,9 @@ msgid ""
 "2=right, 4=top, 8=bottom, you can also use combinations of these values, eg "
 "6 = top-right)."
 msgstr ""
-"E' possibile applicare l'allineamento del mosaico nel video (0=centro, "
+"È possibile imporre l'allineamento del mosaico nel video (0=centro, "
 "1=sinistra, 2=destra, 4=sopra, 8=sotto, puoi anche usare delle combinazioni "
-"di questi valori, es 6 = in alto a destra)."
+"di questi valori, ad es. 6 = in alto a destra)."
 
 #: modules/video_filter/mosaic.c:117
 msgid "Positioning method"
@@ -27652,7 +27669,7 @@ msgid ""
 "delay - multiply subtitle delay. Relative to source content - determine "
 "subtitle delay from its content (text)."
 msgstr ""
-"Ritardo assoluto - aggiunge un valore di ritardo assoluto ad ogni "
+"Ritardo assoluto - aggiunge un valore di ritardo assoluto a ogni "
 "sottotitolo. Collegato al ritardo della fonte - moltiplica il ritardo del "
 "sottotitolo. Collegato al contenuto della fonte - determina il ritardo del "
 "sottotitolo dal suo contenuto (testo)."
@@ -28124,6 +28141,8 @@ msgid ""
 "VideoCore layer where the video is displayed. Subpictures are displayed "
 "directly above and a black background directly below."
 msgstr ""
+"Livello VideoCore dove il video è visualizzato. Le immagini secondarie sono "
+"visualizzate direttamente sopra e uno sfondo nero direttamente sotto."
 
 #: modules/video_output/mmal.c:56 modules/video_output/mmal.c:57
 msgid "Adjust HDMI refresh rate to the video."
@@ -28166,7 +28185,7 @@ msgstr "Ombreggiatura pixel"
 
 #: modules/video_output/msw/direct3d.c:68
 msgid "Choose a pixel shader to apply."
-msgstr "Scegliere l'ombreggiatura dei pixel da applicare"
+msgstr "Scegli l'ombreggiatura dei pixel da applicare"
 
 #: modules/video_output/msw/direct3d.c:69
 msgid "Path to HLSL file"
@@ -28896,7 +28915,7 @@ msgstr ""
 
 #: modules/visualization/visual/visual.c:65
 msgid "Kaiser window parameter"
-msgstr "Ignora i parametri"
+msgstr "Parametri finestra Kaiser"
 
 #: modules/visualization/visual/visual.c:67
 msgid ""
@@ -29402,9 +29421,8 @@ msgid "FLAC"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:703
-#, fuzzy
 msgid "MP&4/MOV"
-msgstr "MP4/MOV"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:704
 msgid "Ogg/Ogm"
@@ -29415,9 +29433,8 @@ msgid "M&KV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:706
-#, fuzzy
 msgid "M&JPEG"
-msgstr "MJPEG"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:707
 msgid "MPEG-PS"
@@ -29428,9 +29445,8 @@ msgid "F&LV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:709
-#, fuzzy
 msgid "&MPEG-TS"
-msgstr "MPEG-TS"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:710
 msgid "RAW"
@@ -29445,9 +29461,8 @@ msgid "Webm"
 msgstr "Webm"
 
 #: modules/gui/qt4/ui/profiles.h:713
-#, fuzzy
 msgid "MPEG &1"
-msgstr "MPEG 1"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:714
 msgid "AVI"
@@ -29478,9 +29493,8 @@ msgid "Menus"
 msgstr "Menu"
 
 #: modules/gui/qt4/ui/profiles.h:730
-#, fuzzy
 msgid "Fra&me Rate"
-msgstr "Velocità fotogrammi"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:731
 msgid "Same as source"
@@ -29495,9 +29509,8 @@ msgid "Custom options"
 msgstr "Opzioni personalizzate"
 
 #: modules/gui/qt4/ui/profiles.h:735
-#, fuzzy
 msgid "&Quality"
-msgstr "Qualità"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:736 modules/gui/qt4/ui/profiles.h:737
 msgid "Not Used"
@@ -29520,14 +29533,12 @@ msgid "px"
 msgstr "px"
 
 #: modules/gui/qt4/ui/profiles.h:758
-#, fuzzy
 msgid "Sa&mple Rate"
-msgstr "Campionamento"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:766
-#, fuzzy
 msgid "Profile &Name"
-msgstr "Nome del profilo"
+msgstr ""
 
 #: modules/gui/qt4/ui/sout.h:203
 msgid "Set up media sources to stream"
@@ -30087,9 +30098,6 @@ msgstr "AAAA; "
 #: modules/gui/qt4/ui/vlm.h:302
 msgid "Media Manager List"
 msgstr "Elenco gestore multimediale"
-
-#~ msgid "MKV"
-#~ msgstr "MKV"
 
 #~ msgid "FLV"
 #~ msgstr "FLV"
@@ -34332,6 +34340,22 @@ msgstr "Elenco gestore multimediale"
 #~ msgstr "Impronta digitale del brano (basata su Acoustid)"
 
 #, fuzzy
+#~ msgid "MJPEG:"
+#~ msgstr "MJPEG"
+
+#, fuzzy
+#~ msgid "MOV"
+#~ msgstr "MKV"
+
+#, fuzzy
+#~ msgid "MPJPEG"
+#~ msgstr "MJPEG"
+
+#, fuzzy
+#~ msgid "MKV"
+#~ msgstr "KVA"
+
+#, fuzzy
 #~ msgid "---  DVD Menu"
 #~ msgstr "Menu DVD"
 
@@ -34591,7 +34615,7 @@ msgstr "Elenco gestore multimediale"
 
 #, fuzzy
 #~ msgid "You can choose the crop style to apply."
-#~ msgstr "Scegliere l'ombreggiatura dei pixel da applicare"
+#~ msgstr "Scegli l'ombreggiatura dei pixel da applicare"
 
 #, fuzzy
 #~ msgid ""
@@ -38345,7 +38369,7 @@ msgstr "Elenco gestore multimediale"
 
 #, fuzzy
 #~ msgid "MPEG-4 V"
-#~ msgstr "MPEG 1"
+#~ msgstr "MPEG-4 video"
 
 #, fuzzy
 #~ msgid "Use DVD Menus"
@@ -38513,15 +38537,11 @@ msgstr "Elenco gestore multimediale"
 
 #, fuzzy
 #~ msgid "Quality:"
-#~ msgstr "Qualità"
+#~ msgstr "Qualità VBR"
 
 #, fuzzy
 #~ msgid "Tuner:"
 #~ msgstr "Sintonizzatore"
-
-#, fuzzy
-#~ msgid "MJPEG:"
-#~ msgstr "MJPEG"
 
 #, fuzzy
 #~ msgid "Decimation:"
@@ -38557,11 +38577,7 @@ msgstr "Elenco gestore multimediale"
 
 #, fuzzy
 #~ msgid "MPEG1"
-#~ msgstr "MPEG 1"
-
-#, fuzzy
-#~ msgid "MOV"
-#~ msgstr "MKV"
+#~ msgstr "MPEG-PS"
 
 #, fuzzy
 #~ msgid "ASF"
@@ -41974,10 +41990,6 @@ msgstr "Elenco gestore multimediale"
 #, fuzzy
 #~ msgid "Format to use in playlist \"author\""
 #~ msgstr "Formato da utilizzare per il campo \"autore\" della scaletta."
-
-#, fuzzy
-#~ msgid "MPJPEG"
-#~ msgstr "MJPEG"
 
 #, fuzzy
 #~ msgid "bad entry number"

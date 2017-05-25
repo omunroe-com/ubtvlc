@@ -1,8 +1,9 @@
 # Finnish translation
-# Copyright (C) 2016 VideoLAN
+# Copyright (C) 2017 VideoLAN
 # This file is distributed under the same license as the vlc package.
 #
 # Translators:
+# Ahto Simakuutio <simakuutio@gmail.com>, 2016
 # Jouni Kähkönen, 2007
 # Juha Jeronen 2011, 2012
 # joni.maatta <maatta.joni1@gmail.com>, 2014
@@ -12,6 +13,7 @@
 # Petri Huotari, 2014-2015
 # Rikkokiri <pilvi.rajala@gmail.com>, 2014
 # Riku Viitanen <riisseli4@gmail.com>, 2016
+# Saku Tiihonen <zackyistic@gmail.com>, 2016
 # Tero Pelander, 2009
 # Tomi Toivio <tomi@sange.fi>, 2013
 # Kasvain <kasvain@gmail.com>, 2014-2015
@@ -19,9 +21,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VLC - Trans\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2017-02-03 12:10+0100\n"
-"PO-Revision-Date: 2016-02-25 11:53+0000\n"
-"Last-Translator: Riku Viitanen <riisseli4@gmail.com>\n"
+"POT-Creation-Date: 2017-05-24 15:01+0200\n"
+"PO-Revision-Date: 2017-02-06 13:43+0000\n"
+"Last-Translator: Christoph Miebach <christoph.miebach@web.de>\n"
 "Language-Team: Finnish (http://www.transifex.com/yaron/vlc-trans/language/"
 "fi/)\n"
 "Language: fi\n"
@@ -1849,7 +1851,7 @@ msgstr ""
 "äänivirroille, jotka eivät ole Dolby Surround -käsiteltyjä, tämä asetus voi "
 "parantaa kokemusta jos käytetään myös kuulokekanavamikseriä."
 
-#: src/libvlc-module.c:178 src/win32/thread.c:885
+#: src/libvlc-module.c:178 src/win32/thread.c:904
 #: modules/audio_output/kai.c:106 modules/codec/x264.c:442
 #: modules/gui/macosx/simple_prefs.m:122
 #: modules/gui/qt4/components/simple_preferences.cpp:136
@@ -3987,7 +3989,7 @@ msgstr ""
 msgid "These settings are the global VLC key bindings, known as \"hotkeys\"."
 msgstr "Nämä asetukset ovat VLC:n globaaleja pikanäppäimiä."
 
-#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1854
+#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1860
 msgid "Ignore"
 msgstr "Älä huomioi"
 
@@ -9385,7 +9387,7 @@ msgstr ""
 
 #: modules/audio_filter/audiobargraph_a.c:48
 msgid "Time window to use in ms"
-msgstr ""
+msgstr "Käytettävä aikaikkuna millisekunneissa"
 
 #: modules/audio_filter/audiobargraph_a.c:49
 msgid ""
@@ -9411,7 +9413,7 @@ msgstr ""
 
 #: modules/audio_filter/audiobargraph_a.c:56
 msgid "Time between two alarm messages in ms"
-msgstr ""
+msgstr "Kahden hälytyksen välinen aika millisekunneissa"
 
 #: modules/audio_filter/audiobargraph_a.c:57
 msgid ""
@@ -11841,7 +11843,7 @@ msgstr ""
 
 #: modules/codec/qsv.c:105
 msgid "Quantization parameter"
-msgstr ""
+msgstr "Kvantisointi parametrit"
 
 #: modules/codec/qsv.c:106
 msgid ""
@@ -11852,7 +11854,7 @@ msgstr ""
 
 #: modules/codec/qsv.c:110
 msgid "Quantization parameter for I-frames"
-msgstr ""
+msgstr "Kvantisointi parametrit I-kehyksille"
 
 #: modules/codec/qsv.c:111
 msgid ""
@@ -11862,7 +11864,7 @@ msgstr ""
 
 #: modules/codec/qsv.c:114
 msgid "Quantization parameter for P-frames"
-msgstr ""
+msgstr "Kvantisointi parametrit P-kehyksille"
 
 #: modules/codec/qsv.c:115
 msgid ""
@@ -11872,7 +11874,7 @@ msgstr ""
 
 #: modules/codec/qsv.c:118
 msgid "Quantization parameter for B-frames"
-msgstr ""
+msgstr "Kvantisointi parametrit B-kehyksille"
 
 #: modules/codec/qsv.c:119
 msgid ""
@@ -12696,7 +12698,7 @@ msgstr ""
 
 #: modules/codec/subsdec.c:183
 msgid "Text subtitle decoder"
-msgstr ""
+msgstr "Tekstityksen purkaja"
 
 #. xgettext:
 #. The Windows ANSI code page most commonly used for this language.
@@ -13816,7 +13818,7 @@ msgstr "Hidas"
 
 #: modules/codec/x264.c:442
 msgid "Spatial"
-msgstr ""
+msgstr "Tila"
 
 #: modules/codec/x264.c:442 modules/hw/vdpau/chroma.c:865
 msgid "Temporal"
@@ -13824,7 +13826,7 @@ msgstr "Väliaikainen"
 
 #: modules/codec/x264.c:447
 msgid "checkerboard"
-msgstr ""
+msgstr "ruudukko"
 
 #: modules/codec/x264.c:447
 msgid "column alternation"
@@ -15117,7 +15119,7 @@ msgstr "Industriaali"
 
 #: modules/demux/mp4/id3genres.h:52
 msgid "Alternative"
-msgstr "Alternative"
+msgstr "Vaihtoehto"
 
 #: modules/demux/mp4/id3genres.h:54
 msgid "Death Metal"
@@ -15189,7 +15191,7 @@ msgstr "Kohina"
 
 #: modules/demux/mp4/id3genres.h:72
 msgid "Alternative Rock"
-msgstr "Alternative Rock"
+msgstr "Vaihtoehtorock"
 
 #: modules/demux/mp4/id3genres.h:73
 msgid "Bass"
@@ -15575,7 +15577,7 @@ msgstr "Crossover"
 
 #: modules/demux/mp4/id3genres.h:172
 msgid "Contemporary Christian"
-msgstr ""
+msgstr "Nykyajan kristillinen"
 
 #: modules/demux/mp4/id3genres.h:173
 msgid "Christian Rock"
@@ -15698,7 +15700,7 @@ msgstr "Alaotsikko"
 
 #: modules/demux/mp4/mp4.c:1476
 msgid "Arranger"
-msgstr ""
+msgstr "Järjestäjä"
 
 #: modules/demux/mp4/mp4.c:1477
 msgid "Art Director"
@@ -15710,7 +15712,7 @@ msgstr ""
 
 #: modules/demux/mp4/mp4.c:1479
 msgid "Conductor"
-msgstr ""
+msgstr "Kapelimestari"
 
 #: modules/demux/mp4/mp4.c:1480
 msgid "Song Description"
@@ -15726,7 +15728,7 @@ msgstr ""
 
 #: modules/demux/mp4/mp4.c:1484
 msgid "Sound Engineer"
-msgstr ""
+msgstr "Ääniteknikko"
 
 #: modules/demux/mp4/mp4.c:1485
 msgid "Soloist"
@@ -16356,11 +16358,11 @@ msgstr "Tekijät"
 #: modules/gui/macosx/about.m:100
 msgid ""
 "VLC media player and VideoLAN are trademarks of the VideoLAN Association."
-msgstr ""
+msgstr "VLC mediasoitin ja VideoLAN ovat VideoLANin tavaramerkkejä"
 
 #: modules/gui/macosx/about.m:109
 msgid "Compiled by %s with %@"
-msgstr ""
+msgstr "Sovelluksen on kääntänyt %s %@ avulla"
 
 #: modules/gui/macosx/about.m:126 modules/gui/qt4/dialogs/help.cpp:94
 msgid ""
@@ -16815,7 +16817,7 @@ msgstr ""
 
 #: modules/gui/macosx/ControlsBar.m:501
 msgid "Click to mute or unmute the audio."
-msgstr ""
+msgstr "Klikkaa vaimennus päälle/pois."
 
 #: modules/gui/macosx/ControlsBar.m:503
 msgid "Full Volume"
@@ -16891,7 +16893,7 @@ msgstr "Virtautuksen asennutus..."
 
 #: modules/gui/macosx/ConvertAndSave.m:163
 msgid "Select Streaming Method"
-msgstr ""
+msgstr "Valitse lähetyksen muoto"
 
 #: modules/gui/macosx/ConvertAndSave.m:164
 msgid "Save as File"
@@ -17116,19 +17118,19 @@ msgstr "(ei toistettavaa kohdetta)"
 msgid "Click to exit fullscreen playback."
 msgstr "Klikkaa poistuaksesi koko näytön tilasta."
 
-#: modules/gui/macosx/intf.m:1556 modules/gui/macosx/intf.m:1573
+#: modules/gui/macosx/intf.m:1562 modules/gui/macosx/intf.m:1579
 msgid "VLC media playback"
 msgstr "VLC-mediantoisto"
 
-#: modules/gui/macosx/intf.m:1852
+#: modules/gui/macosx/intf.m:1858
 msgid "Remove old preferences?"
 msgstr "Nollaa asetukset?"
 
-#: modules/gui/macosx/intf.m:1853
+#: modules/gui/macosx/intf.m:1859
 msgid "We just found an older version of VLC's preferences files."
 msgstr "Löytyi vanha versio VLC:n asetustiedostoista."
 
-#: modules/gui/macosx/intf.m:1854
+#: modules/gui/macosx/intf.m:1860
 msgid "Move To Trash and Relaunch VLC"
 msgstr "Siirrä roskakoriin ja käynnistä VLC uudelleen"
 
@@ -18432,7 +18434,7 @@ msgstr ""
 
 #: modules/gui/macosx/simple_prefs.m:375
 msgid "Note that these are system-wide settings."
-msgstr ""
+msgstr "Huomioi että nämä ovat järjestelmän laajuisia asetuksia."
 
 #: modules/gui/macosx/simple_prefs.m:381
 msgid "Interface style"
@@ -20576,7 +20578,7 @@ msgstr ""
 
 #: modules/gui/qt4/components/preferences_widgets.cpp:1142
 msgid "in"
-msgstr ""
+msgstr "sisään"
 
 #: modules/gui/qt4/components/preferences_widgets.cpp:1144
 msgid "Any field"
@@ -20622,7 +20624,7 @@ msgstr "Paina uusi näppäin tai näppäinyhdistelmä toiminnolle"
 
 #: modules/gui/qt4/components/preferences_widgets.cpp:1428
 msgid "Assign"
-msgstr ""
+msgstr "Aseta"
 
 #: modules/gui/qt4/components/preferences_widgets.cpp:1463
 msgid "Warning: this key or combination is already assigned to "
@@ -20921,7 +20923,7 @@ msgstr "Aloita"
 
 #: modules/gui/qt4/dialogs/convert.cpp:135
 msgid "Containers"
-msgstr ""
+msgstr "Säilöt"
 
 #: modules/gui/qt4/dialogs/errors.cpp:40
 msgid "Errors"
@@ -21223,7 +21225,7 @@ msgstr "Lisäosia ei löytynyt"
 
 #: modules/gui/qt4/dialogs/plugins.cpp:809
 msgid "This addon has been installed manually. VLC can't manage it by itself."
-msgstr ""
+msgstr "Tämä lisäosa on asennettu omatoimisesti. VLC ei voi hallita sitä itse."
 
 #: modules/gui/qt4/dialogs/plugins.cpp:1190
 msgid "Version %1"
@@ -23192,7 +23194,7 @@ msgstr "H.264-videopaketoija"
 
 #: modules/packetizer/hevc.c:50
 msgid "HEVC/H.265 video packetizer"
-msgstr ""
+msgstr "HEVC/H.265 videopaketoija"
 
 #: modules/packetizer/mlp.c:49
 msgid "MLP/TrueHD parser"
@@ -24472,7 +24474,7 @@ msgstr "Ylipiirrot/Tekstitys"
 
 #: modules/text_renderer/freetype.c:96
 msgid "Monospace Font"
-msgstr ""
+msgstr "Tasalevyinen fontti"
 
 #: modules/text_renderer/freetype.c:98
 msgid "Font family for the font you want to use"
@@ -28945,9 +28947,8 @@ msgid "FLAC"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:703
-#, fuzzy
 msgid "MP&4/MOV"
-msgstr "MP4/MOV"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:704
 msgid "Ogg/Ogm"
@@ -28958,9 +28959,8 @@ msgid "M&KV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:706
-#, fuzzy
 msgid "M&JPEG"
-msgstr "MJPEG"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:707
 msgid "MPEG-PS"
@@ -28971,9 +28971,8 @@ msgid "F&LV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:709
-#, fuzzy
 msgid "&MPEG-TS"
-msgstr "MPEG-TS"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:710
 msgid "RAW"
@@ -28988,9 +28987,8 @@ msgid "Webm"
 msgstr "Webm"
 
 #: modules/gui/qt4/ui/profiles.h:713
-#, fuzzy
 msgid "MPEG &1"
-msgstr "MPEG-1"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:714
 msgid "AVI"
@@ -29021,9 +29019,8 @@ msgid "Menus"
 msgstr "Valikot"
 
 #: modules/gui/qt4/ui/profiles.h:730
-#, fuzzy
 msgid "Fra&me Rate"
-msgstr "Ruutunopeus"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:731
 msgid "Same as source"
@@ -29038,9 +29035,8 @@ msgid "Custom options"
 msgstr "Erikoisasetukset"
 
 #: modules/gui/qt4/ui/profiles.h:735
-#, fuzzy
 msgid "&Quality"
-msgstr "Laatu"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:736 modules/gui/qt4/ui/profiles.h:737
 msgid "Not Used"
@@ -29063,14 +29059,12 @@ msgid "px"
 msgstr "px"
 
 #: modules/gui/qt4/ui/profiles.h:758
-#, fuzzy
 msgid "Sa&mple Rate"
-msgstr "Näytteistystaajuus"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:766
-#, fuzzy
 msgid "Profile &Name"
-msgstr "Profiilin nimi"
+msgstr ""
 
 #: modules/gui/qt4/ui/sout.h:203
 msgid "Set up media sources to stream"
@@ -29629,9 +29623,6 @@ msgstr "AAAA; "
 #: modules/gui/qt4/ui/vlm.h:302
 msgid "Media Manager List"
 msgstr "Mediahallinnan lista"
-
-#~ msgid "MKV"
-#~ msgstr "MKV"
 
 #~ msgid "FLV"
 #~ msgstr "FLV"
@@ -32373,6 +32364,18 @@ msgstr "Mediahallinnan lista"
 
 #~ msgid "Empty"
 #~ msgstr "Tyhjä"
+
+#, fuzzy
+#~ msgid "MJPEG:"
+#~ msgstr "MJPEG"
+
+#, fuzzy
+#~ msgid "MOV"
+#~ msgstr "MKV"
+
+#, fuzzy
+#~ msgid "MKV"
+#~ msgstr "KVA"
 
 #, fuzzy
 #~ msgid "---  DVD Menu"
@@ -35264,7 +35267,7 @@ msgstr "Mediahallinnan lista"
 
 #, fuzzy
 #~ msgid "MPEG-4 V"
-#~ msgstr "MPEG-1"
+#~ msgstr "MPEG-4 -video"
 
 #, fuzzy
 #~ msgid "Use DVD Menus"
@@ -35428,15 +35431,11 @@ msgstr "Mediahallinnan lista"
 
 #, fuzzy
 #~ msgid "Quality:"
-#~ msgstr "Laatu"
+#~ msgstr "VBR:n laatu"
 
 #, fuzzy
 #~ msgid "Tuner:"
 #~ msgstr "Viritin"
-
-#, fuzzy
-#~ msgid "MJPEG:"
-#~ msgstr "MJPEG"
 
 #, fuzzy
 #~ msgid "Decimation:"
@@ -35468,11 +35467,7 @@ msgstr "Mediahallinnan lista"
 
 #, fuzzy
 #~ msgid "MPEG1"
-#~ msgstr "MPEG-1"
-
-#, fuzzy
-#~ msgid "MOV"
-#~ msgstr "MKV"
+#~ msgstr "MPEG-PS"
 
 #, fuzzy
 #~ msgid "ASF"
@@ -35575,7 +35570,7 @@ msgstr "Mediahallinnan lista"
 
 #, fuzzy
 #~ msgid "Compiled by "
-#~ msgstr "Kääntäjä: %s\n"
+#~ msgstr "Sovelluksen on kääntänyt %s %@ avulla"
 
 #, fuzzy
 #~ msgid "Open:"

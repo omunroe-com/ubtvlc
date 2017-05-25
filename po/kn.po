@@ -1,5 +1,5 @@
 # Kannada translation
-# Copyright (C) 2016 VideoLAN
+# Copyright (C) 2017 VideoLAN
 # This file is distributed under the same license as the vlc package.
 #
 # Translators:
@@ -9,15 +9,16 @@
 # Lavakara <hjlava@gmail.com>, 2013
 # msj2, 2013
 # Sampath Kumar Shetty K <paramamithra@gmail.com>, 2015
-# srividya <srividyabharadwaj26@gmail.com>, 2014
-# Yogesh K S <yogesh@karnatakaeducation.org.in>, 2013-2016
+# Srividya, 2014
+# Vinay H <winayh@gmail.com>, 2016
+# Yogesh K S <yogesh@karnatakaeducation.org.in>, 2013-2017
 msgid ""
 msgstr ""
 "Project-Id-Version: VLC - Trans\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2017-02-03 12:10+0100\n"
-"PO-Revision-Date: 2016-01-01 18:41+0000\n"
-"Last-Translator: Yogesh K S <yogesh@karnatakaeducation.org.in>\n"
+"POT-Creation-Date: 2017-05-24 15:01+0200\n"
+"PO-Revision-Date: 2017-02-06 13:43+0000\n"
+"Last-Translator: Christoph Miebach <christoph.miebach@web.de>\n"
 "Language-Team: Kannada (http://www.transifex.com/yaron/vlc-trans/language/"
 "kn/)\n"
 "Language: kn\n"
@@ -1826,7 +1827,7 @@ msgstr ""
 "actually encoded with Dolby Surround, turning on this option might enhance "
 "your experience, especially when combined with the Headphone Channel Mixer."
 
-#: src/libvlc-module.c:178 src/win32/thread.c:885
+#: src/libvlc-module.c:178 src/win32/thread.c:904
 #: modules/audio_output/kai.c:106 modules/codec/x264.c:442
 #: modules/gui/macosx/simple_prefs.m:122
 #: modules/gui/qt4/components/simple_preferences.cpp:136
@@ -3926,7 +3927,7 @@ msgstr ""
 msgid "These settings are the global VLC key bindings, known as \"hotkeys\"."
 msgstr "ಈ ಸಂಯೊಜನೆಗಳು \"ಶೀಘ್ರಕೀಲಿ\"ಜಾಗತಿಕ VLC ಕೀಲಿ ನಿಬಂಧನೆಗಳಾಗಿವೆ."
 
-#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1854
+#: src/libvlc-module.c:1183 modules/gui/macosx/intf.m:1860
 msgid "Ignore"
 msgstr "ನಿರ್ಲಕ್ಷಿಸಿ"
 
@@ -10959,15 +10960,15 @@ msgstr ""
 
 #: modules/codec/avcodec/hwdummy.c:42
 msgid "Dummy video decoder"
-msgstr ""
+msgstr "ನಕಲಿ ವೀಡಿಯೊ ವಿಸಂಕೇತಕ"
 
 #: modules/codec/avcodec/vaapi.c:62
 msgid "VA-API video decoder via X11"
-msgstr ""
+msgstr "X11 ಮೂಲಕ VA_API ವೀಡಿಯೊ ವಿಸಂಕೇತಕ"
 
 #: modules/codec/avcodec/vaapi.c:64
 msgid "VA-API video decoder via DRM"
-msgstr ""
+msgstr "DRM ಮೂಲಕ VA_API ವೀಡಿಯೊ ವಿಸಂಕೇತಕ"
 
 #: modules/codec/avcodec/vda.c:85
 msgid "420YpCbCr8Planar"
@@ -11284,7 +11285,7 @@ msgstr ""
 
 #: modules/codec/gstdecode.c:86
 msgid "GStreamer Based Decoder"
-msgstr ""
+msgstr "GStreamer ಆಧಾರಿತ ವಿಸಂಕೇತಕ"
 
 #: modules/codec/jpeg.c:50
 msgid ""
@@ -11293,11 +11294,11 @@ msgstr ""
 
 #: modules/codec/jpeg.c:109
 msgid "JPEG image decoder"
-msgstr ""
+msgstr "JPEG ಚಿತ್ರ ವಿಸಂಕೇತಕ"
 
 #: modules/codec/jpeg.c:118
 msgid "JPEG image encoder"
-msgstr ""
+msgstr "JPEG ಚಿತ್ರ ಸಂಕೇತಕ"
 
 #: modules/codec/kate.c:194 modules/codec/subsdec.c:174
 msgid "Formatted Subtitles"
@@ -11635,7 +11636,7 @@ msgstr "MPEG ಧ್ವನಿ ಪದರ I/II/III ವಿಭಜಕ"
 
 #: modules/codec/omxil/android_mediacodec.c:266
 msgid "Android direct rendering"
-msgstr ""
+msgstr "ಆಂಡ್ರಾಯ್ಡ್ ನೇರ ನಿರೂಪಣೆ"
 
 #: modules/codec/omxil/android_mediacodec.c:268
 msgid "Enable Android direct rendering using opaque buffers."
@@ -17056,19 +17057,19 @@ msgstr "(ಯಾವುದೇ ಐಟಂ ಪ್ಲೇ ಆಗುತಿಲ್ಲ"
 msgid "Click to exit fullscreen playback."
 msgstr "ಫುಲ್ ಸ್ಕ್ರೀನ್ ಪ್ಲೇಬ್ಯಾಕ್‍ನಿಂದ ನಿರ್ಗಮಿಸಲು \"ನಿರ್ಗಮಿಸಿ\" ಕ್ಲಿಕ್ ಮಾಡಿ."
 
-#: modules/gui/macosx/intf.m:1556 modules/gui/macosx/intf.m:1573
+#: modules/gui/macosx/intf.m:1562 modules/gui/macosx/intf.m:1579
 msgid "VLC media playback"
 msgstr "VLC ಯ ಮಾಧ್ಯಮ ಪ್ಲೇಬ್ಯಾಕ್"
 
-#: modules/gui/macosx/intf.m:1852
+#: modules/gui/macosx/intf.m:1858
 msgid "Remove old preferences?"
 msgstr "ಹಳೆಯ ಆದ್ಯತೆಗಳನ್ನು ತೆಗೆದುಹಾಕಬೇಕೆ?"
 
-#: modules/gui/macosx/intf.m:1853
+#: modules/gui/macosx/intf.m:1859
 msgid "We just found an older version of VLC's preferences files."
 msgstr "VLC ಯ ಹಳೆಯ ಆವೃತ್ತಿಯ ಆದ್ಯತಾ ಕಡತಗಳು ಕಂಡುಬಂದಿದೆ."
 
-#: modules/gui/macosx/intf.m:1854
+#: modules/gui/macosx/intf.m:1860
 msgid "Move To Trash and Relaunch VLC"
 msgstr "ಅನುಪಯುಕ್ತಕ್ಕೆ ಸರಿಸಿ ಮತ್ತು VLC ಮರುಪ್ರಾರಂಭಿಸಿ"
 
@@ -22086,7 +22087,7 @@ msgstr "Qt ಅಂತರ್ವರ್ತನ"
 
 #: modules/gui/qt4/recents.cpp:159
 msgid "Recently Played"
-msgstr ""
+msgstr "ಇತ್ತೀಚೆಗೆ ಆಡಿದ"
 
 #: modules/gui/qt4/util/customwidgets.cpp:80
 msgid "errors"
@@ -27664,7 +27665,7 @@ msgstr ""
 
 #: modules/video_output/msw/direct3d.c:69
 msgid "Path to HLSL file"
-msgstr ""
+msgstr "HLSL ಕಡತಕ್ಕೆ ಹಾದಿ"
 
 #: modules/video_output/msw/direct3d.c:70
 msgid "Path to an HLSL file containing a single pixel shader."
@@ -28867,9 +28868,8 @@ msgid "FLAC"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:703
-#, fuzzy
 msgid "MP&4/MOV"
-msgstr "MP4/MOV"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:704
 msgid "Ogg/Ogm"
@@ -28880,9 +28880,8 @@ msgid "M&KV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:706
-#, fuzzy
 msgid "M&JPEG"
-msgstr "MJPEG"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:707
 msgid "MPEG-PS"
@@ -28893,9 +28892,8 @@ msgid "F&LV"
 msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:709
-#, fuzzy
 msgid "&MPEG-TS"
-msgstr "MPEG-TS"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:710
 msgid "RAW"
@@ -28910,9 +28908,8 @@ msgid "Webm"
 msgstr "Webm"
 
 #: modules/gui/qt4/ui/profiles.h:713
-#, fuzzy
 msgid "MPEG &1"
-msgstr "MPEG 1"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:714
 msgid "AVI"
@@ -28943,9 +28940,8 @@ msgid "Menus"
 msgstr "ಮೆನುಗಳು"
 
 #: modules/gui/qt4/ui/profiles.h:730
-#, fuzzy
 msgid "Fra&me Rate"
-msgstr "ಚೌಕಟ್ಟಿನ ದರ"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:731
 msgid "Same as source"
@@ -28960,9 +28956,8 @@ msgid "Custom options"
 msgstr "ಇಚ್ಛೆಯ ಆಯ್ಕೆಗಳು"
 
 #: modules/gui/qt4/ui/profiles.h:735
-#, fuzzy
 msgid "&Quality"
-msgstr "ಗುಣಮಟ್ಟ"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:736 modules/gui/qt4/ui/profiles.h:737
 msgid "Not Used"
@@ -28985,14 +28980,12 @@ msgid "px"
 msgstr "px"
 
 #: modules/gui/qt4/ui/profiles.h:758
-#, fuzzy
 msgid "Sa&mple Rate"
-msgstr "ಮಾದರಿ ದರ"
+msgstr ""
 
 #: modules/gui/qt4/ui/profiles.h:766
-#, fuzzy
 msgid "Profile &Name"
-msgstr "ವಿವರದ ಹೆಸರು"
+msgstr ""
 
 #: modules/gui/qt4/ui/sout.h:203
 msgid "Set up media sources to stream"
@@ -29552,9 +29545,6 @@ msgstr "AAAA;"
 msgid "Media Manager List"
 msgstr "ಮಾಧ್ಯಮ ಮ್ಯಾನೇಜರ್ ಪಟ್ಟಿ"
 
-#~ msgid "MKV"
-#~ msgstr "MKV"
-
 #~ msgid "FLV"
 #~ msgstr "FLV"
 
@@ -29826,6 +29816,10 @@ msgstr "ಮಾಧ್ಯಮ ಮ್ಯಾನೇಜರ್ ಪಟ್ಟಿ"
 #, fuzzy
 #~ msgid "Album art download policy:"
 #~ msgstr "ಆಲ್ಬಮ್ ಕಲೆಯ ಡೌನ್ಲೋಡ್ ನೀತಿ"
+
+#, fuzzy
+#~ msgid "MKV"
+#~ msgstr "KVA"
 
 #, fuzzy
 #~ msgid "---  DVD Menu"
