@@ -5,3 +5,9 @@ qt4-Fix-resume-where-you-left-off.patch
 qt4-input_manager-Always-reset-lastURI-when-stopping.patch
 avcodec-pass-consistent-dimensions-to-hardware-decod.patch
 VLSub-don-t-pretend-to-support-HTTP-1.1.patch
+fix-CVE-2016-5108.patch
+fix-CVE-2017-10699.patch
+fix-CVE-2017-8310.patch
+fix-CVE-2017-8311.patch
+fix-CVE-2017-8312.patch
+fix-CVE-2017-8313.patch
