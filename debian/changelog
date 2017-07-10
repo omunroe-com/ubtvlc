@@ -1,3 +1,11 @@
+vlc (2.2.6-2ubuntu1) artful; urgency=high
+
+  * SECURITY UPDATE: Crash due to Out-of-Bound Heap Memory Write (LP: #1693893)
+    - fix-CVE-2017-10699.patch
+    - CVE-2017-10699
+
+ -- Simon Quigley <tsimonq2@ubuntu.com>  Mon, 10 Jul 2017 01:33:27 -0500
+
 vlc (2.2.6-2) unstable; urgency=medium
 
   * Upload to unstable.
