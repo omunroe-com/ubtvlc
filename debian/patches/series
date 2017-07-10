@@ -10,3 +10,8 @@ skins-remove-timestamp-from-default.vlt-fixes-4562.patch
 skins-implement-silent-mode-make.patch
 skins2-do-not-generate-broken-default.vlt-on-error.patch
 VLSub-don-t-pretend-to-support-HTTP-1.1.patch
+fix-CVE-2017-10699.patch
+fix-CVE-2017-8310.patch
+fix-CVE-2017-8311.patch
+fix-CVE-2017-8312.patch
+fix-CVE-2017-8313.patch
