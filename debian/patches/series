@@ -8,3 +8,4 @@
 0008-desktop-file-We-understand-gvp-and-ram-format.patch
 0009-desktop-file-more-mimetypes-from-iana.org.patch
 0010-MKV-support-WebVTT-subtitles-embedded.patch
+fix-CVE-2017-10699.patch
