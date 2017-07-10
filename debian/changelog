@@ -1,3 +1,23 @@
+vlc (2.2.4-14ubuntu2.1) zesty-security; urgency=high
+
+  * SECURITY UPDATE: Crash due to Out-of-Bound Heap Memory Write (LP: #1693893)
+    - fix-CVE-2017-10699.patch
+    - CVE-2017-10699
+  * SECURITY UPDATE: Fix potential out of bound reads
+    - fix-CVE-2017-8310.patch
+    - CVE-2017-8310
+  * SECURITY UPDATE: Fix invalid double increment
+    - fix-CVE-2017-8311.patch
+    - CVE-2017-8311
+  * SECURITY UPDATE: Fix potential heap buffer overflow
+    - fix-CVE-2017-8312.patch
+    - CVE-2017-8312
+  * SECURITY UPDATE: ParseJSS: fix out-of-bounds read
+    - fix-CVE-2017-8313.patch
+    - CVE-2017-8313
+
+ -- Simon Quigley <tsimonq2@ubuntu.com>  Sun, 09 Jul 2017 22:37:06 -0500
+
 vlc (2.2.4-14ubuntu2) zesty; urgency=medium
 
   * No-change rebuild against latest libbluray
