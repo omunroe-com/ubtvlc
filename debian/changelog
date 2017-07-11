@@ -1,3 +1,23 @@
+vlc (2.1.6-0ubuntu14.04.3) trusty-security; urgency=high
+
+  * SECURITY UPDATE: reject invalid QuickTime IMA files (LP: #1693893)
+    - fix-CVE-2016-5108.patch
+    - CVE-2016-5108
+  * SECURITY UPDATE: Fix potential out of bound reads
+    - fix-CVE-2017-8310.patch
+    - CVE-2017-8310
+  * SECURITY UPDATE: Fix invalid double increment
+    - fix-CVE-2017-8311.patch
+    - CVE-2017-8311
+  * SECURITY UPDATE: Fix potential heap buffer overflow
+    - fix-CVE-2017-8312.patch
+    - CVE-2017-8312
+  * SECURITY UPDATE: ParseJSS: fix out-of-bounds read
+    - fix-CVE-2017-8313.patch
+    - CVE-2017-8313
+
+ -- Simon Quigley <tsimonq2@ubuntu.com>  Mon, 10 Jul 2017 22:59:26 -0500
+
 vlc (2.1.6-0ubuntu14.04.2) trusty-security; urgency=medium
 
   * SECURITY UPDATE: denial of service via crafted FLV file
