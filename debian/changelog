@@ -1,3 +1,9 @@
+vlc (2.2.6-3build2) artful; urgency=medium
+
+  * No-change rebuild against libwebpmux3
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Fri, 28 Jul 2017 03:57:03 +0000
+
 vlc (2.2.6-3build1) artful; urgency=medium
 
   * No-change rebuild against latest liblivemedia
