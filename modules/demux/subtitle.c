@@ -1685,7 +1685,8 @@ static int ParseJSS( demux_t *p_demux, subtitle_t *p_subtitle, int i_idx )
         if( !s )
             return VLC_EGENERIC;
 
-        psz_orig = malloc( strlen( s ) + 1 );
+        size_t line_length = strlen( s );
+        psz_orig = malloc( line_length + 1 );
         if( !psz_orig )
             return VLC_ENOMEM;
         psz_text = psz_orig;
@@ -1725,6 +1726,8 @@ static int ParseJSS( demux_t *p_demux, subtitle_t *p_subtitle, int i_idx )
             {
             case 'S':
                  shift = isalpha( (unsigned char)psz_text[2] ) ? 6 : 2 ;
+                 if ( shift > line_length )
+                     continue;
 
                  if( sscanf( &psz_text[shift], "%d", &h ) )
                  {
@@ -1762,6 +1765,8 @@ static int ParseJSS( demux_t *p_demux, subtitle_t *p_subtitle, int i_idx )
 
             case 'T':
                 shift = isalpha( (unsigned char)psz_text[2] ) ? 8 : 2 ;
+                if ( shift > line_length )
+                    continue;
 
                 sscanf( &psz_text[shift], "%d", &p_sys->jss.i_time_resolution );
                 break;
