@@ -1,3 +1,12 @@
+vlc (2.2.4-14ubuntu2.2) zesty-security; urgency=medium
+
+  * SECURITY UPDATE: flac: Fix heap write overflow on frame format change
+    (LP: #1709420)
+    - fix-CVE-2017-9300.patch
+    - CVE-2017-9300
+
+ -- Simon Quigley <tsimonq2@ubuntu.com>  Tue, 08 Aug 2017 13:41:33 -0500
+
 vlc (2.2.4-14ubuntu2.1) zesty-security; urgency=high
 
   * SECURITY UPDATE: Crash due to Out-of-Bound Heap Memory Write (LP: #1693893)
