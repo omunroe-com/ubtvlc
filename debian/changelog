@@ -1,3 +1,12 @@
+vlc (2.2.2-5ubuntu0.16.04.4) xenial-security; urgency=medium
+
+  * SECURITY UPDATE: flac: Fix heap write overflow on frame format change
+    (LP: #1709420)
+    - fix-CVE-2017-9300.patch
+    - CVE-2017-9300
+
+ -- Simon Quigley <tsimonq2@ubuntu.com>  Tue, 08 Aug 2017 13:59:52 -0500
+
 vlc (2.2.2-5ubuntu0.16.04.3) xenial-security; urgency=high
 
   * SECURITY UPDATE: reject invalid QuickTime IMA files (LP: #1693893)
