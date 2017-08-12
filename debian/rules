@@ -42,7 +42,6 @@ confflags += \
 	--enable-chromaprint \
 	--enable-dbus \
 	--enable-dca \
-	--enable-directfb \
 	--enable-dvbpsi \
 	--enable-dvdnav \
 	--enable-faad \
@@ -99,8 +98,9 @@ confflags += \
 	$(NULL)
 # Reasons for disabling features:
 # decklink: not in Debian
+# directfb: directfb upstream not active anymore, removed upstream in 3.0
 # dxva2: Windows only
-# fdkaac: in Debian non-free
+# fdkaac: in Debian contrib
 # gles1: disabled in mesa
 # gnomevfs: poorly maintained
 # goom: not in Debian
@@ -116,6 +116,7 @@ confflags += \
 # wasapi: Windows only
 confflags += \
 	--disable-decklink \
+	--disable-directfb \
 	--disable-dxva2 \
 	--disable-fdkaac \
 	--disable-gles1 \
