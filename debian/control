@@ -31,7 +31,6 @@ Build-Depends: autopoint,
                libdbus-1-dev (>= 1.6.0),
                libdc1394-22-dev (>= 2.1.0) [linux-any],
                libdca-dev,
-               libdirectfb-dev,
                libdvbpsi-dev,
                libdvdnav-dev (>> 4.9.0),
                libdvdread-dev (>> 4.9.0),
@@ -131,7 +130,7 @@ Build-Depends: autopoint,
                libwebp-dev,
                libxvidcore-dev,
                yasm
-Standards-Version: 4.0.0
+Standards-Version: 4.0.1
 Homepage: https://www.videolan.org/vlc/
 Vcs-Git: https://anonscm.debian.org/git/pkg-multimedia/vlc.git
 Vcs-Browser: https://anonscm.debian.org/cgit/pkg-multimedia/vlc.git
@@ -146,7 +145,7 @@ Depends: vlc-bin (= ${binary:Version}),
          vlc-l10n (= ${source:Version}),
          ${misc:Depends}
 Recommends: vlc-plugin-notify (= ${binary:Version}),
-            vlc-plugin-samba (= ${binary:Version}),
+            vlc-plugin-samba (= ${binary:Version}) [linux-any kfreebsd-any],
             vlc-plugin-skins2 (= ${binary:Version}),
             vlc-plugin-video-splitter (= ${binary:Version}),
             vlc-plugin-visualization (= ${binary:Version})
@@ -383,7 +382,7 @@ Package: vlc-plugin-fluidsynth
 Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: fluid-soundfont-gm | musescore-soundfont-gm,
+Depends: fluid-soundfont-gm | timgm6mb-soundfont,
          ${misc:Depends},
          ${shlibs:Depends}
 Enhances: vlc
