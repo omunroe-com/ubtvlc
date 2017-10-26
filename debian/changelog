@@ -1,3 +1,9 @@
+vlc (2.2.6-6build1) bionic; urgency=medium
+
+  * No-change rebuild for libcdaudio soname change.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 26 Oct 2017 11:33:08 +0000
+
 vlc (2.2.6-6) unstable; urgency=medium
 
   * Update to ffmpeg 2.8.13.
