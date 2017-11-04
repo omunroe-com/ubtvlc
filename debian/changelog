@@ -1,3 +1,9 @@
+vlc (2.2.6-6build2) bionic; urgency=medium
+
+  * No-change rebuild against latest libva
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Sat, 04 Nov 2017 15:39:12 -0400
+
 vlc (2.2.6-6build1) bionic; urgency=medium
 
   * No-change rebuild for libcdaudio soname change.
