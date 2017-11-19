@@ -2,7 +2,7 @@
  * upnp.cpp :  UPnP discovery module (libupnp)
  *****************************************************************************
  * Copyright (C) 2004-2011 the VideoLAN team
- * $Id: b5f74097fb10fd3f1a4b689044e8c7e4c20d2fd0 $
+ * $Id: 9b6ed8727a2c6b318c97a60349776b90a2a97e74 $
  *
  * Authors: Rémi Denis-Courmont <rem # videolan.org> (original plugin)
  *          Christian Henz <henz # c-lab.de>

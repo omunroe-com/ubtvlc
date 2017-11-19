@@ -2,7 +2,7 @@
  * video.c: video decoder using the libavcodec library
  *****************************************************************************
  * Copyright (C) 1999-2001 VLC authors and VideoLAN
- * $Id: 971238612c9cb5f57edd0fa9d35af48070a250ec $
+ * $Id: ce5254423ea0100359a62458e87ac99e46a59827 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -612,7 +612,7 @@ picture_t *DecodeVideo( decoder_t *p_dec, block_t **pp_block )
         post_mt( p_sys );
 
         av_init_packet( &pkt );
-        if( p_block )
+        if( p_block && p_block->i_buffer > 0 )
         {
             pkt.data = p_block->p_buffer;
             pkt.size = p_block->i_buffer;
