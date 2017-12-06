@@ -1,3 +1,10 @@
+vlc (2.2.8-1ubuntu3) bionic; urgency=medium
+
+  * Re-enable vcdx plugin, now vcdimager is fixed.
+    (thanks <slangasek> for the hint!)
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Wed, 06 Dec 2017 17:25:51 +0100
+
 vlc (2.2.8-1ubuntu2) bionic; urgency=medium
 
   * Switch to new upnp8
