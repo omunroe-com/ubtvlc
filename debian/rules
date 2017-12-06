@@ -87,7 +87,6 @@ confflags += \
 	--enable-theora \
 	--enable-twolame \
 	--enable-upnp \
-	--enable-vcdx \
 	--enable-vdpau \
 	--enable-vnc \
 	--enable-vorbis \
