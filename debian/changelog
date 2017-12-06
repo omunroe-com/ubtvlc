@@ -1,3 +1,10 @@
+vlc (2.2.8-1ubuntu1) bionic; urgency=medium
+
+  * Disable vcdx plugin, removed by upstream in
+    933424d7eddc11ed260cb3427f5316209b449ffb
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Wed, 06 Dec 2017 13:50:02 +0100
+
 vlc (2.2.8-1build1) bionic; urgency=medium
 
   * No-change rebuild against libcdio17
