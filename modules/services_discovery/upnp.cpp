@@ -74,6 +74,8 @@ static const char* UpnpEventSubscribe_get_SID_cstr( const UpnpEventSubscribe* p_
 {
   return p_s->Sid;
 }
+#elif UPNP_VERSION < 10800
+typedef void* UpnpEventPtr;
 #else
 typedef const void* UpnpEventPtr;
 #endif
