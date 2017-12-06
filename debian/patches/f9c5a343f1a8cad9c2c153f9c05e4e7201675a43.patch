@@ -1,0 +1,26 @@
+## Description: add some description
+## Origin/Author: add some origin or author
+## Bug: bug URL
+commit f9c5a343f1a8cad9c2c153f9c05e4e7201675a43
+Author: Tristan Matthews <tmatth@videolan.org>
+Date:   Wed Nov 29 10:45:04 2017 -0500
+
+    upnp: don't clash with libupnp's own compat code
+    
+    Fixes build for upnp >= 1.6.23 and less than 1.8.
+    
+    Signed-off-by: Jean-Baptiste Kempf <jb@videolan.org>
+
+Index: vlc-2.2.8/modules/services_discovery/upnp.cpp
+===================================================================
+--- vlc-2.2.8.orig/modules/services_discovery/upnp.cpp
++++ vlc-2.2.8/modules/services_discovery/upnp.cpp
+@@ -40,7 +40,7 @@
+ #include <assert.h>
+ #include <limits.h>
+ 
+-#if UPNP_VERSION < 10800
++#if UPNP_VERSION < 10623
+ /*
+  * Compat functions and typedefs for libupnp prior to 1.8
+  */
