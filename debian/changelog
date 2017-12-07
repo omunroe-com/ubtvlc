@@ -1,3 +1,9 @@
+vlc (2.2.8-1ubuntu4) bionic; urgency=medium
+
+  * No-change rebuild for x265 soname change.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 07 Dec 2017 17:22:51 +0100
+
 vlc (2.2.8-1ubuntu3) bionic; urgency=medium
 
   * Re-enable vcdx plugin, now vcdimager is fixed.
