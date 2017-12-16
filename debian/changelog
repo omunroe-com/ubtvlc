@@ -1,3 +1,9 @@
+vlc (3.0.0~rc1-1ubuntu1) bionic; urgency=medium
+
+  * Apply patch from LocutusOfBorg to fix the FTBFS.
+
+ -- Simon Quigley <tsimonq2@ubuntu.com>  Sat, 16 Dec 2017 16:18:42 -0600
+
 vlc (3.0.0~rc1-1) experimental; urgency=medium
 
   * New upstream release candidate.
