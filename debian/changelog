@@ -1,3 +1,9 @@
+vlc (3.0.0~rc1-1ubuntu2) bionic; urgency=medium
+
+  * Rebuild against new qtbase ABI 5.9.3.
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Mon, 18 Dec 2017 18:13:32 +0100
+
 vlc (3.0.0~rc1-1ubuntu1) bionic; urgency=medium
 
   * Apply patch from LocutusOfBorg to fix the FTBFS.
