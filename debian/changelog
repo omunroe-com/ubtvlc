@@ -1,3 +1,10 @@
+vlc (3.0.0~rc2-1ubuntu1) bionic; urgency=medium
+
+  * Merge from Debian Sid. Remaining changes:
+    - Disable Chromecast support.
+
+ -- Simon Quigley <tsimonq2@ubuntu.com>  Tue, 19 Dec 2017 23:21:01 -0600
+
 vlc (3.0.0~rc2-1) unstable; urgency=medium
 
   * Upload to unstable.
@@ -9,6 +16,26 @@ vlc (3.0.0~rc2-1) unstable; urgency=medium
     3.0.0~rc2.
 
  -- Sebastian Ramacher <sramacher@debian.org>  Tue, 19 Dec 2017 23:34:22 +0100
+
+vlc (3.0.0~rc1-1ubuntu3) bionic; urgency=medium
+
+  * Remove vlc-plugin-sdl from testsuite depends. vlc-plugin-sdl was
+    removed in 3.0.0~rc1, and was only satisfiable while the old version
+    remained in the release pocket.
+
+ -- Rik Mills <rikmills@kubuntu.org>  Tue, 19 Dec 2017 08:04:52 +0000
+
+vlc (3.0.0~rc1-1ubuntu2) bionic; urgency=medium
+
+  * Rebuild against new qtbase ABI 5.9.3.
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Mon, 18 Dec 2017 18:13:32 +0100
+
+vlc (3.0.0~rc1-1ubuntu1) bionic; urgency=medium
+
+  * Apply patch from LocutusOfBorg to fix the FTBFS.
+
+ -- Simon Quigley <tsimonq2@ubuntu.com>  Sat, 16 Dec 2017 16:18:42 -0600
 
 vlc (3.0.0~rc1-1) experimental; urgency=medium
 
