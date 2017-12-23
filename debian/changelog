@@ -1,3 +1,12 @@
+vlc (3.0.0~rc2-2ubuntu2) bionic; urgency=medium
+
+  * No change rebuild to add some information about why we disable chromecast
+    support: it fails to build from source due to protobuf/mir:
+    - https://trac.videolan.org/vlc/ticket/18329
+    - https://github.com/google/protobuf/issues/206
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Sat, 23 Dec 2017 09:36:50 +0100
+
 vlc (3.0.0~rc2-2ubuntu1) bionic; urgency=low
 
   * Merge from Debian unstable.  Remaining changes:
