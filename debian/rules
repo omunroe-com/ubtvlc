@@ -39,7 +39,6 @@ confflags += \
 	--enable-avahi \
 	--enable-caca \
 	--enable-chromaprint \
-	--enable-chromecast \
 	--enable-dbus \
 	--enable-dca \
 	--enable-dvbpsi \
@@ -120,6 +119,7 @@ confflags += \
 # vsxu: not in Debian
 # wasapi: Windows only
 confflags += \
+	--disable-chromecast \
 	--disable-d3d11va \
 	--disable-decklink \
 	--disable-directx \

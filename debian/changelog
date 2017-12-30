@@ -1,3 +1,13 @@
+vlc (3.0.0~rc4-1ubuntu1) bionic; urgency=medium
+
+  * Sync from Debian Sid. Remaining changes:
+    - Disable Chromecast support, because it fails to build from source due to
+      protobuf/mir:
+      + https://trac.videolan.org/vlc/ticket/18329
+      + https://github.com/google/protobuf/issues/206
+
+ -- Simon Quigley <tsimonq2@ubuntu.com>  Sat, 30 Dec 2017 12:25:42 -0600
+
 vlc (3.0.0~rc4-1) unstable; urgency=medium
 
   * New upstream release candidate.
