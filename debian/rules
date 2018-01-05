@@ -3,20 +3,9 @@
 DEB_LDFLAGS_MAINT_APPEND=-Wl,--as-needed
 DEB_BUILD_MAINT_OPTIONS=hardening=+all
 
-include /usr/share/dpkg/pkg-info.mk
 include /usr/share/dpkg/architecture.mk
-
-pluginpackages += access-extra
-pluginpackages += base
-pluginpackages += fluidsynth
-pluginpackages += jack
-pluginpackages += notify
-pluginpackages += qt
-pluginpackages += skins2
-pluginpackages += svg
-pluginpackages += video-output
-pluginpackages += video-splitter
-pluginpackages += visualization
+include /usr/share/dpkg/pkg-info.mk
+include /usr/share/dpkg/vendor.mk
 
 ifneq (,$(filter debug,$(DEB_BUILD_OPTIONS)))
 confflags += --enable-debug
@@ -39,7 +28,6 @@ confflags += \
 	--enable-avahi \
 	--enable-caca \
 	--enable-chromaprint \
-	--enable-chromecast \
 	--enable-dbus \
 	--enable-dca \
 	--enable-dvbpsi \
@@ -106,7 +94,6 @@ confflags += \
 # fluidlite: fluidsynth is enabled
 # goom: not in Debian
 # gst-decode: not needed when having libavcodec
-# libplacebo: not in Debian
 # libtar: security issue (#737534)
 # macosx*: MacOX only
 # mfx: currently not supported on Linux
@@ -129,7 +116,6 @@ confflags += \
 	--disable-fluidlite \
 	--disable-goom \
 	--disable-gst-decode \
-	--disable-libplacebo \
 	--disable-libtar \
 	--disable-macosx \
 	--disable-macosx-avfoundation \
@@ -155,6 +141,7 @@ confflags += \
 	--enable-alsa \
 	--enable-dc1394 \
 	--enable-dv1394 \
+	--enable-libplacebo \
 	--enable-linsys \
 	--enable-nfs \
 	--enable-omxil \
@@ -167,6 +154,7 @@ confflags += \
 	--disable-alsa \
 	--disable-dc1394 \
 	--disable-dv1394 \
+	--disable-libplacebo \
 	--disable-linsys \
 	--disable-nfs \
 	--disable-omxil \
@@ -193,11 +181,23 @@ endif
 
 # Linux and kFreeBSD specific flags (disabled on Hurd)
 ifeq (,$(filter-out linux kfreebsd,$(DEB_HOST_ARCH_OS)))
-confflags += --enable-libva --enable-vcd --enable-smbclient
-pluginpackages += samba
+confflags += \
+	--enable-libva \
+	--enable-vcd \
+	--enable-smbclient \
+	$(NULL)
 else
-confflags += --disable-libva --disable-vcd --disable-smbclient
-removeplugins += cdda libva smbclient vcd
+confflags += \
+	--disable-libva \
+	--disable-vcd \
+	--disable-smbclient \
+	$(NULL)
+removeplugins += \
+	cdda \
+	libva \
+	smbclient \
+	vcd \
+	$(NULL)
 endif
 
 # kFreeBSD specific flags
@@ -207,6 +207,16 @@ else
 # Note: Use PulseAudio/ALSA on Linux instead of OSS.
 confflags += --disable-oss
 removeplugins += oss
+endif
+
+# Ubuntu specific flags
+ifeq (Ubuntu,$(DEB_VENDOR))
+# protobuf related issues only observable on Ubuntu since Mir uses it
+# https://github.com/google/protobuf/issues/206
+confflags += --disable-chromecast
+removeplugins += chromecast
+else
+confflags += --enable-chromecast
 endif
 
 # Linux amd64 and i386 specific flags
