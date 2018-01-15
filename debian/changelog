@@ -1,3 +1,11 @@
+vlc (3.0.0~rc4-1ubuntu2) bionic; urgency=medium
+
+  * xenial->bionic upgrade adjustments to avoid file overwrite conflicts
+    - vlc-bin breaks & replaces vlc-nox
+    - vlc-l10n breaks & replaces vlc-data
+
+ -- Harald Sitter <sitter@kde.org>  Mon, 15 Jan 2018 14:16:08 +0100
+
 vlc (3.0.0~rc4-1ubuntu1) bionic; urgency=medium
 
   * Sync from Debian Sid. Remaining changes:
