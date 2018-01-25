@@ -1,3 +1,12 @@
+vlc (3.0.0~rc7-2ubuntu1) bionic; urgency=medium
+
+   * Merge from Debian unstable. Remaining changes:
+     - xenial->bionic upgrade adjustments to avoid file overwrite conflicts
+       - vlc-bin breaks & replaces vlc-nox
+       - vlc-l10n breaks & replaces vlc-data
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Thu, 25 Jan 2018 11:10:29 +0100
+
 vlc (3.0.0~rc7-2) unstable; urgency=medium
 
   * debian/: Disable freerdp plugin. freerdp2 is currently not supported.
@@ -60,6 +69,24 @@ vlc (3.0.0~rc4-2) unstable; urgency=medium
   * debian/: Enable libplacebo.
 
  -- Sebastian Ramacher <sramacher@debian.org>  Fri, 05 Jan 2018 09:51:06 +0100
+
+vlc (3.0.0~rc4-1ubuntu2) bionic; urgency=medium
+
+  * xenial->bionic upgrade adjustments to avoid file overwrite conflicts
+    - vlc-bin breaks & replaces vlc-nox
+    - vlc-l10n breaks & replaces vlc-data
+
+ -- Harald Sitter <sitter@kde.org>  Mon, 15 Jan 2018 14:16:08 +0100
+
+vlc (3.0.0~rc4-1ubuntu1) bionic; urgency=medium
+
+  * Sync from Debian Sid. Remaining changes:
+    - Disable Chromecast support, because it fails to build from source due to
+      protobuf/mir:
+      + https://trac.videolan.org/vlc/ticket/18329
+      + https://github.com/google/protobuf/issues/206
+
+ -- Simon Quigley <tsimonq2@ubuntu.com>  Sat, 30 Dec 2017 12:25:42 -0600
 
 vlc (3.0.0~rc4-1) unstable; urgency=medium
 
