@@ -1,3 +1,9 @@
+vlc (3.0.0~rc7-2ubuntu2) bionic; urgency=medium
+
+  * No-change rebuild for liblivemedia soname change.
+
+ -- Matthias Klose <doko@ubuntu.com>  Fri, 02 Feb 2018 07:56:57 +0100
+
 vlc (3.0.0~rc7-2ubuntu1) bionic; urgency=medium
 
    * Merge from Debian unstable. Remaining changes:
