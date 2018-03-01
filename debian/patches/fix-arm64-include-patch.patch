@@ -1,0 +1,16 @@
+Description: Fix arm64 build
+Author: Gianfranco Costamagna <locutusofborg@debian.org>
+
+Last-Update: 2018-03-01
+
+--- vlc-3.0.1.orig/modules/video_filter/deinterlace/merge_arm64.S
++++ vlc-3.0.1/modules/video_filter/deinterlace/merge_arm64.S
+@@ -19,7 +19,7 @@
+  // Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+  //****************************************************************************/
+ 
+-#include "../../arm_neon/asm.S"
++#include "../arm_neon/asm.S"
+ 
+ 	.text
+ 
