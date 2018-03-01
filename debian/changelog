@@ -1,3 +1,9 @@
+vlc (3.0.1-1ubuntu3) bionic; urgency=medium
+
+  * Add asm.S file.
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Thu, 01 Mar 2018 19:39:07 +0100
+
 vlc (3.0.1-1ubuntu2) bionic; urgency=medium
 
   * Fix arm64 build
