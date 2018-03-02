@@ -386,6 +386,8 @@ Multi-Arch: same
 Depends: ${misc:Depends},
          ${shlibs:Depends},
          ${vlc:PluginABI}
+Breaks: vlc (<< 3.0.0~rc4-1ubuntu1~)
+Replaces: vlc (<< 3.0.0~rc4-1ubuntu1~)
 Recommends: vlc-bin
 Description: multimedia player and streamer (Qt plugin)
  VLC is the VideoLAN project's media player. It plays MPEG, MPEG-2, MPEG-4,
