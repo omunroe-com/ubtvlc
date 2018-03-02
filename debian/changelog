@@ -1,8 +1,46 @@
+vlc (3.0.1-2ubuntu1) bionic; urgency=medium
+
+  * Merge from Debian unstable.  Remaining changes:
+     - xenial->bionic upgrade adjustments to avoid file overwrite conflicts
+       - vlc-bin breaks & replaces vlc-nox
+       - vlc-l10n breaks & replaces vlc-data
+       - vlc-plugins-qt breaks & replaces vlc
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Fri, 02 Mar 2018 21:38:07 +0100
+
 vlc (3.0.1-2) unstable; urgency=medium
 
   * debian/patch: Add missing files for arm64.
 
  -- Sebastian Ramacher <sramacher@debian.org>  Fri, 02 Mar 2018 16:28:28 +0100
+
+vlc (3.0.1-1ubuntu5) bionic; urgency=medium
+
+  * Break+Replaces also the qt package, for safe upgrade path from xenial
+    (qvlc has moved). Thanks Sebastian Ramacher for the hint
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Fri, 02 Mar 2018 17:35:18 +0100
+
+vlc (3.0.1-1ubuntu4) bionic; urgency=medium
+
+  * No change rebuild against latest libplacebo4
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Thu, 01 Mar 2018 22:42:00 +0100
+
+vlc (3.0.1-1ubuntu3) bionic; urgency=medium
+
+  * Add missing asm.S file.
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Thu, 01 Mar 2018 19:39:07 +0100
+
+vlc (3.0.1-1ubuntu1) bionic; urgency=medium
+
+  * Merge from Debian unstable.  Remaining changes:
+     - xenial->bionic upgrade adjustments to avoid file overwrite conflicts
+       - vlc-bin breaks & replaces vlc-nox
+       - vlc-l10n breaks & replaces vlc-data
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Thu, 01 Mar 2018 18:10:26 +0100
 
 vlc (3.0.1-1) unstable; urgency=medium
 
@@ -10,6 +48,15 @@ vlc (3.0.1-1) unstable; urgency=medium
   * debian/control: Bump libplacebo-dev B-D to 0.2.1 (required by upstream).
 
  -- Sebastian Ramacher <sramacher@debian.org>  Thu, 01 Mar 2018 11:32:12 +0100
+
+vlc (3.0.0-1ubuntu1) bionic; urgency=low
+
+  * Merge from Debian unstable.  Remaining changes:
+     - xenial->bionic upgrade adjustments to avoid file overwrite conflicts
+       - vlc-bin breaks & replaces vlc-nox
+       - vlc-l10n breaks & replaces vlc-data
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Sat, 10 Feb 2018 15:54:18 +0100
 
 vlc (3.0.0-1) unstable; urgency=medium
 
@@ -20,11 +67,29 @@ vlc (3.0.0-1) unstable; urgency=medium
 
  -- Sebastian Ramacher <sramacher@debian.org>  Fri, 09 Feb 2018 16:40:34 +0100
 
+vlc (3.0.0~rc8-1ubuntu1) bionic; urgency=low
+
+  * Merge from Debian unstable.  Remaining changes:
+     - xenial->bionic upgrade adjustments to avoid file overwrite conflicts
+       - vlc-bin breaks & replaces vlc-nox
+       - vlc-l10n breaks & replaces vlc-data
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Fri, 02 Feb 2018 09:52:21 +0100
+
 vlc (3.0.0~rc8-1) unstable; urgency=medium
 
   * New upstream release candidate.
 
  -- Sebastian Ramacher <sramacher@debian.org>  Thu, 01 Feb 2018 20:00:43 +0100
+
+vlc (3.0.0~rc7-2ubuntu1) bionic; urgency=medium
+
+   * Merge from Debian unstable. Remaining changes:
+     - xenial->bionic upgrade adjustments to avoid file overwrite conflicts
+       - vlc-bin breaks & replaces vlc-nox
+       - vlc-l10n breaks & replaces vlc-data
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Thu, 25 Jan 2018 11:10:29 +0100
 
 vlc (3.0.0~rc7-2) unstable; urgency=medium
 
@@ -88,6 +153,24 @@ vlc (3.0.0~rc4-2) unstable; urgency=medium
   * debian/: Enable libplacebo.
 
  -- Sebastian Ramacher <sramacher@debian.org>  Fri, 05 Jan 2018 09:51:06 +0100
+
+vlc (3.0.0~rc4-1ubuntu2) bionic; urgency=medium
+
+  * xenial->bionic upgrade adjustments to avoid file overwrite conflicts
+    - vlc-bin breaks & replaces vlc-nox
+    - vlc-l10n breaks & replaces vlc-data
+
+ -- Harald Sitter <sitter@kde.org>  Mon, 15 Jan 2018 14:16:08 +0100
+
+vlc (3.0.0~rc4-1ubuntu1) bionic; urgency=medium
+
+  * Sync from Debian Sid. Remaining changes:
+    - Disable Chromecast support, because it fails to build from source due to
+      protobuf/mir:
+      + https://trac.videolan.org/vlc/ticket/18329
+      + https://github.com/google/protobuf/issues/206
+
+ -- Simon Quigley <tsimonq2@ubuntu.com>  Sat, 30 Dec 2017 12:25:42 -0600
 
 vlc (3.0.0~rc4-1) unstable; urgency=medium
 
@@ -1941,6 +2024,7 @@ vlc (0.8.6.i-1) experimental; urgency=low
     - Update and rename patch 050_bootstrap to 900_autoconf.
 
  -- Loic Minier <lool@dooz.org>  Fri, 22 Aug 2008 19:13:30 +0200
+
 vlc (0.8.6.h-5) unstable; urgency=high
 
   * Acknowledge NMU by Nico Golde. Thanks.
