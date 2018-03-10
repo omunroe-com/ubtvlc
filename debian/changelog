@@ -1,3 +1,11 @@
+vlc (3.0.1-2ubuntu2) bionic; urgency=medium
+
+  * Enable again chromecast support, gnutls-bin is fixed now
+    (LP: #1740182).
+    A big thanks to Johan Fornander for the help and fix!
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Sat, 10 Mar 2018 22:59:24 +0100
+
 vlc (3.0.1-2ubuntu1) bionic; urgency=medium
 
   * Merge from Debian unstable.  Remaining changes:
