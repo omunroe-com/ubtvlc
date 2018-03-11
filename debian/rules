@@ -28,6 +28,7 @@ confflags += \
 	--enable-avahi \
 	--enable-caca \
 	--enable-chromaprint \
+	--enable-chromecast \
 	--enable-dbus \
 	--enable-dca \
 	--enable-dvbpsi \
@@ -210,16 +211,6 @@ confflags += --disable-oss
 removeplugins += oss
 endif
 
-# Ubuntu specific flags
-ifeq (Ubuntu,$(DEB_VENDOR))
-# protobuf related issues only observable on Ubuntu since Mir uses it
-# https://github.com/google/protobuf/issues/206
-confflags += --disable-chromecast
-removeplugins += chromecast
-else
-confflags += --enable-chromecast
-endif
-
 # Linux amd64 and i386 specific flags
 ifeq (,$(filter-out amd64 i386,$(DEB_HOST_ARCH)))
 confflags += --enable-crystalhd
@@ -269,7 +260,7 @@ DEB_CXXFLAGS_MAINT_APPEND += -mtune=8548
 endif
 endif
 
-export DEB_BUILD_MAINT_OPTION
+export DEB_BUILD_MAINT_OPTIONS
 export DEB_CFLAGS_MAINT_APPEND
 export DEB_CXXFLAGS_MAINT_APPEND
 export DEB_LDFLAGS_MAINT_APPEND
