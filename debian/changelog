@@ -1,3 +1,9 @@
+vlc (3.0.1-3build2) cosmic; urgency=medium
+
+  * No-change rebuild for ncurses soname changes.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 03 May 2018 15:26:25 +0000
+
 vlc (3.0.1-3build1) bionic; urgency=medium
 
   * No-change rebuild for libnfs soname change.
