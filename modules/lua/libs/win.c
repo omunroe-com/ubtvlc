@@ -2,7 +2,7 @@
  * win.c: Windows specific functions
  *****************************************************************************
  * Copyright (C) 2007-2012 the VideoLAN team
- * $Id: c7c0ee649011d27be5339baf685dbb5491ea4597 $
+ * $Id: fc037bf65e1315dc61928a19103351c4ac418abf $
  *
  * Authors: Antoine Cellerier <dionoea at videolan tod org>
  *
@@ -29,6 +29,7 @@
 #endif
 
 #include <vlc_common.h>
+#include <vlc_charset.h>
 
 #include "../vlc.h"
 #include "../libs.h"
@@ -47,12 +48,15 @@ static HANDLE GetConsole( lua_State *L )
 
 #define MAX_LINE_LENGTH 1024
 
-static bool ReadWin32( HANDLE *hConsoleIn, char *p_buffer, int *pi_size )
+static bool ReadWin32( HANDLE *hConsoleIn, unsigned char *p_buffer, int *pi_size )
 {
     INPUT_RECORD input_record;
     DWORD i_dw;
 
-    while( *pi_size < MAX_LINE_LENGTH &&
+    // Prefer to fail early when there's not enough space to store a 4 bytes
+    // UTF8 character. The function will be immediatly called again and we won't
+    // lose an input
+    while( *pi_size < MAX_LINE_LENGTH - 4 &&
            ReadConsoleInput( hConsoleIn, &input_record, 1, &i_dw ) )
     {
         if( input_record.EventType != KEY_EVENT ||
@@ -65,47 +69,60 @@ static bool ReadWin32( HANDLE *hConsoleIn, char *p_buffer, int *pi_size )
             /* nothing interesting */
             continue;
         }
-
-        p_buffer[ *pi_size ] = input_record.Event.KeyEvent.uChar.AsciiChar;
-
-        /* Echo out the command */
-        putc( p_buffer[ *pi_size ], stdout );
-
-        /* Handle special keys */
-        if( p_buffer[ *pi_size ] == '\r' || p_buffer[ *pi_size ] == '\n' )
+        if( input_record.Event.KeyEvent.uChar.AsciiChar == '\n' ||
+            input_record.Event.KeyEvent.uChar.AsciiChar == '\r' )
         {
-            if ( p_buffer[ *pi_size ] == '\r' )
-                p_buffer[ *pi_size ] = '\n';
-            (*pi_size)++; /* We want the \n to be in the output string */
             putc( '\n', stdout );
+            p_buffer[*pi_size] = '\n';
+            (*pi_size)++;
             break;
         }
-        switch( p_buffer[ *pi_size ] )
+        switch( input_record.Event.KeyEvent.uChar.AsciiChar )
         {
         case '\b':
-            if( *pi_size )
+            if ( *pi_size == 0 )
+                break;
+            if ( *pi_size > 1 && (p_buffer[*pi_size - 1] & 0xC0) == 0x80 )
             {
-                *pi_size -= 2;
-                putc( ' ', stdout );
-                putc( '\b', stdout );
+                // pi_size currently points to the character to be written, so
+                // we need to roll back from 2 bytes to start erasing the previous
+                // character
+                (*pi_size) -= 2;
+                unsigned int nbBytes = 1;
+                while( *pi_size > 0 && (p_buffer[*pi_size] & 0xC0) == 0x80 )
+                {
+                    (*pi_size)--;
+                    nbBytes++;
+                }
+                assert( clz( (unsigned char)~(p_buffer[*pi_size]) ) == nbBytes + 1 );
+                // The first utf8 byte will be overriden by a \0
             }
+            else
+                (*pi_size)--;
+            p_buffer[*pi_size] = 0;
+
+            fputs( "\b \b", stdout );
             break;
-        //case '\r':
-        //    (*pi_size) --;
-        //    break;
+        default:
+        {
+            WCHAR psz_winput[] = { input_record.Event.KeyEvent.uChar.UnicodeChar, L'\0' };
+            char* psz_input = FromWide( psz_winput );
+            int input_size = strlen(psz_input);
+            if ( *pi_size + input_size > MAX_LINE_LENGTH )
+            {
+                p_buffer[ *pi_size ] = 0;
+                return false;
+            }
+            strcpy( (char*)&p_buffer[*pi_size], psz_input );
+            utf8_fprintf( stdout, "%s", psz_input );
+            free(psz_input);
+            *pi_size += input_size;
         }
-
-        (*pi_size)++;
+        }
     }
 
-    if( *pi_size == MAX_LINE_LENGTH )
-      // p_buffer[ *pi_size ] == '\r' || p_buffer[ *pi_size ] == '\n' )
-    {
-        p_buffer[ *pi_size ] = 0;
-        return true;
-    }
-
-    return false;
+    p_buffer[ *pi_size ] = 0;
+    return true;
 }
 
 static int vlclua_console_init( lua_State *L )
@@ -123,7 +140,7 @@ static int vlclua_console_init( lua_State *L )
 
 static int vlclua_console_wait( lua_State *L )
 {
-    int i_timeout = luaL_optint( L, 1, 0 );
+    int i_timeout = (int)luaL_optinteger( L, 1, 0 );
     DWORD status = WaitForSingleObject( GetConsole( L ), i_timeout );
     lua_pushboolean( L, status == WAIT_OBJECT_0 );
     return 1;
@@ -134,12 +151,20 @@ static int vlclua_console_read( lua_State *L )
 {
     char psz_buffer[MAX_LINE_LENGTH+1];
     int i_size = 0;
-    ReadWin32( GetConsole( L ), psz_buffer, &i_size );
+    ReadWin32( GetConsole( L ), (unsigned char*)psz_buffer, &i_size );
     lua_pushlstring( L, psz_buffer, i_size );
 
     return 1;
 }
 
+static int vlclua_console_write( lua_State *L )
+{
+    if( !lua_isstring( L, 1 ) )
+        return luaL_error( L, "win.console_write usage: (text)" );
+    const char* psz_line = luaL_checkstring( L, 1 );
+    utf8_fprintf( stdout, "%s", psz_line );
+    return 0;
+}
 
 /*****************************************************************************
  *
@@ -148,6 +173,7 @@ static const luaL_Reg vlclua_win_reg[] = {
     { "console_init", vlclua_console_init },
     { "console_wait", vlclua_console_wait },
     { "console_read", vlclua_console_read },
+    { "console_write", vlclua_console_write },
     { NULL, NULL }
 };
 

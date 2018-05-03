@@ -2,7 +2,7 @@
  * motiondetect.c : Second version of a motion detection plugin.
  *****************************************************************************
  * Copyright (C) 2000-2008 VLC authors and VideoLAN
- * $Id: 1fc41ad0cdf43d01abf22ce55c23169048c3b04e $
+ * $Id: fd1ff9b09df6fe00e9653b6a00bb4c7936ef9a87 $
  *
  * Authors: Antoine Cellerier <dionoea -at- videolan -dot- org>
  *
@@ -32,8 +32,8 @@
 #include <vlc_common.h>
 #include <vlc_plugin.h>
 #include <vlc_sout.h>
-
 #include <vlc_filter.h>
+#include <vlc_picture.h>
 #include "filter_picture.h"
 
 /*****************************************************************************
@@ -49,7 +49,7 @@ vlc_module_begin ()
     set_shortname( N_( "Motion Detect" ))
     set_category( CAT_VIDEO )
     set_subcategory( SUBCAT_VIDEO_VFILTER )
-    set_capability( "video filter2", 0 )
+    set_capability( "video filter", 0 )
 
     add_shortcut( "motion" )
     set_callbacks( Create, Destroy )
@@ -69,7 +69,6 @@ static void Draw( filter_t *p_filter, uint8_t *p_pix, int i_pix_pitch, int i_pix
 struct filter_sys_t
 {
     bool is_yuv_planar;
-    bool b_old;
     picture_t *p_old;
     uint32_t *p_buf;
     uint32_t *p_buf2;
@@ -116,17 +115,14 @@ static int Create( vlc_object_t *p_this )
         return VLC_ENOMEM;
 
     p_sys->is_yuv_planar = is_yuv_planar;
-    p_sys->b_old = false;
-    p_sys->p_old = picture_NewFromFormat( p_fmt );
+    p_sys->p_old = NULL;
     p_sys->p_buf  = calloc( p_fmt->i_width * p_fmt->i_height, sizeof(*p_sys->p_buf) );
     p_sys->p_buf2 = calloc( p_fmt->i_width * p_fmt->i_height, sizeof(*p_sys->p_buf) );
 
-    if( !p_sys->p_old || !p_sys->p_buf || !p_sys->p_buf2 )
+    if( !p_sys->p_buf || !p_sys->p_buf2 )
     {
         free( p_sys->p_buf2 );
         free( p_sys->p_buf );
-        if( p_sys->p_old )
-            picture_Release( p_sys->p_old );
         return VLC_ENOMEM;
     }
 
@@ -143,7 +139,8 @@ static void Destroy( vlc_object_t *p_this )
 
     free( p_sys->p_buf2 );
     free( p_sys->p_buf );
-    picture_Release( p_sys->p_old );
+    if( p_sys->p_old )
+        picture_Release( p_sys->p_old );
     free( p_sys );
 }
 
@@ -209,11 +206,10 @@ static void PreparePlanar( filter_t *p_filter, picture_t *p_inpic )
         {
             const int d = abs( p_inpix_u[y*i_src_pitch_u+x] - p_oldpix_u[y*i_old_pitch_u+x] ) +
                           abs( p_inpix_v[y*i_src_pitch_v+x] - p_oldpix_v[y*i_old_pitch_v+x] );
-            int i, j;
 
-            for( j = 0; j < i_chroma_dy; j++ )
+            for( int j = 0; j < i_chroma_dy; j++ )
             {
-                for( i = 0; i < i_chroma_dx; i++ )
+                for( int i = 0; i < i_chroma_dx; i++ )
                     p_sys->p_buf2[i_chroma_dy*p_fmt->i_width*j + i_chroma_dx*i] = d;
             }
         }
@@ -273,10 +269,9 @@ static picture_t *Filter( filter_t *p_filter, picture_t *p_inpic )
     }
     picture_Copy( p_outpic, p_inpic );
 
-    if( !p_sys->b_old )
+    if( !p_sys->p_old )
     {
-        picture_Copy( p_sys->p_old, p_inpic );
-        p_sys->b_old = true;
+        p_sys->p_old = picture_Hold( p_inpic );
         goto exit;
     }
 
@@ -308,11 +303,9 @@ static picture_t *Filter( filter_t *p_filter, picture_t *p_inpic )
      */
     Draw( p_filter, &p_outpic->p[Y_PLANE].p_pixels[i_pix_offset], p_outpic->p[Y_PLANE].i_pitch, i_pix_size );
 
-    /**
-     * We're done. Lets keep a copy of the picture
-     * TODO we may just picture_Release with a latency of 1 if the filters/vout
-     * handle it correctly */
-    picture_Copy( p_sys->p_old, p_inpic );
+    /* We're done. Lets keep a copy of the picture */
+    picture_Release( p_sys->p_old );
+    p_sys->p_old = picture_Hold( p_inpic );
 
 exit:
     picture_Release( p_inpic );
@@ -335,14 +328,12 @@ static void GaussianConvolution( uint32_t *p_inpix, uint32_t *p_smooth,
                                  int i_src_pitch, int i_num_lines,
                                  int i_src_visible )
 {
-    int x,y;
-
     /* A bit overkill but ... simpler */
     memset( p_smooth, 0, sizeof(*p_smooth) * i_src_pitch * i_num_lines );
 
-    for( y = 2; y < i_num_lines - 2; y++ )
+    for( int y = 2; y < i_num_lines - 2; y++ )
     {
-        for( x = 2; x < i_src_visible - 2; x++ )
+        for( int x = 2; x < i_src_visible - 2; x++ )
         {
             p_smooth[y*i_src_visible+x] = (uint32_t)(
               /* 2 rows up */
@@ -390,7 +381,6 @@ static int FindShapes( uint32_t *p_diff, uint32_t *p_smooth,
                        int *color_y_min, int *color_y_max )
 {
     int last = 1;
-    int i, j;
 
     /**
      * Apply some smoothing to remove noise
@@ -400,13 +390,14 @@ static int FindShapes( uint32_t *p_diff, uint32_t *p_smooth,
     /**
      * Label the shapes and build the labels dependencies list
      */
-    for( j = 0; j < i_pitch; j++ )
+    for( int j = 0; j < i_pitch; j++ )
     {
         p_smooth[j] = 0;
         p_smooth[(i_lines-1)*i_pitch+j] = 0;
     }
-    for( i = 1; i < i_lines-1; i++ )
+    for( int i = 1; i < i_lines-1; i++ )
     {
+        int j;
         p_smooth[i*i_pitch] = 0;
         for( j = 1; j < i_pitch-1; j++ )
         {
@@ -454,7 +445,7 @@ static int FindShapes( uint32_t *p_diff, uint32_t *p_smooth,
     /**
      * Initialise empty rectangle list
      */
-    for( i = 1; i < last; i++ )
+    for( int i = 1; i < last; i++ )
     {
         color_x_min[i] = -1;
         color_x_max[i] = -1;
@@ -465,7 +456,7 @@ static int FindShapes( uint32_t *p_diff, uint32_t *p_smooth,
     /**
      * Compute rectangle coordinates
      */
-    for( i = 0; i < i_pitch * i_lines; i++ )
+    for( int i = 0; i < i_pitch * i_lines; i++ )
     {
         if( p_smooth[i] )
         {
@@ -496,11 +487,11 @@ static int FindShapes( uint32_t *p_diff, uint32_t *p_smooth,
     /**
      * Merge overlaping rectangles
      */
-    for( i = 1; i < last; i++ )
+    for( int i = 1; i < last; i++ )
     {
         if( colors[i] != i ) continue;
         if( color_x_min[i] == -1 ) continue;
-        for( j = i+1; j < last; j++ )
+        for( int j = i+1; j < last; j++ )
         {
             if( colors[j] != j ) continue;
             if( color_x_min[j] == -1 ) continue;
@@ -523,9 +514,10 @@ static int FindShapes( uint32_t *p_diff, uint32_t *p_smooth,
 static void Draw( filter_t *p_filter, uint8_t *p_pix, int i_pix_pitch, int i_pix_size )
 {
     filter_sys_t *p_sys = p_filter->p_sys;
-    int i, j;
 
-    for( i = 1, j = 0; i < p_sys->i_colors; i++ )
+    int j = 0;
+
+    for( int i = 1; i < p_sys->i_colors; i++ )
     {
         int x, y;
 

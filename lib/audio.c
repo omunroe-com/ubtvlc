@@ -2,7 +2,7 @@
  * libvlc_audio.c: New libvlc audio control API
  *****************************************************************************
  * Copyright (C) 2006 VLC authors and VideoLAN
- * $Id: 13378fff2749c47b722bce6e909d7c97e6769c7b $
+ * $Id: 877666473a15ad8687070fe064243b3049d874bf $
  *
  * Authors: Filippo Carone <filippo@carone.org>
  *          Jean-Paul Saman <jpsaman _at_ m2x _dot_ nl>
@@ -30,6 +30,7 @@
 #include <math.h>
 
 #include <vlc/libvlc.h>
+#include <vlc/libvlc_renderer_discoverer.h>
 #include <vlc/libvlc_media.h>
 #include <vlc/libvlc_media_player.h>
 
@@ -188,6 +189,9 @@ libvlc_audio_output_device_list_get( libvlc_instance_t *p_instance,
                                                            >= sizeof(varname) )
         return NULL;
 
+    if( config_GetType(varname) != VLC_VAR_STRING )
+        return NULL;
+
     libvlc_audio_output_device_t *list = NULL, **pp = &list;
     char **values, **texts;
     ssize_t count = config_GetPszChoices( VLC_OBJECT(p_instance->p_libvlc_int),
@@ -277,6 +281,19 @@ void libvlc_audio_output_device_set( libvlc_media_player_t *mp,
 
     aout_DeviceSet( aout, devid );
     vlc_object_release( aout );
+}
+
+char *libvlc_audio_output_device_get( libvlc_media_player_t *mp )
+{
+    audio_output_t *aout = GetAOut( mp );
+    if( aout == NULL )
+        return NULL;
+
+    char *devid = aout_DeviceGet( aout );
+
+    vlc_object_release( aout );
+
+    return devid;
 }
 
 int libvlc_audio_output_get_device_type( libvlc_media_player_t *mp )
@@ -467,7 +484,7 @@ int64_t libvlc_audio_get_delay( libvlc_media_player_t *p_mi )
     int64_t val = 0;
     if( p_input_thread != NULL )
     {
-      val = var_GetTime( p_input_thread, "audio-delay" );
+      val = var_GetInteger( p_input_thread, "audio-delay" );
       vlc_object_release( p_input_thread );
     }
     return val;
@@ -482,7 +499,7 @@ int libvlc_audio_set_delay( libvlc_media_player_t *p_mi, int64_t i_delay )
     int ret = 0;
     if( p_input_thread != NULL )
     {
-      var_SetTime( p_input_thread, "audio-delay", i_delay );
+      var_SetInteger( p_input_thread, "audio-delay", i_delay );
       vlc_object_release( p_input_thread );
     }
     else

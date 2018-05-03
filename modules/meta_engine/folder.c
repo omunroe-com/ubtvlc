@@ -2,7 +2,7 @@
  * folder.c
  *****************************************************************************
  * Copyright (C) 2006 VLC authors and VideoLAN
- * $Id: 38c1e075f75b5fc96b065c7cd4c97381fe7b6ed8 $
+ * $Id: aa25c8f945d11f71c503098efb9bf57b298ca748 $
  *
  * Authors: Antoine Cellerier <dionoea -at- videolan -dot- org>
  *
@@ -40,11 +40,18 @@
 
 static const char* cover_files[] = {
     "Folder.jpg",           /* Windows */
+    "Folder.png",
     "AlbumArtSmall.jpg",    /* Windows */
     "AlbumArt.jpg",         /* Windows */
     "Album.jpg",
     ".folder.png",          /* KDE?    */
     "cover.jpg",            /* rockbox */
+    "cover.png",
+    "cover.gif",
+    "front.jpg",
+    "front.png",
+    "front.gif",
+    "front.bmp",
     "thumb.jpg",
 };
 
@@ -92,7 +99,7 @@ static int FindMeta( vlc_object_t *p_this )
             free( psz_uri );
             return VLC_EGENERIC;
         }
-        char *psz_basedir = make_path( psz_path );
+        char *psz_basedir = vlc_uri2path( psz_path );
         FREENULL( psz_path );
         if( psz_basedir == NULL )
         {
@@ -107,7 +114,7 @@ static int FindMeta( vlc_object_t *p_this )
 
     if ( psz_path == NULL )
     {
-        char *psz_basedir = make_path( psz_uri );
+        char *psz_basedir = vlc_uri2path( psz_uri );
         if( psz_basedir == NULL )
         {
             free( psz_uri );
