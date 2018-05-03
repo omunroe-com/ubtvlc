@@ -86,6 +86,14 @@ w:get_value(): Return identifier of the selected item. Corresponds to the text v
 w:clear(): Clear a list or drop_down widget. After that, all values previously added are lost.
 w:get_selection(): Retrieve a table representing the current selection. Keys are the ids, values are the texts associated. Applies to: list.
 
+errno
+-----
+List of potential errors. It contains the following values:
+  .ENOENT: No such file or directory
+  .EEXIST: File exists
+  .EACCESS: Permission denied
+  .EINVAL: Invalid argument
+
 
 Extension
 ---------
@@ -133,6 +141,27 @@ input.item(): Get the current input item. Input item methods are:
     .played_abuffers
     .lost_abuffers
 
+Input/Output
+------------
+All path for this namespace are expected to be passed as UTF8 strings.
+
+io.mkdir("path", "mode"): Similar to mkdir(2). The mode is passed as a string
+  to allow for octal representations. This returns a success code (non 0 in
+  case of failure), and a more specific error code as its 2nd returned value
+  in case of failure. The error code is to be used with vlc.errno
+io.readdir("path"): Lists all files & directories in the provided folder.
+io.open("path"[, "mode"]): Similar to lua's io.open. Mode is optional and 
+  defaults to "r". It returns a file object with the following member functions:
+    .read
+    .write
+    .seek
+    .flush
+    .close
+  all of which are used exactly like the lua object returned by io.open
+io.unlink("path"): Similar to os.remove. First return value is 0 in case
+  of success. In case of failure, the 2nd return parameter is an error
+  code to be compared against vlc.errno values.
+
 Messages
 --------
 msg.dbg( [str1, [str2, [...]]] ): Output debug messages (-vv).
@@ -163,9 +192,8 @@ Net
 /!\ NB: this namespace is ONLY usable for interfaces and extensions.
 ---
 ----------------------------------------------------------------
-net.url_parse( url, [option delimiter] ): Parse URL. Returns a table with
-  fields "protocol", "username", "password", "host", "port", path" and
-  "option".
+net.url_parse( url ): Deprecated alias for strings.url_parse().
+  Will be removed in VLC 4.x.
 net.listen_tcp( host, port ): Listen to TCP connections. This returns an
   object with an accept and an fds method. accept is blocking (Poll on the
   fds with the net.POLLIN flag if you want to be non blocking).
@@ -286,19 +314,15 @@ playlist.get( [what, [tree]] ): Get the playlist.
       .id: The item's id.
       .flags: a table with the following members if the corresponding flag is
               set:
-          .save
-          .skip
           .disabled
           .ro
-          .remove
-          .expanded
       .name:
       .path:
       .duration: (-1 if unknown)
       .nb_played:
       .children: A table of children playlist items.
 playlist.search( name ): filter the playlist items with the given string
-playlist.current(): return the current input item id
+playlist.current(): return the current playlist item id
 playlist.sort( key ): sort the playlist according to the key.
   Key must be one of the followings values: 'id', 'title', 'title nodes first',
                                             'artist', 'genre', 'random', 'duration',
@@ -329,14 +353,13 @@ sd.add_node( ... ): Add a node to the service discovery.
       .arturl: the node's ArtURL (OPTIONAL)
       .category: the node's category (OPTIONAL)
 sd.add_item( ... ): Add an item to the service discovery.
-  The item object has the same members as the one in playlist.add() along with:
-      .category: the item's category (OPTIONAL)
+  The item object has the same members as the one in playlist.add().
   Returns the input item.
 sd.remove_item( item ): remove the item.
 
 n = vlc.sd.add_node( {title="Node"} )
-n:add_subitem( ... ): Same as sd.add_item(), but as a subitem of n.
-n:add_subnode( ... ): Same as sd.add_node(), but as a subnode of n.
+n:add_subitem( ... ): Same as sd.add_item(), but as a child item of node n.
+n:add_subnode( ... ): Same as sd.add_node(), but as a subnode of node n.
 
 d = vlc.sd.add_item( ... ) Get an item object to perform following set operations on it:
 d:set_name(): the item's name in playlist
@@ -369,6 +392,8 @@ s = vlc.stream( "http://www.videolan.org/" )
 s:read( 128 ) -- read up to 128 characters. Return 0 if no more data is available (FIXME?).
 s:readline() -- read a line. Return nil if EOF was reached.
 s:addfilter() -- add a stream filter. If no argument was specified, try to add all automatic stream filters.
+s:getsize() -- returns the size of the stream, or nil if unknown
+s:seek(offset) -- seeks from offset bytes (from the begining of the stream). Returns nil in case of error
 
 Strings
 -------
@@ -377,13 +402,16 @@ strings.decode_uri( [uri1, [uri2, [...]]] ): Decode a list of URIs. This
 strings.encode_uri_component( [uri1, [uri2, [...]]] ): Encode a list of URI
   components. This function returns as many variables as it had arguments.
 strings.make_uri( path, [scheme] ): Convert a file path to a URI.
+strings.url_parse( url ): Parse URL. Returns a table with
+  fields "protocol", "username", "password", "host", "port", path" and
+  "option".
 strings.resolve_xml_special_chars( [str1, [str2, [...]]] ): Resolve XML
   special characters in a list of strings. This function returns as many
   variables as it had arguments.
 strings.convert_xml_special_chars( [str1, [str2, [...]]] ): Do the inverse
   operation.
 strings.from_charset( charset, str ): convert a string from a specified
-  character encoding into UTF-8.
+  character encoding into UTF-8; return an empty string on error.
 
 Variables
 ---------
@@ -451,5 +479,8 @@ reader:read(): read some data, return -1 on error, 0 on EOF, 1 on start of XML
 reader:name(): name of the element
 reader:value(): value of the element
 reader:next_attr(): next attribute of the element
+reader:node_empty(): queries whether the previous invocation of reader:read()
+  refers to an empty node ("<tag/>"). Returns a value less than 0 on error,
+  1 if the node is empty, and 0 if it is not.
 
 The simplexml module can also be used to parse XML documents easily.
