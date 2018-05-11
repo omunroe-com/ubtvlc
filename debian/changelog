@@ -1,3 +1,9 @@
+vlc (3.0.2-1build1) cosmic; urgency=medium
+
+  * No-change rebuild for x265 soname changes.
+
+ -- Rik Mills <rikmills@kubuntu.org>  Fri, 11 May 2018 13:33:08 +0100
+
 vlc (3.0.2-1) unstable; urgency=medium
 
   [ Felipe Sateler ]
