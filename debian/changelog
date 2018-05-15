@@ -1,3 +1,9 @@
+vlc (3.0.2-0ubuntu0.1) bionic; urgency=medium
+
+  * New upstream bugfix release (LP: #1771259).
+
+ -- Simon Quigley <tsimonq2@ubuntu.com>  Mon, 14 May 2018 23:26:56 -0500
+
 vlc (3.0.1-3build1) bionic; urgency=medium
 
   * No-change rebuild for libnfs soname change.
