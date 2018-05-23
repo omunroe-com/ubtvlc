@@ -2,7 +2,7 @@
  * gaussianblur.c : gaussian blur video filter
  *****************************************************************************
  * Copyright (C) 2000-2007 the VideoLAN team
- * $Id: a8f96efc6833908b39e04f8efe865a0e24e45e7d $
+ * $Id: c736c8c213bc5a552f3d24480e5af8f203e3f5e8 $
  *
  * Authors: Antoine Cellerier <dionoea -at- videolan -dot- org>
  *
@@ -31,9 +31,9 @@
 
 #include <vlc_common.h>
 #include <vlc_plugin.h>
-#include <vlc_vout.h>
+#include <vlc_memory.h>
 
-#include "vlc_filter.h"
+#include <vlc_filter.h>
 #include "filter_picture.h"
 
 #include <math.h>                                          /* exp(), sqrt() */
@@ -49,11 +49,14 @@ static void Destroy   ( vlc_object_t * );
     "Gaussian's standard deviation. The bluring will take " \
     "into account pixels up to 3*sigma away in any direction.")
 
+#define GAUSSIAN_HELP N_("Add a blurring effect")
+
 #define FILTER_PREFIX "gaussianblur-"
 
 vlc_module_begin ()
     set_description( N_("Gaussian blur video filter") )
     set_shortname( N_( "Gaussian Blur" ))
+    set_help(GAUSSIAN_HELP)
     set_capability( "video filter2", 0 )
     set_category( CAT_VIDEO )
     set_subcategory( SUBCAT_VIDEO_VFILTER )
@@ -100,7 +103,7 @@ static void gaussianblur_InitDistribution( filter_sys_t *p_sys )
 {
     double f_sigma = p_sys->f_sigma;
     int i_dim = (int)(3.*f_sigma);
-    type_t *pt_distribution = malloc( (2*i_dim+1) * sizeof( type_t ) );
+    type_t *pt_distribution = xmalloc( (2*i_dim+1) * sizeof( type_t ) );
     int x;
 
     for( x = -i_dim; x <= i_dim; x++ )
@@ -123,17 +126,16 @@ static int Create( vlc_object_t *p_this )
 {
     filter_t *p_filter = (filter_t *)p_this;
 
-    if(   p_filter->fmt_in.video.i_chroma != VLC_FOURCC('I','4','2','0')
-       && p_filter->fmt_in.video.i_chroma != VLC_FOURCC('I','Y','U','V')
-       && p_filter->fmt_in.video.i_chroma != VLC_FOURCC('J','4','2','0')
-       && p_filter->fmt_in.video.i_chroma != VLC_FOURCC('Y','V','1','2')
+    if(   p_filter->fmt_in.video.i_chroma != VLC_CODEC_I420
+       && p_filter->fmt_in.video.i_chroma != VLC_CODEC_J420
+       && p_filter->fmt_in.video.i_chroma != VLC_CODEC_YV12
 
-       && p_filter->fmt_in.video.i_chroma != VLC_FOURCC('I','4','2','2')
-       && p_filter->fmt_in.video.i_chroma != VLC_FOURCC('J','4','2','2')
+       && p_filter->fmt_in.video.i_chroma != VLC_CODEC_I422
+       && p_filter->fmt_in.video.i_chroma != VLC_CODEC_J422
       )
     {
         /* We only want planar YUV 4:2:0 or 4:2:2 */
-        msg_Err( p_filter, "Unsupported input chroma (%4s)",
+        msg_Err( p_filter, "Unsupported input chroma (%4.4s)",
                  (char*)&(p_filter->fmt_in.video.i_chroma) );
         return VLC_EGENERIC;
     }
@@ -201,10 +203,9 @@ static picture_t *Filter( filter_t *p_filter, picture_t *p_pic )
     }
     if( !p_sys->pt_buffer )
     {
-        p_sys->pt_buffer = realloc( p_sys->pt_buffer,
-                                    p_pic->p[Y_PLANE].i_visible_lines *
-                                        p_pic->p[Y_PLANE].i_pitch *
-                                        sizeof( type_t ) );
+        p_sys->pt_buffer = realloc_or_free( p_sys->pt_buffer,
+                               p_pic->p[Y_PLANE].i_visible_lines *
+                               p_pic->p[Y_PLANE].i_pitch * sizeof( type_t ) );
     }
 
     pt_buffer = p_sys->pt_buffer;
@@ -215,7 +216,7 @@ static picture_t *Filter( filter_t *p_filter, picture_t *p_pic )
         const int i_pitch = p_pic->p[Y_PLANE].i_pitch;
         int i_col, i_line;
 
-        p_sys->pt_scale = malloc( i_visible_lines * i_pitch * sizeof( type_t ) );
+        p_sys->pt_scale = xmalloc( i_visible_lines * i_pitch * sizeof( type_t ) );
         pt_scale = p_sys->pt_scale;
 
         for( i_line = 0 ; i_line < i_visible_lines ; i_line++ )
@@ -251,7 +252,7 @@ static picture_t *Filter( filter_t *p_filter, picture_t *p_pic )
 
         const int i_visible_lines = p_pic->p[i_plane].i_visible_lines;
         const int i_visible_pitch = p_pic->p[i_plane].i_visible_pitch;
-        const int i_pitch = p_pic->p[i_plane].i_pitch;
+        const int i_in_pitch = p_pic->p[i_plane].i_pitch;
 
         int i_line, i_col;
         const int x_factor = p_pic->p[Y_PLANE].i_visible_pitch/i_visible_pitch-1;
@@ -263,7 +264,7 @@ static picture_t *Filter( filter_t *p_filter, picture_t *p_pic )
             {
                 type_t t_value = 0;
                 int x;
-                const int c = i_line*i_pitch+i_col;
+                const int c = i_line*i_in_pitch+i_col;
                 for( x = __MAX( -i_dim, -i_col*(x_factor+1) );
                      x <= __MIN( i_dim, (i_visible_pitch - i_col)*(x_factor+1) + 1 );
                      x++ )
@@ -280,17 +281,17 @@ static picture_t *Filter( filter_t *p_filter, picture_t *p_pic )
             {
                 type_t t_value = 0;
                 int y;
-                const int c = i_line*i_pitch+i_col;
+                const int c = i_line*i_in_pitch+i_col;
                 for( y = __MAX( -i_dim, (-i_line)*(y_factor+1) );
                      y <= __MIN( i_dim, (i_visible_lines - i_line)*(y_factor+1) - 1 );
                      y++ )
                 {
                     t_value += pt_distribution[y+i_dim] *
-                               pt_buffer[c+(y>>y_factor)*i_pitch];
+                               pt_buffer[c+(y>>y_factor)*i_in_pitch];
                 }
 
-                const type_t t_scale = pt_scale[(i_line<<y_factor)*(i_pitch<<x_factor)+(i_col<<x_factor)];
-                p_out[c] = (uint8_t)(t_value / t_scale); // FIXME wouldn't it be better to round instead of trunc ?
+                const type_t t_scale = pt_scale[(i_line<<y_factor)*(i_in_pitch<<x_factor)+(i_col<<x_factor)];
+                p_out[i_line * p_outpic->p[i_plane].i_pitch + i_col] = (uint8_t)(t_value / t_scale); // FIXME wouldn't it be better to round instead of trunc ?
             }
         }
     }

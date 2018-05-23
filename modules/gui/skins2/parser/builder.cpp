@@ -2,7 +2,7 @@
  * builder.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: 7423822f4af4b8cdfe1fa56c8e6f4e1466f98618 $
+ * $Id: f2b2e1596e1adbb4483dd66368ef30f08ffeb7d8 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -38,6 +38,7 @@
 #include "../src/popup.hpp"
 #include "../src/theme.hpp"
 #include "../src/window_manager.hpp"
+#include "../src/vout_manager.hpp"
 #include "../commands/cmd_generic.hpp"
 #include "../controls/ctrl_button.hpp"
 #include "../controls/ctrl_checkbox.hpp"
@@ -55,7 +56,8 @@
 #include "../utils/var_bool.hpp"
 #include "../utils/var_text.hpp"
 
-#include "vlc_image.h"
+#include <vlc_image.h>
+#include <fstream>
 
 
 Builder::Builder( intf_thread_t *pIntf, const BuilderData &rData,
@@ -75,24 +77,23 @@ CmdGeneric *Builder::parseAction( const string &rAction )
     return Interpreter::instance( getIntf() )->parseAction( rAction, m_pTheme );
 }
 
-
-// Useful macro
-#define ADD_OBJECTS( type ) \
-    list<BuilderData::type>::const_iterator it##type; \
-    for( it##type = m_rData.m_list##type.begin(); \
-         it##type != m_rData.m_list##type.end(); it##type++ ) \
-    { \
-        add##type( *it##type ); \
-    }
-
+template<class T> inline
+void Builder::add_objects(const std::list<T> &list,
+                          void (Builder::*addfn)(const T &))
+{
+    typename std::list<T>::const_iterator i;
+    for( i = list.begin(); i != list.end(); ++i )
+        (this->*addfn)( *i );
+}
 
 Theme *Builder::build()
 {
-    m_pTheme = new Theme( getIntf() );
+#define ADD_OBJECTS( type ) \
+    add_objects(m_rData.m_list##type,&Builder::add##type)
+
+    m_pTheme = new (std::nothrow) Theme( getIntf() );
     if( m_pTheme == NULL )
-    {
         return NULL;
-    }
 
     // Create everything from the data in the XML
     ADD_OBJECTS( Theme );
@@ -123,6 +124,8 @@ Theme *Builder::build()
     ADD_OBJECTS( MenuSeparator );
 
     return m_pTheme;
+
+#undef  ADD_OBJECTS
 }
 
 
@@ -179,17 +182,25 @@ void Builder::addTheme( const BuilderData::Theme &rData )
 void Builder::addIniFile( const BuilderData::IniFile &rData )
 {
     // Parse the INI file
-    IniFile iniFile( getIntf(), rData.m_id, getFilePath( rData.m_file ) );
+    string full_path = getFilePath( rData.m_file );
+    if( !full_path.size() )
+        return;
+
+    IniFile iniFile( getIntf(), rData.m_id, full_path );
     iniFile.parseFile();
 }
 
 
 void Builder::addBitmap( const BuilderData::Bitmap &rData )
 {
+    string full_path = getFilePath( rData.m_fileName );
+    if( !full_path.size() )
+        return;
+
     GenericBitmap *pBmp =
         new FileBitmap( getIntf(), m_pImageHandler,
-                        getFilePath( rData.m_fileName ), rData.m_alphaColor,
-                        rData.m_nbFrames, rData.m_fps );
+                        full_path, rData.m_alphaColor,
+                        rData.m_nbFrames, rData.m_fps, rData.m_nbLoops );
     if( !pBmp->getData() )
     {
         // Invalid bitmap
@@ -215,7 +226,7 @@ void Builder::addSubBitmap( const BuilderData::SubBitmap &rData )
     // Copy a region of the parent bitmap to the new one
     BitmapImpl *pBmp =
         new BitmapImpl( getIntf(), rData.m_width, rData.m_height,
-                        rData.m_nbFrames, rData.m_fps );
+                        rData.m_nbFrames, rData.m_fps, rData.m_nbLoops );
     bool res = pBmp->drawBitmap( *pParentBmp, rData.m_x, rData.m_y, 0, 0,
                                  rData.m_width, rData.m_height );
     if( !res )
@@ -237,9 +248,12 @@ void Builder::addBitmapFont( const BuilderData::BitmapFont &rData )
         return;
     }
 
+    string full_path = getFilePath( rData.m_file );
+    if( !full_path.size() )
+        return;
+
     GenericBitmap *pBmp =
-        new FileBitmap( getIntf(), m_pImageHandler,
-                        getFilePath( rData.m_file ), 0 );
+        new FileBitmap( getIntf(), m_pImageHandler, full_path, 0 );
     if( !pBmp->getData() )
     {
         // Invalid bitmap
@@ -264,38 +278,35 @@ void Builder::addBitmapFont( const BuilderData::BitmapFont &rData )
 void Builder::addFont( const BuilderData::Font &rData )
 {
     // Try to load the font from the theme directory
-    GenericFont *pFont = new FT2Font( getIntf(),
-                                      getFilePath( rData.m_fontFile ),
-                                      rData.m_size );
-    if( pFont->init() )
+    string full_path = getFilePath( rData.m_fontFile );
+    if( full_path.size() )
     {
-        m_pTheme->m_fonts[rData.m_id] = GenericFontPtr( pFont );
-    }
-    else
-    {
-        delete pFont;
-
-        // Font not found; try in the resource path
-        OSFactory *pOSFactory = OSFactory::instance( getIntf() );
-        const list<string> &resPath = pOSFactory->getResourcePath();
-        const string &sep = pOSFactory->getDirSeparator();
-
-        list<string>::const_iterator it;
-        for( it = resPath.begin(); it != resPath.end(); it++ )
+        GenericFont *pFont = new FT2Font( getIntf(), full_path, rData.m_size );
+        if( pFont->init() )
         {
-            string path = (*it) + sep + "fonts" + sep + rData.m_fontFile;
-            pFont = new FT2Font( getIntf(), path, rData.m_size );
-            if( pFont->init() )
-            {
-                // Font loaded successfully
-                m_pTheme->m_fonts[rData.m_id] = GenericFontPtr( pFont );
-                break;
-            }
-            else
-            {
-                delete pFont;
-            }
+            m_pTheme->m_fonts[rData.m_id] = GenericFontPtr( pFont );
+            return;
         }
+        delete pFont;
+    }
+
+    // Font not found; try in the resource path
+    OSFactory *pOSFactory = OSFactory::instance( getIntf() );
+    const list<string> &resPath = pOSFactory->getResourcePath();
+    const string &sep = pOSFactory->getDirSeparator();
+
+    list<string>::const_iterator it;
+    for( it = resPath.begin(); it != resPath.end(); ++it )
+    {
+        string path = (*it) + sep + "fonts" + sep + rData.m_fontFile;
+        GenericFont *pFont = new FT2Font( getIntf(), path, rData.m_size );
+        if( pFont->init() )
+        {
+            // Font loaded successfully
+            m_pTheme->m_fonts[rData.m_id] = GenericFontPtr( pFont );
+            return;
+        }
+        delete pFont;
     }
 }
 
@@ -350,6 +361,9 @@ void Builder::addWindow( const BuilderData::Window &rData )
                        rData.m_visible );
 
     m_pTheme->m_windows[rData.m_id] = TopWindowPtr( pWin );
+
+    if( rData.m_id == "fullscreenController" )
+        VoutManager::instance( getIntf())->registerFSC( pWin );
 }
 
 
@@ -995,26 +1009,41 @@ void Builder::addVideo( const BuilderData::Video &rData )
         return;
     }
 
+    BuilderData::Video Data = rData;
+    if( Data.m_autoResize )
+    {
+        // force autoresize to false if the control is not able to
+        // freely resize within its container
+        if( Data.m_xKeepRatio || Data.m_yKeepRatio ||
+            !( Data.m_leftTop == "lefttop" &&
+               Data.m_rightBottom == "rightbottom" ) )
+        {
+            msg_Err( getIntf(),
+                "video: resize policy and autoresize are not compatible" );
+            Data.m_autoResize = false;
+        }
+    }
+
     // Get the visibility variable
     // XXX check when it is null
     Interpreter *pInterpreter = Interpreter::instance( getIntf() );
-    VarBool *pVisible = pInterpreter->getVarBool( rData.m_visible, m_pTheme );
+    VarBool *pVisible = pInterpreter->getVarBool( Data.m_visible, m_pTheme );
 
     CtrlVideo *pVideo = new CtrlVideo( getIntf(), *pLayout,
-        rData.m_autoResize, UString( getIntf(), rData.m_help.c_str() ),
+        Data.m_autoResize, UString( getIntf(), Data.m_help.c_str() ),
         pVisible );
-    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pVideo );
+    m_pTheme->m_controls[Data.m_id] = CtrlGenericPtr( pVideo );
 
     // Compute the position of the control
     const GenericRect *pRect;
     GET_BOX( pRect, rData.m_panelId , pLayout);
-    const Position pos = makePosition( rData.m_leftTop, rData.m_rightBottom,
-                                       rData.m_xPos, rData.m_yPos,
-                                       rData.m_width, rData.m_height,
+    const Position pos = makePosition( Data.m_leftTop, Data.m_rightBottom,
+                                       Data.m_xPos, Data.m_yPos,
+                                       Data.m_width, Data.m_height,
                                        *pRect,
-                                       rData.m_xKeepRatio, rData.m_yKeepRatio );
+                                       Data.m_xKeepRatio, Data.m_yKeepRatio );
 
-    pLayout->addControl( pVideo, pos, rData.m_layer );
+    pLayout->addControl( pVideo, pos, Data.m_layer );
 }
 
 
@@ -1142,7 +1171,35 @@ GenericFont *Builder::getFont( const string &fontId )
 string Builder::getFilePath( const string &rFileName ) const
 {
     OSFactory *pFactory = OSFactory::instance( getIntf() );
-    return m_path + pFactory->getDirSeparator() + sFromLocale( rFileName );
+    const string &sep = pFactory->getDirSeparator();
+
+    string file = rFileName;
+    if( file.find( "\\" ) != string::npos )
+    {
+        // For skins to be valid on both Linux and Win32,
+        // slash should be used as path separator for both OSs.
+        msg_Warn( getIntf(), "use of '/' is preferred to '\\' for paths" );
+        int pos;
+        while( ( pos = file.find( "\\" ) ) != string::npos )
+           file[pos] = '/';
+    }
+
+#ifdef WIN32
+    int pos;
+    while( ( pos = file.find( "/" ) ) != string::npos )
+       file.replace( pos, 1, sep );
+#endif
+
+    string full_path = m_path + sep + sFromLocale( file );
+
+    // check that the file exists and can be read
+    if( ifstream( full_path.c_str() ).fail() )
+    {
+        msg_Err( getIntf(), "missing file: %s", file.c_str() );
+        full_path = "";
+    }
+
+    return full_path;
 }
 
 

@@ -2,7 +2,7 @@
  * noise.c : "add noise to image" video filter
  *****************************************************************************
  * Copyright (C) 2000-2006 the VideoLAN team
- * $Id: dcd6cdeea9fc0cc4fefda3454c1f635bd4a31910 $
+ * $Id: 9f2a6b5f30b0ad24e5af7b9503b97c03d08f00fc $
  *
  * Authors: Antoine Cellerier <dionoea -at- videolan -dot- org>
  *
@@ -31,17 +31,15 @@
 
 #include <vlc_common.h>
 #include <vlc_plugin.h>
-#include <vlc_vout.h>
+#include <vlc_rand.h>
 
-#include "vlc_filter.h"
+#include <vlc_filter.h>
 #include "filter_picture.h"
 
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
 static int  Create    ( vlc_object_t * );
-static void Destroy   ( vlc_object_t * );
-
 static picture_t *Filter( filter_t *, picture_t * );
 
 #define FILTER_PREFIX "noise-"
@@ -57,19 +55,8 @@ vlc_module_begin ()
     set_subcategory( SUBCAT_VIDEO_VFILTER )
 
     add_shortcut( "noise" )
-    set_callbacks( Create, Destroy )
+    set_callbacks( Create, NULL )
 vlc_module_end ()
-
-/*****************************************************************************
- * vout_sys_t: Distort video output method descriptor
- *****************************************************************************
- * This structure is part of the video output thread descriptor.
- * It describes the Distort specific properties of an output thread.
- *****************************************************************************/
-struct filter_sys_t
-{
-    mtime_t last_date;
-};
 
 /*****************************************************************************
  * Create: allocates Distort video thread output method
@@ -79,28 +66,9 @@ struct filter_sys_t
 static int Create( vlc_object_t *p_this )
 {
     filter_t *p_filter = (filter_t *)p_this;
-
-    /* Allocate structure */
-    p_filter->p_sys = malloc( sizeof( filter_sys_t ) );
-    if( p_filter->p_sys == NULL )
-        return VLC_ENOMEM;
-
     p_filter->pf_video_filter = Filter;
 
-    p_filter->p_sys->last_date = 0;
-
     return VLC_SUCCESS;
-}
-
-/*****************************************************************************
- * Destroy: destroy Distort video thread output method
- *****************************************************************************
- * Terminate an output method created by DistortCreateOutputMethod
- *****************************************************************************/
-static void Destroy( vlc_object_t *p_this )
-{
-    filter_t *p_filter = (filter_t *)p_this;
-    free( p_filter->p_sys );
 }
 
 /*****************************************************************************
@@ -113,9 +81,7 @@ static void Destroy( vlc_object_t *p_this )
 static picture_t *Filter( filter_t *p_filter, picture_t *p_pic )
 {
     picture_t *p_outpic;
-    filter_sys_t *p_sys = p_filter->p_sys;
     int i_index;
-    mtime_t new_date = mdate();
 
     if( !p_pic ) return NULL;
 
@@ -127,8 +93,6 @@ static picture_t *Filter( filter_t *p_filter, picture_t *p_pic )
         return NULL;
     }
 
-    p_sys->last_date = new_date;
-
     for( i_index = 0 ; i_index < p_pic->i_planes ; i_index++ )
     {
         uint8_t *p_in = p_pic->p[i_index].p_pixels;
@@ -136,32 +100,33 @@ static picture_t *Filter( filter_t *p_filter, picture_t *p_pic )
 
         const int i_num_lines = p_pic->p[i_index].i_visible_lines;
         const int i_num_cols = p_pic->p[i_index].i_visible_pitch;
-        const int i_pitch = p_pic->p[i_index].i_pitch;
+        const int i_in_pitch = p_pic->p[i_index].i_pitch;
+        const int i_out_pitch = p_outpic->p[i_index].i_pitch;
 
         int i_line, i_col;
 
         for( i_line = 0 ; i_line < i_num_lines ; i_line++ )
         {
-            if( rand()%8 )
+            if( vlc_mrand48()&7 )
             {
                 /* line isn't noisy */
-                vlc_memcpy( p_out+i_line*i_pitch, p_in+i_line*i_pitch,
+                vlc_memcpy( p_out+i_line*i_out_pitch, p_in+i_line*i_in_pitch,
                             i_num_cols );
             }
             else
             {
                 /* this line is noisy */
-                int noise_level = rand()%8+2;
+                unsigned noise_level = (vlc_mrand48()&7)+2;
                 for( i_col = 0; i_col < i_num_cols ; i_col++ )
                 {
-                    if( rand()%noise_level )
+                    if( ((unsigned)vlc_mrand48())%noise_level )
                     {
-                        p_out[i_line*i_pitch+i_col] =
-                            p_in[i_line*i_pitch+i_col];
+                        p_out[i_line*i_out_pitch+i_col] =
+                            p_in[i_line*i_in_pitch+i_col];
                     }
                     else
                     {
-                        p_out[i_line*i_pitch+i_col] = (rand()%3)*0x7f;
+                        p_out[i_line*i_out_pitch+i_col] = (vlc_mrand48()&3)*0x7f;
                     }
                 }
             }

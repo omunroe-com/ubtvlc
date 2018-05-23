@@ -2,7 +2,7 @@
  * open.cpp : Advanced open dialog
  *****************************************************************************
  * Copyright © 2006-2009 the VideoLAN team
- * $Id: ec4fe8e37ed2f87f13e5ebbb490c7cc961e3581a $
+ * $Id: b7cdfa65db22e233eabeabe5639841c26759fa5f $
  *
  * Authors: Jean-Baptiste Kempf <jb@videolan.org>
  *
@@ -78,6 +78,7 @@ OpenDialog::OpenDialog( QWidget *parent,
     /* Basic Creation of the Window */
     ui.setupUi( this );
     setWindowTitle( qtr( "Open Media" ) );
+    setWindowRole( "vlc-open-media" );
     setWindowModality( Qt::WindowModal );
 
     /* Tab definition and creation */
@@ -87,14 +88,14 @@ OpenDialog::OpenDialog( QWidget *parent,
     captureOpenPanel = new CaptureOpenPanel( this, p_intf );
 
     /* Insert the tabs */
-    ui.Tab->insertTab( OPEN_FILE_TAB, fileOpenPanel, QIcon( ":/folder-grey" ),
+    ui.Tab->insertTab( OPEN_FILE_TAB, fileOpenPanel, QIcon( ":/type/folder-grey" ),
                        qtr( "&File" ) );
-    ui.Tab->insertTab( OPEN_DISC_TAB, discOpenPanel, QIcon( ":/disc" ),
+    ui.Tab->insertTab( OPEN_DISC_TAB, discOpenPanel, QIcon( ":/type/disc" ),
                        qtr( "&Disc" ) );
-    ui.Tab->insertTab( OPEN_NETWORK_TAB, netOpenPanel, QIcon( ":/network" ),
+    ui.Tab->insertTab( OPEN_NETWORK_TAB, netOpenPanel, QIcon( ":/type/network" ),
                        qtr( "&Network" ) );
-    ui.Tab->insertTab( OPEN_CAPTURE_TAB, captureOpenPanel, QIcon( ":/capture-card" ),
-                       qtr( "Capture &Device" ) );
+    ui.Tab->insertTab( OPEN_CAPTURE_TAB, captureOpenPanel,
+                       QIcon( ":/type/capture-card" ), qtr( "Capture &Device" ) );
 
     /* Hide the Slave input widgets */
     ui.slaveLabel->hide();
@@ -122,8 +123,7 @@ OpenDialog::OpenDialog( QWidget *parent,
     openButtonMenu->addAction( qtr( "&Convert" ), this, SLOT( transcode() ) ,
                                     QKeySequence( "Alt+C" ) );
 
-    ui.menuButton->setMenu( openButtonMenu );
-    ui.menuButton->setIcon( QIcon( ":/down_arrow" ) );
+    playButton->setMenu( openButtonMenu );
 
     /* Add the three Buttons */
     ui.buttonsBox->addButton( selectButton, QDialogButtonBox::AcceptRole );
@@ -167,8 +167,11 @@ OpenDialog::OpenDialog( QWidget *parent,
     BUTTONACT( cancelButton, cancel() );
 
     /* Hide the advancedPanel */
-    if( !config_GetInt( p_intf, "qt-adv-options" ) )
+    if( !var_InheritBool( p_intf, "qt-adv-options" ) )
+    {
         ui.advancedFrame->hide();
+        ui.advancedFrame->setEnabled( false );
+    }
     else
         ui.advancedCheckBox->setChecked( true );
 
@@ -183,7 +186,9 @@ OpenDialog::OpenDialog( QWidget *parent,
 
 OpenDialog::~OpenDialog()
 {
-    getSettings()->setValue( "opendialog-size", size() );
+    getSettings()->setValue( "opendialog-size", size() -
+                 ( ui.advancedFrame->isEnabled() ?
+                   QSize(0, ui.advancedFrame->height()) : QSize(0, 0) ) );
 }
 
 /* Used by VLM dialog and inputSlave selection */
@@ -192,6 +197,11 @@ QString OpenDialog::getMRL( bool b_all )
     if( itemsMRL.size() == 0 ) return "";
     return b_all ? itemsMRL[0] + ui.advancedLineInput->text()
                  : itemsMRL[0];
+}
+
+QString OpenDialog::getOptions()
+{
+    return ui.advancedLineInput->text();
 }
 
 /* Finish the dialog and decide if you open another one after */
@@ -222,7 +232,6 @@ void OpenDialog::setMenuAction()
         }
         playButton->show();
         selectButton->hide();
-        playButton->setDefault( true );
     }
 }
 
@@ -247,6 +256,7 @@ void OpenDialog::toggleAdvancedPanel()
     if( ui.advancedFrame->isVisible() )
     {
         ui.advancedFrame->hide();
+        ui.advancedFrame->setEnabled( false );
         if( size().isValid() )
             resize( size().width(), size().height()
                     - ui.advancedFrame->height() );
@@ -254,6 +264,7 @@ void OpenDialog::toggleAdvancedPanel()
     else
     {
         ui.advancedFrame->show();
+        ui.advancedFrame->setEnabled( true );
         if( size().isValid() )
             resize( size().width(), size().height()
                     + ui.advancedFrame->height() );
@@ -339,7 +350,9 @@ void OpenDialog::finish( bool b_enqueue = false )
         bool b_start = !i && !b_enqueue;
 
         input_item_t *p_input;
-        p_input = input_item_New( p_intf, qtu( itemsMRL[i] ), NULL );
+        char* psz_uri = make_URI( qtu( itemsMRL[i] ) );
+        p_input = input_item_New( p_intf, psz_uri, NULL );
+        free( psz_uri );
 
         /* Insert options only for the first element.
            We don't know how to edit that anyway. */
@@ -405,11 +418,8 @@ void OpenDialog::updateMRL() {
     if( ui.slaveCheckbox->isChecked() ) {
         mrl += " :input-slave=" + ui.slaveText->text();
     }
-    int i_cache = config_GetInt( p_intf, qtu( storedMethod ) );
-    if( i_cache != ui.cacheSpinBox->value() ) {
-        mrl += QString( " :%1=%2" ).arg( storedMethod ).
-                                  arg( ui.cacheSpinBox->value() );
-    }
+    mrl += QString( " :%1=%2" ).arg( storedMethod ).
+                                arg( ui.cacheSpinBox->value() );
     if( ui.startTimeDoubleSpinBox->value() ) {
         mrl += " :start-time=" + QString::number( ui.startTimeDoubleSpinBox->value() );
     }
@@ -421,7 +431,7 @@ void OpenDialog::newCachingMethod( const QString& method )
 {
     if( method != storedMethod ) {
         storedMethod = method;
-        int i_value = config_GetInt( p_intf, qtu( storedMethod ) );
+        int i_value = var_InheritInteger( p_intf, qtu( storedMethod ) );
         ui.cacheSpinBox->setValue( i_value );
     }
 }

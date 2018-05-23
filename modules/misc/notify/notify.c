@@ -2,7 +2,7 @@
  * notify.c : libnotify notification plugin
  *****************************************************************************
  * Copyright (C) 2006-2009 the VideoLAN team
- * $Id: 6fa084af1bfda1805226444c465b636ab616ad3c $
+ * $Id: 9ac593e4d8db2713628f8fa65384ca46c3c5f449 $
  *
  * Authors: Christophe Mutricy <xtophe -at- videolan -dot- org>
  *
@@ -34,8 +34,13 @@
 #include <vlc_playlist.h>
 #include <vlc_url.h>
 
+#include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <libnotify/notify.h>
+
+#ifndef NOTIFY_CHECK_VERSION
+#define NOTIFY_CHECK_VERSION(x,y,z) 0
+#endif
 
 /*****************************************************************************
  * Module descriptor
@@ -55,7 +60,7 @@ vlc_module_begin ()
     set_description( N_("LibNotify Notification Plugin") )
 
     add_integer( "notify-timeout", 4000, NULL,
-                TIMEOUT_TEXT, TIMEOUT_LONGTEXT, true )
+                 TIMEOUT_TEXT, TIMEOUT_LONGTEXT, true )
 
     set_capability( "interface", 0 )
     set_callbacks( Open, Close )
@@ -116,9 +121,7 @@ static int Open( vlc_object_t *p_this )
     }
 
     /* */
-    playlist_t *p_playlist = pl_Hold( p_intf );
-    var_AddCallback( p_playlist, "item-current", ItemChange, p_intf );
-    pl_Release( p_intf );
+    var_AddCallback( pl_Get( p_intf ), "item-current", ItemChange, p_intf );
 
     return VLC_SUCCESS;
 }
@@ -131,9 +134,7 @@ static void Close( vlc_object_t *p_this )
     intf_thread_t   *p_intf = ( intf_thread_t* ) p_this;
     intf_sys_t      *p_sys  = p_intf->p_sys;
 
-    playlist_t *p_playlist = pl_Hold( p_this );
-    var_DelCallback( p_playlist, "item-current", ItemChange, p_this );
-    pl_Release( p_this );
+    var_DelCallback( pl_Get( p_this ), "item-current", ItemChange, p_this );
 
     if( p_sys->notification )
     {
@@ -154,16 +155,15 @@ static int ItemChange( vlc_object_t *p_this, const char *psz_var,
                        vlc_value_t oldval, vlc_value_t newval, void *param )
 {
     VLC_UNUSED(psz_var); VLC_UNUSED(oldval); VLC_UNUSED(newval);
-    char                psz_tmp[MAX_LENGTH];
-    char                psz_notify[MAX_LENGTH];
-    char                *psz_title      = NULL;
-    char                *psz_artist     = NULL;
-    char                *psz_album      = NULL;
-    char                *psz_arturl     = NULL;
-    input_thread_t      *p_input        =  playlist_CurrentInput(
-                                                    (playlist_t*) p_this );
-    intf_thread_t       *p_intf         = param;
-    intf_sys_t          *p_sys          = p_intf->p_sys;
+    char           psz_tmp[MAX_LENGTH];
+    char           psz_notify[MAX_LENGTH];
+    char           *psz_title;
+    char           *psz_artist;
+    char           *psz_album;
+    char           *psz_arturl;
+    input_thread_t *p_input = playlist_CurrentInput( (playlist_t*)p_this );
+    intf_thread_t  *p_intf  = param;
+    intf_sys_t     *p_sys   = p_intf->p_sys;
 
     if( !p_input )
         return VLC_SUCCESS;
@@ -177,39 +177,32 @@ static int ItemChange( vlc_object_t *p_this, const char *psz_var,
 
     /* Wait a tad so the meta has been fetched
      * FIXME that's awfully wrong */
-    msleep( 1000*4 );
+    msleep( 10000 );
 
     /* Playing something ... */
     input_item_t *p_input_item = input_GetItem( p_input );
-    psz_artist = input_item_GetArtist( p_input_item );
-    psz_album = input_item_GetAlbum( p_input_item );
     psz_title = input_item_GetTitleFbName( p_input_item );
 
+    /* We need at least a title */
     if( EMPTY_STR( psz_title ) )
-    {  /* Not enough metadata ... */
+    {
         free( psz_title );
-        free( psz_artist );
-        free( psz_album );
         vlc_object_release( p_input );
         return VLC_SUCCESS;
     }
-    if( EMPTY_STR( psz_artist ) )
-    {
-        free( psz_artist );
-        psz_artist = NULL;
-    }
-    if( EMPTY_STR( psz_album ) )
-    {
-        free( psz_album );
-        psz_album = NULL;
-    }
 
-    if( psz_artist && psz_album )
-        snprintf( psz_tmp, MAX_LENGTH, "<b>%s</b>\n%s\n[%s]",
-                  psz_title, psz_artist, psz_album );
-    else if( psz_artist )
-        snprintf( psz_tmp, MAX_LENGTH, "<b>%s</b>\n%s",
-                  psz_title, psz_artist );
+    psz_artist = input_item_GetArtist( p_input_item );
+    psz_album = input_item_GetAlbum( p_input_item );
+
+    if( !EMPTY_STR( psz_artist ) )
+    {
+        if( !EMPTY_STR( psz_album ) )
+            snprintf( psz_tmp, MAX_LENGTH, "<b>%s</b>\n%s\n[%s]",
+                      psz_title, psz_artist, psz_album );
+        else
+            snprintf( psz_tmp, MAX_LENGTH, "<b>%s</b>\n%s",
+                      psz_title, psz_artist );
+    }
     else
         snprintf( psz_tmp, MAX_LENGTH, "<b>%s</b>", psz_title );
 
@@ -221,21 +214,37 @@ static int ItemChange( vlc_object_t *p_this, const char *psz_var,
     psz_arturl = input_item_GetArtURL( p_input_item );
     vlc_object_release( p_input );
 
-    if( psz_arturl && !strncmp( psz_arturl, "file://", 7 ) &&
-                decode_URI( psz_arturl + 7 ) )
+    if( psz_arturl )
+    {
+        char *psz = make_path( psz_arturl );
+        free( psz_arturl );
+        psz_arturl = psz;
+    }
+
+    if( psz_arturl )
     { /* scale the art to show it in notify popup */
         GError *p_error = NULL;
-        pix = gdk_pixbuf_new_from_file_at_scale( &psz_arturl[7],
+        pix = gdk_pixbuf_new_from_file_at_scale( psz_arturl,
                                                  72, 72, TRUE, &p_error );
     }
     else /* else we show state-of-the art logo */
     {
-        GError *p_error = NULL;
-        char *psz_pixbuf;
-        if( asprintf( &psz_pixbuf, "%s/vlc48x48.png", config_GetDataDir() ) >= 0 )
+        /* First try to get an icon from the current theme. */
+        GtkIconTheme* p_theme = gtk_icon_theme_get_default();
+        pix = gtk_icon_theme_load_icon( p_theme, "vlc", 72, 0, NULL);
+
+        if( !pix )
         {
-            pix = gdk_pixbuf_new_from_file( psz_pixbuf, &p_error );
-            free( psz_pixbuf );
+        /* Load icon from share/ */
+            GError *p_error = NULL;
+            char *psz_pixbuf;
+            char *psz_data = config_GetDataDir( p_this );
+            if( asprintf( &psz_pixbuf, "%s/icons/48x48/vlc.png", psz_data ) >= 0 )
+            {
+                pix = gdk_pixbuf_new_from_file( psz_pixbuf, &p_error );
+                free( psz_pixbuf );
+            }
+            free( psz_data );
         }
     }
 
@@ -271,26 +280,24 @@ static int ItemChange( vlc_object_t *p_this, const char *psz_var,
     return VLC_SUCCESS;
 }
 
+/* libnotify callback, called when the "Next" button is pressed */
 static void Next( NotifyNotification *notification, gchar *psz, gpointer p )
-{ /* libnotify callback, called when the "Next" button is pressed */
+{
     vlc_object_t *p_object = (vlc_object_t*)p;
 
     VLC_UNUSED(psz);
     notify_notification_close( notification, NULL );
-    playlist_t *p_playlist = pl_Hold( p_object );
-    playlist_Next( p_playlist );
-    pl_Release( p_object );
+    playlist_Next( pl_Get( p_object ) );
 }
 
+/* libnotify callback, called when the "Previous" button is pressed */
 static void Prev( NotifyNotification *notification, gchar *psz, gpointer p )
-{ /* libnotify callback, called when the "Previous" button is pressed */
+{
     vlc_object_t *p_object = (vlc_object_t*)p;
 
     VLC_UNUSED(psz);
     notify_notification_close( notification, NULL );
-    playlist_t *p_playlist = pl_Hold( p_object );
-    playlist_Prev( p_playlist );
-    pl_Release( p_object );
+    playlist_Prev( pl_Get( p_object ) );
 }
 
 static int Notify( vlc_object_t *p_this, const char *psz_temp, GdkPixbuf *pix,
@@ -309,9 +316,14 @@ static int Notify( vlc_object_t *p_this, const char *psz_temp, GdkPixbuf *pix,
     }
 
     notification = notify_notification_new( _("Now Playing"),
-                                            psz_temp, NULL, NULL );
+                                            psz_temp, NULL
+#if NOTIFY_CHECK_VERSION (0, 7, 0)
+					    );
+#else
+					    , NULL );
+#endif
     notify_notification_set_timeout( notification,
-                                     config_GetInt(p_this, "notify-timeout") );
+                                var_InheritInteger(p_this, "notify-timeout") );
     notify_notification_set_urgency( notification, NOTIFY_URGENCY_LOW );
     if( pix )
     {
@@ -323,9 +335,9 @@ static int Notify( vlc_object_t *p_this, const char *psz_temp, GdkPixbuf *pix,
     if( p_sys->b_has_actions )
     {
       notify_notification_add_action( notification, "previous", _("Previous"), Prev,
-				                      (gpointer*)p_intf, NULL );
+                                      (gpointer*)p_intf, NULL );
       notify_notification_add_action( notification, "next", _("Next"), Next,
-				                      (gpointer*)p_intf, NULL );
+                                      (gpointer*)p_intf, NULL );
     }
 
     notify_notification_show( notification, NULL);

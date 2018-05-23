@@ -2,7 +2,7 @@
  * prefs_widgets.m: Preferences controls
  *****************************************************************************
  * Copyright (C) 2002-2007 the VideoLAN team
- * $Id: e3b83d4283670eb7d31c4c7c40eb4933ae2baefc $
+ * $Id: 9859e8a331066f965f93b89aec6767e443da29b3 $
  *
  * Authors: Derk-Jan Hartman <hartman at videolan.org>
  *          Jérôme Decoodt <djc at videolan.org>
@@ -33,7 +33,7 @@
 #endif
 
 #include <vlc_common.h>
-#include "vlc_keys.h"
+#include <vlc_keys.h>
 
 #include "intf.h"
 #include "prefs_widgets.h"
@@ -846,11 +846,14 @@ o_textfield = [[[NSSecureTextField alloc] initWithFrame: s_rc] retain];       \
                         withView: o_parent_view];
         }
         break;
+    /* don't display keys in the advanced settings, since the current controls 
+     are broken by design. The user is required to change hotkeys in the sprefs
+     and can only change really advanced stuff here..
     case CONFIG_ITEM_KEY:
         p_control = [[KeyConfigControl alloc]
                         initWithItem: _p_item
                         withView: o_parent_view];
-        break;
+        break; */
     case CONFIG_ITEM_MODULE_LIST:
     case CONFIG_ITEM_MODULE_LIST_CAT:
         p_control = [[ModuleListConfigControl alloc]
@@ -1074,9 +1077,13 @@ o_textfield = [[[NSSecureTextField alloc] initWithFrame: s_rc] retain];       \
             -2, 0, o_textfieldTooltip )
         [o_combo setAutoresizingMask:NSViewWidthSizable ];
         for( i_index = 0; i_index < p_item->i_list; i_index++ )
-            if( p_item->value.psz &&
+        {
+            if( !p_item->value.psz && !p_item->ppsz_list[i_index] )
+                [o_combo selectItemAtIndex: i_index];
+            else if( p_item->value.psz && p_item->ppsz_list[i_index] &&
                 !strcmp( p_item->value.psz, p_item->ppsz_list[i_index] ) )
                 [o_combo selectItemAtIndex: i_index];
+       }
         [self addSubview: o_combo];
     }
     return self;
@@ -1104,11 +1111,14 @@ o_textfield = [[[NSSecureTextField alloc] initWithFrame: s_rc] retain];       \
 
 - (char *)stringValue
 {
-    if( [o_combo indexOfSelectedItem] >= 0 )
-        return strdup( p_item->ppsz_list[[o_combo indexOfSelectedItem]] );
-    else
-        return strdup( [[VLCMain sharedInstance]
-                            delocalizeString: [o_combo stringValue]] );
+    if( [o_combo indexOfSelectedItem] >= 0 ) {
+        if( p_item->ppsz_list[[o_combo indexOfSelectedItem]] != NULL )
+            return strdup( p_item->ppsz_list[[o_combo indexOfSelectedItem]] );
+    } else {
+        if( [[VLCMain sharedInstance] delocalizeString: [o_combo stringValue]] != NULL )
+            return strdup( [[VLCMain sharedInstance] delocalizeString: [o_combo stringValue]] );
+    }
+    return NULL;
 }
 
 - (void)resetValues
@@ -1118,9 +1128,13 @@ o_textfield = [[[NSSecureTextField alloc] initWithFrame: s_rc] retain];       \
     char *psz_value = config_GetPsz( VLCIntf, p_item->psz_name );
 
     for( i_index = 0; i_index < p_item->i_list; i_index++ )
-        if( psz_value &&
+    {
+        if( !psz_value && !p_item->ppsz_list[i_index] )
+            [o_combo selectItemAtIndex: i_index];
+        else if( psz_value && p_item->ppsz_list[i_index] &&
             !strcmp( psz_value, p_item->ppsz_list[i_index] ) )
             [o_combo selectItemAtIndex: i_index];
+    }
 
     free( psz_value );
     [super resetValues];
@@ -2071,11 +2085,14 @@ o_textfield = [[[NSSecureTextField alloc] initWithFrame: s_rc] retain];       \
         {
             unsigned int i;
             o_keys_menu = [[NSMenu alloc] initWithTitle: @"Keys Menu"];
+#warning This does not work anymore. FIXME.
+#if 0
             for ( i = 0; i < sizeof(vlc_keys) / sizeof(key_descriptor_t); i++)
                 if( vlc_keys[i].psz_key_string )
                     POPULATE_A_KEY( o_keys_menu,
                         [NSString stringWithUTF8String:vlc_keys[i].psz_key_string]
                         , vlc_keys[i].i_key_code)
+#endif
         }
         [o_popup setMenu:[o_keys_menu copyWithZone:nil]];
         [o_popup selectItem:[[o_popup menu] itemWithTag:p_item->value.i]];
@@ -2176,7 +2193,7 @@ o_textfield = [[[NSSecureTextField alloc] initWithFrame: s_rc] retain];       \
     }
     module_list_free( p_list );
 
-    mainFrame.size.height = 30 + 18 * [o_modulearray count];
+    mainFrame.size.height = 30 + 20 * [o_modulearray count];
     mainFrame.size.width = mainFrame.size.width - LEFTMARGIN - RIGHTMARGIN;
     mainFrame.origin.x = LEFTMARGIN;
     mainFrame.origin.y = 0;
@@ -2249,7 +2266,7 @@ o_textfield = [[[NSSecureTextField alloc] initWithFrame: s_rc] retain];       \
         initWithIdentifier:@"Module"];
     [o_tableColumn setHeaderCell: o_headerCell];
     [o_tableColumn setDataCell: o_dataCell];
-    [o_tableColumn setWidth:388 - 17];
+    [o_tableColumn setWidth:s_rc.size.width - 34];
     [o_tableview addTableColumn: o_tableColumn];
     [o_tableview registerForDraggedTypes:[NSArray arrayWithObjects:
             @"VLC media player module", nil]];
@@ -2262,6 +2279,7 @@ o_textfield = [[[NSSecureTextField alloc] initWithFrame: s_rc] retain];       \
     [o_scrollview setDocumentView: o_tableview];
 }
     [o_scrollview setAutoresizingMask:NSViewWidthSizable ];
+    [o_scrollview setAutohidesScrollers:YES];
     [self addSubview: o_scrollview];
 
 

@@ -66,9 +66,8 @@ diff -urN live.orig/liveMedia/Locale.cpp live/liveMedia/Locale.cpp
    }
  #endif
  }
-diff -urN live.orig/liveMedia/RTSPClient.cpp live/liveMedia/RTSPClient.cpp
---- live.orig/liveMedia/RTSPClient.cpp	2009-03-23 01:26:16 +0300
-+++ live/liveMedia/RTSPClient.cpp	2009-03-26 19:29:38 +0300
+--- live.orig/liveMedia/RTSPClient.cpp	2010-03-16 03:09:46.000000000 +0100
++++ live/liveMedia/RTSPClient.cpp	2010-08-24 15:04:31.000000000 +0200
 @@ -1019,7 +1019,7 @@
      // This is the default value; we don't need a "Scale:" header:
      buf[0] = '\0';
@@ -92,24 +91,25 @@ diff -urN live.orig/liveMedia/RTSPClient.cpp live/liveMedia/RTSPClient.cpp
      sprintf(buf, "Range: npt=%.3f-%.3f\r\n", start, end);
    }
  
-@@ -2342,7 +2342,7 @@
-   if (_strncasecmp(line, "Scale: ", 7) != 0) return False;
-   line += 7;
- 
--  Locale l("C", LC_NUMERIC);
-+  Locale l("C", LC_NUMERIC_MASK);
-   return sscanf(line, "%f", &scale) == 1;
+--- live/liveMedia/RTSPClient.cpp	2010-08-24 17:05:46.000000000 +0200
++++ live.new/liveMedia/RTSPClient.cpp	2010-08-24 17:04:50.000000000 +0200
+@@ -935,7 +935,7 @@
  }
  
-diff -urN live.orig/liveMedia/RTSPCommon.cpp live/liveMedia/RTSPCommon.cpp
---- live.orig/liveMedia/RTSPCommon.cpp	2009-03-23 01:26:16 +0300
-+++ live/liveMedia/RTSPCommon.cpp	2009-03-26 19:23:25 +0300
-@@ -146,7 +146,7 @@
-   char const* fields = buf + 7;
-   while (*fields == ' ') ++fields;
-   double start, end;
+ Boolean RTSPClient::parseScaleParam(char const* paramStr, float& scale) {
 -  Locale l("C", LC_NUMERIC);
 +  Locale l("C", LC_NUMERIC_MASK);
-   if (sscanf(fields, "npt = %lf - %lf", &start, &end) == 2) {
+   return sscanf(paramStr, "%f", &scale) == 1;
+ }
+ 
+--- live/liveMedia/RTSPCommon.cpp.orig	2011-01-06 01:26:50.000000000 +0100
++++ live/liveMedia/RTSPCommon.cpp	2011-01-09 16:32:24.142645155 +0100
+@@ -137,7 +137,7 @@
+ Boolean parseRangeParam(char const* paramStr, double& rangeStart, double& rangeEnd) {
+   double start, end;
+   int numCharsMatched = 0;
+-  Locale l("C", LC_NUMERIC);
++  Locale l("C", LC_NUMERIC_MASK);
+   if (sscanf(paramStr, "npt = %lf - %lf", &start, &end) == 2) {
      rangeStart = start;
      rangeEnd = end;

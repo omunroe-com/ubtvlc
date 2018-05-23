@@ -2,7 +2,7 @@
  * subsdec.c : text subtitles decoder
  *****************************************************************************
  * Copyright (C) 2000-2006 the VideoLAN team
- * $Id: 8fd5aa22d45cb8c764ae3c059769310dcf7c5bbe $
+ * $Id: d67145d5955e802130812b646cdb5aaa17f24090 $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Samuel Hocevar <sam@zoy.org>
@@ -94,7 +94,11 @@ static const char *const ppsz_encodings[] = {
 };
 
 static const char *const ppsz_encoding_names[] = {
-    N_("Auto"),
+    /* xgettext:
+      The character encoding name in parenthesis corresponds to that used for
+      the GetACP translation. "Windows-1252" applies to Western European
+      languages using the Latin alphabet. */
+    N_("Default (Windows-1252)"),
     N_("Universal (UTF-8)"),
     N_("Universal (UTF-16)"),
     N_("Universal (big endian UTF-16)"),
@@ -228,13 +232,12 @@ static int OpenDecoder( vlc_object_t *p_this )
 {
     decoder_t     *p_dec = (decoder_t*)p_this;
     decoder_sys_t *p_sys;
-    vlc_value_t    val;
 
     switch( p_dec->fmt_in.i_codec )
     {
-        case VLC_FOURCC('s','u','b','t'):
-        case VLC_FOURCC('s','s','a',' '):
-        case VLC_FOURCC('t','1','4','0'):
+        case VLC_CODEC_SUBT:
+        case VLC_CODEC_SSA:
+        case VLC_CODEC_ITU_T140:
             break;
         default:
             return VLC_EGENERIC;
@@ -262,7 +265,7 @@ static int OpenDecoder( vlc_object_t *p_this )
     char *psz_charset = NULL;
 
     /* First try demux-specified encoding */
-    if( p_dec->fmt_in.i_codec == VLC_FOURCC('t','1','4','0') )
+    if( p_dec->fmt_in.i_codec == VLC_CODEC_ITU_T140 )
         psz_charset = strdup( "UTF-8" ); /* IUT T.140 is always using UTF-8 */
     else
     if( p_dec->fmt_in.subs.psz_encoding && *p_dec->fmt_in.subs.psz_encoding )
@@ -284,7 +287,19 @@ static int OpenDecoder( vlc_object_t *p_this )
     /* Third, try "local" encoding with optional UTF-8 autodetection */
     if (psz_charset == NULL)
     {
-        psz_charset = strdup (GetFallbackEncoding ());
+        /* xgettext:
+           The Windows ANSI code page most commonly used for this language.
+           VLC uses this as a guess of the subtitle files character set
+           (if UTF-8 and UTF-16 autodetection fails).
+           Western European languages normally use "CP1252", which is a
+           Microsoft-variant of ISO 8859-1. That suits the Latin alphabet.
+           Other scripts use other code pages.
+
+           This MUST be a valid iconv character set. If unsure, please refer
+           the VideoLAN translators mailing list. */
+        const char *acp = vlc_pgettext("GetACP", "CP1252");
+
+        psz_charset = strdup (acp);
         msg_Dbg (p_dec, "trying default character encoding: %s",
                  psz_charset ? psz_charset : "not specified");
 
@@ -312,11 +327,9 @@ static int OpenDecoder( vlc_object_t *p_this )
     }
     free (psz_charset);
 
-    var_Create( p_dec, "subsdec-align", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
-    var_Get( p_dec, "subsdec-align", &val );
-    p_sys->i_align = val.i_int;
+    p_sys->i_align = var_CreateGetInteger( p_dec, "subsdec-align" );
 
-    if( p_dec->fmt_in.i_codec == VLC_FOURCC('s','s','a',' ')
+    if( p_dec->fmt_in.i_codec == VLC_CODEC_SSA
      && var_CreateGetBool( p_dec, "subsdec-formatted" ) )
     {
         if( p_dec->fmt_in.i_extra > 0 )
@@ -410,7 +423,7 @@ static subpicture_t *ParseText( decoder_t *p_dec, block_t *p_block )
     video_format_t fmt;
 
     /* We cannot display a subpicture with no date */
-    if( p_block->i_pts == 0 )
+    if( p_block->i_pts <= VLC_TS_INVALID )
     {
         msg_Warn( p_dec, "subtitle without a date" );
         return NULL;
@@ -458,7 +471,7 @@ static subpicture_t *ParseText( decoder_t *p_dec, block_t *p_block )
         {
             size_t inbytes_left = strlen( psz_subtitle );
             size_t outbytes_left = 6 * inbytes_left;
-            char *psz_new_subtitle = malloc( outbytes_left + 1 );
+            char *psz_new_subtitle = xmalloc( outbytes_left + 1 );
             char *psz_convert_buffer_out = psz_new_subtitle;
             const char *psz_convert_buffer_in = psz_subtitle;
 
@@ -480,6 +493,8 @@ static subpicture_t *ParseText( decoder_t *p_dec, block_t *p_block )
 
             psz_subtitle = realloc( psz_new_subtitle,
                                     psz_convert_buffer_out - psz_new_subtitle );
+            if( !psz_subtitle )
+                psz_subtitle = psz_new_subtitle;
         }
     }
 
@@ -494,8 +509,7 @@ static subpicture_t *ParseText( decoder_t *p_dec, block_t *p_block )
 
     /* Create a new subpicture region */
     memset( &fmt, 0, sizeof(video_format_t) );
-    fmt.i_chroma = VLC_FOURCC('T','E','X','T');
-    fmt.i_aspect = 0;
+    fmt.i_chroma = VLC_CODEC_TEXT;
     fmt.i_width = fmt.i_height = 0;
     fmt.i_x_offset = fmt.i_y_offset = 0;
     p_spu->p_region = subpicture_region_New( &fmt );
@@ -508,7 +522,7 @@ static subpicture_t *ParseText( decoder_t *p_dec, block_t *p_block )
     }
 
     /* Decode and format the subpicture unit */
-    if( p_dec->fmt_in.i_codec != VLC_FOURCC('s','s','a',' ') )
+    if( p_dec->fmt_in.i_codec != VLC_CODEC_SSA )
     {
         /* Normal text subs, easy markup */
         p_spu->p_region->i_align = SUBPICTURE_ALIGN_BOTTOM | p_sys->i_align;
@@ -618,10 +632,14 @@ static char *StripTags( char *psz_subtitle )
             *psz_text++ = *psz_subtitle;
         }
 
+        /* Security fix: Account for the case where input ends early */
+        if( *psz_subtitle == '\0' ) break;
+
         psz_subtitle++;
     }
     *psz_text = '\0';
-    psz_text_start = realloc( psz_text_start, strlen( psz_text_start ) + 1 );
+    char *psz = realloc( psz_text_start, strlen( psz_text_start ) + 1 );
+    if( psz ) psz_text_start = psz;
 
     return psz_text_start;
 }
@@ -636,7 +654,7 @@ static char *StripTags( char *psz_subtitle )
  * to be carrying style information. Over time people have used them that way.
  * In the absence of specifications from which to work, the tags supported
  * have been restricted to the simple set permitted by the USF DTD, ie. :
- *  Basic: <br>, <i>, <b>, <u>
+ *  Basic: <br>, <i>, <b>, <u>, <s>
  *  Extended: <font>
  *    Attributes: face
  *                family
@@ -686,6 +704,7 @@ static char *CreateHtmlSubtitle( int *pi_align, char *psz_subtitle )
     psz_tag[ 0 ] = '\0';
 
     /* */
+    //Oo + 100 ???
     size_t i_buf_size = strlen( psz_subtitle ) + 100;
     char   *psz_html_start = malloc( i_buf_size );
     char   *psz_html = psz_html_start;
@@ -728,6 +747,11 @@ static char *CreateHtmlSubtitle( int *pi_align, char *psz_subtitle )
             {
                 HtmlCopy( &psz_html, &psz_subtitle, "<u>" );
                 strcat( psz_tag, "u" );
+            }
+            else if( !strncasecmp( psz_subtitle, "<s>", 3 ) )
+            {
+                HtmlCopy( &psz_html, &psz_subtitle, "<s>" );
+                strcat( psz_tag, "s" );
             }
             else if( !strncasecmp( psz_subtitle, "<font ", 6 ))
             {
@@ -816,6 +840,10 @@ static char *CreateHtmlSubtitle( int *pi_align, char *psz_subtitle )
                         break;
                     case 'u':
                         b_match = !strncasecmp( psz_subtitle, "</u>", 4 );
+                        i_len   = 4;
+                        break;
+                    case 's':
+                        b_match = !strncasecmp( psz_subtitle, "</s>", 4 );
                         i_len   = 4;
                         break;
                     case 'f':
@@ -945,7 +973,7 @@ static char *CreateHtmlSubtitle( int *pi_align, char *psz_subtitle )
             /* Hide {\stupidity} */
             psz_subtitle = strchr( psz_subtitle, '}' ) + 1;
         }
-        else if( psz_subtitle[0] == '{' && psz_subtitle[1] == 'Y'
+        else if( psz_subtitle[0] == '{' && ( psz_subtitle[1] == 'Y' || psz_subtitle[1] == 'y' )
                 && psz_subtitle[2] == ':' && strchr( psz_subtitle, '}' ) )
         {
             /* Hide {Y:stupidity} */
@@ -1029,6 +1057,9 @@ static char *CreateHtmlSubtitle( int *pi_align, char *psz_subtitle )
                     break;
                 case 'u':
                     HtmlPut( &psz_html, "</u>" );
+                    break;
+                case 's':
+                    HtmlPut( &psz_html, "</s>" );
                     break;
                 case 'f':
                     HtmlPut( &psz_html, "/font>" );

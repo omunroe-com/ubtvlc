@@ -23,6 +23,8 @@
  * This file implements gcrypt support functions in vlc
  */
 
+#include <errno.h>
+
 #ifdef LIBVLC_USE_PTHREAD
 /**
  * If possible, use gcrypt-provided thread implementation. This is so that
@@ -38,18 +40,13 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
 static int gcry_vlc_mutex_init( void **p_sys )
 {
-    int i_val;
     vlc_mutex_t *p_lock = (vlc_mutex_t *)malloc( sizeof( vlc_mutex_t ) );
-
     if( p_lock == NULL)
         return ENOMEM;
 
-    i_val = vlc_mutex_init( p_lock );
-    if( i_val )
-        free( p_lock );
-    else
-        *p_sys = p_lock;
-    return i_val;
+    vlc_mutex_init( p_lock );
+    *p_sys = p_lock;
+    return VLC_SUCCESS;
 }
 
 static int gcry_vlc_mutex_destroy( void **p_sys )
@@ -79,7 +76,8 @@ static const struct gcry_thread_cbs gcry_threads_vlc =
     gcry_vlc_mutex_init,
     gcry_vlc_mutex_destroy,
     gcry_vlc_mutex_lock,
-    gcry_vlc_mutex_unlock
+    gcry_vlc_mutex_unlock,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 #endif
 

@@ -2,7 +2,7 @@
  * misc.m: code not specific to vlc
  *****************************************************************************
  * Copyright (C) 2003-2009 the VideoLAN team
- * $Id: a7ca58f3b818bd58d2285920b6e4b72f8a486998 $
+ * $Id: 12fedeeb11f53248fcbc5b24ae42ea24ca58e562 $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Felix Paul Kühne <fkuehne at videolan dot org>
@@ -91,7 +91,7 @@
 
 @implementation NSAnimation (VLCAdditions)
 /* fake class attributes  */
-static NSMapTable *VLCAdditions_userInfo = nil;
+static NSMapTable *VLCAdditions_userInfo = NULL;
 
 + (void)load
 {
@@ -124,7 +124,7 @@ static NSMapTable *VLCAdditions_userInfo = nil;
 
 @implementation NSScreen (VLCAdditions)
 
-static NSMutableArray *blackoutWindows = nil;
+static NSMutableArray *blackoutWindows = NULL;
 
 + (void)load
 {
@@ -227,7 +227,12 @@ static NSMutableArray *blackoutWindows = nil;
 {
     self = [super initWithContentRect:contentRect styleMask:styleMask backing:backingType defer:flag];
     if( self )
+    {
         b_isset_canBecomeKeyWindow = NO;
+        /* we don't want this window to be restored on relaunch */
+        if ([self respondsToSelector:@selector(setRestorable:)])
+            [self setRestorable:NO];
+    }
     return self;
 }
 - (void)setCanBecomeKeyWindow: (BOOL)canBecomeKey
@@ -255,7 +260,7 @@ static NSMutableArray *blackoutWindows = nil;
     }
 
     invoc = [NSInvocation invocationWithMethodSignature:[super methodSignatureForSelector:@selector(close)]];
-    [invoc setTarget: (id)super];
+    [invoc setTarget: self];
 
     if (![self isVisible] || [self alphaValue] == 0.0)
     {
@@ -269,7 +274,7 @@ static NSMutableArray *blackoutWindows = nil;
 - (void)orderOut: (id)sender animate: (BOOL)animate
 {
     NSInvocation *invoc = [NSInvocation invocationWithMethodSignature:[super methodSignatureForSelector:@selector(orderOut:)]];
-    [invoc setTarget: (id)super];
+    [invoc setTarget: self];
     [invoc setArgument: sender atIndex: 0];
     [self orderOut: sender animate: animate callback: invoc];
 }
@@ -427,6 +432,11 @@ static NSMutableArray *blackoutWindows = nil;
         [self setContentBorderThickness:28.0 forEdge:NSMinYEdge];
     }
     */
+
+    /* we don't want this window to be restored on relaunch */
+    if ([self respondsToSelector:@selector(setRestorable:)])
+        [self setRestorable:NO];
+
     return self;
 }
 
@@ -703,7 +713,7 @@ void _drawFrameInRect(NSRect frameRect)
 
 @end
 
-/*****************************************************************************
+/*************************************************************************** **
  * ITSliderCell
  *****************************************************************************/
 @implementation ITSliderCell
@@ -712,22 +722,12 @@ void _drawFrameInRect(NSRect frameRect)
 {
     self = [super init];
     _knobOff = [NSImage imageNamed:@"volumeslider_normal"];
-    [self controlTintChanged];
-    [[NSNotificationCenter defaultCenter] addObserver: self
-                                             selector: @selector( controlTintChanged )
-                                                 name: NSControlTintDidChangeNotification
-                                               object: nil];
+	_knobOn = [NSImage imageNamed:@"volumeslider_graphite"];
     b_mouse_down = FALSE;
     return self;
 }
 
-- (void)controlTintChanged
-{
-    if( [NSColor currentControlTint] == NSGraphiteControlTint )
-        _knobOn = [NSImage imageNamed:@"volumeslider_graphite"];
-    else
-        _knobOn = [NSImage imageNamed:@"volumeslider_blue"];
-}
+
 
 - (void)dealloc
 {

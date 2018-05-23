@@ -3,7 +3,6 @@ NULL =
 doc_DATA = \
 	bugreport-howto.txt \
 	fortunes.txt \
-	intf-cdda.txt \
 	intf-vcd.txt \
 	$(NULL)
 
@@ -20,6 +19,7 @@ CHANGELOGS = \
 	ChangeLog-2008 \
 	ChangeLog-2009 \
 	ChangeLog-2010 \
+	ChangeLog-2011 \
 	$(NULL)
 
 man1_MANS = \
@@ -32,12 +32,9 @@ EXTRA_DIST = \
         $(man1_MANS) \
         bugreport-howto.txt \
 	fortunes.txt \
-	intf-cdda.txt \
 	intf-vcd.txt \
 	release-howto.txt \
-	arm-crosscompile-howto.sgml \
 	Doxyfile.in \
-	Configure.help \
 	lirc/example.lircrc \
 	skins/skins-howto.txt \
 	skins/events-howto.txt \
@@ -48,7 +45,6 @@ EXTRA_DIST = \
 	skins/curve_maker/Bezier.vbw \
 	strings.txt \
 	translations.txt \
-	win32/Cross-Compile-Howto.txt \
 	demo.sh \
 	$(NULL)
 
@@ -71,7 +67,7 @@ $(CHANGELOGS): Makefile.am
 	fi
 
 # This one needs to be rebuilt all the time :)
-.PHONY: ChangeLog-2009 changelogs doc
+.PHONY: ChangeLog-2011 changelogs doc
 
 changelogs: $(CHANGELOGS)
 

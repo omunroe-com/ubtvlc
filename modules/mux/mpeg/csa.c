@@ -2,7 +2,7 @@
  * libcsa.c: CSA scrambler/descrambler
  *****************************************************************************
  * Copyright (C) 2004-2005 Laurent Aimar
- * $Id: 99ae905b57c1e9efb7744c45a78fec4c0f95582c $
+ * Copyright (C) the deCSA authors
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Jean-Paul Saman <jpsaman #_at_# m2x.nl>
@@ -21,11 +21,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
-
-/*
- * XXX: A great part is just a copy/past of deCSA but I can't find the
- * author and the license. If there is a problem with it please e-mail me.
- */
 
 #ifdef HAVE_CONFIG_H
 # include "config.h"
@@ -99,11 +94,7 @@ int csa_SetCW( vlc_object_t *p_caller, csa_t *c, char *psz_ck, bool set_odd )
     }
     else
     {
-#ifndef UNDER_CE
         uint64_t i_ck = strtoull( psz_ck, NULL, 16 );
-#else
-        uint64_t i_ck = strtoll( psz_ck, NULL, 16 );
-#endif
         uint8_t  ck[8];
         int      i;
 

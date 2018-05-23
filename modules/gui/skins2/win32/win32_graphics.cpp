@@ -2,7 +2,7 @@
  * win32_graphics.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: 00a4f9b57785d80fed3ce252f3918a178478fc97 $
+ * $Id: 9ded675734b879af45cdd1a0b4cf23cf20091886 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -59,11 +59,21 @@ Win32Graphics::~Win32Graphics()
 }
 
 
-void Win32Graphics::clear()
+void Win32Graphics::clear( int xDest, int yDest, int width, int height )
 {
-    // Clear the transparency mask
-    DeleteObject( m_mask );
-    m_mask = CreateRectRgn( 0, 0, 0, 0 );
+    if( width <= 0 || height <= 0 )
+    {
+        // Clear the transparency mask
+        DeleteObject( m_mask );
+        m_mask = CreateRectRgn( 0, 0, 0, 0 );
+    }
+    else
+    {
+        HRGN mask = CreateRectRgn( xDest, yDest,
+                                   xDest + width, yDest + height );
+        CombineRgn( m_mask, m_mask, mask, RGN_DIFF );
+        DeleteObject( mask );
+    }
 }
 
 
@@ -319,7 +329,7 @@ void Win32Graphics::copyToWindow( OSWindow &rWindow, int xSrc, int ySrc,
 {
     // Initialize painting
     HWND hWnd = ((Win32Window&)rWindow).getHandle();
-    HDC wndDC = GetWindowDC( hWnd );
+    HDC wndDC = GetDC( hWnd );
     HDC srcDC = m_hDC;
 
     // Draw image on window

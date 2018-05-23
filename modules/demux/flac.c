@@ -2,7 +2,7 @@
  * flac.c : FLAC demux module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2007 the VideoLAN team
- * $Id: 17b45ff6cc072d6c7eeb38791efb3865047be88b $
+ * $Id: 01e5be1fc1c9e429e091db18888fd033a7baea1c $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -118,9 +118,13 @@ static int Open( vlc_object_t * p_this )
                  "continuing anyway" );
     }
 
+    p_sys = malloc( sizeof( demux_sys_t ) );
+    if( unlikely(p_sys == NULL) )
+        return VLC_ENOMEM;
+
     p_demux->pf_demux   = Demux;
     p_demux->pf_control = Control;
-    p_demux->p_sys      = p_sys = malloc( sizeof( demux_sys_t ) );
+    p_demux->p_sys      = p_sys;
     p_sys->b_start = true;
     p_sys->p_meta = NULL;
     memset( &p_sys->replay_gain, 0, sizeof(p_sys->replay_gain) );
@@ -144,7 +148,7 @@ static int Open( vlc_object_t * p_this )
     /* Load the FLAC packetizer */
     /* Store STREAMINFO for the decoder and packetizer */
     p_streaminfo[4] |= 0x80; /* Fake this as the last metadata block */
-    es_format_Init( &fmt, AUDIO_ES, VLC_FOURCC( 'f', 'l', 'a', 'c' ) );
+    es_format_Init( &fmt, AUDIO_ES, VLC_CODEC_FLAC );
     fmt.i_extra = i_streaminfo;
     fmt.p_extra = p_streaminfo;
 
@@ -204,7 +208,7 @@ static int Demux( demux_t *p_demux )
     if( !( p_block_in = stream_Block( p_demux->s, FLAC_PACKET_SIZE ) ) )
         return 0;
 
-    p_block_in->i_pts = p_block_in->i_dts = p_sys->b_start ? 1 : 0;
+    p_block_in->i_pts = p_block_in->i_dts = p_sys->b_start ? VLC_TS_0 : VLC_TS_INVALID;
     p_sys->b_start = false;
 
     while( (p_block_out = p_sys->p_packetizer->pf_packetize(
@@ -223,7 +227,7 @@ static int Demux( demux_t *p_demux )
                 p_sys->p_es = es_out_Add( p_demux->out, &p_sys->p_packetizer->fmt_out);
             }
 
-            p_sys->i_pts = p_block_out->i_dts;
+            p_sys->i_pts = p_block_out->i_dts - VLC_TS_0;
 
             /* Correct timestamp */
             p_block_out->i_pts += p_sys->i_time_offset;
@@ -382,7 +386,10 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
         double *pf = (double*)va_arg( args, double * );
         const int64_t i_length = ControlGetLength(p_demux);
         if( i_length > 0 )
-            *pf = (double)ControlGetTime(p_demux) / (double)i_length;
+        {
+            double current = ControlGetTime(p_demux);
+            *pf = current / (double)i_length;
+        }
         else
             *pf= 0.0;
         return VLC_SUCCESS;
@@ -398,7 +405,7 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
             return VLC_EGENERIC;
 
         *pi_int = p_sys->i_attachments;;
-        *ppp_attach = malloc( sizeof(input_attachment_t**) * p_sys->i_attachments );
+        *ppp_attach = xmalloc( sizeof(input_attachment_t**) * p_sys->i_attachments );
         for( i = 0; i < p_sys->i_attachments; i++ )
             (*ppp_attach)[i] = vlc_input_attachment_Duplicate( p_sys->attachments[i] );
         return VLC_SUCCESS;

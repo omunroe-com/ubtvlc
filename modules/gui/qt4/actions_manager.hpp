@@ -2,7 +2,7 @@
  * Controller.hpp : Controller for the main interface
  ****************************************************************************
  * Copyright (C) 2006-2008 the VideoLAN team
- * $Id: d42519e1726776e8d460280251e45df242006918 $
+ * $Id: 4dbf06b7b52a28523e1c06e823dd30f558722e4f $
  *
  * Authors: Jean-Baptiste Kempf <jb@videolan.org>
  *
@@ -51,6 +51,9 @@ typedef enum actionType_e
     SKIP_BACK_ACTION,
     SKIP_FW_ACTION,
     QUIT_ACTION,
+    RANDOM_ACTION,
+    LOOP_ACTION,
+    INFO_ACTION,
 } actionType_e;
 
 class ActionsManager : public QObject
@@ -82,11 +85,11 @@ public slots:
     void AudioUp();
     void AudioDown();
     void play();
+    void record();
 protected slots:
     void fullscreen();
     void snapshot();
     void playlist();
-    void record();
     void frame();
 
     virtual void doAction( int );

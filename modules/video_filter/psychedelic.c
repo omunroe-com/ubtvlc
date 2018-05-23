@@ -2,7 +2,7 @@
  * Psychedelic.c : Psychedelic video effect plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2006 the VideoLAN team
- * $Id: 2e1c53c36acbb924206f16db2b97e675cdcd2ae7 $
+ * $Id: 9ec37571ba32d72bdf942e9d36283289b99562f4 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Antoine Cellerier <dionoea -at- videolan -dot- org>
@@ -35,8 +35,8 @@
 #include <vlc_common.h>
 #include <vlc_plugin.h>
 
-#include "vlc_filter.h"
-#include "vlc_image.h"
+#include <vlc_filter.h>
+#include <vlc_image.h>
 #include "filter_picture.h"
 
 /*****************************************************************************
@@ -62,7 +62,7 @@ vlc_module_begin ()
 vlc_module_end ()
 
 /*****************************************************************************
- * vout_sys_t: Distort video output method descriptor
+ * filter_sys_t: Distort video output method descriptor
  *****************************************************************************
  * This structure is part of the video output thread descriptor.
  * It describes the Distort specific properties of an output thread.
@@ -174,8 +174,7 @@ static picture_t *Filter( filter_t *p_filter, picture_t *p_pic )
     }
 
     /* luminance */
-    vlc_memcpy( p_outpic->p[Y_PLANE].p_pixels, p_pic->p[Y_PLANE].p_pixels,
-                p_outpic->p[Y_PLANE].i_lines * p_outpic->p[Y_PLANE].i_pitch );
+    plane_CopyPixels( &p_outpic->p[Y_PLANE], &p_pic->p[Y_PLANE] );
 
     /* image visualization */
     fmt_out = p_filter->fmt_out.video;

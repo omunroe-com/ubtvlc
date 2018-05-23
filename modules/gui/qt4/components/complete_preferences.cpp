@@ -2,7 +2,7 @@
  * preferences.cpp : "Normal preferences"
  ****************************************************************************
  * Copyright (C) 2006-2007 the VideoLAN team
- * $Id: 76bf1d059bf95c52dd01f69bdec8a744d95ddedb $
+ * $Id: a80ae4c40f987feee6978060cda8fed8f2d5f0e8 $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -53,22 +53,21 @@ PrefsTree::PrefsTree( intf_thread_t *_p_intf, QWidget *_parent ) :
                             QTreeWidget( _parent ), p_intf( _p_intf )
 {
     /* General Qt options */
-    setColumnCount( 1 );
     setAlternatingRowColors( true );
-    header()->hide();
+    setHeaderHidden( true );
 
     setIconSize( QSize( ITEM_HEIGHT,ITEM_HEIGHT ) );
     setTextElideMode( Qt::ElideNone );
 
     /* Nice icons */
-#define BI( a,b) QIcon a##_icon = QIcon( QPixmap( b ))
-    BI( audio, ":/advprefs_audio" );
-    BI( video, ":/advprefs_video" );
-    BI( input, ":/advprefs_codec" );
-    BI( sout, ":/advprefs_sout" );
-    BI( advanced, ":/advprefs_extended" );
-    BI( playlist, ":/advprefs_playlist" );
-    BI( interface, ":/advprefs_intf" );
+#define BI( a,b) QIcon a##_icon = QIcon( b )
+    BI( audio, ":/prefsmenu/advanced/audio" );
+    BI( video, ":/prefsmenu/advanced/video" );
+    BI( input, ":/prefsmenu/advanced/codec" );
+    BI( sout, ":/prefsmenu/advanced/sout" );
+    BI( advanced, ":/prefsmenu/advanced/extended" );
+    BI( playlist, ":/prefsmenu/advanced/playlist" );
+    BI( interface, ":/prefsmenu/advanced/intf" );
 #undef BI
 
     /* Build the tree for the main module */
@@ -125,7 +124,7 @@ PrefsTree::PrefsTree( intf_thread_t *_p_intf, QWidget *_parent ) :
             current_item = new QTreeWidgetItem();
             current_item->setText( 0, data->name );
             current_item->setIcon( 0 , icon );
-            current_item->setSizeHint( 0, QSize( -1, ITEM_HEIGHT ) );
+            //current_item->setSizeHint( 0, QSize( -1, ITEM_HEIGHT ) );
             current_item->setData( 0, Qt::UserRole,
                                    qVariantFromValue( data ) );
             addTopLevelItem( current_item );
@@ -177,7 +176,7 @@ PrefsTree::PrefsTree( intf_thread_t *_p_intf, QWidget *_parent ) :
             subcat_item->setText( 0, data_sub->name );
             subcat_item->setData( 0, Qt::UserRole,
                                   qVariantFromValue( data_sub ) );
-            subcat_item->setSizeHint( 0, QSize( -1, ITEM_HEIGHT ) );
+            //subcat_item->setSizeHint( 0, QSize( -1, ITEM_HEIGHT ) );
 
             /* Add it to the parent */
             assert( current_item );
@@ -271,7 +270,7 @@ PrefsTree::PrefsTree( intf_thread_t *_p_intf, QWidget *_parent ) :
         module_item->setText( 0, qtr( module_get_name( p_module, false ) ) );
         module_item->setData( 0, Qt::UserRole,
                               QVariant::fromValue( module_data) );
-        module_item->setSizeHint( 0, QSize( -1, ITEM_HEIGHT ) );
+        //module_item->setSizeHint( 0, QSize( -1, ITEM_HEIGHT ) );
         subcat_item->addChild( module_item );
     }
 
@@ -279,6 +278,7 @@ PrefsTree::PrefsTree( intf_thread_t *_p_intf, QWidget *_parent ) :
     sortItems( 0, Qt::AscendingOrder );
 
     module_list_free( p_list );
+    resizeColumnToContents( 0 );
 }
 
 PrefsTree::~PrefsTree() {}
