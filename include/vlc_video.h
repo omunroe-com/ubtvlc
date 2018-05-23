@@ -3,8 +3,8 @@
  * This header is required by all modules which have to handle pictures. It
  * includes all common video types and constants.
  *****************************************************************************
- * Copyright (C) 1999, 2000 VideoLAN
- * $Id: vlc_video.h 9274 2004-11-10 15:16:51Z gbazin $
+ * Copyright (C) 1999 - 2005 the VideoLAN team
+ * $Id: vlc_video.h 12412 2005-08-27 16:40:23Z jpsaman $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -110,6 +110,9 @@ struct picture_t
 
     /** This way the picture_Release can be overloaded */
     void (*pf_release)( picture_t * );
+
+    /** Next picture in a FIFO a pictures */
+    struct picture_t *p_next;
 };
 
 /**
@@ -199,19 +202,20 @@ struct picture_heap_t
  */
 struct subpicture_region_t
 {
-    /** \name Region properties */
-    /**@{*/
     video_format_t  fmt;                          /**< format of the picture */
     picture_t       picture;             /**< picture comprising this region */
-
-    char            *psz_text;       /**< text string comprising this region */
 
     int             i_x;                             /**< position of region */
     int             i_y;                             /**< position of region */
 
+    char            *psz_text;       /**< text string comprising this region */
+    int             i_text_color;     /**< text color (RGB native endianess) */
+    int             i_text_alpha;                     /**< text transparency */
+    int             i_text_size;                              /**< text size */
+    int             i_text_align;         /**< horizontal alignment hint for */
+
     subpicture_region_t *p_next;                /**< next region in the list */
     subpicture_region_t *p_cache;       /**< modified version of this region */
-    /**@}*/
 };
 
 /**
@@ -241,10 +245,9 @@ struct subpicture_t
     /**@{*/
     mtime_t         i_start;                  /**< beginning of display date */
     mtime_t         i_stop;                         /**< end of display date */
-    vlc_bool_t      b_ephemer;     /**< If this flag is set to true
-                                      the subtitle will be displayed
-                                      untill the next one appear */
-    vlc_bool_t      b_fade;        /**< enable fading */
+    vlc_bool_t      b_ephemer;    /**< If this flag is set to true the subtitle
+                                will be displayed untill the next one appear */
+    vlc_bool_t      b_fade;                               /**< enable fading */
     /**@}*/
 
     subpicture_region_t *p_region;  /**< region list composing this subtitle */
@@ -258,9 +261,10 @@ struct subpicture_t
     int          i_y;                    /**< offset from alignment position */
     int          i_width;                                 /**< picture width */
     int          i_height;                               /**< picture height */
+    int          i_alpha;                                  /**< transparency */
     int          i_original_picture_width;  /**< original width of the movie */
     int          i_original_picture_height;/**< original height of the movie */
-    int          b_absolute;                       /**< position is absolute */
+    vlc_bool_t   b_absolute;                       /**< position is absolute */
     int          i_flags;                                /**< position flags */
      /**@}*/
 
@@ -272,6 +276,8 @@ struct subpicture_t
     /** Pointer to functions for region management */
     subpicture_region_t * ( *pf_create_region ) ( vlc_object_t *,
                                                   video_format_t * );
+    subpicture_region_t * ( *pf_make_region ) ( vlc_object_t *,
+                                                video_format_t *, picture_t * );
     void ( *pf_destroy_region ) ( vlc_object_t *, subpicture_region_t * );
 
     /** Private data - the subtitle plugin might want to put stuff here to
@@ -340,6 +346,82 @@ VLC_EXPORT( int, __vout_InitPicture, ( vlc_object_t *p_this, picture_t *p_pic, u
 #define vout_AllocatePicture(a,b,c,d,e,f) \
         __vout_AllocatePicture(VLC_OBJECT(a),b,c,d,e,f)
 VLC_EXPORT( int, __vout_AllocatePicture,( vlc_object_t *p_this, picture_t *p_pic, uint32_t i_chroma, int i_width, int i_height, int i_aspect ) );
+
+/**
+ * vout_ShowTextRelative
+ *
+ * Show text on the video for some time
+ * \param p_vout pointer to the vout the text is to be showed on
+ * \param i_channel Subpicture channel
+ * \param psz_string The text to be shown
+ * \param p_style Pointer to a struct with text style info
+ * \param i_flags flags for alignment and such
+ * \param i_hmargin horizontal margin in pixels
+ * \param i_vmargin vertical margin in pixels
+ * \param i_duration Amount of time the text is to be shown.
+ */
+VLC_EXPORT( int, vout_ShowTextRelative, ( vout_thread_t *, int, char *, text_style_t *, int, int, int, mtime_t ) );
+
+/**
+ * vout_ShowTextAbsolute
+ *
+ * Show text on the video from a given start date to a given end date
+ * \param p_vout pointer to the vout the text is to be showed on
+ * \param i_channel Subpicture channel
+ * \param psz_string The text to be shown
+ * \param p_style Pointer to a struct with text style info
+ * \param i_flags flags for alignment and such
+ * \param i_hmargin horizontal margin in pixels
+ * \param i_vmargin vertical margin in pixels
+ * \param i_start the time when this string is to appear on the video
+ * \param i_stop the time when this string should stop to be displayed
+ *               if this is 0 the string will be shown untill the next string
+ *               is about to be shown
+ */
+VLC_EXPORT( int, vout_ShowTextAbsolute, ( vout_thread_t *, int, char *, text_style_t *, int, int, int, mtime_t, mtime_t ) );
+
+/**
+ * vout_OSDMessage
+ *
+ * Write an informative message at the default location,
+ * for the default duration and only if the OSD option is enabled.
+ * \param p_caller The object that called the function.
+ * \param i_channel Subpicture channel
+ * \param psz_format printf style formatting
+ **/
+VLC_EXPORT( void,  __vout_OSDMessage, ( vlc_object_t *, int, char *, ... ) );
+
+/**
+ * Same as __vlc_OSDMessage() but with automatic casting
+ */
+#if defined(HAVE_VARIADIC_MACROS)
+#    define vout_OSDMessage( obj, chan, fmt, args...) __vout_OSDMessage( VLC_OBJECT(obj), chan, fmt, ## args )
+#else
+#    define vout_OSDMessage __vout_OSDMessage
+#endif
+
+/**
+ * vout_OSDSlider
+ *
+ * Display a slider on the video output.
+ * \param p_this    The object that called the function.
+ * \param i_channel Subpicture channel
+ * \param i_postion Current position in the slider
+ * \param i_type    Types are: OSD_HOR_SLIDER and OSD_VERT_SLIDER.
+ * @see vlc_osd.h
+ */
+VLC_EXPORT( void, vout_OSDSlider, ( vlc_object_t *, int, int , short ) );
+
+/**
+ * vout_OSDIcon
+ *
+ * Display an Icon on the video output.
+ * \param p_this    The object that called the function.
+ * \param i_channel Subpicture channel
+ * \param i_type    Types are: OSD_PLAY_ICON, OSD_PAUSE_ICON, OSD_SPEAKER_ICON, OSD_MUTE_ICON
+ * @see vlc_osd.h
+ */
+VLC_EXPORT( void, vout_OSDIcon, ( vlc_object_t *, int, short ) );
 
 /**@}*/
 

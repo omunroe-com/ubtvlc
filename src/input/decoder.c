@@ -1,8 +1,8 @@
 /*****************************************************************************
  * decoder.c: Functions for the management of decoders
  *****************************************************************************
- * Copyright (C) 1999-2004 VideoLAN
- * $Id: decoder.c 8894 2004-10-02 21:01:46Z zorglub $
+ * Copyright (C) 1999-2004 the VideoLAN team
+ * $Id: decoder.c 12438 2005-08-31 20:37:23Z gbazin $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -59,6 +59,8 @@ static es_format_t null_es_format = {0};
 struct decoder_owner_sys_t
 {
     vlc_bool_t      b_own_thread;
+
+    int64_t         i_preroll_end;
 
     input_thread_t  *p_input;
 
@@ -276,6 +278,11 @@ vlc_bool_t input_DecoderEmpty( decoder_t * p_dec )
     return VLC_TRUE;
 }
 
+void input_DecoderPreroll( decoder_t *p_dec, int64_t i_preroll_end )
+{
+    p_dec->p_owner->i_preroll_end = i_preroll_end;
+}
+
 #if 0
 /**
  * Create a NULL packet for padding in case of a data loss
@@ -392,6 +399,7 @@ static decoder_t * CreateDecoder( input_thread_t *p_input,
         return NULL;
     }
     p_dec->p_owner->b_own_thread = VLC_TRUE;
+    p_dec->p_owner->i_preroll_end = -1;
     p_dec->p_owner->p_input = p_input;
     p_dec->p_owner->p_aout = NULL;
     p_dec->p_owner->p_aout_input = NULL;
@@ -529,6 +537,8 @@ static int DecoderDecode( decoder_t *p_dec, block_t *p_block )
                 p_dec->p_owner->sout.i_id = p_dec->fmt_in.i_id;
                 if( p_dec->fmt_in.psz_language )
                 {
+                    if( p_dec->p_owner->sout.psz_language )
+                        free( p_dec->p_owner->sout.psz_language );
                     p_dec->p_owner->sout.psz_language =
                         strdup( p_dec->fmt_in.psz_language );
                 }
@@ -539,7 +549,8 @@ static int DecoderDecode( decoder_t *p_dec, block_t *p_block )
 
                 if( p_dec->p_owner->p_sout_input == NULL )
                 {
-                    msg_Err( p_dec, "cannot create packetizer output" );
+                    msg_Err( p_dec, "cannot create packetizer output (%4.4s)",
+                             (char *)&p_dec->p_owner->sout.i_codec );
                     p_dec->b_error = VLC_TRUE;
 
                     while( p_sout_block )
@@ -610,9 +621,21 @@ static int DecoderDecode( decoder_t *p_dec, block_t *p_block )
                     while( (p_aout_buf = p_dec->pf_decode_audio( p_dec,
                                                        &p_packetized_block )) )
                     {
-                        aout_DecPlay( p_dec->p_owner->p_aout,
-                                      p_dec->p_owner->p_aout_input,
-                                      p_aout_buf );
+                        /* FIXME the best would be to handle the case start_date < preroll < end_date
+                         * but that's not easy with non raw audio stream */
+                        if( p_dec->p_owner->i_preroll_end > 0 &&
+                            p_aout_buf->start_date < p_dec->p_owner->i_preroll_end )
+                        {
+                            aout_DecDeleteBuffer( p_dec->p_owner->p_aout,
+                                                  p_dec->p_owner->p_aout_input, p_aout_buf );
+                        }
+                        else
+                        {
+                            p_dec->p_owner->i_preroll_end = -1;
+                            aout_DecPlay( p_dec->p_owner->p_aout,
+                                          p_dec->p_owner->p_aout_input,
+                                          p_aout_buf );
+                        }
                     }
 
                     p_packetized_block = p_next;
@@ -621,8 +644,19 @@ static int DecoderDecode( decoder_t *p_dec, block_t *p_block )
         }
         else while( (p_aout_buf = p_dec->pf_decode_audio( p_dec, &p_block )) )
         {
-            aout_DecPlay( p_dec->p_owner->p_aout,
-                          p_dec->p_owner->p_aout_input, p_aout_buf );
+            if( p_dec->p_owner->i_preroll_end > 0 &&
+                p_aout_buf->start_date < p_dec->p_owner->i_preroll_end )
+            {
+                aout_DecDeleteBuffer( p_dec->p_owner->p_aout,
+                                      p_dec->p_owner->p_aout_input, p_aout_buf );
+            }
+            else
+            {
+                p_dec->p_owner->i_preroll_end = -1;
+                aout_DecPlay( p_dec->p_owner->p_aout,
+                              p_dec->p_owner->p_aout_input,
+                              p_aout_buf );
+            }
         }
     }
     else if( p_dec->fmt_in.i_cat == VIDEO_ES )
@@ -637,6 +671,15 @@ static int DecoderDecode( decoder_t *p_dec, block_t *p_block )
             while( (p_packetized_block =
                     p_packetizer->pf_packetize( p_packetizer, &p_block )) )
             {
+                if( p_packetizer->fmt_out.i_extra && !p_dec->fmt_in.i_extra )
+                {
+                    p_dec->fmt_in.i_extra = p_packetizer->fmt_out.i_extra;
+                    p_dec->fmt_in.p_extra = malloc( p_dec->fmt_in.i_extra );
+                    memcpy( p_dec->fmt_in.p_extra,
+                            p_packetizer->fmt_out.p_extra,
+                            p_dec->fmt_in.i_extra );
+                }
+
                 while( p_packetized_block )
                 {
                     block_t *p_next = p_packetized_block->p_next;
@@ -646,9 +689,18 @@ static int DecoderDecode( decoder_t *p_dec, block_t *p_block )
                     while( (p_pic = p_dec->pf_decode_video( p_dec,
                                                        &p_packetized_block )) )
                     {
-                        vout_DatePicture( p_dec->p_owner->p_vout, p_pic,
-                                          p_pic->date );
-                        vout_DisplayPicture( p_dec->p_owner->p_vout, p_pic );
+                        if( p_dec->p_owner->i_preroll_end > 0 &&
+                            p_pic->date < p_dec->p_owner->i_preroll_end )
+                        {
+                            vout_DestroyPicture( p_dec->p_owner->p_vout, p_pic );
+                        }
+                        else
+                        {
+                            p_dec->p_owner->i_preroll_end = -1;
+                            vout_DatePicture( p_dec->p_owner->p_vout, p_pic,
+                                              p_pic->date );
+                            vout_DisplayPicture( p_dec->p_owner->p_vout, p_pic );
+                        }
                     }
 
                     p_packetized_block = p_next;
@@ -657,8 +709,17 @@ static int DecoderDecode( decoder_t *p_dec, block_t *p_block )
         }
         else while( (p_pic = p_dec->pf_decode_video( p_dec, &p_block )) )
         {
-            vout_DatePicture( p_dec->p_owner->p_vout, p_pic, p_pic->date );
-            vout_DisplayPicture( p_dec->p_owner->p_vout, p_pic );
+            if( p_dec->p_owner->i_preroll_end > 0 &&
+                p_pic->date < p_dec->p_owner->i_preroll_end )
+            {
+                vout_DestroyPicture( p_dec->p_owner->p_vout, p_pic );
+            }
+            else
+            {
+                p_dec->p_owner->i_preroll_end = -1;
+                vout_DatePicture( p_dec->p_owner->p_vout, p_pic, p_pic->date );
+                vout_DisplayPicture( p_dec->p_owner->p_vout, p_pic );
+            }
         }
     }
     else if( p_dec->fmt_in.i_cat == SPU_ES )
@@ -667,6 +728,15 @@ static int DecoderDecode( decoder_t *p_dec, block_t *p_block )
         subpicture_t *p_spu;
         while( (p_spu = p_dec->pf_decode_sub( p_dec, &p_block ) ) )
         {
+            if( p_dec->p_owner->i_preroll_end > 0 &&
+                p_spu->i_start < p_dec->p_owner->i_preroll_end &&
+                ( p_spu->i_stop <= 0 || p_spu->i_stop <= p_dec->p_owner->i_preroll_end ) )
+            {
+                spu_DestroySubpicture( p_dec->p_owner->p_vout->p_spu, p_spu );
+                continue;
+            }
+
+            p_dec->p_owner->i_preroll_end = -1;
             p_vout = vlc_object_find( p_dec, VLC_OBJECT_VOUT, FIND_ANYWHERE );
             if( p_vout )
             {
@@ -721,7 +791,7 @@ static void DeleteDecoder( decoder_t * p_dec )
 #undef p_pic
 
         /* We are about to die. Reattach video output to p_vlc. */
-        vout_Request( p_dec, p_dec->p_owner->p_vout, 0, 0, 0, 0 );
+        vout_Request( p_dec, p_dec->p_owner->p_vout, 0 );
     }
 
     if( p_dec->p_owner->p_sout_input )
@@ -827,15 +897,35 @@ static picture_t *vout_new_buffer( decoder_t *p_dec )
             return NULL;
         }
 
+        if( !p_dec->fmt_out.video.i_sar_num ||
+            !p_dec->fmt_out.video.i_sar_den )
+        {
+            p_dec->fmt_out.video.i_sar_num =
+              p_dec->fmt_out.video.i_aspect * p_dec->fmt_out.video.i_height;
+
+            p_dec->fmt_out.video.i_sar_den = VOUT_ASPECT_FACTOR *
+              p_dec->fmt_out.video.i_width;
+        }
+
+        vlc_ureduce( &p_dec->fmt_out.video.i_sar_num,
+                     &p_dec->fmt_out.video.i_sar_den,
+                     p_dec->fmt_out.video.i_sar_num,
+                     p_dec->fmt_out.video.i_sar_den, 0 );
+
+        if( !p_dec->fmt_out.video.i_visible_width ||
+            !p_dec->fmt_out.video.i_visible_height )
+        {
+            p_dec->fmt_out.video.i_visible_width =
+                p_dec->fmt_out.video.i_width;
+            p_dec->fmt_out.video.i_visible_height =
+                p_dec->fmt_out.video.i_height;
+        }
+
         p_dec->fmt_out.video.i_chroma = p_dec->fmt_out.i_codec;
         p_sys->video = p_dec->fmt_out.video;
 
         p_sys->p_vout = vout_Request( p_dec, p_sys->p_vout,
-                                      p_sys->video.i_width,
-                                      p_sys->video.i_height,
-                                      p_sys->video.i_chroma,
-                                      p_sys->video.i_aspect );
-
+                                      &p_dec->fmt_out.video );
         if( p_sys->p_vout == NULL )
         {
             msg_Err( p_dec, "failed to create video output" );
@@ -959,5 +1049,20 @@ static subpicture_t *spu_new_buffer( decoder_t *p_dec )
 
 static void spu_del_buffer( decoder_t *p_dec, subpicture_t *p_subpic )
 {
-    spu_DestroySubpicture( p_dec->p_owner->p_vout->p_spu, p_subpic );
+    decoder_owner_sys_t *p_sys = (decoder_owner_sys_t *)p_dec->p_owner;
+    vout_thread_t *p_vout = NULL;
+
+    p_vout = vlc_object_find( p_dec, VLC_OBJECT_VOUT, FIND_ANYWHERE );
+    if( !p_vout || p_sys->p_spu_vout != p_vout )
+    {
+        if( p_vout )
+            vlc_object_release( p_vout );
+        msg_Warn( p_dec, "no vout found, leaking subpicture" );
+        return;
+    }
+
+    spu_DestroySubpicture( p_vout->p_spu, p_subpic );
+
+    vlc_object_release( p_vout );
 }
+

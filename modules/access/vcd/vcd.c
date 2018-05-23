@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vcd.c : VCD input module for vlc
  *****************************************************************************
- * Copyright (C) 2000-2004 VideoLAN
- * $Id: vcd.c 8606 2004-08-31 18:32:54Z hartman $
+ * Copyright (C) 2000-2004 the VideoLAN team
+ * $Id: vcd.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Author: Johan Bilien <jobi@via.ecp.fr>
  *
@@ -43,9 +43,12 @@ static void Close( vlc_object_t * );
     "value should be set in milliseconds units." )
 
 vlc_module_begin();
+    set_shortname( _("VCD"));
     set_description( _("VCD input") );
     set_capability( "access2", 60 );
     set_callbacks( Open, Close );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACCESS );
 
     add_usage_hint( N_("[vcd:][device][@[title][,[chapter]]]") );
     add_integer( "vcd-caching", DEFAULT_PTS_DELAY / 1000, NULL, CACHING_TEXT,
@@ -124,7 +127,6 @@ static int Open( vlc_object_t *p_this )
     /* Open VCD */
     if( !(vcddev = ioctl_Open( p_this, psz_dup )) )
     {
-        msg_Warn( p_access, "could not open %s", psz_dup );
         free( psz_dup );
         return VLC_EGENERIC;
     }

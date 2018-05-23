@@ -1,8 +1,8 @@
 /*****************************************************************************
  * motion_blur.c : motion blur filter for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001, 2002, 2003 VideoLAN
- * $Id: motionblur.c 8551 2004-08-28 17:36:02Z gbazin $
+ * Copyright (C) 2000, 2001, 2002, 2003 the VideoLAN team
+ * $Id: motionblur.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -55,8 +55,11 @@ static int  SendEvents( vlc_object_t *, char const *,
 #define MODE_LONGTEXT N_("The degree of blurring from 1 to 127.")
 
 vlc_module_begin();
+    set_shortname( _("Motion blur") );
     set_description( _("Motion blur filter") );
     set_capability( "video filter", 0 );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VFILTER );
 
     add_integer_with_range( "blur-factor", 80, 1, 127, NULL,
         MODE_TEXT, MODE_LONGTEXT, VLC_FALSE );
@@ -129,6 +132,7 @@ static int Init( vout_thread_t *p_vout )
 {
     int i_index;
     picture_t *p_pic;
+    video_format_t fmt = {0};
 
     I_OUTPUTPICTURES = 0;
 
@@ -153,14 +157,20 @@ static int Init( vout_thread_t *p_vout )
 
     msg_Dbg( p_vout, "spawning the real video output" );
 
+    fmt.i_width = fmt.i_visible_width = p_vout->output.i_width;
+    fmt.i_height = fmt.i_visible_height = p_vout->output.i_height;
+    fmt.i_x_offset = fmt.i_y_offset = 0;
+    fmt.i_chroma = p_vout->output.i_chroma;
+    fmt.i_aspect = p_vout->output.i_aspect;
+    fmt.i_sar_num = p_vout->output.i_aspect * fmt.i_height / fmt.i_width;
+    fmt.i_sar_den = VOUT_ASPECT_FACTOR;
+
     switch( p_vout->render.i_chroma )
     {
     case VLC_FOURCC('I','4','2','0'):
     case VLC_FOURCC('I','Y','U','V'):
     case VLC_FOURCC('Y','V','1','2'):
-        p_vout->p_sys->p_vout = vout_Create( p_vout,
-                           p_vout->output.i_width, p_vout->output.i_height,
-                           p_vout->output.i_chroma, p_vout->output.i_aspect );
+        p_vout->p_sys->p_vout = vout_Create( p_vout, &fmt );
         break;
     default:
         break;

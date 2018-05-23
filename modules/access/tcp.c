@@ -1,8 +1,8 @@
 /*****************************************************************************
  * tcp.c: TCP input module
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: tcp.c 8606 2004-08-31 18:32:54Z hartman $
+ * Copyright (C) 2003-2004 the VideoLAN team
+ * $Id: tcp.c 11967 2005-08-02 17:31:33Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -43,7 +43,10 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 vlc_module_begin();
+    set_shortname( _("TCP") );
     set_description( _("TCP input") );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACCESS );
 
     add_integer( "tcp-caching", DEFAULT_PTS_DELAY / 1000, NULL, CACHING_TEXT,
                  CACHING_LONGTEXT, VLC_TRUE );
@@ -77,32 +80,22 @@ static int Open( vlc_object_t *p_this )
     char         *psz_parser = psz_dup;
 
     /* Parse server:port */
-    while( *psz_parser && *psz_parser != ':' )
+    if( *psz_parser == '[' )
     {
-        if( *psz_parser == '[' )
-        {
-            /* IPV6 */
-            while( *psz_parser && *psz_parser  != ']' )
-            {
-                psz_parser++;
-            }
-        }
-        psz_parser++;
+        psz_parser = strchr( psz_parser, ']' );
+        if( psz_parser == NULL )
+            psz_parser = psz_dup;
     }
-    if( *psz_parser != ':' || psz_parser == psz_dup )
+    psz_parser = strchr( psz_parser, ':' );
+    
+    if( psz_parser == NULL )
     {
-        msg_Err( p_access, "you have to provide server:port addresse" );
+        msg_Err( p_access, "missing port number : %s", psz_dup );
         free( psz_dup );
         return VLC_EGENERIC;
     }
-    *psz_parser++ = '\0';
 
-    if( atoi( psz_parser ) <= 0 )
-    {
-        msg_Err( p_access, "invalid port number (%d)", atoi( psz_parser ) );
-        free( psz_dup );
-        return VLC_EGENERIC;
-    }
+    *psz_parser++ = '\0';
 
     /* Init p_access */
     p_access->pf_read = Read;
@@ -155,7 +148,8 @@ static int Read( access_t *p_access, uint8_t *p_buffer, int i_len )
     if( p_access->info.b_eof )
         return 0;
 
-    i_read = net_Read( p_access, p_sys->fd, p_buffer, i_len, VLC_FALSE );
+    i_read = net_Read( p_access, p_sys->fd, NULL, p_buffer, i_len,
+                       VLC_FALSE );
     if( i_read == 0 )
         p_access->info.b_eof = VLC_TRUE;
     else if( i_read > 0 )

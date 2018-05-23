@@ -1,8 +1,8 @@
 /*****************************************************************************
  * xcommon.c: Functions common to the X11 and XVideo plugins
  *****************************************************************************
- * Copyright (C) 1998-2001 VideoLAN
- * $Id: xcommon.c 8979 2004-10-13 12:30:20Z gbazin $
+ * Copyright (C) 1998-2001 the VideoLAN team
+ * $Id: xcommon.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Sam Hocevar <sam@zoy.org>
@@ -52,6 +52,7 @@
 #endif
 
 #include <X11/Xlib.h>
+#include <X11/Xproto.h>
 #include <X11/Xmd.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
@@ -102,6 +103,7 @@ static IMAGE_TYPE *CreateImage    ( vout_thread_t *,
 #ifdef HAVE_SYS_SHM_H
 static IMAGE_TYPE *CreateShmImage ( vout_thread_t *,
                                     Display *, EXTRA_ARGS_SHM, int, int );
+static vlc_bool_t b_shm = VLC_TRUE;
 #endif
 
 static void ToggleFullScreen      ( vout_thread_t * );
@@ -127,6 +129,8 @@ static void TestNetWMSupport( vout_thread_t * );
 static int ConvertKey( int );
 
 static int WindowOnTop( vout_thread_t *, vlc_bool_t );
+
+static int X11ErrorHandler( Display *, XErrorEvent * );
 
 /*****************************************************************************
  * Activate: allocate X11 video thread output method
@@ -179,6 +183,9 @@ int E_(Activate) ( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
     if( psz_display ) free( psz_display );
+
+    /* Replace error handler so we can intercept some non-fatal errors */
+    XSetErrorHandler( X11ErrorHandler );
 
     /* Get a screen ID matching the XOpenDisplay return value */
     p_vout->p_sys->i_screen = DefaultScreen( p_vout->p_sys->p_display );
@@ -429,6 +436,13 @@ static int InitVideo( vout_thread_t *p_vout )
         PP_OUTPUTPICTURE[ I_OUTPUTPICTURES ] = p_pic;
 
         I_OUTPUTPICTURES++;
+    }
+
+    if( p_vout->output.i_chroma == VLC_FOURCC('Y','V','1','2') )
+    {
+        /* U and V inverted compared to I420
+         * Fixme: this should be handled by the vout core */
+        p_vout->output.i_chroma = VLC_FOURCC('I','4','2','0');
     }
 
     return VLC_SUCCESS;
@@ -970,7 +984,26 @@ static int CreateWindow( vout_thread_t *p_vout, x11_window_t *p_win )
             XSetCommand( p_vout->p_sys->p_display, p_win->base_window,
                          p_vout->p_vlc->ppsz_argv, p_vout->p_vlc->i_argc );
 
-            XStoreName( p_vout->p_sys->p_display, p_win->base_window,
+            if( !var_GetBool( p_vout, "video-deco") )
+            {
+                Atom prop;
+                mwmhints_t mwmhints;
+
+                mwmhints.flags = MWM_HINTS_DECORATIONS;
+                mwmhints.decorations = False;
+
+                prop = XInternAtom( p_vout->p_sys->p_display, "_MOTIF_WM_HINTS",
+                                    False );
+
+                XChangeProperty( p_vout->p_sys->p_display,
+                                 p_win->base_window,
+                                 prop, prop, 32, PropModeReplace,
+                                 (unsigned char *)&mwmhints,
+                                 PROP_MWM_HINTS_ELEMENTS );
+            }
+            else
+            {
+                XStoreName( p_vout->p_sys->p_display, p_win->base_window,
 #ifdef MODULE_NAME_IS_x11
                         VOUT_TITLE " (X11 output)"
 #elif defined(MODULE_NAME_IS_glx)
@@ -979,6 +1012,7 @@ static int CreateWindow( vout_thread_t *p_vout, x11_window_t *p_win )
                         VOUT_TITLE " (XVideo output)"
 #endif
                       );
+            }
         }
     }
     else
@@ -1189,7 +1223,8 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
                             &p_pic->p_sys->shminfo,
                             p_vout->output.i_width, p_vout->output.i_height );
     }
-    else
+
+    if( !p_vout->p_sys->b_shm || !p_pic->p_sys->p_image )
 #endif /* HAVE_SYS_SHM_H */
     {
         /* Create image without XShm extension */
@@ -1205,6 +1240,14 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
                          p_vout->p_sys->i_bytes_per_pixel,
 #endif
                          p_vout->output.i_width, p_vout->output.i_height );
+
+#ifdef HAVE_SYS_SHM_H
+        if( p_pic->p_sys->p_image && p_vout->p_sys->b_shm )
+        {
+            msg_Warn( p_vout, "couldn't create SHM image, disabling SHM." );
+            p_vout->p_sys->b_shm = VLC_FALSE;
+        }
+#endif /* HAVE_SYS_SHM_H */
     }
 
     if( p_pic->p_sys->p_image == NULL )
@@ -1238,7 +1281,6 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
             {
                 /* U and V inverted compared to I420
                  * Fixme: this should be handled by the vout core */
-                p_vout->output.i_chroma = VLC_FOURCC('I','4','2','0');
                 p_pic->U_PIXELS = p_pic->p_sys->p_image->data
                     + p_pic->p_sys->p_image->offsets[2];
                 p_pic->V_PIXELS = p_pic->p_sys->p_image->data
@@ -1974,6 +2016,7 @@ static IMAGE_TYPE * CreateShmImage( vout_thread_t *p_vout,
                                     int i_width, int i_height )
 {
     IMAGE_TYPE *p_image;
+    Status result;
 
     /* Create XImage / XvImage */
 #ifdef MODULE_NAME_IS_xvideo
@@ -2015,7 +2058,10 @@ static IMAGE_TYPE * CreateShmImage( vout_thread_t *p_vout,
     p_shm->readOnly = True;
 
     /* Attach shared memory segment to X server */
-    if( XShmAttach( p_display, p_shm ) == False )
+    XSynchronize( p_display, True );
+    b_shm = VLC_TRUE;
+    result = XShmAttach( p_display, p_shm );
+    if( result == False || !b_shm )
     {
         msg_Err( p_vout, "cannot attach shared memory to X server" );
         IMAGE_FREE( p_image );
@@ -2023,6 +2069,7 @@ static IMAGE_TYPE * CreateShmImage( vout_thread_t *p_vout,
         shmdt( p_shm->shmaddr );
         return NULL;
     }
+    XSynchronize( p_display, False );
 
     /* Send image to X server. This instruction is required, since having
      * built a Shm XImage and not using it causes an error on XCloseDisplay,
@@ -2101,6 +2148,31 @@ static IMAGE_TYPE * CreateImage( vout_thread_t *p_vout,
     }
 
     return p_image;
+}
+
+/*****************************************************************************
+ * X11ErrorHandler: replace error handler so we can intercept some of them
+ *****************************************************************************/
+static int X11ErrorHandler( Display * display, XErrorEvent * event )
+{
+    /* Ingnore errors on XSetInputFocus()
+     * (they happen when a window is not yet mapped) */
+    if( event->request_code == X_SetInputFocus )
+    {
+        fprintf(stderr, "XSetInputFocus failed\n");
+        return 0;
+    }
+
+    if( event->request_code == 150 /* MIT-SHM */ &&
+        event->minor_code == X_ShmAttach )
+    {
+        fprintf(stderr, "XShmAttach failed\n");
+        b_shm = VLC_FALSE;
+        return 0;
+    }
+
+    XSetErrorHandler(NULL);
+    return (XSetErrorHandler(X11ErrorHandler))( display, event );
 }
 
 #ifdef MODULE_NAME_IS_x11
@@ -2302,6 +2374,10 @@ static struct
     { XK_End, KEY_END },
     { XK_Page_Up, KEY_PAGEUP },
     { XK_Page_Down, KEY_PAGEDOWN },
+
+    { XK_Insert, KEY_INSERT },
+    { XK_Delete, KEY_DELETE },
+
     { 0, 0 }
 };
 

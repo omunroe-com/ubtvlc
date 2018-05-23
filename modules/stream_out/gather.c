@@ -1,8 +1,8 @@
 /*****************************************************************************
  * gather.c: gathering stream output module
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: gather.c 8162 2004-07-10 17:20:59Z fenrir $
+ * Copyright (C) 2003-2004 the VideoLAN team
+ * $Id: gather.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -40,6 +40,8 @@ vlc_module_begin();
     set_description( _("Gathering stream output") );
     set_capability( "sout stream", 50 );
     add_shortcut( "gather" );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_STREAM );
     set_callbacks( Open, Close );
 vlc_module_end();
 

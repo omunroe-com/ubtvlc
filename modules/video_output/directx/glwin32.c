@@ -1,8 +1,8 @@
 /*****************************************************************************
  * glwin32.c: Windows OpenGL provider
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: glwin32.c 9269 2004-11-10 13:04:45Z gbazin $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: glwin32.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -59,10 +59,16 @@ static void GLSwapBuffers( vout_thread_t * );
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( _("Win32 OpenGL provider") );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VOUT );
+    set_shortname( "OpenGL" );
+    set_description( _("OpenGL video output") );
     set_capability( "opengl provider", 100 );
     add_shortcut( "glwin32" );
     set_callbacks( OpenVideo, CloseVideo );
+
+    /* FIXME: Hack to avoid unregistering our window class */
+    linked_with_a_crap_library_which_uses_atexit( );
 vlc_module_end();
 
 #if 0 /* FIXME */
@@ -131,7 +137,7 @@ static int OpenVideo( vlc_object_t *p_this )
         vlc_object_create( p_vout, sizeof(event_thread_t) );
     p_vout->p_sys->p_event->p_vout = p_vout;
     if( vlc_thread_create( p_vout->p_sys->p_event, "DirectX Events Thread",
-                           DirectXEventThread, 0, 1 ) )
+                           E_(DirectXEventThread), 0, 1 ) )
     {
         msg_Err( p_vout, "cannot create DirectXEventThread" );
         vlc_object_destroy( p_vout->p_sys->p_event );
@@ -357,9 +363,7 @@ static int Manage( vout_thread_t *p_vout )
         else
         {
             /* Change window style, no borders and no title bar */
-            int i_style = WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW |
-                WS_SIZEBOX | WS_VISIBLE;
-            SetWindowLong( hwnd, GWL_STYLE, i_style );
+            SetWindowLong( hwnd, GWL_STYLE, p_vout->p_sys->i_window_style );
 
             /* Normal window */
             window_placement.showCmd = SW_SHOWNORMAL;
@@ -464,7 +468,7 @@ static void GLSwapBuffers( vout_thread_t *p_vout )
     SwapBuffers( p_vout->p_sys->hGLDC );
 }
 
-int DirectXUpdateOverlay( vout_thread_t *p_vout )
+int E_(DirectXUpdateOverlay)( vout_thread_t *p_vout )
 {
     return 1;
 }

@@ -49,8 +49,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12 /out:"plugins\libskins2_plugin.dll"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib comctl32.lib rpcrt4.lib /nologo /dll /machine:I386 /entry:_CRT_INIT@12 /opt:ref /out:"plugins\libskins2_plugin.dll"
 
 !ELSEIF  "$(CFG)" == "plugin_skins2 - Win32 Debug"
 
@@ -73,8 +73,9 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12 /pdb:"plugins\libskins2_plugin.pdb" /out:"plugins\libskins2_plugin.dll"
+# SUBTRACT BASE LINK32 /pdb:none
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib netapi32.lib winmm.lib comctl32.lib rpcrt4.lib /nologo /dll /subsystem:console /debug /machine:I386 /pdbtype:sept /entry:_CRT_INIT@12 /pdb:"plugins\libskins2_plugin.pdb" /out:"plugins\libskins2_plugin.dll"
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
@@ -239,6 +240,26 @@ SOURCE="..\modules\gui\skins2\commands\cmd_layout.hpp"
 # PROP Intermediate_Dir "Debug\modules\gui\skins2"
 # End Source File
 # Begin Source File
+SOURCE="..\modules\gui\skins2\commands\cmd_muxer.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\commands\cmd_muxer.hpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
 SOURCE="..\modules\gui\skins2\commands\cmd_on_top.cpp"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
 !IF "$(CFG)" == "plugin_skins2 - Win32 Release"
@@ -270,6 +291,26 @@ SOURCE="..\modules\gui\skins2\commands\cmd_playlist.cpp"
 # End Source File
 # Begin Source File
 SOURCE="..\modules\gui\skins2\commands\cmd_playlist.hpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\commands\cmd_playtree.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\commands\cmd_playtree.hpp"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
 !IF "$(CFG)" == "plugin_skins2 - Win32 Release"
 # PROP Output_Dir "Release\modules\gui\skins2"
@@ -470,6 +511,26 @@ SOURCE="..\modules\gui\skins2\controls\ctrl_list.cpp"
 # End Source File
 # Begin Source File
 SOURCE="..\modules\gui\skins2\controls\ctrl_list.hpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\controls\ctrl_tree.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\controls\ctrl_tree.hpp"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
 !IF "$(CFG)" == "plugin_skins2 - Win32 Release"
 # PROP Output_Dir "Release\modules\gui\skins2"
@@ -1559,6 +1620,26 @@ SOURCE="..\modules\gui\skins2\utils\var_text.hpp"
 # PROP Intermediate_Dir "Debug\modules\gui\skins2"
 # End Source File
 # Begin Source File
+SOURCE="..\modules\gui\skins2\utils\var_tree.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\utils\var_tree.hpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
 SOURCE="..\modules\gui\skins2\vars\playlist.cpp"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
 !IF "$(CFG)" == "plugin_skins2 - Win32 Release"
@@ -1579,7 +1660,7 @@ SOURCE="..\modules\gui\skins2\vars\playlist.hpp"
 # PROP Intermediate_Dir "Debug\modules\gui\skins2"
 # End Source File
 # Begin Source File
-SOURCE="..\modules\gui\skins2\vars\stream.cpp"
+SOURCE="..\modules\gui\skins2\vars\playtree.cpp"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
 !IF "$(CFG)" == "plugin_skins2 - Win32 Release"
 # PROP Output_Dir "Release\modules\gui\skins2"
@@ -1589,7 +1670,7 @@ SOURCE="..\modules\gui\skins2\vars\stream.cpp"
 # PROP Intermediate_Dir "Debug\modules\gui\skins2"
 # End Source File
 # Begin Source File
-SOURCE="..\modules\gui\skins2\vars\stream.hpp"
+SOURCE="..\modules\gui\skins2\vars\playtree.hpp"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
 !IF "$(CFG)" == "plugin_skins2 - Win32 Release"
 # PROP Output_Dir "Release\modules\gui\skins2"
@@ -1930,6 +2011,146 @@ SOURCE="..\modules\gui\skins2\x11\x11_tooltip.cpp"
 # End Source File
 # Begin Source File
 SOURCE="..\modules\gui\skins2\x11\x11_tooltip.hpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\macosx\macosx_dragdrop.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\macosx\macosx_dragdrop.hpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\macosx\macosx_factory.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\macosx\macosx_factory.hpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\macosx\macosx_graphics.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\macosx\macosx_graphics.hpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\macosx\macosx_loop.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\macosx\macosx_loop.hpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\macosx\macosx_timer.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\macosx\macosx_timer.hpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\macosx\macosx_window.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\macosx\macosx_window.hpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\macosx\macosx_tooltip.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
+!IF "$(CFG)" == "plugin_skins2 - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\skins2"
+# PROP Intermediate_Dir "Release\modules\gui\skins2"
+!ELSEIF "$(CFG)" == "plugin_skins2 - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\skins2"
+# PROP Intermediate_Dir "Debug\modules\gui\skins2"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\skins2\macosx\macosx_tooltip.hpp"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=skins2" /D "MODULE_NAME_IS_skins2" 
 !IF "$(CFG)" == "plugin_skins2 - Win32 Release"
 # PROP Output_Dir "Release\modules\gui\skins2"

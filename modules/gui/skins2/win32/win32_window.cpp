@@ -1,8 +1,8 @@
 /*****************************************************************************
  * win32_window.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: win32_window.cpp 8966 2004-10-10 10:08:44Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: win32_window.cpp 11786 2005-07-18 23:57:41Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -38,11 +38,17 @@
 #endif
 
 
+// XXX layered windows are supposed to work only with at least win2k
+#ifndef WS_EX_LAYERED
+#   define WS_EX_LAYERED 0x00080000
+#endif
+
 Win32Window::Win32Window( intf_thread_t *pIntf, GenericWindow &rWindow,
                           HINSTANCE hInst, HWND hParentWindow,
                           bool dragDrop, bool playOnDrop,
                           Win32Window *pParentWindow ):
-    OSWindow( pIntf ), m_dragDrop( dragDrop ), m_isLayered( false )
+    OSWindow( pIntf ), m_dragDrop( dragDrop ), m_isLayered( false ),
+    m_pParent( pParentWindow )
 {
     // Create the window
     if( pParentWindow )
@@ -57,7 +63,8 @@ Win32Window::Win32Window( intf_thread_t *pIntf, GenericWindow &rWindow,
     {
         // Normal window
         m_hWnd = CreateWindowEx( WS_EX_TOOLWINDOW, "SkinWindowClass",
-            "default name", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT,
+            "default name", WS_POPUP | WS_CLIPCHILDREN,
+            CW_USEDEFAULT, CW_USEDEFAULT,
             CW_USEDEFAULT, CW_USEDEFAULT, hParentWindow, 0, hInst, NULL );
     }
 
@@ -80,16 +87,21 @@ Win32Window::Win32Window( intf_thread_t *pIntf, GenericWindow &rWindow,
         RegisterDragDrop( m_hWnd, m_pDropTarget );
     }
 
-    // XXX Set this window as the vout
-    if( pParentWindow )
+    // Set this window as a vout
+    if( m_pParent )
     {
-        VlcProc::instance( getIntf() )->setVoutWindow( (void*)m_hWnd );
+        VlcProc::instance( getIntf() )->registerVoutWindow( (void*)m_hWnd );
     }
 }
 
 
 Win32Window::~Win32Window()
 {
+    if( m_pParent )
+    {
+        VlcProc::instance( getIntf() )->unregisterVoutWindow( (void*)m_hWnd );
+    }
+
     Win32Factory *pFactory = (Win32Factory*)Win32Factory::instance( getIntf() );
     pFactory->m_windowMap[m_hWnd] = NULL;
 

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * async_queue.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: async_queue.cpp 8562 2004-08-29 09:00:03Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: async_queue.cpp 12207 2005-08-15 15:54:32Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -27,14 +27,15 @@
 #include "../src/os_timer.hpp"
 
 
-AsyncQueue::AsyncQueue( intf_thread_t *pIntf ): SkinObject( pIntf )
+AsyncQueue::AsyncQueue( intf_thread_t *pIntf ): SkinObject( pIntf ),
+    m_cmdFlush( this )
 {
     // Initialize the mutex
     vlc_mutex_init( pIntf, &m_lock );
 
     // Create a timer
     OSFactory *pOsFactory = OSFactory::instance( pIntf );
-    m_pTimer = pOsFactory->createOSTimer( Callback( this, &doFlush ) );
+    m_pTimer = pOsFactory->createOSTimer( m_cmdFlush );
 
     // Flush the queue every 10 ms
     m_pTimer->start( 10, false );
@@ -103,24 +104,34 @@ void AsyncQueue::remove( const string &rType )
 
 void AsyncQueue::flush()
 {
-    vlc_mutex_lock( &m_lock );
-
-    while( m_cmdList.size() > 0 )
+    while (true)
     {
-        // Pop the first command from the queue
-        CmdGenericPtr cCommand = m_cmdList.front();
-        m_cmdList.pop_front();
-        // And execute it
-        cCommand.get()->execute();
-    }
+        vlc_mutex_lock( &m_lock );
 
-    vlc_mutex_unlock( &m_lock );
+        if( m_cmdList.size() > 0 )
+        {
+            // Pop the first command from the queue
+            CmdGenericPtr cCommand = m_cmdList.front();
+            m_cmdList.pop_front();
+
+            // Unlock the mutex to avoid deadlocks if another thread wants to
+            // enqueue/remove a command while this one is processed
+            vlc_mutex_unlock( &m_lock );
+
+            // Execute the command
+            cCommand.get()->execute();
+        }
+        else
+        {
+            vlc_mutex_unlock( &m_lock );
+            break;
+        }
+    }
 }
 
 
-void AsyncQueue::doFlush( SkinObject *pObj )
+void AsyncQueue::CmdFlush::execute()
 {
-    AsyncQueue *pThis = (AsyncQueue*)pObj;
     // Flush the queue
-    pThis->flush();
+    m_pParent->flush();
 }

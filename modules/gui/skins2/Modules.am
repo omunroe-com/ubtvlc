@@ -14,10 +14,14 @@ SOURCES_skins2 = \
 	commands/cmd_input.hpp \
 	commands/cmd_layout.cpp \
 	commands/cmd_layout.hpp \
+	commands/cmd_muxer.cpp \
+	commands/cmd_muxer.hpp \
 	commands/cmd_on_top.cpp \
 	commands/cmd_on_top.hpp \
 	commands/cmd_playlist.cpp \
 	commands/cmd_playlist.hpp \
+	commands/cmd_playtree.cpp \
+	commands/cmd_playtree.hpp \
 	commands/cmd_minimize.cpp \
 	commands/cmd_minimize.hpp \
 	commands/cmd_quit.cpp \
@@ -39,6 +43,8 @@ SOURCES_skins2 = \
 	controls/ctrl_image.hpp \
 	controls/ctrl_list.cpp \
 	controls/ctrl_list.hpp \
+	controls/ctrl_tree.cpp \
+	controls/ctrl_tree.hpp \
 	controls/ctrl_move.cpp \
 	controls/ctrl_move.hpp \
 	controls/ctrl_resize.cpp \
@@ -151,11 +157,13 @@ SOURCES_skins2 = \
 	utils/var_percent.hpp \
 	utils/var_text.cpp \
 	utils/var_text.hpp \
+	utils/var_tree.cpp \
+	utils/var_tree.hpp \
 	\
 	vars/playlist.cpp \
 	vars/playlist.hpp \
-	vars/stream.cpp \
-	vars/stream.hpp \
+	vars/playtree.cpp \
+	vars/playtree.hpp \
 	vars/time.cpp \
 	vars/time.hpp \
 	vars/volume.cpp \
@@ -192,4 +200,19 @@ SOURCES_skins2 = \
 	x11/x11_window.hpp \
 	x11/x11_tooltip.cpp \
 	x11/x11_tooltip.hpp \
+    \
+	macosx/macosx_dragdrop.cpp \
+	macosx/macosx_dragdrop.hpp \
+	macosx/macosx_factory.cpp \
+	macosx/macosx_factory.hpp \
+	macosx/macosx_graphics.cpp \
+	macosx/macosx_graphics.hpp \
+	macosx/macosx_loop.cpp \
+	macosx/macosx_loop.hpp \
+	macosx/macosx_timer.cpp \
+	macosx/macosx_timer.hpp \
+	macosx/macosx_window.cpp \
+	macosx/macosx_window.hpp \
+	macosx/macosx_tooltip.cpp \
+    macosx/macosx_tooltip.hpp \
 	$(NULL)

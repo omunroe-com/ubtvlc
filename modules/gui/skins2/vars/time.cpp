@@ -1,8 +1,8 @@
 /*****************************************************************************
  * time.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: time.cpp 8071 2004-06-26 16:15:27Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: time.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_minimize.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_fullscreen.hpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_minimize.hpp 12302 2005-08-20 13:57:15Z dionoea $
  *
  * Authors: Mohammed Adnène Trojette     <adn@via.ecp.fr>
  *

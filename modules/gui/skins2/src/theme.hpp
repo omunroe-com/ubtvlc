@@ -1,8 +1,8 @@
 /*****************************************************************************
  * theme.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: theme.hpp 7259 2004-04-03 11:30:26Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: theme.hpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

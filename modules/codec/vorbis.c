@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vorbis.c: vorbis decoder/encoder/packetizer module making use of libvorbis.
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: vorbis.c 8565 2004-08-29 10:56:24Z gbazin $
+ * Copyright (C) 2001-2003 the VideoLAN team
+ * $Id: vorbis.c 12390 2005-08-25 14:09:50Z hartman $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -77,6 +77,10 @@ struct decoder_sys_t
     audio_date_t end_date;
     int          i_last_block_size;
 
+    /*
+    ** Channel reordering
+    */
+    int pi_chan_table[AOUT_CHAN_MAX];
 };
 
 static int pi_channels_maps[7] =
@@ -92,6 +96,28 @@ static int pi_channels_maps[7] =
     AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_CENTER
      | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT | AOUT_CHAN_LFE
 };
+
+/*
+**  channel order as defined in http://www.ogghelp.com/ogg/glossary.cfm#Audio_Channels
+*/
+
+/* recommended vorbis channel order for 6 channels */
+static const uint32_t pi_6channels_in[] =
+{ AOUT_CHAN_LEFT, AOUT_CHAN_CENTER, AOUT_CHAN_RIGHT,  
+  AOUT_CHAN_REARLEFT, AOUT_CHAN_REARRIGHT,AOUT_CHAN_LFE,0 };
+
+/* recommended vorbis channel order for 4 channels */
+static const uint32_t pi_4channels_in[] =
+{ AOUT_CHAN_LEFT, AOUT_CHAN_RIGHT, AOUT_CHAN_CENTER, AOUT_CHAN_LFE, 0 };
+
+/* recommended vorbis channel order for 3 channels */
+static const uint32_t pi_3channels_in[] =
+{ AOUT_CHAN_LEFT, AOUT_CHAN_CENTER, AOUT_CHAN_RIGHT, 0 };
+
+/* our internal channel order (WG-4 order) */
+static const uint32_t pi_channels_out[] =
+{ AOUT_CHAN_LEFT, AOUT_CHAN_RIGHT, AOUT_CHAN_REARLEFT, AOUT_CHAN_REARRIGHT,
+  AOUT_CHAN_CENTER, AOUT_CHAN_LFE, 0 };
 
 /****************************************************************************
  * Local prototypes
@@ -109,10 +135,12 @@ static block_t *SendPacket( decoder_t *, ogg_packet *, block_t * );
 
 static void ParseVorbisComments( decoder_t * );
 
+static void ConfigureChannelOrder(int *, int, uint32_t, vlc_bool_t );
+
 #ifdef MODULE_NAME_IS_tremor
-static void Interleave   ( int32_t *, const int32_t **, int, int );
+static void Interleave   ( int32_t *, const int32_t **, int, int, int * );
 #else
-static void Interleave   ( float *, const float **, int, int );
+static void Interleave   ( float *, const float **, int, int, int * );
 #endif
 
 #ifndef MODULE_NAME_IS_tremor
@@ -141,13 +169,15 @@ static block_t *Encode   ( encoder_t *, aout_buffer_t * );
   "Allows you to force a constant bitrate encoding (CBR)." )
 
 vlc_module_begin();
-
+    set_shortname( "Vorbis" );
     set_description( _("Vorbis audio decoder") );
 #ifdef MODULE_NAME_IS_tremor
     set_capability( "decoder", 90 );
 #else
     set_capability( "decoder", 100 );
 #endif
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACODEC );
     set_callbacks( OpenDecoder, CloseDecoder );
 
     add_submodule();
@@ -160,9 +190,11 @@ vlc_module_begin();
     add_submodule();
     set_description( _("Vorbis audio encoder") );
     set_capability( "encoder", 100 );
-    set_callbacks( OpenEncoder, CloseEncoder );
+#if defined(HAVE_VORBIS_VORBISENC_H)
+	set_callbacks( OpenEncoder, CloseEncoder );
+#endif
 
-    add_integer( ENC_CFG_PREFIX "quality", 3, NULL, ENC_QUALITY_TEXT,
+    add_integer( ENC_CFG_PREFIX "quality", 0, NULL, ENC_QUALITY_TEXT,
                  ENC_QUALITY_LONGTEXT, VLC_FALSE );
     add_integer( ENC_CFG_PREFIX "max-bitrate", 0, NULL, ENC_MAXBR_TEXT,
                  ENC_MAXBR_LONGTEXT, VLC_FALSE );
@@ -203,6 +235,7 @@ static int OpenDecoder( vlc_object_t *p_this )
 
     /* Misc init */
     aout_DateSet( &p_sys->end_date, 0 );
+    p_sys->i_last_block_size = 0;
     p_sys->b_packetizer = VLC_FALSE;
     p_sys->i_headers = 0;
 
@@ -278,6 +311,7 @@ static void *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
     if( p_sys->i_headers == 0 && p_dec->fmt_in.i_extra )
     {
         /* Headers already available as extra data */
+        msg_Dbg( p_dec, "Headers already available as extra data" );
         p_sys->i_headers = 3;
     }
     else if( oggpacket.bytes && p_sys->i_headers < 3 )
@@ -288,7 +322,7 @@ static void *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
         p_dec->fmt_in.p_extra =
             realloc( p_dec->fmt_in.p_extra, p_dec->fmt_in.i_extra +
                      oggpacket.bytes + 2 );
-        p_extra = p_dec->fmt_in.p_extra + p_dec->fmt_in.i_extra;
+        p_extra = (uint8_t *)p_dec->fmt_in.p_extra + p_dec->fmt_in.i_extra;
         *(p_extra++) = oggpacket.bytes >> 8;
         *(p_extra++) = oggpacket.bytes & 0xFF;
 
@@ -420,6 +454,9 @@ static int ProcessHeaders( decoder_t *p_dec )
                 p_dec->fmt_in.p_extra, p_dec->fmt_out.i_extra );
     }
 
+    ConfigureChannelOrder(p_sys->pi_chan_table, p_sys->vi.channels,
+            p_dec->fmt_out.audio.i_physical_channels, VLC_TRUE);
+
     return VLC_SUCCESS;
 }
 
@@ -481,7 +518,11 @@ static aout_buffer_t *DecodePacket( decoder_t *p_dec, ogg_packet *p_oggpacket )
 #endif
 
     if( p_oggpacket->bytes &&
+#ifdef MODULE_NAME_IS_tremor
+        vorbis_synthesis( &p_sys->vb, p_oggpacket, 1 ) == 0 )
+#else
         vorbis_synthesis( &p_sys->vb, p_oggpacket ) == 0 )
+#endif
         vorbis_synthesis_blockin( &p_sys->vd, &p_sys->vb );
 
     /* **pp_pcm is a multichannel float vector. In stereo, for
@@ -502,10 +543,10 @@ static aout_buffer_t *DecodePacket( decoder_t *p_dec, ogg_packet *p_oggpacket )
         /* Interleave the samples */
 #ifdef MODULE_NAME_IS_tremor
         Interleave( (int32_t *)p_aout_buffer->p_buffer,
-                    (const int32_t **)pp_pcm, p_sys->vi.channels, i_samples );
+                    (const int32_t **)pp_pcm, p_sys->vi.channels, i_samples, p_sys->pi_chan_table);
 #else
         Interleave( (float *)p_aout_buffer->p_buffer,
-                    (const float **)pp_pcm, p_sys->vi.channels, i_samples );
+                    (const float **)pp_pcm, p_sys->vi.channels, i_samples, p_sys->pi_chan_table);
 #endif
 
         /* Tell libvorbis how many samples we actually consumed */
@@ -576,7 +617,19 @@ static void ParseVorbisComments( decoder_t *p_dec )
             psz_value++;
             input_Control( p_input, INPUT_ADD_INFO, _("Vorbis comment"),
                            psz_name, psz_value );
+            /* HACK, we should use meta */
+            if( strcasestr( psz_name, "artist" ) )
+            {
+                input_Control( p_input, INPUT_ADD_INFO, _("Meta-information"),
+                               _("Artist"), psz_value );
+            }
+            else if( strcasestr( psz_name, "title" ) )
+            {
+                p_input->input.p_item->psz_name = strdup( psz_value );
+            }
         }
+        /* FIXME */
+        var_SetInteger( p_input, "item-change", p_input->input.p_item->i_id );
         free( psz_comment );
         i++;
     }
@@ -585,24 +638,68 @@ static void ParseVorbisComments( decoder_t *p_dec )
 /*****************************************************************************
  * Interleave: helper function to interleave channels
  *****************************************************************************/
-static void Interleave(
+static void ConfigureChannelOrder(int *pi_chan_table, int i_channels, uint32_t i_channel_mask, vlc_bool_t b_decode)
+{
+    const uint32_t *pi_channels_in;
+    switch( i_channels )
+    {
+        case 6:
+        case 5:
+            pi_channels_in = pi_6channels_in;
+            break;
+        case 4:
+            pi_channels_in = pi_4channels_in;
+            break;
+        case 3:
+            pi_channels_in = pi_3channels_in;
+            break;
+        default:
+            {
+                int i;
+                for( i = 0; i< i_channels; ++i )
+                {
+                    pi_chan_table[i] = i;
+                }
+                return;
+            }
+    }
+
+    if( b_decode )
+        aout_CheckChannelReorder( pi_channels_in, pi_channels_out,
+				  i_channel_mask & AOUT_CHAN_PHYSMASK,
+				  i_channels,
+				  pi_chan_table );
+    else
+        aout_CheckChannelReorder( pi_channels_out, pi_channels_in,
+				  i_channel_mask & AOUT_CHAN_PHYSMASK,
+				  i_channels,
+				  pi_chan_table );
+}
+
+/*****************************************************************************
+ * Interleave: helper function to interleave channels
+ *****************************************************************************/
 #ifdef MODULE_NAME_IS_tremor
-                        int32_t *p_out, const int32_t **pp_in,
-#else
-                        float *p_out, const float **pp_in,
-#endif
-                        int i_nb_channels, int i_samples )
+static void Interleave( int32_t *p_out, const int32_t **pp_in,
+                        int i_nb_channels, int i_samples, int *pi_chan_table)
 {
     int i, j;
 
     for ( j = 0; j < i_samples; j++ )
-    {
         for ( i = 0; i < i_nb_channels; i++ )
-        {
-            p_out[j * i_nb_channels + i] = pp_in[i][j];
-        }
-    }
+            p_out[j * i_nb_channels + pi_chan_table[i]] = pp_in[i][j] * (FIXED32_ONE >> 24);
 }
+#else
+static void Interleave( float *p_out, const float **pp_in,
+                        int i_nb_channels, int i_samples, int *pi_chan_table )
+{
+    int i, j;
+
+    for ( j = 0; j < i_samples; j++ )
+        for ( i = 0; i < i_nb_channels; i++ )
+            p_out[j * i_nb_channels + pi_chan_table[i]] = pp_in[i][j];
+}
+#endif
 
 /*****************************************************************************
  * CloseDecoder: vorbis decoder destruction
@@ -650,6 +747,12 @@ struct encoder_sys_t
      * Common properties
      */
     mtime_t i_pts;
+
+    /*
+    ** Channel reordering
+    */
+    int pi_chan_table[AOUT_CHAN_MAX];
+
 };
 
 /*****************************************************************************
@@ -774,6 +877,9 @@ static int OpenEncoder( vlc_object_t *p_this )
     p_sys->i_samples_delay = 0;
     p_sys->i_pts = 0;
 
+    ConfigureChannelOrder(p_sys->pi_chan_table, p_sys->vi.channels,
+            p_enc->fmt_in.audio.i_physical_channels, VLC_TRUE);
+
     return VLC_SUCCESS;
 }
 
@@ -805,7 +911,7 @@ static block_t *Encode( encoder_t *p_enc, aout_buffer_t *p_aout_buf )
         for( j = 0 ; j < p_aout_buf->i_nb_samples ; j++ )
         {
             buffer[i][j]= ((float *)p_aout_buf->p_buffer)
-                                    [j * p_sys->i_channels + i ];
+                                    [j * p_sys->i_channels + p_sys->pi_chan_table[i]];
         }
     }
 

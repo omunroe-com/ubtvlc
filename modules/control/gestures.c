@@ -1,8 +1,8 @@
 /*****************************************************************************
  * gestures.c: control vlc with mouse gestures
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: gestures.c 8672 2004-09-09 14:02:24Z gbazin $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: gestures.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -10,7 +10,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -87,6 +87,9 @@ static char *button_list[] = { "left", "middle", "right" };
 static char *button_list_text[] = { N_("Left"), N_("Middle"), N_("Right") };
 
 vlc_module_begin();
+    set_shortname( _("Gestures"));
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_CONTROL );
     add_integer( "gestures-threshold", 30, NULL, THRESHOLD_TEXT, THRESHOLD_LONGTEXT, VLC_TRUE );
     add_string( "gestures-button", "right", NULL,
                 BUTTON_TEXT, BUTTON_LONGTEXT, VLC_FALSE );

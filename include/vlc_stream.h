@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_stream.h
  *****************************************************************************
- * Copyright (C) 1999-2004 VideoLAN
- * $Id: vlc_stream.h 8232 2004-07-22 06:59:56Z gbazin $
+ * Copyright (C) 1999-2004 the VideoLAN team
+ * $Id: vlc_stream.h 12465 2005-09-03 15:55:52Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -23,6 +23,10 @@
 
 #ifndef _VLC_STREAM_H
 #define _VLC_STREAM_H 1
+
+# ifdef __cplusplus
+extern "C" {
+# endif
 
 /**
  * \defgroup stream Stream
@@ -50,8 +54,8 @@ enum stream_query_e
 
     /* Special for direct access control from demuxer.
      * XXX: avoid using it by all means */
-    STREAM_CONTROL_ACCESS,      /* arg1= int i_access_query, args   res: can fail
-                                   if access unreachable or access control answer */
+    STREAM_CONTROL_ACCESS   /* arg1= int i_access_query, args   res: can fail
+                             if access unreachable or access control answer */
 };
 
 /**
@@ -65,6 +69,7 @@ struct stream_t
     int      (*pf_read)   ( stream_t *, void *p_read, int i_read );
     int      (*pf_peek)   ( stream_t *, uint8_t **pp_peek, int i_peek );
     int      (*pf_control)( stream_t *, int i_query, va_list );
+    void     (*pf_destroy)( stream_t *);
 
     stream_sys_t *p_sys;
 };
@@ -104,22 +109,42 @@ static inline int stream_vaControl( stream_t *s, int i_query, va_list args )
 {
     return s->pf_control( s, i_query, args );
 }
+
+/**
+ * Destroy a stream
+ */
+static inline void stream_Delete( stream_t *s )
+{
+    s->pf_destroy( s );
+}
+
 static inline int stream_Control( stream_t *s, int i_query, ... )
 {
     va_list args;
     int     i_result;
+
+    if ( s == NULL )
+        return VLC_EGENERIC;
 
     va_start( args, i_query );
     i_result = s->pf_control( s, i_query, args );
     va_end( args );
     return i_result;
 }
+
+/**
+ * Get the current position in a stream
+ */
 static inline int64_t stream_Tell( stream_t *s )
 {
     int64_t i_pos;
     stream_Control( s, STREAM_GET_POSITION, &i_pos );
     return i_pos;
 }
+
+/**
+ * Get the size of the stream.
+ */
 static inline int64_t stream_Size( stream_t *s )
 {
     int64_t i_pos;
@@ -177,8 +202,18 @@ VLC_EXPORT( stream_t *,__stream_DemuxNew, ( vlc_object_t *p_obj, char *psz_demux
 VLC_EXPORT( void,      stream_DemuxSend,  ( stream_t *s, block_t *p_block ) );
 VLC_EXPORT( void,      stream_DemuxDelete,( stream_t *s ) );
 
+
+#define stream_MemoryNew( a, b, c, d ) __stream_MemoryNew( VLC_OBJECT(a), b, c, d )
+VLC_EXPORT( stream_t *,__stream_MemoryNew, (vlc_object_t *p_obj, uint8_t *p_buffer, int64_t i_size, vlc_bool_t i_preserve_memory ) );
+#define stream_UrlNew( a, b ) __stream_UrlNew( VLC_OBJECT(a), b )
+VLC_EXPORT( stream_t *,__stream_UrlNew, (vlc_object_t *p_this, const char *psz_url ) );
+
 /**
  * @}
  */
+
+# ifdef __cplusplus
+}
+# endif
 
 #endif

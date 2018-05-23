@@ -1,8 +1,8 @@
 /*****************************************************************************
  * MediaControlView.cpp: beos interface
  *****************************************************************************
- * Copyright (C) 1999, 2000, 2001 VideoLAN
- * $Id: MediaControlView.cpp 8449 2004-08-17 20:55:55Z titer $
+ * Copyright (C) 1999, 2000, 2001 the VideoLAN team
+ * $Id: MediaControlView.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Tony Castley <tony@castley.net>
  *          Stephan Aßmus <stippi@yellowbites.com>
@@ -208,7 +208,6 @@ MediaControlView::AttachedToWindow()
 		r.bottom += height;
 		// see that our calculated minimal width is not smaller than what
 		// the menubar can be
-printf("preferred: width: %f, height: %f - width: %f\n", width, height, r.Width());
 		width -= r.Width();
 		if (width > 0.0)
 			r.right += width;

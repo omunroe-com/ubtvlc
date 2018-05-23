@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ntservice.c: Windows NT/2K/XP service interface
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: ntservice.c 9028 2004-10-21 14:33:27Z gbazin $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: ntservice.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -58,7 +58,10 @@ static void Close   ( vlc_object_t * );
     "(common values are: logger, sap, rc, http)")
 
 vlc_module_begin();
+    set_shortname( _("NT Service"));
     set_description( _("Windows Service interface") );
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_CONTROL );
     add_bool( "ntservice-install", 0, NULL,
               INSTALL_TEXT, INSTALL_LONGTEXT, VLC_TRUE );
     add_bool( "ntservice-uninstall", 0, NULL,

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * goom.c: based on libgoom (see http://ios.free.fr/?page=projet&quoi=1)
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: goom.c 8978 2004-10-12 12:58:24Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: goom.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -67,8 +67,11 @@ static void Close        ( vlc_object_t * );
 #define MAX_SPEED 10
 
 vlc_module_begin();
+    set_shortname( _("Goom"));
     set_description( _("Goom effect") );
-    set_capability( "audio filter", 0 );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_VISUAL );
+    set_capability( "visualization", 0 );
     add_integer( "goom-width", 320, NULL,
                  WIDTH_TEXT, RES_LONGTEXT, VLC_FALSE );
     add_integer( "goom-height", 240, NULL,
@@ -128,6 +131,7 @@ static int Open( vlc_object_t *p_this )
     aout_filter_sys_t *p_sys;
     goom_thread_t     *p_thread;
     vlc_value_t       width, height;
+    video_format_t    fmt = {0};
 
     if ( p_filter->input.i_format != VLC_FOURCC('f','l','3','2' )
          || p_filter->output.i_format != VLC_FOURCC('f','l','3','2') )
@@ -157,10 +161,13 @@ static int Open( vlc_object_t *p_this )
     var_Create( p_thread, "goom-height", VLC_VAR_INTEGER|VLC_VAR_DOINHERIT );
     var_Get( p_thread, "goom-height", &height );
 
-    p_thread->p_vout =
-        vout_Request( p_filter, NULL, width.i_int, height.i_int,
-                      VLC_FOURCC('R','V','3','2'),
-                      VOUT_ASPECT_FACTOR * width.i_int/height.i_int );
+    fmt.i_width = fmt.i_visible_width = width.i_int;
+    fmt.i_height = fmt.i_visible_height = height.i_int;
+    fmt.i_chroma = VLC_FOURCC('R','V','3','2');
+    fmt.i_aspect = VOUT_ASPECT_FACTOR * width.i_int/height.i_int;
+    fmt.i_sar_num = fmt.i_sar_den = 1;
+
+    p_thread->p_vout = vout_Request( p_filter, NULL, &fmt );
     if( p_thread->p_vout == NULL )
     {
         msg_Err( p_filter, "no suitable vout module" );
@@ -383,7 +390,7 @@ static void Close( vlc_object_t *p_this )
     vlc_thread_join( p_sys->p_thread );
 
     /* Free data */
-    vout_Request( p_filter, p_sys->p_thread->p_vout, 0, 0, 0, 0 );
+    vout_Request( p_filter, p_sys->p_thread->p_vout, 0 );
     vlc_mutex_destroy( &p_sys->p_thread->lock );
     vlc_cond_destroy( &p_sys->p_thread->wait );
     vlc_object_detach( p_sys->p_thread );

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * AudioOutput.cpp: BeOS audio output
  *****************************************************************************
- * Copyright (C) 1999, 2000, 2001 VideoLAN
- * $Id: AudioOutput.cpp 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1999, 2000, 2001 the VideoLAN team
+ * $Id: AudioOutput.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Jean-Marc Dressler <polux@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>

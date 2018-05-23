@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_demux.h
  *****************************************************************************
- * Copyright (C) 1999-2004 VideoLAN
- * $Id: vlc_demux.h 8520 2004-08-25 18:50:36Z fenrir $
+ * Copyright (C) 1999-2005 VideoLAN (Centrale Réseaux) and its contributors
+ * $Id: vlc_demux.h 12202 2005-08-15 14:57:02Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -45,7 +45,7 @@ struct demux_t
     stream_t    *s;     /* NULL in case of a access+demux in one */
 
     /* es output */
-    es_out_t    *out;   /* ou p_es_out */
+    es_out_t    *out;   /* our p_es_out */
 
     /* set by demuxer */
     int (*pf_demux)  ( demux_t * );   /* demux one frame only */
@@ -105,12 +105,12 @@ enum demux_query_e
     DEMUX_CAN_PAUSE,            /* arg1= vlc_bool_t*    cannot fail */
     DEMUX_CAN_CONTROL_PACE,     /* arg1= vlc_bool_t*    cannot fail */
     DEMUX_GET_PTS_DELAY,        /* arg1= int64_t*       cannot fail */
-    DEMUX_SET_PAUSE_STATE, /* arg1= vlc_bool_t     can fail */
+    DEMUX_SET_PAUSE_STATE       /* arg1= vlc_bool_t     can fail */
 };
 
 /* stream_t *s could be null and then it mean a access+demux in one */
-#define demux2_New( a, b, c, d, e, f ) __demux2_New(VLC_OBJECT(a),b,c,d,e,f)
-VLC_EXPORT( demux_t *, __demux2_New,  ( vlc_object_t *p_obj, char *psz_access, char *psz_demux, char *psz_path, stream_t *s, es_out_t *out ) );
+#define demux2_New( a, b, c, d, e, f,g ) __demux2_New(VLC_OBJECT(a),b,c,d,e,f,g)
+VLC_EXPORT( demux_t *, __demux2_New,  ( vlc_object_t *p_obj, char *psz_access, char *psz_demux, char *psz_path, stream_t *s, es_out_t *out, vlc_bool_t ) );
 VLC_EXPORT( void,      demux2_Delete, ( demux_t * ) );
 VLC_EXPORT( int,       demux2_vaControlHelper, ( stream_t *, int64_t i_start, int64_t i_end, int i_bitrate, int i_align, int i_query, va_list args ) );
 

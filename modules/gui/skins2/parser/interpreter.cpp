@@ -1,8 +1,8 @@
 /*****************************************************************************
  * interpreter.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: interpreter.cpp 8524 2004-08-25 21:32:15Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: interpreter.cpp 12281 2005-08-20 00:31:27Z dionoea $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -24,7 +24,9 @@
 
 #include "interpreter.hpp"
 #include "expr_evaluator.hpp"
+#include "../commands/cmd_muxer.hpp"
 #include "../commands/cmd_playlist.hpp"
+#include "../commands/cmd_playtree.hpp"
 #include "../commands/cmd_dialogs.hpp"
 #include "../commands/cmd_dummy.hpp"
 #include "../commands/cmd_layout.hpp"
@@ -49,11 +51,13 @@ Interpreter::Interpreter( intf_thread_t *pIntf ): SkinObject( pIntf )
     REGISTER_CMD( "dialogs.changeSkin()", CmdDlgChangeSkin )
     REGISTER_CMD( "dialogs.fileSimple()", CmdDlgFileSimple )
     REGISTER_CMD( "dialogs.file()", CmdDlgFile )
+    REGISTER_CMD( "dialogs.directory()", CmdDlgDirectory )
     REGISTER_CMD( "dialogs.disc()", CmdDlgDisc )
     REGISTER_CMD( "dialogs.net()", CmdDlgNet )
     REGISTER_CMD( "dialogs.messages()", CmdDlgMessages )
     REGISTER_CMD( "dialogs.prefs()", CmdDlgPrefs )
     REGISTER_CMD( "dialogs.fileInfo()", CmdDlgFileInfo )
+    REGISTER_CMD( "dialogs.streamingWizard()", CmdDlgStreamingWizard )
     REGISTER_CMD( "dialogs.popup()", CmdDlgShowPopupMenu )
     REGISTER_CMD( "playlist.load()", CmdDlgPlaylistLoad )
     REGISTER_CMD( "playlist.save()", CmdDlgPlaylistSave )
@@ -76,6 +80,27 @@ Interpreter::Interpreter( intf_thread_t *pIntf ): SkinObject( pIntf )
         CmdGenericPtr( new CmdPlaylistRepeat( getIntf(), true ) );
     m_commandMap["playlist.setRepeat(false)"] =
         CmdGenericPtr( new CmdPlaylistRepeat( getIntf(), false ) );
+    REGISTER_CMD( "playtree.load()", CmdDlgPlaytreeLoad )
+    REGISTER_CMD( "playtree.save()", CmdDlgPlaytreeSave )
+    REGISTER_CMD( "playtree.add()", CmdDlgAdd )
+    VarTree &rVarTree = VlcProc::instance( getIntf() )->getPlaytreeVar();
+    m_commandMap["playtree.del()"] =
+        CmdGenericPtr( new CmdPlaytreeDel( getIntf(), rVarTree ) );
+    REGISTER_CMD( "playtree.next()", CmdPlaytreeNext )
+    REGISTER_CMD( "playtree.previous()", CmdPlaytreePrevious )
+    REGISTER_CMD( "playtree.sort()", CmdPlaytreeSort )
+    m_commandMap["playtree.setRandom(true)"] =
+        CmdGenericPtr( new CmdPlaytreeRandom( getIntf(), true ) );
+    m_commandMap["playtree.setRandom(false)"] =
+        CmdGenericPtr( new CmdPlaytreeRandom( getIntf(), false ) );
+    m_commandMap["playtree.setLoop(true)"] =
+        CmdGenericPtr( new CmdPlaytreeLoop( getIntf(), true ) );
+    m_commandMap["playtree.setLoop(false)"] =
+        CmdGenericPtr( new CmdPlaytreeLoop( getIntf(), false ) );
+    m_commandMap["playtree.setRepeat(true)"] =
+        CmdGenericPtr( new CmdPlaytreeRepeat( getIntf(), true ) );
+    m_commandMap["playtree.setRepeat(false)"] =
+        CmdGenericPtr( new CmdPlaytreeRepeat( getIntf(), false ) );
     REGISTER_CMD( "vlc.fullscreen()", CmdFullscreen )
     REGISTER_CMD( "vlc.play()", CmdPlay )
     REGISTER_CMD( "vlc.pause()", CmdPause )
@@ -83,6 +108,8 @@ Interpreter::Interpreter( intf_thread_t *pIntf ): SkinObject( pIntf )
     REGISTER_CMD( "vlc.faster()", CmdFaster )
     REGISTER_CMD( "vlc.slower()", CmdSlower )
     REGISTER_CMD( "vlc.mute()", CmdMute )
+    REGISTER_CMD( "vlc.volumeUp()", CmdVolumeUp )
+    REGISTER_CMD( "vlc.volumeDown()", CmdVolumeDown )
     REGISTER_CMD( "vlc.minimize()", CmdMinimize )
     REGISTER_CMD( "vlc.onTop()", CmdOnTop )
     REGISTER_CMD( "vlc.quit()", CmdQuit )
@@ -131,7 +158,35 @@ CmdGeneric *Interpreter::parseAction( const string &rAction, Theme *pTheme )
 
     CmdGeneric *pCommand = NULL;
 
-    if( rAction.find( ".setLayout(" ) != string::npos )
+    if( rAction.find( ";" ) != string::npos )
+    {
+        // Several actions are defined...
+        list<CmdGeneric *> actionList;
+        string rightPart = rAction;
+        string::size_type pos = rightPart.find( ";" );
+        while( pos != string::npos )
+        {
+            string leftPart = rightPart.substr( 0, rightPart.find( ";" ) );
+            // Remove any whitespace at the end of the left part, and parse it
+            leftPart =
+                leftPart.substr( 0, leftPart.find_last_not_of( " \t" ) + 1 );
+            actionList.push_back( parseAction( leftPart, pTheme ) );
+            // Now remove any whitespace at the beginning of the right part,
+            // and go on checking for further actions in it...
+            rightPart = rightPart.substr( pos, rightPart.size() );
+            rightPart =
+                rightPart.substr( rightPart.find_first_not_of( " \t;" ),
+                                  rightPart.size() );
+            pos = rightPart.find( ";" );
+        }
+        actionList.push_back( parseAction( rightPart, pTheme ) );
+
+        // The list is filled, we remove NULL pointers from it, just in case...
+        actionList.remove( NULL );
+
+        pCommand = new CmdMuxer( getIntf(), actionList );
+    }
+    else if( rAction.find( ".setLayout(" ) != string::npos )
     {
         int leftPos = rAction.find( ".setLayout(" );
         string windowId = rAction.substr( 0, leftPos );
@@ -177,6 +232,10 @@ CmdGeneric *Interpreter::parseAction( const string &rAction, Theme *pTheme )
         // Add the command in the pool
         pTheme->m_commands.push_back( CmdGenericPtr( pCommand ) );
     }
+    else
+    {
+        msg_Warn( getIntf(), "Unknown action: %s", rAction.c_str() );
+    }
 
     return pCommand;
 }
@@ -186,14 +245,14 @@ VarBool *Interpreter::getVarBool( const string &rName, Theme *pTheme )
 {
     VarManager *pVarManager = VarManager::instance( getIntf() );
 
-   // Convert the expression into Reverse Polish Notation
-    ExprEvaluator *pEvaluator = new ExprEvaluator( getIntf() );
-    pEvaluator->parse( rName );
+    // Convert the expression into Reverse Polish Notation
+    ExprEvaluator evaluator( getIntf() );
+    evaluator.parse( rName );
 
     list<VarBool*> varStack;
 
     // Get the first token from the RPN stack
-    string token = pEvaluator->getToken();
+    string token = evaluator.getToken();
     while( !token.empty() )
     {
         if( token == "and" )
@@ -295,7 +354,7 @@ VarBool *Interpreter::getVarBool( const string &rName, Theme *pTheme )
             varStack.push_back( pVar );
         }
         // Get the first token from the RPN stack
-        token = pEvaluator->getToken();
+        token = evaluator.getToken();
     }
 
     // The stack should contain a single variable
@@ -325,3 +384,10 @@ VarList *Interpreter::getVarList( const string &rName, Theme *pTheme )
     return pVar;
 }
 
+VarTree *Interpreter::getVarTree( const string &rName, Theme *pTheme )
+{
+    // Try to get the variable from the variable manager
+    VarManager *pVarManager = VarManager::instance( getIntf() );
+    VarTree *pVar = (VarTree*)pVarManager->getVar( rName, "tree" );
+    return pVar;
+}

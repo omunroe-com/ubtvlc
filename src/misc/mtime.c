@@ -2,8 +2,8 @@
  * mtime.c: high resolution time management functions
  * Functions are prototyped in mtime.h.
  *****************************************************************************
- * Copyright (C) 1998-2004 VideoLAN
- * $Id: mtime.c 8165 2004-07-10 18:08:09Z gbazin $
+ * Copyright (C) 1998-2004 the VideoLAN team
+ * $Id: mtime.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *

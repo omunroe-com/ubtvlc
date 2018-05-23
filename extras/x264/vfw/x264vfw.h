@@ -28,7 +28,7 @@
 #define FOURCC_YUY2 mmioFOURCC('Y','U','Y','2')
 #define FOURCC_YUYV mmioFOURCC('Y','U','Y','V')
 
-#define X264_WEBSITE	"http://lyra.via.ecp.fr/"
+#define X264_WEBSITE    "http://videolan.org/x264.html"
 
 /* CONFIG: vfw config
  */
@@ -40,20 +40,57 @@ typedef struct
     int desired_size;           /* please try to avoid modifications here */
     char stats[MAX_PATH];
     /*******************************/
+    int i_2passbitrate;
+    int i_pass;
+
+    int b_fast1pass;    /* turns off some flags during 1st pass */    
+    int b_updatestats;  /* updates the statsfile during 2nd pass */
 
     /* Our config */
     int i_refmax;
-    int i_idrframe;
-    int i_iframe;
+    int i_keyint_max;
+    int i_keyint_min;
+    int i_scenecut_threshold;
+    int i_qp_min;
+    int i_qp_max;
+    int i_qp_step;
 
     int i_qp;
     int b_filter;
 
     int b_cabac;
 
+    int b_i8x8;
     int b_i4x4;
     int b_psub16x16;
     int b_psub8x8;
+    int b_bsub16x16;
+    int b_dct8x8;
+
+    int i_bframe;
+    int i_subpel_refine;
+    int i_me_method;
+    int i_me_range;
+    int b_chroma_me;
+    int i_direct_mv_pred;
+    int i_threads;
+
+    int i_inloop_a;
+    int i_inloop_b;
+
+    int b_b_refs;
+    int b_b_wpred;
+    int i_bframe_bias;
+    int b_bframe_adaptive;
+
+    int i_key_boost;
+    int i_b_red;
+    int i_curve_comp;
+
+    int i_sar_width;
+    int i_sar_height;
+
+    int i_log_level;
 
     /* vfw interface */
     int b_save;
@@ -70,6 +107,9 @@ typedef struct
 
     /* handle */
     x264_t *h;
+
+    /* error console handle */
+    HWND *hCons;
 
     /* XXX: needed ? */
     unsigned int fincr;
@@ -93,11 +133,30 @@ void config_reg_save( CONFIG * config );
 
 /* Dialog callbacks */
 BOOL CALLBACK callback_about( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
+BOOL CALLBACK callback_debug( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
 BOOL CALLBACK callback_main ( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
 BOOL CALLBACK callback_advanced( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
+BOOL CALLBACK callback_err_console( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 /* Dll instance */
 extern HINSTANCE g_hInst;
+
+#if defined(_DEBUG)
+#include <stdio.h> /* vsprintf */
+#define DPRINTF_BUF_SZ  1024
+static __inline void DPRINTF(char *fmt, ...)
+{
+    va_list args;
+    char buf[DPRINTF_BUF_SZ];
+
+    va_start(args, fmt);
+    vsprintf(buf, fmt, args);
+    OutputDebugString(buf);
+}
+#else
+static __inline void DPRINTF(char *fmt, ...) { }
+#endif
+
 
 #endif
 

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * display.c: display stream output module
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: display.c 8265 2004-07-24 10:24:11Z gbazin $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id: display.c 12581 2005-09-17 13:29:37Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -47,9 +47,12 @@ static void Close( vlc_object_t * );
 #define SOUT_CFG_PREFIX "sout-display-"
 
 vlc_module_begin();
+    set_shortname( _("Display"));
     set_description( _("Display stream output") );
     set_capability( "sout stream", 50 );
     add_shortcut( "display" );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_STREAM );
     add_bool( SOUT_CFG_PREFIX "audio", 1, NULL, AUDIO_TEXT,
               AUDIO_LONGTEXT, VLC_TRUE );
     add_bool( SOUT_CFG_PREFIX "video", 1, NULL, VIDEO_TEXT,
@@ -95,7 +98,7 @@ static int Open( vlc_object_t *p_this )
 
     p_sys          = malloc( sizeof( sout_stream_sys_t ) );
     p_sys->p_input = vlc_object_find( p_stream, VLC_OBJECT_INPUT,
-                                      FIND_ANYWHERE );
+                                      FIND_PARENT );
     if( !p_sys->p_input )
     {
         msg_Err( p_stream, "cannot find p_input" );

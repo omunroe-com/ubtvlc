@@ -1,8 +1,8 @@
 /*****************************************************************************
  * window_manager.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: window_manager.hpp 8966 2004-10-10 10:08:44Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: window_manager.hpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

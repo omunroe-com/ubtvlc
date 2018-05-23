@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_spu.h : subpicture unit
  *****************************************************************************
- * Copyright (C) 1999, 2000 VideoLAN
- * $Id: vlc_spu.h 8717 2004-09-17 09:11:50Z gbazin $
+ * Copyright (C) 1999, 2000 the VideoLAN team
+ * $Id: vlc_spu.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -37,7 +37,7 @@ struct spu_t
     VLC_COMMON_MEMBERS
 
     vlc_mutex_t  subpicture_lock;                  /**< subpicture heap lock */
-    subpicture_t p_subpicture[VOUT_MAX_PICTURES];           /**< subpictures */
+    subpicture_t p_subpicture[VOUT_MAX_SUBPICTURES];        /**< subpictures */
     int i_channel;             /**< number of subpicture channels registered */
 
     filter_t *p_blend;                            /**< alpha blending module */
@@ -48,8 +48,8 @@ struct spu_t
     int i_crop_x, i_crop_y, i_crop_width, i_crop_height;       /**< cropping */
 
     int i_margin;                        /**< force position of a subpicture */
-    vlc_bool_t b_force_alpha;         /**< force alpha palette of subpicture */
-    uint8_t pi_alpha[4];                           /**< forced alpha palette */
+    vlc_bool_t b_force_palette;             /**< force palette of subpicture */
+    uint8_t palette[4][4];                               /**< forced palette */
 
     int ( *pf_control ) ( spu_t *, int, va_list );
 
@@ -99,6 +99,8 @@ VLC_EXPORT( void, spu_DisplaySubpicture, ( spu_t *, subpicture_t * ) );
 
 #define spu_CreateRegion(a,b) __spu_CreateRegion(VLC_OBJECT(a),b)
 VLC_EXPORT( subpicture_region_t *,__spu_CreateRegion, ( vlc_object_t *, video_format_t * ) );
+#define spu_MakeRegion(a,b,c) __spu_MakeRegion(VLC_OBJECT(a),b,c)
+VLC_EXPORT( subpicture_region_t *,__spu_MakeRegion, ( vlc_object_t *, video_format_t *, picture_t * ) );
 #define spu_DestroyRegion(a,b) __spu_DestroyRegion(VLC_OBJECT(a),b)
 VLC_EXPORT( void, __spu_DestroyRegion, ( vlc_object_t *, subpicture_region_t * ) );
 

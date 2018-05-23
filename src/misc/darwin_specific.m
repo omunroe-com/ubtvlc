@@ -1,8 +1,8 @@
 /*****************************************************************************
  * darwin_specific.m: Darwin specific features
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: darwin_specific.m 8299 2004-07-27 16:20:32Z hartman $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: darwin_specific.m 12485 2005-09-07 17:44:36Z fkuehne $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -27,6 +27,7 @@
 #include <vlc/vlc.h>
 
 #include <Cocoa/Cocoa.h>
+#include <CoreFoundation/CFString.h>
 
 #ifdef HAVE_LOCALE_H
 #   include <locale.h>
@@ -40,20 +41,22 @@ static int FindLanguage( const char * psz_lang )
     const char ** ppsz_parser;
     const char * ppsz_all[] =
     {
+        "Catalan", "ca",
+        "Danish", "da",
         "German", "de",
         "British", "en_GB",
         "English", "en",
         "Spanish", "es",
         "French", "fr",
-        "Hungarian", "hu",
         "Italian", "it",
         "Japanese", "ja",
+        "Korean", "ko",
         "Dutch", "nl",
-        "Norwegian", "no",
-        "Polish", "pl",
         "Brazillian Portuguese", "pt_BR",
+        "Romanian", "ro",
         "Russian", "ru",
-        "Swedish", "sv",
+        "Turkish", "tr",
+        "Chinese Traditional", "zh_TW",
         NULL
     };
 
@@ -113,6 +116,9 @@ void system_Init( vlc_t *p_this, int *pi_argc, char *ppsz_argv[] )
 
         [o_pool release];
     }
+
+    vlc_mutex_init( p_this, &p_this->p_libvlc->iconv_lock );
+    p_this->p_libvlc->iconv_macosx = vlc_iconv_open( "UTF-8", "UTF-8-MAC" );
 }
 
 /*****************************************************************************
@@ -129,5 +135,9 @@ void system_Configure( vlc_t *p_this, int *pi_argc, char *ppsz_argv[] )
 void system_End( vlc_t *p_this )
 {
     free( p_this->p_libvlc->psz_vlcpath );
+
+    if ( p_this->p_libvlc->iconv_macosx != (vlc_iconv_t)-1 )
+        vlc_iconv_close( p_this->p_libvlc->iconv_macosx );
+    vlc_mutex_destroy( &p_this->p_libvlc->iconv_lock );
 }
 

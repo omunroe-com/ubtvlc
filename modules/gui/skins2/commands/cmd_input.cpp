@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_input.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_input.cpp 7769 2004-05-24 21:48:56Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_input.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -107,5 +107,17 @@ void CmdFaster::execute()
 void CmdMute::execute()
 {
     aout_VolumeMute( getIntf(), NULL );
+}
+
+
+void CmdVolumeUp::execute()
+{
+    aout_VolumeUp( getIntf(), 1, NULL );
+}
+
+
+void CmdVolumeDown::execute()
+{
+    aout_VolumeDown( getIntf(), 1, NULL );
 }
 

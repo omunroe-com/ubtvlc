@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_video.hpp
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: ctrl_video.hpp 7073 2004-03-14 14:33:12Z asmax $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: ctrl_video.hpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -47,6 +47,9 @@ class CtrlVideo: public CtrlGeneric
 
         /// Draw the control on the given graphics
         virtual void draw( OSGraphics &rImage, int xDest, int yDest );
+
+        /// Get the type of control (custom RTTI)
+        virtual string getType() const { return "video"; }
 
     private:
         /// Vout window

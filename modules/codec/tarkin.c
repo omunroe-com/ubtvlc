@@ -1,8 +1,8 @@
 /*****************************************************************************
  * tarkin.c: tarkin decoder module making use of libtarkin.
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: tarkin.c 8551 2004-08-28 17:36:02Z gbazin $
+ * Copyright (C) 2001-2003 the VideoLAN team
+ * $Id: tarkin.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -74,6 +74,8 @@ static void tarkin_CopyPicture( decoder_t *, picture_t *, uint8_t *, int );
 vlc_module_begin();
     set_description( _("Tarkin decoder module") );
     set_capability( "decoder", 100 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_VCODEC );
     set_callbacks( OpenDecoder, CloseDecoder );
     add_shortcut( "tarkin" );
 vlc_module_end();

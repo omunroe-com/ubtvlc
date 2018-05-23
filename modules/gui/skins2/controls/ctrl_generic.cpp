@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_generic.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_generic.cpp 7073 2004-03-14 14:33:12Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: ctrl_generic.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -69,12 +69,42 @@ void CtrlGeneric::setLayout( GenericLayout *pLayout,
 }
 
 
-void CtrlGeneric::notifyLayout() const
+void CtrlGeneric::notifyLayout( int width, int height,
+                                int xOffSet, int yOffSet ) const
 {
     // Notify the layout
     if( m_pLayout )
     {
-        m_pLayout->onControlUpdate( *this );
+        m_pLayout->onControlUpdate( *this, width, height, xOffSet, yOffSet );
+    }
+}
+
+
+void CtrlGeneric::notifyLayoutMaxSize( const OSGraphics *pImg1,
+                                       const OSGraphics *pImg2 )
+{
+    if( pImg1 == NULL )
+    {
+        if( pImg2 == NULL )
+        {
+            notifyLayout();
+        }
+        else
+        {
+            notifyLayout( pImg2->getWidth(), pImg2->getHeight() );
+        }
+    }
+    else
+    {
+        if( pImg2 == NULL )
+        {
+            notifyLayout( pImg1->getWidth(), pImg1->getHeight() );
+        }
+        else
+        {
+            notifyLayout( max( pImg1->getWidth(), pImg2->getWidth() ),
+                          max( pImg1->getHeight(), pImg2->getHeight() ) );
+        }
     }
 }
 
@@ -128,7 +158,7 @@ bool CtrlGeneric::isVisible() const
 
 void CtrlGeneric::onUpdate( Subject<VarBool> &rVariable )
 {
-    // Is it the visibily variable ?
+    // Is it the visibility variable ?
     if( &rVariable == m_pVisible )
     {
         // Redraw the layout

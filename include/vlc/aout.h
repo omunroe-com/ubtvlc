@@ -1,8 +1,8 @@
 /*****************************************************************************
  * aout.h: audio output header for vlc
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: aout.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: aout.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * normvol.c :  volume normalizer
  *****************************************************************************
- * Copyright (C) 2001 VideoLAN
- * $Id: normvol.c 9126 2004-11-03 00:07:38Z gbazin $
+ * Copyright (C) 2001 the VideoLAN team
+ * $Id: normvol.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -80,6 +80,9 @@ typedef struct aout_filter_sys_t
 
 vlc_module_begin();
     set_description( _("Volume normalizer") );
+    set_shortname( N_("Volume normalizer") );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_AFILTER );
     add_shortcut( "volnorm" );
     add_integer( "norm-buff-size", 20 ,NULL ,BUFF_TEXT, BUFF_LONGTEXT,
                  VLC_TRUE);

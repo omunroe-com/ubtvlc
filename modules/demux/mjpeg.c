@@ -1,7 +1,7 @@
 /*****************************************************************************
  * mjpeg.c : demuxes mjpeg webcam http streams
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
+ * Copyright (C) 2004 the VideoLAN team
  * $Id: mjpeg.c 7196 2004-03-29 21:29:31Z fenrir $
  *
  * Authors: Henry Jen (slowhog) <henryjen@ztune.net>
@@ -45,9 +45,12 @@ static void Close( vlc_object_t * );
     "playing from files, use 0 for live.")
 
 vlc_module_begin();
+    set_shortname( "MJPEG");
     set_description( _("JPEG camera demuxer") );
     set_capability( "demux2", 5 );
     set_callbacks( Open, Close );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     add_float( "mjpeg-fps", 0.0, NULL, FPS_TEXT, FPS_LONGTEXT, VLC_FALSE );
 vlc_module_end();
 
@@ -65,6 +68,7 @@ struct demux_sys_t
 
     vlc_bool_t      b_still;
     mtime_t         i_still_end;
+    mtime_t         i_still_length;
 
     mtime_t         i_time;
     mtime_t         i_frame_length;
@@ -75,7 +79,7 @@ struct demux_sys_t
 };
 
 /*****************************************************************************
- * Peek: Helper function to peek data with incremental size. 
+ * Peek: Helper function to peek data with incremental size.
  * \return VLC_FALSE if peek no more data, VLC_TRUE otherwise.
  *****************************************************************************/
 static vlc_bool_t Peek( demux_t *p_demux, vlc_bool_t b_first )
@@ -184,7 +188,7 @@ static vlc_bool_t CheckMimeHeader( demux_t *p_demux, int *p_header_size )
         *p_header_size = -2;
         return VLC_FALSE;
     }
-    if( strncmp( p_sys->p_peek, "--", 2 ) )
+    if( strncmp( (char *)p_sys->p_peek, "--", 2 ) )
     {
         *p_header_size = 0;
         return VLC_FALSE;
@@ -277,7 +281,7 @@ static int SendBlock( demux_t *p_demux, int i )
 
     if( p_sys->b_still )
     {
-        p_sys->i_still_end = mdate() + I64C(5000000);
+        p_sys->i_still_end = mdate() + p_sys->i_still_length;
     }
 
     return 1;
@@ -327,6 +331,11 @@ static int Open( vlc_object_t * p_this )
         goto error;
     }
 
+
+    var_Create( p_demux, "mjpeg-fps", VLC_VAR_FLOAT | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "mjpeg-fps", &val );
+    p_sys->i_frame_length = 0;
+
     /* Check for jpeg file extension */
     p_sys->b_still = VLC_FALSE;
     p_sys->i_still_end = 0;
@@ -335,12 +344,17 @@ static int Open( vlc_object_t * p_this )
                      !strcasecmp( psz_ext, ".jpg" ) ) )
     {
         p_sys->b_still = VLC_TRUE;
+        if( val.f_float)
+        {
+            p_sys->i_still_length =1000000.0 / val.f_float;
+        }
+        else
+        {
+            /* Defaults to 1fps */
+            p_sys->i_still_length = 1000000;
+        }
     }
-
-    var_Create( p_demux, "mjpeg-fps", VLC_VAR_FLOAT | VLC_VAR_DOINHERIT );
-    var_Get( p_demux, "mjpeg-fps", &val );
-    p_sys->i_frame_length = 0;
-    if( val.f_float )
+    else if ( val.f_float )
     {
         p_sys->i_frame_length = 1000000.0 / val.f_float;
     }
@@ -373,7 +387,7 @@ static int MjpgDemux( demux_t *p_demux )
     }
     else if( p_sys->b_still && p_sys->i_still_end )
     {
-        msleep( 40000 );
+        msleep( 400 );
         return 1;
     }
 
@@ -462,7 +476,7 @@ static int MimeDemux( demux_t *p_demux )
                 }
             }
         }
-        if( !strncmp( p_sys->psz_separator, p_sys->p_peek + i + 2,
+        if( !strncmp( p_sys->psz_separator, (char *)(p_sys->p_peek + i + 2),
                       strlen( p_sys->psz_separator ) ) )
         {
             b_done = VLC_TRUE;

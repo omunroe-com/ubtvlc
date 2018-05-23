@@ -1,8 +1,8 @@
 /*****************************************************************************
  * theme.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: theme.cpp 7266 2004-04-03 18:47:12Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: theme.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -45,8 +45,15 @@ void Theme::loadConfig()
 
     // Get config from vlcrc file
     char *save = config_GetPsz( getIntf(), "skins2-config" );
-    if( save == NULL )
+    if( !save ) return;
+
+    // Is there an existing config?
+    if( !strcmp( save, "" ) )
+    {
+        // Show the windows
+        m_windowManager.showAll();
         return;
+    }
 
     // Initialization
     map<string, TopWindowPtr>::const_iterator it;
@@ -75,6 +82,7 @@ void Theme::loadConfig()
         // Next window
         i++;
     }
+    free( save );
 }
 
 
@@ -102,7 +110,6 @@ void Theme::saveConfig()
 
     // Save config to file
     config_PutPsz( getIntf(), "skins2-config", save );
-    config_SaveConfigFile( getIntf(), "skins2" );
 
     // Free memory
     delete[] save;

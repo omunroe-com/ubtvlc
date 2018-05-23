@@ -1,8 +1,8 @@
 /*****************************************************************************
- * hotkeys.h: keycode defines
+ * vlc_keys.h: keycode defines
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: vlc_keys.h 8966 2004-10-10 10:08:44Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: vlc_keys.h 12387 2005-08-24 22:27:28Z titer $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -49,14 +49,16 @@
 #define KEY_F12              0x00120000
 #define KEY_HOME             0x00130000
 #define KEY_END              0x00140000
-#define KEY_MENU             0x00150000
-#define KEY_ESC              0x00160000
-#define KEY_PAGEUP           0x00170000
-#define KEY_PAGEDOWN         0x00180000
-#define KEY_TAB              0x00190000
-#define KEY_BACKSPACE        0x001A0000
-#define KEY_MOUSEWHEELUP     0x001B0000
-#define KEY_MOUSEWHEELDOWN   0x001C0000
+#define KEY_INSERT           0x00150000
+#define KEY_DELETE           0x00160000
+#define KEY_MENU             0x00170000
+#define KEY_ESC              0x00180000
+#define KEY_PAGEUP           0x00190000
+#define KEY_PAGEDOWN         0x001A0000
+#define KEY_TAB              0x001B0000
+#define KEY_BACKSPACE        0x001C0000
+#define KEY_MOUSEWHEELUP     0x001D0000
+#define KEY_MOUSEWHEELDOWN   0x001E0000
 
 #define KEY_ASCII            0x0000007F
 #define KEY_UNSET            0
@@ -101,6 +103,8 @@ static const struct key_descriptor_s vlc_keys[] =
     { "F12", KEY_F12 },
     { "Home", KEY_HOME },
     { "End", KEY_END },
+    { "Insert", KEY_INSERT },
+    { "Delete", KEY_DELETE },
     { "Menu", KEY_MENU },
     { "Esc", KEY_ESC },
     { "Page Up", KEY_PAGEUP },
@@ -196,41 +200,55 @@ static inline int StringToKey( char *psz_key )
 #define ACTIONID_NAV_DOWN              15
 #define ACTIONID_NAV_LEFT              16
 #define ACTIONID_NAV_RIGHT             17
-#define ACTIONID_JUMP_BACKWARD_10SEC   18
-#define ACTIONID_JUMP_FORWARD_10SEC    19
-#define ACTIONID_JUMP_BACKWARD_1MIN    20
-#define ACTIONID_JUMP_FORWARD_1MIN     21
-#define ACTIONID_JUMP_BACKWARD_5MIN    22
-#define ACTIONID_JUMP_FORWARD_5MIN     23
-#define ACTIONID_POSITION              24
-#define ACTIONID_VOL_MUTE              25
+#define ACTIONID_JUMP_BACKWARD_3SEC    18
+#define ACTIONID_JUMP_FORWARD_3SEC     19
+#define ACTIONID_JUMP_BACKWARD_10SEC   20
+#define ACTIONID_JUMP_FORWARD_10SEC    21
+#define ACTIONID_JUMP_BACKWARD_1MIN    22
+#define ACTIONID_JUMP_FORWARD_1MIN     23
+#define ACTIONID_JUMP_BACKWARD_5MIN    24
+#define ACTIONID_JUMP_FORWARD_5MIN     25
+#define ACTIONID_POSITION              26
+#define ACTIONID_VOL_MUTE              27
 /* let ACTIONID_SET_BOOMARK* and ACTIONID_PLAY_BOOKMARK* be contiguous */
-#define ACTIONID_SET_BOOKMARK1         26
-#define ACTIONID_SET_BOOKMARK2         27
-#define ACTIONID_SET_BOOKMARK3         28
-#define ACTIONID_SET_BOOKMARK4         29
-#define ACTIONID_SET_BOOKMARK5         30
-#define ACTIONID_SET_BOOKMARK6         31
-#define ACTIONID_SET_BOOKMARK7         32
-#define ACTIONID_SET_BOOKMARK8         33
-#define ACTIONID_SET_BOOKMARK9         34
-#define ACTIONID_SET_BOOKMARK10        35
-#define ACTIONID_PLAY_BOOKMARK1        36
-#define ACTIONID_PLAY_BOOKMARK2        37
-#define ACTIONID_PLAY_BOOKMARK3        38
-#define ACTIONID_PLAY_BOOKMARK4        39
-#define ACTIONID_PLAY_BOOKMARK5        40
-#define ACTIONID_PLAY_BOOKMARK6        41
-#define ACTIONID_PLAY_BOOKMARK7        42
-#define ACTIONID_PLAY_BOOKMARK8        43
-#define ACTIONID_PLAY_BOOKMARK9        44
-#define ACTIONID_PLAY_BOOKMARK10       45
+#define ACTIONID_SET_BOOKMARK1         28
+#define ACTIONID_SET_BOOKMARK2         29
+#define ACTIONID_SET_BOOKMARK3         39
+#define ACTIONID_SET_BOOKMARK4         31
+#define ACTIONID_SET_BOOKMARK5         32
+#define ACTIONID_SET_BOOKMARK6         33
+#define ACTIONID_SET_BOOKMARK7         34
+#define ACTIONID_SET_BOOKMARK8         35
+#define ACTIONID_SET_BOOKMARK9         36
+#define ACTIONID_SET_BOOKMARK10        37
+#define ACTIONID_PLAY_BOOKMARK1        38
+#define ACTIONID_PLAY_BOOKMARK2        39
+#define ACTIONID_PLAY_BOOKMARK3        40
+#define ACTIONID_PLAY_BOOKMARK4        41
+#define ACTIONID_PLAY_BOOKMARK5        42
+#define ACTIONID_PLAY_BOOKMARK6        43
+#define ACTIONID_PLAY_BOOKMARK7        44
+#define ACTIONID_PLAY_BOOKMARK8        45
+#define ACTIONID_PLAY_BOOKMARK9        46
+#define ACTIONID_PLAY_BOOKMARK10       47
 /* end of contiguous zone */
-#define ACTIONID_SUBDELAY_UP           46
-#define ACTIONID_SUBDELAY_DOWN         47
-#define ACTIONID_HISTORY_BACK          48
-#define ACTIONID_HISTORY_FORWARD       49
-#define ACTIONID_AUDIO_TRACK           50
-#define ACTIONID_SUBTITLE_TRACK        51
-#define ACTIONID_INTF_SHOW             52
-
+#define ACTIONID_SUBDELAY_UP           48
+#define ACTIONID_SUBDELAY_DOWN         49
+#define ACTIONID_HISTORY_BACK          50
+#define ACTIONID_HISTORY_FORWARD       51
+#define ACTIONID_AUDIO_TRACK           52
+#define ACTIONID_SUBTITLE_TRACK        53
+#define ACTIONID_CUBESPEED_UP          54
+#define ACTIONID_CUBESPEED_DOWN        55
+#define ACTIONID_INTF_SHOW             56
+#define ACTIONID_INTF_HIDE             57
+/* chapter and title navigation */
+#define ACTIONID_TITLE_PREV            58
+#define ACTIONID_TITLE_NEXT            59
+#define ACTIONID_CHAPTER_PREV          60
+#define ACTIONID_CHAPTER_NEXT          61
+/* end of chapter and title navigation */
+#define ACTIONID_AUDIODELAY_UP         62
+#define ACTIONID_AUDIODELAY_DOWN       63
+#define ACTIONID_SNAPSHOT              64
+#define ACTIONID_RECORD                65

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_es.h: Elementary stream formats descriptions
  *****************************************************************************
- * Copyright (C) 1999-2001 VideoLAN
- * $Id: vlc_es.h 9268 2004-11-10 13:01:48Z gbazin $
+ * Copyright (C) 1999-2001 the VideoLAN team
+ * $Id: vlc_es.h 12307 2005-08-20 19:14:58Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -61,7 +61,7 @@ struct audio_format_t
     unsigned int i_bytes_per_frame;
 
     /* Number of sampleframes contained in one compressed frame. */
-    unsigned int        i_frame_length;
+    unsigned int i_frame_length;
     /* Please note that it may be completely arbitrary - buffers are not
      * obliged to contain a integral number of so-called "frames". It's
      * just here for the division :
@@ -128,9 +128,9 @@ struct subs_format_t
         uint32_t palette[16+1];
 
         /* the width of the original movie the spu was extracted from */
-        int	i_original_frame_width;
+        int i_original_frame_width;
         /* the height of the original movie the spu was extracted from */
-        int	i_original_frame_height;
+        int i_original_frame_height;
     } spu;
 
     struct
@@ -163,7 +163,7 @@ struct es_format_t
     video_format_t video;
     subs_format_t  subs;
 
-    int            i_bitrate;
+    unsigned int   i_bitrate;
 
     vlc_bool_t     b_packetized; /* wether the data is packetized
                                     (ie. not truncated) */

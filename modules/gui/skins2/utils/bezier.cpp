@@ -1,8 +1,8 @@
 /*****************************************************************************
  * bezier.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: bezier.cpp 7217 2004-04-01 09:07:37Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: bezier.cpp 11786 2005-07-18 23:57:41Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -26,8 +26,18 @@
 #include "bezier.hpp"
 #include <math.h>
 
+// XXX should be in VLC core
 #ifndef HAVE_LRINTF
-#   define lrintf(a) (int)rint(a)
+#   ifdef HAVE_LRINT
+#       define lrintf( x ) (int)rint( x )
+#   elif defined WIN32
+	    __inline long int lrintf( float x )
+	    {
+            int i;
+            _asm fld x __asm fistp i
+		    return i;
+    	}
+#   endif
 #endif
 
 Bezier::Bezier( intf_thread_t *p_intf, const vector<float> &rAbscissas,
@@ -100,8 +110,8 @@ float Bezier::getNearestPercent( int x, int y ) const
 float Bezier::getMinDist( int x, int y ) const
 {
     int nearest = findNearestPoint( x, y );
-    return sqrt( (m_leftVect[nearest] - x) * (m_leftVect[nearest] - x) +
-                 (m_topVect[nearest] - y) * (m_topVect[nearest] - y) );
+    return sqrt( (double)((m_leftVect[nearest] - x) * (m_leftVect[nearest] - x) +
+                 (m_topVect[nearest] - y) * (m_topVect[nearest] - y)) );
 }
 
 
@@ -133,9 +143,9 @@ int Bezier::getWidth() const
     int width = 0;
     for( int i = 0; i < m_nbPoints; i++ )
     {
-        if( m_leftVect[i] > width )
+        if( m_leftVect[i] >= width )
         {
-            width = m_leftVect[i];
+            width = m_leftVect[i] + 1;
         }
     }
     return width;
@@ -147,9 +157,9 @@ int Bezier::getHeight() const
     int height = 0;
     for( int i = 0; i < m_nbPoints; i++ )
     {
-        if( m_topVect[i] > height )
+        if( m_topVect[i] >= height )
         {
-            height = m_topVect[i];
+            height = m_topVect[i] + 1;
         }
     }
     return height;

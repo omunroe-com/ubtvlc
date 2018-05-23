@@ -1,8 +1,8 @@
 /*****************************************************************************
  * wav.c: wav muxer module for vlc
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: wav.c 8862 2004-09-30 17:21:40Z gbazin $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: wav.c 12090 2005-08-09 15:20:23Z jpsaman $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -41,6 +41,8 @@ static void Close  ( vlc_object_t * );
 vlc_module_begin();
     set_description( _("WAV muxer") );
     set_capability( "sout mux", 5 );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_MUX );
     set_callbacks( Open, Close );
     add_shortcut( "wav" );
 vlc_module_end();
@@ -154,7 +156,7 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
     GUID subformat_guid = {0, 0, 0x10,{0x80, 0, 0, 0xaa, 0, 0x38, 0x9b, 0x71}};
     sout_mux_sys_t *p_sys = p_mux->p_sys;
     WAVEFORMATEX *p_waveformat = &p_sys->waveformat.Format;
-    int i_bytes_per_sample, i_format, i;
+    int i_bytes_per_sample, i_format;
     vlc_bool_t b_ext;
 
     if( p_input->p_fmt->i_cat != AUDIO_ES )
@@ -176,6 +178,8 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
     p_sys->i_channel_mask = 0;
     if( p_input->p_fmt->audio.i_physical_channels )
     {
+        unsigned int i;
+        
         for( i = 0; i < sizeof(pi_channels_in)/sizeof(uint32_t); i++ )
         {
             if( p_input->p_fmt->audio.i_physical_channels & pi_channels_src[i])

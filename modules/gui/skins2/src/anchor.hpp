@@ -1,8 +1,8 @@
 /*****************************************************************************
  * anchor.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: anchor.hpp 7228 2004-04-01 21:04:43Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: anchor.hpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

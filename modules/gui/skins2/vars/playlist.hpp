@@ -1,8 +1,8 @@
 /*****************************************************************************
  * playlist.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: playlist.hpp 8659 2004-09-07 21:16:49Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: playlist.hpp 11988 2005-08-03 19:01:44Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -46,14 +46,9 @@ class Playlist: public VarList
     private:
         /// VLC playlist object
         playlist_t *m_pPlaylist;
-        /// Iconv handle
-        vlc_iconv_t iconvHandle;
 
         /// Build the list from the VLC playlist
         void buildList();
-
-        /// Convert a string to UTF8 from the current encoding
-        UString *convertName( const char *pName );
 };
 
 

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * logger.c : file logging plugin for vlc
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: logger.c 8958 2004-10-08 10:36:25Z gbazin $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: logger.c 12036 2005-08-05 18:44:47Z massiot $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -10,7 +10,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -80,7 +80,7 @@ struct intf_sys_t
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
-static int  Open    ( vlc_object_t * );                  
+static int  Open    ( vlc_object_t * );
 static void Close   ( vlc_object_t * );
 static void Run     ( intf_thread_t * );
 
@@ -98,7 +98,10 @@ static char *mode_list_text[] = { N_("Text"), "HTML" };
 #define LOGMODE_LONGTEXT N_("Specify the log format. Available choices are \"text\" (default) and \"html\".")
 
 vlc_module_begin();
-    set_description( _("File logging interface") );
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_CONTROL );
+    set_shortname( N_( "Logging" ) );
+    set_description( _("File logging") );
 
     add_file( "logfile", NULL, NULL, N_("Log filename"), N_("Specify the log filename."), VLC_FALSE );
     add_string( "logmode", "text", NULL, LOGMODE_TEXT, LOGMODE_LONGTEXT,
@@ -157,7 +160,7 @@ static int Open( vlc_object_t *p_this )
     if( !psz_file )
     {
 #ifdef SYS_DARWIN
-	char *psz_homedir = p_this->p_vlc->psz_homedir; 
+        char *psz_homedir = p_this->p_vlc->psz_homedir; 
 
         if( !psz_homedir )
         {
@@ -182,7 +185,7 @@ static int Open( vlc_object_t *p_this )
             }
         }
 #else
-	switch( p_intf->p_sys->i_mode )
+        switch( p_intf->p_sys->i_mode )
         {
         case MODE_HTML:
             psz_file = strdup( LOG_FILE_HTML );

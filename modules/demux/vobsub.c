@@ -1,8 +1,8 @@
 /*****************************************************************************
  * subtitle.c: Demux vobsub files.
  *****************************************************************************
- * Copyright (C) 1999-2004 VideoLAN
- * $Id: vobsub.c 9003 2004-10-17 13:38:22Z hartman $
+ * Copyright (C) 1999-2004 the VideoLAN team
+ * $Id: vobsub.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Derk-Jan Hartman <hartman at videolan dot org>
@@ -46,6 +46,8 @@ static void Close( vlc_object_t *p_this );
 
 vlc_module_begin();
     set_description( _("Vobsub subtitles demux") );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_capability( "demux2", 1 );
     
     set_callbacks( Open, Close );

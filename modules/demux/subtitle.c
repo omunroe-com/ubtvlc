@@ -1,8 +1,8 @@
 /*****************************************************************************
  * subtitle.c: Demux for subtitle text files.
  *****************************************************************************
- * Copyright (C) 1999-2004 VideoLAN
- * $Id: subtitle.c 9114 2004-11-02 20:52:45Z hartman $
+ * Copyright (C) 1999-2004 the VideoLAN team
+ * $Id: subtitle.c 12548 2005-09-14 00:36:41Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Derk-Jan Hartman <hartman at videolan dot org>
@@ -37,11 +37,6 @@
 #include <vlc/input.h>
 #include "vlc_video.h"
 
-
-#if (!defined( WIN32 ) || defined(__MINGW32__))
-#    include <dirent.h>
-#endif
-
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
@@ -54,17 +49,20 @@ static void Close( vlc_object_t *p_this );
     "Override frames per second. " \
     "It will only work with MicroDVD subtitles."
 #define SUB_TYPE_LONGTEXT \
-    "One from \"microdvd\", \"subrip\", \"ssa1\", \"ssa2-4\", \"vplayer\" " \
+    "One from \"microdvd\", \"subrip\", \"ssa1\", \"ssa2-4\", \"ass\", \"vplayer\" " \
     "\"sami\" (auto for autodetection, it should always work)."
 static char *ppsz_sub_type[] =
 {
     "auto", "microdvd", "subrip", "subviewer", "ssa1",
-    "ssa2-4", "vplayer", "sami"
+    "ssa2-4", "ass", "vplayer", "sami"
 };
 
 vlc_module_begin();
+    set_shortname( _("Subtitles"));
     set_description( _("Text subtitles demux") );
     set_capability( "demux2", 0 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     add_float( "sub-fps", 0.0, NULL,
                N_("Frames per second"),
                SUB_FPS_LONGTEXT, VLC_TRUE );
@@ -89,6 +87,7 @@ enum
     SUB_TYPE_SUBRIP,
     SUB_TYPE_SSA1,
     SUB_TYPE_SSA2_4,
+    SUB_TYPE_ASS,
     SUB_TYPE_VPLAYER,
     SUB_TYPE_SAMI,
     SUB_TYPE_SUBVIEWER,
@@ -151,6 +150,7 @@ static struct
     { "subviewer",  SUB_TYPE_SUBVIEWER, "SubViewer",ParseSubViewer },
     { "ssa1",       SUB_TYPE_SSA1,      "SSA-1",    ParseSSA },
     { "ssa2-4",     SUB_TYPE_SSA2_4,    "SSA-2/3/4",ParseSSA },
+    { "ass",        SUB_TYPE_ASS,       "SSA/ASS",  ParseSSA },
     { "vplayer",    SUB_TYPE_VPLAYER,   "VPlayer",  ParseVplayer },
     { "sami",       SUB_TYPE_SAMI,      "SAMI",     ParseSami },
     { NULL,         SUB_TYPE_UNKNOWN,   "Unknown",  NULL }
@@ -159,7 +159,7 @@ static struct
 static int Demux( demux_t * );
 static int Control( demux_t *, int, va_list );
 
-static void Fix( demux_t * );
+/*static void Fix( demux_t * );*/
 
 /*****************************************************************************
  * Module initializer
@@ -265,28 +265,29 @@ static int Open ( vlc_object_t *p_this )
                 p_sys->i_type = SUB_TYPE_SUBRIP;
                 break;
             }
-            else if( sscanf( s,
-                             "!: This is a Sub Station Alpha v%d.x script.",
-                             &i_dummy ) == 1)
+            else if( !strncasecmp( s, "!: This is a Sub Station Alpha v1", 33 ) )
             {
-                if( i_dummy <= 1 )
-                {
-                    p_sys->i_type = SUB_TYPE_SSA1;
-                }
-                else
-                {
-                    p_sys->i_type = SUB_TYPE_SSA2_4; /* I hope this will work */
-                }
+                p_sys->i_type = SUB_TYPE_SSA1;
                 break;
             }
-            else if( strcasestr( s, "This is a Sub Station Alpha v4 script" ) )
+            else if( !strncasecmp( s, "ScriptType: v4.00+", 18 ) )
             {
-                p_sys->i_type = SUB_TYPE_SSA2_4; /* I hope this will work */
+                p_sys->i_type = SUB_TYPE_ASS;
+                break;
+            }
+            else if( !strncasecmp( s, "ScriptType: v4.00", 17 ) )
+            {
+                p_sys->i_type = SUB_TYPE_SSA2_4;
                 break;
             }
             else if( !strncasecmp( s, "Dialogue: Marked", 16  ) )
             {
-                p_sys->i_type = SUB_TYPE_SSA2_4; /* could be wrong */
+                p_sys->i_type = SUB_TYPE_SSA2_4;
+                break;
+            }
+            else if( !strncasecmp( s, "Dialogue:", 9  ) )
+            {
+                p_sys->i_type = SUB_TYPE_ASS;
                 break;
             }
             else if( strcasestr( s, "[INFORMATION]" ) )
@@ -317,6 +318,7 @@ static int Open ( vlc_object_t *p_this )
     if( p_sys->i_type == SUB_TYPE_UNKNOWN )
     {
         msg_Err( p_demux, "failed to recognize subtitle type" );
+        free( p_sys );
         return VLC_EGENERIC;
     }
 
@@ -346,6 +348,10 @@ static int Open ( vlc_object_t *p_this )
                                               sizeof(subtitle_t) * i_max ) ) )
             {
                 msg_Err( p_demux, "out of memory");
+                if( p_sys->subtitle != NULL )
+                    free( p_sys->subtitle );
+                TextUnload( &p_sys->txt );
+                free( p_sys );
                 return VLC_ENOMEM;
             }
         }
@@ -373,7 +379,8 @@ static int Open ( vlc_object_t *p_this )
 
     /* *** add subtitle ES *** */
     if( p_sys->i_type == SUB_TYPE_SSA1 ||
-             p_sys->i_type == SUB_TYPE_SSA2_4 )
+             p_sys->i_type == SUB_TYPE_SSA2_4 ||
+             p_sys->i_type == SUB_TYPE_ASS )
     {
         es_format_Init( &fmt, SPU_ES, VLC_FOURCC( 's','s','a',' ' ) );
     }
@@ -506,7 +513,7 @@ static int Demux( demux_t *p_demux )
     if( p_sys->i_subtitle >= p_sys->i_subtitles )
         return 0;
 
-    i_maxdate = p_sys->i_next_demux_date;
+    i_maxdate = p_sys->i_next_demux_date - var_GetTime( p_demux->p_parent, "spu-delay" );;
     if( i_maxdate <= 0 && p_sys->i_subtitle < p_sys->i_subtitles )
     {
         /* Should not happen */
@@ -568,6 +575,7 @@ static int Demux( demux_t *p_demux )
 /*****************************************************************************
  * Fix: fix time stamp and order of subtitle
  *****************************************************************************/
+#ifdef USE_THIS_UNUSED_PIECE_OF_CODE
 static void Fix( demux_t *p_demux )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
@@ -601,6 +609,7 @@ static void Fix( demux_t *p_demux )
         }
     } while( !b_done );
 }
+#endif
 
 static int TextLoad( text_t *txt, stream_t *s )
 {
@@ -624,7 +633,7 @@ static int TextLoad( text_t *txt, stream_t *s )
         if( txt->i_line_count >= i_line_max )
         {
             i_line_max += 100;
-            txt->line = realloc( txt->line, i_line_max * sizeof( char*) );
+            txt->line = realloc( txt->line, i_line_max * sizeof( char * ) );
         }
     }
 
@@ -674,7 +683,7 @@ static int ParseMicroDvd( demux_t *p_demux, subtitle_t *p_subtitle )
      * each line:
      *  {n1}{n2}Line1|Line2|Line3....
      * where n1 and n2 are the video frame number...
-     *
+     * {n2} can also be {}
      */
     char *s;
 
@@ -918,6 +927,7 @@ static int  ParseSSA( demux_t *p_demux, subtitle_t *p_subtitle )
     text_t      *txt = &p_sys->txt;
 
     char buffer_text[ 10 * MAX_LINE];
+    char buffer_text2[ 10 * MAX_LINE];
     char *s;
     int64_t     i_start;
     int64_t     i_stop;
@@ -929,7 +939,6 @@ static int  ParseSSA( demux_t *p_demux, subtitle_t *p_subtitle )
     for( ;; )
     {
         int h1, m1, s1, c1, h2, m2, s2, c2;
-        int i_dummy;
 
         if( ( s = TextGetLine( txt ) ) == NULL )
         {
@@ -937,9 +946,20 @@ static int  ParseSSA( demux_t *p_demux, subtitle_t *p_subtitle )
         }
         p_subtitle->psz_text = malloc( strlen( s ) );
 
+        /* We expect (SSA2-4):
+         * Format: Marked, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+         * Dialogue: Marked=0,0:02:40.65,0:02:41.79,Wolf main,Cher,0000,0000,0000,,Et les enregistrements de ses ondes delta ?
+         *
+         * SSA-1 is similar but only has 8 commas up untill the subtitle text. Probably the Effect field is no present, but not 100 % sure.
+         */
+
+        /* For ASS:
+         * Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+         * Dialogue: Layer#,0:02:40.65,0:02:41.79,Wolf main,Cher,0000,0000,0000,,Et les enregistrements de ses ondes delta ?
+         */
         if( sscanf( s,
-                    "Dialogue: Marked=%d,%d:%d:%d.%d,%d:%d:%d.%d%[^\r\n]",
-                    &i_dummy,
+                    "Dialogue: %[^,],%d:%d:%d.%d,%d:%d:%d.%d,%[^\r\n]",
+                    buffer_text2,
                     &h1, &m1, &s1, &c1,
                     &h2, &m2, &s2, &c2,
                     buffer_text ) == 10 )
@@ -955,15 +975,16 @@ static int  ParseSSA( demux_t *p_demux, subtitle_t *p_subtitle )
                         (int64_t)c2 * 10 ) * 1000;
 
             /* The dec expects: ReadOrder, Layer, Style, Name, MarginL, MarginR, MarginV, Effect, Text */
+            /* (Layer comes from ASS specs ... it's empty for SSA.) */
             if( p_sys->i_type == SUB_TYPE_SSA1 )
             {
                 sprintf( p_subtitle->psz_text,
-                         ",%d%s", i_dummy, strdup( buffer_text) );
+                         ",%s", strdup( buffer_text) ); /* SSA1 has only 8 commas before the text starts, not 9 */
             }
             else
             {
                 sprintf( p_subtitle->psz_text,
-                         ",%d,%s", i_dummy, strdup( buffer_text) );
+                         ",,%s", strdup( buffer_text) ); /* ReadOrder, Layer, %s(rest of fields) */
             }
             p_subtitle->i_start = i_start;
             p_subtitle->i_stop = i_stop;
@@ -975,12 +996,12 @@ static int  ParseSSA( demux_t *p_demux, subtitle_t *p_subtitle )
             if( p_sys->psz_header != NULL )
             {
                 if( !( p_sys->psz_header = realloc( p_sys->psz_header,
-                          strlen( p_sys->psz_header ) + strlen( s ) + 2 ) ) )
+                          strlen( p_sys->psz_header ) + 1 + strlen( s ) + 2 ) ) )
                 {
                     msg_Err( p_demux, "out of memory");
                     return VLC_ENOMEM;
                 }
-                p_sys->psz_header = strcat( p_sys->psz_header, strdup( s ) );
+                p_sys->psz_header = strcat( p_sys->psz_header,  s );
                 p_sys->psz_header = strcat( p_sys->psz_header, "\n" );
             }
             else
@@ -990,7 +1011,7 @@ static int  ParseSSA( demux_t *p_demux, subtitle_t *p_subtitle )
                     msg_Err( p_demux, "out of memory");
                     return VLC_ENOMEM;
                 }
-                p_sys->psz_header = strdup( s );
+                p_sys->psz_header = s;
                 p_sys->psz_header = strcat( p_sys->psz_header, "\n" );
             }
         }

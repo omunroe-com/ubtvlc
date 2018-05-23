@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout.h: Windows DirectX video output header file
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: vout.h 9269 2004-11-10 13:04:45Z gbazin $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: vout.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -72,6 +72,7 @@ struct vout_sys_t
     int          i_window_y;
     int          i_window_width;
     int          i_window_height;
+    int          i_window_style;
 
     /* Coordinates of src and dest images (used when blitting to display) */
     RECT         rect_src;
@@ -130,13 +131,13 @@ struct picture_sys_t
 /*****************************************************************************
  * Prototypes from vout.c
  *****************************************************************************/
-int DirectXUpdateOverlay( vout_thread_t *p_vout );
+int E_(DirectXUpdateOverlay)( vout_thread_t *p_vout );
 
 /*****************************************************************************
  * Prototypes from events.c
  *****************************************************************************/
-void DirectXEventThread ( event_thread_t *p_event );
-void DirectXUpdateRects ( vout_thread_t *p_vout, vlc_bool_t b_force );
+void E_(DirectXEventThread) ( event_thread_t *p_event );
+void E_(DirectXUpdateRects) ( vout_thread_t *p_vout, vlc_bool_t b_force );
 
 /*****************************************************************************
  * Constants
@@ -148,3 +149,58 @@ void DirectXUpdateRects ( vout_thread_t *p_vout, vlc_bool_t b_force );
 #define IDM_TOGGLE_ON_TOP WM_USER + 1
 #define DX_POSITION_CHANGE 0x1000
 #define DX_WALLPAPER_CHANGE 0x2000
+
+/*****************************************************************************
+ * WinCE helpers
+ *****************************************************************************/
+#ifdef UNDER_CE
+
+#define AdjustWindowRect(a,b,c)
+
+#ifndef GCL_HBRBACKGROUND
+#   define GCL_HBRBACKGROUND (-10)
+#endif
+
+#define FindWindowEx(a,b,c,d) 0
+
+#define GetWindowPlacement(a,b)
+#define SetWindowPlacement(a,b)
+typedef struct _WINDOWPLACEMENT {
+    UINT length;
+    UINT flags;
+    UINT showCmd;
+    POINT ptMinPosition;
+    POINT ptMaxPosition;
+    RECT rcNormalPosition;
+} WINDOWPLACEMENT;
+
+#ifndef WM_NCMOUSEMOVE
+#   define WM_NCMOUSEMOVE 160
+#endif
+#ifndef CS_OWNDC
+#   define CS_OWNDC 32
+#endif
+#ifndef SC_SCREENSAVE
+#   define SC_SCREENSAVE 0xF140
+#endif
+#ifndef SC_MONITORPOWER
+#   define SC_MONITORPOWER 0xF170
+#endif
+#ifndef WM_NCPAINT
+#   define WM_NCPAINT 133
+#endif
+#ifndef WS_OVERLAPPEDWINDOW
+#   define WS_OVERLAPPEDWINDOW 0xcf0000
+#endif
+#ifndef WS_EX_NOPARENTNOTIFY
+#   define WS_EX_NOPARENTNOTIFY 4
+#endif
+#ifndef WS_EX_APPWINDOW
+#define WS_EX_APPWINDOW 0x40000
+#endif
+
+#define SetWindowLongPtr SetWindowLong
+#define GetWindowLongPtr GetWindowLong
+#define GWLP_USERDATA GWL_USERDATA
+
+#endif //UNDER_CE

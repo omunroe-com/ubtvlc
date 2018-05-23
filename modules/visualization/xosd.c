@@ -1,8 +1,8 @@
 /*****************************************************************************
  * xosd.c : X On Screen Display interface
  *****************************************************************************
- * Copyright (C) 2001 VideoLAN
- * $Id: xosd.c 7542 2004-04-28 18:22:31Z zorglub $
+ * Copyright (C) 2001 the VideoLAN team
+ * $Id: xosd.c 12288 2005-08-20 09:48:31Z zorglub $
  *
  * Authors: Loïc Minier <lool@videolan.org>
  *
@@ -77,6 +77,8 @@ static int PlaylistNext( vlc_object_t *p_this, const char *psz_variable,
 #define COLOUR_LONGTEXT ("Colour used to display text in the xosd output")
 
 vlc_module_begin();
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_CONTROL );
     set_description( _("XOSD interface") );
     add_bool( "xosd-position", 1, NULL, POSITION_TEXT, POSITION_LONGTEXT, VLC_TRUE );
     add_integer( "xosd-text-offset", 30, NULL, TXT_OFS_TEXT, TXT_OFS_LONGTEXT, VLC_TRUE );
@@ -97,6 +99,7 @@ vlc_module_end();
 static int Open( vlc_object_t *p_this )
 {
     intf_thread_t *p_intf = (intf_thread_t *)p_this;
+    xosd *p_osd;
 
     /* Allocate instance and initialize some members */
     p_intf->p_sys = (intf_sys_t *)malloc( sizeof( intf_sys_t ) );
@@ -113,22 +116,27 @@ static int Open( vlc_object_t *p_this )
     }
 
     /* Initialize library */
-    p_intf->p_sys->p_osd =
 #if defined(HAVE_XOSD_VERSION_0) || defined(HAVE_XOSD_VERSION_1)
+    p_osd  = p_intf->p_sys->p_osd =
         xosd_init( config_GetPsz( p_intf, "xosd-font" ),
                    config_GetPsz( p_intf,"xosd-colour" ), 3,
                    XOSD_top, 0, 1 );
-#else
-        xosd_init( config_GetPsz( p_intf, "xosd-font" ),
-                   config_GetPsz( p_intf,"xosd-colour" ), 3,
-                    XOSD_top, 0, 0, 1 );
-#endif
-
     if( p_intf->p_sys->p_osd == NULL )
     {
         msg_Err( p_intf, "couldn't initialize libxosd" );
         return VLC_EGENERIC;
     }
+#else
+    p_osd = p_intf->p_sys->p_osd = xosd_create( 1 );
+    if( p_osd == NULL )
+    {
+        msg_Err( p_intf, "couldn't initialize libxosd" );
+        return VLC_EGENERIC;
+    }
+    xosd_set_colour( p_osd, config_GetPsz( p_intf,"xosd-colour" ) );
+    xosd_set_timeout( p_osd, 3 );
+#endif
+
 
     playlist_t *p_playlist =
             (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
@@ -163,10 +171,7 @@ static int Open( vlc_object_t *p_this )
                                          XOSD_bottom: XOSD_top );
 
     /* Initialize to NULL */
-    xosd_display( p_intf->p_sys->p_osd,
-                  0,
-                  XOSD_string,
-                  "xosd interface initialized" );
+    xosd_display( p_osd, 0, XOSD_string, "XOSD interface initialized" );
 
     p_intf->pf_run = Run;
 
@@ -225,13 +230,13 @@ static void Run( intf_thread_t *p_intf )
                 free( psz_display );
                 psz_display = NULL;
             }
-            if( p_playlist->i_status == PLAYLIST_STOPPED )
+            if( p_playlist->status.i_status == PLAYLIST_STOPPED )
             {
                 psz_display = (char *)malloc( sizeof(char )*strlen(_("Stop")));
                 sprintf( psz_display,_("Stop") );
                 vlc_object_release( p_playlist );
             }
-            else if( p_playlist->i_status == PLAYLIST_PAUSED )
+            else if( p_playlist->status.i_status == PLAYLIST_PAUSED )
             {
                 psz_display = (char *)malloc( sizeof(char )*strlen(_("Pause")));
                 sprintf( psz_display,_("Pause") );
@@ -240,8 +245,7 @@ static void Run( intf_thread_t *p_intf )
             else
             {
     //           vlc_mutex_lock(&p_playlist->object_lock );
-                 p_item = playlist_ItemGetByPos( p_playlist,
-                                 p_playlist->i_index );
+                 p_item = p_playlist->status.p_item;
                 item = p_item->input;
                 if( !p_item )
                 {

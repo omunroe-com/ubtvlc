@@ -1,8 +1,8 @@
 /*****************************************************************************
  * output.h: MacOS X Output Dialog
  *****************************************************************************
- * Copyright (C) 2002-2003 VideoLAN
- * $Id: output.h 8405 2004-08-08 14:49:46Z bigben $
+ * Copyright (C) 2002-2003 the VideoLAN team
+ * $Id: output.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>

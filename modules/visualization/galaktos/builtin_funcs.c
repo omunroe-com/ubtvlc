@@ -1,8 +1,8 @@
 /*****************************************************************************
  * builtin_funcs.c:
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: builtin_funcs.c 8205 2004-07-17 13:55:48Z asmax $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: builtin_funcs.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *          code from projectM http://xmms-projectm.sourceforge.net

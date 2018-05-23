@@ -1,8 +1,8 @@
 /*****************************************************************************
  * announce.h : Session announcement
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: announce.h 8376 2004-08-04 21:48:57Z hartman $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: announce.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Clément Stenac <zorglub@via.ecp.fr>
  *
@@ -24,21 +24,6 @@
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-
-#if defined( UNDER_CE )
-#   include <winsock.h>
-#elif defined( WIN32 )
-#   include <winsock2.h>
-#   include <ws2tcpip.h>
-#   define close closesocket
-#else
-#   include <netdb.h>                                         /* hostent ... */
-#   include <sys/socket.h>
-#   include <netinet/in.h>
-#   ifdef HAVE_ARPA_INET_H
-#       include <arpa/inet.h>                    /* inet_ntoa(), inet_aton() */
-#   endif
-#endif
 
 #ifdef HAVE_SLP_H
 #   include <slp.h>

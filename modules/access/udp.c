@@ -1,12 +1,13 @@
 /*****************************************************************************
  * udp.c: raw UDP & RTP input module
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: udp.c 8606 2004-08-31 18:32:54Z hartman $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: udp.c 12378 2005-08-24 14:42:15Z massiot $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Tristan Leteurtre <tooney@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
+ *          Jean-Paul Saman <jpsaman #_at_# m2x dot nl>
  *
  * Reviewed: 23 October 2003, Jean-Paul Saman <jpsaman@wxs.nl>
  *
@@ -51,7 +52,10 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 vlc_module_begin();
+    set_shortname( _("UDP/RTP" ) );
     set_description( _("UDP/RTP input") );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACCESS );
 
     add_integer( "udp-caching", DEFAULT_PTS_DELAY / 1000, NULL, CACHING_TEXT,
                  CACHING_LONGTEXT, VLC_TRUE );
@@ -85,6 +89,9 @@ struct access_sys_t
 
     int i_mtu;
     vlc_bool_t b_auto_mtu;
+    
+    /* rtp only */
+    int i_sequence_number;
 };
 
 /*****************************************************************************
@@ -96,14 +103,8 @@ static int Open( vlc_object_t *p_this )
     access_sys_t *p_sys;
 
     char *psz_name = strdup( p_access->psz_path );
-    char *psz_parser = psz_name;
-    char *psz_server_addr = "";
-    char *psz_server_port = "";
-    char *psz_bind_addr = "";
-    char *psz_bind_port = "";
-    int  i_bind_port = 0;
-    int  i_server_port = 0;
-
+    char *psz_parser, *psz_server_addr, *psz_bind_addr = "";
+    int  i_bind_port, i_server_port = 0;
 
     /* First set ipv4/ipv6 */
     var_Create( p_access, "ipv4", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
@@ -133,75 +134,46 @@ static int Open( vlc_object_t *p_this )
         }
     }
 
+    i_bind_port = var_CreateGetInteger( p_access, "server-port" );
+
     /* Parse psz_name syntax :
      * [serveraddr[:serverport]][@[bindaddr]:[bindport]] */
-    if( *psz_parser && *psz_parser != '@' )
+    psz_parser = strchr( psz_name, '@' );
+    if( psz_parser != NULL )
     {
-        /* Found server */
-        psz_server_addr = psz_parser;
+        /* Found bind address and/or bind port */
+        *psz_parser++ = '\0';
+        psz_bind_addr = psz_parser;
 
-        while( *psz_parser && *psz_parser != ':' && *psz_parser != '@' )
+        if( *psz_parser == '[' )
+            /* skips bracket'd IPv6 address */
+            psz_parser = strchr( psz_parser, ']' );
+
+        if( psz_parser != NULL )
         {
-            if( *psz_parser == '[' )
+            psz_parser = strchr( psz_parser, ':' );
+            if( psz_parser != NULL )
             {
-                /* IPv6 address */
-                while( *psz_parser && *psz_parser != ']' )
-                {
-                    psz_parser++;
-                }
-            }
-            psz_parser++;
-        }
-
-        if( *psz_parser == ':' )
-        {
-            /* Found server port */
-            *psz_parser++ = '\0'; /* Terminate server name */
-            psz_server_port = psz_parser;
-
-            while( *psz_parser && *psz_parser != '@' )
-            {
-                psz_parser++;
+                *psz_parser++ = '\0';
+                i_bind_port = atoi( psz_parser );
             }
         }
+  
     }
 
-    if( *psz_parser == '@' )
+    psz_server_addr = psz_name;
+    if( *psz_server_addr == '[' )
+        /* skips bracket'd IPv6 address */
+        psz_parser = strchr( psz_name, ']' );
+
+    if( psz_parser != NULL )
     {
-        /* Found bind address or bind port */
-        *psz_parser++ = '\0'; /* Terminate server port or name if necessary */
-
-        if( *psz_parser && *psz_parser != ':' )
+        psz_parser = strchr( psz_parser, ':' );
+        if( psz_parser != NULL )
         {
-            /* Found bind address */
-            psz_bind_addr = psz_parser;
-
-            while( *psz_parser && *psz_parser != ':' )
-            {
-                if( *psz_parser == '[' )
-                {
-                    /* IPv6 address */
-                    while( *psz_parser && *psz_parser != ']' )
-                    {
-                        psz_parser++;
-                    }
-                }
-                psz_parser++;
-            }
+            *psz_parser++ = '\0';
+            i_server_port = atoi( psz_parser );
         }
-
-        if( *psz_parser == ':' )
-        {
-            /* Found bind port */
-            *psz_parser++ = '\0'; /* Terminate bind address if necessary */
-            psz_bind_port = psz_parser;
-        }
-    }
-
-    i_server_port = strtol( psz_server_port, NULL, 10 );
-    if( ( i_bind_port   = strtol( psz_bind_port,   NULL, 10 ) ) == 0 )
-    {
-        i_bind_port = var_CreateGetInteger( p_access, "server-port" );
     }
 
     msg_Dbg( p_access, "opening server=%s:%d local=%s:%d",
@@ -209,7 +181,16 @@ static int Open( vlc_object_t *p_this )
 
     /* Set up p_access */
     p_access->pf_read = NULL;
-    p_access->pf_block = BlockChoose;
+    if( !strcasecmp( p_access->psz_access, "rtp" )
+          || !strcasecmp( p_access->psz_access, "rtp4" )
+          || !strcasecmp( p_access->psz_access, "rtp6" ) )
+    {
+        p_access->pf_block = BlockRTP;
+    }
+    else
+    {
+        p_access->pf_block = BlockChoose;
+    }
     p_access->pf_control = Control;
     p_access->pf_seek = NULL;
     p_access->info.i_update = 0;
@@ -231,6 +212,8 @@ static int Open( vlc_object_t *p_this )
     }
     free( psz_name );
 
+    net_StopSend( p_sys->fd );
+
     /* FIXME */
     p_sys->i_mtu = var_CreateGetInteger( p_access, "mtu" );
     if( p_sys->i_mtu <= 1 )
@@ -241,6 +224,9 @@ static int Open( vlc_object_t *p_this )
     /* Update default_pts to a suitable value for udp access */
     var_Create( p_access, "udp-caching", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
 
+    /* Keep track of RTP sequence number */
+    p_sys->i_sequence_number = -1;
+    
     return VLC_SUCCESS;
 }
 
@@ -313,7 +299,9 @@ static block_t *BlockUDP( access_t *p_access )
 
     /* Read data */
     p_block = block_New( p_access, p_sys->i_mtu );
-    p_block->i_buffer = net_Read( p_access, p_sys->fd, p_block->p_buffer, p_sys->i_mtu, VLC_FALSE );
+    p_block->i_buffer = net_Read( p_access, p_sys->fd, NULL,
+                                  p_block->p_buffer, p_sys->i_mtu,
+                                  VLC_FALSE );
     if( p_block->i_buffer <= 0 )
     {
         block_Release( p_block );
@@ -340,7 +328,11 @@ static block_t *BlockParseRTP( access_t *p_access, block_t *p_block )
     int     i_CSRC_count;
     int     i_payload_type;
     int     i_skip = 0;
-
+    int     i_sequence_number = 0;
+ 
+    if( p_block == NULL )
+        return NULL;
+        
     if( p_block->i_buffer < RTP_HEADER_LEN )
         goto trash;
 
@@ -349,6 +341,7 @@ static block_t *BlockParseRTP( access_t *p_access, block_t *p_block )
     i_rtp_version  = ( p_block->p_buffer[0] & 0xC0 ) >> 6;
     i_CSRC_count   = ( p_block->p_buffer[0] & 0x0F );
     i_payload_type = ( p_block->p_buffer[1] & 0x7F );
+    i_sequence_number = ( (p_block->p_buffer[2] << 8 ) + p_block->p_buffer[3] );
 
     if ( i_rtp_version != 2 )
         msg_Dbg( p_access, "RTP version is %u, should be 2", i_rtp_version );
@@ -367,7 +360,26 @@ static block_t *BlockParseRTP( access_t *p_access, block_t *p_block )
     /* Return the packet without the RTP header. */
     p_block->i_buffer -= i_skip;
     p_block->p_buffer += i_skip;
-
+    
+#define RTP_SEQ_NUM_SIZE 65536
+    /* Detect RTP packet loss through tracking sequence numbers.
+     * See RFC 1889. */
+    if( p_access->p_sys->i_sequence_number == -1 )
+        p_access->p_sys->i_sequence_number = i_sequence_number;
+    
+    if( ((p_access->p_sys->i_sequence_number + 1) % RTP_SEQ_NUM_SIZE) != i_sequence_number )
+    {
+        msg_Warn( p_access, "RTP packet(s) lost, expected sequence number %d got %d",
+            ((p_access->p_sys->i_sequence_number + 1) % RTP_SEQ_NUM_SIZE),
+            i_sequence_number );
+        if( i_payload_type == 33 )
+        {
+            /* Mark transport error in the first TS packet in the RTP stream. */
+            p_block->p_buffer[1] |= 0x80;
+        }
+    }
+    p_access->p_sys->i_sequence_number = i_sequence_number;
+#undef RTP_SEQ_NUM_SIZE
     return p_block;
 
 trash:
@@ -378,7 +390,12 @@ trash:
 
 static block_t *BlockRTP( access_t *p_access )
 {
-    return BlockParseRTP( p_access, BlockUDP( p_access ) );
+    block_t *p_block = BlockUDP( p_access );
+
+    if ( p_block != NULL )
+        return BlockParseRTP( p_access, p_block );
+    else
+        return NULL;
 }
 
 /*****************************************************************************
@@ -422,17 +439,18 @@ static block_t *BlockChoose( access_t *p_access )
     {
         case 33:
             msg_Dbg( p_access, "detected TS over RTP" );
-            p_access->psz_demux = strdup( "ts" );
+            /* Disabled because it is auto-detected. */
+            /* p_access->psz_demux = strdup( "ts" ); */
             break;
 
         case 14:
             msg_Dbg( p_access, "detected MPEG audio over RTP" );
-            p_access->psz_demux = strdup( "mp3" );
+            p_access->psz_demux = strdup( "mpga" );
             break;
 
         case 32:
             msg_Dbg( p_access, "detected MPEG video over RTP" );
-            p_access->psz_demux = strdup( "es" );
+            p_access->psz_demux = strdup( "mpgv" );
             break;
 
         default:

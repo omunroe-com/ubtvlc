@@ -162,7 +162,7 @@ SOURCE="..\.\src\playlist\loadsave.c"
 !ENDIF
 # End Source File
 # Begin Source File
-SOURCE="..\.\src\playlist\group.c"
+SOURCE="..\.\src\playlist\view.c"
 # ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
 !IF "$(CFG)" == "libvlc - Win32 Release"
 # PROP Output_Dir "Release\.\src\playlist\"
@@ -195,7 +195,7 @@ SOURCE="..\.\src\playlist\item-ext.c"
 !ENDIF
 # End Source File
 # Begin Source File
-SOURCE="..\.\src\playlist\info.c"
+SOURCE="..\.\src\playlist\services_discovery.c"
 # ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
 !IF "$(CFG)" == "libvlc - Win32 Release"
 # PROP Output_Dir "Release\.\src\playlist\"
@@ -295,6 +295,17 @@ SOURCE="..\.\src\input\input_internal.h"
 # End Source File
 # Begin Source File
 SOURCE="..\.\src\input\stream.c"
+# ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
+!IF "$(CFG)" == "libvlc - Win32 Release"
+# PROP Output_Dir "Release\.\src\input\"
+# PROP Intermediate_Dir "Release\.\src\input\"
+!ELSEIF "$(CFG)" == "libvlc - Win32 Debug"
+# PROP Output_Dir "Debug\.\src\input\"
+# PROP Intermediate_Dir "Debug\.\src\input\"
+!ENDIF
+# End Source File
+# Begin Source File
+SOURCE="..\.\src\input\mem_stream.c"
 # ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
 !IF "$(CFG)" == "libvlc - Win32 Release"
 # PROP Output_Dir "Release\.\src\input\"
@@ -525,6 +536,61 @@ SOURCE="..\.\src\stream_output\sap.c"
 !ENDIF
 # End Source File
 # Begin Source File
+SOURCE="..\.\src\stream_output\acl.c"
+# ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
+!IF "$(CFG)" == "libvlc - Win32 Release"
+# PROP Output_Dir "Release\.\src\stream_output\"
+# PROP Intermediate_Dir "Release\.\src\stream_output\"
+!ELSEIF "$(CFG)" == "libvlc - Win32 Debug"
+# PROP Output_Dir "Debug\.\src\stream_output\"
+# PROP Intermediate_Dir "Debug\.\src\stream_output\"
+!ENDIF
+# End Source File
+# Begin Source File
+SOURCE="..\.\src\osd\osd.c"
+# ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
+!IF "$(CFG)" == "libvlc - Win32 Release"
+# PROP Output_Dir "Release\.\src\osd\"
+# PROP Intermediate_Dir "Release\.\src\osd\"
+!ELSEIF "$(CFG)" == "libvlc - Win32 Debug"
+# PROP Output_Dir "Debug\.\src\osd\"
+# PROP Intermediate_Dir "Debug\.\src\osd\"
+!ENDIF
+# End Source File
+# Begin Source File
+SOURCE="..\.\src\osd\osd_parser.c"
+# ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
+!IF "$(CFG)" == "libvlc - Win32 Release"
+# PROP Output_Dir "Release\.\src\osd\"
+# PROP Intermediate_Dir "Release\.\src\osd\"
+!ELSEIF "$(CFG)" == "libvlc - Win32 Debug"
+# PROP Output_Dir "Debug\.\src\osd\"
+# PROP Intermediate_Dir "Debug\.\src\osd\"
+!ENDIF
+# End Source File
+# Begin Source File
+SOURCE="..\.\src\osd\osd_text.c"
+# ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
+!IF "$(CFG)" == "libvlc - Win32 Release"
+# PROP Output_Dir "Release\.\src\osd\"
+# PROP Intermediate_Dir "Release\.\src\osd\"
+!ELSEIF "$(CFG)" == "libvlc - Win32 Debug"
+# PROP Output_Dir "Debug\.\src\osd\"
+# PROP Intermediate_Dir "Debug\.\src\osd\"
+!ENDIF
+# End Source File
+# Begin Source File
+SOURCE="..\.\src\osd\osd_widgets.c"
+# ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
+!IF "$(CFG)" == "libvlc - Win32 Release"
+# PROP Output_Dir "Release\.\src\osd\"
+# PROP Intermediate_Dir "Release\.\src\osd\"
+!ELSEIF "$(CFG)" == "libvlc - Win32 Debug"
+# PROP Output_Dir "Debug\.\src\osd\"
+# PROP Intermediate_Dir "Debug\.\src\osd\"
+!ENDIF
+# End Source File
+# Begin Source File
 SOURCE="..\.\src\misc\charset.c"
 # ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
 !IF "$(CFG)" == "libvlc - Win32 Release"
@@ -548,6 +614,17 @@ SOURCE="..\.\src\misc\httpd.c"
 # End Source File
 # Begin Source File
 SOURCE="..\.\src\misc\tls.c"
+# ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
+!IF "$(CFG)" == "libvlc - Win32 Release"
+# PROP Output_Dir "Release\.\src\misc\"
+# PROP Intermediate_Dir "Release\.\src\misc\"
+!ELSEIF "$(CFG)" == "libvlc - Win32 Debug"
+# PROP Output_Dir "Debug\.\src\misc\"
+# PROP Intermediate_Dir "Debug\.\src\misc\"
+!ENDIF
+# End Source File
+# Begin Source File
+SOURCE="..\.\src\misc\md5.c"
 # ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
 !IF "$(CFG)" == "libvlc - Win32 Release"
 # PROP Output_Dir "Release\.\src\misc\"
@@ -602,6 +679,17 @@ SOURCE="..\.\src\misc\threads.c"
 !ENDIF
 # End Source File
 # Begin Source File
+SOURCE="..\.\src\misc\unicode.c"
+# ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
+!IF "$(CFG)" == "libvlc - Win32 Release"
+# PROP Output_Dir "Release\.\src\misc\"
+# PROP Intermediate_Dir "Release\.\src\misc\"
+!ELSEIF "$(CFG)" == "libvlc - Win32 Debug"
+# PROP Output_Dir "Debug\.\src\misc\"
+# PROP Intermediate_Dir "Debug\.\src\misc\"
+!ENDIF
+# End Source File
+# Begin Source File
 SOURCE="..\.\src\misc\cpu.c"
 # ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
 !IF "$(CFG)" == "libvlc - Win32 Release"
@@ -614,6 +702,17 @@ SOURCE="..\.\src\misc\cpu.c"
 # End Source File
 # Begin Source File
 SOURCE="..\.\src\misc\configuration.c"
+# ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
+!IF "$(CFG)" == "libvlc - Win32 Release"
+# PROP Output_Dir "Release\.\src\misc\"
+# PROP Intermediate_Dir "Release\.\src\misc\"
+!ELSEIF "$(CFG)" == "libvlc - Win32 Debug"
+# PROP Output_Dir "Debug\.\src\misc\"
+# PROP Intermediate_Dir "Debug\.\src\misc\"
+!ENDIF
+# End Source File
+# Begin Source File
+SOURCE="..\.\src\misc\image.c"
 # ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
 !IF "$(CFG)" == "libvlc - Win32 Release"
 # PROP Output_Dir "Release\.\src\misc\"
@@ -701,7 +800,40 @@ SOURCE="..\.\src\misc\net.c"
 !ENDIF
 # End Source File
 # Begin Source File
+SOURCE="..\.\src\misc\getaddrinfo.c"
+# ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
+!IF "$(CFG)" == "libvlc - Win32 Release"
+# PROP Output_Dir "Release\.\src\misc\"
+# PROP Intermediate_Dir "Release\.\src\misc\"
+!ELSEIF "$(CFG)" == "libvlc - Win32 Debug"
+# PROP Output_Dir "Debug\.\src\misc\"
+# PROP Intermediate_Dir "Debug\.\src\misc\"
+!ENDIF
+# End Source File
+# Begin Source File
 SOURCE="..\.\src\misc\vlm.c"
+# ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
+!IF "$(CFG)" == "libvlc - Win32 Release"
+# PROP Output_Dir "Release\.\src\misc\"
+# PROP Intermediate_Dir "Release\.\src\misc\"
+!ELSEIF "$(CFG)" == "libvlc - Win32 Debug"
+# PROP Output_Dir "Debug\.\src\misc\"
+# PROP Intermediate_Dir "Debug\.\src\misc\"
+!ENDIF
+# End Source File
+# Begin Source File
+SOURCE="..\.\src\misc\xml.c"
+# ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
+!IF "$(CFG)" == "libvlc - Win32 Release"
+# PROP Output_Dir "Release\.\src\misc\"
+# PROP Intermediate_Dir "Release\.\src\misc\"
+!ELSEIF "$(CFG)" == "libvlc - Win32 Debug"
+# PROP Output_Dir "Debug\.\src\misc\"
+# PROP Intermediate_Dir "Debug\.\src\misc\"
+!ENDIF
+# End Source File
+# Begin Source File
+SOURCE="..\.\src\misc\version.c"
 # ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
 !IF "$(CFG)" == "libvlc - Win32 Release"
 # PROP Output_Dir "Release\.\src\misc\"
@@ -723,6 +855,39 @@ SOURCE="..\.\src\extras\libc.c"
 !ENDIF
 # End Source File
 # Begin Source File
+SOURCE="..\.\src\control\core.c"
+# ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
+!IF "$(CFG)" == "libvlc - Win32 Release"
+# PROP Output_Dir "Release\.\src\control\"
+# PROP Intermediate_Dir "Release\.\src\control\"
+!ELSEIF "$(CFG)" == "libvlc - Win32 Debug"
+# PROP Output_Dir "Debug\.\src\control\"
+# PROP Intermediate_Dir "Debug\.\src\control\"
+!ENDIF
+# End Source File
+# Begin Source File
+SOURCE="..\.\src\control\util.c"
+# ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
+!IF "$(CFG)" == "libvlc - Win32 Release"
+# PROP Output_Dir "Release\.\src\control\"
+# PROP Intermediate_Dir "Release\.\src\control\"
+!ELSEIF "$(CFG)" == "libvlc - Win32 Debug"
+# PROP Output_Dir "Debug\.\src\control\"
+# PROP Intermediate_Dir "Debug\.\src\control\"
+!ENDIF
+# End Source File
+# Begin Source File
+SOURCE="..\.\src\control\audio_video.c"
+# ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
+!IF "$(CFG)" == "libvlc - Win32 Release"
+# PROP Output_Dir "Release\.\src\control\"
+# PROP Intermediate_Dir "Release\.\src\control\"
+!ELSEIF "$(CFG)" == "libvlc - Win32 Debug"
+# PROP Output_Dir "Debug\.\src\control\"
+# PROP Intermediate_Dir "Debug\.\src\control\"
+!ENDIF
+# End Source File
+# Begin Source File
 SOURCE="..\.\src\misc\win32_specific.c"
 # ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
 !IF "$(CFG)" == "libvlc - Win32 Release"
@@ -735,17 +900,6 @@ SOURCE="..\.\src\misc\win32_specific.c"
 # End Source File
 # Begin Source File
 SOURCE="..\.\src\extras\dirent.c"
-# ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
-!IF "$(CFG)" == "libvlc - Win32 Release"
-# PROP Output_Dir "Release\.\src\extras\"
-# PROP Intermediate_Dir "Release\.\src\extras\"
-!ELSEIF "$(CFG)" == "libvlc - Win32 Debug"
-# PROP Output_Dir "Debug\.\src\extras\"
-# PROP Intermediate_Dir "Debug\.\src\extras\"
-!ENDIF
-# End Source File
-# Begin Source File
-SOURCE="..\.\src\extras\dirent.h"
 # ADD CPP /D "__VLC__" /D PLUGIN_PATH=\".\" /D DATA_PATH=\"share\"
 !IF "$(CFG)" == "libvlc - Win32 Release"
 # PROP Output_Dir "Release\.\src\extras\"
@@ -838,9 +992,6 @@ SOURCE="..\.\include\mtime.h"
 SOURCE="..\.\include\network.h"
 # End Source File
 # Begin Source File
-SOURCE="..\.\include\osd.h"
-# End Source File
-# Begin Source File
 SOURCE="..\.\include\os_specific.h"
 # End Source File
 # Begin Source File
@@ -857,6 +1008,9 @@ SOURCE="..\.\include\video_output.h"
 # End Source File
 # Begin Source File
 SOURCE="..\.\include\vlc_access.h"
+# End Source File
+# Begin Source File
+SOURCE="..\.\include\vlc_acl.h"
 # End Source File
 # Begin Source File
 SOURCE="..\.\include\vlc_bits.h"
@@ -895,13 +1049,19 @@ SOURCE="..\.\include\vlc_es_out.h"
 SOURCE="..\.\include\vlc_filter.h"
 # End Source File
 # Begin Source File
-SOURCE="..\.\include\vlc_help.h"
+SOURCE="..\.\include\vlc_config_cat.h"
 # End Source File
 # Begin Source File
 SOURCE="..\.\include\vlc_httpd.h"
 # End Source File
 # Begin Source File
 SOURCE="..\.\include\vlc_tls.h"
+# End Source File
+# Begin Source File
+SOURCE="..\.\include\vlc_md5.h"
+# End Source File
+# Begin Source File
+SOURCE="..\.\include\vlc_image.h"
 # End Source File
 # Begin Source File
 SOURCE="..\.\include\vlc_input.h"
@@ -922,6 +1082,9 @@ SOURCE="..\.\include\vlc_meta.h"
 SOURCE="..\.\include\vlc_objects.h"
 # End Source File
 # Begin Source File
+SOURCE="..\.\include\vlc_osd.h"
+# End Source File
+# Begin Source File
 SOURCE="..\.\include\vlc_playlist.h"
 # End Source File
 # Begin Source File
@@ -929,6 +1092,9 @@ SOURCE="..\.\include\vlc_spu.h"
 # End Source File
 # Begin Source File
 SOURCE="..\.\include\vlc_stream.h"
+# End Source File
+# Begin Source File
+SOURCE="..\.\include\vlc_symbols.h"
 # End Source File
 # Begin Source File
 SOURCE="..\.\include\vlc_threads_funcs.h"
@@ -946,13 +1112,13 @@ SOURCE="..\.\include\vlc_vlm.h"
 SOURCE="..\.\include\vlc_vod.h"
 # End Source File
 # Begin Source File
+SOURCE="..\.\include\vlc_xml.h"
+# End Source File
+# Begin Source File
 SOURCE="..\.\include\vout_synchro.h"
 # End Source File
 # Begin Source File
 SOURCE="..\.\include\win32_specific.h"
-# End Source File
-# Begin Source File
-SOURCE="..\.\include\vlc_symbols.h"
 # End Source File
 # Begin Group "vlc"
 # Begin Source File
@@ -975,6 +1141,9 @@ SOURCE="..\.\include\vlc\input.h"
 # End Source File
 # Begin Source File
 SOURCE="..\.\include\vlc\intf.h"
+# End Source File
+# Begin Source File
+SOURCE="..\.\include\vlc\control.h"
 # End Source File
 # End Group
 # End Group

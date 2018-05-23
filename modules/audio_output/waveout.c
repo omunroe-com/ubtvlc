@@ -1,16 +1,16 @@
 /*****************************************************************************
  * waveout.c : Windows waveOut plugin for vlc
  *****************************************************************************
- * Copyright (C) 2001 VideoLAN
- * $Id: waveout.c 9153 2004-11-05 12:56:35Z gbazin $
+ * Copyright (C) 2001 the VideoLAN team
+ * $Id: waveout.c 11916 2005-07-30 11:30:51Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
- *      
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -34,7 +34,7 @@
 #include <windows.h>
 #include <mmsystem.h>
 
-#define FRAME_SIZE 1024              /* The size is in samples, not in bytes */
+#define FRAME_SIZE 4096              /* The size is in samples, not in bytes */
 #define FRAMES_NUM 8
 
 /*****************************************************************************
@@ -123,6 +123,10 @@ static int PlayWaveOut   ( aout_instance_t *, HWAVEOUT, WAVEHDR *,
 static void CALLBACK WaveOutCallback ( HWAVEOUT, UINT, DWORD, DWORD, DWORD );
 static void WaveOutThread( notification_thread_t * );
 
+static int VolumeInfos( aout_instance_t *, audio_volume_t * );
+static int VolumeGet( aout_instance_t *, audio_volume_t * );
+static int VolumeSet( aout_instance_t *, audio_volume_t );
+
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
@@ -132,8 +136,11 @@ static void WaveOutThread( notification_thread_t * );
     "audio output mode (which is not well supported by some soundcards)." )
 
 vlc_module_begin();
+    set_shortname( "WaveOut" );
     set_description( _("Win32 waveOut extension output") );
     set_capability( "audio output", 50 );
+    set_category( CAT_AUDIO );
+    set_subcategory( SUBCAT_AUDIO_AOUT );
     add_bool( "waveout-float32", 1, 0, FLOAT_TEXT, FLOAT_LONGTEXT, VLC_TRUE );
     set_callbacks( Open, Close );
 vlc_module_end();
@@ -284,6 +291,10 @@ static int Open( vlc_object_t *p_this )
             p_aout->output.output.i_bytes_per_frame;
 
         aout_VolumeSoftInit( p_aout );
+
+        p_aout->output.pf_volume_infos = VolumeInfos;
+        p_aout->output.pf_volume_get = VolumeGet;
+        p_aout->output.pf_volume_set = VolumeSet;
     }
 
 
@@ -687,7 +698,7 @@ static void CALLBACK WaveOutCallback( HWAVEOUT h_waveout, UINT uMsg,
 }
 
 /*****************************************************************************
- * WaveOutThread: this thread will capture play notification events. 
+ * WaveOutThread: this thread will capture play notification events.
  *****************************************************************************
  * We use this thread to feed new audio samples to the sound card because
  * we are not authorized to use waveOutWrite() directly in the waveout
@@ -770,4 +781,41 @@ static void WaveOutThread( notification_thread_t *p_notif )
             }
         }
     }
+}
+
+static int VolumeInfos( aout_instance_t * p_aout, audio_volume_t * pi_soft )
+{
+    *pi_soft = AOUT_VOLUME_MAX / 2;
+    return 0;
+}
+
+static int VolumeGet( aout_instance_t * p_aout, audio_volume_t * pi_volume )
+{
+    DWORD i_waveout_vol;
+
+#ifdef UNDER_CE
+    waveOutGetVolume( 0, &i_waveout_vol );
+#else
+    waveOutGetVolume( p_aout->output.p_sys->h_waveout, &i_waveout_vol );
+#endif
+
+    i_waveout_vol &= 0xFFFF;
+    *pi_volume = p_aout->output.i_volume =
+        (i_waveout_vol * AOUT_VOLUME_MAX + 0xFFFF /*rounding*/) / 2 / 0xFFFF;
+    return 0;
+}
+
+static int VolumeSet( aout_instance_t * p_aout, audio_volume_t i_volume )
+{
+    unsigned long i_waveout_vol = i_volume * 0xFFFF * 2 / AOUT_VOLUME_MAX;
+    i_waveout_vol |= (i_waveout_vol << 16);
+
+#ifdef UNDER_CE
+    waveOutSetVolume( 0, i_waveout_vol );
+#else
+    waveOutSetVolume( p_aout->output.p_sys->h_waveout, i_waveout_vol );
+#endif
+
+    p_aout->output.i_volume = i_volume;
+    return 0;
 }

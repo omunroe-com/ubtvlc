@@ -1,8 +1,8 @@
 /*****************************************************************************
  * window_manager.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: window_manager.cpp 8966 2004-10-10 10:08:44Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: window_manager.cpp 11847 2005-07-25 18:57:32Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -264,6 +264,12 @@ void WindowManager::checkAnchors( TopWindow *pWindow,
     for( itMov = m_movingWindows.begin();
          itMov != m_movingWindows.end(); itMov++ )
     {
+        // Skip the invisible windows
+        if( ! (*itMov)->getVisibleVar().get() )
+        {
+            continue;
+        }
+
         int newLeft = (*itMov)->getLeft() + xOffset;
         int newTop = (*itMov)->getTop() + yOffset;
         if( newLeft > workArea.getLeft() - m_magnet &&

@@ -1,12 +1,13 @@
 /*****************************************************************************
  * v4l.c : Video4Linux input module for vlc
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: v4l.c 8594 2004-08-30 19:37:35Z gbazin $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id: v4l.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Author: Laurent Aimar <fenrir@via.ecp.fr>
  *         Paul Forgey <paulf at aphrodite dot com>
  *         Gildas Bazin <gbazin@videolan.org>
+ *         Benjamin Pracht <bigben at videolan dot org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,10 +86,67 @@ static void Close( vlc_object_t * );
 #define CHROMA_LONGTEXT N_( \
     "Force the Video4Linux video device to use a specific chroma format " \
     "(eg. I420 (default), RV24, etc.)")
+#define FREQUENCY_TEXT N_( "Frequency" )
+#define FREQUENCY_LONGTEXT N_( \
+    "Frequency to capture (in kHz), if applicable" )
+#define CHANNEL_TEXT N_( "Channel" )
+#define CHANNEL_LONGTEXT N_( \
+    "Channel of the card to use (Usually, 0 = tuner, " \
+    "1 = composite, 2 = svideo)" )
+#define NORM_TEXT N_( "Norm" )
+#define NORM_LONGTEXT N_( \
+    "Defines the norm of the stream (Automatic, SECAM, PAL, or NTSC)" )
+#define AUDIO_TEXT N_( "Audio Channel" )
+#define AUDIO_LONGTEXT N_( \
+    "Audio Channel to use, if there are several audio input" )
+#define WIDTH_TEXT N_( "Width" )
+#define WIDTH_LONGTEXT N_( "Width of the stream to capture " \
+    "(-1 for autodetect)" )
+#define HEIGHT_TEXT N_( "Height" )
+#define HEIGHT_LONGTEXT N_( "Height of the stream to capture " \
+    "(-1 for autodetect)" )
+#define BRIGHTNESS_TEXT N_( "Brightness" )
+#define BRIGHTNESS_LONGTEXT N_( \
+    "Set the Brightness of the video input" )
+#define HUE_TEXT N_( "Hue" )
+#define HUE_LONGTEXT N_( \
+    "Set the Hue of the video input" )
+#define COLOUR_TEXT N_( "Color" )
+#define COLOUR_LONGTEXT N_( \
+    "Set the Color of the video input" )
+#define CONTRAST_TEXT N_( "Contrast" )
+#define CONTRAST_LONGTEXT N_( \
+    "Set the Contrast of the video input" )
+#define TUNER_TEXT N_( "Tuner" )
+#define TUNER_LONGTEXT N_( "Tuner to use, if there are several ones" )
+#define SAMPLERATE_TEXT N_( "Samplerate" )
+#define SAMPLERATE_LONGTEXT N_( \
+    "Samplerate of the captures audio stream, in Hz" )
+#define STEREO_TEXT N_( "Stereo" )
+#define STEREO_LONGTEXT N_( \
+    "If this option is set, the audio stream will be captured in stereo" )
+#define MJPEG_TEXT N_( "MJPEG" )
+#define MJPEG_LONGTEXT N_(  \
+    "Set this option if the capture device outputs MJPEG" )
+#define DECIMATION_TEXT N_( "Decimation" )
+#define DECIMATION_LONGTEXT N_( \
+    "Set the Decimation level for MJPEG streams" )
+#define QUALITY_TEXT N_( "Quality" )
+#define QUALITY_LONGTEXT N_( "Set the quality of the stream" )
+#define FPS_TEXT N_( "Framerate" )
+#define FPS_LONGTEXT N_( "Framerate to capture, if applicable " \
+    "(-1 for autodetect)" )
+
+static int i_norm_list[] =
+    { VIDEO_MODE_AUTO, VIDEO_MODE_SECAM, VIDEO_MODE_PAL, VIDEO_MODE_NTSC };
+static char *psz_norm_list_text[] =
+    { N_("Automatic"), N_("SECAM"), N_("PAL"),  N_("NTSC") };
 
 vlc_module_begin();
     set_shortname( _("Video4Linux") );
     set_description( _("Video4Linux input") );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACCESS );
 
     add_integer( "v4l-caching", DEFAULT_PTS_DELAY / 1000, NULL,
                  CACHING_TEXT, CACHING_LONGTEXT, VLC_TRUE );
@@ -98,6 +156,36 @@ vlc_module_begin();
                 VLC_FALSE );
     add_string( "v4l-chroma", NULL, NULL, CHROMA_TEXT, CHROMA_LONGTEXT,
                 VLC_TRUE );
+    add_float( "v4l-fps", -1.0, NULL, FPS_TEXT, FPS_LONGTEXT, VLC_TRUE );
+    add_integer( "v4l-samplerate", 44100, NULL, SAMPLERATE_TEXT,
+                SAMPLERATE_LONGTEXT, VLC_TRUE );
+    add_integer( "v4l-channel", 0, NULL, CHANNEL_TEXT, CHANNEL_LONGTEXT,
+                VLC_TRUE );
+    add_integer( "v4l-tuner", -1, NULL, TUNER_TEXT, TUNER_LONGTEXT, VLC_TRUE );
+    add_integer( "v4l-norm", VIDEO_MODE_AUTO, NULL, NORM_TEXT, NORM_LONGTEXT,
+                VLC_FALSE );
+        change_integer_list( i_norm_list, psz_norm_list_text, 0 );
+    add_integer( "v4l-frequency", -1, NULL, FREQUENCY_TEXT, FREQUENCY_LONGTEXT,
+                VLC_FALSE );
+    add_integer( "v4l-audio", -1, NULL, AUDIO_TEXT, AUDIO_LONGTEXT, VLC_TRUE );
+    add_bool( "v4l-stereo", VLC_TRUE, NULL, STEREO_TEXT, STEREO_LONGTEXT,
+            VLC_TRUE );
+    add_integer( "v4l-width", 0, NULL, WIDTH_TEXT, WIDTH_LONGTEXT, VLC_TRUE );
+    add_integer( "v4l-height", 0, NULL, HEIGHT_TEXT, HEIGHT_LONGTEXT,
+                VLC_TRUE );
+    add_integer( "v4l-brightness", -1, NULL, BRIGHTNESS_TEXT,
+                BRIGHTNESS_LONGTEXT, VLC_TRUE );
+    add_integer( "v4l-colour", -1, NULL, COLOUR_TEXT, COLOUR_LONGTEXT,
+                VLC_TRUE );
+    add_integer( "v4l-hue", -1, NULL, HUE_TEXT, HUE_LONGTEXT, VLC_TRUE );
+    add_integer( "v4l-contrast", -1, NULL, CONTRAST_TEXT, CONTRAST_LONGTEXT,
+                VLC_TRUE );
+    add_bool( "v4l-mjpeg", VLC_FALSE, NULL, MJPEG_TEXT, MJPEG_LONGTEXT,
+            VLC_TRUE );
+    add_integer( "v4l-decimation", 1, NULL, DECIMATION_TEXT,
+            DECIMATION_LONGTEXT, VLC_TRUE );
+    add_integer( "v4l-quality", 100, NULL, QUALITY_TEXT, QUALITY_LONGTEXT,
+            VLC_TRUE );
 
     add_shortcut( "v4l" );
     set_capability( "access_demux", 10 );
@@ -226,6 +314,7 @@ static int Open( vlc_object_t *p_this )
 {
     demux_t     *p_demux = (demux_t*)p_this;
     demux_sys_t *p_sys;
+    vlc_value_t val;
 
     /* Only when selected */
     if( *p_demux->psz_access == '\0' )
@@ -240,25 +329,79 @@ static int Open( vlc_object_t *p_this )
     p_demux->p_sys = p_sys = malloc( sizeof( demux_sys_t ) );
     memset( p_sys, 0, sizeof( demux_sys_t ) );
 
-    p_sys->i_audio          = -1;
-    p_sys->i_norm           = VIDEO_MODE_AUTO;    // auto
-    p_sys->i_tuner          = -1;
-    p_sys->i_frequency      = -1;
+    var_Create( p_demux, "v4l-audio", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-audio", &val );
+    p_sys->i_audio          = val.i_int;
 
-    p_sys->f_fps            = -1.0;
+    var_Create( p_demux, "v4l-channel", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-channel", &val );
+    p_sys->i_channel        = val.i_int;
+
+    var_Create( p_demux, "v4l-norm", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-norm", &val );
+    p_sys->i_norm           = val.i_int;
+
+    var_Create( p_demux, "v4l-tuner", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-tuner", &val );
+    p_sys->i_tuner          = val.i_int;
+
+    var_Create( p_demux, "v4l-frequency",
+                                    VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-frequency", &val );
+    p_sys->i_frequency      = val.i_int;
+
+    var_Create( p_demux, "v4l-fps", VLC_VAR_FLOAT | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-fps", &val );
+    p_sys->f_fps            = val.f_float;
+
+    var_Create( p_demux, "v4l-width", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-width", &val );
+    p_sys->i_width          = val.i_int;
+
+    var_Create( p_demux, "v4l-height", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-height", &val );
+    p_sys->i_height         = val.i_int;
+
     p_sys->i_video_pts      = -1;
 
-    p_sys->i_brightness     = -1;
+    var_Create( p_demux, "v4l-brightness", VLC_VAR_INTEGER |
+                                                        VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-brightness", &val );
+    p_sys->i_brightness     = val.i_int;
+
+    var_Create( p_demux, "v4l-hue", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-hue", &val );
     p_sys->i_hue            = -1;
-    p_sys->i_colour         = -1;
-    p_sys->i_contrast       = -1;
 
-    p_sys->b_mjpeg     = VLC_FALSE;
-    p_sys->i_decimation = 1;
-    p_sys->i_quality = 100;
+    var_Create( p_demux, "v4l-colour", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-colour", &val );
+    p_sys->i_colour         = val.i_int;
 
-    p_sys->i_sample_rate  = 44100;
-    p_sys->b_stereo       = VLC_TRUE;
+    var_Create( p_demux, "v4l-contrast", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-contrast", &val );
+    p_sys->i_contrast       = val.i_int;
+
+    var_Create( p_demux, "v4l-mjpeg", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-mjpeg", &val );
+    p_sys->b_mjpeg     = val.b_bool;
+
+    var_Create( p_demux, "v4l-decimation", VLC_VAR_INTEGER |
+                                                            VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-decimation", &val );
+    p_sys->i_decimation = val.i_int;
+
+    var_Create( p_demux, "v4l-quality", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-quality", &val );
+    p_sys->i_quality = val.i_int;
+
+    var_Create( p_demux, "v4l-samplerate",
+                                    VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-samplerate", &val );
+    p_sys->i_sample_rate  = val.i_int;
+
+    var_Create( p_demux, "v4l-stereo", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
+    var_Get( p_demux, "v4l-stereo", &val );
+    p_sys->b_stereo       = val.b_bool;
 
     p_sys->psz_device = p_sys->psz_vdev = p_sys->psz_adev = NULL;
     p_sys->fd_video = -1;
@@ -967,6 +1110,19 @@ static int OpenVideoDev( demux_t *p_demux, char *psz_device )
         }
         p_sys->i_width  = vid_win.width;
         p_sys->i_height = vid_win.height;
+
+        if( !p_sys->i_width || !p_sys->i_height )
+        {
+            p_sys->i_width = p_sys->vid_cap.maxwidth;
+            p_sys->i_height = p_sys->vid_cap.maxheight;
+        }
+
+        if( !p_sys->i_width || !p_sys->i_height )
+        {
+            msg_Err( p_demux, "invalid video size (%ix%i)",
+                     p_sys->i_width, p_sys->i_height );
+            goto vdev_failed;
+        }
 
         msg_Dbg( p_demux, "will use %dx%d", p_sys->i_width, p_sys->i_height );
     }

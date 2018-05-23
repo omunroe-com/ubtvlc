@@ -1,8 +1,8 @@
 /*****************************************************************************
  * async_queue.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: async_queue.hpp 8562 2004-08-29 09:00:03Z asmax $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: async_queue.hpp 12207 2005-08-15 15:54:32Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -65,8 +65,8 @@ class AsyncQueue: public SkinObject
         AsyncQueue( intf_thread_t *pIntf );
         virtual ~AsyncQueue();
 
-        /// Callback for the timer
-        static void doFlush( SkinObject *pObj );
+        // Callback to flush the queue
+        DEFINE_CALLBACK( AsyncQueue, Flush );
 };
 
 

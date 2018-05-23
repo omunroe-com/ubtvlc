@@ -1,8 +1,8 @@
 /*****************************************************************************
  * codecs.h: codec related structures needed by the demuxers and decoders
  *****************************************************************************
- * Copyright (C) 1999-2001 VideoLAN
- * $Id: codecs.h 8401 2004-08-08 01:36:56Z fenrir $
+ * Copyright (C) 1999-2001 the VideoLAN team
+ * $Id: codecs.h 12419 2005-08-28 20:57:48Z hartman $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -114,7 +114,12 @@ typedef struct
     uint32_t   biClrUsed;
     uint32_t   biClrImportant;
 } BITMAPINFOHEADER, *PBITMAPINFOHEADER, *LPBITMAPINFOHEADER;
-typedef struct {
+
+typedef struct
+#ifdef HAVE_ATTRIBUTE_PACKED
+    __attribute__((__packed__))
+#endif
+{
     BITMAPINFOHEADER bmiHeader;
     int        bmiColors[1];
 } BITMAPINFO, *LPBITMAPINFO;
@@ -149,8 +154,57 @@ typedef struct
     uint32_t          dwBitErrorRate;
     REFERENCE_TIME    AvgTimePerFrame;
     BITMAPINFOHEADER  bmiHeader;
-    //int               reserved[3];
 } VIDEOINFOHEADER;
+#endif
+
+#ifndef _RGBQUAD_
+#define _RGBQUAD_
+typedef struct
+#ifdef HAVE_ATTRIBUTE_PACKED
+    __attribute__((__packed__))
+#endif
+{
+    uint8_t rgbBlue;
+    uint8_t rgbGreen;
+    uint8_t rgbRed;
+    uint8_t rgbReserved;
+} RGBQUAD1;
+#endif
+
+#ifndef _TRUECOLORINFO_
+#define _TRUECOLORINFO_
+typedef struct
+#ifdef HAVE_ATTRIBUTE_PACKED
+    __attribute__((__packed__))
+#endif
+{
+    uint32_t dwBitMasks[3];
+    RGBQUAD1 bmiColors[256];
+} TRUECOLORINFO;
+#endif
+
+#ifndef _VIDEOINFO_
+#define _VIDEOINFO_
+typedef struct
+#ifdef HAVE_ATTRIBUTE_PACKED
+    __attribute__((__packed__))
+#endif
+{
+    RECT32            rcSource;
+    RECT32            rcTarget;
+    uint32_t          dwBitRate;
+    uint32_t          dwBitErrorRate;
+    REFERENCE_TIME    AvgTimePerFrame;
+    BITMAPINFOHEADER  bmiHeader;
+
+    union
+    {
+        RGBQUAD1 bmiColors[256]; /* Colour palette */
+        uint32_t dwBitMasks[3]; /* True colour masks */
+        TRUECOLORINFO TrueColorInfo; /* Both of the above */
+    };
+
+} VIDEOINFO;
 #endif
 
 /* WAVE format wFormatTag IDs */
@@ -171,17 +225,43 @@ typedef struct
 
 #define WAVE_FORMAT_A52                 0x2000
 #define WAVE_FORMAT_DTS                 0x2001
-#define WAVE_FORMAT_WMA1                0x0160
-#define WAVE_FORMAT_WMA2                0x0161
-#define WAVE_FORMAT_WMA3                0x0162
+#define WAVE_FORMAT_WMA1                0x0160 /* WMA version 1 */
+#define WAVE_FORMAT_WMA2                0x0161 /* WMA (v2) 7, 8, 9 Series */
+#define WAVE_FORMAT_WMAP                0x0162 /* WMA 9 Professional */
+#define WAVE_FORMAT_WMAL                0x0163 /* WMA 9 Lossless */
 #define WAVE_FORMAT_DIVIO_AAC           0x4143
+#define WAVE_FORMAT_AAC                 0x00FF
 
 /* Need to check these */
 #define WAVE_FORMAT_DK3                 0x0061
 #define WAVE_FORMAT_DK4                 0x0062
 
+#define WAVE_FORMAT_VORB_1              0x674f
+#define WAVE_FORMAT_VORB_1PLUS          0x676f
+#define WAVE_FORMAT_VORB_2              0x6750
+#define WAVE_FORMAT_VORB_2PLUS          0x6770
+#define WAVE_FORMAT_VORB_3              0x6751
+#define WAVE_FORMAT_VORB_3PLUS          0x6771
+
+
 #if !defined(WAVE_FORMAT_EXTENSIBLE)
 #define WAVE_FORMAT_EXTENSIBLE          0xFFFE /* Microsoft */
+#endif
+
+/* GUID SubFormat IDs */
+/* We need both b/c const variables are not compile-time constants in C, giving
+ * us an error if we use the const GUID in an enum */
+
+#ifndef _KSDATAFORMAT_SUBTYPE_PCM_
+#define _KSDATAFORMAT_SUBTYPE_PCM_ {0x00000001, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}}
+static const GUID VLC_KSDATAFORMAT_SUBTYPE_PCM = {0xE923AABF, 0xCB58, 0x4471, {0xA1, 0x19, 0xFF, 0xFA, 0x01, 0xE4, 0xCE, 0x62}};
+#define KSDATAFORMAT_SUBTYPE_PCM VLC_KSDATAFORMAT_SUBTYPE_PCM
+#endif
+
+#ifndef _KSDATAFORMAT_SUBTYPE_UNKNOWN_ 
+#define _KSDATAFORMAT_SUBTYPE_UNKNOWN_ {0x00000000, 0x0000, 0x0000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}
+static const GUID VLC_KSDATAFORMAT_SUBTYPE_UNKNOWN = {0x00000000, 0x0000, 0x0000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
+#define KSDATAFORMAT_SUBTYPE_UNKNOWN VLC_KSDATAFORMAT_SUBTYPE_UNKNOWN
 #endif
 
 /* Microsoft speaker definitions */
@@ -213,25 +293,34 @@ static struct
 }
 wave_format_tag_to_fourcc[] =
 {
-    { WAVE_FORMAT_PCM,      VLC_FOURCC( 'a', 'r', 'a', 'w' ), "Raw audio" },
-    { WAVE_FORMAT_ADPCM,    VLC_FOURCC( 'm', 's', 0x00,0x02), "Adpcm" },
+    { WAVE_FORMAT_PCM,        VLC_FOURCC( 'a', 'r', 'a', 'w' ), "Raw audio" },
+    { WAVE_FORMAT_ADPCM,      VLC_FOURCC( 'm', 's', 0x00,0x02), "Adpcm" },
     { WAVE_FORMAT_IEEE_FLOAT, VLC_FOURCC( 'a', 'f', 'l', 't' ), "IEEE Float audio" },
-    { WAVE_FORMAT_ALAW,     VLC_FOURCC( 'a', 'l', 'a', 'w' ), "A-Law" },
-    { WAVE_FORMAT_MULAW,    VLC_FOURCC( 'm', 'l', 'a', 'w' ), "Mu-Law" },
-    { WAVE_FORMAT_IMA_ADPCM,VLC_FOURCC( 'm', 's', 0x00,0x11), "Ima-Adpcm" },
-    { WAVE_FORMAT_G726,     VLC_FOURCC( 'g', '7', '2', '6' ), "G.726 Adpcm" },
-    { WAVE_FORMAT_MPEGLAYER3,VLC_FOURCC('m', 'p', 'g', 'a' ), "Mpeg Audio" },
-    { WAVE_FORMAT_MPEG,     VLC_FOURCC( 'm', 'p', 'g', 'a' ), "Mpeg Audio" },
-    { WAVE_FORMAT_A52,      VLC_FOURCC( 'a', '5', '2', ' ' ), "A/52" },
-    { WAVE_FORMAT_WMA1,     VLC_FOURCC( 'w', 'm', 'a', '1' ), "Window Media Audio 1" },
-    { WAVE_FORMAT_WMA2,     VLC_FOURCC( 'w', 'm', 'a', '2' ), "Window Media Audio 2" },
-    { WAVE_FORMAT_WMA3,     VLC_FOURCC( 'w', 'm', 'a', '3' ), "Window Media Audio 3" },
-    { WAVE_FORMAT_DK3,      VLC_FOURCC( 'm', 's', 0x00,0x61), "Duck DK3" },
-    { WAVE_FORMAT_DK4,      VLC_FOURCC( 'm', 's', 0x00,0x62), "Duck DK4" },
-    { WAVE_FORMAT_DTS,      VLC_FOURCC( 'd', 't', 's', ' ' ), "DTS Coherent Acoustics" },
-    { WAVE_FORMAT_DTS_MS,   VLC_FOURCC( 'd', 't', 's', ' ' ), "DTS Coherent Acoustics" },
-    { WAVE_FORMAT_DIVIO_AAC,VLC_FOURCC( 'm', 'p', '4', 'a' ), "MPEG-4 Audio (Divio)" },
-    { WAVE_FORMAT_UNKNOWN,  VLC_FOURCC( 'u', 'n', 'd', 'f' ), "Unknown" }
+    { WAVE_FORMAT_ALAW,       VLC_FOURCC( 'a', 'l', 'a', 'w' ), "A-Law" },
+    { WAVE_FORMAT_MULAW,      VLC_FOURCC( 'm', 'l', 'a', 'w' ), "Mu-Law" },
+    { WAVE_FORMAT_IMA_ADPCM,  VLC_FOURCC( 'm', 's', 0x00,0x11), "Ima-Adpcm" },
+    { WAVE_FORMAT_G726,       VLC_FOURCC( 'g', '7', '2', '6' ), "G.726 Adpcm" },
+    { WAVE_FORMAT_MPEGLAYER3, VLC_FOURCC( 'm', 'p', 'g', 'a' ), "Mpeg Audio" },
+    { WAVE_FORMAT_MPEG,       VLC_FOURCC( 'm', 'p', 'g', 'a' ), "Mpeg Audio" },
+    { WAVE_FORMAT_A52,        VLC_FOURCC( 'a', '5', '2', ' ' ), "A/52" },
+    { WAVE_FORMAT_WMA1,       VLC_FOURCC( 'w', 'm', 'a', '1' ), "Window Media Audio v1" },
+    { WAVE_FORMAT_WMA2,       VLC_FOURCC( 'w', 'm', 'a', '2' ), "Window Media Audio v2" },
+    { WAVE_FORMAT_WMA2,       VLC_FOURCC( 'w', 'm', 'a', ' ' ), "Window Media Audio v2" },
+    { WAVE_FORMAT_WMAP,       VLC_FOURCC( 'w', 'm', 'a', 'p' ), "Window Media Audio 9 Professional" },
+    { WAVE_FORMAT_WMAL,       VLC_FOURCC( 'w', 'm', 'a', 'l' ), "Window Media Audio 9 Lossless" },
+    { WAVE_FORMAT_DK3,        VLC_FOURCC( 'm', 's', 0x00,0x61), "Duck DK3" },
+    { WAVE_FORMAT_DK4,        VLC_FOURCC( 'm', 's', 0x00,0x62), "Duck DK4" },
+    { WAVE_FORMAT_DTS,        VLC_FOURCC( 'd', 't', 's', ' ' ), "DTS Coherent Acoustics" },
+    { WAVE_FORMAT_DTS_MS,     VLC_FOURCC( 'd', 't', 's', ' ' ), "DTS Coherent Acoustics" },
+    { WAVE_FORMAT_DIVIO_AAC,  VLC_FOURCC( 'm', 'p', '4', 'a' ), "MPEG-4 Audio (Divio)" },
+    { WAVE_FORMAT_AAC,        VLC_FOURCC( 'm', 'p', '4', 'a' ), "MPEG-4 Audio" },
+    { WAVE_FORMAT_VORB_1,     VLC_FOURCC( 'v', 'o', 'r', '1' ), "Vorbis 1 Audio" },
+    { WAVE_FORMAT_VORB_1PLUS, VLC_FOURCC( 'v', 'o', '1', '+' ), "Vorbis 1+ Audio" },
+    { WAVE_FORMAT_VORB_2,     VLC_FOURCC( 'v', 'o', 'r', '2' ), "Vorbis 2 Audio" },
+    { WAVE_FORMAT_VORB_2PLUS, VLC_FOURCC( 'v', 'o', '2', '+' ), "Vorbis 2+ Audio" },
+    { WAVE_FORMAT_VORB_3,     VLC_FOURCC( 'v', 'o', 'r', '3' ), "Vorbis 3 Audio" },
+    { WAVE_FORMAT_VORB_3PLUS, VLC_FOURCC( 'v', 'o', '3', '+' ), "Vorbis 3+ Audio" },
+    { WAVE_FORMAT_UNKNOWN,    VLC_FOURCC( 'u', 'n', 'd', 'f' ), "Unknown" }
 };
 
 static inline void wf_tag_to_fourcc( uint16_t i_tag, vlc_fourcc_t *fcc,
@@ -254,6 +343,43 @@ static inline void fourcc_to_wf_tag( vlc_fourcc_t fcc, uint16_t *pi_tag )
         if( wave_format_tag_to_fourcc[i].i_fourcc == fcc ) break;
     }
     if( pi_tag ) *pi_tag = wave_format_tag_to_fourcc[i].i_tag;
+}
+
+/* If wFormatTag is WAVEFORMATEXTENSIBLE, we must look at the SubFormat tag
+ * to determine the actual format.  Microsoft has stopped giving out wFormatTag
+ * assignments in lieu of letting 3rd parties generate their own GUIDs
+ */
+static struct
+{
+    GUID         guid_tag;
+    vlc_fourcc_t i_fourcc;
+    char         *psz_name;
+}
+sub_format_tag_to_fourcc[] =
+{
+    { _KSDATAFORMAT_SUBTYPE_PCM_, VLC_FOURCC( 'p', 'c', 'm', ' ' ), "PCM" },
+    { _KSDATAFORMAT_SUBTYPE_UNKNOWN_, VLC_FOURCC( 'u', 'n', 'd', 'f' ), "Unknown" }
+};
+
+/* compares two GUIDs, returns 1 if identical, 0 otherwise */
+static inline int guidcmp( const GUID *s1, const GUID *s2 )
+{
+    return( s1->Data1 == s2->Data1 && s1->Data2 == s2->Data2 &&
+            s1->Data3 == s2->Data3 && !memcmp( s1->Data4, s2->Data4, 8 ) );
+}
+
+static inline void sf_tag_to_fourcc( GUID *guid_tag,
+                                     vlc_fourcc_t *fcc, char **ppsz_name )
+{
+    int i;
+
+    for( i = 0; !guidcmp( &sub_format_tag_to_fourcc[i].guid_tag, 
+                          &KSDATAFORMAT_SUBTYPE_UNKNOWN ); i++ )
+    {
+        if( guidcmp( &sub_format_tag_to_fourcc[i].guid_tag, guid_tag ) ) break;
+    }
+    if( fcc ) *fcc = sub_format_tag_to_fourcc[i].i_fourcc;
+    if( ppsz_name ) *ppsz_name = sub_format_tag_to_fourcc[i].psz_name;
 }
 
 /**

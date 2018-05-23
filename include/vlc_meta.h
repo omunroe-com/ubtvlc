@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_meta.h
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: vlc_meta.h 8643 2004-09-04 14:51:04Z rocky $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: vlc_meta.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -36,6 +36,7 @@
 #define VLC_META_SETTING            N_("Setting")
 #define VLC_META_URL                N_("URL")
 #define VLC_META_LANGUAGE           N_("Language")
+#define VLC_META_NOW_PLAYING        N_("Now Playing")
 
 #define VLC_META_CDDB_ARTIST        N_("CDDB Artist")
 #define VLC_META_CDDB_CATEGORY      N_("CDDB Category")  
@@ -108,7 +109,8 @@ static inline void vlc_meta_Delete( vlc_meta_t *m )
     free( m );
 }
 
-static inline void vlc_meta_Add( vlc_meta_t *m, char *name, char *value )
+static inline void vlc_meta_Add( vlc_meta_t *m,
+                                 const char *name, const char *value )
 {
     m->name  = (char**)realloc( m->name, sizeof(char*) * ( m->i_meta + 1 ) );
     m->name[m->i_meta] = strdup( name );
@@ -156,7 +158,7 @@ static inline void vlc_meta_Merge( vlc_meta_t *dst, vlc_meta_t *src )
     }
 }
 
-static inline char *vlc_meta_GetValue( vlc_meta_t *m, char *name )
+static inline char *vlc_meta_GetValue( vlc_meta_t *m, const char *name )
 {
     int i;
 

@@ -3,8 +3,8 @@
  *   This plugin makes use of libdts to do the actual decoding
  *   (http://www.videolan.org/dtsdec/).
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: dtstofloat32.c 8863 2004-09-30 17:42:27Z gbazin $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id: dtstofloat32.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *      
@@ -87,6 +87,9 @@ struct filter_sys_t
     "listening room.")
 
 vlc_module_begin();
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACODEC );
+    set_shortname( _("DTS" ) );
     set_description( _("DTS Coherent Acoustics audio decoder") );
     add_bool( "dts-dynrng", 1, NULL, DYNRNG_TEXT, DYNRNG_LONGTEXT, VLC_FALSE );
     set_capability( "audio filter", 100 );
@@ -99,7 +102,7 @@ vlc_module_begin();
 vlc_module_end();
 
 /*****************************************************************************
- * Create: 
+ * Create:
  *****************************************************************************/
 static int Create( vlc_object_t *p_this )
 {
@@ -300,7 +303,7 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
     if( !dts_syncinfo( p_sys->p_libdts, p_in_buf->p_buffer, &i_flags,
                        &i_sample_rate, &i_bit_rate, &i_frame_length ) )
     {
-        msg_Warn( p_filter, "libdts couldn't sync on frame" );
+        msg_Warn( p_aout, "libdts couldn't sync on frame" );
         p_out_buf->i_nb_samples = p_out_buf->i_nb_bytes = 0;
         return;
     }
@@ -312,7 +315,7 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
     if ( (i_flags & DTS_CHANNEL_MASK) != (p_sys->i_flags & DTS_CHANNEL_MASK)
           && !p_sys->b_dontwarn )
     {
-        msg_Warn( p_filter,
+        msg_Warn( p_aout,
                   "libdts couldn't do the requested downmix 0x%x->0x%x",
                   p_sys->i_flags  & DTS_CHANNEL_MASK,
                   i_flags & DTS_CHANNEL_MASK );
@@ -331,7 +334,7 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
 
         if( dts_block( p_sys->p_libdts ) )
         {
-            msg_Warn( p_filter, "dts_block failed for block %d", i );
+            msg_Warn( p_aout, "dts_block failed for block %d", i );
             break;
         }
 
@@ -411,6 +414,7 @@ static int OpenFilter( vlc_object_t *p_this )
                   p_filter->fmt_in.audio, p_filter->fmt_out.audio );
 
     p_filter->pf_audio_filter = Convert;
+    p_filter->fmt_out.audio.i_rate = p_filter->fmt_in.audio.i_rate;
 
     return i_ret;
 }

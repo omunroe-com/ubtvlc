@@ -1,7 +1,7 @@
 /*****************************************************************************
  * var.c: object variables for input thread
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
+ * Copyright (C) 2004 the VideoLAN team
  * $Id: input.c 7955 2004-06-07 22:21:33Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
@@ -190,12 +190,14 @@ void input_ControlVarInit ( input_thread_t *p_input )
     var_Change( p_input, "length", VLC_VAR_SETVALUE, &val, NULL );
 
 
-
    /* Special "intf-change" variable, it allows intf to set up a callback
      * to be notified of some changes.
      * TODO list all changes warn by this callbacks */
     var_Create( p_input, "intf-change", VLC_VAR_BOOL );
     var_SetBool( p_input, "intf-change", VLC_TRUE );
+
+   /* item-change variable */
+    var_Create( p_input, "item-change", VLC_VAR_INTEGER );
 }
 
 /*****************************************************************************
@@ -395,8 +397,11 @@ void input_ConfigVarInit ( input_thread_t *p_input )
     var_Create( p_input, "video", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
     var_Create( p_input, "audio", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
 
-    var_Create( p_input, "audio-channel", VLC_VAR_INTEGER|VLC_VAR_DOINHERIT );
-    var_Create( p_input, "spu-channel", VLC_VAR_INTEGER|VLC_VAR_DOINHERIT );
+    var_Create( p_input, "audio-track", VLC_VAR_INTEGER|VLC_VAR_DOINHERIT );
+    var_Create( p_input, "sub-track", VLC_VAR_INTEGER|VLC_VAR_DOINHERIT );
+
+    var_Create( p_input, "audio-language", VLC_VAR_STRING|VLC_VAR_DOINHERIT );
+    var_Create( p_input, "sub-language", VLC_VAR_STRING|VLC_VAR_DOINHERIT );
 
     var_Create( p_input, "sub-file", VLC_VAR_FILE | VLC_VAR_DOINHERIT );
     var_Create( p_input, "sub-autodetect-file", VLC_VAR_BOOL |
@@ -426,12 +431,16 @@ void input_ConfigVarInit ( input_thread_t *p_input )
     var_Create( p_input, "audio-desync", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
 
     var_Create( p_input, "cr-average", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Create( p_input, "clock-synchro", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT);
 
     var_Create( p_input, "seekable", VLC_VAR_BOOL );
     val.b_bool = VLC_TRUE; /* Fixed later*/
     var_Change( p_input, "seekable", VLC_VAR_SETVALUE, &val, NULL );
 
     var_Create( p_input, "input-slave", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
+
+    /* */
+    var_Create( p_input, "access-filter", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
 
     /* Meta */
     var_Create( p_input, "meta-title", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
@@ -466,28 +475,15 @@ static int RateCallback( vlc_object_t *p_this, char const *psz_cmd,
                          vlc_value_t oldval, vlc_value_t newval, void *p_data )
 {
     input_thread_t *p_input = (input_thread_t*)p_this;
-    vlc_value_t val;
-    int i_rate;
 
     /* Problem with this way: the "rate" variable is update after the input thread do the change */
     if( !strcmp( psz_cmd, "rate-slower" ) )
     {
         input_ControlPush( p_input, INPUT_CONTROL_SET_RATE_SLOWER, NULL );
-
-        /* Fix "rate" value */
-        i_rate = var_GetInteger( p_input, "rate" ) * 2;
-        if( i_rate < INPUT_RATE_MIN ) i_rate = INPUT_RATE_MIN;
-        val.i_int = i_rate;
-        var_Change( p_input, "rate", VLC_VAR_SETVALUE, &val, NULL );
     }
     else if( !strcmp( psz_cmd, "rate-faster" ) )
     {
         input_ControlPush( p_input, INPUT_CONTROL_SET_RATE_FASTER, NULL );
-        i_rate = var_GetInteger( p_input, "rate" ) / 2;
-
-        if( i_rate > INPUT_RATE_MAX ) i_rate = INPUT_RATE_MAX;
-        val.i_int = i_rate;
-        var_Change( p_input, "rate", VLC_VAR_SETVALUE, &val, NULL );
     }
     else
     {
@@ -692,8 +688,16 @@ static int EsDelayCallback ( vlc_object_t *p_this, char const *psz_cmd,
 {
     input_thread_t *p_input = (input_thread_t*)p_this;
 
+
     if( !strcmp( psz_cmd, "audio-delay" ) )
+    {
+        /*Change i_pts_delay to make sure es are decoded in time*/
+        if (newval.i_int < 0 || oldval.i_int < 0 )
+        {
+            p_input->i_pts_delay -= newval.i_int - oldval.i_int;
+        }
         input_ControlPush( p_input, INPUT_CONTROL_SET_AUDIO_DELAY, &newval );
+    }
     else if( !strcmp( psz_cmd, "spu-delay" ) )
         input_ControlPush( p_input, INPUT_CONTROL_SET_SPU_DELAY, &newval );
     return VLC_SUCCESS;

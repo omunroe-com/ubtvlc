@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ffmpeg.h: decoder using the ffmpeg library
  *****************************************************************************
- * Copyright (C) 2001 VideoLAN
- * $Id: ffmpeg.h 8806 2004-09-26 13:39:00Z gbazin $
+ * Copyright (C) 2001 the VideoLAN team
+ * $Id: ffmpeg.h 11867 2005-07-27 16:55:17Z massiot $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -186,6 +186,10 @@ void E_(ClosePostproc)( decoder_t *, void * );
 #define ENC_INTERLACE_LONGTEXT N_( "Allows you to enable dedicated " \
   "algorithms for interlaced frames." )
 
+#define ENC_INTERLACE_ME_TEXT N_( "Enable interlaced motion estimation" )
+#define ENC_INTERLACE_ME_LONGTEXT N_( "Allows you to enable interlaced " \
+  "motion estimation algorithms. It requires more CPU." )
+
 #define ENC_PRE_ME_TEXT N_( "Enable pre motion estimation" )
 #define ENC_PRE_ME_LONGTEXT N_( "Allows you to enable the pre motion " \
   "estimation." )
@@ -249,3 +253,29 @@ void E_(ClosePostproc)( decoder_t *, void * );
 #define ENC_STRICT_TEXT N_( "Strict standard compliance" )
 #define ENC_STRICT_LONGTEXT N_( "Allows you to force a strict standard " \
   "compliance when encoding (accepted values: -1, 0, 1)." )
+
+#define ENC_LUMI_MASKING_TEXT N_( "Luminance masking" )
+#define ENC_LUMI_MASKING_LONGTEXT N_( "Allows you to raise the quantizer for " \
+  "very bright macroblocks (default: 0.0)." )
+
+#define ENC_DARK_MASKING_TEXT N_( "Darkness masking" )
+#define ENC_DARK_MASKING_LONGTEXT N_( "Allows you to raise the quantizer for " \
+  "very dark macroblocks (default: 0.0)." )
+
+#define ENC_P_MASKING_TEXT N_( "Motion masking" )
+#define ENC_P_MASKING_LONGTEXT N_( "Allows you to raise the quantizer for " \
+  "macroblocks with a high temporal complexity (default: 0.0)." )
+
+#define ENC_BORDER_MASKING_TEXT N_( "Border masking" )
+#define ENC_BORDER_MASKING_LONGTEXT N_( "Allows you to raise the quantizer " \
+  "for macroblocks at the border of the frame (default: 0.0)." )
+
+#define ENC_LUMA_ELIM_TEXT N_( "Luminance elimination" )
+#define ENC_LUMA_ELIM_LONGTEXT N_( "Eliminates luminance blocks when " \
+  "the PSNR isn't much changed (default: 0.0). The H264 specification " \
+  "recommends -4." )
+
+#define ENC_CHROMA_ELIM_TEXT N_( "Chrominance elimination" )
+#define ENC_CHROMA_ELIM_LONGTEXT N_( "Eliminates chrominance blocks when " \
+  "the PSNR isn't much changed (default: 0.0). The H264 specification " \
+  "recommends 7." )

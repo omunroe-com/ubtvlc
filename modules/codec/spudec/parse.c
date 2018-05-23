@@ -1,8 +1,8 @@
 /*****************************************************************************
  * parse.c: SPU parser
  *****************************************************************************
- * Copyright (C) 2000-2001 VideoLAN
- * $Id: parse.c 8758 2004-09-21 20:33:59Z gbazin $
+ * Copyright (C) 2000-2001, 2005 the VideoLAN team
+ * $Id: parse.c 11709 2005-07-11 16:20:33Z massiot $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -43,7 +43,7 @@ static void Render         ( decoder_t *, subpicture_t *, subpicture_data_t *);
  * AddNibble: read a nibble from a source packet and add it to our integer.
  *****************************************************************************/
 static inline unsigned int AddNibble( unsigned int i_code,
-                                      uint8_t *p_src, int *pi_index )
+                                      uint8_t *p_src, unsigned int *pi_index )
 {
     if( *pi_index & 0x1 )
     {
@@ -589,7 +589,7 @@ static void Render( decoder_t *p_dec, subpicture_t *p_spu,
     /* Create a new subpicture region */
     memset( &fmt, 0, sizeof(video_format_t) );
     fmt.i_chroma = VLC_FOURCC('Y','U','V','P');
-    fmt.i_aspect = VOUT_ASPECT_FACTOR;
+    fmt.i_aspect = 0; /* 0 means use aspect ratio of background video */
     fmt.i_width = fmt.i_visible_width = p_spu->i_width;
     fmt.i_height = fmt.i_visible_height = p_spu->i_height -
         p_spu_data->i_y_top_offset - p_spu_data->i_y_bottom_offset;

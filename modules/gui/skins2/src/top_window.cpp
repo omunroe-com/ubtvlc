@@ -1,8 +1,8 @@
 /*****************************************************************************
  * top_window.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: top_window.cpp 8524 2004-08-25 21:32:15Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: top_window.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -32,6 +32,7 @@
 #include "../commands/cmd_on_top.hpp"
 #include "../commands/cmd_dialogs.hpp"
 #include "../controls/ctrl_generic.hpp"
+#include "../events/evt_refresh.hpp"
 #include "../events/evt_enter.hpp"
 #include "../events/evt_focus.hpp"
 #include "../events/evt_leave.hpp"
@@ -64,6 +65,24 @@ TopWindow::~TopWindow()
 {
     // Unregister from the window manager
     m_rWindowManager.unregisterWindow( *this );
+}
+
+
+void TopWindow::processEvent( EvtRefresh &rEvtRefresh )
+{
+    // We override the behaviour defined in GenericWindow, because we don't
+    // want to draw on a video control!
+    if( m_pActiveLayout == NULL )
+    {
+        GenericWindow::processEvent( rEvtRefresh );
+    }
+    else
+    {
+        m_pActiveLayout->refreshRect( rEvtRefresh.getXStart(),
+                                      rEvtRefresh.getYStart(),
+                                      rEvtRefresh.getWidth(),
+                                      rEvtRefresh.getHeight() );
+    }
 }
 
 

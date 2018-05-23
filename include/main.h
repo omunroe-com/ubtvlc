@@ -2,8 +2,8 @@
  * main.h: access to all program variables
  * Declaration and extern access to global program object.
  *****************************************************************************
- * Copyright (C) 1999, 2000, 2001, 2002 VideoLAN
- * $Id: main.h 8911 2004-10-04 16:03:30Z gbazin $
+ * Copyright (C) 1999, 2000, 2001, 2002 the VideoLAN team
+ * $Id: main.h 12428 2005-08-29 16:34:32Z massiot $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -51,6 +51,12 @@ struct libvlc_t
     /* The message bank */
     msg_bank_t             msg_bank;
 
+    /* UTF-8 conversion */
+    vlc_mutex_t            from_locale_lock;
+    vlc_mutex_t            to_locale_lock;
+    vlc_iconv_t            from_locale;
+    vlc_iconv_t            to_locale;
+
     /* The module bank */
     module_bank_t *        p_module_bank;
 
@@ -63,6 +69,8 @@ struct libvlc_t
     char *                 psz_vlcpath;
 #elif defined( SYS_DARWIN )
     char *                 psz_vlcpath;
+    vlc_iconv_t            iconv_macosx; /* for HFS+ file names */
+    vlc_mutex_t            iconv_lock;
 #elif defined( WIN32 ) && !defined( UNDER_CE )
     SIGNALOBJECTANDWAIT    SignalObjectAndWait;
     vlc_bool_t             b_fast_mutex;
@@ -85,18 +93,14 @@ struct vlc_t
     /* Global properties */
     int                    i_argc;           /* command line arguments count */
     char **                ppsz_argv;              /* command line arguments */
-    char *                 psz_homedir;             /* user's home directory */
+    char *                 psz_homedir;           /* configuration directory */
+    char *                 psz_userdir;             /* user's home directory */
     char *                 psz_configfile;        /* location of config file */
 
     /* Fast memcpy plugin used */
     module_t *             p_memcpy_module;
-#if defined( UNDER_CE )
-    void* ( __cdecl *pf_memcpy ) ( void *, const void *, size_t );
-    void* ( __cdecl *pf_memset ) ( void *, int, size_t );
-#else
     void* ( *pf_memcpy ) ( void *, const void *, size_t );
     void* ( *pf_memset ) ( void *, int, size_t );
-#endif
 
     /* Shared data - these structures are accessed directly from p_vlc by
      * several modules */
@@ -113,7 +117,11 @@ struct vlc_t
         const char *psz_action;
         int i_action;
         int i_key;
-
+        
+        /* hotkey accounting information */
+        mtime_t i_delta_date;/*< minimum delta time between two key presses */
+        mtime_t i_last_date; /*< last date key was pressed */
+        int     i_times;     /*< n times pressed within delta date*/
     } *p_hotkeys;
 };
 

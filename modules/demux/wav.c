@@ -1,8 +1,8 @@
 /*****************************************************************************
  * wav.c : wav file input module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: wav.c 8862 2004-09-30 17:21:40Z gbazin $
+ * Copyright (C) 2001-2003 the VideoLAN team
+ * $Id: wav.c 11685 2005-07-10 10:51:28Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -40,6 +40,8 @@ static void Close( vlc_object_t * );
 
 vlc_module_begin();
     set_description( _("WAV demuxer") );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
     set_capability( "demux2", 142 );
     set_callbacks( Open, Close );
 vlc_module_end();
@@ -108,12 +110,9 @@ static int Open( vlc_object_t * p_this )
     WAVEFORMATEX         *p_wf;
 
     /* Is it a wav file ? */
-    if( stream_Peek( p_demux->s, &p_peek, 12 ) < 12 )
-    {
-        msg_Warn( p_demux, "WAV module discarded (cannot peek)" );
-        return VLC_EGENERIC;
-    }
-    if( strncmp( p_peek, "RIFF", 4 ) || strncmp( &p_peek[8], "WAVE", 4 ) )
+    if( stream_Peek( p_demux->s, &p_peek, 12 ) < 12 ) return VLC_EGENERIC;
+
+    if( memcmp( p_peek, "RIFF", 4 ) || memcmp( &p_peek[8], "WAVE", 4 ) )
     {
         return VLC_EGENERIC;
     }
@@ -164,13 +163,21 @@ static int Open( vlc_object_t * p_this )
     i_extended = 0;
 
     /* Handle new WAVE_FORMAT_EXTENSIBLE wav files */
+    /* see the following link for more information:
+     * http://www.microsoft.com/whdc/device/audio/multichaud.mspx#EFAA */
     if( GetWLE( &p_wf->wFormatTag ) == WAVE_FORMAT_EXTENSIBLE &&
         i_size >= sizeof( WAVEFORMATEXTENSIBLE ) )
     {
-        int i, i_channel_mask;
+        unsigned i, i_channel_mask;
+        GUID guid_subformat;
 
-        wf_tag_to_fourcc( GetWLE( &p_wf_ext->SubFormat ),
-                          &p_sys->fmt.i_codec, &psz_name );
+        guid_subformat = p_wf_ext->SubFormat;
+        guid_subformat.Data1 = GetDWLE( &p_wf_ext->SubFormat.Data1 );
+        guid_subformat.Data2 = GetWLE( &p_wf_ext->SubFormat.Data2 );
+        guid_subformat.Data3 = GetWLE( &p_wf_ext->SubFormat.Data3 );
+
+        sf_tag_to_fourcc( &guid_subformat, &p_sys->fmt.i_codec, &psz_name );
+
         i_extended = sizeof( WAVEFORMATEXTENSIBLE ) - sizeof( WAVEFORMATEX );
         p_sys->fmt.i_extra -= i_extended;
 
@@ -374,7 +381,7 @@ static int ChunkFind( demux_t *p_demux, char *fcc, unsigned int *pi_size )
 
         msg_Dbg( p_demux, "Chunk: fcc=`%4.4s` size=%d", p_peek, i_size );
 
-        if( !strncmp( p_peek, fcc, 4 ) )
+        if( !memcmp( p_peek, fcc, 4 ) )
         {
             if( pi_size )
             {

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mod.c: MOD file demuxer (using libmodplug)
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: mod.c 6963 2004-03-05 19:24:14Z murray $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: mod.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -45,8 +45,11 @@ static int  Open    ( vlc_object_t * );
 static void Close  ( vlc_object_t * );
 
 vlc_module_begin();
+    set_shortname( "MOD");
     set_description( _("MOD demuxer (libmodplug)" ) );
     set_capability( "demux2", 10 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_DEMUX );
 
     add_bool( "mod-noisereduction", VLC_TRUE, NULL, N_("Noise reduction"), N_("Noise reduction"), VLC_FALSE );
 
@@ -108,11 +111,9 @@ static int Open( vlc_object_t *p_this )
     /* We accept file based on extention match */
     if( strcasecmp( p_demux->psz_demux, "mod" ) )
     {
-        if( ( ext = strchr( p_demux->psz_path, '.' ) ) == NULL || stream_Size( p_demux->s ) == 0 )
-        {
-            msg_Warn( p_demux, "MOD module discarded (path=%s)", p_demux->psz_path );
-            return VLC_EGENERIC;
-        }
+        if( ( ext = strchr( p_demux->psz_path, '.' ) ) == NULL ||
+            stream_Size( p_demux->s ) == 0 ) return VLC_EGENERIC;
+
         ext++;  /* skip . */
         for( i = 0; mod_ext[i] != NULL; i++ )
         {
@@ -121,11 +122,7 @@ static int Open( vlc_object_t *p_this )
                 break;
             }
         }
-        if( mod_ext[i] == NULL )
-        {
-            msg_Warn( p_demux, "MOD module discarded (extention '%s' unknown)", ext );
-            return VLC_EGENERIC;
-        }
+        if( mod_ext[i] == NULL ) return VLC_EGENERIC;
         msg_Dbg( p_demux, "running MOD demuxer (ext=%s)", mod_ext[i] );
     }
 

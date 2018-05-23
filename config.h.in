@@ -48,14 +48,14 @@
 /* Define if you want the stream output support */
 #undef ENABLE_SOUT
 
-/* Define if you want utf8 support */
-#undef ENABLE_UTF8
-
 /* Define if you want the VideoLAN manager support */
 #undef ENABLE_VLM
 
 /* Define to 1 if you have the <a52dec/a52.h> header file. */
 #undef HAVE_A52DEC_A52_H
+
+/* Define to `1' if <netdb.h> defines struct addrinfo. */
+#undef HAVE_ADDRINFO
 
 /* Define to 1 if you have `alloca', as a function or macro. */
 #undef HAVE_ALLOCA
@@ -95,6 +95,12 @@
 /* Support for __attribute__((packed)) for structs */
 #undef HAVE_ATTRIBUTE_PACKED
 
+/* Define if you have the avahi-client library */
+#undef HAVE_AVAHI_CLIENT
+
+/* Define to 1 if you have the `bsearch' function. */
+#undef HAVE_BSEARCH
+
 /* Define to 1 if you have the <Carbon/Carbon.h> header file. */
 #undef HAVE_CARBON_CARBON_H
 
@@ -106,7 +112,7 @@
    */
 #undef HAVE_CASCADE_GRAPHICS_CASCADESCREEN_H
 
-/* Define for the CD-DA plugin using libcdio */
+/* Define for the audio CD plugin using libcdio */
 #undef HAVE_CDDAX
 
 /* Define to 1 if you have the <Cocoa/Cocoa.h> header file. */
@@ -123,6 +129,10 @@
 
 /* Define to 1 if you have the `ctime_r' function. */
 #undef HAVE_CTIME_R
+
+/* Define to 1 if you have the <cybergarage/upnp/MediaServer.h> header file.
+   */
+#undef HAVE_CYBERGARAGE_UPNP_MEDIASERVER_H
 
 /* Define to 1 if you have the `daemon' function. */
 #undef HAVE_DAEMON
@@ -177,8 +187,14 @@
 /* Define to 1 if you have the <dvbpsi/dr.h> header file. */
 #undef HAVE_DVBPSI_DR_H
 
+/* Define if you have dvbpsi_GenSDTSections. */
+#undef HAVE_DVBPSI_SDT
+
 /* Define to 1 if you have the <dvdread/dvd_reader.h> header file. */
 #undef HAVE_DVDREAD_DVD_READER_H
+
+/* Define if we have support for dynamic plugins */
+#undef HAVE_DYNAMIC_PLUGINS
 
 /* Define to 1 if you have the <ebml/EbmlVersion.h> header file. */
 #undef HAVE_EBML_EBMLVERSION_H
@@ -204,6 +220,15 @@
 /* Define to 1 if you have the <FLAC/stream_decoder.h> header file. */
 #undef HAVE_FLAC_STREAM_DECODER_H
 
+/* Define to 1 if you have the `fork' function. */
+#undef HAVE_FORK
+
+/* Define to 1 if you have the `gai_strerror' function. */
+#undef HAVE_GAI_STRERROR
+
+/* Define to 1 if you have the `getaddrinfo' function. */
+#undef HAVE_GETADDRINFO
+
 /* Define to 1 if you have the `getcwd' function. */
 #undef HAVE_GETCWD
 
@@ -224,9 +249,6 @@
 
 /* Define to 1 if you have the `gethostbyname' function. */
 #undef HAVE_GETHOSTBYNAME
-
-/* Define to 1 if you have the `gethostbyname2' function. */
-#undef HAVE_GETHOSTBYNAME2
 
 /* Define to 1 if you have the `getnameinfo' function. */
 #undef HAVE_GETNAMEINFO
@@ -261,9 +283,6 @@
 /* Define to 1 if you have the `gmtime_r' function. */
 #undef HAVE_GMTIME_R
 
-/* Define to 1 if you have libgnutls */
-#undef HAVE_GNUTLS
-
 /* Define to 1 if you have the <goom/goom.h> header file. */
 #undef HAVE_GOOM_GOOM_H
 
@@ -288,7 +307,7 @@
 /* Define to 1 if you have the `inet_aton' function. */
 #undef HAVE_INET_ATON
 
-/* Define to 1 if you have the `inet_pton' function. */
+/* Define to 1 if you have inet_pton(). */
 #undef HAVE_INET_PTON
 
 /* Define to 1 if you have the <inttypes.h> header file. */
@@ -328,6 +347,13 @@
 /* Define this if you have libcddb installed */
 #undef HAVE_LIBCDDB
 
+/* Define if you have libcdio 0.72 or greater installed */
+#undef HAVE_LIBCDIO
+
+/* Define to 1 if you have the <libdirac_decoder/dirac_parser.h> header file.
+   */
+#undef HAVE_LIBDIRAC_DECODER_DIRAC_PARSER_H
+
 /* Define to 1 if you have the <libmodplug/modplug.h> header file. */
 #undef HAVE_LIBMODPLUG_MODPLUG_H
 
@@ -337,14 +363,14 @@
 /* Define to 1 if you have the `pth' library (-lpth). */
 #undef HAVE_LIBPTH
 
+/* Define to 1 if you have the <libsmbclient.h> header file. */
+#undef HAVE_LIBSMBCLIENT_H
+
 /* Define to 1 if you have the `st' library (-lst). */
 #undef HAVE_LIBST
 
 /* Define to 1 if you have the <libtar.h> header file. */
 #undef HAVE_LIBTAR_H
-
-/* Define to 1 if you have the `xml2' library (-lxml2). */
-#undef HAVE_LIBXML2
 
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
@@ -379,9 +405,6 @@
 /* Define to 1 if you have the `lrintf' function. */
 #undef HAVE_LRINTF
 
-/* Define to 1 if you have the `lseek' function. */
-#undef HAVE_LSEEK
-
 /* Define to 1 if you have the <machine/param.h> header file. */
 #undef HAVE_MACHINE_PARAM_H
 
@@ -415,6 +438,9 @@
 /* Define to 1 if you have a working `mmap' system call. */
 #undef HAVE_MMAP
 
+/* Define if MMX intrinsics are available. */
+#undef HAVE_MMX_INTRINSICS
+
 /* Define to 1 if you have the <mozilla-config.h> header file. */
 #undef HAVE_MOZILLA_CONFIG_H
 
@@ -442,8 +468,17 @@
 /* Define to 1 if you have the `NSLinkModule' function. */
 #undef HAVE_NSLINKMODULE
 
+/* Define to 1 if you have the <objsafe.h> header file. */
+#undef HAVE_OBJSAFE_H
+
 /* Define to 1 if you have the <ogg/ogg.h> header file. */
 #undef HAVE_OGG_OGG_H
+
+/* Define to 1 if you have the <ole2.h> header file. */
+#undef HAVE_OLE2_H
+
+/* Define to 1 if you have the <olectl.h> header file. */
+#undef HAVE_OLECTL_H
 
 /* Define to 1 if you have the <Ph.h> header file. */
 #undef HAVE_PH_H
@@ -472,14 +507,17 @@
 /* Define to 1 if you have the <QuickTime/QuickTime.h> header file. */
 #undef HAVE_QUICKTIME_QUICKTIME_H
 
-/* Define for the VCD plugin using libcdio/libvcdinfo */
-#undef HAVE_SATELLITE
+/* Define to 1 if you have the `scandir' function. */
+#undef HAVE_SCANDIR
 
 /* For NetBSD VCD support */
 #undef HAVE_SCSIREQ_IN_SYS_SCSIIO_H
 
 /* Define to 1 if you have the <SDL.h> header file. */
 #undef HAVE_SDL_H
+
+/* Define to 1 if you have the <SDL_image.h> header file. */
+#undef HAVE_SDL_IMAGE_H
 
 /* Define to 1 if you have the `select' function. */
 #undef HAVE_SELECT
@@ -492,6 +530,12 @@
 
 /* Define to 1 if you have the `setlocale' function. */
 #undef HAVE_SETLOCALE
+
+/* Define to 1 if libvlc is built as a shared library. */
+#undef HAVE_SHARED_LIBVLC
+
+/* Define if you have the libshout library */
+#undef HAVE_SHOUT
 
 /* Define to 1 if you have the <signal.h> header file. */
 #undef HAVE_SIGNAL_H
@@ -508,8 +552,8 @@
 /* Define to 1 if you have the <soundcard.h> header file. */
 #undef HAVE_SOUNDCARD_H
 
-/* Define to 1 if you have the <speex.h> header file. */
-#undef HAVE_SPEEX_H
+/* Define to 1 if you have the <speex/speex.h> header file. */
+#undef HAVE_SPEEX_SPEEX_H
 
 /* Define to 1 if you have the <stdbool.h> header file. */
 #undef HAVE_STDBOOL_H
@@ -563,6 +607,9 @@
 /* Define to 1 if you have the `strnicmp' function. */
 #undef HAVE_STRNICMP
 
+/* Define to 1 if you have the `strsep' function. */
+#undef HAVE_STRSEP
+
 /* Define to 1 if you have the `strtod' function. */
 #undef HAVE_STRTOD
 
@@ -577,6 +624,12 @@
 
 /* Define to 1 if you have the `strtoul' function. */
 #undef HAVE_STRTOUL
+
+/* Define to 1 if you have the `strtoull' function. */
+#undef HAVE_STRTOULL
+
+/* Define to 1 if the system has the type `struct addrinfo'. */
+#undef HAVE_STRUCT_ADDRINFO
 
 /* Define if <sys/time.h> defines struct timespec. */
 #undef HAVE_STRUCT_TIMESPEC
@@ -632,14 +685,14 @@
 /* Define to 1 if you have the <time.h> header file. */
 #undef HAVE_TIME_H
 
-/* Define to 1 if you have the <toolame.h> header file. */
-#undef HAVE_TOOLAME_H
-
 /* Define to 1 if you have the <tremor/ivorbiscodec.h> header file. */
 #undef HAVE_TREMOR_IVORBISCODEC_H
 
 /* Define to 1 if you have the `tsearch' function. */
 #undef HAVE_TSEARCH
+
+/* Define to 1 if you have the <twolame.h> header file. */
+#undef HAVE_TWOLAME_H
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
@@ -655,6 +708,12 @@
 
 /* Define if <stdarg.h> defines va_copy. */
 #undef HAVE_VA_COPY
+
+/* Define if you have libvcdinfo 0.7.21 or greater installed */
+#undef HAVE_VCDINFO
+
+/* Define for the VCD plugin using libcdio/libvcdinfo */
+#undef HAVE_VCDX
 
 /* Define to 1 if you have the <vorbis/codec.h> header file. */
 #undef HAVE_VORBIS_CODEC_H
@@ -698,6 +757,9 @@
 /* Define to 1 if you have the <zlib.h> header file. */
 #undef HAVE_ZLIB_H
 
+/* Define if samba has _SMBCCTX.close_fn */
+#undef HAVE__SMBCCTX_CLOSE_FN
+
 /* Define to 1 if you have the `__argz_count' function. */
 #undef HAVE___ARGZ_COUNT
 
@@ -731,6 +793,9 @@
 /* Define if <sys/param.h> defines ntohl. */
 #undef NTOHL_IN_SYS_PARAM_H
 
+/* Define if you want to optimize memory usage over performance */
+#undef OPTIMIZE_MEMORY
+
 /* Name of package */
 #undef PACKAGE
 
@@ -749,6 +814,18 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* version minor number */
+#undef PACKAGE_VERSION_EXTRA
+
+/* version major number */
+#undef PACKAGE_VERSION_MAJOR
+
+/* version minor number */
+#undef PACKAGE_VERSION_MINOR
+
+/* version minor number */
+#undef PACKAGE_VERSION_REVISION
+
 /* Define if <inttypes.h> exists and defines unusable PRI* macros. */
 #undef PRI_MACROS_BROKEN
 
@@ -763,6 +840,9 @@
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #undef RETSIGTYPE
+
+/* As a last resort we also test for SDL_image.h presence */
+#undef SDL_IMAGE_INCLUDE_FILE
 
 /* As a last resort we also test for SDL.h presence */
 #undef SDL_INCLUDE_FILE
@@ -792,6 +872,18 @@
 
 /* Simple version string */
 #undef VERSION_MESSAGE
+
+/* compiler */
+#undef VLC_COMPILER
+
+/* user who ran configure */
+#undef VLC_COMPILE_BY
+
+/* domain of the host which ran configure */
+#undef VLC_COMPILE_DOMAIN
+
+/* host which ran configure */
+#undef VLC_COMPILE_HOST
 
 /* big endian system */
 #undef WORDS_BIGENDIAN

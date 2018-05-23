@@ -1,8 +1,8 @@
 /*****************************************************************************
  * glx.c: GLX OpenGL provider
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: glx.c 8498 2004-08-22 14:32:51Z hartman $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: glx.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -109,7 +109,10 @@ static void SwitchContext( vout_thread_t * );
     "set it to 0 for first screen, 1 for the second.")
 
 vlc_module_begin();
-    set_description( _("X11 OpenGL provider") );
+    set_shortname( "OpenGL" );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VOUT );
+    set_description( _("OpenGL video output") );
     set_capability( "opengl provider", 50 );
     set_callbacks( CreateOpenGL, DestroyOpenGL );
 

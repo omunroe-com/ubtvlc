@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc.c: the vlc player
  *****************************************************************************
- * Copyright (C) 1998-2004 VideoLAN
- * $Id: vlc.c 9292 2004-11-12 10:44:50Z gbazin $
+ * Copyright (C) 1998-2004 the VideoLAN team
+ * $Id: vlc.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -157,7 +157,9 @@ static void SigHandler( int i_signal )
 #endif
 
 #if defined(UNDER_CE)
-#include "vlc_common.h"
+#   if defined( _MSC_VER ) && defined( UNDER_CE )
+#       include "vlc_common.h"
+#   endif
 /*****************************************************************************
  * WinMain: parse command line, start interface and spawn threads. (WinCE only)
  *****************************************************************************/

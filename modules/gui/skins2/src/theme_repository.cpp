@@ -1,8 +1,8 @@
 /*****************************************************************************
  * theme_repository.cpp
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: theme_repository.cpp 8513 2004-08-24 19:01:32Z asmax $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: theme_repository.cpp 12476 2005-09-04 21:50:18Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -27,11 +27,10 @@
 #include "../commands/cmd_dialogs.hpp"
 #ifdef HAVE_UNISTD_H
 #   include <unistd.h>
-#elif defined( WIN32 )
+#elif defined( WIN32 ) && !defined( UNDER_CE )
 #   include <direct.h>
 #endif
-#if (!defined( WIN32 ) || defined(__MINGW32__))
-/* Mingw has its own version of dirent */
+#ifdef HAVE_DIRENT_H
 #   include <dirent.h>
 #endif
 
@@ -115,7 +114,7 @@ void ThemeRepository::parseDirectory( const string &rDir )
     }
 
     // Get the first directory entry
-    pDirContent = readdir( pDir );
+    pDirContent = (dirent*)readdir( pDir );
 
     // While we still have entries in the directory
     while( pDirContent != NULL )
@@ -127,14 +126,21 @@ void ThemeRepository::parseDirectory( const string &rDir )
             msg_Dbg( getIntf(), "found skin %s", path.c_str() );
 
             // Add the theme in the popup menu
-            val.psz_string = (char*)path.c_str();
-            text.psz_string = (char*)name.substr(0, name.size() - 4).c_str();
+            string shortname = name.substr( 0, name.size() - 4 );
+            val.psz_string = new char[path.size() + 1];
+            text.psz_string = new char[shortname.size() + 1];
+            strcpy( val.psz_string, path.c_str() );
+            strcpy( text.psz_string, shortname.c_str() );
             var_Change( getIntf(), "intf-skins", VLC_VAR_ADDCHOICE, &val,
                         &text );
+            delete[] val.psz_string;
+            delete[] text.psz_string;
         }
 
-        pDirContent = readdir( pDir );
+        pDirContent = (dirent*)readdir( pDir );
     }
+
+    closedir( pDir );
 }
 
 

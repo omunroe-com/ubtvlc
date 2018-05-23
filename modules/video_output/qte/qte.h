@@ -1,8 +1,8 @@
 /*****************************************************************************
  * qte.h : QT Embedded plugin for vlc
  *****************************************************************************
- * Copyright (C) 1998-2002 VideoLAN
- * $Id: qte.h 6961 2004-03-05 17:34:23Z sam $
+ * Copyright (C) 1998-2002 the VideoLAN team
+ * $Id: qte.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Gerald Hansink <gerald.hansink@ordain.nl>
  *          Jean-Paul Saman <jpsaman@wxs.nl>

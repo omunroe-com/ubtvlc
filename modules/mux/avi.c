@@ -1,8 +1,8 @@
 /*****************************************************************************
  * avi.c
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: avi.c 8373 2004-08-04 20:09:31Z fenrir $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id: avi.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -42,6 +42,8 @@ static void Close  ( vlc_object_t * );
 
 vlc_module_begin();
     set_description( _("AVI muxer") );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_MUX );
     set_capability( "sout mux", 5 );
     add_shortcut( "avi" );
     set_callbacks( Open, Close );
@@ -294,11 +296,15 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
                 case VLC_FOURCC( 'w', 'm', 'a', '1' ):
                     p_wf->wFormatTag = WAVE_FORMAT_WMA1;
                     break;
+                case VLC_FOURCC( 'w', 'm', 'a', ' ' ):
                 case VLC_FOURCC( 'w', 'm', 'a', '2' ):
                     p_wf->wFormatTag = WAVE_FORMAT_WMA2;
                     break;
-                case VLC_FOURCC( 'w', 'm', 'a', '3' ):
-                    p_wf->wFormatTag = WAVE_FORMAT_WMA3;
+                case VLC_FOURCC( 'w', 'm', 'a', 'p' ):
+                    p_wf->wFormatTag = WAVE_FORMAT_WMAP;
+                    break;
+                case VLC_FOURCC( 'w', 'm', 'a', 'l' ):
+                    p_wf->wFormatTag = WAVE_FORMAT_WMAL;
                     break;
                     /* raw codec */
                 case VLC_FOURCC( 'u', '8', ' ', ' ' ):

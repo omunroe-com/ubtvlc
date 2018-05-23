@@ -1,8 +1,8 @@
 /*****************************************************************************
  * video_init.c:
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: video_init.c 8225 2004-07-20 20:25:25Z asmax $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: video_init.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *          code from projectM http://xmms-projectm.sourceforge.net

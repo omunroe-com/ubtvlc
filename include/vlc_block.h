@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_block.h: Data blocks management functions
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: vlc_block.h 9043 2004-10-22 18:34:38Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: vlc_block.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -60,8 +60,16 @@ typedef struct block_sys_t block_sys_t;
 #define BLOCK_FLAG_HEADER        0x0020
 /** This is the last block of the frame */
 #define BLOCK_FLAG_END_OF_FRAME  0x0040
-/** No keyframes present */
+/** This is not a key frame for bitrate shaping */
 #define BLOCK_FLAG_NO_KEYFRAME   0x0080
+/** This block contains a clock reference */
+#define BLOCK_FLAG_CLOCK         0x0200
+/** This block is scrambled */
+#define BLOCK_FLAG_SCRAMBLED     0x0400
+/** This block has to be decoded but not be displayed */
+#define BLOCK_FLAG_PREROLL       0x0800
+/** This block is corrupted and/or there is data loss  */
+#define BLOCK_FLAG_CORRUPTED     0x1000
 
 #define BLOCK_FLAG_PRIVATE_MASK  0xffff0000
 #define BLOCK_FLAG_PRIVATE_SHIFT 16
@@ -210,13 +218,17 @@ static int block_ChainExtract( block_t *p_list, void *p_data, int i_max )
 static inline block_t *block_ChainGather( block_t *p_list )
 {
     int     i_total = 0;
+    mtime_t i_length = 0;
     block_t *b, *g;
 
     if( p_list->p_next == NULL )
         return p_list;  /* Already gathered */
 
     for( b = p_list; b != NULL; b = b->p_next )
+    {
         i_total += b->i_buffer;
+        i_length += b->i_length;
+    }
 
     g = block_New( p_list->p_manager, i_total );
     block_ChainExtract( p_list, g->p_buffer, g->i_buffer );
@@ -224,6 +236,7 @@ static inline block_t *block_ChainGather( block_t *p_list )
     g->i_flags = p_list->i_flags;
     g->i_pts   = p_list->i_pts;
     g->i_dts   = p_list->i_dts;
+    g->i_length = i_length;
 
     /* free p_list */
     block_ChainRelease( p_list );

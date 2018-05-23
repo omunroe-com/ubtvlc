@@ -1,8 +1,8 @@
 /*****************************************************************************
  * playlist.h:  Playlist import module common functions
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: playlist.h 7219 2004-04-01 10:01:48Z zorglub $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: playlist.h 12305 2005-08-20 17:18:41Z gbazin $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -21,12 +21,24 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-char *ProcessMRL( char *, char * );
-char *FindPrefix( demux_t * );
+char *E_(ProcessMRL)( char *, char * );
+char *E_(FindPrefix)( demux_t * );
 
-int Import_Old ( vlc_object_t * );
-int Import_M3U ( vlc_object_t * );
+vlc_bool_t E_(FindItem)( demux_t *, playlist_t *, playlist_item_t **);
 
-void Close_M3U ( vlc_object_t * );
-int Import_PLS ( vlc_object_t * );
-void Close_PLS ( vlc_object_t * );
+int E_(Import_Old) ( vlc_object_t * );
+
+int E_(Import_Native) ( vlc_object_t * );
+void E_(Close_Native) ( vlc_object_t * );
+
+int E_(Import_M3U) ( vlc_object_t * );
+void E_(Close_M3U) ( vlc_object_t * );
+
+int E_(Import_PLS) ( vlc_object_t * );
+void E_(Close_PLS) ( vlc_object_t * );
+
+int E_(Import_B4S) ( vlc_object_t * );
+void E_(Close_B4S) ( vlc_object_t * );
+
+int E_(Import_DVB) ( vlc_object_t * );
+void E_(Close_DVB) ( vlc_object_t * );

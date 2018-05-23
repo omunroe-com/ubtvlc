@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_resize.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_resize.cpp 6964 2004-03-05 20:56:39Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: ctrl_resize.cpp 12207 2005-08-15 15:54:32Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -37,12 +37,12 @@ CtrlResize::CtrlResize( intf_thread_t *pIntf, CtrlFlat &rCtrl,
                         GenericLayout &rLayout, const UString &rHelp,
                         VarBool *pVisible ):
     CtrlFlat( pIntf, rHelp, pVisible ), m_fsm( pIntf ), m_rCtrl( rCtrl ),
-    m_rLayout( rLayout ), m_cmdOutStill( this, &transOutStill ),
-    m_cmdStillOut( this, &transStillOut ),
-    m_cmdStillStill( this, &transStillStill ),
-    m_cmdStillResize( this, &transStillResize ),
-    m_cmdResizeStill( this, &transResizeStill ),
-    m_cmdResizeResize( this, &transResizeResize )
+    m_rLayout( rLayout ), m_cmdOutStill( this ),
+    m_cmdStillOut( this ),
+    m_cmdStillStill( this ),
+    m_cmdStillResize( this ),
+    m_cmdResizeStill( this ),
+    m_cmdResizeResize( this )
 {
     m_pEvt = NULL;
     m_xPos = 0;
@@ -103,96 +103,89 @@ void CtrlResize::handleEvent( EvtGeneric &rEvent )
 }
 
 
-void CtrlResize::transOutStill( SkinObject *pCtrl )
+void CtrlResize::CmdOutStill::execute()
 {
-    CtrlResize *pThis = (CtrlResize*)pCtrl;
-    OSFactory *pOsFactory = OSFactory::instance( pThis->getIntf() );
+    OSFactory *pOsFactory = OSFactory::instance( m_pParent->getIntf() );
     pOsFactory->changeCursor( OSFactory::kResizeNWSE );
 }
 
 
-void CtrlResize::transStillOut( SkinObject *pCtrl )
+void CtrlResize::CmdStillOut::execute()
 {
-    CtrlResize *pThis = (CtrlResize*)pCtrl;
-    OSFactory *pOsFactory = OSFactory::instance( pThis->getIntf() );
+    OSFactory *pOsFactory = OSFactory::instance( m_pParent->getIntf() );
     pOsFactory->changeCursor( OSFactory::kDefaultArrow );
 }
 
 
-void CtrlResize::transStillStill( SkinObject *pCtrl )
+void CtrlResize::CmdStillStill::execute()
 {
-    CtrlResize *pThis = (CtrlResize*)pCtrl;
-    OSFactory *pOsFactory = OSFactory::instance( pThis->getIntf() );
+    OSFactory *pOsFactory = OSFactory::instance( m_pParent->getIntf() );
     pOsFactory->changeCursor( OSFactory::kResizeNWSE );
 }
 
 
-void CtrlResize::transStillResize( SkinObject *pCtrl )
+void CtrlResize::CmdStillResize::execute()
 {
-    CtrlResize *pThis = (CtrlResize*)pCtrl;
-    EvtMouse *pEvtMouse = (EvtMouse*)pThis->m_pEvt;
+    EvtMouse *pEvtMouse = (EvtMouse*)m_pParent->m_pEvt;
 
     // Set the cursor
-    OSFactory *pOsFactory = OSFactory::instance( pThis->getIntf() );
+    OSFactory *pOsFactory = OSFactory::instance( m_pParent->getIntf() );
     pOsFactory->changeCursor( OSFactory::kResizeNWSE );
 
-    pThis->m_xPos = pEvtMouse->getXPos();
-    pThis->m_yPos = pEvtMouse->getYPos();
+    m_pParent->m_xPos = pEvtMouse->getXPos();
+    m_pParent->m_yPos = pEvtMouse->getYPos();
 
-    pThis->captureMouse();
+    m_pParent->captureMouse();
 
-    pThis->m_width = pThis->m_rLayout.getWidth();
-    pThis->m_height = pThis->m_rLayout.getHeight();
+    m_pParent->m_width = m_pParent->m_rLayout.getWidth();
+    m_pParent->m_height = m_pParent->m_rLayout.getHeight();
 }
 
 
-void CtrlResize::transResizeStill( SkinObject *pCtrl )
+void CtrlResize::CmdResizeStill::execute()
 {
-    CtrlResize *pThis = (CtrlResize*)pCtrl;
-
     // Set the cursor
-    OSFactory *pOsFactory = OSFactory::instance( pThis->getIntf() );
+    OSFactory *pOsFactory = OSFactory::instance( m_pParent->getIntf() );
     pOsFactory->changeCursor( OSFactory::kResizeNWSE );
 
-    pThis->releaseMouse();
+    m_pParent->releaseMouse();
 }
 
 
-void CtrlResize::transResizeResize( SkinObject *pCtrl )
+void CtrlResize::CmdResizeResize::execute()
 {
-    CtrlResize *pThis = (CtrlResize*)pCtrl;
-    EvtMotion *pEvtMotion = (EvtMotion*)pThis->m_pEvt;
+    EvtMotion *pEvtMotion = (EvtMotion*)m_pParent->m_pEvt;
 
     // Set the cursor
-    OSFactory *pOsFactory = OSFactory::instance( pThis->getIntf() );
+    OSFactory *pOsFactory = OSFactory::instance( m_pParent->getIntf() );
     pOsFactory->changeCursor( OSFactory::kResizeNWSE );
 
-    int newWidth = pEvtMotion->getXPos() - pThis->m_xPos + pThis->m_width;
-    int newHeight = pEvtMotion->getYPos() - pThis->m_yPos + pThis->m_height;
+    int newWidth = pEvtMotion->getXPos() - m_pParent->m_xPos + m_pParent->m_width;
+    int newHeight = pEvtMotion->getYPos() - m_pParent->m_yPos + m_pParent->m_height;
 
     // Check boundaries
-    if( newWidth < pThis->m_rLayout.getMinWidth() )
+    if( newWidth < m_pParent->m_rLayout.getMinWidth() )
     {
-        newWidth = pThis->m_rLayout.getMinWidth();
+        newWidth = m_pParent->m_rLayout.getMinWidth();
     }
-    if( newWidth > pThis->m_rLayout.getMaxWidth() )
+    if( newWidth > m_pParent->m_rLayout.getMaxWidth() )
     {
-        newWidth = pThis->m_rLayout.getMaxWidth();
+        newWidth = m_pParent->m_rLayout.getMaxWidth();
     }
-    if( newHeight < pThis->m_rLayout.getMinHeight() )
+    if( newHeight < m_pParent->m_rLayout.getMinHeight() )
     {
-        newHeight = pThis->m_rLayout.getMinHeight();
+        newHeight = m_pParent->m_rLayout.getMinHeight();
     }
-    if( newHeight > pThis->m_rLayout.getMaxHeight() )
+    if( newHeight > m_pParent->m_rLayout.getMaxHeight() )
     {
-        newHeight = pThis->m_rLayout.getMaxHeight();
+        newHeight = m_pParent->m_rLayout.getMaxHeight();
     }
 
     // Create a resize command
-    CmdGeneric *pCmd = new CmdResize( pThis->getIntf(), pThis->m_rLayout,
+    CmdGeneric *pCmd = new CmdResize( m_pParent->getIntf(), m_pParent->m_rLayout,
                                       newWidth, newHeight );
     // Push the command in the asynchronous command queue
-    AsyncQueue *pQueue = AsyncQueue::instance( pThis->getIntf() );
+    AsyncQueue *pQueue = AsyncQueue::instance( m_pParent->getIntf() );
     pQueue->remove( "resize" );
     pQueue->push( CmdGenericPtr( pCmd ) );
 }

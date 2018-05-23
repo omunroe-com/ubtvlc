@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout_pictures.c : picture management functions
  *****************************************************************************
- * Copyright (C) 2000-2004 VideoLAN
- * $Id: vout_pictures.c 9268 2004-11-10 13:01:48Z gbazin $
+ * Copyright (C) 2000-2004 the VideoLAN team
+ * $Id: vout_pictures.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -286,24 +286,18 @@ void vout_UnlinkPicture( vout_thread_t *p_vout, picture_t *p_pic )
 picture_t * vout_RenderPicture( vout_thread_t *p_vout, picture_t *p_pic,
                                                        subpicture_t *p_subpic )
 {
-    video_format_t fmt;
     int i_scale_width, i_scale_height;
 
     if( p_pic == NULL )
     {
         /* XXX: subtitles */
-
         return NULL;
     }
 
-    fmt.i_aspect = p_vout->output.i_aspect;
-    fmt.i_chroma = p_vout->output.i_chroma;
-    fmt.i_width = p_vout->output.i_width;
-    fmt.i_height = p_vout->output.i_height;
-    fmt.i_sar_num = p_vout->output.i_aspect * fmt.i_height / fmt.i_width;
-    fmt.i_sar_den = VOUT_ASPECT_FACTOR;
-    i_scale_width = p_vout->output.i_width * 1000 / p_vout->render.i_width;
-    i_scale_height = p_vout->output.i_height * 1000 / p_vout->render.i_height;
+    i_scale_width = p_vout->fmt_out.i_visible_width * 1000 /
+        p_vout->fmt_in.i_visible_width;
+    i_scale_height = p_vout->fmt_out.i_visible_height * 1000 /
+        p_vout->fmt_in.i_visible_height;
 
     if( p_pic->i_type == DIRECT_PICTURE )
     {
@@ -320,7 +314,7 @@ picture_t * vout_RenderPicture( vout_thread_t *p_vout, picture_t *p_pic,
                  * subtitles. */
                 vout_CopyPicture( p_vout, PP_OUTPUTPICTURE[0], p_pic );
 
-                spu_RenderSubpictures( p_vout->p_spu, &fmt,
+                spu_RenderSubpictures( p_vout->p_spu, &p_vout->fmt_out,
                                        PP_OUTPUTPICTURE[0], p_pic, p_subpic,
                                        i_scale_width, i_scale_height );
 
@@ -336,8 +330,8 @@ picture_t * vout_RenderPicture( vout_thread_t *p_vout, picture_t *p_pic,
         /* Picture is in a direct buffer but isn't used by the
          * decoder. We can safely render subtitles on it and
          * display it. */
-        spu_RenderSubpictures( p_vout->p_spu, &fmt, p_pic, p_pic, p_subpic,
-                               i_scale_width, i_scale_height );
+        spu_RenderSubpictures( p_vout->p_spu, &p_vout->fmt_out, p_pic, p_pic,
+                               p_subpic, i_scale_width, i_scale_height );
 
         return p_pic;
     }
@@ -355,8 +349,9 @@ picture_t * vout_RenderPicture( vout_thread_t *p_vout, picture_t *p_pic,
                 return NULL;
 
         vout_CopyPicture( p_vout, PP_OUTPUTPICTURE[0], p_pic );
-        spu_RenderSubpictures( p_vout->p_spu, &fmt, PP_OUTPUTPICTURE[0],
-                               p_pic, p_subpic, i_scale_width, i_scale_height);
+        spu_RenderSubpictures( p_vout->p_spu, &p_vout->fmt_out,
+                               PP_OUTPUTPICTURE[0], p_pic,
+                               p_subpic, i_scale_width, i_scale_height );
 
         if( PP_OUTPUTPICTURE[0]->pf_unlock )
             PP_OUTPUTPICTURE[0]->pf_unlock( p_vout, PP_OUTPUTPICTURE[0] );
@@ -378,10 +373,10 @@ picture_t * vout_RenderPicture( vout_thread_t *p_vout, picture_t *p_pic,
         if( p_tmp_pic->i_status == FREE_PICTURE )
         {
             vout_AllocatePicture( VLC_OBJECT(p_vout),
-                                  p_tmp_pic, p_vout->output.i_chroma,
-                                  p_vout->output.i_width,
-                                  p_vout->output.i_height,
-                                  p_vout->output.i_aspect );
+                                  p_tmp_pic, p_vout->fmt_out.i_chroma,
+                                  p_vout->fmt_out.i_width,
+                                  p_vout->fmt_out.i_height,
+                                  p_vout->fmt_out.i_aspect );
             p_tmp_pic->i_type = MEMORY_PICTURE;
             p_tmp_pic->i_status = RESERVED_PICTURE;
         }
@@ -390,7 +385,7 @@ picture_t * vout_RenderPicture( vout_thread_t *p_vout, picture_t *p_pic,
         p_vout->chroma.pf_convert( p_vout, p_pic, p_tmp_pic );
 
         /* Render subpictures on the first direct buffer */
-        spu_RenderSubpictures( p_vout->p_spu, &fmt, p_tmp_pic,
+        spu_RenderSubpictures( p_vout->p_spu, &p_vout->fmt_out, p_tmp_pic,
                                p_tmp_pic, p_subpic,
                                i_scale_width, i_scale_height );
 
@@ -410,9 +405,9 @@ picture_t * vout_RenderPicture( vout_thread_t *p_vout, picture_t *p_pic,
         p_vout->chroma.pf_convert( p_vout, p_pic, &p_vout->p_picture[0] );
 
         /* Render subpictures on the first direct buffer */
-        spu_RenderSubpictures( p_vout->p_spu, &fmt, &p_vout->p_picture[0],
-                               &p_vout->p_picture[0], p_subpic,
-                               i_scale_width, i_scale_height );
+        spu_RenderSubpictures( p_vout->p_spu, &p_vout->fmt_out,
+                               &p_vout->p_picture[0], &p_vout->p_picture[0],
+                               p_subpic, i_scale_width, i_scale_height );
     }
 
     if( p_vout->p_picture[0].pf_unlock )
@@ -435,7 +430,6 @@ void vout_PlacePicture( vout_thread_t *p_vout,
     if( (i_width <= 0) || (i_height <=0) )
     {
         *pi_width = *pi_height = *pi_x = *pi_y = 0;
-
         return;
     }
 
@@ -578,17 +572,20 @@ void vout_InitFormat( video_frame_format_t *p_format, vlc_fourcc_t i_chroma,
             p_format->i_bits_per_pixel = 32;
             break;
         case FOURCC_I444:
+        case FOURCC_J444:
             p_format->i_bits_per_pixel = 24;
             break;
         case FOURCC_I422:
         case FOURCC_YUY2:
         case FOURCC_UYVY:
+        case FOURCC_J422:
             p_format->i_bits_per_pixel = 16;
             p_format->i_bits_per_pixel = 16;
             break;
         case FOURCC_I411:
         case FOURCC_YV12:
         case FOURCC_I420:
+        case FOURCC_J420:
         case FOURCC_IYUV:
             p_format->i_bits_per_pixel = 12;
             break;
@@ -697,6 +694,7 @@ int __vout_InitPicture( vlc_object_t *p_this, picture_t *p_pic,
         case FOURCC_YV12:
         case FOURCC_I420:
         case FOURCC_IYUV:
+        case FOURCC_J420:
             p_pic->p[ Y_PLANE ].i_lines = i_height_aligned;
             p_pic->p[ Y_PLANE ].i_visible_lines = i_height;
             p_pic->p[ Y_PLANE ].i_pitch = i_width_aligned;
@@ -713,6 +711,7 @@ int __vout_InitPicture( vlc_object_t *p_this, picture_t *p_pic,
             break;
 
         case FOURCC_I422:
+        case FOURCC_J422:
             p_pic->p[ Y_PLANE ].i_lines = i_height_aligned;
             p_pic->p[ Y_PLANE ].i_visible_lines = i_height;
             p_pic->p[ Y_PLANE ].i_pitch = i_width_aligned;
@@ -729,6 +728,7 @@ int __vout_InitPicture( vlc_object_t *p_this, picture_t *p_pic,
             break;
 
         case FOURCC_I444:
+        case FOURCC_J444:
             p_pic->p[ Y_PLANE ].i_lines = i_height_aligned;
             p_pic->p[ Y_PLANE ].i_visible_lines = i_height;
             p_pic->p[ Y_PLANE ].i_pitch = i_width_aligned;

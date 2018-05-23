@@ -1,8 +1,8 @@
 /*****************************************************************************
  * skin_main.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: skin_main.cpp 8524 2004-08-25 21:32:15Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: skin_main.cpp 12034 2005-08-05 17:52:46Z massiot $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -85,6 +85,7 @@ static int Open( vlc_object_t *p_this )
     if( p_intf->p_sys->p_playlist == NULL )
     {
         msg_Err( p_intf, "No playlist object found" );
+	msg_Unsubscribe( p_intf, p_intf->p_sys->p_sub );
         return VLC_EGENERIC;
     }
 
@@ -109,26 +110,36 @@ static int Open( vlc_object_t *p_this )
     if( OSFactory::instance( p_intf ) == NULL )
     {
         msg_Err( p_intf, "Cannot initialize OSFactory" );
+	vlc_object_release( p_intf->p_sys->p_playlist );
+	msg_Unsubscribe( p_intf, p_intf->p_sys->p_sub );
         return VLC_EGENERIC;
     }
     if( AsyncQueue::instance( p_intf ) == NULL )
     {
         msg_Err( p_intf, "Cannot initialize AsyncQueue" );
+	vlc_object_release( p_intf->p_sys->p_playlist );
+	msg_Unsubscribe( p_intf, p_intf->p_sys->p_sub );
         return VLC_EGENERIC;
     }
     if( Interpreter::instance( p_intf ) == NULL )
     {
         msg_Err( p_intf, "Cannot instanciate Interpreter" );
+	vlc_object_release( p_intf->p_sys->p_playlist );
+	msg_Unsubscribe( p_intf, p_intf->p_sys->p_sub );
         return VLC_EGENERIC;
     }
     if( VarManager::instance( p_intf ) == NULL )
     {
         msg_Err( p_intf, "Cannot instanciate VarManager" );
+	vlc_object_release( p_intf->p_sys->p_playlist );
+	msg_Unsubscribe( p_intf, p_intf->p_sys->p_sub );
         return VLC_EGENERIC;
     }
     if( VlcProc::instance( p_intf ) == NULL )
     {
         msg_Err( p_intf, "Cannot initialize VLCProc" );
+	vlc_object_release( p_intf->p_sys->p_playlist );
+	msg_Unsubscribe( p_intf, p_intf->p_sys->p_sub );
         return VLC_EGENERIC;
     }
     Dialogs::instance( p_intf );
@@ -162,7 +173,7 @@ static void Close( vlc_object_t *p_this )
         vlc_object_release( p_intf->p_sys->p_playlist );
     }
 
-   // Unsubscribe from messages bank
+    // Unsubscribe from messages bank
     msg_Unsubscribe( p_intf, p_intf->p_sys->p_sub );
 
     // Destroy structure
@@ -234,7 +245,8 @@ static void Run( intf_thread_t *p_intf )
                                            FIND_ANYWHERE );
         if( p_playlist )
         {
-            playlist_Play( p_playlist );
+            p_playlist->status.i_view = -1;
+            playlist_Control( p_playlist, PLAYLIST_AUTOPLAY );
             vlc_object_release( p_playlist );
         }
     }
@@ -339,15 +351,19 @@ static int DemuxControl( demux_t *p_demux, int i_query, va_list args )
     " correctly.")
 
 vlc_module_begin();
+    set_category( CAT_INTERFACE );
+    set_subcategory( SUBCAT_INTERFACE_GENERAL );
     add_string( "skins2-last", "", NULL, SKINS2_LAST, SKINS2_LAST_LONG,
                 VLC_TRUE );
+        change_autosave();
     add_string( "skins2-config", "", NULL, SKINS2_CONFIG, SKINS2_CONFIG_LONG,
                 VLC_TRUE );
+        change_autosave();
 #ifdef WIN32
     add_bool( "skins2-transparency", VLC_FALSE, NULL, SKINS2_TRANSPARENCY,
               SKINS2_TRANSPARENCY_LONG, VLC_FALSE );
 #endif
-
+    set_shortname( _("Skins"));
     set_description( _("Skinnable Interface") );
     set_capability( "interface", 30 );
     set_callbacks( Open, Close );

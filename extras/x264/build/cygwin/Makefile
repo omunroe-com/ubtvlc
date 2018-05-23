@@ -13,16 +13,19 @@ DIR_CUR=$(shell pwd)
 # Path to src
 DIR_SRC=$(DIR_CUR)/../..
 
+DIR_INSTALL="/usr/local"
+
 # Sources
-SRC_C= core/mc.c core/predict.c core/pixel.c core/macroblock.c \
-       core/frame.c core/dct.c core/cpu.c core/cabac.c \
-       core/common.c core/mdate.c core/csp.c \
+SRC_C= common/mc.c common/predict.c common/pixel.c common/macroblock.c \
+       common/frame.c common/dct.c common/cpu.c common/cabac.c \
+       common/common.c common/mdate.c common/csp.c \
        encoder/analyse.c encoder/me.c encoder/ratecontrol.c \
        encoder/set.c encoder/macroblock.c encoder/cabac.c encoder/cavlc.c \
        encoder/encoder.c encoder/eval.c \
-       core/i386/mc-c.c core/i386/dct-c.c core/i386/predict.c
+       common/i386/mc-c.c common/i386/dct-c.c common/i386/predict.c
 
-SRC_ASM= core/i386/dct.asm core/i386/cpu.asm core/i386/pixel.asm core/i386/mc.asm
+SRC_ASM= common/i386/dct-a.asm common/i386/cpu-a.asm common/i386/pixel-a.asm \
+         common/i386/mc-a.asm common/i386/mc-a2.asm common/i386/predict-a.asm
 
 # Alias
 RM= rm -rf
@@ -44,7 +47,12 @@ CFLAGS += -D__X264__ -D_CYGWIN
 CFLAGS += $(PFLAGS)
 
 # Optional Compiler options
-CFLAGS += -g -Wall -DDEBUG
+ifdef NDEBUG
+CFLAGS += -s -DNDEBUG
+else
+CFLAGS += -g -DDEBUG
+endif
+CFLAGS += -Wall
 CFLAGS += -O3
 CFLAGS += -finline-functions
 CFLAGS += -funroll-loops
@@ -90,6 +98,12 @@ $(DIR_BUILD):
 	@mkdir -p $(DIR_BUILD)/$(@D)
 	@$(CC) $(CFLAGS) -c -o $(DIR_BUILD)/$@ $<
 
+encoder/set.obj: config.h
+config.h: $(wildcard $(DIR_SRC)/.svn/entries $(DIR_SRC)/*/.svn/entries $(DIR_SRC)/*/*/.svn/entries)
+	@echo " C: $@"
+	@cd $(DIR_SRC) && \
+	./version.sh
+
 libx264.a: $(DIR_BUILD) $(OBJECTS)
 	@echo " L: $(@F)"
 	@cd $(DIR_BUILD) && \
@@ -99,7 +113,7 @@ libx264.a: $(DIR_BUILD) $(OBJECTS)
 x264.exe: $(DIR_BUILD) $(OBJECTS) x264.obj
 	@echo " L: $(@F)"
 	@cd $(DIR_BUILD) && \
-	$(CC) $(CFLAGS) -o x264.exe x264.obj libx264.a -lm && \
+	$(CC) $(CFLAGS) -o x264.exe x264.obj libx264.a -lm -lvfw32 && \
 	cp -f x264.exe $(DIR_SRC)
 
 checkasm.exe: $(DIR_BUILD) libx264.a $(OBJECTS) testing/checkasm.obj
@@ -110,5 +124,9 @@ checkasm.exe: $(DIR_BUILD) libx264.a $(OBJECTS) testing/checkasm.obj
 
 clean:
 	@echo " Cl: Object files and target lib"
-	@$(RM) $(DIR_BUILD)
+	@$(RM) $(DIR_BUILD) $(DIR_SRC)/config.h
 
+install: x264.exe
+	install x264.h $(DIR_INSTALL)/include/
+	install libx264.a $(DIR_INSTALL)/lib/
+	install x264.exe $(DIR_INSTALL)/bin/

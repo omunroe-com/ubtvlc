@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlcpeer.cpp: scriptable peer descriptor
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: vlcpeer.cpp 8839 2004-09-28 13:55:00Z zorglub $
+ * Copyright (C) 2002-2005 the VideoLAN team
+ * $Id: vlcpeer.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *

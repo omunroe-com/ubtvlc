@@ -1,8 +1,8 @@
 /*****************************************************************************
  * es.c: Elementary stream output module
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: es.c 8162 2004-07-10 17:20:59Z fenrir $
+ * Copyright (C) 2003-2004 the VideoLAN team
+ * $Id: es.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -75,9 +75,12 @@ static void     Close   ( vlc_object_t * );
 #define SOUT_CFG_PREFIX "sout-es-"
 
 vlc_module_begin();
+    set_shortname( "ES" );
     set_description( _("Elementary stream output") );
     set_capability( "sout stream", 50 );
     add_shortcut( "es" );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_STREAM );
 
     add_string( SOUT_CFG_PREFIX "access", "", NULL, ACCESS_TEXT,
                 ACCESS_LONGTEXT, VLC_TRUE );

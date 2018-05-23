@@ -1,8 +1,8 @@
 /*****************************************************************************
  * intf_eject.c: CD/DVD-ROM ejection handling functions
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: intf_eject.c 8905 2004-10-04 13:34:42Z gbazin $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: intf_eject.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Julien Blache <jb@technologeek.org> for the Linux part
  *                with code taken from the Linux "eject" command

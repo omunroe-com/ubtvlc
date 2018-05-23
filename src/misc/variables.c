@@ -1,8 +1,8 @@
 /*****************************************************************************
  * variables.c: routines for object variables handling
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: variables.c 9119 2004-11-02 23:40:20Z gbazin $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id: variables.c 12509 2005-09-10 15:22:51Z robux4 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -193,6 +193,7 @@ int __var_Create( vlc_object_t *p_this, const char *psz_name, int i_type )
     p_this->i_vars++;
 
     p_var = &p_this->p_vars[i_new];
+    memset( p_var, 0, sizeof(*p_var) );
 
     p_var->i_hash = HashString( psz_name );
     p_var->psz_name = strdup( psz_name );

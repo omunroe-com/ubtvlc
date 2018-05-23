@@ -1,8 +1,8 @@
 /*****************************************************************************
  * generic_window.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: generic_window.cpp 7267 2004-04-03 20:17:06Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: generic_window.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

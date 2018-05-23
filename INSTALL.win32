@@ -1,4 +1,4 @@
-$Id: INSTALL.win32 8706 2004-09-14 11:45:44Z gbazin $
+$Id: INSTALL.win32 12444 2005-09-01 17:41:01Z massiot $
 
 INSTALL file for the Windows9x/Me/NT4/2k/XP version of the VLC media player
 
@@ -124,8 +124,8 @@ along those lines:
   LDFLAGS=-L/usr/win32/lib \
   CC=i586-mingw32msvc-gcc CXX=i586-mingw32msvc-g++ \
   ./configure --host=i586-mingw32msvc --build=i386-linux \
-      --disable-sdl --disable-gtk \
-      --enable-nls \
+      --disable-gtk \
+      --enable-nls --enable-sdl \
       --enable-ffmpeg --with-ffmpeg-mp3lame --with-ffmpeg-faac \
       --with-ffmpeg-zlib --enable-faad --enable-flac --enable-theora \
       --with-wx-config-path=/usr/win32/bin \
@@ -136,7 +136,7 @@ along those lines:
       --with-xml2-config-path=/usr/win32/bin \
       --with-dvdnav-config-path=/usr/win32/bin \
       --disable-cddax --disable-vcdx --enable-goom \
-      --enable-toolame --enable-dvdread \
+      --enable-twolame --enable-dvdread \
       --enable-debug
 
 If you are cross-compiling with our gcc-3.3.1 package, you can use something
@@ -148,8 +148,8 @@ along those lines:
   LDFLAGS=-L/usr/win32/lib \
   CC=i586-mingw32msvc-gcc CXX=i586-mingw32msvc-g++ \
   ./configure --host=i586-mingw32msvc --build=i386-linux \
-      --disable-sdl --disable-gtk \
-      --enable-nls \
+      --disable-gtk \
+      --enable-nls --enable-sdl \
       --enable-ffmpeg --with-ffmpeg-mp3lame --with-ffmpeg-faac \
       --with-ffmpeg-zlib --enable-faad --enable-flac --enable-theora \
       --with-wx-config-path=/usr/win32/bin \
@@ -160,7 +160,7 @@ along those lines:
       --with-xml2-config-path=/usr/win32/bin \
       --with-dvdnav-config-path=/usr/win32/bin \
       --disable-cddax --disable-vcdx --enable-goom \
-      --enable-toolame --enable-dvdread \
+      --enable-twolame --enable-dvdread \
       --enable-debug
 
 If you are using cygwin, you can build VLC with or without the POSIX
@@ -173,8 +173,8 @@ emulation layer, use something like this:
   LDFLAGS=-L/usr/win32/lib \
   CC="gcc -mno-cygwin" CXX="g++ -mno-cygwin" \
   ./configure \
-      --disable-sdl --disable-gtk \
-      --enable-nls \
+      --disable-gtk \
+      --enable-nls --enable-sdl \
       --enable-ffmpeg --with-ffmpeg-mp3lame --with-ffmpeg-faac \
       --with-ffmpeg-zlib --enable-faad --enable-flac --enable-theora \
       --with-wx-config-path=/usr/win32/bin \
@@ -185,7 +185,7 @@ emulation layer, use something like this:
       --with-xml2-config-path=/usr/win32/bin \
       --with-dvdnav-config-path=/usr/win32/bin \
       --disable-cddax --disable-vcdx --enable-goom \
-      --enable-toolame --enable-dvdread \
+      --enable-twolame --enable-dvdread \
       --enable-debug
 
 If you want to use the emulation layer, then just omit the CC="gcc -mno-cygwin"
@@ -197,8 +197,8 @@ lines:
   CPPFLAGS="-I/usr/win32/include -I/usr/win32/include/ebml" \
   LDFLAGS=-L/usr/win32/lib \
   ./configure \
-      --disable-sdl --disable-gtk \
-      --enable-nls \
+      --disable-gtk \
+      --enable-nls --enable-sdl \
       --enable-ffmpeg --with-ffmpeg-mp3lame --with-ffmpeg-faac \
       --with-ffmpeg-zlib --enable-faad --enable-flac --enable-theora \
       --with-wx-config-path=/usr/win32/bin \
@@ -208,7 +208,7 @@ lines:
       --with-xml2-config-path=/usr/win32/bin \
       --with-dvdnav-config-path=/usr/win32/bin \
       --disable-cddax --disable-vcdx --enable-goom \
-      --enable-toolame --enable-dvdread \
+      --enable-twolame --enable-dvdread \
       --disable-mkv \
       --enable-debug
 

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * fb.c : framebuffer plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: fb.c 8551 2004-08-28 17:36:02Z gbazin $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id: fb.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -70,6 +70,9 @@ static void GfxMode        ( int i_tty );
     "for rendering (usually /dev/fb0).")
 
 vlc_module_begin();
+    set_shortname( "Framebuffer" );
+    set_category( CAT_VIDEO );
+    set_subcategory( SUBCAT_VIDEO_VOUT );
     add_file( FB_DEV_VAR, "/dev/fb0", NULL, DEVICE_TEXT, DEVICE_LONGTEXT,
               VLC_FALSE );
     set_description( _("GNU/Linux console framebuffer video output") );

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cdda.c : CD digital audio input module for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2003 VideoLAN
- * $Id: cdda.c 8606 2004-08-31 18:32:54Z hartman $
+ * Copyright (C) 2000, 2003 the VideoLAN team
+ * $Id: cdda.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -45,8 +45,11 @@ static void Close( vlc_object_t * );
     "value should be set in milliseconds units." )
 
 vlc_module_begin();
+    set_shortname( _("Audio CD"));
     set_description( _("Audio CD input") );
     set_capability( "access2", 10 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACCESS );
     set_callbacks( Open, Close );
 
     add_usage_hint( N_("[cdda:][device][@[track]]") );
@@ -186,6 +189,8 @@ static int Open( vlc_object_t *p_this )
     p_sys->waveheader.DataChunkID = VLC_FOURCC('d', 'a', 't', 'a');
     p_sys->waveheader.DataLength = 0;                 /* we just don't know */
 
+    p_access->info.i_update |= INPUT_UPDATE_META;
+
     /* PTS delay */
     var_Create( p_access, "cdda-caching", VLC_VAR_INTEGER|VLC_VAR_DOINHERIT );
     return VLC_SUCCESS;
@@ -244,7 +249,8 @@ static block_t *Block( access_t *p_access )
             return NULL;
         }
 
-        p_access->info.i_update |= INPUT_UPDATE_TITLE | INPUT_UPDATE_SIZE;
+        p_access->info.i_update |= INPUT_UPDATE_TITLE | INPUT_UPDATE_SIZE |
+                                   INPUT_UPDATE_META;
         p_access->info.i_title++;
         p_access->info.i_size = p_sys->title[p_access->info.i_title]->i_size;
         p_access->info.i_pos = 0;
@@ -311,6 +317,8 @@ static int Control( access_t *p_access, int i_query, va_list args )
     int64_t      *pi_64;
     input_title_t ***ppp_title;
     int i;
+    char         *psz_title;
+    vlc_meta_t  **pp_meta;
 
     switch( i_query )
     {
@@ -341,7 +349,7 @@ static int Control( access_t *p_access, int i_query, va_list args )
         case ACCESS_GET_TITLE_INFO:
             ppp_title = (input_title_t***)va_arg( args, input_title_t*** );
             pi_int    = (int*)va_arg( args, int* );
-	    *((int*)va_arg( args, int* )) = 1; /* Title offset */
+            *((int*)va_arg( args, int* )) = 1; /* Title offset */
 
             /* Duplicate title infos */
             *pi_int = p_sys->i_titles;
@@ -358,7 +366,7 @@ static int Control( access_t *p_access, int i_query, va_list args )
             {
                 /* Update info */
                 p_access->info.i_update |=
-                    INPUT_UPDATE_TITLE|INPUT_UPDATE_SIZE;
+                    INPUT_UPDATE_TITLE|INPUT_UPDATE_SIZE|INPUT_UPDATE_META;
                 p_access->info.i_title = i;
                 p_access->info.i_size = p_sys->title[i]->i_size;
                 p_access->info.i_pos = 0;
@@ -367,6 +375,16 @@ static int Control( access_t *p_access, int i_query, va_list args )
                 p_sys->i_sector = p_sys->p_sectors[i];
             }
             break;
+
+        case ACCESS_GET_META:
+             psz_title = malloc( strlen( _("Audio CD - Track ") ) + 5 );
+             snprintf( psz_title, 100, _("Audio CD - Track %i" ),
+                                        p_access->info.i_title+1 );
+             pp_meta = (vlc_meta_t**)va_arg( args, vlc_meta_t** );
+             *pp_meta = vlc_meta_New();
+             vlc_meta_Add( *pp_meta, VLC_META_TITLE, psz_title );
+             free( psz_title );
+             break;
 
         case ACCESS_SET_SEEKPOINT:
         case ACCESS_SET_PRIVATE_ID_STATE:

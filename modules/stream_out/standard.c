@@ -1,8 +1,8 @@
 /*****************************************************************************
  * standard.c: standard stream output module
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: standard.c 9201 2004-11-06 16:51:46Z yoann $
+ * Copyright (C) 2003-2004 the VideoLAN team
+ * $Id: standard.c 11865 2005-07-27 16:30:19Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -63,9 +63,6 @@
 #define SAP_TEXT N_("SAP announcing")
 #define SAP_LONGTEXT N_("Announce this session with SAP")
 
-#define SAPv6_TEXT N_("SAP IPv6 announcing")
-#define SAPv6_LONGTEXT N_("Use IPv6 to announce this session with SAP")
-
 #define SLP_TEXT N_("SLP announcing")
 #define SLP_LONGTEXT N_("Announce this session with SLP")
 
@@ -75,10 +72,13 @@ static void     Close   ( vlc_object_t * );
 #define SOUT_CFG_PREFIX "sout-standard-"
 
 vlc_module_begin();
+    set_shortname( _("Standard"));
     set_description( _("Standard stream output") );
     set_capability( "sout stream", 50 );
     add_shortcut( "standard" );
     add_shortcut( "std" );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_STREAM );
 
     add_string( SOUT_CFG_PREFIX "access", "", NULL, ACCESS_TEXT,
                 ACCESS_LONGTEXT, VLC_FALSE );
@@ -92,8 +92,7 @@ vlc_module_begin();
                                         VLC_TRUE );
     add_string( SOUT_CFG_PREFIX "group", "", NULL, GROUP_TEXT, GROUP_LONGTEXT,
                                         VLC_TRUE );
-    add_bool( SOUT_CFG_PREFIX "sap-ipv6", 0, NULL, SAPv6_TEXT, SAPv6_LONGTEXT,
-                                        VLC_TRUE );
+    add_suppressed_bool( SOUT_CFG_PREFIX "sap-ipv6" );
 
     add_bool( SOUT_CFG_PREFIX "slp", 0, NULL, SLP_TEXT, SLP_LONGTEXT, VLC_TRUE );
 
@@ -106,11 +105,9 @@ vlc_module_end();
  *****************************************************************************/
 static const char *ppsz_sout_options[] = {
     "access", "mux", "url",
-    "sap", "name", "sap-ipv6", "group",
-    "slp", NULL
+    "sap", "name", "group", "slp", NULL
 };
 
-#define DEFAULT_IPV6_SCOPE '8'
 #define DEFAULT_PORT 1234
 
 static sout_stream_id_t *Add ( sout_stream_t *, es_format_t * );
@@ -256,7 +253,7 @@ static int Open( vlc_object_t *p_this )
         }
     }
 
-    /* fix or warm of incompatible couple */
+    /* fix or warn of incompatible couple */
     if( psz_mux && psz_access )
     {
         if( !strncmp( psz_access, "mmsh", 4 ) &&
@@ -330,24 +327,18 @@ static int Open( vlc_object_t *p_this )
 
         var_Get( p_stream, SOUT_CFG_PREFIX "name", &val );
         if( *val.psz_string )
-        {
-            p_session->psz_name = strdup( val.psz_string );
-        }
+            p_session->psz_name = val.psz_string;
         else
         {
             p_session->psz_name = strdup( psz_url );
+            free( val.psz_string );
         }
-        free( val.psz_string );
 
         var_Get( p_stream, SOUT_CFG_PREFIX "group", &val );
         if( *val.psz_string )
-        {
-            p_session->psz_group = strdup( val.psz_string );
-        }
-        free( val.psz_string );
-
-        var_Get( p_stream, SOUT_CFG_PREFIX "sap-ipv6", &val );
-        p_method->i_ip_version = val.b_bool ? 6 : 4;
+            p_session->psz_group = val.psz_string;
+        else
+            free( val.psz_string );
 
         /* Now, parse the URL to extract host and port */
         vlc_UrlParse( &url, psz_url , 0);
@@ -356,7 +347,7 @@ static int Open( vlc_object_t *p_this )
         {
             if( url.i_port == 0 ) url.i_port = DEFAULT_PORT;
 
-            p_session->psz_uri = url.psz_host;
+            p_session->psz_uri = strdup( url.psz_host );
             p_session->i_port = url.i_port;
             p_session->psz_sdp = NULL;
 
@@ -366,14 +357,10 @@ static int Open( vlc_object_t *p_this )
             msg_Info( p_this, "SAP Enabled");
 
             sout_AnnounceRegister( p_sout, p_session, p_method );
-
-            /* FIXME: Free p_method */
-
             p_stream->p_sys->p_session = p_session;
         }
         vlc_UrlClean( &url );
 
-        if( p_method->psz_address) free( p_method->psz_address );
         free( p_method );
     }
 

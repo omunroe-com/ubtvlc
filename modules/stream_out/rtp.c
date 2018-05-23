@@ -1,8 +1,8 @@
 /*****************************************************************************
  * rtp.c: rtp stream output module
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: rtp.c 8412 2004-08-10 15:02:11Z hartman $
+ * Copyright (C) 2003-2004 the VideoLAN team
+ * $Id: rtp.c 11929 2005-07-31 19:04:29Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -74,7 +74,7 @@
 #define PORT_VIDEO_LONGTEXT N_( \
     "Allows you to specify the default video port used for the RTP streaming." )
 
-#define TTL_TEXT N_("Time to live")
+#define TTL_TEXT N_("Time To Live")
 #define TTL_LONGTEXT N_( \
     "Allows you to specify the time to live for the output stream." )
 
@@ -84,9 +84,12 @@ static void Close( vlc_object_t * );
 #define SOUT_CFG_PREFIX "sout-rtp-"
 
 vlc_module_begin();
+    set_shortname( _("RTP"));
     set_description( _("RTP stream output") );
     set_capability( "sout stream", 0 );
     add_shortcut( "rtp" );
+    set_category( CAT_SOUT );
+    set_subcategory( SUBCAT_SOUT_STREAM );
 
     add_string( SOUT_CFG_PREFIX "dst", "", NULL, DST_TEXT,
                 DST_LONGTEXT, VLC_TRUE );
@@ -349,6 +352,12 @@ static int Open( vlc_object_t *p_this )
     }
 
     var_Get( p_stream, SOUT_CFG_PREFIX "ttl", &val );
+    if( ( val.i_int > 255 ) || ( val.i_int < 0 ) )
+    {
+        msg_Err( p_stream, "illegal TTL %d", val.i_int );
+        free( p_sys );
+        return VLC_EGENERIC;
+    }
     p_sys->i_ttl = val.i_int;
 
     p_sys->i_payload_type = 96;
@@ -386,10 +395,14 @@ static int Open( vlc_object_t *p_this )
     if( *val.psz_string )
     {
         sout_access_out_t *p_grab;
+        char *psz_rtpmap, url[NI_MAXHOST + 8], access[17], psz_ttl[5], ipv;
 
-        char *psz_rtpmap;
-        char access[100];
-        char url[strlen( p_sys->psz_destination ) + 1 + 12 + 1];
+        if( p_sys->psz_destination )
+        {
+            msg_Err( p_stream, "rtp needs a destination when muxing" );
+            free( p_sys );
+            return VLC_EGENERIC;
+        }
 
         /* Check muxer type */
         if( !strncasecmp( val.psz_string, "ps", 2 ) || !strncasecmp( val.psz_string, "mpeg1", 5 ) )
@@ -404,6 +417,7 @@ static int Open( vlc_object_t *p_this )
         else
         {
             msg_Err( p_stream, "unsupported muxer type with rtp (only ts/ps)" );
+            free( p_sys );
             return VLC_EGENERIC;
         }
 
@@ -416,7 +430,19 @@ static int Open( vlc_object_t *p_this )
         {
             sprintf( access, "udp{raw}" );
         }
-        sprintf( url, "%s:%d", p_sys->psz_destination, p_sys->i_port );
+
+        /* IPv6 needs brackets if not already present */
+        snprintf( url, sizeof( url ),
+                  ( ( p_sys->psz_destination[0] != '[' ) 
+                 && ( strchr( p_sys->psz_destination, ':' ) != NULL ) )
+                  ? "[%s]:%d" : "%s:%d", p_sys->psz_destination,
+                  p_sys->i_port );
+        url[sizeof( url ) - 1] = '\0';
+        /* FIXME: we should check that url is a numerical address, otherwise
+         * the SDP will be quite broken (regardless of the IP protocol version)
+         */
+        ipv = ( strchr( p_sys->psz_destination, ':' ) != NULL ) ? '6' : '4';
+
         if( !( p_sys->p_access = sout_AccessOutNew( p_sout, access, url ) ) )
         {
             msg_Err( p_stream, "cannot create the access out for %s://%s",
@@ -462,38 +488,43 @@ static int Open( vlc_object_t *p_this )
            o= don't use the localhost address. use fully qualified domain name or IP4 address
            p= international phone number (pass via vars?)
            c= IP6 support
-           c= /ttl should only be added in case of multicast
            a= recvonly (missing)
            a= type:broadcast (missing)
            a= charset: (normally charset should be UTF-8, this can be used to override s= and i=)
            a= x-plgroup: (missing)
            RTP packets need to get the correct src IP address  */
-        p_sys->psz_sdp =
-            malloc( 10 + 30 + 10 + strlen( p_sys->psz_session_name ) +
-                    10 + strlen( p_sys->psz_session_description ) + 10 + strlen( p_sys->psz_session_url ) +
-                    10 + strlen( p_sys->psz_session_email ) + 10 + strlen( p_sys->psz_destination ) +
-                    10 + 10 + strlen( PACKAGE_STRING ) +
-                    20 + 10 + 20 + 10 + strlen( psz_rtpmap ) );
-        sprintf( p_sys->psz_sdp,
-                 "v=0\r\n"
-                 "o=- "I64Fd" %d IN IP4 127.0.0.1\r\n"
-                 "s=%s\r\n"
-                 "i=%s\r\n"
-                 "u=%s\r\n"
-                 "e=%s\r\n"
-                 "t=0 0\r\n" /* permanent stream */ /* when scheduled from vlm, we should set this info correctly */
-                 "a=tool:"PACKAGE_STRING"\r\n"
-                 "c=IN IP4 %s/%d\r\n"
-                 "m=video %d RTP/AVP %d\r\n"
-                 "a=rtpmap:%d %s\r\n",
-                 p_sys->i_sdp_id, p_sys->i_sdp_version,
-                 p_sys->psz_session_name,
-                 p_sys->psz_session_description,
-                 p_sys->psz_session_url,
-                 p_sys->psz_session_email,
-                 p_sys->psz_destination, p_sys->i_ttl,
-                 p_sys->i_port, p_sys->i_payload_type,
-                 p_sys->i_payload_type, psz_rtpmap );
+        if( net_AddressIsMulticast( (vlc_object_t *)p_stream, p_sys->psz_destination ) )
+        {
+            snprintf( psz_ttl, sizeof( psz_ttl ), "/%d", p_sys->i_ttl );
+            psz_ttl[sizeof( psz_ttl ) - 1] = '\0';
+        }
+        else
+        {
+            psz_ttl[0] = '\0'; 
+        }
+
+        asprintf( &p_sys->psz_sdp,
+                  "v=0\r\n"
+                  /* FIXME: source address not known :( */
+                  "o=- "I64Fd" %d IN IP%c %s\r\n"
+                  "s=%s\r\n"
+                  "i=%s\r\n"
+                  "u=%s\r\n"
+                  "e=%s\r\n"
+                  "t=0 0\r\n" /* permanent stream */ /* when scheduled from vlm, we should set this info correctly */
+                  "a=tool:"PACKAGE_STRING"\r\n"
+                  "c=IN IP%c %s%s\r\n"
+                  "m=video %d RTP/AVP %d\r\n"
+                  "a=rtpmap:%d %s\r\n",
+                  p_sys->i_sdp_id, p_sys->i_sdp_version,
+                  ipv, ipv == '6' ? "::1" : "127.0.0.1" /* FIXME */,
+                  p_sys->psz_session_name,
+                  p_sys->psz_session_description,
+                  p_sys->psz_session_url,
+                  p_sys->psz_session_email,
+                  ipv, p_sys->psz_destination, psz_ttl,
+                  p_sys->i_port, p_sys->i_payload_type,
+                  p_sys->i_payload_type, psz_rtpmap );
         fprintf( stderr, "sdp=%s", p_sys->psz_sdp );
 
         /* create the rtp context */
@@ -692,29 +723,33 @@ static void SDPHandleUrl( sout_stream_t *p_stream, char *psz_url )
            o= don't use the localhost address. use fully qualified domain name or IP4 address
            p= international phone number (pass via vars?)
            c= IP6 support
-           c= /ttl should only be added in case of multicast
            a= recvonly (missing)
            a= type:broadcast (missing)
            a= charset: (normally charset should be UTF-8, this can be used to override s= and i=)
            a= x-plgroup: (missing)
            RTP packets need to get the correct src IP address  */
-static char *SDPGenerate( sout_stream_t *p_stream, char *psz_destination, vlc_bool_t b_rtsp )
+static char *SDPGenerate( const sout_stream_t *p_stream,
+                          const char *psz_destination, vlc_bool_t b_rtsp )
 {
     sout_stream_sys_t *p_sys = p_stream->p_sys;
     int i_size;
-    char *psz_sdp, *p;
+    char *psz_sdp, *p, ipv;
     int i;
 
-    i_size = strlen( "v=0\r\n" ) +
-             strlen( "o=- * * IN IP4 127.0.0.1\r\n" ) + 10 + 10 +
-             strlen( "s=*\r\n" ) + strlen( p_sys->psz_session_name ) +
-             strlen( "i=*\r\n" ) + strlen( p_sys->psz_session_description ) +
-             strlen( "u=*\r\n" ) + strlen( p_sys->psz_session_url ) +
-             strlen( "e=*\r\n" ) + strlen( p_sys->psz_session_email ) +
-             strlen( "t=0 0\r\n" ) + /* permanent stream */ /* when scheduled from vlm, we should set this info correctly */
-             strlen( "a=tool:"PACKAGE_STRING"\r\n" ) +
-             strlen( "c=IN IP4 */*\r\n" ) + 20 + 10 +
-             strlen( psz_destination ? psz_destination : "0.0.0.0") ;
+    /* FIXME: breaks IP version check on unknown destination */
+    if( psz_destination == NULL )
+        psz_destination = "0.0.0.0";
+
+    i_size = sizeof( "v=0\r\n" ) +
+             sizeof( "o=- * * IN IP4 127.0.0.1\r\n" ) + 10 + 10 +
+             sizeof( "s=*\r\n" ) + strlen( p_sys->psz_session_name ) +
+             sizeof( "i=*\r\n" ) + strlen( p_sys->psz_session_description ) +
+             sizeof( "u=*\r\n" ) + strlen( p_sys->psz_session_url ) +
+             sizeof( "e=*\r\n" ) + strlen( p_sys->psz_session_email ) +
+             sizeof( "t=0 0\r\n" ) + /* permanent stream */ /* when scheduled from vlm, we should set this info correctly */
+             sizeof( "a=tool:"PACKAGE_STRING"\r\n" ) +
+             sizeof( "c=IN IP4 */*\r\n" ) + 20 + 10 +
+             strlen( psz_destination ) ;
     for( i = 0; i < p_sys->i_es; i++ )
     {
         sout_stream_id_t *id = p_sys->es[i];
@@ -734,10 +769,13 @@ static char *SDPGenerate( sout_stream_t *p_stream, char *psz_destination, vlc_bo
         }
     }
 
+    ipv = ( strchr( psz_destination, ':' ) != NULL ) ? '6' : '4';
+
     p = psz_sdp = malloc( i_size );
     p += sprintf( p, "v=0\r\n" );
-    p += sprintf( p, "o=- "I64Fd" %d IN IP4 127.0.0.1\r\n",
-                  p_sys->i_sdp_id, p_sys->i_sdp_version );
+    p += sprintf( p, "o=- "I64Fd" %d IN IP%c %s\r\n",
+                  p_sys->i_sdp_id, p_sys->i_sdp_version,
+                  ipv, ipv == '6' ? "::" : "127.0.0.1" );
     if( *p_sys->psz_session_name )
         p += sprintf( p, "s=%s\r\n", p_sys->psz_session_name );
     if( *p_sys->psz_session_description )
@@ -750,8 +788,17 @@ static char *SDPGenerate( sout_stream_t *p_stream, char *psz_destination, vlc_bo
     p += sprintf( p, "t=0 0\r\n" ); /* permanent stream */ /* when scheduled from vlm, we should set this info correctly */
     p += sprintf( p, "a=tool:"PACKAGE_STRING"\r\n" );
 
-    p += sprintf( p, "c=IN IP4 %s/%d\r\n", psz_destination ? psz_destination : "0.0.0.0",
-                  p_sys->i_ttl );
+    p += sprintf( p, "c=IN IP%c %s", ipv, psz_destination );
+
+    if( net_AddressIsMulticast( (vlc_object_t *)p_stream, psz_destination ) )
+    {
+        /* Add the ttl if it is a multicast address */
+        p += sprintf( p, "/%d\r\n", p_sys->i_ttl );
+    }
+    else
+    {
+        p += sprintf( p, "\r\n" );
+    }
 
     for( i = 0; i < p_sys->i_es; i++ )
     {
@@ -801,6 +848,7 @@ static int rtp_packetize_ac3  ( sout_stream_t *, sout_stream_id_t *, block_t * )
 static int rtp_packetize_split( sout_stream_t *, sout_stream_id_t *, block_t * );
 static int rtp_packetize_mp4a ( sout_stream_t *, sout_stream_id_t *, block_t * );
 static int rtp_packetize_h263 ( sout_stream_t *, sout_stream_id_t *, block_t * );
+static int rtp_packetize_amr  ( sout_stream_t *, sout_stream_id_t *, block_t * );
 
 static void sprintf_hexa( char *s, uint8_t *p_data, int i_data )
 {
@@ -869,19 +917,24 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
 
     if( p_sys->psz_destination )
     {
-        char access[100];
-        char url[strlen( p_sys->psz_destination ) + 1 + 12 + 1];
+        char access[17];
+        char url[NI_MAXHOST + 8];
 
         /* first try to create the access out */
         if( p_sys->i_ttl > 0 )
         {
-            sprintf( access, "udp{raw,ttl=%d}", p_sys->i_ttl );
+            snprintf( access, sizeof( access ), "udp{raw,ttl=%d}",
+                      p_sys->i_ttl );
+            access[sizeof( access ) - 1] = '\0';
         }
         else
-        {
-            sprintf( access, "udp{raw}" );
-        }
-        sprintf( url, "%s:%d", p_sys->psz_destination, i_port );
+            strcpy( access, "udp{raw}" );
+
+        snprintf( url, sizeof( url ), (( p_sys->psz_destination[0] != '[' ) &&
+                 strchr( p_sys->psz_destination, ':' )) ? "[%s]:%d" : "%s:%d",
+                 p_sys->psz_destination, i_port );
+        url[sizeof( url ) - 1] = '\0';
+
         if( ( p_access = sout_AccessOutNew( p_sout, access, url ) ) == NULL )
         {
             msg_Err( p_stream, "cannot create the access out for %s://%s",
@@ -995,10 +1048,30 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
                      "IndexDeltaLength=3; Profile=1;", hexa );
             break;
         }
+        case VLC_FOURCC( 's', 'a', 'm', 'r' ):
+            id->i_payload_type = p_sys->i_payload_type++;
+            id->psz_rtpmap = strdup( p_fmt->audio.i_channels == 2 ?
+                                     "AMR/8000/2" : "AMR/8000" );
+            id->psz_fmtp = strdup( "octet-align=1" );
+            id->i_clock_rate = p_fmt->audio.i_rate;
+            id->pf_packetize = rtp_packetize_amr;
+            break; 
+        case VLC_FOURCC( 's', 'a', 'w', 'b' ):
+            id->i_payload_type = p_sys->i_payload_type++;
+            id->psz_rtpmap = strdup( p_fmt->audio.i_channels == 2 ?
+                                     "AMR-WB/16000/2" : "AMR-WB/16000" );
+            id->psz_fmtp = strdup( "octet-align=1" );
+            id->i_clock_rate = p_fmt->audio.i_rate;
+            id->pf_packetize = rtp_packetize_amr;
+            break; 
 
         default:
             msg_Err( p_stream, "cannot add this stream (unsupported "
                      "codec:%4.4s)", (char*)&p_fmt->i_codec );
+            if( p_access )
+            {
+                sout_AccessOutDelete( p_access );
+            }
             free( id );
             return NULL;
     }
@@ -1025,7 +1098,7 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
 
         sprintf( psz_urlc, "%s/trackid=%d", p_sys->psz_rtsp_path, p_sys->i_es );
         fprintf( stderr, "rtsp: adding %s\n", psz_urlc );
-        id->p_rtsp_url = httpd_UrlNewUnique( p_sys->p_rtsp_host, psz_urlc, NULL, NULL );
+        id->p_rtsp_url = httpd_UrlNewUnique( p_sys->p_rtsp_host, psz_urlc, NULL, NULL, NULL );
 
         if( id->p_rtsp_url )
         {
@@ -1147,7 +1220,7 @@ static int AccessOutGrabberWriteBuffer( sout_stream_t *p_stream,
     unsigned int    i_data  = p_buffer->i_buffer;
     unsigned int    i_max   = p_sys->i_mtu - 12;
 
-    int i_packet = ( p_buffer->i_buffer + i_max - 1 ) / i_max;
+    unsigned i_packet = ( p_buffer->i_buffer + i_max - 1 ) / i_max;
 
     while( i_data > 0 )
     {
@@ -1186,7 +1259,8 @@ static int AccessOutGrabberWriteBuffer( sout_stream_t *p_stream,
             p_sys->i_sequence++;
         }
 
-        i_size = __MIN( i_data, p_sys->i_mtu - p_sys->packet->i_buffer );
+        i_size = __MIN( i_data,
+                        (unsigned)(p_sys->i_mtu - p_sys->packet->i_buffer) );
 
         memcpy( &p_sys->packet->p_buffer[p_sys->packet->i_buffer],
                 p_data, i_size );
@@ -1227,8 +1301,7 @@ static int SapSetup( sout_stream_t *p_stream )
 {
     sout_stream_sys_t *p_sys = p_stream->p_sys;
     sout_instance_t   *p_sout = p_stream->p_sout;
-    announce_method_t *p_method = (announce_method_t *)
-                                  malloc(sizeof(announce_method_t));
+    announce_method_t *p_method = sout_AnnounceMethodCreate( METHOD_TYPE_SAP );
 
     /* Remove the previous session */
     if( p_sys->p_session != NULL)
@@ -1237,11 +1310,8 @@ static int SapSetup( sout_stream_t *p_stream )
         sout_AnnounceSessionDestroy( p_sys->p_session );
         p_sys->p_session = NULL;
     }
-    p_method->i_type = METHOD_TYPE_SAP;
-    p_method->psz_address = NULL; /* FIXME */
-    p_method->i_ip_version = 4; /* FIXME ! */
 
-    if( p_sys->i_es > 0 && p_sys->psz_sdp && *p_sys->psz_sdp )
+    if( ( p_sys->i_es > 0 || p_sys->p_mux ) && p_sys->psz_sdp && *p_sys->psz_sdp )
     {
         p_sys->p_session = sout_AnnounceRegisterSDP( p_sout, p_sys->psz_sdp,
                                                      p_method );
@@ -1289,7 +1359,7 @@ static int HttpSetup( sout_stream_t *p_stream, vlc_url_t *url)
         p_sys->p_httpd_file = httpd_FileNew( p_sys->p_httpd_host,
                                              url->psz_path ? url->psz_path : "/",
                                              "application/sdp",
-                                             NULL, NULL,
+                                             NULL, NULL, NULL,
                                              HttpCallback, (void*)p_sys );
     }
     if( p_sys->p_httpd_file == NULL )
@@ -1387,7 +1457,7 @@ static int RtspSetup( sout_stream_t *p_stream, vlc_url_t *url )
     sprintf( p_sys->psz_rtsp_control, "rtsp://%s:%d%s",
              url->psz_host,  url->i_port > 0 ? url->i_port : 554, p_sys->psz_rtsp_path );
 
-    p_sys->p_rtsp_url = httpd_UrlNewUnique( p_sys->p_rtsp_host, p_sys->psz_rtsp_path, NULL, NULL );
+    p_sys->p_rtsp_url = httpd_UrlNewUnique( p_sys->p_rtsp_host, p_sys->psz_rtsp_path, NULL, NULL, NULL );
     if( p_sys->p_rtsp_url == 0 )
     {
         return VLC_EGENERIC;
@@ -1429,7 +1499,7 @@ static int  RtspCallback( httpd_callback_sys_t *p_args,
             answer->psz_status = strdup( "OK" );
             httpd_MsgAdd( answer, "Content-type",  "%s", "application/sdp" );
 
-            answer->p_body = psz_sdp;
+            answer->p_body = (uint8_t *)psz_sdp;
             answer->i_body = strlen( psz_sdp );
             break;
         }
@@ -1577,18 +1647,15 @@ static int  RtspCallbackId( httpd_callback_sys_t *p_args,
             else if( strstr( psz_transport, "unicast" ) && strstr( psz_transport, "client_port=" ) )
             {
                 int  i_port = atoi( strstr( psz_transport, "client_port=" ) + strlen("client_port=") );
-                char *ip    = httpd_ClientIP( cl );
-
-                char psz_access[100];
-                char psz_url[100];
+                char ip[NI_MAXNUMERICHOST], psz_access[17], psz_url[NI_MAXNUMERICHOST + 8];
 
                 sout_access_out_t *p_access;
 
                 rtsp_client_t *rtsp = NULL;
 
-                if( ip == NULL )
+                if( httpd_ClientIP( cl, ip ) == NULL )
                 {
-                    answer->i_status = 400;
+                    answer->i_status = 500;
                     answer->psz_status = strdup( "Internal server error" );
                     answer->i_body = 0;
                     answer->p_body = NULL;
@@ -1611,30 +1678,32 @@ static int  RtspCallbackId( httpd_callback_sys_t *p_args,
                     rtsp = RtspClientGet( p_stream, psz_session );
                     if( rtsp == NULL )
                     {
-                        /* FIXME right error code */
-                        answer->i_status = 400;
+                        answer->i_status = 454;
                         answer->psz_status = strdup( "Unknown session id" );
                         answer->i_body = 0;
                         answer->p_body = NULL;
-                        free( ip );
                         break;
                     }
                 }
 
                 /* first try to create the access out */
                 if( p_sys->i_ttl > 0 )
-                    sprintf( psz_access, "udp{raw,ttl=%d}", p_sys->i_ttl );
+                    snprintf( psz_access, sizeof( psz_access ),
+                              "udp{raw,ttl=%d}", p_sys->i_ttl );
                 else
-                    sprintf( psz_access, "udp{raw}" );
-                sprintf( psz_url, "%s:%d", ip, i_port );
-                free( ip );
-                
+                    strncpy( psz_access, "udp{raw}", sizeof( psz_access ) );
+                psz_access[sizeof( psz_access ) - 1] = '\0';
+
+                snprintf( psz_url, sizeof( psz_url ),
+                         ( strchr( ip, ':' ) != NULL ) ? "[%s]:%d" : "%s:%d",
+                         ip, i_port );
+
                 if( ( p_access = sout_AccessOutNew( p_stream->p_sout, psz_access, psz_url ) ) == NULL )
                 {
                     msg_Err( p_stream, "cannot create the access out for %s://%s",
                              psz_access, psz_url );
-                    answer->i_status = 400;
-                    answer->psz_status = strdup( "Server internal error" );
+                    answer->i_status = 500;
+                    answer->psz_status = strdup( "Internal server error" );
                     answer->i_body = 0;
                     answer->p_body = NULL;
                     break;
@@ -1653,8 +1722,8 @@ static int  RtspCallbackId( httpd_callback_sys_t *p_args,
             }
             else /* TODO  strstr( psz_transport, "interleaved" ) ) */
             {
-                answer->i_status = 400;
-                answer->psz_status = strdup( "Bad Request" );
+                answer->i_status = 461;
+                answer->psz_status = strdup( "Unsupported Transport" );
                 answer->i_body = 0;
                 answer->p_body = NULL;
             }
@@ -2106,3 +2175,41 @@ static int rtp_packetize_h263( sout_stream_t *p_stream, sout_stream_id_t *id,
     return VLC_SUCCESS;
 }
 
+static int rtp_packetize_amr( sout_stream_t *p_stream, sout_stream_id_t *id,
+                              block_t *in )
+{
+    int     i_max   = id->i_mtu - 14; /* payload max in one packet */
+    int     i_count = ( in->i_buffer + i_max - 1 ) / i_max;
+
+    uint8_t *p_data = in->p_buffer;
+    int     i_data  = in->i_buffer;
+    int     i;
+
+    /* Only supports octet-aligned mode */
+    for( i = 0; i < i_count; i++ )
+    {
+        int           i_payload = __MIN( i_max, i_data );
+        block_t *out = block_New( p_stream, 14 + i_payload );
+
+        /* rtp common header */
+        rtp_packetize_common( id, out, ((i == i_count - 1)?1:0),
+                              (in->i_pts > 0 ? in->i_pts : in->i_dts) );
+        /* Payload header */
+        out->p_buffer[12] = 0xF0; /* CMR */
+        out->p_buffer[13] = 0x00; /* ToC */ /* FIXME: frame type */
+
+        /* FIXME: are we fed multiple frames ? */
+        memcpy( &out->p_buffer[14], p_data, i_payload );
+
+        out->i_buffer   = 14 + i_payload;
+        out->i_dts    = in->i_dts + i * in->i_length / i_count;
+        out->i_length = in->i_length / i_count;
+
+        rtp_packetize_send( id, out );
+
+        p_data += i_payload;
+        i_data -= i_payload;
+    }
+
+    return VLC_SUCCESS;
+}

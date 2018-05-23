@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_access.h
  *****************************************************************************
- * Copyright (C) 1999-2004 VideoLAN
- * $Id: vlc_access.h 8641 2004-09-03 18:42:25Z massiot $
+ * Copyright (C) 1999-2004 the VideoLAN team
+ * $Id: vlc_access.h 12202 2005-08-15 14:57:02Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -56,6 +56,7 @@ enum access_query_e
      * XXX: avoid to use it unless you can't */
     ACCESS_SET_PRIVATE_ID_STATE,    /* arg1= int i_private_data, vlc_bool_t b_selected can fail */
     ACCESS_SET_PRIVATE_ID_CA,    /* arg1= int i_program_number, uint16_t i_vpid, uint16_t i_apid1, uint16_t i_apid2, uint16_t i_apid3, uint8_t i_length, uint8_t *p_data */
+    ACCESS_GET_PRIVATE_ID_STATE     /* arg1=int i_private_data arg2=vlc_bool_t *  res=can fail */
 };
 
 struct access_t
@@ -69,6 +70,8 @@ struct access_t
     char        *psz_access;
     /* Access path/url/filename/.... */
     char        *psz_path;
+    /* Access source for access_filter (NULL for regular access) */
+    access_t    *p_source;
 
     /* Access can fill this entry to force a demuxer
      * XXX: fill it once you know for sure you will succed
@@ -104,12 +107,14 @@ struct access_t
     access_sys_t *p_sys;
 };
 
-#define access2_New( a, b, c, d ) __access2_New(VLC_OBJECT(a), b, c, d )
-VLC_EXPORT( access_t *, __access2_New,  ( vlc_object_t *p_obj, char *psz_access, char *psz_demux, char *psz_path ) );
+#define access2_New( a, b, c, d, e ) __access2_New(VLC_OBJECT(a), b, c, d, e )
+VLC_EXPORT( access_t *, __access2_New,  ( vlc_object_t *p_obj, char *psz_access, char *psz_demux, char *psz_path, vlc_bool_t b_quick ) );
+VLC_EXPORT( access_t *, access2_FilterNew, ( access_t *p_source, char *psz_access_filter ) );
 VLC_EXPORT( void,      access2_Delete, ( access_t * ) );
 
 static inline int access2_vaControl( access_t *p_access, int i_query, va_list args )
 {
+    if( !p_access ) return VLC_EGENERIC;
     return p_access->pf_control( p_access, i_query, args );
 }
 static inline int access2_Control( access_t *p_access, int i_query, ... )

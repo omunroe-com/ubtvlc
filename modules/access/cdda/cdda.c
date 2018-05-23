@@ -1,8 +1,8 @@
 /*****************************************************************************
- * cddax.c : CD digital audio input module for vlc using libcdio
+ * cdda.c : CD digital audio input module for vlc using libcdio
  *****************************************************************************
- * Copyright (C) 2000, 2003, 2004 VideoLAN
- * $Id: cdda.c 9123 2004-11-02 23:51:21Z sam $
+ * Copyright (C) 2000, 2003, 2004, 2005 the VideoLAN team
+ * $Id: cdda.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Rocky Bernstein <rocky@panix.com>
  *
@@ -27,6 +27,7 @@
 
 #include "callback.h"
 #include "access.h"
+#include <cdio/version.h>
 
 /*****************************************************************************
  * Module descriptor
@@ -35,6 +36,12 @@
 /*****************************************************************************
  * Option help text
  *****************************************************************************/
+
+#if LIBCDIO_VERSION_NUM >= 72
+static char *psz_paranoia_list[] = { "none", "overlap", "full" };
+static char *psz_paranoia_list_text[] = { N_("none"), N_("overlap"),
+					  N_("full") };
+#endif
 
 #define DEBUG_LONGTEXT N_( \
     "This integer when viewed in binary is a debugging mask\n" \
@@ -72,8 +79,9 @@
 "   %n : The number of tracks on the CD\n" \
 "   %p : The artist/performer/composer in the track\n" \
 "   %T : The track number\n" \
-"   %s : Number of seconds in this track \n" \
-"   %t : The title\n" \
+"   %s : Number of seconds in this track\n" \
+"   %S : Number of seconds in the CD\n" \
+"   %t : The track title or MRL if no title\n" \
 "   %Y : The year 19xx or 20xx\n" \
 "   %% : a % \n")
 
@@ -84,8 +92,17 @@
 "   %m : The CD-DA Media Catalog Number (MCN)\n" \
 "   %n : The number of tracks on the CD\n" \
 "   %T : The track number\n" \
-"   %s : Number of seconds in this track \n" \
+"   %s : Number of seconds in this track\n" \
+"   %S : Number of seconds in the CD\n" \
+"   %t : The track title or MRL if no title\n" \
 "   %% : a % \n")
+
+#define PARANOIA_TEXT N_("Enable CD paranoia?")
+#define PARANOIA_LONGTEXT N_( \
+        "Select whether to use CD Paranoia for jitter/error correction.\n" \
+        "none: no paranoia - fastest.\n" \
+        "overlap: do only overlap detection - not generally recommended.\n" \
+        "full: complete jitter and error correction detection - slowest.\n" )
 
 /*****************************************************************************
  * Module descriptor
@@ -95,12 +112,15 @@ vlc_module_begin();
     add_usage_hint( N_("cddax://[device-or-file][@[T]track]") );
     set_description( _("Compact Disc Digital Audio (CD-DA) input") );
     set_capability( "access2", 10 /* compare with priority of cdda */ );
-    set_callbacks( E_(CDDAOpen), E_(CDDAClose) );
+    set_shortname( N_("Audio Compact Disc"));
+    set_callbacks( CDDAOpen, CDDAClose );
     add_shortcut( "cddax" );
     add_shortcut( "cd" );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_ACCESS );
 
     /* Configuration options */
-    add_integer ( MODULE_STRING "-debug", 0, E_(CDDADebugCB),
+    add_integer ( MODULE_STRING "-debug", 0, CDDADebugCB,
                   N_("If nonzero, this gives additional debug information."),
                   DEBUG_LONGTEXT, VLC_TRUE );
 
@@ -110,27 +130,54 @@ vlc_module_begin();
                  CACHING_LONGTEXT, VLC_TRUE );
 
     add_integer( MODULE_STRING "-blocks-per-read",
-                 DEFAULT_BLOCKS_PER_READ, E_(CDDABlocksPerReadCB),
+                 DEFAULT_BLOCKS_PER_READ, CDDABlocksPerReadCB,
                  N_("Number of blocks per CD read"),
                  BLOCKS_PER_READ_LONGTEXT, VLC_TRUE );
 
-    add_string( MODULE_STRING "-author-format",
-                "%A - %a %C %I", NULL,
-                N_("Format to use in playlist \"author\" field"),
-                TITLE_FMT_LONGTEXT, VLC_TRUE );
-
     add_string( MODULE_STRING "-title-format",
-                "%T %M", NULL,
+                "Track %T. %t", NULL,
                 N_("Format to use in playlist \"title\" field when no CDDB"),
                 TITLE_FMT_LONGTEXT, VLC_TRUE );
 
+#if LIBCDIO_VERSION_NUM >= 73
+    add_bool( MODULE_STRING "-analog-output", VLC_FALSE, NULL,
+              N_("Use CD audio controls and output?"),
+              N_("If set, audio controls and audio jack output are used"),
+              VLC_FALSE );
+#endif
+
+    add_bool( MODULE_STRING "-cdtext-enabled", VLC_TRUE, CDTextEnabledCB,
+              N_("Do CD-Text lookups?"),
+              N_("If set, get CD-Text information"),
+              VLC_FALSE );
+
+    add_bool( MODULE_STRING "-navigation-mode", VLC_TRUE, 
+#if FIXED
+	      CDDANavModeCB,
+#else
+	      NULL,
+#endif
+              N_("Use Navigation-style playback?"),
+              N_("If set, tracks are navigated via Navagation rather than "
+		 "a playlist entries"),
+              VLC_FALSE );
+
+#if LIBCDIO_VERSION_NUM >= 72
+      add_string( MODULE_STRING "-paranoia", NULL, NULL,
+		PARANOIA_TEXT,
+		PARANOIA_LONGTEXT,
+		VLC_FALSE );
+      change_string_list( psz_paranoia_list, psz_paranoia_list_text, 0 );
+#endif /* LIBCDIO_VERSION_NUM >= 72 */
+
 #ifdef HAVE_LIBCDDB
+    set_section( N_("CDDB" ), 0 );
     add_string( MODULE_STRING "-cddb-title-format",
-                "Track %T. %t - %p", NULL,
+                "Track %T. %t - %p %A", NULL,
                 N_("Format to use in playlist \"title\" field when using CDDB"),
                 CDDB_TITLE_FMT_LONGTEXT, VLC_TRUE );
 
-    add_bool( MODULE_STRING "-cddb-enabled", 1, E_(CDDBEnabledCB),
+    add_bool( MODULE_STRING "-cddb-enabled", VLC_TRUE, CDDBEnabledCB,
               N_("Do CDDB lookups?"),
               N_("If set, lookup CD-DA track information using the CDDB "
                  "protocol"),
@@ -173,17 +220,11 @@ vlc_module_begin();
                 N_("Directory to cache CDDB requests"),
 		VLC_TRUE );
 
-    add_bool( MODULE_STRING "-cdtext-prefer", VLC_TRUE, E_(CDTextPreferCB),
+    add_bool( MODULE_STRING "-cdtext-prefer", VLC_TRUE, CDTextPreferCB,
               N_("Prefer CD-Text info to CDDB info?"),
               N_("If set, CD-Text information will be preferred "
 		 "to CDDB information when both are available"),
               VLC_FALSE );
-
-#endif
-
-    add_bool( MODULE_STRING "-cdtext-enabled", VLC_TRUE, E_(CDTextEnabledCB),
-              N_("Do CD-Text lookups?"),
-              N_("If set, get CD-Text information"),
-              VLC_FALSE );
+#endif /*HAVE_LIBCDDB*/
 
 vlc_module_end();

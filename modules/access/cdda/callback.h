@@ -1,7 +1,7 @@
 /*****************************************************************************
  * callback.h : Callbacks for CD digital audio input module
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
+ * Copyright (C) 2004 the VideoLAN team
  * $Id: callback.h 8606 2004-08-31 18:32:54Z rocky $
  *
  * Authors: Rocky Bernstein <rocky@panix.com>
@@ -30,25 +30,29 @@
 #define MAX_BLOCKS_PER_READ 25
 #define DEFAULT_BLOCKS_PER_READ 20
 
-int  E_(CDDADebugCB)  ( vlc_object_t *p_this, const char *psz_name,
+int  CDDADebugCB  ( vlc_object_t *p_this, const char *psz_name,
                         vlc_value_t oldval, vlc_value_t val,
                         void *p_data );
 
-int  E_(CDDBEnabledCB)( vlc_object_t *p_this, const char *psz_name,
+int  CDDBEnabledCB( vlc_object_t *p_this, const char *psz_name,
                         vlc_value_t oldval, vlc_value_t val,
                         void *p_data );
 
 
-int  E_(CDTextEnabledCB)( vlc_object_t *p_this, const char *psz_name,
+int  CDTextEnabledCB( vlc_object_t *p_this, const char *psz_name,
 			  vlc_value_t oldval, vlc_value_t val,
 			  void *p_data );
 
-int  E_(CDTextPreferCB)( vlc_object_t *p_this, const char *psz_name,
+int  CDTextPreferCB( vlc_object_t *p_this, const char *psz_name,
 			 vlc_value_t oldval, vlc_value_t val,
 			 void *p_data );
 
+int  CDDANavModeCB( vlc_object_t *p_this, const char *psz_name,
+		    vlc_value_t oldval, vlc_value_t val,
+		    void *p_data );
 
-int E_(CDDABlocksPerReadCB) ( vlc_object_t *p_this, const char *psz_name,
+
+int CDDABlocksPerReadCB ( vlc_object_t *p_this, const char *psz_name,
 			      vlc_value_t oldval, vlc_value_t val, 
 			      void *p_data );
 

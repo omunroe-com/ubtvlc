@@ -1,8 +1,8 @@
 /*****************************************************************************
  * equalizer.m: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: equalizer.m 8644 2004-09-05 16:53:04Z fkuehne $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: equalizer.m 11818 2005-07-23 15:08:46Z fkuehne $
  *
  * Authors: Jerome Decoodt <djc@videolan.org>
  *
@@ -149,10 +149,11 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
     [o_popup_presets removeAllItems];
     for( i = 0; i < 18 ; i++ )
     {
-        [o_popup_presets insertItemWithTitle: _NS(preset_list[i]) atIndex: i];
+        [o_popup_presets insertItemWithTitle: _NS(preset_list_text[i]) atIndex: i];
     }
     [o_window setTitle: _NS("Equalizer")];
 
+	/*
     [o_slider_band1 setFloatValue: 0];
     [o_slider_band2 setFloatValue: 0];
     [o_slider_band3 setFloatValue: 0];
@@ -163,7 +164,8 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
     [o_slider_band8 setFloatValue: 0];
     [o_slider_band9 setFloatValue: 0];
     [o_slider_band10 setFloatValue: 0];
-
+	*/
+	[self initBandSliders];
     [o_ckb_enable setState: NSOffState];
     [o_ckb_2pass setState: NSOffState];
 }
@@ -172,21 +174,28 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
 {
     intf_thread_t *p_intf = VLCIntf;
     float f_preamp, f_band[10];
-    char *psz_bands, *p_next;
+    char *psz_bands, *psz_bands_init, *p_next;
     vlc_bool_t b_2p;
     int i;
     vlc_bool_t b_enabled = GetFiltersStatus( p_intf, "equalizer" );
     vlc_object_t *p_object = vlc_object_find( p_intf,
                                 VLC_OBJECT_AOUT, FIND_ANYWHERE );
+
     if( p_object == NULL )
         p_object = vlc_object_find( p_intf,
                                  VLC_OBJECT_PLAYLIST, FIND_ANYWHERE );
     if( p_object == NULL )
         return;
 
+    var_Create( p_object, "equalizer-preamp", VLC_VAR_FLOAT |
+                                                    VLC_VAR_DOINHERIT );
+    var_Create( p_object, "equalizer-bands", VLC_VAR_STRING |
+                                                    VLC_VAR_DOINHERIT );
+
     f_preamp = var_GetFloat( p_object, "equalizer-preamp" );
     psz_bands = var_GetString( p_object, "equalizer-bands" );
-    if( !psz_bands )
+
+    if( !strcmp( psz_bands, "" ) )
         psz_bands = strdup( "0 0 0 0 0 0 0 0 0 0" );
 
     b_2p = var_GetBool( p_object, "equalizer-2pass" );
@@ -197,6 +206,8 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
     [o_slider_preamp setFloatValue: f_preamp];
 
 /* Set the bands slider */
+    psz_bands_init = psz_bands;
+
     for( i = 0; i < 10; i++ )
     {
         /* Read dB -20/20 */
@@ -210,8 +221,10 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
         if( !*psz_bands ) break; /* end of line */
         psz_bands = p_next+1;
     }
-    free( psz_bands );
+    free( psz_bands_init );
+	[self setBandSlidersValues:f_band];
 
+	/*
     [o_slider_band1 setFloatValue: f_band[0]];
     [o_slider_band2 setFloatValue: f_band[1]];
     [o_slider_band3 setFloatValue: f_band[2]];
@@ -222,7 +235,8 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
     [o_slider_band8 setFloatValue: f_band[7]];
     [o_slider_band9 setFloatValue: f_band[8]];
     [o_slider_band10 setFloatValue: f_band[9]];
-
+	*/
+	
 /* Set the the checkboxes */
     if( b_enabled == VLC_TRUE )
         [o_ckb_enable setState:NSOnState];
@@ -287,6 +301,7 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
     var_SetFloat( p_object, "equalizer-preamp", eqz_preset_10b[[sender indexOfSelectedItem]]->f_preamp);
 
     [o_slider_preamp setFloatValue: eqz_preset_10b[[sender indexOfSelectedItem]]->f_preamp];
+	/*
     [o_slider_band1 setFloatValue: eqz_preset_10b[[sender indexOfSelectedItem]]->f_amp[0]];
     [o_slider_band2 setFloatValue: eqz_preset_10b[[sender indexOfSelectedItem]]->f_amp[1]];
     [o_slider_band3 setFloatValue: eqz_preset_10b[[sender indexOfSelectedItem]]->f_amp[2]];
@@ -297,7 +312,9 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
     [o_slider_band8 setFloatValue: eqz_preset_10b[[sender indexOfSelectedItem]]->f_amp[7]];
     [o_slider_band9 setFloatValue: eqz_preset_10b[[sender indexOfSelectedItem]]->f_amp[8]];
     [o_slider_band10 setFloatValue: eqz_preset_10b[[sender indexOfSelectedItem]]->f_amp[9]];
-
+	*/
+	[self setBandSlidersValues:(float *)eqz_preset_10b[[sender indexOfSelectedItem]]->f_amp];
+	
     vlc_object_release( p_object );
 }
 
@@ -371,10 +388,128 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
 
 - (void)awakeFromNib
 {
+    int i;
+    vlc_object_t *p_object= vlc_object_find( VLCIntf,
+                                 VLC_OBJECT_AOUT, FIND_ANYWHERE );
+    if( p_object == NULL )
+                p_object = vlc_object_find( VLCIntf,
+                                 VLC_OBJECT_PLAYLIST, FIND_ANYWHERE );
+
     [o_window setExcludedFromWindowsMenu: TRUE];
-    
+
     [self initStrings];
+
+    if( p_object )
+    {
+        char *psz_preset;
+
+        var_Create( p_object, "equalizer-preset", VLC_VAR_STRING |
+                                                        VLC_VAR_DOINHERIT );
+        psz_preset = var_GetString( p_object, "equalizer-preset" );
+
+        for( i = 0 ; i < 18 ; i++ )
+        {
+            if( !strcmp( preset_list[i], psz_preset ) )
+            {
+                [o_popup_presets selectItemAtIndex: i];
+
+                [o_slider_preamp setFloatValue: eqz_preset_10b[i]->f_preamp];
+				[self setBandSlidersValues: (float *)eqz_preset_10b[i]->f_amp];
+				
+				/*
+                [o_slider_band1 setFloatValue: eqz_preset_10b[i]->f_amp[0]];
+                [o_slider_band2 setFloatValue: eqz_preset_10b[i]->f_amp[1]];
+                [o_slider_band3 setFloatValue: eqz_preset_10b[i]->f_amp[2]];
+                [o_slider_band4 setFloatValue: eqz_preset_10b[i]->f_amp[3]];
+                [o_slider_band5 setFloatValue: eqz_preset_10b[i]->f_amp[4]];
+                [o_slider_band6 setFloatValue: eqz_preset_10b[i]->f_amp[5]];
+                [o_slider_band7 setFloatValue: eqz_preset_10b[i]->f_amp[6]];
+                [o_slider_band8 setFloatValue: eqz_preset_10b[i]->f_amp[7]];
+                [o_slider_band9 setFloatValue: eqz_preset_10b[i]->f_amp[8]];
+                [o_slider_band10 setFloatValue: eqz_preset_10b[i]->f_amp[9]];
+				*/
+				
+                if( strcmp( psz_preset, "flat" ) )
+                {
+                    char psz_bands[100];
+                    memset( psz_bands, 0, 100 );
+
+                    sprintf( psz_bands, "%.1f %.1f %.1f %.1f %.1f %.1f %.1f "
+                                        "%.1f %.1f %.1f",
+                                        eqz_preset_10b[i]->f_amp[0],
+                                        eqz_preset_10b[i]->f_amp[1],
+                                        eqz_preset_10b[i]->f_amp[2],
+                                        eqz_preset_10b[i]->f_amp[3],
+                                        eqz_preset_10b[i]->f_amp[4],
+                                        eqz_preset_10b[i]->f_amp[5],
+                                        eqz_preset_10b[i]->f_amp[6],
+                                        eqz_preset_10b[i]->f_amp[7],
+                                        eqz_preset_10b[i]->f_amp[8],
+                                        eqz_preset_10b[i]->f_amp[9] );
+
+                    var_Create( p_object, "equalizer-preamp", VLC_VAR_FLOAT |
+                                                            VLC_VAR_DOINHERIT );
+                    var_Create( p_object, "equalizer-bands", VLC_VAR_STRING |
+                                                            VLC_VAR_DOINHERIT );
+                    var_SetFloat( p_object, "equalizer-preamp",
+                                                eqz_preset_10b[i]->f_preamp );
+                    var_SetString( p_object, "equalizer-bands", psz_bands );
+                }
+            }
+        }
+        free( psz_preset );
+        vlc_object_release( p_object );
+    }
+
     [self equalizerUpdated];
+
+}
+
+
+- (id)getSliderByIndex:(int)index
+{
+	switch(index)
+	{
+		case 0 : return o_slider_band1;
+		case 1 : return o_slider_band2;
+		case 2 : return o_slider_band3;
+		case 3 : return o_slider_band4;
+		case 4 : return o_slider_band5;
+		case 5 : return o_slider_band6;
+		case 6 : return o_slider_band7;
+		case 7 : return o_slider_band8;
+		case 8 : return o_slider_band9;
+		case 9 : return o_slider_band10;
+		default : return nil;
+	}
+}
+
+- (void)setBandSlidersValues:(float *)values
+{
+	int i = 0;
+	for (i = 0 ; i<= 9 ; i++)
+	{
+		[self setValue:values[i] forSlider:i];
+	}
+}
+
+- (void)initBandSliders
+{
+	int i = 0;
+	for (i = 0 ; i< 9 ; i++)
+	{
+		[self setValue:0.0 forSlider:i];
+	}
+}
+
+- (void)setValue:(float)value forSlider:(int)index
+{
+	id slider = [self getSliderByIndex:index];
+	
+	if (slider != nil)
+	{
+		[slider setFloatValue:value];
+	}
 }
 
 @end

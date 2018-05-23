@@ -1,8 +1,8 @@
 /*****************************************************************************
  * MsgVals.h
  *****************************************************************************
- * Copyright (C) 2001 VideoLAN
- * $Id: MsgVals.h 8652 2004-09-06 16:46:25Z titer $
+ * Copyright (C) 2001 the VideoLAN team
+ * $Id: MsgVals.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Tony Castley <tcastley@mail.powerup.com.au>
  *          Stephan Aßmus <stippi@yellowbites.com>

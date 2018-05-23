@@ -1,8 +1,8 @@
 /*****************************************************************************
  * spudec.c : SPU decoder thread
  *****************************************************************************
- * Copyright (C) 2000-2001 VideoLAN
- * $Id: spudec.c 9089 2004-10-31 15:51:24Z jpsaman $
+ * Copyright (C) 2000-2001 the VideoLAN team
+ * $Id: spudec.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -40,6 +40,8 @@ static void Close         ( vlc_object_t * );
 vlc_module_begin();
     set_description( _("DVD subtitles decoder") );
     set_capability( "decoder", 50 );
+    set_category( CAT_INPUT );
+    set_subcategory( SUBCAT_INPUT_SCODEC );
     set_callbacks( DecoderOpen, Close );
 
     add_submodule();

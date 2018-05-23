@@ -1,8 +1,8 @@
 /*****************************************************************************
  * plugin.h:
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: plugin.h 8243 2004-07-22 21:27:45Z gbazin $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: plugin.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_dialogs.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_dialogs.hpp 8524 2004-08-25 21:32:15Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_dialogs.hpp 12281 2005-08-20 00:31:27Z dionoea $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -46,6 +46,10 @@ typedef CmdDialogs<10> CmdDlgHidePopupMenu;
 typedef CmdDialogs<11> CmdDlgAdd;
 typedef CmdDialogs<12> CmdDlgPlaylistLoad;
 typedef CmdDialogs<13> CmdDlgPlaylistSave;
+typedef CmdDialogs<14> CmdDlgDirectory;
+typedef CmdDialogs<15> CmdDlgStreamingWizard;
+typedef CmdDialogs<16> CmdDlgPlaytreeLoad;
+typedef CmdDialogs<17> CmdDlgPlaytreeSave;
 
 
 /// Generic "Open dialog" command
@@ -106,6 +110,12 @@ class CmdDialogs: public CmdGeneric
                     break;
                 case 13:
                     pDialogs->showPlaylistSave();
+                    break;
+                case 14:
+                    pDialogs->showDirectory( true );
+                    break;
+                case 15:
+                    pDialogs->showStreamingWizard();
                     break;
                 default:
                     msg_Warn( getIntf(), "Unknown dialog type" );

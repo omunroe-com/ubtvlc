@@ -1,8 +1,8 @@
 /*****************************************************************************
  * libavi.h : LibAVI library
  ******************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: libavi.h 9270 2004-11-10 13:05:27Z gbazin $
+ * Copyright (C) 2001-2003 the VideoLAN team
+ * $Id: libavi.h 11664 2005-07-09 06:17:09Z courmisch $
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify

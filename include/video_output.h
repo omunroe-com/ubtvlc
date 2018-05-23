@@ -1,8 +1,8 @@
 /*****************************************************************************
  * video_output.h : video output thread
  *****************************************************************************
- * Copyright (C) 1999, 2000 VideoLAN
- * $Id: video_output.h 8709 2004-09-15 15:50:54Z gbazin $
+ * Copyright (C) 1999, 2000 the VideoLAN team
+ * $Id: video_output.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@via.ecp.fr>
@@ -103,6 +103,8 @@ struct vout_thread_t
     void      ( *pf_render )     ( vout_thread_t *, picture_t * );
     void      ( *pf_display )    ( vout_thread_t *, picture_t * );
     void      ( *pf_swap )       ( vout_thread_t * );         /* OpenGL only */
+    int       ( *pf_lock )       ( vout_thread_t * );         /* OpenGL only */
+    void      ( *pf_unlock )     ( vout_thread_t * );         /* OpenGL only */
     int       ( *pf_control )    ( vout_thread_t *, int, va_list );
     /**@}*/
 
@@ -121,6 +123,10 @@ struct vout_thread_t
     picture_heap_t      output;                          /**< direct buffers */
     vlc_bool_t          b_direct;            /**< rendered are like direct ? */
     vout_chroma_t       chroma;                      /**< translation tables */
+
+    video_format_t      fmt_render;      /* render format (from the decoder) */
+    video_format_t      fmt_in;            /* input (modified render) format */
+    video_format_t      fmt_out;     /* output format (for the video output) */
     /**@}*/
 
     /* Picture heap */
@@ -142,6 +148,9 @@ struct vout_thread_t
     /* Filter chain */
     char *psz_filter_chain;
     vlc_bool_t b_filter_change;
+
+    /* Misc */
+    vlc_bool_t       b_snapshot;     /**< take one snapshot on the next loop */
 };
 
 #define I_OUTPUTPICTURES p_vout->output.i_pictures
@@ -191,10 +200,10 @@ struct vout_thread_t
 /*****************************************************************************
  * Prototypes
  *****************************************************************************/
-#define vout_Request(a,b,c,d,e,f) __vout_Request(VLC_OBJECT(a),b,c,d,e,f)
-VLC_EXPORT( vout_thread_t *, __vout_Request,      ( vlc_object_t *, vout_thread_t *, unsigned int, unsigned int, uint32_t, unsigned int ) );
-#define vout_Create(a,b,c,d,e) __vout_Create(VLC_OBJECT(a),b,c,d,e)
-VLC_EXPORT( vout_thread_t *, __vout_Create,       ( vlc_object_t *, unsigned int, unsigned int, uint32_t, unsigned int ) );
+#define vout_Request(a,b,c) __vout_Request(VLC_OBJECT(a),b,c)
+VLC_EXPORT( vout_thread_t *, __vout_Request,    ( vlc_object_t *, vout_thread_t *, video_format_t * ) );
+#define vout_Create(a,b) __vout_Create(VLC_OBJECT(a),b)
+VLC_EXPORT( vout_thread_t *, __vout_Create,       ( vlc_object_t *, video_format_t * ) );
 VLC_EXPORT( void,            vout_Destroy,        ( vout_thread_t * ) );
 VLC_EXPORT( int, vout_VarCallback, ( vlc_object_t *, const char *, vlc_value_t, vlc_value_t, void * ) );
 
@@ -243,7 +252,9 @@ enum output_query_e
     VOUT_SET_ZOOM,         /* arg1= double           res=    */
     VOUT_SET_STAY_ON_TOP,  /* arg1= vlc_bool_t       res=    */
     VOUT_REPARENT,
-    VOUT_CLOSE
+    VOUT_SNAPSHOT,
+    VOUT_CLOSE,
+    VOUT_SET_FOCUS         /* arg1= vlc_bool_t       res=    */
 };
 
 /**

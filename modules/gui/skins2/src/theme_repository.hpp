@@ -1,8 +1,8 @@
 /*****************************************************************************
  * theme_repository.hpp
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: theme_repository.hpp 8513 2004-08-24 19:01:32Z asmax $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: theme_repository.hpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
