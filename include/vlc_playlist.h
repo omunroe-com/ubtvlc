@@ -2,7 +2,7 @@
  * vlc_playlist.h : Playlist functions
  *****************************************************************************
  * Copyright (C) 1999-2004 VideoLAN
- * $Id: vlc_playlist.h 7209 2004-03-31 20:52:31Z gbazin $
+ * $Id: vlc_playlist.h 8193 2004-07-16 11:33:32Z sam $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -155,7 +155,7 @@ VLC_EXPORT( int,  playlist_Enable, ( playlist_t *, int ) );
 VLC_EXPORT( int,  playlist_DisableGroup, ( playlist_t *, int ) );
 VLC_EXPORT( int,  playlist_EnableGroup, ( playlist_t *, int ) );
 
-/* Basic item informations accessors */
+/* Basic item information accessors */
 VLC_EXPORT( int, playlist_ItemSetGroup, (playlist_item_t *, int ) );
 VLC_EXPORT( int, playlist_ItemSetName, (playlist_item_t *,  char * ) );
 VLC_EXPORT( int, playlist_ItemSetDuration, (playlist_item_t *, mtime_t ) );

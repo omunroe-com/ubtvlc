@@ -2,7 +2,7 @@
  * messages.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: messages.cpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: messages.cpp 8175 2004-07-12 06:47:15Z zorglub $
  *
  * Authors: Olivier Teulière <ipkiss@via.ecp.fr>
  *

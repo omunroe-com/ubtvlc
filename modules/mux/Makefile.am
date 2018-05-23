@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in mux_dummy mux_avi mux_ogg mux_mp4 mux_asf; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in mux_dummy mux_avi mux_ogg mux_mp4 mux_asf; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in mux_dummy mux_avi mux_ogg mux_mp4 mux_asf; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in mux_dummy mux_avi mux_ogg mux_mp4 mux_asf mux_wav mux_mpjpeg; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in mux_dummy mux_avi mux_ogg mux_mp4 mux_asf mux_wav mux_mpjpeg; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in mux_dummy mux_avi mux_ogg mux_mp4 mux_asf mux_wav mux_mpjpeg; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -216,6 +216,80 @@ libmux_asf_plugin$(LIBEXT): $(libmux_asf_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libmux_asf_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_asf\` ; $(CXXLINK) $(libmux_asf_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_asf` ;; \
 	  objc) echo $(OBJCLINK) $(libmux_asf_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_asf\` ; $(OBJCLINK) $(libmux_asf_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_asf` ;; \
 	  c|*) echo $(LINK) $(libmux_asf_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_asf\` ; $(LINK) $(libmux_asf_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_asf` ;; \
+	esac
+
+
+# The mux_wav plugin
+
+if UNTRUE
+Lmux_wavp = libmux_wav_plugin.a
+Dmux_wavp = libmux_wav_plugin$(LIBEXT)
+Lmux_wavb = libmux_wav.a
+Lmux_wavpic = libmux_wav_pic.a
+endif
+
+libmux_wav_plugin_a_SOURCES = $(SOURCES_mux_wav)
+libmux_wav_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin mux_wav`
+libmux_wav_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mux_wav`
+libmux_wav_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mux_wav`
+
+libmux_wav_pic_a_SOURCES = $(SOURCES_mux_wav)
+libmux_wav_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mux_wav`
+libmux_wav_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mux_wav`
+libmux_wav_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mux_wav`
+
+libmux_wav_a_SOURCES = $(SOURCES_mux_wav)
+libmux_wav_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_wav`
+libmux_wav_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_wav`
+libmux_wav_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_wav`
+
+libvlc_LIBRARIES += $(Lmux_wavb) $(Lmux_wavpic)
+libmux_wav_DATA = $(Dmux_wavp)
+
+libmux_wavdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lmux_wavp)
+libmux_wav_plugin$(LIBEXT): $(libmux_wav_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage mux_wav` in \
+	  c++) echo $(CXXLINK) $(libmux_wav_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_wav\` ; $(CXXLINK) $(libmux_wav_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_wav` ;; \
+	  objc) echo $(OBJCLINK) $(libmux_wav_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_wav\` ; $(OBJCLINK) $(libmux_wav_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_wav` ;; \
+	  c|*) echo $(LINK) $(libmux_wav_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_wav\` ; $(LINK) $(libmux_wav_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_wav` ;; \
+	esac
+
+
+# The mux_mpjpeg plugin
+
+if UNTRUE
+Lmux_mpjpegp = libmux_mpjpeg_plugin.a
+Dmux_mpjpegp = libmux_mpjpeg_plugin$(LIBEXT)
+Lmux_mpjpegb = libmux_mpjpeg.a
+Lmux_mpjpegpic = libmux_mpjpeg_pic.a
+endif
+
+libmux_mpjpeg_plugin_a_SOURCES = $(SOURCES_mux_mpjpeg)
+libmux_mpjpeg_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin mux_mpjpeg`
+libmux_mpjpeg_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mux_mpjpeg`
+libmux_mpjpeg_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mux_mpjpeg`
+
+libmux_mpjpeg_pic_a_SOURCES = $(SOURCES_mux_mpjpeg)
+libmux_mpjpeg_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mux_mpjpeg`
+libmux_mpjpeg_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mux_mpjpeg`
+libmux_mpjpeg_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mux_mpjpeg`
+
+libmux_mpjpeg_a_SOURCES = $(SOURCES_mux_mpjpeg)
+libmux_mpjpeg_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_mpjpeg`
+libmux_mpjpeg_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_mpjpeg`
+libmux_mpjpeg_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_mpjpeg`
+
+libvlc_LIBRARIES += $(Lmux_mpjpegb) $(Lmux_mpjpegpic)
+libmux_mpjpeg_DATA = $(Dmux_mpjpegp)
+
+libmux_mpjpegdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lmux_mpjpegp)
+libmux_mpjpeg_plugin$(LIBEXT): $(libmux_mpjpeg_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage mux_mpjpeg` in \
+	  c++) echo $(CXXLINK) $(libmux_mpjpeg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_mpjpeg\` ; $(CXXLINK) $(libmux_mpjpeg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_mpjpeg` ;; \
+	  objc) echo $(OBJCLINK) $(libmux_mpjpeg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_mpjpeg\` ; $(OBJCLINK) $(libmux_mpjpeg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_mpjpeg` ;; \
+	  c|*) echo $(LINK) $(libmux_mpjpeg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_mpjpeg\` ; $(LINK) $(libmux_mpjpeg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_mpjpeg` ;; \
 	esac
 
 

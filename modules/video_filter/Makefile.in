@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -228,12 +230,12 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Ltransformb) $(Ltransformpic) $(Linvertb) $(Linvertpic) $(Ladjustb) $(Ladjustpic) $(Ldistortb) $(Ldistortpic) $(Lwallb) $(Lwallpic) $(Lcloneb) $(Lclonepic) $(Lcropb) $(Lcroppic) $(Lmotionblurb) $(Lmotionblurpic) $(Llogob) $(Llogopic) $(Ldeinterlaceb) $(Ldeinterlacepic)
-noinst_LIBRARIES = $(Ltransformp) $(Linvertp) $(Ladjustp) $(Ldistortp) $(Lwallp) $(Lclonep) $(Lcropp) $(Lmotionblurp) $(Llogop) $(Ldeinterlacep)
+libvlc_LIBRARIES = $(Ltransformb) $(Ltransformpic) $(Linvertb) $(Linvertpic) $(Ladjustb) $(Ladjustpic) $(Ldistortb) $(Ldistortpic) $(Lwallb) $(Lwallpic) $(Lcloneb) $(Lclonepic) $(Lcropb) $(Lcroppic) $(Lmotionblurb) $(Lmotionblurpic) $(Llogob) $(Llogopic) $(Ldeinterlaceb) $(Ldeinterlacepic) $(Lblendb) $(Lblendpic) $(Lscaleb) $(Lscalepic) $(Ltimeb) $(Ltimepic) $(Lmarqb) $(Lmarqpic)
+noinst_LIBRARIES = $(Ltransformp) $(Linvertp) $(Ladjustp) $(Ldistortp) $(Lwallp) $(Lclonep) $(Lcropp) $(Lmotionblurp) $(Llogop) $(Ldeinterlacep) $(Lblendp) $(Lscalep) $(Ltimep) $(Lmarqp)
 noinst_HEADERS = filter_common.h
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
-SUBDIRS = 
+SUBDIRS = swscale
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/video_filter
 SOURCES_transform = transform.c
@@ -246,6 +248,10 @@ SOURCES_crop = crop.c
 SOURCES_motionblur = motionblur.c
 SOURCES_logo = logo.c
 SOURCES_deinterlace = deinterlace.c
+SOURCES_blend = blend.c
+SOURCES_scale = scale.c
+SOURCES_time = time.c
+SOURCES_marq = marq.c
 
 # There's no need for pic code on win32 so get rid of this to substantially
 # reduce the compilation time.
@@ -501,6 +507,106 @@ libdeinterlace_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin deinterlace`
 libdeinterlace_DATA = $(Ddeinterlacep)
 
 libdeinterlacedir = $(libdir)/vlc/
+
+
+# The blend plugin
+@UNTRUE_TRUE@Lblendp = libblend_plugin.a
+@UNTRUE_TRUE@Dblendp = libblend_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lblendb = libblend.a
+@UNTRUE_TRUE@Lblendpic = libblend_pic.a
+
+libblend_plugin_a_SOURCES = $(SOURCES_blend)
+libblend_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin blend`
+libblend_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin blend`
+libblend_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin blend`
+
+libblend_pic_a_SOURCES = $(SOURCES_blend)
+libblend_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic blend`
+libblend_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic blend`
+libblend_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic blend`
+
+libblend_a_SOURCES = $(SOURCES_blend)
+libblend_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin blend`
+libblend_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin blend`
+libblend_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin blend`
+libblend_DATA = $(Dblendp)
+
+libblenddir = $(libdir)/vlc/
+
+
+# The scale plugin
+@UNTRUE_TRUE@Lscalep = libscale_plugin.a
+@UNTRUE_TRUE@Dscalep = libscale_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lscaleb = libscale.a
+@UNTRUE_TRUE@Lscalepic = libscale_pic.a
+
+libscale_plugin_a_SOURCES = $(SOURCES_scale)
+libscale_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin scale`
+libscale_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin scale`
+libscale_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin scale`
+
+libscale_pic_a_SOURCES = $(SOURCES_scale)
+libscale_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic scale`
+libscale_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic scale`
+libscale_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic scale`
+
+libscale_a_SOURCES = $(SOURCES_scale)
+libscale_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin scale`
+libscale_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin scale`
+libscale_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin scale`
+libscale_DATA = $(Dscalep)
+
+libscaledir = $(libdir)/vlc/
+
+
+# The time plugin
+@UNTRUE_TRUE@Ltimep = libtime_plugin.a
+@UNTRUE_TRUE@Dtimep = libtime_plugin$(LIBEXT)
+@UNTRUE_TRUE@Ltimeb = libtime.a
+@UNTRUE_TRUE@Ltimepic = libtime_pic.a
+
+libtime_plugin_a_SOURCES = $(SOURCES_time)
+libtime_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin time`
+libtime_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin time`
+libtime_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin time`
+
+libtime_pic_a_SOURCES = $(SOURCES_time)
+libtime_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic time`
+libtime_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic time`
+libtime_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic time`
+
+libtime_a_SOURCES = $(SOURCES_time)
+libtime_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin time`
+libtime_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin time`
+libtime_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin time`
+libtime_DATA = $(Dtimep)
+
+libtimedir = $(libdir)/vlc/
+
+
+# The marq plugin
+@UNTRUE_TRUE@Lmarqp = libmarq_plugin.a
+@UNTRUE_TRUE@Dmarqp = libmarq_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lmarqb = libmarq.a
+@UNTRUE_TRUE@Lmarqpic = libmarq_pic.a
+
+libmarq_plugin_a_SOURCES = $(SOURCES_marq)
+libmarq_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin marq`
+libmarq_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin marq`
+libmarq_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin marq`
+
+libmarq_pic_a_SOURCES = $(SOURCES_marq)
+libmarq_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic marq`
+libmarq_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic marq`
+libmarq_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic marq`
+
+libmarq_a_SOURCES = $(SOURCES_marq)
+libmarq_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin marq`
+libmarq_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin marq`
+libmarq_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin marq`
+libmarq_DATA = $(Dmarqp)
+
+libmarqdir = $(libdir)/vlc/
 subdir = modules/video_filter
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
@@ -523,140 +629,200 @@ libadjust_plugin_a_LIBADD =
 am__objects_3 = libadjust_plugin_a-adjust.$(OBJEXT)
 am_libadjust_plugin_a_OBJECTS = $(am__objects_3)
 libadjust_plugin_a_OBJECTS = $(am_libadjust_plugin_a_OBJECTS)
+libblend_a_AR = $(AR) cru
+libblend_a_LIBADD =
+am__objects_4 = libblend_a-blend.$(OBJEXT)
+am_libblend_a_OBJECTS = $(am__objects_4)
+libblend_a_OBJECTS = $(am_libblend_a_OBJECTS)
+libblend_pic_a_AR = $(AR) cru
+libblend_pic_a_LIBADD =
+am__objects_5 = libblend_pic_a-blend.$(OBJEXT)
+am_libblend_pic_a_OBJECTS = $(am__objects_5)
+libblend_pic_a_OBJECTS = $(am_libblend_pic_a_OBJECTS)
+libblend_plugin_a_AR = $(AR) cru
+libblend_plugin_a_LIBADD =
+am__objects_6 = libblend_plugin_a-blend.$(OBJEXT)
+am_libblend_plugin_a_OBJECTS = $(am__objects_6)
+libblend_plugin_a_OBJECTS = $(am_libblend_plugin_a_OBJECTS)
 libclone_a_AR = $(AR) cru
 libclone_a_LIBADD =
-am__objects_4 = libclone_a-clone.$(OBJEXT)
-am_libclone_a_OBJECTS = $(am__objects_4)
+am__objects_7 = libclone_a-clone.$(OBJEXT)
+am_libclone_a_OBJECTS = $(am__objects_7)
 libclone_a_OBJECTS = $(am_libclone_a_OBJECTS)
 libclone_pic_a_AR = $(AR) cru
 libclone_pic_a_LIBADD =
-am__objects_5 = libclone_pic_a-clone.$(OBJEXT)
-am_libclone_pic_a_OBJECTS = $(am__objects_5)
+am__objects_8 = libclone_pic_a-clone.$(OBJEXT)
+am_libclone_pic_a_OBJECTS = $(am__objects_8)
 libclone_pic_a_OBJECTS = $(am_libclone_pic_a_OBJECTS)
 libclone_plugin_a_AR = $(AR) cru
 libclone_plugin_a_LIBADD =
-am__objects_6 = libclone_plugin_a-clone.$(OBJEXT)
-am_libclone_plugin_a_OBJECTS = $(am__objects_6)
+am__objects_9 = libclone_plugin_a-clone.$(OBJEXT)
+am_libclone_plugin_a_OBJECTS = $(am__objects_9)
 libclone_plugin_a_OBJECTS = $(am_libclone_plugin_a_OBJECTS)
 libcrop_a_AR = $(AR) cru
 libcrop_a_LIBADD =
-am__objects_7 = libcrop_a-crop.$(OBJEXT)
-am_libcrop_a_OBJECTS = $(am__objects_7)
+am__objects_10 = libcrop_a-crop.$(OBJEXT)
+am_libcrop_a_OBJECTS = $(am__objects_10)
 libcrop_a_OBJECTS = $(am_libcrop_a_OBJECTS)
 libcrop_pic_a_AR = $(AR) cru
 libcrop_pic_a_LIBADD =
-am__objects_8 = libcrop_pic_a-crop.$(OBJEXT)
-am_libcrop_pic_a_OBJECTS = $(am__objects_8)
+am__objects_11 = libcrop_pic_a-crop.$(OBJEXT)
+am_libcrop_pic_a_OBJECTS = $(am__objects_11)
 libcrop_pic_a_OBJECTS = $(am_libcrop_pic_a_OBJECTS)
 libcrop_plugin_a_AR = $(AR) cru
 libcrop_plugin_a_LIBADD =
-am__objects_9 = libcrop_plugin_a-crop.$(OBJEXT)
-am_libcrop_plugin_a_OBJECTS = $(am__objects_9)
+am__objects_12 = libcrop_plugin_a-crop.$(OBJEXT)
+am_libcrop_plugin_a_OBJECTS = $(am__objects_12)
 libcrop_plugin_a_OBJECTS = $(am_libcrop_plugin_a_OBJECTS)
 libdeinterlace_a_AR = $(AR) cru
 libdeinterlace_a_LIBADD =
-am__objects_10 = libdeinterlace_a-deinterlace.$(OBJEXT)
-am_libdeinterlace_a_OBJECTS = $(am__objects_10)
+am__objects_13 = libdeinterlace_a-deinterlace.$(OBJEXT)
+am_libdeinterlace_a_OBJECTS = $(am__objects_13)
 libdeinterlace_a_OBJECTS = $(am_libdeinterlace_a_OBJECTS)
 libdeinterlace_pic_a_AR = $(AR) cru
 libdeinterlace_pic_a_LIBADD =
-am__objects_11 = libdeinterlace_pic_a-deinterlace.$(OBJEXT)
-am_libdeinterlace_pic_a_OBJECTS = $(am__objects_11)
+am__objects_14 = libdeinterlace_pic_a-deinterlace.$(OBJEXT)
+am_libdeinterlace_pic_a_OBJECTS = $(am__objects_14)
 libdeinterlace_pic_a_OBJECTS = $(am_libdeinterlace_pic_a_OBJECTS)
 libdeinterlace_plugin_a_AR = $(AR) cru
 libdeinterlace_plugin_a_LIBADD =
-am__objects_12 = libdeinterlace_plugin_a-deinterlace.$(OBJEXT)
-am_libdeinterlace_plugin_a_OBJECTS = $(am__objects_12)
+am__objects_15 = libdeinterlace_plugin_a-deinterlace.$(OBJEXT)
+am_libdeinterlace_plugin_a_OBJECTS = $(am__objects_15)
 libdeinterlace_plugin_a_OBJECTS = $(am_libdeinterlace_plugin_a_OBJECTS)
 libdistort_a_AR = $(AR) cru
 libdistort_a_LIBADD =
-am__objects_13 = libdistort_a-distort.$(OBJEXT)
-am_libdistort_a_OBJECTS = $(am__objects_13)
+am__objects_16 = libdistort_a-distort.$(OBJEXT)
+am_libdistort_a_OBJECTS = $(am__objects_16)
 libdistort_a_OBJECTS = $(am_libdistort_a_OBJECTS)
 libdistort_pic_a_AR = $(AR) cru
 libdistort_pic_a_LIBADD =
-am__objects_14 = libdistort_pic_a-distort.$(OBJEXT)
-am_libdistort_pic_a_OBJECTS = $(am__objects_14)
+am__objects_17 = libdistort_pic_a-distort.$(OBJEXT)
+am_libdistort_pic_a_OBJECTS = $(am__objects_17)
 libdistort_pic_a_OBJECTS = $(am_libdistort_pic_a_OBJECTS)
 libdistort_plugin_a_AR = $(AR) cru
 libdistort_plugin_a_LIBADD =
-am__objects_15 = libdistort_plugin_a-distort.$(OBJEXT)
-am_libdistort_plugin_a_OBJECTS = $(am__objects_15)
+am__objects_18 = libdistort_plugin_a-distort.$(OBJEXT)
+am_libdistort_plugin_a_OBJECTS = $(am__objects_18)
 libdistort_plugin_a_OBJECTS = $(am_libdistort_plugin_a_OBJECTS)
 libinvert_a_AR = $(AR) cru
 libinvert_a_LIBADD =
-am__objects_16 = libinvert_a-invert.$(OBJEXT)
-am_libinvert_a_OBJECTS = $(am__objects_16)
+am__objects_19 = libinvert_a-invert.$(OBJEXT)
+am_libinvert_a_OBJECTS = $(am__objects_19)
 libinvert_a_OBJECTS = $(am_libinvert_a_OBJECTS)
 libinvert_pic_a_AR = $(AR) cru
 libinvert_pic_a_LIBADD =
-am__objects_17 = libinvert_pic_a-invert.$(OBJEXT)
-am_libinvert_pic_a_OBJECTS = $(am__objects_17)
+am__objects_20 = libinvert_pic_a-invert.$(OBJEXT)
+am_libinvert_pic_a_OBJECTS = $(am__objects_20)
 libinvert_pic_a_OBJECTS = $(am_libinvert_pic_a_OBJECTS)
 libinvert_plugin_a_AR = $(AR) cru
 libinvert_plugin_a_LIBADD =
-am__objects_18 = libinvert_plugin_a-invert.$(OBJEXT)
-am_libinvert_plugin_a_OBJECTS = $(am__objects_18)
+am__objects_21 = libinvert_plugin_a-invert.$(OBJEXT)
+am_libinvert_plugin_a_OBJECTS = $(am__objects_21)
 libinvert_plugin_a_OBJECTS = $(am_libinvert_plugin_a_OBJECTS)
 liblogo_a_AR = $(AR) cru
 liblogo_a_LIBADD =
-am__objects_19 = liblogo_a-logo.$(OBJEXT)
-am_liblogo_a_OBJECTS = $(am__objects_19)
+am__objects_22 = liblogo_a-logo.$(OBJEXT)
+am_liblogo_a_OBJECTS = $(am__objects_22)
 liblogo_a_OBJECTS = $(am_liblogo_a_OBJECTS)
 liblogo_pic_a_AR = $(AR) cru
 liblogo_pic_a_LIBADD =
-am__objects_20 = liblogo_pic_a-logo.$(OBJEXT)
-am_liblogo_pic_a_OBJECTS = $(am__objects_20)
+am__objects_23 = liblogo_pic_a-logo.$(OBJEXT)
+am_liblogo_pic_a_OBJECTS = $(am__objects_23)
 liblogo_pic_a_OBJECTS = $(am_liblogo_pic_a_OBJECTS)
 liblogo_plugin_a_AR = $(AR) cru
 liblogo_plugin_a_LIBADD =
-am__objects_21 = liblogo_plugin_a-logo.$(OBJEXT)
-am_liblogo_plugin_a_OBJECTS = $(am__objects_21)
+am__objects_24 = liblogo_plugin_a-logo.$(OBJEXT)
+am_liblogo_plugin_a_OBJECTS = $(am__objects_24)
 liblogo_plugin_a_OBJECTS = $(am_liblogo_plugin_a_OBJECTS)
+libmarq_a_AR = $(AR) cru
+libmarq_a_LIBADD =
+am__objects_25 = libmarq_a-marq.$(OBJEXT)
+am_libmarq_a_OBJECTS = $(am__objects_25)
+libmarq_a_OBJECTS = $(am_libmarq_a_OBJECTS)
+libmarq_pic_a_AR = $(AR) cru
+libmarq_pic_a_LIBADD =
+am__objects_26 = libmarq_pic_a-marq.$(OBJEXT)
+am_libmarq_pic_a_OBJECTS = $(am__objects_26)
+libmarq_pic_a_OBJECTS = $(am_libmarq_pic_a_OBJECTS)
+libmarq_plugin_a_AR = $(AR) cru
+libmarq_plugin_a_LIBADD =
+am__objects_27 = libmarq_plugin_a-marq.$(OBJEXT)
+am_libmarq_plugin_a_OBJECTS = $(am__objects_27)
+libmarq_plugin_a_OBJECTS = $(am_libmarq_plugin_a_OBJECTS)
 libmotionblur_a_AR = $(AR) cru
 libmotionblur_a_LIBADD =
-am__objects_22 = libmotionblur_a-motionblur.$(OBJEXT)
-am_libmotionblur_a_OBJECTS = $(am__objects_22)
+am__objects_28 = libmotionblur_a-motionblur.$(OBJEXT)
+am_libmotionblur_a_OBJECTS = $(am__objects_28)
 libmotionblur_a_OBJECTS = $(am_libmotionblur_a_OBJECTS)
 libmotionblur_pic_a_AR = $(AR) cru
 libmotionblur_pic_a_LIBADD =
-am__objects_23 = libmotionblur_pic_a-motionblur.$(OBJEXT)
-am_libmotionblur_pic_a_OBJECTS = $(am__objects_23)
+am__objects_29 = libmotionblur_pic_a-motionblur.$(OBJEXT)
+am_libmotionblur_pic_a_OBJECTS = $(am__objects_29)
 libmotionblur_pic_a_OBJECTS = $(am_libmotionblur_pic_a_OBJECTS)
 libmotionblur_plugin_a_AR = $(AR) cru
 libmotionblur_plugin_a_LIBADD =
-am__objects_24 = libmotionblur_plugin_a-motionblur.$(OBJEXT)
-am_libmotionblur_plugin_a_OBJECTS = $(am__objects_24)
+am__objects_30 = libmotionblur_plugin_a-motionblur.$(OBJEXT)
+am_libmotionblur_plugin_a_OBJECTS = $(am__objects_30)
 libmotionblur_plugin_a_OBJECTS = $(am_libmotionblur_plugin_a_OBJECTS)
+libscale_a_AR = $(AR) cru
+libscale_a_LIBADD =
+am__objects_31 = libscale_a-scale.$(OBJEXT)
+am_libscale_a_OBJECTS = $(am__objects_31)
+libscale_a_OBJECTS = $(am_libscale_a_OBJECTS)
+libscale_pic_a_AR = $(AR) cru
+libscale_pic_a_LIBADD =
+am__objects_32 = libscale_pic_a-scale.$(OBJEXT)
+am_libscale_pic_a_OBJECTS = $(am__objects_32)
+libscale_pic_a_OBJECTS = $(am_libscale_pic_a_OBJECTS)
+libscale_plugin_a_AR = $(AR) cru
+libscale_plugin_a_LIBADD =
+am__objects_33 = libscale_plugin_a-scale.$(OBJEXT)
+am_libscale_plugin_a_OBJECTS = $(am__objects_33)
+libscale_plugin_a_OBJECTS = $(am_libscale_plugin_a_OBJECTS)
+libtime_a_AR = $(AR) cru
+libtime_a_LIBADD =
+am__objects_34 = libtime_a-time.$(OBJEXT)
+am_libtime_a_OBJECTS = $(am__objects_34)
+libtime_a_OBJECTS = $(am_libtime_a_OBJECTS)
+libtime_pic_a_AR = $(AR) cru
+libtime_pic_a_LIBADD =
+am__objects_35 = libtime_pic_a-time.$(OBJEXT)
+am_libtime_pic_a_OBJECTS = $(am__objects_35)
+libtime_pic_a_OBJECTS = $(am_libtime_pic_a_OBJECTS)
+libtime_plugin_a_AR = $(AR) cru
+libtime_plugin_a_LIBADD =
+am__objects_36 = libtime_plugin_a-time.$(OBJEXT)
+am_libtime_plugin_a_OBJECTS = $(am__objects_36)
+libtime_plugin_a_OBJECTS = $(am_libtime_plugin_a_OBJECTS)
 libtransform_a_AR = $(AR) cru
 libtransform_a_LIBADD =
-am__objects_25 = libtransform_a-transform.$(OBJEXT)
-am_libtransform_a_OBJECTS = $(am__objects_25)
+am__objects_37 = libtransform_a-transform.$(OBJEXT)
+am_libtransform_a_OBJECTS = $(am__objects_37)
 libtransform_a_OBJECTS = $(am_libtransform_a_OBJECTS)
 libtransform_pic_a_AR = $(AR) cru
 libtransform_pic_a_LIBADD =
-am__objects_26 = libtransform_pic_a-transform.$(OBJEXT)
-am_libtransform_pic_a_OBJECTS = $(am__objects_26)
+am__objects_38 = libtransform_pic_a-transform.$(OBJEXT)
+am_libtransform_pic_a_OBJECTS = $(am__objects_38)
 libtransform_pic_a_OBJECTS = $(am_libtransform_pic_a_OBJECTS)
 libtransform_plugin_a_AR = $(AR) cru
 libtransform_plugin_a_LIBADD =
-am__objects_27 = libtransform_plugin_a-transform.$(OBJEXT)
-am_libtransform_plugin_a_OBJECTS = $(am__objects_27)
+am__objects_39 = libtransform_plugin_a-transform.$(OBJEXT)
+am_libtransform_plugin_a_OBJECTS = $(am__objects_39)
 libtransform_plugin_a_OBJECTS = $(am_libtransform_plugin_a_OBJECTS)
 libwall_a_AR = $(AR) cru
 libwall_a_LIBADD =
-am__objects_28 = libwall_a-wall.$(OBJEXT)
-am_libwall_a_OBJECTS = $(am__objects_28)
+am__objects_40 = libwall_a-wall.$(OBJEXT)
+am_libwall_a_OBJECTS = $(am__objects_40)
 libwall_a_OBJECTS = $(am_libwall_a_OBJECTS)
 libwall_pic_a_AR = $(AR) cru
 libwall_pic_a_LIBADD =
-am__objects_29 = libwall_pic_a-wall.$(OBJEXT)
-am_libwall_pic_a_OBJECTS = $(am__objects_29)
+am__objects_41 = libwall_pic_a-wall.$(OBJEXT)
+am_libwall_pic_a_OBJECTS = $(am__objects_41)
 libwall_pic_a_OBJECTS = $(am_libwall_pic_a_OBJECTS)
 libwall_plugin_a_AR = $(AR) cru
 libwall_plugin_a_LIBADD =
-am__objects_30 = libwall_plugin_a-wall.$(OBJEXT)
-am_libwall_plugin_a_OBJECTS = $(am__objects_30)
+am__objects_42 = libwall_plugin_a-wall.$(OBJEXT)
+am_libwall_plugin_a_OBJECTS = $(am__objects_42)
 libwall_plugin_a_OBJECTS = $(am_libwall_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
@@ -665,6 +831,9 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libadjust_a-adjust.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libadjust_pic_a-adjust.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libadjust_plugin_a-adjust.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libblend_a-blend.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libblend_pic_a-blend.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libblend_plugin_a-blend.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libclone_a-clone.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libclone_pic_a-clone.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libclone_plugin_a-clone.Po \
@@ -683,9 +852,18 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/liblogo_a-logo.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/liblogo_pic_a-logo.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/liblogo_plugin_a-logo.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmarq_a-marq.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmarq_pic_a-marq.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmarq_plugin_a-marq.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmotionblur_a-motionblur.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmotionblur_pic_a-motionblur.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmotionblur_plugin_a-motionblur.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libscale_a-scale.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libscale_pic_a-scale.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libscale_plugin_a-scale.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libtime_a-time.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libtime_pic_a-time.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libtime_plugin_a-time.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libtransform_a-transform.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libtransform_pic_a-transform.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libtransform_plugin_a-transform.Po \
@@ -697,25 +875,32 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 DIST_SOURCES = $(libadjust_a_SOURCES) $(libadjust_pic_a_SOURCES) \
-	$(libadjust_plugin_a_SOURCES) $(libclone_a_SOURCES) \
-	$(libclone_pic_a_SOURCES) $(libclone_plugin_a_SOURCES) \
-	$(libcrop_a_SOURCES) $(libcrop_pic_a_SOURCES) \
-	$(libcrop_plugin_a_SOURCES) $(libdeinterlace_a_SOURCES) \
-	$(libdeinterlace_pic_a_SOURCES) \
+	$(libadjust_plugin_a_SOURCES) $(libblend_a_SOURCES) \
+	$(libblend_pic_a_SOURCES) $(libblend_plugin_a_SOURCES) \
+	$(libclone_a_SOURCES) $(libclone_pic_a_SOURCES) \
+	$(libclone_plugin_a_SOURCES) $(libcrop_a_SOURCES) \
+	$(libcrop_pic_a_SOURCES) $(libcrop_plugin_a_SOURCES) \
+	$(libdeinterlace_a_SOURCES) $(libdeinterlace_pic_a_SOURCES) \
 	$(libdeinterlace_plugin_a_SOURCES) $(libdistort_a_SOURCES) \
 	$(libdistort_pic_a_SOURCES) $(libdistort_plugin_a_SOURCES) \
 	$(libinvert_a_SOURCES) $(libinvert_pic_a_SOURCES) \
 	$(libinvert_plugin_a_SOURCES) $(liblogo_a_SOURCES) \
 	$(liblogo_pic_a_SOURCES) $(liblogo_plugin_a_SOURCES) \
-	$(libmotionblur_a_SOURCES) $(libmotionblur_pic_a_SOURCES) \
-	$(libmotionblur_plugin_a_SOURCES) $(libtransform_a_SOURCES) \
+	$(libmarq_a_SOURCES) $(libmarq_pic_a_SOURCES) \
+	$(libmarq_plugin_a_SOURCES) $(libmotionblur_a_SOURCES) \
+	$(libmotionblur_pic_a_SOURCES) \
+	$(libmotionblur_plugin_a_SOURCES) $(libscale_a_SOURCES) \
+	$(libscale_pic_a_SOURCES) $(libscale_plugin_a_SOURCES) \
+	$(libtime_a_SOURCES) $(libtime_pic_a_SOURCES) \
+	$(libtime_plugin_a_SOURCES) $(libtransform_a_SOURCES) \
 	$(libtransform_pic_a_SOURCES) $(libtransform_plugin_a_SOURCES) \
 	$(libwall_a_SOURCES) $(libwall_pic_a_SOURCES) \
 	$(libwall_plugin_a_SOURCES)
-DATA = $(libadjust_DATA) $(libclone_DATA) $(libcrop_DATA) \
-	$(libdeinterlace_DATA) $(libdistort_DATA) $(libinvert_DATA) \
-	$(liblogo_DATA) $(libmotionblur_DATA) $(libtransform_DATA) \
-	$(libwall_DATA)
+DATA = $(libadjust_DATA) $(libblend_DATA) $(libclone_DATA) \
+	$(libcrop_DATA) $(libdeinterlace_DATA) $(libdistort_DATA) \
+	$(libinvert_DATA) $(liblogo_DATA) $(libmarq_DATA) \
+	$(libmotionblur_DATA) $(libscale_DATA) $(libtime_DATA) \
+	$(libtransform_DATA) $(libwall_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -728,7 +913,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libadjust_a_SOURCES) $(libadjust_pic_a_SOURCES) $(libadjust_plugin_a_SOURCES) $(libclone_a_SOURCES) $(libclone_pic_a_SOURCES) $(libclone_plugin_a_SOURCES) $(libcrop_a_SOURCES) $(libcrop_pic_a_SOURCES) $(libcrop_plugin_a_SOURCES) $(libdeinterlace_a_SOURCES) $(libdeinterlace_pic_a_SOURCES) $(libdeinterlace_plugin_a_SOURCES) $(libdistort_a_SOURCES) $(libdistort_pic_a_SOURCES) $(libdistort_plugin_a_SOURCES) $(libinvert_a_SOURCES) $(libinvert_pic_a_SOURCES) $(libinvert_plugin_a_SOURCES) $(liblogo_a_SOURCES) $(liblogo_pic_a_SOURCES) $(liblogo_plugin_a_SOURCES) $(libmotionblur_a_SOURCES) $(libmotionblur_pic_a_SOURCES) $(libmotionblur_plugin_a_SOURCES) $(libtransform_a_SOURCES) $(libtransform_pic_a_SOURCES) $(libtransform_plugin_a_SOURCES) $(libwall_a_SOURCES) $(libwall_pic_a_SOURCES) $(libwall_plugin_a_SOURCES)
+SOURCES = $(libadjust_a_SOURCES) $(libadjust_pic_a_SOURCES) $(libadjust_plugin_a_SOURCES) $(libblend_a_SOURCES) $(libblend_pic_a_SOURCES) $(libblend_plugin_a_SOURCES) $(libclone_a_SOURCES) $(libclone_pic_a_SOURCES) $(libclone_plugin_a_SOURCES) $(libcrop_a_SOURCES) $(libcrop_pic_a_SOURCES) $(libcrop_plugin_a_SOURCES) $(libdeinterlace_a_SOURCES) $(libdeinterlace_pic_a_SOURCES) $(libdeinterlace_plugin_a_SOURCES) $(libdistort_a_SOURCES) $(libdistort_pic_a_SOURCES) $(libdistort_plugin_a_SOURCES) $(libinvert_a_SOURCES) $(libinvert_pic_a_SOURCES) $(libinvert_plugin_a_SOURCES) $(liblogo_a_SOURCES) $(liblogo_pic_a_SOURCES) $(liblogo_plugin_a_SOURCES) $(libmarq_a_SOURCES) $(libmarq_pic_a_SOURCES) $(libmarq_plugin_a_SOURCES) $(libmotionblur_a_SOURCES) $(libmotionblur_pic_a_SOURCES) $(libmotionblur_plugin_a_SOURCES) $(libscale_a_SOURCES) $(libscale_pic_a_SOURCES) $(libscale_plugin_a_SOURCES) $(libtime_a_SOURCES) $(libtime_pic_a_SOURCES) $(libtime_plugin_a_SOURCES) $(libtransform_a_SOURCES) $(libtransform_pic_a_SOURCES) $(libtransform_plugin_a_SOURCES) $(libwall_a_SOURCES) $(libwall_pic_a_SOURCES) $(libwall_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -785,6 +970,18 @@ libadjust_plugin.a: $(libadjust_plugin_a_OBJECTS) $(libadjust_plugin_a_DEPENDENC
 	-rm -f libadjust_plugin.a
 	$(libadjust_plugin_a_AR) libadjust_plugin.a $(libadjust_plugin_a_OBJECTS) $(libadjust_plugin_a_LIBADD)
 	$(RANLIB) libadjust_plugin.a
+libblend.a: $(libblend_a_OBJECTS) $(libblend_a_DEPENDENCIES) 
+	-rm -f libblend.a
+	$(libblend_a_AR) libblend.a $(libblend_a_OBJECTS) $(libblend_a_LIBADD)
+	$(RANLIB) libblend.a
+libblend_pic.a: $(libblend_pic_a_OBJECTS) $(libblend_pic_a_DEPENDENCIES) 
+	-rm -f libblend_pic.a
+	$(libblend_pic_a_AR) libblend_pic.a $(libblend_pic_a_OBJECTS) $(libblend_pic_a_LIBADD)
+	$(RANLIB) libblend_pic.a
+libblend_plugin.a: $(libblend_plugin_a_OBJECTS) $(libblend_plugin_a_DEPENDENCIES) 
+	-rm -f libblend_plugin.a
+	$(libblend_plugin_a_AR) libblend_plugin.a $(libblend_plugin_a_OBJECTS) $(libblend_plugin_a_LIBADD)
+	$(RANLIB) libblend_plugin.a
 libclone.a: $(libclone_a_OBJECTS) $(libclone_a_DEPENDENCIES) 
 	-rm -f libclone.a
 	$(libclone_a_AR) libclone.a $(libclone_a_OBJECTS) $(libclone_a_LIBADD)
@@ -857,6 +1054,18 @@ liblogo_plugin.a: $(liblogo_plugin_a_OBJECTS) $(liblogo_plugin_a_DEPENDENCIES)
 	-rm -f liblogo_plugin.a
 	$(liblogo_plugin_a_AR) liblogo_plugin.a $(liblogo_plugin_a_OBJECTS) $(liblogo_plugin_a_LIBADD)
 	$(RANLIB) liblogo_plugin.a
+libmarq.a: $(libmarq_a_OBJECTS) $(libmarq_a_DEPENDENCIES) 
+	-rm -f libmarq.a
+	$(libmarq_a_AR) libmarq.a $(libmarq_a_OBJECTS) $(libmarq_a_LIBADD)
+	$(RANLIB) libmarq.a
+libmarq_pic.a: $(libmarq_pic_a_OBJECTS) $(libmarq_pic_a_DEPENDENCIES) 
+	-rm -f libmarq_pic.a
+	$(libmarq_pic_a_AR) libmarq_pic.a $(libmarq_pic_a_OBJECTS) $(libmarq_pic_a_LIBADD)
+	$(RANLIB) libmarq_pic.a
+libmarq_plugin.a: $(libmarq_plugin_a_OBJECTS) $(libmarq_plugin_a_DEPENDENCIES) 
+	-rm -f libmarq_plugin.a
+	$(libmarq_plugin_a_AR) libmarq_plugin.a $(libmarq_plugin_a_OBJECTS) $(libmarq_plugin_a_LIBADD)
+	$(RANLIB) libmarq_plugin.a
 libmotionblur.a: $(libmotionblur_a_OBJECTS) $(libmotionblur_a_DEPENDENCIES) 
 	-rm -f libmotionblur.a
 	$(libmotionblur_a_AR) libmotionblur.a $(libmotionblur_a_OBJECTS) $(libmotionblur_a_LIBADD)
@@ -869,6 +1078,30 @@ libmotionblur_plugin.a: $(libmotionblur_plugin_a_OBJECTS) $(libmotionblur_plugin
 	-rm -f libmotionblur_plugin.a
 	$(libmotionblur_plugin_a_AR) libmotionblur_plugin.a $(libmotionblur_plugin_a_OBJECTS) $(libmotionblur_plugin_a_LIBADD)
 	$(RANLIB) libmotionblur_plugin.a
+libscale.a: $(libscale_a_OBJECTS) $(libscale_a_DEPENDENCIES) 
+	-rm -f libscale.a
+	$(libscale_a_AR) libscale.a $(libscale_a_OBJECTS) $(libscale_a_LIBADD)
+	$(RANLIB) libscale.a
+libscale_pic.a: $(libscale_pic_a_OBJECTS) $(libscale_pic_a_DEPENDENCIES) 
+	-rm -f libscale_pic.a
+	$(libscale_pic_a_AR) libscale_pic.a $(libscale_pic_a_OBJECTS) $(libscale_pic_a_LIBADD)
+	$(RANLIB) libscale_pic.a
+libscale_plugin.a: $(libscale_plugin_a_OBJECTS) $(libscale_plugin_a_DEPENDENCIES) 
+	-rm -f libscale_plugin.a
+	$(libscale_plugin_a_AR) libscale_plugin.a $(libscale_plugin_a_OBJECTS) $(libscale_plugin_a_LIBADD)
+	$(RANLIB) libscale_plugin.a
+libtime.a: $(libtime_a_OBJECTS) $(libtime_a_DEPENDENCIES) 
+	-rm -f libtime.a
+	$(libtime_a_AR) libtime.a $(libtime_a_OBJECTS) $(libtime_a_LIBADD)
+	$(RANLIB) libtime.a
+libtime_pic.a: $(libtime_pic_a_OBJECTS) $(libtime_pic_a_DEPENDENCIES) 
+	-rm -f libtime_pic.a
+	$(libtime_pic_a_AR) libtime_pic.a $(libtime_pic_a_OBJECTS) $(libtime_pic_a_LIBADD)
+	$(RANLIB) libtime_pic.a
+libtime_plugin.a: $(libtime_plugin_a_OBJECTS) $(libtime_plugin_a_DEPENDENCIES) 
+	-rm -f libtime_plugin.a
+	$(libtime_plugin_a_AR) libtime_plugin.a $(libtime_plugin_a_OBJECTS) $(libtime_plugin_a_LIBADD)
+	$(RANLIB) libtime_plugin.a
 libtransform.a: $(libtransform_a_OBJECTS) $(libtransform_a_DEPENDENCIES) 
 	-rm -f libtransform.a
 	$(libtransform_a_AR) libtransform.a $(libtransform_a_OBJECTS) $(libtransform_a_LIBADD)
@@ -903,6 +1136,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libadjust_a-adjust.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libadjust_pic_a-adjust.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libadjust_plugin_a-adjust.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libblend_a-blend.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libblend_pic_a-blend.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libblend_plugin_a-blend.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libclone_a-clone.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libclone_pic_a-clone.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libclone_plugin_a-clone.Po@am__quote@
@@ -921,9 +1157,18 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblogo_a-logo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblogo_pic_a-logo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblogo_plugin_a-logo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmarq_a-marq.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmarq_pic_a-marq.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmarq_plugin_a-marq.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmotionblur_a-motionblur.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmotionblur_pic_a-motionblur.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmotionblur_plugin_a-motionblur.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libscale_a-scale.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libscale_pic_a-scale.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libscale_plugin_a-scale.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtime_a-time.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtime_pic_a-time.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtime_plugin_a-time.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtransform_a-transform.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtransform_pic_a-transform.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtransform_plugin_a-transform.Po@am__quote@
@@ -1018,6 +1263,72 @@ libadjust_plugin_a-adjust.obj: adjust.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libadjust_plugin_a-adjust.Po' tmpdepfile='$(DEPDIR)/libadjust_plugin_a-adjust.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libadjust_plugin_a_CFLAGS) $(CFLAGS) -c -o libadjust_plugin_a-adjust.obj `if test -f 'adjust.c'; then $(CYGPATH_W) 'adjust.c'; else $(CYGPATH_W) '$(srcdir)/adjust.c'; fi`
+
+libblend_a-blend.o: blend.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libblend_a_CFLAGS) $(CFLAGS) -MT libblend_a-blend.o -MD -MP -MF "$(DEPDIR)/libblend_a-blend.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libblend_a-blend.o `test -f 'blend.c' || echo '$(srcdir)/'`blend.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libblend_a-blend.Tpo" "$(DEPDIR)/libblend_a-blend.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libblend_a-blend.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='blend.c' object='libblend_a-blend.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libblend_a-blend.Po' tmpdepfile='$(DEPDIR)/libblend_a-blend.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libblend_a_CFLAGS) $(CFLAGS) -c -o libblend_a-blend.o `test -f 'blend.c' || echo '$(srcdir)/'`blend.c
+
+libblend_a-blend.obj: blend.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libblend_a_CFLAGS) $(CFLAGS) -MT libblend_a-blend.obj -MD -MP -MF "$(DEPDIR)/libblend_a-blend.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libblend_a-blend.obj `if test -f 'blend.c'; then $(CYGPATH_W) 'blend.c'; else $(CYGPATH_W) '$(srcdir)/blend.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libblend_a-blend.Tpo" "$(DEPDIR)/libblend_a-blend.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libblend_a-blend.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='blend.c' object='libblend_a-blend.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libblend_a-blend.Po' tmpdepfile='$(DEPDIR)/libblend_a-blend.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libblend_a_CFLAGS) $(CFLAGS) -c -o libblend_a-blend.obj `if test -f 'blend.c'; then $(CYGPATH_W) 'blend.c'; else $(CYGPATH_W) '$(srcdir)/blend.c'; fi`
+
+libblend_pic_a-blend.o: blend.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libblend_pic_a_CFLAGS) $(CFLAGS) -MT libblend_pic_a-blend.o -MD -MP -MF "$(DEPDIR)/libblend_pic_a-blend.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libblend_pic_a-blend.o `test -f 'blend.c' || echo '$(srcdir)/'`blend.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libblend_pic_a-blend.Tpo" "$(DEPDIR)/libblend_pic_a-blend.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libblend_pic_a-blend.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='blend.c' object='libblend_pic_a-blend.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libblend_pic_a-blend.Po' tmpdepfile='$(DEPDIR)/libblend_pic_a-blend.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libblend_pic_a_CFLAGS) $(CFLAGS) -c -o libblend_pic_a-blend.o `test -f 'blend.c' || echo '$(srcdir)/'`blend.c
+
+libblend_pic_a-blend.obj: blend.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libblend_pic_a_CFLAGS) $(CFLAGS) -MT libblend_pic_a-blend.obj -MD -MP -MF "$(DEPDIR)/libblend_pic_a-blend.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libblend_pic_a-blend.obj `if test -f 'blend.c'; then $(CYGPATH_W) 'blend.c'; else $(CYGPATH_W) '$(srcdir)/blend.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libblend_pic_a-blend.Tpo" "$(DEPDIR)/libblend_pic_a-blend.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libblend_pic_a-blend.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='blend.c' object='libblend_pic_a-blend.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libblend_pic_a-blend.Po' tmpdepfile='$(DEPDIR)/libblend_pic_a-blend.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libblend_pic_a_CFLAGS) $(CFLAGS) -c -o libblend_pic_a-blend.obj `if test -f 'blend.c'; then $(CYGPATH_W) 'blend.c'; else $(CYGPATH_W) '$(srcdir)/blend.c'; fi`
+
+libblend_plugin_a-blend.o: blend.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libblend_plugin_a_CFLAGS) $(CFLAGS) -MT libblend_plugin_a-blend.o -MD -MP -MF "$(DEPDIR)/libblend_plugin_a-blend.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libblend_plugin_a-blend.o `test -f 'blend.c' || echo '$(srcdir)/'`blend.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libblend_plugin_a-blend.Tpo" "$(DEPDIR)/libblend_plugin_a-blend.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libblend_plugin_a-blend.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='blend.c' object='libblend_plugin_a-blend.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libblend_plugin_a-blend.Po' tmpdepfile='$(DEPDIR)/libblend_plugin_a-blend.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libblend_plugin_a_CFLAGS) $(CFLAGS) -c -o libblend_plugin_a-blend.o `test -f 'blend.c' || echo '$(srcdir)/'`blend.c
+
+libblend_plugin_a-blend.obj: blend.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libblend_plugin_a_CFLAGS) $(CFLAGS) -MT libblend_plugin_a-blend.obj -MD -MP -MF "$(DEPDIR)/libblend_plugin_a-blend.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libblend_plugin_a-blend.obj `if test -f 'blend.c'; then $(CYGPATH_W) 'blend.c'; else $(CYGPATH_W) '$(srcdir)/blend.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libblend_plugin_a-blend.Tpo" "$(DEPDIR)/libblend_plugin_a-blend.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libblend_plugin_a-blend.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='blend.c' object='libblend_plugin_a-blend.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libblend_plugin_a-blend.Po' tmpdepfile='$(DEPDIR)/libblend_plugin_a-blend.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libblend_plugin_a_CFLAGS) $(CFLAGS) -c -o libblend_plugin_a-blend.obj `if test -f 'blend.c'; then $(CYGPATH_W) 'blend.c'; else $(CYGPATH_W) '$(srcdir)/blend.c'; fi`
 
 libclone_a-clone.o: clone.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libclone_a_CFLAGS) $(CFLAGS) -MT libclone_a-clone.o -MD -MP -MF "$(DEPDIR)/libclone_a-clone.Tpo" \
@@ -1415,6 +1726,72 @@ liblogo_plugin_a-logo.obj: logo.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblogo_plugin_a_CFLAGS) $(CFLAGS) -c -o liblogo_plugin_a-logo.obj `if test -f 'logo.c'; then $(CYGPATH_W) 'logo.c'; else $(CYGPATH_W) '$(srcdir)/logo.c'; fi`
 
+libmarq_a-marq.o: marq.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmarq_a_CFLAGS) $(CFLAGS) -MT libmarq_a-marq.o -MD -MP -MF "$(DEPDIR)/libmarq_a-marq.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmarq_a-marq.o `test -f 'marq.c' || echo '$(srcdir)/'`marq.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmarq_a-marq.Tpo" "$(DEPDIR)/libmarq_a-marq.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmarq_a-marq.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='marq.c' object='libmarq_a-marq.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmarq_a-marq.Po' tmpdepfile='$(DEPDIR)/libmarq_a-marq.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmarq_a_CFLAGS) $(CFLAGS) -c -o libmarq_a-marq.o `test -f 'marq.c' || echo '$(srcdir)/'`marq.c
+
+libmarq_a-marq.obj: marq.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmarq_a_CFLAGS) $(CFLAGS) -MT libmarq_a-marq.obj -MD -MP -MF "$(DEPDIR)/libmarq_a-marq.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmarq_a-marq.obj `if test -f 'marq.c'; then $(CYGPATH_W) 'marq.c'; else $(CYGPATH_W) '$(srcdir)/marq.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmarq_a-marq.Tpo" "$(DEPDIR)/libmarq_a-marq.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmarq_a-marq.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='marq.c' object='libmarq_a-marq.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmarq_a-marq.Po' tmpdepfile='$(DEPDIR)/libmarq_a-marq.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmarq_a_CFLAGS) $(CFLAGS) -c -o libmarq_a-marq.obj `if test -f 'marq.c'; then $(CYGPATH_W) 'marq.c'; else $(CYGPATH_W) '$(srcdir)/marq.c'; fi`
+
+libmarq_pic_a-marq.o: marq.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmarq_pic_a_CFLAGS) $(CFLAGS) -MT libmarq_pic_a-marq.o -MD -MP -MF "$(DEPDIR)/libmarq_pic_a-marq.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmarq_pic_a-marq.o `test -f 'marq.c' || echo '$(srcdir)/'`marq.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmarq_pic_a-marq.Tpo" "$(DEPDIR)/libmarq_pic_a-marq.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmarq_pic_a-marq.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='marq.c' object='libmarq_pic_a-marq.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmarq_pic_a-marq.Po' tmpdepfile='$(DEPDIR)/libmarq_pic_a-marq.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmarq_pic_a_CFLAGS) $(CFLAGS) -c -o libmarq_pic_a-marq.o `test -f 'marq.c' || echo '$(srcdir)/'`marq.c
+
+libmarq_pic_a-marq.obj: marq.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmarq_pic_a_CFLAGS) $(CFLAGS) -MT libmarq_pic_a-marq.obj -MD -MP -MF "$(DEPDIR)/libmarq_pic_a-marq.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmarq_pic_a-marq.obj `if test -f 'marq.c'; then $(CYGPATH_W) 'marq.c'; else $(CYGPATH_W) '$(srcdir)/marq.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmarq_pic_a-marq.Tpo" "$(DEPDIR)/libmarq_pic_a-marq.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmarq_pic_a-marq.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='marq.c' object='libmarq_pic_a-marq.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmarq_pic_a-marq.Po' tmpdepfile='$(DEPDIR)/libmarq_pic_a-marq.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmarq_pic_a_CFLAGS) $(CFLAGS) -c -o libmarq_pic_a-marq.obj `if test -f 'marq.c'; then $(CYGPATH_W) 'marq.c'; else $(CYGPATH_W) '$(srcdir)/marq.c'; fi`
+
+libmarq_plugin_a-marq.o: marq.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmarq_plugin_a_CFLAGS) $(CFLAGS) -MT libmarq_plugin_a-marq.o -MD -MP -MF "$(DEPDIR)/libmarq_plugin_a-marq.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmarq_plugin_a-marq.o `test -f 'marq.c' || echo '$(srcdir)/'`marq.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmarq_plugin_a-marq.Tpo" "$(DEPDIR)/libmarq_plugin_a-marq.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmarq_plugin_a-marq.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='marq.c' object='libmarq_plugin_a-marq.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmarq_plugin_a-marq.Po' tmpdepfile='$(DEPDIR)/libmarq_plugin_a-marq.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmarq_plugin_a_CFLAGS) $(CFLAGS) -c -o libmarq_plugin_a-marq.o `test -f 'marq.c' || echo '$(srcdir)/'`marq.c
+
+libmarq_plugin_a-marq.obj: marq.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmarq_plugin_a_CFLAGS) $(CFLAGS) -MT libmarq_plugin_a-marq.obj -MD -MP -MF "$(DEPDIR)/libmarq_plugin_a-marq.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmarq_plugin_a-marq.obj `if test -f 'marq.c'; then $(CYGPATH_W) 'marq.c'; else $(CYGPATH_W) '$(srcdir)/marq.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmarq_plugin_a-marq.Tpo" "$(DEPDIR)/libmarq_plugin_a-marq.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmarq_plugin_a-marq.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='marq.c' object='libmarq_plugin_a-marq.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmarq_plugin_a-marq.Po' tmpdepfile='$(DEPDIR)/libmarq_plugin_a-marq.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmarq_plugin_a_CFLAGS) $(CFLAGS) -c -o libmarq_plugin_a-marq.obj `if test -f 'marq.c'; then $(CYGPATH_W) 'marq.c'; else $(CYGPATH_W) '$(srcdir)/marq.c'; fi`
+
 libmotionblur_a-motionblur.o: motionblur.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmotionblur_a_CFLAGS) $(CFLAGS) -MT libmotionblur_a-motionblur.o -MD -MP -MF "$(DEPDIR)/libmotionblur_a-motionblur.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libmotionblur_a-motionblur.o `test -f 'motionblur.c' || echo '$(srcdir)/'`motionblur.c; \
@@ -1480,6 +1857,138 @@ libmotionblur_plugin_a-motionblur.obj: motionblur.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmotionblur_plugin_a-motionblur.Po' tmpdepfile='$(DEPDIR)/libmotionblur_plugin_a-motionblur.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmotionblur_plugin_a_CFLAGS) $(CFLAGS) -c -o libmotionblur_plugin_a-motionblur.obj `if test -f 'motionblur.c'; then $(CYGPATH_W) 'motionblur.c'; else $(CYGPATH_W) '$(srcdir)/motionblur.c'; fi`
+
+libscale_a-scale.o: scale.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libscale_a_CFLAGS) $(CFLAGS) -MT libscale_a-scale.o -MD -MP -MF "$(DEPDIR)/libscale_a-scale.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libscale_a-scale.o `test -f 'scale.c' || echo '$(srcdir)/'`scale.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libscale_a-scale.Tpo" "$(DEPDIR)/libscale_a-scale.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libscale_a-scale.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='scale.c' object='libscale_a-scale.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libscale_a-scale.Po' tmpdepfile='$(DEPDIR)/libscale_a-scale.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libscale_a_CFLAGS) $(CFLAGS) -c -o libscale_a-scale.o `test -f 'scale.c' || echo '$(srcdir)/'`scale.c
+
+libscale_a-scale.obj: scale.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libscale_a_CFLAGS) $(CFLAGS) -MT libscale_a-scale.obj -MD -MP -MF "$(DEPDIR)/libscale_a-scale.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libscale_a-scale.obj `if test -f 'scale.c'; then $(CYGPATH_W) 'scale.c'; else $(CYGPATH_W) '$(srcdir)/scale.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libscale_a-scale.Tpo" "$(DEPDIR)/libscale_a-scale.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libscale_a-scale.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='scale.c' object='libscale_a-scale.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libscale_a-scale.Po' tmpdepfile='$(DEPDIR)/libscale_a-scale.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libscale_a_CFLAGS) $(CFLAGS) -c -o libscale_a-scale.obj `if test -f 'scale.c'; then $(CYGPATH_W) 'scale.c'; else $(CYGPATH_W) '$(srcdir)/scale.c'; fi`
+
+libscale_pic_a-scale.o: scale.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libscale_pic_a_CFLAGS) $(CFLAGS) -MT libscale_pic_a-scale.o -MD -MP -MF "$(DEPDIR)/libscale_pic_a-scale.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libscale_pic_a-scale.o `test -f 'scale.c' || echo '$(srcdir)/'`scale.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libscale_pic_a-scale.Tpo" "$(DEPDIR)/libscale_pic_a-scale.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libscale_pic_a-scale.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='scale.c' object='libscale_pic_a-scale.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libscale_pic_a-scale.Po' tmpdepfile='$(DEPDIR)/libscale_pic_a-scale.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libscale_pic_a_CFLAGS) $(CFLAGS) -c -o libscale_pic_a-scale.o `test -f 'scale.c' || echo '$(srcdir)/'`scale.c
+
+libscale_pic_a-scale.obj: scale.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libscale_pic_a_CFLAGS) $(CFLAGS) -MT libscale_pic_a-scale.obj -MD -MP -MF "$(DEPDIR)/libscale_pic_a-scale.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libscale_pic_a-scale.obj `if test -f 'scale.c'; then $(CYGPATH_W) 'scale.c'; else $(CYGPATH_W) '$(srcdir)/scale.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libscale_pic_a-scale.Tpo" "$(DEPDIR)/libscale_pic_a-scale.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libscale_pic_a-scale.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='scale.c' object='libscale_pic_a-scale.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libscale_pic_a-scale.Po' tmpdepfile='$(DEPDIR)/libscale_pic_a-scale.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libscale_pic_a_CFLAGS) $(CFLAGS) -c -o libscale_pic_a-scale.obj `if test -f 'scale.c'; then $(CYGPATH_W) 'scale.c'; else $(CYGPATH_W) '$(srcdir)/scale.c'; fi`
+
+libscale_plugin_a-scale.o: scale.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libscale_plugin_a_CFLAGS) $(CFLAGS) -MT libscale_plugin_a-scale.o -MD -MP -MF "$(DEPDIR)/libscale_plugin_a-scale.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libscale_plugin_a-scale.o `test -f 'scale.c' || echo '$(srcdir)/'`scale.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libscale_plugin_a-scale.Tpo" "$(DEPDIR)/libscale_plugin_a-scale.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libscale_plugin_a-scale.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='scale.c' object='libscale_plugin_a-scale.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libscale_plugin_a-scale.Po' tmpdepfile='$(DEPDIR)/libscale_plugin_a-scale.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libscale_plugin_a_CFLAGS) $(CFLAGS) -c -o libscale_plugin_a-scale.o `test -f 'scale.c' || echo '$(srcdir)/'`scale.c
+
+libscale_plugin_a-scale.obj: scale.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libscale_plugin_a_CFLAGS) $(CFLAGS) -MT libscale_plugin_a-scale.obj -MD -MP -MF "$(DEPDIR)/libscale_plugin_a-scale.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libscale_plugin_a-scale.obj `if test -f 'scale.c'; then $(CYGPATH_W) 'scale.c'; else $(CYGPATH_W) '$(srcdir)/scale.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libscale_plugin_a-scale.Tpo" "$(DEPDIR)/libscale_plugin_a-scale.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libscale_plugin_a-scale.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='scale.c' object='libscale_plugin_a-scale.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libscale_plugin_a-scale.Po' tmpdepfile='$(DEPDIR)/libscale_plugin_a-scale.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libscale_plugin_a_CFLAGS) $(CFLAGS) -c -o libscale_plugin_a-scale.obj `if test -f 'scale.c'; then $(CYGPATH_W) 'scale.c'; else $(CYGPATH_W) '$(srcdir)/scale.c'; fi`
+
+libtime_a-time.o: time.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtime_a_CFLAGS) $(CFLAGS) -MT libtime_a-time.o -MD -MP -MF "$(DEPDIR)/libtime_a-time.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libtime_a-time.o `test -f 'time.c' || echo '$(srcdir)/'`time.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libtime_a-time.Tpo" "$(DEPDIR)/libtime_a-time.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libtime_a-time.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='time.c' object='libtime_a-time.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libtime_a-time.Po' tmpdepfile='$(DEPDIR)/libtime_a-time.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtime_a_CFLAGS) $(CFLAGS) -c -o libtime_a-time.o `test -f 'time.c' || echo '$(srcdir)/'`time.c
+
+libtime_a-time.obj: time.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtime_a_CFLAGS) $(CFLAGS) -MT libtime_a-time.obj -MD -MP -MF "$(DEPDIR)/libtime_a-time.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libtime_a-time.obj `if test -f 'time.c'; then $(CYGPATH_W) 'time.c'; else $(CYGPATH_W) '$(srcdir)/time.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libtime_a-time.Tpo" "$(DEPDIR)/libtime_a-time.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libtime_a-time.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='time.c' object='libtime_a-time.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libtime_a-time.Po' tmpdepfile='$(DEPDIR)/libtime_a-time.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtime_a_CFLAGS) $(CFLAGS) -c -o libtime_a-time.obj `if test -f 'time.c'; then $(CYGPATH_W) 'time.c'; else $(CYGPATH_W) '$(srcdir)/time.c'; fi`
+
+libtime_pic_a-time.o: time.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtime_pic_a_CFLAGS) $(CFLAGS) -MT libtime_pic_a-time.o -MD -MP -MF "$(DEPDIR)/libtime_pic_a-time.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libtime_pic_a-time.o `test -f 'time.c' || echo '$(srcdir)/'`time.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libtime_pic_a-time.Tpo" "$(DEPDIR)/libtime_pic_a-time.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libtime_pic_a-time.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='time.c' object='libtime_pic_a-time.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libtime_pic_a-time.Po' tmpdepfile='$(DEPDIR)/libtime_pic_a-time.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtime_pic_a_CFLAGS) $(CFLAGS) -c -o libtime_pic_a-time.o `test -f 'time.c' || echo '$(srcdir)/'`time.c
+
+libtime_pic_a-time.obj: time.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtime_pic_a_CFLAGS) $(CFLAGS) -MT libtime_pic_a-time.obj -MD -MP -MF "$(DEPDIR)/libtime_pic_a-time.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libtime_pic_a-time.obj `if test -f 'time.c'; then $(CYGPATH_W) 'time.c'; else $(CYGPATH_W) '$(srcdir)/time.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libtime_pic_a-time.Tpo" "$(DEPDIR)/libtime_pic_a-time.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libtime_pic_a-time.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='time.c' object='libtime_pic_a-time.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libtime_pic_a-time.Po' tmpdepfile='$(DEPDIR)/libtime_pic_a-time.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtime_pic_a_CFLAGS) $(CFLAGS) -c -o libtime_pic_a-time.obj `if test -f 'time.c'; then $(CYGPATH_W) 'time.c'; else $(CYGPATH_W) '$(srcdir)/time.c'; fi`
+
+libtime_plugin_a-time.o: time.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtime_plugin_a_CFLAGS) $(CFLAGS) -MT libtime_plugin_a-time.o -MD -MP -MF "$(DEPDIR)/libtime_plugin_a-time.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libtime_plugin_a-time.o `test -f 'time.c' || echo '$(srcdir)/'`time.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libtime_plugin_a-time.Tpo" "$(DEPDIR)/libtime_plugin_a-time.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libtime_plugin_a-time.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='time.c' object='libtime_plugin_a-time.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libtime_plugin_a-time.Po' tmpdepfile='$(DEPDIR)/libtime_plugin_a-time.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtime_plugin_a_CFLAGS) $(CFLAGS) -c -o libtime_plugin_a-time.o `test -f 'time.c' || echo '$(srcdir)/'`time.c
+
+libtime_plugin_a-time.obj: time.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtime_plugin_a_CFLAGS) $(CFLAGS) -MT libtime_plugin_a-time.obj -MD -MP -MF "$(DEPDIR)/libtime_plugin_a-time.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libtime_plugin_a-time.obj `if test -f 'time.c'; then $(CYGPATH_W) 'time.c'; else $(CYGPATH_W) '$(srcdir)/time.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libtime_plugin_a-time.Tpo" "$(DEPDIR)/libtime_plugin_a-time.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libtime_plugin_a-time.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='time.c' object='libtime_plugin_a-time.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libtime_plugin_a-time.Po' tmpdepfile='$(DEPDIR)/libtime_plugin_a-time.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtime_plugin_a_CFLAGS) $(CFLAGS) -c -o libtime_plugin_a-time.obj `if test -f 'time.c'; then $(CYGPATH_W) 'time.c'; else $(CYGPATH_W) '$(srcdir)/time.c'; fi`
 
 libtransform_a-transform.o: transform.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtransform_a_CFLAGS) $(CFLAGS) -MT libtransform_a-transform.o -MD -MP -MF "$(DEPDIR)/libtransform_a-transform.Tpo" \
@@ -1631,6 +2140,24 @@ uninstall-libadjustDATA:
 	  echo " rm -f $(DESTDIR)$(libadjustdir)/$$f"; \
 	  rm -f $(DESTDIR)$(libadjustdir)/$$f; \
 	done
+libblendDATA_INSTALL = $(INSTALL_DATA)
+install-libblendDATA: $(libblend_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libblenddir)
+	@list='$(libblend_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libblendDATA_INSTALL) $$d$$p $(DESTDIR)$(libblenddir)/$$f"; \
+	  $(libblendDATA_INSTALL) $$d$$p $(DESTDIR)$(libblenddir)/$$f; \
+	done
+
+uninstall-libblendDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libblend_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libblenddir)/$$f"; \
+	  rm -f $(DESTDIR)$(libblenddir)/$$f; \
+	done
 libcloneDATA_INSTALL = $(INSTALL_DATA)
 install-libcloneDATA: $(libclone_DATA)
 	@$(NORMAL_INSTALL)
@@ -1739,6 +2266,24 @@ uninstall-liblogoDATA:
 	  echo " rm -f $(DESTDIR)$(liblogodir)/$$f"; \
 	  rm -f $(DESTDIR)$(liblogodir)/$$f; \
 	done
+libmarqDATA_INSTALL = $(INSTALL_DATA)
+install-libmarqDATA: $(libmarq_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libmarqdir)
+	@list='$(libmarq_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libmarqDATA_INSTALL) $$d$$p $(DESTDIR)$(libmarqdir)/$$f"; \
+	  $(libmarqDATA_INSTALL) $$d$$p $(DESTDIR)$(libmarqdir)/$$f; \
+	done
+
+uninstall-libmarqDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libmarq_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libmarqdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libmarqdir)/$$f; \
+	done
 libmotionblurDATA_INSTALL = $(INSTALL_DATA)
 install-libmotionblurDATA: $(libmotionblur_DATA)
 	@$(NORMAL_INSTALL)
@@ -1756,6 +2301,42 @@ uninstall-libmotionblurDATA:
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
 	  echo " rm -f $(DESTDIR)$(libmotionblurdir)/$$f"; \
 	  rm -f $(DESTDIR)$(libmotionblurdir)/$$f; \
+	done
+libscaleDATA_INSTALL = $(INSTALL_DATA)
+install-libscaleDATA: $(libscale_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libscaledir)
+	@list='$(libscale_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libscaleDATA_INSTALL) $$d$$p $(DESTDIR)$(libscaledir)/$$f"; \
+	  $(libscaleDATA_INSTALL) $$d$$p $(DESTDIR)$(libscaledir)/$$f; \
+	done
+
+uninstall-libscaleDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libscale_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libscaledir)/$$f"; \
+	  rm -f $(DESTDIR)$(libscaledir)/$$f; \
+	done
+libtimeDATA_INSTALL = $(INSTALL_DATA)
+install-libtimeDATA: $(libtime_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libtimedir)
+	@list='$(libtime_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libtimeDATA_INSTALL) $$d$$p $(DESTDIR)$(libtimedir)/$$f"; \
+	  $(libtimeDATA_INSTALL) $$d$$p $(DESTDIR)$(libtimedir)/$$f; \
+	done
+
+uninstall-libtimeDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libtime_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libtimedir)/$$f"; \
+	  rm -f $(DESTDIR)$(libtimedir)/$$f; \
 	done
 libtransformDATA_INSTALL = $(INSTALL_DATA)
 install-libtransformDATA: $(libtransform_DATA)
@@ -1968,7 +2549,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libadjustdir) $(DESTDIR)$(libclonedir) $(DESTDIR)$(libcropdir) $(DESTDIR)$(libdeinterlacedir) $(DESTDIR)$(libdistortdir) $(DESTDIR)$(libinvertdir) $(DESTDIR)$(liblogodir) $(DESTDIR)$(libmotionblurdir) $(DESTDIR)$(libtransformdir) $(DESTDIR)$(libwalldir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libadjustdir) $(DESTDIR)$(libblenddir) $(DESTDIR)$(libclonedir) $(DESTDIR)$(libcropdir) $(DESTDIR)$(libdeinterlacedir) $(DESTDIR)$(libdistortdir) $(DESTDIR)$(libinvertdir) $(DESTDIR)$(liblogodir) $(DESTDIR)$(libmarqdir) $(DESTDIR)$(libmotionblurdir) $(DESTDIR)$(libscaledir) $(DESTDIR)$(libtimedir) $(DESTDIR)$(libtransformdir) $(DESTDIR)$(libwalldir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -2015,12 +2596,13 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-libadjustDATA install-libcloneDATA \
-	install-libcropDATA install-libdeinterlaceDATA \
-	install-libdistortDATA install-libinvertDATA \
-	install-liblogoDATA install-libmotionblurDATA \
-	install-libtransformDATA install-libvlcLIBRARIES \
-	install-libwallDATA
+install-data-am: install-libadjustDATA install-libblendDATA \
+	install-libcloneDATA install-libcropDATA \
+	install-libdeinterlaceDATA install-libdistortDATA \
+	install-libinvertDATA install-liblogoDATA install-libmarqDATA \
+	install-libmotionblurDATA install-libscaleDATA \
+	install-libtimeDATA install-libtransformDATA \
+	install-libvlcLIBRARIES install-libwallDATA
 
 install-exec-am:
 
@@ -2048,10 +2630,12 @@ ps: ps-recursive
 ps-am:
 
 uninstall-am: uninstall-info-am uninstall-libadjustDATA \
-	uninstall-libcloneDATA uninstall-libcropDATA \
-	uninstall-libdeinterlaceDATA uninstall-libdistortDATA \
-	uninstall-libinvertDATA uninstall-liblogoDATA \
-	uninstall-libmotionblurDATA uninstall-libtransformDATA \
+	uninstall-libblendDATA uninstall-libcloneDATA \
+	uninstall-libcropDATA uninstall-libdeinterlaceDATA \
+	uninstall-libdistortDATA uninstall-libinvertDATA \
+	uninstall-liblogoDATA uninstall-libmarqDATA \
+	uninstall-libmotionblurDATA uninstall-libscaleDATA \
+	uninstall-libtimeDATA uninstall-libtransformDATA \
 	uninstall-libvlcLIBRARIES uninstall-libwallDATA
 
 uninstall-info: uninstall-info-recursive
@@ -2065,10 +2649,12 @@ uninstall-info: uninstall-info-recursive
 	install-data install-data-am install-data-recursive \
 	install-exec install-exec-am install-exec-recursive \
 	install-info install-info-am install-info-recursive \
-	install-libadjustDATA install-libcloneDATA install-libcropDATA \
-	install-libdeinterlaceDATA install-libdistortDATA \
-	install-libinvertDATA install-liblogoDATA \
-	install-libmotionblurDATA install-libtransformDATA \
+	install-libadjustDATA install-libblendDATA install-libcloneDATA \
+	install-libcropDATA install-libdeinterlaceDATA \
+	install-libdistortDATA install-libinvertDATA \
+	install-liblogoDATA install-libmarqDATA \
+	install-libmotionblurDATA install-libscaleDATA \
+	install-libtimeDATA install-libtransformDATA \
 	install-libvlcLIBRARIES install-libwallDATA install-man \
 	install-recursive install-strip installcheck installcheck-am \
 	installdirs installdirs-am installdirs-recursive \
@@ -2078,10 +2664,12 @@ uninstall-info: uninstall-info-recursive
 	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
 	uninstall uninstall-am uninstall-info-am \
 	uninstall-info-recursive uninstall-libadjustDATA \
-	uninstall-libcloneDATA uninstall-libcropDATA \
-	uninstall-libdeinterlaceDATA uninstall-libdistortDATA \
-	uninstall-libinvertDATA uninstall-liblogoDATA \
-	uninstall-libmotionblurDATA uninstall-libtransformDATA \
+	uninstall-libblendDATA uninstall-libcloneDATA \
+	uninstall-libcropDATA uninstall-libdeinterlaceDATA \
+	uninstall-libdistortDATA uninstall-libinvertDATA \
+	uninstall-liblogoDATA uninstall-libmarqDATA \
+	uninstall-libmotionblurDATA uninstall-libscaleDATA \
+	uninstall-libtimeDATA uninstall-libtransformDATA \
 	uninstall-libvlcLIBRARIES uninstall-libwallDATA \
 	uninstall-recursive
 
@@ -2092,9 +2680,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 libtransform_plugin$(LIBEXT): $(libtransform_plugin_a_OBJECTS)
@@ -2156,6 +2744,30 @@ libdeinterlace_plugin$(LIBEXT): $(libdeinterlace_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libdeinterlace_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin deinterlace\` ; $(CXXLINK) $(libdeinterlace_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin deinterlace` ;; \
 	  objc) echo $(OBJCLINK) $(libdeinterlace_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin deinterlace\` ; $(OBJCLINK) $(libdeinterlace_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin deinterlace` ;; \
 	  c|*) echo $(LINK) $(libdeinterlace_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin deinterlace\` ; $(LINK) $(libdeinterlace_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin deinterlace` ;; \
+	esac
+libblend_plugin$(LIBEXT): $(libblend_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage blend` in \
+	  c++) echo $(CXXLINK) $(libblend_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin blend\` ; $(CXXLINK) $(libblend_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin blend` ;; \
+	  objc) echo $(OBJCLINK) $(libblend_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin blend\` ; $(OBJCLINK) $(libblend_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin blend` ;; \
+	  c|*) echo $(LINK) $(libblend_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin blend\` ; $(LINK) $(libblend_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin blend` ;; \
+	esac
+libscale_plugin$(LIBEXT): $(libscale_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage scale` in \
+	  c++) echo $(CXXLINK) $(libscale_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin scale\` ; $(CXXLINK) $(libscale_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin scale` ;; \
+	  objc) echo $(OBJCLINK) $(libscale_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin scale\` ; $(OBJCLINK) $(libscale_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin scale` ;; \
+	  c|*) echo $(LINK) $(libscale_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin scale\` ; $(LINK) $(libscale_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin scale` ;; \
+	esac
+libtime_plugin$(LIBEXT): $(libtime_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage time` in \
+	  c++) echo $(CXXLINK) $(libtime_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin time\` ; $(CXXLINK) $(libtime_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin time` ;; \
+	  objc) echo $(OBJCLINK) $(libtime_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin time\` ; $(OBJCLINK) $(libtime_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin time` ;; \
+	  c|*) echo $(LINK) $(libtime_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin time\` ; $(LINK) $(libtime_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin time` ;; \
+	esac
+libmarq_plugin$(LIBEXT): $(libmarq_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage marq` in \
+	  c++) echo $(CXXLINK) $(libmarq_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin marq\` ; $(CXXLINK) $(libmarq_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin marq` ;; \
+	  objc) echo $(OBJCLINK) $(libmarq_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin marq\` ; $(OBJCLINK) $(libmarq_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin marq` ;; \
+	  c|*) echo $(LINK) $(libmarq_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin marq\` ; $(LINK) $(libmarq_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin marq` ;; \
 	esac
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -11,7 +11,7 @@ CFLAGS=$(OPTFLAGS) -DHAVE_AV_CONFIG_H -I.. -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_S
 
 OBJS= common.o utils.o mem.o allcodecs.o \
       mpegvideo.o jrevdct.o jfdctfst.o jfdctint.o\
-      mpegaudio.o ac3enc.o mjpeg.o resample.o dsputil.o \
+      mpegaudio.o ac3enc.o mjpeg.o resample.o resample2.o dsputil.o \
       motion_est.o imgconvert.o imgresample.o \
       mpeg12.o mpegaudiodec.o pcm.o simple_idct.o \
       ratecontrol.o adpcm.o eval.o dv.o error_resilience.o \
@@ -20,7 +20,8 @@ OBJS= common.o utils.o mem.o allcodecs.o \
       roqvideo.o dpcm.o interplayvideo.o xan.o rpza.o cinepak.o msrle.o \
       msvideo1.o vqavideo.o idcinvideo.o adx.o rational.o faandct.o 8bps.o \
       smc.o parser.o flicvideo.o truemotion1.o vmdav.o lcl.o qtrle.o g726.o \
-      flac.o vp3dsp.o integer.o
+      flac.o vp3dsp.o integer.o snow.o tscc.o sonic.o ulti.o h264idct.o \
+      qdrw.o xl.o rangecoder.o
 
 ifeq ($(AMR_NB),yes)
 ifeq ($(AMR_NB_FIXED),yes)
@@ -55,7 +56,7 @@ ASM_OBJS=
 
 # codecs which are patented in some non free countries like the us
 ifeq ($(CONFIG_RISKY),yes)
-OBJS+= h263.o msmpeg4.o h263dec.o svq1.o rv10.o wmadec.o indeo3.o
+OBJS+= h263.o h261.o msmpeg4.o h263dec.o svq1.o rv10.o wmadec.o indeo3.o
 endif
 
 ifeq ($(HAVE_XVMC_ACCEL),yes)
@@ -73,6 +74,13 @@ OBJS+= liba52/bit_allocate.o liba52/bitstream.o liba52/downmix.o \
 endif
 endif
 
+# currently using libdts for dts decoding
+ifeq ($(CONFIG_DTS),yes)
+OBJS+= dtsdec.o
+CFLAGS += $(DTS_INC)
+EXTRALIBS += -ldts
+endif
+
 ifeq ($(CONFIG_FAAD),yes)
 OBJS+= faad.o
 ifeq ($(CONFIG_FAADBIN),yes)
@@ -87,9 +95,14 @@ OBJS+= faac.o
 EXTRALIBS += -lfaac
 endif
 
+ifeq ($(CONFIG_XVID),yes)
+OBJS+= xvidff.o
+EXTRALIBS += -lxvidcore
+endif
+
 ifeq ($(CONFIG_PP),yes)
 ifeq ($(SHARED_PP),yes)
-EXTRALIBS += -lpostproc
+EXTRALIBS += -L$(VPATH)/libpostproc -lpostproc
 else
 # LIBS += libpostproc/libpostproc.a ... should be fixed
 OBJS += libpostproc/postprocess.o
@@ -155,7 +168,8 @@ endif
 
 ifeq ($(TARGET_ALTIVEC),yes)
 OBJS += ppc/dsputil_altivec.o ppc/mpegvideo_altivec.o ppc/idct_altivec.o \
-        ppc/fft_altivec.o ppc/gmc_altivec.o ppc/fdct_altivec.o
+        ppc/fft_altivec.o ppc/gmc_altivec.o ppc/fdct_altivec.o \
+        ppc/dsputil_h264_altivec.o
 endif
 
 ifeq ($(TARGET_ARCH_SH4),yes)
@@ -193,6 +207,9 @@ $(LIB): $(OBJS) $(AMRLIBS)
 	$(RANLIB) $@
 
 $(SLIB): $(OBJS)
+ifeq ($(CONFIG_PP),yes)
+	$(MAKE) -C $(VPATH)/libpostproc
+endif
 ifeq ($(CONFIG_WIN32),yes)
 	$(CC) $(SHFLAGS) -Wl,--output-def,$(@:.dll=.def) -o $@ $(OBJS) $(EXTRALIBS) $(AMREXTRALIBS)
 	-lib /machine:i386 /def:$(@:.dll=.def)
@@ -266,12 +283,15 @@ fft-test: fft-test.o $(LIB)
 ifeq ($(BUILD_SHARED),yes)
 install: all install-headers
 ifeq ($(CONFIG_WIN32),yes)
-	install -s -m 755 $(SLIB) "$(prefix)"
+	install $(INSTALLSTRIP) -m 755 $(SLIB) "$(prefix)"
 else
 	install -d $(prefix)/lib
-	install -s -m 755 $(SLIB) $(prefix)/lib/libavcodec-$(VERSION).so
+	install $(INSTALLSTRIP) -m 755 $(SLIB) $(prefix)/lib/libavcodec-$(VERSION).so
 	ln -sf libavcodec-$(VERSION).so $(prefix)/lib/libavcodec.so
 	ldconfig || true
+endif
+ifeq ($(CONFIG_PP),yes)
+	$(MAKE) -C $(VPATH)/libpostproc $@
 endif
 else
 install:

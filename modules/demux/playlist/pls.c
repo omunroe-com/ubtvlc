@@ -2,7 +2,7 @@
  * pls.c : PLS playlist format import
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: pls.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: pls.c 8030 2004-06-22 21:22:13Z gbazin $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
@@ -28,6 +28,7 @@
 #include <stdlib.h>                                      /* malloc(), free() */
 
 #include <vlc/vlc.h>
+#include <vlc/input.h>
 #include <vlc/intf.h>
 
 #include <errno.h>                                                 /* ENOMEM */

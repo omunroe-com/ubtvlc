@@ -2,7 +2,7 @@
  * standard.c: standard stream output module
  *****************************************************************************
  * Copyright (C) 2003-2004 VideoLAN
- * $Id: standard.c 7650 2004-05-13 18:22:18Z gbazin $
+ * $Id: standard.c 9201 2004-11-06 16:51:46Z yoann $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -26,10 +26,13 @@
  *****************************************************************************/
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #include <vlc/vlc.h>
 #include <vlc/sout.h>
+
+#ifdef HAVE_UNISTD_H
+#    include <unistd.h>
+#endif
 
 #include "announce.h"
 #include "network.h"
@@ -52,6 +55,10 @@
 #define NAME_TEXT N_("Session name")
 #define NAME_LONGTEXT N_( \
     "Name of the session that will be announced with SAP or SLP" )
+
+#define GROUP_TEXT N_("Session groupname")
+#define GROUP_LONGTEXT N_( \
+    "Name of the group that will be announced for the session" )
 
 #define SAP_TEXT N_("SAP announcing")
 #define SAP_LONGTEXT N_("Announce this session with SAP")
@@ -81,8 +88,10 @@ vlc_module_begin();
                 URL_LONGTEXT, VLC_FALSE );
 
     add_bool( SOUT_CFG_PREFIX "sap", 0, NULL, SAP_TEXT, SAP_LONGTEXT, VLC_TRUE );
-    add_string( SOUT_CFG_PREFIX "name", "", NULL, NAME_TEXT,NAME_LONGTEXT
-                                     , VLC_TRUE );
+    add_string( SOUT_CFG_PREFIX "name", "", NULL, NAME_TEXT, NAME_LONGTEXT,
+                                        VLC_TRUE );
+    add_string( SOUT_CFG_PREFIX "group", "", NULL, GROUP_TEXT, GROUP_LONGTEXT,
+                                        VLC_TRUE );
     add_bool( SOUT_CFG_PREFIX "sap-ipv6", 0, NULL, SAPv6_TEXT, SAPv6_LONGTEXT,
                                         VLC_TRUE );
 
@@ -97,8 +106,8 @@ vlc_module_end();
  *****************************************************************************/
 static const char *ppsz_sout_options[] = {
     "access", "mux", "url",
-    "sap", "name", "sap-ipv6",
-    "slp",NULL
+    "sap", "name", "sap-ipv6", "group",
+    "slp", NULL
 };
 
 #define DEFAULT_IPV6_SCOPE '8'
@@ -135,7 +144,7 @@ static int Open( vlc_object_t *p_this )
 
     char                *psz_mux_byext = NULL;
 
-    sout_ParseCfg( p_stream, SOUT_CFG_PREFIX, ppsz_sout_options,
+    sout_CfgParse( p_stream, SOUT_CFG_PREFIX, ppsz_sout_options,
                    p_stream->p_cfg );
 
     var_Get( p_stream, SOUT_CFG_PREFIX "access", &val );
@@ -223,9 +232,14 @@ static int Open( vlc_object_t *p_this )
         {
             psz_mux = strdup("ts");
         }
-        else
+        else if( psz_mux_byext )
         {
             psz_mux = strdup(psz_mux_byext);
+        }
+        else
+        {
+            msg_Err( p_stream, "no mux specified or found by extention" );
+            return VLC_EGENERIC;
         }
     }
     else if( psz_mux && !psz_access )
@@ -317,13 +331,21 @@ static int Open( vlc_object_t *p_this )
         var_Get( p_stream, SOUT_CFG_PREFIX "name", &val );
         if( *val.psz_string )
         {
-            p_session->psz_name = val.psz_string;
+            p_session->psz_name = strdup( val.psz_string );
         }
         else
         {
-            free( val.psz_string );
             p_session->psz_name = strdup( psz_url );
         }
+        free( val.psz_string );
+
+        var_Get( p_stream, SOUT_CFG_PREFIX "group", &val );
+        if( *val.psz_string )
+        {
+            p_session->psz_group = strdup( val.psz_string );
+        }
+        free( val.psz_string );
+
         var_Get( p_stream, SOUT_CFG_PREFIX "sap-ipv6", &val );
         p_method->i_ip_version = val.b_bool ? 6 : 4;
 
@@ -350,6 +372,9 @@ static int Open( vlc_object_t *p_this )
             p_stream->p_sys->p_session = p_session;
         }
         vlc_UrlClean( &url );
+
+        if( p_method->psz_address) free( p_method->psz_address );
+        free( p_method );
     }
 
     /* *** Register with slp *** */
@@ -397,6 +422,7 @@ static int Open( vlc_object_t *p_this )
     if( psz_mux ) free( psz_mux );
     if( psz_url ) free( psz_url );
 
+
     return VLC_SUCCESS;
 }
 
@@ -412,6 +438,7 @@ static void Close( vlc_object_t * p_this )
     if( p_sys->p_session != NULL )
     {
         sout_AnnounceUnRegister( p_stream->p_sout, p_sys->p_session );
+        sout_AnnounceSessionDestroy( p_sys->p_session );
     }
 
 #ifdef HAVE_SLP_H

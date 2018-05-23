@@ -2,11 +2,12 @@
  * libvlc.c: main libvlc source
  *****************************************************************************
  * Copyright (C) 1998-2004 VideoLAN
- * $Id: libvlc.c 7398 2004-04-20 17:57:58Z gbazin $
+ * $Id: libvlc.c 9056 2004-10-24 21:07:58Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
- *          Gildas Bazin <gbazin@netcourrier.com>
+ *          Gildas Bazin <gbazin@videolan.org>
+ *          Derk-Jan Hartman <hartman at videolan dot org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,10 +35,9 @@
  * Preamble
  *****************************************************************************/
 #include <vlc/vlc.h>
+#include <vlc/input.h>
 
-#ifdef HAVE_ERRNO_H
-#   include <errno.h>                                              /* ENOMEM */
-#endif
+#include <errno.h>                                                 /* ENOMEM */
 #include <stdio.h>                                              /* sprintf() */
 #include <string.h>                                            /* strerror() */
 #include <stdlib.h>                                                /* free() */
@@ -60,13 +60,14 @@
 #   include <locale.h>
 #endif
 
+#ifdef HAVE_HAL
+#   include <hal/libhal.h>
+#endif
+
 #include "vlc_cpu.h"                                        /* CPU detection */
 #include "os_specific.h"
 
 #include "vlc_error.h"
-
-#include "stream_control.h"
-#include "input_ext-intf.h"
 
 #include "vlc_playlist.h"
 #include "vlc_interface.h"
@@ -98,11 +99,14 @@ static void Version       ( void );
 
 #ifdef WIN32
 static void ShowConsole   ( void );
+static void PauseConsole  ( void );
 #endif
 static int  ConsoleWidth  ( void );
 
 static int  VerboseCallback( vlc_object_t *, char const *,
                              vlc_value_t, vlc_value_t, void * );
+
+static void InitDeviceValues( vlc_t * );
 
 /*****************************************************************************
  * vlc_current_object: return the current object.
@@ -207,7 +211,6 @@ int VLC_Create( void )
         return VLC_EGENERIC;
     }
     p_vlc->thread_id = 0;
-    vlc_thread_set_priority( p_vlc, VLC_THREAD_PRIORITY_LOW );
 
     p_vlc->psz_object_name = "root";
 
@@ -215,6 +218,7 @@ int VLC_Create( void )
     vlc_mutex_init( p_vlc, &p_vlc->config_lock );
 #ifdef SYS_DARWIN
     vlc_mutex_init( p_vlc, &p_vlc->quicktime_lock );
+    vlc_thread_set_priority( p_vlc, VLC_THREAD_PRIORITY_LOW );
 #endif
 
     /* Store our newly allocated structure in the global list */
@@ -246,7 +250,6 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     vlc_t *      p_vlc = vlc_current_object( i_object );
     module_t    *p_help_module;
     playlist_t  *p_playlist;
-    vlc_value_t  lockval;
 
     if( !p_vlc )
     {
@@ -285,22 +288,13 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
      * main module. We need to do this at this stage to be able to display
      * a short help if required by the user. (short help == main module
      * options) */
-    var_Create( p_libvlc, "libvlc", VLC_VAR_MUTEX );
-    var_Get( p_libvlc, "libvlc", &lockval );
-    vlc_mutex_lock( lockval.p_address );
-    if( libvlc.p_module_bank == NULL )
-    {
-        module_InitBank( p_vlc );
-        module_LoadMain( p_vlc );
-    }
-    vlc_mutex_unlock( lockval.p_address );
-    var_Destroy( p_libvlc, "libvlc" );
+    module_InitBank( p_vlc );
 
     /* Hack: insert the help module here */
     p_help_module = vlc_object_create( p_vlc, VLC_OBJECT_MODULE );
     if( p_help_module == NULL )
     {
-        /*module_EndBank( p_vlc );*/
+        module_EndBank( p_vlc );
         if( i_object ) vlc_object_release( p_vlc );
         return VLC_EGENERIC;
     }
@@ -315,7 +309,7 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
         vlc_object_detach( p_help_module );
         config_Free( p_help_module );
         vlc_object_destroy( p_help_module );
-        /*module_EndBank( p_vlc );*/
+        module_EndBank( p_vlc );
         if( i_object ) vlc_object_release( p_vlc );
         return VLC_EGENERIC;
     }
@@ -340,15 +334,65 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     p_vlc->psz_homedir = config_GetHomeDir();
     p_vlc->psz_configfile = config_GetPsz( p_vlc, "config" );
 
+    /* Check for plugins cache options */
+    if( config_GetInt( p_vlc, "reset-plugins-cache" ) )
+    {
+        libvlc.p_module_bank->b_cache_delete = VLC_TRUE;
+    }
+
     /* Hack: remove the help module here */
     vlc_object_detach( p_help_module );
     /* End hack */
+
+    /* Will be re-done properly later on */
+    p_vlc->p_libvlc->i_verbose = config_GetInt( p_vlc, "verbose" );
+
+    /* Check for daemon mode */
+#ifndef WIN32
+    if( config_GetInt( p_vlc, "daemon" ) )
+    {
+#if HAVE_DAEMON
+        if( daemon( 0, 0) != 0 )
+        {
+            msg_Err( p_vlc, "Unable to fork vlc to daemon mode" );
+            b_exit = VLC_TRUE;
+        }
+
+        p_vlc->p_libvlc->b_daemon = VLC_TRUE;
+
+#else
+        pid_t i_pid;
+
+        if( ( i_pid = fork() ) < 0 )
+        {
+            msg_Err( p_vlc, "Unable to fork vlc to daemon mode" );
+            b_exit = VLC_TRUE;
+        }
+        else if( i_pid )
+        {
+            /* This is the parent, exit right now */
+            msg_Dbg( p_vlc, "closing parent process" );
+            b_exit = VLC_TRUE;
+        }
+        else
+        {
+            /* We are the child */
+            msg_Dbg( p_vlc, "daemon spawned" );
+            close( STDIN_FILENO );
+            close( STDOUT_FILENO );
+            close( STDERR_FILENO );
+
+            p_vlc->p_libvlc->b_daemon = VLC_TRUE;
+        }
+#endif
+    }
+#endif
 
     if( b_exit )
     {
         config_Free( p_help_module );
         vlc_object_destroy( p_help_module );
-        /*module_EndBank( p_vlc );*/
+        module_EndBank( p_vlc );
         if( i_object ) vlc_object_release( p_vlc );
         return VLC_EEXIT;
     }
@@ -366,22 +410,25 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     psz_language = config_GetPsz( p_vlc, "language" );
     if( psz_language && *psz_language && strcmp( psz_language, "auto" ) )
     {
+        vlc_bool_t b_cache_delete = libvlc.p_module_bank->b_cache_delete;
+
         /* Reset the default domain */
         SetLanguage( psz_language );
 
         /* Translate "C" to the language code: "fr", "en_GB", "nl", "ru"... */
         msg_Dbg( p_vlc, "translation test: code is \"%s\"", _("C") );
 
-        textdomain( PACKAGE );
+        textdomain( PACKAGE_NAME );
 
 #if defined( ENABLE_UTF8 )
-        bind_textdomain_codeset( PACKAGE, "UTF-8" );
+        bind_textdomain_codeset( PACKAGE_NAME, "UTF-8" );
 #endif
 
         module_EndBank( p_vlc );
         module_InitBank( p_vlc );
-        module_LoadMain( p_vlc );
+        config_LoadConfigFile( p_vlc, "main" );
         config_LoadCmdLine( p_vlc, &i_argc, ppsz_argv, VLC_TRUE );
+        libvlc.p_module_bank->b_cache_delete = b_cache_delete;
     }
     if( psz_language ) free( psz_language );
 #endif
@@ -452,10 +499,15 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     {
         config_Free( p_help_module );
         vlc_object_destroy( p_help_module );
-        /*module_EndBank( p_vlc );*/
+        module_EndBank( p_vlc );
         if( i_object ) vlc_object_release( p_vlc );
         return VLC_EEXIT;
     }
+
+    /*
+     * Init device values
+     */
+    InitDeviceValues( p_vlc );
 
     /*
      * Override default configuration with config file settings
@@ -475,13 +527,13 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
         ShowConsole();
         /* Pause the console because it's destroyed when we exit */
         fprintf( stderr, "The command line options couldn't be loaded, check "
-                 "that they are valid.\nPress the RETURN key to continue..." );
-        getchar();
+                 "that they are valid.\n" );
+        PauseConsole();
 #endif
         vlc_object_detach( p_help_module );
         config_Free( p_help_module );
         vlc_object_destroy( p_help_module );
-        /*module_EndBank( p_vlc );*/
+        module_EndBank( p_vlc );
         if( i_object ) vlc_object_release( p_vlc );
         return VLC_EGENERIC;
     }
@@ -592,7 +644,7 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
         {
             module_Unneed( p_vlc, p_vlc->p_memcpy_module );
         }
-        /*module_EndBank( p_vlc );*/
+        module_EndBank( p_vlc );
         if( i_object ) vlc_object_release( p_vlc );
         return VLC_EGENERIC;
     }
@@ -676,6 +728,17 @@ int VLC_AddIntf( int i_object, char const *psz_module,
         return VLC_ENOOBJ;
     }
 
+#ifndef WIN32
+    if( p_vlc->p_libvlc->b_daemon && b_block && !psz_module )
+    {
+        /* Daemon mode hack.
+         * We prefer the dummy interface if none is specified. */
+        char *psz_interface = config_GetPsz( p_vlc, "intf" );
+        if( !psz_interface || !*psz_interface ) psz_module = "dummy";
+        if( psz_interface ) free( psz_interface );
+    }
+#endif
+
     /* Try to create the interface */
     p_intf = intf_Create( p_vlc, psz_module ? psz_module : "$intf" );
 
@@ -706,81 +769,10 @@ int VLC_AddIntf( int i_object, char const *psz_module,
 }
 
 /*****************************************************************************
- * VLC_Destroy: stop playing and destroy everything.
- *****************************************************************************
- * This function requests the running threads to finish, waits for their
- * termination, and destroys their structure.
- *****************************************************************************/
-int VLC_Destroy( int i_object )
-{
-    vlc_t *p_vlc = vlc_current_object( i_object );
-
-    if( !p_vlc )
-    {
-        return VLC_ENOOBJ;
-    }
-
-    /*
-     * Free allocated memory
-     */
-    if( p_vlc->p_memcpy_module )
-    {
-        module_Unneed( p_vlc, p_vlc->p_memcpy_module );
-        p_vlc->p_memcpy_module = NULL;
-    }
-
-    if( p_vlc->psz_homedir )
-    {
-        free( p_vlc->psz_homedir );
-        p_vlc->psz_homedir = NULL;
-    }
-
-    if( p_vlc->psz_configfile )
-    {
-        free( p_vlc->psz_configfile );
-        p_vlc->psz_configfile = NULL;
-    }
-
-    if( p_vlc->p_hotkeys )
-    {
-        free( p_vlc->p_hotkeys );
-        p_vlc->p_hotkeys = NULL;
-    }
-
-    /*
-     * XXX: Free module bank !
-     */
-    /*module_EndBank( p_vlc );*/
-
-    /*
-     * System specific cleaning code
-     */
-    system_End( p_vlc );
-
-    /* Destroy mutexes */
-    vlc_mutex_destroy( &p_vlc->config_lock );
-#ifdef SYS_DARWIN
-    vlc_mutex_destroy( &p_vlc->quicktime_lock );
-#endif
-
-    vlc_object_detach( p_vlc );
-
-    /* Release object before destroying it */
-    if( i_object ) vlc_object_release( p_vlc );
-
-    vlc_object_destroy( p_vlc );
-
-    /* Stop thread system: last one out please shut the door! */
-    vlc_threads_end( p_libvlc );
-
-    return VLC_SUCCESS;
-}
-
-/*****************************************************************************
  * VLC_Die: ask vlc to die.
  *****************************************************************************
  * This function sets p_vlc->b_die to VLC_TRUE, but does not do any other
- * task. It is your duty to call VLC_End and VLC_Destroy afterwards.
+ * task. It is your duty to call VLC_CleanUp and VLC_Destroy afterwards.
  *****************************************************************************/
 int VLC_Die( int i_object )
 {
@@ -798,238 +790,9 @@ int VLC_Die( int i_object )
 }
 
 /*****************************************************************************
- * VLC_AddTarget: adds a target for playing.
- *****************************************************************************
- * This function adds psz_target to the current playlist. If a playlist does
- * not exist, it will create one.
+ * VLC_CleanUp: CleanUp all the intf, playlist, vout, aout
  *****************************************************************************/
-int VLC_AddTarget( int i_object, char const *psz_target,
-                   char const **ppsz_options, int i_options,
-                   int i_mode, int i_pos )
-{
-    int i_err;
-    playlist_t *p_playlist;
-    vlc_t *p_vlc = vlc_current_object( i_object );
-
-    if( !p_vlc )
-    {
-        return VLC_ENOOBJ;
-    }
-
-    p_playlist = vlc_object_find( p_vlc, VLC_OBJECT_PLAYLIST, FIND_ANYWHERE );
-
-    if( p_playlist == NULL )
-    {
-        msg_Dbg( p_vlc, "no playlist present, creating one" );
-        p_playlist = playlist_Create( p_vlc );
-
-        if( p_playlist == NULL )
-        {
-            if( i_object ) vlc_object_release( p_vlc );
-            return VLC_EGENERIC;
-        }
-
-        vlc_object_yield( p_playlist );
-    }
-
-    i_err = playlist_AddExt( p_playlist, psz_target, psz_target,
-                             i_mode, i_pos, -1, ppsz_options, i_options);
-
-    vlc_object_release( p_playlist );
-
-    if( i_object ) vlc_object_release( p_vlc );
-    return i_err;
-}
-
-/*****************************************************************************
- * VLC_Set: set a vlc variable
- *****************************************************************************
- *
- *****************************************************************************/
-int VLC_Set( int i_object, char const *psz_var, vlc_value_t value )
-{
-    vlc_t *p_vlc = vlc_current_object( i_object );
-    int i_ret;
-
-    if( !p_vlc )
-    {
-        return VLC_ENOOBJ;
-    }
-
-    /* FIXME: Temporary hack for Mozilla, if variable starts with conf:: then
-     * we handle it as a configuration variable. Don't tell Gildas :) -- sam */
-    if( !strncmp( psz_var, "conf::", 6 ) )
-    {
-        module_config_t *p_item;
-        char const *psz_newvar = psz_var + 6;
-
-        p_item = config_FindConfig( VLC_OBJECT(p_vlc), psz_newvar );
-
-        if( p_item )
-        {
-            switch( p_item->i_type )
-            {
-                case CONFIG_ITEM_BOOL:
-                    config_PutInt( p_vlc, psz_newvar, value.b_bool );
-                    break;
-                case CONFIG_ITEM_INTEGER:
-                    config_PutInt( p_vlc, psz_newvar, value.i_int );
-                    break;
-                case CONFIG_ITEM_FLOAT:
-                    config_PutFloat( p_vlc, psz_newvar, value.f_float );
-                    break;
-                default:
-                    config_PutPsz( p_vlc, psz_newvar, value.psz_string );
-                    break;
-            }
-            if( i_object ) vlc_object_release( p_vlc );
-            return VLC_SUCCESS;
-        }
-    }
-
-    i_ret = var_Set( p_vlc, psz_var, value );
-
-    if( i_object ) vlc_object_release( p_vlc );
-    return i_ret;
-}
-
-/*****************************************************************************
- * VLC_Get: get a vlc variable
- *****************************************************************************
- *
- *****************************************************************************/
-int VLC_Get( int i_object, char const *psz_var, vlc_value_t *p_value )
-{
-    vlc_t *p_vlc = vlc_current_object( i_object );
-    int i_ret;
-
-    if( !p_vlc )
-    {
-        return VLC_ENOOBJ;
-    }
-
-    i_ret = var_Get( p_vlc, psz_var, p_value );
-
-    if( i_object ) vlc_object_release( p_vlc );
-    return i_ret;
-}
-
-/* FIXME: temporary hacks */
-
-
-/*****************************************************************************
- * VLC_IsPlaying: Query for Playlist Status
- *****************************************************************************/
-vlc_bool_t VLC_IsPlaying( int i_object )
-{
-
-    playlist_t * p_playlist;
-    vlc_bool_t   playing;
-
-    vlc_t *p_vlc = vlc_current_object( i_object );
-
-    /* Check that the handle is valid */
-    if( !p_vlc )
-    {
-        return VLC_ENOOBJ;
-    }
-
-    p_playlist = vlc_object_find( p_vlc, VLC_OBJECT_PLAYLIST, FIND_CHILD );
-
-    if( !p_playlist )
-    {
-        if( i_object ) vlc_object_release( p_vlc );
-        return VLC_ENOOBJ;
-    }
-
-    playing = playlist_IsPlaying( p_playlist );
-
-    vlc_object_release( p_playlist );
-
-    if( i_object ) vlc_object_release( p_vlc );
-
-    return playing;
-
-}
-
-
-/*****************************************************************************
- * VLC_ClearPlaylist: Query for Playlist Status
- *
- * return: 0
- *****************************************************************************/
-int VLC_ClearPlaylist( int i_object )
-{
-
-    playlist_t * p_playlist;
-    vlc_t *p_vlc = vlc_current_object( i_object );
-
-    /* Check that the handle is valid */
-    if( !p_vlc )
-    {
-        return VLC_ENOOBJ;
-    }
-
-    p_playlist = vlc_object_find( p_vlc, VLC_OBJECT_PLAYLIST, FIND_CHILD );
-
-    if( !p_playlist )
-    {
-        if( i_object ) vlc_object_release( p_vlc );
-        return VLC_ENOOBJ;
-    }
-
-    playlist_Clear(p_playlist);
-
-    vlc_object_release( p_playlist );
-
-    if( i_object ) vlc_object_release( p_vlc );
-    return 0;
-}
-
-
-/*****************************************************************************
- * VLC_Play: play
- *****************************************************************************/
-int VLC_Play( int i_object )
-{
-    playlist_t * p_playlist;
-    vlc_t *p_vlc = vlc_current_object( i_object );
-
-    /* Check that the handle is valid */
-    if( !p_vlc )
-    {
-        return VLC_ENOOBJ;
-    }
-
-    p_playlist = vlc_object_find( p_vlc, VLC_OBJECT_PLAYLIST, FIND_CHILD );
-
-    if( !p_playlist )
-    {
-        if( i_object ) vlc_object_release( p_vlc );
-        return VLC_ENOOBJ;
-    }
-
-    vlc_mutex_lock( &p_playlist->object_lock );
-    if( p_playlist->i_size )
-    {
-        vlc_mutex_unlock( &p_playlist->object_lock );
-        playlist_Play( p_playlist );
-    }
-    else
-    {
-        vlc_mutex_unlock( &p_playlist->object_lock );
-    }
-
-    vlc_object_release( p_playlist );
-
-    if( i_object ) vlc_object_release( p_vlc );
-    return VLC_SUCCESS;
-}
-
-/*****************************************************************************
- * VLC_Stop: stop
- *****************************************************************************/
-int VLC_Stop( int i_object )
+int VLC_CleanUp( int i_object )
 {
     intf_thread_t      * p_intf;
     playlist_t         * p_playlist;
@@ -1048,7 +811,6 @@ int VLC_Stop( int i_object )
      * Ask the interfaces to stop and destroy them
      */
     msg_Dbg( p_vlc, "removing all interfaces" );
-
     while( (p_intf = vlc_object_find( p_vlc, VLC_OBJECT_INTF, FIND_CHILD )) )
     {
         intf_StopThread( p_intf );
@@ -1060,7 +822,6 @@ int VLC_Stop( int i_object )
     /*
      * Free playlists
      */
-
     msg_Dbg( p_vlc, "removing all playlists" );
     while( (p_playlist = vlc_object_find( p_vlc, VLC_OBJECT_PLAYLIST,
                                           FIND_CHILD )) )
@@ -1109,13 +870,320 @@ int VLC_Stop( int i_object )
 }
 
 /*****************************************************************************
+ * VLC_Destroy: Destroy everything.
+ *****************************************************************************
+ * This function requests the running threads to finish, waits for their
+ * termination, and destroys their structure.
+ *****************************************************************************/
+int VLC_Destroy( int i_object )
+{
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    /*
+     * Free allocated memory
+     */
+    if( p_vlc->p_memcpy_module )
+    {
+        module_Unneed( p_vlc, p_vlc->p_memcpy_module );
+        p_vlc->p_memcpy_module = NULL;
+    }
+
+    /*
+     * Free module bank !
+     */
+    module_EndBank( p_vlc );
+
+    if( p_vlc->psz_homedir )
+    {
+        free( p_vlc->psz_homedir );
+        p_vlc->psz_homedir = NULL;
+    }
+
+    if( p_vlc->psz_configfile )
+    {
+        free( p_vlc->psz_configfile );
+        p_vlc->psz_configfile = NULL;
+    }
+
+    if( p_vlc->p_hotkeys )
+    {
+        free( p_vlc->p_hotkeys );
+        p_vlc->p_hotkeys = NULL;
+    }
+
+    /*
+     * System specific cleaning code
+     */
+    system_End( p_vlc );
+
+    /* Destroy mutexes */
+    vlc_mutex_destroy( &p_vlc->config_lock );
+
+    vlc_object_detach( p_vlc );
+
+    /* Release object before destroying it */
+    if( i_object ) vlc_object_release( p_vlc );
+
+    vlc_object_destroy( p_vlc );
+
+    /* Stop thread system: last one out please shut the door! */
+    vlc_threads_end( p_libvlc );
+
+    return VLC_SUCCESS;
+}
+
+/*****************************************************************************
+ * VLC_VariableSet: set a vlc variable
+ *****************************************************************************/
+int VLC_VariableSet( int i_object, char const *psz_var, vlc_value_t value )
+{
+    vlc_t *p_vlc = vlc_current_object( i_object );
+    int i_ret;
+
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    /* FIXME: Temporary hack for Mozilla, if variable starts with conf:: then
+     * we handle it as a configuration variable. Don't tell Gildas :) -- sam */
+    if( !strncmp( psz_var, "conf::", 6 ) )
+    {
+        module_config_t *p_item;
+        char const *psz_newvar = psz_var + 6;
+
+        p_item = config_FindConfig( VLC_OBJECT(p_vlc), psz_newvar );
+
+        if( p_item )
+        {
+            switch( p_item->i_type )
+            {
+                case CONFIG_ITEM_BOOL:
+                    config_PutInt( p_vlc, psz_newvar, value.b_bool );
+                    break;
+                case CONFIG_ITEM_INTEGER:
+                    config_PutInt( p_vlc, psz_newvar, value.i_int );
+                    break;
+                case CONFIG_ITEM_FLOAT:
+                    config_PutFloat( p_vlc, psz_newvar, value.f_float );
+                    break;
+                default:
+                    config_PutPsz( p_vlc, psz_newvar, value.psz_string );
+                    break;
+            }
+            if( i_object ) vlc_object_release( p_vlc );
+            return VLC_SUCCESS;
+        }
+    }
+
+    i_ret = var_Set( p_vlc, psz_var, value );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return i_ret;
+}
+
+/*****************************************************************************
+ * VLC_VariableGet: get a vlc variable
+ *****************************************************************************/
+int VLC_VariableGet( int i_object, char const *psz_var, vlc_value_t *p_value )
+{
+    vlc_t *p_vlc = vlc_current_object( i_object );
+    int i_ret;
+
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    i_ret = var_Get( p_vlc , psz_var, p_value );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return i_ret;
+}
+
+/*****************************************************************************
+ * VLC_AddTarget: adds a target for playing.
+ *****************************************************************************
+ * This function adds psz_target to the current playlist. If a playlist does
+ * not exist, it will create one.
+ *****************************************************************************/
+int VLC_AddTarget( int i_object, char const *psz_target,
+                   char const **ppsz_options, int i_options,
+                   int i_mode, int i_pos )
+{
+    int i_err;
+    playlist_t *p_playlist;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    p_playlist = vlc_object_find( p_vlc, VLC_OBJECT_PLAYLIST, FIND_ANYWHERE );
+
+    if( p_playlist == NULL )
+    {
+        msg_Dbg( p_vlc, "no playlist present, creating one" );
+        p_playlist = playlist_Create( p_vlc );
+
+        if( p_playlist == NULL )
+        {
+            if( i_object ) vlc_object_release( p_vlc );
+            return VLC_EGENERIC;
+        }
+
+        vlc_object_yield( p_playlist );
+    }
+
+    i_err = playlist_AddExt( p_playlist, psz_target, psz_target,
+                             i_mode, i_pos, -1, ppsz_options, i_options);
+
+    vlc_object_release( p_playlist );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return i_err;
+}
+
+/*****************************************************************************
+ * VLC_Play: play
+ *****************************************************************************/
+int VLC_Play( int i_object )
+{
+    playlist_t * p_playlist;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    p_playlist = vlc_object_find( p_vlc, VLC_OBJECT_PLAYLIST, FIND_CHILD );
+
+    if( !p_playlist )
+    {
+        if( i_object ) vlc_object_release( p_vlc );
+        return VLC_ENOOBJ;
+    }
+
+    playlist_Play( p_playlist );
+    vlc_object_release( p_playlist );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return VLC_SUCCESS;
+}
+
+/*****************************************************************************
  * VLC_Pause: toggle pause
  *****************************************************************************/
 int VLC_Pause( int i_object )
 {
-    input_thread_t *p_input;
+    playlist_t * p_playlist;
     vlc_t *p_vlc = vlc_current_object( i_object );
 
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    p_playlist = vlc_object_find( p_vlc, VLC_OBJECT_PLAYLIST, FIND_CHILD );
+
+    if( !p_playlist )
+    {
+        if( i_object ) vlc_object_release( p_vlc );
+        return VLC_ENOOBJ;
+    }
+
+    playlist_Pause( p_playlist );
+    vlc_object_release( p_playlist );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return VLC_SUCCESS;
+}
+
+/*****************************************************************************
+ * VLC_Pause: toggle pause
+ *****************************************************************************/
+int VLC_Stop( int i_object )
+{
+    playlist_t * p_playlist;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    p_playlist = vlc_object_find( p_vlc, VLC_OBJECT_PLAYLIST, FIND_CHILD );
+
+    if( !p_playlist )
+    {
+        if( i_object ) vlc_object_release( p_vlc );
+        return VLC_ENOOBJ;
+    }
+
+    playlist_Stop( p_playlist );
+    vlc_object_release( p_playlist );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return VLC_SUCCESS;
+}
+
+/*****************************************************************************
+ * VLC_IsPlaying: Query for Playlist Status
+ *****************************************************************************/
+vlc_bool_t VLC_IsPlaying( int i_object )
+{
+    playlist_t * p_playlist;
+    vlc_bool_t   b_playing;
+
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    p_playlist = vlc_object_find( p_vlc, VLC_OBJECT_PLAYLIST, FIND_CHILD );
+
+    if( !p_playlist )
+    {
+        if( i_object ) vlc_object_release( p_vlc );
+        return VLC_ENOOBJ;
+    }
+
+    b_playing = playlist_IsPlaying( p_playlist );
+    vlc_object_release( p_playlist );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return b_playing;
+}
+
+/**
+ * Get the current position in a input
+ *
+ * Return the current position as a float
+ * \note For some inputs, this will be unknown.
+ *
+ * \param i_object a vlc object id
+ * \return a float in the range of 0.0 - 1.0
+ */
+float VLC_PositionGet( int i_object )
+{
+    input_thread_t *p_input;
+    vlc_value_t val;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
     if( !p_vlc )
     {
         return VLC_ENOOBJ;
@@ -1129,8 +1197,489 @@ int VLC_Pause( int i_object )
         return VLC_ENOOBJ;
     }
 
-    input_SetStatus( p_input, INPUT_STATUS_PAUSE );
+    var_Get( p_input, "position", &val );
     vlc_object_release( p_input );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return val.f_float;
+}
+
+/**
+ * Set the current position in a input
+ *
+ * Set the current position in a input and then return
+ * the current position as a float.
+ * \note For some inputs, this will be unknown.
+ *
+ * \param i_object a vlc object id
+ * \param i_position a float in the range of 0.0 - 1.0
+ * \return a float in the range of 0.0 - 1.0
+ */
+float VLC_PositionSet( int i_object, float i_position )
+{
+    input_thread_t *p_input;
+    vlc_value_t val;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    p_input = vlc_object_find( p_vlc, VLC_OBJECT_INPUT, FIND_CHILD );
+
+    if( !p_input )
+    {
+        if( i_object ) vlc_object_release( p_vlc );
+        return VLC_ENOOBJ;
+    }
+
+    val.f_float = i_position;
+    var_Set( p_input, "position", val );
+    var_Get( p_input, "position", &val );
+    vlc_object_release( p_input );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return val.f_float;
+}
+
+/**
+ * Get the current position in a input
+ *
+ * Return the current position in seconds from the start.
+ * \note For some inputs, this will be unknown.
+ *
+ * \param i_object a vlc object id
+ * \return the offset from 0:00 in seconds
+ */
+int VLC_TimeGet( int i_object )
+{
+    input_thread_t *p_input;
+    vlc_value_t val;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    p_input = vlc_object_find( p_vlc, VLC_OBJECT_INPUT, FIND_CHILD );
+
+    if( !p_input )
+    {
+        if( i_object ) vlc_object_release( p_vlc );
+        return VLC_ENOOBJ;
+    }
+
+    var_Get( p_input, "time", &val );
+    vlc_object_release( p_input );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return val.i_time  / 1000000;
+}
+
+/**
+ * Seek to a position in the current input
+ *
+ * Seek i_seconds in the current input. If b_relative is set,
+ * then the seek will be relative to the current position, otherwise
+ * it will seek to i_seconds from the beginning of the input.
+ * \note For some inputs, this will be unknown.
+ *
+ * \param i_object a vlc object id
+ * \param i_seconds seconds from current position or from beginning of input
+ * \param b_relative seek relative from current position
+ * \return VLC_SUCCESS on success
+ */
+int VLC_TimeSet( int i_object, int i_seconds, vlc_bool_t b_relative )
+{
+    input_thread_t *p_input;
+    vlc_value_t val;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    p_input = vlc_object_find( p_vlc, VLC_OBJECT_INPUT, FIND_CHILD );
+
+    if( !p_input )
+    {
+        if( i_object ) vlc_object_release( p_vlc );
+        return VLC_ENOOBJ;
+    }
+
+    if( b_relative )
+    {
+        val.i_time = i_seconds * 1000000;
+        var_Set( p_input, "time-offset", val );
+    }
+    else
+    {
+        val.i_time = i_seconds * 1000000;
+        var_Set( p_input, "time", val );
+    }
+    vlc_object_release( p_input );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return VLC_SUCCESS;
+}
+
+/**
+ * Get the total length of a input
+ *
+ * Return the total length in seconds from the current input.
+ * \note For some inputs, this will be unknown.
+ *
+ * \param i_object a vlc object id
+ * \return the length in seconds
+ */
+int VLC_LengthGet( int i_object )
+{
+    input_thread_t *p_input;
+    vlc_value_t val;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    p_input = vlc_object_find( p_vlc, VLC_OBJECT_INPUT, FIND_CHILD );
+
+    if( !p_input )
+    {
+        if( i_object ) vlc_object_release( p_vlc );
+        return VLC_ENOOBJ;
+    }
+
+    var_Get( p_input, "length", &val );
+    vlc_object_release( p_input );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return val.i_time  / 1000000;
+}
+
+/**
+ * Play the input faster than realtime
+ *
+ * 2x, 4x, 8x faster than realtime
+ * \note For some inputs, this will be impossible.
+ *
+ * \param i_object a vlc object id
+ * \return the current speedrate
+ */
+float VLC_SpeedFaster( int i_object )
+{
+    input_thread_t *p_input;
+    vlc_value_t val;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    p_input = vlc_object_find( p_vlc, VLC_OBJECT_INPUT, FIND_CHILD );
+
+    if( !p_input )
+    {
+        if( i_object ) vlc_object_release( p_vlc );
+        return VLC_ENOOBJ;
+    }
+
+    val.b_bool = VLC_TRUE;
+    var_Set( p_input, "rate-faster", val );
+    var_Get( p_input, "rate", &val );
+    vlc_object_release( p_input );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return val.f_float / INPUT_RATE_DEFAULT;
+}
+
+/**
+ * Play the input slower than realtime
+ *
+ * 1/2x, 1/4x, 1/8x slower than realtime
+ * \note For some inputs, this will be impossible.
+ *
+ * \param i_object a vlc object id
+ * \return the current speedrate
+ */
+float VLC_SpeedSlower( int i_object )
+{
+    input_thread_t *p_input;
+    vlc_value_t val;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    p_input = vlc_object_find( p_vlc, VLC_OBJECT_INPUT, FIND_CHILD );
+
+    if( !p_input )
+    {
+        if( i_object ) vlc_object_release( p_vlc );
+        return VLC_ENOOBJ;
+    }
+
+    val.b_bool = VLC_TRUE;
+    var_Set( p_input, "rate-slower", val );
+    var_Get( p_input, "rate", &val );
+    vlc_object_release( p_input );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return val.f_float / INPUT_RATE_DEFAULT;
+}
+
+/**
+ * Return the current playlist item
+ *
+ * Returns the index of the playlistitem that is currently selected for play.
+ * This is valid even if nothing is currently playing.
+ *
+ * \param i_object a vlc object id
+ * \return the current index
+ */
+int VLC_PlaylistIndex( int i_object )
+{
+    int i_index;
+    playlist_t * p_playlist;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    p_playlist = vlc_object_find( p_vlc, VLC_OBJECT_PLAYLIST, FIND_CHILD );
+
+    if( !p_playlist )
+    {
+        if( i_object ) vlc_object_release( p_vlc );
+        return VLC_ENOOBJ;
+    }
+
+    i_index = p_playlist->i_index;
+    vlc_object_release( p_playlist );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return i_index;
+}
+
+/**
+ * Total amount of items in the playlist
+ *
+ * \param i_object a vlc object id
+ * \return amount of playlist items
+ */
+int VLC_PlaylistNumberOfItems( int i_object )
+{
+    int i_size;
+    playlist_t * p_playlist;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    p_playlist = vlc_object_find( p_vlc, VLC_OBJECT_PLAYLIST, FIND_CHILD );
+
+    if( !p_playlist )
+    {
+        if( i_object ) vlc_object_release( p_vlc );
+        return VLC_ENOOBJ;
+    }
+
+    i_size = p_playlist->i_size;
+    vlc_object_release( p_playlist );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return i_size;
+}
+
+/**
+ * Next playlist item
+ *
+ * Skip to the next playlistitem and play it.
+ *
+ * \param i_object a vlc object id
+ * \return VLC_SUCCESS on success
+ */
+int VLC_PlaylistNext( int i_object )
+{
+    playlist_t * p_playlist;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    p_playlist = vlc_object_find( p_vlc, VLC_OBJECT_PLAYLIST, FIND_CHILD );
+
+    if( !p_playlist )
+    {
+        if( i_object ) vlc_object_release( p_vlc );
+        return VLC_ENOOBJ;
+    }
+
+    playlist_Next( p_playlist );
+    vlc_object_release( p_playlist );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return VLC_SUCCESS;
+}
+
+/**
+ * Previous playlist item
+ *
+ * Skip to the previous playlistitem and play it.
+ *
+ * \param i_object a vlc object id
+ * \return VLC_SUCCESS on success
+ */
+int VLC_PlaylistPrev( int i_object )
+{
+    playlist_t * p_playlist;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    p_playlist = vlc_object_find( p_vlc, VLC_OBJECT_PLAYLIST, FIND_CHILD );
+
+    if( !p_playlist )
+    {
+        if( i_object ) vlc_object_release( p_vlc );
+        return VLC_ENOOBJ;
+    }
+
+    playlist_Prev( p_playlist );
+    vlc_object_release( p_playlist );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return VLC_SUCCESS;
+}
+
+
+/*****************************************************************************
+ * VLC_PlaylistClear: Empty the playlist
+ *****************************************************************************/
+int VLC_PlaylistClear( int i_object )
+{
+    int i_err;
+    playlist_t * p_playlist;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    p_playlist = vlc_object_find( p_vlc, VLC_OBJECT_PLAYLIST, FIND_CHILD );
+
+    if( !p_playlist )
+    {
+        if( i_object ) vlc_object_release( p_vlc );
+        return VLC_ENOOBJ;
+    }
+
+    i_err = playlist_Clear( p_playlist );
+
+    vlc_object_release( p_playlist );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return i_err;
+}
+
+/**
+ * Change the volume
+ *
+ * \param i_object a vlc object id
+ * \param i_volume something in a range from 0-200
+ * \return the new volume (range 0-200 %)
+ */
+int VLC_VolumeSet( int i_object, int i_volume )
+{
+    audio_volume_t i_vol = 0;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    if( i_volume >= 0 && i_volume <= 200 )
+    {
+        i_vol = i_volume * AOUT_VOLUME_MAX / 200;
+        aout_VolumeSet( p_vlc, i_vol );
+    }
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return i_vol * 200 / AOUT_VOLUME_MAX;
+}
+
+/**
+ * Get the current volume
+ *
+ * Retrieve the current volume.
+ *
+ * \param i_object a vlc object id
+ * \return the current volume (range 0-200 %)
+ */
+int VLC_VolumeGet( int i_object )
+{
+    audio_volume_t i_volume;
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    aout_VolumeGet( p_vlc, &i_volume );
+
+    if( i_object ) vlc_object_release( p_vlc );
+    return i_volume*200/AOUT_VOLUME_MAX;
+}
+
+/**
+ * Mute/Unmute the volume
+ *
+ * \param i_object a vlc object id
+ * \return VLC_SUCCESS on success
+ */
+int VLC_VolumeMute( int i_object )
+{
+    vlc_t *p_vlc = vlc_current_object( i_object );
+
+    /* Check that the handle is valid */
+    if( !p_vlc )
+    {
+        return VLC_ENOOBJ;
+    }
+
+    aout_VolumeMute( p_vlc, NULL );
 
     if( i_object ) vlc_object_release( p_vlc );
     return VLC_SUCCESS;
@@ -1219,17 +1768,17 @@ static void SetLanguage ( char const *psz_lang )
               "locale" );
     psz_path = psz_tmp;
 #endif
-    if( !bindtextdomain( PACKAGE, psz_path ) )
+    if( !bindtextdomain( PACKAGE_NAME, psz_path ) )
     {
         fprintf( stderr, "warning: no domain %s in directory %s\n",
-                 PACKAGE, psz_path );
+                 PACKAGE_NAME, psz_path );
     }
 
     /* Set the default domain */
-    textdomain( PACKAGE );
+    textdomain( PACKAGE_NAME );
 
 #if defined( ENABLE_UTF8 )
-    bind_textdomain_codeset( PACKAGE, "UTF-8" );
+    bind_textdomain_codeset( PACKAGE_NAME, "UTF-8" );
 #endif
 
 #endif
@@ -1525,8 +2074,7 @@ static void Usage( vlc_t *p_this, char const *psz_module_name )
     vlc_list_release( p_list );
 
 #ifdef WIN32        /* Pause the console because it's destroyed when we exit */
-    fprintf( stdout, _("\nPress the RETURN key to continue...\n") );
-    getchar();
+    PauseConsole();
 #endif
 }
 
@@ -1580,8 +2128,7 @@ static void ListModules( vlc_t *p_this )
     vlc_list_release( p_list );
 
 #ifdef WIN32        /* Pause the console because it's destroyed when we exit */
-    fprintf( stdout, _("\nPress the RETURN key to continue...\n") );
-    getchar();
+    PauseConsole();
 #endif
 }
 
@@ -1604,8 +2151,7 @@ static void Version( void )
         "Written by the VideoLAN team; see the AUTHORS file.\n") );
 
 #ifdef WIN32        /* Pause the console because it's destroyed when we exit */
-    fprintf( stdout, _("\nPress the RETURN key to continue...\n") );
-    getchar();
+    PauseConsole();
 #endif
 }
 
@@ -1618,12 +2164,33 @@ static void Version( void )
 static void ShowConsole( void )
 {
 #   ifndef UNDER_CE
+
+    if( getenv( "PWD" ) && getenv( "PS1" ) ) return; /* cygwin shell */
+
     AllocConsole();
     freopen( "CONOUT$", "w", stdout );
     freopen( "CONOUT$", "w", stderr );
     freopen( "CONIN$", "r", stdin );
+
 #   endif
-    return;
+}
+#endif
+
+/*****************************************************************************
+ * PauseConsole: On Win32, wait for a key press before closing the console
+ *****************************************************************************
+ * This function is useful only on Win32.
+ *****************************************************************************/
+#ifdef WIN32 /*  */
+static void PauseConsole( void )
+{
+#   ifndef UNDER_CE
+
+    if( getenv( "PWD" ) && getenv( "PS1" ) ) return; /* cygwin shell */
+    fprintf( stdout, _("\nPress the RETURN key to continue...\n") );
+    getchar();
+
+#   endif
 }
 #endif
 
@@ -1677,4 +2244,52 @@ static int VerboseCallback( vlc_object_t *p_this, const char *psz_variable,
         p_vlc->p_libvlc->i_verbose = __MIN( new_val.i_int, 2 );
     }
     return VLC_SUCCESS;
+}
+
+/*****************************************************************************
+ * InitDeviceValues: initialize device values
+ *****************************************************************************
+ * This function inits the dvd, vcd and cd-audio values
+ *****************************************************************************/
+static void InitDeviceValues( vlc_t *p_vlc )
+{
+#ifdef HAVE_HAL
+    LibHalContext * ctx;
+    int i, i_devices;
+    char **devices;
+    char *block_dev;
+    dbus_bool_t b_dvd;
+
+    if( ( ctx = hal_initialize( NULL, FALSE ) ) )
+    {
+        if( ( devices = hal_get_all_devices( ctx, &i_devices ) ) )
+        {
+            for( i = 0; i < i_devices; i++ )
+            {
+                if( !hal_device_property_exists( ctx, devices[ i ],
+                                                "storage.cdrom.dvd" ) )
+                {
+                    continue;
+                }
+
+                b_dvd = hal_device_get_property_bool( ctx, devices[ i ],
+                                                      "storage.cdrom.dvd" );
+                block_dev = hal_device_get_property_string( ctx, devices[ i ],
+                                                            "block.device" );
+
+                if( b_dvd )
+                {
+                    config_PutPsz( p_vlc, "dvd", block_dev );
+                }
+
+                config_PutPsz( p_vlc, "vcd", block_dev );
+                config_PutPsz( p_vlc, "cd-audio", block_dev );
+
+                hal_free_string( block_dev );
+            }
+        }
+
+        hal_shutdown( ctx );
+    }
+#endif
 }

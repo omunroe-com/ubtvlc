@@ -2,7 +2,7 @@
  * deinterlace.c : deinterlacer plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001, 2002, 2003 VideoLAN
- * $Id: deinterlace.c 7725 2004-05-20 01:42:09Z titer $
+ * $Id: deinterlace.c 8551 2004-08-28 17:36:02Z gbazin $
  *
  * Author: Sam Hocevar <sam@zoy.org>
  *
@@ -63,13 +63,13 @@ static void MergeGeneric ( void *, const void *, const void *, size_t );
 #if defined(CAN_COMPILE_C_ALTIVEC)
 static void MergeAltivec ( void *, const void *, const void *, size_t );
 #endif
-#if defined(CAN_COMPILE_MMX)
+#if defined(CAN_COMPILE_MMXEXT)
 static void MergeMMX     ( void *, const void *, const void *, size_t );
 #endif
-#if defined(CAN_COMPILE_SSE) && !defined(SYS_BEOS)
+#if defined(CAN_COMPILE_SSE)
 static void MergeSSE2    ( void *, const void *, const void *, size_t );
 #endif
-#if defined(CAN_COMPILE_MMX) || defined(CAN_COMPILE_SSE)
+#if defined(CAN_COMPILE_MMXEXT) || defined(CAN_COMPILE_SSE)
 static void EndMMX       ( void );
 #endif
 
@@ -176,7 +176,7 @@ static int Create( vlc_object_t *p_this )
     }
     else
 #endif
-#if defined(CAN_COMPILE_SSE) && !defined(SYS_BEOS)
+#if defined(CAN_COMPILE_SSE)
     if( p_vout->p_libvlc->i_cpu & CPU_CAPABILITY_SSE2 )
     {
         p_vout->p_sys->pf_merge = MergeSSE2;
@@ -184,7 +184,7 @@ static int Create( vlc_object_t *p_this )
     }
     else
 #endif
-#if defined(CAN_COMPILE_MMX)
+#if defined(CAN_COMPILE_MMXEXT)
     if( p_vout->p_libvlc->i_cpu & CPU_CAPABILITY_MMX )
     {
         p_vout->p_sys->pf_merge = MergeMMX;
@@ -508,7 +508,7 @@ static void RenderDiscard( vout_thread_t *p_vout,
 
         p_out = p_outpic->p[i_plane].p_pixels;
         p_out_end = p_out + p_outpic->p[i_plane].i_pitch
-                             * p_outpic->p[i_plane].i_lines;
+                             * p_outpic->p[i_plane].i_visible_lines;
 
         switch( p_vout->render.i_chroma )
         {
@@ -577,7 +577,7 @@ static void RenderBob( vout_thread_t *p_vout,
         p_in = p_pic->p[i_plane].p_pixels;
         p_out = p_outpic->p[i_plane].p_pixels;
         p_out_end = p_out + p_outpic->p[i_plane].i_pitch
-                             * p_outpic->p[i_plane].i_lines;
+                             * p_outpic->p[i_plane].i_visible_lines;
 
         switch( p_vout->render.i_chroma )
         {
@@ -697,7 +697,7 @@ static void RenderLinear( vout_thread_t *p_vout,
         p_in = p_pic->p[i_plane].p_pixels;
         p_out = p_outpic->p[i_plane].p_pixels;
         p_out_end = p_out + p_outpic->p[i_plane].i_pitch
-                             * p_outpic->p[i_plane].i_lines;
+                             * p_outpic->p[i_plane].i_visible_lines;
 
         /* For BOTTOM field we need to add the first line */
         if( i_field == 1 )
@@ -753,7 +753,7 @@ static void RenderMean( vout_thread_t *p_vout,
 
         p_out = p_outpic->p[i_plane].p_pixels;
         p_out_end = p_out + p_outpic->p[i_plane].i_pitch
-                             * p_outpic->p[i_plane].i_lines;
+                             * p_outpic->p[i_plane].i_visible_lines;
 
         /* All lines: mean value */
         for( ; p_out < p_out_end ; )
@@ -782,7 +782,7 @@ static void RenderBlend( vout_thread_t *p_vout,
 
         p_out = p_outpic->p[i_plane].p_pixels;
         p_out_end = p_out + p_outpic->p[i_plane].i_pitch
-                             * p_outpic->p[i_plane].i_lines;
+                             * p_outpic->p[i_plane].i_visible_lines;
 
         switch( p_vout->render.i_chroma )
         {
@@ -871,7 +871,7 @@ static void MergeGeneric( void *_p_dest, const void *_p_s1,
     }
 }
 
-#if defined(CAN_COMPILE_MMX)
+#if defined(CAN_COMPILE_MMXEXT)
 static void MergeMMX( void *_p_dest, const void *_p_s1, const void *_p_s2,
                       size_t i_bytes )
 {
@@ -900,7 +900,7 @@ static void MergeMMX( void *_p_dest, const void *_p_s1, const void *_p_s2,
 }
 #endif
 
-#if defined(CAN_COMPILE_SSE) && !defined(SYS_BEOS)
+#if defined(CAN_COMPILE_SSE)
 static void MergeSSE2( void *_p_dest, const void *_p_s1, const void *_p_s2,
                        size_t i_bytes )
 {
@@ -934,7 +934,7 @@ static void MergeSSE2( void *_p_dest, const void *_p_s1, const void *_p_s2,
 }
 #endif
 
-#if defined(CAN_COMPILE_MMX) || defined(CAN_COMPILE_SSE)
+#if defined(CAN_COMPILE_MMXEXT) || defined(CAN_COMPILE_SSE)
 static void EndMMX( void )
 {
     __asm__ __volatile__( "emms" :: );

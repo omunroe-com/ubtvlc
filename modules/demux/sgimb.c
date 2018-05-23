@@ -2,7 +2,7 @@
  * sgimb.c: a meta demux to parse sgimb referrer files
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: sgimb.c 7433 2004-04-23 06:12:30Z gbazin $
+ * $Id: sgimb.c 9300 2004-11-13 01:35:28Z hartman $
  *
  * Authors: Derk-Jan Hartman <hartman at videolan dot org>
  *
@@ -30,23 +30,66 @@
  * This stems from the fact that the MediaBase servers were first introduced by SGI?????.
  *
  * sgiNameServerHost=host.name.tld
+ *     Obvious: the host hosting this stream
  * Stream="xdma://host.name.tld/demo/a_very_cool.mpg"
+ *     Not always present. xdma can be read as RTSP.
  * sgiMovieName=/demo/a_very_cool.mpg
- * sgiAuxState=1
+ *     The path to the asset
+ * sgiAuxState=1|2
+ *     AuxState=2 is always Video On Demand (so not Scheduled)
+ *     Not present with Live streams
+ * sgiLiveFeed=True|False
+ *     Denounces if the stream is live or from assets (Canned?)
+ *     Live appears as a little sattelite dish in the web interface of Kasenna
  * sgiFormatName=PARTNER_41_MPEG-4
+ *     The type of stream. One of:
+ *       PARTNER_41_MPEG-4 (RTSP MPEG-4 fully compliant)
+ *       MPEG1-Audio       (MP3 Audio streams in MPEG TS)
+ *       MPEG-1            (MPEG 1 A/V in MPEG TS)
+ *       MPEG-2            (MPEG 2 A/V in MPEG TS)
+ * sgiWidth=720
+ *     The width of the to be received stream. Only present if stream is not Live.
+ * sgiHeight=576
+ *     The height of the to be received stream. Only present if stream is not Live.
  * sgiBitrate=1630208
+ *     The bitrate of the to be received stream. Only present if stream is not Live.
  * sgiDuration=378345000
+ *     The duration of the to be received stream. Only present if stream is not Live.
  * sgiQTFileBegin
  * rtsptext
  * rtsp://host.name.tld/demo/a_very_cool.mpg
  * sgiQTFileEnd
+ *     Sometimes present. QT will recognize this as a RTSP reference file, if present.
  * sgiApplicationName=MediaBaseURL
+ *     Beats me !! :)
  * sgiElapsedTime=0
+ *     Time passed since the asset was started (resets for repeating non live assets?)
+ * sgiMulticastAddress=233.81.233.15
+ *     The multicast IP used for the Multicast feed.
+ *     Also defines if a stream is multicast or not. (blue dot in kasenna web interface)
+ * sgiMulticastPort=1234
+ *     The multicast port for the same Multicast feed.
+ * sgiPacketSize=16384
+ *     The packetsize of the UDP frames that Kasenna sends. They should have used a default
+ *     that is a multiple of 188 (TS frame size). Most networks don't support more than 1500 anyways.
+ *     Also, when you loose a frame of this size, imagecorruption is more likely then with smaller
+ *     frames.
  * sgiServerVersion=6.1.2
+ *     Version of the server
  * sgiRtspPort=554
+ *     TCP port used for RTSP communication
  * AutoStart=True
+ *     Start playing automatically
+ * DeliveryService=cds
+ *     Simulcasted (scheduled unicast) content. (Green dot in Kasenna web interface) 
+ * sgiShowingName=A nice name that everyone likes
+ *     A human readible descriptive title for this stream.
+ * sgiSid=2311
+ *     Looks like this is the ID of the scheduled asset?
  * sgiUserAccount=pid=1724&time=1078527309&displayText=You%20are%20logged%20as%20guest&
+ *     User Authentication. Above is a default guest entry. Not required for RTSP communication.
  * sgiUserPassword=
+ *     Password :)
  *
  *****************************************************************************/
 
@@ -92,6 +135,8 @@ struct demux_sys_t
     mtime_t     i_duration;     /* sgiDuration= */
     int         i_port;         /* sgiRtspPort= */
     int         i_sid;          /* sgiSid= */
+    vlc_bool_t  b_concert;      /* DeliveryService=cds */
+    vlc_bool_t  b_rtsp_kasenna; /* kasenna style RTSP */
 };
 
 static int Demux ( demux_t *p_demux );
@@ -136,6 +181,9 @@ static int Activate( vlc_object_t * p_this )
             p_sys->i_packet_size = 0;
             p_sys->i_duration = 0;
             p_sys->i_port = 0;
+            p_sys->i_sid = 0;
+            p_sys->b_rtsp_kasenna = VLC_FALSE;
+            p_sys->b_concert = VLC_FALSE;
 
             return VLC_SUCCESS;
         }
@@ -228,6 +276,12 @@ static int ParseLine ( demux_t *p_demux, char *psz_line )
         psz_bol += sizeof("sgiShowingName=") - 1;
         p_sys->psz_name = strdup( psz_bol );
     }
+    else if( !strncasecmp( psz_bol, "sgiFormatName=", sizeof("sgiFormatName=") - 1 ) )
+    {
+        psz_bol += sizeof("sgiFormatName=") - 1;
+        if( !strcasestr( psz_bol, "MPEG-4") ) /*not mpeg4 */
+            p_sys->b_rtsp_kasenna = VLC_TRUE;
+    }
     else if( !strncasecmp( psz_bol, "sgiMulticastAddress=", sizeof("sgiMulticastAddress=") - 1 ) )
     {
         psz_bol += sizeof("sgiMulticastAddress=") - 1;
@@ -252,7 +306,17 @@ static int ParseLine ( demux_t *p_demux, char *psz_line )
     {
         psz_bol += sizeof("sgiRtspPort=") - 1;
         p_sys->i_port = (int) strtol( psz_bol, NULL, 0 );
-    }else
+    }
+    else if( !strncasecmp( psz_bol, "sgiSid=", sizeof("sgiSid=") - 1 ) )
+    {
+        psz_bol += sizeof("sgiSid=") - 1;
+        p_sys->i_sid = (int) strtol( psz_bol, NULL, 0 );
+    }
+    else if( !strncasecmp( psz_bol, "DeliveryService=cds", sizeof("DeliveryService=cds") - 1 ) )
+    {
+        p_sys->b_concert = VLC_TRUE;
+    }
+    else
     {
         /* This line isn't really important */
         return 0;
@@ -293,28 +357,48 @@ static int Demux ( demux_t *p_demux )
 
     if( p_sys->psz_mcast_ip )
     {
+        /* Definetly schedules multicast session */
+        /* We don't care if it's live or not */
         char *temp;
 
-        temp = (char *)malloc( sizeof("udp/ts2://@000.000.000.000:123456789" ) );
-        sprintf( temp, "udp/ts2://@" "%s:%i", p_sys->psz_mcast_ip, p_sys->i_mcast_port );
+        asprintf( &temp, "udp://@" "%s:%i", p_sys->psz_mcast_ip, p_sys->i_mcast_port );
         if( p_sys->psz_uri ) free( p_sys->psz_uri );
         p_sys->psz_uri = strdup( temp );
         free( temp );
     }
-    else if( p_sys->psz_uri == NULL )
+
+    if( p_sys->psz_uri == NULL )
     {
         if( p_sys->psz_server && p_sys->psz_location )
         {
             char *temp;
             
-            temp = (char *)malloc( sizeof("rtsp/live://" ":" "123456789") +
-                                       strlen( p_sys->psz_server ) + strlen( p_sys->psz_location ) );
-            sprintf( temp, "rtsp/live://" "%s:%i%s",
+            asprintf( &temp, "rtsp://" "%s:%i%s",
                      p_sys->psz_server, p_sys->i_port > 0 ? p_sys->i_port : 554, p_sys->psz_location );
             
             p_sys->psz_uri = strdup( temp );
             free( temp );
         }
+    }
+
+    if( p_sys->b_concert )
+    {
+        /* It's definetly a simulcasted scheduled stream */
+        /* We don't care if it's live or not */
+        char *temp;
+
+        if( p_sys->psz_uri == NULL )
+        {
+            msg_Err( p_demux, "no URI was found" );
+            return -1;
+        }
+        
+        asprintf( &temp, "%s%%3FMeDiAbAsEshowingId=%d%%26MeDiAbAsEconcert%%3FMeDiAbAsE",
+                p_sys->psz_uri, p_sys->i_sid );
+
+        free( p_sys->psz_uri );
+        p_sys->psz_uri = strdup( temp );
+        free( temp );
     }
 
     p_item = playlist_ItemNew( p_playlist, p_sys->psz_uri,
@@ -328,9 +412,23 @@ static int Demux ( demux_t *p_demux )
 
     if( p_sys->i_packet_size && p_sys->psz_mcast_ip )
     {
-        char *psz_option = (char *) malloc( 20 );
+        char *psz_option;
         p_sys->i_packet_size += 1000;
-        sprintf( psz_option, "mtu=%i", p_sys->i_packet_size );
+        asprintf( &psz_option, "mtu=%i", p_sys->i_packet_size );
+        playlist_ItemAddOption( p_item, psz_option );
+        free( psz_option );
+    }
+    if( !p_sys->psz_mcast_ip )
+    {
+        char *psz_option;
+	asprintf( &psz_option, "rtsp-caching=5000" );
+	playlist_ItemAddOption( p_item, psz_option );
+	free( psz_option );
+    }
+    if( !p_sys->psz_mcast_ip && p_sys->b_rtsp_kasenna )
+    {
+        char *psz_option;
+        asprintf( &psz_option, "rtsp-kasenna" );
         playlist_ItemAddOption( p_item, psz_option );
         free( psz_option );
     }

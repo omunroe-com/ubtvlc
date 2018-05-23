@@ -171,8 +171,12 @@ static int dvvideo_init(AVCodecContext *avctx)
 	free_vlc(&dv_vlc);
 
 	for (i = 0; i < NB_DV_VLC - 1; i++) {
-           if (dv_vlc_run[i] >= DV_VLC_MAP_RUN_SIZE || dv_vlc_level[i] >= DV_VLC_MAP_LEV_SIZE)
+           if (dv_vlc_run[i] >= DV_VLC_MAP_RUN_SIZE)
 	       continue;
+#ifdef DV_CODEC_TINY_TARGET
+           if (dv_vlc_level[i] >= DV_VLC_MAP_LEV_SIZE)
+	       continue;
+#endif
 	   
 	   if (dv_vlc_map[dv_vlc_run[i]][dv_vlc_level[i]].size != 0)
 	       continue;
@@ -390,8 +394,7 @@ static inline void dv_decode_video_segment(DVVideoContext *s,
 	    init_get_bits(&gb, buf_ptr, last_index);
             
             /* get the dc */
-            dc = get_bits(&gb, 9);
-            dc = (dc << (32 - 9)) >> (32 - 9);
+            dc = get_sbits(&gb, 9);
             dct_mode = get_bits1(&gb);
             mb->dct_mode = dct_mode;
             mb->scan_table = s->dv_zigzag[dct_mode];
@@ -885,7 +888,6 @@ static int dvvideo_decode_frame(AVCodecContext *avctx,
 {
     DVVideoContext *s = avctx->priv_data;
   
-    *data_size=0;
     /* special case for last picture */
     if(buf_size==0)
         return 0;

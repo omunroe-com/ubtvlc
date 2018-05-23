@@ -2,7 +2,7 @@
  * libmp4.h : LibMP4 library for mp4 module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2004 VideoLAN
- * $Id: libmp4.h 7670 2004-05-15 11:03:48Z fenrir $
+ * $Id: libmp4.h 9142 2004-11-04 22:32:40Z hartman $
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -127,6 +127,7 @@
 #define FOURCC_h263 VLC_FOURCC( 'h', '2', '6', '3' )
 #define FOURCC_s263 VLC_FOURCC( 's', '2', '6', '3' )
 #define FOURCC_DIVX VLC_FOURCC( 'D', 'I', 'V', 'X' )
+#define FOURCC_XVID VLC_FOURCC( 'X', 'V', 'I', 'D' )
 #define FOURCC_cvid VLC_FOURCC( 'c', 'v', 'i', 'd' )
 #define FOURCC_mjpa VLC_FOURCC( 'm', 'j', 'p', 'a' )
 #define FOURCC_mjpb VLC_FOURCC( 'm', 'j', 'q', 't' )
@@ -168,6 +169,9 @@
 #define FOURCC_name VLC_FOURCC( 'n', 'a', 'm', 'e' )
 #define FOURCC_priv VLC_FOURCC( 'p', 'r', 'i', 'v' )
 
+#define FOURCC_text VLC_FOURCC( 't', 'e', 'x', 't' )
+#define FOURCC_subp VLC_FOURCC( 's', 'u', 'b', 'p' )
+
 #define FOURCC_0xa9nam VLC_FOURCC( 0xa9, 'n', 'a', 'm' )
 #define FOURCC_0xa9aut VLC_FOURCC( 0xa9, 'a', 'u', 't' )
 #define FOURCC_0xa9swr VLC_FOURCC( 0xa9, 's', 'w', 'r' )
@@ -183,6 +187,18 @@
 #define FOURCC_0xa9prd VLC_FOURCC( 0xa9, 'p', 'r', 'd' )
 #define FOURCC_0xa9prf VLC_FOURCC( 0xa9, 'p', 'r', 'f' )
 #define FOURCC_0xa9src VLC_FOURCC( 0xa9, 's', 'r', 'c' )
+#define FOURCC_0xa9alb VLC_FOURCC( 0xa9, 'a', 'l', 'b' )
+#define FOURCC_0xa9dis VLC_FOURCC( 0xa9, 'd', 'i', 's' )
+#define FOURCC_0xa9enc VLC_FOURCC( 0xa9, 'e', 'n', 'c' )
+#define FOURCC_0xa9trk VLC_FOURCC( 0xa9, 't', 'r', 'k' )
+#define FOURCC_0xa9url VLC_FOURCC( 0xa9, 'u', 'r', 'l' )
+#define FOURCC_0xa9dsa VLC_FOURCC( 0xa9, 'd', 's', 'a' )
+#define FOURCC_0xa9hst VLC_FOURCC( 0xa9, 'h', 's', 't' )
+#define FOURCC_0xa9ope VLC_FOURCC( 0xa9, 'o', 'p', 'e' )
+#define FOURCC_0xa9wrt VLC_FOURCC( 0xa9, 'w', 'r', 't' )
+#define FOURCC_0xa9com VLC_FOURCC( 0xa9, 'c', 'o', 'm' )
+#define FOURCC_0xa9gen VLC_FOURCC( 0xa9, 'g', 'e', 'n' )
+#define FOURCC_WLOC VLC_FOURCC( 'W', 'L', 'O', 'C' )
 
 /* Do you want some debug information on all read boxes ? */
 #define MP4_VERBOSE  1
@@ -446,6 +462,25 @@ typedef struct MP4_Box_data_sample_vide_s
     uint8_t *p_qt_image_description;
 
 } MP4_Box_data_sample_vide_t;
+
+typedef struct
+{
+    uint8_t  i_reserved1[6];
+    uint16_t i_data_reference_index;
+
+    uint32_t i_display_flags;
+    uint32_t i_justification;
+    uint16_t i_background_color[3];
+    uint64_t i_text_box;
+    uint64_t i_reserved2;
+    uint16_t i_font_number;
+    uint16_t i_font_face;
+    uint16_t i_reserved3;
+
+    uint16_t i_foreground_color[3];
+
+    char    *psz_text_name;
+} MP4_Box_data_sample_text_t;
 
 typedef struct MP4_Box_data_sample_hint_s
 {
@@ -785,6 +820,7 @@ typedef union MP4_Box_data_s
     MP4_Box_data_stsd_t *p_stsd;
         MP4_Box_data_sample_vide_t *p_sample_vide;
         MP4_Box_data_sample_soun_t *p_sample_soun;
+        MP4_Box_data_sample_text_t *p_sample_text;
         MP4_Box_data_sample_hint_t *p_sample_hint;
 
         MP4_Box_data_esds_t *p_esds;
@@ -891,3 +927,8 @@ MP4_Box_t *MP4_BoxGet( MP4_Box_t *p_box, char *psz_fmt, ... );
  *****************************************************************************/
 int MP4_BoxCount( MP4_Box_t *p_box, char *psz_fmt, ... );
 
+MP4_Stream_t *MP4_MemoryStream( stream_t *s,
+                                int i_size, uint8_t *p_buffer );
+int MP4_ReadBoxCommon( MP4_Stream_t *p_stream, MP4_Box_t *p_box );
+int MP4_ReadBox_sample_vide( MP4_Stream_t *p_stream, MP4_Box_t *p_box );
+void MP4_FreeBox_sample_vide( MP4_Box_t *p_box );

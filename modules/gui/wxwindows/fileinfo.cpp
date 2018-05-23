@@ -2,7 +2,7 @@
  * fileinfo.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 VideoLAN
- * $Id: fileinfo.cpp 7209 2004-03-31 20:52:31Z gbazin $
+ * $Id: fileinfo.cpp 8554 2004-08-28 19:29:32Z zorglub $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -33,6 +33,10 @@
  * Event Table.
  *****************************************************************************/
 
+static int ItemChanged( vlc_object_t *, const char *,
+                        vlc_value_t, vlc_value_t, void * );
+
+
 /* IDs for the controls and the menu commands */
 enum
 {
@@ -55,6 +59,8 @@ FileInfo::FileInfo( intf_thread_t *_p_intf, wxWindow *p_parent ):
     wxFrame( p_parent, -1, wxU(_("Stream and media info")), wxDefaultPosition,
              wxDefaultSize, wxDEFAULT_FRAME_STYLE )
 {
+    playlist_t *p_playlist;
+
     /* Initializations */
     p_intf = _p_intf;
     SetIcon( *p_intf->p_sys->p_icon );
@@ -80,6 +86,16 @@ FileInfo::FileInfo( intf_thread_t *_p_intf, wxWindow *p_parent ):
     main_sizer->Layout();
     SetSizerAndFit( main_sizer );
 
+    p_playlist = (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
+                                                FIND_ANYWHERE );
+
+    if( p_playlist )
+    {
+        var_AddCallback( p_playlist, "item-change", ItemChanged, this );
+        vlc_object_release( p_playlist );
+    }
+
+    b_need_update = VLC_TRUE;
     UpdateFileInfo();
 }
 
@@ -87,7 +103,7 @@ void FileInfo::UpdateFileInfo()
 {
     input_thread_t *p_input = p_intf->p_sys->p_input;
 
-    if( !p_input || p_input->b_dead || !p_input->psz_name )
+    if( !p_input || p_input->b_dead || !p_input->input.p_item->psz_name )
     {
         if( fileinfo_root )
         {
@@ -103,35 +119,39 @@ void FileInfo::UpdateFileInfo()
          * retrieved with the GetItemText() method, but it doesn't work on
          * Windows when the wxTR_HIDE_ROOT style is set. That's why we need to
          * use the fileinfo_root_label variable... */
-        fileinfo_root = fileinfo_tree->AddRoot( wxL2U(p_input->psz_name) );
-        fileinfo_root_label = wxL2U(p_input->psz_name);
+        fileinfo_root =
+            fileinfo_tree->AddRoot( wxL2U(p_input->input.p_item->psz_name) );
+        fileinfo_root_label = wxL2U(p_input->input.p_item->psz_name);
     }
-    else if( fileinfo_root_label == wxL2U(p_input->psz_name) )
+    else if( fileinfo_root_label == wxL2U(p_input->input.p_item->psz_name) &&
+             b_need_update == VLC_FALSE )
     {
         return;
     }
 
     /* We rebuild the tree from scratch */
     fileinfo_tree->DeleteChildren( fileinfo_root );
-    fileinfo_root_label = wxL2U(p_input->psz_name);
+    fileinfo_root_label = wxL2U(p_input->input.p_item->psz_name);
 
-    vlc_mutex_lock( &p_input->p_item->lock );
-    for( int i = 0; i < p_input->p_item->i_categories; i++ )
+    vlc_mutex_lock( &p_input->input.p_item->lock );
+    for( int i = 0; i < p_input->input.p_item->i_categories; i++ )
     {
-        info_category_t *p_cat = p_input->p_item->pp_categories[i];
+        info_category_t *p_cat = p_input->input.p_item->pp_categories[i];
 
         wxTreeItemId cat = fileinfo_tree->AppendItem( fileinfo_root,
-                                                      wxL2U(p_cat->psz_name) );
+                                                      wxU(p_cat->psz_name) );
         for( int j = 0; j < p_cat->i_infos; j++ )
         {
             info_t *p_info = p_cat->pp_infos[j];
 
-            fileinfo_tree->AppendItem( cat, (wxString)wxL2U(p_info->psz_name) +
-                                       wxT(": ") + wxL2U(p_info->psz_value) );
+            fileinfo_tree->AppendItem( cat, (wxString)wxU(p_info->psz_name) +
+                                       wxT(": ") + wxU(p_info->psz_value) );
         }
         fileinfo_tree->Expand( cat );
     }
-    vlc_mutex_unlock( &p_input->p_item->lock );
+    vlc_mutex_unlock( &p_input->input.p_item->lock );
+
+    b_need_update = VLC_FALSE;
 
     return;
 }
@@ -143,4 +163,12 @@ FileInfo::~FileInfo()
 void FileInfo::OnClose( wxCommandEvent& event )
 {
     Hide();
+}
+
+static int ItemChanged( vlc_object_t *p_this, const char *psz_var, 
+                        vlc_value_t oldval, vlc_value_t newval, void *param )
+{
+    FileInfo *p_fileinfo = (FileInfo *)param;
+    p_fileinfo->b_need_update = VLC_TRUE;
+    return VLC_SUCCESS;
 }

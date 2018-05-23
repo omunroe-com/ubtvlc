@@ -2,7 +2,7 @@
  * ggi.c : GGI plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001 VideoLAN
- * $Id: ggi.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: ggi.c 8551 2004-08-28 17:36:02Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -74,7 +74,7 @@ vlc_module_end();
  *****************************************************************************/
 struct vout_sys_t
 {
-    /* GGI system informations */
+    /* GGI system information */
     ggi_visual_t        p_display;                         /* display device */
 
     ggi_mode            mode;                             /* mode descriptor */
@@ -190,6 +190,7 @@ static int Init( vout_thread_t *p_vout )
     p_pic->p->p_pixels = p_b[ 0 ]->write;
     p_pic->p->i_pixel_pitch = p_b[ 0 ]->buffer.plb.pixelformat->size / 8;
     p_pic->p->i_lines = p_vout->p_sys->mode.visible.y;
+    p_pic->p->i_visible_lines = p_vout->p_sys->mode.visible.y;
 
     p_pic->p->i_pitch = p_b[ 0 ]->buffer.plb.stride;
 
@@ -266,7 +267,7 @@ static void Destroy( vlc_object_t *p_this )
  * Manage: handle GGI events
  *****************************************************************************
  * This function should be called regularly by video output thread. It returns
- * a non null value if an error occured.
+ * a non null value if an error occurred.
  *****************************************************************************/
 static int Manage( vout_thread_t *p_vout )
 {

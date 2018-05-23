@@ -46,7 +46,7 @@
 #define SDL_AUDIO_BUFFER_SIZE 1024
 
 /* no AV sync correction is done if below the AV sync threshold */
-#define AV_SYNC_THRESHOLD 0.08
+#define AV_SYNC_THRESHOLD 0.01
 /* no AV correction is done if too big error */
 #define AV_NOSYNC_THRESHOLD 10.0
 
@@ -92,6 +92,7 @@ typedef struct VideoState {
     int paused;
     int last_paused;
     int seek_req;
+    int seek_flags;
     int64_t seek_pos;
     AVFormatContext *ic;
     int dtg_active_format;
@@ -113,7 +114,7 @@ typedef struct VideoState {
     /* samples output by the codec. we reserve more space for avsync
        compensation */
     uint8_t audio_buf[(AVCODEC_MAX_AUDIO_FRAME_SIZE * 3) / 2]; 
-    int audio_buf_size; /* in bytes */
+    unsigned int audio_buf_size; /* in bytes */
     int audio_buf_index; /* in bytes */
     AVPacket audio_pkt;
     uint8_t *audio_pkt_data;
@@ -170,6 +171,9 @@ static int debug_mv = 0;
 static int step = 0;
 static int thread_count = 1;
 static int workaround_bugs = 1;
+static int fast = 0;
+static int lowres = 0;
+static int idct = FF_IDCT_AUTO;
 
 /* current context */
 static int is_full_screen;
@@ -197,6 +201,7 @@ static void packet_queue_flush(PacketQueue *q)
     for(pkt = q->first_pkt; pkt != NULL; pkt = pkt1) {
         pkt1 = pkt->next;
         av_free_packet(&pkt->pkt);
+        av_freep(&pkt);
     }
     q->last_pkt = NULL;
     q->first_pkt = NULL;
@@ -585,10 +590,11 @@ static double get_master_clock(VideoState *is)
 }
 
 /* seek in the stream */
-static void stream_seek(VideoState *is, int64_t pos)
+static void stream_seek(VideoState *is, int64_t pos, int rel)
 {
     is->seek_pos = pos;
     is->seek_req = 1;
+    is->seek_flags = rel < 0 ? AVSEEK_FLAG_BACKWARD : 0;
 }
 
 /* pause or resume the video */
@@ -611,7 +617,7 @@ static void video_refresh_timer(void *opaque)
     if (is->video_st) {
         if (is->pictq_size == 0) {
             /* if no picture, need to wait */
-            schedule_refresh(is, 40);
+            schedule_refresh(is, 1);
         } else {
             /* dequeue the picture */
             vp = &is->pictq[is->pictq_rindex];
@@ -841,16 +847,6 @@ static int output_picture2(VideoState *is, AVFrame *src_frame, double pts1)
     
     pts = pts1;
 
-    /* if B frames are present, and if the current picture is a I
-       or P frame, we use the last pts */
-    if (is->video_st->codec.has_b_frames && 
-        src_frame->pict_type != FF_B_TYPE) {
-        /* use last pts */
-        pts = is->video_last_P_pts;
-        /* get the pts for the next I or P frame if present */
-        is->video_last_P_pts = pts1;
-    }
-
     if (pts != 0) {
         /* update video clock with pts, if present */
         is->video_clock = pts;
@@ -900,8 +896,8 @@ static int video_thread(void *arg)
         /* NOTE: ipts is the PTS of the _first_ picture beginning in
            this packet, if any */
         pts = 0;
-        if (pkt->pts != AV_NOPTS_VALUE)
-            pts = (double)pkt->pts / AV_TIME_BASE;
+        if (pkt->dts != AV_NOPTS_VALUE)
+            pts = (double)pkt->dts / AV_TIME_BASE;
 
         if (is->video_st->codec.codec_id == CODEC_ID_RAWVIDEO) {
             avpicture_fill((AVPicture *)frame, pkt->data, 
@@ -1171,6 +1167,10 @@ static int stream_component_open(VideoState *is, int stream_index)
     enc->debug_mv = debug_mv;
     enc->debug = debug;
     enc->workaround_bugs = workaround_bugs;
+    enc->lowres = lowres;
+    if(lowres) enc->flags |= CODEC_FLAG_EMU_EDGE;
+    enc->idct_algo= idct;
+    if(fast) enc->flags2 |= CODEC_FLAG2_FAST;
     if (!codec ||
         avcodec_open(enc, codec) < 0)
         return -1;
@@ -1337,7 +1337,7 @@ static int decode_thread(void *arg)
         /* add the stream start time */
         if (ic->start_time != AV_NOPTS_VALUE)
             timestamp += ic->start_time;
-        ret = av_seek_frame(ic, -1, timestamp);
+        ret = av_seek_frame(ic, -1, timestamp, AVSEEK_FLAG_BACKWARD);
         if (ret < 0) {
             fprintf(stderr, "%s: could not seek to position %0.3f\n", 
                     is->filename, (double)timestamp / AV_TIME_BASE);
@@ -1414,7 +1414,7 @@ static int decode_thread(void *arg)
 #endif
         if (is->seek_req) {
             /* XXX: must lock decoder threads */
-            ret = av_seek_frame(is->ic, -1, is->seek_pos);
+            ret = av_seek_frame(is->ic, -1, is->seek_pos, is->seek_flags);
             if (ret < 0) {
                 fprintf(stderr, "%s: error while seeking\n", is->ic->filename);
             }else{
@@ -1439,7 +1439,11 @@ static int decode_thread(void *arg)
         }
         ret = av_read_frame(ic, pkt);
         if (ret < 0) {
-            break;
+	    if (url_feof(&ic->pb) && url_ferror(&ic->pb) == 0) {
+                SDL_Delay(100); /* wait for user event */
+		continue;
+	    } else
+	        break;
         }
         if (pkt->stream_index == is->audio_stream) {
             packet_queue_put(&is->audioq, pkt);
@@ -1684,7 +1688,7 @@ void event_loop(void)
                 if (cur_stream) {
                     pos = get_master_clock(cur_stream);
                     pos += incr;
-                    stream_seek(cur_stream, (int64_t)(pos * AV_TIME_BASE));
+                    stream_seek(cur_stream, (int64_t)(pos * AV_TIME_BASE), incr);
                 }
                 break;
             default:
@@ -1706,7 +1710,7 @@ void event_loop(void)
 		ss = (ns%60);
 		fprintf(stderr, "Seek to %2.0f%% (%2d:%02d:%02d) of total duration (%2d:%02d:%02d)       \n", frac*100,
 			hh, mm, ss, thh, tmm, tss);
-		stream_seek(cur_stream, (int64_t)(cur_stream->ic->start_time+frac*cur_stream->ic->duration));
+		stream_seek(cur_stream, (int64_t)(cur_stream->ic->start_time+frac*cur_stream->ic->duration), 0);
 	    }
 	    break;
         case SDL_VIDEORESIZE:
@@ -1828,6 +1832,9 @@ const OptionDef options[] = {
     { "debug", HAS_ARG | OPT_EXPERT, {(void*)opt_debug}, "print specific debug info", "" },
     { "bug", OPT_INT | HAS_ARG | OPT_EXPERT, {(void*)&workaround_bugs}, "workaround bugs", "" },
     { "vismv", HAS_ARG | OPT_EXPERT, {(void*)opt_vismv}, "visualize motion vectors", "" },
+    { "fast", OPT_BOOL | OPT_EXPERT, {(void*)&fast}, "non spec compliant optimizations", "" },
+    { "lowres", OPT_INT | HAS_ARG | OPT_EXPERT, {(void*)&lowres}, "", "" },
+    { "idct", OPT_INT | HAS_ARG | OPT_EXPERT, {(void*)&idct}, "set idct algo",  "algo" },
 #ifdef CONFIG_NETWORK
     { "rtp_tcp", OPT_EXPERT, {(void*)&opt_rtp_tcp}, "force RTP/TCP protocol usage", "" },
 #endif

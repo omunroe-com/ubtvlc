@@ -2,7 +2,7 @@
  * skin_main.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: skin_main.cpp 7731 2004-05-20 13:14:55Z sam $
+ * $Id: skin_main.cpp 8524 2004-08-25 21:32:15Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -23,6 +23,7 @@
  *****************************************************************************/
 
 #include <stdlib.h>
+#include <vlc/input.h>
 #include "dialogs.hpp"
 #include "os_factory.hpp"
 #include "os_loop.hpp"
@@ -30,9 +31,11 @@
 #include "vlcproc.hpp"
 #include "theme_loader.hpp"
 #include "theme.hpp"
+#include "theme_repository.hpp"
 #include "../parser/interpreter.hpp"
 #include "../commands/async_queue.hpp"
 #include "../commands/cmd_quit.hpp"
+#include "../commands/cmd_dialogs.hpp"
 
 
 //---------------------------------------------------------------------------
@@ -50,6 +53,10 @@ extern "C" __declspec( dllexport )
 static int  Open  ( vlc_object_t * );
 static void Close ( vlc_object_t * );
 static void Run   ( intf_thread_t * );
+
+static int DemuxOpen( vlc_object_t * );
+static int Demux( demux_t * );
+static int DemuxControl( demux_t *, int, va_list );
 
 
 //---------------------------------------------------------------------------
@@ -90,9 +97,13 @@ static int Open( vlc_object_t *p_this )
     p_intf->p_sys->p_osLoop = NULL;
     p_intf->p_sys->p_varManager = NULL;
     p_intf->p_sys->p_vlcProc = NULL;
+    p_intf->p_sys->p_repository = NULL;
 
     // No theme yet
     p_intf->p_sys->p_theme = NULL;
+
+    // Create a variable to be notified of skins to be loaded
+    var_Create( p_intf, "skin-to-load", VLC_VAR_STRING );
 
     // Initialize singletons
     if( OSFactory::instance( p_intf ) == NULL )
@@ -121,8 +132,9 @@ static int Open( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
     Dialogs::instance( p_intf );
+    ThemeRepository::instance( p_intf );
 
-    /* We support play on start */
+    // We support play on start
     p_intf->b_play = VLC_TRUE;
 
     return( VLC_SUCCESS );
@@ -137,6 +149,7 @@ static void Close( vlc_object_t *p_this )
 
     // Destroy "singleton" objects
     OSFactory::instance( p_intf )->destroyOSLoop();
+    ThemeRepository::destroy( p_intf );
     Dialogs::destroy( p_intf );
     Interpreter::destroy( p_intf );
     AsyncQueue::destroy( p_intf );
@@ -149,7 +162,7 @@ static void Close( vlc_object_t *p_this )
         vlc_object_release( p_intf->p_sys->p_playlist );
     }
 
-   // Unsuscribe to messages bank
+   // Unsubscribe from messages bank
     msg_Unsubscribe( p_intf, p_intf->p_sys->p_sub );
 
     // Destroy structure
@@ -176,7 +189,7 @@ static void Run( intf_thread_t *p_intf )
         list<string>::const_iterator it;
         for( it = resPath.begin(); it != resPath.end(); it++ )
         {
-            string path = (*it) + sep + "default" + sep + "theme.xml";
+            string path = (*it) + sep + "default.vlt";
             if( pLoader->load( path ) )
             {
                 // Theme loaded successfully
@@ -186,10 +199,11 @@ static void Run( intf_thread_t *p_intf )
         if( it == resPath.end() )
         {
             // Last chance: the user can select a new theme file
-            Dialogs *pDialogs = Dialogs::instance( p_intf );
-            if( pDialogs )
+            if( Dialogs::instance( p_intf ) )
             {
-                pDialogs->showChangeSkin();
+                CmdDlgChangeSkin *pCmd = new CmdDlgChangeSkin( p_intf );
+                AsyncQueue *pQueue = AsyncQueue::instance( p_intf );
+                pQueue->push( CmdGenericPtr( pCmd ) );
             }
             else
             {
@@ -197,7 +211,8 @@ static void Run( intf_thread_t *p_intf )
                 CmdQuit *pCmd = new CmdQuit( p_intf );
                 AsyncQueue *pQueue = AsyncQueue::instance( p_intf );
                 pQueue->push( CmdGenericPtr( pCmd ) );
-                msg_Err( p_intf, "Cannot show the \"open skin\" dialog: exiting...");
+                msg_Err( p_intf,
+                         "Cannot show the \"open skin\" dialog: exiting...");
             }
         }
     }
@@ -236,6 +251,81 @@ static void Run( intf_thread_t *p_intf )
     }
 }
 
+
+//---------------------------------------------------------------------------
+// DemuxOpen: initialize demux
+//---------------------------------------------------------------------------
+static int DemuxOpen( vlc_object_t *p_this )
+{
+    demux_t *p_demux = (demux_t*)p_this;
+    intf_thread_t *p_intf;
+    char *ext;
+
+    // Needed callbacks
+    p_demux->pf_demux   = Demux;
+    p_demux->pf_control = DemuxControl;
+
+    // Test that we have a valid .vlt file, based on the extension
+    // TODO: an actual check of the contents would be better...
+    if( ( ext = strchr( p_demux->psz_path, '.' ) ) == NULL ||
+        strcasecmp( ext, ".vlt" ) )
+    {
+        return VLC_EGENERIC;
+    }
+
+    p_intf = (intf_thread_t *)vlc_object_find( p_this, VLC_OBJECT_INTF,
+                                               FIND_ANYWHERE );
+    if( p_intf != NULL )
+    {
+        // Do nothing is skins2 is not the main interface
+        if( var_Type( p_intf, "skin-to-load" ) == VLC_VAR_STRING )
+        {
+            playlist_t *p_playlist =
+                (playlist_t *) vlc_object_find( p_this, VLC_OBJECT_PLAYLIST,
+                                                FIND_ANYWHERE );
+            if( p_playlist != NULL )
+            {
+                // Make sure the item is deleted afterwards
+                p_playlist->pp_items[p_playlist->i_index]->b_autodeletion =
+                    VLC_TRUE;
+                vlc_object_release( p_playlist );
+            }
+
+            vlc_value_t val;
+            val.psz_string = p_demux->psz_path;
+            var_Set( p_intf, "skin-to-load", val );
+        }
+        else
+        {
+            msg_Warn( p_this,
+                      "skin could not be loaded (not using skins2 intf)" );
+        }
+
+        vlc_object_release( p_intf );
+    }
+
+    return VLC_SUCCESS;
+}
+
+
+//---------------------------------------------------------------------------
+// Demux: return EOF
+//---------------------------------------------------------------------------
+static int Demux( demux_t *p_demux )
+{
+    return 0;
+}
+
+
+//---------------------------------------------------------------------------
+// DemuxControl
+//---------------------------------------------------------------------------
+static int DemuxControl( demux_t *p_demux, int i_query, va_list args )
+{
+    return demux2_vaControlHelper( p_demux->s, 0, 0, 0, 1, i_query, args );
+}
+
+
 //---------------------------------------------------------------------------
 // Module descriptor
 //---------------------------------------------------------------------------
@@ -257,8 +347,16 @@ vlc_module_begin();
     add_bool( "skins2-transparency", VLC_FALSE, NULL, SKINS2_TRANSPARENCY,
               SKINS2_TRANSPARENCY_LONG, VLC_FALSE );
 #endif
+
     set_description( _("Skinnable Interface") );
     set_capability( "interface", 30 );
     set_callbacks( Open, Close );
+    add_shortcut( "skins" );
     set_program( "svlc" );
+
+    add_submodule();
+        set_description( _("Skins loader demux") );
+        set_capability( "demux2", 5 );
+        set_callbacks( DemuxOpen, NULL );
+
 vlc_module_end();

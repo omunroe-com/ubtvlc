@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in vout_directx; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in vout_directx; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in vout_directx; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in vout_directx glwin32; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in vout_directx glwin32; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in vout_directx glwin32; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -68,6 +68,43 @@ libvout_directx_plugin$(LIBEXT): $(libvout_directx_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libvout_directx_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin vout_directx\` ; $(CXXLINK) $(libvout_directx_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin vout_directx` ;; \
 	  objc) echo $(OBJCLINK) $(libvout_directx_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin vout_directx\` ; $(OBJCLINK) $(libvout_directx_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin vout_directx` ;; \
 	  c|*) echo $(LINK) $(libvout_directx_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin vout_directx\` ; $(LINK) $(libvout_directx_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin vout_directx` ;; \
+	esac
+
+
+# The glwin32 plugin
+
+if UNTRUE
+Lglwin32p = libglwin32_plugin.a
+Dglwin32p = libglwin32_plugin$(LIBEXT)
+Lglwin32b = libglwin32.a
+Lglwin32pic = libglwin32_pic.a
+endif
+
+libglwin32_plugin_a_SOURCES = $(SOURCES_glwin32)
+libglwin32_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin glwin32`
+libglwin32_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin glwin32`
+libglwin32_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin glwin32`
+
+libglwin32_pic_a_SOURCES = $(SOURCES_glwin32)
+libglwin32_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic glwin32`
+libglwin32_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic glwin32`
+libglwin32_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic glwin32`
+
+libglwin32_a_SOURCES = $(SOURCES_glwin32)
+libglwin32_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin glwin32`
+libglwin32_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin glwin32`
+libglwin32_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin glwin32`
+
+libvlc_LIBRARIES += $(Lglwin32b) $(Lglwin32pic)
+libglwin32_DATA = $(Dglwin32p)
+
+libglwin32dir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lglwin32p)
+libglwin32_plugin$(LIBEXT): $(libglwin32_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage glwin32` in \
+	  c++) echo $(CXXLINK) $(libglwin32_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin glwin32\` ; $(CXXLINK) $(libglwin32_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin glwin32` ;; \
+	  objc) echo $(OBJCLINK) $(libglwin32_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin glwin32\` ; $(OBJCLINK) $(libglwin32_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin glwin32` ;; \
+	  c|*) echo $(LINK) $(libglwin32_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin glwin32\` ; $(LINK) $(libglwin32_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin glwin32` ;; \
 	esac
 
 

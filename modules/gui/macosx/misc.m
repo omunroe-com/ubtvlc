@@ -1,8 +1,8 @@
 /*****************************************************************************
  * misc.m: code not specific to vlc
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: misc.m 7723 2004-05-19 23:58:06Z hartman $
+ * Copyright (C) 2003-2004 VideoLAN
+ * $Id: misc.m 8121 2004-07-05 01:27:35Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *
@@ -44,8 +44,7 @@
 
 - (BOOL)performKeyEquivalent:(NSEvent *)o_event
 {
-    return [( (VLCApplication *) [VLCApplication sharedApplication] )
-            hasDefinedShortcutKey:o_event];
+    return [[VLCMain sharedInstance] hasDefinedShortcutKey:o_event];
 }
 
 @end
@@ -110,7 +109,7 @@
                 o_dic = [NSDictionary dictionaryWithObject:[o_values objectAtIndex:i] forKey:@"ITEM_URL"];
                 o_array = [o_array arrayByAddingObject: o_dic];
             }
-            [(VLCPlaylist *)[[NSApp delegate] getPlaylist] appendArray: o_array atPos: -1 enqueue:NO];
+            [(VLCPlaylist *)[[VLCMain sharedInstance] getPlaylist] appendArray: o_array atPos: -1 enqueue:NO];
             return YES;
         }
     }
@@ -188,7 +187,7 @@
                 o_dic = [NSDictionary dictionaryWithObject:[o_values objectAtIndex:i] forKey:@"ITEM_URL"];
                 o_array = [o_array arrayByAddingObject: o_dic];
             }
-            [(VLCPlaylist *)[[NSApp delegate] getPlaylist] appendArray: o_array atPos: -1 enqueue:NO];
+            [[[VLCMain sharedInstance] getPlaylist] appendArray: o_array atPos: -1 enqueue:NO];
             return YES;
         }
     }
@@ -267,3 +266,4 @@ void _drawFrameInRect(NSRect frameRect)
 }
 
 @end
+

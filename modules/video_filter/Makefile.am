@@ -7,7 +7,7 @@ noinst_LIBRARIES =
 noinst_HEADERS =
 EXTRA_DIST = Modules.am
 BUILT_SOURCES =
-SUBDIRS = 
+SUBDIRS = swscale
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/video_filter
 include Modules.am
@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in transform invert adjust distort wall clone crop motionblur logo deinterlace blend scale time marq; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -401,6 +401,154 @@ libdeinterlace_plugin$(LIBEXT): $(libdeinterlace_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libdeinterlace_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin deinterlace\` ; $(CXXLINK) $(libdeinterlace_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin deinterlace` ;; \
 	  objc) echo $(OBJCLINK) $(libdeinterlace_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin deinterlace\` ; $(OBJCLINK) $(libdeinterlace_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin deinterlace` ;; \
 	  c|*) echo $(LINK) $(libdeinterlace_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin deinterlace\` ; $(LINK) $(libdeinterlace_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin deinterlace` ;; \
+	esac
+
+
+# The blend plugin
+
+if UNTRUE
+Lblendp = libblend_plugin.a
+Dblendp = libblend_plugin$(LIBEXT)
+Lblendb = libblend.a
+Lblendpic = libblend_pic.a
+endif
+
+libblend_plugin_a_SOURCES = $(SOURCES_blend)
+libblend_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin blend`
+libblend_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin blend`
+libblend_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin blend`
+
+libblend_pic_a_SOURCES = $(SOURCES_blend)
+libblend_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic blend`
+libblend_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic blend`
+libblend_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic blend`
+
+libblend_a_SOURCES = $(SOURCES_blend)
+libblend_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin blend`
+libblend_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin blend`
+libblend_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin blend`
+
+libvlc_LIBRARIES += $(Lblendb) $(Lblendpic)
+libblend_DATA = $(Dblendp)
+
+libblenddir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lblendp)
+libblend_plugin$(LIBEXT): $(libblend_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage blend` in \
+	  c++) echo $(CXXLINK) $(libblend_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin blend\` ; $(CXXLINK) $(libblend_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin blend` ;; \
+	  objc) echo $(OBJCLINK) $(libblend_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin blend\` ; $(OBJCLINK) $(libblend_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin blend` ;; \
+	  c|*) echo $(LINK) $(libblend_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin blend\` ; $(LINK) $(libblend_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin blend` ;; \
+	esac
+
+
+# The scale plugin
+
+if UNTRUE
+Lscalep = libscale_plugin.a
+Dscalep = libscale_plugin$(LIBEXT)
+Lscaleb = libscale.a
+Lscalepic = libscale_pic.a
+endif
+
+libscale_plugin_a_SOURCES = $(SOURCES_scale)
+libscale_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin scale`
+libscale_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin scale`
+libscale_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin scale`
+
+libscale_pic_a_SOURCES = $(SOURCES_scale)
+libscale_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic scale`
+libscale_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic scale`
+libscale_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic scale`
+
+libscale_a_SOURCES = $(SOURCES_scale)
+libscale_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin scale`
+libscale_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin scale`
+libscale_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin scale`
+
+libvlc_LIBRARIES += $(Lscaleb) $(Lscalepic)
+libscale_DATA = $(Dscalep)
+
+libscaledir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lscalep)
+libscale_plugin$(LIBEXT): $(libscale_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage scale` in \
+	  c++) echo $(CXXLINK) $(libscale_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin scale\` ; $(CXXLINK) $(libscale_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin scale` ;; \
+	  objc) echo $(OBJCLINK) $(libscale_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin scale\` ; $(OBJCLINK) $(libscale_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin scale` ;; \
+	  c|*) echo $(LINK) $(libscale_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin scale\` ; $(LINK) $(libscale_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin scale` ;; \
+	esac
+
+
+# The time plugin
+
+if UNTRUE
+Ltimep = libtime_plugin.a
+Dtimep = libtime_plugin$(LIBEXT)
+Ltimeb = libtime.a
+Ltimepic = libtime_pic.a
+endif
+
+libtime_plugin_a_SOURCES = $(SOURCES_time)
+libtime_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin time`
+libtime_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin time`
+libtime_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin time`
+
+libtime_pic_a_SOURCES = $(SOURCES_time)
+libtime_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic time`
+libtime_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic time`
+libtime_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic time`
+
+libtime_a_SOURCES = $(SOURCES_time)
+libtime_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin time`
+libtime_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin time`
+libtime_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin time`
+
+libvlc_LIBRARIES += $(Ltimeb) $(Ltimepic)
+libtime_DATA = $(Dtimep)
+
+libtimedir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Ltimep)
+libtime_plugin$(LIBEXT): $(libtime_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage time` in \
+	  c++) echo $(CXXLINK) $(libtime_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin time\` ; $(CXXLINK) $(libtime_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin time` ;; \
+	  objc) echo $(OBJCLINK) $(libtime_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin time\` ; $(OBJCLINK) $(libtime_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin time` ;; \
+	  c|*) echo $(LINK) $(libtime_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin time\` ; $(LINK) $(libtime_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin time` ;; \
+	esac
+
+
+# The marq plugin
+
+if UNTRUE
+Lmarqp = libmarq_plugin.a
+Dmarqp = libmarq_plugin$(LIBEXT)
+Lmarqb = libmarq.a
+Lmarqpic = libmarq_pic.a
+endif
+
+libmarq_plugin_a_SOURCES = $(SOURCES_marq)
+libmarq_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin marq`
+libmarq_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin marq`
+libmarq_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin marq`
+
+libmarq_pic_a_SOURCES = $(SOURCES_marq)
+libmarq_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic marq`
+libmarq_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic marq`
+libmarq_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic marq`
+
+libmarq_a_SOURCES = $(SOURCES_marq)
+libmarq_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin marq`
+libmarq_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin marq`
+libmarq_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin marq`
+
+libvlc_LIBRARIES += $(Lmarqb) $(Lmarqpic)
+libmarq_DATA = $(Dmarqp)
+
+libmarqdir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lmarqp)
+libmarq_plugin$(LIBEXT): $(libmarq_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage marq` in \
+	  c++) echo $(CXXLINK) $(libmarq_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin marq\` ; $(CXXLINK) $(libmarq_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin marq` ;; \
+	  objc) echo $(OBJCLINK) $(libmarq_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin marq\` ; $(OBJCLINK) $(libmarq_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin marq` ;; \
+	  c|*) echo $(LINK) $(libmarq_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin marq\` ; $(LINK) $(libmarq_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin marq` ;; \
 	esac
 
 

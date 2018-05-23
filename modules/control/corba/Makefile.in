@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -231,23 +233,37 @@ NULL =
 libvlc_LIBRARIES = $(Lcorbab) $(Lcorbapic)
 noinst_LIBRARIES = $(Lcorbap)
 noinst_HEADERS = 
-EXTRA_DIST = Modules.am
 
-BUILT_SOURCES = $(Bcorba)
+EXTRA_DIST = Modules.am $(CORBAIDLFILE)
+
+BUILT_SOURCES = $(GENERATEDFILES) $(Bcorba)
 SUBDIRS = 
 #DIST_SUBDIRS = $(SUBDIRS)
 libvlcdir = $(libdir)/vlc/control
 
-SOURCES_corba = corba.c
+SOURCES_corba = corba.c mediacontrol-core.c mediacontrol-plugin.c
 
 nodist_SOURCES_corba = \
-	mediacontrol-common.c \
-	mediacontrol-skels.c \
-	mediacontrol.h \
+	MediaControl-common.c \
+	MediaControl-skels.c \
+	MediaControl-stubs.c \
+	MediaControl.h \
 	$(NULL)
 
 
-ORBITIDL = orbit-idl-2
+@ENABLE_CORBA_TRUE@GENERATEDFILES = MediaControl-common.c MediaControl-skels.c MediaControl.h
+
+@ENABLE_CORBA_TRUE@CORBAIDLFILE = MediaControl.idl
+
+@ENABLE_CORBA_TRUE@corbaidldir = $(datadir)/idl
+@ENABLE_CORBA_TRUE@corbaidl_DATA = $(CORBAIDLFILE)
+
+@ENABLE_CORBA_TRUE@orbittypelibdir = $(libdir)/advene
+@ENABLE_CORBA_TRUE@orbittypelib_DATA = MediaControl.so
+@ENABLE_CORBA_TRUE@orbittypelib_CFLAGS = `$(VLC_CONFIG) --cflags plugin corba`
+@ENABLE_CORBA_TRUE@orbittypelib_LIBS = `$(VLC_CONFIG) --libs plugin corba`
+
+@ENABLE_CORBA_TRUE@ORBIT_IDL = $(shell pkg-config --variable=orbit_idl ORBit-2.0)
 
 # There's no need for pic code on win32 so get rid of this to substantially
 # reduce the compilation time.
@@ -288,29 +304,38 @@ LIBRARIES = $(libvlc_LIBRARIES) $(noinst_LIBRARIES)
 
 libcorba_a_AR = $(AR) cru
 libcorba_a_LIBADD =
-am__objects_1 = libcorba_a-corba.$(OBJEXT)
+am__objects_1 = libcorba_a-corba.$(OBJEXT) \
+	libcorba_a-mediacontrol-core.$(OBJEXT) \
+	libcorba_a-mediacontrol-plugin.$(OBJEXT)
 am_libcorba_a_OBJECTS = $(am__objects_1)
 am__objects_2 =
-am__objects_3 = libcorba_a-mediacontrol-common.$(OBJEXT) \
-	libcorba_a-mediacontrol-skels.$(OBJEXT) $(am__objects_2)
+am__objects_3 = libcorba_a-MediaControl-common.$(OBJEXT) \
+	libcorba_a-MediaControl-skels.$(OBJEXT) \
+	libcorba_a-MediaControl-stubs.$(OBJEXT) $(am__objects_2)
 nodist_libcorba_a_OBJECTS = $(am__objects_3)
 libcorba_a_OBJECTS = $(am_libcorba_a_OBJECTS) \
 	$(nodist_libcorba_a_OBJECTS)
 libcorba_pic_a_AR = $(AR) cru
 libcorba_pic_a_LIBADD =
-am__objects_4 = libcorba_pic_a-corba.$(OBJEXT)
+am__objects_4 = libcorba_pic_a-corba.$(OBJEXT) \
+	libcorba_pic_a-mediacontrol-core.$(OBJEXT) \
+	libcorba_pic_a-mediacontrol-plugin.$(OBJEXT)
 am_libcorba_pic_a_OBJECTS = $(am__objects_4)
-am__objects_5 = libcorba_pic_a-mediacontrol-common.$(OBJEXT) \
-	libcorba_pic_a-mediacontrol-skels.$(OBJEXT) $(am__objects_2)
+am__objects_5 = libcorba_pic_a-MediaControl-common.$(OBJEXT) \
+	libcorba_pic_a-MediaControl-skels.$(OBJEXT) \
+	libcorba_pic_a-MediaControl-stubs.$(OBJEXT) $(am__objects_2)
 nodist_libcorba_pic_a_OBJECTS = $(am__objects_5)
 libcorba_pic_a_OBJECTS = $(am_libcorba_pic_a_OBJECTS) \
 	$(nodist_libcorba_pic_a_OBJECTS)
 libcorba_plugin_a_AR = $(AR) cru
 libcorba_plugin_a_LIBADD =
-am__objects_6 = libcorba_plugin_a-corba.$(OBJEXT)
+am__objects_6 = libcorba_plugin_a-corba.$(OBJEXT) \
+	libcorba_plugin_a-mediacontrol-core.$(OBJEXT) \
+	libcorba_plugin_a-mediacontrol-plugin.$(OBJEXT)
 am_libcorba_plugin_a_OBJECTS = $(am__objects_6)
-am__objects_7 = libcorba_plugin_a-mediacontrol-common.$(OBJEXT) \
-	libcorba_plugin_a-mediacontrol-skels.$(OBJEXT) $(am__objects_2)
+am__objects_7 = libcorba_plugin_a-MediaControl-common.$(OBJEXT) \
+	libcorba_plugin_a-MediaControl-skels.$(OBJEXT) \
+	libcorba_plugin_a-MediaControl-stubs.$(OBJEXT) $(am__objects_2)
 nodist_libcorba_plugin_a_OBJECTS = $(am__objects_7)
 libcorba_plugin_a_OBJECTS = $(am_libcorba_plugin_a_OBJECTS) \
 	$(nodist_libcorba_plugin_a_OBJECTS)
@@ -318,22 +343,31 @@ libcorba_plugin_a_OBJECTS = $(am_libcorba_plugin_a_OBJECTS) \
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libcorba_a-corba.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libcorba_a-mediacontrol-common.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libcorba_a-mediacontrol-skels.Po \
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libcorba_a-MediaControl-common.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcorba_a-MediaControl-skels.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcorba_a-MediaControl-stubs.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcorba_a-corba.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcorba_a-mediacontrol-core.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcorba_a-mediacontrol-plugin.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcorba_pic_a-MediaControl-common.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcorba_pic_a-MediaControl-skels.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcorba_pic_a-MediaControl-stubs.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libcorba_pic_a-corba.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libcorba_pic_a-mediacontrol-common.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libcorba_pic_a-mediacontrol-skels.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcorba_pic_a-mediacontrol-core.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcorba_pic_a-mediacontrol-plugin.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcorba_plugin_a-MediaControl-common.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcorba_plugin_a-MediaControl-skels.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcorba_plugin_a-MediaControl-stubs.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libcorba_plugin_a-corba.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libcorba_plugin_a-mediacontrol-common.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libcorba_plugin_a-mediacontrol-skels.Po
+@AMDEP_TRUE@	./$(DEPDIR)/libcorba_plugin_a-mediacontrol-core.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libcorba_plugin_a-mediacontrol-plugin.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 DIST_SOURCES = $(libcorba_a_SOURCES) $(libcorba_pic_a_SOURCES) \
 	$(libcorba_plugin_a_SOURCES)
-DATA = $(libcorba_DATA)
+DATA = $(corbaidl_DATA) $(libcorba_DATA) $(orbittypelib_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -410,15 +444,24 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_a-MediaControl-common.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_a-MediaControl-skels.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_a-MediaControl-stubs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_a-corba.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_a-mediacontrol-common.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_a-mediacontrol-skels.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_a-mediacontrol-core.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_a-mediacontrol-plugin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_pic_a-MediaControl-common.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_pic_a-MediaControl-skels.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_pic_a-MediaControl-stubs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_pic_a-corba.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_pic_a-mediacontrol-common.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_pic_a-mediacontrol-skels.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_pic_a-mediacontrol-core.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_pic_a-mediacontrol-plugin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_plugin_a-MediaControl-common.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_plugin_a-MediaControl-skels.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_plugin_a-MediaControl-stubs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_plugin_a-corba.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_plugin_a-mediacontrol-common.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_plugin_a-mediacontrol-skels.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_plugin_a-mediacontrol-core.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcorba_plugin_a-mediacontrol-plugin.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
@@ -464,49 +507,115 @@ libcorba_a-corba.obj: corba.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -c -o libcorba_a-corba.obj `if test -f 'corba.c'; then $(CYGPATH_W) 'corba.c'; else $(CYGPATH_W) '$(srcdir)/corba.c'; fi`
 
-libcorba_a-mediacontrol-common.o: mediacontrol-common.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -MT libcorba_a-mediacontrol-common.o -MD -MP -MF "$(DEPDIR)/libcorba_a-mediacontrol-common.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcorba_a-mediacontrol-common.o `test -f 'mediacontrol-common.c' || echo '$(srcdir)/'`mediacontrol-common.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_a-mediacontrol-common.Tpo" "$(DEPDIR)/libcorba_a-mediacontrol-common.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_a-mediacontrol-common.Tpo"; exit 1; \
+libcorba_a-mediacontrol-core.o: mediacontrol-core.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -MT libcorba_a-mediacontrol-core.o -MD -MP -MF "$(DEPDIR)/libcorba_a-mediacontrol-core.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_a-mediacontrol-core.o `test -f 'mediacontrol-core.c' || echo '$(srcdir)/'`mediacontrol-core.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_a-mediacontrol-core.Tpo" "$(DEPDIR)/libcorba_a-mediacontrol-core.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_a-mediacontrol-core.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-common.c' object='libcorba_a-mediacontrol-common.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_a-mediacontrol-common.Po' tmpdepfile='$(DEPDIR)/libcorba_a-mediacontrol-common.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-core.c' object='libcorba_a-mediacontrol-core.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_a-mediacontrol-core.Po' tmpdepfile='$(DEPDIR)/libcorba_a-mediacontrol-core.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -c -o libcorba_a-mediacontrol-common.o `test -f 'mediacontrol-common.c' || echo '$(srcdir)/'`mediacontrol-common.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -c -o libcorba_a-mediacontrol-core.o `test -f 'mediacontrol-core.c' || echo '$(srcdir)/'`mediacontrol-core.c
 
-libcorba_a-mediacontrol-common.obj: mediacontrol-common.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -MT libcorba_a-mediacontrol-common.obj -MD -MP -MF "$(DEPDIR)/libcorba_a-mediacontrol-common.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcorba_a-mediacontrol-common.obj `if test -f 'mediacontrol-common.c'; then $(CYGPATH_W) 'mediacontrol-common.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-common.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_a-mediacontrol-common.Tpo" "$(DEPDIR)/libcorba_a-mediacontrol-common.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_a-mediacontrol-common.Tpo"; exit 1; \
+libcorba_a-mediacontrol-core.obj: mediacontrol-core.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -MT libcorba_a-mediacontrol-core.obj -MD -MP -MF "$(DEPDIR)/libcorba_a-mediacontrol-core.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_a-mediacontrol-core.obj `if test -f 'mediacontrol-core.c'; then $(CYGPATH_W) 'mediacontrol-core.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-core.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_a-mediacontrol-core.Tpo" "$(DEPDIR)/libcorba_a-mediacontrol-core.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_a-mediacontrol-core.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-common.c' object='libcorba_a-mediacontrol-common.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_a-mediacontrol-common.Po' tmpdepfile='$(DEPDIR)/libcorba_a-mediacontrol-common.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-core.c' object='libcorba_a-mediacontrol-core.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_a-mediacontrol-core.Po' tmpdepfile='$(DEPDIR)/libcorba_a-mediacontrol-core.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -c -o libcorba_a-mediacontrol-common.obj `if test -f 'mediacontrol-common.c'; then $(CYGPATH_W) 'mediacontrol-common.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-common.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -c -o libcorba_a-mediacontrol-core.obj `if test -f 'mediacontrol-core.c'; then $(CYGPATH_W) 'mediacontrol-core.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-core.c'; fi`
 
-libcorba_a-mediacontrol-skels.o: mediacontrol-skels.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -MT libcorba_a-mediacontrol-skels.o -MD -MP -MF "$(DEPDIR)/libcorba_a-mediacontrol-skels.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcorba_a-mediacontrol-skels.o `test -f 'mediacontrol-skels.c' || echo '$(srcdir)/'`mediacontrol-skels.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_a-mediacontrol-skels.Tpo" "$(DEPDIR)/libcorba_a-mediacontrol-skels.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_a-mediacontrol-skels.Tpo"; exit 1; \
+libcorba_a-mediacontrol-plugin.o: mediacontrol-plugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -MT libcorba_a-mediacontrol-plugin.o -MD -MP -MF "$(DEPDIR)/libcorba_a-mediacontrol-plugin.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_a-mediacontrol-plugin.o `test -f 'mediacontrol-plugin.c' || echo '$(srcdir)/'`mediacontrol-plugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_a-mediacontrol-plugin.Tpo" "$(DEPDIR)/libcorba_a-mediacontrol-plugin.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_a-mediacontrol-plugin.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-skels.c' object='libcorba_a-mediacontrol-skels.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_a-mediacontrol-skels.Po' tmpdepfile='$(DEPDIR)/libcorba_a-mediacontrol-skels.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-plugin.c' object='libcorba_a-mediacontrol-plugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_a-mediacontrol-plugin.Po' tmpdepfile='$(DEPDIR)/libcorba_a-mediacontrol-plugin.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -c -o libcorba_a-mediacontrol-skels.o `test -f 'mediacontrol-skels.c' || echo '$(srcdir)/'`mediacontrol-skels.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -c -o libcorba_a-mediacontrol-plugin.o `test -f 'mediacontrol-plugin.c' || echo '$(srcdir)/'`mediacontrol-plugin.c
 
-libcorba_a-mediacontrol-skels.obj: mediacontrol-skels.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -MT libcorba_a-mediacontrol-skels.obj -MD -MP -MF "$(DEPDIR)/libcorba_a-mediacontrol-skels.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcorba_a-mediacontrol-skels.obj `if test -f 'mediacontrol-skels.c'; then $(CYGPATH_W) 'mediacontrol-skels.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-skels.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_a-mediacontrol-skels.Tpo" "$(DEPDIR)/libcorba_a-mediacontrol-skels.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_a-mediacontrol-skels.Tpo"; exit 1; \
+libcorba_a-mediacontrol-plugin.obj: mediacontrol-plugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -MT libcorba_a-mediacontrol-plugin.obj -MD -MP -MF "$(DEPDIR)/libcorba_a-mediacontrol-plugin.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_a-mediacontrol-plugin.obj `if test -f 'mediacontrol-plugin.c'; then $(CYGPATH_W) 'mediacontrol-plugin.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-plugin.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_a-mediacontrol-plugin.Tpo" "$(DEPDIR)/libcorba_a-mediacontrol-plugin.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_a-mediacontrol-plugin.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-skels.c' object='libcorba_a-mediacontrol-skels.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_a-mediacontrol-skels.Po' tmpdepfile='$(DEPDIR)/libcorba_a-mediacontrol-skels.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-plugin.c' object='libcorba_a-mediacontrol-plugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_a-mediacontrol-plugin.Po' tmpdepfile='$(DEPDIR)/libcorba_a-mediacontrol-plugin.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -c -o libcorba_a-mediacontrol-skels.obj `if test -f 'mediacontrol-skels.c'; then $(CYGPATH_W) 'mediacontrol-skels.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-skels.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -c -o libcorba_a-mediacontrol-plugin.obj `if test -f 'mediacontrol-plugin.c'; then $(CYGPATH_W) 'mediacontrol-plugin.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-plugin.c'; fi`
+
+libcorba_a-MediaControl-common.o: MediaControl-common.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -MT libcorba_a-MediaControl-common.o -MD -MP -MF "$(DEPDIR)/libcorba_a-MediaControl-common.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_a-MediaControl-common.o `test -f 'MediaControl-common.c' || echo '$(srcdir)/'`MediaControl-common.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_a-MediaControl-common.Tpo" "$(DEPDIR)/libcorba_a-MediaControl-common.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_a-MediaControl-common.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-common.c' object='libcorba_a-MediaControl-common.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_a-MediaControl-common.Po' tmpdepfile='$(DEPDIR)/libcorba_a-MediaControl-common.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -c -o libcorba_a-MediaControl-common.o `test -f 'MediaControl-common.c' || echo '$(srcdir)/'`MediaControl-common.c
+
+libcorba_a-MediaControl-common.obj: MediaControl-common.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -MT libcorba_a-MediaControl-common.obj -MD -MP -MF "$(DEPDIR)/libcorba_a-MediaControl-common.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_a-MediaControl-common.obj `if test -f 'MediaControl-common.c'; then $(CYGPATH_W) 'MediaControl-common.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-common.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_a-MediaControl-common.Tpo" "$(DEPDIR)/libcorba_a-MediaControl-common.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_a-MediaControl-common.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-common.c' object='libcorba_a-MediaControl-common.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_a-MediaControl-common.Po' tmpdepfile='$(DEPDIR)/libcorba_a-MediaControl-common.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -c -o libcorba_a-MediaControl-common.obj `if test -f 'MediaControl-common.c'; then $(CYGPATH_W) 'MediaControl-common.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-common.c'; fi`
+
+libcorba_a-MediaControl-skels.o: MediaControl-skels.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -MT libcorba_a-MediaControl-skels.o -MD -MP -MF "$(DEPDIR)/libcorba_a-MediaControl-skels.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_a-MediaControl-skels.o `test -f 'MediaControl-skels.c' || echo '$(srcdir)/'`MediaControl-skels.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_a-MediaControl-skels.Tpo" "$(DEPDIR)/libcorba_a-MediaControl-skels.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_a-MediaControl-skels.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-skels.c' object='libcorba_a-MediaControl-skels.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_a-MediaControl-skels.Po' tmpdepfile='$(DEPDIR)/libcorba_a-MediaControl-skels.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -c -o libcorba_a-MediaControl-skels.o `test -f 'MediaControl-skels.c' || echo '$(srcdir)/'`MediaControl-skels.c
+
+libcorba_a-MediaControl-skels.obj: MediaControl-skels.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -MT libcorba_a-MediaControl-skels.obj -MD -MP -MF "$(DEPDIR)/libcorba_a-MediaControl-skels.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_a-MediaControl-skels.obj `if test -f 'MediaControl-skels.c'; then $(CYGPATH_W) 'MediaControl-skels.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-skels.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_a-MediaControl-skels.Tpo" "$(DEPDIR)/libcorba_a-MediaControl-skels.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_a-MediaControl-skels.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-skels.c' object='libcorba_a-MediaControl-skels.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_a-MediaControl-skels.Po' tmpdepfile='$(DEPDIR)/libcorba_a-MediaControl-skels.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -c -o libcorba_a-MediaControl-skels.obj `if test -f 'MediaControl-skels.c'; then $(CYGPATH_W) 'MediaControl-skels.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-skels.c'; fi`
+
+libcorba_a-MediaControl-stubs.o: MediaControl-stubs.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -MT libcorba_a-MediaControl-stubs.o -MD -MP -MF "$(DEPDIR)/libcorba_a-MediaControl-stubs.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_a-MediaControl-stubs.o `test -f 'MediaControl-stubs.c' || echo '$(srcdir)/'`MediaControl-stubs.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_a-MediaControl-stubs.Tpo" "$(DEPDIR)/libcorba_a-MediaControl-stubs.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_a-MediaControl-stubs.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-stubs.c' object='libcorba_a-MediaControl-stubs.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_a-MediaControl-stubs.Po' tmpdepfile='$(DEPDIR)/libcorba_a-MediaControl-stubs.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -c -o libcorba_a-MediaControl-stubs.o `test -f 'MediaControl-stubs.c' || echo '$(srcdir)/'`MediaControl-stubs.c
+
+libcorba_a-MediaControl-stubs.obj: MediaControl-stubs.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -MT libcorba_a-MediaControl-stubs.obj -MD -MP -MF "$(DEPDIR)/libcorba_a-MediaControl-stubs.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_a-MediaControl-stubs.obj `if test -f 'MediaControl-stubs.c'; then $(CYGPATH_W) 'MediaControl-stubs.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-stubs.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_a-MediaControl-stubs.Tpo" "$(DEPDIR)/libcorba_a-MediaControl-stubs.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_a-MediaControl-stubs.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-stubs.c' object='libcorba_a-MediaControl-stubs.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_a-MediaControl-stubs.Po' tmpdepfile='$(DEPDIR)/libcorba_a-MediaControl-stubs.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_a_CFLAGS) $(CFLAGS) -c -o libcorba_a-MediaControl-stubs.obj `if test -f 'MediaControl-stubs.c'; then $(CYGPATH_W) 'MediaControl-stubs.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-stubs.c'; fi`
 
 libcorba_pic_a-corba.o: corba.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -MT libcorba_pic_a-corba.o -MD -MP -MF "$(DEPDIR)/libcorba_pic_a-corba.Tpo" \
@@ -530,49 +639,115 @@ libcorba_pic_a-corba.obj: corba.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -c -o libcorba_pic_a-corba.obj `if test -f 'corba.c'; then $(CYGPATH_W) 'corba.c'; else $(CYGPATH_W) '$(srcdir)/corba.c'; fi`
 
-libcorba_pic_a-mediacontrol-common.o: mediacontrol-common.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -MT libcorba_pic_a-mediacontrol-common.o -MD -MP -MF "$(DEPDIR)/libcorba_pic_a-mediacontrol-common.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcorba_pic_a-mediacontrol-common.o `test -f 'mediacontrol-common.c' || echo '$(srcdir)/'`mediacontrol-common.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_pic_a-mediacontrol-common.Tpo" "$(DEPDIR)/libcorba_pic_a-mediacontrol-common.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_pic_a-mediacontrol-common.Tpo"; exit 1; \
+libcorba_pic_a-mediacontrol-core.o: mediacontrol-core.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -MT libcorba_pic_a-mediacontrol-core.o -MD -MP -MF "$(DEPDIR)/libcorba_pic_a-mediacontrol-core.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_pic_a-mediacontrol-core.o `test -f 'mediacontrol-core.c' || echo '$(srcdir)/'`mediacontrol-core.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_pic_a-mediacontrol-core.Tpo" "$(DEPDIR)/libcorba_pic_a-mediacontrol-core.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_pic_a-mediacontrol-core.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-common.c' object='libcorba_pic_a-mediacontrol-common.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_pic_a-mediacontrol-common.Po' tmpdepfile='$(DEPDIR)/libcorba_pic_a-mediacontrol-common.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-core.c' object='libcorba_pic_a-mediacontrol-core.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_pic_a-mediacontrol-core.Po' tmpdepfile='$(DEPDIR)/libcorba_pic_a-mediacontrol-core.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -c -o libcorba_pic_a-mediacontrol-common.o `test -f 'mediacontrol-common.c' || echo '$(srcdir)/'`mediacontrol-common.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -c -o libcorba_pic_a-mediacontrol-core.o `test -f 'mediacontrol-core.c' || echo '$(srcdir)/'`mediacontrol-core.c
 
-libcorba_pic_a-mediacontrol-common.obj: mediacontrol-common.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -MT libcorba_pic_a-mediacontrol-common.obj -MD -MP -MF "$(DEPDIR)/libcorba_pic_a-mediacontrol-common.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcorba_pic_a-mediacontrol-common.obj `if test -f 'mediacontrol-common.c'; then $(CYGPATH_W) 'mediacontrol-common.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-common.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_pic_a-mediacontrol-common.Tpo" "$(DEPDIR)/libcorba_pic_a-mediacontrol-common.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_pic_a-mediacontrol-common.Tpo"; exit 1; \
+libcorba_pic_a-mediacontrol-core.obj: mediacontrol-core.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -MT libcorba_pic_a-mediacontrol-core.obj -MD -MP -MF "$(DEPDIR)/libcorba_pic_a-mediacontrol-core.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_pic_a-mediacontrol-core.obj `if test -f 'mediacontrol-core.c'; then $(CYGPATH_W) 'mediacontrol-core.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-core.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_pic_a-mediacontrol-core.Tpo" "$(DEPDIR)/libcorba_pic_a-mediacontrol-core.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_pic_a-mediacontrol-core.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-common.c' object='libcorba_pic_a-mediacontrol-common.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_pic_a-mediacontrol-common.Po' tmpdepfile='$(DEPDIR)/libcorba_pic_a-mediacontrol-common.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-core.c' object='libcorba_pic_a-mediacontrol-core.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_pic_a-mediacontrol-core.Po' tmpdepfile='$(DEPDIR)/libcorba_pic_a-mediacontrol-core.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -c -o libcorba_pic_a-mediacontrol-common.obj `if test -f 'mediacontrol-common.c'; then $(CYGPATH_W) 'mediacontrol-common.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-common.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -c -o libcorba_pic_a-mediacontrol-core.obj `if test -f 'mediacontrol-core.c'; then $(CYGPATH_W) 'mediacontrol-core.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-core.c'; fi`
 
-libcorba_pic_a-mediacontrol-skels.o: mediacontrol-skels.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -MT libcorba_pic_a-mediacontrol-skels.o -MD -MP -MF "$(DEPDIR)/libcorba_pic_a-mediacontrol-skels.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcorba_pic_a-mediacontrol-skels.o `test -f 'mediacontrol-skels.c' || echo '$(srcdir)/'`mediacontrol-skels.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_pic_a-mediacontrol-skels.Tpo" "$(DEPDIR)/libcorba_pic_a-mediacontrol-skels.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_pic_a-mediacontrol-skels.Tpo"; exit 1; \
+libcorba_pic_a-mediacontrol-plugin.o: mediacontrol-plugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -MT libcorba_pic_a-mediacontrol-plugin.o -MD -MP -MF "$(DEPDIR)/libcorba_pic_a-mediacontrol-plugin.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_pic_a-mediacontrol-plugin.o `test -f 'mediacontrol-plugin.c' || echo '$(srcdir)/'`mediacontrol-plugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_pic_a-mediacontrol-plugin.Tpo" "$(DEPDIR)/libcorba_pic_a-mediacontrol-plugin.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_pic_a-mediacontrol-plugin.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-skels.c' object='libcorba_pic_a-mediacontrol-skels.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_pic_a-mediacontrol-skels.Po' tmpdepfile='$(DEPDIR)/libcorba_pic_a-mediacontrol-skels.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-plugin.c' object='libcorba_pic_a-mediacontrol-plugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_pic_a-mediacontrol-plugin.Po' tmpdepfile='$(DEPDIR)/libcorba_pic_a-mediacontrol-plugin.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -c -o libcorba_pic_a-mediacontrol-skels.o `test -f 'mediacontrol-skels.c' || echo '$(srcdir)/'`mediacontrol-skels.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -c -o libcorba_pic_a-mediacontrol-plugin.o `test -f 'mediacontrol-plugin.c' || echo '$(srcdir)/'`mediacontrol-plugin.c
 
-libcorba_pic_a-mediacontrol-skels.obj: mediacontrol-skels.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -MT libcorba_pic_a-mediacontrol-skels.obj -MD -MP -MF "$(DEPDIR)/libcorba_pic_a-mediacontrol-skels.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcorba_pic_a-mediacontrol-skels.obj `if test -f 'mediacontrol-skels.c'; then $(CYGPATH_W) 'mediacontrol-skels.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-skels.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_pic_a-mediacontrol-skels.Tpo" "$(DEPDIR)/libcorba_pic_a-mediacontrol-skels.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_pic_a-mediacontrol-skels.Tpo"; exit 1; \
+libcorba_pic_a-mediacontrol-plugin.obj: mediacontrol-plugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -MT libcorba_pic_a-mediacontrol-plugin.obj -MD -MP -MF "$(DEPDIR)/libcorba_pic_a-mediacontrol-plugin.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_pic_a-mediacontrol-plugin.obj `if test -f 'mediacontrol-plugin.c'; then $(CYGPATH_W) 'mediacontrol-plugin.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-plugin.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_pic_a-mediacontrol-plugin.Tpo" "$(DEPDIR)/libcorba_pic_a-mediacontrol-plugin.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_pic_a-mediacontrol-plugin.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-skels.c' object='libcorba_pic_a-mediacontrol-skels.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_pic_a-mediacontrol-skels.Po' tmpdepfile='$(DEPDIR)/libcorba_pic_a-mediacontrol-skels.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-plugin.c' object='libcorba_pic_a-mediacontrol-plugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_pic_a-mediacontrol-plugin.Po' tmpdepfile='$(DEPDIR)/libcorba_pic_a-mediacontrol-plugin.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -c -o libcorba_pic_a-mediacontrol-skels.obj `if test -f 'mediacontrol-skels.c'; then $(CYGPATH_W) 'mediacontrol-skels.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-skels.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -c -o libcorba_pic_a-mediacontrol-plugin.obj `if test -f 'mediacontrol-plugin.c'; then $(CYGPATH_W) 'mediacontrol-plugin.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-plugin.c'; fi`
+
+libcorba_pic_a-MediaControl-common.o: MediaControl-common.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -MT libcorba_pic_a-MediaControl-common.o -MD -MP -MF "$(DEPDIR)/libcorba_pic_a-MediaControl-common.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_pic_a-MediaControl-common.o `test -f 'MediaControl-common.c' || echo '$(srcdir)/'`MediaControl-common.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_pic_a-MediaControl-common.Tpo" "$(DEPDIR)/libcorba_pic_a-MediaControl-common.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_pic_a-MediaControl-common.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-common.c' object='libcorba_pic_a-MediaControl-common.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_pic_a-MediaControl-common.Po' tmpdepfile='$(DEPDIR)/libcorba_pic_a-MediaControl-common.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -c -o libcorba_pic_a-MediaControl-common.o `test -f 'MediaControl-common.c' || echo '$(srcdir)/'`MediaControl-common.c
+
+libcorba_pic_a-MediaControl-common.obj: MediaControl-common.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -MT libcorba_pic_a-MediaControl-common.obj -MD -MP -MF "$(DEPDIR)/libcorba_pic_a-MediaControl-common.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_pic_a-MediaControl-common.obj `if test -f 'MediaControl-common.c'; then $(CYGPATH_W) 'MediaControl-common.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-common.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_pic_a-MediaControl-common.Tpo" "$(DEPDIR)/libcorba_pic_a-MediaControl-common.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_pic_a-MediaControl-common.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-common.c' object='libcorba_pic_a-MediaControl-common.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_pic_a-MediaControl-common.Po' tmpdepfile='$(DEPDIR)/libcorba_pic_a-MediaControl-common.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -c -o libcorba_pic_a-MediaControl-common.obj `if test -f 'MediaControl-common.c'; then $(CYGPATH_W) 'MediaControl-common.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-common.c'; fi`
+
+libcorba_pic_a-MediaControl-skels.o: MediaControl-skels.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -MT libcorba_pic_a-MediaControl-skels.o -MD -MP -MF "$(DEPDIR)/libcorba_pic_a-MediaControl-skels.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_pic_a-MediaControl-skels.o `test -f 'MediaControl-skels.c' || echo '$(srcdir)/'`MediaControl-skels.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_pic_a-MediaControl-skels.Tpo" "$(DEPDIR)/libcorba_pic_a-MediaControl-skels.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_pic_a-MediaControl-skels.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-skels.c' object='libcorba_pic_a-MediaControl-skels.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_pic_a-MediaControl-skels.Po' tmpdepfile='$(DEPDIR)/libcorba_pic_a-MediaControl-skels.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -c -o libcorba_pic_a-MediaControl-skels.o `test -f 'MediaControl-skels.c' || echo '$(srcdir)/'`MediaControl-skels.c
+
+libcorba_pic_a-MediaControl-skels.obj: MediaControl-skels.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -MT libcorba_pic_a-MediaControl-skels.obj -MD -MP -MF "$(DEPDIR)/libcorba_pic_a-MediaControl-skels.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_pic_a-MediaControl-skels.obj `if test -f 'MediaControl-skels.c'; then $(CYGPATH_W) 'MediaControl-skels.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-skels.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_pic_a-MediaControl-skels.Tpo" "$(DEPDIR)/libcorba_pic_a-MediaControl-skels.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_pic_a-MediaControl-skels.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-skels.c' object='libcorba_pic_a-MediaControl-skels.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_pic_a-MediaControl-skels.Po' tmpdepfile='$(DEPDIR)/libcorba_pic_a-MediaControl-skels.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -c -o libcorba_pic_a-MediaControl-skels.obj `if test -f 'MediaControl-skels.c'; then $(CYGPATH_W) 'MediaControl-skels.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-skels.c'; fi`
+
+libcorba_pic_a-MediaControl-stubs.o: MediaControl-stubs.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -MT libcorba_pic_a-MediaControl-stubs.o -MD -MP -MF "$(DEPDIR)/libcorba_pic_a-MediaControl-stubs.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_pic_a-MediaControl-stubs.o `test -f 'MediaControl-stubs.c' || echo '$(srcdir)/'`MediaControl-stubs.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_pic_a-MediaControl-stubs.Tpo" "$(DEPDIR)/libcorba_pic_a-MediaControl-stubs.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_pic_a-MediaControl-stubs.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-stubs.c' object='libcorba_pic_a-MediaControl-stubs.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_pic_a-MediaControl-stubs.Po' tmpdepfile='$(DEPDIR)/libcorba_pic_a-MediaControl-stubs.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -c -o libcorba_pic_a-MediaControl-stubs.o `test -f 'MediaControl-stubs.c' || echo '$(srcdir)/'`MediaControl-stubs.c
+
+libcorba_pic_a-MediaControl-stubs.obj: MediaControl-stubs.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -MT libcorba_pic_a-MediaControl-stubs.obj -MD -MP -MF "$(DEPDIR)/libcorba_pic_a-MediaControl-stubs.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_pic_a-MediaControl-stubs.obj `if test -f 'MediaControl-stubs.c'; then $(CYGPATH_W) 'MediaControl-stubs.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-stubs.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_pic_a-MediaControl-stubs.Tpo" "$(DEPDIR)/libcorba_pic_a-MediaControl-stubs.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_pic_a-MediaControl-stubs.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-stubs.c' object='libcorba_pic_a-MediaControl-stubs.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_pic_a-MediaControl-stubs.Po' tmpdepfile='$(DEPDIR)/libcorba_pic_a-MediaControl-stubs.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_pic_a_CFLAGS) $(CFLAGS) -c -o libcorba_pic_a-MediaControl-stubs.obj `if test -f 'MediaControl-stubs.c'; then $(CYGPATH_W) 'MediaControl-stubs.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-stubs.c'; fi`
 
 libcorba_plugin_a-corba.o: corba.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -MT libcorba_plugin_a-corba.o -MD -MP -MF "$(DEPDIR)/libcorba_plugin_a-corba.Tpo" \
@@ -596,50 +771,134 @@ libcorba_plugin_a-corba.obj: corba.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -c -o libcorba_plugin_a-corba.obj `if test -f 'corba.c'; then $(CYGPATH_W) 'corba.c'; else $(CYGPATH_W) '$(srcdir)/corba.c'; fi`
 
-libcorba_plugin_a-mediacontrol-common.o: mediacontrol-common.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -MT libcorba_plugin_a-mediacontrol-common.o -MD -MP -MF "$(DEPDIR)/libcorba_plugin_a-mediacontrol-common.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcorba_plugin_a-mediacontrol-common.o `test -f 'mediacontrol-common.c' || echo '$(srcdir)/'`mediacontrol-common.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_plugin_a-mediacontrol-common.Tpo" "$(DEPDIR)/libcorba_plugin_a-mediacontrol-common.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_plugin_a-mediacontrol-common.Tpo"; exit 1; \
+libcorba_plugin_a-mediacontrol-core.o: mediacontrol-core.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -MT libcorba_plugin_a-mediacontrol-core.o -MD -MP -MF "$(DEPDIR)/libcorba_plugin_a-mediacontrol-core.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_plugin_a-mediacontrol-core.o `test -f 'mediacontrol-core.c' || echo '$(srcdir)/'`mediacontrol-core.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_plugin_a-mediacontrol-core.Tpo" "$(DEPDIR)/libcorba_plugin_a-mediacontrol-core.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_plugin_a-mediacontrol-core.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-common.c' object='libcorba_plugin_a-mediacontrol-common.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_plugin_a-mediacontrol-common.Po' tmpdepfile='$(DEPDIR)/libcorba_plugin_a-mediacontrol-common.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-core.c' object='libcorba_plugin_a-mediacontrol-core.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_plugin_a-mediacontrol-core.Po' tmpdepfile='$(DEPDIR)/libcorba_plugin_a-mediacontrol-core.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -c -o libcorba_plugin_a-mediacontrol-common.o `test -f 'mediacontrol-common.c' || echo '$(srcdir)/'`mediacontrol-common.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -c -o libcorba_plugin_a-mediacontrol-core.o `test -f 'mediacontrol-core.c' || echo '$(srcdir)/'`mediacontrol-core.c
 
-libcorba_plugin_a-mediacontrol-common.obj: mediacontrol-common.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -MT libcorba_plugin_a-mediacontrol-common.obj -MD -MP -MF "$(DEPDIR)/libcorba_plugin_a-mediacontrol-common.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcorba_plugin_a-mediacontrol-common.obj `if test -f 'mediacontrol-common.c'; then $(CYGPATH_W) 'mediacontrol-common.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-common.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_plugin_a-mediacontrol-common.Tpo" "$(DEPDIR)/libcorba_plugin_a-mediacontrol-common.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_plugin_a-mediacontrol-common.Tpo"; exit 1; \
+libcorba_plugin_a-mediacontrol-core.obj: mediacontrol-core.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -MT libcorba_plugin_a-mediacontrol-core.obj -MD -MP -MF "$(DEPDIR)/libcorba_plugin_a-mediacontrol-core.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_plugin_a-mediacontrol-core.obj `if test -f 'mediacontrol-core.c'; then $(CYGPATH_W) 'mediacontrol-core.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-core.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_plugin_a-mediacontrol-core.Tpo" "$(DEPDIR)/libcorba_plugin_a-mediacontrol-core.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_plugin_a-mediacontrol-core.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-common.c' object='libcorba_plugin_a-mediacontrol-common.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_plugin_a-mediacontrol-common.Po' tmpdepfile='$(DEPDIR)/libcorba_plugin_a-mediacontrol-common.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-core.c' object='libcorba_plugin_a-mediacontrol-core.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_plugin_a-mediacontrol-core.Po' tmpdepfile='$(DEPDIR)/libcorba_plugin_a-mediacontrol-core.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -c -o libcorba_plugin_a-mediacontrol-common.obj `if test -f 'mediacontrol-common.c'; then $(CYGPATH_W) 'mediacontrol-common.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-common.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -c -o libcorba_plugin_a-mediacontrol-core.obj `if test -f 'mediacontrol-core.c'; then $(CYGPATH_W) 'mediacontrol-core.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-core.c'; fi`
 
-libcorba_plugin_a-mediacontrol-skels.o: mediacontrol-skels.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -MT libcorba_plugin_a-mediacontrol-skels.o -MD -MP -MF "$(DEPDIR)/libcorba_plugin_a-mediacontrol-skels.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcorba_plugin_a-mediacontrol-skels.o `test -f 'mediacontrol-skels.c' || echo '$(srcdir)/'`mediacontrol-skels.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_plugin_a-mediacontrol-skels.Tpo" "$(DEPDIR)/libcorba_plugin_a-mediacontrol-skels.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_plugin_a-mediacontrol-skels.Tpo"; exit 1; \
+libcorba_plugin_a-mediacontrol-plugin.o: mediacontrol-plugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -MT libcorba_plugin_a-mediacontrol-plugin.o -MD -MP -MF "$(DEPDIR)/libcorba_plugin_a-mediacontrol-plugin.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_plugin_a-mediacontrol-plugin.o `test -f 'mediacontrol-plugin.c' || echo '$(srcdir)/'`mediacontrol-plugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_plugin_a-mediacontrol-plugin.Tpo" "$(DEPDIR)/libcorba_plugin_a-mediacontrol-plugin.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_plugin_a-mediacontrol-plugin.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-skels.c' object='libcorba_plugin_a-mediacontrol-skels.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_plugin_a-mediacontrol-skels.Po' tmpdepfile='$(DEPDIR)/libcorba_plugin_a-mediacontrol-skels.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-plugin.c' object='libcorba_plugin_a-mediacontrol-plugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_plugin_a-mediacontrol-plugin.Po' tmpdepfile='$(DEPDIR)/libcorba_plugin_a-mediacontrol-plugin.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -c -o libcorba_plugin_a-mediacontrol-skels.o `test -f 'mediacontrol-skels.c' || echo '$(srcdir)/'`mediacontrol-skels.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -c -o libcorba_plugin_a-mediacontrol-plugin.o `test -f 'mediacontrol-plugin.c' || echo '$(srcdir)/'`mediacontrol-plugin.c
 
-libcorba_plugin_a-mediacontrol-skels.obj: mediacontrol-skels.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -MT libcorba_plugin_a-mediacontrol-skels.obj -MD -MP -MF "$(DEPDIR)/libcorba_plugin_a-mediacontrol-skels.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libcorba_plugin_a-mediacontrol-skels.obj `if test -f 'mediacontrol-skels.c'; then $(CYGPATH_W) 'mediacontrol-skels.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-skels.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_plugin_a-mediacontrol-skels.Tpo" "$(DEPDIR)/libcorba_plugin_a-mediacontrol-skels.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_plugin_a-mediacontrol-skels.Tpo"; exit 1; \
+libcorba_plugin_a-mediacontrol-plugin.obj: mediacontrol-plugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -MT libcorba_plugin_a-mediacontrol-plugin.obj -MD -MP -MF "$(DEPDIR)/libcorba_plugin_a-mediacontrol-plugin.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_plugin_a-mediacontrol-plugin.obj `if test -f 'mediacontrol-plugin.c'; then $(CYGPATH_W) 'mediacontrol-plugin.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-plugin.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_plugin_a-mediacontrol-plugin.Tpo" "$(DEPDIR)/libcorba_plugin_a-mediacontrol-plugin.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_plugin_a-mediacontrol-plugin.Tpo"; exit 1; \
 @am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-skels.c' object='libcorba_plugin_a-mediacontrol-skels.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_plugin_a-mediacontrol-skels.Po' tmpdepfile='$(DEPDIR)/libcorba_plugin_a-mediacontrol-skels.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mediacontrol-plugin.c' object='libcorba_plugin_a-mediacontrol-plugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_plugin_a-mediacontrol-plugin.Po' tmpdepfile='$(DEPDIR)/libcorba_plugin_a-mediacontrol-plugin.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -c -o libcorba_plugin_a-mediacontrol-skels.obj `if test -f 'mediacontrol-skels.c'; then $(CYGPATH_W) 'mediacontrol-skels.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-skels.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -c -o libcorba_plugin_a-mediacontrol-plugin.obj `if test -f 'mediacontrol-plugin.c'; then $(CYGPATH_W) 'mediacontrol-plugin.c'; else $(CYGPATH_W) '$(srcdir)/mediacontrol-plugin.c'; fi`
+
+libcorba_plugin_a-MediaControl-common.o: MediaControl-common.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -MT libcorba_plugin_a-MediaControl-common.o -MD -MP -MF "$(DEPDIR)/libcorba_plugin_a-MediaControl-common.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_plugin_a-MediaControl-common.o `test -f 'MediaControl-common.c' || echo '$(srcdir)/'`MediaControl-common.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_plugin_a-MediaControl-common.Tpo" "$(DEPDIR)/libcorba_plugin_a-MediaControl-common.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_plugin_a-MediaControl-common.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-common.c' object='libcorba_plugin_a-MediaControl-common.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_plugin_a-MediaControl-common.Po' tmpdepfile='$(DEPDIR)/libcorba_plugin_a-MediaControl-common.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -c -o libcorba_plugin_a-MediaControl-common.o `test -f 'MediaControl-common.c' || echo '$(srcdir)/'`MediaControl-common.c
+
+libcorba_plugin_a-MediaControl-common.obj: MediaControl-common.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -MT libcorba_plugin_a-MediaControl-common.obj -MD -MP -MF "$(DEPDIR)/libcorba_plugin_a-MediaControl-common.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_plugin_a-MediaControl-common.obj `if test -f 'MediaControl-common.c'; then $(CYGPATH_W) 'MediaControl-common.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-common.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_plugin_a-MediaControl-common.Tpo" "$(DEPDIR)/libcorba_plugin_a-MediaControl-common.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_plugin_a-MediaControl-common.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-common.c' object='libcorba_plugin_a-MediaControl-common.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_plugin_a-MediaControl-common.Po' tmpdepfile='$(DEPDIR)/libcorba_plugin_a-MediaControl-common.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -c -o libcorba_plugin_a-MediaControl-common.obj `if test -f 'MediaControl-common.c'; then $(CYGPATH_W) 'MediaControl-common.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-common.c'; fi`
+
+libcorba_plugin_a-MediaControl-skels.o: MediaControl-skels.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -MT libcorba_plugin_a-MediaControl-skels.o -MD -MP -MF "$(DEPDIR)/libcorba_plugin_a-MediaControl-skels.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_plugin_a-MediaControl-skels.o `test -f 'MediaControl-skels.c' || echo '$(srcdir)/'`MediaControl-skels.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_plugin_a-MediaControl-skels.Tpo" "$(DEPDIR)/libcorba_plugin_a-MediaControl-skels.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_plugin_a-MediaControl-skels.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-skels.c' object='libcorba_plugin_a-MediaControl-skels.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_plugin_a-MediaControl-skels.Po' tmpdepfile='$(DEPDIR)/libcorba_plugin_a-MediaControl-skels.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -c -o libcorba_plugin_a-MediaControl-skels.o `test -f 'MediaControl-skels.c' || echo '$(srcdir)/'`MediaControl-skels.c
+
+libcorba_plugin_a-MediaControl-skels.obj: MediaControl-skels.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -MT libcorba_plugin_a-MediaControl-skels.obj -MD -MP -MF "$(DEPDIR)/libcorba_plugin_a-MediaControl-skels.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_plugin_a-MediaControl-skels.obj `if test -f 'MediaControl-skels.c'; then $(CYGPATH_W) 'MediaControl-skels.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-skels.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_plugin_a-MediaControl-skels.Tpo" "$(DEPDIR)/libcorba_plugin_a-MediaControl-skels.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_plugin_a-MediaControl-skels.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-skels.c' object='libcorba_plugin_a-MediaControl-skels.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_plugin_a-MediaControl-skels.Po' tmpdepfile='$(DEPDIR)/libcorba_plugin_a-MediaControl-skels.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -c -o libcorba_plugin_a-MediaControl-skels.obj `if test -f 'MediaControl-skels.c'; then $(CYGPATH_W) 'MediaControl-skels.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-skels.c'; fi`
+
+libcorba_plugin_a-MediaControl-stubs.o: MediaControl-stubs.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -MT libcorba_plugin_a-MediaControl-stubs.o -MD -MP -MF "$(DEPDIR)/libcorba_plugin_a-MediaControl-stubs.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_plugin_a-MediaControl-stubs.o `test -f 'MediaControl-stubs.c' || echo '$(srcdir)/'`MediaControl-stubs.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_plugin_a-MediaControl-stubs.Tpo" "$(DEPDIR)/libcorba_plugin_a-MediaControl-stubs.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_plugin_a-MediaControl-stubs.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-stubs.c' object='libcorba_plugin_a-MediaControl-stubs.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_plugin_a-MediaControl-stubs.Po' tmpdepfile='$(DEPDIR)/libcorba_plugin_a-MediaControl-stubs.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -c -o libcorba_plugin_a-MediaControl-stubs.o `test -f 'MediaControl-stubs.c' || echo '$(srcdir)/'`MediaControl-stubs.c
+
+libcorba_plugin_a-MediaControl-stubs.obj: MediaControl-stubs.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -MT libcorba_plugin_a-MediaControl-stubs.obj -MD -MP -MF "$(DEPDIR)/libcorba_plugin_a-MediaControl-stubs.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libcorba_plugin_a-MediaControl-stubs.obj `if test -f 'MediaControl-stubs.c'; then $(CYGPATH_W) 'MediaControl-stubs.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-stubs.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcorba_plugin_a-MediaControl-stubs.Tpo" "$(DEPDIR)/libcorba_plugin_a-MediaControl-stubs.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libcorba_plugin_a-MediaControl-stubs.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MediaControl-stubs.c' object='libcorba_plugin_a-MediaControl-stubs.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcorba_plugin_a-MediaControl-stubs.Po' tmpdepfile='$(DEPDIR)/libcorba_plugin_a-MediaControl-stubs.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcorba_plugin_a_CFLAGS) $(CFLAGS) -c -o libcorba_plugin_a-MediaControl-stubs.obj `if test -f 'MediaControl-stubs.c'; then $(CYGPATH_W) 'MediaControl-stubs.c'; else $(CYGPATH_W) '$(srcdir)/MediaControl-stubs.c'; fi`
 uninstall-info-am:
+corbaidlDATA_INSTALL = $(INSTALL_DATA)
+install-corbaidlDATA: $(corbaidl_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(corbaidldir)
+	@list='$(corbaidl_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(corbaidlDATA_INSTALL) $$d$$p $(DESTDIR)$(corbaidldir)/$$f"; \
+	  $(corbaidlDATA_INSTALL) $$d$$p $(DESTDIR)$(corbaidldir)/$$f; \
+	done
+
+uninstall-corbaidlDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(corbaidl_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(corbaidldir)/$$f"; \
+	  rm -f $(DESTDIR)$(corbaidldir)/$$f; \
+	done
 libcorbaDATA_INSTALL = $(INSTALL_DATA)
 install-libcorbaDATA: $(libcorba_DATA)
 	@$(NORMAL_INSTALL)
@@ -657,6 +916,24 @@ uninstall-libcorbaDATA:
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
 	  echo " rm -f $(DESTDIR)$(libcorbadir)/$$f"; \
 	  rm -f $(DESTDIR)$(libcorbadir)/$$f; \
+	done
+orbittypelibDATA_INSTALL = $(INSTALL_DATA)
+install-orbittypelibDATA: $(orbittypelib_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(orbittypelibdir)
+	@list='$(orbittypelib_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(orbittypelibDATA_INSTALL) $$d$$p $(DESTDIR)$(orbittypelibdir)/$$f"; \
+	  $(orbittypelibDATA_INSTALL) $$d$$p $(DESTDIR)$(orbittypelibdir)/$$f; \
+	done
+
+uninstall-orbittypelibDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(orbittypelib_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(orbittypelibdir)/$$f"; \
+	  rm -f $(DESTDIR)$(orbittypelibdir)/$$f; \
 	done
 
 # This directory's subdirectories are mostly independent; you can cd
@@ -833,7 +1110,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libcorbadir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(corbaidldir) $(DESTDIR)$(libcorbadir) $(DESTDIR)$(orbittypelibdir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -880,7 +1157,8 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-libcorbaDATA install-libvlcLIBRARIES
+install-data-am: install-corbaidlDATA install-libcorbaDATA \
+	install-libvlcLIBRARIES install-orbittypelibDATA
 
 install-exec-am:
 
@@ -907,8 +1185,9 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libcorbaDATA \
-	uninstall-libvlcLIBRARIES
+uninstall-am: uninstall-corbaidlDATA uninstall-info-am \
+	uninstall-libcorbaDATA uninstall-libvlcLIBRARIES \
+	uninstall-orbittypelibDATA
 
 uninstall-info: uninstall-info-recursive
 
@@ -918,33 +1197,35 @@ uninstall-info: uninstall-info-recursive
 	distclean distclean-compile distclean-generic \
 	distclean-recursive distclean-tags distdir dvi dvi-am \
 	dvi-recursive info info-am info-recursive install install-am \
-	install-data install-data-am install-data-recursive \
-	install-exec install-exec-am install-exec-recursive \
-	install-info install-info-am install-info-recursive \
-	install-libcorbaDATA install-libvlcLIBRARIES install-man \
+	install-corbaidlDATA install-data install-data-am \
+	install-data-recursive install-exec install-exec-am \
+	install-exec-recursive install-info install-info-am \
+	install-info-recursive install-libcorbaDATA \
+	install-libvlcLIBRARIES install-man install-orbittypelibDATA \
 	install-recursive install-strip installcheck installcheck-am \
 	installdirs installdirs-am installdirs-recursive \
 	maintainer-clean maintainer-clean-generic \
 	maintainer-clean-recursive mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
 	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
-	uninstall uninstall-am uninstall-info-am \
+	uninstall uninstall-am uninstall-corbaidlDATA uninstall-info-am \
 	uninstall-info-recursive uninstall-libcorbaDATA \
-	uninstall-libvlcLIBRARIES uninstall-recursive
+	uninstall-libvlcLIBRARIES uninstall-orbittypelibDATA \
+	uninstall-recursive
 
 
-mediacontrol-common.c mediacontrol-skels.c mediacontrol-stubs.c mediacontrol.h:
-	$(ORBITIDL) --skeleton-impl mediacontrol.idl
+@ENABLE_CORBA_TRUE@MediaControl-imodule.o: MediaControl-imodule.c
+@ENABLE_CORBA_TRUE@	$(CC) -fPIC -o $@ -c $< $(orbittypelib_CFLAGS)
 
-mediacontrol-imodule.c:
-	$(ORBITIDL) --imodule mediacontrol.idl
+@ENABLE_CORBA_TRUE@MediaControl.so: MediaControl-imodule.o
+@ENABLE_CORBA_TRUE@	$(CC) -shared -o $@ $< $(orbittypelib_LIBS)
 
-mediacontrol.so: mediacontrol-imodule.c
-	gcc -fPIC -o mediacontrol-imodule.o -c mediacontrol-imodule.c `pkg-config --cflags ORBit-2.0`
-	gcc -shared -o $@ mediacontrol-imodule.o `pkg-config --libs ORBit-2.0`
+@ENABLE_CORBA_TRUE@$(GENERATEDFILES): $(CORBAIDLFILE)
+@ENABLE_CORBA_TRUE@	$(ORBIT_IDL) --imodule $<
+@ENABLE_CORBA_TRUE@	$(ORBIT_IDL) $<
 
-clean:
-	rm -f mediacontrol-stubs.c mediacontrol-imodule.c mediacontrol-skelimpl.c
+@ENABLE_CORBA_TRUE@clean:
+@ENABLE_CORBA_TRUE@	$(RM) -f $(GENERATEDFILES)
 
 clean-local:
 	-rm -f *.a *.so *.dll *.sl *.dylib

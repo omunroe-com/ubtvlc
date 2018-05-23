@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -256,6 +258,8 @@ SOURCES_skins2 = \
 	commands/cmd_on_top.hpp \
 	commands/cmd_playlist.cpp \
 	commands/cmd_playlist.hpp \
+	commands/cmd_minimize.cpp \
+	commands/cmd_minimize.hpp \
 	commands/cmd_quit.cpp \
 	commands/cmd_quit.hpp \
 	commands/cmd_resize.cpp \
@@ -353,6 +357,8 @@ SOURCES_skins2 = \
 	src/theme.hpp \
 	src/theme_loader.cpp \
 	src/theme_loader.hpp \
+	src/theme_repository.cpp \
+	src/theme_repository.hpp \
 	src/tooltip.cpp \
 	src/tooltip.hpp \
 	src/top_window.cpp \
@@ -476,6 +482,7 @@ am__objects_2 = libskins2_a-async_queue.$(OBJEXT) \
 	libskins2_a-cmd_layout.$(OBJEXT) \
 	libskins2_a-cmd_on_top.$(OBJEXT) \
 	libskins2_a-cmd_playlist.$(OBJEXT) \
+	libskins2_a-cmd_minimize.$(OBJEXT) \
 	libskins2_a-cmd_quit.$(OBJEXT) libskins2_a-cmd_resize.$(OBJEXT) \
 	libskins2_a-cmd_vars.$(OBJEXT) \
 	libskins2_a-ctrl_button.$(OBJEXT) \
@@ -506,6 +513,7 @@ am__objects_2 = libskins2_a-async_queue.$(OBJEXT) \
 	libskins2_a-scaled_bitmap.$(OBJEXT) \
 	libskins2_a-skin_main.$(OBJEXT) libskins2_a-theme.$(OBJEXT) \
 	libskins2_a-theme_loader.$(OBJEXT) \
+	libskins2_a-theme_repository.$(OBJEXT) \
 	libskins2_a-tooltip.$(OBJEXT) libskins2_a-top_window.$(OBJEXT) \
 	libskins2_a-var_manager.$(OBJEXT) libskins2_a-vlcproc.$(OBJEXT) \
 	libskins2_a-vout_window.$(OBJEXT) \
@@ -543,6 +551,7 @@ am__objects_3 = libskins2_pic_a-async_queue.$(OBJEXT) \
 	libskins2_pic_a-cmd_layout.$(OBJEXT) \
 	libskins2_pic_a-cmd_on_top.$(OBJEXT) \
 	libskins2_pic_a-cmd_playlist.$(OBJEXT) \
+	libskins2_pic_a-cmd_minimize.$(OBJEXT) \
 	libskins2_pic_a-cmd_quit.$(OBJEXT) \
 	libskins2_pic_a-cmd_resize.$(OBJEXT) \
 	libskins2_pic_a-cmd_vars.$(OBJEXT) \
@@ -582,6 +591,7 @@ am__objects_3 = libskins2_pic_a-async_queue.$(OBJEXT) \
 	libskins2_pic_a-skin_main.$(OBJEXT) \
 	libskins2_pic_a-theme.$(OBJEXT) \
 	libskins2_pic_a-theme_loader.$(OBJEXT) \
+	libskins2_pic_a-theme_repository.$(OBJEXT) \
 	libskins2_pic_a-tooltip.$(OBJEXT) \
 	libskins2_pic_a-top_window.$(OBJEXT) \
 	libskins2_pic_a-var_manager.$(OBJEXT) \
@@ -625,6 +635,7 @@ am__objects_4 = libskins2_plugin_a-async_queue.$(OBJEXT) \
 	libskins2_plugin_a-cmd_layout.$(OBJEXT) \
 	libskins2_plugin_a-cmd_on_top.$(OBJEXT) \
 	libskins2_plugin_a-cmd_playlist.$(OBJEXT) \
+	libskins2_plugin_a-cmd_minimize.$(OBJEXT) \
 	libskins2_plugin_a-cmd_quit.$(OBJEXT) \
 	libskins2_plugin_a-cmd_resize.$(OBJEXT) \
 	libskins2_plugin_a-cmd_vars.$(OBJEXT) \
@@ -664,6 +675,7 @@ am__objects_4 = libskins2_plugin_a-async_queue.$(OBJEXT) \
 	libskins2_plugin_a-skin_main.$(OBJEXT) \
 	libskins2_plugin_a-theme.$(OBJEXT) \
 	libskins2_plugin_a-theme_loader.$(OBJEXT) \
+	libskins2_plugin_a-theme_repository.$(OBJEXT) \
 	libskins2_plugin_a-tooltip.$(OBJEXT) \
 	libskins2_plugin_a-top_window.$(OBJEXT) \
 	libskins2_plugin_a-var_manager.$(OBJEXT) \
@@ -713,6 +725,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-cmd_fullscreen.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-cmd_input.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-cmd_layout.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-cmd_minimize.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-cmd_on_top.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-cmd_playlist.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-cmd_quit.Po \
@@ -754,6 +767,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-stream.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-theme.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-theme_loader.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-theme_repository.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-time.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-tooltip.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_a-top_window.Po \
@@ -793,6 +807,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-cmd_fullscreen.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-cmd_input.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-cmd_layout.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-cmd_minimize.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-cmd_on_top.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-cmd_playlist.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-cmd_quit.Po \
@@ -834,6 +849,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-stream.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-theme.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-theme_loader.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-theme_repository.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-time.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-tooltip.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_pic_a-top_window.Po \
@@ -873,6 +889,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-cmd_fullscreen.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-cmd_input.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-cmd_layout.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-cmd_minimize.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-cmd_on_top.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-cmd_playlist.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-cmd_quit.Po \
@@ -914,6 +931,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-stream.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-theme.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-theme_loader.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-theme_repository.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-time.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-tooltip.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libskins2_plugin_a-top_window.Po \
@@ -1041,6 +1059,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-cmd_fullscreen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-cmd_input.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-cmd_layout.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-cmd_minimize.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-cmd_on_top.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-cmd_playlist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-cmd_quit.Po@am__quote@
@@ -1082,6 +1101,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-stream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-theme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-theme_loader.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-theme_repository.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-time.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-tooltip.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_a-top_window.Po@am__quote@
@@ -1121,6 +1141,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-cmd_fullscreen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-cmd_input.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-cmd_layout.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-cmd_minimize.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-cmd_on_top.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-cmd_playlist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-cmd_quit.Po@am__quote@
@@ -1162,6 +1183,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-stream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-theme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-theme_loader.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-theme_repository.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-time.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-tooltip.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_pic_a-top_window.Po@am__quote@
@@ -1201,6 +1223,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-cmd_fullscreen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-cmd_input.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-cmd_layout.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-cmd_minimize.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-cmd_on_top.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-cmd_playlist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-cmd_quit.Po@am__quote@
@@ -1242,6 +1265,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-stream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-theme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-theme_loader.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-theme_repository.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-time.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-tooltip.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libskins2_plugin_a-top_window.Po@am__quote@
@@ -1469,6 +1493,28 @@ libskins2_a-cmd_playlist.obj: commands/cmd_playlist.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-cmd_playlist.Po' tmpdepfile='$(DEPDIR)/libskins2_a-cmd_playlist.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-cmd_playlist.obj `if test -f 'commands/cmd_playlist.cpp'; then $(CYGPATH_W) 'commands/cmd_playlist.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_playlist.cpp'; fi`
+
+libskins2_a-cmd_minimize.o: commands/cmd_minimize.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-cmd_minimize.o -MD -MP -MF "$(DEPDIR)/libskins2_a-cmd_minimize.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-cmd_minimize.o `test -f 'commands/cmd_minimize.cpp' || echo '$(srcdir)/'`commands/cmd_minimize.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-cmd_minimize.Tpo" "$(DEPDIR)/libskins2_a-cmd_minimize.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-cmd_minimize.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='commands/cmd_minimize.cpp' object='libskins2_a-cmd_minimize.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-cmd_minimize.Po' tmpdepfile='$(DEPDIR)/libskins2_a-cmd_minimize.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-cmd_minimize.o `test -f 'commands/cmd_minimize.cpp' || echo '$(srcdir)/'`commands/cmd_minimize.cpp
+
+libskins2_a-cmd_minimize.obj: commands/cmd_minimize.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-cmd_minimize.obj -MD -MP -MF "$(DEPDIR)/libskins2_a-cmd_minimize.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-cmd_minimize.obj `if test -f 'commands/cmd_minimize.cpp'; then $(CYGPATH_W) 'commands/cmd_minimize.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_minimize.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-cmd_minimize.Tpo" "$(DEPDIR)/libskins2_a-cmd_minimize.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-cmd_minimize.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='commands/cmd_minimize.cpp' object='libskins2_a-cmd_minimize.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-cmd_minimize.Po' tmpdepfile='$(DEPDIR)/libskins2_a-cmd_minimize.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-cmd_minimize.obj `if test -f 'commands/cmd_minimize.cpp'; then $(CYGPATH_W) 'commands/cmd_minimize.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_minimize.cpp'; fi`
 
 libskins2_a-cmd_quit.o: commands/cmd_quit.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-cmd_quit.o -MD -MP -MF "$(DEPDIR)/libskins2_a-cmd_quit.Tpo" \
@@ -2327,6 +2373,28 @@ libskins2_a-theme_loader.obj: src/theme_loader.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-theme_loader.Po' tmpdepfile='$(DEPDIR)/libskins2_a-theme_loader.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-theme_loader.obj `if test -f 'src/theme_loader.cpp'; then $(CYGPATH_W) 'src/theme_loader.cpp'; else $(CYGPATH_W) '$(srcdir)/src/theme_loader.cpp'; fi`
+
+libskins2_a-theme_repository.o: src/theme_repository.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-theme_repository.o -MD -MP -MF "$(DEPDIR)/libskins2_a-theme_repository.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-theme_repository.o `test -f 'src/theme_repository.cpp' || echo '$(srcdir)/'`src/theme_repository.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-theme_repository.Tpo" "$(DEPDIR)/libskins2_a-theme_repository.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-theme_repository.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/theme_repository.cpp' object='libskins2_a-theme_repository.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-theme_repository.Po' tmpdepfile='$(DEPDIR)/libskins2_a-theme_repository.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-theme_repository.o `test -f 'src/theme_repository.cpp' || echo '$(srcdir)/'`src/theme_repository.cpp
+
+libskins2_a-theme_repository.obj: src/theme_repository.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-theme_repository.obj -MD -MP -MF "$(DEPDIR)/libskins2_a-theme_repository.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_a-theme_repository.obj `if test -f 'src/theme_repository.cpp'; then $(CYGPATH_W) 'src/theme_repository.cpp'; else $(CYGPATH_W) '$(srcdir)/src/theme_repository.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_a-theme_repository.Tpo" "$(DEPDIR)/libskins2_a-theme_repository.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_a-theme_repository.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/theme_repository.cpp' object='libskins2_a-theme_repository.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_a-theme_repository.Po' tmpdepfile='$(DEPDIR)/libskins2_a-theme_repository.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_a-theme_repository.obj `if test -f 'src/theme_repository.cpp'; then $(CYGPATH_W) 'src/theme_repository.cpp'; else $(CYGPATH_W) '$(srcdir)/src/theme_repository.cpp'; fi`
 
 libskins2_a-tooltip.o: src/tooltip.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_a-tooltip.o -MD -MP -MF "$(DEPDIR)/libskins2_a-tooltip.Tpo" \
@@ -3230,6 +3298,28 @@ libskins2_pic_a-cmd_playlist.obj: commands/cmd_playlist.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-cmd_playlist.obj `if test -f 'commands/cmd_playlist.cpp'; then $(CYGPATH_W) 'commands/cmd_playlist.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_playlist.cpp'; fi`
 
+libskins2_pic_a-cmd_minimize.o: commands/cmd_minimize.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-cmd_minimize.o -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-cmd_minimize.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-cmd_minimize.o `test -f 'commands/cmd_minimize.cpp' || echo '$(srcdir)/'`commands/cmd_minimize.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-cmd_minimize.Tpo" "$(DEPDIR)/libskins2_pic_a-cmd_minimize.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-cmd_minimize.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='commands/cmd_minimize.cpp' object='libskins2_pic_a-cmd_minimize.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-cmd_minimize.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-cmd_minimize.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-cmd_minimize.o `test -f 'commands/cmd_minimize.cpp' || echo '$(srcdir)/'`commands/cmd_minimize.cpp
+
+libskins2_pic_a-cmd_minimize.obj: commands/cmd_minimize.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-cmd_minimize.obj -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-cmd_minimize.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-cmd_minimize.obj `if test -f 'commands/cmd_minimize.cpp'; then $(CYGPATH_W) 'commands/cmd_minimize.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_minimize.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-cmd_minimize.Tpo" "$(DEPDIR)/libskins2_pic_a-cmd_minimize.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-cmd_minimize.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='commands/cmd_minimize.cpp' object='libskins2_pic_a-cmd_minimize.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-cmd_minimize.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-cmd_minimize.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-cmd_minimize.obj `if test -f 'commands/cmd_minimize.cpp'; then $(CYGPATH_W) 'commands/cmd_minimize.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_minimize.cpp'; fi`
+
 libskins2_pic_a-cmd_quit.o: commands/cmd_quit.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-cmd_quit.o -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-cmd_quit.Tpo" \
 @am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-cmd_quit.o `test -f 'commands/cmd_quit.cpp' || echo '$(srcdir)/'`commands/cmd_quit.cpp; \
@@ -4087,6 +4177,28 @@ libskins2_pic_a-theme_loader.obj: src/theme_loader.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-theme_loader.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-theme_loader.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-theme_loader.obj `if test -f 'src/theme_loader.cpp'; then $(CYGPATH_W) 'src/theme_loader.cpp'; else $(CYGPATH_W) '$(srcdir)/src/theme_loader.cpp'; fi`
+
+libskins2_pic_a-theme_repository.o: src/theme_repository.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-theme_repository.o -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-theme_repository.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-theme_repository.o `test -f 'src/theme_repository.cpp' || echo '$(srcdir)/'`src/theme_repository.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-theme_repository.Tpo" "$(DEPDIR)/libskins2_pic_a-theme_repository.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-theme_repository.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/theme_repository.cpp' object='libskins2_pic_a-theme_repository.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-theme_repository.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-theme_repository.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-theme_repository.o `test -f 'src/theme_repository.cpp' || echo '$(srcdir)/'`src/theme_repository.cpp
+
+libskins2_pic_a-theme_repository.obj: src/theme_repository.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-theme_repository.obj -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-theme_repository.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_pic_a-theme_repository.obj `if test -f 'src/theme_repository.cpp'; then $(CYGPATH_W) 'src/theme_repository.cpp'; else $(CYGPATH_W) '$(srcdir)/src/theme_repository.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_pic_a-theme_repository.Tpo" "$(DEPDIR)/libskins2_pic_a-theme_repository.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_pic_a-theme_repository.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/theme_repository.cpp' object='libskins2_pic_a-theme_repository.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_pic_a-theme_repository.Po' tmpdepfile='$(DEPDIR)/libskins2_pic_a-theme_repository.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_pic_a-theme_repository.obj `if test -f 'src/theme_repository.cpp'; then $(CYGPATH_W) 'src/theme_repository.cpp'; else $(CYGPATH_W) '$(srcdir)/src/theme_repository.cpp'; fi`
 
 libskins2_pic_a-tooltip.o: src/tooltip.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_pic_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_pic_a-tooltip.o -MD -MP -MF "$(DEPDIR)/libskins2_pic_a-tooltip.Tpo" \
@@ -4990,6 +5102,28 @@ libskins2_plugin_a-cmd_playlist.obj: commands/cmd_playlist.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-cmd_playlist.obj `if test -f 'commands/cmd_playlist.cpp'; then $(CYGPATH_W) 'commands/cmd_playlist.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_playlist.cpp'; fi`
 
+libskins2_plugin_a-cmd_minimize.o: commands/cmd_minimize.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-cmd_minimize.o -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-cmd_minimize.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-cmd_minimize.o `test -f 'commands/cmd_minimize.cpp' || echo '$(srcdir)/'`commands/cmd_minimize.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-cmd_minimize.Tpo" "$(DEPDIR)/libskins2_plugin_a-cmd_minimize.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-cmd_minimize.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='commands/cmd_minimize.cpp' object='libskins2_plugin_a-cmd_minimize.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-cmd_minimize.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-cmd_minimize.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-cmd_minimize.o `test -f 'commands/cmd_minimize.cpp' || echo '$(srcdir)/'`commands/cmd_minimize.cpp
+
+libskins2_plugin_a-cmd_minimize.obj: commands/cmd_minimize.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-cmd_minimize.obj -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-cmd_minimize.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-cmd_minimize.obj `if test -f 'commands/cmd_minimize.cpp'; then $(CYGPATH_W) 'commands/cmd_minimize.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_minimize.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-cmd_minimize.Tpo" "$(DEPDIR)/libskins2_plugin_a-cmd_minimize.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-cmd_minimize.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='commands/cmd_minimize.cpp' object='libskins2_plugin_a-cmd_minimize.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-cmd_minimize.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-cmd_minimize.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-cmd_minimize.obj `if test -f 'commands/cmd_minimize.cpp'; then $(CYGPATH_W) 'commands/cmd_minimize.cpp'; else $(CYGPATH_W) '$(srcdir)/commands/cmd_minimize.cpp'; fi`
+
 libskins2_plugin_a-cmd_quit.o: commands/cmd_quit.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-cmd_quit.o -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-cmd_quit.Tpo" \
 @am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-cmd_quit.o `test -f 'commands/cmd_quit.cpp' || echo '$(srcdir)/'`commands/cmd_quit.cpp; \
@@ -5847,6 +5981,28 @@ libskins2_plugin_a-theme_loader.obj: src/theme_loader.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-theme_loader.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-theme_loader.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-theme_loader.obj `if test -f 'src/theme_loader.cpp'; then $(CYGPATH_W) 'src/theme_loader.cpp'; else $(CYGPATH_W) '$(srcdir)/src/theme_loader.cpp'; fi`
+
+libskins2_plugin_a-theme_repository.o: src/theme_repository.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-theme_repository.o -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-theme_repository.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-theme_repository.o `test -f 'src/theme_repository.cpp' || echo '$(srcdir)/'`src/theme_repository.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-theme_repository.Tpo" "$(DEPDIR)/libskins2_plugin_a-theme_repository.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-theme_repository.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/theme_repository.cpp' object='libskins2_plugin_a-theme_repository.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-theme_repository.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-theme_repository.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-theme_repository.o `test -f 'src/theme_repository.cpp' || echo '$(srcdir)/'`src/theme_repository.cpp
+
+libskins2_plugin_a-theme_repository.obj: src/theme_repository.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-theme_repository.obj -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-theme_repository.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o libskins2_plugin_a-theme_repository.obj `if test -f 'src/theme_repository.cpp'; then $(CYGPATH_W) 'src/theme_repository.cpp'; else $(CYGPATH_W) '$(srcdir)/src/theme_repository.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libskins2_plugin_a-theme_repository.Tpo" "$(DEPDIR)/libskins2_plugin_a-theme_repository.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/libskins2_plugin_a-theme_repository.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/theme_repository.cpp' object='libskins2_plugin_a-theme_repository.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/libskins2_plugin_a-theme_repository.Po' tmpdepfile='$(DEPDIR)/libskins2_plugin_a-theme_repository.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -c -o libskins2_plugin_a-theme_repository.obj `if test -f 'src/theme_repository.cpp'; then $(CYGPATH_W) 'src/theme_repository.cpp'; else $(CYGPATH_W) '$(srcdir)/src/theme_repository.cpp'; fi`
 
 libskins2_plugin_a-tooltip.o: src/tooltip.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libskins2_plugin_a_CXXFLAGS) $(CXXFLAGS) -MT libskins2_plugin_a-tooltip.o -MD -MP -MF "$(DEPDIR)/libskins2_plugin_a-tooltip.Tpo" \

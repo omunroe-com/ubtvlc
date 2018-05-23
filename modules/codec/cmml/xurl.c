@@ -5,7 +5,7 @@
  *                         Organisation (CSIRO) Australia
  * Copyright (C) 2004 VideoLAN
  *
- * $Id: xurl.c 7397 2004-04-20 17:27:30Z sam $
+ * $Id: xurl.c 7774 2004-05-26 02:23:10Z andrep $
  *
  * Authors: Andre Pang <Andre.Pang@csiro.au>
  *
@@ -434,11 +434,7 @@ char *XURL_GetHead( const char *psz_path )
     }
 
     /* append a trailing / */
-#ifdef XURL_WIN32_PATHING
-    streallocat( psz_path_head, "\\" );
-#else
     streallocat( psz_path_head, "/" );
-#endif
 
     return psz_path_head;
 }

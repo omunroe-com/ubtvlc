@@ -2,11 +2,11 @@
  * mpegvideo.c: parse and packetize an MPEG1/2 video stream
  *****************************************************************************
  * Copyright (C) 2001, 2002 VideoLAN
- * $Id: mpegvideo.c 7678 2004-05-15 14:42:16Z fenrir $
+ * $Id: mpegvideo.c 8812 2004-09-26 19:59:49Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
- *          Gildas Bazin <gbazin@netcourrier.com>
+ *          Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -268,6 +268,7 @@ static block_t *Packetize( decoder_t *p_dec, block_t **pp_block )
 
             /* Get the new fragment and set the pts/dts */
             p_pic = block_New( p_dec, p_sys->i_offset );
+            block_BytestreamFlush( &p_sys->bytestream );
             p_pic->i_pts = p_sys->bytestream.p_block->i_pts;
             p_pic->i_dts = p_sys->bytestream.p_block->i_dts;
 
@@ -501,6 +502,9 @@ static block_t *ParseMPEGBlock( decoder_t *p_dec, block_t *p_frag )
         p_sys->i_frame_rate = code_to_frame_rate[p_frag->p_buffer[7]&0x0f][0];
         p_sys->i_frame_rate_base =
             code_to_frame_rate[p_frag->p_buffer[7]&0x0f][1];
+
+        p_dec->fmt_out.video.i_frame_rate = p_sys->i_frame_rate;
+        p_dec->fmt_out.video.i_frame_rate_base = p_sys->i_frame_rate_base;
 
         p_sys->b_seq_progressive = VLC_TRUE;
         p_sys->b_low_delay = VLC_TRUE;

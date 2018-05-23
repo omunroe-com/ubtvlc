@@ -2,7 +2,7 @@
  * ctrl_image.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_image.cpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: ctrl_image.cpp 8073 2004-06-26 18:40:54Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -52,7 +52,7 @@ CtrlImage::~CtrlImage()
 void CtrlImage::handleEvent( EvtGeneric &rEvent )
 {
     // No FSM for this simple transition
-    if( rEvent.getAsString() == "mouse:right:down:none" )
+    if( rEvent.getAsString() == "mouse:right:up:none" )
     {
         CmdDlgShowPopupMenu cmd( getIntf() );
         cmd.execute();

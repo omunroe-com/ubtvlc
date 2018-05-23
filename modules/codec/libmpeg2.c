@@ -2,9 +2,9 @@
  * libmpeg2.c: mpeg2 video decoder module making use of libmpeg2.
  *****************************************************************************
  * Copyright (C) 1999-2001 VideoLAN
- * $Id: libmpeg2.c 7138 2004-03-22 15:19:12Z gbazin $
+ * $Id: libmpeg2.c 8813 2004-09-26 20:17:50Z gbazin $
  *
- * Authors: Gildas Bazin <gbazin@netcourrier.com>
+ * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -54,10 +54,10 @@ struct decoder_sys_t
     /*
      * Input properties
      */
-    pes_packet_t     *p_pes;                  /* current PES we are decoding */
-    mtime_t          i_pts;
     mtime_t          i_previous_pts;
     mtime_t          i_current_pts;
+    mtime_t          i_previous_dts;
+    mtime_t          i_current_dts;
     int              i_current_rate;
     picture_t *      p_picture_to_destroy;
     vlc_bool_t       b_garbage_pic;
@@ -69,7 +69,8 @@ struct decoder_sys_t
      * Output properties
      */
     vout_synchro_t *p_synchro;
-    int i_aspect;
+    int            i_aspect;
+    mtime_t        i_last_frame_pts;
 
 };
 
@@ -123,13 +124,13 @@ static int OpenDecoder( vlc_object_t *p_this )
 
     /* Initialize the thread properties */
     memset( p_sys, 0, sizeof(decoder_sys_t) );
-    p_sys->p_pes      = NULL;
     p_sys->p_mpeg2dec = NULL;
     p_sys->p_synchro  = NULL;
     p_sys->p_info     = NULL;
-    p_sys->i_pts      = mdate() + DEFAULT_PTS_DELAY;
     p_sys->i_current_pts  = 0;
     p_sys->i_previous_pts = 0;
+    p_sys->i_current_dts  = 0;
+    p_sys->i_previous_dts = 0;
     p_sys->p_picture_to_destroy = NULL;
     p_sys->b_garbage_pic = 0;
     p_sys->b_slice_i  = 0;
@@ -241,17 +242,22 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
                 }
             }
 
+#ifdef PIC_FLAG_PTS
             if( p_block->i_pts )
             {
-#ifdef PIC_FLAG_PTS
                 mpeg2_pts( p_sys->p_mpeg2dec, (uint32_t)p_block->i_pts );
 
 #else /* New interface */
+            if( p_block->i_pts || p_block->i_dts )
+            {
                 mpeg2_tag_picture( p_sys->p_mpeg2dec,
-                                   (uint32_t)p_block->i_pts, 0/*dts*/ );
+                                   (uint32_t)p_block->i_pts,
+                                   (uint32_t)p_block->i_dts );
 #endif
                 p_sys->i_previous_pts = p_sys->i_current_pts;
                 p_sys->i_current_pts = p_block->i_pts;
+                p_sys->i_previous_dts = p_sys->i_current_dts;
+                p_sys->i_current_dts = p_block->i_dts;
             }
 
             p_sys->i_current_rate = p_block->i_rate;
@@ -370,7 +376,7 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
         case STATE_PICTURE:
         {
             uint8_t *buf[3];
-            mtime_t i_pts;
+            mtime_t i_pts, i_dts;
             buf[0] = buf[1] = buf[2] = NULL;
 
             if ( p_sys->b_after_sequence_header &&
@@ -392,14 +398,7 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
                 ( ( p_sys->p_info->current_picture->pts ==
                     (uint32_t)p_sys->i_current_pts ) ?
                   p_sys->i_current_pts : p_sys->i_previous_pts ) : 0;
-
-#else /* New interface */
-
-            i_pts = p_sys->p_info->current_picture->flags & PIC_FLAG_TAGS ?
-                ( ( p_sys->p_info->current_picture->tag ==
-                    (uint32_t)p_sys->i_current_pts ) ?
-                  p_sys->i_current_pts : p_sys->i_previous_pts ) : 0;
-#endif
+            i_dts = 0;
 
             /* Hack to handle demuxers which only have DTS timestamps */
             if( !i_pts && !p_block->i_pts && p_block->i_dts > 0 )
@@ -414,12 +413,25 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
             p_block->i_pts = p_block->i_dts = 0;
             /* End hack */
 
+#else /* New interface */
+
+            i_pts = p_sys->p_info->current_picture->flags & PIC_FLAG_TAGS ?
+                ( ( p_sys->p_info->current_picture->tag ==
+                    (uint32_t)p_sys->i_current_pts ) ?
+                  p_sys->i_current_pts : p_sys->i_previous_pts ) : 0;
+            i_dts = p_sys->p_info->current_picture->flags & PIC_FLAG_TAGS ?
+                ( ( p_sys->p_info->current_picture->tag2 ==
+                    (uint32_t)p_sys->i_current_dts ) ?
+                  p_sys->i_current_dts : p_sys->i_previous_dts ) : 0;
+#endif
+
             vout_SynchroNewPicture( p_sys->p_synchro,
                 p_sys->p_info->current_picture->flags & PIC_MASK_CODING_TYPE,
-                p_sys->p_info->current_picture->nb_fields, i_pts,
-                0, p_sys->i_current_rate );
+                p_sys->p_info->current_picture->nb_fields, i_pts, i_dts,
+                p_sys->i_current_rate );
 
-            if ( !(p_sys->b_slice_i
+            if( !p_dec->b_pace_control &&
+                !(p_sys->b_slice_i
                    && ((p_sys->p_info->current_picture->flags
                          & PIC_MASK_CODING_TYPE) == P_CODING_TYPE))
                    && !vout_SynchroChoose( p_sys->p_synchro,
@@ -481,7 +493,18 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
                                           p_sys->p_info->discard_fbuf->id );
             }
 
-            if( p_pic ) return p_pic;
+            /* For still frames */
+            if( state == STATE_END && p_pic ) p_pic->b_force = VLC_TRUE;
+
+            if( p_pic )
+            {
+                /* Avoid frames with identical timestamps.
+                 * Especially needed for still frames in DVD menus. */
+                if( p_sys->i_last_frame_pts == p_pic->date ) p_pic->date++;
+                p_sys->i_last_frame_pts = p_pic->date;
+
+                return p_pic;
+            }
 
             break;
 
@@ -571,8 +594,20 @@ static picture_t *GetNewPicture( decoder_t *p_dec, uint8_t **pp_buf )
     picture_t *p_pic;
 
     p_dec->fmt_out.video.i_width = p_sys->p_info->sequence->width;
+    p_dec->fmt_out.video.i_visible_width =
+        p_sys->p_info->sequence->picture_width;
     p_dec->fmt_out.video.i_height = p_sys->p_info->sequence->height;
+    p_dec->fmt_out.video.i_visible_height =
+        p_sys->p_info->sequence->picture_height;
     p_dec->fmt_out.video.i_aspect = p_sys->i_aspect;
+
+    if( p_sys->p_info->sequence->frame_period > 0 )
+    {
+        p_dec->fmt_out.video.i_frame_rate =
+            (uint32_t)( (uint64_t)1001000000 * 27 /
+                        p_sys->p_info->sequence->frame_period );
+        p_dec->fmt_out.video.i_frame_rate_base = 1001;
+    }
 
     p_dec->fmt_out.i_codec =
         ( p_sys->p_info->sequence->chroma_height <

@@ -2,7 +2,7 @@
  * video.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004, 2003 VideoLAN
- * $Id: video.cpp 7713 2004-05-18 14:50:19Z gbazin $
+ * $Id: video.cpp 8980 2004-10-13 12:32:06Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -27,7 +27,6 @@
 #include <vlc/vlc.h>
 #include <vlc/vout.h>
 #include <vlc/intf.h>
-#include "stream_control.h"
 
 #include "wxwindows.h"
 
@@ -66,6 +65,7 @@ private:
     vout_thread_t *p_vout;
     wxWindow *p_parent;
     vlc_mutex_t lock;
+    vlc_bool_t b_shown;
 
     wxWindow *p_child_window;
 
@@ -115,6 +115,7 @@ VideoWindow::VideoWindow( intf_thread_t *_p_intf, wxWindow *_p_parent ):
     p_child_window = new wxWindow( this, -1, wxDefaultPosition, wxSize(0,0) );
     p_child_window->Show();
     Show();
+    b_shown = VLC_TRUE;
 
     p_intf->p_sys->p_video_sizer = new wxBoxSizer( wxHORIZONTAL );
     p_intf->p_sys->p_video_sizer->Add( this, 1, wxEXPAND );
@@ -127,8 +128,16 @@ VideoWindow::~VideoWindow()
     vlc_mutex_lock( &lock );
     if( p_vout )
     {
-        if( vout_Control( p_vout, VOUT_REPARENT ) != VLC_SUCCESS )
-            vout_Control( p_vout, VOUT_CLOSE );
+        if( !p_intf->psz_switch_intf )
+        {
+            if( vout_Control( p_vout, VOUT_CLOSE ) != VLC_SUCCESS )
+                vout_Control( p_vout, VOUT_REPARENT );
+        }
+        else
+        {
+            if( vout_Control( p_vout, VOUT_REPARENT ) != VLC_SUCCESS )
+                vout_Control( p_vout, VOUT_CLOSE );
+        }
     }
 
     p_intf->pf_request_window = NULL;
@@ -228,11 +237,12 @@ void VideoWindow::ReleaseWindow( void *p_window )
 
 void VideoWindow::UpdateSize( wxSizeEvent &event )
 {
-    if( !IsShown() )
+    if( !b_shown )
     {
         p_intf->p_sys->p_video_sizer->Show( this, TRUE );
         p_intf->p_sys->p_video_sizer->Layout();
         SetFocus();
+        b_shown = VLC_TRUE;
     }
     p_intf->p_sys->p_video_sizer->SetMinSize( event.GetSize() );
 
@@ -242,10 +252,14 @@ void VideoWindow::UpdateSize( wxSizeEvent &event )
 
 void VideoWindow::UpdateHide( wxSizeEvent &event )
 {
-    if( IsShown() )
+    if( b_shown )
     {
         p_intf->p_sys->p_video_sizer->Show( this, FALSE );
         p_intf->p_sys->p_video_sizer->Layout();
+        b_shown = VLC_FALSE;
+
+        SetSize(0,0);
+        Show();
     }
     p_intf->p_sys->p_video_sizer->SetMinSize( event.GetSize() );
 
@@ -285,8 +299,8 @@ int VideoWindow::ControlWindow( void *p_window, int i_query, va_list args )
             double f_arg = va_arg( args, double );
 
             /* Update dimensions */
-            wxSizeEvent event( wxSize(p_vout->i_window_width * f_arg,
-                                      p_vout->i_window_height * f_arg),
+            wxSizeEvent event( wxSize((int)(p_vout->i_window_width * f_arg),
+                                      (int)(p_vout->i_window_height * f_arg)),
                                UpdateSize_Event );
             AddPendingEvent( event );
 

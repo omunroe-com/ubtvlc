@@ -2,7 +2,7 @@
  * item-ext.c : Playlist item management functions
  *****************************************************************************
  * Copyright (C) 1999-2004 VideoLAN
- * $Id: item-ext.c 7436 2004-04-23 06:53:00Z gbazin $
+ * $Id: item-ext.c 7997 2004-06-18 11:35:45Z sigmunau $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Clément Stenac <zorglub@videolan.org>
@@ -152,7 +152,7 @@ playlist_item_t * playlist_ItemGetById( playlist_t * p_playlist , int i_id )
  * This function must be entered with the playlist lock
  *
  * \param p_playlist the playlist
- * \param i_id the id to find
+ * \param i_pos the position of the item to find
  * \return the item, or NULL on failure
  */
 playlist_item_t * playlist_ItemGetByPos( playlist_t * p_playlist , int i_pos )
@@ -181,6 +181,7 @@ playlist_item_t * playlist_ItemGetByPos( playlist_t * p_playlist , int i_pos )
  * Set the group of a playlist item
  *
  * \param p_item the item
+ * \param i_group the group to set
  * \return VLC_SUCCESS on success
  */
 int playlist_ItemSetGroup( playlist_item_t *p_item, int i_group)
@@ -281,7 +282,7 @@ int playlist_SetName( playlist_t *p_playlist, int i_pos, char *psz_name )
  * This function must be entered with the item lock
  *
  * \param p_item the item
- * \param psz_name the new name
+ * \param i_duration the new duration
  * \return VLC_SUCCESS on success, VLC_EGENERIC on failure
  */
 int playlist_ItemSetDuration( playlist_item_t *p_item, mtime_t i_duration )

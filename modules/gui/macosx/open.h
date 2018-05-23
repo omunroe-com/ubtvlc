@@ -2,7 +2,7 @@
  * open.h: MacOS X module for vlc
  *****************************************************************************
  * Copyright (C) 2002-2003 VideoLAN
- * $Id: open.h 7090 2004-03-15 19:33:18Z bigben $
+ * $Id: open.h 8896 2004-10-02 21:52:02Z fkuehne $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -82,12 +82,21 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class );
     IBOutlet id o_file_sub_fps;
     IBOutlet id o_file_sub_fps_lbl;
     IBOutlet id o_file_sub_fps_stp;
+    IBOutlet id o_file_sub_encoding_pop;
+    IBOutlet id o_file_sub_encoding_lbl;
+    IBOutlet id o_file_sub_size_pop;
+    IBOutlet id o_file_sub_size_lbl;
+    IBOutlet id o_file_sub_align_pop;
+    IBOutlet id o_file_sub_align_lbl;
     IBOutlet id o_file_sub_ok_btn;
-    
+    IBOutlet id o_file_sub_font_box;
+    IBOutlet id o_file_sub_file_box;
+
     IBOutlet id o_output_ckbox;
     IBOutlet id o_sout_options;
 }
 
+- (void)setSubPanel;
 - (void)openTarget:(int)i_type;
 - (void)tabView:(NSTabView *)o_tv didSelectTabViewItem:(NSTabViewItem *)o_tvi;
 

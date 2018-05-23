@@ -108,6 +108,16 @@ SOURCE="..\modules\access\dvb\linux_dvb.c"
 # PROP Output_Dir "Debug\modules\access\dvb"
 # PROP Intermediate_Dir "Debug\modules\access\dvb"
 # End Source File
+# Begin Source File
+SOURCE="..\modules\access\dvb\en50221.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=dvb" /D "MODULE_NAME_IS_dvb" 
+!IF "$(CFG)" == "plugin_dvb - Win32 Release"
+# PROP Output_Dir "Release\modules\access\dvb"
+# PROP Intermediate_Dir "Release\modules\access\dvb"
+!ELSEIF "$(CFG)" == "plugin_dvb - Win32 Debug"
+# PROP Output_Dir "Debug\modules\access\dvb"
+# PROP Intermediate_Dir "Debug\modules\access\dvb"
+# End Source File
 
 # End Group
 

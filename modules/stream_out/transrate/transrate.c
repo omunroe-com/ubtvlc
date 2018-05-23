@@ -2,7 +2,7 @@
  * transrate.c: MPEG2 video transrating module
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: transrate.c 7411 2004-04-21 15:54:09Z massiot $
+ * $Id: transrate.c 8162 2004-07-10 17:20:59Z fenrir $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -80,7 +80,7 @@ static int Open( vlc_object_t *p_this )
     char *val;
 
     p_sys = malloc( sizeof( sout_stream_sys_t ) );
-    p_sys->p_out = sout_stream_new( p_stream->p_sout, p_stream->psz_next );
+    p_sys->p_out = sout_StreamNew( p_stream->p_sout, p_stream->psz_next );
 
     p_sys->i_vbitrate   = 0;
 
@@ -142,7 +142,7 @@ static void Close( vlc_object_t * p_this )
     sout_stream_t       *p_stream = (sout_stream_t *)p_this;
     sout_stream_sys_t   *p_sys = p_stream->p_sys;
 
-    sout_stream_delete( p_sys->p_out );
+    sout_StreamDelete( p_sys->p_out );
     free( p_sys );
 }
 

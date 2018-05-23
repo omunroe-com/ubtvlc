@@ -12,7 +12,7 @@ NULL =
 #  - . should come before mozilla because the plugin needs libvlc_pic.a
 #  - po should come before . because VLC.app needs the pofiles
 SUBDIRS = intl modules po . mozilla share m4 doc
-DIST_SUBDIRS = $(SUBDIRS) src debian ipkg lib autotools
+DIST_SUBDIRS = $(SUBDIRS) src debian ipkg lib
 
 EXTRA_DIST = \
 	HACKING \
@@ -68,28 +68,25 @@ HEADERS_include = \
 	include/aout_internal.h \
 	include/audio_output.h \
 	include/beos_specific.h \
-	include/configuration.h \
-	include/darwin_specific.h \
 	include/charset.h \
 	include/codecs.h \
-	include/ninput.h \
-	include/input_ext-dec.h \
-	include/input_ext-intf.h \
-	include/input_ext-plugins.h \
+	include/configuration.h \
+	include/darwin_specific.h \
 	include/intf_eject.h \
 	include/iso_lang.h \
-	include/vlc_httpd.h \
 	include/main.h \
 	include/mmx.h \
 	include/modules.h \
 	include/modules_inner.h \
 	include/mtime.h \
 	include/network.h \
+	include/osd.h \
 	include/os_specific.h \
-	include/stream_control.h \
+	include/snapshot.h \
 	include/stream_output.h \
 	include/variables.h \
 	include/video_output.h \
+	include/vlc_access.h \
 	include/vlc_bits.h \
 	include/vlc_block.h \
 	include/vlc_block_helper.h \
@@ -97,22 +94,30 @@ HEADERS_include = \
 	include/vlc_common.h \
 	include/vlc_config.h \
 	include/vlc_cpu.h \
+	include/vlc_demux.h \
 	include/vlc_error.h \
 	include/vlc_es.h \
+	include/vlc_es_out.h \
+	include/vlc_filter.h \
 	include/vlc_help.h \
+	include/vlc_httpd.h \
+	include/vlc_tls.h \
+	include/vlc_input.h \
 	include/vlc_interface.h \
 	include/vlc_keys.h \
 	include/vlc_messages.h \
 	include/vlc_meta.h \
-	include/vlc_vlm.h \
 	include/vlc_objects.h \
 	include/vlc_playlist.h \
-	include/vlc_threads.h \
+	include/vlc_spu.h \
+	include/vlc_stream.h \
 	include/vlc_threads_funcs.h \
+	include/vlc_threads.h \
 	include/vlc_video.h \
+	include/vlc_vlm.h \
+	include/vlc_vod.h \
 	include/vout_synchro.h \
 	include/win32_specific.h \
-	include/osd.h \
 	$(NULL)
 
 HEADERS_include_built = \
@@ -191,6 +196,8 @@ EXTRA_DIST += \
 	extras/MacOSX/Resources/display.png \
 	extras/MacOSX/Resources/display_slider.png \
 	extras/MacOSX/Resources/display_track.png \
+	extras/MacOSX/Resources/equalizerdrawer_active.png \
+	extras/MacOSX/Resources/equalizerdrawer_blue.png \
 	extras/MacOSX/Resources/fullscreen_active.png \
 	extras/MacOSX/Resources/fullscreen_blue.png \
 	extras/MacOSX/Resources/next_active.png \
@@ -230,7 +237,7 @@ EXTRA_DIST += \
 	evc/libvlc.vcp.in \
 	evc/vlc.vcp.in \
 	evc/plugins.vcp.in \
-	evc/vlc.c \
+	evc/errno.h \
 	evc/config.h.in \
 	evc/modules_builtin_evc.h \
 	$(NULL)
@@ -322,21 +329,22 @@ SOURCES_libvlc_common = \
 	src/playlist/item.c \
 	src/playlist/item-ext.c \
 	src/playlist/info.c \
-	src/input/input.c \
+	src/input/access.c \
+	src/input/clock.c \
 	src/input/control.c \
-	src/input/es_out.c \
-	src/input/stream.c \
+	src/input/decoder.c \
 	src/input/demux.c \
+	src/input/es_out.c \
+	src/input/input.c \
+	src/input/input_internal.h \
+	src/input/stream.c \
 	src/input/subtitles.c \
-	src/input/input_ext-plugins.c \
-	src/input/input_ext-intf.c \
-	src/input/input_dec.c \
-	src/input/input_programs.c \
-	src/input/input_clock.c \
+	src/input/var.c \
 	src/video_output/video_output.c \
 	src/video_output/vout_pictures.c \
 	src/video_output/vout_pictures.h \
 	src/video_output/video_text.c \
+	src/video_output/video_widgets.c \
 	src/video_output/vout_subpictures.c \
 	src/video_output/vout_synchro.c \
 	src/video_output/vout_intf.c \
@@ -352,6 +360,7 @@ SOURCES_libvlc_common = \
 	src/stream_output/sap.c \
 	src/misc/charset.c \
 	src/misc/httpd.c \
+	src/misc/tls.c \
 	src/misc/mtime.c \
 	src/misc/block.c \
 	src/misc/modules.c \
@@ -403,14 +412,29 @@ vlc$(EXEEXT): $(vlc_OBJECTS) $(DEPENDENCIES_vlc) stamp-builtin
 	esac
 
 if HAVE_BEOS
-	xres -o $@ $(srcdir)/share/vlc_beos.rsrc
-	mimeset -f $@
-	rm -Rf $(srcdir)/locale ; mkdir -p "$(srcdir)/locale"
-	for i in $(ALL_LINGUAS); do \
-	  mkdir -p "$(srcdir)/locale/$${i}/LC_MESSAGES" ; \
-	  cp "$(srcdir)/po/$${i}.gmo" \
-	    "$(srcdir)/locale/$${i}/LC_MESSAGES/vlc.mo" || true ; \
+noinst_DATA = vlc-bundle
+vlc-bundle: vlc
+	rm -Rf $(top_builddir)/vlc-bundle ; mkdir -p $(top_builddir)/vlc-bundle
+	cp $(top_builddir)/vlc $(top_builddir)/vlc-bundle/
+	xres -o $(top_builddir)/vlc-bundle/vlc $(srcdir)/share/vlc_beos.rsrc
+	for i in "" `$(VLC_CONFIG) --target plugin` ; do \
+	  if test -n "$$i" ; then \
+	    mkdir -p $(top_builddir)/vlc-bundle/plugins ; \
+	    cp "$$i$(LIBEXT)" $(top_builddir)/vlc-bundle/plugins/ ; \
+	  fi ; \
 	done
+	if test -d $(top_builddir)/extras/contrib/vlc-lib ; then \
+	  mkdir -p $(top_builddir)/vlc-bundle/lib ; \
+	  for i in $(top_builddir)/extras/contrib/vlc-lib/*.so ; do \
+	    cp $$i $(top_builddir)/vlc-bundle/lib/ ; \
+	  done ; \
+	fi
+	for i in $(ALL_LINGUAS); do \
+	  mkdir -p "$(top_builddir)/vlc-bundle/locale/$$i/LC_MESSAGES" ; \
+	  cp "$(top_builddir)/po/$$i.gmo" \
+	    "$(top_builddir)/vlc-bundle/locale/$$i/LC_MESSAGES/vlc.mo" || true ; \
+	done
+	find $(top_builddir)/vlc-bundle -type f -exec mimeset -f "{}" \;
 endif
 
 # Install the modules and the symlinks
@@ -461,8 +485,8 @@ VLC.app: vlc
 	    applescript.m \
 	    controls.h \
 	    controls.m \
-	    info.h \
-	    info.m \
+	    equalizer.h \
+	    equalizer.m \
 	    intf.h \
 	    intf.m \
 	    macosx.m \
@@ -481,6 +505,8 @@ VLC.app: vlc
 	    prefs.h \
 	    prefs.m \
 	    vout.h \
+	    voutqt.m \
+	    voutgl.m \
 	    vout.m; do \
 	  cp "$(srcdir)/modules/gui/macosx/$$i" \
              $(top_builddir)/tmp/modules/gui/macosx; \
@@ -492,6 +518,7 @@ VLC.app: vlc
 	$(INSTALL) -d $(top_builddir)/VLC.app/Contents/MacOS
 	$(INSTALL) $(top_builddir)/vlc \
 		   $(top_builddir)/VLC.app/Contents/MacOS/VLC
+	ln -sf ./VLC $(top_builddir)/VLC.app/Contents/MacOS/clivlc
 	$(INSTALL) -d $(top_builddir)/VLC.app/Contents/MacOS/modules
 	for i in "" `$(VLC_CONFIG) --target plugin` ; do \
 	  if test -n "$$i" ; \
@@ -580,8 +607,6 @@ package-win32-base:
 	cp "$(top_builddir)/vlc$(EXEEXT)" "$(srcdir)/vlc-${VERSION}/"
 	cp "$(top_builddir)/vlc.exe.manifest" "$(srcdir)/vlc-${VERSION}/"
 	$(STRIP) "$(srcdir)/vlc-${VERSION}/vlc$(EXEEXT)"
-	@if test -n "$(UPX)"; then \
-           $(UPX) -9 "$(srcdir)/vlc-${VERSION}/vlc$(EXEEXT)"; fi ;
 
 	for file in AUTHORS MAINTAINERS THANKS NEWS COPYING README ; \
 	  do sed 's/@/_AT_/' < "$(srcdir)/$$file" > "$(srcdir)/vlc-${VERSION}/$${file}.txt" ; \
@@ -595,9 +620,7 @@ package-win32-base:
 	  fi ; done
 
 	for i in "" $(srcdir)/vlc-${VERSION}/plugins/*$(LIBEXT) ; \
-	  do if test -n "$$i" ; then $(STRIP) "$$i" ; fi ; \
-	     if test -n "$(UPX)" -a -n "$$i"; then $(UPX) -9 "$$i"; fi ; \
-	  done
+	  do if test -n "$$i" ; then $(STRIP) "$$i" ; fi ; done
 
 	mkdir $(srcdir)/vlc-${VERSION}/locale
 	for i in $(ALL_LINGUAS); do \
@@ -607,23 +630,12 @@ package-win32-base:
             || true ; \
 	done
 
-	mkdir -p $(srcdir)/vlc-${VERSION}/skins/default
-	for i in $(srcdir)/share/skins/default/*.*; do \
-	  cp $$i $(srcdir)/vlc-${VERSION}/skins/default/ || true ; \
-	done
-	for i in $(srcdir)/doc/skins/*.txt; do \
-	  cp $$i $(srcdir)/vlc-${VERSION}/skins/ || true ; \
-	done
-	mkdir -p $(srcdir)/vlc-${VERSION}/skins2/fonts
+	mkdir -p $(srcdir)/vlc-${VERSION}/skins/fonts
 	for i in $(srcdir)/share/skins2/fonts/*.*; do \
-	  cp $$i $(srcdir)/vlc-${VERSION}/skins2/fonts/ || true ; \
-	done
-	mkdir -p $(srcdir)/vlc-${VERSION}/skins2/default
-	for i in $(srcdir)/share/skins2/default/*.*; do \
-	  cp $$i $(srcdir)/vlc-${VERSION}/skins2/default/ || true ; \
+	  cp $$i $(srcdir)/vlc-${VERSION}/skins/fonts/ || true ; \
 	done
 	for i in $(srcdir)/share/skins2/*.*; do \
-	  cp $$i $(srcdir)/vlc-${VERSION}/skins2/ || true ; \
+	  cp $$i $(srcdir)/vlc-${VERSION}/skins/ || true ; \
 	done
 
 	mkdir -p "$(srcdir)/vlc-${VERSION}/http/admin"
@@ -643,15 +655,13 @@ package-win32-base:
 if BUILD_MOZILLA
 	cp $(srcdir)/mozilla/*$(LIBEXT) $(srcdir)/vlc-${VERSION}/mozilla/ ;
 	$(STRIP) $(srcdir)/vlc-${VERSION}/mozilla/*$(LIBEXT);
-	@if test $(UPX); then \
-	  $(UPX) -9 $(srcdir)/vlc-${VERSION}/mozilla/npvlc$(LIBEXT); fi ; \
 	cp $(srcdir)/mozilla/vlcintf.xpt  $(srcdir)/vlc-${VERSION}/mozilla/ ;
 endif
 
 package-win32-base-exe:
 # Create package 
 	wine ~/.wine/fake_windows/Program\ Files/NSIS/makensis.exe \
-             -- /DVERSION=${VERSION} $(srcdir)/vlc-${VERSION}/vlc.win32.nsi
+             /DVERSION=${VERSION} $(srcdir)/vlc-${VERSION}/vlc.win32.nsi
 
 package-win32-base-zip:
 # Create package 
@@ -680,23 +690,21 @@ package-beos:
 
 # Copy relevant files
 	mkdir -p $(srcdir)/tmp/vlc ;
-	cd $(srcdir) && \
-	  cp vlc AUTHORS COPYING ChangeLog README THANKS NEWS tmp/vlc/ ;
-# We cannot use ${PLUGIN_FILES} as it looks like it is too "long" for the BeOS shell...
-	if [ `find $(srcdir)/modules -name "lib*_plugin.so" | wc -l` -gt 0 ]; then \
-	  mkdir -p $(srcdir)/tmp/vlc/plugins ; \
-	  find $(srcdir)/modules -name "lib*_plugin.so" -exec cp {} $(srcdir)/tmp/vlc/plugins/ \; ; \
-	fi
-	for i in $(ALL_LINGUAS); do \
-	  mkdir -p $(srcdir)/tmp/vlc/locale/$${i}/LC_MESSAGES ; \
-	  cp $(srcdir)/po/$${i}.gmo $(srcdir)/tmp/vlc/locale/$${i}/LC_MESSAGES/vlc.mo || true ; \
-	done
+	cd $(srcdir) && cp -R vlc-bundle/* AUTHORS COPYING ChangeLog README \
+	  THANKS NEWS tmp/vlc/ ;
 
-# Strip files and create package
+# Create debug package
+	xres -o $(srcdir)/tmp/vlc/vlc $(srcdir)/share/vlc_beos.rsrc ;
+	find $(srcdir)/tmp/vlc -exec mimeset -f {} \; ;
+	mv $(srcdir)/tmp/vlc $(srcdir)/tmp/vlc-${VERSION} ;
+	(cd $(srcdir)/tmp ; zip -9 -r vlc-${VERSION}-BeOS-debug.zip vlc-${VERSION} )
+	mv $(srcdir)/tmp/vlc-${VERSION}-BeOS-debug.zip $(srcdir)/ ;
+	mv $(srcdir)/tmp/vlc-${VERSION} $(srcdir)/tmp/vlc ;
+
+# Create normal package
 	strip --strip-debug --strip-unneeded $(srcdir)/tmp/vlc/vlc ;
-	if [ -d $(srcdir)/tmp/vlc/plugins ]; then \
-	  strip --strip-debug --strip-unneeded $(srcdir)/tmp/vlc/plugins/lib*_plugin.so ; \
-	fi
+	find $(srcdir)/tmp/vlc -name 'lib*.so' -exec strip \
+	  --strip-debug --strip-unneeded "{}" \; ;
 	xres -o $(srcdir)/tmp/vlc/vlc $(srcdir)/share/vlc_beos.rsrc ;
 	find $(srcdir)/tmp/vlc -exec mimeset -f {} \; ;
 	mv $(srcdir)/tmp/vlc $(srcdir)/tmp/vlc-${VERSION} ;

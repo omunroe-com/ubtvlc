@@ -2,7 +2,7 @@
  * ctrl_checkbox.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_checkbox.cpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: ctrl_checkbox.cpp 8079 2004-06-27 19:27:01Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -88,6 +88,8 @@ CtrlCheckbox::CtrlCheckbox( intf_thread_t *pIntf,
 
     // Transitions
     m_fsm.addTransition( "upOver", "mouse:left:down", "downOver",
+                         &m_cmdUpOverDownOver );
+    m_fsm.addTransition( "upOver", "mouse:left:dblclick", "downOver",
                          &m_cmdUpOverDownOver );
     m_fsm.addTransition( "downOver", "mouse:left:up", "upOver",
                          &m_cmdDownOverUpOver );

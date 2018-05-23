@@ -2,7 +2,7 @@
  * playlistinfo.h: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: playlistinfo.h 7568 2004-04-30 15:44:06Z bigben $
+ * $Id: playlistinfo.h 7801 2004-05-28 16:01:26Z fkuehne $
  *
  * Authors: Benjamin Pracht <bigben at videolan dot org> 
  *
@@ -35,8 +35,8 @@
     IBOutlet id o_uri_txt;
     IBOutlet id o_title_txt;
     IBOutlet id o_author_txt;
-    IBOutlet id o_btn_info_ok;
-    IBOutlet id o_btn_info_cancel;
+    IBOutlet id o_btn_ok;
+    IBOutlet id o_btn_cancel;
     IBOutlet id o_btn_delete_group;
     IBOutlet id o_btn_add_group;
     IBOutlet id o_outline_view;

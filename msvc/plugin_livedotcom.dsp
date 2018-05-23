@@ -98,6 +98,26 @@ SOURCE="..\modules\demux\livedotcom.cpp"
 # PROP Output_Dir "Debug\modules\demux"
 # PROP Intermediate_Dir "Debug\modules\demux"
 # End Source File
+# Begin Source File
+SOURCE="..\modules\demux\..\access\mms\asf.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=livedotcom" /D "MODULE_NAME_IS_livedotcom" 
+!IF "$(CFG)" == "plugin_livedotcom - Win32 Release"
+# PROP Output_Dir "Release\modules\demux"
+# PROP Intermediate_Dir "Release\modules\demux"
+!ELSEIF "$(CFG)" == "plugin_livedotcom - Win32 Debug"
+# PROP Output_Dir "Debug\modules\demux"
+# PROP Intermediate_Dir "Debug\modules\demux"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\demux\..\access\mms\buffer.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=livedotcom" /D "MODULE_NAME_IS_livedotcom" 
+!IF "$(CFG)" == "plugin_livedotcom - Win32 Release"
+# PROP Output_Dir "Release\modules\demux"
+# PROP Intermediate_Dir "Release\modules\demux"
+!ELSEIF "$(CFG)" == "plugin_livedotcom - Win32 Debug"
+# PROP Output_Dir "Debug\modules\demux"
+# PROP Intermediate_Dir "Debug\modules\demux"
+# End Source File
 
 # End Group
 

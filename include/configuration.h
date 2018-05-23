@@ -4,9 +4,9 @@
  * It includes functions allowing to declare, get or set configuration options.
  *****************************************************************************
  * Copyright (C) 1999, 2000 VideoLAN
- * $Id: configuration.h 6961 2004-03-05 17:34:23Z sam $
+ * $Id: configuration.h 8803 2004-09-26 12:59:50Z gbazin $
  *
- * Authors: Gildas Bazin <gbazin@netcourrier.com>
+ * Authors: Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -130,6 +130,9 @@ VLC_EXPORT( void, config_UnsetCallbacks, ( module_config_t * ) );
 #define config_SaveConfigFile(a,b) __config_SaveConfigFile(VLC_OBJECT(a),b)
 #define config_ResetAll(a) __config_ResetAll(VLC_OBJECT(a))
 
+/* internal only */
+int config_CreateDir( vlc_object_t *, char * );
+
 /*****************************************************************************
  * Macros used to build the configuration structure.
  *
@@ -228,6 +231,14 @@ VLC_EXPORT( void, config_UnsetCallbacks, ( module_config_t * ) );
     p_config[i_config].i_list = sizeof(list)/sizeof(int); \
     p_config[i_config].pi_list = list; \
     p_config[i_config].ppsz_list_text = list_text;
+
+#define change_integer_range( min, max ) \
+    p_config[i_config].i_min = min; \
+    p_config[i_config].i_max = max;
+
+#define change_float_range( min, max ) \
+    p_config[i_config].f_min = min; \
+    p_config[i_config].f_max = max;
 
 #define change_action_add( pf_action, action_text ) \
     if( !p_config[i_config].i_action ) \

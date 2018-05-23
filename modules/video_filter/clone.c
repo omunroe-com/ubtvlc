@@ -2,7 +2,7 @@
  * clone.c : Clone video plugin for vlc
  *****************************************************************************
  * Copyright (C) 2002, 2003 VideoLAN
- * $Id: clone.c 7522 2004-04-27 16:35:15Z sam $
+ * $Id: clone.c 8551 2004-08-28 17:36:02Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -54,10 +54,10 @@ static int  SendEvents( vlc_object_t *, char const *,
  *****************************************************************************/
 #define COUNT_TEXT N_("Number of clones")
 #define COUNT_LONGTEXT N_("Select the number of video windows in which to "\
-    "clone the video")
+    "clone the video.")
 
 #define VOUTLIST_TEXT N_("List of video output modules")
-#define VOUTLIST_LONGTEXT N_("Select the specific video output modules that you want to activate")
+#define VOUTLIST_LONGTEXT N_("Select the specific video output modules that you want to activate.")
 
 vlc_module_begin();
     set_description( _("Clone video filter") );
@@ -341,11 +341,12 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
                  && i_out_pitch == i_copy_pitch )
             {
                 p_vout->p_vlc->pf_memcpy( p_out, p_in, i_in_pitch
-                                           * p_outpic->p[i_plane].i_lines );
+                                     * p_outpic->p[i_plane].i_visible_lines );
             }
             else
             {
-                p_in_end = p_in + i_in_pitch * p_outpic->p[i_plane].i_lines;
+                p_in_end = p_in + i_in_pitch *
+                    p_outpic->p[i_plane].i_visible_lines;
 
                 while( p_in < p_in_end )
                 {

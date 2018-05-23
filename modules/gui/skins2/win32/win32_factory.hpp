@@ -2,7 +2,7 @@
  * win32_factory.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: win32_factory.hpp 7574 2004-05-01 14:23:40Z asmax $
+ * $Id: win32_factory.hpp 8116 2004-07-04 22:22:10Z adn $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -52,6 +52,9 @@ class Win32Factory: public OSFactory
 
         /// Destroy the instance of OSLoop.
         virtual void destroyOSLoop();
+
+        ///
+        virtual void minimize();
 
         /// Instantiate an OSTimer with the given callback
         virtual OSTimer *createOSTimer( const Callback &rCallback );

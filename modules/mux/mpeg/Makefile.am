@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in mux_ps mux_ts mux_ts_dvbpsi; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in mux_ps mux_ts mux_ts_dvbpsi; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in mux_ps mux_ts mux_ts_dvbpsi; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in mux_ps mux_ts; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in mux_ps mux_ts; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in mux_ps mux_ts; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -105,43 +105,6 @@ libmux_ts_plugin$(LIBEXT): $(libmux_ts_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libmux_ts_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_ts\` ; $(CXXLINK) $(libmux_ts_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_ts` ;; \
 	  objc) echo $(OBJCLINK) $(libmux_ts_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_ts\` ; $(OBJCLINK) $(libmux_ts_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_ts` ;; \
 	  c|*) echo $(LINK) $(libmux_ts_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_ts\` ; $(LINK) $(libmux_ts_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_ts` ;; \
-	esac
-
-
-# The mux_ts_dvbpsi plugin
-
-if UNTRUE
-Lmux_ts_dvbpsip = libmux_ts_dvbpsi_plugin.a
-Dmux_ts_dvbpsip = libmux_ts_dvbpsi_plugin$(LIBEXT)
-Lmux_ts_dvbpsib = libmux_ts_dvbpsi.a
-Lmux_ts_dvbpsipic = libmux_ts_dvbpsi_pic.a
-endif
-
-libmux_ts_dvbpsi_plugin_a_SOURCES = $(SOURCES_mux_ts_dvbpsi)
-libmux_ts_dvbpsi_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin mux_ts_dvbpsi`
-libmux_ts_dvbpsi_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mux_ts_dvbpsi`
-libmux_ts_dvbpsi_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mux_ts_dvbpsi`
-
-libmux_ts_dvbpsi_pic_a_SOURCES = $(SOURCES_mux_ts_dvbpsi)
-libmux_ts_dvbpsi_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mux_ts_dvbpsi`
-libmux_ts_dvbpsi_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mux_ts_dvbpsi`
-libmux_ts_dvbpsi_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mux_ts_dvbpsi`
-
-libmux_ts_dvbpsi_a_SOURCES = $(SOURCES_mux_ts_dvbpsi)
-libmux_ts_dvbpsi_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_ts_dvbpsi`
-libmux_ts_dvbpsi_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_ts_dvbpsi`
-libmux_ts_dvbpsi_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_ts_dvbpsi`
-
-libvlc_LIBRARIES += $(Lmux_ts_dvbpsib) $(Lmux_ts_dvbpsipic)
-libmux_ts_dvbpsi_DATA = $(Dmux_ts_dvbpsip)
-
-libmux_ts_dvbpsidir = $(libdir)/vlc/
-noinst_LIBRARIES += $(Lmux_ts_dvbpsip)
-libmux_ts_dvbpsi_plugin$(LIBEXT): $(libmux_ts_dvbpsi_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage mux_ts_dvbpsi` in \
-	  c++) echo $(CXXLINK) $(libmux_ts_dvbpsi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_ts_dvbpsi\` ; $(CXXLINK) $(libmux_ts_dvbpsi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_ts_dvbpsi` ;; \
-	  objc) echo $(OBJCLINK) $(libmux_ts_dvbpsi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_ts_dvbpsi\` ; $(OBJCLINK) $(libmux_ts_dvbpsi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_ts_dvbpsi` ;; \
-	  c|*) echo $(LINK) $(libmux_ts_dvbpsi_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_ts_dvbpsi\` ; $(LINK) $(libmux_ts_dvbpsi_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_ts_dvbpsi` ;; \
 	esac
 
 

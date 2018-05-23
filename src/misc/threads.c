@@ -2,7 +2,7 @@
  * threads.c : threads implementation for the VideoLAN client
  *****************************************************************************
  * Copyright (C) 1999-2004 VideoLAN
- * $Id: threads.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: threads.c 9056 2004-10-24 21:07:58Z gbazin $
  *
  * Authors: Jean-Marc Dressler <polux@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -560,18 +560,16 @@ int __vlc_thread_create( vlc_object_t *p_this, char * psz_file, int i_line,
 #elif defined( PTHREAD_COND_T_IN_PTHREAD_H )
     i_ret = pthread_create( &p_this->thread_id, NULL, func, p_data );
 
-    if ( i_priority
 #ifndef SYS_DARWIN
-            && config_GetInt( p_this, "rt-priority" )
+    if ( config_GetInt( p_this, "rt-priority" ) )
 #endif
-       )
     {
         int i_error, i_policy;
         struct sched_param param;
 
         memset( &param, 0, sizeof(struct sched_param) );
         i_priority += config_GetInt( p_this, "rt-offset" );
-        if ( i_priority < 0 )
+        if ( i_priority <= 0 )
         {
             param.sched_priority = (-1) * i_priority;
             i_policy = SCHED_OTHER;
@@ -589,10 +587,12 @@ int __vlc_thread_create( vlc_object_t *p_this, char * psz_file, int i_line,
             i_priority = 0;
         }
     }
+#ifndef SYS_DARWIN
     else
     {
         i_priority = 0;
     }
+#endif
 
 #elif defined( HAVE_CTHREADS_H )
     p_this->thread_id = cthread_fork( (cthread_fn_t)func, (any_t)p_data );
@@ -647,18 +647,16 @@ int __vlc_thread_set_priority( vlc_object_t *p_this, char * psz_file,
     }
 
 #elif defined( PTHREAD_COND_T_IN_PTHREAD_H )
-    if ( i_priority
 #ifndef SYS_DARWIN
-            && config_GetInt( p_this, "rt-priority" )
+    if ( config_GetInt( p_this, "rt-priority" ) )
 #endif
-        )
     {
         int i_error, i_policy;
         struct sched_param param;
 
         memset( &param, 0, sizeof(struct sched_param) );
         i_priority += config_GetInt( p_this, "rt-offset" );
-        if ( i_priority < 0 )
+        if ( i_priority <= 0 )
         {
             param.sched_priority = (-1) * i_priority;
             i_policy = SCHED_OTHER;
@@ -706,11 +704,9 @@ void __vlc_thread_join( vlc_object_t *p_this, char * psz_file, int i_line )
 #elif defined( ST_INIT_IN_ST_H )
     i_ret = st_thread_join( p_this->thread_id, NULL );
 
-#elif defined( UNDER_CE )
+#elif defined( UNDER_CE ) || defined( WIN32 )
     WaitForSingleObject( p_this->thread_id, INFINITE );
-
-#elif defined( WIN32 )
-    WaitForSingleObject( p_this->thread_id, INFINITE );
+    CloseHandle( p_this->thread_id );
 
 #elif defined( HAVE_KERNEL_SCHEDULER_H )
     int32_t exit_value;

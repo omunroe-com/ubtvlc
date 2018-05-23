@@ -2,7 +2,7 @@
  * output.c : internal management of output streams for the audio output
  *****************************************************************************
  * Copyright (C) 2002-2004 VideoLAN
- * $Id: output.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: output.c 8485 2004-08-21 13:54:36Z asmax $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -246,6 +246,12 @@ void aout_OutputPlay( aout_instance_t * p_aout, aout_buffer_t * p_buffer )
                       p_aout->output.i_nb_filters,
                       &p_buffer );
 
+    if( p_buffer->i_nb_bytes == 0 )
+    {
+        aout_BufferFree( p_buffer );
+        return;
+    }
+
     vlc_mutex_lock( &p_aout->output_fifo_lock );
     aout_FifoPush( p_aout, &p_aout->output.fifo, p_buffer );
     p_aout->output.pf_play( p_aout );
@@ -300,7 +306,8 @@ aout_buffer_t * aout_OutputNextBuffer( aout_instance_t * p_aout,
     }
 
     /* Here we suppose that all buffers have the same duration - this is
-     * generally true, and anyway if it's wrong it won't be a disaster. */
+     * generally true, and anyway if it's wrong it won't be a disaster.
+     */
     if ( p_buffer->start_date > start_date
                          + (p_buffer->end_date - p_buffer->start_date) )
     /*

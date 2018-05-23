@@ -2,7 +2,7 @@
  * subtitles.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2001 VideoLAN
- * $Id: subtitles.cpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: subtitles.cpp 8898 2004-10-03 11:52:25Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -125,8 +125,8 @@ SubsFileDialog::SubsFileDialog( intf_thread_t *_p_intf, wxWindow* _p_parent ):
         encoding_combo->SetValue( wxU(p_item->psz_value) );
         encoding_combo->SetToolTip( wxU(p_item->psz_longtext) );
 
-        enc_sizer->Add( label, 0, wxALL, 5 );
-        enc_sizer->Add( encoding_combo, 0, wxALL, 5 );
+        enc_sizer->Add( label, 0, wxALL | wxALIGN_CENTER, 5 );
+        enc_sizer->Add( encoding_combo, 0, wxEXPAND | wxALL | wxALIGN_CENTER, 5 );
         enc_sizer_sizer->Add( enc_sizer, 1, wxEXPAND | wxALL, 5 );
         panel_sizer->Add( enc_sizer, 0, wxEXPAND | wxALL, 5 );
     }
@@ -135,22 +135,79 @@ SubsFileDialog::SubsFileDialog( intf_thread_t *_p_intf, wxWindow* _p_parent ):
     wxBoxSizer *misc_sizer_sizer = new wxBoxSizer( wxHORIZONTAL );
     wxStaticBox *misc_box = new wxStaticBox( panel, -1,
                                              wxU(_("Subtitles options")) );
+
     wxStaticBoxSizer *misc_sizer = new wxStaticBoxSizer( misc_box,
-                                                         wxHORIZONTAL );
-    wxStaticText *label =
-        new wxStaticText(panel, -1, wxU(_("Delay subtitles (in 1/10s)")));
-    int i_delay = config_GetInt( p_intf, "sub-delay" );
-    /* Outside the new wxSpinCtrl to avoid an internal error in gcc2.95 ! */
-    wxString format_delay(wxString::Format(wxT("%d"), i_delay));
-    delay_spinctrl = new wxSpinCtrl( panel, -1, format_delay,
+                                                         wxVERTICAL );
+
+    wxFlexGridSizer *grid_sizer = new wxFlexGridSizer( 2, 1, 20 );
+
+    /* Font size */
+    p_item =
+        config_FindConfig( VLC_OBJECT(p_intf), "freetype-rel-fontsize" );
+    if( p_item )
+    {
+        wxBoxSizer *size_sizer = new wxBoxSizer( wxHORIZONTAL );
+        wxStaticText *label =
+            new wxStaticText(panel, -1, wxU(p_item->psz_text));
+        size_combo = new wxComboBox( panel, -1, wxT(""),
                                      wxDefaultPosition, wxDefaultSize,
-                                     wxSP_ARROW_KEYS,
-                                     -650000, 650000, i_delay );
+                                     0, NULL, wxCB_READONLY );
 
-    misc_sizer->Add( label, 0, wxALL, 5 );
-    misc_sizer->Add( delay_spinctrl, 0, wxALL, 5 );
+        /* build a list of available options */
+        for( int i_index = 0; i_index < p_item->i_list; i_index++ )
+        {
+            size_combo->Append( wxU(p_item->ppsz_list_text[i_index]),
+                                (void *)p_item->pi_list[i_index] );
+            if( p_item->i_value == p_item->pi_list[i_index] )
+            {
+                size_combo->SetSelection( i_index );
+                size_combo->SetValue(wxU(p_item->ppsz_list_text[i_index]));
+            }
+        }
 
-    label = new wxStaticText(panel, -1, wxU(_("Frames per second")));
+        size_combo->SetToolTip( wxU(p_item->psz_longtext) );
+
+        size_sizer->Add( label, 0,  wxRIGHT | wxALIGN_CENTER, 5 );
+        size_sizer->Add( size_combo, 0, wxLEFT | wxALIGN_CENTER, 5 );
+        grid_sizer->Add( size_sizer, 1, wxEXPAND | wxALL, 5 );
+    }
+
+    p_item =
+        config_FindConfig( VLC_OBJECT(p_intf), "subsdec-align" );
+    if( p_item )
+    {
+        wxBoxSizer *align_sizer = new wxBoxSizer( wxHORIZONTAL );
+        wxStaticText *label =
+            new wxStaticText(panel, -1, wxU(p_item->psz_text));
+        align_combo = new wxComboBox( panel, -1, wxT(""),
+                                     wxDefaultPosition, wxDefaultSize,
+                                     0, NULL, wxCB_READONLY );
+
+        /* build a list of available options */
+        for( int i_index = 0; i_index < p_item->i_list; i_index++ )
+        {
+            align_combo->Append( wxU(p_item->ppsz_list_text[i_index]),
+                                (void *)p_item->pi_list[i_index] );
+            if( p_item->i_value == p_item->pi_list[i_index] )
+            {
+                align_combo->SetSelection( i_index );
+                align_combo->SetValue(wxU(p_item->ppsz_list_text[i_index]));
+            }
+        }
+
+        align_combo->SetToolTip( wxU(p_item->psz_longtext) );
+
+        align_sizer->Add( label, 0,  wxRIGHT | wxALIGN_CENTER, 5 );
+        align_sizer->Add( align_combo, 0, wxLEFT | wxALIGN_CENTER, 5 );
+        grid_sizer->Add( align_sizer, 1, wxEXPAND | wxALL, 5 );
+    }
+
+    misc_sizer->Add( grid_sizer, 1, wxEXPAND | wxALL , 5 );
+
+    grid_sizer = new wxFlexGridSizer( 4, 1, 20 );
+
+    wxStaticText *label =
+        new wxStaticText(panel, -1, wxU(_("Frames per second")));
 
     float f_fps = config_GetFloat( p_intf, "sub-fps" );
     /* Outside the new wxSpinCtrl to avoid an internal error in gcc2.95 ! */
@@ -160,11 +217,30 @@ SubsFileDialog::SubsFileDialog( intf_thread_t *_p_intf, wxWindow* _p_parent ):
                                    wxSP_ARROW_KEYS,
                                    0, 16000, (int)f_fps );
     fps_spinctrl->SetToolTip( wxU(_("Override frames per second. "
-                              "It will only work with MicroDVD subtitles.")) );
-    misc_sizer->Add( label, 0, wxALL, 5 );
-    misc_sizer->Add( fps_spinctrl, 0, wxALL, 5 );
+               "It will only work with MicroDVD and SubRIP subtitles.")) );
+    grid_sizer->Add( label, 0, wxALIGN_CENTER, 5 );
+    grid_sizer->Add( fps_spinctrl, 0,wxALIGN_CENTER, 5 );
+
+
+    wxStaticText *label_delay =
+        new wxStaticText(panel, -1, wxU(_("Delay")));
+
+    int i_delay = config_GetInt( p_intf, "sub-delay" );
+    /* Outside the new wxSpinCtrl to avoid an internal error in gcc2.95 ! */
+    wxString format_delay(wxString::Format(wxT("%i"), i_delay ));
+    delay_spinctrl = new wxSpinCtrl( panel, -1, format_delay,
+                                     wxDefaultPosition, wxDefaultSize,
+                                     wxSP_ARROW_KEYS,
+                                     0, 16000, i_delay );
+    delay_spinctrl->SetToolTip( wxU(_("Set subtitle delay (in 1/10s)" ) ) );
+
+    grid_sizer->Add( label_delay , 0, wxALIGN_CENTER, 5 );
+    grid_sizer->Add( delay_spinctrl, 0, wxALIGN_CENTER, 5 );
+
+    misc_sizer->Add( grid_sizer, 0, wxALL, 5 );
 
     misc_sizer_sizer->Add( misc_sizer, 1, wxEXPAND | wxALL, 5 );
+
     panel_sizer->Add( misc_sizer, 0, wxEXPAND | wxALL, 5 );
 
     /* Separation */

@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -228,8 +230,8 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Lmux_dummyb) $(Lmux_dummypic) $(Lmux_avib) $(Lmux_avipic) $(Lmux_oggb) $(Lmux_oggpic) $(Lmux_mp4b) $(Lmux_mp4pic) $(Lmux_asfb) $(Lmux_asfpic)
-noinst_LIBRARIES = $(Lmux_dummyp) $(Lmux_avip) $(Lmux_oggp) $(Lmux_mp4p) $(Lmux_asfp)
+libvlc_LIBRARIES = $(Lmux_dummyb) $(Lmux_dummypic) $(Lmux_avib) $(Lmux_avipic) $(Lmux_oggb) $(Lmux_oggpic) $(Lmux_mp4b) $(Lmux_mp4pic) $(Lmux_asfb) $(Lmux_asfpic) $(Lmux_wavb) $(Lmux_wavpic) $(Lmux_mpjpegb) $(Lmux_mpjpegpic)
+noinst_LIBRARIES = $(Lmux_dummyp) $(Lmux_avip) $(Lmux_oggp) $(Lmux_mp4p) $(Lmux_asfp) $(Lmux_wavp) $(Lmux_mpjpegp)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
@@ -241,6 +243,8 @@ SOURCES_mux_avi = avi.c
 SOURCES_mux_ogg = ogg.c
 SOURCES_mux_mp4 = mp4.c
 SOURCES_mux_asf = asf.c
+SOURCES_mux_wav = wav.c
+SOURCES_mux_mpjpeg = mpjpeg.c
 
 # There's no need for pic code on win32 so get rid of this to substantially
 # reduce the compilation time.
@@ -371,6 +375,56 @@ libmux_asf_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_asf`
 libmux_asf_DATA = $(Dmux_asfp)
 
 libmux_asfdir = $(libdir)/vlc/
+
+
+# The mux_wav plugin
+@UNTRUE_TRUE@Lmux_wavp = libmux_wav_plugin.a
+@UNTRUE_TRUE@Dmux_wavp = libmux_wav_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lmux_wavb = libmux_wav.a
+@UNTRUE_TRUE@Lmux_wavpic = libmux_wav_pic.a
+
+libmux_wav_plugin_a_SOURCES = $(SOURCES_mux_wav)
+libmux_wav_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin mux_wav`
+libmux_wav_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mux_wav`
+libmux_wav_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mux_wav`
+
+libmux_wav_pic_a_SOURCES = $(SOURCES_mux_wav)
+libmux_wav_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mux_wav`
+libmux_wav_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mux_wav`
+libmux_wav_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mux_wav`
+
+libmux_wav_a_SOURCES = $(SOURCES_mux_wav)
+libmux_wav_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_wav`
+libmux_wav_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_wav`
+libmux_wav_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_wav`
+libmux_wav_DATA = $(Dmux_wavp)
+
+libmux_wavdir = $(libdir)/vlc/
+
+
+# The mux_mpjpeg plugin
+@UNTRUE_TRUE@Lmux_mpjpegp = libmux_mpjpeg_plugin.a
+@UNTRUE_TRUE@Dmux_mpjpegp = libmux_mpjpeg_plugin$(LIBEXT)
+@UNTRUE_TRUE@Lmux_mpjpegb = libmux_mpjpeg.a
+@UNTRUE_TRUE@Lmux_mpjpegpic = libmux_mpjpeg_pic.a
+
+libmux_mpjpeg_plugin_a_SOURCES = $(SOURCES_mux_mpjpeg)
+libmux_mpjpeg_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin mux_mpjpeg`
+libmux_mpjpeg_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin mux_mpjpeg`
+libmux_mpjpeg_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin mux_mpjpeg`
+
+libmux_mpjpeg_pic_a_SOURCES = $(SOURCES_mux_mpjpeg)
+libmux_mpjpeg_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic mux_mpjpeg`
+libmux_mpjpeg_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic mux_mpjpeg`
+libmux_mpjpeg_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic mux_mpjpeg`
+
+libmux_mpjpeg_a_SOURCES = $(SOURCES_mux_mpjpeg)
+libmux_mpjpeg_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin mux_mpjpeg`
+libmux_mpjpeg_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin mux_mpjpeg`
+libmux_mpjpeg_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin mux_mpjpeg`
+libmux_mpjpeg_DATA = $(Dmux_mpjpegp)
+
+libmux_mpjpegdir = $(libdir)/vlc/
 subdir = modules/mux
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
@@ -438,21 +492,51 @@ libmux_mp4_plugin_a_LIBADD =
 am__objects_12 = libmux_mp4_plugin_a-mp4.$(OBJEXT)
 am_libmux_mp4_plugin_a_OBJECTS = $(am__objects_12)
 libmux_mp4_plugin_a_OBJECTS = $(am_libmux_mp4_plugin_a_OBJECTS)
+libmux_mpjpeg_a_AR = $(AR) cru
+libmux_mpjpeg_a_LIBADD =
+am__objects_13 = libmux_mpjpeg_a-mpjpeg.$(OBJEXT)
+am_libmux_mpjpeg_a_OBJECTS = $(am__objects_13)
+libmux_mpjpeg_a_OBJECTS = $(am_libmux_mpjpeg_a_OBJECTS)
+libmux_mpjpeg_pic_a_AR = $(AR) cru
+libmux_mpjpeg_pic_a_LIBADD =
+am__objects_14 = libmux_mpjpeg_pic_a-mpjpeg.$(OBJEXT)
+am_libmux_mpjpeg_pic_a_OBJECTS = $(am__objects_14)
+libmux_mpjpeg_pic_a_OBJECTS = $(am_libmux_mpjpeg_pic_a_OBJECTS)
+libmux_mpjpeg_plugin_a_AR = $(AR) cru
+libmux_mpjpeg_plugin_a_LIBADD =
+am__objects_15 = libmux_mpjpeg_plugin_a-mpjpeg.$(OBJEXT)
+am_libmux_mpjpeg_plugin_a_OBJECTS = $(am__objects_15)
+libmux_mpjpeg_plugin_a_OBJECTS = $(am_libmux_mpjpeg_plugin_a_OBJECTS)
 libmux_ogg_a_AR = $(AR) cru
 libmux_ogg_a_LIBADD =
-am__objects_13 = libmux_ogg_a-ogg.$(OBJEXT)
-am_libmux_ogg_a_OBJECTS = $(am__objects_13)
+am__objects_16 = libmux_ogg_a-ogg.$(OBJEXT)
+am_libmux_ogg_a_OBJECTS = $(am__objects_16)
 libmux_ogg_a_OBJECTS = $(am_libmux_ogg_a_OBJECTS)
 libmux_ogg_pic_a_AR = $(AR) cru
 libmux_ogg_pic_a_LIBADD =
-am__objects_14 = libmux_ogg_pic_a-ogg.$(OBJEXT)
-am_libmux_ogg_pic_a_OBJECTS = $(am__objects_14)
+am__objects_17 = libmux_ogg_pic_a-ogg.$(OBJEXT)
+am_libmux_ogg_pic_a_OBJECTS = $(am__objects_17)
 libmux_ogg_pic_a_OBJECTS = $(am_libmux_ogg_pic_a_OBJECTS)
 libmux_ogg_plugin_a_AR = $(AR) cru
 libmux_ogg_plugin_a_LIBADD =
-am__objects_15 = libmux_ogg_plugin_a-ogg.$(OBJEXT)
-am_libmux_ogg_plugin_a_OBJECTS = $(am__objects_15)
+am__objects_18 = libmux_ogg_plugin_a-ogg.$(OBJEXT)
+am_libmux_ogg_plugin_a_OBJECTS = $(am__objects_18)
 libmux_ogg_plugin_a_OBJECTS = $(am_libmux_ogg_plugin_a_OBJECTS)
+libmux_wav_a_AR = $(AR) cru
+libmux_wav_a_LIBADD =
+am__objects_19 = libmux_wav_a-wav.$(OBJEXT)
+am_libmux_wav_a_OBJECTS = $(am__objects_19)
+libmux_wav_a_OBJECTS = $(am_libmux_wav_a_OBJECTS)
+libmux_wav_pic_a_AR = $(AR) cru
+libmux_wav_pic_a_LIBADD =
+am__objects_20 = libmux_wav_pic_a-wav.$(OBJEXT)
+am_libmux_wav_pic_a_OBJECTS = $(am__objects_20)
+libmux_wav_pic_a_OBJECTS = $(am_libmux_wav_pic_a_OBJECTS)
+libmux_wav_plugin_a_AR = $(AR) cru
+libmux_wav_plugin_a_LIBADD =
+am__objects_21 = libmux_wav_plugin_a-wav.$(OBJEXT)
+am_libmux_wav_plugin_a_OBJECTS = $(am__objects_21)
+libmux_wav_plugin_a_OBJECTS = $(am_libmux_wav_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
@@ -469,9 +553,15 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/libmux_mp4_a-mp4.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmux_mp4_pic_a-mp4.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmux_mp4_plugin_a-mp4.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmux_mpjpeg_a-mpjpeg.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmux_mpjpeg_pic_a-mpjpeg.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmux_mpjpeg_plugin_a-mpjpeg.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmux_ogg_a-ogg.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libmux_ogg_pic_a-ogg.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libmux_ogg_plugin_a-ogg.Po
+@AMDEP_TRUE@	./$(DEPDIR)/libmux_ogg_plugin_a-ogg.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmux_wav_a-wav.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmux_wav_pic_a-wav.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/libmux_wav_plugin_a-wav.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -482,10 +572,14 @@ DIST_SOURCES = $(libmux_asf_a_SOURCES) $(libmux_asf_pic_a_SOURCES) \
 	$(libmux_dummy_a_SOURCES) $(libmux_dummy_pic_a_SOURCES) \
 	$(libmux_dummy_plugin_a_SOURCES) $(libmux_mp4_a_SOURCES) \
 	$(libmux_mp4_pic_a_SOURCES) $(libmux_mp4_plugin_a_SOURCES) \
-	$(libmux_ogg_a_SOURCES) $(libmux_ogg_pic_a_SOURCES) \
-	$(libmux_ogg_plugin_a_SOURCES)
+	$(libmux_mpjpeg_a_SOURCES) $(libmux_mpjpeg_pic_a_SOURCES) \
+	$(libmux_mpjpeg_plugin_a_SOURCES) $(libmux_ogg_a_SOURCES) \
+	$(libmux_ogg_pic_a_SOURCES) $(libmux_ogg_plugin_a_SOURCES) \
+	$(libmux_wav_a_SOURCES) $(libmux_wav_pic_a_SOURCES) \
+	$(libmux_wav_plugin_a_SOURCES)
 DATA = $(libmux_asf_DATA) $(libmux_avi_DATA) $(libmux_dummy_DATA) \
-	$(libmux_mp4_DATA) $(libmux_ogg_DATA)
+	$(libmux_mp4_DATA) $(libmux_mpjpeg_DATA) $(libmux_ogg_DATA) \
+	$(libmux_wav_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -498,7 +592,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libmux_asf_a_SOURCES) $(libmux_asf_pic_a_SOURCES) $(libmux_asf_plugin_a_SOURCES) $(libmux_avi_a_SOURCES) $(libmux_avi_pic_a_SOURCES) $(libmux_avi_plugin_a_SOURCES) $(libmux_dummy_a_SOURCES) $(libmux_dummy_pic_a_SOURCES) $(libmux_dummy_plugin_a_SOURCES) $(libmux_mp4_a_SOURCES) $(libmux_mp4_pic_a_SOURCES) $(libmux_mp4_plugin_a_SOURCES) $(libmux_ogg_a_SOURCES) $(libmux_ogg_pic_a_SOURCES) $(libmux_ogg_plugin_a_SOURCES)
+SOURCES = $(libmux_asf_a_SOURCES) $(libmux_asf_pic_a_SOURCES) $(libmux_asf_plugin_a_SOURCES) $(libmux_avi_a_SOURCES) $(libmux_avi_pic_a_SOURCES) $(libmux_avi_plugin_a_SOURCES) $(libmux_dummy_a_SOURCES) $(libmux_dummy_pic_a_SOURCES) $(libmux_dummy_plugin_a_SOURCES) $(libmux_mp4_a_SOURCES) $(libmux_mp4_pic_a_SOURCES) $(libmux_mp4_plugin_a_SOURCES) $(libmux_mpjpeg_a_SOURCES) $(libmux_mpjpeg_pic_a_SOURCES) $(libmux_mpjpeg_plugin_a_SOURCES) $(libmux_ogg_a_SOURCES) $(libmux_ogg_pic_a_SOURCES) $(libmux_ogg_plugin_a_SOURCES) $(libmux_wav_a_SOURCES) $(libmux_wav_pic_a_SOURCES) $(libmux_wav_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -591,6 +685,18 @@ libmux_mp4_plugin.a: $(libmux_mp4_plugin_a_OBJECTS) $(libmux_mp4_plugin_a_DEPEND
 	-rm -f libmux_mp4_plugin.a
 	$(libmux_mp4_plugin_a_AR) libmux_mp4_plugin.a $(libmux_mp4_plugin_a_OBJECTS) $(libmux_mp4_plugin_a_LIBADD)
 	$(RANLIB) libmux_mp4_plugin.a
+libmux_mpjpeg.a: $(libmux_mpjpeg_a_OBJECTS) $(libmux_mpjpeg_a_DEPENDENCIES) 
+	-rm -f libmux_mpjpeg.a
+	$(libmux_mpjpeg_a_AR) libmux_mpjpeg.a $(libmux_mpjpeg_a_OBJECTS) $(libmux_mpjpeg_a_LIBADD)
+	$(RANLIB) libmux_mpjpeg.a
+libmux_mpjpeg_pic.a: $(libmux_mpjpeg_pic_a_OBJECTS) $(libmux_mpjpeg_pic_a_DEPENDENCIES) 
+	-rm -f libmux_mpjpeg_pic.a
+	$(libmux_mpjpeg_pic_a_AR) libmux_mpjpeg_pic.a $(libmux_mpjpeg_pic_a_OBJECTS) $(libmux_mpjpeg_pic_a_LIBADD)
+	$(RANLIB) libmux_mpjpeg_pic.a
+libmux_mpjpeg_plugin.a: $(libmux_mpjpeg_plugin_a_OBJECTS) $(libmux_mpjpeg_plugin_a_DEPENDENCIES) 
+	-rm -f libmux_mpjpeg_plugin.a
+	$(libmux_mpjpeg_plugin_a_AR) libmux_mpjpeg_plugin.a $(libmux_mpjpeg_plugin_a_OBJECTS) $(libmux_mpjpeg_plugin_a_LIBADD)
+	$(RANLIB) libmux_mpjpeg_plugin.a
 libmux_ogg.a: $(libmux_ogg_a_OBJECTS) $(libmux_ogg_a_DEPENDENCIES) 
 	-rm -f libmux_ogg.a
 	$(libmux_ogg_a_AR) libmux_ogg.a $(libmux_ogg_a_OBJECTS) $(libmux_ogg_a_LIBADD)
@@ -603,6 +709,18 @@ libmux_ogg_plugin.a: $(libmux_ogg_plugin_a_OBJECTS) $(libmux_ogg_plugin_a_DEPEND
 	-rm -f libmux_ogg_plugin.a
 	$(libmux_ogg_plugin_a_AR) libmux_ogg_plugin.a $(libmux_ogg_plugin_a_OBJECTS) $(libmux_ogg_plugin_a_LIBADD)
 	$(RANLIB) libmux_ogg_plugin.a
+libmux_wav.a: $(libmux_wav_a_OBJECTS) $(libmux_wav_a_DEPENDENCIES) 
+	-rm -f libmux_wav.a
+	$(libmux_wav_a_AR) libmux_wav.a $(libmux_wav_a_OBJECTS) $(libmux_wav_a_LIBADD)
+	$(RANLIB) libmux_wav.a
+libmux_wav_pic.a: $(libmux_wav_pic_a_OBJECTS) $(libmux_wav_pic_a_DEPENDENCIES) 
+	-rm -f libmux_wav_pic.a
+	$(libmux_wav_pic_a_AR) libmux_wav_pic.a $(libmux_wav_pic_a_OBJECTS) $(libmux_wav_pic_a_LIBADD)
+	$(RANLIB) libmux_wav_pic.a
+libmux_wav_plugin.a: $(libmux_wav_plugin_a_OBJECTS) $(libmux_wav_plugin_a_DEPENDENCIES) 
+	-rm -f libmux_wav_plugin.a
+	$(libmux_wav_plugin_a_AR) libmux_wav_plugin.a $(libmux_wav_plugin_a_OBJECTS) $(libmux_wav_plugin_a_LIBADD)
+	$(RANLIB) libmux_wav_plugin.a
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT) core *.core
@@ -622,9 +740,15 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_mp4_a-mp4.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_mp4_pic_a-mp4.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_mp4_plugin_a-mp4.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_mpjpeg_a-mpjpeg.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_mpjpeg_pic_a-mpjpeg.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_mpjpeg_plugin_a-mpjpeg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ogg_a-ogg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ogg_pic_a-ogg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_ogg_plugin_a-ogg.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_wav_a-wav.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_wav_pic_a-wav.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmux_wav_plugin_a-wav.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
@@ -912,6 +1036,72 @@ libmux_mp4_plugin_a-mp4.obj: mp4.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_mp4_plugin_a_CFLAGS) $(CFLAGS) -c -o libmux_mp4_plugin_a-mp4.obj `if test -f 'mp4.c'; then $(CYGPATH_W) 'mp4.c'; else $(CYGPATH_W) '$(srcdir)/mp4.c'; fi`
 
+libmux_mpjpeg_a-mpjpeg.o: mpjpeg.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_mpjpeg_a_CFLAGS) $(CFLAGS) -MT libmux_mpjpeg_a-mpjpeg.o -MD -MP -MF "$(DEPDIR)/libmux_mpjpeg_a-mpjpeg.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmux_mpjpeg_a-mpjpeg.o `test -f 'mpjpeg.c' || echo '$(srcdir)/'`mpjpeg.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_mpjpeg_a-mpjpeg.Tpo" "$(DEPDIR)/libmux_mpjpeg_a-mpjpeg.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_mpjpeg_a-mpjpeg.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mpjpeg.c' object='libmux_mpjpeg_a-mpjpeg.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_mpjpeg_a-mpjpeg.Po' tmpdepfile='$(DEPDIR)/libmux_mpjpeg_a-mpjpeg.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_mpjpeg_a_CFLAGS) $(CFLAGS) -c -o libmux_mpjpeg_a-mpjpeg.o `test -f 'mpjpeg.c' || echo '$(srcdir)/'`mpjpeg.c
+
+libmux_mpjpeg_a-mpjpeg.obj: mpjpeg.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_mpjpeg_a_CFLAGS) $(CFLAGS) -MT libmux_mpjpeg_a-mpjpeg.obj -MD -MP -MF "$(DEPDIR)/libmux_mpjpeg_a-mpjpeg.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmux_mpjpeg_a-mpjpeg.obj `if test -f 'mpjpeg.c'; then $(CYGPATH_W) 'mpjpeg.c'; else $(CYGPATH_W) '$(srcdir)/mpjpeg.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_mpjpeg_a-mpjpeg.Tpo" "$(DEPDIR)/libmux_mpjpeg_a-mpjpeg.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_mpjpeg_a-mpjpeg.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mpjpeg.c' object='libmux_mpjpeg_a-mpjpeg.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_mpjpeg_a-mpjpeg.Po' tmpdepfile='$(DEPDIR)/libmux_mpjpeg_a-mpjpeg.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_mpjpeg_a_CFLAGS) $(CFLAGS) -c -o libmux_mpjpeg_a-mpjpeg.obj `if test -f 'mpjpeg.c'; then $(CYGPATH_W) 'mpjpeg.c'; else $(CYGPATH_W) '$(srcdir)/mpjpeg.c'; fi`
+
+libmux_mpjpeg_pic_a-mpjpeg.o: mpjpeg.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_mpjpeg_pic_a_CFLAGS) $(CFLAGS) -MT libmux_mpjpeg_pic_a-mpjpeg.o -MD -MP -MF "$(DEPDIR)/libmux_mpjpeg_pic_a-mpjpeg.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmux_mpjpeg_pic_a-mpjpeg.o `test -f 'mpjpeg.c' || echo '$(srcdir)/'`mpjpeg.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_mpjpeg_pic_a-mpjpeg.Tpo" "$(DEPDIR)/libmux_mpjpeg_pic_a-mpjpeg.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_mpjpeg_pic_a-mpjpeg.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mpjpeg.c' object='libmux_mpjpeg_pic_a-mpjpeg.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_mpjpeg_pic_a-mpjpeg.Po' tmpdepfile='$(DEPDIR)/libmux_mpjpeg_pic_a-mpjpeg.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_mpjpeg_pic_a_CFLAGS) $(CFLAGS) -c -o libmux_mpjpeg_pic_a-mpjpeg.o `test -f 'mpjpeg.c' || echo '$(srcdir)/'`mpjpeg.c
+
+libmux_mpjpeg_pic_a-mpjpeg.obj: mpjpeg.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_mpjpeg_pic_a_CFLAGS) $(CFLAGS) -MT libmux_mpjpeg_pic_a-mpjpeg.obj -MD -MP -MF "$(DEPDIR)/libmux_mpjpeg_pic_a-mpjpeg.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmux_mpjpeg_pic_a-mpjpeg.obj `if test -f 'mpjpeg.c'; then $(CYGPATH_W) 'mpjpeg.c'; else $(CYGPATH_W) '$(srcdir)/mpjpeg.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_mpjpeg_pic_a-mpjpeg.Tpo" "$(DEPDIR)/libmux_mpjpeg_pic_a-mpjpeg.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_mpjpeg_pic_a-mpjpeg.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mpjpeg.c' object='libmux_mpjpeg_pic_a-mpjpeg.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_mpjpeg_pic_a-mpjpeg.Po' tmpdepfile='$(DEPDIR)/libmux_mpjpeg_pic_a-mpjpeg.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_mpjpeg_pic_a_CFLAGS) $(CFLAGS) -c -o libmux_mpjpeg_pic_a-mpjpeg.obj `if test -f 'mpjpeg.c'; then $(CYGPATH_W) 'mpjpeg.c'; else $(CYGPATH_W) '$(srcdir)/mpjpeg.c'; fi`
+
+libmux_mpjpeg_plugin_a-mpjpeg.o: mpjpeg.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_mpjpeg_plugin_a_CFLAGS) $(CFLAGS) -MT libmux_mpjpeg_plugin_a-mpjpeg.o -MD -MP -MF "$(DEPDIR)/libmux_mpjpeg_plugin_a-mpjpeg.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmux_mpjpeg_plugin_a-mpjpeg.o `test -f 'mpjpeg.c' || echo '$(srcdir)/'`mpjpeg.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_mpjpeg_plugin_a-mpjpeg.Tpo" "$(DEPDIR)/libmux_mpjpeg_plugin_a-mpjpeg.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_mpjpeg_plugin_a-mpjpeg.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mpjpeg.c' object='libmux_mpjpeg_plugin_a-mpjpeg.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_mpjpeg_plugin_a-mpjpeg.Po' tmpdepfile='$(DEPDIR)/libmux_mpjpeg_plugin_a-mpjpeg.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_mpjpeg_plugin_a_CFLAGS) $(CFLAGS) -c -o libmux_mpjpeg_plugin_a-mpjpeg.o `test -f 'mpjpeg.c' || echo '$(srcdir)/'`mpjpeg.c
+
+libmux_mpjpeg_plugin_a-mpjpeg.obj: mpjpeg.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_mpjpeg_plugin_a_CFLAGS) $(CFLAGS) -MT libmux_mpjpeg_plugin_a-mpjpeg.obj -MD -MP -MF "$(DEPDIR)/libmux_mpjpeg_plugin_a-mpjpeg.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmux_mpjpeg_plugin_a-mpjpeg.obj `if test -f 'mpjpeg.c'; then $(CYGPATH_W) 'mpjpeg.c'; else $(CYGPATH_W) '$(srcdir)/mpjpeg.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_mpjpeg_plugin_a-mpjpeg.Tpo" "$(DEPDIR)/libmux_mpjpeg_plugin_a-mpjpeg.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_mpjpeg_plugin_a-mpjpeg.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mpjpeg.c' object='libmux_mpjpeg_plugin_a-mpjpeg.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_mpjpeg_plugin_a-mpjpeg.Po' tmpdepfile='$(DEPDIR)/libmux_mpjpeg_plugin_a-mpjpeg.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_mpjpeg_plugin_a_CFLAGS) $(CFLAGS) -c -o libmux_mpjpeg_plugin_a-mpjpeg.obj `if test -f 'mpjpeg.c'; then $(CYGPATH_W) 'mpjpeg.c'; else $(CYGPATH_W) '$(srcdir)/mpjpeg.c'; fi`
+
 libmux_ogg_a-ogg.o: ogg.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ogg_a_CFLAGS) $(CFLAGS) -MT libmux_ogg_a-ogg.o -MD -MP -MF "$(DEPDIR)/libmux_ogg_a-ogg.Tpo" \
 @am__fastdepCC_TRUE@	  -c -o libmux_ogg_a-ogg.o `test -f 'ogg.c' || echo '$(srcdir)/'`ogg.c; \
@@ -977,6 +1167,72 @@ libmux_ogg_plugin_a-ogg.obj: ogg.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_ogg_plugin_a-ogg.Po' tmpdepfile='$(DEPDIR)/libmux_ogg_plugin_a-ogg.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_ogg_plugin_a_CFLAGS) $(CFLAGS) -c -o libmux_ogg_plugin_a-ogg.obj `if test -f 'ogg.c'; then $(CYGPATH_W) 'ogg.c'; else $(CYGPATH_W) '$(srcdir)/ogg.c'; fi`
+
+libmux_wav_a-wav.o: wav.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_wav_a_CFLAGS) $(CFLAGS) -MT libmux_wav_a-wav.o -MD -MP -MF "$(DEPDIR)/libmux_wav_a-wav.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmux_wav_a-wav.o `test -f 'wav.c' || echo '$(srcdir)/'`wav.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_wav_a-wav.Tpo" "$(DEPDIR)/libmux_wav_a-wav.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_wav_a-wav.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wav.c' object='libmux_wav_a-wav.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_wav_a-wav.Po' tmpdepfile='$(DEPDIR)/libmux_wav_a-wav.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_wav_a_CFLAGS) $(CFLAGS) -c -o libmux_wav_a-wav.o `test -f 'wav.c' || echo '$(srcdir)/'`wav.c
+
+libmux_wav_a-wav.obj: wav.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_wav_a_CFLAGS) $(CFLAGS) -MT libmux_wav_a-wav.obj -MD -MP -MF "$(DEPDIR)/libmux_wav_a-wav.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmux_wav_a-wav.obj `if test -f 'wav.c'; then $(CYGPATH_W) 'wav.c'; else $(CYGPATH_W) '$(srcdir)/wav.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_wav_a-wav.Tpo" "$(DEPDIR)/libmux_wav_a-wav.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_wav_a-wav.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wav.c' object='libmux_wav_a-wav.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_wav_a-wav.Po' tmpdepfile='$(DEPDIR)/libmux_wav_a-wav.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_wav_a_CFLAGS) $(CFLAGS) -c -o libmux_wav_a-wav.obj `if test -f 'wav.c'; then $(CYGPATH_W) 'wav.c'; else $(CYGPATH_W) '$(srcdir)/wav.c'; fi`
+
+libmux_wav_pic_a-wav.o: wav.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_wav_pic_a_CFLAGS) $(CFLAGS) -MT libmux_wav_pic_a-wav.o -MD -MP -MF "$(DEPDIR)/libmux_wav_pic_a-wav.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmux_wav_pic_a-wav.o `test -f 'wav.c' || echo '$(srcdir)/'`wav.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_wav_pic_a-wav.Tpo" "$(DEPDIR)/libmux_wav_pic_a-wav.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_wav_pic_a-wav.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wav.c' object='libmux_wav_pic_a-wav.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_wav_pic_a-wav.Po' tmpdepfile='$(DEPDIR)/libmux_wav_pic_a-wav.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_wav_pic_a_CFLAGS) $(CFLAGS) -c -o libmux_wav_pic_a-wav.o `test -f 'wav.c' || echo '$(srcdir)/'`wav.c
+
+libmux_wav_pic_a-wav.obj: wav.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_wav_pic_a_CFLAGS) $(CFLAGS) -MT libmux_wav_pic_a-wav.obj -MD -MP -MF "$(DEPDIR)/libmux_wav_pic_a-wav.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmux_wav_pic_a-wav.obj `if test -f 'wav.c'; then $(CYGPATH_W) 'wav.c'; else $(CYGPATH_W) '$(srcdir)/wav.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_wav_pic_a-wav.Tpo" "$(DEPDIR)/libmux_wav_pic_a-wav.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_wav_pic_a-wav.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wav.c' object='libmux_wav_pic_a-wav.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_wav_pic_a-wav.Po' tmpdepfile='$(DEPDIR)/libmux_wav_pic_a-wav.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_wav_pic_a_CFLAGS) $(CFLAGS) -c -o libmux_wav_pic_a-wav.obj `if test -f 'wav.c'; then $(CYGPATH_W) 'wav.c'; else $(CYGPATH_W) '$(srcdir)/wav.c'; fi`
+
+libmux_wav_plugin_a-wav.o: wav.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_wav_plugin_a_CFLAGS) $(CFLAGS) -MT libmux_wav_plugin_a-wav.o -MD -MP -MF "$(DEPDIR)/libmux_wav_plugin_a-wav.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmux_wav_plugin_a-wav.o `test -f 'wav.c' || echo '$(srcdir)/'`wav.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_wav_plugin_a-wav.Tpo" "$(DEPDIR)/libmux_wav_plugin_a-wav.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_wav_plugin_a-wav.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wav.c' object='libmux_wav_plugin_a-wav.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_wav_plugin_a-wav.Po' tmpdepfile='$(DEPDIR)/libmux_wav_plugin_a-wav.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_wav_plugin_a_CFLAGS) $(CFLAGS) -c -o libmux_wav_plugin_a-wav.o `test -f 'wav.c' || echo '$(srcdir)/'`wav.c
+
+libmux_wav_plugin_a-wav.obj: wav.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_wav_plugin_a_CFLAGS) $(CFLAGS) -MT libmux_wav_plugin_a-wav.obj -MD -MP -MF "$(DEPDIR)/libmux_wav_plugin_a-wav.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o libmux_wav_plugin_a-wav.obj `if test -f 'wav.c'; then $(CYGPATH_W) 'wav.c'; else $(CYGPATH_W) '$(srcdir)/wav.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libmux_wav_plugin_a-wav.Tpo" "$(DEPDIR)/libmux_wav_plugin_a-wav.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libmux_wav_plugin_a-wav.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wav.c' object='libmux_wav_plugin_a-wav.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libmux_wav_plugin_a-wav.Po' tmpdepfile='$(DEPDIR)/libmux_wav_plugin_a-wav.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmux_wav_plugin_a_CFLAGS) $(CFLAGS) -c -o libmux_wav_plugin_a-wav.obj `if test -f 'wav.c'; then $(CYGPATH_W) 'wav.c'; else $(CYGPATH_W) '$(srcdir)/wav.c'; fi`
 uninstall-info-am:
 libmux_asfDATA_INSTALL = $(INSTALL_DATA)
 install-libmux_asfDATA: $(libmux_asf_DATA)
@@ -1050,6 +1306,24 @@ uninstall-libmux_mp4DATA:
 	  echo " rm -f $(DESTDIR)$(libmux_mp4dir)/$$f"; \
 	  rm -f $(DESTDIR)$(libmux_mp4dir)/$$f; \
 	done
+libmux_mpjpegDATA_INSTALL = $(INSTALL_DATA)
+install-libmux_mpjpegDATA: $(libmux_mpjpeg_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libmux_mpjpegdir)
+	@list='$(libmux_mpjpeg_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libmux_mpjpegDATA_INSTALL) $$d$$p $(DESTDIR)$(libmux_mpjpegdir)/$$f"; \
+	  $(libmux_mpjpegDATA_INSTALL) $$d$$p $(DESTDIR)$(libmux_mpjpegdir)/$$f; \
+	done
+
+uninstall-libmux_mpjpegDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libmux_mpjpeg_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libmux_mpjpegdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libmux_mpjpegdir)/$$f; \
+	done
 libmux_oggDATA_INSTALL = $(INSTALL_DATA)
 install-libmux_oggDATA: $(libmux_ogg_DATA)
 	@$(NORMAL_INSTALL)
@@ -1067,6 +1341,24 @@ uninstall-libmux_oggDATA:
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
 	  echo " rm -f $(DESTDIR)$(libmux_oggdir)/$$f"; \
 	  rm -f $(DESTDIR)$(libmux_oggdir)/$$f; \
+	done
+libmux_wavDATA_INSTALL = $(INSTALL_DATA)
+install-libmux_wavDATA: $(libmux_wav_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libmux_wavdir)
+	@list='$(libmux_wav_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(libmux_wavDATA_INSTALL) $$d$$p $(DESTDIR)$(libmux_wavdir)/$$f"; \
+	  $(libmux_wavDATA_INSTALL) $$d$$p $(DESTDIR)$(libmux_wavdir)/$$f; \
+	done
+
+uninstall-libmux_wavDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libmux_wav_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libmux_wavdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libmux_wavdir)/$$f; \
 	done
 
 # This directory's subdirectories are mostly independent; you can cd
@@ -1243,7 +1535,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libmux_asfdir) $(DESTDIR)$(libmux_avidir) $(DESTDIR)$(libmux_dummydir) $(DESTDIR)$(libmux_mp4dir) $(DESTDIR)$(libmux_oggdir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libmux_asfdir) $(DESTDIR)$(libmux_avidir) $(DESTDIR)$(libmux_dummydir) $(DESTDIR)$(libmux_mp4dir) $(DESTDIR)$(libmux_mpjpegdir) $(DESTDIR)$(libmux_oggdir) $(DESTDIR)$(libmux_wavdir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -1292,7 +1584,8 @@ info-am:
 
 install-data-am: install-libmux_asfDATA install-libmux_aviDATA \
 	install-libmux_dummyDATA install-libmux_mp4DATA \
-	install-libmux_oggDATA install-libvlcLIBRARIES
+	install-libmux_mpjpegDATA install-libmux_oggDATA \
+	install-libmux_wavDATA install-libvlcLIBRARIES
 
 install-exec-am:
 
@@ -1321,7 +1614,8 @@ ps-am:
 
 uninstall-am: uninstall-info-am uninstall-libmux_asfDATA \
 	uninstall-libmux_aviDATA uninstall-libmux_dummyDATA \
-	uninstall-libmux_mp4DATA uninstall-libmux_oggDATA \
+	uninstall-libmux_mp4DATA uninstall-libmux_mpjpegDATA \
+	uninstall-libmux_oggDATA uninstall-libmux_wavDATA \
 	uninstall-libvlcLIBRARIES
 
 uninstall-info: uninstall-info-recursive
@@ -1337,7 +1631,8 @@ uninstall-info: uninstall-info-recursive
 	install-info install-info-am install-info-recursive \
 	install-libmux_asfDATA install-libmux_aviDATA \
 	install-libmux_dummyDATA install-libmux_mp4DATA \
-	install-libmux_oggDATA install-libvlcLIBRARIES install-man \
+	install-libmux_mpjpegDATA install-libmux_oggDATA \
+	install-libmux_wavDATA install-libvlcLIBRARIES install-man \
 	install-recursive install-strip installcheck installcheck-am \
 	installdirs installdirs-am installdirs-recursive \
 	maintainer-clean maintainer-clean-generic \
@@ -1347,7 +1642,8 @@ uninstall-info: uninstall-info-recursive
 	uninstall uninstall-am uninstall-info-am \
 	uninstall-info-recursive uninstall-libmux_asfDATA \
 	uninstall-libmux_aviDATA uninstall-libmux_dummyDATA \
-	uninstall-libmux_mp4DATA uninstall-libmux_oggDATA \
+	uninstall-libmux_mp4DATA uninstall-libmux_mpjpegDATA \
+	uninstall-libmux_oggDATA uninstall-libmux_wavDATA \
 	uninstall-libvlcLIBRARIES uninstall-recursive
 
 
@@ -1357,9 +1653,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in mux_dummy mux_avi mux_ogg mux_mp4 mux_asf; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in mux_dummy mux_avi mux_ogg mux_mp4 mux_asf; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in mux_dummy mux_avi mux_ogg mux_mp4 mux_asf; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in mux_dummy mux_avi mux_ogg mux_mp4 mux_asf mux_wav mux_mpjpeg; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in mux_dummy mux_avi mux_ogg mux_mp4 mux_asf mux_wav mux_mpjpeg; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in mux_dummy mux_avi mux_ogg mux_mp4 mux_asf mux_wav mux_mpjpeg; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 libmux_dummy_plugin$(LIBEXT): $(libmux_dummy_plugin_a_OBJECTS)
@@ -1391,6 +1687,18 @@ libmux_asf_plugin$(LIBEXT): $(libmux_asf_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libmux_asf_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_asf\` ; $(CXXLINK) $(libmux_asf_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_asf` ;; \
 	  objc) echo $(OBJCLINK) $(libmux_asf_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_asf\` ; $(OBJCLINK) $(libmux_asf_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_asf` ;; \
 	  c|*) echo $(LINK) $(libmux_asf_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_asf\` ; $(LINK) $(libmux_asf_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_asf` ;; \
+	esac
+libmux_wav_plugin$(LIBEXT): $(libmux_wav_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage mux_wav` in \
+	  c++) echo $(CXXLINK) $(libmux_wav_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_wav\` ; $(CXXLINK) $(libmux_wav_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_wav` ;; \
+	  objc) echo $(OBJCLINK) $(libmux_wav_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_wav\` ; $(OBJCLINK) $(libmux_wav_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_wav` ;; \
+	  c|*) echo $(LINK) $(libmux_wav_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_wav\` ; $(LINK) $(libmux_wav_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_wav` ;; \
+	esac
+libmux_mpjpeg_plugin$(LIBEXT): $(libmux_mpjpeg_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage mux_mpjpeg` in \
+	  c++) echo $(CXXLINK) $(libmux_mpjpeg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_mpjpeg\` ; $(CXXLINK) $(libmux_mpjpeg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_mpjpeg` ;; \
+	  objc) echo $(OBJCLINK) $(libmux_mpjpeg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_mpjpeg\` ; $(OBJCLINK) $(libmux_mpjpeg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_mpjpeg` ;; \
+	  c|*) echo $(LINK) $(libmux_mpjpeg_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin mux_mpjpeg\` ; $(LINK) $(libmux_mpjpeg_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin mux_mpjpeg` ;; \
 	esac
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

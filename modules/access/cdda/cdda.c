@@ -1,12 +1,10 @@
 /*****************************************************************************
  * cddax.c : CD digital audio input module for vlc using libcdio
  *****************************************************************************
- * Copyright (C) 2000,2003 VideoLAN
- * $Id: cdda.c 7084 2004-03-14 23:42:41Z rocky $
+ * Copyright (C) 2000, 2003, 2004 VideoLAN
+ * $Id: cdda.c 9123 2004-11-02 23:51:21Z sam $
  *
  * Authors: Rocky Bernstein <rocky@panix.com>
- *          Laurent Aimar <fenrir@via.ecp.fr>
- *          Gildas Bazin <gbazin@netcourrier.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,24 +25,8 @@
  * Preamble
  *****************************************************************************/
 
-#include <vlc/vlc.h>
-
-/*****************************************************************************
- * prototypes
- *****************************************************************************/
-int  E_(Open)         ( vlc_object_t * );
-void E_(Close)        ( vlc_object_t * );
-
-int  E_(OpenIntf)     ( vlc_object_t * );
-void E_(CloseIntf)    ( vlc_object_t * );
-
-int  E_(DebugCB)      ( vlc_object_t *p_this, const char *psz_name,
-                        vlc_value_t oldval, vlc_value_t val,
-                        void *p_data );
-
-int  E_(CDDBEnabledCB)( vlc_object_t *p_this, const char *psz_name,
-                        vlc_value_t oldval, vlc_value_t val,
-                        void *p_data );
+#include "callback.h"
+#include "access.h"
 
 /*****************************************************************************
  * Module descriptor
@@ -56,19 +38,25 @@ int  E_(CDDBEnabledCB)( vlc_object_t *p_this, const char *psz_name,
 
 #define DEBUG_LONGTEXT N_( \
     "This integer when viewed in binary is a debugging mask\n" \
-    "meta info        1\n" \
-    "events           2\n" \
-    "MRL              4\n" \
-    "external call    8\n" \
-    "all calls (10)  16\n" \
-    "LSN       (20)  32\n" \
-    "seek      (40)  64\n" \
-    "libcdio   (80) 128\n" \
-    "libcddb  (100) 256\n" )
+    "meta info          1\n" \
+    "events             2\n" \
+    "MRL                4\n" \
+    "external call      8\n" \
+    "all calls (0x10)  16\n" \
+    "LSN       (0x20)  32\n" \
+    "seek      (0x40)  64\n" \
+    "libcdio   (0x80) 128\n" \
+    "libcddb  (0x100) 256\n" )
 
 #define CACHING_LONGTEXT N_( \
     "Allows you to modify the default caching value for CDDA streams. This " \
     "value should be set in millisecond units." )
+
+#define BLOCKS_PER_READ_LONGTEXT N_( \
+    "Allows you to specify how many CD blocks to get on a single CD read. " \
+    "Generally on newer/faster CDs, this increases throughput at the " \
+    "expense of a little more memory usage and initial delay. SCSI-MMC " \
+    "limitations generally don't allow for more than 25 blocks per access.")
 
 #define CDDB_TITLE_FMT_LONGTEXT N_( \
 "Format used in the GUI Playlist Title. Similar to the Unix date \n" \
@@ -104,22 +92,27 @@ int  E_(CDDBEnabledCB)( vlc_object_t *p_this, const char *psz_name,
  *****************************************************************************/
 
 vlc_module_begin();
-    add_usage_hint( N_("cddax://[device-or-file][@[T]num]") );
+    add_usage_hint( N_("cddax://[device-or-file][@[T]track]") );
     set_description( _("Compact Disc Digital Audio (CD-DA) input") );
-    set_capability( "access", 75 /* slightly higher than cdda */ );
-    set_callbacks( E_(Open), E_(Close) );
-    add_shortcut( "cdda" );
+    set_capability( "access2", 10 /* compare with priority of cdda */ );
+    set_callbacks( E_(CDDAOpen), E_(CDDAClose) );
     add_shortcut( "cddax" );
+    add_shortcut( "cd" );
 
     /* Configuration options */
-    add_integer ( MODULE_STRING "-debug", 0, E_(DebugCB),
+    add_integer ( MODULE_STRING "-debug", 0, E_(CDDADebugCB),
                   N_("If nonzero, this gives additional debug information."),
                   DEBUG_LONGTEXT, VLC_TRUE );
 
     add_integer( MODULE_STRING "-caching",
-                 DEFAULT_PTS_DELAY / 1000, NULL,
+                 DEFAULT_PTS_DELAY / MILLISECONDS_PER_SEC, NULL,
                  N_("Caching value in microseconds"),
                  CACHING_LONGTEXT, VLC_TRUE );
+
+    add_integer( MODULE_STRING "-blocks-per-read",
+                 DEFAULT_BLOCKS_PER_READ, E_(CDDABlocksPerReadCB),
+                 N_("Number of blocks per CD read"),
+                 BLOCKS_PER_READ_LONGTEXT, VLC_TRUE );
 
     add_string( MODULE_STRING "-author-format",
                 "%A - %a %C %I", NULL,
@@ -146,7 +139,7 @@ vlc_module_begin();
     add_string( MODULE_STRING "-cddb-server", "freedb.freedb.org", NULL,
                 N_("CDDB server"),
                 N_( "Contact this CDDB server look up CD-DA information"),
-                 VLC_TRUE );
+		VLC_TRUE );
 
     add_integer( MODULE_STRING "-cddb-port", 8880, NULL,
                  N_("CDDB server port"),
@@ -156,14 +149,14 @@ vlc_module_begin();
     add_string( MODULE_STRING "-cddb-email", "me@home", NULL,
                 N_("email address reported to CDDB server"),
                 N_("email address reported to CDDB server"),
-                 VLC_TRUE );
+		VLC_TRUE );
 
-    add_bool( MODULE_STRING "-cddb-enable-cache", 1, NULL,
+    add_bool( MODULE_STRING "-cddb-enable-cache", VLC_TRUE, NULL,
               N_("Cache CDDB lookups?"),
               N_("If set cache CDDB information about this CD"),
               VLC_FALSE );
 
-    add_bool( MODULE_STRING "-cddb-httpd", 0, NULL,
+    add_bool( MODULE_STRING "-cddb-httpd", VLC_FALSE, NULL,
               N_("Contact CDDB via the HTTP protocol?"),
               N_("If set, the CDDB server gets information via the CDDB HTTP "
                  "protocol"),
@@ -178,8 +171,19 @@ vlc_module_begin();
     add_string( MODULE_STRING "-cddb-cachedir", "~/.cddbslave", NULL,
                 N_("Directory to cache CDDB requests"),
                 N_("Directory to cache CDDB requests"),
-                 VLC_TRUE );
+		VLC_TRUE );
+
+    add_bool( MODULE_STRING "-cdtext-prefer", VLC_TRUE, E_(CDTextPreferCB),
+              N_("Prefer CD-Text info to CDDB info?"),
+              N_("If set, CD-Text information will be preferred "
+		 "to CDDB information when both are available"),
+              VLC_FALSE );
 
 #endif
+
+    add_bool( MODULE_STRING "-cdtext-enabled", VLC_TRUE, E_(CDTextEnabledCB),
+              N_("Do CD-Text lookups?"),
+              N_("If set, get CD-Text information"),
+              VLC_FALSE );
 
 vlc_module_end();

@@ -4,7 +4,7 @@
  *            by DVD subtitles.
  *****************************************************************************
  * Copyright (C) 2003, 2004 VideoLAN
- * $Id: render.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: render.c 8686 2004-09-10 18:03:25Z gbazin $
  *
  * Author: Rocky Bernstein <rocky@panix.com>
  *   based on code from: 
@@ -1044,10 +1044,10 @@ BlendRV24( vout_thread_t *p_vout, picture_t *p_pic,
   int32_t i_x_start, i_y_start, i_x_end, i_y_end;
   
   struct subpicture_sys_t *p_sys = p_spu->p_sys;
-  unsigned int i_aspect_x, i_aspect_y;
+  int i_aspect_x, i_aspect_y;
   
-  vout_AspectRatio( p_vout->render.i_aspect, &i_aspect_y, 
-                    &i_aspect_x );
+  vlc_reduce( &i_aspect_x, &i_aspect_y, p_vout->render.i_aspect,
+               VOUT_ASPECT_FACTOR, 0 );
   
   i_xscale = (( p_vout->output.i_width << ASCALE ) * i_aspect_x)
     / (i_aspect_y * p_vout->render.i_width);
@@ -1336,10 +1336,10 @@ BlendRV32( vout_thread_t *p_vout, picture_t *p_pic,
     int32_t i_x_start, i_y_start, i_x_end, i_y_end;
 
     struct subpicture_sys_t *p_sys = p_spu->p_sys;
-    unsigned int i_aspect_x, i_aspect_y;
+    int i_aspect_x, i_aspect_y;
 
-    vout_AspectRatio( p_vout->render.i_aspect, &i_aspect_y, 
-                      &i_aspect_x );
+    vlc_reduce( &i_aspect_x, &i_aspect_y, p_vout->render.i_aspect,
+                VOUT_ASPECT_FACTOR, 0 );
 
     i_xscale = (( p_vout->output.i_width << ASCALE ) * i_aspect_x)
       / (i_aspect_y * p_vout->render.i_width);
@@ -1683,10 +1683,10 @@ BlendRGB2( vout_thread_t *p_vout, picture_t *p_pic,
     int i_x_start, i_y_start, i_x_end, i_y_end;
 
     struct subpicture_sys_t *p_sys = p_spu->p_sys;
-    unsigned int i_aspect_x, i_aspect_y;
+    int i_aspect_x, i_aspect_y;
 
-    vout_AspectRatio( p_vout->render.i_aspect, &i_aspect_y, 
-                      &i_aspect_x );
+    vlc_reduce( &i_aspect_x, &i_aspect_y, p_vout->render.i_aspect,
+                VOUT_ASPECT_FACTOR, 0 );
     
     i_xscale = (( p_vout->output.i_width << ASCALE ) * i_aspect_x)
       / (i_aspect_y * p_vout->render.i_width);

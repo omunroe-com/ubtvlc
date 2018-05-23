@@ -22,6 +22,9 @@ Use the convert-po.sh script attached :
 Copy the resulting vlc.mo file to
   /usr/local/share/locale/<LANG>/LC_MESSAGES
 
+Launch VLC with --language <LANG>
+Where <LANG> is the international shortcode for your language.
+
 
 Testing your localization on Mac OS X
 =====================================
@@ -32,13 +35,16 @@ and extract them into the current directory :
   tar xvzf gettext-macosx.tar.gz
 
 Use the convert-po.sh script attached :
-  setenv PATH gettext-macosx:$PATH
-  setenv DYLD_LIBRARY_PATH=gettext-macosx
+  export PATH=gettext-macosx:$PATH
+  export DYLD_LIBRARY_PATH=gettext-macosx
   ./convert-po.sh <LANG>.po
 [*]
 
 Copy the resulting vlc.mo file to
   VLC.app/Contents/MacOS/locale/<LANG>/LC_MESSAGES
+
+Launch VLC with --language <LANG>
+Where <LANG> is the international shortcode for your language.
 
 
 "fuzzy" translations
@@ -49,6 +55,12 @@ the "#, fuzzy" comment. If you think the suggestion is OK, or if you
 fixed the suggestion, do not forget to remove the "#, fuzzy" comment.
 
 
+Adding a language to VLC
+========================
+When the language is added to the VLC sourcecode, remember to also edit
+src/libvlc.h for the preference option, and src/misc/darwin_specific.m
+
+
 [*] Step by step process to localize under Mac OS X (excerpt from a mail) :
 cd ~/Desktop
 curl -O http://www.videolan.org/pub/videolan/devtools/vlc-po-files.tar.gz
@@ -56,8 +68,8 @@ tar xzf vlc-po-files.tar.gz
 cd vlc-po-files
 curl -O http://www.videolan.org/pub/videolan/devtools/gettext-macosx.tar.gz
 tar xzf gettext-macosx.tar.gz
-setenv PATH ./gettext-macosx:$PATH
-setenv DYLD_LIBRARY_PATH ./gettext-macosx
+export PATH=./gettext-macosx:$PATH
+export DYLD_LIBRARY_PATH=./gettext-macosx
 [here you copy your it.po file to the vlc-po-files folder on your Desktop]
 ./convert-po.sh it.po
 [here you copy the vlc.mo file to your
@@ -66,4 +78,4 @@ VLC.app/Contents/MacOS/locale/it/LC_MESSAGES]
 -- 
 Christophe Massiot <massiot@via.ecp.fr>
 Derk-Jan Hartman <hartman at videolan dot org>
-$Id: translations.txt 7367 2004-04-18 12:18:23Z hartman $
+$Id: translations.txt 9135 2004-11-04 16:40:39Z hartman $

@@ -2,7 +2,7 @@
  * i422_yuy2.c : YUV to YUV conversion module for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001 VideoLAN
- * $Id: i422_yuy2.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: i422_yuy2.c 8551 2004-08-28 17:36:02Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -162,12 +162,7 @@ static void I422_YUY2( vout_thread_t *p_vout, picture_t *p_source,
             __asm__( ".align 8" MMX_YUV422_YUYV
                      : : "r" (p_line), "r" (p_y), "r" (p_u), "r" (p_v) ); 
 
-            p_line += 8; p_y += 4; p_u += 2; p_v += 2;
-
-            __asm__( ".align 8" MMX_YUV422_YUYV
-                     : : "r" (p_line), "r" (p_y), "r" (p_u), "r" (p_v) ); 
-
-            p_line += 8; p_y += 4; p_u += 2; p_v += 2;
+            p_line += 16; p_y += 8; p_u += 4; p_v += 4;
 #endif
         }
     }
@@ -199,12 +194,7 @@ static void I422_YVYU( vout_thread_t *p_vout, picture_t *p_source,
             __asm__( ".align 8" MMX_YUV422_YVYU
                      : : "r" (p_line), "r" (p_y), "r" (p_u), "r" (p_v) ); 
 
-            p_line += 8; p_y += 4; p_u += 2; p_v += 2;
-
-            __asm__( ".align 8" MMX_YUV422_YVYU
-                     : : "r" (p_line), "r" (p_y), "r" (p_u), "r" (p_v) ); 
-
-            p_line += 8; p_y += 4; p_u += 2; p_v += 2;
+            p_line += 16; p_y += 8; p_u += 4; p_v += 4;
 #endif
         }
     }
@@ -236,12 +226,7 @@ static void I422_UYVY( vout_thread_t *p_vout, picture_t *p_source,
             __asm__( ".align 8" MMX_YUV422_UYVY
                      : : "r" (p_line), "r" (p_y), "r" (p_u), "r" (p_v) ); 
 
-            p_line += 8; p_y += 4; p_u += 2; p_v += 2;
-
-            __asm__( ".align 8" MMX_YUV422_UYVY
-                     : : "r" (p_line), "r" (p_y), "r" (p_u), "r" (p_v) ); 
-
-            p_line += 8; p_y += 4; p_u += 2; p_v += 2;
+            p_line += 16; p_y += 8; p_u += 4; p_v += 4;
 #endif
         }
     }
@@ -263,7 +248,7 @@ static void I422_IUYV( vout_thread_t *p_vout, picture_t *p_source,
 static void I422_cyuv( vout_thread_t *p_vout, picture_t *p_source,
                                               picture_t *p_dest )
 {
-    uint8_t *p_line = p_dest->p->p_pixels + p_dest->p->i_lines * p_dest->p->i_pitch;
+    uint8_t *p_line = p_dest->p->p_pixels + p_dest->p->i_visible_lines * p_dest->p->i_pitch;
     uint8_t *p_y = p_source->Y_PIXELS;
     uint8_t *p_u = p_source->U_PIXELS;
     uint8_t *p_v = p_source->V_PIXELS;
@@ -285,12 +270,7 @@ static void I422_cyuv( vout_thread_t *p_vout, picture_t *p_source,
             __asm__( ".align 8" MMX_YUV422_UYVY
                      : : "r" (p_line), "r" (p_y), "r" (p_u), "r" (p_v) ); 
 
-            p_line += 8; p_y += 4; p_u += 2; p_v += 2;
-
-            __asm__( ".align 8" MMX_YUV422_UYVY
-                     : : "r" (p_line), "r" (p_y), "r" (p_u), "r" (p_v) ); 
-
-            p_line += 8; p_y += 4; p_u += 2; p_v += 2;
+            p_line += 16; p_y += 8; p_u += 4; p_v += 4;
 #endif
         }
     }
@@ -303,7 +283,7 @@ static void I422_cyuv( vout_thread_t *p_vout, picture_t *p_source,
 static void I422_Y211( vout_thread_t *p_vout, picture_t *p_source,
                                               picture_t *p_dest )
 {
-    uint8_t *p_line = p_dest->p->p_pixels + p_dest->p->i_lines * p_dest->p->i_pitch;
+    uint8_t *p_line = p_dest->p->p_pixels + p_dest->p->i_visible_lines * p_dest->p->i_pitch;
     uint8_t *p_y = p_source->Y_PIXELS;
     uint8_t *p_u = p_source->U_PIXELS;
     uint8_t *p_v = p_source->V_PIXELS;

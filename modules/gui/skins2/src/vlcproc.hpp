@@ -2,7 +2,7 @@
  * vlcproc.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: vlcproc.hpp 7574 2004-05-01 14:23:40Z asmax $
+ * $Id: vlcproc.hpp 8966 2004-10-10 10:08:44Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -57,21 +57,6 @@ class VlcProc: public SkinObject
         /// Getter for the stream variable
         Stream &getStreamVar() { return *((Stream*)(m_cVarStream.get())); }
 
-        /// Getter for the mute variable
-        VarBool &getIsMuteVar() { return *((VarBool*)(m_cVarMute.get())); }
-
-        /// Getter for the playing variable
-        VarBool &getIsPlayingVar() { return *((VarBool*)(m_cVarPlaying.get())); }
-
-        /// Getter for the stopped variable
-        VarBool &getIsStoppedVar() { return *((VarBool*)(m_cVarStopped.get())); }
-
-        /// Getter for the paused variable
-        VarBool &getIsPausedVar() { return *((VarBool*)(m_cVarPaused.get())); }
-
-        /// Getter for the seekable variable
-        VarBool &getIsSeekableVar() { return *((VarBool*)(m_cVarSeekable.get())); }
-
         /// Set the vout window handle
         void setVoutWindow( void *pVoutWindow );
 
@@ -87,6 +72,7 @@ class VlcProc: public SkinObject
         VariablePtr m_cPlaylist;
         VariablePtr m_cVarRandom;
         VariablePtr m_cVarLoop;
+        VariablePtr m_cVarRepeat;
         /// Variable for current position of the stream
         VariablePtr m_cVarTime;
         /// Variable for audio volume
@@ -121,6 +107,11 @@ class VlcProc: public SkinObject
                                  vlc_value_t oldVal, vlc_value_t newVal,
                                  void *pParam );
 
+        /// Callback for intf-show variable
+        static int onIntfShow( vlc_object_t *pObj, const char *pVariable,
+                               vlc_value_t oldVal, vlc_value_t newVal,
+                               void *pParam );
+
         /// Callback for item-change variable
         static int onItemChange( vlc_object_t *pObj, const char *pVariable,
                                  vlc_value_t oldVal, vlc_value_t newVal,
@@ -130,6 +121,11 @@ class VlcProc: public SkinObject
         static int onPlaylistChange( vlc_object_t *pObj, const char *pVariable,
                                      vlc_value_t oldVal, vlc_value_t newVal,
                                      void *pParam );
+
+        /// Callback for skins2-to-load variable
+        static int onSkinToLoad( vlc_object_t *pObj, const char *pVariable,
+                                 vlc_value_t oldVal, vlc_value_t newVal,
+                                 void *pParam );
 
         /// Callback to request a vout window
         static void *getWindow( intf_thread_t *pIntf, vout_thread_t *pVout,

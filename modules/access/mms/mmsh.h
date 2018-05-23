@@ -2,7 +2,7 @@
  * mmsh.h:
  *****************************************************************************
  * Copyright (C) 2001, 2002 VideoLAN
- * $Id: mmsh.h 7297 2004-04-07 17:41:14Z fenrir $
+ * $Id: mmsh.h 7903 2004-06-05 21:53:24Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -58,8 +58,7 @@ struct access_sys_t
     unsigned int    i_packet_used;
     unsigned int    i_packet_length;
 
-    off_t           i_pos;
-    off_t           i_start;
+    int64_t         i_start;
 
     asf_header_t    asfh;
     guid_t          guid;

@@ -2,7 +2,7 @@
  * crop.c : Crop video plugin for vlc
  *****************************************************************************
  * Copyright (C) 2002, 2003 VideoLAN
- * $Id: crop.c 7522 2004-04-27 16:35:15Z sam $
+ * $Id: crop.c 8551 2004-08-28 17:36:02Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -287,9 +287,12 @@ static void Destroy( vlc_object_t *p_this )
 {
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
 
-    DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
-    vlc_object_detach( p_vout->p_sys->p_vout );
-    vout_Destroy( p_vout->p_sys->p_vout );
+    if( p_vout->p_sys->p_vout )
+    {
+        DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
+        vlc_object_detach( p_vout->p_sys->p_vout );
+        vout_Destroy( p_vout->p_sys->p_vout );
+    }
 
     DEL_PARENT_CALLBACKS( SendEventsToChild );
 
@@ -368,13 +371,13 @@ static void Render( vout_thread_t *p_vout, picture_t *p_pic )
 
         p_in = p_pic->p[i_plane].p_pixels
                 /* Skip the right amount of lines */
-                + i_in_pitch * ( p_pic->p[i_plane].i_lines * p_vout->p_sys->i_y
-                                  / p_vout->output.i_height )
+                + i_in_pitch * ( p_pic->p[i_plane].i_visible_lines *
+                                 p_vout->p_sys->i_y / p_vout->output.i_height )
                 /* Skip the right amount of columns */
                 + i_in_pitch * p_vout->p_sys->i_x / p_vout->output.i_width;
 
         p_out = p_outpic->p[i_plane].p_pixels;
-        p_out_end = p_out + i_out_pitch * p_outpic->p[i_plane].i_lines;
+        p_out_end = p_out + i_out_pitch * p_outpic->p[i_plane].i_visible_lines;
 
         while( p_out < p_out_end )
         {
@@ -399,7 +402,7 @@ static void UpdateStats( vout_thread_t *p_vout, picture_t *p_pic )
     uint8_t *p_in = p_pic->p[0].p_pixels;
     int i_pitch = p_pic->p[0].i_pitch;
     int i_visible_pitch = p_pic->p[0].i_visible_pitch;
-    int i_lines = p_pic->p[0].i_lines;
+    int i_lines = p_pic->p[0].i_visible_lines;
     int i_firstwhite = -1, i_lastwhite = -1, i;
 
     /* Determine where black borders are */

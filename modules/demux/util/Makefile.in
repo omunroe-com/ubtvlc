@@ -69,6 +69,8 @@ CATOBJEXT = @CATOBJEXT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CORBA_CFLAGS = @CORBA_CFLAGS@
+CORBA_LIBS = @CORBA_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -86,18 +88,20 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_CORBA_FALSE = @ENABLE_CORBA_FALSE@
+ENABLE_CORBA_TRUE = @ENABLE_CORBA_TRUE@
 ESD_CONFIG = @ESD_CONFIG@
 EXEEXT = @EXEEXT@
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
 FREETYPE_CONFIG = @FREETYPE_CONFIG@
 FRIBIDI_CONFIG = @FRIBIDI_CONFIG@
 GENCAT = @GENCAT@
 GLIBC21 = @GLIBC21@
 GMSGFMT = @GMSGFMT@
-GNOME_CONFIG = @GNOME_CONFIG@
-GTK12_CONFIG = @GTK12_CONFIG@
 GTK2_CFLAGS = @GTK2_CFLAGS@
 GTK2_LIBS = @GTK2_LIBS@
-GTK_CONFIG = @GTK_CONFIG@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
 HAVE_BEOS_FALSE = @HAVE_BEOS_FALSE@
 HAVE_BEOS_TRUE = @HAVE_BEOS_TRUE@
 HAVE_BUILTINS_FALSE = @HAVE_BUILTINS_FALSE@
@@ -125,6 +129,7 @@ LIBCDDB_LIBS = @LIBCDDB_LIBS@
 LIBCDIO_CFLAGS = @LIBCDIO_CFLAGS@
 LIBCDIO_LIBS = @LIBCDIO_LIBS@
 LIBEXT = @LIBEXT@
+LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
@@ -142,7 +147,6 @@ OBJC = @OBJC@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJEXT = @OBJEXT@
-ORBIT_CONFIG = @ORBIT_CONFIG@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -160,14 +164,13 @@ SDL_CONFIG = @SDL_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SVG_CFLAGS = @SVG_CFLAGS@
+SVG_LIBS = @SVG_LIBS@
 SYS = @SYS@
 UNTRUE_FALSE = @UNTRUE_FALSE@
 UNTRUE_TRUE = @UNTRUE_TRUE@
-UPX = @UPX@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
-VCDINFO_CFLAGS = @VCDINFO_CFLAGS@
-VCDINFO_LIBS = @VCDINFO_LIBS@
 VERSION = @VERSION@
 VLC_CONFIG = @VLC_CONFIG@
 WINDRES = @WINDRES@
@@ -183,7 +186,6 @@ ac_ct_CYGPATH = @ac_ct_CYGPATH@
 ac_ct_LD = @ac_ct_LD@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_ct_UPX = @ac_ct_UPX@
 ac_ct_WINDRES = @ac_ct_WINDRES@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -228,8 +230,8 @@ target_vendor = @target_vendor@
 
 NULL = 
 
-libvlc_LIBRARIES = $(Lid3b) $(Lid3pic) $(Lid3tagb) $(Lid3tagpic) $(Ldemuxsubb) $(Ldemuxsubpic)
-noinst_LIBRARIES = $(Lid3p) $(Lid3tagp) $(Ldemuxsubp)
+libvlc_LIBRARIES = $(Lid3b) $(Lid3pic) $(Lid3tagb) $(Lid3tagpic)
+noinst_LIBRARIES = $(Lid3p) $(Lid3tagp)
 noinst_HEADERS = 
 EXTRA_DIST = Modules.am
 BUILT_SOURCES = 
@@ -244,12 +246,6 @@ SOURCES_id3 = \
 SOURCES_id3tag = \
 	id3tag.c \
 	id3genres.h \
-	$(NULL)
-
-
-SOURCES_demuxsub = \
-	sub.c \
-	sub.h \
 	$(NULL)
 
 
@@ -307,31 +303,6 @@ libid3tag_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin id3tag`
 libid3tag_DATA = $(Did3tagp)
 
 libid3tagdir = $(libdir)/vlc/
-
-
-# The demuxsub plugin
-@UNTRUE_TRUE@Ldemuxsubp = libdemuxsub_plugin.a
-@UNTRUE_TRUE@Ddemuxsubp = libdemuxsub_plugin$(LIBEXT)
-@UNTRUE_TRUE@Ldemuxsubb = libdemuxsub.a
-@UNTRUE_TRUE@Ldemuxsubpic = libdemuxsub_pic.a
-
-libdemuxsub_plugin_a_SOURCES = $(SOURCES_demuxsub)
-libdemuxsub_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin demuxsub`
-libdemuxsub_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin demuxsub`
-libdemuxsub_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin demuxsub`
-
-libdemuxsub_pic_a_SOURCES = $(SOURCES_demuxsub)
-libdemuxsub_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic demuxsub`
-libdemuxsub_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic demuxsub`
-libdemuxsub_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic demuxsub`
-
-libdemuxsub_a_SOURCES = $(SOURCES_demuxsub)
-libdemuxsub_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin demuxsub`
-libdemuxsub_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin demuxsub`
-libdemuxsub_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin demuxsub`
-libdemuxsub_DATA = $(Ddemuxsubp)
-
-libdemuxsubdir = $(libdir)/vlc/
 subdir = modules/demux/util
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
@@ -339,60 +310,42 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 LIBRARIES = $(libvlc_LIBRARIES) $(noinst_LIBRARIES)
 
-libdemuxsub_a_AR = $(AR) cru
-libdemuxsub_a_LIBADD =
-am__objects_1 =
-am__objects_2 = libdemuxsub_a-sub.$(OBJEXT) $(am__objects_1)
-am_libdemuxsub_a_OBJECTS = $(am__objects_2)
-libdemuxsub_a_OBJECTS = $(am_libdemuxsub_a_OBJECTS)
-libdemuxsub_pic_a_AR = $(AR) cru
-libdemuxsub_pic_a_LIBADD =
-am__objects_3 = libdemuxsub_pic_a-sub.$(OBJEXT) $(am__objects_1)
-am_libdemuxsub_pic_a_OBJECTS = $(am__objects_3)
-libdemuxsub_pic_a_OBJECTS = $(am_libdemuxsub_pic_a_OBJECTS)
-libdemuxsub_plugin_a_AR = $(AR) cru
-libdemuxsub_plugin_a_LIBADD =
-am__objects_4 = libdemuxsub_plugin_a-sub.$(OBJEXT) $(am__objects_1)
-am_libdemuxsub_plugin_a_OBJECTS = $(am__objects_4)
-libdemuxsub_plugin_a_OBJECTS = $(am_libdemuxsub_plugin_a_OBJECTS)
 libid3_a_AR = $(AR) cru
 libid3_a_LIBADD =
-am__objects_5 = libid3_a-id3.$(OBJEXT) $(am__objects_1)
-am_libid3_a_OBJECTS = $(am__objects_5)
+am__objects_1 =
+am__objects_2 = libid3_a-id3.$(OBJEXT) $(am__objects_1)
+am_libid3_a_OBJECTS = $(am__objects_2)
 libid3_a_OBJECTS = $(am_libid3_a_OBJECTS)
 libid3_pic_a_AR = $(AR) cru
 libid3_pic_a_LIBADD =
-am__objects_6 = libid3_pic_a-id3.$(OBJEXT) $(am__objects_1)
-am_libid3_pic_a_OBJECTS = $(am__objects_6)
+am__objects_3 = libid3_pic_a-id3.$(OBJEXT) $(am__objects_1)
+am_libid3_pic_a_OBJECTS = $(am__objects_3)
 libid3_pic_a_OBJECTS = $(am_libid3_pic_a_OBJECTS)
 libid3_plugin_a_AR = $(AR) cru
 libid3_plugin_a_LIBADD =
-am__objects_7 = libid3_plugin_a-id3.$(OBJEXT) $(am__objects_1)
-am_libid3_plugin_a_OBJECTS = $(am__objects_7)
+am__objects_4 = libid3_plugin_a-id3.$(OBJEXT) $(am__objects_1)
+am_libid3_plugin_a_OBJECTS = $(am__objects_4)
 libid3_plugin_a_OBJECTS = $(am_libid3_plugin_a_OBJECTS)
 libid3tag_a_AR = $(AR) cru
 libid3tag_a_LIBADD =
-am__objects_8 = libid3tag_a-id3tag.$(OBJEXT) $(am__objects_1)
-am_libid3tag_a_OBJECTS = $(am__objects_8)
+am__objects_5 = libid3tag_a-id3tag.$(OBJEXT) $(am__objects_1)
+am_libid3tag_a_OBJECTS = $(am__objects_5)
 libid3tag_a_OBJECTS = $(am_libid3tag_a_OBJECTS)
 libid3tag_pic_a_AR = $(AR) cru
 libid3tag_pic_a_LIBADD =
-am__objects_9 = libid3tag_pic_a-id3tag.$(OBJEXT) $(am__objects_1)
-am_libid3tag_pic_a_OBJECTS = $(am__objects_9)
+am__objects_6 = libid3tag_pic_a-id3tag.$(OBJEXT) $(am__objects_1)
+am_libid3tag_pic_a_OBJECTS = $(am__objects_6)
 libid3tag_pic_a_OBJECTS = $(am_libid3tag_pic_a_OBJECTS)
 libid3tag_plugin_a_AR = $(AR) cru
 libid3tag_plugin_a_LIBADD =
-am__objects_10 = libid3tag_plugin_a-id3tag.$(OBJEXT) $(am__objects_1)
-am_libid3tag_plugin_a_OBJECTS = $(am__objects_10)
+am__objects_7 = libid3tag_plugin_a-id3tag.$(OBJEXT) $(am__objects_1)
+am_libid3tag_plugin_a_OBJECTS = $(am__objects_7)
 libid3tag_plugin_a_OBJECTS = $(am_libid3tag_plugin_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libdemuxsub_a-sub.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libdemuxsub_pic_a-sub.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libdemuxsub_plugin_a-sub.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/libid3_a-id3.Po \
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libid3_a-id3.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libid3_pic_a-id3.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libid3_plugin_a-id3.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libid3tag_a-id3tag.Po \
@@ -402,12 +355,10 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-DIST_SOURCES = $(libdemuxsub_a_SOURCES) $(libdemuxsub_pic_a_SOURCES) \
-	$(libdemuxsub_plugin_a_SOURCES) $(libid3_a_SOURCES) \
-	$(libid3_pic_a_SOURCES) $(libid3_plugin_a_SOURCES) \
-	$(libid3tag_a_SOURCES) $(libid3tag_pic_a_SOURCES) \
-	$(libid3tag_plugin_a_SOURCES)
-DATA = $(libdemuxsub_DATA) $(libid3_DATA) $(libid3tag_DATA)
+DIST_SOURCES = $(libid3_a_SOURCES) $(libid3_pic_a_SOURCES) \
+	$(libid3_plugin_a_SOURCES) $(libid3tag_a_SOURCES) \
+	$(libid3tag_pic_a_SOURCES) $(libid3tag_plugin_a_SOURCES)
+DATA = $(libid3_DATA) $(libid3tag_DATA)
 
 HEADERS = $(noinst_HEADERS)
 
@@ -420,7 +371,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.am Makefile.am
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libdemuxsub_a_SOURCES) $(libdemuxsub_pic_a_SOURCES) $(libdemuxsub_plugin_a_SOURCES) $(libid3_a_SOURCES) $(libid3_pic_a_SOURCES) $(libid3_plugin_a_SOURCES) $(libid3tag_a_SOURCES) $(libid3tag_pic_a_SOURCES) $(libid3tag_plugin_a_SOURCES)
+SOURCES = $(libid3_a_SOURCES) $(libid3_pic_a_SOURCES) $(libid3_plugin_a_SOURCES) $(libid3tag_a_SOURCES) $(libid3tag_pic_a_SOURCES) $(libid3tag_plugin_a_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -465,18 +416,6 @@ clean-libvlcLIBRARIES:
 
 clean-noinstLIBRARIES:
 	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
-libdemuxsub.a: $(libdemuxsub_a_OBJECTS) $(libdemuxsub_a_DEPENDENCIES) 
-	-rm -f libdemuxsub.a
-	$(libdemuxsub_a_AR) libdemuxsub.a $(libdemuxsub_a_OBJECTS) $(libdemuxsub_a_LIBADD)
-	$(RANLIB) libdemuxsub.a
-libdemuxsub_pic.a: $(libdemuxsub_pic_a_OBJECTS) $(libdemuxsub_pic_a_DEPENDENCIES) 
-	-rm -f libdemuxsub_pic.a
-	$(libdemuxsub_pic_a_AR) libdemuxsub_pic.a $(libdemuxsub_pic_a_OBJECTS) $(libdemuxsub_pic_a_LIBADD)
-	$(RANLIB) libdemuxsub_pic.a
-libdemuxsub_plugin.a: $(libdemuxsub_plugin_a_OBJECTS) $(libdemuxsub_plugin_a_DEPENDENCIES) 
-	-rm -f libdemuxsub_plugin.a
-	$(libdemuxsub_plugin_a_AR) libdemuxsub_plugin.a $(libdemuxsub_plugin_a_OBJECTS) $(libdemuxsub_plugin_a_LIBADD)
-	$(RANLIB) libdemuxsub_plugin.a
 libid3.a: $(libid3_a_OBJECTS) $(libid3_a_DEPENDENCIES) 
 	-rm -f libid3.a
 	$(libid3_a_AR) libid3.a $(libid3_a_OBJECTS) $(libid3_a_LIBADD)
@@ -508,9 +447,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdemuxsub_a-sub.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdemuxsub_pic_a-sub.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdemuxsub_plugin_a-sub.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libid3_a-id3.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libid3_pic_a-id3.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libid3_plugin_a-id3.Po@am__quote@
@@ -539,72 +475,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`
-
-libdemuxsub_a-sub.o: sub.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdemuxsub_a_CFLAGS) $(CFLAGS) -MT libdemuxsub_a-sub.o -MD -MP -MF "$(DEPDIR)/libdemuxsub_a-sub.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libdemuxsub_a-sub.o `test -f 'sub.c' || echo '$(srcdir)/'`sub.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdemuxsub_a-sub.Tpo" "$(DEPDIR)/libdemuxsub_a-sub.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdemuxsub_a-sub.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sub.c' object='libdemuxsub_a-sub.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdemuxsub_a-sub.Po' tmpdepfile='$(DEPDIR)/libdemuxsub_a-sub.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdemuxsub_a_CFLAGS) $(CFLAGS) -c -o libdemuxsub_a-sub.o `test -f 'sub.c' || echo '$(srcdir)/'`sub.c
-
-libdemuxsub_a-sub.obj: sub.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdemuxsub_a_CFLAGS) $(CFLAGS) -MT libdemuxsub_a-sub.obj -MD -MP -MF "$(DEPDIR)/libdemuxsub_a-sub.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libdemuxsub_a-sub.obj `if test -f 'sub.c'; then $(CYGPATH_W) 'sub.c'; else $(CYGPATH_W) '$(srcdir)/sub.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdemuxsub_a-sub.Tpo" "$(DEPDIR)/libdemuxsub_a-sub.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdemuxsub_a-sub.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sub.c' object='libdemuxsub_a-sub.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdemuxsub_a-sub.Po' tmpdepfile='$(DEPDIR)/libdemuxsub_a-sub.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdemuxsub_a_CFLAGS) $(CFLAGS) -c -o libdemuxsub_a-sub.obj `if test -f 'sub.c'; then $(CYGPATH_W) 'sub.c'; else $(CYGPATH_W) '$(srcdir)/sub.c'; fi`
-
-libdemuxsub_pic_a-sub.o: sub.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdemuxsub_pic_a_CFLAGS) $(CFLAGS) -MT libdemuxsub_pic_a-sub.o -MD -MP -MF "$(DEPDIR)/libdemuxsub_pic_a-sub.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libdemuxsub_pic_a-sub.o `test -f 'sub.c' || echo '$(srcdir)/'`sub.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdemuxsub_pic_a-sub.Tpo" "$(DEPDIR)/libdemuxsub_pic_a-sub.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdemuxsub_pic_a-sub.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sub.c' object='libdemuxsub_pic_a-sub.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdemuxsub_pic_a-sub.Po' tmpdepfile='$(DEPDIR)/libdemuxsub_pic_a-sub.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdemuxsub_pic_a_CFLAGS) $(CFLAGS) -c -o libdemuxsub_pic_a-sub.o `test -f 'sub.c' || echo '$(srcdir)/'`sub.c
-
-libdemuxsub_pic_a-sub.obj: sub.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdemuxsub_pic_a_CFLAGS) $(CFLAGS) -MT libdemuxsub_pic_a-sub.obj -MD -MP -MF "$(DEPDIR)/libdemuxsub_pic_a-sub.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libdemuxsub_pic_a-sub.obj `if test -f 'sub.c'; then $(CYGPATH_W) 'sub.c'; else $(CYGPATH_W) '$(srcdir)/sub.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdemuxsub_pic_a-sub.Tpo" "$(DEPDIR)/libdemuxsub_pic_a-sub.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdemuxsub_pic_a-sub.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sub.c' object='libdemuxsub_pic_a-sub.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdemuxsub_pic_a-sub.Po' tmpdepfile='$(DEPDIR)/libdemuxsub_pic_a-sub.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdemuxsub_pic_a_CFLAGS) $(CFLAGS) -c -o libdemuxsub_pic_a-sub.obj `if test -f 'sub.c'; then $(CYGPATH_W) 'sub.c'; else $(CYGPATH_W) '$(srcdir)/sub.c'; fi`
-
-libdemuxsub_plugin_a-sub.o: sub.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdemuxsub_plugin_a_CFLAGS) $(CFLAGS) -MT libdemuxsub_plugin_a-sub.o -MD -MP -MF "$(DEPDIR)/libdemuxsub_plugin_a-sub.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libdemuxsub_plugin_a-sub.o `test -f 'sub.c' || echo '$(srcdir)/'`sub.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdemuxsub_plugin_a-sub.Tpo" "$(DEPDIR)/libdemuxsub_plugin_a-sub.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdemuxsub_plugin_a-sub.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sub.c' object='libdemuxsub_plugin_a-sub.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdemuxsub_plugin_a-sub.Po' tmpdepfile='$(DEPDIR)/libdemuxsub_plugin_a-sub.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdemuxsub_plugin_a_CFLAGS) $(CFLAGS) -c -o libdemuxsub_plugin_a-sub.o `test -f 'sub.c' || echo '$(srcdir)/'`sub.c
-
-libdemuxsub_plugin_a-sub.obj: sub.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdemuxsub_plugin_a_CFLAGS) $(CFLAGS) -MT libdemuxsub_plugin_a-sub.obj -MD -MP -MF "$(DEPDIR)/libdemuxsub_plugin_a-sub.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o libdemuxsub_plugin_a-sub.obj `if test -f 'sub.c'; then $(CYGPATH_W) 'sub.c'; else $(CYGPATH_W) '$(srcdir)/sub.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdemuxsub_plugin_a-sub.Tpo" "$(DEPDIR)/libdemuxsub_plugin_a-sub.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/libdemuxsub_plugin_a-sub.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sub.c' object='libdemuxsub_plugin_a-sub.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libdemuxsub_plugin_a-sub.Po' tmpdepfile='$(DEPDIR)/libdemuxsub_plugin_a-sub.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdemuxsub_plugin_a_CFLAGS) $(CFLAGS) -c -o libdemuxsub_plugin_a-sub.obj `if test -f 'sub.c'; then $(CYGPATH_W) 'sub.c'; else $(CYGPATH_W) '$(srcdir)/sub.c'; fi`
 
 libid3_a-id3.o: id3.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libid3_a_CFLAGS) $(CFLAGS) -MT libid3_a-id3.o -MD -MP -MF "$(DEPDIR)/libid3_a-id3.Tpo" \
@@ -738,24 +608,6 @@ libid3tag_plugin_a-id3tag.obj: id3tag.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libid3tag_plugin_a_CFLAGS) $(CFLAGS) -c -o libid3tag_plugin_a-id3tag.obj `if test -f 'id3tag.c'; then $(CYGPATH_W) 'id3tag.c'; else $(CYGPATH_W) '$(srcdir)/id3tag.c'; fi`
 uninstall-info-am:
-libdemuxsubDATA_INSTALL = $(INSTALL_DATA)
-install-libdemuxsubDATA: $(libdemuxsub_DATA)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(libdemuxsubdir)
-	@list='$(libdemuxsub_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " $(libdemuxsubDATA_INSTALL) $$d$$p $(DESTDIR)$(libdemuxsubdir)/$$f"; \
-	  $(libdemuxsubDATA_INSTALL) $$d$$p $(DESTDIR)$(libdemuxsubdir)/$$f; \
-	done
-
-uninstall-libdemuxsubDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(libdemuxsub_DATA)'; for p in $$list; do \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " rm -f $(DESTDIR)$(libdemuxsubdir)/$$f"; \
-	  rm -f $(DESTDIR)$(libdemuxsubdir)/$$f; \
-	done
 libid3DATA_INSTALL = $(INSTALL_DATA)
 install-libid3DATA: $(libid3_DATA)
 	@$(NORMAL_INSTALL)
@@ -967,7 +819,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LIBRARIES) $(DATA) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libdemuxsubdir) $(DESTDIR)$(libid3dir) $(DESTDIR)$(libid3tagdir)
+	$(mkinstalldirs) $(DESTDIR)$(libvlcdir) $(DESTDIR)$(libid3dir) $(DESTDIR)$(libid3tagdir)
 
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-recursive
@@ -1014,8 +866,8 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-libdemuxsubDATA install-libid3DATA \
-	install-libid3tagDATA install-libvlcLIBRARIES
+install-data-am: install-libid3DATA install-libid3tagDATA \
+	install-libvlcLIBRARIES
 
 install-exec-am:
 
@@ -1042,9 +894,8 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libdemuxsubDATA \
-	uninstall-libid3DATA uninstall-libid3tagDATA \
-	uninstall-libvlcLIBRARIES
+uninstall-am: uninstall-info-am uninstall-libid3DATA \
+	uninstall-libid3tagDATA uninstall-libvlcLIBRARIES
 
 uninstall-info: uninstall-info-recursive
 
@@ -1057,18 +908,17 @@ uninstall-info: uninstall-info-recursive
 	install-data install-data-am install-data-recursive \
 	install-exec install-exec-am install-exec-recursive \
 	install-info install-info-am install-info-recursive \
-	install-libdemuxsubDATA install-libid3DATA \
-	install-libid3tagDATA install-libvlcLIBRARIES install-man \
-	install-recursive install-strip installcheck installcheck-am \
-	installdirs installdirs-am installdirs-recursive \
-	maintainer-clean maintainer-clean-generic \
-	maintainer-clean-recursive mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
-	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
-	uninstall uninstall-am uninstall-info-am \
-	uninstall-info-recursive uninstall-libdemuxsubDATA \
-	uninstall-libid3DATA uninstall-libid3tagDATA \
-	uninstall-libvlcLIBRARIES uninstall-recursive
+	install-libid3DATA install-libid3tagDATA \
+	install-libvlcLIBRARIES install-man install-recursive \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am installdirs-recursive maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-recursive \
+	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
+	tags-recursive uninstall uninstall-am uninstall-info-am \
+	uninstall-info-recursive uninstall-libid3DATA \
+	uninstall-libid3tagDATA uninstall-libvlcLIBRARIES \
+	uninstall-recursive
 
 
 clean-local:
@@ -1077,9 +927,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in id3 id3tag demuxsub; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in id3 id3tag demuxsub; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in id3 id3tag demuxsub; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in id3 id3tag; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in id3 id3tag; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in id3 id3tag; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 libid3_plugin$(LIBEXT): $(libid3_plugin_a_OBJECTS)
@@ -1093,12 +943,6 @@ libid3tag_plugin$(LIBEXT): $(libid3tag_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libid3tag_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin id3tag\` ; $(CXXLINK) $(libid3tag_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin id3tag` ;; \
 	  objc) echo $(OBJCLINK) $(libid3tag_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin id3tag\` ; $(OBJCLINK) $(libid3tag_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin id3tag` ;; \
 	  c|*) echo $(LINK) $(libid3tag_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin id3tag\` ; $(LINK) $(libid3tag_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin id3tag` ;; \
-	esac
-libdemuxsub_plugin$(LIBEXT): $(libdemuxsub_plugin_a_OBJECTS)
-	@case `$(VLC_CONFIG) --linkage demuxsub` in \
-	  c++) echo $(CXXLINK) $(libdemuxsub_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin demuxsub\` ; $(CXXLINK) $(libdemuxsub_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin demuxsub` ;; \
-	  objc) echo $(OBJCLINK) $(libdemuxsub_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin demuxsub\` ; $(OBJCLINK) $(libdemuxsub_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin demuxsub` ;; \
-	  c|*) echo $(LINK) $(libdemuxsub_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin demuxsub\` ; $(LINK) $(libdemuxsub_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin demuxsub` ;; \
 	esac
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

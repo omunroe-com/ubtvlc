@@ -2,10 +2,10 @@
  * demux.c: demuxer using ffmpeg (libavformat).
  *****************************************************************************
  * Copyright (C) 2004 VideoLAN
- * $Id: demux.c 7014 2004-03-08 13:54:49Z gbazin $
+ * $Id: demux.c 9236 2004-11-07 20:20:35Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
- *          Gildas Bazin <gbazin@netcourrier.com>
+ *          Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 
 #include <vlc/vlc.h>
 #include <vlc/input.h>
+#include "vlc_meta.h"
 
 /* ffmpeg header */
 #ifdef HAVE_FFMPEG_AVCODEC_H
@@ -37,8 +38,16 @@
 #   include <avformat.h>
 #endif
 
+#include "ffmpeg.h"
+
+//#define AVFORMAT_DEBUG 1
+
 /* Version checking */
 #if (LIBAVFORMAT_BUILD >= 4611) && defined(HAVE_LIBAVFORMAT)
+
+#if LIBAVFORMAT_BUILD < 4619
+#   define av_seek_frame(a,b,c,d) av_seek_frame(a,b,c)
+#endif
 
 /*****************************************************************************
  * demux_sys_t: demux descriptor
@@ -80,10 +89,7 @@ int E_(OpenDemux)( vlc_object_t *p_this )
     demux_sys_t   *p_sys;
     AVProbeData   pd;
     AVInputFormat *fmt;
-    int i, b_forced;
-
-    b_forced = ( p_demux->psz_demux && *p_demux->psz_demux &&
-                 !strcmp( p_demux->psz_demux, "ffmpeg" ) ) ? 1 : 0;
+    int i;
 
     /* Init Probe data */
     pd.filename = p_demux->psz_path;
@@ -93,8 +99,7 @@ int E_(OpenDemux)( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
 
-    /* Should we call it only once ? */
-    av_register_all();
+    av_register_all(); /* Can be called several times */
 
     /* Guess format */
     if( !( fmt = av_probe_input_format( &pd, 1 ) ) )
@@ -104,23 +109,48 @@ int E_(OpenDemux)( vlc_object_t *p_this )
     }
 
     /* Don't try to handle MPEG unless forced */
-    if( !b_forced &&
+    if( !p_demux->b_force &&
         ( !strcmp( fmt->name, "mpeg" ) ||
           !strcmp( fmt->name, "vcd" ) ||
           !strcmp( fmt->name, "vob" ) ||
-          !strcmp( fmt->name, "mpegts" ) ) )
+          !strcmp( fmt->name, "mpegts" ) ||
+          /* libavformat's redirector won't work */
+          !strcmp( fmt->name, "redir" ) ||
+          !strcmp( fmt->name, "sdp" ) ) )
     {
         return VLC_EGENERIC;
     }
+
+    /* Don't trigger false alarms on bin files */
+    if( !p_demux->b_force && !strcmp( fmt->name, "psxstr" ) )
+    {
+        int i_len;
+
+        if( !p_demux->psz_path ) return VLC_EGENERIC;
+
+        i_len = strlen( p_demux->psz_path );
+        if( i_len < 4 ) return VLC_EGENERIC;
+
+        if( strcasecmp( &p_demux->psz_path[i_len - 4], ".str" ) &&
+            strcasecmp( &p_demux->psz_path[i_len - 4], ".xai" ) &&
+            strcasecmp( &p_demux->psz_path[i_len - 4], ".xa" ) )
+        {
+            return VLC_EGENERIC;
+        }
+    }
+
+    msg_Dbg( p_demux, "detected format: %s", fmt->name );
 
     /* Fill p_demux fields */
     p_demux->pf_demux = Demux;
     p_demux->pf_control = Control;
     p_demux->p_sys = p_sys = malloc( sizeof( demux_sys_t ) );
+    p_sys->ic = 0;
     p_sys->fmt = fmt;
     p_sys->i_tk = 0;
     p_sys->tk = NULL;
     p_sys->i_pcr_tk = -1;
+    p_sys->i_pcr = -1;
 
     /* Create I/O wrapper */
     p_sys->io_buffer_size = 32768;  /* FIXME */
@@ -129,9 +159,11 @@ int E_(OpenDemux)( vlc_object_t *p_this )
     p_sys->url.prot = &p_sys->prot;
     p_sys->url.prot->name = "VLC I/O wrapper";
     p_sys->url.prot->url_open = 0;
-    p_sys->url.prot->url_read = IORead;
+    p_sys->url.prot->url_read =
+                    (int (*) (URLContext *, unsigned char *, int))IORead;
     p_sys->url.prot->url_write = 0;
-    p_sys->url.prot->url_seek = IOSeek;
+    p_sys->url.prot->url_seek =
+                    (offset_t (*) (URLContext *, offset_t, int))IOSeek;
     p_sys->url.prot->url_close = 0;
     p_sys->url.prot->next = 0;
     init_put_byte( &p_sys->io, p_sys->io_buffer, p_sys->io_buffer_size,
@@ -144,12 +176,14 @@ int E_(OpenDemux)( vlc_object_t *p_this )
                               p_sys->fmt, NULL ) )
     {
         msg_Err( p_demux, "av_open_input_stream failed" );
+        E_(CloseDemux)( p_this );
         return VLC_EGENERIC;
     }
 
     if( av_find_stream_info( p_sys->ic ) )
     {
         msg_Err( p_demux, "av_find_stream_info failed" );
+        E_(CloseDemux)( p_this );
         return VLC_EGENERIC;
     }
 
@@ -217,9 +251,8 @@ void E_(CloseDemux)( vlc_object_t *p_this )
     demux_t     *p_demux = (demux_t*)p_this;
     demux_sys_t *p_sys = p_demux->p_sys;
 
-    av_close_input_file( p_sys->ic );
-
-    free( p_sys->io_buffer );
+    if( p_sys->ic ) av_close_input_file( p_sys->ic );
+    if( p_sys->io_buffer ) free( p_sys->io_buffer );
     free( p_sys );
 }
 
@@ -258,8 +291,10 @@ static int Demux( demux_t *p_demux )
     p_frame->i_pts = ( pkt.pts == AV_NOPTS_VALUE ) ?
         0 : (pkt.pts - i_start_time) * 1000000 / AV_TIME_BASE;
 
+#ifdef AVFORMAT_DEBUG
     msg_Dbg( p_demux, "tk[%d] dts="I64Fd" pts="I64Fd,
              pkt.stream_index, p_frame->i_dts, p_frame->i_pts );
+#endif
 
     if( pkt.dts > 0  &&
         ( pkt.stream_index == p_sys->i_pcr_tk || p_sys->i_pcr_tk < 0 ) )
@@ -287,22 +322,24 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
     switch( i_query )
     {
         case DEMUX_GET_POSITION:
-            pf = (double*) va_arg( args, double* );
+            pf = (double*) va_arg( args, double* ); *pf = 0.0;
             i64 = stream_Size( p_demux->s );
             if( i64 > 0 )
             {
                 *pf = (double)stream_Tell( p_demux->s ) / (double)i64;
             }
-            else
+
+            if( p_sys->ic->duration != AV_NOPTS_VALUE && p_sys->i_pcr > 0 )
             {
-                *pf = 0.0;
+                *pf = (double)p_sys->i_pcr / (double)p_sys->ic->duration;
             }
+
             return VLC_SUCCESS;
 
         case DEMUX_SET_POSITION:
             f = (double) va_arg( args, double );
             i64 = stream_Tell( p_demux->s );
-            if( i64 && p_sys->i_pcr )
+            if( i64 && p_sys->i_pcr > 0 )
             {
                 int64_t i_size = stream_Size( p_demux->s );
 
@@ -310,15 +347,27 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
                 if( p_sys->ic->start_time != AV_NOPTS_VALUE )
                     i64 += p_sys->ic->start_time;
 
+                if( p_sys->ic->duration != AV_NOPTS_VALUE )
+                    i64 = p_sys->ic->duration * f;
+
                 msg_Warn( p_demux, "DEMUX_SET_POSITION: "I64Fd, i64 );
 
-                if( av_seek_frame( p_sys->ic, -1, i64 ) )
+                if( av_seek_frame( p_sys->ic, -1, i64, 0 ) < 0 )
                 {
                     return VLC_EGENERIC;
                 }
                 es_out_Control( p_demux->out, ES_OUT_RESET_PCR );
                 p_sys->i_pcr = -1; /* Invalidate time display */
             }
+            return VLC_SUCCESS;
+
+        case DEMUX_GET_LENGTH:
+            pi64 = (int64_t*)va_arg( args, int64_t * );
+            if( p_sys->ic->duration != AV_NOPTS_VALUE )
+            {
+                *pi64 = p_sys->ic->duration;
+            }
+            else *pi64 = 0;
             return VLC_SUCCESS;
 
         case DEMUX_GET_TIME:
@@ -333,13 +382,40 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
 
             msg_Warn( p_demux, "DEMUX_SET_TIME: "I64Fd, i64 );
 
-            if( av_seek_frame( p_sys->ic, -1, i64 ) < 0 )
+            if( av_seek_frame( p_sys->ic, -1, i64, 0 ) < 0 )
             {
                 return VLC_EGENERIC;
             }
             es_out_Control( p_demux->out, ES_OUT_RESET_PCR );
             p_sys->i_pcr = -1; /* Invalidate time display */
             return VLC_SUCCESS;
+
+        case DEMUX_GET_META:
+        {
+            vlc_meta_t **pp_meta = (vlc_meta_t**)va_arg( args, vlc_meta_t** );
+            vlc_meta_t *meta;
+
+            if( !p_sys->ic->title[0] || !p_sys->ic->author[0] ||
+                !p_sys->ic->copyright[0] || !p_sys->ic->comment[0] ||
+                /*!p_sys->ic->album[0] ||*/ !p_sys->ic->genre[0] )
+            {
+                return VLC_EGENERIC;
+            }
+
+            *pp_meta = meta = vlc_meta_New();
+
+            if( p_sys->ic->title[0] )
+                vlc_meta_Add( meta, VLC_META_TITLE, p_sys->ic->title );
+            if( p_sys->ic->author[0] )
+                vlc_meta_Add( meta, VLC_META_AUTHOR, p_sys->ic->author );
+            if( p_sys->ic->copyright[0] )
+                vlc_meta_Add( meta, VLC_META_COPYRIGHT, p_sys->ic->copyright );
+            if( p_sys->ic->comment[0] )
+                vlc_meta_Add( meta, VLC_META_DESCRIPTION, p_sys->ic->comment );
+            if( p_sys->ic->genre[0] )
+                vlc_meta_Add( meta, VLC_META_GENRE, p_sys->ic->genre );
+            return VLC_SUCCESS;
+        }
 
         default:
             return VLC_EGENERIC;
@@ -353,7 +429,8 @@ static int IORead( void *opaque, uint8_t *buf, int buf_size )
 {
     URLContext *p_url = opaque;
     demux_t *p_demux = p_url->priv_data;
-    return stream_Read( p_demux->s, buf, buf_size );
+    int i_ret = stream_Read( p_demux->s, buf, buf_size );
+    return i_ret ? i_ret : -1;
 }
 
 static int IOSeek( void *opaque, offset_t offset, int whence )
@@ -362,7 +439,9 @@ static int IOSeek( void *opaque, offset_t offset, int whence )
     demux_t *p_demux = p_url->priv_data;
     int64_t i_absolute;
 
+#ifdef AVFORMAT_DEBUG
     msg_Warn( p_demux, "IOSeek offset: "I64Fd", whence: %i", offset, whence );
+#endif
 
     switch( whence )
     {

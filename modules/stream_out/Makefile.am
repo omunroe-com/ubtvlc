@@ -28,9 +28,9 @@ clean-local:
 all: all-modules
 all-modules:
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
-	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in stream_out_dummy stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
-	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in stream_out_dummy stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in stream_out_dummy stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in stream_out_dummy stream_out_description stream_out_standard stream_out_transcode stream_out_duplicate stream_out_es stream_out_display stream_out_gather stream_out_rtp; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 
@@ -68,6 +68,43 @@ libstream_out_dummy_plugin$(LIBEXT): $(libstream_out_dummy_plugin_a_OBJECTS)
 	  c++) echo $(CXXLINK) $(libstream_out_dummy_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_dummy\` ; $(CXXLINK) $(libstream_out_dummy_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_dummy` ;; \
 	  objc) echo $(OBJCLINK) $(libstream_out_dummy_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_dummy\` ; $(OBJCLINK) $(libstream_out_dummy_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_dummy` ;; \
 	  c|*) echo $(LINK) $(libstream_out_dummy_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_dummy\` ; $(LINK) $(libstream_out_dummy_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_dummy` ;; \
+	esac
+
+
+# The stream_out_description plugin
+
+if UNTRUE
+Lstream_out_descriptionp = libstream_out_description_plugin.a
+Dstream_out_descriptionp = libstream_out_description_plugin$(LIBEXT)
+Lstream_out_descriptionb = libstream_out_description.a
+Lstream_out_descriptionpic = libstream_out_description_pic.a
+endif
+
+libstream_out_description_plugin_a_SOURCES = $(SOURCES_stream_out_description)
+libstream_out_description_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin stream_out_description`
+libstream_out_description_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin stream_out_description`
+libstream_out_description_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin stream_out_description`
+
+libstream_out_description_pic_a_SOURCES = $(SOURCES_stream_out_description)
+libstream_out_description_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_description`
+libstream_out_description_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_description`
+libstream_out_description_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_description`
+
+libstream_out_description_a_SOURCES = $(SOURCES_stream_out_description)
+libstream_out_description_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_description`
+libstream_out_description_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_description`
+libstream_out_description_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_description`
+
+libvlc_LIBRARIES += $(Lstream_out_descriptionb) $(Lstream_out_descriptionpic)
+libstream_out_description_DATA = $(Dstream_out_descriptionp)
+
+libstream_out_descriptiondir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lstream_out_descriptionp)
+libstream_out_description_plugin$(LIBEXT): $(libstream_out_description_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage stream_out_description` in \
+	  c++) echo $(CXXLINK) $(libstream_out_description_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_description\` ; $(CXXLINK) $(libstream_out_description_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_description` ;; \
+	  objc) echo $(OBJCLINK) $(libstream_out_description_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_description\` ; $(OBJCLINK) $(libstream_out_description_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_description` ;; \
+	  c|*) echo $(LINK) $(libstream_out_description_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin stream_out_description\` ; $(LINK) $(libstream_out_description_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin stream_out_description` ;; \
 	esac
 
 

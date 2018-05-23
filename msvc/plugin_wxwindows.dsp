@@ -109,6 +109,16 @@ SOURCE="..\modules\gui\wxwindows\interface.cpp"
 # PROP Intermediate_Dir "Debug\modules\gui\wxwindows"
 # End Source File
 # Begin Source File
+SOURCE="..\modules\gui\wxwindows\extrapanel.cpp"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwindows" /D "MODULE_NAME_IS_wxwindows" 
+!IF "$(CFG)" == "plugin_wxwindows - Win32 Release"
+# PROP Output_Dir "Release\modules\gui\wxwindows"
+# PROP Intermediate_Dir "Release\modules\gui\wxwindows"
+!ELSEIF "$(CFG)" == "plugin_wxwindows - Win32 Debug"
+# PROP Output_Dir "Debug\modules\gui\wxwindows"
+# PROP Intermediate_Dir "Debug\modules\gui\wxwindows"
+# End Source File
+# Begin Source File
 SOURCE="..\modules\gui\wxwindows\dialogs.cpp"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwindows" /D "MODULE_NAME_IS_wxwindows" 
 !IF "$(CFG)" == "plugin_wxwindows - Win32 Release"
@@ -130,16 +140,6 @@ SOURCE="..\modules\gui\wxwindows\open.cpp"
 # End Source File
 # Begin Source File
 SOURCE="..\modules\gui\wxwindows\streamout.cpp"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwindows" /D "MODULE_NAME_IS_wxwindows" 
-!IF "$(CFG)" == "plugin_wxwindows - Win32 Release"
-# PROP Output_Dir "Release\modules\gui\wxwindows"
-# PROP Intermediate_Dir "Release\modules\gui\wxwindows"
-!ELSEIF "$(CFG)" == "plugin_wxwindows - Win32 Debug"
-# PROP Output_Dir "Debug\modules\gui\wxwindows"
-# PROP Intermediate_Dir "Debug\modules\gui\wxwindows"
-# End Source File
-# Begin Source File
-SOURCE="..\modules\gui\wxwindows\streamwizard.cpp"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=wxwindows" /D "MODULE_NAME_IS_wxwindows" 
 !IF "$(CFG)" == "plugin_wxwindows - Win32 Release"
 # PROP Output_Dir "Release\modules\gui\wxwindows"
@@ -277,6 +277,9 @@ SOURCE="..\modules\gui\wxwindows\video.cpp"
 
 # Begin Source File
 SOURCE="..\modules\gui\wxwindows\wxwindows.h"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\gui\wxwindows\streamdata.h"
 # End Source File
 # Begin Source File
 SOURCE="..\modules\gui\wxwindows\preferences_widgets.h"

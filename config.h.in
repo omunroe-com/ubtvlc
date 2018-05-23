@@ -38,12 +38,21 @@
 /* Define if <X11/extensions/dpms.h> defines DPMSInfo. */
 #undef DPMSINFO_IN_DPMS_H
 
+/* Define if you want the HTTP dameon support */
+#undef ENABLE_HTTPD
+
 /* Define to 1 if translation of program messages to the user's native
    language is requested. */
 #undef ENABLE_NLS
 
+/* Define if you want the stream output support */
+#undef ENABLE_SOUT
+
 /* Define if you want utf8 support */
 #undef ENABLE_UTF8
+
+/* Define if you want the VideoLAN manager support */
+#undef ENABLE_VLM
 
 /* Define to 1 if you have the <a52dec/a52.h> header file. */
 #undef HAVE_A52DEC_A52_H
@@ -60,6 +69,10 @@
 
 /* Define to 1 if you have the <altivec.h> header file. */
 #undef HAVE_ALTIVEC_H
+
+/* Define to 1 if you have the <ApplicationServices/ApplicationServices.h>
+   header file. */
+#undef HAVE_APPLICATIONSERVICES_APPLICATIONSERVICES_H
 
 /* Define to 1 if you have the <argz.h> header file. */
 #undef HAVE_ARGZ_H
@@ -85,6 +98,14 @@
 /* Define to 1 if you have the <Carbon/Carbon.h> header file. */
 #undef HAVE_CARBON_CARBON_H
 
+/* Define to 1 if you have the <cascade/graphics/CascadeBitmap.h> header file.
+   */
+#undef HAVE_CASCADE_GRAPHICS_CASCADEBITMAP_H
+
+/* Define to 1 if you have the <cascade/graphics/CascadeScreen.h> header file.
+   */
+#undef HAVE_CASCADE_GRAPHICS_CASCADESCREEN_H
+
 /* Define for the CD-DA plugin using libcdio */
 #undef HAVE_CDDAX
 
@@ -102,6 +123,9 @@
 
 /* Define to 1 if you have the `ctime_r' function. */
 #undef HAVE_CTIME_R
+
+/* Define to 1 if you have the `daemon' function. */
+#undef HAVE_DAEMON
 
 /* Define if the GNU dcgettext() function is already present or preinstalled.
    */
@@ -153,12 +177,6 @@
 /* Define to 1 if you have the <dvbpsi/dr.h> header file. */
 #undef HAVE_DVBPSI_DR_H
 
-/* Define to 1 if you have the <dvdcss/dvdcss.h> header file. */
-#undef HAVE_DVDCSS_DVDCSS_H
-
-/* Define to 1 if you have the <dvdplay/dvdplay.h> header file. */
-#undef HAVE_DVDPLAY_DVDPLAY_H
-
 /* Define to 1 if you have the <dvdread/dvd_reader.h> header file. */
 #undef HAVE_DVDREAD_DVD_READER_H
 
@@ -186,9 +204,6 @@
 /* Define to 1 if you have the <FLAC/stream_decoder.h> header file. */
 #undef HAVE_FLAC_STREAM_DECODER_H
 
-/* Define to 1 if you have the <gdk/gdk.h> header file. */
-#undef HAVE_GDK_GDK_H
-
 /* Define to 1 if you have the `getcwd' function. */
 #undef HAVE_GETCWD
 
@@ -213,6 +228,9 @@
 /* Define to 1 if you have the `gethostbyname2' function. */
 #undef HAVE_GETHOSTBYNAME2
 
+/* Define to 1 if you have the `getnameinfo' function. */
+#undef HAVE_GETNAMEINFO
+
 /* Define to 1 if you have the <getopt.h> header file. */
 #undef HAVE_GETOPT_H
 
@@ -234,20 +252,23 @@
 /* Define to 1 if you have the `getuid' function. */
 #undef HAVE_GETUID
 
-/* Define to 1 if you have the <glib.h> header file. */
-#undef HAVE_GLIB_H
+/* Define to 1 if you have the <GL/glx.h> header file. */
+#undef HAVE_GL_GLX_H
+
+/* Define to 1 if you have the <GL/gl.h> header file. */
+#undef HAVE_GL_GL_H
 
 /* Define to 1 if you have the `gmtime_r' function. */
 #undef HAVE_GMTIME_R
 
-/* Define to 1 if you have the <gnome.h> header file. */
-#undef HAVE_GNOME_H
+/* Define to 1 if you have libgnutls */
+#undef HAVE_GNUTLS
 
 /* Define to 1 if you have the <goom/goom.h> header file. */
 #undef HAVE_GOOM_GOOM_H
 
-/* Define to 1 if you have the <gtk/gtk.h> header file. */
-#undef HAVE_GTK_GTK_H
+/* Define if you have the HAL library */
+#undef HAVE_HAL
 
 /* Define if you have the iconv() function. */
 #undef HAVE_ICONV
@@ -424,9 +445,6 @@
 /* Define to 1 if you have the <ogg/ogg.h> header file. */
 #undef HAVE_OGG_OGG_H
 
-/* Define to 1 if you have the <orbit/orbit.h> header file. */
-#undef HAVE_ORBIT_ORBIT_H
-
 /* Define to 1 if you have the <Ph.h> header file. */
 #undef HAVE_PH_H
 
@@ -515,6 +533,9 @@
 /* Define to 1 if you have the `strcasecmp' function. */
 #undef HAVE_STRCASECMP
 
+/* Define to 1 if you have the `strcasestr' function. */
+#undef HAVE_STRCASESTR
+
 /* Define to 1 if you have the `strdup' function. */
 #undef HAVE_STRDUP
 
@@ -530,6 +551,9 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
+/* Define to 1 if you have the `stristr' function. */
+#undef HAVE_STRISTR
+
 /* Define to 1 if you have the `strncasecmp' function. */
 #undef HAVE_STRNCASECMP
 
@@ -542,8 +566,14 @@
 /* Define to 1 if you have the `strtod' function. */
 #undef HAVE_STRTOD
 
+/* Define to 1 if you have the `strtof' function. */
+#undef HAVE_STRTOF
+
 /* Define to 1 if you have the `strtol' function. */
 #undef HAVE_STRTOL
+
+/* Define to 1 if you have the `strtoll' function. */
+#undef HAVE_STRTOLL
 
 /* Define to 1 if you have the `strtoul' function. */
 #undef HAVE_STRTOUL
@@ -602,6 +632,9 @@
 /* Define to 1 if you have the <time.h> header file. */
 #undef HAVE_TIME_H
 
+/* Define to 1 if you have the <toolame.h> header file. */
+#undef HAVE_TOOLAME_H
+
 /* Define to 1 if you have the <tremor/ivorbiscodec.h> header file. */
 #undef HAVE_TREMOR_IVORBISCODEC_H
 
@@ -622,9 +655,6 @@
 
 /* Define if <stdarg.h> defines va_copy. */
 #undef HAVE_VA_COPY
-
-/* Define for the VCD plugin using libcdio/libvcdinfo */
-#undef HAVE_VCDX
 
 /* Define to 1 if you have the <vorbis/codec.h> header file. */
 #undef HAVE_VORBIS_CODEC_H
@@ -649,6 +679,9 @@
 
 /* Define to 1 if you have the <X11/Xlib.h> header file. */
 #undef HAVE_X11_XLIB_H
+
+/* Define to 1 if you have the <x264.h> header file. */
+#undef HAVE_X264_H
 
 /* Define this if you have libXinerama installed */
 #undef HAVE_XINERAMA
@@ -748,9 +781,6 @@
 /* Define if <strings.h> defines strncasecmp. */
 #undef STRNCASECMP_IN_STRINGS_H
 
-/* Define if <gnome.h> defines strndup. */
-#undef STRNDUP_IN_GNOME_H
-
 /* Define if <st.h> defines st_init */
 #undef ST_INIT_IN_ST_H
 
@@ -780,6 +810,12 @@
 
 /* Define to `unsigned' if <sys/types.h> does not define. */
 #undef size_t
+
+/* Define to `sockaddr' if <sys/socket.h> does not define. */
+#undef sockaddr_storage
+
+/* Define to `sa_family' if <sys/socket.h> does not define. */
+#undef ss_family
 
 /* Define to unsigned long or unsigned long long if <inttypes.h> and
    <stdint.h> don't define. */

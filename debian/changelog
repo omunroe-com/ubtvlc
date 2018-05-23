@@ -1,3 +1,154 @@
+vlc (0.8.0-test1-1) unstable; urgency=high
+
+  * New upstream tarball.
+  * debian/rules:
+    + Fixed previously broken DVD support.
+    + Removed currently broken Speex support.
+  * debian/control:
+    + Build-depend on libdvdnav.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Sat,  4 Sep 2004 02:32:49 +0200
+
+vlc (0.7.2.svn20040827-1) unstable; urgency=high
+
+  * New SVN snapshot.
+  * debian/rules:
+    + Activated x264 support.
+    + Re-enabled libmodplug support.
+    + Build PIC plugins even on x86.
+    + Disabled SLP because its code is broken.
+    + Disabled the GNOME, Qt, GTK+ and KDE interfaces in favour of the
+      WxWidgets one.
+    + Activated HAL support.
+  * debian/control:
+    + Force the vlc-plugin-arts dependencies.
+    + Build-depend on jam and nasm because of x264.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Fri, 27 Aug 2004 21:31:13 +0200
+
+vlc (0.7.2.final-11) unstable; urgency=medium
+
+  * configure.ac:
+    + Fixed an LDFLAGS/CFLAGS confusion.
+    + Don't use -finline-limit since it now tries to inline functions that
+      have not been explicitely inlined (Closes: #265673).
+  * debian/patches/20_configure.dpatch:
+    + Don't manage this patch with dpatch since it causes ownership issues.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Sun, 15 Aug 2004 01:35:35 +0200
+
+vlc (0.7.2.final-10) unstable; urgency=medium
+
+  * The "I hope I got it right this time" upload.
+  * configure.ac:
+    + Use -maltivec -mabi=altivec for the memcpyaltivec and deinterlace
+      plugins on PowerPC.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Tue, 10 Aug 2004 18:01:47 +0200
+
+vlc (0.7.2.final-9) unstable; urgency=low
+
+  * debian/control:
+    + Added a missing dpatch build dependency (Closes: #263363).
+    + Removed the modplug plugin until libmodplug-dev enters Debian.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Tue, 10 Aug 2004 11:01:15 +0200
+
+vlc (0.7.2.final-8) unstable; urgency=low
+
+  * debian/control:
+    + Added a missing dpatch build dependency.
+  * configure.ac:
+    + Fixed the powerpc build by conditionally re-enabling -maltivec
+      -mabi=altivec.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Fri, 30 Jul 2004 00:05:58 +0200
+
+vlc (0.7.2.final-7) unstable; urgency=low
+
+  * debian/rules:
+    + Switch build system to dpatch.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Thu, 29 Jul 2004 17:03:51 +0200
+
+vlc (0.7.2.final-6) unstable; urgency=low
+
+  * configure.ac: don't use -maltivec -mabi=altivec, because we don't want
+    to trigger AltiVec optimisations in our generic code (Closes: #256578,
+    Closes: #260819).
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Fri, 23 Jul 2004 17:21:21 +0200
+
+vlc (0.7.2.final-5) unstable; urgency=low
+
+  * debian/control:
+    + Build-depend on libdvbpsi3-dev, so that we can get rid of the previous
+      versions of this library.
+    + Recommend the videolan-doc package.
+    + Build-conflict on libavcodec-dev, just in case it enters Sid at an
+      unappropriate moment.
+  * debian/README.Debian:
+    + Removed mention of the libmpeg2 tree, which we no longer provide.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Tue, 20 Jul 2004 11:25:17 +0200
+
+vlc (0.7.2.final-4) unstable; urgency=low
+
+  * debian/rules:
+    + Activated Theora support (Closes: #259061).
+    + Re-enabled the KDE plugin (Closes: #258295).
+  * debian/control:
+    + Set policy to 3.6.1.1.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Tue, 13 Jul 2004 00:21:20 +0200
+
+vlc (0.7.2.final-3) unstable; urgency=low
+
+  * extras/ffmpeg/configure: fixed HPPA architecture detection.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Fri, 25 Jun 2004 11:55:33 +0200
+
+vlc (0.7.2.final-2) unstable; urgency=low
+
+  * extras/ffmpeg/libavcodec/svq1.c: fixed vector/vect namespace issues on
+    powerpc.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Tue, 22 Jun 2004 15:21:09 +0200
+
+vlc (0.7.2.final-1) unstable; urgency=low
+
+  * New upstream release.
+  * Temporarily disabled the KDE GUI plugin.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Sat, 29 May 2004 00:06:48 -0300
+
+vlc (0.7.2-test2-1) unstable; urgency=low
+
+  * New upstream snapshot.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Thu,  6 May 2004 11:11:25 +0200
+
+vlc (0.7.2-test1-4) unstable; urgency=low
+
+  * extras/ffmpeg/libacvodec/Makefile:
+    + Fixed a PARISC/HPPA mix-up.
+  * src/interface/interface.c:
+    + Removed the "switch interface" menu due to wxwin's utter bugosity.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Fri, 30 Apr 2004 13:15:59 +0200
+
+vlc (0.7.2-test1-3) unstable; urgency=low
+
+  * configure.ac:
+    + Link DTS plugins with libdts_pic.a, not libdts.a.
+  * debian/control:
+    + Build-depend on libid3tag0-dev for ID3 tag support.
+    + Made vlc depend on wxvlc for the moment.
+  * extras/ffmpeg/libacvodec/Makefile:
+    + Build motion_est.c with -O1.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Fri, 30 Apr 2004 10:49:59 +0200
+
 vlc (0.7.2-test1-2) unstable; urgency=low
 
   * debian/control:
@@ -698,7 +849,7 @@ vlc (0.1.99d) unstable; urgency=low
   * the YUV transformations are now plugins as well
   * alternative symlinks like gvlc, fbvlc are now created at compile time
   * borrowed libmpeg2's GPLed MMX YUV transformations (16 and 32 bits)
-  * fixed an endianness problem which occured on iMacs
+  * fixed an endianness problem which occurred on iMacs
 
  -- Samuel Hocevar <sam@via.ecp.fr>  Wed, 12 Jul 2000 01:24:40 +0200
 

@@ -2,7 +2,7 @@
  * pvr.c
  *****************************************************************************
  * Copyright (C) 2001, 2002 VideoLAN
- * $Id: pvr.c 7690 2004-05-16 19:17:56Z gbazin $
+ * $Id: pvr.c 8644 2004-09-05 16:53:04Z fkuehne $
  *
  * Authors: Eric Petit <titer@videolan.org>
  *
@@ -10,7 +10,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -37,10 +37,102 @@
 #include <sys/ioctl.h>
 #include "videodev2.h"
 
+/*****************************************************************************
+ * Module descriptor
+ *****************************************************************************/
+static int  Open ( vlc_object_t * );
+static void Close( vlc_object_t * );
+
+#define DEVICE_TEXT N_( "Device" )
+#define DEVICE_LONGTEXT N_( "PVR video device" )
+
+#define NORM_TEXT N_( "Norm" )
+#define NORM_LONGTEXT N_( "Defines the norm of the stream (Automatic, SECAM, PAL, or NTSC)" )
+static int i_norm_list[] = { V4L2_STD_UNKNOWN, V4L2_STD_SECAM, V4L2_STD_PAL,
+                             V4L2_STD_NTSC };
+static char *psz_norm_list_text[] = { N_("Automatic"), N_("SECAM"),
+                                      N_("PAL"),  N_("NTSC") };
+
+#define WIDTH_TEXT N_( "Width" )
+#define WIDTH_LONGTEXT N_( "Width of the stream to capture (-1 for " \
+                           "autodetect)" )
+#define HEIGHT_TEXT N_( "Height" )
+#define HEIGHT_LONGTEXT N_( "Height of the stream to capture (-1 for " \
+                           "autodetect)" )
+#define FREQUENCY_TEXT N_( "Frequency" )
+#define FREQUENCY_LONGTEXT N_( "Frequency to capture (in kHz), if applicable" )
+#define FRAMERATE_TEXT N_( "Framerate" )
+#define FRAMERATE_LONGTEXT N_( "Framerate to capture, if applicable (-1 for " \
+                               "auto)" )
+#define KEYINT_TEXT N_( "Key interval" )
+#define KEYINT_LONGTEXT N_( "Interval between keyframes (-1 for " \
+                                " auto)" )
+#define BFRAMES_TEXT N_( "B Frames" )
+#define BFRAMES_LONGTEXT N_("If this option is set, B-Frames will be used. " \
+                            "Use this option to set the number of B-Frames.")
+#define BITRATE_TEXT N_( "Bitrate" )
+#define BITRATE_LONGTEXT N_( "Bitrate to use (-1 for default)" )
+#define BITRATE_PEAK_TEXT N_( "Bitrate peak" )
+#define BITRATE_PEAK_LONGTEXT N_( "Peak bitrate in VBR mode" )
+#define BITRATE_MODE_TEXT N_( "Bitrate mode (vbr or cbr)" )
+#define BITRATE_MODE_LONGTEXT N_( "Bitrate mode to use" )
+#define BITMASK_TEXT N_( "Audio bitmask" )
+#define BITMASK_LONGTEXT N_("This option allows setting of bitmask that will get used by the audio part of the card." )
+#define CHAN_TEXT N_( "Channel" )
+#define CHAN_LONGTEXT N_( "Channel of the card to use (Usually, 0 = tuner, " \
+                          "1 = composite, 2 = svideo)" )
+
+static int i_bitrates[] = { 0, 1 };
+static char *psz_bitrates_list_text[] = { N_("vbr"), N_("cbr") };
+
+vlc_module_begin();
+    set_shortname( _("PVR") );
+    set_description( _("MPEG Encoding cards input (with ivtv drivers)") );
+    set_capability( "access2", 0 );
+    add_shortcut( "pvr" );
+
+    add_string( "pvr-device", "/dev/video0", NULL, DEVICE_TEXT,
+                            DEVICE_LONGTEXT, VLC_FALSE );
+
+    add_integer( "pvr-norm", V4L2_STD_UNKNOWN , NULL, NORM_TEXT,
+                             NORM_LONGTEXT, VLC_FALSE );
+       change_integer_list( i_norm_list, psz_norm_list_text, 0 );
+
+    add_integer( "pvr-width", -1, NULL, WIDTH_TEXT, WIDTH_LONGTEXT, VLC_TRUE );
+    add_integer( "pvr-height", -1, NULL, WIDTH_TEXT, WIDTH_LONGTEXT,
+                                         VLC_TRUE );
+    add_integer( "pvr-frequency", -1, NULL, FREQUENCY_TEXT, FREQUENCY_LONGTEXT,
+                                         VLC_FALSE );
+    add_integer( "pvr-framerate", -1, NULL, FRAMERATE_TEXT, FRAMERATE_LONGTEXT,
+                                         VLC_TRUE );
+    add_integer( "pvr-keyint", -1, NULL, KEYINT_TEXT, KEYINT_LONGTEXT,
+                                         VLC_TRUE );
+    add_integer( "pvr-bframes", -1, NULL, FRAMERATE_TEXT, FRAMERATE_LONGTEXT,
+                                         VLC_TRUE );
+    add_integer( "pvr-bitrate", -1, NULL, BITRATE_TEXT, BITRATE_LONGTEXT,
+                                         VLC_FALSE );
+    add_integer( "pvr-bitrate-peak", -1, NULL, BITRATE_PEAK_TEXT,
+                                         BITRATE_PEAK_LONGTEXT, VLC_TRUE );
+    add_integer( "pvr-bitrate-mode", -1, NULL, BITRATE_MODE_TEXT,
+                                         BITRATE_MODE_LONGTEXT, VLC_TRUE );
+        change_integer_list( i_bitrates, psz_bitrates_list_text, 0 );
+    add_integer( "pvr-audio-bitmask", -1, NULL, BITMASK_TEXT,
+                                         BITMASK_LONGTEXT, VLC_TRUE );
+    add_integer( "pvr-channel", -1, NULL, CHAN_TEXT,
+                                          CHAN_LONGTEXT, VLC_TRUE );
+
+    set_callbacks( Open, Close );
+vlc_module_end();
+
+/*****************************************************************************
+ * Prototypes
+ *****************************************************************************/
+static int Read   ( access_t *, uint8_t *, int );
+static int Control( access_t *, int, va_list );
+
 /* ivtv specific ioctls */
 #define IVTV_IOC_G_CODEC    0xFFEE7703
 #define IVTV_IOC_S_CODEC    0xFFEE7704
-
 
 /* for use with IVTV_IOC_G_CODEC and IVTV_IOC_S_CODEC */
 
@@ -62,39 +154,19 @@ struct ivtv_ioctl_codec {
         uint32_t stream_type;
 };
 
-/*****************************************************************************
- * Prototypes
- *****************************************************************************/
-static int     Open   ( vlc_object_t * );
-static void    Close  ( vlc_object_t * );
-
-static ssize_t Read   ( input_thread_t *, byte_t *, size_t );
-
-/*****************************************************************************
- * Module descriptor
- *****************************************************************************/
-vlc_module_begin();
-    set_shortname( _("PVR") );
-    set_description( _("MPEG Encoding cards input (with ivtv drivers)") );
-    set_capability( "access", 0 );
-    add_shortcut( "pvr" );
-    set_callbacks( Open, Close );
-vlc_module_end();
-
-/*****************************************************************************
- * Private access data
- *****************************************************************************/
 struct access_sys_t
 {
     /* file descriptor */
     int i_fd;
-    
+
     /* options */
     int i_standard;
     int i_width;
     int i_height;
     int i_frequency;
     int i_framerate;
+    int i_keyint;
+    int i_bframes;
     int i_bitrate;
     int i_bitrate_peak;
     int i_bitrate_mode;
@@ -107,10 +179,10 @@ struct access_sys_t
  *****************************************************************************/
 static int Open( vlc_object_t * p_this )
 {
-    input_thread_t * p_input = (input_thread_t*) p_this;
+    access_t *p_access = (access_t*) p_this;
     access_sys_t * p_sys;
     char * psz_tofree, * psz_parser, * psz_device;
-    char psz_tmp[5];
+    vlc_value_t val;
 
     struct v4l2_format vfmt;
     struct v4l2_frequency vf;
@@ -118,31 +190,81 @@ static int Open( vlc_object_t * p_this )
 
     //psz_device = calloc( strlen( "/dev/videox" ) + 1, 1 );
 
-    p_input->pf_read = Read;
-    p_input->stream.b_pace_control = 0;
-    p_input->stream.b_seekable = 0;
-    p_input->i_pts_delay = 1000000;
+    p_access->pf_read = Read;
+    p_access->pf_block = NULL;
+    p_access->pf_seek = NULL;
+    p_access->pf_control = Control;
+    p_access->info.i_update = 0;
+    p_access->info.i_size = 0;
+    p_access->info.i_pos = 0;
+    p_access->info.b_eof = VLC_FALSE;
+    p_access->info.i_title = 0;
+    p_access->info.i_seekpoint = 0;
 
     /* create private access data */
     p_sys = calloc( sizeof( access_sys_t ), 1 );
-    p_input->p_access_data = p_sys;
+    p_access->p_sys = p_sys;
 
     /* defaults values */
+    var_Create( p_access, "pvr-caching", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
 
-    psz_device = 0;
-    p_sys->i_standard = V4L2_STD_UNKNOWN;
-    p_sys->i_width = -1;
-    p_sys->i_height = -1;
-    p_sys->i_frequency = -1;
-    p_sys->i_framerate = -1;
-    p_sys->i_bitrate = -1;
-    p_sys->i_bitrate_peak = -1;
-    p_sys->i_bitrate_mode = -1;
-    p_sys->i_audio_bitmask = -1;
-    p_sys->i_input = -1;
+    var_Create( p_access, "pvr-device", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
+    var_Get( p_access, "pvr-device" , &val);
+    psz_device = val.psz_string;
+
+    var_Create( p_access, "pvr-norm", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_access, "pvr-norm" , &val);
+    p_sys->i_standard = val.i_int;
+
+    var_Create( p_access, "pvr-width", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_access, "pvr-width" , &val);
+    p_sys->i_width = val.i_int;
+
+    var_Create( p_access, "pvr-height", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_access, "pvr-height" , &val);
+    p_sys->i_height = val.i_int;
+
+    var_Create( p_access, "pvr-frequency", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_access, "pvr-frequency" , &val);
+    p_sys->i_frequency = val.i_int;
+
+    var_Create( p_access, "pvr-framerate", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_access, "pvr-framerate" , &val);
+    p_sys->i_framerate = val.i_int;
+
+    var_Create( p_access, "pvr-keyint", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_access, "pvr-keyint" , &val);
+    p_sys->i_keyint = val.i_int;
+
+    var_Create( p_access, "pvr-bframes", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_access, "pvr-bframes" , &val);
+    p_sys->i_bframes = val.b_bool;
+
+    var_Create( p_access, "pvr-bitrate", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_access, "pvr-bitrate" , &val);
+    p_sys->i_bitrate = val.i_int;
+
+    var_Create( p_access, "pvr-bitrate-peak", VLC_VAR_INTEGER |
+                                              VLC_VAR_DOINHERIT );
+    var_Get( p_access, "pvr-bitrate-peak" , &val);
+    p_sys->i_bitrate_peak = val.i_int;
+
+    var_Create( p_access, "pvr-bitrate-mode", VLC_VAR_INTEGER |
+                                              VLC_VAR_DOINHERIT );
+    var_Get( p_access, "pvr-bitrate-mode" , &val);
+    p_sys->i_bitrate_mode = val.i_int;
+
+    var_Create( p_access, "pvr-audio-bitmask", VLC_VAR_INTEGER |
+                                              VLC_VAR_DOINHERIT );
+    var_Get( p_access, "pvr-audio-bitmask" , &val);
+    p_sys->i_audio_bitmask = val.i_int;
+    var_Create( p_access, "pvr-channel", VLC_VAR_INTEGER |
+                                              VLC_VAR_DOINHERIT );
+    var_Get( p_access, "pvr-channel" , &val);
+    p_sys->i_input = val.i_int;
 
     /* parse command line options */
-    psz_tofree = strdup( p_input->psz_name );
+    psz_tofree = strdup( p_access->psz_path );
     psz_parser = psz_tofree;
 
     if( *psz_parser )
@@ -209,6 +331,21 @@ static int Open( vlc_object_t * p_this )
                     strtol( psz_parser + strlen( "framerate=" ),
                             &psz_parser, 0 );
             }
+            else if( !strncmp( psz_parser, "keyint=",
+                               strlen( "keyint=" ) ) )
+            {
+                p_sys->i_keyint =
+                    strtol( psz_parser + strlen( "keyint=" ),
+                            &psz_parser, 0 );
+            }
+            else if( !strncmp( psz_parser, "bframes=",
+                               strlen( "bframes=" ) ) )
+            {
+                p_sys->i_bframes =
+                    strtol( psz_parser + strlen( "bframes=" ),
+                            &psz_parser, 0 );
+            }
+
             else if( !strncmp( psz_parser, "width=",
                                strlen( "width=" ) ) )
             {
@@ -309,12 +446,12 @@ static int Open( vlc_object_t * p_this )
     /* open the device */
     if( ( p_sys->i_fd = open( psz_device, O_RDWR ) ) < 0 )
     {
-        msg_Err( p_input, "cannot open device (%s)", strerror( errno ) );
+        msg_Err( p_access, "cannot open device (%s)", strerror( errno ) );
         return VLC_EGENERIC;
     }
     else
     {
-        msg_Dbg( p_input, "using video device: %s",psz_device);
+        msg_Dbg( p_access, "using video device: %s",psz_device);
     }
 
     free( psz_device );
@@ -324,11 +461,11 @@ static int Open( vlc_object_t * p_this )
     {
         if ( ioctl( p_sys->i_fd, VIDIOC_S_INPUT, &p_sys->i_input ) < 0 )
         {
-            msg_Warn( p_input, "VIDIOC_S_INPUT failed" );
+            msg_Warn( p_access, "VIDIOC_S_INPUT failed" );
         }
         else
         {
-            msg_Dbg( p_input, "input set to:%d", p_sys->i_input);
+            msg_Dbg( p_access, "input set to:%d", p_sys->i_input);
         }
     }
 
@@ -337,11 +474,11 @@ static int Open( vlc_object_t * p_this )
     {
         if ( ioctl( p_sys->i_fd, VIDIOC_S_STD, &p_sys->i_standard ) < 0 )
         {
-            msg_Warn( p_input, "VIDIOC_S_STD failed" );
+            msg_Warn( p_access, "VIDIOC_S_STD failed" );
         }
         else
         {
-            msg_Dbg( p_input, "video standard set to:%x", p_sys->i_standard);
+            msg_Dbg( p_access, "video standard set to:%x", p_sys->i_standard);
         }
     }
 
@@ -350,7 +487,7 @@ static int Open( vlc_object_t * p_this )
     {
         if ( ioctl( p_sys->i_fd, VIDIOC_G_FMT, &vfmt ) < 0 )
         {
-            msg_Warn( p_input, "VIDIOC_G_FMT failed" );
+            msg_Warn( p_access, "VIDIOC_G_FMT failed" );
         }
         else
         {
@@ -366,11 +503,11 @@ static int Open( vlc_object_t * p_this )
 
             if ( ioctl( p_sys->i_fd, VIDIOC_S_FMT, &vfmt ) < 0 )
             {
-                msg_Warn( p_input, "VIDIOC_S_FMT failed" );
+                msg_Warn( p_access, "VIDIOC_S_FMT failed" );
             }
             else
             {
-                msg_Dbg( p_input, "picture size set to:%dx%d",
+                msg_Dbg( p_access, "picture size set to:%dx%d",
                          vfmt.fmt.pix.width, vfmt.fmt.pix.height );
             }
         }
@@ -382,7 +519,7 @@ static int Open( vlc_object_t * p_this )
         vf.tuner = 0; /* TODO: let the user choose the tuner */
         if ( ioctl( p_sys->i_fd, VIDIOC_G_FREQUENCY, &vf ) < 0 )
         {
-            msg_Warn( p_input, "VIDIOC_G_FREQUENCY failed (%s)",
+            msg_Warn( p_access, "VIDIOC_G_FREQUENCY failed (%s)",
                       strerror( errno ) );
         }
         else
@@ -390,12 +527,12 @@ static int Open( vlc_object_t * p_this )
             vf.frequency = p_sys->i_frequency * 16 / 1000;
             if( ioctl( p_sys->i_fd, VIDIOC_S_FREQUENCY, &vf ) < 0 )
             {
-                msg_Warn( p_input, "VIDIOC_S_FREQUENCY failed (%s)",
+                msg_Warn( p_access, "VIDIOC_S_FREQUENCY failed (%s)",
                           strerror( errno ) );
             }
             else
             {
-                msg_Dbg( p_input, "Tuner frequency set to:%d",
+                msg_Dbg( p_access, "Tuner frequency set to:%d",
                          p_sys->i_frequency);
             }
         }
@@ -405,12 +542,14 @@ static int Open( vlc_object_t * p_this )
     if ( p_sys->i_framerate != -1
             || p_sys->i_bitrate_mode != -1
             || p_sys->i_bitrate_peak != -1
+            || p_sys->i_keyint != -1
+            || p_sys->i_bframes != -1
             || p_sys->i_bitrate != -1
             || p_sys->i_audio_bitmask != -1 )
     {
         if ( ioctl( p_sys->i_fd, IVTV_IOC_G_CODEC, &codec ) < 0 )
         {
-            msg_Warn( p_input, "IVTV_IOC_G_CODEC failed" );
+            msg_Warn( p_access, "IVTV_IOC_G_CODEC failed" );
         }
         else
         {
@@ -427,7 +566,7 @@ static int Open( vlc_object_t * p_this )
                         break;
 
                     default:
-                        msg_Warn( p_input, "invalid framerate, reverting to 25" );
+                        msg_Warn( p_access, "invalid framerate, reverting to 25" );
                         codec.framerate = 1;
                         break;
                 }
@@ -452,14 +591,22 @@ static int Open( vlc_object_t * p_this )
             {
                 codec.audio_bitmask = p_sys->i_audio_bitmask;
             }
+            if ( p_sys->i_keyint != -1 )
+            {
+                codec.framespergop = p_sys->i_keyint;
+            }
 
+            if ( p_sys->i_bframes != -1 )
+            {
+                codec.bframes = p_sys->i_bframes;
+            }
             if( ioctl( p_sys->i_fd, IVTV_IOC_S_CODEC, &codec ) < 0 )
             {
-                msg_Warn( p_input, "IVTV_IOC_S_CODEC failed" );
+                msg_Warn( p_access, "IVTV_IOC_S_CODEC failed" );
             }
             else
             {
-                msg_Dbg( p_input, "Setting codec parameters to:  framerate: %d, bitrate: %d/%d/%d",
+                msg_Dbg( p_access, "Setting codec parameters to:  framerate: %d, bitrate: %d/%d/%d",
                codec.framerate, codec.bitrate, codec.bitrate_peak, codec.bitrate_mode );
             }
         }
@@ -479,6 +626,7 @@ static int Open( vlc_object_t * p_this )
         }
     }
 #endif
+
     return VLC_SUCCESS;
 }
 
@@ -487,8 +635,8 @@ static int Open( vlc_object_t * p_this )
  *****************************************************************************/
 static void Close( vlc_object_t * p_this )
 {
-    input_thread_t * p_input = (input_thread_t*) p_this;
-    access_sys_t * p_sys = p_input->p_access_data;
+    access_t *p_access = (access_t*) p_this;
+    access_sys_t * p_sys = p_access->p_sys;
 
     close( p_sys->i_fd );
     free( p_sys );
@@ -497,13 +645,12 @@ static void Close( vlc_object_t * p_this )
 /*****************************************************************************
  * Read
  *****************************************************************************/
-static ssize_t Read( input_thread_t * p_input, byte_t * p_buffer,
-                     size_t i_len )
+static int Read( access_t * p_access, uint8_t * p_buffer, int i_len )
 {
-    access_sys_t * p_sys = p_input->p_access_data;
+    access_sys_t * p_sys = p_access->p_sys;
 
     int i_ret;
-    
+
     struct timeval timeout;
     fd_set fds;
 
@@ -512,25 +659,93 @@ static ssize_t Read( input_thread_t * p_input, byte_t * p_buffer,
     timeout.tv_sec = 0;
     timeout.tv_usec = 500000;
 
-    while( !( i_ret = select( p_sys->i_fd + 1, &fds,
-                              NULL, NULL, &timeout ) ) )
+    if( p_access->info.b_eof )
+        return 0;
+
+    while( !( i_ret = select( p_sys->i_fd + 1, &fds, NULL, NULL, &timeout) ) )
     {
         FD_ZERO( &fds );
         FD_SET( p_sys->i_fd, &fds );
         timeout.tv_sec = 0;
         timeout.tv_usec = 500000;
 
-        if( p_input->b_die || p_input->b_error )
+        if( p_access->b_die )
             return 0;
     }
 
     if( i_ret < 0 )
     {
-        msg_Err( p_input, "select error (%s)", strerror( errno ) );
+        msg_Err( p_access, "select error (%s)", strerror( errno ) );
         return -1;
     }
 
     i_ret = read( p_sys->i_fd, p_buffer, i_len );
+    if( i_ret == 0 )
+    {
+        p_access->info.b_eof = VLC_TRUE;
+    }
+    else if( i_ret > 0 )
+    {
+        p_access->info.i_pos += i_ret;
+    }
+
     return i_ret;
+}
+
+/*****************************************************************************
+ * Control
+ *****************************************************************************/
+static int Control( access_t *p_access, int i_query, va_list args )
+{
+    access_sys_t *p_sys = p_access->p_sys;
+    vlc_bool_t   *pb_bool;
+    int          *pi_int;
+    int64_t      *pi_64;
+
+    switch( i_query )
+    {
+        /* */
+        case ACCESS_CAN_SEEK:
+        case ACCESS_CAN_FASTSEEK:
+            pb_bool = (vlc_bool_t*)va_arg( args, vlc_bool_t* );
+            *pb_bool = VLC_FALSE;
+            break;
+        case ACCESS_CAN_PAUSE:
+            pb_bool = (vlc_bool_t*)va_arg( args, vlc_bool_t* );
+            *pb_bool = VLC_FALSE;
+            break;
+        case ACCESS_CAN_CONTROL_PACE:
+            pb_bool = (vlc_bool_t*)va_arg( args, vlc_bool_t* );
+            *pb_bool = VLC_FALSE;
+            break;
+
+        /* */
+        case ACCESS_GET_MTU:
+            pi_int = (int*)va_arg( args, int * );
+            *pi_int = 0;
+            break;
+
+        case ACCESS_GET_PTS_DELAY:
+            pi_64 = (int64_t*)va_arg( args, int64_t * );
+            *pi_64 = (int64_t)var_GetInteger( p_access, "pvr-caching" ) * I64C(1000);
+            break;
+
+        /* */
+        case ACCESS_SET_PAUSE_STATE:
+            /* Nothing to do */
+            break;
+
+        case ACCESS_GET_TITLE_INFO:
+        case ACCESS_SET_TITLE:
+        case ACCESS_SET_SEEKPOINT:
+        case ACCESS_SET_PRIVATE_ID_STATE:
+            return VLC_EGENERIC;
+
+        default:
+            msg_Warn( p_access, "unimplemented query in control" );
+            return VLC_EGENERIC;
+
+    }
+    return VLC_SUCCESS;
 }
 

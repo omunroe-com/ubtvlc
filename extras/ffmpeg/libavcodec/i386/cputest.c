@@ -4,12 +4,20 @@
 #include <stdlib.h>
 #include "../dsputil.h"
 
+#ifdef ARCH_X86_64
+#  define REG_b "rbx"
+#  define REG_S "rsi"
+#else
+#  define REG_b "ebx"
+#  define REG_S "esi"
+#endif
+
 /* ebx saving is necessary for PIC. gcc seems unable to see it alone */
 #define cpuid(index,eax,ebx,ecx,edx)\
     __asm __volatile\
-	("movl %%ebx, %%esi\n\t"\
+	("mov %%"REG_b", %%"REG_S"\n\t"\
          "cpuid\n\t"\
-         "xchgl %%ebx, %%esi"\
+         "xchg %%"REG_b", %%"REG_S\
          : "=a" (eax), "=S" (ebx),\
            "=c" (ecx), "=d" (edx)\
          : "0" (index));
@@ -19,29 +27,30 @@ int mm_support(void)
 {
     int rval;
     int eax, ebx, ecx, edx;
+    long a, c;
     
     __asm__ __volatile__ (
                           /* See if CPUID instruction is supported ... */
                           /* ... Get copies of EFLAGS into eax and ecx */
                           "pushf\n\t"
-                          "popl %0\n\t"
-                          "movl %0, %1\n\t"
+                          "pop %0\n\t"
+                          "mov %0, %1\n\t"
                           
                           /* ... Toggle the ID bit in one copy and store */
                           /*     to the EFLAGS reg */
-                          "xorl $0x200000, %0\n\t"
+                          "xor $0x200000, %0\n\t"
                           "push %0\n\t"
                           "popf\n\t"
                           
                           /* ... Get the (hopefully modified) EFLAGS */
                           "pushf\n\t"
-                          "popl %0\n\t"
-                          : "=a" (eax), "=c" (ecx)
+                          "pop %0\n\t"
+                          : "=a" (a), "=c" (c)
                           :
                           : "cc" 
                           );
     
-    if (eax == ecx)
+    if (a == c)
         return 0; /* CPUID not supported */
     
     cpuid(0, eax, ebx, ecx, edx);
@@ -92,6 +101,8 @@ int mm_support(void)
 	  rval |= MM_MMX;
 	if( edx & ( 1 << 24) )
 	  rval |= MM_MMXEXT;
+        if(rval==0)
+            goto inteltest;
 	return rval;
     } else if (ebx == 0x69727943 &&
                edx == 0x736e4978 &&
@@ -114,6 +125,17 @@ int mm_support(void)
         if (eax & 0x01000000)
             rval |= MM_MMXEXT;
         return rval;
+    } else if (ebx == 0x756e6547 &&
+               edx == 0x54656e69 &&
+               ecx == 0x3638784d) {
+        /* Tranmeta Crusoe */
+        cpuid(0x80000000, eax, ebx, ecx, edx);
+        if ((unsigned)eax < 0x80000001)
+            return 0;
+        cpuid(0x80000001, eax, ebx, ecx, edx);
+        if ((edx & 0x00800000) == 0)
+            return 0;
+        return MM_MMX;
     } else {
         return 0;
     }
@@ -124,7 +146,7 @@ int main ( void )
 {
   int mm_flags;
   mm_flags = mm_support();
-  printf("mm_support = 0x%08u\n",mm_flags);
+  printf("mm_support = 0x%08X\n",mm_flags);
   return 0;
 }
 #endif

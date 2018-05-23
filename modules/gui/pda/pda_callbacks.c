@@ -2,7 +2,7 @@
  * pda_callbacks.c : Callbacks for the pda Linux Gtk+ plugin.
  *****************************************************************************
  * Copyright (C) 2000, 2001 VideoLAN
- * $Id: pda_callbacks.c 7212 2004-03-31 22:55:48Z gbazin $
+ * $Id: pda_callbacks.c 7932 2004-06-07 18:26:27Z fenrir $
  *
  * Authors: Jean-Paul Saman <jpsaman@wxs.nl>
  *
@@ -356,7 +356,7 @@ void onRewind(GtkButton *button, gpointer user_data)
 
     if (p_intf->p_sys->p_input != NULL)
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_SLOWER );
+        var_SetVoid( p_intf->p_sys->p_input, "rate-slower" );
     }
 }
 
@@ -367,7 +367,7 @@ void onPause(GtkButton *button, gpointer user_data)
 
     if (p_intf->p_sys->p_input != NULL)
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_PAUSE );
+        var_SetInteger( p_intf->p_sys->p_input, "state", PAUSE_S );
     }
 }
 
@@ -415,7 +415,7 @@ void onForward(GtkButton *button, gpointer user_data)
 
     if (p_intf->p_sys->p_input != NULL)
     {
-        input_SetStatus( p_intf->p_sys->p_input, INPUT_STATUS_FASTER );
+        var_SetVoid( p_intf->p_sys->p_input, "rate-faster" );
     }
 }
 

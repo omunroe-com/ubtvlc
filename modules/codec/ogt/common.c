@@ -2,7 +2,7 @@
  * Common SVCD and CVD subtitle routines.
  *****************************************************************************
  * Copyright (C) 2003, 2004 VideoLAN
- * $Id: common.c 6961 2004-03-05 17:34:23Z sam $
+ * $Id: common.c 8709 2004-09-15 15:50:54Z gbazin $
  *
  * Author: Rocky Bernstein <rocky@panix.com>
  *   based on code from:
@@ -49,26 +49,11 @@ void VCDSubClose( vlc_object_t *p_this )
 
     dbg_print( (DECODE_DBG_CALL|DECODE_DBG_EXT) , "");
 
-    if( !p_sys->b_packetizer )
+    if( !p_sys->b_packetizer && p_sys->p_vout )
     {
         /* FIXME check if it's ok to not lock vout */
-        if( p_sys->p_vout != NULL && p_sys->p_vout->p_subpicture != NULL )
-        {
-            subpicture_t *  p_subpic;
-            int             i_subpic;
-
-            for( i_subpic = 0; i_subpic < VOUT_MAX_SUBPICTURES; i_subpic++ )
-            {
-                p_subpic = &p_sys->p_vout->p_subpicture[i_subpic];
-
-                if( p_subpic != NULL &&
-                    ( ( p_subpic->i_status == RESERVED_SUBPICTURE ) ||
-                      ( p_subpic->i_status == READY_SUBPICTURE ) ) )
-                {
-                    vout_DestroySubPicture( p_sys->p_vout, p_subpic );
-                }
-            }
-        }
+        spu_Control( p_sys->p_vout->p_spu, SPU_CHANNEL_CLEAR,
+                     p_sys->i_subpic_channel );
     }
 
     if( p_sys->p_block )
@@ -349,7 +334,7 @@ VCDSubHandleScaling( subpicture_t *p_spu, decoder_t *p_dec )
   vlc_object_t * p_input = p_spu->p_sys->p_input;
   vout_thread_t *p_vout = vlc_object_find( p_input, VLC_OBJECT_VOUT, 
                                            FIND_CHILD );
-  unsigned int i_aspect_x, i_aspect_y;
+  int i_aspect_x, i_aspect_y;
   uint8_t *p_dest = (uint8_t *)p_spu->p_sys->p_data;
 
   if (p_vout) {
@@ -405,11 +390,12 @@ VCDSubHandleScaling( subpicture_t *p_spu, decoder_t *p_dec )
             break;
           }
         /* We get here only for scaled chromas. */
-        vout_AspectRatio( p_vout->render.i_aspect, &i_aspect_y, 
-                          &i_aspect_x );
+        vlc_reduce( &i_aspect_x, &i_aspect_y, p_vout->render.i_aspect,
+                    VOUT_ASPECT_FACTOR, 0 );
       } else {
         /* User knows best? */
-        vout_AspectRatio( i_new_aspect, &i_aspect_x, &i_aspect_y );
+        vlc_reduce( &i_aspect_x, &i_aspect_y, p_vout->render.i_aspect,
+                    VOUT_ASPECT_FACTOR, 0 );
       }
       VCDSubScaleX( p_dec, p_spu, i_aspect_x, i_aspect_y );
     }

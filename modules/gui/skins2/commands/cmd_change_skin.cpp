@@ -2,7 +2,7 @@
  * cmd_change_skin.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: cmd_change_skin.cpp 6961 2004-03-05 17:34:23Z sam $
+ * $Id: cmd_change_skin.cpp 8524 2004-08-25 21:32:15Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -28,6 +28,7 @@
 #include "../src/os_loop.hpp"
 #include "../src/theme.hpp"
 #include "../src/theme_loader.hpp"
+#include "../src/window_manager.hpp"
 
 
 void CmdChangeSkin::execute()

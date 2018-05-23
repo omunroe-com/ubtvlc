@@ -208,16 +208,6 @@ SOURCE="..\modules\gui\beos\MediaControlView.cpp"
 # PROP Output_Dir "Debug\modules\gui\beos"
 # PROP Intermediate_Dir "Debug\modules\gui\beos"
 # End Source File
-# Begin Source File
-SOURCE="..\modules\gui\beos\VlcWrapper.cpp"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=beos" /D "MODULE_NAME_IS_beos" 
-!IF "$(CFG)" == "plugin_beos - Win32 Release"
-# PROP Output_Dir "Release\modules\gui\beos"
-# PROP Intermediate_Dir "Release\modules\gui\beos"
-!ELSEIF "$(CFG)" == "plugin_beos - Win32 Debug"
-# PROP Output_Dir "Debug\modules\gui\beos"
-# PROP Intermediate_Dir "Debug\modules\gui\beos"
-# End Source File
 
 # End Group
 
@@ -248,9 +238,6 @@ SOURCE="..\modules\gui\beos\MessagesWindow.h"
 # End Source File
 # Begin Source File
 SOURCE="..\modules\gui\beos\MediaControlView.h"
-# End Source File
-# Begin Source File
-SOURCE="..\modules\gui\beos\VlcWrapper.h"
 # End Source File
 # Begin Source File
 SOURCE="..\modules\gui\beos\Bitmaps.h"

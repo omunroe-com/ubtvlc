@@ -2,12 +2,12 @@
  * xcommon.c: Functions common to the X11 and XVideo plugins
  *****************************************************************************
  * Copyright (C) 1998-2001 VideoLAN
- * $Id: xcommon.c 7694 2004-05-16 22:06:34Z gbazin $
+ * $Id: xcommon.c 8979 2004-10-13 12:30:20Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Sam Hocevar <sam@zoy.org>
  *          David Kennedy <dkennedy@tinytoad.com>
- *          Gildas Bazin <gbazin@netcourrier.com>
+ *          Gildas Bazin <gbazin@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,6 +65,10 @@
 #ifdef MODULE_NAME_IS_xvideo
 #   include <X11/extensions/Xv.h>
 #   include <X11/extensions/Xvlib.h>
+#endif
+
+#ifdef MODULE_NAME_IS_glx
+#   include <GL/glx.h>
 #endif
 
 #ifdef HAVE_XINERAMA
@@ -318,7 +322,7 @@ void E_(Deactivate) ( vlc_object_t *p_this )
     {
         XFreeColormap( p_vout->p_sys->p_display, p_vout->p_sys->colormap );
     }
-#else
+#elif defined(MODULE_NAME_IS_xvideo)
     XVideoReleasePort( p_vout, p_vout->p_sys->i_xvport );
 #endif
 
@@ -368,7 +372,7 @@ static int InitVideo( vout_thread_t *p_vout )
             break;
     }
 
-#else
+#elif defined(MODULE_NAME_IS_x11)
     /* Initialize the output structure: RGB with square pixels, whatever
      * the input format is, since it's the only format we know */
     switch( p_vout->p_sys->i_screen_depth )
@@ -380,7 +384,6 @@ static int InitVideo( vout_thread_t *p_vout )
         case 16:
             p_vout->output.i_chroma = VLC_FOURCC('R','V','1','6'); break;
         case 24:
-            p_vout->output.i_chroma = VLC_FOURCC('R','V','2','4'); break;
         case 32:
             p_vout->output.i_chroma = VLC_FOURCC('R','V','3','2'); break;
         default:
@@ -431,7 +434,7 @@ static int InitVideo( vout_thread_t *p_vout )
     return VLC_SUCCESS;
 }
 
- /*****************************************************************************
+/*****************************************************************************
  * DisplayVideo: displays previously rendered output
  *****************************************************************************
  * This function sends the currently rendered image to X11 server.
@@ -632,14 +635,12 @@ static int ManageVideo( vout_thread_t *p_vout )
                     var_Get( p_vout, "mouse-button-down", &val );
                     val.i_int |= 8;
                     var_Set( p_vout, "mouse-button-down", val );
-                    input_Seek( p_vout, 15, INPUT_SEEK_SECONDS | INPUT_SEEK_CUR );
                     break;
 
                 case Button5:
                     var_Get( p_vout, "mouse-button-down", &val );
                     val.i_int |= 16;
                     var_Set( p_vout, "mouse-button-down", val );
-                    input_Seek( p_vout, -15, INPUT_SEEK_SECONDS | INPUT_SEEK_CUR );
                     break;
             }
         }
@@ -972,6 +973,8 @@ static int CreateWindow( vout_thread_t *p_vout, x11_window_t *p_win )
             XStoreName( p_vout->p_sys->p_display, p_win->base_window,
 #ifdef MODULE_NAME_IS_x11
                         VOUT_TITLE " (X11 output)"
+#elif defined(MODULE_NAME_IS_glx)
+                        VOUT_TITLE " (GLX output)"
 #else
                         VOUT_TITLE " (XVideo output)"
 #endif
@@ -1034,11 +1037,17 @@ static int CreateWindow( vout_thread_t *p_vout, x11_window_t *p_win )
     XMapWindow( p_vout->p_sys->p_display, p_win->base_window );
     do
     {
-        XNextEvent( p_vout->p_sys->p_display, &xevent);
+        XWindowEvent( p_vout->p_sys->p_display, p_win->base_window,
+                      SubstructureNotifyMask | StructureNotifyMask |
+                      ExposureMask, &xevent);
         if( (xevent.type == Expose)
             && (xevent.xexpose.window == p_win->base_window) )
         {
             b_expose = VLC_TRUE;
+            /* ConfigureNotify isn't sent if there isn't a window manager.
+             * Expose should be the last event to be received so it should
+             * be fine to assume we won't receive it anymore. */
+            b_configure_notify = VLC_TRUE;
         }
         else if( (xevent.type == MapNotify)
                  && (xevent.xmap.window == p_win->base_window) )
@@ -1125,7 +1134,9 @@ static void DestroyWindow( vout_thread_t *p_vout, x11_window_t *p_win )
     /* Do NOT use XFlush here ! */
     XSync( p_vout->p_sys->p_display, False );
 
-    XDestroyWindow( p_vout->p_sys->p_display, p_win->video_window );
+    if( p_win->video_window != None )
+        XDestroyWindow( p_vout->p_sys->p_display, p_win->video_window );
+
     XFreeGC( p_vout->p_sys->p_display, p_win->gc );
 
     XUnmapWindow( p_vout->p_sys->p_display, p_win->base_window );
@@ -1142,6 +1153,8 @@ static void DestroyWindow( vout_thread_t *p_vout, x11_window_t *p_win )
  *****************************************************************************/
 static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
 {
+#ifndef MODULE_NAME_IS_glx
+
 #ifdef MODULE_NAME_IS_xvideo
     int i_plane;
 #endif
@@ -1225,6 +1238,7 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
             {
                 /* U and V inverted compared to I420
                  * Fixme: this should be handled by the vout core */
+                p_vout->output.i_chroma = VLC_FOURCC('I','4','2','0');
                 p_pic->U_PIXELS = p_pic->p_sys->p_image->data
                     + p_pic->p_sys->p_image->offsets[2];
                 p_pic->V_PIXELS = p_pic->p_sys->p_image->data
@@ -1240,6 +1254,7 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
         case VLC_FOURCC('R','V','3','2'):
 
             p_pic->p->i_lines = p_pic->p_sys->p_image->height;
+            p_pic->p->i_visible_lines = p_pic->p_sys->p_image->height;
             p_pic->p->p_pixels = p_pic->p_sys->p_image->data
                                   + p_pic->p_sys->p_image->xoffset;
             p_pic->p->i_pitch = p_pic->p_sys->p_image->bytes_per_line;
@@ -1260,6 +1275,8 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
             p_pic->i_planes = 0;
             return -1;
     }
+
+#endif /* !MODULE_NAME_IS_glx */
 
     return 0;
 }
@@ -1326,11 +1343,18 @@ static void ToggleFullScreen ( vout_thread_t *p_vout )
             config_GetInt( p_vout, MODULE_STRING "-altfullscreen" );
 
         XUnmapWindow( p_vout->p_sys->p_display,
-                      p_vout->p_sys->p_win->base_window);
+                      p_vout->p_sys->p_win->base_window );
 
         p_vout->p_sys->p_win = &p_vout->p_sys->fullscreen_window;
 
         CreateWindow( p_vout, p_vout->p_sys->p_win );
+        XDestroyWindow( p_vout->p_sys->p_display,
+                        p_vout->p_sys->fullscreen_window.video_window );
+        XReparentWindow( p_vout->p_sys->p_display,
+                         p_vout->p_sys->original_window.video_window,
+                         p_vout->p_sys->fullscreen_window.base_window, 0, 0 );
+        p_vout->p_sys->fullscreen_window.video_window =
+            p_vout->p_sys->original_window.video_window;
 
         /* To my knowledge there are two ways to create a borderless window.
          * There's the generic way which is to tell x to bypass the window
@@ -1404,7 +1428,7 @@ static void ToggleFullScreen ( vout_thread_t *p_vout )
 
 #define SCREEN p_vout->p_sys->p_win->i_screen
 
-            /* Get Informations about Xinerama (num of screens) */
+            /* Get Information about Xinerama (num of screens) */
             screens = XineramaQueryScreens( p_vout->p_sys->p_display,
                                             &i_num_screens );
 
@@ -1432,7 +1456,18 @@ static void ToggleFullScreen ( vout_thread_t *p_vout )
 #undef SCREEN
 
         }
+        else
 #endif
+        {
+            /* The window wasn't necessarily created at the requested size */
+            p_vout->p_sys->p_win->i_x = p_vout->p_sys->p_win->i_y = 0;
+            p_vout->p_sys->p_win->i_width =
+                DisplayWidth( p_vout->p_sys->p_display,
+                              p_vout->p_sys->i_screen );
+            p_vout->p_sys->p_win->i_height =
+                DisplayHeight( p_vout->p_sys->p_display,
+                               p_vout->p_sys->i_screen );
+        }
 
         XMoveResizeWindow( p_vout->p_sys->p_display,
                            p_vout->p_sys->p_win->base_window,
@@ -1444,11 +1479,17 @@ static void ToggleFullScreen ( vout_thread_t *p_vout )
     else
     {
         msg_Dbg( p_vout, "leaving fullscreen mode" );
+
+        XReparentWindow( p_vout->p_sys->p_display,
+                         p_vout->p_sys->original_window.video_window,
+                         p_vout->p_sys->original_window.base_window, 0, 0 );
+
+        p_vout->p_sys->fullscreen_window.video_window = None;
         DestroyWindow( p_vout, &p_vout->p_sys->fullscreen_window );
         p_vout->p_sys->p_win = &p_vout->p_sys->original_window;
 
         XMapWindow( p_vout->p_sys->p_display,
-                    p_vout->p_sys->p_win->base_window);
+                    p_vout->p_sys->p_win->base_window );
     }
 
     /* Unfortunately, using XSync() here is not enough to ensure the
@@ -1518,7 +1559,7 @@ static void DisableXScreenSaver( vout_thread_t *p_vout )
     int dummy;
 #endif
 
-    /* Save screen saver informations */
+    /* Save screen saver information */
     XGetScreenSaver( p_vout->p_sys->p_display, &p_vout->p_sys->i_ss_timeout,
                      &p_vout->p_sys->i_ss_interval,
                      &p_vout->p_sys->i_ss_blanking,
@@ -1800,7 +1841,7 @@ static int InitDisplay( vout_thread_t *p_vout )
 {
 #ifdef MODULE_NAME_IS_x11
     XPixmapFormatValues *       p_formats;                 /* pixmap formats */
-    XVisualInfo *               p_xvisual;           /* visuals informations */
+    XVisualInfo *               p_xvisual;            /* visuals information */
     XVisualInfo                 xvisual_template;         /* visual template */
     int                         i_count;                       /* array size */
 #endif
@@ -2017,7 +2058,7 @@ static IMAGE_TYPE * CreateImage( vout_thread_t *p_vout,
     /* Allocate memory for image */
 #ifdef MODULE_NAME_IS_xvideo
     p_data = (byte_t *) malloc( i_width * i_height * i_bits_per_pixel / 8 );
-#else
+#elif defined(MODULE_NAME_IS_x11)
     i_bytes_per_line = i_width * i_bytes_per_pixel;
     p_data = (byte_t *) malloc( i_bytes_per_line * i_height );
 #endif
@@ -2048,7 +2089,7 @@ static IMAGE_TYPE * CreateImage( vout_thread_t *p_vout,
 #ifdef MODULE_NAME_IS_xvideo
     p_image = XvCreateImage( p_display, i_xvport, i_chroma,
                              p_data, i_width, i_height );
-#else
+#elif defined(MODULE_NAME_IS_x11)
     p_image = XCreateImage( p_display, p_visual, i_depth, ZPixmap, 0,
                             p_data, i_width, i_height, i_quantum, 0 );
 #endif
@@ -2123,14 +2164,21 @@ static int Control( vout_thread_t *p_vout, int i_query, va_list args )
             vlc_mutex_unlock( &p_vout->p_sys->lock );
             return VLC_SUCCESS;
 
+       case VOUT_CLOSE:
+            vlc_mutex_lock( &p_vout->p_sys->lock );
+            XUnmapWindow( p_vout->p_sys->p_display,
+                          p_vout->p_sys->original_window.base_window );
+            vlc_mutex_unlock( &p_vout->p_sys->lock );
+            /* Fall through */
+
        case VOUT_REPARENT:
             vlc_mutex_lock( &p_vout->p_sys->lock );
             XReparentWindow( p_vout->p_sys->p_display,
-                             p_vout->p_sys->p_win->base_window,
+                             p_vout->p_sys->original_window.base_window,
                              DefaultRootWindow( p_vout->p_sys->p_display ),
                              0, 0 );
             XSync( p_vout->p_sys->p_display, False );
-            p_vout->p_sys->p_win->owner_window = 0;
+            p_vout->p_sys->original_window.owner_window = 0;
             vlc_mutex_unlock( &p_vout->p_sys->lock );
             return vout_vaControlDefault( p_vout, i_query, args );
 
@@ -2157,7 +2205,10 @@ static void TestNetWMSupport( vout_thread_t *p_vout )
 {
     int i_ret, i_format;
     unsigned long i, i_items, i_bytesafter;
-    Atom net_wm_supported, *p_args = NULL;
+    Atom net_wm_supported;
+    union { Atom *p_atom; unsigned char *p_char; } p_args;
+
+    p_args.p_atom = NULL;
 
     p_vout->p_sys->b_net_wm_state_fullscreen = VLC_FALSE;
     p_vout->p_sys->b_net_wm_state_above = VLC_FALSE;
@@ -2173,7 +2224,7 @@ static void TestNetWMSupport( vout_thread_t *p_vout )
                                 0, 16384, False, AnyPropertyType,
                                 &net_wm_supported,
                                 &i_format, &i_items, &i_bytesafter,
-                                (unsigned char **)(intptr_t)&p_args );
+                                (unsigned char **)&p_args );
 
     if( i_ret != Success || i_items == 0 ) return;
 
@@ -2194,23 +2245,23 @@ static void TestNetWMSupport( vout_thread_t *p_vout )
 
     for( i = 0; i < i_items; i++ )
     {
-        if( p_args[i] == p_vout->p_sys->net_wm_state_fullscreen )
+        if( p_args.p_atom[i] == p_vout->p_sys->net_wm_state_fullscreen )
         {
             msg_Dbg( p_vout,
                      "Window manager supports _NET_WM_STATE_FULLSCREEN" );
             p_vout->p_sys->b_net_wm_state_fullscreen = VLC_TRUE;
         }
-        else if( p_args[i] == p_vout->p_sys->net_wm_state_above )
+        else if( p_args.p_atom[i] == p_vout->p_sys->net_wm_state_above )
         {
             msg_Dbg( p_vout, "Window manager supports _NET_WM_STATE_ABOVE" );
             p_vout->p_sys->b_net_wm_state_above = VLC_TRUE;
         }
-        else if( p_args[i] == p_vout->p_sys->net_wm_state_below )
+        else if( p_args.p_atom[i] == p_vout->p_sys->net_wm_state_below )
         {
             msg_Dbg( p_vout, "Window manager supports _NET_WM_STATE_BELOW" );
             p_vout->p_sys->b_net_wm_state_below = VLC_TRUE;
         }
-        else if( p_args[i] == p_vout->p_sys->net_wm_state_stays_on_top )
+        else if( p_args.p_atom[i] == p_vout->p_sys->net_wm_state_stays_on_top )
         {
             msg_Dbg( p_vout,
                      "Window manager supports _NET_WM_STATE_STAYS_ON_TOP" );
@@ -2218,7 +2269,7 @@ static void TestNetWMSupport( vout_thread_t *p_vout )
         }
     }
 
-    XFree( p_args );
+    XFree( p_args.p_atom );
 }
 
 /*****************************************************************************

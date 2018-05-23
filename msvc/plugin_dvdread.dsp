@@ -89,24 +89,14 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 
 # Begin Source File
-SOURCE="..\modules\access\dvdread\dvdread.c"
+SOURCE="..\modules\access\dvdread.c"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=dvdread" /D "MODULE_NAME_IS_dvdread" 
 !IF "$(CFG)" == "plugin_dvdread - Win32 Release"
-# PROP Output_Dir "Release\modules\access\dvdread"
-# PROP Intermediate_Dir "Release\modules\access\dvdread"
+# PROP Output_Dir "Release\modules\access"
+# PROP Intermediate_Dir "Release\modules\access"
 !ELSEIF "$(CFG)" == "plugin_dvdread - Win32 Debug"
-# PROP Output_Dir "Debug\modules\access\dvdread"
-# PROP Intermediate_Dir "Debug\modules\access\dvdread"
-# End Source File
-# Begin Source File
-SOURCE="..\modules\access\dvdread\input.c"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=dvdread" /D "MODULE_NAME_IS_dvdread" 
-!IF "$(CFG)" == "plugin_dvdread - Win32 Release"
-# PROP Output_Dir "Release\modules\access\dvdread"
-# PROP Intermediate_Dir "Release\modules\access\dvdread"
-!ELSEIF "$(CFG)" == "plugin_dvdread - Win32 Debug"
-# PROP Output_Dir "Debug\modules\access\dvdread"
-# PROP Intermediate_Dir "Debug\modules\access\dvdread"
+# PROP Output_Dir "Debug\modules\access"
+# PROP Intermediate_Dir "Debug\modules\access"
 # End Source File
 
 # End Group
@@ -115,9 +105,6 @@ SOURCE="..\modules\access\dvdread\input.c"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 
-# Begin Source File
-SOURCE="..\modules\access\dvdread\input.h"
-# End Source File
 
 # End Group
 

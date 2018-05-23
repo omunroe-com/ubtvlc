@@ -119,6 +119,16 @@ SOURCE="..\modules\codec\ffmpeg\audio.c"
 # PROP Intermediate_Dir "Debug\modules\codec\ffmpeg"
 # End Source File
 # Begin Source File
+SOURCE="..\modules\codec\ffmpeg\video_filter.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=ffmpeg" /D "MODULE_NAME_IS_ffmpeg" 
+!IF "$(CFG)" == "plugin_ffmpeg - Win32 Release"
+# PROP Output_Dir "Release\modules\codec\ffmpeg"
+# PROP Intermediate_Dir "Release\modules\codec\ffmpeg"
+!ELSEIF "$(CFG)" == "plugin_ffmpeg - Win32 Debug"
+# PROP Output_Dir "Debug\modules\codec\ffmpeg"
+# PROP Intermediate_Dir "Debug\modules\codec\ffmpeg"
+# End Source File
+# Begin Source File
 SOURCE="..\modules\codec\ffmpeg\chroma.c"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=ffmpeg" /D "MODULE_NAME_IS_ffmpeg" 
 !IF "$(CFG)" == "plugin_ffmpeg - Win32 Release"

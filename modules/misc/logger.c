@@ -2,7 +2,7 @@
  * logger.c : file logging plugin for vlc
  *****************************************************************************
  * Copyright (C) 2002 VideoLAN
- * $Id: logger.c 7363 2004-04-16 18:41:00Z fkuehne $
+ * $Id: logger.c 8958 2004-10-08 10:36:25Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -29,6 +29,10 @@
 
 #include <errno.h>                                                 /* ENOMEM */
 #include <stdio.h>
+
+#ifdef UNDER_CE
+#   define _IONBF 0x0004
+#endif
 
 #include <vlc/vlc.h>
 #include <vlc/intf.h>

@@ -89,7 +89,7 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 
 # Begin Source File
-SOURCE="..\modules\access\cdda\..\vcdx\cdrom.c"
+SOURCE="..\modules\access\cdda\access.c"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=cddax" /D "MODULE_NAME_IS_cddax" 
 !IF "$(CFG)" == "plugin_cddax - Win32 Release"
 # PROP Output_Dir "Release\modules\access\cdda"
@@ -99,7 +99,7 @@ SOURCE="..\modules\access\cdda\..\vcdx\cdrom.c"
 # PROP Intermediate_Dir "Debug\modules\access\cdda"
 # End Source File
 # Begin Source File
-SOURCE="..\modules\access\cdda\access.c"
+SOURCE="..\modules\access\cdda\callback.c"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=cddax" /D "MODULE_NAME_IS_cddax" 
 !IF "$(CFG)" == "plugin_cddax - Win32 Release"
 # PROP Output_Dir "Release\modules\access\cdda"
@@ -118,6 +118,16 @@ SOURCE="..\modules\access\cdda\cdda.c"
 # PROP Output_Dir "Debug\modules\access\cdda"
 # PROP Intermediate_Dir "Debug\modules\access\cdda"
 # End Source File
+# Begin Source File
+SOURCE="..\modules\access\cdda\info.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=cddax" /D "MODULE_NAME_IS_cddax" 
+!IF "$(CFG)" == "plugin_cddax - Win32 Release"
+# PROP Output_Dir "Release\modules\access\cdda"
+# PROP Intermediate_Dir "Release\modules\access\cdda"
+!ELSEIF "$(CFG)" == "plugin_cddax - Win32 Debug"
+# PROP Output_Dir "Debug\modules\access\cdda"
+# PROP Intermediate_Dir "Debug\modules\access\cdda"
+# End Source File
 
 # End Group
 
@@ -126,10 +136,16 @@ SOURCE="..\modules\access\cdda\cdda.c"
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 
 # Begin Source File
-SOURCE="..\modules\access\cdda\..\vcdx\cdrom.h"
+SOURCE="..\modules\access\cdda\access.h"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\access\cdda\callback.h"
 # End Source File
 # Begin Source File
 SOURCE="..\modules\access\cdda\cdda.h"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\access\cdda\info.h"
 # End Source File
 
 # End Group
