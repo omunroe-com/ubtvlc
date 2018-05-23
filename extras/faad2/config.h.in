@@ -32,6 +32,9 @@
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
 
+/* Define if you have C99's lrintf function. */
+#undef HAVE_LRINTF
+
 /* Define to 1 if you have the <mathf.h> header file. */
 #undef HAVE_MATHF_H
 
@@ -111,5 +114,5 @@
 #undef inline
 #endif
 
-/* Define to `long' if <sys/types.h> does not define. */
+/* Define to `long int' if <sys/types.h> does not define. */
 #undef off_t

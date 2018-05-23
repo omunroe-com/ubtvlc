@@ -21,8 +21,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#include <stdio.h>
-#include <string.h>
 #include <math.h>
 
 #include "common/common.h"
@@ -41,7 +39,7 @@ static void transpose( uint8_t *buf, int w )
 static void scaling_list_write( bs_t *s, x264_pps_t *pps, int idx )
 {
     const int len = idx<4 ? 16 : 64;
-    const int *zigzag = idx<4 ? x264_zigzag_scan4 : x264_zigzag_scan8;
+    const int *zigzag = idx<4 ? x264_zigzag_scan4[0] : x264_zigzag_scan8[0];
     const uint8_t *list = pps->scaling_list[idx];
     const uint8_t *def_list = (idx==CQM_4IC) ? pps->scaling_list[CQM_4IY]
                             : (idx==CQM_4PC) ? pps->scaling_list[CQM_4PY]
@@ -127,20 +125,19 @@ void x264_sps_init( x264_sps_t *sps, int i_id, x264_param_t *param )
 
     sps->b_gaps_in_frame_num_value_allowed = 0;
     sps->i_mb_width = ( param->i_width + 15 ) / 16;
-    sps->i_mb_height= ( param->i_height + 15 )/ 16;
-    sps->b_frame_mbs_only = 1;
-    sps->b_mb_adaptive_frame_field = 0;
-    sps->b_direct8x8_inference = 0;
-    if( sps->b_frame_mbs_only == 0 ||
-        !(param->analyse.inter & X264_ANALYSE_PSUB8x8) )
-    {
-        sps->b_direct8x8_inference = 1;
-    }
+    sps->i_mb_height= ( param->i_height + 15 ) / 16;
+    if( param->b_interlaced )
+        sps->i_mb_height = ( sps->i_mb_height + 1 ) & ~1;
+    sps->b_frame_mbs_only = ! param->b_interlaced;
+    sps->b_mb_adaptive_frame_field = param->b_interlaced;
+    sps->b_direct8x8_inference = param->analyse.i_direct_8x8_inference
+                              || ! sps->b_frame_mbs_only
+                              || !(param->analyse.inter & X264_ANALYSE_PSUB8x8);
 
     sps->crop.i_left   = 0;
     sps->crop.i_top    = 0;
-    sps->crop.i_right  = (- param->i_width)  & 15;
-    sps->crop.i_bottom = (- param->i_height) & 15;
+    sps->crop.i_right  = sps->i_mb_width*16 - param->i_width;
+    sps->crop.i_bottom = (sps->i_mb_height*16 - param->i_height) >> param->b_interlaced;
     sps->b_crop = sps->crop.i_left  || sps->crop.i_top ||
                   sps->crop.i_right || sps->crop.i_bottom;
 
@@ -258,7 +255,14 @@ void x264_sps_write( bs_t *s, x264_sps_t *sps )
     bs_write_ue( s, sps->i_num_ref_frames );
     bs_write( s, 1, sps->b_gaps_in_frame_num_value_allowed );
     bs_write_ue( s, sps->i_mb_width - 1 );
-    bs_write_ue( s, sps->i_mb_height - 1);
+    if (sps->b_frame_mbs_only)
+    {
+        bs_write_ue( s, sps->i_mb_height - 1);
+    }
+    else // interlaced
+    {
+        bs_write_ue( s, sps->i_mb_height/2 - 1);
+    }
     bs_write( s, 1, sps->b_frame_mbs_only );
     if( !sps->b_frame_mbs_only )
     {
@@ -301,7 +305,7 @@ void x264_sps_write( bs_t *s, x264_sps_t *sps )
             }
             else
             {
-                bs_write( s, 8, 255);   /* aspect_ratio_idc (extented) */
+                bs_write( s, 8, 255);   /* aspect_ratio_idc (extended) */
                 bs_write( s, 16, sps->vui.i_sar_width );
                 bs_write( s, 16, sps->vui.i_sar_height );
             }
@@ -473,14 +477,13 @@ void x264_sei_version_write( x264_t *h, bs_t *s )
         0xdc, 0x45, 0xe9, 0xbd, 0xe6, 0xd9, 0x48, 0xb7,
         0x96, 0x2c, 0xd8, 0x20, 0xd9, 0x23, 0xee, 0xef
     };
-    char version[1200];
-    int length;
     char *opts = x264_param2string( &h->param, 0 );
+    char *version = x264_malloc( 200 + strlen(opts) );
+    int length;
 
     sprintf( version, "x264 - core %d%s - H.264/MPEG-4 AVC codec - "
              "Copyleft 2005 - http://www.videolan.org/x264.html - options: %s",
              X264_BUILD, X264_VERSION, opts );
-    x264_free( opts );
     length = strlen(version)+1+16;
 
     bs_write( s, 8, 0x5 ); // payload_type = user_data_unregistered
@@ -495,6 +498,9 @@ void x264_sei_version_write( x264_t *h, bs_t *s )
         bs_write( s, 8, version[i] );
 
     bs_rbsp_trailing( s );
+
+    x264_free( opts );
+    x264_free( version );
 }
 
 const x264_level_t x264_levels[] =
@@ -544,6 +550,8 @@ void x264_validate_levels( x264_t *h )
 
     if( h->param.i_fps_den > 0 )
         CHECK( "MB rate", l->mbps, (int64_t)mbs * h->param.i_fps_num / h->param.i_fps_den );
+    if( h->sps->b_direct8x8_inference < l->direct8x8 )
+        x264_log( h, X264_LOG_WARNING, "direct 8x8 inference (0) < level requirement (1)\n" );
 
     /* TODO check the rest of the limits */
 }

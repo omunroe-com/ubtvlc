@@ -3,7 +3,7 @@
 # bootstrap : Set up config.mak
 # ***************************************************************************
 # Copyright (C) 2003-2006 the VideoLAN team
-# $Id: bootstrap 18332 2006-12-08 19:16:28Z hartman $
+# $Id: bootstrap 23328 2007-11-25 20:54:07Z fkuehne $
 #
 # Authors: Christophe Massiot <massiot@via.ecp.fr>
 #
@@ -63,11 +63,11 @@ case $HOST in
 # Makefile cross compiling is only supported with gcc-4.0
 # ENVP defines the oldest environment on which the program will be able to run
 # SDK 10.2.8 requires gcc-3.3 (so we cannot use that SDK)
-	    SDK_TARGET=10.3
+	    SDK_TARGET=10.4
 	    echo "SDK_TARGET = ${SDK_TARGET}" >> config.mak
 	    echo "HAVE_DARWIN_OS = 1" >> config.mak
 	    echo "ENVP = MACOSX_DEPLOYMENT_TARGET=${SDK_TARGET}" >> config.mak
-	    echo "MACOSX_SDK = /Developer/SDKs/MacOSX10.3.9.sdk" >> config.mak
+	    echo "MACOSX_SDK = /Developer/SDKs/MacOSX10.4u.sdk" >> config.mak
 	    CFLAGS_TUNING=" -mtune=G4"
 	    EXTRA_CFLAGS=" -D\${ENVP} -isysroot \${MACOSX_SDK}"
 	    EXTRA_LDFLAGS=" -isysroot \${MACOSX_SDK} -Wl,-syslibroot,\${MACOSX_SDK}"
@@ -76,6 +76,7 @@ case $HOST in
     i686-apple-darwin8)
 	    SDK_TARGET=10.4
 	    echo "SDK_TARGET = ${SDK_TARGET}" >> config.mak
+	    echo "HAVE_DARWIN_OS_ON_INTEL = 1" >> config.mak
 	    echo "HAVE_DARWIN_OS = 1" >> config.mak
 	    echo "ENVP = MACOSX_DEPLOYMENT_TARGET=${SDK_TARGET}" >> config.mak
 	    echo "MACOSX_SDK = /Developer/SDKs/MacOSX10.4u.sdk" >> config.mak

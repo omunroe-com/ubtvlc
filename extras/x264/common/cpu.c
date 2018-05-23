@@ -33,11 +33,9 @@
 #include <sys/sysctl.h>
 #endif
 
-#include <string.h>
-
 #include "common.h"
 
-#if defined(ARCH_X86) || defined(ARCH_X86_64)
+#ifdef HAVE_MMX
 extern int  x264_cpu_cpuid_test( void );
 extern uint32_t  x264_cpu_cpuid( uint32_t op, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx );
 extern void x264_emms( void );
@@ -48,7 +46,6 @@ uint32_t x264_cpu_detect( void )
 
     uint32_t eax, ebx, ecx, edx;
     int      b_amd;
-
 
     if( !x264_cpu_cpuid_test() )
     {
@@ -80,6 +77,16 @@ uint32_t x264_cpu_detect( void )
         /* Is it OK ? */
         cpu |= X264_CPU_SSE2;
     }
+#ifdef HAVE_SSE3
+    if( (ecx&0x00000001) )
+    {
+        cpu |= X264_CPU_SSE3;
+    }
+    if( (ecx&0x00000200) )
+    {
+        cpu |= X264_CPU_SSSE3;
+    }
+#endif
 
     x264_cpu_cpuid( 0x80000000, &eax, &ebx, &ecx, &edx );
     if( eax < 0x80000001 )
@@ -132,9 +139,43 @@ uint32_t x264_cpu_detect( void )
 }
 
 #elif defined( SYS_LINUX )
+#include <signal.h>
+#include <setjmp.h>
+static sigjmp_buf jmpbuf;
+static volatile sig_atomic_t canjump = 0;
+
+static void sigill_handler( int sig )
+{
+    if( !canjump )
+    {
+        signal( sig, SIG_DFL );
+        raise( sig );
+    }
+
+    canjump = 0;
+    siglongjmp( jmpbuf, 1 );
+}
+
 uint32_t x264_cpu_detect( void )
 {
-    /* FIXME (Linux PPC) */
+    static void (* oldsig)( int );
+
+    oldsig = signal( SIGILL, sigill_handler );
+    if( sigsetjmp( jmpbuf, 1 ) )
+    {
+        signal( SIGILL, oldsig );
+        return 0;
+    }
+
+    canjump = 1;
+    asm volatile( "mtspr 256, %0\n\t"
+                  "vand 0, 0, 0\n\t"
+                  :
+                  : "r"(-1) );
+    canjump = 0;
+
+    signal( SIGILL, oldsig );
+
     return X264_CPU_ALTIVEC;
 }
 #endif
@@ -162,17 +203,17 @@ int x264_cpu_num_processors( void )
 #if !defined(HAVE_PTHREAD)
     return 1;
 
-#elif defined(SYS_LINUX) || defined(WIN32)
+#elif defined(WIN32)
+    return pthread_num_processors_np();
+
+#elif defined(SYS_LINUX)
+    unsigned int bit;
     int np;
-#if defined(WIN32)
-    uint32_t p_aff, s_aff;
-    GetProcessAffinityMask( GetCurrentProcess(), &p_aff, &s_aff );
-#else
-    uint64_t p_aff;
-    sched_getaffinity( 0, sizeof(p_aff), (cpu_set_t*)&p_aff );
-#endif
-    for( np = 0; p_aff != 0; p_aff >>= 1 )
-        np += p_aff&1;
+    cpu_set_t p_aff;
+    memset( &p_aff, 0, sizeof(p_aff) );
+    sched_getaffinity( 0, sizeof(p_aff), &p_aff );
+    for( np = 0, bit = 0; bit < sizeof(p_aff); bit++ )
+        np += (((uint8_t *)&p_aff)[bit / 8] >> (bit % 8)) & 1;
     return np;
 
 #elif defined(SYS_BEOS)
