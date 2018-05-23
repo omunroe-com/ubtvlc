@@ -5,7 +5,7 @@
  * Copyright (C) 2007 Société des arts technologiques
  * Copyright (C) 2007 Savoir-faire Linux
  *
- * $Id: f7e1cb296ff152c4cc279422d0ad45312e5f8e83 $
+ * $Id: 10fd23e8a39a728f207b2304eba9a8f4eba51966 $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jean-Baptiste Kempf <jb@videolan.org>
@@ -405,11 +405,11 @@ void DiscOpenPanel::updateMRL()
 
 void DiscOpenPanel::browseDevice()
 {
-    QString dir = QFileDialog::getExistingDirectory( 0,
+    QString dir = QFileDialog::getExistingDirectory( this,
             qtr( I_DEVICE_TOOLTIP ) );
-    if (!dir.isEmpty()) {
-        ui.deviceCombo->setEditText( dir );
-    }
+    if (!dir.isEmpty())
+        ui.deviceCombo->setEditText( toNativeSepNoSlash( dir ) );
+
     updateMRL();
 }
 
