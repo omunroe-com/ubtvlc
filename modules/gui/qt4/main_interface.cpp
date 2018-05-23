@@ -2,7 +2,7 @@
  * main_interface.cpp : Main interface
  ****************************************************************************
  * Copyright (C) 2006-2008 the VideoLAN team
- * $Id: 1065248a37730175d65bd3464d79e8dcf5c78438 $
+ * $Id: f1525421635ec573cc13f090a1dbdb0ca094d93d $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jean-Baptiste Kempf <jb@videolan.org>
@@ -262,6 +262,8 @@ MainInterface::~MainInterface()
     {
         if( !isDocked() )
             QVLCTools::saveWidgetPosition( p_intf, "Playlist", playlistWidget );
+
+        delete playlistWidget;
     }
 
     settings->beginGroup( "MainWindow" );
@@ -734,7 +736,7 @@ void MainInterface::togglePlaylist()
     If no playlist exist, then create one and attach it to the DockPL*/
     if( !playlistWidget )
     {
-        playlistWidget = new PlaylistWidget( p_intf, this );
+        playlistWidget = new PlaylistWidget( p_intf );
 
         i_pl_dock = PL_UNDOCKED;
 /*        i_pl_dock = (pl_dock_e)getSettings()
@@ -742,15 +744,12 @@ void MainInterface::togglePlaylist()
 
         if( i_pl_dock == PL_UNDOCKED )
         {
-            playlistWidget->setParent( this, Qt::Window );
+            playlistWidget->setWindowFlags( Qt::Window );
 
             /* This will restore the geometry but will not work for position,
                because of parenting */
             QVLCTools::restoreWidgetPosition( p_intf, "Playlist",
                     playlistWidget, QSize( 600, 300 ) );
-            /* Move it correctly then */
-            playlistWidget->move(
-                    getSettings()->value( "Playlist/GlobalPos" ).toPoint() );
         }
         else
         {

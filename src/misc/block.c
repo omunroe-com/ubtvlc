@@ -2,7 +2,7 @@
  * block.c: Data blocks management functions
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: 80832f5773eff6acfa0114229580484c286d23de $
+ * $Id: f666de0c18e0d51cd45290c461e32244022d6007 $
  *
  * Authors: Laurent Aimar <fenrir@videolan.org>
  *
@@ -124,6 +124,7 @@ block_t *block_Realloc( block_t *p_block, ssize_t i_prebody, size_t i_body )
             return NULL;
 
         p_block = p_dup;
+        p_sys = (block_sys_t *)p_block;
     }
 
     /* Adjust reserved header if there is enough room */

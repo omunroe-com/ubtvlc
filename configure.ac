@@ -1,9 +1,9 @@
 dnl Autoconf settings for vlc
 
-AC_INIT(vlc, 0.9.3)
+AC_INIT(vlc, 0.9.4)
 VERSION_MAJOR="0"
 VERSION_MINOR="9"
-VERSION_REVISION="3"
+VERSION_REVISION="4"
 VERSION_EXTRA=""
 
 CONFIGURE_LINE="`echo "$0 $ac_configure_args" | sed -e 's/\\\/\\\\\\\/g'`"
@@ -1858,6 +1858,8 @@ lternatively you can use --disable-live555 to disable the liveMedia plugin.])
           VLC_ADD_PLUGIN([live555])
           VLC_ADD_LIBS([live555], [-lliveMedia ${other_libs}])
         ],[],[${other_libs}]) ],[${other_libs_pic}])
+    ],[
+       AC_MSG_WARN([The development files for liveMedia (live555) can't be found])
     ])
     CPPFLAGS="${CPPFLAGS_save}"
     AC_LANG_POP(C++)

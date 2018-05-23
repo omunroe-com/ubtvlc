@@ -2,7 +2,7 @@
  * playlist.cpp : Custom widgets for the playlist
  ****************************************************************************
  * Copyright © 2007-2008 the VideoLAN team
- * $Id: e1519bfef2f88a98159a97ee8d9f3c3778368833 $
+ * $Id: c17896901168cd4477df1696795a29e3fc8f02ca $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jean-Baptiste Kempf <jb@videolan.org>
@@ -42,9 +42,7 @@
  * Playlist Widget. The embedded playlist
  **********************************************************************/
 
-PlaylistWidget::PlaylistWidget( intf_thread_t *_p_i,
-                                QWidget *_parent )
-               : p_intf ( _p_i ), parent( _parent )
+PlaylistWidget::PlaylistWidget( intf_thread_t *_p_i ) : p_intf ( _p_i )
 {
     setContentsMargins( 3, 3, 3, 3 );
 
@@ -130,8 +128,8 @@ PlaylistWidget::~PlaylistWidget()
 {
     getSettings()->beginGroup("Playlist");
     getSettings()->setValue( "splitterSizes", saveState() );
-    getSettings()->setValue( "GlobalPos", mapToGlobal( pos() ) );
     getSettings()->endGroup();
+    msg_Dbg( p_intf, "Playlist Destroyed" );
 }
 
 #include "main_interface.hpp"
