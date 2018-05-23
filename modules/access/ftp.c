@@ -2,7 +2,7 @@
  * ftp.c: FTP input module
  *****************************************************************************
  * Copyright (C) 2001-2006 the VideoLAN team
- * $Id: ftp.c 15016 2006-03-31 23:07:01Z xtophe $
+ * $Id: ftp.c 16319 2006-08-22 23:22:14Z fkuehne $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr> - original code
  *          Rémi Denis-Courmont <rem # videolan.org> - EPSV support
@@ -29,6 +29,7 @@
 
 #include <vlc/vlc.h>
 #include <vlc/input.h>
+#include <vlc_interaction.h>
 
 #include "network.h"
 #include "vlc_url.h"
@@ -105,6 +106,8 @@ static int Connect( access_t *p_access, access_sys_t *p_sys )
     if( fd < 0 )
     {
         msg_Err( p_access, "failed to connect with server" );
+        intf_UserFatal( p_access, VLC_FALSE, _("Network interaction failed"), 
+                        _("VLC could not connect with the given server.") );
         return -1;
     }
 
@@ -118,12 +121,18 @@ static int Connect( access_t *p_access, access_sys_t *p_sys )
     if( i_answer / 100 != 2 )
     {
         msg_Err( p_access, "connection rejected" );
+        intf_UserFatal( p_access, VLC_FALSE, _("Network interaction failed"), 
+                        _("VLC's connection to the given server was rejected.") );
         return -1;
     }
 
     msg_Dbg( p_access, "connection accepted (%d)", i_answer );
+    
+    if( p_sys->url.psz_username && *p_sys->url.psz_username )
+        psz = strdup( p_sys->url.psz_username );
+    else
+        psz = var_CreateGetString( p_access, "ftp-user" );
 
-    psz = var_CreateGetString( p_access, "ftp-user" );
     if( ftp_SendCommand( p_access, "USER %s", psz ) < 0 ||
         ftp_ReadCommand( p_access, &i_answer, NULL ) < 0 )
     {
@@ -139,7 +148,11 @@ static int Connect( access_t *p_access, access_sys_t *p_sys )
             break;
         case 3:
             msg_Dbg( p_access, "password needed" );
-            psz = var_CreateGetString( p_access, "ftp-pwd" );
+            if( p_sys->url.psz_password && *p_sys->url.psz_password )
+                psz = strdup( p_sys->url.psz_password );
+	    else
+                psz = var_CreateGetString( p_access, "ftp-pwd" );
+
             if( ftp_SendCommand( p_access, "PASS %s", psz ) < 0 ||
                 ftp_ReadCommand( p_access, &i_answer, NULL ) < 0 )
             {
@@ -168,6 +181,9 @@ static int Connect( access_t *p_access, access_sys_t *p_sys )
                     if( i_answer / 100 != 2 )
                     {
                         msg_Err( p_access, "account rejected" );
+                        intf_UserFatal( p_access, VLC_FALSE, 
+                                        _("Network interaction failed"), 
+                                        _("Your account was rejected.") );
                         return -1;
                     }
                     msg_Dbg( p_access, "account accepted" );
@@ -175,11 +191,17 @@ static int Connect( access_t *p_access, access_sys_t *p_sys )
 
                 default:
                     msg_Err( p_access, "password rejected" );
+                    intf_UserFatal( p_access, VLC_FALSE, 
+                                    _("Network interaction failed"), 
+                                    _("Your password was rejected.") );
                     return -1;
             }
             break;
         default:
             msg_Err( p_access, "user rejected" );
+            intf_UserFatal( p_access, VLC_FALSE, 
+                        _("Network interaction failed"), 
+                        _("Your connection attemp to the server was rejected.") );
             return -1;
     }
 
@@ -199,18 +221,7 @@ static int Open( vlc_object_t *p_this )
     char         *psz_arg;
 
     /* Init p_access */
-    p_access->pf_read = Read;
-    p_access->pf_block = NULL;
-    p_access->pf_seek = Seek;
-    p_access->pf_control = Control;
-    p_access->info.i_update = 0;
-    p_access->info.i_size = 0;
-    p_access->info.i_pos = 0;
-    p_access->info.b_eof = VLC_FALSE;
-    p_access->info.i_title = 0;
-    p_access->info.i_seekpoint = 0;
-    p_access->p_sys = p_sys = malloc( sizeof( access_sys_t ) );
-    memset( p_sys, 0, sizeof( access_sys_t ) );
+    STANDARD_READ_ACCESS_INIT
     p_sys->fd_cmd = -1;
     p_sys->fd_data = -1;
 

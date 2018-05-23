@@ -2,7 +2,7 @@
  * dv.c: Digital video/Firewire input (file: access plug-in)
  *****************************************************************************
  * Copyright (C) 2005 M2X
- * $Id: dv.c 15016 2006-03-31 23:07:01Z xtophe $
+ * $Id: dv.c 16083 2006-07-19 09:33:41Z zorglub $
  *
  * Authors: Jean-Paul Saman <jpsaman at m2x dot nl>
  *
@@ -142,17 +142,9 @@ static int Open( vlc_object_t *p_this )
     msg_Dbg( p_access, "opening device %s", psz_name );
 
     /* Set up p_access */
-    p_access->pf_read = NULL;
-    p_access->pf_block = Block;
-    p_access->pf_control = Control;
-    p_access->pf_seek = NULL;
-    p_access->info.i_update = 0;
-    p_access->info.i_size = 0;
-    p_access->info.i_pos = 0;
-    p_access->info.b_eof = VLC_FALSE;
+    access_InitFields( p_access );
+    ACCESS_SET_CALLBACKS( NULL, Block, Control, NULL );
     p_access->info.b_prebuffered = VLC_FALSE;
-    p_access->info.i_title = 0;
-    p_access->info.i_seekpoint = 0;
 
     p_access->p_sys = p_sys = malloc( sizeof( access_sys_t ) );
     if( !p_sys )
@@ -169,6 +161,7 @@ static int Open( vlc_object_t *p_this )
     p_sys->p_raw1394 = NULL;
     p_sys->p_avc1394 = NULL;
     p_sys->p_frame = NULL;
+    p_sys->p_ev = NULL;
 
     vlc_mutex_init( p_access, &p_sys->lock );
 
@@ -229,6 +222,14 @@ static int Open( vlc_object_t *p_this )
 
     /* Now create our event thread catcher */
     p_sys->p_ev = vlc_object_create( p_access, sizeof( event_thread_t ) );
+    if( !p_sys->p_ev )
+    {
+        msg_Err( p_access, "failed to create event thread for %s", psz_name );
+        Close( p_this );
+        free( psz_name );
+        return VLC_EGENERIC;
+    }
+    
     p_sys->p_ev->p_frame = NULL;
     p_sys->p_ev->pp_last = &p_sys->p_ev->p_frame;
     p_sys->p_ev->p_access = p_access;

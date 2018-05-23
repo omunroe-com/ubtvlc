@@ -2,7 +2,7 @@
  * equalizer.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: equalizer.cpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: equalizer.cpp 15803 2006-06-04 13:55:41Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -77,7 +77,7 @@ VariablePtr EqualizerBands::getBand( int band )
 }
 
 
-void EqualizerBands::onUpdate( Subject<VarPercent,void*> &rBand, void *arg )
+void EqualizerBands::onUpdate( Subject<VarPercent> &rBand, void *arg )
 {
     // Make sure we are not called from set()
     if (!m_isUpdating)

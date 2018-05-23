@@ -2,7 +2,7 @@
  * anim_bitmap.hpp
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: anim_bitmap.hpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: anim_bitmap.hpp 15803 2006-06-04 13:55:41Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -35,7 +35,7 @@ class OSTimer;
 
 /// Animated bitmap
 class AnimBitmap: public SkinObject, public Box,
-                  public Subject<AnimBitmap, void*>
+                  public Subject<AnimBitmap>
 {
     public:
         AnimBitmap( intf_thread_t *pIntf, const GenericBitmap &rBitmap );

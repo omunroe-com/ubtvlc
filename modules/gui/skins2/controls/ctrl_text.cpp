@@ -2,7 +2,7 @@
  * ctrl_text.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_text.cpp 15486 2006-04-30 19:14:31Z dionoea $
+ * $Id: ctrl_text.cpp 16234 2006-08-06 16:36:30Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -211,7 +211,7 @@ void CtrlText::setText( const UString &rText, uint32_t color )
 }
 
 
-void CtrlText::onUpdate( Subject<VarText, void*> &rVariable, void* arg )
+void CtrlText::onUpdate( Subject<VarText> &rVariable, void* arg )
 {
     if( isVisible() )
     {
@@ -242,7 +242,7 @@ void CtrlText::displayText( const UString &rText )
     m_pImgDouble = m_rFont.drawString( doubleStringWithSep, m_color );
 
     // Update the current image used, as if the control size had changed
-    onChangePosition();
+    onPositionChange();
 
     if( m_alignment == kRight && getPosition() &&
         getPosition()->getWidth() < m_pImg->getWidth() )
@@ -281,7 +281,7 @@ void CtrlText::displayText( const UString &rText )
 }
 
 
-void CtrlText::onChangePosition()
+void CtrlText::onPositionChange()
 {
     if( m_pImg && getPosition() )
     {
@@ -300,6 +300,12 @@ void CtrlText::onChangePosition()
         // don't care because the control is never drawn without position :)
         m_pCurrImg = m_pImg;
     }
+}
+
+
+void CtrlText::onResize()
+{
+    onPositionChange();
 }
 
 

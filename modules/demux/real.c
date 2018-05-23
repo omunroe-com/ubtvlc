@@ -2,7 +2,7 @@
  * real.c: Real demuxer.
  *****************************************************************************
  * Copyright (C) 2004, 2006 the VideoLAN team
- * $Id: real.c 15058 2006-04-02 14:28:18Z fkuehne $
+ * $Id: real.c 15740 2006-05-25 21:44:11Z fkuehne $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -28,6 +28,7 @@
 
 #include <vlc/vlc.h>
 #include <vlc/input.h>
+#include "charset.h"
 
 /*****************************************************************************
  * Module descriptor
@@ -82,14 +83,17 @@ struct demux_sys_t
     int  i_our_duration;
     int  i_mux_rate;
 
+    char* psz_title;
+    char* psz_artist;
+    char* psz_copyright;
+    char* psz_description;
+
     int          i_track;
     real_track_t **track;
 
     uint8_t buffer[65536];
 
     int64_t     i_pcr;
-    
-    vlc_meta_t *p_meta;
 };
 
 static int Demux( demux_t *p_demux );
@@ -659,8 +663,18 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
 
         case DEMUX_GET_META:
         {
-            vlc_meta_t **pp_meta = (vlc_meta_t**)va_arg( args, vlc_meta_t** );
-            *pp_meta = p_sys->p_meta;
+            vlc_meta_t *p_meta = (vlc_meta_t*)va_arg( args, vlc_meta_t* );
+
+            /* the core will crash if we provide NULL strings, so check 
+             * every string first */
+            if( p_sys->psz_title )
+                vlc_meta_SetTitle( p_meta, p_sys->psz_title );
+            if( p_sys->psz_artist )
+                vlc_meta_SetArtist( p_meta, p_sys->psz_artist );
+            if( p_sys->psz_copyright )
+                vlc_meta_SetCopyright( p_meta, p_sys->psz_copyright );
+            if( p_sys->psz_description )
+                vlc_meta_SetDescription( p_meta, p_sys->psz_description );
             return VLC_SUCCESS;
         }
 
@@ -684,8 +698,6 @@ static int HeaderRead( demux_t *p_demux )
     uint32_t    i_size;
     int64_t     i_skip;
     int         i_version;
-    
-    p_sys->p_meta = vlc_meta_New();
 
     for( ;; )
     {
@@ -761,7 +773,7 @@ static int HeaderRead( demux_t *p_demux )
 
                 msg_Dbg( p_demux, "    - title=`%s'", psz );
                 EnsureUTF8( psz );
-                vlc_meta_Add( p_sys->p_meta, VLC_META_TITLE, psz );
+                asprintf( &p_sys->psz_title, psz );
                 free( psz );
                 i_skip -= i_len;
             }
@@ -776,7 +788,7 @@ static int HeaderRead( demux_t *p_demux )
 
                 msg_Dbg( p_demux, "    - author=`%s'", psz );
                 EnsureUTF8( psz );
-                vlc_meta_Add( p_sys->p_meta, VLC_META_ARTIST, psz );
+                asprintf( &p_sys->psz_artist, psz );
                 free( psz );
                 i_skip -= i_len;
             }
@@ -791,7 +803,7 @@ static int HeaderRead( demux_t *p_demux )
 
                 msg_Dbg( p_demux, "    - copyright=`%s'", psz );
                 EnsureUTF8( psz );
-                vlc_meta_Add( p_sys->p_meta, VLC_META_COPYRIGHT, psz );
+                asprintf( &p_sys->psz_copyright, psz );
                 free( psz );
                 i_skip -= i_len;
             }
@@ -806,7 +818,7 @@ static int HeaderRead( demux_t *p_demux )
 
                 msg_Dbg( p_demux, "    - comment=`%s'", psz );
                 EnsureUTF8( psz );
-                vlc_meta_Add( p_sys->p_meta, VLC_META_DESCRIPTION, psz );
+                asprintf( &p_sys->psz_description, psz );
                 free( psz );
                 i_skip -= i_len;
             }

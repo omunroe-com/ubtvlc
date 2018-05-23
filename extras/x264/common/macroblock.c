@@ -26,16 +26,6 @@
 
 #include "common.h"
 
-static const int dequant_mf[6][4][4] =
-{
-    { {10, 13, 10, 13}, {13, 16, 13, 16}, {10, 13, 10, 13}, {13, 16, 13, 16} },
-    { {11, 14, 11, 14}, {14, 18, 14, 18}, {11, 14, 11, 14}, {14, 18, 14, 18} },
-    { {13, 16, 13, 16}, {16, 20, 16, 20}, {13, 16, 13, 16}, {16, 20, 16, 20} },
-    { {14, 18, 14, 18}, {18, 23, 18, 23}, {14, 18, 14, 18}, {18, 23, 18, 23} },
-    { {16, 20, 16, 20}, {20, 25, 20, 25}, {16, 20, 16, 20}, {20, 25, 20, 25} },
-    { {18, 23, 18, 23}, {23, 29, 23, 29}, {18, 23, 18, 23}, {23, 29, 23, 29} }
-};
-
 int x264_mb_predict_intra4x4_mode( x264_t *h, int idx )
 {
     const int ma = h->mb.cache.intra4x4_pred_mode[x264_scan8[idx] - 1];
@@ -824,7 +814,7 @@ void x264_mb_mc( x264_t *h )
     }
 }
 
-void x264_macroblock_cache_init( x264_t *h )
+int x264_macroblock_cache_init( x264_t *h )
 {
     int i, j;
     int i_mb_count = h->mb.i_mb_count;
@@ -833,34 +823,37 @@ void x264_macroblock_cache_init( x264_t *h )
     h->mb.i_b8_stride = h->sps->i_mb_width * 2;
     h->mb.i_b4_stride = h->sps->i_mb_width * 4;
 
-    h->mb.qp  = x264_malloc( i_mb_count * sizeof(int8_t) );
-    h->mb.cbp = x264_malloc( i_mb_count * sizeof(int16_t) );
-    h->mb.skipbp = x264_malloc( i_mb_count * sizeof(int8_t) );
-    h->mb.mb_transform_size = x264_malloc( i_mb_count * sizeof(int8_t) );
+    CHECKED_MALLOC( h->mb.qp, i_mb_count * sizeof(int8_t) );
+    CHECKED_MALLOC( h->mb.cbp, i_mb_count * sizeof(int16_t) );
+    CHECKED_MALLOC( h->mb.skipbp, i_mb_count * sizeof(int8_t) );
+    CHECKED_MALLOC( h->mb.mb_transform_size, i_mb_count * sizeof(int8_t) );
 
     /* 0 -> 3 top(4), 4 -> 6 : left(3) */
-    h->mb.intra4x4_pred_mode = x264_malloc( i_mb_count * 7 * sizeof( int8_t ) );
+    CHECKED_MALLOC( h->mb.intra4x4_pred_mode, i_mb_count * 7 * sizeof(int8_t) );
 
     /* all coeffs */
-    h->mb.non_zero_count = x264_malloc( i_mb_count * 24 * sizeof( uint8_t ) );
+    CHECKED_MALLOC( h->mb.non_zero_count, i_mb_count * 24 * sizeof(uint8_t) );
 
     if( h->param.b_cabac )
     {
-        h->mb.chroma_pred_mode = x264_malloc( i_mb_count * sizeof( int8_t) );
-        h->mb.mvd[0] = x264_malloc( 2*16 * i_mb_count * sizeof( int16_t ) );
-        h->mb.mvd[1] = x264_malloc( 2*16 * i_mb_count * sizeof( int16_t ) );
+        CHECKED_MALLOC( h->mb.chroma_pred_mode, i_mb_count * sizeof(int8_t) );
+        CHECKED_MALLOC( h->mb.mvd[0], 2*16 * i_mb_count * sizeof(int16_t) );
+        CHECKED_MALLOC( h->mb.mvd[1], 2*16 * i_mb_count * sizeof(int16_t) );
     }
 
     for( i=0; i<2; i++ )
     {
         int i_refs = (i ? 1 : h->param.i_frame_reference) + h->param.b_bframe_pyramid;
         for( j=0; j < i_refs && j < 16; j++ )
-            h->mb.mvr[i][j] = x264_malloc( 2 * i_mb_count * sizeof( int16_t ) );
+            CHECKED_MALLOC( h->mb.mvr[i][j], 2 * i_mb_count * sizeof(int16_t) );
     }
 
     /* init with not avaiable (for top right idx=7,15) */
     memset( h->mb.cache.ref[0], -2, X264_SCAN8_SIZE * sizeof( int8_t ) );
     memset( h->mb.cache.ref[1], -2, X264_SCAN8_SIZE * sizeof( int8_t ) );
+
+    return 0;
+fail: return -1;
 }
 void x264_macroblock_cache_end( x264_t *h )
 {
@@ -1105,7 +1098,7 @@ void x264_macroblock_cache_load( x264_t *h, int i_mb_x, int i_mb_y )
     else
         h->mb.i_mb_type_topleft = -1;
 
-    if( h->param.analyse.b_transform_8x8 )
+    if( h->pps->b_transform_8x8_mode )
     {
         h->mb.cache.i_neighbour_transform_size =
             ( i_left_type >= 0 && h->mb.mb_transform_size[i_left_xy] )

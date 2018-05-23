@@ -2,7 +2,7 @@
  * rc.c : remote control stdin/stdout module for vlc
  *****************************************************************************
  * Copyright (C) 2004 - 2005 the VideoLAN team
- * $Id: rc.c 15533 2006-05-04 21:26:26Z dionoea $
+ * $Id: rc.c 16245 2006-08-10 19:21:25Z dionoea $
  *
  * Author: Peter Surda <shurdeek@panorama.sth.ac.at>
  *         Jean-Paul Saman <jpsaman #_at_# m2x _replaceWith#dot_ nl>
@@ -77,7 +77,7 @@ static void RegisterCallbacks( intf_thread_t * );
 
 static vlc_bool_t ReadCommand( intf_thread_t *, char *, int * );
 
-static playlist_item_t *parse_MRL( intf_thread_t *, char * );
+static input_item_t *parse_MRL( intf_thread_t *, char * );
 
 static int  Input        ( vlc_object_t *, char const *,
                            vlc_value_t, vlc_value_t, void * );
@@ -201,7 +201,6 @@ vlc_module_end();
 static int Activate( vlc_object_t *p_this )
 {
     intf_thread_t *p_intf = (intf_thread_t*)p_this;
-    playlist_t *p_playlist;
     char *psz_host, *psz_unix_path;
     int  *pi_socket = NULL;
 
@@ -321,17 +320,6 @@ static int Activate( vlc_object_t *p_this )
     CONSOLE_INTRO_MSG;
 #endif
 
-    /* Force "no-view" mode */
-    p_playlist = (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
-                                                 FIND_ANYWHERE );
-    if( p_playlist )
-    {
-        vlc_mutex_lock( &p_playlist->object_lock );
-        p_playlist->status.i_view = -1;
-        vlc_mutex_unlock( &p_playlist->object_lock );
-        vlc_object_release( p_playlist );
-    }
-
     msg_rc( _("Remote control interface initialized. Type `help' for help.") );
     return VLC_SUCCESS;
 }
@@ -370,8 +358,12 @@ static void RegisterCallbacks( intf_thread_t *p_intf )
 
     var_Create( p_intf, "add", VLC_VAR_STRING | VLC_VAR_ISCOMMAND );
     var_AddCallback( p_intf, "add", Playlist, NULL );
+    var_Create( p_intf, "enqueue", VLC_VAR_STRING | VLC_VAR_ISCOMMAND );
+    var_AddCallback( p_intf, "enqueue", Playlist, NULL );
     var_Create( p_intf, "playlist", VLC_VAR_VOID | VLC_VAR_ISCOMMAND );
     var_AddCallback( p_intf, "playlist", Playlist, NULL );
+    var_Create( p_intf, "sort", VLC_VAR_VOID | VLC_VAR_ISCOMMAND );
+    var_AddCallback( p_intf, "sort", Playlist, NULL );
     var_Create( p_intf, "play", VLC_VAR_VOID | VLC_VAR_ISCOMMAND );
     var_AddCallback( p_intf, "play", Playlist, NULL );
     var_Create( p_intf, "stop", VLC_VAR_VOID | VLC_VAR_ISCOMMAND );
@@ -428,6 +420,8 @@ static void RegisterCallbacks( intf_thread_t *p_intf )
     var_AddCallback( p_intf, "mosaic-rows", Other, NULL );
     var_Create( p_intf, "mosaic-cols", VLC_VAR_INTEGER | VLC_VAR_ISCOMMAND );
     var_AddCallback( p_intf, "mosaic-cols", Other, NULL );
+    var_Create( p_intf, "mosaic-order", VLC_VAR_INTEGER | VLC_VAR_ISCOMMAND );
+    var_AddCallback( p_intf, "mosaic-order", Other, NULL );
     var_Create( p_intf, "mosaic-keep-aspect-ratio",
                      VLC_VAR_INTEGER | VLC_VAR_ISCOMMAND );
     var_AddCallback( p_intf, "mosaic-keep-aspect-ratio", Other, NULL );
@@ -880,6 +874,7 @@ static void Help( intf_thread_t *p_intf, vlc_bool_t b_longhelp)
     msg_rc(_("+----[ Remote control commands ]"));
     msg_rc(  "| ");
     msg_rc(_("| add XYZ  . . . . . . . . . . add XYZ to playlist"));
+    msg_rc(_("| enqueue XYZ  . . . . . . . queue XYZ to playlist"));
     msg_rc(_("| playlist . . .  show items currently in playlist"));
     msg_rc(_("| play . . . . . . . . . . . . . . . . play stream"));
     msg_rc(_("| stop . . . . . . . . . . . . . . . . stop stream"));
@@ -953,6 +948,7 @@ static void Help( intf_thread_t *p_intf, vlc_bool_t b_longhelp)
         msg_rc(_("| mosaic-position {0=auto,1=fixed} . . . .position"));
         msg_rc(_("| mosaic-rows #. . . . . . . . . . .number of rows"));
         msg_rc(_("| mosaic-cols #. . . . . . . . . . .number of cols"));
+        msg_rc(_("| mosaic-order id(,id)* . . . . order of pictures "));
         msg_rc(_("| mosaic-keep-aspect-ratio {0,1} . . .aspect ratio"));
         msg_rc(  "| ");
         msg_rc(_("| check-updates [newer] [equal] [older]\n"
@@ -1223,7 +1219,6 @@ static int Input( vlc_object_t *p_this, char const *psz_cmd,
 static int Playlist( vlc_object_t *p_this, char const *psz_cmd,
                      vlc_value_t oldval, vlc_value_t newval, void *p_data )
 {
-    vlc_value_t val;
     intf_thread_t *p_intf = (intf_thread_t*)p_this;
     playlist_t *p_playlist;
 
@@ -1231,6 +1226,7 @@ static int Playlist( vlc_object_t *p_this, char const *psz_cmd,
                                            FIND_ANYWHERE );
     if( !p_playlist )
     {
+        msg_Err( p_this, "no playlist" );
         return VLC_ENOOBJ;
     }
 
@@ -1238,7 +1234,8 @@ static int Playlist( vlc_object_t *p_this, char const *psz_cmd,
     {
         vlc_value_t val;
         var_Get( p_playlist->p_input, "state", &val );
-        if( ( val.i_int == PAUSE_S ) || ( val.i_int == PLAYLIST_PAUSED ) )        {
+        if( ( val.i_int == PAUSE_S ) || ( val.i_int == PLAYLIST_PAUSED ) )
+        {
             msg_rc( _("Type 'menu select' or 'pause' to continue.") );
             vlc_object_release( p_playlist );
             return VLC_EGENERIC;
@@ -1256,29 +1253,12 @@ static int Playlist( vlc_object_t *p_this, char const *psz_cmd,
     }
     else if( !strcmp( psz_cmd, "play" ) )
     {
-        if( p_playlist->p_input )
-        {
-            vlc_value_t val;
-
-            var_Get( p_playlist->p_input, "rate", &val );
-            if( val.i_int != INPUT_RATE_DEFAULT )
-            {
-                val.i_int = INPUT_RATE_DEFAULT;
-                var_Set( p_playlist->p_input, "rate", val );
-            }
-            else
-            {
-                playlist_Play( p_playlist );
-            }
-        }
+        msg_Warn( p_playlist, "play" );
+        playlist_Play( p_playlist );
     }
     else if (!strcmp( psz_cmd, "goto" ) )
     {
-        if( strlen( newval.psz_string ) > 0)
-        {
-            val.i_int = atoi( newval.psz_string );
-            playlist_Goto( p_playlist, val.i_int);
-        }
+        msg_Err( p_playlist, "goto is deprecated" );
     }
     else if( !strcmp( psz_cmd, "stop" ) )
     {
@@ -1294,31 +1274,38 @@ static int Playlist( vlc_object_t *p_this, char const *psz_cmd,
     else if( !strcmp( psz_cmd, "add" ) &&
              newval.psz_string && *newval.psz_string )
     {
-        playlist_item_t *p_item = parse_MRL( p_intf, newval.psz_string );
+        input_item_t *p_item = parse_MRL( p_intf, newval.psz_string );
 
         if( p_item )
         {
             msg_rc( "Trying to add %s to playlist.", newval.psz_string );
-            playlist_AddItem( p_playlist, p_item,
+            playlist_PlaylistAddInput( p_playlist, p_item,
                               PLAYLIST_GO|PLAYLIST_APPEND, PLAYLIST_END );
+        }
+    }
+    else if( !strcmp( psz_cmd, "enqueue" ) &&
+             newval.psz_string && *newval.psz_string )
+    {
+        playlist_item_t *p_item = parse_MRL( p_intf, newval.psz_string );
+
+        if( p_item )
+        {
+            msg_rc( "trying to enqueue %s to playlist", newval.psz_string );
+            playlist_PlaylistAddInput( p_playlist, p_item,
+                              PLAYLIST_APPEND, PLAYLIST_END );
         }
     }
     else if( !strcmp( psz_cmd, "playlist" ) )
     {
-        int i;
-
-        for ( i = 0; i < p_playlist->i_size; i++ )
-        {
-            msg_rc( "|%s%s   %s|%s|", i == p_playlist->i_index ? "*" : " ",
-                    p_playlist->pp_items[i]->input.psz_name,
-                    p_playlist->pp_items[i]->input.psz_uri,
-                    p_playlist->pp_items[i]->i_parents > 0 ?
-                    p_playlist->pp_items[i]->pp_parents[0]->p_parent->input.psz_name : "" );
-        }
-        if ( i == 0 )
-        {
-            msg_rc( "| no entries" );
-        }
+        msg_Dbg( p_playlist, "Dumping category" );
+        playlist_NodeDump( p_playlist, p_playlist->p_root_category, 0 );
+        msg_Dbg( p_playlist, "Dumping Onelevel" );
+        playlist_NodeDump( p_playlist, p_playlist->p_root_onelevel, 0 );
+    }
+    else if( !strcmp( psz_cmd, "sort" ))
+    {
+        playlist_RecursiveNodeSort( p_playlist, p_playlist->p_root_onelevel, 
+                                    SORT_ARTIST, ORDER_NORMAL );
     }
     else if( !strcmp( psz_cmd, "status" ) )
     {
@@ -1549,6 +1536,14 @@ static int Other( vlc_object_t *p_this, char const *psz_cmd,
         {
             val.i_int = atoi( newval.psz_string );
             var_Set( p_input->p_libvlc, "mosaic-cols", val );
+        }
+    }
+    else if( !strcmp( psz_cmd, "mosaic-order" ) )
+    {
+        if( strlen( newval.psz_string ) > 0)
+        {
+            val.psz_string = newval.psz_string;
+            var_Set( p_input->p_libvlc, "mosaic-order", val );
         }
     }
     else if( !strcmp( psz_cmd, "mosaic-keep-aspect-ratio" ) )
@@ -2089,19 +2084,19 @@ vlc_bool_t ReadCommand( intf_thread_t *p_intf, char *p_buffer, int *pi_size )
 }
 
 /*****************************************************************************
- * parse_MRL: build a playlist item from a full mrl
+ * parse_MRL: build a input item from a full mrl
  *****************************************************************************
  * MRL format: "simplified-mrl [:option-name[=option-value]]"
  * We don't check for '"' or '\'', we just assume that a ':' that follows a
  * space is a new option. Should be good enough for our purpose.
  *****************************************************************************/
-static playlist_item_t *parse_MRL( intf_thread_t *p_intf, char *psz_mrl )
+static input_item_t *parse_MRL( intf_thread_t *p_intf, char *psz_mrl )
 {
 #define SKIPSPACE( p ) { while( *p && ( *p == ' ' || *p == '\t' ) ) p++; }
 #define SKIPTRAILINGSPACE( p, d ) \
     { char *e=d; while( e > p && (*(e-1)==' ' || *(e-1)=='\t') ){e--;*e=0;} }
 
-    playlist_item_t *p_item = NULL;
+    input_item_t *p_item = NULL;
     char *psz_item = NULL, *psz_item_mrl = NULL, *psz_orig;
     char **ppsz_options = NULL;
     int i, i_options = 0;
@@ -2152,10 +2147,10 @@ static playlist_item_t *parse_MRL( intf_thread_t *p_intf, char *psz_mrl )
     /* Now create a playlist item */
     if( psz_item_mrl )
     {
-        p_item = playlist_ItemNew( p_intf, psz_item_mrl, psz_item_mrl );
+        p_item = input_ItemNew( p_intf, psz_item_mrl, psz_item_mrl );
         for( i = 0; i < i_options; i++ )
         {
-            playlist_ItemAddOption( p_item, ppsz_options[i] );
+            vlc_input_item_AddOption( p_item, ppsz_options[i] );
         }
     }
 

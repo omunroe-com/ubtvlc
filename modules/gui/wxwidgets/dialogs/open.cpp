@@ -2,7 +2,7 @@
  * open.cpp : Open dialog box
  *****************************************************************************
  * Copyright (C) 2000-2005 the VideoLAN team
- * $Id: open.cpp 15370 2006-04-26 23:20:48Z xtophe $
+ * $Id: open.cpp 15756 2006-05-28 13:18:21Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -321,11 +321,11 @@ AutoBuiltPanel::AutoBuiltPanel( wxWindow *parent, OpenDialog *dialog,
         ok_button->SetDefault();
         wxButton *cancel_button =
             new wxButton( p_advanced_dialog, wxID_CANCEL, wxU(_("&Cancel")) );
-        wxBoxSizer *button_sizer = new wxBoxSizer( wxHORIZONTAL );
-        button_sizer->Add( ok_button, 0, wxALL, 5 );
-        button_sizer->Add( cancel_button, 0, wxALL, 5 );
-        button_sizer->Layout();
-        sizer->Add( button_sizer, 0, wxALL, 0 );
+        wxStdDialogButtonSizer *button_sizer = new wxStdDialogButtonSizer;
+        button_sizer->AddButton( ok_button );
+        button_sizer->AddButton( cancel_button );
+        button_sizer->Realize();
+        sizer->Add( button_sizer, 0, wxEXPAND|wxALL, 5 );
 
         sizer->SetMinSize( 400, -1 );
         p_advanced_dialog->SetSizerAndFit( sizer );
@@ -563,10 +563,10 @@ OpenDialog::OpenDialog( intf_thread_t *_p_intf, wxWindow *_p_parent,
     OnPageChange( event );
 
     /* Place everything in sizers */
-    wxBoxSizer *button_sizer = new wxBoxSizer( wxHORIZONTAL );
-    button_sizer->Add( cancel_button, 0, wxALL, 5 );
-    button_sizer->Add( ok_button, 0, wxALL, 5 );
-    button_sizer->Layout();
+    wxStdDialogButtonSizer *button_sizer = new wxStdDialogButtonSizer;
+    button_sizer->AddButton( cancel_button );
+    button_sizer->AddButton( ok_button );
+    button_sizer->Realize();
     wxBoxSizer *main_sizer = new wxBoxSizer( wxVERTICAL );
     wxBoxSizer *panel_sizer = new wxBoxSizer( wxVERTICAL );
 #if (!wxCHECK_VERSION(2,5,2))
@@ -576,7 +576,7 @@ OpenDialog::OpenDialog( intf_thread_t *_p_intf, wxWindow *_p_parent,
 #endif
     panel_sizer->Add( adv_sizer, 0, wxEXPAND | wxALL, 5 );
     panel_sizer->Add( static_line, 0, wxEXPAND | wxALL, 5 );
-    panel_sizer->Add( button_sizer, 0, wxALIGN_RIGHT | wxALL, 5 );
+    panel_sizer->Add( button_sizer, 0, wxEXPAND | wxALL, 5 );
     panel_sizer->Layout();
     panel->SetSizerAndFit( panel_sizer );
     main_sizer->Add( panel, 1, wxGROW, 0 );
@@ -1165,11 +1165,11 @@ void OpenDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
     for( int i = 0; i < (int)mrl.GetCount(); i++ )
     {
         vlc_bool_t b_start = !i && i_open_arg;
-        playlist_item_t *p_item;
+        input_item_t *p_input;
         char *psz_utf8;
 
         psz_utf8 = wxFromLocale( mrl[i] );
-        p_item = playlist_ItemNew( p_intf, psz_utf8, psz_utf8 );
+        p_input = input_ItemNew( p_intf, psz_utf8, psz_utf8 );
         wxLocaleFree( psz_utf8 );
 
         /* Insert options */
@@ -1177,7 +1177,7 @@ void OpenDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
                ((const char *)mrl[i + 1].mb_str())[0] == ':' )
         {
             psz_utf8 = wxFromLocale( mrl[i + 1] );
-            playlist_ItemAddOption( p_item, psz_utf8 );
+            vlc_input_item_AddOption( p_input, psz_utf8 );
             wxLocaleFree( psz_utf8 );
             i++;
         }
@@ -1188,7 +1188,7 @@ void OpenDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
             for( int j = 0; j < (int)subsfile_mrl.GetCount(); j++ )
             {
                 psz_utf8 = wxFromLocale( subsfile_mrl[j] );
-                playlist_ItemAddOption( p_item, psz_utf8 );
+                vlc_input_item_AddOption( p_input, psz_utf8 );
                 wxLocaleFree( psz_utf8 );
             }
         }
@@ -1199,24 +1199,22 @@ void OpenDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
             for( int j = 0; j < (int)sout_mrl.GetCount(); j++ )
             {
                 psz_utf8 = wxFromLocale( sout_mrl[j] );
-                playlist_ItemAddOption( p_item, psz_utf8 );
+                vlc_input_item_AddOption( p_input, psz_utf8 );
                 wxLocaleFree( psz_utf8 );
             }
         }
 
-
         if( b_start )
         {
-            playlist_AddItem( p_playlist, p_item,
-                              PLAYLIST_APPEND,
-                              PLAYLIST_END );
-            playlist_Control( p_playlist, PLAYLIST_ITEMPLAY, p_item );
+            playlist_PlaylistAddInput( p_playlist, p_input,
+                                       PLAYLIST_APPEND | PLAYLIST_GO,
+                                       PLAYLIST_END );
         }
         else
         {
-            playlist_AddItem( p_playlist, p_item,
-                              PLAYLIST_APPEND|PLAYLIST_PREPARSE,
-                              PLAYLIST_END );
+            playlist_PlaylistAddInput( p_playlist, p_input,
+                                       PLAYLIST_APPEND|PLAYLIST_PREPARSE,
+                                       PLAYLIST_END );
         }
     }
 
@@ -1263,6 +1261,12 @@ void OpenDialog::OnFileBrowse( wxCommandEvent& WXUNUSED(event) )
     if( file_dialog == NULL )
         file_dialog = new wxFileDialog( this, wxU(_("Open File")),
             wxT(""), wxT(""), wxT("*"), wxOPEN | wxMULTIPLE );
+
+    file_dialog->SetWildcard(wxU(_("All Files (*.*)|*"
+        "|Sound Files (*.mp3, *.ogg, etc.)|" EXTENSIONS_AUDIO
+        "|Video Files (*.avi, *.mpg, etc.)|" EXTENSIONS_VIDEO
+        "|Playlist Files (*.m3u, *.pls, etc.)|" EXTENSIONS_PLAYLIST
+        "|Subtitle Files (*.srt, *.sub, etc.)|" EXTENSIONS_SUBTITLE)));
 
     if( file_dialog && file_dialog->ShowModal() == wxID_OK )
     {
@@ -1666,10 +1670,12 @@ void OpenDialog::OnDiscTypeChange( wxCommandEvent& WXUNUSED(event) )
         disc_audio->SetRange( 0, 7 );  // up to 8 audio channels
         disc_chapter->SetRange( 0, 255 );
         disc_title->SetToolTip( wxU(_("Title number.")) );
+        // \bug [string] needs to be DVDs instead of DVD's
         disc_sub->SetToolTip( wxU(_(
           "DVD's can have up to 32 subtitles numbered 0..31. "
           "Note this is not the same thing as a subtitle name (e.g. 'en'). "
           "If a value -1 is used, no subtitle will be shown." )) );
+        // \bug [string] needs to be DVDs instead of DVD's
         disc_audio->SetToolTip( wxU(_("Audio track number. "
           "DVD's can have up to 8 audio tracks numbered 0..7."
         )) );
@@ -1707,9 +1713,11 @@ void OpenDialog::OnDiscTypeChange( wxCommandEvent& WXUNUSED(event) )
         disc_title->SetRange( 0, 99 );  // only 100 tracks allowed on VCDs
         disc_sub->SetRange( -1, 3 );    // up to 4 subtitles -1 = no subtitle
         disc_audio->SetRange( 0, 1 );   // up to 2 audio tracks
+        // \bug [string] needs to be SVCDs instead of SVCD's
         disc_sub->SetToolTip( wxU(_(
           "SVCD's can have up to 4 subtitles numbered 0..3. "
           "If a value -1 is used, no subtitle will be shown." )) );
+        // \bug [string] needs to be SVCDs instead of SVCD's
         disc_audio->SetToolTip( wxU(_("Audio track number. "
           "VCD's can have up to 2 audio tracks numbered 0 or 1. "
         )) );
@@ -1823,14 +1831,14 @@ void OpenDialog::OnSubsFileSettings( wxCommandEvent& WXUNUSED(event) )
         if( subsfile_dialog->align_combo )
         {
             subsfile_mrl.Add( wxString::Format(wxT("subsdec-align=%i"),
-                              (int)subsfile_dialog->align_combo->GetClientData(
-                              subsfile_dialog->align_combo->GetSelection()) ) );
+                        (int)subsfile_dialog->align_combo->GetClientData(
+                        subsfile_dialog->align_combo->GetSelection()) ) );
         }
         if( subsfile_dialog->size_combo )
         {
             subsfile_mrl.Add( wxString::Format( wxT("freetype-rel-fontsize=%i"),
-                              (int)subsfile_dialog->size_combo->GetClientData(
-                              subsfile_dialog->size_combo->GetSelection()) ) );
+                        (int)subsfile_dialog->size_combo->GetClientData(
+                        subsfile_dialog->size_combo->GetSelection()) ) );
         }
         subsfile_mrl.Add( wxString::Format( wxT("sub-fps=%i"),
                           subsfile_dialog->fps_spinctrl->GetValue() ) );

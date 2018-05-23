@@ -128,8 +128,9 @@ void libvlc_vlm_set_output( libvlc_instance_t *p_instance, char *psz_name,
     i_ret = vlm_MediaSetup( p_instance->p_vlm, p_media, "output", psz_output );
     if( i_ret )
     {
-         libvlc_exception_raise( p_exception, "Unable to set output" );
-         vlc_mutex_unlock( &p_instance->p_vlm->lock );return;
+        libvlc_exception_raise( p_exception, "Unable to set output" );
+        vlc_mutex_unlock( &p_instance->p_vlm->lock );
+        return;
     }
     vlc_mutex_unlock( &p_instance->p_vlm->lock );
 #endif
@@ -148,14 +149,16 @@ void libvlc_vlm_set_input( libvlc_instance_t *p_instance, char *psz_name,
     i_ret = vlm_MediaSetup( p_instance->p_vlm, p_media, "inputdel", "all" );
     if( i_ret )
     {
-         libvlc_exception_raise( p_exception, "Unable to change input" );
-         vlc_mutex_unlock( &p_instance->p_vlm->lock );return;
+        libvlc_exception_raise( p_exception, "Unable to change input" );
+        vlc_mutex_unlock( &p_instance->p_vlm->lock );
+        return;
     }
     i_ret = vlm_MediaSetup( p_instance->p_vlm, p_media, "input", psz_input );
     if( i_ret )
     {
         libvlc_exception_raise( p_exception, "Unable to change input" );
-        vlc_mutex_unlock( &p_instance->p_vlm->lock );return;
+        vlc_mutex_unlock( &p_instance->p_vlm->lock );
+        return;
     }
     vlc_mutex_unlock( &p_instance->p_vlm->lock );
 #endif
@@ -174,8 +177,9 @@ void libvlc_vlm_add_input( libvlc_instance_t *p_instance, char *psz_name,
     i_ret = vlm_MediaSetup( p_instance->p_vlm, p_media, "input", psz_input );
     if( i_ret )
     {
-         libvlc_exception_raise( p_exception, "Unable to change input" );
-         vlc_mutex_unlock( &p_instance->p_vlm->lock ); return;
+        libvlc_exception_raise( p_exception, "Unable to change input" );
+        vlc_mutex_unlock( &p_instance->p_vlm->lock );
+        return;
     }
 
     vlc_mutex_unlock( &p_instance->p_vlm->lock );
@@ -211,21 +215,81 @@ void libvlc_vlm_change_media( libvlc_instance_t *p_instance, char *psz_name,
     if( i_ret )
     {
         libvlc_exception_raise( p_exception, "Unable to set output" );
-        vlc_mutex_unlock( &p_instance->p_vlm->lock ); return;
+        vlc_mutex_unlock( &p_instance->p_vlm->lock );
+        return;
     }
     i_ret = vlm_MediaSetup( p_instance->p_vlm, p_media, "inputdel", "all" );
     if( i_ret )
     {
         libvlc_exception_raise( p_exception, "Unable to change input" );
-        vlc_mutex_unlock( &p_instance->p_vlm->lock ); return;
+        vlc_mutex_unlock( &p_instance->p_vlm->lock );
+        return;
     }
     i_ret = vlm_MediaSetup( p_instance->p_vlm, p_media, "input", psz_input );
     if( i_ret )
     {
         libvlc_exception_raise( p_exception, "Unable to change input" );
-        vlc_mutex_unlock( &p_instance->p_vlm->lock );return;
+        vlc_mutex_unlock( &p_instance->p_vlm->lock );
+        return;
     }
 
     vlc_mutex_unlock( &p_instance->p_vlm->lock );
+#endif
+}
+
+void libvlc_vlm_play_media( libvlc_instance_t *p_instance, char *psz_name,
+                            libvlc_exception_t *p_exception )
+    
+{
+    char *psz_message;
+    vlm_message_t *answer;
+    CHECK_VLM;
+#ifdef ENABLE_VLM
+    asprintf( &psz_message, "control %s play", psz_name );
+    vlm_ExecuteCommand( p_instance->p_vlm, psz_message, &answer );
+    if( answer->psz_value )
+    {
+        libvlc_exception_raise( p_exception, "Unable to play %s",
+                                psz_name );
+    }
+    free( psz_message);
+#endif
+}
+
+void libvlc_vlm_stop_media( libvlc_instance_t *p_instance, char *psz_name,
+                            libvlc_exception_t *p_exception )
+    
+{
+    char *psz_message;
+    vlm_message_t *answer;
+    CHECK_VLM;
+#ifdef ENABLE_VLM
+    asprintf( &psz_message, "control %s stop", psz_name );
+    vlm_ExecuteCommand( p_instance->p_vlm, psz_message, &answer );
+    if( answer->psz_value )
+    {
+        libvlc_exception_raise( p_exception, "Unable to stop %s",
+                                psz_name );
+    }
+    free( psz_message);
+#endif
+}
+
+void libvlc_vlm_pause_media( libvlc_instance_t *p_instance, char *psz_name,
+                            libvlc_exception_t *p_exception )
+    
+{
+    char *psz_message;
+    vlm_message_t *answer;
+    CHECK_VLM;
+#ifdef ENABLE_VLM
+    asprintf( &psz_message, "control %s pause", psz_name );
+    vlm_ExecuteCommand( p_instance->p_vlm, psz_message, &answer );
+    if( answer->psz_value )
+    {
+        libvlc_exception_raise( p_exception, "Unable to pause %s",
+                                psz_name );
+    }
+    free( psz_message);
 #endif
 }

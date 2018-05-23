@@ -2,7 +2,7 @@
  * ctrl_radialslider.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_radialslider.hpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: ctrl_radialslider.hpp 15804 2006-06-04 14:03:54Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -36,7 +36,7 @@ class VarPercent;
 
 
 /// Radial slider
-class CtrlRadialSlider: public CtrlGeneric, public Observer<VarPercent, void*>
+class CtrlRadialSlider: public CtrlGeneric, public Observer<VarPercent>
 {
     public:
         /// Create a radial slider with the given image, which must be
@@ -86,7 +86,7 @@ class CtrlRadialSlider: public CtrlGeneric, public Observer<VarPercent, void*>
         DEFINE_CALLBACK( CtrlRadialSlider, Move )
 
         /// Method called when the observed variable is modified
-        virtual void onUpdate( Subject<VarPercent,void*> &rVariable, void* );
+        virtual void onUpdate( Subject<VarPercent> &rVariable, void* );
 
         /// Change the position of the cursor, with the given position of
         /// the mouse (relative to the layout). Is blocking is true, the

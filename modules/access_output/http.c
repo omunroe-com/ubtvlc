@@ -2,7 +2,7 @@
  * http.c
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: http.c 15172 2006-04-11 13:17:20Z zorglub $
+ * $Id: http.c 16203 2006-08-03 15:34:08Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Jon Lech Johansen <jon@nanocrew.net>
@@ -44,8 +44,6 @@
 
 #include "vlc_httpd.h"
 
-#define FREE( p ) if( p ) { free( p); (p) = NULL; }
-
 #define DEFAULT_PORT        8080
 #define DEFAULT_SSL_PORT    8443
 
@@ -74,11 +72,11 @@ static void Close( vlc_object_t * );
                           "be used for HTTPS." )
 #define KEY_TEXT N_( "Private key file" )
 #define KEY_LONGTEXT N_( "Path to the x509 PEM private key file that will " \
-                         " be used for HTTPS. Leave " \
+                         "be used for HTTPS. Leave " \
                          "empty if you don't have one." )
 #define CA_TEXT N_( "Root CA file" )
 #define CA_LONGTEXT N_( "Path to the x509 PEM trusted root CA certificates " \
-                        "(certificate authority) file that will be used for" \
+                        "(certificate authority) file that will be used for " \
                         "HTTPS. Leave empty if you " \
                         "don't have one." )
 #define CRL_TEXT N_( "CRL file" )
@@ -113,7 +111,7 @@ vlc_module_begin();
     add_string( SOUT_CFG_PREFIX "crl", NULL, NULL,
                 CRL_TEXT, CRL_LONGTEXT, VLC_TRUE );
     add_bool( SOUT_CFG_PREFIX "bonjour", VLC_FALSE, NULL,
-              BONJOUR_TEXT, BONJOUR_LONGTEXT,VLC_TRUE);
+              BONJOUR_TEXT, BONJOUR_LONGTEXT, VLC_TRUE);
     set_callbacks( Open, Close );
 vlc_module_end();
 
@@ -313,10 +311,10 @@ static int Open( vlc_object_t *p_this )
             return VLC_EGENERIC;
         }
 
-        psz_name = strrchr( p_playlist->status.p_item->input.psz_uri,
+        psz_name = strrchr( p_playlist->status.p_item->p_input->psz_uri,
                             DIRECTORY_SEPARATOR );
         if( psz_name != NULL ) psz_name++;
-        else psz_name = p_playlist->status.p_item->input.psz_uri;
+        else psz_name = p_playlist->status.p_item->p_input->psz_uri;
 
         asprintf( &psz_txt, "path=%s", psz_file_name );
 
@@ -328,11 +326,7 @@ static int Open( vlc_object_t *p_this )
 
         if( p_sys->p_bonjour == NULL )
         {
-            vlc_object_release( p_playlist );
-            httpd_StreamDelete( p_sys->p_httpd_stream );
-            httpd_HostDelete( p_sys->p_httpd_host );
-            free( (void *)p_sys );
-            return VLC_EGENERIC;
+            msg_Err( p_access, "Avahi stream announcing was requested, but no avahi service could be started" );
         }
         vlc_object_release( p_playlist );
     }

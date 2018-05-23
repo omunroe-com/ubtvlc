@@ -2,7 +2,7 @@
  * generic_window.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: generic_window.hpp 14925 2006-03-25 16:36:51Z asmax $
+ * $Id: generic_window.hpp 15804 2006-06-04 14:03:54Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -42,7 +42,7 @@ class WindowManager;
 
 
 /// Generic window class
-class GenericWindow: public SkinObject, public Observer<VarBool, void*>
+class GenericWindow: public SkinObject, public Observer<VarBool>
 {
     private:
         friend class WindowManager;
@@ -122,7 +122,7 @@ class GenericWindow: public SkinObject, public Observer<VarBool, void*>
         mutable VarBoolImpl *m_pVarVisible;
 
         /// Method called when the observed variable is modified
-        virtual void onUpdate( Subject<VarBool, void*> &rVariable , void*);
+        virtual void onUpdate( Subject<VarBool> &rVariable , void*);
 };
 
 

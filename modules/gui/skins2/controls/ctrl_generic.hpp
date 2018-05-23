@@ -2,7 +2,7 @@
  * ctrl_generic.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_generic.hpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: ctrl_generic.hpp 16167 2006-07-30 14:34:21Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -41,7 +41,7 @@ class VarBool;
 
 
 /// Base class for controls
-class CtrlGeneric: public SkinObject, public Observer<VarBool, void*>
+class CtrlGeneric: public SkinObject, public Observer<VarBool>
 {
     public:
         virtual ~CtrlGeneric();
@@ -66,8 +66,10 @@ class CtrlGeneric: public SkinObject, public Observer<VarBool, void*>
         virtual UString getTooltipText() const
             { return UString( getIntf(), "" ); }
 
-        /// Overload this method if you want to do something special when
-        /// the layout is resized
+        /**
+         * Overload this method if you want to do something special when
+         * the layout is resized
+         */
         virtual void onResize() {}
 
         /// Get the help text
@@ -87,14 +89,18 @@ class CtrlGeneric: public SkinObject, public Observer<VarBool, void*>
         CtrlGeneric( intf_thread_t *pIntf, const UString &rHelp,
                      VarBool *pVisible = NULL );
 
-        /// Tell the layout when the image has changed, with the size of the
-        /// rectangle to repaint and its offset.
-        /// Use the default values to repaint the whole window
+        /**
+         * Tell the layout when the image has changed, with the size of the
+         * rectangle to repaint and its offset.
+         * Use the default values to repaint the whole window
+         */
         virtual void notifyLayout( int witdh = -1, int height = -1,
                                    int xOffSet = 0, int yOffSet = 0 ) const;
 
-        /// Same as notifyLayout(), but takes optional images as parameters.
-        /// The maximum size(s) of the images will be used for repainting.
+        /**
+         * Same as notifyLayout(), but takes optional images as parameters.
+         * The maximum size(s) of the images will be used for repainting.
+         */
         void notifyLayoutMaxSize( const Box *pImg1 = NULL,
                                   const Box *pImg2 = NULL );
 
@@ -110,8 +116,10 @@ class CtrlGeneric: public SkinObject, public Observer<VarBool, void*>
         /// Get the associated window, if any
         virtual TopWindow *getWindow() const;
 
-        /// Overload this method if you want to do something special when
-        /// the Position object is set
+        /**
+         * Overload this method if you want to do something special when
+         * the Position object is set
+         */
         virtual void onPositionChange() {}
 
         /// Overload this method to get notified of bool variable changes
@@ -128,7 +136,7 @@ class CtrlGeneric: public SkinObject, public Observer<VarBool, void*>
         VarBool *m_pVisible;
 
         /// Method called when an observed bool variable is changed
-        virtual void onUpdate( Subject<VarBool, void*> &rVariable , void* );
+        virtual void onUpdate( Subject<VarBool> &rVariable , void* );
 };
 
 typedef CountedPtr<CtrlGeneric> CtrlGenericPtr;

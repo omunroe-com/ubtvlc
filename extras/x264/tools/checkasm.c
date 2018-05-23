@@ -131,6 +131,22 @@ static int check_pixel( int cpu_ref, int cpu_new )
     TEST_INTRA_SATD( intra_sa8d_x3_8x8, predict_8x8, sa8d[PIXEL_8x8], 1, edge );
     report( "intra satd_x3 :" );
 
+    if( pixel_asm.ssim_4x4x2_core != pixel_ref.ssim_4x4x2_core ||
+        pixel_asm.ssim_end4 != pixel_ref.ssim_end4 )
+    {
+        float res_c, res_a;
+        ok = 1;
+        x264_cpu_restore( cpu_new );
+        res_c = x264_pixel_ssim_wxh( &pixel_c,   buf1+2, 32, buf2+2, 32, 32, 28 );
+        res_a = x264_pixel_ssim_wxh( &pixel_asm, buf1+2, 32, buf2+2, 32, 32, 28 );
+        if( res_c != res_a )
+        {
+            ok = 0;
+            fprintf( stderr, "ssim: %.7f != %.7f [FAILED]\n", res_c, res_a );
+        }
+        report( "ssim :" );
+    }
+
     return ret;
 }
 
@@ -274,7 +290,7 @@ static int check_mc( int cpu_ref, int cpu_new )
     uint8_t *dst1    = &buf3[2*32+2];
     uint8_t *dst2    = &buf4[2*32+2];
 
-    int dx, dy, i, w;
+    int dx, dy, i, j, w;
     int ret = 0, ok, used_asm;
 
     x264_mc_init( 0, &mc_c );
@@ -304,6 +320,10 @@ static int check_mc( int cpu_ref, int cpu_new )
             memset(buf4, 0xCD, 1024); \
             mc_c.mc_chroma( src, 32, dst1, 16, dx, dy, w, h );     \
             mc_a.mc_chroma( src, 32, dst2, 16, dx, dy, w, h );   \
+            /* mc_chroma width=2 may write garbage to the right of dst. ignore that. */\
+            for( j=0; j<h; j++ ) \
+                for( i=w; i<4; i++ ) \
+                    dst2[i+j*16] = dst1[i+j*16]; \
             if( memcmp( buf3, buf4, 1024 ) )               \
             { \
                 fprintf( stderr, "mc_chroma[mv(%d,%d) %2dx%-2d]     [FAILED]\n", dx, dy, w, h );   \
@@ -325,8 +345,8 @@ static int check_mc( int cpu_ref, int cpu_new )
     report( "mc luma :" );
 
     ok = 1; used_asm = 0;
-    for( dy = 0; dy < 9; dy++ )
-        for( dx = 0; dx < 9; dx++ )
+    for( dy = -1; dy < 9; dy++ )
+        for( dx = -1; dx < 9; dx++ )
         {
             MC_TEST_CHROMA( 8, 8 );
             MC_TEST_CHROMA( 8, 4 );

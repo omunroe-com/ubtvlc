@@ -1,4 +1,4 @@
-$Id: INSTALL.win32 15053 2006-04-02 12:27:24Z dionoea $
+$Id: INSTALL.win32 15707 2006-05-22 09:42:08Z xtophe $
 
 INSTALL file for the Windows9x/Me/NT4/2k/XP version of the VLC media player
 
@@ -132,7 +132,7 @@ along those lines:
       --with-wx-config-path=/usr/win32/bin \
       --with-freetype-config-path=/usr/win32/bin \
       --with-fribidi-config-path=/usr/win32/bin \
-      --enable-livedotcom --with-livedotcom-tree=/usr/win32/live.com \
+      --enable-live555 --with-live555-tree=/usr/win32/live.com \
       --enable-caca --with-caca-config-path=/usr/win32/bin \
       --with-xml2-config-path=/usr/win32/bin \
       --with-dvdnav-config-path=/usr/win32/bin \
@@ -158,7 +158,7 @@ emulation layer, use something like this:
       --with-wx-config-path=/usr/win32/bin \
       --with-freetype-config-path=/usr/win32/bin \
       --with-fribidi-config-path=/usr/win32/bin \
-      --enable-livedotcom --with-livedotcom-tree=/usr/win32/live.com \
+      --enable-live555 --with-live555-tree=/usr/win32/live.com \
       --enable-caca --with-caca-config-path=/usr/win32/bin \
       --with-xml2-config-path=/usr/win32/bin \
       --with-dvdnav-config-path=/usr/win32/bin \
@@ -200,7 +200,7 @@ the CFLAGS, LDFLAGS and --with-foo-config-path=.
       --enable-ffmpeg --enable-faad --enable-flac --enable-theora \
       --disable-cddax --disable-vcdx --enable-goom \
       --enable-twolame --enable-dvdread \
-      --enable-mkv --enable-caca \
+      --enable-mkv --enable-caca --enable-live555\
       --enable-debug
 
 

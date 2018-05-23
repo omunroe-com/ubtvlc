@@ -2,7 +2,7 @@
  * freetype.c : Put text on the video, using freetype2
  *****************************************************************************
  * Copyright (C) 2002 - 2005 the VideoLAN team
- * $Id: freetype.c 15209 2006-04-14 09:37:39Z zorglub $
+ * $Id: freetype.c 16204 2006-08-03 16:58:10Z zorglub $
  *
  * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -83,11 +83,10 @@ static int SetFontSize( filter_t *, int );
 #define FONT_TEXT N_("Font")
 #define FONT_LONGTEXT N_("Filename for the font you want to use")
 #define FONTSIZE_TEXT N_("Font size in pixels")
-/// \bug [String] Extra space
 #define FONTSIZE_LONGTEXT N_("This is the default size of the fonts " \
     "that will be rendered on the video. " \
     "If set to something different than 0 this option will override the " \
-    "relative font size. " )
+    "relative font size." )
 #define OPACITY_TEXT N_("Opacity")
 #define OPACITY_LONGTEXT N_("The opacity (inverse of transparency) of the " \
     "text that will be rendered on the video. 0 = transparent, " \
@@ -109,8 +108,7 @@ static char *ppsz_sizes_text[] = { N_("Smaller"), N_("Small"), N_("Normal"),
 #define YUVP_LONGTEXT N_("This renders the font using \"paletized YUV\". " \
   "This option is only needed if you want to encode into DVB subtitles" )
 #define EFFECT_TEXT N_("Font Effect")
-/// \bug [String] Missing space
-#define EFFECT_LONGTEXT N_("It is possible to apply effects to the rendered" \
+#define EFFECT_LONGTEXT N_("It is possible to apply effects to the rendered " \
 "text to improve its readability." )
 
 #define EFFECT_BACKGROUND  1 
@@ -534,10 +532,6 @@ static void DrawBlack( line_desc_t *p_line, int i_width, subpicture_region_t *p_
 static int RenderYUVA( filter_t *p_filter, subpicture_region_t *p_region,
                    line_desc_t *p_line, int i_width, int i_height )
 {
-    static uint8_t pi_gamma[16] =
-        {0x00, 0x52, 0x84, 0x96, 0xb8, 0xca, 0xdc, 0xee, 0xff,
-          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-
     uint8_t *p_dst_y,*p_dst_u,*p_dst_v,*p_dst_a;
     video_format_t fmt;
     int i, x, y, i_pitch, i_alpha;
@@ -604,7 +598,7 @@ static int RenderYUVA( filter_t *p_filter, subpicture_region_t *p_region,
         DrawBlack( p_line, i_width, p_region,  1,  0);
         DrawBlack( p_line, i_width, p_region,  0,  1);
     }
-    
+
     if( p_filter->p_sys->i_effect == EFFECT_OUTLINE_FAT )
     {
         DrawBlack( p_line, i_width, p_region, -1, -1);
@@ -672,7 +666,7 @@ static int RenderYUVA( filter_t *p_filter, subpicture_region_t *p_region,
 
                         p_dst_u[i_offset+x] = i_u;
                         p_dst_v[i_offset+x] = i_v;
-                        
+
                         if( p_filter->p_sys->i_effect == EFFECT_BACKGROUND )
                             p_dst_a[i_offset+x] = 0xff;
                     }
@@ -681,7 +675,7 @@ static int RenderYUVA( filter_t *p_filter, subpicture_region_t *p_region,
             }
         }
     }
-    
+
     /* Apply the alpha setting */
     for( i = 0; i < (int)fmt.i_height * i_pitch; i++ )
         p_dst_a[i] = p_dst_a[i] * (255 - i_alpha) / 255;
@@ -760,12 +754,12 @@ static int RenderText( filter_t *p_filter, subpicture_region_t *p_region_out,
     }
 
     {
-        char *p_in_buffer, *p_out_buffer;
+        char *p_out_buffer;
+        const char *p_in_buffer = psz_string;
         size_t i_in_bytes, i_out_bytes, i_out_bytes_left, i_ret;
         i_in_bytes = strlen( psz_string );
         i_out_bytes = i_in_bytes * sizeof( uint32_t );
         i_out_bytes_left = i_out_bytes;
-        p_in_buffer = psz_string;
         p_out_buffer = (char *)psz_unicode;
         i_ret = vlc_iconv( iconv_handle, &p_in_buffer, &i_in_bytes,
                            &p_out_buffer, &i_out_bytes_left );

@@ -16,7 +16,7 @@ SUFFIXES = _plugin$(LIBEXT) _plugin.a
 
 libvlcdir = $(libdir)/vlc/$(basedir)
 
-EXTRA_LIBRARIES =  libequalizer_plugin.a libequalizer.a libequalizer_pic.a libnormvol_plugin.a libnormvol.a libnormvol_pic.a libaudio_format_plugin.a libaudio_format.a libaudio_format_pic.a libparam_eq_plugin.a libparam_eq.a libparam_eq_pic.a
+EXTRA_LIBRARIES =  libequalizer_plugin.a libequalizer.a libnormvol_plugin.a libnormvol.a libaudio_format_plugin.a libaudio_format.a libparam_eq_plugin.a libparam_eq.a
 EXTRA_LTLIBRARIES =  libequalizer_plugin.la libequalizer_builtin.la libnormvol_plugin.la libnormvol_builtin.la libaudio_format_plugin.la libaudio_format_builtin.la libparam_eq_plugin.la libparam_eq_builtin.la
 
 include Modules.am
@@ -24,11 +24,14 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
+LIBVLC = -L$(top_builddir)/src -lvlc
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
+
+nice:
+	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -42,7 +45,6 @@ else
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
 	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --list plugin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
 	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" = "pic"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 endif
@@ -79,9 +81,6 @@ else
 	mkdir -p -- "$(DESTDIR)$(libvlcdir)"
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" ; 	      $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" || exit $$?; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-endif
 endif
 
 uninstall-local:
@@ -90,9 +89,6 @@ if USE_LIBTOOL
 else
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" ; 	      rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" || true; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" || true; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" || true; 	      ;; 	  esac; 	done
-endif
 endif
 
 # The equalizer plugin
@@ -106,19 +102,14 @@ libequalizer_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin equalizer`
 libequalizer_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin equalizer`
 libequalizer_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin equalizer`
 libequalizer_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin equalizer` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libequalizer_plugin_la_LIBADD = $(LTLIBVLC)
-
-libequalizer_pic_a_SOURCES = $(SOURCES_equalizer)
-libequalizer_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic equalizer`
-libequalizer_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic equalizer`
-libequalizer_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic equalizer`
 
 libequalizer_a_SOURCES = $(SOURCES_equalizer)
 libequalizer_builtin_la_SOURCES = $(SOURCES_equalizer)
-libequalizer_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin equalizer`
-libequalizer_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin equalizer`
-libequalizer_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin equalizer`
+libequalizer_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) equalizer`
+libequalizer_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) equalizer`
+libequalizer_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) equalizer`
 libequalizer_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin equalizer`
 libequalizer_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin equalizer`
 libequalizer_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin equalizer`
@@ -134,19 +125,14 @@ libnormvol_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin normvol`
 libnormvol_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin normvol`
 libnormvol_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin normvol`
 libnormvol_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin normvol` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libnormvol_plugin_la_LIBADD = $(LTLIBVLC)
-
-libnormvol_pic_a_SOURCES = $(SOURCES_normvol)
-libnormvol_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic normvol`
-libnormvol_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic normvol`
-libnormvol_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic normvol`
 
 libnormvol_a_SOURCES = $(SOURCES_normvol)
 libnormvol_builtin_la_SOURCES = $(SOURCES_normvol)
-libnormvol_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin normvol`
-libnormvol_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin normvol`
-libnormvol_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin normvol`
+libnormvol_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) normvol`
+libnormvol_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) normvol`
+libnormvol_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) normvol`
 libnormvol_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin normvol`
 libnormvol_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin normvol`
 libnormvol_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin normvol`
@@ -162,19 +148,14 @@ libaudio_format_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin audio_format`
 libaudio_format_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin audio_format`
 libaudio_format_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin audio_format`
 libaudio_format_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin audio_format` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libaudio_format_plugin_la_LIBADD = $(LTLIBVLC)
-
-libaudio_format_pic_a_SOURCES = $(SOURCES_audio_format)
-libaudio_format_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic audio_format`
-libaudio_format_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic audio_format`
-libaudio_format_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic audio_format`
 
 libaudio_format_a_SOURCES = $(SOURCES_audio_format)
 libaudio_format_builtin_la_SOURCES = $(SOURCES_audio_format)
-libaudio_format_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin audio_format`
-libaudio_format_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin audio_format`
-libaudio_format_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin audio_format`
+libaudio_format_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) audio_format`
+libaudio_format_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) audio_format`
+libaudio_format_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) audio_format`
 libaudio_format_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin audio_format`
 libaudio_format_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin audio_format`
 libaudio_format_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin audio_format`
@@ -190,19 +171,14 @@ libparam_eq_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin param_eq`
 libparam_eq_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin param_eq`
 libparam_eq_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin param_eq`
 libparam_eq_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin param_eq` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libparam_eq_plugin_la_LIBADD = $(LTLIBVLC)
-
-libparam_eq_pic_a_SOURCES = $(SOURCES_param_eq)
-libparam_eq_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic param_eq`
-libparam_eq_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic param_eq`
-libparam_eq_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic param_eq`
 
 libparam_eq_a_SOURCES = $(SOURCES_param_eq)
 libparam_eq_builtin_la_SOURCES = $(SOURCES_param_eq)
-libparam_eq_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin param_eq`
-libparam_eq_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin param_eq`
-libparam_eq_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin param_eq`
+libparam_eq_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) param_eq`
+libparam_eq_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) param_eq`
+libparam_eq_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) param_eq`
 libparam_eq_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin param_eq`
 libparam_eq_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin param_eq`
 libparam_eq_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin param_eq`

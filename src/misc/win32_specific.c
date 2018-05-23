@@ -2,7 +2,7 @@
  * win32_specific.c: Win32 specific features
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: win32_specific.c 15139 2006-04-07 21:52:33Z dionoea $
+ * $Id: win32_specific.c 15928 2006-06-20 14:33:48Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -84,19 +84,16 @@ void system_Init( vlc_t *p_this, int *pi_argc, char *ppsz_argv[] )
     mdate();
 
     /* WinSock Library Init. */
-    if( !WSAStartup( MAKEWORD( 2, 0 ), &Data ) )
+    if( !WSAStartup( MAKEWORD( 2, 2 ), &Data ) )
     {
-        /* Confirm that the WinSock DLL supports 2.0.*/
-        if( LOBYTE( Data.wVersion ) != 2 || HIBYTE( Data.wVersion ) != 0 )
-        {
+        /* Aah, pretty useless check, we should always have Winsock 2.2
+         * since it appeared in Win98. */
+        if( LOBYTE( Data.wVersion ) != 2 || HIBYTE( Data.wVersion ) != 2 )
             /* We could not find a suitable WinSock DLL. */
             WSACleanup( );
-        }
         else
-        {
             /* Everything went ok. */
             return;
-        }
     }
 
     /* Let's try with WinSock 1.1 */
@@ -104,20 +101,14 @@ void system_Init( vlc_t *p_this, int *pi_argc, char *ppsz_argv[] )
     {
         /* Confirm that the WinSock DLL supports 1.1.*/
         if( LOBYTE( Data.wVersion ) != 1 || HIBYTE( Data.wVersion ) != 1 )
-        {
             /* We could not find a suitable WinSock DLL. */
             WSACleanup( );
-        }
         else
-        {
             /* Everything went ok. */
             return;
-        }
     }
 
     fprintf( stderr, "error: can't initialize WinSocks\n" );
-
-    return;
 }
 
 /*****************************************************************************
@@ -330,13 +321,13 @@ LRESULT CALLBACK WMCOPYWNDPROC( HWND hwnd, UINT uMsg, WPARAM wParam,
                 }
                 if( i_opt || config_GetInt( p_this, "playlist-enqueue" ) )
                 {
-                  playlist_AddExt( p_playlist, ppsz_argv[i_opt],
+                  playlist_PlaylistAddExt( p_playlist, ppsz_argv[i_opt],
                     ppsz_argv[i_opt], PLAYLIST_APPEND ,
                     PLAYLIST_END, -1,
                     (char const **)( i_options ? &ppsz_argv[i_opt+1] : NULL ),
                     i_options );
                 } else {
-                  playlist_AddExt( p_playlist, ppsz_argv[i_opt],
+                  playlist_PlaylistAddExt( p_playlist, ppsz_argv[i_opt],
                     ppsz_argv[i_opt], PLAYLIST_APPEND | PLAYLIST_GO,
                     PLAYLIST_END, -1,
                     (char const **)( i_options ? &ppsz_argv[i_opt+1] : NULL ),

@@ -2,7 +2,7 @@
  * http.c: HTTP input module
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: http.c 15169 2006-04-11 09:27:46Z zorglub $
+ * $Id: http.c 16083 2006-07-19 09:33:41Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -161,18 +161,7 @@ static int Open( vlc_object_t *p_this )
     char         *psz, *p;
 
     /* Set up p_access */
-    p_access->pf_read = Read;
-    p_access->pf_block = NULL;
-    p_access->pf_control = Control;
-    p_access->pf_seek = Seek;
-    p_access->info.i_update = 0;
-    p_access->info.i_size = 0;
-    p_access->info.i_pos = 0;
-    p_access->info.b_eof = VLC_FALSE;
-    p_access->info.i_title = 0;
-    p_access->info.i_seekpoint = 0;
-    p_access->p_sys = p_sys = malloc( sizeof( access_sys_t ) );
-    memset( p_sys, 0, sizeof( access_sys_t ) );
+    STANDARD_READ_ACCESS_INIT;
     p_sys->fd = -1;
     p_sys->b_proxy = VLC_FALSE;
     p_sys->i_version = 1;
@@ -276,7 +265,9 @@ connect:
     if( Connect( p_access, 0 ) )
     {
         /* Retry with http 1.0 */
+        msg_Dbg( p_access, "switching to HTTP version 1.0" );
         p_sys->i_version = 0;
+        p_sys->b_seekable = VLC_FALSE;
 
         if( p_access->b_die ||
             Connect( p_access, 0 ) )
@@ -290,8 +281,9 @@ connect:
         char *psz_login = NULL; char *psz_password = NULL;
         int i_ret;
         msg_Dbg( p_access, "authentication failed" );
-        i_ret = intf_UserLoginPassword( p_access, "HTTP authentication",
-                         "Please enter a valid login and password.", &psz_login, &psz_password );
+        i_ret = intf_UserLoginPassword( p_access, _("HTTP authentication"),
+                        _("Please enter a valid login name and a password."), 
+                                                &psz_login, &psz_password );
         if( i_ret == DIALOG_OK_YES )
         {
             msg_Dbg( p_access, "retrying with user=%s, pwd=%s",
@@ -336,9 +328,9 @@ connect:
             goto error;
         }
 
-        /* Change the uri */
+        /* Change the URI */
         vlc_mutex_lock( &p_playlist->object_lock );
-        p_input_item = &p_playlist->status.p_item->input;
+        p_input_item = p_playlist->status.p_item->p_input;
         vlc_mutex_lock( &p_input_item->lock );
         free( p_input_item->psz_uri );
         free( p_access->psz_path );
@@ -406,7 +398,8 @@ connect:
         p_access->psz_demux = strdup( "nsv" );
     }
     else if( p_sys->psz_mime &&
-             !strcasecmp( p_sys->psz_mime, "application/xspf+xml" ) )
+             !strncasecmp( p_sys->psz_mime, "application/xspf+xml", 20 ) &&
+             ( memchr( " ;\t", p_sys->psz_mime[20], 4 ) != NULL ) )
         p_access->psz_demux = strdup( "xspf-open" );
 
     if( p_sys->b_reconnect ) msg_Dbg( p_access, "auto re-connect enabled" );
@@ -639,7 +632,8 @@ static int ReadICYMeta( access_t *p_access )
         p += strlen( "StreamTitle=" );
         if( *p == '\'' || *p == '"' )
         {
-            char *psz = strchr( &p[1], p[0] );
+            char closing[] = { p[0], ';', '\0' };
+            char *psz = strstr( &p[1], closing );
             if( !psz )
                 psz = strchr( &p[1], ';' );
 
@@ -694,7 +688,7 @@ static int Control( access_t *p_access, int i_query, va_list args )
     vlc_bool_t   *pb_bool;
     int          *pi_int;
     int64_t      *pi_64;
-    vlc_meta_t **pp_meta;
+    vlc_meta_t   *p_meta;
 
     switch( i_query )
     {
@@ -734,18 +728,14 @@ static int Control( access_t *p_access, int i_query, va_list args )
             break;
 
         case ACCESS_GET_META:
-            pp_meta = (vlc_meta_t**)va_arg( args, vlc_meta_t** );
-            *pp_meta = vlc_meta_New();
+            p_meta = (vlc_meta_t*)va_arg( args, vlc_meta_t* );
 
             if( p_sys->psz_icy_name )
-                vlc_meta_Add( *pp_meta, VLC_META_TITLE,
-                              p_sys->psz_icy_name );
+                vlc_meta_SetTitle( p_meta, p_sys->psz_icy_name );
             if( p_sys->psz_icy_genre )
-                vlc_meta_Add( *pp_meta, VLC_META_GENRE,
-                              p_sys->psz_icy_genre );
+                vlc_meta_SetGenre( p_meta, p_sys->psz_icy_genre );
             if( p_sys->psz_icy_title )
-                vlc_meta_Add( *pp_meta, VLC_META_NOW_PLAYING,
-                              p_sys->psz_icy_title );
+                vlc_meta_SetNowPlaying( p_meta, p_sys->psz_icy_title );
             break;
 
         case ACCESS_GET_TITLE_INFO:
@@ -970,16 +960,15 @@ static int Request( access_t *p_access, int64_t i_tell )
     net_Printf( VLC_OBJECT(p_access), p_sys->fd, pvs, "Icy-MetaData: 1\r\n" );
 
 
-    if( p_sys->b_continuous && p_sys->i_version == 1 )
+    if( p_sys->b_continuous )
     {
         net_Printf( VLC_OBJECT( p_access ), p_sys->fd, pvs,
-                    "Connection: keep-alive\r\n" );
+                    "Connection: Keep-Alive\r\n" );
     }
-    else
+    else if( p_sys->i_version == 1 )
     {
-        net_Printf( VLC_OBJECT(p_access), p_sys->fd, pvs,
+        net_Printf( VLC_OBJECT( p_access ), p_sys->fd, pvs,
                     "Connection: Close\r\n");
-        p_sys->b_continuous = VLC_FALSE;
     }
 
     if( net_Printf( VLC_OBJECT(p_access), p_sys->fd, pvs, "\r\n" ) < 0 )

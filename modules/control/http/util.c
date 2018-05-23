@@ -2,7 +2,7 @@
  * util.c : Utility functions for HTTP interface
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: util.c 15116 2006-04-06 16:16:02Z massiot $
+ * $Id: util.c 15908 2006-06-14 12:05:39Z yoann $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -425,17 +425,25 @@ void E_(PlaylistListNode)( intf_thread_t *p_intf, playlist_t *p_pl,
             char *psz;
             mvar_t *itm = E_(mvar_New)( name, "set" );
 
-            sprintf( value, "%d", ( p_pl->status.p_item == p_node )? 1 : 0 );
-            E_(mvar_AppendNewVar)( itm, "current", value );
+            if( p_pl->status.p_item && p_node &&
+                p_pl->status.p_item->p_input && p_node->p_input &&
+                p_pl->status.p_item->p_input->i_id == p_node->p_input->i_id )
+            {
+                E_(mvar_AppendNewVar)( itm, "current", "1" );
+            }
+            else
+            {
+                E_(mvar_AppendNewVar)( itm, "current", "0" );
+            }
 
-            sprintf( value, "%d", p_node->input.i_id );
+            sprintf( value, "%d", p_node->p_input->i_id );
             E_(mvar_AppendNewVar)( itm, "index", value );
 
-            psz = E_(FromUTF8)( p_intf, p_node->input.psz_name );
+            psz = E_(FromUTF8)( p_intf, p_node->p_input->psz_name );
             E_(mvar_AppendNewVar)( itm, "name", psz );
             free( psz );
 
-            psz = E_(FromUTF8)( p_intf, p_node->input.psz_uri );
+            psz = E_(FromUTF8)( p_intf, p_node->p_input->psz_uri );
             E_(mvar_AppendNewVar)( itm, "uri", psz );
             free( psz );
 
@@ -454,7 +462,7 @@ void E_(PlaylistListNode)( intf_thread_t *p_intf, playlist_t *p_pl,
                 E_(mvar_AppendNewVar)( itm, "ro", "rw" );
             }
 
-            sprintf( value, "%ld", (long)p_node->input.i_duration );
+            sprintf( value, "%ld", (long)p_node->p_input->i_duration );
             E_(mvar_AppendNewVar)( itm, "duration", value );
 
             E_(mvar_AppendVar)( s, itm );
@@ -466,7 +474,7 @@ void E_(PlaylistListNode)( intf_thread_t *p_intf, playlist_t *p_pl,
             int i_child;
             mvar_t *itm = E_(mvar_New)( name, "set" );
 
-            psz = E_(FromUTF8)( p_intf, p_node->input.psz_name );
+            psz = E_(FromUTF8)( p_intf, p_node->p_input->psz_name );
             E_(mvar_AppendNewVar)( itm, "name", psz );
             E_(mvar_AppendNewVar)( itm, "uri", psz );
             free( psz );
@@ -474,7 +482,7 @@ void E_(PlaylistListNode)( intf_thread_t *p_intf, playlist_t *p_pl,
             sprintf( value, "Node" );
             E_(mvar_AppendNewVar)( itm, "type", value );
 
-            sprintf( value, "%d", p_node->input.i_id );
+            sprintf( value, "%d", p_node->p_input->i_id );
             E_(mvar_AppendNewVar)( itm, "index", value );
 
             sprintf( value, "%d", p_node->i_children);
@@ -864,13 +872,13 @@ static char *FirstOption( char *psz, char *new )
         return NULL;
 }
 
-playlist_item_t *E_(MRLParse)( intf_thread_t *p_intf, char *_psz,
-                               char *psz_name )
+input_item_t *E_(MRLParse)( intf_thread_t *p_intf, char *_psz,
+                                   char *psz_name )
 {
     char *psz = strdup( _psz );
     char *s_mrl = psz;
     char *s_temp;
-    playlist_item_t * p_item = NULL;
+    input_item_t * p_input = NULL;
 
     /* extract the mrl */
     s_temp = FirstOption( s_mrl, s_mrl );
@@ -879,7 +887,7 @@ playlist_item_t *E_(MRLParse)( intf_thread_t *p_intf, char *_psz,
         s_temp = s_mrl + strlen( s_mrl );
     }
 
-    p_item = playlist_ItemNew( p_intf, s_mrl, psz_name );
+    p_input = input_ItemNew( p_intf, s_mrl, psz_name );
     s_mrl = s_temp;
 
     /* now we can take care of the options */
@@ -892,13 +900,12 @@ playlist_item_t *E_(MRLParse)( intf_thread_t *p_intf, char *_psz,
         {
             s_temp = s_mrl + strlen( s_mrl );
         }
-        playlist_ItemAddOption( p_item, s_mrl );
+        vlc_input_item_AddOption( p_input, s_mrl );
         s_mrl = s_temp;
     }
 
     free( psz );
-
-    return p_item;
+    return p_input;
 }
 
 /**********************************************************************

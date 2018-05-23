@@ -2,7 +2,7 @@
  * skin_main.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: skin_main.cpp 15209 2006-04-14 09:37:39Z zorglub $
+ * $Id: skin_main.cpp 16264 2006-08-15 11:04:13Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -36,6 +36,7 @@
 #include "../commands/async_queue.hpp"
 #include "../commands/cmd_quit.hpp"
 #include "../commands/cmd_dialogs.hpp"
+#include "../commands/cmd_minimize.hpp"
 
 
 //---------------------------------------------------------------------------
@@ -48,7 +49,7 @@ extern "C" __declspec( dllexport )
 
 
 //---------------------------------------------------------------------------
-// Local prototypes.
+// Local prototypes
 //---------------------------------------------------------------------------
 static int  Open  ( vlc_object_t * );
 static void Close ( vlc_object_t * );
@@ -57,6 +58,16 @@ static void Run   ( intf_thread_t * );
 static int DemuxOpen( vlc_object_t * );
 static int Demux( demux_t * );
 static int DemuxControl( demux_t *, int, va_list );
+
+//---------------------------------------------------------------------------
+// Prototypes for configuration callbacks
+//---------------------------------------------------------------------------
+static int onSystrayChange( vlc_object_t *pObj, const char *pVariable,
+                            vlc_value_t oldVal, vlc_value_t newVal,
+                            void *pParam );
+static int onTaskBarChange( vlc_object_t *pObj, const char *pVariable,
+                            vlc_value_t oldVal, vlc_value_t newVal,
+                            void *pParam );
 
 
 //---------------------------------------------------------------------------
@@ -297,8 +308,8 @@ static int DemuxOpen( vlc_object_t *p_this )
             if( p_playlist != NULL )
             {
                 // Make sure the item is deleted afterwards
-                p_playlist->pp_items[p_playlist->i_index]->b_autodeletion =
-                    VLC_TRUE;
+                /// \bug does not always work
+                p_playlist->status.p_item->i_flags |= PLAYLIST_REMOVE_FLAG;
                 vlc_object_release( p_playlist );
             }
 
@@ -338,15 +349,89 @@ static int DemuxControl( demux_t *p_demux, int i_query, va_list args )
 
 
 //---------------------------------------------------------------------------
+// Callbacks
+//---------------------------------------------------------------------------
+
+/// Callback for the systray configuration option
+static int onSystrayChange( vlc_object_t *pObj, const char *pVariable,
+                            vlc_value_t oldVal, vlc_value_t newVal,
+                            void *pParam )
+{
+    intf_thread_t *pIntf =
+        (intf_thread_t*)vlc_object_find( pObj, VLC_OBJECT_INTF, FIND_ANYWHERE );
+
+    if( pIntf == NULL )
+    {
+        return VLC_EGENERIC;
+    }
+
+    // Check that we found the correct interface (same check as for the demux)
+    if( var_Type( pIntf, "skin-to-load" ) == VLC_VAR_STRING )
+    {
+        AsyncQueue *pQueue = AsyncQueue::instance( pIntf );
+        if( newVal.b_bool )
+        {
+            CmdAddInTray *pCmd = new CmdAddInTray( pIntf );
+            pQueue->push( CmdGenericPtr( pCmd ) );
+        }
+        else
+        {
+            CmdRemoveFromTray *pCmd = new CmdRemoveFromTray( pIntf );
+            pQueue->push( CmdGenericPtr( pCmd ) );
+        }
+    }
+
+    vlc_object_release( pIntf );
+    return VLC_SUCCESS;
+}
+
+
+/// Callback for the systray configuration option
+static int onTaskBarChange( vlc_object_t *pObj, const char *pVariable,
+                            vlc_value_t oldVal, vlc_value_t newVal,
+                            void *pParam )
+{
+    intf_thread_t *pIntf =
+        (intf_thread_t*)vlc_object_find( pObj, VLC_OBJECT_INTF, FIND_ANYWHERE );
+
+    if( pIntf == NULL )
+    {
+        return VLC_EGENERIC;
+    }
+
+    // Check that we found the correct interface (same check as for the demux)
+    if( var_Type( pIntf, "skin-to-load" ) == VLC_VAR_STRING )
+    {
+        AsyncQueue *pQueue = AsyncQueue::instance( pIntf );
+        if( newVal.b_bool )
+        {
+            CmdAddInTaskBar *pCmd = new CmdAddInTaskBar( pIntf );
+            pQueue->push( CmdGenericPtr( pCmd ) );
+        }
+        else
+        {
+            CmdRemoveFromTaskBar *pCmd = new CmdRemoveFromTaskBar( pIntf );
+            pQueue->push( CmdGenericPtr( pCmd ) );
+        }
+    }
+
+    vlc_object_release( pIntf );
+    return VLC_SUCCESS;
+}
+
+
+//---------------------------------------------------------------------------
 // Module descriptor
 //---------------------------------------------------------------------------
 #define SKINS2_LAST      N_("Skin to use")
 #define SKINS2_LAST_LONG N_("Path to the skin to use.")
 #define SKINS2_CONFIG      N_("Config of last used skin")
-/// \bug [String] missing "skin". Remove "by the skins module". Add "do not touch"
-#define SKINS2_CONFIG_LONG N_("Windows configuration of the last used. " \
-        "This option is updated automatically by the skins module." )
-
+#define SKINS2_CONFIG_LONG N_("Windows configuration of the last skin used. " \
+        "This option is updated automatically, do not touch it." )
+#define SKINS2_SYSTRAY      N_("Systray icon")
+#define SKINS2_SYSTRAY_LONG N_("Show a systray icon for VLC")
+#define SKINS2_TASKBAR      N_("Show VLC on the taskbar")
+#define SKINS2_TASKBAR_LONG N_("Show VLC on the taskbar")
 #define SKINS2_TRANSPARENCY      N_("Enable transparency effects")
 #define SKINS2_TRANSPARENCY_LONG N_("You can disable all transparency effects"\
     " if you want. This is mainly useful when moving windows does not behave" \
@@ -361,10 +446,18 @@ vlc_module_begin();
     add_string( "skins2-config", "", NULL, SKINS2_CONFIG, SKINS2_CONFIG_LONG,
                 VLC_TRUE );
         change_autosave();
+        change_internal();
 #ifdef WIN32
+    add_bool( "skins2-systray", VLC_FALSE, onSystrayChange, SKINS2_SYSTRAY,
+              SKINS2_SYSTRAY_LONG, VLC_FALSE );
+    add_bool( "skins2-taskbar", VLC_TRUE, onTaskBarChange, SKINS2_TASKBAR,
+              SKINS2_TASKBAR_LONG, VLC_FALSE );
     add_bool( "skins2-transparency", VLC_FALSE, NULL, SKINS2_TRANSPARENCY,
               SKINS2_TRANSPARENCY_LONG, VLC_FALSE );
 #endif
+
+    add_bool( "skinned-playlist", VLC_TRUE, NULL, SKINS2_TRANSPARENCY,
+              SKINS2_TRANSPARENCY_LONG, VLC_FALSE );
     set_shortname( _("Skins"));
     set_description( _("Skinnable Interface") );
     set_capability( "interface", 30 );

@@ -2,7 +2,7 @@
  * variables.h: variables handling
  *****************************************************************************
  * Copyright (C) 2002-2004 the VideoLAN team
- * $Id: variables.h 13991 2006-01-22 17:12:24Z zorglub $
+ * $Id: variables.h 15429 2006-04-29 14:23:41Z zorglub $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -336,7 +336,7 @@ static inline int __var_SetVoid( vlc_object_t *p_obj, const char *psz_name )
  */
 static inline int __var_GetInteger( vlc_object_t *p_obj, const char *psz_name )
 {
-    vlc_value_t val;
+    vlc_value_t val;val.i_int = 0;
     if( !__var_Get( p_obj, psz_name, &val ) )
         return val.i_int;
     else
@@ -351,7 +351,7 @@ static inline int __var_GetInteger( vlc_object_t *p_obj, const char *psz_name )
  */
 static inline int __var_GetBool( vlc_object_t *p_obj, const char *psz_name )
 {
-    vlc_value_t val;
+    vlc_value_t val; val.b_bool = VLC_FALSE;
     if( !__var_Get( p_obj, psz_name, &val ) )
         return val.b_bool;
     else
@@ -366,7 +366,7 @@ static inline int __var_GetBool( vlc_object_t *p_obj, const char *psz_name )
  */
 static inline int64_t __var_GetTime( vlc_object_t *p_obj, const char *psz_name )
 {
-    vlc_value_t val;
+    vlc_value_t val; val.i_time = 0L;
     if( !__var_Get( p_obj, psz_name, &val ) )
         return val.i_time;
     else
@@ -381,7 +381,7 @@ static inline int64_t __var_GetTime( vlc_object_t *p_obj, const char *psz_name )
  */
 static inline float __var_GetFloat( vlc_object_t *p_obj, const char *psz_name )
 {
-    vlc_value_t val;
+    vlc_value_t val; val.f_float = 0.0;
     if( !__var_Get( p_obj, psz_name, &val ) )
         return val.f_float;
     else
@@ -396,7 +396,7 @@ static inline float __var_GetFloat( vlc_object_t *p_obj, const char *psz_name )
  */
 static inline char *__var_GetString( vlc_object_t *p_obj, const char *psz_name )
 {
-    vlc_value_t val;
+    vlc_value_t val; val.psz_string = NULL;
     if( !__var_Get( p_obj, psz_name, &val ) )
         return val.psz_string;
     else

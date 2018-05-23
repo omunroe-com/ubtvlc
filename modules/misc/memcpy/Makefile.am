@@ -16,7 +16,7 @@ SUFFIXES = _plugin$(LIBEXT) _plugin.a
 
 libvlcdir = $(libdir)/vlc/$(basedir)
 
-EXTRA_LIBRARIES =  libmemcpy_plugin.a libmemcpy.a libmemcpy_pic.a libmemcpymmx_plugin.a libmemcpymmx.a libmemcpymmx_pic.a libmemcpymmxext_plugin.a libmemcpymmxext.a libmemcpymmxext_pic.a libmemcpy3dn_plugin.a libmemcpy3dn.a libmemcpy3dn_pic.a libmemcpyaltivec_plugin.a libmemcpyaltivec.a libmemcpyaltivec_pic.a
+EXTRA_LIBRARIES =  libmemcpy_plugin.a libmemcpy.a libmemcpymmx_plugin.a libmemcpymmx.a libmemcpymmxext_plugin.a libmemcpymmxext.a libmemcpy3dn_plugin.a libmemcpy3dn.a libmemcpyaltivec_plugin.a libmemcpyaltivec.a
 EXTRA_LTLIBRARIES =  libmemcpy_plugin.la libmemcpy_builtin.la libmemcpymmx_plugin.la libmemcpymmx_builtin.la libmemcpymmxext_plugin.la libmemcpymmxext_builtin.la libmemcpy3dn_plugin.la libmemcpy3dn_builtin.la libmemcpyaltivec_plugin.la libmemcpyaltivec_builtin.la
 
 include Modules.am
@@ -24,11 +24,14 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
+LIBVLC = -L$(top_builddir)/src -lvlc
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
+
+nice:
+	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -42,7 +45,6 @@ else
 	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
 	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --list plugin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
 	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}.a;; esac; done; fi; \
-	if test "$(pic)" = "pic"; then z=$$($(VLC_CONFIG) --list builtin); for mod in $(mods); do case "$$z " in *\ $${mod}\ *) echo lib$${mod}_pic.a;; esac; done; fi; \
 	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
 	test -z "$$fail"
 endif
@@ -79,9 +81,6 @@ else
 	mkdir -p -- "$(DESTDIR)$(libvlcdir)"
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" ; 	      $(INSTALL_PROGRAM) "lib$${mod}_plugin$(LIBEXT)" "$(DESTDIR)$(libvlcdir)/" || exit $$?; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" ; 	      $(INSTALL_DATA) "lib$${mod}_pic.a" "$(DESTDIR)$(libdir)/vlc/" || exit $$?; 	      ;; 	  esac; 	done
-endif
 endif
 
 uninstall-local:
@@ -90,9 +89,6 @@ if USE_LIBTOOL
 else
 	@z=$$($(VLC_CONFIG) --list plugin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" ; 	      rm -f "$(DESTDIR)$(libvlcdir)/lib$${mod}_plugin$(LIBEXT)" || true; 	      ;; 	  esac; 	done
 	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}.a" || true; 	      ;; 	  esac; 	done
-if BUILD_MOZILLA
-	@z=$$($(VLC_CONFIG) --list builtin); 	for mod in $(mods); do 	  case "$$z " 	    in *\ $${mod}\ *) 	      echo rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" ; 	      rm -f "$(DESTDIR)$(libdir)/vlc/lib$${mod}_pic.a" || true; 	      ;; 	  esac; 	done
-endif
 endif
 
 # The memcpy plugin
@@ -106,19 +102,14 @@ libmemcpy_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin memcpy`
 libmemcpy_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin memcpy`
 libmemcpy_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin memcpy`
 libmemcpy_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin memcpy` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libmemcpy_plugin_la_LIBADD = $(LTLIBVLC)
-
-libmemcpy_pic_a_SOURCES = $(SOURCES_memcpy)
-libmemcpy_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic memcpy`
-libmemcpy_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic memcpy`
-libmemcpy_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic memcpy`
 
 libmemcpy_a_SOURCES = $(SOURCES_memcpy)
 libmemcpy_builtin_la_SOURCES = $(SOURCES_memcpy)
-libmemcpy_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin memcpy`
-libmemcpy_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin memcpy`
-libmemcpy_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin memcpy`
+libmemcpy_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) memcpy`
+libmemcpy_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) memcpy`
+libmemcpy_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) memcpy`
 libmemcpy_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin memcpy`
 libmemcpy_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin memcpy`
 libmemcpy_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin memcpy`
@@ -134,19 +125,14 @@ libmemcpymmx_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin memcpymmx`
 libmemcpymmx_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin memcpymmx`
 libmemcpymmx_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin memcpymmx`
 libmemcpymmx_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin memcpymmx` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libmemcpymmx_plugin_la_LIBADD = $(LTLIBVLC)
-
-libmemcpymmx_pic_a_SOURCES = $(SOURCES_memcpymmx)
-libmemcpymmx_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic memcpymmx`
-libmemcpymmx_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic memcpymmx`
-libmemcpymmx_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic memcpymmx`
 
 libmemcpymmx_a_SOURCES = $(SOURCES_memcpymmx)
 libmemcpymmx_builtin_la_SOURCES = $(SOURCES_memcpymmx)
-libmemcpymmx_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin memcpymmx`
-libmemcpymmx_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin memcpymmx`
-libmemcpymmx_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin memcpymmx`
+libmemcpymmx_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) memcpymmx`
+libmemcpymmx_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) memcpymmx`
+libmemcpymmx_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) memcpymmx`
 libmemcpymmx_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin memcpymmx`
 libmemcpymmx_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin memcpymmx`
 libmemcpymmx_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin memcpymmx`
@@ -162,19 +148,14 @@ libmemcpymmxext_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin memcpymmxext`
 libmemcpymmxext_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin memcpymmxext`
 libmemcpymmxext_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin memcpymmxext`
 libmemcpymmxext_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin memcpymmxext` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libmemcpymmxext_plugin_la_LIBADD = $(LTLIBVLC)
-
-libmemcpymmxext_pic_a_SOURCES = $(SOURCES_memcpymmxext)
-libmemcpymmxext_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic memcpymmxext`
-libmemcpymmxext_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic memcpymmxext`
-libmemcpymmxext_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic memcpymmxext`
 
 libmemcpymmxext_a_SOURCES = $(SOURCES_memcpymmxext)
 libmemcpymmxext_builtin_la_SOURCES = $(SOURCES_memcpymmxext)
-libmemcpymmxext_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin memcpymmxext`
-libmemcpymmxext_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin memcpymmxext`
-libmemcpymmxext_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin memcpymmxext`
+libmemcpymmxext_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) memcpymmxext`
+libmemcpymmxext_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) memcpymmxext`
+libmemcpymmxext_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) memcpymmxext`
 libmemcpymmxext_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin memcpymmxext`
 libmemcpymmxext_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin memcpymmxext`
 libmemcpymmxext_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin memcpymmxext`
@@ -190,19 +171,14 @@ libmemcpy3dn_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin memcpy3dn`
 libmemcpy3dn_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin memcpy3dn`
 libmemcpy3dn_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin memcpy3dn`
 libmemcpy3dn_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin memcpy3dn` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libmemcpy3dn_plugin_la_LIBADD = $(LTLIBVLC)
-
-libmemcpy3dn_pic_a_SOURCES = $(SOURCES_memcpy3dn)
-libmemcpy3dn_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic memcpy3dn`
-libmemcpy3dn_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic memcpy3dn`
-libmemcpy3dn_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic memcpy3dn`
 
 libmemcpy3dn_a_SOURCES = $(SOURCES_memcpy3dn)
 libmemcpy3dn_builtin_la_SOURCES = $(SOURCES_memcpy3dn)
-libmemcpy3dn_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin memcpy3dn`
-libmemcpy3dn_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin memcpy3dn`
-libmemcpy3dn_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin memcpy3dn`
+libmemcpy3dn_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) memcpy3dn`
+libmemcpy3dn_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) memcpy3dn`
+libmemcpy3dn_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) memcpy3dn`
 libmemcpy3dn_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin memcpy3dn`
 libmemcpy3dn_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin memcpy3dn`
 libmemcpy3dn_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin memcpy3dn`
@@ -218,19 +194,14 @@ libmemcpyaltivec_plugin_la_CFLAGS = `$(VLC_CONFIG) --cflags plugin memcpyaltivec
 libmemcpyaltivec_plugin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin memcpyaltivec`
 libmemcpyaltivec_plugin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin memcpyaltivec`
 libmemcpyaltivec_plugin_la_LDFLAGS = `$(VLC_CONFIG) --libs plugin memcpyaltivec` \
-	-rpath '$(libvlcdir)' -module -shrext $(LIBEXT)
+	-rpath '$(libvlcdir)' -avoid-version -module -shrext $(LIBEXT)
 libmemcpyaltivec_plugin_la_LIBADD = $(LTLIBVLC)
-
-libmemcpyaltivec_pic_a_SOURCES = $(SOURCES_memcpyaltivec)
-libmemcpyaltivec_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic memcpyaltivec`
-libmemcpyaltivec_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic memcpyaltivec`
-libmemcpyaltivec_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic memcpyaltivec`
 
 libmemcpyaltivec_a_SOURCES = $(SOURCES_memcpyaltivec)
 libmemcpyaltivec_builtin_la_SOURCES = $(SOURCES_memcpyaltivec)
-libmemcpyaltivec_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin memcpyaltivec`
-libmemcpyaltivec_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin memcpyaltivec`
-libmemcpyaltivec_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin memcpyaltivec`
+libmemcpyaltivec_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) memcpyaltivec`
+libmemcpyaltivec_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) memcpyaltivec`
+libmemcpyaltivec_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) memcpyaltivec`
 libmemcpyaltivec_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin memcpyaltivec`
 libmemcpyaltivec_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin memcpyaltivec`
 libmemcpyaltivec_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin memcpyaltivec`

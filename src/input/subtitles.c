@@ -2,7 +2,7 @@
  * subtitles.c
  *****************************************************************************
  * Copyright (C) 2003-2006 the VideoLAN team
- * $Id: subtitles.c 15118 2006-04-06 17:54:21Z massiot $
+ * $Id: subtitles.c 15922 2006-06-17 18:42:29Z yoann $
  *
  * Authors: Derk-Jan Hartman <hartman at videolan.org>
  * This is adapted code from the GPL'ed MPlayer (http://mplayerhq.hu)
@@ -104,10 +104,7 @@ static void strcpy_strip_ext( char *d, char *s )
         return;
     }
     else
-    {
-        strncpy(d, s, tmp - s);
-        d[tmp - s] = 0;
-    }
+        strlcpy(d, s, tmp - s + 1 );
     while( *d )
     {
         *d = tolower(*d);
@@ -161,10 +158,11 @@ static int compare_sub_priority( const void *a, const void *b )
 #endif
 }
 
-/* Utility function for scandir */
-static int Filter( const char *psz_dir_content )
+/*
+ * Check if a file ends with a subtitle extension
+ */
+int subtitles_Filter( const char *psz_dir_content )
 {
-    /* does it end with a subtitle extension? */
     const char *tmp = strrchr( psz_dir_content, '.');
     if( tmp == NULL )
         return 0;
@@ -295,14 +293,11 @@ char **subtitles_Detect( input_thread_t *p_this, char *psz_path,
 
         f_fname = malloc( strlen(tmp) );
         if( f_fname )
-            strcpy( f_fname, tmp+1 ); // we skip the seperator, so it will still fit in the allocated space
-        dirlen = strlen(psz_fname) - strlen(tmp) + 1; // add the seperator
+            strcpy( f_fname, tmp+1 ); // we skip the separator, so it will still fit in the allocated space
+        dirlen = strlen(psz_fname) - strlen(tmp) + 2; // add the separator
         f_dir = malloc( dirlen + 1 );
-        if( f_dir )
-        {
-            strncpy( f_dir, psz_fname, dirlen );
-            f_dir[dirlen] = 0;
-        }
+        if( f_dir != NULL )
+            strlcpy( f_dir, psz_fname, dirlen );
     }
     else
     {
@@ -350,8 +345,8 @@ char **subtitles_Detect( input_thread_t *p_this, char *psz_path,
             continue;
 
         /* parse psz_src dir */
-        i_dir_content = utf8_scandir( psz_dir, &ppsz_dir_content, Filter,
-                                      NULL );
+        i_dir_content = utf8_scandir( psz_dir, &ppsz_dir_content,
+                                      subtitles_Filter, NULL );
 
         if( i_dir_content != -1 )
         {

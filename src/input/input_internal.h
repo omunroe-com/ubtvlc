@@ -2,7 +2,7 @@
  * input_internal.h:
  *****************************************************************************
  * Copyright (C) 1998-2004 the VideoLAN team
- * $Id: input_internal.h 13905 2006-01-12 23:10:04Z dionoea $
+ * $Id: input_internal.h 15850 2006-06-09 04:38:16Z yoann $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -152,6 +152,8 @@ mtime_t input_ClockGetTS( input_thread_t *, input_clock_t *, mtime_t );
 
 /* Subtitles */
 char **subtitles_Detect( input_thread_t *, char* path, char *fname );
+int subtitles_Filter( const char *);
+
 void MRLSplit( vlc_object_t *, char *, char **, char **, char ** );
 
 #endif

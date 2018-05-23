@@ -2,7 +2,7 @@
  * avi.c : AVI file Stream input module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: avi.c 14790 2006-03-18 02:06:16Z xtophe $
+ * $Id: avi.c 16203 2006-08-03 15:34:08Z zorglub $
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -32,6 +32,7 @@
 
 #include "vlc_meta.h"
 #include "codecs.h"
+#include "charset.h"
 
 #include "libavi.h"
 
@@ -50,6 +51,11 @@
 static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
+static int pi_index[] = {0,1,2};
+
+static char *ppsz_indexes[] = { N_("Ask"),N_("Always fix"),
+                                N_("Never fix") };
+
 vlc_module_begin();
     set_shortname( "AVI" );
     set_description( _("AVI demuxer") );
@@ -59,8 +65,9 @@ vlc_module_begin();
 
     add_bool( "avi-interleaved", 0, NULL,
               INTERLEAVE_TEXT, INTERLEAVE_LONGTEXT, VLC_TRUE );
-    add_bool( "avi-index", 0, NULL,
+    add_integer( "avi-index", 0, NULL,
               INDEX_TEXT, INDEX_LONGTEXT, VLC_FALSE );
+        change_integer_list( pi_index, ppsz_indexes, 0 );
 
     set_callbacks( Open, Close );
 vlc_module_end();
@@ -73,7 +80,6 @@ static int Seek            ( demux_t *, mtime_t, int );
 static int Demux_Seekable  ( demux_t * );
 static int Demux_UnSeekable( demux_t * );
 
-#define FREE( p ) if( p ) { free( p ); (p) = NULL; }
 #define __ABS( x ) ( (x) < 0 ? (-(x)) : (x) )
 
 typedef struct
@@ -205,6 +211,7 @@ static int Open( vlc_object_t * p_this )
     demux_sys_t     *p_sys;
 
     vlc_bool_t       b_index = VLC_FALSE;
+    int              i_do_index;
 
     avi_chunk_t         ck_riff;
     avi_chunk_list_t    *p_riff = (avi_chunk_list_t*)&ck_riff;
@@ -326,7 +333,7 @@ static int Open( vlc_object_t * p_this )
                  p_avih->i_flags&AVIF_MUSTUSEINDEX?" MUST_USE_INDEX":"",
                  p_avih->i_flags&AVIF_ISINTERLEAVED?" IS_INTERLEAVED":"",
                  p_avih->i_flags&AVIF_TRUSTCKTYPE?" TRUST_CKTYPE":"" );
-        vlc_meta_Add( p_sys->meta, VLC_META_SETTING, buffer );
+        vlc_meta_SetSetting( p_sys->meta, buffer );
     }
 
     /* now read info on each stream and create ES */
@@ -517,7 +524,8 @@ static int Open( vlc_object_t * p_this )
         goto error;
     }
 
-    if( config_GetInt( p_demux, "avi-index" ) )
+    i_do_index =  config_GetInt( p_demux, "avi-index" );
+    if( i_do_index == 1 ) /* Always fix */
     {
 aviindex:
         if( p_sys->b_seekable )
@@ -543,13 +551,14 @@ aviindex:
     {
         msg_Warn( p_demux, "broken or missing index, 'seek' will be "
                            "axproximative or will have strange behaviour" );
-        if( !b_index )
+        if( i_do_index == 0 && !b_index )
         {
             int i_create;
             i_create = intf_UserYesNo( p_demux, _("AVI Index") ,
                         _( "This AVI file is broken. Seeking will not "
                         "work correctly.\nDo you want to "
-                        "try to repair it (this might take a long time) ?" ) );
+                        "try to repair it (this might take a long time) ?" ),
+                        _( "Repair" ), _( "Don't repair" ), _( "Cancel") );
             if( i_create == DIALOG_OK_YES )
             {
                 b_index = VLC_TRUE;
@@ -641,11 +650,11 @@ static void Close ( vlc_object_t * p_this )
     {
         if( p_sys->track[i] )
         {
-            FREE( p_sys->track[i]->p_index );
+            FREENULL( p_sys->track[i]->p_index );
             free( p_sys->track[i] );
         }
     }
-    FREE( p_sys->track );
+    FREENULL( p_sys->track );
     AVI_ChunkFreeRoot( p_demux->s, &p_sys->ck_root );
     vlc_meta_Delete( p_sys->meta );
 
@@ -1307,7 +1316,7 @@ static int    Control( demux_t *p_demux, int i_query, va_list args )
     int i;
     double   f, *pf;
     int64_t i64, *pi64;
-    vlc_meta_t **pp_meta;
+    vlc_meta_t *p_meta;
 
     switch( i_query )
     {
@@ -1368,8 +1377,8 @@ static int    Control( demux_t *p_demux, int i_query, va_list args )
             }
             return VLC_SUCCESS;
         case DEMUX_GET_META:
-            pp_meta = (vlc_meta_t**)va_arg( args, vlc_meta_t** );
-            *pp_meta = vlc_meta_Duplicate( p_sys->meta );
+            p_meta = (vlc_meta_t*)va_arg( args, vlc_meta_t* );
+            vlc_meta_Merge( p_meta,  p_sys->meta );
             return VLC_SUCCESS;
 
         default:
@@ -2265,9 +2274,8 @@ static void AVI_IndexCreate( demux_t *p_demux )
     p_demux->p_sys->i_dialog_id = -1;
     if( stream_Size( p_demux->s ) > 10000000 )
     {
-        p_demux->p_sys->i_dialog_id = intf_UserProgress( p_demux,
-                                        _( "Fixing AVI Index" ),
-                                        _( "Creating AVI Index ..." ),
+        p_demux->p_sys->i_dialog_id = intf_IntfProgress( p_demux,
+                                        _( "Fixing AVI Index..." ),
                                         0.0 );
         p_demux->p_sys->last_update = mdate();
     }
@@ -2289,8 +2297,8 @@ static void AVI_IndexCreate( demux_t *p_demux )
                             stream_Size( p_demux->s );
             float f_pos = (float)i_pos;
             p_demux->p_sys->last_update = mdate();
-            intf_UserProgressUpdate( p_demux, p_demux->p_sys->i_dialog_id,
-                                    _( "Creating AVI Index ..." ), f_pos );
+            intf_ProgressUpdate( p_demux, p_demux->p_sys->i_dialog_id,
+                                 _( "Fixing AVI Index..." ), f_pos, -1 );
         }
 
         if( AVI_PacketGetHeader( p_demux, &pk ) )

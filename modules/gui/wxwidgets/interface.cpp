@@ -2,7 +2,7 @@
  * interface.cpp : wxWidgets plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2006 the VideoLAN team
- * $Id: interface.cpp 15044 2006-04-02 07:58:36Z zorglub $
+ * $Id: interface.cpp 16171 2006-07-30 22:00:44Z fkuehne $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -364,6 +364,7 @@ Interface::Interface( intf_thread_t *_p_intf, long style ):
     b_extra = VLC_FALSE;
     extra_frame = 0;
     playlist_manager = 0;
+    i_update_counter = 0;
 
 
     /* Give our interface a nice little icon */
@@ -529,9 +530,11 @@ void Interface::Init()
 void Interface::Update()
 {
     /* Misc updates */
-    ((VLCVolCtrl *)volctrl)->UpdateVolume();
+    if( !(i_update_counter % 10) ) ((VLCVolCtrl *)volctrl)->UpdateVolume();
 
     if( playlist_manager ) playlist_manager->Update();
+
+    i_update_counter++;
 }
 
 void Interface::OnControlEvent( wxCommandEvent& event )
@@ -1236,15 +1239,9 @@ void Interface::OnInteraction( wxCommandEvent& event )
     p_arg->p_dialog = p_dialog;
     p_arg->p_intf = p_intf;
 
-    if( p_dialog->i_type == INTERACT_PROGRESS )
-    {
-        /// \todo Handle progress in the interface
-    }
-    else
-    {
-        p_intf->p_sys->pf_show_dialog( p_intf, INTF_DIALOG_INTERACTION,
+    p_intf->p_sys->pf_show_dialog( p_intf, INTF_DIALOG_INTERACTION,
                                        0, p_arg );
-    }
+
 }
 
 static int InteractCallback( vlc_object_t *p_this,
@@ -1283,11 +1280,31 @@ bool DragAndDrop::OnDropFiles( wxCoord, wxCoord,
         return FALSE;
     }
 
+    /* If we drag & drop a subtitle file, add it on the fly */
+    if( filenames.GetCount() == 1 )
+    {
+        char *psz_utf8 = wxDnDFromLocale( filenames[0] );
+        input_thread_t *p_input = (input_thread_t *)vlc_object_find( p_intf,
+                                            VLC_OBJECT_INPUT, FIND_ANYWHERE );
+        if( p_input )
+        {
+            if( input_AddSubtitles( p_input, psz_utf8, VLC_TRUE ) )
+            {
+                vlc_object_release( p_input );
+                wxDnDLocaleFree( psz_utf8 );
+                vlc_object_release( p_playlist );
+                return TRUE;
+            }
+            vlc_object_release( p_input );
+        }
+        wxDnDLocaleFree( psz_utf8 );
+    }
+
     for( size_t i = 0; i < filenames.GetCount(); i++ )
     {
         char *psz_utf8 = wxDnDFromLocale( filenames[i] );
 
-        playlist_Add( p_playlist, psz_utf8, psz_utf8,
+        playlist_PlaylistAdd( p_playlist, psz_utf8, psz_utf8,
                       PLAYLIST_APPEND | ((i | b_enqueue) ? 0 : PLAYLIST_GO),
                       PLAYLIST_END );
 

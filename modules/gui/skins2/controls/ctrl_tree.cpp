@@ -2,7 +2,7 @@
  * ctrl_tree.cpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_tree.cpp 15252 2006-04-17 15:29:40Z ipkiss $
+ * $Id: ctrl_tree.cpp 15805 2006-06-04 14:17:46Z ipkiss $
  *
  * Authors: Antoine Cellerier <dionoea@videolan.org>
  *
@@ -140,7 +140,7 @@ int CtrlTree::maxItems()
 }
 
 
-void CtrlTree::onUpdate( Subject<VarTree, tree_update*> &rTree,
+void CtrlTree::onUpdate( Subject<VarTree, tree_update> &rTree,
                          tree_update *arg )
 {
     if( arg->i_type == 0 ) // Item update
@@ -189,7 +189,7 @@ void CtrlTree::onUpdate( Subject<VarTree, tree_update*> &rTree,
     notifyLayout();
 }
 
-void CtrlTree::onUpdate( Subject<VarPercent, void*> &rPercent, void* arg)
+void CtrlTree::onUpdate( Subject<VarPercent> &rPercent, void* arg)
 {
     // Determine what is the first item to display
     VarTree::Iterator it = m_flat ? m_rTree.firstLeaf() : m_rTree.begin();

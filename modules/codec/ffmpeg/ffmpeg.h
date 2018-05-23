@@ -2,7 +2,7 @@
  * ffmpeg.h: decoder using the ffmpeg library
  *****************************************************************************
  * Copyright (C) 2001 the VideoLAN team
- * $Id: ffmpeg.h 14993 2006-03-31 13:46:39Z zorglub $
+ * $Id: ffmpeg.h 16315 2006-08-21 07:26:31Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -67,6 +67,10 @@ void E_(CloseAudioEncoder)( vlc_object_t * );
 /* Demux module */
 int  E_(OpenDemux) ( vlc_object_t * );
 void E_(CloseDemux)( vlc_object_t * );
+
+/* Mux module */
+int  E_(OpenMux) ( vlc_object_t * );
+void E_(CloseMux)( vlc_object_t * );
 
 /* Video filter module */
 int  E_(OpenFilter)( vlc_object_t * );

@@ -2,7 +2,7 @@
  * var_tree.hpp
  *****************************************************************************
  * Copyright (C) 2005 VideoLAN
- * $Id: var_tree.hpp 14771 2006-03-16 16:59:41Z dionoea $
+ * $Id: var_tree.hpp 15805 2006-06-04 14:17:46Z ipkiss $
  *
  * Authors: Antoine Cellerier <dionoea@videolan.org>
  *
@@ -42,7 +42,7 @@ typedef struct tree_update
 } tree_update;
 
 /// Tree variable
-class VarTree: public Variable, public Subject<VarTree, tree_update*>
+class VarTree: public Variable, public Subject<VarTree, tree_update>
 {
     public:
         VarTree( intf_thread_t *pIntf );

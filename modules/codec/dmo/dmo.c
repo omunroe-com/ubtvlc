@@ -2,7 +2,7 @@
  * dmo.c : DirectMedia Object decoder module for vlc
  *****************************************************************************
  * Copyright (C) 2002, 2003 the VideoLAN team
- * $Id: dmo.c 13905 2006-01-12 23:10:04Z dionoea $
+ * $Id: dmo.c 15961 2006-06-29 20:15:57Z Trax $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -133,6 +133,8 @@ struct decoder_sys_t
 #endif
 };
 
+static const GUID guid_wvc1 = { 0xc9bfbccf, 0xe60e, 0x4588, { 0xa3, 0xdf, 0x5a, 0x03, 0xb1, 0xfd, 0x95, 0x85 } };
+
 static const GUID guid_wmv9 = { 0x724bb6a4, 0xe526, 0x450f, { 0xaf, 0xfa, 0xab, 0x9b, 0x45, 0x12, 0x91, 0x11 } };
 static const GUID guid_wma9 = { 0x27ca0808, 0x01f5, 0x4e7a, { 0x8b, 0x05, 0x87, 0xf8, 0x07, 0xa2, 0x33, 0xd1 } };
 
@@ -152,7 +154,10 @@ typedef struct
 
 static const codec_dll decoders_table[] =
 {
-    /* WM3 */
+    /* WVC1 */
+    { VLC_FOURCC('W','V','C','1'), "wvc1dmod.dll", &guid_wvc1 },
+    { VLC_FOURCC('w','v','c','1'), "wvc1dmod.dll", &guid_wvc1 },
+    /* WMV3 */
     { VLC_FOURCC('W','M','V','3'), "wmv9dmod.dll", &guid_wmv9 },
     { VLC_FOURCC('w','m','v','3'), "wmv9dmod.dll", &guid_wmv9 },
     /* WMV2 */
@@ -170,6 +175,9 @@ static const codec_dll decoders_table[] =
     { VLC_FOURCC('W','M','A','2'), "wma9dmod.dll", &guid_wma9 },
     { VLC_FOURCC('w','m','a','2'), "wma9dmod.dll", &guid_wma9 },
 
+    /* WMA Speech */
+    { VLC_FOURCC('w','m','a','s'), "wmspdmod.dll", &guid_wma },
+
     /* */
     { 0, NULL, NULL }
 };
@@ -178,7 +186,7 @@ static const codec_dll encoders_table[] =
 {
     /* WMV2 */
     { VLC_FOURCC('W','M','V','2'), "wmvdmoe.dll", &guid_wmv_enc },
-    { VLC_FOURCC('w','m','v','1'), "wmvdmoe.dll", &guid_wmv_enc },
+    { VLC_FOURCC('w','m','v','2'), "wmvdmoe.dll", &guid_wmv_enc },
     /* WMV1 */
     { VLC_FOURCC('W','M','V','1'), "wmvdmoe.dll", &guid_wmv_enc },
     { VLC_FOURCC('w','m','v','1'), "wmvdmoe.dll", &guid_wmv_enc },
@@ -413,8 +421,17 @@ static int DecOpen( vlc_object_t *p_this )
         p_dec->fmt_out.video.i_width = p_dec->fmt_in.video.i_width;
         p_dec->fmt_out.video.i_height = p_dec->fmt_in.video.i_height;
         p_dec->fmt_out.video.i_bits_per_pixel = i_bpp;
-        p_dec->fmt_out.video.i_aspect = VOUT_ASPECT_FACTOR *
-            p_dec->fmt_out.video.i_width / p_dec->fmt_out.video.i_height;
+
+        /* If an aspect-ratio was specified in the input format then force it */
+        if( p_dec->fmt_in.video.i_aspect )
+        {
+            p_dec->fmt_out.video.i_aspect = p_dec->fmt_in.video.i_aspect;
+        }
+        else
+        {
+            p_dec->fmt_out.video.i_aspect = VOUT_ASPECT_FACTOR *
+                p_dec->fmt_out.video.i_width / p_dec->fmt_out.video.i_height;
+        }
 
         p_bih = &p_vih->bmiHeader;
         p_bih->biCompression = i_chroma;

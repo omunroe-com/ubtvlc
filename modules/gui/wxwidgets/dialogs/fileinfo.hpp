@@ -2,7 +2,7 @@
  * fileinfo.hpp: private wxWindows interface description
  *****************************************************************************
  * Copyright (C) 1999-2005 the VideoLAN team
- * $Id: fileinfo.hpp 14634 2006-03-04 22:53:51Z xtophe $
+ * $Id: fileinfo.hpp 15863 2006-06-10 10:10:56Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -27,6 +27,7 @@
 #include "wxwidgets.hpp"
 
 #include <wx/treectrl.h>
+#include <wx/notebook.h>
 
 namespace wxvlc
 {

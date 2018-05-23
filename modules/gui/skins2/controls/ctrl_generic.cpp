@@ -2,7 +2,7 @@
  * ctrl_generic.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_generic.cpp 14118 2006-02-01 18:06:48Z courmisch $
+ * $Id: ctrl_generic.cpp 15803 2006-06-04 13:55:41Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -155,7 +155,7 @@ bool CtrlGeneric::isVisible() const
 }
 
 
-void CtrlGeneric::onUpdate( Subject<VarBool, void*> &rVariable, void *arg  )
+void CtrlGeneric::onUpdate( Subject<VarBool> &rVariable, void *arg  )
 {
     // Is it the visibility variable ?
     if( &rVariable == m_pVisible )

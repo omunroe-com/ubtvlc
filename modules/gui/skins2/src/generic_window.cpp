@@ -2,7 +2,7 @@
  * generic_window.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: generic_window.cpp 14925 2006-03-25 16:36:51Z asmax $
+ * $Id: generic_window.cpp 15803 2006-06-04 13:55:41Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -127,7 +127,7 @@ void GenericWindow::toggleOnTop( bool onTop ) const
 }
 
 
-void GenericWindow::onUpdate( Subject<VarBool, void*> &rVariable, void*arg )
+void GenericWindow::onUpdate( Subject<VarBool> &rVariable, void*arg )
 {
     if( m_pVarVisible->get() )
     {

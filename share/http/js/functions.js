@@ -2,7 +2,7 @@
  * functions.js: VLC media player web interface
  *****************************************************************************
  * Copyright (C) 2005-2006 the VideoLAN team
- * $Id: functions.js 15238 2006-04-15 16:00:45Z dionoea $
+ * $Id: functions.js 15911 2006-06-14 18:31:45Z yoann $
  *
  * Authors: Antoine Cellerier <dionoea -at- videolan -dot- org>
  *
@@ -376,6 +376,10 @@ function seek( pos )
 function fullscreen()
 {
     loadXMLDoc( 'requests/status.xml?command=fullscreen', parse_status );
+}
+function snapshot()
+{
+    loadXMLDoc( 'requests/status.xml?command=snapshot', parse_status );
 }
 function update_status()
 {

@@ -2,7 +2,7 @@
  * dialogs.cpp : wxWidgets plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: dialogs.cpp 14545 2006-02-28 23:23:42Z zorglub $
+ * $Id: dialogs.cpp 15755 2006-05-28 12:04:19Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -84,6 +84,9 @@ private:
     void OnOpenSat( wxCommandEvent& event );
 
     void OnPopupMenu( wxCommandEvent& event );
+    void OnAudioPopupMenu( wxCommandEvent& event );
+    void OnVideoPopupMenu( wxCommandEvent& event );
+    void OnMiscPopupMenu( wxCommandEvent& event );
 
     void OnIdle( wxIdleEvent& event );
 
@@ -140,8 +143,16 @@ BEGIN_EVENT_TABLE(DialogsProvider, wxFrame)
                 DialogsProvider::OnFileInfo)
     EVT_COMMAND(INTF_DIALOG_BOOKMARKS, wxEVT_DIALOG,
                 DialogsProvider::OnBookmarks)
+
     EVT_COMMAND(INTF_DIALOG_POPUPMENU, wxEVT_DIALOG,
                 DialogsProvider::OnPopupMenu)
+    EVT_COMMAND(INTF_DIALOG_AUDIOPOPUPMENU, wxEVT_DIALOG,
+                DialogsProvider::OnAudioPopupMenu)
+    EVT_COMMAND(INTF_DIALOG_VIDEOPOPUPMENU, wxEVT_DIALOG,
+                DialogsProvider::OnVideoPopupMenu)
+    EVT_COMMAND(INTF_DIALOG_MISCPOPUPMENU, wxEVT_DIALOG,
+                DialogsProvider::OnMiscPopupMenu)
+
     EVT_COMMAND(INTF_DIALOG_EXIT, wxEVT_DIALOG,
                 DialogsProvider::OnExitThread)
     EVT_COMMAND(INTF_DIALOG_UPDATEVLC, wxEVT_DIALOG,
@@ -419,6 +430,12 @@ void DialogsProvider::OnOpenFileSimple( wxCommandEvent& event )
         p_file_dialog = new wxFileDialog( NULL, wxU(_("Open File")),
             wxT(""), wxT(""), wxT("*"), wxOPEN | wxMULTIPLE );
 
+	p_file_dialog->SetWildcard(wxU(_("All Files (*.*)|*"
+        "|Sound Files (*.mp3, *.ogg, etc.)|" EXTENSIONS_AUDIO 
+        "|Video Files (*.avi, *.mpg, etc.)|" EXTENSIONS_VIDEO 
+        "|Playlist Files (*.m3u, *.pls, etc.)|" EXTENSIONS_PLAYLIST 
+        "|Subtitle Files (*.srt, *.sub, etc.)|" EXTENSIONS_SUBTITLE)));
+
     if( p_file_dialog && p_file_dialog->ShowModal() == wxID_OK )
     {
         wxArrayString paths;
@@ -429,12 +446,12 @@ void DialogsProvider::OnOpenFileSimple( wxCommandEvent& event )
         {
             char *psz_utf8 = wxFromLocale( paths[i] );
             if( event.GetInt() )
-                playlist_Add( p_playlist, psz_utf8, psz_utf8,
+                playlist_PlaylistAdd( p_playlist, psz_utf8, psz_utf8,
                               PLAYLIST_APPEND | (i ? 0 : PLAYLIST_GO) |
                               (i ? PLAYLIST_PREPARSE : 0 ),
                               PLAYLIST_END );
             else
-                playlist_Add( p_playlist, psz_utf8, psz_utf8,
+                playlist_PlaylistAdd( p_playlist, psz_utf8, psz_utf8,
                               PLAYLIST_APPEND | PLAYLIST_PREPARSE , PLAYLIST_END );
             wxLocaleFree( psz_utf8 );
         }
@@ -460,7 +477,7 @@ void DialogsProvider::OnOpenDirectory( wxCommandEvent& event )
     {
         wxString path = p_dir_dialog->GetPath();
         char *psz_utf8 = wxFromLocale( path );
-        playlist_Add( p_playlist, psz_utf8, psz_utf8,
+        playlist_PlaylistAdd( p_playlist, psz_utf8, psz_utf8,
                       PLAYLIST_APPEND | (event.GetInt() ? PLAYLIST_GO : 0),
                       PLAYLIST_END );
         wxLocaleFree( psz_utf8 );
@@ -508,6 +525,22 @@ void DialogsProvider::OnPopupMenu( wxCommandEvent& event )
     ::PopupMenu( p_intf, this, mousepos );
 }
 
+void DialogsProvider::OnAudioPopupMenu( wxCommandEvent& event )
+{
+    wxPoint mousepos = ScreenToClient( wxGetMousePosition() );
+    ::AudioPopupMenu( p_intf, this, mousepos );
+}
+void DialogsProvider::OnVideoPopupMenu( wxCommandEvent& event )
+{
+    wxPoint mousepos = ScreenToClient( wxGetMousePosition() );
+    ::VideoPopupMenu( p_intf, this, mousepos );
+}
+void DialogsProvider::OnMiscPopupMenu( wxCommandEvent& event )
+{
+    wxPoint mousepos = ScreenToClient( wxGetMousePosition() );
+    ::MiscPopupMenu( p_intf, this, mousepos );
+}
+
 void DialogsProvider::OnExitThread( wxCommandEvent& WXUNUSED(event) )
 {
     wxTheApp->ExitMainLoop();
@@ -542,6 +575,8 @@ void DialogsProvider::OnInteraction( wxCommandEvent& event )
     intf_dialog_args_t *p_arg = (intf_dialog_args_t *)event.GetClientData();
     interaction_dialog_t *p_dialog;
     InteractionDialog *p_wxdialog;
+
+    return;
 
     if( p_arg == NULL )
     {

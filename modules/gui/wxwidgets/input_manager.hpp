@@ -2,7 +2,7 @@
  * input_manager.hpp: Header for input_manager
  *****************************************************************************
  * Copyright (C) 1999-2005 the VideoLAN team
- * $Id: input_manager.hpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: input_manager.hpp 15931 2006-06-20 18:57:13Z yoann $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Clément Stenac <zorglub@videolan.org>
@@ -54,6 +54,7 @@ namespace wxvlc
         void ShowSlider( bool show = true );
 
         void OnSliderUpdate( wxScrollEvent& event );
+        void OnSliderClick( wxMouseEvent& event );
 
         void OnDiscMenu( wxCommandEvent& event );
         void OnDiscPrev( wxCommandEvent& event );

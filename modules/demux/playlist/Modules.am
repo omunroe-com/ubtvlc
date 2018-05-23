@@ -10,6 +10,10 @@ SOURCES_playlist = \
 	xspf.c \
 	xspf.h \
 	shoutcast.c \
+	asx.c \
+	sgimb.c \
+	qtl.c \
+	gvp.c \
 	$(NULL)
 
 

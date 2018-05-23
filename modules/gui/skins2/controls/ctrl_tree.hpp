@@ -2,7 +2,7 @@
  * ctrl_tree.hpp
  *****************************************************************************
  * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_tree.hpp 14771 2006-03-16 16:59:41Z dionoea $
+ * $Id: ctrl_tree.hpp 15805 2006-06-04 14:17:46Z ipkiss $
  *
  * Authors: Antoine Cellerier
  *
@@ -33,8 +33,8 @@ class GenericFont;
 class GenericBitmap;
 
 /// Class for control tree
-class CtrlTree: public CtrlGeneric, public Observer<VarTree, tree_update*>,
-    public Observer<VarPercent, void*>
+class CtrlTree: public CtrlGeneric, public Observer<VarTree, tree_update>,
+    public Observer<VarPercent>
 {
     public:
         CtrlTree( intf_thread_t *pIntf,
@@ -119,11 +119,11 @@ class CtrlTree: public CtrlGeneric, public Observer<VarTree, tree_update*>,
         bool m_flat;
 
         /// Method called when the tree variable is modified
-        virtual void onUpdate( Subject<VarTree, tree_update*> &rTree ,
+        virtual void onUpdate( Subject<VarTree, tree_update> &rTree ,
                                tree_update *);
 
         // Method called when the position variable of the tree is modified
-        virtual void onUpdate( Subject<VarPercent, void *> &rPercent , void *);
+        virtual void onUpdate( Subject<VarPercent> &rPercent , void *);
 
         /// Called when the position is set
         virtual void onPositionChange();

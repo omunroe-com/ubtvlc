@@ -2,7 +2,7 @@
  * dts.c : raw DTS stream input module for vlc
  *****************************************************************************
  * Copyright (C) 2001 the VideoLAN team
- * $Id: dts.c 13905 2006-01-12 23:10:04Z dionoea $
+ * $Id: dts.c 16083 2006-07-19 09:33:41Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -136,13 +136,7 @@ static int Open( vlc_object_t * p_this )
     }
 
     /* Have a peep at the show. */
-    if( stream_Peek( p_demux->s, &p_peek, i_peek + DTS_MAX_HEADER_SIZE * 2 ) <
-        i_peek + DTS_MAX_HEADER_SIZE * 2 )
-    {
-        /* Stream too short */
-        msg_Warn( p_demux, "cannot peek()" );
-        return VLC_EGENERIC;
-    }
+    CHECK_PEEK( p_peek, i_peek + DTS_MAX_HEADER_SIZE * 2  );
 
     if( CheckSync( p_peek + i_peek ) != VLC_SUCCESS )
     {
@@ -155,32 +149,10 @@ static int Open( vlc_object_t * p_this )
                  "continuing anyway" );
     }
 
-    p_demux->pf_demux = Demux;
-    p_demux->pf_control = Control;
-    p_demux->p_sys = p_sys = malloc( sizeof( demux_sys_t ) );
-    p_sys->b_start = VLC_TRUE;
-    p_sys->i_mux_rate = 0;
-
-    /*
-     * Load the DTS packetizer
-     */
-    p_sys->p_packetizer = vlc_object_create( p_demux, VLC_OBJECT_DECODER );
-    p_sys->p_packetizer->pf_decode_audio = 0;
-    p_sys->p_packetizer->pf_decode_video = 0;
-    p_sys->p_packetizer->pf_decode_sub = 0;
-    p_sys->p_packetizer->pf_packetize = 0;
-
-    /* Initialization of decoder structure */
-    es_format_Init( &p_sys->p_packetizer->fmt_in, AUDIO_ES,
-                    VLC_FOURCC( 'd', 't', 's', ' ' ) );
-
-    p_sys->p_packetizer->p_module =
-        module_Need( p_sys->p_packetizer, "packetizer", NULL, 0 );
-    if( !p_sys->p_packetizer->p_module )
-    {
-        msg_Err( p_demux, "cannot find DTS packetizer" );
-        return VLC_EGENERIC;
-    }
+    STANDARD_DEMUX_INIT; p_sys = p_demux->p_sys;
+   
+    INIT_APACKETIZER( p_sys->p_packetizer, 'd','t','s',' ' );
+    LOAD_PACKETIZER_OR_FAIL( p_sys->p_packetizer, "DTS" );
 
     p_sys->p_es = es_out_Add( p_demux->out, &p_sys->p_packetizer->fmt_in );
 
@@ -195,11 +167,7 @@ static void Close( vlc_object_t *p_this )
     demux_t     *p_demux = (demux_t*)p_this;
     demux_sys_t *p_sys = p_demux->p_sys;
 
-    /* Unneed module */
-    module_Unneed( p_sys->p_packetizer, p_sys->p_packetizer->p_module );
-
-    /* Delete the decoder */
-    vlc_object_destroy( p_sys->p_packetizer );
+    DESTROY_PACKETIZER( p_sys->p_packetizer );
 
     free( p_sys );
 }

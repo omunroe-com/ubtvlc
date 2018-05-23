@@ -2,7 +2,7 @@
  * vlcshell.cpp: a VLC plugin for Mozilla
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: vlcshell.cpp 15273 2006-04-19 09:13:26Z damienf $
+ * $Id: vlcshell.cpp 15892 2006-06-12 23:14:44Z damienf $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -82,7 +82,7 @@ static void Resize( Widget w, XtPointer closure, XEvent *event );
  * MacOS-only declarations
 ******************************************************************************/
 #ifdef XP_MACOSX
-#   define VOUT_PLUGINS "macosx,dummy"
+#   define VOUT_PLUGINS "opengl,macosx,dummy"
 #   define AOUT_PLUGINS "auhal,macosx,dummy"
 
 #endif
@@ -204,17 +204,13 @@ int16 NPP_HandleEvent( NPP instance, void * event )
         case updateEvt:
         {
             NPWindow *npwindow = p_plugin->window;
-            NP_Port *npport = (NP_Port *)(npwindow->window);
-
-            SetPort( npport->port );
-            //SetOrigin( npport->portx , npport->porty);
 
             /* draw the beautiful "No Picture" */
 
             ForeColor(blackColor);
             PenMode( patCopy );
 
-	    Rect rect;
+            Rect rect;
             rect.left = 0;
             rect.top = 0;
             rect.right = npwindow->width;
@@ -236,8 +232,12 @@ int16 NPP_HandleEvent( NPP instance, void * event )
             return true;
         case NPEventType_AdjustCursorEvent:
             return false;
-	case NPEventType_ScrollingBeginsEvent:
-	case NPEventType_ScrollingEndsEvent:
+        case NPEventType_MenuCommandEvent:
+            return false;
+        case NPEventType_ClippingChangedEvent:
+            return false;
+        case NPEventType_ScrollingBeginsEvent:
+        case NPEventType_ScrollingEndsEvent:
             return true;
         default:
             ;
@@ -688,7 +688,7 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
         {
 #if USE_LIBVLC
             VLC_AddTarget( p_plugin->i_vlc, p_plugin->psz_target,
-                           0, 0, PLAYLIST_INSERT, 0 );
+                           0, 0, i_mode, -666 );
 #endif
             p_plugin->b_stream = VLC_TRUE;
         }

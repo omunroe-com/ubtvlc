@@ -2,7 +2,7 @@
  * dialogs.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: dialogs.hpp 14187 2006-02-07 16:37:40Z courmisch $
+ * $Id: dialogs.hpp 15269 2006-04-18 21:24:43Z zorglub $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -86,8 +86,11 @@ class Dialogs: public SkinObject
         /// Show the Streaming Wizard dialog
         void showStreamingWizard();
 
-        /// Show the popup menu
-        void showPopupMenu( bool bShow );
+        /// Show the Playlist
+        void showPlaylist();
+
+        /// Show a popup menu
+        void showPopupMenu( bool bShow, int popupType );
 
         /// Show an interaction dialog
         void showInteraction( interaction_dialog_t * );

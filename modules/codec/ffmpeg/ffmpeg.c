@@ -2,7 +2,7 @@
  * ffmpeg.c: video decoder using ffmpeg library
  *****************************************************************************
  * Copyright (C) 1999-2001 the VideoLAN team
- * $Id: ffmpeg.c 15164 2006-04-10 21:32:26Z hartman $
+ * $Id: ffmpeg.c 16315 2006-08-21 07:26:31Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -191,6 +191,12 @@ vlc_module_begin();
     set_capability( "demux2", 2 );
     set_callbacks( E_(OpenDemux), E_(CloseDemux) );
 
+    /* mux submodule */
+    add_submodule();
+    set_description( _("FFmpeg muxer" ) );
+    set_capability( "sout mux", 2 );
+    set_callbacks( E_(OpenMux), E_(CloseMux) );
+
     /* video filter submodule */
     add_submodule();
     set_capability( "video filter2", 50 );
@@ -222,8 +228,8 @@ static int OpenDecoder( vlc_object_t *p_this )
     int i_cat, i_codec_id, i_result;
     char *psz_namecodec;
 
-    AVCodecContext *p_context;
-    AVCodec        *p_codec;
+    AVCodecContext *p_context = NULL;
+    AVCodec        *p_codec = NULL;
 
     /* *** determine codec type *** */
     if( !E_(GetFfmpegCodec)( p_dec->fmt_in.i_codec, &i_cat, &i_codec_id,
@@ -244,7 +250,8 @@ static int OpenDecoder( vlc_object_t *p_this )
     E_(InitLibavcodec)(p_this);
 
     /* *** ask ffmpeg for a decoder *** */
-    if( !( p_codec = avcodec_find_decoder( i_codec_id ) ) )
+    p_codec = avcodec_find_decoder( i_codec_id );
+    if( !p_codec )
     {
         msg_Dbg( p_dec, "codec not found (%s)", psz_namecodec );
         return VLC_EGENERIC;
@@ -252,6 +259,8 @@ static int OpenDecoder( vlc_object_t *p_this )
 
     /* *** get a p_context *** */
     p_context = avcodec_alloc_context();
+    if( !p_context )
+        return VLC_ENOMEM;
     p_context->debug = config_GetInt( p_dec, "ffmpeg-debug" );
     p_context->opaque = (void *)p_this;
 
@@ -325,7 +334,7 @@ static void CloseDecoder( vlc_object_t *p_this )
     {
         if( p_sys->p_context->extradata )
             free( p_sys->p_context->extradata );
-
+        p_sys->p_context->extradata = NULL;
         vlc_mutex_lock( lockval.p_address );
         avcodec_close( p_sys->p_context );
         vlc_mutex_unlock( lockval.p_address );
@@ -376,6 +385,9 @@ static void LibavcodecCallback( void *p_opaque, int i_level,
         i_vlc_level = VLC_MSG_DBG;
         break;
     case AV_LOG_DEBUG:
+        /* Print debug messages if they were requested */
+        if( p_avctx->debug ) vfprintf( stderr, psz_format, va );
+        return;
     default:
         return;
     }
@@ -721,11 +733,17 @@ static struct
       VIDEO_ES, "Windows Media Video 1" },
     { VLC_FOURCC('W','M','V','2'), CODEC_ID_WMV2,
       VIDEO_ES, "Windows Media Video 2" },
-#if 0
+#if LIBAVCODEC_BUILD >= ((51<<16)+(10<<8)+1) 
     { VLC_FOURCC('W','M','V','3'), CODEC_ID_WMV3,
       VIDEO_ES, "Windows Media Video 3" },
-    { VLC_FOURCC('V','C','9',' '), CODEC_ID_VC9,
-      VIDEO_ES, "Windows Media Video VC9" },
+    { VLC_FOURCC('W','V','C','1'), CODEC_ID_VC1,
+      VIDEO_ES, "Windows Media Video VC1" },
+#endif
+#if 0
+    /* WMVA is the VC-1 codec before the standardization proces,
+       it is not bitstream compatible and deprecated  */
+    { VLC_FOURCC('W','M','V','A'), CODEC_ID_VC1,
+      VIDEO_ES, "Windows Media Video Advanced Profile" },
 #endif
 
 #if LIBAVCODEC_BUILD >= 4683
