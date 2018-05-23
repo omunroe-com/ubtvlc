@@ -53637,3 +53637,21 @@ Author: Pierre d'Herbemont <pdherbemont@videolan.org>
 Date:   Tue Jan 1 18:03:56 2008 +0000
 
     Revert [23949].
+
+commit 054a2b0615657a039bd8bbf257a68df1b59ed43e
+Author: Pierre d'Herbemont <pdherbemont@videolan.org>
+Date:   Tue Jan 1 17:06:40 2008 +0000
+
+    svn:keywords.
+
+commit b83ae6b44b26c3db50a9875b30479da954f4d72c
+Author: Pierre d'Herbemont <pdherbemont@videolan.org>
+Date:   Tue Jan 1 16:46:55 2008 +0000
+
+    VLCExceptionHandler.m: -initialize to -load. initialize gets called to late or never.
+
+commit 8d5d2f839b28e3aebe560463cf5b3a977c6ef385
+Author: Rémi Duraffort <ivoire@videolan.org>
+Date:   Tue Jan 1 16:43:09 2008 +0000
+
+    Little correction of the double-clicks detection under sdl
