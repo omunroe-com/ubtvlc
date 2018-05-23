@@ -3,7 +3,7 @@
  *         vlc-specific things tend to go here.
  *****************************************************************************
  * Copyright (C) 2000, 2003, 2004, 2005 the VideoLAN team
- * $Id: access.c 13905 2006-01-12 23:10:04Z dionoea $
+ * $Id: access.c 17183 2006-10-20 21:33:16Z hartman $
  *
  * Authors: Rocky Bernstein <rocky@panix.com>
  *   Some code is based on the non-libcdio VCD plugin (as there really
@@ -316,6 +316,7 @@ VCDSeek( access_t * p_access, int64_t i_pos )
 	}
 
     }
+    p_access->info.b_eof = VLC_FALSE;
     return VLC_SUCCESS;
     
 }
