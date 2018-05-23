@@ -1,8 +1,8 @@
 /*****************************************************************************
  * misc.m: code not specific to vlc
  *****************************************************************************
- * Copyright (C) 2003-2005 the VideoLAN team
- * $Id: misc.m 12524 2005-09-12 13:00:05Z hartman $
+ * Copyright (C) 2003-2005 VideoLAN
+ * $Id: misc.m 10655 2005-04-12 14:31:14Z bigben $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *
@@ -265,98 +265,6 @@ void _drawFrameInRect(NSRect frameRect)
     knobRect.origin.y++;
     _drawFrameInRect(rect);
     _drawKnobInRect(knobRect);
-}
-
-@end
-
-
-/*****************************************************************************
- * ITSlider
- *****************************************************************************/
-
-@implementation ITSlider
-
-- (void)awakeFromNib
-{
-    if ([[self cell] class] != [ITSliderCell class]) {
-        // replace cell
-        NSSliderCell *oldCell = [self cell];
-        NSSliderCell *newCell = [[[ITSliderCell alloc] init] autorelease];
-        [newCell setTag:[oldCell tag]];
-        [newCell setTarget:[oldCell target]];
-        [newCell setAction:[oldCell action]];
-        [newCell setControlSize:[oldCell controlSize]];
-        [newCell setType:[oldCell type]];
-        [newCell setState:[oldCell state]]; 
-        [newCell setAllowsTickMarkValuesOnly:[oldCell allowsTickMarkValuesOnly]];
-        [newCell setAltIncrementValue:[oldCell altIncrementValue]];
-        [newCell setControlTint:[oldCell controlTint]];
-        [newCell setKnobThickness:[oldCell knobThickness]];
-        [newCell setMaxValue:[oldCell maxValue]];
-        [newCell setMinValue:[oldCell minValue]];
-        [newCell setDoubleValue:[oldCell doubleValue]];
-        [newCell setNumberOfTickMarks:[oldCell numberOfTickMarks]];
-        [newCell setEditable:[oldCell isEditable]];
-        [newCell setEnabled:[oldCell isEnabled]];
-        [newCell setEntryType:[oldCell entryType]];
-        [newCell setHighlighted:[oldCell isHighlighted]];
-        [newCell setTickMarkPosition:[oldCell tickMarkPosition]];
-        [self setCell:newCell];
-    }
-}
-
-@end
-
-/*****************************************************************************
- * ITSliderCell
- *****************************************************************************/
-@implementation ITSliderCell
-
-- (id)init
-{
-    self = [super init];
-    _knobOff = [[NSImage imageNamed:@"volumeslider_normal"] retain];
-    _knobOn = [[NSImage imageNamed:@"volumeslider_blue"] retain];
-    b_mouse_down = FALSE;
-    return self;
-}
-
-- (void)dealloc
-{
-    [_knobOff release];
-    [_knobOn release];
-    [super dealloc];
-}
-
-- (void)drawKnob:(NSRect)knob_rect
-{
-    NSImage *knob;
-
-    if( b_mouse_down )
-        knob = _knobOn;
-    else
-        knob = _knobOff;
-
-    [[self controlView] lockFocus];
-    [knob compositeToPoint:NSMakePoint( knob_rect.origin.x + 1,
-        knob_rect.origin.y + knob_rect.size.height -2 )  
-        operation:NSCompositeSourceOver];
-    [[self controlView] unlockFocus];
-}
-
-- (void)stopTracking:(NSPoint)lastPoint at:(NSPoint)stopPoint inView: 
-        (NSView *)controlView mouseIsUp:(BOOL)flag
-{
-    b_mouse_down = NO;
-    [self drawKnob];
-    [super stopTracking:lastPoint at:stopPoint inView:controlView mouseIsUp:flag];
-}
-
-- (BOOL)startTrackingAt:(NSPoint)startPoint inView:(NSView *)controlView
-{
-    b_mouse_down = YES;
-    [self drawKnob];
-    return [super startTrackingAt:startPoint inView:controlView];
 }
 
 @end

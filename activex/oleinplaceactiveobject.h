@@ -1,7 +1,7 @@
 /*****************************************************************************
  * oleinplaceactiveobject.h: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
+ * Copyright (C) 2005 VideoLAN
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -45,11 +45,11 @@ public:
             *ppv = reinterpret_cast<LPVOID>(this);
             return NOERROR;
         }
-        return _p_instance->pUnkOuter->QueryInterface(riid, ppv);
+        return _p_instance->QueryInterface(riid, ppv);
     };
 
-    STDMETHODIMP_(ULONG) AddRef(void) { return _p_instance->pUnkOuter->AddRef(); };
-    STDMETHODIMP_(ULONG) Release(void) { return _p_instance->pUnkOuter->Release(); };
+    STDMETHODIMP_(ULONG) AddRef(void) { return _p_instance->AddRef(); };
+    STDMETHODIMP_(ULONG) Release(void) { return _p_instance->Release(); };
 
     // IOleWindow methods
     STDMETHODIMP GetWindow(HWND *);

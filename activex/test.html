@@ -11,11 +11,11 @@ MRL:
 <!--
 Insert VideoLAN.VLCPlugin.1 activex control
 -->
-<OBJECT classid="clsid:E23FE9C6-778E-49D4-B537-38FCDE4887D8" codebase="http://downloads.videolan.org/pub/videolan/vlc/latest/win32/axvlc.cab"
+<OBJECT classid="clsid:E23FE9C6-778E-49D4-B537-38FCDE4887D8" codebase="axvlc.cab"
         width="640" height="480" id="vlc" events="True">
-<param name="MRL" value="" />
+<param name="Src" value="" />
 <param name="ShowDisplay" value="True" />
-<param name="AutoLoop" value="False" />
+<param name="Loop" value="False" />
 <param name="AutoPlay" value="False" />
 </OBJECT>
 </TD></TR>
@@ -123,7 +123,7 @@ function doUpdate()
 };
 function doGo(targetURL)
 {
-	var options = new Array(":input-repeat=0");
+	var options = new Array(":input-repeat=1");
 	document.vlc.addTarget(targetURL, options, 4+8, -666);
 };
 function doPlayOrPause()
@@ -137,7 +137,7 @@ function doPlayOrPause()
         document.vlc.play();
     }
 };
-function vlc::Play()
+function vlc::play()
 {
     if( ! sliderTimerId )
     {
@@ -145,7 +145,7 @@ function vlc::Play()
     }
     onPlay();
 };
-function vlc::Pause()
+function vlc::pause()
 {
     if( sliderTimerId )
     {
@@ -154,7 +154,7 @@ function vlc::Pause()
     }
     onPause();
 };
-function vlc::Stop()
+function vlc::stop()
 {
     if( sliderTimerId )
     {

@@ -24,30 +24,29 @@
 #ifndef _ME_H
 #define _ME_H 1
 
-#define COST_MAX (1<<28)
-
 typedef struct
 {
     /* input */
     int      i_pixel;   /* PIXEL_WxH */
-    int16_t *p_cost_mv; /* lambda * nbits for each possible mv */
+    int      lm;        /* lambda motion */
 
-    uint8_t *p_fref[6];
-    uint8_t *p_fenc[3];
-    int      i_stride[2];
+    uint8_t *p_fref;
+    uint8_t *p_fenc;
+    int      i_stride;
+
+    int i_mv_range;
 
     int mvp[2];
 
+    int b_mvc;
+    int mvc[2];
+
     /* output */
-    int cost_mv;        /* lambda * nbits for the chosen mv */
-    int cost;           /* satd + lambda * nbits */
+    int cost;           /* satd + lm * nbits */
     int mv[2];
 } x264_me_t;
 
-void x264_me_search_ref( x264_t *h, x264_me_t *m, int (*mvc)[2], int i_mvc, int *p_fullpel_thresh );
-static inline void x264_me_search( x264_t *h, x264_me_t *m, int (*mvc)[2], int i_mvc )
-    { x264_me_search_ref( h, m, mvc, i_mvc, NULL ); }
-
+void x264_me_search( x264_t *h, x264_me_t *m );
 void x264_me_refine_qpel( x264_t *h, x264_me_t *m );
 
 #endif

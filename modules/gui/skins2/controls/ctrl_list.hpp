@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_list.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_list.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ctrl_list.hpp 11009 2005-05-14 14:39:05Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

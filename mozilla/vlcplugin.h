@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlcplugin.h: a VLC plugin for Mozilla
  *****************************************************************************
- * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: vlcplugin.h 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2002-2005 VideoLAN
+ * $Id: vlcplugin.h 11326 2005-06-07 00:01:41Z dionoea $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -106,7 +106,5 @@ private:
     "video/x-ms-asf-plugin:asf,asx:Windows Media Video;" \
     "video/x-ms-asf:asf,asx:Windows Media Video;" \
     "application/x-mplayer2::Windows Media;" \
-    "video/x-ms-wmv:wmv:Windows Media;" \
-    /* Google VLC mime */ \
-    "application/x-google-vlc-plugin::Google VLC plugin" \
+    "video/x-ms-wmv:wmv:Windows Media" \
 

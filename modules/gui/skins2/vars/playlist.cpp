@@ -1,8 +1,8 @@
 /*****************************************************************************
  * playlist.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: playlist.cpp 11991 2005-08-03 21:00:03Z ipkiss $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: playlist.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -26,10 +26,24 @@
 #include "playlist.hpp"
 #include "../utils/ustring.hpp"
 
+#include "charset.h"
+
 Playlist::Playlist( intf_thread_t *pIntf ): VarList( pIntf )
 {
     // Get the playlist VLC object
     m_pPlaylist = pIntf->p_sys->p_playlist;
+
+    // Try to guess the current charset
+    char *pCharset;
+    vlc_current_charset( &pCharset );
+    iconvHandle = vlc_iconv_open( "UTF-8", pCharset );
+    msg_Dbg( pIntf, "Using character encoding: %s", pCharset );
+    free( pCharset );
+
+    if( iconvHandle == (vlc_iconv_t)-1 )
+    {
+        msg_Warn( pIntf, "Unable to do requested conversion" );
+    }
 
     buildList();
 }
@@ -37,6 +51,7 @@ Playlist::Playlist( intf_thread_t *pIntf ): VarList( pIntf )
 
 Playlist::~Playlist()
 {
+    if( iconvHandle != (vlc_iconv_t)-1 ) vlc_iconv_close( iconvHandle );
 }
 
 
@@ -96,13 +111,49 @@ void Playlist::buildList()
     for( int i = 0; i < m_pPlaylist->i_size; i++ )
     {
         // Get the name of the playlist item
-        UString *pName =
-            new UString( getIntf(), m_pPlaylist->pp_items[i]->input.psz_name );
+        UString *pName = convertName( m_pPlaylist->pp_items[i]->input.psz_name );
         // Is it the played stream ?
         bool playing = (i == m_pPlaylist->i_index );
         // Add the item in the list
         m_list.push_back( Elem_t( UStringPtr( pName ), false, playing ) );
     }
     vlc_mutex_unlock( &m_pPlaylist->object_lock );
+}
+
+
+UString *Playlist::convertName( const char *pName )
+{
+    if( iconvHandle == (vlc_iconv_t)-1 )
+    {
+        return new UString( getIntf(), pName );
+    }
+
+    char *pNewName, *pBufferOut;
+    const char *pBufferIn;
+    size_t ret, inbytesLeft, outbytesLeft;
+
+    // Try to convert the playlist item into UTF8
+    pNewName = (char*)malloc( 6 * strlen( pName ) );
+    pBufferOut = pNewName;
+    pBufferIn = pName;
+    inbytesLeft = strlen( pName );
+    outbytesLeft = 6 * inbytesLeft;
+    // ICONV_CONST is defined in config.h
+    ret = vlc_iconv( iconvHandle, (char **)&pBufferIn, &inbytesLeft,
+                     &pBufferOut, &outbytesLeft );
+    *pBufferOut = '\0';
+
+    if( inbytesLeft )
+    {
+        msg_Warn( getIntf(), "Failed to convert the playlist item into UTF8" );
+        free( pNewName );
+        return new UString( getIntf(), pName );
+    }
+    else
+    {
+        UString *pString = new UString( getIntf(), pNewName );
+        free( pNewName );
+        return pString;
+    }
 }
 

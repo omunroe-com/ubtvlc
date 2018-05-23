@@ -7,7 +7,6 @@ EXTRA_DIST = \
 	control \
 	copyright \
 	rules \
-	vlc.desktop \
 	vlc.dirs \
 	vlc.docs \
 	vlc.menu \
@@ -30,7 +29,5 @@ EXTRA_DIST = \
 	wxvlc.dirs \
 	wxvlc.menu \
 	patches/00list \
-	patches/20_osdmenu-paths.dpatch \
-	patches/20_no-wx-updates.dpatch \
-	gcc-snapshot \
+	patches/20_interfaces.dpatch \
 	$(NULL)

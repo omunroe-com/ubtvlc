@@ -1,4 +1,1937 @@
 ------------------------------------------------------------------------
+r11539 | dionoea | 2005-06-25 15:31:08 +0200 (Sat, 25 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/demux/playlist/b4s.c
+
+shoutcast genres fix by Jonas A. Larsen
+
+------------------------------------------------------------------------
+r11538 | fkuehne | 2005-06-25 15:15:01 +0200 (Sat, 25 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/po/da.po
+
+fix svn:keywords
+------------------------------------------------------------------------
+r11537 | fkuehne | 2005-06-25 15:12:16 +0200 (Sat, 25 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/po/da.po
+
+* Update to the Danish translation by Jonas Larsen
+------------------------------------------------------------------------
+r11534 | courmisch | 2005-06-25 15:00:59 +0200 (Sat, 25 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/access/http.c
+
+back to http_proxy in lowercase
+
+------------------------------------------------------------------------
+r11532 | fkuehne | 2005-06-25 14:46:44 +0200 (Sat, 25 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/po/tr.po
+
+* update to the Turkish translation by Adem Gunes (1460 translated messages, 3 fuzzy translations, 1570 untranslated messages now)
+------------------------------------------------------------------------
+r11531 | hartman | 2005-06-25 14:14:42 +0200 (Sat, 25 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/po/nl.po
+
+* Dutch translation for as far as it is gonna get done. (non advanced options and GUI strings translated)
+
+------------------------------------------------------------------------
+r11530 | courmisch | 2005-06-25 13:20:53 +0200 (Sat, 25 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/access/http.c
+
+Backport getenv bugfix from [11529]
+
+------------------------------------------------------------------------
+r11524 | dionoea | 2005-06-25 12:23:06 +0200 (Sat, 25 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/NEWS
+   M /branches/0.8.2/configure.ac
+   M /branches/0.8.2/extras/MacOSX/Resources/English.lproj/InfoPlist.strings
+   M /branches/0.8.2/extras/MacOSX/vlc.pbproj/project.pbxproj
+
+prepare release. We still need to update the Changelog
+
+------------------------------------------------------------------------
+r11522 | hartman | 2005-06-25 11:46:50 +0200 (Sat, 25 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/demux/livedotcom.cpp
+
+* Change timeout on all RTSP transport protocols to 10secs. Apparently on VoD streams, this is not uncommon.
+
+------------------------------------------------------------------------
+r11517 | adn | 2005-06-25 01:48:56 +0200 (Sat, 25 Jun 2005) | 3 lines
+Changed paths:
+   M /branches/0.8.2/po/fr.po
+
+all translated: please check the diff and correct the strings (rc and
+                mosaic, especially) for next release.
+
+------------------------------------------------------------------------
+r11516 | dionoea | 2005-06-24 23:58:22 +0200 (Fri, 24 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/po/fr.po
+
+French translation (37 fuzzy and 65 untranslated). rels #143
+
+------------------------------------------------------------------------
+r11515 | gbazin | 2005-06-24 22:39:26 +0200 (Fri, 24 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/codec/ffmpeg/video.c
+   M /branches/0.8.2/modules/demux/mp4/mp4.c
+
+* modules/codec/ffmpeg/video.c, modules/demux/mp4/mp4.c: backport 11229 to fix playback of some h264 streams.
+------------------------------------------------------------------------
+r11514 | hartman | 2005-06-24 22:14:28 +0200 (Fri, 24 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/extras/contrib/src/packages.mak
+   M /branches/0.8.2/modules/gui/macosx/playlist.m
+   M /branches/0.8.2/modules/video_output/opengl.c
+
+* backport of [11511] [11512] and [11513]
+
+------------------------------------------------------------------------
+r11510 | titer | 2005-06-24 01:15:44 +0200 (Fri, 24 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/src/libvlc.h
+
+ libvlc.h: compile fix (s/_N/N_/)
+
+------------------------------------------------------------------------
+r11508 | zorglub | 2005-06-23 20:58:12 +0200 (Thu, 23 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/wxwindows/preferences.cpp
+
+Backport [11507] to 0.8.2
+
+------------------------------------------------------------------------
+r11506 | fkuehne | 2005-06-23 20:03:26 +0200 (Thu, 23 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/configure.ac
+   M /branches/0.8.2/po/ru.po
+   M /branches/0.8.2/src/libvlc.h
+   M /branches/0.8.2/src/misc/darwin_specific.m
+
+* update to the Russian translation by Andrey Brilevskiy <andrey-brilevskiy@yandex.ru>
+* include ru in the builds again although it's far from being complete (685 translated messages, 716 fuzzy translations, 1632 untranslated messages)
+------------------------------------------------------------------------
+r11503 | hartman | 2005-06-23 17:14:36 +0200 (Thu, 23 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/demux/livedotcom.cpp
+   M /branches/0.8.2/modules/demux/mkv.cpp
+   M /branches/0.8.2/modules/gui/macosx/playlist.m
+
+* backport of [11500] [11501] and [11502]
+
+------------------------------------------------------------------------
+r11499 | xtophe | 2005-06-23 10:36:46 +0200 (Thu, 23 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/share/http/index.html
+
+ckport of [11498]
+
+------------------------------------------------------------------------
+r11497 | dionoea | 2005-06-22 18:43:05 +0200 (Wed, 22 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/src/misc/vlm.c
+
+backport 11496
+
+------------------------------------------------------------------------
+r11495 | hartman | 2005-06-21 23:32:34 +0200 (Tue, 21 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/configure.ac
+
+* backport of [11494]
+
+------------------------------------------------------------------------
+r11493 | hartman | 2005-06-21 20:24:16 +0200 (Tue, 21 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/ChangeLog
+   M /branches/0.8.2/NEWS
+   M /branches/0.8.2/configure.ac
+   M /branches/0.8.2/extras/MacOSX/Resources/English.lproj/InfoPlist.strings
+   M /branches/0.8.2/extras/MacOSX/vlc.pbproj/project.pbxproj
+
+* prepare 0.8.2-test3
+
+------------------------------------------------------------------------
+r11492 | hartman | 2005-06-21 20:19:16 +0200 (Tue, 21 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/macosx/playlist.m
+
+* backport of [11488] and [11489]
+
+------------------------------------------------------------------------
+r11491 | courmisch | 2005-06-21 19:44:53 +0200 (Tue, 21 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/demux/voc.c
+
+Backport 11490
+
+------------------------------------------------------------------------
+r11486 | hartman | 2005-06-21 01:34:38 +0200 (Tue, 21 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/macosx/playlist.m
+   M /branches/0.8.2/modules/misc/dummy/dummy.c
+
+* backport of [11467] and [11479]
+
+------------------------------------------------------------------------
+r11483 | fkuehne | 2005-06-20 23:09:46 +0200 (Mon, 20 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/gui/macosx/intf.m
+
+* fix another resize-bug introduced in [11440] (refs #210)
+------------------------------------------------------------------------
+r11478 | zorglub | 2005-06-20 21:44:46 +0200 (Mon, 20 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/mozilla/vlcshell.cpp
+
+Backport [11477] to 0.8.2 branch
+
+------------------------------------------------------------------------
+r11476 | zorglub | 2005-06-20 20:58:27 +0200 (Mon, 20 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/macosx/playlist.m
+   M /branches/0.8.2/src/playlist/item-ext.c
+   M /branches/0.8.2/src/playlist/playlist.c
+   M /branches/0.8.2/src/playlist/view.c
+
+Merge [11470],[11471],[11474] and [11475] - Closes: #205
+
+------------------------------------------------------------------------
+r11469 | fkuehne | 2005-06-20 15:20:51 +0200 (Mon, 20 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/NEWS
+
+removed the languages we removed from our official builds and added Turkish
+------------------------------------------------------------------------
+r11468 | fkuehne | 2005-06-20 15:13:59 +0200 (Mon, 20 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/THANKS
+   M /branches/0.8.2/configure.ac
+   A /branches/0.8.2/po/tr.po
+
+* initial Turkish translation by Adem Gunes <xleopar@yahoo.com> (839 translated messages)
+------------------------------------------------------------------------
+r11462 | fkuehne | 2005-06-19 15:33:16 +0200 (Sun, 19 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/po/bn.po
+   M /branches/0.8.2/po/ca.po
+   M /branches/0.8.2/po/da.po
+   M /branches/0.8.2/po/de.po
+   M /branches/0.8.2/po/el.po
+   M /branches/0.8.2/po/en_GB.po
+   M /branches/0.8.2/po/es.po
+   M /branches/0.8.2/po/fr.po
+   M /branches/0.8.2/po/hi.po
+   M /branches/0.8.2/po/hu.po
+   M /branches/0.8.2/po/it.po
+   M /branches/0.8.2/po/ja.po
+   M /branches/0.8.2/po/my.po
+   M /branches/0.8.2/po/ne.po
+   M /branches/0.8.2/po/nl.po
+   M /branches/0.8.2/po/no.po
+   M /branches/0.8.2/po/pl.po
+   M /branches/0.8.2/po/ps.po
+   M /branches/0.8.2/po/pt_BR.po
+   M /branches/0.8.2/po/ru.po
+   M /branches/0.8.2/po/sv.po
+   M /branches/0.8.2/po/tet.po
+   M /branches/0.8.2/po/tl.po
+   M /branches/0.8.2/po/zh_TW.po
+
+* ALL: include svn-revision-information via $Id$
+* en_GB: partial update
+------------------------------------------------------------------------
+r11461 | fkuehne | 2005-06-19 14:02:20 +0200 (Sun, 19 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/po/es.po
+
+*grml* finally fixed now
+------------------------------------------------------------------------
+r11460 | fkuehne | 2005-06-19 12:11:03 +0200 (Sun, 19 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/po/es.po
+
+* fix the line-endings, which were broken in the previous commit
+------------------------------------------------------------------------
+r11459 | fkuehne | 2005-06-19 12:03:45 +0200 (Sun, 19 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/po/es.po
+
+* update to the Spanish l10n by Antonio Javier Varela Calvo
+------------------------------------------------------------------------
+r11455 | jpsaman | 2005-06-18 10:17:19 +0200 (Sat, 18 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/AUTHORS
+
+Updated e-mail address. The wxs.nl address is no longer in use.
+------------------------------------------------------------------------
+r11453 | fkuehne | 2005-06-17 21:24:12 +0200 (Fri, 17 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/configure.ac
+   M /branches/0.8.2/src/libvlc.h
+   M /branches/0.8.2/src/misc/darwin_specific.m
+
+* ALL: removed the translations to Bengali, Modern Greek, Hindi, Hungarian, Burmese, Nepali, Norwegian, Polish, Pashto, Russian, Swedish, Tetum & Tagalog from the builds, because each of them contains less than 20% of translated strings (refs #143)
+------------------------------------------------------------------------
+r11449 | massiot | 2005-06-17 18:45:58 +0200 (Fri, 17 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/demux/playlist/b4s.c
+   M /branches/0.8.2/modules/demux/playlist/m3u.c
+   M /branches/0.8.2/modules/demux/playlist/old.c
+   M /branches/0.8.2/modules/demux/playlist/playlist.c
+   M /branches/0.8.2/modules/demux/playlist/playlist.h
+   M /branches/0.8.2/modules/demux/playlist/pls.c
+
+Backported r11448.
+
+------------------------------------------------------------------------
+r11445 | dionoea | 2005-06-17 14:36:47 +0200 (Fri, 17 Jun 2005) | 3 lines
+Changed paths:
+   M /branches/0.8.2/mozilla/vlcshell.cpp
+
+all options enabled by "true" or "yes" can now also be enabled by using "1".
+fixes #211
+
+------------------------------------------------------------------------
+r11444 | dionoea | 2005-06-16 23:13:51 +0200 (Thu, 16 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/Makefile.am
+   M /branches/0.8.2/share/Makefile.am
+   M /branches/0.8.2/share/vlc16x16.xpm
+   M /branches/0.8.2/share/vlc32x32.xpm
+   A /branches/0.8.2/share/vlc48x48new.ico (from /trunk/share/vlc48x48new.ico:11443)
+   M /branches/0.8.2/share/vlc_win32_rc.rc
+   M /branches/0.8.2/vlc.win32.nsi
+
+backport 11443
+
+------------------------------------------------------------------------
+r11442 | dionoea | 2005-06-16 21:43:29 +0200 (Thu, 16 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/share/vlc_win32_rc.rc
+
+back port 11441
+
+------------------------------------------------------------------------
+r11440 | fkuehne | 2005-06-16 09:17:30 +0200 (Thu, 16 Jun 2005) | 3 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/macosx/intf.m
+
+* fix minor resize-bug when closing the playlist (closes #210)
+
+Please do not forwardport this commit. I'll do that in a couple of days. I have other pending changes to intf.m in trunk at the moment, which are not finished yet.
+------------------------------------------------------------------------
+r11438 | dionoea | 2005-06-16 01:21:43 +0200 (Thu, 16 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/wxwindows/preferences.cpp
+
+backport 11437
+
+------------------------------------------------------------------------
+r11433 | fkuehne | 2005-06-15 21:29:46 +0200 (Wed, 15 Jun 2005) | 4 lines
+Changed paths:
+   M /branches/0.8.2/po/de.po
+
+* fixes to the German translation by Jens Seidel <jensseidel@users.sf.net>
+    - reverted to change "VLC Einstellungen" to "VLC-Einstellungen", as this is no good style for a menu entry in my opinion
+    - included all other fixes of strings that are still in use (not that many, as the diff was created from a _very_ old version of de.po)
+* added various fixes to the Streaming-wizard-strings myself
+------------------------------------------------------------------------
+r11431 | massiot | 2005-06-15 18:32:20 +0200 (Wed, 15 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/src/playlist/playlist.c
+
+Backport of r11430.
+
+------------------------------------------------------------------------
+r11429 | xtophe | 2005-06-15 11:26:07 +0200 (Wed, 15 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/access/dvdread.c
+
+Backport of [11428]
+
+------------------------------------------------------------------------
+r11427 | xtophe | 2005-06-15 09:41:41 +0200 (Wed, 15 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/share/http/vlm/index.html
+
+Backport of [11426]
+
+------------------------------------------------------------------------
+r11425 | hartman | 2005-06-15 01:47:05 +0200 (Wed, 15 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/macosx/voutgl.m
+   M /branches/0.8.2/modules/video_output/opengl.c
+
+* backport of [11424]
+
+------------------------------------------------------------------------
+r11423 | hartman | 2005-06-15 01:12:06 +0200 (Wed, 15 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/access/dvdread.c
+
+* backport of [11413] and [11422] Also closes #198
+
+------------------------------------------------------------------------
+r11420 | hartman | 2005-06-14 23:32:56 +0200 (Tue, 14 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/macosx/prefs.h
+   M /branches/0.8.2/modules/gui/macosx/prefs.m
+
+* backport of [11419]
+
+------------------------------------------------------------------------
+r11416 | xtophe | 2005-06-14 20:22:41 +0200 (Tue, 14 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/Makefile.am
+
+Backport of [11415]
+
+------------------------------------------------------------------------
+r11412 | gbazin | 2005-06-14 16:15:34 +0200 (Tue, 14 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/video_output/opengl.c
+
+*  modules/video_output/opengl.c: backport of 11411.
+------------------------------------------------------------------------
+r11410 | hartman | 2005-06-13 22:51:22 +0200 (Mon, 13 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/demux/mkv.cpp
+
+* backport of [11409]
+
+------------------------------------------------------------------------
+r11408 | hartman | 2005-06-13 21:12:43 +0200 (Mon, 13 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/audio_output/auhal.c
+
+* backport of [11407]
+
+------------------------------------------------------------------------
+r11405 | hartman | 2005-06-12 23:06:29 +0200 (Sun, 12 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/audio_output/auhal.c
+
+* backport of [11404]
+
+------------------------------------------------------------------------
+r11403 | zorglub | 2005-06-12 10:54:14 +0200 (Sun, 12 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/po/fr.po
+
+Beginning of french l10n 
+
+------------------------------------------------------------------------
+r11402 | dionoea | 2005-06-11 23:37:39 +0200 (Sat, 11 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/BUGS
+
+backport 11401
+
+------------------------------------------------------------------------
+r11400 | dionoea | 2005-06-11 22:36:55 +0200 (Sat, 11 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/vlc.win32.nsi
+
+backport 11399 
+
+------------------------------------------------------------------------
+r11398 | hartman | 2005-06-10 21:54:49 +0200 (Fri, 10 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/THANKS
+   M /branches/0.8.2/modules/gui/macosx/controls.m
+   M /branches/0.8.2/modules/gui/macosx/intf.h
+   M /branches/0.8.2/modules/gui/macosx/intf.m
+   M /branches/0.8.2/modules/gui/macosx/playlist.m
+   M /branches/0.8.2/src/libvlc.h
+
+* backport of [11397] and [11396]
+
+------------------------------------------------------------------------
+r11393 | dionoea | 2005-06-10 20:58:55 +0200 (Fri, 10 Jun 2005) | 3 lines
+Changed paths:
+   M /branches/0.8.2/modules/video_filter/mosaic.c
+   M /branches/0.8.2/modules/video_filter/motiondetect.c
+
+remove those two filers from the prefs in 0.8.2 since we don't have
+yoann's wxWidgets VLM interface yet
+
+------------------------------------------------------------------------
+r11392 | fkuehne | 2005-06-10 20:53:57 +0200 (Fri, 10 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/extras/MacOSX/Resources/English.lproj/Preferences.nib/info.nib
+   M /branches/0.8.2/extras/MacOSX/Resources/English.lproj/Preferences.nib/keyedobjects.nib
+
+* don't let the prefs-window get smaller as the default size to prevent unnice effects of the elements
+------------------------------------------------------------------------
+r11389 | fkuehne | 2005-06-10 20:24:06 +0200 (Fri, 10 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/po/de.po
+
+* complete update of the German translation (just one fuzzy string is missing)
+------------------------------------------------------------------------
+r11387 | hartman | 2005-06-10 17:32:08 +0200 (Fri, 10 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/audio_filter/converter/mpgatofixed32.c
+   M /branches/0.8.2/modules/audio_filter/format.c
+   M /branches/0.8.2/modules/audio_output/file.c
+   M /branches/0.8.2/modules/codec/dts.c
+   M /branches/0.8.2/modules/gui/macosx/macosx.m
+   M /branches/0.8.2/modules/misc/freetype.c
+   M /branches/0.8.2/modules/misc/network/ipv4.c
+   M /branches/0.8.2/modules/misc/svg.c
+   M /branches/0.8.2/modules/video_filter/mosaic.c
+   M /branches/0.8.2/modules/video_filter/motionblur.c
+   M /branches/0.8.2/modules/video_filter/motiondetect.c
+   M /branches/0.8.2/modules/video_filter/swscale/filter.c
+   M /branches/0.8.2/modules/video_output/fb.c
+   M /branches/0.8.2/modules/video_output/opengl.c
+   M /branches/0.8.2/modules/video_output/sdl.c
+   M /branches/0.8.2/modules/video_output/svgalib.c
+   M /branches/0.8.2/modules/video_output/wingdi.c
+   M /branches/0.8.2/src/libvlc.h
+
+* backport of [11386]
+
+------------------------------------------------------------------------
+r11382 | hartman | 2005-06-10 17:05:04 +0200 (Fri, 10 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/macosx/open.m
+
+* backport of [11381]
+
+------------------------------------------------------------------------
+r11380 | fkuehne | 2005-06-10 16:20:40 +0200 (Fri, 10 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/access/vcdx/vcd.c
+   M /branches/0.8.2/modules/misc/rtsp.c
+   M /branches/0.8.2/modules/mux/mpjpeg.c
+
+* backport of the most important changes from [11379]
+------------------------------------------------------------------------
+r11378 | fkuehne | 2005-06-10 13:13:34 +0200 (Fri, 10 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/po/da.po
+
+* update to the Danish translation by E-bola
+------------------------------------------------------------------------
+r11376 | fkuehne | 2005-06-10 13:01:40 +0200 (Fri, 10 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/access/fake.c
+   M /branches/0.8.2/modules/access/pvr/pvr.c
+   M /branches/0.8.2/modules/access/v4l/v4l.c
+
+* changed some strings as suggested by E-bola
+------------------------------------------------------------------------
+r11375 | dionoea | 2005-06-10 01:36:22 +0200 (Fri, 10 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/vlc.win32.nsi
+
+ * backport 11374
+
+------------------------------------------------------------------------
+r11372 | hartman | 2005-06-10 00:44:02 +0200 (Fri, 10 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/extras/contrib/src/Makefile
+   A /branches/0.8.2/extras/contrib/src/Patches/x264.patch
+
+* Don't build x264 application because it uses getopt which is not available under 10.2 (ugh, ugly hack this is).
+
+------------------------------------------------------------------------
+r11371 | hartman | 2005-06-09 22:40:01 +0200 (Thu, 09 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/extras/contrib/src/Makefile
+   M /branches/0.8.2/extras/contrib/src/packages.mak
+   M /branches/0.8.2/modules/gui/macosx/output.m
+
+* backport of [11370]
+
+------------------------------------------------------------------------
+r11369 | hartman | 2005-06-09 13:03:10 +0200 (Thu, 09 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/video_output/opengl.c
+
+* backport of [11368]
+
+------------------------------------------------------------------------
+r11366 | jpsaman | 2005-06-08 22:44:26 +0200 (Wed, 08 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/access/dvdnav.c
+
+small cleanup #11362
+------------------------------------------------------------------------
+r11363 | gbazin | 2005-06-08 22:00:41 +0200 (Wed, 08 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/access/dvdnav.c
+
+* modules/access/dvdnav.c: backport of 11362.
+------------------------------------------------------------------------
+r11360 | courmisch | 2005-06-08 18:57:11 +0200 (Wed, 08 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/services_discovery/sap.c
+
+Fix remotely-triggerable memleak
+
+------------------------------------------------------------------------
+r11359 | courmisch | 2005-06-08 18:31:39 +0200 (Wed, 08 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/services_discovery/sap.c
+
+Fix off-by-one buffer overflow
+
+------------------------------------------------------------------------
+r11358 | courmisch | 2005-06-08 18:25:10 +0200 (Wed, 08 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/services_discovery/sap.c
+
+Cosmetics
+
+------------------------------------------------------------------------
+r11357 | hartman | 2005-06-08 16:50:26 +0200 (Wed, 08 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/NEWS
+   M /branches/0.8.2/README.MacOSX.rtf
+   M /branches/0.8.2/modules/audio_output/auhal.c
+
+* backport of [11356]
+
+------------------------------------------------------------------------
+r11353 | gbazin | 2005-06-08 15:18:15 +0200 (Wed, 08 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/Makefile.am
+
+* Makefile.am: backport of 11352.
+------------------------------------------------------------------------
+r11351 | gbazin | 2005-06-08 14:07:14 +0200 (Wed, 08 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/stream_out/transcode.c
+
+* modules/stream_out/transcode.c: backport of 11350.
+------------------------------------------------------------------------
+r11349 | gbazin | 2005-06-08 09:34:58 +0200 (Wed, 08 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/codec/ffmpeg/ffmpeg.c
+   M /branches/0.8.2/modules/packetizer/mpeg4video.c
+
+* modules/codec/ffmpeg/ffmpeg.c, modules/packetizer/mpeg4video.c: backport of 11348.
+------------------------------------------------------------------------
+r11336 | gbazin | 2005-06-07 17:02:55 +0200 (Tue, 07 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/audio_output/directx.c
+
+* modules/audio_output/directx.c: backport of 11335.
+------------------------------------------------------------------------
+r11334 | dionoea | 2005-06-07 15:52:41 +0200 (Tue, 07 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/ChangeLog
+
+english changelog 
+
+------------------------------------------------------------------------
+r11333 | dionoea | 2005-06-07 15:43:31 +0200 (Tue, 07 Jun 2005) | 3 lines
+Changed paths:
+   M /branches/0.8.2/ChangeLog
+   M /branches/0.8.2/configure.ac
+   M /branches/0.8.2/extras/MacOSX/Resources/English.lproj/InfoPlist.strings
+   M /branches/0.8.2/extras/MacOSX/vlc.pbproj/project.pbxproj
+
+prepare 0.8.2-test2 release
+
+
+------------------------------------------------------------------------
+r11332 | xtophe | 2005-06-07 15:35:52 +0200 (Tue, 07 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/activex/axvlc_rc.rc
+
+Backport of [11331]
+
+------------------------------------------------------------------------
+r11330 | gbazin | 2005-06-07 14:33:58 +0200 (Tue, 07 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/codec/x264.c
+
+* modules/codec/x264.c: backport of 11329.
+------------------------------------------------------------------------
+r11328 | gbazin | 2005-06-07 12:32:40 +0200 (Tue, 07 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/stream_out/transcode.c
+
+* modules/stream_out/transcode.c: backport of 11327.
+------------------------------------------------------------------------
+r11326 | dionoea | 2005-06-07 02:01:41 +0200 (Tue, 07 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/mozilla/npvlc_rc.rc
+   M /branches/0.8.2/mozilla/vlcpeer.cpp
+   M /branches/0.8.2/mozilla/vlcpeer.h
+   M /branches/0.8.2/mozilla/vlcplugin.cpp
+   M /branches/0.8.2/mozilla/vlcplugin.h
+   M /branches/0.8.2/mozilla/vlcshell.cpp
+
+ * backport r11324 and r11325
+
+------------------------------------------------------------------------
+r11323 | gbazin | 2005-06-06 19:41:51 +0200 (Mon, 06 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/codec/x264.c
+
+* modules/codec/x264.c: backport of 11322.
+------------------------------------------------------------------------
+r11321 | gbazin | 2005-06-06 19:11:25 +0200 (Mon, 06 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/codec/ffmpeg/encoder.c
+   M /branches/0.8.2/modules/stream_out/transcode.c
+
+* modules/codec/ffmpeg/encoder.c, modules/stream_out/transcode.c: backport of 11318 and 11319.
+------------------------------------------------------------------------
+r11317 | dionoea | 2005-06-06 02:29:56 +0200 (Mon, 06 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/vlc.win32.nsi
+
+post commit test for trac : closes #172
+
+------------------------------------------------------------------------
+r11316 | dionoea | 2005-06-06 02:22:59 +0200 (Mon, 06 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/vlc.win32.nsi
+
+same thing
+
+------------------------------------------------------------------------
+r11314 | hartman | 2005-06-06 01:47:31 +0200 (Mon, 06 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/audio_output/auhal.c
+
+* backport of [11313]
+
+------------------------------------------------------------------------
+r11312 | hartman | 2005-06-05 23:56:35 +0200 (Sun, 05 Jun 2005) | 3 lines
+Changed paths:
+   M /branches/0.8.2/NEWS
+   M /branches/0.8.2/README.MacOSX.rtf
+   M /branches/0.8.2/configure.ac
+   M /branches/0.8.2/modules/audio_output/auhal.c
+
+* backport of auhal.c [11020] trough [11310] from trunk
+* backport of [110311]
+
+------------------------------------------------------------------------
+r11309 | gbazin | 2005-06-05 20:07:52 +0200 (Sun, 05 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/access/dvdnav.c
+   M /branches/0.8.2/modules/access/dvdread.c
+
+* modules/access/dvdnav.c,dvdread.c: backport of #11308.
+------------------------------------------------------------------------
+r11307 | gbazin | 2005-06-05 19:31:38 +0200 (Sun, 05 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/access/dvdnav.c
+
+* modules/access/dvdnav.c: backport of #11306.
+------------------------------------------------------------------------
+r11305 | gbazin | 2005-06-05 19:05:20 +0200 (Sun, 05 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/include/vlc_spu.h
+   M /branches/0.8.2/modules/access/dvdnav.c
+   M /branches/0.8.2/src/video_output/vout_subpictures.c
+
+* modules/access/dvdnav.c, src/video_output/vout_subpictures.c: backport of #11304.
+------------------------------------------------------------------------
+r11299 | gbazin | 2005-06-05 04:27:01 +0200 (Sun, 05 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/access/dvdread.c
+
+* modules/access/dvdread.c: backport of #11298.
+------------------------------------------------------------------------
+r11297 | hartman | 2005-06-05 02:48:53 +0200 (Sun, 05 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/macosx/vout.m
+
+* backport of [11296]
+
+------------------------------------------------------------------------
+r11295 | hartman | 2005-06-04 23:26:57 +0200 (Sat, 04 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/macosx/vout.m
+
+* backport of [11294]
+
+------------------------------------------------------------------------
+r11292 | dionoea | 2005-06-04 22:49:12 +0200 (Sat, 04 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/wxwindows/interface.cpp
+
+don't wrap text in the "About" dialog
+
+------------------------------------------------------------------------
+r11291 | titer | 2005-06-04 22:09:06 +0200 (Sat, 04 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/beos/PreferencesWindow.cpp
+
+ Same as [11290]
+
+------------------------------------------------------------------------
+r11289 | titer | 2005-06-04 22:04:07 +0200 (Sat, 04 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/beos/PreferencesWindow.cpp
+   M /branches/0.8.2/modules/gui/beos/PreferencesWindow.h
+
+ Backport of [11288]
+
+------------------------------------------------------------------------
+r11287 | titer | 2005-06-04 19:59:29 +0200 (Sat, 04 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/src/playlist/view.c
+
+ Backport of [11286]
+
+------------------------------------------------------------------------
+r11283 | titer | 2005-06-04 17:10:24 +0200 (Sat, 04 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/macosx/controls.m
+   M /branches/0.8.2/modules/gui/macosx/vout.h
+   M /branches/0.8.2/modules/gui/macosx/vout.m
+   M /branches/0.8.2/modules/gui/macosx/voutgl.m
+   M /branches/0.8.2/modules/gui/macosx/voutqt.m
+
+ Backport of [11282]
+
+------------------------------------------------------------------------
+r11280 | gbazin | 2005-06-04 13:57:21 +0200 (Sat, 04 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/include/vlc_config.h
+
+* include/vlc_config.h: backport of #11279.
+------------------------------------------------------------------------
+r11277 | fkuehne | 2005-06-03 21:50:47 +0200 (Fri, 03 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/po/de.po
+
+* small update to the G. translation
+------------------------------------------------------------------------
+r11275 | titer | 2005-06-03 19:37:44 +0200 (Fri, 03 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/extras/contrib/src/Makefile
+
+ Backport of [11274]
+
+------------------------------------------------------------------------
+r11273 | fkuehne | 2005-06-03 17:12:31 +0200 (Fri, 03 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/po/bn.po
+   M /branches/0.8.2/po/ca.po
+   M /branches/0.8.2/po/da.po
+   M /branches/0.8.2/po/de.po
+   M /branches/0.8.2/po/el.po
+   M /branches/0.8.2/po/en_GB.po
+   M /branches/0.8.2/po/es.po
+   M /branches/0.8.2/po/fr.po
+   M /branches/0.8.2/po/hi.po
+   M /branches/0.8.2/po/hu.po
+   M /branches/0.8.2/po/it.po
+   M /branches/0.8.2/po/ja.po
+   M /branches/0.8.2/po/my.po
+   M /branches/0.8.2/po/ne.po
+   M /branches/0.8.2/po/nl.po
+   M /branches/0.8.2/po/no.po
+   M /branches/0.8.2/po/pl.po
+   M /branches/0.8.2/po/ps.po
+   M /branches/0.8.2/po/pt_BR.po
+   M /branches/0.8.2/po/ru.po
+   M /branches/0.8.2/po/sv.po
+   M /branches/0.8.2/po/tet.po
+   M /branches/0.8.2/po/tl.po
+   M /branches/0.8.2/po/vlc.pot
+   M /branches/0.8.2/po/zh_TW.po
+
+* updated the po-files. strings are frozen now.
+------------------------------------------------------------------------
+r11270 | fkuehne | 2005-06-03 16:56:56 +0200 (Fri, 03 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/po/Makefile.in.in
+
+* minor fix to access gettext in extras/contrib properly
+------------------------------------------------------------------------
+r11269 | hartman | 2005-06-03 15:34:21 +0200 (Fri, 03 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/access/dvdnav.c
+
+* backport of [11267]
+
+------------------------------------------------------------------------
+r11268 | gbazin | 2005-06-03 15:17:08 +0200 (Fri, 03 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/demux/mp4/mp4.c
+
+* modules/demux/mp4/mp4.c: backport of #11266.
+------------------------------------------------------------------------
+r11263 | courmisch | 2005-06-03 11:23:54 +0200 (Fri, 03 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/include/stream_output.h
+   M /branches/0.8.2/src/stream_output/announce.c
+
+Fix declation of sout_AnnounceSessionCreate
+
+------------------------------------------------------------------------
+r11259 | fkuehne | 2005-06-02 19:16:34 +0200 (Thu, 02 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/src/libvlc.h
+
+* another minor fix
+------------------------------------------------------------------------
+r11257 | fkuehne | 2005-06-02 19:06:00 +0200 (Thu, 02 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/access/vcdx/vcd.c
+   M /branches/0.8.2/modules/codec/x264.c
+   M /branches/0.8.2/modules/demux/mkv.cpp
+   M /branches/0.8.2/modules/demux/ty.c
+   M /branches/0.8.2/modules/mux/mpjpeg.c
+   M /branches/0.8.2/modules/services_discovery/sap.c
+   M /branches/0.8.2/modules/stream_out/es.c
+   M /branches/0.8.2/modules/video_filter/deinterlace.c
+   M /branches/0.8.2/modules/video_output/caca.c
+   M /branches/0.8.2/modules/video_output/directx/directx.c
+   M /branches/0.8.2/modules/video_output/directx/glwin32.c
+   M /branches/0.8.2/modules/video_output/fb.c
+   M /branches/0.8.2/modules/video_output/image.c
+   M /branches/0.8.2/modules/video_output/x11/glx.c
+   M /branches/0.8.2/modules/video_output/x11/x11.c
+   M /branches/0.8.2/modules/video_output/x11/xvideo.c
+
+* ALL: various minor string fixes
+------------------------------------------------------------------------
+r11256 | zorglub | 2005-06-02 18:43:19 +0200 (Thu, 02 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/po/fr.po
+   M /branches/0.8.2/src/libvlc.h
+
+Minor string fixes + some updates to fr.po
+
+------------------------------------------------------------------------
+r11255 | fkuehne | 2005-06-02 18:03:24 +0200 (Thu, 02 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/extras/contrib/src/packages.mak
+
+* same as [11254]
+------------------------------------------------------------------------
+r11251 | dionoea | 2005-06-02 15:07:37 +0200 (Thu, 02 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/configure.ac
+
+fix switcher module build
+
+------------------------------------------------------------------------
+r11238 | gbazin | 2005-06-01 21:58:58 +0200 (Wed, 01 Jun 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/modules/access/http.c
+
+* modules/access/http.c: backport of 11237
+------------------------------------------------------------------------
+r11236 | courmisch | 2005-06-01 21:53:37 +0200 (Wed, 01 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/wxwindows/playlist.cpp
+   M /branches/0.8.2/modules/gui/wxwindows/wxwindows.h
+
+Backport 11235 to 0.8.2 - closes #87 for real
+
+------------------------------------------------------------------------
+r11233 | courmisch | 2005-06-01 20:34:45 +0200 (Wed, 01 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/src/misc/block.c
+
+Backport 11231 to 0.8.2
+
+------------------------------------------------------------------------
+r11232 | courmisch | 2005-06-01 20:34:09 +0200 (Wed, 01 Jun 2005) | 3 lines
+Changed paths:
+   M /branches/0.8.2/src/stream_output/sap.c
+
+Partial fix for sending IPv6 SAP announces
+(more complete fix in trunk)
+
+------------------------------------------------------------------------
+r11228 | xtophe | 2005-06-01 19:12:49 +0200 (Wed, 01 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/extras/zsh.cpp
+
+Backport of [11219] to 0.8.2
+
+------------------------------------------------------------------------
+r11227 | xtophe | 2005-06-01 19:10:58 +0200 (Wed, 01 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/packetizer/mpeg4video.c
+
+Backport of [11222] to 0.8.2
+
+------------------------------------------------------------------------
+r11225 | hartman | 2005-06-01 18:24:08 +0200 (Wed, 01 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/configure.ac
+
+* backport of [11224] to 0.8.2
+
+------------------------------------------------------------------------
+r11221 | xtophe | 2005-06-01 15:34:27 +0200 (Wed, 01 Jun 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/demux/ps.h
+
+Backport of [11220]
+
+------------------------------------------------------------------------
+r11209 | xtophe | 2005-05-31 19:48:47 +0200 (Tue, 31 May 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/activex/vlccontrol.cpp
+   M /branches/0.8.2/src/libvlc.c
+
+Backport [11194] to 0.8.2
+
+------------------------------------------------------------------------
+r11207 | xtophe | 2005-05-31 19:42:49 +0200 (Tue, 31 May 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/access/http.c
+
+http.c: fixe a segfault when the proxy is retrieved from the environement variable.( closes #167 )
+
+------------------------------------------------------------------------
+r11192 | courmisch | 2005-05-31 13:07:30 +0200 (Tue, 31 May 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/video_output/directx/directx.c
+
+Backport r11190 - closes #102
+
+------------------------------------------------------------------------
+r11189 | courmisch | 2005-05-31 10:35:18 +0200 (Tue, 31 May 2005) | 3 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/wxwindows/playlist.cpp
+
+Same as previous commit
+(should close #87)
+
+------------------------------------------------------------------------
+r11183 | yoann | 2005-05-27 23:14:19 +0200 (Fri, 27 May 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/gui/ncurses.c
+
+* modules/gui/ncurses: fixes the fullscreen hotkey (Closes #164)
+
+------------------------------------------------------------------------
+r11182 | courmisch | 2005-05-27 22:42:13 +0200 (Fri, 27 May 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/demux/playlist/b4s.c
+   M /branches/0.8.2/modules/demux/playlist/m3u.c
+   M /branches/0.8.2/modules/demux/playlist/pls.c
+   M /branches/0.8.2/src/input/demux.c
+   M /branches/0.8.2/src/playlist/view.c
+
+svn merge -r 11179:11181 trunk branches/0.8.2
+
+------------------------------------------------------------------------
+r11176 | xtophe | 2005-05-27 14:35:57 +0200 (Fri, 27 May 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/access/dshow/dshow.cpp
+
+ckport of [11175]
+
+------------------------------------------------------------------------
+r11173 | xtophe | 2005-05-26 19:55:42 +0200 (Thu, 26 May 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/src/misc/configuration.c
+
+Backport of [11172]
+
+------------------------------------------------------------------------
+r11159 | hartman | 2005-05-24 21:52:57 +0200 (Tue, 24 May 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/modules/demux/subtitle.c
+
+* Backport of SSA/ASS fixes [11158] to 0.8.2
+
+------------------------------------------------------------------------
+r11146 | dionoea | 2005-05-24 11:55:28 +0200 (Tue, 24 May 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/src/libvlc.h
+
+ * fix string ("video" -> "audio")
+
+------------------------------------------------------------------------
+r11145 | courmisch | 2005-05-24 10:42:55 +0200 (Tue, 24 May 2005) | 3 lines
+Changed paths:
+   M /branches/0.8.2/configure.ac
+
+- Backport 11144 to 0.8.2
+- test1 => hopefully soon to come test2
+
+------------------------------------------------------------------------
+r11126 | xtophe | 2005-05-23 11:08:04 +0200 (Mon, 23 May 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/src/misc/modules.c
+
+Backport of [11125]
+
+------------------------------------------------------------------------
+r11114 | fkuehne | 2005-05-22 20:01:29 +0200 (Sun, 22 May 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/extras/MacOSX/Resources/English.lproj/MainMenu.nib/info.nib
+   M /branches/0.8.2/extras/MacOSX/Resources/English.lproj/MainMenu.nib/objects.nib
+
+* apply [11113] to trunk
+------------------------------------------------------------------------
+r11113 | fkuehne | 2005-05-22 19:57:51 +0200 (Sun, 22 May 2005) | 1 line
+Changed paths:
+   M /branches/0.8.2/extras/MacOSX/Resources/English.lproj/MainMenu.nib/info.nib
+   M /branches/0.8.2/extras/MacOSX/Resources/English.lproj/MainMenu.nib/objects.nib
+
+* minor re-design of the equalizer-panel to make 'Preamp' easier to localise and to let it conform to the HIGL a bit better
+------------------------------------------------------------------------
+r11112 | zorglub | 2005-05-22 18:18:46 +0200 (Sun, 22 May 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/src/audio_output/input.c
+   M /branches/0.8.2/src/libvlc.c
+   M /branches/0.8.2/src/playlist/services_discovery.c
+   M /branches/0.8.2/src/video_output/video_output.c
+
+Support old-style module separators and yell at the user. (Closes #111)
+
+------------------------------------------------------------------------
+r11110 | zorglub | 2005-05-22 16:53:15 +0200 (Sun, 22 May 2005) | 2 lines
+Changed paths:
+   M /branches/0.8.2/mozilla/vlcshell.cpp
+   M /branches/0.8.2/src/playlist/playlist.c
+
+Backport to 0.8.2
+
+------------------------------------------------------------------------
+r11102 | courmisch | 2005-05-22 13:16:02 +0200 (Sun, 22 May 2005) | 5 lines
+Changed paths:
+   A /branches/0.8.2 (from /trunk:11101)
+
+Branching 0.8.2.
+
+Bugfixes go to branches/0.8.2
+New features go to trunk/
+
+------------------------------------------------------------------------
+r11101 | courmisch | 2005-05-22 12:55:34 +0200 (Sun, 22 May 2005) | 3 lines
+Changed paths:
+   M /trunk/modules/access/http.c
+
+Support HTTP/TLS tunnels through HTTP/1.1 proxies
+(closes #136)
+
+------------------------------------------------------------------------
+r11100 | courmisch | 2005-05-22 09:46:02 +0200 (Sun, 22 May 2005) | 2 lines
+Changed paths:
+   M /trunk/src/misc/httpd.c
+
+Fix httpd reference count and deletion
+
+------------------------------------------------------------------------
+r11099 | robux4 | 2005-05-22 09:41:38 +0200 (Sun, 22 May 2005) | 1 line
+Changed paths:
+   M /trunk/extras/contrib/src/packages.mak
+
+contrib: update libebml/libmatroska to the freshly released versions
+------------------------------------------------------------------------
+r11098 | damienf | 2005-05-21 22:55:45 +0200 (Sat, 21 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/access/dshow/dshow.cpp
+
+dshow.cpp: fill in frame rate info (if demuxing)
+
+------------------------------------------------------------------------
+r11097 | courmisch | 2005-05-21 21:11:00 +0200 (Sat, 21 May 2005) | 2 lines
+Changed paths:
+   M /trunk/NEWS
+
+FTP/IPv6 news
+
+------------------------------------------------------------------------
+r11096 | courmisch | 2005-05-21 21:05:14 +0200 (Sat, 21 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/access/ftp.c
+
+Update copyright date
+
+------------------------------------------------------------------------
+r11095 | courmisch | 2005-05-21 20:59:49 +0200 (Sat, 21 May 2005) | 5 lines
+Changed paths:
+   M /trunk/modules/access/ftp.c
+
+Implement Extended passive mode
+(RFC2428 - FTP Extensions for IPv6 and NATs) :
+- explicitly NAT-friendly FTP (refs #66),
+- IPv6 support (closes #130).
+
+------------------------------------------------------------------------
+r11094 | courmisch | 2005-05-21 20:13:38 +0200 (Sat, 21 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/access/ftp.c
+
+Code simplification
+
+------------------------------------------------------------------------
+r11093 | xtophe | 2005-05-21 17:07:46 +0200 (Sat, 21 May 2005) | 7 lines
+Changed paths:
+   M /trunk/include/configuration.h
+   M /trunk/modules/gui/beos/PreferencesWindow.cpp
+   M /trunk/modules/gui/macosx/prefs_widgets.m
+   M /trunk/modules/gui/wxwindows/preferences_widgets.cpp
+   M /trunk/src/libvlc.h
+   M /trunk/src/misc/configuration.c
+
+configuration.[ch]: Handling of deprecated options in the command line. Add a new configuration helper add_deprecated( name, b_strict).
+gui/*: Don't show deprecated option in the preferences
+libvlc.h: add the deprecated options from NEWS. Is there others ?
+Could the Mac and BeOS dev, check for their gui, please.
+Closes #112
+
+
+------------------------------------------------------------------------
+r11092 | xtophe | 2005-05-21 16:53:54 +0200 (Sat, 21 May 2005) | 3 lines
+Changed paths:
+   M /trunk/vlc.win32.nsi
+
+vlc.win32.nsi: Add a "Reset VLC preferences" shortcut
+	       Untested.
+
+------------------------------------------------------------------------
+r11091 | sigmunau | 2005-05-21 12:14:10 +0200 (Sat, 21 May 2005) | 4 lines
+Changed paths:
+   M /trunk/modules/video_filter/mosaic.c
+
+video_filter/mosaic.c: you should change the order of the arguments as well
+when you change the order of the format string. thanks to blackjack for
+noticing
+
+------------------------------------------------------------------------
+r11090 | courmisch | 2005-05-20 21:29:25 +0200 (Fri, 20 May 2005) | 2 lines
+Changed paths:
+   M /trunk/Makefile.am
+
+Hopefully fix multi-jobs builds
+
+------------------------------------------------------------------------
+r11089 | massiot | 2005-05-20 20:41:23 +0200 (Fri, 20 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/video_filter/mosaic.c
+
+ * modules/video_filter/mosaic.c: %lld -> I64Fd
+
+------------------------------------------------------------------------
+r11088 | massiot | 2005-05-20 20:16:33 +0200 (Fri, 20 May 2005) | 4 lines
+Changed paths:
+   M /trunk/modules/stream_out/bridge.c
+   M /trunk/modules/stream_out/mosaic_bridge.c
+   M /trunk/modules/video_filter/mosaic.c
+
+ * modules/stream_out/bridge.c: Fixed deleting/adding of streams.
+ * modules/stream_out/mosaic_bridge.c: Fixed potential segfault.
+ * modules/video_filter/mosaic.c: Run the mosaic thread in a higher priority.
+
+------------------------------------------------------------------------
+r11087 | massiot | 2005-05-20 20:05:42 +0200 (Fri, 20 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/codec/ffmpeg/encoder.c
+
+ * modules/codec/ffmpeg/encoder.c: If qmin == qmax, set CODEC_FLAG_QSCALE.
+
+------------------------------------------------------------------------
+r11086 | massiot | 2005-05-20 20:00:02 +0200 (Fri, 20 May 2005) | 4 lines
+Changed paths:
+   M /trunk/include/vlc_block.h
+   M /trunk/include/vout_synchro.h
+   M /trunk/modules/codec/libmpeg2.c
+   M /trunk/src/video_output/vout_synchro.c
+
+ * src/video_output/vout_synchro.c: Fixed synchro for low delay streams.
+ * include/vlc_block.h: Removed BLOCK_FLAG_END_OF_GOP which I don't use
+   any longer.
+
+------------------------------------------------------------------------
+r11085 | gbazin | 2005-05-20 19:58:06 +0200 (Fri, 20 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/stream_out/transcode.c
+
+* modules/stream_out/transcode.c: got rid of useless nearbyint().
+------------------------------------------------------------------------
+r11084 | massiot | 2005-05-20 19:54:10 +0200 (Fri, 20 May 2005) | 2 lines
+Changed paths:
+   M /trunk/include/vlc_codec.h
+   M /trunk/include/vlc_filter.h
+
+ * Added a big fat warning on members of filter_t and decoder_t.
+
+------------------------------------------------------------------------
+r11083 | gbazin | 2005-05-20 19:35:08 +0200 (Fri, 20 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+* modules/demux/mkv.cpp: fill-in frame rate info.
+------------------------------------------------------------------------
+r11082 | zorglub | 2005-05-20 18:59:07 +0200 (Fri, 20 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/demux/mpeg/m4v.c
+   M /trunk/modules/packetizer/mpeg4video.c
+
+Don't print error on non-fatal problems
+
+------------------------------------------------------------------------
+r11081 | robux4 | 2005-05-20 18:42:40 +0200 (Fri, 20 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: fix a problem in UnGet()
+------------------------------------------------------------------------
+r11080 | fenrir | 2005-05-20 18:03:15 +0200 (Fri, 20 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/access/mms/mmstu.c
+
+ * mmstu: fixed 1 buffer overflow.
+
+------------------------------------------------------------------------
+r11079 | massiot | 2005-05-20 17:02:25 +0200 (Fri, 20 May 2005) | 3 lines
+Changed paths:
+   M /trunk/include/vlc_filter.h
+   M /trunk/modules/codec/ffmpeg/ffmpeg.c
+   M /trunk/modules/stream_out/transcode.c
+   M /trunk/modules/video_filter/deinterlace.c
+
+ * ALL : ported the deinterlace module to video filter2. New
+   --sout-transcode-deinterlace-module and --sout-deinterlace-mode options.
+
+------------------------------------------------------------------------
+r11078 | gbazin | 2005-05-20 11:26:26 +0200 (Fri, 20 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/access/v4l/v4l.c
+
+* modules/access/v4l: try a bit harder to find a valid default video size.
+------------------------------------------------------------------------
+r11077 | robux4 | 2005-05-20 10:43:12 +0200 (Fri, 20 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: Improve the block UnGet()
+------------------------------------------------------------------------
+r11076 | sigmunau | 2005-05-20 00:48:38 +0200 (Fri, 20 May 2005) | 3 lines
+Changed paths:
+   M /trunk/modules/demux/livedotcom.cpp
+
+livedotcom.cpp: Do not url encode sdp data coming from sap before passing to
+live.com. Fixes livedotcom with sap which has been broken since r10945
+
+------------------------------------------------------------------------
+r11075 | robux4 | 2005-05-19 23:47:53 +0200 (Thu, 19 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: clean the UnGet() feature
+------------------------------------------------------------------------
+r11074 | robux4 | 2005-05-19 23:19:53 +0200 (Thu, 19 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: fix a problem when using successive 0s chapters in ordered editions
+------------------------------------------------------------------------
+r11073 | robux4 | 2005-05-19 22:23:49 +0200 (Thu, 19 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: better update of the current chapter when seeking (manual or auto)
+------------------------------------------------------------------------
+r11071 | robux4 | 2005-05-19 18:35:59 +0200 (Thu, 19 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: don't use the default edition if there is none
+------------------------------------------------------------------------
+r11070 | robux4 | 2005-05-19 17:27:21 +0200 (Thu, 19 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: allow reading segments bigger than 4GB
+------------------------------------------------------------------------
+r11069 | titer | 2005-05-19 16:11:30 +0200 (Thu, 19 May 2005) | 4 lines
+Changed paths:
+   M /trunk/modules/gui/macosx/vout.h
+   M /trunk/modules/gui/macosx/vout.m
+
+ macosx/vout*: quick kludge for Tiger crashes
+  Use performSelectorOnMainThread when available (>= 10.2) to create
+  the window from the main thread. Also fixed a couple warnings
+
+------------------------------------------------------------------------
+r11068 | courmisch | 2005-05-19 10:36:18 +0200 (Thu, 19 May 2005) | 2 lines
+Changed paths:
+   M /trunk/NEWS
+
+Note about SAP http no longer supported
+
+------------------------------------------------------------------------
+r11066 | massiot | 2005-05-18 23:46:47 +0200 (Wed, 18 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/mux/mpeg/ts.c
+
+ * modules/mux/mpeg/ts.c: More sensible defaults for configuration options.
+
+------------------------------------------------------------------------
+r11063 | sigmunau | 2005-05-18 23:25:24 +0200 (Wed, 18 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/gui/wxwindows/video.cpp
+
+wx/video.cpp: Don't crash with --no-wxwin-embed
+
+------------------------------------------------------------------------
+r11058 | massiot | 2005-05-18 18:07:40 +0200 (Wed, 18 May 2005) | 3 lines
+Changed paths:
+   M /trunk/configure.ac
+
+ * configure.ac : Build dvb as built-in when using --with-dvbpsi-tree. This
+   fixes dvb on x86_64 architecture.
+
+------------------------------------------------------------------------
+r11057 | fenrir | 2005-05-18 17:50:50 +0200 (Wed, 18 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/demux/ts.c
+
+ * ts: fixed EITEventFixString.
+
+------------------------------------------------------------------------
+r11056 | massiot | 2005-05-18 17:02:26 +0200 (Wed, 18 May 2005) | 3 lines
+Changed paths:
+   M /trunk/configure.ac
+
+ * configure.ac: Compile libmpeg2 as a built-in when --with-ffmpeg-tree is
+   requested. Fixes the build of plugins on x86_64 architecture.
+
+------------------------------------------------------------------------
+r11055 | robux4 | 2005-05-18 15:03:15 +0200 (Wed, 18 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: more conditional commands + avoid a compiler warning
+------------------------------------------------------------------------
+r11054 | gbazin | 2005-05-18 12:23:37 +0200 (Wed, 18 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/ogg.c
+
+* modules/demux/ogg.c: fill-in frame rate info for theora as well.
+------------------------------------------------------------------------
+r11053 | robux4 | 2005-05-17 23:27:03 +0200 (Tue, 17 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: improve the DVD conditional calls, add one of the SetHL_BTN DVD command
+------------------------------------------------------------------------
+r11052 | massiot | 2005-05-17 22:56:22 +0200 (Tue, 17 May 2005) | 2 lines
+Changed paths:
+   M /trunk/configure.ac
+
+ * configure.ac : Fixed a typo in libtwolame LDFLAGS.
+
+------------------------------------------------------------------------
+r11051 | robux4 | 2005-05-17 21:13:16 +0200 (Tue, 17 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: add support for the JumpSS DVD command
+------------------------------------------------------------------------
+r11050 | zorglub | 2005-05-17 21:05:20 +0200 (Tue, 17 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/mux/mpeg/ts.c
+
+Better if we don't break teletext 
+
+------------------------------------------------------------------------
+r11049 | zorglub | 2005-05-17 20:29:59 +0200 (Tue, 17 May 2005) | 4 lines
+Changed paths:
+   M /trunk/modules/mux/mpeg/ts.c
+
+Fix streaming of text subtitles in TS (Closes #52)
+
+Not sure it's the proper way,though (basically, simply don't override the length)
+
+------------------------------------------------------------------------
+r11048 | gbazin | 2005-05-17 15:49:31 +0200 (Tue, 17 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/mux/mpeg/ts.c
+
+* modules/mux/mpeg/ts.c: fixed FixPES().
+------------------------------------------------------------------------
+r11047 | fkuehne | 2005-05-17 15:37:48 +0200 (Tue, 17 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/stream_out/rtp.c
+   M /trunk/po/es.po
+   M /trunk/src/libvlc.h
+
+* capitalise "Time To Live" always
+* fixed erroneus Spanish translation of TTL, thanks to the forum-user "martintxo" for the hint
+------------------------------------------------------------------------
+r11046 | fkuehne | 2005-05-17 15:20:50 +0200 (Tue, 17 May 2005) | 1 line
+Changed paths:
+   M /trunk/po/en_GB.po
+   M /trunk/po/es.po
+   M /trunk/po/fr.po
+   M /trunk/po/hu.po
+   M /trunk/po/it.po
+   M /trunk/po/ja.po
+   M /trunk/po/pt_BR.po
+
+* corrected some copyright headers
+------------------------------------------------------------------------
+r11045 | fkuehne | 2005-05-17 15:20:05 +0200 (Tue, 17 May 2005) | 1 line
+Changed paths:
+   M /trunk/po/da.po
+
+* update to the Danish translation by Jonas Larsen
+------------------------------------------------------------------------
+r11044 | robux4 | 2005-05-16 23:07:27 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: don't decode frames when they shouldn't be
+------------------------------------------------------------------------
+r11043 | gbazin | 2005-05-16 21:53:10 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mp4/mp4.c
+
+* modules/demux/mp4/mp4.c: fixed bug in PTS calculation.
+------------------------------------------------------------------------
+r11042 | robux4 | 2005-05-16 21:41:37 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: make seeking more accurate
+------------------------------------------------------------------------
+r11041 | robux4 | 2005-05-16 18:00:46 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: fix duration for text subs
+------------------------------------------------------------------------
+r11040 | gbazin | 2005-05-16 17:51:21 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mp4/mp4.c
+
+* modules/demux/mp4/mp4.c: fill-in frame rate info in es_format_t.
+------------------------------------------------------------------------
+r11038 | robux4 | 2005-05-16 17:45:28 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: hide the navigation packet from the user
+------------------------------------------------------------------------
+r11037 | gbazin | 2005-05-16 17:11:56 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/codec/ffmpeg/video.c
+
+* modules/codec/ffmpeg/video.c: use frame rate info from demuxer (if available) to interpolate PTS.
+------------------------------------------------------------------------
+r11036 | gbazin | 2005-05-16 17:10:59 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/src/input/es_out.c
+
+* src/input/es_out.c: reduce the frame rate rational in es_out_Add().
+------------------------------------------------------------------------
+r11035 | gbazin | 2005-05-16 17:09:58 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/ogg.c
+
+* modules/demux/ogg.c: fill-in frame rate info in es_format_t.
+------------------------------------------------------------------------
+r11032 | gbazin | 2005-05-16 15:48:47 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/gui/wxwindows/interface.cpp
+
+* modules/gui/wxwindows/interface.cpp: something a bit uglier
+------------------------------------------------------------------------
+r11031 | gbazin | 2005-05-16 15:44:05 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/gui/wxwindows/interface.cpp
+
+* modules/gui/wxwindows/interface.cpp: butt-ugly workaround for accelerators' bug in wxGTK 2.6.0.
+------------------------------------------------------------------------
+r11030 | gbazin | 2005-05-16 15:32:12 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/codec/theora.c
+
+* modules/codec/theora.c: give higher priority to the libtheora encoder.
+------------------------------------------------------------------------
+r11029 | gbazin | 2005-05-16 14:47:57 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/gui/wxwindows/interface.cpp
+
+* modules/gui/wxwindows/interface.cpp: another fix for the embedded video size.
+------------------------------------------------------------------------
+r11028 | robux4 | 2005-05-16 14:33:01 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: code factorisation when jumping from one segment to the other
+------------------------------------------------------------------------
+r11027 | gbazin | 2005-05-16 13:52:09 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/gui/wxwindows/video.cpp
+
+* modules/gui/wxwindows/video.cpp: fixed problem where sometime the video doesn't start at the right size.
+------------------------------------------------------------------------
+r11026 | gbazin | 2005-05-16 12:55:53 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/gui/wxwindows/interface.cpp
+
+* modules/gui/wxwindows/interface.cpp: work-around for non working wxToolBarToolBase::SetNormalBitmap() in wxGTK.
+------------------------------------------------------------------------
+r11025 | gbazin | 2005-05-16 11:40:31 +0200 (Mon, 16 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/gui/wxwindows/interface.cpp
+
+* modules/gui/wxwindows/interface.cpp: config_GetInt() inside VLCVolCtrl::OnPaint() is a bad idea.
+------------------------------------------------------------------------
+r11024 | dionoea | 2005-05-15 20:04:32 +0200 (Sun, 15 May 2005) | 3 lines
+Changed paths:
+   M /trunk/modules/gui/wxwindows/interface.cpp
+
+fix play/pause button state ... gruiiiikkk
+Closes #2
+
+------------------------------------------------------------------------
+r11023 | dionoea | 2005-05-15 19:29:26 +0200 (Sun, 15 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/gui/wxwindows/playlist.cpp
+
+gcc 4.0 compile fix by Arwed von Merkatz
+
+------------------------------------------------------------------------
+r11022 | fkuehne | 2005-05-15 17:06:13 +0200 (Sun, 15 May 2005) | 1 line
+Changed paths:
+   M /trunk/po/bn.po
+   M /trunk/po/ca.po
+   M /trunk/po/da.po
+   M /trunk/po/de.po
+   M /trunk/po/el.po
+   M /trunk/po/en_GB.po
+   M /trunk/po/es.po
+   M /trunk/po/fr.po
+   M /trunk/po/hi.po
+   M /trunk/po/hu.po
+   M /trunk/po/it.po
+   M /trunk/po/ja.po
+   M /trunk/po/my.po
+   M /trunk/po/ne.po
+   M /trunk/po/nl.po
+   M /trunk/po/no.po
+   M /trunk/po/pl.po
+   M /trunk/po/ps.po
+   M /trunk/po/pt_BR.po
+   M /trunk/po/ru.po
+   M /trunk/po/sv.po
+   M /trunk/po/tet.po
+   M /trunk/po/tl.po
+   M /trunk/po/vlc.pot
+   M /trunk/po/zh_TW.po
+
+* updated the po-files -- please change as few strings as possible now
+------------------------------------------------------------------------
+r11021 | hartman | 2005-05-15 16:41:50 +0200 (Sun, 15 May 2005) | 2 lines
+Changed paths:
+   M /trunk/configure.ac
+
+* When building coreaudio module, also build auhal module
+
+------------------------------------------------------------------------
+r11020 | hartman | 2005-05-15 15:39:43 +0200 (Sun, 15 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/audio_output/Modules.am
+   A /trunk/modules/audio_output/auhal.c
+
+* AUHAL module. This module is a auhal output renderer for VLC OSX. It uses an auhal unit to do analog audio processing. This will allow us to dump the coreaudio resampler later on and will also do automatic channel reordering etc. The module currently does NOT work. The rendering callback is not functioning. I do not know how to solve the issue. I'm adding it, because it's the way to go, and I want others to be able to take a look at it and fix it. 
+
+------------------------------------------------------------------------
+r11019 | ipkiss | 2005-05-15 15:20:55 +0200 (Sun, 15 May 2005) | 4 lines
+Changed paths:
+   M /trunk/modules/gui/wxwindows/dialogs.cpp
+   M /trunk/modules/gui/wxwindows/fileinfo.cpp
+
+ * modules/gui/wxwindows/fileinfo.cpp: do not use p_intf->p_sys->p_input to
+   get the input thread, as this does not work when called through the dialogs
+   provider. Use vlc_object_find() instead.
+
+------------------------------------------------------------------------
+r11018 | robux4 | 2005-05-15 14:46:30 +0200 (Sun, 15 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: fix most memory leaks
+------------------------------------------------------------------------
+r11017 | asmax | 2005-05-15 01:50:13 +0200 (Sun, 15 May 2005) | 3 lines
+Changed paths:
+   M /trunk/modules/gui/skins2/src/ft2_bitmap.cpp
+   M /trunk/modules/gui/skins2/win32/win32_graphics.cpp
+
+* ft2_bitmap.cpp: committed my changes again (yes x11 skins were broken!)
+* win32_graphics.cpp: so it should work on win32 too, now...
+
+------------------------------------------------------------------------
+r11016 | robux4 | 2005-05-14 23:43:50 +0200 (Sat, 14 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: deal about the memleaks later
+------------------------------------------------------------------------
+r11015 | dionoea | 2005-05-14 23:16:07 +0200 (Sat, 14 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/gui/wxwindows/interface.cpp
+
+code simplification
+
+------------------------------------------------------------------------
+r11014 | robux4 | 2005-05-14 22:53:12 +0200 (Sat, 14 May 2005) | 1 line
+Changed paths:
+   M /trunk/msvc/plugins.dsp.in
+
+DSP files: add 2 libraries needed by wxWidgets (and maybe other plugins)
+------------------------------------------------------------------------
+r11013 | dionoea | 2005-05-14 22:39:42 +0200 (Sat, 14 May 2005) | 4 lines
+Changed paths:
+   M /trunk/modules/gui/wxwindows/interface.cpp
+
+ * fix mute button for real (... just needed to copy 4 lines 1 function
+down but took me 2 hours to understand) Closes #106
+
+
+------------------------------------------------------------------------
+r11012 | dionoea | 2005-05-14 22:12:21 +0200 (Sat, 14 May 2005) | 4 lines
+Changed paths:
+   M /trunk/modules/gui/wxwindows/interface.cpp
+
+kind of begin fixing the mute button (at least it doesn't diplay the
+mute icon when sound isn't mute now). Rels #106
+
+
+------------------------------------------------------------------------
+r11011 | robux4 | 2005-05-14 17:52:01 +0200 (Sat, 14 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: fix a memory leak
+------------------------------------------------------------------------
+r11010 | robux4 | 2005-05-14 17:37:25 +0200 (Sat, 14 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: start the UI hook a bit later
+------------------------------------------------------------------------
+r11009 | ipkiss | 2005-05-14 16:39:05 +0200 (Sat, 14 May 2005) | 4 lines
+Changed paths:
+   M /trunk/doc/skins/skins2-howto.xml
+   M /trunk/modules/gui/skins2/controls/ctrl_list.cpp
+   M /trunk/modules/gui/skins2/controls/ctrl_list.hpp
+   M /trunk/modules/gui/skins2/parser/builder.cpp
+   M /trunk/modules/gui/skins2/parser/builder_data.def
+   M /trunk/modules/gui/skins2/parser/builder_data.hpp
+   M /trunk/modules/gui/skins2/parser/skin_parser.cpp
+   M /trunk/share/skins2/skin.dtd
+
+ * skins2: New Playlist.bgimage attribute, to specify a background image for
+   the Playlist control. If no image is specified (default behaviour), the
+   background is filled like before, with the bgcolor1 and bgcolor2 attributes.
+
+------------------------------------------------------------------------
+r11008 | robux4 | 2005-05-14 15:08:44 +0200 (Sat, 14 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: make the UI hook silent when it's not used
+------------------------------------------------------------------------
+r11007 | robux4 | 2005-05-14 15:01:38 +0200 (Sat, 14 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: improve support for hotkeys for navigation (still missing the button highlight)
+------------------------------------------------------------------------
+r11006 | ipkiss | 2005-05-14 13:40:55 +0200 (Sat, 14 May 2005) | 4 lines
+Changed paths:
+   M /trunk/modules/gui/skins2/src/ft2_bitmap.cpp
+
+ * skins2/src/ft2_bitmap.cpp: Restored the previous version of this file, as
+   the new one breaks text display on win32.
+   I hope it won't break x11 skins at the same time :-)
+
+------------------------------------------------------------------------
+r11005 | ipkiss | 2005-05-14 13:14:22 +0200 (Sat, 14 May 2005) | 2 lines
+Changed paths:
+   M /trunk/doc/skins/skins2-howto.xml
+
+ * doc/skins/skins2-howto.xml: Always check what you write in the doc...
+
+------------------------------------------------------------------------
+r11004 | ipkiss | 2005-05-14 12:38:26 +0200 (Sat, 14 May 2005) | 3 lines
+Changed paths:
+   M /trunk/doc/skins/skins2-howto.xml
+
+ * doc/skins/skins2-howto.xml: document the 'resize' attribute of the Image
+   control
+
+------------------------------------------------------------------------
+r11003 | bigben | 2005-05-14 11:20:47 +0200 (Sat, 14 May 2005) | 3 lines
+Changed paths:
+   M /trunk/extras/MacOSX/Resources/English.lproj/MainMenu.nib/classes.nib
+   M /trunk/extras/MacOSX/Resources/English.lproj/MainMenu.nib/info.nib
+   M /trunk/extras/MacOSX/Resources/English.lproj/MainMenu.nib/objects.nib
+   M /trunk/modules/gui/macosx/playlist.h
+   M /trunk/modules/gui/macosx/playlist.m
+
+Restore the save Playlist function (copy/paste from 0.8.1)
+
+
+------------------------------------------------------------------------
+r11002 | robux4 | 2005-05-13 22:03:27 +0200 (Fri, 13 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: fix the end of stream handling (when there are pending Post commands)
+------------------------------------------------------------------------
+r11001 | robux4 | 2005-05-13 21:25:17 +0200 (Fri, 13 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: fix the interpretation of JumVTS_PTT (and now all 3 buttons work)
+------------------------------------------------------------------------
+r11000 | zorglub | 2005-05-13 19:58:05 +0200 (Fri, 13 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/control/http.c
+
+Remove excessive HTTP debugging - Closes #108
+------------------------------------------------------------------------
+r10999 | robux4 | 2005-05-13 18:34:06 +0200 (Fri, 13 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: don't use a button if it doesn't exist
+------------------------------------------------------------------------
+r10998 | robux4 | 2005-05-13 18:21:35 +0200 (Fri, 13 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: the UI hook is always on
+------------------------------------------------------------------------
+r10997 | fenrir | 2005-05-13 18:00:07 +0200 (Fri, 13 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/access/v4l/v4l.c
+
+ * v4l: fixed v4l-height.
+
+------------------------------------------------------------------------
+r10996 | robux4 | 2005-05-13 17:48:56 +0200 (Fri, 13 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: add support for the JumpVTS_PTT DVD command
+------------------------------------------------------------------------
+r10995 | fkuehne | 2005-05-13 16:51:10 +0200 (Fri, 13 May 2005) | 1 line
+Changed paths:
+   M /trunk/po/de.po
+
+* patch by Torsten Spindler, thanks for the corrections
+------------------------------------------------------------------------
+r10994 | gbazin | 2005-05-13 16:16:03 +0200 (Fri, 13 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/ts.c
+
+* modules/demux/ts.c: keep compatibility with non-DVB streams (SDT/EDT issue).
+------------------------------------------------------------------------
+r10993 | gbazin | 2005-05-13 15:31:39 +0200 (Fri, 13 May 2005) | 1 line
+Changed paths:
+   M /trunk/INSTALL.win32
+
+* INSTALL.win32: s/toolame/twolame.
+------------------------------------------------------------------------
+r10992 | gbazin | 2005-05-13 15:11:36 +0200 (Fri, 13 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/codec/dmo/dmo.c
+
+* modules/codec/dmo/dmo.c: fixed problem with detection of DMOs.
+------------------------------------------------------------------------
+r10991 | djc | 2005-05-13 13:43:13 +0200 (Fri, 13 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/gui/macosx/playlist.m
+
+Temporary disable NSSearchField button
+
+------------------------------------------------------------------------
+r10990 | gbazin | 2005-05-13 13:13:05 +0200 (Fri, 13 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/codec/x264.c
+
+* modules/codec/x264.c: updated with latest changes in libx264.
+------------------------------------------------------------------------
+r10989 | robux4 | 2005-05-13 12:02:48 +0200 (Fri, 13 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: add a mutex to lock demuxing from another thread
+------------------------------------------------------------------------
+r10988 | titer | 2005-05-13 10:46:59 +0200 (Fri, 13 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+ demux/mkv.cpp: gcc < 3 compile fix
+
+------------------------------------------------------------------------
+r10987 | titer | 2005-05-13 10:33:18 +0200 (Fri, 13 May 2005) | 2 lines
+Changed paths:
+   M /trunk/extras/contrib/src/Makefile
+
+ contrib/src/Makefile: fixed cross compiling of twolame
+
+------------------------------------------------------------------------
+r10986 | courmisch | 2005-05-12 23:08:15 +0200 (Thu, 12 May 2005) | 2 lines
+Changed paths:
+   M /trunk/src/misc/httpd.c
+
+Remove debug messages in httpd
+
+------------------------------------------------------------------------
+r10985 | fkuehne | 2005-05-12 20:49:54 +0200 (Thu, 12 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/codec/theora.c
+   M /trunk/modules/services_discovery/shout.c
+
+* fix two typos introduced in [10984]
+------------------------------------------------------------------------
+r10984 | xtophe | 2005-05-12 20:15:28 +0200 (Thu, 12 May 2005) | 2 lines
+Changed paths:
+   M /trunk/modules/codec/ffmpeg/ffmpeg.c
+   M /trunk/modules/codec/theora.c
+   M /trunk/modules/services_discovery/shout.c
+
+ALL: Fix a few strings for the prefs.
+
+------------------------------------------------------------------------
+r10983 | xtophe | 2005-05-12 20:07:47 +0200 (Thu, 12 May 2005) | 2 lines
+Changed paths:
+   M /trunk/share/http/index.html
+
+* Put sout back. (should have read the doc more)
+
+------------------------------------------------------------------------
+r10982 | robux4 | 2005-05-12 18:35:18 +0200 (Thu, 12 May 2005) | 1 line
+Changed paths:
+   M /trunk/modules/demux/mkv.cpp
+
+mkv.cpp: thread handling cleaning
+------------------------------------------------------------------------
+r10981 | dionoea | 2005-05-12 16:36:28 +0200 (Thu, 12 May 2005) | 2 lines
+Changed paths:
+   M /trunk/ChangeLog
+
+ * ChangeLog should be in english ...
+
+------------------------------------------------------------------------
 r10980 | dionoea | 2005-05-12 16:29:58 +0200 (Thu, 12 May 2005) | 3 lines
 Changed paths:
    M /trunk/ChangeLog

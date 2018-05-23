@@ -1,8 +1,8 @@
 /*****************************************************************************
  * filter.c: video scaling module using the swscale library
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: filter.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: filter.c 11387 2005-06-10 15:32:08Z hartman $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -263,7 +263,6 @@ static picture_t *Filter( filter_t *p_filter, picture_t *p_pic )
     uint8_t *dst[3]; int dst_stride[3];
     picture_t *p_pic_dst;
     int i_plane;
-    int i_nb_planes = p_pic->i_planes;
 
     /* Check if format properties changed */
     if( CheckInit( p_filter ) != VLC_SUCCESS ) return 0;
@@ -276,19 +275,12 @@ static picture_t *Filter( filter_t *p_filter, picture_t *p_pic )
         return NULL;
     }
 
-    if( p_filter->fmt_out.video.i_chroma == VLC_FOURCC('Y','U','V','A') )
-    {
-        i_nb_planes = 3;
-        memset( p_pic_dst->p[3].p_pixels, 0xff, p_filter->fmt_out.video.i_height
-                                                 * p_pic_dst->p[3].i_pitch );
-    }
-
-    for( i_plane = 0; i_plane < __MIN(3, p_pic->i_planes); i_plane++ )
+    for( i_plane = 0; i_plane < p_pic->i_planes; i_plane++ )
     {
         src[i_plane] = p_pic->p[i_plane].p_pixels;
         src_stride[i_plane] = p_pic->p[i_plane].i_pitch;
     }
-    for( i_plane = 0; i_plane < __MIN(3, i_nb_planes); i_plane++ )
+    for( i_plane = 0; i_plane < p_pic_dst->i_planes; i_plane++ )
     {
         dst[i_plane] = p_pic_dst->p[i_plane].p_pixels;
         dst_stride[i_plane] = p_pic_dst->p[i_plane].i_pitch;
@@ -323,7 +315,6 @@ static struct
     { VLC_FOURCC('I','4','2','0'), IMGFMT_I420 },
     { VLC_FOURCC('I','Y','U','V'), IMGFMT_IYUV },
     { VLC_FOURCC('I','4','4','4'), IMGFMT_444P },
-    { VLC_FOURCC('Y','U','V','A'), IMGFMT_444P },
     { VLC_FOURCC('I','4','2','2'), IMGFMT_422P },
     { VLC_FOURCC('I','4','1','1'), IMGFMT_411P },
 #if 0

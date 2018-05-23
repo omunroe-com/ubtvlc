@@ -1,8 +1,8 @@
 /*****************************************************************************
  * control.c
  *****************************************************************************
- * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: control.c 12438 2005-08-31 20:37:23Z gbazin $
+ * Copyright (C) 1999-2004 VideoLAN
+ * $Id: control.c 10811 2005-04-26 07:17:42Z fenrir $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -196,7 +196,6 @@ int input_vaControl( input_thread_t *p_input, int i_query, va_list args )
             NotifyPlaylist( p_input );
         }
         return VLC_SUCCESS;
-
         case INPUT_DEL_INFO:
         {
             char *psz_cat = (char *)va_arg( args, char * );
@@ -225,10 +224,6 @@ int input_vaControl( input_thread_t *p_input, int i_query, va_list args )
             {
                 if( !strcmp( p_cat->pp_infos[i]->psz_name, psz_name ) )
                 {
-                    free( p_cat->pp_infos[i]->psz_name );
-                    if( p_cat->pp_infos[i]->psz_value )
-                        free( p_cat->pp_infos[i]->psz_value );
-                    free( p_cat->pp_infos[i] );
                     REMOVE_ELEM( p_cat->pp_infos, p_cat->i_infos, i );
                     break;
                 }

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout_intf.c : video output interface
  *****************************************************************************
- * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: vout_intf.c 12136 2005-08-11 21:21:08Z dionoea $
+ * Copyright (C) 2000-2004 VideoLAN
+ * $Id: vout_intf.c 10509 2005-04-01 22:01:24Z titer $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -177,8 +177,6 @@ void vout_IntfInit( vout_thread_t *p_vout )
     var_Create( p_vout, "snapshot-path", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "snapshot-format", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "aspect-ratio", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
-    var_Create( p_vout, "monitor-aspect-ratio",
-                                      VLC_VAR_STRING | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "width", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "height", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "align", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );

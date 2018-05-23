@@ -1,8 +1,8 @@
 /*****************************************************************************
  * libmp4.c : LibMP4 library for mp4 module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: libmp4.c 12484 2005-09-07 14:05:44Z hartman $
+ * Copyright (C) 2001-2004 VideoLAN
+ * $Id: libmp4.c 10750 2005-04-20 10:41:11Z gbazin $
  *
  * Author: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -1003,7 +1003,7 @@ static int MP4_ReadBox_avcC( stream_t *p_stream, MP4_Box_t *p_box )
     }
 #ifdef MP4_VERBOSE
     msg_Dbg( p_stream,
-             "read box: \"avcC\" version=%d profile=0x%x level=0x%x length size=%d sps=%d pps=%d",
+             "read box: \"avcC\" version=%d profile=0x%x level=0x%x lengh size=%d sps=%d pps=%d",
              p_avcC->i_version, p_avcC->i_profile, p_avcC->i_level,
              p_avcC->i_length_size,
              p_avcC->i_sps, p_avcC->i_pps );
@@ -1087,9 +1087,10 @@ static int MP4_ReadBox_sample_soun( stream_t *p_stream, MP4_Box_t *p_box )
     MP4_GET2BYTES( p_box->data.p_sample_soun->i_sampleratehi );
     MP4_GET2BYTES( p_box->data.p_sample_soun->i_sampleratelo );
 
-    if( p_box->data.p_sample_soun->i_qt_version == 1 && i_read >= 16 )
+    if( p_box->data.p_sample_soun->i_qt_version == 1 &&
+        i_read >= 16 )
     {
-        /* SoundDescriptionV1 */
+        /* qt3+ */
         MP4_GET4BYTES( p_box->data.p_sample_soun->i_sample_per_packet );
         MP4_GET4BYTES( p_box->data.p_sample_soun->i_bytes_per_packet );
         MP4_GET4BYTES( p_box->data.p_sample_soun->i_bytes_per_frame );
@@ -1106,28 +1107,6 @@ static int MP4_ReadBox_sample_soun( stream_t *p_stream, MP4_Box_t *p_box )
 #endif
         stream_Seek( p_stream, p_box->i_pos +
                         MP4_BOX_HEADERSIZE( p_box ) + 44 );
-    }
-    else if( p_box->data.p_sample_soun->i_qt_version == 2 && i_read >= 36 )
-    {
-        /* SoundDescriptionV2 */
-        double f_sample_rate;
-        uint32_t i_channel;
-
-        MP4_GET4BYTES( p_box->data.p_sample_soun->i_sample_per_packet );
-        MP4_GET8BYTES( (*(int64_t *)&f_sample_rate) );
-
-        msg_Dbg( p_stream, "read box: %f Hz", f_sample_rate );
-        p_box->data.p_sample_soun->i_sampleratehi = (int)f_sample_rate % 65536;
-        p_box->data.p_sample_soun->i_sampleratelo = f_sample_rate / 65536;
-
-        MP4_GET4BYTES( i_channel );
-        p_box->data.p_sample_soun->i_channelcount = i_channel;
-
-#ifdef MP4_VERBOSE
-        msg_Dbg( p_stream, "read box: \"soun\" V2" );
-#endif
-        stream_Seek( p_stream, p_box->i_pos +
-                        MP4_BOX_HEADERSIZE( p_box ) + 28 + 36 );
     }
     else
     {
@@ -2193,8 +2172,6 @@ static struct
     { FOURCC_mjpa,  MP4_ReadBox_sample_vide,    MP4_FreeBox_sample_vide },
     { FOURCC_mjpb,  MP4_ReadBox_sample_vide,    MP4_FreeBox_sample_vide },
     { FOURCC_qdrw,  MP4_ReadBox_sample_vide,    MP4_FreeBox_sample_vide },
-    { FOURCC_mp2v,  MP4_ReadBox_sample_vide,    MP4_FreeBox_sample_vide },
-    { FOURCC_hdv2,  MP4_ReadBox_sample_vide,    MP4_FreeBox_sample_vide },
 
     { FOURCC_mjqt,  MP4_ReadBox_default,        NULL }, /* found in mjpa/b */
     { FOURCC_mjht,  MP4_ReadBox_default,        NULL },

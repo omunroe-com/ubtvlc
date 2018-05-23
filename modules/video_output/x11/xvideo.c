@@ -1,8 +1,8 @@
 /*****************************************************************************
  * xvideo.c : Xvideo plugin for vlc
  *****************************************************************************
- * Copyright (C) 1998-2001 the VideoLAN team
- * $Id: xvideo.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 1998-2001 VideoLAN
+ * $Id: xvideo.c 11257 2005-06-02 17:06:00Z fkuehne $
  *
  * Authors: Shane Harper <shanegh@optusnet.com.au>
  *          Vincent Seguin <seguin@via.ecp.fr>

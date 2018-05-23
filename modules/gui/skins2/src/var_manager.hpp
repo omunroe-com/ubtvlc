@@ -1,8 +1,8 @@
 /*****************************************************************************
  * var_manager.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: var_manager.hpp 11973 2005-08-02 23:26:22Z asmax $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: var_manager.hpp 7561 2004-04-29 22:09:23Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -52,16 +52,16 @@ class VarManager: public SkinObject
         Variable *getVar( const string &rName, const string &rType );
 
         /// Get the tooltip text variable
-        VarText &getTooltipText() { return *m_pTooltipText; }
+        VarText &getTooltipText() { return m_tooltipText; }
 
         /// Get the help text variable
-        VarText &getHelpText() { return *m_pHelpText; }
+        VarText &getHelpText() { return m_helpText; }
 
     private:
         /// Tooltip text
-        VarText *m_pTooltipText;
+        VarText m_tooltipText;
         /// Help text
-        VarText *m_pHelpText;
+        VarText m_helpText;
         /// Map of named registered variables
         map<string, VariablePtr> m_varMap;
         /// List of named registed variables

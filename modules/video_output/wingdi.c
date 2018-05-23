@@ -1,8 +1,8 @@
 /*****************************************************************************
  * wingdi.c : Win32 / WinCE GDI video output plugin for vlc
  *****************************************************************************
- * Copyright (C) 2002 the VideoLAN team
- * $Id: wingdi.c 11987 2005-08-03 18:26:11Z gbazin $
+ * Copyright (C) 2002 VideoLAN
+ * $Id: wingdi.c 11387 2005-06-10 15:32:08Z hartman $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Samuel Hocevar <sam@zoy.org>
@@ -36,7 +36,7 @@
 #define SHFS_SHOWSIPBUTTON 0x0004
 #define SHFS_HIDESIPBUTTON 0x0008
 
-#if defined(UNDER_CE) && !defined(__PLUGIN__) /*FIXME*/
+#ifdef UNDER_CE
 #   define MENU_HEIGHT 26
     BOOL SHFullScreen(HWND hwndRequester, DWORD dwState);
 #else

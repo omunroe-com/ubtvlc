@@ -20229,6 +20229,7 @@ else
 fi;
 
 
+
 # Check whether --with-mpeg4ip or --without-mpeg4ip was given.
 if test "${with_mpeg4ip+set}" = set; then
   withval="$with_mpeg4ip"
@@ -22315,6 +22316,10 @@ fi
 done
 
 
+
+
+
+
 # Extract the first word of "mpeg4ip-config", so it can be a program name with args.
 set dummy mpeg4ip-config; ac_word=$2
 echo "$as_me:$LINENO: checking for $ac_word" >&5
@@ -22794,11 +22799,6 @@ if test x$WITHDRM = xyes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define DRM 1
-_ACEOF
-
-
-cat >>confdefs.h <<\_ACEOF
-#define DRM_PS 1
 _ACEOF
 
 fi

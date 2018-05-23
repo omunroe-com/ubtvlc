@@ -1,8 +1,8 @@
 /*****************************************************************************
  * transrate.c: MPEG2 video transrating module
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: transrate.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: transrate.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>

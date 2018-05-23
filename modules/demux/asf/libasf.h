@@ -1,8 +1,8 @@
 /*****************************************************************************
  * libasf.h :
  *****************************************************************************
- * Copyright (C) 2001-2003 the VideoLAN team
- * $Id: libasf.h 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2001-2003 VideoLAN
+ * $Id: libasf.h 10101 2005-03-02 16:47:31Z robux4 $
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify

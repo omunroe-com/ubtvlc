@@ -1,8 +1,8 @@
 /*****************************************************************************
  * generic_font.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: generic_font.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: generic_font.hpp 7141 2004-03-22 20:38:15Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

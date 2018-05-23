@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mpeg4video.c: mpeg 4 video packetizer
  *****************************************************************************
- * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: mpeg4video.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2001, 2002 VideoLAN
+ * $Id: mpeg4video.c 11349 2005-06-08 07:34:58Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -237,23 +237,13 @@ static block_t *Packetize( decoder_t *p_dec, block_t **pp_block )
 
         if( p_vol )
         {
-            if( !p_dec->fmt_out.i_extra )
-            {
-                /* Copy the complete VOL */
-                p_dec->fmt_out.i_extra = p_start - p_vol;
-                p_dec->fmt_out.p_extra =
-                    realloc( p_dec->fmt_out.p_extra, p_dec->fmt_out.i_extra );
-                memcpy( p_dec->fmt_out.p_extra, p_vol,
-                        p_dec->fmt_out.i_extra );
-                m4v_VOLParse( p_dec, &p_dec->fmt_out,
-                              p_dec->fmt_out.p_extra, p_dec->fmt_out.i_extra );
-            }
-
-            /* Remove VOL from the original stream */
-            memmove( p_vol, p_start,
-                     p_sys->i_buffer - (p_start - p_sys->p_buffer) );
-            p_sys->i_buffer -= p_dec->fmt_out.i_extra;
-            p_start = p_vol;
+            /* Copy the complete VOL */
+            p_dec->fmt_out.i_extra = p_start - p_vol;
+            p_dec->fmt_out.p_extra =
+                realloc( p_dec->fmt_out.p_extra, p_dec->fmt_out.i_extra );
+            memcpy( p_dec->fmt_out.p_extra, p_vol, p_dec->fmt_out.i_extra );
+            m4v_VOLParse( p_dec, &p_dec->fmt_out,
+                          p_dec->fmt_out.p_extra, p_dec->fmt_out.i_extra );
 
             p_vol = NULL;
         }

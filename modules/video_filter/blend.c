@@ -1,8 +1,8 @@
 /*****************************************************************************
  * blend.c: alpha blend 2 pictures together
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: blend.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: blend.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *

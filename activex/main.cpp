@@ -1,7 +1,7 @@
 /*****************************************************************************
  * main.cpp: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
+ * Copyright (C) 2005 VideoLAN
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -96,7 +96,7 @@ static LPCTSTR TStrFromGUID(REFGUID clsid)
     if( len > 0 )
     {
         clsidStr = (wchar_t *)CoTaskMemAlloc(len*sizeof(wchar_t));
-        MultiByteToWideChar(CP_ACP, 0, oleStr, -1, pct_CLSID, len);
+        WideCharToMultiByte(CP_ACP, 0, oleStr, -1, pct_CLSID, len);
     }
 #endif
     CoTaskMemFree(oleStr);
@@ -184,18 +184,6 @@ STDAPI DllRegisterServer(VOID)
 
         // Control key value
         hSubKey = keyCreate(hClassKey, TEXT("Control"));
-        RegCloseKey(hSubKey);
-
-        // Insertable key value
-        //hSubKey = keyCreate(hClassKey, TEXT("Insertable"));
-        //RegCloseKey(hSubKey);
-
-        // ToolboxBitmap32 key value
-        hSubKey = keyCreate(hClassKey, TEXT("ToolboxBitmap32"));
-        strcpy(DllPath+DllPathLen, ",1");
-        RegSetValueEx(hSubKey, NULL, 0, REG_SZ,
-                (const BYTE*)DllPath, DllPathLen+2);
-        DllPath[DllPathLen] = '\0';
         RegCloseKey(hSubKey);
 
 #ifdef BUILD_LOCALSERVER
@@ -298,9 +286,6 @@ STDAPI DllRegisterServer(VOID)
 
             RegCloseKey(hSubKey);
         }
-        //hSubKey = keyCreate(hBaseKey, TEXT("Insertable"));
-        //RegCloseKey(hSubKey);
- 
         RegCloseKey(hBaseKey);
     }
 

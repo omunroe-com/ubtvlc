@@ -1,8 +1,8 @@
 /*****************************************************************************
  * dialogs.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: dialogs.hpp 12056 2005-08-07 10:56:07Z ipkiss $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: dialogs.hpp 8524 2004-08-25 21:32:15Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -33,7 +33,8 @@
 class Dialogs: public SkinObject
 {
     public:
-        /// Get the instance of Dialogs (or NULL if initialization failed)
+        /// Get the instance of Dialogs
+        /// Returns NULL if initialization failed
         static Dialogs *instance( intf_thread_t *pIntf );
 
         /// Delete the instance of Dialogs
@@ -48,29 +49,20 @@ class Dialogs: public SkinObject
         /// Show the Save Playlist dialog
         void showPlaylistSave();
 
-        /** Show the Quick Open File dialog.
-         *  If play is false, just add the item in the playlist
-         */
+        /// Show the Quick Open File dialog.
+        /// If play is false, just add the item in the playlist
         void showFileSimple( bool play );
 
-        /** Show the Open File dialog
-         *  If play is false, just add the item in the playlist
-         */
+        /// Show the Open File dialog
+        /// If play is false, just add the item in the playlist
         void showFile( bool play );
 
-        /** Show the Open Directory dialog
-         *  If play is false, just add the item in the playlist
-         */
-        void showDirectory( bool play );
-
-        /** Show the Open Disc dialog
-         *  If play is false, just add the item in the playlist
-         */
+        /// Show the Open Disc dialog
+        /// If play is false, just add the item in the playlist
         void showDisc( bool play );
 
-        /** Show the Open Network Stream dialog
-         *  If play is false, just add the item in the playlist
-         */
+        /// Show the Open Network Stream dialog
+        /// If play is false, just add the item in the playlist
         void showNet( bool play );
 
         /// Show the Messages dialog
@@ -81,9 +73,6 @@ class Dialogs: public SkinObject
 
         /// Show the FileInfo dialog
         void showFileInfo();
-
-        /// Show the Streaming Wizard dialog
-        void showStreamingWizard();
 
         /// Show the popup menu
         void showPopupMenu( bool bShow );
@@ -107,10 +96,9 @@ class Dialogs: public SkinObject
         /// Initialization method
         bool init();
 
-        /** Show a generic open/save dialog, initialized with the given
-         *  parameters
-         *  The 'flags' parameter is a logical or of the flags_t values
-         */
+        /// Show a generic open/save dialog, initialized with the given
+        /// parameters
+        /// The 'flags' parameter is a logical or of the flags_t values
         void showFileGeneric( const string &rTitle, const string &rExtensions,
                               DlgCallback callback, int flags );
 

@@ -2,7 +2,7 @@
  * vlc_config.h: limits and configuration
  * Defines all compilation-time configuration constants and size limits
  *****************************************************************************
- * Copyright (C) 1999-2003 the VideoLAN team
+ * Copyright (C) 1999-2003 VideoLAN
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@via.ecp.fr>
@@ -92,9 +92,11 @@
 
 /* DVD and VCD devices */
 #if !defined( WIN32 ) && !defined( UNDER_CE )
+#   define DVD_DEVICE "/dev/dvd"
 #   define VCD_DEVICE "/dev/cdrom"
 #   define CDAUDIO_DEVICE "/dev/cdrom"
 #else
+#   define DVD_DEVICE "D:"
 #   define VCD_DEVICE "D:"
 #   define CDAUDIO_DEVICE "D:"
 #endif

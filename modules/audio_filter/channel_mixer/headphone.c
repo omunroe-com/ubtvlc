@@ -2,8 +2,8 @@
  * headphone.c : headphone virtual spatialization channel mixer module
  *               -> gives the feeling of a real room with a simple headphone
  *****************************************************************************
- * Copyright (C) 2002 the VideoLAN team
- * $Id: headphone.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2002 VideoLAN
+ * $Id: headphone.c 10112 2005-03-03 06:58:04Z zorglub $
  *
  * Authors: Boris Dorès <babal@via.ecp.fr>
  *

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * lpcm.c: lpcm decoder/packetizer module
  *****************************************************************************
- * Copyright (C) 1999-2005 the VideoLAN team
- * $Id: lpcm.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 1999-2005 VideoLAN
+ * $Id: lpcm.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Henri Fallon <henri@videolan.org>

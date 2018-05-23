@@ -1,8 +1,8 @@
 /*****************************************************************************
  * macosx_tooltip.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: macosx_tooltip.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: macosx_tooltip.hpp 9711 2005-01-09 19:46:39Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *

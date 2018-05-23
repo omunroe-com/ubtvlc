@@ -1,8 +1,8 @@
 /*****************************************************************************
  * gather.c: gathering stream output module
  *****************************************************************************
- * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: gather.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003-2004 VideoLAN
+ * $Id: gather.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *

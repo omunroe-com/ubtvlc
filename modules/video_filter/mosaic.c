@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mosaic.c : Mosaic video plugin for vlc
  *****************************************************************************
- * Copyright (C) 2004-2005 the VideoLAN team
- * $Id: mosaic.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2004-2005 VideoLAN
+ * $Id: mosaic.c 11393 2005-06-10 18:58:55Z dionoea $
  *
  * Authors: Antoine Cellerier <dionoea@via.ecp.fr>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -96,8 +96,8 @@ struct filter_sys_t
 #define ALIGN_TEXT N_("Mosaic alignment")
 
 #define POS_TEXT N_("Positioning method")
-#define POS_LONGTEXT N_("Positioning method. auto: automatically choose " \
-        "the best number of rows and columns. fixed: use the user-defined " \
+#define POS_LONGTEXT N_("Positioning method. auto : automatically choose " \
+        "the best number of rows and columns. fixed : use the user-defined " \
         "number of rows and columns.")
 #define ROWS_TEXT N_("Number of rows")
 #define COLS_TEXT N_("Number of columns")
@@ -124,8 +124,9 @@ static char *ppsz_align_descriptions[] =
 vlc_module_begin();
     set_description( N_("Mosaic video sub filter") );
     set_shortname( N_("Mosaic") );
+/*  Leave this commented as long as the VLM intf in wx isn't available
     set_category( CAT_VIDEO );
-    set_subcategory( SUBCAT_VIDEO_SUBPIC);
+    set_subcategory( SUBCAT_VIDEO_SUBPIC);*/
     set_capability( "sub filter", 0 );
     set_callbacks( CreateFilter, DestroyFilter );
 
@@ -393,11 +394,10 @@ static subpicture_t *Filter( filter_t *p_filter, mtime_t date )
         video_format_t fmt_in = {0}, fmt_out = {0};
         picture_t *p_converted;
 
-        if ( p_es->b_empty )
+        if ( p_es->b_empty || p_es->p_picture == NULL )
             continue;
 
-        while ( p_es->p_picture != NULL
-                 && p_es->p_picture->date + p_sys->i_delay < date )
+        if ( p_es->p_picture->date + p_sys->i_delay < date )
         {
             if ( p_es->p_picture->p_next != NULL )
             {
@@ -412,19 +412,13 @@ static subpicture_t *Filter( filter_t *p_filter, mtime_t date )
                 p_es->p_picture->pf_release( p_es->p_picture );
                 p_es->p_picture = NULL;
                 p_es->pp_last = &p_es->p_picture;
-                break;
+                continue;
             }
             else
-            {
                 msg_Dbg( p_filter, "too late picture for %s (" I64Fd ")",
                          p_es->psz_id,
                          date - p_es->p_picture->date - p_sys->i_delay );
-                break;
-            }
         }
-
-        if ( p_es->p_picture == NULL )
-            continue;
 
         if ( p_sys->i_order_length == 0 )
         {

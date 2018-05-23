@@ -1,8 +1,8 @@
 /*****************************************************************************
  * svcdsub.c : Overlay Graphics Text (SVCD subtitles) decoder
  *****************************************************************************
- * Copyright (C) 2003, 2004 the VideoLAN team
- * $Id: svcdsub.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003, 2004 VideoLAN
+ * $Id: svcdsub.c 10922 2005-05-07 20:02:48Z fkuehne $
  *
  * Authors: Rocky Bernstein
  *          Gildas Bazin <gbazin@videolan.org>

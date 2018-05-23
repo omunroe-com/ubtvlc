@@ -1,8 +1,8 @@
 /*****************************************************************************
  * os_timer.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: os_timer.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: os_timer.hpp 9417 2004-11-26 10:04:08Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

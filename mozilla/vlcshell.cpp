@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlcshell.cpp: a VLC plugin for Mozilla
  *****************************************************************************
- * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: vlcshell.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2002-2005 VideoLAN
+ * $Id: vlcshell.cpp 11478 2005-06-20 19:44:46Z zorglub $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -92,8 +92,8 @@
 #   define VOUT_PLUGINS "xvideo,x11,dummy"
 #   define AOUT_PLUGINS "oss,dummy"
 
-static unsigned int i_previous_height = 100000;
-static unsigned int i_previous_width = 100000;
+static int i_previous_height = -1;
+static int i_previous_width = -1;
 
 static void Redraw( Widget w, XtPointer closure, XEvent *event );
 static void Resize( Widget w, XtPointer closure, XEvent *event );
@@ -947,8 +947,6 @@ static void Resize ( Widget w, XtPointer closure, XEvent *event )
                  event->xconfigure.height,
                  event->xconfigure.send_event ? "TRUE" : "FALSE" );
     }
-#endif /* X11_RESIZE_DEBUG */
-
     if( p_plugin->i_height == i_previous_height &&
         p_plugin->i_width == i_previous_width )
     {
@@ -957,6 +955,7 @@ static void Resize ( Widget w, XtPointer closure, XEvent *event )
     i_previous_height = p_plugin->i_height;
     i_previous_width  = p_plugin->i_width;
 
+#endif /* X11_RESIZE_DEBUG */
 
     i_ret = XResizeWindow( p_plugin->p_display, p_plugin->window,
             p_plugin->i_width, p_plugin->i_height );

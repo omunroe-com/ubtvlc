@@ -2,8 +2,8 @@
  * vlc_threads_funcs.h : threads implementation for the VideoLAN client
  * This header provides a portable threads implementation.
  *****************************************************************************
- * Copyright (C) 1999, 2002 the VideoLAN team
- * $Id: vlc_threads_funcs.h 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 1999, 2002 VideoLAN
+ * $Id: vlc_threads_funcs.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Jean-Marc Dressler <polux@via.ecp.fr>
  *          Samuel Hocevar <sam@via.ecp.fr>

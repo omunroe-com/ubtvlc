@@ -1,8 +1,8 @@
 /*****************************************************************************
  * dmo.h : DirectMedia Object codec module for vlc
  *****************************************************************************
- * Copyright (C) 2002, 2003 the VideoLAN team
- * $Id: dmo.h 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2002, 2003 VideoLAN
+ * $Id: dmo.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -36,12 +36,6 @@ static const GUID MEDIASUBTYPE_I420 = {0x30323449, 0x0000, 0x0010, {0x80, 0x00, 
 static const GUID MEDIASUBTYPE_YV12 = {0x32315659, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 static const GUID MEDIASUBTYPE_RGB24 = {0xe436eb7d, 0x524f, 0x11ce, {0x9f, 0x53, 0x00, 0x20, 0xaf, 0x0b, 0xa7, 0x70}};
 static const GUID MEDIASUBTYPE_RGB565 = {0xe436eb7b, 0x524f, 0x11ce, {0x9f, 0x53, 0x00, 0x20, 0xaf, 0x0b, 0xa7, 0x70}};
-
-
-#ifndef WIN32
-void* CoTaskMemAlloc(unsigned long cb);
-void CoTaskMemFree(void* cb);
-#endif
 
 #define IUnknown IUnknownHack
 #define IClassFactory IClassFactoryHack

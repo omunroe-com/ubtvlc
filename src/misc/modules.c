@@ -1,8 +1,8 @@
 /*****************************************************************************
  * modules.c : Builtin and plugin modules management functions
  *****************************************************************************
- * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: modules.c 12412 2005-08-27 16:40:23Z jpsaman $
+ * Copyright (C) 2001-2004 VideoLAN
+ * $Id: modules.c 11126 2005-05-23 09:08:04Z xtophe $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *          Ethan C. Baldridge <BaldridgeE@cadmus.com>
@@ -92,10 +92,9 @@
 #include "aout_internal.h"
 
 #include "stream_output.h"
+#include "osd.h"
 #include "vlc_httpd.h"
-#include "vlc_acl.h"
 #include "vlc_tls.h"
-#include "vlc_md5.h"
 #include "vlc_xml.h"
 
 #include "iso_lang.h"
@@ -106,7 +105,10 @@
 #include "vlc_vlm.h"
 
 #include "vlc_image.h"
-#include "vlc_osd.h"
+
+#ifdef HAVE_DYNAMIC_PLUGINS
+#   include "modules_plugin.h"
+#endif
 
 #if defined( _MSC_VER ) && defined( UNDER_CE )
 #    include "modules_builtin_evc.h"
@@ -119,7 +121,7 @@
 
 #if defined( WIN32 ) || defined( UNDER_CE )
     /* Avoid name collisions */
-#   define LoadModule(a,b,c) LoadVlcModule(a,b,c)
+#   define LoadModule(a,b,c) _LoadModule(a,b,c)
 #endif
 
 /*****************************************************************************
@@ -193,7 +195,7 @@ void __module_InitBank( vlc_object_t *p_this )
     /*
      * Store the symbols to be exported
      */
-#if defined (HAVE_DYNAMIC_PLUGINS) && !defined (HAVE_SHARED_LIBVLC)
+#ifdef HAVE_DYNAMIC_PLUGINS
     STORE_SYMBOLS( &p_bank->symbols );
 #endif
 
@@ -256,17 +258,14 @@ void __module_EndBank( vlc_object_t *p_this )
     {
         free( p_bank->pp_loaded_cache[p_bank->i_loaded_cache]->psz_file );
         free( p_bank->pp_loaded_cache[p_bank->i_loaded_cache] );
+        if( !p_bank->i_loaded_cache ) free( p_bank->pp_loaded_cache );
     }
-    if( p_bank->pp_loaded_cache )
-        free( p_bank->pp_loaded_cache );
-
     while( p_bank->i_cache-- )
     {
         free( p_bank->pp_cache[p_bank->i_cache]->psz_file );
         free( p_bank->pp_cache[p_bank->i_cache] );
+        if( !p_bank->i_cache ) free( p_bank->pp_cache );
     }
-    if( p_bank->pp_cache )
-        free( p_bank->pp_cache );
 #undef p_bank
 #endif
 
@@ -1089,9 +1088,7 @@ static module_t * AllocatePlugin( vlc_object_t * p_this, char * psz_file )
     /* We need to fill these since they may be needed by CallEntry() */
     p_module->psz_filename = psz_file;
     p_module->handle = handle;
-#ifndef HAVE_SHARED_LIBVLC
     p_module->p_symbols = &p_this->p_libvlc->p_module_bank->symbols;
-#endif
     p_module->b_loaded = VLC_TRUE;
 
     /* Initialize the module: fill p_module, default config */
@@ -1379,6 +1376,7 @@ static int LoadModule( vlc_object_t *p_this, char *psz_file,
 
 #elif defined(HAVE_DL_DLOPEN) && defined(RTLD_NOW)
     /* static is OK, we are called atomically */
+    static vlc_bool_t b_kde = VLC_FALSE;
 
 #   if defined(SYS_LINUX)
     /* XXX HACK #1 - we should NOT open modules with RTLD_GLOBAL, or we
@@ -1395,6 +1393,18 @@ static int LoadModule( vlc_object_t *p_this, char *psz_file,
         }
     }
 #   endif
+    /* XXX HACK #2 - the ugly KDE workaround. It seems that libkdewhatever
+     * causes dlopen() to segfault if libstdc++ is not loaded in the caller,
+     * so we just load libstdc++. Bwahahaha! ph34r! -- Sam. */
+    /* Update: FYI, this is Debian bug #180505, and seems to be fixed. */
+    if( !b_kde && !strstr( psz_file, "kde" ) )
+    {
+        dlopen( "libstdc++.so.6", RTLD_NOW )
+         || dlopen( "libstdc++.so.5", RTLD_NOW )
+         || dlopen( "libstdc++.so.4", RTLD_NOW )
+         || dlopen( "libstdc++.so.3", RTLD_NOW );
+        b_kde = VLC_TRUE;
+    }
 
     handle = dlopen( psz_file, RTLD_NOW );
     if( handle == NULL )
@@ -1616,7 +1626,6 @@ static void CacheLoad( vlc_object_t *p_this )
         DeleteFile( psz_wf );
 #endif
         msg_Dbg( p_this, "removing plugins cache file %s", psz_filename );
-        free( psz_filename );
         return;
     }
 
@@ -2147,9 +2156,7 @@ static void CacheMerge( vlc_object_t *p_this, module_t *p_cache,
 
     p_cache->pf_activate = p_module->pf_activate;
     p_cache->pf_deactivate = p_module->pf_deactivate;
-#ifndef HAVE_SHARED_LIBVLC
     p_cache->p_symbols = p_module->p_symbols;
-#endif
     p_cache->handle = p_module->handle;
 
     for( i_submodule = 0; i_submodule < p_module->i_children; i_submodule++ )
@@ -2158,9 +2165,7 @@ static void CacheMerge( vlc_object_t *p_this, module_t *p_cache,
         module_t *p_cchild = (module_t*)p_cache->pp_children[i_submodule];
         p_cchild->pf_activate = p_child->pf_activate;
         p_cchild->pf_deactivate = p_child->pf_deactivate;
-#ifndef HAVE_SHARED_LIBVLC
         p_cchild->p_symbols = p_child->p_symbols;
-#endif
     }
 
     p_cache->b_loaded = VLC_TRUE;

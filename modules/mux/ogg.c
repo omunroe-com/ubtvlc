@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ogg.c: ogg muxer module for vlc
  *****************************************************************************
- * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: ogg.c 12615 2005-09-19 21:32:04Z gbazin $
+ * Copyright (C) 2001, 2002 VideoLAN
+ * $Id: ogg.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -729,7 +729,7 @@ static block_t *OggCreateHeader( sout_mux_t *p_mux, mtime_t i_dts )
 
             /* comment */
             com[0] = PACKET_TYPE_COMMENT;
-            i_com = snprintf( &com[1], 127, PACKAGE_VERSION" stream output" )
+            i_com = snprintf( &com[1], 128, PACKAGE_VERSION" stream output" )
                      + 1;
             op.packet = com;
             op.bytes  = i_com;

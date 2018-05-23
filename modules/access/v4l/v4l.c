@@ -1,8 +1,8 @@
 /*****************************************************************************
  * v4l.c : Video4Linux input module for vlc
  *****************************************************************************
- * Copyright (C) 2002-2004 the VideoLAN team
- * $Id: v4l.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2002-2004 VideoLAN
+ * $Id: v4l.c 11376 2005-06-10 11:01:40Z fkuehne $
  *
  * Author: Laurent Aimar <fenrir@via.ecp.fr>
  *         Paul Forgey <paulf at aphrodite dot com>

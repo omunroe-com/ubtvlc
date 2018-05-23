@@ -1,8 +1,8 @@
 /*****************************************************************************
  * variables.h: variables handling
  *****************************************************************************
- * Copyright (C) 2002-2004 the VideoLAN team
- * $Id: variables.h 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2002-2004 VideoLAN
+ * $Id: variables.h 10976 2005-05-11 16:56:46Z damienf $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Gildas Bazin <gbazin@netcourrier.com>

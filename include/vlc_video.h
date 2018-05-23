@@ -3,8 +3,8 @@
  * This header is required by all modules which have to handle pictures. It
  * includes all common video types and constants.
  *****************************************************************************
- * Copyright (C) 1999 - 2005 the VideoLAN team
- * $Id: vlc_video.h 12412 2005-08-27 16:40:23Z jpsaman $
+ * Copyright (C) 1999 - 2005 VideoLAN
+ * $Id: vlc_video.h 10689 2005-04-15 19:51:23Z massiot $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -264,7 +264,7 @@ struct subpicture_t
     int          i_alpha;                                  /**< transparency */
     int          i_original_picture_width;  /**< original width of the movie */
     int          i_original_picture_height;/**< original height of the movie */
-    vlc_bool_t   b_absolute;                       /**< position is absolute */
+    int          b_absolute;                       /**< position is absolute */
     int          i_flags;                                /**< position flags */
      /**@}*/
 
@@ -346,82 +346,6 @@ VLC_EXPORT( int, __vout_InitPicture, ( vlc_object_t *p_this, picture_t *p_pic, u
 #define vout_AllocatePicture(a,b,c,d,e,f) \
         __vout_AllocatePicture(VLC_OBJECT(a),b,c,d,e,f)
 VLC_EXPORT( int, __vout_AllocatePicture,( vlc_object_t *p_this, picture_t *p_pic, uint32_t i_chroma, int i_width, int i_height, int i_aspect ) );
-
-/**
- * vout_ShowTextRelative
- *
- * Show text on the video for some time
- * \param p_vout pointer to the vout the text is to be showed on
- * \param i_channel Subpicture channel
- * \param psz_string The text to be shown
- * \param p_style Pointer to a struct with text style info
- * \param i_flags flags for alignment and such
- * \param i_hmargin horizontal margin in pixels
- * \param i_vmargin vertical margin in pixels
- * \param i_duration Amount of time the text is to be shown.
- */
-VLC_EXPORT( int, vout_ShowTextRelative, ( vout_thread_t *, int, char *, text_style_t *, int, int, int, mtime_t ) );
-
-/**
- * vout_ShowTextAbsolute
- *
- * Show text on the video from a given start date to a given end date
- * \param p_vout pointer to the vout the text is to be showed on
- * \param i_channel Subpicture channel
- * \param psz_string The text to be shown
- * \param p_style Pointer to a struct with text style info
- * \param i_flags flags for alignment and such
- * \param i_hmargin horizontal margin in pixels
- * \param i_vmargin vertical margin in pixels
- * \param i_start the time when this string is to appear on the video
- * \param i_stop the time when this string should stop to be displayed
- *               if this is 0 the string will be shown untill the next string
- *               is about to be shown
- */
-VLC_EXPORT( int, vout_ShowTextAbsolute, ( vout_thread_t *, int, char *, text_style_t *, int, int, int, mtime_t, mtime_t ) );
-
-/**
- * vout_OSDMessage
- *
- * Write an informative message at the default location,
- * for the default duration and only if the OSD option is enabled.
- * \param p_caller The object that called the function.
- * \param i_channel Subpicture channel
- * \param psz_format printf style formatting
- **/
-VLC_EXPORT( void,  __vout_OSDMessage, ( vlc_object_t *, int, char *, ... ) );
-
-/**
- * Same as __vlc_OSDMessage() but with automatic casting
- */
-#if defined(HAVE_VARIADIC_MACROS)
-#    define vout_OSDMessage( obj, chan, fmt, args...) __vout_OSDMessage( VLC_OBJECT(obj), chan, fmt, ## args )
-#else
-#    define vout_OSDMessage __vout_OSDMessage
-#endif
-
-/**
- * vout_OSDSlider
- *
- * Display a slider on the video output.
- * \param p_this    The object that called the function.
- * \param i_channel Subpicture channel
- * \param i_postion Current position in the slider
- * \param i_type    Types are: OSD_HOR_SLIDER and OSD_VERT_SLIDER.
- * @see vlc_osd.h
- */
-VLC_EXPORT( void, vout_OSDSlider, ( vlc_object_t *, int, int , short ) );
-
-/**
- * vout_OSDIcon
- *
- * Display an Icon on the video output.
- * \param p_this    The object that called the function.
- * \param i_channel Subpicture channel
- * \param i_type    Types are: OSD_PLAY_ICON, OSD_PAUSE_ICON, OSD_SPEAKER_ICON, OSD_MUTE_ICON
- * @see vlc_osd.h
- */
-VLC_EXPORT( void, vout_OSDIcon, ( vlc_object_t *, int, short ) );
 
 /**@}*/
 

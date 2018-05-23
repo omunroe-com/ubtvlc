@@ -1,8 +1,8 @@
 /*****************************************************************************
  * pls.c : PLS playlist format import
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: pls.c 11709 2005-07-11 16:20:33Z massiot $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: pls.c 11449 2005-06-17 16:45:58Z massiot $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
@@ -58,7 +58,7 @@ int E_(Import_PLS)( vlc_object_t *p_this )
     if( stream_Peek( p_demux->s , &p_peek, 7 ) < 7 ) return VLC_EGENERIC;
     psz_ext = strrchr ( p_demux->psz_path, '.' );
 
-    if( !strncasecmp( (char *)p_peek, "[playlist]", 10 ) )
+    if( !strncasecmp( p_peek, "[playlist]", 10 ) )
     {
         ;
     }

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ncurses.c : NCurses plugin for vlc
  *****************************************************************************
- * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: ncurses.c 12549 2005-09-14 00:43:57Z yoann $
+ * Copyright (C) 2001-2004 VideoLAN
+ * $Id: ncurses.c 11183 2005-05-27 21:14:19Z yoann $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -164,7 +164,6 @@ struct intf_sys_t
     char            *psz_current_dir;
     int             i_dir_entries;
     struct dir_entry_t  **pp_dir_entries;
-    vlc_bool_t      b_show_hidden_files;
 
     int             i_current_view;             /* playlist view             */
     struct pl_item_t    **pp_plist;
@@ -254,7 +253,6 @@ static int Open( vlc_object_t *p_this )
 
     p_sys->i_dir_entries = 0;
     p_sys->pp_dir_entries = NULL;
-    p_sys->b_show_hidden_files = VLC_FALSE;
     ReadDir( p_intf );
 
     return VLC_SUCCESS;
@@ -563,16 +561,10 @@ static int HandleKey( intf_thread_t *p_intf, int i_key )
             case KEY_NPAGE:
                 p_sys->i_box_bidx += p_sys->i_box_lines;
                 break;
-            case '.': /* Toggle show hidden files */
-                p_sys->b_show_hidden_files = ( p_sys->b_show_hidden_files ==
-                    VLC_TRUE ? VLC_FALSE : VLC_TRUE );
-                ReadDir( p_intf );
-                break;
 
             case KEY_ENTER:
             case 0x0d:
-            case ' ':
-                if( p_sys->pp_dir_entries[p_sys->i_box_bidx]->b_file || i_key == ' ' )
+                if( p_sys->pp_dir_entries[p_sys->i_box_bidx]->b_file )
                 {
                     int i_size_entry = strlen( p_sys->psz_current_dir ) +
                                        strlen( p_sys->pp_dir_entries[p_sys->i_box_bidx]->psz_path ) + 2;
@@ -1270,12 +1262,6 @@ static void Redraw( intf_thread_t *p_intf, time_t *t_last_refresh )
         MainBoxWrite( p_intf, l++, 1, "     <backspace> Delete an entry" );
         MainBoxWrite( p_intf, l++, 1, "" );
 
-        MainBoxWrite( p_intf, l++, 1, "[Filebrowser]" );
-        MainBoxWrite( p_intf, l++, 1, "     <enter>     Add the selected file to the playlist" );
-        MainBoxWrite( p_intf, l++, 1, "     <space>     Add the selected directory to the playlist" );
-        MainBoxWrite( p_intf, l++, 1, "     .           Show/Hide hidden files" );
-        MainBoxWrite( p_intf, l++, 1, "" );
-
         MainBoxWrite( p_intf, l++, 1, "[Boxes]" );
         MainBoxWrite( p_intf, l++, 1, "     <up>,<down>     Navigate through the box line by line" );
         MainBoxWrite( p_intf, l++, 1, "     <pgup>,<pgdown> Navigate through the box page by page" );
@@ -1427,7 +1413,7 @@ static void Redraw( intf_thread_t *p_intf, time_t *t_last_refresh )
             {
                 attrset( A_REVERSE );
             }
-            mvnprintw( y++, 1, COLS - 2, " %c %s", p_sys->pp_dir_entries[i_item]->b_file == VLC_TRUE ? ' ' : '+',
+            mvnprintw( y++, 1, COLS - 2, "%c %s", p_sys->pp_dir_entries[i_item]->b_file == VLC_TRUE ? '-' : '+',
                             p_sys->pp_dir_entries[i_item]->psz_path );
             if( b_selected )
             {
@@ -1831,20 +1817,6 @@ static void Eject( intf_thread_t *p_intf )
     return;
 }
 
-static int comp_dir_entries( const void *pp_dir_entry1,
-                             const void *pp_dir_entry2 )
-{
-    struct dir_entry_t *p_dir_entry1 = *(struct dir_entry_t**)pp_dir_entry1;
-    struct dir_entry_t *p_dir_entry2 = *(struct dir_entry_t**)pp_dir_entry2;
-    if ( p_dir_entry1->b_file == p_dir_entry2->b_file ) {
-        return strcasecmp( p_dir_entry1->psz_path, p_dir_entry2->psz_path );
-    }
-    else 
-    {
-        return ( p_dir_entry1->b_file ? 1 : -1 );
-    }
-}
-
 static void ReadDir( intf_thread_t *p_intf )
 {
     intf_sys_t     *p_sys = p_intf->p_sys;
@@ -1892,18 +1864,8 @@ static void ReadDir( intf_thread_t *p_intf )
             struct dir_entry_t *p_dir_entry;
             int i_size_entry = strlen( p_sys->psz_current_dir ) +
                                strlen( p_dir_content->d_name ) + 2;
-            char *psz_uri;
+            char *psz_uri = (char *)malloc( sizeof(char)*i_size_entry);
 
-            if( p_sys->b_show_hidden_files == VLC_FALSE && 
-                ( strlen( p_dir_content->d_name ) &&
-                  p_dir_content->d_name[0] == '.' ) &&
-                strcmp( p_dir_content->d_name, ".." ) )
-            {
-                p_dir_content = readdir( p_current_dir );
-                continue;
-            } 
-
-            psz_uri = (char *)malloc( sizeof(char)*i_size_entry);
             sprintf( psz_uri, "%s/%s", p_sys->psz_current_dir,
                      p_dir_content->d_name );
 
@@ -1939,11 +1901,6 @@ static void ReadDir( intf_thread_t *p_intf )
             /* Read next entry */
             p_dir_content = readdir( p_current_dir );
         }
-
-        /* Sort */
-        qsort( p_sys->pp_dir_entries, p_sys->i_dir_entries,
-               sizeof(struct dir_entry_t*), &comp_dir_entries );
-
         closedir( p_current_dir );
         return;
     }

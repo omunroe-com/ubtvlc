@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_text.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_text.cpp 12207 2005-08-15 15:54:32Z asmax $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ctrl_text.cpp 10861 2005-05-01 13:19:04Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -44,14 +44,16 @@ CtrlText::CtrlText( intf_thread_t *pIntf, VarText &rVariable,
                     const GenericFont &rFont, const UString &rHelp,
                     uint32_t color, VarBool *pVisible ):
     CtrlGeneric( pIntf, rHelp, pVisible ), m_fsm( pIntf ),
-    m_rVariable( rVariable ), m_cmdToManual( this ),
-    m_cmdManualMoving( this ), m_cmdManualStill( this ),
-    m_cmdMove( this ), m_pEvt( NULL ), m_rFont( rFont ),
-    m_color( color ), m_pImg( NULL ), m_pImgDouble( NULL ),
-    m_pCurrImg( NULL ), m_xPos( 0 ), m_xOffset( 0 ),
-    m_cmdUpdateText( this )
+    m_rVariable( rVariable ), m_cmdToManual( this, &transToManual ),
+    m_cmdManualMoving( this, &transManualMoving ),
+    m_cmdManualStill( this, &transManualStill ),
+    m_cmdMove( this, &transMove ),
+    m_pEvt( NULL ), m_rFont( rFont ), m_color( color ),
+    m_pImg( NULL ), m_pImgDouble( NULL ), m_pCurrImg( NULL ),
+    m_xPos( 0 ), m_xOffset( 0 )
 {
-    m_pTimer = OSFactory::instance( pIntf )->createOSTimer( m_cmdUpdateText );
+    m_pTimer = OSFactory::instance( getIntf() )->createOSTimer(
+        Callback( this, &updateText ) );
 
     // States
     m_fsm.addState( "still" );
@@ -252,72 +254,78 @@ void CtrlText::onChangePosition()
 }
 
 
-void CtrlText::CmdToManual::execute()
+void CtrlText::transToManual( SkinObject *pCtrl )
 {
-    EvtMouse *pEvtMouse = (EvtMouse*)m_pParent->m_pEvt;
+    CtrlText *pThis = (CtrlText*)pCtrl;
+    EvtMouse *pEvtMouse = (EvtMouse*)pThis->m_pEvt;
 
     // Compute the offset
-    m_pParent->m_xOffset = pEvtMouse->getXPos() - m_pParent->m_xPos;
+    pThis->m_xOffset = pEvtMouse->getXPos() - pThis->m_xPos;
 
-    m_pParent->m_pTimer->stop();
-    m_pParent->captureMouse();
+    pThis->m_pTimer->stop();
+    pThis->captureMouse();
 }
 
 
-void CtrlText::CmdManualMoving::execute()
+void CtrlText::transManualMoving( SkinObject *pCtrl )
 {
-    m_pParent->releaseMouse();
+    CtrlText *pThis = (CtrlText*)pCtrl;
+    pThis->releaseMouse();
 
     // Start the automatic movement, but only if the text is wider than the
     // control
-    if( m_pParent->m_pImg &&
-        m_pParent->m_pImg->getWidth() >= m_pParent->getPosition()->getWidth() )
+    if( pThis->m_pImg &&
+        pThis->m_pImg->getWidth() >= pThis->getPosition()->getWidth() )
     {
         // The current image may have been set incorrectly in displayText(), so
         // set the correct value
-        m_pParent->m_pCurrImg = m_pParent->m_pImgDouble;
+        pThis->m_pCurrImg = pThis->m_pImgDouble;
 
-        m_pParent->m_pTimer->start( MOVING_TEXT_DELAY, false );
+        pThis->m_pTimer->start( MOVING_TEXT_DELAY, false );
     }
 }
 
 
-void CtrlText::CmdManualStill::execute()
+void CtrlText::transManualStill( SkinObject *pCtrl )
 {
-    m_pParent->releaseMouse();
+    CtrlText *pThis = (CtrlText*)pCtrl;
+    pThis->releaseMouse();
 }
 
 
-void CtrlText::CmdMove::execute()
+void CtrlText::transMove( SkinObject *pCtrl )
 {
-    EvtMouse *pEvtMouse = (EvtMouse*)m_pParent->m_pEvt;
+    CtrlText *pThis = (CtrlText*)pCtrl;
+    EvtMouse *pEvtMouse = (EvtMouse*)pThis->m_pEvt;
 
     // Do nothing if the text fits in the control
-    if( m_pParent->m_pImg &&
-        m_pParent->m_pImg->getWidth() >= m_pParent->getPosition()->getWidth() )
+    if( pThis->m_pImg &&
+        pThis->m_pImg->getWidth() >= pThis->getPosition()->getWidth() )
     {
         // The current image may have been set incorrectly in displayText(), so
         // we set the correct value
-        m_pParent->m_pCurrImg = m_pParent->m_pImgDouble;
+        pThis->m_pCurrImg = pThis->m_pImgDouble;
 
         // Compute the new position of the left side, and make sure it is
         // in the correct range
-        m_pParent->m_xPos = (pEvtMouse->getXPos() - m_pParent->m_xOffset);
-        m_pParent->adjust( m_pParent->m_xPos );
+        pThis->m_xPos = (pEvtMouse->getXPos() - pThis->m_xOffset);
+        pThis->adjust( pThis->m_xPos );
 
-        m_pParent->notifyLayout( m_pParent->getPosition()->getWidth(),
-                             m_pParent->getPosition()->getHeight() );
+        pThis->notifyLayout( pThis->getPosition()->getWidth(),
+                             pThis->getPosition()->getHeight() );
     }
 }
 
 
-void CtrlText::CmdUpdateText::execute()
+void CtrlText::updateText( SkinObject *pCtrl )
 {
-    m_pParent->m_xPos -= MOVING_TEXT_STEP;
-    m_pParent->adjust( m_pParent->m_xPos );
+    CtrlText *pThis = (CtrlText*)pCtrl;
 
-    m_pParent->notifyLayout( m_pParent->getPosition()->getWidth(),
-                         m_pParent->getPosition()->getHeight() );
+    pThis->m_xPos -= MOVING_TEXT_STEP;
+    pThis->adjust( pThis->m_xPos );
+
+    pThis->notifyLayout( pThis->getPosition()->getWidth(),
+                         pThis->getPosition()->getHeight() );
 }
 
 

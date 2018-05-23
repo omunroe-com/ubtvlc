@@ -1,8 +1,8 @@
 /*****************************************************************************
  * time.c : time display video plugin for vlc
  *****************************************************************************
- * Copyright (C) 2003-2005 the VideoLAN team
- * $Id: time.c 12412 2005-08-27 16:40:23Z jpsaman $
+ * Copyright (C) 2003-2005 VideoLAN
+ * $Id: time.c 10645 2005-04-11 14:13:41Z hartman $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -34,7 +34,7 @@
 
 #include "vlc_filter.h"
 #include "vlc_block.h"
-#include "vlc_osd.h"
+#include "osd.h"
 
 /*****************************************************************************
  * Local prototypes

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * stream.c
  *****************************************************************************
- * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: stream.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 1999-2004 VideoLAN
+ * $Id: stream.c 10660 2005-04-12 18:15:33Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *

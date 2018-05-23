@@ -1,8 +1,8 @@
 /*****************************************************************************
  * buffer.c : DirectMedia Object decoder module for vlc
  *****************************************************************************
- * Copyright (C) 2002, 2003 the VideoLAN team
- * $Id: buffer.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2002, 2003 VideoLAN
+ * $Id: buffer.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -88,7 +88,7 @@ static long STDCALL Release( IUnknown *This )
 static long STDCALL SetLength( IMediaBuffer *This, uint32_t cbLength )
 {
     CMediaBuffer *p_mb = (CMediaBuffer *)This;
-    if( cbLength > (uint32_t)p_mb->i_max_size ) return E_INVALIDARG;
+    if( cbLength > p_mb->i_max_size ) return E_INVALIDARG;
     p_mb->p_block->i_buffer = cbLength;
     return S_OK;
 }

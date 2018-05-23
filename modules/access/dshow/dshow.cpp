@@ -1,8 +1,8 @@
 /*****************************************************************************
  * dshow.cpp : DirectShow access module for vlc
  *****************************************************************************
- * Copyright (C) 2002, 2003 the VideoLAN team
- * $Id: dshow.cpp 12572 2005-09-16 16:13:07Z damienf $
+ * Copyright (C) 2002, 2003 VideoLAN
+ * $Id: dshow.cpp 11176 2005-05-27 12:35:57Z xtophe $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -1112,11 +1112,10 @@ FindCaptureDevice( vlc_object_t *p_this, string *p_devicename,
             {
                 int i_convert = WideCharToMultiByte(CP_ACP, 0, var.bstrVal,
                         SysStringLen(var.bstrVal), NULL, 0, NULL, NULL);
-                char *p_buf = (char *)alloca( i_convert+1 ); p_buf[0] = 0;
+                char *p_buf = (char *)alloca( i_convert ); p_buf[0] = 0;
                 WideCharToMultiByte( CP_ACP, 0, var.bstrVal,
                         SysStringLen(var.bstrVal), p_buf, i_convert, NULL, NULL );
                 SysFreeString(var.bstrVal);
-                p_buf[i_convert] = '\0';
 
                 if( p_listdevices ) p_listdevices->push_back( p_buf );
 

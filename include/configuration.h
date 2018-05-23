@@ -3,8 +3,8 @@
  * This file describes the programming interface for the configuration module.
  * It includes functions allowing to declare, get or set configuration options.
  *****************************************************************************
- * Copyright (C) 1999, 2000 the VideoLAN team
- * $Id: configuration.h 12428 2005-08-29 16:34:32Z massiot $
+ * Copyright (C) 1999, 2000 VideoLAN
+ * $Id: configuration.h 11093 2005-05-21 15:07:46Z xtophe $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -180,7 +180,6 @@ VLC_EXPORT( void,   __config_PutPsz,   (vlc_object_t *, const char *, const char
 
 VLC_EXPORT( int,    __config_LoadCmdLine,  ( vlc_object_t *, int *, char *[], vlc_bool_t ) );
 VLC_EXPORT( char *,   config_GetHomeDir,     ( void ) );
-VLC_EXPORT( char *,   config_GetUserDir,     ( void ) );
 VLC_EXPORT( int,    __config_LoadConfigFile, ( vlc_object_t *, const char * ) );
 VLC_EXPORT( int,    __config_SaveConfigFile, ( vlc_object_t *, const char * ) );
 VLC_EXPORT( void,   __config_ResetAll, ( vlc_object_t * ) );
@@ -343,55 +342,18 @@ int config_AutoSaveConfigFile( vlc_object_t * );
     if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
         (i_config+11) * sizeof(module_config_t)); \
     { static module_config_t tmp = { CONFIG_ITEM_BOOL, NULL, name, '\0', text, longtext, NULL, b_value }; p_config[ i_config ] = tmp; p_config[ i_config ].pf_callback = p_callback; p_config[i_config].b_advanced = advc; }
-/* For option renamed */
+
 #define add_deprecated( name, strict ) \
         i_config++; \
     if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
         (i_config+11) * sizeof(module_config_t)); \
-    {   static module_config_t tmp; \
+    {   static module_config_t tmp={}; \
         p_config[ i_config ] = tmp; \
         p_config[ i_config ].i_type = p_config[ i_config -1 ].i_type; \
         p_config[ i_config ].psz_name = name; \
         p_config[i_config].b_strict = strict; \
         p_config[ i_config ].psz_current = p_config[ i_config-1].psz_current?p_config[ i_config-1 ].psz_current:p_config[ i_config-1 ].psz_name; }
-/* For option suppressed*/
-#define add_suppressed_bool( name ) \
-        i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    {   static module_config_t tmp; \
-        p_config[ i_config ] = tmp; \
-        p_config[ i_config ].i_type = CONFIG_ITEM_BOOL; \
-        p_config[ i_config ].psz_name = name; \
-        p_config[ i_config ].psz_current = "SUPPRESSED"; }
 
-#define add_suppressed_integer( name ) \
-        i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    {   static module_config_t tmp; \
-        p_config[ i_config ] = tmp; \
-        p_config[ i_config ].i_type = CONFIG_ITEM_INTEGER; \
-        p_config[ i_config ].psz_name = name; \
-        p_config[ i_config ].psz_current = "SUPPRESSED"; }
-#define add_suppressed_float( name ) \
-        i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    {   static module_config_t tmp; \
-        p_config[ i_config ] = tmp; \
-        p_config[ i_config ].i_type = CONFIG_ITEM_FLOAT; \
-        p_config[ i_config ].psz_name = name; \
-        p_config[ i_config ].psz_current = "SUPPRESSED"; }
-#define add_suppressed_string( name ) \
-        i_config++; \
-    if(!(i_config%10)) p_config = (module_config_t* )realloc(p_config, \
-        (i_config+11) * sizeof(module_config_t)); \
-    {   static module_config_t tmp; \
-        p_config[ i_config ] = tmp; \
-        p_config[ i_config ].i_type = CONFIG_ITEM_STRING; \
-        p_config[ i_config ].psz_name = name; \
-        p_config[ i_config ].psz_current = "SUPPRESSED"; }
 /* Modifier macros for the config options (used for fine tuning) */
 #define change_short( ch ) \
     p_config[i_config].i_short = ch;

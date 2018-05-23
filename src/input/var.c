@@ -1,7 +1,7 @@
 /*****************************************************************************
  * var.c: object variables for input thread
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
+ * Copyright (C) 2004 VideoLAN
  * $Id: input.c 7955 2004-06-07 22:21:33Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
@@ -475,6 +475,8 @@ static int RateCallback( vlc_object_t *p_this, char const *psz_cmd,
                          vlc_value_t oldval, vlc_value_t newval, void *p_data )
 {
     input_thread_t *p_input = (input_thread_t*)p_this;
+    vlc_value_t val;
+    int i_rate;
 
     /* Problem with this way: the "rate" variable is update after the input thread do the change */
     if( !strcmp( psz_cmd, "rate-slower" ) )

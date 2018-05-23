@@ -1,8 +1,8 @@
 /*****************************************************************************
  * init_cond.:
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: init_cond.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: init_cond.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *          code from projectM http://xmms-projectm.sourceforge.net

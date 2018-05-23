@@ -1,8 +1,8 @@
 /*****************************************************************************
  * bezier.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: bezier.cpp 11786 2005-07-18 23:57:41Z asmax $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: bezier.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -26,18 +26,8 @@
 #include "bezier.hpp"
 #include <math.h>
 
-// XXX should be in VLC core
 #ifndef HAVE_LRINTF
-#   ifdef HAVE_LRINT
-#       define lrintf( x ) (int)rint( x )
-#   elif defined WIN32
-	    __inline long int lrintf( float x )
-	    {
-            int i;
-            _asm fld x __asm fistp i
-		    return i;
-    	}
-#   endif
+#   define lrintf(a) (int)rint(a)
 #endif
 
 Bezier::Bezier( intf_thread_t *p_intf, const vector<float> &rAbscissas,
@@ -110,8 +100,8 @@ float Bezier::getNearestPercent( int x, int y ) const
 float Bezier::getMinDist( int x, int y ) const
 {
     int nearest = findNearestPoint( x, y );
-    return sqrt( (double)((m_leftVect[nearest] - x) * (m_leftVect[nearest] - x) +
-                 (m_topVect[nearest] - y) * (m_topVect[nearest] - y)) );
+    return sqrt( (m_leftVect[nearest] - x) * (m_leftVect[nearest] - x) +
+                 (m_topVect[nearest] - y) * (m_topVect[nearest] - y) );
 }
 
 

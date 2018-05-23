@@ -1,8 +1,8 @@
 /*****************************************************************************
  * x264.c: h264 video encoder
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: x264.c 11724 2005-07-13 17:51:13Z courmisch $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: x264.c 11330 2005-06-07 12:33:58Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -386,7 +386,7 @@ static int  Open ( vlc_object_t *p_this )
         i_num = p_enc->fmt_in.video.i_aspect *
             (int64_t)p_enc->fmt_in.video.i_height;
         i_den = VOUT_ASPECT_FACTOR * p_enc->fmt_in.video.i_width;
-        vlc_ureduce( &i_dst_num, &i_dst_den, i_num, i_den, 0 );
+        vlc_reduce( &i_dst_num, &i_dst_den, i_num, i_den, 0 );
 
         p_sys->param.vui.i_sar_width = i_dst_num;
         p_sys->param.vui.i_sar_height = i_dst_den;

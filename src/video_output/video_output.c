@@ -5,8 +5,8 @@
  * It includes functions allowing to open a new thread, send pictures to a
  * thread, and destroy a previously oppened video output thread.
  *****************************************************************************
- * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: video_output.c 12136 2005-08-11 21:21:08Z dionoea $
+ * Copyright (C) 2000-2004 VideoLAN
+ * $Id: video_output.c 11112 2005-05-22 16:18:46Z zorglub $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -59,7 +59,7 @@ static void     DestroyThread     ( vout_thread_t * );
 static void     AspectRatio       ( int, int *, int * );
 static int      BinaryLog         ( uint32_t );
 static void     MaskToShift       ( int *, int *, uint32_t );
-static void     InitWindowSize    ( vout_thread_t *, unsigned *, unsigned * );
+static void     InitWindowSize    ( vout_thread_t *, int *, int * );
 
 /* Object variables callbacks */
 static int DeinterlaceCallback( vlc_object_t *, char const *,
@@ -128,7 +128,7 @@ vout_thread_t *__vout_Request( vlc_object_t *p_this, vout_thread_t *p_vout,
                 p_vout = vlc_object_find( p_playlist,
                                           VLC_OBJECT_VOUT, FIND_CHILD );
                 /* only first children of p_input for unused vout */
-                if( p_vout && p_vout->p_parent != (vlc_object_t *)p_playlist )
+                if( p_vout && p_vout->p_parent != p_playlist )
                 {
                     vlc_object_release( p_vout );
                     p_vout = NULL;
@@ -216,7 +216,7 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
     input_thread_t * p_input_thread;
     int              i_index;                               /* loop variable */
     char           * psz_plugin;
-    vlc_value_t      val, val2, text;
+    vlc_value_t      val, text;
 
     unsigned int i_width = p_fmt->i_width;
     unsigned int i_height = p_fmt->i_height;
@@ -316,49 +316,25 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
      * the video output pipe */
     if( p_parent->i_object_type != VLC_OBJECT_VOUT )
     {
-        int i_monitor_aspect_x = 4 , i_monitor_aspect_y = 3;
         var_Get( p_vout, "aspect-ratio", &val );
-        var_Get( p_vout, "monitor-aspect-ratio", &val2 );
-
-        if( val2.psz_string )
-        {
-            char *psz_parser = strchr( val2.psz_string, ':' );
-            if( psz_parser )
-            {
-                *psz_parser++ = '\0';
-                i_monitor_aspect_x = atoi( val2.psz_string );
-                i_monitor_aspect_y = atoi( psz_parser );
-            } else {
-                AspectRatio( VOUT_ASPECT_FACTOR * atof( val2.psz_string ),
-                                 &i_monitor_aspect_x, &i_monitor_aspect_y );
-            }
-
-            free( val2.psz_string );
-        }
 
         /* Check whether the user tried to override aspect ratio */
         if( val.psz_string )
         {
             unsigned int i_new_aspect = i_aspect;
             char *psz_parser = strchr( val.psz_string, ':' );
-                int i_aspect_x, i_aspect_y;
-                AspectRatio( i_aspect, &i_aspect_x, &i_aspect_y );
 
             if( psz_parser )
             {
                 *psz_parser++ = '\0';
-                i_new_aspect = atoi( val.psz_string )
-                               * VOUT_ASPECT_FACTOR / atoi( psz_parser );
+                i_new_aspect = atoi( val.psz_string ) * VOUT_ASPECT_FACTOR
+                                                      / atoi( psz_parser );
             }
             else
             {
-                if( atof( val.psz_string ) != 0 )
-                {
-                i_new_aspect = VOUT_ASPECT_FACTOR * atof( val.psz_string );
-                }
+                i_new_aspect = VOUT_ASPECT_FACTOR
+                                       * atof( val.psz_string );
             }
-            i_new_aspect = (int)((float)i_new_aspect
-                * (float)i_monitor_aspect_y*4.0/((float)i_monitor_aspect_x*3.0));
 
             free( val.psz_string );
 
@@ -381,6 +357,16 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
         var_Create( p_vout, "vout-filter", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
         var_Get( p_vout, "vout-filter", &val );
         p_vout->psz_filter_chain = val.psz_string;
+
+        if( p_vout->psz_filter_chain && *p_vout->psz_filter_chain &&
+            strchr( p_vout->psz_filter_chain, ',' ) &&
+            !strchr( p_vout->psz_filter_chain, ':') )
+        {
+            msg_Info( p_vout, "Warning: you are using a deprecated syntax for "
+                             "vout-filter." );
+            msg_Info( p_vout, "You must now use ':' as separator instead of "
+                             "','." );
+        }
     }
     else
     {
@@ -388,6 +374,8 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
         char *psz_end;
 
         psz_end = strchr( ((vout_thread_t *)p_parent)->psz_filter_chain, ':' );
+        if( !psz_end ) psz_end = strchr(
+                        ((vout_thread_t *)p_parent)->psz_filter_chain, ',' );
         if( psz_end && *(psz_end+1) )
             p_vout->psz_filter_chain = strdup( psz_end+1 );
         else p_vout->psz_filter_chain = NULL;
@@ -407,6 +395,7 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
         char *psz_end;
 
         psz_end = strchr( p_vout->psz_filter_chain, ':' );
+        if( !psz_end ) psz_end = strchr( p_vout->psz_filter_chain, ',' );
         if( psz_end )
             psz_plugin = strndup( p_vout->psz_filter_chain,
                                   psz_end - p_vout->psz_filter_chain );
@@ -447,9 +436,6 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
     var_Change( p_vout, "deinterlace", VLC_VAR_ADDCHOICE, &val, &text );
     val.psz_string = "linear"; text.psz_string = _("Linear");
     var_Change( p_vout, "deinterlace", VLC_VAR_ADDCHOICE, &val, &text );
-    val.psz_string = "x"; text.psz_string = "X";
-    var_Change( p_vout, "deinterlace", VLC_VAR_ADDCHOICE, &val, &text );
-
     if( var_Get( p_vout, "deinterlace-mode", &val ) == VLC_SUCCESS )
     {
         var_Set( p_vout, "deinterlace", val );
@@ -635,8 +621,8 @@ static int InitThread( vout_thread_t *p_vout )
             p_vout->fmt_out.i_width;
     }
 
-    vlc_ureduce( &p_vout->fmt_out.i_sar_num, &p_vout->fmt_out.i_sar_den,
-                 p_vout->fmt_out.i_sar_num, p_vout->fmt_out.i_sar_den, 0 );
+    vlc_reduce( &p_vout->fmt_out.i_sar_num, &p_vout->fmt_out.i_sar_den,
+                p_vout->fmt_out.i_sar_num, p_vout->fmt_out.i_sar_den, 0 );
 
     AspectRatio( p_vout->fmt_out.i_aspect, &i_aspect_x, &i_aspect_y );
 
@@ -754,7 +740,7 @@ static void RunThread( vout_thread_t *p_vout)
     picture_t *     p_last_picture = NULL;                   /* last picture */
     picture_t *     p_directbuffer;              /* direct buffer to display */
 
-    subpicture_t *  p_subpic = NULL;                   /* subpicture pointer */
+    subpicture_t *  p_subpic;                          /* subpicture pointer */
 
     /*
      * Initialize thread
@@ -938,10 +924,7 @@ static void RunThread( vout_thread_t *p_vout)
         /*
          * Check for subpictures to display
          */
-        if( display_date > 0 )
-        {
-            p_subpic = spu_SortSubpictures( p_vout->p_spu, display_date );
-        }
+        p_subpic = spu_SortSubpictures( p_vout->p_spu, display_date );
 
         /*
          * Perform rendering
@@ -1283,8 +1266,8 @@ static void MaskToShift( int *pi_left, int *pi_right, uint32_t i_mask )
  * This function will check the "width", "height" and "zoom" config options and
  * will calculate the size that the video window should have.
  *****************************************************************************/
-static void InitWindowSize( vout_thread_t *p_vout, unsigned *pi_width,
-                            unsigned *pi_height )
+static void InitWindowSize( vout_thread_t *p_vout, int *pi_width,
+                            int *pi_height )
 {
     vlc_value_t val;
     int i_width, i_height;

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * dts.c: parse DTS audio sync info and packetize the stream
  *****************************************************************************
- * Copyright (C) 2003-2005 the VideoLAN team
- * $Id: dts.c 12089 2005-08-09 15:18:44Z jpsaman $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: dts.c 11387 2005-06-10 15:32:08Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -54,12 +54,8 @@ struct decoder_sys_t
 
     mtime_t i_pts;
 
-    unsigned int i_bit_rate;
-    unsigned int i_frame_size;
-    unsigned int i_frame_length;
-    unsigned int i_rate;
-    unsigned int i_channels;
-    unsigned int i_channels_conf;
+    int i_frame_size, i_bit_rate;
+    unsigned int i_frame_length, i_rate, i_channels, i_channels_conf;
 };
 
 enum {

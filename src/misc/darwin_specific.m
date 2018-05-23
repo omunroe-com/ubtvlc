@@ -1,8 +1,8 @@
 /*****************************************************************************
  * darwin_specific.m: Darwin specific features
  *****************************************************************************
- * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: darwin_specific.m 12485 2005-09-07 17:44:36Z fkuehne $
+ * Copyright (C) 2001-2004 VideoLAN
+ * $Id: darwin_specific.m 11506 2005-06-23 18:03:26Z fkuehne $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -27,7 +27,6 @@
 #include <vlc/vlc.h>
 
 #include <Cocoa/Cocoa.h>
-#include <CoreFoundation/CFString.h>
 
 #ifdef HAVE_LOCALE_H
 #   include <locale.h>
@@ -50,12 +49,9 @@ static int FindLanguage( const char * psz_lang )
         "French", "fr",
         "Italian", "it",
         "Japanese", "ja",
-        "Korean", "ko",
         "Dutch", "nl",
         "Brazillian Portuguese", "pt_BR",
-        "Romanian", "ro",
         "Russian", "ru",
-        "Turkish", "tr",
         "Chinese Traditional", "zh_TW",
         NULL
     };
@@ -116,9 +112,6 @@ void system_Init( vlc_t *p_this, int *pi_argc, char *ppsz_argv[] )
 
         [o_pool release];
     }
-
-    vlc_mutex_init( p_this, &p_this->p_libvlc->iconv_lock );
-    p_this->p_libvlc->iconv_macosx = vlc_iconv_open( "UTF-8", "UTF-8-MAC" );
 }
 
 /*****************************************************************************
@@ -135,9 +128,5 @@ void system_Configure( vlc_t *p_this, int *pi_argc, char *ppsz_argv[] )
 void system_End( vlc_t *p_this )
 {
     free( p_this->p_libvlc->psz_vlcpath );
-
-    if ( p_this->p_libvlc->iconv_macosx != (vlc_iconv_t)-1 )
-        vlc_iconv_close( p_this->p_libvlc->iconv_macosx );
-    vlc_mutex_destroy( &p_this->p_libvlc->iconv_lock );
 }
 

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * fake.c : Fake video input for VLC
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
- * $Id: fake.c 11948 2005-08-01 17:58:22Z massiot $
+ * Copyright (C) 2005 VideoLAN
+ * $Id: fake.c 11376 2005-06-10 11:01:40Z fkuehne $
  *
  * Author: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -43,15 +43,7 @@ static void Close( vlc_object_t * );
     "value should be set in millisecond units." )
 #define FPS_TEXT N_("Framerate")
 #define FPS_LONGTEXT N_( \
-    "Specifies the number of frames per second (eg. 24, 25, 29.97, 30).")
-#define ID_TEXT N_("ID")
-#define ID_LONGTEXT N_( \
-    "Allows you to set the ID of the fake elementary stream for use in " \
-    "#duplicate{} constructs (default 0).")
-#define DURATION_TEXT N_("Duration in ms")
-#define DURATION_LONGTEXT N_( \
-    "Specifies the duration of the fake streaming before faking an " \
-    "end-of-file (default 0 means the stream is unlimited).")
+    "Specify the number of frames per second (eg. 24, 25, 29.97, 30).")
 
 vlc_module_begin();
     set_shortname( _("Fake") );
@@ -62,9 +54,6 @@ vlc_module_begin();
     add_integer( "fake-caching", DEFAULT_PTS_DELAY / 1000, NULL,
                  CACHING_TEXT, CACHING_LONGTEXT, VLC_TRUE );
     add_float( "fake-fps", 25.0, NULL, FPS_TEXT, FPS_LONGTEXT, VLC_TRUE );
-    add_integer( "fake-id", 0, NULL, ID_TEXT, ID_LONGTEXT, VLC_TRUE );
-    add_integer( "fake-duration", 0, NULL, DURATION_TEXT, DURATION_LONGTEXT,
-                 VLC_TRUE );
 
     add_shortcut( "fake" );
     set_capability( "access_demux", 0 );
@@ -80,7 +69,7 @@ static int Control( demux_t *, int, va_list );
 struct demux_sys_t
 {
     float f_fps;
-    mtime_t i_last_pts, i_duration, i_first_pts, i_end_pts, i_pause_pts;
+    mtime_t i_last_pts;    /* only used when f_fps > 0 */
 
     es_out_id_t  *p_es_video;
 };
@@ -108,19 +97,13 @@ static int Open( vlc_object_t *p_this )
     p_demux->p_sys = p_sys = malloc( sizeof( demux_sys_t ) );
     memset( p_sys, 0, sizeof( demux_sys_t ) );
 
-    var_Create( p_demux, "fake-duration", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
-    var_Get( p_demux, "fake-duration", &val );
-    p_sys->i_duration = val.i_int * 1000;
-
     var_Create( p_demux, "fake-fps", VLC_VAR_FLOAT | VLC_VAR_DOINHERIT );
     var_Get( p_demux, "fake-fps", &val );
     p_sys->f_fps = val.f_float;
+    p_sys->i_last_pts = 0;
 
-    /* Declare the elementary stream */
-    es_format_Init( &fmt, VIDEO_ES, VLC_FOURCC('f','a','k','e') );
-    var_Create( p_demux, "fake-id", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
-    var_Get( p_demux, "fake-id", &val );
-    fmt.i_id = val.i_int;
+    /* Declare elementary stream */
+    es_format_Init( &fmt, VIDEO_ES, VLC_FOURCC('f', 'a', 'k', 'e') );
     p_sys->p_es_video = es_out_Add( p_demux->out, &fmt );
 
     /* Update default_pts to a suitable value for access */
@@ -146,78 +129,27 @@ static void Close( vlc_object_t *p_this )
 static int Control( demux_t *p_demux, int i_query, va_list args )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
-    vlc_bool_t *pb, b;
-    int64_t    *pi64, i64;
-    double     *pf, f;
+    vlc_bool_t *pb;
+    int64_t    *pi64;
 
     switch( i_query )
     {
         /* Special for access_demux */
         case DEMUX_CAN_PAUSE:
-        case DEMUX_CAN_CONTROL_PACE:
-            pb = (vlc_bool_t *)va_arg( args, vlc_bool_t * );
-            *pb = VLC_TRUE;
-            return VLC_SUCCESS;
-
         case DEMUX_SET_PAUSE_STATE:
-            b = (vlc_bool_t)va_arg( args, vlc_bool_t );
-            if ( b )
-            {
-                p_sys->i_pause_pts = mdate();
-            }
-            else if ( p_sys->i_pause_pts )
-            {
-                mtime_t i_pause_duration = mdate() - p_sys->i_pause_pts;
-                p_sys->i_first_pts += i_pause_duration;
-                p_sys->i_last_pts += i_pause_duration;
-                if ( p_sys->i_duration )
-                    p_sys->i_end_pts += i_pause_duration;
-                p_sys->i_pause_pts = 0;
-            }
+        case DEMUX_CAN_CONTROL_PACE:
+            pb = (vlc_bool_t*)va_arg( args, vlc_bool_t * );
+            *pb = VLC_FALSE;
             return VLC_SUCCESS;
 
         case DEMUX_GET_PTS_DELAY:
-            pi64 = (int64_t *)va_arg( args, int64_t * );
+            pi64 = (int64_t*)va_arg( args, int64_t * );
             *pi64 = (int64_t)var_GetInteger( p_demux, "fake-caching" ) * 1000;
             return VLC_SUCCESS;
 
-        case DEMUX_GET_POSITION:
-            pf = (double*)va_arg( args, double* );
-            if( p_sys->i_duration > 0 )
-            {
-                *pf = (double)( p_sys->i_last_pts - p_sys->i_first_pts )
-                                / (double)(p_sys->i_duration);
-            }
-            else
-            {
-                *pf = 0;
-            }
-            return VLC_SUCCESS;
-
-        case DEMUX_SET_POSITION:
-            f = (double)va_arg( args, double );
-            i64 = f * (double)p_sys->i_duration;
-            p_sys->i_first_pts = p_sys->i_last_pts - i64;
-            p_sys->i_end_pts = p_sys->i_first_pts + p_sys->i_duration;
-            return VLC_SUCCESS;
-
         case DEMUX_GET_TIME:
-            pi64 = (int64_t *)va_arg( args, int64_t * );
-            if ( p_sys->i_duration )
-                *pi64 = p_sys->i_last_pts - p_sys->i_first_pts;
-            else
-                *pi64 = p_sys->i_last_pts;
-            return VLC_SUCCESS;
-
-        case DEMUX_GET_LENGTH:
             pi64 = (int64_t*)va_arg( args, int64_t * );
-            *pi64 = p_sys->i_duration;
-            return VLC_SUCCESS;
-
-        case DEMUX_SET_TIME:
-            i64 = (int64_t)va_arg( args, int64_t );
-            p_sys->i_first_pts = p_sys->i_last_pts - i64;
-            p_sys->i_end_pts = p_sys->i_first_pts + p_sys->i_duration;
+            *pi64 = p_sys->i_last_pts;
             return VLC_SUCCESS;
 
         /* TODO implement others */
@@ -238,15 +170,11 @@ static int Demux( demux_t *p_demux )
 
     if ( !p_sys->i_last_pts )
     {
-        p_sys->i_last_pts = p_sys->i_first_pts = mdate();
-        if ( p_sys->i_duration )
-            p_sys->i_end_pts = p_sys->i_first_pts + p_sys->i_duration;
+        p_sys->i_last_pts = mdate();
     }
     else
     {
-        p_sys->i_last_pts += (mtime_t)(1000000.0 / p_sys->f_fps);
-        if ( p_sys->i_duration && p_sys->i_last_pts > p_sys->i_end_pts )
-            return 0;
+        p_sys->i_last_pts += I64C(1000000) / p_sys->f_fps;
         mwait( p_sys->i_last_pts );
     }
 

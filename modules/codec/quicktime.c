@@ -1,8 +1,8 @@
 /*****************************************************************************
  * quicktime.c: a quicktime decoder that uses the QT library/dll
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: quicktime.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: quicktime.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir at via.ecp.fr>
  *          Derk-Jan Hartman <thedj at users.sf.net>
@@ -31,10 +31,6 @@
 #include <vlc/vout.h>
 #include <vlc/decoder.h>
 
-#if !defined (SYS_DARWIN) && !defined(WIN32)
-# define LOADER 1
-#endif
-
 #ifdef SYS_DARWIN
 #include <QuickTime/QuickTimeComponents.h>
 #include <QuickTime/Movies.h>
@@ -43,9 +39,9 @@
 
 /* for windows do we require Quicktime compents header? */
 #ifdef LOADER
-#include "qtx/qtxsdk/components.h"
-#include "wine/windef.h"
-#include "ldt_keeper.h"
+#include "w32dll/loader/qtx/qtxsdk/components.h"
+#include "w32dll/loader/wine/windef.h"
+#include "w32dll/loader/ldt_keeper.h"
 
 HMODULE   WINAPI LoadLibraryA(LPCSTR);
 FARPROC   WINAPI GetProcAddress(HMODULE,LPCSTR);

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * builder.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: builder.hpp 12281 2005-08-20 00:31:27Z dionoea $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: builder.hpp 9581 2004-12-16 17:47:40Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -77,7 +77,6 @@ class Builder: public SkinObject
         void addRadialSlider( const BuilderData::RadialSlider &rData );
         void addSlider( const BuilderData::Slider &rData );
         void addList( const BuilderData::List &rData );
-        void addTree( const BuilderData::Tree &rData );
         void addVideo( const BuilderData::Video &rData );
 
        /// Compute the position of a control

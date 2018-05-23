@@ -1,8 +1,8 @@
 /*****************************************************************************
  * flac.c: flac decoder/packetizer/encoder module making use of libflac
  *****************************************************************************
- * Copyright (C) 1999-2001 the VideoLAN team
- * $Id: flac.c 11709 2005-07-11 16:20:33Z massiot $
+ * Copyright (C) 1999-2001 VideoLAN
+ * $Id: flac.c 10169 2005-03-06 18:46:43Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Sigmund Augdal <sigmunau@idi.ntnu.no>
@@ -126,8 +126,7 @@ static aout_buffer_t *DecodeBlock( decoder_t *, block_t ** );
 #endif
 static block_t *PacketizeBlock( decoder_t *, block_t ** );
 
-static int SyncInfo( decoder_t *, uint8_t *, unsigned int *, unsigned int *,
-                     unsigned int *,int * );
+static int SyncInfo( decoder_t *, uint8_t *, int *, int *, int *,int * );
 
 
 #ifdef USE_LIBFLAC
@@ -754,10 +753,8 @@ static void decoder_state_error( decoder_t *p_dec,
  * SyncInfo: parse FLAC sync info
  *****************************************************************************/
 static int SyncInfo( decoder_t *p_dec, uint8_t *p_buf,
-                     unsigned int * pi_channels,
-                     unsigned int * pi_channels_conf,
-                     unsigned int * pi_sample_rate,
-                     int * pi_bits_per_sample )
+                     int * pi_channels, int * pi_channels_conf,
+                     int * pi_sample_rate, int * pi_bits_per_sample )
 {
     decoder_sys_t *p_sys = p_dec->p_sys;
     int i_header, i_temp, i_read;

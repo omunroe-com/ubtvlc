@@ -1,7 +1,7 @@
 /*****************************************************************************
  * viewobject.cpp: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
+ * Copyright (C) 2005 VideoLAN
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -33,35 +33,15 @@ STDMETHODIMP VLCViewObject::Draw(DWORD dwAspect, LONG lindex, PVOID pvAspect,
 {
     if( dwAspect & DVASPECT_CONTENT )
     {
-        if( NULL == lprcBounds )
-            return E_INVALIDARG;
-
-        BOOL releaseDC = FALSE;
-        SIZEL size = _p_instance->getExtent();
-
-        if( NULL == ptd )
+        if( _p_instance->getVisible() )
         {
-            hicTargetDev = CreateDevDC(NULL);
-            releaseDC = TRUE;
+            RECT bounds;
+            bounds.left   = lprcBounds->left;
+            bounds.top    = lprcBounds->top;
+            bounds.right  = lprcBounds->right;
+            bounds.bottom = lprcBounds->bottom;
+            _p_instance->onPaint(hdcDraw, bounds, bounds);
         }
-        DPFromHimetric(hicTargetDev, (LPPOINT)&size, 1);
-
-        RECTL bounds = { 0L, 0L, size.cx, size.cy };
-
-        int sdc = SaveDC(hdcDraw);
-        SetMapMode(hdcDraw, MM_ANISOTROPIC);
-        SetWindowOrgEx(hdcDraw, 0, 0, NULL);
-        SetWindowExtEx(hdcDraw, size.cx, size.cy, NULL);
-        OffsetViewportOrgEx(hdcDraw, lprcBounds->left, lprcBounds->top, NULL);
-        SetViewportExtEx(hdcDraw, lprcBounds->right-lprcBounds->left,
-                lprcBounds->bottom-lprcBounds->top, NULL);
-
-        _p_instance->onDraw(ptd, hicTargetDev, hdcDraw, &bounds, lprcWBounds);
-        RestoreDC(hdcDraw, sdc);
-
-        if( releaseDC )
-            DeleteDC(hicTargetDev);
-
         return S_OK;
     }
     return E_NOTIMPL;
@@ -70,6 +50,9 @@ STDMETHODIMP VLCViewObject::Draw(DWORD dwAspect, LONG lindex, PVOID pvAspect,
 STDMETHODIMP VLCViewObject::Freeze(DWORD dwAspect, LONG lindex,
         PVOID pvAspect, LPDWORD pdwFreeze)
 {
+    if( NULL != pvAspect )
+        return E_INVALIDARG;
+
     return E_NOTIMPL;
 };
 
@@ -101,21 +84,21 @@ STDMETHODIMP VLCViewObject::GetColorSet(DWORD dwAspect, LONG lindex,
 STDMETHODIMP VLCViewObject::SetAdvise(DWORD dwAspect, DWORD advf,
         LPADVISESINK pAdvSink)
 {
-    if( NULL != pAdvSink )
-        pAdvSink->AddRef();
-
+    _dwAspect = dwAspect;
+    _advf = advf;
     if( NULL != _pAdvSink )
         _pAdvSink->Release();
 
-    _dwAspect = dwAspect;
-    _advf = advf;
     _pAdvSink = pAdvSink;
-
-    if( (dwAspect & DVASPECT_CONTENT) && (advf & ADVF_PRIMEFIRST) && (NULL != _pAdvSink) )
+    if( NULL != pAdvSink )
     {
-        _pAdvSink->OnViewChange(DVASPECT_CONTENT, -1);
-    }
+        pAdvSink->AddRef();
 
+        if( dwAspect & DVASPECT_CONTENT )
+        {
+            pAdvSink->OnViewChange(DVASPECT_CONTENT, -1);
+        }
+    }
     return S_OK;
 };
 

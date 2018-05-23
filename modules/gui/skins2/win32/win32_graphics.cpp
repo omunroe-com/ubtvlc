@@ -1,8 +1,8 @@
 /*****************************************************************************
  * win32_graphics.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: win32_graphics.cpp 12041 2005-08-06 15:08:37Z asmax $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: win32_graphics.cpp 11017 2005-05-14 23:50:13Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -25,15 +25,14 @@
 #ifdef WIN32_SKINS
 
 #define WINVER 0x500
+#ifndef AC_SRC_ALPHA
+#define AC_SRC_ALPHA 1
+#endif
 
 #include "win32_factory.hpp"
 #include "win32_graphics.hpp"
 #include "win32_window.hpp"
 #include "../src/generic_bitmap.hpp"
-
-#ifndef AC_SRC_ALPHA
-#define AC_SRC_ALPHA 1
-#endif
 
 Win32Graphics::Win32Graphics( intf_thread_t *pIntf, int width, int height ):
     OSGraphics( pIntf ), m_width( width ), m_height( height ), m_hDC( NULL )
@@ -332,7 +331,7 @@ void Win32Graphics::copyToWindow( OSWindow &rWindow, int xSrc, int ySrc,
 
 bool Win32Graphics::hit( int x, int y ) const
 {
-    return PtInRegion( m_mask, x, y ) != 0;
+    return PtInRegion( m_mask, x, y );
 }
 
 

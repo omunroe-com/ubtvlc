@@ -1,8 +1,8 @@
 /*****************************************************************************
  * old.c : Old playlist format import
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: old.c 11990 2005-08-03 19:09:58Z courmisch $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: old.c 11449 2005-06-17 16:45:58Z massiot $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -50,7 +50,7 @@ int E_(Import_Old)( vlc_object_t *p_this )
 
     if( stream_Peek( p_demux->s, &p_peek, 31 ) < 31 ) return VLC_EGENERIC;
 
-    if( strncmp( (char *)p_peek, PLAYLIST_FILE_HEADER , 31 ) ) return VLC_EGENERIC;
+    if( strncmp( p_peek, PLAYLIST_FILE_HEADER , 31 ) ) return VLC_EGENERIC;
 
     msg_Dbg( p_demux, "found valid old playlist file");
 
@@ -77,8 +77,6 @@ static int Demux( demux_t *p_demux)
     p_playlist->pp_items[p_playlist->i_index]->b_autodeletion = VLC_TRUE;
     while( ( psz_line = stream_ReadLine( p_demux->s) ) != NULL )
     {
-        char *psz_unicode;
-
         if( ( psz_line[0] == '#' ) || (psz_line[0] == '\r') ||
             ( psz_line[0] == '\n') || (psz_line[0] == (char)0) )
         {
@@ -92,13 +90,10 @@ static int Demux( demux_t *p_demux)
             if( psz_line[strlen(psz_line) - 1 ] == '\r' )
                 psz_line[strlen(psz_line) - 1 ] = (char)0;
         }
-
-        psz_unicode = FromLocale( psz_line );
-        playlist_Add( p_playlist, psz_unicode, psz_unicode, PLAYLIST_APPEND,
+        playlist_Add( p_playlist, psz_line, psz_line, PLAYLIST_APPEND,
                       PLAYLIST_END );
 
         free( psz_line );
-        LocaleFree( psz_line );
     }
 
     p_demux->b_die = VLC_TRUE;

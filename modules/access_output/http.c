@@ -1,11 +1,10 @@
 /*****************************************************************************
  * http.c
  *****************************************************************************
- * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: http.c 12496 2005-09-09 02:42:40Z jlj $
+ * Copyright (C) 2001-2003 VideoLAN
+ * $Id: http.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
- *          Jon Lech Johansen <jon@nanocrew.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,19 +29,8 @@
 #include <vlc/vlc.h>
 #include <vlc/sout.h>
 
-#ifdef HAVE_AVAHI_CLIENT
-    #include <vlc/intf.h>
-
-    #include "bonjour.h"
-
-    #if defined( WIN32 )
-        #define DIRECTORY_SEPARATOR '\\'
-    #else
-        #define DIRECTORY_SEPARATOR '/'
-    #endif
-#endif
-
 #include "vlc_httpd.h"
+#include "vlc_tls.h"
 
 #define FREE( p ) if( p ) { free( p); (p) = NULL; }
 
@@ -133,10 +121,6 @@ struct sout_access_out_sys_t
     int                 i_header_size;
     uint8_t             *p_header;
     vlc_bool_t          b_header_complete;
-
-#ifdef HAVE_AVAHI_CLIENT
-    void                *p_bonjour;
-#endif
 };
 
 /*****************************************************************************
@@ -146,6 +130,7 @@ static int Open( vlc_object_t *p_this )
 {
     sout_access_out_t       *p_access = (sout_access_out_t*)p_this;
     sout_access_out_sys_t   *p_sys;
+    tls_server_t            *p_tls;
 
     char                *psz_parser, *psz_name;
 
@@ -155,14 +140,7 @@ static int Open( vlc_object_t *p_this )
     char                *psz_user = NULL;
     char                *psz_pwd = NULL;
     char                *psz_mime = NULL;
-    const char          *psz_cert = NULL, *psz_key = NULL, *psz_ca = NULL,
-                        *psz_crl = NULL;
     vlc_value_t         val;
-
-#ifdef HAVE_AVAHI_CLIENT
-    playlist_t          *p_playlist;
-    char                *psz_txt;
-#endif
 
     if( !( p_sys = p_access->p_sys =
                 malloc( sizeof( sout_access_out_sys_t ) ) ) )
@@ -222,28 +200,62 @@ static int Open( vlc_object_t *p_this )
     /* SSL support */
     if( p_access->psz_access && !strcmp( p_access->psz_access, "https" ) )
     {
+        const char *psz_cert, *psz_key;
         psz_cert = config_GetPsz( p_this, SOUT_CFG_PREFIX"cert" );
         psz_key = config_GetPsz( p_this, SOUT_CFG_PREFIX"key" );
-        psz_ca = config_GetPsz( p_this, SOUT_CFG_PREFIX"ca" );
-        psz_crl = config_GetPsz( p_this, SOUT_CFG_PREFIX"crl" );
+
+        p_tls = tls_ServerCreate( p_this, psz_cert, psz_key );
+        if ( p_tls == NULL )
+        {
+            msg_Err( p_this, "TLS initialization error" );
+            free( psz_file_name );
+            free( psz_name );
+            free( p_sys );
+            return VLC_EGENERIC;
+        }
+
+        psz_cert = config_GetPsz( p_this, SOUT_CFG_PREFIX"ca" );
+        if ( ( psz_cert != NULL) && tls_ServerAddCA( p_tls, psz_cert ) )
+        {
+            msg_Err( p_this, "TLS CA error" );
+            tls_ServerDelete( p_tls );
+            free( psz_file_name );
+            free( psz_name );
+            free( p_sys );
+            return VLC_EGENERIC;
+        }
+
+        psz_cert = config_GetPsz( p_this, SOUT_CFG_PREFIX"crl" );
+        if ( ( psz_cert != NULL) && tls_ServerAddCRL( p_tls, psz_cert ) )
+        {
+            msg_Err( p_this, "TLS CRL error" );
+            tls_ServerDelete( p_tls );
+            free( psz_file_name );
+            free( psz_name );
+            free( p_sys );
+            return VLC_EGENERIC;
+        }
 
         if( i_bind_port <= 0 )
             i_bind_port = DEFAULT_SSL_PORT;
     }
     else
     {
+        p_tls = NULL;
         if( i_bind_port <= 0 )
             i_bind_port = DEFAULT_PORT;
     }
 
     p_sys->p_httpd_host = httpd_TLSHostNew( VLC_OBJECT(p_access),
                                             psz_bind_addr, i_bind_port,
-                                            psz_cert, psz_key, psz_ca,
-                                            psz_crl );
+                                            p_tls );
     if( p_sys->p_httpd_host == NULL )
     {
         msg_Err( p_access, "cannot listen on %s:%d",
                  psz_bind_addr, i_bind_port );
+
+        if( p_tls != NULL )
+            tls_ServerDelete( p_tls );
         free( psz_name );
         free( psz_file_name );
         free( p_sys );
@@ -277,7 +289,7 @@ static int Open( vlc_object_t *p_this )
 
     p_sys->p_httpd_stream =
         httpd_StreamNew( p_sys->p_httpd_host, psz_file_name, psz_mime,
-                         psz_user, psz_pwd, NULL );
+                         psz_user, psz_pwd );
     if( psz_user ) free( psz_user );
     if( psz_pwd ) free( psz_pwd );
     if( psz_mime ) free( psz_mime );
@@ -293,44 +305,8 @@ static int Open( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
 
-#ifdef HAVE_AVAHI_CLIENT
-    asprintf( &psz_txt, "path=%s", psz_file_name );
-#endif
-
     free( psz_file_name );
     free( psz_name );
-
-#ifdef HAVE_AVAHI_CLIENT
-    p_playlist = (playlist_t *)vlc_object_find( p_access, VLC_OBJECT_PLAYLIST,
-                                                FIND_ANYWHERE );
-    if( p_playlist == NULL )
-    {
-        msg_Err( p_access, "unable to find playlist" );
-        httpd_HostDelete( p_sys->p_httpd_host );
-        free( (void *)psz_txt );
-        free( (void *)p_sys );
-        return VLC_EGENERIC;
-    }
-
-    psz_name = strrchr( p_playlist->status.p_item->input.psz_uri,
-                        DIRECTORY_SEPARATOR );
-    if( psz_name != NULL ) psz_name++;
-    else psz_name = p_playlist->status.p_item->input.psz_uri;
-
-    p_sys->p_bonjour = bonjour_start_service( (vlc_object_t *)p_access,
-                                              "_vlc-http._tcp",
-                                              psz_name, i_bind_port, psz_txt );
-    free( (void *)psz_txt );
-    if( p_sys->p_bonjour == NULL )
-    {
-        vlc_object_release( p_playlist );
-        httpd_HostDelete( p_sys->p_httpd_host );
-        free( (void *)p_sys );
-        return VLC_EGENERIC;
-    }
-
-    vlc_object_release( p_playlist );
-#endif
 
     p_sys->i_header_allocated = 1024;
     p_sys->i_header_size      = 0;
@@ -354,10 +330,6 @@ static void Close( vlc_object_t * p_this )
 {
     sout_access_out_t       *p_access = (sout_access_out_t*)p_this;
     sout_access_out_sys_t   *p_sys = p_access->p_sys;
-
-#ifdef HAVE_AVAHI_CLIENT
-    bonjour_stop_service( p_sys->p_bonjour );
-#endif
 
     /* update p_sout->i_out_pace_nocontrol */
     p_access->p_sout->i_out_pace_nocontrol--;

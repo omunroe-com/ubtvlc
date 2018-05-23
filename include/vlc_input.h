@@ -1,7 +1,7 @@
 /*****************************************************************************
  * vlc_input.h:
  *****************************************************************************
- * Copyright (C) 1999-2004 the VideoLAN team
+ * Copyright (C) 1999-2004 VideoLAN
  * $Id: input_ext-intf.h 7954 2004-06-07 22:19:12Z fenrir $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
@@ -280,13 +280,10 @@ enum input_state_e
     INIT_S,
     PLAYING_S,
     PAUSE_S,
-    END_S
+    END_S,
 };
 
-/* "rate" default, min/max
- * A rate below 1000 plays the movie faster,
- * A rate above 1000 plays the movie slower.
- */
+/* "rate" default, min/max */
 #define INPUT_RATE_DEFAULT  1000
 #define INPUT_RATE_MIN       125            /* Up to 8/1 */
 #define INPUT_RATE_MAX      8000            /* Up to 1/8 */
@@ -463,7 +460,7 @@ enum input_query_e
     INPUT_SET_BOOKMARK,    /* arg1= int  res=can fail    */
 
     /* On the fly input slave */
-    INPUT_ADD_SLAVE        /* arg1= char * */
+    INPUT_ADD_SLAVE,       /* arg1= char * */
 };
 
 VLC_EXPORT( int, input_vaControl,( input_thread_t *, int i_query, va_list  ) );

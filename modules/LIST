@@ -1,5 +1,5 @@
-List of vlc plugins (271)
-$Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
+List of vlc plugins (264)
+$Id: LIST 9852 2005-01-29 15:22:53Z zorglub $
 
  * a52: A/52 basic parser/packetizer
 
@@ -11,15 +11,11 @@ $Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
 
  * aa: Ascii art video output
 
+ * aac: AAC stream demuxer
+ 
  * access_directory: Access module to read files in a directory
-  
- * access_fake: Fake access to use for mosaic and other special streaming setups
 
  * access_file: File access module
- 
- * access_filter_record: Raw input Recording module
-
- * access_filter_timeshift: Timeshifting module
 
  * access_ftp: FTP Network access module
 
@@ -57,13 +53,13 @@ $Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
  
  * araw: Pseudo audio decoder for raw PCM
 
+ * arts: audio output module using the aRts sound daemon.
+
  * asf: ASF demuxer
  
  * au: AU file demuxer
- 
+
  * audio_format: helper module for audio transcoding
- 
- * auhal: Audio output for MacOS X based on the AUHAL API.
 
  * avi: AVI File stream demuxer
 
@@ -143,8 +139,6 @@ $Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
 
  * faad: AAC decoder using libfaad2
 
- * fake: fake codec to be used in advanced streaming setups
-
  * fb: video output module for the Linux framebuffer.
 
  * ffmpeg: Video decoder using the ffmpeg library
@@ -187,15 +181,23 @@ $Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
 
  * glx: a opengl provider using X11 OpenGL
 
+ * gnome2: interface using the GNOME2 widget set
+ 
  * gnome2_main: Gtk+ wrapper for gtk_main
 
+ * gnome: interface using the GNOME widget set.
+ 
  * gnome_main: Gtk+ wrapper for gtk_main
 
  * gnutls: GNU TLS encryption/decryption module
 
  * goom: visualisation plugin based on goom
 
+ * gtk2: interface using the Gtk2 widget set.
+
  * gtk2_main: Gtk+ wrapper for gtk_main
+
+ * gtk: interface using the Gtk+ widget set.
 
  * gtk_main: Gtk+ wrapper for gtk_main
 
@@ -244,6 +246,10 @@ $Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
 
  * ipv6: IPv6 network abstraction layer
  
+ * joystick: Linux joystick control module
+
+ * kde: interface module using the KDE widget set.
+
  * libmpeg2: Mpeg2 video decoder using libmpeg2
 
  * linear_resampler: linear audio resampler
@@ -288,8 +294,6 @@ $Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
 
  * mod: MOD demuxer
 
- * mosaic: Module used to display a mosaic
-
  * motionblur: Motion blur filter
 
  * motiondetect: Motion detection filter
@@ -332,15 +336,11 @@ $Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
 
  * ntservice: run VLC as a NT service
 
- * nuv: NUV demuxer
-
  * ogg: input module for OGG decapsulation.
  
  * opengl: a opengl video output that uses opengl provider modules
  
  * opie: interface for Opie using QT/Embedded library.
-
- * osdmenu: video_filter for displaying and streaming a On Screen Display menu
 
  * oss: audio output module using the OSS /dev/dsp interface.
  
@@ -370,6 +370,8 @@ $Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
 
  * qnx: QNX RTOS plugin
 
+ * qt: interface module using the Qt widget set.
+
  * qte: video output module for Qt Embedded.
 
  * qte_main: a QT Embedded GUI wrapper module.
@@ -384,9 +386,7 @@ $Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
 
  * real: partial Real audio/video demuxer
 
- * rss: Display a RSS feed on the video output
- 
- * rv32: RV32 image format conversion module
+ * rtci: extended RC interface module
 
  * s16tofixed32: Signed 16 bits to fixed 32 bits audio converter
 
@@ -398,23 +398,23 @@ $Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
 
  * sap: Interface module to read SAP/SDP announcments
 
+ * satellite: Satellite cards access module
+
  * scale: Images rescaler
 
  * screen: a input module that takes screenshots of the primary monitor
 
  * screensaver: screensaver disabling module
- 
- * sdl_image: SDL-based image decoder
 
  * sgimb: SGIMB referrer files parser
  
- * shout: Shoutcast services discovery
-
  * showintf: shows the main interface
 
  * simple_channel_mixer: channel mixer
 
  * skins2: Skinnable interface, new generation
+
+ * slp: input module to access SLP registered sessions
 
  * snapshot: a output module to save pictures from the vout.
 
@@ -423,9 +423,6 @@ $Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
  * speex: a speex audio decoder/packetizer using the libspeex library.
 
  * spudec: RLE DVD subtitles decoder.
- 
- * stream_out_bridge: stream output module to "exchange" streams between
-  instances. To be used with VLM
 
  * stream_out_description: helper module for RTSP vod
 
@@ -438,15 +435,10 @@ $Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
  * stream_out_es: stream out module outputing ES
 
  * stream_out_gather: stream out module gathering inputs for seemless transitions
- 
- * stream_out_mosaic_bridge: stream output module to make a mosaic. 
-   To be used with VLM
 
  * stream_out_rtp: output using the RTP protocol
-  
- * stream_out_standard: standard stream output module
  
- * stream_out_switcher: stream output module to display backgrounds
+ * stream_out_standard: standard stream output module
 
  * stream_out_transcode: audio & video transcoder using ffmpeg
 
@@ -480,6 +472,8 @@ $Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
 
  * time: Overlays the current time
 
+ * toolame: a mp1 mp2 audio encoder based on toolame
+
  * transform: filter for horizontal and vertical image flips and
                      90° rotations.
 
@@ -491,19 +485,13 @@ $Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
 
  * trivial_resampler: Simple audio resampler
  
- * ts: MPEG-TS demuxer
- 
- * twolame: a mp1 mp2 audio encoder based on twolame
- 
- * ty: TY demuxer
+ * ts: input module for MPEG TS decapsulation.
 
  * u8tofixed32: unsigned 8 bits to fixed 32 bits audio converter 
 
  * u8tofloat32: unsigned 8 bits to float 32 bits audio converter 
 
  * ugly_resampler: Ugly audio resampler
- 
- * upnp: Universal Plug'n play discovery module
 
  * v4l: Video 4 Linux input module
 
@@ -514,8 +502,6 @@ $Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
  * visual: visualisation system
 
  * vobsub: VobSUB subtitles demuxer
-  
- * voc: VOC demuxer
 
  * vod_rtsp: RTSP VoD module
 
@@ -531,21 +517,15 @@ $Id: LIST 12178 2005-08-13 18:44:31Z zorglub $
 
  * waveout: simple audio output module for Windows.
 
- * win32text: Text renderer using native Win32 API
-
  * wince: Pocket PC interface
- 
- * wingapi: Win CE video output
 
  * wingdi: WIN 32 / WIN CE GDI video output
 
- * wxwidgets: interface module using the cross-platform wxWindows library.
+ * wxwindows: interface module using the cross-platform wxWindows library.
 
  * x11: video output module using the X11 API.
 
  * x264: H264 video decoder using X264
- 
- * xa: XA demuxer
 
  * xml: LibXML xml parser
 

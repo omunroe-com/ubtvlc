@@ -1,8 +1,8 @@
 /*****************************************************************************
  * dmo.c : DirectMedia Object decoder module for vlc
  *****************************************************************************
- * Copyright (C) 2002, 2003 the VideoLAN team
- * $Id: dmo.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2002, 2003 VideoLAN
+ * $Id: dmo.c 10992 2005-05-13 13:11:36Z gbazin $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -391,8 +391,7 @@ static int DecOpen( vlc_object_t *p_this )
     {
         BITMAPINFOHEADER *p_bih;
         DMO_MEDIA_TYPE mt;
-        unsigned i_chroma = VLC_FOURCC('Y','U','Y','2');
-        int i_planes = 1, i_bpp = 16;
+        int i_chroma = VLC_FOURCC('Y','U','Y','2'), i_planes = 1, i_bpp = 16;
         int i = 0;
 
         /* Find out which chroma to use */
@@ -550,7 +549,7 @@ static int LoadDMO( vlc_object_t *p_this, HINSTANCE *p_hmsdmo_dll,
     GETCLASS GetClass;
     IClassFactory *cFactory = NULL;
     IUnknown *cObject = NULL;
-    const codec_dll *codecs_table = b_out ? encoders_table : decoders_table;
+    codec_dll *codecs_table = b_out ? encoders_table : decoders_table;
     int i_codec;
 
     /* Look for a DMO which can handle the requested codec */
@@ -635,10 +634,9 @@ static int LoadDMO( vlc_object_t *p_this, HINSTANCE *p_hmsdmo_dll,
     }
 
     return VLC_SUCCESS;
-
-loader:
 #endif   /* LOADER */
 
+ loader:
     for( i_codec = 0; codecs_table[i_codec].i_fourcc != 0; i_codec++ )
     {
         if( codecs_table[i_codec].i_fourcc == p_fmt->i_codec )
@@ -790,7 +788,7 @@ static void *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
 #endif
             return NULL;
         }
-        else if( i_result == (int)DMO_E_NOTACCEPTING )
+        else if( i_result == DMO_E_NOTACCEPTING )
         {
             /* Need to call ProcessOutput */
             msg_Dbg( p_dec, "ProcessInput(): not accepting" );
@@ -1115,7 +1113,7 @@ static int EncoderSetVideoType( encoder_t *p_enc, IMediaObject *p_dmo )
         memcpy( p_vih, dmo_type.pbFormat, dmo_type.cbFormat );
         memcpy( ((uint8_t *)p_vih) + dmo_type.cbFormat, p_data, i_data );
         DMOFreeMediaType( &dmo_type );
-        dmo_type.pbFormat = (char*)p_vih;
+        dmo_type.pbFormat = p_vih;
         dmo_type.cbFormat = i_vih;
 
         msg_Dbg( p_enc, "found extra data: %i", i_data );
@@ -1454,7 +1452,7 @@ static block_t *EncodeBlock( encoder_t *p_enc, void *p_data )
 #endif
         return NULL;
     }
-    else if( i_result == (int)DMO_E_NOTACCEPTING )
+    else if( i_result == DMO_E_NOTACCEPTING )
     {
         /* Need to call ProcessOutput */
         msg_Dbg( p_enc, "ProcessInput(): not accepting" );

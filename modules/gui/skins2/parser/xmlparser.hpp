@@ -1,8 +1,8 @@
 /*****************************************************************************
  * xmlparser.hpp
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: xmlparser.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: xmlparser.hpp 10512 2005-04-01 22:39:10Z sigmunau $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *

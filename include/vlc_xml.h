@@ -1,8 +1,8 @@
 /*****************************************************************************
  * xml.h
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: vlc_xml.h 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: vlc_xml.h 10524 2005-04-02 21:36:06Z gbazin $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *

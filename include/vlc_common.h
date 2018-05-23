@@ -2,8 +2,8 @@
  * common.h: common definitions
  * Collection of useful common types and macros definitions
  *****************************************************************************
- * Copyright (C) 1998-2005 the VideoLAN team
- * $Id: vlc_common.h 12408 2005-08-26 18:15:21Z massiot $
+ * Copyright (C) 1998-2004 VideoLAN
+ * $Id: vlc_common.h 10851 2005-04-28 13:58:54Z damienf $
  *
  * Authors: Samuel Hocevar <sam@via.ecp.fr>
  *          Vincent Seguin <seguin@via.ecp.fr>
@@ -360,9 +360,6 @@ typedef struct pes_packet_t pes_packet_t;
 typedef struct network_socket_t network_socket_t;
 typedef struct virtual_socket_t v_socket_t;
 typedef struct iso639_lang_t iso639_lang_t;
-typedef struct sockaddr sockaddr;
-typedef struct addrinfo addrinfo;
-typedef struct vlc_acl_t vlc_acl_t;
 
 /* block */
 typedef struct block_t      block_t;
@@ -378,10 +375,7 @@ typedef struct httpd_message_t  httpd_message_t;
 typedef int    (*httpd_callback_t)( httpd_callback_sys_t *, httpd_client_t *, httpd_message_t *answer, httpd_message_t *query );
 typedef struct httpd_file_t     httpd_file_t;
 typedef struct httpd_file_sys_t httpd_file_sys_t;
-typedef int (*httpd_file_callback_t)( httpd_file_sys_t *, httpd_file_t *, uint8_t *psz_request, uint8_t **pp_data, int *pi_data );
-typedef struct httpd_handler_t  httpd_handler_t;
-typedef struct httpd_handler_sys_t httpd_handler_sys_t;
-typedef int (*httpd_handler_callback_t)( httpd_handler_sys_t *, httpd_handler_t *, uint8_t *psz_url, uint8_t *psz_request, int i_type, uint8_t *p_in, int i_in, char *psz_remote_addr, char *psz_remote_host, uint8_t **pp_data, int *pi_data );
+typedef int (*httpd_file_callback_t)( httpd_file_sys_t*, httpd_file_t *, uint8_t *psz_request, uint8_t **pp_data, int *pi_data );
 typedef struct httpd_redirect_t httpd_redirect_t;
 typedef struct httpd_stream_t httpd_stream_t;
 
@@ -389,9 +383,6 @@ typedef struct httpd_stream_t httpd_stream_t;
 typedef struct tls_t tls_t;
 typedef struct tls_server_t tls_server_t;
 typedef struct tls_session_t tls_session_t;
-
-/* Hashing */
-typedef struct md5_s md5_t;
 
 /* XML */
 typedef struct xml_t xml_t;
@@ -407,13 +398,6 @@ typedef struct vod_media_t vod_media_t;
 /* opengl */
 typedef struct opengl_t     opengl_t;
 typedef struct opengl_sys_t opengl_sys_t;
-
-/* osdmenu */
-typedef struct osd_menu_t   osd_menu_t;
-typedef struct osd_state_t  osd_state_t;
-typedef struct osd_event_t  osd_event_t;
-typedef struct osd_button_t osd_button_t;
-typedef struct osd_menu_state_t osd_menu_state_t;
 
 /* VLM */
 typedef struct vlm_t         vlm_t;
@@ -546,7 +530,7 @@ static int64_t GCD( int64_t a, int64_t b )
 }
 
 /* Dynamic array handling: realloc array, move data, increment position */
-#if defined( _MSC_VER ) && _MSC_VER < 1300
+#if defined( _MSC_VER )
 #   define VLCCVP (void**) /* Work-around for broken compiler */
 #else
 #   define VLCCVP
@@ -848,17 +832,6 @@ static inline void _SetQWBE( uint8_t *p, uint64_t i_qw )
 #   define vlc_strtoll NULL
 #endif
 
-#ifndef HAVE_SCANDIR
-#   define scandir vlc_scandir
-#   define alphasort vlc_alphasort
-    struct dirent;
-    VLC_EXPORT( int, vlc_scandir, ( const char *name, struct dirent ***namelist, int (*filter) ( const struct dirent * ), int (*compar) ( const struct dirent **, const struct dirent ** ) ) );
-    VLC_EXPORT( int, vlc_alphasort, ( const struct dirent **a, const struct dirent **b ) );
-#elif !defined(__PLUGIN__)
-#   define vlc_scandir NULL
-#   define vlc_alphasort NULL
-#endif
-
 #ifndef HAVE_GETENV
 #   define getenv vlc_getenv
     VLC_EXPORT( char *, vlc_getenv, ( const char *name ) );
@@ -926,36 +899,20 @@ static inline void _SetQWBE( uint8_t *p, uint64_t i_qw )
     VLC_EXPORT( void *, vlc_opendir, ( const char * ) );
     VLC_EXPORT( void *, vlc_readdir, ( void * ) );
     VLC_EXPORT( int, vlc_closedir, ( void * ) );
-#else
-    struct dirent;  /* forward declaration for vlc_symbols.h */
-#   if !defined(__PLUGIN__)
-#       define vlc_opendir  NULL
-#       define vlc_readdir  NULL
-#       define vlc_closedir NULL
-#   endif
+#elif !defined(__PLUGIN__)
+#   define vlc_opendir  NULL
+#   define vlc_readdir  NULL
+#   define vlc_closedir NULL
 #endif
-
-    VLC_EXPORT( void *, vlc_opendir_wrapper, ( const char * ) );
-    VLC_EXPORT( struct dirent *, vlc_readdir_wrapper, ( void * ) );
-    VLC_EXPORT( int, vlc_closedir_wrapper, ( void * ) );
 
 /* Format type specifiers for 64 bits numbers */
 #if defined(__CYGWIN32__) || (!defined(WIN32) && !defined(UNDER_CE))
-#   if defined(__WORDSIZE) && __WORDSIZE == 64
-#       define I64Fd "%ld"
-#       define I64Fi "%li"
-#       define I64Fo "%lo"
-#       define I64Fu "%lu"
-#       define I64Fx "%lx"
-#       define I64FX "%lX"
-#   else
-#       define I64Fd "%lld"
-#       define I64Fi "%lli"
-#       define I64Fo "%llo"
-#       define I64Fu "%llu"
-#       define I64Fx "%llx"
-#       define I64FX "%llX"
-#   endif
+#   define I64Fd "%lld"
+#   define I64Fi "%lli"
+#   define I64Fo "%llo"
+#   define I64Fu "%llu"
+#   define I64Fx "%llx"
+#   define I64FX "%llX"
 #else
 #   define I64Fd "%I64d"
 #   define I64Fi "%I64i"
@@ -967,13 +924,8 @@ static inline void _SetQWBE( uint8_t *p, uint64_t i_qw )
 
 /* 64 bits integer constant suffix */
 #if defined( __MINGW32__ ) || (!defined(WIN32) && !defined(UNDER_CE))
-#   if defined(__WORDSIZE) && __WORDSIZE == 64
-#       define I64C(x)         x##L
-#       define UI64C(x)        x##UL
-#   else
-#       define I64C(x)         x##LL
-#       define UI64C(x)        x##ULL
-#   endif
+#   define I64C(x)         x##LL
+#   define UI64C(x)        x##ULL
 #else
 #   define I64C(x)         x##i64
 #   define UI64C(x)        x##ui64
@@ -1041,7 +993,7 @@ typedef __int64 off_t;
 #   include <tchar.h>
 #endif
 
-VLC_EXPORT( vlc_bool_t, vlc_ureduce, ( unsigned *, unsigned *, uint64_t, uint64_t, uint64_t ) );
+VLC_EXPORT( vlc_bool_t, vlc_reduce, ( int *, int *, int64_t, int64_t, int64_t ) );
 VLC_EXPORT( char **, vlc_parse_cmdline, ( const char *, int * ) );
 
 /* vlc_wraptext (defined in src/extras/libc.c) */
@@ -1053,10 +1005,6 @@ typedef void *vlc_iconv_t;
 VLC_EXPORT( vlc_iconv_t, vlc_iconv_open, ( const char *, const char * ) );
 VLC_EXPORT( size_t, vlc_iconv, ( vlc_iconv_t, char **, size_t *, char **, size_t * ) );
 VLC_EXPORT( int, vlc_iconv_close, ( vlc_iconv_t ) );
-
-/* execve wrapper (defined in src/extras/libc.c) */
-VLC_EXPORT( int, __vlc_execve, ( vlc_object_t *p_object, int i_argc, char **pp_argv, char **pp_env, char *psz_cwd, char *p_in, int i_in, char **pp_data, int *pi_data ) );
-#define vlc_execve(a,b,c,d,e,f,g,h,i) __vlc_execve(VLC_OBJECT(a),b,c,d,e,f,g,h,i)
 
 /*****************************************************************************
  * CPU capabilities
@@ -1096,17 +1044,6 @@ VLC_EXPORT( char *, vlc_dgettext, ( const char *package, const char *msgid ) );
 #   define _(String) ((char*)(String))
 #   define N_(String) ((char*)(String))
 #endif
-
-/*****************************************************************************
- * libvlc features
- *****************************************************************************/
-VLC_EXPORT( const char *, VLC_Version, ( void ) );
-VLC_EXPORT( const char *, VLC_CompileBy, ( void ) );
-VLC_EXPORT( const char *, VLC_CompileHost, ( void ) );
-VLC_EXPORT( const char *, VLC_CompileDomain, ( void ) );
-VLC_EXPORT( const char *, VLC_Compiler, ( void ) );
-VLC_EXPORT( const char *, VLC_Changeset, ( void ) );
-VLC_EXPORT( const char *, VLC_Error, ( int ) );
 
 /*****************************************************************************
  * Additional vlc stuff

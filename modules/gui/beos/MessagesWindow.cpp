@@ -1,8 +1,8 @@
 /*****************************************************************************
  * MessagesWindow.cpp: beos interface
  *****************************************************************************
- * Copyright (C) 1999, 2000, 2001 the VideoLAN team
- * $Id: MessagesWindow.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 1999, 2000, 2001 VideoLAN
+ * $Id: MessagesWindow.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Eric Petit <titer@videolan.org>
  *

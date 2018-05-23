@@ -1,6 +1,6 @@
 /*****************************************************************************
- * Copyright (C) 2003, 2004 Rocky Bernstein (for the VideoLAN team)
- * $Id: vcdplayer.h 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003, 2004 Rocky Bernstein (for VideoLAN)
+ * $Id: vcdplayer.h 10628 2005-04-10 01:51:44Z rocky $
  *
  * Authors: Rocky Bernstein <rocky@panix.com> 
  *

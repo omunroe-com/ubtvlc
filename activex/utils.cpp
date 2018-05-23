@@ -1,7 +1,7 @@
 /*****************************************************************************
  * utils.cpp: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
+ * Copyright (C) 2005 VideoLAN
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -37,13 +37,10 @@ char *CStrFromBSTR(int codePage, BSTR bstr)
                 0, bstr, len, NULL, 0, NULL, NULL);
         if( mblen > 0 )
         {
-            char *buffer = (char *)CoTaskMemAlloc(mblen+1);
+            char *buffer = (char *)malloc(mblen+1);
             ZeroMemory(buffer, mblen+1);
             if( WideCharToMultiByte(codePage, 0, bstr, len, buffer, mblen, NULL, NULL) )
-            {
-                buffer[mblen] = '\0';
                 return buffer;
-            }
         }
     }
     return NULL;
@@ -52,16 +49,16 @@ char *CStrFromBSTR(int codePage, BSTR bstr)
 BSTR BSTRFromCStr(int codePage, const char *s)
 {
     int wideLen = MultiByteToWideChar(codePage, 0, s, -1, NULL, 0);
-    if( wideLen > 0 )
+    if( wideLen )
     {
-        WCHAR* wideStr = (WCHAR*)CoTaskMemAlloc(wideLen*sizeof(WCHAR));
+        WCHAR* wideStr = (WCHAR*)malloc(wideLen*sizeof(WCHAR));
         if( NULL != wideStr )
         {
             BSTR bstr;
 
             ZeroMemory(wideStr, wideLen*sizeof(WCHAR));
             MultiByteToWideChar(codePage, 0, s, -1, wideStr, wideLen);
-            bstr = SysAllocStringLen(wideStr, wideLen);
+            bstr = SysAllocString(wideStr);
             free(wideStr);
 
             return bstr;
@@ -133,29 +130,4 @@ errReturn:
 	return hdc;
 };
 
-#define HIMETRIC_PER_INCH 2540
-
-void DPFromHimetric(HDC hdc, LPPOINT pt, int count)
-{
-    LONG lpX = GetDeviceCaps(hdc, LOGPIXELSX);
-    LONG lpY = GetDeviceCaps(hdc, LOGPIXELSY);
-    while( count-- )
-    {
-        pt->x = pt->x*lpX/HIMETRIC_PER_INCH;
-        pt->y = pt->y*lpY/HIMETRIC_PER_INCH;
-        ++pt;
-    }
-};
-
-void HimetricFromDP(HDC hdc, LPPOINT pt, int count)
-{
-    LONG lpX = GetDeviceCaps(hdc, LOGPIXELSX);
-    LONG lpY = GetDeviceCaps(hdc, LOGPIXELSY);
-    while( count-- )
-    {
-        pt->x = pt->x*HIMETRIC_PER_INCH/lpX;
-        pt->y = pt->y*HIMETRIC_PER_INCH/lpY;
-        ++pt;
-    }
-};
 

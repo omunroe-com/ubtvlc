@@ -1,7 +1,7 @@
 /*****************************************************************************
  * win32text.c : Text drawing routines using the TextOut win32 API
  *****************************************************************************
- * Copyright (C) 2002 - 2005 the VideoLAN team
+ * Copyright (C) 2002 - 2005 VideoLAN
  * $Id: freetype.c 10258 2005-03-10 13:37:29Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
@@ -29,7 +29,7 @@
 
 #include <vlc/vlc.h>
 #include <vlc/vout.h>
-#include "vlc_osd.h"
+#include "osd.h"
 #include "vlc_block.h"
 #include "vlc_filter.h"
 

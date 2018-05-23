@@ -1,8 +1,8 @@
 /*****************************************************************************
  * intf.h: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: intf.h 12495 2005-09-08 21:00:48Z fkuehne $
+ * Copyright (C) 2002-2005 VideoLAN
+ * $Id: intf.h 11398 2005-06-10 19:54:49Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -90,17 +90,7 @@ struct intf_sys_t
     id o_prefs;                 /* VLCPrefs       */
     id o_about;                 /* VLAboutBox     */
     id o_open;                  /* VLCOpen        */
-    id o_wizard;                /* VLCWizard      */
-    id o_extended;              /* VLCExtended    */
-    id o_bookmarks;             /* VLCBookmarks   */
-    id o_update;                /* VLCUpdate      */
-    BOOL nib_main_loaded;       /* reference to the main-nib */
     BOOL nib_open_loaded;       /* reference to the open-nib */
-    BOOL nib_about_loaded;      /* reference to the about-nib */
-    BOOL nib_wizard_loaded;     /* reference to the wizard-nib */
-    BOOL nib_extended_loaded;   /* reference to the extended-nib */
-    BOOL nib_bookmarks_loaded;  /* reference to the bookmarks-nib */ 
-    BOOL nib_update_loaded;     /* reference to the update-nib */
 
     IBOutlet id o_window;       /* main window    */
     IBOutlet id o_playlist_view;/* playlist view  */
@@ -149,7 +139,6 @@ struct intf_sys_t
 
     IBOutlet id o_mi_about;
     IBOutlet id o_mi_prefs;
-    IBOutlet id o_mi_checkForUpdate;
     IBOutlet id o_mi_add_intf;
     IBOutlet id o_mu_add_intf;
     IBOutlet id o_mi_services;
@@ -165,7 +154,6 @@ struct intf_sys_t
     IBOutlet id o_mi_open_net;
     IBOutlet id o_mi_open_recent;
     IBOutlet id o_mi_open_recent_cm;
-    IBOutlet id o_mi_open_wizard;
 
     IBOutlet id o_mu_edit;
     IBOutlet id o_mi_cut;
@@ -234,8 +222,6 @@ struct intf_sys_t
     IBOutlet id o_mi_close_window;
     IBOutlet id o_mi_controller;
     IBOutlet id o_mi_equalizer;
-    IBOutlet id o_mi_extended;
-    IBOutlet id o_mi_bookmarks;
     IBOutlet id o_mi_playlist;
     IBOutlet id o_mi_info;
     IBOutlet id o_mi_messages;
@@ -247,8 +233,6 @@ struct intf_sys_t
     IBOutlet id o_mi_reportabug;
     IBOutlet id o_mi_website;
     IBOutlet id o_mi_license;
-    IBOutlet id o_mi_donation;
-    IBOutlet id o_mi_forum;
 
     /* dock menu */
     IBOutlet id o_dmi_play;
@@ -274,8 +258,6 @@ struct intf_sys_t
 - (id)getControls;
 - (id)getPlaylist;
 - (id)getInfo;
-- (id)getWizard;
-- (id)getBookmarks;
 - (void)terminate;
 - (NSString *)localizedString:(char *)psz;
 - (char *)delocalizeString:(NSString *)psz;
@@ -304,13 +286,8 @@ struct intf_sys_t
 - (IBAction)intfOpenDisc:(id)sender;
 - (IBAction)intfOpenNet:(id)sender;
 
-- (IBAction)showWizard:(id)sender;
-- (IBAction)showExtended:(id)sender;
-- (IBAction)showBookmarks:(id)sender;
-
 - (IBAction)viewAbout:(id)sender;
 - (IBAction)viewPreferences:(id)sender;
-- (IBAction)checkForUpdate:(id)sender;
 - (IBAction)closeError:(id)sender;
 - (IBAction)openReadMe:(id)sender;
 - (IBAction)openDocumentation:(id)sender;

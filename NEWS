@@ -1,63 +1,7 @@
-$Id: NEWS 12579 2005-09-16 21:19:43Z bigben $
-
-Changes between 0.8.2 and 0.8.4-svn (not yet released):
------------------------------------------------------
-
-Core support:
-* Internal strings handling is now UTF-8 based
-* New OSD system
-
-Video output:
-* Fixed problems with OpenGL output
-* New --monitor-aspect-ratio option
-
-Input:
-* Improved DVB support for satellite bands other than Ku-band
-* IPv6 and Extended passive mode support for FTP
-* IPv6 Source Specific Multicast support
-* GnomeVFS input module
-
-Decoders:
-* Support for libSDL_image to import different image types
-
-Services discovery:
-* UPnP service discovery
-* Bonjour service discovery using avahi
-
-Video Filters:
-* RSS feed overlay
-
-Stream output:
-* New shout output module to forward streams to icecast servers
-* Fixed several SAP and SDP announcement bugs
- 
-Interfaces:
- * Mac OS X
-    - New streaming and transcoding wizard
-    - New extended controls panel
-    - New bookmarks window
-    - Fixed playlist sorting
-    - Fixed drag-and-drop inside the playlist
- * wxWidgets
-    - Rename wxWindows interface in wxWidgets.
-    - All the --wxwin-* options are now --wx-*	
-    - VLC update checker
- * HTTP
-    - New RPN functions to control VLC features (see play-howto)
-    - Facilities to correctly handle non-ASCII characters and spaces in
-      the names of files
-    - Include macro to include other files
-
-ActiveX plugin:
-* Should now work outside IE as well
-
-Translations:
- The following languages were added:
- * Korean
- * Romanian
+$Id: NEWS 11524 2005-06-25 10:23:06Z dionoea $
 
 Changes between 0.8.1 and 0.8.2:
---------------------------------
+-----------------------------------------------------
 
 Core support:
  * Rewrite of the playlist

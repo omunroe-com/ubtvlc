@@ -122,8 +122,7 @@ static void help( void )
              "\n" );
 }
 
-static void xyuv_count_frames( xyuv_t *xyuv );
-static void xyuv_detect( int *pi_width, int *pi_height );
+
 static void xyuv_display( xyuv_t *xyuv, int i_frame );
 
 int main( int argc, char **argv )
@@ -191,15 +190,18 @@ int main( int argc, char **argv )
         char *num;
         char *x;
         /* See if we find widthxheight in the file name */
-        for( ;; ) {
-            if( !( x = strchr( psz+1, 'x' ) ) ) {
+        for( ;; )
+        {
+            if( !( x = strchr( psz+1, 'x' ) ) )
+            {
                 break;
             }
             num = x;
             while( num > psz && num[-1] >= '0' && num[-1] <= '9' )
                 num--;
 
-            if( num != x && x[1] >= '0' && x[1] <= '9' ) {
+            if( num != x && x[1] >= '0' && x[1] <= '9' )
+            {
                 xyuv.i_width = atoi( num );
                 xyuv.i_height = atoi( x+1 );
                 break;
@@ -208,11 +210,6 @@ int main( int argc, char **argv )
         }
         fprintf( stderr, "file name gives %dx%d\n", xyuv.i_width, xyuv.i_height );
     }
-
-    if( xyuv.i_width == 0 || xyuv.i_height == 0 ) {
-        xyuv_detect( &xyuv.i_width, &xyuv.i_height );
-    }
-
     if( xyuv.i_width == 0 || xyuv.i_height == 0 ) {
         fprintf( stderr, "invalid or missing frames size\n" );
         return -1;
@@ -234,10 +231,20 @@ int main( int argc, char **argv )
 
     /* Now check frames */
     fprintf( stderr, "displaying :\n" );
+    xyuv.i_frames = 0;
     xyuv.i_frame_size = 3 * xyuv.i_width * xyuv.i_height / 2;
-    xyuv_count_frames( &xyuv );
     for( i = 0; i < xyuv.i_yuv; i++ ) {
+        /* Beurk but avoid using fstat */
+        fseek( xyuv.yuv[i].f, 0, SEEK_END );
+
+        xyuv.yuv[i].i_frames = ftell( xyuv.yuv[i].f ) / xyuv.i_frame_size;
+
+        fseek( xyuv.yuv[i].f, 0, SEEK_SET );
+
         fprintf( stderr, " - '%s' : %d frames\n", xyuv.yuv[i].name, xyuv.yuv[i].i_frames );
+
+        if( xyuv.i_frames < xyuv.yuv[i].i_frames )
+            xyuv.i_frames = xyuv.yuv[i].i_frames;
     }
 
     if( xyuv.i_frames == 0 ) {
@@ -318,7 +325,6 @@ int main( int argc, char **argv )
 
     for( ;; ) {
         SDL_Event event;
-        static int b_fullscreen = 0;
         int64_t i_start = SDL_GetTicks();
         int i_wait;
 
@@ -332,8 +338,6 @@ int main( int argc, char **argv )
                 switch( event.type )
                 {
                     case SDL_QUIT:
-                        if( b_fullscreen )
-                            SDL_WM_ToggleFullScreen( xyuv.screen );
                         exit( 1 );
 
                     case SDL_KEYDOWN:
@@ -341,13 +345,10 @@ int main( int argc, char **argv )
                         {
                             case SDLK_q:
                             case SDLK_ESCAPE:
-                                if( b_fullscreen )
-                                    SDL_WM_ToggleFullScreen( xyuv.screen );
                                 exit(1);
 
                             case SDLK_f:
-                                if( SDL_WM_ToggleFullScreen( xyuv.screen ) )
-                                    b_fullscreen = 1 - b_fullscreen;
+                                SDL_WM_ToggleFullScreen( xyuv.screen );
                                 break;
 
                             case SDLK_g:
@@ -371,8 +372,6 @@ int main( int argc, char **argv )
                                 break;
 
                             case SDLK_RIGHT:
-                                if( xyuv.i_frame >= xyuv.i_frames )
-                                    xyuv_count_frames( &xyuv );
                                 if( xyuv.i_frame < xyuv.i_frames ) xyuv.i_frame++;
                                 b_refresh = 1;
                                 break;
@@ -384,17 +383,12 @@ int main( int argc, char **argv )
                                 break;
 
                             case SDLK_END:
-                                xyuv_count_frames( &xyuv );
                                 xyuv.i_frame = xyuv.i_frames;
                                 b_refresh = 1;
                                 break;
 
                             case SDLK_UP:
                                 xyuv.i_frame += xyuv.i_frames / 20;
-
-                                if( xyuv.i_frame >= xyuv.i_frames )
-                                    xyuv_count_frames( &xyuv );
-
                                 if( xyuv.i_frame > xyuv.i_frames )
                                     xyuv.i_frame = xyuv.i_frames;
                                 b_refresh = 1;
@@ -409,10 +403,6 @@ int main( int argc, char **argv )
 
                             case SDLK_PAGEUP:
                                 xyuv.i_frame += xyuv.i_frames / 10;
-
-                                if( xyuv.i_frame >= xyuv.i_frames )
-                                    xyuv_count_frames( &xyuv );
-
                                 if( xyuv.i_frame > xyuv.i_frames )
                                     xyuv.i_frame = xyuv.i_frames;
                                 b_refresh = 1;
@@ -460,7 +450,7 @@ int main( int argc, char **argv )
         if( !xyuv.b_pause ) {
             /* next frame */
             if( xyuv.i_frame == xyuv.i_frames )
-                    xyuv.b_pause = 1;
+                xyuv.b_pause = 1;
             else if( xyuv.i_frame < xyuv.i_frames )
                 xyuv.i_frame++;
         }
@@ -490,12 +480,8 @@ static void xyuv_display( xyuv_t *xyuv, int i_frame )
     for( i = 0; i < xyuv->i_yuv; i++ ) {
         int i_plane;
 
-        fprintf( stderr, "yuv[%d] %d/%d\n", i, i_frame, xyuv->yuv[i].i_frames );
-        if( i_frame - 1 >= xyuv->yuv[i].i_frames ) {
-            xyuv_count_frames( xyuv );
-            if( i_frame - 1 >= xyuv->yuv[i].i_frames )
-                continue;
-        }
+        if( i_frame - 1 >= xyuv->yuv[i].i_frames )
+            continue;
         i_picture++;
 
         fseek( xyuv->yuv[i].f, (xyuv->i_frame-1) * xyuv->i_frame_size, SEEK_SET );
@@ -616,180 +602,6 @@ static void xyuv_display( xyuv_t *xyuv, int i_frame )
     SDL_WM_SetCaption( xyuv->title, "" );
 }
 
-static void xyuv_count_frames( xyuv_t *xyuv )
-{
-    int i;
-
-    xyuv->i_frames = 0;
-    if( xyuv->i_frame_size <= 0 )
-        return;
-
-    for( i = 0; i < xyuv->i_yuv; i++ ) {
-        /* Beurk but avoid using fstat */
-        fseek( xyuv->yuv[i].f, 0, SEEK_END );
-
-        xyuv->yuv[i].i_frames = ftell( xyuv->yuv[i].f ) / xyuv->i_frame_size;
-        fprintf( stderr, "count (%d) -> %d\n", i, xyuv->yuv[i].i_frames );
-
-        fseek( xyuv->yuv[i].f, 0, SEEK_SET );
-
-        if( xyuv->i_frames < xyuv->yuv[i].i_frames )
-            xyuv->i_frames = xyuv->yuv[i].i_frames;
-    }
-}
-
-static inline int ssd( int a ) { return a*a; }
-
-static void xyuv_detect( int *pi_width, int *pi_height )
-{
-    static const int pi_size[][2] = {
-        {128, 96},
-        {160,120},
-        {320,244},
-        {320,288},
-
-        /* PAL */
-        {176,144},  // QCIF
-        {352,288},  // CIF
-        {352,576},  // 1/2 D1
-        {480,576},  // 2/3 D1
-        {544,576},
-        {640,576},  // VGA
-        {704,576},  // D1
-        {720,576},  // D1
-
-        /* NTSC */
-        {176,112},  // QCIF
-        {320,240},  // MPEG I
-        {352,240},  // CIF
-        {352,480},  // 1/2 D1
-        {480,480},  // 2/3 D1
-        {544,480},
-        {640,480},  // VGA
-        {704,480},  // D1
-        {720,480},  // D1
-
-        /* */
-        {0,0},
-    };
-    int i_max;
-    int i_size_max;
-    uint8_t *pic;
-    int i;
-
-    *pi_width = 0;
-    *pi_height = 0;
-
-    /* Compute size max */
-    for( i_max = 0, i_size_max = 0;
-            pi_size[i_max][0] != 0 && pi_size[i_max][1] != 0; i_max++ ) {
-        int s = pi_size[i_max][0] * pi_size[i_max][1] * 3 / 2;
-
-        if( i_size_max < s )
-            i_size_max = s;
-    }
-
-    /* Temporary buffer */
-    i_size_max *= 3;
-    pic = malloc( i_size_max );
-
-    fprintf( stderr, "guessing size for:\n" );
-    for( i = 0; i < xyuv.i_yuv; i++ ) {
-        int j;
-        int i_read;
-        double dbest = 255*255;
-        int    i_best = i_max;
-        int64_t t;
-
-        fprintf( stderr, " - %s\n", xyuv.yuv[i].name );
-
-        i_read = fread( pic, 1, i_size_max, xyuv.yuv[i].f );
-        if( i_read < 0 )
-            continue;
-
-        /* Check if file size is at least compatible with one format
-         * (if not, ignore file size)*/
-        fseek( xyuv.yuv[i].f, 0, SEEK_END );
-        t = ftell( xyuv.yuv[i].f );
-        fseek( xyuv.yuv[i].f, 0, SEEK_SET );
-        for( j = 0; j < i_max; j++ ) {
-            const int w = pi_size[j][0];
-            const int h = pi_size[j][1];
-            const int s = w * h * 3 / 2;
-
-            if( t % s == 0 )
-                break;
-        }
-        if( j == i_max )
-            t = 0;
 
 
-        /* Try all size */
-        for( j = 0; j < i_max; j++ ) {
-            const int w = pi_size[j][0];
-            const int h = pi_size[j][1];
-            const int s = w * h * 3 / 2;
-            double dd;
 
-            int x, y, n;
-            int64_t d;
-
-            /* To small */
-            if( i_read < 3*s )
-                continue;
-            /* Check file size */
-            if( ( t > 0 && (t % s) != 0  ) ) {
-                fprintf( stderr, "  * %dx%d ignored (incompatible file size)\n", w, h );
-                continue;
-            }
-
-
-            /* We do a simple ssd between 2 consecutives lines */
-            d = 0;
-            for( n = 0; n < 3; n++ ) {
-                uint8_t *p;
-
-                /* Y */
-                p = &pic[n*s];
-                for( y = 0; y < h-1; y++ ) {
-                    for( x = 0; x < w; x++ )
-                        d += ssd( p[x] - p[w+x] );
-                    p += w;
-                }
-
-                /* U */
-                p = &pic[n*s+w*h];
-                for( y = 0; y < h/2-1; y++ ) {
-                    for( x = 0; x < w/2; x++ )
-                        d += ssd( p[x] - p[(w/2)+x] );
-                    p += w/2;
-                }
-
-                /* V */
-                p = &pic[n*s+5*w*h/4];
-                for( y = 0; y < h/2-1; y++ ) {
-                    for( x = 0; x < w/2; x++ )
-                        d += ssd( p[x] - p[(w/2)+x] );
-                    p += w/2;
-                }
-            }
-            dd = (double)d / (3*w*h*3/2);
-            fprintf( stderr, "  * %dx%d d=%f\n", w, h, dd );
-
-            if( dd < dbest ) {
-                i_best = j;
-                dbest = dd;
-            }
-        }
-
-        fseek( xyuv.yuv[i].f, 0, SEEK_SET );
-
-        if( i_best < i_max ) {
-            fprintf( stderr, "  -> %dx%d\n", pi_size[i_best][0], pi_size[i_best][1] );
-            *pi_width = pi_size[i_best][0];
-            *pi_height = pi_size[i_best][1];
-        }
-    }
-
-    free( pic );
-}

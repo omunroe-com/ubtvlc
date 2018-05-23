@@ -1,11 +1,10 @@
 /*****************************************************************************
  * ftp.c: FTP input module
  *****************************************************************************
- * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: ftp.c 11906 2005-07-29 17:28:01Z courmisch $
+ * Copyright (C) 2001-2005 VideoLAN
+ * $Id: ftp.c 11096 2005-05-21 19:05:14Z courmisch $
  *
- * Authors: Laurent Aimar <fenrir@via.ecp.fr> - original code
- *          Rémi Denis-Courmont <rem # videolan.org> - EPSV support
+ * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,13 +30,6 @@
 #include <vlc/input.h>
 
 #include "network.h"
-#if defined( UNDER_CE )
-#   include <winsock.h>
-#elif defined( WIN32 )
-#   include <winsock2.h>
-#else
-#   include <sys/socket.h>
-#endif
 
 /*****************************************************************************
  * Module descriptor
@@ -91,106 +83,13 @@ struct access_sys_t
     int        fd_cmd;
     int        fd_data;
     
-    char       sz_epsv_ip[NI_MAXNUMERICHOST];
+    vlc_bool_t b_epsv;
 };
 
 static int  ftp_SendCommand( access_t *, char *, ... );
 static int  ftp_ReadCommand( access_t *, int *, char ** );
 static int  ftp_StartStream( access_t *, int64_t );
 static int  ftp_StopStream ( access_t *);
-
-static int Connect( access_t *p_access, access_sys_t *p_sys )
-{
-    int fd, i_answer;
-    char *psz;
-
-    /* *** Open a TCP connection with server *** */
-    msg_Dbg( p_access, "waiting for connection..." );
-    p_sys->fd_cmd = fd = net_OpenTCP( p_access, p_sys->url.psz_host,
-                                      p_sys->url.i_port );
-    if( fd < 0 )
-    {
-        msg_Err( p_access, "failed to connect with server" );
-        return -1;
-    }
-
-    for( ;; )
-    {
-        if( ftp_ReadCommand( p_access, &i_answer, NULL ) != 1 )
-        {
-            break;
-        }
-    }
-    if( i_answer / 100 != 2 )
-    {
-        msg_Err( p_access, "connection rejected" );
-        return -1;
-    }
-
-    msg_Dbg( p_access, "connection accepted (%d)", i_answer );
-
-    psz = var_CreateGetString( p_access, "ftp-user" );
-    if( ftp_SendCommand( p_access, "USER %s", psz ) < 0 ||
-        ftp_ReadCommand( p_access, &i_answer, NULL ) < 0 )
-    {
-        free( psz );
-        return -1;
-    }
-    free( psz );
-
-    switch( i_answer / 100 )
-    {
-        case 2:
-            msg_Dbg( p_access, "user accepted" );
-            break;
-        case 3:
-            msg_Dbg( p_access, "password needed" );
-            psz = var_CreateGetString( p_access, "ftp-pwd" );
-            if( ftp_SendCommand( p_access, "PASS %s", psz ) < 0 ||
-                ftp_ReadCommand( p_access, &i_answer, NULL ) < 0 )
-            {
-                free( psz );
-                return -1;
-            }
-            free( psz );
-
-            switch( i_answer / 100 )
-            {
-                case 2:
-                    msg_Dbg( p_access, "password accepted" );
-                    break;
-                case 3:
-                    msg_Dbg( p_access, "account needed" );
-                    psz = var_CreateGetString( p_access, "ftp-account" );
-                    if( ftp_SendCommand( p_access, "ACCT %s",
-                                         psz ) < 0 ||
-                        ftp_ReadCommand( p_access, &i_answer, NULL ) < 0 )
-                    {
-                        free( psz );
-                        return -1;
-                    }
-                    free( psz );
-
-                    if( i_answer / 100 != 2 )
-                    {
-                        msg_Err( p_access, "account rejected" );
-                        return -1;
-                    }
-                    msg_Dbg( p_access, "account accepted" );
-                    break;
-
-                default:
-                    msg_Err( p_access, "password rejected" );
-                    return -1;
-            }
-            break;
-        default:
-            msg_Err( p_access, "user rejected" );
-            return -1;
-    }
-
-    return 0;
-}
 
 /****************************************************************************
  * Open: connect to ftp server and ask for file
@@ -238,38 +137,105 @@ static int Open( vlc_object_t *p_this )
         p_sys->url.i_port = 21; /* default port */
     }
 
-    if( Connect( p_access, p_sys ) < 0 )
+    /* *** Open a TCP connection with server *** */
+    msg_Dbg( p_access, "waiting for connection..." );
+    p_sys->fd_cmd = net_OpenTCP( p_access, p_sys->url.psz_host,
+                                 p_sys->url.i_port );
+    if( p_sys->fd_cmd < 0 )
+    {
+        msg_Err( p_access, "failed to connect with server" );
         goto exit_error;
+    }
+
+    for( ;; )
+    {
+        if( ftp_ReadCommand( p_access, &i_answer, NULL ) != 1 )
+        {
+            break;
+        }
+    }
+    if( i_answer / 100 != 2 )
+    {
+        msg_Err( p_access, "connection rejected" );
+        goto exit_error;
+    }
+
+    msg_Dbg( p_access, "connection accepted (%d)", i_answer );
+
+    psz = var_CreateGetString( p_access, "ftp-user" );
+    if( ftp_SendCommand( p_access, "USER %s", psz ) < 0 ||
+        ftp_ReadCommand( p_access, &i_answer, NULL ) < 0 )
+    {
+        free( psz );
+        goto exit_error;
+    }
+    free( psz );
+
+    switch( i_answer / 100 )
+    {
+        case 2:
+            msg_Dbg( p_access, "user accepted" );
+            break;
+        case 3:
+            msg_Dbg( p_access, "password needed" );
+            psz = var_CreateGetString( p_access, "ftp-pwd" );
+            if( ftp_SendCommand( p_access, "PASS %s", psz ) < 0 ||
+                ftp_ReadCommand( p_access, &i_answer, NULL ) < 0 )
+            {
+                free( psz );
+                goto exit_error;
+            }
+            free( psz );
+
+            switch( i_answer / 100 )
+            {
+                case 2:
+                    msg_Dbg( p_access, "password accepted" );
+                    break;
+                case 3:
+                    msg_Dbg( p_access, "account needed" );
+                    psz = var_CreateGetString( p_access, "ftp-account" );
+                    if( ftp_SendCommand( p_access, "ACCT %s",
+                                         psz ) < 0 ||
+                        ftp_ReadCommand( p_access, &i_answer, NULL ) < 0 )
+                    {
+                        free( psz );
+                        goto exit_error;
+                    }
+                    free( psz );
+
+                    if( i_answer / 100 != 2 )
+                    {
+                        msg_Err( p_access, "account rejected" );
+                        goto exit_error;
+                    }
+                    msg_Dbg( p_access, "account accepted" );
+                    break;
+
+                default:
+                    msg_Err( p_access, "password rejected" );
+                    goto exit_error;
+            }
+            break;
+        default:
+            msg_Err( p_access, "user rejected" );
+            goto exit_error;
+    }
 
     /* Extended passive mode */
     if( ftp_SendCommand( p_access, "EPSV ALL" ) < 0 )
     {
         msg_Err( p_access, "cannot request extended passive mode" );
-        return -1;
+        goto exit_error;
     }
-
-    if( ftp_ReadCommand( p_access, &i_answer, NULL ) == 2 )
+    if( ftp_ReadCommand( p_access, &i_answer, NULL ) != 2 )
     {
-        if( net_GetPeerAddress( p_sys->fd_cmd, p_sys->sz_epsv_ip, NULL ) )
-            goto exit_error;
+        p_sys->b_epsv = VLC_FALSE;
+        msg_Warn( p_access, "Extended passive mode not supported" );
     }
     else
-    {
-        /* If ESPV ALL fails, we fallback to PASV.
-         * We have to restart the connection in case there is a NAT that
-         * understands EPSV ALL in the way, and hence won't allow PASV on
-         * the initial connection.
-         */
-        net_Close( p_sys->fd_cmd );
-        p_sys->fd_cmd = -1;
-        *p_sys->sz_epsv_ip = '\0';
+        p_sys->b_epsv = VLC_TRUE;
 
-        if( ( p_sys->fd_cmd = Connect( p_access, p_sys ) ) < 0 )
-           goto exit_error;
-
-        msg_Info( p_access, "FTP Extended passive mode disabled" );
-    }
-    
     /* binary mode */
     if( ftp_SendCommand( p_access, "TYPE I" ) < 0 ||
         ftp_ReadCommand( p_access, &i_answer, NULL ) != 2 )
@@ -302,8 +268,10 @@ static int Open( vlc_object_t *p_this )
     return VLC_SUCCESS;
 
 exit_error:
-    if( p_sys->fd_cmd >= 0 )
+    if( p_sys->fd_cmd > 0 )
+    {
         net_Close( p_sys->fd_cmd );
+    }
     vlc_UrlClean( &p_sys->url );
     free( p_sys );
     return VLC_EGENERIC;
@@ -541,11 +509,10 @@ static int ftp_StartStream( access_t *p_access, off_t i_start )
     char psz_ipv4[16], *psz_ip;
     int  i_answer;
     char *psz_arg, *psz_parser;
+    unsigned  a1, a2, a3, a4, p1, p2;
     int  i_port;
 
-    psz_ip = p_sys->sz_epsv_ip;
-
-    if( ( ftp_SendCommand( p_access, *psz_ip ? "EPSV" : "PASV" ) < 0 )
+    if( ( ftp_SendCommand( p_access, p_sys->b_epsv ? "EPSV" : "PASV" ) < 0 )
      || ( ftp_ReadCommand( p_access, &i_answer, &psz_arg ) != 2 ) )
     {
         msg_Err( p_access, "cannot set passive mode" );
@@ -560,7 +527,7 @@ static int ftp_StartStream( access_t *p_access, off_t i_start )
         return VLC_EGENERIC;
     }
 
-    if( psz_ip != NULL )
+    if( p_sys->b_epsv )
     {
         char psz_fmt[7] = "(|||%u";
         psz_fmt[1] = psz_fmt[2] = psz_fmt[3] = psz_parser[1];
@@ -571,11 +538,14 @@ static int ftp_StartStream( access_t *p_access, off_t i_start )
             msg_Err( p_access, "cannot parse passive mode response" );
             return VLC_EGENERIC;
         }
+        /* FIXME: if psz_ip is a hostname/DNS to a cluster of FTP servers,
+         * this may fail because we'll end up on another server :(
+         * getpeername() + getnameinfo() should be used instead.
+         */
+        psz_ip = p_sys->url.psz_host;
     }
     else
     {
-        unsigned  a1, a2, a3, a4, p1, p2;
-
         if( ( sscanf( psz_parser, "(%u,%u,%u,%u,%u,%u", &a1, &a2, &a3, &a4,
                       &p1, &p2 ) < 6 ) || ( a1 > 255 ) || ( a2 > 255 )
          || ( a3 > 255 ) || ( a4 > 255 ) || ( p1 > 255 ) || ( p2 > 255 ) )
@@ -638,7 +608,7 @@ static int ftp_StopStream ( access_t *p_access )
 
     if( ftp_SendCommand( p_access, "ABOR" ) < 0 )
     {
-        msg_Warn( p_access, "cannot abort file" );
+        msg_Warn( p_access, "cannot abord file" );
         if(  p_sys->fd_data > 0 )
             net_Close( p_sys->fd_data );
         p_sys->fd_data = -1;

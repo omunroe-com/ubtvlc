@@ -1,7 +1,7 @@
 /*****************************************************************************
  * announce.c : Session announcement
  *****************************************************************************
- * Copyright (C) 2002 the VideoLAN team
+ * Copyright (C) 2002 VideoLAN
  *
  * Authors: Clément Stenac <zorglub@via.ecp.fr>
  *          Damien Lucas <nitrox@via.ecp.fr>

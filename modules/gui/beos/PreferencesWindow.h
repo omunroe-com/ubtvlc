@@ -1,8 +1,8 @@
 /*****************************************************************************
  * PreferencesWindow.h
  *****************************************************************************
- * Copyright (C) 1999, 2000, 2001 the VideoLAN team
- * $Id: PreferencesWindow.h 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 1999, 2000, 2001 VideoLAN
+ * $Id: PreferencesWindow.h 11289 2005-06-04 20:04:07Z titer $
  *
  * Authors: Eric Petit <titer@m0k.org>
  *

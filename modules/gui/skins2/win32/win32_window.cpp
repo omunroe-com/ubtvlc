@@ -1,8 +1,8 @@
 /*****************************************************************************
  * win32_window.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: win32_window.cpp 11786 2005-07-18 23:57:41Z asmax $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: win32_window.cpp 10735 2005-04-18 21:21:09Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -37,11 +37,6 @@
 #   define LWA_ALPHA     0x00000002
 #endif
 
-
-// XXX layered windows are supposed to work only with at least win2k
-#ifndef WS_EX_LAYERED
-#   define WS_EX_LAYERED 0x00080000
-#endif
 
 Win32Window::Win32Window( intf_thread_t *pIntf, GenericWindow &rWindow,
                           HINSTANCE hInst, HWND hParentWindow,

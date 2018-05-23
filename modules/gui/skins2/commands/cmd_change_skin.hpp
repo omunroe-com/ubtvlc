@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_change_skin.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: cmd_change_skin.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: cmd_change_skin.hpp 8524 2004-08-25 21:32:15Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

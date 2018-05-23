@@ -1,8 +1,8 @@
 /*****************************************************************************
  * position.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: position.hpp 11699 2005-07-11 08:52:14Z sam $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: position.hpp 9641 2004-12-22 13:06:43Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -30,8 +30,6 @@
 class Box
 {
     public:
-        virtual ~Box() {}
-
         /// Get the size of the box
         virtual int getWidth() const = 0;
         virtual int getHeight() const = 0;

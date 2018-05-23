@@ -1,8 +1,8 @@
 /*****************************************************************************
  * switcher.c: MPEG2 video switcher module
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: switcher.c 12081 2005-08-09 13:40:18Z jpsaman $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: switcher.c 10952 2005-05-10 10:38:35Z gbazin $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -48,8 +48,8 @@
 #endif
 
 #define SOUT_CFG_PREFIX "sout-switcher-"
-#define MAX_PICTURES 10
-#define MAX_AUDIO 30
+#define MAX_PICTURES 12
+#define MAX_AUDIO 12
 #define AVCODEC_MAX_VIDEO_FRAME_SIZE (3*1024*1024)
 #define MAX_THRESHOLD 99999999
 
@@ -99,9 +99,6 @@ static block_t *AudioGetBuffer( sout_stream_t *p_stream, sout_stream_id_t *id,
 #define QSCALE_TEXT N_("Quantizer scale")
 #define QSCALE_LONGTEXT N_( \
     "Fixed quantizer scale to use." )
-#define AUDIO_TEXT N_("Mute audio")
-#define AUDIO_LONGTEXT N_( \
-    "Mute audio when command is not 0." )
 
 vlc_module_begin();
     set_description( _("MPEG2 video switcher stream output") );
@@ -123,13 +120,10 @@ vlc_module_begin();
                  GOP_TEXT, GOP_LONGTEXT, VLC_TRUE );
     add_integer( SOUT_CFG_PREFIX "qscale", 5, NULL,
                  QSCALE_TEXT, QSCALE_LONGTEXT, VLC_TRUE );
-    add_bool( SOUT_CFG_PREFIX "mute-audio", 1, NULL,
-              AUDIO_TEXT, AUDIO_LONGTEXT, VLC_TRUE );
 vlc_module_end();
 
 static const char *ppsz_sout_options[] = {
-    "files", "sizes", "aspect-ratio", "port", "command", "gop", "qscale",
-    "mute-audio", NULL
+    "files", "sizes", "aspect-ratio", "port", "command", "gop", "qscale", NULL
 };
 
 struct sout_stream_sys_t
@@ -139,7 +133,6 @@ struct sout_stream_sys_t
     int             i_qscale;
     int             i_aspect;
     sout_stream_id_t *pp_audio_ids[MAX_AUDIO];
-    vlc_bool_t      b_audio;
 
     /* Pictures */
     picture_t       p_pictures[MAX_PICTURES];
@@ -274,9 +267,6 @@ static int Open( vlc_object_t *p_this )
     var_Get( p_stream, SOUT_CFG_PREFIX "qscale", &val );
     p_sys->i_qscale = val.i_int;
 
-    var_Get( p_stream, SOUT_CFG_PREFIX "mute-audio", &val );
-    p_sys->b_audio = val.b_bool;
-
     p_stream->pf_add    = Add;
     p_stream->pf_del    = Del;
     p_stream->pf_send   = Send;
@@ -324,8 +314,7 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
                  (char*)&p_fmt->i_codec );
     }
     else if ( p_fmt->i_cat == AUDIO_ES
-               && p_fmt->i_codec == VLC_FOURCC('m', 'p', 'g', 'a')
-               && p_sys->b_audio )
+               && p_fmt->i_codec == VLC_FOURCC('m', 'p', 'g', 'a') )
     {
         int i_ff_codec = CODEC_ID_MP2;
         int i;
@@ -613,7 +602,7 @@ static int UnpackFromFile( sout_stream_t *p_stream, const char *psz_file,
         uint8_t *p_u = &p_pic->p[1].p_pixels[i/2 * p_pic->p[1].i_pitch];
         uint8_t *p_v = &p_pic->p[2].p_pixels[i/2 * p_pic->p[2].i_pitch];
 
-        if ( fread( p_buffer, 2, i_width, p_file ) != (size_t)i_width )
+        if ( fread( p_buffer, 2, i_width, p_file ) != i_width )
         {
             msg_Err( p_stream, "premature end of file %s", psz_file );
             fclose( p_file );
@@ -767,7 +756,6 @@ static mtime_t VideoCommand( sout_stream_t *p_stream, sout_stream_id_t *id )
                             | CODEC_FLAG_LOW_DELAY;
 
         id->ff_enc_c->mb_decision = FF_MB_DECISION_SIMPLE;
-        id->ff_enc_c->pix_fmt = PIX_FMT_YUV420P;
 
         if( avcodec_open( id->ff_enc_c, id->ff_enc ) )
         {
@@ -889,7 +877,6 @@ static block_t *VideoGetBuffer( sout_stream_t *p_stream, sout_stream_id_t *id,
     p_out->i_length = p_buffer->i_length;
     p_out->i_pts = p_buffer->i_dts;
     p_out->i_dts = p_buffer->i_dts;
-    p_out->i_rate = p_buffer->i_rate;
 
     switch ( id->ff_enc_c->coded_frame->pict_type )
     {
@@ -932,7 +919,6 @@ static block_t *AudioGetBuffer( sout_stream_t *p_stream, sout_stream_id_t *id,
     p_out->i_length = p_buffer->i_length;
     p_out->i_pts = p_buffer->i_dts;
     p_out->i_dts = p_buffer->i_dts;
-    p_out->i_rate = p_buffer->i_rate;
 
     block_Release( p_buffer );
 

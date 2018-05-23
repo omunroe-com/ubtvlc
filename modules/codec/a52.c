@@ -1,8 +1,8 @@
 /*****************************************************************************
  * a52.c: parse A/52 audio sync info and packetize the stream
  *****************************************************************************
- * Copyright (C) 2001-2002 the VideoLAN team
- * $Id: a52.c 11709 2005-07-11 16:20:33Z massiot $
+ * Copyright (C) 2001-2002 VideoLAN
+ * $Id: a52.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Stéphane Borel <stef@via.ecp.fr>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -77,8 +77,7 @@ static int  OpenPacketizer( vlc_object_t * );
 static void CloseDecoder  ( vlc_object_t * );
 static void *DecodeBlock  ( decoder_t *, block_t ** );
 
-static int  SyncInfo      ( const byte_t *, unsigned int *, unsigned int *,
-                            unsigned int *, int * );
+static int  SyncInfo      ( const byte_t *, int *, int *, int *,int * );
 
 static uint8_t       *GetOutBuffer ( decoder_t *, void ** );
 static aout_buffer_t *GetAoutBuffer( decoder_t * );
@@ -410,9 +409,8 @@ static block_t *GetSoutBuffer( decoder_t *p_dec )
  * their SyncInfo...
  *****************************************************************************/
 static int SyncInfo( const byte_t * p_buf,
-                     unsigned int * pi_channels,
-                     unsigned int * pi_channels_conf,
-                     unsigned int * pi_sample_rate, int * pi_bit_rate )
+                     int * pi_channels, int * pi_channels_conf,
+                     int * pi_sample_rate, int * pi_bit_rate )
 {
     static const uint8_t halfrate[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3 };
     static const int rate[] = { 32,  40,  48,  56,  64,  80,  96, 112,

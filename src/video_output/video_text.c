@@ -1,8 +1,8 @@
 /*****************************************************************************
  * video_text.c : text manipulation functions
  *****************************************************************************
- * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: video_text.c 12412 2005-08-27 16:40:23Z jpsaman $
+ * Copyright (C) 1999-2004 VideoLAN
+ * $Id: video_text.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Author: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -21,9 +21,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 #include <vlc/vout.h>
-#include <vlc_block.h>
-#include <vlc_filter.h>
-#include <vlc_osd.h>
+#include "vlc_block.h"
+#include "vlc_filter.h"
+#include "osd.h"
 
 /**
  * \brief Show text on the video for some time
@@ -123,6 +123,7 @@ void __vout_OSDMessage( vlc_object_t *p_caller, int i_channel,
     if( !config_GetInt( p_caller, "osd" ) ) return;
 
     p_vout = vlc_object_find( p_caller, VLC_OBJECT_VOUT, FIND_ANYWHERE );
+
     if( p_vout )
     {
         va_start( args, psz_format );

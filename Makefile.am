@@ -11,9 +11,8 @@ NULL =
 #  - modules should come before . because vlc needs the builtins
 #  - . should come before mozilla because the plugin needs libvlc_pic.a
 #  - po should come before . because VLC.app needs the pofiles
-#  - loader should come before modules because some plugins need it
-SUBDIRS = intl loader modules po . mozilla activex share m4 doc
-DIST_SUBDIRS = $(SUBDIRS) debian ipkg lib
+SUBDIRS = intl modules po . mozilla activex share m4 doc
+DIST_SUBDIRS = $(SUBDIRS) src debian ipkg lib
 
 EXTRA_DIST = \
 	HACKING \
@@ -24,23 +23,13 @@ EXTRA_DIST = \
 	bootstrap \
 	src/extras/COPYING \
 	toolbox \
-	vlc-api.pl \
 	vlc-config.in.in \
 	vlc.spec \
 	vlc.spec.mdk \
 	vlc.win32.nsi \
-	src/misc/modules_builtin.h.in \
 	$(NULL)
 
-BUILT_SOURCES_distclean = vlc-config
-BUILT_SOURCES_clean = \
-	stamp-api \
-	src/misc/modules_builtin.h \
-	src/misc/version.c \
-	$(NULL)
-
-BUILT_SOURCES = $(BUILT_SOURCES_distclean) $(BUILT_SOURCES_clean)
-
+BUILT_SOURCES =
 SUFFIXES = 
 
 # Tell aclocal to use -I m4. Wonder if it really works.
@@ -54,6 +43,12 @@ AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects
 # Headers
 ###############################################################################
 
+BUILT_SOURCES += \
+	include/vlc_symbols.h \
+	src/misc/modules_builtin.h \
+	src/misc/modules_plugin.h \
+	$(NULL)
+
 pkgincludedir = $(includedir)/vlc
 
 dist_pkginclude_HEADERS = \
@@ -64,11 +59,9 @@ dist_pkginclude_HEADERS = \
 	include/vlc/decoder.h \
 	include/vlc/input.h \
 	include/vlc/intf.h \
-	include/vlc/control.h \
 	$(NULL)
 
-noinst_HEADERS = $(HEADERS_include)
-noinst_DATA = $(DATA_noinst_beos) $(DATA_noinst_libvlc)
+noinst_HEADERS = $(HEADERS_include) $(HEADERS_include_built)
 
 HEADERS_include = \
 	include/aout_internal.h \
@@ -86,13 +79,13 @@ HEADERS_include = \
 	include/modules_inner.h \
 	include/mtime.h \
 	include/network.h \
+	include/osd.h \
 	include/os_specific.h \
 	include/snapshot.h \
 	include/stream_output.h \
 	include/variables.h \
 	include/video_output.h \
 	include/vlc_access.h \
-	include/vlc_acl.h \
 	include/vlc_bits.h \
 	include/vlc_block.h \
 	include/vlc_block_helper.h \
@@ -108,7 +101,6 @@ HEADERS_include = \
 	include/vlc_config_cat.h \
 	include/vlc_httpd.h \
 	include/vlc_tls.h \
-	include/vlc_md5.h \
 	include/vlc_image.h \
 	include/vlc_input.h \
 	include/vlc_interface.h \
@@ -116,11 +108,9 @@ HEADERS_include = \
 	include/vlc_messages.h \
 	include/vlc_meta.h \
 	include/vlc_objects.h \
-	include/vlc_osd.h \
 	include/vlc_playlist.h \
 	include/vlc_spu.h \
 	include/vlc_stream.h \
-	include/vlc_symbols.h \
 	include/vlc_threads_funcs.h \
 	include/vlc_threads.h \
 	include/vlc_video.h \
@@ -131,17 +121,22 @@ HEADERS_include = \
 	include/win32_specific.h \
 	$(NULL)
 
-src/misc/modules_builtin.h: Makefile src/misc/modules_builtin.h.in vlc-config
+HEADERS_include_built = \
+	include/vlc_symbols.h \
+	$(NULL)
+
+# Common dependencies for these 3 files : Makefile vlc-config
+# Specific dependencies :
+#  include/vlc_symbols.h: $(HEADERS_include)
+#  src/misc/modules_plugin.h: src/misc/modules_plugin.h.in $(HEADERS_include)
+#  src/misc/modules_builtin.h: src/misc/modules_builtin.h.in
+
+include/vlc_symbols.h src/misc/modules_plugin.h src/misc/modules_builtin.h: Makefile $(HEADERS_include) vlc-config src/misc/modules_plugin.h.in src/misc/modules_builtin.h.in
 	srcdir=$(srcdir) $(srcdir)/toolbox --update-includes
-	touch src/misc/modules_builtin.h
-
-src/misc/modules.c: src/misc/modules_builtin.h
-
-src/misc/version.c: FORCE
-	srcdir=$(srcdir) $(srcdir)/toolbox --update-version
 
 # These dependencies are mandatory
-$(SOURCES_libvlc): $(LIB_intl)
+$(SOURCES): include/vlc_symbols.h
+$(SOURCES_libvlc): src/misc/modules_plugin.h src/misc/modules_builtin.h $(LIB_intl)
 
 ###############################################################################
 # Optional libintl - FIXME, bad dependencies
@@ -161,7 +156,7 @@ endif
 EXTRA_DIST += \
 	extras/MacOSX/Resources/English.lproj/MainMenu.nib/classes.nib \
 	extras/MacOSX/Resources/English.lproj/MainMenu.nib/info.nib \
-	extras/MacOSX/Resources/English.lproj/MainMenu.nib/keyedobjects.nib \
+	extras/MacOSX/Resources/English.lproj/MainMenu.nib/objects.nib \
 	extras/MacOSX/Resources/English.lproj/About.nib/classes.nib \
 	extras/MacOSX/Resources/English.lproj/About.nib/info.nib \
 	extras/MacOSX/Resources/English.lproj/About.nib/keyedobjects.nib \
@@ -171,18 +166,6 @@ EXTRA_DIST += \
 	extras/MacOSX/Resources/English.lproj/Preferences.nib/classes.nib \
 	extras/MacOSX/Resources/English.lproj/Preferences.nib/info.nib \
 	extras/MacOSX/Resources/English.lproj/Preferences.nib/keyedobjects.nib \
-	extras/MacOSX/Resources/English.lproj/Wizard.nib/classes.nib \
-	extras/MacOSX/Resources/English.lproj/Wizard.nib/info.nib \
-	extras/MacOSX/Resources/English.lproj/Wizard.nib/keyedobjects.nib \
-	extras/MacOSX/Resources/English.lproj/Bookmarks.nib/classes.nib \
-	extras/MacOSX/Resources/English.lproj/Bookmarks.nib/info.nib \
-	extras/MacOSX/Resources/English.lproj/Bookmarks.nib/keyedobjects.nib \
-	extras/MacOSX/Resources/English.lproj/Extended.nib/classes.nib \
-	extras/MacOSX/Resources/English.lproj/Extended.nib/info.nib \
-	extras/MacOSX/Resources/English.lproj/Extended.nib/keyedobjects.nib \
-	extras/MacOSX/Resources/English.lproj/Update.nib/classes.nib \
-	extras/MacOSX/Resources/English.lproj/Update.nib/info.nib \
-	extras/MacOSX/Resources/English.lproj/Update.nib/keyedobjects.nib \
 	extras/MacOSX/Resources/English.lproj/InfoPlist.strings \
 	extras/MacOSX/Resources/a52.icns \
 	extras/MacOSX/Resources/aac.icns \
@@ -247,9 +230,6 @@ EXTRA_DIST += \
 	extras/MacOSX/Resources/README \
 	extras/MacOSX/vlc.pbproj/project.pbxproj \
 	extras/MacOSX/macosx-dmg \
-	\
-	extras/Makefile \
-	extras/zsh.cpp \
 	$(NULL)
 
 ###############################################################################
@@ -273,8 +253,8 @@ EXTRA_DIST += \
 	$(NULL)
 
 dist-hook:
-	cd $(distdir) && srcdir=. $(SHELL) ./toolbox --update-vc
-	distdir=$(distdir) srcdir=$(srcdir) $(SHELL) $(srcdir)/toolbox --dist-contrib
+	cd $(distdir) && srcdir=$(srcdir) $(srcdir)/toolbox --update-vc
+	distdir=$(distdir) srcdir=$(srcdir) $(srcdir)/toolbox --dist-contrib
 
 ###############################################################################
 # Building libvlc
@@ -282,30 +262,17 @@ dist-hook:
 
 bin_SCRIPTS = vlc-config
 vlc-config: $(top_builddir)/config.status $(top_builddir)/vlc-config.in
-	$(SHELL) ./config.status --file=vlc-config
-	chmod 0755 vlc-config
+	cd $(top_builddir) && $(SHELL) ./config.status --file=$@
+	-cd $(top_builddir) && chmod 0755 $@
 
-vlc-config.in: vlc-config.in.in
-	./config.status --recheck
+$(SOURCES): vlc-config
 
-MOSTLYCLEANFILES = $(DATA_noinst_libvlc)
-CLEANFILES = $(BUILT_SOURCES_clean) stamp-builtin
-DISTCLEANFILES = $(BUILT_SOURCES_distclean) vlc-config.in
+CLEANFILES = $(BUILT_SOURCES)
 
-if HAVE_WIN32
-lib_LIBRARIES = lib/libvlc.a
-else
-if BUILD_SHARED
-lib_LIBRARIES = lib/libvlc_pic.a
-else
-lib_LIBRARIES = lib/libvlc.a
-if BUILD_MOZILLA
-lib_LIBRARIES += lib/libvlc_pic.a
-endif
-endif
-endif
+lib_LIBRARIES = lib/libvlc.a $(LIBRARIES_libvlc_pic)
 
 lib_libvlc_a_SOURCES = $(SOURCES_libvlc)
+dist_lib_libvlc_a_SOURCES = src/misc/modules_plugin.h
 lib_libvlc_a_CFLAGS = `$(VLC_CONFIG) --cflags vlc`
 lib_libvlc_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags vlc`
 lib_libvlc_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags vlc`
@@ -333,26 +300,11 @@ endif
 if BUILD_GETOPT
 OPT_SOURCES_libvlc_getopt = $(SOURCES_libvlc_getopt)
 endif
-
-# Build libvlc as a shared library
-if BUILD_SHARED
-DATA_noinst_libvlc = libvlc$(LIBEXT)
-if HAVE_WIN32
-OBJECTS_libvlc_so = $(lib_libvlc_a_OBJECTS)
-else
-OBJECTS_libvlc_so = $(lib_libvlc_pic_a_OBJECTS)
+if BUILD_MOZILLA
+if !HAVE_WIN32
+LIBRARIES_libvlc_pic = lib/libvlc_pic.a
 endif
 endif
-
-libvlc$(LIBEXT): $(OBJECTS_libvlc_so)
-	@ldfl="`$(VLC_CONFIG) --libs plugin vlc $(pic) builtin`" ; \
-	case `$(VLC_CONFIG) --linkage vlc` in \
-	  c++)  ld="$(CXXLINK)" ;; \
-	  objc) ld="$(OBJCLINK)" ;; \
-	  c|*)  ld="$(LINK)" ;; \
-	esac ; \
-	echo $$ld $(OBJECTS_libvlc_so) $$ldfl ; \
-	$$ld $(OBJECTS_libvlc_so) $$ldfl
 
 EXTRA_DIST += \
 	$(SOURCES_libvlc_beos) \
@@ -426,20 +378,13 @@ SOURCES_libvlc_common = \
 	src/stream_output/stream_output.c \
 	src/stream_output/announce.c \
 	src/stream_output/sap.c \
-	src/stream_output/acl.c \
-	src/osd/osd.c \
-	src/osd/osd_parser.c \
-	src/osd/osd_text.c \
-	src/osd/osd_widgets.c \
 	src/misc/charset.c \
 	src/misc/httpd.c \
 	src/misc/tls.c \
-	src/misc/md5.c \
 	src/misc/mtime.c \
 	src/misc/block.c \
 	src/misc/modules.c \
 	src/misc/threads.c \
-	src/misc/unicode.c \
 	src/misc/cpu.c \
 	src/misc/configuration.c \
 	src/misc/image.c \
@@ -450,14 +395,9 @@ SOURCES_libvlc_common = \
 	src/misc/variables.c \
 	src/misc/error.c \
 	src/misc/net.c \
-	src/misc/getaddrinfo.c \
 	src/misc/vlm.c \
 	src/misc/xml.c \
-	src/misc/version.c \
 	src/extras/libc.c \
-	src/control/core.c \
-	src/control/util.c \
-	src/control/audio_video.c \
 	$(NULL)
 
 SOURCES_libvlc = \
@@ -479,40 +419,27 @@ vlc_SOURCES = src/vlc.c
 
 # Work around a bug in the arm-wince-pe linker
 if HAVE_WINCE
-vlc_WORKAROUNDLDFLAGS = $(LIB_libvlc)
+vlc_WORKAROUNDLDFLAGS = lib/libvlc.a
 endif
 
-if BUILD_SHARED
-### libvlc.so cannot be created into lib/
-LIB_libvlc = libvlc$(LIBEXT)
-LDFLAGS_libvlc =
-#-Wl,-rpath $(libdir)
-else
-LIB_libvlc = lib/libvlc.a
-LDFLAGS_libvlc = `$(VLC_CONFIG) --libs vlc builtin` 
-endif
-
-vlc_LDFLAGS = $(LDFLAGS_libvlc) $(vlc_WORKAROUNDLDFLAGS)
-vlc_LDADD = $(LIB_libvlc) $(DATA_win32_rc) $(LIB_intl)
+vlc_LDFLAGS = `$(VLC_CONFIG) --libs vlc builtin` $(vlc_WORKAROUNDLDFLAGS)
+vlc_LDADD = lib/libvlc.a $(DATA_win32_rc) $(LIB_intl)
 vlc_CFLAGS = `$(VLC_CONFIG) --cflags vlc`
 
 # We use DEPENDENCIES_vlc instead of vlc_DEPENDENCIES because of an
 # old automake-1.5 bug (automake/279).
-DEPENDENCIES_vlc = $(LIB_libvlc) $(DATA_win32_rc) $(LIB_intl)
+DEPENDENCIES_vlc = lib/libvlc.a $(DATA_win32_rc) $(LIB_intl)
 
 vlc$(EXEEXT): $(vlc_OBJECTS) $(DEPENDENCIES_vlc) stamp-builtin
-	@rm -f vlc$(EXEEXT)
+	@rm -f $(top_builddir)/vlc$(EXEEXT)
 	@case `$(VLC_CONFIG) --linkage vlc builtin` in \
-	  c++) cmd="$(CXXLINK)" ;; \
-	  objc) cmd="$(OBJCLINK)" ;; \
-	  c|*) cmd="$(LINK)" ;; \
-	esac ; \
-	cmd="$$cmd $(vlc_OBJECTS) $(vlc_LDADD) $(vlc_LDFLAGS) $(LIBS)" ; \
-	echo $$cmd ; \
-	eval $$cmd
+	  c++) echo $(CXXLINK) $(vlc_OBJECTS) $(vlc_LDADD) $(vlc_LDFLAGS) $(LIBS) ; $(CXXLINK) $(vlc_OBJECTS) $(vlc_LDADD) $(vlc_LDFLAGS) $(LIBS) ;; \
+	  objc) echo $(OBJCLINK) $(vlc_OBJECTS) $(vlc_LDADD) $(vlc_LDFLAGS) $(LIBS) ; $(OBJCLINK) $(vlc_OBJECTS) $(vlc_LDADD) $(vlc_LDFLAGS) $(LIBS) ;; \
+	  c|*) echo $(LINK) $(vlc_OBJECTS) $(vlc_LDADD) $(vlc_LDFLAGS) $(LIBS) ; $(LINK) $(vlc_OBJECTS) $(vlc_LDADD) $(vlc_LDFLAGS) $(LIBS) ;; \
+	esac
 
 if HAVE_BEOS
-DATA_noinst_beos = vlc-bundle
+noinst_DATA = vlc-bundle
 vlc-bundle: vlc
 	rm -Rf $(top_builddir)/vlc-bundle ; mkdir -p $(top_builddir)/vlc-bundle
 	cp $(top_builddir)/vlc $(top_builddir)/vlc-bundle/
@@ -537,20 +464,26 @@ vlc-bundle: vlc
 	find $(top_builddir)/vlc-bundle -type f -exec mimeset -f "{}" \;
 endif
 
-# Install the symlinks and shared libvlc
+# Install the modules and the symlinks
 install-exec-local:
+	for i in "" `$(VLC_CONFIG) --target plugin` ; do if test -n "$$i" ; then \
+	  echo $(INSTALL) -m 755 "$$i$(LIBEXT)" "$(DESTDIR)$(libdir)/vlc/`echo $$i | sed -e 's,.*modules/\([^/]*\).*,\1,'`" ; \
+	  $(INSTALL) -m 755 "$$i$(LIBEXT)" "$(DESTDIR)$(libdir)/vlc/`echo $$i | sed -e 's,.*modules/\([^/]*\).*,\1,'`" ; \
+	fi ; done
+	for i in "" `$(VLC_CONFIG) --target builtin` ; do if test -n "$$i" ; then \
+	  echo $(INSTALL) -m 644 "$$i" "$(DESTDIR)$(libdir)/vlc" ; \
+	  $(INSTALL) -m 644 "$$i" "$(DESTDIR)$(libdir)/vlc" ; \
+	fi ; done
+if BUILD_MOZILLA
+	for i in "" `$(VLC_CONFIG) --target builtin pic` ; do if test -n "$$i" ; then \
+	  echo $(INSTALL) -m 644 "$$i" "$(DESTDIR)$(libdir)/vlc" ; \
+	  $(INSTALL) -m 644 "$$i" "$(DESTDIR)$(libdir)/vlc" ; \
+	fi ; done
+endif
 	for i in "" $(ALIASES) ; do if test -n "$$i" ; then \
 	  rm -f "$(DESTDIR)$(bindir)/$$i" && \
 	  ln -s vlc "$(DESTDIR)$(bindir)/$$i" ; \
 	fi ; done
-	test -z "$(DATA_noinst_libvlc)" || $(INSTALL_PROGRAM) "$(DATA_noinst_libvlc)" "$(DESTDIR)$(libdir)"
-
-# the opposite of install-{data,exec}-local
-uninstall-local:
-	for i in "" $(ALIASES) ; do if test -n "$$i" ; then \
-	  rm -f "$(DESTDIR)$(bindir)/$$i" ; \
-	fi ; done
-	test -z "$(DATA_noinst_libvlc)" || rm -f "$(DESTDIR)$(libdir)/$(DATA_noinst_libvlc)"
 
 if HAVE_DARWIN
 # Create the MacOS X app
@@ -602,32 +535,13 @@ VLC-release.app: vlc
 	    vout.h \
 	    voutqt.m \
 	    voutgl.m \
-	    wizard.h \
-	    wizard.m \
-	    extended.h \
-	    extended.m \
-	    bookmarks.h \
-	    bookmarks.m \
-	    update.h \
-	    update.m \
 	    vout.m; do \
 	  cp "$(srcdir)/modules/gui/macosx/$$i" \
              $(top_builddir)/tmp/modules/gui/macosx; \
 	done
-	case $(target_triplet) in \
-	  *darwin6*) cd $(top_builddir)/tmp/extras/MacOSX && pbxbuild -target vlc | grep -v '^\([ \t]\|$$\)'; \
-	    cd ../../../; \
-	    cp -r $(top_builddir)/tmp/extras/MacOSX/build/VLC.bundle \
-	          $(top_builddir)/VLC-release.app;; \
-	  *darwin7*) cd $(top_builddir)/tmp/extras/MacOSX && xcodebuild -target vlc | grep -v '^\([ \t]\|$$\)'; \
-	    cd ../../../; \
-	    cp -r $(top_builddir)/tmp/extras/MacOSX/build/VLC.bundle \
-	          $(top_builddir)/VLC-release.app;; \
-	  *darwin8*) cd $(top_builddir)/tmp/extras/MacOSX && xcodebuild -target vlc | grep -v '^\([ \t]\|$$\)'; \
-	    cd ../../../; \
-	    cp -r $(top_builddir)/tmp/extras/MacOSX/build/Default/VLC.bundle \
-	          $(top_builddir)/VLC-release.app;; \
-	esac
+	cd $(top_builddir)/tmp/extras/MacOSX && xcodebuild -target vlc | grep -v '^\([ \t]\|$$\)'
+	cp -r $(top_builddir)/tmp/extras/MacOSX/build/VLC.bundle \
+	      $(top_builddir)/VLC-release.app
 	rm -Rf $(top_builddir)/tmp
 	$(INSTALL) -d $(top_builddir)/VLC-release.app/Contents/MacOS
 	$(INSTALL) $(top_builddir)/vlc \
@@ -639,9 +553,9 @@ VLC-release.app: vlc
 	    then $(INSTALL) "$$i$(LIBEXT)" \
 			   "$(top_builddir)/VLC-release.app/Contents/MacOS/modules" ; \
 	  fi ; done
-	if test -d $(srcdir)/extras/contrib/vlc-lib; then \
+	if test -d $(top_builddir)/extras/contrib/vlc-lib; then \
 	  mkdir -p $(top_builddir)/VLC-release.app/Contents/MacOS/lib ; \
-	  for i in $(srcdir)/extras/contrib/vlc-lib/*.dylib ; do \
+	  for i in $(top_builddir)/extras/contrib/vlc-lib/*.dylib ; do \
 	    $(INSTALL) -m 644 $${i} $(top_builddir)/VLC-release.app/Contents/MacOS/lib/vlc_`basename $${i}` ; \
 	  done ; \
 	fi
@@ -718,32 +632,13 @@ VLC.app: vlc
 	    vout.h \
 	    voutqt.m \
 	    voutgl.m \
-	    wizard.h \
-	    wizard.m \
-	    extended.h \
-	    extended.m \
-	    bookmarks.h \
-	    bookmarks.m \
-	    update.h \
-	    update.m \
 	    vout.m; do \
 	  cp "$(srcdir)/modules/gui/macosx/$$i" \
              $(top_builddir)/tmp/modules/gui/macosx; \
 	done
-	case $(target_triplet) in \
-	  *darwin6*) cd $(top_builddir)/tmp/extras/MacOSX && pbxbuild -target vlc | grep -v '^\([ \t]\|$$\)'; \
-	    cd ../../../; \
-	    cp -r $(top_builddir)/tmp/extras/MacOSX/build/VLC.bundle \
-	          $(top_builddir)/VLC.app;; \
-	  *darwin7*) cd $(top_builddir)/tmp/extras/MacOSX && xcodebuild -target vlc | grep -v '^\([ \t]\|$$\)'; \
-	    cd ../../../; \
-	    cp -r $(top_builddir)/tmp/extras/MacOSX/build/VLC.bundle \
-	          $(top_builddir)/VLC.app;; \
-	  *darwin8*) cd $(top_builddir)/tmp/extras/MacOSX && xcodebuild -target vlc | grep -v '^\([ \t]\|$$\)'; \
-	    cd ../../../; \
-	    cp -r $(top_builddir)/tmp/extras/MacOSX/build/Default/VLC.bundle \
-	          $(top_builddir)/VLC.app;; \
-	esac
+	cd $(top_builddir)/tmp/extras/MacOSX && xcodebuild -target vlc | grep -v '^\([ \t]\|$$\)'
+	cp -r $(top_builddir)/tmp/extras/MacOSX/build/VLC.bundle \
+	      $(top_builddir)/VLC.app
 	rm -Rf $(top_builddir)/tmp
 	$(INSTALL) -d $(top_builddir)/VLC.app/Contents/MacOS
 	$(INSTALL) $(top_builddir)/vlc \
@@ -755,9 +650,9 @@ VLC.app: vlc
 	    then ln -sfn "`pwd`/$$i$(LIBEXT)" \
 			   "$(top_builddir)/VLC.app/Contents/MacOS/modules" ; \
 	  fi ; done
-	if test -d $(srcdir)/extras/contrib/vlc-lib; then \
+	if test -d $(top_builddir)/extras/contrib/vlc-lib; then \
 	  mkdir -p $(top_builddir)/VLC.app/Contents/MacOS/lib ; \
-	  for i in $(srcdir)/extras/contrib/vlc-lib/*.dylib ; do \
+	  for i in $(top_builddir)/extras/contrib/vlc-lib/*.dylib ; do \
 	    ln -sfn `pwd`/$${i} $(top_builddir)/VLC.app/Contents/MacOS/lib/vlc_`basename $${i}` ; \
 	  done ; \
 	fi
@@ -782,7 +677,6 @@ noinst_share_vlc_win32_rcdir = $(libdir)
 share/vlc_win32_rc.$(OBJEXT): share/vlc_win32_rc.rc
 	$(WINDRES) -DVERSION=$(VERSION) -DVERSION_NUMBER=`echo $(VERSION).0.0.0 | sed 's/\([0-9]*\)[^.]*\.*\([0-9]*\)[^.]*\.*\([0-9]*\)[^.]*\.*\([0-9]*\).*/\1,\2,\3,\4/'` --include-dir $(srcdir)/share -i $< -o $@
 endif
-
 
 ###############################################################################
 # Building specific source packages
@@ -854,49 +748,6 @@ package-win32-base:
 	  cp $$i $(top_builddir)/vlc-${VERSION}/skins/ || true ; \
 	done
 
-	mkdir -p "$(top_builddir)/vlc-${VERSION}/osdmenu"
-	mkdir -p "$(top_builddir)/vlc-${VERSION}/osdmenu/dvd"
-	mkdir -p "$(top_builddir)/vlc-${VERSION}/osdmenu/dvd/selected"
-	mkdir -p "$(top_builddir)/vlc-${VERSION}/osdmenu/dvd/unselect"
-	mkdir -p "$(top_builddir)/vlc-${VERSION}/osdmenu/dvd/selection"
-	mkdir -p "$(top_builddir)/vlc-${VERSION}/osdmenu/dvd/volume"
-	for i in $(srcdir)/share/osdmenu/*.*; do \
-	  cp $$i $(top_builddir)/vlc-${VERSION}/osdmenu/ || true ; \
-	  unix2dos $(top_builddir)/vlc-${VERSION}/osdmenu/`basename $$i` ; \
-	done
-	for i in $(srcdir)/share/osdmenu/dvd/*.*; do \
-	  cp $$i $(top_builddir)/vlc-${VERSION}/osdmenu/dvd || true ; \
-	done
-	for i in $(srcdir)/share/osdmenu/dvd/unselect/*.*; do \
-	  cp $$i $(top_builddir)/vlc-${VERSION}/osdmenu/dvd/unselect || true ; \
-	done
-	for i in $(srcdir)/share/osdmenu/dvd/selected/*.*; do \
-	  cp $$i $(top_builddir)/vlc-${VERSION}/osdmenu/dvd/selected/ || true ; \
-	done
-	for i in $(srcdir)/share/osdmenu/dvd/selection/*.*; do \
-	  cp $$i $(top_builddir)/vlc-${VERSION}/osdmenu/dvd/selection/ || true ; \
-	done
-	for i in $(srcdir)/share/osdmenu/dvd/volume/*.*; do \
-	  cp $$i $(top_builddir)/vlc-${VERSION}/osdmenu/dvd/volume/ || true ; \
-	done
-
-	mkdir -p "$(top_builddir)/vlc-${VERSION}/osdmenu/default"
-	mkdir -p "$(top_builddir)/vlc-${VERSION}/osdmenu/default/selected"
-	mkdir -p "$(top_builddir)/vlc-${VERSION}/osdmenu/default/selection"
-	mkdir -p "$(top_builddir)/vlc-${VERSION}/osdmenu/default/volume"
-	for i in $(srcdir)/share/osdmenu/default/*.*; do \
-	  cp $$i $(top_builddir)/vlc-${VERSION}/osdmenu/default || true ; \
-	done
-	for i in $(srcdir)/share/osdmenu/default/selected/*.*; do \
-	  cp $$i $(top_builddir)/vlc-${VERSION}/osdmenu/default/selected/ || true ; \
-	done
-	for i in $(srcdir)/share/osdmenu/default/selection/*.*; do \
-	  cp $$i $(top_builddir)/vlc-${VERSION}/osdmenu/default/selection/ || true ; \
-	done
-	for i in $(srcdir)/share/osdmenu/default/volume/*.*; do \
-	  cp $$i $(top_builddir)/vlc-${VERSION}/osdmenu/default/volume/ || true ; \
-	done
-
 	mkdir -p "$(top_builddir)/vlc-${VERSION}/http/admin"
 	mkdir -p "$(top_builddir)/vlc-${VERSION}/http/vlm"
 	cp $(srcdir)/share/http/*.html $(top_builddir)/vlc-${VERSION}/http/ ;
@@ -928,8 +779,8 @@ endif
 
 	mkdir -p "$(top_builddir)/vlc-${VERSION}/activex"
 if BUILD_ACTIVEX
-	cp $(srcdir)/activex/README.TXT  $(top_builddir)/vlc-${VERSION}/activex/ ;
-	cp $(srcdir)/activex/test.html  $(top_builddir)/vlc-${VERSION}/activex/ ;
+	cp $(top_builddir)/activex/README.TXT  $(top_builddir)/vlc-${VERSION}/activex/ ;
+	cp $(top_builddir)/activex/test.html  $(top_builddir)/vlc-${VERSION}/activex/ ;
 	unix2dos $(top_builddir)/vlc-${VERSION}/activex/* ;
 
 	cp $(top_builddir)/activex/*$(LIBEXT) $(top_builddir)/vlc-${VERSION}/activex/ ;
@@ -1057,34 +908,12 @@ package-translations:
 	  | GZIP=$(GZIP_ENV) gzip -c >$(srcdir)/vlc-translations-$(VERSION).tar.gz
 
 ###############################################################################
-# PO translation files update
-###############################################################################
-.PHONY: update-po
-
-update-po:
-	rm -f $(top_srcdir)/po/POTFILES.in
-	{ \
-	  cd $(top_srcdir) ; \
-	  echo "# automatically created by make update-po" ; \
-	  echo "" ; \
-	  echo "# main sources" ; \
-	  find include src -name '*.[chm]' -o -name '*.[ch]pp' \
-	    | grep -v '\(vlc_symbols\|misc/modules_\)' \
-	    | sort ; \
-	  echo "" ; \
-	  echo "# modules" ; \
-	  find modules -name '*.[chm]' -o -name '*.[ch]pp' \
-	    | grep -v '\(\.moc\.\|gui/gtk2/\)' \
-	    | sort ; \
-	} > $(top_srcdir)/po/POTFILES.in
-	rm -f $(top_srcdir)/po/vlc.pot
-	cd po && $(MAKE) POTFILES vlc.pot update-po
-
-#cd po && $(MAKE) update-po
-
-###############################################################################
 # Stamp rules
 ###############################################################################
+clean: clean-stamp clean-recursive
+clean-stamp:
+	rm -f stamp-builtin
+
 stamp-builtin: FORCE
 	@for dep in "" `$(VLC_CONFIG) --target builtin`; do \
 	  if test "$${dep}" -nt "$(top_builddir)/vlc$(EXEEXT)"; then \
@@ -1093,11 +922,6 @@ stamp-builtin: FORCE
 	  fi; \
 	done
 	@if test ! -f $@; then printf "" > $@; fi
-
-stamp-api: Makefile.in $(HEADERS_include) vlc-config vlc-api.pl
-	( cd $(srcdir) && cat $(HEADERS_include) ) | \
-	  top_srcdir="$(top_srcdir)" perl $(top_srcdir)/vlc-api.pl
-	touch stamp-api
 
 ###############################################################################
 # Force rule

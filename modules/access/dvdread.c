@@ -1,8 +1,8 @@
 /*****************************************************************************
  * dvdread.c : DvdRead input module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: dvdread.c 12437 2005-08-31 19:09:50Z massiot $
+ * Copyright (C) 2001-2004 VideoLAN
+ * $Id: dvdread.c 11429 2005-06-15 09:26:07Z xtophe $
  *
  * Authors: Stéphane Borel <stef@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -192,13 +192,13 @@ static int Open( vlc_object_t *p_this )
         if( !p_this->b_force ) return VLC_EGENERIC;
 
         psz_name = var_CreateGetString( p_this, "dvd" );
-        if( !psz_name )
+        if( !psz_name || !*psz_name )
         {
-            psz_name = strdup("");
+            if( psz_name ) free( psz_name );
+            return VLC_EGENERIC;
         }
     }
-    else
-        psz_name = strdup( p_demux->psz_path );
+    else psz_name = strdup( p_demux->psz_path );
 
 #ifdef WIN32
     if( psz_name[0] && psz_name[1] == ':' &&

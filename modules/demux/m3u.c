@@ -1,8 +1,8 @@
 /*****************************************************************************
  * m3u.c: a meta demux to parse pls, m3u, asx et b4s playlists
  *****************************************************************************
- * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: m3u.c 12558 2005-09-15 06:17:33Z zorglub $
+ * Copyright (C) 2001-2004 VideoLAN
+ * $Id: m3u.c 9961 2005-02-16 22:01:41Z robux4 $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -126,8 +126,8 @@ static int Activate( vlc_object_t * p_this )
     /* We double check for file != m3u as some asx are just m3u file */
     if( i_type != TYPE_M3U )
     {
-        char *p_peek;
-        int i_size = stream_Peek( p_demux->s, (uint8_t **)&p_peek, MAX_LINE );
+        uint8_t *p_peek;
+        int i_size = stream_Peek( p_demux->s, &p_peek, MAX_LINE );
         i_size -= sizeof("[Reference]") - 1;
 
         if( i_size > 0 )

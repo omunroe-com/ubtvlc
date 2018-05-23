@@ -1,8 +1,8 @@
 /*****************************************************************************
  * logger.c : file logging plugin for vlc
  *****************************************************************************
- * Copyright (C) 2002 the VideoLAN team
- * $Id: logger.c 12036 2005-08-05 18:44:47Z massiot $
+ * Copyright (C) 2002 VideoLAN
+ * $Id: logger.c 10781 2005-04-23 22:13:35Z zorglub $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -160,7 +160,7 @@ static int Open( vlc_object_t *p_this )
     if( !psz_file )
     {
 #ifdef SYS_DARWIN
-        char *psz_homedir = p_this->p_vlc->psz_homedir; 
+	char *psz_homedir = p_this->p_vlc->psz_homedir; 
 
         if( !psz_homedir )
         {
@@ -185,7 +185,7 @@ static int Open( vlc_object_t *p_this )
             }
         }
 #else
-        switch( p_intf->p_sys->i_mode )
+	switch( p_intf->p_sys->i_mode )
         {
         case MODE_HTML:
             psz_file = strdup( LOG_FILE_HTML );

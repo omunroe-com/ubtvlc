@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mms.h: MMS access plug-in
  *****************************************************************************
- * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: mmstu.h 11728 2005-07-13 18:30:46Z courmisch $
+ * Copyright (C) 2001, 2002 VideoLAN
+ * $Id: mmstu.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -37,7 +37,7 @@ struct access_sys_t
     int                 i_handle_tcp;   /* TCP socket for communication with server */
     int                 i_handle_udp;   /* Optional UDP socket for data(media/header packet) */
                                         /* send by server */
-    char                sz_bind_addr[NI_MAXNUMERICHOST]; /* used by udp */
+    char                *psz_bind_addr; /* used by udp */
 
     vlc_url_t           url;
 

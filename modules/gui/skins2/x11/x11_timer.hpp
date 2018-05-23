@@ -1,8 +1,8 @@
 /*****************************************************************************
  * x11_timer.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: x11_timer.hpp 12208 2005-08-15 15:58:39Z asmax $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: x11_timer.hpp 9641 2004-12-22 13:06:43Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -31,14 +31,13 @@
 
 // Forward declaration
 class X11TimerLoop;
-class CmdGeneric;
 
 
 // X11 specific timer
 class X11Timer: public OSTimer
 {
     public:
-        X11Timer( intf_thread_t *pIntf, CmdGeneric &rCmd );
+        X11Timer( intf_thread_t *pIntf, const Callback &rCallback );
         virtual ~X11Timer();
 
         /// (Re)start the timer with the given delay (in ms). If oneShot is
@@ -55,8 +54,8 @@ class X11Timer: public OSTimer
         bool execute();
 
     private:
-        /// Command to execute
-        CmdGeneric &m_rCommand;
+        /// Callback to execute
+        Callback m_callback;
         /// Timer loop
         X11TimerLoop *m_pTimerLoop;
         /// Delay between two execute

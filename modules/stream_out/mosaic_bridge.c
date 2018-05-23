@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mosaic_bridge.c:
  *****************************************************************************
- * Copyright (C) 2004-2005 the VideoLAN team
- * $Id: mosaic_bridge.c 12075 2005-08-08 17:41:08Z dionoea $
+ * Copyright (C) 2004-2005 VideoLAN
+ * $Id: mosaic_bridge.c 11088 2005-05-20 18:16:33Z massiot $
  *
  * Authors: Antoine Cellerier <dionoea@videolan.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -48,12 +48,11 @@ struct sout_stream_sys_t
     decoder_t       *p_decoder;
     image_handler_t *p_image; /* filter for resizing */
     int i_height, i_width;
-    int i_sar_num, i_sar_den;
     char *psz_id;
     vlc_bool_t b_inited;
 };
 
-#define PICTURE_RING_SIZE 4
+#define PICTURE_RING_SIZE 64
 struct decoder_owner_sys_t
 {
     picture_t *pp_pics[PICTURE_RING_SIZE];
@@ -107,9 +106,6 @@ static void video_unlink_picture_decoder( decoder_t *, picture_t * );
 #define HEIGHT_TEXT N_("Video height")
 #define HEIGHT_LONGTEXT N_( \
     "Allows you to specify the output video height." )
-#define RATIO_TEXT N_("Sample aspect ratio")
-#define RATIO_LONGTEXT N_( \
-    "Sample aspect ratio of the destination (1:1, 3:4, 2:3)." )
 
 #define SOUT_CFG_PREFIX "sout-mosaic-bridge-"
 
@@ -125,8 +121,6 @@ vlc_module_begin();
                  WIDTH_LONGTEXT, VLC_TRUE );
     add_integer( SOUT_CFG_PREFIX "height", 0, NULL, HEIGHT_TEXT,
                  HEIGHT_LONGTEXT, VLC_TRUE );
-    add_string( SOUT_CFG_PREFIX "sar", "1:1", NULL, RATIO_TEXT,
-                RATIO_LONGTEXT, VLC_FALSE );
 
     set_callbacks( Open, Close );
 
@@ -134,7 +128,7 @@ vlc_module_begin();
 vlc_module_end();
 
 static const char *ppsz_sout_options[] = {
-    "id", "width", "height", "sar", NULL
+    "id", "width", "height", NULL
 };
 
 /*****************************************************************************
@@ -161,35 +155,14 @@ static int Open( vlc_object_t *p_this )
     p_sys->psz_id = val.psz_string;
 
     var_Get( p_stream, SOUT_CFG_PREFIX "height", &val );
-    p_sys->i_height = val.i_int;
+    p_sys->i_height = val.i_int; 
 
     var_Get( p_stream, SOUT_CFG_PREFIX "width", &val );
-    p_sys->i_width = val.i_int;
+    p_sys->i_width = val.i_int; 
 
-    var_Get( p_stream, SOUT_CFG_PREFIX "sar", &val );
-    if ( val.psz_string )
+    if ( p_sys->i_height || p_sys->i_width )
     {
-        char *psz_parser = strchr( val.psz_string, ':' );
-
-        if( psz_parser )
-        {
-            *psz_parser++ = '\0';
-            p_sys->i_sar_num = atoi( val.psz_string );
-            p_sys->i_sar_den = atoi( psz_parser );
-            vlc_ureduce( &p_sys->i_sar_num, &p_sys->i_sar_den,
-                         p_sys->i_sar_num, p_sys->i_sar_den, 0 );
-        }
-        else
-        {
-            msg_Warn( p_stream, "bad aspect ratio %s", val.psz_string );
-            p_sys->i_sar_num = p_sys->i_sar_den = 1;
-        }
-
-        free( val.psz_string );
-    }
-    else
-    {
-        p_sys->i_sar_num = p_sys->i_sar_den = 1;
+        p_sys->p_image = image_HandlerCreate( p_stream );
     }
 
     p_stream->pf_add    = Add;
@@ -303,11 +276,6 @@ static sout_stream_id_t * Add( sout_stream_t *p_stream, es_format_t *p_fmt )
 
     vlc_mutex_unlock( p_sys->p_lock );
 
-    if ( p_sys->i_height || p_sys->i_width )
-    {
-        p_sys->p_image = image_HandlerCreate( p_stream );
-    }
-
     msg_Dbg( p_stream, "mosaic bridge id=%s pos=%d", p_es->psz_id, i );
 
     return (sout_stream_id_t *)p_sys;
@@ -418,26 +386,8 @@ static int Send( sout_stream_t *p_stream, sout_stream_id_t *id,
             fmt_in = p_sys->p_decoder->fmt_out.video;
 
             fmt_out.i_chroma = VLC_FOURCC('Y','U','V','A');
-
-            if ( !p_sys->i_height )
-            {
-                fmt_out.i_width = p_sys->i_width;
-                fmt_out.i_height = (p_sys->i_width * VOUT_ASPECT_FACTOR
-                    * p_sys->i_sar_num / p_sys->i_sar_den / fmt_in.i_aspect)
-                      & ~0x1;
-            }
-            else if ( !p_sys->i_width )
-            {
-                fmt_out.i_height = p_sys->i_height;
-                fmt_out.i_width = (p_sys->i_height * fmt_in.i_aspect
-                    * p_sys->i_sar_den / p_sys->i_sar_num / VOUT_ASPECT_FACTOR)
-                      & ~0x1;
-            }
-            else
-            {
-                fmt_out.i_width = p_sys->i_width;
-                fmt_out.i_height = p_sys->i_height;
-            }
+            fmt_out.i_width = p_sys->i_width;
+            fmt_out.i_height = p_sys->i_height;
             fmt_out.i_visible_width = fmt_out.i_width;
             fmt_out.i_visible_height = fmt_out.i_height;
 

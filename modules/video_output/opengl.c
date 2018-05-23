@@ -1,8 +1,8 @@
 /*****************************************************************************
  * opengl.c: OpenGL video output
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: opengl.c 12310 2005-08-21 14:33:06Z hartman $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: opengl.c 11514 2005-06-24 20:14:28Z hartman $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -67,10 +67,6 @@
 /* Use RGB on Win32/GLX */
 #define VLCGL_FORMAT VLCGL_RGB_FORMAT
 #define VLCGL_TYPE   VLCGL_RGB_TYPE
-#endif
-
-#ifndef GL_CLAMP_TO_EDGE
-#   define GL_CLAMP_TO_EDGE 0x812F
 #endif
 
 /* OpenGL effects */
@@ -230,7 +226,6 @@ static int CreateVout( vlc_object_t *p_this )
     var_Create( p_sys->p_vout, "mouse-y", VLC_VAR_INTEGER );
     var_Create( p_sys->p_vout, "mouse-moved", VLC_VAR_BOOL );
     var_Create( p_sys->p_vout, "mouse-clicked", VLC_VAR_INTEGER );
-    var_Create( p_sys->p_vout, "mouse-button-down", VLC_VAR_INTEGER );
     var_Create( p_sys->p_vout, "video-on-top",
                 VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
 
@@ -238,7 +233,6 @@ static int CreateVout( vlc_object_t *p_this )
     var_AddCallback( p_sys->p_vout, "mouse-y", SendEvents, p_vout );
     var_AddCallback( p_sys->p_vout, "mouse-moved", SendEvents, p_vout );
     var_AddCallback( p_sys->p_vout, "mouse-clicked", SendEvents, p_vout );
-    var_AddCallback( p_sys->p_vout, "mouse-button-down", SendEvents, p_vout );
 
     return VLC_SUCCESS;
 }
@@ -595,10 +589,10 @@ static void DisplayVideo( vout_thread_t *p_vout, picture_t *p_pic )
     {
         glEnable( VLCGL_TARGET );
         glBegin( GL_POLYGON );
-        glTexCoord2f( 0.0, 0.0 ); glVertex2f( -1.0, 1.0 );
-        glTexCoord2f( f_width, 0.0 ); glVertex2f( 1.0, 1.0 );
-        glTexCoord2f( f_width, f_height ); glVertex2f( 1.0, -1.0 );
-        glTexCoord2f( 0.0, f_height ); glVertex2f( -1.0, -1.0 );
+        glTexCoord2f( 0.5, 0.5 ); glVertex2f( -1.0, 1.0 );
+        glTexCoord2f( f_width - 0.5, 0.5 ); glVertex2f( 1.0, 1.0 );
+        glTexCoord2f( f_width - 0.5, f_height - 0.5 ); glVertex2f( 1.0, -1.0 );
+        glTexCoord2f( 0.5, f_height - 0.5 ); glVertex2f( -1.0, -1.0 );
         glEnd();
     }
     else
@@ -609,40 +603,36 @@ static void DisplayVideo( vout_thread_t *p_vout, picture_t *p_pic )
         glBegin( GL_QUADS );
 
         /* Front */
-        glTexCoord2f( 0, 0 ); glVertex3f( - 1.0, 1.0, 1.0 );
-        glTexCoord2f( 0, f_height ); glVertex3f( - 1.0, - 1.0, 1.0 );
-        glTexCoord2f( f_width, f_height ); glVertex3f( 1.0, - 1.0, 1.0 );
-        glTexCoord2f( f_width, 0 ); glVertex3f( 1.0, 1.0, 1.0 );
+        glTexCoord2f( 0.5, 0.5 ); glVertex3f( - 1.0, 1.0, 1.0 );
+        glTexCoord2f( 0.5, f_height - 0.5 ); glVertex3f( - 1.0, - 1.0, 1.0 );
+        glTexCoord2f( f_width - 0.5, f_height - 0.5 ); glVertex3f( 1.0, - 1.0, 1.0 );
+        glTexCoord2f( f_width - 0.5, 0.5 ); glVertex3f( 1.0, 1.0, 1.0 );
 
         /* Left */
-        glTexCoord2f( 0, 0 ); glVertex3f( - 1.0, 1.0, - 1.0 );
-        glTexCoord2f( 0, f_height ); glVertex3f( - 1.0, - 1.0, - 1.0 );
-        glTexCoord2f( f_width, f_height ); glVertex3f( - 1.0, - 1.0, 1.0 );
-        glTexCoord2f( f_width, 0 ); glVertex3f( - 1.0, 1.0, 1.0 );
+        glTexCoord2f( 0.5, 0.5 ); glVertex3f( - 1.0, 1.0, - 1.0 );
+        glTexCoord2f( 0.5, f_height - 0.5 ); glVertex3f( - 1.0, - 1.0, - 1.0 );
+        glTexCoord2f( f_width - 0.5, f_height - 0.5 ); glVertex3f( - 1.0, - 1.0, 1.0 );
+        glTexCoord2f( f_width - 0.5, 0.5 ); glVertex3f( - 1.0, 1.0, 1.0 );
 
         /* Back */
-        glTexCoord2f( 0, 0 ); glVertex3f( 1.0, 1.0, - 1.0 );
-        glTexCoord2f( 0, f_height ); glVertex3f( 1.0, - 1.0, - 1.0 );
-        glTexCoord2f( f_width, f_height ); glVertex3f( - 1.0, - 1.0, - 1.0 );
-        glTexCoord2f( f_width, 0 ); glVertex3f( - 1.0, 1.0, - 1.0 );
+        glTexCoord2f( 0.5, 0.5 ); glVertex3f( 1.0, 1.0, - 1.0 );
+        glTexCoord2f( 0.5, f_height - 0.5 ); glVertex3f( 1.0, - 1.0, - 1.0 );
+        glTexCoord2f( f_width - 0.5, f_height - 0.5 ); glVertex3f( - 1.0, - 1.0, - 1.0 );
+        glTexCoord2f( f_width - 0.5, 0.5 ); glVertex3f( - 1.0, 1.0, - 1.0 );
 
         /* Right */
-        glTexCoord2f( 0, 0 ); glVertex3f( 1.0, 1.0, 1.0 );
-        glTexCoord2f( 0, f_height ); glVertex3f( 1.0, - 1.0, 1.0 );
-        glTexCoord2f( f_width, f_height ); glVertex3f( 1.0, - 1.0, - 1.0 );
-        glTexCoord2f( f_width, 0 ); glVertex3f( 1.0, 1.0, - 1.0 );
+        glTexCoord2f( 0.5, 0.5 ); glVertex3f( 1.0, 1.0, 1.0 );
+        glTexCoord2f( 0.5, f_height - 0.5 ); glVertex3f( 1.0, - 1.0, 1.0 );
+        glTexCoord2f( f_width - 0.5, f_height - 0.5 ); glVertex3f( 1.0, - 1.0, - 1.0 );
+        glTexCoord2f( f_width - 0.5, 0.5 ); glVertex3f( 1.0, 1.0, - 1.0 );
 
         /* Top */
-        glTexCoord2f( 0, 0 ); glVertex3f( - 1.0, 1.0, - 1.0 );
-        glTexCoord2f( 0, f_height ); glVertex3f( - 1.0, 1.0, 1.0 );
-        glTexCoord2f( f_width, f_height ); glVertex3f( 1.0, 1.0, 1.0 );
-        glTexCoord2f( f_width, 0 ); glVertex3f( 1.0, 1.0, - 1.0 );
-
-        /* Bottom */
-        glTexCoord2f( 0, 0 ); glVertex3f( - 1.0, - 1.0, 1.0 );
-        glTexCoord2f( 0, f_height ); glVertex3f( - 1.0, - 1.0, - 1.0 );
-        glTexCoord2f( f_width, f_height ); glVertex3f( 1.0, - 1.0, - 1.0 );
-        glTexCoord2f( f_width, 0 ); glVertex3f( 1.0, - 1.0, 1.0 );
+        glTexCoord2f( 0.5, 0.5 ); glVertex3f( - 1.0, 1.0, - 1.0 );
+        glTexCoord2f( 0.5, f_height - 0.5 ); glVertex3f( - 1.0, 1.0, 1.0 );
+        glTexCoord2f( f_width - 0.5, f_height - 0.5 ); glVertex3f( 1.0, 1.0, 1.0 );
+        glTexCoord2f( 0.5, f_height - 0.5 ); glVertex3f( - 1.0, - 1.0, - 1.0 );
+        glTexCoord2f( f_width - 0.5, f_height - 0.5 ); glVertex3f( 1.0, - 1.0, - 1.0 );
+        glTexCoord2f( f_width - 0.5, 0.5 ); glVertex3f( 1.0, - 1.0, 1.0 );
         glEnd();
     }
 

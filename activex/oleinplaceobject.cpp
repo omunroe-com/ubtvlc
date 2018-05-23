@@ -1,7 +1,7 @@
 /*****************************************************************************
  * oleinplaceobject.cpp: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
+ * Copyright (C) 2005 VideoLAN
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -30,15 +30,18 @@ using namespace std;
 STDMETHODIMP VLCOleInPlaceObject::GetWindow(HWND *pHwnd)
 {
     if( NULL == pHwnd )
-        return E_POINTER;
+        return E_INVALIDARG;
 
-    *pHwnd = NULL;
     if( _p_instance->isInPlaceActive() )
     {
         if( NULL != (*pHwnd = _p_instance->getInPlaceWindow()) )
             return S_OK;
+
+        return E_FAIL;
     }
-    return E_FAIL;
+    *pHwnd = NULL;
+
+    return E_UNEXPECTED;
 };
 
 STDMETHODIMP VLCOleInPlaceObject::ContextSensitiveHelp(BOOL fEnterMode)
@@ -51,7 +54,6 @@ STDMETHODIMP VLCOleInPlaceObject::InPlaceDeactivate(void)
     if( _p_instance->isInPlaceActive() )
     {
         UIDeactivate();
-
         _p_instance->onInPlaceDeactivate();
 
         LPOLEOBJECT p_oleObject;
@@ -83,26 +85,26 @@ STDMETHODIMP VLCOleInPlaceObject::UIDeactivate(void)
         if( _p_instance->hasFocus() )
         {
             _p_instance->setFocus(FALSE);
-        }
 
-        LPOLEOBJECT p_oleObject;
-        if( SUCCEEDED(QueryInterface(IID_IOleObject, (void**)&p_oleObject)) ) 
-        {
-            LPOLECLIENTSITE p_clientSite;
-            if( SUCCEEDED(p_oleObject->GetClientSite(&p_clientSite)) )
+            LPOLEOBJECT p_oleObject;
+            if( SUCCEEDED(QueryInterface(IID_IOleObject, (void**)&p_oleObject)) ) 
             {
-                LPOLEINPLACESITE p_inPlaceSite;
-
-                if( SUCCEEDED(p_clientSite->QueryInterface(IID_IOleInPlaceSite, (void**)&p_inPlaceSite)) )
+                LPOLECLIENTSITE p_clientSite;
+                if( SUCCEEDED(p_oleObject->GetClientSite(&p_clientSite)) )
                 {
-                    p_inPlaceSite->OnUIDeactivate(FALSE);
-                    p_inPlaceSite->Release();
+                    LPOLEINPLACESITE p_inPlaceSite;
+
+                    if( SUCCEEDED(p_clientSite->QueryInterface(IID_IOleInPlaceSite, (void**)&p_inPlaceSite)) )
+                    {
+                        p_inPlaceSite->OnUIDeactivate(FALSE);
+                        p_inPlaceSite->Release();
+                    }
+                    p_clientSite->Release();
                 }
-                p_clientSite->Release();
+                p_oleObject->Release();
             }
-            p_oleObject->Release();
+            return S_OK;
         }
-        return S_OK;
     }
     return E_UNEXPECTED;
 };

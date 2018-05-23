@@ -1,8 +1,8 @@
 /*****************************************************************************
  * bitmap_font.cpp
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: bitmap_font.cpp 12501 2005-09-09 19:20:34Z gbazin $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: bitmap_font.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -30,8 +30,6 @@ BitmapFont::BitmapFont( intf_thread_t *pIntf, const GenericBitmap &rBitmap,
                         const string &rType ):
     GenericFont( pIntf ), m_rBitmap( rBitmap )
 {
-    int i;
-
     // Build the character table
     if( rType == "digits" )
     {
@@ -39,7 +37,7 @@ BitmapFont::BitmapFont( intf_thread_t *pIntf, const GenericBitmap &rBitmap,
         m_height = 13;
         m_advance = 12;
         m_skip = 6;
-        for( i = 0; i <= 9; i++ )
+        for( int i = 0; i <= 9; i++ )
         {
             m_table['0'+i].m_xPos = i * m_width;
         }
@@ -51,14 +49,14 @@ BitmapFont::BitmapFont( intf_thread_t *pIntf, const GenericBitmap &rBitmap,
         m_height = 6;
         m_advance = 5;
         m_skip = 5;
-        for( i = 0; i < 26; i++ )
+        for( int i = 0; i < 26; i++ )
         {
             m_table['A'+i].m_xPos = m_table['a'+i].m_xPos = i * m_width;
         }
         m_table[(size_t)'"'].m_xPos = 26 * m_width;
         m_table[(size_t)'@'].m_xPos = 27 * m_width;
         m_table[(size_t)' '].m_xPos = 29 * m_width;
-        for( i = 0; i <= 9; i++ )
+        for( int i = 0; i <= 9; i++ )
         {
             m_table['0'+i].m_xPos = i * m_width;
             m_table['0'+i].m_yPos = m_height;
@@ -66,7 +64,7 @@ BitmapFont::BitmapFont( intf_thread_t *pIntf, const GenericBitmap &rBitmap,
         static const char specialChars[] = {'.', ':', '(', ')', '-', '\'',
             '!', '_', '+', '\\', '/', '[', ']', '^', '&', '%', ',', '=', '$',
             '#'};
-        for( i = 0; i < 19; i++ )
+        for( int i = 0; i < 19; i++ )
         {
             m_table[(size_t)specialChars[i]].m_xPos = (11 + i) * m_width;
             m_table[(size_t)specialChars[i]].m_yPos = m_height;

@@ -1,4 +1,4 @@
-# $Id: MAINTAINERS 12591 2005-09-18 13:18:55Z sam $
+# $Id: MAINTAINERS 6961 2004-03-05 17:34:23Z sam $
 #
 #                            VLC MAINTAINERS
 #
@@ -97,10 +97,10 @@
 [henri] = Henri Fallon
 [jlj] = Jon Lech Johansen
 [jobi] = Johan Bilien
-[lool] = LoÃ¯c Minier
+[lool] = Loïc Minier
 [meuuh] = Christophe Massiot
 [sam] = Samuel Hocevar
 [saman] = Jean-Paul Saman
 [sigmund] = Sigmund Augdal
-[stef] = StÃ©phane Borel
+[stef] = Stéphane Borel
 [thedj] = Derk-Jan Hartman

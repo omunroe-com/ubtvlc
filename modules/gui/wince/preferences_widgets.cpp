@@ -1,8 +1,8 @@
 /*****************************************************************************
  * preferences_widgets.cpp : WinCE gui plugin for VLC
  *****************************************************************************
- * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: preferences_widgets.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2000-2004 VideoLAN
+ * $Id: preferences_widgets.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Marodon Cedric <cedric_marodon@yahoo.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -50,10 +50,6 @@ ConfigControl *CreateConfigControl( vlc_object_t *p_this,
 {
     ConfigControl *p_control = NULL;
 
-    if( p_item->psz_current )
-    {
-        return NULL;
-    }
     switch( p_item->i_type )
     {
     case CONFIG_ITEM_MODULE:

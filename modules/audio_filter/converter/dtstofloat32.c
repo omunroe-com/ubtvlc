@@ -3,8 +3,8 @@
  *   This plugin makes use of libdts to do the actual decoding
  *   (http://www.videolan.org/dtsdec/).
  *****************************************************************************
- * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: dtstofloat32.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2001, 2002 VideoLAN
+ * $Id: dtstofloat32.c 10379 2005-03-17 20:39:52Z gbazin $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *      

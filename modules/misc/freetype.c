@@ -1,8 +1,8 @@
 /*****************************************************************************
  * freetype.c : Put text on the video, using freetype2
  *****************************************************************************
- * Copyright (C) 2002 - 2005 the VideoLAN team
- * $Id: freetype.c 12412 2005-08-27 16:40:23Z jpsaman $
+ * Copyright (C) 2002 - 2005 VideoLAN
+ * $Id: freetype.c 11387 2005-06-10 15:32:08Z hartman $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -34,7 +34,7 @@
 
 #include <vlc/vlc.h>
 #include <vlc/vout.h>
-#include "vlc_osd.h"
+#include "osd.h"
 #include "vlc_block.h"
 #include "vlc_filter.h"
 

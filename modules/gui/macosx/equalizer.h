@@ -1,8 +1,8 @@
 /*****************************************************************************
  * equalizer.h: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: equalizer.h 11818 2005-07-23 15:08:46Z fkuehne $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: equalizer.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: JŽr™me Decoodt <djc@videolan.org>
  *
@@ -54,11 +54,4 @@
 - (IBAction)twopass:(id)sender;
 - (void)windowWillClose:(NSNotification *)aNotification;
 - (void)awakeFromNib;
-
-- (void)setValue:(float)value forSlider:(int)index;
-- (id)getSliderByIndex:(int)index;
-- (void)setBandSlidersValues:(float *)values;
-- (void)initBandSliders;
-
-
 @end

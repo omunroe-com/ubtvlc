@@ -1,8 +1,8 @@
 /*****************************************************************************
  * item.c : Playlist item functions
  *****************************************************************************
- * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: item.c 11699 2005-07-11 08:52:14Z sam $
+ * Copyright (C) 1999-2004 VideoLAN
+ * $Id: item.c 10660 2005-04-12 18:15:33Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -395,13 +395,11 @@ static void GuessType( input_item_t *p_item)
         { NULL, 0 }
     };
 
-#if 0 /* Unused */
     static struct { char *psz_search; int i_type; } exts_array[] =
     {
         { "mp3", ITEM_TYPE_AFILE },
         { NULL, 0 }
     };
-#endif
 
     for( i = 0; types_array[i].psz_search != NULL; i++ )
     {

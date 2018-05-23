@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout_synchro.h: frame-dropping structures
  *****************************************************************************
- * Copyright (C) 1999-2005 the VideoLAN team
- * $Id: vout_synchro.h 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 1999-2005 VideoLAN
+ * $Id: vout_synchro.h 11086 2005-05-20 18:00:02Z massiot $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Jean-Marc Dressler <polux@via.ecp.fr>

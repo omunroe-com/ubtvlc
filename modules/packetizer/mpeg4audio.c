@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mpeg4audio.c: parse and packetize an MPEG 4 audio stream
  *****************************************************************************
- * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: mpeg4audio.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2001, 2002 VideoLAN
+ * $Id: mpeg4audio.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlcproc.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: vlcproc.hpp 12281 2005-08-20 00:31:27Z dionoea $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: vlcproc.hpp 10735 2005-04-18 21:21:09Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -28,11 +28,9 @@
 #include <set>
 
 #include "../vars/playlist.hpp"
-#include "../vars/playtree.hpp"
 #include "../vars/time.hpp"
 #include "../vars/volume.hpp"
 #include "../utils/var_text.hpp"
-#include "../commands/cmd_generic.hpp"
 
 class OSTimer;
 class VarBool;
@@ -51,9 +49,6 @@ class VlcProc: public SkinObject
 
         /// Getter for the playlist variable
         Playlist &getPlaylistVar() { return *((Playlist*)m_cPlaylist.get()); }
-
-        /// Getter for the playtree variable
-        Playtree &getPlaytreeVar() { return *((Playtree*)m_cPlaytree.get()); }
 
         /// Getter for the time variable
         StreamTime &getTimeVar() { return *((StreamTime*)(m_cVarTime.get())); }
@@ -76,7 +71,7 @@ class VlcProc: public SkinObject
         void unregisterVoutWindow( void *pVoutWindow );
 
         /// Indicate whether the embedded video output is currently used
-        bool isVoutUsed() const { return m_pVout != NULL; }
+        bool isVoutUsed() const { return m_pVout; }
 
         /// If an embedded video output is used, drop it (i.e. tell it to stop
         /// using our window handle)
@@ -92,8 +87,6 @@ class VlcProc: public SkinObject
         OSTimer *m_pTimer;
         /// Playlist variable
         VariablePtr m_cPlaylist;
-        /// Playtree variable FIXME
-        VariablePtr m_cPlaytree;
         VariablePtr m_cVarRandom;
         VariablePtr m_cVarLoop;
         VariablePtr m_cVarRepeat;
@@ -130,11 +123,12 @@ class VlcProc: public SkinObject
          */
         void manage();
 
-        /// Define the command that calls manage()
-        DEFINE_CALLBACK( VlcProc, Manage );
-
         /// Update the stream name variable
         void updateStreamName( playlist_t *p_playlist );
+
+        /// This function directly calls manage(), because it's boring to
+        /// always write "pThis->"
+        static void doManage( SkinObject *pObj );
 
         /// Callback for intf-change variable
         static int onIntfChange( vlc_object_t *pObj, const char *pVariable,

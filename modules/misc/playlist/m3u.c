@@ -1,8 +1,8 @@
 /*****************************************************************************
  * m3u.c :  M3U playlist export module
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: m3u.c 12558 2005-09-15 06:17:33Z zorglub $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: m3u.c 10665 2005-04-12 21:55:32Z zorglub $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -63,26 +63,22 @@ int Export_M3U( vlc_object_t *p_this )
              strcmp( p_playlist->pp_items[i]->input.psz_name,
                     p_playlist->pp_items[i]->input.psz_uri ) )
         {
-            char *psz_artist =
-                vlc_input_item_GetInfo( &p_playlist->pp_items[i]->input,
-                                        _("Meta-information"), _("Artist") );
-            if( psz_artist && *psz_artist )
+            char *psz_author =
+                   vlc_input_item_GetInfo( &p_playlist->pp_items[i]->input,
+                                         _("Meta-information"), _("Artist") );
+            if( psz_author && *psz_author )
             {
-                /* write EXTINF with artist */
                 fprintf( p_export->p_file, "#EXTINF:%i,%s - %s\n",
-                         (int)(p_playlist->pp_items[i]->input.i_duration/1000000),
-                         psz_artist,
-                         p_playlist->pp_items[i]->input.psz_name );
+                     (int)(p_playlist->pp_items[i]->input.i_duration/1000000),
+                     psz_author, p_playlist->pp_items[i]->input.psz_name );
             }
             else
             {
-                /* write EXTINF without artist */
                 fprintf( p_export->p_file, "#EXTINF:%i,%s\n",
-                       (int)(p_playlist->pp_items[i]->input.i_duration/1000000),
+                         (int)(p_playlist->pp_items[i]->input.i_duration/1000000),
                          p_playlist->pp_items[i]->input.psz_name );
             }
-            if( psz_artist )
-                free( psz_artist );
+            free(psz_author);
         }
 
         /* VLC specific options */

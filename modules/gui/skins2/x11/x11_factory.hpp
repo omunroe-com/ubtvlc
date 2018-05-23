@@ -1,8 +1,8 @@
 /*****************************************************************************
  * x11_factory.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: x11_factory.hpp 12207 2005-08-15 15:54:32Z asmax $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: x11_factory.hpp 8116 2004-07-04 22:22:10Z adn $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -59,8 +59,8 @@ class X11Factory: public OSFactory
         /// Destroy the instance of OSLoop.
         virtual void destroyOSLoop();
 
-        /// Instantiate an OSTimer with the given command
-        virtual OSTimer *createOSTimer( CmdGeneric &rCmd );
+        /// Instantiate an OSTimer with the given callback
+        virtual OSTimer *createOSTimer( const Callback &rCallback );
 
         ///
         virtual void minimize();

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * linux_dvb.c : functions to control a DVB card under Linux with v4l2
  *****************************************************************************
- * Copyright (C) 1998-2004 the VideoLAN team
+ * Copyright (C) 1998-2004 VideoLAN
  *
  * Authors: Damien Lucas <nitrox@via.ecp.fr>
  *          Johan Bilien <jobi@via.ecp.fr>
@@ -690,79 +690,19 @@ static int FrontendSetQPSK( access_t *p_access )
     struct dvb_frontend_parameters fep;
     int i_ret;
     vlc_value_t val;
-    int i_frequency, i_lnb_slof = 0, i_lnb_lof1, i_lnb_lof2 = 0;
+    int i_frequency, i_lnb_slof;
 
     /* Prepare the fep structure */
     var_Get( p_access, "dvb-frequency", &val );
     i_frequency = val.i_int;
+    var_Get( p_access, "dvb-lnb-slof", &val );
+    i_lnb_slof = val.i_int;
 
-    var_Get( p_access, "dvb-lnb-lof1", &val );
-    if ( val.i_int == 0 )
-    {
-        /* Automatic mode. */
-        if ( i_frequency >= 950000 && i_frequency <= 2150000 )
-        {
-            msg_Dbg( p_access, "frequency %d is in IF-band", i_frequency );
-            i_lnb_lof1 = 0;
-        }
-        else if ( i_frequency >= 2500000 && i_frequency <= 2700000 )
-        {
-            msg_Dbg( p_access, "frequency %d is in S-band", i_frequency );
-            i_lnb_lof1 = 3650000;
-        }
-        else if ( i_frequency >= 3400000 && i_frequency <= 4200000 )
-        {
-            msg_Dbg( p_access, "frequency %d is in C-band (lower)",
-                     i_frequency );
-            i_lnb_lof1 = 5150000;
-        }
-        else if ( i_frequency >= 4500000 && i_frequency <= 4800000 )
-        {
-            msg_Dbg( p_access, "frequency %d is in C-band (higher)",
-                     i_frequency );
-            i_lnb_lof1 = 5950000;
-        }
-        else if ( i_frequency >= 10700000 && i_frequency <= 13250000 )
-        {
-            msg_Dbg( p_access, "frequency %d is in Ku-band",
-                     i_frequency );
-            i_lnb_lof1 = 9750000;
-            i_lnb_lof2 = 10600000;
-            i_lnb_slof = 11700000;
-        }
-        else
-        {
-            msg_Err( p_access, "frequency %d is out of any known band",
-                     i_frequency );
-            msg_Err( p_access, "specify dvb-lnb-lof1 manually for the local "
-                     "oscillator frequency" );
-            return VLC_EGENERIC;
-        }
-        val.i_int = i_lnb_lof1;
-        var_Set( p_access, "dvb-lnb-lof1", val );
-        val.i_int = i_lnb_lof2;
-        var_Set( p_access, "dvb-lnb-lof2", val );
-        val.i_int = i_lnb_slof;
-        var_Set( p_access, "dvb-lnb-slof", val );
-    }
-    else
-    {
-        i_lnb_lof1 = val.i_int;
+    if( i_frequency >= i_lnb_slof )
         var_Get( p_access, "dvb-lnb-lof2", &val );
-        i_lnb_lof2 = val.i_int;
-        var_Get( p_access, "dvb-lnb-slof", &val );
-        i_lnb_slof = val.i_int;
-    }
-
-    if( i_lnb_slof && i_frequency >= i_lnb_slof )
-    {
-        i_frequency -= i_lnb_lof2;
-    }
     else
-    {
-        i_frequency -= i_lnb_lof1;
-    }
-    fep.frequency = i_frequency >= 0 ? i_frequency : -i_frequency;
+        var_Get( p_access, "dvb-lnb-lof1", &val );
+    fep.frequency = i_frequency - val.i_int;
 
     fep.inversion = DecodeInversion( p_access );
 
@@ -1177,12 +1117,6 @@ int E_(DVROpen)( access_t * p_access )
         return VLC_EGENERIC;
     }
 
-    if( fcntl( p_sys->i_handle, F_SETFL, O_NONBLOCK ) == -1 )
-    {
-        msg_Warn( p_access, "DVROpen: couldn't set non-blocking mode (%s)",
-                  strerror(errno) );
-    }
-
     return VLC_SUCCESS;
 }
 
@@ -1223,52 +1157,14 @@ int E_(CAMOpen)( access_t *p_access )
     msg_Dbg( p_access, "Opening device %s", ca );
     if( (p_sys->i_ca_handle = open(ca, O_RDWR | O_NONBLOCK)) < 0 )
     {
-        msg_Warn( p_access, "CAMInit: opening CAM device failed (%s)",
-                  strerror(errno) );
+        msg_Err( p_access, "CAMInit: opening device failed (%s)",
+                 strerror(errno) );
         p_sys->i_ca_handle = 0;
         return VLC_EGENERIC;
     }
 
-    if ( ioctl( p_sys->i_ca_handle, CA_GET_CAP, &caps ) != 0 )
-    {
-        msg_Err( p_access, "CAMInit: ioctl() error getting CAM capabilities" );
-        close( p_sys->i_ca_handle );
-        p_sys->i_ca_handle = 0;
-        return VLC_EGENERIC;
-    }
-
-    /* Output CA capabilities */
-    msg_Dbg( p_access, "CAMInit: CA interface with %d %s", caps.slot_num, 
-        caps.slot_num == 1 ? "slot" : "slots" );
-    if ( caps.slot_type & CA_CI )
-        msg_Dbg( p_access, "CAMInit: CI high level interface type (not supported)" );
-    if ( caps.slot_type & CA_CI_LINK )
-        msg_Dbg( p_access, "CAMInit: CI link layer level interface type" );
-    if ( caps.slot_type & CA_CI_PHYS )
-        msg_Dbg( p_access, "CAMInit: CI physical layer level interface type (not supported) " );
-    if ( caps.slot_type & CA_DESCR )
-        msg_Dbg( p_access, "CAMInit: built-in descrambler detected" );
-    if ( caps.slot_type & CA_SC )
-        msg_Dbg( p_access, "CAMInit: simple smart card interface" );
-
-    msg_Dbg( p_access, "CAMInit: %d available %s", caps.descr_num,
-        caps.descr_num == 1 ? "descrambler (key)" : "descramblers (keys)" );
-    if ( caps.descr_type & CA_ECD )
-        msg_Dbg( p_access, "CAMInit: ECD scrambling system supported" );
-    if ( caps.descr_type & CA_NDS )
-        msg_Dbg( p_access, "CAMInit: NDS scrambling system supported" );
-    if ( caps.descr_type & CA_DSS )
-        msg_Dbg( p_access, "CAMInit: DSS scrambling system supported" );
- 
-    if ( caps.slot_num == 0 )
-    {
-        msg_Err( p_access, "CAMInit: CAM module with no slots" );
-        close( p_sys->i_ca_handle );
-        p_sys->i_ca_handle = 0;
-        return VLC_EGENERIC;
-    }
-
-    if ( !(caps.slot_type & CA_CI_LINK) )
+    if ( ioctl( p_sys->i_ca_handle, CA_GET_CAP, &caps ) != 0
+          || caps.slot_num == 0 || caps.slot_type != CA_CI_LINK )
     {
         msg_Err( p_access, "CAMInit: no compatible CAM module" );
         close( p_sys->i_ca_handle );
@@ -1286,6 +1182,9 @@ int E_(CAMOpen)( access_t *p_access )
             msg_Err( p_access, "CAMInit: couldn't reset slot %d", i_slot );
         }
     }
+
+    msg_Dbg( p_access, "CAMInit: found a CI handler with %d slots",
+             p_sys->i_nb_slots );
 
     p_sys->i_ca_timeout = 100000;
     /* Wait a bit otherwise it doesn't initialize properly... */

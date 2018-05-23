@@ -1,8 +1,8 @@
 /*****************************************************************************
  * misc.h: code not specific to vlc
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: misc.h 12338 2005-08-22 13:44:11Z hartman $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: misc.h 10655 2005-04-12 14:31:14Z bigben $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *
@@ -60,29 +60,7 @@
 
 @interface MPSlider : NSSlider
 {
-}
 
-@end
-
-/*****************************************************************************
- * ITSliderCell
- *****************************************************************************/
- 
-@interface ITSlider : NSSlider
-{
-}
-
-@end
-
-/*****************************************************************************
- * ITSliderCell
- *****************************************************************************/
- 
-@interface ITSliderCell : NSSliderCell
-{
-    NSImage *_knobOff;
-    NSImage *_knobOn;
-    BOOL b_mouse_down;
 }
 
 @end

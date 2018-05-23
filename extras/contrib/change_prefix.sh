@@ -2,8 +2,8 @@
 # ***************************************************************************
 # change_prefix.sh : allow to transfer a contrib dir
 # ***************************************************************************
-# Copyright (C) 2003 the VideoLAN team
-# $Id: change_prefix.sh 11664 2005-07-09 06:17:09Z courmisch $
+# Copyright (C) 2003 VideoLAN
+# $Id: change_prefix.sh 6961 2004-03-05 17:34:23Z sam $
 #
 # Authors: Christophe Massiot <massiot@via.ecp.fr>
 #

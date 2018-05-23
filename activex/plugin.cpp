@@ -1,7 +1,7 @@
 /*****************************************************************************
  * plugin.cpp: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
+ * Copyright (C) 2005 VideoLAN
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -34,16 +34,11 @@
 #include "objectsafety.h"
 #include "vlccontrol.h"
 #include "viewobject.h"
-#include "dataobject.h"
 
 #include "utils.h"
 
 #include <string.h>
 #include <winreg.h>
-#include <winuser.h>
-#include <servprov.h>
-#include <shlwapi.h>
-#include <wininet.h>
 
 using namespace std;
 
@@ -102,14 +97,13 @@ static LRESULT CALLBACK VLCVideoClassWndProc(HWND hWnd, UINT uMsg, WPARAM wParam
 
 VLCPluginClass::VLCPluginClass(LONG *p_class_ref, HINSTANCE hInstance) :
     _p_class_ref(p_class_ref),
-    _hinstance(hInstance),
-    _inplace_picture(NULL)
+    _hinstance(hInstance)
 {
     WNDCLASS wClass;
 
     if( ! GetClassInfo(hInstance, getInPlaceWndClassName(), &wClass) )
     {
-        wClass.style          = CS_NOCLOSE|CS_DBLCLKS;
+        wClass.style          = CS_NOCLOSE|CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS;
         wClass.lpfnWndProc    = VLCInPlaceClassWndProc;
         wClass.cbClsExtra     = 0;
         wClass.cbWndExtra     = 0;
@@ -129,7 +123,7 @@ VLCPluginClass::VLCPluginClass(LONG *p_class_ref, HINSTANCE hInstance) :
 
     if( ! GetClassInfo(hInstance, getVideoWndClassName(), &wClass) )
     {
-        wClass.style          = CS_NOCLOSE;
+        wClass.style          = CS_NOCLOSE|CS_HREDRAW|CS_VREDRAW;
         wClass.lpfnWndProc    = VLCVideoClassWndProc;
         wClass.cbClsExtra     = 0;
         wClass.cbWndExtra     = 0;
@@ -147,19 +141,8 @@ VLCPluginClass::VLCPluginClass(LONG *p_class_ref, HINSTANCE hInstance) :
         _video_wndclass_atom = 0;
     }
 
-    HBITMAP hbitmap = (HBITMAP)LoadImage(getHInstance(), TEXT("INPLACE-PICT"), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-    if( NULL != hbitmap )
-    {
-        PICTDESC pictDesc;
+    _inplace_hbitmap = (HBITMAP)LoadImage(getHInstance(), TEXT("INPLACE-PICT"), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
-        pictDesc.cbSizeofstruct = sizeof(PICTDESC);
-        pictDesc.picType        = PICTYPE_BITMAP;
-        pictDesc.bmp.hbitmap    = hbitmap;
-        pictDesc.bmp.hpal       = NULL;
-
-        if( FAILED(OleCreatePictureIndirect(&pictDesc, IID_IPicture, TRUE, reinterpret_cast<LPVOID*>(&_inplace_picture))) )
-            _inplace_picture = NULL;
-    }
     AddRef();
 };
 
@@ -171,8 +154,8 @@ VLCPluginClass::~VLCPluginClass()
     if( 0 != _video_wndclass_atom )
         UnregisterClass(MAKEINTATOM(_video_wndclass_atom), _hinstance);
 
-    if( NULL != _inplace_picture )
-        _inplace_picture->Release();
+    if( NULL != _inplace_hbitmap )
+        DeleteObject(_inplace_hbitmap);
 };
 
 STDMETHODIMP VLCPluginClass::QueryInterface(REFIID riid, void **ppv)
@@ -209,18 +192,17 @@ STDMETHODIMP_(ULONG) VLCPluginClass::Release(void)
     return refcount;
 };
 
-STDMETHODIMP VLCPluginClass::CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void **ppv)
+STDMETHODIMP VLCPluginClass::CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppv)
 {
     if( NULL == ppv )
         return E_POINTER;
 
     *ppv = NULL;
 
-    if( (NULL != pUnkOuter) && (IID_IUnknown != riid) ) {
+    if( NULL != pUnkOuter )
         return CLASS_E_NOAGGREGATION;
-    }
 
-    VLCPlugin *plugin = new VLCPlugin(this, pUnkOuter);
+    VLCPlugin *plugin = new VLCPlugin(this);
     if( NULL != plugin )
     {
         HRESULT hr = plugin->QueryInterface(riid, ppv);
@@ -242,21 +224,21 @@ STDMETHODIMP VLCPluginClass::LockServer(BOOL fLock)
 
 ////////////////////////////////////////////////////////////////////////
 
-VLCPlugin::VLCPlugin(VLCPluginClass *p_class, LPUNKNOWN pUnkOuter) :
+VLCPlugin::VLCPlugin(VLCPluginClass *p_class) :
     _inplacewnd(NULL),
     _p_class(p_class),
     _i_ref(1UL),
-    _i_codepage(CP_ACP),
-    _b_usermode(TRUE),
-    _bstr_mrl(NULL),
-    _b_autoplay(TRUE),
-    _b_autoloop(FALSE),
+    _codepage(CP_ACP),
+    _psz_src(NULL),
+    _b_autostart(TRUE),
+    _b_loopmode(FALSE),
     _b_visible(TRUE),
-    _b_mute(FALSE),
+    _b_sendevents(TRUE),
     _i_vlc(0)
 {
     p_class->AddRef();
 
+    vlcOleObject = new VLCOleObject(this);
     vlcOleControl = new VLCOleControl(this);
     vlcOleInPlaceObject = new VLCOleInPlaceObject(this);
     vlcOleInPlaceActiveObject = new VLCOleInPlaceActiveObject(this);
@@ -268,29 +250,22 @@ VLCPlugin::VLCPlugin(VLCPluginClass *p_class, LPUNKNOWN pUnkOuter) :
     vlcObjectSafety = new VLCObjectSafety(this);
     vlcControl = new VLCControl(this);
     vlcViewObject = new VLCViewObject(this);
-    vlcDataObject = new VLCDataObject(this);
-    vlcOleObject = new VLCOleObject(this);
-
-    // configure controlling IUnknown interface for implemented interfaces
-    this->pUnkOuter = (NULL != pUnkOuter) ? pUnkOuter : dynamic_cast<LPUNKNOWN>(this);
-
-    // default picure
-    _p_pict = p_class->getInPlacePict();
 
     // set default/preferred size (320x240) pixels in HIMETRIC
     HDC hDC = CreateDevDC(NULL);
-    _extent.cx = 320;
-    _extent.cy = 240;
-    HimetricFromDP(hDC, (LPPOINT)&_extent, 1);
+    _extent.cx = (320*2540L)/GetDeviceCaps(hDC, LOGPIXELSX);
+    _extent.cy = (240*2540L)/GetDeviceCaps(hDC, LOGPIXELSY);
     DeleteDC(hDC);
 };
 
 VLCPlugin::~VLCPlugin()
 {
-    delete vlcOleObject;
-    delete vlcDataObject;
+    vlcOleInPlaceObject->UIDeactivate();
+    vlcOleInPlaceObject->InPlaceDeactivate();
+
     delete vlcViewObject;
     delete vlcControl;
+    delete vlcObjectSafety;
     delete vlcConnectionPointContainer;
     delete vlcProvideClassInfo;
     delete vlcPersistPropertyBag;
@@ -298,13 +273,11 @@ VLCPlugin::~VLCPlugin()
     delete vlcPersistStorage;
     delete vlcOleInPlaceActiveObject;
     delete vlcOleInPlaceObject;
-    delete vlcObjectSafety;
-
     delete vlcOleControl;
-    if( _p_pict )
-        _p_pict->Release();
+    delete vlcOleObject;
 
-    SysFreeString(_bstr_mrl);
+    if( _psz_src )
+        free(_psz_src);
 
     _p_class->Release();
 };
@@ -315,50 +288,117 @@ STDMETHODIMP VLCPlugin::QueryInterface(REFIID riid, void **ppv)
         return E_INVALIDARG;
 
     if( IID_IUnknown == riid )
-        *ppv = reinterpret_cast<LPVOID>(this);
-    else if( IID_IOleObject == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcOleObject);
-    else if( IID_IOleControl == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcOleControl);
-    else if( IID_IOleWindow == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcOleInPlaceObject);
-    else if( IID_IOleInPlaceObject == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcOleInPlaceObject);
-    else if( IID_IOleInPlaceActiveObject == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcOleInPlaceActiveObject);
-    else if( IID_IPersist == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcPersistStreamInit);
-    else if( IID_IPersistStreamInit == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcPersistStreamInit);
-    else if( IID_IPersistStorage == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcPersistStorage);
-    else if( IID_IPersistPropertyBag == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcPersistPropertyBag);
-    else if( IID_IProvideClassInfo == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcProvideClassInfo);
-    else if( IID_IProvideClassInfo2 == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcProvideClassInfo);
-    else if( IID_IConnectionPointContainer == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcConnectionPointContainer);
-    else if( IID_IObjectSafety == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcObjectSafety);
-    else if( IID_IDispatch == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcControl);
-    else if( IID_IVLCControl == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcControl);
-    else if( IID_IViewObject == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcViewObject);
-    else if( IID_IViewObject2 == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcViewObject);
-    else if( IID_IDataObject == riid )
-        *ppv = reinterpret_cast<LPVOID>(vlcDataObject);
-    else
     {
-        *ppv = NULL;
-        return E_NOINTERFACE;
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(this);
+        return NOERROR;
     }
-    ((LPUNKNOWN)*ppv)->AddRef();
-    return NOERROR;
+    else if( IID_IOleObject == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcOleObject);
+        return NOERROR;
+    }
+    else if( IID_IOleControl == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcOleControl);
+        return NOERROR;
+    }
+    else if( IID_IOleWindow == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcOleInPlaceObject);
+        return NOERROR;
+    }
+    else if( IID_IOleInPlaceObject == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcOleInPlaceObject);
+        return NOERROR;
+    }
+    else if( IID_IOleInPlaceActiveObject == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcOleInPlaceActiveObject);
+        return NOERROR;
+    }
+    else if( IID_IPersist == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcPersistPropertyBag);
+        return NOERROR;
+    }
+    else if( IID_IPersistStreamInit == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcPersistStreamInit);
+        return NOERROR;
+    }
+    else if( IID_IPersistStorage == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcPersistStorage);
+        return NOERROR;
+    }
+    else if( IID_IPersistPropertyBag == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcPersistPropertyBag);
+        return NOERROR;
+    }
+    else if( IID_IProvideClassInfo == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcProvideClassInfo);
+        return NOERROR;
+    }
+    else if( IID_IProvideClassInfo2 == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcProvideClassInfo);
+        return NOERROR;
+    }
+    else if( IID_IConnectionPointContainer == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcConnectionPointContainer);
+        return NOERROR;
+    }
+    else if( IID_IObjectSafety == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcObjectSafety);
+        return NOERROR;
+    }
+    else if( IID_IDispatch == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcControl);
+        return NOERROR;
+    }
+    else if( IID_IVLCControl == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcControl);
+        return NOERROR;
+    }
+    else if( IID_IViewObject == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcViewObject);
+        return NOERROR;
+    }
+    else if( IID_IViewObject2 == riid )
+    {
+        AddRef();
+        *ppv = reinterpret_cast<LPVOID>(vlcViewObject);
+        return NOERROR;
+    }
+
+    *ppv = NULL;
+
+    return E_NOINTERFACE;
 };
 
 STDMETHODIMP_(ULONG) VLCPlugin::AddRef(void)
@@ -470,12 +510,12 @@ static void getViewportCoords(LPRECT lprPosRect, LPRECT lprClipRect)
     *lprPosRect  = bounds;
 };
 
-HRESULT VLCPlugin::onInit(void)
+HRESULT VLCPlugin::onInit(BOOL isNew)
 {
     if( 0 == _i_vlc )
     {
 #ifdef ACTIVEX_DEBUG
-        char *ppsz_argv[] = { "vlc", "-vv", "--fast-mutex", "--win9x-cv-method=1" };
+        char *ppsz_argv[] = { "vlc", "-vvv", "--fast-mutex", "--win9x-cv-method=1" };
 #else
         char *ppsz_argv[] = { "vlc", "-vv" };
 #endif
@@ -502,11 +542,6 @@ HRESULT VLCPlugin::onInit(void)
 #endif
 
         _i_vlc = VLC_Create();
-        if( _i_vlc < 0 )
-        {
-            _i_vlc = 0;
-            return E_FAIL;
-        }
 
         if( VLC_Init(_i_vlc, sizeof(ppsz_argv)/sizeof(char*), ppsz_argv) )
         {
@@ -514,154 +549,54 @@ HRESULT VLCPlugin::onInit(void)
             _i_vlc = 0;
             return E_FAIL;
         }
+
+        if( isNew )
+        {
+            /*
+            ** object has fully initialized,
+            ** try to activate in place if container is ready
+            */
+            LPOLECLIENTSITE pActiveSite;
+
+            if( SUCCEEDED(vlcOleObject->GetClientSite(&pActiveSite)) && (NULL != pActiveSite) )
+            {
+                vlcOleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, NULL, pActiveSite, 0, NULL, NULL);
+                pActiveSite->Release();
+            }
+        }
         return S_OK;
     }
-    return CO_E_ALREADYINITIALIZED;
+    return E_UNEXPECTED;
 };
 
 HRESULT VLCPlugin::onLoad(void)
 {
-    if( _b_mute )
-        VLC_VolumeMute(_i_vlc);
+    /*
+    ** object has fully initialized,
+    ** try to activate in place if container is ready
+    */
+    LPOLECLIENTSITE pActiveSite;
 
-    if( SysStringLen(_bstr_mrl) > 0 )
+    if( SUCCEEDED(vlcOleObject->GetClientSite(&pActiveSite)) && (NULL != pActiveSite) )
     {
-        /*
-        ** try to combine MRL with client site moniker, which for Internet Explorer
-        ** is the URL of the page the plugin is embedded into. Hence, if the MRL
-        ** is a relative URL, we should end up with an absolute URL
-        */
-        IOleClientSite *pClientSite;
-        if( SUCCEEDED(vlcOleObject->GetClientSite(&pClientSite)) && (NULL != pClientSite) )
-        {
-            IBindCtx *pBC = 0;
-            if( SUCCEEDED(CreateBindCtx(0, &pBC)) )
-            {
-                LPMONIKER pContMoniker = NULL;
-                if( SUCCEEDED(pClientSite->GetMoniker(OLEGETMONIKER_ONLYIFTHERE,
-                                OLEWHICHMK_CONTAINER, &pContMoniker)) )
-                {
-                    LPOLESTR name;
-                    if( SUCCEEDED(pContMoniker->GetDisplayName(pBC, NULL, &name)) )
-                    {
-                        if( UrlIsW(name, URLIS_URL) )
-                        {
-                            LPOLESTR url = (LPOLESTR)CoTaskMemAlloc(sizeof(OLECHAR)*INTERNET_MAX_URL_LENGTH);
-                            if( NULL != url )
-                            {
-                                DWORD len = INTERNET_MAX_URL_LENGTH;
-                                if( SUCCEEDED(UrlCombineW(name, _bstr_mrl, url, &len,
-                                                URL_ESCAPE_UNSAFE)) )
-                                {
-                                    SysFreeString(_bstr_mrl);
-                                    _bstr_mrl = SysAllocStringLen(url, len);
-                                }
-                                CoTaskMemFree(url);
-                            }
-                        }
-                        CoTaskMemFree(name);
-                    }
-                    pContMoniker->Release();
-                }
-                pBC->Release();
-            }
-            pClientSite->Release();
-        }
-
-        char *psz_mrl = CStrFromBSTR(CP_UTF8, _bstr_mrl);
-        if( NULL != psz_mrl )
-        {
-            // add default target to playlist
-            char *cOptions[1];
-            int  cOptionsCount = 0;
-
-            if( _b_autoloop )
-            {
-                cOptions[cOptionsCount++] = "loop";
-            }
-            VLC_AddTarget(_i_vlc, psz_mrl, (const char **)&cOptions, cOptionsCount, PLAYLIST_APPEND, PLAYLIST_END);
-            CoTaskMemFree(psz_mrl);
-        }
+        vlcOleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, NULL, pActiveSite, 0, NULL, NULL);
+        pActiveSite->Release();
     }
-    setDirty(FALSE);
     return S_OK;
 };
 
-HRESULT VLCPlugin::onAmbientChanged(LPUNKNOWN pContainer, DISPID dispID)
+HRESULT VLCPlugin::onClientSiteChanged(LPOLECLIENTSITE pActiveSite)
 {
-    VARIANT v;
-    switch( dispID )
+    if( NULL != pActiveSite )
     {
-        case DISPID_AMBIENT_BACKCOLOR:
-            break;
-        case DISPID_AMBIENT_DISPLAYNAME:
-            break;
-        case DISPID_AMBIENT_FONT:
-            break;
-        case DISPID_AMBIENT_FORECOLOR:
-            break;
-        case DISPID_AMBIENT_LOCALEID:
-            break;
-        case DISPID_AMBIENT_MESSAGEREFLECT:
-            break;
-        case DISPID_AMBIENT_SCALEUNITS:
-            break;
-        case DISPID_AMBIENT_TEXTALIGN:
-            break;
-        case DISPID_AMBIENT_USERMODE:
-            VariantInit(&v);
-            V_VT(&v) = VT_BOOL;
-            if( SUCCEEDED(GetObjectProperty(pContainer, dispID, v)) )
-            {
-                setUserMode(V_BOOL(&v) != VARIANT_FALSE);
-                VariantClear(&v);
-            }
-            break;
-        case DISPID_AMBIENT_UIDEAD:
-            break;
-        case DISPID_AMBIENT_SHOWGRABHANDLES:
-            break;
-        case DISPID_AMBIENT_SHOWHATCHING:
-            break;
-        case DISPID_AMBIENT_DISPLAYASDEFAULT:
-            break;
-        case DISPID_AMBIENT_SUPPORTSMNEMONICS:
-            break;
-        case DISPID_AMBIENT_AUTOCLIP:
-            break;
-        case DISPID_AMBIENT_APPEARANCE:
-            break;
-        case DISPID_AMBIENT_CODEPAGE:
-            VariantInit(&v);
-            V_VT(&v) = VT_I4;
-            if( SUCCEEDED(GetObjectProperty(pContainer, dispID, v)) )
-            {
-                setCodePage(V_I4(&v));
-            }
-            break;
-        case DISPID_AMBIENT_PALETTE:
-            break;
-        case DISPID_AMBIENT_CHARSET:
-            break;
-        case DISPID_AMBIENT_RIGHTTOLEFT:
-            break;
-        case DISPID_AMBIENT_TOPTOBOTTOM:
-            break;
-        case DISPID_UNKNOWN:
-            VariantInit(&v);
-            V_VT(&v) = VT_BOOL;
-            if( SUCCEEDED(GetObjectProperty(pContainer, DISPID_AMBIENT_USERMODE, v)) )
-            {
-                setUserMode(V_BOOL(&v) != VARIANT_FALSE);
-                VariantClear(&v);
-            }
-            VariantInit(&v);
-            V_VT(&v) = VT_I4;
-            if( SUCCEEDED(GetObjectProperty(pContainer, dispID, v)) )
-            {
-                setCodePage(V_I4(&v));
-            }
-            break;
+        /*
+        ** object is embedded in container 
+        ** try to activate in place if it has initialized
+        */
+        if( _i_vlc )
+        {
+            vlcOleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, NULL, pActiveSite, 0, NULL, NULL);
+        }
     }
     return S_OK;
 };
@@ -670,17 +605,14 @@ HRESULT VLCPlugin::onClose(DWORD dwSaveOption)
 {
     if( _i_vlc )
     {
-        int i_vlc = _i_vlc;
-
-        _i_vlc = 0;
         if( isInPlaceActive() )
         {
             onInPlaceDeactivate();
         }
-        vlcDataObject->onClose();
 
-        VLC_CleanUp(i_vlc);
-        VLC_Destroy(i_vlc);
+        VLC_CleanUp(_i_vlc);
+        VLC_Destroy(_i_vlc);
+        _i_vlc = 0;
     }
     return S_OK;
 };
@@ -712,7 +644,7 @@ HRESULT VLCPlugin::onActivateInPlace(LPMSG lpMesg, HWND hwndParent, LPCRECT lprc
     */
     _inplacewnd = CreateWindow(_p_class->getInPlaceWndClassName(),
             "VLC Plugin In-Place Window",
-            WS_CHILD|WS_CLIPCHILDREN|WS_CLIPSIBLINGS,
+            WS_CHILD|WS_CLIPCHILDREN|WS_TABSTOP,
             clipRect.left,
             clipRect.top,
             clipRect.right-clipRect.left,
@@ -761,15 +693,24 @@ HRESULT VLCPlugin::onActivateInPlace(LPMSG lpMesg, HWND hwndParent, LPCRECT lprc
     vlc_value_t val;
     val.i_int = reinterpret_cast<int>(_videownd);
     VLC_VariableSet(_i_vlc, "drawable", val);
-    val.i_int = posRect.right-posRect.left;
-    VLC_VariableSet(_i_vlc, "width", val);
-    val.i_int = posRect.bottom-posRect.top;
-    VLC_VariableSet(_i_vlc, "height", val);
 
-    if( _b_usermode && _b_autoplay & (VLC_PlaylistNumberOfItems(_i_vlc) > 0) )
+    if( NULL != _psz_src )
     {
-        VLC_Play(_i_vlc);
-        fireOnPlayEvent();
+        // add target to playlist
+        char *cOptions[1];
+        int  cOptionsCount = 0;
+
+        if( _b_loopmode )
+        {
+            cOptions[cOptionsCount++] = "loop";
+        }
+        VLC_AddTarget(_i_vlc, _psz_src, (const char **)&cOptions, cOptionsCount, PLAYLIST_APPEND, PLAYLIST_END);
+
+        if( _b_autostart )
+        {
+            VLC_Play(_i_vlc);
+            fireOnPlayEvent();
+        }
     }
     return S_OK;
 };
@@ -806,112 +747,52 @@ BOOL VLCPlugin::hasFocus(void)
     return GetActiveWindow() == _inplacewnd;
 };
 
-void VLCPlugin::onDraw(DVTARGETDEVICE * ptd, HDC hicTargetDev,
-        HDC hdcDraw, LPCRECTL lprcBounds, LPCRECTL lprcWBounds)
+void VLCPlugin::onPaint(HDC hdc, const RECT &bounds, const RECT &pr)
 {
-    if( getVisible() )
+    /*
+    ** if VLC is playing, it may not display any VIDEO content 
+    ** hence, draw control logo
+    */ 
+    int width = bounds.right-bounds.left;
+    int height = bounds.bottom-bounds.top;
+
+    HBITMAP pict = _p_class->getInPlacePict();
+    if( NULL != pict )
     {
-        long width = lprcBounds->right-lprcBounds->left;
-        long height = lprcBounds->bottom-lprcBounds->top;
-
-        RECT bounds = { lprcBounds->left, lprcBounds->top, lprcBounds->right, lprcBounds->bottom };
-        FillRect(hdcDraw, &bounds, (HBRUSH)GetStockObject(WHITE_BRUSH));
-
-        LPPICTURE pict = getPicture();
-        if( NULL != pict )
+        HDC hdcPict = CreateCompatibleDC(hdc);
+        if( NULL != hdcPict )
         {
-            OLE_XSIZE_HIMETRIC picWidth;
-            OLE_YSIZE_HIMETRIC picHeight;
-
-            pict->get_Width(&picWidth);
-            pict->get_Height(&picHeight);
-
-            SIZEL picSize = { picWidth, picHeight };
-
-            if( NULL != hicTargetDev )
+            BITMAP bm;
+            if( GetObject(pict, sizeof(BITMAPINFO), &bm) )
             {
-                DPFromHimetric(hicTargetDev, (LPPOINT)&picSize, 1);
+                int dstWidth = bm.bmWidth;
+                if( dstWidth > width-4 )
+                    dstWidth = width-4;
+
+                int dstHeight = bm.bmHeight;
+                if( dstHeight > height-4 )
+                    dstHeight = height-4;
+
+                int dstX = bounds.left+(width-dstWidth)/2;
+                int dstY = bounds.top+(height-dstHeight)/2;
+
+                SelectObject(hdcPict, pict);
+                StretchBlt(hdc, dstX, dstY, dstWidth, dstHeight,
+                        hdcPict, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
+                DeleteDC(hdcPict);
+                ExcludeClipRect(hdc, dstX, dstY, dstWidth+dstX, dstHeight+dstY);
             }
-            else if( NULL != (hicTargetDev = CreateDevDC(ptd)) )
-            {
-                DPFromHimetric(hicTargetDev, (LPPOINT)&picSize, 1);
-                DeleteDC(hicTargetDev);
-            }
-
-            if( picSize.cx > width-4 )
-                picSize.cx = width-4;
-            if( picSize.cy > height-4 )
-                picSize.cy = height-4;
-
-            LONG dstX = lprcBounds->left+(width-picSize.cx)/2;
-            LONG dstY = lprcBounds->top+(height-picSize.cy)/2;
-
-            if( NULL != lprcWBounds )
-            {
-                RECT wBounds = { lprcWBounds->left, lprcWBounds->top, lprcWBounds->right, lprcWBounds->bottom };
-                pict->Render(hdcDraw, dstX, dstY, picSize.cx, picSize.cy,
-                        0L, picHeight, picWidth, -picHeight, &wBounds);
-            }
-            else 
-                pict->Render(hdcDraw, dstX, dstY, picSize.cx, picSize.cy,
-                        0L, picHeight, picWidth, -picHeight, NULL);
-
-            pict->Release();
-        }
-
-        SelectObject(hdcDraw, GetStockObject(BLACK_BRUSH));
-
-        MoveToEx(hdcDraw, bounds.left, bounds.top, NULL);
-        LineTo(hdcDraw, bounds.left+width-1, bounds.top);
-        LineTo(hdcDraw, bounds.left+width-1, bounds.top+height-1);
-        LineTo(hdcDraw, bounds.left, bounds.top+height-1);
-        LineTo(hdcDraw, bounds.left, bounds.top);
-    }
-};
-
-void VLCPlugin::onPaint(HDC hdc, const RECT &bounds, const RECT &clipRect)
-{
-    if( getVisible() )
-    {
-        /** if VLC is playing, it may not display any VIDEO content 
-        ** hence, draw control logo*/
-        HDC hdcDraw = CreateCompatibleDC(hdc);
-        if( NULL != hdcDraw )
-        {
-            SIZEL size = getExtent();
-            DPFromHimetric(hdc, (LPPOINT)&size, 1);
-            RECTL posRect = { 0, 0, size.cx, size.cy };
-
-            int width = bounds.right-bounds.left;
-            int height = bounds.bottom-bounds.top;
-
-            HBITMAP hBitmap = CreateCompatibleBitmap(hdc, width, height);
-            if( NULL != hBitmap )
-            {
-                HBITMAP oldBmp = (HBITMAP)SelectObject(hdcDraw, hBitmap);
-
-                if( (size.cx != width) || (size.cx != height) )
-                {
-                    // needs to scale canvas
-                    SetMapMode(hdcDraw, MM_ANISOTROPIC);
-                    SetWindowExtEx(hdcDraw, size.cx, size.cy, NULL);
-                    SetViewportExtEx(hdcDraw, width, height, NULL);
-                }
-
-                onDraw(NULL, hdc, hdcDraw, &posRect, NULL);
-
-                SetMapMode(hdcDraw, MM_TEXT);
-                BitBlt(hdc, bounds.left, bounds.top,
-                        width, height,
-                        hdcDraw, 0, 0,
-                        SRCCOPY);
-
-                SelectObject(hdcDraw, oldBmp);
-                DeleteObject(hBitmap);
-            }
-            DeleteDC(hdcDraw);
         }
     }
+
+    FillRect(hdc, &pr, (HBRUSH)GetStockObject(WHITE_BRUSH));
+    SelectObject(hdc, GetStockObject(BLACK_BRUSH));
+
+    MoveToEx(hdc, bounds.left, bounds.top, NULL);
+    LineTo(hdc, bounds.left+width-1, bounds.top);
+    LineTo(hdc, bounds.left+width-1, bounds.top+height-1);
+    LineTo(hdc, bounds.left, bounds.top+height-1);
+    LineTo(hdc, bounds.left, bounds.top);
 };
 
 void VLCPlugin::onPositionChange(LPCRECT lprcPosRect, LPCRECT lprcClipRect)
@@ -919,11 +800,9 @@ void VLCPlugin::onPositionChange(LPCRECT lprcPosRect, LPCRECT lprcClipRect)
     RECT clipRect = *lprcClipRect;
     RECT posRect  = *lprcPosRect;
 
-    //RedrawWindow(GetParent(_inplacewnd), &_posRect, NULL, RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);
-
     /*
     ** record keeping of control geometry within container
-    */
+    */ 
     _posRect = posRect;
 
     /*
@@ -934,62 +813,70 @@ void VLCPlugin::onPositionChange(LPCRECT lprcPosRect, LPCRECT lprcClipRect)
     /*
     ** change in-place window geometry to match clipping region
     */
-    SetWindowPos(_inplacewnd, NULL,
+    MoveWindow(_inplacewnd,
             clipRect.left,
             clipRect.top,
             clipRect.right-clipRect.left,
             clipRect.bottom-clipRect.top,
-            SWP_NOACTIVATE|
-            SWP_NOCOPYBITS|
-            SWP_NOZORDER|
-            SWP_NOOWNERZORDER );
+            FALSE);
 
     /*
     ** change video window geometry to match object bounds within clipping region
     */
-    SetWindowPos(_videownd, NULL,
+    MoveWindow(_videownd,
             posRect.left,
             posRect.top,
             posRect.right-posRect.left,
             posRect.bottom-posRect.top,
-            SWP_NOACTIVATE|
-            SWP_NOCOPYBITS|
-            SWP_NOZORDER|
-            SWP_NOOWNERZORDER );
+            FALSE);
 
-    //RedrawWindow(_videownd, &posRect, NULL, RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);
-    vlc_value_t val;
-    val.i_int = posRect.right-posRect.left;
-    VLC_VariableSet(_i_vlc, "width", val);
-    val.i_int = posRect.bottom-posRect.top;
-    VLC_VariableSet(_i_vlc, "height", val);
-};
 
-void VLCPlugin::freezeEvents(BOOL freeze)
-{
-    vlcConnectionPointContainer->freezeEvents(freeze);
+    /*
+    ** force a full refresh of control content
+    */
+    RECT updateRect;
+    updateRect.left = -posRect.left;
+    updateRect.top = -posRect.top;
+    updateRect.right = posRect.right-posRect.left;
+    updateRect.bottom = posRect.bottom-posRect.top;
+
+    ValidateRect(_videownd, NULL);
+    InvalidateRect(_videownd, &updateRect, FALSE);
+    UpdateWindow(_videownd);
 };
 
 void VLCPlugin::firePropChangedEvent(DISPID dispid)
 {
-    vlcConnectionPointContainer->firePropChangedEvent(dispid); 
+    if( _b_sendevents )
+    {
+        vlcConnectionPointContainer->firePropChangedEvent(dispid); 
+    }
 };
 
 void VLCPlugin::fireOnPlayEvent(void)
 {
-    DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
-    vlcConnectionPointContainer->fireEvent(DISPID_PlayEvent, &dispparamsNoArgs); 
+    if( _b_sendevents )
+    {
+        DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
+        vlcConnectionPointContainer->fireEvent(DISPID_PlayEvent, &dispparamsNoArgs); 
+    }
 };
 
 void VLCPlugin::fireOnPauseEvent(void)
 {
-    DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
-    vlcConnectionPointContainer->fireEvent(DISPID_PauseEvent, &dispparamsNoArgs); 
+    if( _b_sendevents )
+    {
+        DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
+        vlcConnectionPointContainer->fireEvent(DISPID_PauseEvent, &dispparamsNoArgs); 
+    }
 };
 
 void VLCPlugin::fireOnStopEvent(void)
 {
-    DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
-    vlcConnectionPointContainer->fireEvent(DISPID_StopEvent, &dispparamsNoArgs); 
+    if( _b_sendevents )
+    {
+        DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
+        vlcConnectionPointContainer->fireEvent(DISPID_StopEvent, &dispparamsNoArgs); 
+    }
 };
 

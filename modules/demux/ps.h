@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ps.h: Program Stream demuxer helper
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: ps.h 11699 2005-07-11 08:52:14Z sam $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: ps.h 11221 2005-06-01 13:34:27Z xtophe $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -27,7 +27,7 @@
 
 typedef struct ps_psm_t ps_psm_t;
 static inline int ps_id_to_type( ps_psm_t *, int );
-static inline uint8_t *ps_id_to_lang( ps_psm_t *, int );
+static inline char *ps_id_to_lang( ps_psm_t *, int );
 
 typedef struct
 {
@@ -390,7 +390,7 @@ static inline int ps_id_to_type( ps_psm_t *p_psm, int i_id )
     return 0;
 }
 
-static inline uint8_t *ps_id_to_lang( ps_psm_t *p_psm, int i_id )
+static inline char *ps_id_to_lang( ps_psm_t *p_psm, int i_id )
 {
     int i;
     for( i = 0; p_psm && i < p_psm->i_es; i++ )

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * asf.c: asf muxer module for vlc
  *****************************************************************************
- * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: asf.c 11955 2005-08-01 19:47:12Z sigmunau $
+ * Copyright (C) 2003-2004 VideoLAN
+ * $Id: asf.c 10452 2005-03-27 17:49:24Z markfm $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -517,23 +517,18 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
             }
             else if( p_input->p_fmt->i_codec == VLC_FOURCC('W','M','V','1') )
             {
-                tk->psz_name = "Windows Media Video 7";
+                tk->psz_name = "Windows Media Video 1";
                 tk->i_fourcc = VLC_FOURCC( 'W', 'M', 'V', '1' );
             }
             else if( p_input->p_fmt->i_codec == VLC_FOURCC('W','M','V','2') )
             {
-                tk->psz_name = "Windows Media Video 8";
+                tk->psz_name = "Windows Media Video 2";
                 tk->i_fourcc = VLC_FOURCC( 'W', 'M', 'V', '2' );
             }
             else if( p_input->p_fmt->i_codec == VLC_FOURCC('W','M','V','3') )
             {
-                tk->psz_name = "Windows Media Video 9";
+                tk->psz_name = "Windows Media Video 3";
                 tk->i_fourcc = VLC_FOURCC( 'W', 'M', 'V', '3' );
-            }
-            else if( p_input->p_fmt->i_codec == VLC_FOURCC('h','2','6','4') )
-            {
-                tk->psz_name = "H.264/MPEG-4 AVC";
-                tk->i_fourcc = VLC_FOURCC('h','2','6','4');
             }
             else
             {
@@ -920,7 +915,7 @@ static block_t *asf_header_create( sout_mux_t *p_mux, vlc_bool_t b_broadcast )
         i_num = p_sys->track[i].fmt.video.i_aspect *
             (int64_t)p_sys->track[i].fmt.video.i_height;
         i_den = VOUT_ASPECT_FACTOR * p_sys->track[i].fmt.video.i_width;
-        vlc_ureduce( &i_dst_num, &i_dst_den, i_num, i_den, 0 );
+        vlc_reduce( &i_dst_num, &i_dst_den, i_num, i_den, 0 );
 
         msg_Dbg( p_mux, "pixel aspect-ratio: %i/%i", i_dst_num, i_dst_den );
 

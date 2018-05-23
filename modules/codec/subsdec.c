@@ -1,8 +1,8 @@
 /*****************************************************************************
  * subsdec.c : text subtitles decoder
  *****************************************************************************
- * Copyright (C) 2000-2001 the VideoLAN team
- * $Id: subsdec.c 12412 2005-08-27 16:40:23Z jpsaman $
+ * Copyright (C) 2000-2001 VideoLAN
+ * $Id: subsdec.c 10310 2005-03-11 22:36:40Z anil $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Samuel Hocevar <sam@zoy.org>
@@ -29,7 +29,7 @@
 #include <vlc/vout.h>
 #include <vlc/decoder.h>
 
-#include "vlc_osd.h"
+#include "osd.h"
 #include "vlc_filter.h"
 
 #include "charset.h"

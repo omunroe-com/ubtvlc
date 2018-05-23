@@ -1,8 +1,8 @@
 /*****************************************************************************
  * bridge.c: bridge stream output module
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
- * $Id: bridge.c 12074 2005-08-08 17:18:08Z dionoea $
+ * Copyright (C) 2005 VideoLAN
+ * $Id: bridge.c 11088 2005-05-20 18:16:33Z massiot $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -136,7 +136,7 @@ static bridge_t *__GetBridge( vlc_object_t *p_object )
     else
     {
         p_bridge = val.p_address;
-    }
+    }    
 
     return p_bridge;
 }
@@ -286,8 +286,6 @@ static int DelOut( sout_stream_t *p_stream, sout_stream_id_t *id )
     p_es->b_changed = VLC_TRUE;
     vlc_mutex_unlock( p_sys->p_lock );
 
-    p_sys->b_inited = VLC_FALSE;
-
     return VLC_SUCCESS;
 }
 
@@ -429,14 +427,13 @@ static int SendIn( sout_stream_t *p_stream, sout_stream_id_t *id,
             b_no_es = VLC_FALSE;
 
         while ( p_bridge->pp_es[i]->p_block != NULL
-                 && (p_bridge->pp_es[i]->p_block->i_dts + p_sys->i_delay
-                       < mdate()
+                 && (p_bridge->pp_es[i]->p_block->i_dts < mdate()
                       || p_bridge->pp_es[i]->p_block->i_dts + p_sys->i_delay
                           < p_bridge->pp_es[i]->i_last) )
         {
             block_t *p_block = p_bridge->pp_es[i]->p_block;
             msg_Dbg( p_stream, "dropping a packet (" I64Fd ")",
-                     mdate() - p_block->i_dts - p_sys->i_delay );
+                     p_bridge->pp_es[i]->i_last - p_block->i_dts );
             p_bridge->pp_es[i]->p_block
                 = p_bridge->pp_es[i]->p_block->p_next;
             block_Release( p_block );
@@ -455,9 +452,7 @@ static int SendIn( sout_stream_t *p_stream, sout_stream_id_t *id,
             }
             else
             {
-                /* We need at least two packets to enter the mux. */
-                if ( p_bridge->pp_es[i]->p_block == NULL
-                      || p_bridge->pp_es[i]->p_block->p_next == NULL )
+                if ( p_bridge->pp_es[i]->p_block == NULL )
                 {
                     continue;
                 }

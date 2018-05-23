@@ -1,8 +1,8 @@
 /*****************************************************************************
  * objects.c: vlc_object_t handling
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: objects.c 12116 2005-08-10 22:08:50Z jpsaman $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: objects.c 10705 2005-04-16 12:24:32Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -55,7 +55,6 @@
 #include "vlc_vod.h"
 #include "vlc_tls.h"
 #include "vlc_xml.h"
-#include "vlc_osd.h"
 
 /*****************************************************************************
  * Local prototypes
@@ -72,7 +71,7 @@ static void           SetAttachment ( vlc_object_t *, vlc_bool_t );
 
 static vlc_list_t   * NewList       ( int );
 static void           ListReplace   ( vlc_list_t *, vlc_object_t *, int );
-/*static void           ListAppend    ( vlc_list_t *, vlc_object_t * );*/
+static void           ListAppend    ( vlc_list_t *, vlc_object_t * );
 static int            CountChildren ( vlc_object_t *, int );
 static void           ListChildren  ( vlc_list_t *, vlc_object_t *, int );
 
@@ -207,10 +206,6 @@ void * __vlc_object_create( vlc_object_t *p_this, int i_type )
         case VLC_OBJECT_ANNOUNCE:
             i_size = sizeof( announce_handler_t );
             psz_type = "announce handler";
-            break;
-        case VLC_OBJECT_OSDMENU:
-            i_size = sizeof( osd_menu_t );
-            psz_type = "osd menu";
             break;
         default:
             i_size = i_type > 0
@@ -347,23 +342,17 @@ void __vlc_object_destroy( vlc_object_t *p_this )
         /* Don't warn immediately ... 100ms seems OK */
         if( i_delay == 2 )
         {
-            msg_Warn( p_this,
-                  "refcount is %i, delaying before deletion (id=%d,type=%d)",
-                  p_this->i_refcount, p_this->i_object_id,
-                  p_this->i_object_type );
+            msg_Warn( p_this, "refcount is %i, delaying before deletion",
+                              p_this->i_refcount );
         }
-        else if( i_delay == 10 )
+        else if( i_delay == 12 )
         {
-            msg_Err( p_this,
-                  "refcount is %i, delaying again (id=%d,type=%d)",
-                  p_this->i_refcount, p_this->i_object_id,
-                  p_this->i_object_type );
+            msg_Err( p_this, "refcount is %i, I have a bad feeling about this",
+                             p_this->i_refcount );
         }
-        else if( i_delay == 20 )
+        else if( i_delay == 42 )
         {
-            msg_Err( p_this,
-                  "we waited too long, cancelling destruction (id=%d,type=%d)",
-                  p_this->i_object_id, p_this->i_object_type );
+            msg_Err( p_this, "we waited too long, cancelling destruction" );
             return;
         }
 
@@ -1040,7 +1029,7 @@ static void ListReplace( vlc_list_t *p_list, vlc_object_t *p_object,
     return;
 }
 
-/*static void ListAppend( vlc_list_t *p_list, vlc_object_t *p_object )
+static void ListAppend( vlc_list_t *p_list, vlc_object_t *p_object )
 {
     if( p_list == NULL )
     {
@@ -1061,7 +1050,7 @@ static void ListReplace( vlc_list_t *p_list, vlc_object_t *p_object,
     p_list->i_count++;
 
     return;
-}*/
+}
 
 static int CountChildren( vlc_object_t *p_this, int i_type )
 {

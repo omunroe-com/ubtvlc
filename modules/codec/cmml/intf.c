@@ -3,9 +3,9 @@
  *****************************************************************************
  * Copyright (C) 2003-2004 Commonwealth Scientific and Industrial Research
  *                         Organisation (CSIRO) Australia
- * Copyright (C) 2004 the VideoLAN team
+ * Copyright (C) 2004 VideoLAN
  *
- * $Id: intf.c 12412 2005-08-27 16:40:23Z jpsaman $
+ * $Id: intf.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Andre Pang <Andre.Pang@csiro.au>
  *
@@ -41,7 +41,7 @@
 #include <vlc/intf.h>
 #include <vlc/vout.h>
 
-#include <vlc_osd.h>
+#include <osd.h>
 
 #include "vlc_keys.h"
 

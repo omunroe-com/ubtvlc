@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_list.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_list.cpp 12285 2005-08-20 09:26:46Z dionoea $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ctrl_list.cpp 11009 2005-05-14 14:39:05Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -39,7 +39,7 @@
 #   include "solaris_specific.h" // for lrint
 #endif
 
-#define SCROLL_STEP 0.05f
+#define SCROLL_STEP 0.05
 #define LINE_INTERVAL 1  // Number of pixels inserted between 2 lines
 
 
@@ -332,14 +332,13 @@ void CtrlList::handleEvent( EvtGeneric &rEvent )
         int direction = ((EvtScroll&)rEvent).getDirection();
 
         double percentage = m_rList.getPositionVar().get();
-        double step = 2.0 / (double)m_rList.size();
         if( direction == EvtScroll::kUp )
         {
-            percentage += step;
+            percentage += SCROLL_STEP;
         }
         else
         {
-            percentage -= step;
+            percentage -= SCROLL_STEP;
         }
         m_rList.getPositionVar().set( percentage );
     }
@@ -482,8 +481,8 @@ void CtrlList::makeImage()
     int yPos = 0;
     for( it = m_rList[m_lastPos]; it != m_rList.end() && yPos < height; it++ )
     {
-        UString *pStr = (UString*)(it->m_cString.get());
-        uint32_t color = ( it->m_playing ? m_playColor : m_fgColor );
+        UString *pStr = (UString*)((*it).m_cString.get());
+        uint32_t color = ( (*it).m_playing ? m_playColor : m_fgColor );
 
         // Draw the text
         GenericBitmap *pText = m_rFont.drawString( *pStr, color, width );

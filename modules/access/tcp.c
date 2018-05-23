@@ -1,8 +1,8 @@
 /*****************************************************************************
  * tcp.c: TCP input module
  *****************************************************************************
- * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: tcp.c 11967 2005-08-02 17:31:33Z courmisch $
+ * Copyright (C) 2003-2004 VideoLAN
+ * $Id: tcp.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -80,22 +80,32 @@ static int Open( vlc_object_t *p_this )
     char         *psz_parser = psz_dup;
 
     /* Parse server:port */
-    if( *psz_parser == '[' )
+    while( *psz_parser && *psz_parser != ':' )
     {
-        psz_parser = strchr( psz_parser, ']' );
-        if( psz_parser == NULL )
-            psz_parser = psz_dup;
+        if( *psz_parser == '[' )
+        {
+            /* IPV6 */
+            while( *psz_parser && *psz_parser  != ']' )
+            {
+                psz_parser++;
+            }
+        }
+        psz_parser++;
     }
-    psz_parser = strchr( psz_parser, ':' );
-    
-    if( psz_parser == NULL )
+    if( *psz_parser != ':' || psz_parser == psz_dup )
     {
-        msg_Err( p_access, "missing port number : %s", psz_dup );
+        msg_Err( p_access, "you have to provide server:port addresse" );
         free( psz_dup );
         return VLC_EGENERIC;
     }
-
     *psz_parser++ = '\0';
+
+    if( atoi( psz_parser ) <= 0 )
+    {
+        msg_Err( p_access, "invalid port number (%d)", atoi( psz_parser ) );
+        free( psz_dup );
+        return VLC_EGENERIC;
+    }
 
     /* Init p_access */
     p_access->pf_read = Read;

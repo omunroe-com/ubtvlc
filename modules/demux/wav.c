@@ -1,8 +1,8 @@
 /*****************************************************************************
  * wav.c : wav file input module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2003 the VideoLAN team
- * $Id: wav.c 11685 2005-07-10 10:51:28Z zorglub $
+ * Copyright (C) 2001-2003 VideoLAN
+ * $Id: wav.c 10193 2005-03-07 20:21:24Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -112,7 +112,7 @@ static int Open( vlc_object_t * p_this )
     /* Is it a wav file ? */
     if( stream_Peek( p_demux->s, &p_peek, 12 ) < 12 ) return VLC_EGENERIC;
 
-    if( memcmp( p_peek, "RIFF", 4 ) || memcmp( &p_peek[8], "WAVE", 4 ) )
+    if( strncmp( p_peek, "RIFF", 4 ) || strncmp( &p_peek[8], "WAVE", 4 ) )
     {
         return VLC_EGENERIC;
     }
@@ -381,7 +381,7 @@ static int ChunkFind( demux_t *p_demux, char *fcc, unsigned int *pi_size )
 
         msg_Dbg( p_demux, "Chunk: fcc=`%4.4s` size=%d", p_peek, i_size );
 
-        if( !memcmp( p_peek, fcc, 4 ) )
+        if( !strncmp( p_peek, fcc, 4 ) )
         {
             if( pi_size )
             {

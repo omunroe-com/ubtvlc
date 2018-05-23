@@ -1,8 +1,8 @@
 /*****************************************************************************
  * main.h:
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: main.h 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: main.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *

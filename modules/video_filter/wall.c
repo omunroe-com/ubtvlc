@@ -1,8 +1,8 @@
 /*****************************************************************************
  * wall.c : Wall video plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001, 2002, 2003 the VideoLAN team
- * $Id: wall.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2000, 2001, 2002, 2003 VideoLAN
+ * $Id: wall.c 10348 2005-03-15 17:18:58Z sigmunau $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *

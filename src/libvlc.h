@@ -1,13 +1,12 @@
 /*****************************************************************************
  * libvlc.h: main libvlc header
  *****************************************************************************
- * Copyright (C) 1998-2005 VideoLAN (Centrale Réseaux) and its contributors
- * $Id: libvlc.h 12580 2005-09-17 12:12:54Z zorglub $
+ * Copyright (C) 1998-2005 VideoLAN
+ * $Id: libvlc.h 11510 2005-06-23 23:15:44Z titer $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
  *          Gildas Bazin <gbazin@videolan.org>
- *          Jean-Paul Saman <jpsaman #_at_# m2x.nl>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,9 +28,9 @@
 
 static char *ppsz_language[] =
 { "auto", "en", "en_GB", "ca", "da", "de", "es",
-  "fr", "it", "ja", "ko", "nl", "pt_BR", "ro", "ru", "tr", "zh_TW" };
+  "fr", "it", "ja", "nl", "pt_BR", "ru", "zh_TW" };
 static char *ppsz_language_text[] =
-{ N_("Auto"), N_("American English"), N_("British English"), N_("Catalan"), N_("Danish"), N_("German"), N_("Spanish"), N_("French"), N_("Italian"), N_("Japanese"), N_("Korean"), N_("Dutch"), N_("Brazilian Portuguese"), N_("Romanian"), N_("Russian"), N_("Turkish"), N_("Chinese Traditional") };
+{ N_("Auto"), N_("American"), N_("British"), N_("Catalan"), N_("Danish"), N_("German"), N_("Spanish"), N_("French"), N_("Italian"), N_("Japanese"), N_("Dutch"), N_("Brazilian"), N_("Russian"), N_("Chinese Traditional") };
 
 static char *ppsz_snap_formats[] =
 { "png", "jpg" };
@@ -67,16 +66,12 @@ static char *ppsz_snap_formats[] =
 
 #define VERBOSE_TEXT N_("Verbosity (0,1,2)")
 #define VERBOSE_LONGTEXT N_( \
-    "This option sets the verbosity level (0=only errors and " \
+    "This options sets the verbosity level (0=only errors and " \
     "standard messages, 1=warnings, 2=debug).")
 
 #define QUIET_TEXT N_("Be quiet")
 #define QUIET_LONGTEXT N_( \
-    "This option turns off all warning and information messages.")
-
-#define OPEN_TEXT N_("Open MRL")
-#define OPEN_LONGTEXT N_( \
-    "This option allows you to open a default MRL on start-up.")
+    "This options turns off all warning and information messages.")
 
 #define LANGUAGE_TEXT N_("Language")
 #define LANGUAGE_LONGTEXT N_( "This option allows you to set the language " \
@@ -123,11 +118,6 @@ static char *ppsz_snap_formats[] =
 #define VOLUME_SAVE_TEXT N_("Audio output saved volume")
 #define VOLUME_SAVE_LONGTEXT N_( \
     "This saves the audio output volume when you select mute.")
-
-#define VOLUME_STEP_TEXT N_("Audio output volume step")
-#define VOLUME_STEP_LONGTEXT N_( \
-    "The step size of the volume is adjustable using this option, " \
-    "in a range from 0 to 1024." )
 
 #define AOUT_RATE_TEXT N_("Audio output frequency (Hz)")
 #define AOUT_RATE_LONGTEXT N_( \
@@ -250,13 +240,10 @@ static char *ppsz_align_descriptions[] =
 #define VIDEO_ON_TOP_LONGTEXT N_("Always place the video window on top of " \
     "other windows." )
 
-#define SS_TEXT N_("Disable screensaver")
-#define SS_LONGTEXT N_("Disable the screensaver during video playback." )
-
 #define VIDEO_DECO_TEXT N_("Window decorations")
 #define VIDEO_DECO_LONGTEXT N_( \
     "If this option is disabled, VLC will avoid creating window caption, " \
-    "frames, etc... around the video.")
+    "frames, etc... around the video. Currently only supported on Windows.")
 
 #define FILTER_TEXT N_("Video filter module")
 #define FILTER_LONGTEXT N_( \
@@ -283,12 +270,6 @@ static char *ppsz_align_descriptions[] =
     "aspect, or a float value (1.25, 1.3333, etc.) expressing pixel " \
     "squareness.")
 
-#define MASPECT_RATIO_TEXT N_("Monitor aspect ratio")
-#define MASPECT_RATIO_LONGTEXT N_( \
-    "This will force the monitor aspect ratio. Most monitors have a 4:3." \
-    "If you have a 16:9 screen, you will need to change this to 16:9 in" \
-    "order to keep proportions.")
-
 #define SKIP_FRAMES_TEXT N_("Skip frames")
 #define SKIP_FRAMES_LONGTEXT N_( \
     "Disable this option to disable frame drops on MPEG-2 streams.")
@@ -312,7 +293,6 @@ static char *ppsz_align_descriptions[] =
 #define CLOCK_SYNCHRO_LONGTEXT N_( \
     "Allows you to enable/disable the input clock synchronisation for " \
     "real-time sources.")
-
 static int pi_clock_values[] = { -1, 0, 1 };
 static char *ppsz_clock_descriptions[] =
 { N_("Default"), N_("Disable"), N_("Enable") };
@@ -387,7 +367,7 @@ static char *ppsz_clock_descriptions[] =
 #define INPUT_SLAVE_TEXT N_("Input slave (experimental)")
 #define INPUT_SLAVE_LONGTEXT N_("Allows you to play from several files at " \
     "the same time. This feature is experimental, not all formats " \
- 	"are supported.")
+    "are supported.")
 
 #define BOOKMARKS_TEXT N_("Bookmarks list for a stream")
 #define BOOKMARKS_LONGTEXT N_("You can specify a list of bookmarks for a stream in " \
@@ -481,11 +461,6 @@ static char *ppsz_clock_descriptions[] =
     "If you check this box, IPv4 will be used by default for all UDP and " \
     "HTTP connections.")
 
-#define TIMEOUT_TEXT N_("TCP connection timeout in ms")
-#define TIMEOUT_LONGTEXT N_( \
-    "Allows you to modify the default TCP connection timeout. This " \
-    "value should be set in millisecond units." )
-
 #define SOCKS_SERVER_TEXT N_("SOCKS server")
 #define SOCKS_SERVER_LONGTEXT N_( \
     "Allow you to specify a SOCKS server to use. It must be of the form " \
@@ -498,6 +473,9 @@ static char *ppsz_clock_descriptions[] =
 #define SOCKS_PASS_TEXT N_("SOCKS password")
 #define SOCKS_PASS_LONGTEXT N_("Allows you to modify the password that will " \
     "be used for the connection to the SOCKS server.")
+
+
+
 
 #define META_TITLE_TEXT N_("Title metadata")
 #define META_TITLE_LONGTEXT N_( \
@@ -554,7 +532,7 @@ static char *ppsz_clock_descriptions[] =
 #define SOUT_TEXT N_("Default stream output chain")
 #define SOUT_LONGTEXT N_( \
     "You can enter here a default stream output chain. Refer to "\
-    "the documentation to learn how to build such chains." \
+    "the documentation to learn how to build such chains. " \
     "Warning: this chain will be enabled for all streams." )
 
 #define SOUT_ALL_TEXT N_("Enable streaming of all ES")
@@ -736,12 +714,6 @@ static char *ppsz_clock_descriptions[] =
     "double-click on a file in the explorer. This option will allow you " \
     "to play the file with the already running instance or enqueue it.")
 
-#define PLAYLISTENQUEUE_TEXT N_( \
-    "Enqueue items to playlist when in one instance mode")
-#define PLAYLISTENQUEUE_LONGTEXT N_( \
-    "When using the one instance only option, enqueue items to playlist " \
-    "and keep playing current item.")
-
 #define HPRIORITY_TEXT N_("Increase the priority of the process")
 #define HPRIORITY_LONGTEXT N_( \
     "Increasing the priority of the process will very likely improve your " \
@@ -793,8 +765,6 @@ static char *ppsz_clock_descriptions[] =
 #define POSITION_KEY_TEXT N_("Position")
 #define POSITION_KEY_LONGTEXT N_("Select the hotkey to display the position.")
 
-#define JB3SEC_KEY_TEXT N_("Jump 3 seconds backwards")
-#define JB3SEC_KEY_LONGTEXT N_("Select the hotkey to jump 3 seconds backwards.")
 #define JB10SEC_KEY_TEXT N_("Jump 10 seconds backwards")
 #define JB10SEC_KEY_LONGTEXT N_("Select the hotkey to jump 10 seconds backwards.")
 
@@ -802,14 +772,12 @@ static char *ppsz_clock_descriptions[] =
 #define JB1MIN_KEY_LONGTEXT N_("Select the hotkey to jump 1 minute backwards.")
 #define JB5MIN_KEY_TEXT N_("Jump 5 minutes backwards")
 #define JB5MIN_KEY_LONGTEXT N_("Select the hotkey to jump 5 minutes backwards.")
-
-#define JF3SEC_KEY_TEXT N_("Jump 3 seconds forward")
-#define JF3SEC_KEY_LONGTEXT N_("Select the hotkey to jump 3 seconds forward.")
 #define JF10SEC_KEY_TEXT N_("Jump 10 seconds forward")
 #define JF10SEC_KEY_LONGTEXT N_("Select the hotkey to jump 10 seconds forward.")
 
 #define JF1MIN_KEY_TEXT N_("Jump 1 minute forward")
 #define JF1MIN_KEY_LONGTEXT N_("Select the hotkey to jump 1 minute forward.")
+
 #define JF5MIN_KEY_TEXT N_("Jump 5 minutes forward")
 #define JF5MIN_KEY_LONGTEXT N_("Select the hotkey to jump 5 minutes forward.")
 
@@ -825,14 +793,6 @@ static char *ppsz_clock_descriptions[] =
 #define NAV_RIGHT_KEY_LONGTEXT N_("Select the key to move the selector right in DVD menus.")
 #define NAV_ACTIVATE_KEY_TEXT N_("Activate")
 #define NAV_ACTIVATE_KEY_LONGTEXT N_("Select the key to activate selected item in DVD menus.")
-#define TITLE_PREV_TEXT N_("Select previous DVD title")
-#define TITLE_PREV_LONGTEXT N_("Select the key to choose the previous title from the DVD")
-#define TITLE_NEXT_TEXT N_("Select next DVD title")
-#define TITLE_NEXT_LONGTEXT N_("Select the key to choose the next title from the DVD")
-#define CHAPTER_PREV_TEXT N_("Select prev DVD chapter")
-#define CHAPTER_PREV_LONGTEXT N_("Select the key to choose the previous chapter from the DVD")
-#define CHAPTER_NEXT_TEXT N_("Select prev DVD chapter")
-#define CHAPTER_NEXT_LONGTEXT N_("Select the key to choose the next chapter from the DVD")
 #define VOL_UP_KEY_TEXT N_("Volume up")
 #define VOL_UP_KEY_LONGTEXT N_("Select the key to increase audio volume.")
 #define VOL_DOWN_KEY_TEXT N_("Volume down")
@@ -881,8 +841,6 @@ static char *ppsz_clock_descriptions[] =
 #define SUBTITLE_TRACK_KEY_LONGTEXT N_("Cycle through the available subtitle tracks")
 #define INTF_SHOW_KEY_TEXT N_("Show interface")
 #define INTF_SHOW_KEY_LONGTEXT N_("Raise the interface above all other windows")
-#define INTF_HIDE_KEY_TEXT N_("Hide interface")
-#define INTF_HIDE_KEY_LONGTEXT N_("Lower the interface below all other windows")
 #define SNAP_KEY_TEXT N_("Take video snapshot")
 #define SNAP_KEY_LONGTEXT N_("Takes a video snapshot and writes it to disk.")
 
@@ -918,7 +876,7 @@ static char *ppsz_clock_descriptions[] =
     "\n  [cdda://][device]              Audio CD device" \
     "\n  udp:[[<source address>]@[<bind address>][:<bind port>]]" \
     "\n                                 UDP stream sent by a streaming server"\
-    "\n  vlc:pause:<seconds>            Special item to pause the playlist for a certain time" \
+    "\n  vlc:pause                      Special item to pause the playlist" \
     "\n  vlc:quit                       Special item to quit VLC" \
     "\n")
 
@@ -950,9 +908,6 @@ vlc_module_begin();
     add_integer_with_range( "volume", AOUT_VOLUME_DEFAULT, AOUT_VOLUME_MIN,
                             AOUT_VOLUME_MAX, NULL, VOLUME_TEXT,
                             VOLUME_LONGTEXT, VLC_FALSE );
-    add_integer_with_range( "volume-step", AOUT_VOLUME_STEP, AOUT_VOLUME_MIN,
-                            AOUT_VOLUME_MAX, NULL, VOLUME_STEP_TEXT,
-                            VOLUME_STEP_LONGTEXT, VLC_TRUE );
     add_integer( "aout-rate", -1, NULL, AOUT_RATE_TEXT,
                  AOUT_RATE_LONGTEXT, VLC_TRUE );
 #if !defined( SYS_DARWIN )
@@ -965,6 +920,7 @@ vlc_module_begin();
     set_subcategory( SUBCAT_AUDIO_AOUT );
     add_module( "aout", "audio output", NULL, NULL, AOUT_TEXT, AOUT_LONGTEXT,
                 VLC_TRUE );
+        change_short('A');
     set_subcategory( SUBCAT_AUDIO_AFILTER );
     add_module_list_cat( "audio-filter", SUBCAT_AUDIO_AFILTER, 0,
                          NULL, AUDIO_FILTER_TEXT,
@@ -993,8 +949,6 @@ vlc_module_begin();
 #endif
     add_bool( "video-on-top", 0, NULL, VIDEO_ON_TOP_TEXT,
               VIDEO_ON_TOP_LONGTEXT, VLC_FALSE );
-    add_bool( "disable-screensaver", VLC_TRUE, NULL, SS_TEXT, SS_LONGTEXT,
-              VLC_TRUE );
 
     set_section( N_("Snapshot") , NULL );
     add_directory( "snapshot-path", NULL, NULL, SNAP_PATH_TEXT,
@@ -1010,8 +964,6 @@ vlc_module_begin();
     add_integer( "video-y", -1, NULL, VIDEOY_TEXT, VIDEOY_LONGTEXT, VLC_TRUE );
     add_string( "aspect-ratio", "", NULL,
                ASPECT_RATIO_TEXT, ASPECT_RATIO_LONGTEXT, VLC_FALSE );
-    add_string( "monitor-aspect-ratio", "4:3", NULL,
-               MASPECT_RATIO_TEXT, MASPECT_RATIO_LONGTEXT, VLC_FALSE );
     add_bool( "video-deco", 1, NULL, VIDEO_DECO_TEXT,
               VIDEO_DECO_LONGTEXT, VLC_TRUE );
     add_string( "video-title", NULL, NULL, VIDEO_TITLE_TEXT,
@@ -1059,7 +1011,7 @@ vlc_module_begin();
         add_deprecated( "spu-margin", VLC_FALSE ); /*Deprecated since 0.8.2 */
     set_section( N_( "Overlays" ) , NULL );
     add_module_list_cat( "sub-filter", SUBCAT_VIDEO_SUBPIC, NULL, NULL,
-                SUB_FILTER_TEXT, SUB_FILTER_LONGTEXT, VLC_FALSE );
+                SUB_FILTER_TEXT, SUB_FILTER_LONGTEXT, VLC_TRUE );
 
 /* Input options */
     set_category( CAT_INPUT );
@@ -1117,7 +1069,7 @@ vlc_module_begin();
 
     set_section( N_( "Default devices") , NULL )
 
-    add_file( "dvd", NULL, NULL, DVD_DEV_TEXT, DVD_DEV_LONGTEXT,
+    add_file( "dvd", DVD_DEVICE, NULL, DVD_DEV_TEXT, DVD_DEV_LONGTEXT,
               VLC_FALSE );
     add_file( "vcd", VCD_DEVICE, NULL, VCD_DEV_TEXT, VCD_DEV_LONGTEXT,
               VLC_FALSE );
@@ -1135,8 +1087,6 @@ vlc_module_begin();
         change_short('6');
     add_bool( "ipv4", 0, NULL, IPV4_TEXT, IPV4_LONGTEXT, VLC_FALSE );
         change_short('4');
-    add_integer( "ipv4-timeout", 5 * 1000, NULL, TIMEOUT_TEXT,
-                 TIMEOUT_LONGTEXT, VLC_TRUE );
 
     set_section( N_( "Socks proxy") , NULL )
     add_string( "socks", NULL, NULL,
@@ -1241,7 +1191,6 @@ vlc_module_begin();
                 MEMCPY_LONGTEXT, VLC_TRUE );
     add_module( "audio-channel-mixer", "audio mixer", NULL, NULL,
                 AUDIO_CHANNEL_MIXER, AUDIO_CHANNEL_MIXER_LONGTEXT, VLC_TRUE );
-        change_short('A');
 
     set_section( N_("Plugins" ), NULL );
     add_bool( "plugins-cache", VLC_TRUE, NULL, PLUGINS_CACHE_TEXT,
@@ -1253,7 +1202,7 @@ vlc_module_begin();
     add_bool( "minimize-threads", 0, NULL, MINIMIZE_THREADS_TEXT,
               MINIMIZE_THREADS_LONGTEXT, VLC_TRUE );
 
-#if !defined(SYS_BEOS) && defined(PTHREAD_COND_T_IN_PTHREAD_H)
+#if !defined(SYS_DARWIN) && !defined(SYS_BEOS) && defined(PTHREAD_COND_T_IN_PTHREAD_H)
     add_bool( "rt-priority", 0, NULL, RT_PRIORITY_TEXT,
               RT_PRIORITY_LONGTEXT, VLC_TRUE );
 #endif
@@ -1266,8 +1215,6 @@ vlc_module_begin();
 #if defined(WIN32)
     add_bool( "one-instance", 0, NULL, ONEINSTANCE_TEXT,
               ONEINSTANCE_LONGTEXT, VLC_TRUE );
-    add_bool( "playlist-enqueue", 0, NULL, PLAYLISTENQUEUE_TEXT,
-              PLAYLISTENQUEUE_LONGTEXT, VLC_TRUE );
     add_bool( "high-priority", 0, NULL, HPRIORITY_TEXT,
               HPRIORITY_LONGTEXT, VLC_FALSE );
     add_bool( "fast-mutex", 0, NULL, FAST_MUTEX_TEXT,
@@ -1296,8 +1243,6 @@ vlc_module_begin();
     add_bool( "repeat", 0, NULL, REPEAT_TEXT, REPEAT_LONGTEXT, VLC_FALSE );
         change_short('R');
     add_bool( "play-and-stop", 0, NULL, PAS_TEXT, PAS_LONGTEXT, VLC_FALSE );
-
-    add_string( "open", "", NULL, OPEN_TEXT, OPEN_LONGTEXT, VLC_FALSE );
 
     set_subcategory( SUBCAT_PLAYLIST_SD );
     add_module_list_cat( "services-discovery", SUBCAT_PLAYLIST_SD, NULL,
@@ -1378,8 +1323,6 @@ vlc_module_begin();
 #   define KEY_PREV               KEY_MODIFIER_COMMAND|KEY_LEFT
 #   define KEY_STOP               KEY_MODIFIER_COMMAND|'.'
 #   define KEY_POSITION           't'
-#   define KEY_JUMP_M3SEC         KEY_MODIFIER_COMMAND|KEY_MODIFIER_CTRL|KEY_LEFT
-#   define KEY_JUMP_P3SEC         KEY_MODIFIER_COMMAND|KEY_MODIFIER_CTRL|KEY_RIGHT
 #   define KEY_JUMP_M10SEC        KEY_MODIFIER_COMMAND|KEY_MODIFIER_ALT|KEY_LEFT
 #   define KEY_JUMP_P10SEC        KEY_MODIFIER_COMMAND|KEY_MODIFIER_ALT|KEY_RIGHT
 #   define KEY_JUMP_M1MIN         KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_LEFT
@@ -1402,11 +1345,6 @@ vlc_module_begin();
 #   define KEY_AUDIO_TRACK        'l'
 #   define KEY_SUBTITLE_TRACK     's'
 #   define KEY_INTF_SHOW          'i'
-#   define KEY_INTF_HIDE          'I'
-#   define KEY_TITLE_PREV         KEY_MODIFIER_CTRL|'p'
-#   define KEY_TITLE_NEXT         KEY_MODIFIER_CTRL|'n'
-#   define KEY_CHAPTER_PREV       KEY_MODIFIER_CTRL|'u'
-#   define KEY_CHAPTER_NEXT       KEY_MODIFIER_CTRL|'d'
 #   define KEY_SNAPSHOT           KEY_MODIFIER_COMMAND|KEY_MODIFIER_ALT|'s'
 
 #   define KEY_SET_BOOKMARK1      KEY_MODIFIER_COMMAND|KEY_F1
@@ -1444,8 +1382,6 @@ vlc_module_begin();
 #   define KEY_PREV               'p'
 #   define KEY_STOP               's'
 #   define KEY_POSITION           't'
-#   define KEY_JUMP_M3SEC         KEY_MODIFIER_SHIFT|KEY_LEFT
-#   define KEY_JUMP_P3SEC         KEY_MODIFIER_SHIFT|KEY_RIGHT
 #   define KEY_JUMP_M10SEC        KEY_MODIFIER_ALT|KEY_LEFT
 #   define KEY_JUMP_P10SEC        KEY_MODIFIER_ALT|KEY_RIGHT
 #   define KEY_JUMP_M1MIN         KEY_MODIFIER_CTRL|KEY_LEFT
@@ -1469,11 +1405,6 @@ vlc_module_begin();
 #   define KEY_AUDIO_TRACK        'l'
 #   define KEY_SUBTITLE_TRACK     'k'
 #   define KEY_INTF_SHOW          'i'
-#   define KEY_INTF_HIDE          'I'
-#   define KEY_TITLE_PREV         KEY_MODIFIER_CTRL|'p'
-#   define KEY_TITLE_NEXT         KEY_MODIFIER_CTRL|'n'
-#   define KEY_CHAPTER_PREV       KEY_MODIFIER_CTRL|'u'
-#   define KEY_CHAPTER_NEXT       KEY_MODIFIER_CTRL|'d'
 #   define KEY_SNAPSHOT           KEY_MODIFIER_CTRL|KEY_MODIFIER_ALT|'s'
 
 #   define KEY_SET_BOOKMARK1      KEY_MODIFIER_CTRL|KEY_F1
@@ -1521,10 +1452,6 @@ vlc_module_begin();
              STOP_KEY_LONGTEXT, VLC_FALSE );
     add_key( "key-position", KEY_POSITION, NULL, POSITION_KEY_TEXT,
              POSITION_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-jump-3sec", KEY_JUMP_M3SEC, NULL, JB3SEC_KEY_TEXT,
-             JB3SEC_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump+3sec", KEY_JUMP_P3SEC, NULL, JF3SEC_KEY_TEXT,
-             JF3SEC_KEY_LONGTEXT, VLC_FALSE );             
     add_key( "key-jump-10sec", KEY_JUMP_M10SEC, NULL, JB10SEC_KEY_TEXT,
              JB10SEC_KEY_LONGTEXT, VLC_FALSE );
     add_key( "key-jump+10sec", KEY_JUMP_P10SEC, NULL, JF10SEC_KEY_TEXT,
@@ -1549,15 +1476,6 @@ vlc_module_begin();
     add_key( "key-nav-right", KEY_NAV_RIGHT, NULL, NAV_RIGHT_KEY_TEXT,
              NAV_RIGHT_KEY_LONGTEXT, VLC_TRUE );
 
-    add_key( "key-title-prev", KEY_TITLE_PREV, NULL, TITLE_PREV_TEXT,
-             TITLE_PREV_LONGTEXT, VLC_TRUE );
-    add_key( "key-title-next", KEY_TITLE_NEXT, NULL, TITLE_NEXT_TEXT,
-             TITLE_NEXT_LONGTEXT, VLC_TRUE );
-    add_key( "key-chapter-prev", KEY_CHAPTER_PREV, NULL, CHAPTER_PREV_TEXT,
-             CHAPTER_PREV_LONGTEXT, VLC_TRUE );
-    add_key( "key-chapter-next", KEY_CHAPTER_NEXT, NULL, CHAPTER_NEXT_TEXT,
-             CHAPTER_NEXT_LONGTEXT, VLC_TRUE );
-                          
     add_key( "key-quit", KEY_QUIT, NULL, QUIT_KEY_TEXT,
              QUIT_KEY_LONGTEXT, VLC_FALSE );
     add_key( "key-vol-up", KEY_VOL_UP, NULL, VOL_UP_KEY_TEXT,
@@ -1580,8 +1498,6 @@ vlc_module_begin();
              SUBTITLE_TRACK_KEY_TEXT, SUBTITLE_TRACK_KEY_LONGTEXT, VLC_FALSE );
     add_key( "key-intf-show", KEY_INTF_SHOW, NULL,
              INTF_SHOW_KEY_TEXT, INTF_SHOW_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-intf-hide", KEY_INTF_HIDE, NULL,
-             INTF_HIDE_KEY_TEXT, INTF_HIDE_KEY_LONGTEXT, VLC_TRUE );             
     add_key( "key-snapshot", KEY_SNAPSHOT, NULL,
              SNAP_KEY_TEXT, SNAP_KEY_LONGTEXT, VLC_TRUE );
 
@@ -1675,68 +1591,62 @@ static module_config_t p_help_config[] =
  *****************************************************************************/
 static struct hotkey p_hotkeys[] =
 {
-    { "key-quit", ACTIONID_QUIT, 0, 0, 0, 0 },
-    { "key-play-pause", ACTIONID_PLAY_PAUSE, 0, 0, 0, 0 },
-    { "key-play", ACTIONID_PLAY, 0, 0, 0, 0 },
-    { "key-pause", ACTIONID_PAUSE, 0, 0, 0, 0 },
-    { "key-stop", ACTIONID_STOP, 0, 0, 0, 0 },
-    { "key-position", ACTIONID_POSITION, 0, 0, 0, 0 },
-    { "key-jump-3sec", ACTIONID_JUMP_BACKWARD_3SEC, 0, 1000000, 0, 0 },
-    { "key-jump+3sec", ACTIONID_JUMP_FORWARD_3SEC, 0, 1000000, 0, 0 },
-    { "key-jump-10sec", ACTIONID_JUMP_BACKWARD_10SEC, 0, 1000000, 0, 0 },
-    { "key-jump+10sec", ACTIONID_JUMP_FORWARD_10SEC, 0, 1000000, 0, 0 },
-    { "key-jump-1min", ACTIONID_JUMP_BACKWARD_1MIN, 0, 1000000, 0, 0 },
-    { "key-jump+1min", ACTIONID_JUMP_FORWARD_1MIN, 0, 1000000, 0, 0 },
-    { "key-jump-5min", ACTIONID_JUMP_BACKWARD_5MIN, 0, 1000000, 0, 0 },
-    { "key-jump+5min", ACTIONID_JUMP_FORWARD_5MIN, 0, 1000000, 0, 0 },
-    { "key-prev", ACTIONID_PREV, 0, 0, 0, 0 },
-    { "key-next", ACTIONID_NEXT, 0, 0, 0, 0 },
-    { "key-faster", ACTIONID_FASTER, 0, 0, 0, 0 },
-    { "key-slower", ACTIONID_SLOWER, 0, 0, 0, 0 },
-    { "key-fullscreen", ACTIONID_FULLSCREEN, 0, 0, 0, 0 },
-    { "key-vol-up", ACTIONID_VOL_UP, 0, 0, 0, 0 },
-    { "key-vol-down", ACTIONID_VOL_DOWN, 0, 0, 0, 0 },
-    { "key-vol-mute", ACTIONID_VOL_MUTE, 0, 0, 0, 0 },
-    { "key-subdelay-down", ACTIONID_SUBDELAY_DOWN, 0, 0, 0, 0 },
-    { "key-subdelay-up", ACTIONID_SUBDELAY_UP, 0, 0, 0, 0 },
-    { "key-audiodelay-down", ACTIONID_AUDIODELAY_DOWN, 0, 0, 0, 0 },
-    { "key-audiodelay-up", ACTIONID_AUDIODELAY_UP, 0, 0, 0, 0 },
-    { "key-audio-track", ACTIONID_AUDIO_TRACK, 0, 0, 0, 0 },
-    { "key-subtitle-track", ACTIONID_SUBTITLE_TRACK, 0, 0, 0, 0 },
-    { "key-intf-show", ACTIONID_INTF_SHOW, 0, 0, 0, 0 },
-    { "key-intf-hide", ACTIONID_INTF_HIDE, 0, 0, 0, 0 },
-    { "key-snapshot", ACTIONID_SNAPSHOT, 0, 0, 0, 0 },
-    { "key-nav-activate", ACTIONID_NAV_ACTIVATE, 0, 0, 0, 0 },
-    { "key-nav-up", ACTIONID_NAV_UP, 0, 0, 0, 0 },
-    { "key-nav-down", ACTIONID_NAV_DOWN, 0, 0, 0, 0 },
-    { "key-nav-left", ACTIONID_NAV_LEFT, 0, 0, 0, 0 },
-    { "key-nav-right", ACTIONID_NAV_RIGHT, 0, 0, 0, 0 },
-    { "key-title-prev", ACTIONID_TITLE_PREV, 0, 0, 0, 0 },
-    { "key-title-next", ACTIONID_TITLE_NEXT, 0, 0, 0, 0 },
-    { "key-chapter-prev", ACTIONID_CHAPTER_PREV, 0, 0, 0, 0 },
-    { "key-chapter-next", ACTIONID_CHAPTER_NEXT, 0, 0, 0, 0 },
-    { "key-set-bookmark1", ACTIONID_SET_BOOKMARK1, 0, 0, 0, 0 },
-    { "key-set-bookmark2", ACTIONID_SET_BOOKMARK2, 0, 0, 0, 0 },
-    { "key-set-bookmark3", ACTIONID_SET_BOOKMARK3, 0, 0, 0, 0 },
-    { "key-set-bookmark4", ACTIONID_SET_BOOKMARK4, 0, 0, 0, 0 },
-    { "key-set-bookmark5", ACTIONID_SET_BOOKMARK5, 0, 0, 0, 0 },
-    { "key-set-bookmark6", ACTIONID_SET_BOOKMARK6, 0, 0, 0, 0 },
-    { "key-set-bookmark7", ACTIONID_SET_BOOKMARK7, 0, 0, 0, 0 },
-    { "key-set-bookmark8", ACTIONID_SET_BOOKMARK8, 0, 0, 0, 0 },
-    { "key-set-bookmark9", ACTIONID_SET_BOOKMARK9, 0, 0, 0, 0 },
-    { "key-set-bookmark10", ACTIONID_SET_BOOKMARK10, 0, 0, 0, 0 },
-    { "key-play-bookmark1", ACTIONID_PLAY_BOOKMARK1, 0, 0, 0, 0 },
-    { "key-play-bookmark2", ACTIONID_PLAY_BOOKMARK2, 0, 0, 0, 0 },
-    { "key-play-bookmark3", ACTIONID_PLAY_BOOKMARK3, 0, 0, 0, 0 },
-    { "key-play-bookmark4", ACTIONID_PLAY_BOOKMARK4, 0, 0, 0, 0 },
-    { "key-play-bookmark5", ACTIONID_PLAY_BOOKMARK5, 0, 0, 0, 0 },
-    { "key-play-bookmark6", ACTIONID_PLAY_BOOKMARK6, 0, 0, 0, 0 },
-    { "key-play-bookmark7", ACTIONID_PLAY_BOOKMARK7, 0, 0, 0, 0 },
-    { "key-play-bookmark8", ACTIONID_PLAY_BOOKMARK8, 0, 0, 0, 0 },
-    { "key-play-bookmark9", ACTIONID_PLAY_BOOKMARK9, 0, 0, 0, 0 },
-    { "key-play-bookmark10", ACTIONID_PLAY_BOOKMARK10, 0, 0, 0, 0 },
-    { "key-history-back", ACTIONID_HISTORY_BACK, 0, 0, 0, 0 },
-    { "key-history-forward", ACTIONID_HISTORY_FORWARD, 0, 0, 0, 0 },
-    { "key-record", ACTIONID_RECORD, 0, 0, 0, 0 },
-    { NULL, 0, 0, 0, 0, 0 }
+    { "key-quit", ACTIONID_QUIT, 0 },
+    { "key-play-pause", ACTIONID_PLAY_PAUSE, 0 },
+    { "key-play", ACTIONID_PLAY, 0 },
+    { "key-pause", ACTIONID_PAUSE, 0 },
+    { "key-stop", ACTIONID_STOP, 0 },
+    { "key-position", ACTIONID_POSITION, 0 },
+    { "key-jump-10sec", ACTIONID_JUMP_BACKWARD_10SEC, 0 },
+    { "key-jump+10sec", ACTIONID_JUMP_FORWARD_10SEC, 0 },
+    { "key-jump-1min", ACTIONID_JUMP_BACKWARD_1MIN, 0 },
+    { "key-jump+1min", ACTIONID_JUMP_FORWARD_1MIN, 0 },
+    { "key-jump-5min", ACTIONID_JUMP_BACKWARD_5MIN, 0 },
+    { "key-jump+5min", ACTIONID_JUMP_FORWARD_5MIN, 0 },
+    { "key-prev", ACTIONID_PREV, 0 },
+    { "key-next", ACTIONID_NEXT, 0 },
+    { "key-faster", ACTIONID_FASTER, 0 },
+    { "key-slower", ACTIONID_SLOWER, 0 },
+    { "key-fullscreen", ACTIONID_FULLSCREEN, 0 },
+    { "key-vol-up", ACTIONID_VOL_UP, 0 },
+    { "key-vol-down", ACTIONID_VOL_DOWN, 0 },
+    { "key-vol-mute", ACTIONID_VOL_MUTE, 0 },
+    { "key-subdelay-down", ACTIONID_SUBDELAY_DOWN, 0 },
+    { "key-subdelay-up", ACTIONID_SUBDELAY_UP, 0 },
+    { "key-audiodelay-down", ACTIONID_AUDIODELAY_DOWN, 0 },
+    { "key-audiodelay-up", ACTIONID_AUDIODELAY_UP, 0 },
+    { "key-audio-track", ACTIONID_AUDIO_TRACK, 0},
+    { "key-subtitle-track", ACTIONID_SUBTITLE_TRACK, 0},
+    { "key-intf-show", ACTIONID_INTF_SHOW, 0},
+    { "key-snapshot", ACTIONID_SNAPSHOT, 0},
+    { "key-nav-activate", ACTIONID_NAV_ACTIVATE, 0 },
+    { "key-nav-up", ACTIONID_NAV_UP, 0 },
+    { "key-nav-down", ACTIONID_NAV_DOWN, 0 },
+    { "key-nav-left", ACTIONID_NAV_LEFT, 0 },
+    { "key-nav-right", ACTIONID_NAV_RIGHT, 0 },
+    { "key-set-bookmark1", ACTIONID_SET_BOOKMARK1, 0},
+    { "key-set-bookmark2", ACTIONID_SET_BOOKMARK2, 0},
+    { "key-set-bookmark3", ACTIONID_SET_BOOKMARK3, 0},
+    { "key-set-bookmark4", ACTIONID_SET_BOOKMARK4, 0},
+    { "key-set-bookmark5", ACTIONID_SET_BOOKMARK5, 0},
+    { "key-set-bookmark6", ACTIONID_SET_BOOKMARK6, 0},
+    { "key-set-bookmark7", ACTIONID_SET_BOOKMARK7, 0},
+    { "key-set-bookmark8", ACTIONID_SET_BOOKMARK8, 0},
+    { "key-set-bookmark9", ACTIONID_SET_BOOKMARK9, 0},
+    { "key-set-bookmark10", ACTIONID_SET_BOOKMARK10, 0},
+    { "key-play-bookmark1", ACTIONID_PLAY_BOOKMARK1, 0},
+    { "key-play-bookmark2", ACTIONID_PLAY_BOOKMARK2, 0},
+    { "key-play-bookmark3", ACTIONID_PLAY_BOOKMARK3, 0},
+    { "key-play-bookmark4", ACTIONID_PLAY_BOOKMARK4, 0},
+    { "key-play-bookmark5", ACTIONID_PLAY_BOOKMARK5, 0},
+    { "key-play-bookmark6", ACTIONID_PLAY_BOOKMARK6, 0},
+    { "key-play-bookmark7", ACTIONID_PLAY_BOOKMARK7, 0},
+    { "key-play-bookmark8", ACTIONID_PLAY_BOOKMARK8, 0},
+    { "key-play-bookmark9", ACTIONID_PLAY_BOOKMARK9, 0},
+    { "key-play-bookmark10", ACTIONID_PLAY_BOOKMARK10, 0},
+    { "key-history-back", ACTIONID_HISTORY_BACK, 0},
+    { "key-history-forward", ACTIONID_HISTORY_FORWARD, 0},
+    { "key-record", ACTIONID_RECORD, 0 },
+    { NULL, 0, 0 }
 };
+

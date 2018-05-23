@@ -1,8 +1,8 @@
 /*****************************************************************************
  * open.m: MacOS X module for vlc
  *****************************************************************************
- * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: open.m 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2002-2005 VideoLAN
+ * $Id: open.m 11382 2005-06-10 15:05:04Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net> 
  *          Christophe Massiot <massiot@via.ecp.fr>

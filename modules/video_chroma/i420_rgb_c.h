@@ -4,8 +4,8 @@
  * are a complete and portable C implementation, and may be replaced in certain
  * case by optimized functions.
  *****************************************************************************
- * Copyright (C) 1999, 2000 the VideoLAN team
- * $Id: i420_rgb_c.h 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 1999, 2000 VideoLAN
+ * $Id: i420_rgb_c.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *

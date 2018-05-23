@@ -1,7 +1,7 @@
 /*****************************************************************************
  * oleinplaceactiveobject.cpp: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
+ * Copyright (C) 2005 VideoLAN
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -28,15 +28,18 @@ using namespace std;
 STDMETHODIMP VLCOleInPlaceActiveObject::GetWindow(HWND *pHwnd)
 {
     if( NULL == pHwnd )
-        return E_POINTER;
+        return E_INVALIDARG;
 
-    *pHwnd = NULL;
     if( _p_instance->isInPlaceActive() )
     {
         if( NULL != (*pHwnd = _p_instance->getInPlaceWindow()) )
             return S_OK;
+
+        return E_FAIL;
     }
-    return E_FAIL;
+    *pHwnd = NULL;
+
+    return E_UNEXPECTED;
 };
 
 STDMETHODIMP VLCOleInPlaceActiveObject::EnableModeless(BOOL fEnable)

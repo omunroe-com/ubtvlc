@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_es_out.h
  *****************************************************************************
- * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: vlc_es_out.h 12202 2005-08-15 14:57:02Z zorglub $
+ * Copyright (C) 1999-2004 VideoLAN
+ * $Id: vlc_es_out.h 10845 2005-04-28 07:26:04Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -81,7 +81,7 @@ enum es_out_query_e
     /* Set meta data for group (dynamic) */
     ES_OUT_SET_GROUP_META,  /* arg1=int i_group arg2=vlc_meta_t */
     /* */
-    ES_OUT_DEL_GROUP        /* arg1=int i_group */
+    ES_OUT_DEL_GROUP,       /* arg1=int i_group */
 };
 
 struct es_out_t

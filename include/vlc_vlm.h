@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_vlm.h: VLM interface plugin
  *****************************************************************************
- * Copyright (C) 2000, 2001 the VideoLAN team
- * $Id: vlc_vlm.h 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2000, 2001 VideoLAN
+ * $Id: vlc_vlm.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Simon Latapie <garf@videolan.org>
  *          Laurent Aimar <fenrir@videolan.org>

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * MacOSX_loop.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: macosx_loop.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: macosx_loop.hpp 10861 2005-05-01 13:19:04Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *

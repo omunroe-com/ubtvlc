@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_vars.hpp
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: cmd_vars.hpp 12281 2005-08-20 00:31:27Z dionoea $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: cmd_vars.hpp 9410 2004-11-24 20:23:23Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -31,8 +31,6 @@ class VarText;
 
 /// Command to notify the playlist of a change
 DEFINE_COMMAND( NotifyPlaylist, "notify playlist" )
-/// Command to notify the playtree of a change
-DEFINE_COMMAND( NotifyPlaytree, "notify playtree" )
 
 
 /// Command to set a text variable

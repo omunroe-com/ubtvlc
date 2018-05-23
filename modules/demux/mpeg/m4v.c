@@ -1,8 +1,8 @@
 /*****************************************************************************
  * m4v.c : MPEG-4 Video demuxer
  *****************************************************************************
- * Copyright (C) 2002-2004 the VideoLAN team
- * $Id: m4v.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2002-2004 VideoLAN
+ * $Id: m4v.c 11082 2005-05-20 16:59:07Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *

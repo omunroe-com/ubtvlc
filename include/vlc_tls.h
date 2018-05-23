@@ -1,8 +1,8 @@
 /*****************************************************************************
  * tls.c
  *****************************************************************************
- * Copyright (C) 2004-2005 the VideoLAN team
- * $Id: vlc_tls.h 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2004-2005 VideoLAN
+ * $Id: vlc_tls.h 10321 2005-03-13 13:29:45Z courmisch $
  *
  * Authors: Remi Denis-Courmont <rem # videolan.org>
  *

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_move.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_move.hpp 12053 2005-08-06 23:38:31Z asmax $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ctrl_move.hpp 9596 2004-12-17 23:39:34Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -58,7 +58,11 @@ class CtrlMove: public CtrlFlat
         /// Get the position of the decorated control in the layout, if any
         virtual const Position *getPosition() const;
 
-          /// Get the type of control (custom RTTI)
+        static void transMovingMoving( SkinObject *pCtrl );
+        static void transStillMoving( SkinObject *pCtrl );
+        static void transMovingStill( SkinObject *pCtrl );
+
+        /// Get the type of control (custom RTTI)
         virtual string getType() const { return m_rCtrl.getType(); }
 
     private:
@@ -73,11 +77,10 @@ class CtrlMove: public CtrlFlat
         EvtGeneric *m_pEvt;
         /// Position of the click that started the move
         int m_xPos, m_yPos;
-
-        /// Callback objects
-        DEFINE_CALLBACK( CtrlMove, MovingMoving )
-        DEFINE_CALLBACK( CtrlMove, StillMoving )
-        DEFINE_CALLBACK( CtrlMove, MovingStill )
- };
+        /// Callbacks
+        Callback m_cmdMovingMoving;
+        Callback m_cmdStillMoving;
+        Callback m_cmdMovingStill;
+};
 
 #endif

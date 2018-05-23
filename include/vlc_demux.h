@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_demux.h
  *****************************************************************************
- * Copyright (C) 1999-2005 VideoLAN (Centrale Réseaux) and its contributors
- * $Id: vlc_demux.h 12202 2005-08-15 14:57:02Z zorglub $
+ * Copyright (C) 1999-2004 VideoLAN
+ * $Id: vlc_demux.h 10192 2005-03-07 20:16:52Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -45,7 +45,7 @@ struct demux_t
     stream_t    *s;     /* NULL in case of a access+demux in one */
 
     /* es output */
-    es_out_t    *out;   /* our p_es_out */
+    es_out_t    *out;   /* ou p_es_out */
 
     /* set by demuxer */
     int (*pf_demux)  ( demux_t * );   /* demux one frame only */
@@ -105,7 +105,7 @@ enum demux_query_e
     DEMUX_CAN_PAUSE,            /* arg1= vlc_bool_t*    cannot fail */
     DEMUX_CAN_CONTROL_PACE,     /* arg1= vlc_bool_t*    cannot fail */
     DEMUX_GET_PTS_DELAY,        /* arg1= int64_t*       cannot fail */
-    DEMUX_SET_PAUSE_STATE       /* arg1= vlc_bool_t     can fail */
+    DEMUX_SET_PAUSE_STATE, /* arg1= vlc_bool_t     can fail */
 };
 
 /* stream_t *s could be null and then it mean a access+demux in one */

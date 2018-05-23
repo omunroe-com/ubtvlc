@@ -137,18 +137,6 @@
 		<dict>
 			<key>CFBundleTypeExtensions</key>
 			<array>
-				<string>img</string>
-			</array>
-			<key>CFBundleTypeIconFile</key>
-			<string>generic.icns</string>
-			<key>CFBundleTypeName</key>
-			<string>IMG Disk Image</string>
-			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
-		</dict>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
 				<string>mod</string>
 			</array>
 			<key>CFBundleTypeName</key>
@@ -671,7 +659,7 @@
 	<key>CFBundleExecutable</key>
 	<string>VLC</string>
 	<key>CFBundleGetInfoString</key>
-	<string>VLC media player 0.8.4-svn, Copyright (c) 1996-2004 VideoLAN.</string>
+	<string>VLC media player 0.8.2, Copyright (c) 1996-2005 VideoLAN.</string>
 	<key>CFBundleIconFile</key>
 	<string>vlc.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -683,7 +671,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.8.4-svn</string>
+	<string>0.8.2</string>
 	<key>CFBundleSignature</key>
 	<string>VLC#</string>
 	<key>CFBundleURLTypes</key>
@@ -725,7 +713,7 @@
 			<string>RTSP</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>rtsp</string>
+				<string>rtsp,rts</string>
 			</array>
 		</dict>
 		<dict>
@@ -740,7 +728,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>0.8.4-svn</string>
+	<string>0.8.2</string>
 	<key>NSAppleScriptEnabled</key>
 	<string>YES</string>
 	<key>NSMainNibFile</key>
@@ -824,10 +812,6 @@
 				DCA00AA9075F948800E6BF46,
 				DCF358BB077F10BA007DB450,
 				DCA693C30789DF8700139EC6,
-				DCFCCDB9085CE18F001E36AF,
-				DC7F46ED08A183FC0027DB24,
-				DCE7BD0508A56C8B007B10AE,
-				DCF49B4308B50FAF007E304F,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -908,14 +892,6 @@
 				8ED6C28803E2EB1C0059A3A7,
 				8E9CA1A506D7DEE800B7186C,
 				8E9CA1A606D7DEE800B7186C,
-				DC769AB8085DF0DB001A838D,
-				DC769AB7085DF0DB001A838D,
-				DC7F46F008A187F60027DB24,
-				DC7F46F108A187F60027DB24,
-				DCE7BD0708A5724D007B10AE,
-				DCE7BD0608A5724D007B10AE,
-				DCF49B4408B51992007E304F,
-				DCF49B4508B51992007E304F,
 			);
 			isa = PBXGroup;
 			name = Classes;
@@ -2178,71 +2154,6 @@
 //DC2
 //DC3
 //DC4
-		DC769AB7085DF0DB001A838D = {
-			fileEncoding = 5;
-			indentWidth = 4;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.c.objc;
-			name = wizard.m;
-			path = ../../modules/gui/macosx/wizard.m;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-			tabWidth = 4;
-			usesTabs = 0;
-		};
-		DC769AB8085DF0DB001A838D = {
-			fileEncoding = 5;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.c.h;
-			name = wizard.h;
-			path = ../../modules/gui/macosx/wizard.h;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		DC7F46EB08A183FC0027DB24 = {
-			children = (
-				DC7F46EC08A183FC0027DB24,
-			);
-			isa = PBXVariantGroup;
-			name = Extended.nib;
-			path = "";
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		DC7F46EC08A183FC0027DB24 = {
-			isa = PBXFileReference;
-			lastKnownFileType = wrapper.nib;
-			name = English;
-			path = Resources/English.lproj/Extended.nib;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		DC7F46ED08A183FC0027DB24 = {
-			fileRef = DC7F46EB08A183FC0027DB24;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		DC7F46F008A187F60027DB24 = {
-			explicitFileType = sourcecode.c.objc;
-			fileEncoding = 5;
-			isa = PBXFileReference;
-			name = extended.h;
-			path = ../../modules/gui/macosx/extended.h;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-			usesTabs = 0;
-		};
-		DC7F46F108A187F60027DB24 = {
-			explicitFileType = sourcecode.c.objc;
-			fileEncoding = 5;
-			includeInIndex = 0;
-			isa = PBXFileReference;
-			name = extended.m;
-			path = ../../modules/gui/macosx/extended.m;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
 		DCA00AA7075F948800E6BF46 = {
 			children = (
 				DCA00AA8075F948800E6BF46,
@@ -2297,48 +2208,6 @@
 			settings = {
 			};
 		};
-		DCE7BD0308A56C8B007B10AE = {
-			children = (
-				DCE7BD0408A56C8B007B10AE,
-			);
-			isa = PBXVariantGroup;
-			name = Bookmarks.nib;
-			path = "";
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		DCE7BD0408A56C8B007B10AE = {
-			isa = PBXFileReference;
-			lastKnownFileType = wrapper.nib;
-			name = English;
-			path = Resources/English.lproj/Bookmarks.nib;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		DCE7BD0508A56C8B007B10AE = {
-			fileRef = DCE7BD0308A56C8B007B10AE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		DCE7BD0608A5724D007B10AE = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.c.objc;
-			name = bookmarks.m;
-			path = ../../modules/gui/macosx/bookmarks.m;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		DCE7BD0708A5724D007B10AE = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.c.h;
-			name = bookmarks.h;
-			path = ../../modules/gui/macosx/bookmarks.h;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
 		DCF358B9077F10BA007DB450 = {
 			children = (
 				DCF358BA077F10BA007DB450,
@@ -2369,81 +2238,11 @@
 				F74F13EA02C2A79C01EE194C,
 				DCF358B9077F10BA007DB450,
 				DCA693C10789DF8700139EC6,
-				DCFCCDB7085CE18F001E36AF,
-				DC7F46EB08A183FC0027DB24,
-				DCE7BD0308A56C8B007B10AE,
-				DCF49B4108B50FAF007E304F,
 			);
 			isa = PBXGroup;
 			name = nibs;
 			refType = 4;
 			sourceTree = "<group>";
-		};
-		DCF49B4108B50FAF007E304F = {
-			children = (
-				DCF49B4208B50FAF007E304F,
-			);
-			isa = PBXVariantGroup;
-			name = Update.nib;
-			path = "";
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		DCF49B4208B50FAF007E304F = {
-			isa = PBXFileReference;
-			lastKnownFileType = wrapper.nib;
-			name = English;
-			path = Resources/English.lproj/Update.nib;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		DCF49B4308B50FAF007E304F = {
-			fileRef = DCF49B4108B50FAF007E304F;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		DCF49B4408B51992007E304F = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.c.h;
-			name = update.h;
-			path = ../../modules/gui/macosx/update.h;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		DCF49B4508B51992007E304F = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.c.objc;
-			name = update.m;
-			path = ../../modules/gui/macosx/update.m;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		DCFCCDB7085CE18F001E36AF = {
-			children = (
-				DCFCCDB8085CE18F001E36AF,
-			);
-			isa = PBXVariantGroup;
-			name = Wizard.nib;
-			path = "";
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		DCFCCDB8085CE18F001E36AF = {
-			isa = PBXFileReference;
-			lastKnownFileType = wrapper.nib;
-			name = English;
-			path = Resources/English.lproj/Wizard.nib;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		DCFCCDB9085CE18F001E36AF = {
-			fileRef = DCFCCDB7085CE18F001E36AF;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 //DC0
 //DC1

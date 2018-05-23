@@ -1,8 +1,8 @@
 /*****************************************************************************
  * x11_display.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: x11_display.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: x11_display.cpp 10869 2005-05-01 21:36:53Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

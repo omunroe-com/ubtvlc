@@ -1,8 +1,8 @@
 /*****************************************************************************
  * block.c: Data blocks management functions
  *****************************************************************************
- * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: block.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003-2004 VideoLAN
+ * $Id: block.c 11233 2005-06-01 18:34:45Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@videolan.org>
  *

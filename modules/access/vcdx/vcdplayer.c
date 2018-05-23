@@ -3,7 +3,7 @@
  *               using libcdio, libvcd and libvcdinfo
  *****************************************************************************
  * Copyright (C) 2003, 2004 Rocky Bernstein <rocky@panix.com>
- * $Id: vcdplayer.c 11815 2005-07-23 11:25:49Z rocky $
+ * $Id: vcdplayer.c 10922 2005-05-07 20:02:48Z fkuehne $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,6 +42,10 @@
 #include <cdio/cdio.h>
 #include <cdio/util.h>
 #include <libvcd/info.h>
+
+#ifdef WIN32
+#define sleep(A) Sleep((A)*1000)
+#endif
 
 extern void VCDSetOrigin ( access_t *p_access, lsn_t i_lsn, track_t i_track,
 			   const vcdinfo_itemid_t * p_itemid );
@@ -326,18 +330,13 @@ vcdplayer_play_single_item( access_t * p_access, vcdinfo_itemid_t itemid)
    changed: p_vcdplayer->origin_lsn, p_vcdplayer->end_lsn
 */
 
+/* FIXME: add parameters lsn, i_track, p_itemid and set accordingly. */
 void 
 vcdplayer_set_origin(access_t *p_access, lsn_t i_lsn, track_t i_track,
 		     const vcdinfo_itemid_t *p_itemid)
 {
   vcdplayer_t *p_vcdplayer = (vcdplayer_t *)p_access->p_sys;
   const size_t i_size= vcdplayer_get_item_size(p_access, *p_itemid);
-
-  if( VCDINFO_NULL_LSN == i_lsn ) 
-  {
-      LOG_ERR("%s %d", "Invalid LSN for track", i_track);
-      return;
-  }
 
   p_vcdplayer->play_item.num  = p_itemid->num;
   p_vcdplayer->play_item.type = p_itemid->type;
@@ -347,8 +346,6 @@ vcdplayer_set_origin(access_t *p_access, lsn_t i_lsn, track_t i_track,
   p_vcdplayer->i_track        = i_track;
   p_vcdplayer->track_lsn      = vcdinfo_get_track_lsn(p_vcdplayer->vcd, 
 						      i_track);
-  p_vcdplayer->track_end_lsn  = p_vcdplayer->track_lsn + 
-    vcdinfo_get_track_sect_count(p_vcdplayer->vcd, i_track);
 
   dbg_print((INPUT_DBG_CALL|INPUT_DBG_LSN), 
 	    "lsn %u, end LSN: %u item.num %d, item.type %d", 
@@ -553,7 +550,7 @@ vcdplayer_pbc_nav ( access_t * p_access, uint8_t *wait_time )
           return READ_BLOCK;
         } else if (p_vcdplayer->i_still) {
           /* Hack: Just go back and do still again */
-          msleep(1000);
+          sleep(1);
           return READ_STILL_FRAME;
         }
       }
@@ -698,7 +695,6 @@ vcdplayer_play_default( access_t * p_access )
       dbg_print(INPUT_DBG_PBC, "DEFAULT to %d", itemid.num);
     } else {
       dbg_print(INPUT_DBG_PBC, "no DEFAULT for LID %d", p_vcdplayer->i_lid);
-      return VLC_EGENERIC;
     }
 
 #else 
@@ -728,7 +724,7 @@ vcdplayer_play_default( access_t * p_access )
     /* PBC is not on. "default" selection beginning of current 
        selection . */
   
-    itemid.num = p_vcdplayer->play_item.num;
+    p_vcdplayer->play_item.num = p_vcdplayer->play_item.num;
     
   }
 
@@ -758,7 +754,7 @@ vcdplayer_play_next( access_t * p_access )
 
   p_vcdinfo = p_vcdplayer->vcd;
 
-  itemid = p_vcdplayer->play_item;
+  itemid.type = p_vcdplayer->play_item.type;
 
   if  (vcdplayer_pbc_is_on(p_vcdplayer)) {
 
@@ -852,7 +848,7 @@ vcdplayer_play_prev( access_t * p_access )
   dbg_print( (INPUT_DBG_CALL|INPUT_DBG_PBC), 
 	     "current: %d" , p_vcdplayer->play_item.num);
 
-  itemid = p_vcdplayer->play_item;
+  itemid.type = p_vcdplayer->play_item.type;
 
   if  (vcdplayer_pbc_is_on(p_vcdplayer)) {
 
@@ -918,7 +914,7 @@ vcdplayer_play_return( access_t * p_access )
   dbg_print( (INPUT_DBG_CALL|INPUT_DBG_PBC), 
 	     "current: %d" , p_vcdplayer->play_item.num);
 
-  itemid = p_vcdplayer->play_item;
+  itemid.type = p_vcdplayer->play_item.type;
 
   if  (vcdplayer_pbc_is_on(p_vcdplayer)) {
 

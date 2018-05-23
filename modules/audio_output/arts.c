@@ -1,8 +1,8 @@
 /*****************************************************************************
  * arts.c : aRts module
  *****************************************************************************
- * Copyright (C) 2001-2002 the VideoLAN team
- * $Id: arts.c 12186 2005-08-14 12:43:30Z sam $
+ * Copyright (C) 2001-2002 VideoLAN
+ * $Id: arts.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Emmanuel Blindauer <manu@agat.net>
  *          Samuel Hocevar <sam@zoy.org>

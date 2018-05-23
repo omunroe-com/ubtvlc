@@ -1,8 +1,8 @@
 /*****************************************************************************
  * video_output.h : video output thread
  *****************************************************************************
- * Copyright (C) 1999, 2000 the VideoLAN team
- * $Id: video_output.h 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 1999, 2000 VideoLAN
+ * $Id: video_output.h 10430 2005-03-25 12:02:14Z titer $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@via.ecp.fr>

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_muxer.hpp
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
- * $Id: cmd_muxer.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2005 VideoLAN
+ * $Id: cmd_muxer.hpp 10770 2005-04-22 22:25:10Z ipkiss $
  *
  * Authors: Olivier Teulière <ipkiss@via.ecp.fr>
  *

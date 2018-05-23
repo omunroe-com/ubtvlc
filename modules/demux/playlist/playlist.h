@@ -1,8 +1,8 @@
 /*****************************************************************************
  * playlist.h:  Playlist import module common functions
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: playlist.h 12305 2005-08-20 17:18:41Z gbazin $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: playlist.h 11449 2005-06-17 16:45:58Z massiot $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -39,6 +39,3 @@ void E_(Close_PLS) ( vlc_object_t * );
 
 int E_(Import_B4S) ( vlc_object_t * );
 void E_(Close_B4S) ( vlc_object_t * );
-
-int E_(Import_DVB) ( vlc_object_t * );
-void E_(Close_DVB) ( vlc_object_t * );

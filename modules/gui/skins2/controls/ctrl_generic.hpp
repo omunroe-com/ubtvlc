@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_generic.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_generic.hpp 12207 2005-08-15 15:54:32Z asmax $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ctrl_generic.hpp 9596 2004-12-17 23:39:34Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -30,7 +30,6 @@
 #include "../utils/fsm.hpp"
 #include "../utils/ustring.hpp"
 #include "../utils/observer.hpp"
-#include "../commands/cmd_generic.hpp"
 
 class EvtGeneric;
 class OSGraphics;

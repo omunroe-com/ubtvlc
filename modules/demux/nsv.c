@@ -1,8 +1,8 @@
 /*****************************************************************************
  * nsv.c: NullSoft Video demuxer.
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: nsv.c 11709 2005-07-11 16:20:33Z massiot $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: nsv.c 10547 2005-04-04 23:50:07Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -88,11 +88,9 @@ static int Open( vlc_object_t *p_this )
 
     uint8_t     *p_peek;
 
-    if( stream_Peek( p_demux->s, &p_peek, 8 ) < 8 )
-        return VLC_EGENERIC;
+    if( stream_Peek( p_demux->s, &p_peek, 8 ) < 8 ) return VLC_EGENERIC;
 
-    if( strncmp( (char *)p_peek, "NSVf", 4 )
-            && strncmp( (char *)p_peek, "NSVs", 4 ))
+    if( strncmp( p_peek, "NSVf", 4 ) && strncmp( p_peek, "NSVs", 4 ))
     {
        /* In case we had force this demuxer we try to resynch */
         if( strcmp( p_demux->psz_demux, "nsv" ) || ReSynch( p_demux ) )
@@ -155,14 +153,14 @@ static int Demux( demux_t *p_demux )
             return 0;
         }
 
-        if( !strncmp( (char *)p_peek, "NSVf", 4 ) )
+        if( !strncmp( p_peek, "NSVf", 4 ) )
         {
             if( ReadNSVf( p_demux ) )
             {
                 return -1;
             }
         }
-        else if( !strncmp( (char *)p_peek, "NSVs", 4 ) )
+        else if( !strncmp( p_peek, "NSVs", 4 ) )
         {
             if( ReadNSVs( p_demux ) )
             {
@@ -382,7 +380,7 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
  *****************************************************************************/
 static int ReSynch( demux_t *p_demux )
 {
-    uint8_t  *p_peek;
+    uint8_t *p_peek;
     int      i_skip;
     int      i_peek;
 
@@ -396,8 +394,7 @@ static int ReSynch( demux_t *p_demux )
 
         while( i_skip < i_peek - 4 )
         {
-            if( !strncmp( (char *)p_peek, "NSVf", 4 )
-                    || !strncmp( (char *)p_peek, "NSVs", 4 ) )
+            if( !strncmp( p_peek, "NSVf", 4 ) || !strncmp( p_peek, "NSVs", 4 ) )
             {
                 if( i_skip > 0 )
                 {

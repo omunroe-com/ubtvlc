@@ -1,8 +1,8 @@
 /*****************************************************************************
  * xcommon.c: Functions common to the X11 and XVideo plugins
  *****************************************************************************
- * Copyright (C) 1998-2001 the VideoLAN team
- * $Id: xcommon.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 1998-2001 VideoLAN
+ * $Id: xcommon.c 10831 2005-04-26 14:27:47Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Sam Hocevar <sam@zoy.org>
@@ -103,7 +103,6 @@ static IMAGE_TYPE *CreateImage    ( vout_thread_t *,
 #ifdef HAVE_SYS_SHM_H
 static IMAGE_TYPE *CreateShmImage ( vout_thread_t *,
                                     Display *, EXTRA_ARGS_SHM, int, int );
-static vlc_bool_t b_shm = VLC_TRUE;
 #endif
 
 static void ToggleFullScreen      ( vout_thread_t * );
@@ -984,26 +983,7 @@ static int CreateWindow( vout_thread_t *p_vout, x11_window_t *p_win )
             XSetCommand( p_vout->p_sys->p_display, p_win->base_window,
                          p_vout->p_vlc->ppsz_argv, p_vout->p_vlc->i_argc );
 
-            if( !var_GetBool( p_vout, "video-deco") )
-            {
-                Atom prop;
-                mwmhints_t mwmhints;
-
-                mwmhints.flags = MWM_HINTS_DECORATIONS;
-                mwmhints.decorations = False;
-
-                prop = XInternAtom( p_vout->p_sys->p_display, "_MOTIF_WM_HINTS",
-                                    False );
-
-                XChangeProperty( p_vout->p_sys->p_display,
-                                 p_win->base_window,
-                                 prop, prop, 32, PropModeReplace,
-                                 (unsigned char *)&mwmhints,
-                                 PROP_MWM_HINTS_ELEMENTS );
-            }
-            else
-            {
-                XStoreName( p_vout->p_sys->p_display, p_win->base_window,
+            XStoreName( p_vout->p_sys->p_display, p_win->base_window,
 #ifdef MODULE_NAME_IS_x11
                         VOUT_TITLE " (X11 output)"
 #elif defined(MODULE_NAME_IS_glx)
@@ -1012,7 +992,6 @@ static int CreateWindow( vout_thread_t *p_vout, x11_window_t *p_win )
                         VOUT_TITLE " (XVideo output)"
 #endif
                       );
-            }
         }
     }
     else
@@ -1223,8 +1202,7 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
                             &p_pic->p_sys->shminfo,
                             p_vout->output.i_width, p_vout->output.i_height );
     }
-
-    if( !p_vout->p_sys->b_shm || !p_pic->p_sys->p_image )
+    else
 #endif /* HAVE_SYS_SHM_H */
     {
         /* Create image without XShm extension */
@@ -1240,14 +1218,6 @@ static int NewPicture( vout_thread_t *p_vout, picture_t *p_pic )
                          p_vout->p_sys->i_bytes_per_pixel,
 #endif
                          p_vout->output.i_width, p_vout->output.i_height );
-
-#ifdef HAVE_SYS_SHM_H
-        if( p_pic->p_sys->p_image && p_vout->p_sys->b_shm )
-        {
-            msg_Warn( p_vout, "couldn't create SHM image, disabling SHM." );
-            p_vout->p_sys->b_shm = VLC_FALSE;
-        }
-#endif /* HAVE_SYS_SHM_H */
     }
 
     if( p_pic->p_sys->p_image == NULL )
@@ -2016,7 +1986,6 @@ static IMAGE_TYPE * CreateShmImage( vout_thread_t *p_vout,
                                     int i_width, int i_height )
 {
     IMAGE_TYPE *p_image;
-    Status result;
 
     /* Create XImage / XvImage */
 #ifdef MODULE_NAME_IS_xvideo
@@ -2058,10 +2027,7 @@ static IMAGE_TYPE * CreateShmImage( vout_thread_t *p_vout,
     p_shm->readOnly = True;
 
     /* Attach shared memory segment to X server */
-    XSynchronize( p_display, True );
-    b_shm = VLC_TRUE;
-    result = XShmAttach( p_display, p_shm );
-    if( result == False || !b_shm )
+    if( XShmAttach( p_display, p_shm ) == False )
     {
         msg_Err( p_vout, "cannot attach shared memory to X server" );
         IMAGE_FREE( p_image );
@@ -2069,7 +2035,6 @@ static IMAGE_TYPE * CreateShmImage( vout_thread_t *p_vout,
         shmdt( p_shm->shmaddr );
         return NULL;
     }
-    XSynchronize( p_display, False );
 
     /* Send image to X server. This instruction is required, since having
      * built a Shm XImage and not using it causes an error on XCloseDisplay,
@@ -2160,14 +2125,6 @@ static int X11ErrorHandler( Display * display, XErrorEvent * event )
     if( event->request_code == X_SetInputFocus )
     {
         fprintf(stderr, "XSetInputFocus failed\n");
-        return 0;
-    }
-
-    if( event->request_code == 150 /* MIT-SHM */ &&
-        event->minor_code == X_ShmAttach )
-    {
-        fprintf(stderr, "XShmAttach failed\n");
-        b_shm = VLC_FALSE;
         return 0;
     }
 

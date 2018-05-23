@@ -1,8 +1,8 @@
 /*****************************************************************************
  * dts.c : raw DTS stream input module for vlc
  *****************************************************************************
- * Copyright (C) 2001 the VideoLAN team
- * $Id: dts.c 11676 2005-07-10 08:13:48Z courmisch $
+ * Copyright (C) 2001 VideoLAN
+ * $Id: dts.c 9961 2005-02-16 22:01:41Z robux4 $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -78,13 +78,13 @@ static int Open( vlc_object_t * p_this )
 
     /* Check if we are dealing with a WAV file */
     if( stream_Peek( p_demux->s, &p_peek, 20 ) == 20 &&
-        !memcmp( p_peek, "RIFF", 4 ) && !memcmp( &p_peek[8], "WAVE", 4 ) )
+        !strncmp( p_peek, "RIFF", 4 ) && !strncmp( &p_peek[8], "WAVE", 4 ) )
     {
         int i_size;
 
         /* Find the wave format header */
         i_peek = 20;
-        while( memcmp( p_peek + i_peek - 8, "fmt ", 4 ) )
+        while( strncmp( p_peek + i_peek - 8, "fmt ", 4 ) )
         {
             i_size = GetDWLE( p_peek + i_peek - 4 );
             if( i_size + i_peek > DTS_PROBE_SIZE ) return VLC_EGENERIC;
@@ -110,7 +110,7 @@ static int Open( vlc_object_t * p_this )
             return VLC_EGENERIC;
 
         /* Skip the wave header */
-        while( memcmp( p_peek + i_peek - 8, "data", 4 ) )
+        while( strncmp( p_peek + i_peek - 8, "data", 4 ) )
         {
             i_size = GetDWLE( p_peek + i_peek - 4 );
             if( i_size + i_peek > DTS_PROBE_SIZE ) return VLC_EGENERIC;

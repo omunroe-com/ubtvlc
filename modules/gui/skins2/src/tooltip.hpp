@@ -1,8 +1,8 @@
 /*****************************************************************************
  * tooltip.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: tooltip.hpp 12207 2005-08-15 15:54:32Z asmax $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: tooltip.hpp 9417 2004-11-26 10:04:08Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -26,7 +26,6 @@
 #define TOOLTIP_HPP
 
 #include "../utils/var_text.hpp"
-#include "../commands/cmd_generic.hpp"
 
 class GenericFont;
 class OSTooltip;
@@ -73,8 +72,8 @@ class Tooltip: public SkinObject, public Observer<VarText>
         /// Build m_pImage with the given text
         void makeImage( const UString &rText );
 
-        /// Callback to show the tooltip window
-        DEFINE_CALLBACK( Tooltip, Show );
+        /// Show the tooltip window
+        static void doShow( SkinObject *pObj );
 };
 
 

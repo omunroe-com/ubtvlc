@@ -1,8 +1,8 @@
 /*****************************************************************************
  * win32_timer.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: win32_timer.hpp 12207 2005-08-15 15:54:32Z asmax $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: win32_timer.hpp 9641 2004-12-22 13:06:43Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -27,13 +27,13 @@
 
 #include "../src/os_timer.hpp"
 
-class CmdGeneric;
 
 // Win32 specific timer
 class Win32Timer: public OSTimer
 {
     public:
-        Win32Timer( intf_thread_t *pIntf, CmdGeneric &rCmd, HWND hWnd );
+        Win32Timer( intf_thread_t *pIntf, const Callback &rCallback,
+                    HWND hWnd );
         virtual ~Win32Timer();
 
         /// (Re)start the timer with the given delay (in ms). If oneShot is
@@ -47,8 +47,8 @@ class Win32Timer: public OSTimer
         void execute();
 
     private:
-        /// Command to execute
-        CmdGeneric &m_rCommand;
+        /// Callback to execute
+        Callback m_callback;
 
         /// Delay between two execute
         mtime_t m_interval;

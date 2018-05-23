@@ -1,8 +1,8 @@
 /*****************************************************************************
  * drms.c: DRMS
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: drms.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: drms.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Sam Hocevar <sam@zoy.org>
@@ -32,7 +32,6 @@
 
 #ifdef __VLC__
 #   include <vlc/vlc.h>
-#   include "vlc_md5.h"
 #   include "libmp4.h"
 #else
 #   include "drmsvl.h"
@@ -89,9 +88,6 @@ struct aes_s
     uint32_t pp_dec_keys[ AES_KEY_COUNT + 1 ][ 4 ];
 };
 
-#ifdef __VLC__
-# define Digest DigestMD5
-#else
 /*****************************************************************************
  * md5_s: MD5 message structure
  *****************************************************************************
@@ -104,7 +100,6 @@ struct md5_s
     uint32_t p_digest[4]; /* The MD5 digest */
     uint32_t p_data[16];  /* Buffer to cache non-aligned writes */
 };
-#endif
 
 /*****************************************************************************
  * shuffle_s: shuffle structure
@@ -145,12 +140,10 @@ struct drms_s
 static void InitAES       ( struct aes_s *, uint32_t * );
 static void DecryptAES    ( struct aes_s *, uint32_t *, const uint32_t * );
 
-#ifndef __VLC__
 static void InitMD5       ( struct md5_s * );
 static void AddMD5        ( struct md5_s *, const uint8_t *, uint32_t );
 static void EndMD5        ( struct md5_s * );
 static void Digest        ( struct md5_s *, uint32_t * );
-#endif
 
 static void InitShuffle   ( struct shuffle_s *, uint32_t *, uint32_t );
 static void DoShuffle     ( struct shuffle_s *, uint32_t *, uint32_t );
@@ -494,7 +487,6 @@ static void DecryptAES( struct aes_s *p_aes,
     }
 }
 
-#ifndef __VLC__
 /*****************************************************************************
  * InitMD5: initialise an MD5 message
  *****************************************************************************
@@ -681,7 +673,6 @@ static void Digest( struct md5_s *p_md5, uint32_t *p_input )
     p_md5->p_digest[ 2 ] += c;
     p_md5->p_digest[ 3 ] += d;
 }
-#endif
 
 /*****************************************************************************
  * InitShuffle: initialise a shuffle structure

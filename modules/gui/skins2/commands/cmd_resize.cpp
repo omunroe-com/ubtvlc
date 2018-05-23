@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_resize.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: cmd_resize.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: cmd_resize.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

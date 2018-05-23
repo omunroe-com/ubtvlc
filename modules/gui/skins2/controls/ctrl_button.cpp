@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_button.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_button.cpp 12207 2005-08-15 15:54:32Z asmax $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ctrl_button.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -37,11 +37,15 @@ CtrlButton::CtrlButton( intf_thread_t *pIntf, const GenericBitmap &rBmpUp,
                         VarBool *pVisible ):
     CtrlGeneric( pIntf, rHelp, pVisible ), m_fsm( pIntf ),
     m_rCommand( rCommand ), m_tooltip( rTooltip ),
-    m_cmdUpOverDownOver( this ), m_cmdDownOverUpOver( this ),
-    m_cmdDownOverDown( this ), m_cmdDownDownOver( this ),
-    m_cmdUpOverUp( this ), m_cmdUpUpOver( this ),
-    m_cmdDownUp( this ), m_cmdUpHidden( this ),
-    m_cmdHiddenUp( this )
+    m_cmdUpOverDownOver( this, &transUpOverDownOver ),
+    m_cmdDownOverUpOver( this, &transDownOverUpOver ),
+    m_cmdDownOverDown( this, &transDownOverDown ),
+    m_cmdDownDownOver( this, &transDownDownOver ),
+    m_cmdUpOverUp( this, &transUpOverUp ),
+    m_cmdUpUpOver( this, &transUpUpOver ),
+    m_cmdDownUp( this, &transDownUp ),
+    m_cmdUpHidden( this, &transUpHidden ),
+    m_cmdHiddenUp( this, &transHiddenUp )
 {
     // Build the images of the button
     OSFactory *pOsFactory = OSFactory::instance( pIntf );
@@ -125,76 +129,85 @@ void CtrlButton::draw( OSGraphics &rImage, int xDest, int yDest )
 }
 
 
-void CtrlButton::CmdUpOverDownOver::execute()
+void CtrlButton::transUpOverDownOver( SkinObject *pCtrl )
 {
-    m_pParent->captureMouse();
-    const OSGraphics *pOldImg = m_pParent->m_pImg;
-    m_pParent->m_pImg = m_pParent->m_pImgDown;
-    m_pParent->notifyLayoutMaxSize( pOldImg, m_pParent->m_pImg );
+    CtrlButton *pThis = (CtrlButton*)pCtrl;
+    pThis->captureMouse();
+    const OSGraphics *pOldImg = pThis->m_pImg;
+    pThis->m_pImg = pThis->m_pImgDown;
+    pThis->notifyLayoutMaxSize( pOldImg, pThis->m_pImg );
 }
 
 
-void CtrlButton::CmdDownOverUpOver::execute()
+void CtrlButton::transDownOverUpOver( SkinObject *pCtrl )
 {
-    m_pParent->releaseMouse();
-    const OSGraphics *pOldImg = m_pParent->m_pImg;
-    m_pParent->m_pImg = m_pParent->m_pImgUp;
-    m_pParent->notifyLayoutMaxSize( pOldImg, m_pParent->m_pImg );
+    CtrlButton *pThis = (CtrlButton*)pCtrl;
+    pThis->releaseMouse();
+    const OSGraphics *pOldImg = pThis->m_pImg;
+    pThis->m_pImg = pThis->m_pImgUp;
+    pThis->notifyLayoutMaxSize( pOldImg, pThis->m_pImg );
     // Execute the command associated to this button
-    m_pParent->m_rCommand.execute();
+    pThis->m_rCommand.execute();
 }
 
 
-void CtrlButton::CmdDownOverDown::execute()
+void CtrlButton::transDownOverDown( SkinObject *pCtrl )
 {
-    const OSGraphics *pOldImg = m_pParent->m_pImg;
-    m_pParent->m_pImg = m_pParent->m_pImgUp;
-    m_pParent->notifyLayoutMaxSize( pOldImg, m_pParent->m_pImg );
+    CtrlButton *pThis = (CtrlButton*)pCtrl;
+    const OSGraphics *pOldImg = pThis->m_pImg;
+    pThis->m_pImg = pThis->m_pImgUp;
+    pThis->notifyLayoutMaxSize( pOldImg, pThis->m_pImg );
 }
 
 
-void CtrlButton::CmdDownDownOver::execute()
+void CtrlButton::transDownDownOver( SkinObject *pCtrl )
 {
-    const OSGraphics *pOldImg = m_pParent->m_pImg;
-    m_pParent->m_pImg = m_pParent->m_pImgDown;
-    m_pParent->notifyLayoutMaxSize( pOldImg, m_pParent->m_pImg );
+    CtrlButton *pThis = (CtrlButton*)pCtrl;
+    const OSGraphics *pOldImg = pThis->m_pImg;
+    pThis->m_pImg = pThis->m_pImgDown;
+    pThis->notifyLayoutMaxSize( pOldImg, pThis->m_pImg );
 }
 
 
-void CtrlButton::CmdUpUpOver::execute()
+void CtrlButton::transUpUpOver( SkinObject *pCtrl )
 {
-    const OSGraphics *pOldImg = m_pParent->m_pImg;
-    m_pParent->m_pImg = m_pParent->m_pImgOver;
-    m_pParent->notifyLayoutMaxSize( pOldImg, m_pParent->m_pImg );
+    CtrlButton *pThis = (CtrlButton*)pCtrl;
+    const OSGraphics *pOldImg = pThis->m_pImg;
+    pThis->m_pImg = pThis->m_pImgOver;
+    pThis->notifyLayoutMaxSize( pOldImg, pThis->m_pImg );
 }
 
 
-void CtrlButton::CmdUpOverUp::execute()
+void CtrlButton::transUpOverUp( SkinObject *pCtrl )
 {
-    const OSGraphics *pOldImg = m_pParent->m_pImg;
-    m_pParent->m_pImg = m_pParent->m_pImgUp;
-    m_pParent->notifyLayoutMaxSize( pOldImg, m_pParent->m_pImg );
+    CtrlButton *pThis = (CtrlButton*)pCtrl;
+    const OSGraphics *pOldImg = pThis->m_pImg;
+    pThis->m_pImg = pThis->m_pImgUp;
+    pThis->notifyLayoutMaxSize( pOldImg, pThis->m_pImg );
 }
 
 
-void CtrlButton::CmdDownUp::execute()
+void CtrlButton::transDownUp( SkinObject *pCtrl )
 {
-    m_pParent->releaseMouse();
+    CtrlButton *pThis = (CtrlButton*)pCtrl;
+    pThis->releaseMouse();
 }
 
 
-void CtrlButton::CmdUpHidden::execute()
+void CtrlButton::transUpHidden( SkinObject *pCtrl )
 {
-    const OSGraphics *pOldImg = m_pParent->m_pImg;
-    m_pParent->m_pImg = NULL;
-    m_pParent->notifyLayoutMaxSize( pOldImg, m_pParent->m_pImg );
+    CtrlButton *pThis = (CtrlButton*)pCtrl;
+    const OSGraphics *pOldImg = pThis->m_pImg;
+    pThis->m_pImg = NULL;
+    pThis->notifyLayoutMaxSize( pOldImg, pThis->m_pImg );
 }
 
 
-void CtrlButton::CmdHiddenUp::execute()
+void CtrlButton::transHiddenUp( SkinObject *pCtrl )
 {
-    const OSGraphics *pOldImg = m_pParent->m_pImg;
-    m_pParent->m_pImg = m_pParent->m_pImgUp;
-    m_pParent->notifyLayoutMaxSize( pOldImg, m_pParent->m_pImg );
+    CtrlButton *pThis = (CtrlButton*)pCtrl;
+    const OSGraphics *pOldImg = pThis->m_pImg;
+    pThis->m_pImg = pThis->m_pImgUp;
+    pThis->notifyLayoutMaxSize( pOldImg, pThis->m_pImg );
 }
 

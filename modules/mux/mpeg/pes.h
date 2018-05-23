@@ -1,8 +1,8 @@
 /*****************************************************************************
  * pes.h
  *****************************************************************************
- * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: pes.h 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2001, 2002 VideoLAN
+ * $Id: pes.h 10731 2005-04-18 15:32:31Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>

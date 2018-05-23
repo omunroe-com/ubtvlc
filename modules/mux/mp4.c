@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mp4.c: mp4/mov muxer
  *****************************************************************************
- * Copyright (C) 2001, 2002, 2003 the VideoLAN team
- * $Id: mp4.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2001, 2002, 2003 VideoLAN
+ * $Id: mp4.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin at videolan dot org>
@@ -413,10 +413,7 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
         case VLC_FOURCC( 'm', 'j', 'p', 'b' ):
         case VLC_FOURCC( 'S', 'V', 'Q', '1' ):
         case VLC_FOURCC( 'S', 'V', 'Q', '3' ):
-        case VLC_FOURCC( 'H', '2', '6', '3' ):
         case VLC_FOURCC( 'h', '2', '6', '4' ):
-        case VLC_FOURCC( 's', 'a', 'm', 'r' ):
-        case VLC_FOURCC( 's', 'a', 'w', 'b' ):
             break;
         case VLC_FOURCC( 's', 'u', 'b', 't' ):
             msg_Warn( p_mux, "subtitle track added like in .mov (even when creating .mp4)" );
@@ -885,41 +882,6 @@ static bo_t *GetWaveTag( mp4_stream_t *p_stream )
     return wave;
 }
 
-static bo_t *GetDamrTag( mp4_stream_t *p_stream )
-{
-    bo_t *damr;
-
-    damr = box_new( "damr" );
-
-    bo_add_fourcc( damr, "REFC" );
-    bo_add_8( damr, 0 );
-
-    if( p_stream->fmt.i_codec == VLC_FOURCC( 's', 'a', 'm', 'r' ) )
-        bo_add_16be( damr, 0x81ff ); /* Mode set (all modes for AMR_NB) */
-    else
-        bo_add_16be( damr, 0x83ff ); /* Mode set (all modes for AMR_WB) */
-    bo_add_16be( damr, 0x1 ); /* Mode change period (no restriction) */
-
-    box_fix( damr );
-
-    return damr;
-}
-
-static bo_t *GetD263Tag( mp4_stream_t *p_stream )
-{
-    bo_t *d263;
-
-    d263 = box_new( "d263" );
-
-    bo_add_fourcc( d263, "VLC " );
-    bo_add_16be( d263, 0xa );
-    bo_add_8( d263, 0 );
-
-    box_fix( d263 );
-
-    return d263;
-}
-
 static bo_t *GetAvcCTag( mp4_stream_t *p_stream )
 {
     bo_t *avcC;
@@ -1082,12 +1044,6 @@ static bo_t *GetSounBox( sout_mux_t *p_mux, mp4_stream_t *p_stream )
         b_descr = VLC_TRUE;
         break;
 
-    case VLC_FOURCC('s','a','m','r'):
-    case VLC_FOURCC('s','a','w','b'):
-        memcpy( fcc, (char*)&p_stream->fmt.i_codec, 4 );
-        b_descr = VLC_TRUE;
-        break;
-
     case VLC_FOURCC('m','p','g','a'):
         if( p_sys->b_mov )
             memcpy( fcc, ".mp3", 4 );
@@ -1154,10 +1110,6 @@ static bo_t *GetSounBox( sout_mux_t *p_mux, mp4_stream_t *p_stream )
         {
             box = GetWaveTag( p_stream );
         }
-        else if( p_stream->fmt.i_codec == VLC_FOURCC('s','a','m','r') )
-        {
-            box = GetDamrTag( p_stream );
-        }
         else
         {
             box = GetESDS( p_stream );
@@ -1195,10 +1147,6 @@ static bo_t *GetVideBox( sout_mux_t *p_mux, mp4_stream_t *p_stream )
 
     case VLC_FOURCC('S','V','Q','3'):
         memcpy( fcc, "SVQ3", 4 );
-        break;
-
-    case VLC_FOURCC('H','2','6','3'):
-        memcpy( fcc, "s263", 4 );
         break;
 
     case VLC_FOURCC('h','2','6','4'):
@@ -1252,15 +1200,6 @@ static bo_t *GetVideBox( sout_mux_t *p_mux, mp4_stream_t *p_stream )
 
             box_fix( esds );
             box_gather( vide, esds );
-        }
-        break;
-
-    case VLC_FOURCC('H','2','6','3'):
-        {
-            bo_t *d263 = GetD263Tag( p_stream );
-
-            box_fix( d263 );
-            box_gather( vide, d263 );
         }
         break;
 

@@ -39,7 +39,6 @@
  */
 
 #define XP_UNIX 1
-#define OJI 1
 
 #include <stdio.h>
 #include "nscore.h"

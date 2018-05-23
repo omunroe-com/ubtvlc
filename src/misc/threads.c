@@ -1,8 +1,8 @@
 /*****************************************************************************
  * threads.c : threads implementation for the VideoLAN client
  *****************************************************************************
- * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: threads.c 12590 2005-09-18 12:58:25Z robux4 $
+ * Copyright (C) 1999-2004 VideoLAN
+ * $Id: threads.c 10706 2005-04-16 12:30:45Z courmisch $
  *
  * Authors: Jean-Marc Dressler <polux@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -482,9 +482,6 @@ int __vlc_cond_destroy( char * psz_file, int i_line, vlc_cond_t *p_condvar )
     else
         i_result = !CloseHandle( p_condvar->event )
           || !CloseHandle( p_condvar->semaphore );
-
-    if( p_condvar->semaphore != NULL )
-		DeleteCriticalSection( &p_condvar->csection );
 
 #elif defined( HAVE_KERNEL_SCHEDULER_H )
     p_condvar->init = 0;

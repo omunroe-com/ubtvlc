@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout.c: Windows DirectX video output display method
  *****************************************************************************
- * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: directx.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2001-2004 VideoLAN
+ * $Id: directx.c 11257 2005-06-02 17:06:00Z fkuehne $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *

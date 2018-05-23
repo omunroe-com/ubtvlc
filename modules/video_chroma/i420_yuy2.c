@@ -1,8 +1,8 @@
 /*****************************************************************************
  * i420_yuy2.c : YUV to YUV conversion module for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001 the VideoLAN team
- * $Id: i420_yuy2.c 12371 2005-08-23 18:23:20Z sam $
+ * Copyright (C) 2000, 2001 VideoLAN
+ * $Id: i420_yuy2.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -30,7 +30,7 @@
 #include <vlc/vlc.h>
 #include <vlc/vout.h>
 
-#if defined (MODULE_NAME_IS_i420_yuy2_altivec) && defined(HAVE_ALTIVEC_H)
+#ifdef HAVE_ALTIVEC_H
 #   include <altivec.h>
 #endif
 

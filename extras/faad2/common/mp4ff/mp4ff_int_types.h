@@ -1,7 +1,7 @@
 #ifndef _MP4FF_INT_TYPES_H_
 #define _MP4FF_INT_TYPES_H_
 
-#if defined (_WIN32)
+#ifdef _WIN32
 
 typedef char int8_t;
 typedef unsigned char uint8_t;

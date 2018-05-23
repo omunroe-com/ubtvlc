@@ -1,8 +1,8 @@
 /*****************************************************************************
  * prefs_widgets.m: Preferences controls
  *****************************************************************************
- * Copyright (C) 2002-2003 the VideoLAN team
- * $Id: prefs_widgets.m 12274 2005-08-19 16:16:34Z hartman $
+ * Copyright (C) 2002-2003 VideoLAN
+ * $Id: prefs_widgets.m 11093 2005-05-21 15:07:46Z xtophe $
  *
  * Authors: Derk-Jan Hartman <hartman at videolan.org>
  *          Jérôme Decoodt <djc at videolan.org>
@@ -981,12 +981,6 @@ if( MACOS_VERSION >= 10.3 )                                                 \
 {
     return [o_label frame].size.width;
 }
-
-- (void) alignWithXPosition:(int)i_xPos;
-{
-    /* FIXME: not implemented atm, but created to shut up the warning
-     * about "method definition not found" -- FK @ 7/24/05 */
-}
 @end
 
 @implementation StringConfigControl
@@ -1936,25 +1930,37 @@ if( MACOS_VERSION >= 10.3 )                                                 \
     {
         i_view_type = CONFIG_ITEM_BOOL;
 
-        /* add the checkbox */
-        o_tooltip = [[VLCMain sharedInstance]
-            wrapString: [[VLCMain sharedInstance]
-            localizedString: p_item->psz_longtext ] toWidth: PREFS_WRAP];
-        ADD_CHECKBOX( o_checkbox, mainFrame, 0,
-                        0, @"", o_tooltip, p_item->i_value, NSImageLeft)
-        [o_checkbox setAutoresizingMask:NSViewNotSizable ];
-        [self addSubview: o_checkbox];
         /* add the label */
         if( p_item->psz_text )
             o_labelString = [[VLCMain sharedInstance]
                                 localizedString: p_item->psz_text];
         else
             o_labelString = [NSString stringWithString:@""];
-        ADD_LABEL( o_label, mainFrame, [o_checkbox frame].size.width, 0, o_labelString )
+        ADD_LABEL( o_label, mainFrame, 0, 0, o_labelString )
         [o_label setAutoresizingMask:NSViewNotSizable ];
         [self addSubview: o_label];
+        /* add the checkbox */
+        o_tooltip = [[VLCMain sharedInstance]
+            wrapString: [[VLCMain sharedInstance]
+            localizedString: p_item->psz_longtext ] toWidth: PREFS_WRAP];
+        ADD_CHECKBOX( o_checkbox, mainFrame, [o_label frame].size.width,
+                        0, @"", o_tooltip, p_item->i_value, NSImageLeft)
+        [o_checkbox setAutoresizingMask:NSViewNotSizable ];
+        [self addSubview: o_checkbox];
     }
     return self;
+}
+
+- (void) alignWithXPosition:(int)i_xPos
+{
+    NSRect frame;
+    frame = [o_label frame];
+    frame.origin.x = i_xPos - frame.size.width - 3;
+    [o_label setFrame:frame];
+
+    frame = [o_checkbox frame];
+    frame.origin.x = i_xPos;
+    [o_checkbox setFrame:frame];
 }
 
 - (void)dealloc
@@ -2113,7 +2119,7 @@ if( MACOS_VERSION >= 10.3 )                                                 \
     i_new_key |= ([o_shift_checkbox state] == NSOnState) ?
         KEY_MODIFIER_SHIFT : 0;
 
-    i_new_key |= StringToKey((char *)[[[o_popup selectedItem] title] cString]);
+    i_new_key |= StringToKey([[[o_popup selectedItem] title] cString]);
     return i_new_key;
 }
 @end

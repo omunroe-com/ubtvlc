@@ -1,10 +1,10 @@
 /*****************************************************************************
  * tls.c
  *****************************************************************************
- * Copyright (C) 2004-2005 Rémi Denis-Courmont
- * $Id: gnutls.c 11723 2005-07-13 17:16:09Z courmisch $
+ * Copyright (C) 2004-2005 VideoLAN
+ * $Id: gnutls.c 10620 2005-04-09 14:54:44Z courmisch $
  *
- * Authors: Rémi Denis-Courmont <rem # videolan.org>
+ * Authors: Remi Denis-Courmont <rem # videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@ static void Close( vlc_object_t * );
 #define CHECK_CERT_TEXT N_("Check TLS/SSL server certificate validity")
 #define CHECK_CERT_LONGTEXT N_( \
     "Ensures that server certificate is valid " \
-    "(i.e. signed by an approved Certificate Authority)." )
+    "(ie. signed by an approved Certificate Authority)." )
 
 #define CHECK_HOSTNAME_TEXT N_("Check TLS/SSL server hostname in certificate")
 #define CHECK_HOSTNAME_LONGTEXT N_( \
@@ -262,7 +262,7 @@ gnutls_HandshakeAndValidate( tls_session_t *p_session )
     val = gnutls_ContinueHandshake( p_session );
     if( val == 0 )
     {
-        unsigned status;
+        int status;
         gnutls_x509_crt cert;
         const gnutls_datum *p_data;
         tls_session_sys_t *p_sys;
@@ -299,7 +299,7 @@ gnutls_HandshakeAndValidate( tls_session_t *p_session )
             return 0;
 
         /* certificate (host)name verification */
-        p_data = gnutls_certificate_get_peers( p_sys->session, &status );
+        p_data = gnutls_certificate_get_peers( p_sys->session, &val );
         if( p_data == NULL )
         {
             msg_Err( p_session, "TLS peer certificate not available" );

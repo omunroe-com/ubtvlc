@@ -1,16 +1,16 @@
 /*****************************************************************************
  * waveout.c : Windows waveOut plugin for vlc
  *****************************************************************************
- * Copyright (C) 2001 the VideoLAN team
- * $Id: waveout.c 11916 2005-07-30 11:30:51Z gbazin $
+ * Copyright (C) 2001 VideoLAN
+ * $Id: waveout.c 10369 2005-03-16 23:10:08Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
- *
+ *      
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -698,7 +698,7 @@ static void CALLBACK WaveOutCallback( HWAVEOUT h_waveout, UINT uMsg,
 }
 
 /*****************************************************************************
- * WaveOutThread: this thread will capture play notification events.
+ * WaveOutThread: this thread will capture play notification events. 
  *****************************************************************************
  * We use this thread to feed new audio samples to the sound card because
  * we are not authorized to use waveOutWrite() directly in the waveout
@@ -801,7 +801,7 @@ static int VolumeGet( aout_instance_t * p_aout, audio_volume_t * pi_volume )
 
     i_waveout_vol &= 0xFFFF;
     *pi_volume = p_aout->output.i_volume =
-        (i_waveout_vol * AOUT_VOLUME_MAX + 0xFFFF /*rounding*/) / 2 / 0xFFFF;
+        i_waveout_vol * AOUT_VOLUME_MAX / 2 / 0xFFFF;
     return 0;
 }
 

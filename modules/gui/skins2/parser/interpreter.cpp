@@ -1,8 +1,8 @@
 /*****************************************************************************
  * interpreter.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: interpreter.cpp 12281 2005-08-20 00:31:27Z dionoea $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: interpreter.cpp 10770 2005-04-22 22:25:10Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -26,7 +26,6 @@
 #include "expr_evaluator.hpp"
 #include "../commands/cmd_muxer.hpp"
 #include "../commands/cmd_playlist.hpp"
-#include "../commands/cmd_playtree.hpp"
 #include "../commands/cmd_dialogs.hpp"
 #include "../commands/cmd_dummy.hpp"
 #include "../commands/cmd_layout.hpp"
@@ -51,13 +50,11 @@ Interpreter::Interpreter( intf_thread_t *pIntf ): SkinObject( pIntf )
     REGISTER_CMD( "dialogs.changeSkin()", CmdDlgChangeSkin )
     REGISTER_CMD( "dialogs.fileSimple()", CmdDlgFileSimple )
     REGISTER_CMD( "dialogs.file()", CmdDlgFile )
-    REGISTER_CMD( "dialogs.directory()", CmdDlgDirectory )
     REGISTER_CMD( "dialogs.disc()", CmdDlgDisc )
     REGISTER_CMD( "dialogs.net()", CmdDlgNet )
     REGISTER_CMD( "dialogs.messages()", CmdDlgMessages )
     REGISTER_CMD( "dialogs.prefs()", CmdDlgPrefs )
     REGISTER_CMD( "dialogs.fileInfo()", CmdDlgFileInfo )
-    REGISTER_CMD( "dialogs.streamingWizard()", CmdDlgStreamingWizard )
     REGISTER_CMD( "dialogs.popup()", CmdDlgShowPopupMenu )
     REGISTER_CMD( "playlist.load()", CmdDlgPlaylistLoad )
     REGISTER_CMD( "playlist.save()", CmdDlgPlaylistSave )
@@ -80,27 +77,6 @@ Interpreter::Interpreter( intf_thread_t *pIntf ): SkinObject( pIntf )
         CmdGenericPtr( new CmdPlaylistRepeat( getIntf(), true ) );
     m_commandMap["playlist.setRepeat(false)"] =
         CmdGenericPtr( new CmdPlaylistRepeat( getIntf(), false ) );
-    REGISTER_CMD( "playtree.load()", CmdDlgPlaytreeLoad )
-    REGISTER_CMD( "playtree.save()", CmdDlgPlaytreeSave )
-    REGISTER_CMD( "playtree.add()", CmdDlgAdd )
-    VarTree &rVarTree = VlcProc::instance( getIntf() )->getPlaytreeVar();
-    m_commandMap["playtree.del()"] =
-        CmdGenericPtr( new CmdPlaytreeDel( getIntf(), rVarTree ) );
-    REGISTER_CMD( "playtree.next()", CmdPlaytreeNext )
-    REGISTER_CMD( "playtree.previous()", CmdPlaytreePrevious )
-    REGISTER_CMD( "playtree.sort()", CmdPlaytreeSort )
-    m_commandMap["playtree.setRandom(true)"] =
-        CmdGenericPtr( new CmdPlaytreeRandom( getIntf(), true ) );
-    m_commandMap["playtree.setRandom(false)"] =
-        CmdGenericPtr( new CmdPlaytreeRandom( getIntf(), false ) );
-    m_commandMap["playtree.setLoop(true)"] =
-        CmdGenericPtr( new CmdPlaytreeLoop( getIntf(), true ) );
-    m_commandMap["playtree.setLoop(false)"] =
-        CmdGenericPtr( new CmdPlaytreeLoop( getIntf(), false ) );
-    m_commandMap["playtree.setRepeat(true)"] =
-        CmdGenericPtr( new CmdPlaytreeRepeat( getIntf(), true ) );
-    m_commandMap["playtree.setRepeat(false)"] =
-        CmdGenericPtr( new CmdPlaytreeRepeat( getIntf(), false ) );
     REGISTER_CMD( "vlc.fullscreen()", CmdFullscreen )
     REGISTER_CMD( "vlc.play()", CmdPlay )
     REGISTER_CMD( "vlc.pause()", CmdPause )
@@ -384,10 +360,3 @@ VarList *Interpreter::getVarList( const string &rName, Theme *pTheme )
     return pVar;
 }
 
-VarTree *Interpreter::getVarTree( const string &rName, Theme *pTheme )
-{
-    // Try to get the variable from the variable manager
-    VarManager *pVarManager = VarManager::instance( getIntf() );
-    VarTree *pVar = (VarTree*)pVarManager->getVar( rName, "tree" );
-    return pVar;
-}

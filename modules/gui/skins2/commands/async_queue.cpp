@@ -1,8 +1,8 @@
 /*****************************************************************************
  * async_queue.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: async_queue.cpp 12207 2005-08-15 15:54:32Z asmax $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: async_queue.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -27,15 +27,14 @@
 #include "../src/os_timer.hpp"
 
 
-AsyncQueue::AsyncQueue( intf_thread_t *pIntf ): SkinObject( pIntf ),
-    m_cmdFlush( this )
+AsyncQueue::AsyncQueue( intf_thread_t *pIntf ): SkinObject( pIntf )
 {
     // Initialize the mutex
     vlc_mutex_init( pIntf, &m_lock );
 
     // Create a timer
     OSFactory *pOsFactory = OSFactory::instance( pIntf );
-    m_pTimer = pOsFactory->createOSTimer( m_cmdFlush );
+    m_pTimer = pOsFactory->createOSTimer( Callback( this, &doFlush ) );
 
     // Flush the queue every 10 ms
     m_pTimer->start( 10, false );
@@ -130,8 +129,9 @@ void AsyncQueue::flush()
 }
 
 
-void AsyncQueue::CmdFlush::execute()
+void AsyncQueue::doFlush( SkinObject *pObj )
 {
+    AsyncQueue *pThis = (AsyncQueue*)pObj;
     // Flush the queue
-    m_pParent->flush();
+    pThis->flush();
 }

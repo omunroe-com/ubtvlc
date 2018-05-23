@@ -1,8 +1,8 @@
 /*****************************************************************************
  * fsm.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: fsm.cpp 12053 2005-08-06 23:38:31Z asmax $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: fsm.cpp 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -33,7 +33,7 @@ void FSM::addState( const string &state )
 
 
 void FSM::addTransition( const string &state1, const string &event,
-                         const string &state2, CmdGeneric *pCmd )
+                         const string &state2, Callback *pCmd )
 {
     // Check that we already know the states
     if( m_states.find( state1 ) == m_states.end() ||
@@ -100,9 +100,9 @@ void FSM::handleTransition( const string &event )
     m_currentState = (*it).second.first;
 
     // Call the callback, if any
-    CmdGeneric *pCmd = (*it).second.second;
+    Callback *pCmd = (*it).second.second;
     if( pCmd != NULL )
     {
-        pCmd->execute();
+        (*(pCmd->getFunc()))( pCmd->getObj() );
     }
 }

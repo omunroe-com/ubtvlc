@@ -1,8 +1,8 @@
 /*****************************************************************************
  * subtitle.c: Demux for subtitle text files.
  *****************************************************************************
- * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: subtitle.c 12548 2005-09-14 00:36:41Z hartman $
+ * Copyright (C) 1999-2004 VideoLAN
+ * $Id: subtitle.c 11159 2005-05-24 19:52:57Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Derk-Jan Hartman <hartman at videolan dot org>
@@ -159,7 +159,7 @@ static struct
 static int Demux( demux_t * );
 static int Control( demux_t *, int, va_list );
 
-/*static void Fix( demux_t * );*/
+static void Fix( demux_t * );
 
 /*****************************************************************************
  * Module initializer
@@ -318,7 +318,6 @@ static int Open ( vlc_object_t *p_this )
     if( p_sys->i_type == SUB_TYPE_UNKNOWN )
     {
         msg_Err( p_demux, "failed to recognize subtitle type" );
-        free( p_sys );
         return VLC_EGENERIC;
     }
 
@@ -348,10 +347,6 @@ static int Open ( vlc_object_t *p_this )
                                               sizeof(subtitle_t) * i_max ) ) )
             {
                 msg_Err( p_demux, "out of memory");
-                if( p_sys->subtitle != NULL )
-                    free( p_sys->subtitle );
-                TextUnload( &p_sys->txt );
-                free( p_sys );
                 return VLC_ENOMEM;
             }
         }
@@ -575,7 +570,6 @@ static int Demux( demux_t *p_demux )
 /*****************************************************************************
  * Fix: fix time stamp and order of subtitle
  *****************************************************************************/
-#ifdef USE_THIS_UNUSED_PIECE_OF_CODE
 static void Fix( demux_t *p_demux )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
@@ -609,7 +603,6 @@ static void Fix( demux_t *p_demux )
         }
     } while( !b_done );
 }
-#endif
 
 static int TextLoad( text_t *txt, stream_t *s )
 {
@@ -633,7 +626,7 @@ static int TextLoad( text_t *txt, stream_t *s )
         if( txt->i_line_count >= i_line_max )
         {
             i_line_max += 100;
-            txt->line = realloc( txt->line, i_line_max * sizeof( char * ) );
+            txt->line = realloc( txt->line, i_line_max * sizeof( char*) );
         }
     }
 
@@ -996,12 +989,12 @@ static int  ParseSSA( demux_t *p_demux, subtitle_t *p_subtitle )
             if( p_sys->psz_header != NULL )
             {
                 if( !( p_sys->psz_header = realloc( p_sys->psz_header,
-                          strlen( p_sys->psz_header ) + 1 + strlen( s ) + 2 ) ) )
+                          strlen( p_sys->psz_header ) + strlen( s ) + 2 ) ) )
                 {
                     msg_Err( p_demux, "out of memory");
                     return VLC_ENOMEM;
                 }
-                p_sys->psz_header = strcat( p_sys->psz_header,  s );
+                p_sys->psz_header = strcat( p_sys->psz_header, strdup( s ) );
                 p_sys->psz_header = strcat( p_sys->psz_header, "\n" );
             }
             else
@@ -1011,7 +1004,7 @@ static int  ParseSSA( demux_t *p_demux, subtitle_t *p_subtitle )
                     msg_Err( p_demux, "out of memory");
                     return VLC_ENOMEM;
                 }
-                p_sys->psz_header = s;
+                p_sys->psz_header = strdup( s );
                 p_sys->psz_header = strcat( p_sys->psz_header, "\n" );
             }
         }

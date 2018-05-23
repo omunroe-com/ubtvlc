@@ -1,7 +1,7 @@
 /*****************************************************************************
  * info.c : CD digital audio input information routines
  *****************************************************************************
- * Copyright (C) 2004, 2005 the VideoLAN team
+ * Copyright (C) 2004, 2005 VideoLAN
  * $Id: info.c 8845 2004-09-29 09:00:41Z rocky $
  *
  * Authors: Rocky Bernstein <rocky@panix.com>
@@ -116,14 +116,13 @@ GetCDDBInfo( access_t *p_access, cdda_data_t *p_cdda )
     {
         track_t i_track =  p_cdda->i_first_track + i;
         cddb_track_t *t = cddb_track_new();
-	cddb_track_set_frame_offset(t, 
-				    cdio_get_track_lba(p_cdio, i_track));
+        t->frame_offset = cdio_get_track_lba(p_cdio, i_track);
         cddb_disc_add_track(p_cdda->cddb.disc, t);
     }
 
-    cddb_disc_set_length(p_cdda->cddb.disc,
-			 cdio_get_track_lba(p_cdio, CDIO_CDROM_LEADOUT_TRACK)
-			 / CDIO_CD_FRAMES_PER_SEC);
+    p_cdda->cddb.disc->length =
+        cdio_get_track_lba(p_cdio, CDIO_CDROM_LEADOUT_TRACK)
+        / CDIO_CD_FRAMES_PER_SEC;
 
     if (!cddb_disc_calc_discid(p_cdda->cddb.disc))
     {

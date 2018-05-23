@@ -1,7 +1,7 @@
 /*****************************************************************************
  * olecontrol.cpp: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
+ * Copyright (C) 2005 VideoLAN
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -23,6 +23,8 @@
 #include "plugin.h"
 #include "olecontrol.h"
 
+#include "utils.h"
+
 using namespace std;
 
 STDMETHODIMP VLCOleControl::GetControlInfo(CONTROLINFO *pCI)
@@ -43,12 +45,12 @@ STDMETHODIMP VLCOleControl::OnMnemonic(LPMSG pMsg)
     return E_NOTIMPL;
 };
 
-STDMETHODIMP VLCOleControl::OnAmbientPropertyChange(DISPID dispID)
+static HRESULT getAmbientProperty(VLCPlugin& instance, DISPID dispID, VARIANT& v)
 {
     HRESULT hr;
     IOleObject *oleObj;
 
-    hr = QueryInterface(IID_IOleObject, (LPVOID *)&oleObj);
+    hr = instance.QueryInterface(IID_IOleObject, (LPVOID *)&oleObj);
     if( SUCCEEDED(hr) )
     {
         IOleClientSite *clientSite;
@@ -56,17 +58,76 @@ STDMETHODIMP VLCOleControl::OnAmbientPropertyChange(DISPID dispID)
         hr = oleObj->GetClientSite(&clientSite);
         if( SUCCEEDED(hr) && (NULL != clientSite) )
         {
-            _p_instance->onAmbientChanged(clientSite, dispID);
+            hr = GetObjectProperty(clientSite, dispID, v);
             clientSite->Release();
         }
         oleObj->Release();
+    }
+    return hr;
+};
+
+STDMETHODIMP VLCOleControl::OnAmbientPropertyChange(DISPID dispID)
+{
+    switch( dispID )
+    {
+        case DISPID_AMBIENT_BACKCOLOR:
+            break;
+        case DISPID_AMBIENT_DISPLAYNAME:
+            break;
+        case DISPID_AMBIENT_FONT:
+            break;
+        case DISPID_AMBIENT_FORECOLOR:
+            break;
+        case DISPID_AMBIENT_LOCALEID:
+            break;
+        case DISPID_AMBIENT_MESSAGEREFLECT:
+            break;
+        case DISPID_AMBIENT_SCALEUNITS:
+            break;
+        case DISPID_AMBIENT_TEXTALIGN:
+            break;
+        case DISPID_AMBIENT_USERMODE:
+            break;
+        case DISPID_AMBIENT_UIDEAD:
+            break;
+        case DISPID_AMBIENT_SHOWGRABHANDLES:
+            break;
+        case DISPID_AMBIENT_SHOWHATCHING:
+            break;
+        case DISPID_AMBIENT_DISPLAYASDEFAULT:
+            break;
+        case DISPID_AMBIENT_SUPPORTSMNEMONICS:
+            break;
+        case DISPID_AMBIENT_AUTOCLIP:
+            break;
+        case DISPID_AMBIENT_APPEARANCE:
+            break;
+        case DISPID_AMBIENT_CODEPAGE:
+            VARIANT v;
+            VariantInit(&v);
+            V_VT(&v) = VT_I4;
+            if( SUCCEEDED(getAmbientProperty(*_p_instance, dispID, v)) )
+            {
+                _p_instance->setCodePage(V_I4(&v));
+            }
+            break;
+        case DISPID_AMBIENT_PALETTE:
+            break;
+        case DISPID_AMBIENT_CHARSET:
+            break;
+        case DISPID_AMBIENT_RIGHTTOLEFT:
+            break;
+        case DISPID_AMBIENT_TOPTOBOTTOM:
+            break;
+        default:
+            break;
     }
     return S_OK;
 };
 
 STDMETHODIMP VLCOleControl::FreezeEvents(BOOL bFreeze)
 {
-    _p_instance->freezeEvents(bFreeze);
+    _p_instance->setSendEvents(! bFreeze);
     return S_OK;
 };
 

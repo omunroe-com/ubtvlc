@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_button.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_button.hpp 12053 2005-08-06 23:38:31Z asmax $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ctrl_button.hpp 9596 2004-12-17 23:39:34Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -68,21 +68,31 @@ class CtrlButton: public CtrlGeneric
         CmdGeneric &m_rCommand;
         /// Tooltip text
         const UString m_tooltip;
+        /// Callbacks objects
+        Callback m_cmdUpOverDownOver;
+        Callback m_cmdDownOverUpOver;
+        Callback m_cmdDownOverDown;
+        Callback m_cmdDownDownOver;
+        Callback m_cmdUpOverUp;
+        Callback m_cmdUpUpOver;
+        Callback m_cmdDownUp;
+        Callback m_cmdUpHidden;
+        Callback m_cmdHiddenUp;
         /// Images of the button in the different states
         OSGraphics *m_pImgUp, *m_pImgOver, *m_pImgDown;
         /// Current image
         OSGraphics *m_pImg;
 
-        /// Callback objects
-        DEFINE_CALLBACK( CtrlButton, UpOverDownOver )
-        DEFINE_CALLBACK( CtrlButton, DownOverUpOver )
-        DEFINE_CALLBACK( CtrlButton, DownOverDown )
-        DEFINE_CALLBACK( CtrlButton, DownDownOver )
-        DEFINE_CALLBACK( CtrlButton, UpOverUp )
-        DEFINE_CALLBACK( CtrlButton, UpUpOver )
-        DEFINE_CALLBACK( CtrlButton, DownUp )
-        DEFINE_CALLBACK( CtrlButton, UpHidden )
-        DEFINE_CALLBACK( CtrlButton, HiddenUp )
+        /// Callback functions
+        static void transUpOverDownOver( SkinObject *pCtrl );
+        static void transDownOverUpOver( SkinObject *pCtrl );
+        static void transDownOverDown( SkinObject *pCtrl );
+        static void transDownDownOver( SkinObject *pCtrl );
+        static void transUpOverUp( SkinObject *pCtrl );
+        static void transUpUpOver( SkinObject *pCtrl );
+        static void transDownUp( SkinObject *pCtrl );
+        static void transUpHidden( SkinObject *pCtrl );
+        static void transHiddenUp( SkinObject *pCtrl );
 };
 
 

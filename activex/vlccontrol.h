@@ -1,7 +1,7 @@
 /*****************************************************************************
  * vlccontrol.h: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
+ * Copyright (C) 2005 VideoLAN
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -42,14 +42,14 @@ public:
          && (IID_IDispatch == riid)
          && (IID_IVLCControl == riid) ) {
             AddRef();
-            *ppv = reinterpret_cast<LPVOID>(this);
+            *ppv = dynamic_cast<LPVOID>(this);
             return NOERROR;
         }
-        return _p_instance->pUnkOuter->QueryInterface(riid, ppv);
+        return _p_instance->QueryInterface(riid, ppv);
     };
 
-    STDMETHODIMP_(ULONG) AddRef(void) { return _p_instance->pUnkOuter->AddRef(); };
-    STDMETHODIMP_(ULONG) Release(void) { return _p_instance->pUnkOuter->Release(); };
+    STDMETHODIMP_(ULONG) AddRef(void) { return _p_instance->AddRef(); };
+    STDMETHODIMP_(ULONG) Release(void) { return _p_instance->Release(); };
 
     // IDispatch methods
     STDMETHODIMP GetTypeInfoCount(UINT*);
@@ -64,6 +64,7 @@ public:
     STDMETHODIMP pause(void);
     STDMETHODIMP stop(void);
     STDMETHODIMP get_Playing(VARIANT_BOOL *isPlaying);
+    STDMETHODIMP put_Playing(VARIANT_BOOL isPlaying);
     STDMETHODIMP get_Position(float *position);
     STDMETHODIMP put_Position(float position);
     STDMETHODIMP get_Time(int *seconds);
@@ -85,12 +86,6 @@ public:
     STDMETHODIMP playlistPrev(void);
     STDMETHODIMP playlistClear(void);
     STDMETHODIMP get_VersionInfo(BSTR *version);
-    STDMETHODIMP get_MRL(BSTR *mrl);
-    STDMETHODIMP put_MRL(BSTR mrl);
-    STDMETHODIMP get_AutoLoop(VARIANT_BOOL *autoloop);
-    STDMETHODIMP put_AutoLoop(VARIANT_BOOL autoloop);
-    STDMETHODIMP get_AutoPlay(VARIANT_BOOL *autoplay);
-    STDMETHODIMP put_AutoPlay(VARIANT_BOOL autoplay);
  
 private:
 

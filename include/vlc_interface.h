@@ -3,8 +3,8 @@
  * This library provides basic functions for threads to interact with user
  * interface, such as message output.
  *****************************************************************************
- * Copyright (C) 1999, 2000 the VideoLAN team
- * $Id: vlc_interface.h 11835 2005-07-24 21:03:20Z dionoea $
+ * Copyright (C) 1999, 2000 VideoLAN
+ * $Id: vlc_interface.h 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -156,8 +156,6 @@ VLC_EXPORT( void,              intf_Destroy,    ( intf_thread_t * ) );
 #define INTF_DIALOG_POPUPMENU  20
 
 #define INTF_DIALOG_FILE_GENERIC 30
-
-#define INTF_DIALOG_UPDATEVLC   90
 
 #define INTF_DIALOG_EXIT       99
 

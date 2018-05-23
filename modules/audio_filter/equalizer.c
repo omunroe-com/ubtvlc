@@ -1,8 +1,8 @@
 /*****************************************************************************
  * equalizer.c:
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: equalizer.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: equalizer.c 10257 2005-03-10 13:05:43Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *

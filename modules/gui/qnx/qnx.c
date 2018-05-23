@@ -1,7 +1,7 @@
 /*****************************************************************************
  * qnx.c : QNX RTOS plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001 the VideoLAN team
+ * Copyright (C) 2000, 2001 VideoLAN
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *      

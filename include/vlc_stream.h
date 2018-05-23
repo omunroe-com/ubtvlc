@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_stream.h
  *****************************************************************************
- * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: vlc_stream.h 12465 2005-09-03 15:55:52Z robux4 $
+ * Copyright (C) 1999-2004 VideoLAN
+ * $Id: vlc_stream.h 10863 2005-05-01 15:17:40Z asmax $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -54,8 +54,8 @@ enum stream_query_e
 
     /* Special for direct access control from demuxer.
      * XXX: avoid using it by all means */
-    STREAM_CONTROL_ACCESS   /* arg1= int i_access_query, args   res: can fail
-                             if access unreachable or access control answer */
+    STREAM_CONTROL_ACCESS,      /* arg1= int i_access_query, args   res: can fail
+                                   if access unreachable or access control answer */
 };
 
 /**
@@ -122,9 +122,6 @@ static inline int stream_Control( stream_t *s, int i_query, ... )
 {
     va_list args;
     int     i_result;
-
-    if ( s == NULL )
-        return VLC_EGENERIC;
 
     va_start( args, i_query );
     i_result = s->pf_control( s, i_query, args );

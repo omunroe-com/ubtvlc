@@ -1,8 +1,8 @@
 /*****************************************************************************
  * output.m: MacOS X Output Dialog
  *****************************************************************************
- * Copyright (C) 2002-2003 the VideoLAN team
- * $Id: output.m 12599 2005-09-18 19:29:35Z fkuehne $
+ * Copyright (C) 2002-2003 VideoLAN
+ * $Id: output.m 11371 2005-06-09 20:40:01Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -131,7 +131,7 @@
     NSArray *o_v_scales = [NSArray arrayWithObjects: @"0.25",@"0.5",@"0.75",@"1",@"1.25",@"1.5",@"1.75",@"2",nil];
     NSArray *o_a_codecs = [NSArray arrayWithObjects: @"mpga", @"mp3 ", @"mp4a", @"a52 ", @"vorb", @"flac", @"spx ", nil];
     NSArray *o_v_codecs = [NSArray arrayWithObjects: @"mp1v", @"mp2v", @"mp4v", @"DIV1",
-        @"DIV2", @"DIV3", @"h263", @"h264", @"WMV1", @"WMV2", @"MJPG", @"theo", nil];
+        @"DIV2", @"DIV3", @"h263", @"h264", @"I263", @"WMV1", @"WMV2", @"MJPG", @"theo", nil];
 
     [o_output_ckbox setTitle: _NS("Advanced output:")];
     [o_output_settings setTitle: _NS("Settings...")];
@@ -425,37 +425,11 @@
         }
         if ( ![o_mode isEqualToString: @"RTP"] )
         {
-            /* split up the hostname and the following path to paste the
-             * port correctly. Not need, if there isn't any path following the
-             * hostname. */
-            NSArray * o_urlItems = [[o_stream_address stringValue] \
-                componentsSeparatedByString: @"/"];
-            NSMutableString * o_finalStreamAddress;
-            o_finalStreamAddress = [[NSMutableString alloc] init];
-            
-            if ([o_urlItems count] == 1)
-            {
-                [o_finalStreamAddress appendFormat: @"\"%@:%@\"", \
-                    [o_stream_address stringValue],[o_stream_port stringValue]];
-            }
-            else
-            {
-                [o_finalStreamAddress appendFormat: @"\"%@:%@", [o_urlItems \
-                    objectAtIndex: 0], [o_stream_port stringValue]];
-                unsigned int x;
-                x = 1;
-                while (x != [o_urlItems count])
-                {
-                    [o_finalStreamAddress appendFormat: @"/%@", [o_urlItems \
-                        objectAtIndex: x]];
-                    x = (x + 1);
-                }
-                [o_finalStreamAddress appendString: @"\""];
-            }
-            
+
             [o_mrl_string appendFormat:
-                        @"std{access=%@,mux=%@,url=%@%@}",
-                        o_mode, o_mux_string, o_finalStreamAddress, o_announce];
+                        @"std{access=%@,mux=%@,url=\"%@:%@\"%@}",
+                        o_mode, o_mux_string, [o_stream_address stringValue],
+                        [o_stream_port stringValue], o_announce];
         }
         else
         {

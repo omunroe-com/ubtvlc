@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mp4.c : MP4 file input module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: mp4.c 12007 2005-08-04 16:50:18Z courmisch $
+ * Copyright (C) 2001-2004 VideoLAN
+ * $Id: mp4.c 11515 2005-06-24 20:39:26Z gbazin $
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1713,7 +1713,7 @@ static void MP4_TrackCreate( demux_t *p_demux, mp4_track_t *p_track,
     unsigned int i;
     char language[4];
 
-    /* hint track unsupported */
+    /* hint track unsuported */
 
     /* set default value (-> track unusable) */
     p_track->b_ok       = VLC_FALSE;

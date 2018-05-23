@@ -1,7 +1,7 @@
 /*****************************************************************************
  * modules_builtin.h: built-in modules list
  *****************************************************************************
- * Copyright (C) 2001 the VideoLAN team
+ * Copyright (C) 2001 VideoLAN
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *

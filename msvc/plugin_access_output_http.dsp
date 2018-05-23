@@ -99,16 +99,6 @@ SOURCE="..\modules\access_output\http.c"
 # PROP Output_Dir "Debug\modules\access_output"
 # PROP Intermediate_Dir "Debug\modules\access_output"
 # End Source File
-# Begin Source File
-SOURCE="..\modules\access_output\bonjour.c"
-# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=access_output_http" /D "MODULE_NAME_IS_access_output_http" 
-!IF "$(CFG)" == "plugin_access_output_http - Win32 Release"
-# PROP Output_Dir "Release\modules\access_output"
-# PROP Intermediate_Dir "Release\modules\access_output"
-!ELSEIF "$(CFG)" == "plugin_access_output_http - Win32 Debug"
-# PROP Output_Dir "Debug\modules\access_output"
-# PROP Intermediate_Dir "Debug\modules\access_output"
-# End Source File
 
 # End Group
 
@@ -116,9 +106,6 @@ SOURCE="..\modules\access_output\bonjour.c"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 
-# Begin Source File
-SOURCE="..\modules\access_output\bonjour.h"
-# End Source File
 
 # End Group
 

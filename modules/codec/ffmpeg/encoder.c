@@ -1,8 +1,8 @@
 /*****************************************************************************
  * encoder.c: video and audio encoder using the ffmpeg library
  *****************************************************************************
- * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: encoder.c 12609 2005-09-19 18:30:36Z fkuehne $
+ * Copyright (C) 1999-2004 VideoLAN
+ * $Id: encoder.c 11321 2005-06-06 17:11:25Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -33,7 +33,7 @@
 #include <vlc/decoder.h>
 
 /* ffmpeg header */
-#define HAVE_MMX 1
+#define HAVE_MMX
 #ifdef HAVE_FFMPEG_AVCODEC_H
 #   include <ffmpeg/avcodec.h>
 #else
@@ -134,14 +134,12 @@ struct encoder_sys_t
     float      f_rc_buffer_aggressivity;
     vlc_bool_t b_pre_me;
     vlc_bool_t b_hurry_up;
-    vlc_bool_t b_interlace, b_interlace_me;
+    vlc_bool_t b_interlace;
     float      f_i_quant_factor;
     int        i_noise_reduction;
     vlc_bool_t b_mpeg4_matrix;
     vlc_bool_t b_trellis;
     int        i_quality; /* for VBR */
-    float      f_lumi_masking, f_dark_masking, f_p_masking, f_border_masking;
-    int        i_luma_elim, i_chroma_elim;
 
     /* Used to work around stupid timestamping behaviour in libavcodec */
     uint64_t i_framenum;
@@ -152,19 +150,8 @@ static const char *ppsz_enc_options[] = {
     "keyint", "bframes", "vt", "qmin", "qmax", "hq", "strict-rc",
     "rc-buffer-size", "rc-buffer-aggressivity", "pre-me", "hurry-up",
     "interlace", "i-quant-factor", "noise-reduction", "mpeg4-matrix",
-    "trellis", "qscale", "strict", "lumi-masking", "dark-masking",
-    "p-masking", "border-masking", "luma-elim-threshold",
-    "chroma-elim-threshold", NULL
+    "trellis", "qscale", "strict", NULL
 };
-
-static const uint16_t mpa_bitrate_tab[2][15] =
-{
-    {0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384},
-    {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160}
-};
-
-static const uint16_t mpa_freq_tab[6] =
-{ 44100, 48000, 32000, 22050, 24000, 16000 };
 
 /*****************************************************************************
  * OpenEncoder: probe the encoder
@@ -181,9 +168,6 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
     int i_codec_id, i_cat;
     char *psz_namecodec;
     vlc_value_t val;
-    vlc_value_t lockval;
-
-    var_Get( p_enc->p_libvlc, "avcodec", &lockval );
 
     if( !E_(GetFfmpegCodec)( p_enc->fmt_out.i_codec, &i_cat, &i_codec_id,
                              &psz_namecodec ) )
@@ -238,8 +222,6 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
     p_sys->p_buffer = NULL;
 
     p_sys->p_context = p_context = avcodec_alloc_context();
-    p_context->debug = config_GetInt( p_enc, "ffmpeg-debug" );
-    p_context->opaque = (void *)p_this;
 
     /* Set CPU capabilities */
     p_context->dsp_mask = 0;
@@ -274,9 +256,6 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
 
     var_Get( p_enc, ENC_CFG_PREFIX "interlace", &val );
     p_sys->b_interlace = val.b_bool;
-
-    var_Get( p_enc, ENC_CFG_PREFIX "interlace-me", &val );
-    p_sys->b_interlace_me = val.b_bool;
 
     var_Get( p_enc, ENC_CFG_PREFIX "pre-me", &val );
     p_sys->b_pre_me = val.b_bool;
@@ -334,19 +313,6 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
     if( val.i_int < - 1 || val.i_int > 1 ) val.i_int = 0;
     p_context->strict_std_compliance = val.i_int;
 
-    var_Get( p_enc, ENC_CFG_PREFIX "lumi-masking", &val );
-    p_sys->f_lumi_masking = val.f_float;
-    var_Get( p_enc, ENC_CFG_PREFIX "dark-masking", &val );
-    p_sys->f_dark_masking = val.f_float;
-    var_Get( p_enc, ENC_CFG_PREFIX "p-masking", &val );
-    p_sys->f_p_masking = val.f_float;
-    var_Get( p_enc, ENC_CFG_PREFIX "border-masking", &val );
-    p_sys->f_border_masking = val.f_float;
-    var_Get( p_enc, ENC_CFG_PREFIX "luma-elim-threshold", &val );
-    p_sys->i_luma_elim = val.i_int;
-    var_Get( p_enc, ENC_CFG_PREFIX "chroma-elim-threshold", &val );
-    p_sys->i_chroma_elim = val.i_int;
-
     if( p_enc->fmt_in.i_cat == VIDEO_ES )
     {
         int i_aspect_num, i_aspect_den;
@@ -377,15 +343,6 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
         p_context->b_quant_factor = 1.25;
         p_context->i_quant_offset = 0.0;
         p_context->i_quant_factor = -0.8;
-
-        p_context->lumi_masking = p_sys->f_lumi_masking;
-        p_context->dark_masking = p_sys->f_dark_masking;
-        p_context->p_masking = p_sys->f_p_masking;
-#if LIBAVCODEC_BUILD >= 4741
-        p_context->border_masking = p_sys->f_border_masking;
-#endif
-        p_context->luma_elim_threshold = p_sys->i_luma_elim;
-        p_context->chroma_elim_threshold = p_sys->i_chroma_elim;
 
         if( p_sys->i_key_int > 0 )
             p_context->gop_size = p_sys->i_key_int;
@@ -429,9 +386,6 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
         {
             p_context->rc_max_rate = p_enc->fmt_out.i_bitrate;
             p_context->rc_buffer_size = p_sys->i_rc_buffer_size;
-            /* This is from ffmpeg's ffmpeg.c : */
-            p_context->rc_initial_buffer_occupancy
-                = p_sys->i_rc_buffer_size * 3/4;
             p_context->rc_buffer_aggressivity = p_sys->f_rc_buffer_aggressivity;
         }
 
@@ -456,20 +410,9 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
 
         if ( p_sys->b_interlace )
         {
-            if ( p_context->height <= 280 )
-            {
-                if ( p_context->height != 16 || p_context->width != 16 )
-                    msg_Warn( p_enc,
-                        "disabling interlaced video because height=%d <= 280",
-                        p_context->height );
-            }
-            else
-            {
-                p_context->flags |= CODEC_FLAG_INTERLACED_DCT;
+            p_context->flags |= CODEC_FLAG_INTERLACED_DCT;
 #if LIBAVCODEC_BUILD >= 4698
-                if ( p_sys->b_interlace_me )
-                    p_context->flags |= CODEC_FLAG_INTERLACED_ME;
-            }
+            p_context->flags |= CODEC_FLAG_INTERLACED_ME;
 #endif
         }
 
@@ -529,67 +472,19 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
     p_context->extradata = NULL;
     p_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
 
-    vlc_mutex_lock( lockval.p_address );
     if( avcodec_open( p_context, p_codec ) )
     {
-        vlc_mutex_unlock( lockval.p_address );
-        if( p_enc->fmt_in.i_cat == AUDIO_ES &&
-             (p_context->channels > 2 || i_codec_id == CODEC_ID_MP2
-               || i_codec_id == CODEC_ID_MP3) )
+        if( p_enc->fmt_in.i_cat == AUDIO_ES && p_context->channels > 2 )
         {
-            if( p_context->channels > 2 )
-            {
-                p_context->channels = 2;
-                p_enc->fmt_in.audio.i_channels = 2; // FIXME
-                msg_Warn( p_enc, "stereo mode selected (codec limitation)" );
-            }
-
-            if( i_codec_id == CODEC_ID_MP2 || i_codec_id == CODEC_ID_MP3 )
-            {
-                int i_frequency, i;
-
-                for ( i_frequency = 0; i_frequency < 6; i_frequency++ )
-                {
-                    if ( p_enc->fmt_out.audio.i_rate
-                            == mpa_freq_tab[i_frequency] )
-                        break;
-                }
-                if ( i_frequency == 6 )
-                {
-                    msg_Err( p_enc, "MPEG audio doesn't support frequency=%d",
-                             p_enc->fmt_out.audio.i_rate );
-                    free( p_sys );
-                    return VLC_EGENERIC;
-                }
-
-                for ( i = 1; i < 14; i++ )
-                {
-                    if ( p_enc->fmt_out.i_bitrate / 1000
-                          <= mpa_bitrate_tab[i_frequency / 3][i] )
-                        break;
-                }
-                if ( p_enc->fmt_out.i_bitrate / 1000
-                      != mpa_bitrate_tab[i_frequency / 3][i] )
-                {
-                    msg_Warn( p_enc,
-                              "MPEG audio doesn't support bitrate=%d, using %d",
-                              p_enc->fmt_out.i_bitrate,
-                              mpa_bitrate_tab[i_frequency / 3][i] * 1000 );
-                    p_enc->fmt_out.i_bitrate =
-                        mpa_bitrate_tab[i_frequency / 3][i] * 1000;
-                    p_context->bit_rate = p_enc->fmt_out.i_bitrate;
-                }
-            }
-
-            p_context->codec = NULL;
-            vlc_mutex_lock( lockval.p_address );
+            p_context->channels = 2;
+            p_enc->fmt_in.audio.i_channels = 2; // FIXME
             if( avcodec_open( p_context, p_codec ) )
             {
-                vlc_mutex_unlock( lockval.p_address );
                 msg_Err( p_enc, "cannot open encoder" );
                 free( p_sys );
                 return VLC_EGENERIC;
             }
+            msg_Warn( p_enc, "stereo mode selected (codec limitation)" );
         }
         else
         {
@@ -598,7 +493,6 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
             return VLC_EGENERIC;
         }
     }
-    vlc_mutex_unlock( lockval.p_address );
 
     p_enc->fmt_out.i_extra = p_context->extradata_size;
     p_enc->fmt_out.p_extra = p_context->extradata;
@@ -741,7 +635,7 @@ static block_t *EncodeVideo( encoder_t *p_enc, picture_t *p_pict )
     /* Let ffmpeg select the frame type */
     frame.pict_type = 0;
 
-    frame.repeat_pict = p_pict->i_nb_fields - 2;
+    frame.repeat_pict = 2 - p_pict->i_nb_fields;
 
 #if LIBAVCODEC_BUILD >= 4685
     frame.interlaced_frame = !p_pict->b_progressive;
@@ -757,9 +651,9 @@ static block_t *EncodeVideo( encoder_t *p_enc, picture_t *p_pict )
     if( 1 )
 #endif
     {
-        frame.pts = p_pict->date ? p_pict->date : (signed int) AV_NOPTS_VALUE;
+        frame.pts = p_pict->date ? p_pict->date : AV_NOPTS_VALUE;
 
-        if ( p_sys->b_hurry_up && frame.pts != (signed int) AV_NOPTS_VALUE )
+        if ( p_sys->b_hurry_up && frame.pts != AV_NOPTS_VALUE )
         {
             mtime_t current_date = mdate();
 
@@ -805,7 +699,7 @@ static block_t *EncodeVideo( encoder_t *p_enc, picture_t *p_pict )
         frame.pts = AV_NOPTS_VALUE;
     }
 
-    if ( frame.pts != (signed int) AV_NOPTS_VALUE && frame.pts != 0 )
+    if ( frame.pts != AV_NOPTS_VALUE && frame.pts != 0 )
     {
         if ( p_sys->i_last_pts == frame.pts )
         {
@@ -857,7 +751,7 @@ static block_t *EncodeVideo( encoder_t *p_enc, picture_t *p_pict )
             /* No delay -> output pts == input pts */
             p_block->i_pts = p_block->i_dts = p_pict->date;
         }
-        else if( p_sys->p_context->coded_frame->pts != (signed int) AV_NOPTS_VALUE &&
+        else if( p_sys->p_context->coded_frame->pts != AV_NOPTS_VALUE &&
             p_sys->p_context->coded_frame->pts != 0 &&
             p_sys->i_buggy_pts_detect != p_sys->p_context->coded_frame->pts )
         {
@@ -1010,9 +904,6 @@ void E_(CloseEncoder)( vlc_object_t *p_this )
 {
     encoder_t *p_enc = (encoder_t *)p_this;
     encoder_sys_t *p_sys = p_enc->p_sys;
-    vlc_value_t lockval;
-
-    var_Get( p_enc->p_libvlc, "avcodec", &lockval );
 
 #if LIBAVCODEC_BUILD >= 4702
     if ( p_sys->b_inited && p_enc->i_threads >= 1 )
@@ -1034,9 +925,7 @@ void E_(CloseEncoder)( vlc_object_t *p_this )
     }
 #endif
 
-    vlc_mutex_lock( lockval.p_address );
     avcodec_close( p_sys->p_context );
-    vlc_mutex_unlock( lockval.p_address );
     av_free( p_sys->p_context );
 
     if( p_sys->p_buffer ) free( p_sys->p_buffer );

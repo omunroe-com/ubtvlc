@@ -1,7 +1,7 @@
 /*****************************************************************************
  * sap.c :  SAP interface module
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
+ * Copyright (C) 2004 VideoLAN
  * $Id: sap.c 9217 2004-11-07 11:02:59Z courmisch $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>

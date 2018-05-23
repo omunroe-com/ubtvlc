@@ -24,18 +24,7 @@
 #ifndef _X264_H
 #define _X264_H 1
 
-#if !defined(_STDINT_H) && !defined(_STDINT_H_) && \
-    !defined(_INTTYPES_H) && !defined(_INTTYPES_H_)
-# ifdef _MSC_VER
-#  pragma message("You must include stdint.h or inttypes.h before x264.h")
-# else
-#  warning You must include stdint.h or inttypes.h before x264.h
-# endif
-#endif
-
-#include <stdarg.h>
-
-#define X264_BUILD 34
+#define X264_BUILD 0x000b
 
 /* x264_t:
  *      opaque handler for decoder and encoder */
@@ -57,20 +46,8 @@ typedef struct x264_t x264_t;
 /* Analyse flags
  */
 #define X264_ANALYSE_I4x4       0x0001  /* Analyse i4x4 */
-#define X264_ANALYSE_I8x8       0x0002  /* Analyse i8x8 (requires 8x8 transform) */
 #define X264_ANALYSE_PSUB16x16  0x0010  /* Analyse p16x8, p8x16 and p8x8 */
 #define X264_ANALYSE_PSUB8x8    0x0020  /* Analyse p8x4, p4x8, p4x4 */
-#define X264_ANALYSE_BSUB16x16  0x0100  /* Analyse b16x8, b8x16 and b8x8 */
-#define X264_DIRECT_PRED_NONE        0
-#define X264_DIRECT_PRED_SPATIAL     1
-#define X264_DIRECT_PRED_TEMPORAL    2
-#define X264_ME_DIA                  0
-#define X264_ME_HEX                  1
-#define X264_ME_UMH                  2
-#define X264_ME_ESA                  3
-#define X264_CQM_FLAT                0
-#define X264_CQM_JVT                 1
-#define X264_CQM_CUSTOM              2
 
 /* Colorspace type
  */
@@ -92,10 +69,7 @@ typedef struct x264_t x264_t;
 #define X264_TYPE_IDR           0x0001
 #define X264_TYPE_I             0x0002
 #define X264_TYPE_P             0x0003
-#define X264_TYPE_BREF          0x0004  /* Non-disposable B-frame */
-#define X264_TYPE_B             0x0005
-#define IS_X264_TYPE_I(x) ((x)==X264_TYPE_I || (x)==X264_TYPE_IDR)
-#define IS_X264_TYPE_B(x) ((x)==X264_TYPE_B || (x)==X264_TYPE_BREF)
+#define X264_TYPE_B             0x0004
 
 /* Log level
  */
@@ -107,23 +81,13 @@ typedef struct x264_t x264_t;
 
 typedef struct
 {
-    int i_start, i_end;
-    int b_force_qp;
-    int i_qp;
-    float f_bitrate_factor;
-} x264_zone_t;
-
-typedef struct
-{
     /* CPU flags */
     unsigned int cpu;
-    int         i_threads;  /* divide each frame into multiple slices, encode in parallel */
 
     /* Video Properties */
     int         i_width;
     int         i_height;
     int         i_csp;  /* CSP of encoded bitstream, only i420 supported */
-    int         i_level_idc; 
 
     struct
     {
@@ -137,13 +101,10 @@ typedef struct
 
     /* Bitstream parameters */
     int         i_frame_reference;  /* Maximum number of reference frames */
-    int         i_keyint_max;       /* Force an IDR keyframe at this interval */
-    int         i_keyint_min;       /* Scenecuts closer together than this are coded as I, not IDR. */
+    int         i_idrframe; /* every i_idrframe I frame are marked as IDR */
+    int         i_iframe;   /* every i_iframe are intra */
     int         i_scenecut_threshold; /* how aggressively to insert extra I frames */
     int         i_bframe;   /* how many b-frame between 2 references pictures */
-    int         b_bframe_adaptive;
-    int         i_bframe_bias;
-    int         b_bframe_pyramid;   /* Keep some B-frames as references */
 
     int         b_deblocking_filter;
     int         i_deblocking_filter_alphac0;    /* [-6, 6] -6 light filter, 6 strong */
@@ -152,39 +113,19 @@ typedef struct
     int         b_cabac;
     int         i_cabac_init_idc;
 
-    int         i_cqm_preset;
-    char        *psz_cqm_file;      /* JM format */
-    int8_t      cqm_4iy[16];        /* used only if i_cqm_preset == X264_CQM_CUSTOM */
-    int8_t      cqm_4ic[16];
-    int8_t      cqm_4py[16];
-    int8_t      cqm_4pc[16];
-    int8_t      cqm_8iy[64];
-    int8_t      cqm_8py[64];
 
     /* Log */
     void        (*pf_log)( void *, int i_level, const char *psz, va_list );
     void        *p_log_private;
     int         i_log_level;
-    int         b_visualize;
 
     /* Encoder analyser parameters */
     struct
     {
-        unsigned int intra;     /* intra partitions */
-        unsigned int inter;     /* inter partitions */
+        unsigned int intra;     /* intra flags */
+        unsigned int inter;     /* inter flags */
 
-        int          b_transform_8x8;
-
-        int          i_direct_mv_pred; /* spatial vs temporal mv prediction */
-        int          i_me_method; /* motion estimation algorithm to use (X264_ME_*) */
-        int          i_me_range; /* integer pixel motion estimation search range (from predicted mv) */
         int          i_subpel_refine; /* subpixel motion estimation quality */
-        int          b_chroma_me; /* chroma ME for subpel and mode decision in P-frames */
-        int          i_mv_range; /* maximum length of a mv (in pixels) */
-
-        int          b_weighted_bipred; /* implicit weighting for B-frames */
-
-        int          i_chroma_qp_offset;
 
         int          b_psnr;    /* Do we compute PSNR stats (save a few % of cpu) */
     } analyse;
@@ -197,12 +138,11 @@ typedef struct
         int         i_qp_max;       /* max allowed QP value */
         int         i_qp_step;      /* max QP step between frames */
 
-        int         b_cbr;          /* use bitrate instead of CQP */
+        int         b_cbr;          /* constant bitrate */
         int         i_bitrate;
-        float       f_rate_tolerance;
-        int         i_vbv_max_bitrate;
-        int         i_vbv_buffer_size;
-        float       f_vbv_buffer_init;
+        int         i_rc_buffer_size;
+        int         i_rc_init_buffer;
+        int         i_rc_sens;      /* rate control sensitivity */
         float       f_ip_factor;
         float       f_pb_factor;
 
@@ -212,17 +152,12 @@ typedef struct
         int         b_stat_read;    /* Read stat from psz_stat_in and use it */
         char        *psz_stat_in;
 
-        /* 2pass params (same as ffmpeg ones) */
+        /* 2pass params (same than ffmpeg ones) */
         char        *psz_rc_eq;     /* 2 pass rate control equation */
         float       f_qcompress;    /* 0.0 => cbr, 1.0 => constant qp */
         float       f_qblur;        /* temporally blur quants */
-        float       f_complexity_blur; /* temporally blur complexity */
-        x264_zone_t *zones;         /* ratecontrol overrides */
-        int         i_zones;        /* sumber of zone_t's */
-        char        *psz_zones;     /* alternate method of specifying zones */
     } rc;
 
-    int b_aud;                  /* generate access unit delimiters */
 } x264_param_t;
 
 /* x264_param_default:
@@ -278,8 +213,7 @@ enum nal_unit_type_e
     NAL_SLICE_IDR   = 5,    /* ref_idc != 0 */
     NAL_SEI         = 6,    /* ref_idc == 0 */
     NAL_SPS         = 7,
-    NAL_PPS         = 8,
-    NAL_AUD         = 9,
+    NAL_PPS         = 8
     /* ref_idc == 0 for 6,9,10,11,12 */
 };
 enum nal_priority_e
@@ -317,16 +251,12 @@ int x264_nal_decode( x264_nal_t *nal, void *, int );
 /* x264_encoder_open:
  *      create a new encoder handler, all parameters from x264_param_t are copied */
 x264_t *x264_encoder_open   ( x264_param_t * );
-/* x264_encoder_reconfig:
- *      change encoder options while encoding,
- *      analysis-related parameters from x264_param_t are copied */
-int     x264_encoder_reconfig( x264_t *, x264_param_t * );
 /* x264_encoder_headers:
  *      return the SPS and PPS that will be used for the whole stream */
 int     x264_encoder_headers( x264_t *, x264_nal_t **, int * );
 /* x264_encoder_encode:
  *      encode one picture */
-int     x264_encoder_encode ( x264_t *, x264_nal_t **, int *, x264_picture_t *, x264_picture_t * );
+int     x264_encoder_encode ( x264_t *, x264_nal_t **, int *, x264_picture_t * );
 /* x264_encoder_close:
  *      close an encoder handler */
 void    x264_encoder_close  ( x264_t * );

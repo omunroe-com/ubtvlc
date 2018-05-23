@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_playlist.h : Playlist functions
  *****************************************************************************
- * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: vlc_playlist.h 12564 2005-09-15 17:42:24Z zorglub $
+ * Copyright (C) 1999-2004 VideoLAN
+ * $Id: vlc_playlist.h 10830 2005-04-26 14:16:14Z gbazin $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -108,7 +108,6 @@ struct playlist_view_t
 #define VIEW_FIRST_SORTED  4
 #define VIEW_S_AUTHOR 4
 #define VIEW_S_GENRE 5
-#define VIEW_S_ALBUM  6
 
 #define VIEW_LAST_SORTED  10
 
@@ -123,7 +122,7 @@ typedef enum { PLAYLIST_STOPPED,PLAYLIST_RUNNING,PLAYLIST_PAUSED } playlist_stat
 struct services_discovery_t
 {
     VLC_COMMON_MEMBERS
-    char *psz_module;
+    const char *psz_module;
 
     module_t *p_module;
 
@@ -233,7 +232,6 @@ struct playlist_add_t
 #define SORT_RANDOM 5
 #define SORT_DURATION 6
 #define SORT_TITLE_NUMERIC 7
-#define SORT_ALBUM 8
 
 #define ORDER_NORMAL 0
 #define ORDER_REVERSE 1
@@ -263,7 +261,6 @@ VLC_EXPORT( int,  playlist_Clear, ( playlist_t * ) );
 VLC_EXPORT( int,  playlist_LockClear, ( playlist_t * ) );
 
 VLC_EXPORT( int, playlist_PreparseEnqueue, (playlist_t *, input_item_t *) );
-VLC_EXPORT( int, playlist_PreparseEnqueueItem, (playlist_t *, playlist_item_t *) );
 
 /* Services discovery */
 
@@ -301,7 +298,6 @@ VLC_EXPORT( playlist_item_t *, playlist_NodeCreate, ( playlist_t *,int,char *, p
 VLC_EXPORT( int, playlist_NodeAppend, (playlist_t *,int,playlist_item_t*,playlist_item_t *) );
 VLC_EXPORT( int, playlist_NodeInsert, (playlist_t *,int,playlist_item_t*,playlist_item_t *, int) );
 VLC_EXPORT( int, playlist_NodeRemoveItem, (playlist_t *,playlist_item_t*,playlist_item_t *) );
-VLC_EXPORT( int, playlist_NodeRemoveParent, (playlist_t *,playlist_item_t*,playlist_item_t *) );
 VLC_EXPORT( int, playlist_NodeChildrenCount, (playlist_t *,playlist_item_t* ) );
 VLC_EXPORT( playlist_item_t *, playlist_ChildSearchName, (playlist_item_t*, const char* ) );
 VLC_EXPORT( int, playlist_NodeDelete, ( playlist_t *, playlist_item_t *, vlc_bool_t , vlc_bool_t ) );
@@ -353,7 +349,6 @@ VLC_EXPORT( int, playlist_ItemAddOption, (playlist_item_t *, const char *) );
 #define playlist_SortID(p, i) playlist_Sort( p, SORT_ID, i)
 #define playlist_SortTitle(p, i) playlist_Sort( p, SORT_TITLE, i)
 #define playlist_SortAuthor(p, i) playlist_Sort( p, SORT_AUTHOR, i)
-#define playlist_SortAlbum(p, i) playlist_Sort( p, SORT_ALBUM, i)
 #define playlist_SortGroup(p, i) playlist_Sort( p, SORT_GROUP, i)
 VLC_EXPORT( int,  playlist_Sort, ( playlist_t *, int, int) );
 VLC_EXPORT( int,  playlist_Move, ( playlist_t *, int, int ) );

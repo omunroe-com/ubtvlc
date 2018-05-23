@@ -1,8 +1,8 @@
 /*****************************************************************************
  * equalizer.m: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: equalizer.m 11818 2005-07-23 15:08:46Z fkuehne $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: equalizer.m 10946 2005-05-09 18:59:11Z bigben $
  *
  * Authors: Jerome Decoodt <djc@videolan.org>
  *
@@ -153,7 +153,6 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
     }
     [o_window setTitle: _NS("Equalizer")];
 
-	/*
     [o_slider_band1 setFloatValue: 0];
     [o_slider_band2 setFloatValue: 0];
     [o_slider_band3 setFloatValue: 0];
@@ -164,8 +163,7 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
     [o_slider_band8 setFloatValue: 0];
     [o_slider_band9 setFloatValue: 0];
     [o_slider_band10 setFloatValue: 0];
-	*/
-	[self initBandSliders];
+
     [o_ckb_enable setState: NSOffState];
     [o_ckb_2pass setState: NSOffState];
 }
@@ -222,9 +220,7 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
         psz_bands = p_next+1;
     }
     free( psz_bands_init );
-	[self setBandSlidersValues:f_band];
 
-	/*
     [o_slider_band1 setFloatValue: f_band[0]];
     [o_slider_band2 setFloatValue: f_band[1]];
     [o_slider_band3 setFloatValue: f_band[2]];
@@ -235,8 +231,7 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
     [o_slider_band8 setFloatValue: f_band[7]];
     [o_slider_band9 setFloatValue: f_band[8]];
     [o_slider_band10 setFloatValue: f_band[9]];
-	*/
-	
+
 /* Set the the checkboxes */
     if( b_enabled == VLC_TRUE )
         [o_ckb_enable setState:NSOnState];
@@ -301,7 +296,6 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
     var_SetFloat( p_object, "equalizer-preamp", eqz_preset_10b[[sender indexOfSelectedItem]]->f_preamp);
 
     [o_slider_preamp setFloatValue: eqz_preset_10b[[sender indexOfSelectedItem]]->f_preamp];
-	/*
     [o_slider_band1 setFloatValue: eqz_preset_10b[[sender indexOfSelectedItem]]->f_amp[0]];
     [o_slider_band2 setFloatValue: eqz_preset_10b[[sender indexOfSelectedItem]]->f_amp[1]];
     [o_slider_band3 setFloatValue: eqz_preset_10b[[sender indexOfSelectedItem]]->f_amp[2]];
@@ -312,9 +306,7 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
     [o_slider_band8 setFloatValue: eqz_preset_10b[[sender indexOfSelectedItem]]->f_amp[7]];
     [o_slider_band9 setFloatValue: eqz_preset_10b[[sender indexOfSelectedItem]]->f_amp[8]];
     [o_slider_band10 setFloatValue: eqz_preset_10b[[sender indexOfSelectedItem]]->f_amp[9]];
-	*/
-	[self setBandSlidersValues:(float *)eqz_preset_10b[[sender indexOfSelectedItem]]->f_amp];
-	
+
     vlc_object_release( p_object );
 }
 
@@ -414,9 +406,6 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
                 [o_popup_presets selectItemAtIndex: i];
 
                 [o_slider_preamp setFloatValue: eqz_preset_10b[i]->f_preamp];
-				[self setBandSlidersValues: (float *)eqz_preset_10b[i]->f_amp];
-				
-				/*
                 [o_slider_band1 setFloatValue: eqz_preset_10b[i]->f_amp[0]];
                 [o_slider_band2 setFloatValue: eqz_preset_10b[i]->f_amp[1]];
                 [o_slider_band3 setFloatValue: eqz_preset_10b[i]->f_amp[2]];
@@ -427,8 +416,7 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
                 [o_slider_band8 setFloatValue: eqz_preset_10b[i]->f_amp[7]];
                 [o_slider_band9 setFloatValue: eqz_preset_10b[i]->f_amp[8]];
                 [o_slider_band10 setFloatValue: eqz_preset_10b[i]->f_amp[9]];
-				*/
-				
+
                 if( strcmp( psz_preset, "flat" ) )
                 {
                     char psz_bands[100];
@@ -463,53 +451,6 @@ static vlc_bool_t GetFiltersStatus( intf_thread_t *p_intf,
 
     [self equalizerUpdated];
 
-}
-
-
-- (id)getSliderByIndex:(int)index
-{
-	switch(index)
-	{
-		case 0 : return o_slider_band1;
-		case 1 : return o_slider_band2;
-		case 2 : return o_slider_band3;
-		case 3 : return o_slider_band4;
-		case 4 : return o_slider_band5;
-		case 5 : return o_slider_band6;
-		case 6 : return o_slider_band7;
-		case 7 : return o_slider_band8;
-		case 8 : return o_slider_band9;
-		case 9 : return o_slider_band10;
-		default : return nil;
-	}
-}
-
-- (void)setBandSlidersValues:(float *)values
-{
-	int i = 0;
-	for (i = 0 ; i<= 9 ; i++)
-	{
-		[self setValue:values[i] forSlider:i];
-	}
-}
-
-- (void)initBandSliders
-{
-	int i = 0;
-	for (i = 0 ; i< 9 ; i++)
-	{
-		[self setValue:0.0 forSlider:i];
-	}
-}
-
-- (void)setValue:(float)value forSlider:(int)index
-{
-	id slider = [self getSliderByIndex:index];
-	
-	if (slider != nil)
-	{
-		[slider setFloatValue:value];
-	}
 }
 
 @end

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vcd.c : VCD input module for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2003, 2004, 2005 the VideoLAN team
- * $Id: vcd.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2000, 2003, 2004, 2005 VideoLAN
+ * $Id: vcd.c 11380 2005-06-10 14:20:40Z fkuehne $
  *
  * Authors: Rocky Bernstein <rocky@panix.com>
  *
@@ -92,14 +92,14 @@ int  E_(BlocksPerReadCallback) ( vlc_object_t *p_this, const char *psz_name,
  *****************************************************************************/
 
 vlc_module_begin();
-    set_shortname( N_("(Super) Video CD"));
-    set_description( _("Video CD (VCD 1.0, 1.1, 2.0, SVCD, HQVCD) input") );
     add_usage_hint( N_("vcdx://[device-or-file][@{P,S,T}num]") );
+    set_description( _("Video CD (VCD 1.0, 1.1, 2.0, SVCD, HQVCD) input") );
+    set_capability( "access2", 55 /* slightly lower than vcd */ );
+    set_shortname( N_("(Super) Video CD"));
+    set_callbacks( VCDOpen, VCDClose );
     add_shortcut( "vcdx" );
     set_category( CAT_INPUT );
     set_subcategory( SUBCAT_INPUT_ACCESS );
-    set_capability( "access2", 55 /* slightly lower than vcd */ );
-    set_callbacks( VCDOpen, VCDClose );
 
     /* Configuration options */
     add_integer ( MODULE_STRING "-debug", 0, NULL,

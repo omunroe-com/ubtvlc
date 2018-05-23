@@ -4,7 +4,7 @@
 #define CONFIGURE_LINE "eMbedded Visual C++"
 
 /* Copyright string */
-#define COPYRIGHT_MESSAGE "VLC media player - version 0.8.4-svn Janus - (c) 1996-2004 VideoLAN"
+#define COPYRIGHT_MESSAGE "VLC media player - version 0.8.2 Janus - (c) 1996-2004 VideoLAN"
 
 /* Maximum supported data alignment */
 #define ATTRIBUTE_ALIGNED_MAX 16
@@ -61,10 +61,10 @@
 #define LIBEXT ".dll"
 
 /* String suffix for module functions */
-#define MODULE_SUFFIX "__0_8_4_svn"
+#define MODULE_SUFFIX "__0_8_2"
 
 /* Symbol suffix for module functions */
-#define MODULE_SYMBOL 0_8_4_svn
+#define MODULE_SYMBOL 0_8_2
 
 /* Name of package */
 #define PACKAGE "vlc"
@@ -76,22 +76,22 @@
 #define PACKAGE_NAME "vlc"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "vlc 0.8.4-svn"
+#define PACKAGE_STRING "vlc 0.8.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "vlc"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.8.4-svn"
+#define PACKAGE_VERSION "0.8.2"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.8.4-svn"
+#define VERSION "0.8.2"
 
 /* Simple version string */
-#define VERSION_MESSAGE "0.8.4-svn Janus"
+#define VERSION_MESSAGE "0.8.2 Janus"
 
 /* Define as `__inline' if that's what the C compiler calls it, or to nothing
    if it is not supported. */

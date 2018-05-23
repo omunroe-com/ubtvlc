@@ -1,8 +1,8 @@
 /*****************************************************************************
  * prefs.h: MacOS X module for vlc
  *****************************************************************************
- * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: prefs.h 12274 2005-08-19 16:16:34Z hartman $
+ * Copyright (C) 2002-2005 VideoLAN
+ * $Id: prefs.h 11420 2005-06-14 21:32:56Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net> 
  *
@@ -24,8 +24,6 @@
 @interface VLCTreeItem : NSObject
 {
     NSString *o_name;
-    NSString *o_title;
-    NSString *o_help;
     int i_object_id;
     VLCTreeItem *o_parent;
     NSMutableArray *o_children;
@@ -38,8 +36,6 @@
 - (VLCTreeItem *)childAtIndex:(int)i_index;
 - (int)getObjectID;
 - (NSString *)getName;
-- (NSString *)getTitle;
-- (NSString *)getHelp;
 - (BOOL)hasPrefs:(NSString *)o_module_name;
 - (NSView *)showView:(NSScrollView *)o_prefs_view advancedView:(vlc_bool_t) b_advanced;
 - (void)applyChanges;
@@ -59,7 +55,6 @@
     NSMutableDictionary *o_save_prefs;
     
     IBOutlet id o_prefs_window;
-    IBOutlet id o_title;
     IBOutlet id o_tree;
     IBOutlet id o_prefs_view;
     IBOutlet id o_save_btn;
@@ -71,7 +66,6 @@
 + (VLCPrefs *)sharedInstance;
 
 - (void)initStrings;
-- (void)setTitle: (NSString *) o_title_name;
 - (void)showPrefs;
 - (IBAction)savePrefs: (id)sender;
 - (IBAction)closePrefs: (id)sender;

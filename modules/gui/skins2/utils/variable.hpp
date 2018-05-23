@@ -1,8 +1,8 @@
 /*****************************************************************************
  * variable.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: variable.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: variable.hpp 9641 2004-12-22 13:06:43Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

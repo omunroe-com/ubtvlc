@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cvd.c : CVD Subtitle decoder
  *****************************************************************************
- * Copyright (C) 2003, 2004 the VideoLAN team
- * $Id: cvdsub.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2003, 2004 VideoLAN
+ * $Id: cvdsub.c 10101 2005-03-02 16:47:31Z robux4 $
  *
  * Authors: Rocky Bernstein
  *          Gildas Bazin <gbazin@videolan.org>

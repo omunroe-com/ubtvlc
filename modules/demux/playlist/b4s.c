@@ -1,8 +1,8 @@
 /*****************************************************************************
  * b4s.c : B4S playlist format import
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
- * $Id: b4s.c 12570 2005-09-15 23:53:41Z sigmunau $
+ * Copyright (C) 2005 VideoLAN
+ * $Id: b4s.c 11539 2005-06-25 13:31:08Z dionoea $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
@@ -25,7 +25,6 @@
  * Preamble
  *****************************************************************************/
 #include <stdlib.h>                                      /* malloc(), free() */
-#include <ctype.h>                                              /* isspace() */
 
 #include <vlc/vlc.h>
 #include <vlc/input.h>
@@ -49,7 +48,7 @@ struct demux_sys_t
  *****************************************************************************/
 static int Demux( demux_t *p_demux);
 static int Control( demux_t *p_demux, int i_query, va_list args );
-static char *GetNextToken(char *psz_cur_string);
+static char *get_next_token(char *cur_string);
 static int IsWhitespace( char *psz_string );
 static void ShoutcastAdd( playlist_t *p_playlist, playlist_item_t* p_genre,
                           playlist_item_t *p_bitrate, playlist_item_t *p_item,
@@ -153,7 +152,7 @@ static int Demux( demux_t *p_demux )
         p_bitrate = playlist_NodeCreate( p_playlist, p_current->pp_parents[0]->i_view, "Bitrate", p_current );
         playlist_CopyParents( p_current, p_bitrate );
     }
-
+    
     p_xml = p_sys->p_xml = xml_Create( p_demux );
     if( !p_xml ) return -1;
 
@@ -245,7 +244,7 @@ static int Demux( demux_t *p_demux )
                 if( psz_elname ) free( psz_elname );
                 psz_elname = xml_ReaderName( p_xml_reader );
                 if( !psz_elname ) return -1;
-
+                
 
                 // Read the attributes
                 while( xml_ReaderNextAttr( p_xml_reader ) == VLC_SUCCESS )
@@ -358,41 +357,25 @@ static int Demux( demux_t *p_demux )
                     /* We need to declare the parents of the node as the
                      *                  * same of the parent's ones */
                     playlist_CopyParents( p_current, p_item );
-
+                    
                     vlc_input_item_CopyOptions( &p_current->input,
                                                 &p_item->input );
                     if( b_shoutcast )
-                    {
-                        char *psz_genreToken;
-                        char *psz_otherToken;
-                        int i = 0;
+					{
+						char *psz_genreToken;
+						char *psz_otherToken;
 
-                        psz_genreToken = psz_genre;
 
-                        /* split up the combined genre string form
-                        shoutcast and add the individual genres */
-                        while ( psz_genreToken &&
-                          ( psz_otherToken = GetNextToken(psz_genreToken )))
-                        {
-                            if( strlen(psz_genreToken)>2 )
-                            /* We dont want genres below 2 letters,
-                            this gets rid of alot of junk*/
-                            {
-                                /* lowercase everything */
-                                for( i=0; psz_genreToken[i]!=0; i++ )
-                                    psz_genreToken[i] =
-                                        tolower(psz_genreToken[i]);
-                /* Make first letter uppercase, purely cosmetical */
-                                psz_genreToken[0] =
-                                    toupper( psz_genreToken[0] );
-                                ShoutcastAdd( p_playlist, p_genre,
-                                              p_bitrate, p_item,
-                                              psz_genreToken, psz_bitrate );
+						psz_genreToken = psz_genre;
 
-                                psz_genreToken = psz_otherToken;
-                            }
-                        }
-                    }
+						while ( psz_genreToken && ( psz_otherToken = get_next_token(psz_genreToken )))
+						{
+							ShoutcastAdd( p_playlist, p_genre, p_bitrate, p_item,
+                                      psz_genreToken, psz_bitrate );
+
+							psz_genreToken = psz_otherToken;
+						}
+					}
 
 #define FREE(a) if( a ) free( a ); a = NULL;
                     FREE( psz_name );
@@ -442,25 +425,12 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
     return VLC_EGENERIC;
 }
 
-/**
- * Get a in-string pointer to the start of the next token from a
- * string terminating the pointer returned by a previous call.
- *
- * \param psz_cur_string The string to search for the token from
- * \return a pointer to withing psz_cur_string, or NULL if no token
- * was found
- * \note The returned pointer may contain more than one
- * token, Run GetNextToken once more to terminate the token properly
- */
-static char *GetNextToken(char *psz_cur_string) {
-    while (*psz_cur_string && !isspace(*psz_cur_string))
-        psz_cur_string++;
-    if (!*psz_cur_string)
-        return NULL;
-    *psz_cur_string++ = '\0';
-    while (*psz_cur_string && isspace(*psz_cur_string))
-        psz_cur_string++;
-    return psz_cur_string;
+static char *get_next_token(char *cur_string) {
+        while (*cur_string && !isspace(*cur_string)) cur_string++;
+        if (!*cur_string) return NULL;
+        *cur_string++ = '\0';
+        while (*cur_string && isspace(*cur_string)) cur_string++;
+        return cur_string;
 }
 
 static int IsWhitespace( char *psz_string )

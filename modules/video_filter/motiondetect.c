@@ -1,8 +1,8 @@
 /*****************************************************************************
  * motiondetect.c : Motion detect video effect plugin for vlc
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
- * $Id: motiondetect.c 11924 2005-07-31 00:07:48Z dionoea $
+ * Copyright (C) 2005 VideoLAN
+ * $Id: $
  *
  * Authors: Jérôme Decoodt <djc@videolan.org>
  *
@@ -59,8 +59,9 @@ static int  SendEvents   ( vlc_object_t *, char const *,
 vlc_module_begin();
     set_description( _("Motion detect video filter") );
     set_shortname( N_( "Motion detect" ));
+/*  Leave this commented as long as the VLM intf in wx isn't available
     set_category( CAT_VIDEO );
-    set_subcategory( SUBCAT_VIDEO_VFILTER );
+    set_subcategory( SUBCAT_VIDEO_VFILTER );*/
     set_capability( "video filter", 0 );
 
     add_integer( "motiondetect-history", 1, NULL, HISTORY_TEXT,

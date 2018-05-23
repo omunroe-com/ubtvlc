@@ -1,12 +1,12 @@
 /*****************************************************************************
  * iso_lang.h: languages codes and abbreviations
  *****************************************************************************
- * Copyright (C) 1998-2004 the VideoLAN team
- * $Id: iso-639_def.h 12111 2005-08-10 19:29:49Z jpsaman $
+ * Copyright (C) 1998-2004 VideoLAN
+ * $Id: iso-639_def.h 10885 2005-05-03 11:07:20Z courmisch $
  *
  * This is used in iso_lang.cpp and is taken from the GNU glibc 2.2.5
  * tarball. It has been partially completed with native language names.
- * Authors: Stï¿½hane Borel <stef@via.ecp.fr>
+ * Authors: Stéphane Borel <stef@via.ecp.fr>
  *          Arnaud de Bossoreille de Ribou <bozo@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -29,9 +29,9 @@
  * If you find something missing or wrong contact <bug-glibc@gnu.org> */
 
 /* Some spellings were converted to pure ASCII:
- *  Provenï¿½l -> Provencal
- *  Volapk -> Volapuk
- *  Bokmï¿½ -> Bokmaal */
+ *  Provençal -> Provencal
+ *  Volapük -> Volapuk
+ *  Bokmål -> Bokmaal */
 
 static const iso639_lang_t p_languages[] =
 {
@@ -140,7 +140,6 @@ static const iso639_lang_t p_languages[] =
     { N_( "Occitan (post 1500); Provencal" ), "", "oc", "oci", "oci" },
     { N_( "Oriya" ),            "",            "or", "ori", "ori" },
     { N_( "Oromo" ),            "",            "om", "orm", "orm" },
-    { N_( "On Screen Display" ),"On Screen Display", "od", "osd", "osd" },
     { N_( "Ossetian; Ossetic" ), "",           "os", "oss", "oss" },
     { N_( "Panjabi" ),          "",            "pa", "pan", "pan" },
     { N_( "Persian" ),          "",            "fa", "fas", "per" },

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * live.cpp : live.com support.
  *****************************************************************************
- * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: livedotcom.cpp 12594 2005-09-18 16:20:24Z gbazin $
+ * Copyright (C) 2003-2004 VideoLAN
+ * $Id: livedotcom.cpp 11522 2005-06-25 09:46:50Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -174,11 +174,6 @@ static void StreamRead( void *, unsigned int, unsigned int,
 static void StreamClose( void * );
 static void TaskInterrupt( void * );
 
-#if LIVEMEDIA_LIBRARY_VERSION_INT >= 1117756800
-static unsigned char* parseH264ConfigStr( char const* configStr,
-                                          unsigned int& configSize );
-#endif
-
 /*****************************************************************************
  * DemuxOpen:
  *****************************************************************************/
@@ -203,8 +198,8 @@ static int  Open ( vlc_object_t *p_this )
            v, o, s fields are mandatory and in this order */
         if( stream_Peek( p_demux->s, &p_peek, 7 ) < 7 ) return VLC_EGENERIC;
 
-        if( memcmp( (char*)p_peek, "v=0\r\n", 5 ) &&
-            memcmp( (char*)p_peek, "v=0\n", 4 ) &&
+        if( strncmp( (char*)p_peek, "v=0\r\n", 5 ) &&
+            strncmp( (char*)p_peek, "v=0\n", 4 ) &&
             ( p_peek[0] < 'a' || p_peek[0] > 'z' || p_peek[1] != '=' ) )
         {
             return VLC_EGENERIC;
@@ -233,7 +228,7 @@ static int  Open ( vlc_object_t *p_this )
     p_sys->b_no_data = VLC_TRUE;
     p_sys->i_no_data_ti = 0;
     p_sys->b_multicast = VLC_FALSE;
-    p_sys->psz_path = strdup(p_demux->psz_path);
+    p_sys->psz_path = p_demux->psz_path;
 
 
     if( ( p_sys->scheduler = BasicTaskScheduler::createNew() ) == NULL )
@@ -247,10 +242,12 @@ static int  Open ( vlc_object_t *p_this )
         goto error;
     }
 
-    if( strcasecmp( p_demux->psz_access, "sdp" ) )
+    if( strcasecmp( p_demux->psz_access, "sdp" ) && 
+	vlc_UrlIsNotEncoded( p_sys->psz_path ) )
     {
-        char *p = p_sys->psz_path;
-        while( (p = strchr( p, ' ' )) != NULL ) *p = '+';
+        p_sys->psz_path = vlc_UrlEncode( p_sys->psz_path );
+        if( p_sys->psz_path == NULL )
+            goto error;
     }
 
     if( p_demux->s == NULL && !strcasecmp( p_demux->psz_access, "rtsp" ) )
@@ -269,7 +266,8 @@ static int  Open ( vlc_object_t *p_this )
         sprintf( psz_url, "rtsp://%s", p_sys->psz_path );
 
         psz_options = p_sys->rtsp->sendOptionsCmd( psz_url );
-        if( psz_options ) delete [] psz_options;
+        if( psz_options )
+            delete [] psz_options;
 
         p_sdp = (uint8_t*)p_sys->rtsp->describeURL( psz_url,
                               NULL, var_CreateGetBool( p_demux, "rtsp-kasenna" ) );
@@ -285,7 +283,7 @@ static int  Open ( vlc_object_t *p_this )
         /* malloc-ated copy */
         p_sys->p_sdp = strdup( (char*)p_sdp );
         delete[] p_sdp;
-        msg_Dbg( p_demux, "sdp=%s\n", p_sys->p_sdp );
+        fprintf( stderr, "sdp=%s\n", p_sys->p_sdp );
     }
     else if( p_demux->s == NULL && !strcasecmp( p_demux->psz_access, "sdp" ) )
     {
@@ -390,7 +388,6 @@ static int  Open ( vlc_object_t *p_this )
         if( !p_sys->rtsp->playMediaSession( *p_sys->ms ) )
         {
             msg_Err( p_demux, "PLAY failed %s", p_sys->env->getResultMsg() );
-            delete iter;
             goto error;
         }
     }
@@ -401,7 +398,10 @@ static int  Open ( vlc_object_t *p_this )
     {
         live_track_t *tk;
 
-        if( sub->readSource() == NULL ) continue;
+        if( sub->readSource() == NULL )
+        {
+            continue;
+        }
 
         tk = (live_track_t*)malloc( sizeof( live_track_t ) );
         tk->p_demux = p_demux;
@@ -421,7 +421,7 @@ static int  Open ( vlc_object_t *p_this )
         {
             es_format_Init( &tk->fmt, AUDIO_ES, VLC_FOURCC('u','n','d','f') );
             tk->fmt.audio.i_channels = sub->numChannels();
-            tk->fmt.audio.i_rate = sub->rtpTimestampFrequency();
+            tk->fmt.audio.i_rate = sub->rtpSource()->timestampFrequency();
 
             if( !strcmp( sub->codecName(), "MPA" ) ||
                 !strcmp( sub->codecName(), "MPA-ROBUST" ) ||
@@ -452,14 +452,6 @@ static int  Open ( vlc_object_t *p_this )
             else if( !strcmp( sub->codecName(), "PCMA" ) )
             {
                 tk->fmt.i_codec = VLC_FOURCC( 'a', 'l', 'a', 'w' );
-            }
-            else if( !strcmp( sub->codecName(), "AMR" ) )
-            {
-                tk->fmt.i_codec = VLC_FOURCC( 's', 'a', 'm', 'r' );
-            }
-            else if( !strcmp( sub->codecName(), "AMR-WB" ) )
-            {
-                tk->fmt.i_codec = VLC_FOURCC( 's', 'a', 'w', 'b' );
             }
             else if( !strcmp( sub->codecName(), "MP4A-LATM" ) )
             {
@@ -517,28 +509,6 @@ static int  Open ( vlc_object_t *p_this )
             else if( !strcmp( sub->codecName(), "H261" ) )
             {
                 tk->fmt.i_codec = VLC_FOURCC( 'H', '2', '6', '1' );
-            }
-            else if( !strcmp( sub->codecName(), "H264" ) )
-            {
-#if LIVEMEDIA_LIBRARY_VERSION_INT >= 1117756800
-                unsigned int i_extra = 0;
-                uint8_t      *p_extra = NULL;
-#endif
-                tk->fmt.i_codec = VLC_FOURCC( 'H', '2', '6', '4' );
-                tk->fmt.b_packetized = VLC_FALSE;
-
-                /* XXX not the right minimal version I fear */
-#if LIVEMEDIA_LIBRARY_VERSION_INT >= 1117756800
-                if((p_extra=parseH264ConfigStr( sub->fmtp_spropparametersets(),
-                                                i_extra ) ) )
-                {
-                    tk->fmt.i_extra = i_extra;
-                    tk->fmt.p_extra = malloc( i_extra );
-                    memcpy( tk->fmt.p_extra, p_extra, i_extra );
-
-                    delete[] p_extra;
-                }
-#endif
             }
             else if( !strcmp( sub->codecName(), "JPEG" ) )
             {
@@ -643,13 +613,33 @@ static int  Open ( vlc_object_t *p_this )
     return VLC_SUCCESS;
 
 error:
-    if( p_sys->p_out_asf ) stream_DemuxDelete( p_sys->p_out_asf );
-    if( p_sys->ms ) Medium::close( p_sys->ms );
-    if( p_sys->rtsp ) Medium::close( p_sys->rtsp );
-    if( p_sys->env ) RECLAIM_ENV(p_sys->env);
-    if( p_sys->scheduler ) delete p_sys->scheduler;
-    if( p_sys->p_sdp ) free( p_sys->p_sdp );
-    if( p_sys->psz_path ) free( p_sys->psz_path );
+    if( p_sys->p_out_asf )
+    {
+        stream_DemuxDelete( p_sys->p_out_asf );
+    }
+    if( p_sys->ms )
+    {
+        Medium::close( p_sys->ms );
+    }
+    if( p_sys->rtsp )
+    {
+        Medium::close( p_sys->rtsp );
+    }
+    if( p_sys->env )
+    {
+        RECLAIM_ENV(p_sys->env);
+    }
+    if( p_sys->scheduler )
+    {
+        delete p_sys->scheduler;
+    }
+    if( p_sys->p_sdp )
+    {
+        free( p_sys->p_sdp );
+    }
+    if( ( p_sys->psz_path != NULL )
+     && ( p_sys->psz_path != p_demux->psz_path ) )
+        free( p_sys->psz_path );
 
     free( p_sys );
     return VLC_EGENERIC;
@@ -688,7 +678,8 @@ static void Close( vlc_object_t *p_this )
     if( p_sys->env ) RECLAIM_ENV(p_sys->env);
     if( p_sys->scheduler ) delete p_sys->scheduler;
     if( p_sys->p_sdp ) free( p_sys->p_sdp );
-    if( p_sys->psz_path ) free( p_sys->psz_path );
+    if( p_sys->psz_path != p_demux->psz_path )
+        free( p_sys->psz_path );
     free( p_sys );
 }
 
@@ -761,7 +752,7 @@ static int Demux( demux_t *p_demux )
         live_track_t *tk = p_sys->track[i];
 
         if( !tk->b_muxed && !tk->b_rtcp_sync &&
-            tk->rtpSource && tk->rtpSource->hasBeenSynchronizedUsingRTCP() )
+            tk->rtpSource->hasBeenSynchronizedUsingRTCP() )
         {
             msg_Dbg( p_demux, "tk->rtpSource->hasBeenSynchronizedUsingRTCP()" );
 
@@ -857,13 +848,16 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
 
             if( p_sys->rtsp && p_sys->i_length > 0 )
             {
+                MediaSubsessionIterator *iter =
+                    new MediaSubsessionIterator( *p_sys->ms );
+                MediaSubsession *sub;
                 int i;
 
-                if( !p_sys->rtsp->playMediaSession( *p_sys->ms, time ) )
+                while( ( sub = iter->next() ) != NULL )
                 {
-                    msg_Err( p_demux, "PLAY failed %s", p_sys->env->getResultMsg() );
-                    return VLC_EGENERIC;
+                    p_sys->rtsp->playMediaSubsession( *sub, time );
                 }
+                delete iter;
                 p_sys->i_start = (mtime_t)(f * (double)p_sys->i_length);
                 p_sys->i_pcr_start = 0;
                 p_sys->i_pcr       = 0;
@@ -900,6 +894,8 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
 
         case DEMUX_SET_PAUSE_STATE:
             double d_npt;
+            MediaSubsessionIterator *iter;
+            MediaSubsession *sub;
 
             d_npt = ( (double)( p_sys->i_pcr - p_sys->i_pcr_start +
                                 p_sys->i_start ) ) / 1000000.00;
@@ -908,13 +904,18 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
             if( p_sys->rtsp == NULL )
                 return VLC_EGENERIC;
 
-            if( ( b_bool && !p_sys->rtsp->pauseMediaSession( *p_sys->ms ) ) ||
-                    ( !b_bool && !p_sys->rtsp->playMediaSession( *p_sys->ms,
-                      d_npt > 0 ? d_npt : -1 ) ) )
+            iter = new MediaSubsessionIterator( *p_sys->ms );
+            while( ( sub = iter->next() ) != NULL )
             {
-                    msg_Err( p_demux, "PLAY or PAUSE failed %s", p_sys->env->getResultMsg() );
+                if( ( b_bool && !p_sys->rtsp->pauseMediaSubsession( *sub ) ) ||
+                    ( !b_bool && !p_sys->rtsp->playMediaSubsession( *sub,
+                      d_npt > 0 ? d_npt : -1 ) ) )
+                {
+                    delete iter;
                     return VLC_EGENERIC;
+                }
             }
+            delete iter;
 #if 0
             /* reset PCR and PCR start, mmh won't work well for multi-stream I fear */
             for( i = 0; i < p_sys->i_track; i++ )
@@ -1139,7 +1140,7 @@ static void StreamRead( void *p_private, unsigned int i_size,
         msg_Warn( p_demux, "buffer overflow" );
     }
     /* FIXME could i_size be > buffer size ? */
-    if( tk->fmt.i_codec == VLC_FOURCC('H','2','6','1') )
+    if( tk->fmt.i_codec == VLC_FOURCC('h','2','6','1') )
     {
 #if LIVEMEDIA_LIBRARY_VERSION_INT >= 1081468800
         H261VideoRTPSource *h261Source = (H261VideoRTPSource*)tk->rtpSource;
@@ -1151,22 +1152,6 @@ static void StreamRead( void *p_private, unsigned int i_size,
         p_block = block_New( p_demux, i_size + 4 );
         memcpy( p_block->p_buffer, &header, 4 );
         memcpy( p_block->p_buffer + 4, tk->p_buffer, i_size );
-
-        if( tk->rtpSource->curPacketMarkerBit() )
-            p_block->i_flags |= BLOCK_FLAG_END_OF_FRAME;
-    }
-    else if( tk->fmt.i_codec == VLC_FOURCC('H','2','6','4') )
-    {
-        if( (tk->p_buffer[0] & 0x1f) >= 24 )
-            msg_Warn( p_demux, "unsupported NAL type for H264" );
-
-        /* Normal NAL type */
-        p_block = block_New( p_demux, i_size + 4 );
-        p_block->p_buffer[0] = 0x00;
-        p_block->p_buffer[1] = 0x00;
-        p_block->p_buffer[2] = 0x00;
-        p_block->p_buffer[3] = 0x01;
-        memcpy( &p_block->p_buffer[4], tk->p_buffer, i_size );
     }
     else if( tk->b_asf )
     {
@@ -1180,7 +1165,11 @@ static void StreamRead( void *p_private, unsigned int i_size,
         p_block = block_New( p_demux, i_size );
         memcpy( p_block->p_buffer, tk->p_buffer, i_size );
     }
-
+    if( tk->fmt.i_codec == VLC_FOURCC('h','2','6','1') &&
+        tk->rtpSource->curPacketMarkerBit() )
+    {
+        p_block->i_flags |= BLOCK_FLAG_END_OF_FRAME;
+    }
     //p_block->i_rate = p_input->stream.control.i_rate;
 
     if( i_pts != tk->i_pts && !tk->b_muxed )
@@ -1240,6 +1229,8 @@ static void TaskInterrupt( void *p_private )
 {
     demux_t *p_demux = (demux_t*)p_private;
 
+    fprintf( stderr, "TaskInterrupt\n" );
+
     p_demux->p_sys->i_no_data_ti++;
 
     /* Avoid lock */
@@ -1296,44 +1287,6 @@ static int ParseASF( demux_t *p_demux )
     free( psz_asf );
     return VLC_SUCCESS;
 }
-
-#if LIVEMEDIA_LIBRARY_VERSION_INT >= 1117756800
-static unsigned char* parseH264ConfigStr( char const* configStr,
-                                          unsigned int& configSize )
-{
-    char *dup, *psz;
-
-    if( configSize )
-    configSize = 0;
-
-    if( configStr == NULL || *configStr == '\0' )
-        return NULL;
-
-    psz = dup = strdup( configStr );
-
-    unsigned char *cfg = new unsigned char[5 * strlen(psz)];
-    for( ;; )
-    {
-        char *p = strchr( psz, ',' );
-        if( p )
-            *p++ = '\0';
-
-        cfg[configSize++] = 0x00;
-        cfg[configSize++] = 0x00;
-        cfg[configSize++] = 0x00;
-        cfg[configSize++] = 0x01;
-        configSize += b64_decode( (char*)&cfg[configSize], psz );
-
-        if( p == NULL )
-            break;
-        psz = p;
-    }
-
-    if( dup ) free( dup );
-    return cfg;
-}
-#endif
-
 /*char b64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";*/
 static int b64_decode( char *dest, char *src )
 {

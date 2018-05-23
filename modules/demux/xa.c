@@ -1,8 +1,8 @@
 /*****************************************************************************
  * xa.c : xa file input module for vlc
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
- * $Id: xa.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2005 VideoLAN
+ * $Id: xa.c 10586 2005-04-07 09:39:25Z courmisch $
  *
  * Authors: Remi Denis-Courmont <rem # videolan.org>
  *
@@ -65,7 +65,7 @@ struct demux_sys_t
 
 typedef struct xa_header_t
 {
-    char     xa_id[4];
+    uint8_t  xa_id[4];
     uint32_t iSize;
 
     uint16_t wFormatTag;

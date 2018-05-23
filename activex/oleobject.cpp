@@ -1,7 +1,7 @@
 /*****************************************************************************
  * oleobject.cpp: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
+ * Copyright (C) 2005 VideoLAN
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -37,9 +37,8 @@ _p_clientsite(NULL), _p_instance(p_instance)
 
 VLCOleObject::~VLCOleObject()
 {
-    SetClientSite(NULL);
-    Close(OLECLOSE_NOSAVE);
     _p_advise_holder->Release();
+    SetClientSite(NULL); 
 };
 
 STDMETHODIMP VLCOleObject::Advise(IAdviseSink *pAdvSink, DWORD *dwConnection)
@@ -49,24 +48,22 @@ STDMETHODIMP VLCOleObject::Advise(IAdviseSink *pAdvSink, DWORD *dwConnection)
 
 STDMETHODIMP VLCOleObject::Close(DWORD dwSaveOption)
 {
-    if( _p_instance->isRunning() )
-    {
-        _p_advise_holder->SendOnClose();
-        return _p_instance->onClose(dwSaveOption);
-    }
-    return S_OK;
+    _p_advise_holder->SendOnClose();
+    OleFlushClipboard();
+    return _p_instance->onClose(dwSaveOption);
 };
 
 STDMETHODIMP VLCOleObject::DoVerb(LONG iVerb, LPMSG lpMsg, LPOLECLIENTSITE pActiveSite,
                                     LONG lIndex, HWND hwndParent, LPCRECT lprcPosRect)
 {
+    if( 0 != lIndex )
+        return DV_E_LINDEX;
+
     switch( iVerb )
     {
         case OLEIVERB_PRIMARY:
         case OLEIVERB_SHOW:
         case OLEIVERB_OPEN:
-            // force control to be visible when activating in place
-            _p_instance->setVisible(TRUE);
         case OLEIVERB_INPLACEACTIVATE:
             return doInPlaceActivate(lpMsg, pActiveSite, hwndParent, lprcPosRect);
 
@@ -81,12 +78,7 @@ STDMETHODIMP VLCOleObject::DoVerb(LONG iVerb, LPMSG lpMsg, LPOLECLIENTSITE pActi
             return S_OK;
 
         default:
-            if( iVerb > 0 ) {
-                _p_instance->setVisible(TRUE);
-                doInPlaceActivate(lpMsg, pActiveSite, hwndParent, lprcPosRect);
-                return OLEOBJ_S_INVALIDVERB;
-            }
-            return E_NOTIMPL;
+            return OLEOBJ_S_INVALIDVERB;
     }
 };
 
@@ -102,8 +94,8 @@ HRESULT VLCOleObject::doInPlaceActivate(LPMSG lpMsg, LPOLECLIENTSITE pActiveSite
         if( _p_instance->isInPlaceActive() )
         {
             // just attempt to show object then
-            if( _p_instance->getVisible() )
-                pActiveSite->ShowObject();
+            pActiveSite->ShowObject();
+            _p_instance->setVisible(TRUE);
             return S_OK;
         }
 
@@ -112,15 +104,12 @@ HRESULT VLCOleObject::doInPlaceActivate(LPMSG lpMsg, LPOLECLIENTSITE pActiveSite
         if( SUCCEEDED(pActiveSite->QueryInterface(IID_IOleInPlaceSite, (void**)&p_inPlaceSite)) )
         {
             if( S_OK != p_inPlaceSite->CanInPlaceActivate() )
-            {
                 return OLEOBJ_S_CANNOT_DOVERB_NOW;
-            }
 
             LPOLEINPLACEFRAME p_inPlaceFrame;
             LPOLEINPLACEUIWINDOW p_inPlaceUIWindow;
             OLEINPLACEFRAMEINFO oleFrameInfo;
 
-            oleFrameInfo.cb = sizeof(OLEINPLACEFRAMEINFO);
             if( SUCCEEDED(p_inPlaceSite->GetWindowContext(&p_inPlaceFrame, &p_inPlaceUIWindow, &posRect, &clipRect, &oleFrameInfo)) )
             {
                 lprcPosRect = &posRect;
@@ -139,9 +128,7 @@ HRESULT VLCOleObject::doInPlaceActivate(LPMSG lpMsg, LPOLECLIENTSITE pActiveSite
             }
         }
         else if( NULL == hwndParent )
-        {
             return OLEOBJ_S_INVALIDHWND;
-        }
 
         if( FAILED(_p_instance->onActivateInPlace(lpMsg, hwndParent, lprcPosRect, lprcClipRect)) )
         {
@@ -216,8 +203,7 @@ STDMETHODIMP VLCOleObject::EnumAdvise(IEnumSTATDATA **ppEnumAdvise)
 
 STDMETHODIMP VLCOleObject::EnumVerbs(IEnumOleVerb **ppEnumOleVerb)
 {
-    return OleRegEnumVerbs(_p_instance->getClassID(),
-        ppEnumOleVerb);
+    return OLE_S_USEREG;
 };
 
 STDMETHODIMP VLCOleObject::GetClientSite(LPOLECLIENTSITE *ppClientSite)
@@ -234,7 +220,7 @@ STDMETHODIMP VLCOleObject::GetClientSite(LPOLECLIENTSITE *ppClientSite)
 
 STDMETHODIMP VLCOleObject::GetClipboardData(DWORD dwReserved, LPDATAOBJECT *ppDataObject)
 {
-    return _p_instance->pUnkOuter->QueryInterface(IID_IDataObject, (void **)ppDataObject);
+    return E_NOTIMPL;
 };
 
 STDMETHODIMP VLCOleObject::GetExtent(DWORD dwDrawAspect, SIZEL *pSizel)
@@ -254,7 +240,7 @@ STDMETHODIMP VLCOleObject::GetExtent(DWORD dwDrawAspect, SIZEL *pSizel)
 
 STDMETHODIMP VLCOleObject::GetMiscStatus(DWORD dwAspect, DWORD *pdwStatus)
 {
-    if( NULL == pdwStatus )
+    if( NULL != pdwStatus )
         return E_POINTER;
 
     switch( dwAspect )
@@ -286,14 +272,13 @@ STDMETHODIMP VLCOleObject::GetUserClassID(LPCLSID pClsid)
     if( NULL == pClsid )
         return E_POINTER;
  
-    *pClsid = _p_instance->getClassID(); 
+    pClsid = const_cast<LPCLSID>(&_p_instance->getClassID()); 
     return S_OK;
 };
 
 STDMETHODIMP VLCOleObject::GetUserType(DWORD dwFormOfType, LPOLESTR *pszUserType)
 {
-    return OleRegGetUserType(_p_instance->getClassID(),
-        dwFormOfType, pszUserType);
+    return OLE_S_USEREG;
 };
 
 STDMETHODIMP VLCOleObject::InitFromData(LPDATAOBJECT pDataObject, BOOL fCreation, DWORD dwReserved)
@@ -309,15 +294,26 @@ STDMETHODIMP VLCOleObject::IsUpToDate(void)
 STDMETHODIMP VLCOleObject::SetClientSite(LPOLECLIENTSITE pClientSite)
 {
     if( NULL != _p_clientsite )
-        _p_clientsite->Release();
-
-    _p_clientsite = pClientSite;
-
+        _p_clientsite->Release(); 
+ 
     if( NULL != pClientSite )
     {
         pClientSite->AddRef();
-        _p_instance->onAmbientChanged(pClientSite, DISPID_UNKNOWN);
+
+        /*
+        ** retrieve container ambient properties
+        */
+        VARIANT v;
+        VariantInit(&v);
+        V_VT(&v) = VT_I4;
+        if( SUCCEEDED(GetObjectProperty(pClientSite, DISPID_AMBIENT_CODEPAGE, v)) )
+        {
+            _p_instance->setCodePage(V_I4(&v));
+            VariantClear(&v);
+        }
     }
+    _p_clientsite = pClientSite;
+    _p_instance->onClientSiteChanged(pClientSite);
     return S_OK;
 };
 
@@ -341,18 +337,30 @@ STDMETHODIMP VLCOleObject::SetExtent(DWORD dwDrawAspect, SIZEL *pSizel)
 
             if( SUCCEEDED(_p_clientsite->QueryInterface(IID_IOleInPlaceSite, (void**)&p_inPlaceSite)) )
             {
-                HWND hwnd;
+                LPOLECONTROLSITE p_controlSite;
+                RECT posRect = _p_instance->getPosRect();
 
-                if( SUCCEEDED(p_inPlaceSite->GetWindow(&hwnd)) )
+                if( SUCCEEDED(_p_clientsite->QueryInterface(IID_IOleControlSite, (void**)&p_controlSite)) )
                 {
-                    // use HIMETRIC to pixel transform 
-                    RECT posRect = _p_instance->getPosRect();
-                    HDC hDC = GetDC(hwnd);
+                    // use HIMETRIC to container transform
+                    POINTL extent = { pSizel->cx, pSizel->cy };
+                    POINTF container;
+                    if( SUCCEEDED(p_controlSite->TransformCoords(&extent,
+                                    &container, XFORMCOORDS_SIZE|XFORMCOORDS_HIMETRICTOCONTAINER)) )
+                    {
+                        posRect.right  = ((LONG)container.x)+posRect.left;
+                        posRect.bottom = ((LONG)container.y)+posRect.top;
+                    }
+                    p_controlSite->Release();
+                }
+                else {
+                    // use HIMETRIC to display transform 
+                    HDC hDC = CreateDevDC(NULL);
                     posRect.right = (pSizel->cx*GetDeviceCaps(hDC, LOGPIXELSX)/2540L)+posRect.left;
                     posRect.bottom = (pSizel->cy*GetDeviceCaps(hDC, LOGPIXELSY)/2540L)+posRect.top;
                     DeleteDC(hDC);
-                    p_inPlaceSite->OnPosRectChange(&posRect);
                 }
+                p_inPlaceSite->OnPosRectChange(&posRect);
                 p_inPlaceSite->Release();
             }
         }

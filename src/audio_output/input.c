@@ -1,8 +1,8 @@
 /*****************************************************************************
  * input.c : internal management of input streams for the audio output
  *****************************************************************************
- * Copyright (C) 2002-2004 the VideoLAN team
- * $Id: input.c 12404 2005-08-25 19:57:12Z zorglub $
+ * Copyright (C) 2002-2004 VideoLAN
+ * $Id: input.c 11112 2005-05-22 16:18:46Z zorglub $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -107,7 +107,7 @@ int aout_InputNew( aout_instance_t * p_aout, aout_input_t * p_input )
         var_Change( p_aout, "visual", VLC_VAR_SETTEXT, &text, NULL );
         val.psz_string = ""; text.psz_string = _("Disable");
         var_Change( p_aout, "visual", VLC_VAR_ADDCHOICE, &val, &text );
-        val.psz_string = "spectrometer"; text.psz_string = _("Spectrometer");
+        val.psz_string = "random"; text.psz_string = _("Random");
         var_Change( p_aout, "visual", VLC_VAR_ADDCHOICE, &val, &text );
         val.psz_string = "scope"; text.psz_string = _("Scope");
         var_Change( p_aout, "visual", VLC_VAR_ADDCHOICE, &val, &text );
@@ -202,6 +202,14 @@ int aout_InputNew( aout_instance_t * p_aout, aout_input_t * p_input )
     {
         char *psz_parser = psz_filters;
         char *psz_next;
+
+        if( strchr( psz_filters, ',' ) && !strchr( psz_filters, ':' ) )
+        {
+            msg_Info( p_aout, "Warning: you are using a deprecated syntax for "
+                              "audio-filter / audio-visual." );
+            msg_Info( p_aout, "You must now use ':' as separator instead of "
+                              "','." );
+        }
         while( psz_parser && *psz_parser )
         {
             aout_filter_t * p_filter;
@@ -212,11 +220,16 @@ int aout_InputNew( aout_instance_t * p_aout, aout_input_t * p_input )
                 break;
             }
 
-            while( *psz_parser == ' ' && *psz_parser == ':' )
+            while( *psz_parser == ' ' || *psz_parser == ':' ||
+                   *psz_parser == ',')
             {
                 psz_parser++;
             }
             if( ( psz_next = strchr( psz_parser , ':'  ) ) )
+            {
+                *psz_next++ = '\0';
+            }
+            else if( ( psz_next = strchr( psz_parser , ','  ) ) )
             {
                 *psz_next++ = '\0';
             }
