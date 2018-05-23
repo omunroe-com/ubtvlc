@@ -1,21 +1,20 @@
-MOSTLYCLEANFILES = $(nobase_pkgdata_DATA) 
-
-pkgdatadir = $(datadir)/vlc
+MOSTLYCLEANFILES = $(nobase_vlcdata_DATA)
 
 nobase_dist_data_DATA = applications/vlc.desktop
 
-dist_pkgdata_DATA = \
+dist_vlcdata_DATA = \
+	$(DIST_icons) \
 	$(DIST_icons16) \
 	$(DIST_icons32) \
 	$(DIST_icons48) \
 	$(DIST_icons128)
-nobase_dist_pkgdata_SCRIPTS = \
+nobase_dist_vlcdata_SCRIPTS = \
 	utils/gnome-vlc-default.sh \
 	utils/audio-vlc-default.sh \
 	utils/video-vlc-default.sh \
 	$(NULL)
 
-nobase_dist_pkgdata_DATA = $(NULL)
+nobase_vlcdata_DATA = $(NULL)
 
 EXTRA_DIST = \
 	$(DIST_rsrc) \
@@ -26,35 +25,35 @@ EXTRA_DIST = \
 	$(DIST_http_lua) \
 	$(DIST_lua) \
 	$(DIST_osdmenu_default) \
-	$(DIST_osdmenu_dvd) \
-	$(DIST_osdmenu_minimal) \
-	$(DIST_mozilla)
+	$(DIST_mozilla) \
+	$(DIST_maemo)
 
 if BUILD_SKINS
-nobase_pkgdata_DATA = skins2/default.vlt
-nobase_dist_pkgdata_DATA += $(DIST_skins2)
+nobase_vlcdata_DATA += skins2/default.vlt
+nobase_vlcdata_DATA += $(DIST_skins2)
 endif
 if BUILD_PDA
-nobase_dist_pkgdata_DATA += $(DIST_pda)
+nobase_vlcdata_DATA += $(DIST_pda)
 endif
 if BUILD_HTTPD
-nobase_dist_pkgdata_DATA += $(DIST_http)
+nobase_vlcdata_DATA += $(DIST_http)
 endif
 if BUILD_OSDMENU
-nobase_dist_pkgdata_DATA += \
-	$(DIST_osdmenu_default) \
-	$(DIST_osdmenu_dvd) \
-	$(DIST_osdmenu_minimal)
+nobase_vlcdata_DATA += \
+	$(DIST_osdmenu_default)
 endif
 if BUILD_LUA
-nobase_dist_pkgdata_DATA += $(DIST_lua)
+nobase_vlcdata_DATA += $(DIST_lua)
 if BUILD_HTTPD
-nobase_dist_pkgdata_DATA += $(DIST_http_lua)
+nobase_vlcdata_DATA += $(DIST_http_lua)
 endif
 endif
 if BUILD_MOZILLA
 # TODO: move to the mozilla directory
-nobase_dist_pkgdata_DATA += $(DIST_mozilla)
+nobase_vlcdata_DATA += $(DIST_mozilla)
+endif
+if BUILD_MAEMO
+nobase_vlcdata_DATA += $(DIST_maemo) $(maemo_FILES)
 endif
 
 DIST_rsrc = \
@@ -75,11 +74,13 @@ DIST_pda = \
 	pda-rewindb16x16.xpm \
 	pda-stopb16x16.xpm
 
+DIST_icons = vlc.ico
+
 DIST_icons16 = vlc16x16.png vlc16x16.xpm
 
 DIST_icons32 = vlc32x32.png vlc32x32.xpm vlc32x32-christmas.xpm
 
-DIST_icons48 = vlc48x48.ico vlc48x48.png vlc48x48-christmas.png
+DIST_icons48 = vlc48x48.png vlc48x48-christmas.png
 
 DIST_icons128 = vlc128x128.png vlc128x128-christmas.png
 
@@ -91,34 +92,16 @@ DIST_skins2 = \
 	skins2/winamp2.xml
 
 skins2_default_vlt_FILES = \
-	skins2/default/main/pause_over.png \
-	skins2/default/main/main_up.png \
-	skins2/default/main/timeslider.png \
-	skins2/default/main/main_down.png \
-	skins2/default/main/main.png \
-	skins2/default/main/dvd_prevtitle.png \
-	skins2/default/main/dvd_nexttitle.png \
-	skins2/default/main/dvd_nextchapter.png \
-	skins2/default/main/pause_up.png \
-	skins2/default/main/main_over.png \
-	skins2/default/main/pause_down.png \
-	skins2/default/main/dvd_prevchapter.png \
-	skins2/default/main/vol_bg.png \
-	skins2/default/main/vol_mask.png \
-	skins2/default/main/vol_slider.png \
-	skins2/default/main/dvd_menu.png \
-	skins2/default/switch.png \
-	skins2/default/font.otf \
-	skins2/default/credits.png \
-	skins2/default/theme.xml \
-	skins2/default/playlist/plscroller.png \
-	skins2/default/playlist/playlist_down.png \
-	skins2/default/playlist/playtreeglyphs.png \
-	skins2/default/playlist/playlist_up.png \
-	skins2/default/playlist/playlist_over.png \
-	skins2/default/playlist/playlist.png \
-	skins2/default/minimal.png \
-	skins2/default/equalizer.png
+        skins2/default/theme.xml \
+	skins2/default/subX/about.png \
+	skins2/default/subX/eq.png \
+	skins2/default/subX/font.otf \
+	skins2/default/subX/main.png \
+	skins2/default/subX/playtreeglyphs.png \
+	skins2/default/subX/pl.png \
+	skins2/default/subX/sysbuttons.png \
+	skins2/default/subX/vol_anim.png \
+	skins2/default/subX/vol_slider.png
 
 skins2/default.vlt: $(skins2_default_vlt_FILES)
 	mkdir -p skins2
@@ -177,21 +160,6 @@ DIST_http = \
 	http/js/mosaic.js \
 	http/js/vlm.js \
 	http/mosaic.html \
-	http/old/.hosts \
-	http/old/admin/.access \
-	http/old/admin/browse.html \
-	http/old/admin/dboxfiles.html \
-	http/old/admin/index.html \
-	http/old/cone_minus.png \
-	http/old/cone_plus.png \
-	http/old/index.html \
-	http/old/info.html \
-	http/old/style.css \
-	http/old/vlm/edit.html \
-	http/old/vlm/index.html \
-	http/old/vlm/new.html \
-	http/old/vlm/show.html \
-	http/old/webcam.html \
 	http/requests/browse.xml \
 	http/requests/playlist.xml \
 	http/requests/status.xml \
@@ -235,55 +203,13 @@ DIST_osdmenu_default = \
 	osdmenu/default/volume/volume_09.png \
 	osdmenu/default/volume/volume_10.png
 
-DIST_osdmenu_dvd = \
-	osdmenu/dvd.cfg \
-	osdmenu/dvd/selection/bw.png \
-	osdmenu/dvd/selection/esc.png \
-	osdmenu/dvd/selection/fw.png \
-	osdmenu/dvd/selection/mute.png \
-	osdmenu/dvd/selection/next.png \
-	osdmenu/dvd/selection/pause.png \
-	osdmenu/dvd/selection/play.png \
-	osdmenu/dvd/selection/previous.png \
-	osdmenu/dvd/selection/slow.png \
-	osdmenu/dvd/selection/stop.png \
-	osdmenu/dvd/selected/bw.png \
-	osdmenu/dvd/selected/next.png \
-	osdmenu/dvd/selected/play.png \
-	osdmenu/dvd/selected/fw.png \
-	osdmenu/dvd/selected/stop.png \
-	osdmenu/dvd/selected/pause.png \
-	osdmenu/dvd/selected/previous.png \
-	osdmenu/dvd/selected/esc.png \
-	osdmenu/dvd/selected/mute.png \
-	osdmenu/dvd/selected/slow.png \
-	osdmenu/dvd/selected/volume.png \
-	osdmenu/dvd/volume/volume00.png \
-	osdmenu/dvd/volume/volume01.png \
-	osdmenu/dvd/volume/volume02.png \
-	osdmenu/dvd/volume/volume03.png \
-	osdmenu/dvd/volume/volume04.png \
-	osdmenu/dvd/volume/volume05.png \
-	osdmenu/dvd/unselect/barroff.png
-
-DIST_osdmenu_minimal = \
-	osdmenu/minimal.cfg \
-	osdmenu/minimal/fs_panel_simple.xcf \
-	osdmenu/minimal/fs_panel_skip_next.png \
-	osdmenu/minimal/fs_panel_simple.png \
-	osdmenu/minimal/fs_panel_volume_max.png \
-	osdmenu/minimal/fs_panel.xcf \
-	osdmenu/minimal/fs_panel_skip_previous.png \
-	osdmenu/minimal/fs_panel_volume_min.png \
-	osdmenu/minimal/fs_panel.png \
-	osdmenu/minimal/fs_panel_mockup.png
-
 DIST_lua= \
 	lua/README.txt \
 	lua/meta/README.txt \
 	lua/meta/01_musicbrainz.lua \
 	lua/meta/10_googleimage.lua \
 	lua/playlist/README.txt \
+	lua/playlist/anevia_streams.lua \
 	lua/playlist/appletrailers.lua \
 	lua/playlist/break.lua \
 	lua/playlist/dailymotion.lua \
@@ -385,3 +311,17 @@ DIST_mozilla = \
 	mozilla/volume_max.xpm \
 	mozilla/volume_mute.xpm \
 	mozilla/volume_slider_bar.xpm
+
+DIST_maemo = \
+	maemo/vlc_intf.rc \
+	maemo/vlc_left_tab_active.png \
+	maemo/vlc_left_tab_passive.png \
+	maemo/playlist.png
+
+maemo_FILES = \
+	../modules/gui/qt4/pixmaps/play.png \
+	../modules/gui/qt4/pixmaps/pause.png \
+	../modules/gui/qt4/pixmaps/stop.png \
+	../modules/gui/qt4/pixmaps/previous.png \
+	../modules/gui/qt4/pixmaps/next.png \
+	vlc32x32.png

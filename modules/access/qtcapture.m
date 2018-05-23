@@ -36,6 +36,7 @@
 #include <vlc_vout.h>
 #include <vlc_demux.h>
 #include <vlc_interface.h>
+#include <vlc_dialog.h>
 
 #import <QTKit/QTKit.h>
 #import <CoreAudio/CoreAudio.h>
@@ -51,15 +52,15 @@ static int Control( demux_t *, int, va_list );
 /*****************************************************************************
 * Module descriptor
 *****************************************************************************/
-vlc_module_begin();
-   set_shortname( N_("Quicktime Capture") );
-   set_description( N_("Quicktime Capture") );
-   set_category( CAT_INPUT );
-   set_subcategory( SUBCAT_INPUT_ACCESS );
-   add_shortcut( "qtcapture" );
-   set_capability( "access_demux", 10 );
-   set_callbacks( Open, Close );
-vlc_module_end();
+vlc_module_begin ()
+   set_shortname( N_("Quicktime Capture") )
+   set_description( N_("Quicktime Capture") )
+   set_category( CAT_INPUT )
+   set_subcategory( SUBCAT_INPUT_ACCESS )
+   add_shortcut( "qtcapture" )
+   set_capability( "access_demux", 10 )
+   set_callbacks( Open, Close )
+vlc_module_end ()
 
 
 /*****************************************************************************
@@ -171,6 +172,8 @@ static int qtchroma_to_fourcc( int i_qt )
     {
         /* Raw data types */
         { k422YpCbCr8CodecType,    VLC_FOURCC('U','Y','V','Y') },
+        { kComponentVideoCodecType,VLC_FOURCC('Y','U','Y','2') },
+        { kComponentVideoUnsigned, VLC_FOURCC('U','Y','V','Y') },
         { 0, 0 }
     };
     int i;
@@ -209,21 +212,19 @@ static int Open( vlc_object_t *p_this )
     p_demux->info.i_title = 0;
     p_demux->info.i_seekpoint = 0;
     
-    p_demux->p_sys = p_sys = malloc( sizeof( demux_sys_t ) );
-    if( !p_sys ) return VLC_ENOMEM;
+    p_demux->p_sys = p_sys = calloc( 1, sizeof( demux_sys_t ) );
+    if( !p_sys )
+        return VLC_ENOMEM;
     
-    memset( p_sys, 0, sizeof( demux_sys_t ) );
     memset( &fmt, 0, sizeof( es_format_t ) );    
     
-    msg_Dbg( p_demux, "QTCapture Probed" );
-
     QTCaptureDeviceInput * input = nil;
     NSError *o_returnedError;
 
     p_sys->device = [QTCaptureDevice defaultInputDeviceWithMediaType: QTMediaTypeVideo];
     if( !p_sys->device )
     {
-        intf_UserFatal( p_demux, true, _("No Input device found"),
+        dialog_FatalWait( p_demux, _("No Input device found"),
                         _("Your Mac does not seem to be equipped with a suitable input device. "
                           "Please check your connectors and drivers.") );
         msg_Err( p_demux, "Can't find any Video device" );
@@ -233,7 +234,7 @@ static int Open( vlc_object_t *p_this )
 
     if( ![p_sys->device open: &o_returnedError] )
     {
-        msg_Err( p_demux, "Unable to open the capture device (%i)", [o_returnedError code] );
+        msg_Err( p_demux, "Unable to open the capture device (%ld)", [o_returnedError code] );
         goto error;
     }
 
@@ -252,31 +253,21 @@ static int Open( vlc_object_t *p_this )
 
     p_sys->output = [[VLCDecompressedVideoOutput alloc] init];
 
-    /* Hack - This will lower CPU consumption for some reason */
-    [p_sys->output setPixelBufferAttributes: [NSDictionary dictionaryWithObjectsAndKeys:
-        [NSNumber numberWithInt:480], kCVPixelBufferHeightKey,
-        [NSNumber numberWithInt:640], kCVPixelBufferWidthKey, nil]];
-
-    p_sys->session = [[QTCaptureSession alloc] init];
-
-    bool ret = [p_sys->session addInput:input error: &o_returnedError];
-    if( !ret )
+    /* Get the formats */
+    NSArray *format_array = [p_sys->device formatDescriptions];
+    QTFormatDescription* camera_format = NULL;
+    for( int k=0; k < [format_array count]; k++ )
     {
-        msg_Err( p_demux, "default video capture device could not be added to capture session (%i)", [o_returnedError code] );
-        goto error;
+        camera_format = [format_array objectAtIndex: k];
+
+        NSLog( [camera_format localizedFormatSummary] );
+        NSLog( [[camera_format formatDescriptionAttributes] description] );
     }
+    if( [format_array count] )
+        camera_format = [format_array objectAtIndex: 0];
+    else goto error;
 
-    ret = [p_sys->session addOutput:p_sys->output error: &o_returnedError];
-    if( !ret )
-    {
-        msg_Err( p_demux, "output could not be added to capture session (%i)", [o_returnedError code] );
-        goto error;
-    }
-
-    [p_sys->session startRunning];
-
-
-    int qtchroma = [[[p_sys->device formatDescriptions] objectAtIndex: 0] formatType]; /* FIXME */
+    int qtchroma = [camera_format formatType];
     int chroma = qtchroma_to_fourcc( qtchroma );
     if( !chroma )
     {
@@ -285,12 +276,46 @@ static int Open( vlc_object_t *p_this )
     }
 
     /* Now we can init */
-
     es_format_Init( &fmt, VIDEO_ES, chroma );
 
-    NSSize size = [[p_sys->device attributeForKey:QTFormatDescriptionVideoEncodedPixelsSizeAttribute] sizeValue];
-    p_sys->width = fmt.video.i_width = 640;/* size.width; FIXME */
-    p_sys->height = fmt.video.i_height = 480;/* size.height; FIXME */
+    NSSize encoded_size = [[camera_format attributeForKey:QTFormatDescriptionVideoEncodedPixelsSizeAttribute] sizeValue];
+    NSSize display_size = [[camera_format attributeForKey:QTFormatDescriptionVideoCleanApertureDisplaySizeAttribute] sizeValue];
+    NSSize par_size = [[camera_format attributeForKey:QTFormatDescriptionVideoProductionApertureDisplaySizeAttribute] sizeValue];
+
+    fmt.video.i_width = p_sys->width = encoded_size.width;
+    fmt.video.i_height = p_sys->height = encoded_size.height;
+    if( par_size.width != encoded_size.width )
+    {
+        fmt.video.i_aspect = par_size.width * VOUT_ASPECT_FACTOR / encoded_size.width ;
+    }
+
+    NSLog( @"encoded_size %d %d", (int)encoded_size.width, (int)encoded_size.height );
+    NSLog( @"display_size %d %d", (int)display_size.width, (int)display_size.height );
+    NSLog( @"PAR size %d %d", (int)par_size.width, (int)par_size.height );
+    
+    [p_sys->output setPixelBufferAttributes: [NSDictionary dictionaryWithObjectsAndKeys:
+        [NSNumber numberWithInt: p_sys->height], kCVPixelBufferHeightKey,
+        [NSNumber numberWithInt: p_sys->width], kCVPixelBufferWidthKey,
+        [NSNumber numberWithBool:YES], (id)kCVPixelBufferOpenGLCompatibilityKey,
+        nil]];
+
+    p_sys->session = [[QTCaptureSession alloc] init];
+
+    bool ret = [p_sys->session addInput:input error: &o_returnedError];
+    if( !ret )
+    {
+        msg_Err( p_demux, "default video capture device could not be added to capture session (%ld)", [o_returnedError code] );
+        goto error;
+    }
+
+    ret = [p_sys->session addOutput:p_sys->output error: &o_returnedError];
+    if( !ret )
+    {
+        msg_Err( p_demux, "output could not be added to capture session (%ld)", [o_returnedError code] );
+        goto error;
+    }
+
+    [p_sys->session startRunning];
 
     msg_Dbg( p_demux, "added new video es %4.4s %dx%d",
             (char*)&fmt.i_codec, fmt.video.i_width, fmt.video.i_height );

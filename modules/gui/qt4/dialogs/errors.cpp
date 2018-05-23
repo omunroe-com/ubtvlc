@@ -2,7 +2,7 @@
  * errors.cpp : Errors
  ****************************************************************************
  * Copyright ( C ) 2006 the VideoLAN team
- * $Id: d8c785eb73a2fffe93e915c1780e003a11757e73 $
+ * $Id: a2bd94f73d44c7e92b93bcf86005c70a3967a7cb $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jean-Baptiste Kempf <jb@videolan.org>
@@ -42,8 +42,6 @@ ErrorsDialog::ErrorsDialog( QWidget *parent, intf_thread_t *_p_intf )
     setWindowTitle( qtr( "Errors" ) );
     resize( 500 , 300 );
 
-    setWindowModality( Qt::ApplicationModal );
-
     QGridLayout *layout = new QGridLayout( this );
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox;
@@ -67,17 +65,17 @@ ErrorsDialog::ErrorsDialog( QWidget *parent, intf_thread_t *_p_intf )
     BUTTONACT( stopShowing, dontShow() );
 }
 
-void ErrorsDialog::addError( QString title, QString text )
+void ErrorsDialog::addError( const QString& title, const QString& text )
 {
     add( true, title, text );
 }
 
-void ErrorsDialog::addWarning( QString title, QString text )
+/*void ErrorsDialog::addWarning( QString title, QString text )
 {
     add( false, title, text );
-}
+}*/
 
-void ErrorsDialog::add( bool error, QString title, QString text )
+void ErrorsDialog::add( bool error, const QString& title, const QString& text )
 {
     if( stopShowing->isChecked() ) return;
     messages->textCursor().movePosition( QTextCursor::End );

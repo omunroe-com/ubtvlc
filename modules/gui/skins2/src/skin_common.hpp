@@ -2,7 +2,7 @@
  * skin_common.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ff169f9868e97ee0d7df9fc1fe96b43526200b92 $
+ * $Id: c893207325ba1856b323f38c68e9486a4d929ef8 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -44,6 +44,7 @@ class OSFactory;
 class OSLoop;
 class VarManager;
 class VlcProc;
+class VoutManager;
 class Theme;
 class ThemeRepository;
 
@@ -112,6 +113,12 @@ struct intf_sys_t
     /// The playlist thread
     playlist_t *p_playlist;
 
+#ifdef WIN32
+    /// flags in order to terminate properly
+    bool b_exitRequested;
+    bool b_exitOK;
+#endif
+
     /// Message bank subscription
     msg_subscription_t *p_sub;
 
@@ -132,6 +139,8 @@ struct intf_sys_t
     VarManager *p_varManager;
     /// VLC state handler
     VlcProc *p_vlcProc;
+    /// Vout manager
+    VoutManager *p_voutManager;
     /// Theme repository
     ThemeRepository *p_repository;
 

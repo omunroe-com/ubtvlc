@@ -3,7 +3,7 @@
  *              FYI: http://www.mozilla.org/projects/plugins/npruntime.html
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: 638ce7b4a3f3440dc4553b1d51467ec4f38b62d5 $
+ * $Id: 2ac525d39de922ee692ee3ffd4beae75126fd42a $
  *
  * Authors: Damien Fouilleul <damien.fouilleul@laposte.net>
  *
@@ -126,6 +126,15 @@ protected:
     virtual InvokeResult invokeDefault(const NPVariant *args, uint32_t argCount, NPVariant &result);
 
     bool returnInvokeResult(InvokeResult result);
+
+    bool isPluginRunning()
+    {
+        return (_instance->pdata != NULL);
+    }
+    template<class T> T *getPrivate()
+    {
+        return reinterpret_cast<T *>(_instance->pdata);
+    }
 
     NPP _instance;
 };

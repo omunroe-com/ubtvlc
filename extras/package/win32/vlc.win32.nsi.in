@@ -20,6 +20,9 @@
 !define MUI_LANGDLL_REGISTRY_KEY "${PRODUCT_DIR_REGKEY}"
 !define MUI_LANGDLL_REGISTRY_VALUENAME "Language"
 
+@BUILD_ACTIVEX_TRUE@ !define INSTALL_ACTIVEX
+@BUILD_MOZILLA_TRUE@ !define INSTALL_MOZILLA
+
 @FILE_LIBVLCCORE_DLL@
 @FILE_LIBVLC_DLL@
 
@@ -56,8 +59,8 @@ InstType $Name_InstTypeFull
 
 ; MUI Settings
   !define MUI_ABORTWARNING
-  !define MUI_ICON "vlc48x48.ico"
-  !define MUI_UNICON "vlc48x48.ico"
+  !define MUI_ICON "vlc.ico"
+  !define MUI_UNICON "vlc.ico"
   !define MUI_COMPONENTSPAGE_SMALLDESC
 
 ; Installer pages
@@ -105,6 +108,7 @@ InstType $Name_InstTypeFull
   !insertmacro MUI_LANGUAGE "Greek"
   !insertmacro MUI_LANGUAGE "Russian"
   !insertmacro MUI_LANGUAGE "Portuguese"
+  !insertmacro MUI_LANGUAGE "PortugueseBR"
   !insertmacro MUI_LANGUAGE "Arabic"
   !insertmacro MUI_LANGUAGE "Polish"
   !insertmacro MUI_LANGUAGE "Romanian"
@@ -217,6 +221,7 @@ FunctionEnd
   !insertmacro ${_action} ".spx"
   !insertmacro ${_action} ".wav"
   !insertmacro ${_action} ".wma"
+  !insertmacro ${_action} ".wv"
   !insertmacro ${_action} ".xm"
 !macroend
 
@@ -241,10 +246,12 @@ FunctionEnd
   !insertmacro ${_action} ".mpg"
   !insertmacro ${_action} ".mts"
   !insertmacro ${_action} ".mxf"
+  !insertmacro ${_action} ".nuv"
   !insertmacro ${_action} ".ogg"
   !insertmacro ${_action} ".ogm"
   !insertmacro ${_action} ".ogx"
   !insertmacro ${_action} ".ogv"
+  !insertmacro ${_action} ".rmvb"
   !insertmacro ${_action} ".ts"
   !insertmacro ${_action} ".vob"
   !insertmacro ${_action} ".wmv"
@@ -413,10 +420,11 @@ Section $Name_Section01 SEC01
   ; Subfolders
   !insertmacro InstallFolder plugins
   !insertmacro InstallFolder locale
-  !insertmacro InstallFolder osdmenu
-  !insertmacro InstallFolder skins
-  !insertmacro InstallFolder http
-  !insertmacro InstallFolder lua
+@BUILD_OSDMENU_TRUE@ !insertmacro InstallFolder osdmenu
+@BUILD_SKINS_TRUE@   !insertmacro InstallFolder skins
+@BUILD_HTTPD_TRUE@   !insertmacro InstallFolder http
+@BUILD_LUA_TRUE@     !insertmacro InstallFolder lua
+
 
   ; URLs
   WriteIniStr "$INSTDIR\${PRODUCT_GROUP} Website.url" "InternetShortcut" "URL" \
@@ -463,8 +471,8 @@ Section $Name_Section02a SEC02a
   CreateShortCut "$SMPROGRAMS\VideoLAN\Quick Settings\Audio\Set Audio mode to Waveout.lnk" \
     "$INSTDIR\vlc.exe" "--aout waveout --save-config vlc://quit"
   CreateDirectory "$SMPROGRAMS\VideoLAN\Quick Settings\Interface"
-  CreateShortCut "$SMPROGRAMS\VideoLAN\Quick Settings\Interface\Set Main Interface to Skinnable.lnk" \
-    "$INSTDIR\vlc.exe" "-I skins --save-config vlc://quit"
+@BUILD_SKINS_TRUE@  CreateShortCut "$SMPROGRAMS\VideoLAN\Quick Settings\Interface\Set Main Interface to Skinnable.lnk" \
+@BUILD_SKINS_TRUE@    "$INSTDIR\vlc.exe" "-I skins --save-config vlc://quit"
   CreateShortCut "$SMPROGRAMS\VideoLAN\Quick Settings\Interface\Set Main Interface to Qt (default).lnk" \
     "$INSTDIR\vlc.exe" "-I qt --save-config vlc://quit"
   CreateDirectory "$SMPROGRAMS\VideoLAN\Quick Settings\Video"
@@ -499,6 +507,7 @@ Section $Name_Section02b SEC02b
     "$INSTDIR\vlc.exe" ""
 SectionEnd
 
+!ifdef INSTALL_MOZILLA
 Section /o $Name_Section03 SEC03
   SectionIn 3
 
@@ -545,7 +554,9 @@ Section /o $Name_Section03 SEC03
  ;!undef Index
 
 SectionEnd
+!endif
 
+!ifdef INSTALL_ACTIVEX
 Section $Name_Section04 SEC04
   SectionIn 3
   SetOutPath "$INSTDIR"
@@ -555,21 +566,10 @@ Section $Name_Section04 SEC04
   !insertmacro CloseUninstallLog
   RegDLL "$INSTDIR\axvlc.dll"
 SectionEnd
-
-SectionGroup /e !$Name_Section06 SEC05
-  SectionGroup $Name_SectionGroupAudio
-    !insertmacro MacroAudioExtensions RegisterExtensionSection
-  SectionGroupEnd
-  SectionGroup $Name_SectionGroupVideo
-    !insertmacro MacroVideoExtensions RegisterExtensionSection
-  SectionGroupEnd
-  SectionGroup $Name_SectionGroupOther
-    !insertmacro MacroOtherExtensions RegisterExtensionSection
-  SectionGroupEnd
-SectionGroupEnd
+!endif
 
 
-Section $Name_Section05 SEC06
+Section $Name_Section05 SEC05
   SectionIn 1 2 3
   WriteRegStr HKCR "AudioCD\shell\PlayWithVLC" "" $ContextMenuEntry_PlayWith
   WriteRegStr HKCR "AudioCD\shell\PlayWithVLC\command" "" \
@@ -604,6 +604,19 @@ Section $Name_Section05 SEC06
 
 SectionEnd
 
+
+SectionGroup /e !$Name_Section06 SEC06
+  SectionGroup $Name_SectionGroupAudio
+    !insertmacro MacroAudioExtensions RegisterExtensionSection
+  SectionGroupEnd
+  SectionGroup $Name_SectionGroupVideo
+    !insertmacro MacroVideoExtensions RegisterExtensionSection
+  SectionGroupEnd
+  SectionGroup $Name_SectionGroupOther
+    !insertmacro MacroOtherExtensions RegisterExtensionSection
+  SectionGroupEnd
+SectionGroupEnd
+
 Section $Name_Section07 SEC07
   SectionIn 1 3
   !insertmacro MacroAllExtensions AddContextMenu
@@ -619,10 +632,10 @@ SectionEnd
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC01} $Desc_Section01
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC02a} $Desc_Section02a
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC02b} $Desc_Section02b
-  !insertmacro MUI_DESCRIPTION_TEXT ${SEC03} $Desc_Section03
-  !insertmacro MUI_DESCRIPTION_TEXT ${SEC04} $Desc_Section04
-  !insertmacro MUI_DESCRIPTION_TEXT ${SEC05} $Desc_Section06
-  !insertmacro MUI_DESCRIPTION_TEXT ${SEC06} $Desc_Section05
+@BUILD_MOZILLA_TRUE@ !insertmacro MUI_DESCRIPTION_TEXT ${SEC03} $Desc_Section03
+@BUILD_ACTIVEX_TRUE@ !insertmacro MUI_DESCRIPTION_TEXT ${SEC04} $Desc_Section04
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC05} $Desc_Section05
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC06} $Desc_Section06
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC07} $Desc_Section07
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC08} $Desc_Section08
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
@@ -642,8 +655,12 @@ Function .onInit
   StrCmp $LANGUAGE ${LANG_POLISH} Polish 0
   StrCmp $LANGUAGE ${LANG_DUTCH} Dutch 0
   StrCmp $LANGUAGE ${LANG_SIMPCHINESE} SChinese 0
-  StrCmp $LANGUAGE ${LANG_GERMAN} German 0
-  StrCmp $LANGUAGE ${LANG_FINNISH} Finnish EndLanguageCmp
+  StrCmp $LANGUAGE ${LANG_FINNISH} Finnish 0
+;  StrCmp $LANGUAGE ${LANG_BENGALI} Bengali 0
+;  StrCmp $LANGUAGE ${LANG_PUNJABI} Punjabi 0
+;  StrCmp $LANGUAGE ${LANG_SLOVENIAN} Slovenian 0
+  StrCmp $LANGUAGE ${LANG_SPANISH} Spanish 0
+  StrCmp $LANGUAGE ${LANG_PORTUGUESEBR} Brazilian EndLanguageCmp
   French:
   !include "languages\french.nsh"
   Goto EndLanguageCmp
@@ -674,11 +691,23 @@ Function .onInit
   Schinese:
   !include "languages\schinese.nsh"
   Goto EndLanguageCmp
-  German:
-  !include "languages\german.nsh"
-  Goto EndLanguageCmp
   Finnish:
   !include "languages\finnish.nsh"
+  Goto EndLanguageCmp
+  Bengali:
+  !include "languages\bengali.nsh"
+  Goto EndLanguageCmp
+  Punjabi:
+  !include "languages\punjabi.nsh"
+  Goto EndLanguageCmp
+  Slovenian:
+  !include "languages\slovenian.nsh"
+  Goto EndLanguageCmp
+  Spanish:
+  !include "languages\spanish.nsh"
+  Goto EndLanguageCmp
+  Brazilian:
+  !include "languages\brazilian_portuguese.nsh"
   EndLanguageCmp:
 
   ReadRegStr $R0  ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" \
@@ -890,8 +919,12 @@ Function un.onInit
   StrCmp $LANGUAGE ${LANG_POLISH} Polish 0
   StrCmp $LANGUAGE ${LANG_DUTCH} Dutch 0
   StrCmp $LANGUAGE ${LANG_SIMPCHINESE} SChinese 0
-  StrCmp $LANGUAGE ${LANG_GERMAN} German 0
-  StrCmp $LANGUAGE ${LANG_FINNISH} Finnish EndLanguageCmp
+  StrCmp $LANGUAGE ${LANG_FINNISH} Finnish 0
+;  StrCmp $LANGUAGE ${LANG_BENGALI} Bengali 0
+;  StrCmp $LANGUAGE ${LANG_PUNJABI} Punjabi 0
+;  StrCmp $LANGUAGE ${LANG_SLOVENIAN} Slovenian 0
+  StrCmp $LANGUAGE ${LANG_SPANISH} Spanish 0
+  StrCmp $LANGUAGE ${LANG_PORTUGUESEBR} Brazilian EndLanguageCmp
   French:
   !include "languages\french.nsh"
   Goto EndLanguageCmp
@@ -922,11 +955,23 @@ Function un.onInit
   Schinese:
   !include "languages\schinese.nsh"
   Goto EndLanguageCmp
-  German:
-  !include "languages\german.nsh"
-  Goto EndLanguageCmp
   Finnish:
   !include "languages\finnish.nsh"
+  Goto EndLanguageCmp
+  Bengali:
+  !include "languages\bengali.nsh"
+  Goto EndLanguageCmp
+  Punjabi:
+  !include "languages\punjabi.nsh"
+  Goto EndLanguageCmp
+  Slovenian:
+  !include "languages\slovenian.nsh"
+  Goto EndLanguageCmp
+  Spanish:
+  !include "languages\spanish.nsh"
+  Goto EndLanguageCmp
+  Brazilian:
+  !include "languages\brazilian_portuguese.nsh"
   EndLanguageCmp:
   
 FunctionEnd

@@ -2,7 +2,7 @@
  * visual.h : Header for the visualisation system
  *****************************************************************************
  * Copyright (C) 2002 the VideoLAN team
- * $Id: 5124dd12f6d6ba28c3c1c62e101d9d5b4eddc996 $
+ * $Id: 532abc184023dd49a344588ec11835d00889830e $
  *
  * Authors: Clément Stenac <zorglub@via.ecp.fr>
  *
@@ -32,7 +32,17 @@ typedef struct visual_effect_t
     int        i_height;
     char *     psz_args;
     int        i_nb_chans;
+
+    /* Channels index */
+    int        i_idx_left;
+    int        i_idx_right;
 } visual_effect_t ;
+
+typedef struct spectrum_data
+{
+    int *peaks;
+    int *prev_heights;
+} spectrum_data;
 
 
 /*****************************************************************************
@@ -41,7 +51,7 @@ typedef struct visual_effect_t
  * This structure is part of the audio filter descriptor.
  * It describes some visualizer specific variables.
  *****************************************************************************/
-typedef struct aout_filter_sys_t
+struct aout_filter_sys_t
 {
     vout_thread_t   *p_vout;
 
@@ -50,7 +60,7 @@ typedef struct aout_filter_sys_t
 
     int             i_effect;
     visual_effect_t **effect;
-} aout_filter_sys_t;
+};
 
 /* Prototypes */
 int scope_Run
