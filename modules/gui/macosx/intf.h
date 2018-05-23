@@ -2,7 +2,7 @@
  * intf.h: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2006 the VideoLAN team
- * $Id: intf.h 23381 2007-11-27 19:26:51Z fkuehne $
+ * $Id: intf.h 23943 2007-12-30 14:59:04Z fkuehne $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -106,6 +106,7 @@ struct intf_sys_t
     BOOL nib_wizard_loaded;     /* reference to the wizard-nib */
     BOOL nib_extended_loaded;   /* reference to the extended-nib */
     BOOL nib_bookmarks_loaded;  /* reference to the bookmarks-nib */
+    BOOL nib_prefs_loaded;      /* reference to the prefs-nib */
     BOOL nib_update_loaded;     /* reference to the update-nib */
 
     IBOutlet id o_window;       /* main window    */

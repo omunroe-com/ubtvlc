@@ -1,8 +1,8 @@
 #***************************************************************************
 # src/Makefile : Dearchive and compile all files necessary
 # ***************************************************************************
-# Copyright (C) 2003 - 2007 the VideoLAN team
-# $Id: Makefile 23327 2007-11-25 16:54:29Z fkuehne $
+# Copyright (C) 2003 - 2008 the VideoLAN team
+# $Id: Makefile 25234 2008-02-21 10:28:05Z funman $
 #
 # Authors: Christophe Massiot <massiot@via.ecp.fr>
 #          Derk-Jan Hartman <hartman at videolan dot org>
@@ -37,10 +37,6 @@ include ./packages.mak
 export PATH := $(PREFIX)/bin:$(EXTRA_PATH):$(PATH)
 export PKG_CONFIG_PATH
 export PKG_CONFIG_LIBDIR = $(PREFIX)/lib/pkgconfig
-export DYLD_LIBRARY_PATH = $(PREFIX)/lib
-# following is required for configure scripts that check dyld libraries
-# by building and running a test app 
-export DYLD_LIBRARY_PATH := $(DYLD_LIBRARY_PATH):$(PREFIX)/vlc-lib
 export MACOSX_DEPLOYMENT_TARGET = $(SDK_TARGET)
 export LIBRARY_PATH := $(PREFIX)/lib:$(LIBRARY_PATH)
 export CFLAGS = -I$(PREFIX)/include $(EXTRA_CFLAGS) $(EXTRA_CPPFLAGS)
@@ -745,9 +741,6 @@ flac: flac-$(FLAC_VERSION).tar.gz
 ifdef HAVE_DARWIN_OS
 	(patch -p 0 < Patches/flac-mactel.patch)
 endif
-ifneq ($(HOST),$(BUILD))
-	(patch -p 0 < Patches/flac-cross.patch && cd $@ && autoconf)
-endif
 
 .FLAC: flac 
 ifdef HAVE_WIN32
@@ -1075,20 +1068,7 @@ live555-$(LIVEDOTCOM_VERSION).tar.gz:
 
 live: live555-$(LIVEDOTCOM_VERSION).tar.gz
 	$(EXTRACT_GZ)
-	patch -p 0 < Patches/live.patch
-ifdef HAVE_WIN32 
-	patch -p0 < Patches/livedotcom-win32.patch
-endif
-ifdef HAVE_DARWIN_OS
-	patch -p0 < Patches/live-osx.patch
-endif
-	(cd live/liveMedia/include; \
-		mv liveMedia_version.hh liveMedia_version.hh.bak; \
-	sed -e 's/.*LIVEMEDIA_LIBRARY_VERSION_INT.*/#define LIVEMEDIA_LIBRARY_VERSION_INT         9999999999/' liveMedia_version.hh.bak > liveMedia_version.hh )
-	patch -Np0 < Patches/live-config.patch
-ifdef HAVE_UCLIBC
 	patch -p0 < Patches/live-noapps.patch
-endif
 
 .live: live
 ifdef HAVE_WIN32 
@@ -1099,7 +1079,13 @@ ifdef HAVE_DARWIN_OS
 	(cd $<; ./genMakefiles macosx && make)
 else
 	(cd $<; sed -e 's/=/= EXTRA_CPPFLAGS/' -e 's%EXTRA_CPPFLAGS%-I/include%' -i.orig groupsock/Makefile.head)
+ifdef HAVE_UCLIBC
+ifdef HAVE_BIGENDIAN
+	(cd $<; ./genMakefiles armeb-uclibc && make $(HOSTCC))
+endif
+else
 	(cd $<; ./genMakefiles linux && make $(HOSTCC))
+endif
 endif
 endif
 	touch $@
@@ -1201,7 +1187,7 @@ CLEAN_PKG += libdca
 
 ifdef SVN
 x264: 
-	$(SVN) co svn://svn.videolan.org/x264/trunk/ -r 701 x264
+	$(SVN) co svn://svn.videolan.org/x264/trunk/ -r 736 x264
 ifdef HAVE_WIN32
 	(cd $@; patch -p 0 < ../Patches/x264-svn-win32.patch )
 endif
@@ -1339,7 +1325,7 @@ wxwidgets: wxWidgets-$(WXWIDGETS_VERSION).tar.gz
 #	(cd wxwidgets; patch -p1 <../Patches/wxMSW-win32.patch)
 
 .wxwidgets: wxwidgets
-	(cd wxwidgets; $(HOSTCC) ./configure $(HOSTCONF) --prefix=$(PREFIX) --enable-optimise --disable-debug --disable-threads --disable-gif --disable-pcx --disable-iff --disable-pnm --without-zlib  --without-libpng --without-libjpeg --without-libtiff --without-regex  --disable-zipstream --disable-fs_zip --enable-no_rtti  --enable-no_exceptions --disable-exceptions --disable-stl --disable-html --without-expat --disable-protocols --disable-protocol --disable-xrc --disable-sound --disable-dialupman --disable-mediactrl  --disable-joystick --disable-grid --disable-datepick --disable-postscript--disable-filesystem --disable-fileproto --disable-ipc --disable-sockets --disable-precomp-headers && make && make install)
+	(cd wxwidgets; $(HOSTCC) ./configure $(HOSTCONF) --prefix=$(PREFIX) --enable-optimise --disable-debug --disable-threads --disable-gif --disable-pcx --disable-iff --disable-pnm --without-zlib  --without-libpng --without-libjpeg --without-libtiff --without-regex  --disable-zipstream --disable-fs_zip --enable-no_rtti  --enable-no_exceptions --disable-exceptions --disable-stl --disable-html --without-expat --disable-protocols --disable-protocol --disable-xrc --disable-sound --disable-dialupman --disable-mediactrl  --disable-joystick --disable-grid --disable-datepick --disable-postscript--disable-filesystem --disable-fileproto --disable-ipc --disable-sockets --disable-precomp-headers --enable-unicode && make && make install)
 	$(INSTALL_NAME)
 	touch $@
 
@@ -1406,7 +1392,7 @@ ifdef HAVE_WIN32
 endif
 
 .xml: xml
-	(cd xml; $(HOSTCC) ./configure $(HOSTCONF) --prefix=$(PREFIX) --with-minimal --with-catalog --with-reader --with-tree --with-push --with-xptr --with-valid --with-writer --with-output --with-xpath --with-xinclude --with-sax1 --without-zlib --without-iconv --without-http --without-ftp && make && make install)
+	(cd xml; CFLAGS="-DLIBXML_STATIC" $(HOSTCC) ./configure $(HOSTCONF) --prefix=$(PREFIX) --with-minimal --with-catalog --with-reader --with-tree --with-push --with-xptr --with-valid --with-writer --with-output --with-xpath --with-xinclude --with-sax1 --without-zlib --without-iconv --without-http --without-ftp && make && make install)
 ifndef HAVE_DARWIN_OS
 	$(INSTALL_NAME)
 endif
@@ -1830,6 +1816,7 @@ SDL_image-$(SDL_IMAGE_VERSION).tar.gz:
 SDL_image: SDL_image-$(SDL_IMAGE_VERSION).tar.gz 
 	$(EXTRACT_GZ)
 	patch -p 0 < Patches/SDL_image.patch
+	patch -p0 < Patches/SDL_image-CVE-2006-4484.patch
 
 .SDL_image: SDL_image .SDL .png .jpeg .tiff
 	(cd $<; $(HOSTCC) ./configure $(HOSTCONF) --prefix=$(PREFIX) --enable-tif --disable-sdltest CFLAGS="$(CFLAGS)" && make && make install)

@@ -2,7 +2,7 @@
  * interface.cpp : wxWidgets plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2006 the VideoLAN team
- * $Id: interface.cpp 23379 2007-11-27 19:10:16Z fkuehne $
+ * $Id: interface.cpp 24300 2008-01-14 20:17:23Z Trax $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -936,9 +936,9 @@ void Interface::OnExit( wxCommandEvent& WXUNUSED(event) )
 void Interface::OnAbout( wxCommandEvent& WXUNUSED(event) )
 {
     wxString msg;
-    msg.Printf( wxString(wxT("VLC media player " PACKAGE_VERSION)) +
+    msg.Printf( wxString(wxT("VLC media player " VERSION_MESSAGE)) +
         wxU(_(" (wxWidgets interface)\n\n")) +
-        wxU(_("(c) 1996-2006 - the VideoLAN Team\n\n")) +
+        wxU(_("(c) " COPYRIGHT_YEARS " - the VideoLAN Team\n\n")) +
        wxU(_("Compiled by "))+ wxU(VLC_CompileBy())+ wxU("@") +
        wxU(VLC_CompileHost())+ wxT(".")+ wxU(VLC_CompileDomain())+ wxT(".\n") +
        wxU(_("Compiler: "))+ wxU(VLC_Compiler())+wxT( ".\n") +
