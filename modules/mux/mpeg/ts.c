@@ -2,7 +2,7 @@
  * ts.c: MPEG-II TS Muxer
  *****************************************************************************
  * Copyright (C) 2001-2005 VideoLAN (Centrale Réseaux) and its contributors
- * $Id: ts.c 16067 2006-07-18 08:48:53Z sigmunau $
+ * $Id: ts.c 16647 2006-09-14 14:58:57Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>

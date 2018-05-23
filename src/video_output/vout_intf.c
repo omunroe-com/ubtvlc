@@ -2,7 +2,7 @@
  * vout_intf.c : video output interface
  *****************************************************************************
  * Copyright (C) 2000-2006 the VideoLAN team
- * $Id: vout_intf.c 16134 2006-07-26 21:21:48Z dionoea $
+ * $Id: vout_intf.c 16647 2006-09-14 14:58:57Z hartman $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *

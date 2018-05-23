@@ -2,7 +2,7 @@
  * vlcglue.c: VLC Module
  *****************************************************************************
  * Copyright (C) 1998-2004 the VideoLAN team
- * $Id: vlcglue.c 16080 2006-07-19 09:01:15Z oaubert $
+ * $Id: vlcglue.c 16647 2006-09-14 14:58:57Z hartman $
  *
  * Authors: Olivier Aubert <oaubert at bat710.univ-lyon1.fr>
  *          Clément Stenac <zorglub@videolan.org>

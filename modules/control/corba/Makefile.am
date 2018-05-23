@@ -24,14 +24,11 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = -L$(top_builddir)/src -lvlc
+LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
-
-nice:
-	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -116,9 +113,9 @@ libcorba_a_SOURCES = $(SOURCES_corba)
 libcorba_builtin_la_SOURCES = $(SOURCES_corba)
 nodist_libcorba_a_SOURCES = $(nodist_SOURCES_corba)
 nodist_libcorba_builtin_la_SOURCES = $(nodist_SOURCES_corba)
-libcorba_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) corba`
-libcorba_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) corba`
-libcorba_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) corba`
+libcorba_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic corba`
+libcorba_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic corba`
+libcorba_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic corba`
 libcorba_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin corba`
 libcorba_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin corba`
 libcorba_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin corba`

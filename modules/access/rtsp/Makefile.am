@@ -24,14 +24,11 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = -L$(top_builddir)/src -lvlc
+LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
-
-nice:
-	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -107,9 +104,9 @@ libaccess_realrtsp_plugin_la_LIBADD = $(LTLIBVLC)
 
 libaccess_realrtsp_a_SOURCES = $(SOURCES_access_realrtsp)
 libaccess_realrtsp_builtin_la_SOURCES = $(SOURCES_access_realrtsp)
-libaccess_realrtsp_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) access_realrtsp`
-libaccess_realrtsp_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) access_realrtsp`
-libaccess_realrtsp_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) access_realrtsp`
+libaccess_realrtsp_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic access_realrtsp`
+libaccess_realrtsp_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic access_realrtsp`
+libaccess_realrtsp_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic access_realrtsp`
 libaccess_realrtsp_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin access_realrtsp`
 libaccess_realrtsp_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin access_realrtsp`
 libaccess_realrtsp_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin access_realrtsp`

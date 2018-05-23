@@ -2,7 +2,7 @@
  * dialogs.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: dialogs.cpp 16120 2006-07-24 20:09:22Z ipkiss $
+ * $Id: dialogs.cpp 16647 2006-09-14 14:58:57Z hartman $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

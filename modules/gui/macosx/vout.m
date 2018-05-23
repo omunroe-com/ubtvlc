@@ -2,7 +2,7 @@
  * vout.m: MacOS X video output module
  *****************************************************************************
  * Copyright (C) 2001-2006 the VideoLAN team
- * $Id: vout.m 16301 2006-08-19 22:54:18Z fkuehne $
+ * $Id: vout.m 16647 2006-09-14 14:58:57Z hartman $
  *
  * Authors: Colin Delacroix <colin@zoy.org>
  *          Florian G. Pflug <fgp@phlo.org>
@@ -479,79 +479,124 @@ int DeviceCallback( vlc_object_t *p_this, const char *psz_variable,
             msg_Dbg( p_vout, "received NSRightMouseDown (generic method) or Ctrl clic" );
             [NSMenu popUpContextMenu: [[VLCMain sharedInstance] getVoutMenu] withEvent: o_event forView: [[[VLCMain sharedInstance] getControls] getVoutView]];
         }
+        else
+            [super mouseDown: o_event];
     }
-
-    [super mouseDown: o_event];
 }
 
 - (void)otherMouseDown:(NSEvent *)o_event
 {
     vlc_value_t val;
 
-    if( p_vout && [o_event type] == NSOtherMouseDown )
+    if( p_vout )
     {
-        var_Get( p_vout, "mouse-button-down", &val );
-        val.i_int |= 2;
-        var_Set( p_vout, "mouse-button-down", val );
-    }
+        switch( [o_event type] )
+        {
+            case NSOtherMouseDown:
+            {
+                var_Get( p_vout, "mouse-button-down", &val );
+                val.i_int |= 2;
+                var_Set( p_vout, "mouse-button-down", val );
+            }
+            break;
 
-    [super mouseDown: o_event];
+            default:
+                [super mouseDown: o_event];
+            break;
+        }
+    }
 }
 
 - (void)rightMouseDown:(NSEvent *)o_event
 {
-    if( p_vout && [o_event type] == NSRightMouseDown )
+    if( p_vout )
     {
-        msg_Dbg( p_vout, "received NSRightMouseDown (specific method)" );
-        [NSMenu popUpContextMenu: [[VLCMain sharedInstance] getVoutMenu] withEvent: o_event forView: [[[VLCMain sharedInstance] getControls] getVoutView]];
-    }
+        switch( [o_event type] )
+        {
+            case NSRightMouseDown:
+            {
+                msg_Dbg( p_vout, "received NSRightMouseDown (specific method)" );
+                [NSMenu popUpContextMenu: [[VLCMain sharedInstance] getVoutMenu] withEvent: o_event forView: [[[VLCMain sharedInstance] getControls] getVoutView]];
+            }
+            break;
 
-    [super mouseDown: o_event];
+            default:
+                [super mouseDown: o_event];
+            break;
+        }
+    }
 }
 
 - (void)mouseUp:(NSEvent *)o_event
 {
     vlc_value_t val;
 
-    if( p_vout && [o_event type] == NSLeftMouseUp )
+    if( p_vout )
     {
-        vlc_value_t b_val;
-        b_val.b_bool = VLC_TRUE;
-        var_Set( p_vout, "mouse-clicked", b_val );
+        switch( [o_event type] )
+        {
+            case NSLeftMouseUp:
+            {
+                vlc_value_t b_val;
+                b_val.b_bool = VLC_TRUE;
+                var_Set( p_vout, "mouse-clicked", b_val );
 
-        var_Get( p_vout, "mouse-button-down", &val );
-        val.i_int &= ~1;
-        var_Set( p_vout, "mouse-button-down", val );
+                var_Get( p_vout, "mouse-button-down", &val );
+                val.i_int &= ~1;
+                var_Set( p_vout, "mouse-button-down", val );
+            }
+            break;
+
+            default:
+                [super mouseUp: o_event];
+            break;
+        }
     }
-
-    [super mouseUp: o_event];
 }
 
 - (void)otherMouseUp:(NSEvent *)o_event
 {
     vlc_value_t val;
 
-    if( p_vout && [o_event type] == NSOtherMouseUp )
+    if( p_vout )
     {
-        var_Get( p_vout, "mouse-button-down", &val );
-        val.i_int &= ~2;
-        var_Set( p_vout, "mouse-button-down", val );
-    }
+        switch( [o_event type] )
+        {
+            case NSOtherMouseUp:
+            {
+                var_Get( p_vout, "mouse-button-down", &val );
+                val.i_int &= ~2;
+                var_Set( p_vout, "mouse-button-down", val );
+            }
+            break;
 
-    [super mouseUp: o_event];
+            default:
+                [super mouseUp: o_event];
+            break;
+        }
+    }
 }
 
 - (void)rightMouseUp:(NSEvent *)o_event
 {
-    if( p_vout && [o_event type] == NSRightMouseUp )
+    if( p_vout )
     {
-        /* FIXME: this isn't the appropriate place, but we can't receive
-         * NSRightMouseDown some how */
-        msg_Dbg( p_vout, "received NSRightMouseUp" ); 
-        [NSMenu popUpContextMenu: [[VLCMain sharedInstance] getVoutMenu] withEvent: o_event forView: [[[VLCMain sharedInstance] getControls] getVoutView]];
-    }
+        switch( [o_event type] )
+        {
+            case NSRightMouseUp:
+            {
+                /* FIXME: this isn't the appropriate place, but we can't receive
+                 * NSRightMouseDown some how */
+                msg_Dbg( p_vout, "received NSRightMouseUp" ); 
+                [NSMenu popUpContextMenu: [[VLCMain sharedInstance] getVoutMenu] withEvent: o_event forView: [[[VLCMain sharedInstance] getControls] getVoutView]];
+            }
+            break;
 
-    [super mouseUp: o_event];
+            default:
+                [super mouseUp: o_event];
+            break;
+        }
+    }
 }
 
 - (void)mouseDragged:(NSEvent *)o_event
@@ -610,7 +655,6 @@ int DeviceCallback( vlc_object_t *p_this, const char *psz_variable,
             var_Set( p_vout, "mouse-moved", val );
         }
     }
-
     [super mouseMoved: o_event];
 }
 

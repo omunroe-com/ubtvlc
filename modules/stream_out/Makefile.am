@@ -24,14 +24,11 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = -L$(top_builddir)/src -lvlc
+LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
-
-nice:
-	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -107,9 +104,9 @@ libstream_out_dummy_plugin_la_LIBADD = $(LTLIBVLC)
 
 libstream_out_dummy_a_SOURCES = $(SOURCES_stream_out_dummy)
 libstream_out_dummy_builtin_la_SOURCES = $(SOURCES_stream_out_dummy)
-libstream_out_dummy_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) stream_out_dummy`
-libstream_out_dummy_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) stream_out_dummy`
-libstream_out_dummy_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) stream_out_dummy`
+libstream_out_dummy_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_dummy`
+libstream_out_dummy_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_dummy`
+libstream_out_dummy_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_dummy`
 libstream_out_dummy_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_dummy`
 libstream_out_dummy_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_dummy`
 libstream_out_dummy_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_dummy`
@@ -130,9 +127,9 @@ libstream_out_description_plugin_la_LIBADD = $(LTLIBVLC)
 
 libstream_out_description_a_SOURCES = $(SOURCES_stream_out_description)
 libstream_out_description_builtin_la_SOURCES = $(SOURCES_stream_out_description)
-libstream_out_description_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) stream_out_description`
-libstream_out_description_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) stream_out_description`
-libstream_out_description_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) stream_out_description`
+libstream_out_description_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_description`
+libstream_out_description_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_description`
+libstream_out_description_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_description`
 libstream_out_description_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_description`
 libstream_out_description_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_description`
 libstream_out_description_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_description`
@@ -153,9 +150,9 @@ libstream_out_standard_plugin_la_LIBADD = $(LTLIBVLC)
 
 libstream_out_standard_a_SOURCES = $(SOURCES_stream_out_standard)
 libstream_out_standard_builtin_la_SOURCES = $(SOURCES_stream_out_standard)
-libstream_out_standard_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) stream_out_standard`
-libstream_out_standard_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) stream_out_standard`
-libstream_out_standard_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) stream_out_standard`
+libstream_out_standard_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_standard`
+libstream_out_standard_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_standard`
+libstream_out_standard_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_standard`
 libstream_out_standard_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_standard`
 libstream_out_standard_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_standard`
 libstream_out_standard_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_standard`
@@ -176,9 +173,9 @@ libstream_out_transcode_plugin_la_LIBADD = $(LTLIBVLC)
 
 libstream_out_transcode_a_SOURCES = $(SOURCES_stream_out_transcode)
 libstream_out_transcode_builtin_la_SOURCES = $(SOURCES_stream_out_transcode)
-libstream_out_transcode_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) stream_out_transcode`
-libstream_out_transcode_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) stream_out_transcode`
-libstream_out_transcode_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) stream_out_transcode`
+libstream_out_transcode_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_transcode`
+libstream_out_transcode_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_transcode`
+libstream_out_transcode_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_transcode`
 libstream_out_transcode_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_transcode`
 libstream_out_transcode_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_transcode`
 libstream_out_transcode_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_transcode`
@@ -199,9 +196,9 @@ libstream_out_duplicate_plugin_la_LIBADD = $(LTLIBVLC)
 
 libstream_out_duplicate_a_SOURCES = $(SOURCES_stream_out_duplicate)
 libstream_out_duplicate_builtin_la_SOURCES = $(SOURCES_stream_out_duplicate)
-libstream_out_duplicate_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) stream_out_duplicate`
-libstream_out_duplicate_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) stream_out_duplicate`
-libstream_out_duplicate_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) stream_out_duplicate`
+libstream_out_duplicate_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_duplicate`
+libstream_out_duplicate_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_duplicate`
+libstream_out_duplicate_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_duplicate`
 libstream_out_duplicate_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_duplicate`
 libstream_out_duplicate_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_duplicate`
 libstream_out_duplicate_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_duplicate`
@@ -222,9 +219,9 @@ libstream_out_es_plugin_la_LIBADD = $(LTLIBVLC)
 
 libstream_out_es_a_SOURCES = $(SOURCES_stream_out_es)
 libstream_out_es_builtin_la_SOURCES = $(SOURCES_stream_out_es)
-libstream_out_es_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) stream_out_es`
-libstream_out_es_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) stream_out_es`
-libstream_out_es_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) stream_out_es`
+libstream_out_es_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_es`
+libstream_out_es_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_es`
+libstream_out_es_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_es`
 libstream_out_es_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_es`
 libstream_out_es_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_es`
 libstream_out_es_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_es`
@@ -245,9 +242,9 @@ libstream_out_display_plugin_la_LIBADD = $(LTLIBVLC)
 
 libstream_out_display_a_SOURCES = $(SOURCES_stream_out_display)
 libstream_out_display_builtin_la_SOURCES = $(SOURCES_stream_out_display)
-libstream_out_display_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) stream_out_display`
-libstream_out_display_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) stream_out_display`
-libstream_out_display_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) stream_out_display`
+libstream_out_display_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_display`
+libstream_out_display_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_display`
+libstream_out_display_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_display`
 libstream_out_display_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_display`
 libstream_out_display_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_display`
 libstream_out_display_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_display`
@@ -268,9 +265,9 @@ libstream_out_gather_plugin_la_LIBADD = $(LTLIBVLC)
 
 libstream_out_gather_a_SOURCES = $(SOURCES_stream_out_gather)
 libstream_out_gather_builtin_la_SOURCES = $(SOURCES_stream_out_gather)
-libstream_out_gather_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) stream_out_gather`
-libstream_out_gather_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) stream_out_gather`
-libstream_out_gather_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) stream_out_gather`
+libstream_out_gather_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_gather`
+libstream_out_gather_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_gather`
+libstream_out_gather_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_gather`
 libstream_out_gather_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_gather`
 libstream_out_gather_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_gather`
 libstream_out_gather_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_gather`
@@ -291,9 +288,9 @@ libstream_out_rtp_plugin_la_LIBADD = $(LTLIBVLC)
 
 libstream_out_rtp_a_SOURCES = $(SOURCES_stream_out_rtp)
 libstream_out_rtp_builtin_la_SOURCES = $(SOURCES_stream_out_rtp)
-libstream_out_rtp_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) stream_out_rtp`
-libstream_out_rtp_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) stream_out_rtp`
-libstream_out_rtp_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) stream_out_rtp`
+libstream_out_rtp_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_rtp`
+libstream_out_rtp_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_rtp`
+libstream_out_rtp_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_rtp`
 libstream_out_rtp_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_rtp`
 libstream_out_rtp_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_rtp`
 libstream_out_rtp_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_rtp`
@@ -314,9 +311,9 @@ libstream_out_switcher_plugin_la_LIBADD = $(LTLIBVLC)
 
 libstream_out_switcher_a_SOURCES = $(SOURCES_stream_out_switcher)
 libstream_out_switcher_builtin_la_SOURCES = $(SOURCES_stream_out_switcher)
-libstream_out_switcher_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) stream_out_switcher`
-libstream_out_switcher_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) stream_out_switcher`
-libstream_out_switcher_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) stream_out_switcher`
+libstream_out_switcher_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_switcher`
+libstream_out_switcher_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_switcher`
+libstream_out_switcher_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_switcher`
 libstream_out_switcher_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_switcher`
 libstream_out_switcher_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_switcher`
 libstream_out_switcher_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_switcher`
@@ -337,9 +334,9 @@ libstream_out_bridge_plugin_la_LIBADD = $(LTLIBVLC)
 
 libstream_out_bridge_a_SOURCES = $(SOURCES_stream_out_bridge)
 libstream_out_bridge_builtin_la_SOURCES = $(SOURCES_stream_out_bridge)
-libstream_out_bridge_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) stream_out_bridge`
-libstream_out_bridge_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) stream_out_bridge`
-libstream_out_bridge_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) stream_out_bridge`
+libstream_out_bridge_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_bridge`
+libstream_out_bridge_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_bridge`
+libstream_out_bridge_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_bridge`
 libstream_out_bridge_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_bridge`
 libstream_out_bridge_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_bridge`
 libstream_out_bridge_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_bridge`
@@ -360,9 +357,9 @@ libstream_out_mosaic_bridge_plugin_la_LIBADD = $(LTLIBVLC)
 
 libstream_out_mosaic_bridge_a_SOURCES = $(SOURCES_stream_out_mosaic_bridge)
 libstream_out_mosaic_bridge_builtin_la_SOURCES = $(SOURCES_stream_out_mosaic_bridge)
-libstream_out_mosaic_bridge_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) stream_out_mosaic_bridge`
-libstream_out_mosaic_bridge_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) stream_out_mosaic_bridge`
-libstream_out_mosaic_bridge_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) stream_out_mosaic_bridge`
+libstream_out_mosaic_bridge_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic stream_out_mosaic_bridge`
+libstream_out_mosaic_bridge_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic stream_out_mosaic_bridge`
+libstream_out_mosaic_bridge_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic stream_out_mosaic_bridge`
 libstream_out_mosaic_bridge_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin stream_out_mosaic_bridge`
 libstream_out_mosaic_bridge_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin stream_out_mosaic_bridge`
 libstream_out_mosaic_bridge_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin stream_out_mosaic_bridge`

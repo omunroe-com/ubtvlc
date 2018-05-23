@@ -24,14 +24,11 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = -L$(top_builddir)/src -lvlc
+LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
-
-nice:
-	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -107,9 +104,9 @@ libtest1_plugin_la_LIBADD = $(LTLIBVLC)
 
 libtest1_a_SOURCES = $(SOURCES_test1)
 libtest1_builtin_la_SOURCES = $(SOURCES_test1)
-libtest1_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) test1`
-libtest1_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) test1`
-libtest1_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) test1`
+libtest1_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic test1`
+libtest1_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic test1`
+libtest1_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic test1`
 libtest1_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin test1`
 libtest1_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin test1`
 libtest1_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin test1`
@@ -130,9 +127,9 @@ libtest2_plugin_la_LIBADD = $(LTLIBVLC)
 
 libtest2_a_SOURCES = $(SOURCES_test2)
 libtest2_builtin_la_SOURCES = $(SOURCES_test2)
-libtest2_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) test2`
-libtest2_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) test2`
-libtest2_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) test2`
+libtest2_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic test2`
+libtest2_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic test2`
+libtest2_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic test2`
 libtest2_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin test2`
 libtest2_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin test2`
 libtest2_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin test2`
@@ -153,9 +150,9 @@ libtest3_plugin_la_LIBADD = $(LTLIBVLC)
 
 libtest3_a_SOURCES = $(SOURCES_test3)
 libtest3_builtin_la_SOURCES = $(SOURCES_test3)
-libtest3_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) test3`
-libtest3_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) test3`
-libtest3_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) test3`
+libtest3_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic test3`
+libtest3_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic test3`
+libtest3_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic test3`
 libtest3_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin test3`
 libtest3_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin test3`
 libtest3_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin test3`
@@ -176,9 +173,9 @@ libtest4_plugin_la_LIBADD = $(LTLIBVLC)
 
 libtest4_a_SOURCES = $(SOURCES_test4)
 libtest4_builtin_la_SOURCES = $(SOURCES_test4)
-libtest4_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) test4`
-libtest4_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) test4`
-libtest4_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) test4`
+libtest4_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic test4`
+libtest4_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic test4`
+libtest4_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic test4`
 libtest4_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin test4`
 libtest4_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin test4`
 libtest4_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin test4`
@@ -199,9 +196,9 @@ libtest_playlist_plugin_la_LIBADD = $(LTLIBVLC)
 
 libtest_playlist_a_SOURCES = $(SOURCES_test_playlist)
 libtest_playlist_builtin_la_SOURCES = $(SOURCES_test_playlist)
-libtest_playlist_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) test_playlist`
-libtest_playlist_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) test_playlist`
-libtest_playlist_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) test_playlist`
+libtest_playlist_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic test_playlist`
+libtest_playlist_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic test_playlist`
+libtest_playlist_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic test_playlist`
 libtest_playlist_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin test_playlist`
 libtest_playlist_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin test_playlist`
 libtest_playlist_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin test_playlist`

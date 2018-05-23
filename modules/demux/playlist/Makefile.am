@@ -24,14 +24,11 @@ include Modules.am
 LTLIBVLC = $(top_builddir)/src/libvlc.la
 
 if BUILD_SHARED
-LIBVLC = -L$(top_builddir)/src -lvlc
+LIBVLC = $(top_builddir)/src/libvlc$(LIBEXT)
 LIBADD = $(LIBVLC)
 endif
 
 all: all-modules
-
-nice:
-	$(top_builddir)/compile
 
 # Find out which modules were enabled and tell make to build them
 all-modules:
@@ -107,9 +104,9 @@ libplaylist_plugin_la_LIBADD = $(LTLIBVLC)
 
 libplaylist_a_SOURCES = $(SOURCES_playlist)
 libplaylist_builtin_la_SOURCES = $(SOURCES_playlist)
-libplaylist_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin $(pic) playlist`
-libplaylist_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin $(pic) playlist`
-libplaylist_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin $(pic) playlist`
+libplaylist_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic playlist`
+libplaylist_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic playlist`
+libplaylist_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic playlist`
 libplaylist_builtin_la_CFLAGS = `$(VLC_CONFIG) --cflags builtin playlist`
 libplaylist_builtin_la_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin playlist`
 libplaylist_builtin_la_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin playlist`
