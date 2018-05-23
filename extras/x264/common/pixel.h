@@ -25,6 +25,8 @@
 #define _PIXEL_H 1
 
 typedef int  (*x264_pixel_cmp_t) ( uint8_t *, int, uint8_t *, int );
+typedef void (*x264_pixel_avg_t) ( uint8_t *, int, uint8_t *, int );
+typedef void (*x264_pixel_avg_weight_t) ( uint8_t *, int, uint8_t *, int, int );
 
 enum
 {
@@ -66,9 +68,10 @@ typedef struct
     x264_pixel_cmp_t satd[7];
     x264_pixel_cmp_t sa8d[4];
     x264_pixel_cmp_t mbcmp[7]; /* either satd or sad for subpel refine and mode decision */
+    x264_pixel_avg_t  avg[10];
+    x264_pixel_avg_weight_t avg_weight[10];
 } x264_pixel_function_t;
 
 void x264_pixel_init( int cpu, x264_pixel_function_t *pixf );
-int64_t x264_pixel_ssd_wxh( x264_pixel_function_t *pf, uint8_t *pix1, int i_pix1, uint8_t *pix2, int i_pix2, int i_width, int i_height );
 
 #endif

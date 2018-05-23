@@ -12,9 +12,7 @@ echo "  --enable-mp4-output      enables mp4 output (using gpac)"
 echo "  --enable-vfw             compiles the VfW frontend"
 echo "  --enable-pthread         enables multithreaded encoding"
 echo "  --enable-debug           adds -g, doesn't strip"
-echo "  --enable-gprof           adds -pg, doesn't strip"
 echo "  --enable-visualize       enables visualization (X11 only)"
-echo "  --extra-asflags=EASFLAGS add EASFLAGS to ASFLAGS"
 echo "  --extra-cflags=ECFLAGS   add ECFLAGS to CFLAGS"
 echo "  --extra-ldflags=ELDFLAGS add ELDFLAGS to LDFLAGS"
 echo ""
@@ -22,16 +20,15 @@ exit 1
 fi
 
 prefix='/usr/local'
-exec_prefix='${prefix}'
-bindir='${exec_prefix}/bin'
-libdir='${exec_prefix}/lib'
+eprefix='${prefix}'
+bindir='${eprefix}/bin'
+libdir='${eprefix}/lib'
 includedir='${prefix}/include'
 
 avis_input="no"
 mp4_output="no"
 pthread="no"
 debug="no"
-gprof="no"
 vfw="no"
 vis="no"
 
@@ -127,9 +124,6 @@ case "$UNAMEM" in
   ia64)
     ARCH="IA64"
     ;;
-  alpha)
-    ARCH="ALPHA"
-    ;;
   mips|mipsel)
     ARCH="MIPS"
     ;;
@@ -158,21 +152,21 @@ CFLAGS="$CFLAGS -DARCH_$ARCH -DSYS_$SYS"
 for opt do
     optarg="${opt#*=}"
     case "$opt" in
-        --prefix=*)
-            prefix="$optarg"
-            ;;
-        --exec-prefix=*)
-            exec_prefix="$optarg"
-            ;;
-        --bindir=*)
-            bindir="$optarg"
-            ;;
-        --libdir=*)
-            libdir="$optarg"
-            ;;
-        --includedir=*)
-            includedir="$optarg"
-            ;;
+	--prefix=*)
+	    prefix="$optarg"
+	    ;;
+	--exec-prefix=*)
+	    eprefix="$optarg"
+	    ;;
+	--bindir=*)
+	    bindir="$optarg"
+	    ;;
+	--libdir=*)
+	    libdir="$optarg"
+	    ;;
+	--includedir=*)
+	    includedir="$optarg"
+	    ;;
         --enable-avis-input)
             if [ $SYS = CYGWIN -o $SYS = MINGW ]; then
                 CFLAGS="$CFLAGS -DAVIS_INPUT"
@@ -182,14 +176,11 @@ for opt do
             ;;
         --enable-mp4-output)
             CFLAGS="$CFLAGS -DMP4_OUTPUT"
-            LDFLAGS="$LDFLAGS -lgpac_static"
+            LDFLAGS="$LDFLAGS -lm4systems_static"
             if [ $SYS = CYGWIN -o $SYS = MINGW ]; then
                 LDFLAGS="$LDFLAGS -lwinmm"
             fi
             mp4_output="yes"
-            ;;
-        --extra-asflags=*)
-            ASFLAGS="$ASFLAGS ${opt#--extra-asflags=}"
             ;;
         --extra-cflags=*)
             CFLAGS="$CFLAGS ${opt#--extra-cflags=}"
@@ -214,11 +205,6 @@ for opt do
             CFLAGS="$CFLAGS -g"
             debug="yes"
             ;;
-        --enable-gprof)
-            CFLAGS="$CFLAGS -pg"
-            LDFLAGS="$LDFLAGS -pg"
-            gprof="yes"
-            ;;
         --enable-vfw)
             vfw="yes"
             ;;
@@ -234,7 +220,7 @@ for opt do
 done
 
 VFWFLAGS=
-if [ "$debug" != "yes" -a "$gprof" != "yes" ]; then
+if [ "$debug" != "yes" ]; then
     CFLAGS="$CFLAGS -s -fomit-frame-pointer"
     LDFLAGS="$LDFLAGS -s"
     VFW_LDFLAGS="$VFW_LDFLAGS -s"
@@ -243,7 +229,7 @@ fi
 rm -f config.mak
 cat > config.mak << EOF
 prefix=$prefix
-exec_prefix=$exec_prefix
+eprefix=$eprefix
 bindir=$bindir
 libdir=$libdir
 includedir=$includedir
@@ -269,22 +255,6 @@ EOF
     echo "default: x264vfw.dll" >> config.mak
 fi
 
-# x264.pc file creation
-rm -f x264.pc
-cat > x264.pc << EOF
-prefix=$prefix
-exec_prefix=$exec_prefix
-libdir=$libdir
-includedir=$includedir
-
-Name: x264
-Description: H.264 (MPEG4 AVC) encoder library
-Version:
-Libs: -L$libdir -lx264
-Cflags: -I$includedir
-EOF
-
-
 echo "Platform:   $ARCH"
 echo "System:     $SYS"
 echo "avis input: $avis_input"
@@ -292,7 +262,6 @@ echo "mp4 output: $mp4_output"
 echo "pthread:    $pthread"
 echo "vfw:        $vfw"
 echo "debug:      $debug"
-echo "gprof:      $gprof"
 echo "visualize:  $vis"
 echo
 echo "You can run 'make' now."

@@ -2,7 +2,7 @@
 # Makefile : Build vlc-contrib files
 # ***************************************************************************
 # Copyright (C) 2003-2005 the VideoLAN team
-# $Id: Makefile 13093 2005-11-02 11:51:07Z fkuehne $
+# $Id: Makefile 12879 2005-10-18 21:02:04Z fkuehne $
 # 
 # Authors: Christophe Massiot <massiot@via.ecp.fr>
 #          Derk-Jan Hartman <hartman at videolan dot org>
@@ -27,10 +27,7 @@ include ./config.mak
 BUILDDIRS = bin doc etc include info lib man sbin share vlc-lib tmp
 
 all: FORCE
-#	@echo "Do you mean to make src or make bin ?"
-	@echo "    'make bin' isn't functional at the moment,"
-	@echo "    running 'make src' instead..."
-	$(MAKE) src
+	@echo "Do you mean to make src or make bin ?"
 
 src: FORCE
 	$(MAKE) -C src all

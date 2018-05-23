@@ -130,32 +130,31 @@ LRESULT compress_frames_info(CODEC * codec, ICCOMPRESSFRAMES * icf )
 {
     codec->fincr = icf->dwScale;
     codec->fbase = icf->dwRate;
-    codec->config.i_frame_total = icf->lFrameCount;
     return ICERR_OK;
 }
 
 static void x264_log_vfw( void *p_private, int i_level, const char *psz_fmt, va_list arg )
-{
+{ 
     char error_msg[1024];
     int idx;
     HWND *hCons = p_private;
 
     vsprintf( error_msg, psz_fmt, arg );
-
+    
     /* strip final linefeeds (required) */
     idx=strlen( error_msg ) - 1;
     while( idx >= 0 && error_msg[idx] == '\n' )
         error_msg[idx--] = 0;
 
     if(!( *hCons ) ) {
-        *hCons = CreateDialog( g_hInst, MAKEINTRESOURCE( IDD_ERRCONSOLE ), NULL,
+        *hCons = CreateDialog( g_hInst, MAKEINTRESOURCE( IDD_ERRCONSOLE ), NULL, 
                  callback_err_console );
         //ShowWindow( *hCons, SW_SHOW );
     }
     idx = SendDlgItemMessage( *hCons, IDC_CONSOLE, LB_ADDSTRING, 0, ( LPARAM )error_msg );
-
+    
     /* make sure that the last item added is visible (autoscroll) */
-    if( idx >= 0 )
+    if( idx >= 0 ) 
         SendDlgItemMessage( *hCons, IDC_CONSOLE, LB_SETTOPINDEX, ( WPARAM )idx, 0 );
 
 }
@@ -214,7 +213,6 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 
     param.i_fps_num = codec->fbase;
     param.i_fps_den = codec->fincr;
-    param.i_frame_total = config->i_frame_total;
 
     param.i_frame_reference = config->i_refmax;
     param.i_keyint_min = config->i_keyint_min;
@@ -264,9 +262,6 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
     if( config->b_i8x8 )
         param.analyse.inter |= X264_ANALYSE_I8x8;
     param.analyse.b_transform_8x8 = config->b_dct8x8;
-    if( config->b_mixedref )
-        param.analyse.b_mixed_references = 1;
-
 
     switch( config->i_encoding_type )
     {
@@ -353,7 +348,6 @@ LRESULT compress_end(CODEC * codec)
     }
 
     free( codec->hCons );
-    codec->hCons = NULL;
     return ICERR_OK;
 }
 

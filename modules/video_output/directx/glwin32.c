@@ -2,7 +2,7 @@
  * glwin32.c: Windows OpenGL provider
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: glwin32.c 13062 2005-10-31 21:14:27Z gbazin $
+ * $Id: glwin32.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -300,24 +300,6 @@ static int Manage( vout_thread_t *p_vout )
     else
     {
         vlc_mutex_unlock( &p_vout->p_sys->lock );
-    }
-
-    /* Check for cropping / aspect changes */
-    if( p_vout->i_changes & VOUT_CROP_CHANGE ||
-        p_vout->i_changes & VOUT_ASPECT_CHANGE )
-    {
-        p_vout->i_changes &= ~VOUT_CROP_CHANGE;
-        p_vout->i_changes &= ~VOUT_ASPECT_CHANGE;
-
-        p_vout->fmt_out.i_x_offset = p_vout->fmt_in.i_x_offset;
-        p_vout->fmt_out.i_y_offset = p_vout->fmt_in.i_y_offset;
-        p_vout->fmt_out.i_visible_width = p_vout->fmt_in.i_visible_width;
-        p_vout->fmt_out.i_visible_height = p_vout->fmt_in.i_visible_height;
-        p_vout->fmt_out.i_aspect = p_vout->fmt_in.i_aspect;
-        p_vout->fmt_out.i_sar_num = p_vout->fmt_in.i_sar_num;
-        p_vout->fmt_out.i_sar_den = p_vout->fmt_in.i_sar_den;
-        p_vout->output.i_aspect = p_vout->fmt_in.i_aspect;
-        E_(DirectXUpdateRects)( p_vout, VLC_TRUE );
     }
 
     /* We used to call the Win32 PeekMessage function here to read the window

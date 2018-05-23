@@ -2,7 +2,7 @@
  * marq.c : marquee display video plugin for vlc
  *****************************************************************************
  * Copyright (C) 2003-2005 the VideoLAN team
- * $Id: marq.c 13324 2005-11-22 21:13:42Z gbazin $
+ * $Id: marq.c 12821 2005-10-11 17:16:13Z zorglub $
  *
  * Authors: Mark Moriarty
  *
@@ -212,15 +212,6 @@ static void DestroyFilter( vlc_object_t *p_this )
     {
         return;
     }
-    var_DelCallback( p_input->p_libvlc, "marq-x", MarqueeCallback, p_sys );
-    var_DelCallback( p_input->p_libvlc, "marq-y", MarqueeCallback, p_sys );
-    var_DelCallback( p_input->p_libvlc, "marq-marquee", MarqueeCallback, p_sys );
-    var_DelCallback( p_input->p_libvlc, "marq-timeout", MarqueeCallback, p_sys );
-    var_DelCallback( p_input->p_libvlc, "marq-position", MarqueeCallback, p_sys );
-    var_DelCallback( p_input->p_libvlc, "marq-color", MarqueeCallback, p_sys );
-    var_DelCallback( p_input->p_libvlc, "marq-opacity", MarqueeCallback, p_sys );
-    var_DelCallback( p_input->p_libvlc, "marq-size", MarqueeCallback, p_sys );
-
     var_Destroy( p_input->p_libvlc , "marq-marquee" );
     var_Destroy( p_input->p_libvlc , "marq-x" );
     var_Destroy( p_input->p_libvlc , "marq-y" );

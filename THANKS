@@ -1,4 +1,4 @@
-$Id: THANKS 13388 2005-11-26 00:07:02Z dionoea $
+$Id: THANKS 12859 2005-10-16 19:44:44Z fkuehne $
 
 VLC makes extensive use of the following persons' code:
 
@@ -8,7 +8,6 @@ Michel Lespinasse <walken at zoy.org> - AC3 decoder, MPEG audio and video decode
 
 The VideoLAN team would like to thank the following contributors:
 
-Alex Izvorski <aizvorski at gmail dot com> - some more x264 options
 André de Barros Martins Ribeiro <andrerib at ajato.com.br> - Brazilian portuguese localization
 Andre Pang <adre.pang at csiro dot au> - Annodex support
 Andres Krapf <dae at via.ecp.fr> - FreeBSD port and tests, KDE interface
@@ -37,14 +36,12 @@ Damien Fouilleul <damien.fouilleul at laposte.net> - DirectShow input improvemen
 Daniel Fischer <dan at subsignal dot org> - Shoutcast output support
 Daniel Stränger <vlc at schmaller d0t de> - M3U and playlist improvements
 David Kennedy <dkennedy at tinytoad.com> - X11 fullscreen patch
-Daniel Nylander <info@danielnylander at se> - Swedish translation
 David Weber <david_weber at gmx.de> - Mac OS X interface design & graphics (v0.5.0)
 Davor Orel <syntheticamac at yahoo.it> - Mac OS X icons
 DirektX <direktx at freemail.hu> - Hungarian translation
 Emmanuel Blindauer <manu at agat.net> - aRts audio output
 Espen Skoglund <esk at ira.uka.de> - FreeBSD autoconf and Makefile patches
 Ethan C. Baldridge <BaldridgeE at cadmus.com> - directory browsing code
-Eurodata Rcomputer Rclub <retron.info> - VLC icon design (v0.8.4)
 François Seingier <francois.seingier at club-internet.fr> - TTL setting in the wx stream output dialog
 Frank Chao <frank0624 at gmail.com> - Chinese Traditional translation
 Fumio Nakayama <endymion at ca2.so-net.ne.jp> - Japanese translation
@@ -53,7 +50,6 @@ Goetz Waschk <waschk at informatik.uni-rostock dot de> - Mandrake packages
 Haakon Meland Eriksen - Norwegian translation
 Han HoJoong <0demon0 at paran dot com> - Korean translation
 Hans-Peter Jansen <hpj at urpla.net> - patch for module options handling
-Iván <talivan.ivan@gmail.com> - Galician translation
 Jan Gerber <j at v2v dot org> - patch theora decoding aspect ratio
 Jan Van Boghout <vlc at macrabbit.com> - iTunes like slider for OSX intf
 Javier Varela <tonxabar at hotmail.com> - Spanish translation
@@ -70,7 +66,6 @@ Johen Michael Zorko <zorko at att.net> - fix for delay issues in udp sout
 John Paul Lorenti <jpl31 at columbia.edu> - ALSA device selection patch
 Jonas Larsen <jonas at vrt.dk> - Danish translation
 Julien Blache <jb at technologeek.org> - disc ejection code
-King Norman <normankingxu at gmail.com> - Simplified Chinese translation
 kty0ne - WinAmp 5 skin for VLC
 Lorena Gomes - Catalan translation
 Marc Nolette <nolette at videotron.ca> - PVR support in DirectShow input

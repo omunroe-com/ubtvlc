@@ -2,7 +2,7 @@
  * block.c: Data blocks management functions
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: block.c 13022 2005-10-29 18:11:46Z md $
+ * $Id: block.c 12954 2005-10-24 17:08:54Z md $
  *
  * Authors: Laurent Aimar <fenrir@videolan.org>
  *
@@ -70,6 +70,7 @@ block_t *__block_New( vlc_object_t *p_obj, int i_size )
     p_block->i_dts          = 0;
     p_block->i_length       = 0;
     p_block->i_rate         = 0;
+    p_block->i_seqno        = 0;
     p_block->i_buffer       = i_size;
     p_block->p_buffer       =
         &p_sys->p_allocated_buffer[BLOCK_PADDING_SIZE +

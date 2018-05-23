@@ -2,7 +2,7 @@
  * vlcproc.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: vlcproc.cpp 13051 2005-10-31 07:35:39Z md $
+ * $Id: vlcproc.cpp 12955 2005-10-24 19:59:51Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -484,13 +484,18 @@ int VlcProc::controlWindow( intf_thread_t *pIntf, void *pWindow,
     {
         case VOUT_SET_ZOOM:
         {
+            double fArg = va_arg( args, double );
+
             if( pThis->m_pVout )
             {
+                // Compute requested vout dimensions
+                int width = (int)( pThis->m_pVout->i_window_width * fArg );
+                int height = (int)( pThis->m_pVout->i_window_height * fArg );
+
                 // Post a resize vout command
                 CmdResizeVout *pCmd =
                     new CmdResizeVout( pThis->getIntf(), pWindow,
-                                       pThis->m_pVout->i_window_width,
-                                       pThis->m_pVout->i_window_height );
+                                       width, height );
                 AsyncQueue *pQueue = AsyncQueue::instance( pThis->getIntf() );
                 pQueue->remove( "resize vout" );
                 pQueue->push( CmdGenericPtr( pCmd ) );

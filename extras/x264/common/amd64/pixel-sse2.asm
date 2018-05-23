@@ -26,7 +26,15 @@ BITS 64
 ; Macros and other preprocessor constants
 ;=============================================================================
 
-%include "amd64inc.asm"
+%macro cglobal 1
+    %ifdef PREFIX
+        global _%1
+        %define %1 _%1
+    %else
+        global %1
+    %endif
+%endmacro
+
 
 SECTION .rodata align=16
 
@@ -82,7 +90,7 @@ cglobal x264_pixel_satd_16x16_sse2
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_sad_16x16_sse2 (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_sad_16x16_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_sad_16x16_sse2:
     SAD_START_SSE2
@@ -151,7 +159,7 @@ x264_pixel_sad_16x16_sse2:
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_sad_16x8_sse2 (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_sad_16x8_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_sad_16x8_sse2:
     SAD_START_SSE2
@@ -227,7 +235,7 @@ x264_pixel_sad_16x8_sse2:
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_ssd_16x16_sse2 (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_ssd_16x16_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_ssd_16x16_sse2:
     SSD_START_SSE2
@@ -237,7 +245,7 @@ x264_pixel_ssd_16x16_sse2:
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_ssd_16x8_sse2 (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_ssd_16x8_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_ssd_16x8_sse2:
     SSD_START_SSE2
@@ -394,7 +402,7 @@ x264_pixel_ssd_16x8_sse2:
     movdqa  %2, %1
     psrldq  %1, 2
     paddusw %1, %2
-    pand    %1, [pd_0000ffff GLOBAL]
+    pand    %1, [pd_0000ffff]
     movdqa  %2, %1
     psrldq  %1, 4
     paddd   %1, %2
@@ -427,7 +435,7 @@ x264_pixel_ssd_16x8_sse2:
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_satd_16x16_sse2 (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_satd_16x16_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_satd_16x16_sse2:
     SATD_START
@@ -451,7 +459,7 @@ x264_pixel_satd_16x16_sse2:
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_satd_8x16_sse2 (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_satd_8x16_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_satd_8x16_sse2:
     SATD_START
@@ -465,7 +473,7 @@ x264_pixel_satd_8x16_sse2:
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_satd_16x8_sse2 (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_satd_16x8_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_satd_16x8_sse2:
     SATD_START
@@ -485,7 +493,7 @@ x264_pixel_satd_16x8_sse2:
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_satd_8x8_sse2 (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_satd_8x8_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_satd_8x8_sse2:
     SATD_START
@@ -497,7 +505,7 @@ x264_pixel_satd_8x8_sse2:
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_satd_8x4_sse2 (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_satd_8x4_sse2 (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_satd_8x4_sse2:
     SATD_START

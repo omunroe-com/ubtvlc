@@ -2,7 +2,7 @@
  * linear.c : linear interpolation resampler
  *****************************************************************************
  * Copyright (C) 2002 the VideoLAN team
- * $Id: linear.c 13071 2005-11-01 07:59:50Z bigben $
+ * $Id: linear.c 12836 2005-10-15 13:23:08Z sigmunau $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *          Sigmund Augdal Helberg <dnumgis@videolan.org>
@@ -188,7 +188,7 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
             {
                 i_chan--;
                 p_out[i_chan] = p_prev_sample[i_chan];
-                p_out[i_chan] += ( ( p_in[i_chan] - p_prev_sample[i_chan] )
+                p_out[i_chan] += ( (p_prev_sample[i_chan] - p_in[i_chan])
                                    * p_sys->i_remainder
                                    / p_filter->output.i_rate );
             }
@@ -209,8 +209,8 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
             {
                 i_chan--;
                 p_out[i_chan] = p_in[i_chan];
-                p_out[i_chan] += ( ( p_in[i_chan + i_nb_channels]
-                    - p_in[i_chan] )
+                p_out[i_chan] += ( (p_in[i_chan] -
+                    p_in[i_chan + i_nb_channels])
                     * p_sys->i_remainder / p_filter->output.i_rate );
             }
             p_out += i_nb_channels;

@@ -2,7 +2,7 @@
  * standard.c: standard stream output module
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: standard.c 12975 2005-10-26 09:14:14Z md $
+ * $Id: standard.c 12920 2005-10-23 09:14:19Z md $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -368,9 +368,7 @@ static int Open( vlc_object_t *p_this )
             p_session->i_port = url.i_port;
             p_session->psz_sdp = NULL;
 
-            var_Get( p_access, "sout-udp-ttl", &val );
-            p_session->i_ttl = val.i_int ? 
-                val.i_int : config_GetInt( p_sout, "ttl" );
+            p_session->i_ttl = config_GetInt( p_sout, "ttl" );
             p_session->i_payload = 33;
             p_session->b_rtp = strstr( psz_access, "rtp") ? 1 : 0;
 

@@ -484,8 +484,8 @@ HRESULT VLCPlugin::onInit(void)
         /*
         ** default initialization options
         */
-        char *ppsz_argv[10] = { "vlc", "-vv", "--no-one-instance" };
-        int   ppsz_argc = 3;
+        char *ppsz_argv[10] = { "vlc", "-vv" };
+        int   ppsz_argc = 2;
 
         HKEY h_key;
         DWORD i_type, i_data = MAX_PATH + 1;
@@ -569,7 +569,7 @@ HRESULT VLCPlugin::onLoad(void)
                             if( NULL != abs_url )
                             {
                                 if( SUCCEEDED(UrlCombineW(base_url, _bstr_mrl, abs_url, &len,
-                                                URL_ESCAPE_UNSAFE|URL_PLUGGABLE_PROTOCOL)) )
+                                                URL_ESCAPE_UNSAFE)) )
                                 {
                                     SysFreeString(_bstr_mrl);
                                     _bstr_mrl = SysAllocStringLen(abs_url, len);
@@ -781,9 +781,9 @@ HRESULT VLCPlugin::onActivateInPlace(LPMSG lpMesg, HWND hwndParent, LPCRECT lprc
     /* set internal video width and height */
     vlc_value_t val;
     val.i_int = posRect.right-posRect.left;
-    VLC_VariableSet(_i_vlc, "conf::width", val);
+    VLC_VariableSet(_i_vlc, "width", val);
     val.i_int = posRect.bottom-posRect.top;
-    VLC_VariableSet(_i_vlc, "conf::height", val);
+    VLC_VariableSet(_i_vlc, "height", val);
 
     /* set internal video parent window */
     /* horrible cast there */
@@ -984,9 +984,9 @@ void VLCPlugin::onPositionChange(LPCRECT lprcPosRect, LPCRECT lprcClipRect)
     //RedrawWindow(_videownd, &posRect, NULL, RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);
     vlc_value_t val;
     val.i_int = posRect.right-posRect.left;
-    VLC_VariableSet(_i_vlc, "conf::width", val);
+    VLC_VariableSet(_i_vlc, "width", val);
     val.i_int = posRect.bottom-posRect.top;
-    VLC_VariableSet(_i_vlc, "conf::height", val);
+    VLC_VariableSet(_i_vlc, "height", val);
 };
 
 void VLCPlugin::freezeEvents(BOOL freeze)

@@ -2,7 +2,7 @@
  * xcommon.c: Functions common to the X11 and XVideo plugins
  *****************************************************************************
  * Copyright (C) 1998-2001 the VideoLAN team
- * $Id: xcommon.c 13247 2005-11-14 20:28:22Z jpsaman $
+ * $Id: xcommon.c 12930 2005-10-23 10:19:03Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Sam Hocevar <sam@zoy.org>
@@ -405,33 +405,11 @@ static int InitVideo( vout_thread_t *p_vout )
     vout_PlacePicture( p_vout, p_vout->p_sys->p_win->i_width,
                        p_vout->p_sys->p_win->i_height,
                        &i_index, &i_index,
-                       &p_vout->fmt_out.i_visible_width,
-                       &p_vout->fmt_out.i_visible_height );
+                       &p_vout->output.i_width, &p_vout->output.i_height );
 
-    p_vout->fmt_out.i_chroma = p_vout->output.i_chroma;
-
-    p_vout->output.i_width = p_vout->fmt_out.i_width =
-        p_vout->fmt_out.i_visible_width * p_vout->fmt_in.i_width /
-        p_vout->fmt_in.i_visible_width;
-    p_vout->output.i_height = p_vout->fmt_out.i_height =
-        p_vout->fmt_out.i_visible_height * p_vout->fmt_in.i_height /
-        p_vout->fmt_in.i_visible_height;
-    p_vout->fmt_out.i_x_offset =
-        p_vout->fmt_out.i_visible_width * p_vout->fmt_in.i_x_offset /
-        p_vout->fmt_in.i_visible_width;
-    p_vout->fmt_out.i_y_offset =
-        p_vout->fmt_out.i_visible_height * p_vout->fmt_in.i_y_offset /
-        p_vout->fmt_in.i_visible_height;
-
-    p_vout->fmt_out.i_sar_num = p_vout->fmt_out.i_sar_den = 1;
-    p_vout->output.i_aspect = p_vout->fmt_out.i_aspect =
-        p_vout->fmt_out.i_width * VOUT_ASPECT_FACTOR /p_vout->fmt_out.i_height;
-
-    msg_Dbg( p_vout, "x11 image size %ix%i (%i,%i,%ix%i)",
-             p_vout->fmt_out.i_width, p_vout->fmt_out.i_height,
-             p_vout->fmt_out.i_x_offset, p_vout->fmt_out.i_y_offset,
-             p_vout->fmt_out.i_visible_width,
-             p_vout->fmt_out.i_visible_height );
+    /* Assume we have square pixels */
+    p_vout->output.i_aspect = p_vout->output.i_width
+                               * VOUT_ASPECT_FACTOR / p_vout->output.i_height;
 #endif
 
     /* Try to initialize up to MAX_DIRECTBUFFERS direct buffers */
@@ -508,11 +486,8 @@ static void DisplayVideo( vout_thread_t *p_vout, picture_t *p_pic )
         XShmPutImage( p_vout->p_sys->p_display,
                       p_vout->p_sys->p_win->video_window,
                       p_vout->p_sys->p_win->gc, p_pic->p_sys->p_image,
-                      p_vout->fmt_out.i_x_offset,
-                      p_vout->fmt_out.i_y_offset,
-                      0 /*dest_x*/, 0 /*dest_y*/,
-                      p_vout->fmt_out.i_visible_width,
-                      p_vout->fmt_out.i_visible_height,
+                      0 /*src_x*/, 0 /*src_y*/, 0 /*dest_x*/, 0 /*dest_y*/,
+                      p_vout->output.i_width, p_vout->output.i_height,
                       False /* Don't put True here ! */ );
 #   endif
     }
@@ -533,11 +508,8 @@ static void DisplayVideo( vout_thread_t *p_vout, picture_t *p_pic )
         XPutImage( p_vout->p_sys->p_display,
                    p_vout->p_sys->p_win->video_window,
                    p_vout->p_sys->p_win->gc, p_pic->p_sys->p_image,
-                   p_vout->fmt_out.i_x_offset,
-                   p_vout->fmt_out.i_y_offset,
-                   0 /*dest_x*/, 0 /*dest_y*/,
-                   p_vout->fmt_out.i_visible_width,
-                   p_vout->fmt_out.i_visible_height );
+                   0 /*src_x*/, 0 /*src_y*/, 0 /*dest_x*/, 0 /*dest_y*/,
+                   p_vout->output.i_width, p_vout->output.i_height );
 #endif
     }
 
@@ -785,13 +757,11 @@ static int ManageVideo( vout_thread_t *p_vout )
                                p_vout->p_sys->p_win->i_height,
                                &i_x, &i_y, &i_width, &i_height );
 
-            val.i_int = ( xevent.xmotion.x - i_x ) *
-                p_vout->fmt_in.i_visible_width / i_width +
-                p_vout->fmt_in.i_x_offset;
+            val.i_int = ( xevent.xmotion.x - i_x )
+                         * p_vout->render.i_width / i_width;
             var_Set( p_vout, "mouse-x", val );
-            val.i_int = ( xevent.xmotion.y - i_y ) *
-                p_vout->fmt_in.i_visible_height / i_height +
-                p_vout->fmt_in.i_y_offset;
+            val.i_int = ( xevent.xmotion.y - i_y )
+                         * p_vout->render.i_height / i_height;
             var_Set( p_vout, "mouse-y", val );
 
             val.b_bool = VLC_TRUE;
@@ -875,24 +845,6 @@ static int ManageVideo( vout_thread_t *p_vout )
 
         ToggleFullScreen( p_vout );
         p_vout->i_changes &= ~VOUT_FULLSCREEN_CHANGE;
-    }
-
-    if( p_vout->i_changes & VOUT_CROP_CHANGE ||
-        p_vout->i_changes & VOUT_ASPECT_CHANGE )
-    {
-        p_vout->i_changes &= ~VOUT_CROP_CHANGE;
-        p_vout->i_changes &= ~VOUT_ASPECT_CHANGE;
-
-        p_vout->fmt_out.i_x_offset = p_vout->fmt_in.i_x_offset;
-        p_vout->fmt_out.i_y_offset = p_vout->fmt_in.i_y_offset;
-        p_vout->fmt_out.i_visible_width = p_vout->fmt_in.i_visible_width;
-        p_vout->fmt_out.i_visible_height = p_vout->fmt_in.i_visible_height;
-        p_vout->fmt_out.i_aspect = p_vout->fmt_in.i_aspect;
-        p_vout->fmt_out.i_sar_num = p_vout->fmt_in.i_sar_num;
-        p_vout->fmt_out.i_sar_den = p_vout->fmt_in.i_sar_den;
-        p_vout->output.i_aspect = p_vout->fmt_in.i_aspect;
-
-        p_vout->i_changes |= VOUT_SIZE_CHANGE;
     }
 
     /*
@@ -1540,13 +1492,14 @@ static void ToggleFullScreen ( vout_thread_t *p_vout )
             screens = XineramaQueryScreens( p_vout->p_sys->p_display,
                                             &i_num_screens );
 
-            SCREEN = config_GetInt( p_vout,
+            if( !SCREEN )
+                SCREEN = config_GetInt( p_vout,
                                         MODULE_STRING "-xineramascreen" );
 
             /* just check that user has entered a good value */
             if( SCREEN >= i_num_screens || SCREEN < 0 )
             {
-                msg_Dbg( p_vout, "requested screen number invalid (%d/%d)", SCREEN, i_num_screens );
+                msg_Dbg( p_vout, "requested screen number invalid" );
                 SCREEN = 0;
             }
 
@@ -2287,6 +2240,7 @@ static void SetPalette( vout_thread_t *p_vout,
  *****************************************************************************/
 static int Control( vout_thread_t *p_vout, int i_query, va_list args )
 {
+    double f_arg;
     vlc_bool_t b_arg;
 
     switch( i_query )
@@ -2296,13 +2250,16 @@ static int Control( vout_thread_t *p_vout, int i_query, va_list args )
                 return vout_ControlWindow( p_vout,
                     (void *)p_vout->p_sys->p_win->owner_window, i_query, args);
 
+            f_arg = va_arg( args, double );
+
             vlc_mutex_lock( &p_vout->p_sys->lock );
 
             /* Update dimensions */
+            /* FIXME: export InitWindowSize() from vout core */
             XResizeWindow( p_vout->p_sys->p_display,
                            p_vout->p_sys->p_win->base_window,
-                           p_vout->i_window_width,
-                           p_vout->i_window_height );
+                           p_vout->i_window_width * f_arg,
+                           p_vout->i_window_height * f_arg );
 
             vlc_mutex_unlock( &p_vout->p_sys->lock );
             return VLC_SUCCESS;

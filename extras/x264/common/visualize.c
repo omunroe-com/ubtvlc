@@ -49,6 +49,7 @@
 
 #include "common.h"
 #include "visualize.h"
+#include "macroblock.h"
 #include "display.h"
 
 typedef struct {

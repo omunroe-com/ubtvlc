@@ -2,7 +2,7 @@
  * vorbis.c: vorbis decoder/encoder/packetizer module making use of libvorbis.
  *****************************************************************************
  * Copyright (C) 2001-2003 the VideoLAN team
- * $Id: vorbis.c 13044 2005-10-30 20:10:05Z gbazin $
+ * $Id: vorbis.c 12390 2005-08-25 14:09:50Z hartman $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -709,7 +709,7 @@ static void CloseDecoder( vlc_object_t *p_this )
     decoder_t *p_dec = (decoder_t *)p_this;
     decoder_sys_t *p_sys = p_dec->p_sys;
 
-    if( !p_sys->b_packetizer && p_sys->i_headers > 3 )
+    if( !p_sys->b_packetizer && p_sys->i_headers >= 3 )
     {
         vorbis_block_clear( &p_sys->vb );
         vorbis_dsp_clear( &p_sys->vd );

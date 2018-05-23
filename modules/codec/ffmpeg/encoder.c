@@ -2,7 +2,7 @@
  * encoder.c: video and audio encoder using the ffmpeg library
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: encoder.c 13067 2005-10-31 23:12:10Z gbazin $
+ * $Id: encoder.c 12609 2005-09-19 18:30:36Z fkuehne $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -601,12 +601,7 @@ int E_(OpenEncoder)( vlc_object_t *p_this )
     vlc_mutex_unlock( lockval.p_address );
 
     p_enc->fmt_out.i_extra = p_context->extradata_size;
-    if( p_enc->fmt_out.i_extra )
-    {
-        p_enc->fmt_out.p_extra = malloc( p_enc->fmt_out.i_extra );
-        memcpy( p_enc->fmt_out.p_extra, p_context->extradata,
-                p_enc->fmt_out.i_extra );
-    }
+    p_enc->fmt_out.p_extra = p_context->extradata;
     p_context->flags &= ~CODEC_FLAG_GLOBAL_HEADER;
 
     if( p_enc->fmt_in.i_cat == AUDIO_ES )

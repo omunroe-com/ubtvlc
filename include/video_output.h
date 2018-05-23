@@ -2,7 +2,7 @@
  * video_output.h : video output thread
  *****************************************************************************
  * Copyright (C) 1999, 2000 the VideoLAN team
- * $Id: video_output.h 13051 2005-10-31 07:35:39Z md $
+ * $Id: video_output.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@via.ecp.fr>
@@ -84,12 +84,11 @@ struct vout_thread_t
     vlc_bool_t          b_interface;                   /**< render interface */
     vlc_bool_t          b_scale;                  /**< allow picture scaling */
     vlc_bool_t          b_fullscreen;         /**< toogle fullscreen display */
+    vlc_bool_t          b_override_aspect;       /**< aspect ratio overriden */
     uint32_t            render_time;           /**< last picture render time */
     unsigned int        i_window_width;              /**< video window width */
     unsigned int        i_window_height;            /**< video window height */
     unsigned int        i_alignment;          /**< video alignment in window */
-    unsigned int        i_par_num;           /**< monitor pixel aspect-ratio */
-    unsigned int        i_par_den;           /**< monitor pixel aspect-ratio */
 
     intf_thread_t       *p_parent_intf;   /**< parent interface for embedded
                                                                vout (if any) */
@@ -184,12 +183,8 @@ struct vout_thread_t
 #define VOUT_DEPTH_CHANGE       0x0400
 /** change chroma tables */
 #define VOUT_CHROMA_CHANGE      0x0800
-/** cropping parameters changed */
-#define VOUT_CROP_CHANGE        0x1000
-/** aspect ratio changed */
-#define VOUT_ASPECT_CHANGE      0x2000
 /** change/recreate picture buffers */
-#define VOUT_PICTURE_BUFFERS_CHANGE 0x4000
+#define VOUT_PICTURE_BUFFERS_CHANGE 0x1000
 /**@}*/
 
 /* Alignment flags */
@@ -254,7 +249,7 @@ static inline int vout_Control( vout_thread_t *p_vout, int i_query, ... )
 
 enum output_query_e
 {
-    VOUT_SET_ZOOM,
+    VOUT_SET_ZOOM,         /* arg1= double           res=    */
     VOUT_SET_STAY_ON_TOP,  /* arg1= vlc_bool_t       res=    */
     VOUT_REPARENT,
     VOUT_SNAPSHOT,

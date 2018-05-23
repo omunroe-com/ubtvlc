@@ -46,7 +46,7 @@ BITS 32
 %endmacro
 
 ;=============================================================================
-; Constants
+; Local Data (Read Only)
 ;=============================================================================
 
 %ifdef FORMAT_COFF
@@ -55,11 +55,11 @@ SECTION .rodata data
 SECTION .rodata data align=16
 %endif
 
+;-----------------------------------------------------------------------------
+; Various memory constants (trigonometric values or rounding values)
+;-----------------------------------------------------------------------------
+
 ALIGN 16
-pw_4:  times 4 dw  4
-pw_8:  times 4 dw  8
-pw_32: times 4 dw 32
-pw_64: times 4 dw 64
 
 ;=============================================================================
 ; Code
@@ -72,10 +72,6 @@ cglobal x264_pixel_avg_w8_mmxext
 cglobal x264_pixel_avg_w16_mmxext
 cglobal x264_pixel_avg_w16_sse2
 
-cglobal x264_pixel_avg_weight_4x4_mmxext
-cglobal x264_pixel_avg_weight_w8_mmxext
-cglobal x264_pixel_avg_weight_w16_mmxext
-
 cglobal x264_mc_copy_w4_mmxext
 cglobal x264_mc_copy_w8_mmxext
 cglobal x264_mc_copy_w16_mmxext
@@ -83,9 +79,6 @@ cglobal x264_mc_copy_w16_sse2
 
 cglobal x264_mc_chroma_sse
 
-;=============================================================================
-; pixel avg
-;=============================================================================
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
@@ -248,108 +241,6 @@ ALIGN 4
     ret
 
 
-;=============================================================================
-; weighted prediction
-;=============================================================================
-; implicit bipred only:
-; assumes log2_denom = 5, offset = 0, weight1 + weight2 = 64
-
-%macro BIWEIGHT_4P_MMX 2
-    movd      mm0, %1
-    movd      mm1, %2
-    punpcklbw mm0, mm7
-    punpcklbw mm1, mm7
-    pmullw    mm0, mm4
-    pmullw    mm1, mm5
-    paddw     mm0, mm1
-    paddw     mm0, mm6
-    psraw     mm0, 6
-    pmaxsw    mm0, mm7
-    packuswb  mm0, mm0
-    movd      %1,  mm0
-%endmacro
-
-%macro BIWEIGHT_START_MMX 0
-    push    edi
-    push    esi
-    mov     edi, [esp+12] ; dst
-    mov     esi, [esp+16] ; i_dst
-    mov     edx, [esp+20] ; src
-    mov     ecx, [esp+24] ; i_src
-
-    pshufw  mm4, [esp+28], 0 ; weight_dst
-    movq    mm5, [pw_64]
-    psubw   mm5, mm4      ; weight_src
-    movq    mm6, [pw_32]  ; rounding
-    pxor    mm7, mm7
-%endmacro
-%macro BIWEIGHT_END_MMX 0
-    pop     esi
-    pop     edi
-    ret
-%endmacro
-
-ALIGN 16
-;-----------------------------------------------------------------------------
-;   int __cdecl x264_pixel_avg_weight_w16_mmxext( uint8_t *, int, uint8_t *, int, int, int )
-;-----------------------------------------------------------------------------
-x264_pixel_avg_weight_w16_mmxext:
-    BIWEIGHT_START_MMX
-    mov     eax, [esp+32] ; i_height
-    ALIGN 4
-    .height_loop
-
-    BIWEIGHT_4P_MMX  [edi   ], [edx   ]
-    BIWEIGHT_4P_MMX  [edi+ 4], [edx+ 4]
-    BIWEIGHT_4P_MMX  [edi+ 8], [edx+ 8]
-    BIWEIGHT_4P_MMX  [edi+12], [edx+12]
-
-    add  edi, esi
-    add  edx, ecx
-    dec  eax
-    jnz  .height_loop
-    BIWEIGHT_END_MMX
-
-ALIGN 16
-;-----------------------------------------------------------------------------
-;   int __cdecl x264_pixel_avg_weight_w8_mmxext( uint8_t *, int, uint8_t *, int, int, int )
-;-----------------------------------------------------------------------------
-x264_pixel_avg_weight_w8_mmxext:
-    BIWEIGHT_START_MMX
-    mov     eax, [esp+32]
-    ALIGN 4
-    .height_loop
-
-    BIWEIGHT_4P_MMX  [edi      ], [edx      ]
-    BIWEIGHT_4P_MMX  [edi+4    ], [edx+4    ]
-    BIWEIGHT_4P_MMX  [edi+esi  ], [edx+ecx  ]
-    BIWEIGHT_4P_MMX  [edi+esi+4], [edx+ecx+4]
-
-    lea  edi, [edi+esi*2]
-    lea  edx, [edx+ecx*2]
-    sub  eax, byte 2
-    jnz  .height_loop
-    BIWEIGHT_END_MMX
-
-ALIGN 16
-;-----------------------------------------------------------------------------
-;   int __cdecl x264_pixel_avg_weight_4x4_mmxext( uint8_t *, int, uint8_t *, int, int )
-;-----------------------------------------------------------------------------
-x264_pixel_avg_weight_4x4_mmxext:
-    BIWEIGHT_START_MMX
-    BIWEIGHT_4P_MMX  [edi      ], [edx      ]
-    BIWEIGHT_4P_MMX  [edi+esi  ], [edx+ecx  ]
-    BIWEIGHT_4P_MMX  [edi+esi*2], [edx+ecx*2]
-    add  edi, esi
-    add  edx, ecx
-    BIWEIGHT_4P_MMX  [edi+esi*2], [edx+ecx*2]
-    BIWEIGHT_END_MMX
-
-
-
-;=============================================================================
-; pixel copy
-;=============================================================================
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
@@ -382,6 +273,8 @@ ALIGN 4
     pop     esi
     pop     ebx
     ret
+
+cglobal mc_copy_w8
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
@@ -420,6 +313,8 @@ ALIGN 4
     pop     esi
     pop     ebx
     ret
+
+cglobal mc_copy_w16
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
@@ -501,10 +396,13 @@ ALIGN 4
     ret
 
 
+SECTION .rodata
 
-;=============================================================================
-; chroma MC
-;=============================================================================
+ALIGN 16
+eights    times 4   dw 8
+thirty2s  times 4   dw 32
+
+SECTION .text
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
@@ -521,7 +419,7 @@ x264_mc_chroma_sse:
     pshufw  mm5, [esp+20], 0    ; mm5 - dx
     pshufw  mm6, [esp+24], 0    ; mm6 - dy
 
-    movq    mm4, [pw_8]
+    movq    mm4, [eights]
     movq    mm0, mm4
 
     psubw   mm4, mm5            ; mm4 - 8-dx
@@ -557,7 +455,7 @@ ALIGN 4
     punpcklbw mm2, mm3
     punpcklbw mm1, mm3
 
-    paddw   mm0, [pw_32]
+    paddw   mm0, [thirty2s]
 
     pmullw  mm2, mm5            ; line * cB
     pmullw  mm1, mm7            ; line * cD

@@ -27,49 +27,56 @@ BITS 64
 ; Macros and other preprocessor constants
 ;=============================================================================
 
-%include "amd64inc.asm"
+%macro cglobal 1
+	%ifdef PREFIX
+		global _%1
+		%define %1 _%1
+	%else
+		global %1
+	%endif
+%endmacro
 
 %macro SAD_INC_2x16P 0
-    movq    mm1,    [parm1q]
-    movq    mm2,    [parm1q+8]
-    movq    mm3,    [parm1q+parm2q]
-    movq    mm4,    [parm1q+parm2q+8]
-    psadbw  mm1,    [parm3q]
-    psadbw  mm2,    [parm3q+8]
-    psadbw  mm3,    [parm3q+parm4q]
-    psadbw  mm4,    [parm3q+parm4q+8]
-    lea     parm1q, [parm1q+2*parm2q]
+    movq    mm1,    [rax]
+    movq    mm2,    [rax+8]
+    movq    mm3,    [rax+rbx]
+    movq    mm4,    [rax+rbx+8]
+    psadbw  mm1,    [rcx]
+    psadbw  mm2,    [rcx+8]
+    psadbw  mm3,    [rcx+rdx]
+    psadbw  mm4,    [rcx+rdx+8]
+    lea     rax,    [rax+2*rbx]
     paddw   mm1,    mm2
     paddw   mm3,    mm4
-    lea     parm3q, [parm3q+2*parm4q]
+    lea     rcx,    [rcx+2*rdx]
     paddw   mm0,    mm1
     paddw   mm0,    mm3
 %endmacro
 
 %macro SAD_INC_2x8P 0
-    movq    mm1,    [parm1q]
-    movq    mm2,    [parm1q+parm2q]
-    psadbw  mm1,    [parm3q]
-    psadbw  mm2,    [parm3q+parm4q]
-    lea     parm1q,    [parm1q+2*parm2q]
+    movq    mm1,    [rax]
+    movq    mm2,    [rax+rbx]
+    psadbw  mm1,    [rcx]
+    psadbw  mm2,    [rcx+rdx]
+    lea     rax,    [rax+2*rbx]
     paddw   mm0,    mm1
     paddw   mm0,    mm2
-    lea     parm3q, [parm3q+2*parm4q]
+    lea     rcx,    [rcx+2*rdx]
 %endmacro
 
 %macro SAD_INC_2x4P 0
-    movd    mm1,    [parm1q]
-    movd    mm2,    [parm3q]
-    movd    mm3,    [parm1q+parm2q]
-    movd    mm4,    [parm3q+parm4q]
+    movd    mm1,    [rax]
+    movd    mm2,    [rcx]
+    movd    mm3,    [rax+rbx]
+    movd    mm4,    [rcx+rdx]
 
     psadbw  mm1,    mm2
     psadbw  mm3,    mm4
     paddw   mm0,    mm1
     paddw   mm0,    mm3
 
-    lea     parm1q, [parm1q+2*parm2q]
-    lea     parm3q, [parm3q+2*parm4q]
+    lea     rax,    [rax+2*rbx]
+    lea     rcx,    [rcx+2*rdx]
 %endmacro
 
 %macro SSD_INC_1x16P 0
@@ -168,32 +175,23 @@ BITS 64
     SSD_INC_1x4P
 %endmacro
 
-%macro LOAD_DIFF_4P 4  ; MMP, MMT, [pix1], [pix2]
-    movd        %1, %3
-    movd        %2, %4
-    punpcklbw   %1, %2
-    punpcklbw   %2, %2
+%macro LOAD_DIFF_4P 5  ; MMP, MMT, MMZ, [pix1], [pix2]
+    movd        %1, %4
+    punpcklbw   %1, %3
+    movd        %2, %5
+    punpcklbw   %2, %3
     psubw       %1, %2
 %endmacro
 
-%macro LOAD_DIFF_INC_4x4 10 ; p1,p2,p3,p4, t, pix1, i_pix1, pix2, i_pix2, offset
-    LOAD_DIFF_4P %1, %5, [%6+%10],    [%8+%10]
-    LOAD_DIFF_4P %2, %5, [%6+%7+%10], [%8+%9+%10]
-    lea %6, [%6+2*%7]
-    lea %8, [%8+2*%9]
-    LOAD_DIFF_4P %3, %5, [%6+%10],    [%8+%10]
-    LOAD_DIFF_4P %4, %5, [%6+%7+%10], [%8+%9+%10]
-    lea %6, [%6+2*%7]
-    lea %8, [%8+2*%9]
-%endmacro
-
-%macro LOAD_DIFF_4x4 10 ; p1,p2,p3,p4, t, pix1, i_pix1, pix2, i_pix2, offset
-    LOAD_DIFF_4P %1, %5, [%6+%10],      [%8+%10]
-    LOAD_DIFF_4P %3, %5, [%6+2*%7+%10], [%8+2*%9+%10]
-    add     %6, %7
-    add     %8, %9
-    LOAD_DIFF_4P %2, %5, [%6+%10],      [%8+%10]
-    LOAD_DIFF_4P %4, %5, [%6+2*%7+%10], [%8+2*%9+%10]
+%macro LOAD_DIFF_INC_4x4 11 ; p1,p2,p3,p4, t, z, pix1, i_pix1, pix2, i_pix2, offset
+    LOAD_DIFF_4P %1, %5, %6, [%7+%11],    [%9+%11]
+    LOAD_DIFF_4P %2, %5, %6, [%7+%8+%11], [%9+%10+%11]
+    lea %7, [%7+2*%8]
+    lea %9, [%9+2*%10]
+    LOAD_DIFF_4P %3, %5, %6, [%7+%11],    [%9+%11]
+    LOAD_DIFF_4P %4, %5, %6, [%7+%8+%11], [%9+%10+%11]
+    lea %7, [%7+2*%8]
+    lea %9, [%9+2*%10]
 %endmacro
 
 %macro HADAMARD4_SUB_BADC 4
@@ -235,17 +233,44 @@ BITS 64
     pmaxsw  %1, %2
 %endmacro
 
-%macro HADAMARD4x4_SUM 1    ; %1 = dest (row sum of one block)
-    HADAMARD4x4 mm4, mm5, mm6, mm7
-    TRANSPOSE4x4 mm4, mm5, mm6, mm7, %1
-    HADAMARD4x4 mm4, mm7, %1, mm6
-    MMX_ABS     mm4, mm5
-    MMX_ABS     mm7, mm5
-    MMX_ABS     %1,  mm5
-    MMX_ABS     mm6, mm5
-    paddw       %1,  mm4
-    paddw       mm6, mm7
-    pavgw       %1,  mm6
+%macro MMX_ABS_SUM 3    ; mma, mmt, mms
+    pxor    %2, %2
+    psubw   %2, %1
+    pmaxsw  %1, %2
+    paddusw %3, %1
+%endmacro
+
+
+%macro MMX_SUM_MM 2     ; mmv, mmt
+    movq    %2, %1
+    psrlq   %1, 32
+    paddusw %1, %2
+    movq    %2, %1
+    psrlq   %1, 16
+    paddusw %1, %2
+    movd    rax,%1
+    and     rax,0xffff
+    shr     rax,1
+%endmacro
+
+%macro HADAMARD4x4_FIRST 0
+    HADAMARD4x4 mm0, mm1, mm2, mm3
+    TRANSPOSE4x4 mm0, mm1, mm2, mm3, mm4
+    HADAMARD4x4 mm0, mm3, mm4, mm2
+    MMX_ABS     mm0, mm7
+    MMX_ABS_SUM mm3, mm7, mm0
+    MMX_ABS_SUM mm4, mm7, mm0
+    MMX_ABS_SUM mm2, mm7, mm0
+%endmacro
+
+%macro HADAMARD4x4_NEXT 0
+    HADAMARD4x4 mm1, mm2, mm3, mm4
+    TRANSPOSE4x4 mm1, mm2, mm3, mm4, mm5
+    HADAMARD4x4 mm1, mm4, mm5, mm3
+    MMX_ABS_SUM mm1, mm7, mm0
+    MMX_ABS_SUM mm4, mm7, mm0
+    MMX_ABS_SUM mm5, mm7, mm0
+    MMX_ABS_SUM mm3, mm7, mm0
 %endmacro
 
 ;=============================================================================
@@ -279,17 +304,29 @@ cglobal x264_pixel_satd_8x16_mmxext
 cglobal x264_pixel_satd_16x16_mmxext
 
 %macro SAD_START 0
+    push    rbx
+
+    mov     r9, rdx             ; pix2
+    mov     r8d, ecx            ; stride2
+
+    mov     rax, rdi            ; pix1
+    movsxd  rbx, esi            ; stride1
+    mov     rcx, r9             ; pix2
+    movsxd  rdx, r8d            ; stride2
+
     pxor    mm0,    mm0
 %endmacro
-
 %macro SAD_END 0
+    xor     rax, rax
     movd    eax, mm0
+
+    pop rbx
     ret
 %endmacro
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_sad_16x16_mmxext (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_sad_16x16_mmxext (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_sad_16x16_mmxext:
     SAD_START
@@ -305,7 +342,7 @@ x264_pixel_sad_16x16_mmxext:
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_sad_16x8_mmxext (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_sad_16x8_mmxext (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_sad_16x8_mmxext:
     SAD_START
@@ -317,7 +354,7 @@ x264_pixel_sad_16x8_mmxext:
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_sad_8x16_mmxext (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_sad_8x16_mmxext (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_sad_8x16_mmxext:
     SAD_START
@@ -333,7 +370,7 @@ x264_pixel_sad_8x16_mmxext:
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_sad_8x8_mmxext (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_sad_8x8_mmxext (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_sad_8x8_mmxext:
     SAD_START
@@ -345,7 +382,7 @@ x264_pixel_sad_8x8_mmxext:
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_sad_8x4_mmxext (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_sad_8x4_mmxext (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_sad_8x4_mmxext:
     SAD_START
@@ -355,7 +392,7 @@ x264_pixel_sad_8x4_mmxext:
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_sad_4x8_mmxext (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_sad_4x8_mmxext (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_sad_4x8_mmxext:
     SAD_START
@@ -367,7 +404,7 @@ x264_pixel_sad_4x8_mmxext:
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_sad_4x4_mmxext (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_sad_4x4_mmxext (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_sad_4x4_mmxext:
     SAD_START
@@ -378,18 +415,15 @@ x264_pixel_sad_4x4_mmxext:
 
 
 %macro SSD_START 0
-    firstpush rbx
-    pushreg   rbx
-    endprolog
+    push    rbx
 
-    mov     rax, parm1q         ; pix1 =parm1
-    movsxd  rbx, parm2d         ; stride1 =parm2
-%ifdef WIN64
-    mov     rcx, parm3q
-    movsxd  rdx, parm4d
-%else
-   xchg     rcx, rdx
-%endif
+    mov     r9, rdx             ; pix2
+    mov     r8d, ecx            ; stride2
+
+    mov     rax, rdi            ; pix1
+    movsxd  rbx, esi            ; stride1
+    mov     rcx, r9             ; pix2
+    movsxd  rdx, r8d            ; stride2
 
     pxor    mm7,    mm7         ; zero
     pxor    mm0,    mm0         ; mm0 holds the sum
@@ -399,16 +433,16 @@ x264_pixel_sad_4x4_mmxext:
     movq    mm1,    mm0
     psrlq   mm1,    32
     paddd   mm0,    mm1
+    xor     rax,    rax
     movd    eax,    mm0
 
     pop rbx
     ret
-    endfunc
 %endmacro
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_ssd_16x16_mmxext (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_ssd_16x16_mmxext (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_ssd_16x16_mmxext:
     SSD_START
@@ -458,234 +492,352 @@ x264_pixel_ssd_4x4_mmxext:
     SSD_END
 
 
-%macro SATD_START 0
-;   mov     rdi, rdi            ; pix1
-;   movsxd  rsi, esi            ; stride1
-;   mov     rdx, rdx            ; pix2
-;   movsxd  rcx, ecx            ; stride2
-%endmacro
-
-%macro SATD_END 0
-    pshufw      mm1, mm0, 01001110b
-    paddw       mm0, mm1
-    pshufw      mm1, mm0, 10110001b
-    paddw       mm0, mm1
-    movd        eax, mm0
-    and         eax, 0xffff
-    ret
-%endmacro
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_satd_4x4_mmxext (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_satd_4x4_mmxext (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_satd_4x4_mmxext:
-    SATD_START
-    LOAD_DIFF_4x4       mm4, mm5, mm6, mm7, mm0, parm1q, parm2q, parm3q, parm4q, 0
-    HADAMARD4x4_SUM     mm0
-    SATD_END
+    push    rbx
+
+    mov     r9, rdx             ; pix2
+    mov     r8d, ecx            ; stride2
+
+    mov     rax, rdi            ; pix1
+    movsxd  rbx, esi            ; stride1
+    mov     rcx, r9             ; pix2
+    movsxd  rdx, r8d            ; stride2
+
+    pxor    mm7,    mm7
+
+    LOAD_DIFF_4P mm0, mm6, mm7, [rax],       [rcx]
+    LOAD_DIFF_4P mm1, mm6, mm7, [rax+rbx],   [rcx+rdx]
+    LOAD_DIFF_4P mm2, mm6, mm7, [rax+2*rbx], [rcx+2*rdx]
+    add rax, rbx
+    add rcx, rdx
+    LOAD_DIFF_4P mm3, mm6, mm7, [rax+2*rbx], [rcx+2*rdx]
+
+    HADAMARD4x4_FIRST
+
+    MMX_SUM_MM  mm0, mm7
+    pop     rbx
+    ret
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_satd_4x8_mmxext (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_satd_4x8_mmxext (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_satd_4x8_mmxext:
-    SATD_START
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm0, parm1q, parm2q, parm3q, parm4q, 0
-    HADAMARD4x4_SUM     mm0
-    LOAD_DIFF_4x4       mm4, mm5, mm6, mm7, mm1, parm1q, parm2q, parm3q, parm4q, 0
-    HADAMARD4x4_SUM     mm1
-    paddw       mm0, mm1
-    SATD_END
+    push    rbx
+
+    mov     r9, rdx             ; pix2
+    mov     r8d, ecx            ; stride2
+
+    mov     rax, rdi            ; pix1
+    movsxd  rbx, esi            ; stride1
+    mov     rcx, r9             ; pix2
+    movsxd  rdx, r8d            ; stride2
+
+    pxor    mm7,    mm7
+
+    LOAD_DIFF_INC_4x4 mm0, mm1, mm2, mm3, mm6, mm7, rax, rbx, rcx, rdx, 0
+    HADAMARD4x4_FIRST
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 0
+    HADAMARD4x4_NEXT
+
+    MMX_SUM_MM  mm0, mm7
+    pop     rbx
+    ret
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_satd_8x4_mmxext (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_satd_8x4_mmxext (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_satd_8x4_mmxext:
-    SATD_START
-    LOAD_DIFF_4x4       mm4, mm5, mm6, mm7, mm0, parm1q, parm2q, parm3q, parm4q, 0
-    HADAMARD4x4_SUM     mm0
-    sub         parm1q, parm2q
-    sub         parm3q, parm4q
-    LOAD_DIFF_4x4       mm4, mm5, mm6, mm7, mm1, parm1q, parm2q, parm3q, parm4q, 4
-    HADAMARD4x4_SUM     mm1
-    paddw       mm0, mm1
-    SATD_END
+    push    rbx
+
+    mov     r9, rdx             ; pix2
+    mov     r8d, ecx            ; stride2
+
+    mov     rax, rdi            ; pix1
+    movsxd  rbx, esi            ; stride1
+    mov     rcx, r9             ; pix2
+    movsxd  rdx, r8d            ; stride2
+
+    mov     r10, rax            ; save pix1
+    mov     r11, rcx            ; save pix2
+
+    pxor    mm7,    mm7
+
+    LOAD_DIFF_INC_4x4 mm0, mm1, mm2, mm3, mm6, mm7, rax, rbx, rcx, rdx, 0
+    HADAMARD4x4_FIRST
+
+    mov     rax,    r10         ; load pix1
+    mov     rcx,    r11         ; load pix2
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 4
+    HADAMARD4x4_NEXT
+
+    MMX_SUM_MM  mm0, mm7
+    pop     rbx
+    ret
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_satd_8x8_mmxext (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_satd_8x8_mmxext (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_satd_8x8_mmxext:
-    SATD_START
-    mov         r10, parm1q        ; pix1
-    mov         r11, parm3q        ; pix2
+    push    rbx
 
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm0, parm1q, parm2q, parm3q, parm4q, 0
-    HADAMARD4x4_SUM     mm0
-    LOAD_DIFF_4x4       mm4, mm5, mm6, mm7, mm1, parm1q, parm2q, parm3q, parm4q, 0
-    HADAMARD4x4_SUM     mm1
+    mov     r9, rdx             ; pix2
+    mov     r8d, ecx            ; stride2
 
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm2, r10, parm2q, r11, parm4q, 4
-    HADAMARD4x4_SUM     mm2
-    LOAD_DIFF_4x4       mm4, mm5, mm6, mm7, mm3, r10, parm2q, r11, parm4q, 4
-    HADAMARD4x4_SUM     mm3
-    paddw       mm0, mm1
-    paddw       mm2, mm3
-    paddw       mm0, mm2
-    SATD_END
+    mov     rax, rdi            ; pix1
+    movsxd  rbx, esi            ; stride1
+    mov     rcx, r9             ; pix2
+    movsxd  rdx, r8d            ; stride2
+
+    mov     r10, rax            ; save pix1
+    mov     r11, rcx            ; save pix2
+
+    pxor    mm7,    mm7
+
+    LOAD_DIFF_INC_4x4 mm0, mm1, mm2, mm3, mm6, mm7, rax, rbx, rcx, rdx, 0
+    HADAMARD4x4_FIRST
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 0
+    HADAMARD4x4_NEXT
+
+    mov     rax,    r10         ; load pix1
+    mov     rcx,    r11         ; load pix2
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 4
+    HADAMARD4x4_NEXT
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 4
+    HADAMARD4x4_NEXT
+
+    MMX_SUM_MM  mm0, mm7
+    pop     rbx
+    ret
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_satd_16x8_mmxext (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_satd_16x8_mmxext (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_satd_16x8_mmxext:
-    SATD_START
-    mov         r10, parm1q
-    mov         r11, parm3q
+    push    rbx
+    push    rbp
 
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm0, parm1q, parm2q, parm3q, parm4q, 0
-    HADAMARD4x4_SUM     mm0
-    LOAD_DIFF_4x4       mm4, mm5, mm6, mm7, mm1, parm1q, parm2q, parm3q, parm4q, 0
-    HADAMARD4x4_SUM     mm1
+    mov     r9, rdx             ; pix2
+    mov     r8d, ecx            ; stride2
 
-    mov         parm1q, r10
-    mov         parm3q, r11
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm2, parm1q, parm2q, parm3q, parm4q, 4
-    HADAMARD4x4_SUM     mm2
-    LOAD_DIFF_4x4       mm4, mm5, mm6, mm7, mm3, parm1q, parm2q, parm3q, parm4q, 4
-    HADAMARD4x4_SUM     mm3
-    paddw       mm0, mm1
-    paddw       mm2, mm3
-    paddw       mm0, mm2
+    mov     rax, rdi            ; pix1
+    movsxd  rbx, esi            ; stride1
+    mov     rcx, r9             ; pix2
+    movsxd  rdx, r8d            ; stride2
 
-    mov         parm1q, r10
-    mov         parm3q, r11
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm1, parm1q, parm2q, parm3q, parm4q, 8
-    HADAMARD4x4_SUM     mm1
-    LOAD_DIFF_4x4       mm4, mm5, mm6, mm7, mm2, parm1q, parm2q, parm3q, parm4q, 8
-    HADAMARD4x4_SUM     mm2
-    paddw       mm1, mm2
+    mov     r10, rax            ; save pix1
+    mov     r11, rcx            ; save pix2
 
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm2, r10, parm2q, r11, parm4q, 12
-    HADAMARD4x4_SUM     mm2
-    LOAD_DIFF_4x4       mm4, mm5, mm6, mm7, mm3, r10, parm2q, r11, parm4q, 12
-    HADAMARD4x4_SUM     mm3
-    paddw       mm0, mm1
-    paddw       mm2, mm3
-    paddw       mm0, mm2
-    SATD_END
+    pxor    mm7,    mm7
+    xor     rbp,    rbp
+
+    LOAD_DIFF_INC_4x4 mm0, mm1, mm2, mm3, mm6, mm7, rax, rbx, rcx, rdx, 0
+    HADAMARD4x4_FIRST
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 0
+    HADAMARD4x4_NEXT
+
+    mov     rax,    r10         ; load pix1
+    mov     rcx,    r11         ; load pix2
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 4
+    HADAMARD4x4_NEXT
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 4
+    HADAMARD4x4_NEXT
+
+    MMX_SUM_MM  mm0, mm7
+    mov     rbp, rax
+
+    mov     rax,    r10         ; load pix1
+    mov     rcx,    r11         ; load pix2
+
+    LOAD_DIFF_INC_4x4 mm0, mm1, mm2, mm3, mm6, mm7, rax, rbx, rcx, rdx, 8
+    HADAMARD4x4_FIRST
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 8
+    HADAMARD4x4_NEXT
+
+    mov     rax,    r10         ; load pix1
+    mov     rcx,    r11         ; load pix2
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 12
+    HADAMARD4x4_NEXT
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 12
+    HADAMARD4x4_NEXT
+
+    MMX_SUM_MM  mm0, mm7
+    add         rax, rbp
+
+    pop     rbp
+    pop     rbx
+    ret
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_satd_8x16_mmxext (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_satd_8x16_mmxext (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_satd_8x16_mmxext:
-    SATD_START
-    mov         r10, parm1q
-    mov         r11, parm3q
+    push    rbx
+    push    rbp
 
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm0, parm1q, parm2q, parm3q, parm4q, 0
-    HADAMARD4x4_SUM     mm0
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm1, parm1q, parm2q, parm3q, parm4q, 0
-    HADAMARD4x4_SUM     mm1
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm2, parm1q, parm2q, parm3q, parm4q, 0
-    HADAMARD4x4_SUM     mm2
-    LOAD_DIFF_4x4       mm4, mm5, mm6, mm7, mm3, parm1q, parm2q, parm3q, parm4q, 0
-    HADAMARD4x4_SUM     mm3
-    paddw       mm0, mm1
-    paddw       mm2, mm3
-    paddw       mm0, mm2
+    mov     r9, rdx             ; pix2
+    mov     r8d, ecx            ; stride2
 
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm1, r10, parm2q, r11, parm4q, 4
-    HADAMARD4x4_SUM     mm1
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm2, r10, parm2q, r11, parm4q, 4
-    HADAMARD4x4_SUM     mm2
-    paddw       mm1, mm2
+    mov     rax, rdi            ; pix1
+    movsxd  rbx, esi            ; stride1
+    mov     rcx, r9             ; pix2
+    movsxd  rdx, r8d            ; stride2
 
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm2, r10, parm2q, r11, parm4q, 4
-    HADAMARD4x4_SUM     mm2
-    LOAD_DIFF_4x4       mm4, mm5, mm6, mm7, mm3, r10, parm2q, r11, parm4q, 4
-    HADAMARD4x4_SUM     mm3
-    paddw       mm0, mm1
-    paddw       mm2, mm3
-    paddw       mm0, mm2
-    SATD_END
+    mov     r10, rax            ; save pix1
+    mov     r11, rcx            ; save pix2
+
+    pxor    mm7,    mm7
+    xor     rbp,    rbp
+
+    LOAD_DIFF_INC_4x4 mm0, mm1, mm2, mm3, mm6, mm7, rax, rbx, rcx, rdx, 0
+    HADAMARD4x4_FIRST
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 0
+    HADAMARD4x4_NEXT
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 0
+    HADAMARD4x4_NEXT
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 0
+    HADAMARD4x4_NEXT
+
+    MMX_SUM_MM  mm0, mm7
+    mov     rbp, rax
+
+    mov     rax,    r10         ; load pix1
+    mov     rcx,    r11         ; load pix2
+
+    LOAD_DIFF_INC_4x4 mm0, mm1, mm2, mm3, mm6, mm7, rax, rbx, rcx, rdx, 4
+    HADAMARD4x4_FIRST
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 4
+    HADAMARD4x4_NEXT
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 4
+    HADAMARD4x4_NEXT
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 4
+    HADAMARD4x4_NEXT
+
+    MMX_SUM_MM  mm0, mm7
+    add     rax,    rbp
+
+    pop     rbp
+    pop     rbx
+    ret
 
 ALIGN 16
 ;-----------------------------------------------------------------------------
-;   int x264_pixel_satd_16x16_mmxext (uint8_t *, int, uint8_t *, int )
+;   int __cdecl x264_pixel_satd_16x16_mmxext (uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
 x264_pixel_satd_16x16_mmxext:
-    SATD_START
-    mov         r10, parm1q
-    mov         r11, parm3q
+    push    rbx
+    push    rbp
 
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm0, parm1q, parm2q, parm3q, parm4q, 0
-    HADAMARD4x4_SUM     mm0
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm1, parm1q, parm2q, parm3q, parm4q, 0
-    HADAMARD4x4_SUM     mm1
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm2, parm1q, parm2q, parm3q, parm4q, 0
-    HADAMARD4x4_SUM     mm2
-    LOAD_DIFF_4x4       mm4, mm5, mm6, mm7, mm3, parm1q, parm2q, parm3q, parm4q, 0
-    HADAMARD4x4_SUM     mm3
-    paddw       mm0, mm1
-    paddw       mm2, mm3
-    paddw       mm0, mm2
+    mov     r9, rdx             ; pix2
+    mov     r8d, ecx            ; stride2
 
-    mov         parm1q, r10
-    mov         parm3q, r11
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm1, parm1q, parm2q, parm3q, parm4q, 4
-    HADAMARD4x4_SUM     mm1
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm2, parm1q, parm2q, parm3q, parm4q, 4
-    HADAMARD4x4_SUM     mm2
-    paddw       mm1, mm2
+    mov     rax, rdi            ; pix1
+    movsxd  rbx, esi            ; stride1
+    mov     rcx, r9             ; pix2
+    movsxd  rdx, r8d            ; stride2
 
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm2, parm1q, parm2q, parm3q, parm4q, 4
-    HADAMARD4x4_SUM     mm2
-    LOAD_DIFF_4x4       mm4, mm5, mm6, mm7, mm3, parm1q, parm2q, parm3q, parm4q, 4
-    HADAMARD4x4_SUM     mm3
-    paddw       mm0, mm1
-    paddw       mm2, mm3
-    paddw       mm0, mm2
+    mov     r10, rax            ; save pix1
+    mov     r11, rcx            ; save pix2
 
-    mov         parm1q, r10
-    mov         parm3q, r11
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm1, parm1q, parm2q, parm3q, parm4q, 8
-    HADAMARD4x4_SUM     mm1
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm2, parm1q, parm2q, parm3q, parm4q, 8
-    HADAMARD4x4_SUM     mm2
-    paddw       mm1, mm2
+    pxor    mm7,    mm7
+    xor     rbp,    rbp
 
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm2, parm1q, parm2q, parm3q, parm4q, 8
-    HADAMARD4x4_SUM     mm2
-    LOAD_DIFF_4x4       mm4, mm5, mm6, mm7, mm3, parm1q, parm2q, parm3q, parm4q, 8
-    HADAMARD4x4_SUM     mm3
-    paddw       mm0, mm1
-    paddw       mm2, mm3
-    paddw       mm0, mm2
+    LOAD_DIFF_INC_4x4 mm0, mm1, mm2, mm3, mm6, mm7, rax, rbx, rcx, rdx, 0
+    HADAMARD4x4_FIRST
 
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm1, r10, parm2q, r11, parm4q, 12
-    HADAMARD4x4_SUM     mm1
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm2, r10, parm2q, r11, parm4q, 12
-    HADAMARD4x4_SUM     mm2
-    paddw       mm1, mm2
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 0
+    HADAMARD4x4_NEXT
 
-    LOAD_DIFF_INC_4x4   mm4, mm5, mm6, mm7, mm2, r10, parm2q, r11, parm4q, 12
-    HADAMARD4x4_SUM     mm2
-    LOAD_DIFF_4x4       mm4, mm5, mm6, mm7, mm3, r10, parm2q, r11, parm4q, 12
-    HADAMARD4x4_SUM     mm3
-    paddw       mm0, mm1
-    paddw       mm2, mm3
-    paddw       mm0, mm2
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 0
+    HADAMARD4x4_NEXT
 
-    pxor        mm3, mm3
-    pshufw      mm1, mm0, 01001110b
-    paddw       mm0, mm1
-    punpcklwd   mm0, mm3
-    pshufw      mm1, mm0, 01001110b
-    paddd       mm0, mm1
-    movd        eax, mm0
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 0
+    HADAMARD4x4_NEXT
+
+    MMX_SUM_MM  mm0, mm7
+    mov     rbp, rax
+
+    mov     rax,    r10         ; load pix1
+    mov     rcx,    r11         ; load pix2
+
+    LOAD_DIFF_INC_4x4 mm0, mm1, mm2, mm3, mm6, mm7, rax, rbx, rcx, rdx, 4
+    HADAMARD4x4_FIRST
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 4
+    HADAMARD4x4_NEXT
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 4
+    HADAMARD4x4_NEXT
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 4
+    HADAMARD4x4_NEXT
+
+    MMX_SUM_MM  mm0, mm7
+    add     rbp,    rax
+
+    mov     rax,    r10         ; load pix1
+    mov     rcx,    r11         ; load pix2
+
+    LOAD_DIFF_INC_4x4 mm0, mm1, mm2, mm3, mm6, mm7, rax, rbx, rcx, rdx, 8
+    HADAMARD4x4_FIRST
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 8
+    HADAMARD4x4_NEXT
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 8
+    HADAMARD4x4_NEXT
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 8
+    HADAMARD4x4_NEXT
+
+    MMX_SUM_MM  mm0, mm7
+    add     rbp,    rax
+
+    mov     rax,    r10         ; load pix1
+    mov     rcx,    r11         ; load pix2
+
+    LOAD_DIFF_INC_4x4 mm0, mm1, mm2, mm3, mm6, mm7, rax, rbx, rcx, rdx, 12
+    HADAMARD4x4_FIRST
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 12
+    HADAMARD4x4_NEXT
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 12
+    HADAMARD4x4_NEXT
+
+    LOAD_DIFF_INC_4x4 mm1, mm2, mm3, mm4, mm6, mm7, rax, rbx, rcx, rdx, 12
+    HADAMARD4x4_NEXT
+
+    MMX_SUM_MM  mm0, mm7
+    add     rax,    rbp
+
+    pop     rbp
+    pop     rbx
     ret
 

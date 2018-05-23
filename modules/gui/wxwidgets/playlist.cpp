@@ -2,7 +2,7 @@
  * playlist.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2005 the VideoLAN team
- * $Id: playlist.cpp 13298 2005-11-20 21:52:59Z zorglub $
+ * $Id: playlist.cpp 12582 2005-09-17 14:15:32Z zorglub $
  *
  * Authors: Olivier Teulière <ipkiss@via.ecp.fr>
  *          Clément Stenac <zorglub@videolan.org>
@@ -204,7 +204,6 @@ Playlist::Playlist( intf_thread_t *_p_intf, wxWindow *p_parent ):
     i_update_counter = 0;
     i_sort_mode = MODE_NONE;
     b_need_update = VLC_FALSE;
-    i_items_to_append = 0;
     p_playlist = (playlist_t *)vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                                 FIND_ANYWHERE );
     if( p_playlist == NULL ) return;
@@ -484,23 +483,15 @@ void Playlist::UpdateTreeItem( wxTreeItemId item )
     LockPlaylist( p_intf->p_sys, p_playlist );
     playlist_item_t *p_item = playlist_ItemGetById( p_playlist,
                                           ((PlaylistItem *)p_data)->i_id );
-    if( !p_item )
-    {
-        UnlockPlaylist( p_intf->p_sys, p_playlist );
-        return;
-    }
+    if( !p_item ) return;
 
     wxString msg;
     wxString duration = wxU( "" );
     char *psz_author = vlc_input_item_GetInfo( &p_item->input,
                                                      _("Meta-information"),
                                                      _("Artist"));
-    if( !psz_author )
-    {
-        UnlockPlaylist( p_intf->p_sys, p_playlist );
+    if( psz_author == NULL )
         return;
-    }
-
     char psz_duration[MSTRTIME_MAX_SIZE];
     mtime_t dur = p_item->input.i_duration;
 
@@ -527,11 +518,7 @@ void Playlist::UpdateTreeItem( wxTreeItemId item )
     if( p_playlist->status.p_item == p_item )
     {
         treectrl->SetItemBold( item, true );
-        while( treectrl->GetItemParent( item ).IsOk() )
-        {
-            item = treectrl->GetItemParent( item );
-            treectrl->Expand( item );
-        }
+        treectrl->EnsureVisible( item );
     }
     else
     {
@@ -545,23 +532,23 @@ void Playlist::AppendItem( wxCommandEvent& event )
 {
     playlist_add_t *p_add = (playlist_add_t *)event.GetClientData();
     playlist_item_t *p_item = NULL;
-    wxTreeItemId item, node;
 
-    i_items_to_append--;
+    wxTreeItemId item,node;
 
-    /* No need to do anything if the playlist is going to be rebuilt */
-    if( b_need_update ) return;
-
-    if( p_add->i_view != i_current_view ) goto update;
+    if( p_add->i_view != i_current_view )
+    {
+        goto update;
+    }
 
     node = FindItem( treectrl->GetRootItem(), p_add->i_node );
-    if( !node.IsOk() ) goto update;
+    if( !node.IsOk() )
+    {
+        goto update;
+    }
 
     p_item = playlist_ItemGetById( p_playlist, p_add->i_item );
-    if( !p_item ) goto update;
-
-    item = FindItem( treectrl->GetRootItem(), p_add->i_item );
-    if( item.IsOk() ) goto update;
+    if( !p_item )
+        goto update;
 
     item = treectrl->AppendItem( node,
                                  wxL2U( p_item->input.psz_name ), -1,-1,
@@ -760,8 +747,6 @@ void Playlist::Rebuild( vlc_bool_t b_root )
 {
     playlist_view_t *p_view;
 
-    i_items_to_append = 0;
-
     /* We can remove the callbacks before locking, anyway, we won't
      * miss anything */
     if( b_root )
@@ -866,12 +851,20 @@ void Playlist::DeleteTreeItem( wxTreeItemId item )
        return;
    }
 
-   if( p_item->i_children == -1 ) DeleteItem( p_item->input.i_id );
-   else DeleteNode( p_item );
-
+   if( p_item->i_children == -1 )
+   {
+       UnlockPlaylist( p_intf->p_sys, p_playlist );
+       DeleteItem( p_item->input.i_id );
+   }
+   else
+   {
+       UnlockPlaylist( p_intf->p_sys, p_playlist );
+       DeleteNode( p_item );
+   }
    RemoveItem( item );
-   UnlockPlaylist( p_intf->p_sys, p_playlist );
 }
+
+
 
 void Playlist::DeleteItem( int item_id )
 {
@@ -1017,7 +1010,6 @@ void Playlist::OnSearch( wxCommandEvent& WXUNUSED(event) )
     {
         search_current = found;
         treectrl->EnsureVisible( found );
-        treectrl->UnselectAll();
         treectrl->SelectItem( found, true );
     }
 }
@@ -1086,11 +1078,7 @@ void Playlist::OnActivateItem( wxTreeEvent& event )
 
     LockPlaylist( p_intf->p_sys, p_playlist );
 
-    if( !( p_wxitem && p_wxparent ) )
-    {
-        UnlockPlaylist( p_intf->p_sys, p_playlist );
-        return;
-    }
+    if( !( p_wxitem && p_wxparent ) ) return;
 
     p_item2 = playlist_ItemGetById(p_playlist, p_wxitem->i_id);
     p_node2 = playlist_ItemGetById(p_playlist, p_wxparent->i_id);
@@ -1517,15 +1505,8 @@ static int ItemAppended( vlc_object_t *p_this, const char *psz_variable,
     Playlist *p_playlist_dialog = (Playlist *)param;
 
     playlist_add_t *p_add = (playlist_add_t *)malloc(sizeof( playlist_add_t));
-    memcpy( p_add, nval.p_address, sizeof( playlist_add_t ) );
 
-    if( p_playlist_dialog->i_items_to_append++ > 50 )
-    {
-        /* Too many items waiting to be added, it will be quicker to rebuild
-         * the whole playlist */
-        p_playlist_dialog->b_need_update = VLC_TRUE;
-        return VLC_SUCCESS;
-    }
+    memcpy( p_add, nval.p_address, sizeof( playlist_add_t ) );
 
     wxCommandEvent event( wxEVT_PLAYLIST, AppendItem_Event );
     event.SetClientData( (void *)p_add );

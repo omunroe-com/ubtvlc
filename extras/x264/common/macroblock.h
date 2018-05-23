@@ -156,10 +156,6 @@ static const int x264_mb_partition_count_table[17] =
     /* Partition */
     4, 2, 2, 1
 };
-static const int x264_mb_partition_pixel_table[17] =
-{
-    6, 4, 5, 3, 6, 4, 5, 3, 6, 4, 5, 3, 3, 3, 1, 2, 0
-};
 
 static const int x264_zigzag_scan4[16] =
 {
@@ -173,42 +169,6 @@ static const int x264_zigzag_scan8[64] =
    58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63
 };  
 
-static const uint8_t block_idx_x[16] =
-{
-    0, 1, 0, 1, 2, 3, 2, 3, 0, 1, 0, 1, 2, 3, 2, 3
-};
-static const uint8_t block_idx_y[16] =
-{
-    0, 0, 1, 1, 0, 0, 1, 1, 2, 2, 3, 3, 2, 2, 3, 3
-};
-static const uint8_t block_idx_xy[4][4] =
-{
-    { 0, 2, 8,  10 },
-    { 1, 3, 9,  11 },
-    { 4, 6, 12, 14 },
-    { 5, 7, 13, 15 }
-};
-
-static const int i_chroma_qp_table[52] =
-{
-     0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
-    10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-    20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
-    29, 30, 31, 32, 32, 33, 34, 34, 35, 35,
-    36, 36, 37, 37, 37, 38, 38, 38, 39, 39,
-    39, 39
-};
-
-enum cabac_ctx_block_cat_e
-{
-    DCT_LUMA_DC   = 0,
-    DCT_LUMA_AC   = 1,
-    DCT_LUMA_4x4  = 2,
-    DCT_CHROMA_DC = 3,
-    DCT_CHROMA_AC = 4,
-    DCT_LUMA_8x8  = 5,
-};
-
 
 void x264_macroblock_cache_init( x264_t *h );
 void x264_macroblock_slice_init( x264_t *h );
@@ -217,6 +177,11 @@ void x264_macroblock_cache_save( x264_t *h );
 void x264_macroblock_cache_end( x264_t *h );
 
 void x264_macroblock_bipred_init( x264_t *h );
+
+void x264_mb_dequant_4x4_dc( int16_t dct[4][4], int dequant_mf[6][4][4], int i_qscale );
+void x264_mb_dequant_2x2_dc( int16_t dct[2][2], int dequant_mf[6][4][4], int i_qscale );
+void x264_mb_dequant_4x4( int16_t dct[4][4], int dequant_mf[6][4][4], int i_qscale );
+void x264_mb_dequant_8x8( int16_t dct[8][8], int dequant_mf[6][8][8], int i_qscale );
 
 /* x264_mb_predict_mv_16x16:
  *      set mvp with predicted mv for D_16x16 block
@@ -244,7 +209,7 @@ void x264_mb_load_mv_direct8x8( x264_t *h, int idx );
  *      set mvc with D_16x16 prediction.
  *      uses all neighbors, even those that didn't end up using this ref.
  *      h->mb. need only valid values from other blocks */
-void x264_mb_predict_mv_ref16x16( x264_t *h, int i_list, int i_ref, int mvc[8][2], int *i_mvc );
+void x264_mb_predict_mv_ref16x16( x264_t *h, int i_list, int i_ref, int mvc[5][2], int *i_mvc );
 
 
 int  x264_mb_predict_intra4x4_mode( x264_t *h, int idx );

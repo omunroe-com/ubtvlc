@@ -133,17 +133,17 @@ typedef struct
     /* Synchronization information */
     mtime_t                 delta_cr;
     mtime_t                 cr_ref, sysdate_ref;
-    mtime_t                 last_sysdate;
     mtime_t                 last_cr; /* reference to detect unexpected stream
                                       * discontinuities                      */
     mtime_t                 last_pts;
+    count_t                 c_average_count;
+                           /* counter used to compute dynamic average values */
     int                     i_synchro_state;
 
     vlc_bool_t              b_master;
 
     /* Config */
     int                     i_cr_average;
-    int                     i_delta_cr_residue;
 } input_clock_t;
 
 void input_ClockInit( input_clock_t *, vlc_bool_t b_master, int i_cr_average );

@@ -2,7 +2,7 @@
  * open.cpp : wxWindows plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2005 the VideoLAN team
- * $Id: open.cpp 13180 2005-11-10 18:43:42Z gbazin $
+ * $Id: open.cpp 12796 2005-10-09 16:36:17Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -501,7 +501,7 @@ OpenDialog::OpenDialog( intf_thread_t *_p_intf, wxWindow *_p_parent,
     /* Create notebook */
     notebook = new wxNotebook( panel, Notebook_Event );
 
-#if (!wxCHECK_VERSION(2,5,2))
+#if (!wxCHECK_VERSION(2,5,0))
     wxNotebookSizer *notebook_sizer = new wxNotebookSizer( notebook );
 #endif
 
@@ -577,7 +577,7 @@ OpenDialog::OpenDialog( intf_thread_t *_p_intf, wxWindow *_p_parent,
     wxBoxSizer *panel_sizer = new wxBoxSizer( wxVERTICAL );
     panel_sizer->Add( mrl_sizer_sizer, 0, wxEXPAND, 5 );
     panel_sizer->Add( label, 0, wxEXPAND | wxALL, 5 );
-#if (!wxCHECK_VERSION(2,5,2))
+#if (!wxCHECK_VERSION(2,5,0))
     panel_sizer->Add( notebook_sizer, 1, wxEXPAND | wxALL, 5 );
 #else
     panel_sizer->Add( notebook, 1, wxEXPAND | wxALL, 5 );

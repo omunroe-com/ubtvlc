@@ -82,7 +82,6 @@ HRESULT GetObjectProperty(LPUNKNOWN object, DISPID dispID, VARIANT& v)
     {
         DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
         VARIANT vres;
-        VariantInit(&vres);
         hr = pDisp->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT,
                 DISPATCH_PROPERTYGET, &dispparamsNoArgs, &vres, NULL, NULL);
         if( SUCCEEDED(hr) )

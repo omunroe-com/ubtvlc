@@ -2,7 +2,7 @@
  * waveout.c : Windows waveOut plugin for vlc
  *****************************************************************************
  * Copyright (C) 2001 the VideoLAN team
- * $Id: waveout.c 13383 2005-11-25 19:21:47Z gbazin $
+ * $Id: waveout.c 11916 2005-07-30 11:30:51Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -250,8 +250,6 @@ static int Open( vlc_object_t *p_this )
     }
     else
     {
-        WAVEOUTCAPS wocaps;
-
         if( val.i_int == AOUT_VAR_5_1 )
         {
             p_aout->output.output.i_physical_channels
@@ -294,20 +292,9 @@ static int Open( vlc_object_t *p_this )
 
         aout_VolumeSoftInit( p_aout );
 
-        /* Check for hardware volume support */
-        if( waveOutGetDevCaps( (UINT_PTR)p_aout->output.p_sys->h_waveout,
-                               &wocaps, sizeof(wocaps) ) == MMSYSERR_NOERROR &&
-            wocaps.dwSupport & WAVECAPS_VOLUME )
-        {
-            DWORD i_dummy;
-            if( waveOutGetVolume( p_aout->output.p_sys->h_waveout, &i_dummy )
-                == MMSYSERR_NOERROR )
-            {
-                p_aout->output.pf_volume_infos = VolumeInfos;
-                p_aout->output.pf_volume_get = VolumeGet;
-                p_aout->output.pf_volume_set = VolumeSet;
-            }
-        }
+        p_aout->output.pf_volume_infos = VolumeInfos;
+        p_aout->output.pf_volume_get = VolumeGet;
+        p_aout->output.pf_volume_set = VolumeSet;
     }
 
 

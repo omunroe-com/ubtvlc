@@ -2,7 +2,7 @@
  * udp.c
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: udp.c 12981 2005-10-27 07:31:15Z md $
+ * $Id: udp.c 12822 2005-10-11 17:32:01Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -199,6 +199,8 @@ static int Open( vlc_object_t *p_this )
     if( p_access->psz_access != NULL &&
         !strcmp( p_access->psz_access, "rtp" ) )
     {
+        msg_Warn( p_access, "be careful that rtp output only works with ts "
+                  "payload (not an error)" );
         p_sys->b_rtpts = 1;
     }
     else
@@ -447,20 +449,6 @@ static int Write( sout_access_out_t *p_access, block_t *p_buffer )
 static int WriteRaw( sout_access_out_t *p_access, block_t *p_buffer )
 {
     sout_access_out_sys_t   *p_sys = p_access->p_sys;
-    block_t *p_buf;
-
-    vlc_mutex_lock( &p_sys->p_thread->blocks_lock );
-    while ( p_sys->p_thread->i_empty_depth >= MAX_EMPTY_BLOCKS )
-    {
-        p_buf = p_sys->p_thread->p_empty_blocks;
-        p_sys->p_thread->p_empty_blocks =
-                    p_sys->p_thread->p_empty_blocks->p_next;
-        p_sys->p_thread->i_empty_depth--;
-        vlc_mutex_unlock( &p_sys->p_thread->blocks_lock );
-        block_Release( p_buf );
-        vlc_mutex_lock( &p_sys->p_thread->blocks_lock );
-    }
-    vlc_mutex_unlock( &p_sys->p_thread->blocks_lock );
 
     block_FifoPut( p_sys->p_thread->p_fifo, p_buffer );
 

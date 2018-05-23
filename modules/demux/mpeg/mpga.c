@@ -2,7 +2,7 @@
  * mpga.c : MPEG-I/II Audio input module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: mpga.c 13227 2005-11-13 18:32:16Z dionoea $
+ * $Id: mpga.c 11709 2005-07-11 16:20:33Z massiot $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -32,7 +32,7 @@
 #include "vlc_codec.h"
 #include "vlc_meta.h"
 
-#define MPGA_PACKET_SIZE 1024
+#define MPGA_PACKET_SIZE 4096
 
 /*****************************************************************************
  * Module descriptor

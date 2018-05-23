@@ -56,6 +56,22 @@ static const uint8_t sub_mb_type_b_to_golomb[13]=
     10,  4,  5,  1, 11,  6,  7,  2, 12,  8,  9,  3,  0
 };
 
+static const uint8_t block_idx_x[16] =
+{
+    0, 1, 0, 1, 2, 3, 2, 3, 0, 1, 0, 1, 2, 3, 2, 3
+};
+static const uint8_t block_idx_y[16] =
+{
+    0, 0, 1, 1, 0, 0, 1, 1, 2, 2, 3, 3, 2, 2, 3, 3
+};
+static const uint8_t block_idx_xy[4][4] =
+{
+    { 0, 2, 8,  10},
+    { 1, 3, 9,  11},
+    { 4, 6, 12, 14},
+    { 5, 7, 13, 15}
+};
+
 #define BLOCK_INDEX_CHROMA_DC   (-1)
 #define BLOCK_INDEX_LUMA_DC     (-2)
 
@@ -321,7 +337,7 @@ static void x264_sub_mb_mv_write_cavlc( x264_t *h, bs_t *s, int i_list )
     }
 }
 
-static void x264_macroblock_luma_write_cavlc( x264_t *h, bs_t *s )
+void x264_macroblock_luma_write_cavlc( x264_t *h, bs_t *s )
 {
     int i8, i4, i;
     if( h->mb.b_transform_8x8 )
@@ -350,13 +366,10 @@ static void x264_macroblock_luma_write_cavlc( x264_t *h, bs_t *s )
 void x264_macroblock_write_cavlc( x264_t *h, bs_t *s )
 {
     const int i_mb_type = h->mb.i_type;
-    int i_mb_i_offset;
-    int i;
-
-#ifndef RDO_SKIP_BS
     const int i_mb_pos_start = bs_pos( s );
     int       i_mb_pos_tex;
-#endif
+    int i_mb_i_offset;
+    int i;
 
     switch( h->sh.i_type )
     {
@@ -383,9 +396,6 @@ void x264_macroblock_write_cavlc( x264_t *h, bs_t *s )
         /* Untested */
         bs_write_ue( s, i_mb_i_offset + 25 );
 
-#ifdef RDO_SKIP_BS
-        s->i_bits_encoded += 384*8;
-#else
         bs_align_0( s );
         /* Luma */
         for( i = 0; i < 16*16; i++ )
@@ -408,7 +418,6 @@ void x264_macroblock_write_cavlc( x264_t *h, bs_t *s )
             const int y = 8 * h->mb.i_mb_y + (i / 8);
             bs_write( s, 8, h->fenc->plane[2][y*h->mb.pic.i_stride[2]+x] );
         }
-#endif
         return;
     }
     else if( i_mb_type == I_4x4 || i_mb_type == I_8x8 )
@@ -422,7 +431,7 @@ void x264_macroblock_write_cavlc( x264_t *h, bs_t *s )
         for( i = 0; i < 16; i += di )
         {
             int i_pred = x264_mb_predict_intra4x4_mode( h, i );
-            int i_mode = x264_mb_pred_mode4x4_fix( h->mb.cache.intra4x4_pred_mode[x264_scan8[i]] );
+            int i_mode = h->mb.cache.intra4x4_pred_mode[x264_scan8[i]];
 
             if( i_pred == i_mode)
             {
@@ -445,7 +454,7 @@ void x264_macroblock_write_cavlc( x264_t *h, bs_t *s )
     }
     else if( i_mb_type == I_16x16 )
     {
-        bs_write_ue( s, i_mb_i_offset + 1 + x264_mb_pred_mode16x16_fix[h->mb.i_intra16x16_pred_mode] +
+        bs_write_ue( s, i_mb_i_offset + 1 + h->mb.i_intra16x16_pred_mode +
                         h->mb.i_cbp_chroma * 4 + ( h->mb.i_cbp_luma == 0 ? 0 : 12 ) );
         bs_write_ue( s, x264_mb_pred_mode8x8c_fix[ h->mb.i_chroma_pred_mode ] );
     }
@@ -653,10 +662,8 @@ void x264_macroblock_write_cavlc( x264_t *h, bs_t *s )
         return;
     }
 
-#ifndef RDO_SKIP_BS
     i_mb_pos_tex = bs_pos( s );
     h->stat.frame.i_hdr_bits += i_mb_pos_tex - i_mb_pos_start;
-#endif
 
     /* Coded block patern */
     if( i_mb_type == I_4x4 || i_mb_type == I_8x8 )
@@ -677,7 +684,7 @@ void x264_macroblock_write_cavlc( x264_t *h, bs_t *s )
     /* write residual */
     if( i_mb_type == I_16x16 )
     {
-        bs_write_se( s, h->mb.i_qp - h->mb.i_last_qp );
+        bs_write_se( s, h->mb.qp[h->mb.i_mb_xy] - h->mb.i_last_qp );
 
         /* DC Luma */
         block_residual_write_cavlc( h, s, BLOCK_INDEX_LUMA_DC , h->dct.luma16x16_dc, 16 );
@@ -689,7 +696,7 @@ void x264_macroblock_write_cavlc( x264_t *h, bs_t *s )
     }
     else if( h->mb.i_cbp_luma != 0 || h->mb.i_cbp_chroma != 0 )
     {
-        bs_write_se( s, h->mb.i_qp - h->mb.i_last_qp );
+        bs_write_se( s, h->mb.qp[h->mb.i_mb_xy] - h->mb.i_last_qp );
         x264_macroblock_luma_write_cavlc( h, s );
     }
     if( h->mb.i_cbp_chroma != 0 )
@@ -702,10 +709,8 @@ void x264_macroblock_write_cavlc( x264_t *h, bs_t *s )
                 block_residual_write_cavlc( h, s, 16 + i, h->dct.block[16+i].residual_ac, 15 );
     }
 
-#ifndef RDO_SKIP_BS
     if( IS_INTRA( i_mb_type ) )
         h->stat.frame.i_itex_bits += bs_pos(s) - i_mb_pos_tex;
     else
         h->stat.frame.i_ptex_bits += bs_pos(s) - i_mb_pos_tex;
-#endif
 }

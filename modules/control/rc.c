@@ -2,7 +2,7 @@
  * rc.c : remote control stdin/stdout module for vlc
  *****************************************************************************
  * Copyright (C) 2004 - 2005 the VideoLAN team
- * $Id: rc.c 13127 2005-11-03 20:39:41Z jpsaman $
+ * $Id: rc.c 12953 2005-10-24 15:17:03Z bigben $
  *
  * Author: Peter Surda <shurdeek@panorama.sth.ac.at>
  *         Jean-Paul Saman <jpsaman #_at_# m2x _replaceWith#dot_ nl>
@@ -135,7 +135,7 @@ void __msg_rc( intf_thread_t *p_intf, const char *psz_fmt, ... )
     if( p_intf->p_sys->i_socket == -1 )
     {
         vprintf( psz_fmt, args );
-        printf( "\r\n" );
+        printf( "\n" );
     }
     else
     {
@@ -531,7 +531,7 @@ static void Run( intf_thread_t *p_intf )
 
     /* status callbacks */
     /* Listen to audio volume updates */
-    var_AddCallback( p_intf->p_vlc, "volume-change", VolumeChanged, p_intf );
+    var_AddCallback( p_intf->p_vlc, "volume", VolumeChanged, p_intf );
 
 #ifdef WIN32
     /* Get the file descriptor of the console input */
@@ -865,7 +865,7 @@ static void Run( intf_thread_t *p_intf )
         p_playlist = NULL;
     }
 
-    var_DelCallback( p_intf->p_vlc, "volume-change", VolumeChanged, p_intf );
+    var_DelCallback( p_intf->p_vlc, "volume", VolumeChanged, p_intf );
 }
 
 static void Help( intf_thread_t *p_intf, vlc_bool_t b_longhelp)
@@ -979,7 +979,7 @@ static int VolumeChanged( vlc_object_t *p_this, char const *psz_cmd,
     intf_thread_t *p_intf = (intf_thread_t*)p_data;
 
     vlc_mutex_lock( &p_intf->p_sys->status_lock );
-    msg_rc( STATUS_CHANGE "( audio volume: %d )", config_GetInt( p_this, "volume") );
+    msg_rc( STATUS_CHANGE "( audio volume: %d )", newval.i_int );
     vlc_mutex_unlock( &p_intf->p_sys->status_lock );
     return VLC_SUCCESS;
 }
@@ -1065,8 +1065,9 @@ static int Input( vlc_object_t *p_this, char const *psz_cmd,
     /* Parse commands that only require an input */
     if( !strcmp( psz_cmd, "pause" ) )
     {
-        val.i_int = config_GetInt( p_intf, "key-play-pause" );
-        var_Set( p_intf->p_vlc, "key-pressed", val );
+        val.i_int = PAUSE_S;
+
+        var_Set( p_input, "state", val );
         vlc_object_release( p_input );
         return VLC_SUCCESS;
     }
@@ -1699,7 +1700,7 @@ static int Volume( vlc_object_t *p_this, char const *psz_cmd,
 {
     intf_thread_t *p_intf = (intf_thread_t*)p_this;
     input_thread_t *p_input = NULL;
-    int i_error = VLC_EGENERIC;
+    int i_error;
 
     p_input = vlc_object_find( p_this, VLC_OBJECT_INPUT, FIND_ANYWHERE );
     if( !p_input )

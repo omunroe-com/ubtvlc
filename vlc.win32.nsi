@@ -43,8 +43,8 @@ InstType "Full"
 
 ; MUI Settings
   !define MUI_ABORTWARNING
-  !define MUI_ICON "vlc48x48.ico"
-  !define MUI_UNICON "vlc48x48.ico"
+  !define MUI_ICON "vlc48x48new.ico"
+  !define MUI_UNICON "vlc48x48new.ico"
   !define MUI_COMPONENTSPAGE_SMALLDESC
 
 ; Installer pages
@@ -61,7 +61,8 @@ InstType "Full"
     !insertmacro MUI_PAGE_INSTFILES
   ; Finish page
     !define MUI_FINISHPAGE_RUN "$INSTDIR\vlc.exe"
-    !define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\README.txt"
+    !define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\NEWS.txt"
+    !define MUI_FINISHPAGE_SHOWREADME_TEXT "View changelog"
     !define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
     !define MUI_FINISHPAGE_LINK "Visit the VideoLAN VLC media player Website"
     !define MUI_FINISHPAGE_LINK_LOCATION "http://www.videolan.org/vlc/"

@@ -2,7 +2,7 @@
  * decoder.c: Functions for the management of decoders
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: decoder.c 13055 2005-10-31 13:14:23Z md $
+ * $Id: decoder.c 12887 2005-10-19 07:09:09Z md $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -930,8 +930,6 @@ static picture_t *vout_new_buffer( decoder_t *p_dec )
             var_CreateGetBool( p_dec, "hdtv-fix" ) )
         {
             p_dec->fmt_out.video.i_visible_height = 1080;
-            p_dec->fmt_out.video.i_sar_num *= 135; 
-            p_dec->fmt_out.video.i_sar_den *= 136; 
             msg_Warn( p_dec, "Fixing broken HDTV stream (display_height=1088)");
         }
 
@@ -948,7 +946,7 @@ static picture_t *vout_new_buffer( decoder_t *p_dec )
         vlc_ureduce( &p_dec->fmt_out.video.i_sar_num,
                      &p_dec->fmt_out.video.i_sar_den,
                      p_dec->fmt_out.video.i_sar_num,
-                     p_dec->fmt_out.video.i_sar_den, 50000 );
+                     p_dec->fmt_out.video.i_sar_den, 0 );
 
         p_dec->fmt_out.video.i_chroma = p_dec->fmt_out.i_codec;
         p_sys->video = p_dec->fmt_out.video;

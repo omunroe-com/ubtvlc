@@ -2,7 +2,7 @@
  * bookmarks.m: MacOS X Bookmarks window
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: bookmarks.m 12986 2005-10-27 18:15:35Z fkuehne $
+ * $Id: bookmarks.m 12811 2005-10-10 15:41:52Z fkuehne $
  *
  * Authors: Felix KŸhne <fkuehne@users.sf.net>
  *
@@ -239,9 +239,9 @@ static VLCBookmarks *_o_sharedInstance = nil;
     if( p_old_input != p_input )
     {
         NSBeginCriticalAlertSheet(_NS("Input has changed"), _NS("OK"), \
-            @"", @"", o_bookmarks_window, nil, nil, nil, nil, _NS("Input " \
-            "has changed, unable to save bookmark. Use \"Pause\" while " \
-            "editing bookmarks to keep the same input."));
+                @"", @"", o_bookmarks_window, nil, nil, nil, nil, _NS("Input " \
+                "has changed, unable to save bookmark. Use \"pause\" while " \
+                "editing bookmarks to keep the same input."));
         vlc_object_release( p_input );
         return;
     }
@@ -289,8 +289,8 @@ static VLCBookmarks *_o_sharedInstance = nil;
     if( [o_tbl_dataTable numberOfSelectedRows] < 2 )
     {
         NSBeginAlertSheet(_NS("Invalid selection"), _NS("OK"), \
-            @"", @"", o_bookmarks_window, nil, nil, nil, nil, _NS("" \
-            "You have to select two bookmarks."));
+                @"", @"", o_bookmarks_window, nil, nil, nil, nil, _NS("" \
+                "You must select two bookmarks"));
         return;
     }
     input_thread_t *p_input =
@@ -299,8 +299,8 @@ static VLCBookmarks *_o_sharedInstance = nil;
     if( !p_input )
     {
         NSBeginCriticalAlertSheet(_NS("No input found"), _NS("OK"), \
-            @"", @"", o_bookmarks_window, nil, nil, nil, nil, _NS("" \
-            "The stream must be playing or paused for bookmarks to work."));
+                @"", @"", o_bookmarks_window, nil, nil, nil, nil, _NS("" \
+                "The stream must be playing or paused for bookmarks to work"));
         return;
     }
     

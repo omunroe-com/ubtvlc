@@ -2,7 +2,7 @@
  * vlcshell.cpp: a VLC plugin for Mozilla
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: vlcshell.cpp 13236 2005-11-14 00:52:36Z adn $
+ * $Id: vlcshell.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -90,7 +90,7 @@
 ******************************************************************************/
 #ifdef XP_UNIX
 #   define VOUT_PLUGINS "xvideo,x11,dummy"
-#   define AOUT_PLUGINS "alsa,oss,dummy"
+#   define AOUT_PLUGINS "oss,dummy"
 
 static unsigned int i_previous_height = 100000;
 static unsigned int i_previous_width = 100000;

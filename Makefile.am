@@ -181,6 +181,9 @@ EXTRA_DIST += \
 	extras/MacOSX/Resources/English.lproj/Extended.nib/classes.nib \
 	extras/MacOSX/Resources/English.lproj/Extended.nib/info.nib \
 	extras/MacOSX/Resources/English.lproj/Extended.nib/keyedobjects.nib \
+	extras/MacOSX/Resources/English.lproj/Update.nib/classes.nib \
+	extras/MacOSX/Resources/English.lproj/Update.nib/info.nib \
+	extras/MacOSX/Resources/English.lproj/Update.nib/keyedobjects.nib \
 	extras/MacOSX/Resources/English.lproj/InfoPlist.strings \
 	extras/MacOSX/Resources/a52.icns \
 	extras/MacOSX/Resources/aac.icns \
@@ -245,6 +248,7 @@ EXTRA_DIST += \
 	extras/MacOSX/Resources/README \
 	extras/MacOSX/vlc.pbproj/project.pbxproj \
 	extras/MacOSX/macosx-dmg \
+	\
 	extras/Makefile \
 	extras/zsh.cpp \
 	$(NULL)
@@ -879,7 +883,7 @@ package-win32-base:
            $(top_builddir)/vlc-${VERSION}/http/vlm/ ;
 	unix2dos $(top_builddir)/vlc-${VERSION}/http/vlm/*.html ;
 
-	cp $(srcdir)/share/vlc48x48.ico $(top_builddir)/vlc-${VERSION}/ ;
+	cp $(srcdir)/share/vlc48x48new.ico $(top_builddir)/vlc-${VERSION}/ ;
 
 	mkdir -p "$(top_builddir)/vlc-${VERSION}/mozilla"
 if BUILD_MOZILLA
@@ -983,7 +987,7 @@ package-wince-base:
            $(top_builddir)/vlc-${VERSION}/http/vlm/ ;
 	unix2dos $(top_builddir)/vlc-${VERSION}/http/vlm/*.html ;
 
-	cp $(srcdir)/share/vlc48x48.ico $(top_builddir)/vlc-${VERSION}/ ;
+	cp $(srcdir)/share/vlc48x48new.ico $(top_builddir)/vlc-${VERSION}/ ;
 
 if BUILD_MOZILLA
 	mkdir -p "$(top_builddir)/vlc-${VERSION}/mozilla"

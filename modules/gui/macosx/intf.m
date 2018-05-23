@@ -2,7 +2,7 @@
  * intf.m: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: intf.m 13146 2005-11-06 19:37:22Z fkuehne $
+ * $Id: intf.m 12868 2005-10-16 23:21:25Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -1530,7 +1530,6 @@ static VLCMain *_o_sharedMainInstance = nil;
     if (!nib_wizard_loaded)
     {
         nib_wizard_loaded = [NSBundle loadNibNamed:@"Wizard" owner:self];
-        [o_wizard initStrings];
     }
     
     if (!nib_bookmarks_loaded)

@@ -2,7 +2,7 @@
  * hotkeys.c: Hotkey handling for vlc
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: hotkeys.c 12990 2005-10-28 00:13:28Z hartman $
+ * $Id: hotkeys.c 12908 2005-10-22 10:18:20Z asmax $
  *
  * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *          Jean-Paul Saman <jpsaman #_at_# m2x.nl>
@@ -605,12 +605,6 @@ static void Run( intf_thread_t *p_intf )
             {
                 val.b_bool = VLC_TRUE;
                 var_Set( p_input, "next-chapter", val );
-            }
-            else if( i_action == ACTIONID_DISC_MENU )
-            {
-                vlc_value_t val; val.i_int = 2;
-msg_Dbg( p_input, "set dvdmenu" );
-                var_Set( p_input, "title  0", val);
             }
             else if( i_action == ACTIONID_SUBDELAY_DOWN )
             {

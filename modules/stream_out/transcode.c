@@ -2,7 +2,7 @@
  * transcode.c: transcoding stream output module
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: transcode.c 13101 2005-11-02 18:16:58Z gbazin $
+ * $Id: transcode.c 12438 2005-08-31 20:37:23Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -1500,8 +1500,6 @@ static int transcode_video_new( sout_stream_t *p_stream, sout_stream_id_t *id )
     /* Close the encoder.
      * We'll open it only when we have the first frame. */
     module_Unneed( id->p_encoder, id->p_encoder->p_module );
-    if( id->p_encoder->fmt_out.p_extra )
-        free( id->p_encoder->fmt_out.p_extra );
     id->p_encoder->p_module = NULL;
 
     if( p_sys->i_threads >= 1 )

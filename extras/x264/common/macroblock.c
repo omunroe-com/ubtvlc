@@ -26,6 +26,23 @@
 #include <string.h>
 
 #include "common.h"
+#include "macroblock.h"
+
+static const uint8_t block_idx_x[16] =
+{
+    0, 1, 0, 1, 2, 3, 2, 3, 0, 1, 0, 1, 2, 3, 2, 3
+};
+static const uint8_t block_idx_y[16] =
+{
+    0, 0, 1, 1, 0, 0, 1, 1, 2, 2, 3, 3, 2, 2, 3, 3
+};
+static const uint8_t block_idx_xy[4][4] =
+{
+    { 0, 2, 8,  10},
+    { 1, 3, 9,  11},
+    { 4, 6, 12, 14},
+    { 5, 7, 13, 15}
+};
 
 static const int dequant_mf[6][4][4] =
 {
@@ -35,6 +52,65 @@ static const int dequant_mf[6][4][4] =
     { {14, 18, 14, 18}, {18, 23, 18, 23}, {14, 18, 14, 18}, {18, 23, 18, 23} },
     { {16, 20, 16, 20}, {20, 25, 20, 25}, {16, 20, 16, 20}, {20, 25, 20, 25} },
     { {18, 23, 18, 23}, {23, 29, 23, 29}, {18, 23, 18, 23}, {23, 29, 23, 29} }
+};
+
+static const int dequant8_mf[6][8][8] =
+{
+  {
+    {20, 19, 25, 19, 20, 19, 25, 19},
+    {19, 18, 24, 18, 19, 18, 24, 18},
+    {25, 24, 32, 24, 25, 24, 32, 24},
+    {19, 18, 24, 18, 19, 18, 24, 18},
+    {20, 19, 25, 19, 20, 19, 25, 19},
+    {19, 18, 24, 18, 19, 18, 24, 18},
+    {25, 24, 32, 24, 25, 24, 32, 24},
+    {19, 18, 24, 18, 19, 18, 24, 18}
+  }, {
+    {22, 21, 28, 21, 22, 21, 28, 21},
+    {21, 19, 26, 19, 21, 19, 26, 19},
+    {28, 26, 35, 26, 28, 26, 35, 26},
+    {21, 19, 26, 19, 21, 19, 26, 19},
+    {22, 21, 28, 21, 22, 21, 28, 21},
+    {21, 19, 26, 19, 21, 19, 26, 19},
+    {28, 26, 35, 26, 28, 26, 35, 26},
+    {21, 19, 26, 19, 21, 19, 26, 19}
+  }, {
+    {26, 24, 33, 24, 26, 24, 33, 24},
+    {24, 23, 31, 23, 24, 23, 31, 23},
+    {33, 31, 42, 31, 33, 31, 42, 31},
+    {24, 23, 31, 23, 24, 23, 31, 23},
+    {26, 24, 33, 24, 26, 24, 33, 24},
+    {24, 23, 31, 23, 24, 23, 31, 23},
+    {33, 31, 42, 31, 33, 31, 42, 31},
+    {24, 23, 31, 23, 24, 23, 31, 23}
+  }, {
+    {28, 26, 35, 26, 28, 26, 35, 26},
+    {26, 25, 33, 25, 26, 25, 33, 25},
+    {35, 33, 45, 33, 35, 33, 45, 33},
+    {26, 25, 33, 25, 26, 25, 33, 25},
+    {28, 26, 35, 26, 28, 26, 35, 26},
+    {26, 25, 33, 25, 26, 25, 33, 25},
+    {35, 33, 45, 33, 35, 33, 45, 33},
+    {26, 25, 33, 25, 26, 25, 33, 25}
+  }, {
+    {32, 30, 40, 30, 32, 30, 40, 30},
+    {30, 28, 38, 28, 30, 28, 38, 28},
+    {40, 38, 51, 38, 40, 38, 51, 38},
+    {30, 28, 38, 28, 30, 28, 38, 28},
+    {32, 30, 40, 30, 32, 30, 40, 30},
+    {30, 28, 38, 28, 30, 28, 38, 28},
+    {40, 38, 51, 38, 40, 38, 51, 38},
+    {30, 28, 38, 28, 30, 28, 38, 28}
+  }, {
+    {36, 34, 46, 34, 36, 34, 46, 34},
+    {34, 32, 43, 32, 34, 32, 43, 32},
+    {46, 43, 58, 43, 46, 43, 58, 43},
+    {34, 32, 43, 32, 34, 32, 43, 32},
+    {36, 34, 46, 34, 36, 34, 46, 34},
+    {34, 32, 43, 32, 34, 32, 43, 32},
+    {46, 43, 58, 43, 46, 43, 58, 43},
+    {34, 32, 43, 32, 34, 32, 43, 32}
+  }
 };
 
 int x264_mb_predict_intra4x4_mode( x264_t *h, int idx )
@@ -82,6 +158,132 @@ int x264_mb_transform_8x8_allowed( x264_t *h )
         return 0;
 
     return 1;
+}
+
+/****************************************************************************
+ * Scan and Quant functions
+ ****************************************************************************/
+void x264_mb_dequant_2x2_dc( int16_t dct[2][2], int dequant_mf[6][4][4], int i_qscale )
+{
+    const int i_qbits = i_qscale/6 - 5;
+
+    if( i_qbits >= 0 )
+    {
+        const int i_dmf = dequant_mf[i_qscale%6][0][0] << i_qbits;
+
+        dct[0][0] *= i_dmf;
+        dct[0][1] *= i_dmf;
+        dct[1][0] *= i_dmf;
+        dct[1][1] *= i_dmf;
+    }
+    else
+    {
+        const int i_dmf = dequant_mf[i_qscale%6][0][0];
+        // chroma DC is truncated, not rounded
+
+        dct[0][0] = ( dct[0][0] * i_dmf ) >> (-i_qbits);
+        dct[0][1] = ( dct[0][1] * i_dmf ) >> (-i_qbits);
+        dct[1][0] = ( dct[1][0] * i_dmf ) >> (-i_qbits);
+        dct[1][1] = ( dct[1][1] * i_dmf ) >> (-i_qbits);
+    }
+}
+
+void x264_mb_dequant_4x4_dc( int16_t dct[4][4], int dequant_mf[6][4][4], int i_qscale )
+{
+    const int i_qbits = i_qscale/6 - 6;
+    int y;
+
+    if( i_qbits >= 0 )
+    {
+        const int i_dmf = dequant_mf[i_qscale%6][0][0] << i_qbits;
+
+        for( y = 0; y < 4; y++ )
+        {
+            dct[y][0] *= i_dmf;
+            dct[y][1] *= i_dmf;
+            dct[y][2] *= i_dmf;
+            dct[y][3] *= i_dmf;
+        }
+    }
+    else
+    {
+        const int i_dmf = dequant_mf[i_qscale%6][0][0];
+        const int f = 1 << (-i_qbits-1);
+
+        for( y = 0; y < 4; y++ )
+        {
+            dct[y][0] = ( dct[y][0] * i_dmf + f ) >> (-i_qbits);
+            dct[y][1] = ( dct[y][1] * i_dmf + f ) >> (-i_qbits);
+            dct[y][2] = ( dct[y][2] * i_dmf + f ) >> (-i_qbits);
+            dct[y][3] = ( dct[y][3] * i_dmf + f ) >> (-i_qbits);
+        }
+    }
+}
+
+void x264_mb_dequant_4x4( int16_t dct[4][4], int dequant_mf[6][4][4], int i_qscale )
+{
+    const int i_mf = i_qscale%6;
+    const int i_qbits = i_qscale/6 - 4;
+    int y;
+
+    if( i_qbits >= 0 )
+    {
+        for( y = 0; y < 4; y++ )
+        {
+            dct[y][0] = ( dct[y][0] * dequant_mf[i_mf][y][0] ) << i_qbits;
+            dct[y][1] = ( dct[y][1] * dequant_mf[i_mf][y][1] ) << i_qbits;
+            dct[y][2] = ( dct[y][2] * dequant_mf[i_mf][y][2] ) << i_qbits;
+            dct[y][3] = ( dct[y][3] * dequant_mf[i_mf][y][3] ) << i_qbits;
+        }
+    }
+    else
+    {
+        const int f = 1 << (-i_qbits-1);
+        for( y = 0; y < 4; y++ )
+        {
+            dct[y][0] = ( dct[y][0] * dequant_mf[i_mf][y][0] + f ) >> (-i_qbits);
+            dct[y][1] = ( dct[y][1] * dequant_mf[i_mf][y][1] + f ) >> (-i_qbits);
+            dct[y][2] = ( dct[y][2] * dequant_mf[i_mf][y][2] + f ) >> (-i_qbits);
+            dct[y][3] = ( dct[y][3] * dequant_mf[i_mf][y][3] + f ) >> (-i_qbits);
+        }
+    }
+}
+
+void x264_mb_dequant_8x8( int16_t dct[8][8], int dequant_mf[6][8][8], int i_qscale )
+{
+    const int i_mf = i_qscale%6;
+    const int i_qbits = i_qscale/6 - 6;
+    int y;
+
+    if( i_qbits >= 0 )
+    {
+        for( y = 0; y < 8; y++ )
+        {
+            dct[y][0] = ( dct[y][0] * dequant_mf[i_mf][y][0] ) << i_qbits;
+            dct[y][1] = ( dct[y][1] * dequant_mf[i_mf][y][1] ) << i_qbits;
+            dct[y][2] = ( dct[y][2] * dequant_mf[i_mf][y][2] ) << i_qbits;
+            dct[y][3] = ( dct[y][3] * dequant_mf[i_mf][y][3] ) << i_qbits;
+            dct[y][4] = ( dct[y][4] * dequant_mf[i_mf][y][4] ) << i_qbits;
+            dct[y][5] = ( dct[y][5] * dequant_mf[i_mf][y][5] ) << i_qbits;
+            dct[y][6] = ( dct[y][6] * dequant_mf[i_mf][y][6] ) << i_qbits;
+            dct[y][7] = ( dct[y][7] * dequant_mf[i_mf][y][7] ) << i_qbits;
+        }
+    }
+    else
+    {
+        const int f = 1 << (-i_qbits-1);
+        for( y = 0; y < 8; y++ )
+        {
+            dct[y][0] = ( dct[y][0] * dequant_mf[i_mf][y][0] + f ) >> (-i_qbits);
+            dct[y][1] = ( dct[y][1] * dequant_mf[i_mf][y][1] + f ) >> (-i_qbits);
+            dct[y][2] = ( dct[y][2] * dequant_mf[i_mf][y][2] + f ) >> (-i_qbits);
+            dct[y][3] = ( dct[y][3] * dequant_mf[i_mf][y][3] + f ) >> (-i_qbits);
+            dct[y][4] = ( dct[y][4] * dequant_mf[i_mf][y][4] + f ) >> (-i_qbits);
+            dct[y][5] = ( dct[y][5] * dequant_mf[i_mf][y][5] + f ) >> (-i_qbits);
+            dct[y][6] = ( dct[y][6] * dequant_mf[i_mf][y][6] + f ) >> (-i_qbits);
+            dct[y][7] = ( dct[y][7] * dequant_mf[i_mf][y][7] + f ) >> (-i_qbits);
+        }
+    }
 }
 
 void x264_mb_predict_mv( x264_t *h, int i_list, int idx, int i_width, int mvp[2] )
@@ -429,77 +631,59 @@ void x264_mb_load_mv_direct8x8( x264_t *h, int idx )
 }
 
 /* This just improves encoder performance, it's not part of the spec */
-void x264_mb_predict_mv_ref16x16( x264_t *h, int i_list, int i_ref, int mvc[8][2], int *i_mvc )
+void x264_mb_predict_mv_ref16x16( x264_t *h, int i_list, int i_ref, int mvc[5][2], int *i_mvc )
 {
     int16_t (*mvr)[2] = h->mb.mvr[i_list][i_ref];
     int i = 0;
 
-#define SET_MVP(mvp) { \
-        mvc[i][0] = mvp[0]; \
-        mvc[i][1] = mvp[1]; \
-        i++; \
-    }
-
-    /* b_direct */
-    if( h->sh.i_type == SLICE_TYPE_B
-        && h->mb.cache.ref[i_list][x264_scan8[12]] == i_ref )
+    /* temporal */
+    if( h->sh.i_type == SLICE_TYPE_B )
     {
-        SET_MVP( h->mb.cache.mv[i_list][x264_scan8[12]] );
+        if( h->mb.cache.ref[i_list][x264_scan8[12]] == i_ref )
+        {
+            /* FIXME: use direct_mv to be clearer? */
+            int16_t *mvp = h->mb.cache.mv[i_list][x264_scan8[12]];
+            mvc[i][0] = mvp[0];
+            mvc[i][1] = mvp[1];
+            i++;
+        }
     }
 
-    /* spatial predictors */
+    /* spatial */
     if( h->mb.i_neighbour & MB_LEFT )
     {
         int i_mb_l = h->mb.i_mb_xy - 1;
         /* skip MBs didn't go through the whole search process, so mvr is undefined */
         if( !IS_SKIP( h->mb.type[i_mb_l] ) )
-            SET_MVP( mvr[i_mb_l] );
+        {
+            mvc[i][0] = mvr[i_mb_l][0];
+            mvc[i][1] = mvr[i_mb_l][1];
+            i++;
+        }
     }
     if( h->mb.i_neighbour & MB_TOP )
     {
         int i_mb_t = h->mb.i_mb_xy - h->mb.i_mb_stride;
         if( !IS_SKIP( h->mb.type[i_mb_t] ) )
-            SET_MVP( mvr[i_mb_t] );
-
-        if( h->mb.i_neighbour & MB_TOPLEFT && !IS_SKIP( h->mb.type[i_mb_t - 1] ) )
-            SET_MVP( mvr[i_mb_t-1] );
-        if( h->mb.i_mb_x < h->mb.i_mb_stride - 1 && !IS_SKIP( h->mb.type[i_mb_t + 1] ) )
-            SET_MVP( mvr[i_mb_t+1] );
-    }
-#undef SET_MVP
-
-    /* temporal predictors */
-    if( h->fref0[0]->i_ref[0] > 0 )
-    {
-        x264_frame_t *l0 = h->fref0[0];
-        int ref_col_cur, ref_col_prev = -1;
-        int scale = 0;
-
-#define SET_TMVP(dx, dy) { \
-            int i_b4 = h->mb.i_b4_xy + dx*4 + dy*4*h->mb.i_b4_stride; \
-            int i_b8 = h->mb.i_b8_xy + dx*2 + dy*2*h->mb.i_b8_stride; \
-            ref_col_cur = l0->ref[0][i_b8]; \
-            if( ref_col_cur >= 0 ) \
-            { \
-                /* TODO: calc once per frame and tablize? */\
-                if( ref_col_cur != ref_col_prev ) \
-                    scale = 256 * (h->fenc->i_poc - h->fref0[i_ref]->i_poc) \
-                                / (l0->i_poc - l0->ref_poc[0][ref_col_cur]); \
-                mvc[i][0] = l0->mv[0][i_b4][0] * scale / 256; \
-                mvc[i][1] = l0->mv[0][i_b4][1] * scale / 256; \
-                i++; \
-                ref_col_prev = ref_col_cur; \
-            } \
+        {
+            mvc[i][0] = mvr[i_mb_t][0];
+            mvc[i][1] = mvr[i_mb_t][1];
+            i++;
         }
 
-        SET_TMVP(0,0);
-        if( h->mb.i_mb_x < h->sps->i_mb_width-1 )
-            SET_TMVP(1,0);
-        if( h->mb.i_mb_y < h->sps->i_mb_height-1 )
-            SET_TMVP(0,1);
-#undef SET_TMVP
+        if( h->mb.i_neighbour & MB_TOPLEFT && !IS_SKIP( h->mb.type[i_mb_t - 1] ) )
+        {
+            mvc[i][0] = mvr[i_mb_t - 1][0];
+            mvc[i][1] = mvr[i_mb_t - 1][1];
+            i++;
+        }
+        if( h->mb.i_mb_x < h->mb.i_mb_stride - 1 && !IS_SKIP( h->mb.type[i_mb_t + 1] ) )
+        {
+            mvc[i][0] = mvr[i_mb_t + 1][0];
+            mvc[i][1] = mvr[i_mb_t + 1][1];
+            i++;
+        }
     }
-
     *i_mvc = i;
 }
 
@@ -562,27 +746,27 @@ static inline void x264_mb_mc_01xywh( x264_t *h, int x, int y, int width, int he
         const int i_ref0 = h->mb.cache.ref[0][i8];
         const int weight = h->mb.bipred_weight[i_ref0][i_ref1];
 
-        h->mc.avg_weight[i_mode]( &h->mb.pic.p_fdec[0][4*y *h->mb.pic.i_stride[0]+4*x], h->mb.pic.i_stride[0], tmp, 16, weight );
+        h->pixf.avg_weight[i_mode]( &h->mb.pic.p_fdec[0][4*y *h->mb.pic.i_stride[0]+4*x], h->mb.pic.i_stride[0], tmp, 16, weight );
 
         h->mc.mc_chroma( &h->mb.pic.p_fref[1][i_ref1][4][2*y*h->mb.pic.i_stride[1]+2*x], h->mb.pic.i_stride[1],
                           tmp, 16, mvx1, mvy1, 2*width, 2*height );
-        h->mc.avg_weight[i_mode+3]( &h->mb.pic.p_fdec[1][2*y*h->mb.pic.i_stride[1]+2*x], h->mb.pic.i_stride[1], tmp, 16, weight );
+        h->pixf.avg_weight[i_mode+3]( &h->mb.pic.p_fdec[1][2*y*h->mb.pic.i_stride[1]+2*x], h->mb.pic.i_stride[1], tmp, 16, weight );
 
         h->mc.mc_chroma( &h->mb.pic.p_fref[1][i_ref1][5][2*y*h->mb.pic.i_stride[2]+2*x], h->mb.pic.i_stride[2],
                           tmp, 16, mvx1, mvy1, 2*width, 2*height );
-        h->mc.avg_weight[i_mode+3]( &h->mb.pic.p_fdec[2][2*y*h->mb.pic.i_stride[2]+2*x], h->mb.pic.i_stride[2], tmp, 16, weight );
+        h->pixf.avg_weight[i_mode+3]( &h->mb.pic.p_fdec[2][2*y*h->mb.pic.i_stride[2]+2*x], h->mb.pic.i_stride[2], tmp, 16, weight );
     }
     else
     {
-        h->mc.avg[i_mode]( &h->mb.pic.p_fdec[0][4*y *h->mb.pic.i_stride[0]+4*x], h->mb.pic.i_stride[0], tmp, 16 );
+        h->pixf.avg[i_mode]( &h->mb.pic.p_fdec[0][4*y *h->mb.pic.i_stride[0]+4*x], h->mb.pic.i_stride[0], tmp, 16 );
 
         h->mc.mc_chroma( &h->mb.pic.p_fref[1][i_ref1][4][2*y*h->mb.pic.i_stride[1]+2*x], h->mb.pic.i_stride[1],
                           tmp, 16, mvx1, mvy1, 2*width, 2*height );
-        h->mc.avg[i_mode+3]( &h->mb.pic.p_fdec[1][2*y*h->mb.pic.i_stride[1]+2*x], h->mb.pic.i_stride[1], tmp, 16 );
+        h->pixf.avg[i_mode+3]( &h->mb.pic.p_fdec[1][2*y*h->mb.pic.i_stride[1]+2*x], h->mb.pic.i_stride[1], tmp, 16 );
 
         h->mc.mc_chroma( &h->mb.pic.p_fref[1][i_ref1][5][2*y*h->mb.pic.i_stride[2]+2*x], h->mb.pic.i_stride[2],
                           tmp, 16, mvx1, mvy1, 2*width, 2*height );
-        h->mc.avg[i_mode+3]( &h->mb.pic.p_fdec[2][2*y*h->mb.pic.i_stride[2]+2*x], h->mb.pic.i_stride[2], tmp, 16 );
+        h->pixf.avg[i_mode+3]( &h->mb.pic.p_fdec[2][2*y*h->mb.pic.i_stride[2]+2*x], h->mb.pic.i_stride[2], tmp, 16 );
     }
 }
 
@@ -793,8 +977,8 @@ void x264_macroblock_cache_init( x264_t *h )
 
     for( i=0; i<2; i++ )
     {
-        int i_refs = (i ? 1 : h->param.i_frame_reference) + h->param.b_bframe_pyramid;
-        for( j=0; j < i_refs && j < 16; j++ )
+        int i_refs = i ? 1 + h->param.b_bframe_pyramid : h->param.i_frame_reference;
+        for( j=0; j < i_refs; j++ )
             h->mb.mvr[i][j] = x264_malloc( 2 * i_mb_count * sizeof( int16_t ) );
     }
 
@@ -1228,12 +1412,11 @@ void x264_macroblock_cache_save( x264_t *h )
 
     h->mb.type[i_mb_xy] = i_mb_type;
 
-    if( h->mb.i_type != I_16x16 && h->mb.i_cbp_luma == 0 && h->mb.i_cbp_chroma == 0 )
-        h->mb.i_qp = h->mb.i_last_qp;
-    h->mb.qp[i_mb_xy] = h->mb.i_qp;
+    if( IS_SKIP( h->mb.i_type ) )
+        h->mb.qp[i_mb_xy] = h->mb.i_last_qp;
 
-    h->mb.i_last_dqp = h->mb.i_qp - h->mb.i_last_qp;
-    h->mb.i_last_qp = h->mb.i_qp;
+    h->mb.i_last_dqp = h->mb.qp[i_mb_xy] - h->mb.i_last_qp;
+    h->mb.i_last_qp = h->mb.qp[i_mb_xy];
 
     /* save intra4x4 */
     if( i_mb_type == I_4x4 )
@@ -1274,8 +1457,6 @@ void x264_macroblock_cache_save( x264_t *h )
         }
     }
 
-    if( h->mb.i_cbp_luma == 0 && h->mb.i_type != I_8x8 )
-        h->mb.b_transform_8x8 = 0;
     h->mb.mb_transform_size[i_mb_xy] = h->mb.b_transform_8x8;
 
     if( !IS_INTRA( i_mb_type ) )

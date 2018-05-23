@@ -1,7 +1,7 @@
-$Id: NEWS 13329 2005-11-22 21:38:25Z fkuehne $
+$Id: NEWS 12882 2005-10-18 23:05:09Z dionoea $
 
-Changes between 0.8.2 and 0.8.4:
---------------------------------
+Changes between 0.8.2 and 0.8.4-svn (not yet released):
+-----------------------------------------------------
 
 Core support:
  * Internal strings handling is now UTF-8 based
@@ -9,24 +9,21 @@ Core support:
 
 Video output:
  * Fixed problems with OpenGL output
- * New --monitor-par (pixel aspect ratio) option
- * Fixed display problems with HDTV-1080 format
+ * New --monitor-aspect-ratio option
 
 Input:
  * Improved DVB support for satellite bands other than Ku-band
  * IPv6 and Extended passive mode support for FTP
  * IPv6 Source Specific Multicast support
  * GnomeVFS input module
- * Support for RTP packet reordering
- * Fixed syntax for FTP URLs
 
 Decoders:
  * Support for libSDL_image to import different image types
  * Musepack decoder using libmpdec
- * QDM2 audio support (needs ffmpeg from 19th Oct 2005 or later)
+ * QDM2 audio support (needs ffmpeg from 19th oct 2005 or later)
 
 Services discovery:
- * UPnP service discovery (Linux only at the moment)
+ * UPnP service discovery
  * Bonjour service discovery using avahi (Linux only)
 
 Video filters:
@@ -39,7 +36,6 @@ Audio filters:
 Stream output:
  * New shout output module to forward streams to icecast servers
  * Fixed several SAP and SDP announcement bugs
- * Fixed MTU handling to avoid IP fragments
  
 Interfaces:
  * Mac OS X
@@ -51,7 +47,7 @@ Interfaces:
  * wxWidgets
     - Rename wxWindows interface in wxWidgets.
     - All the --wxwin-* options are now --wx-*
-    - Support for RTP streaming in Stream Ouput dialog
+    - VLC update checker
     - Now require wx2.6 with Unicode support
  * Skins2
     - Tree playlist
@@ -68,18 +64,11 @@ ActiveX plugin:
 Mac OS X port:
 * New script to delete the preferences automatically
 
-Windows port:
-* Fixed bandwidth problems of HTTP streaming
-* Fixed audio problems with DirectX audio output
-
 Translations:
  The following languages were added:
- * Galician
  * Korean
  * Romanian
  * Simplified Chinese
- The following language was re-added:
- * Swedish
 
 Changes between 0.8.1 and 0.8.2:
 --------------------------------

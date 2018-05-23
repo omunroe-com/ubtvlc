@@ -46,8 +46,6 @@ typedef struct
     int b_fast1pass;    /* turns off some flags during 1st pass */    
     int b_updatestats;  /* updates the statsfile during 2nd pass */
 
-    int i_frame_total;
-
     /* Our config */
     int i_refmax;
     int i_keyint_max;
@@ -68,7 +66,6 @@ typedef struct
     int b_psub8x8;
     int b_bsub16x16;
     int b_dct8x8;
-    int b_mixedref;
 
     int i_bframe;
     int i_subpel_refine;
@@ -132,13 +129,13 @@ LRESULT compress(CODEC *, ICCOMPRESS *);
 /* config functions */
 void config_reg_load( CONFIG * config );
 void config_reg_save( CONFIG * config );
-static void tabs_enable_items( HWND hDlg, CONFIG * config );
-static void tabs_update_items( HWND hDlg, CONFIG * config );
+
 
 /* Dialog callbacks */
-BOOL CALLBACK callback_main ( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
-BOOL CALLBACK callback_tabs( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
 BOOL CALLBACK callback_about( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
+BOOL CALLBACK callback_debug( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
+BOOL CALLBACK callback_main ( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
+BOOL CALLBACK callback_advanced( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
 BOOL CALLBACK callback_err_console( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 /* Dll instance */

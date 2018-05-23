@@ -2,7 +2,7 @@
  * equalizer.c:
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: equalizer.c 13308 2005-11-21 14:05:12Z zorglub $
+ * $Id: equalizer.c 12676 2005-09-25 16:49:40Z babal $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -359,8 +359,7 @@ static int EqzInit( aout_filter_t *p_filter, int i_rate )
         strstr( p_sys->psz_newbands, val2.psz_string ) ) || !*val2.psz_string )
     {
         var_SetString( p_aout, "equalizer-bands", p_sys->psz_newbands );
-        if( p_sys->f_newpreamp == p_sys->f_gamp )
-            var_SetFloat( p_aout, "equalizer-preamp", p_sys->f_newpreamp );
+        var_SetFloat( p_aout, "equalizer-preamp", p_sys->f_newpreamp );
     }
 
     /* Add our own callbacks */

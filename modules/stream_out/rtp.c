@@ -2,7 +2,7 @@
  * rtp.c: rtp stream output module
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: rtp.c 12985 2005-10-27 13:39:50Z md $
+ * $Id: rtp.c 12951 2005-10-24 07:33:08Z md $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -38,9 +38,6 @@
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
-
-#define MTU_REDUCE 50
-
 #define DST_TEXT N_("Destination")
 #define DST_LONGTEXT N_( \
     "Allows you to specify the output URL used for the streaming output." )
@@ -117,7 +114,7 @@ vlc_module_begin();
     add_integer( SOUT_CFG_PREFIX "port-video", 1232, NULL, PORT_VIDEO_TEXT,
                  PORT_VIDEO_LONGTEXT, VLC_TRUE );
 
-    add_integer( SOUT_CFG_PREFIX "ttl", 0, NULL, TTL_TEXT,
+    add_integer( SOUT_CFG_PREFIX "ttl", 1, NULL, TTL_TEXT,
                  TTL_LONGTEXT, VLC_TRUE );
 
     set_callbacks( Open, Close );
@@ -454,12 +451,11 @@ static int Open( vlc_object_t *p_this )
             return VLC_EGENERIC;
         }
         p_sys->i_mtu = config_GetInt( p_stream, "mtu" );  /* XXX beurk */
-        if( p_sys->i_mtu <= 16 + MTU_REDUCE )
+        if( p_sys->i_mtu <= 16 )
         {
             /* better than nothing */
             p_sys->i_mtu = 1500;
         }
-        p_sys->i_mtu -= MTU_REDUCE;
 
         /* the access out grabber TODO export it as sout_AccessOutGrabberNew */
         p_grab = p_sys->p_grab =
@@ -499,8 +495,7 @@ static int Open( vlc_object_t *p_this )
            RTP packets need to get the correct src IP address  */
         if( net_AddressIsMulticast( (vlc_object_t *)p_stream, p_sys->psz_destination ) )
         {
-            snprintf( psz_ttl, sizeof( psz_ttl ), "/%d", p_sys->i_ttl ? 
-                p_sys->i_ttl : config_GetInt( p_sout, "ttl" ) );
+            snprintf( psz_ttl, sizeof( psz_ttl ), "/%d", p_sys->i_ttl );
             psz_ttl[sizeof( psz_ttl ) - 1] = '\0';
         }
         else
@@ -742,7 +737,6 @@ static char *SDPGenerate( const sout_stream_t *p_stream,
                           const char *psz_destination, vlc_bool_t b_rtsp )
 {
     sout_stream_sys_t *p_sys = p_stream->p_sys;
-    sout_instance_t  *p_sout = p_stream->p_sout;
     int i_size;
     char *psz_sdp, *p, ipv;
     int i;
@@ -804,8 +798,7 @@ static char *SDPGenerate( const sout_stream_t *p_stream,
     if( net_AddressIsMulticast( (vlc_object_t *)p_stream, psz_destination ) )
     {
         /* Add the ttl if it is a multicast address */
-        p += sprintf( p, "/%d\r\n", p_sys->i_ttl ? p_sys->i_ttl :
-                config_GetInt( p_sout, "ttl" ) );
+        p += sprintf( p, "/%d\r\n", p_sys->i_ttl );
     }
     else
     {
@@ -1097,13 +1090,12 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
     id->i_timestamp_start = rand()&0xffffffff;
 
     id->i_mtu    = config_GetInt( p_stream, "mtu" );  /* XXX beuk */
-    if( id->i_mtu <= 16 + MTU_REDUCE )
+    if( id->i_mtu <= 16 )
     {
         /* better than nothing */
         id->i_mtu = 1500;
     }
-    id->i_mtu -= MTU_REDUCE;
-    msg_Dbg( p_stream, "maximum RTP packet size: %d bytes", id->i_mtu );
+    msg_Dbg( p_stream, "using mtu=%d", id->i_mtu );
 
     if( p_sys->p_rtsp_url )
     {
@@ -1620,7 +1612,6 @@ static int  RtspCallbackId( httpd_callback_sys_t *p_args,
 {
     sout_stream_id_t *id = (sout_stream_id_t*)p_args;
     sout_stream_t    *p_stream = id->p_stream;
-    sout_instance_t    *p_sout = p_stream->p_sout;
     sout_stream_sys_t *p_sys = p_stream->p_sys;
     char          *psz_session = NULL;
 
@@ -1657,9 +1648,7 @@ static int  RtspCallbackId( httpd_callback_sys_t *p_args,
                 }
                 httpd_MsgAdd( answer, "Transport",
                               "RTP/AVP/UDP;destination=%s;port=%d-%d;ttl=%d",
-                              id->psz_destination, id->i_port,id->i_port+1,
-                              p_sys->i_ttl ? p_sys->i_ttl : 
-                              config_GetInt( p_sout, "ttl" ) );
+                              id->psz_destination, id->i_port,id->i_port+1, p_sys->i_ttl );
             }
             else if( strstr( psz_transport, "unicast" ) && strstr( psz_transport, "client_port=" ) )
             {

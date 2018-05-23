@@ -2,7 +2,7 @@
  * ps.c: Program Stream demux module for VLC.
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: ps.c 13186 2005-11-10 19:23:12Z gbazin $
+ * $Id: ps.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -68,8 +68,6 @@ struct demux_sys_t
 
     int64_t     i_scr;
     int         i_mux_rate;
-
-    vlc_bool_t  b_lost_sync;
 };
 
 static int Demux  ( demux_t *p_demux );
@@ -109,7 +107,6 @@ static int Open( vlc_object_t *p_this )
     /* Init p_sys */
     p_sys->i_mux_rate = 0;
     p_sys->i_scr      = -1;
-    p_sys->b_lost_sync = VLC_FALSE;
 
     ps_psm_init( &p_sys->psm );
     ps_track_init( p_sys->tk );
@@ -180,15 +177,9 @@ static int Demux( demux_t *p_demux )
     }
     else if( i_ret == 0 )
     {
-        if( !p_sys->b_lost_sync )
-            msg_Warn( p_demux, "garbage at input, trying to resync..." );
-
-        p_sys->b_lost_sync = VLC_TRUE;
+        msg_Warn( p_demux, "garbage at input" );
         return 1;
     }
-
-    if( p_sys->b_lost_sync ) msg_Warn( p_demux, "found sync code" );
-    p_sys->b_lost_sync = VLC_FALSE;
 
     if( ( p_pkt = ps_pkt_read( p_demux->s, i_code ) ) == NULL )
     {

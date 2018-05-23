@@ -2,7 +2,7 @@
  * libvlc.c: main libvlc source
  *****************************************************************************
  * Copyright (C) 1998-2004 the VideoLAN team
- * $Id: libvlc.c 13254 2005-11-15 14:52:19Z damienf $
+ * $Id: libvlc.c 12931 2005-10-23 10:44:59Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -275,7 +275,6 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     char *       psz_parser;
     char *       psz_control;
     vlc_bool_t   b_exit = VLC_FALSE;
-    int          i_ret = VLC_EEXIT;
     vlc_t *      p_vlc = vlc_current_object( i_object );
     module_t    *p_help_module;
     playlist_t  *p_playlist;
@@ -359,14 +358,12 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     {
         Help( p_vlc, "help" );
         b_exit = VLC_TRUE;
-        i_ret = VLC_EEXITSUCCESS;
     }
     /* Check for version option */
     else if( config_GetInt( p_vlc, "version" ) )
     {
         Version();
         b_exit = VLC_TRUE;
-        i_ret = VLC_EEXITSUCCESS;
     }
 
     /* Set the config file stuff */
@@ -426,7 +423,6 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
             /* This is the parent, exit right now */
             msg_Dbg( p_vlc, "closing parent process" );
             b_exit = VLC_TRUE;
-            i_ret = VLC_EEXITSUCCESS;
         }
         else
         {
@@ -448,7 +444,7 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
         vlc_object_destroy( p_help_module );
         module_EndBank( p_vlc );
         if( i_object ) vlc_object_release( p_vlc );
-        return i_ret;
+        return VLC_EEXIT;
     }
 
     /* Check for translation config option */
@@ -509,21 +505,18 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
         Help( p_vlc, p_tmp );
         free( p_tmp );
         b_exit = VLC_TRUE;
-        i_ret = VLC_EEXITSUCCESS;
     }
     /* Check for long help option */
     else if( config_GetInt( p_vlc, "longhelp" ) )
     {
         Help( p_vlc, "longhelp" );
         b_exit = VLC_TRUE;
-        i_ret = VLC_EEXITSUCCESS;
     }
     /* Check for module list option */
     else if( config_GetInt( p_vlc, "list" ) )
     {
         ListModules( p_vlc );
         b_exit = VLC_TRUE;
-        i_ret = VLC_EEXITSUCCESS;
     }
 
     /* Check for config file options */
@@ -554,7 +547,7 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
         vlc_object_destroy( p_help_module );
         module_EndBank( p_vlc );
         if( i_object ) vlc_object_release( p_vlc );
-        return i_ret;
+        return VLC_EEXIT;
     }
 
     /*
@@ -785,9 +778,6 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     var_Create( p_vlc, "drawableh", VLC_VAR_INTEGER );
     var_Create( p_vlc, "drawableportx", VLC_VAR_INTEGER );
     var_Create( p_vlc, "drawableporty", VLC_VAR_INTEGER );
-
-    /* Create volume callback system. */
-    var_Create( p_vlc, "volume-change", VLC_VAR_BOOL );
 
     /*
      * Get input filenames given as commandline arguments
@@ -1315,11 +1305,11 @@ int VLC_Stop( int i_object )
 /*****************************************************************************
  * VLC_IsPlaying: Query for Playlist Status
  *****************************************************************************/
-
 vlc_bool_t VLC_IsPlaying( int i_object )
 {
     playlist_t * p_playlist;
     vlc_bool_t   b_playing;
+    vlc_value_t  val;
 
     vlc_t *p_vlc = vlc_current_object( i_object );
 
@@ -1336,17 +1326,13 @@ vlc_bool_t VLC_IsPlaying( int i_object )
         if( i_object ) vlc_object_release( p_vlc );
         return VLC_ENOOBJ;
     }
-
-    if( p_playlist->p_input )
+    if( !p_playlist->p_input )
     {
-        vlc_value_t  val;
-        var_Get( p_playlist->p_input, "state", &val );
-        b_playing = ( val.i_int == PLAYING_S );
+        if( i_object ) vlc_object_release( p_vlc );
+        return VLC_ENOOBJ;
     }
-    else
-    {
-        b_playing = playlist_IsPlaying( p_playlist );
-    }
+    var_Get( p_playlist->p_input, "state", &val );
+    b_playing = ( val.i_int == PLAYING_S );
     vlc_object_release( p_playlist );
 
     if( i_object ) vlc_object_release( p_vlc );
@@ -2004,7 +1990,7 @@ static void SetLanguage ( char const *psz_lang )
 #endif
     if( !bindtextdomain( PACKAGE_NAME, psz_path ) )
     {
-        fprintf( stderr, "warning: couldn't bind domain %s in directory %s\n",
+        fprintf( stderr, "warning: no domain %s in directory %s\n",
                  PACKAGE_NAME, psz_path );
     }
 

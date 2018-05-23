@@ -2,7 +2,7 @@
  * wxwidgets.cpp : wxWidgets plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2005 the VideoLAN team
- * $Id: wxwidgets.cpp 12962 2005-10-25 10:32:49Z dionoea $
+ * $Id: wxwidgets.cpp 12768 2005-10-06 17:45:57Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -303,7 +303,6 @@ static void Init( intf_thread_t *p_intf )
 #else
     wxEntry( i_args, p_args );
 #endif
-    setlocale( LC_NUMERIC, "C" );
 }
 
 /* following functions are local */
@@ -334,8 +333,7 @@ bool Instance::OnInit()
     /* Initialization of i18n stuff.
      * Usefull for things we don't have any control over, like wxWidgets
      * provided facilities (eg. open file dialog) */
-    locale.Init( wxLANGUAGE_DEFAULT, wxLOCALE_LOAD_DEFAULT );
-    setlocale( LC_NUMERIC, "C" );
+    locale.Init( wxLANGUAGE_DEFAULT );
 
     /* Load saved window settings */
     p_intf->p_sys->p_window_settings = new WindowSettings( p_intf );

@@ -2,7 +2,7 @@
  * deinterlace.c : deinterlacer plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001, 2002, 2003 the VideoLAN team
- * $Id: deinterlace.c 13364 2005-11-24 08:10:13Z md $
+ * $Id: deinterlace.c 12821 2005-10-11 17:16:13Z zorglub $
  *
  * Author: Sam Hocevar <sam@zoy.org>
  *
@@ -166,11 +166,6 @@ struct vout_sys_t
  *****************************************************************************/
 static int Control( vout_thread_t *p_vout, int i_query, va_list args )
 {
-    if( i_query == VOUT_SET_ZOOM )
-    {
-        p_vout->p_sys->p_vout->i_window_width = p_vout->i_window_width;
-        p_vout->p_sys->p_vout->i_window_height = p_vout->i_window_height;
-    }
     return vout_vaControl( p_vout->p_sys->p_vout, i_query, args );
 }
 
@@ -324,7 +319,6 @@ static int Init( vout_thread_t *p_vout )
             p_vout->output.i_width  = p_vout->render.i_width;
             p_vout->output.i_height = p_vout->render.i_height;
             p_vout->output.i_aspect = p_vout->render.i_aspect;
-            p_vout->fmt_out = p_vout->fmt_in;
             break;
 
         default:
@@ -364,7 +358,13 @@ static vout_thread_t *SpawnRealVout( vout_thread_t *p_vout )
 
     msg_Dbg( p_vout, "spawning the real video output" );
 
-    fmt = p_vout->fmt_out;
+    fmt.i_width = fmt.i_visible_width = p_vout->output.i_width;
+    fmt.i_height = fmt.i_visible_height = p_vout->output.i_height;
+    fmt.i_x_offset = fmt.i_y_offset = 0;
+    fmt.i_chroma = p_vout->output.i_chroma;
+    fmt.i_aspect = p_vout->output.i_aspect;
+    fmt.i_sar_num = p_vout->output.i_aspect * fmt.i_height / fmt.i_width;
+    fmt.i_sar_den = VOUT_ASPECT_FACTOR;
 
     switch( p_vout->render.i_chroma )
     {
@@ -375,8 +375,7 @@ static vout_thread_t *SpawnRealVout( vout_thread_t *p_vout )
         {
         case DEINTERLACE_MEAN:
         case DEINTERLACE_DISCARD:
-            fmt.i_height /= 2; fmt.i_visible_height /= 2; fmt.i_y_offset /= 2;
-            fmt.i_sar_den *= 2;
+            fmt.i_height = fmt.i_visible_height = p_vout->output.i_height / 2;
             p_real_vout = vout_Create( p_vout, &fmt );
             break;
 
@@ -446,25 +445,8 @@ static void Destroy( vlc_object_t *p_this )
  *****************************************************************************/
 static void Render ( vout_thread_t *p_vout, picture_t *p_pic )
 {
-    vout_sys_t *p_sys = p_vout->p_sys;
     picture_t *pp_outpic[2];
 
-    p_vout->fmt_out.i_x_offset = p_sys->p_vout->fmt_in.i_x_offset =
-        p_vout->fmt_in.i_x_offset;
-    p_vout->fmt_out.i_y_offset = p_sys->p_vout->fmt_in.i_y_offset =
-        p_vout->fmt_in.i_y_offset;
-    p_vout->fmt_out.i_visible_width = p_sys->p_vout->fmt_in.i_visible_width =
-        p_vout->fmt_in.i_visible_width;
-    p_vout->fmt_out.i_visible_height = p_sys->p_vout->fmt_in.i_visible_height =
-        p_vout->fmt_in.i_visible_height;
-    if( p_vout->p_sys->i_mode == DEINTERLACE_MEAN ||
-        p_vout->p_sys->i_mode == DEINTERLACE_DISCARD )
-    {
-        p_vout->fmt_out.i_y_offset /= 2; p_sys->p_vout->fmt_in.i_y_offset /= 2;
-        p_vout->fmt_out.i_visible_height /= 2;
-        p_sys->p_vout->fmt_in.i_visible_height /= 2;
-    }
- 
     pp_outpic[0] = pp_outpic[1] = NULL;
 
     vlc_mutex_lock( &p_vout->p_sys->filter_lock );

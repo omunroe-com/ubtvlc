@@ -2,7 +2,7 @@
  * logo.c : logo video plugin for vlc
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: logo.c 12968 2005-10-25 19:24:21Z gbazin $
+ * $Id: logo.c 12821 2005-10-11 17:16:13Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Simon Latapie <garf@videolan.org>
@@ -220,8 +220,14 @@ static int Init( vout_thread_t *p_vout )
     p_vout->output.i_width  = p_vout->render.i_width;
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
-    p_vout->fmt_out = p_vout->fmt_in;
-    fmt = p_vout->fmt_out;
+
+    fmt.i_width = fmt.i_visible_width = p_vout->render.i_width;
+    fmt.i_height = fmt.i_visible_height = p_vout->render.i_height;
+    fmt.i_x_offset = fmt.i_y_offset = 0;
+    fmt.i_chroma = p_vout->render.i_chroma;
+    fmt.i_aspect = p_vout->render.i_aspect;
+    fmt.i_sar_num = p_vout->render.i_aspect * fmt.i_height / fmt.i_width;
+    fmt.i_sar_den = VOUT_ASPECT_FACTOR;
 
     /* Load the video blending filter */
     p_sys->p_blend = vlc_object_create( p_vout, sizeof(filter_t) );

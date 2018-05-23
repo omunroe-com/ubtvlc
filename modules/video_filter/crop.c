@@ -2,7 +2,7 @@
  * crop.c : Crop video plugin for vlc
  *****************************************************************************
  * Copyright (C) 2002, 2003 the VideoLAN team
- * $Id: crop.c 12982 2005-10-27 09:29:36Z md $
+ * $Id: crop.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -146,7 +146,6 @@ static int Init( vout_thread_t *p_vout )
     p_vout->output.i_width  = p_vout->render.i_width;
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
-    p_vout->fmt_out = p_vout->fmt_in;
 
     /* Shall we use autocrop ? */
     p_vout->p_sys->b_autocrop = config_GetInt( p_vout, "autocrop" );
@@ -233,10 +232,9 @@ static int Init( vout_thread_t *p_vout )
     }
     else
     {
-        p_vout->p_sys->i_width  = p_vout->fmt_out.i_visible_width;
-        p_vout->p_sys->i_height = p_vout->fmt_out.i_visible_height;
-        p_vout->p_sys->i_x = p_vout->fmt_out.i_x_offset;
-        p_vout->p_sys->i_y = p_vout->fmt_out.i_y_offset;
+        p_vout->p_sys->i_width  = p_vout->output.i_width;
+        p_vout->p_sys->i_height = p_vout->output.i_height;
+        p_vout->p_sys->i_x = p_vout->p_sys->i_y = 0;
     }
 
     /* Pheeew. Parsing done. */
@@ -246,9 +244,9 @@ static int Init( vout_thread_t *p_vout )
                      p_vout->p_sys->b_autocrop ? "" : "not " );
 
     /* Set current output image properties */
-    p_vout->p_sys->i_aspect = p_vout->fmt_out.i_aspect
-           * p_vout->fmt_out.i_visible_height / p_vout->p_sys->i_height
-           * p_vout->p_sys->i_width / p_vout->fmt_out.i_visible_width;
+    p_vout->p_sys->i_aspect = p_vout->output.i_aspect
+                            * p_vout->output.i_height / p_vout->p_sys->i_height
+                            * p_vout->p_sys->i_width / p_vout->output.i_width;
 
     fmt.i_width = fmt.i_visible_width = p_vout->p_sys->i_width;
     fmt.i_height = fmt.i_visible_height = p_vout->p_sys->i_height;

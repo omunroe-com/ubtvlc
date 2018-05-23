@@ -2,7 +2,7 @@
  * udp.c: raw UDP & RTP input module
  *****************************************************************************
  * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: udp.c 13312 2005-11-22 07:51:20Z md $
+ * $Id: udp.c 12954 2005-10-24 17:08:54Z md $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Tristan Leteurtre <tooney@via.ecp.fr>
@@ -99,7 +99,7 @@ struct access_sys_t
     vlc_bool_t b_auto_mtu;
 
     /* reorder rtp packets when out-of-sequence */
-    mtime_t i_rtp_late;
+    int64_t i_rtp_late;
     uint16_t i_last_seqno;
     block_t *p_list;
     block_t *p_end;
@@ -191,7 +191,16 @@ static int Open( vlc_object_t *p_this )
 
     /* Set up p_access */
     p_access->pf_read = NULL;
-    p_access->pf_block = BlockChoose;
+    if( !strcasecmp( p_access->psz_access, "rtp" )
+          || !strcasecmp( p_access->psz_access, "rtp4" )
+          || !strcasecmp( p_access->psz_access, "rtp6" ) )
+    {
+        p_access->pf_block = BlockRTP;
+    }
+    else
+    {
+        p_access->pf_block = BlockChoose;
+    }
     p_access->pf_control = Control;
     p_access->pf_seek = NULL;
     p_access->info.i_update = 0;
@@ -334,7 +343,7 @@ static inline vlc_bool_t rtp_ChainInsert( access_t *p_access, block_t *p_block )
     access_sys_t *p_sys = (access_sys_t *) p_access->p_sys;
     block_t *p_prev = NULL;
     block_t *p = p_sys->p_end;
-    uint16_t i_new = (uint16_t) p_block->i_dts;
+    uint16_t i_new = p_block->i_seqno;
     uint16_t i_tmp = 0;
 
     if( !p_sys->p_list )
@@ -348,13 +357,13 @@ static inline vlc_bool_t rtp_ChainInsert( access_t *p_access, block_t *p_block )
 
     for( ;; )
     {
-        i_tmp = i_new - (uint16_t) p->i_dts;
+        i_tmp = i_new - p->i_seqno;
 
         if( !i_tmp )   /* trash duplicate */
             break; 
 
         if ( i_tmp < 32768 )
-        {   /* insert after this block ( i_new > p->i_dts ) */
+        {   /* insert after this block ( i_new > p->i_seqno ) */
             p_block->p_next = p->p_next;
             p->p_next = p_block;
             p_block->p_prev = p;
@@ -362,7 +371,7 @@ static inline vlc_bool_t rtp_ChainInsert( access_t *p_access, block_t *p_block )
             {
                 p_prev->p_prev = p_block;
                 msg_Dbg(p_access, "RTP reordering: insert after %d, new %d", 
-                    (uint16_t) p->i_dts, i_new );
+                    p->i_seqno, i_new );
             }
             else 
             {
@@ -376,7 +385,7 @@ static inline vlc_bool_t rtp_ChainInsert( access_t *p_access, block_t *p_block )
             if( !p_access->info.b_prebuffered || (i_tmp > 32767) )
             {
                 msg_Dbg(p_access, "RTP reordering: prepend %d before %d", 
-                        i_new, (uint16_t) p->i_dts );
+                        i_new, p->i_seqno );
                 p_block->p_next = p;
                 p->p_prev = p_block;
                 p_sys->p_list = p_block;
@@ -388,8 +397,8 @@ static inline vlc_bool_t rtp_ChainInsert( access_t *p_access, block_t *p_block )
 
             /* reordering failed - append the packet to the end of queue */
             msg_Dbg(p_access, "RTP: sequence changed (or buffer too small) "
-                "new: %d, buffer %d...%d", i_new, (uint16_t) p->i_dts, 
-                (uint16_t) p_sys->p_end->i_dts);
+                "new: %d, buffer %d...%d", i_new, p->i_seqno, 
+                p_sys->p_end->i_seqno);
             p_sys->p_end->p_next = p_block;
             p_block->p_prev = p_sys->p_end;
             p_sys->p_end = p_block;
@@ -407,6 +416,7 @@ static inline vlc_bool_t rtp_ChainInsert( access_t *p_access, block_t *p_block )
  *****************************************************************************/
 static block_t *BlockParseRTP( access_t *p_access, block_t *p_block )
 {
+    access_sys_t *p_sys = (access_sys_t *) p_access->p_sys;
     int      i_rtp_version;
     int      i_CSRC_count;
     int      i_payload_type;
@@ -432,9 +442,9 @@ static block_t *BlockParseRTP( access_t *p_access, block_t *p_block )
     if( i_rtp_version != 2 )
         msg_Dbg( p_access, "RTP version is %u, should be 2", i_rtp_version );
 
-    if( i_payload_type == 14 || i_payload_type == 32)
+    if( i_payload_type == 14 )
         i_skip = 4;
-    else if( i_payload_type !=  33 )
+    else if( i_payload_type !=  33 && i_payload_type != 32 )
         msg_Dbg( p_access, "unsupported RTP payload type (%u)", i_payload_type );
     if( i_extension_flag )
         i_extension_length = 4 +
@@ -446,11 +456,10 @@ static block_t *BlockParseRTP( access_t *p_access, block_t *p_block )
     if( i_skip >= p_block->i_buffer )
         goto trash;
 
-    /* Return the packet without the RTP header, remember seqno in i_dts */
+    /* Return the packet without the RTP header, remember seqno */
     p_block->i_buffer -= i_skip;
     p_block->p_buffer += i_skip;
-    p_block->i_pts = mdate();
-    p_block->i_dts = (mtime_t) i_sequence_number;
+    p_block->i_seqno = i_sequence_number;
 
 #if 0
     /* Emulate packet loss */
@@ -474,19 +483,19 @@ trash:
 static block_t *BlockPrebufferRTP( access_t *p_access, block_t *p_block )
 {
     access_sys_t *p_sys = p_access->p_sys;
-    mtime_t   i_first = mdate();
+    int64_t   i_first = mdate();
     int       i_count = 0;
     block_t   *p = p_block;
 
     for( ;; )
     {
-        mtime_t i_date = mdate();
+        int64_t i_date = mdate();
 
         if( p && rtp_ChainInsert( p_access, p ))
             i_count++;
 
-        /* Require at least 2 packets in the buffer */
-        if( i_count > 2 && (i_date - i_first) > p_sys->i_rtp_late )
+        /* Require at least 3 packets in the buffer */
+        if( i_count > 3 && (i_date - i_first) > p_sys->i_rtp_late )
             break;
 
         p = BlockParseRTP( p_access, BlockUDP( p_access ));
@@ -501,7 +510,7 @@ static block_t *BlockPrebufferRTP( access_t *p_access, block_t *p_block )
     p_access->info.b_prebuffered = VLC_TRUE;
     p = p_sys->p_list;
     p_sys->p_list = p_sys->p_list->p_next;
-    p_sys->i_last_seqno = (uint16_t) p->i_dts;
+    p_sys->i_last_seqno = p->i_seqno;
     p->p_next = NULL;
     return p;
 }
@@ -511,25 +520,26 @@ static block_t *BlockRTP( access_t *p_access )
     access_sys_t *p_sys = p_access->p_sys;
     block_t *p;
 
-    while ( !p_sys->p_list || 
-             ( mdate() - p_sys->p_list->i_pts ) < p_sys->i_rtp_late )
-    {
-        p = BlockParseRTP( p_access, BlockUDP( p_access ));
+again:
+    p = BlockParseRTP( p_access, BlockUDP( p_access ));
 
-        if ( !p ) 
-            return NULL;
+    if ( !p ) 
+        return NULL;
 
-        rtp_ChainInsert( p_access, p );
-    }
+    if ( !p_access->info.b_prebuffered )
+        return BlockPrebufferRTP( p_access, p );
+
+    if( !rtp_ChainInsert( p_access, p ))
+        goto again;
 
     p = p_sys->p_list;
     p_sys->p_list = p_sys->p_list->p_next;
     p_sys->i_last_seqno++;
-    if( p_sys->i_last_seqno != (uint16_t) p->i_dts )
+    if( p_sys->i_last_seqno != p->i_seqno )
     {
         msg_Dbg( p_access, "RTP: packet(s) lost, expected %d, got %d",
-                 p_sys->i_last_seqno, (uint16_t) p->i_dts );
-        p_sys->i_last_seqno = (uint16_t) p->i_dts;
+                 p_sys->i_last_seqno, p->i_seqno );
+        p_sys->i_last_seqno = p->i_seqno;
     }
     p->p_next = NULL;
     return p;
@@ -552,7 +562,6 @@ static block_t *BlockChoose( access_t *p_access )
     {
         msg_Dbg( p_access, "detected TS over raw UDP" );
         p_access->pf_block = BlockUDP;
-        p_access->info.b_prebuffered = VLC_TRUE;
         return p_block;
     }
 
@@ -570,7 +579,6 @@ static block_t *BlockChoose( access_t *p_access )
     {
         msg_Dbg( p_access, "no supported RTP header detected" );
         p_access->pf_block = BlockUDP;
-        p_access->info.b_prebuffered = VLC_TRUE;
         return p_block;
     }
 
@@ -594,7 +602,6 @@ static block_t *BlockChoose( access_t *p_access )
         default:
             msg_Dbg( p_access, "no RTP header detected" );
             p_access->pf_block = BlockUDP;
-            p_access->info.b_prebuffered = VLC_TRUE;
             return p_block;
     }
 

@@ -2,7 +2,7 @@
  * libvlc.h: main libvlc header
  *****************************************************************************
  * Copyright (C) 1998-2005 VideoLAN (Centrale Réseaux) and its contributors
- * $Id: libvlc.h 13240 2005-11-14 17:45:51Z fkuehne $
+ * $Id: libvlc.h 12887 2005-10-19 07:09:09Z md $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -29,9 +29,9 @@
 
 static char *ppsz_language[] =
 { "auto", "en", "en_GB", "ca", "da", "de", "es",
-  "fr", "gl", "it", "ja", "ko", "nl", "pt_BR", "ro", "ru", "tr", "zh_CN", "zh_TW" };
+  "fr", "it", "ja", "ko", "nl", "pt_BR", "ro", "ru", "tr", "zh_CN", "zh_TW" };
 static char *ppsz_language_text[] =
-{ N_("Auto"), N_("American English"), N_("British English"), N_("Catalan"), N_("Danish"), N_("German"), N_("Spanish"), N_("French"), N_("Galician"), N_("Italian"), N_("Japanese"), N_("Korean"), N_("Dutch"), N_("Brazilian Portuguese"), N_("Romanian"), N_("Russian"), N_("Turkish"), N_("Simplified Chinese"), N_("Chinese Traditional") };
+{ N_("Auto"), N_("American English"), N_("British English"), N_("Catalan"), N_("Danish"), N_("German"), N_("Spanish"), N_("French"), N_("Italian"), N_("Japanese"), N_("Korean"), N_("Dutch"), N_("Brazilian Portuguese"), N_("Romanian"), N_("Russian"), N_("Turkish"), N_("Simplified Chinese"), N_("Chinese Traditional") };
 
 static char *ppsz_snap_formats[] =
 { "png", "jpg" };
@@ -279,12 +279,6 @@ static char *ppsz_align_descriptions[] =
     "Allows you to specify the image format in which the video snapshots will " \
     "be stored.")
 
-#define CROP_TEXT N_("Video cropping")
-#define CROP_LONGTEXT N_( \
-    "This will force the cropping of the source video. " \
-    "Accepted formats are x:y (4:3, 16:9, etc.) expressing the global image " \
-    "aspect.")
-
 #define ASPECT_RATIO_TEXT N_("Source aspect ratio")
 #define ASPECT_RATIO_LONGTEXT N_( \
     "This will force the source aspect ratio. For instance, some DVDs claim " \
@@ -301,11 +295,11 @@ static char *ppsz_align_descriptions[] =
     "Disable this option only if your video has non-standard format " \
     "requiring all 1088 lines.")
 
-#define MASPECT_RATIO_TEXT N_("Monitor pixel aspect ratio")
+#define MASPECT_RATIO_TEXT N_("Monitor aspect ratio")
 #define MASPECT_RATIO_LONGTEXT N_( \
-    "This will force the monitor aspect ratio. Most monitors have square " \
-    "pixels (1:1). If you have a 16:9 screen, you might need to change this " \
-    "to 4:3 in order to keep proportions.")
+    "This will force the monitor aspect ratio. Most monitors have a 4:3." \
+    "If you have a 16:9 screen, you will need to change this to 16:9 in" \
+    "order to keep proportions.")
 
 #define SKIP_FRAMES_TEXT N_("Skip frames")
 #define SKIP_FRAMES_LONGTEXT N_( \
@@ -342,8 +336,8 @@ static char *ppsz_clock_descriptions[] =
 
 #define MTU_TEXT N_("MTU of the network interface")
 #define MTU_LONGTEXT N_( \
-    "This is the maximum packet size that can be transmitted " \
-    "over network interface. On Ethernet it is usually 1500 bytes.")
+    "This is the typical size of UDP packets that we expect. On Ethernet " \
+    "it is usually 1500.")
 
 #define TTL_TEXT N_("Time To Live")
 #define TTL_LONGTEXT N_( \
@@ -840,8 +834,6 @@ static char *ppsz_clock_descriptions[] =
 #define NAV_RIGHT_KEY_LONGTEXT N_("Select the key to move the selector right in DVD menus.")
 #define NAV_ACTIVATE_KEY_TEXT N_("Activate")
 #define NAV_ACTIVATE_KEY_LONGTEXT N_("Select the key to activate selected item in DVD menus.")
-#define DISC_MENU_TEXT N_("Go to the DVD menu")
-#define DISC_MENU_LONGTEXT N_("Select the key to take you to the DVD menu")
 #define TITLE_PREV_TEXT N_("Select previous DVD title")
 #define TITLE_PREV_LONGTEXT N_("Select the key to choose the previous title from the DVD")
 #define TITLE_NEXT_TEXT N_("Select next DVD title")
@@ -1028,11 +1020,10 @@ vlc_module_begin();
     add_integer( "height", -1, NULL, HEIGHT_TEXT, HEIGHT_LONGTEXT, VLC_TRUE );
     add_integer( "video-x", -1, NULL, VIDEOX_TEXT, VIDEOX_LONGTEXT, VLC_TRUE );
     add_integer( "video-y", -1, NULL, VIDEOY_TEXT, VIDEOY_LONGTEXT, VLC_TRUE );
-    add_string( "crop", NULL, NULL, CROP_TEXT, CROP_LONGTEXT, VLC_FALSE );
-    add_string( "aspect-ratio", NULL, NULL,
-                ASPECT_RATIO_TEXT, ASPECT_RATIO_LONGTEXT, VLC_FALSE );
-    add_string( "monitor-par", NULL, NULL,
-                MASPECT_RATIO_TEXT, MASPECT_RATIO_LONGTEXT, VLC_TRUE );
+    add_string( "aspect-ratio", "", NULL,
+               ASPECT_RATIO_TEXT, ASPECT_RATIO_LONGTEXT, VLC_FALSE );
+    add_string( "monitor-aspect-ratio", "4:3", NULL,
+               MASPECT_RATIO_TEXT, MASPECT_RATIO_LONGTEXT, VLC_FALSE );
     add_bool( "hdtv-fix", 1, NULL, HDTV_FIX_TEXT, HDTV_FIX_LONGTEXT, VLC_TRUE );
     add_bool( "video-deco", 1, NULL, VIDEO_DECO_TEXT,
               VIDEO_DECO_LONGTEXT, VLC_TRUE );
@@ -1421,7 +1412,6 @@ vlc_module_begin();
 #   define KEY_SUBTITLE_TRACK     's'
 #   define KEY_INTF_SHOW          'i'
 #   define KEY_INTF_HIDE          'I'
-#   define KEY_DISC_MENU          KEY_MODIFIER_CTRL|'m'
 #   define KEY_TITLE_PREV         KEY_MODIFIER_CTRL|'p'
 #   define KEY_TITLE_NEXT         KEY_MODIFIER_CTRL|'n'
 #   define KEY_CHAPTER_PREV       KEY_MODIFIER_CTRL|'u'
@@ -1489,7 +1479,6 @@ vlc_module_begin();
 #   define KEY_SUBTITLE_TRACK     'k'
 #   define KEY_INTF_SHOW          'i'
 #   define KEY_INTF_HIDE          'I'
-#   define KEY_DISC_MENU          KEY_MODIFIER_CTRL|'m'
 #   define KEY_TITLE_PREV         KEY_MODIFIER_CTRL|'p'
 #   define KEY_TITLE_NEXT         KEY_MODIFIER_CTRL|'n'
 #   define KEY_CHAPTER_PREV       KEY_MODIFIER_CTRL|'u'
@@ -1569,8 +1558,6 @@ vlc_module_begin();
     add_key( "key-nav-right", KEY_NAV_RIGHT, NULL, NAV_RIGHT_KEY_TEXT,
              NAV_RIGHT_KEY_LONGTEXT, VLC_TRUE );
 
-    add_key( "key-disc-menu", KEY_DISC_MENU, NULL, DISC_MENU_TEXT,
-             DISC_MENU_LONGTEXT, VLC_TRUE );
     add_key( "key-title-prev", KEY_TITLE_PREV, NULL, TITLE_PREV_TEXT,
              TITLE_PREV_LONGTEXT, VLC_TRUE );
     add_key( "key-title-next", KEY_TITLE_NEXT, NULL, TITLE_NEXT_TEXT,
@@ -1733,7 +1720,6 @@ static struct hotkey p_hotkeys[] =
     { "key-nav-down", ACTIONID_NAV_DOWN, 0, 0, 0, 0 },
     { "key-nav-left", ACTIONID_NAV_LEFT, 0, 0, 0, 0 },
     { "key-nav-right", ACTIONID_NAV_RIGHT, 0, 0, 0, 0 },
-    { "key-disc-menu", ACTIONID_DISC_MENU, 0, 0, 0, 0 },
     { "key-title-prev", ACTIONID_TITLE_PREV, 0, 0, 0, 0 },
     { "key-title-next", ACTIONID_TITLE_NEXT, 0, 0, 0, 0 },
     { "key-chapter-prev", ACTIONID_CHAPTER_PREV, 0, 0, 0, 0 },

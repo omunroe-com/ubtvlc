@@ -2,7 +2,7 @@
  * vlm.c: VLM interface plugin
  *****************************************************************************
  * Copyright (C) 2000, 2001 the VideoLAN team
- * $Id: vlm.c 13133 2005-11-04 21:10:24Z courmisch $
+ * $Id: vlm.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Simon Latapie <garf@videolan.org>
  *          Laurent Aimar <fenrir@videolan.org>
@@ -360,11 +360,7 @@ static int ExecuteCommand( vlm_t *p_vlm, char *psz_command,
 
             psz_temp = FindEndCommand( psz_cmd );
 
-            if( psz_temp == NULL )
-            {
-                p_message = vlm_MessageNew( "Incomplete command", psz_cmd );
-                goto error;
-            }
+            if( psz_temp == NULL ) goto error;
 
             i_temp = psz_temp - psz_cmd;
 

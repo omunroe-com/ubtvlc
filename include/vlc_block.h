@@ -2,7 +2,7 @@
  * vlc_block.h: Data blocks management functions
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: vlc_block.h 13022 2005-10-29 18:11:46Z md $
+ * $Id: vlc_block.h 12954 2005-10-24 17:08:54Z md $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -87,6 +87,8 @@ struct block_t
 
     int         i_samples; /* Used for audio */
     int         i_rate;
+
+    uint16_t	i_seqno;   /* Used for RTP */
 
     int         i_buffer;
     uint8_t     *p_buffer;

@@ -2,7 +2,7 @@
 # src/packages.mak : Archive locations
 # ***************************************************************************
 # Copyright (C) 2003 - 2005 the VideoLAN team
-# $Id: packages.mak 13010 2005-10-29 12:01:03Z fkuehne $
+# $Id: packages.mak 12890 2005-10-19 11:27:09Z hartman $
 #
 # Authors: Christophe Massiot <massiot@via.ecp.fr>
 #          Derk-Jan Hartman <hartman at videolan dot org>
@@ -106,8 +106,8 @@ MODPLUG_VERSION=0.7
 MODPLUG_URL=$(VIDEOLAN)/testing/contrib/libmodplug-$(MODPLUG_VERSION).tar.gz
 MASH_VERSION=5.2
 MASH_URL=$(SF)/openmash/mash-src-$(MASH_VERSION).tar.gz
-CDDB_VERSION=0.9.6
-CDDB_URL=$(SF)/libcddb/libcddb-$(CDDB_VERSION).tar.gz
+CDDB_VERSION=1.2.1
+CDDB_URL=$(SF)/libcddb/libcddb-$(CDDB_VERSION).tar.bz2
 VCDIMAGER_VERSION=0.7.21
 VCDIMAGER_URL=$(GNU)/vcdimager/vcdimager-$(VCDIMAGER_VERSION).tar.gz
 CDIO_VERSION=0.72

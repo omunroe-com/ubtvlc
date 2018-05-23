@@ -2,7 +2,7 @@
  * vout.c: Windows DirectX video output display method
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: directx.c 13062 2005-10-31 21:14:27Z gbazin $
+ * $Id: directx.c 12952 2005-10-24 08:26:23Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -537,24 +537,6 @@ static int Manage( vout_thread_t *p_vout )
             /* This will force the vout core to recreate the picture buffers */
             p_vout->i_changes |= VOUT_PICTURE_BUFFERS_CHANGE;
         }
-    }
-
-    /* Check for cropping / aspect changes */
-    if( p_vout->i_changes & VOUT_CROP_CHANGE ||
-        p_vout->i_changes & VOUT_ASPECT_CHANGE )
-    {
-        p_vout->i_changes &= ~VOUT_CROP_CHANGE;
-        p_vout->i_changes &= ~VOUT_ASPECT_CHANGE;
-
-        p_vout->fmt_out.i_x_offset = p_vout->fmt_in.i_x_offset;
-        p_vout->fmt_out.i_y_offset = p_vout->fmt_in.i_y_offset;
-        p_vout->fmt_out.i_visible_width = p_vout->fmt_in.i_visible_width;
-        p_vout->fmt_out.i_visible_height = p_vout->fmt_in.i_visible_height;
-        p_vout->fmt_out.i_aspect = p_vout->fmt_in.i_aspect;
-        p_vout->fmt_out.i_sar_num = p_vout->fmt_in.i_sar_num;
-        p_vout->fmt_out.i_sar_den = p_vout->fmt_in.i_sar_den;
-        p_vout->output.i_aspect = p_vout->fmt_in.i_aspect;
-        E_(DirectXUpdateRects)( p_vout, VLC_TRUE );
     }
 
     /* We used to call the Win32 PeekMessage function here to read the window

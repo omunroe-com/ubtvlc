@@ -21,8 +21,7 @@ SRCS   += common/i386/mc-c.c common/i386/dct-c.c common/i386/predict.c
 ASMSRC  = common/i386/dct-a.asm common/i386/cpu-a.asm \
           common/i386/pixel-a.asm common/i386/mc-a.asm \
           common/i386/mc-a2.asm common/i386/predict-a.asm \
-          common/i386/pixel-sse2.asm common/i386/quant-a.asm \
-          common/i386/deblock-a.asm
+          common/i386/pixel-sse2.asm common/i386/quant-a.asm
 OBJASM  = $(ASMSRC:%.asm=%.o)
 endif
 
@@ -32,10 +31,8 @@ SRCS   += common/i386/mc-c.c common/i386/dct-c.c common/i386/predict.c
 ASMSRC  = common/amd64/dct-a.asm common/amd64/cpu-a.asm \
           common/amd64/pixel-a.asm common/amd64/mc-a.asm \
           common/amd64/mc-a2.asm common/amd64/predict-a.asm \
-          common/amd64/pixel-sse2.asm common/amd64/quant-a.asm \
-          common/amd64/deblock-a.asm
+          common/amd64/pixel-sse2.asm common/amd64/quant-a.asm
 OBJASM  = $(ASMSRC:%.asm=%.o)
-ASFLAGS += -Icommon/amd64
 endif
 
 # AltiVec optims
@@ -71,10 +68,9 @@ x264$(EXE): libx264.a x264.o matroska.o
 x264vfw.dll: libx264.a $(wildcard vfw/*.c vfw/*.h)
 	make -C vfw/build/cygwin
 
-checkasm: tools/checkasm.o libx264.a
+checkasm: testing/checkasm.o libx264.a
 	$(CC) -o $@ $< libx264.a $(LDFLAGS)
 
-common/amd64/*.o: common/amd64/amd64inc.asm
 %.o: %.asm
 	$(AS) $(ASFLAGS) -o $@ $<
 
@@ -92,27 +88,18 @@ include .depend
 endif
 
 clean:
-	rm -f $(OBJS) $(OBJASM) config.h *.a x264.o matroska.o x264 x264.exe .depend TAGS x264.pc
-	rm -f checkasm checkasm.exe tools/checkasm.o
-	rm -f tools/avc2avi tools/avc2avi.exe tools/avc2avi.o
+	rm -f $(OBJS) $(OBJASM) config.h *.a x264.o matroska.o x264 x264.exe .depend TAGS
 	rm -rf vfw/build/cygwin/bin
 
 distclean: clean
 	rm -f config.mak vfw/build/cygwin/config.mak
 
 install: x264
-	install -d $(DESTDIR)$(bindir) $(DESTDIR)$(includedir)
-	install -d $(DESTDIR)$(libdir) $(DESTDIR)$(libdir)/pkgconfig
+	install -d $(DESTDIR)$(bindir) $(DESTDIR)$(libdir) $(DESTDIR)$(includedir)
 	install -m 644 x264.h $(DESTDIR)$(includedir)
 	install -m 644 libx264.a $(DESTDIR)$(libdir)
-	install -m 644 x264.pc $(DESTDIR)$(libdir)/pkgconfig
 	install x264 $(DESTDIR)$(bindir)
 	ranlib $(DESTDIR)$(libdir)/libx264.a
-
-.PHONY: uninstall
-uninstall:
-	rm -f $(DESTDIR)$(includedir)/x264.h $(DESTDIR)$(libdir)/libx264.a
-	rm -f $(DESTDIR)$(bindir)/x264 $(DESTDIR)$(libdir)/pkgconfig/x264.pc
 
 etags: TAGS
 

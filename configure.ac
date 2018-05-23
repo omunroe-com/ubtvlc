@@ -1,11 +1,11 @@
 dnl Autoconf settings for vlc
-dnl $Id: configure.ac 13396 2005-11-26 14:39:23Z dionoea $
+dnl $Id: configure.ac 12901 2005-10-20 17:49:04Z xtophe $
 
-AC_INIT(vlc,0.8.4)
+AC_INIT(vlc,0.8.4-test1)
 VERSION_MAJOR="0"
 VERSION_MINOR="8"
 VERSION_REVISION="4"
-VERSION_EXTRA=""
+VERSION_EXTRA="test1"
 
 CONFIGURE_LINE="$0 $*"
 CODENAME="Janus"
@@ -17,7 +17,7 @@ AC_CANONICAL_SYSTEM
 
 dnl XXX: we don't put any flags here, because automake 1.5 doesn't support
 dnl them. And we need the comma otherwize automake will choke on it.
-AM_INIT_AUTOMAKE(vlc,0.8.4)
+AM_INIT_AUTOMAKE(vlc,0.8.4-test1)
 AM_CONFIG_HEADER(config.h)
 
 dnl HA! HA!
@@ -228,7 +228,7 @@ AM_CONDITIONAL(HAVE_WINCE, test "${SYS}" = "mingwce")
 dnl
 dnl Gettext stuff
 dnl
-ALL_LINGUAS="ca da de en_GB es fr gl it ja ko nl pt_BR ro ru sv tr zh_CN zh_TW"
+ALL_LINGUAS="ca da de en_GB es fr it ja ko nl pt_BR ro ru tr zh_CN zh_TW"
 AM_GNU_GETTEXT_VERSION(0.11.5)
 AM_GNU_GETTEXT
 if test "${nls_cv_force_use_gnu_gettext}" = "yes"; then
@@ -1155,7 +1155,7 @@ dnl
 dnl There are several possible cases:
 dnl - OS X PPC, gcc 4.x: use -mpim-altivec, don't need <altivec.h>
 dnl - OS X PPC, gcc 3.x: need -faltivec, don't need <altivec.h>
-dnl - Linux PPC, gcc 3.4, 4.x: need <altivec.h> which requires -maltivec
+dnl - Linux PPC, gcc 4.x: need <altivec.h> which itself requires -maltivec
 dnl - Linux PPC, gcc 3.3: need <altivec.h> and -maltivec -mabi=altivec
 dnl - Linux PPC, gcc 3.x: need <altivec.h> and -fvec
 dnl - Others: test should fail
@@ -1949,7 +1949,7 @@ AC_CHECK_FUNCS(inet_pton,[have_ipv6=yes],[
      VLC_ADD_LDFLAGS([ipv6 vlc],[-lresolv])])
 ])
 
-AS_IF([test "${have_ipv6}" = "yes"], [
+AS_IF([test "${have_ipv6}" == "yes"], [
   AC_DEFINE(HAVE_INET_PTON, 1, [Define to 1 if you have inet_pton().])])
 
 if test "${SYS}" != "nto" &&
@@ -2332,7 +2332,7 @@ dnl  ffmpeg decoder/demuxer plugin
 dnl
 AC_ARG_ENABLE(ffmpegaltivec,
 [  --enable-ffmpegaltivec  ffmpegaltivec codec (DO NOT USE)])
-if test "${enable_ffmpegaltivec}" = "yes"
+if test "${enable_ffmpegaltivec}" == "yes"
 then
   if test "${with_ffmpeg_tree}" != "no" -a -n "${with_ffmpeg_tree}"; then
     AC_MSG_CHECKING(for libavcodecaltivec.a in ${with_ffmpeg_tree})
@@ -2879,7 +2879,7 @@ if test "${enable_x264}" != "no"; then
       AC_MSG_RESULT(yes)
       VLC_ADD_CPPFLAGS([x264],[-I${real_x264_tree}])
       VLC_ADD_LDFLAGS([x264],[-L${real_x264_tree}])
-      LDFLAGS="${LDFLAGS_save} ${LDFLAGS_x264} ${THREAD_LIB}"
+      LDFLAGS="${LDFLAGS_save} ${LDFLAGS_x264}"
       AC_CHECK_LIB(x264, x264_encoder_open, [
         VLC_ADD_BUILTINS([x264])
         VLC_ADD_LDFLAGS([x264],[-lx264])
@@ -2892,7 +2892,7 @@ if test "${enable_x264}" != "no"; then
       AC_MSG_ERROR([the specified tree doesn't have x264.h])
     fi
   else
-    LDFLAGS="${LDFLAGS_save} ${LDFLAGS_x264} ${THREAD_LIB}"
+    LDFLAGS="${LDFLAGS_save} ${LDFLAGS_x264}"
     AC_CHECK_HEADERS(x264.h, [
       AC_CHECK_LIB(x264, x264_encoder_open, [
         VLC_ADD_PLUGINS([x264])
@@ -3259,7 +3259,7 @@ dnl  SVG module
 dnl
 AC_ARG_ENABLE(svg,
   [  --enable-svg            SVG support (default disabled)])
-if test "${enable_svg}" = "yes"
+if test "${enable_svg}" == "yes"
 then
   PKG_CHECK_MODULES(SVG, 
 	librsvg-2.0 >= 2.5.0,

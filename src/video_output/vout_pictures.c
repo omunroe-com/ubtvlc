@@ -2,7 +2,7 @@
  * vout_pictures.c : picture management functions
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: vout_pictures.c 13026 2005-10-30 15:32:11Z gbazin $
+ * $Id: vout_pictures.c 12933 2005-10-23 11:07:38Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -445,18 +445,19 @@ void vout_PlacePicture( vout_thread_t *p_vout,
     }
 
     if( p_vout->fmt_in.i_visible_width * (int64_t)p_vout->fmt_in.i_sar_num *
-        *pi_height / p_vout->fmt_in.i_visible_height /
-        p_vout->fmt_in.i_sar_den > *pi_width )
+        *pi_height /
+        (p_vout->fmt_in.i_visible_height * p_vout->fmt_in.i_sar_den) >
+        *pi_width )
     {
         *pi_height = p_vout->fmt_in.i_visible_height *
             (int64_t)p_vout->fmt_in.i_sar_den * *pi_width /
-            p_vout->fmt_in.i_visible_width / p_vout->fmt_in.i_sar_num;
+            (p_vout->fmt_in.i_visible_width * p_vout->fmt_in.i_sar_num);
     }
     else
     {
         *pi_width = p_vout->fmt_in.i_visible_width *
             (int64_t)p_vout->fmt_in.i_sar_num * *pi_height /
-            p_vout->fmt_in.i_visible_height / p_vout->fmt_in.i_sar_den;
+            (p_vout->fmt_in.i_visible_height * p_vout->fmt_in.i_sar_den);
     }
 
     switch( p_vout->i_alignment & VOUT_ALIGN_HMASK )

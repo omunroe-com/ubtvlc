@@ -106,43 +106,6 @@ PIXEL_SSD_C( pixel_ssd_8x4,    8,  4 )
 PIXEL_SSD_C( pixel_ssd_4x8,    4,  8 )
 PIXEL_SSD_C( pixel_ssd_4x4,    4,  4 )
 
-int64_t x264_pixel_ssd_wxh( x264_pixel_function_t *pf, uint8_t *pix1, int i_pix1, uint8_t *pix2, int i_pix2, int i_width, int i_height )
-{
-    int64_t i_ssd = 0;
-    int x, y;
-
-#define SSD(size) i_ssd += pf->ssd[size]( pix1 + y*i_pix1 + x, i_pix1, \
-                                          pix2 + y*i_pix2 + x, i_pix2 );
-    for( y = 0; y < i_height-15; y += 16 )
-    {
-        for( x = 0; x < i_width-15; x += 16 )
-            SSD(PIXEL_16x16);
-        if( x < i_width-7 )
-            SSD(PIXEL_8x16);
-    }
-    if( y < i_height-7 )
-        for( x = 0; x < i_width-7; x += 8 )
-            SSD(PIXEL_8x8);
-#undef SSD
-
-#define SSD1 { int d = pix1[y*i_pix1+x] - pix2[y*i_pix2+x]; i_ssd += d*d; }
-    if( i_width % 8 != 0 )
-    {
-        for( y = 0; y < (i_height & ~7); y++ )
-            for( x = i_width & ~7; x < i_width; x++ )
-                SSD1;
-    }
-    if( i_height % 8 != 0 )
-    {
-        for( y = i_height & ~7; y < i_height; y++ )
-            for( x = 0; x < i_width; x++ )
-                SSD1;
-    }
-#undef SSD1
-
-    return i_ssd;
-}
-
 
 static inline void pixel_sub_wxh( int16_t *diff, int i_size,
                                   uint8_t *pix1, int i_pix1, uint8_t *pix2, int i_pix2 )
@@ -301,6 +264,89 @@ PIXEL_SA8D_C( 8, 16 )
 PIXEL_SA8D_C( 8, 8 )
 
 
+static inline void pixel_avg_wxh( uint8_t *dst, int i_dst, uint8_t *src, int i_src, int width, int height )
+{
+    int x, y;
+    for( y = 0; y < height; y++ )
+    {
+        for( x = 0; x < width; x++ )
+        {
+            dst[x] = ( dst[x] + src[x] + 1 ) >> 1;
+        }
+        dst += i_dst;
+        src += i_src;
+    }
+}
+
+
+#define PIXEL_AVG_C( name, width, height ) \
+static void name( uint8_t *pix1, int i_stride_pix1, \
+                  uint8_t *pix2, int i_stride_pix2 ) \
+{ \
+    pixel_avg_wxh( pix1, i_stride_pix1, pix2, i_stride_pix2, width, height ); \
+}
+PIXEL_AVG_C( pixel_avg_16x16, 16, 16 )
+PIXEL_AVG_C( pixel_avg_16x8,  16, 8 )
+PIXEL_AVG_C( pixel_avg_8x16,  8, 16 )
+PIXEL_AVG_C( pixel_avg_8x8,   8, 8 )
+PIXEL_AVG_C( pixel_avg_8x4,   8, 4 )
+PIXEL_AVG_C( pixel_avg_4x8,   4, 8 )
+PIXEL_AVG_C( pixel_avg_4x4,   4, 4 )
+PIXEL_AVG_C( pixel_avg_4x2,   4, 2 )
+PIXEL_AVG_C( pixel_avg_2x4,   2, 4 )
+PIXEL_AVG_C( pixel_avg_2x2,   2, 2 )
+
+
+/* Implicit weighted bipred only:
+ * assumes log2_denom = 5, offset = 0, weight1 + weight2 = 64 */
+#define op_scale2(x) dst[x] = x264_clip_uint8( (dst[x]*i_weight1 + src[x]*i_weight2 + (1<<5)) >> 6 )
+static inline void pixel_avg_weight_wxh( uint8_t *dst, int i_dst, uint8_t *src, int i_src, int width, int height, int i_weight1 ){
+    int y;
+    const int i_weight2 = 64 - i_weight1;
+    for(y=0; y<height; y++, dst += i_dst, src += i_src){
+        op_scale2(0);
+        op_scale2(1);
+        if(width==2) continue;
+        op_scale2(2);
+        op_scale2(3);
+        if(width==4) continue;
+        op_scale2(4);
+        op_scale2(5);
+        op_scale2(6);
+        op_scale2(7);
+        if(width==8) continue;
+        op_scale2(8);
+        op_scale2(9);
+        op_scale2(10);
+        op_scale2(11);
+        op_scale2(12);
+        op_scale2(13);
+        op_scale2(14);
+        op_scale2(15);
+    }
+}
+
+#define PIXEL_AVG_WEIGHT_C( width, height ) \
+static void pixel_avg_weight_##width##x##height( \
+                uint8_t *pix1, int i_stride_pix1, \
+                uint8_t *pix2, int i_stride_pix2, int i_weight1 ) \
+{ \
+    pixel_avg_weight_wxh( pix1, i_stride_pix1, pix2, i_stride_pix2, width, height, i_weight1 ); \
+}
+
+PIXEL_AVG_WEIGHT_C(16,16)
+PIXEL_AVG_WEIGHT_C(16,8)
+PIXEL_AVG_WEIGHT_C(8,16)
+PIXEL_AVG_WEIGHT_C(8,8)
+PIXEL_AVG_WEIGHT_C(8,4)
+PIXEL_AVG_WEIGHT_C(4,8)
+PIXEL_AVG_WEIGHT_C(4,4)
+PIXEL_AVG_WEIGHT_C(4,2)
+PIXEL_AVG_WEIGHT_C(2,4)
+PIXEL_AVG_WEIGHT_C(2,2)
+#undef op_scale2
+#undef PIXEL_AVG_WEIGHT_C
+
 /****************************************************************************
  * x264_pixel_init:
  ****************************************************************************/
@@ -334,6 +380,28 @@ void x264_pixel_init( int cpu, x264_pixel_function_t *pixf )
     pixf->sa8d[PIXEL_16x8] = pixel_sa8d_16x8;
     pixf->sa8d[PIXEL_8x16] = pixel_sa8d_8x16;
     pixf->sa8d[PIXEL_8x8]  = pixel_sa8d_8x8;
+
+    pixf->avg[PIXEL_16x16]= pixel_avg_16x16;
+    pixf->avg[PIXEL_16x8] = pixel_avg_16x8;
+    pixf->avg[PIXEL_8x16] = pixel_avg_8x16;
+    pixf->avg[PIXEL_8x8]  = pixel_avg_8x8;
+    pixf->avg[PIXEL_8x4]  = pixel_avg_8x4;
+    pixf->avg[PIXEL_4x8]  = pixel_avg_4x8;
+    pixf->avg[PIXEL_4x4]  = pixel_avg_4x4;
+    pixf->avg[PIXEL_4x2]  = pixel_avg_4x2;
+    pixf->avg[PIXEL_2x4]  = pixel_avg_2x4;
+    pixf->avg[PIXEL_2x2]  = pixel_avg_2x2;
+    
+    pixf->avg_weight[PIXEL_16x16]= pixel_avg_weight_16x16;
+    pixf->avg_weight[PIXEL_16x8] = pixel_avg_weight_16x8;
+    pixf->avg_weight[PIXEL_8x16] = pixel_avg_weight_8x16;
+    pixf->avg_weight[PIXEL_8x8]  = pixel_avg_weight_8x8;
+    pixf->avg_weight[PIXEL_8x4]  = pixel_avg_weight_8x4;
+    pixf->avg_weight[PIXEL_4x8]  = pixel_avg_weight_4x8;
+    pixf->avg_weight[PIXEL_4x4]  = pixel_avg_weight_4x4;
+    pixf->avg_weight[PIXEL_4x2]  = pixel_avg_weight_4x2;
+    pixf->avg_weight[PIXEL_2x4]  = pixel_avg_weight_2x4;
+    pixf->avg_weight[PIXEL_2x2]  = pixel_avg_weight_2x2;
 
 #ifdef HAVE_MMXEXT
     if( cpu&X264_CPU_MMXEXT )

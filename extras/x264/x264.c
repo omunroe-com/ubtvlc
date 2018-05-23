@@ -42,7 +42,7 @@
 #endif
 
 #ifdef MP4_OUTPUT
-#include <gpac/isomedia.h>
+#include <gpac/m4_author.h>
 #endif
 
 
@@ -73,6 +73,7 @@ static void    SigIntHandler( int a )
 typedef struct {
     int b_decompress;
     int b_progress;
+    int i_maxframes;
     int i_seek;
     hnd_t hin;
     hnd_t hout;
@@ -153,19 +154,6 @@ int main( int argc, char **argv )
     return Encode( &param, &opt );
 }
 
-static const char * const overscan_str[] = { "undef", "show", "crop", NULL };
-static const char * const vidformat_str[] = { "component", "pal", "ntsc", "secam", "mac", "undef", NULL };
-static const char * const fullrange_str[] = { "off", "on", NULL };
-static const char * const colorprim_str[] = { "", "bt709", "undef", "", "bt470m", "bt470bg", "smpte170m", "smpte240m", "film", NULL };
-static const char * const transfer_str[] = { "", "bt709", "undef", "", "bt470m", "bt470bg", "smpte170m", "smpte240m", "linear", "log100", "log316", NULL };
-static const char * const colmatrix_str[] = { "GBR", "bt709", "undef", "", "fcc", "bt470bg", "smpte170m", "smpte240m", "YCgCo", NULL };
-
-static char const *strtable_lookup( const char * const table[], int index )
-{
-    int i = 0; while( table[i] ) i++;
-    return ( ( index >= 0 && index < i ) ? table[ index ] : "???" );
-}
-
 /*****************************************************************************
  * Help:
  *****************************************************************************/
@@ -205,7 +193,6 @@ static void Help( x264_param_t *defaults )
              "\n"
              "  -q, --qp <integer>          Set QP (0=lossless) [%d]\n"
              "  -B, --bitrate <integer>     Set bitrate\n"
-             "      --crf <integer>         Quality-based VBR (nominal QP)\n"
              "      --qpmin <integer>       Set min QP [%d]\n"
              "      --qpmax <integer>       Set max QP [%d]\n"
              "      --qpstep <integer>      Set max QP step [%d]\n"
@@ -242,7 +229,7 @@ static void Help( x264_param_t *defaults )
              "                                  - p8x8, p4x4, b8x8, i8x8, i4x4\n"
              "                                  - none, all\n"
              "                                  (p4x4 requires p8x8. i8x8 requires --8x8dct.)\n"
-             "      --direct <string>       Direct MV prediction mode [\"%s\"]\n"
+             "      --direct <string>       Direct MV prediction mode [\"temporal\"]\n"
              "                                  - none, spatial, temporal\n"
              "  -w, --weightb               Weighted prediction for B-frames\n"
              "      --me <string>           Integer pixel motion estimation method [\"%s\"]\n"
@@ -253,14 +240,8 @@ static void Help( x264_param_t *defaults )
              "      --merange <integer>     Maximum motion vector search range [%d]\n"
              "  -m, --subme <integer>       Subpixel motion estimation and partition\n"
              "                                  decision quality: 1=fast, 6=best. [%d]\n"
-             "      --b-rdo                 RD based mode decision for B-frames. Requires subme 6.\n"
-             "      --mixed-refs            Decide references on a per partition basis\n"
              "      --no-chroma-me          Ignore chroma in motion estimation\n"
              "  -8, --8x8dct                Adaptive spatial transform size\n"
-             "  -t, --trellis <integer>     Trellis RD quantization. Requires CABAC. [%d]\n"
-             "                                  - 0: disabled\n"
-             "                                  - 1: enabled only on the final encode of a MB\n"
-             "                                  - 2: enabled on all mode decisions\n"
              "\n"
              "      --cqm <string>          Preset quant matrices [\"flat\"]\n"
              "                                  - jvt, flat\n"
@@ -275,31 +256,10 @@ static void Help( x264_param_t *defaults )
              "      --cqm4iy, --cqm4ic, --cqm4py, --cqm4pc\n"
              "                              Set individual quant matrices\n"
              "\n"
-             "Video Usability Info (Annex E):\n"
-             "The VUI settings are not used by the encoder but are merely suggestions to\n"
-             "the playback equipment. See doc/vui.txt for details. Use at your own risk.\n"
-             "\n"
-             "      --sar width:height      Specify Sample Aspect Ratio\n"
-             "      --overscan <string>     Specify crop overscan setting [\"%s\"]\n"
-             "                                  - undef, show, crop\n"
-             "      --videoformat <string>  Specify video format [\"%s\"]\n"
-             "                                  - component, pal, ntsc, secam, mac, undef\n"
-             "      --fullrange <string>    Specify full range samples setting [\"%s\"]\n"
-             "                                  - off, on\n"
-             "      --colorprim <string>    Specify color primaries [\"%s\"]\n"
-             "                                  - undef, bt709, bt470m, bt470bg\n"
-             "                                    smpte170m, smpte240m, film\n"
-             "      --transfer <string>     Specify transfer characteristics [\"%s\"]\n"
-             "                                  - undef, bt709, bt470m, bt470bg, linear,\n"
-             "                                    log100, log316, smpte170m, smpte240m\n"
-             "      --colormatrix <string>  Specify color matrix setting [\"%s\"]\n"
-             "                                  - undef, bt709, fcc, bt470bg\n"
-             "                                    smpte170m, smpte240m, GBR, YCgCo\n"
-             "      --chromaloc <integer>   Specify chroma sample location (0 to 5) [%d]\n"
-             "\n"
              "Input/Output:\n"
              "\n"
-             "      --level <string>        Specify level (as defined by Annex A)\n"
+             "      --level <integer>       Specify level (as defined by Annex A)\n"
+             "      --sar width:height      Specify Sample Aspect Ratio\n"
              "      --fps <float|rational>  Specify framerate\n"
              "      --seek <integer>        First frame to encode\n"
              "      --frames <integer>      Maximum number of frames to encode\n"
@@ -349,31 +309,13 @@ static void Help( x264_param_t *defaults )
             defaults->rc.f_qcompress,
             defaults->rc.f_complexity_blur,
             defaults->rc.f_qblur,
-            strtable_lookup( x264_direct_pred_names, defaults->analyse.i_direct_mv_pred ),
-            strtable_lookup( x264_motion_est_names, defaults->analyse.i_me_method ),
+            defaults->analyse.i_me_method==X264_ME_DIA ? "dia"
+            : defaults->analyse.i_me_method==X264_ME_HEX ? "hex"
+            : defaults->analyse.i_me_method==X264_ME_UMH ? "umh"
+            : defaults->analyse.i_me_method==X264_ME_ESA ? "esa" : NULL,
             defaults->analyse.i_me_range,
-            defaults->analyse.i_subpel_refine,
-            defaults->analyse.i_trellis,
-            strtable_lookup( overscan_str, defaults->vui.i_overscan ),
-            strtable_lookup( vidformat_str, defaults->vui.i_vidformat ),
-            strtable_lookup( fullrange_str, defaults->vui.b_fullrange ),
-            strtable_lookup( colorprim_str, defaults->vui.i_colorprim ),
-            strtable_lookup( transfer_str, defaults->vui.i_transfer ),
-            strtable_lookup( colmatrix_str, defaults->vui.i_colmatrix ),
-            defaults->vui.i_chroma_loc
+            defaults->analyse.i_subpel_refine
            );
-}
-
-static int parse_enum( const char *arg, const char * const *names, int *dst )
-{
-    int i;
-    for( i = 0; names[i]; i++ )
-        if( !strcmp( arg, names[i] ) )
-        {
-            *dst = i;
-            return 0;
-        }
-    return -1;
 }
 
 static int parse_cqm( const char *str, uint8_t *cqm, int length )
@@ -467,17 +409,6 @@ static int  Parse( int argc, char **argv,
 #define OPT_CQM8I 303
 #define OPT_CQM8P 304
 #define OPT_CQMFILE 305
-#define OPT_SAR 306
-#define OPT_OVERSCAN 307
-#define OPT_VIDFORMAT 308
-#define OPT_FULLRANGE 309
-#define OPT_COLOURPRIM 310
-#define OPT_TRANSFER 311
-#define OPT_COLOURMATRIX 312
-#define OPT_CHROMALOC 313
-#define OPT_MIXED_REFS 314
-#define OPT_CRF 315
-#define OPT_B_RDO 316
 
         static struct option long_options[] =
         {
@@ -497,10 +428,9 @@ static int  Parse( int argc, char **argv,
             { "qpmin",   required_argument, NULL, OPT_QPMIN },
             { "qpmax",   required_argument, NULL, OPT_QPMAX },
             { "qpstep",  required_argument, NULL, OPT_QPSTEP },
-            { "crf",     required_argument, NULL, OPT_CRF },
             { "ref",     required_argument, NULL, 'r' },
             { "no-asm",  no_argument,       NULL, 'C' },
-            { "sar",     required_argument, NULL, OPT_SAR },
+            { "sar",     required_argument, NULL, 's' },
             { "fps",     required_argument, NULL, OPT_FPS },
             { "frames",  required_argument, NULL, OPT_FRAMES },
             { "seek",    required_argument, NULL, OPT_SEEK },
@@ -511,11 +441,8 @@ static int  Parse( int argc, char **argv,
             { "me",      required_argument, NULL, OPT_ME },
             { "merange", required_argument, NULL, OPT_MERANGE },
             { "subme",   required_argument, NULL, 'm' },
-            { "b-rdo", no_argument,    NULL, OPT_B_RDO },
-            { "mixed-refs", no_argument,    NULL, OPT_MIXED_REFS },
             { "no-chroma-me", no_argument,  NULL, OPT_NO_CHROMA_ME },
             { "8x8dct",  no_argument,       NULL, '8' },
-            { "trellis", required_argument, NULL, 't' },
             { "level",   required_argument, NULL, OPT_LEVEL },
             { "ratetol", required_argument, NULL, OPT_RATETOL },
             { "vbv-maxrate", required_argument, NULL, OPT_VBVMAXRATE },
@@ -550,19 +477,12 @@ static int  Parse( int argc, char **argv,
             { "cqm8",    required_argument, NULL, OPT_CQM8 },
             { "cqm8i",   required_argument, NULL, OPT_CQM8I },
             { "cqm8p",   required_argument, NULL, OPT_CQM8P },
-            { "overscan", required_argument, NULL, OPT_OVERSCAN },
-            { "videoformat", required_argument, NULL, OPT_VIDFORMAT },
-            { "fullrange", required_argument, NULL, OPT_FULLRANGE },
-            { "colorprim", required_argument, NULL, OPT_COLOURPRIM },
-            { "transfer", required_argument, NULL, OPT_TRANSFER },
-            { "colormatrix", required_argument, NULL, OPT_COLOURMATRIX },
-            { "chromaloc", required_argument, NULL, OPT_CHROMALOC },
             {0, 0, 0, 0}
         };
 
         int c;
 
-        c = getopt_long( argc, argv, "hi:I:b:r:cxB:q:f:o:A:m:p:t:vw8",
+        c = getopt_long( argc, argv, "hi:I:b:r:cxB:q:f:o:A:m:p:vw8",
                          long_options, &long_options_index);
 
         if( c == -1 )
@@ -581,9 +501,6 @@ static int  Parse( int argc, char **argv,
             case 'B':
                 param->rc.i_bitrate = atol( optarg );
                 param->rc.b_cbr = 1;
-                break;
-            case OPT_CRF:
-                param->rc.i_rf_constant = atol( optarg );
                 break;
             case 'b':
                 param->i_bframe = atol( optarg );
@@ -645,12 +562,12 @@ static int  Parse( int argc, char **argv,
                 param->cpu = 0;
                 break;
             case OPT_FRAMES:
-                param->i_frame_total = atoi( optarg );
+                opt->i_maxframes = atoi( optarg );
                 break;
             case OPT_SEEK:
                 opt->i_seek = atoi( optarg );
                 break;
-            case 'o':
+            case'o':
                 if( !strncasecmp(optarg + strlen(optarg) - 4, ".mp4", 4) )
                 {
 #ifdef MP4_OUTPUT
@@ -664,14 +581,14 @@ static int  Parse( int argc, char **argv,
                     return -1;
 #endif
                 }
-                else if( !strncasecmp(optarg + strlen(optarg) - 4, ".mkv", 4) )
-                {
-                    p_open_outfile = open_file_mkv;
+        else if( !strncasecmp(optarg + strlen(optarg) - 4, ".mkv", 4) )
+        {
+            p_open_outfile = open_file_mkv;
                     p_write_nalu = write_nalu_mkv;
                     p_set_outfile_param = set_param_mkv;
                     p_set_eop = set_eop_mkv;
                     p_close_outfile = close_file_mkv;
-                }
+        }
                 if( !strcmp(optarg, "-") )
                     opt->hout = stdout;
                 else if( p_open_outfile( optarg, &opt->hout ) )
@@ -680,7 +597,7 @@ static int  Parse( int argc, char **argv,
                     return -1;
                 }
                 break;
-            case OPT_SAR:
+            case 's':
             {
                 char *p = strchr( optarg, ':' );
                 if( p )
@@ -719,13 +636,29 @@ static int  Parse( int argc, char **argv,
                 if( strstr( optarg, "b8x8" ) )  param->analyse.inter |= X264_ANALYSE_BSUB16x16;
                 break;
             case OPT_DIRECT:
-                b_error |= parse_enum( optarg, x264_direct_pred_names, &param->analyse.i_direct_mv_pred );
+                if( strstr( optarg, "temporal" ) )
+                    param->analyse.i_direct_mv_pred = X264_DIRECT_PRED_TEMPORAL;
+                else if( strstr( optarg, "spatial" ) )
+                    param->analyse.i_direct_mv_pred = X264_DIRECT_PRED_SPATIAL;
+                else if( strstr( optarg, "none" ) )
+                    param->analyse.i_direct_mv_pred = X264_DIRECT_PRED_NONE;
+                else
+                    param->analyse.i_direct_mv_pred = atoi( optarg );
                 break;
             case 'w':
                 param->analyse.b_weighted_bipred = 1;
                 break;
             case OPT_ME:
-                b_error |= parse_enum( optarg, x264_motion_est_names, &param->analyse.i_me_method );
+                param->analyse.i_me_method = 
+                    strstr( optarg, "dia" ) ? X264_ME_DIA :
+                    strstr( optarg, "hex" ) ? X264_ME_HEX :
+                    strstr( optarg, "umh" ) ? X264_ME_UMH :
+                    strstr( optarg, "esa" ) ? X264_ME_ESA : -1;
+                if( param->analyse.i_me_method == -1 )
+                {
+                    fprintf( stderr, "bad ME method `%s'\n", optarg );
+                    return -1;
+                }
                 break;
             case OPT_MERANGE:
                 param->analyse.i_me_range = atoi(optarg);
@@ -733,26 +666,14 @@ static int  Parse( int argc, char **argv,
             case 'm':
                 param->analyse.i_subpel_refine = atoi(optarg);
                 break;
-            case OPT_B_RDO:
-                param->analyse.b_bframe_rdo = 1;
-                break;
-            case OPT_MIXED_REFS:
-                param->analyse.b_mixed_references = 1;
-                break;
             case OPT_NO_CHROMA_ME:
                 param->analyse.b_chroma_me = 0;
                 break;
             case '8':
                 param->analyse.b_transform_8x8 = 1;
                 break;
-            case 't':
-                param->analyse.i_trellis = atoi(optarg);
-                break;
             case OPT_LEVEL:
-                if( atof(optarg) < 6 )
-                    param->i_level_idc = (int)(10*atof(optarg)+.5);
-                else
-                    param->i_level_idc = atoi(optarg);
+                param->i_level_idc = atoi(optarg);
                 break;
             case OPT_RATETOL:
                 param->rc.f_rate_tolerance = !strncmp("inf", optarg, 3) ? 1e9 : atof(optarg);
@@ -892,28 +813,6 @@ static int  Parse( int argc, char **argv,
                 param->i_cqm_preset = X264_CQM_CUSTOM;
                 b_error |= parse_cqm( optarg, param->cqm_8py, 64 );
                 break;
-            case OPT_OVERSCAN:
-                b_error |= parse_enum( optarg, overscan_str, &param->vui.i_overscan );
-                break;
-            case OPT_VIDFORMAT:
-                b_error |= parse_enum( optarg, vidformat_str, &param->vui.i_vidformat );
-                break;
-            case OPT_FULLRANGE:
-                b_error |= parse_enum( optarg, fullrange_str, &param->vui.b_fullrange );
-                break;
-            case OPT_COLOURPRIM:
-                b_error |= parse_enum( optarg, colorprim_str, &param->vui.i_colorprim );
-                break;
-            case OPT_TRANSFER:
-                b_error |= parse_enum( optarg, transfer_str, &param->vui.i_transfer );
-                break;
-            case OPT_COLOURMATRIX:
-                b_error |= parse_enum( optarg, colmatrix_str, &param->vui.i_colmatrix );
-                break;
-            case OPT_CHROMALOC:
-                param->vui.i_chroma_loc = atoi( optarg );
-                b_error = ( param->vui.i_chroma_loc < 0 || param->vui.i_chroma_loc > 5 );
-                break;
             default:
                 fprintf( stderr, "unknown option (%c)\n", optopt );
                 return -1;
@@ -921,7 +820,7 @@ static int  Parse( int argc, char **argv,
 
         if( b_error )
         {
-            fprintf( stderr, "bad argument: %s %s\n", argv[optind-2], optarg );
+            fprintf( stderr, "bad argument (%s)\n", optarg );
             return -1;
         }
     }
@@ -944,8 +843,8 @@ static int  Parse( int argc, char **argv,
                 if( *psz >= '0' && *psz <= '9'
                     && sscanf( psz, "%ux%u", &param->i_width, &param->i_height ) == 2 )
                 {
-                    if( param->i_log_level >= X264_LOG_INFO )
-                        fprintf( stderr, "x264 [info]: file name gives %dx%d\n", param->i_width, param->i_height );
+                    if( param->i_log_level > X264_LOG_NONE )
+                        fprintf( stderr, "x264: file name gives %dx%d\n", param->i_width, param->i_height );
                     break;
                 }
             }
@@ -1003,6 +902,146 @@ static int  Parse( int argc, char **argv,
 /*****************************************************************************
  * Decode:
  *****************************************************************************/
+#if 0
+static int  Decode( x264_param_t  *param, FILE *fh26l, hnd_t hout )
+{
+    fprintf( stderr, "decompressor not working (help is welcome)\n" );
+    return -1;
+    x264_nal_t nal;
+    int i_data;
+    int b_eof;
+
+    //param.cpu = 0;
+    if( ( h = x264_decoder_open( &param ) ) == NULL )
+    {
+        fprintf( stderr, "x264_decoder_open failed\n" );
+        return -1;
+    }
+
+    i_start = x264_mdate();
+    b_eof = 0;
+    i_frame = 0;
+    i_data  = 0;
+    nal.p_payload = malloc( DATA_MAX );
+
+    while( !b_ctrl_c )
+    {
+        uint8_t *p, *p_next, *end;
+        int i_size;
+        /* fill buffer */
+        if( i_data < DATA_MAX && !b_eof )
+        {
+            int i_read = fread( &data[i_data], 1, DATA_MAX - i_data, fh26l );
+            if( i_read <= 0 )
+            {
+                b_eof = 1;
+            }
+            else
+            {
+                i_data += i_read;
+            }
+        }
+
+        if( i_data < 3 )
+        {
+            break;
+        }
+
+        end = &data[i_data];
+
+        /* extract one nal */
+        p = &data[0];
+        while( p < end - 3 )
+        {
+            if( p[0] == 0x00 && p[1] == 0x00 && p[2] == 0x01 )
+            {
+                break;
+            }
+            p++;
+        }
+
+        if( p >= end - 3 )
+        {
+            fprintf( stderr, "garbage (i_data = %d)\n", i_data );
+            i_data = 0;
+            continue;
+        }
+
+        p_next = p + 3;
+        while( p_next < end - 3 )
+        {
+            if( p_next[0] == 0x00 && p_next[1] == 0x00 && p_next[2] == 0x01 )
+            {
+                break;
+            }
+            p_next++;
+        }
+
+        if( p_next == end - 3 && i_data < DATA_MAX )
+        {
+            p_next = end;
+        }
+
+        /* decode this nal */
+        i_size = p_next - p - 3;
+        if( i_size <= 0 )
+        {
+            if( b_eof )
+            {
+                break;
+            }
+            fprintf( stderr, "nal too large (FIXME) ?\n" );
+            i_data = 0;
+            continue;
+        }
+
+        x264_nal_decode( &nal, p +3, i_size );
+
+        /* decode the content of the nal */
+        x264_decoder_decode( h, &pic, &nal );
+
+        if( pic != NULL )
+        {
+            int i;
+
+            i_frame++;
+
+            for( i = 0; i < pic->i_plane;i++ )
+            {
+                int i_line;
+                int i_div;
+
+                i_div = i==0 ? 1 : 2;
+                for( i_line = 0; i_line < pic->i_height/i_div; i_line++ )
+                {
+                    fwrite( pic->plane[i]+i_line*pic->i_stride[i], 1, pic->i_width/i_div, hout );
+                }
+            }
+        }
+
+        memmove( &data[0], p_next, end - p_next );
+        i_data -= p_next - &data[0];
+    }
+
+    i_end = x264_mdate();
+    free( nal.p_payload );
+    fprintf( stderr, "\n" );
+
+    x264_decoder_close( h );
+
+    fclose( fh26l );
+    if( hout != stdout )
+    {
+        fclose( hout );
+    }
+    if( i_frame > 0 )
+    {
+        double fps = (double)i_frame * (double)1000000 /
+                     (double)( i_end - i_start );
+        fprintf( stderr, "decoded %d frames %ffps\n", i_frame, fps );
+    }
+}
+#endif
 
 static int  Encode_frame( x264_t *h, hnd_t hout, x264_picture_t *pic )
 {
@@ -1058,11 +1097,6 @@ static int  Encode( x264_param_t *param, cli_opt_t *opt )
     int     i_progress;
 
     i_frame_total = p_get_frame_total( opt->hin, param->i_width, param->i_height );
-    i_frame_total -= opt->i_seek;
-    if( ( i_frame_total == 0 || param->i_frame_total < i_frame_total )
-        && param->i_frame_total > 0 )
-        i_frame_total = param->i_frame_total;
-    param->i_frame_total = i_frame_total;
 
     if( ( h = x264_encoder_open( param ) ) == NULL )
     {
@@ -1084,15 +1118,17 @@ static int  Encode( x264_param_t *param, cli_opt_t *opt )
     x264_picture_alloc( &pic, X264_CSP_I420, param->i_width, param->i_height );
 
     i_start = x264_mdate();
-
     /* Encode frames */
+    i_frame_total -= opt->i_seek;
+    if( opt->i_maxframes > 0 && opt->i_maxframes < i_frame_total )
+        i_frame_total = opt->i_maxframes;
     for( i_frame = 0, i_file = 0, i_progress = 0;
          b_ctrl_c == 0 && (i_frame < i_frame_total || i_frame_total == 0); )
     {
         if( p_read_frame( &pic, opt->hin, i_frame + opt->i_seek, param->i_width, param->i_height ) )
             break;
 
-        pic.i_pts = (int64_t)i_frame * param->i_fps_den;
+        pic.i_pts = i_frame * param->i_fps_den;
 
         i_file += Encode_frame( h, opt->hout, &pic );
 
@@ -1100,21 +1136,13 @@ static int  Encode( x264_param_t *param, cli_opt_t *opt )
 
         /* update status line (up to 1000 times per input file) */
         if( opt->b_progress && param->i_log_level < X264_LOG_DEBUG && 
-            ( i_frame_total ? i_frame * 1000 / i_frame_total > i_progress
-                            : i_frame % 10 == 0 ) )
+            i_frame * 1000 / i_frame_total > i_progress )
         {
             int64_t i_elapsed = x264_mdate() - i_start;
             double fps = i_elapsed > 0 ? i_frame * 1000000. / i_elapsed : 0;
-            if( i_frame_total )
-            {
-                int eta = i_elapsed * (i_frame_total - i_frame) / ((int64_t)i_frame * 1000000);
-                i_progress = i_frame * 1000 / i_frame_total;
-                fprintf( stderr, "encoded frames: %d/%d (%.1f%%), %.2f fps, eta %d:%02d:%02d  \r",
-                         i_frame, i_frame_total, (float)i_progress / 10, fps,
-                         eta/3600, (eta/60)%60, eta%60 );
-            }
-            else
-                fprintf( stderr, "encoded frames: %d, %.2f fps   \r", i_frame, fps );
+            i_progress = i_frame * 1000 / i_frame_total;
+            fprintf( stderr, "encoded frames: %d/%d (%.1f%%), %.2f fps   \r", i_frame,
+                     i_frame_total, (float)i_progress / 10, fps );
             fflush( stderr ); // needed in windows
         }
     }
@@ -1141,8 +1169,7 @@ static int  Encode( x264_param_t *param, cli_opt_t *opt )
                      (double)( i_end - i_start );
 
         fprintf( stderr, "encoded %d frames, %.2f fps, %.2f kb/s\n", i_frame, fps,
-                 (double) i_file * 8 * param->i_fps_num /
-                 ( (double) param->i_fps_den * i_frame * 1000 ) );
+                 (double) i_file * 8 * param->i_fps_num / ( param->i_fps_den * i_frame * 1000 ) );
     }
 
     return 0;
@@ -1341,9 +1368,9 @@ static int close_file_bsf( hnd_t handle )
 
 typedef struct
 {
-    GF_ISOFile *p_file;
-    GF_AVCConfig *p_config;
-    GF_ISOSample *p_sample;
+    M4File *p_file;
+    AVCConfig *p_config;
+    M4Sample *p_sample;
     int i_track;
     int i_descidx;
     int i_time_inc;
@@ -1355,24 +1382,24 @@ typedef struct
 } mp4_t;
 
 
-static void recompute_bitrate_mp4(GF_ISOFile *p_file, int i_track)
+static void recompute_bitrate_mp4(M4File *p_file, int i_track)
 {
     u32 i, count, di, timescale, time_wnd, rate;
     u64 offset;
     Double br;
-    GF_ESD *esd;
+    ESDescriptor *esd;
 
-    esd = gf_isom_get_esd(p_file, i_track, 1);
+    esd = M4_GetStreamDescriptor(p_file, i_track, 1);
     if (!esd) return;
 
     esd->decoderConfig->avgBitrate = 0;
     esd->decoderConfig->maxBitrate = 0;
     rate = time_wnd = 0;
 
-    timescale = gf_isom_get_media_timescale(p_file, i_track);
-    count = gf_isom_get_sample_count(p_file, i_track);
+    timescale = M4_GetMediaTimeScale(p_file, i_track);
+    count = M4_GetSampleCount(p_file, i_track);
     for (i=0; i<count; i++) {
-        GF_ISOSample *samp = gf_isom_get_sample_info(p_file, i_track, i+1, &di, &offset);
+        M4Sample *samp = M4_GetSampleInfo(p_file, i_track, i+1, &di, &offset);
 
         if (samp->dataLength>esd->decoderConfig->bufferSizeDB) esd->decoderConfig->bufferSizeDB = samp->dataLength;
 
@@ -1385,18 +1412,18 @@ static void recompute_bitrate_mp4(GF_ISOFile *p_file, int i_track)
             rate = 0;
         }
 
-        gf_isom_sample_del(&samp);
+        M4_DeleteSample(&samp);
     }
 
-    br = (Double) (s64) gf_isom_get_media_duration(p_file, i_track);
+    br = (Double) (s64) M4_GetMediaDuration(p_file, i_track);
     br /= timescale;
     esd->decoderConfig->avgBitrate = (u32) (esd->decoderConfig->avgBitrate / br);
     /*move to bps*/
     esd->decoderConfig->avgBitrate *= 8;
     esd->decoderConfig->maxBitrate *= 8;
 
-    gf_isom_change_mpeg4_description(p_file, i_track, 1, esd);
-    gf_odf_desc_del((GF_Descriptor *) esd);
+    M4_ChangeStreamDescriptor(p_file, i_track, 1, esd);
+    OD_DeleteDescriptor((Descriptor **)&esd);
 }
 
 
@@ -1408,22 +1435,22 @@ static int close_file_mp4( hnd_t handle )
         return 0;
 
     if (p_mp4->p_config)
-        gf_odf_avc_cfg_del(p_mp4->p_config);
+        AVC_DeleteConfig(p_mp4->p_config);
 
     if (p_mp4->p_sample)
     {
         if (p_mp4->p_sample->data)
             free(p_mp4->p_sample->data);
 
-        gf_isom_sample_del(&p_mp4->p_sample);
+        M4_DeleteSample(&p_mp4->p_sample);
     }
 
     if (p_mp4->p_file)
     {
         recompute_bitrate_mp4(p_mp4->p_file, p_mp4->i_track);
-        gf_isom_set_pl_indication(p_mp4->p_file, GF_ISOM_PL_VISUAL, 0x15);
-        gf_isom_set_storage_mode(p_mp4->p_file, GF_ISOM_STORE_FLAT);
-        gf_isom_close(p_mp4->p_file);
+        M4_SetMoviePLIndication(p_mp4->p_file, M4_PL_VISUAL, 0x15);
+        M4_SetStorageMode(p_mp4->p_file, M4_FLAT);
+        M4_MovieClose(p_mp4->p_file);
     }
 
     free(p_mp4);
@@ -1441,15 +1468,15 @@ static int open_file_mp4( char *psz_filename, hnd_t *p_handle )
         return -1;
 
     memset(p_mp4, 0, sizeof(mp4_t));
-    p_mp4->p_file = gf_isom_open(psz_filename, GF_ISOM_OPEN_WRITE, NULL);
+    p_mp4->p_file = M4_MovieOpen(psz_filename, M4_OPEN_WRITE);
 
-    if ((p_mp4->p_sample = gf_isom_sample_new()) == NULL)
+    if ((p_mp4->p_sample = M4_NewSample()) == NULL)
     {
         close_file_mp4( p_mp4 );
         return -1;
     }
 
-    gf_isom_set_brand_info(p_mp4->p_file, GF_ISOM_BRAND_AVC1, 0);
+    M4_SetMovieVersionInfo(p_mp4->p_file, H264_AVC_File, 0);
 
     *p_handle = p_mp4;
 
@@ -1461,14 +1488,14 @@ static int set_param_mp4( hnd_t handle, x264_param_t *p_param )
 {
     mp4_t *p_mp4 = (mp4_t *)handle;
 
-    p_mp4->i_track = gf_isom_new_track(p_mp4->p_file, 0, GF_ISOM_MEDIA_VISUAL, 
+    p_mp4->i_track = M4_NewTrack(p_mp4->p_file, 0, M4_VisualMediaType, 
         p_param->i_fps_num);
 
-    p_mp4->p_config = gf_odf_avc_cfg_new();
-    gf_isom_avc_config_new(p_mp4->p_file, p_mp4->i_track, p_mp4->p_config, 
+    p_mp4->p_config = AVC_NewConfig();
+    M4_AVC_NewStreamConfig(p_mp4->p_file, p_mp4->i_track, p_mp4->p_config, 
         NULL, NULL, &p_mp4->i_descidx);
 
-    gf_isom_set_visual_info(p_mp4->p_file, p_mp4->i_track, p_mp4->i_descidx, 
+    M4_SetVisualEntrySize(p_mp4->p_file, p_mp4->i_track, p_mp4->i_descidx, 
         p_param->i_width, p_param->i_height);
 
     p_mp4->p_sample->data = (char *)malloc(p_param->i_width * p_param->i_height * 3 / 2);
@@ -1489,7 +1516,7 @@ static int set_param_mp4( hnd_t handle, x264_param_t *p_param )
 static int write_nalu_mp4( hnd_t handle, uint8_t *p_nalu, int i_size )
 {
     mp4_t *p_mp4 = (mp4_t *)handle;
-    GF_AVCConfigSlot *p_slot;
+    AVCConfigSlot *p_slot;
     uint8_t type = p_nalu[4] & 0x1f;
     int psize;
 
@@ -1503,11 +1530,11 @@ static int write_nalu_mp4( hnd_t handle, uint8_t *p_nalu, int i_size )
             p_mp4->p_config->AVCProfileIndication = p_nalu[5];
             p_mp4->p_config->profile_compatibility = p_nalu[6];
             p_mp4->p_config->AVCLevelIndication = p_nalu[7];
-            p_slot = (GF_AVCConfigSlot *)malloc(sizeof(GF_AVCConfigSlot));
+            p_slot = (AVCConfigSlot *)malloc(sizeof(AVCConfigSlot));
             p_slot->size = i_size - 4;
             p_slot->data = (char *)malloc(p_slot->size);
             memcpy(p_slot->data, p_nalu + 4, i_size - 4);
-            gf_list_add(p_mp4->p_config->sequenceParameterSets, p_slot);
+            ChainAddEntry(p_mp4->p_config->sequenceParameterSets, p_slot);
             p_slot = NULL;
             p_mp4->b_sps = 1;
         }
@@ -1517,15 +1544,15 @@ static int write_nalu_mp4( hnd_t handle, uint8_t *p_nalu, int i_size )
     case 0x08:
         if (!p_mp4->b_pps)
         {
-            p_slot = (GF_AVCConfigSlot *)malloc(sizeof(GF_AVCConfigSlot));
+            p_slot = (AVCConfigSlot *)malloc(sizeof(AVCConfigSlot));
             p_slot->size = i_size - 4;
             p_slot->data = (char *)malloc(p_slot->size);
             memcpy(p_slot->data, p_nalu + 4, i_size - 4);
-            gf_list_add(p_mp4->p_config->pictureParameterSets, p_slot);
+            ChainAddEntry(p_mp4->p_config->pictureParameterSets, p_slot);
             p_slot = NULL;
             p_mp4->b_pps = 1;
             if (p_mp4->b_sps)
-                gf_isom_avc_config_update(p_mp4->p_file, p_mp4->i_track, 1, p_mp4->p_config);
+                M4_AVC_UpdateStreamConfig(p_mp4->p_file, p_mp4->i_track, 1, p_mp4->p_config);
         }
         break;
 
@@ -1556,7 +1583,7 @@ static int set_eop_mp4( hnd_t handle, x264_picture_t *p_picture )
     p_mp4->p_sample->IsRAP = p_picture->i_type == X264_TYPE_IDR ? 1 : 0;
     p_mp4->p_sample->DTS = dts;
     p_mp4->p_sample->CTS_Offset = offset;
-    gf_isom_add_sample(p_mp4->p_file, p_mp4->i_track, p_mp4->i_descidx, p_mp4->p_sample);
+    M4_AddSample(p_mp4->p_file, p_mp4->i_track, p_mp4->i_descidx, p_mp4->p_sample);
 
     p_mp4->p_sample->dataLength = 0;
     p_mp4->i_numframe++;
@@ -1687,7 +1714,7 @@ static int set_param_mkv( hnd_t handle, x264_param_t *p_param )
 
     if( dw > 0 && dh > 0 )
     {
-        int64_t a = dw, b = dh;
+	int64_t	a = dw, b = dh;
 
         for (;;)
         {
@@ -1698,8 +1725,8 @@ static int set_param_mkv( hnd_t handle, x264_param_t *p_param )
             b = c;
         }
 
-        dw /= b;
-        dh /= b;
+	dw /= b;
+	dh /= b;
     }
 
     p_mkv->d_width = (int)dw;
@@ -1748,7 +1775,7 @@ static int write_nalu_mkv( hnd_t handle, uint8_t *p_nalu, int i_size )
         if( !p_mkv->b_writing_frame )
         {
             if( mk_startFrame(p_mkv->w) < 0 )
-                return -1;
+		return -1;
             p_mkv->b_writing_frame = 1;
         }
         psize = i_size - 4 ;
@@ -1756,8 +1783,8 @@ static int write_nalu_mkv( hnd_t handle, uint8_t *p_nalu, int i_size )
         dsize[1] = psize >> 8;
         dsize[2] = psize;
         if( mk_addFrameData(p_mkv->w, dsize, 3) < 0 ||
-            mk_addFrameData(p_mkv->w, p_nalu + 4, i_size - 4) < 0 )
-            return -1;
+	    mk_addFrameData(p_mkv->w, p_nalu + 4, i_size - 4) < 0 )
+	    return -1;
         break;
 
     default:
@@ -1774,7 +1801,8 @@ static int write_nalu_mkv( hnd_t handle, uint8_t *p_nalu, int i_size )
 static int set_eop_mkv( hnd_t handle, x264_picture_t *p_picture )
 {
     mkv_t *p_mkv = handle;
-    int64_t i_stamp = (int64_t)(p_picture->i_pts * 1e9 / p_mkv->fps_num);
+    int64_t i_stamp = (int64_t)p_picture->i_pts * (int64_t)1000000000 /
+                      p_mkv->fps_num;
 
     p_mkv->b_writing_frame = 0;
 

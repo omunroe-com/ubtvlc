@@ -2,7 +2,7 @@
 # src/Makefile : Dearchive and compile all files necessary
 # ***************************************************************************
 # Copyright (C) 2003, 2004, 2005 the VideoLAN team
-# $Id: Makefile 13043 2005-10-30 19:56:45Z fkuehne $
+# $Id: Makefile 12944 2005-10-23 15:34:37Z zorglub $
 #
 # Authors: Christophe Massiot <massiot@via.ecp.fr>
 #          Derk-Jan Hartman <hartman at videolan dot org>
@@ -1009,12 +1009,11 @@ DISTCLEAN_PKG += libmodplug-$(MODPLUG_VERSION).tar.gz
 # libcddb
 # ***************************************************************************
 
-libcddb-$(CDDB_VERSION).tar.gz:
+libcddb-$(CDDB_VERSION).tar.bz2:
 	$(WGET) $(CDDB_URL)
 
-libcddb: libcddb-$(CDDB_VERSION).tar.gz
-	$(EXTRACT_GZ)
-	patch -p 0 < Patches/libcddb.patch
+libcddb: libcddb-$(CDDB_VERSION).tar.bz2
+	$(EXTRACT_BZ2)
 
 .cddb: libcddb
 	(cd $<; ./configure --prefix=$(PREFIX) --disable-shared --enable-static CFLAGS="$(CFLAGS) -D_BSD_SOCKLEN_T_=int" LDFLAGS="$(LDFLAGS) -liconv" && make && make install)
@@ -1022,7 +1021,7 @@ libcddb: libcddb-$(CDDB_VERSION).tar.gz
 
 CLEAN_FILE += .cddb
 CLEAN_PKG += libcddb
-DISTCLEAN_PKG += libcddb-$(CDDB_VERSION).tar.gz
+DISTCLEAN_PKG += libcddb-$(CDDB_VERSION).tar.bz2
 
 # ***************************************************************************
 # vcdimager

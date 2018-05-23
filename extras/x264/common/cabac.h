@@ -26,17 +26,31 @@
 
 typedef struct
 {
+    /* model */
+    struct
+    {
+        int i_model;
+        int i_cost;
+    } slice[3];
+
     /* context */
-    /* #436-459 are for interlacing, so are omitted for now */
-    uint8_t state[436];
+    /* states 436-459 are for interlacing, so are omitted for now */
+    struct
+    {
+        int i_state;
+        int i_mps;
+        int i_count;
+    } ctxstate[436];
 
     /* state */
     int i_low;
     int i_range;
 
+    int i_sym_cnt;
+
     /* bit stream */
+    int b_first_bit;
     int i_bits_outstanding;
-    int f8_bits_encoded; // only if using x264_cabac_size_decision()
     bs_t *s;
 
 } x264_cabac_t;
@@ -50,16 +64,16 @@ int  x264_cabac_decode_decision( x264_cabac_t *cb, int i_ctx_idx );
 int  x264_cabac_decode_bypass  ( x264_cabac_t *cb );
 int  x264_cabac_decode_terminal( x264_cabac_t *cb );
 
+/* encoder only: adaptive model init */
+void x264_cabac_model_init( x264_cabac_t *cb );
+int  x264_cabac_model_get ( x264_cabac_t *cb, int i_slice_type );
+void x264_cabac_model_update( x264_cabac_t *cb, int i_slice_type, int i_qp );
 /* encoder only: */
 void x264_cabac_encode_init ( x264_cabac_t *cb, bs_t *s );
 void x264_cabac_encode_decision( x264_cabac_t *cb, int i_ctx_idx, int b );
 void x264_cabac_encode_bypass( x264_cabac_t *cb, int b );
 void x264_cabac_encode_terminal( x264_cabac_t *cb, int b );
 void x264_cabac_encode_flush( x264_cabac_t *cb );
-/* don't write the bitstream, just calculate cost: */
-void x264_cabac_size_decision( x264_cabac_t *cb, int i_ctx, int b );
-int  x264_cabac_size_decision2( uint8_t *state, int b );
-int  x264_cabac_size_decision_noup( uint8_t *state, int b );
 
 static inline int x264_cabac_pos( x264_cabac_t *cb )
 {
