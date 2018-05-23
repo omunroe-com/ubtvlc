@@ -1,10 +1,10 @@
 /*****************************************************************************
  * time.c : time display video plugin for vlc
  *****************************************************************************
- * Copyright (C) 2003-2005 VideoLAN
- * $Id: time.c 10645 2005-04-11 14:13:41Z hartman $
+ * Copyright (C) 2003-2005 the VideoLAN team
+ * $Id: time.c 12871 2005-10-17 20:15:10Z hartman $
  *
- * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@
 
 #include "vlc_filter.h"
 #include "vlc_block.h"
-#include "osd.h"
+#include "vlc_osd.h"
 
 /*****************************************************************************
  * Local prototypes
@@ -74,7 +74,7 @@ struct filter_sys_t
 #define POSX_LONGTEXT N_("X offset, from the left screen edge" )
 #define POSY_TEXT N_("Y offset, from the top")
 #define POSY_LONGTEXT N_("Y offset, down from the top" )
-#define OPACITY_TEXT N_("Opacity, 0..255")
+#define OPACITY_TEXT N_("Opacity")
 #define OPACITY_LONGTEXT N_("The opacity (inverse of transparency) of " \
     "overlay text. 0 = transparent, 255 = totally opaque. " )
 #define SIZE_TEXT N_("Font size, pixels")
@@ -105,15 +105,17 @@ vlc_module_begin();
     set_category( CAT_VIDEO );
     set_subcategory( SUBCAT_VIDEO_SUBPIC );
     set_callbacks( CreateFilter, DestroyFilter );
-    add_string( "time-format", "%Y-%m-%d   %H:%M:%S", NULL, MSG_TEXT, MSG_LONGTEXT, VLC_FALSE );
-    add_integer( "time-x", -1, NULL, POSX_TEXT, POSX_LONGTEXT, VLC_FALSE );
-    add_integer( "time-y", 0, NULL, POSY_TEXT, POSY_LONGTEXT, VLC_FALSE );
-    add_integer( "time-position", 9, NULL, POS_TEXT, POS_LONGTEXT, VLC_TRUE );
+    add_string( "time-format", "%Y-%m-%d   %H:%M:%S", NULL, MSG_TEXT,
+                MSG_LONGTEXT, VLC_TRUE );
+    add_integer( "time-x", -1, NULL, POSX_TEXT, POSX_LONGTEXT, VLC_TRUE );
+    add_integer( "time-y", 0, NULL, POSY_TEXT, POSY_LONGTEXT, VLC_TRUE );
+    add_integer( "time-position", 9, NULL, POS_TEXT, POS_LONGTEXT, VLC_FALSE );
     /* 9 sets the default to bottom-left, minimizing jitter */
     change_integer_list( pi_pos_values, ppsz_pos_descriptions, 0 );
     add_integer_with_range( "time-opacity", 255, 0, 255, NULL,
         OPACITY_TEXT, OPACITY_LONGTEXT, VLC_FALSE );
-    add_integer( "time-color", 0xFFFFFF, NULL, COLOR_TEXT, COLOR_LONGTEXT, VLC_TRUE );
+    add_integer( "time-color", 0xFFFFFF, NULL, COLOR_TEXT, COLOR_LONGTEXT,
+                 VLC_FALSE );
         change_integer_list( pi_color_values, ppsz_color_descriptions, 0 );
     add_integer( "time-size", -1, NULL, SIZE_TEXT, SIZE_LONGTEXT, VLC_FALSE );
     set_description( _("Time display sub filter") );

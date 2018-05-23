@@ -1,8 +1,8 @@
 # ***************************************************************************
 # Makefile : Build vlc-contrib files
 # ***************************************************************************
-# Copyright (C) 2003-2005 VideoLAN
-# $Id: Makefile 10601 2005-04-08 20:28:23Z hartman $
+# Copyright (C) 2003-2005 the VideoLAN team
+# $Id: Makefile 13093 2005-11-02 11:51:07Z fkuehne $
 # 
 # Authors: Christophe Massiot <massiot@via.ecp.fr>
 #          Derk-Jan Hartman <hartman at videolan dot org>
@@ -27,7 +27,10 @@ include ./config.mak
 BUILDDIRS = bin doc etc include info lib man sbin share vlc-lib tmp
 
 all: FORCE
-	@echo "Do you mean to make src or make bin ?"
+#	@echo "Do you mean to make src or make bin ?"
+	@echo "    'make bin' isn't functional at the moment,"
+	@echo "    running 'make src' instead..."
+	$(MAKE) src
 
 src: FORCE
 	$(MAKE) -C src all
@@ -60,7 +63,11 @@ clean-bin: FORCE
 	$(MAKE) -C src clean-dots
 
 clean: FORCE
-	@echo "Do you mean to clean-src or clean-bin ?"
+#	@echo "    Do you mean to clean-src or clean-bin ?"
+	@echo "    'make bin' isn't available at the moment"
+	@echo "    you probably wanna run 'make clean-src' then"
+	@echo "    you can still run 'make clean-bin' manually if needed"
+	$(MAKE) clean-src
 
 package: FORCE
 	@if test -d tmp; then \

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * spudec.c : SPU decoder thread
  *****************************************************************************
- * Copyright (C) 2000-2001 VideoLAN
- * $Id: spudec.c 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2000-2001 the VideoLAN team
+ * $Id: spudec.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Laurent Aimar <fenrir@via.ecp.fr>

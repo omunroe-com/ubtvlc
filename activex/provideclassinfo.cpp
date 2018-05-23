@@ -1,7 +1,7 @@
 /*****************************************************************************
  * provideclassinfo.cpp: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 VideoLAN
+ * Copyright (C) 2005 the VideoLAN team
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *

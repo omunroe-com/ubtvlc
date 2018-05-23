@@ -1,8 +1,8 @@
 /*****************************************************************************
  * standard.c: standard stream output module
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: standard.c 10470 2005-03-28 23:24:21Z hartman $
+ * Copyright (C) 2003-2004 the VideoLAN team
+ * $Id: standard.c 12975 2005-10-26 09:14:14Z md $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -48,9 +48,14 @@
 #define MUX_LONGTEXT N_( \
     "Allows you to specify the output muxer method used for the streaming " \
     "output." )
-#define URL_TEXT N_("Output URL")
+#define URL_TEXT N_("Output URL (deprecated)")
 #define URL_LONGTEXT N_( \
-    "Allows you to specify the output URL used for the streaming output." )
+    "Allows you to specify the output URL used for the streaming output." \
+    "Deprecated, use dst instead." )
+
+#define DST_TEXT N_("Output destination")
+#define DST_LONGTEXT N_( \
+    "Allows you to specify the output destination used for the streaming output." )
 
 #define NAME_TEXT N_("Session name")
 #define NAME_LONGTEXT N_( \
@@ -62,9 +67,6 @@
 
 #define SAP_TEXT N_("SAP announcing")
 #define SAP_LONGTEXT N_("Announce this session with SAP")
-
-#define SAPv6_TEXT N_("SAP IPv6 announcing")
-#define SAPv6_LONGTEXT N_("Use IPv6 to announce this session with SAP")
 
 #define SLP_TEXT N_("SLP announcing")
 #define SLP_LONGTEXT N_("Announce this session with SLP")
@@ -89,14 +91,15 @@ vlc_module_begin();
                 MUX_LONGTEXT, VLC_FALSE );
     add_string( SOUT_CFG_PREFIX "url", "", NULL, URL_TEXT,
                 URL_LONGTEXT, VLC_FALSE );
+    add_string( SOUT_CFG_PREFIX "dst", "", NULL, DST_TEXT,
+                DST_LONGTEXT, VLC_FALSE );
 
     add_bool( SOUT_CFG_PREFIX "sap", 0, NULL, SAP_TEXT, SAP_LONGTEXT, VLC_TRUE );
     add_string( SOUT_CFG_PREFIX "name", "", NULL, NAME_TEXT, NAME_LONGTEXT,
                                         VLC_TRUE );
     add_string( SOUT_CFG_PREFIX "group", "", NULL, GROUP_TEXT, GROUP_LONGTEXT,
                                         VLC_TRUE );
-    add_bool( SOUT_CFG_PREFIX "sap-ipv6", 0, NULL, SAPv6_TEXT, SAPv6_LONGTEXT,
-                                        VLC_TRUE );
+    add_suppressed_bool( SOUT_CFG_PREFIX "sap-ipv6" );
 
     add_bool( SOUT_CFG_PREFIX "slp", 0, NULL, SLP_TEXT, SLP_LONGTEXT, VLC_TRUE );
 
@@ -108,12 +111,10 @@ vlc_module_end();
  * Exported prototypes
  *****************************************************************************/
 static const char *ppsz_sout_options[] = {
-    "access", "mux", "url",
-    "sap", "name", "sap-ipv6", "group",
-    "slp", NULL
+    "access", "mux", "url", "dst",
+    "sap", "name", "group", "slp", NULL
 };
 
-#define DEFAULT_IPV6_SCOPE '8'
 #define DEFAULT_PORT 1234
 
 static sout_stream_id_t *Add ( sout_stream_t *, es_format_t * );
@@ -152,15 +153,23 @@ static int Open( vlc_object_t *p_this )
 
     var_Get( p_stream, SOUT_CFG_PREFIX "access", &val );
     psz_access = *val.psz_string ? val.psz_string : NULL;
-    if( val.psz_string && !*val.psz_string ) free( val.psz_string );
+    if( !*val.psz_string ) free( val.psz_string );
 
     var_Get( p_stream, SOUT_CFG_PREFIX "mux", &val );
     psz_mux = *val.psz_string ? val.psz_string : NULL;
-    if( val.psz_string && !*val.psz_string ) free( val.psz_string );
+    if( !*val.psz_string ) free( val.psz_string );
 
-    var_Get( p_stream, SOUT_CFG_PREFIX "url", &val );
+
+    var_Get( p_stream, SOUT_CFG_PREFIX "dst", &val );
     psz_url = *val.psz_string ? val.psz_string : NULL;
-    if( val.psz_string && !*val.psz_string ) free( val.psz_string );
+    if( !*val.psz_string ) free( val.psz_string );
+    if( !psz_url )
+    {
+        /* XXX dst take preference over url (url will be removed later) */
+        var_Get( p_stream, SOUT_CFG_PREFIX "url", &val );
+        psz_url = *val.psz_string ? val.psz_string : NULL;
+        if( !*val.psz_string ) free( val.psz_string );
+    }
 
     p_stream->p_sys = malloc( sizeof( sout_stream_sys_t) );
     p_stream->p_sys->p_session = NULL;
@@ -188,6 +197,7 @@ static int Open( vlc_object_t *p_this )
             { "mpeg","ps" },
             { "ps",  "ps" },
             { "mpeg1","mpeg1" },
+            { "wav","wav" },
             { NULL,  NULL }
         };
         char *psz_ext = strrchr( psz_url, '.' ) + 1;
@@ -231,7 +241,8 @@ static int Open( vlc_object_t *p_this )
         {
             psz_mux = strdup("asfh");
         }
-        else if( !strncmp( psz_access, "udp", 3 ) )
+        else if( !strncmp( psz_access, "udp", 3 ) ||
+                 !strncmp( psz_access, "rtp", 3 ) )
         {
             psz_mux = strdup("ts");
         }
@@ -333,24 +344,18 @@ static int Open( vlc_object_t *p_this )
 
         var_Get( p_stream, SOUT_CFG_PREFIX "name", &val );
         if( *val.psz_string )
-        {
-            p_session->psz_name = strdup( val.psz_string );
-        }
+            p_session->psz_name = val.psz_string;
         else
         {
             p_session->psz_name = strdup( psz_url );
+            free( val.psz_string );
         }
-        free( val.psz_string );
 
         var_Get( p_stream, SOUT_CFG_PREFIX "group", &val );
         if( *val.psz_string )
-        {
-            p_session->psz_group = strdup( val.psz_string );
-        }
-        free( val.psz_string );
-
-        var_Get( p_stream, SOUT_CFG_PREFIX "sap-ipv6", &val );
-        p_method->i_ip_version = val.b_bool ? 6 : 4;
+            p_session->psz_group = val.psz_string;
+        else
+            free( val.psz_string );
 
         /* Now, parse the URL to extract host and port */
         vlc_UrlParse( &url, psz_url , 0);
@@ -363,20 +368,19 @@ static int Open( vlc_object_t *p_this )
             p_session->i_port = url.i_port;
             p_session->psz_sdp = NULL;
 
-            p_session->i_ttl = config_GetInt( p_sout, "ttl" );
+            var_Get( p_access, "sout-udp-ttl", &val );
+            p_session->i_ttl = val.i_int ? 
+                val.i_int : config_GetInt( p_sout, "ttl" );
             p_session->i_payload = 33;
+            p_session->b_rtp = strstr( psz_access, "rtp") ? 1 : 0;
 
             msg_Info( p_this, "SAP Enabled");
 
             sout_AnnounceRegister( p_sout, p_session, p_method );
-
-            /* FIXME: Free p_method */
-
             p_stream->p_sys->p_session = p_session;
         }
         vlc_UrlClean( &url );
 
-        if( p_method->psz_address) free( p_method->psz_address );
         free( p_method );
     }
 

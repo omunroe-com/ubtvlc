@@ -1,8 +1,8 @@
 /*****************************************************************************
  * decoder.c: Functions for the management of decoders
  *****************************************************************************
- * Copyright (C) 1999-2004 VideoLAN
- * $Id: decoder.c 10745 2005-04-19 15:59:57Z fenrir $
+ * Copyright (C) 1999-2004 the VideoLAN team
+ * $Id: decoder.c 13055 2005-10-31 13:14:23Z md $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -537,6 +537,8 @@ static int DecoderDecode( decoder_t *p_dec, block_t *p_block )
                 p_dec->p_owner->sout.i_id = p_dec->fmt_in.i_id;
                 if( p_dec->fmt_in.psz_language )
                 {
+                    if( p_dec->p_owner->sout.psz_language )
+                        free( p_dec->p_owner->sout.psz_language );
                     p_dec->p_owner->sout.psz_language =
                         strdup( p_dec->fmt_in.psz_language );
                 }
@@ -547,7 +549,8 @@ static int DecoderDecode( decoder_t *p_dec, block_t *p_block )
 
                 if( p_dec->p_owner->p_sout_input == NULL )
                 {
-                    msg_Err( p_dec, "cannot create packetizer output" );
+                    msg_Err( p_dec, "cannot create packetizer output (%4.4s)",
+                             (char *)&p_dec->p_owner->sout.i_codec );
                     p_dec->b_error = VLC_TRUE;
 
                     while( p_sout_block )
@@ -668,6 +671,15 @@ static int DecoderDecode( decoder_t *p_dec, block_t *p_block )
             while( (p_packetized_block =
                     p_packetizer->pf_packetize( p_packetizer, &p_block )) )
             {
+                if( p_packetizer->fmt_out.i_extra && !p_dec->fmt_in.i_extra )
+                {
+                    p_dec->fmt_in.i_extra = p_packetizer->fmt_out.i_extra;
+                    p_dec->fmt_in.p_extra = malloc( p_dec->fmt_in.i_extra );
+                    memcpy( p_dec->fmt_in.p_extra,
+                            p_packetizer->fmt_out.p_extra,
+                            p_dec->fmt_in.i_extra );
+                }
+
                 while( p_packetized_block )
                 {
                     block_t *p_next = p_packetized_block->p_next;
@@ -841,10 +853,30 @@ static aout_buffer_t *aout_new_buffer( decoder_t *p_dec, int i_samples )
 
     if( p_sys->p_aout_input == NULL )
     {
+        audio_sample_format_t format;
+        int i_force_dolby = config_GetInt( p_dec, "force-dolby-surround" );
+
         p_dec->fmt_out.audio.i_format = p_dec->fmt_out.i_codec;
         p_sys->audio = p_dec->fmt_out.audio;
+
+        memcpy( &format, &p_sys->audio, sizeof( audio_sample_format_t ) );
+        if ( i_force_dolby && (format.i_original_channels&AOUT_CHAN_PHYSMASK)
+                                    == (AOUT_CHAN_LEFT|AOUT_CHAN_RIGHT) )
+        {
+            if ( i_force_dolby == 1 )
+            {
+                format.i_original_channels = format.i_original_channels |
+                                             AOUT_CHAN_DOLBYSTEREO;
+            }
+            else /* i_force_dolby == 2 */
+            {
+                format.i_original_channels = format.i_original_channels &
+                                             ~AOUT_CHAN_DOLBYSTEREO;
+            }
+        }
+
         p_sys->p_aout_input =
-            aout_DecNew( p_dec, &p_sys->p_aout, &p_sys->audio );
+            aout_DecNew( p_dec, &p_sys->p_aout, &format );
         if( p_sys->p_aout_input == NULL )
         {
             msg_Err( p_dec, "failed to create audio output" );
@@ -885,29 +917,38 @@ static picture_t *vout_new_buffer( decoder_t *p_dec )
             return NULL;
         }
 
+        if( !p_dec->fmt_out.video.i_visible_width ||
+            !p_dec->fmt_out.video.i_visible_height )
+        {
+            p_dec->fmt_out.video.i_visible_width =
+                p_dec->fmt_out.video.i_width;
+            p_dec->fmt_out.video.i_visible_height =
+                p_dec->fmt_out.video.i_height;
+        }
+
+        if( p_dec->fmt_out.video.i_visible_height == 1088 &&
+            var_CreateGetBool( p_dec, "hdtv-fix" ) )
+        {
+            p_dec->fmt_out.video.i_visible_height = 1080;
+            p_dec->fmt_out.video.i_sar_num *= 135; 
+            p_dec->fmt_out.video.i_sar_den *= 136; 
+            msg_Warn( p_dec, "Fixing broken HDTV stream (display_height=1088)");
+        }
+
         if( !p_dec->fmt_out.video.i_sar_num ||
             !p_dec->fmt_out.video.i_sar_den )
         {
-            p_dec->fmt_out.video.i_sar_num =
-              p_dec->fmt_out.video.i_aspect * p_dec->fmt_out.video.i_height;
+            p_dec->fmt_out.video.i_sar_num = p_dec->fmt_out.video.i_aspect * 
+              p_dec->fmt_out.video.i_visible_height;
 
             p_dec->fmt_out.video.i_sar_den = VOUT_ASPECT_FACTOR *
-              p_dec->fmt_out.video.i_width;
+              p_dec->fmt_out.video.i_visible_width;
         }
 
-        vlc_reduce( &p_dec->fmt_out.video.i_sar_num,
-                    &p_dec->fmt_out.video.i_sar_den,
-		    p_dec->fmt_out.video.i_sar_num,
-		    p_dec->fmt_out.video.i_sar_den, 0 );
-
-	if( !p_dec->fmt_out.video.i_visible_width ||
-	    !p_dec->fmt_out.video.i_visible_height )
-	{
-	    p_dec->fmt_out.video.i_visible_width =
-	        p_dec->fmt_out.video.i_width;
-	    p_dec->fmt_out.video.i_visible_height =
-	        p_dec->fmt_out.video.i_height;
-	}
+        vlc_ureduce( &p_dec->fmt_out.video.i_sar_num,
+                     &p_dec->fmt_out.video.i_sar_den,
+                     p_dec->fmt_out.video.i_sar_num,
+                     p_dec->fmt_out.video.i_sar_den, 50000 );
 
         p_dec->fmt_out.video.i_chroma = p_dec->fmt_out.i_codec;
         p_sys->video = p_dec->fmt_out.video;

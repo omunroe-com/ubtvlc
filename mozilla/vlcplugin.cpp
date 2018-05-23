@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlcplugin.cpp: a VLC plugin for Mozilla
  *****************************************************************************
- * Copyright (C) 2002-2005 VideoLAN
- * $Id: vlcplugin.cpp 11326 2005-06-07 00:01:41Z dionoea $
+ * Copyright (C) 2002-2005 the VideoLAN team
+ * $Id: vlcplugin.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *

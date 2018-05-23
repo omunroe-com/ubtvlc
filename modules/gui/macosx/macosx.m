@@ -1,8 +1,8 @@
 /*****************************************************************************
  * macosx.m: Mac OS X module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2005 VideoLAN
- * $Id: macosx.m 11387 2005-06-10 15:32:08Z hartman $
+ * Copyright (C) 2001-2005 the VideoLAN team
+ * $Id: macosx.m 12504 2005-09-09 21:19:15Z hartman $
  *
  * Authors: Colin Delacroix <colin@zoy.org>
  *          Eugenio Jarosiewicz <ej0@cise.ufl.edu>
@@ -66,6 +66,10 @@ void E_(CloseVideoGL) ( vlc_object_t * );
 #define FILL_LONGTEXT N_("In fullscreen mode, crop the picture if " \
         "necessary in order to fill the screen without black " \
         "borders (OpenGL only)." )
+        
+#define BACKGROUND_TEXT N_("Use as Desktop Background")
+#define BACKGROUND_LONGTEXT N_("Use the video as the Desktop Background " \
+        "of the Finder. Desktop icons cannot be interacted with in this mode." )
 
 vlc_module_begin();
     set_description( _("Mac OS X interface") );
@@ -87,6 +91,8 @@ vlc_module_begin();
                 OPAQUENESS_TEXT, OPAQUENESS_LONGTEXT, VLC_TRUE );
         add_bool( "macosx-fill", 0, NULL, FILL_TEXT, FILL_LONGTEXT,
                   VLC_TRUE );
+        add_bool( "macosx-background", 0, NULL, BACKGROUND_TEXT, BACKGROUND_LONGTEXT,
+                     VLC_FALSE );
     add_submodule();
         set_description( "Mac OS X OpenGL" );
         set_capability( "opengl provider", 100 );

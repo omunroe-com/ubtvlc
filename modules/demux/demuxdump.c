@@ -1,8 +1,8 @@
 /*****************************************************************************
  * demuxdump.c : Pseudo demux module for vlc (dump raw stream)
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: demuxdump.c 10309 2005-03-11 21:49:19Z zorglub $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: demuxdump.c 12236 2005-08-18 15:58:05Z massiot $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -173,7 +173,7 @@ static int Demux( demux_t *p_demux )
 
     i_data = fwrite( p_sys->buffer, 1, i_data, p_sys->p_file );
 
-    if( i_data < 0 )
+    if( i_data == 0 )
     {
         msg_Err( p_demux, "failed to write data" );
         return -1;

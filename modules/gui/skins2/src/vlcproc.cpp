@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlcproc.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: vlcproc.cpp 10735 2005-04-18 21:21:09Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: vlcproc.cpp 13051 2005-10-31 07:35:39Z md $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -35,6 +35,7 @@
 #include "../commands/cmd_change_skin.hpp"
 #include "../commands/cmd_show_window.hpp"
 #include "../commands/cmd_quit.hpp"
+#include "../commands/cmd_resize.hpp"
 #include "../commands/cmd_vars.hpp"
 #include "../utils/var_bool.hpp"
 
@@ -60,11 +61,12 @@ void VlcProc::destroy( intf_thread_t *pIntf )
 }
 
 
-VlcProc::VlcProc( intf_thread_t *pIntf ): SkinObject( pIntf ), m_pVout( NULL )
+VlcProc::VlcProc( intf_thread_t *pIntf ): SkinObject( pIntf ), m_pVout( NULL ),
+    m_cmdManage( this )
 {
     // Create a timer to poll the status of the vlc
     OSFactory *pOsFactory = OSFactory::instance( pIntf );
-    m_pTimer = pOsFactory->createOSTimer( Callback( this, &doManage ) );
+    m_pTimer = pOsFactory->createOSTimer( m_cmdManage );
     m_pTimer->start( 100, false );
 
     // Create and register VLC variables
@@ -79,6 +81,12 @@ VlcProc::VlcProc( intf_thread_t *pIntf ): SkinObject( pIntf ), m_pVout( NULL )
     REGISTER_VAR( m_cVarRandom, VarBoolImpl, "playlist.isRandom" )
     REGISTER_VAR( m_cVarLoop, VarBoolImpl, "playlist.isLoop" )
     REGISTER_VAR( m_cVarRepeat, VarBoolImpl, "playlist.isRepeat" )
+    REGISTER_VAR( m_cPlaytree, Playtree, "playtree" )
+    pVarManager->registerVar( getPlaytreeVar().getPositionVarPtr(),
+                              "playtree.slider" );
+    pVarManager->registerVar( m_cVarRandom, "playtree.isRandom" );
+    pVarManager->registerVar( m_cVarLoop, "playtree.isLoop" );
+    pVarManager->registerVar( m_cVarRepeat, "playtree.isRepeat" );
     REGISTER_VAR( m_cVarTime, StreamTime, "time" )
     REGISTER_VAR( m_cVarVolume, Volume, "volume" )
     REGISTER_VAR( m_cVarMute, VarBoolImpl, "vlc.isMute" )
@@ -213,7 +221,7 @@ void VlcProc::manage()
     // Refresh sound volume
     audio_volume_t volume;
     aout_VolumeGet( getIntf(), &volume );
-    pVolume->set( (double)volume / AOUT_VOLUME_MAX );
+    pVolume->set( (double)volume * 2.0 / AOUT_VOLUME_MAX );
     // Set the mute variable
     pVarMute->set( volume == 0 );
 
@@ -260,22 +268,22 @@ void VlcProc::manage()
     // Refresh the random variable
     vlc_value_t val;
     var_Get( getIntf()->p_sys->p_playlist, "random", &val );
-    pVarRandom->set( val.b_bool );
+    pVarRandom->set( val.b_bool != 0 );
 
     // Refresh the loop variable
     var_Get( getIntf()->p_sys->p_playlist, "loop", &val );
-    pVarLoop->set( val.b_bool );
+    pVarLoop->set( val.b_bool != 0 );
 
     // Refresh the repeat variable
     var_Get( getIntf()->p_sys->p_playlist, "repeat", &val );
-    pVarRepeat->set( val.b_bool );
+    pVarRepeat->set( val.b_bool != 0 );
 }
 
 
-void VlcProc::doManage( SkinObject *pObj )
+void VlcProc::CmdManage::execute()
 {
-    VlcProc *pThis = (VlcProc*)pObj;
-    pThis->manage();
+    // Just forward to VlcProc
+    m_pParent->manage();
 }
 
 
@@ -291,11 +299,15 @@ int VlcProc::onIntfChange( vlc_object_t *pObj, const char *pVariable,
 
     // Create a playlist notify command
     CmdNotifyPlaylist *pCmd = new CmdNotifyPlaylist( pThis->getIntf() );
+    // Create a playtree notify command
+    CmdPlaytreeChanged *pCmdTree = new CmdPlaytreeChanged( pThis->getIntf() );
 
     // Push the command in the asynchronous command queue
     AsyncQueue *pQueue = AsyncQueue::instance( pThis->getIntf() );
     pQueue->remove( "notify playlist" );
+    pQueue->remove( "playtree changed" );
     pQueue->push( CmdGenericPtr( pCmd ) );
+    pQueue->push( CmdGenericPtr( pCmdTree ) );
 
     return VLC_SUCCESS;
 }
@@ -336,11 +348,16 @@ int VlcProc::onItemChange( vlc_object_t *pObj, const char *pVariable,
     // Create a playlist notify command
     // TODO: selective update
     CmdNotifyPlaylist *pCmd = new CmdNotifyPlaylist( pThis->getIntf() );
+    // Create a playtree notify command
+    CmdPlaytreeUpdate *pCmdTree = new CmdPlaytreeUpdate( pThis->getIntf(),
+                                                         newVal.i_int );
 
     // Push the command in the asynchronous command queue
     AsyncQueue *pQueue = AsyncQueue::instance( pThis->getIntf() );
     pQueue->remove( "notify playlist" );
+    pQueue->remove( "playtree update" );
     pQueue->push( CmdGenericPtr( pCmd ) );
+    pQueue->push( CmdGenericPtr( pCmdTree ) );
 
     return VLC_SUCCESS;
 }
@@ -361,10 +378,14 @@ int VlcProc::onPlaylistChange( vlc_object_t *pObj, const char *pVariable,
     // Create a playlist notify command
     // TODO: selective update
     CmdNotifyPlaylist *pCmd = new CmdNotifyPlaylist( pThis->getIntf() );
+    // Create a playtree notify command
+    CmdPlaytreeChanged *pCmdTree = new CmdPlaytreeChanged( pThis->getIntf() );
 
     // Push the command in the asynchronous command queue
     pQueue->remove( "notify playlist" );
+    pQueue->remove( "playtree changed" );
     pQueue->push( CmdGenericPtr( pCmd ) );
+    pQueue->push( CmdGenericPtr( pCmdTree ) );
 
     return VLC_SUCCESS;
 }
@@ -434,7 +455,15 @@ void *VlcProc::getWindow( intf_thread_t *pIntf, vout_thread_t *pVout,
     }
     else
     {
-        return *pThis->m_handleSet.begin();
+        // Get the window handle
+        void *pWindow = *pThis->m_handleSet.begin();
+        // Post a resize vout command
+        CmdResizeVout *pCmd = new CmdResizeVout( pThis->getIntf(), pWindow,
+                                                 *pWidthHint, *pHeightHint );
+        AsyncQueue *pQueue = AsyncQueue::instance( pThis->getIntf() );
+        pQueue->remove( "resize vout" );
+        pQueue->push( CmdGenericPtr( pCmd ) );
+        return pWindow;
     }
 }
 
@@ -449,6 +478,30 @@ void VlcProc::releaseWindow( intf_thread_t *pIntf, void *pWindow )
 int VlcProc::controlWindow( intf_thread_t *pIntf, void *pWindow,
                             int query, va_list args )
 {
+    VlcProc *pThis = pIntf->p_sys->p_vlcProc;
+
+    switch( query )
+    {
+        case VOUT_SET_ZOOM:
+        {
+            if( pThis->m_pVout )
+            {
+                // Post a resize vout command
+                CmdResizeVout *pCmd =
+                    new CmdResizeVout( pThis->getIntf(), pWindow,
+                                       pThis->m_pVout->i_window_width,
+                                       pThis->m_pVout->i_window_height );
+                AsyncQueue *pQueue = AsyncQueue::instance( pThis->getIntf() );
+                pQueue->remove( "resize vout" );
+                pQueue->push( CmdGenericPtr( pCmd ) );
+            }
+        }
+
+        default:
+            msg_Dbg( pIntf, "control query not supported" );
+            break;
+    }
+
     return VLC_SUCCESS;
 }
 

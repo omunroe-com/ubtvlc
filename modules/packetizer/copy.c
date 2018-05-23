@@ -1,8 +1,8 @@
 /*****************************************************************************
  * copy.c
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: copy.c 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id: copy.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>

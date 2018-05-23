@@ -1,13 +1,8 @@
 {
     IBClasses = (
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = ITSlider; LANGUAGE = ObjC; SUPERCLASS = NSSlider; }, 
         {CLASS = MPSlider; LANGUAGE = ObjC; SUPERCLASS = NSSlider; }, 
-        {
-            ACTIONS = {showPanel = id; }; 
-            CLASS = VLAboutBox; 
-            LANGUAGE = ObjC; 
-            SUPERCLASS = NSObject; 
-        }, 
         {CLASS = VLBrushedMetalImageView; LANGUAGE = ObjC; SUPERCLASS = NSImageView; }, 
         {CLASS = VLCApplication; LANGUAGE = ObjC; SUPERCLASS = NSApplication; }, 
         {CLASS = VLCControllerView; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
@@ -113,6 +108,9 @@
                 openRecentItem = id; 
                 openWebsite = id; 
                 reportABug = id; 
+                showBookmarks = id; 
+                showExtended = id; 
+                showWizard = id; 
                 timesliderUpdate = id; 
                 togglePlaylist = id; 
                 viewAbout = id; 
@@ -147,6 +145,7 @@
                 "o_mi_about" = id; 
                 "o_mi_add_intf" = id; 
                 "o_mi_audiotrack" = id; 
+                "o_mi_bookmarks" = id; 
                 "o_mi_bring_atf" = id; 
                 "o_mi_bwd" = id; 
                 "o_mi_channels" = id; 
@@ -159,12 +158,15 @@
                 "o_mi_deinterlace" = id; 
                 "o_mi_device" = id; 
                 "o_mi_documentation" = id; 
+                "o_mi_donation" = id; 
                 "o_mi_double_window" = id; 
                 "o_mi_equalizer" = id; 
+                "o_mi_extended" = id; 
                 "o_mi_faster" = id; 
                 "o_mi_ffmpeg_pp" = id; 
                 "o_mi_fittoscreen" = id; 
                 "o_mi_floatontop" = id; 
+                "o_mi_forum" = id; 
                 "o_mi_fullscreen" = id; 
                 "o_mi_fwd" = id; 
                 "o_mi_half_window" = id; 
@@ -241,13 +243,13 @@
             }; 
             SUPERCLASS = NSObject; 
         }, 
-        {CLASS = VLCOpen; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
-        {CLASS = VLCOutput; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {
             ACTIONS = {
                 deleteItem = id; 
                 handlePopUp = id; 
                 playItem = id; 
+                preparseItem = id; 
+                recursiveExpandNode = id; 
                 savePlaylist = id; 
                 searchItem = id; 
                 selectAll = id; 
@@ -263,6 +265,8 @@
                 "o_mi_delete" = id; 
                 "o_mi_info" = id; 
                 "o_mi_play" = id; 
+                "o_mi_preparse" = id; 
+                "o_mi_recursive_expand" = id; 
                 "o_mi_save_playlist" = id; 
                 "o_mi_selectall" = id; 
                 "o_mi_services" = id; 
@@ -282,22 +286,7 @@
             }; 
             SUPERCLASS = NSObject; 
         }, 
-        {CLASS = VLCPlaylistView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
-        {
-            ACTIONS = {advancedToggle = id; closePrefs = id; resetAll = id; savePrefs = id; }; 
-            CLASS = VLCPrefs; 
-            LANGUAGE = ObjC; 
-            OUTLETS = {
-                "o_advanced_ckb" = id; 
-                "o_cancel_btn" = id; 
-                "o_prefs_view" = id; 
-                "o_prefs_window" = id; 
-                "o_reset_btn" = id; 
-                "o_save_btn" = id; 
-                "o_tree" = id; 
-            }; 
-            SUPERCLASS = NSObject; 
-        }
+        {CLASS = VLCPlaylistView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }
     ); 
     IBVersion = 1; 
 }

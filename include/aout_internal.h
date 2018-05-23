@@ -1,8 +1,8 @@
 /*****************************************************************************
  * aout_internal.h : internal defines for audio output
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: aout_internal.h 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: aout_internal.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *

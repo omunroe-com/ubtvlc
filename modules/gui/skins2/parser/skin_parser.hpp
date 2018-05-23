@@ -1,8 +1,8 @@
 /*****************************************************************************
  * skin_parser.hpp
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: skin_parser.hpp 9417 2004-11-26 10:04:08Z gbazin $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: skin_parser.hpp 12517 2005-09-11 20:03:18Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -46,6 +46,7 @@ class SkinParser: public XMLParser
         string m_curWindowId;
         string m_curLayoutId;
         string m_curListId;
+        string m_curTreeId;
         /// Current offset of the controls
         int m_xOffset, m_yOffset;
         list<int> m_xOffsetList, m_yOffsetList;

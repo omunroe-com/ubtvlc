@@ -1,16 +1,16 @@
 /*****************************************************************************
  * waveout.c : Windows waveOut plugin for vlc
  *****************************************************************************
- * Copyright (C) 2001 VideoLAN
- * $Id: waveout.c 10369 2005-03-16 23:10:08Z gbazin $
+ * Copyright (C) 2001 the VideoLAN team
+ * $Id: waveout.c 13383 2005-11-25 19:21:47Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
- *      
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -250,6 +250,8 @@ static int Open( vlc_object_t *p_this )
     }
     else
     {
+        WAVEOUTCAPS wocaps;
+
         if( val.i_int == AOUT_VAR_5_1 )
         {
             p_aout->output.output.i_physical_channels
@@ -292,9 +294,20 @@ static int Open( vlc_object_t *p_this )
 
         aout_VolumeSoftInit( p_aout );
 
-        p_aout->output.pf_volume_infos = VolumeInfos;
-        p_aout->output.pf_volume_get = VolumeGet;
-        p_aout->output.pf_volume_set = VolumeSet;
+        /* Check for hardware volume support */
+        if( waveOutGetDevCaps( (UINT_PTR)p_aout->output.p_sys->h_waveout,
+                               &wocaps, sizeof(wocaps) ) == MMSYSERR_NOERROR &&
+            wocaps.dwSupport & WAVECAPS_VOLUME )
+        {
+            DWORD i_dummy;
+            if( waveOutGetVolume( p_aout->output.p_sys->h_waveout, &i_dummy )
+                == MMSYSERR_NOERROR )
+            {
+                p_aout->output.pf_volume_infos = VolumeInfos;
+                p_aout->output.pf_volume_get = VolumeGet;
+                p_aout->output.pf_volume_set = VolumeSet;
+            }
+        }
     }
 
 
@@ -698,7 +711,7 @@ static void CALLBACK WaveOutCallback( HWAVEOUT h_waveout, UINT uMsg,
 }
 
 /*****************************************************************************
- * WaveOutThread: this thread will capture play notification events. 
+ * WaveOutThread: this thread will capture play notification events.
  *****************************************************************************
  * We use this thread to feed new audio samples to the sound card because
  * we are not authorized to use waveOutWrite() directly in the waveout
@@ -801,7 +814,7 @@ static int VolumeGet( aout_instance_t * p_aout, audio_volume_t * pi_volume )
 
     i_waveout_vol &= 0xFFFF;
     *pi_volume = p_aout->output.i_volume =
-        i_waveout_vol * AOUT_VOLUME_MAX / 2 / 0xFFFF;
+        (i_waveout_vol * AOUT_VOLUME_MAX + 0xFFFF /*rounding*/) / 2 / 0xFFFF;
     return 0;
 }
 

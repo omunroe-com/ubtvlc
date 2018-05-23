@@ -1,8 +1,8 @@
 /*****************************************************************************
  * about.h: MacOS X About Panel
  *****************************************************************************
- * Copyright (C) 2001-2005 VideoLAN
- * $Id: about.h 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2001-2005 the VideoLAN team
+ * $Id: about.h 12527 2005-09-12 19:11:43Z fkuehne $
  *
  * Authors: Derk-Jan Hartman <thedj@users.sourceforge.net>
  * 
@@ -28,6 +28,7 @@
 {
     IBOutlet id o_about_window;
     IBOutlet id o_name_version_field;
+    IBOutlet id o_revision_field;
     IBOutlet id o_copyright_field;
     IBOutlet id o_credits_textview;
     IBOutlet id o_credits_scrollview;

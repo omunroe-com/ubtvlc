@@ -1,11 +1,13 @@
 /*****************************************************************************
  * ts.c: MPEG-II TS Muxer
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: ts.c 11066 2005-05-18 21:46:47Z massiot $
+ * Copyright (C) 2001-2005 VideoLAN (Centrale Réseaux) and its contributors
+ * $Id: ts.c 12798 2005-10-09 17:01:08Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
+ *          Jean-Paul Saman <jpsaman #_at_# m2x.nl>
+ *          Wallace Wadge <wwadge #_at_# gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,16 +41,20 @@
 
 #ifdef HAVE_DVBPSI_DR_H
 #   include <dvbpsi/dvbpsi.h>
+#   include <dvbpsi/demux.h>
 #   include <dvbpsi/descriptor.h>
 #   include <dvbpsi/pat.h>
 #   include <dvbpsi/pmt.h>
+#   include <dvbpsi/sdt.h>
 #   include <dvbpsi/dr.h>
 #   include <dvbpsi/psi.h>
 #else
 #   include "dvbpsi.h"
+#   include "demux.h"
 #   include "descriptor.h"
 #   include "tables/pat.h"
 #   include "tables/pmt.h"
+#   include "tables/sdt.h"
 #   include "descriptors/dr.h"
 #   include "psi.h"
 #endif
@@ -85,8 +91,15 @@ static void    Close  ( vlc_object_t * );
 #define PMTPID_LONGTEXT N_("Assigns a fixed PID to the PMT")
 #define TSID_TEXT N_("TS ID")
 #define TSID_LONGTEXT N_("Assigns a fixed Transport Stream ID.")
-#define PMTPROG_TEXT N_("PMT Program number")
-#define PMTPROG_LONGTEXT N_("Assigns a program number to the PMT.")
+#define NETID_TEXT N_("NET ID")
+#define NETID_LONGTEXT N_("Assigns a fixed Network ID (for SDT table)")
+#define PMTPROG_TEXT N_("PMT Program numbers (requires --sout-ts-es-id-pid)")
+#define PMTPROG_LONGTEXT N_("Assigns a program number to each PMT")
+#define MUXPMT_TEXT N_("Mux PMT (requires --sout-ts-es-id-pid)")
+#define MUXPMT_LONGTEXT N_("Defines the pids to add to each pmt." )
+
+#define SDTDESC_TEXT N_("SDT Descriptors (requires --sout-ts-es-id-pid)")
+#define SDTDESC_LONGTEXT N_("Defines the descriptors of each SDT" )
 
 #define PID_TEXT N_("Set PID to id of ES")
 #define PID_LONGTEXT N_("set PID to id of es")
@@ -123,12 +136,25 @@ static void    Close  ( vlc_object_t * );
 
 #define ACRYPT_TEXT N_("Crypt audio")
 #define ACRYPT_LONGTEXT N_("Crypt audio using CSA")
+#define VCRYPT_TEXT N_("Crypt video")
+#define VCRYPT_LONGTEXT N_("Crypt video using CSA")
 
 #define CK_TEXT N_("CSA Key")
 #define CK_LONGTEXT N_("Defines the CSA encryption key. This must be a " \
   "16 char string (8 hexadecimal bytes).")
 
+#define CPKT_TEXT N_("Packet size in bytes to encrypt")
+#define CPKT_LONGTEXT N_("Specify the size of the TS packet to encrypt. " \
+    "The encryption routines subtract the TS-header from the value before " \
+    "encrypting. " )
+
 #define SOUT_CFG_PREFIX "sout-ts-"
+#ifdef HAVE_BSEARCH
+#   define MAX_PMT 64       /* Maximum number of programs. FIXME: I just chose an arbitary number. Where is the maximum in the spec? */
+#else
+#   define MAX_PMT 1
+#endif
+#define MAX_PMT_PID 64       /* Maximum pids in each pmt.  FIXME: I just chose an arbitary number. Where is the maximum in the spec? */
 
 vlc_module_begin();
     set_description( _("TS muxer (libdvbpsi)") );
@@ -148,10 +174,18 @@ vlc_module_begin();
                  PMTPID_LONGTEXT, VLC_TRUE );
     add_integer( SOUT_CFG_PREFIX "tsid", 0, NULL, TSID_TEXT,
                  TSID_LONGTEXT, VLC_TRUE );
-    add_integer( SOUT_CFG_PREFIX "program-pmt", 1, NULL, PMTPROG_TEXT,
-                 PMTPROG_LONGTEXT, VLC_TRUE );
+#ifdef HAVE_DVBPSI_SDT
+    add_integer( SOUT_CFG_PREFIX "netid", 0, NULL, NETID_TEXT,
+                 NETID_LONGTEXT, VLC_TRUE );
+#endif
+    add_string( SOUT_CFG_PREFIX "program-pmt", NULL, NULL, PMTPROG_TEXT,
+                PMTPROG_LONGTEXT, VLC_TRUE );
     add_bool( SOUT_CFG_PREFIX "es-id-pid", 0, NULL, PID_TEXT, PID_LONGTEXT,
               VLC_TRUE );
+    add_string( SOUT_CFG_PREFIX "muxpmt", NULL, NULL, MUXPMT_TEXT, MUXPMT_LONGTEXT, VLC_TRUE );
+#ifdef HAVE_DVBPSI_SDT
+    add_string( SOUT_CFG_PREFIX "sdtdesc", NULL, NULL, SDTDESC_TEXT, SDTDESC_LONGTEXT, VLC_TRUE );
+#endif
 
     add_integer( SOUT_CFG_PREFIX "shaping", 200, NULL,SHAPING_TEXT,
                  SHAPING_LONGTEXT, VLC_TRUE );
@@ -169,9 +203,12 @@ vlc_module_begin();
 
     add_bool( SOUT_CFG_PREFIX "crypt-audio", VLC_TRUE, NULL, ACRYPT_TEXT,
               ACRYPT_LONGTEXT, VLC_TRUE );
+    add_bool( SOUT_CFG_PREFIX "crypt-video", VLC_TRUE, NULL, VCRYPT_TEXT,
+              VCRYPT_LONGTEXT, VLC_TRUE );
 
     add_string( SOUT_CFG_PREFIX "csa-ck", NULL, NULL, CK_TEXT, CK_LONGTEXT,
                 VLC_TRUE );
+    add_integer( SOUT_CFG_PREFIX "csa-pkt", 188, NULL, CPKT_TEXT, CPKT_LONGTEXT, VLC_TRUE );
 
     set_callbacks( Open, Close );
 vlc_module_end();
@@ -180,11 +217,24 @@ vlc_module_end();
  * Local data structures
  *****************************************************************************/
 static const char *ppsz_sout_options[] = {
-    "pid-video", "pid-audio", "pid-spu", "pid-pmt", "tsid", "program-pmt",
+    "pid-video", "pid-audio", "pid-spu", "pid-pmt", "tsid", "netid",
     "es-id-pid", "shaping", "pcr", "bmin", "bmax", "use-key-frames",
-    "dts-delay", "csa-ck", "crypt-audio",
+    "dts-delay", "csa-ck", "csa-pkt", "crypt-audio", "crypt-video",
+    "muxpmt", "sdtdesc", "program-pmt",
     NULL
 };
+
+typedef struct pmt_map_t   /* Holds the mapping between the pmt-pid/pmt table */
+{
+    int i_pid;
+    unsigned long i_prog;
+} pmt_map_t;
+
+typedef struct sdt_desc_t
+{
+    char *psz_provider;
+    char *psz_service_name;  /* name of program */
+} sdt_desc_t;
 
 typedef struct
 {
@@ -199,6 +249,7 @@ static inline void BufferChainInit  ( sout_buffer_chain_t *c )
     c->p_first = NULL;
     c->pp_last = &c->p_first;
 }
+
 static inline void BufferChainAppend( sout_buffer_chain_t *c, block_t *b )
 {
     *c->pp_last = b;
@@ -211,6 +262,7 @@ static inline void BufferChainAppend( sout_buffer_chain_t *c, block_t *b )
     }
     c->pp_last = &b->p_next;
 }
+
 static inline block_t *BufferChainGet( sout_buffer_chain_t *c )
 {
     block_t *b = c->p_first;
@@ -229,12 +281,14 @@ static inline block_t *BufferChainGet( sout_buffer_chain_t *c )
     }
     return b;
 }
+
 static inline block_t *BufferChainPeek( sout_buffer_chain_t *c )
 {
     block_t *b = c->p_first;
 
     return b;
 }
+
 static inline void BufferChainClean( sout_instance_t *p_sout,
                                      sout_buffer_chain_t *c )
 {
@@ -255,6 +309,7 @@ typedef struct ts_stream_t
     int             i_stream_type;
     int             i_stream_id;
     int             i_continuity_counter;
+    vlc_bool_t      b_discontinuity;
 
     /* to be used for carriege of DIV3 */
     vlc_fourcc_t    i_bih_codec;
@@ -286,22 +341,30 @@ struct sout_mux_sys_t
     int             i_video_bound;
 
     vlc_bool_t      b_es_id_pid;
+    vlc_bool_t      b_sdt;
     int             i_pid_video;
     int             i_pid_audio;
     int             i_pid_spu;
-    int             i_pid_free; // first usable pid
+    int             i_pid_free; /* first usable pid */
 
     int             i_tsid;
+    int             i_netid;
+    int             i_num_pmt;
+    int             i_pmtslots;
     int             i_pat_version_number;
     ts_stream_t     pat;
 
     int             i_pmt_version_number;
-    ts_stream_t     pmt;        // Up to now only one program
-    int             i_pmt_program_number;
+    ts_stream_t     pmt[MAX_PMT];
+    pmt_map_t       pmtmap[MAX_PMT_PID];
+    int             i_pmt_program_number[MAX_PMT];
+    sdt_desc_t      sdt_descriptors[MAX_PMT];
 
     int             i_mpeg4_streams;
 
     int             i_null_continuity_counter;  /* Needed ? */
+    ts_stream_t     sdt;
+    dvbpsi_pmt_t    *dvbpmt;
 
     /* for TS building */
     int64_t             i_bitrate_min;
@@ -317,9 +380,10 @@ struct sout_mux_sys_t
     mtime_t             i_pcr;  /* last PCR emited */
 
     csa_t               *csa;
+    int                 i_csa_pkt_size;
     vlc_bool_t          b_crypt_audio;
+    vlc_bool_t          b_crypt_video;
 };
-
 
 /* Reserve a pid and return it */
 static int  AllocatePID( sout_mux_sys_t *p_sys, int i_cat )
@@ -345,6 +409,26 @@ static int  AllocatePID( sout_mux_sys_t *p_sys, int i_cat )
         i_pid = ++p_sys->i_pid_free;
     }
     return i_pid;
+}
+
+static int pmtcompare( const void *pa, const void *pb )
+{
+    if ( ((pmt_map_t *)pa)->i_pid  < ((pmt_map_t *)pb)->i_pid )
+        return -1;
+    else if ( ((pmt_map_t *)pa)->i_pid  > ((pmt_map_t *)pb)->i_pid )
+        return 1;
+    else
+        return 0;
+}
+
+static int intcompare( const void *pa, const void *pb )
+{
+    if ( *(int *)pa  < *(int *)pb )
+        return -1;
+    else if ( *(int *)pa > *(int *)pb )
+        return 1;
+    else
+        return 0;
 }
 
 /*****************************************************************************
@@ -374,13 +458,19 @@ static void PEStoTS  ( sout_instance_t *, sout_buffer_chain_t *, block_t *, ts_s
 static int Open( vlc_object_t *p_this )
 {
     sout_mux_t          *p_mux =(sout_mux_t*)p_this;
-    sout_mux_sys_t      *p_sys;
+    sout_mux_sys_t      *p_sys = NULL;
     vlc_value_t         val;
+    int i;
 
-    msg_Dbg( p_mux, "Open" );
     sout_CfgParse( p_mux, SOUT_CFG_PREFIX, ppsz_sout_options, p_mux->p_cfg );
 
     p_sys = malloc( sizeof( sout_mux_sys_t ) );
+    if( !p_sys )
+        return VLC_ENOMEM;
+    p_sys->i_pmtslots = p_sys->b_sdt = 0;
+    p_sys->i_num_pmt = 1;
+    p_sys->dvbpmt = NULL;
+    memset( &p_sys->pmtmap, 0, sizeof(p_sys->pmtmap) );
 
     p_mux->pf_control   = Control;
     p_mux->pf_addstream = AddStream;
@@ -389,46 +479,187 @@ static int Open( vlc_object_t *p_this )
     p_mux->p_sys        = p_sys;
 
     srand( (uint32_t)mdate() );
+    for ( i = 0; i < MAX_PMT; i++ )
+        p_sys->sdt_descriptors[i].psz_service_name
+            = p_sys->sdt_descriptors[i].psz_provider = NULL;
+    memset( p_sys->sdt_descriptors, 0, sizeof(sdt_desc_t) );
 
     p_sys->i_audio_bound = 0;
     p_sys->i_video_bound = 0;
 
+    var_Get( p_mux, SOUT_CFG_PREFIX "es-id-pid", &val );
+    p_sys->b_es_id_pid = val.b_bool;
+
+    var_Get( p_mux, SOUT_CFG_PREFIX "muxpmt", &val );
+    /*
+       fetch string of pmts. Here's a sample: --sout-ts-muxpmt="0x451,0x200,0x28a,0x240,,0x450,0x201,0x28b,0x241,,0x452,0x202,0x28c,0x242"
+       This would mean 0x451, 0x200, 0x28a, 0x240 would fall under one pmt (program), 0x450,0x201,0x28b,0x241 would fall under another
+    */
+    if( val.psz_string != NULL && *val.psz_string )
+    {
+        char *psz_next;
+        char *psz = val.psz_string;
+        uint16_t i_pid;
+        psz_next = psz;
+
+        while( psz != NULL )
+        {
+            i_pid = strtoul( psz, &psz_next, 0 );
+
+            if ( strlen(psz_next) > 0 )
+                psz = &psz_next[1];
+            if ( i_pid == 0 )
+            {
+                p_sys->i_num_pmt++;
+                if ( p_sys->i_num_pmt > MAX_PMT )
+                {
+                    msg_Err( p_mux,
+             "Number of PMTs greater than compiled maximum (%d)", MAX_PMT );
+                    p_sys->i_num_pmt = MAX_PMT;
+                }
+            }
+            else
+            {
+                p_sys->pmtmap[p_sys->i_pmtslots].i_pid = i_pid;
+                p_sys->pmtmap[p_sys->i_pmtslots].i_prog = p_sys->i_num_pmt - 1;
+                p_sys->i_pmtslots++;
+                if ( p_sys->i_pmtslots > MAX_PMT_PID )
+                {
+                    msg_Err( p_mux,
+             "Number of pids in PMT greater than compiled maximum (%d)",
+                             MAX_PMT_PID );
+                    p_sys->i_pmtslots = MAX_PMT_PID;
+                }
+            }
+
+            /* Now sort according to pids for fast search later on */
+            qsort( (void *)p_sys->pmtmap, p_sys->i_pmtslots,
+                   sizeof(pmt_map_t), &pmtcompare );
+            if ( !*psz_next )
+                psz = NULL;
+        }
+    }
+    if( val.psz_string != NULL) free( val.psz_string );
+
     p_sys->i_pat_version_number = rand() % 32;
     p_sys->pat.i_pid = 0;
     p_sys->pat.i_continuity_counter = 0;
+    p_sys->pat.b_discontinuity = VLC_FALSE;
 
     var_Get( p_mux, SOUT_CFG_PREFIX "tsid", &val );
     if ( val.i_int )
         p_sys->i_tsid = val.i_int;
     else
         p_sys->i_tsid = rand() % 65536;
+
+    p_sys->i_netid = rand() % 65536;
+#ifdef HAVE_DVBPSI_SDT
+    var_Get( p_mux, SOUT_CFG_PREFIX "netid", &val );
+    if ( val.i_int )
+        p_sys->i_netid = val.i_int;
+#endif
+
     p_sys->i_pmt_version_number = rand() % 32;
-    p_sys->pmt.i_continuity_counter = 0;
+    for( i = 0; i < p_sys->i_num_pmt; i++ )
+    {
+        p_sys->pmt[i].i_continuity_counter = 0;
+        p_sys->pmt[i].b_discontinuity = VLC_FALSE;
+    }
+
+    p_sys->sdt.i_pid = 0x11;
+    p_sys->sdt.i_continuity_counter = 0;
+    p_sys->sdt.b_discontinuity = VLC_FALSE;
+
+#ifdef HAVE_DVBPSI_SDT
+    var_Get( p_mux, SOUT_CFG_PREFIX "sdtdesc", &val );
+    p_sys->b_sdt = val.psz_string && *val.psz_string ? VLC_TRUE : VLC_FALSE;
+
+    /* Syntax is provider_sdt1,service_name_sdt1,provider_sdt2,service_name_sdt2... */
+    if( p_sys->b_sdt )
+    {
+
+        char *psz = val.psz_string;
+        char *psz_sdttoken = psz;
+
+        i = 0;
+        while ( psz_sdttoken != NULL )
+        {
+            char *psz_end = strchr( psz_sdttoken, ',' );
+            if( psz_end != NULL )
+            {
+                *psz_end++ = '\0';
+            }
+            if ( !(i % 2) )
+            {
+                p_sys->sdt_descriptors[i/2].psz_provider
+                    = strdup(psz_sdttoken);
+            }
+            else
+            {
+                p_sys->sdt_descriptors[i/2].psz_service_name
+                    = strdup(psz_sdttoken);
+            }
+
+            i++;
+            psz_sdttoken = psz_end;
+        }
+    }
+    if( val.psz_string != NULL ) free( val.psz_string );
+#else
+    p_sys->b_sdt = VLC_FALSE;
+#endif
 
     var_Get( p_mux, SOUT_CFG_PREFIX "program-pmt", &val );
-    if (val.i_int )
+    if( val.psz_string && *val.psz_string )
     {
-        p_sys->i_pmt_program_number = val.i_int;
+        char *psz_next;
+        char *psz = val.psz_string;
+        uint16_t i_pid;
+
+        psz_next = psz;
+        i = 0;
+        while ( psz != NULL )
+        {
+            i_pid = strtoul( psz, &psz_next, 0 );
+            if( strlen(psz_next) > 0 )
+                psz = &psz_next[1];
+            else
+                psz = NULL;
+
+            if( i_pid == 0 )
+            {
+                if( i > MAX_PMT )
+                    msg_Err( p_mux, "Number of PMTs > maximum (%d)",
+                             MAX_PMT );
+            }
+            else
+            {
+                p_sys->i_pmt_program_number[i] = i_pid;
+                i++;
+            }
+        }
     }
     else
     {
-        p_sys->i_pmt_program_number = 1;
+        /* Option not specified, use 1, 2, 3... */
+        for( i = 0; i < p_sys->i_num_pmt; i++ )
+            p_sys->i_pmt_program_number[i] = i + 1;
     }
+    if( val.psz_string != NULL ) free( val.psz_string );
 
     var_Get( p_mux, SOUT_CFG_PREFIX "pid-pmt", &val );
-    if (val.i_int )
+    if( val.i_int )
     {
-        p_sys->pmt.i_pid = val.i_int;
+        for( i = 0; i < p_sys->i_num_pmt; i++ )
+            p_sys->pmt[i].i_pid = val.i_int + i; /* Does this make any sense? */
     }
     else
     {
-       p_sys->pmt.i_pid = 0x42;
+        for( i = 0; i < p_sys->i_num_pmt; i++ )
+            p_sys->pmt[i].i_pid = 0x42 + i;
     }
 
-    p_sys->i_pid_free = p_sys->pmt.i_pid + 1;
-
-    var_Get( p_mux, SOUT_CFG_PREFIX "es-id-pid", &val );
-    p_sys->b_es_id_pid = val.b_bool;
+    p_sys->i_pid_free = p_sys->pmt[p_sys->i_num_pmt - 1].i_pid + 1;
 
     var_Get( p_mux, SOUT_CFG_PREFIX "pid-video", &val );
     p_sys->i_pid_video = val.i_int;
@@ -495,9 +726,9 @@ static int Open( vlc_object_t *p_this )
         p_sys->i_pcr_delay >= p_sys->i_shaping_delay )
     {
         msg_Err( p_mux,
-                 "invalid pcr delay ("I64Fd"ms) resetting to 30ms",
+                 "invalid pcr delay ("I64Fd"ms) resetting to 70ms",
                  p_sys->i_pcr_delay / 1000 );
-        p_sys->i_pcr_delay = 30000;
+        p_sys->i_pcr_delay = 70000;
     }
 
     var_Get( p_mux, SOUT_CFG_PREFIX "dts-delay", &val );
@@ -537,18 +768,36 @@ static int Open( vlc_object_t *p_this )
             {
                 ck[i] = ( i_ck >> ( 56 - 8*i) )&0xff;
             }
-
+#ifndef TS_NO_CSA_CK_MSG
             msg_Dbg( p_mux, "using CSA scrambling with ck=%x:%x:%x:%x:%x:%x:%x:%x",
                      ck[0], ck[1], ck[2], ck[3], ck[4], ck[5], ck[6], ck[7] );
-
+#endif
             p_sys->csa = csa_New();
-            csa_SetCW( p_sys->csa, ck, ck );
+            if( p_sys->csa )
+            {
+                vlc_value_t pkt_val;
+
+                csa_SetCW( p_sys->csa, ck, ck );
+
+                var_Get( p_mux, SOUT_CFG_PREFIX "csa-pkt", &pkt_val );
+                if( pkt_val.i_int < 12 || pkt_val.i_int > 188 )
+                {
+                    msg_Err( p_mux, "wrong packet size %d specified.", pkt_val.i_int );
+                    msg_Warn( p_mux, "using default packet size of 188 bytes" );
+                    p_sys->i_csa_pkt_size = 188;
+                }
+                else p_sys->i_csa_pkt_size = pkt_val.i_int;
+                msg_Dbg( p_mux, "encrypting %d bytes of packet", p_sys->i_csa_pkt_size );
+            }
         }
     }
     if( val.psz_string ) free( val.psz_string );
 
     var_Get( p_mux, SOUT_CFG_PREFIX "crypt-audio", &val );
     p_sys->b_crypt_audio = val.b_bool;
+
+    var_Get( p_mux, SOUT_CFG_PREFIX "crypt-video", &val );
+    p_sys->b_crypt_video = val.b_bool;
 
     return VLC_SUCCESS;
 }
@@ -560,12 +809,22 @@ static void Close( vlc_object_t * p_this )
 {
     sout_mux_t          *p_mux = (sout_mux_t*)p_this;
     sout_mux_sys_t      *p_sys = p_mux->p_sys;
+    int i;
 
-    msg_Dbg( p_mux, "Close" );
     if( p_sys->csa )
     {
         csa_Delete( p_sys->csa );
     }
+    for( i = 0; i < MAX_PMT; i++ )
+    {
+        if( p_sys->sdt_descriptors[i].psz_service_name != NULL )
+            free( p_sys->sdt_descriptors[i].psz_service_name );
+        if( p_sys->sdt_descriptors[i].psz_provider != NULL )
+            free( p_sys->sdt_descriptors[i].psz_provider );
+    }
+
+    if( p_sys->dvbpmt != NULL )  /* safety */
+        free ( p_sys->dvbpmt );
 
     free( p_sys );
 }
@@ -617,6 +876,7 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
         p_stream->i_pid = AllocatePID( p_sys, p_input->p_fmt->i_cat );
     p_stream->i_codec = p_input->p_fmt->i_codec;
     p_stream->i_continuity_counter    = 0;
+    p_stream->b_discontinuity         = VLC_FALSE;
     p_stream->i_decoder_specific_info = 0;
     p_stream->p_decoder_specific_info = NULL;
 
@@ -636,8 +896,7 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
                     break;
                 case VLC_FOURCC( 'm', 'p','4', 'v' ):
                     p_stream->i_stream_type = 0x10;
-                    p_stream->i_stream_id = 0xfa;
-                    p_sys->i_mpeg4_streams++;
+                    p_stream->i_stream_id = 0xe0;
                     p_stream->i_es_id = p_stream->i_pid;
                     break;
                 case VLC_FOURCC( 'h', '2','6', '4' ):
@@ -656,8 +915,8 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
                 case VLC_FOURCC( 'D', 'I', 'V', '2' ):
                 case VLC_FOURCC( 'D', 'I', 'V', '1' ):
                 case VLC_FOURCC( 'M', 'J', 'P', 'G' ):
-                    p_stream->i_stream_type = 0xa0; // private
-                    p_stream->i_stream_id = 0xa0;   // beurk
+                    p_stream->i_stream_type = 0xa0; /* private */
+                    p_stream->i_stream_id = 0xa0;   /* beurk */
                     p_stream->i_bih_codec  = p_input->p_fmt->i_codec;
                     p_stream->i_bih_width  = p_input->p_fmt->video.i_width;
                     p_stream->i_bih_height = p_input->p_fmt->video.i_height;
@@ -689,7 +948,6 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
                     p_stream->i_stream_type = 0x06;
                     p_stream->i_stream_id = 0xbd;
                     break;
-
                 case VLC_FOURCC( 'm', 'p','4', 'a' ):
                     p_stream->i_stream_type = 0x11;
                     p_stream->i_stream_id = 0xfa;
@@ -766,7 +1024,6 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
                      p_stream->lang[0], p_stream->lang[1], p_stream->lang[2] );
         }
     }
-
 
     /* Copy extra data (VOL for MPEG-4 and extra BitMapInfoHeader for VFW */
     p_stream->i_decoder_specific_info = p_input->p_fmt->i_extra;
@@ -1182,6 +1439,7 @@ static int Mux( sout_mux_t *p_mux )
                              * so don't remove it ... */
                             p_data->i_pts = p_data->i_dts;
                         }
+
                         E_( EStoPES )( p_mux->p_sout, &p_data, p_data,
                                        p_input->p_fmt, p_stream->i_stream_id,
                                        1, b_data_alignment, i_header_size, 0 );
@@ -1298,7 +1556,8 @@ static int Mux( sout_mux_t *p_mux )
             /* Build the TS packet */
             p_ts = TSNew( p_mux, p_stream, b_pcr );
             if( p_sys->csa != NULL &&
-                 (p_input->p_fmt->i_cat != AUDIO_ES || p_sys->b_crypt_audio) )
+                 (p_input->p_fmt->i_cat != AUDIO_ES || p_sys->b_crypt_audio) &&
+                 (p_input->p_fmt->i_cat != VIDEO_ES || p_sys->b_crypt_video) )
             {
                 p_ts->i_flags |= BLOCK_FLAG_SCRAMBLED;
             }
@@ -1488,7 +1747,7 @@ static void TSDate( sout_mux_t *p_mux, sout_buffer_chain_t *p_chain_ts,
         }
         if( p_ts->i_flags & BLOCK_FLAG_SCRAMBLED )
         {
-            csa_Encrypt( p_sys->csa, p_ts->p_buffer, 0 );
+            csa_Encrypt( p_sys->csa, p_ts->p_buffer, p_sys->i_csa_pkt_size, 0 );
         }
 
         /* latency */
@@ -1533,6 +1792,7 @@ static block_t *TSNew( sout_mux_t *p_mux, ts_stream_t *p_stream,
         p_stream->i_continuity_counter;
 
     p_stream->i_continuity_counter = (p_stream->i_continuity_counter+1)%16;
+    p_stream->b_discontinuity = (p_pes->i_flags & BLOCK_FLAG_DISCONTINUITY);
 
     if( b_adaptation_field )
     {
@@ -1546,6 +1806,11 @@ static block_t *TSNew( sout_mux_t *p_mux, ts_stream_t *p_stream,
 
             p_ts->p_buffer[4] = 7 + i_stuffing;
             p_ts->p_buffer[5] = 0x10;   /* flags */
+            if( p_stream->b_discontinuity )
+            {
+                p_ts->p_buffer[5] |= 0x80; /* flag TS dicontinuity */
+                p_stream->b_discontinuity = VLC_FALSE;
+            }
             p_ts->p_buffer[6] = ( 0 )&0xff;
             p_ts->p_buffer[7] = ( 0 )&0xff;
             p_ts->p_buffer[8] = ( 0 )&0xff;
@@ -1610,7 +1875,6 @@ static block_t *TSNew( sout_mux_t *p_mux, ts_stream_t *p_stream,
 
     return p_ts;
 }
-
 
 static void TSSetPCR( block_t *p_ts, mtime_t i_dts )
 {
@@ -1765,6 +2029,11 @@ static void PEStoTS( sout_instance_t *p_sout,
             if( i_stuffing > 1 )
             {
                 p_ts->p_buffer[5] = 0x00;
+                if( p_stream->b_discontinuity )
+                {
+                    p_ts->p_buffer[5] |= 0x80;
+                    p_stream->b_discontinuity = VLC_FALSE;
+                }
                 for( i = 6; i < 6 + i_stuffing - 2; i++ )
                 {
                     p_ts->p_buffer[i] = 0xff;
@@ -1803,7 +2072,6 @@ static block_t *WritePSISection( sout_instance_t *p_sout,
 {
     block_t   *p_psi, *p_first = NULL;
 
-
     while( p_section )
     {
         int             i_size;
@@ -1817,7 +2085,7 @@ static block_t *WritePSISection( sout_instance_t *p_sout,
         p_psi->i_length = 0;
         p_psi->i_buffer = i_size + 1;
 
-        p_psi->p_buffer[0] = 0; // pointer
+        p_psi->p_buffer[0] = 0; /* pointer */
         memcpy( p_psi->p_buffer + 1,
                 p_section->p_data,
                 i_size );
@@ -1834,19 +2102,21 @@ static void GetPAT( sout_mux_t *p_mux,
                     sout_buffer_chain_t *c )
 {
     sout_mux_sys_t       *p_sys = p_mux->p_sys;
-    block_t        *p_pat;
+    block_t              *p_pat;
     dvbpsi_pat_t         pat;
     dvbpsi_psi_section_t *p_section;
+    int i;
 
     dvbpsi_InitPAT( &pat, p_sys->i_tsid, p_sys->i_pat_version_number,
-                    1 );      // b_current_next
-    /* add all program (only one) */
-    dvbpsi_PATAddProgram( &pat,
-                          p_sys->i_pmt_program_number,                    // i_number
-                          p_sys->pmt.i_pid );   // i_pid
+                    1 );      /* b_current_next */
+    /* add all programs */
+    for ( i = 0; i < p_sys->i_num_pmt; i++ )
+        dvbpsi_PATAddProgram( &pat,
+                              p_sys->i_pmt_program_number[i],
+                              p_sys->pmt[i].i_pid );
 
     p_section = dvbpsi_GenPATSections( &pat,
-                                       0 );     // max program per section
+                                       0 );     /* max program per section */
 
     p_pat = WritePSISection( p_mux->p_sout, p_section );
 
@@ -1867,23 +2137,78 @@ static uint32_t GetDescriptorLength24b( int i_length )
     return( 0x808000 | ( i_l3 << 16 ) | ( i_l2 << 8 ) | i_l1 );
 }
 
-static void GetPMT( sout_mux_t *p_mux,
-                    sout_buffer_chain_t *c )
+static void GetPMT( sout_mux_t *p_mux, sout_buffer_chain_t *c )
 {
     sout_mux_sys_t  *p_sys = p_mux->p_sys;
-    block_t   *p_pmt;
+    block_t   *p_pmt[MAX_PMT];
+    block_t   *p_sdt;
 
-    dvbpsi_pmt_t        pmt;
+    dvbpsi_sdt_t        sdt;
     dvbpsi_pmt_es_t     *p_es;
-    dvbpsi_psi_section_t *p_section;
+    dvbpsi_psi_section_t *p_section[MAX_PMT], *p_section2;
+    dvbpsi_sdt_service_t *p_service;
+    char            *psz_sdt_desc;
+    int             i_pidinput;
 
-    int                 i_stream;
+    int             i_stream;
+    int             i;
+    int             *p_usepid = NULL;
 
-    dvbpsi_InitPMT( &pmt,
-                    p_sys->i_pmt_program_number,   // program number
-                    p_sys->i_pmt_version_number,
-                    1,      // b_current_next
-                    p_sys->i_pcr_pid );
+    if( p_sys->dvbpmt == NULL )
+        p_sys->dvbpmt = malloc( p_sys->i_num_pmt * sizeof(dvbpsi_pmt_t) );
+#ifdef HAVE_DVBPSI_SDT
+    if( p_sys->b_sdt )
+        dvbpsi_InitSDT( &sdt, p_sys->i_tsid, 1, 1, p_sys->i_netid );
+#endif
+
+    for( i = 0; i < p_sys->i_num_pmt; i++ )
+    {
+        dvbpsi_InitPMT( &p_sys->dvbpmt[i],
+                        p_sys->i_pmt_program_number[i],   /* program number */
+                        p_sys->i_pmt_version_number,
+                        1,      /* b_current_next */
+                        p_sys->i_pcr_pid );
+
+#ifdef HAVE_DVBPSI_SDT
+        if( p_sys->b_sdt )
+        {
+            p_service = dvbpsi_SDTAddService( &sdt,
+                p_sys->i_pmt_program_number[i],  /* service id */
+                0,         /* eit schedule */
+                0,         /* eit present */
+                4,         /* running status ("4=RUNNING") */
+                0 );       /* free ca */
+
+#define psz_sdtprov p_sys->sdt_descriptors[i].psz_provider
+#define psz_sdtserv p_sys->sdt_descriptors[i].psz_service_name
+
+            /* FIXME: Ineffecient malloc's & ugly code......  */
+            if( psz_sdtprov != NULL && psz_sdtserv != NULL )
+            {
+                psz_sdt_desc = malloc( 3 + strlen(psz_sdtprov)
+                                         + strlen(psz_sdtserv) );
+                psz_sdt_desc[0] = 0x01; /* digital television service */
+
+                /* service provider name length */
+                psz_sdt_desc[1] = (char)strlen(psz_sdtprov);
+                memcpy( &psz_sdt_desc[2], psz_sdtprov, strlen(psz_sdtprov) );
+
+                /* service name length */
+                psz_sdt_desc[ 2 + strlen(psz_sdtprov) ]
+                    = (char)strlen(psz_sdtserv);
+                memcpy( &psz_sdt_desc[3+strlen(psz_sdtprov)], psz_sdtserv,
+                        strlen(psz_sdtserv) );
+
+                dvbpsi_SDTServiceAddDescriptor( p_service, 0x48,
+                        3 + strlen(psz_sdtprov) + strlen(psz_sdtserv),
+                        psz_sdt_desc );
+                free( psz_sdt_desc );
+            }
+#undef psz_sdtprov
+#undef psz_sdtserv
+        }
+#endif
+    }
 
     if( p_sys->i_mpeg4_streams > 0 )
     {
@@ -1897,25 +2222,25 @@ static void GetPMT( sout_mux_t *p_mux,
         memset( iod, 0, 4096 );
 
         bits_initwrite( &bits, 4096, iod );
-	// IOD_label_scope
+        /* IOD_label_scope */
         bits_write( &bits, 8,   0x11 );
-        // IOD_label
+        /* IOD_label */
         bits_write( &bits, 8,   0x01 );
-        // InitialObjectDescriptor
+        /* InitialObjectDescriptor */
         bits_align( &bits );
-        bits_write( &bits, 8,   0x02 );     // tag
-        bits_fix_IOD = bits;    // save states to fix length later
+        bits_write( &bits, 8,   0x02 );     /* tag */
+        bits_fix_IOD = bits;    /* save states to fix length later */
         bits_write( &bits, 24,
-            GetDescriptorLength24b( 0 ) ); // variable length (fixed later)
-        bits_write( &bits, 10,  0x01 );     // ObjectDescriptorID
-        bits_write( &bits, 1,   0x00 );     // URL Flag
-        bits_write( &bits, 1,   0x00 );     // includeInlineProfileLevelFlag
-        bits_write( &bits, 4,   0x0f );     // reserved
-        bits_write( &bits, 8,   0xff );     // ODProfile (no ODcapability )
-        bits_write( &bits, 8,   0xff );     // sceneProfile
-        bits_write( &bits, 8,   0xfe );     // audioProfile (unspecified)
-        bits_write( &bits, 8,   0xfe );     // visualProfile( // )
-        bits_write( &bits, 8,   0xff );     // graphicProfile (no )
+            GetDescriptorLength24b( 0 ) );  /* variable length (fixed later) */
+        bits_write( &bits, 10,  0x01 );     /* ObjectDescriptorID */
+        bits_write( &bits, 1,   0x00 );     /* URL Flag */
+        bits_write( &bits, 1,   0x00 );     /* includeInlineProfileLevelFlag */
+        bits_write( &bits, 4,   0x0f );     /* reserved */
+        bits_write( &bits, 8,   0xff );     /* ODProfile (no ODcapability ) */
+        bits_write( &bits, 8,   0xff );     /* sceneProfile */
+        bits_write( &bits, 8,   0xfe );     /* audioProfile (unspecified) */
+        bits_write( &bits, 8,   0xfe );     /* visualProfile( // ) */
+        bits_write( &bits, 8,   0xff );     /* graphicProfile (no ) */
         for( i_stream = 0; i_stream < p_mux->i_nb_inputs; i_stream++ )
         {
             ts_stream_t *p_stream;
@@ -1928,41 +2253,41 @@ static void GetPMT( sout_mux_t *p_mux,
                 bits_buffer_t bits_fix_ESDescr, bits_fix_Decoder;
                 /* ES descriptor */
                 bits_align( &bits );
-                bits_write( &bits, 8,   0x03 );     // ES_DescrTag
+                bits_write( &bits, 8,   0x03 );     /* ES_DescrTag */
                 bits_fix_ESDescr = bits;
                 bits_write( &bits, 24,
-                            GetDescriptorLength24b( 0 ) ); // variable size
+                            GetDescriptorLength24b( 0 ) ); /* variable size */
                 bits_write( &bits, 16,  p_stream->i_es_id );
-                bits_write( &bits, 1,   0x00 );     // streamDependency
-                bits_write( &bits, 1,   0x00 );     // URL Flag
-                bits_write( &bits, 1,   0x00 );     // OCRStreamFlag
-                bits_write( &bits, 5,   0x1f );     // streamPriority
+                bits_write( &bits, 1,   0x00 );     /* streamDependency */
+                bits_write( &bits, 1,   0x00 );     /* URL Flag */
+                bits_write( &bits, 1,   0x00 );     /* OCRStreamFlag */
+                bits_write( &bits, 5,   0x1f );     /* streamPriority */
 
-                // DecoderConfigDesciptor
+                /* DecoderConfigDesciptor */
                 bits_align( &bits );
-                bits_write( &bits, 8,   0x04 ); // DecoderConfigDescrTag
+                bits_write( &bits, 8,   0x04 ); /* DecoderConfigDescrTag */
                 bits_fix_Decoder = bits;
                 bits_write( &bits, 24,  GetDescriptorLength24b( 0 ) );
                 if( p_stream->i_stream_type == 0x10 )
                 {
-                    bits_write( &bits, 8, 0x20 );   // Visual 14496-2
-                    bits_write( &bits, 6, 0x04 );   // VisualStream
+                    bits_write( &bits, 8, 0x20 );   /* Visual 14496-2 */
+                    bits_write( &bits, 6, 0x04 );   /* VisualStream */
                 }
                 else if( p_stream->i_stream_type == 0x1b )
                 {
-                    bits_write( &bits, 8, 0x21 );   // Visual 14496-2
-                    bits_write( &bits, 6, 0x04 );   // VisualStream
+                    bits_write( &bits, 8, 0x21 );   /* Visual 14496-2 */
+                    bits_write( &bits, 6, 0x04 );   /* VisualStream */
                 }
                 else if( p_stream->i_stream_type == 0x11  || p_stream->i_stream_type == 0x0f )
                 {
-                    bits_write( &bits, 8, 0x40 );   // Audio 14496-3
-                    bits_write( &bits, 6, 0x05 );   // AudioStream
+                    bits_write( &bits, 8, 0x40 );   /* Audio 14496-3 */
+                    bits_write( &bits, 6, 0x05 );   /* AudioStream */
                 }
                 else if( p_stream->i_stream_type == 0x12 &&
                          p_stream->i_codec == VLC_FOURCC('s','u','b','t') )
                 {
-                    bits_write( &bits, 8, 0x0B );   // Text Stream
-                    bits_write( &bits, 6, 0x04 );   // VisualStream
+                    bits_write( &bits, 8, 0x0B );   /* Text Stream */
+                    bits_write( &bits, 6, 0x04 );   /* VisualStream */
                 }
                 else
                 {
@@ -1972,18 +2297,18 @@ static void GetPMT( sout_mux_t *p_mux,
                     msg_Err( p_mux->p_sout,"Unsupported stream_type => "
                              "broken IOD" );
                 }
-                bits_write( &bits, 1,   0x00 );     // UpStream
-                bits_write( &bits, 1,   0x01 );     // reserved
-                bits_write( &bits, 24,  1024 * 1024 );  // bufferSizeDB
-                bits_write( &bits, 32,  0x7fffffff );   // maxBitrate
-                bits_write( &bits, 32,  0 );            // avgBitrate
+                bits_write( &bits, 1,   0x00 );         /* UpStream */
+                bits_write( &bits, 1,   0x01 );         /* reserved */
+                bits_write( &bits, 24,  1024 * 1024 );  /* bufferSizeDB */
+                bits_write( &bits, 32,  0x7fffffff );   /* maxBitrate */
+                bits_write( &bits, 32,  0 );            /* avgBitrate */
 
                 if( p_stream->i_decoder_specific_info > 0 )
                 {
                     int i;
-                    // DecoderSpecificInfo
+                    /* DecoderSpecificInfo */
                     bits_align( &bits );
-                    bits_write( &bits, 8,   0x05 ); // tag
+                    bits_write( &bits, 8,   0x05 ); /* tag */
                     bits_write( &bits, 24, GetDescriptorLength24b(
                                 p_stream->i_decoder_specific_info ) );
                     for( i = 0; i < p_stream->i_decoder_specific_info; i++ )
@@ -1997,15 +2322,15 @@ static void GetPMT( sout_mux_t *p_mux,
                             GetDescriptorLength24b( bits.i_data -
                             bits_fix_Decoder.i_data - 3 ) );
 
-                /* SLConfigDescriptor : predifined (0x01) */
+                /* SLConfigDescriptor : predefined (0x01) */
                 bits_align( &bits );
-                bits_write( &bits, 8,   0x06 ); // tag
+                bits_write( &bits, 8,   0x06 ); /* tag */
                 bits_write( &bits, 24,  GetDescriptorLength24b( 8 ) );
-                bits_write( &bits, 8,   0x01 ); // predefined
-                bits_write( &bits, 1,   0 );   // durationFlag
-                bits_write( &bits, 32,  0 );   // OCRResolution
-                bits_write( &bits, 8,   0 );   // OCRLength
-                bits_write( &bits, 8,   0 );   // InstantBitrateLength
+                bits_write( &bits, 8,   0x01 );/* predefined */
+                bits_write( &bits, 1,   0 );   /* durationFlag */
+                bits_write( &bits, 32,  0 );   /* OCRResolution */
+                bits_write( &bits, 8,   0 );   /* OCRLength */
+                bits_write( &bits, 8,   0 );   /* InstantBitrateLength */
                 bits_align( &bits );
 
                 /* fix ESDescr length */
@@ -2019,17 +2344,46 @@ static void GetPMT( sout_mux_t *p_mux,
         bits_write( &bits_fix_IOD, 24,
                     GetDescriptorLength24b( bits.i_data -
                                             bits_fix_IOD.i_data - 3 ) );
-        dvbpsi_PMTAddDescriptor( &pmt, 0x1d, bits.i_data, bits.p_data );
+
+#if 0//def HAVE_BSEARCH /* FIXME!!! This can't possibly work */
+        i_pidinput = p_mux->pp_inputs[i]->p_fmt->i_id;
+        p_usepid = bsearch( &i_pidinput, p_sys->pmtmap, p_sys->i_pmtslots,
+                            sizeof(pmt_map_t), intcompare );
+        p_usepid = bsearch( &p_usepid, p_sys->pmtmap, p_sys->i_num_pmt,
+                            sizeof(pmt_map_t), pmtcompare );
+        if( p_usepid != NULL )
+            dvbpsi_PMTAddDescriptor(
+                    &p_sys->dvbpmt[((pmt_map_t *)p_usepid)->i_prog], 0x1d,
+                    bits.i_data, bits.p_data );
+        else
+            msg_Err( p_mux, "Received an unmapped PID" );
+#else
+        dvbpsi_PMTAddDescriptor( &p_sys->dvbpmt[0], 0x1d, bits.i_data,
+                                 bits.p_data );
+#endif
     }
 
     for( i_stream = 0; i_stream < p_mux->i_nb_inputs; i_stream++ )
     {
         ts_stream_t *p_stream;
 
-        p_stream = (ts_stream_t*)p_mux->pp_inputs[i_stream]->p_sys;
+        p_stream = (ts_stream_t *)p_mux->pp_inputs[i_stream]->p_sys;
 
-        p_es = dvbpsi_PMTAddES( &pmt, p_stream->i_stream_type,
-                                p_stream->i_pid );
+#ifdef HAVE_BSEARCH
+        i_pidinput = p_mux->pp_inputs[i_stream]->p_fmt->i_id;
+        p_usepid = bsearch( &i_pidinput, p_sys->pmtmap, p_sys->i_pmtslots,
+                            sizeof(pmt_map_t), intcompare );
+
+        if( p_usepid != NULL )
+            p_es = dvbpsi_PMTAddES(
+                    &p_sys->dvbpmt[((pmt_map_t *)p_usepid)->i_prog],
+                    p_stream->i_stream_type, p_stream->i_pid );
+        else
+            /* If there's an error somewhere, dump it to the first pmt */
+#endif
+            p_es = dvbpsi_PMTAddES( &p_sys->dvbpmt[0], p_stream->i_stream_type,
+                                    p_stream->i_pid );
+
         if( p_stream->i_stream_id == 0xfa || p_stream->i_stream_id == 0xfb )
         {
             uint8_t     es_id[2];
@@ -2120,12 +2474,23 @@ static void GetPMT( sout_mux_t *p_mux,
         }
     }
 
-    p_section = dvbpsi_GenPMTSections( &pmt );
+    for( i = 0; i < p_sys->i_num_pmt; i++ )
+    {
+        p_section[i] = dvbpsi_GenPMTSections( &p_sys->dvbpmt[i] );
+        p_pmt[i] = WritePSISection( p_mux->p_sout, p_section[i] );
+        PEStoTS( p_mux->p_sout, c, p_pmt[i], &p_sys->pmt[i] );
+        dvbpsi_DeletePSISections( p_section[i] );
+        dvbpsi_EmptyPMT( &p_sys->dvbpmt[i] );
+    }
 
-    p_pmt = WritePSISection( p_mux->p_sout, p_section );
-
-    PEStoTS( p_mux->p_sout, c, p_pmt, &p_sys->pmt );
-
-    dvbpsi_DeletePSISections( p_section );
-    dvbpsi_EmptyPMT( &pmt );
+#ifdef HAVE_DVBPSI_SDT
+    if( p_sys->b_sdt )
+    {
+        p_section2 = dvbpsi_GenSDTSections( &sdt );
+        p_sdt = WritePSISection( p_mux->p_sout, p_section2 );
+        PEStoTS( p_mux->p_sout, c, p_sdt, &p_sys->sdt );
+        dvbpsi_DeletePSISections( p_section2 );
+        dvbpsi_EmptySDT( &sdt );
+    }
+#endif
 }

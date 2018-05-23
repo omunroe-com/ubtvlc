@@ -1,7 +1,88 @@
-$Id: NEWS 11524 2005-06-25 10:23:06Z dionoea $
+$Id: NEWS 13329 2005-11-22 21:38:25Z fkuehne $
+
+Changes between 0.8.2 and 0.8.4:
+--------------------------------
+
+Core support:
+ * Internal strings handling is now UTF-8 based
+ * New OSD system
+
+Video output:
+ * Fixed problems with OpenGL output
+ * New --monitor-par (pixel aspect ratio) option
+ * Fixed display problems with HDTV-1080 format
+
+Input:
+ * Improved DVB support for satellite bands other than Ku-band
+ * IPv6 and Extended passive mode support for FTP
+ * IPv6 Source Specific Multicast support
+ * GnomeVFS input module
+ * Support for RTP packet reordering
+ * Fixed syntax for FTP URLs
+
+Decoders:
+ * Support for libSDL_image to import different image types
+ * Musepack decoder using libmpdec
+ * QDM2 audio support (needs ffmpeg from 19th Oct 2005 or later)
+
+Services discovery:
+ * UPnP service discovery (Linux only at the moment)
+ * Bonjour service discovery using avahi (Linux only)
+
+Video filters:
+ * RSS feed overlay
+
+Audio filters:
+* Fixes, enhancements and new options related to the Headphone Channel
+  Mixer and Dolby Surround
+
+Stream output:
+ * New shout output module to forward streams to icecast servers
+ * Fixed several SAP and SDP announcement bugs
+ * Fixed MTU handling to avoid IP fragments
+ 
+Interfaces:
+ * Mac OS X
+    - New streaming and transcoding wizard
+    - New extended controls panel
+    - New bookmarks window
+    - Fixed playlist sorting
+    - Fixed drag-and-drop inside the playlist
+ * wxWidgets
+    - Rename wxWindows interface in wxWidgets.
+    - All the --wxwin-* options are now --wx-*
+    - Support for RTP streaming in Stream Ouput dialog
+    - Now require wx2.6 with Unicode support
+ * Skins2
+    - Tree playlist
+ * HTTP
+    - New RPN functions to control VLC features (see play-howto)
+    - Facilities to correctly handle non-ASCII characters and spaces in
+      the names of files
+    - Include macro to include other files
+    - CGI 1.0 support
+
+ActiveX plugin:
+* Should now work outside IE as well
+
+Mac OS X port:
+* New script to delete the preferences automatically
+
+Windows port:
+* Fixed bandwidth problems of HTTP streaming
+* Fixed audio problems with DirectX audio output
+
+Translations:
+ The following languages were added:
+ * Galician
+ * Korean
+ * Romanian
+ * Simplified Chinese
+ The following language was re-added:
+ * Swedish
 
 Changes between 0.8.1 and 0.8.2:
------------------------------------------------------
+--------------------------------
 
 Core support:
  * Rewrite of the playlist

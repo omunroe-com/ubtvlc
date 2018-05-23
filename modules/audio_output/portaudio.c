@@ -1,8 +1,8 @@
 /*****************************************************************************
  * portaudio.c : portaudio (v19) audio output plugin
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: portaudio.c 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: portaudio.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Frederic Ruget <frederic.ruget@free.fr>
  *          Gildas Bazin <gbazin@videolan.org>

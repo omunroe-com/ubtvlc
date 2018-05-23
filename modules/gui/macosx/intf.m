@@ -1,8 +1,8 @@
 /*****************************************************************************
  * intf.m: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2002-2005 VideoLAN
- * $Id: intf.m 11483 2005-06-20 21:09:46Z fkuehne $
+ * Copyright (C) 2002-2005 the VideoLAN team
+ * $Id: intf.m 13146 2005-11-06 19:37:22Z fkuehne $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -38,6 +38,10 @@
 #include "controls.h"
 #include "about.h"
 #include "open.h"
+#include "wizard.h"
+#include "extended.h"
+#include "bookmarks.h"
+/*#include "update.h"*/
 
 /*****************************************************************************
  * Local prototypes.
@@ -296,6 +300,10 @@ static VLCMain *_o_sharedMainInstance = nil;
     o_about = [[VLAboutBox alloc] init];
     o_prefs = nil;
     o_open = [[VLCOpen alloc] init];
+    o_wizard = [[VLCWizard alloc] init];
+    o_extended = nil;
+    o_bookmarks = [[VLCBookmarks alloc] init];
+    /*o_update = [[VLCUpdate alloc] init];*/
 
     i_lastShownVolume = -1;
     return _o_sharedMainInstance;
@@ -314,6 +322,9 @@ static VLCMain *_o_sharedMainInstance = nil;
     unsigned int i_key = 0;
     playlist_t *p_playlist;
     vlc_value_t val;
+
+    /* Check if we already did this once. Opening the other nibs calls it too, because VLCMain is the owner */
+    if( nib_main_loaded ) return;
 
     [self initStrings];
     [o_window setExcludedFromWindowsMenu: TRUE];
@@ -408,7 +419,7 @@ static VLCMain *_o_sharedMainInstance = nil;
         /* Check if we need to start playing */
         if( p_intf->b_play )
         {
-            playlist_Play( p_playlist );
+            playlist_LockControl( p_playlist, PLAYLIST_AUTOPLAY );
         }
         var_Create( p_playlist, "fullscreen", VLC_VAR_BOOL | VLC_VAR_DOINHERIT);
         val.b_bool = VLC_FALSE;
@@ -418,6 +429,7 @@ static VLCMain *_o_sharedMainInstance = nil;
         [o_btn_fullscreen setState: ( var_Get( p_playlist, "fullscreen", &val )>=0 && val.b_bool )];
         vlc_object_release( p_playlist );
     }
+    nib_main_loaded = TRUE;
 }
 
 - (void)initStrings
@@ -442,7 +454,9 @@ static VLCMain *_o_sharedMainInstance = nil;
     [o_msgs_btn_crashlog setTitle: _NS("Open CrashLog")];
 
     /* main menu */
-    [o_mi_about setTitle: _NS("About VLC media player")];
+    [o_mi_about setTitle: [_NS("About VLC media player") \
+        stringByAppendingString: @"..."]];
+/*    [o_mi_checkForUpdate setTitle: _NS("Check for Update...")];*/
     [o_mi_prefs setTitle: _NS("Preferences...")];
     [o_mi_add_intf setTitle: _NS("Add Interface")];
     [o_mu_add_intf setTitle: _NS("Add Interface")];
@@ -459,6 +473,7 @@ static VLCMain *_o_sharedMainInstance = nil;
     [o_mi_open_net setTitle: _NS("Open Network...")];
     [o_mi_open_recent setTitle: _NS("Open Recent")];
     [o_mi_open_recent_cm setTitle: _NS("Clear Menu")];
+    [o_mi_open_wizard setTitle: _NS("Streaming/Exporting Wizard...")];
 
     [o_mu_edit setTitle: _NS("Edit")];
     [o_mi_cut setTitle: _NS("Cut")];
@@ -467,7 +482,7 @@ static VLCMain *_o_sharedMainInstance = nil;
     [o_mi_clear setTitle: _NS("Clear")];
     [o_mi_select_all setTitle: _NS("Select All")];
 
-    [o_mu_controls setTitle: _NS("Controls")];
+    [o_mu_controls setTitle: _NS("Playback")];
     [o_mi_play setTitle: _NS("Play")];
     [o_mi_stop setTitle: _NS("Stop")];
     [o_mi_faster setTitle: _NS("Faster")];
@@ -524,6 +539,8 @@ static VLCMain *_o_sharedMainInstance = nil;
     [o_mi_close_window setTitle: _NS("Close Window")];
     [o_mi_controller setTitle: _NS("Controller")];
     [o_mi_equalizer setTitle: _NS("Equalizer")];
+    [o_mi_extended setTitle: _NS("Extended Controls")];
+    [o_mi_bookmarks setTitle: _NS("Bookmarks")];
     [o_mi_playlist setTitle: _NS("Playlist")];
     [o_mi_info setTitle: _NS("Info")];
     [o_mi_messages setTitle: _NS("Messages")];
@@ -536,6 +553,8 @@ static VLCMain *_o_sharedMainInstance = nil;
     [o_mi_reportabug setTitle: _NS("Report a Bug")];
     [o_mi_website setTitle: _NS("VideoLAN Website")];
     [o_mi_license setTitle: _NS("License")];
+    [o_mi_donation setTitle: _NS("Make a donation")];
+    [o_mi_forum setTitle: _NS("Online Forum")];
 
     /* dock menu */
     [o_dmi_play setTitle: _NS("Play")];
@@ -546,8 +565,10 @@ static VLCMain *_o_sharedMainInstance = nil;
 
     /* error panel */
     [o_error setTitle: _NS("Error")];
-    [o_err_lbl setStringValue: _NS("An error has occurred which probably prevented the execution of your request:")];
-    [o_err_bug_lbl setStringValue: _NS("If you believe that it is a bug, please follow the instructions at:")];
+    [o_err_lbl setStringValue: _NS("An error has occurred which probably " \
+        "prevented the execution of your request:")];
+    [o_err_bug_lbl setStringValue: _NS("If you believe that it is a bug, " \
+        "please follow the instructions at:")];
     [o_err_btn_msgs setTitle: _NS("Open Messages Window")];
     [o_err_btn_dismiss setTitle: _NS("Dismiss")];
     [o_err_ckbk_surpress setTitle: _NS("Suppress further errors")];
@@ -713,7 +734,6 @@ static VLCMain *_o_sharedMainInstance = nil;
         case NSDeleteFunctionKey:
         case NSDeleteCharFunctionKey:
         case NSBackspaceCharacter:
-            return YES;
         case NSUpArrowFunctionKey:
         case NSDownArrowFunctionKey:
         case NSRightArrowFunctionKey:
@@ -761,7 +781,25 @@ static VLCMain *_o_sharedMainInstance = nil;
     {
         return o_info;
     }
-    return  nil;
+    return nil;
+}
+
+- (id)getWizard
+{
+    if ( o_wizard )
+    {
+        return o_wizard;
+    }
+    return nil;
+}
+
+- (id)getBookmarks
+{
+    if ( o_bookmarks )
+    {
+        return o_bookmarks;
+    }
+    return nil;
 }
 
 - (void)manage
@@ -979,11 +1017,12 @@ static VLCMain *_o_sharedMainInstance = nil;
         if( p_intf->p_sys->b_volume_update )
         {
             NSString *o_text;
-            o_text = [NSString stringWithFormat: _NS("Volume: %d"), i_lastShownVolume * 200 / AOUT_VOLUME_MAX];
+            int i_volume_step = 0;
+            o_text = [NSString stringWithFormat: _NS("Volume: %d%%"), i_lastShownVolume * 400 / AOUT_VOLUME_MAX];
             if( i_lastShownVolume != -1 )
             [self setScrollField:o_text stopAfter:1000000];
-
-            [o_volumeslider setFloatValue: (float)i_lastShownVolume / AOUT_VOLUME_STEP];
+            i_volume_step = config_GetInt( p_intf->p_vlc, "volume-step" );
+            [o_volumeslider setFloatValue: (float)i_lastShownVolume / i_volume_step];
             [o_volumeslider setEnabled: TRUE];
             p_intf->p_sys->b_mute = ( i_lastShownVolume == 0 );
             p_intf->p_sys->b_volume_update = FALSE;
@@ -1297,6 +1336,14 @@ static VLCMain *_o_sharedMainInstance = nil;
     playlist_t * p_playlist;
     vout_thread_t * p_vout;
 
+#define p_input p_intf->p_sys->p_input
+    if( p_input )
+    {
+        vlc_object_release( p_input );
+        p_input = NULL;
+    }
+#undef p_input
+
     /* Stop playback */
     if( ( p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
                                         FIND_ANYWHERE ) ) )
@@ -1317,6 +1364,32 @@ static VLCMain *_o_sharedMainInstance = nil;
         msleep( 100000 );
     }
     msleep( 500000 );
+
+    /* save the prefs if they were changed in the extended panel */
+    if (o_extended && [o_extended getConfigChanged])
+    {
+        [o_extended savePrefs];
+    }
+
+    /* release some other objects here, because it isn't sure whether dealloc
+     * will be called later on -- FK (10/6/05) */
+    if( nib_about_loaded && o_about )
+        [o_about release];
+    
+    if( nib_open_loaded && o_open )
+        [o_open release];
+    
+    if( nib_extended_loaded && o_extended )
+    {
+        [o_extended collapsAll];
+        [o_extended release];
+    }
+    
+    if( nib_bookmarks_loaded && o_bookmarks )
+        [o_bookmarks release];
+
+    if( nib_wizard_loaded && o_wizard )
+        [o_wizard release];
 
     if( o_img_pause_pressed != nil )
     {
@@ -1421,9 +1494,63 @@ static VLCMain *_o_sharedMainInstance = nil;
     }
 }
 
+- (IBAction)showWizard:(id)sender
+{
+    if (!nib_wizard_loaded)
+    {
+        nib_wizard_loaded = [NSBundle loadNibNamed:@"Wizard" owner:self];
+        [o_wizard initStrings];
+        [o_wizard resetWizard];
+        [o_wizard showWizard];
+    } else {
+        [o_wizard resetWizard];
+        [o_wizard showWizard];
+    }
+}
+
+- (IBAction)showExtended:(id)sender
+{
+    if ( o_extended == nil )
+    {
+        o_extended = [[VLCExtended alloc] init];
+    }
+    if (!nib_extended_loaded)
+    {
+        nib_extended_loaded = [NSBundle loadNibNamed:@"Extended" owner:self];
+        [o_extended initStrings];
+        [o_extended showPanel];
+    } else {
+        [o_extended showPanel];
+    }
+}
+
+- (IBAction)showBookmarks:(id)sender
+{
+    /* we need the wizard-nib for the bookmarks's extract functionality */
+    if (!nib_wizard_loaded)
+    {
+        nib_wizard_loaded = [NSBundle loadNibNamed:@"Wizard" owner:self];
+        [o_wizard initStrings];
+    }
+    
+    if (!nib_bookmarks_loaded)
+    {
+        nib_bookmarks_loaded = [NSBundle loadNibNamed:@"Bookmarks" owner:self];
+        [o_bookmarks showBookmarks];
+    } else {
+        [o_bookmarks showBookmarks];
+    }
+}
+
 - (IBAction)viewAbout:(id)sender
 {
-    [o_about showPanel];
+    if (!nib_about_loaded)
+    {
+        nib_about_loaded = [NSBundle loadNibNamed:@"About" owner:self];
+        [o_about showPanel];
+    } else {
+        [o_about showPanel];
+    }
 }
 
 - (IBAction)viewPreferences:(id)sender
@@ -1433,6 +1560,17 @@ static VLCMain *_o_sharedMainInstance = nil;
         o_prefs = [[VLCPrefs alloc] init];
     [o_prefs showPrefs];
 }
+
+/*- (IBAction)checkForUpdate:(id)sender
+{
+    if (!nib_update_loaded)
+    {
+        nib_update_loaded = [NSBundle loadNibNamed:@"Update" owner:self];
+        [o_update showUpdateWindow];
+    } else {
+        [o_update showUpdateWindow];
+    }
+}*/
 
 - (IBAction)closeError:(id)sender
 {
@@ -1515,7 +1653,7 @@ static VLCMain *_o_sharedMainInstance = nil;
     }
     else
     {
-        NSBeginInformationalAlertSheet(_NS("No CrashLog found"), @"Continue", nil, nil, o_msgs_panel, self, NULL, NULL, nil, _NS("Either you are running Mac OS X pre 10.2 or you haven't experienced any heavy crashes yet.") );
+        NSBeginInformationalAlertSheet(_NS("No CrashLog found"), @"Continue", nil, nil, o_msgs_panel, self, NULL, NULL, nil, _NS("You haven't experienced any heavy crashes yet.") );
 
     }
 }
@@ -1581,7 +1719,6 @@ static VLCMain *_o_sharedMainInstance = nil;
         o_rect.origin.y = [o_window frame].origin.y +
             [o_window frame].size.height - [o_window minSize].height;
 
-        
         [o_playlist_view setAutoresizesSubviews: NO];
         [o_playlist_view removeFromSuperview];
         [o_btn_playlist setState: NO];

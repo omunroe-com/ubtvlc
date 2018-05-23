@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_resize.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_resize.hpp 9641 2004-12-22 13:06:43Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_resize.hpp 12955 2005-10-24 19:59:51Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -49,5 +49,27 @@ class CmdResize: public CmdGeneric
         GenericLayout &m_rLayout;
         int m_width, m_height;
 };
+
+
+/// Command to resize the vout window
+class CmdResizeVout: public CmdGeneric
+{
+    public:
+        /// Resize the given layout
+        CmdResizeVout( intf_thread_t *pIntf, void *pWindow, int width,
+                       int height );
+        virtual ~CmdResizeVout() {}
+
+        /// This method does the real job of the command
+        virtual void execute();
+
+        /// Return the type of the command
+        virtual string getType() const { return "resize vout"; }
+
+    private:
+        void *m_pWindow;
+        int m_width, m_height;
+};
+
 
 #endif

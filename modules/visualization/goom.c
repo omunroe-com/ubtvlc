@@ -1,8 +1,8 @@
 /*****************************************************************************
  * goom.c: based on libgoom (see http://ios.free.fr/?page=projet&quoi=1)
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: goom.c 10145 2005-03-05 16:49:15Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: goom.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>

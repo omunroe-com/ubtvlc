@@ -1,8 +1,8 @@
 /*****************************************************************************
  * win32_specific.c: Win32 specific features
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: win32_specific.c 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: win32_specific.c 12816 2005-10-11 09:01:00Z damienf $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -326,12 +326,20 @@ LRESULT CALLBACK WMCOPYWNDPROC( HWND hwnd, UINT uMsg, WPARAM wParam,
                 {
                     i_options++;
                 }
-
-                playlist_AddExt( p_playlist, ppsz_argv[i_opt],ppsz_argv[i_opt],
-                    PLAYLIST_APPEND | (i_opt? 0 : PLAYLIST_GO),
+                if( i_opt || config_GetInt( p_this, "playlist-enqueue" ) )
+                {
+                  playlist_AddExt( p_playlist, ppsz_argv[i_opt],
+                    ppsz_argv[i_opt], PLAYLIST_APPEND ,
                     PLAYLIST_END, -1,
                     (char const **)( i_options ? &ppsz_argv[i_opt+1] : NULL ),
                     i_options );
+                } else {
+                  playlist_AddExt( p_playlist, ppsz_argv[i_opt],
+                    ppsz_argv[i_opt], PLAYLIST_APPEND | PLAYLIST_GO,
+                    PLAYLIST_END, -1,
+                    (char const **)( i_options ? &ppsz_argv[i_opt+1] : NULL ),
+                    i_options );
+                }
 
                 i_opt += i_options;
             }
@@ -350,5 +358,11 @@ LRESULT CALLBACK WMCOPYWNDPROC( HWND hwnd, UINT uMsg, WPARAM wParam,
  *****************************************************************************/
 void system_End( vlc_t *p_this )
 {
+    if( p_this && p_this->p_libvlc && p_this->p_libvlc->psz_vlcpath )
+    {
+        free( p_this->p_libvlc->psz_vlcpath );
+        p_this->p_libvlc->psz_vlcpath = NULL;
+    }
+
     WSACleanup();
 }

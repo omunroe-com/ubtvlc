@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ft2_font.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ft2_font.cpp 10873 2005-05-02 09:01:55Z rocky $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: ft2_font.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

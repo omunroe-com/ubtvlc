@@ -2,8 +2,8 @@
  * mpgatofixed32.c: MPEG-1 & 2 audio layer I, II, III + MPEG 2.5 decoder,
  * using MAD (MPEG Audio Decoder)
  *****************************************************************************
- * Copyright (C) 2001-2005 VideoLAN
- * $Id: mpgatofixed32.c 11387 2005-06-10 15:32:08Z hartman $
+ * Copyright (C) 2001-2005 the VideoLAN team
+ * $Id: mpgatofixed32.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Jean-Paul Saman <jpsaman@wxs.nl>

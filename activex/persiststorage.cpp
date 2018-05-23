@@ -1,7 +1,7 @@
 /*****************************************************************************
  * persiststorage.cpp: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 VideoLAN
+ * Copyright (C) 2005 the VideoLAN team
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -37,38 +37,67 @@ STDMETHODIMP VLCPersistStorage::GetClassID(LPCLSID pClsID)
 
 STDMETHODIMP VLCPersistStorage::IsDirty(void)
 {
-    return S_FALSE;
+    return _p_instance->isDirty() ? S_OK : S_FALSE;
 };
 
-STDMETHODIMP VLCPersistStorage::InitNew(IStorage *pStg)
+STDMETHODIMP VLCPersistStorage::InitNew(LPSTORAGE pStg)
 {
-    if( NULL == pStg )
-        return E_POINTER;
-
-    return _p_instance->onInit(TRUE);
+    return _p_instance->onInit();
 };
 
-STDMETHODIMP VLCPersistStorage::Load(IStorage *pStg)
+STDMETHODIMP VLCPersistStorage::Load(LPSTORAGE pStg)
 {
     if( NULL == pStg )
-        return E_POINTER;
+        return E_INVALIDARG;
 
-    return _p_instance->onInit(TRUE);
+    LPSTREAM pStm = NULL;
+    HRESULT result = pStg->OpenStream(L"VideoLAN ActiveX Plugin Data", NULL,
+                        STGM_READ|STGM_SHARE_EXCLUSIVE, 0, &pStm);
+
+    if( FAILED(result) )
+        return result;
+
+    LPPERSISTSTREAMINIT pPersistStreamInit;
+    if( SUCCEEDED(QueryInterface(IID_IPersistStreamInit, (void **)&pPersistStreamInit)) )
+    {
+        result = pPersistStreamInit->Load(pStm);
+        pPersistStreamInit->Release();
+    }
+
+    pStm->Release();
+
+    return result;
 };
 
-STDMETHODIMP VLCPersistStorage::Save(IStorage *pStg, BOOL fSameAsLoad)
+STDMETHODIMP VLCPersistStorage::Save(LPSTORAGE pStg, BOOL fSameAsLoad)
 {
     if( NULL == pStg )
-        return E_POINTER;
+        return E_INVALIDARG;
 
-    return S_OK;
+    if( fSameAsLoad && (S_FALSE == IsDirty()) )
+        return S_OK;
+
+    LPSTREAM pStm = NULL;
+    HRESULT result = pStg->CreateStream(L"VideoLAN ActiveX Plugin Data",
+                        STGM_CREATE|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, 0, 0, &pStm);
+
+    if( FAILED(result) )
+        return result;
+
+    LPPERSISTSTREAMINIT pPersistStreamInit;
+    if( SUCCEEDED(QueryInterface(IID_IPersistStreamInit, (void **)&pPersistStreamInit)) )
+    {
+        result = pPersistStreamInit->Save(pStm, fSameAsLoad);
+        pPersistStreamInit->Release();
+    }
+
+    pStm->Release();
+
+    return result;
 };
 
 STDMETHODIMP VLCPersistStorage::SaveCompleted(IStorage *pStg)
 {
-    if( NULL == pStg )
-        return E_POINTER;
-
     return S_OK;
 };
 

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * xcommon.h: Defines common to the X11 and XVideo plugins
  *****************************************************************************
- * Copyright (C) 1998-2001 VideoLAN
- * $Id: xcommon.h 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 1998-2001 the VideoLAN team
+ * $Id: xcommon.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>

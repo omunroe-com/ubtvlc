@@ -1,8 +1,8 @@
 /*****************************************************************************
  * open.cpp : WinCE gui plugin for VLC
  *****************************************************************************
- * Copyright (C) 2000-2004 VideoLAN
- * $Id: open.cpp 10485 2005-03-30 23:47:41Z gbazin $
+ * Copyright (C) 2000-2004 the VideoLAN team
+ * $Id: open.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Marodon Cedric <cedric_marodon@yahoo.fr>
  *          Gildas Bazin <gbazin@videolan.org>

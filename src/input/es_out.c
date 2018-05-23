@@ -1,10 +1,11 @@
 /*****************************************************************************
  * es_out.c: Es Out handler for input.
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: es_out.c 11036 2005-05-16 15:10:59Z gbazin $
+ * Copyright (C) 2003-2004 the VideoLAN team
+ * $Id: es_out.c 12354 2005-08-22 20:24:20Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
+ *          Jean-Paul Saman <jpsaman #_at_# m2x dot nl>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,7 +64,10 @@ struct es_out_id_t
     int       i_id;
     es_out_pgrm_t *p_pgrm;
 
-    /* */
+    /* Signal a discontinuity in the timeline for every PID */
+    vlc_bool_t b_discontinuity;
+
+    /* Misc. */
     int64_t i_preroll_end;
 
     /* Channel in the track type */
@@ -276,7 +280,8 @@ void input_EsOutDiscontinuity( es_out_t *out, vlc_bool_t b_audio )
     for( i = 0; i < p_sys->i_es; i++ )
     {
         es_out_id_t *es = p_sys->es[i];
-
+        es->b_discontinuity = VLC_TRUE; /* signal discontinuity */
+        
         /* Send a dummy block to let decoder know that
          * there is a discontinuity */
         if( es->p_dec && ( !b_audio || es->fmt.i_cat == AUDIO_ES ) )
@@ -669,6 +674,7 @@ static es_out_id_t *EsOutAdd( es_out_t *out, es_format_t *fmt )
     es->p_pgrm = p_pgrm;
     es_format_Copy( &es->fmt, fmt );
     es->i_preroll_end = -1;
+    es->b_discontinuity = VLC_FALSE;
 
     switch( fmt->i_cat )
     {
@@ -679,10 +685,10 @@ static es_out_id_t *EsOutAdd( es_out_t *out, es_format_t *fmt )
     case VIDEO_ES:
         es->i_channel = p_sys->i_video;
         if( fmt->video.i_frame_rate && fmt->video.i_frame_rate_base )
-            vlc_reduce( &es->fmt.video.i_frame_rate,
-                        &es->fmt.video.i_frame_rate_base,
-                        fmt->video.i_frame_rate,
-                        fmt->video.i_frame_rate_base, 0 );
+            vlc_ureduce( &es->fmt.video.i_frame_rate,
+                         &es->fmt.video.i_frame_rate_base,
+                         fmt->video.i_frame_rate,
+                         fmt->video.i_frame_rate_base, 0 );
         break;
 
     case SPU_ES:
@@ -1052,6 +1058,8 @@ static int EsOutSend( es_out_t *out, es_out_id_t *es, block_t *p_block )
 static void EsOutDel( es_out_t *out, es_out_id_t *es )
 {
     es_out_sys_t *p_sys = out->p_sys;
+    vlc_bool_t b_reselect = VLC_FALSE;
+    int i;
 
     /* We don't try to reselect */
     if( es->p_dec )
@@ -1067,6 +1075,9 @@ static void EsOutDel( es_out_t *out, es_out_id_t *es )
     {
         msg_Dbg( p_sys->p_input, "Program doesn't contain anymore ES" );
     }
+
+    if( p_sys->p_es_audio == es || p_sys->p_es_video == es ||
+        p_sys->p_es_sub == es ) b_reselect = VLC_TRUE;
 
     if( p_sys->p_es_audio == es ) p_sys->p_es_audio = NULL;
     if( p_sys->p_es_video == es ) p_sys->p_es_video = NULL;
@@ -1084,6 +1095,14 @@ static void EsOutDel( es_out_t *out, es_out_id_t *es )
             p_sys->i_video--;
             break;
     }
+
+    /* Re-select another track when needed */
+    if( b_reselect )
+        for( i = 0; i < p_sys->i_es; i++ )
+        {
+            if( es->fmt.i_cat == p_sys->es[i]->fmt.i_cat )
+                EsOutSelect( out, p_sys->es[i], VLC_FALSE );
+        }
 
     if( es->psz_language )
         free( es->psz_language );

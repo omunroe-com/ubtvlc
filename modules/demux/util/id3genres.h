@@ -1,10 +1,10 @@
 /*****************************************************************************
  * id3genres.h: list of genres for id3 genre tags
  *****************************************************************************
- * Copyright (C) 2002-2003 VideoLAN
- * $Id: id3genres.h 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2002-2003 the VideoLAN team
+ * $Id: id3genres.h 12836 2005-10-15 13:23:08Z sigmunau $
  *
- * Author: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Author: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *         list found at http://www.id3.org/id3v2.4.0-frames.txt
  *
  * This program is free software; you can redistribute it and/or modify

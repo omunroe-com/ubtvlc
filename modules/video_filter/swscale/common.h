@@ -1,8 +1,8 @@
 /*****************************************************************************
  * common.h: a few defines and wrappers for swscale
  *****************************************************************************
- * Copyright (C) 1999-2004 VideoLAN
- * $Id: common.h 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 1999-2004 the VideoLAN team
+ * $Id: common.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *

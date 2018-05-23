@@ -1,8 +1,8 @@
 /*****************************************************************************
  * intf.h: send info to intf.
  *****************************************************************************
- * Copyright (C) 2001 VideoLAN
- * $Id: intf.h 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2001 the VideoLAN team
+ * $Id: intf.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Author: Stéphane Borel <stef@via.ecp.fr>
  *

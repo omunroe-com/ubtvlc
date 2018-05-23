@@ -1,8 +1,8 @@
 /*****************************************************************************
  * bits.h
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: bits.h 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id: bits.h 12798 2005-10-09 17:01:08Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -43,18 +43,9 @@ static inline int bits_initwrite( bits_buffer_t *p_buffer,
     if( !p_buffer->p_data )
     {
         if( !( p_buffer->p_data = malloc( i_size ) ) )
-        {
-            return( -1 );
-        }
-        else
-        {
-            return( 0 );
-        }
+            return -1;
     }
-    else
-    {
-        return( 0 );
-    }
+    return 0;
 }
 
 static inline void bits_align( bits_buffer_t *p_buffer )

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * intf.c : audio output API towards the interface modules
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: intf.c 10408 2005-03-22 20:17:30Z jpsaman $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id: intf.c 13250 2005-11-14 21:17:45Z jpsaman $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -87,11 +87,13 @@ int __aout_VolumeGet( vlc_object_t * p_object, audio_volume_t * pi_volume )
 int __aout_VolumeSet( vlc_object_t * p_object, audio_volume_t i_volume )
 {
     vlc_value_t val;
-    aout_instance_t * p_aout = vlc_object_find( p_object, VLC_OBJECT_AOUT,
-                                                FIND_ANYWHERE );
+    aout_instance_t *p_aout = vlc_object_find( p_object, VLC_OBJECT_AOUT, FIND_ANYWHERE );
     int i_result = 0;
 
     config_PutInt( p_object, "volume", i_volume );
+
+    val.b_bool = VLC_TRUE;
+    var_Set( p_object->p_vlc, "volume-change", val );
 
     if ( p_aout == NULL ) return 0;
 
@@ -102,10 +104,8 @@ int __aout_VolumeSet( vlc_object_t * p_object, audio_volume_t i_volume )
     }
     vlc_mutex_unlock( &p_aout->mixer_lock );
 
-    vlc_object_release( p_aout );
-
-    val.b_bool = VLC_TRUE;
     var_Set( p_aout, "intf-change", val );
+    vlc_object_release( p_aout );
     return i_result;
 }
 
@@ -147,10 +147,11 @@ int __aout_VolumeUp( vlc_object_t * p_object, int i_nb_steps,
 {
     aout_instance_t * p_aout = vlc_object_find( p_object, VLC_OBJECT_AOUT,
                                                 FIND_ANYWHERE );
-    int i_result = 0, i_volume = 0;
+    int i_result = 0, i_volume = 0, i_volume_step = 0;
 
+    i_volume_step = config_GetInt( p_object->p_vlc, "volume-step" );
     i_volume = config_GetInt( p_object, "volume" );
-    i_volume += AOUT_VOLUME_STEP * i_nb_steps;
+    i_volume += i_volume_step * i_nb_steps;
     if ( i_volume > AOUT_VOLUME_MAX )
     {
         i_volume = AOUT_VOLUME_MAX;
@@ -184,10 +185,11 @@ int __aout_VolumeDown( vlc_object_t * p_object, int i_nb_steps,
 {
     aout_instance_t * p_aout = vlc_object_find( p_object, VLC_OBJECT_AOUT,
                                                 FIND_ANYWHERE );
-    int i_result = 0, i_volume = 0;
+    int i_result = 0, i_volume = 0, i_volume_step = 0;
 
+    i_volume_step = config_GetInt( p_object->p_vlc, "volume-step" );
     i_volume = config_GetInt( p_object, "volume" );
-    i_volume -= AOUT_VOLUME_STEP * i_nb_steps;
+    i_volume -= i_volume_step * i_nb_steps;
     if ( i_volume < AOUT_VOLUME_MIN )
     {
         i_volume = AOUT_VOLUME_MIN;

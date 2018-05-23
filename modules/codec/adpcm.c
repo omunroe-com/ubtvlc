@@ -1,8 +1,8 @@
 /*****************************************************************************
  * adpcm.c : adpcm variant audio decoder
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: adpcm.c 10321 2005-03-13 13:29:45Z courmisch $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id: adpcm.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Remi Denis-Courmont <rem # videolan.org>

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ogg.c : ogg stream demux module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: ogg.c 11054 2005-05-18 10:23:37Z gbazin $
+ * Copyright (C) 2001-2003 the VideoLAN team
+ * $Id: ogg.c 12801 2005-10-09 17:56:25Z fenrir $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *          Andre Pang <Andre.Pang@csiro.au> (Annodex support)
@@ -183,7 +183,7 @@ static int Open( vlc_object_t * p_this )
 
     /* Check if we are dealing with an ogg stream */
     if( stream_Peek( p_demux->s, &p_peek, 4 ) < 4 ) return VLC_EGENERIC;
-    if( strcmp( p_demux->psz_demux, "ogg" ) && strncmp( p_peek, "OggS", 4 ) )
+    if( strcmp( p_demux->psz_demux, "ogg" ) && memcmp( p_peek, "OggS", 4 ) )
     {
         return VLC_EGENERIC;
     }
@@ -276,14 +276,14 @@ static int Demux( demux_t * p_demux )
             {
                 if( p_stream->fmt.i_codec == VLC_FOURCC('t','h','e','o') &&
                         oggpacket.bytes >= 7 &&
-                        ! strncmp( &oggpacket.packet[1], "theora", 6 ) )
+                        ! memcmp( &oggpacket.packet[1], "theora", 6 ) )
                 {
                     Ogg_ReadTheoraHeader( p_stream, &oggpacket );
                     p_stream->secondary_header_packets = 0;
                 }
                 else if( p_stream->fmt.i_codec == VLC_FOURCC('v','o','r','b') &&
                         oggpacket.bytes >= 7 &&
-                        ! strncmp( &oggpacket.packet[1], "vorbis", 6 ) )
+                        ! memcmp( &oggpacket.packet[1], "vorbis", 6 ) )
                 {
                     Ogg_ReadVorbisHeader( p_stream, &oggpacket );
                     p_stream->secondary_header_packets = 0;
@@ -404,7 +404,7 @@ static int Ogg_ReadPage( demux_t *p_demux, ogg_page *p_oggpage )
 {
     demux_sys_t *p_ogg = p_demux->p_sys  ;
     int i_read = 0;
-    byte_t *p_buffer;
+    char *p_buffer;
 
     while( ogg_sync_pageout( &p_ogg->oy, p_oggpage ) != 1 )
     {
@@ -484,17 +484,20 @@ static void Ogg_DecodePacket( demux_t *p_demux,
     }
 
     if( p_oggpacket->bytes >= 7 &&
-        ! strncmp ( &p_oggpacket->packet[0], "Annodex", 7 ) )
+        ! memcmp ( &p_oggpacket->packet[0], "Annodex", 7 ) )
     {
         /* it's an Annodex packet -- skip it (do nothing) */
         return; 
     }
     else if( p_oggpacket->bytes >= 7 &&
-        ! strncmp ( &p_oggpacket->packet[0], "AnxData", 7 ) )
+        ! memcmp ( &p_oggpacket->packet[0], "AnxData", 7 ) )
     {
         /* it's an AnxData packet -- skip it (do nothing) */
         return; 
     }
+
+    if( p_stream->fmt.i_codec == VLC_FOURCC( 's','u','b','t' ) &&
+        p_oggpacket->packet[0] & PACKET_TYPE_BITS ) return;
 
     /* Check the ES is selected */
     es_out_Control( p_demux->out, ES_OUT_GET_ES_STATE,
@@ -511,26 +514,30 @@ static void Ogg_DecodePacket( demux_t *p_demux,
         case VLC_FOURCC( 'v','o','r','b' ):
         case VLC_FOURCC( 's','p','x',' ' ):
         case VLC_FOURCC( 't','h','e','o' ):
-          if( p_stream->i_packets_backup == 3 ) p_stream->b_force_backup = 0;
-          break;
+            if( p_stream->i_packets_backup == 3 ) p_stream->b_force_backup = 0;
+            break;
 
         case VLC_FOURCC( 'f','l','a','c' ):
-          if( !p_stream->fmt.audio.i_rate && p_stream->i_packets_backup == 2 )
-          {
-              Ogg_ReadFlacHeader( p_demux, p_stream, p_oggpacket );
-              p_stream->b_force_backup = 0;
-          }
-          else if( p_stream->fmt.audio.i_rate )
-          {
-              p_stream->b_force_backup = 0;
-              p_oggpacket->packet += 9; p_oggpacket->bytes -= 9;
-          }
-          b_store_size = VLC_FALSE;
-          break;
+            if( !p_stream->fmt.audio.i_rate && p_stream->i_packets_backup == 2 )
+            {
+                Ogg_ReadFlacHeader( p_demux, p_stream, p_oggpacket );
+                p_stream->b_force_backup = 0;
+            }
+            else if( p_stream->fmt.audio.i_rate )
+            {
+                p_stream->b_force_backup = 0;
+                if( p_oggpacket->bytes >= 9 )
+                {
+                    p_oggpacket->packet += 9;
+                    p_oggpacket->bytes -= 9;
+                }
+            }
+            b_store_size = VLC_FALSE;
+            break;
 
         default:
-          p_stream->b_force_backup = 0;
-          break;
+            p_stream->b_force_backup = 0;
+            break;
         }
 
         /* Backup the ogg packet (likely an header packet) */
@@ -623,6 +630,9 @@ static void Ogg_DecodePacket( demux_t *p_demux,
         return;
     }
 
+    if( p_oggpacket->bytes <= 0 )
+        return;
+
     if( !( p_block = block_New( p_demux, p_oggpacket->bytes ) ) ) return;
 
     /* Normalize PTS */
@@ -660,7 +670,7 @@ static void Ogg_DecodePacket( demux_t *p_demux,
         {
             /* But with subtitles we need to retrieve the duration first */
             int i, lenbytes = 0;
-        
+
             if( i_header_len > 0 && p_oggpacket->bytes >= i_header_len + 1 )
             {
                 for( i = 0, lenbytes = 0; i < i_header_len; i++ )
@@ -680,7 +690,10 @@ static void Ogg_DecodePacket( demux_t *p_demux,
         }
 
         i_header_len++;
-        p_block->i_buffer -= i_header_len;
+        if( p_block->i_buffer >= i_header_len )
+            p_block->i_buffer -= i_header_len;
+        else
+            p_block->i_buffer = 0;
     }
 
     if( p_stream->fmt.i_codec == VLC_FOURCC( 't','a','r','k' ) )
@@ -756,14 +769,14 @@ static int Ogg_FindLogicalStreams( demux_t *p_demux )
 
                 /* Check for Vorbis header */
                 if( oggpacket.bytes >= 7 &&
-                    ! strncmp( &oggpacket.packet[1], "vorbis", 6 ) )
+                    ! memcmp( &oggpacket.packet[1], "vorbis", 6 ) )
                 {
                     Ogg_ReadVorbisHeader( p_stream, &oggpacket );
                     msg_Dbg( p_demux, "found vorbis header" );
                 }
                 /* Check for Speex header */
                 else if( oggpacket.bytes >= 7 &&
-                    ! strncmp( &oggpacket.packet[0], "Speex", 5 ) )
+                    ! memcmp( &oggpacket.packet[0], "Speex", 5 ) )
                 {
                     Ogg_ReadSpeexHeader( p_stream, &oggpacket );
                     msg_Dbg( p_demux, "found speex header, channels: %i, "
@@ -773,7 +786,7 @@ static int Ogg_FindLogicalStreams( demux_t *p_demux )
                 }
                 /* Check for Flac header (< version 1.1.1) */
                 else if( oggpacket.bytes >= 4 &&
-                    ! strncmp( &oggpacket.packet[0], "fLaC", 4 ) )
+                    ! memcmp( &oggpacket.packet[0], "fLaC", 4 ) )
                 {
                     msg_Dbg( p_demux, "found FLAC header" );
 
@@ -787,8 +800,8 @@ static int Ogg_FindLogicalStreams( demux_t *p_demux )
                 }
                 /* Check for Flac header (>= version 1.1.1) */
                 else if( oggpacket.bytes >= 13 && oggpacket.packet[0] ==0x7F &&
-                    ! strncmp( &oggpacket.packet[1], "FLAC", 4 ) &&
-                    ! strncmp( &oggpacket.packet[9], "fLaC", 4 ) )
+                    ! memcmp( &oggpacket.packet[1], "FLAC", 4 ) &&
+                    ! memcmp( &oggpacket.packet[9], "fLaC", 4 ) )
                 {
                     int i_packets = ((int)oggpacket.packet[7]) << 8 |
                         oggpacket.packet[8];
@@ -806,7 +819,7 @@ static int Ogg_FindLogicalStreams( demux_t *p_demux )
                 }
                 /* Check for Theora header */
                 else if( oggpacket.bytes >= 7 &&
-                         ! strncmp( &oggpacket.packet[1], "theora", 6 ) )
+                         ! memcmp( &oggpacket.packet[1], "theora", 6 ) )
                 {
                     Ogg_ReadTheoraHeader( p_stream, &oggpacket );
 
@@ -816,7 +829,7 @@ static int Ogg_FindLogicalStreams( demux_t *p_demux )
                 }
                 /* Check for Tarkin header */
                 else if( oggpacket.bytes >= 7 &&
-                         ! strncmp( &oggpacket.packet[1], "tarkin", 6 ) )
+                         ! memcmp( &oggpacket.packet[1], "tarkin", 6 ) )
                 {
                     oggpack_buffer opb;
 
@@ -836,7 +849,7 @@ static int Ogg_FindLogicalStreams( demux_t *p_demux )
                 }
                 /* Check for Annodex header */
                 else if( oggpacket.bytes >= 7 &&
-                         ! strncmp( &oggpacket.packet[0], "Annodex", 7 ) )
+                         ! memcmp( &oggpacket.packet[0], "Annodex", 7 ) )
                 {
                     Ogg_ReadAnnodexHeader( VLC_OBJECT(p_demux), p_stream,
                                            &oggpacket );
@@ -846,13 +859,13 @@ static int Ogg_FindLogicalStreams( demux_t *p_demux )
                 }
                 /* Check for Annodex header */
                 else if( oggpacket.bytes >= 7 &&
-                         ! strncmp( &oggpacket.packet[0], "AnxData", 7 ) )
+                         ! memcmp( &oggpacket.packet[0], "AnxData", 7 ) )
                 {
                     Ogg_ReadAnnodexHeader( VLC_OBJECT(p_demux), p_stream,
                                            &oggpacket );
                 }
                 else if( oggpacket.bytes >= 142 &&
-                         !strncmp( &oggpacket.packet[1],
+                         !memcmp( &oggpacket.packet[1],
                                    "Direct Show Samples embedded in Ogg", 35 ))
                 {
                     /* Old header type */
@@ -1310,7 +1323,8 @@ static void Ogg_ReadAnnodexHeader( vlc_object_t *p_this,
                                    logical_stream_t *p_stream,
                                    ogg_packet *p_oggpacket )
 {
-    if( ! strncmp( &p_oggpacket->packet[0], "Annodex", 7 ) )
+    if( p_oggpacket->bytes >= 28 &&
+        !memcmp( &p_oggpacket->packet[0], "Annodex", 7 ) )
     {
         oggpack_buffer opb;
 
@@ -1328,7 +1342,8 @@ static void Ogg_ReadAnnodexHeader( vlc_object_t *p_this,
         timebase_numerator = GetQWLE( &p_oggpacket->packet[16] );
         timebase_denominator = GetQWLE( &p_oggpacket->packet[24] );
     }
-    else if( ! strncmp( &p_oggpacket->packet[0], "AnxData", 7 ) )
+    else if( p_oggpacket->bytes >= 42 &&
+             !memcmp( &p_oggpacket->packet[0], "AnxData", 7 ) )
     {
         uint64_t granule_rate_numerator;
         uint64_t granule_rate_denominator;
@@ -1343,10 +1358,14 @@ static void Ogg_ReadAnnodexHeader( vlc_object_t *p_this,
 
         /* we are guaranteed that the first header field will be
          * the content-type (by the Annodex standard) */
+        content_type_string[0] = '\0';
         if( !strncasecmp( &p_oggpacket->packet[28], "Content-Type: ", 14 ) )
         {
-            sscanf( &p_oggpacket->packet[42], "%1024s\r\n",
-                    content_type_string );
+            uint8_t *p = memchr( &p_oggpacket->packet[42], '\r',
+                                 p_oggpacket->bytes - 1 );
+            if( p && p[0] == '\r' && p[1] == '\n' )
+                sscanf( &p_oggpacket->packet[42], "%1024s\r\n",
+                        content_type_string );
         }
 
         msg_Dbg( p_this, "AnxData packet info: "I64Fd" / "I64Fd", %d, ``%s''",

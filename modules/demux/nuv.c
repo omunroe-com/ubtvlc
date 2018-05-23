@@ -1,7 +1,7 @@
 /*****************************************************************************
  * nuv.c:
  *****************************************************************************
- * Copyright (C) 2005 VideoLAN
+ * Copyright (C) 2005 the VideoLAN team
  * $Id: $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
@@ -198,8 +198,8 @@ static int Open( vlc_object_t * p_this )
 
     /* Check id */
     if( stream_Peek( p_demux->s, &p_peek, 12 ) != 12 ||
-        ( strncmp( p_peek, "MythTVVideo", 11 ) &&
-          strncmp( p_peek, "NuppelVideo", 11 ) ) )
+        ( strncmp( (char *)p_peek, "MythTVVideo", 11 ) &&
+          strncmp( (char *)p_peek, "NuppelVideo", 11 ) ) )
         return VLC_EGENERIC;
 
     p_sys = malloc( sizeof( demux_sys_t ) );
@@ -230,7 +230,7 @@ static int Open( vlc_object_t * p_this )
         else
         {
             /* TODO handle rtjpeg */
-            msg_Warn( p_demux, "unsuported 'D' frame (c=%c)", fh.i_compression );
+            msg_Warn( p_demux, "unsupported 'D' frame (c=%c)", fh.i_compression );
             if( stream_Read( p_demux->s, NULL, fh.i_length ) != fh.i_length )
                 goto error;
         }

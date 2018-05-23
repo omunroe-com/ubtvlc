@@ -1,10 +1,10 @@
 /*****************************************************************************
  * id3tag.c: id3 tag parser/skipper based on libid3tag
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: id3tag.c 10615 2005-04-09 11:27:23Z gbazin $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id: id3tag.c 12836 2005-10-15 13:23:08Z sigmunau $
  *
- * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

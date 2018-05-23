@@ -1,10 +1,10 @@
 /*****************************************************************************
  * motion_blur.c : motion blur filter for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001, 2002, 2003 VideoLAN
- * $Id: motionblur.c 11387 2005-06-10 15:32:08Z hartman $
+ * Copyright (C) 2000, 2001, 2002, 2003 the VideoLAN team
+ * $Id: motionblur.c 12968 2005-10-25 19:24:21Z gbazin $
  *
- * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,6 +55,7 @@ static int  SendEvents( vlc_object_t *, char const *,
 #define MODE_LONGTEXT N_("The degree of blurring from 1 to 127.")
 
 vlc_module_begin();
+    set_shortname( _("Motion blur") );
     set_description( _("Motion blur filter") );
     set_capability( "video filter", 0 );
     set_category( CAT_VIDEO );
@@ -147,6 +148,8 @@ static int Init( vout_thread_t *p_vout )
             p_vout->output.i_width  = p_vout->render.i_width;
             p_vout->output.i_height = p_vout->render.i_height;
             p_vout->output.i_aspect = p_vout->render.i_aspect;
+            p_vout->fmt_out = p_vout->fmt_in;
+            fmt = p_vout->fmt_out;
             break;
 
         default:
@@ -155,14 +158,6 @@ static int Init( vout_thread_t *p_vout )
     }
 
     msg_Dbg( p_vout, "spawning the real video output" );
-
-    fmt.i_width = fmt.i_visible_width = p_vout->output.i_width;
-    fmt.i_height = fmt.i_visible_height = p_vout->output.i_height;
-    fmt.i_x_offset = fmt.i_y_offset = 0;
-    fmt.i_chroma = p_vout->output.i_chroma;
-    fmt.i_aspect = p_vout->output.i_aspect;
-    fmt.i_sar_num = p_vout->output.i_aspect * fmt.i_height / fmt.i_width;
-    fmt.i_sar_den = VOUT_ASPECT_FACTOR;
 
     switch( p_vout->render.i_chroma )
     {

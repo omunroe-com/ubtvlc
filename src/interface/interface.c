@@ -3,8 +3,8 @@
  * This library provides basic functions for threads to interact with user
  * interface, such as command line.
  *****************************************************************************
- * Copyright (C) 1998-2004 VideoLAN
- * $Id: interface.c 10147 2005-03-05 17:18:30Z gbazin $
+ * Copyright (C) 1998-2004 the VideoLAN team
+ * $Id: interface.c 12065 2005-08-07 20:22:33Z zorglub $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -309,7 +309,7 @@ static void RunInterface( intf_thread_t *p_intf )
     static char *ppsz_interfaces[] =
     {
         "skins2", "Skins 2",
-        "wxwindows", "wxWindows",
+        "wxwidgets", "wxWidgets",
         NULL, NULL
     };
     char **ppsz_parser;

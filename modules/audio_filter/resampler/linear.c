@@ -1,11 +1,11 @@
 /*****************************************************************************
  * linear.c : linear interpolation resampler
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: linear.c 10814 2005-04-26 07:23:56Z fenrir $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: linear.c 13071 2005-11-01 07:59:50Z bigben $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
- *          Sigmund Augdal <sigmunau@idi.ntnu.no>
+ *          Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -188,7 +188,7 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
             {
                 i_chan--;
                 p_out[i_chan] = p_prev_sample[i_chan];
-                p_out[i_chan] += ( (p_prev_sample[i_chan] - p_in[i_chan])
+                p_out[i_chan] += ( ( p_in[i_chan] - p_prev_sample[i_chan] )
                                    * p_sys->i_remainder
                                    / p_filter->output.i_rate );
             }
@@ -209,8 +209,8 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
             {
                 i_chan--;
                 p_out[i_chan] = p_in[i_chan];
-                p_out[i_chan] += ( (p_in[i_chan] -
-                    p_in[i_chan + i_nb_channels])
+                p_out[i_chan] += ( ( p_in[i_chan + i_nb_channels]
+                    - p_in[i_chan] )
                     * p_sys->i_remainder / p_filter->output.i_rate );
             }
             p_out += i_nb_channels;

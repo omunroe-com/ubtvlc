@@ -1,7 +1,7 @@
 /*****************************************************************************
  * utils.h: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 VideoLAN
+ * Copyright (C) 2005 the VideoLAN team
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -28,14 +28,17 @@
 #include <vector>
 
 // utilities
-extern char *CStrFromBSTR(int codePage, BSTR bstr);
-extern BSTR BSTRFromCStr(int codePage, const char *s);
+extern char *CStrFromBSTR(UINT codePage, BSTR bstr);
+extern BSTR BSTRFromCStr(UINT codePage, LPCSTR s);
 
 // properties
 extern HRESULT GetObjectProperty(LPUNKNOWN object, DISPID dispID, VARIANT& v);
 
 // properties
 extern HDC CreateDevDC(DVTARGETDEVICE *ptd);
+extern void DPFromHimetric(HDC hdc, LPPOINT pt, int count);
+extern void HimetricFromDP(HDC hdc, LPPOINT pt, int count);
+
 
 // enumeration
 template<class T> class VLCEnum : IUnknown
@@ -60,7 +63,6 @@ public:
     STDMETHODIMP Reset(void);
     // cloning is implemented by subclasses and must use copy constructor
     //STDMETHODIMP Clone(VLCEnum<T> **);
-    // cloning is implemented by subclasses and must use copy constructor
 
     typedef void (*retainer)(T);
 
@@ -100,6 +102,7 @@ VLCEnum<T>& VLCEnum<T>::operator=(const VLCEnum<T> &e)
     this->_riid = e._riid;
     this->_v    = e._v;
     this->_i    = e._i;
+    return this;
 };
 
 template<class T>

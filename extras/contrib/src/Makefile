@@ -1,11 +1,13 @@
 # ***************************************************************************
 # src/Makefile : Dearchive and compile all files necessary
 # ***************************************************************************
-# Copyright (C) 2003, 2004, 2005 VideoLAN
-# $Id: Makefile 11372 2005-06-09 22:44:02Z hartman $
+# Copyright (C) 2003, 2004, 2005 the VideoLAN team
+# $Id: Makefile 13043 2005-10-30 19:56:45Z fkuehne $
 #
 # Authors: Christophe Massiot <massiot@via.ecp.fr>
 #          Derk-Jan Hartman <hartman at videolan dot org>
+#          Eric Petit <titer@m0k.org>
+#          Felix Kühne <fkuehne@users.sourceforge.net>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -48,13 +50,13 @@ export PATH = $(PREFIX)/bin:.:/boot/home/config/bin:/bin:/boot/apps:/boot/prefer
 export LIBRARY_PATH = $(PREFIX)/lib:%A/lib:/boot/home/config/lib:/boot/beos/system/lib
 else
 # Cross compiling from Linux
-export PATH = $(PREFIX)/bin:/opt/cross-tools/bin:/usr/bin:/bin
+export PATH = $(PREFIX)/bin:/opt/beos-tools/bin:/opt/cross-tools/bin:/usr/bin:/bin
 endif
 endif
 
-export CPPFLAGS = -I$(PREFIX)/include $(EXTRA_CPPFLAGS)
-export CFLAGS = -I$(PREFIX)/include $(EXTRA_CPPFLAGS)
-export CXXFLAGS = -I$(PREFIX)/include $(EXTRA_CPPFLAGS)
+export CFLAGS = -I$(PREFIX)/include $(EXTRA_CFLAGS) $(EXTRA_CPPFLAGS)
+export CPPFLAGS = -I$(PREFIX)/include $(EXTRA_CFLAGS) $(EXTRA_CPPFLAGS)
+export CXXFLAGS = -I$(PREFIX)/include $(EXTRA_CFLAGS) $(EXTRA_CPPFLAGS)
 export LDFLAGS = -L$(PREFIX)/lib $(EXTRA_LDFLAGS)
 
 # ***************************************************************************
@@ -76,24 +78,28 @@ else
 # Building natively
 RANLIB=ranlib
 endif
+ifeq ($(HOST),i586-pc-beos)
+FFMPEGCONF+=--cpu=x86
+endif
 
 # ***************************************************************************
 # Standard rules
 # ***************************************************************************
 
 ifdef HAVE_DARWIN_OS
- all: .autoconf .libtool .automake .iconv .intl .pkgcfg .freetype .fribidi \
+ all: .autoconf .automake .libtool .iconv .intl .pkgcfg .freetype .fribidi \
 	.a52 .mpeg2 .id3tag .mad .ogg .vorbis .vorbisenc .x264 .theora \
-	.FLAC .speex .faad .faac .lame .twolame .ebml .matroska .ffmpeg .openslp \
+	.FLAC .speex .shout .faad .faac .lame .twolame .ebml .matroska .ffmpeg .openslp \
 	.dvdcss .dvdread .dvdnav .dvbpsi .live .goom2k4 .caca .mod \
-	.png .gpg-error .gcrypt .gnutls .daap .cddb .cdio .vcdimager .aclocal
-# mozilla support? add before .aclocal:  .glib .libidl .mozilla
+	.png .gpg-error .gcrypt .gnutls .opendaap .cddb .cdio .vcdimager .SDL_image \
+	.glib .libidl .gecko .libmpcdec .aclocal
+# .mozilla will build an entire mozilla. it can be used if we need to create a new .gecko package
 else
 
  ifeq ($(HOST),i586-pc-beos)
   ifeq ($(HOST),$(BUILD))
 # Native build: we need perl, autoconf, etc first
-   all: .perl .autoconf .libtool .automake .iconv .intl .freetype .fribidi \
+   all: .perl .autoconf .automake .libtool .iconv .intl .freetype .fribidi \
 	.a52 .mpeg2 .id3tag .mad .ogg .vorbis .vorbisenc .theora \
 	.FLAC .speex .faad .faac .lame .ebml .matroska .ffmpeg .dvdcss \
 	.dvdread .dvdnav .dvbpsi .aclocal
@@ -108,9 +114,9 @@ else
  else
 # Standard Linux or other UNIX-like systems
    all: .iconv .intl .freetype .fribidi \
-	.a52 .mpeg2 .id3tag .mad .ogg .vorbis .vorbisenc .theora \
+	.a52 .mpeg2 .id3tag .mad .ogg .vorbis .vorbisenc .x264 .theora \
 	.FLAC .speex .faad .faac .lame .ebml .matroska .ffmpeg .dvdcss \
-	.dvdread .dvdnav .dvbpsi .aclocal
+	.dvdread .dvdnav .dvbpsi .live .aclocal
  endif
 endif
 
@@ -227,6 +233,10 @@ ifdef HAVE_DARWIN_OS
 	if test -x /usr/bin/glibtoolize; then \
 		ln -sf /usr/bin/glibtoolize $(PREFIX)/bin/libtoolize ; \
 	fi
+	if test -f /usr/share/aclocal/libtool.m4; then \
+		mkdir -p $(PREFIX)/share/aclocal ; \
+		ln -sf /usr/share/aclocal/libtool.m4 $(PREFIX)/share/aclocal ; \
+	fi
 	touch $@
 endif
 
@@ -324,6 +334,7 @@ libiconv-$(LIBICONV_VERSION).tar.gz:
 
 libiconv: libiconv-$(LIBICONV_VERSION).tar.gz
 	$(EXTRACT_GZ)
+	patch -p 0 < Patches/libiconv.patch
 
 .iconv: libiconv
 	(cd libiconv; ./configure $(HOSTCONF) --prefix=$(PREFIX) --disable-nls && make && make install)
@@ -407,7 +418,7 @@ DISTCLEAN_PKG += a52dec-$(A52DEC_VERSION).tar.gz
 # It is easier to use bootstrapped versions...
 mpeg2dec-$(MPEG2DEC_VERSION).tar.gz:
 	$(WGET) $(MPEG2DEC_SNAPSHOT)
-	mv mpeg2dec-snapshot.tar.gz $@
+	mv mpeg2dec-$(MPEG2DEC_DATE).tar.gz $@
 
 mpeg2dec: mpeg2dec-$(MPEG2DEC_VERSION).tar.gz
 	$(EXTRACT_GZ)
@@ -475,6 +486,7 @@ libogg-$(OGG_VERSION).tar.gz:
 
 libogg: libogg-$(OGG_VERSION).tar.gz
 	$(EXTRACT_GZ)
+	patch -p 0 < Patches/ogg.patch
 
 .ogg: libogg
 	(cd $<; ./configure $(HOSTCONF) --prefix=$(PREFIX) && make && make install)
@@ -503,11 +515,9 @@ libvorbis: libvorbis-$(VORBIS_VERSION).tar.gz
 	$(EXTRACT_GZ)
 
 .vorbis: libvorbis .ogg
-# libvorbis' configure doesn't handle --host
-# FIXME: shared libs disabled for now because configure thinks we should
-# link the .so to -lc when cross-compiling to BeOS (-> fails)
-#   -- titer 2005/02/12
-	(cd $<; $(HOSTCC) ./configure --prefix=$(PREFIX) --disable-shared && make && make install)
+# FIXME: shared libs disabled for now because of linking errors
+#   -- titer 2005/09/16
+	(cd $<; ./configure $(HOSTCONF) --prefix=$(PREFIX) --disable-shared && make && make install)
 #	$(INSTALL_NAME)
 	touch $@
 
@@ -528,16 +538,35 @@ libtheora-$(THEORA_VERSION).tar.bz2:
 
 libtheora: libtheora-$(THEORA_VERSION).tar.bz2
 	$(EXTRACT_BZ2)
-	patch -p 0 < Patches/theora.patch
+	patch -p0 < Patches/theora.patch
 
-.theora: libtheora
-	(cd $<; ./configure $(HOSTCONF) --prefix=$(PREFIX) && make && make install)
+.theora: libtheora .ogg
+	(cd $<; ./configure $(HOSTCONF) --prefix=$(PREFIX) --disable-sdltest --disable-oggtest --disable-vorbistest && make && make install)
 	$(INSTALL_NAME)
 	touch $@
 
 CLEAN_FILE += .theora
 CLEAN_PKG += libtheora
 DISTCLEAN_PKG += libtheora-$(THEORA_VERSION).tar.bz2
+
+# ***************************************************************************
+# shout
+# ***************************************************************************
+
+libshout-$(SHOUT_VERSION).tar.gz:
+	$(WGET) $(SHOUT_URL)
+
+libshout: libshout-$(SHOUT_VERSION).tar.gz
+	$(EXTRACT_GZ)
+
+.shout: libshout .theora .ogg
+	(cd $<; ./configure $(HOSTCONF) --prefix=$(PREFIX) && make && make install)
+	$(INSTALL_NAME)
+	touch $@
+
+CLEAN_FILE += .shout
+CLEAN_PKG += libshout
+DISTCLEAN_PKG += libshout-$(SHOUT_VERSION).tar.gz
 
 # ***************************************************************************
 # flac
@@ -567,7 +596,7 @@ speex-$(SPEEX_VERSION).tar.gz:
 
 speex: speex-$(SPEEX_VERSION).tar.gz
 	$(EXTRACT_GZ)
-	patch -p 0 < Patches/speex.patch
+	patch -p0 < Patches/speex.patch
 
 .speex: speex
 	(cd $<; ./configure $(HOSTCONF) --prefix=$(PREFIX) --enable-ogg=no && make && make install)
@@ -693,9 +722,10 @@ DISTCLEAN_PKG += libmatroska-$(LIBMATROSKA_VERSION).tar.bz2
 # ffmpeg
 # ***************************************************************************
 
-# Note: at present, we check out the tree from 2005-04-30 because of 
-# compilation issues. We will use the latest version again, when our
-# ffmpeg-module is fixed properly -- FK
+# Note: we are using this cvs-snapshot of ffmpeg now, because this one 
+# compiles finely on 10.2 and is used in the win32-port as well, so we
+# experience the same bugs in both ports ;)
+
 ffmpeg:
 	echo $(FFMPEG_CVSROOT) A > ./ffmpeg.cvs
 	CVS_PASSFILE=./ffmpeg.cvs cvs -z3 -d $(FFMPEG_CVSROOT) co ffmpeg
@@ -710,11 +740,11 @@ ffmpeg-$(FFMPEG_VERSION).tar.gz:
 #	patch -p 0 < Patches/ffmpeg.patch
 
 .ffmpeg: ffmpeg
-	(cd $<; ./configure $(FFMPEGCONF) --prefix=$(PREFIX) --extra-cflags="$(CFLAGS) -DRUNTIME_CPUDETECT" --extra-ldflags="$(LDFLAGS)" --enable-gpl --enable-mp3lame --enable-faac --enable-pp --disable-vhook --disable-audio-beos --disable-ffserver --disable-vorbis --disable-faad --enable-mp3lame --enable-zlib --enable-a52 && make && make -C libavcodec/libpostproc install && make -C libavcodec installlib && make -C libavformat installlib)
+	(cd $<; ./configure $(FFMPEGCONF) --prefix=$(PREFIX) --extra-cflags="$(CFLAGS) -DRUNTIME_CPUDETECT" --extra-ldflags="$(LDFLAGS)" --enable-gpl --enable-mp3lame --enable-faac --enable-pp --disable-vhook --disable-audio-beos --disable-ffserver --enable-mp3lame --enable-a52 --disable-ffplay && echo -e "#define HAVE_LRINTF 1" >> config.h && make && make -C libavcodec/libpostproc install && make -C libavcodec installlib && make -C libavformat installlib && make -C libavutil installlib)
 	touch $@
 
 CLEAN_FILE += .ffmpeg
-CLEAN_PKG += ffmpeg
+CLEAN_PKG += ffmpeg ffmpeg.cvs
 DISTCLEAN_PKG += ffmpeg-$(FFMPEG_VERSION).tar.gz
 
 # ***************************************************************************
@@ -740,11 +770,17 @@ DISTCLEAN_PKG += openslp-$(OPENSLP_VERSION).tar.gz
 # libdvdcss
 # ***************************************************************************
 
+ifdef SVN
+libdvdcss: 
+	$(SVN) co svn://svn.videolan.org/libdvdcss/trunk libdvdcss
+	cd $@ && sh bootstrap
+else
 libdvdcss-$(LIBDVDCSS_VERSION).tar.gz:
 	$(WGET) $(LIBDVDCSS_URL)
 
 libdvdcss: libdvdcss-$(LIBDVDCSS_VERSION).tar.gz
 	$(EXTRACT_GZ)
+endif
 
 .dvdcss: libdvdcss
 	(cd $<; ./configure $(HOSTCONF) --prefix=$(PREFIX) && make && make install)
@@ -817,26 +853,31 @@ libdvbpsi: libdvbpsi3-$(LIBDVBPSI_VERSION).tar.gz
 
 CLEAN_FILE += .dvbpsi
 CLEAN_PKG += libdvbpsi
-DISTCLEAN_PKG += libdvbpsi-$(LIBDVBPSI_VERSION).tar.gz
+DISTCLEAN_PKG += libdvbpsi3-$(LIBDVBPSI_VERSION).tar.gz
 
 # ***************************************************************************
 # live
 # ***************************************************************************
 
-live.$(LIVEDOTCOM_VERSION).tar.gz:
+live555-$(LIVEDOTCOM_VERSION).tar.gz:
 	$(WGET) $(LIVEDOTCOM_URL)
 
-live: live.$(LIVEDOTCOM_VERSION).tar.gz
+live: live555-$(LIVEDOTCOM_VERSION).tar.gz
 	$(EXTRACT_GZ)
 	patch -p 0 < Patches/live.patch
+	patch -p 0 < Patches/livedotcom-osx.patch
 
 .live: live
+ifeq ($(HOST),ppc-darwin)
+	(cd $<; ./genMakefiles macosx-before-version-10.4 && make )
+else
 	(cd $<; ./genMakefiles macosx && make )
+endif
 	touch $@
 
 CLEAN_FILE += .live
 CLEAN_PKG += live
-DISTCLEAN_PKG += live.$(LIVEDOTCOM_VERSION).tar.gz
+DISTCLEAN_PKG += live555-$(LIVEDOTCOM_VERSION).tar.gz
 
 # ***************************************************************************
 # goom
@@ -874,7 +915,7 @@ goom: goom$(GOOM2k4_VERSION).tar.gz
 
 CLEAN_FILE += .goom2k4
 CLEAN_PKG += goom
-DISTCLEAN_PKG += goom$(GOOM2k_VESION).tar.gz
+DISTCLEAN_PKG += goom$(GOOM2k4_VERSION).tar.gz
 
 # ***************************************************************************
 # libcaca
@@ -920,9 +961,15 @@ CLEAN_PKG += libdts
 DISTCLEAN_PKG += libdts-$(LIBDTS_VERSION).tar.gz
 
 # ***************************************************************************
-# libdts
+# libx264
 # ***************************************************************************
 
+ifdef SVN
+x264: 
+	$(SVN) co svn://svn.videolan.org/x264/trunk/ x264
+	cd x264 && patch -p 0 < ../Patches/x264_svn.patch
+	rm x264/x264.c
+else
 x264-$(X264_VERSION).tar.gz:
 	$(WGET) $(X264_URL)
 
@@ -930,6 +977,7 @@ x264: x264-$(X264_VERSION).tar.gz
 	$(EXTRACT_GZ)
 	patch -p 0 < Patches/x264.patch
 	rm x264/x264.c
+endif
 
 .x264: x264
 	(cd $<; ./configure --enable-pthread --prefix=$(PREFIX) && make && make install)
@@ -1029,7 +1077,7 @@ mash-code: mash-src-$(MASH_VERSION).tar.gz
 	$(EXTRACT_GZ)
 
 .mash: mash-code
-	(cd $<; ./configure && make )
+	(cd $<; ./configure && make)
 	touch $@
 
 CLEAN_FILE += .mash
@@ -1053,7 +1101,7 @@ twolame: twolame-$(TWOLAME_VERSION).tar.gz
 
 CLEAN_FILE += .twolame
 CLEAN_PKG += twolame
-DISTCLEAN_PKG += twolame-$(TWOLAME_VERSION).tar.bz2
+DISTCLEAN_PKG += twolame-$(TWOLAME_VERSION).tar.gz
 
 # ***************************************************************************
 # libpng
@@ -1072,7 +1120,7 @@ libpng: libpng-$(PNG_VERSION).tar.bz2
 
 CLEAN_FILE += .png
 CLEAN_PKG += libpng
-DISCLEAN_PKG += libpng-$(PNG_VERSION).tar.bz2
+DISTCLEAN_PKG += libpng-$(PNG_VERSION).tar.bz2
 
 # ***************************************************************************
 # libzvbi
@@ -1085,12 +1133,12 @@ zvbi: zvbi-$(ZVBI_VERSION).tar.bz2
 	$(EXTRACT_BZ2)
 
 .zvbi: zvbi
-	(cd $<; ./configure --prefix=$(PREFIX) && make )
+	(cd $<; ./configure --prefix=$(PREFIX) && make)
 	touch $@
 
 CLEAN_FILE += .zvbi
 CLEAN_PKG += zvbi
-DISCLEAN_PKG += zvbi-$(ZVBI_VERSION).tar.bz2
+DISTCLEAN_PKG += zvbi-$(ZVBI_VERSION).tar.bz2
 
 # ***************************************************************************
 # gpg-error 
@@ -1103,13 +1151,13 @@ libgpg-error: libgpg-error-$(GPGERROR_VERSION).tar.gz
 	$(EXTRACT_GZ)
 
 .gpg-error: libgpg-error
-	(cd $<; ./configure --prefix=$(PREFIX) --disable-nls && make && make install )
+	(cd $<; ./configure --prefix=$(PREFIX) --disable-nls && make && make install)
 	$(INSTALL_NAME)
 	touch $@
 
 CLEAN_FILE += .gpg-error
 CLEAN_PKG += libgpg-error
-DISCLEAN_PKG += libgpg-error-$(GPGERROR_VERSION).tar.gz
+DISTCLEAN_PKG += libgpg-error-$(GPGERROR_VERSION).tar.gz
 
 # ***************************************************************************
 # libgcrypt
@@ -1123,13 +1171,13 @@ libgcrypt: libgcrypt-$(GCRYPT_VERSION).tar.gz
 	patch -p 0 < Patches/gcrypt.patch
 
 .gcrypt: libgcrypt .gpg-error
-	(cd $<; ./configure --prefix=$(PREFIX) CFLAGS="$(CFLAGS) -D_BSD_SOCKLEN_T_=int" && make && make install )
+	(cd $<; ./configure --prefix=$(PREFIX) CFLAGS="$(CFLAGS) -D_BSD_SOCKLEN_T_=int" && make && make install)
 	$(INSTALL_NAME)
 	touch $@
 
 CLEAN_FILE += .gcrypt
 CLEAN_PKG += libgcrypt
-DISCLEAN_PKG += libgcrypt-$(GCRYPT_VERSION).tar.gz
+DISTCLEAN_PKG += libgcrypt-$(GCRYPT_VERSION).tar.gz
 
 # ***************************************************************************
 # gnutls
@@ -1142,13 +1190,13 @@ gnutls: gnutls-$(GNUTLS_VERSION).tar.bz2
 	$(EXTRACT_BZ2)
 
 .gnutls: gnutls .gcrypt .gpg-error
-	(cd $<; ./configure --prefix=$(PREFIX) && make && make install )
+	(cd $<; ./configure --prefix=$(PREFIX) && make && make install)
 	$(INSTALL_NAME)
 	touch $@
 
 CLEAN_FILE += .gnutls
 CLEAN_PKG += gnutls
-DISCLEAN_PKG += gnutls-$(GNUTLS_VERSION).tar.bz2
+DISTCLEAN_PKG += gnutls-$(GNUTLS_VERSION).tar.bz2
 
 # ***************************************************************************
 # libopendaap
@@ -1161,13 +1209,14 @@ libopendaap: libopendaap-$(DAAP_VERSION).tar.bz2
 	$(EXTRACT_BZ2)
 	patch -p 0 < Patches/daap.patch
 
-.daap: libopendaap
-	(cd $<; ./configure --prefix=$(PREFIX) CFLAGS="$(CFLAGS) -D_BSD_SOCKLEN_T_=int" && make install )
+.opendaap: libopendaap
+	(cd $<; ./configure --prefix=$(PREFIX) CFLAGS="$(CFLAGS) -D_BSD_SOCKLEN_T_=int" && make install)
+	$(INSTALL_NAME)
 	touch $@
 
-CLEAN_FILE += .daap
+CLEAN_FILE += .opendaap
 CLEAN_PKG += libopendaap
-DISCLEAN_PKG += libopendaap-$(DAAP_VERSION).tar.bz2
+DISTCLEAN_PKG += libopendaap-$(DAAP_VERSION).tar.bz2
 
 # ***************************************************************************
 # glib
@@ -1180,12 +1229,12 @@ glib: glib-$(GLIB_VERSION).tar.gz
 	$(EXTRACT_GZ)
 
 .glib: glib
-	(cd $<; ./configure --prefix=$(PREFIX) --host=powerpc-apple-macos && make && make install )
+	(cd $<; ./configure --prefix=$(PREFIX) --host=powerpc-apple-macos && make && make install)
 	touch $@
 
 CLEAN_FILE += .glibl
 CLEAN_PKG += glib
-DISCLEAN_PKG += glib-$(GLIB_VERSION).tar.gz
+DISTCLEAN_PKG += glib-$(GLIB_VERSION).tar.gz
 
 # ***************************************************************************
 # libIDL
@@ -1203,7 +1252,25 @@ libIDL: libIDL-$(LIBIDL_VERSION).tar.gz
 
 CLEAN_FILE += .libidl
 CLEAN_PKG += libIDL
-DISCLEAN_PKG += libIDL-$(LIBIDL_VERSION).tar.gz
+DISTCLEAN_PKG += libIDL-$(LIBIDL_VERSION).tar.gz
+
+# ***************************************************************************
+# Gecko SDK
+# ***************************************************************************
+
+gecko-sdk-ppc-macosx10.2-1.7.5.tar.gz:
+	$(WGET) $(GECKO_SDK_MAC_URL)
+
+gecko-sdk: gecko-sdk-ppc-macosx10.2-1.7.5.tar.gz
+	$(EXTRACT_GZ)
+
+.gecko: gecko-sdk
+	(cd $<)
+	touch $@
+
+CLEAN_FILE += .gecko
+CLEAN_PKG += gecko-sdk
+DISTCLEAN_PKG += gecko-sdk-ppc-macosx10.2-1.7.5.tar.gz
 
 # ***************************************************************************
 # mozilla
@@ -1216,12 +1283,109 @@ mozilla: mozilla-source-$(MOZILLA_VERSION).tar.bz2
 	$(EXTRACT_BZ2)
 
 .mozilla: mozilla
-	(cd $<; ./configure --prefix=$(PREFIX) --enable-default-toolkit=mac --enable-standalone-modules=xpcom,plugin && make && make install )
+	(cd $<; ./configure --prefix=$(PREFIX) --enable-default-toolkit=mac --enable-standalone-modules=xpcom,plugin && make && make install)
 	touch $@
 
 CLEAN_FILE += .mozilla
 CLEAN_PKG += mozilla
-DISCLEAN_PKG += mozilla-source-$(MOZILLA_VERSION).tar.bz2
+DISTCLEAN_PKG += mozilla-source-$(MOZILLA_VERSION).tar.bz2
+
+# ***************************************************************************
+# libjpeg
+# ***************************************************************************
+
+jpeg-$(JPEG_VERSION).tar.gz:
+	$(WGET) $(JPEG_URL)
+
+jpeg: jpeg-$(JPEG_VERSION).tar.gz 
+	$(EXTRACT_GZ)
+
+.jpeg: jpeg
+	(cd $<; ./configure --prefix=$(PREFIX) CFLAGS="$(CFLAGS)" && make && make install-lib)
+	$(RANLIB) $(PREFIX)/lib/libjpeg.a
+	touch $@
+
+CLEAN_FILE += .jpeg
+CLEAN_PKG += jpeg
+DISTCLEAN_PKG += jpeg-$(JPEG_VERSION).tar.gz
+
+# ***************************************************************************
+# tiff
+# ***************************************************************************
+
+tiff-$(TIFF_VERSION).tar.gz:
+	$(WGET) $(TIFF_URL)
+	mv tiff-$(TIFF_VERSION)-tar.gz $@
+
+tiff: tiff-$(TIFF_VERSION).tar.gz 
+	$(EXTRACT_GZ)
+	patch -p 0 < Patches/tiff.patch
+
+.tiff: tiff
+	(cd $<; ./configure --noninteractive --with-DIR_BIN=$(PREFIX)/bin --with-DIR_LIB=$(PREFIX)/lib --with-DIR_INC=$(PREFIX)/include --with-CFLAGS="$(CFLAGS)" --with-JPEG=no --with-ZIP=no && make -C libtiff && make -C libtiff install)
+	touch $@
+
+CLEAN_FILE += .tiff
+CLEAN_PKG += tiff
+DISTCLEAN_PKG += tiff-$(TIFF_VERSION).tar.gz
+
+# ***************************************************************************
+# SDL
+# ***************************************************************************
+
+SDL-$(SDL_VERSION).tar.gz:
+	$(WGET) $(SDL_URL)
+
+SDL: SDL-$(SDL_VERSION).tar.gz 
+	$(EXTRACT_GZ)
+	patch -p 0 < Patches/SDL.patch
+
+.SDL: SDL
+	(cd $<; ./configure --prefix=$(PREFIX) --disable-audio --disable-video-x11 --disable-video-aalib --disable-video-dga --disable-video-fbcon --disable-video-directfb --disable-video-ggi --disable-video-svga --disable-directx --disable-joystick --disable-cdrom --disable-threads --disable-sdl-dlopen CFLAGS="$(CFLAGS)" && make && make install)
+	$(INSTALL_NAME)
+	touch $@
+
+CLEAN_FILE += .SDL
+CLEAN_PKG += SDL
+DISTCLEAN_PKG += SDL-$(SDL_VERSION).tar.gz
+
+# ***************************************************************************
+# SDL_image
+# ***************************************************************************
+
+SDL_image-$(SDL_IMAGE_VERSION).tar.gz:
+	$(WGET) $(SDL_IMAGE_URL)
+
+SDL_image: SDL_image-$(SDL_IMAGE_VERSION).tar.gz 
+	$(EXTRACT_GZ)
+	patch -p 0 < Patches/SDL_image.patch
+
+.SDL_image: SDL_image .SDL .png .jpeg .tiff
+	(cd $<; ./configure --prefix=$(PREFIX) --enable-tif CFLAGS="$(CFLAGS)" && make && make install)
+	$(INSTALL_NAME)
+	touch $@
+
+CLEAN_FILE += .SDL_image
+CLEAN_PKG += SDL_image
+DISTCLEAN_PKG += SDL_image-$(SDL_IMAGE_VERSION).tar.gz
+
+# ***************************************************************************
+# Musepack decoder library (libmpcdec)
+# ***************************************************************************
+
+libmpcdec-$(MUSE_VERSION).tar.bz2:
+	$(WGET) $(MUSE_URL)
+
+libmpcdec: libmpcdec-$(MUSE_VERSION).tar.bz2 
+	$(EXTRACT_BZ2)
+
+.libmpcdec: libmpcdec
+	(cd $<; ./configure --prefix=$(PREFIX) && make && make install)
+	touch $@
+
+CLEAN_FILE += .libmpcdec
+CLEAN_PKG += libmpcdec
+DISTCLEAN_PKG += libmpcdec-$(MUSE_VERSION).tar.bz2
 
 # ***************************************************************************
 # Copy aclocal files
@@ -1233,6 +1397,7 @@ DISCLEAN_PKG += mozilla-source-$(MOZILLA_VERSION).tar.bz2
 	cp -R $(PREFIX)/share/aclocal/* $(PREFIX)/../../m4/
 	touch $@
 
+CLEAN_FILE += .aclocal
 
 # ***************************************************************************
 # Some cleansing

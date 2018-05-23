@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_access.h
  *****************************************************************************
- * Copyright (C) 1999-2004 VideoLAN
- * $Id: vlc_access.h 10478 2005-03-29 16:01:23Z fenrir $
+ * Copyright (C) 1999-2004 the VideoLAN team
+ * $Id: vlc_access.h 12954 2005-10-24 17:08:54Z md $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -56,7 +56,7 @@ enum access_query_e
      * XXX: avoid to use it unless you can't */
     ACCESS_SET_PRIVATE_ID_STATE,    /* arg1= int i_private_data, vlc_bool_t b_selected can fail */
     ACCESS_SET_PRIVATE_ID_CA,    /* arg1= int i_program_number, uint16_t i_vpid, uint16_t i_apid1, uint16_t i_apid2, uint16_t i_apid3, uint8_t i_length, uint8_t *p_data */
-    ACCESS_GET_PRIVATE_ID_STATE,    /* arg1=int i_private_data arg2=vlc_bool_t *  res=can fail */
+    ACCESS_GET_PRIVATE_ID_STATE     /* arg1=int i_private_data arg2=vlc_bool_t *  res=can fail */
 };
 
 struct access_t
@@ -103,6 +103,8 @@ struct access_t
 
         int          i_title;    /* idem, start from 0 (could be menu) */
         int          i_seekpoint;/* idem, start from 0 */
+
+        vlc_bool_t   b_prebuffered; /* Read only for input */ 
     } info;
     access_sys_t *p_sys;
 };

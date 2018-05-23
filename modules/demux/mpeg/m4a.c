@@ -1,7 +1,7 @@
 /*****************************************************************************
  * m4a.c : MPEG-4 audio demuxer
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
+ * Copyright (C) 2002-2004 the VideoLAN team
  * $Id: m4v.c 7754 2004-05-23 14:43:14Z fenrir $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
@@ -94,7 +94,7 @@ static int Open( vlc_object_t * p_this )
         msg_Err( p_demux, "cannot peek" );
         return VLC_EGENERIC;
     }
-    if( !strncmp( p_peek, "ADIF", 4 ) )
+    if( !strncmp( (char *)p_peek, "ADIF", 4 ) )
     {
         msg_Err( p_demux, "ADIF file. Not yet supported. (Please report)" );
         return VLC_EGENERIC;

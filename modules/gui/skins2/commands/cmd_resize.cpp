@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_resize.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_resize.cpp 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_resize.cpp 12955 2005-10-24 19:59:51Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -39,3 +39,20 @@ void CmdResize::execute()
     // Resize the layout
     m_rLayout.resize( m_width, m_height );
 }
+
+
+CmdResizeVout::CmdResizeVout( intf_thread_t *pIntf, void *pWindow, int width,
+                              int height ):
+    CmdGeneric( pIntf ), m_pWindow( pWindow ), m_width( width ),
+    m_height( height )
+{
+}
+
+
+void CmdResizeVout::execute()
+{
+    // TODO
+    msg_Dbg( getIntf(), "New vout size requested: %d x %d", m_width,
+             m_height );
+}
+

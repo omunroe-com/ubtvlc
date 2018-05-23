@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc.h: global header for vlc
  *****************************************************************************
- * Copyright (C) 1998-2004 VideoLAN
- * $Id: vlc.h 10976 2005-05-11 16:56:46Z damienf $
+ * Copyright (C) 1998-2004 the VideoLAN team
+ * $Id: vlc.h 12455 2005-09-03 09:16:11Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -46,6 +46,12 @@ typedef int vlc_bool_t;
 typedef struct vlc_list_t vlc_list_t;
 typedef struct vlc_object_t vlc_object_t;
 
+#if (defined( WIN32 ) || defined( UNDER_CE )) && !defined( __MINGW32__ )
+typedef signed __int64 vlc_int64_t;
+# else
+typedef signed long long vlc_int64_t;
+#endif
+
 /**
  * \defgroup var_type Variable types
  * These are the different types a vlc variable can have.
@@ -79,12 +85,7 @@ typedef union
     void *          p_address;
     vlc_object_t *  p_object;
     vlc_list_t *    p_list;
-
-#if (defined( WIN32 ) || defined( UNDER_CE )) && !defined( __MINGW32__ )
-    signed __int64   i_time;
-# else
-    signed long long i_time;
-#endif
+    vlc_int64_t     i_time;
 
     struct { char *psz_name; int i_object_id; } var;
 
@@ -121,6 +122,7 @@ struct vlc_list_t
 #define VLC_EBADVAR        -31                         /* Bad variable value */
 
 #define VLC_EEXIT         -255                             /* Program exited */
+#define VLC_EEXITSUCCESS  -999                /* Program exited successfully */
 #define VLC_EGENERIC      -666                              /* Generic error */
 
 /*****************************************************************************
@@ -152,7 +154,8 @@ struct vlc_list_t
 /*****************************************************************************
  * Exported libvlc API
  *****************************************************************************/
-
+#if !defined( __VLC__ )
+/* Otherwise they are declared and exported in vlc_common.h */
 /**
  * Retrieve libvlc version
  *
@@ -161,12 +164,56 @@ struct vlc_list_t
 char const * VLC_Version ( void );
 
 /**
+ * Retrieve libvlc compile time
+ *
+ * \return a string containing the libvlc compile time
+ */
+char const * VLC_CompileTime ( void );
+
+/**
+ * Retrieve the username of the libvlc builder
+ *
+ * \return a string containing the username of the libvlc builder
+ */
+char const * VLC_CompileBy ( void );
+
+/**
+ * Retrieve the host of the libvlc builder
+ *
+ * \return a string containing the host of the libvlc builder
+ */
+char const * VLC_CompileHost ( void );
+
+/**
+ * Retrieve the domain name of the host of the libvlc builder
+ *
+ * \return a string containing the domain name of the host of the libvlc builder
+ */
+char const * VLC_CompileDomain ( void );
+
+/**
+ * Retrieve libvlc compiler version
+ *
+ * \return a string containing the libvlc compiler version
+ */
+char const * VLC_Compiler ( void );
+
+/**
+ * Retrieve libvlc changeset
+ *
+ * \return a string containing the libvlc subversion changeset
+ */
+char const * VLC_Changeset ( void );
+
+/**
  * Return an error string
  *
  * \param i_err an error code
  * \return an error string
  */
 char const * VLC_Error ( int i_err );
+
+#endif /* __VLC__ */
 
 /**
  * Initialize libvlc

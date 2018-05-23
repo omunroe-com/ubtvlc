@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_vars.cpp
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: cmd_vars.cpp 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: cmd_vars.cpp 12949 2005-10-23 17:42:16Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -25,6 +25,7 @@
 #include "../src/vlcproc.hpp"
 #include "../utils/var_text.hpp"
 #include "../vars/playlist.hpp"
+#include "../vars/playtree.hpp"
 
 
 void CmdNotifyPlaylist::execute()
@@ -32,6 +33,21 @@ void CmdNotifyPlaylist::execute()
     // Notify the playlist variable
     Playlist &rVar = VlcProc::instance( getIntf() )->getPlaylistVar();
     rVar.onChange();
+}
+
+void CmdPlaytreeChanged::execute()
+{
+    // Notify  the playtree variable
+    Playtree &rVar = VlcProc::instance( getIntf() )->getPlaytreeVar();
+    rVar.onChange();
+}
+
+
+void CmdPlaytreeUpdate::execute()
+{
+    // Notify  the playtree variable
+    Playtree &rVar = VlcProc::instance( getIntf() )->getPlaytreeVar();
+    rVar.onUpdate( m_id );
 }
 
 

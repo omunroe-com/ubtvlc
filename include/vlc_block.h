@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_block.h: Data blocks management functions
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: vlc_block.h 11086 2005-05-20 18:00:02Z massiot $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: vlc_block.h 13022 2005-10-29 18:11:46Z md $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -77,6 +77,7 @@ typedef struct block_sys_t block_sys_t;
 struct block_t
 {
     block_t     *p_next;
+    block_t     *p_prev;
 
     uint32_t    i_flags;
 

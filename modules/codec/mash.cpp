@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mash.c: Video decoder using openmash codec implementations
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: mash.cpp 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: mash.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * gtk_main.c : Gtk+ wrapper for gtk_main
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: gtk_main.c 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: gtk_main.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * filter.c : DirectShow access module for vlc
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: filter.cpp 10183 2005-03-07 16:33:56Z gbazin $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: filter.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *

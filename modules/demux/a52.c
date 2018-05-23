@@ -1,8 +1,8 @@
 /*****************************************************************************
  * a52.c : raw A/52 stream input module for vlc
  *****************************************************************************
- * Copyright (C) 2001 VideoLAN
- * $Id: a52.c 9961 2005-02-16 22:01:41Z robux4 $
+ * Copyright (C) 2001 the VideoLAN team
+ * $Id: a52.c 11699 2005-07-11 08:52:14Z sam $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -81,18 +81,18 @@ static int Open( vlc_object_t * p_this )
     demux_sys_t *p_sys;
     byte_t      *p_peek;
     int         i_peek = 0;
-    vlc_bool_t  b_big_endian;
+    vlc_bool_t  b_big_endian = 0; /* Arbitrary initialisation */
 
     /* Check if we are dealing with a WAV file */
     if( stream_Peek( p_demux->s, &p_peek, 12 ) == 12 &&
-        !strncmp( p_peek, "RIFF", 4 ) && !strncmp( &p_peek[8], "WAVE", 4 ) )
+        !memcmp( p_peek, "RIFF", 4 ) && !memcmp( p_peek + 8, "WAVE", 4 ) )
     {
         int i_size;
 
         /* Skip the wave header */
         i_peek = 12 + 8;
         while( stream_Peek( p_demux->s, &p_peek, i_peek ) == i_peek &&
-               strncmp( p_peek + i_peek - 8, "data", 4 ) )
+               memcmp( p_peek + i_peek - 8, "data", 4 ) )
         {
             i_peek += GetDWLE( p_peek + i_peek - 4 ) + 8;
         }

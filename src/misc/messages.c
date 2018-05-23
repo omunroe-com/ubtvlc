@@ -3,8 +3,8 @@
  * This library provides an interface to the message queue to be used by other
  * modules, especially intf modules. See config.h for output configuration.
  *****************************************************************************
- * Copyright (C) 1998-2004 VideoLAN
- * $Id: messages.c 10710 2005-04-17 12:58:33Z sigmunau $
+ * Copyright (C) 1998-2005 the VideoLAN team
+ * $Id: messages.c 12729 2005-10-02 08:00:06Z courmisch $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -99,18 +99,19 @@ void __msg_Create( vlc_object_t *p_this )
  */
 void __msg_Flush( vlc_object_t *p_this )
 {
-    int i_index;
-
     vlc_mutex_lock( &p_this->p_libvlc->msg_bank.lock );
 
     p_this->p_libvlc->msg_bank.b_configured = VLC_TRUE;
 
+#if 0
+    /* Some messages remain in the queue, dont rewrite them */
     for( i_index = p_this->p_libvlc->msg_bank.i_start;
          i_index != p_this->p_libvlc->msg_bank.i_stop;
          i_index = (i_index+1) % VLC_MSG_QSIZE )
     {
         PrintMsg( p_this, &p_this->p_libvlc->msg_bank.msg[i_index] );
     }
+#endif
 
     FlushMsg( &p_this->p_libvlc->msg_bank );
 
@@ -209,8 +210,7 @@ void __msg_Unsubscribe( vlc_object_t *p_this, msg_subscription_t *p_sub )
     /* Remove this subscription */
     REMOVE_ELEM( p_bank->pp_sub, p_bank->i_sub, i_index );
 
-    free( p_sub );
-
+    if( p_sub ) free( p_sub );
     vlc_mutex_unlock( &p_bank->lock );
 }
 
@@ -377,8 +377,10 @@ static void QueueMsg( vlc_object_t *p_this, int i_type, const char *psz_module,
 
     if( p_bank->b_overflow )
     {
-        free( p_item->psz_module );
-        free( p_item->psz_msg );
+        if( p_item->psz_module )
+            free( p_item->psz_module );
+        if( p_item->psz_msg )
+            free( p_item->psz_msg );
     }
 
     vlc_mutex_unlock( &p_bank->lock );
@@ -426,8 +428,10 @@ static void FlushMsg ( msg_bank_t *p_bank )
          i_index != i_stop;
          i_index = (i_index+1) % VLC_MSG_QSIZE )
     {
-        free( p_bank->msg[i_index].psz_msg );
-        free( p_bank->msg[i_index].psz_module );
+        if( p_bank->msg[i_index].psz_msg )
+            free( p_bank->msg[i_index].psz_msg );
+        if( p_bank->msg[i_index].psz_module )
+            free( p_bank->msg[i_index].psz_module );
     }
 
     /* Update the new start value */

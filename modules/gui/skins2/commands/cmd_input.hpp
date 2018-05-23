@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_input.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_input.hpp 10401 2005-03-21 19:24:06Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_input.hpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mmsh.c:
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: mmsh.c 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id: mmsh.c 12080 2005-08-09 13:33:36Z jpsaman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -206,7 +206,7 @@ static int Control( access_t *p_access, int i_query, va_list args )
 
         case ACCESS_GET_PRIVATE_ID_STATE:
             i_int = (int)va_arg( args, int );
-            pb_bool = (vlc_bool_t*)va_arg( args, vlc_bool_t );
+            pb_bool = (vlc_bool_t *)va_arg( args, vlc_bool_t * );
 
             if( i_int < 0 || i_int > 127 )
                 return VLC_EGENERIC;
@@ -286,12 +286,12 @@ static int Read( access_t *p_access, uint8_t *p_buffer, int i_len )
     if( p_access->info.b_eof )
         return 0;
 
-    while( i_data < i_len )
+    while( i_data < (size_t) i_len )
     {
         if( p_access->info.i_pos < p_sys->i_start + p_sys->i_header )
         {
             int i_offset = p_access->info.i_pos - p_sys->i_start;
-            i_copy = __MIN( p_sys->i_header - i_offset, i_len - i_data );
+            i_copy = __MIN( p_sys->i_header - i_offset, (int)((size_t)i_len - i_data) );
             memcpy( &p_buffer[i_data], &p_sys->p_header[i_offset], i_copy );
 
             i_data += i_copy;
@@ -541,7 +541,7 @@ static int Describe( access_t  *p_access, char **ppsz_location )
      *        and bitrate mutual exclusion(optional) */
     E_( asf_HeaderParse )( &p_sys->asfh,
                            p_sys->p_header, p_sys->i_header );
-    msg_Dbg( p_access, "packet count=%lld packet size=%d",
+    msg_Dbg( p_access, "packet count="I64Fd" packet size=%d",
              p_sys->asfh.i_data_packets_count,
              p_sys->asfh.i_min_data_packet_size );
 

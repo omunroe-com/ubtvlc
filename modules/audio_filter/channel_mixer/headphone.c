@@ -2,8 +2,8 @@
  * headphone.c : headphone virtual spatialization channel mixer module
  *               -> gives the feeling of a real room with a simple headphone
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: headphone.c 10112 2005-03-03 06:58:04Z zorglub $
+ * Copyright (C) 2002-2005 the VideoLAN team
+ * $Id: headphone.c 12917 2005-10-22 17:58:12Z babal $
  *
  * Authors: Boris Dorès <babal@via.ecp.fr>
  *
@@ -47,15 +47,27 @@ static void DoWork    ( aout_instance_t *, aout_filter_t *, aout_buffer_t *,
  *****************************************************************************/
 #define MODULE_DESCRIPTION N_ ( \
      "This effect gives you the feeling that you are standing in a room " \
-     "with a complete 5.1 speaker set when using only a headphone, " \
+     "with a complete 7.1 speaker set when using only a headphone, " \
      "providing a more realistic sound experience. It should also be " \
      "more comfortable and less tiring when listening to music for " \
      "long periods of time.\nIt works with any source format from mono " \
-     "to 5.1.")
+     "to 7.1.")
 
 #define HEADPHONE_DIM_TEXT N_("Characteristic dimension")
 #define HEADPHONE_DIM_LONGTEXT N_( \
      "Distance between front left speaker and listener in meters.")
+
+#define HEADPHONE_COMPENSATE_TEXT N_("Compensate delay")
+#define HEADPHONE_COMPENSATE_LONGTEXT N_( \
+     "The delay which is introduced by the physical algorithm may "\
+     "sometimes be disturbing for the lipsync. In that case, turn "\
+     "this on to compensate.")
+
+#define HEADPHONE_DOLBY_TEXT N_("No decoding of Dolby Surround")
+#define HEADPHONE_DOLBY_LONGTEXT N_( \
+     "If this option is turned on (not recommended), Dolby Surround "\
+     "encoded streams won't be decoded before being processed by this "\
+     "filter.")
 
 vlc_module_begin();
     set_description( N_("Headphone channel mixer with virtual spatialization effect") );
@@ -65,6 +77,10 @@ vlc_module_begin();
 
     add_integer( "headphone-dim", 10, NULL, HEADPHONE_DIM_TEXT,
                  HEADPHONE_DIM_LONGTEXT, VLC_FALSE );
+    add_bool( "headphone-compensate", 0, NULL, HEADPHONE_COMPENSATE_TEXT,
+              HEADPHONE_COMPENSATE_LONGTEXT, VLC_TRUE );
+    add_bool( "headphone-dolby", 0, NULL, HEADPHONE_DOLBY_TEXT,
+              HEADPHONE_DOLBY_LONGTEXT, VLC_TRUE );
 
     set_capability( "audio filter", 0 );
     set_callbacks( Create, Destroy );
@@ -112,9 +128,10 @@ struct aout_filter_sys_t
 static void ComputeChannelOperations ( struct aout_filter_sys_t * p_data
         , unsigned int i_rate , unsigned int i_next_atomic_operation
         , int i_source_channel_offset , double d_x , double d_z
-        , double d_channel_amplitude_factor )
+        , double d_compensation_length , double d_channel_amplitude_factor )
 {
     double d_c = 340; /*sound celerity (unit: m/s)*/
+    double d_compensation_delay = (d_compensation_length-0.1) / d_c * i_rate;
 
     /* Left ear */
     p_data->p_atomic_operations[i_next_atomic_operation]
@@ -123,7 +140,7 @@ static void ComputeChannelOperations ( struct aout_filter_sys_t * p_data
         .i_dest_channel_offset = 0;/* left */
     p_data->p_atomic_operations[i_next_atomic_operation]
         .i_delay = (int)( sqrt( (-0.1-d_x)*(-0.1-d_x) + (0-d_z)*(0-d_z) )
-                          / d_c * i_rate );
+                          / d_c * i_rate - d_compensation_delay );
     if ( d_x < 0 )
     {
         p_data->p_atomic_operations[i_next_atomic_operation]
@@ -147,7 +164,7 @@ static void ComputeChannelOperations ( struct aout_filter_sys_t * p_data
         .i_dest_channel_offset = 1;/* right */
     p_data->p_atomic_operations[i_next_atomic_operation + 1]
         .i_delay = (int)( sqrt( (0.1-d_x)*(0.1-d_x) + (0-d_z)*(0-d_z) )
-                          / d_c * i_rate );
+                          / d_c * i_rate - d_compensation_delay );
     if ( d_x < 0 )
     {
         p_data->p_atomic_operations[i_next_atomic_operation + 1]
@@ -172,6 +189,7 @@ static int Init ( aout_filter_t * p_filter , struct aout_filter_sys_t * p_data
     double d_x = config_GetInt ( p_filter , "headphone-dim" );
     double d_z = d_x;
     double d_z_rear = -d_x/3;
+    double d_min = 0;
     unsigned int i_next_atomic_operation;
     int i_source_channel_offset;
     unsigned int i;
@@ -182,8 +200,25 @@ static int Init ( aout_filter_t * p_filter , struct aout_filter_sys_t * p_data
         return 0;
     }
 
+    if ( config_GetInt ( p_filter , "headphone-compensate" ) )
+    {
+        /* minimal distance to any speaker */
+        if ( i_physical_channels & AOUT_CHAN_REARCENTER )
+        {
+            d_min = d_z_rear;
+        }
+        else
+        {
+            d_min = d_z;
+        }
+    }
+
     /* Number of elementary operations */
     p_data->i_nb_atomic_operations = i_nb_channels * 2;
+    if ( i_physical_channels & AOUT_CHAN_CENTER )
+    {
+        p_data->i_nb_atomic_operations += 2;
+    }
     p_data->p_atomic_operations = malloc ( sizeof(struct atomic_operation_t)
             * p_data->i_nb_atomic_operations );
     if ( p_data->p_atomic_operations == NULL )
@@ -200,7 +235,7 @@ static int Init ( aout_filter_t * p_filter , struct aout_filter_sys_t * p_data
     {
         ComputeChannelOperations ( p_data , i_rate
                 , i_next_atomic_operation , i_source_channel_offset
-                , -d_x , d_z , 2.0 / i_nb_channels );
+                , -d_x , d_z , d_min , 2.0 / i_nb_channels );
         i_next_atomic_operation += 2;
         i_source_channel_offset++;
     }
@@ -208,47 +243,7 @@ static int Init ( aout_filter_t * p_filter , struct aout_filter_sys_t * p_data
     {
         ComputeChannelOperations ( p_data , i_rate
                 , i_next_atomic_operation , i_source_channel_offset
-                , d_x , d_z , 2.0 / i_nb_channels );
-        i_next_atomic_operation += 2;
-        i_source_channel_offset++;
-    }
-    if ( i_physical_channels & AOUT_CHAN_REARLEFT )
-    {
-        ComputeChannelOperations ( p_data , i_rate
-                , i_next_atomic_operation , i_source_channel_offset
-                , -d_x , d_z_rear , 1.5 / i_nb_channels );
-        i_next_atomic_operation += 2;
-        i_source_channel_offset++;
-    }
-    if ( i_physical_channels & AOUT_CHAN_REARRIGHT )
-    {
-        ComputeChannelOperations ( p_data , i_rate
-                , i_next_atomic_operation , i_source_channel_offset
-                , d_x , d_z_rear , 1.5 / i_nb_channels );
-        i_next_atomic_operation += 2;
-        i_source_channel_offset++;
-    }
-    if ( i_physical_channels & AOUT_CHAN_REARCENTER )
-    {
-        ComputeChannelOperations ( p_data , i_rate
-                , i_next_atomic_operation , i_source_channel_offset
-                , 0 , -d_z , 1.5 / i_nb_channels );
-        i_next_atomic_operation += 2;
-        i_source_channel_offset++;
-    }
-    if ( i_physical_channels & AOUT_CHAN_CENTER )
-    {
-        ComputeChannelOperations ( p_data , i_rate
-                , i_next_atomic_operation , i_source_channel_offset
-                , 0 , d_z , 1.5 / i_nb_channels );
-        i_next_atomic_operation += 2;
-        i_source_channel_offset++;
-    }
-    if ( i_physical_channels & AOUT_CHAN_LFE )
-    {
-        ComputeChannelOperations ( p_data , i_rate
-                , i_next_atomic_operation , i_source_channel_offset
-                , 0 , d_z_rear , 5.0 / i_nb_channels );
+                , d_x , d_z , d_min , 2.0 / i_nb_channels );
         i_next_atomic_operation += 2;
         i_source_channel_offset++;
     }
@@ -256,7 +251,7 @@ static int Init ( aout_filter_t * p_filter , struct aout_filter_sys_t * p_data
     {
         ComputeChannelOperations ( p_data , i_rate
                 , i_next_atomic_operation , i_source_channel_offset
-                , -d_x , 0 , 1.5 / i_nb_channels );
+                , -d_x , 0 , d_min , 1.5 / i_nb_channels );
         i_next_atomic_operation += 2;
         i_source_channel_offset++;
     }
@@ -264,7 +259,52 @@ static int Init ( aout_filter_t * p_filter , struct aout_filter_sys_t * p_data
     {
         ComputeChannelOperations ( p_data , i_rate
                 , i_next_atomic_operation , i_source_channel_offset
-                , d_x , 0 , 1.5 / i_nb_channels );
+                , d_x , 0 , d_min , 1.5 / i_nb_channels );
+        i_next_atomic_operation += 2;
+        i_source_channel_offset++;
+    }
+    if ( i_physical_channels & AOUT_CHAN_REARLEFT )
+    {
+        ComputeChannelOperations ( p_data , i_rate
+                , i_next_atomic_operation , i_source_channel_offset
+                , -d_x , d_z_rear , d_min , 1.5 / i_nb_channels );
+        i_next_atomic_operation += 2;
+        i_source_channel_offset++;
+    }
+    if ( i_physical_channels & AOUT_CHAN_REARRIGHT )
+    {
+        ComputeChannelOperations ( p_data , i_rate
+                , i_next_atomic_operation , i_source_channel_offset
+                , d_x , d_z_rear , d_min , 1.5 / i_nb_channels );
+        i_next_atomic_operation += 2;
+        i_source_channel_offset++;
+    }
+    if ( i_physical_channels & AOUT_CHAN_REARCENTER )
+    {
+        ComputeChannelOperations ( p_data , i_rate
+                , i_next_atomic_operation , i_source_channel_offset
+                , 0 , -d_z , d_min , 1.5 / i_nb_channels );
+        i_next_atomic_operation += 2;
+        i_source_channel_offset++;
+    }
+    if ( i_physical_channels & AOUT_CHAN_CENTER )
+    {
+        /* having two center channels increases the spatialization effect */
+        ComputeChannelOperations ( p_data , i_rate
+                , i_next_atomic_operation , i_source_channel_offset
+                , d_x / 5.0 , d_z , d_min , 0.75 / i_nb_channels );
+        i_next_atomic_operation += 2;
+        ComputeChannelOperations ( p_data , i_rate
+                , i_next_atomic_operation , i_source_channel_offset
+                , -d_x / 5.0 , d_z , d_min , 0.75 / i_nb_channels );
+        i_next_atomic_operation += 2;
+        i_source_channel_offset++;
+    }
+    if ( i_physical_channels & AOUT_CHAN_LFE )
+    {
+        ComputeChannelOperations ( p_data , i_rate
+                , i_next_atomic_operation , i_source_channel_offset
+                , 0 , d_z_rear , d_min , 5.0 / i_nb_channels );
         i_next_atomic_operation += 2;
         i_source_channel_offset++;
     }
@@ -301,23 +341,58 @@ static int Init ( aout_filter_t * p_filter , struct aout_filter_sys_t * p_data
 static int Create( vlc_object_t *p_this )
 {
     aout_filter_t * p_filter = (aout_filter_t *)p_this;
+    vlc_bool_t b_fit = VLC_TRUE;
 
-    if ( p_filter->output.i_physical_channels != ( AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT )
-          || p_filter->input.i_format != p_filter->output.i_format
-          || p_filter->input.i_rate != p_filter->output.i_rate
-          || (p_filter->input.i_format != VLC_FOURCC('f','l','3','2')
-               && p_filter->input.i_format != VLC_FOURCC('f','i','3','2')) )
+    /* Activate this filter only with stereo devices */
+    if ( p_filter->output.i_physical_channels
+            != (AOUT_CHAN_LEFT|AOUT_CHAN_RIGHT) )
     {
-        msg_Dbg( p_filter, "Filter discarded (invalid format)" );
-        return -1;
+        msg_Dbg( p_filter, "Filter discarded (incompatible format)" );
+        return VLC_EGENERIC;
+    }
+
+    /* Request a specific format if not already compatible */
+    if ( p_filter->input.i_original_channels
+            != p_filter->output.i_original_channels )
+    {
+        b_fit = VLC_FALSE;
+        p_filter->input.i_original_channels =
+                                        p_filter->output.i_original_channels;
+    }
+    if ( p_filter->input.i_format != VLC_FOURCC('f','l','3','2')
+          || p_filter->output.i_format != VLC_FOURCC('f','l','3','2') )
+    {
+        b_fit = VLC_FALSE;
+        p_filter->input.i_format = VLC_FOURCC('f','l','3','2');
+        p_filter->output.i_format = VLC_FOURCC('f','l','3','2');
+    }
+    if ( p_filter->input.i_rate != p_filter->output.i_rate )
+    {
+        b_fit = VLC_FALSE;
+        p_filter->input.i_rate = p_filter->output.i_rate;
+    }
+    if ( p_filter->input.i_physical_channels == (AOUT_CHAN_LEFT|AOUT_CHAN_RIGHT)
+          && ( p_filter->input.i_original_channels & AOUT_CHAN_DOLBYSTEREO )
+          && ! config_GetInt ( p_filter , "headphone-dolby" ) )
+    {
+        b_fit = VLC_FALSE;
+        p_filter->input.i_physical_channels = AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT |
+                                              AOUT_CHAN_CENTER |
+                                              AOUT_CHAN_REARLEFT |
+                                              AOUT_CHAN_REARRIGHT;
+    }
+    if ( ! b_fit )
+    {
+        msg_Dbg( p_filter, "Requesting specific format" );
+        return VLC_EGENERIC;
     }
 
     /* Allocate the memory needed to store the module's structure */
     p_filter->p_sys = malloc( sizeof(struct aout_filter_sys_t) );
     if ( p_filter->p_sys == NULL )
     {
-        msg_Err( p_filter, "out of memory" );
-        return -1;
+        msg_Err( p_filter, "Out of memory" );
+        return VLC_EGENERIC;
     }
     p_filter->p_sys->i_overflow_buffer_size = 0;
     p_filter->p_sys->p_overflow_buffer = NULL;
@@ -329,13 +404,13 @@ static int Create( vlc_object_t *p_this )
                 , p_filter->input.i_physical_channels
                 ,  p_filter->input.i_rate ) < 0 )
     {
-        return -1;
+        return VLC_EGENERIC;
     }
 
     p_filter->pf_do_work = DoWork;
     p_filter->b_in_place = 0;
 
-    return 0;
+    return VLC_SUCCESS;
 }
 
 /*****************************************************************************

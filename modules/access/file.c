@@ -1,8 +1,8 @@
 /*****************************************************************************
  * file.c: file input (file: access plug-in)
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: file.c 10310 2005-03-11 22:36:40Z anil $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: file.c 12318 2005-08-21 17:46:48Z damienf $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -69,6 +69,8 @@
 #   define lseek fseek
 #endif
 
+#include "charset.h"
+
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
@@ -106,7 +108,7 @@ static int  Seek( access_t *, int64_t );
 static int  Read( access_t *, uint8_t *, int );
 static int  Control( access_t *, int, va_list );
 
-static int  _OpenFile( access_t *, char * );
+static int  _OpenFile( access_t *, const char * );
 
 typedef struct
 {
@@ -146,28 +148,55 @@ static int Open( vlc_object_t *p_this )
 {
     access_t     *p_access = (access_t*)p_this;
     access_sys_t *p_sys;
-    char *psz_name = p_access->psz_path;
+    char *psz_name = strdup( p_access->psz_path );
     char *psz;
 
 #ifdef HAVE_SYS_STAT_H
-    int                 i_stat;
     struct stat         stat_info;
 #endif
     vlc_bool_t          b_stdin;
 
     file_entry_t *      p_file;
 
-
     b_stdin = psz_name[0] == '-' && psz_name[1] == '\0';
 
-#ifdef HAVE_SYS_STAT_H
-    if( !b_stdin && (i_stat = stat( psz_name, &stat_info )) == (-1) )
+    if( !b_stdin )
     {
-        msg_Warn( p_access, "cannot stat() file `%s' (%s)",
-                  psz_name, strerror(errno));
-        return VLC_EGENERIC;
-    }
+        if( psz_name[0] == '~' && psz_name[1] == '/' )
+        {
+            psz = malloc( strlen(p_access->p_vlc->psz_homedir)
+                           + strlen(psz_name) );
+            /* This is incomplete : we should also support the ~cmassiot/
+             * syntax. */
+            sprintf( psz, "%s/%s", p_access->p_vlc->psz_homedir, psz_name + 2 );
+            free( psz_name );
+            psz_name = psz;
+        }
+#if defined(WIN32)
+        else if( !strcasecmp( p_access->psz_access, "file" )
+                && ('/' == psz_name[0]) && psz_name[1]
+                && (':' == psz_name[2]) && ('/' == psz_name[3]) )
+        {
+            /*
+            ** explorer can open path such as file:/C:/ or file:///C:/...
+            ** hence remove leading / if found
+            */
+            ++psz_name;
+        }
 #endif
+
+#ifdef HAVE_SYS_STAT_H
+        psz = ToLocale( psz_name );
+        if( stat( psz, &stat_info ) )
+        {
+            msg_Warn( p_access, "%s: %s", psz_name, strerror( errno ) );
+            LocaleFree( psz );
+            free( psz_name );
+            return VLC_EGENERIC;
+        }
+        LocaleFree( psz );
+#endif
+    }
 
     p_access->pf_read = Read;
     p_access->pf_block = NULL;
@@ -247,6 +276,7 @@ static int Open( vlc_object_t *p_this )
     else if( _OpenFile( p_access, psz_name ) )
     {
         free( p_sys );
+        free( psz_name );
         return VLC_EGENERIC;
     }
 
@@ -255,6 +285,7 @@ static int Open( vlc_object_t *p_this )
         /* FIXME that's bad because all others access will be probed */
         msg_Err( p_access, "file %s is empty, aborting", psz_name );
         free( p_sys );
+        free( psz_name );
         return VLC_EGENERIC;
     }
 
@@ -266,7 +297,7 @@ static int Open( vlc_object_t *p_this )
      */
     p_file = malloc( sizeof(file_entry_t) );
     p_file->i_size = p_access->info.i_size;
-    p_file->psz_name = strdup( psz_name );
+    p_file->psz_name = psz_name;
     TAB_APPEND( p_sys->i_file, p_sys->file, p_file );
 
     psz = var_CreateGetString( p_access, "file-cat" );
@@ -422,6 +453,7 @@ static int Read( access_t *p_access, uint8_t *p_buffer, int i_len )
         else if ( p_sys->file[i_file]->i_size != stat_info.st_size )
         {
             p_access->info.i_size += (stat_info.st_size - p_sys->file[i_file]->i_size );
+            p_sys->file[i_file]->i_size = stat_info.st_size;
             p_access->info.i_update |= INPUT_UPDATE_SIZE;
         }
     }
@@ -572,12 +604,16 @@ static int Control( access_t *p_access, int i_query, va_list args )
 /*****************************************************************************
  * OpenFile: Opens a specific file
  *****************************************************************************/
-static int _OpenFile( access_t * p_access, char * psz_name )
+static int _OpenFile( access_t * p_access, const char * psz_name )
 {
     access_sys_t *p_sys = p_access->p_sys;
+    const char *psz_localname;
+
+    psz_localname = ToLocale( psz_name );
 
 #ifdef UNDER_CE
-    p_sys->fd = fopen( psz_name, "rb" );
+    p_sys->fd = fopen( psz_localname, "rb" );
+    LocaleFree( psz_localname );
     if ( !p_sys->fd )
     {
         msg_Err( p_access, "cannot open file %s", psz_name );
@@ -590,7 +626,8 @@ static int _OpenFile( access_t * p_access, char * psz_name )
     fseek( p_sys->fd, 0, SEEK_SET );
 #else
 
-    p_sys->fd = open( psz_name, O_NONBLOCK /*| O_LARGEFILE*/ );
+    p_sys->fd = open( psz_localname, O_NONBLOCK /*| O_LARGEFILE*/ );
+    LocaleFree( psz_localname );
     if ( p_sys->fd == -1 )
     {
         msg_Err( p_access, "cannot open file %s (%s)", psz_name,

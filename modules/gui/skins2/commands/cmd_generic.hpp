@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_generic.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: cmd_generic.hpp 9641 2004-12-22 13:06:43Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: cmd_generic.hpp 12207 2005-08-15 15:54:32Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -42,6 +42,23 @@ class Cmd##name: public CmdGeneric \
         virtual string getType() const { return type; } \
 \
 };
+
+
+/// Macro to define a "callback" command inside a class
+#define DEFINE_CALLBACK( parent, action ) \
+class Cmd##action: public CmdGeneric \
+{ \
+    public: \
+        Cmd##action( parent *pParent ): \
+            CmdGeneric( pParent->getIntf() ), m_pParent( pParent ) {} \
+        virtual ~Cmd##action() {} \
+        virtual void execute(); \
+        virtual string getType() const { return "Cmd" #parent #action; } \
+    private: \
+        parent *m_pParent; \
+\
+} m_cmd##action; \
+friend class Cmd##action;
 
 
 /// Base class for skins commands

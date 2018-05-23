@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="iso-8859-1" ?>
-<!-- $Id: index.html 11499 2005-06-23 08:36:46Z xtophe $-->
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- $Id: index.html 12004 2005-08-04 14:58:44Z courmisch $-->
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD  XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml10/DTD/xhtml10transitional.dtd">
 
@@ -8,10 +8,9 @@
  <head>
     <title>VLC media player</title>
     <link href="/style.css" title="Default" rel="stylesheet" type="text/css" />
-    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <!-- Work around. should be done in the code -->
     <vlc id="if" param1="url_param"/>
-        <meta http-equiv="refresh" content="0;url=/" />
+        <meta http-equiv="Refresh" content="0;url=/" />
     <vlc id="else" />
         <meta http-equiv="Refresh" content="60;url=/">
     <vlc id="end" />
@@ -42,8 +41,6 @@ function changeMe(item)
 
  <body>
 
-program="<vlc id="get" param1="program" param2="int" />
-test2="<vlc id="get" param1="test2" param2="int" />
     <!-- left menu -->
     <div class="left">
       <div class="sectitle">Playback control</div>
@@ -88,7 +85,7 @@ test2="<vlc id="get" param1="test2" param2="int" />
         <form method="get" action="">
                <input type="hidden" name="control" value="volume" />
           Vol: <input type="text" name="value" size="5"/>
-               <input type="submit" value="Set" /><br /> (0 - 1024)<br /><span class="small">(for exemple: "536", "-12", "+42", "36%")</span>
+               <input type="submit" value="Set" /><br /> (0 - 1024)<br /><span class="small">(for example: "536", "-12", "+42", "36%")</span>
         </form>
         <br />
         <form method="get" action="">
@@ -243,7 +240,7 @@ test2="<vlc id="get" param1="test2" param2="int" />
       if ( seconds < 10 ) seconds = "0" + seconds;
       document.getElementById('length').innerHTML = hours+":"+minutes+":"+seconds;
       got_volume = <vlc id="value" param1="volume" />;
-      document.getElementById( 'volume').innerHTML = Math.ceil(got_volume * 100/1024) + " %";
+      document.getElementById( 'volume').innerHTML = Math.ceil(got_volume * 400/1024) + " %";
     </script>
 </body>
 </html>

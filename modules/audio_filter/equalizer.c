@@ -1,8 +1,8 @@
 /*****************************************************************************
  * equalizer.c:
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: equalizer.c 10257 2005-03-10 13:05:43Z zorglub $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: equalizer.c 13308 2005-11-21 14:05:12Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -136,16 +136,26 @@ static int Open( vlc_object_t *p_this )
 {
     aout_filter_t     *p_filter = (aout_filter_t *)p_this;
     aout_filter_sys_t *p_sys;
+    vlc_bool_t         b_fit = VLC_TRUE;
 
     if( p_filter->input.i_format != VLC_FOURCC('f','l','3','2' ) ||
         p_filter->output.i_format != VLC_FOURCC('f','l','3','2') )
     {
+        b_fit = VLC_FALSE;
+        p_filter->input.i_format = VLC_FOURCC('f','l','3','2');
+        p_filter->output.i_format = VLC_FOURCC('f','l','3','2');
         msg_Warn( p_filter, "Bad input or output format" );
-        return VLC_EGENERIC;
     }
     if ( !AOUT_FMTS_SIMILAR( &p_filter->input, &p_filter->output ) )
     {
+        b_fit = VLC_FALSE;
+        memcpy( &p_filter->output, &p_filter->input,
+                sizeof(audio_sample_format_t) );
         msg_Warn( p_filter, "input and output formats are not similar" );
+    }
+
+    if ( ! b_fit )
+    {
         return VLC_EGENERIC;
     }
 
@@ -349,7 +359,8 @@ static int EqzInit( aout_filter_t *p_filter, int i_rate )
         strstr( p_sys->psz_newbands, val2.psz_string ) ) || !*val2.psz_string )
     {
         var_SetString( p_aout, "equalizer-bands", p_sys->psz_newbands );
-        var_SetFloat( p_aout, "equalizer-preamp", p_sys->f_newpreamp );
+        if( p_sys->f_newpreamp == p_sys->f_gamp )
+            var_SetFloat( p_aout, "equalizer-preamp", p_sys->f_newpreamp );
     }
 
     /* Add our own callbacks */

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * a52tospdif.c : encapsulates A/52 frames into S/PDIF packets
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: a52tospdif.c 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: a52tospdif.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Stéphane Borel <stef@via.ecp.fr>

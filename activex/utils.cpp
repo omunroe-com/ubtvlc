@@ -1,7 +1,7 @@
 /*****************************************************************************
  * utils.cpp: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 VideoLAN
+ * Copyright (C) 2005 the VideoLAN team
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -28,7 +28,7 @@
 
 using namespace std;
 
-char *CStrFromBSTR(int codePage, BSTR bstr)
+char *CStrFromBSTR(UINT codePage, BSTR bstr)
 {
     UINT len = SysStringLen(bstr);
     if( len > 0 )
@@ -37,28 +37,31 @@ char *CStrFromBSTR(int codePage, BSTR bstr)
                 0, bstr, len, NULL, 0, NULL, NULL);
         if( mblen > 0 )
         {
-            char *buffer = (char *)malloc(mblen+1);
+            char *buffer = (char *)CoTaskMemAlloc(mblen+1);
             ZeroMemory(buffer, mblen+1);
             if( WideCharToMultiByte(codePage, 0, bstr, len, buffer, mblen, NULL, NULL) )
+            {
+                buffer[mblen] = '\0';
                 return buffer;
+            }
         }
     }
     return NULL;
 };
 
-BSTR BSTRFromCStr(int codePage, const char *s)
+BSTR BSTRFromCStr(UINT codePage, LPCSTR s)
 {
     int wideLen = MultiByteToWideChar(codePage, 0, s, -1, NULL, 0);
-    if( wideLen )
+    if( wideLen > 0 )
     {
-        WCHAR* wideStr = (WCHAR*)malloc(wideLen*sizeof(WCHAR));
+        WCHAR* wideStr = (WCHAR*)CoTaskMemAlloc(wideLen*sizeof(WCHAR));
         if( NULL != wideStr )
         {
             BSTR bstr;
 
             ZeroMemory(wideStr, wideLen*sizeof(WCHAR));
             MultiByteToWideChar(codePage, 0, s, -1, wideStr, wideLen);
-            bstr = SysAllocString(wideStr);
+            bstr = SysAllocStringLen(wideStr, wideLen);
             free(wideStr);
 
             return bstr;
@@ -79,6 +82,7 @@ HRESULT GetObjectProperty(LPUNKNOWN object, DISPID dispID, VARIANT& v)
     {
         DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
         VARIANT vres;
+        VariantInit(&vres);
         hr = pDisp->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT,
                 DISPATCH_PROPERTYGET, &dispparamsNoArgs, &vres, NULL, NULL);
         if( SUCCEEDED(hr) )
@@ -130,4 +134,29 @@ errReturn:
 	return hdc;
 };
 
+#define HIMETRIC_PER_INCH 2540
+
+void DPFromHimetric(HDC hdc, LPPOINT pt, int count)
+{
+    LONG lpX = GetDeviceCaps(hdc, LOGPIXELSX);
+    LONG lpY = GetDeviceCaps(hdc, LOGPIXELSY);
+    while( count-- )
+    {
+        pt->x = pt->x*lpX/HIMETRIC_PER_INCH;
+        pt->y = pt->y*lpY/HIMETRIC_PER_INCH;
+        ++pt;
+    }
+};
+
+void HimetricFromDP(HDC hdc, LPPOINT pt, int count)
+{
+    LONG lpX = GetDeviceCaps(hdc, LOGPIXELSX);
+    LONG lpY = GetDeviceCaps(hdc, LOGPIXELSY);
+    while( count-- )
+    {
+        pt->x = pt->x*HIMETRIC_PER_INCH/lpX;
+        pt->y = pt->y*HIMETRIC_PER_INCH/lpY;
+        ++pt;
+    }
+};
 

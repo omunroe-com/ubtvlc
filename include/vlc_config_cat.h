@@ -1,7 +1,7 @@
 /*****************************************************************************
  * vlc_help.h: Help strings
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
+ * Copyright (C) 2003 the VideoLAN team
  * $Id: vlc_help.h 9171 2004-11-06 11:15:50Z zorglub $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
@@ -97,13 +97,15 @@
 
 #define ACCESS_TITLE N_( "Access modules" )
 #define ACCESS_HELP N_( \
-    "Settings related to the various access methods used by VLC.\n" \
+    "Settings related to the various access methods used by VLC. " \
     "Common settings you may want to alter are HTTP proxy or " \
     "caching settings." )
 
-#define ACCESS_FILTER_TITLE N_( "Access filter modules" )
+#define ACCESS_FILTER_TITLE N_( "Access filters" )
 #define ACCESS_FILTER_HELP N_( \
-    "Settings related to the various access filter used by VLC.\n" )
+    "Access filters are special modules that allow advanced operations on " \
+    "the input side of VLC. You should not touch anything here unless you " \
+    "know what you are doing.\n" )
 
 #define DEMUX_TITLE N_("Demuxers")
 #define DEMUX_HELP N_( "Demuxers are used to separate audio and video streams" )
@@ -117,8 +119,8 @@
 #define SDEC_TITLE N_( "Other codecs")
 #define SDEC_HELP N_( "Settings for audio+video and miscellaneous decoders and encoders" )
 
-#define ADVANCED_TITLE N_("Advanced")
-#define ADVANCED_HELP N_( "Advanced input settings. Use with care." )
+#define ADVANCED_TITLE N_("General")
+#define ADVANCED_HELP N_( "General input settings. Use with care." )
 
 /* Sout */
 #define SOUT_TITLE N_( "Stream output" )
@@ -136,19 +138,19 @@
 #define SOUT_MUX_TITLE N_( "Muxers" )
 #define SOUT_MUX_HELP N_( "Muxers are the encapsulation formats that are used to " \
                           "put all the elementary streams (video, audio, ...) " \
-                          "together. This setting allows you to always force a muxer." \
+                          "together. This setting allows you to always force a muxer. " \
                           "You should probably not do that.\n" \
                           "You can also set default parameters for each muxer." )
 #define SOUT_ACO_TITLE N_( "Access output" )
-#define SOUT_ACO_HELP N_( "Access output are the ways the muxed streams are sent." \
-                          "This setting allows you to always force an access output." \
+#define SOUT_ACO_HELP N_( "Access output are the ways the muxed streams are sent. " \
+                          "This setting allows you to always force an access output. " \
                           "You should probably not do that.\n" \
                           "You can also set default parameters for each access output.")
 
 #define SOUT_PACKET_TITLE N_( "Packetizers" )
 #define SOUT_PACKET_HELP N_( "Packetizers are used to \"preprocess\" the elementary "\
-                              "streams before muxing." \
-                          "This setting allows you to always force a packetizer." \
+                              "streams before muxing. " \
+                          "This setting allows you to always force a packetizer. " \
                           "You should probably not do that.\n" \
                           "You can also set default parameters for each packetizer." )
 
@@ -300,13 +302,13 @@ static struct config_category_t categories_array[] =
 //    { SUBCAT_VIDEO_TEXT, TEXT_TITLE, TEXT_HELP },
 
     { CAT_INPUT, INPUT_TITLE, INPUT_HELP },
+    { SUBCAT_INPUT_GENERAL, ADVANCED_TITLE, ADVANCED_HELP },
     { SUBCAT_INPUT_ACCESS, ACCESS_TITLE, ACCESS_HELP },
     { SUBCAT_INPUT_ACCESS_FILTER, ACCESS_FILTER_TITLE, ACCESS_FILTER_HELP },
     { SUBCAT_INPUT_DEMUX, DEMUX_TITLE, DEMUX_HELP },
     { SUBCAT_INPUT_VCODEC, VDEC_TITLE, VDEC_HELP },
     { SUBCAT_INPUT_ACODEC, ADEC_TITLE, ADEC_HELP },
     { SUBCAT_INPUT_SCODEC, SDEC_TITLE, SDEC_HELP },
-    { SUBCAT_INPUT_ADVANCED, ADVANCED_TITLE, ADVANCED_HELP },
 
     { CAT_SOUT, SOUT_TITLE, SOUT_HELP },
     { SUBCAT_SOUT_GENERAL, GENERAL_TITLE, SOUT_GENERAL_HELP },

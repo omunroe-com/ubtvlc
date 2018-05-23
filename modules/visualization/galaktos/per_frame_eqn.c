@@ -1,8 +1,8 @@
 /*****************************************************************************
  * per_frame_eqn.c:
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: per_frame_eqn.c 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: per_frame_eqn.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *          code from projectM http://xmms-projectm.sourceforge.net

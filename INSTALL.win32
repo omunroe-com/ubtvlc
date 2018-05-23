@@ -1,4 +1,4 @@
-$Id: INSTALL.win32 10993 2005-05-13 13:31:39Z gbazin $
+$Id: INSTALL.win32 13314 2005-11-22 10:02:33Z xtophe $
 
 INSTALL file for the Windows9x/Me/NT4/2k/XP version of the VLC media player
 
@@ -94,13 +94,14 @@ http://download.videolan.org/pub/testing/contrib/
 We also provide a package with all the libraries already compiled so it is
 actually really easy to compile a full-featured version of vlc (these compiled
 libraries will only work with mingw or cygwin):
-http://download.videolan.org/pub/testing/win32/contrib-20040902-win32-bin-gcc3.3.1-only.tar.bz2 (Check out fo more recent versions at the same location). 
+http://download.videolan.org/pub/testing/win32/contrib-20051104-win32-bin-gcc3.3.1-only.tar.bz2 
+(This one was the current one when the release was done. More recent ones may work). 
 
 All you need to do is extract it in your root directory (the include files
 and libraries will be put in /usr/win32). You can do this with the following
 command: 
 
-  tar xjvf contrib-20040902-win32-bin-gcc3.3.1-only.tar.bz2 -C /
+  tar xjvf contrib-20051104-win32-bin-gcc3.3.1-only.tar.bz2 -C /
 
 Please note the "-C /". 
 
@@ -124,8 +125,8 @@ along those lines:
   LDFLAGS=-L/usr/win32/lib \
   CC=i586-mingw32msvc-gcc CXX=i586-mingw32msvc-g++ \
   ./configure --host=i586-mingw32msvc --build=i386-linux \
-      --disable-sdl --disable-gtk \
-      --enable-nls \
+      --disable-gtk \
+      --enable-nls --enable-sdl --with-sdl-config-path=/usr/win32/bin \
       --enable-ffmpeg --with-ffmpeg-mp3lame --with-ffmpeg-faac \
       --with-ffmpeg-zlib --enable-faad --enable-flac --enable-theora \
       --with-wx-config-path=/usr/win32/bin \
@@ -148,8 +149,8 @@ along those lines:
   LDFLAGS=-L/usr/win32/lib \
   CC=i586-mingw32msvc-gcc CXX=i586-mingw32msvc-g++ \
   ./configure --host=i586-mingw32msvc --build=i386-linux \
-      --disable-sdl --disable-gtk \
-      --enable-nls \
+      --disable-gtk \
+      --enable-nls --enable-sdl --with-sdl-config-path=/usr/win32/bin \
       --enable-ffmpeg --with-ffmpeg-mp3lame --with-ffmpeg-faac \
       --with-ffmpeg-zlib --enable-faad --enable-flac --enable-theora \
       --with-wx-config-path=/usr/win32/bin \
@@ -173,8 +174,8 @@ emulation layer, use something like this:
   LDFLAGS=-L/usr/win32/lib \
   CC="gcc -mno-cygwin" CXX="g++ -mno-cygwin" \
   ./configure \
-      --disable-sdl --disable-gtk \
-      --enable-nls \
+      --disable-gtk \
+      --enable-nls --enable-sdl --with-sdl-config-path=/usr/win32/bin \
       --enable-ffmpeg --with-ffmpeg-mp3lame --with-ffmpeg-faac \
       --with-ffmpeg-zlib --enable-faad --enable-flac --enable-theora \
       --with-wx-config-path=/usr/win32/bin \
@@ -197,8 +198,8 @@ lines:
   CPPFLAGS="-I/usr/win32/include -I/usr/win32/include/ebml" \
   LDFLAGS=-L/usr/win32/lib \
   ./configure \
-      --disable-sdl --disable-gtk \
-      --enable-nls \
+      --disable-gtk \
+      --enable-nls --enable-sdl --with-sdl-config-path=/usr/win32/bin \
       --enable-ffmpeg --with-ffmpeg-mp3lame --with-ffmpeg-faac \
       --with-ffmpeg-zlib --enable-faad --enable-flac --enable-theora \
       --with-wx-config-path=/usr/win32/bin \

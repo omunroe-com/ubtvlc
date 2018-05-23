@@ -1,8 +1,8 @@
 /*****************************************************************************
  * wince.h: private WinCE interface descriptor
  *****************************************************************************
- * Copyright (C) 1999-2004 VideoLAN
- * $Id: wince.h 10570 2005-04-06 08:27:13Z gbazin $
+ * Copyright (C) 1999-2004 the VideoLAN team
+ * $Id: wince.h 11988 2005-08-03 19:01:44Z courmisch $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Marodon Cedric <cedric_marodon@yahoo.fr>
@@ -533,12 +533,6 @@ protected:
 #else
 #   define _FROMMB(a) a
 #   define _TOMB(a) a
-#endif
-
-#if defined( ENABLE_NLS ) && defined( ENABLE_UTF8 )
-#   define ISUTF8 1
-#else // ENABLE_NLS && ENABLE_UTF8
-#   define ISUTF8 0
 #endif
 
 /*****************************************************************************

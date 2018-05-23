@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc.c: the vlc player
  *****************************************************************************
- * Copyright (C) 1998-2004 VideoLAN
- * $Id: vlc.c 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 1998-2004 the VideoLAN team
+ * $Id: vlc.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -99,7 +99,7 @@ int main( int i_argc, char *ppsz_argv[] )
     if( i_ret < 0 )
     {
         VLC_Destroy( 0 );
-        return i_ret;
+        return i_ret == VLC_EEXITSUCCESS ? 0 : i_ret;
     }
 
     i_ret = VLC_AddIntf( 0, NULL, VLC_TRUE, VLC_TRUE );

@@ -1,10 +1,10 @@
 /*****************************************************************************
  * renderer.c : dummy text rendering functions
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: renderer.c 10202 2005-03-08 01:54:55Z gbazin $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id: renderer.c 12836 2005-10-15 13:23:08Z sigmunau $
  *
- * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

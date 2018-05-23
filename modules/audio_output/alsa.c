@@ -1,8 +1,8 @@
 /*****************************************************************************
  * alsa.c : alsa plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000-2001 VideoLAN
- * $Id: alsa.c 10296 2005-03-11 09:54:47Z sigmunau $
+ * Copyright (C) 2000-2001 the VideoLAN team
+ * $Id: alsa.c 13164 2005-11-08 23:36:22Z bigben $
  *
  * Authors: Henri Fallon <henri@videolan.org> - Original Author
  *          Jeffrey Baker <jwbaker@acm.org> - Port to ALSA 1.0 API
@@ -52,7 +52,7 @@
 struct aout_sys_t
 {
     snd_pcm_t         * p_snd_pcm;
-    int                 i_period_time;
+    unsigned int                 i_period_time;
 
 #ifdef ALSA_DEBUG
     snd_output_t      * p_snd_stderr;
@@ -109,8 +109,6 @@ vlc_module_begin();
         change_string_list( ppsz_devices, ppsz_devices_text, FindDevicesCallback );
         change_action_add( FindDevicesCallback, N_("Refresh list") );
 
-
-
     set_capability( "audio output", 150 );
     set_callbacks( Open, Close );
 vlc_module_end();
@@ -155,18 +153,21 @@ static void Probe( aout_instance_t * p_aout,
         if ( snd_pcm_hw_params_set_format( p_sys->p_snd_pcm, p_hw,
                                            *pi_snd_pcm_format ) < 0 )
         {
+            int i_snd_rc = -1;
+
             if( *pi_snd_pcm_format != SND_PCM_FORMAT_S16 )
             {
                 *pi_snd_pcm_format = SND_PCM_FORMAT_S16;
-                if ( snd_pcm_hw_params_set_format( p_sys->p_snd_pcm, p_hw,
-                                                   *pi_snd_pcm_format ) < 0 )
-                {
-                    msg_Warn( p_aout, "unable to set stream sample size and "
-                              "word order, disabling linear PCM audio" );
-                    snd_pcm_close( p_sys->p_snd_pcm );
-                    var_Destroy( p_aout, "audio-device" );
-                    return;
-                }
+                i_snd_rc = snd_pcm_hw_params_set_format( p_sys->p_snd_pcm,
+                                                    p_hw, *pi_snd_pcm_format );
+            }
+            if ( i_snd_rc < 0 )
+            {
+                msg_Warn( p_aout, "unable to set stream sample size and "
+                          "word order, disabling linear PCM audio" );
+                snd_pcm_close( p_sys->p_snd_pcm );
+                var_Destroy( p_aout, "audio-device" );
+                return;
             }
         }
 
@@ -303,6 +304,7 @@ static int Open( vlc_object_t *p_this )
 
     int i_snd_rc = -1;
     unsigned int i_old_rate;
+    vlc_bool_t b_retry = VLC_TRUE;
 
     /* Allocate structures */
     p_aout->output.p_sys = p_sys = malloc( sizeof( aout_sys_t ) );
@@ -369,15 +371,6 @@ static int Open( vlc_object_t *p_this )
     if ( var_Type( p_aout, "audio-device" ) == 0 )
     {
         Probe( p_aout, psz_device, psz_iec_device, &i_snd_pcm_format );
-        switch( i_snd_pcm_format )
-        {
-        case SND_PCM_FORMAT_FLOAT:
-            i_vlc_pcm_format = VLC_FOURCC('f','l','3','2');
-            break;
-        case SND_PCM_FORMAT_S16:
-            i_vlc_pcm_format = AOUT_FMT_S16_NE;
-            break;
-        }
     }
 
     if ( var_Get( p_aout, "audio-device", &val ) < 0 )
@@ -387,13 +380,9 @@ static int Open( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
 
-    if ( val.i_int == AOUT_VAR_SPDIF )
+    p_aout->output.output.i_format = i_vlc_pcm_format;
+    if ( val.i_int == AOUT_VAR_5_1 )
     {
-        p_aout->output.output.i_format = VLC_FOURCC('s','p','d','i');
-    }
-    else if ( val.i_int == AOUT_VAR_5_1 )
-    {
-        p_aout->output.output.i_format = i_vlc_pcm_format;
         p_aout->output.output.i_physical_channels
             = AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_CENTER
                | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT
@@ -403,7 +392,6 @@ static int Open( vlc_object_t *p_this )
     }
     else if ( val.i_int == AOUT_VAR_2F2R )
     {
-        p_aout->output.output.i_format = i_vlc_pcm_format;
         p_aout->output.output.i_physical_channels
             = AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT
                | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT;
@@ -412,21 +400,19 @@ static int Open( vlc_object_t *p_this )
     }
     else if ( val.i_int == AOUT_VAR_STEREO )
     {
-        p_aout->output.output.i_format = i_vlc_pcm_format;
         p_aout->output.output.i_physical_channels
             = AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT;
     }
     else if ( val.i_int == AOUT_VAR_MONO )
     {
-        p_aout->output.output.i_format = i_vlc_pcm_format;
         p_aout->output.output.i_physical_channels = AOUT_CHAN_CENTER;
     }
-
     else
     {
         /* This should not happen ! */
         msg_Err( p_aout, "internal: can't find audio-device (%i)", val.i_int );
         free( p_sys );
+        free( psz_device );
         return VLC_EGENERIC;
     }
 
@@ -435,7 +421,7 @@ static int Open( vlc_object_t *p_this )
 #endif
 
     /* Open the device */
-    if ( AOUT_FMT_NON_LINEAR( &p_aout->output.output ) )
+    if ( val.i_int == AOUT_VAR_SPDIF )
     {
         if ( ( i_snd_rc = snd_pcm_open( &p_sys->p_snd_pcm, psz_iec_device,
                             SND_PCM_STREAM_PLAYBACK, 0 ) ) < 0 )
@@ -450,6 +436,7 @@ static int Open( vlc_object_t *p_this )
         i_snd_pcm_format = SND_PCM_FORMAT_S16;
         i_channels = 2;
 
+        i_vlc_pcm_format = VLC_FOURCC('s','p','d','i');
         p_aout->output.i_nb_samples = i_period_size = ALSA_SPDIF_PERIOD_SIZE;
         p_aout->output.output.i_bytes_per_frame = AOUT_SPDIF_SIZE;
         p_aout->output.output.i_frame_length = A52_FRAME_NB;
@@ -458,10 +445,28 @@ static int Open( vlc_object_t *p_this )
     }
     else
     {
+        int i;
+
         msg_Dbg( p_aout, "opening ALSA device `%s'", psz_device );
 
-        if ( ( i_snd_rc = snd_pcm_open( &p_sys->p_snd_pcm, psz_device,
-                            SND_PCM_STREAM_PLAYBACK, 0 ) ) < 0 )
+        /* Since it seems snd_pcm_close hasen't really released the device at
+          the time it returns, probe if the device is available in loop for 1s.
+          We cannot use blocking mode since the we would wait indefinitely when
+          switching from a dmx device to surround51. */
+
+        for( i = 10; i >= 0; i-- )
+        {
+            if ( ( i_snd_rc = snd_pcm_open( &p_sys->p_snd_pcm, psz_device,
+                   SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK ) ) == -EBUSY )
+            {
+                if( i ) msleep( 100000 /* 100ms */ );
+                else msg_Err( p_aout, "audio device: %s is already in use",
+                              psz_device );
+                continue;
+            }
+            break;
+        }
+        if( i_snd_rc < 0 )
         {
             msg_Err( p_aout, "cannot open ALSA device `%s' (%s)",
                              psz_device, snd_strerror( i_snd_rc ) );
@@ -469,6 +474,10 @@ static int Open( vlc_object_t *p_this )
             free( psz_device );
             return VLC_EGENERIC;
         }
+
+        /* We want blocking mode */
+        snd_pcm_nonblock( p_sys->p_snd_pcm, 0 );
+
         i_buffer_size = ALSA_DEFAULT_BUFFER_SIZE;
         i_channels = aout_FormatNbChannels( &p_aout->output.output );
 
@@ -485,93 +494,132 @@ static int Open( vlc_object_t *p_this )
     snd_pcm_hw_params_alloca(&p_hw);
     snd_pcm_sw_params_alloca(&p_sw);
 
-    /* Get Initial hardware parameters */
-    if ( ( i_snd_rc = snd_pcm_hw_params_any( p_sys->p_snd_pcm, p_hw ) ) < 0 )
+    /* Due to some bugs in alsa with some drivers, we need to retry in s16l
+       if snd_pcm_hw_params fails in fl32 */
+    while ( b_retry )
     {
-        msg_Err( p_aout, "unable to retrieve initial hardware parameters (%s)",
-                         snd_strerror( i_snd_rc ) );
-        goto error;
-    }
+        b_retry = VLC_FALSE;
 
-    /* Set format. */
-    if ( ( i_snd_rc = snd_pcm_hw_params_set_format( p_sys->p_snd_pcm, p_hw,
+        /* Get Initial hardware parameters */
+        if ( ( i_snd_rc = snd_pcm_hw_params_any( p_sys->p_snd_pcm, p_hw ) ) < 0 )
+        {
+            msg_Err( p_aout, "unable to retrieve initial hardware parameters (%s)",
+                         snd_strerror( i_snd_rc ) );
+            goto error;
+        }
+
+        /* Set format. */
+        if ( ( i_snd_rc = snd_pcm_hw_params_set_format( p_sys->p_snd_pcm, p_hw,
                                                     i_snd_pcm_format ) ) < 0 )
-    {
-        msg_Err( p_aout, "unable to set stream sample size and word order (%s)",
-                         snd_strerror( i_snd_rc ) );
-        goto error;
-    }
+        {
+            if( i_snd_pcm_format != SND_PCM_FORMAT_S16 )
+            {
+                i_snd_pcm_format = SND_PCM_FORMAT_S16;
+                i_snd_rc = snd_pcm_hw_params_set_format( p_sys->p_snd_pcm,
+                                                     p_hw, i_snd_pcm_format );
+            }
+            if ( i_snd_rc < 0 )
+            {
+                msg_Err( p_aout, "unable to set stream sample size and "
+                     "word order (%s)", snd_strerror( i_snd_rc ) );
+                goto error;
+            }
+        }
+        if( i_vlc_pcm_format != VLC_FOURCC('s','p','d','i') )
+        switch( i_snd_pcm_format )
+        {
+        case SND_PCM_FORMAT_FLOAT:
+            i_vlc_pcm_format = VLC_FOURCC('f','l','3','2');
+            break;
+        case SND_PCM_FORMAT_S16:
+            i_vlc_pcm_format = AOUT_FMT_S16_NE;
+            break;
+        }
+        p_aout->output.output.i_format = i_vlc_pcm_format;
 
-    if ( ( i_snd_rc = snd_pcm_hw_params_set_access( p_sys->p_snd_pcm, p_hw,
+        if ( ( i_snd_rc = snd_pcm_hw_params_set_access( p_sys->p_snd_pcm, p_hw,
                                     SND_PCM_ACCESS_RW_INTERLEAVED ) ) < 0 )
-    {
-        msg_Err( p_aout, "unable to set interleaved stream format (%s)",
-                         snd_strerror( i_snd_rc ) );
-        goto error;
-    }
+        {
+            msg_Err( p_aout, "unable to set interleaved stream format (%s)",
+                             snd_strerror( i_snd_rc ) );
+            goto error;
+        }
 
-    /* Set channels. */
-    if ( ( i_snd_rc = snd_pcm_hw_params_set_channels( p_sys->p_snd_pcm, p_hw,
+        /* Set channels. */
+        if ( ( i_snd_rc = snd_pcm_hw_params_set_channels( p_sys->p_snd_pcm, p_hw,
                                                       i_channels ) ) < 0 )
-    {
-        msg_Err( p_aout, "unable to set number of output channels (%s)",
-                         snd_strerror( i_snd_rc ) );
-        goto error;
-    }
+        {
+            msg_Err( p_aout, "unable to set number of output channels (%s)",
+                             snd_strerror( i_snd_rc ) );
+            goto error;
+        }
 
-    /* Set rate. */
-    i_old_rate = p_aout->output.output.i_rate;
+        /* Set rate. */
+        i_old_rate = p_aout->output.output.i_rate;
 #ifdef HAVE_ALSA_NEW_API
-    i_snd_rc = snd_pcm_hw_params_set_rate_near( p_sys->p_snd_pcm, p_hw,
+        i_snd_rc = snd_pcm_hw_params_set_rate_near( p_sys->p_snd_pcm, p_hw,
                                                 &p_aout->output.output.i_rate,
                                                 NULL );
 #else
-    i_snd_rc = snd_pcm_hw_params_set_rate_near( p_sys->p_snd_pcm, p_hw,
+        i_snd_rc = snd_pcm_hw_params_set_rate_near( p_sys->p_snd_pcm, p_hw,
                                                 p_aout->output.output.i_rate,
                                                 NULL );
 #endif
-    if( i_snd_rc < 0 || p_aout->output.output.i_rate != i_old_rate )
-    {
-        msg_Warn( p_aout, "The rate %d Hz is not supported by your hardware. "
+        if( i_snd_rc < 0 || p_aout->output.output.i_rate != i_old_rate )
+        {
+            msg_Warn( p_aout, "The rate %d Hz is not supported by your hardware. "
                   "Using %d Hz instead.\n", i_old_rate,
                   p_aout->output.output.i_rate );
-    }
+        }
 
-    /* Set buffer size. */
+        /* Set buffer size. */
 #ifdef HAVE_ALSA_NEW_API
-    if ( ( i_snd_rc = snd_pcm_hw_params_set_buffer_size_near( p_sys->p_snd_pcm,
+        if ( ( i_snd_rc = snd_pcm_hw_params_set_buffer_size_near( p_sys->p_snd_pcm,
                                     p_hw, &i_buffer_size ) ) < 0 )
 #else
-    if ( ( i_snd_rc = snd_pcm_hw_params_set_buffer_size_near( p_sys->p_snd_pcm,
+        if ( ( i_snd_rc = snd_pcm_hw_params_set_buffer_size_near( p_sys->p_snd_pcm,
                                     p_hw, i_buffer_size ) ) < 0 )
 #endif
-    {
-        msg_Err( p_aout, "unable to set buffer size (%s)",
+        {
+            msg_Err( p_aout, "unable to set buffer size (%s)",
                          snd_strerror( i_snd_rc ) );
-        goto error;
-    }
+            goto error;
+        }
 
-    /* Set period size. */
+        /* Set period size. */
 #ifdef HAVE_ALSA_NEW_API
-    if ( ( i_snd_rc = snd_pcm_hw_params_set_period_size_near( p_sys->p_snd_pcm,
+        if ( ( i_snd_rc = snd_pcm_hw_params_set_period_size_near( p_sys->p_snd_pcm,
                                     p_hw, &i_period_size, NULL ) ) < 0 )
 #else
-    if ( ( i_snd_rc = snd_pcm_hw_params_set_period_size_near( p_sys->p_snd_pcm,
+        if ( ( i_snd_rc = snd_pcm_hw_params_set_period_size_near( p_sys->p_snd_pcm,
                                     p_hw, i_period_size, NULL ) ) < 0 )
 #endif
-    {
-        msg_Err( p_aout, "unable to set period size (%s)",
+        {
+            msg_Err( p_aout, "unable to set period size (%s)",
                          snd_strerror( i_snd_rc ) );
-        goto error;
-    }
-    p_aout->output.i_nb_samples = i_period_size;
+            goto error;
+        }
+        p_aout->output.i_nb_samples = i_period_size;
 
-    /* Commit hardware parameters. */
-    if ( ( i_snd_rc = snd_pcm_hw_params( p_sys->p_snd_pcm, p_hw ) ) < 0 )
-    {
-        msg_Err( p_aout, "unable to commit hardware configuration (%s)",
+        /* Commit hardware parameters. */
+        if ( ( i_snd_rc = snd_pcm_hw_params( p_sys->p_snd_pcm, p_hw ) ) < 0 )
+        {
+            if ( b_retry == VLC_FALSE &&
+                                i_snd_pcm_format == SND_PCM_FORMAT_FLOAT)
+            {
+                b_retry = VLC_TRUE;
+                i_snd_pcm_format = SND_PCM_FORMAT_S16;
+                p_aout->output.output.i_format = AOUT_FMT_S16_NE;
+                msg_Warn( p_aout, "unable to commit hardware configuration "
+                                  "with fl32 samples. Retrying with s16l (%s)",                                     snd_strerror( i_snd_rc ) );
+            }
+            else
+            {
+                msg_Err( p_aout, "unable to commit hardware configuration (%s)",
                          snd_strerror( i_snd_rc ) );
-        goto error;
+                goto error;
+            }
+        }
     }
 
 #ifdef HAVE_ALSA_NEW_API
@@ -579,7 +627,7 @@ static int Open( vlc_object_t *p_this )
                                     &p_sys->i_period_time, NULL ) ) < 0 )
 #else
     if( ( p_sys->i_period_time =
-                  snd_pcm_hw_params_get_period_time( p_hw, NULL ) ) < 0 )
+                  (int)snd_pcm_hw_params_get_period_time( p_hw, NULL ) ) < 0 )
 #endif
     {
         msg_Err( p_aout, "unable to get period time (%s)",
@@ -951,4 +999,3 @@ static void GetDevices( module_config_t *p_item )
         }
     }
 }
-

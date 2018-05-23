@@ -1,8 +1,8 @@
 /*****************************************************************************
  * auhal.c: AUHAL output plugin
  *****************************************************************************
- * Copyright (C) 2005 VideoLAN
- * $Id$
+ * Copyright (C) 2005 the VideoLAN team
+ * $Id: auhal.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Derk-Jan Hartman <hartman at videolan dot org>
  *

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * dialogs.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: dialogs.cpp 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: dialogs.cpp 12802 2005-10-09 17:57:58Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -27,6 +27,7 @@
 #include "../commands/cmd_change_skin.hpp"
 #include "../commands/cmd_quit.hpp"
 #include "../commands/cmd_playlist.hpp"
+#include "../commands/cmd_playtree.hpp"
 
 
 /// Callback called when a new skin is chosen
@@ -71,6 +72,7 @@ void Dialogs::showPlaylistLoadCB( intf_dialog_args_t *pArg )
         // Push the command in the asynchronous command queue
         AsyncQueue *pQueue = AsyncQueue::instance( pIntf );
         pQueue->remove( "load playlist" );
+        pQueue->remove( "load playtree" );
         pQueue->push( CmdGenericPtr( pCmd ) );
     }
 }
@@ -89,6 +91,7 @@ void Dialogs::showPlaylistSaveCB( intf_dialog_args_t *pArg )
         // Push the command in the asynchronous command queue
         AsyncQueue *pQueue = AsyncQueue::instance( pIntf );
         pQueue->remove( "load playlist" );
+        pQueue->remove( "load playtree" );
         pQueue->push( CmdGenericPtr( pCmd ) );
     }
 }
@@ -99,7 +102,7 @@ static int PopupMenuCB( vlc_object_t *p_this, const char *psz_variable,
                         vlc_value_t old_val, vlc_value_t new_val, void *param )
 {
     Dialogs *p_dialogs = (Dialogs *)param;
-    p_dialogs->showPopupMenu( new_val.b_bool );
+    p_dialogs->showPopupMenu( new_val.b_bool != 0 );
 
     return VLC_SUCCESS;
 }
@@ -172,7 +175,7 @@ bool Dialogs::init()
     m_pModule = module_Need( m_pProvider, "dialogs provider", NULL, 0 );
     if( m_pModule == NULL )
     {
-        msg_Err( getIntf(), "No suitable dialogs provider found" );
+        msg_Err( getIntf(), "No suitable dialogs provider found (hint: compile the wxWidgets plugin, and make sure it is loaded properly)" );
         vlc_object_destroy( m_pProvider );
         m_pProvider = NULL;
         return false;
@@ -223,7 +226,7 @@ void Dialogs::showFileGeneric( const string &rTitle, const string &rExtensions,
 void Dialogs::showChangeSkin()
 {
     showFileGeneric( _("Open a skin file"),
-                     _("Skin files (*.vlt)|*.vlt|Skin files (*.xml)|*.xml|"),
+                     _("Skin files (*.vlt)|*.vlt|Skin files (*.xml)|*.xml"),
                      showChangeSkinCB, kOPEN );
 }
 
@@ -258,6 +261,16 @@ void Dialogs::showFile( bool play )
     if( m_pProvider && m_pProvider->pf_show_dialog )
     {
         m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_FILE,
+                                     (int)play, 0 );
+    }
+}
+
+
+void Dialogs::showDirectory( bool play )
+{
+    if( m_pProvider && m_pProvider->pf_show_dialog )
+    {
+        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_DIRECTORY,
                                      (int)play, 0 );
     }
 }
@@ -303,9 +316,18 @@ void Dialogs::showPrefs()
 
 void Dialogs::showFileInfo()
 {
-   if( m_pProvider && m_pProvider->pf_show_dialog )
+    if( m_pProvider && m_pProvider->pf_show_dialog )
     {
-       m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_FILEINFO, 0, 0 );
+        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_FILEINFO, 0, 0 );
+    }
+}
+
+
+void Dialogs::showStreamingWizard()
+{
+    if( m_pProvider && m_pProvider->pf_show_dialog )
+    {
+        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_WIZARD, 0, 0 );
     }
 }
 

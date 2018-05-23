@@ -5,8 +5,8 @@
  * It includes functions allowing to open a new thread, send pictures to a
  * thread, and destroy a previously oppened video output thread.
  *****************************************************************************
- * Copyright (C) 2000-2004 VideoLAN
- * $Id: video_output.c 11112 2005-05-22 16:18:46Z zorglub $
+ * Copyright (C) 2000-2004 the VideoLAN team
+ * $Id: video_output.c 13026 2005-10-30 15:32:11Z gbazin $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -59,7 +59,6 @@ static void     DestroyThread     ( vout_thread_t * );
 static void     AspectRatio       ( int, int *, int * );
 static int      BinaryLog         ( uint32_t );
 static void     MaskToShift       ( int *, int *, uint32_t );
-static void     InitWindowSize    ( vout_thread_t *, int *, int * );
 
 /* Object variables callbacks */
 static int DeinterlaceCallback( vlc_object_t *, char const *,
@@ -128,7 +127,7 @@ vout_thread_t *__vout_Request( vlc_object_t *p_this, vout_thread_t *p_vout,
                 p_vout = vlc_object_find( p_playlist,
                                           VLC_OBJECT_VOUT, FIND_CHILD );
                 /* only first children of p_input for unused vout */
-                if( p_vout && p_vout->p_parent != p_playlist )
+                if( p_vout && p_vout->p_parent != (vlc_object_t *)p_playlist )
                 {
                     vlc_object_release( p_vout );
                     p_vout = NULL;
@@ -174,8 +173,7 @@ vout_thread_t *__vout_Request( vlc_object_t *p_this, vout_thread_t *p_vout,
         if( ( p_vout->fmt_render.i_width != p_fmt->i_width ) ||
             ( p_vout->fmt_render.i_height != p_fmt->i_height ) ||
             ( p_vout->fmt_render.i_chroma != p_fmt->i_chroma ) ||
-            ( p_vout->fmt_render.i_aspect != p_fmt->i_aspect
-                    && !p_vout->b_override_aspect ) ||
+            ( p_vout->fmt_render.i_aspect != p_fmt->i_aspect ) ||
             p_vout->b_filter_change )
         {
             /* We are not interested in this format, close this vout */
@@ -247,8 +245,12 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
 
     /* Initialize the rendering heap */
     I_RENDERPICTURES = 0;
+
+    vlc_ureduce( &p_fmt->i_sar_num, &p_fmt->i_sar_den,
+                 p_fmt->i_sar_num, p_fmt->i_sar_den, 50000 );
     p_vout->fmt_render        = *p_fmt;   /* FIXME palette */
     p_vout->fmt_in            = *p_fmt;   /* FIXME palette */
+
     p_vout->render.i_width    = i_width;
     p_vout->render.i_height   = i_height;
     p_vout->render.i_chroma   = i_chroma;
@@ -286,6 +288,7 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
     p_vout->b_filter_change = 0;
     p_vout->pf_control = 0;
     p_vout->p_parent_intf = 0;
+    p_vout->i_par_num = p_vout->i_par_den = 1;
 
     /* Initialize locks */
     vlc_mutex_init( p_vout, &p_vout->picture_lock );
@@ -310,63 +313,14 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
     /* Take care of some "interface/control" related initialisations */
     vout_IntfInit( p_vout );
 
-    p_vout->b_override_aspect = VLC_FALSE;
-
     /* If the parent is not a VOUT object, that means we are at the start of
      * the video output pipe */
     if( p_parent->i_object_type != VLC_OBJECT_VOUT )
     {
-        var_Get( p_vout, "aspect-ratio", &val );
-
-        /* Check whether the user tried to override aspect ratio */
-        if( val.psz_string )
-        {
-            unsigned int i_new_aspect = i_aspect;
-            char *psz_parser = strchr( val.psz_string, ':' );
-
-            if( psz_parser )
-            {
-                *psz_parser++ = '\0';
-                i_new_aspect = atoi( val.psz_string ) * VOUT_ASPECT_FACTOR
-                                                      / atoi( psz_parser );
-            }
-            else
-            {
-                i_new_aspect = VOUT_ASPECT_FACTOR
-                                       * atof( val.psz_string );
-            }
-
-            free( val.psz_string );
-
-            if( i_new_aspect && i_new_aspect != i_aspect )
-            {
-                int i_aspect_x, i_aspect_y;
-
-                AspectRatio( i_new_aspect, &i_aspect_x, &i_aspect_y );
-
-                msg_Dbg( p_vout, "overriding source aspect ratio to %i:%i",
-                         i_aspect_x, i_aspect_y );
-
-                p_vout->render.i_aspect = i_new_aspect;
-
-                p_vout->b_override_aspect = VLC_TRUE;
-            }
-        }
-
         /* Look for the default filter configuration */
         var_Create( p_vout, "vout-filter", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
         var_Get( p_vout, "vout-filter", &val );
         p_vout->psz_filter_chain = val.psz_string;
-
-        if( p_vout->psz_filter_chain && *p_vout->psz_filter_chain &&
-            strchr( p_vout->psz_filter_chain, ',' ) &&
-            !strchr( p_vout->psz_filter_chain, ':') )
-        {
-            msg_Info( p_vout, "Warning: you are using a deprecated syntax for "
-                             "vout-filter." );
-            msg_Info( p_vout, "You must now use ':' as separator instead of "
-                             "','." );
-        }
     }
     else
     {
@@ -374,8 +328,6 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
         char *psz_end;
 
         psz_end = strchr( ((vout_thread_t *)p_parent)->psz_filter_chain, ':' );
-        if( !psz_end ) psz_end = strchr(
-                        ((vout_thread_t *)p_parent)->psz_filter_chain, ',' );
         if( psz_end && *(psz_end+1) )
             p_vout->psz_filter_chain = strdup( psz_end+1 );
         else p_vout->psz_filter_chain = NULL;
@@ -395,16 +347,11 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
         char *psz_end;
 
         psz_end = strchr( p_vout->psz_filter_chain, ':' );
-        if( !psz_end ) psz_end = strchr( p_vout->psz_filter_chain, ',' );
         if( psz_end )
             psz_plugin = strndup( p_vout->psz_filter_chain,
                                   psz_end - p_vout->psz_filter_chain );
         else psz_plugin = strdup( p_vout->psz_filter_chain );
     }
-
-    /* Initialize the dimensions of the video window */
-    InitWindowSize( p_vout, &p_vout->i_window_width,
-                    &p_vout->i_window_height );
 
     /* Create the vout thread */
     p_vout->p_module = module_Need( p_vout,
@@ -436,6 +383,9 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
     var_Change( p_vout, "deinterlace", VLC_VAR_ADDCHOICE, &val, &text );
     val.psz_string = "linear"; text.psz_string = _("Linear");
     var_Change( p_vout, "deinterlace", VLC_VAR_ADDCHOICE, &val, &text );
+    val.psz_string = "x"; text.psz_string = "X";
+    var_Change( p_vout, "deinterlace", VLC_VAR_ADDCHOICE, &val, &text );
+
     if( var_Get( p_vout, "deinterlace-mode", &val ) == VLC_SUCCESS )
     {
         var_Set( p_vout, "deinterlace", val );
@@ -621,14 +571,18 @@ static int InitThread( vout_thread_t *p_vout )
             p_vout->fmt_out.i_width;
     }
 
-    vlc_reduce( &p_vout->fmt_out.i_sar_num, &p_vout->fmt_out.i_sar_den,
-                p_vout->fmt_out.i_sar_num, p_vout->fmt_out.i_sar_den, 0 );
+    vlc_ureduce( &p_vout->fmt_out.i_sar_num, &p_vout->fmt_out.i_sar_den,
+                 p_vout->fmt_out.i_sar_num, p_vout->fmt_out.i_sar_den, 0 );
 
     AspectRatio( p_vout->fmt_out.i_aspect, &i_aspect_x, &i_aspect_y );
 
-    msg_Dbg( p_vout, "picture out %ix%i, chroma %4.4s, ar %i:%i, sar %i:%i",
-             p_vout->output.i_width, p_vout->output.i_height,
-             (char*)&p_vout->output.i_chroma,
+    msg_Dbg( p_vout, "picture out %ix%i (%i,%i,%ix%i), "
+             "chroma %4.4s, ar %i:%i, sar %i:%i",
+             p_vout->fmt_out.i_width, p_vout->fmt_out.i_height,
+             p_vout->fmt_out.i_x_offset, p_vout->fmt_out.i_y_offset,
+             p_vout->fmt_out.i_visible_width,
+             p_vout->fmt_out.i_visible_height,
+             (char*)&p_vout->fmt_out.i_chroma,
              i_aspect_x, i_aspect_y,
              p_vout->fmt_out.i_sar_num, p_vout->fmt_out.i_sar_den );
 
@@ -740,7 +694,7 @@ static void RunThread( vout_thread_t *p_vout)
     picture_t *     p_last_picture = NULL;                   /* last picture */
     picture_t *     p_directbuffer;              /* direct buffer to display */
 
-    subpicture_t *  p_subpic;                          /* subpicture pointer */
+    subpicture_t *  p_subpic = NULL;                   /* subpicture pointer */
 
     /*
      * Initialize thread
@@ -924,7 +878,10 @@ static void RunThread( vout_thread_t *p_vout)
         /*
          * Check for subpictures to display
          */
-        p_subpic = spu_SortSubpictures( p_vout->p_spu, display_date );
+        if( display_date > 0 )
+        {
+            p_subpic = spu_SortSubpictures( p_vout->p_spu, display_date );
+        }
 
         /*
          * Perform rendering
@@ -1258,69 +1215,6 @@ static void MaskToShift( int *pi_left, int *pi_right, uint32_t i_mask )
     /* Update pointers and return */
     *pi_left =   i_low;
     *pi_right = (8 - i_high + i_low);
-}
-
-/*****************************************************************************
- * InitWindowSize: find the initial dimensions the video window should have.
- *****************************************************************************
- * This function will check the "width", "height" and "zoom" config options and
- * will calculate the size that the video window should have.
- *****************************************************************************/
-static void InitWindowSize( vout_thread_t *p_vout, int *pi_width,
-                            int *pi_height )
-{
-    vlc_value_t val;
-    int i_width, i_height;
-    uint64_t ll_zoom;
-
-#define FP_FACTOR 1000                             /* our fixed point factor */
-
-    var_Get( p_vout, "align", &val );
-    p_vout->i_alignment = val.i_int;
-
-    var_Get( p_vout, "width", &val );
-    i_width = val.i_int;
-    var_Get( p_vout, "height", &val );
-    i_height = val.i_int;
-    var_Get( p_vout, "zoom", &val );
-    ll_zoom = (uint64_t)( FP_FACTOR * val.f_float );
-
-    if( i_width > 0 && i_height > 0)
-    {
-        *pi_width = (int)( i_width * ll_zoom / FP_FACTOR );
-        *pi_height = (int)( i_height * ll_zoom / FP_FACTOR );
-        return;
-    }
-    else if( i_width > 0 )
-    {
-        *pi_width = (int)( i_width * ll_zoom / FP_FACTOR );
-        *pi_height = (int)( i_width * ll_zoom * VOUT_ASPECT_FACTOR /
-                            p_vout->render.i_aspect / FP_FACTOR );
-        return;
-    }
-    else if( i_height > 0 )
-    {
-        *pi_height = (int)( i_height * ll_zoom / FP_FACTOR );
-        *pi_width = (int)( i_height * ll_zoom * p_vout->render.i_aspect /
-                           VOUT_ASPECT_FACTOR / FP_FACTOR );
-        return;
-    }
-
-    if( p_vout->render.i_height * p_vout->render.i_aspect
-        >= p_vout->render.i_width * VOUT_ASPECT_FACTOR )
-    {
-        *pi_width = (int)( p_vout->render.i_height * ll_zoom
-          * p_vout->render.i_aspect / VOUT_ASPECT_FACTOR / FP_FACTOR );
-        *pi_height = (int)( p_vout->render.i_height * ll_zoom / FP_FACTOR );
-    }
-    else
-    {
-        *pi_width = (int)( p_vout->render.i_width * ll_zoom / FP_FACTOR );
-        *pi_height = (int)( p_vout->render.i_width * ll_zoom
-          * VOUT_ASPECT_FACTOR / p_vout->render.i_aspect / FP_FACTOR );
-    }
-
-#undef FP_FACTOR
 }
 
 /*****************************************************************************

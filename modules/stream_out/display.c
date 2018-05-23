@@ -1,8 +1,8 @@
 /*****************************************************************************
  * display.c: display stream output module
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: display.c 10112 2005-03-03 06:58:04Z zorglub $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id: display.c 12581 2005-09-17 13:29:37Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -98,7 +98,7 @@ static int Open( vlc_object_t *p_this )
 
     p_sys          = malloc( sizeof( sout_stream_sys_t ) );
     p_sys->p_input = vlc_object_find( p_stream, VLC_OBJECT_INPUT,
-                                      FIND_ANYWHERE );
+                                      FIND_PARENT );
     if( !p_sys->p_input )
     {
         msg_Err( p_stream, "cannot find p_input" );

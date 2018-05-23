@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mpga.c : MPEG-I/II Audio input module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: mpga.c 10615 2005-04-09 11:27:23Z gbazin $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: mpga.c 13227 2005-11-13 18:32:16Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -32,7 +32,7 @@
 #include "vlc_codec.h"
 #include "vlc_meta.h"
 
-#define MPGA_PACKET_SIZE 4096
+#define MPGA_PACKET_SIZE 1024
 
 /*****************************************************************************
  * Module descriptor
@@ -202,7 +202,7 @@ static int Open( vlc_object_t * p_this )
             i_skip = MPGA_MODE( header ) != 3 ? 21 : 13;
         }
 
-        if( i_skip + 8 < i_xing && !strncmp( &p_xing[i_skip], "Xing", 4 ) )
+        if( i_skip + 8 < i_xing && !strncmp( (char *)&p_xing[i_skip], "Xing", 4 ) )
         {
             unsigned int i_flags = GetDWBE( &p_xing[i_skip+4] );
 

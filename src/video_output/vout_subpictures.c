@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout_subpictures.c : subpicture management functions
  *****************************************************************************
- * Copyright (C) 2000-2005 VideoLAN
- * $Id: vout_subpictures.c 11305 2005-06-05 17:05:20Z gbazin $
+ * Copyright (C) 2000-2005 the VideoLAN team
+ * $Id: vout_subpictures.c 12194 2005-08-15 12:21:16Z jpsaman $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -263,7 +263,7 @@ subpicture_region_t *__spu_CreateRegion( vlc_object_t *p_this,
             malloc( sizeof(video_palette_t) );
     else p_fmt->p_palette = p_region->fmt.p_palette = NULL;
 
-    p_region->picture.p_data_orig = 0;
+    p_region->picture.p_data_orig = NULL;
 
     if( p_fmt->i_chroma == VLC_FOURCC('T','E','X','T') ) return p_region;
 

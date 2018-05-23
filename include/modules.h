@@ -1,8 +1,8 @@
 /*****************************************************************************
  * modules.h : Module management functions.
  *****************************************************************************
- * Copyright (C) 2001 VideoLAN
- * $Id: modules.h 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2001 the VideoLAN team
+ * $Id: modules.h 12319 2005-08-21 18:48:05Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -55,7 +55,9 @@ struct module_bank_t
     VLC_COMMON_MEMBERS
 
     int              i_usage;
+#ifndef HAVE_SHARED_LIBVLC
     module_symbols_t symbols;
+#endif
 
     vlc_bool_t       b_main;
     vlc_bool_t       b_builtins;

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mga.c : Matrox Graphic Array plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: mga.c 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id: mga.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
  *          Samuel Hocevar <sam@zoy.org>

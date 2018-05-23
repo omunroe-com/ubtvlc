@@ -1,4 +1,4 @@
-# $Id: AUTHORS 11455 2005-06-18 08:17:19Z jpsaman $
+# $Id: AUTHORS 12836 2005-10-15 13:23:08Z sigmunau $
 # 
 # The format of this file was inspired by the Linux kernel CREDITS file.
 # Authors are listed alphabetically.
@@ -13,10 +13,11 @@ D: input and decoders core improvements
 D: avi, asf/wmv/wma, mp4/mov, mp3, aac, wav demultiplexers
 D: MPEG-4, Div & OpenDivX and various decoders (ffmpeg)
 D: AAC decoder (libfaad2)
-D: cinepak, adpcm, araw decoders
+D: cinepak, adpcm, araw, musepack decoders
 D: Subtile file parser.
 D: mms, ftp access
 D: Stream output
+D: VLM
 S: France
 
 N: Marc Ariberti
@@ -37,15 +38,16 @@ E: oaubert at lisi dot univ-lyon1 dot fr
 D: CORBA interface
 S: France
 
-N: Sigmund Augdal
-E: sigmunau@idi.ntnu.no
+N: Sigmund Augdal Helberg
+E: dnumgis@videolan.org
 C: sigmunau
 D: lirc plugin
-D: norwegian translation
 D: aalib plugin
-D: KDE plug-in
 D: Subtitles and freetype
 D: Hotkeys
+D: Shoutcast discovery module and b4s playlist parser
+D: wxWidgets preferences
+D: File-Info and metadata handling
 S: Norway
 
 N: Pierre Baillet
@@ -66,6 +68,7 @@ D: mpeg1/2 video decoder (libmpeg2), bandlimited resampling
 D: Ogg and Raw DV demultiplexers
 D: Configuration file infrastructure
 D: wxWindows and http interfaces
+D: Pocket PC port
 S: France
 
 N: Rocky Bernstein
@@ -83,7 +86,7 @@ D: Satellite input
 D: libdvbpsi support
 S: France
 
-N: Stéphane Borel
+N: StÃ©phane Borel
 E: stef@via.ecp.fr
 C: stef
 D: MPEG video decoder
@@ -103,6 +106,12 @@ C: tcastley
 D: BeOS interface, BeOS Video
 S: Australia
 
+N: Antoine Cellerier
+E: dionoea@videolan.org
+C: dionoea
+D: mosaic
+S: France
+
 N: Renaud Dartus
 E: reno@via.ecp.fr
 C: reno
@@ -117,13 +126,20 @@ D: skins module (X11 port)
 D: skins2 module (core and X11 port)
 S: France
 
+N: RÃ©mi Denis-Courmont
+E: rem#videolan.org
+C: courmisch
+D: SSL/TLS support (core, HTTP server, HTTP input)
+D: VOC files demultiplexer
+S: France
+
 N: Colin Delacroix
 E: colin@zoy.org
 C: colin
 D: MacOS X sound support
 S: France
 
-N: Boris Dorès
+N: Boris DorÃ¨s
 E: babal(at)via.ecp.fr
 C: babal
 D: Win32 network input
@@ -150,6 +166,12 @@ N: Andrew Flintham
 E: amf@cus.org.uk
 D: text subtitler and font scripts
 S: United Kingdom
+
+N: Damien Fouilleul
+E: Damien.Fouilleul@laposte.net
+C: Quovodis
+D: ActiveX control
+S: Ireland
 
 N: Alexis Guillard
 E: alexis.guillard@bt.com
@@ -179,7 +201,7 @@ D: Mac OS X Audio Output
 D: Kasenna client support
 S: Netherlands
 
-N: Gaël Hendryckx
+N: GaÃ«l Hendryckx
 E: jimmy@via.ecp.fr
 C: jimmy
 D: IDCT and YUV transforms
@@ -222,17 +244,25 @@ D: AC3 decoder
 D: MPEG audio decoder
 S: France
 
+N: Felix KÃ¼hne
+E: fkuehne@users.sourceforge.net
+C: fkuehne
+D: MacOS X Interface (Wizard, structure, extended controls panel, bookmarks window)
+D: German translation
+S: Germany
+
 N: Simon Latapie
 E: garf@via.ecp.fr
 C: garf
-D: contrast/HSB, and logo  video filters
+D: contrast/HSB, and logo video filters
 D: HTTP interface
+D: VLM
 S: France
 
 N: Pascal Levesque
 E: pascal.levesque@mindready.com
 D: QNX RTOS video output and audio output
-S: Canada, Québec
+S: Canada, QuÃ©bec
 
 N: Christophe Massiot
 E: massiot@via.ecp.fr
@@ -241,10 +271,13 @@ D: decoder and input core functions
 D: audio output
 D: MPEG video decoder
 D: Many ports (Mac OS X, iPAQ, *BSD, Solaris...)
+D: DVB input
+D: mosaic
+D: TS muxer/demuxer improvements
 D: documentation
 S: France
 
-N: Loïc Minier
+N: LoÃ¯c Minier
 E: lool@via.ecp.fr
 C: lool
 D: Gtk/gnome enhancements
@@ -271,26 +304,33 @@ D: Stream output
 D: Mac OS X OpenGL video output
 S: France
 
+N: Benjamin Pracht
+E: bigben@videolan.org
+C: bigben
+D: MacOS X Interface (playlist)
+D: documentation
+S: France / Germany
+
 N: Emmanuel Puig
 E: karibu@videolan.org
 C: karibu
 D: skins module (core and win32 port)
 S: France
 
-N: Frédéric RUGET
+N: FrÃ©dÃ©ric RUGET
 E: frederic.ruget@free.fr
 D: Portaudio audio output
 S: France
 
 N: Jean-Paul Saman
-E: jean-paul dot saman#planet dot nl
+E: jp_dot_saman#videolan_dot_nl
 D: libmad plug-in
 D: iPAQ port
-D: Familiar and PDA Linux interface
-D: Opie PDA Linux interface
+D: PDA (Familiar Linux) interface 
 D: Dutch Translation
 D: DVB-S/C/T on v4l2 API
 D: HD1000 port 
+D: OSD menu
 S: Netherlands
 
 N: Arnaud Schauly
@@ -315,7 +355,7 @@ C: richards
 D: BeOS video output (BBitmap and Overlay)
 S: United Kingdom
 
-N: Clément Stenac
+N: ClÃ©ment Stenac
 E: zorglub@videolan.org
 C: zorglub
 D: Playlist core and demuxers, SAP parser
@@ -329,24 +369,10 @@ E: shurdeek@panorama.sth.ac.at
 D: rc plugin for VLC control through /dev/stdin
 S: Austria
 
-N: Olivier Teulière
+N: Olivier TeuliÃ¨re
 E: ipkiss@via.ecp.fr
 C: ipkiss
 D: Win32 interface
 D: skins module (core and win32 port)
 D: skins2 module (core and win32 port)
 S: France
-
-N: Rémi Denis-Courmont
-E: rem#videolan.org
-C: courmisch
-D: SSL/TLS support (core, HTTP server, HTTP input)
-D: VOC files demultiplexer
-S: France
-
-N: Damien Fouilleul
-E: Damien.Fouilleul@laposte.net
-C: Quovodis
-D: ActiveX control
-S: Germany
-

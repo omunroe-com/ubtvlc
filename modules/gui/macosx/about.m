@@ -1,8 +1,8 @@
 /*****************************************************************************
  * about.m: MacOS X About Panel
  *****************************************************************************
- * Copyright (C) 2001-2005 VideoLAN
- * $Id: about.m 10045 2005-02-23 13:53:28Z hartman $
+ * Copyright (C) 2001-2005 the VideoLAN team
+ * $Id: about.m 12794 2005-10-09 12:33:44Z fkuehne $
  *
  * Authors: Derk-Jan Hartman <thedj@users.sourceforge.net>
  *
@@ -57,9 +57,6 @@ static VLAboutBox *_o_sharedInstance = nil;
         NSString *o_name;
         NSString *o_version;
         NSString *o_thanks_path;
-        
-		/* Load the needed nib-file */
-		[NSBundle loadNibNamed:@"About" owner:self];
 		
         /* Get the info dictionary (Info.plist) */
         o_info_dict = [[NSBundle mainBundle] infoDictionary];
@@ -77,14 +74,19 @@ static VLAboutBox *_o_sharedInstance = nil;
         
         /* Setup the version field */
         o_version = [o_info_dict objectForKey:@"CFBundleVersion"];
+        
+        /* setup the creator / revision field */
+        [o_revision_field setStringValue: [NSString stringWithFormat: \
+            _NS("Compiled by %s, based on SVN revision %s"), VLC_CompileBy(), \
+            VLC_Changeset()]];
     
         /* Setup the nameversion field */
-        o_name_version = [NSString stringWithFormat:@"%@ - Version %@", o_name, o_version];
+        o_name_version = [NSString stringWithFormat:@"Version %@", o_version];
         [o_name_version_field setStringValue: o_name_version];
         
         /* Setup our credits */
         o_credits_path = [[NSBundle mainBundle] pathForResource:@"AUTHORS" ofType:nil];
-        o_credits = [[NSString alloc] initWithData: [NSData dataWithContentsOfFile: o_credits_path ] encoding:NSWindowsCP1252StringEncoding];
+        o_credits = [[NSString alloc] initWithData: [NSData dataWithContentsOfFile: o_credits_path ] encoding:NSUTF8StringEncoding];
         
         /* Parse the authors string */
         NSMutableString *o_outString = [NSMutableString stringWithFormat: @"%@\n\n", _NS(INTF_ABOUT_MSG)];
@@ -128,7 +130,7 @@ static VLAboutBox *_o_sharedInstance = nil;
         /* Parse the thanks string */
         o_thanks_path = [[NSBundle mainBundle] pathForResource:@"THANKS" ofType:nil];
         o_thanks = [[NSString alloc] initWithData: [NSData dataWithContentsOfFile: 
-                        o_thanks_path ] encoding:NSWindowsCP1252StringEncoding];
+                        o_thanks_path ] encoding:NSUTF8StringEncoding];
         
         NSScanner *o_scan_thanks = [NSScanner scannerWithString: o_thanks];
         [o_scan_thanks scanUpToCharactersFromSet: o_stopSet intoString: nil];

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * var_percent.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: var_percent.hpp 9641 2004-12-22 13:06:43Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: var_percent.hpp 11786 2005-07-18 23:57:41Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -28,12 +28,14 @@
 #include "variable.hpp"
 #include "observer.hpp"
 
+class VarPercent;
+
 
 /// Percentage variable
 class VarPercent: public Variable, public Subject<VarPercent>
 {
     public:
-        VarPercent( intf_thread_t *pIntf );
+        VarPercent( intf_thread_t *pIntf ): Variable( pIntf ), m_value( 0 ) {}
         virtual ~VarPercent() {}
 
         /// Get the variable type

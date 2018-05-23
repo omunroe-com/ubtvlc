@@ -1,8 +1,8 @@
 /*****************************************************************************
  * volume.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: volume.cpp 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: volume.cpp 11824 2005-07-23 19:18:17Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -33,7 +33,7 @@ Volume::Volume( intf_thread_t *pIntf ): VarPercent( pIntf )
     // Initial value
     audio_volume_t val;
     aout_VolumeGet( getIntf(), &val );
-    VarPercent::set( val / AOUT_VOLUME_MAX );
+    VarPercent::set( val * 2.0 / AOUT_VOLUME_MAX );
 }
 
 
@@ -45,7 +45,7 @@ void Volume::set( float percentage )
     {
         VarPercent::set( percentage );
 
-        aout_VolumeSet( getIntf(), (int)(get() * AOUT_VOLUME_MAX) );
+        aout_VolumeSet( getIntf(), (int)(get() * AOUT_VOLUME_MAX / 2.0) );
     }
 }
 

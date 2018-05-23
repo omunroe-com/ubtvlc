@@ -1,4 +1,4 @@
-$Id: HACKING 8782 2004-09-23 20:56:46Z hartman $
+$Id: HACKING 13168 2005-11-09 12:05:09Z courmisch $
 
 Hacking vlc
 ===========
@@ -21,6 +21,8 @@ You will need the following tools if you plan to use the SVN version of vlc:
  - automake version 1.5 (but 1.6 or later is recommended)
 
  - gettext version 0.10.40 (but 0.11.3 or later is recommended)
+
+ - perl version 5.005 or later
 
 After retrieving the SVN tree, you need to run the bootstrap script to
 generate all the files needed to build vlc. You can then run configure.

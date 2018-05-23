@@ -1,8 +1,8 @@
 /*****************************************************************************
  * announce.c : announce handler
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: announce.c 11263 2005-06-03 09:23:54Z courmisch $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id: announce.c 12932 2005-10-23 10:58:24Z zorglub $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -83,11 +83,13 @@ int sout_AnnounceRegister( sout_instance_t *p_sout,
  *
  * \param p_sout a sout instance structure
  * \param psz_sdp the SDP to register
+ * \param psz_uri session URI (needed for SAP address auto detection
  * \param p_method an announce method descriptor
  * \return the new session descriptor structure
  */
 session_descriptor_t *sout_AnnounceRegisterSDP( sout_instance_t *p_sout,
-                          char *psz_sdp, announce_method_t *p_method )
+                          const char *psz_sdp, const char *psz_uri,
+                          announce_method_t *p_method )
 {
     session_descriptor_t *p_session;
     announce_handler_t *p_announce = (announce_handler_t*)
@@ -113,6 +115,7 @@ session_descriptor_t *sout_AnnounceRegisterSDP( sout_instance_t *p_sout,
 
     p_session = sout_AnnounceSessionCreate();
     p_session->psz_sdp = strdup( psz_sdp );
+    p_session->psz_uri = strdup( psz_uri );
     announce_Register( p_announce, p_session, p_method );
 
     vlc_object_release( p_announce );
@@ -199,18 +202,10 @@ announce_method_t * sout_AnnounceMethodCreate( int i_type )
     announce_method_t *p_method;
 
     p_method = (announce_method_t *)malloc( sizeof(announce_method_t) );
+    if( p_method == NULL )
+        return NULL;
 
-    if( p_method )
-    {
-        p_method->i_type = i_type;
-        if( i_type == METHOD_TYPE_SAP )
-        {
-            /* Default values */
-            p_method->psz_address = NULL;
-            p_method->i_ip_version = 4 ;
-            p_method->sz_ipv6_scope = '\0';
-        }
-    }
+    p_method->i_type = i_type;
     return p_method;
 }
 
@@ -290,7 +285,7 @@ int announce_Register( announce_handler_t *p_announce,
         }
         /* this will set p_session->p_sap for later deletion */
         msg_Dbg( p_announce, "adding SAP session");
-        p_announce->p_sap->pf_add( p_announce->p_sap, p_session, p_method );
+        p_announce->p_sap->pf_add( p_announce->p_sap, p_session );
     }
     else if( p_method->i_type == METHOD_TYPE_SLP )
     {

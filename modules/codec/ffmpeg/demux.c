@@ -1,8 +1,8 @@
 /*****************************************************************************
  * demux.c: demuxer using ffmpeg (libavformat).
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: demux.c 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: demux.c 13101 2005-11-02 18:16:58Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -43,11 +43,7 @@
 //#define AVFORMAT_DEBUG 1
 
 /* Version checking */
-#if (LIBAVFORMAT_BUILD >= 4611) && defined(HAVE_LIBAVFORMAT)
-
-#if LIBAVFORMAT_BUILD < 4619
-#   define av_seek_frame(a,b,c,d) av_seek_frame(a,b,c)
-#endif
+#if (LIBAVFORMAT_BUILD >= 4629) && defined(HAVE_LIBAVFORMAT)
 
 /*****************************************************************************
  * demux_sys_t: demux descriptor
@@ -133,7 +129,7 @@ int E_(OpenDemux)( vlc_object_t *p_this )
 
         if( strcasecmp( &p_demux->psz_path[i_len - 4], ".str" ) &&
             strcasecmp( &p_demux->psz_path[i_len - 4], ".xai" ) &&
-            strcasecmp( &p_demux->psz_path[i_len - 4], ".xa" ) )
+            strcasecmp( &p_demux->psz_path[i_len - 3], ".xa" ) )
         {
             return VLC_EGENERIC;
         }
@@ -180,7 +176,7 @@ int E_(OpenDemux)( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
 
-    if( av_find_stream_info( p_sys->ic ) )
+    if( av_find_stream_info( p_sys->ic ) < 0 )
     {
         msg_Err( p_demux, "av_find_stream_info failed" );
         E_(CloseDemux)( p_this );
@@ -189,13 +185,22 @@ int E_(OpenDemux)( vlc_object_t *p_this )
 
     for( i = 0; i < p_sys->ic->nb_streams; i++ )
     {
-        AVCodecContext *cc = &p_sys->ic->streams[i]->codec;
+        AVCodecContext *cc = p_sys->ic->streams[i]->codec;
         es_out_id_t  *es;
         es_format_t  fmt;
         vlc_fourcc_t fcc;
 
         if( !E_(GetVlcFourcc)( cc->codec_id, NULL, &fcc, NULL ) )
+        {
             fcc = VLC_FOURCC( 'u', 'n', 'd', 'f' );
+
+            /* Special case for raw video data */
+            if( cc->codec_id == CODEC_ID_RAWVIDEO )
+            {
+                msg_Dbg( p_demux, "raw video, pixel format: %i", cc->pix_fmt );
+                fcc = E_(GetVlcChroma)( cc->pix_fmt );
+            }
+        }
 
         switch( cc->codec_type )
         {
@@ -287,9 +292,13 @@ static int Demux( demux_t *p_demux )
         p_sys->ic->start_time : 0;
 
     p_frame->i_dts = ( pkt.dts == AV_NOPTS_VALUE ) ?
-        0 : (pkt.dts - i_start_time) * 1000000 / AV_TIME_BASE;
+        0 : (pkt.dts - i_start_time) * 1000000 *
+        p_sys->ic->streams[pkt.stream_index]->time_base.num /
+        p_sys->ic->streams[pkt.stream_index]->time_base.den;
     p_frame->i_pts = ( pkt.pts == AV_NOPTS_VALUE ) ?
-        0 : (pkt.pts - i_start_time) * 1000000 / AV_TIME_BASE;
+        0 : (pkt.pts - i_start_time) * 1000000 *
+        p_sys->ic->streams[pkt.stream_index]->time_base.num /
+        p_sys->ic->streams[pkt.stream_index]->time_base.den;
 
 #ifdef AVFORMAT_DEBUG
     msg_Dbg( p_demux, "tk[%d] dts="I64Fd" pts="I64Fd,
@@ -300,7 +309,7 @@ static int Demux( demux_t *p_demux )
         ( pkt.stream_index == p_sys->i_pcr_tk || p_sys->i_pcr_tk < 0 ) )
     {    
         p_sys->i_pcr_tk = pkt.stream_index;
-        p_sys->i_pcr = pkt.dts - i_start_time;
+        p_sys->i_pcr = p_frame->i_dts;
 
         es_out_Control( p_demux->out, ES_OUT_SET_PCR, (int64_t)p_sys->i_pcr );
     }
@@ -478,4 +487,4 @@ void E_(CloseDemux)( vlc_object_t *p_this )
 {
 }
 
-#endif /* LIBAVFORMAT_BUILD >= 4611 */
+#endif /* LIBAVFORMAT_BUILD >= 4629 */

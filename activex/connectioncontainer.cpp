@@ -1,7 +1,7 @@
 /*****************************************************************************
  * connectioncontainer.cpp: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 VideoLAN
+ * Copyright (C) 2005 the VideoLAN team
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -133,7 +133,7 @@ STDMETHODIMP VLCConnectionPoint::EnumConnections(IEnumConnections **ppEnum)
     return (NULL != *ppEnum ) ? S_OK : E_OUTOFMEMORY;
 };
 
-void VLCConnectionPoint::fireEvent(DISPID dispId, DISPPARAMS* pDispParams)
+void VLCConnectionPoint::fireEvent(DISPID dispId, DISPPARAMS *pDispParams)
 {
     vector<CONNECTDATA>::iterator end = _connections.end();
     vector<CONNECTDATA>::iterator iter = _connections.begin();
@@ -221,8 +221,23 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
+VLCDispatchEvent::~VLCDispatchEvent()
+{
+    //clear event arguments
+    if( NULL != _dispParams.rgvarg )
+    {
+        for(unsigned int c=0; c<_dispParams.cArgs; ++c)
+            VariantClear(_dispParams.rgvarg+c);
+        CoTaskMemFree(_dispParams.rgvarg);
+    }
+    if( NULL != _dispParams.rgdispidNamedArgs )
+        CoTaskMemFree(_dispParams.rgdispidNamedArgs);
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
 VLCConnectionPointContainer::VLCConnectionPointContainer(VLCPlugin *p_instance) :
-    _p_instance(p_instance)
+    _p_instance(p_instance), _b_freeze(FALSE)
 {
     _p_events = new VLCConnectionPoint(dynamic_cast<LPCONNECTIONPOINTCONTAINER>(this),
             _p_instance->getDispEventID());
@@ -237,7 +252,6 @@ VLCConnectionPointContainer::VLCConnectionPointContainer(VLCPlugin *p_instance) 
 
 VLCConnectionPointContainer::~VLCConnectionPointContainer()
 {
-    _v_cps.clear();
     delete _p_props;
     delete _p_events;
 };
@@ -275,13 +289,44 @@ STDMETHODIMP VLCConnectionPointContainer::FindConnectionPoint(REFIID riid, IConn
     return NOERROR;
 };
 
+void VLCConnectionPointContainer::freezeEvents(BOOL freeze)
+{
+    if( ! freeze )
+    {
+        // release queued events
+        while( ! _q_events.empty() )
+        {
+            VLCDispatchEvent *ev = _q_events.front();
+            _q_events.pop();
+            _p_events->fireEvent(ev->_dispId, &ev->_dispParams);
+            delete ev;
+        }
+    }
+    _b_freeze = freeze;
+};
+
 void VLCConnectionPointContainer::fireEvent(DISPID dispId, DISPPARAMS* pDispParams)
 {
-    _p_events->fireEvent(dispId, pDispParams);
+    if( _b_freeze )
+    {
+        // queue event for later use when container is ready
+        _q_events.push(new VLCDispatchEvent(dispId, *pDispParams));
+        if( _q_events.size() > 10 )
+        {
+            // too many events in queue, get rid of older one
+            delete _q_events.front();
+            _q_events.pop();
+        }
+    }
+    else
+    {
+        _p_events->fireEvent(dispId, pDispParams);
+    }
 };
 
 void VLCConnectionPointContainer::firePropChangedEvent(DISPID dispId)
 {
-    _p_props->firePropChangedEvent(dispId);
+    if( ! _b_freeze )
+        _p_props->firePropChangedEvent(dispId);
 };
 

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout.m: MacOS X video output module
  *****************************************************************************
- * Copyright (C) 2001-2005 VideoLAN
- * $Id: vout.m 11297 2005-06-05 00:48:53Z hartman $
+ * Copyright (C) 2001-2005 the VideoLAN team
+ * $Id: vout.m 12504 2005-09-09 21:19:15Z hartman $
  *
  * Authors: Colin Delacroix <colin@zoy.org>
  *          Florian G. Pflug <fgp@phlo.org>
@@ -144,6 +144,7 @@ int DeviceCallback( vlc_object_t *p_this, const char *psz_variable,
     var_Create( p_vout, "macosx-fill", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "macosx-stretch", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "macosx-opaqueness", VLC_VAR_FLOAT | VLC_VAR_DOINHERIT );
+    var_Create( p_vout, "macosx-background", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
 
     /* Get the pref value when this is the first time, otherwise retrieve the device from the top level video-device var */
     if( var_Type( p_real_vout->p_vlc, "video-device" ) == 0 )
@@ -233,6 +234,19 @@ int DeviceCallback( vlc_object_t *p_this, const char *psz_variable,
             BeginFullScreen( &p_fullscreen_state, NULL, 0, 0,
                              NULL, NULL, fullScreenAllowEvents );
         }
+    }
+    else if( var_GetBool( p_real_vout, "macosx-background" ) )
+    {
+        NSRect screen_rect = [o_screen frame];
+        screen_rect.origin.x = screen_rect.origin.y = 0;
+
+        /* Creates a window with size: screen_rect on o_screen */
+        [self initWithContentRect: screen_rect
+              styleMask: NSBorderlessWindowMask
+              backing: NSBackingStoreBuffered
+              defer: YES screen: o_screen];
+
+        [self setLevel: CGWindowLevelForKey(kCGDesktopWindowLevelKey)];
     }
     else
     {
@@ -497,8 +511,7 @@ int DeviceCallback( vlc_object_t *p_this, const char *psz_variable,
         return;
     }
     
-    p_input = vlc_object_find( p_vout, VLC_OBJECT_INPUT,
-                                                FIND_PARENT );
+    p_input = vlc_object_find( p_vout, VLC_OBJECT_INPUT, FIND_PARENT );
     
     if( p_input == NULL )
     {
@@ -514,7 +527,6 @@ int DeviceCallback( vlc_object_t *p_this, const char *psz_variable,
     if( o_title == nil )
         o_title = o_mrl;
 
-    vlc_object_release( p_input );
     if( o_mrl != nil )
     {
         if( p_input->input.p_access && !strcmp( p_input->input.p_access->p_module->psz_shortname, "File" ) )
@@ -530,6 +542,7 @@ int DeviceCallback( vlc_object_t *p_this, const char *psz_variable,
     {
         [self setTitle: [NSString stringWithCString: VOUT_TITLE]];
     }
+    vlc_object_release( p_input );
 }
 
 /* This is actually the same as VLCControls::stop. */

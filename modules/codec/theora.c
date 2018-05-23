@@ -1,8 +1,8 @@
 /*****************************************************************************
  * theora.c: theora decoder module making use of libtheora.
  *****************************************************************************
- * Copyright (C) 1999-2001 VideoLAN
- * $Id: theora.c 11030 2005-05-16 13:32:12Z gbazin $
+ * Copyright (C) 1999-2001 the VideoLAN team
+ * $Id: theora.c 11724 2005-07-13 17:51:13Z courmisch $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -665,12 +665,12 @@ static int OpenEncoder( vlc_object_t *p_this )
 
     if( p_enc->fmt_in.video.i_aspect )
     {
-        int64_t i_num, i_den;
-        int i_dst_num, i_dst_den;
+        uint64_t i_num, i_den;
+        unsigned i_dst_num, i_dst_den;
 
         i_num = p_enc->fmt_in.video.i_aspect * (int64_t)p_sys->ti.height;
         i_den = VOUT_ASPECT_FACTOR * p_sys->ti.width;
-        vlc_reduce( &i_dst_num, &i_dst_den, i_num, i_den, 0 );
+        vlc_ureduce( &i_dst_num, &i_dst_den, i_num, i_den, 0 );
         p_sys->ti.aspect_numerator = i_dst_num;
         p_sys->ti.aspect_denominator = i_dst_den;
     }

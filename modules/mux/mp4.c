@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mp4.c: mp4/mov muxer
  *****************************************************************************
- * Copyright (C) 2001, 2002, 2003 VideoLAN
- * $Id: mp4.c 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2001, 2002, 2003 the VideoLAN team
+ * $Id: mp4.c 12698 2005-09-28 18:56:36Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin at videolan dot org>
@@ -413,7 +413,10 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
         case VLC_FOURCC( 'm', 'j', 'p', 'b' ):
         case VLC_FOURCC( 'S', 'V', 'Q', '1' ):
         case VLC_FOURCC( 'S', 'V', 'Q', '3' ):
+        case VLC_FOURCC( 'H', '2', '6', '3' ):
         case VLC_FOURCC( 'h', '2', '6', '4' ):
+        case VLC_FOURCC( 's', 'a', 'm', 'r' ):
+        case VLC_FOURCC( 's', 'a', 'w', 'b' ):
             break;
         case VLC_FOURCC( 's', 'u', 'b', 't' ):
             msg_Warn( p_mux, "subtitle track added like in .mov (even when creating .mp4)" );
@@ -882,6 +885,41 @@ static bo_t *GetWaveTag( mp4_stream_t *p_stream )
     return wave;
 }
 
+static bo_t *GetDamrTag( mp4_stream_t *p_stream )
+{
+    bo_t *damr;
+
+    damr = box_new( "damr" );
+
+    bo_add_fourcc( damr, "REFC" );
+    bo_add_8( damr, 0 );
+
+    if( p_stream->fmt.i_codec == VLC_FOURCC( 's', 'a', 'm', 'r' ) )
+        bo_add_16be( damr, 0x81ff ); /* Mode set (all modes for AMR_NB) */
+    else
+        bo_add_16be( damr, 0x83ff ); /* Mode set (all modes for AMR_WB) */
+    bo_add_16be( damr, 0x1 ); /* Mode change period (no restriction) */
+
+    box_fix( damr );
+
+    return damr;
+}
+
+static bo_t *GetD263Tag( mp4_stream_t *p_stream )
+{
+    bo_t *d263;
+
+    d263 = box_new( "d263" );
+
+    bo_add_fourcc( d263, "VLC " );
+    bo_add_16be( d263, 0xa );
+    bo_add_8( d263, 0 );
+
+    box_fix( d263 );
+
+    return d263;
+}
+
 static bo_t *GetAvcCTag( mp4_stream_t *p_stream )
 {
     bo_t *avcC;
@@ -930,7 +968,7 @@ static bo_t *GetSVQ3Tag( mp4_stream_t *p_stream )
                 /* FIXME handle 1 as long size */
                 break;
             }
-            if( !strncmp( &p[4], "SMI ", 4 ) )
+            if( !strncmp( (const char *)&p[4], "SMI ", 4 ) )
             {
                 bo_add_mem( smi, p_end - p - 8, &p[8] );
                 return smi;
@@ -969,7 +1007,7 @@ static bo_t *GetUdtaTag( sout_mux_t *p_mux )
             bo_add_16be( box, sizeof("QuickTime 6.0 or greater") - 1);
             bo_add_16be( box, 0 );
             bo_add_mem( box, sizeof("QuickTime 6.0 or greater") - 1,
-                        "QuickTime 6.0 or greater" );
+                        (uint8_t *)"QuickTime 6.0 or greater" );
             box_fix( box );
             box_gather( udta, box );
             break;
@@ -983,7 +1021,7 @@ static bo_t *GetUdtaTag( sout_mux_t *p_mux )
         bo_add_16be( box, sizeof(PACKAGE_STRING " stream output") - 1);
         bo_add_16be( box, 0 );
         bo_add_mem( box, sizeof(PACKAGE_STRING " stream output") - 1,
-                    PACKAGE_STRING " stream output" );
+                    (uint8_t*)PACKAGE_STRING " stream output" );
         box_fix( box );
         box_gather( udta, box );
     }
@@ -1018,7 +1056,7 @@ static bo_t *GetUdtaTag( sout_mux_t *p_mux )
                 bo_add_16be( box, strlen( p_meta->value[i] ) );
                 bo_add_16be( box, 0 );
                 bo_add_mem( box, strlen( p_meta->value[i] ),
-                            p_meta->value[i] );
+                            (uint8_t*)(p_meta->value[i]) );
                 box_fix( box );
                 box_gather( udta, box );
             }
@@ -1041,6 +1079,12 @@ static bo_t *GetSounBox( sout_mux_t *p_mux, mp4_stream_t *p_stream )
     {
     case VLC_FOURCC('m','p','4','a'):
         memcpy( fcc, "mp4a", 4 );
+        b_descr = VLC_TRUE;
+        break;
+
+    case VLC_FOURCC('s','a','m','r'):
+    case VLC_FOURCC('s','a','w','b'):
+        memcpy( fcc, (char*)&p_stream->fmt.i_codec, 4 );
         b_descr = VLC_TRUE;
         break;
 
@@ -1110,6 +1154,10 @@ static bo_t *GetSounBox( sout_mux_t *p_mux, mp4_stream_t *p_stream )
         {
             box = GetWaveTag( p_stream );
         }
+        else if( p_stream->fmt.i_codec == VLC_FOURCC('s','a','m','r') )
+        {
+            box = GetDamrTag( p_stream );
+        }
         else
         {
             box = GetESDS( p_stream );
@@ -1147,6 +1195,10 @@ static bo_t *GetVideBox( sout_mux_t *p_mux, mp4_stream_t *p_stream )
 
     case VLC_FOURCC('S','V','Q','3'):
         memcpy( fcc, "SVQ3", 4 );
+        break;
+
+    case VLC_FOURCC('H','2','6','3'):
+        memcpy( fcc, "s263", 4 );
         break;
 
     case VLC_FOURCC('h','2','6','4'):
@@ -1203,6 +1255,15 @@ static bo_t *GetVideBox( sout_mux_t *p_mux, mp4_stream_t *p_stream )
         }
         break;
 
+    case VLC_FOURCC('H','2','6','3'):
+        {
+            bo_t *d263 = GetD263Tag( p_stream );
+
+            box_fix( d263 );
+            box_gather( vide, d263 );
+        }
+        break;
+
     case VLC_FOURCC('S','V','Q','3'):
         {
             bo_t *esds = GetSVQ3Tag( p_stream );
@@ -1256,7 +1317,7 @@ static bo_t *GetTextBox( sout_mux_t *p_mux, mp4_stream_t *p_stream )
     }
 
     bo_add_8 ( text, 9 );
-    bo_add_mem( text, 9, "Helvetica" );
+    bo_add_mem( text, 9, (uint8_t*)"Helvetica" );
 
     box_fix( text );
 
@@ -1749,11 +1810,11 @@ static bo_t *GetMoovBox( sout_mux_t *p_mux )
             bo_add_8( hdlr, 12 );   /* Pascal string for .mov */
 
         if( p_stream->fmt.i_cat == AUDIO_ES )
-            bo_add_mem( hdlr, 12, "SoundHandler" );
+            bo_add_mem( hdlr, 12, (uint8_t*)"SoundHandler" );
         else if( p_stream->fmt.i_cat == VIDEO_ES )
-            bo_add_mem( hdlr, 12, "VideoHandler" );
+            bo_add_mem( hdlr, 12, (uint8_t*)"VideoHandler" );
         else
-            bo_add_mem( hdlr, 12, "Text Handler" );
+            bo_add_mem( hdlr, 12, (uint8_t*)"Text Handler" );
 
         if( !p_sys->b_mov )
             bo_add_8( hdlr, 0 );   /* asciiz string for .mp4, yes that's BRAIN DAMAGED F**K MP4 */

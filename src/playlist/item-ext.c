@@ -1,8 +1,8 @@
 /*****************************************************************************
  * item-ext.c : Playlist item management functions (act on the playlist)
  *****************************************************************************
- * Copyright (C) 1999-2004 VideoLAN
- * $Id: item-ext.c 11476 2005-06-20 18:58:27Z zorglub $
+ * Copyright (C) 1999-2004 the VideoLAN team
+ * $Id: item-ext.c 12493 2005-09-08 18:18:54Z bigben $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Clément Stenac <zorglub@videolan.org>
@@ -281,6 +281,8 @@ int playlist_NodeAddItem( playlist_t *p_playlist, playlist_item_t *p_item,
 
     vlc_mutex_lock( &p_playlist->object_lock );
 
+    if ( i_pos == PLAYLIST_END ) i_pos = -1;
+
     /* Sanity checks */
     if( !p_parent || p_parent->i_children == -1 )
     {
@@ -334,7 +336,7 @@ int playlist_NodeAddItem( playlist_t *p_playlist, playlist_item_t *p_item,
     p_playlist->i_enabled ++;
 
     /* TODO: Handle modes */
-    playlist_NodeAppend( p_playlist, i_view, p_item, p_parent );
+    playlist_NodeInsert( p_playlist, i_view, p_item, p_parent, i_pos );
 
     p_add->i_item = p_item->input.i_id;
     p_add->i_node = p_parent->input.i_id;

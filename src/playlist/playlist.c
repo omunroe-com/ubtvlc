@@ -1,8 +1,8 @@
 /*****************************************************************************
  * playlist.c : Playlist management functions
  *****************************************************************************
- * Copyright (C) 1999-2004 VideoLAN
- * $Id: playlist.c 11476 2005-06-20 18:58:27Z zorglub $
+ * Copyright (C) 1999-2004 the VideoLAN team
+ * $Id: playlist.c 12842 2005-10-15 17:55:46Z asmax $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Clément Stenac <zorglub@videolan.org>
@@ -51,6 +51,37 @@ static int ItemChange( vlc_object_t *, const char *,
                        vlc_value_t, vlc_value_t, void * );
 
 int playlist_vaControl( playlist_t * p_playlist, int i_query, va_list args );
+
+void playlist_PreparseEnqueueItemSub( playlist_t *, playlist_item_t * );
+
+playlist_item_t *playlist_RecursiveFindLast(playlist_t *p_playlist,
+                                            playlist_item_t *p_node );
+
+/*****************************************************************************
+ * Helper Function for NextItem
+ *****************************************************************************/
+
+playlist_item_t *playlist_RecursiveFindLast(playlist_t *p_playlist,
+                                            playlist_item_t *p_node )
+{
+    int i;
+    playlist_item_t *p_item;
+    for ( i = p_node->i_children - 1; i >= 0; i-- )
+    {
+        if( p_node->pp_children[i]->i_children == -1 )
+            return p_node->pp_children[i];
+        else if(p_node->pp_children[i]->i_children > 0)
+        {
+             p_item = playlist_RecursiveFindLast( p_playlist,
+                                        p_node->pp_children[i] );
+            if ( p_item != NULL )
+                return p_item;
+        }
+        else if( i == 0 )
+            return NULL;
+    }
+    return NULL;
+}
 
 
 /**
@@ -306,6 +337,7 @@ int playlist_vaControl( playlist_t * p_playlist, int i_query, va_list args )
     case PLAYLIST_STOP:
         p_playlist->status.i_status = PLAYLIST_STOPPED;
         p_playlist->request.b_request = VLC_TRUE;
+        p_playlist->request.p_item = NULL;
         break;
 
     case PLAYLIST_ITEMPLAY:
@@ -380,6 +412,7 @@ int playlist_vaControl( playlist_t * p_playlist, int i_query, va_list args )
 
     case PLAYLIST_AUTOPLAY:
         p_playlist->status.i_status = PLAYLIST_RUNNING;
+        p_playlist->status.p_node = p_playlist->p_general;
 
         p_playlist->request.b_request = VLC_FALSE;
         break;
@@ -410,11 +443,16 @@ int playlist_vaControl( playlist_t * p_playlist, int i_query, va_list args )
         break;
 
     case PLAYLIST_SKIP:
+        p_playlist->request.i_view = p_playlist->status.i_view;
         if( p_playlist->status.i_view > -1 )
         {
-            p_playlist->request.i_view = p_playlist->status.i_view;
             p_playlist->request.p_node = p_playlist->status.p_node;
             p_playlist->request.p_item = p_playlist->status.p_item;
+        }
+        else
+        {
+            p_playlist->request.p_node = NULL;
+            p_playlist->request.p_item = NULL;
         }
         p_playlist->request.i_skip = (int) va_arg( args, int );
         p_playlist->request.b_request = VLC_TRUE;
@@ -447,6 +485,39 @@ int playlist_PreparseEnqueue( playlist_t *p_playlist,
                  p_playlist->p_preparse->i_waiting,
                  p_item );
     vlc_mutex_unlock( &p_playlist->p_preparse->object_lock );
+    return VLC_SUCCESS;
+}
+
+/* Should only be called if playlist and preparser are locked */
+void playlist_PreparseEnqueueItemSub( playlist_t *p_playlist,
+                                     playlist_item_t *p_item )
+{
+    int i;
+    if( p_item->i_children == -1 )
+    {
+        INSERT_ELEM( p_playlist->p_preparse->pp_waiting,
+                     p_playlist->p_preparse->i_waiting,
+                     p_playlist->p_preparse->i_waiting,
+                     &(p_item->input) );
+    }
+    else
+    {
+        for( i = 0; i < p_item->i_children; i++)
+        {
+            playlist_PreparseEnqueueItemSub( p_playlist,
+                                             p_item->pp_children[i] );
+        }
+    }
+}
+
+int playlist_PreparseEnqueueItem( playlist_t *p_playlist,
+                                  playlist_item_t *p_item )
+{
+    vlc_mutex_lock( &p_playlist->object_lock );
+    vlc_mutex_lock( &p_playlist->p_preparse->object_lock );
+    playlist_PreparseEnqueueItemSub( p_playlist, p_item );
+    vlc_mutex_unlock( &p_playlist->p_preparse->object_lock );
+    vlc_mutex_unlock( &p_playlist->object_lock );
     return VLC_SUCCESS;
 }
 
@@ -570,12 +641,12 @@ static void RunThread ( playlist_t *p_playlist )
 
                 continue;
             }
-            /* This input is dying, let him do */
+            /* This input is dying, let it do */
             else if( p_playlist->p_input->b_die )
             {
                 ;
             }
-            /* This input has finished, ask him to die ! */
+            /* This input has finished, ask it to die ! */
             else if( p_playlist->p_input->b_error
                       || p_playlist->p_input->b_eof )
             {
@@ -634,6 +705,13 @@ static void RunThread ( playlist_t *p_playlist )
         }
         else if( p_playlist->status.i_status == PLAYLIST_STOPPED )
         {
+            if( p_item && p_playlist->status.p_item &&
+                p_playlist->status.p_item->i_flags & PLAYLIST_REMOVE_FLAG )
+            {
+                 playlist_ItemDelete( p_item );
+                 p_playlist->status.p_item = NULL;
+            }
+
             /* Collect garbage */
             vlc_mutex_unlock( &p_playlist->object_lock );
             i_sout_destroyed_date =
@@ -691,7 +769,7 @@ static void RunThread ( playlist_t *p_playlist )
         }
         else if( p_playlist->p_input->b_die )
         {
-            /* This input is dying, leave him alone */
+            /* This input is dying, leave it alone */
             ;
         }
         else if( p_playlist->p_input->b_error || p_playlist->p_input->b_eof )
@@ -821,31 +899,41 @@ static playlist_item_t * NextItem( playlist_t *p_playlist )
     /* TODO: use the "shuffled view" internally ? */
     /* Random case. This is an exception: if request, but request is skip +- 1
      * we don't go to next item but select a new random one. */
-    if( b_random && (!p_playlist->request.b_request ||
-        p_playlist->request.i_skip == 1 || p_playlist->request.i_skip == -1 ) )
+    if( b_random && 
+        ( !p_playlist->request.b_request ||
+        ( p_playlist->request.b_request && ( p_playlist->request.p_item == NULL ||
+          p_playlist->request.i_skip == 1 || p_playlist->request.i_skip == -1 ) ) ) )
     {
-        srand( (unsigned int)mdate() );
-        i_new = 0;
-        for( i_count = 0; i_count < p_playlist->i_size - 1 ; i_count ++ )
+        /* how many items to choose from ? */
+        i_count = 0;
+        for ( i = 0; i < p_playlist->i_size; i++ )
         {
-            i_new =
-                (int)((float)p_playlist->i_size * rand() / (RAND_MAX+1.0));
-            /* Check if the item has not already been played */
-            if( p_playlist->pp_items[i_new]->i_nb_played == 0 )
-                break;
+            if ( p_playlist->pp_items[i]->i_nb_played == 0 )
+                i_count++;
         }
-        if( i_count == p_playlist->i_size )
+        /* Nothing left? */
+        if ( i_count == 0 )
         {
-            /* The whole playlist has been played: reset the counters */
-            while( i_count > 0 )
-            {
-                p_playlist->pp_items[--i_count]->i_nb_played = 0;
-            }
+            /* Don't loop? Exit! */
             if( !b_loop )
-            {
                 return NULL;
+            /* Otherwise reset the counter */
+            for ( i = 0; i < p_playlist->i_size; i++ )
+            {
+                p_playlist->pp_items[i]->i_nb_played = 0;
             }
+            i_count = p_playlist->i_size;
         }
+        srand( (unsigned int)mdate() );
+        i = rand() % i_count + 1 ;
+        /* loop thru the list and count down the unplayed items to the selected one */
+        for ( i_new = 0; i_new < p_playlist->i_size && i > 0; i_new++ )
+        {
+            if ( p_playlist->pp_items[i_new]->i_nb_played == 0 )
+                i--;
+        }
+        i_new--;
+
         p_playlist->request.i_skip = 0;
         p_playlist->request.b_request = VLC_FALSE;
         return p_playlist->pp_items[i_new];
@@ -858,17 +946,19 @@ static playlist_item_t * NextItem( playlist_t *p_playlist )
         msg_Dbg( p_playlist,"processing request" );
 #endif
         /* We are not playing from a view */
-        if(  p_playlist->request.i_view == -1  )
+        if( p_playlist->request.i_view == -1  )
         {
 #ifdef PLAYLIST_DEBUG
             msg_Dbg( p_playlist, "non-view mode request");
 #endif
             /* Directly select the item, just like now */
+            p_new = p_playlist->request.p_item;
             i_skip = p_playlist->request.i_skip;
             i_goto = p_playlist->request.i_goto;
 
             if( p_playlist->i_index < 0 ) p_playlist->i_index = 0;
-            p_new = p_playlist->pp_items[p_playlist->i_index];
+            if ( p_new == NULL )
+                p_new = p_playlist->pp_items[p_playlist->i_index];
 
             if( i_goto >= 0  && i_goto < p_playlist->i_size )
             {
@@ -920,22 +1010,15 @@ static playlist_item_t * NextItem( playlist_t *p_playlist )
                                     p_new );
                     if( p_new == NULL )
                     {
-                        if( b_loop )
-                        {
 #ifdef PLAYLIST_DEBUG
-                            msg_Dbg( p_playlist, "looping" );
+                        msg_Dbg( p_playlist, "looping" );
 #endif
-                            p_new = playlist_FindNextFromParent( p_playlist,
-                                      p_playlist->request.i_view,
-                                      p_view->p_root,
-                                      p_playlist->request.p_node,
-                                      NULL );
-                            if( p_new == NULL ) break;
-                        }
-                        else
-                        {
-                            break;
-                        }
+                        p_new = playlist_FindNextFromParent( p_playlist,
+                                  p_playlist->request.i_view,
+                                  p_view->p_root,
+                                  p_view->p_root,
+                                  NULL );
+                        if( p_new == NULL ) break;
                     }
                 }
             }
@@ -948,6 +1031,13 @@ static playlist_item_t * NextItem( playlist_t *p_playlist )
                                     p_view->p_root,
                                     p_playlist->request.p_node,
                                     p_new );
+                    if( p_new == NULL )
+                    {
+                    /* We reach the beginning of the playlist.
+                       Go back to the last item. */
+                        p_new = playlist_RecursiveFindLast( p_playlist,
+                                                            p_view->p_root );
+                    }
                     if( p_new == NULL ) break;
                 }
 
@@ -964,7 +1054,7 @@ static playlist_item_t * NextItem( playlist_t *p_playlist )
         if( p_playlist->status.i_view == -1 )
         {
 #ifdef PLAYLIST_DEBUG
-        msg_Dbg( p_playlist,"no request - old mode" );
+        msg_Dbg( p_playlist, "no request - old mode" );
 #endif
             if( p_playlist->i_index + 1 < p_playlist->i_size )
             {
@@ -1014,7 +1104,7 @@ static playlist_item_t * NextItem( playlist_t *p_playlist )
                     p_new = playlist_FindNextFromParent( p_playlist,
                                    p_playlist->status.i_view,
                                    p_view->p_root,
-                                   p_playlist->status.p_node,
+                                   p_view->p_root,
                                    NULL );
                 }
                 if( p_new != NULL && !(p_new->i_flags & PLAYLIST_SKIP_FLAG) )

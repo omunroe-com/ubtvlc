@@ -1,3 +1,157 @@
+vlc (0.8.4.debian-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Sat, 26 Nov 2005 19:55:09 +0100
+
+vlc (0.8.4-test2-2) unstable; urgency=low
+
+  * extras/x264/configure:
+    + Teach the configure script about the Alpha platform.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Fri, 11 Nov 2005 18:49:31 +0100
+
+vlc (0.8.4-test2-1) unstable; urgency=low
+
+  * New upstream release.
+  * debian/control:
+    + Build-depend on a newer version of gnutls (Closes: #335774).
+    + Replaced occurrences of "wxwindows" with "wxwidgets" (Closes: #330141).
+  * debian/rules:
+    + Use dh_buildinfo because of all the static libraries we use.
+  * Upstream fixed the wx code so that it builds with newer versions of the
+    library (Closes: #332282, #332773).
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Fri, 11 Nov 2005 10:41:35 +0100
+
+vlc (0.8.4-svn20050920-3) unstable; urgency=low
+
+  * configure.ac:
+    + Fixed a bug in the gnomevfs plugin configuration.
+  * debian/rules:
+    + Explicitly disable the GnomeVFS plugin (Closes: #329317).
+  * debian/control:
+    + Buuild-depend on yasm on amd64.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Wed, 21 Sep 2005 11:36:24 +0200
+
+vlc (0.8.4-svn20050920-2) unstable; urgency=low
+
+  * configure:
+    + Fixed the powerpc build with gcc-4.x.
+  * extras/x264/configure:
+    + Added missing Debian architectures to the configure script.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Tue, 20 Sep 2005 17:46:35 +0200
+
+vlc (0.8.4-svn20050920-1) unstable; urgency=low
+
+  * New SVN snapshot.
+  * configure.ac:
+    + Upstream fixed the AltiVec build on PPC.
+  * debian/control:
+    + Build-depend on a newer version of libavcodec. mp2v and mp1v encoders
+      work again (Closes: #324840).
+    + Build-depend on gcc-snapshot on i386 and amd64, because currently only
+      that version of gcc properly builds some of the MMX modules.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Tue, 20 Sep 2005 13:43:41 +0200
+
+vlc (0.8.4-svn20050823-2) unstable; urgency=low
+
+  * debian/control:
+    + Build-depend on libflac-dev (>= 1.1.2-3) because of the soname
+      change (Closes: #325948).
+  * debian/copyright:
+    + Fixed the FSF address.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Thu,  1 Sep 2005 12:36:10 +0200
+
+vlc (0.8.4-svn20050823-1) unstable; urgency=low
+
+  * New SVN snapshot.
+  * debian/control:
+    + Build-depend on libsmbclient-dev.
+    + Build-depend on libwxgtk2.6-dev (Closes: #285373), which means the
+      interface now works with non-UTF8 locales (Closes: #308770, #322665).
+    + Build-depend on a newer version of libavcodec.
+  * debian/rules:
+    + Activated SMB client support.
+    + Install desktop files in usr/share/applications instead of
+      usr/share/gnome/apps/Multimedia.
+  * debian/patches/00list:
+    + 20_no-wx-updates.dpatch: disabled the update check.
+    + 20_interfaces.dpatch: disabled deprecated patch.
+  * configure.ac:
+    + Fixes powerpc build.
+  * include/network.h src/misc/net.c:
+    + Fixes HTTP input (Closes: #322757).
+    + Fixes URL encoding in the RTSP module (Closes: #323813).
+  * modules/gui/skins2 modules/gui/wxwidgets:
+    + Fixes a compilation issue on 64-bit architectures (Closes: #324031).
+  * modules/visualization/xosd.c:
+    + Fixes libxosd initialisation (Closes: #324039).
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Mon, 22 Aug 2005 14:43:48 +0200
+
+vlc (0.8.4-svn20050810-2) unstable; urgency=low
+
+  * debian/control:
+    + Build-depend on libarts1-dev (>= 1.4.2-1).
+    + Build-depend on a newer version of libavcodec.
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Tue, 16 Aug 2005 17:36:21 +0200
+
+vlc (0.8.4-svn20050810-1) unstable; urgency=low
+
+  * New SVN snapshot.
+  * Rebuilt against libaa1 and new wxWin and SDL packages to complete the
+    aalib transition (Closes: #320874) and make the packages installable again
+    (Closes: #319292, #319598, #321461, #322166, #317380).
+  * debian/rules:
+    + Use DEB_BUILD_ARCH_CPU instead of DEB_BUILD_GNU_CPU.
+  * debian/vlc.desktop:
+    + Added desktop file, thanks to Mantas Kriauciunas (Closes: #290612).
+  * debian/control:
+    + Removed unused dummy packages (Closes: #321988, #322003, #322013).
+    + Build-depend on libmatroska-dev (>= 0.7.7).
+    + Build-depend on libwxgtk2.4-dev (>= 2.4.4).
+    + Build-depend on libdvbpsi4-dev instead of libdvbpsi3-dev.
+    * Build-depend on libsdl1.2-dev (>= 1.2.7+1.2.8cvs20041007-5.3).
+    + Build-depend on a newer version of libmatroska-dev and mozilla-dev
+      because of the C++ transition.
+    + Build-depend on libsvga1-dev instead of svgalib1-dev.
+  * This snapshot no longer uses tune=opteron on amd64 (Closes: #316161).
+  * The SVN version adds support for Freebox users (Closes: #317035).
+  * Various gcc-4.x FTBFS were fixed upstream (Closes: #317055).
+  * mozilla/support/npunix.c: fixed undeclared NPP_GetJavaClass
+    (Closes: #317067).
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Wed, 10 Aug 2005 16:18:37 +0200
+
+vlc (0.8.2-1) unstable; urgency=low
+
+  * New upstream release.
+  * This version fixes the random playlist parsing (Closes: #308375), encodes
+    non-ASCII characters in RTSP requests (Closes: #279735) and fixes an issue
+    with large files (Closes: #306110).
+  * debian/control:
+    + Set policy to 3.6.2.1.
+    + Build-depend on libpng12-dev, xlibmesa-gl-dev.
+    + Build-depend on a more recent ffmpeg library set, to fix nasty visual
+      artifacts with post-processing (Closes: #300220).
+    + mozilla-plugin-vlc recommends mozilla-firefox in addition to
+      mozilla-browser (Closes: #308723).
+    + Now that sarge is out, removed legacy packages that disappeared in woody.
+  * debian/rules:
+    + Activated PNG output support.
+    + Activated GLX output support.
+  * The NEWS file documents the changed behaviour for SAP (Closes: #303262).
+  * Minor typo fixed in the manpage (Closes: #300339).
+  * po/de.po: merged corrections from Jens Seidel (Closes: #313890).
+
+ -- Sam Hocevar (Debian packages) <sam+deb@zoy.org>  Sun, 26 Jun 2005 16:28:19 +0200
+
 vlc (0.8.1.svn20050314-1) unstable; urgency=low
 
   * More recent SVN snapshot.

@@ -137,6 +137,18 @@
 		<dict>
 			<key>CFBundleTypeExtensions</key>
 			<array>
+				<string>img</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>generic.icns</string>
+			<key>CFBundleTypeName</key>
+			<string>IMG Disk Image</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
 				<string>mod</string>
 			</array>
 			<key>CFBundleTypeName</key>
@@ -584,8 +596,7 @@
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>mp4</string>
-				<string>m4a</string>
-				<string>m4p</string>
+				<string>m4v</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
 			<string>mpeg4.icns</string>
@@ -646,7 +657,6 @@
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>m4a</string>
-				<string>m4p</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
 			<string>mpeg4.icns</string>
@@ -655,11 +665,23 @@
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
 		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>mpc</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>generic.icns</string>
+			<key>CFBundleTypeName</key>
+			<string>Musepack Audio File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>VLC</string>
 	<key>CFBundleGetInfoString</key>
-	<string>VLC media player 0.8.2, Copyright (c) 1996-2005 VideoLAN.</string>
+	<string>VLC media player 0.8.4, Copyright (c) 1996-2005 VideoLAN.</string>
 	<key>CFBundleIconFile</key>
 	<string>vlc.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -671,7 +693,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.8.2</string>
+	<string>0.8.4</string>
 	<key>CFBundleSignature</key>
 	<string>VLC#</string>
 	<key>CFBundleURLTypes</key>
@@ -713,7 +735,7 @@
 			<string>RTSP</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>rtsp,rts</string>
+				<string>rtsp</string>
 			</array>
 		</dict>
 		<dict>
@@ -728,7 +750,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>0.8.2</string>
+	<string>0.8.4</string>
 	<key>NSAppleScriptEnabled</key>
 	<string>YES</string>
 	<key>NSMainNibFile</key>
@@ -757,7 +779,6 @@
 				DCC9AE9507F77DE600394C42,
 				A0E6B59904407FBD0080DD97,
 				8EDAC3440440F72D0059A3A7,
-				8EE1AFA40444660F0059A3A7,
 				8E9CC7B2046EFD700059A3A7,
 				8E445F9D04728A700059A3A7,
 				8E445F9E04728A700059A3A7,
@@ -812,6 +833,10 @@
 				DCA00AA9075F948800E6BF46,
 				DCF358BB077F10BA007DB450,
 				DCA693C30789DF8700139EC6,
+				DCFCCDB9085CE18F001E36AF,
+				DC7F46ED08A183FC0027DB24,
+				DCE7BD0508A56C8B007B10AE,
+				DCDA5E6508F94518009D93A8,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -834,9 +859,9 @@
 		089C167CFE841241C02AAC07 = {
 			children = (
 				DCF358BC077F1236007DB450,
+				DCDA5E6408F94518009D93A8,
 				8E445F86047289E50059A3A7,
 				8ECA7E520563CD9500DFC000,
-				8EE1AFA30444660F0059A3A7,
 				F69B0CA602E24F6401A80112,
 				8ED6C29D03E2F32E0059A3A7,
 				8E9CC7B1046EFD700059A3A7,
@@ -892,6 +917,12 @@
 				8ED6C28803E2EB1C0059A3A7,
 				8E9CA1A506D7DEE800B7186C,
 				8E9CA1A606D7DEE800B7186C,
+				DC769AB8085DF0DB001A838D,
+				DC769AB7085DF0DB001A838D,
+				DC7F46F008A187F60027DB24,
+				DC7F46F108A187F60027DB24,
+				DCE7BD0708A5724D007B10AE,
+				DCE7BD0608A5724D007B10AE,
 			);
 			isa = PBXGroup;
 			name = Classes;
@@ -2105,20 +2136,6 @@
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
-		8EE1AFA30444660F0059A3A7 = {
-			isa = PBXFileReference;
-			lastKnownFileType = image.png;
-			name = about_bg.png;
-			path = Resources/about_bg.png;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		8EE1AFA40444660F0059A3A7 = {
-			fileRef = 8EE1AFA30444660F0059A3A7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 //8E0
 //8E1
 //8E2
@@ -2154,6 +2171,71 @@
 //DC2
 //DC3
 //DC4
+		DC769AB7085DF0DB001A838D = {
+			fileEncoding = 5;
+			indentWidth = 4;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			name = wizard.m;
+			path = ../../modules/gui/macosx/wizard.m;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+			tabWidth = 4;
+			usesTabs = 0;
+		};
+		DC769AB8085DF0DB001A838D = {
+			fileEncoding = 5;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = wizard.h;
+			path = ../../modules/gui/macosx/wizard.h;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		DC7F46EB08A183FC0027DB24 = {
+			children = (
+				DC7F46EC08A183FC0027DB24,
+			);
+			isa = PBXVariantGroup;
+			name = Extended.nib;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		DC7F46EC08A183FC0027DB24 = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = Resources/English.lproj/Extended.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		DC7F46ED08A183FC0027DB24 = {
+			fileRef = DC7F46EB08A183FC0027DB24;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DC7F46F008A187F60027DB24 = {
+			explicitFileType = sourcecode.c.objc;
+			fileEncoding = 5;
+			isa = PBXFileReference;
+			name = extended.h;
+			path = ../../modules/gui/macosx/extended.h;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+			usesTabs = 0;
+		};
+		DC7F46F108A187F60027DB24 = {
+			explicitFileType = sourcecode.c.objc;
+			fileEncoding = 5;
+			includeInIndex = 0;
+			isa = PBXFileReference;
+			name = extended.m;
+			path = ../../modules/gui/macosx/extended.m;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
 		DCA00AA7075F948800E6BF46 = {
 			children = (
 				DCA00AA8075F948800E6BF46,
@@ -2208,6 +2290,62 @@
 			settings = {
 			};
 		};
+		DCDA5E6408F94518009D93A8 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.png;
+			name = about_bg.png;
+			path = Resources/about_bg.png;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		DCDA5E6508F94518009D93A8 = {
+			fileRef = DCDA5E6408F94518009D93A8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DCE7BD0308A56C8B007B10AE = {
+			children = (
+				DCE7BD0408A56C8B007B10AE,
+			);
+			isa = PBXVariantGroup;
+			name = Bookmarks.nib;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		DCE7BD0408A56C8B007B10AE = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = Resources/English.lproj/Bookmarks.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		DCE7BD0508A56C8B007B10AE = {
+			fileRef = DCE7BD0308A56C8B007B10AE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DCE7BD0608A5724D007B10AE = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			name = bookmarks.m;
+			path = ../../modules/gui/macosx/bookmarks.m;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		DCE7BD0708A5724D007B10AE = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = bookmarks.h;
+			path = ../../modules/gui/macosx/bookmarks.h;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
 		DCF358B9077F10BA007DB450 = {
 			children = (
 				DCF358BA077F10BA007DB450,
@@ -2238,11 +2376,38 @@
 				F74F13EA02C2A79C01EE194C,
 				DCF358B9077F10BA007DB450,
 				DCA693C10789DF8700139EC6,
+				DCFCCDB7085CE18F001E36AF,
+				DC7F46EB08A183FC0027DB24,
+				DCE7BD0308A56C8B007B10AE,
 			);
 			isa = PBXGroup;
 			name = nibs;
 			refType = 4;
 			sourceTree = "<group>";
+		};
+		DCFCCDB7085CE18F001E36AF = {
+			children = (
+				DCFCCDB8085CE18F001E36AF,
+			);
+			isa = PBXVariantGroup;
+			name = Wizard.nib;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		DCFCCDB8085CE18F001E36AF = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = Resources/English.lproj/Wizard.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		DCFCCDB9085CE18F001E36AF = {
+			fileRef = DCFCCDB7085CE18F001E36AF;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 //DC0
 //DC1

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * au.c : au file input module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2003 VideoLAN
- * $Id: au.c 10150 2005-03-05 17:54:19Z gbazin $
+ * Copyright (C) 2001-2003 the VideoLAN team
+ * $Id: au.c 11685 2005-07-10 10:51:28Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -107,7 +107,7 @@ static int Open( vlc_object_t *p_this )
 
     if( stream_Peek( p_demux->s, &p_peek, 4 ) < 4 ) return VLC_EGENERIC;
 
-    if( strncmp( p_peek, ".snd", 4 ) )
+    if( memcmp( p_peek, ".snd", 4 ) )
     {
         return VLC_EGENERIC;
     }

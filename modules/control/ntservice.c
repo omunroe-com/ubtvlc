@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ntservice.c: Windows NT/2K/XP service interface
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: ntservice.c 10112 2005-03-03 06:58:04Z zorglub $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: ntservice.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *

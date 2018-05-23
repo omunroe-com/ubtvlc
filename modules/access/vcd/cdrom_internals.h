@@ -1,8 +1,8 @@
 /****************************************************************************
  * cdrom_internals.h: cdrom tools private header
  *****************************************************************************
- * Copyright (C) 1998-2001 VideoLAN
- * $Id: cdrom_internals.h 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 1998-2001 the VideoLAN team
+ * $Id: cdrom_internals.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Johan Bilien <jobi@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>

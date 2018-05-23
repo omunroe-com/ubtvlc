@@ -1,18 +1,23 @@
 #!/usr/bin/make -f
 # debian/rules for the VLC media player - uses debhelper.
-# $Id: rules 10334 2005-03-14 13:54:04Z sam $
+# $Id: rules 12681 2005-09-25 23:47:23Z sam $
 # based on Joey Hess's one.
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 include /usr/share/dpatch/dpatch.make
 
+# These are used for cross-compiling and for saving the configure script
+# from having to guess our platform (since we know it already)
+DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+confflags = --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) 
+
 #
 # Compilation options
 #
-
-CONFIG_FLAGS = --enable-release --prefix=/usr
-CONFIG_FLAGS += \
+vlc_confflags = --enable-release --prefix=/usr
+vlc_confflags += \
 	--disable-gnome \
 	--disable-gtk \
 	--disable-familiar \
@@ -37,8 +42,8 @@ CONFIG_FLAGS += \
 	--disable-satellite \
 	--enable-ogg \
 	--enable-vorbis \
-	--enable-wxwindows \
-	--with-wx-config=wxgtk-2.4-config \
+	--enable-wxwidgets \
+	--with-wx-config=wx-config \
 	--disable-slp \
 	--enable-flac \
 	--disable-skins \
@@ -62,25 +67,38 @@ CONFIG_FLAGS += \
 	--enable-gnutls \
 	--enable-ffmpeg \
 	--enable-ncurses \
+	--enable-smb \
+	--disable-gnomevfs \
 	$(NULL)
 
 # These ones are currently shipped with VLC
-CONFIG_FLAGS += --enable-faad --with-faad-tree=extras/faad2
-CONFIG_FLAGS += --enable-x264 --with-x264-tree=extras/x264
+vlc_confflags += --enable-faad --with-faad-tree=extras/faad2
+vlc_confflags += --enable-x264 --with-x264-tree=extras/x264
 
 # Glide and svgalib are only for x86
-ifeq ($(shell dpkg-architecture -qDEB_BUILD_GNU_CPU),i386)
-CONFIG_FLAGS += --enable-glide
-CONFIG_FLAGS += --enable-svgalib
+ifeq ($(shell dpkg-architecture -qDEB_BUILD_ARCH_CPU),i386)
+vlc_confflags += --enable-glide
+vlc_confflags += --enable-svgalib
+endif
+
+# We need this hack for i386 and amd64
+ifeq ($(shell dpkg-architecture -qDEB_BUILD_ARCH_CPU),i386)
+CC = $(shell pwd)/debian/gcc-snapshot
+export CC
+endif
+ifeq ($(shell dpkg-architecture -qDEB_BUILD_ARCH_CPU),amd64)
+CC = $(shell pwd)/debian/gcc-snapshot
+export CC
 endif
 
 # Remove --without-dvdcss in non-totalitarian countries
-CONFIG_FLAGS += --enable-dvd --without-dvdcss
+vlc_confflags += --enable-dvd --without-dvdcss
 
 # A few shortcuts
 VIDDIR = usr/share/vlc
 PIXDIR = usr/share/pixmaps
-GNOMEDIR = usr/share/gnome/apps/Multimedia
+APPDIR = usr/share/applications
+
 
 #
 # Build rules
@@ -99,28 +117,26 @@ configure-stamp:
 
 	# Check that we have an x264 tree in here (can be a symlink)
 	test -d extras/x264
-	if test ! '(' -d CVS -o -d .svn ')'; then \
-	  cd extras/x264 \
-	  && jam -dx libx264.a; \
-	fi
+	cd extras/x264 \
+	 && ./configure $(confflags) --extra-cflags='$$(ECFLAGS)' \
+	                             --extra-asflags='$$(EASFLAGS)' \
+	 && $(MAKE)
 
 	# Check that we have an faad2 tree in here (can be a symlink)
 	test -d extras/faad2
-	if test ! '(' -d CVS -o -d .svn ')'; then \
-	  cd extras/faad2 \
-	  && touch `find . -name configure.in` \
-	  && touch `find . -name aclocal.m4` \
-	  && touch `find . -name configure` \
-	  && touch `find . -name config.h.in` \
-	  && touch `find . -name Makefile.in` \
-	  && ./configure --disable-shared \
-	  && cd libfaad \
-	  && $(MAKE); \
-	fi
+	cd extras/faad2 \
+	 && touch `find . -name configure.in` \
+	 && touch `find . -name aclocal.m4` \
+	 && touch `find . -name configure` \
+	 && touch `find . -name config.h.in` \
+	 && touch `find . -name Makefile.in` \
+	 && ./configure $(confflags) --disable-shared \
+	 && cd libfaad \
+	 && $(MAKE)
 
 	# Configure VLC
 	./configure --mandir=$${prefix}/share/man \
-	  --infodir=$${prefix}/share/info $(CONFIG_FLAGS)
+	  --infodir=$${prefix}/share/info $(confflags) $(vlc_confflags)
 
 	touch configure-stamp
 
@@ -134,24 +150,19 @@ build-stamp: patch configure-stamp
 	$(MAKE) vlc
 
 	# Hackety hackety hack
-	if test ! '(' -d CVS -o -d .svn ')'; then \
-	  cd extras/x264 \
-	  && jam -dx clean \
-	  && rm -f Jamfile.pic \
-	  && sed 's/^CCFLAGS *=/& -fPIC -DPIC /' <Jamfile >Jamfile.pic \
-	  && jam -dx -sJAMFILE=Jamfile.pic libx264.a \
-	  && rm -f Jamfile.pic; \
-	fi
+	cd extras/x264 && $(MAKE) clean && $(MAKE) ECFLAGS=-fPIC EASFLAGS=-D__PIC__
 
 	# HACKETY HACKETY HACK
-	if test ! '(' -d CVS -o -d .svn ')'; then \
-	  cd extras/faad2/libfaad \
-	  && $(MAKE) clean \
-	  && $(MAKE) AM_CFLAGS=-fPIC; \
-	fi
+	cd extras/faad2/libfaad && $(MAKE) clean && $(MAKE) AM_CFLAGS=-fPIC
 
 	# Build all the rest, with the PIC libs
 	AM_MAKEFLAGS='builtin=no' $(MAKE)
+
+	# Minor test, to see which plugins were built and whether they load
+	# properly.
+ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
+	./vlc --reset-plugins-cache -l -I rc vlc:quit
+endif
 
 	touch build-stamp
 
@@ -162,14 +173,13 @@ clean: unpatch
 
 	# Check that we have an x264 tree in here (can be a symlink)
 	test -d extras/x264
-	-if test ! '(' -d CVS -o -d .svn ')'; then \
-	  cd extras/x264 && jam -dx clean; \
-	fi
+	-cd extras/x264 && $(MAKE) distclean
 	# Check that we have an faad2 tree in here (can be a symlink)
 	test -d extras/faad2
-	-if test ! '(' -d CVS -o -d .svn ')'; then \
-	  cd extras/faad2 && $(MAKE) distclean; \
-	fi
+	-cd extras/faad2 && $(MAKE) distclean
+
+	# Clean zsh completion stuff
+	rm -f extras/zsh
 
 	# Removed ugly cruft
 	rm -f src/misc/modules_builtin.h
@@ -193,8 +203,8 @@ install: build
 	# Package: vlc
 	mv debian/vlc/$(VIDDIR)/vlc48x48.png debian/vlc/$(PIXDIR)/vlc.png
 	mv debian/vlc/$(VIDDIR)/vlc32x32.xpm debian/vlc/$(VIDDIR)/vlc.xpm
-	cp debian/gvlc.desktop debian/gvlc/$(GNOMEDIR)
-	cp debian/gnome-vlc.desktop debian/gnome-vlc/$(GNOMEDIR)
+	cp debian/gvlc.desktop debian/gvlc/$(APPDIR)
+	cp debian/gnome-vlc.desktop debian/gnome-vlc/$(APPDIR)
 
 	#cp doc/fortunes.txt debian/vlc/usr/share/games/fortunes/vlc
 	#strfile doc/fortunes.txt debian/vlc/usr/share/games/fortunes/vlc.dat
@@ -221,10 +231,6 @@ install: build
 	#mv debian/vlc/$(VIDDIR)/gnome-vlc32x32.xpm debian/gnome-vlc/$(VIDDIR)/gnome-vlc.xpm
 	#mv debian/vlc/$(VIDDIR)/gnome-vlc48x48.png debian/gnome-vlc/$(PIXDIR)/gnome-vlc.png
 
-	# Package: vlc-gnome
-	mkdir -p debian/vlc-gnome/usr/share/doc/
-	ln -s vlc debian/vlc-gnome/usr/share/doc/vlc-gnome
-
 	# Package: gvlc
 	#mv debian/vlc/usr/bin/gvlc debian/gvlc/usr/bin/
 	ln -s vlc debian/gvlc/usr/share/doc/gvlc
@@ -238,27 +244,15 @@ install: build
 	#mv debian/vlc/$(VIDDIR)/gvlc32x32.xpm debian/gvlc/$(VIDDIR)/gvlc.xpm
 	#mv debian/vlc/$(VIDDIR)/gvlc48x48.png debian/gvlc/$(PIXDIR)/gvlc.png
 
-	# Package: vlc-gtk
-	mkdir -p debian/vlc-gtk/usr/share/doc/
-	ln -s vlc debian/vlc-gtk/usr/share/doc/vlc-gtk
-
 	# Package: vlc-plugin-esd
 	ln -s vlc debian/vlc-plugin-esd/usr/share/doc/vlc-plugin-esd
 	mv debian/vlc/usr/lib/vlc/audio_output/libesd_plugin.so \
 	  debian/vlc-plugin-esd/usr/lib/vlc/audio_output/
 
-	# Package: vlc-esd
-	mkdir -p debian/vlc-esd/usr/share/doc/
-	ln -s vlc debian/vlc-esd/usr/share/doc/vlc-esd
-
 	# Package: vlc-plugin-alsa
 	ln -s vlc debian/vlc-plugin-alsa/usr/share/doc/vlc-plugin-alsa
 	mv debian/vlc/usr/lib/vlc/audio_output/libalsa_plugin.so \
 	  debian/vlc-plugin-alsa/usr/lib/vlc/audio_output/
-
-	# Package: vlc-alsa
-	mkdir -p debian/vlc-alsa/usr/share/doc/
-	ln -s vlc debian/vlc-alsa/usr/share/doc/vlc-alsa
 
 	# Package: vlc-plugin-sdl
 	ln -s vlc debian/vlc-plugin-sdl/usr/share/doc/vlc-plugin-sdl
@@ -267,28 +261,16 @@ install: build
 	mv debian/vlc/usr/lib/vlc/video_output/libvout_sdl_plugin.so \
 	  debian/vlc-plugin-sdl/usr/lib/vlc/video_output/
 
-	# Package: vlc-sdl
-	mkdir -p debian/vlc-sdl/usr/share/doc/
-	ln -s vlc debian/vlc-sdl/usr/share/doc/vlc-sdl
-
 	# Package: vlc-plugin-ggi
 	ln -s vlc debian/vlc-plugin-ggi/usr/share/doc/vlc-plugin-ggi
 	mv debian/vlc/usr/lib/vlc/video_output/libggi_plugin.so \
 	  debian/vlc-plugin-ggi/usr/lib/vlc/video_output/
 
-	# Package: vlc-ggi
-	mkdir -p debian/vlc-ggi/usr/share/doc/
-	ln -s vlc debian/vlc-ggi/usr/share/doc/vlc-ggi
-
 	# Package: vlc-plugin-glide
-ifeq ($(shell dpkg-architecture -qDEB_BUILD_GNU_CPU),i386)
+ifeq ($(shell dpkg-architecture -qDEB_BUILD_ARCH_CPU),i386)
 	ln -s vlc debian/vlc-plugin-glide/usr/share/doc/vlc-plugin-glide
 	mv debian/vlc/usr/lib/vlc/video_output/libglide_plugin.so \
 	  debian/vlc-plugin-glide/usr/lib/vlc/video_output/
-
-	# Package: vlc-glide
-	mkdir -p debian/vlc-glide/usr/share/doc/
-	ln -s vlc debian/vlc-glide/usr/share/doc/vlc-glide
 endif
 
 	# Package: qvlc
@@ -299,10 +281,6 @@ endif
 	#ln -s vlc.1.gz debian/qvlc/usr/share/man/man1/qvlc.1.gz
 	#mv debian/vlc/$(VIDDIR)/qvlc32x32.xpm debian/qvlc/$(VIDDIR)/qvlc.xpm
 	#mv debian/vlc/$(VIDDIR)/qvlc48x48.png debian/qvlc/$(PIXDIR)/qvlc.png
-
-	# Package: vlc-qt
-	mkdir -p debian/vlc-qt/usr/share/doc/
-	ln -s vlc debian/vlc-qt/usr/share/doc/vlc-qt
 
 	# Package: vlc-plugin-arts
 	ln -s vlc debian/vlc-plugin-arts/usr/share/doc/vlc-plugin-arts
@@ -329,7 +307,7 @@ endif
 	#mv debian/vlc/$(VIDDIR)/kvlc48x48.png debian/kvlc/$(PIXDIR)/kvlc.png
 
 	# Package: vlc-plugin-svgalib
-ifeq ($(shell dpkg-architecture -qDEB_BUILD_GNU_CPU),i386)
+ifeq ($(shell dpkg-architecture -qDEB_BUILD_ARCH_CPU),i386)
 	ln -s vlc debian/vlc-plugin-svgalib/usr/share/doc/vlc-plugin-svgalib
 	mv debian/vlc/usr/lib/vlc/video_output/libsvgalib_plugin.so \
 	  debian/vlc-plugin-svgalib/usr/lib/vlc/video_output
@@ -339,7 +317,8 @@ endif
 	mv debian/vlc/usr/bin/wxvlc debian/wxvlc/usr/bin/
 	ln -s vlc debian/wxvlc/usr/share/doc/wxvlc
 	cp debian/vlc/$(VIDDIR)/vlc.xpm debian/wxvlc/$(VIDDIR)/wxvlc.xpm
-	mv debian/vlc/usr/lib/vlc/gui/libwxwindows_plugin.so \
+	cp debian/vlc.desktop debian/wxvlc/$(APPDIR)
+	mv debian/vlc/usr/lib/vlc/gui/libwxwidgets_plugin.so \
 	  debian/wxvlc/usr/lib/vlc/gui/
 	ln -s vlc.1.gz debian/wxvlc/usr/share/man/man1/wxvlc.1.gz
 
@@ -359,6 +338,7 @@ binary-arch: build install
 	dh_testroot
 #	dh_installdebconf	
 	dh_installdocs -p vlc
+	dh_buildinfo -p vlc
 #	dh_installexamples
 	dh_installmenu -s
 	dh_installmime -s

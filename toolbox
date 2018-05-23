@@ -1,9 +1,12 @@
 #! /bin/sh
 
 ##  toolbox for the VLC media player
-##  $Id: toolbox 10091 2005-03-01 21:24:25Z courmisch $
+##  $Id: toolbox 12678 2005-09-25 17:10:55Z asmax $
+##
+##  Copyright (C) 2005  the VideoLAN team
 ##
 ##  Authors: Samuel Hocevar <sam@zoy.org>
+##           Rémi Denis-Courmont <rem # videolan.org>
 
 ###
 ###  Get a sane environment, just in case
@@ -23,8 +26,10 @@ help()
   cat << EOF
 recognized flags are:
   --update-vc             update Microsoft Visual Studio files
+  --update-vc7            update Microsoft Visual .NET files
   --update-po             update translation files
   --update-includes       generate various include files
+  --update-version        generate src/misc/version.c
   --update-glade          generate and fix Glade code
   --update-glade2         generate and fix Glade 2 code
   --update-flexml         generate and fix flexml and flex code
@@ -62,11 +67,17 @@ case "$1" in
   --update-vc)
     action=vc
     ;;
+  --update-vc7)
+    action=vc7
+    ;;
   --update-po)
     action=po
     ;;
   --update-includes)
     action=includes
+    ;;
+  --update-version)
+    action=version
     ;;
   --update-flexml)
     action=flexml
@@ -362,32 +373,170 @@ EOF
 fi
 
 ##
+##  Update the MSVC (.NET) project files
+##
+if test "${action}" = "vc7"
+then
+  echo "generating Visual .NET files"
+
+  srcdir=.
+
+  #  The evil ^M. printf '\r' does not work in Cygwin.
+  M='
+'
+
+  #  Variables we get from configure.ac
+  LIBVLC_VERSION=`sed -ne '/AC_INIT/s/.*,\(.*\))/\1/p' < configure.ac`
+  LIBVLC_CODENAME=`sed -ne '/CODENAME=/s/.*"\(.*\)"/\1/p' < configure.ac`
+  LIBVLC_SYMBOL=`echo $LIBVLC_VERSION | sed -e 'y/.-/__/'`
+
+  #  Sources that get built under Win32 - FIXME: anyone wanna deuglify this? :)
+  LIBVLC_SOURCES=`getfiles SOURCES_libvlc_common; getfiles SOURCES_libvlc_win32; getfiles SOURCES_libvlc_dirent; getfiles SOURCES_libvlc_getopt; getfiles SOURCES_libvlc_libc`
+
+  LIBVLC_HEADERS=`getfiles HEADERS_include; getfiles HEADERS_include_built`
+
+  LIBVLC_PKG_HEADERS=`getfiles dist_pkginclude_HEADERS`
+
+  # Clean up
+  rm -f msvc/*.vcproj
+
+  # config files
+  for target in msvc/config.h
+  do
+    printf "."
+    rm -f ${target}
+    sed -e "s/@CODENAME@/${LIBVLC_CODENAME}/" \
+        -e "s/@VERSION@/${LIBVLC_VERSION}/" \
+        -e "s/@SYMBOL@/${LIBVLC_SYMBOL}/" < ${target}.in > ${target}
+  done
+
+ # vlc files
+  target="msvc/vlc.vcproj"
+  printf "."
+  #  Top of the project file
+  guid=`perl -e 'sub r {return sprintf("%X", int rand(65536))} print r.r."-".r."-".r."-".r."-".r.r.r'`
+  perl -pe 'if(/§SOURCES§/){last;} s/§GUID§/'${guid}'/g' < ${target}.in > ${target}
+  #  The source files
+  cat >> ${target} << EOF
+<File RelativePath="..\\src\\vlc.c"></File>${M}
+EOF
+  #  Bottom of the project file - handles resource files too
+  perl -e 'while(<>){if(/§SOURCES§/){last;}}while(<>){print $_}' < ${target}.in >> ${target}
+  
+  # libvlc files
+  target=msvc/libvlc.vcproj
+  printf "."
+  #  Top of the project file
+  guid=`perl -e 'sub r {return sprintf("%X", int rand(65536))} print r.r."-".r."-".r."-".r."-".r.r.r'`
+  perl -pe 'if(/§SOURCES§/){last;} s/§GUID§/'${guid}'/g' < ${target}.in > ${target}
+  #  The source files
+  for file in `for i in ${LIBVLC_SOURCES} ; do echo $i ; done | grep -v "/.*/"`
+  do
+    cat >> ${target} << EOF
+<File RelativePath="..\\`echo ${dir}/${file} | sed 's,/,\\\\,g'`"></File>${M}
+EOF
+  done
+  for subdir in `for i in ${LIBVLC_SOURCES} ; do echo $i ; done | grep "/.*/" | cut -f2 -d/ | sort | uniq`
+  do
+    cat >> ${target} << EOF
+<Filter	Name="`echo ${subdir} | sed s,/,_,g`" Filter="c;cpp">${M}
+EOF
+    for file in `for i in ${LIBVLC_SOURCES} ; do echo $i ; done | grep "/${subdir}/"`
+    do
+      cat >> ${target} << EOF
+<File RelativePath="..\\`echo ${file} | sed 's,/,\\\\,g'`">${M}
+EOF
+      if echo ${file} | grep -q '.c$'
+      then
+        cat >> ${target} << EOF
+	<FileConfiguration Name="Debug|Win32">${M}
+		<Tool Name="VCCLCompilerTool" ObjectFile="\$(IntDir)/\$(ProjectName)/`echo ${file} | sed -e s/\.c$/.obj/`"/>${M}
+	</FileConfiguration>${M}
+EOF
+      fi
+      cat >> ${target} << EOF
+</File>${M}
+EOF
+    done
+    cat >> ${target} << EOF
+</Filter>${M}
+EOF
+  done
+  #  The headers
+  perl -e 'while(<>){if(/§SOURCES§/){last;}}while(<>){if(/§HEADERS§/){last;}print $_}' < ${target}.in >> ${target}
+  for file in ${LIBVLC_HEADERS}
+  do
+    cat >> ${target} << EOF
+<File RelativePath="..\\`echo ${file} | sed 's,/,\\\\,g'`"></File>${M}
+EOF
+  done
+  cat >> ${target} << EOF
+<Filter	Name="vlc" Filter="h;hpp">${M}
+EOF
+  for file in ${LIBVLC_PKG_HEADERS}
+  do
+    cat >> ${target} << EOF
+<File RelativePath="..\\`echo ${file} | sed 's,/,\\\\,g'`"></File>${M}
+EOF
+  done
+  cat >> ${target} << EOF
+</Filter>${M}
+EOF
+  perl -e 'while(<>){if(/§HEADERS§/){last;}}while(<>){print $_}' < ${target}.in >> ${target}
+
+  # plugins files
+  for dir in `sed -ne 's,modules/\(.*\)/Makefile,\1,p' ${srcdir}/configure.ac`
+  do
+    mf="${srcdir}/modules/${dir}/Modules.am"
+    for mod in `sed -n -e 's/^ *SOURCES_\([^ ]*\).*/\1/p' < ${mf}`
+    do
+      # this is an attempt at getting a list of plugin sources... we take the
+      # production and remove everything that does not contain "module", which
+      # means you miss $(NULL), but other variables too.
+      allfiles=`grep -v '[^-_a-zA-Z0-9]*#' ${mf} | awk 'BEGIN{a=0}{if(!a&&$0~/^SOURCES_'${mod}'[^-_a-zA-Z0-9]*=/){a=1;print$0;next;}if(a){if($0~/^[a-zA-Z]/){exit;}print $0}}' | tr '\\ ' '\n\n' | grep '\.'`
+      hfiles=`for i in ${allfiles} ; do echo "$i" ; done | grep '\.h$'`
+      cfiles=`for i in ${allfiles} ; do echo "$i" ; done | grep -v '\.h$'`
+      for msdir in msvc
+      do
+        source="${msdir}/plugins.vcproj.in"
+        target="${msdir}/plugin_${mod}.vcproj"
+        printf "."
+	guid=`perl -e 'sub r {return sprintf("%X", int rand(65536))} print r.r."-".r."-".r."-".r."-".r.r.r'`
+        perl -pe 'if(/§SOURCES§/){last;} s/§PLUGIN§/'${mod}'/g' < ${source} | sed 's,§GUID§,'${guid}',' > ${target}
+        for cfile in ${cfiles}
+        do
+          cat >> ${target} << EOF
+<File RelativePath="..\\modules\\`echo ${dir}/${cfile} | sed 's,/,\\\\,g'`"></File>${M}
+EOF
+        done
+        # sed is really nicer for this... unfortunately it's broken under cygwin
+        # sed -ne '1,/§SOURCES§/d; /§HEADERS§/,$d; p' < ${source} >> ${target}
+        perl -e 'while(<>){if(/§SOURCES§/){last;}}while(<>){if(/§HEADERS§/){last;}print $_}' < ${source} >> ${target}
+        for hfile in ${hfiles}
+        do
+          cat >> ${target} << EOF
+<File RelativePath="..\\modules\\`echo ${dir}/${hfile} | sed 's,/,\\\\,g'`"></File>${M}
+EOF
+        done
+        # sed -ne '1,/§HEADERS§/d; p' < ${source} >> ${target}
+        perl -e 'while(<>){if(/§HEADERS§/){last;}}while(<>){print $_}' < ${source} >> ${target}
+      done
+    done
+  done
+
+  echo " done."
+  exit 0
+fi
+
+##
 ##  Update the potfiles because no one ever does it
 ##
 if test "${action}" = "po"
 then
   # find out the source files
-  rm -f po/POTFILES.in
-  echo "# automatically created by toolbox --update-po" > po/POTFILES.in
-  echo "" >> po/POTFILES.in
-  echo "# main sources" >> po/POTFILES.in
-  find include src -name '*.[chm]' -o -name '*.[ch]pp' \
-    | grep -v '\(vlc_symbols\|misc/modules_\)' \
-    | sort >> po/POTFILES.in
-  echo "" >> po/POTFILES.in
-  echo "# modules" >> po/POTFILES.in
-  find modules -name '*.[chm]' -o -name '*.[ch]pp' \
-    | grep -v '\(\.moc\.\|gui/gtk2/\)' \
-    | sort >> po/POTFILES.in
-  # clean old potfiles
-  cd po
-  rm -f vlc.pot
-  # update
-  make vlc.pot || exit 1
-  make update-po || exit 1
-  cd ..
-
-  exit 0
+  echo "WARNING: you should run \"make update-po\" instead!" >&2
+  make update-po
+  exit $?
 fi
 
 ##
@@ -403,43 +552,7 @@ then
   if test -z "${builddir}"; then
     builddir="`sed -ne 's/^top_builddir *= *//p' < Makefile`"
   fi
-  mkdir -p "${builddir}/include"
-
-  LIBVLC_HEADERS=`getfiles HEADERS_include`
   BUILTINS=`sed -ne 's/.*builtins *= *" *\([^"]*\)".*/\1/p' vlc-config`
-
-  file="${builddir}/include/vlc_symbols.h"
-
-  rm -f ${file}.in
-  echo '/* DO NOT EDIT THIS FILE! See Makefile.am */' >> ${file}.in
-  echo 'struct module_symbols_t {' >> ${file}.in
-  cat ${LIBVLC_HEADERS} | grep '^ *VLC_EXPORT.*;' | sed -e 's/VLC_EXPORT( *\([^,]*\), *\([^,]*\), *\(.*\));.*/    \1 (* \2_inner) \3;/' >> ${file}.in
-  echo '};' >> ${file}.in
-  echo '#ifdef __PLUGIN__' >> ${file}.in
-  cat ${LIBVLC_HEADERS} | grep '^ *VLC_EXPORT.*;' | sed -e 's/VLC_EXPORT( *\([^,]*\), *\([^,]*\), *\(.*\));.*/#   define \2 p_symbols->\2_inner/' >> ${file}.in
-  echo '#endif /* __PLUGIN__ */' >> ${file}.in
-  if diff >/dev/null 2>&1 ${file} ${file}.in
-  then
-    rm -f ${file}.in
-  else
-    echo "creating new ${file}"
-    mv -f ${file}.in ${file}
-  fi
-
-  file="${builddir}/src/misc/modules_plugin.h"
-
-  rm -f ${file}.tmp
-  sed -e 's#.*\$[I][d]:.*# * Automatically generated from '${file}'.in by bootstrap#' < ${srcdir}/src/misc/modules_plugin.h.in > ${file}.tmp
-  echo '#define STORE_SYMBOLS( p_symbols ) \' >> ${file}.tmp
-  cat ${LIBVLC_HEADERS} | grep '^ *VLC_EXPORT.*;' | sed -e 's/VLC_EXPORT( *\([^,]*\), *\([^,]*\), *\(.*\));.*/    (p_symbols)->\2_inner = \2; \\/' >> ${file}.tmp
-  echo '' >> ${file}.tmp
-  if diff >/dev/null 2>&1 ${file} ${file}.tmp
-  then
-    rm -f ${file}.tmp
-  else
-    echo "creating new ${file}"
-    mv -f ${file}.tmp ${file}
-  fi
 
   file="${builddir}/src/misc/modules_builtin.h"
 
@@ -464,6 +577,49 @@ then
   fi
   echo "    } while( 0 );" >> ${file}.tmp
   echo "" >> ${file}.tmp
+  if diff >/dev/null 2>&1 ${file} ${file}.tmp
+  then
+    rm -f ${file}.tmp
+  else
+    echo "creating new ${file}"
+    mv -f ${file}.tmp ${file}
+  fi
+
+  exit 0
+fi
+
+##
+##  Create version file
+##
+if test "${action}" = "version"
+then
+  if test -z "${srcdir}"; then
+    srcdir="`sed -ne 's/^srcdir *= *//p' < Makefile`"
+  fi
+  if test -z "${builddir}"; then
+    builddir="`sed -ne 's/^top_builddir *= *//p' < Makefile`"
+  fi
+  if test -z "${CC}"; then
+    CC="`sed -ne 's/^CC *= *//p' < Makefile`"
+  fi
+
+  file="${builddir}/src/misc/version.c"
+  if which svnversion 2>&1 >/dev/null; then
+    VLC_CHANGESET=`svnversion $srcdir`
+  else
+    VLC_CHANGESET='exported'
+  fi
+
+  rm -f ${file}.tmp
+  cat > ${file}.tmp << EOF
+/* DO NOT EDIT THIS FILE - IT IS REGENERATED AT EVERY COMPILE -
+ * IT GIVES BETTER TRACKING OF VLC STABLE AND DEVELOPMENT VERSIONS
+ * WHETHER THEY ARE BUILT BY OTHERS OR DURING DEVELOPMENT OR FOR THE
+ * OFFICIAL VLC STABLE RELEASES.
+ */
+const char psz_vlc_changeset[] = "${VLC_CHANGESET}";
+
+EOF
   if diff >/dev/null 2>&1 ${file} ${file}.tmp
   then
     rm -f ${file}.tmp
@@ -573,12 +729,12 @@ then
   # a naive sanity check to make sure we are in a VLC tree
   test -f vlc.spec.mdk -a -f debian/rules || exit 1
   # let's rock!
-  find . -type f '(' -name '*.[oa]' -o -name '*.so' -o -name '*.sl' -o -name '*.dylib' -o -name '*.dll' -o -name .dirstamp -o -name Makefile.in -o -name 'stamp-h*' -o -name '*~' -o -name '*.bak' -o -name '*.moc.cpp' ')' -exec rm -f '{}' ';'
+  find . -type f '(' -name '*.[oa]' -o -name '*.so' -o -name '*.sl' -o -name '*.dylib' -o -name '*.dll' -o -name .dirstamp -o '(' '(' ! -path '\./doc/developer/Makefile\.in' ')' -a -name Makefile.in ')' -o -name 'stamp-h*' -o -name '*~' -o -name '*.bak' -o -name '*.moc.cpp' ')' -exec rm -f '{}' ';'
   (cd autotools && find . -name '[a-z]*' -maxdepth 1 -exec rm -f '{}' ';')
-  (cd debian && find . -type d -name '[a-z]*' -maxdepth 1 -exec rm -Rf '{}' ';')
+  (cd debian && find . -type d '(' -name '[a-z]*' ! -name 'patches' ')' -maxdepth 1 -exec rm -Rf '{}' ';')
   find msvc -type f -name '*.dsp' -exec rm -f '{}' ';'
   find evc -type f -name '*.vcp' -exec rm -f '{}' ';'
-  #find . -type d -name '.deps' -exec rm -Rf '{}' ';'
+  find . -type d -name '.deps' -exec rm -Rf '{}' ';'
   # there's some more cruft all around
   rm -f config.h config.log config.status
   rm -f vlc vlc-config Makefile Modules.am

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * blend.c: alpha blend 2 pictures together
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: blend.c 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: blend.c 12821 2005-10-11 17:16:13Z zorglub $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -65,8 +65,6 @@ static void BlendPalRV( filter_t *, picture_t *, picture_t *, picture_t *,
  *****************************************************************************/
 vlc_module_begin();
     set_description( _("Video pictures blending") );
-    set_category( CAT_VIDEO );
-    set_subcategory( SUBCAT_VIDEO_VFILTER );
     set_capability( "video blending", 100 );
     set_callbacks( OpenFilter, CloseFilter );
 vlc_module_end();

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * x11_timer.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: x11_timer.cpp 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: x11_timer.cpp 12207 2005-08-15 15:54:32Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -29,10 +29,11 @@
 
 #include "x11_timer.hpp"
 #include "x11_factory.hpp"
+#include "../commands/cmd_generic.hpp"
 
 
-X11Timer::X11Timer( intf_thread_t *pIntf, const Callback &rCallback ):
-    OSTimer( pIntf ), m_callback( rCallback )
+X11Timer::X11Timer( intf_thread_t *pIntf, CmdGeneric &rCmd ):
+    OSTimer( pIntf ), m_rCommand( rCmd )
 {
     // Get the instance of timer loop
     X11Factory *m_pOsFactory = (X11Factory*)(OSFactory::instance( pIntf ) );
@@ -71,7 +72,7 @@ bool X11Timer::execute()
 {
     m_nextDate += m_interval;
     // Execute the callback
-    (*(m_callback.getFunc()))( m_callback.getObj() );
+    m_rCommand.execute();
 
     return !m_oneShot;
 }

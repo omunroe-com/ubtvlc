@@ -1,8 +1,8 @@
 /*****************************************************************************
  * window_manager.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: window_manager.cpp 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: window_manager.cpp 12912 2005-10-22 11:57:29Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -195,13 +195,18 @@ void WindowManager::raiseAll() const
 }
 
 
-void WindowManager::showAll() const
+void WindowManager::showAll( bool firstTime ) const
 {
     // Show all the windows
     WinSet_t::const_iterator it;
     for( it = m_allWindows.begin(); it != m_allWindows.end(); it++ )
     {
-        (*it)->show();
+        // When the theme is opened for the first time,
+        // only show the window if set as visible in the XML
+        if ((*it)->isVisible() || !firstTime)
+        {
+            (*it)->show();
+        }
         (*it)->setOpacity( m_alpha );
     }
 }
@@ -264,6 +269,12 @@ void WindowManager::checkAnchors( TopWindow *pWindow,
     for( itMov = m_movingWindows.begin();
          itMov != m_movingWindows.end(); itMov++ )
     {
+        // Skip the invisible windows
+        if( ! (*itMov)->getVisibleVar().get() )
+        {
+            continue;
+        }
+
         int newLeft = (*itMov)->getLeft() + xOffset;
         int newTop = (*itMov)->getTop() + yOffset;
         if( newLeft > workArea.getLeft() - m_magnet &&

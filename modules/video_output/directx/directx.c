@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout.c: Windows DirectX video output display method
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: directx.c 11257 2005-06-02 17:06:00Z fkuehne $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: directx.c 13062 2005-10-31 21:14:27Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -356,6 +356,8 @@ static int Init( vout_thread_t *p_vout )
     p_vout->output.i_width  = p_vout->render.i_width;
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
+    p_vout->fmt_out = p_vout->fmt_in;
+    E_(DirectXUpdateRects)( p_vout, VLC_TRUE );
 
 #define MAX_DIRECTBUFFERS 1
     /* Right now we use only 1 directbuffer because we don't want the
@@ -413,6 +415,7 @@ static int Init( vout_thread_t *p_vout )
     /* Change the window title bar text */
     PostMessage( p_vout->p_sys->hwnd, WM_VLC_CHANGE_TEXT, 0, 0 );
 
+    p_vout->fmt_out.i_chroma = p_vout->output.i_chroma;
     return VLC_SUCCESS;
 }
 
@@ -534,6 +537,24 @@ static int Manage( vout_thread_t *p_vout )
             /* This will force the vout core to recreate the picture buffers */
             p_vout->i_changes |= VOUT_PICTURE_BUFFERS_CHANGE;
         }
+    }
+
+    /* Check for cropping / aspect changes */
+    if( p_vout->i_changes & VOUT_CROP_CHANGE ||
+        p_vout->i_changes & VOUT_ASPECT_CHANGE )
+    {
+        p_vout->i_changes &= ~VOUT_CROP_CHANGE;
+        p_vout->i_changes &= ~VOUT_ASPECT_CHANGE;
+
+        p_vout->fmt_out.i_x_offset = p_vout->fmt_in.i_x_offset;
+        p_vout->fmt_out.i_y_offset = p_vout->fmt_in.i_y_offset;
+        p_vout->fmt_out.i_visible_width = p_vout->fmt_in.i_visible_width;
+        p_vout->fmt_out.i_visible_height = p_vout->fmt_in.i_visible_height;
+        p_vout->fmt_out.i_aspect = p_vout->fmt_in.i_aspect;
+        p_vout->fmt_out.i_sar_num = p_vout->fmt_in.i_sar_num;
+        p_vout->fmt_out.i_sar_den = p_vout->fmt_in.i_sar_den;
+        p_vout->output.i_aspect = p_vout->fmt_in.i_aspect;
+        E_(DirectXUpdateRects)( p_vout, VLC_TRUE );
     }
 
     /* We used to call the Win32 PeekMessage function here to read the window
@@ -1228,9 +1249,10 @@ int E_(DirectXUpdateOverlay)( vout_thread_t *p_vout )
     {
         int i_x, i_y, i_width, i_height;
 
-        rect_src.left = rect_src.top = 0;
-        rect_src.right = p_vout->render.i_width;
-        rect_src.bottom = p_vout->render.i_height;
+        rect_src.left = p_vout->fmt_out.i_x_offset;
+        rect_src.top = p_vout->fmt_out.i_y_offset;
+        rect_src.right = rect_src.left + p_vout->fmt_out.i_visible_width;
+        rect_src.bottom = rect_src.top + p_vout->fmt_out.i_visible_height;
 
         rect_dest = p_vout->p_sys->rect_display;
         vout_PlacePicture( p_vout, rect_dest.right, rect_dest.bottom,

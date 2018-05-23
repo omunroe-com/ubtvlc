@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ctrl_move.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: ctrl_move.cpp 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: ctrl_move.cpp 12207 2005-08-15 15:54:32Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -37,9 +37,9 @@ CtrlMove::CtrlMove( intf_thread_t *pIntf, WindowManager &rWindowManager,
     CtrlFlat( pIntf, rHelp, pVisible ), m_fsm( pIntf ),
     m_rWindowManager( rWindowManager ),
     m_rCtrl( rCtrl ), m_rWindow( rWindow ),
-    m_cmdMovingMoving( this, &transMovingMoving ),
-    m_cmdStillMoving( this, &transStillMoving ),
-    m_cmdMovingStill( this, &transMovingStill )
+    m_cmdMovingMoving( this ),
+    m_cmdStillMoving( this ),
+    m_cmdMovingStill( this )
 {
     m_pEvt = NULL;
     m_xPos = 0;
@@ -96,39 +96,35 @@ void CtrlMove::handleEvent( EvtGeneric &rEvent )
 }
 
 
-void CtrlMove::transStillMoving( SkinObject *pCtrl )
+void CtrlMove::CmdStillMoving::execute()
 {
-    CtrlMove *pThis = (CtrlMove*)pCtrl;
-    EvtMouse *pEvtMouse = (EvtMouse*)pThis->m_pEvt;
+    EvtMouse *pEvtMouse = (EvtMouse*)m_pParent->m_pEvt;
 
-    pThis->m_xPos = pEvtMouse->getXPos();
-    pThis->m_yPos = pEvtMouse->getYPos();
+    m_pParent->m_xPos = pEvtMouse->getXPos();
+    m_pParent->m_yPos = pEvtMouse->getYPos();
 
-    pThis->captureMouse();
+    m_pParent->captureMouse();
 
-    pThis->m_rWindowManager.startMove( pThis->m_rWindow );
+    m_pParent->m_rWindowManager.startMove( m_pParent->m_rWindow );
 }
 
 
-void CtrlMove::transMovingMoving( SkinObject *pCtrl )
+void CtrlMove::CmdMovingMoving::execute()
 {
-    CtrlMove *pThis = (CtrlMove*)pCtrl;
-    EvtMotion *pEvtMotion = (EvtMotion*)pThis->m_pEvt;
+    EvtMotion *pEvtMotion = (EvtMotion*)m_pParent->m_pEvt;
 
-    int xNewLeft = pEvtMotion->getXPos() - pThis->m_xPos +
-                   pThis->m_rWindow.getLeft();
-    int yNewTop = pEvtMotion->getYPos() - pThis->m_yPos +
-                  pThis->m_rWindow.getTop();
+    int xNewLeft = pEvtMotion->getXPos() - m_pParent->m_xPos +
+                   m_pParent->m_rWindow.getLeft();
+    int yNewTop = pEvtMotion->getYPos() - m_pParent->m_yPos +
+                  m_pParent->m_rWindow.getTop();
 
-    pThis->m_rWindowManager.move( pThis->m_rWindow, xNewLeft, yNewTop );
+    m_pParent->m_rWindowManager.move( m_pParent->m_rWindow, xNewLeft, yNewTop );
 }
 
 
-void CtrlMove::transMovingStill( SkinObject *pCtrl )
+void CtrlMove::CmdMovingStill::execute()
 {
-    CtrlMove *pThis = (CtrlMove*)pCtrl;
+    m_pParent->releaseMouse();
 
-    pThis->releaseMouse();
-
-    pThis->m_rWindowManager.stopMove();
+    m_pParent->m_rWindowManager.stopMove();
 }

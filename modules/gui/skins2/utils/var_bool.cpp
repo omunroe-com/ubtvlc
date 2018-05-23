@@ -1,8 +1,8 @@
 /*****************************************************************************
  * var_bool.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: var_bool.cpp 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: var_bool.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

@@ -1,10 +1,10 @@
 /*****************************************************************************
  * vout_aa.c: Aa video output display method for testing purposes
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: aa.c 10112 2005-03-03 06:58:04Z zorglub $
+ * Copyright (C) 2002 the VideoLAN team
+ * $Id: aa.c 12836 2005-10-15 13:23:08Z sigmunau $
  *
- * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

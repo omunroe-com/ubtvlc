@@ -4,6 +4,10 @@
    (DRM) */
 #undef DRM
 
+/* Define if you want support for Digital Radio Mondiale (DRM) parametric
+   stereo */
+#undef DRM_PS
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 

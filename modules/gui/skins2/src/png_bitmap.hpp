@@ -1,8 +1,8 @@
 /*****************************************************************************
  * png_bitmap.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: png_bitmap.hpp 9581 2004-12-16 17:47:40Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: png_bitmap.hpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

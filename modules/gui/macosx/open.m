@@ -1,8 +1,8 @@
 /*****************************************************************************
  * open.m: MacOS X module for vlc
  *****************************************************************************
- * Copyright (C) 2002-2005 VideoLAN
- * $Id: open.m 11382 2005-06-10 15:05:04Z hartman $
+ * Copyright (C) 2002-2005 the VideoLAN team
+ * $Id: open.m 12843 2005-10-15 18:19:03Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net> 
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -81,7 +81,7 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
     p_list = [NSMutableArray arrayWithCapacity: 1];
     
     next_media = IOIteratorNext( media_iterator );
-    if( next_media != NULL )
+    if( next_media != nil )
     {
         char psz_buf[0x32];
         size_t dev_path_length;
@@ -114,7 +114,7 @@ NSArray *GetEjectableMediaOfClass( const char *psz_class )
             
             IOObjectRelease( next_media );
         
-        } while( ( next_media = IOIteratorNext( media_iterator ) ) != NULL );
+        } while( ( next_media = IOIteratorNext( media_iterator ) ) != nil );
     }
     
     IOObjectRelease( media_iterator );
@@ -323,7 +323,7 @@ static VLCOpen *_o_sharedMainInstance = nil;
             intf_thread_t * p_intf = VLCIntf;
             module_config_t * p_item;
 
-            [o_options addObject: [NSString stringWithFormat: @"sub-file=%s", [[o_file_sub_path stringValue] fileSystemRepresentation]]];
+            [o_options addObject: [NSString stringWithFormat: @"sub-file=%@", [o_file_sub_path stringValue]]];
             if( [o_file_sub_override state] == NSOnState )
             {
                 [o_options addObject: [NSString stringWithFormat: @"sub-delay=%i", (int)( [o_file_sub_delay intValue] * 10 )]];

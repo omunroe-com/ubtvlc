@@ -1,8 +1,8 @@
 /*****************************************************************************
  * output.c : internal management of output streams for the audio output
  *****************************************************************************
- * Copyright (C) 2002-2004 VideoLAN
- * $Id: output.c 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2002-2004 the VideoLAN team
+ * $Id: output.c 12676 2005-09-25 16:49:40Z babal $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -189,6 +189,7 @@ int aout_OutputNew( aout_instance_t * p_aout,
     aout_FormatPrint( p_aout, "mixer", &p_aout->output.output );
 
     /* Create filters. */
+    p_aout->output.i_nb_filters = 0;
     if ( aout_FiltersCreatePipeline( p_aout, p_aout->output.pp_filters,
                                      &p_aout->output.i_nb_filters,
                                      &p_aout->mixer.mixer,

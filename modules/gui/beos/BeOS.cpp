@@ -1,8 +1,8 @@
 /*****************************************************************************
  * beos.cpp : BeOS plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: BeOS.cpp 10640 2005-04-10 18:18:22Z titer $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id: BeOS.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Jean-Marc Dressler <polux@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>

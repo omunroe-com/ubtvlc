@@ -1,8 +1,8 @@
 /*****************************************************************************
  * win32_window.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: win32_window.hpp 10735 2005-04-18 21:21:09Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: win32_window.hpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>

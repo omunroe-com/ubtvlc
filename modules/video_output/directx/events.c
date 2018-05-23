@@ -1,8 +1,8 @@
 /*****************************************************************************
  * events.c: Windows DirectX video output events handler
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: events.c 10831 2005-04-26 14:27:47Z gbazin $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: events.c 13384 2005-11-25 19:22:40Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -144,11 +144,13 @@ void E_(DirectXEventThread)( event_thread_t *p_event )
 
             if( i_width && i_height )
             {
-                val.i_int = ( GET_X_LPARAM(msg.lParam) - i_x )
-                             * p_event->p_vout->render.i_width / i_width;
+                val.i_int = ( GET_X_LPARAM(msg.lParam) - i_x ) *
+                    p_event->p_vout->fmt_in.i_visible_width / i_width +
+                    p_event->p_vout->fmt_in.i_x_offset;
                 var_Set( p_event->p_vout, "mouse-x", val );
-                val.i_int = ( GET_Y_LPARAM(msg.lParam) - i_y )
-                             * p_event->p_vout->render.i_height / i_height;
+                val.i_int = ( GET_Y_LPARAM(msg.lParam) - i_y ) *
+                    p_event->p_vout->fmt_in.i_visible_height / i_height +
+                    p_event->p_vout->fmt_in.i_y_offset;
                 var_Set( p_event->p_vout, "mouse-y", val );
 
                 val.b_bool = VLC_TRUE;
@@ -293,28 +295,37 @@ void E_(DirectXEventThread)( event_thread_t *p_event )
 
         case WM_VLC_CHANGE_TEXT:
             var_Get( p_event->p_vout, "video-title", &val );
-
             if( !val.psz_string || !*val.psz_string ) /* Default video title */
             {
+                if( val.psz_string ) free( val.psz_string );
+
 #ifdef MODULE_NAME_IS_glwin32
-                SetWindowText( p_event->p_vout->p_sys->hwnd,
-                    _T(VOUT_TITLE) _T(" (OpenGL output)") );
+                val.psz_string = strdup( VOUT_TITLE " (OpenGL output)" );
 #else
-                if( p_event->p_vout->p_sys->b_using_overlay )
-                    SetWindowText( p_event->p_vout->p_sys->hwnd, _T(VOUT_TITLE)
-                        _T(" (hardware YUV overlay DirectX output)") );
-                else if( p_event->p_vout->p_sys->b_hw_yuv )
-                    SetWindowText( p_event->p_vout->p_sys->hwnd, _T(VOUT_TITLE)
-                        _T(" (hardware YUV DirectX output)") );
-                else
-                    SetWindowText( p_event->p_vout->p_sys->hwnd, _T(VOUT_TITLE)
-                        _T(" (software RGB DirectX output)") );
+                if( p_event->p_vout->p_sys->b_using_overlay ) val.psz_string = 
+                strdup( VOUT_TITLE " (hardware YUV overlay DirectX output)" );
+                else if( p_event->p_vout->p_sys->b_hw_yuv ) val.psz_string = 
+                strdup( VOUT_TITLE " (hardware YUV DirectX output)" );
+                else val.psz_string = 
+                strdup( VOUT_TITLE " (software RGB DirectX output)" );
 #endif
             }
-            else
+
+#ifdef UNICODE
             {
-                SetWindowText( p_event->p_vout->p_sys->hwnd, val.psz_string );
+                wchar_t *psz_title = malloc( strlen(val.psz_string) * 2 + 2 );
+                mbstowcs( psz_title, val.psz_string, strlen(val.psz_string)*2);
+                psz_title[strlen(val.psz_string)] = 0;
+                free( val.psz_string ); val.psz_string = (char *)psz_title;
             }
+#endif
+
+            SetWindowText( p_event->p_vout->p_sys->hwnd,
+                           (LPCTSTR)val.psz_string );
+            if( p_event->p_vout->p_sys->hfswnd )
+                SetWindowText( p_event->p_vout->p_sys->hfswnd,
+                               (LPCTSTR)val.psz_string );
+            free( val.psz_string );
             break;
 
         default:
@@ -649,16 +660,20 @@ void E_(DirectXUpdateRects)( vout_thread_t *p_vout, vlc_bool_t b_force )
     rect_src.bottom = p_vout->render.i_height;
 
     /* Clip the source image */
-    rect_src_clipped.left = (rect_dest_clipped.left - rect_dest.left) *
-      p_vout->render.i_width / (rect_dest.right - rect_dest.left);
-    rect_src_clipped.right = p_vout->render.i_width -
-      (rect_dest.right - rect_dest_clipped.right) * p_vout->render.i_width /
-      (rect_dest.right - rect_dest.left);
-    rect_src_clipped.top = (rect_dest_clipped.top - rect_dest.top) *
-      p_vout->render.i_height / (rect_dest.bottom - rect_dest.top);
-    rect_src_clipped.bottom = p_vout->render.i_height -
-      (rect_dest.bottom - rect_dest_clipped.bottom) * p_vout->render.i_height /
-      (rect_dest.bottom - rect_dest.top);
+    rect_src_clipped.left = p_vout->fmt_out.i_x_offset +
+      (rect_dest_clipped.left - rect_dest.left) *
+      p_vout->fmt_out.i_visible_width / (rect_dest.right - rect_dest.left);
+    rect_src_clipped.right = p_vout->fmt_out.i_x_offset +
+      p_vout->fmt_out.i_visible_width -
+      (rect_dest.right - rect_dest_clipped.right) *
+      p_vout->fmt_out.i_visible_width / (rect_dest.right - rect_dest.left);
+    rect_src_clipped.top = p_vout->fmt_out.i_y_offset +
+      (rect_dest_clipped.top - rect_dest.top) *
+      p_vout->fmt_out.i_visible_height / (rect_dest.bottom - rect_dest.top);
+    rect_src_clipped.bottom = p_vout->fmt_out.i_y_offset +
+      p_vout->fmt_out.i_visible_height -
+      (rect_dest.bottom - rect_dest_clipped.bottom) *
+      p_vout->fmt_out.i_visible_height / (rect_dest.bottom - rect_dest.top);
 
     /* Apply overlay hardware constraints */
     if( p_vout->p_sys->b_using_overlay )
@@ -730,7 +745,7 @@ static long FAR PASCAL DirectXEventProc( HWND hwnd, UINT message,
 
     /* Catch the screensaver and the monitor turn-off */
     if( message == WM_SYSCOMMAND &&
-        ( wParam == SC_SCREENSAVE || wParam == SC_MONITORPOWER ) )
+        ( (wParam & 0xFFF0) == SC_SCREENSAVE || (wParam & 0xFFF0) == SC_MONITORPOWER ) )
     {
         //if( p_vout ) msg_Dbg( p_vout, "WinProc WM_SYSCOMMAND screensaver" );
         return 0; /* this stops them from happening */
@@ -894,12 +909,10 @@ static int Control( vout_thread_t *p_vout, int i_query, va_list args )
             return vout_ControlWindow( p_vout,
                     (void *)p_vout->p_sys->hparent, i_query, args );
 
-        f_arg = va_arg( args, double );
-
         /* Update dimensions */
         rect_window.top = rect_window.left = 0;
-        rect_window.right  = p_vout->i_window_width * f_arg;
-        rect_window.bottom = p_vout->i_window_height * f_arg;
+        rect_window.right  = p_vout->i_window_width;
+        rect_window.bottom = p_vout->i_window_height;
         AdjustWindowRect( &rect_window, p_vout->p_sys->i_window_style, 0 );
 
         SetWindowPos( p_vout->p_sys->hwnd, 0, 0, 0,

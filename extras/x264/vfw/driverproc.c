@@ -119,15 +119,15 @@ LRESULT WINAPI DriverProc( DWORD dwDriverId, HDRVR hDriver, UINT uMsg, LPARAM lP
                 CONFIG temp;
 
                 codec->config.b_save = FALSE;
-			    memcpy( &temp, &codec->config, sizeof(CONFIG) );
+                memcpy( &temp, &codec->config, sizeof(CONFIG) );
 
                 DialogBoxParam( g_hInst, MAKEINTRESOURCE(IDD_MAINCONFIG), (HWND)lParam1, callback_main, (LPARAM)&temp );
 
-			    if( temp.b_save )
-			    {
-				    memcpy( &codec->config, &temp, sizeof(CONFIG) );
+                if( temp.b_save )
+                {
+                    memcpy( &codec->config, &temp, sizeof(CONFIG) );
                     config_reg_save( &codec->config );
-			    }
+                }
             }
             return ICERR_OK;
 
@@ -199,25 +199,11 @@ LRESULT WINAPI DriverProc( DWORD dwDriverId, HDRVR hDriver, UINT uMsg, LPARAM lP
         case ICM_DECOMPRESSEX:
             return ICERR_UNSUPPORTED;
 
-#if 0
-        /* VFWEXT entry point : XXX what's that ? */
-        case ICM_USER+0x0fff :
-            if (lParam1 == VFWEXT_CONFIGURE_INFO) {
-                VFWEXT_CONFIGURE_INFO_T * info = (VFWEXT_CONFIGURE_INFO_T*)lParam2;
-                DPRINTF("%i %i %i %i %i %i",
-                    info->ciWidth, info->ciHeight,
-                    info->ciRate, info->ciScale,
-                    info->ciActiveFrame, info->ciFrameCount);
-
-                codec->config.ci_valid = 1;
-                memcpy(&codec->config.ci, (void*)lParam2, sizeof(VFWEXT_CONFIGURE_INFO_T));
-                return ICERR_OK;
-            }
-            return ICERR_UNSUPPORTED;
-#endif
-
         default:
-            return DefDriverProc( dwDriverId, hDriver, uMsg, lParam1, lParam2 );
+        if (uMsg < DRV_USER)
+            return DefDriverProc(dwDriverId, hDriver, uMsg, lParam1, lParam2);
+        else 
+            return ICERR_UNSUPPORTED;
     }
 }
 

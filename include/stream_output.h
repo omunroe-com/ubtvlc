@@ -1,12 +1,13 @@
 /*****************************************************************************
  * stream_output.h : stream output module
  *****************************************************************************
- * Copyright (C) 2002 VideoLAN
- * $Id: stream_output.h 11263 2005-06-03 09:23:54Z courmisch $
+ * Copyright (C) 2002-2005 the VideoLAN team
+ * $Id: stream_output.h 12932 2005-10-23 10:58:24Z zorglub $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
+ *          Jean-Paul Saman <jpsaman #_at_# m2x.nl>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -206,6 +207,9 @@ struct sout_stream_t
     sout_cfg_t        *p_cfg;
     char              *psz_next;
 
+    /* Subpicture unit */
+    spu_t             *p_spu;
+    
     /* add, remove a stream */
     sout_stream_id_t *(*pf_add)( sout_stream_t *, es_format_t * );
     int               (*pf_del)( sout_stream_t *, sout_stream_id_t * );
@@ -249,6 +253,7 @@ struct session_descriptor_t
 
     sap_session_t *p_sap; /* If we have a sap session, remember it */
     char *psz_sdp;
+    vlc_bool_t b_rtp;
 };
 
 #define METHOD_TYPE_SAP 1
@@ -257,47 +262,15 @@ struct session_descriptor_t
 struct announce_method_t
 {
     int i_type;
-
-    /* For SAP */
-    int i_ip_version;
-    char *psz_address; /* If we use a custom address */
-    char sz_ipv6_scope;
 };
 
-
-/* SAP Specific structures */
-
-/* 100ms */
-#define SAP_IDLE ((mtime_t)(0.100*CLOCK_FREQ))
-#define SAP_MAX_BUFFER 65534
-#define MIN_INTERVAL 2
-#define MAX_INTERVAL 300
-
-/* A SAP announce address. For each of these, we run the
- * control flow algorithm */
-struct sap_address_t
-{
-    char *psz_address;
-    int i_ip_version;
-    int i_port;
-    int i_rfd; /* Read socket */
-    int i_wfd; /* Write socket */
-
-    /* Used for flow control */
-    mtime_t t1;
-    vlc_bool_t b_enabled;
-    vlc_bool_t b_ready;
-    int i_interval;
-    int i_buff;
-    int i_limit;
-};
 
 /* A SAP session descriptor, enqueued in the SAP handler queue */
 struct sap_session_t
 {
     char          *psz_sdp;
-    char          *psz_data;
-    int            i_length;
+    uint8_t       *psz_data;
+    unsigned      i_length;
     sap_address_t *p_address;
 
     /* Last and next send */
@@ -320,11 +293,10 @@ struct sap_handler_t
 
     int i_current_session;
 
-    int (*pf_add)  ( sap_handler_t*, session_descriptor_t *,announce_method_t*);
+    int (*pf_add)  ( sap_handler_t*, session_descriptor_t *);
     int (*pf_del)  ( sap_handler_t*, session_descriptor_t *);
 
     /* private data, not in p_sys as there is one kind of sap_handler_t */
-    vlc_iconv_t iconvHandle;
 };
 
 /* The main announce handler object */
@@ -365,7 +337,7 @@ static inline char *sout_cfg_find_value( sout_cfg_t *p_cfg, char *psz_name )
 
 /* Announce system */
 VLC_EXPORT( int,                sout_AnnounceRegister, (sout_instance_t *,session_descriptor_t*, announce_method_t* ) );
-VLC_EXPORT(session_descriptor_t*,sout_AnnounceRegisterSDP, (sout_instance_t *,char *, announce_method_t* ) );
+VLC_EXPORT(session_descriptor_t*,sout_AnnounceRegisterSDP, (sout_instance_t *,const char *, const char *, announce_method_t* ) );
 VLC_EXPORT( int,                sout_AnnounceUnRegister, (sout_instance_t *,session_descriptor_t* ) );
 
 VLC_EXPORT(session_descriptor_t*,sout_AnnounceSessionCreate, (void) );

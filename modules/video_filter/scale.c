@@ -2,8 +2,8 @@
  * resize.c: video scaling module for YUVP/A pictures
  *  Uses the low quality "nearest neighbour" algorithm.
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: scale.c 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: scale.c 12516 2005-09-11 16:57:10Z gbazin $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -105,10 +105,11 @@ static void CloseFilter( vlc_object_t *p_this )
  ****************************************************************************/
 static picture_t *Filter( filter_t *p_filter, picture_t *p_pic )
 {
-    filter_sys_t *p_sys = p_filter->p_sys;
     picture_t *p_pic_dst;
     int i_plane, i, j, k, l;
 
+    if( !p_pic ) return NULL;
+    
     /* Request output picture */
     p_pic_dst = p_filter->pf_vout_buffer_new( p_filter );
     if( !p_pic_dst )
@@ -132,11 +133,15 @@ static picture_t *Filter( filter_t *p_filter, picture_t *p_pic )
                   p_filter->fmt_out.video.i_height / 2 ) /
                 p_filter->fmt_out.video.i_height;
 
+            l = __MIN( (int)p_filter->fmt_in.video.i_height - 1, l );
+
             for( j = 0; j < p_pic_dst->p[i_plane].i_visible_pitch; j++ )
             {
                 k = ( p_filter->fmt_in.video.i_width * j +
                       p_filter->fmt_out.video.i_width / 2 ) /
                     p_filter->fmt_out.video.i_width;
+
+                k = __MIN( (int)p_filter->fmt_in.video.i_width - 1, k );
 
                 p_dst[i * i_dst_pitch + j] = p_src[l * i_src_pitch + k];
             }

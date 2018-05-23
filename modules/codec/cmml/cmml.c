@@ -3,9 +3,9 @@
  *****************************************************************************
  * Copyright (C) 2003-2004 Commonwealth Scientific and Industrial Research
  *                         Organisation (CSIRO) Australia
- * Copyright (C) 2004 VideoLAN
+ * Copyright (C) 2004 the VideoLAN team
  *
- * $Id: cmml.c 10101 2005-03-02 16:47:31Z robux4 $
+ * $Id: cmml.c 12412 2005-08-27 16:40:23Z jpsaman $
  *
  * Author: Andre Pang <Andre.Pang@csiro.au>
  *
@@ -31,7 +31,7 @@
 #include <vlc/decoder.h>
 #include <vlc/intf.h>
 
-#include <osd.h>
+#include <vlc_osd.h>
 
 #include "charset.h"
 

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * block.c: Data blocks management functions
  *****************************************************************************
- * Copyright (C) 2003-2004 VideoLAN
- * $Id: block.c 11233 2005-06-01 18:34:45Z courmisch $
+ * Copyright (C) 2003-2004 the VideoLAN team
+ * $Id: block.c 13022 2005-10-29 18:11:46Z md $
  *
  * Authors: Laurent Aimar <fenrir@videolan.org>
  *
@@ -64,6 +64,7 @@ block_t *__block_New( vlc_object_t *p_obj, int i_size )
 
     /* Fill all fields */
     p_block->p_next         = NULL;
+    p_block->p_prev         = NULL;
     p_block->i_flags        = 0;
     p_block->i_pts          = 0;
     p_block->i_dts          = 0;

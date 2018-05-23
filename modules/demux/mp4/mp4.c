@@ -1,8 +1,8 @@
 /*****************************************************************************
  * mp4.c : MP4 file input module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: mp4.c 11515 2005-06-24 20:39:26Z gbazin $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: mp4.c 13184 2005-11-10 18:51:31Z gbazin $
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 #include <vlc/vlc.h>
 #include <vlc/input.h>
 #include <vlc_playlist.h>
+#include <vlc_md5.h>
 #include "iso_lang.h"
 #include "vlc_meta.h"
 
@@ -164,7 +165,7 @@ static int      MP4_TrackSampleSize( mp4_track_t * );
 static int      MP4_TrackNextSample( demux_t *, mp4_track_t * );
 static void     MP4_TrackSetELST( demux_t *, mp4_track_t *, int64_t );
 
-/* Return time in µs of a track */
+/* Return time in s of a track */
 static inline int64_t MP4_TrackGetDTS( demux_t *p_demux, mp4_track_t *p_track )
 {
 #define chunk p_track->chunk[p_track->i_chunk]
@@ -1277,6 +1278,7 @@ static int TrackCreateES( demux_t *p_demux, mp4_track_t *p_track,
             break;
 
         case( VLC_FOURCC( 't', 'e', 'x', 't' ) ):
+        case( VLC_FOURCC( 't', 'x', '3', 'g' ) ):
             p_track->fmt.i_codec = VLC_FOURCC( 's', 'u', 'b', 't' );
             /* FIXME: Not true, could be UTF-16 with a Byte Order Mark (0xfeff) */
             /* FIXME UTF-8 doesn't work here ? */
@@ -1425,6 +1427,8 @@ static int TrackCreateES( demux_t *p_demux, mp4_track_t *p_track,
     case( VIDEO_ES ):
         p_track->fmt.video.i_width = p_sample->data.p_sample_vide->i_width;
         p_track->fmt.video.i_height = p_sample->data.p_sample_vide->i_height;
+        p_track->fmt.video.i_bits_per_pixel =
+            p_sample->data.p_sample_vide->i_depth;
 
         /* fall on display size */
         if( p_track->fmt.video.i_width <= 0 )
@@ -1544,8 +1548,8 @@ static int TrackTimeToSampleChunk( demux_t *p_demux, mp4_track_t *p_track,
             break;
         }
 
-        if( i_start >= p_track->chunk[i_chunk].i_first_dts &&
-            i_start <  p_track->chunk[i_chunk + 1].i_first_dts )
+        if( (uint64_t)i_start >= p_track->chunk[i_chunk].i_first_dts &&
+            (uint64_t)i_start <  p_track->chunk[i_chunk + 1].i_first_dts )
         {
             break;
         }
@@ -1558,7 +1562,7 @@ static int TrackTimeToSampleChunk( demux_t *p_demux, mp4_track_t *p_track,
     {
         if( i_dts +
             p_track->chunk[i_chunk].p_sample_count_dts[i_index] *
-            p_track->chunk[i_chunk].p_sample_delta_dts[i_index] < i_start )
+            p_track->chunk[i_chunk].p_sample_delta_dts[i_index] < (uint64_t)i_start )
         {
             i_dts    +=
                 p_track->chunk[i_chunk].p_sample_count_dts[i_index] *
@@ -1713,7 +1717,7 @@ static void MP4_TrackCreate( demux_t *p_demux, mp4_track_t *p_track,
     unsigned int i;
     char language[4];
 
-    /* hint track unsuported */
+    /* hint track unsupported */
 
     /* set default value (-> track unusable) */
     p_track->b_ok       = VLC_FALSE;
@@ -1776,6 +1780,7 @@ static void MP4_TrackCreate( demux_t *p_demux, mp4_track_t *p_track,
 
         case( FOURCC_text ):
         case( FOURCC_subp ):
+        case( FOURCC_tx3g ):
             p_track->fmt.i_cat = SPU_ES;
             break;
 
@@ -1788,7 +1793,7 @@ static void MP4_TrackCreate( demux_t *p_demux, mp4_track_t *p_track,
     if( ( p_track->p_elst = p_elst = MP4_BoxGet( p_box_trak, "edts/elst" ) ) )
     {
         MP4_Box_data_elst_t *elst = p_elst->data.p_elst;
-        int i;
+        unsigned int i;
 
         msg_Warn( p_demux, "elst box found" );
         for( i = 0; i < elst->i_entry_count; i++ )
@@ -1797,7 +1802,8 @@ static void MP4_TrackCreate( demux_t *p_demux, mp4_track_t *p_track,
                      "ms) rate=%d.%d", i,
                      elst->i_segment_duration[i] * 1000 / p_sys->i_timescale,
                      elst->i_media_time[i] >= 0 ?
-                     elst->i_media_time[i] * 1000 / p_track->i_timescale : -1,
+                     (int64_t)(elst->i_media_time[i] * 1000 / p_track->i_timescale) :
+                     I64C(-1),
                      elst->i_media_rate_integer[i],
                      elst->i_media_rate_fraction[i] );
         }
@@ -2004,7 +2010,11 @@ static int MP4_TrackSeek( demux_t *p_demux, mp4_track_t *p_track,
         VLC_SUCCESS )
     {
         p_track->b_selected = VLC_TRUE;
+
+        es_out_Control( p_demux->out, ES_OUT_SET_NEXT_DISPLAY_TIME,
+                        p_track->p_es, i_start );
     }
+
     return( p_track->b_selected ? VLC_SUCCESS : VLC_EGENERIC );
 }
 
@@ -2156,10 +2166,10 @@ static int MP4_TrackNextSample( demux_t *p_demux, mp4_track_t *p_track )
     {
         demux_sys_t *p_sys = p_demux->p_sys;
         MP4_Box_data_elst_t *elst = p_track->p_elst->data.p_elst;
-        int64_t i_mvt = MP4_TrackGetDTS( p_demux, p_track ) *
+        uint64_t i_mvt = MP4_TrackGetDTS( p_demux, p_track ) *
                         p_sys->i_timescale / (int64_t)1000000;
 
-        if( p_track->i_elst < elst->i_entry_count &&
+        if( (unsigned int)p_track->i_elst < elst->i_entry_count &&
             i_mvt >= p_track->i_elst_time +
                      elst->i_segment_duration[p_track->i_elst] )
         {
@@ -2185,7 +2195,7 @@ static void MP4_TrackSetELST( demux_t *p_demux, mp4_track_t *tk,
         MP4_Box_data_elst_t *elst = tk->p_elst->data.p_elst;
         int64_t i_mvt= i_time * p_sys->i_timescale / (int64_t)1000000;
 
-        for( tk->i_elst = 0; tk->i_elst < elst->i_entry_count; tk->i_elst++ )
+        for( tk->i_elst = 0; (unsigned int)tk->i_elst < elst->i_entry_count; tk->i_elst++ )
         {
             mtime_t i_dur = elst->i_segment_duration[tk->i_elst];
 
@@ -2196,7 +2206,7 @@ static void MP4_TrackSetELST( demux_t *p_demux, mp4_track_t *tk,
             tk->i_elst_time += i_dur;
         }
 
-        if( tk->i_elst >= elst->i_entry_count )
+        if( (unsigned int)tk->i_elst >= elst->i_entry_count )
         {
             /* msg_Dbg( p_demux, "invalid number of entry in elst" ); */
             tk->i_elst = elst->i_entry_count - 1;

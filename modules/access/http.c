@@ -1,11 +1,12 @@
 /*****************************************************************************
  * http.c: HTTP input module
  *****************************************************************************
- * Copyright (C) 2001-2005 VideoLAN
- * $Id: http.c 11534 2005-06-25 13:00:59Z courmisch $
+ * Copyright (C) 2001-2005 the VideoLAN team
+ * $Id: http.c 12821 2005-10-11 17:16:13Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Christophe Massiot <massiot@via.ecp.fr>
+ *          Rémi Denis-Courmont <rem # videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,21 +45,13 @@ static void Close( vlc_object_t * );
 #define PROXY_TEXT N_("HTTP proxy")
 #define PROXY_LONGTEXT N_( \
     "You can specify an HTTP proxy to use. It must be of the form " \
-    "http://myproxy.mydomain:myport/. If none is specified, the HTTP_PROXY " \
-    "environment variable will be tried." )
+    "http://[user[:pass]@]myproxy.mydomain:myport/ ; " \
+    "if empty, the http_proxy environment variable will be tried." )
 
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
     "Allows you to modify the default caching value for http streams. This " \
     "value should be set in millisecond units." )
-
-#define USER_TEXT N_("HTTP user name")
-#define USER_LONGTEXT N_("Allows you to modify the user name that will " \
-    "be used for the connection (Basic authentication only).")
-
-#define PASS_TEXT N_("HTTP password")
-#define PASS_LONGTEXT N_("Allows you to modify the password that will be " \
-    "used for the connection.")
 
 #define AGENT_TEXT N_("HTTP user agent")
 #define AGENT_LONGTEXT N_("Allows you to modify the user agent that will be " \
@@ -83,18 +76,15 @@ vlc_module_begin();
                 VLC_FALSE );
     add_integer( "http-caching", 4 * DEFAULT_PTS_DELAY / 1000, NULL,
                  CACHING_TEXT, CACHING_LONGTEXT, VLC_TRUE );
-    add_string( "http-user", NULL, NULL, USER_TEXT, USER_LONGTEXT, VLC_FALSE );
-    add_string( "http-pwd", NULL , NULL, PASS_TEXT, PASS_LONGTEXT, VLC_FALSE );
     add_string( "http-user-agent", COPYRIGHT_MESSAGE , NULL, AGENT_TEXT,
-                AGENT_LONGTEXT, VLC_FALSE );
+                AGENT_LONGTEXT, VLC_TRUE );
     add_bool( "http-reconnect", 0, NULL, RECONNECT_TEXT,
               RECONNECT_LONGTEXT, VLC_TRUE );
     add_bool( "http-continuous", 0, NULL, CONTINUOUS_TEXT,
               CONTINUOUS_LONGTEXT, VLC_TRUE );
-
+    add_suppressed_string("http-user");
+    add_suppressed_string("http-pwd");
     add_shortcut( "http" );
-    add_shortcut( "http4" );
-    add_shortcut( "http6" );
     add_shortcut( "https" );
     add_shortcut( "unsv" );
     set_callbacks( Open, Close );
@@ -111,8 +101,6 @@ struct access_sys_t
 
     /* From uri */
     vlc_url_t url;
-    char    *psz_user;
-    char    *psz_passwd;
     char    *psz_user_agent;
 
     /* Proxy */
@@ -153,8 +141,7 @@ static int Seek( access_t *, int64_t );
 static int Control( access_t *, int, va_list );
 
 /* */
-static void ParseURL( access_sys_t *, char *psz_url );
-static int  Connect( access_t *, int64_t );
+static int Connect( access_t *, int64_t );
 static int Request( access_t *p_access, int64_t i_tell );
 static void Disconnect( access_t * );
 
@@ -165,33 +152,7 @@ static int Open( vlc_object_t *p_this )
 {
     access_t     *p_access = (access_t*)p_this;
     access_sys_t *p_sys;
-    char         *psz;
-
-    /* First set ipv4/ipv6 */
-    var_Create( p_access, "ipv4", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
-    var_Create( p_access, "ipv6", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
-
-    if( *p_access->psz_access )
-    {
-        vlc_value_t val;
-        /* Find out which shortcut was used */
-        if( !strncmp( p_access->psz_access, "http4", 6 ) )
-        {
-            val.b_bool = VLC_TRUE;
-            var_Set( p_access, "ipv4", val );
-
-            val.b_bool = VLC_FALSE;
-            var_Set( p_access, "ipv6", val );
-        }
-        else if( !strncmp( p_access->psz_access, "http6", 6 ) )
-        {
-            val.b_bool = VLC_TRUE;
-            var_Set( p_access, "ipv6", val );
-
-            val.b_bool = VLC_FALSE;
-            var_Set( p_access, "ipv4", val );
-        }
-    }
+    char         *psz, *p;
 
     /* Set up p_access */
     p_access->pf_read = Read;
@@ -226,21 +187,12 @@ static int Open( vlc_object_t *p_this )
     p_sys->psz_icy_title = NULL;
     p_sys->i_remaining = 0;
 
-    /* Parse URI */
-    if( vlc_UrlIsNotEncoded( p_access->psz_path ) )
-    {
-        psz = vlc_UrlEncode( p_access->psz_path );
-        if( psz == NULL )
-        {
-            free( p_sys );
-            return VLC_ENOMEM;
-        }
-
-        ParseURL( p_sys, psz );
-        free( psz );
-    }
-    else
-        ParseURL( p_sys, p_access->psz_path );
+    /* Parse URI - remove spaces */
+    p = psz = strdup( p_access->psz_path );
+    while( (p = strchr( p, ' ' )) != NULL )
+        *p = '+';
+    vlc_UrlParse( &p_sys->url, psz, 0 );
+    free( psz );
 
     if( p_sys->url.psz_host == NULL || *p_sys->url.psz_host == '\0' )
     {
@@ -249,7 +201,7 @@ static int Open( vlc_object_t *p_this )
     }
     if( !strncmp( p_access->psz_access, "https", 5 ) )
     {
-        /* SSL over HTTP */
+        /* HTTP over SSL */
         p_sys->b_ssl = VLC_TRUE;
         if( p_sys->url.i_port <= 0 )
             p_sys->url.i_port = 443;
@@ -258,11 +210,6 @@ static int Open( vlc_object_t *p_this )
     {
         if( p_sys->url.i_port <= 0 )
             p_sys->url.i_port = 80;
-    }
-    if( !p_sys->psz_user || *p_sys->psz_user == '\0' )
-    {
-        p_sys->psz_user = var_CreateGetString( p_access, "http-user" );
-        p_sys->psz_passwd = var_CreateGetString( p_access, "http-pwd" );
     }
 
     /* Do user agent */
@@ -308,10 +255,10 @@ static int Open( vlc_object_t *p_this )
         msg_Dbg( p_access, "      proxy %s:%d", p_sys->proxy.psz_host,
                  p_sys->proxy.i_port );
     }
-    if( p_sys->psz_user && *p_sys->psz_user )
+    if( p_sys->url.psz_username && *p_sys->url.psz_username )
     {
         msg_Dbg( p_access, "      user='%s', pwd='%s'",
-                 p_sys->psz_user, p_sys->psz_passwd );
+                 p_sys->url.psz_username, p_sys->url.psz_password );
     }
 
     p_sys->b_reconnect = var_CreateGetBool( p_access, "http-reconnect" );
@@ -338,6 +285,15 @@ static int Open( vlc_object_t *p_this )
         input_item_t *p_input_item;
 
         msg_Dbg( p_access, "redirection to %s", p_sys->psz_location );
+
+        /* Do not accept redirection outside of HTTP works */
+        if( strncmp( p_sys->psz_location, "http", 4 )
+         || ( ( p_sys->psz_location[4] != ':' ) /* HTTP */
+           && strncmp( p_sys->psz_location + 4, "s:", 2 ) /* HTTP/SSL */ ) )
+        {
+            msg_Err( p_access, "insecure redirection ignored" );
+            goto error;
+        }
 
         p_playlist = vlc_object_find( p_access, VLC_OBJECT_PLAYLIST,
                                       FIND_ANYWHERE );
@@ -366,8 +322,6 @@ static int Open( vlc_object_t *p_this )
         if( p_sys->psz_pragma ) free( p_sys->psz_pragma );
         if( p_sys->psz_location ) free( p_sys->psz_location );
         if( p_sys->psz_user_agent ) free( p_sys->psz_user_agent );
-        if( p_sys->psz_user ) free( p_sys->psz_user );
-        if( p_sys->psz_passwd ) free( p_sys->psz_passwd );
 
         Disconnect( p_access );
         free( p_sys );
@@ -433,8 +387,6 @@ error:
     if( p_sys->psz_pragma ) free( p_sys->psz_pragma );
     if( p_sys->psz_location ) free( p_sys->psz_location );
     if( p_sys->psz_user_agent ) free( p_sys->psz_user_agent );
-    if( p_sys->psz_user ) free( p_sys->psz_user );
-    if( p_sys->psz_passwd ) free( p_sys->psz_passwd );
 
     Disconnect( p_access );
     free( p_sys );
@@ -451,9 +403,6 @@ static void Close( vlc_object_t *p_this )
 
     vlc_UrlClean( &p_sys->url );
     vlc_UrlClean( &p_sys->proxy );
-
-    if( p_sys->psz_user ) free( p_sys->psz_user );
-    if( p_sys->psz_passwd ) free( p_sys->psz_passwd );
 
     if( p_sys->psz_mime ) free( p_sys->psz_mime );
     if( p_sys->psz_pragma ) free( p_sys->psz_pragma );
@@ -622,37 +571,33 @@ static int ReadICYMeta( access_t *p_access )
 {
     access_sys_t *p_sys = p_access->p_sys;
 
-    uint8_t buffer[1];
-    char *psz_meta;
+    uint8_t buffer;
+    char *p, *psz_meta;
     int i_read;
-    char *p;
 
     /* Read meta data length */
-    i_read = net_Read( p_access, p_sys->fd, p_sys->p_vs, buffer, 1,
+    i_read = net_Read( p_access, p_sys->fd, p_sys->p_vs, &buffer, 1,
                        VLC_TRUE );
     if( i_read <= 0 )
         return VLC_EGENERIC;
-
-
-    if( buffer[0] <= 0 )
+    if( buffer == 0 )
         return VLC_SUCCESS;
 
-    msg_Dbg( p_access, "ICY meta size=%d", buffer[0] * 16);
+    i_read = buffer << 4;
+    /* msg_Dbg( p_access, "ICY meta size=%u", i_read); */
 
-    psz_meta = malloc( buffer[0] * 16 + 1 );
-    i_read = net_Read( p_access, p_sys->fd, p_sys->p_vs,
-                       psz_meta, buffer[0] * 16, VLC_TRUE );
-
-    if( i_read != buffer[0] * 16 )
+    psz_meta = malloc( i_read + 1 );
+    if( net_Read( p_access, p_sys->fd, p_sys->p_vs,
+                  (uint8_t *)psz_meta, i_read, VLC_TRUE ) != i_read )
         return VLC_EGENERIC;
 
-    psz_meta[buffer[0]*16] = '\0'; /* Just in case */
+    psz_meta[i_read] = '\0'; /* Just in case */
 
-    msg_Dbg( p_access, "icy-meta=%s", psz_meta );
+    /* msg_Dbg( p_access, "icy-meta=%s", psz_meta ); */
 
     /* Now parse the meta */
     /* Look for StreamTitle= */
-    p = strcasestr( psz_meta, "StreamTitle=" );
+    p = strcasestr( (char *)psz_meta, "StreamTitle=" );
     if( p )
     {
         p += strlen( "StreamTitle=" );
@@ -670,16 +615,18 @@ static int ReadICYMeta( access_t *p_access )
             if( psz ) *psz = '\0';
         }
 
-        if( p_sys->psz_icy_title ) free( p_sys->psz_icy_title );
+        if( !p_sys->psz_icy_title ||
+            strcmp( p_sys->psz_icy_title, &p[1] ) )
+        {
+            if( p_sys->psz_icy_title )
+                free( p_sys->psz_icy_title );
+            p_sys->psz_icy_title = strdup( &p[1] );
+            p_access->info.i_update |= INPUT_UPDATE_META;
 
-        p_sys->psz_icy_title = strdup( &p[1] );
-
-        p_access->info.i_update |= INPUT_UPDATE_META;
+            msg_Dbg( p_access, "New Title=%s", p_sys->psz_icy_title );
+        }
     }
-
     free( psz_meta );
-
-    msg_Dbg( p_access, "New Title=%s", p_sys->psz_icy_title );
 
     return VLC_SUCCESS;
 }
@@ -753,8 +700,7 @@ static int Control( access_t *p_access, int i_query, va_list args )
         case ACCESS_GET_META:
             pp_meta = (vlc_meta_t**)va_arg( args, vlc_meta_t** );
             *pp_meta = vlc_meta_New();
-            msg_Dbg( p_access, "GET META %s %s %s",
-                     p_sys->psz_icy_name, p_sys->psz_icy_genre, p_sys->psz_icy_title );
+
             if( p_sys->psz_icy_name )
                 vlc_meta_Add( *pp_meta, VLC_META_TITLE,
                               p_sys->psz_icy_name );
@@ -778,54 +724,6 @@ static int Control( access_t *p_access, int i_query, va_list args )
 
     }
     return VLC_SUCCESS;
-}
-
-/*****************************************************************************
- * ParseURL: extract user:password
- *****************************************************************************/
-static void ParseURL( access_sys_t *p_sys, char *psz_url )
-{
-    char *psz_dup = strdup( psz_url );
-    char *p = psz_dup;
-    char *psz;
-
-    /* Syntax //[user:password]@<hostname>[:<port>][/<path>] */
-    while( *p == '/' )
-    {
-        p++;
-    }
-    psz = p;
-
-    /* Parse auth */
-    if( ( p = strchr( psz, '@' ) ) )
-    {
-        char *comma;
-
-        *p++ = '\0';
-        comma = strchr( psz, ':' );
-
-        /* Retreive user:password */
-        if( comma )
-        {
-            *comma++ = '\0';
-
-            p_sys->psz_user = strdup( psz );
-            p_sys->psz_passwd = strdup( comma );
-        }
-        else
-        {
-            p_sys->psz_user = strdup( psz );
-        }
-    }
-    else
-    {
-        p = psz;
-    }
-
-    /* Parse uri */
-    vlc_UrlParse( &p_sys->url, p, 0 );
-
-    free( psz_dup );
 }
 
 /*****************************************************************************
@@ -952,7 +850,6 @@ static int Request( access_t *p_access, int64_t i_tell )
 
     if( p_sys->b_proxy )
     {
-        /* FIXME: support SSL proxies */
         if( p_sys->url.psz_path )
         {
             net_Printf( VLC_OBJECT(p_access), p_sys->fd, NULL,
@@ -999,20 +896,37 @@ static int Request( access_t *p_access, int64_t i_tell )
                     "Range: bytes="I64Fd"-\r\n", i_tell );
     }
 
-    /* Authentification */
-    if( p_sys->psz_user && *p_sys->psz_user )
+    /* Authentication */
+    if( p_sys->url.psz_username && *p_sys->url.psz_username )
     {
         char *buf;
         char *b64;
 
-        asprintf( &buf, "%s:%s", p_sys->psz_user,
-                   p_sys->psz_passwd ? p_sys->psz_passwd : "" );
+        asprintf( &buf, "%s:%s", p_sys->url.psz_username,
+                   p_sys->url.psz_password ? p_sys->url.psz_password : "" );
 
         b64 = vlc_b64_encode( buf );
         free( buf );
 
         net_Printf( VLC_OBJECT(p_access), p_sys->fd, pvs,
                     "Authorization: Basic %s\r\n", b64 );
+        free( b64 );
+    }
+
+    /* Proxy Authentication */
+    if( p_sys->proxy.psz_username && *p_sys->proxy.psz_username )
+    {
+        char *buf;
+        char *b64;
+
+        asprintf( &buf, "%s:%s", p_sys->proxy.psz_username,
+                   p_sys->proxy.psz_password ? p_sys->proxy.psz_password : "" );
+
+        b64 = vlc_b64_encode( buf );
+        free( buf );
+
+        net_Printf( VLC_OBJECT(p_access), p_sys->fd, pvs,
+                    "Proxy-Authorization: Basic %s\r\n", b64 );
         free( b64 );
     }
 

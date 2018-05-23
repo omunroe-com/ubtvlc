@@ -1,8 +1,8 @@
 /*****************************************************************************
  r playlistinfo.m: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2002-2005 VideoLAN
- * $Id: playlistinfo.m 10960 2005-05-10 16:18:43Z djc $
+ * Copyright (C) 2002-2005 the VideoLAN team
+ * $Id: playlistinfo.m 12560 2005-09-15 14:21:38Z hartman $
  *
  * Authors: Benjamin Pracht <bigben at videolan dot org>
  *
@@ -142,7 +142,7 @@
                                           FIND_ANYWHERE );
     vlc_value_t val;
 
-    if ([self isItemInPlaylist: p_item] )
+    if( [self isItemInPlaylist: p_item] )
     {
         vlc_mutex_lock( &p_item->input.lock );
 
@@ -154,7 +154,7 @@
         val.b_bool = VLC_TRUE;
         var_Set( p_playlist, "intf-change", val );
     }
-
+    vlc_object_release( p_playlist );
     [o_info_window orderOut: self];
 }
 

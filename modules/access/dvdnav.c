@@ -1,8 +1,8 @@
 /*****************************************************************************
  * dvdnav.c: DVD module using the dvdnav library.
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: dvdnav.c 11366 2005-06-08 20:44:26Z jpsaman $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: dvdnav.c 12835 2005-10-15 12:15:06Z jpsaman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -176,13 +176,13 @@ static int Open( vlc_object_t *p_this )
         if( !p_this->b_force ) return VLC_EGENERIC;
 
         psz_name = var_CreateGetString( p_this, "dvd" );
-        if( !psz_name || !*psz_name )
+        if( !psz_name )
         {
-            if( psz_name ) free( psz_name );
-            return VLC_EGENERIC;
+            psz_name = strdup("");
         }
     }
-    else psz_name = strdup( p_demux->psz_path );
+    else
+        psz_name = strdup( p_demux->psz_path );
 
 #ifdef WIN32
     if( psz_name[0] && psz_name[1] == ':' &&
@@ -744,9 +744,9 @@ static int Demux( demux_t *p_demux )
          */
         DemuxBlock( p_demux, packet, i_len );
         if( p_sys->b_spu_change ) 
-	{
-		ButtonUpdate( p_demux, VLC_FALSE );
-	        p_sys->b_spu_change = VLC_FALSE;
+        {
+            ButtonUpdate( p_demux, VLC_FALSE );
+            p_sys->b_spu_change = VLC_FALSE;
         }
         break;
     }
@@ -1367,6 +1367,12 @@ static int ProbeDVD( demux_t *p_demux, char *psz_name )
     uint8_t pi_anchor[2];
     uint16_t i_tag_id = 0;
     int i_fd, i_ret;
+
+    if( !*psz_name )
+    {
+        /* Triggers libdvdcss autodetection */
+        return VLC_SUCCESS;
+    }
 
     if( stat( psz_name, &stat_info ) || !S_ISREG( stat_info.st_mode ) )
     {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * persiststreaminit.h: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 VideoLAN
+ * Copyright (C) 2005 the VideoLAN team
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -30,8 +30,8 @@ class VLCPersistStreamInit : public IPersistStreamInit
 
 public:
 
-    VLCPersistStreamInit(VLCPlugin *p_instance) : _p_instance(p_instance) {};
-    virtual ~VLCPersistStreamInit() {};
+    VLCPersistStreamInit(VLCPlugin *p_instance);
+    virtual ~VLCPersistStreamInit();
 
     // IUnknown methods
     STDMETHODIMP QueryInterface(REFIID riid, void **ppv)
@@ -44,11 +44,11 @@ public:
             *ppv = reinterpret_cast<LPVOID>(this);
             return NOERROR;
         }
-        return _p_instance->QueryInterface(riid, ppv);
+        return _p_instance->pUnkOuter->QueryInterface(riid, ppv);
     };
 
-    STDMETHODIMP_(ULONG) AddRef(void) { return _p_instance->AddRef(); };
-    STDMETHODIMP_(ULONG) Release(void) { return _p_instance->Release(); };
+    STDMETHODIMP_(ULONG) AddRef(void) { return _p_instance->pUnkOuter->AddRef(); };
+    STDMETHODIMP_(ULONG) Release(void) { return _p_instance->pUnkOuter->Release(); };
 
     // IPersist methods
     STDMETHODIMP GetClassID(LPCLSID);
@@ -63,6 +63,7 @@ public:
 private:
 
     VLCPlugin *_p_instance;
+    class VLCPropertyBag *_p_props;
 };
 
 #endif

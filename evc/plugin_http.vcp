@@ -594,19 +594,65 @@ LINK32=link.exe
 # Begin Group "Source Files"
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
-SOURCE="..\modules\control\http.c"
+SOURCE="..\modules\control\http\http.c"
 # ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=http" /D "MODULE_NAME_IS_http" 
 !IF "$(CFG)" == "plugin_http - Win32 Release"
-# PROP Output_Dir "Release\modules\control"
-# PROP Intermediate_Dir "Release\modules\control"
+# PROP Output_Dir "Release\modules\control\http"
+# PROP Intermediate_Dir "Release\modules\control\http"
 !ELSEIF "$(CFG)" == "plugin_http - Win32 Debug"
-# PROP Output_Dir "Debug\modules\control"
-# PROP Intermediate_Dir "Debug\modules\control"
+# PROP Output_Dir "Debug\modules\control\http"
+# PROP Intermediate_Dir "Debug\modules\control\http"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\control\http\rpn.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=http" /D "MODULE_NAME_IS_http" 
+!IF "$(CFG)" == "plugin_http - Win32 Release"
+# PROP Output_Dir "Release\modules\control\http"
+# PROP Intermediate_Dir "Release\modules\control\http"
+!ELSEIF "$(CFG)" == "plugin_http - Win32 Debug"
+# PROP Output_Dir "Debug\modules\control\http"
+# PROP Intermediate_Dir "Debug\modules\control\http"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\control\http\macro.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=http" /D "MODULE_NAME_IS_http" 
+!IF "$(CFG)" == "plugin_http - Win32 Release"
+# PROP Output_Dir "Release\modules\control\http"
+# PROP Intermediate_Dir "Release\modules\control\http"
+!ELSEIF "$(CFG)" == "plugin_http - Win32 Debug"
+# PROP Output_Dir "Debug\modules\control\http"
+# PROP Intermediate_Dir "Debug\modules\control\http"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\control\http\mvar.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=http" /D "MODULE_NAME_IS_http" 
+!IF "$(CFG)" == "plugin_http - Win32 Release"
+# PROP Output_Dir "Release\modules\control\http"
+# PROP Intermediate_Dir "Release\modules\control\http"
+!ELSEIF "$(CFG)" == "plugin_http - Win32 Debug"
+# PROP Output_Dir "Debug\modules\control\http"
+# PROP Intermediate_Dir "Debug\modules\control\http"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\control\http\util.c"
+# ADD CPP /D "__VLC__" /D "__PLUGIN__"  /D "MODULE_NAME=http" /D "MODULE_NAME_IS_http" 
+!IF "$(CFG)" == "plugin_http - Win32 Release"
+# PROP Output_Dir "Release\modules\control\http"
+# PROP Intermediate_Dir "Release\modules\control\http"
+!ELSEIF "$(CFG)" == "plugin_http - Win32 Debug"
+# PROP Output_Dir "Debug\modules\control\http"
+# PROP Intermediate_Dir "Debug\modules\control\http"
 # End Source File
 # End Group
 
 # Begin Group "Header Files"
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+SOURCE="..\modules\control\http\http.h"
+# End Source File
+# Begin Source File
+SOURCE="..\modules\control\http\macros.h"
+# End Source File
 # End Group
 
 # End Target

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * builder.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: builder.cpp 11009 2005-05-14 14:39:05Z ipkiss $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: builder.cpp 12912 2005-10-22 11:57:29Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -43,6 +43,7 @@
 #include "../controls/ctrl_slider.hpp"
 #include "../controls/ctrl_radialslider.hpp"
 #include "../controls/ctrl_text.hpp"
+#include "../controls/ctrl_tree.hpp"
 #include "../controls/ctrl_video.hpp"
 #include "../utils/position.hpp"
 #include "../utils/var_bool.hpp"
@@ -101,6 +102,7 @@ Theme *Builder::build()
     ADD_OBJECTS( RadialSlider );
     ADD_OBJECTS( Slider );
     ADD_OBJECTS( List );
+    ADD_OBJECTS( Tree );
     ADD_OBJECTS( Video );
 
     return m_pTheme;
@@ -184,8 +186,9 @@ void Builder::addWindow( const BuilderData::Window &rData )
 {
     TopWindow *pWin =
         new TopWindow( getIntf(), rData.m_xPos, rData.m_yPos,
-                           m_pTheme->getWindowManager(),
-                           rData.m_dragDrop, rData.m_playOnDrop );
+                       m_pTheme->getWindowManager(),
+                       rData.m_dragDrop, rData.m_playOnDrop,
+                       rData.m_visible );
 
     m_pTheme->m_windows[rData.m_id] = TopWindowPtr( pWin );
 }
@@ -628,6 +631,62 @@ void Builder::addList( const BuilderData::List &rData )
     m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pList );
 }
 
+void Builder::addTree( const BuilderData::Tree &rData )
+{
+    // Get the bitmaps, if any
+    GenericBitmap *pBgBmp = NULL;
+    GenericBitmap *pItemBmp = NULL;
+    GenericBitmap *pOpenBmp = NULL;
+    GenericBitmap *pClosedBmp = NULL;
+    GET_BMP( pBgBmp, rData.m_bgImageId );
+    GET_BMP( pItemBmp, rData.m_itemImageId );
+    GET_BMP( pOpenBmp, rData.m_openImageId );
+    GET_BMP( pClosedBmp, rData.m_closedImageId );
+
+    GenericLayout *pLayout = m_pTheme->getLayoutById(rData.m_layoutId);
+    if( pLayout == NULL )
+    {
+        msg_Err( getIntf(), "unknown layout id: %s", rData.m_layoutId.c_str() );
+        return;
+    }
+
+    GenericFont *pFont = getFont( rData.m_fontId );
+    if( pFont == NULL )
+    {
+        msg_Err( getIntf(), "Unknown font id: %s", rData.m_fontId.c_str() );
+        return;
+    }
+
+    // Get the list variable
+    Interpreter *pInterpreter = Interpreter::instance( getIntf() );
+    VarTree *pVar = pInterpreter->getVarTree( rData.m_var, m_pTheme );
+    if( pVar == NULL )
+    {
+        msg_Err( getIntf(), "No such list variable: %s", rData.m_var.c_str() );
+        return;
+    }
+
+    // Get the visibility variable
+    // XXX check when it is null
+    VarBool *pVisible = pInterpreter->getVarBool( rData.m_visible, m_pTheme );
+
+    // Create the list control
+    CtrlTree *pTree = new CtrlTree( getIntf(), *pVar, *pFont, pBgBmp,
+       pItemBmp, pOpenBmp, pClosedBmp,
+       rData.m_fgColor, rData.m_playColor, rData.m_bgColor1,
+       rData.m_bgColor2, rData.m_selColor,
+       UString( getIntf(), rData.m_help.c_str() ), pVisible );
+
+    // Compute the position of the control
+    const Position pos = makePosition( rData.m_leftTop, rData.m_rightBottom,
+                                       rData.m_xPos, rData.m_yPos,
+                                       rData.m_width, rData.m_height,
+                                       *pLayout );
+
+    pLayout->addControl( pTree, pos, rData.m_layer );
+
+    m_pTheme->m_controls[rData.m_id] = CtrlGenericPtr( pTree );
+}
 
 void Builder::addVideo( const BuilderData::Video &rData )
 {

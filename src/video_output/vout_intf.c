@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout_intf.c : video output interface
  *****************************************************************************
- * Copyright (C) 2000-2004 VideoLAN
- * $Id: vout_intf.c 10509 2005-04-01 22:01:24Z titer $
+ * Copyright (C) 2000-2004 the VideoLAN team
+ * $Id: vout_intf.c 13051 2005-10-31 07:35:39Z md $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -37,10 +37,15 @@
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
+static void InitWindowSize( vout_thread_t *, unsigned *, unsigned * );
 
 /* Object variables callbacks */
 static int ZoomCallback( vlc_object_t *, char const *,
                          vlc_value_t, vlc_value_t, void * );
+static int CropCallback( vlc_object_t *, char const *,
+                         vlc_value_t, vlc_value_t, void * );
+static int AspectCallback( vlc_object_t *, char const *,
+                           vlc_value_t, vlc_value_t, void * );
 static int OnTopCallback( vlc_object_t *, char const *,
                           vlc_value_t, vlc_value_t, void * );
 static int FullscreenCallback( vlc_object_t *, char const *,
@@ -172,17 +177,21 @@ int vout_ControlWindow( vout_thread_t *p_vout, void *p_window,
 void vout_IntfInit( vout_thread_t *p_vout )
 {
     vlc_value_t val, text, old_val;
+    vlc_bool_t b_force_par = VLC_FALSE;
 
     /* Create a few object variables we'll need later on */
     var_Create( p_vout, "snapshot-path", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "snapshot-format", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
-    var_Create( p_vout, "aspect-ratio", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "width", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "height", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "align", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_vout, "align", &val );
+    p_vout->i_alignment = val.i_int;
+
     var_Create( p_vout, "video-x", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "video-y", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
 
+    /* Zoom object var */
     var_Create( p_vout, "zoom", VLC_VAR_FLOAT | VLC_VAR_ISCOMMAND |
                 VLC_VAR_HASCHOICE | VLC_VAR_DOINHERIT );
 
@@ -210,6 +219,95 @@ void vout_IntfInit( vout_thread_t *p_vout )
     var_Set( p_vout, "zoom", old_val );
 
     var_AddCallback( p_vout, "zoom", ZoomCallback, NULL );
+
+    /* Crop object var */
+    var_Create( p_vout, "crop", VLC_VAR_STRING |
+                VLC_VAR_HASCHOICE | VLC_VAR_DOINHERIT );
+
+    text.psz_string = _("Crop");
+    var_Change( p_vout, "crop", VLC_VAR_SETTEXT, &text, NULL );
+
+    val.psz_string = "";
+    var_Change( p_vout, "crop", VLC_VAR_DELCHOICE, &val, 0 );
+    val.psz_string = ""; text.psz_string = _("Default");
+    var_Change( p_vout, "crop", VLC_VAR_ADDCHOICE, &val, &text );
+    val.psz_string = "001:1"; text.psz_string = _("1:1");
+    var_Change( p_vout, "crop", VLC_VAR_ADDCHOICE, &val, &text );
+    val.psz_string = "004:3"; text.psz_string = _("4:3");
+    var_Change( p_vout, "crop", VLC_VAR_ADDCHOICE, &val, &text );
+    val.psz_string = "16:9"; text.psz_string = _("16:9");
+    var_Change( p_vout, "crop", VLC_VAR_ADDCHOICE, &val, &text );
+    val.psz_string = "221:100"; text.psz_string = _("221:100");
+    var_Change( p_vout, "crop", VLC_VAR_ADDCHOICE, &val, &text );
+
+    var_AddCallback( p_vout, "crop", CropCallback, NULL );
+    var_Get( p_vout, "crop", &old_val );
+    if( old_val.psz_string && *old_val.psz_string )
+        var_Change( p_vout, "crop", VLC_VAR_TRIGGER_CALLBACKS, 0, 0 );
+    if( old_val.psz_string ) free( old_val.psz_string );
+
+    /* Monitor pixel aspect-ratio */
+    var_Create( p_vout, "monitor-par", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
+    var_Get( p_vout, "monitor-par", &val );
+    if( val.psz_string && *val.psz_string )
+    {
+        char *psz_parser = strchr( val.psz_string, ':' );
+        unsigned int i_aspect_num = 0, i_aspect_den = 0;
+        float i_aspect = 0;
+        if( psz_parser )
+        {
+            i_aspect_num = strtol( val.psz_string, 0, 0 );
+            i_aspect_den = strtol( ++psz_parser, 0, 0 );
+        }
+        else
+        {
+            i_aspect = atof( val.psz_string );
+            vlc_ureduce( &i_aspect_num, &i_aspect_den,
+                         i_aspect *VOUT_ASPECT_FACTOR, VOUT_ASPECT_FACTOR, 0 );
+        }
+        if( !i_aspect_num || !i_aspect_den ) i_aspect_num = i_aspect_den = 1;
+
+        p_vout->i_par_num = i_aspect_num;
+        p_vout->i_par_den = i_aspect_den;
+
+        vlc_ureduce( &p_vout->i_par_num, &p_vout->i_par_den,
+                     p_vout->i_par_num, p_vout->i_par_den, 0 );
+
+        msg_Dbg( p_vout, "monitor pixel aspect-ratio overriding: %i:%i",
+                 p_vout->i_par_num, p_vout->i_par_den );
+        b_force_par = VLC_TRUE;
+    }
+    if( val.psz_string ) free( val.psz_string );
+
+    /* Aspect-ratio object var */
+    var_Create( p_vout, "aspect-ratio", VLC_VAR_STRING |
+                VLC_VAR_HASCHOICE | VLC_VAR_DOINHERIT );
+
+    text.psz_string = _("Aspect-ratio");
+    var_Change( p_vout, "aspect-ratio", VLC_VAR_SETTEXT, &text, NULL );
+
+    val.psz_string = "";
+    var_Change( p_vout, "aspect-ratio", VLC_VAR_DELCHOICE, &val, 0 );
+    val.psz_string = ""; text.psz_string = _("Default");
+    var_Change( p_vout, "aspect-ratio", VLC_VAR_ADDCHOICE, &val, &text );
+    val.psz_string = "001:1"; text.psz_string = _("1:1");
+    var_Change( p_vout, "aspect-ratio", VLC_VAR_ADDCHOICE, &val, &text );
+    val.psz_string = "004:3"; text.psz_string = _("4:3");
+    var_Change( p_vout, "aspect-ratio", VLC_VAR_ADDCHOICE, &val, &text );
+    val.psz_string = "16:9"; text.psz_string = _("16:9");
+    var_Change( p_vout, "aspect-ratio", VLC_VAR_ADDCHOICE, &val, &text );
+    val.psz_string = "221:100"; text.psz_string = _("221:100");
+    var_Change( p_vout, "aspect-ratio", VLC_VAR_ADDCHOICE, &val, &text );
+
+    var_AddCallback( p_vout, "aspect-ratio", AspectCallback, NULL );
+    var_Get( p_vout, "aspect-ratio", &old_val );
+    if( (old_val.psz_string && *old_val.psz_string) || b_force_par )
+        var_Change( p_vout, "aspect-ratio", VLC_VAR_TRIGGER_CALLBACKS, 0, 0 );
+    if( old_val.psz_string ) free( old_val.psz_string );
+
+    /* Initialize the dimensions of the video window */
+    InitWindowSize( p_vout, &p_vout->i_window_width,
+                    &p_vout->i_window_height );
 
     /* Add a variable to indicate if the window should be on top of others */
     var_Create( p_vout, "video-on-top", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
@@ -435,13 +533,193 @@ int vout_vaControlDefault( vout_thread_t *p_vout, int i_query, va_list args )
 }
 
 /*****************************************************************************
+ * InitWindowSize: find the initial dimensions the video window should have.
+ *****************************************************************************
+ * This function will check the "width", "height" and "zoom" config options and
+ * will calculate the size that the video window should have.
+ *****************************************************************************/
+static void InitWindowSize( vout_thread_t *p_vout, unsigned *pi_width,
+                            unsigned *pi_height )
+{
+    vlc_value_t val;
+    int i_width, i_height;
+    uint64_t ll_zoom;
+
+#define FP_FACTOR 1000                             /* our fixed point factor */
+
+    var_Get( p_vout, "width", &val );
+    i_width = val.i_int;
+    var_Get( p_vout, "height", &val );
+    i_height = val.i_int;
+    var_Get( p_vout, "zoom", &val );
+    ll_zoom = (uint64_t)( FP_FACTOR * val.f_float );
+
+    if( i_width > 0 && i_height > 0)
+    {
+        *pi_width = (int)( i_width * ll_zoom / FP_FACTOR );
+        *pi_height = (int)( i_height * ll_zoom / FP_FACTOR );
+        goto initwsize_end;
+    }
+    else if( i_width > 0 )
+    {
+        *pi_width = (int)( i_width * ll_zoom / FP_FACTOR );
+        *pi_height = (int)( p_vout->fmt_in.i_visible_height * ll_zoom *
+            p_vout->fmt_in.i_sar_den * i_width / p_vout->fmt_in.i_sar_num /
+            FP_FACTOR / p_vout->fmt_in.i_visible_width );
+        goto initwsize_end;
+    }
+    else if( i_height > 0 )
+    {
+        *pi_height = (int)( i_height * ll_zoom / FP_FACTOR );
+        *pi_width = (int)( p_vout->fmt_in.i_visible_width * ll_zoom *
+            p_vout->fmt_in.i_sar_num * i_height / p_vout->fmt_in.i_sar_den /
+            FP_FACTOR / p_vout->fmt_in.i_visible_height );
+        goto initwsize_end;
+    }
+
+    if( p_vout->fmt_in.i_sar_num >= p_vout->fmt_in.i_sar_den )
+    {
+        *pi_width = (int)( p_vout->fmt_in.i_visible_width * ll_zoom *
+            p_vout->fmt_in.i_sar_num / p_vout->fmt_in.i_sar_den / FP_FACTOR );
+        *pi_height = (int)( p_vout->fmt_in.i_visible_height * ll_zoom 
+            / FP_FACTOR );
+    }
+    else
+    {
+        *pi_width = (int)( p_vout->fmt_in.i_visible_width * ll_zoom 
+            / FP_FACTOR );
+        *pi_height = (int)( p_vout->fmt_in.i_visible_height * ll_zoom *
+            p_vout->fmt_in.i_sar_den / p_vout->fmt_in.i_sar_num / FP_FACTOR );
+    }
+
+initwsize_end:
+    msg_Dbg( p_vout, "window size: %dx%d", p_vout->i_window_width, 
+             p_vout->i_window_height );
+
+#undef FP_FACTOR
+}
+
+/*****************************************************************************
  * Object variables callbacks
  *****************************************************************************/
 static int ZoomCallback( vlc_object_t *p_this, char const *psz_cmd,
                          vlc_value_t oldval, vlc_value_t newval, void *p_data )
 {
     vout_thread_t *p_vout = (vout_thread_t *)p_this;
-    vout_Control( p_vout, VOUT_SET_ZOOM, newval.f_float );
+    InitWindowSize( p_vout, &p_vout->i_window_width,
+                    &p_vout->i_window_height );
+    vout_Control( p_vout, VOUT_SET_ZOOM );
+    return VLC_SUCCESS;
+}
+
+static int CropCallback( vlc_object_t *p_this, char const *psz_cmd,
+                         vlc_value_t oldval, vlc_value_t newval, void *p_data )
+{
+    vout_thread_t *p_vout = (vout_thread_t *)p_this;
+    int64_t i_aspect_num, i_aspect_den;
+    unsigned int i_width, i_height;
+
+    char *psz_end, *psz_parser = strchr( newval.psz_string, ':' );
+
+    /* Restore defaults */
+    p_vout->fmt_in.i_x_offset = p_vout->fmt_render.i_x_offset;
+    p_vout->fmt_in.i_visible_width = p_vout->fmt_render.i_visible_width;
+    p_vout->fmt_in.i_y_offset = p_vout->fmt_render.i_y_offset;
+    p_vout->fmt_in.i_visible_height = p_vout->fmt_render.i_visible_height;
+
+    if( !psz_parser ) goto crop_end;
+
+    i_aspect_num = strtol( newval.psz_string, &psz_end, 0 );
+    if( psz_end == newval.psz_string || !i_aspect_num ) goto crop_end;
+
+    i_aspect_den = strtol( ++psz_parser, &psz_end, 0 );
+    if( psz_end == psz_parser || !i_aspect_den ) goto crop_end;
+
+    i_width = p_vout->fmt_in.i_sar_den * p_vout->fmt_render.i_visible_height *
+        i_aspect_num / i_aspect_den / p_vout->fmt_in.i_sar_num;
+    i_height = p_vout->fmt_render.i_visible_width * p_vout->fmt_in.i_sar_num *
+        i_aspect_den / i_aspect_num / p_vout->fmt_in.i_sar_den;
+
+    if( i_width < p_vout->fmt_render.i_visible_width )
+    {
+        p_vout->fmt_in.i_x_offset = p_vout->fmt_render.i_x_offset +
+            (p_vout->fmt_render.i_visible_width - i_width) / 2;
+        p_vout->fmt_in.i_visible_width = i_width;
+    }
+    else
+    {
+        p_vout->fmt_in.i_y_offset = p_vout->fmt_render.i_y_offset +
+            (p_vout->fmt_render.i_visible_height - i_height) / 2;
+        p_vout->fmt_in.i_visible_height = i_height;
+    }
+
+ crop_end:
+    InitWindowSize( p_vout, &p_vout->i_window_width,
+                    &p_vout->i_window_height );
+
+    p_vout->i_changes |= VOUT_CROP_CHANGE;
+
+    msg_Dbg( p_vout, "cropping picture %ix%i to %i,%i,%ix%i",
+             p_vout->fmt_in.i_width, p_vout->fmt_in.i_height,
+             p_vout->fmt_in.i_x_offset, p_vout->fmt_in.i_y_offset,
+             p_vout->fmt_in.i_visible_width,
+             p_vout->fmt_in.i_visible_height );
+
+    return VLC_SUCCESS;
+}
+
+static int AspectCallback( vlc_object_t *p_this, char const *psz_cmd,
+                         vlc_value_t oldval, vlc_value_t newval, void *p_data )
+{
+    vout_thread_t *p_vout = (vout_thread_t *)p_this;
+    unsigned int i_aspect_num, i_aspect_den, i_sar_num, i_sar_den;
+    vlc_value_t val;
+
+    char *psz_end, *psz_parser = strchr( newval.psz_string, ':' );
+
+    /* Restore defaults */
+    p_vout->fmt_in.i_sar_num = p_vout->fmt_render.i_sar_num;
+    p_vout->fmt_in.i_sar_den = p_vout->fmt_render.i_sar_den;
+    p_vout->fmt_in.i_aspect = p_vout->fmt_render.i_aspect;
+    p_vout->render.i_aspect = p_vout->fmt_render.i_aspect;
+
+    if( !psz_parser ) goto aspect_end;
+
+    i_aspect_num = strtol( newval.psz_string, &psz_end, 0 );
+    if( psz_end == newval.psz_string || !i_aspect_num ) goto aspect_end;
+
+    i_aspect_den = strtol( ++psz_parser, &psz_end, 0 );
+    if( psz_end == psz_parser || !i_aspect_den ) goto aspect_end;
+
+    i_sar_num = i_aspect_num * p_vout->fmt_render.i_visible_height;
+    i_sar_den = i_aspect_den * p_vout->fmt_render.i_visible_width;
+    vlc_ureduce( &i_sar_num, &i_sar_den, i_sar_num, i_sar_den, 0 );
+    p_vout->fmt_in.i_sar_num = i_sar_num;
+    p_vout->fmt_in.i_sar_den = i_sar_den;
+    p_vout->fmt_in.i_aspect = i_aspect_num * VOUT_ASPECT_FACTOR / i_aspect_den;
+    p_vout->render.i_aspect = p_vout->fmt_in.i_aspect;
+
+ aspect_end:
+    if( p_vout->i_par_num && p_vout->i_par_den )
+    {
+        p_vout->fmt_in.i_sar_num *= p_vout->i_par_den;
+        p_vout->fmt_in.i_sar_den *= p_vout->i_par_num;
+        p_vout->fmt_in.i_aspect = p_vout->fmt_in.i_aspect *
+            p_vout->i_par_den / p_vout->i_par_num;
+        p_vout->render.i_aspect = p_vout->fmt_in.i_aspect;
+    }
+
+    p_vout->i_changes |= VOUT_ASPECT_CHANGE;
+
+    vlc_ureduce( &i_aspect_num, &i_aspect_den,
+                 p_vout->fmt_in.i_aspect, VOUT_ASPECT_FACTOR, 0 );
+    msg_Dbg( p_vout, "new aspect-ratio %i:%i, sample aspect-ratio %i:%i",
+             i_aspect_num, i_aspect_den,
+             p_vout->fmt_in.i_sar_num, p_vout->fmt_in.i_sar_den );
+
+    var_Get( p_vout, "crop", &val );
+    return CropCallback( p_this, 0, val, val, 0 );
+
     return VLC_SUCCESS;
 }
 

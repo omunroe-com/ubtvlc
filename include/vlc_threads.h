@@ -2,8 +2,8 @@
  * vlc_threads.h : threads implementation for the VideoLAN client
  * This header provides portable declarations for mutexes & conditions
  *****************************************************************************
- * Copyright (C) 1999, 2002 VideoLAN
- * $Id: vlc_threads.h 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 1999, 2002 the VideoLAN team
+ * $Id: vlc_threads.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Jean-Marc Dressler <polux@via.ecp.fr>
  *          Samuel Hocevar <sam@via.ecp.fr>
@@ -75,6 +75,7 @@
 #   define VLC_THREAD_PRIORITY_AUDIO 37
 #   define VLC_THREAD_PRIORITY_VIDEO (-47)
 #   define VLC_THREAD_PRIORITY_OUTPUT 37
+#   define VLC_THREAD_PRIORITY_HIGHEST 37
 
 #elif defined(SYS_BEOS)
 #   define VLC_THREAD_PRIORITY_LOW 5
@@ -82,6 +83,7 @@
 #   define VLC_THREAD_PRIORITY_AUDIO 10
 #   define VLC_THREAD_PRIORITY_VIDEO 5
 #   define VLC_THREAD_PRIORITY_OUTPUT 15
+#   define VLC_THREAD_PRIORITY_HIGHEST 15
 
 #elif defined(PTHREAD_COND_T_IN_PTHREAD_H)
 #   define VLC_THREAD_PRIORITY_LOW 0
@@ -89,6 +91,7 @@
 #   define VLC_THREAD_PRIORITY_AUDIO 10
 #   define VLC_THREAD_PRIORITY_VIDEO 0
 #   define VLC_THREAD_PRIORITY_OUTPUT 30
+#   define VLC_THREAD_PRIORITY_HIGHEST 40
 
 #elif defined(WIN32) || defined(UNDER_CE)
 /* Define different priorities for WinNT/2K/XP and Win9x/Me */
@@ -110,6 +113,7 @@
 #   define VLC_THREAD_PRIORITY_AUDIO 0
 #   define VLC_THREAD_PRIORITY_VIDEO 0
 #   define VLC_THREAD_PRIORITY_OUTPUT 0
+#   define VLC_THREAD_PRIORITY_HIGHEST 0
 
 #endif
 

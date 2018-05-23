@@ -1,8 +1,8 @@
 /*****************************************************************************
  * theme_loader.cpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: theme_loader.cpp 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: theme_loader.cpp 12912 2005-10-22 11:57:29Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -38,7 +38,7 @@
 #endif
 #ifdef HAVE_UNISTD_H
 #   include <unistd.h>
-#elif defined( WIN32 )
+#elif defined( WIN32 ) && !defined( UNDER_CE )
 #   include <direct.h>
 #endif
 
@@ -50,7 +50,10 @@
 #if defined( HAVE_ZLIB_H )
 #   include <zlib.h>
 #   include <errno.h>
-int gzopen_frontend( char *pathname, int oflags, int mode );
+int gzopen_frontend ( char *pathname, int oflags, int mode );
+int gzclose_frontend( int );
+int gzread_frontend ( int, void *, size_t );
+int gzwrite_frontend( int, const void *, size_t );
 #if defined( HAVE_LIBTAR_H )
 #   include <libtar.h>
 #else
@@ -95,7 +98,7 @@ bool ThemeLoader::load( const string &fileName )
     {
         config_PutPsz( getIntf(), "skins2-last", fileName.c_str() );
         // Show the windows
-        pNewTheme->getWindowManager().showAll();
+        pNewTheme->getWindowManager().showAll( true );
     }
     if( skin_last ) free( skin_last );
 
@@ -111,8 +114,10 @@ bool ThemeLoader::extractTarGz( const string &tarFile, const string &rootDir )
 {
     TAR *t;
 #if defined( HAVE_LIBTAR_H )
-    tartype_t gztype = { (openfunc_t) gzopen_frontend, (closefunc_t) gzclose,
-        (readfunc_t) gzread, (writefunc_t) gzwrite };
+    tartype_t gztype = { (openfunc_t) gzopen_frontend,
+                         (closefunc_t) gzclose_frontend,
+                         (readfunc_t) gzread_frontend,
+                         (writefunc_t) gzwrite_frontend };
 
     if( tar_open( &t, (char *)tarFile.c_str(), &gztype, O_RDONLY, 0,
                   TAR_GNU ) == -1 )
@@ -224,7 +229,7 @@ bool ThemeLoader::findThemeFile( const string &rootDir, string &themeFilePath )
     }
 
     // Get the first directory entry
-    pDirContent = readdir( pCurrDir );
+    pDirContent = (dirent*)readdir( pCurrDir );
 
     // While we still have entries in the directory
     while( pDirContent != NULL )
@@ -265,7 +270,7 @@ bool ThemeLoader::findThemeFile( const string &rootDir, string &themeFilePath )
             }
         }
 
-        pDirContent = readdir( pCurrDir );
+        pDirContent = (dirent*)readdir( pCurrDir );
     }
 
     closedir( pCurrDir );
@@ -530,12 +535,16 @@ int makedir( char *newdir )
 #endif
 
 #ifdef HAVE_ZLIB_H
+
+static int currentGzFd = -1;
+static void * currentGzVp = NULL;
+
 int gzopen_frontend( char *pathname, int oflags, int mode )
 {
     char *gzflags;
     gzFile gzf;
 
-    switch( oflags & O_ACCMODE )
+    switch( oflags )
     {
         case O_WRONLY:
             gzflags = "wb";
@@ -556,6 +565,40 @@ int gzopen_frontend( char *pathname, int oflags, int mode )
         return -1;
     }
 
-    return (int)gzf;
+    /** Hum ... */
+    currentGzFd = 42;
+    currentGzVp = gzf;
+
+    return currentGzFd;
 }
+
+int gzclose_frontend( int fd )
+{
+    if( currentGzVp != NULL && fd != -1 )
+    {
+        void *toClose = currentGzVp;
+        currentGzVp = NULL;  currentGzFd = -1;
+        return gzclose( toClose );
+    }
+    return -1;
+}
+
+int gzread_frontend( int fd, void *p_buffer, size_t i_length )
+{
+    if( currentGzVp != NULL && fd != -1 )
+    {
+        return gzread( currentGzVp, p_buffer, i_length );
+    }
+    return -1;
+}
+
+int gzwrite_frontend( int fd, const void * p_buffer, size_t i_length )
+{
+    if( currentGzVp != NULL && fd != -1 )
+    {
+        return gzwrite( currentGzVp, const_cast<void*>(p_buffer), i_length );
+    }
+    return -1;
+}
+
 #endif

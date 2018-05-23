@@ -1,56 +1,90 @@
-# Makefile: tuned for i386/MMX system only
+# Makefile
 
-# For FreeBSD, remove -DHAVE_MALLOC_H and add -DSYS_FREEBSD
+include config.mak
 
-# Uncomment this for Mac OS X
-#SYS_MACOSX=1
+SRCS = common/mc.c common/predict.c common/pixel.c common/macroblock.c \
+       common/frame.c common/dct.c common/cpu.c common/cabac.c \
+       common/common.c common/mdate.c common/csp.c common/set.c \
+       common/quant.c \
+       encoder/analyse.c encoder/me.c encoder/ratecontrol.c \
+       encoder/set.c encoder/macroblock.c encoder/cabac.c \
+       encoder/cavlc.c encoder/encoder.c encoder/eval.c
 
-SRCS_COMMON= core/mc.c core/predict.c core/pixel.c core/macroblock.c \
-             core/frame.c core/dct.c core/cpu.c core/cabac.c \
-             core/common.c core/mdate.c core/csp.c \
-             encoder/analyse.c encoder/me.c encoder/ratecontrol.c \
-             encoder/set.c encoder/macroblock.c encoder/cabac.c \
-             encoder/cavlc.c encoder/encoder.c encoder/eval.c x264.c
-
-ifdef SYS_MACOSX
-PFLAGS=-DARCH_PPC -DSYS_MACOSX -faltivec
-SRCS= $(SRCS_COMMON) core/ppc/mc.c core/ppc/pixel.c
-else
-PFLAGS=-DARCH_X86 -DHAVE_MMXEXT -DHAVE_SSE2 -DHAVE_MALLOC_H
-SRCS= $(SRCS_COMMON) core/i386/mc-c.c core/i386/dct-c.c core/i386/predict.c
-ASMSRC= core/i386/dct.asm core/i386/cpu.asm core/i386/pixel.asm  core/i386/mc.asm
-OBJASM= $(ASMSRC:%.asm=%.o)
+# Visualization sources
+ifeq ($(VIS),yes)
+SRCS   += common/visualize.c common/display-x11.c
 endif
 
-CC=gcc
-CFLAGS=-g -Wall -I. -DDEBUG -O4 -funroll-loops -D__X264__ $(PFLAGS)
+# MMX/SSE optims
+ifeq ($(ARCH),X86)
+SRCS   += common/i386/mc-c.c common/i386/dct-c.c common/i386/predict.c
+ASMSRC  = common/i386/dct-a.asm common/i386/cpu-a.asm \
+          common/i386/pixel-a.asm common/i386/mc-a.asm \
+          common/i386/mc-a2.asm common/i386/predict-a.asm \
+          common/i386/pixel-sse2.asm common/i386/quant-a.asm \
+          common/i386/deblock-a.asm
+OBJASM  = $(ASMSRC:%.asm=%.o)
+endif
 
-AS= nasm
-# for linux
-ASFLAGS=-f elf $(PFLAGS)
-# for cygwin
-#ASFLAGS=-f gnuwin32 -DPREFIX
+# MMX/SSE optims
+ifeq ($(ARCH),X86_64)
+SRCS   += common/i386/mc-c.c common/i386/dct-c.c common/i386/predict.c
+ASMSRC  = common/amd64/dct-a.asm common/amd64/cpu-a.asm \
+          common/amd64/pixel-a.asm common/amd64/mc-a.asm \
+          common/amd64/mc-a2.asm common/amd64/predict-a.asm \
+          common/amd64/pixel-sse2.asm common/amd64/quant-a.asm \
+          common/amd64/deblock-a.asm
+OBJASM  = $(ASMSRC:%.asm=%.o)
+ASFLAGS += -Icommon/amd64
+endif
+
+# AltiVec optims
+ifeq ($(ARCH),PPC)
+SRCS += common/ppc/mc.c common/ppc/pixel.c common/ppc/dct.c
+endif
+
+# VIS optims
+ifeq ($(ARCH),UltraSparc)
+ASMSRC += common/sparc/pixel.asm
+OBJASM  = $(ASMSRC:%.asm=%.o)
+endif
+
+ifneq ($(HAVE_GETOPT_LONG),1)
+SRCS += extras/getopt.c
+CFLAGS += -DHAVE_GETOPT_LONG=0
+else
+CFLAGS += -DHAVE_GETOPT_LONG=1
+endif
 
 OBJS = $(SRCS:%.c=%.o)
 DEP  = depend
 
-default: $(DEP) x264
+default: $(DEP) x264$(EXE)
 
-libx264.a: $(OBJS) $(OBJASM)
+libx264.a: .depend $(OBJS) $(OBJASM)
 	ar rc libx264.a $(OBJS) $(OBJASM)
 	ranlib libx264.a
 
-x264: libx264.a x264.o
-	$(CC) $(CFLAGS) -o x264 x264.o libx264.a -lm
+x264$(EXE): libx264.a x264.o matroska.o
+	$(CC) -o $@ x264.o matroska.o libx264.a $(LDFLAGS)
 
-checkasm: testing/checkasm.c libx264.a
-	$(CC) $(CFLAGS) -o checkasm $< libx264.a -lm
+x264vfw.dll: libx264.a $(wildcard vfw/*.c vfw/*.h)
+	make -C vfw/build/cygwin
 
+checkasm: tools/checkasm.o libx264.a
+	$(CC) -o $@ $< libx264.a $(LDFLAGS)
+
+common/amd64/*.o: common/amd64/amd64inc.asm
 %.o: %.asm
 	$(AS) $(ASFLAGS) -o $@ $<
 
-.depend: $(SRCS) x264.c
-	$(CC) -MM $(CFLAGS) $(SRCS) x264.c 1> .depend
+.depend: config.mak config.h
+	rm -f .depend
+# Hacky - because gcc 2.9x doesn't have -MT
+	$(foreach SRC, $(SRCS) x264.c matroska.c, ( echo -n "`dirname $(SRC)`/" && $(CC) $(CFLAGS) $(SRC) -MM -g0 ) 1>> .depend;)
+
+config.h: $(wildcard .svn/entries */.svn/entries */*/.svn/entries)
+	./version.sh
 
 depend: .depend
 ifneq ($(wildcard .depend),)
@@ -58,9 +92,27 @@ include .depend
 endif
 
 clean:
-	rm -f $(OBJS) $(OBJASM) *.a x264.o .depend x264 TAGS
+	rm -f $(OBJS) $(OBJASM) config.h *.a x264.o matroska.o x264 x264.exe .depend TAGS x264.pc
+	rm -f checkasm checkasm.exe tools/checkasm.o
+	rm -f tools/avc2avi tools/avc2avi.exe tools/avc2avi.o
+	rm -rf vfw/build/cygwin/bin
 
 distclean: clean
+	rm -f config.mak vfw/build/cygwin/config.mak
+
+install: x264
+	install -d $(DESTDIR)$(bindir) $(DESTDIR)$(includedir)
+	install -d $(DESTDIR)$(libdir) $(DESTDIR)$(libdir)/pkgconfig
+	install -m 644 x264.h $(DESTDIR)$(includedir)
+	install -m 644 libx264.a $(DESTDIR)$(libdir)
+	install -m 644 x264.pc $(DESTDIR)$(libdir)/pkgconfig
+	install x264 $(DESTDIR)$(bindir)
+	ranlib $(DESTDIR)$(libdir)/libx264.a
+
+.PHONY: uninstall
+uninstall:
+	rm -f $(DESTDIR)$(includedir)/x264.h $(DESTDIR)$(libdir)/libx264.a
+	rm -f $(DESTDIR)$(bindir)/x264 $(DESTDIR)$(libdir)/pkgconfig/x264.pc
 
 etags: TAGS
 

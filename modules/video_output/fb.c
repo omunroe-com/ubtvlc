@@ -1,8 +1,8 @@
 /*****************************************************************************
  * fb.c : framebuffer plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000, 2001 VideoLAN
- * $Id: fb.c 11387 2005-06-10 15:32:08Z hartman $
+ * Copyright (C) 2000, 2001 the VideoLAN team
+ * $Id: fb.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *

@@ -2,8 +2,8 @@
  * vcd.c : VCD input module for vlc using libcdio, libvcd and libvcdinfo.
  *         vlc-specific things tend to go here.
  *****************************************************************************
- * Copyright (C) 2000, 2003, 2004, 2005 VideoLAN
- * $Id: access.c 10862 2005-05-01 14:48:08Z rocky $
+ * Copyright (C) 2000, 2003, 2004, 2005 the VideoLAN team
+ * $Id: access.c 11815 2005-07-23 11:25:49Z rocky $
  *
  * Authors: Rocky Bernstein <rocky@panix.com>
  *   Some code is based on the non-libcdio VCD plugin (as there really
@@ -692,7 +692,8 @@ VCDSetOrigin( access_t *p_access, lsn_t i_lsn, track_t i_track,
       if (p_vcdplayer->b_track_length) 
       {
 	p_access->info.i_size = p_vcdplayer->p_title[i_track-1]->i_size;
-	p_access->info.i_pos  = (int64_t) i_lsn * M2F2_SECTOR_SIZE;
+	p_access->info.i_pos  = (int64_t) M2F2_SECTOR_SIZE *
+	  (vcdinfo_get_track_lsn(p_vcdplayer->vcd, i_track) - i_lsn) ;
       } else {
 	p_access->info.i_size = M2F2_SECTOR_SIZE * (int64_t)
 	  vcdinfo_get_entry_sect_count(p_vcdplayer->vcd, p_itemid->num);
@@ -1139,11 +1140,26 @@ static int VCDControl( access_t *p_access, int i_query, va_list args )
                 unsigned int     i_entry =
                   vcdinfo_track_get_entry( p_vcdplayer->vcd, i_track);
 
-                /* FIXME! For now we are assuming titles are only
-                 tracks and that track == title+1 */
-                itemid.num = i_track;
-                itemid.type = VCDINFO_ITEM_TYPE_TRACK;
-
+		if( i < p_vcdplayer->i_tracks ) 
+		{
+		    /* FIXME! For now we are assuming titles are only
+		       tracks and that track == title+1 */
+		    itemid.num = i_track;
+		    itemid.type = VCDINFO_ITEM_TYPE_TRACK;
+		} 
+		else 
+		{
+		    /* FIXME! i_tracks+2 are Segments, but we need to 
+		       be able to figure out which segment of that.
+                       i_tracks+1 is either Segments (if no LIDs) or 
+		       LIDs otherwise. Again need a way to get the LID 
+		       number. */
+		    msg_Warn( p_access,
+                    "Trying to set track (%u) beyond end of last track (%u).",
+			      i+1, p_vcdplayer->i_tracks );
+		    return VLC_EGENERIC;
+		}
+		
                 VCDSetOrigin(p_access,
                      vcdinfo_get_entry_lsn(p_vcdplayer->vcd, i_entry),
                              i_track, &itemid );

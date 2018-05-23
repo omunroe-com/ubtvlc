@@ -1,8 +1,8 @@
 /*****************************************************************************
  * libmpeg2.c: mpeg2 video decoder module making use of libmpeg2.
  *****************************************************************************
- * Copyright (C) 1999-2001 VideoLAN
- * $Id: libmpeg2.c 11086 2005-05-20 18:00:02Z massiot $
+ * Copyright (C) 1999-2001 the VideoLAN team
+ * $Id: libmpeg2.c 13118 2005-11-02 23:32:56Z gbazin $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -35,7 +35,7 @@
 
 /* Aspect ratio (ISO/IEC 13818-2 section 6.3.3, table 6-3) */
 #define AR_SQUARE_PICTURE       1                           /* square pixels */
-#define AR_3_4_PICTURE          2                        /* 3:4 picture (TV) */
+#define AR_4_3_PICTURE          2                        /* 4:3 picture (TV) */
 #define AR_16_9_PICTURE         3              /* 16:9 picture (wide screen) */
 #define AR_221_1_PICTURE        4                  /* 2.21:1 picture (movie) */
 
@@ -72,6 +72,8 @@ struct decoder_sys_t
      */
     vout_synchro_t *p_synchro;
     int            i_aspect;
+    int            i_sar_num;
+    int            i_sar_den;
     mtime_t        i_last_frame_pts;
 
 };
@@ -85,6 +87,7 @@ static void CloseDecoder( vlc_object_t * );
 static picture_t *DecodeBlock( decoder_t *, block_t ** );
 
 static picture_t *GetNewPicture( decoder_t *, uint8_t ** );
+static void GetAR( decoder_t *p_dec );
 
 /*****************************************************************************
  * Module descriptor
@@ -113,7 +116,8 @@ static int OpenDecoder( vlc_object_t *p_this )
         p_dec->fmt_in.i_codec != VLC_FOURCC('P','I','M','1') &&
         /* ATI Video */
         p_dec->fmt_in.i_codec != VLC_FOURCC('V','C','R','2') &&
-        p_dec->fmt_in.i_codec != VLC_FOURCC('m','p','g','2') )
+        p_dec->fmt_in.i_codec != VLC_FOURCC('m','p','g','2') &&
+        p_dec->fmt_in.i_codec != VLC_FOURCC('h','d','v','2') )
     {
         return VLC_EGENERIC;
     }
@@ -286,63 +290,19 @@ static picture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
             p_block->i_buffer = 0;
             break;
 
+#ifdef STATE_SEQUENCE_MODIFIED
+        case STATE_SEQUENCE_MODIFIED:
+            GetAR( p_dec );
+            break;
+#endif
+
         case STATE_SEQUENCE:
         {
             /* Initialize video output */
             uint8_t *buf[3];
             buf[0] = buf[1] = buf[2] = NULL;
 
-            /* Check whether the input gave a particular aspect ratio */
-            if( p_dec->fmt_in.video.i_aspect )
-            {
-                p_sys->i_aspect = p_dec->fmt_in.video.i_aspect;
-                if( p_sys->i_aspect <= AR_221_1_PICTURE )
-                switch( p_sys->i_aspect )
-                {
-                case AR_3_4_PICTURE:
-                    p_sys->i_aspect = VOUT_ASPECT_FACTOR * 4 / 3;
-                    break;
-                case AR_16_9_PICTURE:
-                    p_sys->i_aspect = VOUT_ASPECT_FACTOR * 16 / 9;
-                    break;
-                case AR_221_1_PICTURE:
-                    p_sys->i_aspect = VOUT_ASPECT_FACTOR * 221 / 100;
-                    break;
-                case AR_SQUARE_PICTURE:
-                    p_sys->i_aspect = VOUT_ASPECT_FACTOR *
-                                   p_sys->p_info->sequence->width /
-                                   p_sys->p_info->sequence->height;
-                    break;
-                }
-            }
-            else
-            {
-                /* Use the value provided in the MPEG sequence header */
-                if( p_sys->p_info->sequence->pixel_height > 0 )
-                {
-                    p_sys->i_aspect =
-                        ((uint64_t)p_sys->p_info->sequence->display_width) *
-                        p_sys->p_info->sequence->pixel_width *
-                        VOUT_ASPECT_FACTOR /
-                        p_sys->p_info->sequence->display_height /
-                        p_sys->p_info->sequence->pixel_height;
-                }
-                else
-                {
-                    /* Invalid aspect, assume 4:3.
-                     * This shouldn't happen and if it does it is a bug
-                     * in libmpeg2 (likely triggered by an invalid stream) */
-                    p_sys->i_aspect = VOUT_ASPECT_FACTOR * 4 / 3;
-                }
-            }
-
-            msg_Dbg( p_dec, "%dx%d, aspect %d, %u.%03u fps",
-                     p_sys->p_info->sequence->width,
-                     p_sys->p_info->sequence->height, p_sys->i_aspect,
-                     (uint32_t)((uint64_t)1001000000 * 27 /
-                         p_sys->p_info->sequence->frame_period / 1001),
-                     (uint32_t)((uint64_t)1001000000 * 27 /
-                         p_sys->p_info->sequence->frame_period % 1001) );
+            GetAR( p_dec );
 
             mpeg2_custom_fbuf( p_sys->p_mpeg2dec, 1 );
 
@@ -623,6 +583,8 @@ static picture_t *GetNewPicture( decoder_t *p_dec, uint8_t **pp_buf )
     p_dec->fmt_out.video.i_visible_height =
         p_sys->p_info->sequence->picture_height;
     p_dec->fmt_out.video.i_aspect = p_sys->i_aspect;
+    p_dec->fmt_out.video.i_sar_num = p_sys->i_sar_num;
+    p_dec->fmt_out.video.i_sar_den = p_sys->i_sar_den;
 
     if( p_sys->p_info->sequence->frame_period > 0 )
     {
@@ -656,4 +618,78 @@ static picture_t *GetNewPicture( decoder_t *p_dec, uint8_t **pp_buf )
     pp_buf[2] = p_pic->p[2].p_pixels;
 
     return p_pic;
+}
+
+/*****************************************************************************
+ * GetAR: Get aspect ratio
+ *****************************************************************************/
+static void GetAR( decoder_t *p_dec )
+{
+    decoder_sys_t *p_sys = p_dec->p_sys;
+
+    /* Check whether the input gave a particular aspect ratio */
+    if( p_dec->fmt_in.video.i_aspect )
+    {
+        p_sys->i_aspect = p_dec->fmt_in.video.i_aspect;
+        if( p_sys->i_aspect <= AR_221_1_PICTURE )
+        switch( p_sys->i_aspect )
+        {
+        case AR_4_3_PICTURE:
+            p_sys->i_aspect = VOUT_ASPECT_FACTOR * 4 / 3;
+            p_sys->i_sar_num = p_sys->p_info->sequence->picture_height * 4;
+            p_sys->i_sar_den = p_sys->p_info->sequence->picture_width * 3;
+            break;
+        case AR_16_9_PICTURE:
+            p_sys->i_aspect = VOUT_ASPECT_FACTOR * 16 / 9;
+            p_sys->i_sar_num = p_sys->p_info->sequence->picture_height * 16;
+            p_sys->i_sar_den = p_sys->p_info->sequence->picture_width * 9;
+            break;
+        case AR_221_1_PICTURE:
+            p_sys->i_aspect = VOUT_ASPECT_FACTOR * 221 / 100;
+            p_sys->i_sar_num = p_sys->p_info->sequence->picture_height * 221;
+            p_sys->i_sar_den = p_sys->p_info->sequence->picture_width * 100;
+            break;
+        case AR_SQUARE_PICTURE:
+            p_sys->i_aspect = VOUT_ASPECT_FACTOR *
+                           p_sys->p_info->sequence->picture_width /
+                           p_sys->p_info->sequence->picture_height;
+            p_sys->i_sar_num = p_sys->i_sar_den = 1;
+            break;
+        }
+    }
+    else
+    {
+        /* Use the value provided in the MPEG sequence header */
+        if( p_sys->p_info->sequence->pixel_height > 0 )
+        {
+            p_sys->i_aspect =
+                ((uint64_t)p_sys->p_info->sequence->picture_width) *
+                p_sys->p_info->sequence->pixel_width *
+                VOUT_ASPECT_FACTOR /
+                p_sys->p_info->sequence->picture_height /
+                p_sys->p_info->sequence->pixel_height;
+            p_sys->i_sar_num = p_sys->p_info->sequence->pixel_width;
+            p_sys->i_sar_den = p_sys->p_info->sequence->pixel_height;
+        }
+        else
+        {
+            /* Invalid aspect, assume 4:3.
+             * This shouldn't happen and if it does it is a bug
+             * in libmpeg2 (likely triggered by an invalid stream) */
+            p_sys->i_aspect = VOUT_ASPECT_FACTOR * 4 / 3;
+            p_sys->i_sar_num = p_sys->p_info->sequence->picture_height * 4;
+            p_sys->i_sar_den = p_sys->p_info->sequence->picture_width * 3;
+        }
+    }
+
+    msg_Dbg( p_dec, "%dx%d (display %d,%d), aspect %d, sar %i:%i, %u.%03u fps",
+             p_sys->p_info->sequence->picture_width,
+             p_sys->p_info->sequence->picture_height,
+             p_sys->p_info->sequence->display_width,
+             p_sys->p_info->sequence->display_height,
+             p_sys->i_aspect, p_sys->i_sar_num, p_sys->i_sar_den,
+             (uint32_t)((uint64_t)1001000000 * 27 /
+                 p_sys->p_info->sequence->frame_period / 1001),
+             (uint32_t)((uint64_t)1001000000 * 27 /
+                 p_sys->p_info->sequence->frame_period % 1001) );
 }

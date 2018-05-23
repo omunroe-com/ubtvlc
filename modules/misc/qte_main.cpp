@@ -1,8 +1,8 @@
 /*****************************************************************************
  * qte_main.c : QT Embedded wrapper for gte_main
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: qte_main.cpp 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: qte_main.cpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Jean-Paul Saman <jpsaman@wxs.nl>
  *

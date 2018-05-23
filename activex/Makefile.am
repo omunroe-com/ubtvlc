@@ -32,6 +32,8 @@ SOURCES_activex = \
     connectioncontainer.h \
     objectsafety.cpp \
     objectsafety.h \
+    dataobject.cpp \
+    dataobject.h \
     viewobject.cpp \
     viewobject.h \
     vlccontrol.cpp \
@@ -48,10 +50,12 @@ DIST_rsrc = \
 
 DIST_misc = \
     README.TXT \
+    axvlc.inf.in \
     axvlc.def \
     axvlc.idl \
     axvlc.tlb \
     inplace.bmp \
+    vlc16x16.bmp \
     test.html \
     $(NULL)
 
@@ -63,7 +67,7 @@ noinst_LIBRARIES_activex = libaxvlc.a
 axvlc_DATA = axvlc$(LIBEXT)
 axvlcdir = $(libdir)
 
-LDFLAGS_activex = `$(VLC_CONFIG) --libs vlc activex builtin`
+LDFLAGS_activex = `$(VLC_CONFIG) --libs activex vlc builtin`
 
 libaxvlc_a_SOURCES = $(SOURCES_activex) $(SOURCE_dll)
 libaxvlc_a_CFLAGS = `$(VLC_CONFIG) --cflags activex`
@@ -74,7 +78,7 @@ axvlc$(LIBEXT): $(libaxvlc_a_OBJECTS) \
 	              $(libaxvlc_a_DEPENDENCIES) stamp-pic
 	$(CXXLINK) $(libaxvlc_a_OBJECTS) $(DATA_axvlc_rc) \
 	-Wl,--enable-stdcall-fixup $(srcdir)/axvlc.def \
-	  $(LIBRARIES_libvlc) -shared $(LDFLAGS_activex)
+	  $(LIBRARIES_libvlc) -shared $(LDFLAGS_activex) $(LIBRARIES_libvlc) 
 
 
 DATA_axvlc_tlb = $(axvlc_tlb_DATA)

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * plugin.h: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 VideoLAN
+ * Copyright (C) 2005 the VideoLAN team
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -45,13 +45,14 @@ public:
     STDMETHODIMP_(ULONG) Release(void);
 
     /* IClassFactory methods */
-    STDMETHODIMP CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppv);
+    STDMETHODIMP CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void **ppv);
     STDMETHODIMP LockServer(BOOL fLock);
 
     LPCSTR getInPlaceWndClassName(void) const { return TEXT("VLC Plugin In-Place"); };
     LPCSTR getVideoWndClassName(void) const { return TEXT("VLC Plugin Video"); };
     HINSTANCE getHInstance(void) const { return _hinstance; };
-    HBITMAP getInPlacePict(void) const { return _inplace_hbitmap; };
+    LPPICTURE getInPlacePict(void) const
+        { if( NULL != _inplace_picture) _inplace_picture->AddRef(); return _inplace_picture; };
 
 protected:
 
@@ -63,7 +64,7 @@ private:
     HINSTANCE   _hinstance;
     ATOM        _inplace_wndclass_atom;
     ATOM        _video_wndclass_atom;
-    HBITMAP     _inplace_hbitmap;
+    LPPICTURE   _inplace_picture;
 };
 
 class VLCPlugin : public IUnknown
@@ -71,7 +72,7 @@ class VLCPlugin : public IUnknown
 
 public:
 
-    VLCPlugin(VLCPluginClass *p_class);
+    VLCPlugin(VLCPluginClass *p_class, LPUNKNOWN pUnkOuter);
 
     /* IUnknown methods */
     STDMETHODIMP QueryInterface(REFIID riid, void **ppv);
@@ -79,60 +80,118 @@ public:
     STDMETHODIMP_(ULONG) Release(void);
 
     /* custom methods */
-    HRESULT getTypeLib(LCID lcid, ITypeLib **pTL)
-        { return LoadRegTypeLib(LIBID_AXVLC, 1, 0, lcid, pTL); };
+    HRESULT getTypeLib(LCID lcid, ITypeLib **pTL) { return LoadRegTypeLib(LIBID_AXVLC, 1, 0, lcid, pTL); };
     REFCLSID getClassID(void) { return (REFCLSID)CLSID_VLCPlugin; };
     REFIID getDispEventID(void) { return (REFIID)DIID_DVLCEvents; };
 
-    HRESULT onInit(BOOL isNew);
-    HRESULT onLoad(void);
-    HRESULT onClientSiteChanged(LPOLECLIENTSITE pActiveSite);
-    HRESULT onClose(DWORD dwSaveOption);
-
-    BOOL isInPlaceActive(void);
-    HRESULT onActivateInPlace(LPMSG lpMesg, HWND hwndParent, LPCRECT lprcPosRect, LPCRECT lprcClipRect);
-    HRESULT onInPlaceDeactivate(void);
-    HWND getInPlaceWindow(void) const { return _inplacewnd; };
-
-    BOOL hasFocus(void);
-    void setFocus(BOOL fFocus);
-
-    UINT getCodePage(void) { return _codepage; };
-    void setCodePage(UINT cp) { _codepage = cp; };
-
-    int  getVLCObject(void) { return _i_vlc; };
-
-    // control properties
-    void setSourceURL(const char *url) { _psz_src = strdup(url); };
-    void setAutoStart(BOOL autostart) { _b_autostart = autostart; };
-    void setLoopMode(BOOL loopmode) { _b_loopmode = loopmode; };
-    void setMute(BOOL mute) {
-        if( mute && _i_vlc )
-        {
-            VLC_VolumeMute(_i_vlc);
-        }
+    /*
+    ** persistant properties
+    */
+    void setMRL(BSTR mrl)
+    {
+        SysFreeString(_bstr_mrl);
+        _bstr_mrl = SysAllocStringLen(mrl, SysStringLen(mrl));
+        setDirty(TRUE);
     };
-    void setSendEvents(BOOL sendevents) { _b_sendevents = sendevents; };
+    const BSTR getMRL(void) { return _bstr_mrl; };
+
+    inline void setAutoPlay(BOOL autoplay)
+    {
+        _b_autoplay = autoplay;
+        setDirty(TRUE);
+    };
+    inline BOOL getAutoPlay(void) { return _b_autoplay; };
+
+    inline void setAutoLoop(BOOL autoloop) 
+    {
+        _b_autoloop = autoloop;
+        setDirty(TRUE);
+    };
+    inline BOOL getAutoLoop(void) { return _b_autoloop;};
+
     void setVisible(BOOL fVisible);
     BOOL getVisible(void) { return _b_visible; };
 
+    // control size in HIMETRIC
+    inline void setExtent(const SIZEL& extent)
+    {
+        _extent = extent;
+        setDirty(TRUE);
+    };
+    const SIZEL& getExtent(void) { return _extent; };
+
+    // transient properties 
+    inline void setMute(BOOL mute) { _b_mute = mute; };
+
+    inline void setPicture(LPPICTURE pict)
+    {
+        if( NULL != _p_pict )
+            _p_pict->Release();
+        if( NULL != pict )
+            _p_pict->AddRef();
+        _p_pict = pict;
+    };
+
+    inline LPPICTURE getPicture(void)
+    {
+        if( NULL != _p_pict )
+            _p_pict->AddRef();
+        return _p_pict;
+    };
     
-    // container events
+    BOOL hasFocus(void);
+    void setFocus(BOOL fFocus);
+
+    inline UINT getCodePage(void) { return _i_codepage; };
+    inline void setCodePage(UINT cp)
+    {
+        // accept new codepage only if it works on this system
+        size_t mblen = WideCharToMultiByte(cp,
+                0, L"test", -1, NULL, 0, NULL, NULL);
+        if( mblen > 0 )
+            _i_codepage = cp;
+    };
+
+    inline BOOL isUserMode(void) { return _b_usermode; };
+    inline void setUserMode(BOOL um) { _b_usermode = um; };
+
+    inline BOOL isDirty(void) { return _b_dirty; };
+    inline void setDirty(BOOL dirty) { _b_dirty = dirty; };
+
+    inline BOOL isRunning(void) { return 0 != _i_vlc; };
+
+    // control geometry within container
+    RECT getPosRect(void) { return _posRect; }; 
+    inline HWND getInPlaceWindow(void) const { return _inplacewnd; };
+    BOOL isInPlaceActive(void);
+
+    inline int getVLCObject(void) const { return _i_vlc; };
+
+    /*
+    ** container events
+    */
+    HRESULT onInit(void);
+    HRESULT onLoad(void);
+    HRESULT onActivateInPlace(LPMSG lpMesg, HWND hwndParent, LPCRECT lprcPosRect, LPCRECT lprcClipRect);
+    HRESULT onInPlaceDeactivate(void);
+    HRESULT onAmbientChanged(LPUNKNOWN pContainer, DISPID dispID);
+    HRESULT onClose(DWORD dwSaveOption);
     void onPositionChange(LPCRECT lprcPosRect, LPCRECT lprcClipRect);
+    void onDraw(DVTARGETDEVICE * ptd, HDC hicTargetDev,
+            HDC hdcDraw, LPCRECTL lprcBounds, LPCRECTL lprcWBounds);
     void onPaint(HDC hdc, const RECT &bounds, const RECT &pr);
 
-    // control events
+    /*
+    ** control events
+    */
+    void freezeEvents(BOOL freeze);
     void firePropChangedEvent(DISPID dispid);
     void fireOnPlayEvent(void);
     void fireOnPauseEvent(void);
     void fireOnStopEvent(void);
 
-    // control size in HIMETRIC
-    const SIZEL& getExtent(void) { return _extent; };
-    void  setExtent(const SIZEL& extent) { _extent = extent; };
-
-    // control geometry within container
-    RECT getPosRect(void) { return _posRect; }; 
+    // controlling IUnknown interface
+    LPUNKNOWN pUnkOuter;
 
 protected:
 
@@ -153,6 +212,7 @@ private:
     class VLCObjectSafety *vlcObjectSafety;
     class VLCControl *vlcControl;
     class VLCViewObject *vlcViewObject;
+    class VLCDataObject *vlcDataObject;
 
     // in place activated window (Clipping window)
     HWND _inplacewnd;
@@ -162,12 +222,15 @@ private:
     VLCPluginClass *_p_class;
     ULONG _i_ref;
 
-    UINT _codepage;
-    char *_psz_src;
-    BOOL _b_autostart;
-    BOOL _b_loopmode;
+    LPPICTURE _p_pict;
+    UINT _i_codepage;
+    BOOL _b_usermode;
+    BSTR _bstr_mrl;
+    BOOL _b_autoplay;
+    BOOL _b_autoloop;
     BOOL _b_visible;
-    BOOL _b_sendevents;
+    BOOL _b_mute;
+    BOOL _b_dirty;
     int  _i_vlc;
 
     SIZEL _extent;

@@ -1,10 +1,10 @@
 /*****************************************************************************
  * mem_stream.c: stream_t wrapper around memory buffer
  *****************************************************************************
- * Copyright (C) 1999-2004 VideoLAN
+ * Copyright (C) 1999-2004 the VideoLAN team
  * $Id: stream.c 9390 2004-11-22 09:56:48Z fenrir $
  *
- * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
+ * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

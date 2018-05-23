@@ -1,8 +1,8 @@
 /*****************************************************************************
  * pes.c: PES packetizer used by the MPEG multiplexers
  *****************************************************************************
- * Copyright (C) 2001, 2002 VideoLAN
- * $Id: pes.c 10731 2005-04-18 15:32:31Z gbazin $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id: pes.c 12798 2005-10-09 17:01:08Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -64,7 +64,6 @@ static inline int PESHeader( uint8_t *p_hdr, mtime_t i_pts, mtime_t i_dts,
             i_extra += 3;
         }
     }
-
 
     bits_initwrite( &bits, 50, p_hdr );
 
@@ -255,6 +254,15 @@ int E_( EStoPES )( sout_instance_t *p_sout, block_t **pp_pes, block_t *p_es,
         i_stream_id  = PES_PRIVATE_STREAM_1;
     }
 
+    if( p_fmt->i_codec == VLC_FOURCC( 'm', 'p','4', 'v' ) &&
+        p_es->i_flags & BLOCK_FLAG_TYPE_I )
+    {
+        /* For MPEG4 video, add VOL before I-frames */
+        p_es = block_Realloc( p_es, p_fmt->i_extra, p_es->i_buffer );
+
+        memcpy( p_es->p_buffer, p_fmt->p_extra, p_fmt->i_extra );
+    }
+
     i_pts = p_es->i_pts <= 0 ? 0 : p_es->i_pts * 9 / 100; // 90000 units clock
     i_dts = p_es->i_dts <= 0 ? 0 : p_es->i_dts * 9 / 100; // 90000 units clock
 
@@ -262,6 +270,10 @@ int E_( EStoPES )( sout_instance_t *p_sout, block_t **pp_pes, block_t *p_es,
     p_data = p_es->p_buffer;
 
     *pp_pes = p_pes = NULL;
+
+#ifdef DEBUG
+    memset( header, 0, 50 );
+#endif
 
     do
     {

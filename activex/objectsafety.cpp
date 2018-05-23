@@ -1,7 +1,7 @@
 /*****************************************************************************
  * objectsafety.cpp: ActiveX control for VLC
  *****************************************************************************
- * Copyright (C) 2005 VideoLAN
+ * Copyright (C) 2005 the VideoLAN team
  *
  * Authors: Damien Fouilleul <Damien.Fouilleul@laposte.net>
  *
@@ -29,6 +29,8 @@
 const GUID IID_IObjectSafety = 
     {0xCB5BDC81,0x93C1,0x11cf,{0x8F,0x20,0x00,0x80,0x5F,0x2C,0xD0,0x64}}; 
 #endif
+
+using namespace std;
 
 STDMETHODIMP VLCObjectSafety::GetInterfaceSafetyOptions(      
     REFIID riid,

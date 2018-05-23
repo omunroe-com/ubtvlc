@@ -1,8 +1,8 @@
 /*****************************************************************************
  * memcpyaltivec.c : AltiVec memcpy module
  *****************************************************************************
- * Copyright (C) 2001 VideoLAN
- * $Id: memcpyaltivec.c 10101 2005-03-02 16:47:31Z robux4 $
+ * Copyright (C) 2001 the VideoLAN team
+ * $Id: memcpyaltivec.c 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Author: Christophe Massiot <massiot@via.ecp.fr>
  *

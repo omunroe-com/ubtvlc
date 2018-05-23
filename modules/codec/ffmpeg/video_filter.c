@@ -2,8 +2,8 @@
  * video filter: video filter doing chroma conversion and resizing
  *               using the ffmpeg library
  *****************************************************************************
- * Copyright (C) 1999-2001 VideoLAN
- * $Id: video_filter.c 10391 2005-03-19 12:20:57Z gbazin $
+ * Copyright (C) 1999-2001 the VideoLAN team
+ * $Id: video_filter.c 12082 2005-08-09 13:42:11Z jpsaman $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -328,9 +328,9 @@ static picture_t *Process( filter_t *p_filter, picture_t *p_pic )
         int i_src_pitch = p_pic->p[0].i_pitch;
         uint8_t *p_dst = p_pic_dst->p[3].p_pixels;
         int i_dst_pitch = p_pic_dst->p[3].i_pitch;
-        int j;
+        uint32_t l,j;
 
-        for( i = 0; i < p_filter->fmt_out.video.i_height; i++ )
+        for( l = 0; l < p_filter->fmt_out.video.i_height; l++ )
         {
             for( j = 0; j < p_filter->fmt_out.video.i_width; j++ )
             {

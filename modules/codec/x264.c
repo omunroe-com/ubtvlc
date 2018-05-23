@@ -1,8 +1,8 @@
 /*****************************************************************************
  * x264.c: h264 video encoder
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: x264.c 11330 2005-06-07 12:33:58Z gbazin $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: x264.c 13388 2005-11-26 00:07:02Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -118,13 +118,45 @@ static void Close( vlc_object_t * );
     "tradeoffs involved in the motion estimation decision process " \
     "(lower = quicker and higher = better quality)." )
 
+#define ME_TEXT N_("Motion estimation algorithm.")
+#define ME_LONGTEXT N_( "Selects the motion estimation algorithm: "\
+    " dia - diamond (fastest) \n" \
+    " hex - hexagon (default setting) \n" \
+    " umh - uneven multi-hexagon (better but slower) \n" \
+    " esa - exhaustive search (extremely slow, primarily for testing) " )
+
+#define MERANGE_TEXT N_("Motion estimation search range.")
+#define MERANGE_LONGTEXT N_( "Maximum distance to search for motion estimation, "\
+    "measured from predicted position(s). Default of 16 is good for most footage, "\
+    "high motion sequences may benefit from settings between 24-32." )
+
+#define NO_PSNR_TEXT N_("Disable PSNR calculation.")
+#define NO_PSNR_LONGTEXT N_( "This has no effect on actual encoding quality, "\
+    "it just prevents the stats from being calculated (for speed)." )
+
+#define NO_B_ADAPT_TEXT N_("Disable adaptive B-frames.")
+#define NO_B_ADAPT_LONGTEXT N_( "If this is on, the specified number of consequtive B-frames "\
+    "will always be used, except possibly before an I-frame. " )
+
+#define B_BIAS_TEXT N_("Bias the choice to use B-frames.")
+#define B_BIAS_LONGTEXT N_( "Positive values cause more= B-frames, negative values cause less B-frames. " )
+
+
+#if X264_BUILD >= 23
+static char *enc_me_list[] =
+  { "", "dia", "hex", "umh", "esa" };
+static char *enc_me_list_text[] =
+  { N_("default"), N_("dia"), N_("hex"), N_("umh"), N_("esa") };
+#endif
+
 static char *enc_analyse_list[] =
   { "", "all", "normal", "fast", "none" };
 static char *enc_analyse_list_text[] =
-  { N_("default"), N_("all"), N_("normal"), N_("fast"), N_("none") };
+  { N_("default"), N_("all"), N_("slow"), N_("normal"),
+    N_("fast"), N_("none") };
 
 vlc_module_begin();
-    set_description( _("h264 video encoder using x264 library"));
+    set_description( _("H264 encoder (using x264 library)"));
     set_capability( "encoder", 200 );
     set_callbacks( Open, Close );
     set_category( CAT_INPUT );
@@ -185,9 +217,38 @@ vlc_module_begin();
                  SCENE_LONGTEXT, VLC_FALSE );
         change_integer_range( -1, 100 );
 
+#if X264_BUILD >= 30
+    add_integer( SOUT_CFG_PREFIX "subpel", 6, NULL, SUBPEL_TEXT,
+                 SUBPEL_LONGTEXT, VLC_FALSE );
+        change_integer_range( 1, 6 );
+#else
     add_integer( SOUT_CFG_PREFIX "subpel", 5, NULL, SUBPEL_TEXT,
                  SUBPEL_LONGTEXT, VLC_FALSE );
         change_integer_range( 1, 5 );
+#endif
+
+#if X264_BUILD >= 23
+/* r221 */    add_string( SOUT_CFG_PREFIX "me", "hex", NULL, ME_TEXT,
+                ME_LONGTEXT, VLC_FALSE );
+        change_string_list( enc_me_list, enc_me_list_text, 0 );
+
+/* r221 */    add_integer( SOUT_CFG_PREFIX "merange", 16, NULL, MERANGE_TEXT,
+                 MERANGE_LONGTEXT, VLC_FALSE );
+        change_integer_range( 1, 64 );
+#endif
+
+/* r44 */    add_bool( SOUT_CFG_PREFIX "no-psnr", 0, NULL, NO_PSNR_TEXT,
+              NO_PSNR_LONGTEXT, VLC_FALSE );
+
+#if X264_BUILD >= 0x0013
+/* r137 */    add_bool( SOUT_CFG_PREFIX "no-b-adapt", 0, NULL, NO_B_ADAPT_TEXT,
+              NO_B_ADAPT_LONGTEXT, VLC_FALSE );
+
+/* r137 */    add_integer( SOUT_CFG_PREFIX "b-bias", 0, NULL, B_BIAS_TEXT,
+                 B_BIAS_LONGTEXT, VLC_FALSE );
+        change_integer_range( -100, 100 );
+#endif
+
 
 vlc_module_end();
 
@@ -197,7 +258,8 @@ vlc_module_end();
 static const char *ppsz_sout_options[] = {
     "qp", "qp-min", "qp-max", "cabac", "loopfilter", "analyse",
     "keyint", "keyint-min", "bframes", "bpyramid", "frameref", "scenecut",
-    "subpel", "tolerance", "vbv-maxrate", "vbv-bufsize", "vbv-init", NULL
+    "subpel", "me", "merange", "no-psnr", "no-b-adapt", "b-bias", "tolerance", 
+    "vbv-maxrate", "vbv-bufsize", "vbv-init", NULL
 };
 
 static block_t *Encode( encoder_t *, picture_t * );
@@ -229,6 +291,7 @@ static int  Open ( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
 
+#if X264_BUILD < 37
     if( p_enc->fmt_in.video.i_width % 16 != 0 ||
         p_enc->fmt_in.video.i_height % 16!= 0 )
     {
@@ -246,6 +309,7 @@ static int  Open ( vlc_object_t *p_this )
                   p_enc->fmt_in.video.i_width >> 4 << 4,
                   p_enc->fmt_in.video.i_height >> 4 << 4 );
     }
+#endif
 
     sout_CfgParse( p_enc, SOUT_CFG_PREFIX, ppsz_sout_options, p_enc->p_cfg );
 
@@ -258,8 +322,12 @@ static int  Open ( vlc_object_t *p_this )
     p_sys->i_last_ref_pts = 0;
 
     x264_param_default( &p_sys->param );
-    p_sys->param.i_width  = p_enc->fmt_in.video.i_width >> 4 << 4;
-    p_sys->param.i_height = p_enc->fmt_in.video.i_height >> 4 << 4;
+    p_sys->param.i_width  = p_enc->fmt_in.video.i_width;
+    p_sys->param.i_height = p_enc->fmt_in.video.i_height;
+#if X264_BUILD < 37
+    p_sys->param.i_width  = p_sys->param.i_width >> 4 << 4;
+    p_sys->param.i_height = p_sys->param.i_height >> 4 << 4;
+#endif
 
     var_Get( p_enc, SOUT_CFG_PREFIX "qp-min", &val );
     if( val.i_int >= 1 && val.i_int <= 51 ) i_qmin = val.i_int;
@@ -349,10 +417,53 @@ static int  Open ( vlc_object_t *p_this )
 
 #if X264_BUILD >= 22
     var_Get( p_enc, SOUT_CFG_PREFIX "subpel", &val );
+#if X264_BUILD >= 30
+    if( val.i_int >= 1 && val.i_int <= 6 )
+#else
     if( val.i_int >= 1 && val.i_int <= 5 )
+#endif
         p_sys->param.analyse.i_subpel_refine = val.i_int;
 #endif
 
+#if X264_BUILD >= 23
+    var_Get( p_enc, SOUT_CFG_PREFIX "me", &val );
+    if( !strcmp( val.psz_string, "dia" ) )
+    {
+        p_sys->param.analyse.i_me_method = X264_ME_DIA;
+    }
+    else if( !strcmp( val.psz_string, "hex" ) )
+    {
+        p_sys->param.analyse.i_me_method = X264_ME_HEX;
+    }
+    else if( !strcmp( val.psz_string, "umh" ) )
+    {
+        p_sys->param.analyse.i_me_method = X264_ME_UMH;
+    }
+    else if( !strcmp( val.psz_string, "esa" ) )
+    {
+        p_sys->param.analyse.i_me_method = X264_ME_ESA;
+    }
+    if( val.psz_string ) free( val.psz_string );
+
+    var_Get( p_enc, SOUT_CFG_PREFIX "merange", &val );
+    if( val.i_int >= 1 && val.i_int <= 64 ) p_sys->param.analyse.i_me_range = val.i_int;
+#endif
+
+    var_Get( p_enc, SOUT_CFG_PREFIX "no-psnr", &val );
+    p_sys->param.analyse.b_psnr = ! val.b_bool;
+
+#if X264_BUILD >= 0x0013
+    var_Get( p_enc, SOUT_CFG_PREFIX "no-b-adapt", &val );
+    p_sys->param.b_bframe_adaptive = ! val.b_bool;
+
+    var_Get( p_enc, SOUT_CFG_PREFIX "b-bias", &val );
+    if( val.i_int >= -100 && val.i_int <= 100 )
+        p_sys->param.i_bframe_bias = val.i_int;
+#endif
+
+#ifndef X264_ANALYSE_BSUB16x16
+#   define X264_ANALYSE_BSUB16x16 0
+#endif
     var_Get( p_enc, SOUT_CFG_PREFIX "analyse", &val );
     if( !strcmp( val.psz_string, "none" ) )
     {
@@ -367,14 +478,23 @@ static int  Open ( vlc_object_t *p_this )
         p_sys->param.analyse.inter =
             X264_ANALYSE_I4x4 | X264_ANALYSE_PSUB16x16;
     }
+    else if( !strcmp( val.psz_string, "slow" ) )
+    {
+        p_sys->param.analyse.inter =
+            X264_ANALYSE_I4x4 |
+            X264_ANALYSE_PSUB16x16 | X264_ANALYSE_PSUB8x8 |
+            X264_ANALYSE_BSUB16x16;
+    }
     else if( !strcmp( val.psz_string, "all" ) )
     {
-#ifndef X264_ANALYSE_BSUB16x16
-#   define X264_ANALYSE_BSUB16x16 0
-#endif
         p_sys->param.analyse.inter =
-            X264_ANALYSE_I4x4 | X264_ANALYSE_PSUB16x16 | X264_ANALYSE_PSUB8x8 |
+            X264_ANALYSE_I4x4 |
+            X264_ANALYSE_PSUB16x16 | X264_ANALYSE_PSUB8x8 |
             X264_ANALYSE_BSUB16x16;
+#ifdef X264_ANALYSE_I8x8
+        p_sys->param.analyse.inter |= X264_ANALYSE_I8x8;
+        p_sys->param.analyse.b_transform_8x8 = 1;
+#endif
     }
     if( val.psz_string ) free( val.psz_string );
 
@@ -386,7 +506,7 @@ static int  Open ( vlc_object_t *p_this )
         i_num = p_enc->fmt_in.video.i_aspect *
             (int64_t)p_enc->fmt_in.video.i_height;
         i_den = VOUT_ASPECT_FACTOR * p_enc->fmt_in.video.i_width;
-        vlc_reduce( &i_dst_num, &i_dst_den, i_num, i_den, 0 );
+        vlc_ureduce( &i_dst_num, &i_dst_den, i_num, i_den, 0 );
 
         p_sys->param.vui.i_sar_width = i_dst_num;
         p_sys->param.vui.i_sar_height = i_dst_den;
@@ -531,7 +651,7 @@ static block_t *Encode( encoder_t *p_enc, picture_t *p_pict )
 }
 
 /*****************************************************************************
- * CloseEncoder: ffmpeg encoder destruction
+ * CloseEncoder: x264 encoder destruction
  *****************************************************************************/
 static void Close( vlc_object_t *p_this )
 {

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * araw.c: Pseudo audio decoder; for raw pcm data
  *****************************************************************************
- * Copyright (C) 2001, 2003 VideoLAN
- * $Id: araw.c 10380 2005-03-17 21:50:29Z gbazin $
+ * Copyright (C) 2001, 2003 the VideoLAN team
+ * $Id: araw.c 12741 2005-10-02 12:22:29Z jpsaman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -59,7 +59,9 @@ vlc_module_end();
  * Local prototypes
  *****************************************************************************/
 static aout_buffer_t *DecodeBlock( decoder_t *, block_t ** );
+#ifdef ENABLE_SOUT
 static block_t *EncoderEncode( encoder_t *, aout_buffer_t * );
+#endif
 
 struct decoder_sys_t
 {

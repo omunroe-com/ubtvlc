@@ -1,8 +1,8 @@
 /*****************************************************************************
  * libmp4.c : LibMP4 library for mp4 module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2004 VideoLAN
- * $Id: libmp4.c 10750 2005-04-20 10:41:11Z gbazin $
+ * Copyright (C) 2001-2004 the VideoLAN team
+ * $Id: libmp4.c 12770 2005-10-06 19:12:22Z fenrir $
  *
  * Author: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -1003,7 +1003,7 @@ static int MP4_ReadBox_avcC( stream_t *p_stream, MP4_Box_t *p_box )
     }
 #ifdef MP4_VERBOSE
     msg_Dbg( p_stream,
-             "read box: \"avcC\" version=%d profile=0x%x level=0x%x lengh size=%d sps=%d pps=%d",
+             "read box: \"avcC\" version=%d profile=0x%x level=0x%x length size=%d sps=%d pps=%d",
              p_avcC->i_version, p_avcC->i_profile, p_avcC->i_level,
              p_avcC->i_length_size,
              p_avcC->i_sps, p_avcC->i_pps );
@@ -1087,10 +1087,9 @@ static int MP4_ReadBox_sample_soun( stream_t *p_stream, MP4_Box_t *p_box )
     MP4_GET2BYTES( p_box->data.p_sample_soun->i_sampleratehi );
     MP4_GET2BYTES( p_box->data.p_sample_soun->i_sampleratelo );
 
-    if( p_box->data.p_sample_soun->i_qt_version == 1 &&
-        i_read >= 16 )
+    if( p_box->data.p_sample_soun->i_qt_version == 1 && i_read >= 16 )
     {
-        /* qt3+ */
+        /* SoundDescriptionV1 */
         MP4_GET4BYTES( p_box->data.p_sample_soun->i_sample_per_packet );
         MP4_GET4BYTES( p_box->data.p_sample_soun->i_bytes_per_packet );
         MP4_GET4BYTES( p_box->data.p_sample_soun->i_bytes_per_frame );
@@ -1107,6 +1106,28 @@ static int MP4_ReadBox_sample_soun( stream_t *p_stream, MP4_Box_t *p_box )
 #endif
         stream_Seek( p_stream, p_box->i_pos +
                         MP4_BOX_HEADERSIZE( p_box ) + 44 );
+    }
+    else if( p_box->data.p_sample_soun->i_qt_version == 2 && i_read >= 36 )
+    {
+        /* SoundDescriptionV2 */
+        double f_sample_rate;
+        uint32_t i_channel;
+
+        MP4_GET4BYTES( p_box->data.p_sample_soun->i_sample_per_packet );
+        MP4_GET8BYTES( (*(int64_t *)&f_sample_rate) );
+
+        msg_Dbg( p_stream, "read box: %f Hz", f_sample_rate );
+        p_box->data.p_sample_soun->i_sampleratehi = (int)f_sample_rate % 65536;
+        p_box->data.p_sample_soun->i_sampleratelo = f_sample_rate / 65536;
+
+        MP4_GET4BYTES( i_channel );
+        p_box->data.p_sample_soun->i_channelcount = i_channel;
+
+#ifdef MP4_VERBOSE
+        msg_Dbg( p_stream, "read box: \"soun\" V2" );
+#endif
+        stream_Seek( p_stream, p_box->i_pos +
+                        MP4_BOX_HEADERSIZE( p_box ) + 28 + 36 );
     }
     else
     {
@@ -1259,45 +1280,89 @@ static int MP4_ReadBox_sample_mp4s( stream_t *p_stream, MP4_Box_t *p_box )
 static int MP4_ReadBox_sample_text( stream_t *p_stream, MP4_Box_t *p_box )
 {
     unsigned int i;
+    int32_t t;
 
     MP4_READBOX_ENTER( MP4_Box_data_sample_text_t );
 
-    for( i = 0; i < 6 ; i++ )
-    {
-        MP4_GET1BYTE( p_box->data.p_sample_text->i_reserved1[i] );
-    }
+    MP4_GET4BYTES( p_box->data.p_sample_text->i_reserved1 );
+    MP4_GET2BYTES( p_box->data.p_sample_text->i_reserved2 );
+
     MP4_GET2BYTES( p_box->data.p_sample_text->i_data_reference_index );
 
     MP4_GET4BYTES( p_box->data.p_sample_text->i_display_flags );
-    MP4_GET4BYTES( p_box->data.p_sample_text->i_justification );
+
+    MP4_GET4BYTES( t );
+    switch( t )
+    {
+        /* FIXME search right signification */
+        case 1: // Center
+            p_box->data.p_sample_text->i_justification_horizontal = 1;
+            p_box->data.p_sample_text->i_justification_vertical = 1;
+            break;
+        case -1:    // Flush Right
+            p_box->data.p_sample_text->i_justification_horizontal = -1;
+            p_box->data.p_sample_text->i_justification_vertical = -1;
+            break;
+        case -2:    // Flush Left
+            p_box->data.p_sample_text->i_justification_horizontal = 0;
+            p_box->data.p_sample_text->i_justification_vertical = 0;
+            break;
+        case 0: // Flush Default
+        default:
+            p_box->data.p_sample_text->i_justification_horizontal = 1;
+            p_box->data.p_sample_text->i_justification_vertical = -1;
+            break;
+    }
 
     MP4_GET2BYTES( p_box->data.p_sample_text->i_background_color[0] );
     MP4_GET2BYTES( p_box->data.p_sample_text->i_background_color[1] );
     MP4_GET2BYTES( p_box->data.p_sample_text->i_background_color[2] );
+    p_box->data.p_sample_text->i_background_color[3] = 0;
 
-    MP4_GET8BYTES( p_box->data.p_sample_text->i_text_box );
-    MP4_GET8BYTES( p_box->data.p_sample_text->i_reserved2 );
-
-    MP4_GET2BYTES( p_box->data.p_sample_text->i_font_number );
-    MP4_GET2BYTES( p_box->data.p_sample_text->i_font_face );
-
-    MP4_GET2BYTES( p_box->data.p_sample_text->i_reserved3 );
-
-    MP4_GET2BYTES( p_box->data.p_sample_text->i_foreground_color[0] );
-    MP4_GET2BYTES( p_box->data.p_sample_text->i_foreground_color[1] );
-    MP4_GET2BYTES( p_box->data.p_sample_text->i_foreground_color[2] );
-
-    MP4_GET1BYTE( i );
-    p_box->data.p_sample_text->psz_text_name = malloc( i + 1 );
-    memcpy( p_box->data.p_sample_text->psz_text_name, p_peek, i );
-    p_box->data.p_sample_text->psz_text_name[i] = '\0';
+    MP4_GET2BYTES( p_box->data.p_sample_text->i_text_box_top );
+    MP4_GET2BYTES( p_box->data.p_sample_text->i_text_box_left );
+    MP4_GET2BYTES( p_box->data.p_sample_text->i_text_box_bottom );
+    MP4_GET2BYTES( p_box->data.p_sample_text->i_text_box_right );
 
 #ifdef MP4_VERBOSE
-    msg_Dbg( p_stream, "read box: \"text\" in stsd text name=%s",
-             p_box->data.p_sample_text->psz_text_name );
+    msg_Dbg( p_stream, "read box: \"text\" in stsd text" );
 #endif
     MP4_READBOX_EXIT( 1 );
 }
+
+static int MP4_ReadBox_sample_tx3g( stream_t *p_stream, MP4_Box_t *p_box )
+{
+    unsigned int i;
+    int32_t t;
+
+    MP4_READBOX_ENTER( MP4_Box_data_sample_text_t );
+
+    MP4_GET4BYTES( p_box->data.p_sample_text->i_reserved1 );
+    MP4_GET2BYTES( p_box->data.p_sample_text->i_reserved2 );
+
+    MP4_GET2BYTES( p_box->data.p_sample_text->i_data_reference_index );
+
+    MP4_GET4BYTES( p_box->data.p_sample_text->i_display_flags );
+
+    MP4_GET1BYTE ( p_box->data.p_sample_text->i_justification_horizontal );
+    MP4_GET1BYTE ( p_box->data.p_sample_text->i_justification_vertical );
+
+    MP4_GET1BYTE ( p_box->data.p_sample_text->i_background_color[0] );
+    MP4_GET1BYTE ( p_box->data.p_sample_text->i_background_color[1] );
+    MP4_GET1BYTE ( p_box->data.p_sample_text->i_background_color[2] );
+    MP4_GET1BYTE ( p_box->data.p_sample_text->i_background_color[3] );
+
+    MP4_GET2BYTES( p_box->data.p_sample_text->i_text_box_top );
+    MP4_GET2BYTES( p_box->data.p_sample_text->i_text_box_left );
+    MP4_GET2BYTES( p_box->data.p_sample_text->i_text_box_bottom );
+    MP4_GET2BYTES( p_box->data.p_sample_text->i_text_box_right );
+
+#ifdef MP4_VERBOSE
+    msg_Dbg( p_stream, "read box: \"text\" in stsd text" );
+#endif
+    MP4_READBOX_EXIT( 1 );
+}
+
 
 #if 0
 /* We can't easily call it, and anyway ~ 20 bytes lost isn't a real problem */
@@ -2045,6 +2110,8 @@ static int MP4_ReadBox_default( stream_t *p_stream, MP4_Box_t *p_box )
                 return MP4_ReadBox_sample_vide( p_stream, p_box );
             case FOURCC_text:
                 return MP4_ReadBox_sample_text( p_stream, p_box );
+            case FOURCC_tx3g:
+                return MP4_ReadBox_sample_tx3g( p_stream, p_box );
             default:
                 msg_Warn( p_stream,
                           "unknown handler type in stsd (uncompletetly loaded)" );
@@ -2172,6 +2239,8 @@ static struct
     { FOURCC_mjpa,  MP4_ReadBox_sample_vide,    MP4_FreeBox_sample_vide },
     { FOURCC_mjpb,  MP4_ReadBox_sample_vide,    MP4_FreeBox_sample_vide },
     { FOURCC_qdrw,  MP4_ReadBox_sample_vide,    MP4_FreeBox_sample_vide },
+    { FOURCC_mp2v,  MP4_ReadBox_sample_vide,    MP4_FreeBox_sample_vide },
+    { FOURCC_hdv2,  MP4_ReadBox_sample_vide,    MP4_FreeBox_sample_vide },
 
     { FOURCC_mjqt,  MP4_ReadBox_default,        NULL }, /* found in mjpa/b */
     { FOURCC_mjht,  MP4_ReadBox_default,        NULL },

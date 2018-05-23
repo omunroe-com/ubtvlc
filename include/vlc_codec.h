@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_codec.h: codec related structures
  *****************************************************************************
- * Copyright (C) 1999-2003 VideoLAN
- * $Id: vlc_codec.h 11084 2005-05-20 17:54:10Z massiot $
+ * Copyright (C) 1999-2003 the VideoLAN team
+ * $Id: vlc_codec.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *

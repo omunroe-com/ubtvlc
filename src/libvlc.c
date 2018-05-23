@@ -1,8 +1,8 @@
 /*****************************************************************************
  * libvlc.c: main libvlc source
  *****************************************************************************
- * Copyright (C) 1998-2004 VideoLAN
- * $Id: libvlc.c 11209 2005-05-31 17:48:47Z xtophe $
+ * Copyright (C) 1998-2004 the VideoLAN team
+ * $Id: libvlc.c 13254 2005-11-15 14:52:19Z damienf $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -78,6 +78,7 @@
 #include "video_output.h"
 
 #include "stream_output.h"
+#include "charset.h"
 
 #include "libvlc.h"
 
@@ -91,6 +92,8 @@ static vlc_t *    p_static_vlc;
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
+static void LocaleInit( void );
+static void LocaleDeinit( void );
 static void SetLanguage   ( char const * );
 static int  GetFilenames  ( vlc_t *, int, char *[] );
 static void Help          ( vlc_t *, char const *psz_help_name );
@@ -133,6 +136,27 @@ vlc_t * vlc_current_object( int i_object )
 char const * VLC_Version( void )
 {
     return VERSION_MESSAGE;
+}
+
+/*****************************************************************************
+ * VLC_CompileBy, VLC_CompileHost, VLC_CompileDomain,
+ * VLC_Compiler, VLC_Changeset
+ *****************************************************************************/
+#define DECLARE_VLC_VERSION( func, var )                                    \
+char const * VLC_##func ( void )                                            \
+{                                                                           \
+    return VLC_##var ;                                                      \
+}
+
+DECLARE_VLC_VERSION( CompileBy, COMPILE_BY );
+DECLARE_VLC_VERSION( CompileHost, COMPILE_HOST );
+DECLARE_VLC_VERSION( CompileDomain, COMPILE_DOMAIN );
+DECLARE_VLC_VERSION( Compiler, COMPILER );
+
+extern const char psz_vlc_changeset[];
+char const * VLC_Changeset( void )
+{
+    return psz_vlc_changeset;
 }
 
 /*****************************************************************************
@@ -201,6 +225,9 @@ int VLC_Create( void )
         libvlc.p_module_bank = NULL;
 
         libvlc.b_ready = VLC_TRUE;
+
+        /* UTF-8 convertor are initialized after the locale */
+        libvlc.from_locale = libvlc.to_locale = (vlc_iconv_t)(-1);
     }
     vlc_mutex_unlock( lockval.p_address );
     var_Destroy( p_libvlc, "libvlc" );
@@ -247,11 +274,16 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     char *       psz_modules;
     char *       psz_parser;
     char *       psz_control;
-    char *       psz_language;
     vlc_bool_t   b_exit = VLC_FALSE;
+    int          i_ret = VLC_EEXIT;
     vlc_t *      p_vlc = vlc_current_object( i_object );
     module_t    *p_help_module;
     playlist_t  *p_playlist;
+    vlc_value_t  val;
+#if defined( ENABLE_NLS ) \
+     && ( defined( HAVE_GETTEXT ) || defined( HAVE_INCLUDED_GETTEXT ) )
+    char *       psz_language;
+#endif
 
     if( !p_vlc )
     {
@@ -282,6 +314,12 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
      * Support for gettext
      */
     SetLanguage( "" );
+
+    /*
+     * Global iconv, must be done after setlocale()
+     * so that vlc_current_charset() works.
+     */
+    LocaleInit();
 
     /* Translate "C" to the language code: "fr", "en_GB", "nl", "ru"... */
     msg_Dbg( p_vlc, "translation test: code is \"%s\"", _("C") );
@@ -321,17 +359,33 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     {
         Help( p_vlc, "help" );
         b_exit = VLC_TRUE;
+        i_ret = VLC_EEXITSUCCESS;
     }
     /* Check for version option */
     else if( config_GetInt( p_vlc, "version" ) )
     {
         Version();
         b_exit = VLC_TRUE;
+        i_ret = VLC_EEXITSUCCESS;
     }
 
     /* Set the config file stuff */
     p_vlc->psz_homedir = config_GetHomeDir();
+    p_vlc->psz_userdir = config_GetUserDir();
+    if( p_vlc->psz_userdir == NULL )
+        p_vlc->psz_userdir = strdup(p_vlc->psz_homedir);
     p_vlc->psz_configfile = config_GetPsz( p_vlc, "config" );
+    if( p_vlc->psz_configfile != NULL && p_vlc->psz_configfile[0] == '~'
+         && p_vlc->psz_configfile[1] == '/' )
+    {
+        char *psz = malloc( strlen(p_vlc->psz_userdir)
+                             + strlen(p_vlc->psz_configfile) );
+        /* This is incomplete : we should also support the ~cmassiot/ syntax. */
+        sprintf( psz, "%s/%s", p_vlc->psz_userdir,
+                               p_vlc->psz_configfile + 2 );
+        free( p_vlc->psz_configfile );
+        p_vlc->psz_configfile = psz;
+    }
 
     /* Check for plugins cache options */
     if( config_GetInt( p_vlc, "reset-plugins-cache" ) )
@@ -351,7 +405,7 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     if( config_GetInt( p_vlc, "daemon" ) )
     {
 #if HAVE_DAEMON
-        if( daemon( 0, 0) != 0 )
+        if( daemon( 1, 0) != 0 )
         {
             msg_Err( p_vlc, "Unable to fork vlc to daemon mode" );
             b_exit = VLC_TRUE;
@@ -372,6 +426,7 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
             /* This is the parent, exit right now */
             msg_Dbg( p_vlc, "closing parent process" );
             b_exit = VLC_TRUE;
+            i_ret = VLC_EEXITSUCCESS;
         }
         else
         {
@@ -393,7 +448,7 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
         vlc_object_destroy( p_help_module );
         module_EndBank( p_vlc );
         if( i_object ) vlc_object_release( p_vlc );
-        return VLC_EEXIT;
+        return i_ret;
     }
 
     /* Check for translation config option */
@@ -413,15 +468,11 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
 
         /* Reset the default domain */
         SetLanguage( psz_language );
+        LocaleDeinit();
+        LocaleInit();
 
         /* Translate "C" to the language code: "fr", "en_GB", "nl", "ru"... */
         msg_Dbg( p_vlc, "translation test: code is \"%s\"", _("C") );
-
-        textdomain( PACKAGE_NAME );
-
-#if defined( ENABLE_UTF8 )
-        bind_textdomain_codeset( PACKAGE_NAME, "UTF-8" );
-#endif
 
         module_EndBank( p_vlc );
         module_InitBank( p_vlc );
@@ -458,18 +509,21 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
         Help( p_vlc, p_tmp );
         free( p_tmp );
         b_exit = VLC_TRUE;
+        i_ret = VLC_EEXITSUCCESS;
     }
     /* Check for long help option */
     else if( config_GetInt( p_vlc, "longhelp" ) )
     {
         Help( p_vlc, "longhelp" );
         b_exit = VLC_TRUE;
+        i_ret = VLC_EEXITSUCCESS;
     }
     /* Check for module list option */
     else if( config_GetInt( p_vlc, "list" ) )
     {
         ListModules( p_vlc );
         b_exit = VLC_TRUE;
+        i_ret = VLC_EEXITSUCCESS;
     }
 
     /* Check for config file options */
@@ -500,7 +554,7 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
         vlc_object_destroy( p_help_module );
         module_EndBank( p_vlc );
         if( i_object ) vlc_object_release( p_vlc );
-        return VLC_EEXIT;
+        return i_ret;
     }
 
     /*
@@ -555,7 +609,6 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     var_Create( p_vlc, "verbose", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
     if( config_GetInt( p_vlc, "quiet" ) )
     {
-        vlc_value_t val;
         val.i_int = -1;
         var_Set( p_vlc, "verbose", val );
     }
@@ -678,19 +731,11 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     }
 
     psz_parser = psz_modules;
-    if( psz_parser && *psz_parser &&
-       strstr( psz_parser, ",") && !strstr(psz_parser, ":" ) )
-    {
-        msg_Info( p_vlc, "Warning: you are using a deprecated syntax for "
-                         "extraintf / control." );
-        msg_Info( p_vlc, "You must now use ':' as separator instead of ','." );
-    }
     while ( psz_parser && *psz_parser )
     {
         char *psz_module, *psz_temp;
         psz_module = psz_parser;
         psz_parser = strchr( psz_module, ':' );
-        if( !psz_parser ) psz_parser = strchr( psz_module, ',' );
         if ( psz_parser )
         {
             *psz_parser = '\0';
@@ -710,9 +755,20 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     }
 
     /*
-     * Allways load the hotkeys interface if it exists
+     * Always load the hotkeys interface if it exists
      */
     VLC_AddIntf( 0, "hotkeys,none", VLC_FALSE, VLC_FALSE );
+
+    /*
+     * If needed, load the Xscreensaver interface
+     * Currently, only for X
+     */
+#ifdef HAVE_X11_XLIB_H
+    if( config_GetInt( p_vlc, "disable-screensaver" ) == 1 )
+    {
+        VLC_AddIntf( 0, "screensaver", VLC_FALSE, VLC_FALSE );
+    }
+#endif
 
     /*
      * FIXME: kludge to use a p_vlc-local variable for the Mozilla plugin
@@ -730,10 +786,25 @@ int VLC_Init( int i_object, int i_argc, char *ppsz_argv[] )
     var_Create( p_vlc, "drawableportx", VLC_VAR_INTEGER );
     var_Create( p_vlc, "drawableporty", VLC_VAR_INTEGER );
 
+    /* Create volume callback system. */
+    var_Create( p_vlc, "volume-change", VLC_VAR_BOOL );
+
     /*
      * Get input filenames given as commandline arguments
      */
     GetFilenames( p_vlc, i_argc, ppsz_argv );
+
+    /*
+     * Get --open argument
+     */
+    var_Create( p_vlc, "open", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
+    var_Get( p_vlc, "open", &val );
+    if ( val.psz_string != NULL && *val.psz_string )
+    {
+        VLC_AddTarget( p_vlc->i_object_id, val.psz_string, NULL, 0,
+                       PLAYLIST_INSERT, 0 );
+    }
+    if ( val.psz_string != NULL ) free( val.psz_string );
 
     if( i_object ) vlc_object_release( p_vlc );
     return VLC_SUCCESS;
@@ -936,6 +1007,12 @@ int VLC_Destroy( int i_object )
         p_vlc->psz_homedir = NULL;
     }
 
+    if( p_vlc->psz_userdir )
+    {
+        free( p_vlc->psz_userdir );
+        p_vlc->psz_userdir = NULL;
+    }
+
     if( p_vlc->psz_configfile )
     {
         free( p_vlc->psz_configfile );
@@ -952,6 +1029,16 @@ int VLC_Destroy( int i_object )
      * System specific cleaning code
      */
     system_End( p_vlc );
+
+    /*
+     * Free message queue.
+     * Nobody shall use msg_* afterward.
+     */
+    msg_Flush( p_vlc );
+    msg_Destroy( p_libvlc );
+
+    /* Destroy global iconv */
+    LocaleDeinit();
 
     /* Destroy mutexes */
     vlc_mutex_destroy( &p_vlc->config_lock );
@@ -1228,6 +1315,7 @@ int VLC_Stop( int i_object )
 /*****************************************************************************
  * VLC_IsPlaying: Query for Playlist Status
  *****************************************************************************/
+
 vlc_bool_t VLC_IsPlaying( int i_object )
 {
     playlist_t * p_playlist;
@@ -1249,7 +1337,16 @@ vlc_bool_t VLC_IsPlaying( int i_object )
         return VLC_ENOOBJ;
     }
 
-    b_playing = playlist_IsPlaying( p_playlist );
+    if( p_playlist->p_input )
+    {
+        vlc_value_t  val;
+        var_Get( p_playlist->p_input, "state", &val );
+        b_playing = ( val.i_int == PLAYING_S );
+    }
+    else
+    {
+        b_playing = playlist_IsPlaying( p_playlist );
+    }
     vlc_object_release( p_playlist );
 
     if( i_object ) vlc_object_release( p_vlc );
@@ -1805,6 +1902,49 @@ int VLC_FullScreen( int i_object )
 
 /* following functions are local */
 
+static void LocaleInit( void )
+{
+    char *psz_charset;
+
+    if( !vlc_current_charset( &psz_charset ) )
+    {
+        char *psz_conv = psz_charset;
+
+        /*
+         * Still allow non-ASCII characters when the locale is not set.
+         * Western Europeans are being favored for historical reasons.
+         */
+        psz_conv = strcmp( psz_charset, "ASCII" )
+            ? psz_charset
+            : "ISO-8859-15";
+
+        vlc_mutex_init( p_libvlc, &libvlc.from_locale_lock );
+        vlc_mutex_init( p_libvlc, &libvlc.to_locale_lock );
+        libvlc.from_locale = vlc_iconv_open( "UTF-8", psz_charset );
+        libvlc.to_locale = vlc_iconv_open( psz_charset, "UTF-8" );
+        if( !libvlc.to_locale )
+        {
+            /* Not sure it is the right thing to do, but at least it
+             doesn't make vlc crash with msvc ! */
+            libvlc.to_locale = (vlc_iconv_t)(-1);
+        }
+    }
+    else
+        libvlc.from_locale = libvlc.to_locale = (vlc_iconv_t)(-1);
+    free( psz_charset );
+}
+
+static void LocaleDeinit( void )
+{
+    if( libvlc.to_locale != (vlc_iconv_t)(-1) )
+    {
+        vlc_mutex_destroy( &libvlc.from_locale_lock );
+        vlc_mutex_destroy( &libvlc.to_locale_lock );
+        vlc_iconv_close( libvlc.from_locale );
+        vlc_iconv_close( libvlc.to_locale );
+    }
+}
+
 /*****************************************************************************
  * SetLanguage: set the interface language.
  *****************************************************************************
@@ -1848,6 +1988,10 @@ static void SetLanguage ( char const *psz_lang )
 #endif
 
         setlocale( LC_ALL, psz_lang );
+        /* many code paths assume that float numbers are formatted according
+         * to the US standard (ie. with dot as decimal point), so we keep
+         * C for LC_NUMERIC. */
+        setlocale(LC_NUMERIC, "C" );
     }
 
     /* Specify where to find the locales for current domain */
@@ -1860,17 +2004,13 @@ static void SetLanguage ( char const *psz_lang )
 #endif
     if( !bindtextdomain( PACKAGE_NAME, psz_path ) )
     {
-        fprintf( stderr, "warning: no domain %s in directory %s\n",
+        fprintf( stderr, "warning: couldn't bind domain %s in directory %s\n",
                  PACKAGE_NAME, psz_path );
     }
 
     /* Set the default domain */
     textdomain( PACKAGE_NAME );
-
-#if defined( ENABLE_UTF8 )
     bind_textdomain_codeset( PACKAGE_NAME, "UTF-8" );
-#endif
-
 #endif
 }
 
@@ -1888,6 +2028,7 @@ static int GetFilenames( vlc_t *p_vlc, int i_argc, char *ppsz_argv[] )
      * and their input options */
     for( i_opt = i_argc - 1; i_opt >= optind; i_opt-- )
     {
+        const char *psz_target;
         i_options = 0;
 
         /* Count the input options */
@@ -1899,10 +2040,13 @@ static int GetFilenames( vlc_t *p_vlc, int i_argc, char *ppsz_argv[] )
 
         /* TODO: write an internal function of this one, to avoid
          *       unnecessary lookups. */
-        VLC_AddTarget( p_vlc->i_object_id, ppsz_argv[ i_opt ],
+        /* FIXME: should we convert options to UTF-8 as well ?? */
+        psz_target = FromLocale( ppsz_argv[ i_opt ] );
+        VLC_AddTarget( p_vlc->i_object_id, psz_target,
                        (char const **)( i_options ? &ppsz_argv[i_opt + 1] :
                                         NULL ), i_options,
                        PLAYLIST_INSERT, 0 );
+        LocaleFree( psz_target );
     }
 
     return VLC_SUCCESS;
@@ -2030,8 +2174,13 @@ static void Usage( vlc_t *p_this, char const *psz_module_name )
             char *psz_text, *psz_spaces = psz_spaces_text;
             char *psz_bra = NULL, *psz_type = NULL, *psz_ket = NULL;
             char *psz_suf = "", *psz_prefix = NULL;
-            int i;
+            signed int i;
 
+            /* Skip deprecated options */
+            if( p_item->psz_current )
+            {
+                continue;
+            }
             /* Skip advanced options if requested */
             if( p_item->b_advanced && !b_advanced )
             {
@@ -2121,12 +2270,7 @@ static void Usage( vlc_t *p_this, char const *psz_module_name )
 
             if( p_item->i_type == CONFIG_ITEM_BOOL && !b_help_module )
             {
-                /* If option is of type --foo-bar, we print its counterpart
-                 * as --no-foo-bar, but if it is of type --foobar (without
-                 * dashes in the name) we print it as --nofoobar. Both
-                 * values are of course valid, only the display changes. */
-                psz_prefix = strchr( p_item->psz_name, '-' ) ? ", --no-"
-                                                             : ", --no";
+                psz_prefix =  ", --no-";
                 i -= strlen( p_item->psz_name ) + strlen( psz_prefix );
             }
 
@@ -2163,10 +2307,10 @@ static void Usage( vlc_t *p_this, char const *psz_module_name )
             while( *psz_text )
             {
                 char *psz_parser, *psz_word;
-                int i_end = strlen( psz_text );
+                size_t i_end = strlen( psz_text );
 
                 /* If the remaining text fits in a line, print it. */
-                if( i_end <= i_width )
+                if( i_end <= (size_t)i_width )
                 {
                     fprintf( stdout, "%s\n", psz_text );
                     break;
@@ -2282,7 +2426,13 @@ static void Version( void )
     ShowConsole();
 #endif
 
-    fprintf( stdout, VERSION_MESSAGE "\n" );
+    fprintf( stdout, _("VLC version %s\n"), VLC_Version() );
+    fprintf( stdout, _("Compiled by %s@%s.%s\n"),
+             VLC_CompileBy(), VLC_CompileHost(), VLC_CompileDomain() );
+    fprintf( stdout, _("Compiler: %s\n"), VLC_Compiler() );
+    if( strcmp( VLC_Changeset(), "exported" ) )
+        fprintf( stdout, _("Based upon svn changeset [%s]\n"),
+                 VLC_Changeset() );
     fprintf( stdout,
       _("This program comes with NO WARRANTY, to the extent permitted by "
         "law.\nYou may redistribute it under the terms of the GNU General "
@@ -2303,13 +2453,23 @@ static void Version( void )
 static void ShowConsole( void )
 {
 #   ifndef UNDER_CE
+    FILE *f_help;
 
     if( getenv( "PWD" ) && getenv( "PS1" ) ) return; /* cygwin shell */
 
     AllocConsole();
-    freopen( "CONOUT$", "w", stdout );
+
     freopen( "CONOUT$", "w", stderr );
     freopen( "CONIN$", "r", stdin );
+
+    if( (f_help = fopen( "vlc-help.txt", "wt" )) )
+    {
+        fclose( f_help );
+        freopen( "vlc-help.txt", "wt", stdout );
+        fprintf( stderr, _("\nDumped content to vlc-help.txt file.\n") );
+    }
+
+    else freopen( "CONOUT$", "w", stdout );
 
 #   endif
 }
@@ -2326,8 +2486,10 @@ static void PauseConsole( void )
 #   ifndef UNDER_CE
 
     if( getenv( "PWD" ) && getenv( "PS1" ) ) return; /* cygwin shell */
-    fprintf( stdout, _("\nPress the RETURN key to continue...\n") );
+
+    fprintf( stderr, _("\nPress the RETURN key to continue...\n") );
     getchar();
+    fclose( stdout );
 
 #   endif
 }
@@ -2432,4 +2594,93 @@ static void InitDeviceValues( vlc_t *p_vlc )
         hal_shutdown( ctx );
     }
 #endif
+}
+
+/*****************************************************************************
+ * FromLocale: converts a locale string to UTF-8
+ *****************************************************************************/
+char *FromLocale( const char *locale )
+{
+    if( locale == NULL )
+        return NULL;
+
+    if( libvlc.from_locale != (vlc_iconv_t)(-1) )
+    {
+        char *iptr = (char *)locale, *output, *optr;
+        size_t inb, outb;
+
+        /*
+         * We are not allowed to modify the locale pointer, even if we cast it
+         * to non-const.
+         */
+        inb = strlen( locale );
+        outb = inb * 6 + 1;
+
+        /* FIXME: I'm not sure about the value for the multiplication
+         * (for western people, multiplication by 3 (Latin9) is sufficient) */
+        optr = output = calloc( outb , 1);
+
+        vlc_mutex_lock( &libvlc.from_locale_lock );
+        vlc_iconv( libvlc.from_locale, NULL, NULL, NULL, NULL );
+
+        while( vlc_iconv( libvlc.from_locale, &iptr, &inb, &optr, &outb )
+                                                               == (size_t)-1 )
+        {
+            *optr = '?';
+            optr++;
+            iptr++;
+            vlc_iconv( libvlc.from_locale, NULL, NULL, NULL, NULL );
+        }
+        vlc_mutex_unlock( &libvlc.from_locale_lock );
+
+        return realloc( output, strlen( output ) + 1 );
+    }
+    return (char *)locale;
+}
+
+/*****************************************************************************
+ * ToLocale: converts an UTF-8 string to locale
+ *****************************************************************************/
+char *ToLocale( const char *utf8 )
+{
+    if( utf8 == NULL )
+        return NULL;
+
+    if( libvlc.to_locale != (vlc_iconv_t)(-1) )
+    {
+        char *iptr = (char *)utf8, *output, *optr;
+        size_t inb, outb;
+
+        /*
+         * We are not allowed to modify the locale pointer, even if we cast it
+         * to non-const.
+         */
+        inb = strlen( utf8 );
+        /* FIXME: I'm not sure about the value for the multiplication
+         * (for western people, multiplication is not needed) */
+        outb = inb * 2 + 1;
+
+        optr = output = calloc( outb, 1 );
+        vlc_mutex_lock( &libvlc.to_locale_lock );
+        vlc_iconv( libvlc.to_locale, NULL, NULL, NULL, NULL );
+
+        while( vlc_iconv( libvlc.to_locale, &iptr, &inb, &optr, &outb )
+                                                               == (size_t)-1 )
+        {
+            *optr = '?'; /* should not happen, and yes, it sucks */
+            optr++;
+            iptr++;
+            vlc_iconv( libvlc.to_locale, NULL, NULL, NULL, NULL );
+        }
+        vlc_mutex_unlock( &libvlc.to_locale_lock );
+
+        return realloc( output, strlen( output ) + 1 );
+    }
+    return (char *)utf8;
+}
+
+void LocaleFree( const char *str )
+{
+    if( ( str != NULL ) && ( libvlc.to_locale != (vlc_iconv_t)(-1) ) )
+        free( (char *)str );
 }

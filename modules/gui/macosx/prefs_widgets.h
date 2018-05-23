@@ -1,8 +1,8 @@
 /*****************************************************************************
  * prefs_widgets.h: Preferences controls
  *****************************************************************************
- * Copyright (C) 2002-2003 VideoLAN
- * $Id: prefs_widgets.h 10912 2005-05-07 01:12:16Z djc $
+ * Copyright (C) 2002-2003 the VideoLAN team
+ * $Id: prefs_widgets.h 12274 2005-08-19 16:16:34Z hartman $
  *
  * Authors: Derk-Jan Hartman <hartman at videolan.org> 
  *
@@ -216,7 +216,7 @@ static NSMenu   *o_keys_menu = nil;
 
 - (id) initWithItem: (module_config_t *)_p_item
            withView: (NSView *)o_parent_view;
-
+           
 @end
 
 //#undef CONFIG_ITEM_LIST_STRING

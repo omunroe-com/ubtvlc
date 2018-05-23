@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vlc_meta.h
  *****************************************************************************
- * Copyright (C) 2004 VideoLAN
- * $Id: vlc_meta.h 10482 2005-03-30 21:16:51Z sigmunau $
+ * Copyright (C) 2004 the VideoLAN team
+ * $Id: vlc_meta.h 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *

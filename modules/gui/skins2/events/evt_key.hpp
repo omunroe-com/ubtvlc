@@ -1,8 +1,8 @@
 /*****************************************************************************
  * evt_key.hpp
  *****************************************************************************
- * Copyright (C) 2003 VideoLAN
- * $Id: evt_key.hpp 9641 2004-12-22 13:06:43Z gbazin $
+ * Copyright (C) 2003 the VideoLAN team
+ * $Id: evt_key.hpp 11664 2005-07-09 06:17:09Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
