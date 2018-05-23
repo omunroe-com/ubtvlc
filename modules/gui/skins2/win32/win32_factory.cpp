@@ -1,11 +1,11 @@
 /*****************************************************************************
  * win32_factory.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: a357276f29a5ce4a16a14c7447f7d1bf0a3e0ec8 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: win32_factory.cpp 7567 2004-04-30 15:35:56Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,40 +19,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifdef WIN32_SKINS
-
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
-#include <windows.h>
-#include <winuser.h>
-#include <wingdi.h>
-#include <tchar.h>
-#include <shellapi.h>
 
 #include "win32_factory.hpp"
 #include "win32_graphics.hpp"
 #include "win32_timer.hpp"
 #include "win32_window.hpp"
 #include "win32_tooltip.hpp"
-#include "win32_popup.hpp"
 #include "win32_loop.hpp"
-#include "../src/theme.hpp"
-#include "../src/window_manager.hpp"
-#include "../src/generic_window.hpp"
-#include "../commands/cmd_dialogs.hpp"
-#include "../commands/cmd_minimize.hpp"
-
-// Custom message for the notifications of the system tray
-#define MY_WM_TRAYACTION (WM_APP + 1)
 
 
-LRESULT CALLBACK Win32Factory::Win32Proc( HWND hwnd, UINT uMsg,
-                                          WPARAM wParam, LPARAM lParam )
+LRESULT CALLBACK Win32Proc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
     // Get pointer to thread info: should only work with the parent window
     intf_thread_t *p_intf = (intf_thread_t *)GetWindowLongPtr( hwnd,
@@ -64,64 +44,33 @@ LRESULT CALLBACK Win32Factory::Win32Proc( HWND hwnd, UINT uMsg,
         return DefWindowProc( hwnd, uMsg, wParam, lParam );
     }
 
-    Win32Factory *pFactory = (Win32Factory*)Win32Factory::instance( p_intf );
-    GenericWindow *pWin = pFactory->m_windowMap[hwnd];
+    // Here we know we are getting a message for the parent window, since it is
+    // the only one to store p_intf...
+    // Yes, it is a kludge :)
 
-    if( hwnd == pFactory->getParentWindow() )
+//Win32Factory *pFactory = (Win32Factory*)Win32Factory::instance( p_intf );
+//msg_Err( p_intf, "Parent window %p %p %u %i\n", pFactory->m_hParentWindow, hwnd, uMsg, wParam );
+    // If Window is parent window
+    // XXX: this test isn't needed, see the kludge above...
+//    if( hwnd == pFactory->m_hParentWindow )
     {
         if( uMsg == WM_SYSCOMMAND )
         {
             // If closing parent window
-            if( (wParam & 0xFFF0) == SC_CLOSE )
+            if( wParam == SC_CLOSE )
             {
-                libvlc_Quit( p_intf->obj.libvlc );
-                return 0;
-            }
-            else if( (wParam & 0xFFF0) == SC_MINIMIZE )
-            {
-                pFactory->minimize();
-                return 0;
-            }
-            else if( (wParam & 0xFFF0) == SC_RESTORE )
-            {
-                pFactory->restore();
+                Win32Loop *pLoop = (Win32Loop*)Win32Loop::instance( p_intf );
+                pLoop->exit();
                 return 0;
             }
             else
             {
-                msg_Dbg( p_intf, "WM_SYSCOMMAND %i", (wParam  & 0xFFF0) );
+                msg_Err( p_intf, "WM_SYSCOMMAND %i", wParam );
             }
+//            if( (Event *)wParam != NULL )
+//                ( (Event *)wParam )->SendEvent();
+//            return 0;
         }
-        // Handle systray notifications
-        else if( uMsg == MY_WM_TRAYACTION )
-        {
-            if( (UINT)lParam == WM_LBUTTONDOWN )
-            {
-                p_intf->p_sys->p_theme->getWindowManager().raiseAll();
-                CmdDlgHidePopupMenu aCmdPopup( p_intf );
-                aCmdPopup.execute();
-                return 0;
-            }
-            else if( (UINT)lParam == WM_RBUTTONDOWN )
-            {
-                CmdDlgShowPopupMenu aCmdPopup( p_intf );
-                aCmdPopup.execute();
-                return 0;
-            }
-            else if( (UINT)lParam == WM_LBUTTONDBLCLK )
-            {
-                CmdRestore aCmdRestore( p_intf );
-                aCmdRestore.execute();
-                return 0;
-            }
-        }
-    }
-    else if( pWin )
-    {
-        Win32Loop* pLoop =
-            (Win32Loop*) OSFactory::instance( p_intf )->getOSLoop();
-        if( pLoop )
-            return pLoop->processEvent( hwnd, uMsg, wParam, lParam );
     }
 
     // If hwnd does not match any window or message not processed
@@ -129,18 +78,9 @@ LRESULT CALLBACK Win32Factory::Win32Proc( HWND hwnd, UINT uMsg,
 }
 
 
-BOOL CALLBACK Win32Factory::MonitorEnumProc( HMONITOR hMonitor, HDC hdcMonitor,
-                                             LPRECT lprcMonitor, LPARAM dwData )
-{
-    (void)hdcMonitor; (void)lprcMonitor;
-    std::list<HMONITOR>* pList = (std::list<HMONITOR>*)dwData;
-    pList->push_back( hMonitor );
-
-    return TRUE;
-}
-
 Win32Factory::Win32Factory( intf_thread_t *pIntf ):
-    OSFactory( pIntf ), m_hParentWindow( NULL ),
+    OSFactory( pIntf ), TransparentBlt( NULL ), AlphaBlend( NULL ),
+    SetLayeredWindowAttributes( NULL ), m_hParentWindow( NULL ),
     m_dirSep( "\\" )
 {
     // see init()
@@ -149,10 +89,6 @@ Win32Factory::Win32Factory( intf_thread_t *pIntf ):
 
 bool Win32Factory::init()
 {
-    LPCTSTR vlc_name = TEXT("VLC Media Player");
-    LPCTSTR vlc_icon = TEXT("VLC_ICON");
-    LPCTSTR vlc_class = TEXT("SkinWindowClass");
-
     // Get instance handle
     m_hInst = GetModuleHandle( NULL );
     if( m_hInst == NULL )
@@ -162,15 +98,15 @@ bool Win32Factory::init()
 
     // Create window class
     WNDCLASS skinWindowClass;
-    skinWindowClass.style = CS_DBLCLKS;
-    skinWindowClass.lpfnWndProc = (WNDPROC)Win32Factory::Win32Proc;
-    skinWindowClass.lpszClassName = vlc_class;
+    skinWindowClass.style = CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS;
+    skinWindowClass.lpfnWndProc = (WNDPROC) Win32Proc;
+    skinWindowClass.lpszClassName = "SkinWindowClass";
     skinWindowClass.lpszMenuName = NULL;
     skinWindowClass.cbClsExtra = 0;
     skinWindowClass.cbWndExtra = 0;
-    skinWindowClass.hbrBackground = NULL;
-    skinWindowClass.hCursor = LoadCursor( NULL, IDC_ARROW );
-    skinWindowClass.hIcon = LoadIcon( m_hInst, vlc_icon );
+    skinWindowClass.hbrBackground = HBRUSH (COLOR_WINDOW);
+    skinWindowClass.hCursor = LoadCursor( NULL , IDC_ARROW );
+    skinWindowClass.hIcon = LoadIcon( m_hInst, "VLC_ICON" );
     skinWindowClass.hInstance = m_hInst;
 
     // Register class and check it
@@ -180,86 +116,75 @@ bool Win32Factory::init()
 
         // Check why it failed. If it's because the class already exists
         // then fine, otherwise return with an error.
-        if( !GetClassInfo( m_hInst, vlc_class, &wndclass ) )
+        if( !GetClassInfo( m_hInst, "SkinWindowClass", &wndclass ) )
         {
-            msg_Err( getIntf(), "cannot register window class" );
+            msg_Err( getIntf(), "Cannot register window class" );
             return false;
         }
     }
 
     // Create Window
-    m_hParentWindow = CreateWindowEx( WS_EX_TOOLWINDOW, vlc_class,
-        vlc_name, WS_POPUP | WS_SYSMENU | WS_MINIMIZEBOX,
-        -200, -200, 0, 0, 0, 0, m_hInst, 0 );
+    m_hParentWindow = CreateWindowEx( WS_EX_APPWINDOW, "SkinWindowClass",
+        "VLC media player", WS_SYSMENU, -200, -200, 0, 0, 0, 0, m_hInst, 0 );
     if( m_hParentWindow == NULL )
     {
-        msg_Err( getIntf(), "cannot create parent window" );
+        msg_Err( getIntf(), "Cannot create parent window" );
         return false;
     }
-
-    // Store with it a pointer to the interface thread
-    SetWindowLongPtr( m_hParentWindow, GWLP_USERDATA, (LONG_PTR)getIntf() );
 
     // We do it this way otherwise CreateWindowEx will fail
     // if WS_EX_LAYERED is not supported
     SetWindowLongPtr( m_hParentWindow, GWL_EXSTYLE,
-                      GetWindowLongPtr( m_hParentWindow, GWL_EXSTYLE ) |
-                      WS_EX_LAYERED );
+                      GetWindowLong( m_hParentWindow, GWL_EXSTYLE )
+                      | WS_EX_LAYERED );
 
+    // Store with it a pointer to the interface thread
+    SetWindowLongPtr( m_hParentWindow, GWLP_USERDATA, (LONG_PTR)getIntf() );
     ShowWindow( m_hParentWindow, SW_SHOW );
-
-    // Initialize the systray icon
-    m_trayIcon.cbSize = sizeof( NOTIFYICONDATA );
-    m_trayIcon.hWnd = m_hParentWindow;
-    m_trayIcon.uID = 42;
-    m_trayIcon.uFlags = NIF_ICON|NIF_TIP|NIF_MESSAGE;
-    m_trayIcon.uCallbackMessage = MY_WM_TRAYACTION;
-    m_trayIcon.hIcon = LoadIcon( m_hInst, vlc_icon );
-    _tcscpy( m_trayIcon.szTip, vlc_name );
-
-    // Show the systray icon if needed
-    if( var_InheritBool( getIntf(), "skins2-systray" ) )
-    {
-        addInTray();
-    }
-
-    // Show the task in the task bar if needed
-    if( var_InheritBool( getIntf(), "skins2-taskbar" ) )
-    {
-        addInTaskBar();
-    }
 
     // Initialize the OLE library (for drag & drop)
     OleInitialize( NULL );
 
-    // Initialize the resource path
-    char *datadir = config_GetUserDir( VLC_DATA_DIR );
-    m_resourcePath.push_back( (std::string)datadir + "\\skins" );
-    free( datadir );
-    datadir = config_GetDataDir();
-    m_resourcePath.push_back( (std::string)datadir + "\\skins" );
-    m_resourcePath.push_back( (std::string)datadir + "\\skins2" );
-    m_resourcePath.push_back( (std::string)datadir + "\\share\\skins" );
-    m_resourcePath.push_back( (std::string)datadir + "\\share\\skins2" );
-    free( datadir );
-
-    // Enumerate all monitors available
-    EnumDisplayMonitors( NULL, NULL, MonitorEnumProc, (LPARAM)&m_monitorList );
-    int num = 0;
-    for( std::list<HMONITOR>::iterator it = m_monitorList.begin();
-         it != m_monitorList.end(); ++it, num++ )
+    // We dynamically load msimg32.dll to get a pointer to TransparentBlt()
+    m_hMsimg32 = LoadLibrary( "msimg32.dll" );
+    if( !m_hMsimg32 ||
+        !( TransparentBlt =
+            (BOOL (WINAPI*)(HDC, int, int, int, int,
+                            HDC, int, int, int, int, unsigned int))
+            GetProcAddress( m_hMsimg32, "TransparentBlt" ) ) )
     {
-        MONITORINFO mi;
-        mi.cbSize = sizeof( MONITORINFO );
-        if( GetMonitorInfo( *it, &mi ) )
-        {
-            msg_Dbg( getIntf(), "monitor #%i, %ldx%ld at +%ld+%ld", num,
-                        mi.rcMonitor.right - mi.rcMonitor.left,
-                        mi.rcMonitor.bottom - mi.rcMonitor.top,
-                        mi.rcMonitor.left,
-                        mi.rcMonitor.top );
-        }
+        TransparentBlt = NULL;
+        msg_Dbg( getIntf(), "Couldn't find TransparentBlt(), "
+                 "falling back to BitBlt()" );
     }
+    if( !m_hMsimg32 ||
+        !( AlphaBlend =
+            (BOOL (WINAPI*)( HDC, int, int, int, int, HDC, int, int,
+                              int, int, BLENDFUNCTION ))
+            GetProcAddress( m_hMsimg32, "AlphaBlend" ) ) )
+    {
+        AlphaBlend = NULL;
+        msg_Dbg( getIntf(), "Couldn't find AlphaBlend()" );
+    }
+
+    // Idem for user32.dll and SetLayeredWindowAttributes()
+    m_hUser32 = LoadLibrary( "user32.dll" );
+    if( !m_hUser32 ||
+        !( SetLayeredWindowAttributes =
+            (BOOL (WINAPI *)(HWND, COLORREF, BYTE, DWORD))
+            GetProcAddress( m_hUser32, "SetLayeredWindowAttributes" ) ) )
+    {
+        SetLayeredWindowAttributes = NULL;
+        msg_Dbg( getIntf(), "Couldn't find SetLayeredWindowAttributes()" );
+    }
+
+    // Initialize the resource path
+    m_resourcePath.push_back( (string)getIntf()->p_vlc->psz_homedir +
+                               "\\" + CONFIG_DIR + "\\skins2" );
+    m_resourcePath.push_back( (string)getIntf()->p_libvlc->psz_vlcpath +
+                              "\\skins2" );
+    m_resourcePath.push_back( (string)getIntf()->p_libvlc->psz_vlcpath +
+                              "\\share\\skins2" );
 
     // All went well
     return true;
@@ -271,10 +196,13 @@ Win32Factory::~Win32Factory()
     // Uninitialize the OLE library
     OleUninitialize();
 
-    // Remove the systray icon
-    removeFromTray();
-
     if( m_hParentWindow ) DestroyWindow( m_hParentWindow );
+
+    // Unload msimg32.dll and user32.dll
+    if( m_hMsimg32 )
+        FreeLibrary( m_hMsimg32 );
+    if( m_hUser32 )
+        FreeLibrary( m_hUser32 );
 }
 
 
@@ -295,57 +223,18 @@ void Win32Factory::destroyOSLoop()
     Win32Loop::destroy( getIntf() );
 }
 
-void Win32Factory::minimize()
-{
-    /* Make sure no tooltip is visible first */
-    getIntf()->p_sys->p_theme->getWindowManager().hideTooltip();
 
-    ShowWindow( m_hParentWindow, SW_MINIMIZE );
-}
-
-void Win32Factory::restore()
+OSTimer *Win32Factory::createOSTimer( const Callback &rCallback )
 {
-    ShowWindow( m_hParentWindow, SW_RESTORE );
-}
-
-void Win32Factory::addInTray()
-{
-    Shell_NotifyIcon( NIM_ADD, &m_trayIcon );
-}
-
-void Win32Factory::removeFromTray()
-{
-    Shell_NotifyIcon( NIM_DELETE, &m_trayIcon );
-}
-
-void Win32Factory::addInTaskBar()
-{
-    ShowWindow( m_hParentWindow, SW_HIDE );
-    SetWindowLongPtr( m_hParentWindow, GWL_EXSTYLE,
-                      WS_EX_LAYERED|WS_EX_APPWINDOW );
-    ShowWindow( m_hParentWindow, SW_SHOW );
-}
-
-void Win32Factory::removeFromTaskBar()
-{
-    ShowWindow( m_hParentWindow, SW_HIDE );
-    SetWindowLongPtr( m_hParentWindow, GWL_EXSTYLE,
-                      WS_EX_LAYERED|WS_EX_TOOLWINDOW );
-    ShowWindow( m_hParentWindow, SW_SHOW );
-}
-
-OSTimer *Win32Factory::createOSTimer( CmdGeneric &rCmd )
-{
-    return new Win32Timer( getIntf(), rCmd, m_hParentWindow );
+    return new Win32Timer( getIntf(), rCallback, m_hParentWindow );
 }
 
 
 OSWindow *Win32Factory::createOSWindow( GenericWindow &rWindow, bool dragDrop,
-                                        bool playOnDrop, OSWindow *pParent,
-                                        GenericWindow::WindowType_t type )
+                                        bool playOnDrop, OSWindow *pParent )
 {
     return new Win32Window( getIntf(), rWindow, m_hInst, m_hParentWindow,
-                            dragDrop, playOnDrop, (Win32Window*)pParent, type );
+                            dragDrop, playOnDrop, (Win32Window*)pParent );
 }
 
 
@@ -355,26 +244,10 @@ OSTooltip *Win32Factory::createOSTooltip()
 }
 
 
-OSPopup *Win32Factory::createOSPopup()
-{
-    // XXX FIXME: this way of getting the handle really sucks!
-    // In fact, the clean way would be to have in Builder::addPopup() a call
-    // to pPopup->associateToWindow() (to be written)... but the problem is
-    // that there is no way to access the OS-dependent window handle from a
-    // GenericWindow (we cannot even access the OSWindow).
-    if( m_windowMap.begin() == m_windowMap.end() )
-    {
-        msg_Err( getIntf(), "no window has been created before the popup!" );
-        return NULL;
-    }
-
-    return new Win32Popup( getIntf(), m_windowMap.begin()->first );
-}
-
-
 int Win32Factory::getScreenWidth() const
 {
     return GetSystemMetrics(SM_CXSCREEN);
+
 }
 
 
@@ -384,69 +257,13 @@ int Win32Factory::getScreenHeight() const
 }
 
 
-void Win32Factory::getMonitorInfo( const GenericWindow &rWindow,
-                                   int* p_x, int* p_y,
-                                   int* p_width, int* p_height ) const
-{
-    HWND wnd = (HWND)rWindow.getOSHandle();
-    HMONITOR hmon = MonitorFromWindow( wnd, MONITOR_DEFAULTTONEAREST );
-    MONITORINFO mi;
-    mi.cbSize = sizeof( MONITORINFO );
-    if( hmon && GetMonitorInfo( hmon, &mi ) )
-    {
-        *p_x = mi.rcMonitor.left;
-        *p_y = mi.rcMonitor.top;
-        *p_width = mi.rcMonitor.right - mi.rcMonitor.left;
-        *p_height = mi.rcMonitor.bottom - mi.rcMonitor.top;
-    }
-    else
-    {
-        *p_x = 0;
-        *p_y = 0;
-        *p_width = getScreenWidth();
-        *p_height = getScreenHeight();
-    }
-}
-
-
-void Win32Factory::getMonitorInfo( int numScreen, int* p_x, int* p_y,
-                                   int* p_width, int* p_height ) const
-{
-    HMONITOR hmon = NULL;
-    std::list<HMONITOR>::const_iterator it = m_monitorList.begin();
-    for( int i = 0; it != m_monitorList.end(); ++it, i++ )
-    {
-        if( i == numScreen )
-        {
-            hmon = *it;
-            break;
-        }
-    }
-    MONITORINFO mi;
-    mi.cbSize = sizeof( MONITORINFO );
-    if( hmon && GetMonitorInfo( hmon, &mi ) )
-    {
-        *p_x = mi.rcMonitor.left;
-        *p_y = mi.rcMonitor.top;
-        *p_width = mi.rcMonitor.right - mi.rcMonitor.left;
-        *p_height = mi.rcMonitor.bottom - mi.rcMonitor.top;
-    }
-    else
-    {
-        *p_x = 0;
-        *p_y = 0;
-        *p_width = getScreenWidth();
-        *p_height = getScreenHeight();
-    }
-}
-
-
-SkinsRect Win32Factory::getWorkArea() const
+Rect Win32Factory::getWorkArea() const
 {
     RECT r;
     SystemParametersInfo( SPI_GETWORKAREA, 0, &r, 0 );
     // Fill a Rect object
-    return  SkinsRect( r.left, r.top, r.right, r.bottom );
+    Rect rect( r.left, r.top, r.right, r.bottom );
+    return rect;
 }
 
 
@@ -464,12 +281,24 @@ void Win32Factory::changeCursor( CursorType_t type ) const
     LPCTSTR id;
     switch( type )
     {
-    default:
-    case kDefaultArrow: id = IDC_ARROW;    break;
-    case kResizeNWSE:   id = IDC_SIZENWSE; break;
-    case kResizeNS:     id = IDC_SIZENS;   break;
-    case kResizeWE:     id = IDC_SIZEWE;   break;
-    case kResizeNESW:   id = IDC_SIZENESW; break;
+        case kDefaultArrow:
+            id = IDC_ARROW;
+            break;
+        case kResizeNWSE:
+            id = IDC_SIZENWSE;
+            break;
+        case kResizeNS:
+            id = IDC_SIZENS;
+            break;
+        case kResizeWE:
+            id = IDC_SIZEWE;
+            break;
+        case kResizeNESW:
+            id = IDC_SIZENESW;
+            break;
+        default:
+            id = IDC_ARROW;
+            break;
     }
 
     HCURSOR hCurs = LoadCursor( NULL, id );
@@ -477,30 +306,42 @@ void Win32Factory::changeCursor( CursorType_t type ) const
 }
 
 
-void Win32Factory::rmDir( const std::string &rPath )
+void Win32Factory::rmDir( const string &rPath )
 {
-    LPWSTR dir_temp = ToWide( rPath.c_str() );
-    size_t len = wcslen( dir_temp );
+    WIN32_FIND_DATA find;
+    string file;
+    string findFiles = rPath + "\\*";
+    HANDLE handle    = FindFirstFile( findFiles.c_str(), &find );
 
-    LPWSTR dir = (wchar_t *)vlc_alloc( len + 2, sizeof (wchar_t) );
-    wcsncpy( dir, dir_temp, len + 2);
+    while( handle != INVALID_HANDLE_VALUE )
+    {
+        // If file is neither "." nor ".."
+        if( strcmp( find.cFileName, "." ) && strcmp( find.cFileName, ".." ) )
+        {
+            // Set file name
+            file = rPath + "\\" + (string)find.cFileName;
 
-    SHFILEOPSTRUCTW file_op = {
-        NULL,
-        FO_DELETE,
-        dir,
-        NULL,
-        FOF_NOCONFIRMATION |
-        FOF_NOERRORUI |
-        FOF_SILENT,
-        false,
-        NULL,
-        L"" };
+            // If file is a directory, delete it recursively
+            if( find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+            {
+                rmDir( file );
+            }
+            // Else, it is a file so simply delete it
+            else
+            {
+                DeleteFile( file.c_str() );
+            }
+        }
 
-     SHFileOperationW(&file_op);
+        // If no more file in directory, exit while
+        if( !FindNextFile( handle, &find ) )
+            break;
+    }
 
-     free(dir_temp);
-     free(dir);
+    // Now directory is empty so can be removed
+    FindClose( handle );
+    RemoveDirectory( rPath.c_str() );
 }
+
 
 #endif

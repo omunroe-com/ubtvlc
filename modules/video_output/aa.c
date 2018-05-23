@@ -1,330 +1,261 @@
 /*****************************************************************************
- * aa.c: "vout display" module using aalib
+ * vout_aa.c: Aa video output display method for testing purposes
  *****************************************************************************
- * Copyright (C) 2002-2009 VLC authors and VideoLAN
- * $Id: e9146d082c781d6a63aacbe52ee4fc5a6e1eafff $
+ * Copyright (C) 2002 VideoLAN
+ * $Id: aa.c 6961 2004-03-05 17:34:23Z sam $
  *
- * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
+ * Authors: Sigmund Augdal <sigmunau@idi.ntnu.no>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
+#include <errno.h>                                                 /* ENOMEM */
+#include <stdlib.h>                                                /* free() */
+#include <string.h>                                            /* strerror() */
 
-#include <vlc_common.h>
-#include <vlc_plugin.h>
-#include <vlc_vout_display.h>
-#include <vlc_picture_pool.h>
-
-#include <assert.h>
 #include <aalib.h>
 
-#ifndef _WIN32
-# ifdef X_DISPLAY_MISSING
-#  error Xlib required due to XInitThreads
-# endif
-# include <vlc_xlib.h>
-#endif
-
-#include "event_thread.h"
-
-/* TODO
- * - what about RGB palette ?
- */
-/*****************************************************************************
- * Module descriptor
- *****************************************************************************/
-static int  Open (vlc_object_t *);
-static void Close(vlc_object_t *);
-
-vlc_module_begin()
-    set_shortname(N_("ASCII Art"))
-    set_category(CAT_VIDEO)
-    set_subcategory(SUBCAT_VIDEO_VOUT)
-    set_description(N_("ASCII-art video output"))
-    set_capability("vout display", /*10*/0)
-    add_shortcut("aalib")
-    set_callbacks(Open, Close)
-vlc_module_end()
+#include <vlc/vlc.h>
+#include <vlc/vout.h>
+#include <vlc/intf.h>
 
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
-static picture_pool_t *Pool   (vout_display_t *, unsigned);
-static void            Prepare(vout_display_t *, picture_t *, subpicture_t *);
-static void            PictureDisplay(vout_display_t *, picture_t *, subpicture_t *);
-static int             Control(vout_display_t *, int, va_list);
+static int  Create    ( vlc_object_t * );
+static void Destroy   ( vlc_object_t * );
 
-/* */
-static void Manage(vout_display_t *);
+static int  Init      ( vout_thread_t * );
+static void End       ( vout_thread_t * );
+static int  Manage    ( vout_thread_t * );
+static void Render    ( vout_thread_t *, picture_t * );
+static void Display   ( vout_thread_t *, picture_t * );
 
-/* */
-struct vout_display_sys_t {
+static void SetPalette     ( vout_thread_t *, uint16_t *, uint16_t *, uint16_t * );
+
+/*****************************************************************************
+ * Module descriptor
+ *****************************************************************************/
+vlc_module_begin();
+    set_description( _("ASCII-art video output") );
+    set_capability( "video output", 10 );
+    add_shortcut( "aalib" );
+    set_callbacks( Create, Destroy );
+vlc_module_end();
+
+/*****************************************************************************
+ * vout_sys_t: aa video output method descriptor
+ *****************************************************************************
+ * This structure is part of the video output thread descriptor.
+ * It describes the aa specific properties of an output thread.
+ *****************************************************************************/
+struct vout_sys_t
+{
     struct aa_context*  aa_context;
     aa_palette          palette;
-
-    picture_pool_t      *pool;
-    vout_display_event_thread_t *et;
+    int                 i_width;                     /* width of main window */
+    int                 i_height;                   /* height of main window */
 };
 
-/**
+/*****************************************************************************
+ * Create: allocates aa video thread output method
+ *****************************************************************************
  * This function allocates and initializes a aa vout method.
- */
-static int Open(vlc_object_t *object)
+ *****************************************************************************/
+static int Create( vlc_object_t *p_this )
 {
-    vout_display_t *vd = (vout_display_t *)object;
-    vout_display_sys_t *sys;
-
-#ifndef _WIN32
-    if (!vlc_xlib_init (object))
-        return VLC_EGENERIC;
-#endif
+    vout_thread_t *p_vout = (vout_thread_t *)p_this;
 
     /* Allocate structure */
-    vd->sys = sys = calloc(1, sizeof(*sys));
-    if (!sys)
-        return VLC_ENOMEM;
+    p_vout->p_sys = malloc( sizeof( vout_sys_t ) );
+    if( p_vout->p_sys == NULL )
+    {
+        msg_Err( p_vout, "out of memory" );
+        return( 1 );
+    }
 
     /* Don't parse any options, but take $AAOPTS into account */
-    aa_parseoptions(NULL, NULL, NULL, NULL);
+    aa_parseoptions( NULL, NULL, NULL, NULL );
 
-    /* */
-    sys->aa_context = aa_autoinit(&aa_defparams);
-    if (!sys->aa_context) {
-        msg_Err(vd, "cannot initialize aalib");
-        goto error;
+    if (!(p_vout->p_sys->aa_context = aa_autoinit(&aa_defparams)))
+    {
+        msg_Err( p_vout, "cannot initialize aalib" );
+        return( 1 );
     }
-    vout_display_DeleteWindow(vd, NULL);
 
-    sys->et = VoutDisplayEventCreateThread(vd);
+    p_vout->pf_init = Init;
+    p_vout->pf_end = End;
+    p_vout->pf_manage = Manage;
+    p_vout->pf_render = Render;
+    p_vout->pf_display = Display;
 
-    aa_autoinitkbd(sys->aa_context, 0);
-    aa_autoinitmouse(sys->aa_context, AA_MOUSEALLMASK);
-
-    /* */
-    video_format_t fmt = vd->fmt;
-    fmt.i_chroma = VLC_CODEC_RGB8;
-    fmt.i_width  = aa_imgwidth(sys->aa_context);
-    fmt.i_height = aa_imgheight(sys->aa_context);
-    fmt.i_visible_width = fmt.i_width;
-    fmt.i_visible_height = fmt.i_height;
-
-    /* Setup vout_display now that everything is fine */
-    vd->fmt = fmt;
-    vd->info.has_pictures_invalid = true;
-    vd->info.needs_hide_mouse = true;
-
-    vd->pool    = Pool;
-    vd->prepare = Prepare;
-    vd->display = PictureDisplay;
-    vd->control = Control;
-    vd->manage  = Manage;
-
-    /* Inspect initial configuration and send correction events
-     * FIXME how to handle aspect ratio with aa ? */
-    vout_display_SendEventDisplaySize(vd, fmt.i_width, fmt.i_height);
-
-    return VLC_SUCCESS;
-
-error:
-    if (sys && sys->aa_context)
-        aa_close(sys->aa_context);
-    free(sys);
-    return VLC_EGENERIC;
+    p_vout->p_sys->i_width = aa_imgwidth(p_vout->p_sys->aa_context);
+    p_vout->p_sys->i_height = aa_imgheight(p_vout->p_sys->aa_context);
+    aa_autoinitkbd( p_vout->p_sys->aa_context, 0 );
+    aa_autoinitmouse( p_vout->p_sys->aa_context, AA_MOUSEPRESSMASK );
+    aa_hidemouse( p_vout->p_sys->aa_context );
+    return( 0 );
 }
 
-/**
- * Close a aa video output method
- */
-static void Close(vlc_object_t *object)
+/*****************************************************************************
+ * Init: initialize aa video thread output method
+ *****************************************************************************/
+static int Init( vout_thread_t *p_vout )
 {
-    vout_display_t *vd = (vout_display_t *)object;
-    vout_display_sys_t *sys = vd->sys;
+    int i_index;
+    picture_t *p_pic = NULL;
 
-    if (sys->pool)
-        picture_pool_Release(sys->pool);
-    VoutDisplayEventKillThread(sys->et);
-    aa_close(sys->aa_context);
-    free(sys);
-}
+    I_OUTPUTPICTURES = 0;
 
-/**
- * Return a pool of direct buffers
- */
-static picture_pool_t *Pool(vout_display_t *vd, unsigned count)
-{
-    vout_display_sys_t *sys = vd->sys;
-    VLC_UNUSED(count);
+    p_vout->output.i_chroma = VLC_FOURCC('R','G','B','2');
+    p_vout->output.i_width = p_vout->p_sys->i_width;
+    p_vout->output.i_height = p_vout->p_sys->i_height;
+    p_vout->output.i_aspect = p_vout->p_sys->i_width
+                               * VOUT_ASPECT_FACTOR / p_vout->p_sys->i_height;
+    p_vout->output.pf_setpalette = SetPalette;
 
-    if (!sys->pool) {
-        picture_resource_t rsc;
-
-        memset(&rsc, 0, sizeof(rsc));
-        rsc.p[0].p_pixels = aa_image(sys->aa_context);
-        rsc.p[0].i_pitch = aa_imgwidth(sys->aa_context);
-        rsc.p[0].i_lines = aa_imgheight(sys->aa_context);
-
-        picture_t *p_picture = picture_NewFromResource(&vd->fmt, &rsc);
-        if (!p_picture)
-            return NULL;
-
-        sys->pool = picture_pool_New(1, &p_picture);
-    }
-    return sys->pool;
-}
-
-/**
- * Prepare a picture for display */
-static void Prepare(vout_display_t *vd, picture_t *picture, subpicture_t *subpicture)
-{
-    vout_display_sys_t *sys = vd->sys;
-
-    assert(vd->fmt.i_width  == aa_imgwidth(sys->aa_context) &&
-           vd->fmt.i_height == aa_imgheight(sys->aa_context));
-
-#if 0
-    if (picture->format.p_palette) {
-        for (int i = 0; i < 256; i++) {
-            aa_setpalette(vd->sys->palette, 256 - i,
-                           red[ i ], green[ i ], blue[ i ]);
+    /* Find an empty picture slot */
+    for( i_index = 0 ; i_index < VOUT_MAX_PICTURES ; i_index++ )
+    {
+        if( p_vout->p_picture[ i_index ].i_status == FREE_PICTURE )
+        {
+            p_pic = p_vout->p_picture + i_index;
+            break;
         }
     }
-#else
-    VLC_UNUSED(picture);
-#endif
-    VLC_UNUSED(subpicture);
 
-    aa_fastrender(sys->aa_context, 0, 0,
-                  vd->fmt.i_width, vd->fmt.i_height);
+    if( p_pic == NULL )
+    {
+        return -1;
+    }
+
+    /* Allocate the picture */
+    p_pic->p->p_pixels = aa_image( p_vout->p_sys->aa_context );
+    p_pic->p->i_lines = p_vout->p_sys->i_height;
+    p_pic->p->i_pitch = p_vout->p_sys->i_width;
+    p_pic->p->i_pixel_pitch = 1;
+    p_pic->p->i_visible_pitch = p_vout->p_sys->i_width;
+    p_pic->i_planes = 1;
+
+    p_pic->i_status = DESTROYED_PICTURE;
+    p_pic->i_type   = DIRECT_PICTURE;
+
+    PP_OUTPUTPICTURE[ I_OUTPUTPICTURES ] = p_pic;
+    I_OUTPUTPICTURES++;
+
+    return 0;
 }
 
-/**
- * Display a picture
- */
-static void PictureDisplay(vout_display_t *vd, picture_t *picture, subpicture_t *subpicture)
+/*****************************************************************************
+ * End: terminate aa video thread output method
+ *****************************************************************************/
+static void End( vout_thread_t *p_vout )
 {
-    vout_display_sys_t *sys = vd->sys;
-
-    aa_flush(sys->aa_context);
-    picture_Release(picture);
-    VLC_UNUSED(subpicture);
+    ;
 }
 
-/**
- * Control for vout display
- */
-static int Control(vout_display_t *vd, int query, va_list args)
+/*****************************************************************************
+ * Destroy: destroy aa video thread output method
+ *****************************************************************************
+ * Terminate an output method created by AaCreateOutputMethod
+ *****************************************************************************/
+static void Destroy( vlc_object_t *p_this )
 {
-    VLC_UNUSED(args);
-    vout_display_sys_t *sys = vd->sys;
+    vout_thread_t *p_vout = (vout_thread_t *)p_this;
 
-    switch (query) {
-    case VOUT_DISPLAY_CHANGE_DISPLAY_SIZE:
-        /* We have to ignore what is requested */
-        vout_display_SendEventPicturesInvalid(vd);
-        return VLC_SUCCESS;
+    aa_close( p_vout->p_sys->aa_context );
+    free( p_vout->p_sys );
+}
 
-    case VOUT_DISPLAY_RESET_PICTURES:
-        if (sys->pool)
-            picture_pool_Release(sys->pool);
-        sys->pool = NULL;
-
-        vd->fmt.i_width  = aa_imgwidth(sys->aa_context);
-        vd->fmt.i_height = aa_imgheight(sys->aa_context);
-        return VLC_SUCCESS;
-
-    case VOUT_DISPLAY_HIDE_MOUSE:
-        aa_hidemouse(sys->aa_context);
-        return VLC_SUCCESS;
-
+/*****************************************************************************
+ * Manage: handle aa events
+ *****************************************************************************
+ * This function should be called regularly by video output thread. It manages
+ * console events. It returns a non null value on error.
+ *****************************************************************************/
+static int Manage( vout_thread_t *p_vout )
+{
+    int event, x, y, b;
+    event = aa_getevent( p_vout->p_sys->aa_context, 0 );
+    switch ( event )
+    {
+    case AA_MOUSE:
+        aa_getmouse( p_vout->p_sys->aa_context, &x, &y, &b );
+        if ( b & AA_BUTTON3 )
+        {
+            intf_thread_t *p_intf;
+            p_intf = vlc_object_find( p_vout, VLC_OBJECT_INTF, FIND_ANYWHERE );
+            if( p_intf )
+            {
+                p_intf->b_menu_change = 1;
+                vlc_object_release( p_intf );
+            }
+        }
+        break;
+    case AA_RESIZE:
+        p_vout->i_changes |= VOUT_SIZE_CHANGE;
+        aa_resize( p_vout->p_sys->aa_context );
+        p_vout->p_sys->i_width = aa_imgwidth( p_vout->p_sys->aa_context );
+        p_vout->p_sys->i_height = aa_imgheight( p_vout->p_sys->aa_context );
+        break;
     default:
-        msg_Err(vd, "Unsupported query in vout display aalib");
-        return VLC_EGENERIC;
+        break;
     }
+    return( 0 );
 }
 
-
-/**
- * Proccess pending event
- */
-static void Manage(vout_display_t *vd)
+/*****************************************************************************
+ * Render: render previously calculated output
+ *****************************************************************************/
+static void Render( vout_thread_t *p_vout, picture_t *p_pic )
 {
-    vout_display_sys_t *sys = vd->sys;
+  aa_fastrender( p_vout->p_sys->aa_context, 0, 0,
+                 aa_imgwidth( p_vout->p_sys->aa_context ),
+                 aa_imgheight( p_vout->p_sys->aa_context ) );
+}
 
-    for (;;) {
-        const int event = aa_getevent(sys->aa_context, 0);
-        if (!event)
-            return;
+/*****************************************************************************
+ * Display: displays previously rendered output
+ *****************************************************************************/
+static void Display( vout_thread_t *p_vout, picture_t *p_pic )
+{
+    /* No need to do anything, the fake direct buffers stay as they are */
+    int i_width, i_height, i_x, i_y;
 
-        switch (event) {
-        case AA_MOUSE: {
-            int x, y;
-            int button;
-            int vlc;
-            aa_getmouse(sys->aa_context, &x, &y, &button);
+    vout_PlacePicture( p_vout, p_vout->p_sys->i_width, p_vout->p_sys->i_height,
+                       &i_x, &i_y, &i_width, &i_height );
 
-            vlc = 0;
-            if (button & AA_BUTTON1)
-                vlc |= 1 << MOUSE_BUTTON_LEFT;
-            if (button & AA_BUTTON2)
-                vlc |= 1 << MOUSE_BUTTON_CENTER;
-            if (button & AA_BUTTON3)
-                vlc |= 1 << MOUSE_BUTTON_RIGHT;
+    aa_flush(p_vout->p_sys->aa_context);
+}
 
-            vout_display_SendEventMouseState(vd, x, y, vlc);
+/*****************************************************************************
+ * SetPalette: set the 8bpp palette
+ *****************************************************************************/
+static void SetPalette( vout_thread_t *p_vout,
+                        uint16_t *red, uint16_t *green, uint16_t *blue )
+{
+    int i;
 
-            aa_showcursor(sys->aa_context); /* Not perfect, we show it on click too */
-            break;
-        }
-
-        case AA_RESIZE:
-            aa_resize(sys->aa_context);
-            vout_display_SendEventDisplaySize(vd,
-                                              aa_imgwidth(sys->aa_context),
-                                              aa_imgheight(sys->aa_context));
-            break;
-
-        /* TODO keys support to complete */
-        case AA_UP:
-            vout_display_SendEventKey(vd, KEY_UP);
-            break;
-        case AA_DOWN:
-            vout_display_SendEventKey(vd, KEY_DOWN);
-            break;
-        case AA_RIGHT:
-            vout_display_SendEventKey(vd, KEY_RIGHT);
-            break;
-        case AA_LEFT:
-            vout_display_SendEventKey(vd, KEY_LEFT);
-            break;
-        case AA_BACKSPACE:
-            vout_display_SendEventKey(vd, KEY_BACKSPACE);
-            break;
-        case AA_ESC:
-            vout_display_SendEventKey(vd, KEY_ESC);
-            break;
-        default:
-            if (event >= 0x20 && event <= 0x7f)
-                vout_display_SendEventKey(vd, event);
-            break;
-        }
+    /* Fill colors with color information */
+    for( i = 0; i < 256; i++ )
+    {
+        aa_setpalette( p_vout->p_sys->palette, 256 -i,
+                       red[ i ], green[ i ], blue[ i ] );
     }
 }
 

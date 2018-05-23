@@ -1,37 +1,32 @@
 /*****************************************************************************
  * buffer.c: MMS access plug-in
  *****************************************************************************
- * Copyright (C) 2001-2004 VLC authors and VideoLAN
- * $Id: 1aab6aa8bf35e0ca98c8f4b6d1c93804d11695e5 $
+ * Copyright (C) 2001, 2002 VideoLAN
+ * $Id: buffer.c 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
+#include <stdlib.h>
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
-#include <vlc_common.h>
-#include <vlc_access.h>
-#include <vlc_charset.h>
+#include <vlc/vlc.h>
 
 #include "asf.h"
 #include "buffer.h"
@@ -39,12 +34,16 @@
 /*****************************************************************************
  * Buffer management functions
  *****************************************************************************/
+
 int var_buffer_initwrite( var_buffer_t *p_buf, int i_default_size )
 {
     p_buf->i_size =  ( i_default_size > 0 ) ? i_default_size : 2048;
     p_buf->i_data = 0;
-    p_buf->p_data = malloc( p_buf->i_size );
-    return p_buf->p_data ? 0 : -1;
+    if( !( p_buf->p_data = malloc( p_buf->i_size ) ) )
+    {
+        return( -1 );
+    }
+    return( 0 );
 }
 
 int var_buffer_reinitwrite( var_buffer_t *p_buf, int i_default_size )
@@ -53,7 +52,10 @@ int var_buffer_reinitwrite( var_buffer_t *p_buf, int i_default_size )
     if( p_buf->i_size < i_default_size )
     {
         p_buf->i_size = i_default_size;
-        free( p_buf->p_data );
+        if( p_buf->p_data )
+        {
+            free( p_buf->p_data );
+        }
         p_buf->p_data = malloc( p_buf->i_size );
     }
     if( !p_buf->p_data )
@@ -61,7 +63,11 @@ int var_buffer_reinitwrite( var_buffer_t *p_buf, int i_default_size )
         p_buf->i_size =  ( i_default_size > 0 ) ? i_default_size : 2048;
         p_buf->p_data = malloc( p_buf->i_size );
     }
-    return p_buf->p_data ? 0 : -1;
+    if( !p_buf->p_data )
+    {
+        return( -1 );
+    }
+    return( 0 );
 }
 
 void var_buffer_add8 ( var_buffer_t *p_buf, uint8_t  i_byte )
@@ -70,7 +76,7 @@ void var_buffer_add8 ( var_buffer_t *p_buf, uint8_t  i_byte )
     if( p_buf->i_data >= p_buf->i_size )
     {
         p_buf->i_size += 1024;
-        p_buf->p_data = xrealloc( p_buf->p_data, p_buf->i_size );
+        p_buf->p_data = realloc( p_buf->p_data, p_buf->i_size );
     }
     p_buf->p_data[p_buf->i_data] = i_byte&0xff;
     p_buf->i_data++;
@@ -94,49 +100,44 @@ void var_buffer_add64( var_buffer_t *p_buf, uint64_t i_long )
     var_buffer_add32( p_buf, ( i_long >> 32 )&0xffffffff );
 }
 
+
 void var_buffer_addmemory( var_buffer_t *p_buf, void *p_mem, int i_mem )
 {
     /* check if there is enough data */
     if( p_buf->i_data + i_mem >= p_buf->i_size )
     {
         p_buf->i_size += i_mem + 1024;
-        p_buf->p_data = xrealloc( p_buf->p_data, p_buf->i_size );
+        p_buf->p_data = realloc( p_buf->p_data, p_buf->i_size );
     }
 
-    memcpy( p_buf->p_data + p_buf->i_data, p_mem, i_mem );
+    memcpy( p_buf->p_data + p_buf->i_data,
+            p_mem,
+            i_mem );
     p_buf->i_data += i_mem;
 }
 
-void var_buffer_addUTF16( stream_t  *p_access, var_buffer_t *p_buf, const char *p_str )
+void var_buffer_addUTF16( var_buffer_t *p_buf, char *p_str )
 {
-    uint16_t *p_out;
-    size_t i_out;
-
-    if( p_str != NULL )
-#ifdef WORDS_BIGENDIAN
-        p_out = ToCharset( "UTF-16BE", p_str, &i_out );
-#else
-        p_out = ToCharset( "UTF-16LE", p_str, &i_out );
-#endif
-    else
-        p_out = NULL;
-    if( p_out == NULL )
+    unsigned int i;
+    if( !p_str )
     {
-        msg_Err( p_access, "UTF-16 conversion failed" );
-        i_out = 0;
+        var_buffer_add16( p_buf, 0 );
     }
-
-    i_out /= 2;
-    for( size_t i = 0; i < i_out; i ++ )
-        var_buffer_add16( p_buf, p_out[i] );
-    free( p_out );
-
-    var_buffer_add16( p_buf, 0 );
+    else
+    {
+        for( i = 0; i < strlen( p_str ) + 1; i++ ) // and 0
+        {
+            var_buffer_add16( p_buf, p_str[i] );
+        }
+    }
 }
 
 void var_buffer_free( var_buffer_t *p_buf )
 {
-    free( p_buf->p_data );
+    if( p_buf->p_data )
+    {
+        free( p_buf->p_data );
+    }
     p_buf->i_data = 0;
     p_buf->i_size = 0;
 }
@@ -159,6 +160,7 @@ uint8_t var_buffer_get8 ( var_buffer_t *p_buf )
     p_buf->i_data++;
     return( i_byte );
 }
+
 
 uint16_t var_buffer_get16( var_buffer_t *p_buf )
 {
@@ -198,10 +200,11 @@ int var_buffer_getmemory ( var_buffer_t *p_buf, void *p_mem, int64_t i_mem )
     i_copy = __MIN( i_mem, p_buf->i_size - p_buf->i_data );
     if( i_copy > 0 && p_mem != NULL)
     {
-        memcpy( p_mem, p_buf->p_data + p_buf->i_data , i_copy );
+        memcpy( p_mem, p_buf + p_buf->i_data, i_copy );
     }
     if( i_copy < 0 )
     {
+//        fprintf( stderr, "\n**************arrrrrrggggg\n" );
         i_copy = 0;
     }
     p_buf->i_data += i_copy;
@@ -215,10 +218,15 @@ int var_buffer_readempty( var_buffer_t *p_buf )
 
 void var_buffer_getguid( var_buffer_t *p_buf, guid_t *p_guid )
 {
-    p_guid->Data1 = var_buffer_get32( p_buf );
-    p_guid->Data2 = var_buffer_get16( p_buf );
-    p_guid->Data3 = var_buffer_get16( p_buf );
+    int i;
 
-    for( int i = 0; i < 8; i++ )
-        p_guid->Data4[i] = var_buffer_get8( p_buf );
+    p_guid->v1 = var_buffer_get32( p_buf );
+    p_guid->v2 = var_buffer_get16( p_buf );
+    p_guid->v3 = var_buffer_get16( p_buf );
+
+    for( i = 0; i < 8; i++ )
+    {
+        p_guid->v4[i] = var_buffer_get8( p_buf );
+    }
 }
+

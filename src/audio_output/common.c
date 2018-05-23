@@ -1,85 +1,111 @@
 /*****************************************************************************
  * common.c : audio output management of common data structures
  *****************************************************************************
- * Copyright (C) 2002-2007 VLC authors and VideoLAN
- * $Id: f7dbc575578979ffa5588155fef8c08f4d2e14c5 $
+ * Copyright (C) 2002-2004 VideoLAN
+ * $Id: common.c 7632 2004-05-10 12:21:29Z gbazin $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
+/*****************************************************************************
+ * Preamble
+ *****************************************************************************/
+#include <stdlib.h>                            /* calloc(), malloc(), free() */
+#include <string.h>
 
-#include <limits.h>
-#include <assert.h>
+#include <vlc/vlc.h>
 
-#include <vlc_common.h>
-#include <vlc_aout.h>
+#include "audio_output.h"
 #include "aout_internal.h"
+
+
+/*
+ * Instances management (internal and external)
+ */
+
+/*****************************************************************************
+ * aout_New: initialize aout structure
+ *****************************************************************************/
+aout_instance_t * __aout_New( vlc_object_t * p_parent )
+{
+    aout_instance_t * p_aout;
+    vlc_value_t val;
+
+    /* Allocate descriptor. */
+    p_aout = vlc_object_create( p_parent, VLC_OBJECT_AOUT );
+    if( p_aout == NULL )
+    {
+        return NULL;
+    }
+
+    /* Initialize members. */
+    vlc_mutex_init( p_parent, &p_aout->input_fifos_lock );
+    vlc_mutex_init( p_parent, &p_aout->mixer_lock );
+    vlc_mutex_init( p_parent, &p_aout->output_fifo_lock );
+    p_aout->i_nb_inputs = 0;
+    p_aout->mixer.f_multiplier = 1.0;
+    p_aout->mixer.b_error = 1;
+    p_aout->output.b_error = 1;
+    p_aout->output.b_starving = 1;
+
+    var_Create( p_aout, "intf-change", VLC_VAR_BOOL );
+    val.b_bool = VLC_TRUE;
+    var_Set( p_aout, "intf-change", val );
+
+    return p_aout;
+}
+
+/*****************************************************************************
+ * aout_Delete: destroy aout structure
+ *****************************************************************************/
+void aout_Delete( aout_instance_t * p_aout )
+{
+    var_Destroy( p_aout, "intf-change" );
+
+    vlc_mutex_destroy( &p_aout->input_fifos_lock );
+    vlc_mutex_destroy( &p_aout->mixer_lock );
+    vlc_mutex_destroy( &p_aout->output_fifo_lock );
+
+    /* Free structure. */
+    vlc_object_destroy( p_aout );
+}
+
 
 /*
  * Formats management (internal and external)
  */
 
 /*****************************************************************************
- * aout_BitsPerSample : get the number of bits per sample
+ * aout_FormatNbChannels : return the number of channels
  *****************************************************************************/
-unsigned int aout_BitsPerSample( vlc_fourcc_t i_format )
+unsigned int aout_FormatNbChannels( const audio_sample_format_t * p_format )
 {
-    switch( vlc_fourcc_GetCodec( AUDIO_ES, i_format ) )
+    static const uint32_t pi_channels[] =
+        { AOUT_CHAN_CENTER, AOUT_CHAN_LEFT, AOUT_CHAN_RIGHT,
+          AOUT_CHAN_REARCENTER, AOUT_CHAN_REARLEFT, AOUT_CHAN_REARRIGHT,
+          AOUT_CHAN_MIDDLELEFT, AOUT_CHAN_MIDDLERIGHT, AOUT_CHAN_LFE };
+    unsigned int i_nb = 0, i;
+
+    for ( i = 0; i < sizeof(pi_channels)/sizeof(uint32_t); i++ )
     {
-    case VLC_CODEC_U8:
-    case VLC_CODEC_S8:
-    case VLC_CODEC_ALAW:
-    case VLC_CODEC_MULAW:
-        return 8;
-
-    case VLC_CODEC_U16L:
-    case VLC_CODEC_S16L:
-    case VLC_CODEC_U16B:
-    case VLC_CODEC_S16B:
-        return 16;
-
-    case VLC_CODEC_U24L:
-    case VLC_CODEC_S24L:
-    case VLC_CODEC_U24B:
-    case VLC_CODEC_S24B:
-        return 24;
-
-    case VLC_CODEC_S24L32:
-    case VLC_CODEC_S24B32:
-    case VLC_CODEC_U32L:
-    case VLC_CODEC_U32B:
-    case VLC_CODEC_S32L:
-    case VLC_CODEC_S32B:
-    case VLC_CODEC_F32L:
-    case VLC_CODEC_F32B:
-        return 32;
-
-    case VLC_CODEC_F64L:
-    case VLC_CODEC_F64B:
-        return 64;
-
-    default:
-        /* For these formats the caller has to indicate the parameters
-         * by hand. */
-        return 0;
+        if ( p_format->i_physical_channels & pi_channels[i] ) i_nb++;
     }
+
+    return i_nb;
 }
 
 /*****************************************************************************
@@ -87,17 +113,40 @@ unsigned int aout_BitsPerSample( vlc_fourcc_t i_format )
  *****************************************************************************/
 void aout_FormatPrepare( audio_sample_format_t * p_format )
 {
+    int i_result;
 
-    unsigned i_channels = aout_FormatNbChannels( p_format );
-    if( i_channels > 0 )
-        p_format->i_channels = i_channels;
-    p_format->i_bitspersample = aout_BitsPerSample( p_format->i_format );
-    if( p_format->i_bitspersample > 0 )
+    switch ( p_format->i_format )
     {
-        p_format->i_bytes_per_frame = ( p_format->i_bitspersample / 8 )
-                                    * p_format->i_channels;
-        p_format->i_frame_length = 1;
+    case VLC_FOURCC('u','8',' ',' '):
+    case VLC_FOURCC('s','8',' ',' '):
+        i_result = 1;
+        break;
+
+    case VLC_FOURCC('u','1','6','l'):
+    case VLC_FOURCC('s','1','6','l'):
+    case VLC_FOURCC('u','1','6','b'):
+    case VLC_FOURCC('s','1','6','b'):
+        i_result = 2;
+        break;
+
+    case VLC_FOURCC('f','l','3','2'):
+    case VLC_FOURCC('f','i','3','2'):
+        i_result = 4;
+        break;
+
+    case VLC_FOURCC('s','p','d','i'):
+    case VLC_FOURCC('a','5','2',' '):
+    case VLC_FOURCC('d','t','s',' '):
+    case VLC_FOURCC('m','p','g','a'):
+    case VLC_FOURCC('m','p','g','3'):
+    default:
+        /* For these formats the caller has to indicate the parameters
+         * by hand. */
+        return;
     }
+
+    p_format->i_bytes_per_frame = i_result * aout_FormatNbChannels( p_format );
+    p_format->i_frame_length = 1;
 }
 
 /*****************************************************************************
@@ -105,34 +154,37 @@ void aout_FormatPrepare( audio_sample_format_t * p_format )
  *****************************************************************************/
 const char * aout_FormatPrintChannels( const audio_sample_format_t * p_format )
 {
-    if (p_format->channel_type == AUDIO_CHANNEL_TYPE_AMBISONICS)
-        return "Ambisonics";
-
-    /* AUDIO_CHANNEL_TYPE_BITMAP */
-    switch ( p_format->i_physical_channels )
+    switch ( p_format->i_physical_channels & AOUT_CHAN_PHYSMASK )
     {
-    case AOUT_CHAN_LEFT:
-    case AOUT_CHAN_RIGHT:
     case AOUT_CHAN_CENTER:
-        if ( (p_format->i_physical_channels & AOUT_CHAN_CENTER)
-              || (p_format->i_physical_channels
+        if ( (p_format->i_original_channels & AOUT_CHAN_CENTER)
+              || (p_format->i_original_channels
                    & (AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT)) )
             return "Mono";
-        else if ( p_format->i_physical_channels & AOUT_CHAN_LEFT )
+        else if ( p_format->i_original_channels & AOUT_CHAN_LEFT )
             return "Left";
         return "Right";
     case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT:
-        if ( p_format->i_chan_mode & AOUT_CHANMODE_DOLBYSTEREO )
-            return "Dolby";
-        else if ( p_format->i_chan_mode & AOUT_CHANMODE_DUALMONO )
-            return "Dual-mono";
-        else if ( p_format->i_physical_channels == AOUT_CHAN_CENTER )
-            return "Stereo/Mono";
-        else if ( !(p_format->i_physical_channels & AOUT_CHAN_RIGHT) )
-            return "Stereo/Left";
-        else if ( !(p_format->i_physical_channels & AOUT_CHAN_LEFT) )
-            return "Stereo/Right";
-        return "Stereo";
+        if ( p_format->i_original_channels & AOUT_CHAN_REVERSESTEREO )
+        {
+            if ( p_format->i_original_channels & AOUT_CHAN_DOLBYSTEREO )
+                return "Dolby/Reverse";
+            return "Stereo/Reverse";
+        }
+        else
+        {
+            if ( p_format->i_original_channels & AOUT_CHAN_DOLBYSTEREO )
+                return "Dolby";
+            else if ( p_format->i_original_channels & AOUT_CHAN_DUALMONO )
+                return "Dual-mono";
+            else if ( p_format->i_original_channels == AOUT_CHAN_CENTER )
+                return "Stereo/Mono";
+            else if ( !(p_format->i_original_channels & AOUT_CHAN_RIGHT) )
+                return "Stereo/Left";
+            else if ( !(p_format->i_original_channels & AOUT_CHAN_LEFT) )
+                return "Stereo/Right";
+            return "Stereo";
+        }
     case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_CENTER:
         return "3F";
     case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_REARCENTER:
@@ -143,34 +195,28 @@ const char * aout_FormatPrintChannels( const audio_sample_format_t * p_format )
     case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT
           | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT:
         return "2F2R";
-    case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT
-          | AOUT_CHAN_MIDDLELEFT | AOUT_CHAN_MIDDLERIGHT:
-        return "2F2M";
     case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_CENTER
           | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT:
         return "3F2R";
-    case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_CENTER
-          | AOUT_CHAN_MIDDLELEFT | AOUT_CHAN_MIDDLERIGHT:
-        return "3F2M";
 
     case AOUT_CHAN_CENTER | AOUT_CHAN_LFE:
-        if ( (p_format->i_physical_channels & AOUT_CHAN_CENTER)
-              || (p_format->i_physical_channels
+        if ( (p_format->i_original_channels & AOUT_CHAN_CENTER)
+              || (p_format->i_original_channels
                    & (AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT)) )
             return "Mono/LFE";
-        else if ( p_format->i_physical_channels & AOUT_CHAN_LEFT )
+        else if ( p_format->i_original_channels & AOUT_CHAN_LEFT )
             return "Left/LFE";
         return "Right/LFE";
     case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_LFE:
-        if ( p_format->i_chan_mode & AOUT_CHANMODE_DOLBYSTEREO )
+        if ( p_format->i_original_channels & AOUT_CHAN_DOLBYSTEREO )
             return "Dolby/LFE";
-        else if ( p_format->i_chan_mode & AOUT_CHANMODE_DUALMONO )
+        else if ( p_format->i_original_channels & AOUT_CHAN_DUALMONO )
             return "Dual-mono/LFE";
-        else if ( p_format->i_physical_channels == AOUT_CHAN_CENTER )
+        else if ( p_format->i_original_channels == AOUT_CHAN_CENTER )
             return "Mono/LFE";
-        else if ( !(p_format->i_physical_channels & AOUT_CHAN_RIGHT) )
+        else if ( !(p_format->i_original_channels & AOUT_CHAN_RIGHT) )
             return "Stereo/Left/LFE";
-        else if ( !(p_format->i_physical_channels & AOUT_CHAN_LEFT) )
+        else if ( !(p_format->i_original_channels & AOUT_CHAN_LEFT) )
             return "Stereo/Right/LFE";
          return "Stereo/LFE";
     case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_CENTER | AOUT_CHAN_LFE:
@@ -184,23 +230,9 @@ const char * aout_FormatPrintChannels( const audio_sample_format_t * p_format )
     case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT
           | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT | AOUT_CHAN_LFE:
         return "2F2R/LFE";
-    case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT
-          | AOUT_CHAN_MIDDLELEFT | AOUT_CHAN_MIDDLERIGHT | AOUT_CHAN_LFE:
-        return "2F2M/LFE";
     case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_CENTER
           | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT | AOUT_CHAN_LFE:
         return "3F2R/LFE";
-    case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_CENTER
-          | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT | AOUT_CHAN_REARCENTER
-          | AOUT_CHAN_LFE:
-        return "3F3R/LFE";
-    case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_CENTER
-          | AOUT_CHAN_MIDDLELEFT | AOUT_CHAN_MIDDLERIGHT | AOUT_CHAN_LFE:
-        return "3F2M/LFE";
-    case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT
-          | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT | AOUT_CHAN_MIDDLELEFT
-          | AOUT_CHAN_MIDDLERIGHT:
-        return "2F2M2R";
     case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_CENTER
           | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT | AOUT_CHAN_MIDDLELEFT
           | AOUT_CHAN_MIDDLERIGHT:
@@ -209,41 +241,31 @@ const char * aout_FormatPrintChannels( const audio_sample_format_t * p_format )
           | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT | AOUT_CHAN_MIDDLELEFT
           | AOUT_CHAN_MIDDLERIGHT | AOUT_CHAN_LFE:
         return "3F2M2R/LFE";
-    case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_CENTER
-          | AOUT_CHAN_REARCENTER | AOUT_CHAN_MIDDLELEFT
-          | AOUT_CHAN_MIDDLERIGHT | AOUT_CHAN_LFE:
-        return "3F2M1R/LFE";
-    case AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT | AOUT_CHAN_CENTER
-          | AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT | AOUT_CHAN_REARCENTER
-          | AOUT_CHAN_MIDDLELEFT | AOUT_CHAN_MIDDLERIGHT | AOUT_CHAN_LFE:
-        return "3F2M3R/LFE";
     }
 
-    return "Unknown-chan-mask";
+    return "ERROR";
 }
 
-#undef aout_FormatPrint
-/**
- * Prints an audio sample format in a human-readable form.
- */
-void aout_FormatPrint( vlc_object_t *obj, const char *psz_text,
-                       const audio_sample_format_t *p_format )
+/*****************************************************************************
+ * aout_FormatPrint : print a format in a human-readable form
+ *****************************************************************************/
+void aout_FormatPrint( aout_instance_t * p_aout, const char * psz_text,
+                       const audio_sample_format_t * p_format )
 {
-    msg_Dbg( obj, "%s '%4.4s' %d Hz %s frame=%d samples/%d bytes", psz_text,
+    msg_Dbg( p_aout, "%s '%4.4s' %d Hz %s frame=%d samples/%d bytes", psz_text,
              (char *)&p_format->i_format, p_format->i_rate,
              aout_FormatPrintChannels( p_format ),
              p_format->i_frame_length, p_format->i_bytes_per_frame );
 }
 
-#undef aout_FormatsPrint
-/**
- * Prints two formats in a human-readable form
- */
-void aout_FormatsPrint( vlc_object_t *obj, const char * psz_text,
+/*****************************************************************************
+ * aout_FormatsPrint : print two formats in a human-readable form
+ *****************************************************************************/
+void aout_FormatsPrint( aout_instance_t * p_aout, const char * psz_text,
                         const audio_sample_format_t * p_format1,
                         const audio_sample_format_t * p_format2 )
 {
-    msg_Dbg( obj, "%s '%4.4s'->'%4.4s' %d Hz->%d Hz %s->%s",
+    msg_Dbg( p_aout, "%s '%4.4s'->'%4.4s' %d Hz->%d Hz %s->%s",
              psz_text,
              (char *)&p_format1->i_format, (char *)&p_format2->i_format,
              p_format1->i_rate, p_format2->i_rate,
@@ -251,398 +273,194 @@ void aout_FormatsPrint( vlc_object_t *obj, const char * psz_text,
              aout_FormatPrintChannels( p_format2 ) );
 }
 
+
+/*
+ * FIFO management (internal) - please understand that solving race conditions
+ * is _your_ job, ie. in the audio output you should own the mixer lock
+ * before calling any of these functions.
+ */
+
 /*****************************************************************************
- * aout_CheckChannelReorder : Check if we need to do some channel re-ordering
+ * aout_FifoInit : initialize the members of a FIFO
  *****************************************************************************/
-unsigned aout_CheckChannelReorder( const uint32_t *chans_in,
-                                   const uint32_t *chans_out,
-                                   uint32_t mask, uint8_t *restrict table )
+void aout_FifoInit( aout_instance_t * p_aout, aout_fifo_t * p_fifo,
+                    uint32_t i_rate )
 {
-    static_assert(AOUT_CHAN_MAX <= (sizeof (mask) * CHAR_BIT), "Missing bits");
-
-    unsigned channels = 0;
-
-    if( chans_in == NULL )
-        chans_in = pi_vlc_chan_order_wg4;
-    if( chans_out == NULL )
-        chans_out = pi_vlc_chan_order_wg4;
-
-    for( unsigned i = 0; chans_in[i]; i++ )
-    {
-        const uint32_t chan = chans_in[i];
-        if( !(mask & chan) )
-            continue;
-
-        unsigned index = 0;
-        for( unsigned j = 0; chan != chans_out[j]; j++ )
-            if( mask & chans_out[j] )
-                index++;
-
-        table[channels++] = index;
-    }
-
-    for( unsigned i = 0; i < channels; i++ )
-        if( table[i] != i )
-            return channels;
-    return 0;
-}
-
-/**
- * Reorders audio samples within a block of linear audio interleaved samples.
- * \param ptr start address of the block of samples
- * \param bytes size of the block in bytes (must be a multiple of the product
- *              of the channels count and the sample size)
- * \param channels channels count (also length of the chans_table table)
- * \param chans_table permutation table to reorder the channels
- *                    (usually computed by aout_CheckChannelReorder())
- * \param fourcc sample format (must be a linear sample format)
- * \note The samples must be naturally aligned in memory.
- */
-void aout_ChannelReorder( void *ptr, size_t bytes, uint8_t channels,
-                          const uint8_t *restrict chans_table, vlc_fourcc_t fourcc )
-{
-    if( unlikely(bytes == 0) )
-        return;
-
-    assert( channels != 0 );
-
-    /* The audio formats supported in audio output are inlined. For other
-     * formats (used in demuxers and muxers), memcpy() is used to avoid
-     * breaking type punning. */
-#define REORDER_TYPE(type) \
-do { \
-    const size_t frames = (bytes / sizeof (type)) / channels; \
-    type *buf = ptr; \
-\
-    for( size_t i = 0; i < frames; i++ ) \
-    { \
-        type tmp[AOUT_CHAN_MAX]; \
-\
-        for( size_t j = 0; j < channels; j++ ) \
-            tmp[chans_table[j]] = buf[j]; \
-        memcpy( buf, tmp, sizeof (type) * channels ); \
-        buf += channels; \
-    } \
-} while(0)
-
-    if( likely(channels <= AOUT_CHAN_MAX) )
-    {
-        switch( fourcc )
-        {
-            case VLC_CODEC_U8:   REORDER_TYPE(uint8_t); return;
-            case VLC_CODEC_S16N: REORDER_TYPE(int16_t); return;
-            case VLC_CODEC_FL32: REORDER_TYPE(float);   return;
-            case VLC_CODEC_S32N: REORDER_TYPE(int32_t); return;
-            case VLC_CODEC_FL64: REORDER_TYPE(double);  return;
-        }
-    }
-
-    unsigned size = aout_BitsPerSample( fourcc ) / 8;
-    assert( size != 0 && size <= 8 );
-
-    const size_t frames = bytes / (size * channels);
-    unsigned char *buf = ptr;
-
-    for( size_t i = 0; i < frames; i++ )
-    {
-        unsigned char tmp[256 * 8];
-
-        for( size_t j = 0; j < channels; j++ )
-             memcpy( tmp + size * chans_table[j], buf + size * j, size );
-         memcpy( buf, tmp, size * channels );
-         buf += size * channels;
-    }
-}
-
-/**
- * Interleaves audio samples within a block of samples.
- * \param dst destination buffer for interleaved samples
- * \param srcv source buffers (one per plane) of uninterleaved samples
- * \param samples number of samples (per channel/per plane)
- * \param chans channels/planes count
- * \param fourcc sample format (must be a linear sample format)
- * \note The samples must be naturally aligned in memory.
- * \warning Destination and source buffers MUST NOT overlap.
- */
-void aout_Interleave( void *restrict dst, const void *const *srcv,
-                      unsigned samples, unsigned chans, vlc_fourcc_t fourcc )
-{
-#define INTERLEAVE_TYPE(type) \
-do { \
-    type *d = dst; \
-    for( size_t i = 0; i < chans; i++ ) { \
-        const type *s = srcv[i]; \
-        for( size_t j = 0, k = 0; j < samples; j++, k += chans ) \
-            d[k] = *(s++); \
-        d++; \
-    } \
-} while(0)
-
-    switch( fourcc )
-    {
-        case VLC_CODEC_U8:   INTERLEAVE_TYPE(uint8_t);  break;
-        case VLC_CODEC_S16N: INTERLEAVE_TYPE(int16_t);  break;
-        case VLC_CODEC_FL32: INTERLEAVE_TYPE(float);    break;
-        case VLC_CODEC_S32N: INTERLEAVE_TYPE(int32_t);  break;
-        case VLC_CODEC_FL64: INTERLEAVE_TYPE(double);   break;
-        default:             vlc_assert_unreachable();
-    }
-#undef INTERLEAVE_TYPE
-}
-
-/**
- * Deinterleaves audio samples within a block of samples.
- * \param dst destination buffer for planar samples
- * \param src source buffer with interleaved samples
- * \param samples number of samples (per channel/per plane)
- * \param chans channels/planes count
- * \param fourcc sample format (must be a linear sample format)
- * \note The samples must be naturally aligned in memory.
- * \warning Destination and source buffers MUST NOT overlap.
- */
-void aout_Deinterleave( void *restrict dst, const void *restrict src,
-                      unsigned samples, unsigned chans, vlc_fourcc_t fourcc )
-{
-#define DEINTERLEAVE_TYPE(type) \
-do { \
-    type *d = dst; \
-    const type *s = src; \
-    for( size_t i = 0; i < chans; i++ ) { \
-        for( size_t j = 0, k = 0; j < samples; j++, k += chans ) \
-            *(d++) = s[k]; \
-        s++; \
-    } \
-} while(0)
-
-    switch( fourcc )
-    {
-        case VLC_CODEC_U8:   DEINTERLEAVE_TYPE(uint8_t);  break;
-        case VLC_CODEC_S16N: DEINTERLEAVE_TYPE(int16_t);  break;
-        case VLC_CODEC_FL32: DEINTERLEAVE_TYPE(float);    break;
-        case VLC_CODEC_S32N: DEINTERLEAVE_TYPE(int32_t);  break;
-        case VLC_CODEC_FL64: DEINTERLEAVE_TYPE(double);   break;
-        default:             vlc_assert_unreachable();
-    }
-#undef DEINTERLEAVE_TYPE
+    p_fifo->p_first = NULL;
+    p_fifo->pp_last = &p_fifo->p_first;
+    aout_DateInit( &p_fifo->end_date, i_rate );
 }
 
 /*****************************************************************************
- * aout_ChannelExtract:
+ * aout_FifoPush : push a packet into the FIFO
  *****************************************************************************/
-static inline void ExtractChannel( uint8_t *pi_dst, int i_dst_channels,
-                                   const uint8_t *pi_src, int i_src_channels,
-                                   int i_sample_count,
-                                   const int *pi_selection, int i_bytes )
+void aout_FifoPush( aout_instance_t * p_aout, aout_fifo_t * p_fifo,
+                    aout_buffer_t * p_buffer )
 {
-    for( int i = 0; i < i_sample_count; i++ )
+    *p_fifo->pp_last = p_buffer;
+    p_fifo->pp_last = &p_buffer->p_next;
+    *p_fifo->pp_last = NULL;
+    /* Enforce the continuity of the stream. */
+    if ( aout_DateGet( &p_fifo->end_date ) )
     {
-        for( int j = 0; j < i_dst_channels; j++ )
-            memcpy( &pi_dst[j * i_bytes], &pi_src[pi_selection[j] * i_bytes], i_bytes );
-        pi_dst += i_dst_channels * i_bytes;
-        pi_src += i_src_channels * i_bytes;
-    }
-}
-
-void aout_ChannelExtract( void *p_dst, int i_dst_channels,
-                          const void *p_src, int i_src_channels,
-                          int i_sample_count, const int *pi_selection, int i_bits_per_sample )
-{
-    /* It does not work in place */
-    assert( p_dst != p_src );
-
-    /* Force the compiler to inline for the specific cases so it can optimize */
-    if( i_bits_per_sample == 8 )
-        ExtractChannel( p_dst, i_dst_channels, p_src, i_src_channels, i_sample_count, pi_selection, 1 );
-    else  if( i_bits_per_sample == 16 )
-        ExtractChannel( p_dst, i_dst_channels, p_src, i_src_channels, i_sample_count, pi_selection, 2 );
-    else  if( i_bits_per_sample == 32 )
-        ExtractChannel( p_dst, i_dst_channels, p_src, i_src_channels, i_sample_count, pi_selection, 4 );
-    else  if( i_bits_per_sample == 64 )
-        ExtractChannel( p_dst, i_dst_channels, p_src, i_src_channels, i_sample_count, pi_selection, 8 );
-}
-
-bool aout_CheckChannelExtraction( int *pi_selection,
-                                  uint32_t *pi_layout, int *pi_channels,
-                                  const uint32_t pi_order_dst[AOUT_CHAN_MAX],
-                                  const uint32_t *pi_order_src, int i_channels )
-{
-    static_assert(AOUT_CHAN_MAX <= (sizeof (*pi_order_dst) * CHAR_BIT),
-                  "Missing bits");
-
-    uint32_t i_layout = 0;
-    int i_out = 0;
-    int pi_index[AOUT_CHAN_MAX];
-
-    /* */
-    if( !pi_order_dst )
-        pi_order_dst = pi_vlc_chan_order_wg4;
-
-    /* */
-    for( int i = 0; i < i_channels; i++ )
-    {
-        /* Ignore unknown or duplicated channels or not present in output */
-        if( !pi_order_src[i] || (i_layout & pi_order_src[i]) )
-            continue;
-
-        for( int j = 0; j < AOUT_CHAN_MAX; j++ )
-        {
-            if( pi_order_dst[j] == pi_order_src[i] )
-            {
-                assert( i_out < AOUT_CHAN_MAX );
-                pi_index[i_out++] = i;
-                i_layout |= pi_order_src[i];
-                break;
-            }
-        }
-    }
-
-    /* */
-    for( int i = 0, j = 0; i < AOUT_CHAN_MAX; i++ )
-    {
-        for( int k = 0; k < i_out; k++ )
-        {
-            if( pi_order_dst[i] == pi_order_src[pi_index[k]] )
-            {
-                pi_selection[j++] = pi_index[k];
-                break;
-            }
-        }
-    }
-
-    *pi_layout = i_layout;
-    *pi_channels = i_out;
-
-    for( int i = 0; i < i_out; i++ )
-    {
-        if( pi_selection[i] != i )
-            return true;
-    }
-    return i_out != i_channels;
-}
-
-/* Return the order in which filters should be inserted */
-static int FilterOrder( const char *psz_name )
-{
-    static const struct {
-        const char psz_name[10];
-        int        i_order;
-    } filter[] = {
-        { "equalizer",  0 },
-    };
-    for( unsigned i = 0; i < ARRAY_SIZE(filter); i++ )
-    {
-        if( !strcmp( filter[i].psz_name, psz_name ) )
-            return filter[i].i_order;
-    }
-    return INT_MAX;
-}
-
-/* This function will add or remove a module from a string list (colon
- * separated). It will return true if there is a modification
- * In case p_aout is NULL, we will use configuration instead of variable */
-bool aout_ChangeFilterString( vlc_object_t *p_obj, vlc_object_t *p_aout,
-                              const char *psz_variable,
-                              const char *psz_name, bool b_add )
-{
-    if( *psz_name == '\0' )
-        return false;
-
-    char *psz_list;
-    if( p_aout )
-    {
-        psz_list = var_GetString( p_aout, psz_variable );
+        p_buffer->start_date = aout_DateGet( &p_fifo->end_date );
+        p_buffer->end_date = aout_DateIncrement( &p_fifo->end_date,
+                                                 p_buffer->i_nb_samples );
     }
     else
     {
-        psz_list = var_InheritString( p_obj, psz_variable );
+        aout_DateSet( &p_fifo->end_date, p_buffer->end_date );
     }
-
-    /* Split the string into an array of filters */
-    int i_count = 1;
-    for( char *p = psz_list; p && *p; p++ )
-        i_count += *p == ':';
-    i_count += b_add;
-
-    const char **ppsz_filter = calloc( i_count, sizeof(*ppsz_filter) );
-    if( !ppsz_filter )
-    {
-        free( psz_list );
-        return false;
-    }
-    bool b_present = false;
-    i_count = 0;
-    for( char *p = psz_list; p && *p; )
-    {
-        char *psz_end = strchr(p, ':');
-        if( psz_end )
-            *psz_end++ = '\0';
-        else
-            psz_end = p + strlen(p);
-        if( *p )
-        {
-            b_present |= !strcmp( p, psz_name );
-            ppsz_filter[i_count++] = p;
-        }
-        p = psz_end;
-    }
-    if( b_present == b_add )
-    {
-        free( ppsz_filter );
-        free( psz_list );
-        return false;
-    }
-
-    if( b_add )
-    {
-        int i_order = FilterOrder( psz_name );
-        int i;
-        for( i = 0; i < i_count; i++ )
-        {
-            if( FilterOrder( ppsz_filter[i] ) > i_order )
-                break;
-        }
-        if( i < i_count )
-            memmove( &ppsz_filter[i+1], &ppsz_filter[i], (i_count - i) * sizeof(*ppsz_filter) );
-        ppsz_filter[i] = psz_name;
-        i_count++;
-    }
-    else
-    {
-        for( int i = 0; i < i_count; i++ )
-        {
-            if( !strcmp( ppsz_filter[i], psz_name ) )
-                ppsz_filter[i] = "";
-        }
-    }
-    size_t i_length = 0;
-    for( int i = 0; i < i_count; i++ )
-        i_length += 1 + strlen( ppsz_filter[i] );
-
-    char *psz_new = malloc( i_length + 1 );
-
-    if( unlikely( !psz_new ) )
-    {
-        free( ppsz_filter );
-        free( psz_list );
-        return false;
-    }
-
-    *psz_new = '\0';
-    for( int i = 0; i < i_count; i++ )
-    {
-        if( *ppsz_filter[i] == '\0' )
-            continue;
-        if( *psz_new )
-            strcat( psz_new, ":" );
-        strcat( psz_new, ppsz_filter[i] );
-    }
-    free( ppsz_filter );
-    free( psz_list );
-
-    var_SetString( p_obj, psz_variable, psz_new );
-    if( p_aout )
-        var_SetString( p_aout, psz_variable, psz_new );
-    free( psz_new );
-
-    return true;
 }
+
+/*****************************************************************************
+ * aout_FifoSet : set end_date and trash all buffers (because they aren't
+ * properly dated)
+ *****************************************************************************/
+void aout_FifoSet( aout_instance_t * p_aout, aout_fifo_t * p_fifo,
+                   mtime_t date )
+{
+    aout_buffer_t * p_buffer;
+
+    aout_DateSet( &p_fifo->end_date, date );
+    p_buffer = p_fifo->p_first;
+    while ( p_buffer != NULL )
+    {
+        aout_buffer_t * p_next = p_buffer->p_next;
+        aout_BufferFree( p_buffer );
+        p_buffer = p_next;
+    }
+    p_fifo->p_first = NULL;
+    p_fifo->pp_last = &p_fifo->p_first;
+}
+
+/*****************************************************************************
+ * aout_FifoMoveDates : Move forwards or backwards all dates in the FIFO
+ *****************************************************************************/
+void aout_FifoMoveDates( aout_instance_t * p_aout, aout_fifo_t * p_fifo,
+                         mtime_t difference )
+{
+    aout_buffer_t * p_buffer;
+
+    aout_DateMove( &p_fifo->end_date, difference );
+    p_buffer = p_fifo->p_first;
+    while ( p_buffer != NULL )
+    {
+        p_buffer->start_date += difference;
+        p_buffer->end_date += difference;
+        p_buffer = p_buffer->p_next;
+    }
+}
+
+/*****************************************************************************
+ * aout_FifoNextStart : return the current end_date
+ *****************************************************************************/
+mtime_t aout_FifoNextStart( aout_instance_t * p_aout, aout_fifo_t * p_fifo )
+{
+    return aout_DateGet( &p_fifo->end_date );
+}
+
+/*****************************************************************************
+ * aout_FifoFirstDate : return the playing date of the first buffer in the
+ * FIFO
+ *****************************************************************************/
+mtime_t aout_FifoFirstDate( aout_instance_t * p_aout, aout_fifo_t * p_fifo )
+{
+    return p_fifo->p_first ?  p_fifo->p_first->start_date : 0;
+}
+
+/*****************************************************************************
+ * aout_FifoPop : get the next buffer out of the FIFO
+ *****************************************************************************/
+aout_buffer_t * aout_FifoPop( aout_instance_t * p_aout, aout_fifo_t * p_fifo )
+{
+    aout_buffer_t * p_buffer;
+
+    p_buffer = p_fifo->p_first;
+    if ( p_buffer == NULL ) return NULL;
+    p_fifo->p_first = p_buffer->p_next;
+    if ( p_fifo->p_first == NULL )
+    {
+        p_fifo->pp_last = &p_fifo->p_first;
+    }
+
+    return p_buffer;
+}
+
+/*****************************************************************************
+ * aout_FifoDestroy : destroy a FIFO and its buffers
+ *****************************************************************************/
+void aout_FifoDestroy( aout_instance_t * p_aout, aout_fifo_t * p_fifo )
+{
+    aout_buffer_t * p_buffer;
+
+    p_buffer = p_fifo->p_first;
+    while ( p_buffer != NULL )
+    {
+        aout_buffer_t * p_next = p_buffer->p_next;
+        aout_BufferFree( p_buffer );
+        p_buffer = p_next;
+    }
+
+    p_fifo->p_first = NULL;
+    p_fifo->pp_last = &p_fifo->p_first;
+}
+
+
+/*
+ * Date management (internal and external)
+ */
+
+/*****************************************************************************
+ * aout_DateInit : set the divider of an audio_date_t
+ *****************************************************************************/
+void aout_DateInit( audio_date_t * p_date, uint32_t i_divider )
+{
+    p_date->date = 0;
+    p_date->i_divider = i_divider;
+    p_date->i_remainder = 0;
+}
+
+/*****************************************************************************
+ * aout_DateSet : set the date of an audio_date_t
+ *****************************************************************************/
+void aout_DateSet( audio_date_t * p_date, mtime_t new_date )
+{
+    p_date->date = new_date;
+    p_date->i_remainder = 0;
+}
+
+/*****************************************************************************
+ * aout_DateMove : move forwards or backwards the date of an audio_date_t
+ *****************************************************************************/
+void aout_DateMove( audio_date_t * p_date, mtime_t difference )
+{
+    p_date->date += difference;
+}
+
+/*****************************************************************************
+ * aout_DateGet : get the date of an audio_date_t
+ *****************************************************************************/
+mtime_t aout_DateGet( const audio_date_t * p_date )
+{
+    return p_date->date;
+}
+
+/*****************************************************************************
+ * aout_DateIncrement : increment the date and return the result, taking
+ * into account rounding errors
+ *****************************************************************************/
+mtime_t aout_DateIncrement( audio_date_t * p_date, uint32_t i_nb_samples )
+{
+    mtime_t i_dividend = (mtime_t)i_nb_samples * 1000000;
+    p_date->date += i_dividend / p_date->i_divider;
+    p_date->i_remainder += (int)(i_dividend % p_date->i_divider);
+    if ( p_date->i_remainder >= p_date->i_divider )
+    {
+        /* This is Bresenham algorithm. */
+        p_date->date++;
+        p_date->i_remainder -= p_date->i_divider;
+    }
+    return p_date->date;
+}
+

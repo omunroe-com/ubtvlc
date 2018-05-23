@@ -1,11 +1,11 @@
 /*****************************************************************************
  * bezier.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: b1fc05977230caeb65ea0cdddb2dfe39eedd5d5d $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: bezier.cpp 7217 2004-04-01 09:07:37Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,33 +19,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
-#include <vlc_common.h>
+#include <vlc/vlc.h>
 #include "bezier.hpp"
 #include <math.h>
 
-// XXX should be in VLC core
 #ifndef HAVE_LRINTF
-#   ifdef HAVE_LRINT
-#       define lrintf( x ) (int)rint( x )
-#   elif defined _WIN32
-        __inline long int lrintf( float x )
-        {
-            int i;
-            _asm fld x __asm fistp i
-            return i;
-        }
-#   endif
+#   define lrintf(a) (int)rint(a)
 #endif
 
-Bezier::Bezier( intf_thread_t *p_intf, const std::vector<float> &rAbscissas,
-                const std::vector<float> &rOrdinates, Flag_t flag )
+Bezier::Bezier( intf_thread_t *p_intf, const vector<float> &rAbscissas,
+                const vector<float> &rOrdinates, Flag_t flag )
     : SkinObject( p_intf )
 {
     // Copy the control points coordinates
@@ -90,7 +76,7 @@ Bezier::Bezier( intf_thread_t *p_intf, const std::vector<float> &rAbscissas,
     m_nbPoints = m_leftVect.size();
 
     // If we have only one control point, we duplicate it
-    // This allows simplifying the algorithms used in the class
+    // This allows to simplify the algorithms used in the class
     if( m_nbPoints == 1 )
     {
         m_leftVect.push_back( m_leftVect[0] );
@@ -111,12 +97,11 @@ float Bezier::getNearestPercent( int x, int y ) const
 }
 
 
-float Bezier::getMinDist( int x, int y, float xScale, float yScale ) const
+float Bezier::getMinDist( int x, int y ) const
 {
     int nearest = findNearestPoint( x, y );
-    double xDist = xScale * (m_leftVect[nearest] - x);
-    double yDist = yScale * (m_topVect[nearest] - y);
-    return sqrt( xDist * xDist + yDist * yDist );
+    return sqrt( (m_leftVect[nearest] - x) * (m_leftVect[nearest] - x) +
+                 (m_topVect[nearest] - y) * (m_topVect[nearest] - y) );
 }
 
 
@@ -148,9 +133,9 @@ int Bezier::getWidth() const
     int width = 0;
     for( int i = 0; i < m_nbPoints; i++ )
     {
-        if( m_leftVect[i] >= width )
+        if( m_leftVect[i] > width )
         {
-            width = m_leftVect[i] + 1;
+            width = m_leftVect[i];
         }
     }
     return width;
@@ -162,9 +147,9 @@ int Bezier::getHeight() const
     int height = 0;
     for( int i = 0; i < m_nbPoints; i++ )
     {
-        if( m_topVect[i] >= height )
+        if( m_topVect[i] > height )
         {
-            height = m_topVect[i] + 1;
+            height = m_topVect[i];
         }
     }
     return height;
@@ -194,23 +179,6 @@ int Bezier::findNearestPoint( int x, int y ) const
 }
 
 
-inline float Bezier::power( float x, int n )
-{
-#if 0
-    return n <= 0 ? 1 : x * power( x, n - 1 );
-#else
-    return powf( x, n );
-#endif
-}
-
-
-inline float Bezier::computeCoeff( int i, int n, float t ) const
-{
-    return (power( t, i ) * power( 1 - t, (n - i) ) *
-        (m_ft[n] / m_ft[i] / m_ft[n - i]));
-}
-
-
 void Bezier::computePoint( float t, int &x, int &y ) const
 {
     // See http://astronomy.swin.edu.au/~pbourke/curves/bezier/ for a simple
@@ -229,3 +197,18 @@ void Bezier::computePoint( float t, int &x, int &y ) const
     y = lrintf(yPos);
 }
 
+
+inline float Bezier::computeCoeff( int i, int n, float t ) const
+{
+    return (power( t, i ) * power( 1 - t, (n - i) ) *
+        (m_ft[n] / m_ft[i] / m_ft[n - i]));
+}
+
+
+inline float Bezier::power( float x, int n ) const
+{
+    if( n > 0 )
+        return x * power( x, n - 1);
+    else
+        return 1;
+}

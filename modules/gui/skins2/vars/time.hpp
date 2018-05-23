@@ -1,11 +1,11 @@
 /*****************************************************************************
  * time.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 7a85703f8650e5f4ec39055df5cb7754d791d06e $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: time.hpp 7574 2004-05-01 14:23:40Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef TIME_HPP
@@ -28,31 +28,29 @@
 #include "../utils/var_percent.hpp"
 #include <string>
 
-/// Variable for VLC stream time
+/// Variable for VLC strem time
 class StreamTime: public VarPercent
 {
-public:
-    StreamTime( intf_thread_t *pIntf ): VarPercent( pIntf ) { }
-    virtual ~StreamTime() { }
+    public:
+        StreamTime( intf_thread_t *pIntf ): VarPercent( pIntf ) {}
+        virtual ~StreamTime() {}
 
-    virtual void set( float percentage, bool updateVLC );
+        virtual void set( float percentage, bool updateVLC );
 
-    virtual void set( float percentage ) { set( percentage, true ); }
+        virtual void set( float percentage ) { set( percentage, true ); }
 
-    /// Return a string containing a value from 0 to 100
-    virtual std::string getAsStringPercent() const;
-    /// Return the current time formatted as a time display (h:mm:ss)
-    virtual std::string getAsStringCurrTime( bool bShortFormat = false ) const;
-    /// Return the time left formatted as a time display (h:mm:ss)
-    virtual std::string getAsStringTimeLeft( bool bShortFormat = false ) const;
-    /// Return the duration formatted as a time display (h:mm:ss)
-    virtual std::string getAsStringDuration( bool bShortFormat = false ) const;
+        /// Return a string containing a value from 0 to 100
+        virtual const string getAsStringPercent() const;
+        /// Return the current time formatted as a time display (h:mm:ss)
+        virtual const string getAsStringCurrTime() const;
+        /// Return the time left formatted as a time display (h:mm:ss)
+        virtual const string getAsStringTimeLeft() const;
+        /// Return the duration formatted as a time display (h:mm:ss)
+        virtual const string getAsStringDuration() const;
 
-private:
-    /// Convert a number of seconds into "h:mm:ss" format
-    std::string formatTime( int seconds, bool bShortFormat ) const;
-    /// Return true when there is a non-null input and its position is not 0.0.
-    bool havePosition() const;
+    private:
+        /// Convert a number of seconds into "h:mm:ss" format
+        const string formatTime( int seconds ) const;
 };
 
 #endif

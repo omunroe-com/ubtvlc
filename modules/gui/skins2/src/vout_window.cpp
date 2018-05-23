@@ -1,8 +1,8 @@
 /*****************************************************************************
  * vout_window.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: d683e6a974b03e4b5244d7efc2ccaf1881d24f46 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: vout_window.cpp 7074 2004-03-14 14:58:11Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -18,128 +18,58 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "vout_window.hpp"
-#include "vout_manager.hpp"
-#include "vlcproc.hpp"
-#include "theme.hpp"
 #include "os_factory.hpp"
 #include "os_graphics.hpp"
 #include "os_window.hpp"
-#include "../events/evt_key.hpp"
-#include "../events/evt_motion.hpp"
-#include "../events/evt_mouse.hpp"
-
-#include <vlc_actions.h>
 
 
-VoutWindow::VoutWindow( intf_thread_t *pIntf, vout_window_t* pWnd,
-                        int width, int height, GenericWindow* pParent ) :
-      GenericWindow( pIntf, 0, 0, false, false, pParent,
-                     GenericWindow::VoutWindow ),
-      m_pWnd( pWnd ), original_width( width ), original_height( height ),
-      m_pCtrlVideo( NULL ), m_pParentWindow( pParent )
+VoutWindow::VoutWindow( intf_thread_t *pIntf, int left, int top,
+                        bool dragDrop, bool playOnDrop,
+                        GenericWindow &rParent ):
+    GenericWindow( pIntf, left, top, dragDrop, playOnDrop,
+                   &rParent ), m_pImage( NULL )
 {
-    if( m_pWnd )
-    {
-        vlc_object_hold( m_pWnd );
-
-#ifdef X11_SKINS
-        m_pWnd->handle.xid = getOSHandle();
-        m_pWnd->display.x11 = NULL;
-#else
-        m_pWnd->handle.hwnd = getOSHandle();
-#endif
-    }
 }
 
 
 VoutWindow::~VoutWindow()
 {
-    if( m_pWnd )
+    if( m_pImage )
     {
-        vlc_object_release( m_pWnd );
+        delete m_pImage;
     }
-}
-
-
-void VoutWindow::setCtrlVideo( CtrlVideo* pCtrlVideo )
-{
-    if( pCtrlVideo )
-    {
-        hide();
-        const Position *pPos = pCtrlVideo->getPosition();
-        int x = pPos->getLeft();
-        int y = pPos->getTop();
-        int w = pPos->getWidth();
-        int h = pPos->getHeight();
-
-        setParent( pCtrlVideo->getWindow(), x, y, w, h );
-        m_pParentWindow = pCtrlVideo->getWindow();
-
-        resize( w, h );
-        show();
-    }
-    else
-    {
-        hide();
-        int w = VoutManager::instance( getIntf() )->getVoutMainWindow()->getWidth();
-        int h = VoutManager::instance( getIntf() )->getVoutMainWindow()->getHeight();
-
-        setParent( VoutManager::instance( getIntf() )->getVoutMainWindow(),
-                   0, 0, w, h );
-        m_pParentWindow =
-                  VoutManager::instance( getIntf() )->getVoutMainWindow();
-
-        resize( w, h );
-        show();
-    }
-
-    m_pCtrlVideo = pCtrlVideo;
+    // XXX we should stop the vout before destroying the window!
 }
 
 
 void VoutWindow::resize( int width, int height )
 {
+    // Get the OSFactory
+    OSFactory *pOsFactory = OSFactory::instance( getIntf() );
+
+    // Recreate the image
+    if( m_pImage )
+    {
+        delete m_pImage;
+    }
+    m_pImage = pOsFactory->createOSGraphics( width, height );
+    // Draw a black rectangle
+    m_pImage->fillRect( 0, 0, width, height, 0 );
+
+    // Resize the window
     GenericWindow::resize( width, height );
-
-    if( m_pWnd )
-        vout_window_ReportSize( m_pWnd, width, height );
 }
 
 
-void VoutWindow::processEvent( EvtKey &rEvtKey )
+void VoutWindow::refresh( int left, int top, int width, int height )
 {
-    // Only do the action when the key is down
-    if( rEvtKey.getKeyState() == EvtKey::kDown )
-        getIntf()->p_sys->p_dialogs->sendKey( rEvtKey.getModKey() );
-}
-
-
-void VoutWindow::processEvent( EvtMotion &rEvtMotion )
-{
-    int x = rEvtMotion.getXPos() - m_pParentWindow->getLeft() - getLeft();
-    int y = rEvtMotion.getYPos() - m_pParentWindow->getTop() - getTop();
-    vout_window_ReportMouseMoved( m_pWnd, x, y );
-}
-
-
-void VoutWindow::processEvent( EvtMouse &rEvtMouse )
-{
-    int button = -1;
-    if( rEvtMouse.getButton() == EvtMouse::kLeft )
-        button = 0;
-    else if( rEvtMouse.getButton() == EvtMouse::kMiddle )
-        button = 1;
-    else if( rEvtMouse.getButton() == EvtMouse::kRight )
-        button = 2;
-
-    if( rEvtMouse.getAction() == EvtMouse::kDown )
-        vout_window_ReportMousePressed( m_pWnd, button );
-    else if( rEvtMouse.getAction() == EvtMouse::kUp )
-        vout_window_ReportMouseReleased( m_pWnd, button );
-    else if( rEvtMouse.getAction() == EvtMouse::kDblClick )
-        vout_window_ReportMouseDoubleClick( m_pWnd, button );
+    if( m_pImage )
+    {
+        m_pImage->copyToWindow( *getOSWindow(), left, top, width, height, left,
+                                top );
+    }
 }

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * theme_loader.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: d018b4e92eb389897b02f72888dd79e67726a3a9 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: theme_loader.cpp 7290 2004-04-06 19:56:57Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,34 +19,455 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
-
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fstream>
-#include <memory>
-
-#include <vlc_common.h>
-#include <vlc_fs.h>
-#include <vlc_url.h>
-#include <vlc_stream_extractor.h>
 
 #include "theme_loader.hpp"
 #include "theme.hpp"
 #include "../parser/builder.hpp"
 #include "../parser/skin_parser.hpp"
 #include "../src/os_factory.hpp"
-#include "../src/vlcproc.hpp"
 #include "../src/window_manager.hpp"
 
+#ifdef HAVE_FCNTL_H
+#   include <fcntl.h>
+#endif
+#if !defined( WIN32 )
+#   include <unistd.h>
+#else
+#   include <direct.h>
+#endif
+
+#if (!defined( WIN32 ) || defined(__MINGW32__))
+/* Mingw has its own version of dirent */
+#   include <dirent.h>
+#endif
+
+
+#if defined( HAVE_ZLIB_H )
+#   include <zlib.h>
+#   include <errno.h>
+int gzopen_frontend( char *pathname, int oflags, int mode );
+#if defined( HAVE_LIBTAR_H )
+#   include <libtar.h>
+#else
+typedef gzFile TAR;
+int tar_open        ( TAR **t, char *pathname, int oflags );
+int tar_extract_all ( TAR *t, char *prefix );
+int tar_close       ( TAR *t );
+#endif
+#endif
+
 #define DEFAULT_XML_FILE "theme.xml"
-#define WINAMP2_XML_FILE "winamp2.xml"
+
+
+bool ThemeLoader::load( const string &fileName )
+{
+    // First, we try to un-targz the file, and if it fails we hope it's a XML
+    // file...
+#if defined( HAVE_ZLIB_H )
+    if( ! extract( fileName ) && ! parse( fileName ) )
+        return false;
+#else
+    if( ! parse( fileName ) )
+        return false;
+#endif
+
+    Theme *pNewTheme = getIntf()->p_sys->p_theme;
+    if( !pNewTheme )
+    {
+        return false;
+    }
+
+    // Check if the skin to load is in the config file, to load its config
+    char *skin_last = config_GetPsz( getIntf(), "skins2-last" );
+    if( skin_last != NULL && fileName == (string)skin_last )
+    {
+        // Restore the theme configuration
+        getIntf()->p_sys->p_theme->loadConfig();
+        // Used to anchor the windows at the beginning
+        pNewTheme->getWindowManager().stopMove();
+    }
+    else
+    {
+        config_PutPsz( getIntf(), "skins2-last", fileName.c_str() );
+        // Show the windows
+        pNewTheme->getWindowManager().showAll();
+    }
+
+    return true;
+}
+
+
+#if defined( HAVE_ZLIB_H )
+bool ThemeLoader::extractTarGz( const string &tarFile, const string &rootDir )
+{
+    TAR *t;
+#if defined( HAVE_LIBTAR_H )
+    tartype_t gztype = { (openfunc_t) gzopen_frontend, (closefunc_t) gzclose,
+        (readfunc_t) gzread, (writefunc_t) gzwrite };
+
+    if( tar_open( &t, (char *)tarFile.c_str(), &gztype, O_RDONLY, 0,
+                  TAR_GNU ) == -1 )
+#else
+    if( tar_open( &t, (char *)tarFile.c_str(), O_RDONLY ) == -1 )
+#endif
+    {
+        return false;
+    }
+
+    if( tar_extract_all( t, (char *)rootDir.c_str() ) != 0 )
+    {
+        tar_close( t );
+        return false;
+    }
+
+    if( tar_close( t ) != 0 )
+    {
+        return false;
+    }
+
+    return true;
+}
+
+
+bool ThemeLoader::extract( const string &fileName )
+{
+    char *tmpdir = tempnam( NULL, "vlt" );
+    string tempPath = tmpdir;
+    free( tmpdir );
+
+    // Extract the file in a temporary directory
+    if( ! extractTarGz( fileName, tempPath ) )
+        return false;
+
+    // Find the XML file and parse it
+    string xmlFile;
+    if( ! findThemeFile( tempPath, xmlFile ) || ! parse( xmlFile ) )
+    {
+        msg_Err( getIntf(), "%s doesn't contain a " DEFAULT_XML_FILE " file",
+                 fileName.c_str() );
+        deleteTempFiles( tempPath );
+        return false;
+    }
+
+    // Clean-up
+    deleteTempFiles( tempPath );
+    return true;
+}
+
+
+void ThemeLoader::deleteTempFiles( const string &path )
+{
+    OSFactory::instance( getIntf() )->rmDir( path );
+}
+#endif // HAVE_ZLIB_H
+
+
+bool ThemeLoader::parse( const string &xmlFile )
+{
+    // File loaded
+    msg_Dbg( getIntf(), "Using skin file: %s", xmlFile.c_str() );
+
+    // Extract the path of the XML file
+    string path;
+    const string &sep = OSFactory::instance( getIntf() )->getDirSeparator();
+    unsigned int p = xmlFile.rfind( sep, xmlFile.size() );
+    if( p != string::npos )
+    {
+        path = xmlFile.substr( 0, p + 1 );
+    }
+    else
+    {
+        path = "";
+    }
+
+    // Start the parser
+    SkinParser parser( getIntf(), xmlFile, path );
+    if( ! parser.parse() )
+    {
+        msg_Err( getIntf(), "Failed to parse %s", xmlFile.c_str() );
+        return false;
+    }
+
+    // Build and store the theme
+    Builder builder( getIntf(), parser.getData() );
+    getIntf()->p_sys->p_theme = builder.build();
+
+    return true;
+}
+
+
+bool ThemeLoader::findThemeFile( const string &rootDir, string &themeFilePath )
+{
+    // Path separator
+    const string &sep = OSFactory::instance( getIntf() )->getDirSeparator();
+
+    DIR *pCurrDir;
+    struct dirent *pDirContent;
+
+    // Open the dir
+    pCurrDir = opendir( rootDir.c_str() );
+
+    if( pCurrDir == NULL )
+    {
+        // An error occurred
+        msg_Dbg( getIntf(), "Cannot open directory %s", rootDir.c_str() );
+        return false;
+    }
+
+    // Get the first directory entry
+    pDirContent = readdir( pCurrDir );
+
+    // While we still have entries in the directory
+    while( pDirContent != NULL )
+    {
+        string newURI = rootDir + sep + pDirContent->d_name;
+
+        // Skip . and ..
+        if( string( pDirContent->d_name ) != "." &&
+            string( pDirContent->d_name ) != ".." )
+        {
+#if defined( S_ISDIR )
+            struct stat stat_data;
+            stat( newURI.c_str(), &stat_data );
+            if( S_ISDIR(stat_data.st_mode) )
+#elif defined( DT_DIR )
+            if( pDirContent->d_type == DT_DIR )
+#else
+            if( 0 )
+#endif
+            {
+                // Can we find the theme file in this subdirectory?
+                if( findThemeFile( newURI, themeFilePath ) )
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                // Found the theme file?
+                if( string( DEFAULT_XML_FILE ) ==
+                    string( pDirContent->d_name ) )
+                {
+                    themeFilePath = newURI;
+                    return true;
+                }
+            }
+        }
+
+        pDirContent = readdir( pCurrDir );
+    }
+
+    return false;
+}
+
+
+#if !defined( HAVE_LIBTAR_H ) && defined( HAVE_ZLIB_H )
+
+#ifdef WIN32
+#  define mkdir(dirname,mode) _mkdir(dirname)
+#endif
+
+/* Values used in typeflag field */
+#define REGTYPE  '0'            /* regular file */
+#define AREGTYPE '\0'           /* regular file */
+#define DIRTYPE  '5'            /* directory */
+
+#define BLOCKSIZE 512
+
+struct tar_header
+{                               /* byte offset */
+    char name[100];             /*   0 */
+    char mode[8];               /* 100 */
+    char uid[8];                /* 108 */
+    char gid[8];                /* 116 */
+    char size[12];              /* 124 */
+    char mtime[12];             /* 136 */
+    char chksum[8];             /* 148 */
+    char typeflag;              /* 156 */
+    char linkname[100];         /* 157 */
+    char magic[6];              /* 257 */
+    char version[2];            /* 263 */
+    char uname[32];             /* 265 */
+    char gname[32];             /* 297 */
+    char devmajor[8];           /* 329 */
+    char devminor[8];           /* 337 */
+    char prefix[155];           /* 345 */
+                                /* 500 */
+};
+
+
+union tar_buffer {
+    char              buffer[BLOCKSIZE];
+    struct tar_header header;
+};
+
+
+/* helper functions */
+int getoct( char *p, int width );
+int makedir( char *newdir );
+
+int tar_open( TAR **t, char *pathname, int oflags )
+{
+    gzFile f = gzopen( pathname, "rb" );
+    if( f == NULL )
+    {
+        fprintf( stderr, "Couldn't gzopen %s\n", pathname );
+        return -1;
+    }
+
+    *t = (gzFile *)malloc( sizeof(gzFile) );
+    **t = f;
+    return 0;
+}
+
+
+int tar_extract_all( TAR *t, char *prefix )
+{
+    union tar_buffer buffer;
+    int   len, err, getheader = 1, remaining = 0;
+    FILE  *outfile = NULL;
+    char  fname[BLOCKSIZE + PATH_MAX];
+
+    while( 1 )
+    {
+        len = gzread( *t, &buffer, BLOCKSIZE );
+        if( len < 0 )
+        {
+            fprintf( stderr, "%s\n", gzerror(*t, &err) );
+        }
+
+        /*
+         * Always expect complete blocks to process
+         * the tar information.
+         */
+        if( len != 0 && len != BLOCKSIZE )
+        {
+            fprintf( stderr, "gzread: incomplete block read\n" );
+            return -1;
+        }
+
+        /*
+         * If we have to get a tar header
+         */
+        if( getheader == 1 )
+        {
+            /*
+             * If we met the end of the tar
+             * or the end-of-tar block, we are done
+             */
+            if( (len == 0) || (buffer.header.name[0] == 0) )
+            {
+                break;
+            }
+
+            sprintf( fname, "%s/%s", prefix, buffer.header.name );
+
+            /* Check magic value in header */
+            if( strncmp( buffer.header.magic, "GNUtar", 6 ) &&
+                strncmp( buffer.header.magic, "ustar", 5 ) )
+            {
+                //fprintf(stderr, "not a tar file\n");
+                return -1;
+            }
+
+            switch( buffer.header.typeflag )
+            {
+                case DIRTYPE:
+                    makedir( fname );
+                    break;
+                case REGTYPE:
+                case AREGTYPE:
+                    remaining = getoct( buffer.header.size, 12 );
+                    if( remaining )
+                    {
+                        outfile = fopen( fname, "wb" );
+                        if( outfile == NULL )
+                        {
+                            /* try creating directory */
+                            char *p = strrchr( fname, '/' );
+                            if( p != NULL )
+                            {
+                                *p = '\0';
+                                makedir( fname );
+                                *p = '/';
+                                outfile = fopen( fname, "wb" );
+                                if( !outfile )
+                                {
+                                    fprintf( stderr, "tar couldn't create %s\n",
+                                             fname );
+                                }
+                            }
+                        }
+                    }
+                    else outfile = NULL;
+
+                /*
+                 * could have no contents
+                 */
+                getheader = (remaining) ? 0 : 1;
+                break;
+            default:
+                break;
+            }
+        }
+        else
+        {
+            unsigned int bytes = (remaining > BLOCKSIZE)?BLOCKSIZE:remaining;
+
+            if( outfile != NULL )
+            {
+                if( fwrite( &buffer, sizeof(char), bytes, outfile ) != bytes )
+                {
+                    fprintf( stderr, "error writing %s skipping...\n", fname );
+                    fclose( outfile );
+                    unlink( fname );
+                }
+            }
+            remaining -= bytes;
+            if( remaining == 0 )
+            {
+                getheader = 1;
+                if( outfile != NULL )
+                {
+                    fclose(outfile);
+                    outfile = NULL;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+
+int tar_close( TAR *t )
+{
+    if( gzclose( *t ) != Z_OK ) fprintf( stderr, "failed gzclose\n" );
+    free( t );
+    return 0;
+}
+
+
+/* helper functions */
+int getoct( char *p, int width )
+{
+    int result = 0;
+    char c;
+
+    while( width-- )
+    {
+        c = *p++;
+        if( c == ' ' )
+            continue;
+        if( c == 0 )
+            break;
+        result = result * 8 + (c - '0');
+    }
+    return result;
+}
+
 
 /* Recursive make directory
  * Abort if you get an ENOENT errno somewhere in the middle
@@ -54,7 +475,7 @@
  *
  * return 1 if OK, 0 on error
  */
-static int makedir( const char *newdir )
+int makedir( char *newdir )
 {
     char *p, *buffer = strdup( newdir );
     int  len = strlen( buffer );
@@ -70,7 +491,7 @@ static int makedir( const char *newdir )
         buffer[len-1] = '\0';
     }
 
-    if( vlc_mkdir( buffer, 0775 ) == 0 )
+    if( mkdir( buffer, 0775 ) == 0 )
     {
         free( buffer );
         return 1;
@@ -84,7 +505,7 @@ static int makedir( const char *newdir )
         while( *p && *p != '\\' && *p != '/' ) p++;
         hold = *p;
         *p = 0;
-        if( ( vlc_mkdir( buffer, 0775 ) == -1 ) && ( errno == ENOENT ) )
+        if( ( mkdir( buffer, 0775 ) == -1 ) && ( errno == ENOENT ) )
         {
             fprintf( stderr, "couldn't create directory %s\n", buffer );
             free( buffer );
@@ -96,334 +517,35 @@ static int makedir( const char *newdir )
     free( buffer );
     return 1;
 }
-
-bool ThemeLoader::load( const std::string &fileName )
-{
-    std::string path = getFilePath( fileName );
-
-    //Before all, let's see if the file is present
-    struct stat p_stat;
-    if( vlc_stat( fileName.c_str(), &p_stat ) )
-        return false;
-
-    // First, we try to un-targz the file, and if it fails we hope it's a XML
-    // file...
-
-    if( ! extract( fileName ) && ! parse( path, fileName ) )
-        return false;
-
-    Theme *pNewTheme = getIntf()->p_sys->p_theme;
-    if( !pNewTheme )
-        return false;
-
-    // Restore the theme configuration
-    getIntf()->p_sys->p_theme->loadConfig();
-
-    // Retain new loaded skins in config
-    config_PutPsz( getIntf(), "skins2-last", fileName.c_str() );
-
-    return true;
-}
-
-bool ThemeLoader::extract( const std::string &fileName )
-{
-    bool result = true;
-    std::string tempPath = getTmpDir();
-    if( tempPath.empty() )
-        return false;
-
-    if( unarchive( fileName, tempPath ) == false )
-    {
-        msg_Err( getIntf(), "extraction from %s failed", fileName.c_str() );
-        return false;
-    }
-
-    std::string path;
-    std::string xmlFile;
-    OSFactory *pOsFactory = OSFactory::instance( getIntf() );
-    // Find the XML file in the theme
-    if( findFile( tempPath, DEFAULT_XML_FILE, xmlFile ) )
-    {
-        path = getFilePath( xmlFile );
-    }
-    else
-    {
-        // No XML file, check if it is a winamp2 skin
-        std::string mainBmp;
-        if( findFile( tempPath, "main.bmp", mainBmp ) )
-        {
-            msg_Dbg( getIntf(), "trying to load a winamp2 skin" );
-            path = getFilePath( mainBmp );
-
-            // Look for winamp2.xml in the resource path
-            std::list<std::string> resPath = pOsFactory->getResourcePath();
-            std::list<std::string>::const_iterator it;
-            for( it = resPath.begin(); it != resPath.end(); ++it )
-            {
-                if( findFile( *it, WINAMP2_XML_FILE, xmlFile ) )
-                    break;
-            }
-        }
-    }
-
-    if( !xmlFile.empty() )
-    {
-        // Parse the XML file
-        if (! parse( path, xmlFile ) )
-        {
-            msg_Err( getIntf(), "error while parsing %s", xmlFile.c_str() );
-            result = false;
-        }
-    }
-    else
-    {
-        msg_Err( getIntf(), "no XML found in theme %s", fileName.c_str() );
-        result = false;
-    }
-
-    // Clean-up
-    deleteTempFiles( tempPath );
-    return result;
-}
-
-bool ThemeLoader::unarchive( const std::string& fileName, const std::string &tempPath )
-{
-#define UPTR_HELPER(type,deleter) []( type * data ) { \
-        return std::unique_ptr< type, decltype( deleter )> ( data, deleter ); }
-
-    auto make_input_node_ptr = UPTR_HELPER( input_item_node_t, &input_item_node_Delete );
-    auto make_input_item_ptr = UPTR_HELPER( input_item_t, &input_item_Release );
-    auto make_stream_ptr = UPTR_HELPER( stream_t, &vlc_stream_Delete );
-    auto make_cstr_ptr = UPTR_HELPER( char, &std::free );
-
-#undef UPTR_HELPER
-
-    auto uri = make_cstr_ptr( vlc_path2uri( fileName.c_str(), "file" ) );
-    if( !uri )
-    {
-        msg_Err( getIntf(), "unable to convert %s to local URI",
-                            fileName.c_str() );
-        return false;
-    }
-
-    auto input = make_stream_ptr( vlc_stream_NewURL( getIntf(), uri.get() ) );
-    if( !input )
-    {
-        msg_Err( getIntf(), "unable to open %s", uri.get() );
-        return false;
-    }
-
-    stream_t* stream = input.get();
-    if( vlc_stream_directory_Attach( &stream, NULL ) )
-    {
-        msg_Err( getIntf(), "unable to attach stream_directory, treat as XML!" );
-    }
-    else
-    {
-        input.release();
-        input.reset( stream );
-
-        auto item = make_input_item_ptr( input_item_New( "vlc://dummy", "vlc://dummy" ) );
-        auto node = make_input_node_ptr( (input_item_node_t*)std::calloc( 1, sizeof( input_item_node_t ) ) );
-
-        if( !item || !node )
-            return false;
-
-        input_item_AddOption( item.get(), "ignore-filetypes=\"\"", VLC_INPUT_OPTION_TRUSTED );
-        input_item_AddOption( item.get(), "extractor-flatten", VLC_INPUT_OPTION_TRUSTED );
-        node->p_item = item.release();
-
-        if( vlc_stream_ReadDir( input.get(), node.get() ) )
-        {
-            msg_Err( getIntf(), "unable to read items in %s", uri.get() );
-            return false;
-        }
-
-        for( int i = 0; i < node->i_children; ++i )
-        {
-            auto child = node->pp_children[i]->p_item;
-            auto child_stream = make_stream_ptr( vlc_stream_NewMRL( getIntf(), child->psz_uri ) );
-            if( !child_stream )
-            {
-                msg_Err( getIntf(), "unable to open %s for reading", child->psz_name );
-                return false;
-            }
-
-            auto out_path = tempPath + "/" + child->psz_name;
-
-            { /* create directory tree */
-                auto out_directory = out_path.substr( 0, out_path.find_last_of( '/' ) );
-
-                if( makedir( out_directory.c_str() ) == false )
-                {
-                    msg_Err( getIntf(), "failed to create directory tree for %s (%s)",
-                             out_path.c_str(), out_directory.c_str() );
-
-                    return false;
-                }
-            }
-
-            { /* write data to disk */
-                std::string contents;
-
-                char buf[1024];
-                ssize_t n;
-
-                while( ( n = vlc_stream_Read( child_stream.get(), buf, sizeof buf ) ) > 0 )
-                    contents.append( buf, n );
-
-                std::ofstream out_stream( out_path, std::ios::binary );
-
-                if( out_stream.write( contents.data(), contents.size() ) )
-                {
-                    msg_Dbg( getIntf(), "finished writing %zu bytes to %s",
-                        size_t{ contents.size() }, out_path.c_str() );
-                }
-                else
-                {
-                    msg_Err( getIntf(), "unable to write %zu bytes to %s",
-                        size_t{ contents.size() }, out_path.c_str() );
-                    return false;
-                }
-            }
-        }
-    }
-
-    return true;
-}
-
-void ThemeLoader::deleteTempFiles( const std::string &path )
-{
-    OSFactory::instance( getIntf() )->rmDir( path );
-}
-
-bool ThemeLoader::parse( const std::string &path, const std::string &xmlFile )
-{
-    // File loaded
-    msg_Dbg( getIntf(), "using skin file: %s", xmlFile.c_str() );
-
-    // Start the parser
-    SkinParser parser( getIntf(), xmlFile, path );
-    if( ! parser.parse() )
-        return false;
-
-    // Build and store the theme
-    Builder builder( getIntf(), parser.getData(), path );
-    getIntf()->p_sys->p_theme = builder.build();
-
-    return true;
-}
-
-
-std::string ThemeLoader::getFilePath( const std::string &rFullPath )
-{
-    OSFactory *pOsFactory = OSFactory::instance( getIntf() );
-    const std::string &sep = pOsFactory->getDirSeparator();
-    // Find the last separator ('/' or '\')
-    std::string::size_type p = rFullPath.rfind( sep, rFullPath.size() );
-    std::string basePath;
-    if( p != std::string::npos )
-    {
-        if( p < rFullPath.size() - 1)
-        {
-            basePath = rFullPath.substr( 0, p );
-        }
-        else
-        {
-            basePath = rFullPath;
-        }
-    }
-    return basePath;
-}
-
-bool ThemeLoader::findFile( const std::string &rootDir, const std::string &rFileName,
-                            std::string &themeFilePath )
-{
-    // Path separator
-    const std::string &sep = OSFactory::instance( getIntf() )->getDirSeparator();
-
-    const char *pszDirContent;
-
-    // Open the dir
-    DIR *pCurrDir = vlc_opendir( rootDir.c_str() );
-
-    if( pCurrDir == NULL )
-    {
-        // An error occurred
-        msg_Dbg( getIntf(), "cannot open directory %s", rootDir.c_str() );
-        return false;
-    }
-
-    // While we still have entries in the directory
-    while( ( pszDirContent = vlc_readdir( pCurrDir ) ) != NULL )
-    {
-        std::string newURI = rootDir + sep + pszDirContent;
-
-        // Skip . and ..
-        if( std::string( pszDirContent ) != "." &&
-            std::string( pszDirContent ) != ".." )
-        {
-#if defined( S_ISDIR )
-            struct stat stat_data;
-
-            if( ( vlc_stat( newURI.c_str(), &stat_data ) == 0 )
-             && S_ISDIR(stat_data.st_mode) )
-#elif defined( DT_DIR )
-            if( pDirContent->d_type & DT_DIR )
-#else
-            if( 0 )
 #endif
-            {
-                // Can we find the file in this subdirectory?
-                if( findFile( newURI, rFileName, themeFilePath ) )
-                {
-                    closedir( pCurrDir );
-                    return true;
-                }
-            }
-            else
-            {
-                // Found the theme file?
-                if( rFileName == std::string( pszDirContent ) )
-                {
-                    themeFilePath = newURI;
-                    closedir( pCurrDir );
-                    return true;
-                }
-            }
-        }
+
+#ifdef HAVE_ZLIB_H
+int gzopen_frontend( char *pathname, int oflags, int mode )
+{
+    char *gzflags;
+    gzFile gzf;
+
+    switch( oflags & O_ACCMODE )
+    {
+        case O_WRONLY:
+            gzflags = "wb";
+            break;
+        case O_RDONLY:
+            gzflags = "rb";
+            break;
+        case O_RDWR:
+        default:
+            errno = EINVAL;
+            return -1;
     }
 
-    closedir( pCurrDir );
-    return false;
+    gzf = gzopen( pathname, gzflags );
+    if( !gzf )
+    {
+        errno = ENOMEM;
+        return -1;
+    }
+
+    return (int)gzf;
 }
-
-// FIXME: could become a skins2 OS factory function or a vlc core function
-std::string ThemeLoader::getTmpDir( )
-{
-#if defined( _WIN32 )
-    wchar_t *tmpdir = _wtempnam( NULL, L"vlt" );
-    if( tmpdir == NULL )
-        return "";
-    char* utf8 = FromWide( tmpdir );
-    free( tmpdir );
-    std::string tempPath( utf8 ? utf8 : "" );
-    free( utf8 );
-    return tempPath;
-
-#elif defined( __OS2__ )
-    char *tmpdir = tempnam( NULL, "vlt" );
-    if( tmpdir == NULL )
-        return "";
-    std::string tempPath( sFromLocale( tmpdir ));
-    free( tmpdir );
-    return tempPath;
-
-#else
-    char templ[] = "/tmp/vltXXXXXX";
-    char *tmpdir = mkdtemp( templ );
-    return std::string( tmpdir ? tmpdir : "");
 #endif
-}
-
-

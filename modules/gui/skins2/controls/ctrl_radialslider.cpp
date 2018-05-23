@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ctrl_radialslider.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: e06673a4957b75568bd55d6fb79c655d53bb74a9 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ctrl_radialslider.cpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include <math.h>
@@ -40,11 +40,18 @@ CtrlRadialSlider::CtrlRadialSlider( intf_thread_t *pIntf,
                                     VarBool *pVisible ):
     CtrlGeneric( pIntf, rHelp, pVisible ), m_fsm( pIntf ), m_numImg( numImg ),
     m_rVariable( rVariable ), m_minAngle( minAngle ), m_maxAngle( maxAngle ),
-    m_position( 0 ),
-    m_width( rBmpSeq.getWidth() ), m_height( rBmpSeq.getHeight() / numImg ),
-    m_pImgSeq( rBmpSeq.getGraphics() ),
-    m_cmdUpDown( this ), m_cmdDownUp( this ), m_cmdMove( this )
+    m_cmdUpDown( this, &transUpDown ), m_cmdDownUp( this, &transDownUp ),
+    m_cmdMove( this, &transMove ), m_position( 0 ), m_lastPos( 0 )
 {
+    // Build the images of the sequence
+    OSFactory *pOsFactory = OSFactory::instance( getIntf() );
+    m_pImgSeq = pOsFactory->createOSGraphics( rBmpSeq.getWidth(),
+                                              rBmpSeq.getHeight() );
+    m_pImgSeq->drawBitmap( rBmpSeq, 0, 0 );
+
+    m_width = rBmpSeq.getWidth();
+    m_height = rBmpSeq.getHeight() / numImg;
+
     // States
     m_fsm.addState( "up" );
     m_fsm.addState( "down" );
@@ -65,6 +72,7 @@ CtrlRadialSlider::CtrlRadialSlider( intf_thread_t *pIntf,
 CtrlRadialSlider::~CtrlRadialSlider()
 {
     m_rVariable.delObserver( this );
+    SKINS_DELETE( m_pImgSeq );
 }
 
 
@@ -83,59 +91,49 @@ bool CtrlRadialSlider::mouseOver( int x, int y ) const
 }
 
 
-void CtrlRadialSlider::draw( OSGraphics &rImage, int xDest, int yDest, int w, int h )
+void CtrlRadialSlider::draw( OSGraphics &rImage, int xDest, int yDest )
 {
-    const Position *pPos = getPosition();
-    rect region( pPos->getLeft(), pPos->getTop(), m_width, m_height );
-    rect clip( xDest, yDest, w ,h );
-    rect inter;
-    if( rect::intersect( region, clip, &inter ) )
-        rImage.drawGraphics( *m_pImgSeq,
-                              inter.x - region.x,
-                              inter.y - region.y + m_position * m_height,
-                              inter.x, inter.y,
-                              inter.width, inter.height );
+    rImage.drawGraphics( *m_pImgSeq, 0, m_position * m_height, xDest, yDest,
+                         m_width, m_height );
 }
 
 
-void CtrlRadialSlider::onUpdate( Subject<VarPercent> &rVariable, void *arg )
+void CtrlRadialSlider::onUpdate( Subject<VarPercent> &rVariable )
 {
-    (void)arg;
-    if( &rVariable == &m_rVariable )
-    {
-        int position = (int)( m_rVariable.get() * ( m_numImg - 1 ) );
-        if( position == m_position )
-            return;
-
-        m_position = position;
-        notifyLayout( m_width, m_height );
-    }
+    m_position = (int)( m_rVariable.get() * m_numImg );
+    notifyLayout();
 }
 
 
-void CtrlRadialSlider::CmdUpDown::execute()
+void CtrlRadialSlider::transUpDown( SkinObject *pCtrl )
 {
-    EvtMouse *pEvtMouse = (EvtMouse*)m_pParent->m_pEvt;
+    CtrlRadialSlider *pThis = (CtrlRadialSlider*)pCtrl;
+
+    EvtMouse *pEvtMouse = (EvtMouse*)pThis->m_pEvt;
 
     // Change the position of the cursor, in non-blocking mode
-    m_pParent->setCursor( pEvtMouse->getXPos(), pEvtMouse->getYPos(), false );
+    pThis->setCursor( pEvtMouse->getXPos(), pEvtMouse->getYPos(), false );
 
-    m_pParent->captureMouse();
+    pThis->captureMouse();
 }
 
 
-void CtrlRadialSlider::CmdDownUp::execute()
+void CtrlRadialSlider::transDownUp( SkinObject *pCtrl )
 {
-    m_pParent->releaseMouse();
+    CtrlRadialSlider *pThis = (CtrlRadialSlider*)pCtrl;
+
+    pThis->releaseMouse();
 }
 
 
-void CtrlRadialSlider::CmdMove::execute()
+void CtrlRadialSlider::transMove( SkinObject *pCtrl )
 {
-    EvtMouse *pEvtMouse = static_cast<EvtMouse*>(m_pParent->m_pEvt);
+    CtrlRadialSlider *pThis = (CtrlRadialSlider*)pCtrl;
+
+    EvtMouse *pEvtMouse = (EvtMouse*)pThis->m_pEvt;
 
     // Change the position of the cursor, in blocking mode
-    m_pParent->setCursor( pEvtMouse->getXPos(), pEvtMouse->getYPos(), true );
+    pThis->setCursor( pEvtMouse->getXPos(), pEvtMouse->getYPos(), true );
 }
 
 
@@ -150,10 +148,10 @@ void CtrlRadialSlider::setCursor( int posX, int posY, bool blocking )
 
     // Compute the position relative to the center
     int x = posX - pPos->getLeft() - m_width / 2;
-    int y = posY - pPos->getTop() - m_height / 2;
+    int y = posY - pPos->getTop() - m_width / 2;
 
     // Compute the polar coordinates. angle is -(-j,OM)
-    float r = sqrt((float)(x*x + y*y));
+    float r = sqrt(x*x + y*y);
     if( r == 0 )
     {
         return;

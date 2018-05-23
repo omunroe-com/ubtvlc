@@ -1,11 +1,11 @@
 /*****************************************************************************
  * theme.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: f1c65f5f425ce09384f851c0fdce13f444b7d7d9 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: theme.hpp 7259 2004-04-03 11:30:26Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,23 +17,21 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef THEME_HPP
 #define THEME_HPP
 
-#include "generic_bitmap.hpp"
-#include "generic_font.hpp"
-#include "generic_layout.hpp"
-#include "popup.hpp"
+#include "../src/generic_bitmap.hpp"
+#include "../src/generic_font.hpp"
+#include "../src/generic_layout.hpp"
 #include "../src/window_manager.hpp"
 #include "../commands/cmd_generic.hpp"
 #include "../utils/bezier.hpp"
 #include "../utils/variable.hpp"
-#include "../utils/position.hpp"
 #include "../controls/ctrl_generic.hpp"
 #include <string>
 #include <list>
@@ -45,80 +43,44 @@ class Interpreter;
 /// Class storing the data of the current theme
 class Theme: public SkinObject
 {
-private:
-    friend class Builder;
-    friend class Interpreter;
-public:
-    Theme( intf_thread_t *pIntf ): SkinObject( pIntf ),
-        m_windowManager( getIntf() ) { }
-    virtual ~Theme();
-
-    void loadConfig();
-    int readConfig();
-    void saveConfig();
-    void applyConfig();
-
-    GenericBitmap *getBitmapById( const std::string &id ) const;
-    GenericFont *getFontById( const std::string &id ) const;
-
-#   define ObjByID( var ) ( const std::string &id ) const \
-        { return var.find_object( id ); }
-    Popup         *getPopupById    ObjByID( m_popups    )
-    TopWindow     *getWindowById   ObjByID( m_windows   )
-    GenericLayout *getLayoutById   ObjByID( m_layouts   )
-    CtrlGeneric   *getControlById  ObjByID( m_controls  )
-    Position      *getPositionById ObjByID( m_positions )
-#   undef  ObjById
-
-    WindowManager &getWindowManager() { return m_windowManager; }
-
-private:
-    template<class T> class IDmap: public std::map<std::string, T> {
     private:
-        typedef typename std::map<std::string, T> parent;
+        friend class Builder;
+        friend class Interpreter;
     public:
-        typename T::pointer find_object(const std::string &id) const
-        {
-            typename parent::const_iterator it = parent::find( id );
-            return it!=parent::end() ? it->second.get() : NULL;
-        }
-        typename T::pointer find_first_object(const std::string &id) const;
-    };
+        Theme( intf_thread_t *pIntf ): SkinObject( pIntf ),
+            m_windowManager( getIntf() ) {}
+        virtual ~Theme();
 
-    struct save_t {
-        TopWindow* win;
-        GenericLayout* layout;
-        int x;
-        int y;
-        int width;
-        int height;
-        int visible;
-    };
+        void loadConfig();
+        void saveConfig();
 
-    /// Store the bitmaps by ID
-    IDmap<GenericBitmapPtr> m_bitmaps;
-    /// Store the fonts by ID
-    IDmap<GenericFontPtr> m_fonts;
-    /// Store the popups by ID
-    IDmap<PopupPtr> m_popups;
-    /// Store the windows by ID
-    IDmap<TopWindowPtr> m_windows;
-    /// Store the layouts by ID
-    IDmap<GenericLayoutPtr> m_layouts;
-    /// Store the controls by ID
-    IDmap<CtrlGenericPtr> m_controls;
-    /// Store the panel positions by ID
-    IDmap<PositionPtr> m_positions;
-    /// Store the commands
-    std::list<CmdGenericPtr> m_commands;
-    /// Store the Bezier curves
-    std::list<BezierPtr> m_curves;
-    /// Store the variables
-    std::list<VariablePtr> m_vars;
-    /// List saved windows/layouts
-    std::list<save_t> m_saved;
+        GenericBitmap *getBitmapById( const string &id );
+        GenericFont *getFontById( const string &id );
+        TopWindow *getWindowById( const string &id );
+        GenericLayout *getLayoutById( const string &id );
+        CtrlGeneric *getControlById( const string &id );
 
-    WindowManager m_windowManager;
+        WindowManager &getWindowManager() { return m_windowManager; }
+
+    private:
+        /// Store the bitmaps by ID
+        map<string, GenericBitmapPtr> m_bitmaps;
+        /// Store the fonts by ID
+        map<string, GenericFontPtr> m_fonts;
+        /// Store the windows by ID
+        map<string, TopWindowPtr> m_windows;
+        /// Store the layouts by ID
+        map<string, GenericLayoutPtr> m_layouts;
+        /// Store the controls by ID
+        map<string, CtrlGenericPtr> m_controls;
+        /// Store the commands
+        list<CmdGenericPtr> m_commands;
+        /// Store the Bezier curves
+        list<BezierPtr> m_curves;
+        /// Store the variables
+        list<VariablePtr> m_vars;
+
+        WindowManager m_windowManager;
 };
 
 

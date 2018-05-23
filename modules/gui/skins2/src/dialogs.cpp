@@ -1,11 +1,11 @@
 /*****************************************************************************
  * dialogs.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 465e3102dc7af989d82ac296cb78c19c51c0502f $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: dialogs.cpp 7335 2004-04-12 21:48:18Z gbazin $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,22 +19,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#include <sstream>
 #include "dialogs.hpp"
 #include "../commands/async_queue.hpp"
 #include "../commands/cmd_change_skin.hpp"
 #include "../commands/cmd_quit.hpp"
-#include "../commands/cmd_playlist.hpp"
-#include "../commands/cmd_playtree.hpp"
-#include <vlc_playlist.h>
-#include <vlc_modules.h>
-#include <vlc_url.h>
+
 
 /// Callback called when a new skin is chosen
-void Dialogs::showChangeSkinCB( intf_dialog_args_t *pArg )
+static void showChangeSkinCB( intf_dialog_args_t *pArg )
 {
     intf_thread_t *pIntf = (intf_thread_t *)pArg->p_arg;
 
@@ -42,18 +37,14 @@ void Dialogs::showChangeSkinCB( intf_dialog_args_t *pArg )
     {
         if( pArg->psz_results[0] )
         {
-            char* psz_path = vlc_uri2path( pArg->psz_results[0] );
-            if( psz_path )
-            {
-                // Create a change skin command
-                CmdChangeSkin *pCmd =
-                    new CmdChangeSkin( pIntf, psz_path );
-                free( psz_path );
+            // Create a change skin command
+            CmdChangeSkin *pCmd = new CmdChangeSkin( pIntf,
+                                                     pArg->psz_results[0] );
 
-                // Push the command in the asynchronous command queue
-                AsyncQueue *pQueue = AsyncQueue::instance( pIntf );
-                pQueue->push( CmdGenericPtr( pCmd ) );
-	    }
+            // Push the command in the asynchronous command queue
+            AsyncQueue *pQueue = AsyncQueue::instance( pIntf );
+            pQueue->remove( "resize" );
+            pQueue->push( CmdGenericPtr( pCmd ) );
         }
     }
     else if( !pIntf->p_sys->p_theme )
@@ -65,48 +56,13 @@ void Dialogs::showChangeSkinCB( intf_dialog_args_t *pArg )
     }
 }
 
-void Dialogs::showPlaylistLoadCB( intf_dialog_args_t *pArg )
-{
-    intf_thread_t *pIntf = (intf_thread_t *)pArg->p_arg;
-
-    if( pArg->i_results && pArg->psz_results[0] )
-    {
-        // Create a Playlist Load command
-        CmdPlaylistLoad *pCmd =
-            new CmdPlaylistLoad( pIntf, pArg->psz_results[0] );
-
-        // Push the command in the asynchronous command queue
-        AsyncQueue *pQueue = AsyncQueue::instance( pIntf );
-        pQueue->push( CmdGenericPtr( pCmd ) );
-    }
-}
-
-
-void Dialogs::showPlaylistSaveCB( intf_dialog_args_t *pArg )
-{
-    intf_thread_t *pIntf = (intf_thread_t *)pArg->p_arg;
-
-    if( pArg->i_results && pArg->psz_results[0] )
-    {
-        // Create a Playlist Save command
-        CmdPlaylistSave *pCmd =
-            new CmdPlaylistSave( pIntf, pArg->psz_results[0] );
-
-        // Push the command in the asynchronous command queue
-        AsyncQueue *pQueue = AsyncQueue::instance( pIntf );
-        pQueue->push( CmdGenericPtr( pCmd ) );
-    }
-}
-
 
 /// Callback called when the popup menu is requested
 static int PopupMenuCB( vlc_object_t *p_this, const char *psz_variable,
                         vlc_value_t old_val, vlc_value_t new_val, void *param )
 {
-    (void)p_this; (void)psz_variable; (void)old_val;
-
     Dialogs *p_dialogs = (Dialogs *)param;
-    p_dialogs->showPopupMenu( new_val.b_bool != 0, INTF_DIALOG_POPUPMENU );
+    p_dialogs->showPopupMenu( new_val.b_bool );
 
     return VLC_SUCCESS;
 }
@@ -123,13 +79,15 @@ Dialogs::~Dialogs()
     if( m_pProvider && m_pModule )
     {
         // Detach the dialogs provider from its parent interface
-        module_unneed( m_pProvider, m_pModule );
-        vlc_object_release( m_pProvider );
+        vlc_object_detach( m_pProvider );
 
-        /* Unregister callbacks */
-        var_DelCallback( getIntf()->obj.libvlc, "intf-popupmenu",
-                         PopupMenuCB, this );
+        module_Unneed( m_pProvider, m_pModule );
+        vlc_object_destroy( m_pProvider );
     }
+
+    /* Unregister callbacks */
+    var_DelCallback( getIntf()->p_sys->p_playlist, "intf-popupmenu",
+                     PopupMenuCB, this );
 }
 
 
@@ -155,8 +113,11 @@ Dialogs *Dialogs::instance( intf_thread_t *pIntf )
 
 void Dialogs::destroy( intf_thread_t *pIntf )
 {
-    delete pIntf->p_sys->p_dialogs;
-    pIntf->p_sys->p_dialogs = NULL;
+    if( pIntf->p_sys->p_dialogs )
+    {
+        delete pIntf->p_sys->p_dialogs;
+        pIntf->p_sys->p_dialogs = NULL;
+    }
 }
 
 
@@ -164,42 +125,56 @@ bool Dialogs::init()
 {
     // Allocate descriptor
     m_pProvider = (intf_thread_t *)vlc_object_create( getIntf(),
-                                                    sizeof( intf_thread_t ) );
+                                                      VLC_OBJECT_DIALOGS );
     if( m_pProvider == NULL )
+    {
+        msg_Err( getIntf(), "out of memory" );
         return false;
+    }
 
-    m_pModule = module_need( m_pProvider, "dialogs provider", NULL, false );
+    m_pModule = module_Need( m_pProvider, "dialogs provider", NULL, 0 );
     if( m_pModule == NULL )
     {
-        vlc_object_release( m_pProvider );
+        msg_Err( getIntf(), "No suitable dialogs provider found" );
+        vlc_object_destroy( m_pProvider );
         m_pProvider = NULL;
         return false;
     }
 
+    // Attach the dialogs provider to its parent interface
+    vlc_object_attach( m_pProvider, getIntf() );
+
+    // Initialize dialogs provider
+    // (returns as soon as initialization is done)
+    if( m_pProvider->pf_run )
+    {
+        m_pProvider->pf_run( m_pProvider );
+    }
+
     /* Register callback for the intf-popupmenu variable */
-    var_AddCallback( getIntf()->obj.libvlc, "intf-popupmenu",
+    var_AddCallback( getIntf()->p_sys->p_playlist, "intf-popupmenu",
                      PopupMenuCB, this );
 
     return true;
 }
 
 
-void Dialogs::showFileGeneric( const std::string &rTitle, const std::string &rExtensions,
-                               DlgCallback callback, int flags )
+void Dialogs::showChangeSkin()
 {
     if( m_pProvider && m_pProvider->pf_show_dialog )
     {
-        intf_dialog_args_t *p_arg = (intf_dialog_args_t*)
-                                    calloc( 1, sizeof( intf_dialog_args_t ) );
+        intf_dialog_args_t *p_arg =
+            (intf_dialog_args_t *)malloc( sizeof(intf_dialog_args_t) );
+        memset( p_arg, 0, sizeof(intf_dialog_args_t) );
 
-        p_arg->psz_title = strdup( rTitle.c_str() );
-        p_arg->psz_extensions = strdup( rExtensions.c_str() );
+        p_arg->b_blocking = false;
 
-        p_arg->b_save = flags & kSAVE;
-        p_arg->b_multiple = flags & kMULTIPLE;
+        p_arg->psz_title = strdup( _("Open a skin file") );
+        p_arg->psz_extensions =
+            strdup( _("Skin files (*.vlt)|*.vlt|Skin files (*.xml)|*.xml|") );
 
         p_arg->p_arg = getIntf();
-        p_arg->pf_callback = callback;
+        p_arg->pf_callback = showChangeSkinCB;
 
         m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_FILE_GENERIC,
                                      0, p_arg );
@@ -207,47 +182,12 @@ void Dialogs::showFileGeneric( const std::string &rTitle, const std::string &rEx
 }
 
 
-void Dialogs::showChangeSkin()
-{
-    showFileGeneric( _("Open a skin file"),
-                     _("Skin files |*.vlt;*.wsz;*.xml"),
-                     showChangeSkinCB, kOPEN );
-}
-
-
-void Dialogs::showPlaylistLoad()
-{
-    std::stringstream fileTypes;
-    fileTypes << _("Playlist Files |") << EXTENSIONS_PLAYLIST  << _("|All Files |*");
-    showFileGeneric( _("Open playlist"),
-                     fileTypes.str(),
-                     showPlaylistLoadCB, kOPEN );
-}
-
-
-void Dialogs::showPlaylistSave()
-{
-    showFileGeneric( _("Save playlist"), _("XSPF playlist |*.xspf|"
-                                           "M3U file |*.m3u|"
-                                           "HTML playlist |*.html"),
-                     showPlaylistSaveCB, kSAVE );
-}
-
-void Dialogs::showPlaylist()
-{
-    if( m_pProvider && m_pProvider->pf_show_dialog )
-    {
-        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_PLAYLIST,
-                                     0, NULL );
-    }
-}
-
 void Dialogs::showFileSimple( bool play )
 {
     if( m_pProvider && m_pProvider->pf_show_dialog )
     {
         m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_FILE_SIMPLE,
-                                     (int)play, NULL );
+                                     (int)play, 0 );
     }
 }
 
@@ -257,17 +197,7 @@ void Dialogs::showFile( bool play )
     if( m_pProvider && m_pProvider->pf_show_dialog )
     {
         m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_FILE,
-                                     (int)play, NULL );
-    }
-}
-
-
-void Dialogs::showDirectory( bool play )
-{
-    if( m_pProvider && m_pProvider->pf_show_dialog )
-    {
-        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_DIRECTORY,
-                                     (int)play, NULL );
+                                     (int)play, 0 );
     }
 }
 
@@ -277,7 +207,7 @@ void Dialogs::showDisc( bool play )
     if( m_pProvider && m_pProvider->pf_show_dialog )
     {
         m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_DISC,
-                                     (int)play, NULL );
+                                     (int)play, 0 );
     }
 }
 
@@ -287,7 +217,7 @@ void Dialogs::showNet( bool play )
     if( m_pProvider && m_pProvider->pf_show_dialog )
     {
         m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_NET,
-                                     (int)play, NULL );
+                                     (int)play, 0 );
     }
 }
 
@@ -296,7 +226,7 @@ void Dialogs::showMessages()
 {
     if( m_pProvider && m_pProvider->pf_show_dialog )
     {
-        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_MESSAGES, 0, NULL );
+        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_MESSAGES, 0, 0 );
     }
 }
 
@@ -305,58 +235,26 @@ void Dialogs::showPrefs()
 {
     if( m_pProvider && m_pProvider->pf_show_dialog )
     {
-        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_PREFS, 0, NULL );
+        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_PREFS, 0, 0 );
     }
 }
 
 
 void Dialogs::showFileInfo()
 {
-    if( m_pProvider && m_pProvider->pf_show_dialog )
+   if( m_pProvider && m_pProvider->pf_show_dialog )
     {
-        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_FILEINFO, 0, NULL );
+       m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_FILEINFO, 0, 0 );
     }
 }
 
 
-void Dialogs::showStreamingWizard()
+void Dialogs::showPopupMenu( bool bShow )
 {
     if( m_pProvider && m_pProvider->pf_show_dialog )
     {
-        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_WIZARD, 0, NULL );
+        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_POPUPMENU,
+                                     (int)bShow, 0 );
     }
 }
 
-
-void Dialogs::showPopupMenu( bool bShow, int popupType = INTF_DIALOG_POPUPMENU )
-{
-    if( m_pProvider && m_pProvider->pf_show_dialog )
-    {
-        m_pProvider->pf_show_dialog( m_pProvider, popupType,
-                                     (int)bShow, NULL );
-    }
-}
-
-void Dialogs::showInteraction( interaction_dialog_t *p_dialog )
-{
-    if( m_pProvider && m_pProvider->pf_show_dialog )
-    {
-        intf_dialog_args_t *p_arg = (intf_dialog_args_t *)
-                                    calloc( 1, sizeof(intf_dialog_args_t) );
-
-        p_arg->p_dialog = p_dialog;
-        p_arg->p_intf = getIntf();
-
-        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_INTERACTION,
-                                     0, p_arg );
-    }
-}
-
-void Dialogs::sendKey( int key )
-{
-    if( m_pProvider && m_pProvider->pf_show_dialog )
-    {
-        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_SENDKEY,
-                                     key, NULL );
-    }
-}

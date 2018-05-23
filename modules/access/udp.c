@@ -1,178 +1,241 @@
 /*****************************************************************************
- * udp.c: raw UDP input module
+ * udp.c: raw UDP & RTP input module
  *****************************************************************************
- * Copyright (C) 2001-2005 VLC authors and VideoLAN
- * Copyright (C) 2007 Remi Denis-Courmont
- * $Id: cf6ebb7125402e6be9bd7fc2d80f3d5df14b6b78 $
+ * Copyright (C) 2001-2004 VideoLAN
+ * $Id: udp.c 7522 2004-04-27 16:35:15Z sam $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Tristan Leteurtre <tooney@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
- *          Jean-Paul Saman <jpsaman #_at_# m2x dot nl>
- *          Remi Denis-Courmont
  *
- * Reviewed: 23 October 2003, Jean-Paul Saman <jpsaman _at_ videolan _dot_ org>
+ * Reviewed: 23 October 2003, Jean-Paul Saman <jpsaman@wxs.nl>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
+#include <stdlib.h>
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
+#include <vlc/vlc.h>
+#include <vlc/input.h>
 
-#include <errno.h>
-#include <vlc_common.h>
-#include <vlc_plugin.h>
-#include <vlc_access.h>
-#include <vlc_network.h>
-#include <vlc_block.h>
-#include <vlc_interrupt.h>
-#ifdef HAVE_POLL
-# include <poll.h>
-#endif
-#ifdef HAVE_SYS_UIO_H
-# include <sys/uio.h>
-#endif
+#include "network.h"
 
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
-static int  Open( vlc_object_t * );
+#define CACHING_TEXT N_("Caching value in ms")
+#define CACHING_LONGTEXT N_( \
+    "Allows you to modify the default caching value for UDP streams. This " \
+    "value should be set in millisecond units." )
+
+static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
-#define BUFFER_TEXT N_("Receive buffer")
-#define BUFFER_LONGTEXT N_("UDP receive buffer size (bytes)" )
-#define TIMEOUT_TEXT N_("UDP Source timeout (sec)")
+vlc_module_begin();
+    set_description( _("UDP/RTP input") );
 
-vlc_module_begin ()
-    set_shortname( N_("UDP" ) )
-    set_description( N_("UDP input") )
-    set_category( CAT_INPUT )
-    set_subcategory( SUBCAT_INPUT_ACCESS )
+    add_integer( "udp-caching", DEFAULT_PTS_DELAY / 1000, NULL, CACHING_TEXT,
+                 CACHING_LONGTEXT, VLC_TRUE );
 
-    add_obsolete_integer( "server-port" ) /* since 2.0.0 */
-    add_obsolete_integer( "udp-buffer" ) /* since 3.0.0 */
-    add_integer( "udp-timeout", -1, TIMEOUT_TEXT, NULL, true )
-
-    set_capability( "access", 0 )
-    add_shortcut( "udp", "udpstream", "udp4", "udp6" )
-
-    set_callbacks( Open, Close )
-vlc_module_end ()
-
-struct access_sys_t
-{
-    int fd;
-    int timeout;
-    size_t mtu;
-};
+    set_capability( "access", 0 );
+    add_shortcut( "udp" );
+    add_shortcut( "udpstream" );
+    add_shortcut( "udp4" );
+    add_shortcut( "udp6" );
+    add_shortcut( "rtp" );
+    add_shortcut( "rtp4" );
+    add_shortcut( "rtp6" );
+    set_callbacks( Open, Close );
+vlc_module_end();
 
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
-static block_t *BlockUDP( stream_t *, bool * );
-static int Control( stream_t *, int, va_list );
+#define RTP_HEADER_LEN 12
+
+static ssize_t Read    ( input_thread_t *, byte_t *, size_t );
+static ssize_t RTPRead ( input_thread_t *, byte_t *, size_t );
+static ssize_t RTPChoose( input_thread_t *, byte_t *, size_t );
+
+struct access_sys_t
+{
+    int fd;
+};
 
 /*****************************************************************************
  * Open: open the socket
  *****************************************************************************/
 static int Open( vlc_object_t *p_this )
 {
-    stream_t     *p_access = (stream_t*)p_this;
-    access_sys_t *sys;
+    input_thread_t     *p_input = (input_thread_t *)p_this;
+    access_sys_t       *p_sys;
 
-    if( p_access->b_preparsing )
-        return VLC_EGENERIC;
+    char *              psz_name = strdup(p_input->psz_name);
+    char *              psz_parser = psz_name;
+    char *              psz_server_addr = "";
+    char *              psz_server_port = "";
+    char *              psz_bind_addr = "";
+    char *              psz_bind_port = "";
+    int                 i_bind_port = 0, i_server_port = 0;
+    vlc_value_t         val;
 
-    sys = vlc_obj_malloc( p_this, sizeof( *sys ) );
-    if( unlikely( sys == NULL ) )
-        return VLC_ENOMEM;
 
-    p_access->p_sys = sys;
+    /* First set ipv4/ipv6 */
+    var_Create( p_input, "ipv4", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
+    var_Create( p_input, "ipv6", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
 
-    /* Set up p_access */
-    ACCESS_SET_CALLBACKS( NULL, BlockUDP, Control, NULL );
+    if( *p_input->psz_access )
+    {
+        /* Find out which shortcut was used */
+        if( !strncmp( p_input->psz_access, "udp4", 6 ) ||
+            !strncmp( p_input->psz_access, "rtp4", 6 ))
+        {
+            val.b_bool = VLC_TRUE;
+            var_Set( p_input, "ipv4", val );
 
-    char *psz_name = strdup( p_access->psz_location );
-    char *psz_parser;
-    const char *psz_server_addr, *psz_bind_addr = "";
-    int  i_bind_port = 1234, i_server_port = 0;
+            val.b_bool = VLC_FALSE;
+            var_Set( p_input, "ipv6", val );
+        }
+        else if( !strncmp( p_input->psz_access, "udp6", 6 ) ||
+                 !strncmp( p_input->psz_access, "rtp6", 6 ) )
+        {
+            val.b_bool = VLC_TRUE;
+            var_Set( p_input, "ipv6", val );
 
-    if( unlikely(psz_name == NULL) )
-        return VLC_ENOMEM;
+            val.b_bool = VLC_FALSE;
+            var_Set( p_input, "ipv4", val );
+        }
+    }
 
     /* Parse psz_name syntax :
      * [serveraddr[:serverport]][@[bindaddr]:[bindport]] */
-    psz_parser = strchr( psz_name, '@' );
-    if( psz_parser != NULL )
+    if( *psz_parser && *psz_parser != '@' )
     {
-        /* Found bind address and/or bind port */
-        *psz_parser++ = '\0';
-        psz_bind_addr = psz_parser;
+        /* Found server */
+        psz_server_addr = psz_parser;
 
-        if( psz_bind_addr[0] == '[' )
-            /* skips bracket'd IPv6 address */
-            psz_parser = strchr( psz_parser, ']' );
-
-        if( psz_parser != NULL )
+        while( *psz_parser && *psz_parser != ':' && *psz_parser != '@' )
         {
-            psz_parser = strchr( psz_parser, ':' );
-            if( psz_parser != NULL )
+            if( *psz_parser == '[' )
             {
-                *psz_parser++ = '\0';
-                i_bind_port = atoi( psz_parser );
+                /* IPv6 address */
+                while( *psz_parser && *psz_parser != ']' )
+                {
+                    psz_parser++;
+                }
+            }
+            psz_parser++;
+        }
+
+        if( *psz_parser == ':' )
+        {
+            /* Found server port */
+            *psz_parser++ = '\0'; /* Terminate server name */
+            psz_server_port = psz_parser;
+
+            while( *psz_parser && *psz_parser != '@' )
+            {
+                psz_parser++;
             }
         }
     }
 
-    psz_server_addr = psz_name;
-    psz_parser = ( psz_server_addr[0] == '[' )
-        ? strchr( psz_name, ']' ) /* skips bracket'd IPv6 address */
-        : psz_name;
-
-    if( psz_parser != NULL )
+    if( *psz_parser == '@' )
     {
-        psz_parser = strchr( psz_parser, ':' );
-        if( psz_parser != NULL )
+        /* Found bind address or bind port */
+        *psz_parser++ = '\0'; /* Terminate server port or name if necessary */
+
+        if( *psz_parser && *psz_parser != ':' )
         {
-            *psz_parser++ = '\0';
-            i_server_port = atoi( psz_parser );
+            /* Found bind address */
+            psz_bind_addr = psz_parser;
+
+            while( *psz_parser && *psz_parser != ':' )
+            {
+                if( *psz_parser == '[' )
+                {
+                    /* IPv6 address */
+                    while( *psz_parser && *psz_parser != ']' )
+                    {
+                        psz_parser++;
+                    }
+                }
+                psz_parser++;
+            }
+        }
+
+        if( *psz_parser == ':' )
+        {
+            /* Found bind port */
+            *psz_parser++ = '\0'; /* Terminate bind address if necessary */
+            psz_bind_port = psz_parser;
         }
     }
 
-    msg_Dbg( p_access, "opening server=%s:%d local=%s:%d",
+    i_server_port = strtol( psz_server_port, NULL, 10 );
+    if( ( i_bind_port   = strtol( psz_bind_port,   NULL, 10 ) ) == 0 )
+    {
+        i_bind_port = config_GetInt( p_this, "server-port" );
+    }
+
+    msg_Dbg( p_input, "opening server=%s:%d local=%s:%d",
              psz_server_addr, i_server_port, psz_bind_addr, i_bind_port );
 
-    sys->fd = net_OpenDgram( p_access, psz_bind_addr, i_bind_port,
-                             psz_server_addr, i_server_port, IPPROTO_UDP );
-    free( psz_name );
-    if( sys->fd == -1 )
+    p_sys = p_input->p_access_data = malloc( sizeof( access_sys_t ) );
+    if( p_sys == NULL )
     {
-        msg_Err( p_access, "cannot open socket" );
+        msg_Err( p_input, "out of memory" );
         return VLC_EGENERIC;
     }
 
-    sys->mtu = 7 * 188;
+    p_sys->fd = net_OpenUDP( p_input, psz_bind_addr, i_bind_port,
+                                      psz_server_addr, i_server_port );
+    if( p_sys->fd < 0 )
+    {
+        msg_Err( p_input, "cannot open socket" );
+        free( psz_name );
+        free( p_sys );
+        return VLC_EGENERIC;
+    }
+    free( psz_name );
 
-    sys->timeout = var_InheritInteger( p_access, "udp-timeout");
-    if( sys->timeout > 0)
-        sys->timeout *= 1000;
+    /* FIXME */
+    var_Create( p_input, "mtu", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_input, "mtu", &val);
+    p_input->i_mtu = val.i_int;
+
+    /* fill p_input fields */
+    p_input->pf_read = RTPChoose;
+    p_input->pf_set_program = input_SetProgram;
+    p_input->pf_set_area = NULL;
+    p_input->pf_seek = NULL;
+
+    vlc_mutex_lock( &p_input->stream.stream_lock );
+    p_input->stream.b_pace_control = VLC_FALSE;
+    p_input->stream.b_seekable = VLC_FALSE;
+    p_input->stream.p_selected_area->i_tell = 0;
+    p_input->stream.i_method = INPUT_METHOD_NETWORK;
+    vlc_mutex_unlock( &p_input->stream.stream_lock );
+
+    /* Update default_pts to a suitable value for udp access */
+    var_Create( p_input, "udp-caching", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_input, "udp-caching", &val );
+    p_input->i_pts_delay = val.i_int * 1000;
 
     return VLC_SUCCESS;
 }
@@ -182,103 +245,183 @@ static int Open( vlc_object_t *p_this )
  *****************************************************************************/
 static void Close( vlc_object_t *p_this )
 {
-    stream_t     *p_access = (stream_t*)p_this;
-    access_sys_t *sys = p_access->p_sys;
+    input_thread_t *p_input = (input_thread_t *)p_this;
+    access_sys_t   *p_sys = p_input->p_access_data;
 
-    net_Close( sys->fd );
+    msg_Info( p_input, "closing UDP target `%s'", p_input->psz_source );
+
+    net_Close( p_sys->fd );
+
+    free( p_sys );
 }
 
 /*****************************************************************************
- * Control:
+ * Read: read on a file descriptor, checking b_die periodically
  *****************************************************************************/
-static int Control( stream_t *p_access, int i_query, va_list args )
+static ssize_t Read( input_thread_t * p_input, byte_t * p_buffer, size_t i_len )
 {
-    bool    *pb_bool;
-    int64_t *pi_64;
+    access_sys_t   *p_sys = p_input->p_access_data;
 
-    switch( i_query )
-    {
-        case STREAM_CAN_SEEK:
-        case STREAM_CAN_FASTSEEK:
-        case STREAM_CAN_PAUSE:
-        case STREAM_CAN_CONTROL_PACE:
-            pb_bool = va_arg( args, bool * );
-            *pb_bool = false;
-            break;
-
-        case STREAM_GET_PTS_DELAY:
-            pi_64 = va_arg( args, int64_t * );
-            *pi_64 = INT64_C(1000)
-                   * var_InheritInteger(p_access, "network-caching");
-            break;
-
-        default:
-            return VLC_EGENERIC;
-    }
-    return VLC_SUCCESS;
+    return net_Read( p_input, p_sys->fd, p_buffer, i_len, VLC_FALSE );
 }
 
 /*****************************************************************************
- * BlockUDP:
+ * RTPRead : read from the network, and parse the RTP header
  *****************************************************************************/
-static block_t *BlockUDP(stream_t *access, bool *restrict eof)
+static ssize_t RTPRead( input_thread_t * p_input, byte_t * p_buffer,
+                        size_t i_len )
 {
-    access_sys_t *sys = access->p_sys;
+    int         i_rtp_version;
+    int         i_CSRC_count;
+    int         i_payload_type;
+    int         i_skip = 0;
 
-    block_t *pkt = block_Alloc(sys->mtu);
-    if (unlikely(pkt == NULL))
-    {   /* OOM - dequeue and discard one packet */
-        char dummy;
-        recv(sys->fd, &dummy, 1, 0);
-        return NULL;
+    byte_t *    p_tmp_buffer = alloca( p_input->i_mtu );
+
+    /* Get the raw data from the socket.
+     * We first assume that RTP header size is the classic RTP_HEADER_LEN. */
+    ssize_t i_ret = Read( p_input, p_tmp_buffer, p_input->i_mtu );
+
+    if ( i_ret <= 0 ) return 0; /* i_ret is at least 1 */
+
+    /* Parse the header and make some verifications.
+     * See RFC 1889 & RFC 2250. */
+
+    i_rtp_version  = ( p_tmp_buffer[0] & 0xC0 ) >> 6;
+    i_CSRC_count   = ( p_tmp_buffer[0] & 0x0F );
+    i_payload_type = ( p_tmp_buffer[1] & 0x7F );
+
+    if ( i_rtp_version != 2 )
+        msg_Dbg( p_input, "RTP version is %u, should be 2", i_rtp_version );
+
+    if( i_payload_type == 14 )
+    {
+        i_skip = 4;
+    }
+    else if( i_payload_type !=  33 && i_payload_type != 32 )
+    {
+        msg_Dbg( p_input, "unsupported RTP payload type (%u)",
+                 i_payload_type );
+    }
+    i_skip += RTP_HEADER_LEN + 4*i_CSRC_count;
+
+    /* A CSRC extension field is 32 bits in size (4 bytes) */
+    if ( i_ret < i_skip )
+    {
+        /* Packet is not big enough to hold the complete RTP_HEADER with
+         * CSRC extensions.
+         */
+        msg_Warn( p_input, "RTP input trashing %d bytes", i_ret - i_len );
+        return 0;
     }
 
-    struct iovec iov = {
-        .iov_base = pkt->p_buffer,
-        .iov_len = sys->mtu,
-    };
-    struct msghdr msg = {
-        .msg_iov = &iov,
-        .msg_iovlen = 1,
-#ifdef __linux__
-        .msg_flags = MSG_TRUNC,
-#endif
-    };
+    /* Return the packet without the RTP header. */
+    i_ret -= i_skip;
 
-    struct pollfd ufd[1];
-
-    ufd[0].fd = sys->fd;
-    ufd[0].events = POLLIN;
-
-    switch (vlc_poll_i11e(ufd, 1, sys->timeout))
+    if ( (size_t)i_ret > i_len )
     {
-        case 0:
-            msg_Err(access, "receive time-out");
-            *eof = true;
-            /* fall through */
-        case -1:
-            goto skip;
-     }
-
-    ssize_t len = recvmsg(sys->fd, &msg, 0);
-    if (len < 0)
-    {
-skip:
-        block_Release(pkt);
-        return NULL;
+        /* This should NOT happen. */
+        msg_Warn( p_input, "RTP input trashing %d bytes", i_ret - i_len );
+        i_ret = i_len;
     }
 
-#ifdef MSG_TRUNC
-    if (msg.msg_flags & MSG_TRUNC)
-    {
-        msg_Err(access, "%zd bytes packet truncated (MTU was %zu)",
-                len, sys->mtu);
-        pkt->i_flags |= BLOCK_FLAG_CORRUPTED;
-        sys->mtu = len;
-    }
-    else
-#endif
-        pkt->i_buffer = len;
+    p_input->p_vlc->pf_memcpy( p_buffer, &p_tmp_buffer[i_skip], i_ret );
 
-    return pkt;
+    return i_ret;
+}
+
+/*****************************************************************************
+ * RTPChoose : read from the network, and decide whether it's UDP or RTP
+ *****************************************************************************/
+static ssize_t RTPChoose( input_thread_t * p_input, byte_t * p_buffer,
+                          size_t i_len )
+{
+    int         i_rtp_version;
+    int         i_CSRC_count;
+    int         i_payload_type;
+
+    byte_t *    p_tmp_buffer = alloca( p_input->i_mtu );
+
+    /* Get the raw data from the socket.
+     * We first assume that RTP header size is the classic RTP_HEADER_LEN. */
+    ssize_t i_ret = Read( p_input, p_tmp_buffer, p_input->i_mtu );
+
+    if ( i_ret <= 0 ) return 0; /* i_ret is at least 1 */
+
+    /* Check that it's not TS. */
+    if ( p_tmp_buffer[0] == 0x47 )
+    {
+        msg_Dbg( p_input, "detected TS over raw UDP" );
+        p_input->pf_read = Read;
+        p_input->p_vlc->pf_memcpy( p_buffer, p_tmp_buffer, i_ret );
+        return i_ret;
+    }
+
+    /* Parse the header and make some verifications.
+     * See RFC 1889 & RFC 2250. */
+
+    i_rtp_version  = ( p_tmp_buffer[0] & 0xC0 ) >> 6;
+    i_CSRC_count   = ( p_tmp_buffer[0] & 0x0F );
+    i_payload_type = ( p_tmp_buffer[1] & 0x7F );
+
+    if ( i_rtp_version != 2 )
+    {
+        msg_Dbg( p_input, "no supported RTP header detected" );
+        p_input->pf_read = Read;
+        p_input->p_vlc->pf_memcpy( p_buffer, p_tmp_buffer, i_ret );
+        return i_ret;
+    }
+
+    switch ( i_payload_type )
+    {
+    case 33:
+        msg_Dbg( p_input, "detected TS over RTP" );
+        break;
+
+    case 14:
+        msg_Dbg( p_input, "detected MPEG audio over RTP" );
+        if( !p_input->psz_demux || *p_input->psz_demux == '\0' )
+        {
+            p_input->psz_demux = "mp3";
+        }
+        break;
+
+    case 32:
+        msg_Dbg( p_input, "detected MPEG video over RTP" );
+        break;
+
+    default:
+        msg_Dbg( p_input, "no RTP header detected" );
+        p_input->pf_read = Read;
+        p_input->p_vlc->pf_memcpy( p_buffer, p_tmp_buffer, i_ret );
+        return i_ret;
+    }
+
+    p_input->pf_read = RTPRead;
+
+    /* A CSRC extension field is 32 bits in size (4 bytes) */
+    if( i_ret < RTP_HEADER_LEN + 4*i_CSRC_count )
+    {
+        /* Packet is not big enough to hold the complete RTP_HEADER with
+         * CSRC extensions.
+         */
+        msg_Warn( p_input, "RTP input trashing %d bytes", i_ret - i_len );
+        return 0;
+    }
+
+    /* Return the packet without the RTP header. */
+    i_ret -= RTP_HEADER_LEN + 4*i_CSRC_count;
+
+    if ( (size_t)i_ret > i_len )
+    {
+        /* This should NOT happen. */
+        msg_Warn( p_input, "RTP input trashing %d bytes", i_ret - i_len );
+        i_ret = i_len;
+    }
+
+    p_input->p_vlc->pf_memcpy( p_buffer,
+                               &p_tmp_buffer[RTP_HEADER_LEN + 4*i_CSRC_count],
+                               i_ret );
+
+    return i_ret;
 }

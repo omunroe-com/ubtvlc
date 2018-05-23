@@ -1,11 +1,11 @@
 /*****************************************************************************
  * win32_tooltip.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: f26dfa43db51ef2f6352c0836686592943dd7e2b $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: win32_tooltip.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef WIN32_TOOLTIP_HPP
@@ -32,20 +32,21 @@
 /// Win32 implementation of OSTooltip
 class Win32Tooltip: public OSTooltip
 {
-public:
-    Win32Tooltip( intf_thread_t *pIntf, HINSTANCE hInst, HWND hParentWindow );
+    public:
+        Win32Tooltip( intf_thread_t *pIntf, HINSTANCE hInst,
+                            HWND hParentWindow );
 
-    virtual ~Win32Tooltip();
+        virtual ~Win32Tooltip();
 
-    /// Show the tooltip
-    virtual void show( int left, int top, OSGraphics &rText );
+        // Show the tooltip
+        virtual void show( int left, int top, OSGraphics &rText );
 
-    /// Hide the tooltip
-    virtual void hide();
+        // Hide the tooltip
+        virtual void hide();
 
-private:
-    /// Window ID
-    HWND m_hWnd;
+    private:
+        /// Window ID
+        HWND m_hWnd;
 };
 
 

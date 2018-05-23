@@ -1,446 +1,450 @@
 /*****************************************************************************
  * block.c: Data blocks management functions
  *****************************************************************************
- * Copyright (C) 2003-2004 VLC authors and VideoLAN
- * Copyright (C) 2007-2009 Rémi Denis-Courmont
+ * Copyright (C) 2003-2004 VideoLAN
+ * $Id: block.c 7678 2004-05-15 14:42:16Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@videolan.org>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
+/*****************************************************************************
+ * Preamble
+ *****************************************************************************/
+#include <stdlib.h>
+#include <stdarg.h>
 
-#include <sys/stat.h>
-#include <assert.h>
-#include <errno.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include <vlc/vlc.h>
+#include "vlc_block.h"
 
-#include <vlc_common.h>
-#include <vlc_block.h>
-#include <vlc_fs.h>
-
-#ifndef NDEBUG
-static void BlockNoRelease( block_t *b )
+/* private */
+struct block_sys_t
 {
-    fprintf( stderr, "block %p has no release callback! This is a bug!\n",
-             (void *) b );
-    abort();
-}
+    vlc_mutex_t lock;
 
-static void block_Check (block_t *block)
+    uint8_t     *p_allocated_buffer;
+    int         i_allocated_buffer;
+
+    vlc_bool_t  b_modify;       /* has it been put in modified state */
+    int         i_duplicated;   /* how many times has the content been
+                                 * duplicated */
+
+};
+
+static void BlockRelease( block_t *p_block )
 {
-    while (block != NULL)
+    vlc_mutex_lock( &p_block->p_sys->lock );
+
+    p_block->p_sys->i_duplicated--;
+    if( p_block->p_sys->i_duplicated < 0 )
     {
-        unsigned char *start = block->p_start;
-        unsigned char *end = block->p_start + block->i_size;
-        unsigned char *bufstart = block->p_buffer;
-        unsigned char *bufend = block->p_buffer + block->i_buffer;
+        vlc_mutex_unlock( &p_block->p_sys->lock );
+        vlc_mutex_destroy( &p_block->p_sys->lock );
+        free( p_block->p_sys->p_allocated_buffer );
+        free( p_block->p_sys );
+        free( p_block );
 
-        assert (block->pf_release != BlockNoRelease);
-        assert (start <= end);
-        assert (bufstart <= bufend);
-        assert (bufstart >= start);
-        assert (bufend <= end);
-
-        block = block->p_next;
+        return;
     }
+
+    vlc_mutex_unlock( &p_block->p_sys->lock );
+    free( p_block );
 }
 
-static void block_Invalidate (block_t *block)
+static block_t *__BlockDupContent( block_t *p_block )
 {
-    block->p_next = NULL;
-    block_Check (block);
-    block->pf_release = BlockNoRelease;
-}
-#else
-# define block_Check(b) ((void)(b))
-# define block_Invalidate(b) ((void)(b))
-#endif
+    block_t *p_dup;
 
-void block_Init( block_t *restrict b, void *buf, size_t size )
-{
-    /* Fill all fields to their default */
-    b->p_next = NULL;
-    b->p_buffer = buf;
-    b->i_buffer = size;
-    b->p_start = buf;
-    b->i_size = size;
-    b->i_flags = 0;
-    b->i_nb_samples = 0;
-    b->i_pts =
-    b->i_dts = VLC_TS_INVALID;
-    b->i_length = 0;
-#ifndef NDEBUG
-    b->pf_release = BlockNoRelease;
-#endif
+    p_dup = block_New( p_block->p_manager, p_block->i_buffer );
+    memcpy( p_dup->p_buffer, p_block->p_buffer, p_block->i_buffer );
+    p_dup->i_flags         = p_block->i_flags;
+    p_dup->i_pts           = p_block->i_pts;
+    p_dup->i_dts           = p_block->i_dts;
+    p_dup->i_length        = p_block->i_length;
+    p_dup->i_rate          = p_block->i_rate;
+
+    return p_dup;
 }
 
-static void block_generic_Release (block_t *block)
+static block_t *BlockModify( block_t *p_block, vlc_bool_t b_will_modify )
 {
-    /* That is always true for blocks allocated with block_Alloc(). */
-    assert (block->p_start == (unsigned char *)(block + 1));
-    block_Invalidate (block);
-    free (block);
-}
+    block_t *p_mod = p_block;   /* by default */
 
-static void BlockMetaCopy( block_t *restrict out, const block_t *in )
-{
-    out->p_next    = in->p_next;
-    out->i_nb_samples = in->i_nb_samples;
-    out->i_dts     = in->i_dts;
-    out->i_pts     = in->i_pts;
-    out->i_flags   = in->i_flags;
-    out->i_length  = in->i_length;
-}
+    vlc_mutex_lock( &p_block->p_sys->lock );
 
-/** Initial memory alignment of data block.
- * @note This must be a multiple of sizeof(void*) and a power of two.
- * libavcodec AVX optimizations require at least 32-bytes. */
-#define BLOCK_ALIGN        32
-
-/** Initial reserved header and footer size. */
-#define BLOCK_PADDING      32
-
-block_t *block_Alloc (size_t size)
-{
-    if (unlikely(size >> 27))
+    if( p_block->p_sys->b_modify == b_will_modify )
     {
-        errno = ENOBUFS;
-        return NULL;
+        vlc_mutex_unlock( &p_block->p_sys->lock );
+        return p_block;
     }
 
-    /* 2 * BLOCK_PADDING: pre + post padding */
-    const size_t alloc = sizeof (block_t) + BLOCK_ALIGN + (2 * BLOCK_PADDING)
-                       + size;
-    if (unlikely(alloc <= size))
-        return NULL;
+    if( p_block->p_sys->i_duplicated == 0 )
+    {
+        p_block->p_sys->b_modify = b_will_modify;
+        vlc_mutex_unlock( &p_block->p_sys->lock );
+        return p_block;
+    }
 
-    block_t *b = malloc (alloc);
-    if (unlikely(b == NULL))
-        return NULL;
+    /* FIXME we could avoid that
+     * we just need to create a new p_sys with new mem FIXME */
+    p_mod = __BlockDupContent( p_block );
+    vlc_mutex_unlock( &p_block->p_sys->lock );
 
-    block_Init (b, b + 1, alloc - sizeof (*b));
-    static_assert ((BLOCK_PADDING % BLOCK_ALIGN) == 0,
-                   "BLOCK_PADDING must be a multiple of BLOCK_ALIGN");
-    b->p_buffer += BLOCK_PADDING + BLOCK_ALIGN - 1;
-    b->p_buffer = (void *)(((uintptr_t)b->p_buffer) & ~(BLOCK_ALIGN - 1));
-    b->i_buffer = size;
-    b->pf_release = block_generic_Release;
-    return b;
+    BlockRelease( p_block );
+
+    return p_mod;
 }
 
-block_t *block_TryRealloc (block_t *p_block, ssize_t i_prebody, size_t i_body)
+static block_t *BlockDuplicate( block_t *p_block )
 {
-    block_Check( p_block );
+    block_t *p_dup;
 
-    /* Corner case: empty block requested */
-    if( i_prebody <= 0 && i_body <= (size_t)(-i_prebody) )
-        i_prebody = i_body = 0;
-
-    assert( p_block->p_start <= p_block->p_buffer );
-    assert( p_block->p_start + p_block->i_size
-                                    >= p_block->p_buffer + p_block->i_buffer );
-
-    /* First, shrink payload */
-
-    /* Pull payload start */
-    if( i_prebody < 0 )
+    vlc_mutex_lock( &p_block->p_sys->lock );
+    if( !p_block->p_sys->b_modify )
     {
-        if( p_block->i_buffer >= (size_t)-i_prebody )
-        {
-            p_block->p_buffer -= i_prebody;
-            p_block->i_buffer += i_prebody;
-        }
-        else /* Discard current payload entirely */
-            p_block->i_buffer = 0;
-        i_body += i_prebody;
-        i_prebody = 0;
+        p_block->p_sys->i_duplicated++;
+        vlc_mutex_unlock( &p_block->p_sys->lock );
+        p_dup = block_NewEmpty();
+        memcpy( p_dup, p_block, sizeof( block_t ) );
+        p_dup->p_next = NULL;
+        return p_dup;
     }
+    p_dup = __BlockDupContent( p_block );
+    vlc_mutex_unlock( &p_block->p_sys->lock );
 
-    /* Trim payload end */
-    if( p_block->i_buffer > i_body )
-        p_block->i_buffer = i_body;
+    return p_dup;
+}
 
-    size_t requested = i_prebody + i_body;
+static block_t *BlockRealloc( block_t *p_block, int i_prebody, int i_body )
+{
+    int i_buffer_size = i_prebody + i_body;
 
-    if( p_block->i_buffer == 0 )
-    {   /* Corner case: nothing to preserve */
-        if( requested <= p_block->i_size )
-        {   /* Enough room: recycle buffer */
-            size_t extra = p_block->i_size - requested;
+    if( i_body < 0 || i_buffer_size <= 0 ) return NULL;
 
-            p_block->p_buffer = p_block->p_start + (extra / 2);
-            p_block->i_buffer = requested;
-            return p_block;
-        }
+    vlc_mutex_lock( &p_block->p_sys->lock );
 
-        /* Not enough room: allocate a new buffer */
-        block_t *p_rea = block_Alloc( requested );
-        if( p_rea == NULL )
-            return NULL;
-
-        BlockMetaCopy( p_rea, p_block );
-        block_Release( p_block );
-        return p_rea;
-    }
-
-    uint8_t *p_start = p_block->p_start;
-    uint8_t *p_end = p_start + p_block->i_size;
-
-    /* Second, reallocate the buffer if we lack space. */
-    assert( i_prebody >= 0 );
-    if( (size_t)(p_block->p_buffer - p_start) < (size_t)i_prebody
-     || (size_t)(p_end - p_block->p_buffer) < i_body )
-    {
-        block_t *p_rea = block_Alloc( requested );
-        if( p_rea == NULL )
-            return NULL;
-
-        memcpy( p_rea->p_buffer + i_prebody, p_block->p_buffer,
-                p_block->i_buffer );
-        BlockMetaCopy( p_rea, p_block );
-        block_Release( p_block );
-        return p_rea;
-    }
-
-    /* Third, expand payload */
-
-    /* Push payload start */
-    if( i_prebody > 0 )
+    if( i_prebody < ( p_block->p_buffer - p_block->p_sys->p_allocated_buffer +
+                      p_block->p_sys->i_allocated_buffer ) ||
+        p_block->p_buffer - i_prebody > p_block->p_sys->p_allocated_buffer )
     {
         p_block->p_buffer -= i_prebody;
         p_block->i_buffer += i_prebody;
-        i_body += i_prebody;
         i_prebody = 0;
     }
+    if( p_block->p_buffer + i_body < p_block->p_sys->p_allocated_buffer +
+        p_block->p_sys->i_allocated_buffer )
+    {
+        p_block->i_buffer = i_buffer_size;
+        i_body = 0;
+    }
 
-    /* Expand payload to requested size */
-    p_block->i_buffer = i_body;
+    if( i_body > 0 || i_prebody > 0 )
+    {
+        block_t *p_rea = block_New( p_block->p_manager, i_buffer_size );
+
+        p_rea->i_dts   = p_block->i_dts;
+        p_rea->i_pts   = p_block->i_pts;
+        p_rea->i_flags = p_block->i_flags;
+        p_rea->i_length= p_block->i_length;
+        p_rea->i_rate  = p_block->i_rate;
+
+        memcpy( p_rea->p_buffer + i_prebody, p_block->p_buffer,
+                __MIN( p_block->i_buffer, p_rea->i_buffer - i_prebody ) );
+
+        vlc_mutex_unlock( &p_block->p_sys->lock );
+        block_Release( p_block );
+
+        return p_rea;
+    }
+
+    vlc_mutex_unlock( &p_block->p_sys->lock );
 
     return p_block;
 }
 
-block_t *block_Realloc (block_t *block, ssize_t prebody, size_t body)
+/*****************************************************************************
+ * Standard block management
+ *
+ *****************************************************************************/
+/* to be used by other block management */
+block_t *block_NewEmpty( void )
 {
-    block_t *rea = block_TryRealloc (block, prebody, body);
-    if (rea == NULL)
-        block_Release(block);
-    return rea;
+    block_t *p_block;
+
+    p_block = malloc( sizeof( block_t ) );
+    memset( p_block, 0, sizeof( block_t ) );
+
+    p_block->p_next         = NULL;
+    p_block->i_flags        = 0;
+    p_block->i_pts          = 0;
+    p_block->i_dts          = 0;
+    p_block->i_length       = 0;
+    p_block->i_rate         = 0;
+
+    p_block->i_buffer       = 0;
+    p_block->p_buffer       = NULL;
+
+    p_block->pf_release     = NULL;
+    p_block->pf_duplicate   = NULL;
+    p_block->pf_modify      = NULL;
+    p_block->pf_realloc     = NULL;
+
+    p_block->p_manager      = NULL;
+    p_block->p_sys = NULL;
+    return p_block;
 }
 
-static void block_heap_Release (block_t *block)
+block_t *__block_New( vlc_object_t *p_obj, int i_size )
 {
-    block_Invalidate (block);
-    free (block->p_start);
-    free (block);
+    block_t     *p_block;
+    block_sys_t *p_sys;
+
+    p_block = block_NewEmpty();
+
+    p_block->pf_release     = BlockRelease;
+    p_block->pf_duplicate   = BlockDuplicate;
+    p_block->pf_modify      = BlockModify;
+    p_block->pf_realloc     = BlockRealloc;
+
+    /* that should be ok (no comunication between multiple p_vlc) */
+    p_block->p_manager      = VLC_OBJECT( p_obj->p_vlc );
+
+    p_block->p_sys = p_sys = malloc( sizeof( block_sys_t ) );
+    vlc_mutex_init( p_obj, &p_sys->lock );
+
+    /* XXX align on 16 and add 32 prebuffer/posbuffer bytes */
+    p_sys->i_allocated_buffer = i_size + 32 + 32 + 16;
+    p_sys->p_allocated_buffer = malloc( p_sys->i_allocated_buffer );
+    p_block->i_buffer         = i_size;
+    p_block->p_buffer         = &p_sys->p_allocated_buffer[32+15-((long)p_sys->p_allocated_buffer % 16 )];
+
+    p_sys->i_duplicated = 0;
+    p_sys->b_modify = VLC_TRUE;
+
+    return p_block;
 }
 
-block_t *block_heap_Alloc (void *addr, size_t length)
+void block_ChainAppend( block_t **pp_list, block_t *p_block )
 {
-    block_t *block = malloc (sizeof (*block));
-    if (block == NULL)
+    if( *pp_list == NULL )
     {
-        free (addr);
-        return NULL;
+        *pp_list = p_block;
     }
-
-    block_Init (block, addr, length);
-    block->pf_release = block_heap_Release;
-    return block;
-}
-
-#ifdef HAVE_MMAP
-# include <sys/mman.h>
-
-static void block_mmap_Release (block_t *block)
-{
-    block_Invalidate (block);
-    munmap (block->p_start, block->i_size);
-    free (block);
-}
-
-block_t *block_mmap_Alloc (void *addr, size_t length)
-{
-    if (addr == MAP_FAILED)
-        return NULL;
-
-    long page_mask = sysconf(_SC_PAGESIZE) - 1;
-    size_t left = ((uintptr_t)addr) & page_mask;
-    size_t right = (-length) & page_mask;
-
-    block_t *block = malloc (sizeof (*block));
-    if (block == NULL)
+    else
     {
-        munmap (addr, length);
-        return NULL;
-    }
+        block_t *p = *pp_list;
 
-    block_Init (block, ((char *)addr) - left, left + length + right);
-    block->p_buffer = addr;
-    block->i_buffer = length;
-    block->pf_release = block_mmap_Release;
-    return block;
-}
-#else
-block_t *block_mmap_Alloc (void *addr, size_t length)
-{
-    (void)addr; (void)length; return NULL;
-}
-#endif
-
-#ifdef HAVE_SYS_SHM_H
-# include <sys/shm.h>
-
-typedef struct block_shm_t
-{
-    block_t     self;
-    void       *base_addr;
-} block_shm_t;
-
-static void block_shm_Release (block_t *block)
-{
-    block_shm_t *p_sys = (block_shm_t *)block;
-
-    shmdt (p_sys->base_addr);
-    free (p_sys);
-}
-
-block_t *block_shm_Alloc (void *addr, size_t length)
-{
-    block_shm_t *block = malloc (sizeof (*block));
-    if (unlikely(block == NULL))
-    {
-        shmdt (addr);
-        return NULL;
-    }
-
-    block_Init (&block->self, (uint8_t *)addr, length);
-    block->self.pf_release = block_shm_Release;
-    block->base_addr = addr;
-    return &block->self;
-}
-#else
-block_t *block_shm_Alloc (void *addr, size_t length)
-{
-    (void) addr; (void) length;
-    abort ();
-}
-#endif
-
-
-#ifdef _WIN32
-# include <io.h>
-
-static
-ssize_t pread (int fd, void *buf, size_t count, off_t offset)
-{
-    HANDLE handle = (HANDLE)(intptr_t)_get_osfhandle (fd);
-    if (handle == INVALID_HANDLE_VALUE)
-        return -1;
-
-    OVERLAPPED olap = {.Offset = offset, .OffsetHigh = (offset >> 32)};
-    DWORD written;
-    /* This braindead API will override the file pointer even if we specify
-     * an explicit read offset... So do not expect this to mix well with
-     * regular read() calls. */
-    if (ReadFile (handle, buf, count, &written, &olap))
-        return written;
-    return -1;
-}
-#endif
-
-block_t *block_File(int fd, bool write)
-{
-    size_t length;
-    struct stat st;
-
-    /* First, get the file size */
-    if (fstat (fd, &st))
-        return NULL;
-
-    /* st_size is meaningful for regular files, shared memory and typed memory.
-     * It's also meaning for symlinks, but that's not possible with fstat().
-     * In other cases, it's undefined, and we should really not go further. */
-#ifndef S_TYPEISSHM
-# define S_TYPEISSHM( buf ) (0)
-#endif
-    if (S_ISDIR (st.st_mode))
-    {
-        errno = EISDIR;
-        return NULL;
-    }
-    if (!S_ISREG (st.st_mode) && !S_TYPEISSHM (&st))
-    {
-        errno = ESPIPE;
-        return NULL;
-    }
-
-    /* Prevent an integer overflow in mmap() and malloc() */
-    if ((uintmax_t)st.st_size >= SIZE_MAX)
-    {
-        errno = ENOMEM;
-        return NULL;
-    }
-    length = (size_t)st.st_size;
-
-#ifdef HAVE_MMAP
-    if (length > 0)
-    {
-        int prot = PROT_READ | (write ? PROT_WRITE : 0);
-        int flags = write ? MAP_PRIVATE : MAP_SHARED;
-        void *addr = mmap(NULL, length, prot, flags, fd, 0);
-
-        if (addr != MAP_FAILED)
-            return block_mmap_Alloc (addr, length);
-    }
-#endif
-
-    /* If mmap() is not implemented by the OS _or_ the filesystem... */
-    block_t *block = block_Alloc (length);
-    if (block == NULL)
-        return NULL;
-    block_cleanup_push (block);
-
-    for (size_t i = 0; i < length;)
-    {
-        ssize_t len = pread (fd, block->p_buffer + i, length - i, i);
-        if (len == -1)
+        while( p->p_next )
         {
-            block_Release (block);
-            block = NULL;
-            break;
+            p = p->p_next;
         }
-        i += len;
+        p->p_next = p_block;
     }
-    vlc_cleanup_pop ();
-    return block;
 }
 
-block_t *block_FilePath(const char *path, bool write)
+void block_ChainLastAppend( block_t ***ppp_last, block_t *p_block  )
 {
-    /* NOTE: Writeable shared mappings are not supported here. So there are no
-     * needs to open the file for writing (even if the mapping is writable). */
-    int fd = vlc_open (path, O_RDONLY);
-    if (fd == -1)
-        return NULL;
+    block_t *p_last = p_block;
 
-    block_t *block = block_File(fd, write);
-    vlc_close (fd);
-    return block;
+    /* Append the block */
+    **ppp_last = p_block;
+
+    /* Update last pointer */
+    while( p_last->p_next ) p_last = p_last->p_next;
+    *ppp_last = &p_last->p_next;
 }
+
+void block_ChainRelease( block_t *p_block )
+{
+    while( p_block )
+    {
+        block_t *p_next;
+        p_next = p_block->p_next;
+        p_block->pf_release( p_block );
+        p_block = p_next;
+    }
+}
+
+int block_ChainExtract( block_t *p_list, void *p_data, int i_max )
+{
+    block_t *b;
+    int     i_total = 0;
+    uint8_t *p = p_data;
+
+    for( b = p_list; b != NULL; b = b->p_next )
+    {
+        int i_copy;
+
+        i_copy = __MIN( i_max, b->i_buffer );
+        if( i_copy > 0 )
+        {
+            memcpy( p, b->p_buffer, i_copy );
+            i_max   -= i_copy;
+            i_total += i_copy;
+            p       += i_copy;
+
+            if( i_max == 0 )
+            {
+                return i_total;
+            }
+        }
+    }
+    return i_total;
+}
+
+block_t *block_ChainGather( block_t *p_list )
+{
+    int     i_total = 0;
+    block_t *b, *g;
+
+    if( p_list->p_next == NULL )
+    {
+        /* only one, so no need */
+        return p_list;
+    }
+
+    for( b = p_list; b != NULL; b = b->p_next )
+    {
+        i_total += b->i_buffer;
+    }
+
+    g = block_New( p_list->p_manager, i_total );
+    block_ChainExtract( p_list, g->p_buffer, g->i_buffer );
+
+    g->i_flags = p_list->i_flags;
+    g->i_pts   = p_list->i_pts;
+    g->i_dts   = p_list->i_dts;
+
+    /* free p_list */
+    block_ChainRelease( p_list );
+    return g;
+}
+
+/*****************************************************************************
+ * block_fifo_t management
+ *****************************************************************************/
+block_fifo_t *__block_FifoNew( vlc_object_t *p_obj )
+{
+    block_fifo_t *p_fifo;
+
+    p_fifo = malloc( sizeof( vlc_object_t ) );
+    vlc_mutex_init( p_obj, &p_fifo->lock );
+    vlc_cond_init( p_obj, &p_fifo->wait );
+    p_fifo->i_depth = 0;
+    p_fifo->p_first = NULL;
+    p_fifo->pp_last = &p_fifo->p_first;
+
+    return p_fifo;
+}
+
+void block_FifoRelease( block_fifo_t *p_fifo )
+{
+    block_FifoEmpty( p_fifo );
+    vlc_cond_destroy( &p_fifo->wait );
+    vlc_mutex_destroy( &p_fifo->lock );
+    free( p_fifo );
+}
+
+void block_FifoEmpty( block_fifo_t *p_fifo )
+{
+    block_t *b;
+
+    vlc_mutex_lock( &p_fifo->lock );
+    for( b = p_fifo->p_first; b != NULL; )
+    {
+        block_t *p_next;
+
+        p_next = b->p_next;
+        block_Release( b );
+        b = p_next;
+    }
+
+    p_fifo->i_depth = 0;
+    p_fifo->p_first = NULL;
+    p_fifo->pp_last = &p_fifo->p_first;
+    vlc_mutex_unlock( &p_fifo->lock );
+}
+
+int block_FifoPut( block_fifo_t *p_fifo, block_t *p_block )
+{
+    int i_size = 0;
+    vlc_mutex_lock( &p_fifo->lock );
+
+    do
+    {
+        i_size += p_block->i_buffer;
+
+        *p_fifo->pp_last = p_block;
+        p_fifo->pp_last = &p_block->p_next;
+        p_fifo->i_depth++;
+
+        p_block = p_block->p_next;
+
+    } while( p_block );
+
+    /* warn there is data in this fifo */
+    vlc_cond_signal( &p_fifo->wait );
+    vlc_mutex_unlock( &p_fifo->lock );
+
+    return i_size;
+}
+
+block_t *block_FifoGet( block_fifo_t *p_fifo )
+{
+    block_t *b;
+
+    vlc_mutex_lock( &p_fifo->lock );
+
+    if( p_fifo->p_first == NULL )
+    {
+        vlc_cond_wait( &p_fifo->wait, &p_fifo->lock );
+    }
+
+    b = p_fifo->p_first;
+
+    p_fifo->p_first = b->p_next;
+    p_fifo->i_depth--;
+
+    if( p_fifo->p_first == NULL )
+    {
+        p_fifo->pp_last = &p_fifo->p_first;
+    }
+
+    vlc_mutex_unlock( &p_fifo->lock );
+
+    b->p_next = NULL;
+    return( b );
+}
+
+block_t *block_FifoShow( block_fifo_t *p_fifo )
+{
+    block_t *b;
+
+    vlc_mutex_lock( &p_fifo->lock );
+
+    if( p_fifo->p_first == NULL )
+    {
+        vlc_cond_wait( &p_fifo->wait, &p_fifo->lock );
+    }
+
+    b = p_fifo->p_first;
+
+    vlc_mutex_unlock( &p_fifo->lock );
+
+    return( b );
+
+}
+

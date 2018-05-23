@@ -1,11 +1,11 @@
 /*****************************************************************************
  * time.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 0089a6e036e5e88422b1561e8150d98d95069285 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: time.cpp 7574 2004-05-01 14:23:40Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,19 +17,15 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
+#include <stdio.h>  // snprintf
+
 #include "time.hpp"
-#include <vlc_input.h>
-
-
-inline bool StreamTime::havePosition() const {
-    input_thread_t *p_input = getIntf()->p_sys->p_input;
-    return p_input && ( var_GetFloat( p_input, "position" ) != 0.0 );
-}
+#include <vlc/input.h>
 
 
 void StreamTime::set( float percentage, bool updateVLC )
@@ -38,67 +34,84 @@ void StreamTime::set( float percentage, bool updateVLC )
 
     // Avoid looping forever...
     if( updateVLC && getIntf()->p_sys->p_input )
-        var_SetFloat( getIntf()->p_sys->p_input, "position", percentage );
+    {
+        vlc_value_t pos;
+        pos.f_float = percentage;
+
+        var_Set( getIntf()->p_sys->p_input, "position", pos );
+    }
 }
 
 
-std::string StreamTime::getAsStringPercent() const
+const string StreamTime::getAsStringPercent() const
 {
     int value = (int)(100. * get());
     // 0 <= value <= 100, so we need 4 chars
-    char str[4];
+    char *str = new char[4];
     snprintf( str, 4, "%d", value );
-    return std::string(str);
+    string ret = str;
+    delete[] str;
+
+    return ret;
 }
 
 
-std::string StreamTime::formatTime( int seconds, bool bShortFormat ) const
+const string StreamTime::getAsStringCurrTime() const
 {
-    char psz_time[MSTRTIME_MAX_SIZE];
-    if( bShortFormat && (seconds < 60 * 60) )
+    if( getIntf()->p_sys->p_input == NULL ||
+        !getIntf()->p_sys->p_input->stream.b_seekable )
     {
-        snprintf( psz_time, MSTRTIME_MAX_SIZE, "%02d:%02d",
-                  (int) (seconds / 60 % 60),
-                  (int) (seconds % 60) );
+        return "-:--:--";
     }
-    else
+
+    vlc_value_t time;
+    var_Get( getIntf()->p_sys->p_input, "time", &time );
+
+    return formatTime( time.i_time / 1000000 );
+}
+
+
+const string StreamTime::getAsStringTimeLeft() const
+{
+    if( getIntf()->p_sys->p_input == NULL ||
+        !getIntf()->p_sys->p_input->stream.b_seekable )
     {
-        snprintf( psz_time, MSTRTIME_MAX_SIZE, "%d:%02d:%02d",
-                  (int) (seconds / (60 * 60)),
-                  (int) (seconds / 60 % 60),
-                  (int) (seconds % 60) );
+        return "-:--:--";
     }
-    return std::string(psz_time);
+
+    vlc_value_t time, duration;
+    var_Get( getIntf()->p_sys->p_input, "time", &time );
+    var_Get( getIntf()->p_sys->p_input, "length", &duration );
+
+    return formatTime( (duration.i_time - time.i_time) / 1000000 );
 }
 
 
-std::string StreamTime::getAsStringCurrTime( bool bShortFormat ) const
+const string StreamTime::getAsStringDuration() const
 {
-    if( !havePosition() )
+    if( getIntf()->p_sys->p_input == NULL ||
+        !getIntf()->p_sys->p_input->stream.b_seekable )
+    {
         return "-:--:--";
+    }
 
-    mtime_t time = var_GetInteger( getIntf()->p_sys->p_input, "time" );
-    return formatTime( time / CLOCK_FREQ, bShortFormat );
+    vlc_value_t time;
+    var_Get( getIntf()->p_sys->p_input, "length", &time );
+
+    return formatTime( time.i_time / 1000000 );
 }
 
 
-std::string StreamTime::getAsStringTimeLeft( bool bShortFormat ) const
+const string StreamTime::formatTime( int seconds ) const
 {
-    if( !havePosition() )
-        return "-:--:--";
+    char *psz_time = new char[MSTRTIME_MAX_SIZE];
+    snprintf( psz_time, MSTRTIME_MAX_SIZE, "%d:%02d:%02d",
+              (int) (seconds / (60 * 60)),
+              (int) (seconds / 60 % 60),
+              (int) (seconds % 60) );
 
-    mtime_t time = var_GetInteger( getIntf()->p_sys->p_input, "time" ),
-        duration = var_GetInteger( getIntf()->p_sys->p_input, "length" );
+    string ret = psz_time;
+    delete[] psz_time;
 
-    return formatTime( (duration - time) / CLOCK_FREQ, bShortFormat );
-}
-
-
-std::string StreamTime::getAsStringDuration( bool bShortFormat ) const
-{
-    if( !havePosition() )
-        return "-:--:--";
-
-    mtime_t time = var_GetInteger( getIntf()->p_sys->p_input, "length" );
-    return formatTime( time / CLOCK_FREQ, bShortFormat );
+    return ret;
 }

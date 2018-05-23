@@ -1,11 +1,11 @@
 /*****************************************************************************
  * evt_focus.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 6c789a18523fbb50da8a5b135a4a4ee2571dc3b1 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: evt_focus.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef EVT_FOCUS_HPP
@@ -31,19 +31,20 @@
 /// Focus change event
 class EvtFocus: public EvtGeneric
 {
-public:
-    EvtFocus( intf_thread_t *pIntf, bool focus )
-            : EvtGeneric( pIntf ), m_focus( focus ) { }
-    virtual ~EvtFocus() { }
+    public:
+        EvtFocus( intf_thread_t *pIntf, bool focus ): EvtGeneric( pIntf ),
+            m_focus( focus ) {}
+        virtual ~EvtFocus() {}
 
-    virtual const std::string getAsString() const
-    {
-        return ( m_focus ? "focus:in" : "focus:out" );
-    }
+        /// Return the type of event
+        virtual const string getAsString() const
+        {
+            return ( m_focus ? "focus:in" : "focus:out" );
+        }
 
-private:
-    /// true for a focus in, and false for a focus out
-    bool m_focus;
+    private:
+        /// true for a focus in, and false for a focus out
+        bool m_focus;
 };
 
 

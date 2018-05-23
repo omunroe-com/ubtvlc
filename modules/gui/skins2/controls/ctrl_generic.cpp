@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ctrl_generic.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: dfa055494ee8ec468f8145f489c741964c80b74a $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ctrl_generic.cpp 7073 2004-03-14 14:33:12Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "ctrl_generic.hpp"
@@ -29,13 +29,11 @@
 #include "../utils/position.hpp"
 #include "../utils/var_bool.hpp"
 
-#include <assert.h>
-
 
 CtrlGeneric::CtrlGeneric( intf_thread_t *pIntf, const UString &rHelp,
                           VarBool *pVisible):
-    SkinObject( pIntf ), m_pLayout( NULL ), m_pVisible( pVisible ),
-    m_pPosition( NULL ), m_help( rHelp )
+    SkinObject( pIntf ), m_pLayout( NULL ), m_pPosition( NULL ),
+    m_help( rHelp ), m_pVisible( pVisible )
 {
     // Observe the visibility variable
     if( m_pVisible )
@@ -47,6 +45,10 @@ CtrlGeneric::CtrlGeneric( intf_thread_t *pIntf, const UString &rHelp,
 
 CtrlGeneric::~CtrlGeneric()
 {
+    if( m_pPosition )
+    {
+        delete m_pPosition;
+    }
     if( m_pVisible )
     {
         m_pVisible->delObserver( this );
@@ -57,60 +59,22 @@ CtrlGeneric::~CtrlGeneric()
 void CtrlGeneric::setLayout( GenericLayout *pLayout,
                              const Position &rPosition )
 {
-    assert( !m_pLayout && pLayout);
-
     m_pLayout = pLayout;
+    if( m_pPosition )
+    {
+        delete m_pPosition;
+    }
     m_pPosition = new Position( rPosition );
     onPositionChange();
 }
 
-void CtrlGeneric::unsetLayout()
-{
-    assert( m_pLayout );
 
-    delete m_pPosition;
-    m_pPosition = NULL;
-    m_pLayout = NULL;
-}
-
-void CtrlGeneric::notifyLayout( int width, int height,
-                                int xOffSet, int yOffSet )
+void CtrlGeneric::notifyLayout() const
 {
     // Notify the layout
     if( m_pLayout )
     {
-        width = ( width > 0 ) ? width : m_pPosition->getWidth();
-        height = ( height > 0 ) ? height : m_pPosition->getHeight();
-
-        m_pLayout->onControlUpdate( *this, width, height, xOffSet, yOffSet );
-    }
-}
-
-
-void CtrlGeneric::notifyLayoutMaxSize( const Box *pImg1, const Box *pImg2 )
-{
-    if( pImg1 == NULL )
-    {
-        if( pImg2 == NULL )
-        {
-            notifyLayout();
-        }
-        else
-        {
-            notifyLayout( pImg2->getWidth(), pImg2->getHeight() );
-        }
-    }
-    else
-    {
-        if( pImg2 == NULL )
-        {
-            notifyLayout( pImg1->getWidth(), pImg1->getHeight() );
-        }
-        else
-        {
-            notifyLayout( std::max( pImg1->getWidth(), pImg2->getWidth() ),
-                          std::max( pImg1->getHeight(), pImg2->getHeight() ) );
-        }
+        m_pLayout->onControlUpdate( *this );
     }
 }
 
@@ -162,10 +126,9 @@ bool CtrlGeneric::isVisible() const
 }
 
 
-void CtrlGeneric::onUpdate( Subject<VarBool> &rVariable, void *arg  )
+void CtrlGeneric::onUpdate( Subject<VarBool> &rVariable )
 {
-    (void)arg;
-    // Is it the visibility variable ?
+    // Is it the visibily variable ?
     if( &rVariable == m_pVisible )
     {
         // Redraw the layout

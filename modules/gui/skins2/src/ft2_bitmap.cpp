@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ft2_bitmap.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 10a3e1106cc3dc7bbee4a26b4a03bdc7ec0a7b2d $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ft2_bitmap.cpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "ft2_bitmap.hpp"
@@ -36,7 +36,10 @@ FT2Bitmap::FT2Bitmap( intf_thread_t *pIntf, int width, int height ):
 
 FT2Bitmap::~FT2Bitmap()
 {
-    delete[] m_pData;
+    if( m_pData )
+    {
+        delete[] m_pData;
+    }
 }
 
 
@@ -50,16 +53,16 @@ void FT2Bitmap::draw( const FT_Bitmap &rBitmap, int left, int top,
     uint8_t green = (color >> 8) & 0xff;
     uint8_t red = (color >> 16) & 0xff;
 
-    for( unsigned y = top; y < top + rBitmap.rows && y < m_height; y++ )
+    for( int y = top; y < top + rBitmap.rows; y++ )
     {
         uint8_t *pData = m_pData + 4 * (m_width * y + left);
-        for( unsigned x = left; x < left + rBitmap.width && x < m_width; x++ )
+        for( int x = left; x < left + rBitmap.width; x++ )
         {
             // The buffer in FT_Bitmap contains alpha values
             uint8_t val = *(pBuf++);
-            *(pData++) = (blue * val) >> 8;
-            *(pData++) = (green * val) >> 8;
-            *(pData++) = (red * val) >> 8;
+            *(pData++) = blue;
+            *(pData++) = green;
+            *(pData++) = red;
             *(pData++) = val;
         }
     }

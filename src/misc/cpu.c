@@ -1,184 +1,150 @@
 /*****************************************************************************
  * cpu.c: CPU detection code
  *****************************************************************************
- * Copyright (C) 1998-2004 VLC authors and VideoLAN
- * $Id: 1b271edd799ac60ea5542699feb7b36273a96cc3 $
+ * Copyright (C) 1998-2004 VideoLAN
+ * $Id: cpu.c 7726 2004-05-20 01:49:08Z titer $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Christophe Massiot <massiot@via.ecp.fr>
  *          Eugenio Jarosiewicz <ej0@cise.ufl.eduEujenio>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#ifdef HAVE_CONFIG_H
-# include "config.h"
+#include <vlc/vlc.h>
+
+#ifdef HAVE_SIGNAL_H
+#   include <signal.h>                            /* SIGHUP, SIGINT, SIGKILL */
+#   include <setjmp.h>                                    /* longjmp, setjmp */
 #endif
 
-#include <vlc_common.h>
-#include <vlc_cpu.h>
-#include <vlc_memstream.h>
-#include "libvlc.h"
-
-#include <assert.h>
-
-#ifndef __linux__
-#include <sys/types.h>
-#ifndef _WIN32
-#include <unistd.h>
-#include <sys/wait.h>
-#include <signal.h>
-#else
-#include <errno.h>
-#endif
-
-#ifdef __APPLE__
+#ifdef SYS_DARWIN
 #include <sys/sysctl.h>
 #endif
-#ifdef __ANDROID__
-#include <cpu-features.h>
+
+#include "vlc_cpu.h"
+
+/*****************************************************************************
+ * Local prototypes
+ *****************************************************************************/
+#ifdef HAVE_SIGNAL_H
+static void SigHandler   ( int );
 #endif
 
-#if defined(__OpenBSD__) && defined(__powerpc__)
-#include <sys/param.h>
-#include <sys/sysctl.h>
-#include <machine/cpu.h>
+/*****************************************************************************
+ * Global variables - they're needed for signal handling
+ *****************************************************************************/
+#ifdef HAVE_SIGNAL_H
+static jmp_buf env;
+static int     i_illegal;
+#if defined( __i386__ )
+static char   *psz_capability;
+#endif
 #endif
 
-static uint32_t cpu_flags;
-
-#if defined (__i386__) || defined (__x86_64__) || defined (__powerpc__) \
- || defined (__ppc__) || defined (__ppc64__) || defined (__powerpc64__)
-# if defined (HAVE_FORK)
-static bool vlc_CPU_check (const char *name, void (*func) (void))
+/*****************************************************************************
+ * CPUCapabilities: get the CPU capabilities
+ *****************************************************************************
+ * This function is called to list extensions the CPU may have.
+ *****************************************************************************/
+uint32_t CPUCapabilities( void )
 {
-    pid_t pid = fork();
+    volatile uint32_t i_capabilities = CPU_CAPABILITY_NONE;
 
-    switch (pid)
-    {
-        case 0:
-            signal (SIGILL, SIG_DFL);
-            func ();
-            _exit (0);
-        case -1:
-            return false;
-    }
+#if defined( SYS_DARWIN )
+    int selectors[2] = { CTL_HW, HW_VECTORUNIT };
+    int i_has_altivec = 0;
+    size_t i_length = sizeof( i_has_altivec );
+    int i_error = sysctl( selectors, 2, &i_has_altivec, &i_length, NULL, 0);
 
-    int status;
-    while( waitpid( pid, &status, 0 ) == -1 );
+    i_capabilities |= CPU_CAPABILITY_FPU;
 
-    if( WIFEXITED( status ) && WEXITSTATUS( status ) == 0 )
-        return true;
+    if( i_error == 0 && i_has_altivec != 0 )
+        i_capabilities |= CPU_CAPABILITY_ALTIVEC;
 
-    fprintf (stderr, "Warning: your CPU has %s instructions, but not your "
-                     "operating system.\n", name);
-    fprintf( stderr, "         some optimizations will be disabled unless "
-                     "you upgrade your OS\n" );
-    return false;
-}
+    return i_capabilities;
 
-#if defined (CAN_COMPILE_SSE) && !defined (__SSE__)
-VLC_SSE static void SSE_test (void)
-{
-    asm volatile ("xorps %%xmm0,%%xmm0\n" : : : "xmm0", "xmm1");
-}
-#endif
-#if defined (CAN_COMPILE_3DNOW)
-VLC_MMX static void ThreeD_Now_test (void)
-{
-    asm volatile ("pfadd %%mm0,%%mm0\n" "femms\n" : : : "mm0");
-}
-#endif
-
-#if defined (CAN_COMPILE_ALTIVEC)
-static void Altivec_test (void)
-{
-    asm volatile ("mtspr 256, %0\n" "vand %%v0, %%v0, %%v0\n" : : "r" (-1));
-}
-#endif
-
-#else /* _WIN32 || __OS2__ */
-# define vlc_CPU_check(name, func) (1)
-#endif
-#endif
-
-/**
- * Determines the CPU capabilities and stores them in cpu_flags.
- * The result can be retrieved with vlc_CPU().
- */
-void vlc_CPU_init (void)
-{
-    uint32_t i_capabilities = 0;
-
-#if defined( __i386__ ) || defined( __x86_64__ )
-     unsigned int i_eax, i_ebx, i_ecx, i_edx;
-     bool b_amd;
+#elif defined( __i386__ )
+    volatile unsigned int  i_eax, i_ebx, i_ecx, i_edx;
+    volatile vlc_bool_t    b_amd;
 
     /* Needed for x86 CPU capabilities detection */
-# if defined (__i386__) && defined (__PIC__)
-#  define cpuid(reg) \
-     asm volatile ("xchgl %%ebx,%1\n\t" \
-                   "cpuid\n\t" \
-                   "xchgl %%ebx,%1\n\t" \
-                   : "=a" (i_eax), "=r" (i_ebx), "=c" (i_ecx), "=d" (i_edx) \
-                   : "a" (reg) \
-                   : "cc");
-# else
-#  define cpuid(reg) \
-     asm volatile ("cpuid\n\t" \
-                   : "=a" (i_eax), "=b" (i_ebx), "=c" (i_ecx), "=d" (i_edx) \
-                   : "a" (reg) \
-                   : "cc");
-# endif
-     /* Check if the OS really supports the requested instructions */
-# if defined (__i386__) && !defined (__i486__) && !defined (__i586__) \
-  && !defined (__i686__) && !defined (__pentium4__) \
-  && !defined (__k6__) && !defined (__athlon__) && !defined (__k8__)
-    /* check if cpuid instruction is supported */
-    asm volatile ( "push %%ebx\n\t"
-                   "pushf\n\t"
-                   "pop %%eax\n\t"
+#   define cpuid( reg )                    \
+        asm volatile ( "pushl %%ebx\n\t"   \
+                       "cpuid\n\t"         \
+                       "movl %%ebx,%1\n\t" \
+                       "popl %%ebx\n\t"    \
+                     : "=a" ( i_eax ),     \
+                       "=r" ( i_ebx ),     \
+                       "=c" ( i_ecx ),     \
+                       "=d" ( i_edx )      \
+                     : "a"  ( reg )        \
+                     : "cc" );
+
+#   if defined( CAN_COMPILE_SSE ) || defined ( CAN_COMPILE_3DNOW ) \
+     && defined( HAVE_SIGNAL_H )
+    void (*pf_sigill) (int) = signal( SIGILL, SigHandler );
+#   endif
+
+    i_capabilities |= CPU_CAPABILITY_FPU;
+
+    /* test for a 486 CPU */
+    asm volatile ( "pushl %%ebx\n\t"
+                   "pushfl\n\t"
+                   "popl %%eax\n\t"
                    "movl %%eax, %%ebx\n\t"
                    "xorl $0x200000, %%eax\n\t"
-                   "push %%eax\n\t"
-                   "popf\n\t"
-                   "pushf\n\t"
-                   "pop %%eax\n\t"
+                   "pushl %%eax\n\t"
+                   "popfl\n\t"
+                   "pushfl\n\t"
+                   "popl %%eax\n\t"
                    "movl %%ebx,%1\n\t"
-                   "pop %%ebx\n\t"
+                   "popl %%ebx\n\t"
                  : "=a" ( i_eax ),
                    "=r" ( i_ebx )
                  :
                  : "cc" );
 
     if( i_eax == i_ebx )
-        goto out;
-# endif
+    {
+#   if defined( CAN_COMPILE_SSE ) || defined ( CAN_COMPILE_3DNOW ) \
+     && defined( HAVE_SIGNAL_H )
+        signal( SIGILL, pf_sigill );
+#   endif
+        return i_capabilities;
+    }
+
+    i_capabilities |= CPU_CAPABILITY_486;
 
     /* the CPU supports the CPUID instruction - get its level */
     cpuid( 0x00000000 );
 
-# if defined (__i386__) && !defined (__i586__) \
-  && !defined (__i686__) && !defined (__pentium4__) \
-  && !defined (__k6__) && !defined (__athlon__) && !defined (__k8__)
     if( !i_eax )
-        goto out;
-#endif
+    {
+#   if defined( CAN_COMPILE_SSE ) || defined ( CAN_COMPILE_3DNOW ) \
+     && defined( HAVE_SIGNAL_H )
+        signal( SIGILL, pf_sigill );
+#   endif
+        return i_capabilities;
+    }
+
+    /* FIXME: this isn't correct, since some 486s have cpuid */
+    i_capabilities |= CPU_CAPABILITY_586;
 
     /* borrowed from mpeg2dec */
     b_amd = ( i_ebx == 0x68747541 ) && ( i_ecx == 0x444d4163 )
@@ -186,151 +152,174 @@ void vlc_CPU_init (void)
 
     /* test for the MMX flag */
     cpuid( 0x00000001 );
-# if !defined (__MMX__)
+
     if( ! (i_edx & 0x00800000) )
-        goto out;
-# endif
-    i_capabilities |= VLC_CPU_MMX;
+    {
+#   if defined( CAN_COMPILE_SSE ) || defined ( CAN_COMPILE_3DNOW ) \
+     && defined( HAVE_SIGNAL_H )
+        signal( SIGILL, pf_sigill );
+#   endif
+        return i_capabilities;
+    }
+
+    i_capabilities |= CPU_CAPABILITY_MMX;
 
     if( i_edx & 0x02000000 )
-        i_capabilities |= VLC_CPU_MMXEXT;
-# if defined (CAN_COMPILE_SSE) && !defined (__SSE__)
-    if (( i_edx & 0x02000000 ) && vlc_CPU_check ("SSE", SSE_test))
-# endif
     {
-        /*if( i_edx & 0x02000000 )*/
-            i_capabilities |= VLC_CPU_SSE;
-        if (i_edx & 0x04000000)
-            i_capabilities |= VLC_CPU_SSE2;
-        if (i_ecx & 0x00000001)
-            i_capabilities |= VLC_CPU_SSE3;
-        if (i_ecx & 0x00000200)
-            i_capabilities |= VLC_CPU_SSSE3;
-        if (i_ecx & 0x00080000)
-            i_capabilities |= VLC_CPU_SSE4_1;
-        if (i_ecx & 0x00100000)
-            i_capabilities |= VLC_CPU_SSE4_2;
+        i_capabilities |= CPU_CAPABILITY_MMXEXT;
+
+#   ifdef CAN_COMPILE_SSE
+        /* We test if OS supports the SSE instructions */
+        psz_capability = "SSE";
+        i_illegal = 0;
+
+        if( setjmp( env ) == 0 )
+        {
+            /* Test a SSE instruction */
+            __asm__ __volatile__ ( "xorps %%xmm0,%%xmm0\n" : : );
+        }
+
+        if( i_illegal == 0 )
+        {
+            i_capabilities |= CPU_CAPABILITY_SSE;
+        }
+#   endif
+    }
+    if( i_edx & 0x04000000 )
+    {
+#   if defined(CAN_COMPILE_SSE) && !defined(SYS_BEOS)
+        /* We test if OS supports the SSE instructions */
+        psz_capability = "SSE2";
+        i_illegal = 0;
+
+        if( setjmp( env ) == 0 )
+        {
+            /* Test a SSE2 instruction */
+            __asm__ __volatile__ ( "movupd %%xmm0, %%xmm0\n" : : );
+        }
+
+        if( i_illegal == 0 )
+        {
+            i_capabilities |= CPU_CAPABILITY_SSE2;
+        }
+#   endif
     }
 
     /* test for additional capabilities */
     cpuid( 0x80000000 );
 
     if( i_eax < 0x80000001 )
-        goto out;
+    {
+#   if defined( CAN_COMPILE_SSE ) || defined ( CAN_COMPILE_3DNOW ) \
+     && defined( HAVE_SIGNAL_H )
+        signal( SIGILL, pf_sigill );
+#   endif
+        return i_capabilities;
+    }
 
     /* list these additional capabilities */
     cpuid( 0x80000001 );
 
-# if defined (CAN_COMPILE_3DNOW) && !defined (__3dNOW__)
-    if ((i_edx & 0x80000000) && vlc_CPU_check ("3D Now!", ThreeD_Now_test))
-# endif
-        i_capabilities |= VLC_CPU_3dNOW;
+#   ifdef CAN_COMPILE_3DNOW
+    if( i_edx & 0x80000000 )
+    {
+        psz_capability = "3D Now!";
+        i_illegal = 0;
+
+        if( setjmp( env ) == 0 )
+        {
+            /* Test a 3D Now! instruction */
+            __asm__ __volatile__ ( "pfadd %%mm0,%%mm0\n" "femms\n" : : );
+        }
+
+        if( i_illegal == 0 )
+        {
+            i_capabilities |= CPU_CAPABILITY_3DNOW;
+        }
+    }
+#   endif
 
     if( b_amd && ( i_edx & 0x00400000 ) )
-        i_capabilities |= VLC_CPU_MMXEXT;
-out:
-
-#elif defined( __powerpc__ ) || defined( __ppc__ ) || defined( __powerpc64__ ) \
-    || defined( __ppc64__ )
-
-#   if defined(__APPLE__) || defined(__OpenBSD__)
-#   if defined(__OpenBSD__)
-    int selectors[2] = { CTL_MACHDEP, CPU_ALTIVEC };
-#   else
-    int selectors[2] = { CTL_HW, HW_VECTORUNIT };
-#   endif
-    int i_has_altivec = 0;
-    size_t i_length = sizeof( i_has_altivec );
-    int i_error = sysctl( selectors, 2, &i_has_altivec, &i_length, NULL, 0);
-
-    if( i_error == 0 && i_has_altivec != 0 )
-        i_capabilities |= VLC_CPU_ALTIVEC;
-
-#   elif defined( CAN_COMPILE_ALTIVEC )
-    if (vlc_CPU_check ("Altivec", Altivec_test))
-        i_capabilities |= VLC_CPU_ALTIVEC;
-
-#   endif
-
-#elif defined ( __arm__)
-# ifdef __ANDROID__
-    if (android_getCpuFeatures() & ANDROID_CPU_ARM_FEATURE_NEON)
-        i_capabilities |= VLC_CPU_ARM_NEON;
-# endif
-
-#endif
-
-    cpu_flags = i_capabilities;
-}
-
-/**
- * Retrieves pre-computed CPU capability flags
- */
-unsigned vlc_CPU (void)
-{
-/* On Windows and OS/2,
- * initialized from DllMain() and _DLL_InitTerm() respectively, instead */
-#if !defined(_WIN32) && !defined(__OS2__)
-    static pthread_once_t once = PTHREAD_ONCE_INIT;
-    pthread_once (&once, vlc_CPU_init);
-#endif
-    return cpu_flags;
-}
-#endif
-
-void vlc_CPU_dump (vlc_object_t *obj)
-{
-    struct vlc_memstream stream;
-
-    vlc_memstream_open(&stream);
-
-#if defined (__i386__) || defined (__x86_64__)
-    if (vlc_CPU_MMX())
-        vlc_memstream_puts(&stream, "MMX ");
-    if (vlc_CPU_MMXEXT())
-        vlc_memstream_puts(&stream, "MMXEXT ");
-    if (vlc_CPU_SSE())
-        vlc_memstream_puts(&stream, "SSE ");
-    if (vlc_CPU_SSE2())
-        vlc_memstream_puts(&stream, "SSE2 ");
-    if (vlc_CPU_SSE3())
-        vlc_memstream_puts(&stream, "SSE3 ");
-    if (vlc_CPU_SSSE3())
-        vlc_memstream_puts(&stream, "SSSE3 ");
-    if (vlc_CPU_SSE4_1())
-        vlc_memstream_puts(&stream, "SSE4.1 ");
-    if (vlc_CPU_SSE4_2())
-        vlc_memstream_puts(&stream, "SSE4.2 ");
-    if (vlc_CPU_SSE4A())
-        vlc_memstream_puts(&stream, "SSE4A ");
-    if (vlc_CPU_AVX())
-        vlc_memstream_puts(&stream, "AVX ");
-    if (vlc_CPU_AVX2())
-        vlc_memstream_puts(&stream, "AVX2 ");
-    if (vlc_CPU_3dNOW())
-        vlc_memstream_puts(&stream, "3DNow! ");
-    if (vlc_CPU_XOP())
-        vlc_memstream_puts(&stream, "XOP ");
-    if (vlc_CPU_FMA4())
-        vlc_memstream_puts(&stream, "FMA4 ");
-
-#elif defined (__powerpc__) || defined (__ppc__) || defined (__ppc64__)
-    if (vlc_CPU_ALTIVEC())
-        vlc_memstream_puts(&stream, "AltiVec");
-
-#elif defined (__arm__)
-    if (vlc_CPU_ARM_NEON())
-        vlc_memstream_puts(&stream, "ARM_NEON ");
-
-#endif
-
-#if HAVE_FPU
-    vlc_memstream_puts(&stream, "FPU ");
-#endif
-
-    if (vlc_memstream_close(&stream) == 0)
     {
-        msg_Dbg (obj, "CPU has capabilities %s", stream.ptr);
-        free(stream.ptr);
+        i_capabilities |= CPU_CAPABILITY_MMXEXT;
     }
+
+#   if defined( CAN_COMPILE_SSE ) || defined ( CAN_COMPILE_3DNOW ) \
+     && defined( HAVE_SIGNAL_H )
+    signal( SIGILL, pf_sigill );
+#   endif
+    return i_capabilities;
+
+#elif defined( __powerpc__ )
+
+#   ifdef CAN_COMPILE_ALTIVEC && defined( HAVE_SIGNAL_H )
+    void (*pf_sigill) (int) = signal( SIGILL, SigHandler );
+
+    i_capabilities |= CPU_CAPABILITY_FPU;
+
+    i_illegal = 0;
+
+    if( setjmp( env ) == 0 )
+    {
+        asm volatile ("mtspr 256, %0\n\t"
+                      "vand %%v0, %%v0, %%v0"
+                      :
+                      : "r" (-1));
+    }
+
+    if( i_illegal == 0 )
+    {
+        i_capabilities |= CPU_CAPABILITY_ALTIVEC;
+    }
+
+    signal( SIGILL, pf_sigill );
+#   endif
+
+    return i_capabilities;
+
+#elif defined( __sparc__ )
+
+    i_capabilities |= CPU_CAPABILITY_FPU;
+    return i_capabilities;
+
+#elif defined( _MSC_VER )
+    i_capabilities |= CPU_CAPABILITY_FPU;
+    return i_capabilities;
+
+#else
+    /* default behaviour */
+    return i_capabilities;
+
+#endif
 }
+
+/*****************************************************************************
+ * SigHandler: system signal handler
+ *****************************************************************************
+ * This function is called when an illegal instruction signal is received by
+ * the program. We use this function to test OS and CPU capabilities
+ *****************************************************************************/
+#if defined( HAVE_SIGNAL_H )
+static void SigHandler( int i_signal )
+{
+    /* Acknowledge the signal received */
+    i_illegal = 1;
+
+#ifdef HAVE_SIGRELSE
+    sigrelse( i_signal );
+#endif
+
+#if defined( __i386__ )
+    fprintf( stderr, "warning: your CPU has %s instructions, but not your "
+                     "operating system.\n", psz_capability );
+    fprintf( stderr, "         some optimizations will be disabled unless "
+                     "you upgrade your OS\n" );
+#   if defined( SYS_LINUX )
+    fprintf( stderr, "         (for instance Linux kernel 2.4.x or later)\n" );
+#   endif
+#endif
+
+    longjmp( env, 1 );
+}
+#endif
+

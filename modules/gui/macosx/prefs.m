@@ -1,12 +1,11 @@
 /*****************************************************************************
  * prefs.m: MacOS X module for vlc
  *****************************************************************************
- * Copyright (C) 2002-2015 VLC authors and VideoLAN
- * $Id: 1560fc46d9d8fab74f2de66413a83f6f3f051fc8 $
+ * Copyright (C) 2002-2004 VideoLAN
+ * $Id: prefs.m 7090 2004-03-15 19:33:18Z bigben $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Derk-Jan Hartman <hartman at videolan dot org>
- *          Felix Paul Kühne <fkuehne at videolan dot org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,24 +19,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
-
-/* VLCPrefs manages the main preferences dialog
-   the class is related to wxwindows intf, PrefsPanel */
-/* VLCTreeItem should contain:
-   - the children of the treeitem
-   - the associated prefs widgets
-   - the documentview with all the prefs widgets in it
-   - a saveChanges action
-   - a revertChanges action
-   - a redraw view action
-   - the children action should generate a list of the treeitems children (to be used by VLCPrefs datasource)
-
-   The class is sort of a mix of wxwindows intfs, PrefsTreeCtrl and ConfigTreeData
-*/
-/* VLCConfigControl are subclassed NSView's containing and managing individual config items
-   the classes are VERY closely related to wxwindows ConfigControls */
 
 /*****************************************************************************
  * Preamble
@@ -46,616 +29,1118 @@
 #include <sys/param.h>                                    /* for MAXPATHLEN */
 #include <string.h>
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
-#include <vlc_common.h>
-#include <vlc_config_cat.h>
-
-#import "CompatibilityFixes.h"
-#import "VLCMain.h"
-#import "prefs.h"
-#import "VLCSimplePrefsController.h"
-#import "prefs_widgets.h"
-#import "VLCCoreInteraction.h"
-#import <vlc_actions.h>
-#import <vlc_modules.h>
-#import <vlc_plugin.h>
-
-#define LEFTMARGIN  18
-#define RIGHTMARGIN 18
-
-/* /!\ Warning: Unreadable code :/ */
-
-@interface VLCFlippedView : NSView
-@end
-
-@implementation VLCFlippedView
-
-- (BOOL)isFlipped
-{
-    return YES;
-}
-
-@end
-
-@interface VLCTreeItem : NSObject
-{
-    NSString *_name;
-    NSMutableArray *_children;
-    NSMutableArray *_options;
-    NSMutableArray *_subviews;
-}
-@property (readwrite, unsafe_unretained) VLCPrefs *prefsViewController;
-
-- (id)initWithName:(NSString*)name;
-
-- (int)numberOfChildren;
-- (VLCTreeItem *)childAtIndex:(NSInteger)i_index;
-
-- (NSString *)name;
-- (NSMutableArray *)children;
-- (NSMutableArray *)options;
-- (void)showView;
-- (void)applyChanges;
-- (void)resetView;
-
-@end
-
-/* CONFIG_SUBCAT */
-@interface VLCTreeSubCategoryItem : VLCTreeItem
-{
-    int _subCategory;
-}
-+ (VLCTreeSubCategoryItem *)subCategoryTreeItemWithSubCategory:(int)subCategory;
-- (id)initWithSubCategory:(int)subCategory;
-- (int)subCategory;
-@end
-
-/* Plugin daughters */
-@interface VLCTreePluginItem : VLCTreeItem
-{
-    module_config_t * _configItems;
-    unsigned int _configSize;
-}
-+ (VLCTreePluginItem *)pluginTreeItemWithPlugin:(module_t *)plugin;
-- (id)initWithPlugin:(module_t *)plugin;
-
-- (module_config_t *)configItems;
-- (unsigned int)configSize;
-@end
-
-/* CONFIG_CAT */
-@interface VLCTreeCategoryItem : VLCTreeItem
-{
-    int _category;
-}
-+ (VLCTreeCategoryItem *)categoryTreeItemWithCategory:(int)category;
-- (id)initWithCategory:(int)category;
-
-- (int)category;
-- (VLCTreeSubCategoryItem *)itemRepresentingSubCategory:(int)category;
-@end
-
-/* individual options. */
-@interface VLCTreeLeafItem : VLCTreeItem
-{
-    module_config_t * _configItem;
-}
-- (id)initWithConfigItem:(module_config_t *)configItem;
-- (module_config_t *)configItem;
-@end
-
-@interface VLCTreeMainItem : VLCTreePluginItem
-- (VLCTreeCategoryItem *)itemRepresentingCategory:(int)category;
-@end
-
-#pragma mark -
+#include "intf.h"
+#include "prefs.h"
+#include "vlc_keys.h"
 
 /*****************************************************************************
  * VLCPrefs implementation
  *****************************************************************************/
-
-@interface VLCPrefs()
-{
-    VLCTreeMainItem *_rootTreeItem;
-    NSView *o_emptyView;
-    NSMutableDictionary *o_save_prefs;
-}
-@end
-
 @implementation VLCPrefs
 
 - (id)init
 {
-    self = [super initWithWindowNibName:@"Preferences"];
-    if (self) {
-        o_emptyView = [[NSView alloc] init];
-        _rootTreeItem = [[VLCTreeMainItem alloc] init];
+    self = [super init];
+
+    if( self != nil )
+    {
+        o_empty_view = [[NSView alloc] init];
+        o_save_prefs = [[NSMutableDictionary alloc] init];
     }
 
-    return self;
+    return( self );
 }
 
-- (void)windowDidLoad
-
+- (void)dealloc
 {
-    [self.window setCollectionBehavior: NSWindowCollectionBehaviorFullScreenAuxiliary];
-    [self.window setHidesOnDeactivate:YES];
-
-    [self.window setTitle: _NS("Preferences")];
-    [_saveButton setTitle: _NS("Save")];
-    [_cancelButton setTitle: _NS("Cancel")];
-    [_resetButton setTitle: _NS("Reset All")];
-    [_showBasicButton setTitle: _NS("Show Basic")];
-
-    [_prefsView setBorderType: NSGrooveBorder];
-    [_prefsView setHasVerticalScroller: YES];
-    [_prefsView setDrawsBackground: NO];
-    [_prefsView setDocumentView: o_emptyView];
-    [self.window layoutIfNeeded];
-    [_tree selectRowIndexes: [NSIndexSet indexSetWithIndex: 0] byExtendingSelection: NO];
+    [o_empty_view release];
+    [o_save_prefs release];
+    [super dealloc];
 }
 
-- (void)setTitle: (NSString *) o_title_name
+- (void)awakeFromNib
 {
-    [self.titleLabel setStringValue: o_title_name];
+    p_intf = [NSApp getIntf];
+    b_advanced = config_GetInt( p_intf, "advanced" );
+
+    [self initStrings];
+    [o_advanced_ckb setState: b_advanced];
+    [o_prefs_view setBorderType: NSGrooveBorder];
+    [o_prefs_view setHasVerticalScroller: YES];
+    [o_prefs_view setDrawsBackground: NO];
+    [o_prefs_view setRulersVisible: NO];
+    [o_prefs_view setDocumentView: o_empty_view];
+    [o_tree selectRow:0 byExtendingSelection:NO];
 }
 
-- (void)showPrefsWithLevel:(NSInteger)iWindow_level
+- (void)initStrings
 {
-    [self.window setLevel: iWindow_level];
-    [self.window center];
-    [self.window makeKeyAndOrderFront:self];
-    [_rootTreeItem resetView];
+    [o_prefs_window setTitle: _NS("Preferences")];
+    [o_save_btn setTitle: _NS("Save")];
+    [o_cancel_btn setTitle: _NS("Cancel")];
+    [o_reset_btn setTitle: _NS("Reset All")];
+    [o_advanced_ckb setTitle: _NS("Advanced")];
+}
+
+- (void)showPrefs
+{
+    [o_save_prefs release];
+    o_save_prefs = [[NSMutableDictionary alloc] init];
+    [self showViewForID: [[o_tree itemAtRow:[o_tree selectedRow]] getObjectID]
+        andName: [[o_tree itemAtRow:[o_tree selectedRow]] getName]];
+    [o_prefs_window center];
+    [o_prefs_window makeKeyAndOrderFront:self];
 }
 
 - (IBAction)savePrefs: (id)sender
 {
-    /* TODO: call savePrefs on Root item */
-    [_rootTreeItem applyChanges];
-    [[VLCCoreInteraction sharedInstance] fixIntfSettings];
-    config_SaveConfigFile(getIntf());
-    [self.window orderOut:self];
+    id o_vlc_config;
+    NSEnumerator *o_enum;
+
+    o_enum = [o_save_prefs objectEnumerator];
+    while( ( o_vlc_config = [o_enum nextObject] ) )
+    {
+        int i_type = [o_vlc_config configType];
+        NSString *o_name = [o_vlc_config configName];
+        char *psz_name = (char *)[o_name UTF8String];
+
+        switch( i_type )
+        {
+    
+        case CONFIG_ITEM_MODULE:
+            {
+                char *psz_value;
+                module_t *p_a_module;
+                int i_id = [[o_vlc_config selectedItem] tag];
+                
+                p_a_module = (module_t *)vlc_object_get( p_intf, i_id );
+                if( p_a_module == NULL || p_a_module->i_object_type != VLC_OBJECT_MODULE )
+                {
+                    i_id = -1;
+                }
+                
+                psz_value = ( i_id == -1 ) ? "" :  p_a_module->psz_object_name ;
+                config_PutPsz( p_intf, psz_name, strdup(psz_value) );
+            }
+            break;
+    
+        case CONFIG_ITEM_STRING:
+        case CONFIG_ITEM_FILE:
+        case CONFIG_ITEM_DIRECTORY:
+            {
+                char *psz_value;
+                NSString *o_value = [o_vlc_config stringValue];
+                psz_value = (char *)[o_value UTF8String];
+    
+                config_PutPsz( p_intf, psz_name, psz_value );
+            }
+            break;
+    
+        case CONFIG_ITEM_INTEGER:
+        case CONFIG_ITEM_BOOL:
+            {
+                int i_value = [o_vlc_config intValue];
+    
+                config_PutInt( p_intf, psz_name, i_value );
+            }
+            break;
+    
+        case CONFIG_ITEM_FLOAT:
+            {
+                float f_value = [o_vlc_config floatValue];
+    
+                config_PutFloat( p_intf, psz_name, f_value );
+            }
+            break;
+
+        case CONFIG_ITEM_KEY:
+            {
+                unsigned int i_key = config_GetInt( p_intf, psz_name );
+                unsigned int i_new_key = 0;
+
+                if( [o_vlc_config class] == [VLCMatrix class] )
+                {
+                    int i;
+                    NSButtonCell *o_current_cell;
+                    NSArray *o_cells = [o_vlc_config cells];
+                    i_new_key = (i_key & ~KEY_MODIFIER);
+                    for( i = 0; i < [o_cells count]; i++ )
+                    {
+                        o_current_cell = [o_cells objectAtIndex:i];
+                        if( [[o_current_cell title] isEqualToString:_NS("Command")] && 
+                            [o_current_cell state] == NSOnState )
+                                i_new_key |= KEY_MODIFIER_COMMAND;
+                        if( [[o_current_cell title] isEqualToString:_NS("Control")] && 
+                            [o_current_cell state] == NSOnState )
+                                i_new_key |= KEY_MODIFIER_CTRL;
+                        if( [[o_current_cell title] isEqualToString:_NS("Option/Alt")] && 
+                            [o_current_cell state] == NSOnState )
+                                i_new_key |= KEY_MODIFIER_ALT;
+                        if( [[o_current_cell title] isEqualToString:_NS("Shift")] && 
+                            [o_current_cell state] == NSOnState )
+                                i_new_key |= KEY_MODIFIER_SHIFT;
+                    }
+                }
+                else
+                {
+                    i_new_key = (i_key & KEY_MODIFIER);
+                    i_new_key |= StringToKey([[o_vlc_config stringValue] cString]);
+                }
+                config_PutInt( p_intf, psz_name, i_new_key );
+            }
+            break;
+        }
+    }
+    config_SaveConfigFile( p_intf, NULL );
+    [o_prefs_window orderOut:self];
 }
 
 - (IBAction)closePrefs: (id)sender
 {
-    [self.window orderOut:self];
+    [o_prefs_window orderOut:self];
 }
 
-- (IBAction)showSimplePrefs: (id)sender
+- (IBAction)resetAll: (id)sender
 {
-    [self.window orderOut: self];
-    [[[VLCMain sharedInstance] simplePreferences] showSimplePrefs];
+    NSBeginInformationalAlertSheet(_NS("Reset Preferences"), _NS("Cancel"), _NS("Continue"), 
+        nil, o_prefs_window, self, @selector(sheetDidEnd: returnCode: contextInfo:), NULL, nil,
+        _NS("Beware this will reset your VLC media player preferences.\n"
+            "Are you sure you want to continue?") );
 }
 
-- (IBAction)resetPrefs:(id)sender
+- (void)sheetDidEnd:(NSWindow *)o_sheet returnCode:(int)i_return contextInfo:(void *)o_context
 {
-    [[[VLCMain sharedInstance] simplePreferences] resetPreferences:sender];
+    if( i_return == NSAlertAlternateReturn )
+    {
+        config_ResetAll( p_intf );
+        [self showViewForID: [[o_tree itemAtRow:[o_tree selectedRow]] getObjectID]
+            andName: [[o_tree itemAtRow:[o_tree selectedRow]] getName]];
+    }
+}
+
+- (IBAction)advancedToggle: (id)sender
+{
+    b_advanced = !b_advanced;
+    [o_advanced_ckb setState: b_advanced];
+    [self showViewForID: [[o_tree itemAtRow:[o_tree selectedRow]] getObjectID]
+        andName: [[o_tree itemAtRow:[o_tree selectedRow]] getName]];
+}
+
+- (IBAction)openFileDialog: (id)sender
+{
+    NSOpenPanel *o_open_panel = [NSOpenPanel openPanel];
+    
+    [o_open_panel setTitle: _NS("Select file or directory")];
+    [o_open_panel setPrompt: _NS("Select")];
+    [o_open_panel setAllowsMultipleSelection: NO];
+    [o_open_panel setCanChooseFiles: YES];
+    [o_open_panel setCanChooseDirectories: YES];
+    [o_open_panel beginSheetForDirectory:nil
+        file:nil
+        types:nil
+        modalForWindow:[sender window]
+        modalDelegate: self
+        didEndSelector: @selector(pathChosenInPanel: 
+                        withReturn:
+                        contextInfo:)
+        contextInfo: sender];
+}
+
+- (void)pathChosenInPanel:(NSOpenPanel *)o_sheet withReturn:(int)i_return_code contextInfo:(void  *)o_context_info
+{
+    if( i_return_code == NSOKButton )
+    {
+        NSString *o_path = [[o_sheet filenames] objectAtIndex: 0];
+        VLCTextField *o_field = (VLCTextField *)[(VLCButton *)o_context_info tag]; /* FIXME */
+        [o_field setStringValue: o_path];
+        [self configChanged: o_field];
+    }
 }
 
 - (void)loadConfigTree
 {
+    
 }
 
 - (void)outlineViewSelectionIsChanging:(NSNotification *)o_notification
 {
 }
 
-/* update the document view to the view of the selected tree item */
 - (void)outlineViewSelectionDidChange:(NSNotification *)o_notification
 {
-    VLCTreeItem *treeItem = [_tree itemAtRow:[_tree selectedRow]];
-    treeItem.prefsViewController = self;
-    [treeItem showView];
-    [_tree expandItem:[_tree itemAtRow:[_tree selectedRow]]];
+    [self showViewForID: [[o_tree itemAtRow:[o_tree selectedRow]] getObjectID]
+        andName: [[o_tree itemAtRow:[o_tree selectedRow]] getName]];
 }
+
+- (void)configChanged:(id)o_unknown
+{
+    id o_vlc_config = [o_unknown isKindOfClass: [NSNotification class]] ?
+                      [o_unknown object] : o_unknown;
+
+    NSString *o_name = [o_vlc_config configName];
+    [o_save_prefs setObject: o_vlc_config forKey: o_name];
+}
+
+- (void)showViewForID: (int)i_id andName: (NSString *)o_item_name
+{
+    vlc_list_t *p_list;
+    module_t *p_parser;
+    module_config_t *p_item;
+    
+    int i_pos, i_module_tag, i_index;
+    
+    NSString *o_module_name;
+    NSRect s_rc;                        /* rect                         */
+    NSView *o_view;                     /* view                         */
+    NSRect s_vrc;                       /* view rect                    */
+    VLCTextField *o_text_field;         /* input field / label          */
+    
+    p_list = vlc_list_find( p_intf, VLC_OBJECT_MODULE, FIND_ANYWHERE );
+
+    /* Get a pointer to the module */
+    p_parser = (module_t *)vlc_object_get( p_intf, i_id );
+    if( p_parser->i_object_type != VLC_OBJECT_MODULE )
+    {
+        /* 0OOoo something went really bad */
+        return;
+    }
+    
+    /* Enumerate config options and add corresponding config boxes */
+    o_module_name = [NSString stringWithUTF8String: p_parser->psz_object_name];
+    p_item = p_parser->p_config;
+
+    i_pos = 0;
+    o_view = nil;
+    i_module_tag = 3;
+
+#define X_ORIGIN 20
+#define Y_ORIGIN (X_ORIGIN - 10)
+
+#define CHECK_VIEW_HEIGHT \
+    { \
+        float f_new_pos = s_rc.origin.y + s_rc.size.height + X_ORIGIN; \
+        if( f_new_pos > s_vrc.size.height ) \
+        { \
+            s_vrc.size.height = f_new_pos; \
+            [o_view setFrame: s_vrc]; \
+        } \
+    }
+
+#define CONTROL_LABEL( label ) \
+    { \
+        s_rc.origin.x += s_rc.size.width + 10; \
+        s_rc.size.width = s_vrc.size.width - s_rc.origin.x - X_ORIGIN - 20; \
+        o_text_field = [[NSTextField alloc] initWithFrame: s_rc]; \
+        [o_text_field setDrawsBackground: NO]; \
+        [o_text_field setBordered: NO]; \
+        [o_text_field setEditable: NO]; \
+        [o_text_field setSelectable: NO]; \
+        if ( label ) \
+        { \
+            [o_text_field setStringValue: \
+                [NSApp localizedString: label]]; \
+        } \
+        [o_text_field sizeToFit]; \
+        [o_view addSubview: [o_text_field autorelease]]; \
+    }
+
+#define INPUT_FIELD( ctype, cname, label, w, msg, param, tip ) \
+    { \
+        char * psz_duptip = NULL; \
+        if ( p_item->psz_longtext != NULL ) \
+            psz_duptip = strdup( p_item->psz_longtext ); \
+        s_rc.size.height = 25; \
+        s_rc.size.width = w; \
+        s_rc.origin.y += 10; \
+        CHECK_VIEW_HEIGHT; \
+        o_text_field = [[VLCTextField alloc] initWithFrame: s_rc]; \
+        [o_text_field setAlignment: NSRightTextAlignment]; \
+        CONTROL_CONFIG( o_text_field, o_module_name, ctype, cname ); \
+        [o_text_field msg: param]; \
+        if ( psz_duptip != NULL ) \
+        { \
+            [o_text_field setToolTip: [NSApp wrapString: [NSApp localizedString: \
+                                       psz_duptip] toWidth: PREFS_WRAP ]]; \
+            free(psz_duptip);\
+        } \
+        [o_view addSubview: [o_text_field autorelease]]; \
+        [[NSNotificationCenter defaultCenter] addObserver: self \
+            selector: @selector(configChanged:) \
+            name: NSControlTextDidChangeNotification \
+            object: o_text_field]; \
+        CONTROL_LABEL( label ); \
+        s_rc.origin.y += s_rc.size.height; \
+        s_rc.origin.x = X_ORIGIN; \
+    }
+
+#define INPUT_FIELD_INTEGER( name, label, w, param, tip ) \
+    INPUT_FIELD( CONFIG_ITEM_INTEGER, name, label, w, setIntValue, param, tip )
+#define INPUT_FIELD_FLOAT( name, label, w, param, tip ) \
+    INPUT_FIELD( CONFIG_ITEM_FLOAT, name, label, w, setFloatValue, param, tip )
+#define INPUT_FIELD_STRING( name, label, w, param, tip ) \
+    INPUT_FIELD( CONFIG_ITEM_STRING, name, label, w, setStringValue, param, tip )
+
+    /* Init View */
+    s_vrc = [[o_prefs_view contentView] bounds]; s_vrc.size.height -= 4;
+    o_view = [[VLCFlippedView alloc] initWithFrame: s_vrc];
+    [o_view setAutoresizingMask: NSViewWidthSizable];
+    s_rc.origin.x = X_ORIGIN;
+    s_rc.origin.y = Y_ORIGIN;
+    BOOL b_right_cat = TRUE;
+
+    if( p_item ) do
+    {
+        if( p_item->i_type == CONFIG_HINT_CATEGORY )
+        {
+            if( !strcmp( p_parser->psz_object_name, "main" ) &&
+                [o_item_name isEqualToString: [NSApp localizedString: p_item->psz_text]] )
+            {
+                b_right_cat = TRUE;
+            } else if( strcmp( p_parser->psz_object_name, "main" ) )
+            {
+                 b_right_cat = TRUE;
+            } else b_right_cat = FALSE; 
+        } else if( p_item->i_type == CONFIG_HINT_END && !strcmp( p_parser->psz_object_name, "main" ) )
+        {
+            b_right_cat = FALSE;
+        }
+        
+        if( (p_item->b_advanced && !b_advanced ) || !b_right_cat )
+        {
+            continue;
+        }
+        switch( p_item->i_type )
+        {
+            case CONFIG_ITEM_MODULE:
+            {
+                VLCPopUpButton *o_modules;
+                module_t *p_a_module;
+                char * psz_duptip = NULL;
+
+                if ( p_item->psz_longtext != NULL )
+                    psz_duptip = strdup( p_item->psz_longtext );
+
+                s_rc.size.height = 25;
+                s_rc.size.width = 200;
+                s_rc.origin.y += 10;
+                
+                CHECK_VIEW_HEIGHT;
+    
+                o_modules = [[VLCPopUpButton alloc] initWithFrame: s_rc];
+                CONTROL_CONFIG( o_modules, o_module_name,
+                                    CONFIG_ITEM_MODULE, p_item->psz_name );
+                [o_modules setTarget: self];
+                [o_modules setAction: @selector(configChanged:)];
+                [o_modules sendActionOn:NSLeftMouseUpMask];
+                
+                if ( psz_duptip != NULL )
+                {
+                    [o_modules setToolTip: [NSApp wrapString: [NSApp localizedString: psz_duptip] toWidth: PREFS_WRAP]];
+                    free( psz_duptip );
+                }
+                [o_view addSubview: [o_modules autorelease]];
+
+                [o_modules addItemWithTitle: _NS("Default")];
+                [[o_modules lastItem] setTag: -1];
+                [o_modules selectItem: [o_modules lastItem]];
+
+                /* build a list of available modules */
+                {
+                    for( i_index = 0; i_index < p_list->i_count; i_index++ )
+                    {
+                        p_a_module = (module_t *)p_list->p_values[i_index].p_object ;
+    
+                        if( !strcmp( p_a_module->psz_capability,
+                                    p_item->psz_type ) )
+                        {
+                            NSString *o_description = [NSApp
+                                localizedString: p_a_module->psz_longname];
+                            [o_modules addItemWithTitle: o_description];
+                            [[o_modules lastItem] setTag: p_a_module->i_object_id];
+
+                            if( p_item->psz_value &&
+                                !strcmp( p_item->psz_value, p_a_module->psz_object_name ) )
+                            {
+                                [o_modules selectItem:[o_modules lastItem]];
+                            }
+                        }
+                    }
+                }
+
+                CONTROL_LABEL( p_item->psz_text );
+                s_rc.origin.y += s_rc.size.height;
+                s_rc.origin.x = X_ORIGIN;
+            }
+            break;
+
+            case CONFIG_ITEM_FILE:
+            case CONFIG_ITEM_DIRECTORY:
+            {
+                char *psz_duptip = NULL;
+                char *psz_value = p_item->psz_value ?
+                                    p_item->psz_value : "";
+
+                if ( p_item->psz_longtext != NULL )
+                    psz_duptip = strdup( p_item->psz_longtext );
+
+                s_rc.origin.y += 10;
+                s_rc.size.width = - 10;
+                s_rc.size.height = 25;
+                CHECK_VIEW_HEIGHT;
+                CONTROL_LABEL( p_item->psz_text );
+                s_rc.origin.x = X_ORIGIN;
+                s_rc.origin.y += s_rc.size.height;
+                CHECK_VIEW_HEIGHT;
+
+                VLCButton *button = [[VLCButton alloc] initWithFrame: s_rc];
+                CONTROL_CONFIG( button, o_module_name, CONFIG_ITEM_STRING , p_item->psz_name );
+                [button setButtonType: NSMomentaryPushInButton];
+                [button setBezelStyle: NSRoundedBezelStyle];
+                [button setTitle: _NS("Browse...")];
+                [button sizeToFit];
+                [button setAutoresizingMask:NSViewMinXMargin];
+                [button setFrameOrigin: NSMakePoint( s_vrc.size.width - ( 10 + [button frame].size.width), s_rc.origin.y)];
+
+                [button setTarget: self];
+                [button setAction: @selector(openFileDialog:)];
+
+                s_rc.size.height = 25;
+                s_rc.size.width = s_vrc.size.width - ( 35 + [button frame].size.width);
+                
+                o_text_field = [[VLCTextField alloc] initWithFrame: s_rc];
+                CONTROL_CONFIG( o_text_field, o_module_name, CONFIG_ITEM_STRING , p_item->psz_name );
+
+                [o_text_field setStringValue: [NSApp localizedString: psz_value]];
+                if ( psz_duptip != NULL )
+                {
+                    [o_text_field setToolTip: [NSApp wrapString: [NSApp localizedString:
+                                            psz_duptip] toWidth: PREFS_WRAP ]];
+                    free(psz_duptip);
+                }
+                
+                [[NSNotificationCenter defaultCenter] addObserver: self
+                    selector: @selector(configChanged:)
+                    name: NSControlTextDidChangeNotification
+                    object: o_text_field];
+                [o_text_field setAutoresizingMask:NSViewWidthSizable];
+                [button setTag: (int) o_text_field ]; /* FIXME */
+                
+                [o_view addSubview: [o_text_field autorelease]];
+                [o_view addSubview: [button autorelease]];
+                s_rc.origin.y += s_rc.size.height;
+                s_rc.origin.x = X_ORIGIN;
+            }
+            break;
+            
+            case CONFIG_ITEM_STRING:            
+            {
+                if( !p_item->ppsz_list )
+                {
+                    char *psz_value = p_item->psz_value ?
+                                    p_item->psz_value : "";
+    
+                    INPUT_FIELD_STRING( p_item->psz_name, p_item->psz_text, 200,
+                                        [NSApp localizedString: psz_value],
+                                        p_item->psz_longtext );
+                }
+                else
+                {
+                    int i;
+                    VLCComboBox *o_combo_box;
+                    char * psz_duptip = NULL;
+                    if ( p_item->psz_longtext != NULL )
+                        psz_duptip = strdup( p_item->psz_longtext );
+    
+                    s_rc.size.height = 25;
+                    s_rc.size.width = 200;
+                    s_rc.origin.y += 10;
+    
+                    CHECK_VIEW_HEIGHT;
+    
+                    o_combo_box = [[VLCComboBox alloc] initWithFrame: s_rc];
+                    CONTROL_CONFIG( o_combo_box, o_module_name,
+                                    CONFIG_ITEM_STRING, p_item->psz_name );
+                    [o_combo_box setTarget: self];
+                    [o_combo_box setAction: @selector(configChanged:)];
+                    [o_combo_box sendActionOn:NSLeftMouseUpMask];
+                    [[NSNotificationCenter defaultCenter] addObserver: self
+                        selector: @selector(configChanged:)
+                        name: NSControlTextDidChangeNotification
+                        object: o_combo_box];
+
+                    if ( psz_duptip != NULL )
+                    {
+                        [o_combo_box setToolTip: [NSApp wrapString: [NSApp localizedString: psz_duptip] toWidth: PREFS_WRAP]];
+                        free( psz_duptip );
+                    }
+                    [o_view addSubview: [o_combo_box autorelease]];
+                    
+                    for( i=0; p_item->ppsz_list[i]; i++ )
+                    {
+                        [o_combo_box addItemWithObjectValue:
+                            [NSApp localizedString: p_item->ppsz_list[i]]];
+                    }
+                    [o_combo_box setStringValue: [NSApp localizedString: 
+                        p_item->psz_value ? p_item->psz_value : ""]];
+    
+                    CONTROL_LABEL( p_item->psz_text );
+    
+                    s_rc.origin.y += s_rc.size.height;
+                    s_rc.origin.x = X_ORIGIN;
+                }
+    
+            }
+            break;
+    
+            case CONFIG_ITEM_INTEGER:
+            {
+                if( p_item->i_min == p_item->i_max )
+                {
+                    INPUT_FIELD_INTEGER( p_item->psz_name, p_item->psz_text, 70,
+                        p_item->i_value, p_item->psz_longtext );
+                }
+                else
+                {
+                    /*create a slider */
+                    VLCSlider *o_slider;
+                    char * psz_duptip = NULL;
+                    if ( p_item->psz_longtext != NULL )
+                        psz_duptip = strdup( p_item->psz_longtext );
+        
+                    s_rc.size.height = 27;
+                    s_rc.size.width = 200;
+                    s_rc.origin.y += 10;
+        
+                    CHECK_VIEW_HEIGHT;
+        
+                    o_slider = [[VLCSlider alloc] initWithFrame: s_rc];
+                    [o_slider setMinValue: p_item->i_min];
+                    [o_slider setMaxValue: p_item->i_max];
+                    [o_slider setIntValue: p_item->i_value];
+
+                    if ( psz_duptip != NULL )
+                    {
+                        [o_slider setToolTip: [NSApp wrapString: [NSApp localizedString: psz_duptip] toWidth: PREFS_WRAP]];
+                        free( psz_duptip );
+                    }
+                    [o_slider setTarget: self];
+                    [o_slider setAction: @selector(configChanged:)];
+                    [o_slider sendActionOn:NSLeftMouseUpMask];
+                    CONTROL_CONFIG( o_slider, o_module_name,
+                                    CONFIG_ITEM_INTEGER, p_item->psz_name );
+                    [o_view addSubview: [o_slider autorelease]];
+                    CONTROL_LABEL( p_item->psz_text );
+        
+                    s_rc.origin.y += s_rc.size.height;
+                    s_rc.origin.x = X_ORIGIN;
+                }
+            }
+            break;
+    
+            case CONFIG_ITEM_FLOAT:
+            {
+                if( p_item->f_min == p_item->f_max )
+                {
+                    INPUT_FIELD_FLOAT( p_item->psz_name, p_item->psz_text, 70,
+                        p_item->f_value, p_item->psz_longtext );
+                }
+                else
+                {
+                    /* create a slider */
+                    VLCSlider *o_slider;
+                    char * psz_duptip = NULL;
+                    if ( p_item->psz_longtext != NULL )
+                        psz_duptip = strdup( p_item->psz_longtext );
+        
+                    s_rc.size.height = 27;
+                    s_rc.size.width = 200;
+                    s_rc.origin.y += 10;
+        
+                    CHECK_VIEW_HEIGHT;
+        
+                    o_slider = [[VLCSlider alloc] initWithFrame: s_rc];
+                    [o_slider setMinValue: p_item->f_min];
+                    [o_slider setMaxValue: p_item->f_max];
+                    [o_slider setFloatValue: p_item->f_value];
+
+                    if ( psz_duptip != NULL )
+                    {
+                        [o_slider setToolTip: [NSApp wrapString: [NSApp localizedString: psz_duptip] toWidth: PREFS_WRAP]];
+                        free( psz_duptip );
+                    }
+                    [o_slider setTarget: self];
+                    [o_slider setAction: @selector(configChanged:)];
+                    [o_slider sendActionOn:NSLeftMouseUpMask];
+                    CONTROL_CONFIG( o_slider, o_module_name,
+                                    CONFIG_ITEM_FLOAT, p_item->psz_name );
+                    [o_view addSubview: [o_slider autorelease]];
+                    CONTROL_LABEL( p_item->psz_text );
+        
+                    s_rc.origin.y += s_rc.size.height;
+                    s_rc.origin.x = X_ORIGIN;
+                }
+            }
+            break;
+    
+            case CONFIG_ITEM_BOOL:
+            {
+                VLCButton *o_btn_bool;
+                char * psz_duptip = NULL;
+
+                if ( p_item->psz_longtext != NULL )
+                    psz_duptip = strdup( p_item->psz_longtext );
+    
+                s_rc.size.height = 27;
+                s_rc.size.width = s_vrc.size.width - X_ORIGIN * 2 - 20;
+                s_rc.origin.y += 10;
+    
+                CHECK_VIEW_HEIGHT;
+    
+                o_btn_bool = [[VLCButton alloc] initWithFrame: s_rc];
+                [o_btn_bool setButtonType: NSSwitchButton];
+                [o_btn_bool setIntValue: p_item->i_value];
+                [o_btn_bool setTitle: [NSApp localizedString: p_item->psz_text]];
+                if ( psz_duptip != NULL )
+                {
+                    [o_btn_bool setToolTip: [NSApp wrapString: [NSApp localizedString: psz_duptip] toWidth: PREFS_WRAP]];
+                    free( psz_duptip );
+                }
+                [o_btn_bool setTarget: self];
+                [o_btn_bool setAction: @selector(configChanged:)];
+                CONTROL_CONFIG( o_btn_bool, o_module_name,
+                                CONFIG_ITEM_BOOL, p_item->psz_name );
+                [o_view addSubview: [o_btn_bool autorelease]];
+    
+                s_rc.origin.y += s_rc.size.height;
+            }
+            break;
+
+            case CONFIG_ITEM_KEY:
+            {
+                int i;
+                char *psz_duptip = NULL;
+                VLCComboBox *o_combo_box;
+
+                if ( p_item->psz_longtext != NULL )
+                    psz_duptip = strdup( p_item->psz_longtext );
+
+                s_rc.origin.y += 10;
+                s_rc.size.width = - 10;
+                s_rc.size.height = 20;
+                CHECK_VIEW_HEIGHT;
+                CONTROL_LABEL( p_item->psz_text );
+                s_rc.origin.x = X_ORIGIN;
+                s_rc.origin.y += s_rc.size.height;
+                s_rc.size.width = s_vrc.size.width - X_ORIGIN * 2;
+                CHECK_VIEW_HEIGHT;
+                VLCMatrix *o_matrix = [[VLCMatrix alloc] initWithFrame: s_rc mode: NSHighlightModeMatrix cellClass: [NSButtonCell class] numberOfRows:2 numberOfColumns:2];
+                NSArray *o_cells = [o_matrix cells];
+                for( i=0; i < [o_cells count]; i++ )
+                {
+                    NSButtonCell *o_current_cell = [o_cells objectAtIndex:i];
+                    [o_current_cell setButtonType: NSSwitchButton];
+                    [o_current_cell setControlSize: NSSmallControlSize];
+                    if( psz_duptip != NULL )
+                    {
+                        [o_matrix setToolTip: [NSApp wrapString: [NSApp localizedString: psz_duptip] toWidth: PREFS_WRAP] forCell: o_current_cell];
+                    }
+                    switch( i )
+                    {
+                        case 0:
+                            [o_current_cell setTitle:_NS("Command")];
+                            [o_current_cell setState: p_item->i_value & KEY_MODIFIER_COMMAND];
+                            break;
+                        case 1:
+                            [o_current_cell setTitle:_NS("Control")];
+                            [o_current_cell setState: p_item->i_value & KEY_MODIFIER_CTRL];
+                            break;
+                        case 2:
+                            [o_current_cell setTitle:_NS("Option/Alt")];
+                            [o_current_cell setState: p_item->i_value & KEY_MODIFIER_ALT];
+                            break;
+                        case 3:
+                            [o_current_cell setTitle:_NS("Shift")];
+                            [o_current_cell setState: p_item->i_value & KEY_MODIFIER_SHIFT];
+                            break;
+                    }
+                    [o_current_cell setTarget: self];
+                    [o_current_cell setAction: @selector(configChanged:)];
+                    [o_current_cell sendActionOn:NSLeftMouseUpMask];
+                }
+                CONTROL_CONFIG( o_matrix, o_module_name,
+                                CONFIG_ITEM_KEY, p_item->psz_name );
+                [o_matrix sizeToCells];
+                [o_view addSubview: [o_matrix autorelease]];
+
+                s_rc.origin.x += [o_matrix frame].size.width + 20;
+                s_rc.size.height = 25;
+                s_rc.size.width = 100;
+
+                CHECK_VIEW_HEIGHT;
+
+                o_combo_box = [[VLCComboBox alloc] initWithFrame: s_rc];
+                CONTROL_CONFIG( o_combo_box, o_module_name,
+                                CONFIG_ITEM_KEY, p_item->psz_name );
+                [o_combo_box setTarget: self];
+                [o_combo_box setAction: @selector(configChanged:)];
+                [o_combo_box sendActionOn:NSLeftMouseUpMask];
+                [[NSNotificationCenter defaultCenter] addObserver: self
+                        selector: @selector(configChanged:)
+                        name: NSControlTextDidChangeNotification
+                        object: o_combo_box];
+
+                if ( psz_duptip != NULL )
+                {
+                    [o_combo_box setToolTip: [NSApp wrapString: [NSApp localizedString: psz_duptip] toWidth: PREFS_WRAP]];
+                }
+                [o_view addSubview: [o_combo_box autorelease]];
+                
+                for( i = 0; i < sizeof(vlc_keys) / sizeof(key_descriptor_t); i++ )
+                {
+                    
+                    if( vlc_keys[i].psz_key_string && *vlc_keys[i].psz_key_string )
+                    [o_combo_box addItemWithObjectValue: [NSApp localizedString:vlc_keys[i].psz_key_string]];
+                }
+                
+                [o_combo_box setStringValue: [NSApp localizedString:KeyToString(( ((unsigned int)p_item->i_value) & ~KEY_MODIFIER ))]];
+                
+                s_rc.origin.y += s_rc.size.height;
+                s_rc.origin.x = X_ORIGIN;
+                if( psz_duptip ) free( psz_duptip );
+            }
+            break;
+    
+            }
+    
+    #undef INPUT_FIELD_INTEGER
+    #undef INPUT_FIELD_FLOAT
+    #undef INPUT_FIELD_STRING
+    #undef INPUT_FIELD
+    #undef CHECK_VIEW_HEIGHT
+    #undef CONTROL_LABEL
+    #undef Y_ORIGIN
+    #undef X_ORIGIN
+        }
+        while( p_item->i_type != CONFIG_HINT_END && p_item++ );
+        vlc_list_release( p_list );
+    
+    [o_prefs_view setDocumentView: o_view];
+    [o_prefs_view setNeedsDisplay: TRUE];
+}
+
 
 @end
 
 @implementation VLCPrefs (NSTableDataSource)
 
-- (NSInteger)outlineView:(NSOutlineView *)outlineView numberOfChildrenOfItem:(id)item
-{
-    return (item == nil) ? [_rootTreeItem numberOfChildren] : [item numberOfChildren];
+- (int)outlineView:(NSOutlineView *)outlineView numberOfChildrenOfItem:(id)item {
+    return (item == nil) ? [[VLCTreeItem rootItem] numberOfChildren] : [item numberOfChildren];
 }
 
-- (BOOL)outlineView:(NSOutlineView *)outlineView isItemExpandable:(id)item
-{
-    return (item == nil) ? [_rootTreeItem numberOfChildren] : [item numberOfChildren];
+- (BOOL)outlineView:(NSOutlineView *)outlineView isItemExpandable:(id)item {
+    return (item == nil) ? YES : ([item numberOfChildren] != -1);
 }
 
-- (id)outlineView:(NSOutlineView *)outlineView child:(NSInteger)index ofItem:(id)item
-{
-    return (item == nil) ? (id)[_rootTreeItem childAtIndex:index]: (id)[item childAtIndex:index];
+- (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item {
+    return (item == nil) ? [[VLCTreeItem rootItem] childAtIndex:index] : [item childAtIndex:index];
 }
 
-- (id)outlineView:(NSOutlineView *)outlineView
-    objectValueForTableColumn:(NSTableColumn *)tableColumn byItem:(id)item
-{
-    return (item == nil) ? @"" : [item name];
-}
-
-#pragma mark -
-#pragma mark split view delegate
-- (CGFloat)splitView:(NSSplitView *)splitView constrainMaxCoordinate:(CGFloat)proposedMax ofSubviewAt:(NSInteger)dividerIndex
-{
-    return 300.;
-}
-
-- (CGFloat)splitView:(NSSplitView *)splitView constrainMinCoordinate:(CGFloat)proposedMin ofSubviewAt:(NSInteger)dividerIndex
-{
-    return 100.;
-}
-
-- (BOOL)splitView:(NSSplitView *)splitView canCollapseSubview:(NSView *)subview
-{
-    return NO;
-}
-
-- (BOOL)splitView:(NSSplitView *)splitView shouldAdjustSizeOfSubview:(NSView *)subview
-{
-    return [splitView.subviews objectAtIndex:0] != subview;
+- (id)outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(NSTableColumn *)tableColumn byItem:(id)item {
+    return (item == nil) ? @"" : (id)[item getName];
 }
 
 @end
 
-#pragma mark -
-#pragma mark (Root class for all TreeItems)
 @implementation VLCTreeItem
 
-- (id)initWithName:(NSString*)name
+static VLCTreeItem *o_root_item = nil;
+
+#define IsALeafNode ((id)-1)
+
+- (id)initWithName: (NSString *)o_item_name ID: (int)i_id parent:(VLCTreeItem *)o_parent_item
 {
     self = [super init];
-    if (self != nil)
-        _name = name;
 
-    return self;
-}
-
-- (VLCTreeItem *)childAtIndex:(NSInteger)i_index
-{
-    return [[self children] objectAtIndex:i_index];
-}
-
-- (int)numberOfChildren
-{
-    return [[self children] count];
-}
-
-- (NSString *)name
-{
-    return _name;
-}
-
-- (void)showView
-{
-    NSScrollView *prefsView = self.prefsViewController.prefsView;
-    NSRect s_vrc;
-    NSView *view;
-
-    [self.prefsViewController setTitle: [self name]];
-    s_vrc = [[prefsView contentView] bounds]; s_vrc.size.height -= 4;
-    view = [[VLCFlippedView alloc] initWithFrame: s_vrc];
-    [view setAutoresizingMask: NSViewWidthSizable | NSViewMinYMargin | NSViewMaxYMargin];
-
-    if (!_subviews) {
-        _subviews = [[NSMutableArray alloc] initWithCapacity:10];
-
-        NSUInteger count = [[self options] count];
-        for (NSUInteger i = 0; i < count; i++) {
-            VLCTreeLeafItem * item = [[self options] objectAtIndex:i];
-
-            VLCConfigControl *control;
-            control = [VLCConfigControl newControl:[item configItem] withView:view];
-            if (control) {
-                [control setAutoresizingMask: NSViewMaxYMargin | NSViewWidthSizable];
-                [_subviews addObject: control];
-            }
-        }
+    if( self != nil )
+    {
+        o_name = [o_item_name copy];
+        i_object_id = i_id;
+        o_parent = o_parent_item;
     }
-
-    assert(view);
-
-    int i_lastItem = 0;
-    int i_yPos = -2;
-    int i_max_label = 0;
-
-    NSEnumerator *enumerator = [_subviews objectEnumerator];
-    VLCConfigControl *widget;
-    NSRect frame;
-
-    while((widget = [enumerator nextObject])) {
-        if (i_max_label < [widget labelSize])
-            i_max_label = [widget labelSize];
-    }
-
-    enumerator = [_subviews objectEnumerator];
-    while((widget = [enumerator nextObject])) {
-        int i_widget;
-
-        i_widget = [widget viewType];
-        i_yPos += [VLCConfigControl calcVerticalMargin:i_widget lastItem:i_lastItem];
-        [widget setYPos:i_yPos];
-        frame = [widget frame];
-        frame.size.width = [view frame].size.width - LEFTMARGIN - RIGHTMARGIN;
-        [widget setFrame:frame];
-        [widget alignWithXPosition: i_max_label];
-        i_yPos += [widget frame].size.height;
-        i_lastItem = i_widget;
-        [view addSubview:widget];
-    }
-
-    frame = [view frame];
-    frame.size.height = i_yPos;
-    [view setFrame:frame];
-    [prefsView setDocumentView:view];
+    return( self );
 }
 
-- (void)applyChanges
-{
-    NSUInteger i;
-    NSUInteger count = [_subviews count];
-    for (i = 0 ; i < count ; i++)
-        [[_subviews objectAtIndex:i] applyChanges];
-
-    count = [_children count];
-    for (i = 0 ; i < count ; i++)
-        [[_children objectAtIndex:i] applyChanges];
-}
-
-- (void)resetView
-{
-    NSUInteger count = [_subviews count];
-    for (NSUInteger i = 0 ; i < count ; i++)
-        [[_subviews objectAtIndex:i] resetValues];
-
-    count = [_options count];
-    for (NSUInteger i = 0 ; i < count ; i++)
-        [[_options objectAtIndex:i] resetView];
-
-    count = [_children count];
-    for (NSUInteger i = 0 ; i < count ; i++)
-        [[_children objectAtIndex:i] resetView];
-
-}
-
-- (NSMutableArray *)children
-{
-    if (!_children)
-        _children = [[NSMutableArray alloc] init];
-    return _children;
-}
-
-- (NSMutableArray *)options
-{
-    if (!_options)
-        _options = [[NSMutableArray alloc] init];
-    return _options;
-}
-@end
-
-#pragma mark -
-@implementation VLCTreeMainItem
-
-- (VLCTreeCategoryItem *)itemRepresentingCategory:(int)category
-{
-    NSUInteger childrenCount = [[self children] count];
-    for (int i = 0; i < childrenCount; i++) {
-        VLCTreeCategoryItem * categoryItem = [[self children] objectAtIndex:i];
-        if ([categoryItem category] == category)
-            return categoryItem;
-    }
-    return nil;
-}
-
-- (bool)isSubCategoryGeneral:(int)category
-{
-    if (category == SUBCAT_VIDEO_GENERAL ||
-          category == SUBCAT_ADVANCED_MISC ||
-          category == SUBCAT_INPUT_GENERAL ||
-          category == SUBCAT_INTERFACE_GENERAL ||
-          category == SUBCAT_SOUT_GENERAL||
-          category == SUBCAT_PLAYLIST_GENERAL||
-          category == SUBCAT_AUDIO_GENERAL) {
-        return true;
-    }
-    return false;
-}
-
-/* Creates and returns the array of children
- * Loads children incrementally */
-- (NSMutableArray *)children
-{
-    if (_children) return _children;
-    _children = [[NSMutableArray alloc] init];
-
-    /* List the modules */
-    size_t count, i;
-    module_t ** modules = module_list_get(&count);
-    if (!modules) return nil;
-
-    /* Build a tree of the plugins */
-    /* Add the capabilities */
-    for (i = 0; i < count; i++) {
-        VLCTreeCategoryItem * categoryItem = nil;
-        VLCTreeSubCategoryItem * subCategoryItem = nil;
-        VLCTreePluginItem * pluginItem = nil;
-        module_config_t *p_configs = NULL;
-        int lastsubcat = 0;
-        unsigned int confsize;
-
-        module_t * p_module = modules[i];
-
-        /* Exclude empty plugins (submodules don't have config */
-        /* options, they are stored in the parent module) */
-        if (module_is_main(p_module)) {
-            pluginItem = self;
-            _configItems = module_config_get(p_module, &confsize);
-            _configSize = confsize;
-        } else {
-            pluginItem = [VLCTreePluginItem pluginTreeItemWithPlugin: p_module];
-            confsize = [pluginItem configSize];
-        }
-        p_configs = [pluginItem configItems];
-
-        unsigned int j;
-        for (j = 0; j < confsize; j++) {
-            int configType = p_configs[j].i_type;
-            if (configType == CONFIG_CATEGORY) {
-                categoryItem = [self itemRepresentingCategory:p_configs[j].value.i];
-                if (!categoryItem) {
-                    categoryItem = [VLCTreeCategoryItem categoryTreeItemWithCategory:p_configs[j].value.i];
-                    if (categoryItem)
-                        [[self children] addObject:categoryItem];
-                }
-            }
-            else if (configType == CONFIG_SUBCATEGORY) {
-                lastsubcat = p_configs[j].value.i;
-                if (categoryItem && ![self isSubCategoryGeneral:lastsubcat]) {
-                    subCategoryItem = [categoryItem itemRepresentingSubCategory:lastsubcat];
-                    if (!subCategoryItem) {
-                        subCategoryItem = [VLCTreeSubCategoryItem subCategoryTreeItemWithSubCategory:lastsubcat];
-                        if (subCategoryItem)
-                            [[categoryItem children] addObject:subCategoryItem];
-                    }
-                }
-            }
-
-            if (module_is_main(p_module) && (CONFIG_ITEM(configType) || configType == CONFIG_SECTION)) {
-                if (categoryItem && [self isSubCategoryGeneral:lastsubcat])
-                    [[categoryItem options] addObject:[[VLCTreeLeafItem alloc] initWithConfigItem:&p_configs[j]]];
-                else if (subCategoryItem)
-                    [[subCategoryItem options] addObject:[[VLCTreeLeafItem alloc] initWithConfigItem:&p_configs[j]]];
-            }
-            else if (!module_is_main(p_module) && (CONFIG_ITEM(configType) || configType == CONFIG_SECTION)) {
-                if (![[subCategoryItem children] containsObject: pluginItem])
-                    [[subCategoryItem children] addObject:pluginItem];
-
-                if (pluginItem)
-                    [[pluginItem options] addObject:[[VLCTreeLeafItem alloc] initWithConfigItem:&p_configs[j]]];
-            }
-        }
-    }
-    module_list_free(modules);
-    return _children;
-}
-@end
-
-#pragma mark -
-@implementation VLCTreeCategoryItem
-+ (VLCTreeCategoryItem *)categoryTreeItemWithCategory:(int)category
-{
-    if (!config_CategoryNameGet(category)) return nil;
-    return [[[self class] alloc] initWithCategory:category];
-}
-
-- (id)initWithCategory:(int)category
-{
-    NSString * name = _NS(config_CategoryNameGet(category));
-    if (self = [super initWithName:name]) {
-        _category = category;
-        //_help = [_NS(config_CategoryHelpGet(category)) retain];
-    }
-    return self;
-}
-
-- (VLCTreeSubCategoryItem *)itemRepresentingSubCategory:(int)subCategory
-{
-    assert([self isKindOfClass:[VLCTreeCategoryItem class]]);
-    NSUInteger childrenCount = [[self children] count];
-    for (NSUInteger i = 0; i < childrenCount; i++) {
-        VLCTreeSubCategoryItem * subCategoryItem = [[self children] objectAtIndex:i];
-        if ([subCategoryItem subCategory] == subCategory)
-            return subCategoryItem;
-    }
-    return nil;
-}
-
-- (int)category
-{
-    return _category;
-}
-@end
-
-#pragma mark -
-@implementation VLCTreeSubCategoryItem
-- (id)initWithSubCategory:(int)subCategory
-{
-    NSString * name = _NS(config_CategoryNameGet(subCategory));
-    if (self = [super initWithName:name]) {
-        _subCategory = subCategory;
-        //_help = [_NS(config_CategoryHelpGet(subCategory)) retain];
-    }
-    return self;
-}
-
-+ (VLCTreeSubCategoryItem *)subCategoryTreeItemWithSubCategory:(int)subCategory
-{
-    if (!config_CategoryNameGet(subCategory))
-        return nil;
-    return [[[self class] alloc] initWithSubCategory:subCategory];
-}
-
-- (int)subCategory
-{
-    return _subCategory;
-}
-
-@end
-
-#pragma mark -
-@implementation VLCTreePluginItem
-- (id)initWithPlugin:(module_t *)plugin
-{
-    NSString * name = _NS(module_get_name(plugin, false));
-    if (self = [super initWithName:name]) {
-        _configItems = module_config_get(plugin, &_configSize);
-        //_plugin = plugin;
-        //_help = [_NS(config_CategoryHelpGet(subCategory)) retain];
-    }
-    return self;
-}
-
-+ (VLCTreePluginItem *)pluginTreeItemWithPlugin:(module_t *)plugin
-{
-    return [[[self class] alloc] initWithPlugin:plugin];
++ (VLCTreeItem *)rootItem {
+   if (o_root_item == nil) o_root_item = [[VLCTreeItem alloc] initWithName:@"main" ID: 0 parent:nil];
+   return o_root_item;       
 }
 
 - (void)dealloc
 {
-    module_config_free(_configItems);
+    if (o_children != IsALeafNode) [o_children release];
+    [o_name release];
+    [super dealloc];
 }
 
-- (module_config_t *)configItems
-{
-    return _configItems;
+/* Creates and returns the array of children
+ * Loads children incrementally */
+- (NSArray *)children {
+    if (o_children == NULL) {
+        intf_thread_t *p_intf = [NSApp getIntf];
+        vlc_list_t      *p_list;
+        module_t        *p_module = NULL;
+        module_config_t *p_item;
+        int i_index,j;
+
+        /* List the modules */
+        p_list = vlc_list_find( p_intf, VLC_OBJECT_MODULE, FIND_ANYWHERE );
+        if( !p_list ) return nil;
+
+        if( [[self getName] isEqualToString: @"main"] )
+        {
+            /*
+            * Build a tree of the main options
+            */
+            for( i_index = 0; i_index < p_list->i_count; i_index++ )
+            {
+                p_module = (module_t *)p_list->p_values[i_index].p_object;
+                if( !strcmp( p_module->psz_object_name, "main" ) )
+                    break;
+            }
+            if( p_module == NULL )
+            {
+                msg_Err( p_intf, "could not find the main module in our preferences" );
+                return nil;
+            }
+            if( i_index < p_list->i_count )
+            {
+                /* We found the main module */
+        
+                /* Enumerate config categories and store a reference so we can
+                 * generate their config panel them when it is asked by the user. */
+                p_item = p_module->p_config;
+                o_children = [[NSMutableArray alloc] initWithCapacity:10];
+
+                if( p_item ) do
+                {
+                    NSString *o_child_name;
+                    
+                    switch( p_item->i_type )
+                    {
+                    case CONFIG_HINT_CATEGORY:
+                        o_child_name = [NSApp localizedString: p_item->psz_text];
+                        [o_children addObject:[[VLCTreeItem alloc] initWithName: o_child_name
+                            ID: p_module->i_object_id parent:self]];
+                        break;
+                    }
+                }
+                while( p_item->i_type != CONFIG_HINT_END && p_item++ );
+                
+                /* Add the modules item */
+                [o_children addObject:[[VLCTreeItem alloc] initWithName: _NS("Modules")
+                    ID: 0 parent:self]];
+            }
+            else
+            {
+                o_children = IsALeafNode;
+            }
+        }
+        else if( [[self getName] isEqualToString: _NS("Modules")] )
+        {
+            /* Add the capabilities */
+            o_children = [[NSMutableArray alloc] initWithCapacity:10];
+            for( i_index = 0; i_index < p_list->i_count; i_index++ )
+            {
+                p_module = (module_t *)p_list->p_values[i_index].p_object;
+        
+                /* Exclude the main module */
+                if( !strcmp( p_module->psz_object_name, "main" ) )
+                    continue;
+        
+                /* Exclude empty modules */
+                p_item = p_module->p_config;
+                if( !p_item ) continue;
+                do
+                {
+                    if( p_item->i_type & CONFIG_ITEM )
+                        break;
+                }
+                while( p_item->i_type != CONFIG_HINT_END && p_item++ );
+                if( p_item->i_type == CONFIG_HINT_END ) continue;
+        
+                /* Create the capability tree if it doesn't already exist */
+                NSString *o_capability;
+                o_capability = [NSApp localizedString: p_module->psz_capability];
+                if( !p_module->psz_capability || !*p_module->psz_capability )
+                {
+                    /* Empty capability ? Let's look at the submodules */
+                    module_t * p_submodule;
+                    for( j = 0; j < p_module->i_children; j++ )
+                    {
+                        p_submodule = (module_t*)p_module->pp_children[ j ];
+                        if( p_submodule->psz_capability && *p_submodule->psz_capability )
+                        {
+                            o_capability = [NSApp localizedString: p_submodule->psz_capability];
+                            BOOL b_found = FALSE;
+                            for( j = 0; j < (int)[o_children count]; j++ )
+                            {
+                                if( [[[o_children objectAtIndex:j] getName] isEqualToString: o_capability] )
+                                {
+                                    b_found = TRUE;
+                                    break;
+                                }
+                            }
+                            if( !b_found )
+                            {
+                                [o_children addObject:[[VLCTreeItem alloc] initWithName: o_capability
+                                ID: 0 parent:self]];
+                            }
+                        }
+                    }
+                }
+
+                BOOL b_found = FALSE;
+                for( j = 0; j < (int)[o_children count]; j++ )
+                {
+                    if( [[[o_children objectAtIndex:j] getName] isEqualToString: o_capability] )
+                    {
+                        b_found = TRUE;
+                        break;
+                    }
+                }
+                if( !b_found )
+                {
+                    [o_children addObject:[[VLCTreeItem alloc] initWithName: o_capability
+                    ID: 0 parent:self]];
+                }
+            }
+        }
+        else if( [[o_parent getName] isEqualToString: _NS("Modules")] )
+        {
+            /* Now add the modules */
+            o_children = [[NSMutableArray alloc] initWithCapacity:10];
+            for( i_index = 0; i_index < p_list->i_count; i_index++ )
+            {
+                p_module = (module_t *)p_list->p_values[i_index].p_object;
+        
+                /* Exclude the main module */
+                if( !strcmp( p_module->psz_object_name, "main" ) )
+                    continue;
+        
+                /* Exclude empty modules */
+                p_item = p_module->p_config;
+                if( !p_item ) continue;
+                do
+                {
+                    if( p_item->i_type & CONFIG_ITEM )
+                        break;
+                }
+                while( p_item->i_type != CONFIG_HINT_END && p_item++ );
+                if( p_item->i_type == CONFIG_HINT_END ) continue;
+        
+                /* Check the capability */
+                NSString *o_capability;
+                o_capability = [NSApp localizedString: p_module->psz_capability];
+                if( !p_module->psz_capability || !*p_module->psz_capability )
+                {
+                    /* Empty capability ? Let's look at the submodules */
+                    module_t * p_submodule;
+                    for( j = 0; j < p_module->i_children; j++ )
+                    {
+                        p_submodule = (module_t*)p_module->pp_children[ j ];
+                        if( p_submodule->psz_capability && *p_submodule->psz_capability )
+                        {
+                            o_capability = [NSApp localizedString: p_submodule->psz_capability];
+                            if( [o_capability isEqualToString: [self getName]] )
+                            {
+                            [o_children addObject:[[VLCTreeItem alloc] initWithName:
+                                [NSApp localizedString: p_module->psz_object_name ]
+                                ID: p_module->i_object_id parent:self]];
+                            }
+                        }
+                    }
+                }
+                else if( [o_capability isEqualToString: [self getName]] )
+                {
+                    [o_children addObject:[[VLCTreeItem alloc] initWithName:
+                        [NSApp localizedString: p_module->psz_object_name ]
+                        ID: p_module->i_object_id parent:self]];
+                }
+            }
+        }
+        else
+        {
+            /* all the other stuff are leafs */
+            o_children = IsALeafNode;
+        }
+    }
+    return o_children;
 }
 
-- (unsigned int)configSize
+- (int)getObjectID
 {
-    return _configSize;
+    return i_object_id;
+}
+
+- (NSString *)getName
+{
+    return o_name;
+}
+
+- (VLCTreeItem *)childAtIndex:(int)i_index {
+    return [[self children] objectAtIndex:i_index];
+}
+
+- (int)numberOfChildren {
+    id i_tmp = [self children];
+    return (i_tmp == IsALeafNode) ? (-1) : (int)[i_tmp count];
+}
+
+- (BOOL)hasPrefs:(NSString *)o_module_name
+{
+    intf_thread_t *p_intf = [NSApp getIntf];
+    module_t *p_parser;
+    vlc_list_t *p_list;
+    char *psz_module_name;
+    int i_index;
+
+    psz_module_name = (char *)[o_module_name UTF8String];
+
+    /* look for module */
+    p_list = vlc_list_find( p_intf, VLC_OBJECT_MODULE, FIND_ANYWHERE );
+
+    for( i_index = 0; i_index < p_list->i_count; i_index++ )
+    {
+        p_parser = (module_t *)p_list->p_values[i_index].p_object ;
+
+        if( !strcmp( p_parser->psz_object_name, psz_module_name ) )
+        {
+            BOOL b_has_prefs = p_parser->i_config_items != 0;
+            vlc_list_release( p_list );
+            return( b_has_prefs );
+        }
+    }
+
+    vlc_list_release( p_list );
+
+    return( NO );
 }
 
 @end
 
-#pragma mark -
-@implementation VLCTreeLeafItem
 
-- (id)initWithConfigItem: (module_config_t *) configItem
+@implementation VLCFlippedView
+
+- (BOOL)isFlipped
 {
-    NSString *name = toNSStr(configItem->psz_name);
-    self = [super initWithName:name];
-    if (self != nil)
-        _configItem = configItem;
-
-    return self;
+    return( YES );
 }
 
-- (module_config_t *)configItem
-{
-    return _configItem;
-}
 @end
+
+IMPL_CONTROL_CONFIG(Button);
+IMPL_CONTROL_CONFIG(PopUpButton);
+IMPL_CONTROL_CONFIG(ComboBox);
+IMPL_CONTROL_CONFIG(TextField);
+IMPL_CONTROL_CONFIG(Slider);
+IMPL_CONTROL_CONFIG(Matrix);

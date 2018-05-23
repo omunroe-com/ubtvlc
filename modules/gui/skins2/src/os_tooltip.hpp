@@ -1,11 +1,11 @@
 /*****************************************************************************
  * os_tooltip.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 0e7fe5e2878b74f0d1c60cc6cacf3adbfa50a101 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: os_tooltip.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef OS_TOOLTIP_HPP
@@ -33,17 +33,17 @@ class OSGraphics;
 /// Base class for OS specific Tooltip Windows
 class OSTooltip: public SkinObject
 {
-public:
-    virtual ~OSTooltip() { }
+    public:
+        virtual ~OSTooltip() {}
 
-    /// Show the tooltip
-    virtual void show( int left, int top, OSGraphics &rText ) = 0;
+        // Show the tooltip
+        virtual void show( int left, int top, OSGraphics &rText ) = 0;
 
-    /// Hide the tooltip
-    virtual void hide() = 0;
+        // Hide the tooltip
+        virtual void hide() = 0;
 
-protected:
-    OSTooltip( intf_thread_t *pIntf ): SkinObject( pIntf ) { }
+    protected:
+        OSTooltip( intf_thread_t *pIntf ): SkinObject( pIntf ) {}
 };
 
 #endif

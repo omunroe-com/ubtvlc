@@ -1,10 +1,10 @@
 /*****************************************************************************
- * m3u.c : M3U playlist export module
+ * m3u.c :  M3U playlist export module
  *****************************************************************************
- * Copyright (C) 2004-2009 the VideoLAN team
- * $Id: 6a31f1463d1bb3147c113307178bc8ca0514c00d $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: m3u.c 7405 2004-04-21 12:13:26Z gbazin $
  *
- * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
+ * Authors: Clément Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,129 +18,66 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
+#include <stdlib.h>                                      /* malloc(), free() */
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
+#include <vlc/vlc.h>
+#include <vlc/intf.h>
 
-#include <vlc_common.h>
-#include <vlc_playlist.h>
-#include <vlc_input.h>
-#include <vlc_meta.h>
-#include <vlc_charset.h>
-#include <vlc_url.h>
-
-#include <assert.h>
+#include <errno.h>                                                 /* ENOMEM */
 
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
 int Export_M3U ( vlc_object_t * );
-int Export_M3U8( vlc_object_t * );
 
 /*****************************************************************************
  * Export_M3U: main export function
  *****************************************************************************/
-static void DoChildren( playlist_export_t *p_export, playlist_item_t *p_root,
-                        int (*pf_fprintf) (FILE *, const char *, ...) )
-{
-    size_t prefix_len = -1;
-    if( likely(p_export->base_url != NULL) )
-    {
-        const char *p = strrchr( p_export->base_url, '/' );
-        assert(p != NULL);
-        prefix_len = (p + 1) - p_export->base_url;
-    }
-
-    /* Write header */
-    fputs( "#EXTM3U\n", p_export->p_file );
-
-    /* Go through the playlist and add items */
-    for( int i = 0; i< p_root->i_children ; i++)
-    {
-        playlist_item_t *p_current = p_root->pp_children[i];
-        assert( p_current );
-
-        if( p_current->i_children >= 0 )
-        {
-            DoChildren( p_export, p_current, pf_fprintf );
-            continue;
-        }
-
-        /* General info */
-
-        char *psz_uri = input_item_GetURI( p_current->p_input );
-
-        assert( psz_uri );
-
-        char *psz_name = input_item_GetName( p_current->p_input );
-        if( psz_name && strcmp( psz_uri, psz_name ) )
-        {
-            char *psz_artist = input_item_GetArtist( p_current->p_input );
-            if( psz_artist == NULL ) psz_artist = strdup( "" );
-            mtime_t i_duration = input_item_GetDuration( p_current->p_input );
-            if( psz_artist && *psz_artist )
-            {
-                /* write EXTINF with artist */
-                pf_fprintf( p_export->p_file, "#EXTINF:%"PRIu64",%s - %s\n",
-                            i_duration / CLOCK_FREQ, psz_artist, psz_name);
-            }
-            else
-            {
-                /* write EXTINF without artist */
-                pf_fprintf( p_export->p_file, "#EXTINF:%"PRIu64",%s\n",
-                            i_duration / CLOCK_FREQ, psz_name);
-            }
-            free( psz_artist );
-        }
-        free( psz_name );
-
-        /* VLC specific options */
-        vlc_mutex_lock( &p_current->p_input->lock );
-        for( int j = 0; j < p_current->p_input->i_options; j++ )
-        {
-            pf_fprintf( p_export->p_file, "#EXTVLCOPT:%s\n",
-                        p_current->p_input->ppsz_options[j][0] == ':' ?
-                        p_current->p_input->ppsz_options[j] + 1 :
-                        p_current->p_input->ppsz_options[j] );
-        }
-        vlc_mutex_unlock( &p_current->p_input->lock );
-
-        /* We cannot really know if relative or absolute URL is better. As a
-         * heuristic, we write a relative URL if the item is in the same
-         * directory as the playlist, or a sub-directory thereof. */
-        size_t skip = 0;
-        if( likely(prefix_len != (size_t)-1)
-         && !strncmp( p_export->base_url, psz_uri, prefix_len ) )
-            skip = prefix_len;
-
-        fprintf( p_export->p_file, "%s\n", psz_uri + skip );
-        free( psz_uri );
-    }
-}
-
 int Export_M3U( vlc_object_t *p_this )
 {
-    playlist_export_t *p_export = (playlist_export_t *)p_this;
+    playlist_t *p_playlist = (playlist_t*)p_this;
+    playlist_export_t *p_export = (playlist_export_t *)p_playlist->p_private;
+    int i, j;
 
-    msg_Dbg( p_export, "saving using M3U format");
+    msg_Dbg(p_playlist, "Saving using M3U format");
 
-    DoChildren( p_export, p_export->p_root, utf8_fprintf );
-    return VLC_SUCCESS;
-}
+    /* Write header */
+    fprintf( p_export->p_file, "#EXTM3U\n" );
 
-int Export_M3U8( vlc_object_t *p_this )
-{
-    playlist_export_t *p_export = (playlist_export_t *)p_this;
+    /* Go through the playlist and add items */
+    for( i = 0; i< p_playlist->i_size ; i++)
+    {
+        /* General info */
+        if( p_playlist->pp_items[i]->input.psz_name &&
+	    strcmp( p_playlist->pp_items[i]->input.psz_name,
+                    p_playlist->pp_items[i]->input.psz_uri ) )
+        {
+            char *psz_author =
+	        playlist_GetInfo( p_playlist, i, _("General"), _("Author") );
 
-    msg_Dbg( p_export, "saving using M3U8 format");
+            fprintf( p_export->p_file, "#EXTINF:%i,%s,%s\n",
+                     (int)(p_playlist->pp_items[i]->input.i_duration/1000000),
+                     psz_author ? psz_author : "",
+                     p_playlist->pp_items[i]->input.psz_name );
+        }
 
-    DoChildren( p_export, p_export->p_root, fprintf );
+        /* VLC specific options */
+        for( j = 0; j < p_playlist->pp_items[i]->input.i_options; j++ )
+        {
+            fprintf( p_export->p_file, "#EXTVLCOPT:%s\n",
+                     p_playlist->pp_items[i]->input.ppsz_options[j][0] == ':' ?
+                     p_playlist->pp_items[i]->input.ppsz_options[j] + 1 :
+                     p_playlist->pp_items[i]->input.ppsz_options[j] );
+        }
+
+        fprintf( p_export->p_file, "%s\n",
+                 p_playlist->pp_items[i]->input.psz_uri );
+    }
     return VLC_SUCCESS;
 }

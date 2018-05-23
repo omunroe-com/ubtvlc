@@ -1,11 +1,11 @@
 /*****************************************************************************
  * evt_special.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: a6fb797a0cefb0a189270fd035863e3e83057971 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: evt_special.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef EVT_SPECIAL_HPP
@@ -31,23 +31,25 @@
 /// Class for non-genuine events
 class EvtSpecial: public EvtGeneric
 {
-public:
-    enum ActionType_t
-    {
-        kShow,
-        kHide,
-        kEnable,
-        kDisable
-    };
+    public:
+        typedef enum
+        {
+            kShow,
+            kHide,
+            kEnable,
+            kDisable
+        } ActionType_t;
 
-    EvtSpecial( intf_thread_t *pIntf, ActionType_t action )
-              : EvtGeneric( pIntf ), m_action( action ) { }
-    virtual ~EvtSpecial() { }
-    virtual const std::string getAsString() const;
+        EvtSpecial( intf_thread_t *pIntf, ActionType_t action ):
+            EvtGeneric( pIntf ), m_action( action ) {}
+        virtual ~EvtSpecial() {}
 
-private:
-    /// Type of action
-    ActionType_t m_action;
+        /// Return the type of event
+        virtual const string getAsString() const;
+
+    private:
+        /// Type of action
+        ActionType_t m_action;
 };
 
 

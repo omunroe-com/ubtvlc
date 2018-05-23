@@ -1,11 +1,10 @@
 /*****************************************************************************
  * misc.m: code not specific to vlc
  *****************************************************************************
- * Copyright (C) 2003-2015 VLC authors and VideoLAN
- * $Id: acffad80bb2e5804d906a91227806f709a151783 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: misc.m 7723 2004-05-19 23:58:06Z hartman $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
- *          Felix Paul Kühne <fkuehne at videolan dot org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,96 +18,69 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#import "CompatibilityFixes.h"
-#import "misc.h"
-#import "VLCMain.h"                                          /* VLCApplication */
-#import "VLCMainWindow.h"
-#import "VLCMainMenu.h"
-#import "VLCControlsBarCommon.h"
-#import "VLCCoreInteraction.h"
-#import <vlc_actions.h>
+#include <Cocoa/Cocoa.h>
+
+#include "intf.h"                                          /* VLCApplication */
+#include "misc.h"
+#include "playlist.h"
 
 /*****************************************************************************
- * VLCDragDropView
+ * VLCControllerWindow
  *****************************************************************************/
 
-@implementation VLCDropDisabledImageView
+@implementation VLCControllerWindow
 
-- (void)awakeFromNib
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(unsigned int)styleMask
+    backing:(NSBackingStoreType)backingType defer:(BOOL)flag
 {
-    [self unregisterDraggedTypes];
+    self = [super initWithContentRect:contentRect styleMask:styleMask //& ~NSTitledWindowMask
+    backing:backingType defer:flag];
+
+    return( self );
+}
+
+- (BOOL)performKeyEquivalent:(NSEvent *)o_event
+{
+    return [( (VLCApplication *) [VLCApplication sharedApplication] )
+            hasDefinedShortcutKey:o_event];
 }
 
 @end
 
+
+
 /*****************************************************************************
- * VLCDragDropView
+ * VLCControllerView
  *****************************************************************************/
 
-@interface VLCDragDropView()
-{
-    bool b_activeDragAndDrop;
-}
-@end
-
-@implementation VLCDragDropView
-
-- (id)initWithFrame:(NSRect)frame
-{
-    self = [super initWithFrame:frame];
-    if (self) {
-        // default value
-        [self setDrawBorder:YES];
-    }
-
-    return self;
-}
-
-- (void)enablePlaylistItems
-{
-    [self registerForDraggedTypes:[NSArray arrayWithObjects:NSFilenamesPboardType, @"VLCPlaylistItemPboardType", nil]];
-}
-
-- (BOOL)mouseDownCanMoveWindow
-{
-    return YES;
-}
+@implementation VLCControllerView
 
 - (void)dealloc
 {
     [self unregisterDraggedTypes];
+    [super dealloc];
 }
 
 - (void)awakeFromNib
 {
-    [self registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
+    [self registerForDraggedTypes:[NSArray arrayWithObjects:NSTIFFPboardType, 
+        NSFilenamesPboardType, nil]];
 }
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
 {
-    if ((NSDragOperationGeneric & [sender draggingSourceOperationMask]) == NSDragOperationGeneric) {
-        b_activeDragAndDrop = YES;
-        [self setNeedsDisplay:YES];
-
-        return NSDragOperationCopy;
+    if ((NSDragOperationGeneric & [sender draggingSourceOperationMask]) 
+                == NSDragOperationGeneric)
+    {
+        return NSDragOperationGeneric;
     }
-
-    return NSDragOperationNone;
-}
-
-- (void)draggingEnded:(id < NSDraggingInfo >)sender
-{
-    b_activeDragAndDrop = NO;
-    [self setNeedsDisplay:YES];
-}
-
-- (void)draggingExited:(id < NSDraggingInfo >)sender
-{
-    b_activeDragAndDrop = NO;
-    [self setNeedsDisplay:YES];
+    else
+    {
+        return NSDragOperationNone;
+    }
 }
 
 - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
@@ -118,15 +90,32 @@
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
-    BOOL b_returned;
+    NSPasteboard *o_paste = [sender draggingPasteboard];
+    NSArray *o_types = [NSArray arrayWithObjects: NSFilenamesPboardType, nil];
+    NSString *o_desired_type = [o_paste availableTypeFromArray:o_types];
+    NSData *o_carried_data = [o_paste dataForType:o_desired_type];
 
-    if (_dropHandler && [_dropHandler respondsToSelector:@selector(performDragOperation:)])
-        b_returned = [_dropHandler performDragOperation:sender];
-    else // default
-        b_returned = [[VLCCoreInteraction sharedInstance] performDragOperation:sender];
+    if( o_carried_data )
+    {
+        if ([o_desired_type isEqualToString:NSFilenamesPboardType])
+        {
+            int i;
+            NSArray *o_array = [NSArray array];
+            NSArray *o_values = [[o_paste propertyListForType: NSFilenamesPboardType]
+                        sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
 
+            for( i = 0; i < (int)[o_values count]; i++)
+            {
+                NSDictionary *o_dic;
+                o_dic = [NSDictionary dictionaryWithObject:[o_values objectAtIndex:i] forKey:@"ITEM_URL"];
+                o_array = [o_array arrayByAddingObject: o_dic];
+            }
+            [(VLCPlaylist *)[[NSApp delegate] getPlaylist] appendArray: o_array atPos: -1 enqueue:NO];
+            return YES;
+        }
+    }
     [self setNeedsDisplay:YES];
-    return b_returned;
+    return YES;
 }
 
 - (void)concludeDragOperation:(id <NSDraggingInfo>)sender
@@ -134,203 +123,147 @@
     [self setNeedsDisplay:YES];
 }
 
-- (void)drawRect:(NSRect)dirtyRect
-{
-    if ([self drawBorder] && b_activeDragAndDrop) {
-        NSRect frameRect = [self bounds];
+@end
 
-        [[NSColor selectedControlColor] set];
-        NSFrameRectWithWidthUsingOperation(frameRect, 2., NSCompositeSourceOver);
+/*****************************************************************************
+ * VLBrushedMetalImageView
+ *****************************************************************************/
+
+@implementation VLBrushedMetalImageView
+
+- (BOOL)mouseDownCanMoveWindow
+{
+    return YES;
+}
+
+- (void)dealloc
+{
+    [self unregisterDraggedTypes];
+    [super dealloc];
+}
+
+- (void)awakeFromNib
+{
+    [self registerForDraggedTypes:[NSArray arrayWithObjects:NSTIFFPboardType, 
+        NSFilenamesPboardType, nil]];
+}
+
+- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
+{
+    if ((NSDragOperationGeneric & [sender draggingSourceOperationMask]) 
+                == NSDragOperationGeneric)
+    {
+        return NSDragOperationGeneric;
     }
+    else
+    {
+        return NSDragOperationNone;
+    }
+}
 
-    [super drawRect:dirtyRect];
+- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
+{
+    return YES;
+}
+
+- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
+{
+    NSPasteboard *o_paste = [sender draggingPasteboard];
+    NSArray *o_types = [NSArray arrayWithObjects: NSFilenamesPboardType, nil];
+    NSString *o_desired_type = [o_paste availableTypeFromArray:o_types];
+    NSData *o_carried_data = [o_paste dataForType:o_desired_type];
+
+    if( o_carried_data )
+    {
+        if ([o_desired_type isEqualToString:NSFilenamesPboardType])
+        {
+            int i;
+            NSArray *o_array = [NSArray array];
+            NSArray *o_values = [[o_paste propertyListForType: NSFilenamesPboardType]
+                        sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
+
+            for( i = 0; i < (int)[o_values count]; i++)
+            {
+                NSDictionary *o_dic;
+                o_dic = [NSDictionary dictionaryWithObject:[o_values objectAtIndex:i] forKey:@"ITEM_URL"];
+                o_array = [o_array arrayByAddingObject: o_dic];
+            }
+            [(VLCPlaylist *)[[NSApp delegate] getPlaylist] appendArray: o_array atPos: -1 enqueue:NO];
+            return YES;
+        }
+    }
+    [self setNeedsDisplay:YES];
+    return YES;
+}
+
+- (void)concludeDragOperation:(id <NSDraggingInfo>)sender
+{
+    [self setNeedsDisplay:YES];
 }
 
 @end
 
 
 /*****************************************************************************
- * VLCMainWindowSplitView implementation
+ * MPSlider
  *****************************************************************************/
-@implementation VLCMainWindowSplitView : NSSplitView
+@implementation MPSlider
 
-// Custom color for the dividers
-- (NSColor *)dividerColor
+void _drawKnobInRect(NSRect knobRect)
 {
-    return [NSColor colorWithCalibratedRed:.60 green:.60 blue:.60 alpha:1.];
+    // Center knob in given rect
+    knobRect.origin.x += (int)((float)(knobRect.size.width - 7)/2.0);
+    knobRect.origin.y += (int)((float)(knobRect.size.height - 7)/2.0);
+    
+    // Draw diamond
+    NSRectFillUsingOperation(NSMakeRect(knobRect.origin.x + 3, knobRect.origin.y + 6, 1, 1), NSCompositeSourceOver);
+    NSRectFillUsingOperation(NSMakeRect(knobRect.origin.x + 2, knobRect.origin.y + 5, 3, 1), NSCompositeSourceOver);
+    NSRectFillUsingOperation(NSMakeRect(knobRect.origin.x + 1, knobRect.origin.y + 4, 5, 1), NSCompositeSourceOver);
+    NSRectFillUsingOperation(NSMakeRect(knobRect.origin.x + 0, knobRect.origin.y + 3, 7, 1), NSCompositeSourceOver);
+    NSRectFillUsingOperation(NSMakeRect(knobRect.origin.x + 1, knobRect.origin.y + 2, 5, 1), NSCompositeSourceOver);
+    NSRectFillUsingOperation(NSMakeRect(knobRect.origin.x + 2, knobRect.origin.y + 1, 3, 1), NSCompositeSourceOver);
+    NSRectFillUsingOperation(NSMakeRect(knobRect.origin.x + 3, knobRect.origin.y + 0, 1, 1), NSCompositeSourceOver);
 }
 
-// Custom thickness for the divider
-- (CGFloat)dividerThickness
+void _drawFrameInRect(NSRect frameRect)
 {
-    return 1.0;
-}
-
-@end
-
-/*****************************************************************************
- * VLCThreePartImageView interface
- *****************************************************************************/
-
-@interface VLCThreePartImageView()
-{
-    NSImage *_left_img;
-    NSImage *_middle_img;
-    NSImage *_right_img;
-}
-@end
-
-@implementation VLCThreePartImageView
-
-- (void)setImagesLeft:(NSImage *)left middle: (NSImage *)middle right:(NSImage *)right
-{
-    _left_img = left;
-    _middle_img = middle;
-    _right_img = right;
+    // Draw frame
+    NSRectFillUsingOperation(NSMakeRect(frameRect.origin.x, frameRect.origin.y, frameRect.size.width, 1), NSCompositeSourceOver);
+    NSRectFillUsingOperation(NSMakeRect(frameRect.origin.x, frameRect.origin.y + frameRect.size.height-1, frameRect.size.width, 1), NSCompositeSourceOver);
+    NSRectFillUsingOperation(NSMakeRect(frameRect.origin.x, frameRect.origin.y, 1, frameRect.size.height), NSCompositeSourceOver);
+    NSRectFillUsingOperation(NSMakeRect(frameRect.origin.x+frameRect.size.width-1, frameRect.origin.y, 1, frameRect.size.height), NSCompositeSourceOver);
 }
 
 - (void)drawRect:(NSRect)rect
 {
-    NSRect bnds = [self bounds];
-    NSDrawThreePartImage( bnds, _left_img, _middle_img, _right_img, NO, NSCompositeSourceOver, 1, NO );
-}
-
-@end
-
-@interface PositionFormatter()
-{
-    NSCharacterSet *o_forbidden_characters;
-}
-@end
-
-@implementation PositionFormatter
-
-- (id)init
-{
-    self = [super init];
-    NSMutableCharacterSet *nonNumbers = [[[NSCharacterSet decimalDigitCharacterSet] invertedSet] mutableCopy];
-    [nonNumbers removeCharactersInString:@"-:"];
-    o_forbidden_characters = [nonNumbers copy];
-
-    return self;
-}
-
-- (NSString*)stringForObjectValue:(id)obj
-{
-    if([obj isKindOfClass:[NSString class]])
-        return obj;
-    if([obj isKindOfClass:[NSNumber class]])
-        return [obj stringValue];
-
-    return nil;
-}
-
-- (BOOL)getObjectValue:(id*)obj forString:(NSString*)string errorDescription:(NSString**)error
-{
-    *obj = [string copy];
-    return YES;
-}
-
-- (BOOL)isPartialStringValid:(NSString*)partialString newEditingString:(NSString**)newString errorDescription:(NSString**)error
-{
-    if ([partialString rangeOfCharacterFromSet:o_forbidden_characters options:NSLiteralSearch].location != NSNotFound) {
-        return NO;
-    } else {
-        return YES;
-    }
-}
-
-@end
-
-@implementation NSView (EnableSubviews)
-
-- (void)enableSubviews:(BOOL)b_enable
-{
-    for (NSView *o_view in [self subviews]) {
-        [o_view enableSubviews:b_enable];
-
-        // enable NSControl
-        if ([o_view respondsToSelector:@selector(setEnabled:)]) {
-            [(NSControl *)o_view setEnabled:b_enable];
-        }
-        // also "enable / disable" text views
-        if ([o_view respondsToSelector:@selector(setTextColor:)]) {
-            if (b_enable == NO) {
-                [(NSTextField *)o_view setTextColor:[NSColor disabledControlTextColor]];
-            } else {
-                [(NSTextField *)o_view setTextColor:[NSColor controlTextColor]];
-            }
-        }
-
-    }
-}
-
-@end
-
-/*****************************************************************************
- * VLCByteCountFormatter addition
- *****************************************************************************/
-
-@implementation VLCByteCountFormatter
-
-+ (NSString *)stringFromByteCount:(long long)byteCount countStyle:(NSByteCountFormatterCountStyle)countStyle
-{
-    // Use native implementation on >= mountain lion
-    Class byteFormatterClass = NSClassFromString(@"NSByteCountFormatter");
-    if (byteFormatterClass && [byteFormatterClass respondsToSelector:@selector(stringFromByteCount:countStyle:)]) {
-        return [byteFormatterClass stringFromByteCount:byteCount countStyle:NSByteCountFormatterCountStyleFile];
-    }
-
-    float devider = 0.;
-    float returnValue = 0.;
-    NSString *suffix;
-
-    NSNumberFormatter *theFormatter = [[NSNumberFormatter alloc] init];
-    [theFormatter setLocale:[NSLocale currentLocale]];
-    [theFormatter setAllowsFloats:YES];
-
-    NSString *returnString = @"";
-
-    if (countStyle != NSByteCountFormatterCountStyleDecimal)
-        devider = 1024.;
-    else
-        devider = 1000.;
-
-    if (byteCount < 1000) {
-        returnValue = byteCount;
-        suffix = _NS("B");
-        [theFormatter setMaximumFractionDigits:0];
-        goto end;
-    }
-
-    if (byteCount < 1000000) {
-        returnValue = byteCount / devider;
-        suffix = _NS("KB");
-        [theFormatter setMaximumFractionDigits:0];
-        goto end;
-    }
-
-    if (byteCount < 1000000000) {
-        returnValue = byteCount / devider / devider;
-        suffix = _NS("MB");
-        [theFormatter setMaximumFractionDigits:1];
-        goto end;
-    }
-
-    [theFormatter setMaximumFractionDigits:2];
-    if (byteCount < 1000000000000) {
-        returnValue = byteCount / devider / devider / devider;
-        suffix = _NS("GB");
-        goto end;
-    }
-
-    returnValue = byteCount / devider / devider / devider / devider;
-    suffix = _NS("TB");
-
-end:
-    returnString = [NSString stringWithFormat:@"%@ %@", [theFormatter stringFromNumber:[NSNumber numberWithFloat:returnValue]], suffix];
-
-    return returnString;
+    // Draw default to make sure the slider behaves correctly
+    [[NSGraphicsContext currentContext] saveGraphicsState];
+    NSRectClip(NSZeroRect);
+    [super drawRect:rect];
+    [[NSGraphicsContext currentContext] restoreGraphicsState];
+    
+    // Full size
+    rect = [self bounds];
+    int diff = (int)(([[self cell] knobThickness] - 7.0)/2.0) - 1;
+    rect.origin.x += diff-1;
+    rect.origin.y += diff;
+    rect.size.width -= 2*diff-2;
+    rect.size.height -= 2*diff;
+    
+    // Draw dark
+    NSRect knobRect = [[self cell] knobRectFlipped:NO];
+    [[[NSColor blackColor] colorWithAlphaComponent:0.6] set];
+    _drawFrameInRect(rect);
+    _drawKnobInRect(knobRect);
+    
+    // Draw shadow
+    [[[NSColor blackColor] colorWithAlphaComponent:0.1] set];
+    rect.origin.x++;
+    rect.origin.y++;
+    knobRect.origin.x++;
+    knobRect.origin.y++;
+    _drawFrameInRect(rect);
+    _drawKnobInRect(knobRect);
 }
 
 @end

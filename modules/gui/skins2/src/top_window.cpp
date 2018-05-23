@@ -1,11 +1,11 @@
 /*****************************************************************************
  * top_window.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 260872e42034c55ee45c0633f53598a6f2850556 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: top_window.cpp 7267 2004-04-03 20:17:06Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "top_window.hpp"
@@ -28,48 +28,35 @@
 #include "os_window.hpp"
 #include "os_factory.hpp"
 #include "theme.hpp"
+#include "dialogs.hpp"
 #include "var_manager.hpp"
 #include "../commands/cmd_on_top.hpp"
-#include "../commands/cmd_dialogs.hpp"
-#include "../commands/cmd_add_item.hpp"
 #include "../controls/ctrl_generic.hpp"
-#include "../events/evt_refresh.hpp"
 #include "../events/evt_enter.hpp"
 #include "../events/evt_focus.hpp"
 #include "../events/evt_leave.hpp"
-#include "../events/evt_menu.hpp"
 #include "../events/evt_motion.hpp"
 #include "../events/evt_mouse.hpp"
 #include "../events/evt_key.hpp"
 #include "../events/evt_special.hpp"
 #include "../events/evt_scroll.hpp"
-#include "../events/evt_dragndrop.hpp"
 #include "../utils/position.hpp"
 #include "../utils/ustring.hpp"
 
-#include <vlc_actions.h>
-#include <vlc_input.h>
-#include <vlc_url.h>
-#include <list>
+#include <vlc_keys.h>
 
 
 TopWindow::TopWindow( intf_thread_t *pIntf, int left, int top,
                       WindowManager &rWindowManager,
-                      bool dragDrop, bool playOnDrop, bool visible,
-                      GenericWindow::WindowType_t type ):
-    GenericWindow( pIntf, left, top, dragDrop, playOnDrop, NULL, type ),
-    m_initialVisibility( visible ), m_playOnDrop( playOnDrop ),
-    m_rWindowManager( rWindowManager ),
-    m_pActiveLayout( NULL ), m_pLastHitControl( NULL ),
-    m_pCapturingControl( NULL ), m_pFocusControl( NULL ),
-    m_pDragControl( NULL ), m_currModifier( 0 )
+                      bool dragDrop, bool playOnDrop ):
+    GenericWindow( pIntf, left, top, dragDrop, playOnDrop,
+                   NULL),
+    m_rWindowManager( rWindowManager ), m_pActiveLayout( NULL ),
+    m_pLastHitControl( NULL ), m_pCapturingControl( NULL ),
+    m_pFocusControl( NULL ), m_currModifier( 0 )
 {
     // Register as a moving window
     m_rWindowManager.registerWindow( *this );
-
-    // Create the "maximized" variable and register it in the manager
-    m_pVarMaximized = new VarBoolImpl( pIntf );
-    VarManager::instance( pIntf )->registerVar( VariablePtr( m_pVarMaximized ) );
 }
 
 
@@ -82,21 +69,7 @@ TopWindow::~TopWindow()
 
 void TopWindow::processEvent( EvtFocus &rEvtFocus )
 {
-    (void)rEvtFocus;
-}
-
-
-void TopWindow::processEvent( EvtMenu &rEvtMenu )
-{
-    Popup *pPopup = m_rWindowManager.getActivePopup();
-    // We should never receive a menu event when there is no active popup!
-    if( pPopup == NULL )
-    {
-        msg_Warn( getIntf(), "unexpected menu event, ignoring" );
-        return;
-    }
-
-    pPopup->handleEvent( rEvtMenu );
+//    fprintf(stderr, rEvtFocus.getAsString().c_str()) ;
 }
 
 
@@ -137,10 +110,9 @@ void TopWindow::processEvent( EvtMotion &rEvtMotion )
 
 void TopWindow::processEvent( EvtLeave &rEvtLeave )
 {
-    (void)rEvtLeave;
-
     // No more hit control
     setLastHit( NULL );
+
     if( !m_pCapturingControl )
     {
         m_rWindowManager.hideTooltip();
@@ -161,23 +133,27 @@ void TopWindow::processEvent( EvtMouse &rEvtMouse )
         // Raise the window
         m_rWindowManager.raise( *this );
 
-        if( m_pFocusControl != pNewHitControl )
+        if( pNewHitControl && pNewHitControl->isFocusable() )
         {
-            if( m_pFocusControl )
+            // If a new control gains the focus, the previous one loses it
+            if( m_pFocusControl && m_pFocusControl != pNewHitControl )
             {
-                // The previous control loses the focus
                 EvtFocus evt( getIntf(), false );
                 m_pFocusControl->handleEvent( evt );
-                m_pFocusControl = NULL;
             }
-
-            if( pNewHitControl && pNewHitControl->isFocusable() )
+            if( pNewHitControl != m_pFocusControl )
             {
-                // The hit control gains the focus
                 m_pFocusControl = pNewHitControl;
-                EvtFocus evt( getIntf(), true );
+                EvtFocus evt( getIntf(), false );
                 pNewHitControl->handleEvent( evt );
             }
+        }
+        else if( m_pFocusControl )
+        {
+            // The previous control loses the focus
+            EvtFocus evt( getIntf(), false );
+            m_pFocusControl->handleEvent( evt );
+            m_pFocusControl = NULL;
         }
     }
 
@@ -205,14 +181,55 @@ void TopWindow::processEvent( EvtKey &rEvtKey )
     }
 
     // Only do the action when the key is down
-    if( rEvtKey.getKeyState() == EvtKey::kDown )
+    if( rEvtKey.getAsString().find( "key:down") != string::npos )
     {
-        getIntf()->p_sys->p_dialogs->sendKey( rEvtKey.getModKey() );
+        //XXX not to be hardcoded !
+        // Ctrl-S = Change skin
+        if( (rEvtKey.getMod() & EvtInput::kModCtrl) &&
+            rEvtKey.getKey() == 's' )
+        {
+            Dialogs *pDialogs = Dialogs::instance( getIntf() );
+            if( pDialogs != NULL )
+            {
+                pDialogs->showChangeSkin();
+            }
+            return;
+        }
+
+        //XXX not to be hardcoded !
+        // Ctrl-T = Toggle on top
+        if( (rEvtKey.getMod() & EvtInput::kModCtrl) &&
+            rEvtKey.getKey() == 't' )
+        {
+            CmdOnTop cmd( getIntf() );
+            cmd.execute();
+            return;
+        }
+
+        vlc_value_t val;
+        // Set the key
+        val.i_int = rEvtKey.getKey();
+        // Set the modifiers
+        if( rEvtKey.getMod() & EvtInput::kModAlt )
+        {
+            val.i_int |= KEY_MODIFIER_ALT;
+        }
+        if( rEvtKey.getMod() & EvtInput::kModCtrl )
+        {
+            val.i_int |= KEY_MODIFIER_CTRL;
+        }
+        if( rEvtKey.getMod() & EvtInput::kModShift )
+        {
+            val.i_int |= KEY_MODIFIER_SHIFT;
+        }
+
+        var_Set( getIntf()->p_vlc, "key-pressed", val );
     }
 
-    // Always store the modifier, which can be needed for scroll events.
+    // Always store the modifier, which can be needed for scroll events
     m_currModifier = rEvtKey.getMod();
 }
+
 
 void TopWindow::processEvent( EvtScroll &rEvtScroll )
 {
@@ -224,96 +241,37 @@ void TopWindow::processEvent( EvtScroll &rEvtScroll )
                                                   rEvtScroll.getYPos());
     setLastHit( pNewHitControl );
 
-    // send a mouse event to the right control when scrollable
-    // if none, send it directly to the vlc core
-    CtrlGeneric *pHitControl = m_pCapturingControl ?
-                               m_pCapturingControl : pNewHitControl;
+    // Send a mouse event to the hit control, or to the control
+    // that captured the mouse, if any
+    CtrlGeneric *pActiveControl = pNewHitControl;
 
-    if( pHitControl && pHitControl->isScrollable() )
+    if( m_pCapturingControl )
     {
-        pHitControl->handleEvent( rEvtScroll );
+        pActiveControl = m_pCapturingControl;
+    }
+    if( pActiveControl )
+    {
+        pActiveControl->handleEvent( rEvtScroll );
     }
     else
     {
-        // Treat the scroll event as a hotkey plus current modifiers
-        int i = (rEvtScroll.getDirection() == EvtScroll::kUp ?
-                 KEY_MOUSEWHEELUP : KEY_MOUSEWHEELDOWN) | m_currModifier;
-
-        getIntf()->p_sys->p_dialogs->sendKey( i );
-    }
-}
-
-void TopWindow::processEvent( EvtDragDrop &rEvtDragDrop )
-{
-    // Get the control hit by the mouse
-    int xPos = rEvtDragDrop.getXPos() - getLeft();
-    int yPos = rEvtDragDrop.getYPos() - getTop();
-
-    CtrlGeneric *pHitControl = findHitControl( xPos, yPos );
-    if( pHitControl && pHitControl->getType() == "tree" )
-    {
-        // Send a dragDrop event
-        EvtDragDrop evt( getIntf(), xPos, yPos, rEvtDragDrop.getFiles() );
-        pHitControl->handleEvent( evt );
-    }
-    else
-    {
-        input_thread_t *pInput = getIntf()->p_sys->p_input;
-        bool is_subtitle = false;
-        std::list<std::string> files = rEvtDragDrop.getFiles();
-        if( files.size() == 1 && pInput != NULL )
+        // Treat the scroll event as a hotkey
+        vlc_value_t val;
+        if( rEvtScroll.getDirection() == EvtScroll::kUp )
         {
-            std::list<std::string>::const_iterator it = files.begin();
-            is_subtitle = !input_AddSlave( pInput, SLAVE_TYPE_SPU,
-                                           it->c_str(), true, true, true );
+            val.i_int = KEY_MOUSEWHEELUP;
         }
-        if( !is_subtitle )
+        else
         {
-            std::list<std::string>::const_iterator it = files.begin();
-            for( bool first = true; it != files.end(); ++it, first = false )
-            {
-                bool playOnDrop = m_playOnDrop && first;
-                CmdAddItem( getIntf(), it->c_str(), playOnDrop ).execute();
-            }
+            val.i_int = KEY_MOUSEWHEELDOWN;
         }
-    }
-    m_pDragControl = NULL;
-}
+        // Add the modifiers
+        val.i_int |= m_currModifier;
 
-void TopWindow::processEvent( EvtDragOver &rEvtDragOver )
-{
-    // Get the control hit by the mouse
-    int xPos = rEvtDragOver.getXPos() - getLeft();
-    int yPos = rEvtDragOver.getYPos() - getTop();
-
-    CtrlGeneric *pHitControl = findHitControl( xPos, yPos );
-
-    if( m_pDragControl && m_pDragControl != pHitControl )
-    {
-        EvtDragLeave evt( getIntf() );
-        m_pDragControl->handleEvent( evt );
-    }
-
-    m_pDragControl = pHitControl;
-
-    if( m_pDragControl )
-    {
-        // Send a dragOver event
-        EvtDragOver evt( getIntf(), xPos, yPos );
-        m_pDragControl->handleEvent( evt );
+        var_Set( getIntf()->p_vlc, "key-pressed", val );
     }
 }
 
-void TopWindow::processEvent( EvtDragLeave &rEvtDragLeave )
-{
-    (void)rEvtDragLeave;
-    if( m_pDragControl )
-    {
-        EvtDragLeave evt( getIntf() );
-        m_pDragControl->handleEvent( evt );
-        m_pDragControl = NULL;
-    }
-}
 
 void TopWindow::forwardEvent( EvtGeneric &rEvt, CtrlGeneric &rCtrl )
 {
@@ -334,37 +292,12 @@ void TopWindow::refresh( int left, int top, int width, int height )
 
 void TopWindow::setActiveLayout( GenericLayout *pLayout )
 {
-    bool isVisible = getVisibleVar().get();
-    if( m_pActiveLayout )
-    {
-        if( isVisible )
-        {
-            m_pActiveLayout->onHide();
-        }
-        // The current layout becomes inactive
-        m_pActiveLayout->getActiveVar().set( false );
-
-        // if both layouts have the same original size, infer a
-        // subsequent resize of the active layout has to be applied
-        // to the new layout about to become active
-        if( pLayout->isTightlyCoupledWith( *m_pActiveLayout ) )
-            pLayout->resize( m_pActiveLayout->getWidth(),
-                             m_pActiveLayout->getHeight() );
-    }
-
     pLayout->setWindow( this );
     m_pActiveLayout = pLayout;
     // Get the size of the layout and resize the window
     resize( pLayout->getWidth(), pLayout->getHeight() );
-
-    // The new layout is active
-    pLayout->getActiveVar().set( true );
-
-    if( isVisible )
-    {
-        pLayout->onShow();
-    }
-
+    updateShape();
+    pLayout->refreshAll();
 }
 
 
@@ -376,29 +309,17 @@ const GenericLayout& TopWindow::getActiveLayout() const
 
 void TopWindow::innerShow()
 {
-    // First, refresh the layout
+    // First, refresh the layout and update the shape of the window
     if( m_pActiveLayout )
     {
-        m_pActiveLayout->onShow();
+        updateShape();
+        m_pActiveLayout->refreshAll();
     }
-
     // Show the window
     GenericWindow::innerShow();
 }
 
-
-void TopWindow::innerHide()
-{
-    if( m_pActiveLayout )
-    {
-        // Notify the active layout
-        m_pActiveLayout->onHide();
-    }
-    // Hide the window
-    GenericWindow::innerHide();
-}
-
-
+ 
 void TopWindow::updateShape()
 {
     // Set the shape of the window
@@ -429,7 +350,7 @@ void TopWindow::onControlRelease( const CtrlGeneric &rCtrl )
     }
     else
     {
-        msg_Dbg( getIntf(), "control had not captured the mouse" );
+        msg_Dbg( getIntf(), "Control had not captured the mouse" );
     }
 
     // Send an enter event to the control under the mouse, if it doesn't
@@ -458,18 +379,9 @@ void TopWindow::onTooltipChange( const CtrlGeneric &rCtrl )
     // Check that the control is the active one
     if( m_pLastHitControl && m_pLastHitControl == &rCtrl )
     {
-        if( rCtrl.getTooltipText().size() )
-        {
-            // Set the tooltip text variable
-            VarManager *pVarManager = VarManager::instance( getIntf() );
-            pVarManager->getTooltipText().set( rCtrl.getTooltipText() );
-            m_rWindowManager.showTooltip();
-        }
-        else
-        {
-            // Nothing to display, so hide the tooltip
-            m_rWindowManager.hideTooltip();
-        }
+        // Set the tooltip text variable
+        VarManager *pVarManager = VarManager::instance( getIntf() );
+        pVarManager->getTooltipText().set( rCtrl.getTooltipText() );
     }
 }
 
@@ -482,14 +394,14 @@ CtrlGeneric *TopWindow::findHitControl( int xPos, int yPos )
     }
 
     // Get the controls in the active layout
-    const std::list<LayeredControl> &ctrlList = m_pActiveLayout->getControlList();
-    std::list<LayeredControl>::const_reverse_iterator iter;
+    const list<LayeredControl> &ctrlList = m_pActiveLayout->getControlList();
+    list<LayeredControl>::const_reverse_iterator iter;
 
     // New control hit by the mouse
     CtrlGeneric *pNewHitControl = NULL;
 
     // Loop on the control list to find the uppest hit control
-    for( iter = ctrlList.rbegin(); iter != ctrlList.rend(); ++iter )
+    for( iter = ctrlList.rbegin(); iter != ctrlList.rend(); iter++ )
     {
         // Get the position of the control in the layout
         const Position *pos = (*iter).m_pControl->getPosition();
@@ -509,7 +421,7 @@ CtrlGeneric *TopWindow::findHitControl( int xPos, int yPos )
         }
         else
         {
-            msg_Dbg( getIntf(), "control at NULL position" );
+            msg_Dbg( getIntf(), "Control at NULL position" );
         }
     }
 

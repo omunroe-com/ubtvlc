@@ -1,11 +1,11 @@
 /*****************************************************************************
  * evt_scroll.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 361084318ce8601a7a1668afa2a594acf5a58631 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: evt_scroll.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef EVT_SCROLL_HPP
@@ -31,32 +31,33 @@
 /// Class for mouse scroll events
 class EvtScroll: public EvtInput
 {
-public:
-    enum Direction_t
-    {
-        kUp,
-        kDown
-    };
+    public:
+        typedef enum
+        {
+            kUp,
+            kDown
+        } Direction_t;
 
-    EvtScroll( intf_thread_t *pIntf, int xPos, int yPos,
-               Direction_t direction, int mod = kModNone )
-             : EvtInput( pIntf, mod ), m_xPos( xPos ), m_yPos( yPos ),
-               m_direction( direction ) { }
-    virtual ~EvtScroll() { }
-    virtual const std::string getAsString() const;
+        EvtScroll( intf_thread_t *pIntf, int xPos, int yPos,
+                   Direction_t direction, int mod = kModNone ):
+            EvtInput( pIntf, mod ), m_xPos( xPos ), m_yPos( yPos ),
+            m_direction( direction ) {}
+        virtual ~EvtScroll() {}
 
-    // Return the event coordinates
-    int getXPos() const { return m_xPos; }
-    int getYPos() const { return m_yPos; }
+        // Return the event coordinates
+        int getXPos() const { return m_xPos; }
+        int getYPos() const { return m_yPos; }
 
-    // Return the direction
-    Direction_t getDirection() const { return m_direction; }
+        // Return the direction
+        Direction_t getDirection() const { return m_direction; }
 
-private:
-    /// Coordinates of the mouse relative to the window
-    int m_xPos, m_yPos;
-    /// Scroll direction
-    Direction_t m_direction;
+        virtual const string getAsString() const;
+
+    private:
+        /// Coordinates of the mouse relative to the window
+        int m_xPos, m_yPos;
+        /// Scroll direction
+        Direction_t m_direction;
 };
 
 

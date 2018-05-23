@@ -1,11 +1,11 @@
 /*****************************************************************************
  * cmd_layout.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: dec56d13a2c0a66db91882a80ead0502d184bf74 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: cmd_layout.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,32 +17,35 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef CMD_LAYOUT_HPP
 #define CMD_LAYOUT_HPP
 
 #include "cmd_generic.hpp"
+#include <string>
 
-class TopWindow;
-class GenericLayout;
 
 /// "Change layout" command
 class CmdLayout: public CmdGeneric
 {
-public:
-    CmdLayout( intf_thread_t *pIntf, TopWindow &rWindow,
-               GenericLayout &rLayout );
-    virtual ~CmdLayout() { }
-    virtual void execute();
-    virtual std::string getType() const { return "change layout"; }
+    public:
+        CmdLayout( intf_thread_t *pIntf, const string &windowId,
+                   const string &layoutId );
+        virtual ~CmdLayout() {}
 
-private:
-    TopWindow &m_rWindow;
-    GenericLayout &m_rLayout;
+        /// This method does the real job of the command
+        virtual void execute();
+
+        /// Return the type of the command
+        virtual string getType() const { return "change layout"; }
+
+    private:
+        string m_windowId;
+        string m_layoutId;
 };
 
 #endif

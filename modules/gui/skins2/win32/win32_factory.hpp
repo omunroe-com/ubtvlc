@@ -1,11 +1,11 @@
 /*****************************************************************************
  * win32_factory.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: c5bf1b08decba27a19e1c97501000697de4b3dee $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: win32_factory.hpp 7574 2004-05-01 14:23:40Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,139 +17,104 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef WIN32_FACTORY_HPP
 #define WIN32_FACTORY_HPP
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
+#ifndef _WIN32_WINNT
+#   define _WIN32_WINNT 0x0500
 #endif
 
 #include <windows.h>
-#include <shellapi.h>
-// #include <wingdi.h>
 #include "../src/os_factory.hpp"
-#include "../src/generic_window.hpp"
-
 #include <map>
 
 
 /// Class used to instanciate Win32 specific objects
 class Win32Factory: public OSFactory
 {
-public:
-    Win32Factory( intf_thread_t *pIntf );
-    virtual ~Win32Factory();
+    public:
+        Win32Factory( intf_thread_t *pIntf );
+        virtual ~Win32Factory();
 
-    /// Initialization method
-    virtual bool init();
+        /// Initialization method
+        virtual bool init();
 
-    /// Instantiate an object OSGraphics
-    virtual OSGraphics *createOSGraphics( int width, int height );
+        /// Instantiate an object OSGraphics.
+        virtual OSGraphics *createOSGraphics( int width, int height );
 
-    /// Get the instance of the singleton OSLoop
-    virtual OSLoop *getOSLoop();
+        /// Get the instance of the singleton OSLoop.
+        virtual OSLoop *getOSLoop();
 
-    /// Destroy the instance of OSLoop
-    virtual void destroyOSLoop();
+        /// Destroy the instance of OSLoop.
+        virtual void destroyOSLoop();
 
-    /// Minimize all the windows
-    virtual void minimize();
+        /// Instantiate an OSTimer with the given callback
+        virtual OSTimer *createOSTimer( const Callback &rCallback );
 
-    /// Restore the minimized windows
-    virtual void restore();
+        /// Instantiate an OSWindow object
+        virtual OSWindow *createOSWindow( GenericWindow &rWindow,
+                                          bool dragDrop, bool playOnDrop,
+                                          OSWindow *pParent );
 
-    /// Add an icon in the system tray
-    virtual void addInTray();
+        /// Instantiate an object OSTooltip.
+        virtual OSTooltip *createOSTooltip();
 
-    /// Remove the icon from the system tray
-    virtual void removeFromTray();
+        /// Get the directory separator
+        virtual const string &getDirSeparator() const { return m_dirSep; }
 
-    /// Show the task in the task bar
-    virtual void addInTaskBar();
+        /// Get the resource path
+        virtual const list<string> &getResourcePath() const
+            { return m_resourcePath; }
 
-    /// Remove the task from the task bar
-    virtual void removeFromTaskBar();
+        /// Get the screen size
+        virtual int getScreenWidth() const;
+        virtual int getScreenHeight() const;
 
-    /// Instantiate an OSTimer with the given command
-    virtual OSTimer *createOSTimer( CmdGeneric &rCmd );
+        /// Get the work area (screen area without taskbars)
+        virtual Rect getWorkArea() const;
 
-    /// Instantiate an OSWindow object
-    virtual OSWindow *createOSWindow( GenericWindow &rWindow,
-                                      bool dragDrop, bool playOnDrop,
-                                      OSWindow *pParent,
-                                      GenericWindow::WindowType_t type );
+        /// Get the position of the mouse
+        virtual void getMousePos( int &rXPos, int &rYPos ) const;
 
-    /// Instantiate an object OSTooltip
-    virtual OSTooltip *createOSTooltip();
+        /// Change the cursor
+        virtual void changeCursor( CursorType_t type ) const;
 
-    /// Instantiate an object OSPopup
-    virtual OSPopup *createOSPopup();
+        /// Delete a directory recursively
+        virtual void rmDir( const string &rPath );
 
-    /// Get the directory separator
-    virtual const std::string &getDirSeparator() const { return m_dirSep; }
+        /// Map to find the GenericWindow associated with a Win32Window
+        map<HWND, GenericWindow*> m_windowMap;
 
-    /// Get the resource path
-    virtual const std::list<std::string> &getResourcePath() const
-        { return m_resourcePath; }
+        /// Functions dynamically loaded from the dll, because they don't exist
+        /// on Win9x/NT4
+        // We dynamically load msimg32.dll to get a pointer to TransparentBlt()
+        BOOL (WINAPI *TransparentBlt)( HDC, int, int, int, int,
+                                       HDC, int, int, int, int, UINT );
+        BOOL (WINAPI *AlphaBlend)( HDC, int, int, int, int,
+                                   HDC, int, int, int, int, BLENDFUNCTION );
 
-    /// Get the screen size
-    virtual int getScreenWidth() const;
-    virtual int getScreenHeight() const;
+        // Idem for user32.dll and SetLayeredWindowAttributes()
+        BOOL (WINAPI *SetLayeredWindowAttributes)( HWND, COLORREF,
+                                                   BYTE, DWORD );
 
-    /// Get Monitor Information
-    virtual void getMonitorInfo( const GenericWindow &rWindow,
-                                 int* x, int* y,
-                                 int* width, int* height ) const;
-    virtual void getMonitorInfo( int numScreen,
-                                 int* x, int* y,
-                                 int* width, int* height ) const;
-
-    /// Get the work area (screen area without taskbars)
-    virtual SkinsRect getWorkArea() const;
-
-    /// Get the position of the mouse
-    virtual void getMousePos( int &rXPos, int &rYPos ) const;
-
-    /// Change the cursor
-    virtual void changeCursor( CursorType_t type ) const;
-
-    /// Delete a directory recursively
-    virtual void rmDir( const std::string &rPath );
-
-    /// Map to find the GenericWindow associated with a Win32Window
-    std::map<HWND, GenericWindow*> m_windowMap;
-
-    HWND getParentWindow() { return m_hParentWindow; }
-
-    /// Callback function (Windows Procedure)
-    static LRESULT CALLBACK Win32Proc( HWND hwnd, UINT uMsg,
-                                       WPARAM wParam, LPARAM lParam );
-
-    /// Callback (enumerate multiple screens)
-    static BOOL CALLBACK MonitorEnumProc( HMONITOR hMonitor, HDC hdcMonitor,
-                                          LPRECT lprcMonitor, LPARAM dwData );
-private:
-    /// Handle of the instance
-    HINSTANCE m_hInst;
-    /// Handle of the parent window
-    HWND m_hParentWindow;
-    /// Structure for the system tray
-    NOTIFYICONDATA m_trayIcon;
-    /// Handle on msimg32.dll (for TransparentBlt)
-    HINSTANCE m_hMsimg32;
-    /// Handle on user32.dll (for SetLayeredWindowAttributes)
-    HINSTANCE m_hUser32;
-    /// Directory separator
-    const std::string m_dirSep;
-    /// Resource path
-    std::list<std::string> m_resourcePath;
-    /// Monitors detected
-    std::list<HMONITOR> m_monitorList;
+    private:
+        /// Handle of the instance
+        HINSTANCE m_hInst;
+        /// Handle of the parent window
+        HWND m_hParentWindow;
+        /// Handle on msimg32.dll (for TransparentBlt)
+        HINSTANCE m_hMsimg32;
+        /// Handle on user32.dll (for SetLayeredWindowAttributes)
+        HINSTANCE m_hUser32;
+        /// Directory separator
+        const string m_dirSep;
+        /// Resource path
+        list<string> m_resourcePath;
 };
 
 

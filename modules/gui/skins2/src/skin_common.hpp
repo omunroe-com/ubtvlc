@@ -1,11 +1,11 @@
 /*****************************************************************************
  * skin_common.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: d748e51283a4e3e9c136bc334a868fbb2b7f80c9 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: skin_common.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,24 +17,19 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef SKIN_COMMON_HPP
 #define SKIN_COMMON_HPP
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
-#include <vlc_common.h>
-#include <vlc_interface.h>
-#include <vlc_charset.h>
-#include <vlc_fs.h>
+#include <vlc/vlc.h>
+#include <vlc/intf.h>
 
 #include <string>
+using namespace std;
 
 class AsyncQueue;
 class Logger;
@@ -44,47 +39,24 @@ class OSFactory;
 class OSLoop;
 class VarManager;
 class VlcProc;
-class VoutManager;
-class ArtManager;
 class Theme;
-class ThemeRepository;
 
 #ifndef M_PI
 #   define M_PI 3.14159265358979323846
 #endif
 
-#ifdef _MSC_VER
-// turn off 'warning C4355: 'this' : used in base member initializer list'
-#pragma warning ( disable:4355 )
-// turn off 'identifier was truncated to '255' characters in the debug info'
-#pragma warning ( disable:4786 )
-#endif
+// Useful macros
+#define SKINS_DELETE( p ) \
+   if( p ) \
+   { \
+       delete p; \
+   } \
+   else \
+   { \
+       msg_Err( getIntf(), "delete NULL pointer in %s at line %d", \
+                __FILE__, __LINE__ ); \
+   }
 
-#ifdef X11_SKINS
-typedef uint32_t vlc_wnd_type;
-#else
-typedef void* vlc_wnd_type;
-#endif
-
-/// Wrapper around FromLocale, to avoid the need to call LocaleFree()
-static inline std::string sFromLocale( const std::string &rLocale )
-{
-    const char *s = FromLocale( rLocale.c_str() );
-    std::string res = s;
-    LocaleFree( s );
-    return res;
-}
-
-#ifdef _WIN32
-/// Wrapper around FromWide, to avoid the need to call free()
-static inline std::string sFromWide( const std::wstring &rWide )
-{
-    char *s = FromWide( rWide.c_str() );
-    std::string res = s;
-    free( s );
-    return res;
-}
-#endif
 
 //---------------------------------------------------------------------------
 // intf_sys_t: description and status of skin interface
@@ -93,6 +65,12 @@ struct intf_sys_t
 {
     /// The input thread
     input_thread_t *p_input;
+
+    /// The playlist thread
+    playlist_t *p_playlist;
+
+    /// Message bank subscription
+    msg_subscription_t *p_sub;
 
     // "Singleton" objects: MUST be initialized to NULL !
     /// Logger
@@ -111,39 +89,47 @@ struct intf_sys_t
     VarManager *p_varManager;
     /// VLC state handler
     VlcProc *p_vlcProc;
-    /// Vout manager
-    VoutManager *p_voutManager;
-    /// Art manager
-    ArtManager *p_artManager;
-    /// Theme repository
-    ThemeRepository *p_repository;
 
     /// Current theme
     Theme *p_theme;
-
-    /// synchronisation at start of interface
-    vlc_thread_t thread;
-    vlc_mutex_t  init_lock;
-    vlc_cond_t   init_wait;
-    bool         b_error;
-    bool         b_ready;
 };
 
 
 /// Base class for all skin classes
 class SkinObject
 {
-public:
-    SkinObject( intf_thread_t *pIntf ): m_pIntf( pIntf ) { }
-    virtual ~SkinObject() { }
+    public:
+        SkinObject( intf_thread_t *pIntf ): m_pIntf( pIntf ) {}
+        virtual ~SkinObject() {}
 
-    /// Getter (public because it is used in C callbacks in the win32
-    /// interface)
-    intf_thread_t *getIntf() const { return m_pIntf; }
-    playlist_t *getPL() const { return pl_Get(m_pIntf); }
+        /// Getter (public because it is used in C callbacks in the win32
+        /// interface)
+        intf_thread_t *getIntf() const { return m_pIntf; }
 
-private:
-    intf_thread_t *m_pIntf;
+        /// Class for callbacks
+        class Callback {
+            public:
+                /// Type for callback methods
+                typedef void (*CallbackFunc_t)( SkinObject* );
+
+                /// Create a callback with the given object and function
+                Callback( SkinObject *pObj, CallbackFunc_t pFunc ):
+                    m_pObj( pObj ), m_pFunc( pFunc ) {}
+                ~Callback() {}
+
+                /// Getters
+                SkinObject *getObj() const { return m_pObj; }
+                CallbackFunc_t getFunc() const { return m_pFunc; }
+
+            private:
+                /// Pointer on the callback object
+                SkinObject *const m_pObj;
+                /// Pointer on the callback method
+                CallbackFunc_t m_pFunc;
+        };
+
+    private:
+        intf_thread_t *m_pIntf;
 };
 
 

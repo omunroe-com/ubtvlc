@@ -1,11 +1,11 @@
 /*****************************************************************************
  * cmd_add_item.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: a2c47f4bd9d89191c8ea97bddb9858cde0f82357 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: cmd_add_item.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef CMD_ADD_ITEM_HPP
@@ -32,18 +32,22 @@
 /// "Add item" command
 class CmdAddItem: public CmdGeneric
 {
-public:
-    CmdAddItem( intf_thread_t *pIntf, const std::string &rName, bool playNow )
-              : CmdGeneric( pIntf ), m_name( rName ), m_playNow( playNow ) { }
-    virtual ~CmdAddItem() { }
-    virtual void execute();
-    virtual std::string getType() const { return "add item"; }
+    public:
+        CmdAddItem( intf_thread_t *pIntf, const string &rName, bool playNow ):
+            CmdGeneric( pIntf ), m_name( rName ), m_playNow( playNow ) {}
+        virtual ~CmdAddItem() {}
 
-private:
-    /// Name of the item to enqueue
-    std::string m_name;
-    /// Should we play the item immediately?
-    bool m_playNow;
+        /// This method does the real job of the command
+        virtual void execute();
+
+        /// Return the type of the command
+        virtual string getType() const { return "add item"; }
+
+    private:
+        /// Name of the item to enqueue
+        string m_name;
+        /// Should we play the item immediately?
+        bool m_playNow;
 };
 
 #endif

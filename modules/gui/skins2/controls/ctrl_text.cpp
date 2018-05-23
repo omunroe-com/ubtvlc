@@ -1,12 +1,11 @@
 /*****************************************************************************
  * ctrl_text.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 729fdab85ded06622fb878fda7a91a85088710bd $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ctrl_text.cpp 7480 2004-04-25 15:04:45Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teuli√®re <ipkiss@via.ecp.fr>
- *          Erwan Tulou      <erwan10 At videolan Dot org<
+ *          Olivier TeuliËre <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "ctrl_text.hpp"
@@ -36,25 +35,25 @@
 #include "../utils/var_text.hpp"
 
 
-#define MOVING_TEXT_STEP 1
-#define MOVING_TEXT_DELAY 30
+#define MOVING_TEXT_STEP 3
+#define MOVING_TEXT_DELAY 200
 #define SEPARATOR_STRING "   "
 
 
 CtrlText::CtrlText( intf_thread_t *pIntf, VarText &rVariable,
                     const GenericFont &rFont, const UString &rHelp,
-                    uint32_t color, VarBool *pVisible, VarBool *pFocus,
-                    Scrolling_t scrollMode, Align_t alignment ):
+                    uint32_t color, VarBool *pVisible ):
     CtrlGeneric( pIntf, rHelp, pVisible ), m_fsm( pIntf ),
-    m_rVariable( rVariable ), m_cmdToManual( this ),
-    m_cmdManualMoving( this ), m_cmdManualStill( this ),
-    m_cmdMove( this ), m_pEvt( NULL ), m_rFont( rFont ),
-    m_color( color ), m_scrollMode( scrollMode ), m_alignment( alignment ),
-    m_pFocus( pFocus), m_pImg( NULL ), m_pImgDouble( NULL ),
-    m_pCurrImg( NULL ), m_xPos( 0 ), m_xOffset( 0 ),
-    m_cmdUpdateText( this )
+    m_rVariable( rVariable ), m_cmdToManual( this, &transToManual ),
+    m_cmdManualMoving( this, &transManualMoving ),
+    m_cmdManualStill( this, &transManualStill ),
+    m_cmdMove( this, &transMove ),
+    m_pEvt( NULL ), m_rFont( rFont ), m_color( color ),
+    m_pImg( NULL ), m_pImgDouble( NULL ), m_pCurrImg( NULL ),
+    m_xPos( 0 ), m_xOffset( 0 )
 {
-    m_pTimer = OSFactory::instance( pIntf )->createOSTimer( m_cmdUpdateText );
+    m_pTimer = OSFactory::instance( getIntf() )->createOSTimer(
+        Callback( this, &updateText ) );
 
     // States
     m_fsm.addState( "still" );
@@ -65,49 +64,47 @@ CtrlText::CtrlText( intf_thread_t *pIntf, VarText &rVariable,
     m_fsm.addState( "outMoving" );
 
     // Transitions
+    m_fsm.addTransition( "still", "mouse:left:down", "manual1",
+                         &m_cmdToManual );
+    m_fsm.addTransition( "manual1", "mouse:left:up", "moving",
+                         &m_cmdManualMoving );
+    m_fsm.addTransition( "moving", "mouse:left:down", "manual2",
+                         &m_cmdToManual );
+    m_fsm.addTransition( "manual2", "mouse:left:up", "still",
+                         &m_cmdManualStill );
+    m_fsm.addTransition( "manual1", "motion", "manual1", &m_cmdMove );
+    m_fsm.addTransition( "manual2", "motion", "manual2", &m_cmdMove );
     m_fsm.addTransition( "still", "leave", "outStill" );
     m_fsm.addTransition( "outStill", "enter", "still" );
-    if( m_scrollMode == kManual )
-    {
-        m_fsm.addTransition( "still", "mouse:left:down", "manual1",
-                             &m_cmdToManual );
-        m_fsm.addTransition( "manual1", "mouse:left:up", "still",
-                             &m_cmdManualStill );
-        m_fsm.addTransition( "manual1", "motion", "manual1", &m_cmdMove );
-    }
-    else if( m_scrollMode == kAutomatic )
-    {
-        m_fsm.addTransition( "still", "mouse:left:down", "manual1",
-                             &m_cmdToManual );
-        m_fsm.addTransition( "manual1", "mouse:left:up", "moving",
-                             &m_cmdManualMoving );
-        m_fsm.addTransition( "moving", "mouse:left:down", "manual2",
-                             &m_cmdToManual );
-        m_fsm.addTransition( "manual2", "mouse:left:up", "still",
-                             &m_cmdManualStill );
-        m_fsm.addTransition( "manual1", "motion", "manual1", &m_cmdMove );
-        m_fsm.addTransition( "manual2", "motion", "manual2", &m_cmdMove );
-        m_fsm.addTransition( "moving", "leave", "outMoving" );
-        m_fsm.addTransition( "outMoving", "enter", "moving" );
-    }
+    m_fsm.addTransition( "moving", "leave", "outMoving" );
+    m_fsm.addTransition( "outMoving", "enter", "moving" );
 
     // Initial state
-    m_fsm.setState( (m_scrollMode != kAutomatic) ? "outStill" : "outMoving" );
+    m_fsm.setState( "moving" );
 
     // Observe the variable
     m_rVariable.addObserver( this );
 
-    // initialize pictures
-    setPictures( m_rVariable.get() );
+    // Set the text
+    displayText( m_rVariable.get() );
 }
 
 
 CtrlText::~CtrlText()
 {
     m_rVariable.delObserver( this );
-    delete m_pTimer;
-    delete m_pImg;
-    delete m_pImgDouble;
+    if( m_pTimer )
+    {
+        delete m_pTimer;
+    }
+    if( m_pImg )
+    {
+        delete m_pImg;
+    }
+    if( m_pImgDouble )
+    {
+        delete m_pImgDouble;
+    }
 }
 
 
@@ -122,9 +119,6 @@ void CtrlText::handleEvent( EvtGeneric &rEvent )
 
 bool CtrlText::mouseOver( int x, int y ) const
 {
-    if( !m_pFocus->get() )
-        return false;
-
     if( m_pCurrImg )
     {
         // We have 3 different ways of deciding when to return true here:
@@ -154,48 +148,19 @@ bool CtrlText::mouseOver( int x, int y ) const
 }
 
 
-void CtrlText::draw( OSGraphics &rImage, int xDest, int yDest, int w, int h )
+void CtrlText::draw( OSGraphics &rImage, int xDest, int yDest )
 {
-    rect clip( xDest, yDest, w, h );
-    const Position *pPos = getPosition();
     if( m_pCurrImg )
     {
         // Compute the dimensions to draw
-        int width = std::min( m_pCurrImg->getWidth() + m_xPos,
+        int width = min( m_pCurrImg->getWidth() + m_xPos,
                          getPosition()->getWidth() );
-        int height = std::min( m_pCurrImg->getHeight(), getPosition()->getHeight() );
+        int height = min( m_pCurrImg->getHeight(), getPosition()->getHeight() );
         // Draw the current image
         if( width > 0 && height > 0 )
         {
-            int offset = 0;
-            if( m_alignment == kLeft )
-            {
-                // We align to the left
-                offset = 0;
-            }
-            else if( m_alignment == kRight &&
-                     width < getPosition()->getWidth() )
-
-            {
-                // The text is shorter than the width of the control, so we
-                // can align it to the right
-                offset = getPosition()->getWidth() - width;
-            }
-            else if( m_alignment == kCenter &&
-                     width < getPosition()->getWidth() )
-            {
-                // The text is shorter than the width of the control, so we
-                // can center it
-                offset = (getPosition()->getWidth() - width) / 2;
-            }
-            rect region( pPos->getLeft() + offset,
-                         pPos->getTop(), width, height );
-            rect inter;
-            if( rect::intersect( region, clip, &inter ) )
-                rImage.drawBitmap( *m_pCurrImg, -m_xPos + inter.x - region.x,
-                                   inter.y - region.y,
-                                   inter.x, inter.y,
-                                   inter.width, inter.height, true );
+            rImage.drawBitmap( *m_pCurrImg, -m_xPos, 0, xDest, yDest,
+                            width, height );
         }
     }
 }
@@ -214,186 +179,163 @@ void CtrlText::setText( const UString &rText, uint32_t color )
 }
 
 
-void CtrlText::onUpdate( Subject<VarText> &rVariable, void* arg )
+void CtrlText::onUpdate( Subject<VarText> &rVariable )
 {
-    (void)rVariable; (void)arg;
-    if( isVisible() )
-    {
-        setPictures( m_rVariable.get() );
-        updateContext();
-        notifyLayout( getPosition()->getWidth(), getPosition()->getHeight() );
-    }
+    displayText( m_rVariable.get() );
 }
 
 
-void CtrlText::onUpdate( Subject<VarBool> &rVariable, void *arg  )
+void CtrlText::displayText( const UString &rText )
 {
-    (void)arg;
-    // Visibility changed
-    if( &rVariable == m_pVisible )
-    {
-        if( isVisible() )
-        {
-            setPictures( m_rVariable.get() );
-            updateContext();
-        }
-
-        // notify in any case
-        notifyLayout( getPosition()->getWidth(), getPosition()->getHeight() );
-    }
-}
-
-
-void CtrlText::setPictures( const UString &rText )
-{
-    // reset the images ('normal' and 'double') from the text
+    // Create the images ('normal' and 'double') from the text
     // 'Normal' image
-    delete m_pImg;
+    if( m_pImg )
+    {
+        delete m_pImg;
+    }
     m_pImg = m_rFont.drawString( rText, m_color );
     if( !m_pImg )
+    {
         return;
-
+    }
     // 'Double' image
     const UString doubleStringWithSep = rText + SEPARATOR_STRING + rText;
-    delete m_pImgDouble;
+    if( m_pImgDouble )
+    {
+        delete m_pImgDouble;
+    }
     m_pImgDouble = m_rFont.drawString( doubleStringWithSep, m_color );
+
+    // Update the current image used, as if the control size had changed
+    onChangePosition();
+    m_xPos = 0;
+
+    if( getPosition() )
+    {
+        // If the control was in the moving state, check if the scrolling is
+        // still necessary
+        const string &rState = m_fsm.getState();
+        if( rState == "moving" || rState == "outMoving" )
+        {
+            if( m_pImg && m_pImg->getWidth() >= getPosition()->getWidth() )
+            {
+                m_pCurrImg = m_pImgDouble;
+                m_pTimer->start( MOVING_TEXT_DELAY, false );
+            }
+            else
+            {
+                m_pTimer->stop();
+            }
+        }
+        notifyLayout();
+    }
 }
 
 
-void CtrlText::updateContext()
+void CtrlText::onChangePosition()
 {
-    if( !m_pImg || !getPosition() )
-        return;
-
-    if( m_pImg->getWidth() < getPosition()->getWidth() )
+    if( m_pImg && getPosition() )
     {
-        m_pCurrImg = m_pImg;
-
-        // When the control becomes wide enough for the text to display,
-        // make sure to stop any scrolling effect
-        m_pTimer->stop();
-        m_xPos = 0;
-    }
-    else
-    {
-        m_pCurrImg = m_pImgDouble;
-    }
-
-    // If the control is in the moving state,
-    // automatically start or stop the timer accordingly
-    const std::string &rState = m_fsm.getState();
-    if( rState == "moving" || rState == "outMoving" )
-    {
-        if( m_pCurrImg == m_pImgDouble )
+        if( m_pImg->getWidth() < getPosition()->getWidth() )
         {
-            m_pTimer->start( MOVING_TEXT_DELAY, false );
+            m_pCurrImg = m_pImg;
         }
         else
         {
-            m_pTimer->stop();
+            m_pCurrImg = m_pImgDouble;
         }
-    }
-
-    // compute alignment
-    if( m_alignment == kRight &&
-        getPosition()->getWidth() < m_pImg->getWidth() )
-    {
-        m_xPos = getPosition()->getWidth() - m_pImg->getWidth();
-    }
-    else if( m_alignment == kCenter &&
-             getPosition()->getWidth() < m_pImg->getWidth() )
-    {
-        m_xPos = (getPosition()->getWidth() - m_pImg->getWidth()) / 2;
     }
     else
     {
-        m_xPos = 0;
+        // m_pImg is a better default value than m_pImgDouble, but anyway we
+        // don't care because the control is never drawn without position :)
+        m_pCurrImg = m_pImg;
     }
 }
 
 
-void CtrlText::onPositionChange()
+void CtrlText::transToManual( SkinObject *pCtrl )
 {
-    updateContext();
-}
-
-
-void CtrlText::onResize()
-{
-    updateContext();
-}
-
-
-void CtrlText::CmdToManual::execute()
-{
-    EvtMouse *pEvtMouse = (EvtMouse*)m_pParent->m_pEvt;
+    CtrlText *pThis = (CtrlText*)pCtrl;
+    EvtMouse *pEvtMouse = (EvtMouse*)pThis->m_pEvt;
 
     // Compute the offset
-    m_pParent->m_xOffset = pEvtMouse->getXPos() - m_pParent->m_xPos;
+    pThis->m_xOffset = pEvtMouse->getXPos() - pThis->m_xPos;
 
-    m_pParent->m_pTimer->stop();
-    m_pParent->captureMouse();
+    pThis->m_pTimer->stop();
+    pThis->captureMouse();
 }
 
 
-void CtrlText::CmdManualMoving::execute()
+void CtrlText::transManualMoving( SkinObject *pCtrl )
 {
-    m_pParent->releaseMouse();
+    CtrlText *pThis = (CtrlText*)pCtrl;
+    pThis->releaseMouse();
 
     // Start the automatic movement, but only if the text is wider than the
-    // control and if the control can scroll (either in manual or automatic
-    // mode)
-    if( m_pParent->m_pCurrImg &&
-        m_pParent->m_pCurrImg == m_pParent->m_pImgDouble )
+    // control
+    if( pThis->m_pImg &&
+        pThis->m_pImg->getWidth() >= pThis->getPosition()->getWidth() )
     {
-        m_pParent->m_pTimer->start( MOVING_TEXT_DELAY, false );
+        // The current image may have been set incorrectly in displayText(), so
+        // set the correct value
+        pThis->m_pCurrImg = pThis->m_pImgDouble;
+
+        pThis->m_pTimer->start( MOVING_TEXT_DELAY, false );
     }
 }
 
 
-void CtrlText::CmdManualStill::execute()
+void CtrlText::transManualStill( SkinObject *pCtrl )
 {
-    m_pParent->releaseMouse();
+    CtrlText *pThis = (CtrlText*)pCtrl;
+    pThis->releaseMouse();
 }
 
 
-void CtrlText::CmdMove::execute()
+void CtrlText::transMove( SkinObject *pCtrl )
 {
-    EvtMouse *pEvtMouse = (EvtMouse*)m_pParent->m_pEvt;
+    CtrlText *pThis = (CtrlText*)pCtrl;
+    EvtMouse *pEvtMouse = (EvtMouse*)pThis->m_pEvt;
 
-    // Move text only when it is larger than the control
-    if( m_pParent->m_pCurrImg &&
-        m_pParent->m_pCurrImg == m_pParent->m_pImgDouble )
+    // Do nothing if the text fits in the control
+    if( pThis->m_pImg &&
+        pThis->m_pImg->getWidth() >= pThis->getPosition()->getWidth() )
     {
+        // The current image may have been set incorrectly in displayText(), so
+        // we set the correct value
+        pThis->m_pCurrImg = pThis->m_pImgDouble;
+
         // Compute the new position of the left side, and make sure it is
         // in the correct range
-        m_pParent->m_xPos = (pEvtMouse->getXPos() - m_pParent->m_xOffset);
-        m_pParent->adjust( m_pParent->m_xPos );
+        pThis->m_xPos = (pEvtMouse->getXPos() - pThis->m_xOffset);
+        pThis->adjust( pThis->m_xPos );
 
-        m_pParent->notifyLayout( m_pParent->getPosition()->getWidth(),
-                                 m_pParent->getPosition()->getHeight() );
+        pThis->notifyLayout();
     }
 }
 
 
-void CtrlText::CmdUpdateText::execute()
+void CtrlText::updateText( SkinObject *pCtrl )
 {
-    m_pParent->m_xPos -= MOVING_TEXT_STEP;
-    m_pParent->adjust( m_pParent->m_xPos );
+    CtrlText *pThis = (CtrlText*)pCtrl;
 
-    m_pParent->notifyLayout( m_pParent->getPosition()->getWidth(),
-                             m_pParent->getPosition()->getHeight() );
+    pThis->m_xPos -= MOVING_TEXT_STEP;
+    pThis->adjust( pThis->m_xPos );
+
+    pThis->notifyLayout();
 }
 
 
 void CtrlText::adjust( int &position )
 {
-    if( !m_pImg || !m_pImgDouble )
-        return;
-
-    // {m_pImgDouble->getWidth() - m_pImg->getWidth()} is the period of the
+    // {m_pImgDouble->getWidth()  - m_pImg->getWidth()} is the period of the
     // bitmap; remember that the string used to generate m_pImgDouble is of the
     // form: "foo  foo", the number of spaces being a parameter
+    if( !m_pImg )
+    {
+        return;
+    }
     position %= m_pImgDouble->getWidth() - m_pImg->getWidth();
     if( position > 0 )
     {

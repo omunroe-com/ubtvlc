@@ -1,11 +1,11 @@
 /*****************************************************************************
  * evt_input.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 80d299f071d586844a76dc3465a2b63fed8f0d32 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: evt_input.cpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,25 +19,24 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "evt_input.hpp"
-#include "vlc_actions.h"
 
-const int
-    EvtInput::kModNone=0,
-    EvtInput::kModAlt=KEY_MODIFIER_ALT,
-    EvtInput::kModShift=KEY_MODIFIER_SHIFT,
-    EvtInput::kModCtrl=KEY_MODIFIER_CTRL,
-    EvtInput::kModMeta=KEY_MODIFIER_META,
-    EvtInput::kModCmd=KEY_MODIFIER_COMMAND;
-
-EvtInput::EvtInput( intf_thread_t *pIntf, int mod )
-    : EvtGeneric( pIntf), m_mod( mod ) { }
+const int EvtInput::kModNone  = 0;
+const int EvtInput::kModAlt   = 1;
+const int EvtInput::kModCtrl  = 2;
+const int EvtInput::kModShift = 4;
 
 
-void EvtInput::addModifier( std::string &rEvtString ) const
+EvtInput::EvtInput( intf_thread_t *pIntf, int mod ):
+    EvtGeneric( pIntf), m_mod( mod )
+{
+}
+
+
+void EvtInput::addModifier( string &rEvtString ) const
 {
     if( m_mod == kModNone )
     {
@@ -45,18 +44,21 @@ void EvtInput::addModifier( std::string &rEvtString ) const
     }
     else
     {
-        std::string m = ":";
+        string modList = ":";
         if( m_mod & kModAlt )
-            m += "alt,";
+        {
+            modList += "alt,";
+        }
         if( m_mod & kModCtrl )
-            m += "ctrl,";
+        {
+            modList += "ctrl,";
+        }
         if( m_mod & kModShift )
-            m += "shift,";
-        if( m_mod & kModMeta )
-            m += "meta,";
-        if( m_mod & kModCmd )
-            m += "cmd,";
-        // Append the result except the last ','
-        rEvtString.insert( rEvtString.end(), m.begin(), m.end()-1 );
+        {
+            modList += "shift,";
+        }
+        // Remove the last ','
+        modList = modList.substr( 0, modList.size() - 1 );
+        rEvtString += modList;
     }
 }

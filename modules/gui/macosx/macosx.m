@@ -1,17 +1,19 @@
 /*****************************************************************************
  * macosx.m: Mac OS X module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2014 VLC authors and VideoLAN
- * $Id: 3c93acfcfb5595ad7ca85b56a908444811a19927 $
+ * Copyright (C) 2001-2003 VideoLAN
+ * $Id: macosx.m 7709 2004-05-18 06:46:05Z fkuehne $
  *
- * Authors: Felix Paul Kühne <fkuehne at videolan dot org>
- *          David Fuhrmann <david dot fuhrmann at googlemail dot com>
+ * Authors: Colin Delacroix <colin@zoy.org>
+ *          Eugenio Jarosiewicz <ej0@cise.ufl.edu>
+ *          Florian G. Pflug <fgp@phlo.org>
+ *          Jon Lech Johansen <jon-vl@nanocrew.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,183 +21,87 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
 #include <stdlib.h>                                      /* malloc(), free() */
+#include <string.h>
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
-#define VLC_MODULE_LICENSE VLC_LICENSE_GPL_2_PLUS
-#include <vlc_common.h>
-#include <vlc_plugin.h>
-#include <vlc_vout_window.h>
+#include <vlc/vlc.h>
 
 /*****************************************************************************
  * External prototypes
  *****************************************************************************/
-int  OpenIntf     (vlc_object_t *);
-void CloseIntf    (vlc_object_t *);
+int  E_(OpenIntf)     ( vlc_object_t * );
+void E_(CloseIntf)    ( vlc_object_t * );
 
-int  WindowOpen   (vout_window_t *, const vout_window_cfg_t *);
-void WindowClose  (vout_window_t *);
+int  E_(OpenVideo)    ( vlc_object_t * );
+void E_(CloseVideo)   ( vlc_object_t * );
 
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
 #define VDEV_TEXT N_("Video device")
-#define VDEV_LONGTEXT N_("Number of the screen to use by default to display " \
-                         "videos in 'fullscreen'. The screen number correspondance can be found in "\
-                         "the video device selection menu.")
+#define VDEV_LONGTEXT N_("Choose a number corresponding to " \
+    "a screen in you video device selection menu and this screen " \
+    "will be used by default as the screen for 'fullscreen'.")
 
 #define OPAQUENESS_TEXT N_("Opaqueness")
-#define OPAQUENESS_LONGTEXT N_("Set the transparency of the video output. 1 is non-transparent (default) " \
-                                "0 is fully transparent.")
+#define OPAQUENESS_LONGTEXT N_( \
+    "Set the transparency of the video output. 1 is non-transparent (default) " \
+    "0 is fully transparent.")
+    
+#define STRETCH_TEXT N_("Stretch Aspect Ratio")
+#define STRETCH_LONGTEXT N_("Instead of keeping the aspect ratio " \
+        "of the movie when resizing the video, stretch the video " \
+        "to fill the entire window." )
 
-#define BLACK_TEXT N_("Black screens in fullscreen")
-#define BLACK_LONGTEXT N_("In fullscreen mode, keep screen where there is no " \
-                          "video displayed black")
+#define MACOSX_VOUT_TEXT N_("video rendering mode")
+#define MACOSX_VOUT_LONGTEXT N_("The default method is OpenGL " \
+        "for Quartz Extreme machines and Quartz for the others.")
 
-#define FSPANEL_TEXT N_("Show Fullscreen controller")
-#define FSPANEL_LONGTEXT N_("Shows a lucent controller when moving the mouse " \
-                            "in fullscreen mode.")
+#define OPENGL_EFFECT_TEXT N_("OpenGL effect")
+#define OPENGL_EFFECT_LONGTEXT N_("Use 'None' to display the video " \
+        "without any fantasy, 'Cube' to let the video play on " \
+        "the faces of a rotating cube, 'Transparent cube' do make this " \
+        "cube transparent." )
 
-#define AUTOPLAY_OSX_TEST N_("Auto-playback of new items")
-#define AUTOPLAY_OSX_LONGTEXT N_("Start playback of new items immediately " \
-                                 "once they were added.")
+#define FILL_TEXT N_("Fill fullscreen")
+#define FILL_LONGTEXT N_("In fullscreen mode, crop the picture if " \
+        "necessary in order to fill the screen without black " \
+        "borders (OpenGL only)." )
 
-#define RECENT_ITEMS_TEXT N_("Keep Recent Items")
-#define RECENT_ITEMS_LONGTEXT N_("By default, VLC keeps a list of the last 10 items. " \
-                                 "This feature can be disabled here.")
+static char * effect_list[] = { "none", "cube", "transparent-cube" };
+static char * effect_list_text[] = { N_("None"), N_("Cube"),
+                                     N_("Transparent cube") };
 
-#define USE_APPLE_REMOTE_TEXT N_("Control playback with the Apple Remote")
-#define USE_APPLE_REMOTE_LONGTEXT N_("By default, VLC can be remotely controlled with the Apple Remote.")
-
-#define USE_APPLE_REMOTE_VOLUME_TEXT N_("Control system volume with the Apple Remote")
-#define USE_APPLE_REMOTE_VOLUME_LONGTEXT N_("By default, VLC will control its own volume with the Apple Remote. However, you can choose to control the global system volume instead.")
-
-#define DISPLAY_STATUS_ICONMENU_TEXT N_("Display VLC status menu icon")
-#define DISPLAY_STATUS_ICONMENU_LONGTEXT N_("By default, VLC will show the statusbar icon menu. However, you can choose to disable it (restart required).")
-
-#define USE_APPLE_REMOTE_PREVNEXT_TEXT N_("Control playlist items with the Apple Remote")
-#define USE_APPLE_REMOTE_PREVNEXT_LONGTEXT N_("By default, VLC will allow you to switch to the next or previous item with the Apple Remote. You can disable this behavior with this option.")
-
-#define USE_MEDIAKEYS_TEXT N_("Control playback with media keys")
-#define USE_MEDIAKEYS_LONGTEXT N_("By default, VLC can be controlled using the media keys on modern Apple " \
-                                  "keyboards.")
-
-#define INTERFACE_STYLE_TEXT N_("Run VLC with dark interface style")
-#define INTERFACE_STYLE_LONGTEXT N_("If this option is enabled, VLC will use the dark interface style. Otherwise, the grey interface style is used.")
-
-#define NATIVE_FULLSCREEN_MODE_ON_LION_TEXT N_("Use the native fullscreen mode")
-#define NATIVE_FULLSCREEN_MODE_ON_LION_LONGTEXT N_("By default, VLC uses the fullscreen mode known from previous Mac OS X releases. It can also use the native fullscreen mode on Mac OS X 10.7 and later.")
-
-#define KEEPSIZE_TEXT N_("Resize interface to the native video size")
-#define KEEPSIZE_LONGTEXT N_("You have two choices:\n" \
-" - The interface will resize to the native video size\n" \
-" - The video will fit to the interface size\n " \
-"By default, interface resize to the native video size.")
-
-#define PAUSE_MINIMIZED_TEXT N_("Pause the video playback when minimized")
-#define PAUSE_MINIMIZED_LONGTEXT N_(\
-"With this option enabled, the playback will be automatically paused when minimizing the window.")
-
-#define ICONCHANGE_TEXT N_("Allow automatic icon changes")
-#define ICONCHANGE_LONGTEXT N_("This option allows the interface to change its icon on various occasions.")
-
-#define LOCK_ASPECT_RATIO_TEXT N_("Lock Aspect Ratio")
-
-#define DIM_KEYBOARD_PLAYBACK_TEXT N_("Dim keyboard backlight during fullscreen playback")
-#define DIM_KEYBOARD_PLAYBACK_LONGTEXT N_("Turn off the MacBook keyboard backlight while a video is playing in fullscreen. Automatic brightness adjustment should be disabled in System Preferences.")
-
-#define JUMPBUTTONS_TEXT N_("Show Previous & Next Buttons")
-#define JUMPBUTTONS_LONGTEXT N_("Shows the previous and next buttons in the main window.")
-
-#define PLAYMODEBUTTONS_TEXT N_("Show Shuffle & Repeat Buttons")
-#define PLAYMODEBUTTONS_LONGTEXT N_("Shows the shuffle and repeat buttons in the main window.")
-
-#define EFFECTSBUTTON_TEXT N_("Show Audio Effects Button")
-#define EFFECTSBUTTON_LONGTEXT N_("Shows the audio effects button in the main window.")
-
-#define ITUNES_TEXT N_("Control external music players")
-#define ITUNES_LONGTEXT N_("VLC will pause and resume supported music players on playback.")
-
-#define LARGE_LISTFONT_TEXT N_("Use large text for list views")
-
-static const int itunes_list[] =
-    { 0, 1, 2 };
-static const char *const itunes_list_text[] = {
-    N_("Do nothing"), N_("Pause iTunes / Spotify"), N_("Pause and resume iTunes / Spotify")
-};
-
-#define CONTINUE_PLAYBACK_TEXT N_("Continue playback where you left off")
-#define CONTINUE_PLAYBACK_LONGTEXT N_("VLC will store playback positions of the last 30 items you played. If you re-open one of those, playback will continue.")
-
-static const int continue_playback_list[] =
-{ 0, 1, 2 };
-static const char *const continue_playback_list_text[] = {
-    N_("Ask"), N_("Always"), N_("Never")
-};
-
-#define VOLUME_MAX_TEXT N_("Maximum Volume displayed")
-
-
-vlc_module_begin()
-    set_description(N_("Mac OS X interface"))
-    set_capability("interface", 200)
-    set_callbacks(OpenIntf, CloseIntf)
-    set_category(CAT_INTERFACE)
-    set_subcategory(SUBCAT_INTERFACE_MAIN)
-    cannot_unload_broken_library()
-
-    set_section(N_("Appearance"), 0)
-        add_bool("macosx-interfacestyle", false, INTERFACE_STYLE_TEXT, INTERFACE_STYLE_LONGTEXT, false)
-        add_bool("macosx-nativefullscreenmode", false, NATIVE_FULLSCREEN_MODE_ON_LION_TEXT, NATIVE_FULLSCREEN_MODE_ON_LION_LONGTEXT, false)
-        add_bool("macosx-statusicon", true, DISPLAY_STATUS_ICONMENU_TEXT, DISPLAY_STATUS_ICONMENU_LONGTEXT, false)
-        add_bool("macosx-icon-change", true, ICONCHANGE_TEXT, ICONCHANGE_LONGTEXT, true)
-        add_bool("macosx-show-playback-buttons", false, JUMPBUTTONS_TEXT, JUMPBUTTONS_LONGTEXT, false)
-        add_bool("macosx-show-playmode-buttons", false, PLAYMODEBUTTONS_TEXT, PLAYMODEBUTTONS_LONGTEXT, false)
-        add_bool("macosx-show-effects-button", false, EFFECTSBUTTON_TEXT, EFFECTSBUTTON_LONGTEXT, false)
-        add_integer_with_range("macosx-max-volume", 125, 60, 200, VOLUME_MAX_TEXT, VOLUME_MAX_TEXT, true)
-        add_bool("macosx-large-text", false, LARGE_LISTFONT_TEXT, LARGE_LISTFONT_TEXT, false)
-
-    set_section(N_("Behavior"), 0)
-        add_bool("macosx-autoplay", true, AUTOPLAY_OSX_TEST, AUTOPLAY_OSX_LONGTEXT, false)
-        add_bool("macosx-recentitems", true, RECENT_ITEMS_TEXT, RECENT_ITEMS_LONGTEXT, false)
-        add_bool("macosx-fspanel", true, FSPANEL_TEXT, FSPANEL_LONGTEXT, false)
-        add_bool("macosx-video-autoresize", true, KEEPSIZE_TEXT, KEEPSIZE_LONGTEXT, false)
-        add_bool("macosx-pause-minimized", false, PAUSE_MINIMIZED_TEXT, PAUSE_MINIMIZED_LONGTEXT, false)
-        add_bool("macosx-lock-aspect-ratio", true, LOCK_ASPECT_RATIO_TEXT, LOCK_ASPECT_RATIO_TEXT, true)
-        add_bool("macosx-dim-keyboard", false, DIM_KEYBOARD_PLAYBACK_TEXT, DIM_KEYBOARD_PLAYBACK_LONGTEXT, false)
-        add_integer("macosx-control-itunes", 1, ITUNES_TEXT, ITUNES_LONGTEXT, false)
-        change_integer_list(itunes_list, itunes_list_text)
-        add_integer("macosx-continue-playback", 0, CONTINUE_PLAYBACK_TEXT, CONTINUE_PLAYBACK_LONGTEXT, false)
-        change_integer_list(continue_playback_list, continue_playback_list_text)
-
-    set_section(N_("Apple Remote and media keys"), 0)
-        add_bool("macosx-appleremote", true, USE_APPLE_REMOTE_TEXT, USE_APPLE_REMOTE_LONGTEXT, false)
-        add_bool("macosx-appleremote-sysvol", false, USE_APPLE_REMOTE_VOLUME_TEXT, USE_APPLE_REMOTE_VOLUME_LONGTEXT, false)
-        add_bool("macosx-appleremote-prevnext", false, USE_APPLE_REMOTE_PREVNEXT_TEXT, USE_APPLE_REMOTE_PREVNEXT_LONGTEXT, false)
-        add_bool("macosx-mediakeys", true, USE_MEDIAKEYS_TEXT, USE_MEDIAKEYS_LONGTEXT, false)
-
-    add_obsolete_bool("macosx-stretch") /* since 2.0.0 */
-    add_obsolete_bool("macosx-eq-keep") /* since 2.0.0 */
-    add_obsolete_bool("macosx-autosave-volume") /* since 2.1.0 */
-    add_obsolete_bool("macosx-show-sidebar") /* since 3.0.1 */
-
-    add_submodule()
-        set_description("Mac OS X Video Output Provider")
-        set_capability("vout window", 100)
-        set_callbacks(WindowOpen, WindowClose)
-
-        set_section(N_("Video output"), 0)
-        add_integer("macosx-vdev", 0, VDEV_TEXT, VDEV_LONGTEXT, false)
-        add_float_with_range("macosx-opaqueness", 1, 0, 1, OPAQUENESS_TEXT, OPAQUENESS_LONGTEXT, true);
-        add_bool("macosx-black", false, BLACK_TEXT, BLACK_LONGTEXT, false)
-vlc_module_end()
+static char *ppsz_vout_list[] = { "auto", "quartz", "opengl" };
+static char *ppsz_vout_list_text[] = { N_("Auto"), "Quartz", "OpenGL" };
+    
+vlc_module_begin();
+    set_description( _("Mac OS X interface, sound and video") );
+    set_capability( "interface", 100 );
+    set_callbacks( E_(OpenIntf), E_(CloseIntf) );
+    add_submodule();
+        set_capability( "video output", 200 );
+        set_callbacks( E_(OpenVideo), E_(CloseVideo) );
+        add_integer( "macosx-vdev", 0, NULL, VDEV_TEXT, VDEV_LONGTEXT,
+                     VLC_FALSE );
+        add_bool( "macosx-stretch", 0, NULL, STRETCH_TEXT, STRETCH_LONGTEXT,
+                     VLC_FALSE );
+        add_float_with_range( "macosx-opaqueness", 1, 0, 1, NULL,
+                OPAQUENESS_TEXT, OPAQUENESS_LONGTEXT, VLC_TRUE );
+        add_string( "macosx-vout", "auto", NULL, MACOSX_VOUT_TEXT,
+                MACOSX_VOUT_LONGTEXT, VLC_TRUE );
+        change_string_list( ppsz_vout_list, ppsz_vout_list_text, 0 );
+        add_string( "macosx-opengl-effect", "none", NULL,
+                    OPENGL_EFFECT_TEXT, OPENGL_EFFECT_LONGTEXT,
+                    VLC_TRUE );
+        add_bool( "macosx-fill", 0, NULL, FILL_TEXT, FILL_LONGTEXT,
+                  VLC_TRUE );
+        change_string_list( effect_list, effect_list_text, 0 );
+vlc_module_end();
 

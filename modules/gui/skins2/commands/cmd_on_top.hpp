@@ -1,11 +1,11 @@
 /*****************************************************************************
  * cmd_on_top.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: c6b84f8a5ab85b92c13faa0c56088a41054c7126 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: cmd_on_top.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef CMD_ON_TOP_HPP
@@ -30,19 +30,5 @@
 
 /// "Always on top" command
 DEFINE_COMMAND( OnTop, "always on top" )
-
-class CmdSetOnTop: public CmdGeneric
-{
-public:
-    CmdSetOnTop( intf_thread_t *pIntf, bool b_ontop )
-        : CmdGeneric( pIntf ), m_ontop( b_ontop ) { }
-    virtual ~CmdSetOnTop() { }
-    virtual void execute();
-    virtual std::string getType() const { return "set on top"; }
-
-private:
-    bool m_ontop;
-};
-
 
 #endif

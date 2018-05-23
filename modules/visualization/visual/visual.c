@@ -1,45 +1,36 @@
 /*****************************************************************************
  * visual.c : Visualisation system
  *****************************************************************************
- * Copyright (C) 2002-2009 VLC authors and VideoLAN
- * $Id: e0c47d83df78643215b8bda5f92a19c3c99eafc2 $
+ * Copyright (C) 2002 VideoLAN
+ * $Id: visual.c 7373 2004-04-18 23:08:44Z gbazin $
  *
- * Authors: ClÃ©ment Stenac <zorglub@via.ecp.fr>
+ * Authors: Clément Stenac <zorglub@via.ecp.fr>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
-#include <assert.h>
-#include <limits.h>
-
-#include <vlc_common.h>
-#include <vlc_plugin.h>
-#include <vlc_vout.h>
-#include <vlc_aout.h>
-#include <vlc_filter.h>
+#include <stdlib.h>                                      /* malloc(), free() */
+#include <vlc/vlc.h>
+#include <vlc/vout.h>
+#include "audio_output.h"
+#include "aout_internal.h"
 
 #include "visual.h"
-
-#include "window_presets.h"
 
 /*****************************************************************************
  * Module descriptor
@@ -47,8 +38,7 @@
 #define ELIST_TEXT N_( "Effects list" )
 #define ELIST_LONGTEXT N_( \
       "A list of visual effect, separated by commas.\n"  \
-      "Current effects include: dummy, scope, spectrum, "\
-      "spectrometer and vuMeter." )
+      "Current effects include: dummy, random, scope, spectrum" )
 
 #define WIDTH_TEXT N_( "Video width" )
 #define WIDTH_LONGTEXT N_( \
@@ -58,132 +48,72 @@
 #define HEIGHT_LONGTEXT N_( \
       "The height of the effects video window, in pixels." )
 
-#define FFT_WINDOW_TEXT N_( "FFT window" )
-#define FFT_WINDOW_LONGTEXT N_( \
-      "The type of FFT window to use for spectrum-based visualizations." )
+#define NBBANDS_TEXT N_( "Number of bands" )
+#define NBBANDS_LONGTEXT N_( \
+      "Number of bands used by spectrum analyzer, should be 20 or 80." )
 
-#define KAISER_PARAMETER_TEXT N_( "Kaiser window parameter" )
-#define KAISER_PARAMETER_LONGTEXT N_( \
-      "The parameter alpha for the Kaiser window. Increasing alpha " \
-      "increases the main-lobe width and decreases the side-lobe amplitude." )
-
-#define NBBANDS_TEXT N_( "Show 80 bands instead of 20" )
-#define SPNBBANDS_LONGTEXT N_( \
-      "More bands for the spectrometer: 80 if enabled, else 20." )
-
-#define SEPAR_TEXT N_( "Number of blank pixels between bands.")
+#define SEPAR_TEXT N_( "Band separator" )
+#define SEPAR_LONGTEXT N_( \
+        "Number of blank pixels between bands.")
 
 #define AMP_TEXT N_( "Amplification" )
 #define AMP_LONGTEXT N_( \
         "This is a coefficient that modifies the height of the bands.")
 
-#define PEAKS_TEXT N_( "Draw peaks in the analyzer" )
+#define PEAKS_TEXT N_( "Enable peaks" )
+#define PEAKS_LONGTEXT N_( \
+        "Defines whether to draw peaks." )
 
-#define ORIG_TEXT N_( "Enable original graphic spectrum" )
-#define ORIG_LONGTEXT N_( \
-        "Enable the \"flat\" spectrum analyzer in the spectrometer." )
-
-#define BANDS_TEXT N_( "Draw bands in the spectrometer" )
-
-#define BASE_TEXT N_( "Draw the base of the bands" )
-
-#define RADIUS_TEXT N_( "Base pixel radius" )
-#define RADIUS_LONGTEXT N_( \
-        "Defines radius size in pixels, of base of bands(beginning)." )
-
-#define SSECT_TEXT N_( "Spectral sections" )
-#define SSECT_LONGTEXT N_( \
-        "Determines how many sections of spectrum will exist." )
-
-#define PEAK_HEIGHT_TEXT N_( "Peak height" )
-#define PEAK_HEIGHT_LONGTEXT N_( \
-        "Total pixel height of the peak items." )
-
-#define PEAK_WIDTH_TEXT N_( "Peak extra width" )
-#define PEAK_WIDTH_LONGTEXT N_( \
-        "Additions or subtractions of pixels on the peak width." )
-
-#define COLOR1_TEXT N_( "V-plane color" )
-#define COLOR1_LONGTEXT N_( \
-        "YUV-Color cube shifting across the V-plane ( 0 - 127 )." )
-
-/* Default vout size */
-#define VOUT_WIDTH  800
-#define VOUT_HEIGHT 500
+#define STARS_TEXT N_( "Number of stars" )
+#define STARS_LONGTEXT N_( \
+        "Defines the number of stars to draw with random effect." )
 
 static int  Open         ( vlc_object_t * );
 static void Close        ( vlc_object_t * );
 
-vlc_module_begin ()
-    set_shortname( N_("Visualizer"))
-    set_category( CAT_AUDIO )
-    set_subcategory( SUBCAT_AUDIO_VISUAL )
-    set_description( N_("Visualizer filter") )
-    set_section( N_( "General") , NULL )
-    add_string("effect-list", "spectrum",
-            ELIST_TEXT, ELIST_LONGTEXT, true )
-    add_integer("effect-width",VOUT_WIDTH,
-             WIDTH_TEXT, WIDTH_LONGTEXT, false )
-    add_integer("effect-height" , VOUT_HEIGHT ,
-             HEIGHT_TEXT, HEIGHT_LONGTEXT, false )
-    add_string("effect-fft-window", "flat",
-            FFT_WINDOW_TEXT, FFT_WINDOW_LONGTEXT, true )
-        change_string_list( window_list, window_list_text )
-    add_float("effect-kaiser-param", 3.0f,
-            KAISER_PARAMETER_TEXT, KAISER_PARAMETER_LONGTEXT, true )
-    set_section( N_("Spectrum analyser") , NULL )
-    add_obsolete_integer( "visual-nbbands" ) /* Since 1.0.0 */
-    add_bool("visual-80-bands", true,
-             NBBANDS_TEXT, NBBANDS_TEXT, true );
-    add_obsolete_integer( "visual-separ" ) /* Since 1.0.0 */
-    add_obsolete_integer( "visual-amp" ) /* Since 1.0.0 */
-    add_bool("visual-peaks", true,
-             PEAKS_TEXT, PEAKS_TEXT, true )
-    set_section( N_("Spectrometer") , NULL )
-    add_bool("spect-show-original", false,
-             ORIG_TEXT, ORIG_LONGTEXT, true )
-    add_bool("spect-show-base", true,
-             BASE_TEXT, BASE_TEXT, true )
-    add_integer("spect-radius", 42,
-             RADIUS_TEXT, RADIUS_LONGTEXT, true )
-    add_integer_with_range("spect-sections", 3, 1, INT_MAX,
-             SSECT_TEXT, SSECT_LONGTEXT, true )
-    add_integer("spect-color", 80,
-             COLOR1_TEXT, COLOR1_LONGTEXT, true )
-    add_bool("spect-show-bands", true,
-             BANDS_TEXT, BANDS_TEXT, true );
-    add_obsolete_integer( "spect-nbbands" ) /* Since 1.0.0 */
-    add_bool("spect-80-bands", true,
-             NBBANDS_TEXT, NBBANDS_TEXT, true )
-    add_integer("spect-separ", 1,
-             SEPAR_TEXT, SEPAR_TEXT, true )
-    add_integer("spect-amp", 8,
-             AMP_TEXT, AMP_LONGTEXT, true )
-    add_bool("spect-show-peaks", true,
-             PEAKS_TEXT, PEAKS_TEXT, true )
-    add_integer("spect-peak-width", 61,
-             PEAK_WIDTH_TEXT, PEAK_WIDTH_LONGTEXT, true )
-    add_integer("spect-peak-height", 1,
-             PEAK_HEIGHT_TEXT, PEAK_HEIGHT_LONGTEXT, true )
-    set_capability( "visualization", 0 )
-    set_callbacks( Open, Close )
-    add_shortcut( "visualizer")
-vlc_module_end ()
+vlc_module_begin();
+    set_description( _("visualizer filter") );
+    add_string("effect-list", "spectrum", NULL,
+            ELIST_TEXT, ELIST_LONGTEXT, VLC_TRUE );
+    add_integer("effect-width",VOUT_WIDTH,NULL,
+             WIDTH_TEXT, WIDTH_LONGTEXT, VLC_FALSE );
+    add_integer("effect-height" , VOUT_HEIGHT , NULL,
+             HEIGHT_TEXT, HEIGHT_LONGTEXT, VLC_FALSE );
+    add_integer("visual-nbbands", 80, NULL,
+             NBBANDS_TEXT, NBBANDS_LONGTEXT, VLC_FALSE );
+    add_integer("visual-separ", 1, NULL,
+             SEPAR_TEXT, SEPAR_LONGTEXT, VLC_FALSE );
+    add_integer("visual-amp", 3, NULL,
+             AMP_TEXT, AMP_LONGTEXT, VLC_FALSE );
+    add_bool("visual-peaks", VLC_TRUE, NULL,
+             PEAKS_TEXT, PEAKS_LONGTEXT, VLC_FALSE );
+    add_integer("visual-stars", 200, NULL,
+             STARS_TEXT, STARS_LONGTEXT, VLC_FALSE );
+    set_capability( "audio filter", 0 );
+    set_callbacks( Open, Close );
+    add_shortcut( "visualizer");
+vlc_module_end();
 
 
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
-static block_t *DoWork( filter_t *, block_t * );
-static void *Thread( void *);
-
-struct filter_sys_t
+static void DoWork( aout_instance_t *, aout_filter_t *,
+                    aout_buffer_t *, aout_buffer_t * );
+static int FilterCallback( vlc_object_t *, char const *,
+                           vlc_value_t, vlc_value_t, void * );
+static struct
 {
-    block_fifo_t    *fifo;
-    vout_thread_t   *p_vout;
-    visual_effect_t **effect;
-    int             i_effect;
-    vlc_thread_t    thread;
+    char *psz_name;
+    int  (*pf_run)( visual_effect_t *, aout_instance_t *,
+                    aout_buffer_t *, picture_t *);
+} pf_effect_run[]=
+{
+    { "scope",      scope_Run },
+    { "spectrum",   spectrum_Run },
+    { "random",     random_Run},
+    { "dummy",      dummy_Run},
+    { NULL,         dummy_Run}
 };
 
 /*****************************************************************************
@@ -191,61 +121,76 @@ struct filter_sys_t
  *****************************************************************************/
 static int Open( vlc_object_t *p_this )
 {
-    filter_t     *p_filter = (filter_t *)p_this;
-    filter_sys_t *p_sys;
+    aout_filter_t     *p_filter = (aout_filter_t *)p_this;
+    aout_filter_sys_t *p_sys;
+    vlc_value_t        val;
 
     char *psz_effects, *psz_parser;
 
-    p_sys = p_filter->p_sys = malloc( sizeof( filter_sys_t ) );
-    if( unlikely (p_sys == NULL ) )
+    if( ( p_filter->input.i_format != VLC_FOURCC('f','l','3','2') &&
+          p_filter->input.i_format != VLC_FOURCC('f','i','3','2') ) )
+    {
         return VLC_EGENERIC;
+    }
 
-    int width = var_InheritInteger( p_filter , "effect-width");
-    int height = var_InheritInteger( p_filter , "effect-width");
-    /* No resolution under 400x532 and no odd dimension */
-    if( width < 532 )
-        width  = 532;
-    width &= ~1;
-    if( height < 400 )
-        height = 400;
-    height &= ~1;
+    p_sys = p_filter->p_sys = malloc( sizeof( aout_filter_sys_t ) );
+    if( p_sys == NULL )
+    {
+        msg_Err( p_filter, "out of memory" );
+        return VLC_EGENERIC;
+    }
+
+    p_sys->i_height = config_GetInt( p_filter , "effect-height");
+    p_sys->i_width  = config_GetInt( p_filter , "effect-width");
+
+    if( p_sys->i_height < 20 ) p_sys->i_height =  20;
+    if( p_sys->i_width  < 20 ) p_sys->i_width  =  20;
+    if( (p_sys->i_height % 2 ) != 0 ) p_sys->i_height--;
+    if( (p_sys->i_width % 2 )  != 0 ) p_sys->i_width--;
 
     p_sys->i_effect = 0;
     p_sys->effect   = NULL;
 
     /* Parse the effect list */
-    psz_parser = psz_effects = var_CreateGetString( p_filter, "effect-list" );
+    var_Create( p_filter, "effect-list", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
+    var_Get( p_filter, "effect-list", &val);
+    psz_parser = psz_effects = strdup( val.psz_string );
+    free( val.psz_string );
+    msg_Dbg( p_filter , "Building list of effects" );
+    
+    var_AddCallback( p_filter, "effect-list", FilterCallback, NULL );
 
     while( psz_parser && *psz_parser != '\0' )
     {
         visual_effect_t *p_effect;
+        int  i;
 
         p_effect = malloc( sizeof( visual_effect_t ) );
-        if( !p_effect )
-            break;
-        p_effect->i_width     = width;
-        p_effect->i_height    = height;
-        p_effect->i_nb_chans  = aout_FormatNbChannels( &p_filter->fmt_in.audio);
-        p_effect->i_idx_left  = 0;
-        p_effect->i_idx_right = __MIN( 1, p_effect->i_nb_chans-1 );
+        p_effect->i_width = p_sys->i_width;
+        p_effect->i_height= p_sys->i_height;
+        p_effect->i_nb_chans = aout_FormatNbChannels( &p_filter->input);
+        p_effect->psz_args = NULL;
+        p_effect->p_data = NULL;
 
-        p_effect->p_data   = NULL;
-        p_effect->pf_run   = NULL;
+        p_effect->pf_run = NULL;
+        p_effect->psz_name = NULL;
 
-        for( unsigned i = 0; i < effectc; i++ )
+        for( i = 0; pf_effect_run[i].psz_name != NULL; i++ )
         {
-            if( !strncasecmp( psz_parser, effectv[i].name,
-                              strlen( effectv[i].name ) ) )
+            if( !strncasecmp( psz_parser,
+                              pf_effect_run[i].psz_name,
+                              strlen( pf_effect_run[i].psz_name ) ) )
             {
-                p_effect->pf_run = effectv[i].run_cb;
-                p_effect->pf_free = effectv[i].free_cb;
-                psz_parser += strlen( effectv[i].name );
+                p_effect->pf_run = pf_effect_run[i].pf_run;
+                p_effect->psz_name = strdup( pf_effect_run[i].psz_name );
                 break;
             }
         }
 
-        if( p_effect->pf_run != NULL )
+        if( p_effect->psz_name )
         {
+            psz_parser += strlen( p_effect->psz_name );
+
             if( *psz_parser == '{' )
             {
                 char *psz_eoa;
@@ -254,10 +199,11 @@ static int Open( vlc_object_t *p_this )
 
                 if( ( psz_eoa = strchr( psz_parser, '}') ) == NULL )
                 {
-                   msg_Err( p_filter, "unable to parse effect list. Aborting");
-                   free( p_effect );
+                   msg_Err( p_filter, "Unable to parse effect list. Aborting");
                    break;
                 }
+                p_effect->psz_args =
+                    strndup( psz_parser, psz_eoa - psz_parser);
             }
             TAB_APPEND( p_sys->i_effect, p_sys->effect, p_effect );
         }
@@ -281,116 +227,88 @@ static int Open( vlc_object_t *p_this )
         }
     }
 
-    free( psz_effects );
+    if( psz_effects )
+    {
+        free( psz_effects );
+    }
 
     if( !p_sys->i_effect )
     {
         msg_Err( p_filter, "no effects found" );
-        goto error;
+        free( p_sys );
+        return VLC_EGENERIC;
     }
 
     /* Open the video output */
-    video_format_t fmt = {
-        .i_chroma = VLC_CODEC_I420,
-        .i_width = width,
-        .i_height = height,
-        .i_visible_width = width,
-        .i_visible_height = height,
-        .i_sar_num = 1,
-        .i_sar_den = 1,
-    };
-    p_sys->p_vout = aout_filter_RequestVout( p_filter, NULL, &fmt );
+    p_sys->p_vout =
+         vout_Request( p_filter, NULL,
+                       p_sys->i_width, p_sys->i_height,
+                       VLC_FOURCC('I','4','2','0'),
+                       VOUT_ASPECT_FACTOR * p_sys->i_width/p_sys->i_height );
+
     if( p_sys->p_vout == NULL )
     {
         msg_Err( p_filter, "no suitable vout module" );
-        goto error;
+        free( p_sys );
+        return VLC_EGENERIC;
     }
 
-    p_sys->fifo = block_FifoNew();
-    if( unlikely( p_sys->fifo == NULL ) )
-    {
-        aout_filter_RequestVout( p_filter, p_sys->p_vout, NULL );
-        goto error;
-    }
+    p_filter->pf_do_work = DoWork;
+    p_filter->b_in_place= 1;
 
-    if( vlc_clone( &p_sys->thread, Thread, p_filter,
-                   VLC_THREAD_PRIORITY_VIDEO ) )
-    {
-        block_FifoRelease( p_sys->fifo );
-        aout_filter_RequestVout( p_filter, p_sys->p_vout, NULL );
-        goto error;
-    }
-
-    p_filter->fmt_in.audio.i_format = VLC_CODEC_FL32;
-    p_filter->fmt_out.audio = p_filter->fmt_in.audio;
-    p_filter->pf_audio_filter = DoWork;
+    msg_Dbg( p_filter,"Visualizer initialized");
     return VLC_SUCCESS;
-
-error:
-    for( int i = 0; i < p_sys->i_effect; i++ )
-        free( p_sys->effect[i] );
-    free( p_sys->effect );
-    free( p_sys );
-    return VLC_EGENERIC;
 }
 
-static block_t *DoRealWork( filter_t *p_filter, block_t *p_in_buf )
+/*****************************************************************************
+ * DoWork: convert a buffer
+ *****************************************************************************
+ * Audio part pasted from trivial.c
+ ****************************************************************************/
+static void DoWork( aout_instance_t *p_aout, aout_filter_t *p_filter,
+                    aout_buffer_t *p_in_buf, aout_buffer_t *p_out_buf )
 {
-    filter_sys_t *p_sys = p_filter->p_sys;
+    aout_filter_sys_t *p_sys = p_filter->p_sys;
+    picture_t *p_outpic;
+    int i;
+
+    p_out_buf->i_nb_samples = p_in_buf->i_nb_samples;
+    p_out_buf->i_nb_bytes = p_in_buf->i_nb_bytes *
+                            aout_FormatNbChannels( &p_filter->output ) /
+                            aout_FormatNbChannels( &p_filter->input );
 
     /* First, get a new picture */
-    picture_t *p_outpic = vout_GetPicture( p_sys->p_vout );
-    p_outpic->b_progressive = true;
-    if( unlikely(p_outpic == NULL) )
-        return p_in_buf;
+    while( ( p_outpic = vout_CreatePicture( p_sys->p_vout, 0, 0, 3 ) ) == NULL)
+    {
+        if( p_aout->b_die )
+        {
+            return;
+        }
+        msleep( VOUT_OUTMEM_SLEEP );
+    }
 
     /* Blank the picture */
-    for( int i = 0 ; i < p_outpic->i_planes ; i++ )
+    for( i = 0 ; i < p_outpic->i_planes ; i++ )
     {
         memset( p_outpic->p[i].p_pixels, i > 0 ? 0x80 : 0x00,
-                p_outpic->p[i].i_visible_lines * p_outpic->p[i].i_pitch );
+                p_outpic->p[i].i_lines * p_outpic->p[i].i_pitch );
     }
 
     /* We can now call our visualization effects */
-    for( int i = 0; i < p_sys->i_effect; i++ )
+    for( i = 0; i < p_sys->i_effect; i++ )
     {
 #define p_effect p_sys->effect[i]
         if( p_effect->pf_run )
         {
-            p_effect->pf_run( p_effect, VLC_OBJECT(p_filter),
-                              p_in_buf, p_outpic );
+            p_effect->pf_run( p_effect, p_aout, p_out_buf, p_outpic );
         }
 #undef p_effect
     }
 
-    p_outpic->date = p_in_buf->i_pts + (p_in_buf->i_length / 2);
+    vout_DatePicture( p_sys->p_vout, p_outpic,
+                      ( p_in_buf->start_date + p_in_buf->end_date ) / 2 );
 
-    vout_PutPicture( p_sys->p_vout, p_outpic );
-    return p_in_buf;
-}
-
-static void *Thread( void *data )
-{
-    filter_t *p_filter = data;
-    filter_sys_t *sys = p_filter->p_sys;
-
-    for (;;)
-    {
-        block_t *block = block_FifoGet( sys->fifo );
-
-        int canc = vlc_savecancel( );
-        block_Release( DoRealWork( p_filter, block ) );
-        vlc_restorecancel( canc );
-    }
-    vlc_assert_unreachable();
-}
-
-static block_t *DoWork( filter_t *p_filter, block_t *p_in_buf )
-{
-    block_t *block = block_Duplicate( p_in_buf );
-    if( likely(block != NULL) )
-        block_FifoPut( p_filter->p_sys->fifo, block );
-    return p_in_buf;
+    vout_DisplayPicture( p_sys->p_vout, p_outpic );
 }
 
 /*****************************************************************************
@@ -398,23 +316,50 @@ static block_t *DoWork( filter_t *p_filter, block_t *p_in_buf )
  *****************************************************************************/
 static void Close( vlc_object_t *p_this )
 {
-    filter_t * p_filter = (filter_t *)p_this;
-    filter_sys_t *p_sys = p_filter->p_sys;
+    aout_filter_t * p_filter = (aout_filter_t *)p_this;
+    aout_filter_sys_t *p_sys = p_filter->p_sys;
 
-    vlc_cancel( p_sys->thread );
-    vlc_join( p_sys->thread, NULL );
-    block_FifoRelease( p_sys->fifo );
-    aout_filter_RequestVout( p_filter, p_filter->p_sys->p_vout, NULL );
+    int i;
+
+    if( p_filter->p_sys->p_vout )
+    {
+        vout_Request( p_filter, p_filter->p_sys->p_vout, 0, 0, 0, 0 );
+    }
 
     /* Free the list */
-    for( int i = 0; i < p_sys->i_effect; i++ )
+    for( i = 0; i < p_sys->i_effect; i++ )
     {
-#define p_effect (p_sys->effect[i])
-        p_effect->pf_free( p_effect->p_data );
+#define p_effect p_sys->effect[i]
+        if( p_effect->psz_name )
+        {
+            free( p_effect->psz_name );
+        }
+        if( p_effect->psz_args )
+        {
+            free( p_effect->psz_args );
+        }
         free( p_effect );
 #undef p_effect
     }
 
-    free( p_sys->effect );
-    free( p_sys );
+    if( p_sys->effect )
+    {
+        free( p_sys->effect );
+    }
+
+    free( p_filter->p_sys );
 }
+
+/*****************************************************************************
+ * FilterCallback: called when changing the deinterlace method on the fly.
+ *****************************************************************************/
+static int FilterCallback( vlc_object_t *p_this, char const *psz_cmd,
+                           vlc_value_t oldval, vlc_value_t newval,
+                           void *p_data )
+{
+    aout_filter_t     *p_filter = (aout_filter_t *)p_this;
+    /* restart this baby */
+    msg_Dbg( p_filter, "We should restart the visual filter" );
+    return VLC_SUCCESS;
+}
+

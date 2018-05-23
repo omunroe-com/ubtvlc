@@ -1,38 +1,33 @@
 /*****************************************************************************
  * au.c : au file input module for vlc
  *****************************************************************************
- * Copyright (C) 2001-2007 VLC authors and VideoLAN
- * $Id: 0cda4bf73e504bd793b2ebf9231f0132d1524434 $
+ * Copyright (C) 2001-2003 VideoLAN
+ * $Id: au.c 7665 2004-05-15 10:52:56Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
+#include <stdlib.h>                                      /* malloc(), free() */
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
-#include <limits.h>
-#include <vlc_common.h>
-#include <vlc_plugin.h>
-#include <vlc_demux.h>
+#include <vlc/vlc.h>
+#include <vlc/input.h>
 
 /* TODO:
  *  - all adpcm things (I _NEED_ samples)
@@ -45,14 +40,12 @@
 static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
-vlc_module_begin ()
-    set_category( CAT_INPUT )
-    set_subcategory( SUBCAT_INPUT_DEMUX )
-    set_description( N_("AU demuxer") )
-    set_capability( "demux", 10 )
-    set_callbacks( Open, Close )
-    add_shortcut( "au" )
-vlc_module_end ()
+vlc_module_begin();
+    set_description( _("AU demuxer") );
+    set_capability( "demux2", 10 );
+    set_callbacks( Open, Close );
+    add_shortcut( "au" );
+vlc_module_end();
 
 /*****************************************************************************
  * Local prototypes
@@ -91,10 +84,10 @@ struct demux_sys_t
     int             i_frame_size;
     mtime_t         i_frame_length;
 
-    uint32_t        i_header_size;
+    int             i_header_size;
 };
 
-static int Demux( demux_t * );
+static int DemuxPCM( demux_t * );
 static int Control ( demux_t *, int i_query, va_list args );
 
 /*****************************************************************************
@@ -106,21 +99,26 @@ static int Open( vlc_object_t *p_this )
     demux_sys_t *p_sys;
 
     uint8_t      hdr[20];
-    const uint8_t *p_peek;
+    uint8_t     *p_peek;
     int          i_cat;
+    int          i_samples, i_modulo;
 
-    if( vlc_stream_Peek( p_demux->s , &p_peek, 4 ) < 4 )
+    if( stream_Peek( p_demux->s, &p_peek, 4 ) < 4 )
+    {
+        msg_Warn( p_demux, "cannot peek" );
         return VLC_EGENERIC;
-
-    if( memcmp( p_peek, ".snd", 4 ) )
+    }
+    if( strncmp( p_peek, ".snd", 4 ) )
+    {
+        msg_Warn( p_demux, "AU module discarded" );
         return VLC_EGENERIC;
+    }
 
     /* skip signature */
-    if( vlc_stream_Read( p_demux->s, NULL, 4 ) < 4 )
-        return VLC_EGENERIC;
+    stream_Read( p_demux->s, NULL, 4 );   /* cannot fail */
 
     /* read header */
-    if( vlc_stream_Read( p_demux->s, hdr, 20 ) < 20 )
+    if( stream_Read( p_demux->s, hdr, 20 ) < 20 )
     {
         msg_Err( p_demux, "cannot read" );
         return VLC_EGENERIC;
@@ -132,23 +130,14 @@ static int Open( vlc_object_t *p_this )
         return VLC_EGENERIC;
     }
 
-    p_sys = malloc( sizeof (*p_sys) );
-    if( unlikely(p_sys == NULL) )
-        return VLC_ENOMEM;
-
-    p_sys->i_time = 0;
+    p_sys = p_demux->p_sys = malloc( sizeof( demux_sys_t ) );
+    p_sys->i_time = 1;
     p_sys->i_header_size = GetDWBE( &hdr[0] );
 
     /* skip extra header data */
     if( p_sys->i_header_size > 24 )
     {
-#if (SSIZE_MAX <= INT32_MAX)
-        if( p_sys->i_header_size > SSIZE_MAX )
-            goto error;
-#endif
-        size_t skip = p_sys->i_header_size - 24;
-        if( vlc_stream_Read( p_demux->s, NULL, skip ) < (ssize_t)skip )
-            goto error;
+        stream_Read( p_demux->s, NULL, p_sys->i_header_size - 24 );
     }
 
     /* init fmt */
@@ -166,42 +155,42 @@ static int Open( vlc_object_t *p_this )
     switch( GetDWBE( &hdr[8] ) )
     {
         case AU_ALAW_8:        /* 8-bit ISDN A-law */
-            p_sys->fmt.i_codec               = VLC_CODEC_ALAW;
+            p_sys->fmt.i_codec               = VLC_FOURCC( 'a','l','a','w' );
             p_sys->fmt.audio.i_bitspersample = 8;
             p_sys->fmt.audio.i_blockalign    = 1 * p_sys->fmt.audio.i_channels;
             i_cat                    = AU_CAT_PCM;
             break;
 
         case AU_MULAW_8:       /* 8-bit ISDN u-law */
-            p_sys->fmt.i_codec               = VLC_CODEC_MULAW;
+            p_sys->fmt.i_codec               = VLC_FOURCC( 'u','l','a','w' );
             p_sys->fmt.audio.i_bitspersample = 8;
             p_sys->fmt.audio.i_blockalign    = 1 * p_sys->fmt.audio.i_channels;
             i_cat                    = AU_CAT_PCM;
             break;
 
         case AU_LINEAR_8:      /* 8-bit linear PCM */
-            p_sys->fmt.i_codec               = VLC_CODEC_S8;
+            p_sys->fmt.i_codec               = VLC_FOURCC( 't','w','o','s' );
             p_sys->fmt.audio.i_bitspersample = 8;
             p_sys->fmt.audio.i_blockalign    = 1 * p_sys->fmt.audio.i_channels;
             i_cat                    = AU_CAT_PCM;
             break;
 
         case AU_LINEAR_16:     /* 16-bit linear PCM */
-            p_sys->fmt.i_codec               = VLC_CODEC_S16B;
+            p_sys->fmt.i_codec               = VLC_FOURCC( 't','w','o','s' );
             p_sys->fmt.audio.i_bitspersample = 16;
             p_sys->fmt.audio.i_blockalign    = 2 * p_sys->fmt.audio.i_channels;
             i_cat                    = AU_CAT_PCM;
             break;
 
         case AU_LINEAR_24:     /* 24-bit linear PCM */
-            p_sys->fmt.i_codec               = VLC_CODEC_S24B;
+            p_sys->fmt.i_codec               = VLC_FOURCC( 't','w','o','s' );
             p_sys->fmt.audio.i_bitspersample = 24;
             p_sys->fmt.audio.i_blockalign    = 3 * p_sys->fmt.audio.i_channels;
             i_cat                    = AU_CAT_PCM;
             break;
 
         case AU_LINEAR_32:     /* 32-bit linear PCM */
-            p_sys->fmt.i_codec               = VLC_CODEC_S32B;
+            p_sys->fmt.i_codec               = VLC_FOURCC( 't','w','o','s' );
             p_sys->fmt.audio.i_bitspersample = 32;
             p_sys->fmt.audio.i_blockalign    = 4 * p_sys->fmt.audio.i_channels;
             i_cat                    = AU_CAT_PCM;
@@ -250,7 +239,7 @@ static int Open( vlc_object_t *p_this )
             break;
 
         default:
-            msg_Warn( p_demux, "unknown encoding=0x%x", GetDWBE( &hdr[8] ) );
+            msg_Warn( p_demux, "unknow encoding=0x%x", GetDWBE( &hdr[8] ) );
             p_sys->fmt.audio.i_bitspersample = 0;
             p_sys->fmt.audio.i_blockalign    = 0;
             i_cat                    = AU_CAT_UNKNOWN;
@@ -263,66 +252,60 @@ static int Open( vlc_object_t *p_this )
 
     if( i_cat == AU_CAT_UNKNOWN || i_cat == AU_CAT_ADPCM )
     {
-        msg_Err( p_demux, "unsupported codec/type (Please report it)" );
-        goto error;
-    }
+        p_sys->i_frame_size = 0;
+        p_sys->i_frame_length = 0;
 
-    if( p_sys->fmt.audio.i_rate == 0 )
-    {
-        msg_Err( p_demux, "invalid samplerate: 0" );
-        goto error;
+        msg_Err( p_demux, "unsupported codec/type (Please report it)" );
+        free( p_sys );
+        return VLC_EGENERIC;
     }
 
     /* add the es */
     p_sys->es = es_out_Add( p_demux->out, &p_sys->fmt );
 
     /* calculate 50ms frame size/time */
-    unsigned i_samples = __MAX( p_sys->fmt.audio.i_rate / 20, 1 );
+    i_samples = __MAX( p_sys->fmt.audio.i_rate / 20, 1 );
     p_sys->i_frame_size = i_samples * p_sys->fmt.audio.i_channels *
                           ( (p_sys->fmt.audio.i_bitspersample + 7) / 8 );
     if( p_sys->fmt.audio.i_blockalign > 0 )
     {
-        unsigned mod = p_sys->i_frame_size % p_sys->fmt.audio.i_blockalign;
-        if( mod != 0 )
+        if( ( i_modulo = p_sys->i_frame_size % p_sys->fmt.audio.i_blockalign ) != 0 )
         {
-            p_sys->i_frame_size += p_sys->fmt.audio.i_blockalign - mod;
+            p_sys->i_frame_size += p_sys->fmt.audio.i_blockalign - i_modulo;
         }
     }
     p_sys->i_frame_length = (mtime_t)1000000 *
                             (mtime_t)i_samples /
                             (mtime_t)p_sys->fmt.audio.i_rate;
 
-    p_demux->p_sys = p_sys;
-    p_demux->pf_demux = Demux;
+    /* finish to set up p_demux */
+    p_demux->pf_demux   = DemuxPCM;
     p_demux->pf_control = Control;
+
     return VLC_SUCCESS;
-error:
-    free( p_sys );
-    return VLC_EGENERIC;
 }
 
 /*****************************************************************************
- * Demux: read packet and send them to decoders
+ * DemuxPCM: read packet and send them to decoders
  *****************************************************************************
  * Returns -1 in case of error, 0 in case of EOF, 1 otherwise
  *****************************************************************************/
-static int Demux( demux_t *p_demux )
+static int DemuxPCM( demux_t *p_demux )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
     block_t     *p_block;
 
     /* set PCR */
-    es_out_SetPCR( p_demux->out, VLC_TS_0 + p_sys->i_time );
+    es_out_Control( p_demux->out, ES_OUT_SET_PCR, p_sys->i_time );
 
-    p_block = vlc_stream_Block( p_demux->s, p_sys->i_frame_size );
-    if( p_block == NULL )
+    if( ( p_block = stream_Block( p_demux->s, p_sys->i_frame_size ) ) == NULL )
     {
         msg_Warn( p_demux, "cannot read data" );
         return 0;
     }
 
     p_block->i_dts =
-    p_block->i_pts = VLC_TS_0 + p_sys->i_time;
+    p_block->i_pts = p_sys->i_time;
 
     es_out_Send( p_demux->out, p_sys->es, p_block );
 
@@ -349,7 +332,7 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
 
-    return demux_vaControlHelper( p_demux->s, p_sys->i_header_size, -1,
+    return demux2_vaControlHelper( p_demux->s, p_sys->i_header_size, -1,
                                    p_sys->fmt.i_bitrate, p_sys->fmt.audio.i_blockalign,
                                    i_query, args );
 }

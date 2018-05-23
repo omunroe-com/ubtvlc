@@ -1,12 +1,11 @@
 /*****************************************************************************
  * ctrl_slider.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 9f259b3a78722bf9bd1751e55af26d4c24999c9f $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ctrl_slider.cpp 7073 2004-03-14 14:33:12Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
- *          Erwan Tulou      <erwan10 At videolan doT org>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "ctrl_slider.hpp"
@@ -28,17 +27,15 @@
 #include "../events/evt_mouse.hpp"
 #include "../events/evt_scroll.hpp"
 #include "../src/generic_bitmap.hpp"
-#include "../src/scaled_bitmap.hpp"
 #include "../src/top_window.hpp"
 #include "../src/os_factory.hpp"
 #include "../src/os_graphics.hpp"
+#include "../utils/position.hpp"
 #include "../utils/var_percent.hpp"
 
 
-static inline float scroll( bool up, float pct, float step )
-{
-    return pct + ( up ? step : -step );
-}
+#define RANGE 40
+#define SCROLL_STEP 0.05
 
 
 CtrlSliderCursor::CtrlSliderCursor( intf_thread_t *pIntf,
@@ -53,17 +50,25 @@ CtrlSliderCursor::CtrlSliderCursor( intf_thread_t *pIntf,
     CtrlGeneric( pIntf, rHelp, pVisible ), m_fsm( pIntf ),
     m_rVariable( rVariable ), m_tooltip( rTooltip ),
     m_width( rCurve.getWidth() ), m_height( rCurve.getHeight() ),
-    m_xPosition( 0 ), m_yPosition( 0 ),
-    m_cmdOverDown( this ), m_cmdDownOver( this ),
-    m_cmdOverUp( this ), m_cmdUpOver( this ),
-    m_cmdMove( this ), m_cmdScroll( this ),
-    m_lastCursorRect(), m_xOffset( 0 ), m_yOffset( 0 ),
-    m_pEvt( NULL ), m_rCurve( rCurve ),
-    m_pImgUp( rBmpUp.getGraphics() ),
-    m_pImgOver( rBmpOver.getGraphics() ),
-    m_pImgDown( rBmpDown.getGraphics() ),
-    m_pImg( m_pImgUp )
+    m_cmdOverDown( this, &transOverDown ),
+    m_cmdDownOver( this, &transDownOver ), m_cmdOverUp( this, &transOverUp ),
+    m_cmdUpOver( this, &transUpOver ), m_cmdMove( this, &transMove ),
+    m_cmdScroll( this, &transScroll ),
+    m_lastPercentage( 0 ), m_xOffset( 0 ), m_yOffset( 0 ),
+    m_pEvt( NULL ), m_rCurve( rCurve )
 {
+    // Build the images of the cursor
+    OSFactory *pOsFactory = OSFactory::instance( getIntf() );
+    m_pImgUp = pOsFactory->createOSGraphics( rBmpUp.getWidth(),
+                                             rBmpUp.getHeight() );
+    m_pImgUp->drawBitmap( rBmpUp, 0, 0 );
+    m_pImgDown = pOsFactory->createOSGraphics( rBmpDown.getWidth(),
+                                               rBmpDown.getHeight() );
+    m_pImgDown->drawBitmap( rBmpDown, 0, 0 );
+    m_pImgOver = pOsFactory->createOSGraphics( rBmpOver.getWidth(),
+                                               rBmpOver.getHeight() );
+    m_pImgOver->drawBitmap( rBmpOver, 0, 0 );
+
     // States
     m_fsm.addState( "up" );
     m_fsm.addState( "over" );
@@ -81,15 +86,22 @@ CtrlSliderCursor::CtrlSliderCursor( intf_thread_t *pIntf,
 
     // Initial state
     m_fsm.setState( "up" );
+    m_pImg = m_pImgUp;
 
     // Observe the position variable
     m_rVariable.addObserver( this );
+
+    // Initial position of the cursor
+    m_lastPercentage = m_rVariable.get();
 }
 
 
 CtrlSliderCursor::~CtrlSliderCursor()
 {
     m_rVariable.delObserver( this );
+    SKINS_DELETE( m_pImgUp );
+    SKINS_DELETE( m_pImgDown );
+    SKINS_DELETE( m_pImgOver );
 }
 
 
@@ -119,153 +131,149 @@ bool CtrlSliderCursor::mouseOver( int x, int y ) const
         return m_pImg->hit( x - xPos + m_pImg->getWidth() / 2,
                             y - yPos + m_pImg->getHeight() / 2 );
     }
-
-    return false;
+    else
+    {
+        return false;
+    }
 }
 
 
-void CtrlSliderCursor::draw( OSGraphics &rImage, int xDest, int yDest, int w, int h )
+void CtrlSliderCursor::draw( OSGraphics &rImage, int xDest, int yDest )
 {
     if( m_pImg )
     {
+        // Compute the position of the cursor
+        int xPos, yPos;
+        m_rCurve.getPoint( m_rVariable.get(), xPos, yPos );
+
+        // Compute the resize factors
+        float factorX, factorY;
+        getResizeFactors( factorX, factorY );
+        xPos = (int)(xPos * factorX);
+        yPos = (int)(yPos * factorY);
+
         // Draw the current image
-        rect inter;
-        rect clip( xDest, yDest, w, h);
-
-        if( rect::intersect( m_lastCursorRect, clip, &inter ) )
-            rImage.drawGraphics( *m_pImg,
-                             inter.x - m_lastCursorRect.x,
-                             inter.y - m_lastCursorRect.y,
-                             inter.x, inter.y, inter.width, inter.height );
+        rImage.drawGraphics( *m_pImg, 0, 0,
+                             xDest + xPos - m_pImg->getWidth() / 2,
+                             yDest + yPos - m_pImg->getHeight() / 2 );
     }
 }
 
 
-void CtrlSliderCursor::onPositionChange()
+void CtrlSliderCursor::onUpdate( Subject<VarPercent> &rVariable )
 {
-    m_lastCursorRect = getCurrentCursorRect();
-}
-
-
-void CtrlSliderCursor::onResize()
-{
-    onPositionChange();
-}
-
-
-void CtrlSliderCursor::notifyLayout( int width, int height,
-                                     int xOffSet, int yOffSet )
-{
-    if( width > 0 && height > 0 )
-    {
-        CtrlGeneric::notifyLayout( width, height, xOffSet, yOffSet );
-    }
-    else
-    {
-        onPositionChange();
-        const Position *pPos = getPosition();
-        CtrlGeneric::notifyLayout( m_lastCursorRect.width,
-                                   m_lastCursorRect.height,
-                                   m_lastCursorRect.x - pPos->getLeft(),
-                                   m_lastCursorRect.y - pPos->getTop() );
-    }
-}
-
-
-void CtrlSliderCursor::onUpdate( Subject<VarPercent> &rVariable, void *arg  )
-{
-    (void)rVariable; (void)arg;
     // The position has changed
-    refreshLayout( false );
+    notifyLayout();
 }
 
 
-void CtrlSliderCursor::CmdOverDown::execute()
+void CtrlSliderCursor::transOverDown( SkinObject *pCtrl )
 {
-    EvtMouse *pEvtMouse = static_cast<EvtMouse*>(m_pParent->m_pEvt);
+    CtrlSliderCursor *pThis = (CtrlSliderCursor*)pCtrl;
+    EvtMouse *pEvtMouse = (EvtMouse*)pThis->m_pEvt;
 
     // Compute the resize factors
     float factorX, factorY;
-    m_pParent->getResizeFactors( factorX, factorY );
+    pThis->getResizeFactors( factorX, factorY );
 
     // Get the position of the control
-    const Position *pPos = m_pParent->getPosition();
+    const Position *pPos = pThis->getPosition();
 
     // Compute the offset
     int tempX, tempY;
-    m_pParent->m_rCurve.getPoint( m_pParent->m_rVariable.get(), tempX, tempY );
-    m_pParent->m_xOffset = pEvtMouse->getXPos() - pPos->getLeft()
+    pThis->m_rCurve.getPoint( pThis->m_rVariable.get(), tempX, tempY );
+    pThis->m_xOffset = pEvtMouse->getXPos() - pPos->getLeft()
                        - (int)(tempX * factorX);
-    m_pParent->m_yOffset = pEvtMouse->getYPos() - pPos->getTop()
+    pThis->m_yOffset = pEvtMouse->getYPos() - pPos->getTop()
                        - (int)(tempY * factorY);
 
-    m_pParent->captureMouse();
-
-    if( m_pParent->m_pImg == m_pParent->m_pImgDown )
-        return;
-    m_pParent->m_pImg = m_pParent->m_pImgDown;
-    m_pParent->refreshLayout();
+    pThis->captureMouse();
+    pThis->m_pImg = pThis->m_pImgDown;
+    pThis->notifyLayout();
 }
 
 
-void CtrlSliderCursor::CmdDownOver::execute()
+void CtrlSliderCursor::transDownOver( SkinObject *pCtrl )
 {
-    m_pParent->releaseMouse();
+    CtrlSliderCursor *pThis = (CtrlSliderCursor*)pCtrl;
 
-    if( m_pParent->m_pImg == m_pParent->m_pImgUp )
-        return;
-    m_pParent->m_pImg = m_pParent->m_pImgUp;
-    m_pParent->refreshLayout();
+    // Save the position
+    pThis->m_lastPercentage = pThis->m_rVariable.get();
+
+    pThis->releaseMouse();
+    pThis->m_pImg = pThis->m_pImgUp;
+    pThis->notifyLayout();
 }
 
 
-void CtrlSliderCursor::CmdUpOver::execute()
+void CtrlSliderCursor::transUpOver( SkinObject *pCtrl )
 {
-    if( m_pParent->m_pImg == m_pParent->m_pImgOver )
-        return;
-    m_pParent->m_pImg = m_pParent->m_pImgOver;
-    m_pParent->refreshLayout();
+    CtrlSliderCursor *pThis = (CtrlSliderCursor*)pCtrl;
+
+    pThis->m_pImg = pThis->m_pImgOver;
+    pThis->notifyLayout();
 }
 
 
-void CtrlSliderCursor::CmdOverUp::execute()
+void CtrlSliderCursor::transOverUp( SkinObject *pCtrl )
 {
-    if( m_pParent->m_pImg == m_pParent->m_pImgUp )
-        return;
-    m_pParent->m_pImg = m_pParent->m_pImgUp;
-    m_pParent->refreshLayout();
+    CtrlSliderCursor *pThis = (CtrlSliderCursor*)pCtrl;
+
+    pThis->m_pImg = pThis->m_pImgUp;
+    pThis->notifyLayout();
 }
 
 
-void CtrlSliderCursor::CmdMove::execute()
+void CtrlSliderCursor::transMove( SkinObject *pCtrl )
 {
-    EvtMouse *pEvtMouse = static_cast<EvtMouse*>(m_pParent->m_pEvt);
+    CtrlSliderCursor *pThis = (CtrlSliderCursor*)pCtrl;
+    EvtMouse *pEvtMouse = (EvtMouse*)pThis->m_pEvt;
 
     // Get the position of the control
-    const Position *pPos = m_pParent->getPosition();
+    const Position *pPos = pThis->getPosition();
 
     // Compute the resize factors
     float factorX, factorY;
-    m_pParent->getResizeFactors( factorX, factorY );
+    pThis->getResizeFactors( factorX, factorY );
 
     // Compute the relative position of the centre of the cursor
-    float relX = pEvtMouse->getXPos() - pPos->getLeft() - m_pParent->m_xOffset;
-    float relY = pEvtMouse->getYPos() - pPos->getTop() - m_pParent->m_yOffset;
+    float relX = pEvtMouse->getXPos() - pPos->getLeft() - pThis->m_xOffset;
+    float relY = pEvtMouse->getYPos() - pPos->getTop() - pThis->m_yOffset;
     // Ponderate with the resize factors
     int relXPond = (int)(relX / factorX);
     int relYPond = (int)(relY / factorY);
 
-    float percentage =
-        m_pParent->m_rCurve.getNearestPercent( relXPond, relYPond );
-    m_pParent->m_rVariable.set( percentage );
+    // Update the position
+    if( pThis->m_rCurve.getMinDist( relXPond, relYPond ) < RANGE )
+    {
+        float percentage = pThis->m_rCurve.getNearestPercent( relXPond,
+                                                              relYPond );
+        pThis->m_rVariable.set( percentage );
+    }
+    else
+    {
+        pThis->m_rVariable.set( pThis->m_lastPercentage );
+    }
 }
 
-void CtrlSliderCursor::CmdScroll::execute()
+void CtrlSliderCursor::transScroll( SkinObject *pCtrl )
 {
-    int dir = static_cast<EvtScroll*>(m_pParent->m_pEvt)->getDirection();
-    m_pParent->m_rVariable.set( scroll( EvtScroll::kUp == dir,
-                                        m_pParent->m_rVariable.get(),
-                                        m_pParent->m_rVariable.getStep()) );
+    CtrlSliderCursor *pThis = (CtrlSliderCursor*)pCtrl;
+    EvtScroll *pEvtScroll = (EvtScroll*)pThis->m_pEvt;
+
+    int direction = pEvtScroll->getDirection();
+
+    float percentage = pThis->m_rVariable.get();
+    if( direction == EvtScroll::kUp )
+    {
+        percentage += SCROLL_STEP;
+    }
+    else
+    {
+        percentage -= SCROLL_STEP;
+    }
+
+    pThis->m_rVariable.set( percentage );
 }
 
 
@@ -280,82 +288,25 @@ void CtrlSliderCursor::getResizeFactors( float &rFactorX,
 
     // Compute the resize factors
     if( m_width > 0 )
+    {
         rFactorX = (float)pPos->getWidth() / (float)m_width;
+    }
     if( m_height > 0 )
+    {
         rFactorY = (float)pPos->getHeight() / (float)m_height;
-}
-
-
-void CtrlSliderCursor::refreshLayout( bool force )
-{
-    rect currRect = getCurrentCursorRect();
-    if( !force && currRect == m_lastCursorRect )
-        return;
-
-    rect join;
-    if( rect::join( m_lastCursorRect, currRect, &join ) )
-    {
-        m_lastCursorRect = currRect;
-
-        const Position *pPos = getPosition();
-        notifyLayout( join.width, join.height,
-                      join.x - pPos->getLeft(),
-                      join.y - pPos->getTop() );
     }
 }
 
 
-rect CtrlSliderCursor::getCurrentCursorRect()
-{
-    const Position *pPos = getPosition();
 
-    // Compute the position of the cursor
-    int xPos, yPos;
-    m_rCurve.getPoint( m_rVariable.get(), xPos, yPos );
-
-    // Compute the resize factors
-    float factorX, factorY;
-    getResizeFactors( factorX, factorY );
-    xPos = (int)(xPos * factorX);
-    yPos = (int)(yPos * factorY);
-
-    int x = pPos->getLeft() + xPos - m_pImg->getWidth() / 2;
-    int y = pPos->getTop() + yPos - m_pImg->getHeight() / 2;
-
-    return rect( x, y, m_pImg->getWidth(), m_pImg->getHeight() );
-}
-
-
-CtrlSliderBg::CtrlSliderBg( intf_thread_t *pIntf,
+CtrlSliderBg::CtrlSliderBg( intf_thread_t *pIntf, CtrlSliderCursor &rCursor,
                             const Bezier &rCurve, VarPercent &rVariable,
-                            int thickness, GenericBitmap *pBackground,
-                            int nbHoriz, int nbVert, int padHoriz, int padVert,
-                            VarBool *pVisible, const UString &rHelp ):
-    CtrlGeneric( pIntf, rHelp, pVisible ), m_pCursor( NULL ),
+                            int thickness, VarBool *pVisible,
+                            const UString &rHelp ):
+    CtrlGeneric( pIntf, rHelp, pVisible ), m_rCursor( rCursor ),
     m_rVariable( rVariable ), m_thickness( thickness ), m_rCurve( rCurve ),
-    m_width( rCurve.getWidth() ), m_height( rCurve.getHeight() ),
-    m_pImgSeq( pBackground ), m_pScaledBmp( NULL ),
-    m_nbHoriz( nbHoriz ), m_nbVert( nbVert ),
-    m_padHoriz( padHoriz ), m_padVert( padVert ),
-    m_bgWidth( 0 ), m_bgHeight( 0 ), m_position( 0 )
+    m_width( rCurve.getWidth() ), m_height( rCurve.getHeight() )
 {
-    if( m_pImgSeq )
-    {
-        // Observe the position variable
-        m_rVariable.addObserver( this );
-
-        // Initial position
-        m_position = (int)( m_rVariable.get() * (m_nbHoriz * m_nbVert - 1) );
-    }
-}
-
-
-CtrlSliderBg::~CtrlSliderBg()
-{
-    if( m_pImgSeq )
-        m_rVariable.delObserver( this );
-
-    delete m_pScaledBmp;
 }
 
 
@@ -365,55 +316,14 @@ bool CtrlSliderBg::mouseOver( int x, int y ) const
     float factorX, factorY;
     getResizeFactors( factorX, factorY );
 
-    if( m_pScaledBmp )
-    {
-        // background size that is displayed
-        int width = m_bgWidth - (int)(m_padHoriz * factorX);
-        int height = m_bgHeight - (int)(m_padVert * factorY);
-
-        return x >= 0 && x < width &&
-               y >= 0 && y < height;
-    }
-    else
-    {
-        return m_rCurve.getMinDist( (int)(x / factorX), (int)(y / factorY),
-                                    factorX, factorY ) < m_thickness;
-    }
-}
-
-
-void CtrlSliderBg::draw( OSGraphics &rImage, int xDest, int yDest, int w, int h )
-{
-    if( !m_pScaledBmp || m_bgWidth <= 0 || m_bgHeight <= 0 )
-        return;
-
-    // Compute the resize factors
-    float factorX, factorY;
-    getResizeFactors( factorX, factorY );
-
-    // Locate the right image in the background bitmap
-    int x = m_bgWidth * ( m_position % m_nbHoriz );
-    int y = m_bgHeight * ( m_position / m_nbHoriz );
-
-    // Draw the background image
-    const Position *pPos = getPosition();
-    rect region( pPos->getLeft(), pPos->getTop(),
-                 m_bgWidth - (int)(m_padHoriz * factorX),
-                 m_bgHeight - (int)(m_padVert * factorY) );
-    rect clip( xDest, yDest, w, h );
-    rect inter;
-    if( rect::intersect( region, clip, &inter ) )
-        rImage.drawBitmap( *m_pScaledBmp,
-                           x + inter.x - region.x,
-                           y + inter.y - region.y,
-                           inter.x, inter.y,
-                           inter.width, inter.height );
+    return (m_rCurve.getMinDist( (int)(x / factorX),
+                                 (int)(y / factorY) ) < m_thickness );
 }
 
 
 void CtrlSliderBg::handleEvent( EvtGeneric &rEvent )
 {
-    if( rEvent.getAsString().find( "mouse:left:down" ) != std::string::npos )
+    if( rEvent.getAsString().find( "mouse:left:down" ) != string::npos )
     {
         // Compute the resize factors
         float factorX, factorY;
@@ -433,78 +343,30 @@ void CtrlSliderBg::handleEvent( EvtGeneric &rEvent )
         // Forward the clic to the cursor
         EvtMouse evt( getIntf(), x, y, EvtMouse::kLeft, EvtMouse::kDown );
         TopWindow *pWin = getWindow();
-        if( pWin && m_pCursor )
+        if( pWin )
         {
             EvtEnter evtEnter( getIntf() );
             // XXX It was not supposed to be implemented like that !!
-            pWin->forwardEvent( evtEnter, *m_pCursor );
-            pWin->forwardEvent( evt, *m_pCursor );
+            pWin->forwardEvent( evtEnter, m_rCursor );
+            pWin->forwardEvent( evt, m_rCursor );
         }
     }
-    else if( rEvent.getAsString().find( "scroll" ) != std::string::npos )
+    else if( rEvent.getAsString().find( "scroll" ) != string::npos )
     {
-        int dir = static_cast<EvtScroll*>(&rEvent)->getDirection();
-        m_rVariable.set( scroll( EvtScroll::kUp == dir,
-                                 m_rVariable.get(), m_rVariable.getStep() ) );
+        int direction = ((EvtScroll&)rEvent).getDirection();
+
+        float percentage = m_rVariable.get();
+        if( direction == EvtScroll::kUp )
+        {
+            percentage += SCROLL_STEP;
+        }
+        else
+        {
+            percentage -= SCROLL_STEP;
+        }
+
+        m_rVariable.set( percentage );
     }
-}
-
-
-void CtrlSliderBg::onPositionChange()
-{
-    if( m_pImgSeq )
-    {
-        setCurrentImage();
-    }
-}
-
-
-void CtrlSliderBg::onResize()
-{
-    if( m_pImgSeq )
-    {
-        setCurrentImage();
-    }
-}
-
-
-void CtrlSliderBg::associateCursor( CtrlSliderCursor &rCursor )
-{
-    m_pCursor = &rCursor;
-}
-
-
-void CtrlSliderBg::notifyLayout( int width, int height,
-                                 int xOffSet, int yOffSet )
-{
-    if( width > 0 && height > 0 )
-    {
-        CtrlGeneric::notifyLayout( width, height, xOffSet, yOffSet );
-    }
-    else
-    {
-        // Compute the resize factors
-        float factorX, factorY;
-        getResizeFactors( factorX, factorY );
-        // real background size
-        int width = m_bgWidth - (int)(m_padHoriz * factorX);
-        int height = m_bgHeight - (int)(m_padVert * factorY);
-        CtrlGeneric::notifyLayout( width, height );
-    }
-}
-
-
-void CtrlSliderBg::onUpdate( Subject<VarPercent> &rVariable, void*arg )
-{
-    (void)rVariable; (void)arg;
-    int position = (int)( m_rVariable.get() * (m_nbHoriz * m_nbVert - 1) );
-    if( position == m_position )
-        return;
-
-    m_position = position;
-
-    // redraw the entire control
-    notifyLayout();
 }
 
 
@@ -518,39 +380,12 @@ void CtrlSliderBg::getResizeFactors( float &rFactorX, float &rFactorY ) const
 
     // Compute the resize factors
     if( m_width > 0 )
-        rFactorX = (float)pPos->getWidth() / (float)m_width;
-    if( m_height > 0 )
-        rFactorY = (float)pPos->getHeight() / (float)m_height;
-}
-
-
-void CtrlSliderBg::setCurrentImage()
-{
-    // Compute the resize factors
-    float factorX, factorY;
-    getResizeFactors( factorX, factorY );
-
-    // Build the background image sequence
-    // Note: we suppose that the last padding is not included in the
-    // given image
-    // TODO: we should probably change this assumption, as it would make
-    // the code a bit simpler and it would be more natural for the skins
-    // designers
-    // Size of one elementary background image (padding included)
-    m_bgWidth =
-        (int)((m_pImgSeq->getWidth() + m_padHoriz) * factorX / m_nbHoriz);
-    m_bgHeight =
-        (int)((m_pImgSeq->getHeight() + m_padVert) * factorY / m_nbVert);
-
-    // Rescale the image accordingly
-    int width = m_bgWidth * m_nbHoriz - (int)(m_padHoriz * factorX);
-    int height = m_bgHeight * m_nbVert - (int)(m_padVert * factorY);
-    if( !m_pScaledBmp ||
-        m_pScaledBmp->getWidth() != width ||
-        m_pScaledBmp->getHeight() != height )
     {
-        // scaled bitmap
-        delete m_pScaledBmp;
-        m_pScaledBmp = new ScaledBitmap( getIntf(), *m_pImgSeq, width, height );
+        rFactorX = (float)pPos->getWidth() / (float)m_width;
+    }
+    if( m_height > 0 )
+    {
+        rFactorY = (float)pPos->getHeight() / (float)m_height;
     }
 }
+

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * expr_evaluator.hpp
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: 7bf2a0d313b7e645e475cb3338c2b4489af9a262 $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: expr_evaluator.hpp 7561 2004-04-29 22:09:23Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -16,9 +16,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef EXPR_EVALUATOR_HPP
@@ -31,23 +31,26 @@
 /// Expression evaluator using Reverse Polish Notation
 class ExprEvaluator: public SkinObject
 {
-public:
-    ExprEvaluator( intf_thread_t *pIntf ): SkinObject( pIntf ) { }
-    ~ExprEvaluator() { }
+    public:
+        /// Constructor
+        ExprEvaluator( intf_thread_t *pIntf ): SkinObject( pIntf ) {}
 
-    /// Clear the RPN stack and parse an expression
-    void parse( const std::string &rExpr );
+        /// Destructor
+        ~ExprEvaluator() {}
 
-    /// Pop the first token from the RPN stack.
-    /// Return NULL when the stack is empty.
-    std::string getToken();
+        /// Clear the RPN stack and parse an expression
+        void parse( const string &rExpr );
 
-private:
-    /// RPN stack
-    std::list<std::string> m_stack;
+        /// Pop the first token from the RPN stack.
+        /// Return NULL when the stack is empty.
+        string getToken();
 
-    /// Returns true if op1 has precedency over op2
-    bool hasPrecedency( const std::string &op1, const std::string &op2 ) const;
+    private:
+        /// RPN stack
+        list<string> m_stack;
+
+        /// Returns true if op1 has precedency over op2
+        bool hasPrecedency( const string &op1, const string &op2 ) const;
 };
 
 #endif

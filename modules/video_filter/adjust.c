@@ -1,46 +1,44 @@
 /*****************************************************************************
  * adjust.c : Contrast/Hue/Saturation/Brightness video plugin for vlc
  *****************************************************************************
- * Copyright (C) 2000-2006 VLC authors and VideoLAN
- * $Id: fc12d666402bafcaa9ea1ac13d6696ddc578953a $
+ * Copyright (C) 2000, 2001, 2002, 2003 VideoLAN
+ * $Id: adjust.c 7453 2004-04-23 20:01:59Z gbazin $
  *
  * Authors: Simon Latapie <garf@via.ecp.fr>
- *          Antoine Cellerier <dionoea -at- videolan d0t org>
- *          Martin Briza <gamajun@seznam.cz> (SSE)
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
+#include <errno.h>
+#include <stdlib.h>                                      /* malloc(), free() */
+#include <string.h>
 #include <math.h>
 
-#include <vlc_common.h>
-#include <vlc_atomic.h>
-#include <vlc_plugin.h>
-#include <vlc_filter.h>
-#include <vlc_picture.h>
-#include "filter_picture.h"
+#include <vlc/vlc.h>
+#include <vlc/vout.h>
 
-#include "adjust_sat_hue.h"
+#include "filter_common.h"
+
+#ifndef M_PI
+#   define M_PI 3.14159265358979323846
+#endif
+
+#define eight_times( x )    x x x x x x x x
 
 /*****************************************************************************
  * Local prototypes
@@ -48,511 +46,281 @@
 static int  Create    ( vlc_object_t * );
 static void Destroy   ( vlc_object_t * );
 
-static picture_t *FilterPlanar( filter_t *, picture_t * );
-static picture_t *FilterPacked( filter_t *, picture_t * );
-static int AdjustCallback( vlc_object_t *p_this, char const *psz_var,
-                           vlc_value_t oldval, vlc_value_t newval,
-                           void *p_data );
+static int  Init      ( vout_thread_t * );
+static void End       ( vout_thread_t * );
+static void Render    ( vout_thread_t *, picture_t * );
+
+static int  SendEvents( vlc_object_t *, char const *,
+                        vlc_value_t, vlc_value_t, void * );
 
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
 
-#define THRES_TEXT N_("Brightness threshold")
-#define THRES_LONGTEXT N_("When this mode is enabled, pixels will be " \
-        "shown as black or white. The threshold value will be the brightness " \
-        "defined below." )
 #define CONT_TEXT N_("Image contrast (0-2)")
-#define CONT_LONGTEXT N_("Set the image contrast, between 0 and 2. Defaults to 1.")
-#define HUE_TEXT N_("Image hue (-180..180)")
-#define HUE_LONGTEXT N_("Set the image hue, between -180 and 180. Defaults to 0.")
+#define CONT_LONGTEXT N_("Set the image contrast, between 0 and 2. Defaults to 1")
+#define HUE_TEXT N_("Image hue (0-360)")
+#define HUE_LONGTEXT N_("Set the image hue, between 0 and 360. Defaults to 0")
 #define SAT_TEXT N_("Image saturation (0-3)")
-#define SAT_LONGTEXT N_("Set the image saturation, between 0 and 3. Defaults to 1.")
+#define SAT_LONGTEXT N_("Set the image saturation, between 0 and 3. Defaults to 1")
 #define LUM_TEXT N_("Image brightness (0-2)")
-#define LUM_LONGTEXT N_("Set the image brightness, between 0 and 2. Defaults to 1.")
+#define LUM_LONGTEXT N_("Set the image brightness, between 0 and 2. Defaults to 1")
 #define GAMMA_TEXT N_("Image gamma (0-10)")
-#define GAMMA_LONGTEXT N_("Set the image gamma, between 0.01 and 10. Defaults to 1.")
+#define GAMMA_LONGTEXT N_("Set the image gamma, between 0.01 and 10. Defaults to 1")
 
-vlc_module_begin ()
-    set_description( N_("Image properties filter") )
-    set_shortname( N_("Image adjust" ))
-    set_category( CAT_VIDEO )
-    set_subcategory( SUBCAT_VIDEO_VFILTER )
-    set_capability( "video filter", 0 )
 
-    add_float_with_range( "contrast", 1.0, 0.0, 2.0,
-                          CONT_TEXT, CONT_LONGTEXT, false )
-        change_safe()
-    add_float_with_range( "brightness", 1.0, 0.0, 2.0,
-                           LUM_TEXT, LUM_LONGTEXT, false )
-        change_safe()
-    add_float_with_range( "hue", 0, -180., +180.,
-                            HUE_TEXT, HUE_LONGTEXT, false )
-        change_safe()
-    add_float_with_range( "saturation", 1.0, 0.0, 3.0,
-                          SAT_TEXT, SAT_LONGTEXT, false )
-        change_safe()
-    add_float_with_range( "gamma", 1.0, 0.01, 10.0,
-                          GAMMA_TEXT, GAMMA_LONGTEXT, false )
-        change_safe()
-    add_bool( "brightness-threshold", false,
-              THRES_TEXT, THRES_LONGTEXT, false )
-        change_safe()
+vlc_module_begin();
+    set_description( _("Image properties filter") );
+    set_capability( "video filter", 0 );
 
-    add_shortcut( "adjust" )
-    set_callbacks( Create, Destroy )
-vlc_module_end ()
+    add_float_with_range( "contrast", 1.0, 0.0, 2.0, NULL, CONT_TEXT, CONT_LONGTEXT, VLC_FALSE );
+    add_float_with_range( "brightness", 1.0, 0.0, 2.0, NULL, LUM_TEXT, LUM_LONGTEXT, VLC_FALSE );
+    add_integer_with_range( "hue", 0, 0, 360, NULL, HUE_TEXT, HUE_LONGTEXT, VLC_FALSE );
+    add_float_with_range( "saturation", 1.0, 0.0, 3.0, NULL, SAT_TEXT, SAT_LONGTEXT, VLC_FALSE );
+    add_float_with_range( "gamma", 1.0, 0.01, 10.0, NULL, GAMMA_TEXT, GAMMA_LONGTEXT, VLC_FALSE );
 
-static const char *const ppsz_filter_options[] = {
-    "contrast", "brightness", "hue", "saturation", "gamma",
-    "brightness-threshold", NULL
-};
+    add_shortcut( "adjust" );
+    set_callbacks( Create, Destroy );
+vlc_module_end();
 
 /*****************************************************************************
- * filter_sys_t: adjust filter method descriptor
+ * vout_sys_t: adjust video output method descriptor
+ *****************************************************************************
+ * This structure is part of the video output thread descriptor.
+ * It describes the adjust specific properties of an output thread.
  *****************************************************************************/
-struct filter_sys_t
+struct vout_sys_t
 {
-    vlc_atomic_float f_contrast;
-    vlc_atomic_float f_brightness;
-    vlc_atomic_float f_hue;
-    vlc_atomic_float f_saturation;
-    vlc_atomic_float f_gamma;
-    atomic_bool  b_brightness_threshold;
-    int (*pf_process_sat_hue)( picture_t *, picture_t *, int, int, int,
-                               int, int );
-    int (*pf_process_sat_hue_clip)( picture_t *, picture_t *, int, int,
-                                    int, int, int );
+    vout_thread_t *p_vout;
 };
 
+inline static int32_t clip( int32_t a )
+{
+    return (a > 255) ? 255 : (a < 0) ? 0 : a;
+}
+
 /*****************************************************************************
- * Create: allocates adjust video filter
+ * Control: control facility for the vout (forwards to child vout)
+ *****************************************************************************/
+static int Control( vout_thread_t *p_vout, int i_query, va_list args )
+{
+    return vout_vaControl( p_vout->p_sys->p_vout, i_query, args );
+}
+
+/*****************************************************************************
+ * Create: allocates adjust video thread output method
+ *****************************************************************************
+ * This function allocates and initializes a adjust vout method.
  *****************************************************************************/
 static int Create( vlc_object_t *p_this )
 {
-    filter_t *p_filter = (filter_t *)p_this;
-    filter_sys_t *p_sys;
-
-    if( p_filter->fmt_in.video.i_chroma != p_filter->fmt_out.video.i_chroma )
-    {
-        msg_Err( p_filter, "Input and output chromas don't match" );
-        return VLC_EGENERIC;
-    }
+    vout_thread_t *p_vout = (vout_thread_t *)p_this;
 
     /* Allocate structure */
-    p_filter->p_sys = malloc( sizeof( filter_sys_t ) );
-    if( p_filter->p_sys == NULL )
-        return VLC_ENOMEM;
-    p_sys = p_filter->p_sys;
-
-    /* Choose Planar/Packed function and pointer to a Hue/Saturation processing
-     * function*/
-    switch( p_filter->fmt_in.video.i_chroma )
+    p_vout->p_sys = malloc( sizeof( vout_sys_t ) );
+    if( p_vout->p_sys == NULL )
     {
-        CASE_PLANAR_YUV
-            /* Planar YUV */
-            p_filter->pf_video_filter = FilterPlanar;
-            p_sys->pf_process_sat_hue_clip = planar_sat_hue_clip_C;
-            p_sys->pf_process_sat_hue = planar_sat_hue_C;
-            break;
-
-        CASE_PLANAR_YUV10
-        CASE_PLANAR_YUV9
-            /* Planar YUV 9-bit or 10-bit */
-            p_filter->pf_video_filter = FilterPlanar;
-            p_sys->pf_process_sat_hue_clip = planar_sat_hue_clip_C_16;
-            p_sys->pf_process_sat_hue = planar_sat_hue_C_16;
-            break;
-
-        CASE_PACKED_YUV_422
-            /* Packed YUV 4:2:2 */
-            p_filter->pf_video_filter = FilterPacked;
-            p_sys->pf_process_sat_hue_clip = packed_sat_hue_clip_C;
-            p_sys->pf_process_sat_hue = packed_sat_hue_C;
-            break;
-
-        default:
-            msg_Dbg( p_filter, "Unsupported input chroma (%4.4s)",
-                     (char*)&(p_filter->fmt_in.video.i_chroma) );
-            free(p_sys);
-            return VLC_EGENERIC;
+        msg_Err( p_vout, "out of memory" );
+        return VLC_ENOMEM;
     }
 
-    /* needed to get options passed in transcode using the
-     * adjust{name=value} syntax */
-    config_ChainParse( p_filter, "", ppsz_filter_options, p_filter->p_cfg );
-
-    vlc_atomic_init_float( &p_sys->f_contrast,
-                           var_CreateGetFloatCommand( p_filter, "contrast" ) );
-    vlc_atomic_init_float( &p_sys->f_brightness,
-                           var_CreateGetFloatCommand( p_filter, "brightness" ) );
-    vlc_atomic_init_float( &p_sys->f_hue,
-                           var_CreateGetFloatCommand( p_filter, "hue" ) );
-    vlc_atomic_init_float( &p_sys->f_saturation,
-                           var_CreateGetFloatCommand( p_filter, "saturation" ) );
-    vlc_atomic_init_float( &p_sys->f_gamma,
-                           var_CreateGetFloatCommand( p_filter, "gamma" ) );
-    atomic_init( &p_sys->b_brightness_threshold,
-                 var_CreateGetBoolCommand( p_filter, "brightness-threshold" ) );
-
-    var_AddCallback( p_filter, "contrast",   AdjustCallback, p_sys );
-    var_AddCallback( p_filter, "brightness", AdjustCallback, p_sys );
-    var_AddCallback( p_filter, "hue",        AdjustCallback, p_sys );
-    var_AddCallback( p_filter, "saturation", AdjustCallback, p_sys );
-    var_AddCallback( p_filter, "gamma",      AdjustCallback, p_sys );
-    var_AddCallback( p_filter, "brightness-threshold",
-                                             AdjustCallback, p_sys );
+    p_vout->pf_init = Init;
+    p_vout->pf_end = End;
+    p_vout->pf_manage = NULL;
+    p_vout->pf_render = Render;
+    p_vout->pf_display = NULL;
+    p_vout->pf_control = Control;
+    
+    var_Create( p_vout, "contrast", VLC_VAR_FLOAT | VLC_VAR_DOINHERIT );
+    var_Create( p_vout, "brightness", VLC_VAR_FLOAT | VLC_VAR_DOINHERIT );
+    var_Create( p_vout, "hue", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Create( p_vout, "saturation", VLC_VAR_FLOAT | VLC_VAR_DOINHERIT );
+    var_Create( p_vout, "gamma", VLC_VAR_FLOAT | VLC_VAR_DOINHERIT );
 
     return VLC_SUCCESS;
 }
 
 /*****************************************************************************
- * Destroy: destroy adjust video filter
+ * Init: initialize adjust video thread output method
+ *****************************************************************************/
+static int Init( vout_thread_t *p_vout )
+{
+    int i_index;
+    picture_t *p_pic;
+
+    I_OUTPUTPICTURES = 0;
+
+    /* Initialize the output structure */
+    p_vout->output.i_chroma = p_vout->render.i_chroma;
+    p_vout->output.i_width  = p_vout->render.i_width;
+    p_vout->output.i_height = p_vout->render.i_height;
+    p_vout->output.i_aspect = p_vout->render.i_aspect;
+
+    /* Try to open the real video output */
+    msg_Dbg( p_vout, "spawning the real video output" );
+
+    p_vout->p_sys->p_vout = vout_Create( p_vout,
+                     p_vout->render.i_width, p_vout->render.i_height,
+                     p_vout->render.i_chroma, p_vout->render.i_aspect );
+
+    /* Everything failed */
+    if( p_vout->p_sys->p_vout == NULL )
+    {
+        msg_Err( p_vout, "can't open vout, aborting" );
+
+        return VLC_EGENERIC;
+    }
+
+    ALLOCATE_DIRECTBUFFERS( VOUT_MAX_PICTURES );
+
+    ADD_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
+
+    ADD_PARENT_CALLBACKS( SendEventsToChild );
+
+    return VLC_SUCCESS;
+}
+
+/*****************************************************************************
+ * End: terminate adjust video thread output method
+ *****************************************************************************/
+static void End( vout_thread_t *p_vout )
+{
+    int i_index;
+
+    /* Free the fake output buffers we allocated */
+    for( i_index = I_OUTPUTPICTURES ; i_index ; )
+    {
+        i_index--;
+        free( PP_OUTPUTPICTURE[ i_index ]->p_data_orig );
+    }
+}
+
+/*****************************************************************************
+ * Destroy: destroy adjust video thread output method
+ *****************************************************************************
+ * Terminate an output method created by adjustCreateOutputMethod
  *****************************************************************************/
 static void Destroy( vlc_object_t *p_this )
 {
-    filter_t *p_filter = (filter_t *)p_this;
-    filter_sys_t *p_sys = p_filter->p_sys;
+    vout_thread_t *p_vout = (vout_thread_t *)p_this;
 
-    var_DelCallback( p_filter, "contrast",   AdjustCallback, p_sys );
-    var_DelCallback( p_filter, "brightness", AdjustCallback, p_sys );
-    var_DelCallback( p_filter, "hue",        AdjustCallback, p_sys );
-    var_DelCallback( p_filter, "saturation", AdjustCallback, p_sys );
-    var_DelCallback( p_filter, "gamma",      AdjustCallback, p_sys );
-    var_DelCallback( p_filter, "brightness-threshold",
-                                             AdjustCallback, p_sys );
+    DEL_CALLBACKS( p_vout->p_sys->p_vout, SendEvents );
+    vlc_object_detach( p_vout->p_sys->p_vout );
+    vout_Destroy( p_vout->p_sys->p_vout );
 
-    free( p_sys );
+    DEL_PARENT_CALLBACKS( SendEventsToChild );
+
+    free( p_vout->p_sys );
 }
 
 /*****************************************************************************
- * Run the filter on a Planar YUV picture
+ * Render: displays previously rendered output
+ *****************************************************************************
+ * This function send the currently rendered image to adjust modified image,
+ * waits until it is displayed and switch the two rendering buffers, preparing
+ * next frame.
  *****************************************************************************/
-static picture_t *FilterPlanar( filter_t *p_filter, picture_t *p_pic )
-{
-    /* The full range will only be used for 10-bit */
-    int pi_luma[1024];
-    int pi_gamma[1024];
-
-    picture_t *p_outpic;
-
-    filter_sys_t *p_sys = p_filter->p_sys;
-
-    if( !p_pic ) return NULL;
-
-    p_outpic = filter_NewPicture( p_filter );
-    if( !p_outpic )
-    {
-        picture_Release( p_pic );
-        return NULL;
-    }
-
-    bool b_16bit;
-    float f_range;
-    switch( p_filter->fmt_in.video.i_chroma )
-    {
-        CASE_PLANAR_YUV10
-            b_16bit = true;
-            f_range = 1024.f;
-            break;
-        CASE_PLANAR_YUV9
-            b_16bit = true;
-            f_range = 512.f;
-            break;
-        default:
-            b_16bit = false;
-            f_range = 256.f;
-    }
-
-    const float f_max = f_range - 1.f;
-    const unsigned i_max = f_max;
-    const int i_range = f_range;
-    const unsigned i_size = i_range;
-    const unsigned i_mid = i_range >> 1;
-
-    /* Get variables */
-    int32_t i_cont = lroundf( vlc_atomic_load_float( &p_sys->f_contrast ) * f_max );
-    int32_t i_lum = lroundf( (vlc_atomic_load_float( &p_sys->f_brightness ) - 1.f) * f_max );
-    float f_hue = vlc_atomic_load_float( &p_sys->f_hue ) * (float)(M_PI / 180.);
-    int i_sat = (int)( vlc_atomic_load_float( &p_sys->f_saturation ) * f_range );
-    float f_gamma = 1.f / vlc_atomic_load_float( &p_sys->f_gamma );
-
-    /*
-     * Threshold mode drops out everything about luma, contrast and gamma.
-     */
-    if( !atomic_load( &p_sys->b_brightness_threshold ) )
-    {
-
-        /* Contrast is a fast but kludged function, so I put this gap to be
-         * cleaner :) */
-        i_lum += i_mid - i_cont / 2;
-
-        /* Fill the gamma lookup table */
-        for( unsigned i = 0 ; i < i_size; i++ )
-        {
-            pi_gamma[ i ] = VLC_CLIP( powf(i / f_max, f_gamma) * f_max, 0, i_max );
-        }
-
-        /* Fill the luma lookup table */
-        for( unsigned i = 0 ; i < i_size; i++ )
-        {
-            pi_luma[ i ] = pi_gamma[VLC_CLIP( (int)(i_lum + i_cont * i / i_range), 0, i_max )];
-        }
-    }
-    else
-    {
-        /*
-         * We get luma as threshold value: the higher it is, the darker is
-         * the image. Should I reverse this?
-         */
-        for( int i = 0 ; i < i_range; i++ )
-        {
-            pi_luma[ i ] = (i < i_lum) ? 0 : i_max;
-        }
-
-        /*
-         * Desaturates image to avoid that strange yellow halo...
-         */
-        i_sat = 0;
-    }
-
-    /*
-     * Do the Y plane
-     */
-    if ( b_16bit )
-    {
-        uint16_t *p_in, *p_in_end, *p_line_end;
-        uint16_t *p_out;
-        p_in = (uint16_t *) p_pic->p[Y_PLANE].p_pixels;
-        p_in_end = p_in + p_pic->p[Y_PLANE].i_visible_lines
-            * (p_pic->p[Y_PLANE].i_pitch >> 1) - 8;
-
-        p_out = (uint16_t *) p_outpic->p[Y_PLANE].p_pixels;
-
-        for( ; p_in < p_in_end ; )
-        {
-            p_line_end = p_in + (p_pic->p[Y_PLANE].i_visible_pitch >> 1) - 8;
-
-            for( ; p_in < p_line_end ; )
-            {
-                /* Do 8 pixels at a time */
-                *p_out++ = pi_luma[ *p_in++ ]; *p_out++ = pi_luma[ *p_in++ ];
-                *p_out++ = pi_luma[ *p_in++ ]; *p_out++ = pi_luma[ *p_in++ ];
-                *p_out++ = pi_luma[ *p_in++ ]; *p_out++ = pi_luma[ *p_in++ ];
-                *p_out++ = pi_luma[ *p_in++ ]; *p_out++ = pi_luma[ *p_in++ ];
-            }
-
-            p_line_end += 8;
-
-            for( ; p_in < p_line_end ; )
-            {
-                *p_out++ = pi_luma[ *p_in++ ];
-            }
-
-            p_in += (p_pic->p[Y_PLANE].i_pitch >> 1)
-                - (p_pic->p[Y_PLANE].i_visible_pitch >> 1);
-            p_out += (p_outpic->p[Y_PLANE].i_pitch >> 1)
-                - (p_outpic->p[Y_PLANE].i_visible_pitch >> 1);
-        }
-    }
-    else
-    {
-        uint8_t *p_in, *p_in_end, *p_line_end;
-        uint8_t *p_out;
-        p_in = p_pic->p[Y_PLANE].p_pixels;
-        p_in_end = p_in + p_pic->p[Y_PLANE].i_visible_lines
-                 * p_pic->p[Y_PLANE].i_pitch - 8;
-
-        p_out = p_outpic->p[Y_PLANE].p_pixels;
-
-        for( ; p_in < p_in_end ; )
-        {
-            p_line_end = p_in + p_pic->p[Y_PLANE].i_visible_pitch - 8;
-
-            for( ; p_in < p_line_end ; )
-            {
-                /* Do 8 pixels at a time */
-                *p_out++ = pi_luma[ *p_in++ ]; *p_out++ = pi_luma[ *p_in++ ];
-                *p_out++ = pi_luma[ *p_in++ ]; *p_out++ = pi_luma[ *p_in++ ];
-                *p_out++ = pi_luma[ *p_in++ ]; *p_out++ = pi_luma[ *p_in++ ];
-                *p_out++ = pi_luma[ *p_in++ ]; *p_out++ = pi_luma[ *p_in++ ];
-            }
-
-            p_line_end += 8;
-
-            for( ; p_in < p_line_end ; )
-            {
-                *p_out++ = pi_luma[ *p_in++ ];
-            }
-
-            p_in += p_pic->p[Y_PLANE].i_pitch
-                  - p_pic->p[Y_PLANE].i_visible_pitch;
-            p_out += p_outpic->p[Y_PLANE].i_pitch
-                   - p_outpic->p[Y_PLANE].i_visible_pitch;
-        }
-    }
-
-    /*
-     * Do the U and V planes
-     */
-
-    int i_sin = sinf(f_hue) * f_max;
-    int i_cos = cosf(f_hue) * f_max;
-
-    /* pow(2, (bpp * 2) - 1) */
-    int i_x = ( cosf(f_hue) + sinf(f_hue) ) * f_range * i_mid;
-    int i_y = ( cosf(f_hue) - sinf(f_hue) ) * f_range * i_mid;
-
-    if ( i_sat > i_range )
-    {
-        /* Currently no errors are implemented in the function, if any are added
-         * check them here */
-        p_sys->pf_process_sat_hue_clip( p_pic, p_outpic, i_sin, i_cos, i_sat,
-                                        i_x, i_y );
-    }
-    else
-    {
-        /* Currently no errors are implemented in the function, if any are added
-         * check them here */
-        p_sys->pf_process_sat_hue( p_pic, p_outpic, i_sin, i_cos, i_sat,
-                                        i_x, i_y );
-    }
-
-    return CopyInfoAndRelease( p_outpic, p_pic );
-}
-
-/*****************************************************************************
- * Run the filter on a Packed YUV picture
- *****************************************************************************/
-static picture_t *FilterPacked( filter_t *p_filter, picture_t *p_pic )
+static void Render( vout_thread_t *p_vout, picture_t *p_pic )
 {
     int pi_luma[256];
     int pi_gamma[256];
 
     picture_t *p_outpic;
-    uint8_t *p_in, *p_in_end, *p_line_end;
-    uint8_t *p_out;
-    int i_y_offset, i_u_offset, i_v_offset;
-
-    int i_pitch, i_visible_pitch;
+    uint8_t *p_in, *p_in_v, *p_in_end, *p_line_end;
+    uint8_t *p_out, *p_out_v;
 
     double  f_hue;
     double  f_gamma;
     int32_t i_cont, i_lum;
     int i_sat, i_sin, i_cos, i_x, i_y;
+    int i;
+    vlc_value_t val;
 
-    filter_sys_t *p_sys = p_filter->p_sys;
-
-    if( !p_pic ) return NULL;
-
-    i_pitch = p_pic->p->i_pitch;
-    i_visible_pitch = p_pic->p->i_visible_pitch;
-
-    if( GetPackedYuvOffsets( p_pic->format.i_chroma, &i_y_offset,
-                             &i_u_offset, &i_v_offset ) != VLC_SUCCESS )
+    /* This is a new frame. Get a structure from the video_output. */
+    while( ( p_outpic = vout_CreatePicture( p_vout->p_sys->p_vout, 0, 0, 0 ) )
+              == NULL )
     {
-        msg_Warn( p_filter, "Unsupported input chroma (%4.4s)",
-                  (char*)&(p_pic->format.i_chroma) );
-
-        picture_Release( p_pic );
-        return NULL;
+        if( p_vout->b_die || p_vout->b_error )
+        {
+            return;
+        }
+        msleep( VOUT_OUTMEM_SLEEP );
     }
 
-    p_outpic = filter_NewPicture( p_filter );
-    if( !p_outpic )
-    {
-        msg_Warn( p_filter, "can't get output picture" );
+    vout_DatePicture( p_vout->p_sys->p_vout, p_outpic, p_pic->date );
+    vout_LinkPicture( p_vout->p_sys->p_vout, p_outpic );
 
-        picture_Release( p_pic );
-        return NULL;
+    /* Getvariables */
+    var_Get( p_vout, "contrast", &val );
+    i_cont = (int) ( val.f_float * 255 );
+    var_Get( p_vout, "brightness", &val );
+    i_lum = (int) (( val.f_float - 1.0 ) * 255 );
+    var_Get( p_vout, "hue", &val );
+    f_hue = (float) ( val.i_int * M_PI / 180 );
+    var_Get( p_vout, "saturation", &val );
+    i_sat = (int) (val.f_float * 256 );
+    var_Get( p_vout, "gamma", &val );
+    f_gamma = 1.0 / val.f_float;
+
+    /* Contrast is a fast but kludged function, so I put this gap to be
+     * cleaner :) */
+    i_lum += 128 - i_cont / 2;
+
+    /* Fill the gamma lookup table */
+    for( i = 0 ; i < 256 ; i++ )
+    {
+      pi_gamma[ i ] = clip( pow(i / 255.0, f_gamma) * 255.0);
     }
 
-    /* Get variables */
-    i_cont = (int)( vlc_atomic_load_float( &p_sys->f_contrast ) * 255 );
-    i_lum = (int)( (vlc_atomic_load_float( &p_sys->f_brightness ) - 1.0)*255 );
-    f_hue = vlc_atomic_load_float( &p_sys->f_hue ) * (float)(M_PI / 180.);
-    i_sat = (int)( vlc_atomic_load_float( &p_sys->f_saturation ) * 256 );
-    f_gamma = 1.0 / vlc_atomic_load_float( &p_sys->f_gamma );
-
-    /*
-     * Threshold mode drops out everything about luma, contrast and gamma.
-     */
-    if( !atomic_load( &p_sys->b_brightness_threshold ) )
+    /* Fill the luma lookup table */
+    for( i = 0 ; i < 256 ; i++ )
     {
-
-        /* Contrast is a fast but kludged function, so I put this gap to be
-         * cleaner :) */
-        i_lum += 128 - i_cont / 2;
-
-        /* Fill the gamma lookup table */
-        for( int i = 0 ; i < 256 ; i++ )
-        {
-          pi_gamma[ i ] = clip_uint8_vlc( pow(i / 255.0, f_gamma) * 255.0);
-        }
-
-        /* Fill the luma lookup table */
-        for( int i = 0 ; i < 256 ; i++ )
-        {
-            pi_luma[ i ] = pi_gamma[clip_uint8_vlc( i_lum + i_cont * i / 256)];
-        }
-    }
-    else
-    {
-        /*
-         * We get luma as threshold value: the higher it is, the darker is
-         * the image. Should I reverse this?
-         */
-        for( int i = 0 ; i < 256 ; i++ )
-        {
-            pi_luma[ i ] = (i < i_lum) ? 0 : 255;
-        }
-
-        /*
-         * Desaturates image to avoid that strange yellow halo...
-         */
-        i_sat = 0;
+        pi_luma[ i ] = pi_gamma[clip( i_lum + i_cont * i / 256)];
     }
 
     /*
      * Do the Y plane
      */
 
-    p_in = p_pic->p->p_pixels + i_y_offset;
-    p_in_end = p_in + p_pic->p->i_visible_lines * p_pic->p->i_pitch - 8 * 4;
+    p_in = p_pic->p[0].p_pixels;
+    p_in_end = p_in + p_pic->p[0].i_lines * p_pic->p[0].i_pitch - 8;
 
-    p_out = p_outpic->p->p_pixels + i_y_offset;
+    p_out = p_outpic->p[0].p_pixels;
 
     for( ; p_in < p_in_end ; )
     {
-        p_line_end = p_in + i_visible_pitch - 8 * 4;
+        p_line_end = p_in + p_pic->p[0].i_visible_pitch - 8;
 
         for( ; p_in < p_line_end ; )
         {
             /* Do 8 pixels at a time */
-            *p_out = pi_luma[ *p_in ]; p_in += 2; p_out += 2;
-            *p_out = pi_luma[ *p_in ]; p_in += 2; p_out += 2;
-            *p_out = pi_luma[ *p_in ]; p_in += 2; p_out += 2;
-            *p_out = pi_luma[ *p_in ]; p_in += 2; p_out += 2;
-            *p_out = pi_luma[ *p_in ]; p_in += 2; p_out += 2;
-            *p_out = pi_luma[ *p_in ]; p_in += 2; p_out += 2;
-            *p_out = pi_luma[ *p_in ]; p_in += 2; p_out += 2;
-            *p_out = pi_luma[ *p_in ]; p_in += 2; p_out += 2;
+            *p_out++ = pi_luma[ *p_in++ ]; *p_out++ = pi_luma[ *p_in++ ];
+            *p_out++ = pi_luma[ *p_in++ ]; *p_out++ = pi_luma[ *p_in++ ];
+            *p_out++ = pi_luma[ *p_in++ ]; *p_out++ = pi_luma[ *p_in++ ];
+            *p_out++ = pi_luma[ *p_in++ ]; *p_out++ = pi_luma[ *p_in++ ];
         }
 
-        p_line_end += 8 * 4;
+        p_line_end += 8;
 
         for( ; p_in < p_line_end ; )
         {
-            *p_out = pi_luma[ *p_in ]; p_in += 2; p_out += 2;
+            *p_out++ = pi_luma[ *p_in++ ];
         }
 
-        p_in += i_pitch - p_pic->p->i_visible_pitch;
-        p_out += i_pitch - p_outpic->p->i_visible_pitch;
+        p_in += p_pic->p[0].i_pitch - p_pic->p[0].i_visible_pitch;
+        p_out += p_outpic->p[0].i_pitch - p_outpic->p[0].i_visible_pitch;
     }
 
     /*
      * Do the U and V planes
      */
+
+    p_in = p_pic->p[1].p_pixels;
+    p_in_v = p_pic->p[2].p_pixels;
+    p_in_end = p_in + p_pic->p[1].i_lines * p_pic->p[1].i_pitch - 8;
+
+    p_out = p_outpic->p[1].p_pixels;
+    p_out_v = p_outpic->p[2].p_pixels;
 
     i_sin = sin(f_hue) * 256;
     i_cos = cos(f_hue) * 256;
@@ -562,53 +330,100 @@ static picture_t *FilterPacked( filter_t *p_filter, picture_t *p_pic )
 
     if ( i_sat > 256 )
     {
-        if ( p_sys->pf_process_sat_hue_clip( p_pic, p_outpic, i_sin, i_cos, i_sat,
-                                             i_x, i_y ) != VLC_SUCCESS )
+#define WRITE_UV_CLIP() \
+    i_u = *p_in++ ; i_v = *p_in_v++ ; \
+    *p_out++ = clip( (( ((i_u * i_cos + i_v * i_sin - i_x) >> 8) \
+                           * i_sat) >> 8) + 128); \
+    *p_out_v++ = clip( (( ((i_v * i_cos - i_u * i_sin - i_y) >> 8) \
+                           * i_sat) >> 8) + 128)
+
+        uint8_t i_u, i_v;
+
+        for( ; p_in < p_in_end ; )
         {
-            /* Currently only one error can happen in the function, but if there
-             * will be more of them, this message must go away */
-            msg_Warn( p_filter, "Unsupported input chroma (%4.4s)",
-                      (char*)&(p_pic->format.i_chroma) );
-            picture_Release( p_pic );
-            return NULL;
+            p_line_end = p_in + p_pic->p[1].i_visible_pitch - 8;
+
+            for( ; p_in < p_line_end ; )
+            {
+                /* Do 8 pixels at a time */
+                WRITE_UV_CLIP(); WRITE_UV_CLIP();
+                WRITE_UV_CLIP(); WRITE_UV_CLIP();
+                WRITE_UV_CLIP(); WRITE_UV_CLIP();
+                WRITE_UV_CLIP(); WRITE_UV_CLIP();
+            }
+
+            p_line_end += 8;
+
+            for( ; p_in < p_line_end ; )
+            {
+                WRITE_UV_CLIP();
+            }
+
+            p_in += p_pic->p[1].i_pitch - p_pic->p[1].i_visible_pitch;
+            p_in_v += p_pic->p[2].i_pitch - p_pic->p[2].i_visible_pitch;
+            p_out += p_outpic->p[1].i_pitch - p_outpic->p[1].i_visible_pitch;
+            p_out_v += p_outpic->p[2].i_pitch - p_outpic->p[2].i_visible_pitch;
         }
     }
     else
     {
-        if ( p_sys->pf_process_sat_hue( p_pic, p_outpic, i_sin, i_cos, i_sat,
-                                        i_x, i_y ) != VLC_SUCCESS )
+#define WRITE_UV() \
+    i_u = *p_in++ ; i_v = *p_in_v++ ; \
+    *p_out++ = (( ((i_u * i_cos + i_v * i_sin - i_x) >> 8) \
+                       * i_sat) >> 8) + 128; \
+    *p_out_v++ = (( ((i_v * i_cos - i_u * i_sin - i_y) >> 8) \
+                       * i_sat) >> 8) + 128
+
+        uint8_t i_u, i_v;
+
+        for( ; p_in < p_in_end ; )
         {
-            /* Currently only one error can happen in the function, but if there
-             * will be more of them, this message must go away */
-            msg_Warn( p_filter, "Unsupported input chroma (%4.4s)",
-                      (char*)&(p_pic->format.i_chroma) );
-            picture_Release( p_pic );
-            return NULL;
+            p_line_end = p_in + p_pic->p[1].i_visible_pitch - 8;
+
+            for( ; p_in < p_line_end ; )
+            {
+                /* Do 8 pixels at a time */
+                WRITE_UV(); WRITE_UV(); WRITE_UV(); WRITE_UV();
+                WRITE_UV(); WRITE_UV(); WRITE_UV(); WRITE_UV();
+            }
+
+            p_line_end += 8;
+
+            for( ; p_in < p_line_end ; )
+            {
+                WRITE_UV();
+            }
+
+            p_in += p_pic->p[1].i_pitch - p_pic->p[1].i_visible_pitch;
+            p_in_v += p_pic->p[2].i_pitch - p_pic->p[2].i_visible_pitch;
+            p_out += p_outpic->p[1].i_pitch - p_outpic->p[1].i_visible_pitch;
+            p_out_v += p_outpic->p[2].i_pitch - p_outpic->p[2].i_visible_pitch;
         }
     }
 
-    return CopyInfoAndRelease( p_outpic, p_pic );
+    vout_UnlinkPicture( p_vout->p_sys->p_vout, p_outpic );
+
+    vout_DisplayPicture( p_vout->p_sys->p_vout, p_outpic );
 }
 
-static int AdjustCallback( vlc_object_t *p_this, char const *psz_var,
-                           vlc_value_t oldval, vlc_value_t newval,
-                           void *p_data )
+/*****************************************************************************
+ * SendEvents: forward mouse and keyboard events to the parent p_vout
+ *****************************************************************************/
+static int SendEvents( vlc_object_t *p_this, char const *psz_var,
+                       vlc_value_t oldval, vlc_value_t newval, void *p_data )
 {
-    VLC_UNUSED(p_this); VLC_UNUSED(oldval);
-    filter_sys_t *p_sys = (filter_sys_t *)p_data;
+    var_Set( (vlc_object_t *)p_data, psz_var, newval );
 
-    if( !strcmp( psz_var, "contrast" ) )
-        vlc_atomic_store_float( &p_sys->f_contrast, newval.f_float );
-    else if( !strcmp( psz_var, "brightness" ) )
-        vlc_atomic_store_float( &p_sys->f_brightness, newval.f_float );
-    else if( !strcmp( psz_var, "hue" ) )
-        vlc_atomic_store_float( &p_sys->f_hue, newval.f_float );
-    else if( !strcmp( psz_var, "saturation" ) )
-        vlc_atomic_store_float( &p_sys->f_saturation, newval.f_float );
-    else if( !strcmp( psz_var, "gamma" ) )
-        vlc_atomic_store_float( &p_sys->f_gamma, newval.f_float );
-    else if( !strcmp( psz_var, "brightness-threshold" ) )
-        atomic_store( &p_sys->b_brightness_threshold, newval.b_bool );
+    return VLC_SUCCESS;
+}
 
+/*****************************************************************************
+ * SendEventsToChild: forward events to the child/children vout
+ *****************************************************************************/
+static int SendEventsToChild( vlc_object_t *p_this, char const *psz_var,
+                       vlc_value_t oldval, vlc_value_t newval, void *p_data )
+{
+    vout_thread_t *p_vout = (vout_thread_t *)p_this;
+    var_Set( p_vout->p_sys->p_vout, psz_var, newval );
     return VLC_SUCCESS;
 }

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * var_text.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 5ccc795950bd33ba8b9e6c660993212684b78805 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: var_text.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef VAR_TEXT_HPP
@@ -33,37 +33,33 @@
 
 /// String variable
 class VarText: public Variable, public Subject<VarText>,
-               public Observer<VarPercent>,
-               public Observer<VarText>
+               public Observer<VarPercent>, public Observer< VarText >
 {
-public:
-    // Set substVars to true to replace "$X" variables in the text
-    VarText( intf_thread_t *pIntf, bool substVars = true );
-    virtual ~VarText();
+    public:
+        VarText( intf_thread_t *pIntf );
+        virtual ~VarText();
 
-    /// Get the variable type
-    virtual const std::string &getType() const { return m_type; }
+        /// Get the variable type
+        virtual const string &getType() const { return m_type; }
 
-    /// Set the internal value
-    virtual void set( const UString &rText );
-    virtual const UString get() const;
+        /// Set the internal value
+        virtual void set( const UString &rText );
+        virtual const UString get() const;
 
-    /// Methods called when an observed variable is modified
-    virtual void onUpdate( Subject<VarPercent> &rVariable, void* );
-    virtual void onUpdate( Subject<VarText> &rVariable, void* );
+        /// Methods called when an observed variable is modified
+        virtual void onUpdate( Subject<VarPercent> &rVariable );
+        virtual void onUpdate( Subject<VarText> &rVariable );
 
-private:
-    /// Stop observing other variables
-    void delObservers();
+    private:
+        /// Variable type
+        static const string m_type;
+        /// The text of the variable
+        UString m_text;
+        /// Actual text after having replaced the variables
+        UString m_lastText;
 
-    /// Variable type
-    static const std::string m_type;
-    /// The text of the variable
-    UString m_text;
-    /// Actual text after having replaced the variables
-    UString m_lastText;
-    /// Flag to activate or not "$X" variables substitution
-    bool m_substVars;
+        /// Get the raw text without replacing the $something's
+        const UString &getRaw() const { return m_text; }
 };
 
 #endif

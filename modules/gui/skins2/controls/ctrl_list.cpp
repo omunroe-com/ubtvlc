@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ctrl_list.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: c5f7055682186ad1756c90aee8458d8b88662dda $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ctrl_list.cpp 7261 2004-04-03 13:57:46Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include <math.h>
@@ -28,27 +28,28 @@
 #include "../src/os_graphics.hpp"
 #include "../src/generic_bitmap.hpp"
 #include "../src/generic_font.hpp"
-#include "../src/scaled_bitmap.hpp"
 #include "../utils/position.hpp"
 #include "../utils/ustring.hpp"
 #include "../events/evt_key.hpp"
 #include "../events/evt_mouse.hpp"
 #include "../events/evt_scroll.hpp"
-#include <vlc_actions.h>
+#include "vlc_keys.h"
+#ifdef sun
+#   include "solaris_specific.h" // for lrint
+#endif
 
-#define SCROLL_STEP 0.05f
+#define SCROLL_STEP 0.05
 #define LINE_INTERVAL 1  // Number of pixels inserted between 2 lines
 
 
-CtrlList::CtrlList( intf_thread_t *pIntf, VarList &rList,
-                    const GenericFont &rFont, const GenericBitmap *pBitmap,
+CtrlList::CtrlList( intf_thread_t *pIntf, VarList &rList, GenericFont &rFont,
                     uint32_t fgColor, uint32_t playColor, uint32_t bgColor1,
                     uint32_t bgColor2, uint32_t selColor,
                     const UString &rHelp, VarBool *pVisible ):
     CtrlGeneric( pIntf, rHelp, pVisible ), m_rList( rList ), m_rFont( rFont ),
-    m_pBitmap( pBitmap ), m_fgColor( fgColor ), m_playColor( playColor ),
-    m_bgColor1( bgColor1 ), m_bgColor2( bgColor2 ), m_selColor( selColor ),
-    m_pLastSelected( NULL ), m_pImage( NULL ), m_lastPos( 0 )
+    m_fgColor( fgColor ), m_playColor( playColor ), m_bgColor1( bgColor1 ),
+    m_bgColor2( bgColor2 ), m_selColor( selColor ), m_pLastSelected( NULL ),
+    m_pImage( NULL ), m_lastPos( 0 )
 {
     // Observe the list and position variables
     m_rList.addObserver( this );
@@ -62,26 +63,28 @@ CtrlList::~CtrlList()
 {
     m_rList.getPositionVar().delObserver( this );
     m_rList.delObserver( this );
-    delete m_pImage;
+    if( m_pImage )
+    {
+        delete m_pImage;
+    }
 }
 
 
-void CtrlList::onUpdate( Subject<VarList> &rList, void *arg  )
+void CtrlList::onUpdate( Subject<VarList> &rList )
 {
-    (void)rList; (void)arg;
     autoScroll();
     m_pLastSelected = NULL;
 }
 
 
-void CtrlList::onUpdate( Subject<VarPercent> &rPercent, void *arg  )
+void CtrlList::onUpdate( Subject<VarPercent> &rPercent )
 {
-    (void)rPercent; (void)arg;
     // Get the size of the control
     const Position *pPos = getPosition();
     if( !pPos )
+    {
         return;
-
+    }
     int height = pPos->getHeight();
 
     // How many lines can be displayed ?
@@ -115,8 +118,9 @@ void CtrlList::onResize()
     // Get the size of the control
     const Position *pPos = getPosition();
     if( !pPos )
+    {
         return;
-
+    }
     int height = pPos->getHeight();
 
     // How many lines can be displayed ?
@@ -142,65 +146,25 @@ void CtrlList::onResize()
     }
 
     makeImage();
+    notifyLayout();
 }
 
 
 void CtrlList::onPositionChange()
 {
     makeImage();
+    notifyLayout();
 }
 
 
 void CtrlList::handleEvent( EvtGeneric &rEvent )
 {
-    if( rEvent.getAsString().find( "key:down" ) != std::string::npos )
+    if( rEvent.getAsString().find( "key:down" ) != string::npos )
     {
-        int key = ((EvtKey&)rEvent).getKey();
-        VarList::Iterator it = m_rList.begin();
-        bool previousWasSelected = false;
-        while( it != m_rList.end() )
-        {
-            VarList::Iterator next = it;
-            ++next;
-            if( key == KEY_UP )
-            {
-                // Scroll up one item
-                if( it != m_rList.begin() || &*it != m_pLastSelected )
-                {
-                    bool nextWasSelected = ( &*next == m_pLastSelected );
-                    (*it).m_selected = nextWasSelected;
-                    if( nextWasSelected )
-                    {
-                        m_pLastSelected = &*it;
-                    }
-                }
-            }
-            else if( key == KEY_DOWN )
-            {
-                // Scroll down one item
-                if( next != m_rList.end() || &*it != m_pLastSelected )
-                {
-                    (*it).m_selected = previousWasSelected;
-                }
-                if( previousWasSelected )
-                {
-                    m_pLastSelected = &*it;
-                    previousWasSelected = false;
-                }
-                else
-                {
-                    previousWasSelected = ( &*it == m_pLastSelected );
-                }
-            }
-            it = next;
-        }
-
-        // Redraw the control
-        makeImage();
-        notifyLayout();
+        char key = ((EvtKey&)rEvent).getKey();
     }
 
-    else if( rEvent.getAsString().find( "mouse:left" ) != std::string::npos )
+    else if( rEvent.getAsString().find( "mouse:left" ) != string::npos )
     {
         EvtMouse &rEvtMouse = (EvtMouse&)rEvent;
         const Position *pos = getPosition();
@@ -210,11 +174,11 @@ void CtrlList::handleEvent( EvtGeneric &rEvent )
         int index = 0;
 
         if( rEvent.getAsString().find( "mouse:left:down:ctrl,shift" ) !=
-                 std::string::npos )
+                 string::npos )
         {
             // Flag to know if the current item must be selected
             bool select = false;
-            for( it = m_rList.begin(); it != m_rList.end(); ++it )
+            for( it = m_rList.begin(); it != m_rList.end(); it++ )
             {
                 bool nextSelect = select;
                 if( index == yPos || &*it == m_pLastSelected )
@@ -236,9 +200,9 @@ void CtrlList::handleEvent( EvtGeneric &rEvent )
         }
 
         else if( rEvent.getAsString().find( "mouse:left:down:ctrl" ) !=
-                 std::string::npos )
+                 string::npos )
         {
-            for( it = m_rList.begin(); it != m_rList.end(); ++it )
+            for( it = m_rList.begin(); it != m_rList.end(); it++ )
             {
                 if( index == yPos )
                 {
@@ -251,11 +215,11 @@ void CtrlList::handleEvent( EvtGeneric &rEvent )
         }
 
         else if( rEvent.getAsString().find( "mouse:left:down:shift" ) !=
-                 std::string::npos )
+                 string::npos )
         {
             // Flag to know if the current item must be selected
             bool select = false;
-            for( it = m_rList.begin(); it != m_rList.end(); ++it )
+            for( it = m_rList.begin(); it != m_rList.end(); it++ )
             {
                 bool nextSelect = select;
                 if( index == yPos ||  &*it == m_pLastSelected )
@@ -277,9 +241,9 @@ void CtrlList::handleEvent( EvtGeneric &rEvent )
         }
 
         else if( rEvent.getAsString().find( "mouse:left:down" ) !=
-                 std::string::npos )
+                 string::npos )
         {
-            for( it = m_rList.begin(); it != m_rList.end(); ++it )
+            for( it = m_rList.begin(); it != m_rList.end(); it++ )
             {
                 if( index == yPos )
                 {
@@ -295,9 +259,9 @@ void CtrlList::handleEvent( EvtGeneric &rEvent )
         }
 
         else if( rEvent.getAsString().find( "mouse:left:dblclick" ) !=
-                 std::string::npos )
+                 string::npos )
         {
-            for( it = m_rList.begin(); it != m_rList.end(); ++it )
+            for( it = m_rList.begin(); it != m_rList.end(); it++ )
             {
                 if( index == yPos )
                 {
@@ -319,19 +283,18 @@ void CtrlList::handleEvent( EvtGeneric &rEvent )
         notifyLayout();
     }
 
-    else if( rEvent.getAsString().find( "scroll" ) != std::string::npos )
+    else if( rEvent.getAsString().find( "scroll" ) != string::npos )
     {
         int direction = ((EvtScroll&)rEvent).getDirection();
 
         double percentage = m_rList.getPositionVar().get();
-        double step = 2.0 / (double)m_rList.size();
         if( direction == EvtScroll::kUp )
         {
-            percentage += step;
+            percentage += SCROLL_STEP;
         }
         else
         {
-            percentage -= step;
+            percentage -= SCROLL_STEP;
         }
         m_rList.getPositionVar().set( percentage );
     }
@@ -351,19 +314,11 @@ bool CtrlList::mouseOver( int x, int y ) const
 }
 
 
-void CtrlList::draw( OSGraphics &rImage, int xDest, int yDest, int w, int h )
+void CtrlList::draw( OSGraphics &rImage, int xDest, int yDest )
 {
-    const Position *pPos = getPosition();
-    rect region( pPos->getLeft(), pPos->getTop(),
-                 pPos->getWidth(), pPos->getHeight() );
-    rect clip( xDest, yDest, w, h );
-    rect inter;
-    if( rect::intersect( region, clip, &inter ) && m_pImage )
+    if( m_pImage )
     {
-        rImage.drawGraphics( *m_pImage,
-                      inter.x - pPos->getLeft(),
-                      inter.y - pPos->getTop(),
-                      inter.x, inter.y, inter.width, inter.height );
+        rImage.drawGraphics( *m_pImage, 0, 0, xDest, yDest );
     }
 }
 
@@ -385,7 +340,7 @@ void CtrlList::autoScroll()
     // Find the current playing stream
     int playIndex = 0;
     VarList::ConstIterator it;
-    for( it = m_rList.begin(); it != m_rList.end(); ++it )
+    for( it = m_rList.begin(); it != m_rList.end(); it++ )
     {
         if( (*it).m_playing )
         {
@@ -411,7 +366,10 @@ void CtrlList::autoScroll()
 
 void CtrlList::makeImage()
 {
-    delete m_pImage;
+    if( m_pImage )
+    {
+        delete m_pImage;
+    }
 
     // Get the size of the control
     const Position *pPos = getPosition();
@@ -427,60 +385,34 @@ void CtrlList::makeImage()
     OSFactory *pOsFactory = OSFactory::instance( getIntf() );
     m_pImage = pOsFactory->createOSGraphics( width, height );
 
-    VarList::ConstIterator it = m_rList[m_lastPos];
+    // Current background color
+    uint32_t bgColor = m_bgColor1;
 
     // Draw the background
-    if( m_pBitmap )
+    VarList::ConstIterator it = m_rList[m_lastPos];
+    for( int yPos = 0; yPos < height; yPos += itemHeight )
     {
-        // A background bitmap is given, so we scale it, ignoring the
-        // background colors
-        ScaledBitmap bmp( getIntf(), *m_pBitmap, width, height );
-        m_pImage->drawBitmap( bmp, 0, 0 );
-
-        // Take care of the selection color
-        for( int yPos = 0; yPos < height; yPos += itemHeight )
+        int rectHeight = __MIN( itemHeight, height - yPos );
+        if( it != m_rList.end() )
         {
-            int rectHeight = __MIN( itemHeight, height - yPos );
-            if( it != m_rList.end() )
-            {
-                if( (*it).m_selected )
-                {
-                    m_pImage->fillRect( 0, yPos, width, rectHeight,
-                                        m_selColor );
-                }
-                ++it;
-            }
+            uint32_t color = ( (*it).m_selected ? m_selColor : bgColor );
+            m_pImage->fillRect( 0, yPos, width, rectHeight, color );
+            it++;
         }
-    }
-    else
-    {
-        // No background bitmap, so use the 2 background colors
-        // Current background color
-        uint32_t bgColor = m_bgColor1;
-        for( int yPos = 0; yPos < height; yPos += itemHeight )
+        else
         {
-            int rectHeight = __MIN( itemHeight, height - yPos );
-            if( it != m_rList.end() )
-            {
-                uint32_t color = ( (*it).m_selected ? m_selColor : bgColor );
-                m_pImage->fillRect( 0, yPos, width, rectHeight, color );
-                ++it;
-            }
-            else
-            {
-                m_pImage->fillRect( 0, yPos, width, rectHeight, bgColor );
-            }
-            // Flip the background color
-            bgColor = ( bgColor == m_bgColor1 ? m_bgColor2 : m_bgColor1 );
+            m_pImage->fillRect( 0, yPos, width, rectHeight, bgColor );
         }
+        // Flip the background color
+        bgColor = ( bgColor == m_bgColor1 ? m_bgColor2 : m_bgColor1 );
     }
 
     // Draw the items
     int yPos = 0;
-    for( it = m_rList[m_lastPos]; it != m_rList.end() && yPos < height; ++it )
+    for( it = m_rList[m_lastPos]; it != m_rList.end() && yPos < height; it++ )
     {
-        UString *pStr = (UString*)(it->m_cString.get());
-        uint32_t color = ( it->m_playing ? m_playColor : m_fgColor );
+        UString *pStr = (UString*)((*it).m_cString.get());
+        uint32_t color = ( (*it).m_playing ? m_playColor : m_fgColor );
 
         // Draw the text
         GenericBitmap *pText = m_rFont.drawString( *pStr, color, width );
@@ -497,7 +429,7 @@ void CtrlList::makeImage()
         }
         int lineHeight = __MIN( pText->getHeight() - ySrc, height - yPos );
         m_pImage->drawBitmap( *pText, 0, ySrc, 0, yPos, pText->getWidth(),
-                              lineHeight, true );
+                              lineHeight );
         yPos += (pText->getHeight() - ySrc );
         delete pText;
 

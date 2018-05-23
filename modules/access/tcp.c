@@ -1,124 +1,161 @@
 /*****************************************************************************
  * tcp.c: TCP input module
  *****************************************************************************
- * Copyright (C) 2003-2004 VLC authors and VideoLAN
- * $Id: 947ee49b061fa5d59eb48c7f068b52bce6f79766 $
+ * Copyright (C) 2003-2004 VideoLAN
+ * $Id: tcp.c 7522 2004-04-27 16:35:15Z sam $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
+/*****************************************************************************
+ * Preamble
+ *****************************************************************************/
+#include <stdlib.h>
 
-#include <errno.h>
+#include <vlc/vlc.h>
+#include <vlc/input.h>
 
-#include <vlc_common.h>
-#include <vlc_plugin.h>
-#include <vlc_access.h>
-#include <vlc_url.h>
-#include <vlc_tls.h>
-
-static ssize_t Read(stream_t *access, void *buf, size_t len)
-{
-    return vlc_tls_Read(access->p_sys, buf, len, false);
-}
-
-static int Control( stream_t *p_access, int i_query, va_list args )
-{
-    bool    *pb_bool;
-    int64_t *pi_64;
-
-    switch( i_query )
-    {
-        case STREAM_CAN_SEEK:
-        case STREAM_CAN_FASTSEEK:
-            pb_bool = va_arg( args, bool * );
-            *pb_bool = false;
-            break;
-        case STREAM_CAN_PAUSE:
-            pb_bool = va_arg( args, bool * );
-            *pb_bool = true;    /* FIXME */
-            break;
-        case STREAM_CAN_CONTROL_PACE:
-            pb_bool = va_arg( args, bool * );
-            *pb_bool = true;    /* FIXME */
-            break;
-
-        case STREAM_GET_PTS_DELAY:
-            pi_64 = va_arg( args, int64_t * );
-            *pi_64 = INT64_C(1000)
-                   * var_InheritInteger( p_access, "network-caching" );
-            break;
-
-        case STREAM_SET_PAUSE_STATE:
-            /* Nothing to do */
-            break;
-
-        default:
-            return VLC_EGENERIC;
-    }
-    return VLC_SUCCESS;
-}
-
-static int Open(vlc_object_t *obj)
-{
-    stream_t *access = (stream_t *)obj;
-    vlc_tls_t *sock;
-    vlc_url_t url;
-
-    if (vlc_UrlParse(&url, access->psz_url)
-     || url.psz_host == NULL || url.i_port == 0)
-    {
-        msg_Err(access, "invalid location: %s", access->psz_location);
-        vlc_UrlClean(&url);
-        return VLC_EGENERIC;
-    }
-
-    sock = vlc_tls_SocketOpenTCP(obj, url.psz_host, url.i_port);
-    vlc_UrlClean(&url);
-    if (sock == NULL)
-        return VLC_EGENERIC;
-
-    access->p_sys = sock;
-    access->pf_read = Read;
-    access->pf_block = NULL;
-    access->pf_control = Control;
-    access->pf_seek = NULL;
-    return VLC_SUCCESS;
-}
-
-static void Close( vlc_object_t *p_this )
-{
-    stream_t *access = (stream_t *)p_this;
-
-    vlc_tls_SessionDelete(access->p_sys);
-}
+#include "network.h"
 
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
-vlc_module_begin ()
-    set_shortname( N_("TCP") )
-    set_description( N_("TCP input") )
-    set_category( CAT_INPUT )
-    set_subcategory( SUBCAT_INPUT_ACCESS )
+#define CACHING_TEXT N_("Caching value in ms")
+#define CACHING_LONGTEXT N_( \
+    "Allows you to modify the default caching value for TCP streams. This " \
+    "value should be set in millisecond units." )
 
-    set_capability( "access", 0 )
-    add_shortcut( "tcp" )
-    set_callbacks( Open, Close )
-vlc_module_end ()
+static int  Open ( vlc_object_t * );
+static void Close( vlc_object_t * );
+
+vlc_module_begin();
+    set_description( _("TCP input") );
+
+    add_integer( "tcp-caching", DEFAULT_PTS_DELAY / 1000, NULL, CACHING_TEXT,
+                 CACHING_LONGTEXT, VLC_TRUE );
+
+    set_capability( "access", 0 );
+    add_shortcut( "tcp" );
+    set_callbacks( Open, Close );
+vlc_module_end();
+
+/*****************************************************************************
+ * Local prototypes
+ *****************************************************************************/
+struct access_sys_t
+{
+    int fd;
+};
+
+static ssize_t Read ( input_thread_t *, byte_t *, size_t );
+
+/*****************************************************************************
+ * Open: open the socket
+ *****************************************************************************/
+static int Open( vlc_object_t *p_this )
+{
+    input_thread_t *p_input = (input_thread_t *)p_this;
+    access_sys_t   *p_sys;
+
+    char           *psz_dup = strdup(p_input->psz_name);
+    char           *psz_parser = psz_dup;
+
+    vlc_value_t    val;
+
+    /* Parse server:port */
+    while( *psz_parser && *psz_parser != ':' )
+    {
+        if( *psz_parser == '[' )
+        {
+            /* IPV6 */
+            while( *psz_parser && *psz_parser  != ']' )
+            {
+                psz_parser++;
+            }
+        }
+        psz_parser++;
+    }
+    if( *psz_parser != ':' || psz_parser == psz_dup )
+    {
+        msg_Err( p_input, "you have to provide server:port addresse" );
+        free( psz_dup );
+        return VLC_EGENERIC;
+    }
+    *psz_parser++ = '\0';
+
+    if( atoi( psz_parser ) <= 0 )
+    {
+        msg_Err( p_input, "invalid port number (%d)", atoi( psz_parser ) );
+        free( psz_dup );
+        return VLC_EGENERIC;
+    }
+
+    /* Connect */
+    p_input->p_access_data = p_sys = malloc( sizeof( access_sys_t ) );
+    p_sys->fd = net_OpenTCP( p_input, psz_dup, atoi( psz_parser ) );
+    free( psz_dup );
+
+    if( p_sys->fd < 0 )
+    {
+        free( p_sys );
+        return VLC_EGENERIC;
+    }
+
+    p_input->pf_read = Read;
+    p_input->pf_set_program = input_SetProgram;
+    p_input->pf_set_area = NULL;
+    p_input->pf_seek = NULL;
+
+    vlc_mutex_lock( &p_input->stream.stream_lock );
+    p_input->stream.b_pace_control = VLC_TRUE;  /* FIXME ? */
+    p_input->stream.b_seekable = 0;
+    p_input->stream.p_selected_area->i_tell = 0;
+    p_input->stream.i_method = INPUT_METHOD_NETWORK;
+    p_input->i_mtu = 0;
+    vlc_mutex_unlock( &p_input->stream.stream_lock );
+
+    /* Update default_pts to a suitable value for udp access */
+    var_Create( p_input, "tcp-caching", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
+    var_Get( p_input, "tcp-caching", &val );
+    p_input->i_pts_delay = val.i_int * 1000;
+
+    return VLC_SUCCESS;
+}
+
+/*****************************************************************************
+ * Close: free unused data structures
+ *****************************************************************************/
+static void Close( vlc_object_t *p_this )
+{
+    input_thread_t *p_input = (input_thread_t *)p_this;
+    access_sys_t   *p_sys = p_input->p_access_data;
+
+    msg_Info( p_input, "closing TCP target `%s'", p_input->psz_source );
+
+    net_Close( p_sys->fd );
+    free( p_sys );
+}
+
+/*****************************************************************************
+ * Read: read on a file descriptor, checking b_die periodically
+ *****************************************************************************/
+static ssize_t Read( input_thread_t * p_input, byte_t * p_buffer, size_t i_len )
+{
+    access_sys_t   *p_sys = p_input->p_access_data;
+
+    return net_Read( p_input, p_sys->fd, p_buffer, i_len, VLC_FALSE );
+}

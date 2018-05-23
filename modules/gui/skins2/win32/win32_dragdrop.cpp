@@ -1,11 +1,11 @@
 /*****************************************************************************
  * win32_dragdrop.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: bb936ac6f91c57c1656e776cbe7982b1939537fd $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: win32_dragdrop.cpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,21 +19,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifdef WIN32_SKINS
 
+#include <windows.h>
 #include "win32_dragdrop.hpp"
 #include "../commands/cmd_add_item.hpp"
-#include "../events/evt_dragndrop.hpp"
-#include <list>
 
 
-Win32DragDrop::Win32DragDrop( intf_thread_t *pIntf,
-                              bool playOnDrop, GenericWindow* pWin )
-    : SkinObject( pIntf ), IDropTarget(), m_references( 1 ),
-      m_playOnDrop( playOnDrop ), m_pWin( pWin)
+Win32DragDrop::Win32DragDrop( intf_thread_t *pIntf, bool playOnDrop ):
+    SkinObject( pIntf ), IDropTarget(), m_references( 1 ),
+    m_playOnDrop( playOnDrop )
 {
 }
 
@@ -72,7 +70,6 @@ STDMETHODIMP_(ULONG) Win32DragDrop::Release()
 STDMETHODIMP Win32DragDrop::DragEnter( LPDATAOBJECT pDataObj,
     DWORD grfKeyState, POINTL pt, DWORD *pdwEffect )
 {
-    (void)grfKeyState; (void)pt;
     FORMATETC fmtetc;
 
     fmtetc.cfFormat = CF_HDROP;
@@ -92,10 +89,6 @@ STDMETHODIMP Win32DragDrop::DragEnter( LPDATAOBJECT pDataObj,
         *pdwEffect = DROPEFFECT_NONE;
     }
 
-    // transmit DragEnter event
-    EvtDragEnter evt( getIntf() );
-    m_pWin->processEvent( evt );
-
     return S_OK;
 }
 
@@ -103,21 +96,13 @@ STDMETHODIMP Win32DragDrop::DragEnter( LPDATAOBJECT pDataObj,
 STDMETHODIMP Win32DragDrop::DragOver( DWORD grfKeyState, POINTL pt,
                                       DWORD *pdwEffect )
 {
-    (void)grfKeyState; (void)pdwEffect;
-    // transmit DragOver event
-    EvtDragOver evt( getIntf(), pt.x, pt.y );
-    m_pWin->processEvent( evt );
-
+    // For visual feedback
     return S_OK;
 }
 
 
 STDMETHODIMP Win32DragDrop::DragLeave()
 {
-    // transmit DragLeave event
-    EvtDragLeave evt( getIntf() );
-    m_pWin->processEvent( evt );
-
     // Remove visual feedback
     return S_OK;
 }
@@ -126,7 +111,6 @@ STDMETHODIMP Win32DragDrop::DragLeave()
 STDMETHODIMP Win32DragDrop::Drop( LPDATAOBJECT pDataObj, DWORD grfKeyState,
     POINTL pt, DWORD *pdwEffect )
 {
-    (void)grfKeyState;
     // User has dropped on us -- get the CF_HDROP data from drag source
     FORMATETC fmtetc;
     fmtetc.cfFormat = CF_HDROP;
@@ -145,7 +129,7 @@ STDMETHODIMP Win32DragDrop::Drop( LPDATAOBJECT pDataObj, DWORD grfKeyState,
         HDROP HDrop = (HDROP)GlobalLock( HFiles );
 
         // Notify VLC of the drop
-        HandleDrop( HDrop, pt.x, pt.y );
+        HandleDrop( HDrop );
 
         // Release the pointer to the memory
         GlobalUnlock( HFiles );
@@ -160,29 +144,27 @@ STDMETHODIMP Win32DragDrop::Drop( LPDATAOBJECT pDataObj, DWORD grfKeyState,
 }
 
 
-void Win32DragDrop::HandleDrop( HDROP HDrop, int x, int y )
+void Win32DragDrop::HandleDrop( HDROP HDrop )
 {
-    std::list<std::string> files;
-
     // Get the number of dropped files
-    int nbFiles = DragQueryFileW( HDrop, 0xFFFFFFFF, NULL, 0 );
+    int nbFiles = DragQueryFile( HDrop, 0xFFFFFFFF, NULL, 0 );
 
+    // For each dropped file
     for( int i = 0; i < nbFiles; i++ )
     {
         // Get the name of the file
-        int nameLength = DragQueryFileW( HDrop, i, NULL, 0 ) + 1;
-        wchar_t *psz_fileName = new WCHAR[nameLength];
-        DragQueryFileW( HDrop, i, psz_fileName, nameLength );
+        int nameLength = DragQueryFile( HDrop, i, NULL, 0 ) + 1;
+        char *psz_fileName = new char[nameLength];
+        DragQueryFile( HDrop, i, psz_fileName, nameLength );
 
-        files.push_back( sFromWide(psz_fileName) );
+        // Add the file
+        CmdAddItem cmd( getIntf(), psz_fileName, m_playOnDrop );
+        cmd.execute();
+
         delete[] psz_fileName;
     }
 
     DragFinish( HDrop );
-
-    // transmit DragDrop event
-    EvtDragDrop evt( getIntf(), x, y, files );
-    m_pWin->processEvent( evt );
 }
 
 

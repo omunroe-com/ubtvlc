@@ -1,40 +1,61 @@
 /*****************************************************************************
- * filter.h : DirectShow access module for vlc:
- * CapturePin, CaptureFilter, CaptureEnumPins implementations
+ * filter.h : DirectShow access module for vlc
  *****************************************************************************
- * Copyright (C) 2002-2004, 2008 VLC authors and VideoLAN
- * $Id: 733f45b7bddd4e2f5c09896d5a8466f9bb5a31fc $
+ * Copyright (C) 2002 VideoLAN
+ * $Id: filter.h 7718 2004-05-19 09:40:58Z damienf $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-
+#include <string>
+#include <list>
 #include <deque>
+using namespace std;
 
-struct VLCMediaSample
+#ifndef _MSC_VER
+#   include <wtypes.h>
+#   include <unknwn.h>
+#   include <ole2.h>
+#   include <limits.h>
+#   define _WINGDI_ 1
+#   define AM_NOVTABLE
+#   define _OBJBASE_H_
+#   undef _X86_
+#   define _I64_MAX LONG_LONG_MAX
+#   define LONGLONG long long
+#endif
+
+#include <dshow.h>
+
+extern const GUID MEDIASUBTYPE_I420;
+extern const GUID MEDIASUBTYPE_PREVIEW_VIDEO;
+
+typedef struct VLCMediaSample
 {
-    ComPtr<IMediaSample> p_sample;
+    IMediaSample *p_sample;
     mtime_t i_timestamp;
-};
 
-/* */
+} VLCMediaSample;
+
+class CaptureFilter;
+
 void WINAPI FreeMediaType( AM_MEDIA_TYPE& mt );
 HRESULT WINAPI CopyMediaType( AM_MEDIA_TYPE *pmtTarget,
                               const AM_MEDIA_TYPE *pmtSource );
@@ -44,33 +65,28 @@ int GetFourCCFromMediaType(const AM_MEDIA_TYPE &media_type);
 /****************************************************************************
  * Declaration of our dummy directshow filter pin class
  ****************************************************************************/
-class CaptureFilter;
 class CapturePin: public IPin, public IMemInputPin
 {
     friend class CaptureEnumMediaTypes;
 
-    vlc_object_t *p_input;
-    access_sys_t *p_sys;
-    // Don't store this filter as a ComPtr to avoid a circular reference.
-    // p_filter is the parent filter, and already has a refcounter pointer to this CapturePin
-    // instance
-    CaptureFilter* p_filter;
+    input_thread_t *p_input;
+    CaptureFilter  *p_filter;
 
-    ComPtr<IPin> p_connected_pin;
+    IPin *p_connected_pin;
 
     AM_MEDIA_TYPE *media_types;
     size_t media_type_count;
 
     AM_MEDIA_TYPE cx_media_type;
 
-    std::deque<VLCMediaSample> samples_queue;
+    deque<VLCMediaSample> samples_queue;
 
     long i_ref;
 
   public:
-    CapturePin( vlc_object_t *_p_input, access_sys_t *p_sys,
-                CaptureFilter* _p_filter,
+    CapturePin( input_thread_t * _p_input, CaptureFilter *_p_filter,
                 AM_MEDIA_TYPE *mt, size_t mt_count );
+    virtual ~CapturePin();
 
     /* IUnknown methods */
     STDMETHODIMP QueryInterface(REFIID riid, void **ppv);
@@ -108,12 +124,7 @@ class CapturePin: public IPin, public IMemInputPin
 
     /* Custom methods */
     HRESULT CustomGetSample( VLCMediaSample * );
-    HRESULT CustomGetSamples( std::deque<VLCMediaSample> &external_queue );
-
     AM_MEDIA_TYPE &CustomGetMediaType();
-
-private:
-    virtual ~CapturePin();
 };
 
 /****************************************************************************
@@ -123,17 +134,17 @@ class CaptureFilter : public IBaseFilter
 {
     friend class CapturePin;
 
-    vlc_object_t   *p_input;
-    ComPtr<CapturePin>   p_pin;
-    ComPtr<IFilterGraph> p_graph;
+    input_thread_t *p_input;
+    CapturePin     *p_pin;
+    IFilterGraph   *p_graph;
     //AM_MEDIA_TYPE  media_type;
     FILTER_STATE   state;
 
     long i_ref;
 
   public:
-    CaptureFilter( vlc_object_t *_p_input, access_sys_t *p_sys,
-                   AM_MEDIA_TYPE *mt, size_t mt_count );
+    CaptureFilter( input_thread_t * _p_input, AM_MEDIA_TYPE *mt, size_t mt_count );
+    virtual ~CaptureFilter();
 
     /* IUnknown methods */
     STDMETHODIMP QueryInterface(REFIID riid, void **ppv);
@@ -159,10 +170,7 @@ class CaptureFilter : public IBaseFilter
     STDMETHODIMP QueryVendorInfo( LPWSTR* pVendorInfo );
 
     /* Custom methods */
-    ComPtr<CapturePin>& CustomGetPin();
-
-private:
-    virtual ~CaptureFilter();
+    CapturePin *CustomGetPin();
 };
 
 /****************************************************************************
@@ -170,15 +178,16 @@ private:
  ****************************************************************************/
 class CaptureEnumPins : public IEnumPins
 {
-    vlc_object_t *p_input;
-    ComPtr<CaptureFilter> p_filter;
+    input_thread_t * p_input;
+    CaptureFilter  *p_filter;
 
     int i_position;
     long i_ref;
 
 public:
-    CaptureEnumPins( vlc_object_t *_p_input, ComPtr<CaptureFilter> _p_filter,
-                     ComPtr<CaptureEnumPins> pEnumPins );
+    CaptureEnumPins( input_thread_t * _p_input, CaptureFilter *_p_filter,
+                     CaptureEnumPins *pEnumPins );
+    virtual ~CaptureEnumPins();
 
     // IUnknown
     STDMETHODIMP QueryInterface( REFIID riid, void **ppv );
@@ -190,9 +199,6 @@ public:
     STDMETHODIMP Skip( ULONG cPins );
     STDMETHODIMP Reset();
     STDMETHODIMP Clone( IEnumPins **ppEnum );
-
-private:
-    virtual ~CaptureEnumPins();
 };
 
 /****************************************************************************
@@ -200,16 +206,17 @@ private:
  ****************************************************************************/
 class CaptureEnumMediaTypes : public IEnumMediaTypes
 {
-    vlc_object_t *p_input;
-    ComPtr<CapturePin> p_pin;
-    AM_MEDIA_TYPE cx_media_type;
+    input_thread_t * p_input;
+    CapturePin     *p_pin;
 
-    size_t i_position;
+    int i_position;
     long i_ref;
 
 public:
-    CaptureEnumMediaTypes( vlc_object_t *_p_input, ComPtr<CapturePin> _p_pin,
+    CaptureEnumMediaTypes( input_thread_t * _p_input, CapturePin *_p_pin,
                            CaptureEnumMediaTypes *pEnumMediaTypes );
+
+    virtual ~CaptureEnumMediaTypes();
 
     // IUnknown
     STDMETHODIMP QueryInterface( REFIID riid, void **ppv );
@@ -222,7 +229,4 @@ public:
     STDMETHODIMP Skip( ULONG cMediaTypes );
     STDMETHODIMP Reset();
     STDMETHODIMP Clone( IEnumMediaTypes **ppEnum );
-
-private:
-    virtual ~CaptureEnumMediaTypes();
 };

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * theme_loader.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 76f48c11785ef51ccd39a3110bb89ff656fe4eae $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: theme_loader.hpp 7290 2004-04-06 19:56:57Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef THEME_LOADER_HPP
@@ -28,48 +28,35 @@
 #include "skin_common.hpp"
 #include <string>
 
+
 class ThemeLoader: public SkinObject
 {
-public:
-    ThemeLoader( intf_thread_t *pIntf ): SkinObject( pIntf ) { }
-    virtual ~ThemeLoader() { }
+    public:
+        ThemeLoader( intf_thread_t *pIntf ): SkinObject( pIntf ) {}
+        virtual ~ThemeLoader() {}
 
-    /// The expected fileName must be an UTF-8 string
-    bool load( const std::string &fileName );
+        bool load( const string &fileName );
 
-private:
-    /// Extract files from an archive (handles tar.gz and zip)
-    /**
-     * Expects a string from the current locale.
-     */
-    bool extract( const std::string &fileName );
+    private:
+#if defined( HAVE_ZLIB_H )
+        /// Extract files from an archive (currently only handles tar.gz)
+        bool extract( const string &fileName );
 
-    bool unarchive( const std::string &fileName, const std::string &tempPath );
+        /// Extract files from a tar.gz archive
+        bool extractTarGz( const string &tarFile, const string &rootDir );
 
-    void deleteTempFiles( const std::string &path );
+        /// Clean up the temporary files created by the extraction
+        void deleteTempFiles( const string &path );
+#endif
 
-    /// Get a unique temporary directory
-    std::string getTmpDir( );
+        /// Parse the XML file given as a parameter and build the skin
+        bool parse( const string &xmlFile );
 
-    /// Parse the XML file given as a parameter and build the skin
-    /**
-     * Expects UTF8 strings
-     */
-    bool parse( const std::string &path, const std::string &xmlFile );
-
-    /// Recursively look for the XML file from rootDir.
-    /**
-     * The first corresponding file found will be chosen and themeFilePath
-     * will be updated accordingly.
-     * The method returns true if a theme file was found, false otherwise.
-     * rootDir and rFilename must both be strings in the current locale,
-     * whereas themeFilePath will be in UTF8.
-     */
-    bool findFile( const std::string &rootDir, const std::string &rFileName,
-                   std::string &themeFilePath );
-
-    /// Get the base path of a file
-    std::string getFilePath( const std::string &rFullPath );
+        /// Recursively look for the XML file from rootDir.
+        /// The first corresponding file found will be chosen and themeFilePath
+        /// will be updated accordingly.
+        /// The method returns true if a theme file was found, false otherwise
+        bool findThemeFile( const string &rootDir, string &themeFilePath );
 };
 
 #endif

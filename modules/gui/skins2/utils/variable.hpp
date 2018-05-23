@@ -1,11 +1,11 @@
 /*****************************************************************************
  * variable.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: e45e73fe583c014fee4aea184bd252a3c8565c86 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: variable.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef VARIABLE_HPP
@@ -33,14 +33,14 @@
 /// Base class for variable objects
 class Variable: public SkinObject
 {
-public:
-    virtual ~Variable() { }
+    public:
+        virtual ~Variable() {}
 
-    /// Get the variable type
-    virtual const std::string &getType() const = 0;
+        /// Get the variable type
+        virtual const string &getType() const = 0;
 
-protected:
-    Variable( intf_thread_t *pIntf ): SkinObject( pIntf ) { }
+    protected:
+        Variable( intf_thread_t *pIntf ): SkinObject( pIntf ) {}
 };
 
 

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ctrl_flat.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: f21482d25f66f3825ce0b837deae6226ee687abc $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ctrl_flat.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef CTRL_FLAT_HPP
@@ -31,11 +31,12 @@
 /// Base class for "mover controls" and images
 class CtrlFlat: public CtrlGeneric
 {
-protected:
-    CtrlFlat( intf_thread_t *pIntf, const UString &rHelp, VarBool *pVisible )
-            : CtrlGeneric( pIntf, rHelp, pVisible ) { }
+    protected:
+        CtrlFlat( intf_thread_t *pIntf, const UString &rHelp,
+                  VarBool *pVisible ):
+            CtrlGeneric( pIntf, rHelp, pVisible ) {}
 
-    virtual ~CtrlFlat() { }
+        virtual ~CtrlFlat() {}
 };
 
 #endif

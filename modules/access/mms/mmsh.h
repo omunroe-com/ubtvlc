@@ -1,28 +1,25 @@
 /*****************************************************************************
  * mmsh.h:
  *****************************************************************************
- * Copyright (C) 2001, 2002 VLC authors and VideoLAN
- * $Id: 27f77bacf23a001f1edc4de5a11192c626e9d919 $
+ * Copyright (C) 2001, 2002 VideoLAN
+ * $Id: mmsh.h 7297 2004-04-07 17:41:14Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
-
-#ifndef VLC_MMS_MMSH_H_
-#define VLC_MMS_MMSH_H_
 
 typedef struct
 {
@@ -47,14 +44,11 @@ struct access_sys_t
     int             fd;
     vlc_url_t       url;
 
-    bool      b_proxy;
-    vlc_url_t       proxy;
-
     int             i_request_context;
 
     uint8_t         buffer[BUFFER_SIZE + 1];
 
-    bool      b_broadcast;
+    vlc_bool_t      b_broadcast;
 
     uint8_t         *p_header;
     int             i_header;
@@ -64,11 +58,9 @@ struct access_sys_t
     unsigned int    i_packet_used;
     unsigned int    i_packet_length;
 
-    uint64_t        i_start;
-    uint64_t        i_position;
+    off_t           i_pos;
+    off_t           i_start;
 
     asf_header_t    asfh;
     guid_t          guid;
 };
-
-#endif

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * x11_factory.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: c8f2ce00ac30930089866be032cc8c249a623d51 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: x11_factory.hpp 7327 2004-04-12 14:25:15Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef X11_FACTORY_HPP
@@ -28,8 +28,6 @@
 #include <X11/Xlib.h>
 
 #include "../src/os_factory.hpp"
-#include "../src/generic_window.hpp"
-#include "x11_display.hpp"
 #include <map>
 
 class X11Display;
@@ -40,130 +38,73 @@ class X11TimerLoop;
 /// Class used to instanciate X11 specific objects
 class X11Factory: public OSFactory
 {
-private:
-    /** ptrmap is an associative container (like std::map, in fact it builds
-      * on std::map) that provides only operator[] in non-const and const
-      * variants, and has the property that a (const) lookup of a non-existent
-      * key does not cause an empty node to be inserted. Instead it returns
-      * NULL if there was no entry; so it only stores pointers. */
-    template<class K, class V> class ptrmap {
-    private:
-        typedef V *value_type;
-        typedef std::map<K,value_type> map_t;
-        map_t m_map;
-        ptrmap &operator=(const ptrmap &);
-        ptrmap(const ptrmap &);
     public:
-        ptrmap() { }
-        value_type &operator[](K k) { return m_map.operator[](k); }
-        value_type  operator[](K k) const
-        {
-            typename map_t::const_iterator i=m_map.find(k);
-            return i!=m_map.end() ? i->second : NULL;
-        }
-    };
-public:
-    /// Map to find the GenericWindow* associated to a X11Window
-    ptrmap<Window, GenericWindow> m_windowMap;
-    /// Map to find the Dnd object (X11DragDrop*) associated to a X11Window
-    ptrmap<Window, X11DragDrop> m_dndMap;
+        /// Map to find the GenericWindow associated to a X11Window
+        map<Window, GenericWindow*> m_windowMap;
+        /// Map to find the Dnd object associated to a X11Window
+        map<Window, X11DragDrop*> m_dndMap;
 
-    X11Factory( intf_thread_t *pIntf );
-    virtual ~X11Factory();
+        X11Factory( intf_thread_t *pIntf );
+        virtual ~X11Factory();
 
-    /// Initialization method
-    virtual bool init();
+        /// Initialization method
+        virtual bool init();
 
-    /// Instantiate an object OSGraphics
-    virtual OSGraphics *createOSGraphics( int width, int height );
+        /// Instantiate an object OSGraphics.
+        virtual OSGraphics *createOSGraphics( int width, int height );
 
-    /// Get the instance of the singleton OSLoop
-    virtual OSLoop *getOSLoop();
+        /// Get the instance of the singleton OSLoop.
+        virtual OSLoop *getOSLoop();
 
-    /// Destroy the instance of OSLoop
-    virtual void destroyOSLoop();
+        /// Destroy the instance of OSLoop.
+        virtual void destroyOSLoop();
 
-    /// Instantiate an OSTimer with the given command
-    virtual OSTimer *createOSTimer( CmdGeneric &rCmd );
+        /// Instantiate an OSTimer with the given callback
+        virtual OSTimer *createOSTimer( const Callback &rCallback );
 
-    /// Minimize all the windows
-    virtual void minimize();
+        /// Instantiate an OSWindow object
+        virtual OSWindow *createOSWindow( GenericWindow &rWindow,
+                                          bool dragDrop, bool playOnDrop,
+                                          OSWindow *pParent );
 
-    /// Restore the minimized windows
-    virtual void restore();
+        /// Instantiate an object OSTooltip.
+        virtual OSTooltip *createOSTooltip();
 
-    /// Add an icon in the system tray
-    virtual void addInTray();
+        /// Get the directory separator
+        virtual const string &getDirSeparator() const { return m_dirSep; }
 
-    /// Remove the icon from the system tray
-    virtual void removeFromTray();
+        /// Get the resource path
+        virtual const list<string> &getResourcePath() const
+            { return m_resourcePath; }
 
-    /// Show the task in the task bar
-    virtual void addInTaskBar();
+        /// Get the screen size
+        virtual int getScreenWidth() const;
+        virtual int getScreenHeight() const;
 
-    /// Remove the task from the task bar
-    virtual void removeFromTaskBar();
+        /// Get the work area (screen area without taskbars)
+        virtual Rect getWorkArea() const;
 
-    /// Instantiate an OSWindow object
-    virtual OSWindow *createOSWindow( GenericWindow &rWindow,
-                                      bool dragDrop, bool playOnDrop,
-                                      OSWindow *pParent,
-                                      GenericWindow::WindowType_t type );
+        /// Get the position of the mouse
+        virtual void getMousePos( int &rXPos, int &rYPos ) const;
 
-    /// Instantiate an object OSTooltip
-    virtual OSTooltip *createOSTooltip();
+        /// Change the cursor
+        virtual void changeCursor( CursorType_t type ) const { /*TODO*/ }
 
-    /// Instantiate an object OSPopup
-    virtual OSPopup *createOSPopup();
+        /// Delete a directory recursively
+        virtual void rmDir( const string &rPath );
 
-    /// Get the directory separator
-    virtual const std::string &getDirSeparator() const { return m_dirSep; }
+        /// Get the timer loop
+        X11TimerLoop *getTimerLoop() const { return m_pTimerLoop; }
 
-    /// Get the resource path
-    virtual const std::list<std::string> &getResourcePath() const
-        { return m_resourcePath; }
-
-    /// Get the screen size
-    virtual int getScreenWidth() const;
-    virtual int getScreenHeight() const;
-
-    /// Get Monitor Information
-    virtual void getMonitorInfo( const GenericWindow &rWindow,
-                                 int* x, int* y,
-                                 int* width, int* height ) const;
-    virtual void getMonitorInfo( int numScreen,
-                                 int* x, int* y,
-                                 int* width, int* height ) const;
-
-    virtual void getDefaultGeometry( int* width, int* height ) const;
-
-    /// Get the work area (screen area without taskbars)
-    virtual SkinsRect getWorkArea() const;
-
-    /// Get the position of the mouse
-    virtual void getMousePos( int &rXPos, int &rYPos ) const;
-
-    /// Change the cursor
-    virtual void changeCursor( CursorType_t type ) const
-        { /*TODO*/ (void)type; }
-
-    /// Delete a directory recursively
-    virtual void rmDir( const std::string &rPath );
-
-    /// Get the timer loop
-    X11TimerLoop *getTimerLoop() const { return m_pTimerLoop; }
-
-private:
-    /// X11 display
-    X11Display *m_pDisplay;
-    /// Timer loop
-    X11TimerLoop *m_pTimerLoop;
-    /// Directory separator
-    const std::string m_dirSep;
-    /// Resource path
-    std::list<std::string> m_resourcePath;
-    /// Monitor geometry
-    int m_screenWidth, m_screenHeight;
+    private:
+        /// X11 display
+        X11Display *m_pDisplay;
+        /// Timer loop
+        X11TimerLoop *m_pTimerLoop;
+        /// Directory separator
+        const string m_dirSep;
+        /// Resource path
+        list<string> m_resourcePath;
 };
 
 #endif

@@ -1,0 +1,16 @@
+body {font-family:Verdana, Arial, Sans Serif; }
+h2 { text-align:center; }
+h3 { text-align:left; }
+table {width:100%;}
+table.add {width:100%;}
+div.section {background-color:#DDDDFF;
+     border:1pt black solid;
+     margin-bottom:2em;
+     padding:0.5em;}
+div.sectitle {background-color:#5A5ABB;
+        color:#FFFFFF;
+        border:1pt black solid;
+        width:8em;
+        font-weight:bold;}
+tr.ligne1 { background-color:#EEEEFF; }
+tr.ligne2 { background-color:#CCCCFF; }

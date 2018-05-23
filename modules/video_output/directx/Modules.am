@@ -1,0 +1,6 @@
+SOURCES_vout_directx = \
+	directx.c \
+	vout.h \
+	events.c \
+	$(NULL)
+

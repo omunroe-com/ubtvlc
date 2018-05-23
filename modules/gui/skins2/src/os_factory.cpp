@@ -1,11 +1,11 @@
 /*****************************************************************************
  * os_factory.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: b00be30b685c7212c09ddcff58031ebe7e210960 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: os_factory.cpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "os_factory.hpp"
@@ -28,8 +28,6 @@
 #include "../x11/x11_factory.hpp"
 #elif defined WIN32_SKINS
 #include "../win32/win32_factory.hpp"
-#elif defined OS2_SKINS
-#include "../os2/os2_factory.hpp"
 #endif
 
 OSFactory *OSFactory::instance( intf_thread_t *pIntf )
@@ -41,8 +39,6 @@ OSFactory *OSFactory::instance( intf_thread_t *pIntf )
         pOsFactory = new X11Factory( pIntf );
 #elif defined WIN32_SKINS
         pOsFactory = new Win32Factory( pIntf );
-#elif defined OS2_SKINS
-        pOsFactory = new OS2Factory( pIntf );
 #else
 #error "No OSFactory implementation !"
 #endif
@@ -64,7 +60,10 @@ OSFactory *OSFactory::instance( intf_thread_t *pIntf )
 
 void OSFactory::destroy( intf_thread_t *pIntf )
 {
-    delete pIntf->p_sys->p_osFactory;
-    pIntf->p_sys->p_osFactory = NULL;
+    if( pIntf->p_sys->p_osFactory )
+    {
+        delete pIntf->p_sys->p_osFactory;
+        pIntf->p_sys->p_osFactory = NULL;
+    }
 }
 

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * cmd_on_top.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 54cc640129563cbe7416f900e6ecd068580ab487 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: cmd_on_top.cpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "cmd_on_top.hpp"
@@ -30,9 +30,4 @@
 void CmdOnTop::execute()
 {
     getIntf()->p_sys->p_theme->getWindowManager().toggleOnTop();
-}
-
-void CmdSetOnTop::execute()
-{
-    getIntf()->p_sys->p_theme->getWindowManager().setOnTop( m_ontop );
 }

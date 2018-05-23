@@ -1,11 +1,11 @@
 /*****************************************************************************
  * interpreter.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 9e7fc133dbcc8a1f5e4110d561f55887be9cdb4e $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: interpreter.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef INTERPRETER_HPP
@@ -31,48 +31,41 @@
 class Theme;
 class VarBool;
 class VarList;
-class VarTree;
 class VarPercent;
 
 
 /// Command interpreter for scripts in the XML
 class Interpreter: public SkinObject
 {
-public:
-    /// Get the instance of Interpreter
-    static Interpreter *instance( intf_thread_t *pIntf );
+    public:
+        /// Get the instance of Interpreter
+        static Interpreter *instance( intf_thread_t *pIntf );
 
-    /// Delete the instance of Interpreter
-    static void destroy( intf_thread_t *pIntf );
+        /// Delete the instance of Interpreter
+        static void destroy( intf_thread_t *pIntf );
 
-    /// Parse an action tag and returns a pointer on a command
-    /// (the intepreter takes care of deleting it, don't do it
-    ///  yourself !)
-    CmdGeneric *parseAction( const std::string &rAction, Theme *pTheme );
+        /// Parse an action tag and returns a pointer on a command
+        /// (the intepreter takes care of deleting it, don't do it
+        ///  yourself !)
+        CmdGeneric *parseAction( const string &rAction, Theme *pTheme );
 
-    /// Returns the boolean variable corresponding to the given name
-    VarBool *getVarBool( const std::string &rName, Theme *pTheme );
+        /// Returns the boolean variable corresponding to the given name
+        VarBool *getVarBool( const string &rName, Theme *pTheme );
 
 
-    /// Returns the percent variable corresponding to the given name
-    VarPercent *getVarPercent( const std::string &rName, Theme *pTheme );
+        /// Returns the percent variable corresponding to the given name
+        VarPercent *getVarPercent( const string &rName, Theme *pTheme );
 
-    /// Returns the list variable corresponding to the given name
-    VarList *getVarList( const std::string &rName, Theme *pTheme );
+        /// Returns the list variable corresponding to the given name
+        VarList *getVarList( const string &rName, Theme *pTheme );
 
-    /// Returns the tree variable corresponding to the given name
-    VarTree *getVarTree( const std::string &rName, Theme *pTheme );
+    private:
+        /// Map of global commands
+        map<string, CmdGenericPtr> m_commandMap;
 
-    /// Get a constant value
-    std::string getConstant( const std::string &rValue );
-
-private:
-    /// Map of global commands
-    std::map<std::string, CmdGenericPtr> m_commandMap;
-
-    // Private because it is a singleton
-    Interpreter( intf_thread_t *pIntf );
-    virtual ~Interpreter() { }
+        // Private because it is a singleton
+        Interpreter( intf_thread_t *pIntf );
+        virtual ~Interpreter() {}
 };
 
 #endif

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * x11_graphics.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: b6a34f2bdb3b0ba766a710eed37db5b96bc6a249 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: x11_graphics.cpp 7292 2004-04-06 20:38:10Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifdef X11_SKINS
 
+#include <stdlib.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/extensions/shape.h>
@@ -32,7 +33,6 @@
 #include "x11_graphics.hpp"
 #include "x11_window.hpp"
 #include "../src/generic_bitmap.hpp"
-#include "../utils/position.hpp"
 
 
 X11Graphics::X11Graphics( intf_thread_t *pIntf, X11Display &rDisplay,
@@ -49,7 +49,7 @@ X11Graphics::X11Graphics( intf_thread_t *pIntf, X11Display &rDisplay,
     {
         // Avoid a X11 Bad Value error
         width = height = 1;
-        msg_Err( getIntf(), "invalid image size (null width or height)" );
+        msg_Err( getIntf(), "Invalid image size (null width or height)" );
     }
 
     // Create a pixmap
@@ -74,27 +74,11 @@ X11Graphics::~X11Graphics()
 }
 
 
-void X11Graphics::clear( int xDest, int yDest, int width, int height )
+void X11Graphics::clear()
 {
-    if( width <= 0 || height <= 0 )
-    {
-        // Clear the transparency mask completely
-        XDestroyRegion( m_mask );
-        m_mask = XCreateRegion();
-    }
-    else
-    {
-        // remove this area from the mask
-        XRectangle rect;
-        rect.x = xDest;
-        rect.y = yDest;
-        rect.width = width;
-        rect.height = height;
-        Region regMask = XCreateRegion();
-        XUnionRectWithRegion( &rect, regMask, regMask );
-        XSubtractRegion( m_mask, regMask, m_mask );
-        XDestroyRegion( regMask );
-    }
+    // Clear the transparency mask
+    XDestroyRegion( m_mask );
+    m_mask = XCreateRegion();
 }
 
 
@@ -102,26 +86,17 @@ void X11Graphics::drawGraphics( const OSGraphics &rGraphics, int xSrc,
                                 int ySrc, int xDest, int yDest, int width,
                                 int height )
 {
-    const X11Graphics& rGraph = (X11Graphics&)rGraphics;
-
-    // check and adapt to source if needed
-    if( !checkBoundaries( 0, 0, rGraph.getWidth(), rGraph.getHeight(),
-                          xSrc, ySrc, width, height ) )
+    if( width == -1 )
     {
-        msg_Err( getIntf(), "nothing to draw from graphics source" );
-        return;
+        width = rGraphics.getWidth();
     }
-
-    // check destination
-    if( !checkBoundaries( 0, 0, m_width, m_height,
-                          xDest, yDest, width, height ) )
+    if( height == -1 )
     {
-        msg_Err( getIntf(), "out of reach destination! pls, debug your skin" );
-        return;
+        height = rGraphics.getHeight();
     }
 
     // Source drawable
-    Drawable src = rGraph.getDrawable();
+    Drawable src = ((X11Graphics&)rGraphics).getDrawable();
 
     // Create the mask for transparency
     Region voidMask = XCreateRegion();
@@ -133,7 +108,7 @@ void X11Graphics::drawGraphics( const OSGraphics &rGraphics, int xSrc,
     Region clipMask = XCreateRegion();
     XUnionRectWithRegion( &rect, voidMask, clipMask );
     Region mask = XCreateRegion();
-    XIntersectRegion( rGraph.getMask(), clipMask, mask );
+    XIntersectRegion( ((X11Graphics&)rGraphics).getMask(), clipMask, mask );
     XDestroyRegion( clipMask );
     XDestroyRegion( voidMask );
     XOffsetRegion( mask, xDest - xSrc, yDest - ySrc );
@@ -154,21 +129,38 @@ void X11Graphics::drawGraphics( const OSGraphics &rGraphics, int xSrc,
 
 void X11Graphics::drawBitmap( const GenericBitmap &rBitmap, int xSrc,
                               int ySrc, int xDest, int yDest, int width,
-                              int height, bool blend )
+                              int height )
 {
-    // check and adapt to source if needed
-    if( !checkBoundaries( 0, 0, rBitmap.getWidth(), rBitmap.getHeight(),
-                          xSrc, ySrc, width, height ) )
+    // Get the bitmap size if necessary
+    if( width == -1 )
     {
-        msg_Err( getIntf(), "empty source! pls, debug your skin" );
+        width = rBitmap.getWidth();
+    }
+    else if( width > rBitmap.getWidth() )
+    {
+        msg_Dbg( getIntf(), "Bitmap width too small!" );
+        width = rBitmap.getWidth();
+    }
+    if( height == -1 )
+    {
+        height = rBitmap.getHeight();
+    }
+    else if( height > rBitmap.getHeight() )
+    {
+        msg_Dbg( getIntf(), "Bitmap height too small!" );
+        height = rBitmap.getHeight();
+    }
+
+    // Nothing to draw if width or height is null
+    if( width == 0 || height == 0 )
+    {
         return;
     }
 
-    // check destination
-    if( !checkBoundaries( 0, 0, m_width, m_height,
-                          xDest, yDest, width, height ) )
+    // Safety check for debugging purpose
+    if( xDest + width > m_width || yDest + height > m_height )
     {
-        msg_Err( getIntf(), "out of reach destination! pls, debug your skin" );
+        msg_Dbg( getIntf(), "Bitmap too large !" );
         return;
     }
 
@@ -179,10 +171,6 @@ void X11Graphics::drawBitmap( const GenericBitmap &rBitmap, int xSrc,
         // Nothing to draw
         return;
     }
-
-    // Force pending XCopyArea to be sent to the X Server
-    // before issuing an XGetImage.
-    XSync( XDISPLAY, False );
 
     // Get the image from the pixmap
     XImage *pImage = XGetImage( XDISPLAY, m_pixmap, xDest, yDest, width,
@@ -202,8 +190,7 @@ void X11Graphics::drawBitmap( const GenericBitmap &rBitmap, int xSrc,
     Region mask = XCreateRegion();
 
     // Get a pointer on the right X11Display::makePixel method
-    X11Display::MakePixelFunc_t makePixelFunc = ( blend ?
-        m_rDisplay.getBlendPixel() : m_rDisplay.getPutPixel() );
+    X11Display::MakePixelFunc_t makePixelFunc = m_rDisplay.getMakePixel();
 
     // Skip the first lines of the image
     pBmpData += 4 * ySrc * rBitmap.getWidth();
@@ -321,9 +308,6 @@ void X11Graphics::applyMaskToWindow( OSWindow &rWindow )
     // Get the target window
     Window win = ((X11Window&)rWindow).getDrawable();
 
-    // ensure the window size is right
-    XResizeWindow( XDISPLAY, win, m_width, m_height );
-
     // Change the shape of the window
     XShapeCombineRegion( XDISPLAY, win, ShapeBounding, 0, 0, m_mask,
                          ShapeSet );
@@ -374,30 +358,6 @@ inline void X11Graphics::addVSegmentInRegion( Region &rMask, int yStart,
     XUnionRectWithRegion( &rect, rMask, newMask );
     XDestroyRegion( rMask );
     rMask = newMask;
-}
-
-bool X11Graphics::checkBoundaries( int x_src, int y_src,
-                                   int w_src, int h_src,
-                                   int& x_target, int& y_target,
-                                   int& w_target, int& h_target )
-{
-    // set valid width and height
-    w_target = (w_target > 0) ? w_target : w_src;
-    h_target = (h_target > 0) ? h_target : h_src;
-
-    // clip source if needed
-    rect srcRegion( x_src, y_src, w_src, h_src );
-    rect targetRegion( x_target, y_target, w_target, h_target );
-    rect inter;
-    if( rect::intersect( srcRegion, targetRegion, &inter ) )
-    {
-        x_target = inter.x;
-        y_target = inter.y;
-        w_target = inter.width;
-        h_target = inter.height;
-        return true;
-    }
-    return false;
 }
 
 #endif

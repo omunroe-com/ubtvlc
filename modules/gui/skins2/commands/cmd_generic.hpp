@@ -1,11 +1,11 @@
 /*****************************************************************************
  * cmd_generic.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 3180492d9619c21b551e3a8db78c384459fe49a2 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: cmd_generic.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,65 +17,47 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef CMD_GENERIC_HPP
 #define CMD_GENERIC_HPP
 
-#include <string>
-
 #include "../src/skin_common.hpp"
 #include "../utils/pointer.hpp"
 
+#include <string>
+
 
 /// Macro to define the prototype of simple commands
-#define DEFINE_COMMAND( name, type )                           \
-class Cmd##name: public CmdGeneric                             \
-{   public:                                                    \
-    Cmd##name( intf_thread_t *pIntf ): CmdGeneric( pIntf ) { } \
-    virtual ~Cmd##name() { }                                   \
-    virtual void execute();                                    \
-    virtual std::string getType() const { return type; }       \
+#define DEFINE_COMMAND( name, type ) \
+class Cmd##name: public CmdGeneric \
+{ \
+    public: \
+        Cmd##name( intf_thread_t *pIntf ): CmdGeneric( pIntf ) {} \
+        virtual ~Cmd##name() {} \
+        virtual void execute(); \
+        virtual string getType() const { return type; } \
+\
 };
-
-
-/// Macro to define a "callback" command inside a class
-#define DEFINE_CALLBACK( parent, action )                            \
-class Cmd##action: public CmdGeneric                                 \
-{                                                                    \
-public:                                                              \
-    Cmd##action( parent *pParent ):                                  \
-        CmdGeneric( pParent->getIntf() ), m_pParent( pParent ) { }   \
-    virtual ~Cmd##action() { }                                       \
-    virtual void execute();                                          \
-    virtual std::string getType() const { return "Cmd" #parent #action; } \
-private:                                                             \
-    parent *m_pParent;                                               \
-} m_cmd##action;                                                     \
-friend class Cmd##action;
 
 
 /// Base class for skins commands
 class CmdGeneric: public SkinObject
 {
-public:
-    virtual ~CmdGeneric() { }
+    public:
+        virtual ~CmdGeneric() {}
 
-    /// This method does the real job of the command
-    virtual void execute() = 0;
+        /// This method does the real job of the command
+        virtual void execute() = 0;
 
-    /// Return the type of the command
-    virtual std::string getType() const { return ""; }
+        /// Return the type of the command
+        virtual string getType() const { return ""; }
 
-    /// During queue reductions, check if we really want to remove
-    /// this command.
-    virtual bool checkRemove( CmdGeneric * ) const { return true; }
-
-protected:
-    CmdGeneric( intf_thread_t *pIntf ): SkinObject( pIntf ) { }
+    protected:
+        CmdGeneric( intf_thread_t *pIntf ): SkinObject( pIntf ) {}
 };
 
 

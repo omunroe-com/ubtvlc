@@ -1,11 +1,11 @@
 /*****************************************************************************
  * x11_timer.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 87280baab93097f98d2bde421bbe9560e324ad4b $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: x11_timer.cpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,21 +19,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifdef X11_SKINS
 
 #include <unistd.h>
-#include <poll.h>
+#include <fcntl.h>
 
 #include "x11_timer.hpp"
 #include "x11_factory.hpp"
-#include "../commands/cmd_generic.hpp"
 
 
-X11Timer::X11Timer( intf_thread_t *pIntf, CmdGeneric &rCmd ):
-    OSTimer( pIntf ), m_rCommand( rCmd )
+X11Timer::X11Timer( intf_thread_t *pIntf, const Callback &rCallback ):
+    OSTimer( pIntf ), m_callback( rCallback )
 {
     // Get the instance of timer loop
     X11Factory *m_pOsFactory = (X11Factory*)(OSFactory::instance( pIntf ) );
@@ -49,7 +48,7 @@ X11Timer::~X11Timer()
 
 void X11Timer::start( int delay, bool oneShot )
 {
-    m_interval = 1000LL * (mtime_t)delay;
+    m_interval = 1000 * delay;
     m_oneShot = oneShot;
     m_nextDate = mdate() + m_interval;
     m_pTimerLoop->addTimer( *this );
@@ -72,7 +71,7 @@ bool X11Timer::execute()
 {
     m_nextDate += m_interval;
     // Execute the callback
-    m_rCommand.execute();
+    (*(m_callback.getFunc()))( m_callback.getObj() );
 
     return !m_oneShot;
 }
@@ -109,8 +108,8 @@ void X11TimerLoop::waitNextTimer()
     X11Timer *nextTimer = NULL;
 
     // Find the next timer to execute
-    std::list<X11Timer*>::const_iterator timer;
-    for( timer = m_timers.begin(); timer != m_timers.end(); ++timer )
+    list<X11Timer*>::const_iterator timer;
+    for( timer = m_timers.begin(); timer != m_timers.end(); timer++ )
     {
         mtime_t timerDate = (*timer)->getNextDate();
         if( timerDate < nextDate )
@@ -146,13 +145,20 @@ void X11TimerLoop::waitNextTimer()
 
 bool X11TimerLoop::sleep( int delay )
 {
-    struct pollfd ufd;
-    memset( &ufd, 0, sizeof (ufd) );
-    ufd.fd = m_connectionNumber;
-    ufd.events = POLLIN;
+    // Timeout delay
+    struct timeval tv;
+    tv.tv_sec = delay / 1000;
+    tv.tv_usec = 1000 * (delay % 1000);
+
+    // FD set for select()
+    fd_set rfds;
+    FD_ZERO( &rfds );
+    FD_SET( m_connectionNumber, &rfds );
 
     // Wait for an X11 event, or timeout
-    return poll( &ufd, 1, delay ) > 0;
+    int num = select( m_connectionNumber + 1, &rfds, NULL, NULL, &tv );
+
+    return ( num > 0 );
 }
 
 

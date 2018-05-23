@@ -1,623 +1,412 @@
 /*****************************************************************************
  * mmsh.c:
  *****************************************************************************
- * Copyright (C) 2001, 2002 VLC authors and VideoLAN
- * $Id: d2f497dd947509e9a5cfe7e7c3aa7849ecb377d8 $
+ * Copyright (C) 2001, 2002 VideoLAN
+ * $Id: mmsh.c 7297 2004-04-07 17:41:14Z fenrir $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
+#include <stdlib.h>
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
+#include <vlc/vlc.h>
+#include <vlc/input.h>
 
-#include <vlc_common.h>
-#include <vlc_access.h>
-#include <vlc_strings.h>
-#include <vlc_input.h>
+#include "vlc_playlist.h"
 
-#include <vlc_network.h>
-#include <vlc_url.h>
-#include <vlc_memstream.h>
+#include "network.h"
 #include "asf.h"
 #include "buffer.h"
 
 #include "mms.h"
 #include "mmsh.h"
 
-#include "assert.h"
 /* TODO:
+ *  - http_proxy
  *  - authentication
  */
 
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
-int  MMSHOpen  ( stream_t * );
-void MMSHClose ( stream_t * );
+int  E_(MMSHOpen)  ( input_thread_t * );
+void E_(MMSHClose) ( input_thread_t * );
 
-static block_t *Block( stream_t *p_access, bool * );
-static int  Seek( stream_t *, uint64_t );
-static int  Control( stream_t *, int, va_list );
+static ssize_t  Read( input_thread_t *, byte_t *, size_t );
+static ssize_t  ReadRedirect( input_thread_t *, byte_t *, size_t );
+static void     Seek( input_thread_t *, off_t );
 
-static int  Describe( stream_t  *, char **ppsz_location );
-static int  Start( stream_t *, uint64_t );
-static void Stop( stream_t * );
-
-static int  GetPacket( stream_t *, chunk_t * );
-static void GetHeader( stream_t *p_access, int i_content_length );
-
-static int Restart( stream_t * );
-static int Reset( stream_t * );
-
-//#define MMSH_USER_AGENT "NSPlayer/4.1.0.3856"
-#define MMSH_USER_AGENT "NSPlayer/7.10.0.3059"
+static int      Describe( input_thread_t  *, char **ppsz_location );
+static int      Start( input_thread_t *, off_t );
+static void     Stop( input_thread_t * );
+static int      GetPacket( input_thread_t *, chunk_t * );
 
 /****************************************************************************
  * Open: connect to ftp server and ask for file
  ****************************************************************************/
-int MMSHOpen( stream_t *p_access )
+int  E_( MMSHOpen )  ( input_thread_t *p_input )
 {
-    access_sys_t    *p_sys = calloc( 1, sizeof( *p_sys ) );
+    access_sys_t    *p_sys;
+
     char            *psz_location = NULL;
 
-    if( unlikely(p_sys == NULL) )
-        return VLC_ENOMEM;
+    vlc_value_t     val;
 
-    p_access->p_sys = p_sys;
-    p_sys->i_proto= MMS_PROTO_HTTP;
-    p_sys->fd     = -1;
-    p_sys->i_position = 0;
+    /* init p_sys */
+    p_input->p_access_data = p_sys = malloc( sizeof( access_sys_t ) );
+    p_sys->i_proto = MMS_PROTO_HTTP;
 
-    /* Handle proxy */
-    p_sys->b_proxy = false;
-
-    /* Check proxy */
-    char *psz_proxy = vlc_getProxyUrl( p_access->psz_url );
-    if( psz_proxy != NULL )
-    {
-        p_sys->b_proxy = true;
-        vlc_UrlParse( &p_sys->proxy, psz_proxy );
-        free( psz_proxy );
-
-        if( ( p_sys->proxy.psz_host == NULL ) ||
-            ( *p_sys->proxy.psz_host == '\0' ) )
-        {
-            msg_Warn( p_access, "invalid proxy host" );
-            vlc_UrlClean( &p_sys->proxy );
-            free( p_sys );
-            return VLC_EGENERIC;
-        }
-
-        if( p_sys->proxy.i_port <= 0 )
-            p_sys->proxy.i_port = 80;
-        msg_Dbg( p_access, "Using http proxy %s:%d",
-                 p_sys->proxy.psz_host, p_sys->proxy.i_port );
-    }
+    p_sys->fd       = -1;
+    p_sys->i_pos  = 0;
+    p_sys->i_start= 0;
 
     /* open a tcp connection */
-    vlc_UrlParse( &p_sys->url, p_access->psz_url );
-    if( ( p_sys->url.psz_host == NULL ) ||
-        ( *p_sys->url.psz_host == '\0' ) )
+    vlc_UrlParse( &p_sys->url, p_input->psz_name, 0 );
+    if( p_sys->url.psz_host == NULL && *p_sys->url.psz_host == '\0' )
     {
-        msg_Err( p_access, "invalid host" );
-        goto error;
+        msg_Err( p_input, "invalid host" );
+        vlc_UrlClean( &p_sys->url );
+        free( p_sys );
+        return VLC_EGENERIC;
     }
     if( p_sys->url.i_port <= 0 )
-        p_sys->url.i_port = 80;
-
-    if( Describe( p_access, &psz_location ) )
-        goto error;
-
-    /* Handle redirection */
-    if( psz_location != NULL )
     {
-        msg_Dbg( p_access, "redirection to %s", psz_location );
-        p_access->psz_url = psz_location;
+        p_sys->url.i_port = 80;
+    }
 
+    if( Describe( p_input, &psz_location ) )
+    {
         vlc_UrlClean( &p_sys->url );
-        vlc_UrlClean( &p_sys->proxy );
         free( p_sys );
-        return VLC_ACCESS_REDIRECT;
+        return VLC_EGENERIC;
+    }
+    /* Handle redirection */
+    if( psz_location && *psz_location )
+    {
+        playlist_t * p_playlist = vlc_object_find( p_input, VLC_OBJECT_PLAYLIST, FIND_PARENT );
+
+        msg_Dbg( p_input, "redirection to %s", psz_location );
+
+        if( !p_playlist )
+        {
+            msg_Err( p_input, "redirection failed: can't find playlist" );
+            free( psz_location );
+            return VLC_EGENERIC;
+        }
+        p_playlist->pp_items[p_playlist->i_index]->b_autodeletion = VLC_TRUE;
+        playlist_Add( p_playlist, psz_location, psz_location,
+                      PLAYLIST_INSERT | PLAYLIST_GO,
+                      p_playlist->i_index + 1 );
+        vlc_object_release( p_playlist );
+
+        free( psz_location );
+
+        p_input->pf_read = ReadRedirect;
+        p_input->pf_seek = NULL;
+        p_input->pf_set_program = input_SetProgram;
+        p_input->pf_set_area = NULL;
+
+        /* *** finished to set some variable *** */
+        vlc_mutex_lock( &p_input->stream.stream_lock );
+        p_input->stream.b_pace_control = 0;
+        p_input->stream.p_selected_area->i_size = 0;
+        p_input->stream.b_seekable = 0;
+        p_input->stream.p_selected_area->i_tell = 0;
+        p_input->stream.i_method = INPUT_METHOD_NETWORK;
+        vlc_mutex_unlock( &p_input->stream.stream_lock );
+
+        return VLC_SUCCESS;
     }
 
     /* Start playing */
-    if( Start( p_access, 0 ) )
+    if( Start( p_input, 0 ) )
     {
-        msg_Err( p_access, "cannot start stream" );
+        msg_Err( p_input, "cannot start stream" );
         free( p_sys->p_header );
-        goto error;
+        vlc_UrlClean( &p_sys->url );
+        free( p_sys );
+        return VLC_EGENERIC;
     }
 
-    ACCESS_SET_CALLBACKS( NULL, Block, Control, Seek );
-    return VLC_SUCCESS;
+    /* *** set exported functions *** */
+    p_input->pf_read = Read;
+    p_input->pf_seek = Seek;
+    p_input->pf_set_program = input_SetProgram;
+    p_input->pf_set_area = NULL;
 
-error:
-    if( p_sys->b_proxy )
-        vlc_UrlClean( &p_sys->proxy );
-    vlc_UrlClean( &p_sys->url );
-    free( p_sys );
-    return VLC_EGENERIC;
+    p_input->p_private = NULL;
+    p_input->i_mtu = 3 * p_sys->asfh.i_min_data_packet_size;
+
+    /* *** finished to set some variable *** */
+    vlc_mutex_lock( &p_input->stream.stream_lock );
+    p_input->stream.b_pace_control = 0;
+    if( p_sys->b_broadcast )
+    {
+        p_input->stream.p_selected_area->i_size = 0;
+        p_input->stream.b_seekable = 0;
+    }
+    else
+    {
+        p_input->stream.p_selected_area->i_size = p_sys->asfh.i_file_size;
+        p_input->stream.b_seekable = 1;
+    }
+    p_input->stream.p_selected_area->i_tell = 0;
+    p_input->stream.i_method = INPUT_METHOD_NETWORK;
+    vlc_mutex_unlock( &p_input->stream.stream_lock );
+
+    /* Update default_pts to a suitable value for mms access */
+    var_Get( p_input, "mms-caching", &val );
+    p_input->i_pts_delay = val.i_int * 1000;
+
+    return VLC_SUCCESS;
 }
 
 /*****************************************************************************
  * Close: free unused data structures
  *****************************************************************************/
-void  MMSHClose ( stream_t *p_access )
+void E_( MMSHClose )( input_thread_t *p_input )
 {
-    access_sys_t *p_sys = p_access->p_sys;
+    access_sys_t    *p_sys   = p_input->p_access_data;
 
-    Stop( p_access );
+    msg_Dbg( p_input, "stopping stream" );
 
-    free( p_sys->p_header );
+    Stop( p_input );
 
-    if( p_sys->b_proxy )
-        vlc_UrlClean( &p_sys->proxy );
-    vlc_UrlClean( &p_sys->url );
+
     free( p_sys );
-}
-
-/*****************************************************************************
- * Control:
- *****************************************************************************/
-static int Control( stream_t *p_access, int i_query, va_list args )
-{
-    access_sys_t *p_sys = p_access->p_sys;
-    bool   *pb_bool;
-    bool    b_bool;
-    int64_t      *pi_64;
-    int          i_int;
-
-    switch( i_query )
-    {
-        case STREAM_CAN_SEEK:
-            pb_bool = va_arg( args, bool * );
-            *pb_bool = !p_sys->b_broadcast;
-            break;
-
-        case STREAM_CAN_FASTSEEK:
-            pb_bool = va_arg( args, bool * );
-            *pb_bool = false;
-            break;
-
-        case STREAM_CAN_PAUSE:
-        case STREAM_CAN_CONTROL_PACE:
-            pb_bool = va_arg( args, bool * );
-            *pb_bool = true;
-            break;
-
-        case STREAM_GET_SIZE:
-        {
-            uint64_t *s = va_arg( args, uint64_t * );
-            if (p_sys->b_broadcast)
-                return VLC_EGENERIC;
-            *s = p_sys->asfh.i_file_size;
-            return VLC_SUCCESS;
-        }
-
-        case STREAM_GET_PTS_DELAY:
-            pi_64 = va_arg( args, int64_t * );
-            *pi_64 = INT64_C(1000)
-                   * var_InheritInteger( p_access, "network-caching" );
-            break;
-
-        case STREAM_GET_PRIVATE_ID_STATE:
-            i_int = va_arg( args, int );
-            pb_bool = va_arg( args, bool * );
-
-            if( (i_int < 0) || (i_int > 127) )
-                return VLC_EGENERIC;
-            *pb_bool =  p_sys->asfh.stream[i_int].i_selected ? true : false;
-            break;
-
-        case STREAM_SET_PRIVATE_ID_STATE:
-        {
-            i_int = va_arg( args, int );
-            b_bool = (bool)va_arg( args, int );
-            int i_cat;
-            if( i_int > 127 )
-                return VLC_EGENERIC;
-            else if ( i_int < 0 )
-            {
-                /* Deselecting all ES in this category */
-                assert( !b_bool );
-                i_cat = -1 * i_int;
-                if ( i_cat > ES_CATEGORY_COUNT )
-                    return VLC_EGENERIC;
-            }
-            else
-            {
-                /* Chose another ES */
-                assert( b_bool );
-                i_cat = p_sys->asfh.stream[i_int].i_cat;
-            }
-
-            for ( int i=0; i< 128; i++ )
-            {
-                /* First unselect all streams from the same cat */
-                if ( i_cat == p_sys->asfh.stream[i].i_cat )
-                    p_sys->asfh.stream[i].i_selected = false;
-            }
-
-            if ( i_int > 0 )
-                p_sys->asfh.stream[i_int].i_selected = true;
-
-            Stop( p_access );
-            Seek( p_access, p_sys->i_position );
-            return VLC_SUCCESS;
-        }
-
-        case STREAM_SET_PAUSE_STATE:
-            b_bool = (bool)va_arg( args, int );
-            if( b_bool )
-                Stop( p_access );
-            else
-                Seek( p_access, p_sys->i_position );
-            break;
-
-        default:
-            return VLC_EGENERIC;
-    }
-    return VLC_SUCCESS;
 }
 
 /*****************************************************************************
  * Seek: try to go at the right place
  *****************************************************************************/
-static int Seek( stream_t *p_access, uint64_t i_pos )
+static void Seek( input_thread_t * p_input, off_t i_pos )
 {
-    access_sys_t *p_sys = p_access->p_sys;
+    access_sys_t *p_sys = p_input->p_access_data;
     chunk_t      ck;
-    uint64_t     i_offset;
-    uint64_t     i_packet;
-
-    msg_Dbg( p_access, "seeking to %"PRId64, i_pos );
+    off_t        i_offset;
+    off_t        i_packet;
 
     i_packet = ( i_pos - p_sys->i_header ) / p_sys->asfh.i_min_data_packet_size;
     i_offset = ( i_pos - p_sys->i_header ) % p_sys->asfh.i_min_data_packet_size;
 
-    Stop( p_access );
-    Start( p_access, i_packet * p_sys->asfh.i_min_data_packet_size );
+    msg_Dbg( p_input, "seeking to "I64Fd, i_pos );
+
+    vlc_mutex_lock( &p_input->stream.stream_lock );
+
+    Stop( p_input );
+    Start( p_input, i_packet * p_sys->asfh.i_min_data_packet_size );
 
     for( ;; )
     {
-        if( GetPacket( p_access, &ck ) )
+        if( GetPacket( p_input, &ck ) )
+        {
             break;
+        }
 
         /* skip headers */
         if( ck.i_type != 0x4824 )
+        {
             break;
-
-        msg_Warn( p_access, "skipping header" );
+        }
+        msg_Warn( p_input, "skipping header" );
     }
 
-    p_sys->i_position = i_pos;
+    p_sys->i_pos = i_pos;
     p_sys->i_packet_used += i_offset;
 
-    return VLC_SUCCESS;
+    p_input->stream.p_selected_area->i_tell = i_pos;
+    vlc_mutex_unlock( &p_input->stream.stream_lock );
 }
 
 /*****************************************************************************
- * Block:
+ * Read:
  *****************************************************************************/
-static block_t *Block( stream_t *p_access, bool *restrict eof )
+static ssize_t ReadRedirect( input_thread_t *p_input, byte_t *p, size_t i )
 {
-    access_sys_t *p_sys = p_access->p_sys;
-    const unsigned i_packet_min = p_sys->asfh.i_min_data_packet_size;
+    return 0;
+}
 
-    if( p_sys->i_position < p_sys->i_start + p_sys->i_header )
+/*****************************************************************************
+ * Read:
+ *****************************************************************************/
+static ssize_t Read        ( input_thread_t * p_input, byte_t * p_buffer,
+                             size_t i_len )
+{
+    access_sys_t *p_sys = p_input->p_access_data;
+    size_t       i_copy;
+    size_t       i_data = 0;
+
+    while( i_data < i_len )
     {
-        const size_t i_offset = p_sys->i_position - p_sys->i_start;
-        const size_t i_copy = p_sys->i_header - i_offset;
-
-        block_t *p_block = block_Alloc( i_copy );
-        if( !p_block )
-            return NULL;
-
-        memcpy( p_block->p_buffer, &p_sys->p_header[i_offset], i_copy );
-        p_sys->i_position += i_copy;
-        return p_block;
-    }
-    else if( p_sys->i_packet_length > 0 &&
-             p_sys->i_packet_used < __MAX( p_sys->i_packet_length, i_packet_min ) )
-    {
-        size_t i_copy = 0;
-        size_t i_padding = 0;
-
-        if( p_sys->i_packet_used < p_sys->i_packet_length )
-            i_copy = p_sys->i_packet_length - p_sys->i_packet_used;
-        if( __MAX( p_sys->i_packet_used, p_sys->i_packet_length ) < i_packet_min )
-            i_padding = i_packet_min - __MAX( p_sys->i_packet_used, p_sys->i_packet_length );
-
-        block_t *p_block = block_Alloc( i_copy + i_padding );
-        if( !p_block )
-            return NULL;
-
-        if( i_copy > 0 )
-            memcpy( &p_block->p_buffer[0], &p_sys->p_packet[p_sys->i_packet_used], i_copy );
-        if( i_padding > 0 )
-            memset( &p_block->p_buffer[i_copy], 0, i_padding );
-
-        p_sys->i_packet_used += i_copy + i_padding;
-        p_sys->i_position += i_copy + i_padding;
-        return p_block;
-
-    }
-
-    chunk_t ck;
-    if( GetPacket( p_access, &ck ) )
-    {
-        int i_ret = -1;
-        if( p_sys->b_broadcast )
+        if( p_sys->i_pos < p_sys->i_start + p_sys->i_header )
         {
-            if( (ck.i_type == 0x4524) && (ck.i_sequence != 0) )
-                i_ret = Restart( p_access );
-            else if( ck.i_type == 0x4324 )
-                i_ret = Reset( p_access );
+            int i_offset = p_sys->i_pos - p_sys->i_start;
+            i_copy = __MIN( p_sys->i_header - i_offset, i_len - i_data );
+            memcpy( &p_buffer[i_data], &p_sys->p_header[i_offset], i_copy );
+
+            i_data += i_copy;
+            p_sys->i_pos += i_copy;
         }
-        if( i_ret )
+        else if( p_sys->i_packet_used < p_sys->i_packet_length )
         {
-            *eof = true;
-            return 0;
+            i_copy = __MIN( p_sys->i_packet_length - p_sys->i_packet_used,
+                            i_len - i_data );
+
+            memcpy( &p_buffer[i_data],
+                    &p_sys->p_packet[p_sys->i_packet_used],
+                    i_copy );
+
+            i_data += i_copy;
+            p_sys->i_packet_used += i_copy;
+            p_sys->i_pos += i_copy;
         }
-    }
-    if( ck.i_type != 0x4424 )
-    {
-        p_sys->i_packet_used = 0;
-        p_sys->i_packet_length = 0;
-    }
-
-    return NULL;
-}
-
-/* */
-static int Restart( stream_t *p_access )
-{
-    access_sys_t *p_sys = p_access->p_sys;
-    char *psz_location = NULL;
-
-    msg_Dbg( p_access, "Restart the stream" );
-    p_sys->i_start = p_sys->i_position;
-
-    /* */
-    msg_Dbg( p_access, "stopping the stream" );
-    Stop( p_access );
-
-    /* */
-    msg_Dbg( p_access, "describe the stream" );
-    if( Describe( p_access, &psz_location ) )
-    {
-        msg_Err( p_access, "describe failed" );
-        return VLC_EGENERIC;
-    }
-    free( psz_location );
-
-    /* */
-    if( Start( p_access, 0 ) )
-    {
-        msg_Err( p_access, "Start failed" );
-        return VLC_EGENERIC;
-    }
-    return VLC_SUCCESS;
-}
-static int Reset( stream_t *p_access )
-{
-    access_sys_t *p_sys = p_access->p_sys;
-    asf_header_t old_asfh = p_sys->asfh;
-    int i;
-
-    msg_Dbg( p_access, "Reset the stream" );
-    p_sys->i_start = p_sys->i_position;
-
-    /* */
-    p_sys->i_packet_sequence = 0;
-    p_sys->i_packet_used = 0;
-    p_sys->i_packet_length = 0;
-    p_sys->p_packet = NULL;
-
-    /* Get the next header FIXME memory loss ? */
-    GetHeader( p_access, -1 );
-    if( p_sys->i_header <= 0 )
-        return VLC_EGENERIC;
-
-    asf_HeaderParse ( &p_sys->asfh,
-                       p_sys->p_header, p_sys->i_header );
-    msg_Dbg( p_access, "packet count=%"PRId64" packet size=%d",
-             p_sys->asfh.i_data_packets_count,
-             p_sys->asfh.i_min_data_packet_size );
-
-    asf_StreamSelect( &p_sys->asfh,
-                       var_InheritInteger( p_access, "mms-maxbitrate" ),
-                       var_InheritBool( p_access, "mms-all" ),
-                       var_InheritBool( p_access, "audio" ),
-                       var_InheritBool( p_access, "video" ) );
-
-    /* Check we have comptible asfh */
-    for( i = 1; i < 128; i++ )
-    {
-        asf_stream_t *p_old = &old_asfh.stream[i];
-        asf_stream_t *p_new = &p_sys->asfh.stream[i];
-
-        if( p_old->i_cat != p_new->i_cat || p_old->i_selected != p_new->i_selected )
-            break;
-    }
-    if( i < 128 )
-    {
-        msg_Warn( p_access, "incompatible asf header, restart" );
-        return Restart( p_access );
-    }
-
-    /* */
-    p_sys->i_packet_used = 0;
-    p_sys->i_packet_length = 0;
-    return VLC_SUCCESS;
-}
-
-static void WriteRequestLine( const access_sys_t *sys,
-                              struct vlc_memstream *restrict stream )
-{
-    vlc_memstream_open( stream );
-
-    vlc_memstream_puts( stream, "GET " );
-    if( sys->b_proxy )
-        vlc_memstream_printf( stream, "http://%s:%d", sys->url.psz_host,
-                              sys->url.i_port );
-    if( (sys->url.psz_path == NULL) || (sys->url.psz_path[0] == '\0') )
-        vlc_memstream_putc( stream, '/' );
-    else
-        vlc_memstream_puts( stream, sys->url.psz_path );
-    if( sys->url.psz_option != NULL )
-        vlc_memstream_printf( stream, "?%s", sys->url.psz_option );
-    vlc_memstream_puts( stream, " HTTP/1.0\r\n" );
-
-    vlc_memstream_printf( stream, "Host: %s:%d\r\n", sys->url.psz_host,
-                          sys->url.i_port );
-
-    /* Proxy Authentication */
-    const vlc_url_t *proxy = &sys->proxy;
-
-    if( sys->b_proxy && proxy->psz_username != NULL )
-    {
-        const char *pw = proxy->psz_password ? proxy->psz_password : "";
-        char *buf;
-
-        if( asprintf( &buf, "%s:%s", proxy->psz_username, pw ) != -1 )
+        else if( p_sys->i_packet_length > 0 &&
+                 (int)p_sys->i_packet_used < p_sys->asfh.i_min_data_packet_size )
         {
-            char *b64 = vlc_b64_encode( buf );
-            free( buf );
-            if( b64 != NULL )
+            i_copy = __MIN( p_sys->asfh.i_min_data_packet_size - p_sys->i_packet_used,
+                            i_len - i_data );
+
+            memset( &p_buffer[i_data], 0, i_copy );
+
+            i_data += i_copy;
+            p_sys->i_packet_used += i_copy;
+            p_sys->i_pos += i_copy;
+        }
+        else
+        {
+            chunk_t ck;
+            if( GetPacket( p_input, &ck ) )
             {
-                vlc_memstream_printf( stream, "Proxy-Authorization: "
-                                      "Basic %s\r\n", b64 );
-                free( b64 );
+                if( ck.i_type == 0x4524 && ck.i_sequence != 0 && p_sys->b_broadcast )
+                {
+                    char *psz_location = NULL;
+
+                    p_sys->i_start = p_sys->i_pos;
+
+                    msg_Dbg( p_input, "stoping the stream" );
+                    Stop( p_input );
+
+                    msg_Dbg( p_input, "describe the stream" );
+                    if( Describe( p_input, &psz_location ) )
+                    {
+                        msg_Err( p_input, "describe failed" );
+                        return -1;
+                    }
+                    if( Start( p_input, 0 ) )
+                    {
+                        msg_Err( p_input, "Start failed" );
+                        return -1;
+                    }
+                }
+                else
+                {
+                    return -1;
+                }
+            }
+            if( ck.i_type != 0x4424 )
+            {
+                p_sys->i_packet_used = 0;
+                p_sys->i_packet_length = 0;
             }
         }
     }
 
-    vlc_memstream_puts( stream, "Accept: */*\r\n" );
-    vlc_memstream_printf( stream, "User-Agent: %s\r\n", MMSH_USER_AGENT );
-}
-
-static int OpenConnection( stream_t *p_access,
-                           struct vlc_memstream *restrict stream )
-{
-    access_sys_t *p_sys = p_access->p_sys;
-    const vlc_url_t *srv = p_sys->b_proxy ? &p_sys->proxy : &p_sys->url;
-
-    /* XXX: This is useless: HTTP/1.0 closes connection by default */
-    vlc_memstream_puts( stream, "Connection: Close\r\n" );
-
-    vlc_memstream_puts( stream, "\r\n" ); /* end of HTTP request header */
-
-    if( vlc_memstream_close( stream ) )
-        return VLC_ENOMEM;
-
-    int fd = net_ConnectTCP( p_access, srv->psz_host, srv->i_port );
-    if( fd < 0 )
-    {
-        free( stream->ptr );
-        return VLC_EGENERIC;
-    }
-
-    msg_Dbg( p_access, "sending request:\n%s", stream->ptr );
-
-    ssize_t val = net_Write( p_access, fd, stream->ptr, stream->length );
-    free( stream->ptr );
-    if( val < (ssize_t)stream->length )
-    {
-        msg_Err( p_access, "failed to send request" );
-        net_Close( fd );
-        fd = -1;
-    }
-
-    p_sys->fd = fd;
-    return (fd >= 0) ? VLC_SUCCESS : VLC_EGENERIC;
+    return( i_data );
 }
 
 /*****************************************************************************
  * Describe:
  *****************************************************************************/
-static int Describe( stream_t  *p_access, char **ppsz_location )
+static int Describe( input_thread_t  *p_input, char **ppsz_location )
 {
-    access_sys_t *p_sys = p_access->p_sys;
+    access_sys_t *p_sys = p_input->p_access_data;
     char         *psz_location = NULL;
-    int          i_content_length = -1;
-    bool         b_keepalive = false;
+    char         *psz;
     int          i_code;
-    struct vlc_memstream stream;
 
     /* Reinit context */
-    p_sys->b_broadcast = true;
+    p_sys->b_broadcast = VLC_TRUE;
     p_sys->i_request_context = 1;
     p_sys->i_packet_sequence = 0;
     p_sys->i_packet_used = 0;
     p_sys->i_packet_length = 0;
     p_sys->p_packet = NULL;
+    E_( GenerateGuid )( &p_sys->guid );
 
-    GenerateGuid ( &p_sys->guid );
-
-    WriteRequestLine( p_sys, &stream );
-
-    vlc_memstream_printf( &stream, "Pragma: no-cache,rate=1.000000,"
-                          "stream-time=0,stream-offset=0:0,"
-                          "request-context=%d,max-duration=0\r\n",
-                          p_sys->i_request_context++ );
-    vlc_memstream_printf( &stream, "Pragma: xClientGUID={"GUID_FMT"}\r\n",
-                          GUID_PRINT(p_sys->guid) );
-
-    if( OpenConnection( p_access, &stream ) )
-        return VLC_EGENERIC;
-
-    /* Receive the http header */
-    char *psz = net_Gets( p_access, p_sys->fd );
-    if( psz == NULL )
+    if( ( p_sys->fd = net_OpenTCP( p_input, p_sys->url.psz_host,
+                                            p_sys->url.i_port ) ) < 0 )
     {
-        msg_Err( p_access, "failed to read answer" );
+        msg_Err( p_input, "cannot connect to%s:%d", p_sys->url.psz_host, p_sys->url.i_port );
         goto error;
     }
 
+    /* send first request */
+    net_Printf( VLC_OBJECT(p_input), p_sys->fd,
+                "GET %s HTTP/1.0\r\n"
+                "Accept: */*\r\n"
+                "User-Agent: NSPlayer/4.1.0.3856\r\n"
+                "Host: %s:%d\r\n"
+                "Pragma: no-cache,rate=1.000000,stream-time=0,stream-offset=0:0,request-context=%d,max-duration=0\r\n"
+                "Pragma: xClientGUID={"GUID_FMT"}\r\n"
+                "Connection: Close\r\n",
+                ( p_sys->url.psz_path == NULL || *p_sys->url.psz_path == '\0' ) ? "/" : p_sys->url.psz_path,
+                p_sys->url.psz_host, p_sys->url.i_port,
+                p_sys->i_request_context++,
+                GUID_PRINT( p_sys->guid ) );
+
+    if( net_Printf( VLC_OBJECT(p_input), p_sys->fd, "\r\n" ) < 0 )
+    {
+        msg_Err( p_input, "failed to send request" );
+        goto error;
+    }
+
+    /* Receive the http header */
+    if( ( psz = net_Gets( VLC_OBJECT(p_input), p_sys->fd ) ) == NULL )
+    {
+        msg_Err( p_input, "failed to read answer" );
+        goto error;
+    }
     if( strncmp( psz, "HTTP/1.", 7 ) )
     {
-        msg_Err( p_access, "invalid HTTP reply '%s'", psz );
+        msg_Err( p_input, "invalid HTTP reply '%s'", psz );
         free( psz );
         goto error;
     }
     i_code = atoi( &psz[9] );
     if( i_code >= 400 )
     {
-        msg_Err( p_access, "error: %s", psz );
+        msg_Err( p_input, "error: %s", psz );
         free( psz );
         goto error;
     }
 
-    msg_Dbg( p_access, "HTTP reply '%s'", psz );
+    msg_Dbg( p_input, "HTTP reply '%s'", psz );
     free( psz );
     for( ;; )
     {
-        psz = net_Gets( p_access, p_sys->fd );
+        char *psz = net_Gets( p_input, p_sys->fd );
+        char *p;
 
         if( psz == NULL )
         {
-            msg_Err( p_access, "failed to read answer" );
-            free( psz_location );
+            msg_Err( p_input, "failed to read answer" );
             goto error;
         }
 
@@ -627,12 +416,10 @@ static int Describe( stream_t  *p_access, char **ppsz_location )
             break;
         }
 
-        char *p = strchr( psz, ':' );
-        if( p == NULL )
+        if( ( p = strchr( psz, ':' ) ) == NULL )
         {
-            msg_Err( p_access, "malformed header line: %s", psz );
+            msg_Err( p_input, "malformed header line: %s", psz );
             free( psz );
-            free( psz_location );
             goto error;
         }
         *p++ = '\0';
@@ -647,91 +434,91 @@ static int Describe( stream_t  *p_access, char **ppsz_location )
                 /* FIXME, it is a bit badly done here ..... */
                 if( strstr( p, "broadcast" ) )
                 {
-                    msg_Dbg( p_access, "stream type = broadcast" );
-                    p_sys->b_broadcast = true;
+                    msg_Dbg( p_input, "stream type = broadcast" );
+                    p_sys->b_broadcast = VLC_TRUE;
                 }
                 else if( strstr( p, "seekable" ) )
                 {
-                    msg_Dbg( p_access, "stream type = seekable" );
-                    p_sys->b_broadcast = false;
+                    msg_Dbg( p_input, "stream type = seekable" );
+                    p_sys->b_broadcast = VLC_FALSE;
                 }
                 else
                 {
-                    msg_Warn( p_access, "unknown stream types (%s)", p );
-                    p_sys->b_broadcast = false;
+                    msg_Warn( p_input, "unknow stream types (%s)", p );
+                    p_sys->b_broadcast = VLC_FALSE;
                 }
             }
         }
         else if( !strcasecmp( psz, "Location" ) )
         {
-            free( psz_location );
-            psz_location = vlc_uri_resolve( p_access->psz_url, p );
+            psz_location = strdup( p );
         }
-        else if( !strcasecmp( psz, "Content-Length" ) )
-        {
-            i_content_length = atoi( p );
-            msg_Dbg( p_access, "content-length = %d", i_content_length );
-        }
-        else if( !strcasecmp( psz, "Connection" ) )
-        {
-            if( strcasestr( p, "Keep-Alive" ) )
-            {
-                msg_Dbg( p_access, "Keep-Alive header found" );
-                b_keepalive = true;
-            }
-        }
-
 
         free( psz );
     }
 
     /* Handle the redirection */
-    if( ( (i_code == 301) || (i_code == 302) ||
-          (i_code == 303) || (i_code == 307) ) &&
-        psz_location )
+    if( ( i_code == 301 || i_code == 302 ||
+          i_code == 303 || i_code == 307 ) &&
+        psz_location && *psz_location )
     {
-        msg_Dbg( p_access, "redirection to %s", psz_location );
+        msg_Dbg( p_input, "redirection to %s", psz_location );
         net_Close( p_sys->fd ); p_sys->fd = -1;
 
         *ppsz_location = psz_location;
         return VLC_SUCCESS;
     }
-    free( psz_location );
 
     /* Read the asf header */
-    GetHeader( p_access, b_keepalive ? i_content_length : -1);
+    p_sys->i_header = 0;
+    p_sys->p_header = NULL;
+    for( ;; )
+    {
+        chunk_t ck;
+        if( GetPacket( p_input, &ck ) ||
+            ck.i_type != 0x4824 )
+        {
+            break;
+        }
+
+        if( ck.i_data > 0 )
+        {
+            p_sys->i_header += ck.i_data;
+            p_sys->p_header = realloc( p_sys->p_header, p_sys->i_header );
+            memcpy( &p_sys->p_header[p_sys->i_header - ck.i_data],
+                    ck.p_data, ck.i_data );
+        }
+    }
+    msg_Dbg( p_input, "complete header size=%d", p_sys->i_header );
     if( p_sys->i_header <= 0 )
     {
-        msg_Err( p_access, "header size == 0" );
+        msg_Err( p_input, "header size == 0" );
         goto error;
     }
     /* close this connection */
-    net_Close( p_sys->fd );
-    p_sys->fd = -1;
+    net_Close( p_sys->fd ); p_sys->fd = -1;
 
     /* *** parse header and get stream and their id *** */
     /* get all streams properties,
      *
      * TODO : stream bitrates properties(optional)
      *        and bitrate mutual exclusion(optional) */
-    asf_HeaderParse ( &p_sys->asfh,
-                       p_sys->p_header, p_sys->i_header );
-    msg_Dbg( p_access, "packet count=%"PRId64" packet size=%d",
+    E_( asf_HeaderParse )( &p_sys->asfh,
+                           p_sys->p_header, p_sys->i_header );
+    msg_Dbg( p_input, "packet count=%lld packet size=%d",
              p_sys->asfh.i_data_packets_count,
              p_sys->asfh.i_min_data_packet_size );
 
-    if( p_sys->asfh.i_min_data_packet_size <= 0 )
-        goto error;
+    E_( asf_StreamSelect)( &p_sys->asfh,
+                           config_GetInt( p_input, "mms-maxbitrate" ),
+                           config_GetInt( p_input, "mms-all" ),
+                           config_GetInt( p_input, "audio" ),
+                           config_GetInt( p_input, "video" ) );
 
-    asf_StreamSelect( &p_sys->asfh,
-                       var_InheritInteger( p_access, "mms-maxbitrate" ),
-                       var_InheritBool( p_access, "mms-all" ),
-                       var_InheritBool( p_access, "audio" ),
-                       var_InheritBool( p_access, "video" ) );
     return VLC_SUCCESS;
 
 error:
-    if( p_sys->fd >= 0 )
+    if( p_sys->fd > 0 )
     {
         net_Close( p_sys->fd  );
         p_sys->fd = -1;
@@ -739,117 +526,112 @@ error:
     return VLC_EGENERIC;
 }
 
-static void GetHeader( stream_t *p_access, int i_content_length )
-{
-    access_sys_t *p_sys = p_access->p_sys;
-    int i_read_content = 0;
-
-    /* Read the asf header */
-    p_sys->i_header = 0;
-    free( p_sys->p_header  );
-    p_sys->p_header = NULL;
-    for( ;; )
-    {
-        chunk_t ck;
-        if( (i_content_length >= 0 && i_read_content >= i_content_length) || GetPacket( p_access, &ck ) || ck.i_type != 0x4824 )
-            break;
-
-        i_read_content += (4+ck.i_size);
-
-        if( ck.i_data > 0 )
-        {
-            p_sys->i_header += ck.i_data;
-            p_sys->p_header = xrealloc( p_sys->p_header, p_sys->i_header );
-            memcpy( &p_sys->p_header[p_sys->i_header - ck.i_data],
-                    ck.p_data, ck.i_data );
-        }
-    }
-    msg_Dbg( p_access, "complete header size=%d", p_sys->i_header );
-}
-
-
 /*****************************************************************************
- * Start stream
- ****************************************************************************/
-static int Start( stream_t *p_access, uint64_t i_pos )
+ *
+ *****************************************************************************/
+static int Start( input_thread_t *p_input, off_t i_pos )
 {
-    access_sys_t *p_sys = p_access->p_sys;
+    access_sys_t *p_sys = p_input->p_access_data;
     int  i_streams = 0;
-    int  i_streams_selected = 0;
-    struct vlc_memstream stream;
+    int  i;
+    char *psz;
 
-    msg_Dbg( p_access, "starting stream" );
+    msg_Dbg( p_input, "starting stream" );
 
-    for( unsigned i = 1; i < 128; i++ )
+    if( ( p_sys->fd = net_OpenTCP( p_input, p_sys->url.psz_host,
+                                            p_sys->url.i_port ) ) < 0 )
     {
-        if( p_sys->asfh.stream[i].i_cat == ASF_CODEC_TYPE_UNKNOWN )
-            continue;
-        i_streams++;
-        if( p_sys->asfh.stream[i].i_selected )
-            i_streams_selected++;
-    }
-    if( i_streams_selected <= 0 )
-    {
-        msg_Err( p_access, "no stream selected" );
+        /* should not occur */
+        msg_Err( p_input, "cannot connect to the server" );
         return VLC_EGENERIC;
     }
 
-    WriteRequestLine( p_sys, &stream );
-
-    vlc_memstream_puts( &stream, "Pragma: no-cache,rate=1.000000" );
-    if( !p_sys->b_broadcast )
-        vlc_memstream_printf( &stream, ",stream-time=0,stream-offset="
-                              "%"PRIu32":%"PRIu32, (uint32_t)(i_pos >> 32),
-                              (uint32_t)i_pos );
-    vlc_memstream_printf( &stream, ",request-context=%d",
-                          p_sys->i_request_context++ );
-    if( !p_sys->b_broadcast )
-        vlc_memstream_puts( &stream, ",max-duration=0" );
-    vlc_memstream_puts( &stream, "\r\n" );
-
-    vlc_memstream_puts( &stream, "Pragma: xPlayStrm=1\r\n" );
-    vlc_memstream_printf( &stream, "Pragma: xClientGUID={"GUID_FMT"}\r\n",
-                          GUID_PRINT(p_sys->guid) );
-    vlc_memstream_printf( &stream, "Pragma: stream-switch-count=%d\r\n",
-                          i_streams );
-
-    vlc_memstream_puts( &stream, "Pragma: stream-switch-entry=" );
-    for( unsigned i = 1; i < 128; i++ )
+    for( i = 1; i < 128; i++ )
     {
-        if( p_sys->asfh.stream[i].i_cat != ASF_CODEC_TYPE_UNKNOWN )
+        if( p_sys->asfh.stream[i].i_selected )
         {
-            int i_select = p_sys->asfh.stream[i].i_selected ? 0 : 2;
-            vlc_memstream_printf( &stream, "ffff:%x:%d ", i, i_select );
+            i_streams++;
         }
     }
-    vlc_memstream_puts( &stream, "\r\n" );
 
-    if( OpenConnection( p_access, &stream ) )
-        return VLC_EGENERIC;
-
-    char *psz = net_Gets( p_access, p_sys->fd );
-    if( psz == NULL )
+    if( i_streams <= 0 )
     {
-        msg_Err( p_access, "cannot read data 0" );
+        msg_Err( p_input, "no stream selected" );
+        return VLC_EGENERIC;
+    }
+    net_Printf( VLC_OBJECT(p_input), p_sys->fd,
+                "GET %s HTTP/1.0\r\n"
+                "Accept: */*\r\n"
+                "User-Agent: NSPlayer/4.1.0.3856\r\n"
+                "Host: %s:%d\r\n",
+                ( p_sys->url.psz_path == NULL || *p_sys->url.psz_path == '\0' ) ? "/" : p_sys->url.psz_path,
+                p_sys->url.psz_host, p_sys->url.i_port );
+    if( p_sys->b_broadcast )
+    {
+        net_Printf( VLC_OBJECT(p_input), p_sys->fd,
+                    "Pragma: no-cache,rate=1.000000,request-context=%d\r\n",
+                    p_sys->i_request_context++ );
+    }
+    else
+    {
+        net_Printf( VLC_OBJECT(p_input), p_sys->fd,
+                    "Pragma: no-cache,rate=1.000000,stream-time=0,stream-offset=%u:%u,request-context=%d,max-duration=0\r\n",
+                    (uint32_t)((i_pos >> 32)&0xffffffff),
+                    (uint32_t)(i_pos&0xffffffff),
+                    p_sys->i_request_context++ );
+    }
+    net_Printf( VLC_OBJECT(p_input), p_sys->fd,
+                "Pragma: xPlayStrm=1\r\n"
+                "Pragma: xClientGUID={"GUID_FMT"}\r\n"
+                "Pragma: stream-switch-count=%d\r\n"
+                "Pragma: stream-switch-entry=",
+                GUID_PRINT( p_sys->guid ),
+                i_streams);
+
+    for( i = 1; i < 128; i++ )
+    {
+        if( p_sys->asfh.stream[i].i_cat != ASF_STREAM_UNKNOWN )
+        {
+            int i_select = 2;
+            if( p_sys->asfh.stream[i].i_selected )
+            {
+                i_select = 0;
+            }
+
+            net_Printf( VLC_OBJECT(p_input), p_sys->fd,
+                        "ffff:%d:%d ", i, i_select );
+        }
+    }
+    net_Printf( VLC_OBJECT(p_input), p_sys->fd, "\r\n" );
+    net_Printf( VLC_OBJECT(p_input), p_sys->fd, "Connection: Close\r\n" );
+
+    if( net_Printf( VLC_OBJECT(p_input), p_sys->fd, "\r\n" ) < 0 )
+    {
+        msg_Err( p_input, "failed to send request" );
         return VLC_EGENERIC;
     }
 
+    if( ( psz = net_Gets( VLC_OBJECT(p_input), p_sys->fd ) ) == NULL )
+    {
+        msg_Err( p_input, "cannot read data" );
+        return VLC_EGENERIC;
+    }
     if( atoi( &psz[9] ) >= 400 )
     {
-        msg_Err( p_access, "error: %s", psz );
+        msg_Err( p_input, "error: %s", psz );
         free( psz );
         return VLC_EGENERIC;
     }
-    msg_Dbg( p_access, "HTTP reply '%s'", psz );
+    msg_Dbg( p_input, "HTTP reply '%s'", psz );
     free( psz );
 
     /* FIXME check HTTP code */
     for( ;; )
     {
-        psz = net_Gets( p_access, p_sys->fd );
+        char *psz = net_Gets( p_input, p_sys->fd );
         if( psz == NULL )
         {
-            msg_Err( p_access, "cannot read data 1" );
+            msg_Err( p_input, "cannot read data" );
             return VLC_EGENERIC;
         }
         if( *psz == '\0' )
@@ -857,7 +639,7 @@ static int Start( stream_t *p_access, uint64_t i_pos )
             free( psz );
             break;
         }
-        msg_Dbg( p_access, "%s", psz );
+        msg_Dbg( p_input, "%s", psz );
         free( psz );
     }
 
@@ -868,14 +650,14 @@ static int Start( stream_t *p_access, uint64_t i_pos )
 }
 
 /*****************************************************************************
- * closing stream
+ *
  *****************************************************************************/
-static void Stop( stream_t *p_access )
+static void Stop( input_thread_t *p_input )
 {
-    access_sys_t *p_sys = p_access->p_sys;
+    access_sys_t *p_sys = p_input->p_access_data;
 
-    msg_Dbg( p_access, "closing stream" );
-    if( p_sys->fd >= 0 )
+    msg_Dbg( p_input, "closing stream" );
+    if( p_sys->fd > 0 )
     {
         net_Close( p_sys->fd );
         p_sys->fd = -1;
@@ -883,100 +665,61 @@ static void Stop( stream_t *p_access )
 }
 
 /*****************************************************************************
- * get packet
+ *
  *****************************************************************************/
-static int GetPacket( stream_t * p_access, chunk_t *p_ck )
+static int GetPacket( input_thread_t * p_input, chunk_t *p_ck )
 {
-    access_sys_t *p_sys = p_access->p_sys;
-    int restsize;
+    access_sys_t *p_sys = p_input->p_access_data;
 
     /* chunk_t */
     memset( p_ck, 0, sizeof( chunk_t ) );
 
     /* Read the chunk header */
-    /* Some headers are short, like 0x4324. Reading 12 bytes will cause us
-     * to lose synchronization with the stream. Just read to the length
-     * (4 bytes), decode and then read up to 8 additional bytes to get the
-     * entire header.
-     */
-    if( net_Read( p_access, p_sys->fd, p_sys->buffer, 4 ) < 4 )
+    if( net_Read( p_input, p_sys->fd, p_sys->buffer, 12, VLC_TRUE ) < 12 )
     {
-       msg_Err( p_access, "cannot read data 2" );
-       return VLC_EGENERIC;
-    }
-
-    p_ck->i_type = GetWLE( p_sys->buffer);
-    p_ck->i_size = GetWLE( p_sys->buffer + 2);
-
-    restsize = p_ck->i_size;
-    if( restsize > 8 )
-        restsize = 8;
-
-    if( net_Read( p_access, p_sys->fd, p_sys->buffer + 4, restsize ) < restsize )
-    {
-        msg_Err( p_access, "cannot read data 3" );
+        /* msg_Err( p_input, "cannot read data" ); */
         return VLC_EGENERIC;
     }
+
+    p_ck->i_type      = GetWLE( p_sys->buffer);
+    p_ck->i_size      = GetWLE( p_sys->buffer + 2);
     p_ck->i_sequence  = GetDWLE( p_sys->buffer + 4);
     p_ck->i_unknown   = GetWLE( p_sys->buffer + 8);
-
-    /* Set i_size2 to 8 if this header was short, since a real value won't be
-     * present in the buffer. Using 8 avoid reading additional data for the
-     * packet.
-     */
-    if( restsize < 8 )
-        p_ck->i_size2 = 8;
-    else
-        p_ck->i_size2 = GetWLE( p_sys->buffer + 10);
-
+    p_ck->i_size2     = GetWLE( p_sys->buffer + 10);
     p_ck->p_data      = p_sys->buffer + 12;
     p_ck->i_data      = p_ck->i_size2 - 8;
 
-    if( p_ck->i_type == 0x4524 )   // $E (End-of-Stream Notification) Packet
+    if( p_ck->i_type == 0x4524 )   // Transfer complete
     {
         if( p_ck->i_sequence == 0 )
         {
-            msg_Warn( p_access, "EOF" );
+            msg_Warn( p_input, "EOF" );
             return VLC_EGENERIC;
         }
         else
         {
-            msg_Warn( p_access, "next stream following" );
+            msg_Warn( p_input, "Next stream follow but not supported" );
             return VLC_EGENERIC;
         }
     }
-    else if( p_ck->i_type == 0x4324 ) // $C (Stream Change Notification) Packet
+    else if( p_ck->i_type != 0x4824 && p_ck->i_type != 0x4424 )
     {
-        /* 0x4324 is CHUNK_TYPE_RESET: a new stream will follow with a sequence of 0 */
-        msg_Warn( p_access, "next stream following (reset) seq=%d", p_ck->i_sequence  );
-        return VLC_EGENERIC;
-    }
-    else if( (p_ck->i_type != 0x4824) && (p_ck->i_type != 0x4424) )
-    {
-        /* Unsupported so far:
-         * $M (Metadata) Packet               0x4D24
-         * $P (Packet-Pair) Packet            0x5024
-         * $T (Test Data Notification) Packet 0x5424
-         */
-        msg_Err( p_access, "unrecognized chunk FATAL (0x%x)", p_ck->i_type );
+        msg_Err( p_input, "invalid chunk FATAL (0x%x)", p_ck->i_type );
         return VLC_EGENERIC;
     }
 
-    if( (p_ck->i_data > 0) &&
-        (net_Read( p_access, p_sys->fd, &p_sys->buffer[12],
-                   p_ck->i_data ) < p_ck->i_data) )
+    if( p_ck->i_data > 0 &&
+        net_Read( p_input, p_sys->fd, &p_sys->buffer[12], p_ck->i_data, VLC_TRUE ) < p_ck->i_data )
     {
-        msg_Err( p_access, "cannot read data 4" );
+        msg_Err( p_input, "cannot read data" );
         return VLC_EGENERIC;
     }
 
-#if 0
-    if( (p_sys->i_packet_sequence != 0) &&
-        (p_ck->i_sequence != p_sys->i_packet_sequence) )
+    if( p_sys->i_packet_sequence != 0 &&
+        p_ck->i_sequence != p_sys->i_packet_sequence )
     {
-        msg_Warn( p_access, "packet lost ? (%d != %d)", p_ck->i_sequence, p_sys->i_packet_sequence );
+        msg_Warn( p_input, "packet lost ? (%d != %d)", p_ck->i_sequence, p_sys->i_packet_sequence );
     }
-#endif
 
     p_sys->i_packet_sequence = p_ck->i_sequence + 1;
     p_sys->i_packet_used   = 0;

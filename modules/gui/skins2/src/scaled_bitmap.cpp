@@ -1,11 +1,11 @@
 /*****************************************************************************
  * scaled_bitmap.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 049139936f4390ef32dd21a84c6062e6d654f14c $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: scaled_bitmap.cpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "scaled_bitmap.hpp"
@@ -42,13 +42,13 @@ ScaledBitmap::ScaledBitmap( intf_thread_t *pIntf, const GenericBitmap &rBitmap,
     // Algorithm for horizontal enlargement
     if( width > srcWidth )
     {
-        // Decision variables for Bresenham algorithm
-        int incX1 = 2 * (srcWidth-1);
-        int incX2 = incX1 - 2 * (width-1);
+        // Decision variables for Bresenham alogrithm
+        int incX1 = 2 * srcWidth;
+        int incX2 = incX1 - 2 * width;
+        int dX = incX1 - width;
 
         for( int y = 0; y < height; y++ )
         {
-            int dX = incX1 - (width-1);
             uint32_t yOffset = ((y * srcHeight) / height) * srcWidth;
             pSrcData = ((uint32_t*)rBitmap.getData()) + yOffset;
 
@@ -71,21 +71,17 @@ ScaledBitmap::ScaledBitmap( intf_thread_t *pIntf, const GenericBitmap &rBitmap,
     // Algorithm for horizontal reduction
     else
     {
-        // Decision variables for Bresenham algorithm
-        int incX1 = 2 * (width-1);
-        int incX2 = incX1 - 2 * (srcWidth-1);
+        // Decision variables for Bresenham alogrithm
+        int incX1 = 2 * width;
+        int incX2 = incX1 - 2 * srcWidth;
+        int dX = incX1 - srcWidth;
 
         for( int y = 0; y < height; y++ )
         {
-            int dX = incX1 - (srcWidth-1);
             uint32_t yOffset = ((y * srcHeight) / height) * srcWidth;
             pSrcData = ((uint32_t*)rBitmap.getData()) + yOffset;
 
-            if (width == 1)
-            {
-                *(pDestData++) = *pSrcData;
-            }
-            else for( int x = 0; x < width; x++ )
+            for( int x = 0; x < width; x++ )
             {
                 *(pDestData++) = *(pSrcData++);
 
@@ -104,6 +100,9 @@ ScaledBitmap::ScaledBitmap( intf_thread_t *pIntf, const GenericBitmap &rBitmap,
 
 ScaledBitmap::~ScaledBitmap()
 {
-    delete[] m_pData;
+    if( m_pData )
+    {
+        delete[] m_pData;
+    }
 }
 

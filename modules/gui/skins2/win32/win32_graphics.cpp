@@ -1,11 +1,11 @@
 /*****************************************************************************
  * win32_graphics.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 71b49719ca714b9ec8c36b3134bb6fd2410d3008 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: win32_graphics.cpp 7326 2004-04-12 14:07:57Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,21 +19,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifdef WIN32_SKINS
 
 #define WINVER 0x500
+#ifndef AC_SRC_ALPHA
+#define AC_SRC_ALPHA 1
+#endif
 
 #include "win32_factory.hpp"
 #include "win32_graphics.hpp"
 #include "win32_window.hpp"
 #include "../src/generic_bitmap.hpp"
-
-#ifndef AC_SRC_ALPHA
-#define AC_SRC_ALPHA 1
-#endif
 
 Win32Graphics::Win32Graphics( intf_thread_t *pIntf, int width, int height ):
     OSGraphics( pIntf ), m_width( width ), m_height( height ), m_hDC( NULL )
@@ -59,43 +58,31 @@ Win32Graphics::~Win32Graphics()
 }
 
 
-void Win32Graphics::clear( int xDest, int yDest, int width, int height )
+void Win32Graphics::clear()
 {
-    if( width <= 0 || height <= 0 )
-    {
-        // Clear the transparency mask
-        DeleteObject( m_mask );
-        m_mask = CreateRectRgn( 0, 0, 0, 0 );
-    }
-    else
-    {
-        HRGN mask = CreateRectRgn( xDest, yDest,
-                                   xDest + width, yDest + height );
-        CombineRgn( m_mask, m_mask, mask, RGN_DIFF );
-        DeleteObject( mask );
-    }
+    // Clear the transparency mask
+    DeleteObject( m_mask );
+    m_mask = CreateRectRgn( 0, 0, 0, 0 );
 }
 
 
 void Win32Graphics::drawBitmap( const GenericBitmap &rBitmap,
                                 int xSrc, int ySrc, int xDest, int yDest,
-                                int width, int height, bool blend )
+                                int width, int height )
 {
-    (void)blend;
-
-    // check and adapt to source if needed
-    if( !checkBoundaries( 0, 0, rBitmap.getWidth(), rBitmap.getHeight(),
-                          xSrc, ySrc, width, height ) )
+    // Get the bitmap size if necessary
+    if( width == -1 )
     {
-        msg_Err( getIntf(), "empty source! pls, debug your skin" );
-        return;
+        width = rBitmap.getWidth();
+    }
+    if( height == -1 )
+    {
+        height = rBitmap.getHeight();
     }
 
-    // check destination
-    if( !checkBoundaries( 0, 0, m_width, m_height,
-                          xDest, yDest, width, height ) )
+    if( xDest + width > m_width || yDest + height > m_height )
     {
-        msg_Err( getIntf(), "out of reach destination! pls, debug your skin" );
+        msg_Err( getIntf(), "Bitmap too large !" );
         return;
     }
 
@@ -119,7 +106,7 @@ void Win32Graphics::drawBitmap( const GenericBitmap &rBitmap,
     bmpInfo.bmiHeader.biCompression = BI_RGB;
     bmpInfo.bmiHeader.biSizeImage = width * height * 4;
 
-    // Create a DIB (Device Independent Bitmap) and associate it with
+    // Create a DIB (Device Independant Bitmap) and associate it with
     // a temporary DC
     HDC hDC = CreateCompatibleDC( m_hDC );
     HBITMAP hBmp = CreateDIBSection( hDC, &bmpInfo, DIB_RGB_COLORS,
@@ -149,8 +136,12 @@ void Win32Graphics::drawBitmap( const GenericBitmap &rBitmap,
             uint8_t a = *(pBmpData++);
 
             // Draw the pixel
+            // Note: the colours are multiplied by a/255, because of the
+            // algorithm used by Windows for the AlphaBlending
             ((UINT32 *)pBits)[x + y * width] =
-                (a << 24) | (r << 16) | (g << 8) | b;
+                (a << 24) | (((r * a) >> 8) << 16) |
+                            (((g * a) >> 8) << 8) |
+                             ((b * a) >> 8);
 
             if( a > 0 )
             {
@@ -193,10 +184,19 @@ void Win32Graphics::drawBitmap( const GenericBitmap &rBitmap,
     bf.AlphaFormat = AC_SRC_ALPHA;
 
     // Blend the image onto the internal DC
-    if( !AlphaBlend( m_hDC, xDest, yDest, width, height, hDC, 0, 0,
+    BOOL (WINAPI *AlphaBlend)( HDC, int, int, int, int, HDC, int, int,
+                               int, int, BLENDFUNCTION );
+    AlphaBlend = ((Win32Factory*)OSFactory::instance( getIntf() ))->AlphaBlend;
+    if( AlphaBlend &&
+        !AlphaBlend( m_hDC, xDest, yDest, width, height, hDC, 0, 0,
                      width, height, bf ) )
     {
         msg_Err( getIntf(), "AlphaBlend() failed" );
+    }
+    else if( !AlphaBlend )
+    {
+        // Copy the image onto the internal DC
+        BitBlt( m_hDC, xDest, yDest, width, height, hDC, 0, 0, SRCCOPY );
     }
 
     // Add the bitmap mask to the global graphics mask
@@ -213,20 +213,13 @@ void Win32Graphics::drawGraphics( const OSGraphics &rGraphics, int xSrc,
                                   int ySrc, int xDest, int yDest, int width,
                                   int height )
 {
-    // check and adapt to source if needed
-    if( !checkBoundaries( 0, 0, rGraphics.getWidth(), rGraphics.getHeight(),
-                          xSrc, ySrc, width, height ) )
+    if( width == -1 )
     {
-        msg_Err( getIntf(), "nothing to draw from graphics source" );
-        return;
+        width = rGraphics.getWidth();
     }
-
-    // check destination
-    if( !checkBoundaries( 0, 0, m_width, m_height,
-                          xDest, yDest, width, height ) )
+    if( height == -1 )
     {
-        msg_Err( getIntf(), "out of reach destination! pls, debug your skin" );
-        return;
+        height = rGraphics.getHeight();
     }
 
     // Create the mask for transparency
@@ -329,7 +322,7 @@ void Win32Graphics::copyToWindow( OSWindow &rWindow, int xSrc, int ySrc,
 {
     // Initialize painting
     HWND hWnd = ((Win32Window&)rWindow).getHandle();
-    HDC wndDC = GetDC( hWnd );
+    HDC wndDC = GetWindowDC( hWnd );
     HDC srcDC = m_hDC;
 
     // Draw image on window
@@ -342,7 +335,7 @@ void Win32Graphics::copyToWindow( OSWindow &rWindow, int xSrc, int ySrc,
 
 bool Win32Graphics::hit( int x, int y ) const
 {
-    return PtInRegion( m_mask, x, y ) != 0;
+    return PtInRegion( m_mask, x, y );
 }
 
 
@@ -352,31 +345,6 @@ void Win32Graphics::addSegmentInRegion( HRGN &rMask, int start,
     HRGN buffer = CreateRectRgn( start, line, end, line + 1 );
     CombineRgn( rMask, buffer, rMask, RGN_OR );
     DeleteObject( buffer );
-}
-
-
-bool Win32Graphics::checkBoundaries( int x_src, int y_src,
-                                     int w_src, int h_src,
-                                     int& x_target, int& y_target,
-                                     int& w_target, int& h_target )
-{
-    // set valid width and height
-    w_target = (w_target > 0) ? w_target : w_src;
-    h_target = (h_target > 0) ? h_target : h_src;
-
-    // clip source if needed
-    rect srcRegion( x_src, y_src, w_src, h_src );
-    rect targetRegion( x_target, y_target, w_target, h_target );
-    rect inter;
-    if( rect::intersect( srcRegion, targetRegion, &inter ) )
-    {
-        x_target = inter.x;
-        y_target = inter.y;
-        w_target = inter.width;
-        h_target = inter.height;
-        return true;
-    }
-    return false;
 }
 
 #endif

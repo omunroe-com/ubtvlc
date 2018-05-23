@@ -1,11 +1,11 @@
 /*****************************************************************************
  * fsm.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 06ae175ae235e8090f983f7bb847b12657a46302 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: fsm.cpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,21 +19,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "fsm.hpp"
 #include "../commands/cmd_generic.hpp"
 
 
-void FSM::addState( const std::string &state )
+void FSM::addState( const string &state )
 {
     m_states.insert( state );
 }
 
 
-void FSM::addTransition( const std::string &state1, const std::string &event,
-                         const std::string &state2, CmdGeneric *pCmd )
+void FSM::addTransition( const string &state1, const string &event,
+                         const string &state2, Callback *pCmd )
 {
     // Check that we already know the states
     if( m_states.find( state1 ) == m_states.end() ||
@@ -58,7 +58,7 @@ void FSM::addTransition( const std::string &state1, const std::string &event,
 }
 
 
-void FSM::setState( const std::string &state )
+void FSM::setState( const string &state )
 {
     if( m_states.find( state ) == m_states.end() )
     {
@@ -69,11 +69,11 @@ void FSM::setState( const std::string &state )
 }
 
 
-void FSM::handleTransition( const std::string &event )
+void FSM::handleTransition( const string &event )
 {
-    std::string tmpEvent = event;
+    string tmpEvent = event;
     Key_t key( m_currentState, event );
-    std::map<Key_t, Data_t>::const_iterator it;
+    map<Key_t, Data_t>::const_iterator it;
 
     // Find a transition
     it = m_transitions.find( key );
@@ -81,7 +81,7 @@ void FSM::handleTransition( const std::string &event )
     // While the matching fails, try to match a more generic transition
     // For example, if "key:up:F" isn't a transition, "key:up" or "key" may be
     while( it == m_transitions.end() &&
-           tmpEvent.rfind( ":", tmpEvent.size() ) != std::string::npos )
+           tmpEvent.rfind( ":", tmpEvent.size() ) != string::npos )
     {
         // Cut the last part
         tmpEvent = tmpEvent.substr( 0, tmpEvent.rfind( ":", tmpEvent.size() ) );
@@ -100,9 +100,9 @@ void FSM::handleTransition( const std::string &event )
     m_currentState = (*it).second.first;
 
     // Call the callback, if any
-    CmdGeneric *pCmd = (*it).second.second;
+    Callback *pCmd = (*it).second.second;
     if( pCmd != NULL )
     {
-        pCmd->execute();
+        (*(pCmd->getFunc()))( pCmd->getObj() );
     }
 }

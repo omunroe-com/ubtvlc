@@ -1,11 +1,11 @@
 /*****************************************************************************
  * evt_key.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 8206ae551b2eb01a756e71f7edad888d06eb002d $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: evt_key.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef EVT_KEY_HPP
@@ -31,29 +31,29 @@
 /// Class for keyboard events
 class EvtKey: public EvtInput
 {
-public:
-    enum ActionType_t
-    {
-        kDown,
-        kUp
-    };
+    public:
+        typedef enum
+        {
+            kDown,
+            kUp
+        } ActionType_t;
 
-    EvtKey( intf_thread_t *I, int key, ActionType_t actn, int mod = kModNone )
-          : EvtInput( I, mod ), m_key( key ), m_action( actn ) { }
-    virtual ~EvtKey() { }
-    virtual const std::string getAsString() const;
+        EvtKey( intf_thread_t *pIntf, int key, ActionType_t action,
+                int mod = kModNone ):
+            EvtInput( pIntf, mod ), m_key( key ), m_action( action ) {}
+        virtual ~EvtKey() {}
 
-    int getKey() const { return m_key; }
-    int getModKey() const { return m_key | getMod(); }
+        /// Return the type of event
+        virtual const string getAsString() const;
 
-    ActionType_t getKeyState() const { return m_action; }
+        int getKey() const { return m_key; }
 
-private:
-    /// The concerned key, stored according to the '#define's in vlc_actions.h
-    /// but without the modifiers (which are stored in EvtInput)
-    int m_key;
-    /// Type of action
-    ActionType_t m_action;
+    private:
+        /// The concerned key, stored according to the '#define's in vlc_keys.h
+        /// but without the modifiers (which are stored in EvtInput)
+        int m_key;
+        /// Type of action
+        ActionType_t m_action;
 };
 
 

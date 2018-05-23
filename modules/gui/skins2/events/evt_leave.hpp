@@ -1,11 +1,11 @@
 /*****************************************************************************
  * evt_leave.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 583f9635346f3d5a2a0bab4149f380106fc99538 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: evt_leave.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef EVT_LEAVE_HPP
@@ -31,10 +31,12 @@
 /// Mouse leave event
 class EvtLeave: public EvtInput
 {
-public:
-    EvtLeave( intf_thread_t *pIntf ): EvtInput( pIntf ) { }
-    virtual ~EvtLeave() { }
-    virtual const std::string getAsString() const { return "leave"; }
+    public:
+        EvtLeave( intf_thread_t *pIntf ): EvtInput( pIntf ) {}
+        virtual ~EvtLeave() {}
+
+        /// Return the type of event
+        virtual const string getAsString() const { return "leave"; }
 };
 
 

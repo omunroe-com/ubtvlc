@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ustring.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 56ed4659c0bc9e8bda3ada5fc0d675790fca7548 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ustring.cpp 7258 2004-04-03 10:55:51Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#include <sstream>
+#include <string.h>
 #include "ustring.hpp"
 
 
@@ -71,7 +71,7 @@ UString::UString( intf_thread_t *pIntf, const char *pString ):
     }
     if( !pCur || *pCur )
     {
-        msg_Err( pIntf, "invalid UTF8 string: %s", pString );
+        msg_Err( pIntf, "Invalid UTF8 string: %s", pString );
         m_length = 0;
         m_pString = NULL;
         return;
@@ -130,7 +130,10 @@ UString::UString( intf_thread_t *pIntf, const char *pString ):
 
 UString::~UString()
 {
-    delete[] m_pString;
+    if( m_pString )
+    {
+        delete[] m_pString;
+    }
 }
 
 
@@ -196,11 +199,8 @@ bool UString::operator >=( const UString &rOther ) const
 }
 
 
-UString& UString::operator =( const UString &rOther )
+void UString::operator =( const UString &rOther )
 {
-    if( this == &rOther )
-        return *this;
-
     m_length = rOther.m_length;
     delete[] m_pString;
     m_pString = new uint32_t[size() + 1];
@@ -208,20 +208,15 @@ UString& UString::operator =( const UString &rOther )
     {
         m_pString[i] = rOther.m_pString[i];
     }
-
-    return *this;
 }
 
 
-UString& UString::operator +=( const UString &rOther )
+void UString::operator +=( const UString &rOther )
 {
-    if( this == &rOther )
-        return *this;
-
     int tempLength = this->length() + rOther.length();
     uint32_t *pTempString = new uint32_t[tempLength + 1];
     // Copy the first string
-    memcpy( pTempString, this->m_pString, sizeof(uint32_t) * this->size() );
+    memcpy( pTempString, this->m_pString, 4 * this->size() );
     // Append the second string
 //     memcpy( pTempString + 4 * size(), rOther.m_pString,
 //             4 * rOther.size() );
@@ -235,8 +230,6 @@ UString& UString::operator +=( const UString &rOther )
     delete[] m_pString;
     m_pString = pTempString;
     m_length = tempLength;
-
-    return *this;
 }
 
 
@@ -253,6 +246,19 @@ const UString UString::operator +( const char *pString ) const
 {
     UString temp( getIntf(), pString );
     return (*this + temp );
+}
+
+
+void UString::debug() const
+{
+    char *s = new char[size() + 1];
+    for( uint32_t i = 0; i < size(); i++ )
+    {
+        s[i] = (char)m_pString[i];
+    }
+    s[size()] = '\0';
+    msg_Err( getIntf(), "%s", s );
+    delete[] s;
 }
 
 
@@ -309,7 +315,7 @@ UString UString::substr( uint32_t position, uint32_t n) const
     UString tmp( getIntf(), "" );
     if( position > size() )
     {
-        msg_Err( getIntf(), "invalid position in UString::substr()" );
+        msg_Err( getIntf(), "Invalid position in UString::substr()" );
         return tmp;
     }
     tmp.m_length = (n < size() - position) ? n : size() - position;
@@ -322,12 +328,3 @@ UString UString::substr( uint32_t position, uint32_t n) const
 
     return tmp;
 }
-
-
-UString UString::fromInt( intf_thread_t *pIntf, int number)
-{
-    std::stringstream ss;
-    ss << number;
-    return UString( pIntf, ss.str().c_str() );
-}
-

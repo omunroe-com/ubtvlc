@@ -1,8 +1,8 @@
 /*****************************************************************************
  * xmlparser.cpp
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: e19b34b76dc31806bf2bd594f5c0ea0e9e5a8c5f $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: xmlparser.cpp 7328 2004-04-12 17:08:58Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -18,151 +18,114 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "xmlparser.hpp"
-#include "../src/os_factory.hpp"
-#include <vlc_url.h>
 
-#include <sys/stat.h>
-#include <vlc_fs.h>
-
-XMLParser::XMLParser( intf_thread_t *pIntf, const std::string &rFileName )
-    : SkinObject( pIntf ), m_pXML( NULL ), m_pReader( NULL ), m_pStream( NULL )
+XMLParser::XMLParser( intf_thread_t *pIntf, const string &rFileName ):
+    SkinObject( pIntf )
 {
-    m_errors = false;
-    m_pXML = xml_Create( pIntf );
-    if( !m_pXML )
-    {
-        msg_Err( getIntf(), "cannot initialize xml" );
-        return;
-    }
-
-    LoadCatalog();
-
-    char *psz_uri = vlc_path2uri( rFileName.c_str(), NULL );
-    m_pStream = vlc_stream_NewURL( pIntf, psz_uri );
-    free( psz_uri );
-    if( !m_pStream )
-    {
-        msg_Err( getIntf(), "failed to open %s for reading",
-                 rFileName.c_str() );
-        return;
-    }
-
-    m_pReader = xml_ReaderCreate( m_pXML, m_pStream );
+    m_pReader = xmlNewTextReaderFilename( rFileName.c_str() );
     if( !m_pReader )
     {
-        msg_Err( getIntf(), "failed to open %s for parsing",
+        msg_Err( getIntf(), "Failed to open %s for parsing",
                  rFileName.c_str() );
         return;
     }
 
-    xml_ReaderUseDTD( m_pReader );
+    // Activate DTD validation
+    xmlTextReaderSetParserProp( m_pReader, XML_PARSER_DEFAULTATTRS, 1 );
+    xmlTextReaderSetParserProp( m_pReader, XML_PARSER_VALIDATE, 1 );
+
+    // Set the error handler
+    xmlTextReaderSetErrorHandler( m_pReader, handleError, this );
 }
 
 
 XMLParser::~XMLParser()
 {
-    if( m_pReader ) xml_ReaderDelete( m_pReader );
-    if( m_pXML ) xml_Delete( m_pXML );
-    if( m_pStream ) vlc_stream_Delete( m_pStream );
-}
-
-
-void XMLParser::LoadCatalog()
-{
-    // Get the resource path and look for the DTD
-    OSFactory *pOSFactory = OSFactory::instance( getIntf() );
-    const std::list<std::string> &resPath = pOSFactory->getResourcePath();
-    const std::string &sep = pOSFactory->getDirSeparator();
-    std::list<std::string>::const_iterator it;
-
-    struct stat statBuf;
-
-    // Try to load the catalog first (needed at least on win32 where
-    // we don't have a default catalog)
-    for( it = resPath.begin(); it != resPath.end(); ++it )
+    if( m_pReader )
     {
-        std::string catalog_path = (*it) + sep + "skin.catalog";
-        if( !vlc_stat( catalog_path.c_str(), &statBuf ) )
-        {
-            msg_Dbg( getIntf(), "Using catalog %s", catalog_path.c_str() );
-            xml_CatalogLoad( m_pXML, catalog_path.c_str() );
-            break;
-        }
-    }
-    if( it == resPath.end() )
-    {
-        // Ok, try the default one
-        xml_CatalogLoad( m_pXML, NULL );
-    }
-
-    for( it = resPath.begin(); it != resPath.end(); ++it )
-    {
-        std::string path = (*it) + sep + "skin.dtd";
-        if( !vlc_stat( path.c_str(), &statBuf ) )
-        {
-            // DTD found
-            msg_Dbg( getIntf(), "using DTD %s", path.c_str() );
-
-            // Add an entry in the default catalog
-            xml_CatalogAdd( m_pXML, "public",
-                            "-//VideoLAN//DTD VLC Skins V"
-                            SKINS_DTD_VERSION "//EN", path.c_str() );
-            break;
-        }
-    }
-    if( it == resPath.end() )
-    {
-        msg_Err( getIntf(), "cannot find the skins DTD");
+        xmlFreeTextReader( m_pReader );
     }
 }
+
 
 bool XMLParser::parse()
 {
-    const char *node;
-    int type;
-
-    if( !m_pReader ) return false;
+    if( !m_pReader )
+    {
+        return false;
+    }
 
     m_errors = false;
 
-    while( (type = xml_ReaderNextNode( m_pReader, &node )) > 0 )
+    int ret = xmlTextReaderRead( m_pReader );
+    while (ret == 1)
     {
-        if( m_errors ) return false;
-
-        switch( type )
+        if( m_errors )
         {
-            case XML_READER_STARTELEM:
+            return false;
+        }
+        // Get the node type
+        int type = xmlTextReaderNodeType( m_pReader );
+        switch (type )
+        {
+            // Error
+            case -1:
+                return false;
+                break;
+
+            // Begin element
+            case 1:
             {
+                // Read the element name
+                const xmlChar *eltName = xmlTextReaderConstName( m_pReader );
+                if( !eltName )
+                {
+                    return false;
+                }
                 // Read the attributes
                 AttrList_t attributes;
-                const char *name, *value;
-                while( (name = xml_ReaderNextAttr( m_pReader, &value )) != NULL )
-                    attributes[strdup(name)] = strdup(value);
-
-                handleBeginElement( node, attributes );
-
-                std::map<const char*, const char*, ltstr> ::iterator it =
-                    attributes.begin();
-                while( it != attributes.end() )
+                while( xmlTextReaderMoveToNextAttribute( m_pReader ) == 1 )
                 {
-                    free( (char *)it->first );
-                    free( (char *)it->second );
-                    ++it;
+                    const xmlChar *name = xmlTextReaderConstName( m_pReader );
+                    const xmlChar *value = xmlTextReaderConstValue( m_pReader );
+                    if( !name || !value )
+                    {
+                        return false;
+                    }
+                    attributes[(const char*)name] = (const char*)value;
                 }
+                handleBeginElement( (const char*)eltName, attributes);
                 break;
             }
 
             // End element
-            case XML_READER_ENDELEM:
-            {
-                handleEndElement( node );
+            case 15:
+                // Read the element name
+                const xmlChar *eltName = xmlTextReaderConstName( m_pReader );
+                if( !eltName )
+                {
+                    return false;
+                }
+                handleEndElement( (const char*)eltName );
                 break;
-            }
         }
+        ret = xmlTextReaderRead( m_pReader );
     }
-    return (type == 0 && !m_errors );
+    return (ret == 0 && !m_errors );
 }
+
+
+void XMLParser::handleError( void *pArg,  const char *pMsg,
+                             xmlParserSeverities severity,
+                             xmlTextReaderLocatorPtr locator)
+{
+    XMLParser *pThis = (XMLParser*)pArg;
+    int line = xmlTextReaderLocatorLineNumber( locator );
+    msg_Err( pThis->getIntf(), "XML parser error (line %d) : %s", line, pMsg );
+    pThis->m_errors = true;
+}
+ 

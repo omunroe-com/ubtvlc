@@ -1,11 +1,11 @@
 /*****************************************************************************
  * os_factory.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 3aff7ba2c362c65dbb2e04a938b43c26755ff6f2 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: os_factory.hpp 7327 2004-04-12 14:25:15Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef OS_FACTORY_HPP
@@ -30,122 +30,85 @@
 #include <string>
 #include <list>
 
-#include "../src/generic_window.hpp"
-class CmdGeneric;
+class GenericWindow;
 class OSBitmap;
 class OSGraphics;
 class OSLoop;
 class OSWindow;
 class OSTooltip;
-class OSPopup;
 class OSTimer;
 
 
 /// Abstract factory used to instantiate OS specific objects.
 class OSFactory: public SkinObject
 {
-public:
-    enum CursorType_t
-    {
-        kDefaultArrow,
-        kResizeNS,
-        kResizeWE,
-        kResizeNWSE,
-        kResizeNESW,
-        kNoCursor,
-    };
+    public:
+        typedef enum
+        {
+            kDefaultArrow,
+            kResizeNS,
+            kResizeWE,
+            kResizeNWSE,
+            kResizeNESW
+        } CursorType_t;
 
-    /**
-     * Initialization method overloaded in derived classes.
-     * It must return false if the init failed.
-     */
-    virtual bool init() { return true; }
+        /// Initialization method overloaded in derived classes.
+        /// It must return false if the init failed.
+        virtual bool init() { return true; }
 
-    /**
-     * Get the right instance of OSFactory.
-     * Returns NULL if initialization of the concrete factory failed.
-     */
-    static OSFactory *instance( intf_thread_t *pIntf );
+        /// Get the right instance of OSFactory.
+        /// Returns NULL if initialization of the concrete factory failed.
+        static OSFactory *instance( intf_thread_t *pIntf );
 
-    /// Delete the instance of OSFactory
-    static void destroy( intf_thread_t *pIntf );
+        /// Delete the instance of OSFactory.
+        static void destroy( intf_thread_t *pIntf );
 
-    /// Instantiate an object OSGraphics
-    virtual OSGraphics *createOSGraphics( int width, int height ) = 0;
+        /// Instantiate an object OSGraphics.
+        virtual OSGraphics *createOSGraphics( int width, int height ) = 0;
 
-    /// Get the instance of the singleton OSLoop
-    virtual OSLoop *getOSLoop() = 0;
+        /// Get the instance of the singleton OSLoop.
+        virtual OSLoop *getOSLoop() = 0;
 
-    /// Destroy the instance of OSLoop
-    virtual void destroyOSLoop() = 0;
+        /// Destroy the instance of OSLoop.
+        virtual void destroyOSLoop() = 0;
 
-    /// Minimize all the windows
-    virtual void minimize() = 0;
+        /// Instantiate an OSTimer with the given callback
+        virtual OSTimer *createOSTimer( const Callback &rCallback ) = 0;
 
-    /// Restore the minimized windows
-    virtual void restore() = 0;
+        /// Instantiate an object OSWindow.
+        virtual OSWindow *createOSWindow( GenericWindow &rWindow,
+                                          bool dragDrop, bool playOnDrop,
+                                          OSWindow *pParent ) = 0;
 
-    /// Add an icon in the system tray
-    virtual void addInTray() = 0;
+        /// Instantiate an object OSTooltip.
+        virtual OSTooltip *createOSTooltip() = 0;
 
-    /// Remove the icon from the system tray
-    virtual void removeFromTray() = 0;
+        /// Get the directory separator
+        virtual const string &getDirSeparator() const = 0;
 
-    /// Show the task in the task bar
-    virtual void addInTaskBar() = 0;
+        /// Get the resource path
+        virtual const list<string> &getResourcePath() const = 0;
 
-    /// Remove the task from the task bar
-    virtual void removeFromTaskBar() = 0;
+        /// Get the screen size
+        virtual int getScreenWidth() const = 0;
+        virtual int getScreenHeight() const = 0;
 
-    /// Instantiate an OSTimer with the given command
-    virtual OSTimer *createOSTimer( CmdGeneric &rCmd ) = 0;
+        /// Get the work area (screen area without taskbars)
+        virtual Rect getWorkArea() const = 0;
 
-    /// Instantiate an object OSWindow
-    virtual OSWindow *createOSWindow( GenericWindow &rWindow,
-                                      bool dragDrop, bool playOnDrop,
-                                      OSWindow *pParent, GenericWindow::WindowType_t ) = 0;
+        /// Get the position of the mouse
+        virtual void getMousePos( int &rXPos, int &rYPos ) const = 0;
 
-    /// Instantiate an object OSTooltip
-    virtual OSTooltip *createOSTooltip() = 0;
+        /// Change the cursor
+        virtual void changeCursor( CursorType_t type ) const = 0;
 
-    /// Instantiate an object OSPopup
-    virtual OSPopup *createOSPopup() = 0;
+        /// Delete a directory recursively
+        virtual void rmDir( const string &rPath ) = 0;
 
-    /// Get the directory separator
-    virtual const std::string &getDirSeparator() const = 0;
-
-    /// Get the resource path
-    virtual const std::list<std::string> &getResourcePath() const = 0;
-
-    /// Get the screen size
-    virtual int getScreenWidth() const = 0;
-    virtual int getScreenHeight() const = 0;
-
-    /// Get Monitor Information for a given Window
-    virtual void getMonitorInfo( const GenericWindow &rWindow,
-                                 int* x, int* y,
-                                 int* width, int* height ) const = 0;
-
-    /// Get Monitor Information (screens numbered from 0 upwards.)
-    virtual void getMonitorInfo( int num, int* x, int* y,
-                                 int* width, int* height ) const = 0;
-
-    /// Get the work area (screen area without taskbars)
-    virtual SkinsRect getWorkArea() const = 0;
-
-    /// Get the position of the mouse
-    virtual void getMousePos( int &rXPos, int &rYPos ) const = 0;
-
-    /// Change the cursor
-    virtual void changeCursor( CursorType_t type ) const = 0;
-
-    /// Delete a directory recursively
-    virtual void rmDir( const std::string &rPath ) = 0;
-
-protected:
-    // Protected because it's a singleton
-    OSFactory( intf_thread_t* pIntf ): SkinObject( pIntf ) { }
-    virtual ~OSFactory() { }
+   protected:
+        // Protected because it's a singleton.
+        OSFactory( intf_thread_t* pIntf ): SkinObject( pIntf ) {}
+        virtual ~OSFactory() {}
 };
 
 

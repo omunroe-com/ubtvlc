@@ -1,11 +1,11 @@
 /*****************************************************************************
  * cmd_resize.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 6b8b378f062c2612bd0834405befc527048285eb $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: cmd_resize.cpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,61 +17,25 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "cmd_resize.hpp"
 #include "../src/generic_layout.hpp"
-#include "../src/vlcproc.hpp"
-#include "../src/window_manager.hpp"
-#include "../src/vout_manager.hpp"
-#include "../controls/ctrl_video.hpp"
 
 
-CmdResize::CmdResize( intf_thread_t *pIntf, const WindowManager &rWindowManager,
-                      GenericLayout &rLayout, int width, int height )
-    : CmdGeneric( pIntf ), m_rWindowManager( rWindowManager ),
-      m_rLayout( rLayout ), m_width( width ), m_height( height ) { }
+CmdResize::CmdResize( intf_thread_t *pIntf, GenericLayout &rLayout, int width,
+                      int height ):
+    CmdGeneric( pIntf ), m_rLayout( rLayout ), m_width( width ),
+    m_height( height )
+{
+}
 
 
 void CmdResize::execute()
 {
     // Resize the layout
-    m_rWindowManager.resize( m_rLayout, m_width, m_height );
-}
-
-
-
-CmdResizeVout::CmdResizeVout( intf_thread_t *pIntf, vout_window_t* pWnd,
-                              int width, int height )
-    : CmdGeneric( pIntf ), m_pWnd( pWnd ), m_width( width ),
-      m_height( height ) { }
-
-
-void CmdResizeVout::execute()
-{
-    getIntf()->p_sys->p_voutManager->setSizeWnd( m_pWnd, m_width, m_height );
-}
-
-CmdSetFullscreen::CmdSetFullscreen( intf_thread_t *pIntf,
-                                    vout_window_t * pWnd, bool fullscreen )
-    : CmdGeneric( pIntf ), m_pWnd( pWnd ), m_bFullscreen( fullscreen ) { }
-
-
-void CmdSetFullscreen::execute()
-{
-    getIntf()->p_sys->p_voutManager->setFullscreenWnd( m_pWnd, m_bFullscreen );
-}
-
-
-CmdHideMouse::CmdHideMouse( intf_thread_t *pIntf,
-			    vout_window_t * pWnd, bool hide )
-    : CmdGeneric( pIntf ), m_pWnd( pWnd ), m_bHide( hide ) { }
-
-
-void CmdHideMouse::execute()
-{
-    getIntf()->p_sys->p_voutManager->hideMouseWnd( m_pWnd, m_bHide );
+    m_rLayout.resize( m_width, m_height );
 }

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * evt_key.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 34ed297aca8f260e12bcb768ba1120de7da61c06 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: evt_key.cpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +19,16 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "evt_key.hpp"
-#include <vlc_actions.h>
+#include "vlc_keys.h"
 
 
-const std::string EvtKey::getAsString() const
+const string EvtKey::getAsString() const
 {
-    std::string event = "key";
+    string event = "key";
 
     // Add the action
     if( m_action == kDown )
@@ -39,12 +39,9 @@ const std::string EvtKey::getAsString() const
         msg_Warn( getIntf(), "Unknown action type" );
 
     // Add the key
-    char *keyName = vlc_keycode2str( m_key & ~KEY_MODIFIER, true );
+    char *keyName = KeyToString( m_key );
     if( keyName )
-    {
-        event += std::string(":") + keyName;
-        free( keyName );
-    }
+        event += (string)":" + keyName;
     else
         msg_Warn( getIntf(), "Unknown key: %d", m_key );
 
@@ -53,3 +50,4 @@ const std::string EvtKey::getAsString() const
 
     return event;
 }
+

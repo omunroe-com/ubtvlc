@@ -1,11 +1,11 @@
 /*****************************************************************************
  * cmd_add_item.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: e1eba6f9e7de76ae1806c90ecf135fe265241997 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: cmd_add_item.cpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,29 +19,31 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
-#include <vlc_common.h>
-#include <vlc_playlist.h>
-#include <vlc_url.h>
+#include <vlc/vlc.h>
 #include "cmd_add_item.hpp"
+
 
 void CmdAddItem::execute()
 {
-    playlist_t *pPlaylist = getPL();
-
-    if( strstr( m_name.c_str(), "://" ) == NULL )
+    playlist_t *pPlaylist = getIntf()->p_sys->p_playlist;
+    if( pPlaylist == NULL )
     {
-        char *psz_uri = vlc_path2uri( m_name.c_str(), NULL );
-        if( !psz_uri )
-            return;
-        m_name = psz_uri;
-        free( psz_uri );
+        return;
     }
-    playlist_Add( pPlaylist, m_name.c_str(), m_playNow );
+
+    if( m_playNow )
+    {
+        // Enqueue and play the item
+        playlist_Add( pPlaylist, m_name.c_str(),m_name.c_str(),
+                      PLAYLIST_APPEND | PLAYLIST_GO, PLAYLIST_END );
+    }
+    else
+    {
+        // Enqueue the item only
+        playlist_Add( pPlaylist, m_name.c_str(), m_name.c_str(),
+                      PLAYLIST_APPEND, PLAYLIST_END );
+    }
 }

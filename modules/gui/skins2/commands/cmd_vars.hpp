@@ -1,8 +1,8 @@
 /*****************************************************************************
  * cmd_vars.hpp
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: 73aab301053b616c3225ad0d23a1e51a1a343f87 $
+ * Copyright (C) 2004 VideoLAN
+ * $Id: cmd_vars.hpp 7261 2004-04-03 13:57:46Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -16,136 +16,45 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef CMD_VARS_HPP
 #define CMD_VARS_HPP
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
-#include <vlc_common.h>
-#include <vlc_playlist.h>
-#include <vlc_input_item.h>
-
 #include "cmd_generic.hpp"
 #include "../utils/ustring.hpp"
 
-class EqualizerBands;
-class EqualizerPreamp;
-class VarText;
+class Stream;
 
-/// Command to notify the playtree of an item update
-class CmdItemUpdate: public CmdGeneric
+/// Command to notify the playlist of a change
+DEFINE_COMMAND( NotifyPlaylist, "notify playlist" )
+
+
+/// Command to set a stream variable
+class CmdSetStream: public CmdGeneric
 {
-public:
-    CmdItemUpdate( intf_thread_t *pIntf, input_item_t* pItem ):
-        CmdGeneric( pIntf ), m_pItem( pItem )
-    {
-        if( pItem )
-            input_item_Hold( pItem );
-    }
-    virtual ~CmdItemUpdate()
-    {
-        if( m_pItem )
-            input_item_Release( m_pItem );
-    }
-    virtual void execute();
-    virtual std::string getType() const { return "playtree update"; }
+    public:
+        CmdSetStream( intf_thread_t *pIntf, Stream &rStream,
+                      const UString &rName, bool updateVLC ):
+            CmdGeneric( pIntf ), m_rStream( rStream ), m_name( rName ),
+            m_updateVLC( updateVLC ) {}
+        virtual ~CmdSetStream() {}
 
-    /// Only accept removal of command if they concern the same item
-    virtual bool checkRemove( CmdGeneric * ) const;
+        /// This method does the real job of the command
+        virtual void execute();
 
-private:
-    /// input item changed
-    input_item_t* m_pItem;
-};
+        /// Return the type of the command
+        virtual string getType() const { return "set stream"; }
 
-/// Command to notify the playtree of an item append
-class CmdPlaytreeAppend: public CmdGeneric
-{
-public:
-    CmdPlaytreeAppend( intf_thread_t *pIntf, int i_id ):
-        CmdGeneric( pIntf ), m_id( i_id )
-    { }
-    virtual ~CmdPlaytreeAppend() { }
-    virtual void execute();
-    virtual std::string getType() const { return "playtree append"; }
-
-private:
-    int m_id;
-};
-
-/// Command to notify the playtree of an item deletion
-class CmdPlaytreeDelete: public CmdGeneric
-{
-public:
-    CmdPlaytreeDelete( intf_thread_t *pIntf, int i_id ):
-        CmdGeneric( pIntf ), m_id( i_id ) { }
-    virtual ~CmdPlaytreeDelete() { }
-    virtual void execute();
-    virtual std::string getType() const { return "playtree append"; }
-
-private:
-    int m_id;
-};
-
-
-/// Command to set a text variable
-class CmdSetText: public CmdGeneric
-{
-public:
-    CmdSetText( intf_thread_t *pIntf, VarText &rText, const UString &rValue ):
-        CmdGeneric( pIntf ), m_rText( rText ), m_value( rValue ) { }
-    virtual ~CmdSetText() { }
-    virtual void execute();
-    virtual std::string getType() const { return "set text"; }
-
-private:
-    /// Text variable to set
-    VarText &m_rText;
-    /// Value to set
-    const UString m_value;
-};
-
-
-/// Command to set the equalizer preamp
-class CmdSetEqPreamp: public CmdGeneric
-{
-public:
-    CmdSetEqPreamp( intf_thread_t *I, EqualizerPreamp &P, float v )
-                  : CmdGeneric( I ), m_rPreamp( P ), m_value( v ) { }
-    virtual ~CmdSetEqPreamp() { }
-    virtual void execute();
-    virtual std::string getType() const { return "set equalizer preamp"; }
-
-private:
-    /// Preamp variable to set
-    EqualizerPreamp &m_rPreamp;
-    /// Value to set
-    float m_value;
-};
-
-
-/// Command to set the equalizerbands
-class CmdSetEqBands: public CmdGeneric
-{
-public:
-    CmdSetEqBands( intf_thread_t *I, EqualizerBands &B, const std::string &V )
-                 : CmdGeneric( I ), m_rEqBands( B ), m_value( V ) { }
-    virtual ~CmdSetEqBands() { }
-    virtual void execute();
-    virtual std::string getType() const { return "set equalizer bands"; }
-
-private:
-    /// Equalizer variable to set
-    EqualizerBands &m_rEqBands;
-    /// Value to set
-    const std::string m_value;
+    private:
+        /// Stream variable to set
+        Stream &m_rStream;
+        /// Value to set
+        const UString m_name;
+        bool m_updateVLC;
 };
 
 

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * win32_tooltip.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 403d3319216644b7e99b8cc424201470ea010b0e $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: win32_tooltip.cpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifdef WIN32_SKINS
@@ -34,13 +34,14 @@ Win32Tooltip::Win32Tooltip( intf_thread_t *pIntf, HINSTANCE hInst,
 {
     // Create the window
     m_hWnd = CreateWindowEx( WS_EX_TOOLWINDOW,
-        TEXT("SkinWindowClass"), TEXT("tooltip"), WS_POPUP | WS_DISABLED,
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-        hParentWindow, 0, hInst, NULL );
+        "SkinWindowClass", "default name", WS_POPUP, CW_USEDEFAULT,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hParentWindow, 0,
+        hInst, NULL );
 
     if( !m_hWnd )
     {
-        msg_Err( getIntf(), "createWindow failed" );
+        msg_Err( getIntf(), "CreateWindow failed" );
+        return;
     }
 }
 
@@ -59,13 +60,11 @@ void Win32Tooltip::show( int left, int top, OSGraphics &rText )
     int width = rText.getWidth();
     int height = rText.getHeight();
 
-    // Set the window on top, resize it, and show it
-    // SWP_NOACTIVATE is needed to make sure the underlying window
-    // keeps the keyboard focus ( keys + mouse_wheel )
-    SetWindowPos( m_hWnd, HWND_TOPMOST, left, top, width, height,
-                  SWP_NOACTIVATE | SWP_SHOWWINDOW );
+    // Set the window on top, resize it and show it
+    SetWindowPos( m_hWnd, HWND_TOPMOST, left, top, width, height, 0 );
+    ShowWindow( m_hWnd, SW_SHOW );
 
-    HDC wndDC = GetDC( m_hWnd );
+    HDC wndDC = GetWindowDC( m_hWnd );
     BitBlt( wndDC, 0, 0, width, height, srcDC, 0, 0, SRCCOPY );
     ReleaseDC( m_hWnd, wndDC );
 }

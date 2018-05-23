@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ctrl_button.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 2d7b64d7929c00a662244c447bd1aeaab8fcad99 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ctrl_button.hpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef CTRL_BUTTON_HPP
@@ -27,76 +27,69 @@
 
 #include "ctrl_generic.hpp"
 #include "../utils/fsm.hpp"
-#include "../src/anim_bitmap.hpp"
 
 class GenericBitmap;
+class OSGraphics;
 class CmdGeneric;
 
 
 /// Base class for button controls
-class CtrlButton: public CtrlGeneric, public Observer<AnimBitmap>
+class CtrlButton: public CtrlGeneric
 {
-public:
-    /// Create a button with 3 images
-    CtrlButton( intf_thread_t *pIntf, const GenericBitmap &rBmpUp,
-                const GenericBitmap &rBmpOver, const GenericBitmap &rBmpDown,
-                CmdGeneric &rCommand, const UString &rTooltip,
-                const UString &rHelp, VarBool *pVisible );
+    public:
+        /// Create a button with 3 images
+        CtrlButton( intf_thread_t *pIntf, const GenericBitmap &rBmpUp,
+                    const GenericBitmap &rBmpOver,
+                    const GenericBitmap &rBmpDown,
+                    CmdGeneric &rCommand, const UString &rTooltip,
+                    const UString &rHelp, VarBool *pVisible );
 
-    virtual ~CtrlButton();
+        virtual ~CtrlButton();
 
-    /// Set the position and the associated layout of the control
-    virtual void setLayout( GenericLayout *pLayout,
-                            const Position &rPosition );
-    virtual void unsetLayout();
+        /// Handle an event
+        virtual void handleEvent( EvtGeneric &rEvent );
 
-    /// Handle an event
-    virtual void handleEvent( EvtGeneric &rEvent );
+        /// Check whether coordinates are inside the control
+        virtual bool mouseOver( int x, int y ) const;
 
-    /// Check whether coordinates are inside the control
-    virtual bool mouseOver( int x, int y ) const;
+        /// Draw the control on the given graphics
+        virtual void draw( OSGraphics &rImage, int xDest, int yDest );
 
-    /// Draw the control on the given graphics
-    virtual void draw( OSGraphics &rImage, int xDest, int yDest, int w, int h );
+        /// Get the text of the tooltip
+        virtual UString getTooltipText() const { return m_tooltip; }
 
-    /// Get the text of the tooltip
-    virtual UString getTooltipText() const { return m_tooltip; }
+    private:
+        /// Finite state machine of the control
+        FSM m_fsm;
+        /// Command triggered by the button
+        CmdGeneric &m_rCommand;
+        /// Tooltip text
+        const UString m_tooltip;
+        /// Callbacks objects
+        Callback m_cmdUpOverDownOver;
+        Callback m_cmdDownOverUpOver;
+        Callback m_cmdDownOverDown;
+        Callback m_cmdDownDownOver;
+        Callback m_cmdUpOverUp;
+        Callback m_cmdUpUpOver;
+        Callback m_cmdDownUp;
+        Callback m_cmdUpHidden;
+        Callback m_cmdHiddenUp;
+        /// Images of the button in the different states
+        OSGraphics *m_pImgUp, *m_pImgOver, *m_pImgDown;
+        /// Current image
+        OSGraphics *m_pImg;
 
-    /// Get the type of control (custom RTTI)
-    virtual std::string getType() const { return "button"; }
-
-private:
-    /// Finite state machine of the control
-    FSM m_fsm;
-    /// Command triggered by the button
-    CmdGeneric &m_rCommand;
-    /// Tooltip text
-    const UString m_tooltip;
-    /// Images of the button in the different states
-    AnimBitmap m_imgUp, m_imgOver, m_imgDown;
-    /// Current image
-    AnimBitmap *m_pImg;
-
-    /// Callback objects
-    DEFINE_CALLBACK( CtrlButton, UpOverDownOver )
-    DEFINE_CALLBACK( CtrlButton, DownOverUpOver )
-    DEFINE_CALLBACK( CtrlButton, DownOverDown )
-    DEFINE_CALLBACK( CtrlButton, DownDownOver )
-    DEFINE_CALLBACK( CtrlButton, UpOverUp )
-    DEFINE_CALLBACK( CtrlButton, UpUpOver )
-    DEFINE_CALLBACK( CtrlButton, DownUp )
-    DEFINE_CALLBACK( CtrlButton, UpHidden )
-    DEFINE_CALLBACK( CtrlButton, HiddenUp )
-
-    /// Change the current image
-    void setImage( AnimBitmap *pImg );
-
-    /// Method called when an animated bitmap changes
-    virtual void onUpdate( Subject<AnimBitmap> &rBitmap, void* );
-
-    /// Method called when visibility or ActiveLayout is updated
-    virtual void onUpdate( Subject<VarBool> &rVariable , void* );
-
+        /// Callback functions
+        static void transUpOverDownOver( SkinObject *pCtrl );
+        static void transDownOverUpOver( SkinObject *pCtrl );
+        static void transDownOverDown( SkinObject *pCtrl );
+        static void transDownDownOver( SkinObject *pCtrl );
+        static void transUpOverUp( SkinObject *pCtrl );
+        static void transUpUpOver( SkinObject *pCtrl );
+        static void transDownUp( SkinObject *pCtrl );
+        static void transUpHidden( SkinObject *pCtrl );
+        static void transHiddenUp( SkinObject *pCtrl );
 };
 
 

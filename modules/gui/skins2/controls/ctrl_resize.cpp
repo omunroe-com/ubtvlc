@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ctrl_resize.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 7992d4b0fef4b983f731c09962b182da87fe4d14 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: ctrl_resize.cpp 6964 2004-03-05 20:56:39Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "ctrl_resize.hpp"
@@ -33,18 +33,16 @@
 #include "../commands/cmd_resize.hpp"
 
 
-CtrlResize::CtrlResize( intf_thread_t *pIntf, WindowManager &rWindowManager,
-                        CtrlFlat &rCtrl, GenericLayout &rLayout,
-                        const UString &rHelp, VarBool *pVisible,
-                        WindowManager::Direction_t direction ):
-    CtrlFlat( pIntf, rHelp, pVisible ), m_fsm( pIntf ),
-    m_rWindowManager( rWindowManager ), m_rCtrl( rCtrl ),
-    m_rLayout( rLayout ), m_direction( direction ),  m_cmdOutStill( this ),
-    m_cmdStillOut( this ),
-    m_cmdStillStill( this ),
-    m_cmdStillResize( this ),
-    m_cmdResizeStill( this ),
-    m_cmdResizeResize( this )
+CtrlResize::CtrlResize( intf_thread_t *pIntf, CtrlFlat &rCtrl,
+                        GenericLayout &rLayout, const UString &rHelp,
+                        VarBool *pVisible ):
+    CtrlFlat( pIntf, rHelp, pVisible ), m_fsm( pIntf ), m_rCtrl( rCtrl ),
+    m_rLayout( rLayout ), m_cmdOutStill( this, &transOutStill ),
+    m_cmdStillOut( this, &transStillOut ),
+    m_cmdStillStill( this, &transStillStill ),
+    m_cmdStillResize( this, &transStillResize ),
+    m_cmdResizeStill( this, &transResizeStill ),
+    m_cmdResizeResize( this, &transResizeResize )
 {
     m_pEvt = NULL;
     m_xPos = 0;
@@ -75,9 +73,9 @@ bool CtrlResize::mouseOver( int x, int y ) const
 }
 
 
-void CtrlResize::draw( OSGraphics &rImage, int xDest, int yDest, int w, int h )
+void CtrlResize::draw( OSGraphics &rImage, int xDest, int yDest )
 {
-    m_rCtrl.draw( rImage, xDest, yDest, w, h );
+    m_rCtrl.draw( rImage, xDest, yDest );
 }
 
 
@@ -89,22 +87,9 @@ void CtrlResize::setLayout( GenericLayout *pLayout, const Position &rPosition )
 }
 
 
-void CtrlResize::unsetLayout()
-{
-    m_rCtrl.unsetLayout();
-    CtrlGeneric::unsetLayout();
-}
-
-
 const Position *CtrlResize::getPosition() const
 {
     return m_rCtrl.getPosition();
-}
-
-
-void CtrlResize::onResize()
-{
-    m_rCtrl.onResize();
 }
 
 
@@ -118,88 +103,96 @@ void CtrlResize::handleEvent( EvtGeneric &rEvent )
 }
 
 
-void CtrlResize::changeCursor( WindowManager::Direction_t direction ) const
+void CtrlResize::transOutStill( SkinObject *pCtrl )
 {
-    OSFactory::CursorType_t cursor;
-    switch( direction )
+    CtrlResize *pThis = (CtrlResize*)pCtrl;
+    OSFactory *pOsFactory = OSFactory::instance( pThis->getIntf() );
+    pOsFactory->changeCursor( OSFactory::kResizeNWSE );
+}
+
+
+void CtrlResize::transStillOut( SkinObject *pCtrl )
+{
+    CtrlResize *pThis = (CtrlResize*)pCtrl;
+    OSFactory *pOsFactory = OSFactory::instance( pThis->getIntf() );
+    pOsFactory->changeCursor( OSFactory::kDefaultArrow );
+}
+
+
+void CtrlResize::transStillStill( SkinObject *pCtrl )
+{
+    CtrlResize *pThis = (CtrlResize*)pCtrl;
+    OSFactory *pOsFactory = OSFactory::instance( pThis->getIntf() );
+    pOsFactory->changeCursor( OSFactory::kResizeNWSE );
+}
+
+
+void CtrlResize::transStillResize( SkinObject *pCtrl )
+{
+    CtrlResize *pThis = (CtrlResize*)pCtrl;
+    EvtMouse *pEvtMouse = (EvtMouse*)pThis->m_pEvt;
+
+    // Set the cursor
+    OSFactory *pOsFactory = OSFactory::instance( pThis->getIntf() );
+    pOsFactory->changeCursor( OSFactory::kResizeNWSE );
+
+    pThis->m_xPos = pEvtMouse->getXPos();
+    pThis->m_yPos = pEvtMouse->getYPos();
+
+    pThis->captureMouse();
+
+    pThis->m_width = pThis->m_rLayout.getWidth();
+    pThis->m_height = pThis->m_rLayout.getHeight();
+}
+
+
+void CtrlResize::transResizeStill( SkinObject *pCtrl )
+{
+    CtrlResize *pThis = (CtrlResize*)pCtrl;
+
+    // Set the cursor
+    OSFactory *pOsFactory = OSFactory::instance( pThis->getIntf() );
+    pOsFactory->changeCursor( OSFactory::kResizeNWSE );
+
+    pThis->releaseMouse();
+}
+
+
+void CtrlResize::transResizeResize( SkinObject *pCtrl )
+{
+    CtrlResize *pThis = (CtrlResize*)pCtrl;
+    EvtMotion *pEvtMotion = (EvtMotion*)pThis->m_pEvt;
+
+    // Set the cursor
+    OSFactory *pOsFactory = OSFactory::instance( pThis->getIntf() );
+    pOsFactory->changeCursor( OSFactory::kResizeNWSE );
+
+    int newWidth = pEvtMotion->getXPos() - pThis->m_xPos + pThis->m_width;
+    int newHeight = pEvtMotion->getYPos() - pThis->m_yPos + pThis->m_height;
+
+    // Check boundaries
+    if( newWidth < pThis->m_rLayout.getMinWidth() )
     {
-    default:
-    case WindowManager::kNone:     cursor = OSFactory::kDefaultArrow; break;
-    case WindowManager::kResizeSE: cursor = OSFactory::kResizeNWSE;   break;
-    case WindowManager::kResizeS:  cursor = OSFactory::kResizeNS;     break;
-    case WindowManager::kResizeE:  cursor = OSFactory::kResizeWE;     break;
+        newWidth = pThis->m_rLayout.getMinWidth();
     }
-    OSFactory::instance( getIntf() )->changeCursor( cursor );
-}
+    if( newWidth > pThis->m_rLayout.getMaxWidth() )
+    {
+        newWidth = pThis->m_rLayout.getMaxWidth();
+    }
+    if( newHeight < pThis->m_rLayout.getMinHeight() )
+    {
+        newHeight = pThis->m_rLayout.getMinHeight();
+    }
+    if( newHeight > pThis->m_rLayout.getMaxHeight() )
+    {
+        newHeight = pThis->m_rLayout.getMaxHeight();
+    }
 
-
-void CtrlResize::CmdOutStill::execute()
-{
-    m_pParent->changeCursor( m_pParent->m_direction );
-}
-
-
-void CtrlResize::CmdStillOut::execute()
-{
-    m_pParent->changeCursor( WindowManager::kNone );
-}
-
-
-void CtrlResize::CmdStillStill::execute()
-{
-    m_pParent->changeCursor( m_pParent->m_direction );
-}
-
-
-void CtrlResize::CmdStillResize::execute()
-{
-    EvtMouse *pEvtMouse = static_cast<EvtMouse*>(m_pParent->m_pEvt);
-
-    // Set the cursor
-    m_pParent->changeCursor( m_pParent->m_direction );
-
-    m_pParent->m_xPos = pEvtMouse->getXPos();
-    m_pParent->m_yPos = pEvtMouse->getYPos();
-
-    m_pParent->captureMouse();
-
-    m_pParent->m_width = m_pParent->m_rLayout.getWidth();
-    m_pParent->m_height = m_pParent->m_rLayout.getHeight();
-
-    m_pParent->m_rWindowManager.startResize( m_pParent->m_rLayout,
-                                             m_pParent->m_direction);
-}
-
-
-void CtrlResize::CmdResizeStill::execute()
-{
-    // Set the cursor
-    m_pParent->changeCursor( m_pParent->m_direction );
-
-    m_pParent->releaseMouse();
-
-    m_pParent->m_rWindowManager.stopResize();
-}
-
-
-void CtrlResize::CmdResizeResize::execute()
-{
-    EvtMotion *pEvtMotion = static_cast<EvtMotion*>(m_pParent->m_pEvt);
-
-    m_pParent->changeCursor( m_pParent->m_direction );
-
-    int newWidth = m_pParent->m_width;
-    newWidth += pEvtMotion->getXPos() - m_pParent->m_xPos;
-    int newHeight = m_pParent->m_height;
-    newHeight += pEvtMotion->getYPos() - m_pParent->m_yPos;
-
-    // Create a resize command, instead of calling the window manager directly.
-    // Thanks to this trick, the duplicate resizing commands will be trashed
-    // in the asynchronous queue, thus making resizing faster
-    CmdGeneric *pCmd = new CmdResize( m_pParent->getIntf(),
-                                      m_pParent->m_rWindowManager,
-                                      m_pParent->m_rLayout,
+    // Create a resize command
+    CmdGeneric *pCmd = new CmdResize( pThis->getIntf(), pThis->m_rLayout,
                                       newWidth, newHeight );
     // Push the command in the asynchronous command queue
-    AsyncQueue::instance( getIntf() )->push( CmdGenericPtr( pCmd ) );
+    AsyncQueue *pQueue = AsyncQueue::instance( pThis->getIntf() );
+    pQueue->remove( "resize" );
+    pQueue->push( CmdGenericPtr( pCmd ) );
 }

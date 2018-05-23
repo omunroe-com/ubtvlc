@@ -1,136 +1,134 @@
 /*****************************************************************************
- * ugly.c : zero-order hold "ugly" resampler
+ * ugly.c : ugly resampler (changes pitch)
  *****************************************************************************
- * Copyright (C) 2002, 2006 VLC authors and VideoLAN
- * $Id: fd72e85691a5a3fb12932711aa7f90acd6f2b68b $
+ * Copyright (C) 2002 VideoLAN
+ * $Id: ugly.c 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
+#include <stdlib.h>                                      /* malloc(), free() */
+#include <string.h>
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
-#include <vlc_common.h>
-#include <vlc_plugin.h>
-#include <vlc_aout.h>
-#include <vlc_filter.h>
+#include <vlc/vlc.h>
+#include "audio_output.h"
+#include "aout_internal.h"
 
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
-static int Create (vlc_object_t *);
-static int CreateResampler (vlc_object_t *);
+static int  Create    ( vlc_object_t * );
 
-static block_t *DoWork( filter_t *, block_t * );
+static void DoWork    ( aout_instance_t *, aout_filter_t *, aout_buffer_t *,
+                        aout_buffer_t * );
 
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
-vlc_module_begin ()
-    set_description( N_("Nearest-neighbor audio resampler") )
-    set_capability( "audio converter", 2 )
-    set_category( CAT_AUDIO )
-    set_subcategory( SUBCAT_AUDIO_RESAMPLER )
-    set_callbacks( Create, NULL )
-
-    add_submodule()
-    set_capability( "audio resampler", 2 )
-    set_callbacks( CreateResampler, NULL )
-vlc_module_end ()
+vlc_module_begin();
+    set_description( _("audio filter for ugly resampling") );
+    set_capability( "audio filter", 5 );
+    set_callbacks( Create, NULL );
+vlc_module_end();
 
 /*****************************************************************************
  * Create: allocate ugly resampler
  *****************************************************************************/
 static int Create( vlc_object_t *p_this )
 {
-    filter_t * p_filter = (filter_t *)p_this;
+    aout_filter_t * p_filter = (aout_filter_t *)p_this;
 
-    if( p_filter->fmt_in.audio.i_rate == p_filter->fmt_out.audio.i_rate )
+    if ( p_filter->input.i_rate == p_filter->output.i_rate
+          || p_filter->input.i_format != p_filter->output.i_format
+          || p_filter->input.i_physical_channels
+              != p_filter->output.i_physical_channels
+          || p_filter->input.i_original_channels
+              != p_filter->output.i_original_channels
+          || (p_filter->input.i_format != VLC_FOURCC('f','l','3','2')
+               && p_filter->input.i_format != VLC_FOURCC('f','i','3','2')) )
+    {
         return VLC_EGENERIC;
-    return CreateResampler( p_this );
-}
+    }
 
-static int CreateResampler( vlc_object_t *p_this )
-{
-    filter_t * p_filter = (filter_t *)p_this;
+    p_filter->pf_do_work = DoWork;
 
-    if( p_filter->fmt_in.audio.i_format != p_filter->fmt_out.audio.i_format
-     || p_filter->fmt_in.audio.i_channels != p_filter->fmt_out.audio.i_channels
-     || !AOUT_FMT_LINEAR( &p_filter->fmt_in.audio ) )
-        return VLC_EGENERIC;
+    /* We don't want a new buffer to be created because we're not sure we'll
+     * actually need to resample anything. */
+    p_filter->b_in_place = VLC_TRUE;
 
-    p_filter->pf_audio_filter = DoWork;
     return VLC_SUCCESS;
 }
 
 /*****************************************************************************
  * DoWork: convert a buffer
  *****************************************************************************/
-static block_t *DoWork( filter_t * p_filter, block_t * p_in_buf )
+static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
+                    aout_buffer_t * p_in_buf, aout_buffer_t * p_out_buf )
 {
+    int32_t *p_in, *p_out = (int32_t*)p_out_buf->p_buffer;
+
+    unsigned int i_nb_channels = aout_FormatNbChannels( &p_filter->input );
+    unsigned int i_in_nb = p_in_buf->i_nb_samples;
+    unsigned int i_out_nb = i_in_nb * p_filter->output.i_rate
+                                    / p_filter->input.i_rate;
+    unsigned int i_sample_bytes = i_nb_channels * sizeof(int32_t);
+    unsigned int i_out, i_chan, i_remainder = 0;
+
     /* Check if we really need to run the resampler */
-    if( p_filter->fmt_out.audio.i_rate == p_filter->fmt_in.audio.i_rate )
-        return p_in_buf;
-
-    block_t *p_out_buf = p_in_buf;
-    unsigned int i_out_nb = p_in_buf->i_nb_samples
-        * p_filter->fmt_out.audio.i_rate / p_filter->fmt_in.audio.i_rate;
-    const unsigned framesize = (p_filter->fmt_in.audio.i_bitspersample / 8)
-        * aout_FormatNbChannels( &p_filter->fmt_in.audio );
-
-    if( p_filter->fmt_out.audio.i_rate > p_filter->fmt_in.audio.i_rate )
+    if( p_aout->mixer.mixer.i_rate == p_filter->input.i_rate )
     {
-        p_out_buf = block_Alloc( i_out_nb * framesize );
-        if( !p_out_buf )
-            goto out;
+        return;
     }
 
-    unsigned char *p_out = p_out_buf->p_buffer;
-    unsigned char *p_in = p_in_buf->p_buffer;
-    unsigned int i_remainder = 0;
-
-    p_out_buf->i_nb_samples = i_out_nb;
-    p_out_buf->i_buffer = i_out_nb * framesize;
-    p_out_buf->i_pts = p_in_buf->i_pts;
-    p_out_buf->i_length = p_out_buf->i_nb_samples *
-        1000000 / p_filter->fmt_out.audio.i_rate;
-
-    while( i_out_nb )
+#ifdef HAVE_ALLOCA
+    p_in = (int32_t *)alloca( p_in_buf->i_nb_bytes );
+#else
+    p_in = (int32_t *)malloc( p_in_buf->i_nb_bytes );
+#endif
+    if( p_in == NULL )
     {
-        if( p_out != p_in )
-            memcpy( p_out, p_in, framesize );
-        p_out += framesize;
-        i_out_nb--;
+        return;
+    }
 
-        i_remainder += p_filter->fmt_in.audio.i_rate;
-        while( i_remainder >= p_filter->fmt_out.audio.i_rate )
+    p_aout->p_vlc->pf_memcpy( p_in, p_in_buf->p_buffer, p_in_buf->i_nb_bytes );
+
+    for( i_out = i_out_nb ; i_out-- ; )
+    {
+        for( i_chan = i_nb_channels ; i_chan ; )
         {
-            p_in += framesize;
-            i_remainder -= p_filter->fmt_out.audio.i_rate;
+            i_chan--;
+            p_out[i_chan] = p_in[i_chan];
+        }
+        p_out += i_nb_channels;
+
+        i_remainder += p_filter->input.i_rate;
+        while( i_remainder >= p_filter->output.i_rate )
+        {
+            p_in += i_nb_channels;
+            i_remainder -= p_filter->output.i_rate;
         }
     }
 
-    if( p_in_buf != p_out_buf )
-out:
-        block_Release( p_in_buf );
-    return p_out_buf;
+    p_out_buf->i_nb_samples = i_out_nb;
+    p_out_buf->i_nb_bytes = i_out_nb * i_sample_bytes;
+    p_out_buf->start_date = p_in_buf->start_date;
+    p_out_buf->end_date = p_out_buf->start_date + p_out_buf->i_nb_samples *
+        1000000 / p_filter->output.i_rate;
 }

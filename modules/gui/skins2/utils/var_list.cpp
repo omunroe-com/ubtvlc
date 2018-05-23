@@ -1,11 +1,11 @@
 /*****************************************************************************
  * var_list.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: c3efc93681d2ea9ea8a662a5fb5cda4f3c19d397 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: var_list.cpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "var_list.hpp"
 
 
-const std::string VarList::m_type = "list";
+const string VarList::m_type = "list";
 
 
 VarList::VarList( intf_thread_t *pIntf ): Variable( pIntf )
@@ -56,12 +56,12 @@ void VarList::delSelected()
         if( (*it).m_selected )
         {
             Iterator oldIt = it;
-            ++it;
+            it++;
             m_list.erase( oldIt );
         }
         else
         {
-            ++it;
+            it++;
         }
     }
     notify();

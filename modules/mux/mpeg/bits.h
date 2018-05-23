@@ -1,25 +1,25 @@
 /*****************************************************************************
  * bits.h
  *****************************************************************************
- * Copyright (C) 2001, 2002 VLC authors and VideoLAN
- * $Id: 4f0e6002c57e0e34eada5bb0e40bf9810652a171 $
+ * Copyright (C) 2001, 2002 VideoLAN
+ * $Id: bits.h 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 typedef struct bits_buffer_s
@@ -39,13 +39,22 @@ static inline int bits_initwrite( bits_buffer_t *p_buffer,
     p_buffer->i_data = 0;
     p_buffer->i_mask = 0x80;
     p_buffer->p_data = p_data;
+    p_buffer->p_data[0] = 0;
     if( !p_buffer->p_data )
     {
         if( !( p_buffer->p_data = malloc( i_size ) ) )
-            return -1;
+        {
+            return( -1 );
+        }
+        else
+        {
+            return( 0 );
+        }
     }
-    p_buffer->p_data[0] = 0;
-    return 0;
+    else
+    {
+        return( 0 );
+    }
 }
 
 static inline void bits_align( bits_buffer_t *p_buffer )

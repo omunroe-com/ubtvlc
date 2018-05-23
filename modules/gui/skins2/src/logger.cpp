@@ -1,11 +1,11 @@
 /*****************************************************************************
  * logger.cpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: 931981c170804cca56c5e8ecb18523535ac23c70 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: logger.cpp 6961 2004-03-05 17:34:23Z sam $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #include "logger.hpp"
@@ -52,19 +52,22 @@ Logger *Logger::instance( intf_thread_t *pIntf )
 
 void Logger::destroy( intf_thread_t *pIntf )
 {
-    delete pIntf->p_sys->p_logger;
-    pIntf->p_sys->p_logger = NULL;
+    if( pIntf->p_sys->p_logger )
+    {
+        delete pIntf->p_sys->p_logger;
+        pIntf->p_sys->p_logger = NULL;
+    }
 }
 
 
-void Logger::error( const std::string &rMsg )
+void Logger::error( const string &rMsg )
 {
-    msg_Err( getIntf(), "%s", rMsg.c_str() );
+    msg_Err( getIntf(), rMsg.c_str() );
 }
 
 
-void Logger::warn( const std::string &rMsg )
+void Logger::warn( const string &rMsg )
 {
-    msg_Warn( getIntf(), "%s", rMsg.c_str() );
+    msg_Warn( getIntf(), rMsg.c_str() );
 }
 

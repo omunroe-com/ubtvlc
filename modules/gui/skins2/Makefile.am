@@ -1,267 +1,73 @@
-libskins2_plugin_la_SOURCES = \
-	gui/skins2/commands/async_queue.cpp \
-	gui/skins2/commands/async_queue.hpp \
-	gui/skins2/commands/cmd_add_item.cpp \
-	gui/skins2/commands/cmd_add_item.hpp \
-	gui/skins2/commands/cmd_audio.cpp \
-	gui/skins2/commands/cmd_audio.hpp \
-	gui/skins2/commands/cmd_dummy.hpp \
-	gui/skins2/commands/cmd_dvd.cpp \
-	gui/skins2/commands/cmd_dvd.hpp \
-	gui/skins2/commands/cmd_generic.hpp \
-	gui/skins2/commands/cmd_callbacks.hpp \
-	gui/skins2/commands/cmd_change_skin.cpp \
-	gui/skins2/commands/cmd_change_skin.hpp \
-	gui/skins2/commands/cmd_dialogs.hpp \
-	gui/skins2/commands/cmd_fullscreen.cpp \
-	gui/skins2/commands/cmd_fullscreen.hpp \
-	gui/skins2/commands/cmd_input.cpp \
-	gui/skins2/commands/cmd_input.hpp \
-	gui/skins2/commands/cmd_layout.cpp \
-	gui/skins2/commands/cmd_layout.hpp \
-	gui/skins2/commands/cmd_muxer.cpp \
-	gui/skins2/commands/cmd_muxer.hpp \
-	gui/skins2/commands/cmd_on_top.cpp \
-	gui/skins2/commands/cmd_on_top.hpp \
-	gui/skins2/commands/cmd_playlist.cpp \
-	gui/skins2/commands/cmd_playlist.hpp \
-	gui/skins2/commands/cmd_playtree.cpp \
-	gui/skins2/commands/cmd_playtree.hpp \
-	gui/skins2/commands/cmd_minimize.cpp \
-	gui/skins2/commands/cmd_minimize.hpp \
-	gui/skins2/commands/cmd_quit.cpp \
-	gui/skins2/commands/cmd_quit.hpp \
-	gui/skins2/commands/cmd_resize.cpp \
-	gui/skins2/commands/cmd_resize.hpp \
-	gui/skins2/commands/cmd_snapshot.cpp \
-	gui/skins2/commands/cmd_snapshot.hpp \
-	gui/skins2/commands/cmd_show_window.hpp \
-	gui/skins2/commands/cmd_vars.cpp \
-	gui/skins2/commands/cmd_vars.hpp \
-	\
-	gui/skins2/controls/ctrl_button.cpp \
-	gui/skins2/controls/ctrl_button.hpp \
-	gui/skins2/controls/ctrl_checkbox.cpp \
-	gui/skins2/controls/ctrl_checkbox.hpp \
-	gui/skins2/controls/ctrl_flat.hpp \
-	gui/skins2/controls/ctrl_generic.cpp \
-	gui/skins2/controls/ctrl_generic.hpp \
-	gui/skins2/controls/ctrl_image.cpp \
-	gui/skins2/controls/ctrl_image.hpp \
-	gui/skins2/controls/ctrl_list.cpp \
-	gui/skins2/controls/ctrl_list.hpp \
-	gui/skins2/controls/ctrl_tree.cpp \
-	gui/skins2/controls/ctrl_tree.hpp \
-	gui/skins2/controls/ctrl_move.cpp \
-	gui/skins2/controls/ctrl_move.hpp \
-	gui/skins2/controls/ctrl_resize.cpp \
-	gui/skins2/controls/ctrl_resize.hpp \
-	gui/skins2/controls/ctrl_slider.cpp \
-	gui/skins2/controls/ctrl_slider.hpp \
-	gui/skins2/controls/ctrl_radialslider.cpp \
-	gui/skins2/controls/ctrl_radialslider.hpp \
-	gui/skins2/controls/ctrl_text.hpp \
-	gui/skins2/controls/ctrl_text.cpp \
-	gui/skins2/controls/ctrl_video.cpp \
-	gui/skins2/controls/ctrl_video.hpp \
-	\
-	gui/skins2/events/evt_enter.hpp \
-	gui/skins2/events/evt_focus.hpp \
-	gui/skins2/events/evt_generic.hpp \
-	gui/skins2/events/evt_input.cpp \
-	gui/skins2/events/evt_input.hpp \
-	gui/skins2/events/evt_key.cpp \
-	gui/skins2/events/evt_key.hpp \
-	gui/skins2/events/evt_leave.hpp \
-	gui/skins2/events/evt_menu.hpp \
-	gui/skins2/events/evt_motion.hpp \
-	gui/skins2/events/evt_mouse.cpp \
-	gui/skins2/events/evt_mouse.hpp \
-	gui/skins2/events/evt_refresh.hpp \
-	gui/skins2/events/evt_special.cpp \
-	gui/skins2/events/evt_special.hpp \
-	gui/skins2/events/evt_scroll.cpp \
-	gui/skins2/events/evt_scroll.hpp \
-	gui/skins2/events/evt_dragndrop.hpp \
-	\
-	gui/skins2/parser/builder.cpp \
-	gui/skins2/parser/builder.hpp \
-	gui/skins2/parser/builder_data.hpp \
-	gui/skins2/parser/expr_evaluator.cpp \
-	gui/skins2/parser/expr_evaluator.hpp \
-	gui/skins2/parser/interpreter.cpp \
-	gui/skins2/parser/interpreter.hpp \
-	gui/skins2/parser/skin_parser.cpp \
-	gui/skins2/parser/skin_parser.hpp \
-	gui/skins2/parser/xmlparser.cpp \
-	gui/skins2/parser/xmlparser.hpp \
-	\
-	gui/skins2/src/anchor.cpp \
-	gui/skins2/src/anchor.hpp \
-	gui/skins2/src/anim_bitmap.cpp \
-	gui/skins2/src/anim_bitmap.hpp \
-	gui/skins2/src/bitmap_font.cpp \
-	gui/skins2/src/bitmap_font.hpp \
-	gui/skins2/src/dialogs.cpp \
-	gui/skins2/src/dialogs.hpp \
-	gui/skins2/src/file_bitmap.cpp \
-	gui/skins2/src/file_bitmap.hpp \
-	gui/skins2/src/art_manager.cpp \
-	gui/skins2/src/art_manager.hpp \
-	gui/skins2/src/ft2_bitmap.cpp \
-	gui/skins2/src/ft2_bitmap.hpp \
-	gui/skins2/src/ft2_font.cpp \
-	gui/skins2/src/ft2_font.hpp \
-	gui/skins2/src/ft2_err.c \
-	gui/skins2/src/ft2_err.h \
-	gui/skins2/src/generic_bitmap.cpp \
-	gui/skins2/src/generic_bitmap.hpp \
-	gui/skins2/src/generic_font.hpp \
-	gui/skins2/src/generic_layout.cpp \
-	gui/skins2/src/generic_layout.hpp \
-	gui/skins2/src/generic_window.cpp \
-	gui/skins2/src/generic_window.hpp \
-	gui/skins2/src/ini_file.cpp \
-	gui/skins2/src/ini_file.hpp \
-	gui/skins2/src/logger.cpp \
-	gui/skins2/src/logger.hpp \
-	gui/skins2/src/os_factory.cpp \
-	gui/skins2/src/os_factory.hpp \
-	gui/skins2/src/os_graphics.hpp \
-	gui/skins2/src/os_loop.hpp \
-	gui/skins2/src/os_popup.hpp \
-	gui/skins2/src/os_timer.hpp \
-	gui/skins2/src/os_window.hpp \
-	gui/skins2/src/os_tooltip.hpp \
-	gui/skins2/src/popup.cpp \
-	gui/skins2/src/popup.hpp \
-	gui/skins2/src/scaled_bitmap.cpp \
-	gui/skins2/src/scaled_bitmap.hpp \
-	gui/skins2/src/skin_main.cpp \
-	gui/skins2/src/skin_common.hpp \
-	gui/skins2/src/theme.cpp \
-	gui/skins2/src/theme.hpp \
-	gui/skins2/src/theme_loader.cpp \
-	gui/skins2/src/theme_loader.hpp \
-	gui/skins2/src/theme_repository.cpp \
-	gui/skins2/src/theme_repository.hpp \
-	gui/skins2/src/tooltip.cpp \
-	gui/skins2/src/tooltip.hpp \
-	gui/skins2/src/top_window.cpp \
-	gui/skins2/src/top_window.hpp \
-	gui/skins2/src/fsc_window.cpp \
-	gui/skins2/src/fsc_window.hpp \
-	gui/skins2/src/var_manager.cpp \
-	gui/skins2/src/var_manager.hpp \
-	gui/skins2/src/vlcproc.cpp \
-	gui/skins2/src/vlcproc.hpp \
-	gui/skins2/src/vout_window.cpp \
-	gui/skins2/src/vout_window.hpp \
-	gui/skins2/src/vout_manager.cpp \
-	gui/skins2/src/vout_manager.hpp \
-	gui/skins2/src/window_manager.cpp \
-	gui/skins2/src/window_manager.hpp \
-	\
-	gui/skins2/utils/bezier.cpp \
-	gui/skins2/utils/bezier.hpp \
-	gui/skins2/utils/fsm.cpp \
-	gui/skins2/utils/fsm.hpp \
-	gui/skins2/utils/observer.hpp \
-	gui/skins2/utils/pointer.hpp \
-	gui/skins2/utils/position.cpp \
-	gui/skins2/utils/position.hpp \
-	gui/skins2/utils/ustring.cpp \
-	gui/skins2/utils/ustring.hpp \
-	gui/skins2/utils/variable.hpp \
-	gui/skins2/utils/var_bool.cpp \
-	gui/skins2/utils/var_bool.hpp \
-	gui/skins2/utils/var_list.cpp \
-	gui/skins2/utils/var_list.hpp \
-	gui/skins2/utils/var_percent.cpp \
-	gui/skins2/utils/var_percent.hpp \
-	gui/skins2/utils/var_text.cpp \
-	gui/skins2/utils/var_text.hpp \
-	gui/skins2/utils/var_string.cpp \
-	gui/skins2/utils/var_string.hpp \
-	gui/skins2/utils/var_tree.cpp \
-	gui/skins2/utils/var_tree.hpp \
-	\
-	gui/skins2/vars/equalizer.cpp \
-	gui/skins2/vars/equalizer.hpp \
-	gui/skins2/vars/playtree.cpp \
-	gui/skins2/vars/playtree.hpp \
-	gui/skins2/vars/time.cpp \
-	gui/skins2/vars/time.hpp \
-	gui/skins2/vars/volume.cpp \
-	gui/skins2/vars/volume.hpp
 
+# Autogenerated by bootstrap - DO NOT EDIT - edit Modules.am instead
+
+NULL =
+libvlc_LIBRARIES =
+noinst_LIBRARIES =
+noinst_HEADERS =
+EXTRA_DIST = Modules.am
+BUILT_SOURCES =
+SUBDIRS = 
+#DIST_SUBDIRS = $(SUBDIRS)
+libvlcdir = $(libdir)/vlc/gui
+include Modules.am
+
+if BUILD_MOZILLA
 if HAVE_WIN32
-libskins2_plugin_la_SOURCES += \
-	gui/skins2/win32/win32_dragdrop.cpp \
-	gui/skins2/win32/win32_dragdrop.hpp \
-	gui/skins2/win32/win32_factory.cpp \
-	gui/skins2/win32/win32_factory.hpp \
-	gui/skins2/win32/win32_graphics.cpp \
-	gui/skins2/win32/win32_graphics.hpp \
-	gui/skins2/win32/win32_loop.cpp \
-	gui/skins2/win32/win32_loop.hpp \
-	gui/skins2/win32/win32_popup.cpp \
-	gui/skins2/win32/win32_popup.hpp \
-	gui/skins2/win32/win32_timer.cpp \
-	gui/skins2/win32/win32_timer.hpp \
-	gui/skins2/win32/win32_tooltip.cpp \
-	gui/skins2/win32/win32_tooltip.hpp \
-	gui/skins2/win32/win32_window.cpp \
-	gui/skins2/win32/win32_window.hpp \
-    $(NULL)
-else
-if HAVE_OS2
-libskins2_plugin_la_SOURCES += \
-	gui/skins2/os2/os2_dragdrop.cpp \
-	gui/skins2/os2/os2_dragdrop.hpp \
-	gui/skins2/os2/os2_factory.cpp \
-	gui/skins2/os2/os2_factory.hpp \
-	gui/skins2/os2/os2_graphics.cpp \
-	gui/skins2/os2/os2_graphics.hpp \
-	gui/skins2/os2/os2_loop.cpp \
-	gui/skins2/os2/os2_loop.hpp \
-	gui/skins2/os2/os2_popup.cpp \
-	gui/skins2/os2/os2_popup.hpp \
-	gui/skins2/os2/os2_timer.cpp \
-	gui/skins2/os2/os2_timer.hpp \
-	gui/skins2/os2/os2_tooltip.cpp \
-	gui/skins2/os2/os2_tooltip.hpp \
-	gui/skins2/os2/os2_window.cpp \
-	gui/skins2/os2/os2_window.hpp \
-    $(NULL)
-else
-libskins2_plugin_la_SOURCES += \
-	gui/skins2/x11/x11_display.cpp \
-	gui/skins2/x11/x11_display.hpp \
-	gui/skins2/x11/x11_dragdrop.cpp \
-	gui/skins2/x11/x11_dragdrop.hpp \
-	gui/skins2/x11/x11_factory.cpp \
-	gui/skins2/x11/x11_factory.hpp \
-	gui/skins2/x11/x11_graphics.cpp \
-	gui/skins2/x11/x11_graphics.hpp \
-	gui/skins2/x11/x11_loop.cpp \
-	gui/skins2/x11/x11_loop.hpp \
-	gui/skins2/x11/x11_popup.cpp \
-	gui/skins2/x11/x11_popup.hpp \
-	gui/skins2/x11/x11_timer.cpp \
-	gui/skins2/x11/x11_timer.hpp \
-	gui/skins2/x11/x11_window.cpp \
-	gui/skins2/x11/x11_window.hpp \
-	gui/skins2/x11/x11_tooltip.cpp \
-	gui/skins2/x11/x11_tooltip.hpp \
-    $(NULL)
+# There's no need for pic code on win32 so get rid of this to substantially
+# reduce the compilation time.
+pic = no
 endif
+else
+pic = no
 endif
 
-libskins2_plugin_la_CPPFLAGS = $(AM_CPPFLAGS) $(CPPFLAGS_skins2)
-libskins2_plugin_la_CXXFLAGS = $(AM_CXXFLAGS) -O2 -fno-rtti
-libskins2_plugin_la_LIBADD = $(LIBS_skins2)
+clean-local:
+	-rm -f *.a *.so *.dll *.sl *.dylib
 
-if BUILD_SKINS
-gui_LTLIBRARIES += libskins2_plugin.la
+all: all-modules
+all-modules:
+	@set fnord $$MAKEFLAGS; amf=$$2; targets=`\
+	if test "$(plugin)" != "no"; then z=$$($(VLC_CONFIG) --target plugin); for mod in skins2; do case "$$z" in */lib$${mod}_plugin*) echo lib$${mod}_plugin$(LIBEXT);; esac; done; fi; \
+	if test "$(builtin)" != "no"; then z=$$($(VLC_CONFIG) --target builtin); for mod in skins2; do case "$$z" in */lib$${mod}.a*) echo lib$${mod}.a;; esac; done; fi; \
+	if test "$(pic)" != "no"; then z=$$($(VLC_CONFIG) --target builtin pic); for mod in skins2; do case "$$z" in */lib$${mod}_pic.a*) echo lib$${mod}_pic.a;; esac; done; fi; \
+	`; case "$$targets" in *lib*) $(MAKE) $(AM_MAKEFLAGS) $$targets || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; ;; esac; \
+	test -z "$$fail"
+
+# The skins2 plugin
+
+if UNTRUE
+Lskins2p = libskins2_plugin.a
+Dskins2p = libskins2_plugin$(LIBEXT)
+Lskins2b = libskins2.a
+Lskins2pic = libskins2_pic.a
 endif
+
+libskins2_plugin_a_SOURCES = $(SOURCES_skins2)
+libskins2_plugin_a_CFLAGS = `$(VLC_CONFIG) --cflags plugin skins2`
+libskins2_plugin_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags plugin skins2`
+libskins2_plugin_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags plugin skins2`
+
+libskins2_pic_a_SOURCES = $(SOURCES_skins2)
+libskins2_pic_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin pic skins2`
+libskins2_pic_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin pic skins2`
+libskins2_pic_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin pic skins2`
+
+libskins2_a_SOURCES = $(SOURCES_skins2)
+libskins2_a_CFLAGS = `$(VLC_CONFIG) --cflags builtin skins2`
+libskins2_a_CXXFLAGS = `$(VLC_CONFIG) --cxxflags builtin skins2`
+libskins2_a_OBJCFLAGS = `$(VLC_CONFIG) --objcflags builtin skins2`
+
+libvlc_LIBRARIES += $(Lskins2b) $(Lskins2pic)
+libskins2_DATA = $(Dskins2p)
+
+libskins2dir = $(libdir)/vlc/
+noinst_LIBRARIES += $(Lskins2p)
+libskins2_plugin$(LIBEXT): $(libskins2_plugin_a_OBJECTS)
+	@case `$(VLC_CONFIG) --linkage skins2` in \
+	  c++) echo $(CXXLINK) $(libskins2_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin skins2\` ; $(CXXLINK) $(libskins2_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin skins2` ;; \
+	  objc) echo $(OBJCLINK) $(libskins2_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin skins2\` ; $(OBJCLINK) $(libskins2_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin skins2` ;; \
+	  c|*) echo $(LINK) $(libskins2_plugin_a_OBJECTS) \`$(VLC_CONFIG) --libs plugin skins2\` ; $(LINK) $(libskins2_plugin_a_OBJECTS) `$(VLC_CONFIG) --libs plugin skins2` ;; \
+	esac
+
+

@@ -1,24 +1,24 @@
 /*****************************************************************************
  * avi.c
  *****************************************************************************
- * Copyright (C) 2001-2009 VLC authors and VideoLAN
- * $Id: b4a55a2a756b3a4ee4ef051c8d5e86d3355ed5b6 $
+ * Copyright (C) 2001, 2002 VideoLAN
+ * $Id: avi.c 7306 2004-04-07 22:57:08Z gbazin $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -26,17 +26,13 @@
  *****************************************************************************/
 /* TODO: add OpenDML write support */
 
+#include <stdlib.h>
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
+#include <vlc/vlc.h>
+#include <vlc/input.h>
+#include <vlc/sout.h>
 
-#include <vlc_common.h>
-#include <vlc_plugin.h>
-#include <vlc_sout.h>
-#include <vlc_block.h>
-#include <vlc_codecs.h>
-#include <vlc_boxes.h>
+#include "codecs.h"
 
 /*****************************************************************************
  * Module descriptor
@@ -44,48 +40,21 @@
 static int  Open   ( vlc_object_t * );
 static void Close  ( vlc_object_t * );
 
-#define SOUT_CFG_PREFIX "sout-avi-"
-
-#define CFG_ARTIST_TEXT     N_("Artist")
-#define CFG_DATE_TEXT       N_("Date")
-#define CFG_GENRE_TEXT      N_("Genre")
-#define CFG_COPYRIGHT_TEXT  N_("Copyright")
-#define CFG_COMMENT_TEXT    N_("Comment")
-#define CFG_NAME_TEXT       N_("Name")
-#define CFG_SUBJECT_TEXT    N_("Subject")
-#define CFG_ENCODER_TEXT    N_("Encoder")
-#define CFG_KEYWORDS_TEXT   N_("Keywords")
-
-vlc_module_begin ()
-    set_description( N_("AVI muxer") )
-    set_category( CAT_SOUT )
-    set_subcategory( SUBCAT_SOUT_MUX )
-    set_capability( "sout mux", 5 )
-    add_shortcut( "avi" )
-
-    add_string( SOUT_CFG_PREFIX "artist", NULL,    CFG_ARTIST_TEXT, NULL, true )
-    add_string( SOUT_CFG_PREFIX "date",   NULL,    CFG_DATE_TEXT, NULL, true )
-    add_string( SOUT_CFG_PREFIX "genre",  NULL,    CFG_GENRE_TEXT, NULL, true )
-    add_string( SOUT_CFG_PREFIX "copyright", NULL, CFG_COPYRIGHT_TEXT, NULL, true )
-    add_string( SOUT_CFG_PREFIX "comment", NULL,   CFG_COMMENT_TEXT, NULL, true )
-    add_string( SOUT_CFG_PREFIX "name", NULL,      CFG_NAME_TEXT, NULL, true )
-    add_string( SOUT_CFG_PREFIX "subject", NULL,   CFG_SUBJECT_TEXT, NULL, true )
-    add_string( SOUT_CFG_PREFIX "encoder",
-                "VLC Media Player - " VERSION_MESSAGE,
-                                                   CFG_ENCODER_TEXT, NULL, true )
-    add_string( SOUT_CFG_PREFIX "keywords", NULL,  CFG_KEYWORDS_TEXT, NULL, true )
-
-    set_callbacks( Open, Close )
-vlc_module_end ()
+vlc_module_begin();
+    set_description( _("AVI muxer") );
+    set_capability( "sout mux", 5 );
+    add_shortcut( "avi" );
+    set_callbacks( Open, Close );
+vlc_module_end();
 
 
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
-static int Control( sout_mux_t *, int, va_list );
-static int AddStream( sout_mux_t *, sout_input_t * );
-static void DelStream( sout_mux_t *, sout_input_t * );
-static int Mux      ( sout_mux_t * );
+static int  Capability(sout_mux_t *, int , void *, void * );
+static int  AddStream( sout_mux_t *, sout_input_t * );
+static int  DelStream( sout_mux_t *, sout_input_t * );
+static int  Mux      ( sout_mux_t * );
 
 typedef struct avi_stream_s
 {
@@ -93,7 +62,7 @@ typedef struct avi_stream_s
 
     char fcc[4];
 
-    mtime_t i_duration;       // in Âµs
+    mtime_t i_duration;       // in µs
 
     int     i_frames;        // total frame count
     int64_t i_totalsize;    // total stream size
@@ -101,8 +70,8 @@ typedef struct avi_stream_s
     float   f_fps;
     int     i_bitrate;
 
-    VLC_BITMAPINFOHEADER    *p_bih;
-    WAVEFORMATEX            *p_wf;
+    BITMAPINFOHEADER    *p_bih;
+    WAVEFORMATEX        *p_wf;
 
 } avi_stream_t;
 
@@ -125,7 +94,7 @@ typedef struct avi_idx1_s
 
 struct sout_mux_sys_t
 {
-    bool b_write_header;
+    vlc_bool_t b_write_header;
 
     int i_streams;
     int i_stream_video;
@@ -138,7 +107,8 @@ struct sout_mux_sys_t
 
 };
 
-#define HDR_BASE_SIZE 512 /* single video&audio ~ 400 bytes header */
+// FIXME FIXME
+#define HDR_SIZE 10240
 
 /* Flags in avih */
 #define AVIF_HASINDEX       0x00000010  // Index at end of file?
@@ -163,13 +133,11 @@ static void SetFCC( uint8_t *p, char *fcc )
 static int Open( vlc_object_t *p_this )
 {
     sout_mux_t      *p_mux = (sout_mux_t*)p_this;
-    sout_mux_sys_t  *p_sys;
+    sout_mux_sys_t  *p_sys = p_mux->p_sys;
 
     msg_Dbg( p_mux, "AVI muxer opened" );
 
     p_sys = malloc( sizeof( sout_mux_sys_t ) );
-    if( !p_sys )
-        return VLC_ENOMEM;
     p_sys->i_streams = 0;
     p_sys->i_stream_video = -1;
     p_sys->i_movi_size = 0;
@@ -178,15 +146,10 @@ static int Open( vlc_object_t *p_this )
     p_sys->idx1.i_entry_max = 10000;
     p_sys->idx1.entry = calloc( p_sys->idx1.i_entry_max,
                                 sizeof( avi_idx1_entry_t ) );
-    if( !p_sys->idx1.entry )
-    {
-        free( p_sys );
-        return VLC_ENOMEM;
-    }
-    p_sys->b_write_header = true;
+    p_sys->b_write_header = VLC_TRUE;
 
 
-    p_mux->pf_control   = Control;
+    p_mux->pf_capacity  = Capability;
     p_mux->pf_addstream = AddStream;
     p_mux->pf_delstream = DelStream;
     p_mux->pf_mux       = Mux;
@@ -210,12 +173,8 @@ static void Close( vlc_object_t * p_this )
 
     /* first create idx1 chunk (write at the end of the stream */
     p_idx1 = avi_HeaderCreateidx1( p_mux );
-    if( p_idx1 )
-    {
-        p_sys->i_idx1_size = p_idx1->i_buffer;
-        sout_AccessOutWrite( p_mux->p_access, p_idx1 );
-    }
-    else p_sys->i_idx1_size = 0;
+    p_sys->i_idx1_size = p_idx1->i_buffer;
+    sout_AccessOutWrite( p_mux->p_access, p_idx1 );
 
     /* calculate some value for headers creations */
     for( i_stream = 0; i_stream < p_sys->i_streams; i_stream++ )
@@ -239,8 +198,8 @@ static void Close( vlc_object_t * p_this )
                     (uint64_t)p_stream->i_totalsize /
                     (uint64_t)p_stream->i_duration;
         }
-        msg_Info( p_mux, "stream[%d] duration:%"PRId64" totalsize:%"PRId64
-                  " frames:%d fps:%f KiB/s:%d",
+        msg_Info( p_mux, "stream[%d] duration:"I64Fd" totalsize:"I64Fd
+                  " frames:%d fps:%f kb/s:%d",
                   i_stream,
                   (int64_t)p_stream->i_duration / (int64_t)1000000,
                   p_stream->i_totalsize,
@@ -249,48 +208,20 @@ static void Close( vlc_object_t * p_this )
     }
 
     p_hdr = avi_HeaderCreateRIFF( p_mux );
-    if ( p_hdr )
-    {
-        sout_AccessOutSeek( p_mux->p_access, 0 );
-        sout_AccessOutWrite( p_mux->p_access, p_hdr );
-    }
-
-    for( i_stream = 0; i_stream < p_sys->i_streams; i_stream++ )
-    {
-        avi_stream_t *p_stream;
-        p_stream = &p_sys->stream[i_stream];
-        free( p_stream->p_bih );
-        free( p_stream->p_wf );
-    }
-    free( p_sys->idx1.entry );
-    free( p_sys );
+    sout_AccessOutSeek( p_mux->p_access, 0 );
+    sout_AccessOutWrite( p_mux->p_access, p_hdr );
 }
 
-static int Control( sout_mux_t *p_mux, int i_query, va_list args )
+static int Capability( sout_mux_t *p_mux, int i_query,
+                       void *p_args, void *p_answer )
 {
-    VLC_UNUSED(p_mux);
-    bool *pb_bool;
-    char **ppsz;
-
    switch( i_query )
    {
-       case MUX_CAN_ADD_STREAM_WHILE_MUXING:
-           pb_bool = va_arg( args, bool * );
-           *pb_bool = false;
-           return VLC_SUCCESS;
-
-       case MUX_GET_ADD_STREAM_WAIT:
-           pb_bool = va_arg( args, bool * );
-           *pb_bool = true;
-           return VLC_SUCCESS;
-
-       case MUX_GET_MIME:
-           ppsz = va_arg( args, char ** );
-           *ppsz = strdup( "video/avi" );
-           return VLC_SUCCESS;
-
+        case SOUT_MUX_CAP_GET_ADD_STREAM_ANY_TIME:
+            *(vlc_bool_t*)p_answer = VLC_FALSE;
+            return( SOUT_MUX_CAP_ERR_OK );
         default:
-            return VLC_EGENERIC;
+            return( SOUT_MUX_CAP_ERR_UNIMPLEMENTED );
    }
 }
 
@@ -302,13 +233,11 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
     if( p_sys->i_streams >= 100 )
     {
         msg_Err( p_mux, "too many streams" );
-        return VLC_EGENERIC;
+        return( -1 );
     }
 
     msg_Dbg( p_mux, "adding input" );
     p_input->p_sys = malloc( sizeof( int ) );
-    if( !p_input->p_sys )
-        return VLC_ENOMEM;
 
     *((int*)p_input->p_sys) = p_sys->i_streams;
     p_stream = &p_sys->stream[p_sys->i_streams];
@@ -324,15 +253,9 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
 
             p_stream->p_bih = NULL;
 
-            WAVEFORMATEX *p_wf  = malloc( sizeof( WAVEFORMATEX ) +
-                                  p_input->p_fmt->i_extra );
-            if( !p_wf )
-            {
-                free( p_input->p_sys );
-                p_input->p_sys = NULL;
-                return VLC_ENOMEM;
-            }
-
+            p_stream->p_wf  = malloc( sizeof( WAVEFORMATEX ) +
+                                      p_input->p_fmt->i_extra );
+#define p_wf p_stream->p_wf
             p_wf->cbSize = p_input->p_fmt->i_extra;
             if( p_wf->cbSize > 0 )
             {
@@ -348,68 +271,46 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
 
             switch( p_input->p_fmt->i_codec )
             {
-                case VLC_CODEC_A52:
+                case VLC_FOURCC( 'a', '5', '2', ' ' ):
                     p_wf->wFormatTag = WAVE_FORMAT_A52;
-                    p_wf->nBlockAlign= 1;
                     break;
-                case VLC_CODEC_MP3:
+                case VLC_FOURCC( 'm', 'p', 'g', 'a' ):
                     p_wf->wFormatTag = WAVE_FORMAT_MPEGLAYER3;
-                    p_wf->nBlockAlign= 1;
                     break;
-                case VLC_CODEC_WMA1:
+                case VLC_FOURCC( 'w', 'm', 'a', '1' ):
                     p_wf->wFormatTag = WAVE_FORMAT_WMA1;
                     break;
-                case VLC_CODEC_WMA2:
+                case VLC_FOURCC( 'w', 'm', 'a', '2' ):
                     p_wf->wFormatTag = WAVE_FORMAT_WMA2;
                     break;
-                case VLC_CODEC_WMAP:
-                    p_wf->wFormatTag = WAVE_FORMAT_WMAP;
-                    break;
-                case VLC_CODEC_WMAL:
-                    p_wf->wFormatTag = WAVE_FORMAT_WMAL;
-                    break;
-                case VLC_CODEC_ALAW:
-                    p_wf->wFormatTag = WAVE_FORMAT_ALAW;
-                    break;
-                case VLC_CODEC_MULAW:
-                    p_wf->wFormatTag = WAVE_FORMAT_MULAW;
+                case VLC_FOURCC( 'w', 'm', 'a', '3' ):
+                    p_wf->wFormatTag = WAVE_FORMAT_WMA3;
                     break;
                     /* raw codec */
-                case VLC_CODEC_U8:
+                case VLC_FOURCC( 'u', '8', ' ', ' ' ):
                     p_wf->wFormatTag = WAVE_FORMAT_PCM;
                     p_wf->nBlockAlign= p_wf->nChannels;
                     p_wf->wBitsPerSample = 8;
-                    p_wf->nAvgBytesPerSec = (p_wf->wBitsPerSample/8) *
-                                      p_wf->nSamplesPerSec * p_wf->nChannels;
                     break;
-                case VLC_CODEC_S16L:
+                case VLC_FOURCC( 's', '1', '6', 'l' ):
                     p_wf->wFormatTag = WAVE_FORMAT_PCM;
                     p_wf->nBlockAlign= 2 * p_wf->nChannels;
                     p_wf->wBitsPerSample = 16;
-                    p_wf->nAvgBytesPerSec = (p_wf->wBitsPerSample/8) *
-                                      p_wf->nSamplesPerSec * p_wf->nChannels;
                     break;
-                case VLC_CODEC_S24L:
+                case VLC_FOURCC( 's', '2', '4', 'l' ):
                     p_wf->wFormatTag = WAVE_FORMAT_PCM;
                     p_wf->nBlockAlign= 3 * p_wf->nChannels;
                     p_wf->wBitsPerSample = 24;
-                    p_wf->nAvgBytesPerSec = (p_wf->wBitsPerSample/8) *
-                                      p_wf->nSamplesPerSec * p_wf->nChannels;
                     break;
-                case VLC_CODEC_S32L:
+                case VLC_FOURCC( 's', '3', '2', 'l' ):
                     p_wf->wFormatTag = WAVE_FORMAT_PCM;
                     p_wf->nBlockAlign= 4 * p_wf->nChannels;
                     p_wf->wBitsPerSample = 32;
-                    p_wf->nAvgBytesPerSec = (p_wf->wBitsPerSample/8) *
-                                      p_wf->nSamplesPerSec * p_wf->nChannels;
                     break;
                 default:
-                    free( p_wf );
-                    free( p_input->p_sys );
-                    p_input->p_sys = NULL;
                     return VLC_EGENERIC;
             }
-            p_stream->p_wf = p_wf;
+#undef p_wf
             break;
         case VIDEO_ES:
             p_stream->i_cat = VIDEO_ES;
@@ -422,16 +323,10 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
                 p_sys->i_stream_video = p_sys->i_streams;
             }
             p_stream->p_wf  = NULL;
-            VLC_BITMAPINFOHEADER *p_bih = malloc( sizeof( VLC_BITMAPINFOHEADER ) +
-                                                 p_input->p_fmt->i_extra );
-            if( !p_bih )
-            {
-                free( p_input->p_sys );
-                p_input->p_sys = NULL;
-                return VLC_ENOMEM;
-            }
-
-            p_bih->biSize  = sizeof( VLC_BITMAPINFOHEADER ) +
+            p_stream->p_bih = malloc( sizeof( BITMAPINFOHEADER ) +
+                                      p_input->p_fmt->i_extra );
+#define p_bih p_stream->p_bih
+            p_bih->biSize  = sizeof( BITMAPINFOHEADER ) +
                              p_input->p_fmt->i_extra;
             if( p_input->p_fmt->i_extra > 0 )
             {
@@ -450,18 +345,16 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
             p_bih->biClrImportant   = 0;
             switch( p_input->p_fmt->i_codec )
             {
-                case VLC_CODEC_MP4V:
+                case VLC_FOURCC( 'm', 'p', '4', 'v' ):
                     p_bih->biCompression = VLC_FOURCC( 'X', 'V', 'I', 'D' );
                     break;
                 default:
-                    p_bih->biCompression = p_input->p_fmt->i_original_fourcc ?: p_input->p_fmt->i_codec;
+                    p_bih->biCompression = p_input->p_fmt->i_codec;
                     break;
             }
-            p_stream->p_bih = p_bih;
+#undef p_bih
             break;
         default:
-            free( p_input->p_sys );
-            p_input->p_sys = NULL;
             return( VLC_EGENERIC );
     }
     p_stream->i_totalsize = 0;
@@ -476,29 +369,32 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
     return( VLC_SUCCESS );
 }
 
-static void DelStream( sout_mux_t *p_mux, sout_input_t *p_input )
+static int DelStream( sout_mux_t *p_mux, sout_input_t *p_input )
 {
+
     msg_Dbg( p_mux, "removing input" );
 
     free( p_input->p_sys );
+    return( 0 );
 }
 
 static int Mux      ( sout_mux_t *p_mux )
 {
     sout_mux_sys_t  *p_sys = p_mux->p_sys;
     avi_stream_t    *p_stream;
-    int i_stream, i;
+    int i_stream;
+    int i;
 
     if( p_sys->b_write_header )
     {
+        block_t *p_hdr;
+
         msg_Dbg( p_mux, "writing header" );
 
-        block_t *p_hdr = avi_HeaderCreateRIFF( p_mux );
-        if ( !p_hdr )
-            return VLC_EGENERIC;
+        p_hdr = avi_HeaderCreateRIFF( p_mux );
         sout_AccessOutWrite( p_mux->p_access, p_hdr );
 
-        p_sys->b_write_header = false;
+        p_sys->b_write_header = VLC_FALSE;
     }
 
     for( i = 0; i < p_mux->i_nb_inputs; i++ )
@@ -506,42 +402,21 @@ static int Mux      ( sout_mux_t *p_mux )
         int i_count;
         block_fifo_t *p_fifo;
 
-        if (!p_mux->pp_inputs[i]->p_sys)
-            continue;
-
         i_stream = *((int*)p_mux->pp_inputs[i]->p_sys );
         p_stream = &p_sys->stream[i_stream];
 
         p_fifo = p_mux->pp_inputs[i]->p_fifo;
-        i_count = block_FifoCount(  p_fifo );
-        while( i_count > 1 )
+        i_count = p_fifo->i_depth;
+        while( i_count > 0 )
         {
             avi_idx1_entry_t *p_idx;
             block_t *p_data;
 
             p_data = block_FifoGet( p_fifo );
-            if( block_FifoCount( p_fifo ) > 0 )
+            if( p_fifo->i_depth > 0 )
             {
                 block_t *p_next = block_FifoShow( p_fifo );
                 p_data->i_length = p_next->i_dts - p_data->i_dts;
-            }
-
-
-            if( p_stream->i_frames == 0 &&p_stream->i_cat == VIDEO_ES )
-            {
-               /* Add header present at the end of BITMAP info header
-                  to first frame in case of XVID */
-               if( p_stream->p_bih->biCompression
-                               == VLC_FOURCC( 'X', 'V', 'I', 'D' ) )
-               {
-                   int i_header_length =
-                       p_stream->p_bih->biSize - sizeof(VLC_BITMAPINFOHEADER);
-                   p_data = block_Realloc( p_data,
-                                   i_header_length, p_data->i_buffer );
-                   if( !p_data)
-                       return VLC_ENOMEM;
-                   memcpy(p_data->p_buffer,&p_stream->p_bih[1], i_header_length);
-               }
             }
 
             p_stream->i_frames++;
@@ -558,17 +433,15 @@ static int Mux      ( sout_mux_t *p_mux )
             /* add idx1 entry for this frame */
             p_idx = &p_sys->idx1.entry[p_sys->idx1.i_entry_count];
             memcpy( p_idx->fcc, p_stream->fcc, 4 );
-            p_idx->i_flags = 0;
-            if( ( p_data->i_flags & BLOCK_FLAG_TYPE_MASK ) == 0 || ( p_data->i_flags & BLOCK_FLAG_TYPE_I ) )
-                p_idx->i_flags = AVIIF_KEYFRAME;
+            p_idx->i_flags = AVIIF_KEYFRAME;
             p_idx->i_pos   = p_sys->i_movi_size + 4;
             p_idx->i_length= p_data->i_buffer;
             p_sys->idx1.i_entry_count++;
             if( p_sys->idx1.i_entry_count >= p_sys->idx1.i_entry_max )
             {
                 p_sys->idx1.i_entry_max += 10000;
-                p_sys->idx1.entry = xrealloc( p_sys->idx1.entry,
-                       p_sys->idx1.i_entry_max * sizeof( avi_idx1_entry_t ) );
+                p_sys->idx1.entry = realloc( p_sys->idx1.entry,
+                                             p_sys->idx1.i_entry_max * sizeof( avi_idx1_entry_t ) );
             }
 
             p_data = block_Realloc( p_data, 8, p_data->i_buffer );
@@ -580,15 +453,10 @@ static int Mux      ( sout_mux_t *p_mux )
                 if( p_data->i_buffer & 0x01 )
                 {
                     p_data = block_Realloc( p_data, 0, p_data->i_buffer + 1 );
-                    if ( p_data )
-                        p_data->p_buffer[ p_data->i_buffer - 1 ] = '\0';
                 }
 
-                if ( p_data )
-                {
-                    p_sys->i_movi_size += p_data->i_buffer;
-                    sout_AccessOutWrite( p_mux->p_access, p_data );
-                }
+                p_sys->i_movi_size += p_data->i_buffer;
+                sout_AccessOutWrite( p_mux->p_access, p_data );
             }
 
             i_count--;
@@ -596,6 +464,84 @@ static int Mux      ( sout_mux_t *p_mux )
 
     }
     return( 0 );
+}
+
+/****************************************************************************/
+/****************************************************************************/
+/****************************************************************************/
+/****************************************************************************/
+
+typedef struct buffer_out_s
+{
+    int      i_buffer_size;
+    int      i_buffer;
+    uint8_t  *p_buffer;
+
+} buffer_out_t;
+
+static void bo_Init( buffer_out_t *p_bo, int i_size, uint8_t *p_buffer )
+{
+    p_bo->i_buffer_size = i_size;
+    p_bo->i_buffer = 0;
+    p_bo->p_buffer = p_buffer;
+}
+static void bo_AddByte( buffer_out_t *p_bo, uint8_t i )
+{
+    if( p_bo->i_buffer < p_bo->i_buffer_size )
+    {
+        p_bo->p_buffer[p_bo->i_buffer] = i;
+    }
+    p_bo->i_buffer++;
+}
+static void bo_AddWordLE( buffer_out_t *p_bo, uint16_t i )
+{
+    bo_AddByte( p_bo, i &0xff );
+    bo_AddByte( p_bo, ( ( i >> 8) &0xff ) );
+}
+static void bo_AddWordBE( buffer_out_t *p_bo, uint16_t i )
+{
+    bo_AddByte( p_bo, ( ( i >> 8) &0xff ) );
+    bo_AddByte( p_bo, i &0xff );
+}
+static void bo_AddDWordLE( buffer_out_t *p_bo, uint32_t i )
+{
+    bo_AddWordLE( p_bo, i &0xffff );
+    bo_AddWordLE( p_bo, ( ( i >> 16) &0xffff ) );
+}
+static void bo_AddDWordBE( buffer_out_t *p_bo, uint32_t i )
+{
+    bo_AddWordBE( p_bo, ( ( i >> 16) &0xffff ) );
+    bo_AddWordBE( p_bo, i &0xffff );
+}
+#if 0
+static void bo_AddLWordLE( buffer_out_t *p_bo, uint64_t i )
+{
+    bo_AddDWordLE( p_bo, i &0xffffffff );
+    bo_AddDWordLE( p_bo, ( ( i >> 32) &0xffffffff ) );
+}
+static void bo_AddLWordBE( buffer_out_t *p_bo, uint64_t i )
+{
+    bo_AddDWordBE( p_bo, ( ( i >> 32) &0xffffffff ) );
+    bo_AddDWordBE( p_bo, i &0xffffffff );
+}
+#endif
+
+static void bo_AddFCC( buffer_out_t *p_bo, char *fcc )
+{
+    bo_AddByte( p_bo, fcc[0] );
+    bo_AddByte( p_bo, fcc[1] );
+    bo_AddByte( p_bo, fcc[2] );
+    bo_AddByte( p_bo, fcc[3] );
+}
+
+static void bo_AddMem( buffer_out_t *p_bo, int i_size, uint8_t *p_mem )
+{
+    int i;
+
+    for( i = 0; i < i_size; i++ )
+    {
+        bo_AddByte( p_bo, p_mem[i] );
+    }
 }
 
 /****************************************************************************
@@ -606,22 +552,22 @@ static int Mux      ( sout_mux_t *p_mux )
  ****************************************************************************
  ****************************************************************************/
 #define AVI_BOX_ENTER( fcc ) \
-    int i_datasize_offset; \
-    bo_add_fourcc( p_bo, fcc ); \
-    i_datasize_offset = p_bo->b->i_buffer; \
-    bo_add_32le( p_bo, 0 )
+    buffer_out_t _bo_sav_; \
+    bo_AddFCC( p_bo, fcc ); \
+    _bo_sav_ = *p_bo; \
+    bo_AddDWordLE( p_bo, 0 )
 
 #define AVI_BOX_ENTER_LIST( fcc ) \
     AVI_BOX_ENTER( "LIST" ); \
-    bo_add_fourcc( p_bo, fcc )
+    bo_AddFCC( p_bo, fcc )
 
 #define AVI_BOX_EXIT( i_err ) \
-    if( p_bo->b->i_buffer&0x01 ) bo_add_8( p_bo, 0 ); \
-    bo_set_32le( p_bo, i_datasize_offset, p_bo->b->i_buffer - i_datasize_offset - 4 ); \
+    if( p_bo->i_buffer&0x01 ) bo_AddByte( p_bo, 0 ); \
+    bo_AddDWordLE( &_bo_sav_, p_bo->i_buffer - _bo_sav_.i_buffer - 4 ); \
     return( i_err );
 
 static int avi_HeaderAdd_avih( sout_mux_t *p_mux,
-                               bo_t *p_bo )
+                               buffer_out_t *p_bo )
 {
     sout_mux_sys_t  *p_sys = p_mux->p_sys;
     avi_stream_t    *p_video = NULL;
@@ -659,39 +605,41 @@ static int avi_HeaderAdd_avih( sout_mux_t *p_mux,
         if( p_sys->stream[i_stream].i_duration > 0 )
         {
             i_maxbytespersec +=
-                p_sys->stream[i_stream].i_totalsize /
-                p_sys->stream[i_stream].i_duration;
+                p_sys->stream[p_sys->i_stream_video].i_totalsize /
+                p_sys->stream[p_sys->i_stream_video].i_duration;
         }
     }
 
-    bo_add_32le( p_bo, i_microsecperframe );
-    bo_add_32le( p_bo, i_maxbytespersec );
-    bo_add_32le( p_bo, 0 );                   /* padding */
-    bo_add_32le( p_bo, AVIF_TRUSTCKTYPE |
-                       AVIF_HASINDEX |
-                       AVIF_ISINTERLEAVED );  /* flags */
-    bo_add_32le( p_bo, i_totalframes );
-    bo_add_32le( p_bo, 0 );                   /* initial frame */
-    bo_add_32le( p_bo, p_sys->i_streams );    /* streams count */
-    bo_add_32le( p_bo, 1024 * 1024 );         /* suggested buffer size */
+    bo_AddDWordLE( p_bo, i_microsecperframe );
+    bo_AddDWordLE( p_bo, i_maxbytespersec );
+    bo_AddDWordLE( p_bo, 0 );                   /* padding */
+    bo_AddDWordLE( p_bo, AVIF_TRUSTCKTYPE |
+                         AVIF_HASINDEX |
+                         AVIF_ISINTERLEAVED );  /* flags */
+    bo_AddDWordLE( p_bo, i_totalframes );
+    bo_AddDWordLE( p_bo, 0 );                   /* initial frame */
+    bo_AddDWordLE( p_bo, p_sys->i_streams );    /* streams count */
+    bo_AddDWordLE( p_bo, 1024 * 1024 );         /* suggested buffer size */
     if( p_video )
     {
-        bo_add_32le( p_bo, p_video->p_bih->biWidth );
-        bo_add_32le( p_bo, p_video->p_bih->biHeight );
+        bo_AddDWordLE( p_bo, p_video->p_bih->biWidth );
+        bo_AddDWordLE( p_bo, p_video->p_bih->biHeight );
     }
     else
     {
-        bo_add_32le( p_bo, 0 );
-        bo_add_32le( p_bo, 0 );
+        bo_AddDWordLE( p_bo, 0 );
+        bo_AddDWordLE( p_bo, 0 );
     }
-    bo_add_32le( p_bo, 0 );                   /* ???? */
-    bo_add_32le( p_bo, 0 );                   /* ???? */
-    bo_add_32le( p_bo, 0 );                   /* ???? */
-    bo_add_32le( p_bo, 0 );                   /* ???? */
+    bo_AddDWordLE( p_bo, 0 );                   /* ???? */
+    bo_AddDWordLE( p_bo, 0 );                   /* ???? */
+    bo_AddDWordLE( p_bo, 0 );                   /* ???? */
+    bo_AddDWordLE( p_bo, 0 );                   /* ???? */
 
     AVI_BOX_EXIT( 0 );
 }
-static int avi_HeaderAdd_strh( bo_t *p_bo, avi_stream_t *p_stream )
+static int avi_HeaderAdd_strh( sout_mux_t   *p_mux,
+                               buffer_out_t *p_bo,
+                               avi_stream_t *p_stream )
 {
     AVI_BOX_ENTER( "strh" );
 
@@ -699,23 +647,23 @@ static int avi_HeaderAdd_strh( bo_t *p_bo, avi_stream_t *p_stream )
     {
         case VIDEO_ES:
             {
-                bo_add_fourcc( p_bo, "vids" );
-                bo_add_32be( p_bo, p_stream->p_bih->biCompression );
-                bo_add_32le( p_bo, 0 );   /* flags */
-                bo_add_16le(  p_bo, 0 );   /* priority */
-                bo_add_16le(  p_bo, 0 );   /* langage */
-                bo_add_32le( p_bo, 0 );   /* initial frame */
-                bo_add_32le( p_bo, 1000 );/* scale */
-                bo_add_32le( p_bo, (uint32_t)( 1000 * p_stream->f_fps ));
-                bo_add_32le( p_bo, 0 );   /* start */
-                bo_add_32le( p_bo, p_stream->i_frames );
-                bo_add_32le( p_bo, 1024 * 1024 );
-                bo_add_32le( p_bo, -1 );  /* quality */
-                bo_add_32le( p_bo, 0 );   /* samplesize */
-                bo_add_16le(  p_bo, 0 );   /* ??? */
-                bo_add_16le(  p_bo, 0 );   /* ??? */
-                bo_add_16le(  p_bo, p_stream->p_bih->biWidth );
-                bo_add_16le(  p_bo, p_stream->p_bih->biHeight );
+                bo_AddFCC( p_bo, "vids" );
+                bo_AddDWordBE( p_bo, p_stream->p_bih->biCompression );
+                bo_AddDWordLE( p_bo, 0 );   /* flags */
+                bo_AddWordLE(  p_bo, 0 );   /* priority */
+                bo_AddWordLE(  p_bo, 0 );   /* langage */
+                bo_AddDWordLE( p_bo, 0 );   /* initial frame */
+                bo_AddDWordLE( p_bo, 1000 );/* scale */
+                bo_AddDWordLE( p_bo, (uint32_t)( 1000 * p_stream->f_fps ));
+                bo_AddDWordLE( p_bo, 0 );   /* start */
+                bo_AddDWordLE( p_bo, p_stream->i_frames );
+                bo_AddDWordLE( p_bo, 1024 * 1024 );
+                bo_AddDWordLE( p_bo, -1 );  /* quality */
+                bo_AddDWordLE( p_bo, 0 );   /* samplesize */
+                bo_AddWordLE(  p_bo, 0 );   /* ??? */
+                bo_AddWordLE(  p_bo, 0 );   /* ??? */
+                bo_AddWordLE(  p_bo, p_stream->p_bih->biWidth );
+                bo_AddWordLE(  p_bo, p_stream->p_bih->biHeight );
             }
             break;
         case AUDIO_ES:
@@ -734,23 +682,23 @@ static int avi_HeaderAdd_strh( bo_t *p_bo, avi_stream_t *p_stream )
                     i_scale = 1000;
                     i_rate = 1000 * p_stream->i_bitrate / 8;
                 }
-                bo_add_fourcc( p_bo, "auds" );
-                bo_add_32le( p_bo, 0 );   /* tag */
-                bo_add_32le( p_bo, 0 );   /* flags */
-                bo_add_16le(  p_bo, 0 );   /* priority */
-                bo_add_16le(  p_bo, 0 );   /* langage */
-                bo_add_32le( p_bo, 0 );   /* initial frame */
-                bo_add_32le( p_bo, i_scale );/* scale */
-                bo_add_32le( p_bo, i_rate );
-                bo_add_32le( p_bo, 0 );   /* start */
-                bo_add_32le( p_bo, p_stream->i_frames );
-                bo_add_32le( p_bo, 10 * 1024 );
-                bo_add_32le( p_bo, -1 );  /* quality */
-                bo_add_32le( p_bo, i_samplesize );
-                bo_add_16le(  p_bo, 0 );   /* ??? */
-                bo_add_16le(  p_bo, 0 );   /* ??? */
-                bo_add_16le(  p_bo, 0 );
-                bo_add_16le(  p_bo, 0 );
+                bo_AddFCC( p_bo, "auds" );
+                bo_AddDWordLE( p_bo, 0 );   /* tag */
+                bo_AddDWordLE( p_bo, 0 );   /* flags */
+                bo_AddWordLE(  p_bo, 0 );   /* priority */
+                bo_AddWordLE(  p_bo, 0 );   /* langage */
+                bo_AddDWordLE( p_bo, 0 );   /* initial frame */
+                bo_AddDWordLE( p_bo, i_scale );/* scale */
+                bo_AddDWordLE( p_bo, i_rate );
+                bo_AddDWordLE( p_bo, 0 );   /* start */
+                bo_AddDWordLE( p_bo, p_stream->i_frames );
+                bo_AddDWordLE( p_bo, 10 * 1024 );
+                bo_AddDWordLE( p_bo, -1 );  /* quality */
+                bo_AddDWordLE( p_bo, i_samplesize );
+                bo_AddWordLE(  p_bo, 0 );   /* ??? */
+                bo_AddWordLE(  p_bo, 0 );   /* ??? */
+                bo_AddWordLE(  p_bo, 0 );
+                bo_AddWordLE(  p_bo, 0 );
             }
             break;
     }
@@ -758,97 +706,60 @@ static int avi_HeaderAdd_strh( bo_t *p_bo, avi_stream_t *p_stream )
     AVI_BOX_EXIT( 0 );
 }
 
-static int avi_HeaderAdd_strf( bo_t *p_bo, avi_stream_t *p_stream )
+static int avi_HeaderAdd_strf( sout_mux_t *p_mux,
+                               buffer_out_t *p_bo,
+                               avi_stream_t *p_stream )
 {
     AVI_BOX_ENTER( "strf" );
 
     switch( p_stream->i_cat )
     {
         case AUDIO_ES:
-            bo_add_16le( p_bo, p_stream->p_wf->wFormatTag );
-            bo_add_16le( p_bo, p_stream->p_wf->nChannels );
-            bo_add_32le( p_bo, p_stream->p_wf->nSamplesPerSec );
-            bo_add_32le( p_bo, p_stream->p_wf->nAvgBytesPerSec );
-            bo_add_16le( p_bo, p_stream->p_wf->nBlockAlign );
-            bo_add_16le( p_bo, p_stream->p_wf->wBitsPerSample );
-            bo_add_16le( p_bo, p_stream->p_wf->cbSize );
-            bo_add_mem( p_bo, p_stream->p_wf->cbSize, (uint8_t*)&p_stream->p_wf[1] );
+            bo_AddWordLE( p_bo, p_stream->p_wf->wFormatTag );
+            bo_AddWordLE( p_bo, p_stream->p_wf->nChannels );
+            bo_AddDWordLE( p_bo, p_stream->p_wf->nSamplesPerSec );
+            bo_AddDWordLE( p_bo, p_stream->p_wf->nAvgBytesPerSec );
+            bo_AddWordLE( p_bo, p_stream->p_wf->nBlockAlign );
+            bo_AddWordLE( p_bo, p_stream->p_wf->wBitsPerSample );
+            bo_AddWordLE( p_bo, p_stream->p_wf->cbSize );
+            bo_AddMem( p_bo, p_stream->p_wf->cbSize, (uint8_t*)&p_stream->p_wf[1] );
             break;
         case VIDEO_ES:
-            bo_add_32le( p_bo, p_stream->p_bih->biSize );
-            bo_add_32le( p_bo, p_stream->p_bih->biWidth );
-            bo_add_32le( p_bo, p_stream->p_bih->biHeight );
-            bo_add_16le( p_bo, p_stream->p_bih->biPlanes );
-            bo_add_16le( p_bo, p_stream->p_bih->biBitCount );
+            bo_AddDWordLE( p_bo, p_stream->p_bih->biSize );
+            bo_AddDWordLE( p_bo, p_stream->p_bih->biWidth );
+            bo_AddDWordLE( p_bo, p_stream->p_bih->biHeight );
+            bo_AddWordLE( p_bo, p_stream->p_bih->biPlanes );
+            bo_AddWordLE( p_bo, p_stream->p_bih->biBitCount );
             if( VLC_FOURCC( 0, 0, 0, 1 ) == 0x00000001 )
             {
-                bo_add_32be( p_bo, p_stream->p_bih->biCompression );
+                bo_AddDWordBE( p_bo, p_stream->p_bih->biCompression );
             }
             else
             {
-                bo_add_32le( p_bo, p_stream->p_bih->biCompression );
+                bo_AddDWordLE( p_bo, p_stream->p_bih->biCompression );
             }
-            bo_add_32le( p_bo, p_stream->p_bih->biSizeImage );
-            bo_add_32le( p_bo, p_stream->p_bih->biXPelsPerMeter );
-            bo_add_32le( p_bo, p_stream->p_bih->biYPelsPerMeter );
-            bo_add_32le( p_bo, p_stream->p_bih->biClrUsed );
-            bo_add_32le( p_bo, p_stream->p_bih->biClrImportant );
-            bo_add_mem( p_bo,
-                        p_stream->p_bih->biSize - sizeof( VLC_BITMAPINFOHEADER ),
-                        (uint8_t*)&p_stream->p_bih[1] );
+            bo_AddDWordLE( p_bo, p_stream->p_bih->biSizeImage );
+            bo_AddDWordLE( p_bo, p_stream->p_bih->biXPelsPerMeter );
+            bo_AddDWordLE( p_bo, p_stream->p_bih->biYPelsPerMeter );
+            bo_AddDWordLE( p_bo, p_stream->p_bih->biClrUsed );
+            bo_AddDWordLE( p_bo, p_stream->p_bih->biClrImportant );
+            bo_AddMem( p_bo,
+                       p_stream->p_bih->biSize - sizeof( BITMAPINFOHEADER ),
+                       (uint8_t*)&p_stream->p_bih[1] );
             break;
     }
 
     AVI_BOX_EXIT( 0 );
 }
 
-static int avi_HeaderAdd_strl( bo_t *p_bo, avi_stream_t *p_stream )
+static int avi_HeaderAdd_strl( sout_mux_t *p_mux,
+                               buffer_out_t *p_bo,
+                               avi_stream_t *p_stream )
 {
     AVI_BOX_ENTER_LIST( "strl" );
 
-    avi_HeaderAdd_strh( p_bo, p_stream );
-    avi_HeaderAdd_strf( p_bo, p_stream );
-
-    AVI_BOX_EXIT( 0 );
-}
-
-static int avi_HeaderAdd_meta( bo_t *p_bo, const char psz_meta[4],
-                               const char *psz_data )
-{
-    if ( psz_data == NULL ) return 1;
-    const char *psz = psz_data;
-    AVI_BOX_ENTER( psz_meta );
-    while (*psz) bo_add_8( p_bo, *psz++ );
-    bo_add_8( p_bo, 0 );
-    AVI_BOX_EXIT( 0 );
-}
-
-static int avi_HeaderAdd_INFO( sout_mux_t *p_mux, bo_t *p_bo )
-{
-    char *psz;
-
-#define APPLY_META(var, fourcc) \
-    psz = var_InheritString( p_mux, SOUT_CFG_PREFIX var );\
-    if ( psz )\
-    {\
-        avi_HeaderAdd_meta( p_bo, fourcc, psz );\
-        free( psz );\
-    }
-
-    AVI_BOX_ENTER_LIST( "INFO" );
-
-    APPLY_META( "artist",   "IART")
-    APPLY_META( "comment",  "ICMT")
-    APPLY_META( "copyright","ICOP")
-    APPLY_META( "date",     "ICRD")
-    APPLY_META( "genre",    "IGNR")
-    APPLY_META( "name",     "INAM")
-    APPLY_META( "keywords", "IKEY")
-    APPLY_META( "subject",  "ISBJ")
-    APPLY_META( "encoder",  "ISFT")
-    /* Some are missing, but are they really useful ?? */
-
-#undef APPLY_META
+    avi_HeaderAdd_strh( p_mux, p_bo, p_stream );
+    avi_HeaderAdd_strf( p_mux, p_bo, p_stream );
 
     AVI_BOX_EXIT( 0 );
 }
@@ -856,91 +767,68 @@ static int avi_HeaderAdd_INFO( sout_mux_t *p_mux, bo_t *p_bo )
 static block_t *avi_HeaderCreateRIFF( sout_mux_t *p_mux )
 {
     sout_mux_sys_t      *p_sys = p_mux->p_sys;
+    block_t       *p_hdr;
     int                 i_stream;
+    int                 i_maxbytespersec;
     int                 i_junk;
-    bo_t                bo;
+    buffer_out_t        bo;
 
-    struct
-    {
-        int i_riffsize;
-        int i_hdrllistsize;
-        int i_hdrldatastart;
-    } offsets;
+    p_hdr = block_New( p_mux, HDR_SIZE );
+    memset( p_hdr->p_buffer, 0, HDR_SIZE );
 
-    if (! bo_init( &bo, HDR_BASE_SIZE ) )
-        return NULL;
+    bo_Init( &bo, HDR_SIZE, p_hdr->p_buffer );
 
-    bo_add_fourcc( &bo, "RIFF" );
-    offsets.i_riffsize = bo.b->i_buffer;
-    bo_add_32le( &bo, 0xEFBEADDE );
-    bo_add_fourcc( &bo, "AVI " );
+    bo_AddFCC( &bo, "RIFF" );
+    bo_AddDWordLE( &bo, p_sys->i_movi_size + HDR_SIZE - 8 + p_sys->i_idx1_size );
+    bo_AddFCC( &bo, "AVI " );
 
-    bo_add_fourcc( &bo, "LIST" );
-    /* HDRL List size should exclude following data in HDR buffer
-     *  -12 (RIFF, RIFF size, 'AVI ' tag),
-     *  - 8 (hdr1 LIST tag and its size)
-     *  - 12 (movi LIST tag, size, 'movi' listType )
-     */
-    offsets.i_hdrllistsize = bo.b->i_buffer;
-    bo_add_32le( &bo, 0xEFBEADDE );
-    bo_add_fourcc( &bo, "hdrl" );
-    offsets.i_hdrldatastart = bo.b->i_buffer;
+    bo_AddFCC( &bo, "LIST" );
+    bo_AddDWordLE( &bo, HDR_SIZE - 8);
+    bo_AddFCC( &bo, "hdrl" );
 
     avi_HeaderAdd_avih( p_mux, &bo );
-    for( i_stream = 0; i_stream < p_sys->i_streams; i_stream++ )
+    for( i_stream = 0,i_maxbytespersec = 0; i_stream < p_sys->i_streams; i_stream++ )
     {
-        avi_HeaderAdd_strl( &bo, &p_sys->stream[i_stream] );
+        avi_HeaderAdd_strl( p_mux, &bo, &p_sys->stream[i_stream] );
     }
 
-    /* align on 16 bytes */
-    int i_align = ( ( bo.b->i_buffer + 12 + 0xE ) & ~ 0xF );
-    i_junk = i_align - bo.b->i_buffer;
-    bo_add_fourcc( &bo, "JUNK" );
-    bo_add_32le( &bo, i_junk );
-    for( int i=0; i< i_junk; i++ )
-    {
-        bo_add_8( &bo, 0 );
-    }
+    i_junk = HDR_SIZE - bo.i_buffer - 8 - 12;
+    bo_AddFCC( &bo, "JUNK" );
+    bo_AddDWordLE( &bo, i_junk );
 
-    /* Now set hdrl size */
-    bo_set_32le( &bo, offsets.i_hdrllistsize,
-                 bo.b->i_buffer - offsets.i_hdrldatastart );
+    bo.i_buffer += i_junk;
+    bo_AddFCC( &bo, "LIST" );
+    bo_AddDWordLE( &bo, p_sys->i_movi_size + 4 );
+    bo_AddFCC( &bo, "movi" );
 
-    avi_HeaderAdd_INFO( p_mux, &bo );
-
-    bo_add_fourcc( &bo, "LIST" );
-    bo_add_32le( &bo, p_sys->i_movi_size + 4 );
-    bo_add_fourcc( &bo, "movi" );
-
-    /* Now set RIFF size */
-    bo_set_32le( &bo, offsets.i_riffsize, bo.b->i_buffer - 8
-                 + p_sys->i_movi_size + p_sys->i_idx1_size );
-
-    return( bo.b );
+    return( p_hdr );
 }
 
 static block_t * avi_HeaderCreateidx1( sout_mux_t *p_mux )
 {
     sout_mux_sys_t      *p_sys = p_mux->p_sys;
+    block_t       *p_idx1;
     uint32_t            i_idx1_size;
-    bo_t                bo;
+    unsigned int        i;
+    buffer_out_t        bo;
 
-    i_idx1_size = 16 * p_sys->idx1.i_entry_count + 8;
+    i_idx1_size = 16 * p_sys->idx1.i_entry_count;
 
-    if (!i_idx1_size || !bo_init( &bo, i_idx1_size ) )
-        return NULL;
-    memset( bo.b->p_buffer, 0, i_idx1_size);
+    p_idx1 = block_New( p_mux, i_idx1_size + 8 );
+    memset( p_idx1->p_buffer, 0, i_idx1_size );
 
-    bo_add_fourcc( &bo, "idx1" );
-    bo_add_32le( &bo, i_idx1_size - 8);
+    bo_Init( &bo, i_idx1_size, p_idx1->p_buffer );
+    bo_AddFCC( &bo, "idx1" );
+    bo_AddDWordLE( &bo, i_idx1_size );
 
-    for( unsigned i = 0; i < p_sys->idx1.i_entry_count; i++ )
+    for( i = 0; i < p_sys->idx1.i_entry_count; i++ )
     {
-        bo_add_fourcc( &bo, p_sys->idx1.entry[i].fcc );
-        bo_add_32le( &bo, p_sys->idx1.entry[i].i_flags );
-        bo_add_32le( &bo, p_sys->idx1.entry[i].i_pos );
-        bo_add_32le( &bo, p_sys->idx1.entry[i].i_length );
+        bo_AddFCC( &bo, p_sys->idx1.entry[i].fcc );
+        bo_AddDWordLE( &bo, p_sys->idx1.entry[i].i_flags );
+        bo_AddDWordLE( &bo, p_sys->idx1.entry[i].i_pos );
+        bo_AddDWordLE( &bo, p_sys->idx1.entry[i].i_length );
     }
 
-    return( bo.b );
+    return( p_idx1 );
 }
+

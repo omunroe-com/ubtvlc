@@ -1,11 +1,11 @@
 /*****************************************************************************
  * var_bool.hpp
  *****************************************************************************
- * Copyright (C) 2003 the VideoLAN team
- * $Id: dfd21851de99617aa4f96a11e43caf28eb9ca8e1 $
+ * Copyright (C) 2003 VideoLAN
+ * $Id: var_bool.hpp 7561 2004-04-29 22:09:23Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
+ *          Olivier Teulière <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
 #ifndef VAR_BOOL_HPP
@@ -32,112 +32,116 @@
 /// Interface for read-only boolean variable
 class VarBool: public Variable, public Subject<VarBool>
 {
-public:
-    /// Get the variable type
-    virtual const std::string &getType() const { return m_type; }
+    public:
+        /// Get the variable type
+        virtual const string &getType() const { return m_type; }
 
-    /// Get the boolean value
-    virtual bool get() const = 0;
+        /// Get the boolean value
+        virtual bool get() const = 0;
 
-protected:
-    VarBool( intf_thread_t *pIntf ): Variable( pIntf ) { }
-    virtual ~VarBool() { }
+    protected:
+        VarBool( intf_thread_t *pIntf ): Variable( pIntf ) {}
+        virtual ~VarBool() {}
 
-private:
-    /// Variable type
-    static const std::string m_type;
+    private:
+        /// Variable type
+        static const string m_type;
 };
 
 
 /// Constant true VarBool
 class VarBoolTrue: public VarBool
 {
-public:
-    VarBoolTrue( intf_thread_t *pIntf ): VarBool( pIntf ) { }
-    virtual ~VarBoolTrue() { }
-    virtual bool get() const { return true; }
+    public:
+        VarBoolTrue( intf_thread_t *pIntf ): VarBool( pIntf ) {}
+        virtual ~VarBoolTrue() {}
+        virtual bool get() const { return true; }
 };
 
 
 /// Constant false VarBool
 class VarBoolFalse: public VarBool
 {
-public:
-    VarBoolFalse( intf_thread_t *pIntf ): VarBool( pIntf ) { }
-    virtual ~VarBoolFalse() { }
-    virtual bool get() const { return false; }
+    public:
+        VarBoolFalse( intf_thread_t *pIntf ): VarBool( pIntf ) {}
+        virtual ~VarBoolFalse() {}
+        virtual bool get() const { return false; }
 };
 
 
 /// Boolean variable implementation (read/write)
 class VarBoolImpl: public VarBool
 {
-public:
-    VarBoolImpl( intf_thread_t *pIntf );
-    virtual ~VarBoolImpl() { }
+    public:
+        VarBoolImpl( intf_thread_t *pIntf );
+        virtual ~VarBoolImpl() {}
 
-    // Get the boolean value
-    virtual bool get() const { return m_value; }
+        // Get the boolean value
+        virtual bool get() const { return m_value; }
 
-    /// Set the internal value
-    virtual void set( bool value );
+        /// Set the internal value
+        virtual void set( bool value );
 
-private:
-    /// Boolean value
-    bool m_value;
+    private:
+        /// Boolean value
+        bool m_value;
 };
 
 
 /// Conjunction of two boolean variables (AND)
 class VarBoolAndBool: public VarBool, public Observer<VarBool>
 {
-public:
-    VarBoolAndBool( intf_thread_t *pIntf, VarBool &rVar1, VarBool &rVar2 );
-    virtual ~VarBoolAndBool();
-    virtual bool get() const { return m_value; }
+    public:
+        VarBoolAndBool( intf_thread_t *pIntf, VarBool &rVar1, VarBool &rVar2 );
+        virtual ~VarBoolAndBool();
 
-    // Called when one of the observed variables is changed
-    void onUpdate( Subject<VarBool> &rVariable, void* );
+        // Get the boolean value
+        virtual bool get() const { return m_rVar1.get() && m_rVar2.get(); }
 
-private:
-    /// Boolean variables
-    VarBool &m_rVar1, &m_rVar2;
-    bool m_value;
+        // Called when one of the observed variables is changed
+        void onUpdate( Subject<VarBool> &rVariable );
+
+    private:
+        /// Boolean variables
+        VarBool &m_rVar1, &m_rVar2;
 };
 
 
 /// Disjunction of two boolean variables (OR)
 class VarBoolOrBool: public VarBool, public Observer<VarBool>
 {
-public:
-    VarBoolOrBool( intf_thread_t *pIntf, VarBool &rVar1, VarBool &rVar2 );
-    virtual ~VarBoolOrBool();
-    virtual bool get() const { return m_value; }
+    public:
+        VarBoolOrBool( intf_thread_t *pIntf, VarBool &rVar1, VarBool &rVar2 );
+        virtual ~VarBoolOrBool();
 
-    // Called when one of the observed variables is changed
-    void onUpdate( Subject<VarBool> &rVariable, void* );
+        // Get the boolean value
+        virtual bool get() const { return m_rVar1.get() || m_rVar2.get(); }
 
-private:
-    /// Boolean variables
-    VarBool &m_rVar1, &m_rVar2;
-    bool m_value;
+        // Called when one of the observed variables is changed
+        void onUpdate( Subject<VarBool> &rVariable );
+
+    private:
+        /// Boolean variables
+        VarBool &m_rVar1, &m_rVar2;
 };
 
 
 /// Negation of a boolean variable (NOT)
 class VarNotBool: public VarBool, public Observer<VarBool>
 {
-public:
-    VarNotBool( intf_thread_t *pIntf, VarBool &rVar );
-    virtual ~VarNotBool();
-    virtual bool get() const { return !m_rVar.get(); }
+    public:
+        VarNotBool( intf_thread_t *pIntf, VarBool &rVar );
+        virtual ~VarNotBool();
 
-    // Called when the observed variable is changed
-    void onUpdate( Subject<VarBool> &rVariable, void* );
+        // Get the boolean value
+        virtual bool get() const { return !m_rVar.get(); }
 
-private:
-    /// Boolean variable
-    VarBool &m_rVar;
+        // Called when the observed variable is changed
+        void onUpdate( Subject<VarBool> &rVariable );
+
+    private:
+        /// Boolean variable
+        VarBool &m_rVar;
 };
 
 
